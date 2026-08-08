@@ -76,7 +76,11 @@ SURFACES = ("players_data.json", "family-feud-draft-board.html", "family-feud-ch
 ROW_KEYS = ("r", "name", "pos", "team", "pr", "tier", "badges", "note",
             "vorp", "vbdRank", "vbdDelta", "sleeperId", "vorpMethod")
 
-META_KEYS = ("league", "leagueId", "format", "updated", "owner", "badges",
+#: `rankings` sits next to `updated` because the two are constantly confused and the whole point
+#: of the key is that they are different facts: `updated` is when this BUILD ran, `rankings` is
+#: when a human last actually re-ranked. The digest that keeps them honest is defined by the GATE
+#: (`validate_board.JUDGMENT_KEYS`) -- the checker owns it so the writer cannot drift from it.
+META_KEYS = ("league", "leagueId", "format", "updated", "rankings", "owner", "badges",
              "kdef_patched", "vbd", "shape", "build")
 
 #: Badge code -> the WinAnsi glyph the PDF and the engine print. NOT invented here: this is the
@@ -297,7 +301,8 @@ def check_def_identity(players, names):
     return bad
 
 
-def enrich(d, shape, ledger, dump_meta, names, generator_sha, dirty=False, now=None):
+def enrich(d, shape, ledger, dump_meta, names, generator_sha, dirty=False, now=None,
+           rankings_synthesized=None):
     """Produce the emitted source from the read source. Pure apart from the clock."""
     players = [dict(p) for p in d["players"]]
 
@@ -371,6 +376,29 @@ def enrich(d, shape, ledger, dump_meta, names, generator_sha, dirty=False, now=N
         if os.path.exists(path):
             floors.append(_dt.date.fromtimestamp(os.path.getmtime(path)))
     meta["updated"] = max(floors).isoformat()
+
+    # THE ONE FACT THE GENERATOR REFUSES TO GENERATE. `meta.rankings` records when a human last
+    # actually re-ranked, and the digest pins that claim to the judgment it describes. Recomputing
+    # it on every build would make the gate's check agree by construction and verify nothing --
+    # residue #3's disease, which is exactly how the header came to advertise a synthesis date
+    # that was really `max(today, input mtimes)`. So it is CARRIED, and moves only when somebody
+    # says it moved.
+    if rankings_synthesized is not None:
+        try:
+            when = _dt.date.fromisoformat(str(rankings_synthesized)).isoformat()
+        except ValueError:
+            raise Refuse(f"--rankings-synthesized {rankings_synthesized!r} is not an ISO date "
+                         f"(YYYY-MM-DD)")
+        meta["rankings"] = {"synthesized": when, "judgment": G.judgment_sha(players)}
+    else:
+        carried = (d["meta"].get("rankings") or {})
+        if not carried.get("synthesized"):
+            raise Refuse(
+                "players_data.json has no meta.rankings.synthesized, so the board cannot say when "
+                "it was last actually ranked -- and every surface prints that date. Rebuild with "
+                "--rankings-synthesized YYYY-MM-DD (the date the judgment in this file was made, "
+                "NOT today, unless you just made it).")
+        meta["rankings"] = dict(carried)
 
     meta["build"] = {
         "generator_sha": generator_sha,
@@ -765,7 +793,8 @@ def verify_only(kit=KIT, full=True):
     return problems
 
 
-def build(allow_dirty=False, full=True, now=None, cargo=CARGO, league_cargo=LEAGUE_CARGO):
+def build(allow_dirty=False, full=True, now=None, cargo=CARGO, league_cargo=LEAGUE_CARGO,
+          rankings_synthesized=None):
     # The cargo paths are parameters so the test suite can run off a COMMITTED fixture. They
     # default to the mule's inbox, which is gitignored and rewritten hourly -- a suite that reads
     # it passes only on the machine the mule runs on, and a clean clone reported 22 errors.
@@ -785,7 +814,8 @@ def build(allow_dirty=False, full=True, now=None, cargo=CARGO, league_cargo=LEAG
     shape = read_shape(cargo, league_cargo)
     names = team_names()
     source = enrich(before, shape, ledger, ledger.get("meta") or {}, names,
-                    generator_sha=sha256(os.path.abspath(__file__)), dirty=bool(dirty), now=now)
+                    generator_sha=sha256(os.path.abspath(__file__)), dirty=bool(dirty), now=now,
+                    rankings_synthesized=rankings_synthesized)
 
     # BYTE-STABILITY. meta.build carries a wall-clock `built_at`, so restamping it on every run
     # would make an unchanged rebuild produce a diff -- exactly the spurious churn the plan's
@@ -827,6 +857,11 @@ def main(argv=None):
                     help="build over uncommitted draft-kit/ changes (stamps meta.build.dirty)")
     ap.add_argument("--fast", action="store_true",
                     help="skip the engine replay (static + cross-surface only)")
+    ap.add_argument("--rankings-synthesized", metavar="YYYY-MM-DD", default=None,
+                    help="record that the judgment in players_data.json (pr/tier/badges/note) was "
+                         "made on this date, and re-pin the digest to it. Pass this ONLY when you "
+                         "actually re-ranked -- every surface prints the date, and the gate "
+                         "refuses a board whose rankings moved without it.")
     a = ap.parse_args(argv)
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -844,7 +879,8 @@ def main(argv=None):
         return 0
 
     try:
-        before, after = build(allow_dirty=a.allow_dirty, full=not a.fast)
+        before, after = build(allow_dirty=a.allow_dirty, full=not a.fast,
+                              rankings_synthesized=a.rankings_synthesized)
     except Refuse as e:
         print(f"!! REFUSED TO EMIT -- nothing was written; the board on disk is unchanged.\n\n{e}")
         return 1

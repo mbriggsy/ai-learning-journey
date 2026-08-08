@@ -4,6 +4,10 @@
   "leagueId": "1390509993844809728",
   "format": "8-team · Full PPR · Snake · 16 rounds · QB/2RB/2WR/TE/2FLEX/K/DEF + 6 BN + 2 IR",
   "updated": "2026-08-08",
+  "rankings": {
+   "synthesized": "2026-08-05",
+   "judgment": "38d65e8a12c1b02d"
+  },
   "owner": "PoppaBriggsy",
   "badges": {
    "T": {
@@ -97,11 +101,11 @@
    "playoff_teams": 6
   },
   "build": {
-   "generator_sha": "a44040f8f33a9dc74aefac8091e38990d1aaf168d5402416c1bcc48a78a99f5c",
-   "source_sha256": "a6e27aa2ff2eca687615e6040cc82e9cae17b021bd346ac9e527e3c43e6e5d34",
+   "generator_sha": "772bf9abb898c07a52c4f08f21c89ae885a444d70becf91cef312ebed7cf3a65",
+   "source_sha256": "c348c3e8ae1044e8a4f1edf4ebf3514c86cc414ced22196d7d1a093ac9a447a1",
    "curve_sha256": "ad26ce6f78fb0983e26a58065a354b9d8471d53100e9fffbe20538d40dc4d115",
    "sleeper_dump_fetched_at": "2026-08-08T01:15:28+00:00",
-   "built_at": "2026-08-08T20:30:44+00:00",
+   "built_at": "2026-08-08T23:05:59+00:00",
    "dirty": false
   }
  },

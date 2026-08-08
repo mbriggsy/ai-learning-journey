@@ -41,7 +41,7 @@ def data_line(source):
 
 
 def synth_date(iso):
-    """meta.updated -> the header's human form, in the format the gate parses back."""
+    """An ISO date -> the header's human form, in the format the gate parses back."""
     d = _dt.date.fromisoformat(str(iso))
     return f"{d:%b} {d.day}, {d.year}"
 
@@ -97,7 +97,11 @@ def render(source, out_path, template=TEMPLATE):
         "__BENCH__": str(shape.get("bench", 0)),
         "__IR__": str(shape.get("ir", 0)),
         "__PLAYOFF__": playoff_line(shape),
-        "__SYNTH_DATE__": synth_date(source["meta"]["updated"]),
+        # meta.rankings.synthesized, NOT meta.updated. The sentence this lands in says the
+        # rankings were synthesized "from ... consensus + training-camp reporting" on this date,
+        # and meta.updated is `max(today, input mtimes)` -- a build stamp that advances on its own.
+        # Feeding it here re-dated the claim on every rebuild over judgment frozen since Aug 5.
+        "__SYNTH_DATE__": synth_date(source["meta"]["rankings"]["synthesized"]),
     }
     for token, value in subs.items():
         if token not in html:

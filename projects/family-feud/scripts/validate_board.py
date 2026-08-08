@@ -21,6 +21,7 @@ silently did the wrong thing, the comment says what.
 """
 import argparse
 import datetime as _dt
+import hashlib
 import json
 import os
 import re
@@ -53,6 +54,16 @@ TOP_KEYS = {"meta", "players", "dst", "strategy"}
 STRATEGY_KEYS = {"rules", "roundPlan", "slotNotes", "kickers"}
 VALUE_KEYS = ("vorp", "vbdRank", "vbdDelta")
 
+#: The fields that ARE the ranking judgment, keyed by the frozen Sleeper id so row ORDER cannot
+#: move the digest. `name`, `team` and `pos` are deliberately OUT: they are identity and data,
+#: already guarded by the resolver, `check_sleeper_ids` and `check_def_identity`, and correcting
+#: one is not a re-synthesis. Commit c6379d78 rewrote `"team": "JAC"` to `"JAX"` on eight rows and
+#: re-ranked nobody -- had that forced the synthesis date forward, the fix for a lying date would
+#: itself have made the date lie. `vorp`/`vbdRank`/`vbdDelta` are out for the opposite reason:
+#: they are GENERATED from `pr` and the curve, so including them would fire on a curve rebuild
+#: that changed no judgment at all.
+JUDGMENT_KEYS = ("pr", "tier", "badges", "note")
+
 # The reproduced prefix schedule. The vbdDelta break fired at EXACTLY three picks, so deciles
 # would have missed it entirely. 1, 2, 3, 4 first, then widen.
 PREFIXES = [0, 1, 2, 3, 4, 5, 8, 9, 16, 17, 40, 80, 119, 120]
@@ -61,6 +72,22 @@ PREFIXES = [0, 1, 2, 3, 4, 5, 8, 9, 16, 17, 40, 80, 119, 120]
 def _is_int(v):
     """bool is a subclass of int, and True would sail through an isinstance(v, int) check."""
     return isinstance(v, int) and not isinstance(v, bool)
+
+
+def judgment_sha(players):
+    """A digest of the board's JUDGMENT -- what a human decided, not what the generator derived.
+
+    Keyed by `sleeperId`, so reordering the rows cannot move it and adding or dropping a player
+    always does. Returns 16 hex characters: this is a change detector between two boards, not a
+    security primitive, and a full 64 makes `meta.rankings` unreadable in a diff.
+    """
+    payload = sorted(
+        [str(p.get("sleeperId"))] + [json.dumps(p.get(k), sort_keys=True, ensure_ascii=False)
+                                     for k in JUDGMENT_KEYS]
+        for p in players
+    )
+    blob = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:16]
 
 
 # ---------------------------------------------------------------- structure and rows
@@ -683,6 +710,48 @@ def check_normalizer_equivalence(players, html=HTML):
 # ---------------------------------------------------------------- cross-surface
 
 
+def check_rankings_provenance(d):
+    """Does the board's claim about WHEN it was ranked still describe the rankings it carries?
+
+    Every other date on this board is a build stamp: `meta.updated` is `max(today, input mtimes)`,
+    so it advances on its own every single run. The header prints one of them behind the words
+    "Rankings synthesized ... from FantasyPros, FTN, ESPN ... + training-camp reporting", which
+    made that sentence re-date itself on every rebuild while the judgment underneath sat frozen.
+    Measured before this check existed: `pr`/`tier`/`badges`/`note` had not moved since the Aug 5
+    synthesis, and the board said Aug 8.
+
+    So `meta.rankings` is a PINNED PRIOR ASSERTION, written the last time somebody actually
+    re-ranked and carried unchanged by the generator. This is the only check on the board that
+    compares the rows to something outside themselves rather than to another copy of themselves --
+    residue #3's lesson, one key over. Recomputing the digest here at build time would make it
+    agree by construction and check nothing.
+    """
+    meta = (d.get("meta") or {})
+    r = meta.get("rankings")
+    if not isinstance(r, dict):
+        return ["meta.rankings is missing -- the board cannot say when it was last actually "
+                "ranked, and meta.updated is a BUILD stamp that moves every run"]
+
+    problems = []
+    when = str(r.get("synthesized", ""))
+    try:
+        _dt.date.fromisoformat(when)
+    except ValueError:
+        problems.append(f"meta.rankings.synthesized is {when!r}, which is not an ISO date")
+
+    stored = str(r.get("judgment", ""))
+    actual = judgment_sha(d.get("players") or [])
+    if not stored:
+        problems.append("meta.rankings.judgment is empty, so nothing pins the synthesis date to "
+                        "the rankings it describes")
+    elif stored != actual:
+        problems.append(
+            f"the RANKINGS MOVED but meta.rankings still claims they were synthesized {when} "
+            f"(judgment {stored}, recomputed {actual}). Every surface prints that date. Re-run "
+            f"with --rankings-synthesized YYYY-MM-DD to record when the new judgment was made.")
+    return problems
+
+
 def check_html(d, path=HTML):
     problems = []
     if not os.path.exists(path):
@@ -702,10 +771,20 @@ def check_html(d, path=HTML):
 
     # PROSE OUTSIDE THE BLOB. The deep-equal above inspects only the extracted object, so a
     # refresh passes it while shipping a board whose visible header still reads the old date.
+    #
+    # This compares against meta.rankings.synthesized, NOT meta.updated. It used to be
+    # meta.updated, and that is precisely how the board came to advertise "Rankings synthesized
+    # Aug 8" over judgment frozen since Aug 5: meta.updated is `max(today, ...)`, so the check
+    # passed every day by construction while the sentence it blessed got less true.
     prose = html[:m.start()] + html[m.end():]
     meta = d.get("meta") or {}
-    claimed = str(meta.get("updated", ""))
-    for shown in re.findall(r"Rankings synthesized ([A-Z][a-z]+ \d+, \d{4})", prose):
+    claimed = str((meta.get("rankings") or {}).get("synthesized", ""))
+    shown_dates = re.findall(r"Rankings synthesized ([A-Z][a-z]+ \d+, \d{4})", prose)
+    if not shown_dates:
+        problems.append("the board's prose carries no 'Rankings synthesized <date>' line -- the "
+                        "template lost it, or this reader stopped finding it, and either way the "
+                        "one human-visible date is now unchecked")
+    for shown in shown_dates:
         try:
             when = _dt.datetime.strptime(shown, "%b %d, %Y").date().isoformat()
         except ValueError:
@@ -715,8 +794,8 @@ def check_html(d, path=HTML):
                 problems.append(f"the board's visible date {shown!r} is unparseable")
                 continue
         if when != claimed:
-            problems.append(f"the board's visible date says {shown} but meta.updated is "
-                            f"{claimed} -- the only human-visible date on the board is wrong")
+            problems.append(f"the board's visible date says rankings were synthesized {shown} but "
+                            f"meta.rankings.synthesized is {claimed}")
 
     # NO NUMBER APPEARING IN meta MAY EXIST AS A LITERAL IN GENERATED PROSE. It looks
     # data-driven -- the surrounding line guards on DATA.meta.vbd existing and then prints the
@@ -731,8 +810,15 @@ def check_html(d, path=HTML):
     return problems
 
 
-def check_pdf(players, path=PDF):
+def check_pdf(d, path=PDF):
+    """The sheet you actually hold on draft morning. It prints the synthesis date too, and until
+    this check existed nothing read it -- the HTML's date was guarded and the PDF's was not, so
+    the same false claim shipped on the one surface that has no comment channel to warn you."""
+    # Takes the whole board, not just the rows. It used to take rows, and tolerating both here
+    # would leave a caller that passes a list silently skipping the footer check below -- the
+    # shape of hole insight 013 is about.
     problems = []
+    players = d["players"]
     if not os.path.exists(path):
         return [f"{os.path.basename(path)} is missing"]
     try:
@@ -744,6 +830,25 @@ def check_pdf(players, path=PDF):
     if missing:
         problems.append(f"the cheat sheet is missing {len(missing)} of {len(players)} board "
                         f"players, e.g. {missing[:6]}")
+
+    claimed = str(((d.get("meta") or {}).get("rankings") or {}).get("synthesized", ""))
+    # POSITIVE CONTROL, insight 008. A PDF extractor that returns nothing reports zero mismatches,
+    # which reads exactly like agreement. Finding no date at all is itself the finding.
+    flat = re.sub(r"\s+", " ", text)
+    shown = re.findall(r"Rankings synthesized ([A-Z][a-z]+ \d+, \d{4})", flat)
+    if not shown:
+        problems.append("the cheat sheet's footer has no readable 'Rankings synthesized <date>' "
+                        "-- either the footer changed or the extractor is broken, and a silent "
+                        "zero here reads as agreement")
+    for s in shown:
+        try:
+            when = _dt.datetime.strptime(s, "%b %d, %Y").date().isoformat()
+        except ValueError:
+            problems.append(f"the cheat sheet's visible date {s!r} is unparseable")
+            continue
+        if when != claimed:
+            problems.append(f"the cheat sheet says rankings were synthesized {s} but "
+                            f"meta.rankings.synthesized is {claimed}")
     return problems
 
 
@@ -814,9 +919,10 @@ def validate(board_path=BOARD, ledger_path=LEDGER, dump_path=DUMP, html=HTML, pd
     problems += check_sleeper_ids(players, ledger, dump)
     problems += check_generated_fields(d, ledger)
     problems += check_shape_against_draft(d, cargo, league_cargo)
+    problems += check_rankings_provenance(d)
     problems += check_normalizer_equivalence(players, html)
     problems += check_html(d, html)
-    problems += check_pdf(players, pdf)
+    problems += check_pdf(d, pdf)
     if full:
         problems += check_engine_replay(kit=kit)
     return problems

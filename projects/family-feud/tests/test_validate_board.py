@@ -16,6 +16,7 @@ No network: the dump is a dict built here, or the one U14 pinned. No PDF is synt
 the PDF check is exercised against the real cheat sheet, against a missing path, and against a
 player who cannot be on it (the positive control on the text extractor).
 """
+import datetime as _dt
 import json
 import os
 import re
@@ -51,7 +52,13 @@ def good_board():
         players.append(player(4 + i, f"{city} {nick}", "DEF", code, 1 + i))
     dst = [{"rank": i + 1, "team": f"{c} {n}"} for i, (_, c, n) in enumerate(TEAMS[:8])]
     return {
-        "meta": {"updated": "2026-08-05", "format": "8-team · Full PPR · Snake · 16 rounds",
+        # `updated` and `rankings.synthesized` are DELIBERATELY different here. They were the same
+        # fact until the header was found advertising a synthesis date that was really the build
+        # date, and a fixture where they coincide cannot tell the two apart -- every date test
+        # below would pass against either one.
+        "meta": {"updated": "2026-08-08", "format": "8-team · Full PPR · Snake · 16 rounds",
+                 "rankings": {"synthesized": "2026-08-05",
+                              "judgment": V.judgment_sha(players)},
                  "badges": {"T": {"label": "t"}, "I": {"label": "i"}},
                  "vbd": {"baselineWaiver": {"QB": 12}, "lastStarter": {"QB": 8}}},
         "players": players,
@@ -558,11 +565,19 @@ class TestNormalizerEquivalence(unittest.TestCase):
 
 
 class TestHtmlCrossSurface(GateCase):
-    def write_html(self, blob, prose=""):
+    def synth_prose(self, iso=None):
+        """The header line the real template emits, in the form the gate parses back."""
+        d = _dt.date.fromisoformat(iso or self.b["meta"]["rankings"]["synthesized"])
+        return f"<p>Rankings synthesized {d:%b} {d.day}, {d.year}</p>"
+
+    def write_html(self, blob, prose=None):
         d = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, d, True)   # was `lambda: None` -- a cleanup that cleaned
                                                   # nothing, leaking a temp dir per test
         p = os.path.join(d, "board.html")
+        # Defaults to the CORRECT header line. A blank default would make every test here run
+        # against a page with no date at all, which is now itself a finding.
+        prose = self.synth_prose() if prose is None else prose
         with open(p, "w", encoding="utf-8") as f:
             f.write("<html><body>\n" + prose + "\nconst DATA = "
                     + json.dumps(blob, ensure_ascii=False) + "\n</body></html>\n")
@@ -582,22 +597,47 @@ class TestHtmlCrossSurface(GateCase):
         html = self.write_html(json.loads(json.dumps(self.b)), prose="<p>waiver QB12 rules</p>")
         self.only(V.check_html(self.b, html), "hardcoded")
 
-    def test_a_visible_date_disagreeing_with_meta_updated_is_refused(self):
+    def test_a_visible_date_disagreeing_with_the_synthesis_date_is_refused(self):
         """A refresh passes deep-equal while shipping a board whose visible header reads the old
         date -- and that header is the only human-visible date on the board."""
         html = self.write_html(json.loads(json.dumps(self.b)),
                                prose="<p>Rankings synthesized Aug 20, 2026</p>")
         self.only(V.check_html(self.b, html), "visible date")
 
-    def test_a_visible_date_agreeing_with_meta_updated_passes(self):
-        html = self.write_html(json.loads(json.dumps(self.b)),
-                               prose="<p>Rankings synthesized Aug 5, 2026</p>")
+    def test_a_visible_date_agreeing_with_the_synthesis_date_passes(self):
+        html = self.write_html(json.loads(json.dumps(self.b)), prose=self.synth_prose())
         self.assertEqual(V.check_html(self.b, html), [])
+
+    def test_THE_BUG_a_header_showing_the_BUILD_date_is_refused(self):
+        """THE REGRESSION. `__SYNTH_DATE__` was fed `meta.updated`, and this check compared the
+        header to `meta.updated` -- so the sentence "Rankings synthesized <date> from ...
+        training-camp reporting" re-dated itself on every rebuild and the gate blessed it every
+        time. Measured on the live board 2026-08-08: judgment frozen since Aug 5, header said
+        Aug 8. Both halves are pinned here, because fixing either one alone leaves the hole.
+        """
+        self.assertNotEqual(self.b["meta"]["updated"],
+                            self.b["meta"]["rankings"]["synthesized"],
+                            "this fixture cannot distinguish the two dates")
+        html = self.write_html(json.loads(json.dumps(self.b)),
+                               prose=self.synth_prose(self.b["meta"]["updated"]))
+        self.only(V.check_html(self.b, html), "visible date")
+
+    def test_a_page_with_no_synthesis_line_at_all_is_refused(self):
+        """Insight 008 on the reader itself: findall returning nothing produced zero mismatches,
+        which reads exactly like agreement. Deleting the line from the template must not be the
+        way to make this check quiet."""
+        html = self.write_html(json.loads(json.dumps(self.b)), prose="<p>no date here</p>")
+        self.only(V.check_html(self.b, html), "no 'Rankings synthesized")
 
 
 class TestPdf(unittest.TestCase):
+    def real_board(self):
+        with open(V.BOARD, encoding="utf-8") as f:
+            return json.load(f)
+
     def test_a_missing_cheat_sheet_is_refused(self):
-        self.assertTrue(V.check_pdf([{"name": "x"}], "/nonexistent/none.pdf"))
+        self.assertTrue(V.check_pdf({"meta": {}, "players": [{"name": "x"}]},
+                                    "/nonexistent/none.pdf"))
 
     def test_the_real_cheat_sheet_carries_every_board_row(self):
         """Was born red at '24 of 174' -- all 10 K and all 14 DEF were absent. U6's generator
@@ -606,17 +646,120 @@ class TestPdf(unittest.TestCase):
         The paired negative control below is what keeps this honest: a check that passes because
         the extractor silently returns nothing would satisfy this assertion too.
         """
-        with open(V.BOARD, encoding="utf-8") as f:
-            rows = json.load(f)["players"]
-        self.assertEqual(V.check_pdf(rows), [])
+        self.assertEqual(V.check_pdf(self.real_board()), [])
 
     def test_a_player_who_is_not_on_the_sheet_is_reported(self):
         """Positive control on the instrument. If extract_text returned '' for any reason, the
         test above would pass while proving nothing -- docs/insights/008."""
-        problems = V.check_pdf([{"name": "Zzyzx Nonexistent"}])
+        d = self.real_board()
+        d["players"] = [{"name": "Zzyzx Nonexistent"}]
+        problems = V.check_pdf(d)
         self.assertTrue(problems, "check_pdf found a player who cannot be on the sheet, so its "
                                   "text extraction is not actually reading the PDF")
         self.assertIn("1 of 1", problems[0])
+
+    def test_the_sheets_footer_date_is_read_and_agrees(self):
+        """The cheat sheet prints the synthesis date too, and nothing read it -- the HTML's date
+        was guarded and the PDF's was not, so the same false claim shipped on the one surface
+        with no comment channel to warn you it is wrong."""
+        self.assertEqual(V.check_pdf(self.real_board()), [])
+
+    def test_a_wrong_synthesis_date_in_meta_is_caught_on_the_SHEET(self):
+        """Positive control on the footer reader specifically. Without this, a footer regex that
+        matched nothing would report no mismatch, and 'no mismatch' reads as 'they agree'."""
+        d = self.real_board()
+        d["meta"]["rankings"] = dict(d["meta"]["rankings"], synthesized="1999-01-01")
+        problems = V.check_pdf(d)
+        self.assertTrue(any("cheat sheet says rankings were synthesized" in p for p in problems),
+                        f"the footer reader did not register a reading; got {problems}")
+
+
+class TestRankingsProvenance(GateCase):
+    """meta.rankings is the only assertion on this board that the generator refuses to generate.
+
+    Everything else the gate checks, it checks against another copy of itself. This one is pinned
+    the last time a human actually re-ranked, so a board can be perfectly self-consistent and
+    still fail here -- which is the entire point.
+    """
+
+    def test_a_matching_digest_passes(self):
+        self.assertEqual(V.check_rankings_provenance(self.b), [])
+
+    def test_a_moved_ranking_without_a_restamp_is_REFUSED(self):
+        b = json.loads(json.dumps(self.b))
+        b["players"][0]["pr"] = 99
+        self.only(V.check_rankings_provenance(b), "RANKINGS MOVED")
+
+    def test_the_refusal_names_the_way_out(self):
+        b = json.loads(json.dumps(self.b))
+        b["players"][0]["tier"] = 7
+        self.only(V.check_rankings_provenance(b), "--rankings-synthesized")
+
+    def test_a_missing_rankings_key_is_refused(self):
+        b = json.loads(json.dumps(self.b))
+        del b["meta"]["rankings"]
+        self.only(V.check_rankings_provenance(b), "meta.rankings is missing")
+
+    def test_an_empty_digest_is_refused_rather_than_treated_as_agreement(self):
+        b = json.loads(json.dumps(self.b))
+        b["meta"]["rankings"]["judgment"] = ""
+        self.only(V.check_rankings_provenance(b), "nothing pins the synthesis date")
+
+    def test_a_non_iso_synthesis_date_is_refused(self):
+        b = json.loads(json.dumps(self.b))
+        b["meta"]["rankings"]["synthesized"] = "Aug 5, 2026"
+        self.only(V.check_rankings_provenance(b), "not an ISO date")
+
+    # ---- what the digest must and must not notice -------------------------------------------
+
+    def moved(self, fn):
+        b = json.loads(json.dumps(self.b))
+        fn(b["players"])
+        return V.judgment_sha(b["players"]) != V.judgment_sha(self.b["players"])
+
+    def test_every_judgment_field_moves_the_digest(self):
+        self.assertTrue(self.moved(lambda p: p[0].__setitem__("pr", 99)), "pr")
+        self.assertTrue(self.moved(lambda p: p[0].__setitem__("tier", 9)), "tier")
+        self.assertTrue(self.moved(lambda p: p[0].__setitem__("note", "new read")), "note")
+        self.assertTrue(self.moved(lambda p: p[0].__setitem__("badges", ["T"])), "badges")
+        self.assertTrue(self.moved(lambda p: p.pop(0)), "a dropped player")
+
+    def test_a_DATA_CORRECTION_does_not_move_the_digest(self):
+        """c6379d78 rewrote `"team": "JAC"` to `"JAX"` on eight rows and re-ranked nobody. If that
+        forced the synthesis date forward, the fix for a lying date would make the date lie."""
+        self.assertFalse(self.moved(lambda p: p[0].__setitem__("team", "JAX")), "a team code")
+        self.assertFalse(self.moved(lambda p: p[0].__setitem__("name", "A. One")), "a rendering")
+
+    def test_REGENERATED_values_do_not_move_the_digest(self):
+        """vorp/vbdRank/vbdDelta are derived from pr and the curve. Including them would fire on
+        every curve rebuild -- a red that means nothing trains people to restamp reflexively."""
+        self.assertFalse(self.moved(
+            lambda p: [x.__setitem__("vorp", x["vorp"] + 1) for x in p]), "vorp")
+        self.assertFalse(self.moved(
+            lambda p: [x.__setitem__("vbdRank", 0) for x in p]), "vbdRank")
+
+    def test_row_ORDER_does_not_move_the_digest(self):
+        self.assertFalse(self.moved(lambda p: p.reverse()))
+
+    def test_validate_actually_calls_this_check(self):
+        """THE CALL SITE (insight 013), and it was missing -- CONFIRMED BY MUTATION, not assumed.
+
+        Every test above calls `check_rankings_provenance` directly. Cutting
+        `problems += check_rankings_provenance(d)` out of `validate()` left all eleven of them
+        green and the whole 534-test suite green with it: eleven tests for the function, none for
+        its wiring. The third time this repo has made the same mistake.
+        """
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, tmp, True)
+        with open(V.BOARD, encoding="utf-8") as f:
+            board = json.load(f)
+        board["players"][0]["pr"] = 999           # a re-rank nobody recorded
+        p = os.path.join(tmp, "players_data.json")
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump(board, f, ensure_ascii=False)
+        problems = V.validate(board_path=p)
+        self.assertTrue(any("RANKINGS MOVED" in x for x in problems),
+                        f"validate() never ran the rankings check: {problems}")
 
 
 class TestTheExecutionGate(unittest.TestCase):

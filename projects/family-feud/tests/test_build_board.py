@@ -26,6 +26,7 @@ sys.path.insert(0, os.path.join(ROOT, "draft-kit"))
 
 import build_board as B  # noqa: E402
 import render_pdf as RP  # noqa: E402
+import validate_board as V  # noqa: E402
 
 
 def sha(path):
@@ -493,6 +494,69 @@ class TestSlotRangesAreDerived(unittest.TestCase):
         board = B.read_board()
         self.assertEqual([e["slot"] for e in board["strategy"]["slotNotes"]],
                          B.strategy_slot_ranges(board["meta"]["shape"]))
+
+
+class TestRankingsAreCarriedNotGenerated(unittest.TestCase):
+    """The one fact the generator refuses to generate, and the reason the gate's check is not
+    vacuous.
+
+    CONFIRMED BY MUTATION: changing `enrich` to `dict(carried, judgment=G.judgment_sha(players))`
+    -- which looks like a tidy-up and reads like "keep the digest current" -- left the entire
+    suite green while destroying the whole mechanism. A recomputed digest agrees with the rows by
+    construction, so `check_rankings_provenance` would pass on every board forever, including one
+    whose rankings had silently moved. That is residue #3's disease exactly: a check comparing the
+    board to another copy of itself.
+    """
+
+    def ledger(self):
+        with open(B.LEDGER, encoding="utf-8") as f:
+            return json.load(f)
+
+    def enriched(self, src, **kw):
+        ledger = self.ledger()
+        return B.enrich(src, fixture_shape(), ledger, ledger.get("meta") or {},
+                        B.team_names(), generator_sha="test", **kw)
+
+    def test_a_STALE_digest_is_carried_through_untouched_so_the_gate_can_see_it(self):
+        src = B.read_board()
+        src["meta"]["rankings"] = dict(src["meta"]["rankings"], judgment="0000staleff000000")
+        out = self.enriched(src)
+        self.assertEqual(out["meta"]["rankings"]["judgment"], "0000staleff000000",
+                         "enrich() 'fixed' the digest, which makes the gate's check vacuous")
+        self.assertTrue(V.check_rankings_provenance(out),
+                        "a board carrying a stale digest must still be refused by the gate")
+
+    def test_the_synthesis_date_is_carried_and_never_advanced_to_today(self):
+        src = B.read_board()
+        src["meta"]["rankings"] = dict(src["meta"]["rankings"], synthesized="2020-01-01")
+        out = self.enriched(src)
+        self.assertEqual(out["meta"]["rankings"]["synthesized"], "2020-01-01")
+        self.assertNotEqual(out["meta"]["rankings"]["synthesized"], out["meta"]["updated"])
+
+    def test_the_flag_restamps_BOTH_the_date_and_the_digest(self):
+        src = B.read_board()
+        src["meta"]["rankings"] = dict(src["meta"]["rankings"], judgment="0000staleff000000")
+        out = self.enriched(src, rankings_synthesized="2026-08-12")
+        self.assertEqual(out["meta"]["rankings"]["synthesized"], "2026-08-12")
+        self.assertEqual(out["meta"]["rankings"]["judgment"], V.judgment_sha(out["players"]))
+        self.assertEqual(V.check_rankings_provenance(out), [])
+
+    def test_a_non_iso_restamp_is_refused_rather_than_written(self):
+        with self.assertRaises(B.Refuse) as ctx:
+            self.enriched(B.read_board(), rankings_synthesized="Aug 12")
+        self.assertIn("not an ISO date", str(ctx.exception))
+
+    def test_a_source_with_no_rankings_key_refuses_and_says_how_to_seed_it(self):
+        src = B.read_board()
+        del src["meta"]["rankings"]
+        with self.assertRaises(B.Refuse) as ctx:
+            self.enriched(src)
+        self.assertIn("--rankings-synthesized", str(ctx.exception))
+
+    def test_the_LIVE_board_agrees_with_its_own_pinned_digest(self):
+        """The board Briggsy actually drafts from. If this goes red, the rankings moved and no
+        surface is saying so."""
+        self.assertEqual(V.check_rankings_provenance(B.read_board()), [])
 
 
 class TestManifest(unittest.TestCase):

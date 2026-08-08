@@ -281,17 +281,26 @@ def _header(c, source, page_no, pages_hint):
     c.drawString(26, 550, f"Marks:  {glyphs}")
 
 
+def _human_date(iso):
+    """ISO -> "Aug 5, 2026". Same rendering the HTML header and the gate's parser agree on."""
+    try:
+        d = _dt.date.fromisoformat(str(iso))
+        return f"{d:%b} {d.day}, {d.year}"
+    except ValueError:
+        return str(iso)
+
+
 def _footer(c, source, page_no, total):
     meta = source["meta"]
     c.setFont("Helvetica", 6.4)
     c.setFillColor(FAINT)
-    updated = str(meta.get("updated", ""))
-    try:
-        d = _dt.date.fromisoformat(updated)
-        updated = f"{d:%b} {d.day}, {d.year}"        # "Aug 8, 2026", not "2026-08-08"
-    except ValueError:
-        pass
-    c.drawString(26, 20, f"Synthesized {updated} · tuned to "
+    # TWO DATES, because they are two facts and printing one of them under the other's name is the
+    # defect this replaced. `rankings.synthesized` is when a human last re-ranked; `updated` is
+    # when this sheet was generated. On paper you need both: the first tells you how stale the
+    # judgment is, the second tells you whether you are holding last week's printout.
+    synth = _human_date((meta.get("rankings") or {}).get("synthesized", ""))
+    built = _human_date(meta.get("updated", ""))
+    c.drawString(26, 20, f"Rankings synthesized {synth} · sheet built {built} · tuned to "
                          f"{meta.get('league', '')} scoring. Left # = position rank · "
                          f"right edge = overall board rank.")
     c.drawRightString(PAGE[0] - 26, 20,

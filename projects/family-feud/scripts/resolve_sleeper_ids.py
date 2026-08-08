@@ -160,11 +160,24 @@ def resolve(board, cache, ledger):
     players = cache["players"]
     by_slot = index_by_slot(players)
     known_teams = {p.get("team") for p in players.values() if p.get("team")}
+    prior_ids = ledger.get("ids") or {}
+    unresolved = {u["name"]: u for u in ledger.get("unresolved", [])}
+    board_names = [r["name"] for r in board]
     entries, problems = {}, []
 
-    # Precondition, asserted rather than trusted: every board team code is one Sleeper uses.
-    # The board said "JAC" for eight Jacksonville rows while Sleeper's dump AND its live picks
-    # both say "JAX", which silently disabled the engine's (team,pos) escalation for one team.
+    # -- preconditions, each asserted rather than trusted --------------------------------
+
+    # The ledger is keyed by board name, so two rows sharing a name would collapse into one
+    # entry -- and the duplicate-id sweep below would never see the collision, because there
+    # would only be one entry to compare.
+    dup_names = sorted(n for n, c in Counter(board_names).items() if c > 1)
+    if dup_names:
+        problems.append(f"the board has duplicate name(s): {dup_names}. The ledger is keyed by "
+                        f"name, so these cannot be told apart. Rename or remove one.")
+
+    # Every board team code must be one Sleeper uses. The board said "JAC" for eight
+    # Jacksonville rows while Sleeper's dump AND its live picks both say "JAX", which silently
+    # disabled the engine's (team,pos) escalation for one team.
     stray = sorted({r["team"] for r in board if r.get("team")} - known_teams)
     if stray:
         problems.append(
@@ -172,13 +185,61 @@ def resolve(board, cache, ledger):
             f"those rows returns nothing -- resolution AND the engine's unmatched-pick "
             f"escalation are both dead for them. Fix the board, not this script.")
 
+    # The whole id scheme assumes the dump's key IS the player's id. Everything downstream --
+    # every by-key re-assertion below, and every consumer that looks a pick's player_id up --
+    # is nonsense if that is false.
+    miskeyed = sorted(k for k, p in players.items() if p.get("player_id") != k)[:5]
+    if miskeyed:
+        problems.append(f"the pinned dump is keyed inconsistently with player_id: {miskeyed}")
+
+    # APPEND-ONLY MEANS NOTHING MAY VANISH. `entries` is rebuilt from the board each run and
+    # then replaces `ids` wholesale, so a row that is renamed or deleted would take its frozen
+    # id with it -- silently, with the printed count unchanged. A rename is the dangerous half:
+    # the new name has no prior, so it re-resolves from scratch and can freeze a DIFFERENT
+    # man's id while every other check passes.
+    orphans = sorted(set(prior_ids) - set(board_names))
+    if orphans:
+        problems.append(
+            f"the ledger holds {len(orphans)} frozen id(s) whose board row is gone: {orphans}. "
+            f"A renamed row would silently re-resolve under its new name and could freeze a "
+            f"different player; a deleted row would drop its id. Adjudicate: if the row was "
+            f"renamed, rename its ledger key to match; if it really left the board, delete the "
+            f"entry deliberately.")
+
+    # `unresolved` is a recorded decision, not a wildcard. It must name a real board row, and
+    # it must never shadow a row that already has a frozen id -- the script's own remediation
+    # message used to advise exactly that, which DELETED the id it told you to protect.
+    rows_by_name = {r["name"]: r for r in board}
+    for name, rec in sorted(unresolved.items()):
+        if name not in rows_by_name:
+            problems.append(f"unresolved entry {name!r} is not a board row")
+        if name in prior_ids:
+            problems.append(
+                f"unresolved entry {name!r} already has a frozen id "
+                f"({prior_ids[name].get('sleeperId')}). Listing it as unresolved would delete "
+                f"that id. Remove it from 'unresolved', or delete the frozen entry on purpose.")
+        for field in ("reason", "approved_on"):
+            if not rec.get(field):
+                problems.append(f"unresolved entry {name!r} has no {field!r}")
+        # A parked row that resolves again must be un-parked deliberately. Left alone it would
+        # sit in `ids` AND `unresolved` at once, which no consumer can interpret -- and while
+        # parked it carries no frozen id, so it is still joining on a name that drifts.
+        if name in rows_by_name:
+            tier, cands = candidates(rows_by_name[name], by_slot)
+            if tier == "exact_norm" and len(cands) == 1:
+                problems.append(
+                    f"unresolved entry {name!r} now resolves cleanly to "
+                    f"{cands[0].get('player_id')}. Remove it from 'unresolved' and re-run.")
+
+    # -- resolution ----------------------------------------------------------------------
+
     for row in board:
         name = row["name"]
-        prior = (ledger.get("ids") or {}).get(name)
+        prior = prior_ids.get(name)
         tier, cands = candidates(row, by_slot)
 
         if len(cands) != 1:
-            if name in {u["name"] for u in ledger.get("unresolved", [])}:
+            if name in unresolved:
                 continue    # a recorded decision, not a silent gap
             if not cands:
                 problems.append(
@@ -195,11 +256,23 @@ def resolve(board, cache, ledger):
         cand = cands[0]
         pid = cand.get("player_id")
 
-        # Re-assert after the fact: a flip on either field is a different man or a stale dump.
-        if cand.get("position") != row.get("pos") or cand.get("team") != row.get("team"):
-            problems.append(f"{name!r} resolved to {pid} but the dump says "
-                            f"{cand.get('position')}/{cand.get('team')} and the board says "
-                            f"{row.get('pos')}/{row.get('team')}")
+        # A LONE SHARED-TOKEN CANDIDATE IS NOT AN IDENTIFICATION, AND IS ROUTINELY A TEAMMATE.
+        # Six board rows have a same-position teammate sharing exactly one token, so the moment
+        # a name re-renders (or a trade moves the real man off that team) tier 1 goes empty and
+        # tier 2 returns precisely ONE candidate: the teammate. "Marvin Harrison" shares
+        # 'harrison' with Harrison Wallace, also ARI/WR -- and every downstream check passes,
+        # because Wallace really is a WR on ARI. Auto-accepting that freezes the wrong man
+        # permanently. The engine may use this rule to RAISE A WARNING a human reads; a
+        # one-time permanent freeze is a different act and needs a human either way.
+        if tier == "shared_token" and not (prior and prior.get("sleeperId") == pid):
+            shared = sorted(tokens(name) & tokens(dump_name(cand)))
+            problems.append(
+                f"{name!r} ({row.get('pos')}/{row.get('team')}) matched ONLY by shared token "
+                f"{shared} -- proposing but NOT accepting:\n"
+                f"       {describe(cand)}\n"
+                f"       A lone shared-token match is often a same-position teammate. Confirm "
+                f"this is the same man, then paste the id into the ledger by hand to approve "
+                f"it; a later run will honour it.")
             continue
 
         # Cheap, and it catches the rookie/veteran collision that actually matters.
@@ -236,11 +309,40 @@ def resolve(board, cache, ledger):
             },
         }
 
+    # -- post-resolution re-assertion, BY KEY -------------------------------------------
+    #
+    # Not a re-check of what resolution just did. Resolution draws candidates out of the
+    # (team,pos) bucket, so comparing the chosen candidate's team/pos back against the row is a
+    # branch that cannot execute -- it agrees by construction, which is a verification step
+    # that can never fail loudly (insight 006). Looking the FROZEN id up by key is a different
+    # question with a different answer: a refreshed dump can drop a player or re-key him, and
+    # then the ledger points at nothing, or at somebody else entirely.
+    for name, entry in sorted(entries.items()):
+        rec = players.get(entry["sleeperId"])
+        row = next(r for r in board if r["name"] == name)
+        if rec is None:
+            problems.append(f"{name!r} is frozen at {entry['sleeperId']} but that id is not in "
+                            f"the pinned dump at all -- Sleeper dropped or re-keyed him")
+            continue
+        if rec.get("position") != row.get("pos") or rec.get("team") != row.get("team"):
+            problems.append(
+                f"{name!r} is frozen at {entry['sleeperId']}, but that id is now "
+                f"{rec.get('position')}/{rec.get('team')} in the dump while the board says "
+                f"{row.get('pos')}/{row.get('team')} -- a different man, or a stale board")
+
     # A duplicate id is "one pick removes two board rows" arriving by a new road.
     dupes = {i: n for i, n in Counter(e["sleeperId"] for e in entries.values()).items() if n > 1}
-    for pid, n in dupes.items():
+    for pid, n in sorted(dupes.items()):
         who = sorted(k for k, v in entries.items() if v["sleeperId"] == pid)
         problems.append(f"id {pid} is claimed by {n} board rows: {who}")
+
+    # Coverage as a SET, not arithmetic. Counting `len(entries) + len(unresolved)` double-counts
+    # any name in both, and a stale unresolved entry could make the total come out right while
+    # a real board row had no id at all.
+    uncovered = sorted(set(board_names) - set(entries) - set(unresolved))
+    if uncovered and not problems:
+        problems.append(f"{len(uncovered)} board row(s) have neither an id nor a recorded "
+                        f"decision: {uncovered[:10]}")
 
     return entries, problems
 
@@ -296,20 +398,25 @@ def main(argv=None):
         entries, problems = resolve(board, cache, ledger)
 
         if problems:
-            print(f"!! {len(problems)} row(s) need adjudication -- NOTHING WAS WRITTEN\n")
+            print(f"!! {len(problems)} problem(s) need adjudication -- NOTHING WAS WRITTEN\n")
             for p in problems:
                 print(f"  - {p}")
-            print("\nResolve each by hand: fix the board, or add the row to the ledger's "
-                  "'unresolved' list with a reason and an approved_on date.")
-            return 1
-
-        covered = len(entries) + len(ledger.get("unresolved", []))
-        if covered != len(board):
-            print(f"!! {covered} of {len(board)} board rows accounted for -- refusing to write")
+            # This used to say "or add the row to the ledger's 'unresolved' list", which for a
+            # row that ALREADY had a frozen id deleted that id -- the tool advising the operator
+            # to destroy the one thing it exists to protect. resolve() now refuses that state
+            # outright, and the wording no longer suggests it.
+            print("\nResolve each by hand. Options, in order of preference:\n"
+                  "  1. fix the board (a wrong team code, a name that drifted from Sleeper's)\n"
+                  "  2. approve a proposed id by pasting it into the ledger's 'ids' by hand\n"
+                  "  3. for a row that genuinely cannot resolve AND has no frozen id yet, add\n"
+                  "     it to 'unresolved' with a reason and an approved_on date")
             return 1
 
         merged = dict(ledger)
         merged["ids"] = entries
+        # A shallow dict() shares the SAME list object, which made --verify's unresolved check
+        # compare a list to itself -- a branch that could never fire.
+        merged["unresolved"] = [dict(u) for u in ledger.get("unresolved", [])]
         merged["meta"] = {
             "dump_fetched_at": cache["fetched_at"],
             "dump_source": cache.get("source", DUMP_URL),
@@ -337,10 +444,10 @@ def main(argv=None):
                 for name, (a, b) in sorted(moved.items()):
                     print(f"  - {name!r}: ledger={a} dump={b}")
                 return 1
-            if {u["name"] for u in ledger.get("unresolved", [])} != \
-                    {u["name"] for u in merged["unresolved"]}:
-                print("!! the unresolved list changed")
-                return 1
+            # There is deliberately no separate unresolved check here. The old one compared the
+            # list against a copy of itself and could never fire; the question worth asking --
+            # "does anything parked in 'unresolved' now resolve?" -- is asked by resolve(), so
+            # it fires in BOTH modes rather than only under --verify.
             print(f"ledger verified: {len(entries)} ids, "
                   f"{len(merged['unresolved'])} unresolved, dump {cache['fetched_at']}")
             if old_bytes != new_bytes:

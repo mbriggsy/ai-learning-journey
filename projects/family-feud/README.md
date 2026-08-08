@@ -33,6 +33,10 @@ draft-kit/       the draft-day arsenal (run the engine from in here)
   draft_engine.py                    players_data.json
   family-feud-draft-board.html       family-feud-cheat-sheet.pdf
   draft_rankings_data_2026-08-05.json   ⛔ drifted — see TODO, do not carry forward
+  normalize.py     the ONE name normalizer. Rules live here as data; norm_spec.json
+                   and the board's JS are both generated from it. Never fork it.
+  sleeper_ids.json every board row's frozen Sleeper id. Append-only ledger.
+  cache/           the pinned /players/nfl dump the ids were resolved against.
 
 newsletter/      The Nightly Feud machinery + the mule
                  data/inbox/   mule cargo (gitignored — a cache, not source)
@@ -43,7 +47,10 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         refuses picks from a different draft
                  watch_draft_state.py — reads mule cargo; writes an alert when the
                                         draft becomes real. Never a notification.
-tests/           72 tests: python -m unittest discover -s tests  (run from the root)
+                 resolve_sleeper_ids.py — resolves board rows to Sleeper ids against
+                                        the pinned dump. Hard-stops rather than guess.
+tests/           152 tests: python -m unittest discover -s tests  (run from the root)
+                 fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```
 

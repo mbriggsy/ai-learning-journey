@@ -201,20 +201,30 @@ class BoardSweep(unittest.TestCase):
     def test_every_board_name_normalizes_to_a_distinct_key(self):
         players, _ = board_names()
         self.assertEqual(len(players), 174, "board size changed -- re-verify this sweep")
-        keys = {}
-        for name in players:
-            keys.setdefault(normalize.norm(name), []).append(name)
-        collisions = {k: v for k, v in keys.items() if len(v) > 1}
-        self.assertEqual(collisions, {},
+        self.assertEqual(self.sweep(players), {},
                          "two board rows share a norm() key -- one pick would remove both")
 
-    def test_the_collision_sweep_can_actually_fail(self):
-        """Positive control. A sweep that cannot go red proves nothing (amendment 4)."""
-        colliding = ["Marvin Harrison Jr.", "Marvin Harrison"]
+    @staticmethod
+    def sweep(names):
+        """The sweep itself, in one place, so the test above and its control share it.
+
+        Previously the control re-implemented this inline and asserted len(keys) == 1, which
+        never touched the real sweep's failure predicate -- reduced, it was just the golden
+        vector norm('Marvin Harrison Jr.') == norm('Marvin Harrison'), already covered above.
+        A control that does not exercise the thing it controls is not a control.
+        """
         keys = {}
-        for name in colliding:
+        for name in names:
             keys.setdefault(normalize.norm(name), []).append(name)
-        self.assertEqual(len(keys), 1, "the sweep's own detection logic is broken")
+        return {k: v for k, v in keys.items() if len(v) > 1}
+
+    def test_the_collision_sweep_can_actually_fail(self):
+        """Positive control on the SWEEP, via the same function the real check calls."""
+        self.assertEqual(self.sweep(["Marvin Harrison Jr.", "Marvin Harrison"]),
+                         {"marvinharrison": ["Marvin Harrison Jr.", "Marvin Harrison"]},
+                         "the sweep failed to report a collision it was handed")
+        self.assertEqual(self.sweep(["Ja'Marr Chase", "Bijan Robinson"]), {},
+                         "the sweep reported a collision between two distinct names")
 
     def test_every_board_name_is_a_string(self):
         players, dst = board_names()

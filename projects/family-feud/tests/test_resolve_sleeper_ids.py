@@ -119,19 +119,71 @@ class OneCandidate(Harness):
         self.assertEqual(e["evidence"]["matched"], "exact_norm")
 
 
-class TierTwoFallback(Harness):
-    """The shared-token tier. Unreachable on today's board, so it is exercised on purpose."""
+class TierTwoNeverAutoAccepts(Harness):
+    """The shared-token tier PROPOSES; it never freezes.
 
-    def test_a_re_rendered_surname_still_resolves_via_shared_token(self):
+    An adversarial review found the hole this class now pins. A lone shared-token candidate
+    reads like a clean resolve -- len(cands) == 1, every downstream check passes -- but on this
+    board it is routinely a SAME-POSITION TEAMMATE. Six rows have one: Bijan/Brian Robinson,
+    Josh/Kyle Allen, Burrow/Flacco, Marvin Harrison/Harrison Wallace, Stafford/Matthew Caldwell,
+    Worthy/Loyd. One trade plus one re-rendered name empties tier 1 and leaves tier 2 returning
+    exactly ONE candidate: the teammate. Auto-accepting freezes the wrong man permanently.
+
+    The engine may use (team,pos)+token to raise a WARNING a human reads. A permanent freeze is
+    a different act and needs a human either way.
+    """
+
+    def test_a_lone_shared_token_candidate_is_proposed_not_frozen(self):
         # Sleeper drops the compound surname; no exact normalized match exists.
         self.write_board([board_row(1, "Jaxon Smith-Njigba", "WR", "SEA")])
         self.write_cache([dump_player("9999", "Jaxon", "Njigba", "SEA", "WR")])
         rc, out = self.run_resolver()
+        self.assertEqual(rc, 1)
+        self.assertIn("matched ONLY by shared token", out)
+        self.assertIn("['jaxon']", out)
+        self.assertIn("id=9999", out, "the operator cannot approve what is not shown")
+        self.assertFalse(os.path.exists(self.ledger_path))
+
+    def test_the_teammate_trap_that_forced_this_rule(self):
+        """The reviewer's reproduction, in miniature: the real man has moved teams and the
+        board re-rendered his name, so the only shared-token candidate is his ex-teammate."""
+        self.write_board([board_row(1, "Marvin Harrison", "WR", "ARI")])
+        self.write_cache([dump_player("11628", "Marvin", "Harrison", "CLE", "WR"),
+                          dump_player("13670", "Harrison", "Wallace", "ARI", "WR", years_exp=0)])
+        rc, out = self.run_resolver()
+        self.assertEqual(rc, 1, "a teammate was frozen as the board row")
+        self.assertIn("13670", out)
+        self.assertIn("teammate", out)
+        self.assertFalse(os.path.exists(self.ledger_path))
+
+    def test_an_operator_approved_shared_token_id_is_honoured_afterwards(self):
+        """Approval is pasting the id into the ledger by hand. A later run must accept it
+        silently -- otherwise the adjudication has to be repeated forever."""
+        self.write_board([board_row(1, "Jaxon Smith-Njigba", "WR", "SEA")])
+        self.write_cache([dump_player("9999", "Jaxon", "Njigba", "SEA", "WR")])
+        self.write_ledger({"ids": {"Jaxon Smith-Njigba": {
+            "sleeperId": "9999", "resolved_on": "2026-08-07",
+            "dump_fetched_at": "2026-08-07T00:00:00+00:00",
+            "evidence": {"team": "SEA", "pos": "WR", "matched": "manual",
+                         "matched_token": ["jaxon"], "dump_name": "Jaxon Njigba"}}},
+            "unresolved": []})
+        rc, out = self.run_resolver()
         self.assertEqual(rc, 0, out)
-        e = self.ledger()["ids"]["Jaxon Smith-Njigba"]
-        self.assertEqual(e["sleeperId"], "9999")
-        self.assertEqual(e["evidence"]["matched"], "shared_token")
-        self.assertEqual(e["evidence"]["matched_token"], ["jaxon"])
+        self.assertEqual(self.ledger()["ids"]["Jaxon Smith-Njigba"]["sleeperId"], "9999")
+
+    def test_an_approved_id_that_stops_matching_still_hard_stops(self):
+        """Approval freezes ONE id, it does not bless the row forever."""
+        self.write_board([board_row(1, "Jaxon Smith-Njigba", "WR", "SEA")])
+        self.write_cache([dump_player("7777", "Jaxon", "Njigba", "SEA", "WR")])
+        self.write_ledger({"ids": {"Jaxon Smith-Njigba": {
+            "sleeperId": "9999", "resolved_on": "2026-08-07",
+            "dump_fetched_at": "2026-08-07T00:00:00+00:00",
+            "evidence": {"team": "SEA", "pos": "WR", "matched": "manual",
+                         "matched_token": ["jaxon"], "dump_name": "Jaxon Njigba"}}},
+            "unresolved": []})
+        rc, out = self.run_resolver()
+        self.assertEqual(rc, 1)
+        self.assertIn("7777", out)
 
     def test_tier_one_wins_when_both_tiers_would_match(self):
         """The whole reason tier 1 exists: a teammate at the same position sharing one token.
@@ -328,18 +380,204 @@ class AppendOnly(Harness):
         self.assertEqual(len(self.ledger()["unresolved"]), 1)
 
 
-class Verify(Harness):
-    def test_verify_writes_nothing_and_fails_on_a_stale_ledger(self):
+class NothingMayVanish(Harness):
+    """`entries` is rebuilt from the board each run and then REPLACES `ids` wholesale, so any
+    row that leaves the board by name takes its frozen id with it -- silently. A rename is the
+    dangerous half: the new name has no prior, so it re-resolves from scratch and can freeze a
+    different man while the printed count stays identical.
+
+    Found by adversarial review; the module docstring claimed append-only and the code was not.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.write_board([board_row(1, "Bijan Robinson", "RB", "ATL")])
+        self.write_cache([dump_player("9509", "Bijan", "Robinson", "ATL", "RB"),
+                          dump_player("8154", "Brian", "Robinson", "ATL", "RB", years_exp=4)])
+        self.assertEqual(self.run_resolver()[0], 0)
+
+    def test_a_renamed_board_row_is_a_hard_stop_not_a_silent_reresolve(self):
+        self.write_board([board_row(1, "Brian Robinson", "RB", "ATL")])
+        rc, out = self.run_resolver()
+        self.assertEqual(rc, 1, "a rename silently re-froze a different player")
+        self.assertIn("Bijan Robinson", out)
+        self.assertIn("board row is gone", out)
+        self.assertEqual(self.ledger()["ids"]["Bijan Robinson"]["sleeperId"], "9509")
+
+    def test_a_deleted_board_row_is_a_hard_stop_not_a_silent_drop(self):
+        self.write_board([board_row(1, "Ja'Marr Chase", "WR", "CIN")])
+        self.write_cache([dump_player("9509", "Bijan", "Robinson", "ATL", "RB"),
+                          dump_player("7564", "Ja'Marr", "Chase", "CIN", "WR")])
+        rc, out = self.run_resolver()
+        self.assertEqual(rc, 1)
+        self.assertIn("Bijan Robinson", out)
+
+    def test_parking_a_row_that_already_has_a_frozen_id_is_refused(self):
+        """The script's own remediation used to advise exactly this, and following it DELETED
+        the id the unit exists to protect."""
+        led = self.ledger()
+        led["unresolved"] = [{"name": "Bijan Robinson", "reason": "x", "approved_on": "2026-08-07"}]
+        self.write_ledger(led)
+        rc, out = self.run_resolver()
+        self.assertEqual(rc, 1)
+        self.assertIn("already has a frozen id", out)
+        self.assertIn("9509", out)
+        self.assertEqual(self.ledger()["ids"]["Bijan Robinson"]["sleeperId"], "9509")
+
+    def test_the_remediation_text_no_longer_advises_the_destructive_fix(self):
+        self.write_board([board_row(1, "Bijan Robinson", "RB", "ATL"),
+                          board_row(2, "Ghost Man", "TE", "ATL")])
+        rc, out = self.run_resolver()
+        self.assertEqual(rc, 1)
+        self.assertIn("has no frozen id yet", out,
+                      "the remediation must qualify when 'unresolved' is safe")
+
+
+class LedgerHygiene(Harness):
+    def test_duplicate_board_names_are_refused(self):
+        """The ledger is name-keyed, so two rows sharing a name collapse to one entry -- and
+        the duplicate-id sweep would never see the collision, because there is only one entry."""
+        self.write_board([board_row(1, "Ja'Marr Chase", "WR", "CIN"),
+                          board_row(2, "Ja'Marr Chase", "WR", "CIN")])
+        self.write_cache([dump_player("7564", "Ja'Marr", "Chase", "CIN", "WR")])
+        rc, out = self.run_resolver()
+        self.assertEqual(rc, 1)
+        self.assertIn("duplicate name", out)
+        self.assertFalse(os.path.exists(self.ledger_path))
+
+    def test_an_unresolved_entry_that_is_not_a_board_row_is_refused(self):
+        self.write_board([board_row(1, "Ja'Marr Chase", "WR", "CIN")])
+        self.write_cache([dump_player("7564", "Ja'Marr", "Chase", "CIN", "WR")])
+        self.write_ledger({"ids": {}, "unresolved": [
+            {"name": "Nobody At All", "reason": "x", "approved_on": "2026-08-07"}]})
+        rc, out = self.run_resolver()
+        self.assertEqual(rc, 1)
+        self.assertIn("is not a board row", out)
+
+    def test_an_unresolved_entry_without_a_reason_or_date_is_refused(self):
+        self.write_board([board_row(1, "Ghost Man", "TE", "ATL")])
+        self.write_cache([dump_player("1", "Some", "Falcon", "ATL", "TE")])
+        self.write_ledger({"ids": {}, "unresolved": [{"name": "Ghost Man"}]})
+        rc, out = self.run_resolver()
+        self.assertEqual(rc, 1)
+        self.assertIn("'reason'", out)
+        self.assertIn("'approved_on'", out)
+
+    def test_a_dump_keyed_inconsistently_with_player_id_is_refused(self):
+        """Everything downstream looks a pick's player_id up as a key. If the dump's key is not
+        the id, every by-key assertion in this file is meaningless."""
+        self.write_board([board_row(1, "Ja'Marr Chase", "WR", "CIN")])
+        p = dump_player("7564", "Ja'Marr", "Chase", "CIN", "WR")
+        cache = {"source": "t", "fetched_at": "2026-08-07T00:00:00+00:00", "count": 1,
+                 "players": {"WRONG_KEY": p}}
+        R.write_cache(cache, self.cache_path)
+        rc, out = self.run_resolver()
+        self.assertEqual(rc, 1)
+        self.assertIn("keyed inconsistently", out)
+
+
+class FrozenIdReassertedByKey(Harness):
+    """The post-resolution check that CAN fail.
+
+    The original version compared the chosen candidate's team/pos back against the board row --
+    but candidates are drawn out of the (team,pos) bucket, so it agreed by construction and the
+    branch could never execute. Deleting it left the whole suite green. Insight 006 exactly.
+    Looking the FROZEN id up BY KEY asks a different question with a different answer.
+    """
+
+    def setUp(self):
+        super().setUp()
         self.write_board([board_row(1, "Ja'Marr Chase", "WR", "CIN")])
         self.write_cache([dump_player("7564", "Ja'Marr", "Chase", "CIN", "WR")])
         self.assertEqual(self.run_resolver()[0], 0)
+
+    def test_a_frozen_id_that_left_the_dump_is_a_hard_stop(self):
+        # Sleeper drops or re-keys him; a same-named record keeps the row resolving.
+        self.write_cache([dump_player("7564", "Ja'Marr", "Chase", "CIN", "WR")])
         led = self.ledger()
-        led["ids"]["Ja'Marr Chase"]["sleeperId"] = "0000"
+        led["ids"]["Ja'Marr Chase"]["sleeperId"] = "NOT_IN_DUMP"
         self.write_ledger(led)
+        rc, out = self.run_resolver()
+        self.assertEqual(rc, 1)
+        self.assertIn("NOT_IN_DUMP", out)
+
+    def test_a_frozen_id_whose_dump_record_moved_teams_is_a_hard_stop(self):
+        """The board still says CIN and still resolves to SOMEBODY there, but the frozen id now
+        points at a player on another team -- a different man, or a stale board."""
+        self.write_cache([dump_player("7564", "Ja'Marr", "Chase", "CLE", "WR"),
+                          dump_player("8888", "Ja'Marr", "Chase", "CIN", "WR")])
+        rc, out = self.run_resolver()
+        self.assertEqual(rc, 1)
+        self.assertIn("7564", out)
+
+    def test_the_clean_case_still_passes(self):
+        """Positive control -- a by-key check that rejects everything passes both tests above."""
+        rc, out = self.run_resolver()
+        self.assertEqual(rc, 0, out)
+
+
+class Verify(Harness):
+    """--verify's own code had ZERO coverage before an adversarial review pointed it out.
+
+    Its only test planted a wrong sleeperId, which makes resolve() emit a FROZEN problem, so
+    main() returned at `if problems:` -- 26 lines BEFORE `if args.verify:` was ever read. The
+    comparison, the unresolved check and the success print were all unreached, and the companion
+    "--verify wrote nothing" assertion was equally empty because the non-verify path would not
+    have written either. These tests reach the block.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.write_board([board_row(1, "Ja'Marr Chase", "WR", "CIN")])
+        self.write_cache([dump_player("7564", "Ja'Marr", "Chase", "CIN", "WR"),
+                          dump_player("9509", "Bijan", "Robinson", "ATL", "RB")])
+        self.assertEqual(self.run_resolver()[0], 0)
+
+    def test_verify_passes_and_writes_nothing_on_a_consistent_pair(self):
+        before = self.read_ledger_bytes()
+        rc, out = self.run_resolver("--verify")
+        self.assertEqual(rc, 0, out)
+        self.assertIn("ledger verified", out)
+        self.assertEqual(self.read_ledger_bytes(), before)
+
+    def test_verify_fails_when_a_board_row_has_no_entry_in_the_ledger(self):
+        """The state --verify actually exists to catch: the board moved on and the shipped
+        ledger did not. A moved id is caught earlier, by the FROZEN guard, in both modes."""
+        self.write_board([board_row(1, "Ja'Marr Chase", "WR", "CIN"),
+                          board_row(2, "Bijan Robinson", "RB", "ATL")])
         before = self.read_ledger_bytes()
         rc, out = self.run_resolver("--verify")
         self.assertEqual(rc, 1)
+        self.assertIn("Bijan Robinson", out)
         self.assertEqual(self.read_ledger_bytes(), before, "--verify wrote")
+
+    def test_a_parked_row_that_now_resolves_is_reported_in_both_modes(self):
+        """A row in 'unresolved' carries NO frozen id, so it is still joining on a name that
+        drifts. Left alone it would end up in `ids` AND `unresolved` at once. The check lives in
+        resolve(), not in the --verify branch, so a plain run catches it too."""
+        self.write_board([board_row(1, "Ja'Marr Chase", "WR", "CIN"),
+                          board_row(2, "Bijan Robinson", "RB", "ATL")])
+        self.write_ledger({"ids": {"Ja'Marr Chase": self.ledger()["ids"]["Ja'Marr Chase"]},
+                           "unresolved": [{"name": "Bijan Robinson", "reason": "was hurt",
+                                           "approved_on": "2026-08-01"}]})
+        before = self.read_ledger_bytes()
+        for mode in ([], ["--verify"]):
+            with self.subTest(mode=mode or "write"):
+                rc, out = self.run_resolver(*mode)
+                self.assertEqual(rc, 1)
+                self.assertIn("now resolves cleanly", out)
+                self.assertIn("9509", out)
+                self.assertEqual(self.read_ledger_bytes(), before, "the ledger was rewritten")
+
+    def test_verify_survives_a_refetch_that_only_moves_the_timestamp(self):
+        """Provenance drift is not a failure -- treating it as one trains the operator to
+        ignore the check that screams when a join key really moves."""
+        cache = R.read_cache(self.cache_path)
+        cache["fetched_at"] = "2099-01-01T00:00:00+00:00"
+        R.write_cache(cache, self.cache_path)
+        rc, out = self.run_resolver("--verify")
+        self.assertEqual(rc, 0, out)
+        self.assertIn("provenance only", out)
 
 
 class CacheIntegrity(Harness):

@@ -9,12 +9,13 @@
 plan  ✅ → deepen  ✅ → work  ◀ YOU ARE HERE → ultramode ⬜ (at the Phase 1 boundary, after U6)
 ```
 
-**Units shipped:** U1, U2 (Phase 0 gates) · **U9 (draft-state watcher, 2026-08-07)** — 26 tests,
-scheduled task registered and verified green, alert fires on real cargo.
+**Units shipped:** U1, U2 (Phase 0 gates) · **U9** (draft-state watcher) · **U3** (one normalizer,
+proven equal in two runtimes) · **U14** (`sleeperId` frozen — 174 ids, 0 unresolved) — all four
+verified green on 2026-08-07.
 
 **Next action: `/ce-work` on
 [`docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md`](docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md),
-starting with U3 (shared normalizer), then U14 (`sleeperId`).**
+at `{ U4 gate ∥ U5 VORP }` — the two that run in parallel. U4 is **born red** and that is correct.**
 
 **The planning phase is CLOSED.** The plan was deepened 2026-08-07 and does not get another pass.
 If something in it turns out to be wrong, fix it inside `/ce-work` — do not reopen a deepening
@@ -24,9 +25,10 @@ stopping condition, and the plan still outweighs the code (**13 commits, 5 of wh
 
 **Ultramode fires once, after U6** — one review of a working spine, not six reviews of fragments.
 
-**State:** both silent paths to advising an already-drafted player are closed, and the hauler now
-has its first consumer. **72 tests**, zero skips (`python -m unittest discover -s tests` from the
-root). What remains is the spine: one source that generates every surface.
+**State:** both silent paths to advising an already-drafted player are closed, the hauler has its
+first consumer, and the board now joins to Sleeper on a frozen id instead of a name. **152 tests**,
+zero skips (`python -m unittest discover -s tests` from the root). What remains is the spine: one
+source that generates every surface.
 
 **Everything below is detailed in**
 [`docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md`](docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md).
@@ -75,24 +77,27 @@ U9  →  U3  →  U14  →  { U4 ∥ U5 }  →  U6  →  { U7 ∥ U15 }  →  U8
   (gitignored). **Nothing to do here — but know it exists**, because it is what tells you the draft
   date appeared or moved. If it ever needs re-registering after a folder move:
   `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-watcher.ps1`
-- **U3 normalizer** — extract the shared cleaning prefix, **not just `norm()`**. `tokens()` is a
-  second normalizer in the same file repeating three of four steps. Spec owns both; JS is *generated*,
-  not hand-ported.
-- **U14 `sleeperId`** (NEW) — the unit nobody owned, though KTD-4 called it the highest-leverage change
-  in the plan. Only **160 rows** need resolving: the 14 DEF rows already carry their Sleeper id in
-  `team`. Hard-stop on 0 or ≥2 candidates; never auto-select. Append-only ledger.
-- **U4 gate ∥ U5 VORP** — U5 never depended on U4; the gate consumes its output. U4 is **born red** and
-  that's correct: two cross-surface checks fail on today's drifted surfaces.
+- ~~**U3 normalizer**~~ ✅ **SHIPPED 2026-08-07** (`522843cd`). `draft-kit/normalize.py` owns the
+  rules as data; `norm_spec.json` and the board's JS are generated from it. **Never fork it.**
+- ~~**U14 `sleeperId`**~~ ✅ **SHIPPED 2026-08-07** (`c6379d78` + hardening). 174 ids frozen, 0
+  unresolved, ledger at `draft-kit/sleeper_ids.json`, dump pinned at `draft-kit/cache/`. Standing
+  check: `python scripts/resolve_sleeper_ids.py --verify` — exit 0 means the join key still holds.
+  **A lone shared-token match is never auto-accepted** — it is routinely a same-position teammate
+  (six such pairs on this board), so it proposes and hard-stops for a human.
+- **U4 gate ∥ U5 VORP** ◀ **NEXT.** U5 never depended on U4; the gate consumes its output. U4 is
+  **born red** and that's correct: two cross-surface checks fail on today's drifted surfaces.
 - **U6 generator** — staged emit, `.last_good/`, `--verify-only`, one-refresh-one-commit.
 - **U15 engine wrapper** (NEW) — KTD-8's missing owner. Reads shape from the draft object; hard-refuses
   non-snake drafts.
 
-**Board today:** 174 players + 8 dst, `meta.updated: 2026-08-05`, **no `sleeperId` on any row**.
+**Board today:** 174 players + 8 dst, `meta.updated: 2026-08-05`. **The ids are frozen in
+`draft-kit/sleeper_ids.json`, NOT on the board rows** — every row still has no `sleeperId` field.
+Stamping them onto the board is U6's job, as the generator's output. Until U6 runs, any consumer
+must join through the ledger.
 
-**Blocking prerequisite:** no lab-feed fixture exists anywhere in the repo, so every "replay the lab
-feed" acceptance criterion currently has nothing to replay. The spent room `1390923383440424960` is
-still live (120 picks, contiguous, all carrying `player_id`) — capture it to
-`tests/fixtures/lab_feed_120.json` before U4/U5.
+~~**Blocking prerequisite:** no lab-feed fixture exists**~~ ✅ **RESOLVED** — `tests/fixtures/lab_feed_120.json`
+is committed and verified: 120 picks, `pick_no` contiguous 1→120, every pick carrying `player_id`,
+all from draft `1390923383440424960`. "Replay the lab feed" now has something to replay.
 
 **Install now, not in draft week:** `jinja2` and `reportlab` are both absent. Both are pure-Python
 `py3-none-any` wheels on 3.14.3, so it's a two-package install. `defusedxml` is already present.

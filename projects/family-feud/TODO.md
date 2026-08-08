@@ -6,35 +6,33 @@
 ## ▶ WHERE WE ARE — read this first, update it when it changes
 
 ```
-plan  ✅ → deepen  ✅ → work  ◀ YOU ARE HERE → ultramode ⬜ (at the Phase 1 boundary, after U6)
+plan  ✅ → deepen  ✅ → work  ✅ (through U6) → ultramode  ◀ YOU ARE HERE (Phase 1 boundary)
 ```
 
 **Units shipped:** U1, U2 (Phase 0 gates) · **U9** (draft-state watcher) · **U3** (one normalizer,
 proven equal in two runtimes) · **U14** (`sleeperId` frozen — 174 ids, 0 unresolved) ·
 **U4** (board schema gate, born red on 13 real findings) · **U5** (scoring as code + the empirical
-curve; oracle exact at 2469/2469) — the last two on 2026-08-08.
+curve; oracle exact at 2469/2469) · **U6** (the generator — one source, every surface) — the last
+three on 2026-08-08.
 
-**Next action: **U6, the generator** —
-[`docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md`](docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md)
-(§ U6). It is the unit that FIXES what U4 currently reports: regenerate `players_data.json`, the
-HTML and the PDF from one source, stamp the frozen ids onto the rows, render `meta.vbd`'s numbers
-from data instead of literals, and put all 174 rows in the cheat sheet instead of 150.
-**Write-all-or-write-none** — stage every surface, run the gate, and emit only on pass; the plan
-forecasts its own crash (a badge glyph Helvetica cannot encode kills the PDF *after* the HTML is
-written, leaving new HTML + old PDF + a green gate + a non-zero exit nobody reads).**
+**Next action: the ultramode review**, then `{ U7 ∥ U15 }`. It fires **once**, here, on a working
+spine — one review of generator + gate + scoring + normalizer as an integrated system, not six
+reviews of fragments.
 
 **The planning phase is CLOSED.** The plan was deepened 2026-08-07 and does not get another pass.
 If something in it turns out to be wrong, fix it inside `/ce-work` — do not reopen a deepening
-cycle. Reopening is how this project loses its thread: analysis that spawns analysis has no
-stopping condition, and the plan still outweighs the code (**13 commits, 5 of which changed code;
-15 units planned, 3 built**).
+cycle. **Three plan facts were already falsified in flight and fixed in code, not by re-planning**
+(see `docs/insights/011` and `012`): the hand-typed 32-team table (the pinned dump already had it),
+the Latin-1 glyph assertion (wrong codec — it rejects `†` and every em-dash), and the forecast PDF
+crash (reportlab does not raise; it silently substitutes ZapfDingbats). A closed plan's *decisions*
+bind; its *facts* expire.
 
-**Ultramode fires once, after U6** — one review of a working spine, not six reviews of fragments.
-
-**State:** both silent paths to advising an already-drafted player are closed, the hauler has its
-first consumer, and the board now joins to Sleeper on a frozen id instead of a name. **274 tests**,
-zero skips (`python -m unittest discover -s tests` from the root). What remains is the spine: one
-source that generates every surface.
+**State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
+passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
+gate went **13 findings → 0** by fixing surfaces. **315 tests**, zero skips
+(`python -m unittest discover -s tests` from the root). Verified by eye, not only by tests: the
+cheat sheet is one page carrying all 174 rows, and the HTML board renders shape-driven round labels
+with no invented rounds.
 
 **Everything below is detailed in**
 [`docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md`](docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md).
@@ -136,15 +134,50 @@ U9  →  U3  →  U14  →  { U4 ∥ U5 }  →  U6  →  { U7 ∥ U15 }  →  U8
   laterals, fumble-recovery TDs). Closing it means reimplementing nflverse's stat builder;
   shipping unquantified attribution error would be worse than shipping a narrower EXACT
   basis. **That is the next accuracy win if anyone wants it.**
-- **U6 generator** — staged emit, `.last_good/`, `--verify-only`, one-refresh-one-commit.
+- ~~**U6 generator**~~ ✅ **SHIPPED 2026-08-08.** `scripts/build_board.py` + `render_html.py` +
+  `render_pdf.py` + `scripts/templates/board.html`, 41 tests. **The gate went 13 → 0.**
+  - `python scripts/build_board.py` refreshes every surface · `--verify-only` is the draft-morning
+    "is my board sane?" command (gate + a sha256 per surface from `draft-kit/build_manifest.json`,
+    the only detector that covers the PDF) · `--allow-dirty` stamps `meta.build.dirty`.
+  - **Write-all-or-write-none, proven by injected crash**, both paths: a raise during staging
+    leaves the surfaces untouched; a raise *between* replaces restores from `.last_good/`.
+    Mutation-tested — deleting the restore turns the test red.
+  - **Byte-stable**: two rebuilds on a clean tree leave `git status draft-kit/` empty. This needed
+    two real fixes — reportlab stamps wall-clock time into the PDF trailer (`invariant=1`), and
+    `meta.build`/the manifest carry provenance forward when nothing else moved.
+  - **The rows now carry `sleeperId`** — consumers no longer join through the ledger. Also
+    `vorpMethod` per row, `meta.shape` from the live draft object, and
+    `meta.badges[code].glyph`, which killed the engine's fourth glyph table.
+  - **VORP is CARRIED, not recomputed** — deliberate, per KTD-6. See the note below.
 - **U15 engine wrapper** (NEW) — KTD-8's missing owner. Reads shape from the draft object; hard-refuses
-  non-snake drafts.
+  non-snake drafts. **Note:** U6 already stamps `meta.shape` (teams/rounds/starters/flex/bench/ir/
+  playoff_teams/draft_id) and already refuses non-snake and `reversal_round != 0` at BUILD time —
+  U15 is the same discipline at RUN time, and `read_shape()` in `build_board.py` is the pattern.
 
-**Board today:** 174 players + 8 dst, `meta.updated: 2026-08-05`. **The ids are frozen in
-`draft-kit/sleeper_ids.json`, NOT on the board rows** — every row still has no `sleeperId` field.
-Stamping them onto the board is U6's job, as the generator's output. Until U6 runs, any consumer
-must join through the ledger — **the engine now does** (2026-08-08), reading `sleeper_ids.json`
-from cwd and matching live picks on `player_id` before falling back to the name.
+**Board today:** 174 players + 8 derived `dst`, `meta.updated: 2026-08-08`, **every row carrying
+`sleeperId` and `vorpMethod`**, `meta.shape` stamped from draft `1390509994847240192`. Never edit
+any surface by hand — `build_manifest.json`'s sha256 will catch it, and `--verify-only` names the
+file. To change the board, edit `players_data.json`'s judgment fields and re-run the generator.
+
+---
+
+### ⚠ ONE DECISION FOR BRIGGSY — VORP is carried, not recomputed
+
+U6 did **not** overwrite skill-player `vorp`, and this is the plan's own call rather than caution:
+KTD-6 assigns skill values to **projections** and gives the curve the **replacement baselines and
+K/DEF**, and projection VORP (v2) is explicitly deferred (plan line 430).
+
+**What a recompute from the shipped curve would do, measured:** **143 of 174 rows move**, max
+|Δ| 19.8, and **VBD #1 changes hands — Gibbs 268.4 → 254.4, Chase 242.7 → 256.1.** The cause is a
+season mismatch: the board was built from a 2022-2025 curve and `build_curves.py` ships
+**2021-2024**, whose own metadata says `reproduces_aug5_board: false`.
+
+Every refresh prints this under "would-be recompute" so the choice stays visible. **Three ways
+forward, in order of my preference:**
+1. **Leave it.** Carried values + honest `vorpMethod`. Costs nothing, changes nothing.
+2. **Rebuild the curve on 2022-2025** to match the board's actual provenance, then compare again.
+   Cheap — `python scripts/build_curves.py --refetch` with `SEASONS` changed.
+3. **Build projection VORP (v2)** — the accuracy win KTD-6 actually wants. Un-deferred work.
 
 ~~**Blocking prerequisite:** no lab-feed fixture exists**~~ ✅ **RESOLVED** — `tests/fixtures/lab_feed_120.json`
 is committed and verified: 120 picks, `pick_no` contiguous 1→120, every pick carrying `player_id`,

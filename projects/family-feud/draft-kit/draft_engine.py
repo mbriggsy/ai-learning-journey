@@ -136,13 +136,27 @@ def sname(s):
 # carried player_id 9221 -- his frozen id, in our own ledger, thrown away.
 # Optional, like the cargo, and for the same reason: a missing ledger degrades to the name join
 # and SAYS SO. A silent degrade is the exact failure it exists to prevent.
-try:
-    ROW_ID = {nm: str(e["sleeperId"])
-              for nm, e in (json.load(open("sleeper_ids.json", encoding="utf-8")).get("ids")
-                            or {}).items()
-              if isinstance(e, dict) and e.get("sleeperId")}
-except Exception:
-    ROW_ID = {}
+#
+# WHERE THE ID COMES FROM CHANGED, AND THE LEDGER DID NOT GO AWAY.
+# U6 stamps `sleeperId` onto every board row and refuses to build a board where any row lacks
+# one, so the key this engine joins on now arrives WITH the board instead of from a second file
+# that had to be in the same cwd. sleeper_ids.json is still the resolver's ledger -- the
+# provenance record of how each id was established, and what `--verify` re-asserts -- but it is
+# no longer this reader's join key. That removes the state where the two disagree and the engine
+# silently prefers the older one.
+# The ledger remains the FALLBACK for a board built before U6, and a board with neither degrades
+# to the name join and SAYS SO. A silent degrade is the exact failure this block exists to prevent.
+ROW_ID = {p["name"]: str(p["sleeperId"]) for p in BOARD if p.get("sleeperId")}
+ID_SOURCE = "the board's own rows"
+if not ROW_ID:
+    try:
+        ROW_ID = {nm: str(e["sleeperId"])
+                  for nm, e in (json.load(open("sleeper_ids.json", encoding="utf-8")).get("ids")
+                                or {}).items()
+                  if isinstance(e, dict) and e.get("sleeperId")}
+        ID_SOURCE = "sleeper_ids.json"
+    except Exception:
+        ROW_ID = {}
 
 # --- contamination gate: the SECOND half of the guard in scripts/merge_picks.py ---
 # That script refuses to merge foreign picks -- and then leaves the file on disk. Its exit code is
@@ -304,19 +318,21 @@ elif SLOT_NAMES:
 
 # -- the frozen join key: present, complete, or neither --
 _covered = sum(1 for p in BOARD if ROW_ID.get(p["name"]))
-FULL_LEDGER = bool(ROW_ID) and _covered == len(BOARD)
+FULL_IDS = bool(ROW_ID) and _covered == len(BOARD)
 if not ROW_ID:
     # NB: this text deliberately avoids the literal section headings the advisory prints. Tests
     # (and eyes) split the output on those, so a warning that echoes one truncates everything
     # after it. Found the hard way -- an earlier wording here silently ate the escalation block.
-    unsure.append("no sleeper_ids.json in cwd -- picks join to the board on the rendered NAME, "
-                  "the one field that drifts. A drafted player whose name re-renders would stay "
-                  "on the available list. Run scripts/resolve_sleeper_ids.py")
-elif not FULL_LEDGER:
-    unsure.append(f"sleeper_ids.json covers {_covered} of {len(BOARD)} board rows -- the rest "
-                  f"fall back to the name join. Run scripts/resolve_sleeper_ids.py --verify")
+    unsure.append("no sleeperId on the board and no usable sleeper_ids.json in cwd -- picks join "
+                  "to the board on the rendered NAME, the one field that drifts. A drafted player "
+                  "whose name re-renders would stay on the available list. Rebuild the board with "
+                  "scripts/build_board.py")
+elif not FULL_IDS:
+    unsure.append(f"{ID_SOURCE} covers {_covered} of {len(BOARD)} board rows -- the rest fall "
+                  f"back to the name join. Rebuild with scripts/build_board.py, which refuses to "
+                  f"emit a board with an unresolved row")
 else:
-    checked.append(f"all {_covered} board rows carry a frozen sleeperId")
+    checked.append(f"all {_covered} board rows carry a frozen sleeperId (from {ID_SOURCE})")
 
 if fatal:
     print("!" * 62)
@@ -488,10 +504,10 @@ if unmatched:
                 if norm(b.get("name", "")) not in taken_keys
                 and ROW_ID.get(b.get("name", "")) not in taken_ids
                 and tokens(b.get("name", "")) & want]
-        # With a COMPLETE ledger, a pick carrying an id we do not hold is not on our 174 at all.
+        # With a COMPLETE id set, a pick carrying an id we do not hold is not on our 174 at all.
         # That inverts this warning's premise -- see below.
         scored.append((pn, nm, ps, tm, cand,
-                       bool(pid) and FULL_LEDGER and pid not in board_by_id, pid))
+                       bool(pid) and FULL_IDS and pid not in board_by_id, pid))
     hot = [s for s in scored if s[4]]
     cold = [s for s in scored if not s[4]]
 

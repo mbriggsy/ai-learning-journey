@@ -158,10 +158,17 @@ picks — before any advice is computed. A wrong seat is inside the legal range,
 produce a complete, plausible advisory for another manager's team and exit 0. A missing oracle
 never blocks the run; it prints `[unverified]` and says exactly what it could not check.
 
-**Picks join on the frozen Sleeper id, not the name.** `sleeper_ids.json` is what makes an
-already-drafted player disappear from the board even when Sleeper renders his name differently
-than we do, or he has changed teams since the board was authored. Without it the engine falls
-back to matching names — and says so.
+**Picks join on the frozen Sleeper id, not the name.** That id is what makes an already-drafted
+player disappear from the board even when Sleeper renders his name differently than we do, or he
+has changed teams since the board was authored.
+
+The engine reads it from **the board's own rows** — every row carries `sleeperId`, and the
+generator refuses to emit a board where one does not. So the war-room working directory needs
+`players_data.json`, `normalize.py` and `picks.json`, and nothing else. `sleeper_ids.json` remains
+the resolver's ledger — the provenance record of how each id was established, and what
+`resolve_sleeper_ids.py --verify` re-asserts — and it is the fallback for a board built before the
+generator existed. With neither, the engine falls back to matching names — and says so, naming
+which source it used.
 
 ## Validating the board
 

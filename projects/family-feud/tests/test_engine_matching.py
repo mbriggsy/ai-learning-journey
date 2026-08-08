@@ -20,11 +20,17 @@ ENGINE = os.path.join(ROOT, "draft-kit", "draft_engine.py")
 REAL_BOARD = os.path.join(ROOT, "draft-kit", "players_data.json")
 
 
-def row(r, name, pos, team, pr, tier=1, badges=None, vorp=10.0, vbd_rank=None, note="n"):
-    return {"r": r, "name": name, "pos": pos, "team": team, "pr": pr, "tier": tier,
-            "badges": badges if badges is not None else [], "note": note,
-            "vorp": vorp, "vbdRank": vbd_rank if vbd_rank is not None else r,
-            "vbdDelta": r - (vbd_rank if vbd_rank is not None else r)}
+def row(r, name, pos, team, pr, tier=1, badges=None, vorp=10.0, vbd_rank=None, note="n",
+        sleeper_id=None):
+    """`sleeper_id` defaults to absent on purpose: that is a pre-U6 board, and it keeps every
+    test written before the engine read the board's own id exercising the ledger FALLBACK."""
+    out = {"r": r, "name": name, "pos": pos, "team": team, "pr": pr, "tier": tier,
+           "badges": badges if badges is not None else [], "note": note,
+           "vorp": vorp, "vbdRank": vbd_rank if vbd_rank is not None else r,
+           "vbdDelta": r - (vbd_rank if vbd_rank is not None else r)}
+    if sleeper_id is not None:
+        out["sleeperId"] = str(sleeper_id)
+    return out
 
 
 def board(players):
@@ -101,6 +107,27 @@ class EngineCase(unittest.TestCase):
     def real_board(self):
         with open(REAL_BOARD, encoding="utf-8") as f:
             return json.load(f)
+
+    def real_board_without_ids(self):
+        """The real board with every `sleeperId` stripped -- the world where the NAME JOIN is the
+        only net there is.
+
+        Several tests below exist to prove that net works: the JAC/JAX bucket bug, the "he is
+        STILL on BEST AVAILABLE" warning, the "not shown" suspect wording. They used to reach it
+        for free, because the engine read its ids from sleeper_ids.json and these tests plant no
+        ledger. Once the engine started reading `sleeperId` off the board rows, the real board
+        supplied a complete id set and those picks joined by id instead -- which is the better
+        outcome, and it means the net was no longer being tested.
+
+        Worse than untested: these fixtures build picks with `pick()`, whose player_id is the pick
+        NUMBER. With a complete id set the engine correctly reads "an id we do not hold" as "not
+        one of our 174" and inverts the escalation's wording, so the test was asserting the old
+        sentence about an input that now means something else. Stripping the ids restores the
+        state each test was actually written about.
+        """
+        b = self.real_board()
+        b["players"] = [{k: v for k, v in p.items() if k != "sleeperId"} for p in b["players"]]
+        return b
 
     def warning_block(self, out):
         """Everything the engine prints BEFORE the advisory proper. Assertions about the report
@@ -207,8 +234,11 @@ class TestEscalation(EngineCase):
 
     def test_positive_control_drafted_player_still_on_best_available(self):
         """The end-to-end proof: a divergence leaves a drafted man at the top of BEST AVAILABLE,
-        and the engine must say so."""
-        b = self.real_board()
+        and the engine must say so.
+
+        Ids stripped on purpose -- with them the divergence cannot happen at all, which is the
+        point of the id join. This asserts the NAME net still works underneath it."""
+        b = self.real_board_without_ids()
         chase = next(p for p in b["players"] if "Chase" in p["name"])
         _, out = self.run_engine(b, [pick(1, "Ja'M", "Chase", chase["pos"], chase["team"])])
         self.assertIn(chase["name"], out.split("BEST AVAILABLE")[1], "he is still being recommended")
@@ -319,8 +349,11 @@ class TestEscalationTellsYouWhereToLook(EngineCase):
 
     def test_says_not_shown_when_the_suspect_is_too_deep(self):
         """Share the SURNAME so the token rule surfaces the row, but diverge the first name so
-        norm() cannot reconcile it -- then assert the row genuinely is not printed anywhere below."""
-        b = self.real_board()
+        norm() cannot reconcile it -- then assert the row genuinely is not printed anywhere below.
+
+        Ids stripped: this is a test of the name-join escalation's WORDING, and the escalation is
+        only reached when the id join could not answer."""
+        b = self.real_board_without_ids()
         deep = max((p for p in b["players"] if p["pos"] == "K"), key=lambda p: p["r"])
         surname = deep["name"].split()[-1]
         _, out = self.run_engine(b, [pick(1, "Zzquentin", surname, "K", deep["team"])])
@@ -386,8 +419,11 @@ class TestTeamCodeAgreement(EngineCase):
         return picks
 
     def test_a_jaguar_whose_name_drifts_still_escalates(self):
+        """Ids stripped: the (team, pos) bucket IS the safety net, and it is only consulted when
+        the id join could not answer. With ids present this same drift is caught one layer
+        earlier -- asserted directly below."""
         picks = self.drifted_feed("Bhayshul", "Tuten", "Bhayshul T.")
-        code, out = self.run_engine(self.real_board(), picks,
+        code, out = self.run_engine(self.real_board_without_ids(), picks,
                                     draft_id="1390923383440424960")
         self.assertEqual(code, 0)
         block = self.warning_block(out)
@@ -399,10 +435,26 @@ class TestTeamCodeAgreement(EngineCase):
     def test_the_same_drift_on_a_non_jaguar_escalates_too(self):
         """Control. Without this, a check that escalates everything would pass the test above."""
         picks = self.drifted_feed("Bijan", "Robinson", "Bijan A.")
-        code, out = self.run_engine(self.real_board(), picks,
+        code, out = self.run_engine(self.real_board_without_ids(), picks,
                                     draft_id="1390923383440424960")
         self.assertEqual(code, 0)
         self.assertIn("is UNCLAIMED", self.warning_block(out))
+
+    def test_with_ids_the_same_drift_never_reaches_the_escalation_at_all(self):
+        """The layer above the net, on the SAME input the two tests above degrade to reach.
+
+        This is what the id join buys: the drifted Jaguar is joined on his frozen id, reported as
+        a rendering drift rather than a mystery, and never appears as an unmatched pick needing a
+        (team, pos) suspect. The board's own row carries that id now -- no ledger in cwd."""
+        picks = self.drifted_feed("Bhayshul", "Tuten", "Bhayshul T.")
+        code, out = self.run_engine(self.real_board(), picks, draft_id="1390923383440424960")
+        self.assertEqual(code, 0)
+        block = self.warning_block(out)
+        self.assertIn("joined on the frozen id", block)
+        self.assertIn("Bhayshul T. Tuten", block)
+        self.assertNotIn("is UNCLAIMED", block)
+        self.assertNotIn("Bhayshul Tuten", out.split("BEST AVAILABLE")[1],
+                         "a drafted Jaguar is still being recommended")
 
     def test_an_undrifted_feed_escalates_nobody(self):
         """Second control: the real feed's 4 unmatched picks are genuinely off our board, so
@@ -507,6 +559,7 @@ class TestFrozenIdJoin(EngineCase):
         self.assertIn("Jahmyr Gibbs", avail)
         self.assertIn("Ja'Marr Chase", avail)
 
+
     def test_a_defense_joins_on_its_team_code(self):
         """Sleeper's player_id for a DEF is the team code, and U14 asserts the board agrees."""
         b = board([row(1, "Minnesota Vikings", "DEF", "MIN", 1), row(2, "A B", "RB", "KC", 1)])
@@ -544,6 +597,86 @@ class TestFrozenIdJoin(EngineCase):
         self.assertIn("Marvin Harrison", head, "the suspect must be named so it can be judged")
         self.assertIn("different man", head.lower())
         self.assertNotIn("is the same man", head.lower())
+
+
+class TestTheIdComesFromTheBoard(EngineCase):
+    """U6 stamps `sleeperId` onto every row and refuses to emit a board missing one, so the join
+    key arrives WITH the board. The ledger stays as the resolver's provenance record and as the
+    fallback for a pre-U6 board -- it is no longer a file that must be in the war-room cwd.
+
+    Equivalence was proven by replay before these were written: the old engine WITH the ledger and
+    the new engine WITHOUT it produce byte-identical advisories on the 120-pick lab feed at
+    prefixes 1, 3, 5, 20, 60, 119 and 120 -- every line except the provenance line below."""
+
+    GIBBS = "9221"
+    BIJAN = "8138"
+
+    def kit(self, with_ids=True):
+        return board([row(1, "Jahmyr Gibbs", "RB", "DET", 1,
+                          sleeper_id=self.GIBBS if with_ids else None),
+                      row(2, "Bijan Robinson", "RB", "ATL", 2,
+                          sleeper_id=self.BIJAN if with_ids else None),
+                      row(3, "Ja'Marr Chase", "WR", "CIN", 1,
+                          sleeper_id="7564" if with_ids else None)])
+
+    def drifted_gibbs(self):
+        p = pick(1, "J.", "Gibbs", "RB", "NE")
+        p["player_id"] = self.GIBBS
+        return p
+
+    def test_the_drift_is_caught_with_no_ledger_anywhere_on_disk(self):
+        """THE POINT OF THE CHANGE. This exact input, on a board without ids, cannot be caught --
+        the test directly above proves that. Here the row carries its own id and nothing else is
+        in cwd."""
+        code, out = self.run_engine(self.kit(), [self.drifted_gibbs()])
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("Jahmyr Gibbs", out.split("BEST AVAILABLE")[1],
+                         "an already-drafted man is being recommended with the id sitting on his "
+                         "own board row")
+
+    def test_the_provenance_line_names_the_board_not_the_ledger(self):
+        """A banner that says where the key came from is the difference between 'it worked' and
+        'I know why it worked'. The engine read the ledger for months; the line must not still
+        say so."""
+        code, out = self.run_engine(self.kit(), [self.drifted_gibbs()])
+        self.assertIn("from the board's own rows", out)
+        self.assertNotIn("[unverified] no sleeperId on the board", out)
+
+    def test_a_pre_u6_board_still_falls_back_to_the_ledger_and_says_so(self):
+        """The fallback is not decoration: a board built before U6 carries no ids at all, and the
+        ledger on disk is a complete answer for it."""
+        code, out = self.run_engine(self.kit(with_ids=False), [self.drifted_gibbs()],
+                                    ledger=ledger_of(("Jahmyr Gibbs", self.GIBBS),
+                                                     ("Bijan Robinson", self.BIJAN),
+                                                     ("Ja'Marr Chase", "7564")))
+        self.assertEqual(code, 0, out)
+        self.assertIn("from sleeper_ids.json", out)
+        self.assertNotIn("Jahmyr Gibbs", out.split("BEST AVAILABLE")[1])
+
+    def test_neither_source_degrades_to_the_name_join_and_says_so(self):
+        code, out = self.run_engine(self.kit(with_ids=False), [self.drifted_gibbs()])
+        self.assertEqual(code, 0, out)
+        self.assertIn("no sleeperId on the board", out)
+        self.assertIn("UNVERIFIED", out.upper())
+
+    def test_the_board_wins_when_both_exist_and_disagree(self):
+        """A stale ledger beside a fresh board is the state this change removes. The board is the
+        surface the gate hashes and `--verify-only` covers, so it is the one that must win -- and
+        it must be provable which one did."""
+        code, out = self.run_engine(self.kit(), [self.drifted_gibbs()],
+                                    ledger=ledger_of(("Jahmyr Gibbs", "999999")))
+        self.assertEqual(code, 0, out)
+        self.assertIn("from the board's own rows", out)
+        self.assertNotIn("Jahmyr Gibbs", out.split("BEST AVAILABLE")[1],
+                         "the stale ledger id won over the board's own row")
+
+    def test_a_partially_stamped_board_reports_the_shortfall(self):
+        """All-or-neither is the honest report. Half a join silently applied is worse than none."""
+        b = board([row(1, "Jahmyr Gibbs", "RB", "DET", 1, sleeper_id=self.GIBBS),
+                   row(2, "Bijan Robinson", "RB", "ATL", 2)])
+        code, out = self.run_engine(b, [self.drifted_gibbs()])
+        self.assertEqual(code, 0, out)
+        self.assertIn("covers 1 of 2 board rows", out)
 
 
 class TestTheAdvisoryBodyIsPinned(EngineCase):

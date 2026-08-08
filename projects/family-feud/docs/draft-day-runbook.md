@@ -247,7 +247,9 @@ Three rules it obeys, each one load-bearing:
 
 **This is why you pass `draft_id` as arg 4** — without it the engine cannot tie the cargo to this draft, so `teams`/`rounds` go unchecked whenever `picks.json` is empty.
 
-**The frozen-id join (added 2026-08-08).** The engine reads `draft-kit/sleeper_ids.json` and matches each live pick to the board on Sleeper's `player_id` **before** falling back to the rendered name. The name is the one field that drifts; the id does not. Optional and self-reporting, same doctrine as the cargo — no ledger means the name join, and it says so.
+**The frozen-id join (added 2026-08-08, repointed the same day).** The engine matches each live pick to the board on Sleeper's `player_id` **before** falling back to the rendered name. The name is the one field that drifts; the id does not.
+
+It reads that id from **the board's own rows**. Every row carries `sleeperId` and the generator refuses to emit a board where one does not, so the id arrives with the board rather than from a second file that had to be in the same directory. **What you need in `draft-kit/` is `players_data.json`, `normalize.py` and `picks.json`.** `sleeper_ids.json` is still the resolver's ledger and still what `resolve_sleeper_ids.py --verify` re-asserts, and it is the fallback for a board built before the generator — but it is no longer the engine's join key, so the two can no longer disagree with the engine silently preferring the older one. With neither source the engine falls back to the name join and says so; the `[checked]` line names which source it used.
 
 Why it matters, reproduced against the real board: board #1 Jahmyr Gibbs taken at pick 1, rendered by Sleeper as `J. Gibbs`, and on a different team than the board records. Name join missed him. The `(team,pos)` escalation missed him too — board says DET, pick says NE. So the engine printed `not on our board`, added the all-clear `no unclaimed board row shares a team and position`, and left him at **#1 on BEST AVAILABLE**. The pick carried `player_id 9221` — his frozen id, in our own ledger, discarded.
 

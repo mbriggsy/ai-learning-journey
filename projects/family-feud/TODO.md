@@ -6,7 +6,8 @@
 ## ▶ WHERE WE ARE — read this first, update it when it changes
 
 ```
-plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U7·U8·U10·U11·U12)  ◀ HERE
+plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U7·U8·U10·U11·U12)
+  → review residue ✅ (all 10) → engine join ✅   ◀ HERE (U13, a doc)
 ```
 
 **Units shipped:** U1, U2 (Phase 0 gates) · **U9** (draft-state watcher) · **U3** (one normalizer,
@@ -18,9 +19,13 @@ live draft) · **U8** (the runbook's draft loop is executable again) · **U10** 
 what it caught) · **U11** (The Nightly Feud publishes) · **U12** (it publishes without a human) —
 the last nine on 2026-08-08.
 
-**Phase 2 closed; U8, U10, U11 and U12 done.** **Next action: review residue #4** (the `strategy`
-prose, the last open item from the ultramode pass — full prescription in §0.5), then the **engine's
-`sleeperId` join**, then **U13**, which is a planning document (`docs/in-season-plan.md`), not code.
+**Phase 2 closed. U8, U10, U11, U12, review residue #4 and the engine's `sleeperId` join are all
+done.** **Next action: U13** — and it is a planning document (`docs/in-season-plan.md`), not code:
+the three in-season deliverables, the confirmed waiver timing, the mule extension they need
+(`/rosters`, `/matchups/<week>`, `/transactions/<week>` — none hauled today), and the un-stub
+trigger. After that the ranked queue is the two measured accuracy gaps, both in §2: **K and DEF
+still carry flat per-tier constants** (`carried:kdef-tier-flat`, 24 rows) and **the curve stops at
+2024** because exact scoring does not exist for 2025.
 
 **The archive question is DECIDED (Briggsy, 2026-08-08): back issues are gitignored.** The
 deciding argument was his: `newsletter/data/archive/` — the cargo each edition is built from — was
@@ -157,11 +162,27 @@ answer that looked right, and several are shapes that will recur.
     there — it is used twice, because the per-density `section` value is a LEAD and this is the
     trailing half added to it. Deleting all five, as the finding implied, would have broken the PDF.
 
-**Escalated on a materiality split — HALF CLOSED 2026-08-08.** The row-level `sleeperId` U6 stamps
-now has a reader: **U7's poll loop joins on it first**, name second, and that path is browser-
-verified against the lab feed. What is still open is the **engine**, which continues to join
-through `sleeper_ids.json`. Pointing it at the board's own key is a separate change needing its
-own replay verification — not hard, but it must not be done blind.
+**Escalated on a materiality split — FULLY CLOSED 2026-08-08.** The row-level `sleeperId` U6 stamps
+has both its readers now: **U7's poll loop** (browser-verified against the lab feed) and **the
+engine**, which no longer joins through `sleeper_ids.json`.
+
+**It was not done blind.** The old engine WITH the ledger in cwd and the new engine WITHOUT it
+produce **byte-identical advisories** on the 120-pick lab feed at prefixes 1, 3, 5, 20, 60, 119 and
+120 — every line except the provenance line, which was reworded on purpose to name its source.
+- **The ledger did not go away.** It is still the resolver's provenance record, still what
+  `resolve_sleeper_ids.py --verify` re-asserts, and still the fallback for a pre-U6 board. What
+  changed is that the two can no longer disagree with the engine silently preferring the older one.
+- **`--full`'s replay no longer copies `sleeper_ids.json` into the work dir**, so a regression back
+  to "the ledger must be in cwd" cannot replay green here and fail on draft morning.
+- ⚠️ **Four existing tests went red and every one of them was right to.** They prove the NAME-JOIN
+  safety net (the JAC/JAX bucket, the "STILL on BEST AVAILABLE" warning, the "not shown" wording)
+  and reached it only because the board had no ids in reach. Their picks carry `player_id` = the
+  pick number, so with a complete id set the engine correctly reads "an id we do not hold" as "not
+  one of our 174" and inverts the escalation's wording — the tests were asserting the old sentence
+  about an input that now means something else. They run against `real_board_without_ids()` now,
+  which is the world each was actually written about, **and a new test asserts the better outcome
+  on the same input**: with ids, the drifted Jaguar is joined on his id and never reaches the
+  escalation at all.
 
 ---
 

@@ -761,7 +761,11 @@ def check_engine_replay(prefixes=PREFIXES, engine=ENGINE, feed=FEED, kit=KIT):
     with tempfile.TemporaryDirectory() as t:
         work = os.path.join(t, "draft-kit")
         os.makedirs(work)
-        for name in ("players_data.json", "normalize.py", "sleeper_ids.json"):
+        # sleeper_ids.json is DELIBERATELY not copied. The engine reads its join key off the
+        # board's own rows now, so a war-room cwd needs exactly these two files plus picks.json --
+        # and copying the ledger in would let a regression back to "the ledger must be in cwd"
+        # replay green here while failing on draft morning in a directory that does not have it.
+        for name in ("players_data.json", "normalize.py"):
             src = os.path.join(kit, name)
             if os.path.exists(src):
                 shutil.copy(src, work)

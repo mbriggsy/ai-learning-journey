@@ -6,7 +6,7 @@
 ## ▶ WHERE WE ARE — read this first, update it when it changes
 
 ```
-plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15 · U7 · U8)  ◀ YOU ARE HERE (U10)
+plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U7·U8·U10)  ◀ YOU ARE HERE (U11)
 ```
 
 **Units shipped:** U1, U2 (Phase 0 gates) · **U9** (draft-state watcher) · **U3** (one normalizer,
@@ -16,10 +16,9 @@ curve; oracle exact at 2469/2469) · **U6** (the generator — one source, every
 **U15** (the engine wrapper — shape read from the draft, not typed) · **U7** (the board polls the
 live draft) — the last five on 2026-08-08.
 
-**Phase 2 is closed and U8 is done.** **Next action: U10** — harden the mule (validate
-parseability, not bytes), whose finding is already measured and waiting at the bottom of this file:
-`rss_nbc_edge` is not RSS, so the wire has **4 working feeds, not 5**, and the replacement
-(ProFootballTalk) is already chosen and measured.
+**Phase 2 is closed; U8 and U10 are done.** **Next action: U11** — The Nightly Feud's build half,
+the thing Briggsy actually loves and the one piece of this project that **has never run once**.
+U10 was its blocking dependency and is now cleared: the wire is real, validated, and 5 feeds deep.
 
 **The ultramode review RAN 2026-08-08** (13 reviewers, 4-angle adversary panel, 3 refuters per
 finding, `real`/`material` aggregated separately). 77 confirmed after verification, 22 correctly
@@ -36,9 +35,9 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **387 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 387 with **1 skip**,
-the live-cargo environment probe. Verified by eye, not only by tests: the cheat sheet is **2 pages
+gate went **13 findings → 0** by fixing surfaces. **408 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 408 with **2 skips**,
+both live-cargo environment probes. Verified by eye, not only by tests: the cheat sheet is **2 pages
 — the whole 174-row board on page 1**, the plan on page 2 — and the HTML board renders shape-driven
 round labels with no invented rounds.
 
@@ -213,6 +212,24 @@ U9  →  U3  →  U14  →  { U4 ∥ U5 }  →  U6  →  { U7 ∥ U15 }  →  U8
     `vorpMethod` per row, `meta.shape` from the live draft object, and
     `meta.badges[code].glyph`, which killed the engine's fourth glyph table.
   - **VORP is CARRIED, not recomputed** — deliberate, per KTD-6. See the note below.
+- ~~**U10 harden the mule**~~ ✅ **SHIPPED 2026-08-08.** `newsletter/feud_mule.ps1` (v2) +
+  `scripts/validate_cargo.py`, 21 tests.
+  - **The mule now validates content, not bytes.** Status, content-type, that it parses
+    (`defusedxml`), and that a feed carries items. `rss_nbc_edge` had been recorded **ok** every
+    hour for days while being a 793 KB web page with zero `<item>` elements — it passed `size > 50`
+    comfortably. **Retired; ProFootballTalk replaces it.** Wire: **5 feeds, 145 items.**
+  - **Nothing is overwritten until it passes.** v1 downloaded straight onto the live file, so a bad
+    response destroyed good cargo and only removed it if under 50 bytes — leaving neither. Fetches
+    now land on `<name>.incoming` and are promoted only on a pass. **Proven in an isolated run
+    against the real failing NBC payload: cargo sha256 AND mtime unchanged, no temp left behind,
+    and the status recorded both the failure and that what remains is 0 min old.**
+  - **It fails safe, not open.** If the validator cannot run, the payload is rejected and the old
+    cargo kept — accepting it would silently reinstate the bug.
+  - **`null` is now a failure.** Sleeper answers `null` for a retired draft id; it parses cleanly,
+    and v1 would have written it over good cargo — which is precisely how a re-created draft blinds
+    the watcher.
+  - **The `ok` prefix is a contract** with `watch_draft_state.py`, which keys on it. Tested at the
+    call site, not just as a string.
 - ~~**U8 correct the misleading docs**~~ ✅ **SHIPPED 2026-08-08.** Runbook, `league.md`,
   `ranking-methodology.md`, `README.md`, `CLAUDE.md`.
   - **The headline defect is gone: the draft loop is executable.** The runbook said `cd draft-kit/`
@@ -345,9 +362,8 @@ The four that bite hardest under time pressure:
 - **Presence is not health.** `Last Result: 0`, `NumberOfMissedRuns`, and the mule's `10/10 ok` are
   all untrustworthy. Only the cargo timestamp in `mule_status.json` proves life.
   ([`007`](docs/insights/007-presence-is-not-health-the-third-instance-of-one-pattern.md))
-- **`rss_nbc_edge` is not RSS.** Re-measured 2026-08-07 at the mule's real URL: HTTP 200,
-  **803,573 bytes, `Content-Type: text/html`, zero `<item>` elements** — it fails content-type,
-  parse *and* item count while passing the only check `Fetch-Source` runs (`size > 50`). The wire
-  has **4 working feeds, not 5** (yahoo 50 · cbs 36 · espn 23 · rotowire 5 = 114 items).
-  Replacement decided and measured: **ProFootballTalk** (`https://profootballtalk.nbcsports.com/feed/`
-  — 30 items, 9 naming board players). (U10)
+- ~~**`rss_nbc_edge` is not RSS.**~~ ✅ **RETIRED 2026-08-08 (U10).** It returned HTTP 200,
+  ~793 KB, `Content-Type: text/html`, zero `<item>` elements — failing content-type, parse *and*
+  item count while passing the only check `Fetch-Source` ran (`size > 50`). **ProFootballTalk**
+  replaced it. The wire now carries **5 working feeds, 145 items**. Do not restore the old URL:
+  it is not broken, it was never a feed.

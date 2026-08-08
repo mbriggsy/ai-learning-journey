@@ -42,6 +42,17 @@ nflverse GitHub releases carry stats, injuries and depth charts; both hosts are 
 `newsletter/feud_mule.ps1` runs hourly under the Windows task **"Family Feud Mule"** and drops
 10 sources into `newsletter/data/inbox/` — five Sleeper endpoints plus five fantasy RSS feeds.
 
+**Every payload is validated before it is allowed to land** *(changed 2026-08-08, U10)* — HTTP
+status, content-type, that it parses, and that a feed actually carries `<item>`/`<entry>` elements.
+`scripts/validate_cargo.py` owns that judgment. The old check was `size > 50 bytes`, which an
+793 KB HTML error page passes comfortably, and did, hourly, for days.
+
+**A failed source keeps the previous cargo.** Fetches land on `<name>.incoming` and are promoted
+only on a pass, so a bad response can no longer destroy good data — and the failure line records
+**how old what remains now is**, because "this source failed" and "you are reading day-old data"
+are different facts. `mule_status.json` carries a `validation` field; a status file without one
+predates this and its `ok`s mean only that bytes arrived.
+
 **Read the inbox instead of the network** for anything scheduled or unattended. It is at most
 an hour stale, it costs nothing, and it cannot fail mid-run. `mule_status.json` records exactly
 which sources succeeded on the last haul; dead feeds report `FAIL` and are expected — the

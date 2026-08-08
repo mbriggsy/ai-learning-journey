@@ -7,7 +7,7 @@ cross-referenced against our board — written to a local HTML page Briggsy keep
 
 | Half | State |
 |---|---|
-| **The Mule** — hauls data in, hourly | ✅ **Green.** Verified 2026-08-07: 10 sources, 0 failed. |
+| **The Mule** — hauls data in, hourly | ✅ **Green, and the green is now earned.** Verified 2026-08-08: 10 sources, 0 failed, every payload parsed and counted rather than weighed. **5 working feeds, 145 items.** |
 | **The build** — turns data into a newsletter | ❌ **Has never run. Not once.** |
 
 **The evidence, not a guess:** `newsletter/family-feud-newsletter.html` is *byte-identical* to
@@ -28,8 +28,14 @@ board in `../draft-kit/players_data.json`, and the design in `newsletter-templat
 
 Runs `newsletter/feud_mule.ps1` hourly, dropping 10 sources into `newsletter/data/inbox/`:
 five Sleeper endpoints (league, users, draft, trending add, trending drop) and five fantasy RSS
-feeds (Yahoo, Rotowire, ESPN, CBS, NBC Edge). Each source fails independently — dead feeds report
-`FAIL` in `mule_status.json` and the newsletter is meant to use whatever arrived.
+feeds (Yahoo, Rotowire, ESPN, CBS, **ProFootballTalk**). Each source fails independently — dead
+feeds report `FAIL` in `mule_status.json` and the newsletter is meant to use whatever arrived.
+
+⚠️ **NBC Edge was retired 2026-08-08 and must not be restored.** Its URL returns HTTP 200 with
+`Content-Type: text/html` and a ~793 KB page carrying zero `<item>` elements — it was never a feed,
+and the old `size > 50` check recorded it **ok** every hour. ProFootballTalk took its slot
+(30 items). The wire is **5 working feeds, ~145 items**; counts move daily, so read
+`mule_status.json` rather than quoting a number from here.
 
 **Install, re-install, or verify — one command, from the project root:**
 

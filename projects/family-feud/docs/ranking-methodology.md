@@ -124,7 +124,29 @@ Case studies from the current board:
 
 **All defenses, +68.** Ignore these. VBD genuinely believes a top DST is worth a round-8 pick — season totals say so — but week-to-week DST scoring is a coin flip and streaming off the wire replaces most of it. Doctrine keeps K/DEF in rounds 15-16. The engine treats these deltas as decoration.
 
-**Rule of thumb: VBD is the tie-breaker, never the boss.** When two players sit in the same tier and the badges don't decide it, the VORP chip decides it. It never reaches across tiers.
+**Rule of thumb: VBD is the tie-breaker, never the boss.** It never reaches across tiers.
+
+> ⚠️ **But the same-tier half of that rule is inert, and you should know why before you lean on it.**
+> This section used to say that when two players sit in the same tier and the badges don't decide
+> it, *the VORP chip decides it*. **It cannot.** Tiers are drawn within a position, so two players
+> in the same tier are the same position — and within a position `vorp` is a pure function of the
+> board rank itself: the curve is a rank→points lookup with `pr` as its only input. The better-
+> ranked player therefore *always* has the better VORP. The chip agrees with the board by
+> construction and can never overturn it.
+>
+> **Measured on this board, not assumed:** across all **150 skill rows** and the **146 adjacent
+> same-position pairs** they form, there are **zero** pairs where a worse `pr` carries a higher
+> `vorp`, and **zero** where a worse `pr` carries a better `vbdRank`. Within a position, VBD rank
+> order is *identical* to board order.
+>
+> **What survives is the part that was always the real value: the CROSS-POSITIONAL comparison.**
+> `RB41 = 117.5` against `WR47` is a genuine statement about replacement level that no board rank
+> encodes, and it is why the rounds 3-5 RB-over-WR lean is real. So: use VBD to decide *which
+> position* to take, never *which player within one*. For that, the badges and the tiers are the
+> only instruments that carry independent information.
+>
+> Breaking the circularity needs real per-player projections rather than a rank→points curve. That
+> is a genuine future unit, not a bug to patch.
 
 ---
 

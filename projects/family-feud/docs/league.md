@@ -86,7 +86,19 @@ That −4 floor is why streaming a defense into a bad matchup is genuinely expen
   practice, and `/traded_picks` returned `[]`. One check on draft morning covers a *pre*-draft
   trade; don't build tooling for in-draft trades.
 - **Waivers: rolling priority** (`waiver_type: 0`), 1-day clear.
-  `waiver_day_of_week: 2` — the older notes read this as Wednesday processing with a Tuesday
-  report. **Unconfirmed against a live waiver cycle**; worth one look in week 1 rather than
-  a guess. (`waiver_budget: 100` is present but inert — FAAB only applies when `waiver_type`
-  is FAAB, and it isn't.)
+  **Re-read from the live league object 2026-08-08:** `waiver_type: 0`, `waiver_day_of_week: 2`,
+  `waiver_budget: 100`. The budget is **inert** — FAAB only applies when `waiver_type` is FAAB,
+  and it isn't. Do not plan around a 100-dollar budget that does not exist.
+
+  **What `2` actually means is still not settled, and the ambiguity is the point.** The older notes
+  read it as Wednesday processing with a Tuesday report. The 2026-08-07 deepening pass reported a
+  check against 2025 transaction history — 111 completed waivers across two leagues, clearing
+  Wednesday ~03:10 ET — which matches the Wednesday reading. **That measurement is recorded here as
+  a citation, not as something re-derived:** the league object on disk today carries no
+  `previous_league_id`/`copy_from_league_id`, so there is no route to reproduce it from current
+  cargo, and it has not been re-run. The integer's *label* (is `2` Tuesday-index-from-Sunday, or
+  Wednesday?) remains the open question either way — a clearing time observed in history does not
+  tell you how Sleeper labels the field.
+
+  **One look at the first live cycle settles it for good.** Until then, treat Wednesday as the
+  working assumption and not as a fact you'd bet a claim on.

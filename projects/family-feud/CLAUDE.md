@@ -40,6 +40,24 @@ and never overrides them. Changelog entries quote pre-migration paths (`Draft Ki
   impossible pick order, and leaves drafted players on the available list — it will name an
   already-drafted player as THE CALL. Reproduced and fixed Aug 5.
 - **Never advise off a `picks.json` the engine refused.** Re-fetch, merge on `pick_no`, rerun.
+- **`slot_to_roster_id` is NOT the draft slot.** It is the identity map `{1:1 … 8:8}` on this draft
+  (re-verified 2026-08-08), so it returns whatever you give it and reads like a confirmation. There
+  are **three unrelated "3"s** in this league — Briggsy's slot, his `roster_id`, and this map's `3`
+  — and `roster_id 3` sits a line away in `docs/league.md`, which makes "3" the most attractive
+  wrong answer in the project. Read the seat from `draft_order["1390750540631150592"]` and nothing
+  else. `scripts/run_engine.py` does exactly that, and refuses rather than guessing when
+  `draft_order` is still `null` (it is, today).
+- **The real draft object has NO `metadata.slot_name_*`.** Its `metadata` carries exactly four keys:
+  `description`, `league_type`, `name`, `scoring_type`. Those slot-name fields existed in **Mock #1's
+  room** and were generalised into doctrine; do not go hunting for them under a clock.
+- **`mule_status.json` is the ONE file that needs `utf-8-sig`, not `utf-8`.** PowerShell 5.1 wrote
+  it with a BOM, so the project's blanket `encoding="utf-8"` rule is wrong for exactly this file and
+  right for every other. `utf-8-sig` reads both, which is why the cargo readers use it.
+- **Run the draft loop from the REPO ROOT, via `scripts/run_engine.py`.** The runbook used to say
+  `cd draft-kit/`, which made its own Step 3 impossible: 3.1 only resolves from the root and 3.3
+  only resolved from `draft-kit/`. The engine still opens its inputs from cwd — the wrapper handles
+  that. Related: **`draft-kit/` is not a valid Python identifier**, so nothing under it is importable
+  as a package; `scripts/` reaches it by `sys.path` insertion.
 - **Anything in this project that reads a JSON file must pass `encoding="utf-8"`.** Windows
   Python defaults to cp1252 and `players_data.json` carries emoji badge icons; a bare `open()`
   dies on byte 0x8f. Printing the board is the same trap in reverse — `⚠` (U+26A0) cannot be

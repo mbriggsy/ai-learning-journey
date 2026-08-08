@@ -5,12 +5,24 @@
 
 **Two operating modes.** *Advisor:* Claude computes THE CALL, Briggsy clicks. *Executor:* Claude also drives Briggsy's logged-in Chrome (claude-in-chrome tools) and clicks the picks himself — proven in Mock #2. Executor mode adds the "Executor mode" section's rules on top of everything else; the biggest difference is cadence math (see Step 3).
 
-## Files you need — run the engine from inside `draft-kit/`
+## Files you need — run EVERYTHING from the repo root *(changed 2026-08-08, U15)*
 
-The engine opens its inputs by literal name from the **current working directory**, so `cd` into
-`draft-kit/` and work there. (Under Cowork these had to be staged into a sandbox workspace; that
-step is gone — the files are just local now.) Your `picks.json` and optional `slot_names.json`
-get written there during the draft; both are gitignored scratch.
+**Stand in the repo root and never leave it.** Every command in this runbook runs from there.
+
+This section used to say "`cd` into `draft-kit/` and work there," and that made the draft loop in
+Step 3 **impossible to execute as written**: Step 3.1 (`python3 scripts/merge_picks.py`) only
+resolves from the repo root, and Step 3.3 (`python3 draft_engine.py`) only resolved from
+`draft-kit/`. Following the instructions literally meant one of the two commands failed, and
+finding that out at 8am with a clock running is exactly the wrong time.
+
+The conflict was real and it is now gone. `scripts/run_engine.py` runs from the root and enters
+`draft-kit/` on your behalf, because the engine still opens `players_data.json`, `picks.json` and
+the optional `slot_names.json` by literal name from the current directory. That constraint did not
+go away — it stopped being yours to manage.
+
+Your `picks.json` and optional `slot_names.json` are written into `draft-kit/` during the draft;
+both are gitignored scratch. (Under Cowork these had to be staged into a sandbox workspace; that
+step is gone — the files are just local now.)
 
 - `draft_engine.py` — the analysis engine (tier cliffs incl. K/DEF, run watch, diminutive-alias name matching)
 - `players_data.json` — the board: **174 entries** (150 skill players + 10 K + 14 DEF), tiers, badges, `vorp`/`vbdRank`/`vbdDelta`, plus the frozen `sleeperId` and a `vorpMethod` on every row. VORP = pts/season over waiver replacement, baselines waiver QB12/RB41/WR47/TE12 and last starters QB8/RB21/WR27/TE8. **Skill values are recomputed from `vorp_curve.json` (seasons 2021-2024, exact scoring) on every build**; K and DEF keep flat per-tier constants and say so, because the curve builds QB/RB/WR/TE only. Engine expects this exact filename in cwd.
@@ -42,14 +54,53 @@ detector that covers the PDF, which has no comment channel to warn you.
 - `python scripts/validate_board.py --full` still exists and still proves the surfaces agree; the
   generator runs it for you against the staged set before anything is replaced.
 
+### 🔙 Rollback — the literal commands, because you will not want to browse git history at 7am
+
+A refresh that goes wrong at draft time needs a restore you can execute without thinking. This is
+it. **One refresh = one commit containing every surface**, which is what makes this work at all.
+
+```bash
+git log --oneline -- draft-kit/            # find the last commit you trust
+git checkout <sha> -- draft-kit/           # restore ALL surfaces together, never one file
+python scripts/build_board.py --verify-only  # prove the restored set is self-consistent
+```
+
+**Restore the whole directory, never a single surface.** The three surfaces are only meaningful as
+a set; `build_manifest.json` carries a sha256 per surface, so restoring the HTML alone leaves the
+manifest describing a board that no longer exists and `--verify-only` will correctly go red.
+
+`--verify-only` is the confirmation step, not a formality — it is the **only** detector that covers
+the PDF, which has no comment channel and cannot warn you it is stale.
+
+### Two path conventions live in this repo, deliberately
+
+Both are load-bearing and mixing them up is the same family as the "absolute paths in scheduled
+tasks" landmine:
+
+- **`draft-kit/` is not a valid Python identifier**, so nothing under it can be imported as a
+  package. `scripts/` modules reach it by `sys.path` insertion, never by `import draft_kit`.
+- **`normalize.py` finds its spec by `__file__`; `draft_engine.py` opens its inputs relative to
+  `cwd`** — on purpose. The engine must follow the operator to whatever directory holds this
+  draft's scratch files; the normalizer must always find its own rules. `run_engine.py` is what
+  keeps those two conventions from becoming your problem.
+- **`mule_status.json` carries a BOM** (PowerShell 5.1 wrote it), so it is the one file in this
+  project where the blanket `encoding="utf-8"` rule is wrong — it needs `utf-8-sig`. Every other
+  JSON read here passes `encoding="utf-8"` and must.
+
 ⚠️ **Rankings are refreshed as of 2026-08-08 and are still a snapshot.** Re-research
 rankings/injuries/ADP before the real draft, then run the generator. Check `meta.updated` before
 you trust a single rank.
 
-⚠️ **Nothing will remind you.** A Cowork one-shot trigger used to drop a `REFRESH_BRIEF` into the
-draft kit on Aug 26 as the starting gun for this. That trigger did not survive the migration and
-**no longer exists** — the refresh is now a `TODO.md` item and nothing else. Check the board's date
-before you trust a single rank.
+⚠️ **Something WILL remind you now — but it writes a file, it does not tap you on the shoulder.**
+*(changed 2026-08-08, U9.)* The Cowork one-shot that used to drop a `REFRESH_BRIEF` on a hardcoded
+Aug 26 is gone, and good riddance: the draft date is a handshake between eight people and **it can
+move earlier**, so a fixed date was the wrong shape. `scripts/watch_draft_state.py` runs hourly at
+:35 and fires on the actual transition — `start_time` going non-null, `draft_order` populating,
+`status` leaving `pre_draft`, a seat moving or vanishing, or the draft being re-created. It writes
+to `newsletter/data/state/DRAFT_ALERTS.md` (gitignored), **never a notification** — Anthropic push
+and email are broken account-wide for this account, so an alert that needs one does not exist.
+
+**Read that file; it will not come to you.** And still check `meta.updated` before trusting a rank.
 
 ## Step 1 — Find the draft
 - **Real league draft:** draft_id `1390509994847240192` (league `1390509993844809728`).
@@ -68,7 +119,22 @@ before you trust a single rank.
 - `settings.teams`, `settings.rounds`, `settings.pick_timer` — **read rounds from the API, never assume 16** (Mocks #1 and #2 both ran 15; the real league is 16).
 - `draft_order` — map of user_id → slot. Briggsy = user_id `1390750540631150592`. **His slot is the engine's first argument.** draft_order can be null until near start — re-verify ON draft day, before the first advisory. Slot changes strategy hard: turn slots (1/8) draft in pairs and plan 14 picks ahead; middle slots don't. Slot 2 (Mock #2) is a near-turn: picks come in loose pairs with 3 picks between (e.g. 15/18, 31/34) and 13-pick droughts after — plan both picks of a pair as one decision, including who the between-teams will eat (denial forecasting won Egbuka→Kyren and Skattebo→Daniels).
 - Confirm scoring context (real league = full PPR; make mocks 8-team PPR to mirror it — verify `metadata.scoring_type` via API; Mock #1's lobby was accidentally created as Standard first, Mock #2 verified `ppr` ✓).
-- **Slot names:** the draft object's `metadata.slot_name_<N>` fields name the human in each slot, and they populate even with `show_team_names: 0` (verified live on Mock #1: DIego/Hunter/Ryan in slots 2-4). Write them to `slot_names.json` in cwd as `{"2": "DIego", "3": "Hunter", ...}` — the engine then names every roster ("slot 3 (Hunter)"), which makes denial plays readable at a glance. Registered accounts appear in `draft_order` instead (Briggsy's slot comes from there). All-CPU mock rooms have no slot names — skip the file.
+- **Slot names — and the real draft does NOT have them.** Re-measured against the live draft object
+  2026-08-08: `metadata` carries **exactly four keys — `description`, `league_type`, `name`,
+  `scoring_type` — and zero `slot_name_*`.** This runbook used to teach `metadata.slot_name_<N>` as
+  a live source; that was true of **Mock #1's room** and was generalised to the real league, where
+  it is simply absent. Do not go hunting for those fields on draft morning. Registered accounts
+  appear in `draft_order` and the humans behind them in `/league/<id>/users` — that pair is the
+  real source, and the engine already reads it. `slot_names.json` remains an optional hand-authored
+  override (`{"2": "DIego", "3": "Hunter", ...}`, written into `draft-kit/`) and the engine prints
+  a disagreement rather than trusting it. All-CPU mock rooms have no names at all — skip the file.
+- 🚨 **`slot_to_roster_id` IS NOT YOUR SLOT.** It is the identity map `{1:1 … 8:8}` on this draft
+  (verified live 2026-08-08), so it will hand back whatever you put in and look like a confirmation.
+  There are **three unrelated "3"s** in this league — Briggsy's user slot, his `roster_id`, and this
+  map's `3` — and `roster_id 3` sits one line away in [`league.md`](league.md), which makes "3" the
+  most attractive wrong answer in the project. Read the seat from
+  `draft_order["1390750540631150592"]` and **from nothing else**. `run_engine.py` does exactly that
+  and refuses rather than guessing when `draft_order` is still null.
 
 ## Step 3 — The loop (repeat until draft complete)
 1. **`python3 scripts/merge_picks.py <draft_id>`** — one command: fetches `/picks`, merges into
@@ -89,11 +155,26 @@ before you trust a single rank.
    returns the whole cumulative array, so there is no range left to get wrong** — that failure
    mode is retired. The merge discipline and the integrity gate below are what caught it; both stay.*
    The engine now enforces this: it **hard-fails (exit 1) on interior gaps or duplicate pick_nos** in picks.json and refuses to emit board state. If it screams, re-fetch /picks, re-merge, rerun — NEVER advise off a screaming engine. (A missing *newest* pick is undetectable — a tail hole looks identical to "draft is only this far along" — but /picks is cumulative, so that's staleness bounded by poll cadence, not corruption.)
-3. Run: `python3 draft_engine.py <briggsy_slot> <teams> <rounds> <draft_id>`
-   **Read the first lines of the output before the advisory.** `[checked]` names what the engine
-   confirmed against the draft itself. A `**` banner means the seat could NOT be confirmed —
-   go get `draft_order` before acting. A `!!` block means an argument disagrees with the draft
-   and nothing was computed.
+3. Run: **`python3 scripts/run_engine.py`** — from the repo root, same directory as step 1.
+   *(changed 2026-08-08, U15)*
+   Pass the seat as `run_engine.py <slot>` while `draft_order` is still null; once it populates,
+   the wrapper reads the seat itself. It also reads `teams`, `rounds` and the whole roster from the
+   draft object, and **arms the contamination gate for you** when the mule's cargo is fresh — that
+   flag used to be optional and forgettable, and forgetting it is how a spent mock's `picks.json`
+   advises a live draft. Overrides are `--teams`, `--rounds`, `--draft-id`; each wins and says so.
+   **`--dry-run` prints every value and where it came from without starting the engine.**
+
+   It **hard-refuses** a non-snake or third-round-reversal draft rather than computing a pick order
+   this repo does not model. Missing cargo is different: it degrades to what you typed and says so.
+
+   **Read the first lines of the output before the advisory.** The wrapper's block names the source
+   of every number; then `[checked]` names what the engine confirmed against the draft itself. A
+   `**` banner means the seat could NOT be confirmed — go get `draft_order` before acting. A `!!`
+   block means an argument disagrees with the draft and nothing was computed.
+
+   *The bare `python3 draft_engine.py <slot> <teams> <rounds> <draft_id>` from inside `draft-kit/`
+   still works and is the fallback if the wrapper ever misbehaves — but run it bare and the roster
+   shape falls back to constants inside the file that nothing checks against this draft.*
 4. Read the output; compose the advisory (format below); send it. In executor mode, execute the pick instead when it's our clock.
 
 **Cadence — key it off ROOM SPEED, measured in round 1, not just pick distance** (the picks feed is cumulative, so you can never miss picks — only be late with advice):

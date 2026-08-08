@@ -6,7 +6,7 @@
 ## ▶ WHERE WE ARE — read this first, update it when it changes
 
 ```
-plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15 · U7)  ◀ YOU ARE HERE (U8)
+plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15 · U7 · U8)  ◀ YOU ARE HERE (U10)
 ```
 
 **Units shipped:** U1, U2 (Phase 0 gates) · **U9** (draft-state watcher) · **U3** (one normalizer,
@@ -16,9 +16,10 @@ curve; oracle exact at 2469/2469) · **U6** (the generator — one source, every
 **U15** (the engine wrapper — shape read from the draft, not typed) · **U7** (the board polls the
 live draft) — the last five on 2026-08-08.
 
-**Phase 2 is closed.** **Next action: U8** — correct the docs that would mislead under time
-pressure. The runbook still contradicts itself on working directory, so *the draft loop cannot be
-executed as written*; that is a draft-morning trap, not a tidy-up. U8's file list is in the plan.
+**Phase 2 is closed and U8 is done.** **Next action: U10** — harden the mule (validate
+parseability, not bytes), whose finding is already measured and waiting at the bottom of this file:
+`rss_nbc_edge` is not RSS, so the wire has **4 working feeds, not 5**, and the replacement
+(ProFootballTalk) is already chosen and measured.
 
 **The ultramode review RAN 2026-08-08** (13 reviewers, 4-angle adversary panel, 3 refuters per
 finding, `real`/`material` aggregated separately). 77 confirmed after verification, 22 correctly
@@ -212,6 +213,29 @@ U9  →  U3  →  U14  →  { U4 ∥ U5 }  →  U6  →  { U7 ∥ U15 }  →  U8
     `vorpMethod` per row, `meta.shape` from the live draft object, and
     `meta.badges[code].glyph`, which killed the engine's fourth glyph table.
   - **VORP is CARRIED, not recomputed** — deliberate, per KTD-6. See the note below.
+- ~~**U8 correct the misleading docs**~~ ✅ **SHIPPED 2026-08-08.** Runbook, `league.md`,
+  `ranking-methodology.md`, `README.md`, `CLAUDE.md`.
+  - **The headline defect is gone: the draft loop is executable.** The runbook said `cd draft-kit/`
+    while its own Step 3.1 only resolves from the repo root — following it literally meant one of
+    the two commands failed. **Everything now runs from the repo root** and it was verified by
+    *executing the loop*, not by reading it: `merge_picks.py` then `run_engine.py`, same directory,
+    both exit 0.
+  - **`metadata.slot_name_*` does not exist on the real draft.** Re-measured: `metadata` has exactly
+    four keys. That doctrine came from Mock #1's room and was generalised. Corrected, with the
+    `slot_to_roster_id` identity-map trap written down beside it.
+  - **The VBD same-tier tie-breaker rule was inert and now says so.** Within a position `vorp` is a
+    pure function of board rank, so the chip agrees with the board by construction. Measured on this
+    board: **0 violations across 146 adjacent same-position pairs.** Cross-positional VBD — the part
+    that was always the real value — is untouched.
+  - **Rollback is now written down** as literal commands. Restore `draft-kit/` whole, never one
+    surface, then `--verify-only` — the only detector that covers the PDF.
+  - **Stale by the time it was read:** `ranking-methodology.md`'s two factual errors (the 40+/50+
+    bonuses, the play-by-play provenance) were already corrected by an earlier session. Left as is.
+  - **Deliberately NOT upgraded:** the waiver-day claim. The plan says a 2025-history check
+    confirmed Wednesday ~03:10 ET across 111 waivers, but the league object carries no
+    `previous_league_id` today, so it **cannot be reproduced from current cargo**. It is recorded in
+    `league.md` as a citation with that provenance stated, not as re-verified fact. One look at the
+    first live cycle settles it.
 - ~~**U7 live board poll loop**~~ ✅ **SHIPPED 2026-08-08.** `scripts/templates/board.html`
   (never the generated HTML — KTD-1), 15 tests. **▶ Go live**, or `?live=1` for a wall display.
   - **Verified in a browser, not by reading it.** The board was served over HTTP and polled a real

@@ -10,12 +10,13 @@ plan  ✅ → deepen  ✅ → work  ◀ YOU ARE HERE → ultramode ⬜ (at the P
 ```
 
 **Units shipped:** U1, U2 (Phase 0 gates) · **U9** (draft-state watcher) · **U3** (one normalizer,
-proven equal in two runtimes) · **U14** (`sleeperId` frozen — 174 ids, 0 unresolved) — all four
-verified green on 2026-08-07.
+proven equal in two runtimes) · **U14** (`sleeperId` frozen — 174 ids, 0 unresolved) ·
+**U4** (the board schema gate, born red on 12 real findings, 2026-08-08).
 
-**Next action: `/ce-work` on
-[`docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md`](docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md),
-at `{ U4 gate ∥ U5 VORP }` — the two that run in parallel. U4 is **born red** and that is correct.**
+**Next action:
+[`docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md`](docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md)
+at **U5 (VORP pipeline)**, then U6 — the generator that regenerates every surface U4 currently
+reports as drifted.**
 
 **The planning phase is CLOSED.** The plan was deepened 2026-08-07 and does not get another pass.
 If something in it turns out to be wrong, fix it inside `/ce-work` — do not reopen a deepening
@@ -26,7 +27,7 @@ stopping condition, and the plan still outweighs the code (**13 commits, 5 of wh
 **Ultramode fires once, after U6** — one review of a working spine, not six reviews of fragments.
 
 **State:** both silent paths to advising an already-drafted player are closed, the hauler has its
-first consumer, and the board now joins to Sleeper on a frozen id instead of a name. **210 tests**,
+first consumer, and the board now joins to Sleeper on a frozen id instead of a name. **252 tests**,
 zero skips (`python -m unittest discover -s tests` from the root). What remains is the spine: one
 source that generates every surface.
 
@@ -91,8 +92,16 @@ U9  →  U3  →  U14  →  { U4 ∥ U5 }  →  U6  →  { U7 ∥ U15 }  →  U8
   check: `python scripts/resolve_sleeper_ids.py --verify` — exit 0 means the join key still holds.
   **A lone shared-token match is never auto-accepted** — it is routinely a same-position teammate
   (six such pairs on this board), so it proposes and hard-stops for a human.
-- **U4 gate ∥ U5 VORP** ◀ **NEXT.** U5 never depended on U4; the gate consumes its output. U4 is
-  **born red** and that's correct: two cross-surface checks fail on today's drifted surfaces.
+- ~~**U4 gate**~~ ✅ **SHIPPED 2026-08-08.** `scripts/validate_board.py`, 42 tests. `--fast`
+  (static + cross-surface, offline, milliseconds) and `--full` (adds a real-engine replay of the
+  lab feed at prefixes 1, 2, **3**, 4, ... — the reproduced `vbdDelta` break fires at exactly
+  three picks, so deciles would have missed it). **BORN RED with 12 findings, all real drift:**
+  `meta.updated` claims Aug 5 while its inputs are dated Aug 7-8 (3) · eight `meta.vbd` numbers
+  hardcoded as literals in the board HTML's prose (8) · the cheat sheet holds 150 of 174 rows,
+  missing every K and DEF (1). **Fix the surface, never the gate.** U6 regenerates them.
+- **U5 VORP** ◀ **NEXT.** Never depended on U4; the gate consumes its output. Note U5 is
+  licensed to change `meta.vbd`'s numbers — which are exactly the eight the gate now refuses to
+  see hardcoded in prose.
 - **U6 generator** — staged emit, `.last_good/`, `--verify-only`, one-refresh-one-commit.
 - **U15 engine wrapper** (NEW) — KTD-8's missing owner. Reads shape from the draft object; hard-refuses
   non-snake drafts.

@@ -32,7 +32,6 @@ docs/            all prose — start here
 draft-kit/       the draft-day arsenal (run the engine from in here)
   draft_engine.py                    players_data.json
   family-feud-draft-board.html       family-feud-cheat-sheet.pdf
-  draft_rankings_data_2026-08-05.json   ⛔ drifted — see TODO, do not carry forward
   normalize.py     the ONE name normalizer. Rules live here as data; norm_spec.json
                    and the board's JS are both generated from it. Never fork it.
   sleeper_ids.json every board row's frozen Sleeper id. Append-only ledger, and
@@ -51,7 +50,9 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         draft becomes real. Never a notification.
                  resolve_sleeper_ids.py — resolves board rows to Sleeper ids against
                                         the pinned dump. Hard-stops rather than guess.
-tests/           210 tests: python -m unittest discover -s tests  (run from the root)
+                 validate_board.py    — the schema gate. Refuses to let a board the
+                                        engine cannot eat reach draft day. Born red.
+tests/           252 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```
@@ -88,6 +89,23 @@ never blocks the run; it prints `[unverified]` and says exactly what it could no
 already-drafted player disappear from the board even when Sleeper renders his name differently
 than we do, or he has changed teams since the board was authored. Without it the engine falls
 back to matching names — and says so.
+
+## Validating the board
+
+```bash
+python3 scripts/validate_board.py           # static + cross-surface, milliseconds, offline
+python3 scripts/validate_board.py --full    # adds a real-engine replay of the lab feed
+```
+
+Checks all 174 rows — never a sample, because both known break modes are latent: a float
+`vbdDelta` passes an empty-picks run and kills the whole advisory three picks in. It also checks
+the things a row-level gate never looks at, which is where the verified drift actually was:
+`dst`, `strategy`, the HTML's prose outside the data blob, and the cheat sheet.
+
+**It is born red, and that is correct.** Several surfaces are drifted today and the gate's job is
+to say so. Acceptance is *"the gate correctly reports the known-drifted surfaces as failing"* —
+never *"the gate passes"*. A gate that must be born green is a gate someone weakens until it is.
+**Fix the surface, never the gate.**
 
 ## State of play
 

@@ -76,7 +76,7 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                  build_newsletter.py  — THE NIGHTLY FEUD. Turns the mule's cargo into an edition.
                                         Facts are computed, never written by a model; the design
                                         is carried from the frozen template; no network calls.
-tests/           491 tests: python -m unittest discover -s tests  (run from the root)
+tests/           542 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```

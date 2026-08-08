@@ -57,9 +57,10 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **491 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 491 with **2 skips**,
-both live-cargo environment probes. Verified by eye, not only by tests: the cheat sheet is **2 pages
+gate went **13 findings → 0** by fixing surfaces. **542 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 542 with **2 skips**,
+both live-cargo environment probes — re-measured 2026-08-08 by hiding `newsletter/data/inbox/`,
+not copied from the previous line. Verified by eye, not only by tests: the cheat sheet is **2 pages
 — the whole 174-row board on page 1**, the plan on page 2 — and the HTML board renders shape-driven
 round labels with no invented rounds.
 
@@ -194,7 +195,7 @@ produce **byte-identical advisories** on the 120-pick lab feed at prefixes 1, 3,
 
 ## 0. Start with `/brief`
 
-Sixteen insight docs now exist. Each has a documented wrong answer that looks right. Read them
+Seventeen insight docs now exist. Each has a documented wrong answer that looks right. Read them
 before designing, not after debugging.
 
 **The two from 2026-08-08 are the ones to read before writing any wrapper or any `except`:**
@@ -534,7 +535,7 @@ Start with `--dry-run` to see every value and where it came from before anything
 
 ## Landmines
 
-Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the sixteen worked cases.
+Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the seventeen worked cases.
 The four that bite hardest under time pressure:
 
 - **A screaming engine means STOP.** Re-fetch, re-merge, rerun. Never advise off a `picks.json` it

@@ -55,14 +55,23 @@ STRATEGY_KEYS = {"rules", "roundPlan", "slotNotes", "kickers"}
 VALUE_KEYS = ("vorp", "vbdRank", "vbdDelta")
 
 #: The fields that ARE the ranking judgment, keyed by the frozen Sleeper id so row ORDER cannot
-#: move the digest. `name`, `team` and `pos` are deliberately OUT: they are identity and data,
-#: already guarded by the resolver, `check_sleeper_ids` and `check_def_identity`, and correcting
-#: one is not a re-synthesis. Commit c6379d78 rewrote `"team": "JAC"` to `"JAX"` on eight rows and
-#: re-ranked nobody -- had that forced the synthesis date forward, the fix for a lying date would
-#: itself have made the date lie. `vorp`/`vbdRank`/`vbdDelta` are out for the opposite reason:
-#: they are GENERATED from `pr` and the curve, so including them would fire on a curve rebuild
-#: that changed no judgment at all.
-JUDGMENT_KEYS = ("pr", "tier", "badges", "note")
+#: move the digest.
+#:
+#: `r` IS LOAD-BEARING AND WAS MISSING FROM THE FIRST VERSION OF THIS. `pr` is the rank WITHIN a
+#: position, so swapping two players at different positions in overall board order leaves both
+#: `pr` values untouched -- each is still first or second at his own position. Measured on the
+#: live board: trading Bijan Robinson and Ja'Marr Chase at r=2/r=3 produced a BYTE-IDENTICAL
+#: digest. That is the most consequential re-rank there is, and the detector could not see it.
+#: `pr` stays as well, because it is the value the VORP curve actually consumes.
+#:
+#: `name`, `team` and `pos` are deliberately OUT: they are identity and data, already guarded by
+#: the resolver, `check_sleeper_ids` and `check_def_identity`, and correcting one is not a
+#: re-synthesis. Commit c6379d78 rewrote `"team": "JAC"` to `"JAX"` on eight rows and re-ranked
+#: nobody -- had that forced the synthesis date forward, the fix for a lying date would itself
+#: have made the date lie. `vorp`/`vbdRank`/`vbdDelta` are out for the opposite reason: they are
+#: GENERATED from `pr` and the curve, so including them would fire on a curve rebuild that
+#: changed no judgment at all.
+JUDGMENT_KEYS = ("r", "pr", "tier", "badges", "note")
 
 # The reproduced prefix schedule. The vbdDelta break fired at EXACTLY three picks, so deciles
 # would have missed it entirely. 1, 2, 3, 4 first, then widen.

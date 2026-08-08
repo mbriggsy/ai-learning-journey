@@ -50,6 +50,14 @@ def good_board():
                player(3, "Charlie Three", "K", "DAL", 1)]
     for i, (code, city, nick) in enumerate(TEAMS):
         players.append(player(4 + i, f"{city} {nick}", "DEF", code, 1 + i))
+    # EVERY ROW CARRIES AN ID, because the real board does -- enrich() refuses to build without
+    # one. A fixture without them made `judgment_sha` key every row on the string "None", so two
+    # rows identical apart from `r` collapsed into the same multiset entry and swapping their
+    # board order was undetectable. That is a property of the fixture, not the digest: the same
+    # swap on the live board is caught. The rule here matches dump_for()'s key scheme exactly.
+    for i, p in enumerate(players):
+        p["sleeperId"] = p["team"] if p["pos"] == "DEF" else str(1000 + i)
+
     dst = [{"rank": i + 1, "team": f"{c} {n}"} for i, (_, c, n) in enumerate(TEAMS[:8])]
     return {
         # `updated` and `rankings.synthesized` are DELIBERATELY different here. They were the same
@@ -718,11 +726,34 @@ class TestRankingsProvenance(GateCase):
         return V.judgment_sha(b["players"]) != V.judgment_sha(self.b["players"])
 
     def test_every_judgment_field_moves_the_digest(self):
+        self.assertTrue(self.moved(lambda p: p[0].__setitem__("r", 99)), "r")
         self.assertTrue(self.moved(lambda p: p[0].__setitem__("pr", 99)), "pr")
         self.assertTrue(self.moved(lambda p: p[0].__setitem__("tier", 9)), "tier")
         self.assertTrue(self.moved(lambda p: p[0].__setitem__("note", "new read")), "note")
         self.assertTrue(self.moved(lambda p: p[0].__setitem__("badges", ["T"])), "badges")
         self.assertTrue(self.moved(lambda p: p.pop(0)), "a dropped player")
+
+    def test_a_CROSS_POSITIONAL_reorder_moves_the_digest(self):
+        """THE HOLE IN THE FIRST VERSION OF THIS DIGEST, found because a plant failed to land.
+
+        `pr` is the rank WITHIN a position, so trading two players at different positions in
+        overall board order leaves both `pr` values identical -- each is still first or second at
+        his own position. Measured on the live board before `r` was added: swapping Bijan Robinson
+        and Ja'Marr Chase at r=2/r=3 produced a byte-identical digest. Reordering the top of the
+        board is the most consequential re-rank there is, and the detector was blind to exactly it.
+        """
+        b = json.loads(json.dumps(self.b))
+        rows = sorted(b["players"], key=lambda x: x["r"])
+        first, second = next((x, y) for x, y in zip(rows, rows[1:]) if x["pos"] != y["pos"])
+        pr_before = (first["pr"], second["pr"])
+
+        first["r"], second["r"] = second["r"], first["r"]
+
+        self.assertEqual((first["pr"], second["pr"]), pr_before,
+                         "this test only means something while the swap leaves `pr` alone -- "
+                         "that is the whole reason the digest could not see it")
+        self.assertNotEqual(V.judgment_sha(b["players"]), V.judgment_sha(self.b["players"]),
+                            "the board order changed and the digest did not notice")
 
     def test_a_DATA_CORRECTION_does_not_move_the_digest(self):
         """c6379d78 rewrote `"team": "JAC"` to `"JAX"` on eight rows and re-ranked nobody. If that

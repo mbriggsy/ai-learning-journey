@@ -312,5 +312,77 @@ class TestNoRegression(EngineCase):
         self.assertIn("YOUR next pick", out)
 
 
+class TestTeamCodeAgreement(EngineCase):
+    """P0 REGRESSION, found while building U14 and fixed in the board.
+
+    Escalation buckets candidates by (team, pos), where the KEY comes from the board and the
+    LOOKUP comes from the pick. The board said "JAC" for all eight Jacksonville rows; Sleeper's
+    player dump AND its live picks both say "JAX". So every Jaguar whose rendered name drifted
+    landed in the (JAX, pos) bucket, found nothing, and was demoted to "not on our board" -- while
+    still sitting on BEST AVAILABLE. That is precisely the outcome U2 shipped to prevent, silently
+    disabled for one team, inside the safety net itself.
+
+    Reproduced against the real 120-pick lab feed by re-rendering one Jaguar's first name, which
+    is exactly how Sleeper drifts a name in practice.
+    """
+
+    FEED = os.path.join(ROOT, "tests", "fixtures", "lab_feed_120.json")
+
+    def drifted_feed(self, first, last, new_first):
+        with open(self.FEED, encoding="utf-8") as f:
+            picks = json.load(f)
+        hits = 0
+        for p in picks:
+            md = p.get("metadata") or {}
+            if md.get("first_name") == first and md.get("last_name") == last:
+                md["first_name"] = new_first
+                hits += 1
+        self.assertEqual(hits, 1, f"fixture drift target {first} {last} not found exactly once")
+        return picks
+
+    def test_a_jaguar_whose_name_drifts_still_escalates(self):
+        picks = self.drifted_feed("Bhayshul", "Tuten", "Bhayshul T.")
+        code, out = self.run_engine(self.real_board(), picks,
+                                    draft_id="1390923383440424960")
+        self.assertEqual(code, 0)
+        block = self.warning_block(out)
+        self.assertIn("Bhayshul T. Tuten", block)
+        self.assertIn("is UNCLAIMED", block,
+                      "a Jaguar drifted and the escalation stayed silent -- board/Sleeper team "
+                      "codes have diverged again (see JAC/JAX)")
+
+    def test_the_same_drift_on_a_non_jaguar_escalates_too(self):
+        """Control. Without this, a check that escalates everything would pass the test above."""
+        picks = self.drifted_feed("Bijan", "Robinson", "Bijan A.")
+        code, out = self.run_engine(self.real_board(), picks,
+                                    draft_id="1390923383440424960")
+        self.assertEqual(code, 0)
+        self.assertIn("is UNCLAIMED", self.warning_block(out))
+
+    def test_an_undrifted_feed_escalates_nobody(self):
+        """Second control: the real feed's 4 unmatched picks are genuinely off our board, so
+        nothing should be escalated. A check that always fires would pass both tests above."""
+        with open(self.FEED, encoding="utf-8") as f:
+            picks = json.load(f)
+        code, out = self.run_engine(self.real_board(), picks,
+                                    draft_id="1390923383440424960")
+        self.assertEqual(code, 0)
+        block = self.warning_block(out)
+        self.assertIn("4 pick(s) did not match", block)
+        self.assertNotIn("is UNCLAIMED", block)
+
+    def test_no_board_row_uses_a_team_code_absent_from_the_lab_feed_picks(self):
+        """The invariant behind all of the above, stated over data rather than behaviour:
+        board team codes and Sleeper pick team codes are drawn from one vocabulary."""
+        with open(self.FEED, encoding="utf-8") as f:
+            picks = json.load(f)
+        pick_teams = {(p.get("metadata") or {}).get("team") for p in picks}
+        pick_teams.discard(None)
+        board_teams = {r["team"] for r in self.real_board()["players"]}
+        # every team the feed names must be spelled the same way on the board
+        self.assertEqual(sorted(pick_teams - board_teams), [],
+                         "Sleeper uses a team code the board does not")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

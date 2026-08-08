@@ -1,0 +1,2098 @@
+{
+  "ids": {
+    "A.J. Brown": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "A.J. Brown",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "NE"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "5859"
+    },
+    "Aaron Jones Sr.": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Aaron Jones",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "MIN"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "4199"
+    },
+    "Aaron Rodgers": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Aaron Rodgers",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "PIT"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "96"
+    },
+    "Adonai Mitchell": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Adonai Mitchell",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "NYJ"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11625"
+    },
+    "Alec Pierce": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Alec Pierce",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "IND"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "8142"
+    },
+    "Amon-Ra St. Brown": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Amon-Ra St. Brown",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "DET"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "7547"
+    },
+    "Ashton Jeanty": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Ashton Jeanty",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "LV"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12527"
+    },
+    "Baker Mayfield": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Baker Mayfield",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "TB"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "4892"
+    },
+    "Baltimore Ravens": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Baltimore Ravens",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "DEF",
+        "team": "BAL"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "BAL"
+    },
+    "Bhayshul Tuten": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Bhayshul Tuten",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "JAX"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12490"
+    },
+    "Bijan Robinson": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Bijan Robinson",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "ATL"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "9509"
+    },
+    "Blake Corum": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Blake Corum",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "LAR"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11586"
+    },
+    "Bo Nix": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Bo Nix",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "DEN"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11563"
+    },
+    "Braelon Allen": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Braelon Allen",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "NYJ"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11576"
+    },
+    "Brandon Aubrey": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Brandon Aubrey",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "K",
+        "team": "DAL"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11533"
+    },
+    "Breece Hall": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Breece Hall",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "NYJ"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "8155"
+    },
+    "Brenton Strange": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Brenton Strange",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "TE",
+        "team": "JAX"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "9480"
+    },
+    "Brian Thomas Jr.": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Brian Thomas",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "JAX"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11631"
+    },
+    "Brock Bowers": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Brock Bowers",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "TE",
+        "team": "LV"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11604"
+    },
+    "Brock Purdy": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Brock Purdy",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "SF"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "8183"
+    },
+    "Bucky Irving": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Bucky Irving",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "TB"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11584"
+    },
+    "Cairo Santos": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Cairo Santos",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "K",
+        "team": "CHI"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "2020"
+    },
+    "Caleb Williams": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Caleb Williams",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "CHI"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11560"
+    },
+    "Cam Little": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Cam Little",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "K",
+        "team": "JAX"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11786"
+    },
+    "Cam Skattebo": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Cam Skattebo",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "NYG"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12481"
+    },
+    "Cam Ward": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Cam Ward",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "TEN"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12522"
+    },
+    "Cameron Dicker": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Cameron Dicker",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "K",
+        "team": "LAC"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "8259"
+    },
+    "Carnell Tate": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Carnell Tate",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "TEN"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "13279"
+    },
+    "CeeDee Lamb": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "CeeDee Lamb",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "DAL"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "6786"
+    },
+    "Chase Brown": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Chase Brown",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "CIN"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "9224"
+    },
+    "Chris Godwin Jr.": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Chris Godwin",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "TB"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "4037"
+    },
+    "Chris Olave": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Chris Olave",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "NO"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "8144"
+    },
+    "Christian Kirk": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Christian Kirk",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "SF"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "4950"
+    },
+    "Christian McCaffrey": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Christian McCaffrey",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "SF"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "4034"
+    },
+    "Christian Watson": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Christian Watson",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "GB"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "8167"
+    },
+    "Chuba Hubbard": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Chuba Hubbard",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "CAR"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "7594"
+    },
+    "Colston Loveland": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Colston Loveland",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "TE",
+        "team": "CHI"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12517"
+    },
+    "Courtland Sutton": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Courtland Sutton",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "DEN"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "5045"
+    },
+    "D'Andre Swift": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "D'Andre Swift",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "CHI"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "6790"
+    },
+    "DJ Moore": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "DJ Moore",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "BUF"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "4983"
+    },
+    "DK Metcalf": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "DK Metcalf",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "PIT"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "5846"
+    },
+    "Dak Prescott": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Dak Prescott",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "DAL"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "3294"
+    },
+    "Dallas Goedert": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Dallas Goedert",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "TE",
+        "team": "PHI"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "5022"
+    },
+    "Dalton Kincaid": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Dalton Kincaid",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "TE",
+        "team": "BUF"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "10236"
+    },
+    "Davante Adams": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Davante Adams",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "LAR"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "2133"
+    },
+    "David Montgomery": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "David Montgomery",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "HOU"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "5892"
+    },
+    "De'Von Achane": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "De'Von Achane",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "MIA"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "9226"
+    },
+    "De'Zhaun Stribling": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "De'Zhaun Stribling",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "SF"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "13417"
+    },
+    "DeVonta Smith": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "DeVonta Smith",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "PHI"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "7525"
+    },
+    "Deebo Samuel": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Deebo Samuel",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "SF"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "5872"
+    },
+    "Denver Broncos": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Denver Broncos",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "DEF",
+        "team": "DEN"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "DEN"
+    },
+    "Denzel Boston": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Denzel Boston",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "CLE"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "13346"
+    },
+    "Derrick Henry": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Derrick Henry",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "BAL"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "3198"
+    },
+    "Detroit Lions": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Detroit Lions",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "DEF",
+        "team": "DET"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "DET"
+    },
+    "Drake London": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Drake London",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "ATL"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "8112"
+    },
+    "Drake Maye": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Drake Maye",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "NE"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11564"
+    },
+    "Eddy Pineiro": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Eddy Pineiro",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "K",
+        "team": "SF"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "5189"
+    },
+    "Emari Demercado": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Emari Demercado",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "KC"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11199"
+    },
+    "Emeka Egbuka": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Emeka Egbuka",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "TB"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12514"
+    },
+    "Evan McPherson": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Evan McPherson",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "K",
+        "team": "CIN"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "7839"
+    },
+    "Garrett Wilson": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Garrett Wilson",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "NYJ"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "8146"
+    },
+    "George Kittle": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "George Kittle",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "TE",
+        "team": "SF"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "4217"
+    },
+    "George Pickens": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "George Pickens",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "DAL"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "8137"
+    },
+    "Green Bay Packers": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Green Bay Packers",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "DEF",
+        "team": "GB"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "GB"
+    },
+    "Harold Fannin Jr.": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Harold Fannin",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "TE",
+        "team": "CLE"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12506"
+    },
+    "Houston Texans": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Houston Texans",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "DEF",
+        "team": "HOU"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "HOU"
+    },
+    "Hunter Henry": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Hunter Henry",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "TE",
+        "team": "NE"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "3214"
+    },
+    "Isaiah Davis": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Isaiah Davis",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "NYJ"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11571"
+    },
+    "Isaiah Likely": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Isaiah Likely",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "TE",
+        "team": "NYG"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "8131"
+    },
+    "J.K. Dobbins": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "J.K. Dobbins",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "DEN"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "6806"
+    },
+    "Ja'Marr Chase": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Ja'Marr Chase",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "CIN"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "7564"
+    },
+    "Jacksonville Jaguars": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jacksonville Jaguars",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "DEF",
+        "team": "JAX"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "JAX"
+    },
+    "Jacory Croskey-Merritt": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jacory Croskey-Merritt",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "WAS"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12533"
+    },
+    "Jadarian Price": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jadarian Price",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "SEA"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "13286"
+    },
+    "Jahmyr Gibbs": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jahmyr Gibbs",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "DET"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "9221"
+    },
+    "Jake Bates": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jake Bates",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "K",
+        "team": "DET"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11539"
+    },
+    "Jake Ferguson": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jake Ferguson",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "TE",
+        "team": "DAL"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "8110"
+    },
+    "Jakobi Meyers": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jakobi Meyers",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "JAX"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "5947"
+    },
+    "Jalen Hurts": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jalen Hurts",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "PHI"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "6904"
+    },
+    "Jalen McMillan": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jalen McMillan",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "TB"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11618"
+    },
+    "James Cook": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "James Cook",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "BUF"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "8138"
+    },
+    "Jameson Williams": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jameson Williams",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "DET"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "8148"
+    },
+    "Jared Goff": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jared Goff",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "DET"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "3163"
+    },
+    "Jason Myers": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jason Myers",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "K",
+        "team": "SEA"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "2747"
+    },
+    "Javonte Williams": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Javonte Williams",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "DAL"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "7588"
+    },
+    "Jaxon Smith-Njigba": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jaxon Smith-Njigba",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "SEA"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "9488"
+    },
+    "Jaxson Dart": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jaxson Dart",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "NYG"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12508"
+    },
+    "Jayden Daniels": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jayden Daniels",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "WAS"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11566"
+    },
+    "Jayden Higgins": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jayden Higgins",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "HOU"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12484"
+    },
+    "Jaydon Blue": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jaydon Blue",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "DAL"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12457"
+    },
+    "Jaylen Waddle": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jaylen Waddle",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "DEN"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "7526"
+    },
+    "Jaylen Warren": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jaylen Warren",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "PIT"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "8228"
+    },
+    "Jeremiyah Love": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jeremiyah Love",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "ARI"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "13287"
+    },
+    "Joe Burrow": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Joe Burrow",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "CIN"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "6770"
+    },
+    "Jonathan Taylor": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jonathan Taylor",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "IND"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "6813"
+    },
+    "Jonathon Brooks": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jonathon Brooks",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "CAR"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11583"
+    },
+    "Jordan Addison": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jordan Addison",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "MIN"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "9756"
+    },
+    "Jordan Love": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jordan Love",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "GB"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "6804"
+    },
+    "Jordyn Tyson": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Jordyn Tyson",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "NO"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "13281"
+    },
+    "Josh Allen": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Josh Allen",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "BUF"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "4984"
+    },
+    "Josh Downs": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Josh Downs",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "IND"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "9500"
+    },
+    "Josh Jacobs": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Josh Jacobs",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "GB"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "5850"
+    },
+    "Justin Herbert": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Justin Herbert",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "LAC"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "6797"
+    },
+    "Justin Jefferson": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Justin Jefferson",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "MIN"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "6794"
+    },
+    "KC Concepcion": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "KC Concepcion",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "CLE"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "13298"
+    },
+    "Ka'imi Fairbairn": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Ka'imi Fairbairn",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "K",
+        "team": "HOU"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "3451"
+    },
+    "Kansas City Chiefs": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Kansas City Chiefs",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "DEF",
+        "team": "KC"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "KC"
+    },
+    "Kayshon Boutte": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Kayshon Boutte",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "NE"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "9504"
+    },
+    "Kenneth Gainwell": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Kenny Gainwell",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "TB"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "7567"
+    },
+    "Kenneth Walker III": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Kenneth Walker",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "KC"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "8151"
+    },
+    "Kenyon Sadiq": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Kenyon Sadiq",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "TE",
+        "team": "NYJ"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "13330"
+    },
+    "Khalil Herbert": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Khalil Herbert",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "SF"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "7608"
+    },
+    "Khalil Shakir": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Khalil Shakir",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "BUF"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "8134"
+    },
+    "Kyle Monangai": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Kyle Monangai",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "CHI"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12534"
+    },
+    "Kyle Pitts": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Kyle Pitts",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "TE",
+        "team": "ATL"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "7553"
+    },
+    "Kyler Murray": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Kyler Murray",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "MIN"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "5849"
+    },
+    "Kyren Williams": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Kyren Williams",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "LAR"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "8150"
+    },
+    "Ladd McConkey": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Ladd McConkey",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "LAC"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11635"
+    },
+    "Lamar Jackson": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Lamar Jackson",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "BAL"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "4881"
+    },
+    "Los Angeles Chargers": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Los Angeles Chargers",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "DEF",
+        "team": "LAC"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "LAC"
+    },
+    "Los Angeles Rams": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Los Angeles Rams",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "DEF",
+        "team": "LAR"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "LAR"
+    },
+    "Luther Burden III": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Luther Burden",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "CHI"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12519"
+    },
+    "Makai Lemon": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Makai Lemon",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "PHI"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "13294"
+    },
+    "Malik Nabers": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Malik Nabers",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "NYG"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11632"
+    },
+    "MarShawn Lloyd": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "MarShawn Lloyd",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "GB"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11581"
+    },
+    "Mark Andrews": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Mark Andrews",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "TE",
+        "team": "BAL"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "5012"
+    },
+    "Marvin Harrison Jr.": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Marvin Harrison",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "ARI"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11628"
+    },
+    "Matthew Golden": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Matthew Golden",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "GB"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12501"
+    },
+    "Matthew Stafford": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Matthew Stafford",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "LAR"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "421"
+    },
+    "Michael Pittman Jr.": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Michael Pittman",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "PIT"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "6819"
+    },
+    "Mike Evans": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Mike Evans",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "SF"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "2216"
+    },
+    "Minnesota Vikings": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Minnesota Vikings",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "DEF",
+        "team": "MIN"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "MIN"
+    },
+    "New England Patriots": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "New England Patriots",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "DEF",
+        "team": "NE"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "NE"
+    },
+    "Nicholas Singleton": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Nicholas Singleton",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "TEN"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "13288"
+    },
+    "Nico Collins": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Nico Collins",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "HOU"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "7569"
+    },
+    "Omar Cooper Jr.": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Omar Cooper",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "NYJ"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "13276"
+    },
+    "Omarion Hampton": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Omarion Hampton",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "LAC"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12507"
+    },
+    "Oronde Gadsden II": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Oronde Gadsden",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "TE",
+        "team": "LAC"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12493"
+    },
+    "Parker Washington": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Parker Washington",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "JAX"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "9487"
+    },
+    "Patrick Mahomes": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Patrick Mahomes",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "KC"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "4046"
+    },
+    "Philadelphia Eagles": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Philadelphia Eagles",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "DEF",
+        "team": "PHI"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "PHI"
+    },
+    "Pittsburgh Steelers": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Pittsburgh Steelers",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "DEF",
+        "team": "PIT"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "PIT"
+    },
+    "Puka Nacua": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Puka Nacua",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "LAR"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "9493"
+    },
+    "Quentin Johnston": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Quentin Johnston",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "LAC"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "9754"
+    },
+    "Quinshon Judkins": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Quinshon Judkins",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "CLE"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12512"
+    },
+    "RJ Harvey": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "RJ Harvey",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "DEN"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12489"
+    },
+    "Rachaad White": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Rachaad White",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "WAS"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "8136"
+    },
+    "Rashee Rice": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Rashee Rice",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "KC"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "10229"
+    },
+    "Rashid Shaheed": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Rashid Shaheed",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "SEA"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "8676"
+    },
+    "Rhamondre Stevenson": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Rhamondre Stevenson",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "NE"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "7611"
+    },
+    "Rico Dowdle": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Rico Dowdle",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "PIT"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "7021"
+    },
+    "Rome Odunze": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Rome Odunze",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "CHI"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11620"
+    },
+    "Sam Darnold": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Sam Darnold",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "SEA"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "4943"
+    },
+    "Sam LaPorta": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Sam LaPorta",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "TE",
+        "team": "DET"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "10859"
+    },
+    "Saquon Barkley": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Saquon Barkley",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "PHI"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "4866"
+    },
+    "Seattle Seahawks": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Seattle Seahawks",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "DEF",
+        "team": "SEA"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "SEA"
+    },
+    "T.J. Hockenson": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "T.J. Hockenson",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "TE",
+        "team": "MIN"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "5844"
+    },
+    "Tank Dell": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Tank Dell",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "HOU"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "9502"
+    },
+    "Tee Higgins": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Tee Higgins",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "CIN"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "6801"
+    },
+    "Terry McLaurin": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Terry McLaurin",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "WAS"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "5927"
+    },
+    "Tetairoa McMillan": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Tetairoa McMillan",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "CAR"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12526"
+    },
+    "Tony Pollard": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Tony Pollard",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "TEN"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "5967"
+    },
+    "Travis Etienne": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Travis Etienne",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "NO"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "7543"
+    },
+    "Travis Kelce": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Travis Kelce",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "TE",
+        "team": "KC"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "1466"
+    },
+    "TreVeyon Henderson": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "TreVeyon Henderson",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "NE"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12529"
+    },
+    "Trevor Lawrence": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Trevor Lawrence",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "JAX"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "7523"
+    },
+    "Trey McBride": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Trey McBride",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "TE",
+        "team": "ARI"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "8130"
+    },
+    "Tucker Kraft": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Tucker Kraft",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "TE",
+        "team": "GB"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "9484"
+    },
+    "Tyler Loop": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Tyler Loop",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "K",
+        "team": "BAL"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12711"
+    },
+    "Tyler Shough": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Tyler Shough",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "QB",
+        "team": "NO"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12545"
+    },
+    "Tyler Warren": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Tyler Warren",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "TE",
+        "team": "IND"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "12518"
+    },
+    "Xavier Worthy": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Xavier Worthy",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "KC"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "11624"
+    },
+    "Zach Charbonnet": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Zach Charbonnet",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "RB",
+        "team": "SEA"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "9753"
+    },
+    "Zay Flowers": {
+      "dump_fetched_at": "2026-08-08T01:12:13+00:00",
+      "evidence": {
+        "dump_name": "Zay Flowers",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "BAL"
+      },
+      "resolved_on": "2026-08-07",
+      "sleeperId": "9997"
+    }
+  },
+  "meta": {
+    "board_rows": 174,
+    "dump_fetched_at": "2026-08-08T01:15:28+00:00",
+    "dump_source": "https://api.sleeper.app/v1/players/nfl"
+  },
+  "unresolved": []
+}

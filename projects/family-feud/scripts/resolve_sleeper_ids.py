@@ -256,6 +256,30 @@ def resolve(board, cache, ledger):
         cand = cands[0]
         pid = cand.get("player_id")
 
+        # THE FROZEN GUARD RUNS FIRST, BEFORE ANY OTHER OBJECTION TO THE CANDIDATE.
+        #
+        # ORDER IS LOAD-BEARING HERE, and it was wrong once. If a row already carries a frozen
+        # id and today's dump disagrees, that outranks everything else we could say -- because
+        # any message that does not LEAD with it is a message inviting an overwrite. Shipped
+        # briefly with the shared-token proposal above this guard, which starved it: for a
+        # frozen row the proposal fired, `continue`d, and told the operator to paste a
+        # TEAMMATE's id in by hand. The frozen id was never even mentioned. That is the exact
+        # failure this unit exists to prevent, re-entered through its own remediation text.
+        # Any new objection added below must stay below this one.
+        if prior and prior.get("sleeperId") != pid:
+            note = ""
+            if tier == "shared_token":
+                shared = sorted(tokens(name) & tokens(dump_name(cand)))
+                note = (f"\n       Today's match is ONLY a shared token {shared}:\n"
+                        f"       {describe(cand)}\n"
+                        f"       A lone shared-token match is routinely a same-position "
+                        f"teammate, which makes overwriting this id especially dangerous.")
+            problems.append(
+                f"{name!r} is FROZEN at {prior.get('sleeperId')} (resolved "
+                f"{prior.get('resolved_on')}) but today's dump resolves it to {pid}. "
+                f"The primary key is moving. Adjudicate; do not overwrite.{note}")
+            continue
+
         # A LONE SHARED-TOKEN CANDIDATE IS NOT AN IDENTIFICATION, AND IS ROUTINELY A TEAMMATE.
         # Six board rows have a same-position teammate sharing exactly one token, so the moment
         # a name re-renders (or a trade moves the real man off that team) tier 1 goes empty and
@@ -264,6 +288,11 @@ def resolve(board, cache, ledger):
         # because Wallace really is a WR on ARI. Auto-accepting that freezes the wrong man
         # permanently. The engine may use this rule to RAISE A WARNING a human reads; a
         # one-time permanent freeze is a different act and needs a human either way.
+        #
+        # Reaching here with a `prior` means the prior AGREES with pid -- the guard above
+        # `continue`d otherwise -- i.e. an operator already approved this id, so it is honoured
+        # silently. The condition is written defensively rather than as `not prior` so that it
+        # stays correct if the guard above is ever moved again.
         if tier == "shared_token" and not (prior and prior.get("sleeperId") == pid):
             shared = sorted(tokens(name) & tokens(dump_name(cand)))
             problems.append(
@@ -288,12 +317,8 @@ def resolve(board, cache, ledger):
                             f"{row.get('team')!r} -- the convention U14 relies on is broken")
             continue
 
-        if prior and prior.get("sleeperId") != pid:
-            problems.append(
-                f"{name!r} is FROZEN at {prior.get('sleeperId')} (resolved "
-                f"{prior.get('resolved_on')}) but today's dump resolves it to {pid}. "
-                f"The primary key is moving. Adjudicate; do not overwrite.")
-            continue
+        # (The FROZEN guard used to live here. It now runs above, before any other objection --
+        # leaving a copy here would be unreachable code wearing a safety check's clothes.)
 
         entries[name] = prior if prior else {
             "sleeperId": pid,

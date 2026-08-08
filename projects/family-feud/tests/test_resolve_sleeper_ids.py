@@ -172,7 +172,12 @@ class TierTwoNeverAutoAccepts(Harness):
         self.assertEqual(self.ledger()["ids"]["Jaxon Smith-Njigba"]["sleeperId"], "9999")
 
     def test_an_approved_id_that_stops_matching_still_hard_stops(self):
-        """Approval freezes ONE id, it does not bless the row forever."""
+        """Approval freezes ONE id, it does not bless the row forever.
+
+        The assertions here are deliberately specific. `assertIn("7777")` alone passed for the
+        WRONG REASON -- the new id is echoed by the shared-token proposal AND by the FROZEN
+        guard, so it could not tell which one fired, and the one that fired was the wrong one.
+        """
         self.write_board([board_row(1, "Jaxon Smith-Njigba", "WR", "SEA")])
         self.write_cache([dump_player("7777", "Jaxon", "Njigba", "SEA", "WR")])
         self.write_ledger({"ids": {"Jaxon Smith-Njigba": {
@@ -184,6 +189,45 @@ class TierTwoNeverAutoAccepts(Harness):
         rc, out = self.run_resolver()
         self.assertEqual(rc, 1)
         self.assertIn("7777", out)
+        self.assertIn("FROZEN at 9999", out, "the guard that fired was not the FROZEN guard")
+        self.assertIn("do not overwrite", out)
+
+    def test_the_proposal_never_preempts_the_frozen_guard(self):
+        """A frozen row that falls to tier 2 must warn FROZEN, never invite an overwrite.
+
+        Shipped broken in c9bacf7f and caught by the sweep that followed. The new shared-token
+        proposal sat ABOVE the FROZEN guard, so for a row that already had a frozen id the
+        proposal fired first and `continue`d -- the FROZEN guard was unreachable on that path.
+        The operator was shown a teammate's id, told to "paste the id into the ledger by hand",
+        and never told that a frozen id existed at all. Following the tool's own remediation
+        overwrote the right man with his teammate: the precise failure the unit exists to
+        prevent, re-entered through the remediation text a fix had just cleaned up elsewhere.
+
+        This is the seed bug wearing the fix's clothes, which is why the assertions below pin
+        the MESSAGE and not just the exit code.
+        """
+        self.write_board([board_row(1, "Marvin Harrison", "WR", "ARI")])
+        # The real man was traded and his name re-rendered, so ARI/WR holds only his ex-teammate.
+        self.write_cache([dump_player("11628", "Marvin", "Harrison Jr.", "CLE", "WR"),
+                          dump_player("13670", "Harrison", "Wallace", "ARI", "WR", years_exp=0)])
+        self.write_ledger({"ids": {"Marvin Harrison": {
+            "sleeperId": "11628", "resolved_on": "2026-06-01",
+            "dump_fetched_at": "2026-06-01T00:00:00+00:00",
+            "evidence": {"team": "ARI", "pos": "WR", "matched": "exact_norm",
+                         "matched_token": None, "dump_name": "Marvin Harrison"}}},
+            "unresolved": []})
+        before = self.read_ledger_bytes()
+        rc, out = self.run_resolver()
+        self.assertEqual(rc, 1)
+        self.assertIn("FROZEN at 11628", out,
+                      "the operator was never shown the id he already had frozen")
+        self.assertIn("do not overwrite", out)
+        self.assertNotIn("paste the id into the ledger by hand", out,
+                         "the tool invited an overwrite of a frozen id")
+        # The weak-evidence note must SURVIVE -- it is why this overwrite is extra dangerous.
+        self.assertIn("shared token", out)
+        self.assertIn("13670", out, "the operator cannot adjudicate what he is not shown")
+        self.assertEqual(self.read_ledger_bytes(), before, "the ledger was rewritten")
 
     def test_tier_one_wins_when_both_tiers_would_match(self):
         """The whole reason tier 1 exists: a teammate at the same position sharing one token.

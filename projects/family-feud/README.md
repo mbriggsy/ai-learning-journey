@@ -72,7 +72,10 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         memory, and arms the contamination gate for you.
                  validate_cargo.py    — is this payload actually the thing we asked for? The
                                         mule's per-source gate: status, content-type, parse, items.
-tests/           450 tests: python -m unittest discover -s tests  (run from the root)
+                 build_newsletter.py  — THE NIGHTLY FEUD. Turns the mule's cargo into an edition.
+                                        Facts are computed, never written by a model; the design
+                                        is carried from the frozen template; no network calls.
+tests/           491 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```
@@ -190,8 +193,11 @@ quoting these.
 under Cowork — 15/15 manual picks, zero clock misses. The browser-driving half has **not** been
 exercised in this environment. Treat it as unproven here until a mock says otherwise.
 
-**Not working:** The Nightly Feud's build half has never run once — see
-[`docs/nightly-feud.md`](docs/nightly-feud.md).
+**The Nightly Feud publishes now.** Its build half had never run once; **Edition #1 went out
+2026-08-08** — `python scripts/build_newsletter.py`. Deterministic code owns every fact, the design
+is carried byte-for-byte from the frozen template rather than copied, and it makes no network calls.
+What is still missing is the *schedule* (U12): today it is a command you run, not a job that runs
+itself. See [`docs/nightly-feud.md`](docs/nightly-feud.md).
 
 **The board polls the live draft now.** Open it and click **▶ Go live** — or open it with `?live=1`
 and it starts itself, which is what a wall display wants. Every 12 seconds it reads the picks feed

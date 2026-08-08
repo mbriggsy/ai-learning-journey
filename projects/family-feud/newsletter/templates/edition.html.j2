@@ -1,0 +1,162 @@
+{# The Nightly Feud -- nightly edition.
+
+   PRESENTATION ONLY. Every fact and every number arrives in the context from
+   scripts/build_newsletter.py; nothing here computes, estimates or remembers one. If you find
+   yourself wanting to type a figure into this file, the figure belongs in the builder.
+
+   The <style> block and the theme toggle are INJECTED from newsletter-template.html, which stays
+   frozen in git as the design reference. They are not duplicated here, so the edition cannot
+   drift from the design and there is no second copy of the CSS to maintain.
+
+   VOICE, which is the asset and cannot be produced by f-strings: mock-institutional setup,
+   deadpan puncture. Long declarative sentence, then a colon or em-dash pivot into a short
+   kicker that lands last. Second person to the owner. Hunter is the antagonist. ZERO
+   exclamation marks -- the joke is the flatness. #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Nightly Feud — {{ date_short }} (Edition #{{ edition_no }})</title>
+<style>
+{{ style }}
+</style>
+</head>
+<body>
+<button id="themeBtn" title="Toggle light/dark">☀ daylight</button>
+<div class="paper">
+
+  <div class="masthead">
+    <h1>THE NIGHTLY <span class="accent">FEUD</span></h1>
+    <div class="tagline">All the news that's fit to draft. — Family Feud League, est. 2026</div>
+  </div>
+  <div class="dateline">
+    <span>Edition #{{ edition_no }}</span>
+    <span>{{ date_long }}</span>
+    <span>Press time: {{ press_time }}</span>
+  </div>
+
+  <div class="tiles">
+    {% for t in tiles %}
+    <div class="tile"><div class="num">{{ t.num }}</div><div class="lbl">{{ t.lbl }}</div></div>
+    {% endfor %}
+  </div>
+
+  <section>
+    <h2><span class="sec-icon">🏛️</span>League Desk</h2>
+    {% if league.managers %}
+    <p class="lede">The Family Feud sits at <strong>{{ league.managers|length }} of {{ league.teams }} seats</strong> — {{ league.managers|join(', ') }}.
+      {% if league.open_seats %}
+      {{ league.open_seats }} still open, which means {{ league.open_seats }} more scouting file{{ '' if league.open_seats == 1 else 's' }} that do not exist yet.
+      {% else %}
+      The room is full, so the only unknown left is the order.
+      {% endif %}
+    </p>
+    {% else %}
+    <p class="lede">The league object did not arrive tonight, so the desk has nothing to report about the room — see the colophon for what the mule could not haul.</p>
+    {% endif %}
+
+    <div class="item {{ 'good' if league.scheduled else 'watch' }}">
+      <div class="hd">
+        {% if league.scheduled %}
+        The draft has a time <span class="tag up">SCHEDULED</span>
+        {% else %}
+        The draft still has no time <span class="tag hot">WATCH</span>
+        {% endif %}
+      </div>
+      <div class="bd">
+        {% if league.scheduled %}
+        Sleeper is carrying a real <code>start_time</code>, which makes the countdown above a fact rather than a hope. The board is dated {{ tiles[3].num }}: rebuild it before the clock starts, because ranks move daily in August and a stale board drafts confidently and wrong.
+        {% else %}
+        <code>start_time</code> is <strong>null</strong> and no draft order is posted. The ~Aug 29 target is a handshake between eight people, which means it can move <strong>earlier</strong> as easily as later — this desk will not print a countdown to a date the draft object does not carry.
+        {% endif %}
+      </div>
+    </div>
+
+    {% if not league.order_posted %}
+    <div class="item">
+      <div class="hd">Your slot is unknown, and that is normal <span class="tag">PENDING</span></div>
+      <div class="bd">Sleeper populates <code>draft_order</code> near go time. Until it does, the tile reads a dash rather than a guess: <code>slot_to_roster_id</code> would happily hand you a number, and there are three unrelated threes in this league.</div>
+    </div>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2><span class="sec-icon">🚑</span>The Wire</h2>
+    {% if wire %}
+    <p class="lede">{{ wire|length }} headline{{ '' if wire|length == 1 else 's' }} tonight named someone on our {{ board_rows }}-player board. Everything else the feeds carried is somebody else's problem.</p>
+    {% for item in wire %}
+    <div class="item {{ item.kind }}">
+      <div class="hd">
+        {% if item.link %}<a href="{{ item.link }}" style="color:inherit;text-decoration:none;">{{ item.title }}</a>{% else %}{{ item.title }}{% endif %}
+        {% if item.kind == 'bad' %}<span class="tag down">BOARD HIT</span>
+        {% elif item.kind == 'good' %}<span class="tag up">RISER</span>
+        {% else %}<span class="tag hot">WATCH</span>{% endif %}
+      </div>
+      <div class="bd">
+        {% for p in item.players %}
+        <strong>{{ p.name }}</strong> — {{ p.pos }}, {{ p.team }}, board #{{ p.r }}, tier {{ p.tier }}{{ '' if loop.last else ' · ' }}
+        {% endfor %}
+        <span style="opacity:.7"> ({{ item.outlets|join(', ') }}{% if item.also %}, and {{ item.also }} more headline{{ '' if item.also == 1 else 's' }} on the same story{% endif %})</span>
+      </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="lede">Nothing on the wire tonight touched our {{ board_rows }}-player board. That is not a quiet news day, it is a quiet news day <em>for us</em> — the feeds were busy, none of it was about anyone you can draft.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2><span class="sec-icon">📈</span>Market Watch</h2>
+    {% set adds = market.adds %}{% set drops = market.drops %}
+    {% if adds.rows or drops.rows %}
+    <p class="lede">Sleeper's last 24 hours of adds and drops, filtered to the {{ board_rows }} players we actually rank. Your board is the benchmark; the market is gossip until it isn't.</p>
+    {% for row in adds.rows %}
+    <div class="item good">
+      <div class="hd">{{ row.name }} <span class="tag up">ADDED</span></div>
+      <div class="bd">{{ row.pos }}, {{ row.team }} · board #{{ row.r }}, tier {{ row.tier }}{% if row.count %} · {{ row.count }} adds in 24h{% endif %}</div>
+    </div>
+    {% endfor %}
+    {% for row in drops.rows %}
+    <div class="item bad">
+      <div class="hd">{{ row.name }} <span class="tag down">DROPPED</span></div>
+      <div class="bd">{{ row.pos }}, {{ row.team }} · board #{{ row.r }}, tier {{ row.tier }}{% if row.count %} · {{ row.count }} drops in 24h{% endif %}</div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="lede">All {{ adds.total }} trending adds and {{ drops.total }} trending drops belong to players we do not rank. The market moved; none of it moved anything of ours.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2><span class="sec-icon">📋</span>Owner's Action Items</h2>
+    <ul class="actions">
+      {% if league.scheduled %}
+      <li>Rebuild the board — the draft has a date now and yours is dated {{ tiles[3].num }}: <code>python scripts/build_board.py</code></li>
+      {% else %}
+      <li>Nothing on the draft. It has no time yet, and the watcher is the thing that stays awake for that, not you.</li>
+      {% endif %}
+      {% if wire %}
+      <li>Read the {{ wire|length }} wire item{{ '' if wire|length == 1 else 's' }} above. They are the only ones that touched your board.</li>
+      {% endif %}
+      <li>Beat Hunter. He is the commissioner, which means he sets the clock and will not be waiting on you.</li>
+    </ul>
+  </section>
+
+  <div class="colophon">
+    THE NIGHTLY FEUD · compiled nightly by Claude · league data &amp; wire copy via the Feud Mule (local scheduler)<br>
+    {% if cargo_stamp %}Cargo stamped {{ cargo_stamp }} · {% endif %}Back issues in <span style="color:var(--ink-dim);">newsletter/archive/</span> · debug trail in <span style="color:var(--ink-dim);">newsletter/data/archive/</span> · Beat Hunter. 🏈
+    {% if draft_note or gaps %}
+    <br><br><span style="color:var(--ink-dim);">
+      {% if draft_note %}* {{ draft_note }}.{% endif %}
+      {% for g in gaps %}<br>Tonight's paper is thinner than usual: {{ g }}.{% endfor %}
+    </span>
+    {% endif %}
+  </div>
+
+</div>
+<script>
+{{ theme_script }}
+</script>
+</body>
+</html>

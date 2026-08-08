@@ -6,7 +6,7 @@
 ## ▶ WHERE WE ARE — read this first, update it when it changes
 
 ```
-plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U7·U8·U10)  ◀ YOU ARE HERE (U11)
+plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U7·U8·U10·U11)  ◀ HERE (U12)
 ```
 
 **Units shipped:** U1, U2 (Phase 0 gates) · **U9** (draft-state watcher) · **U3** (one normalizer,
@@ -16,9 +16,16 @@ curve; oracle exact at 2469/2469) · **U6** (the generator — one source, every
 **U15** (the engine wrapper — shape read from the draft, not typed) · **U7** (the board polls the
 live draft) — the last five on 2026-08-08.
 
-**Phase 2 is closed; U8 and U10 are done.** **Next action: U11** — The Nightly Feud's build half,
-the thing Briggsy actually loves and the one piece of this project that **has never run once**.
-U10 was its blocking dependency and is now cleared: the wire is real, validated, and 5 feeds deep.
+**Phase 2 closed; U8, U10 and U11 done.** **Next action: U12** — schedule the newsletter. Edition #1
+exists but only because a human typed the command; a nightly paper that needs a human is not a
+nightly paper. Mirror `install-mule.ps1`: derive from `$PSScriptRoot`, register, force a run,
+verify, throw if not green, `-StartWhenAvailable` so a run missed while the laptop sleeps fires on
+wake. **Health is proven by output freshness, never by `Last Result`** — both are frozen signals.
+
+⚠️ **One thing to decide before U12 runs unattended:** each build writes a back issue into
+`newsletter/archive/`, which is **tracked**, so a nightly job leaves an uncommitted file every
+night and `git status` is never clean again. Either gitignore back issues (the edition number
+self-heals from disk, so numbering still works) or have the job commit them. Briggsy's call.
 
 **The ultramode review RAN 2026-08-08** (13 reviewers, 4-angle adversary panel, 3 refuters per
 finding, `real`/`material` aggregated separately). 77 confirmed after verification, 22 correctly
@@ -35,8 +42,8 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **450 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 450 with **2 skips**,
+gate went **13 findings → 0** by fixing surfaces. **491 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 491 with **2 skips**,
 both live-cargo environment probes. Verified by eye, not only by tests: the cheat sheet is **2 pages
 — the whole 174-row board on page 1**, the plan on page 2 — and the HTML board renders shape-driven
 round labels with no invented rounds.
@@ -268,6 +275,25 @@ U9  →  U3  →  U14  →  { U4 ∥ U5 }  →  U6  →  { U7 ∥ U15 }  →  U8
     `vorpMethod` per row, `meta.shape` from the live draft object, and
     `meta.badges[code].glyph`, which killed the engine's fourth glyph table.
   - **VORP is CARRIED, not recomputed** — deliberate, per KTD-6. See the note below.
+- ~~**U11 The Nightly Feud's build half**~~ ✅ **SHIPPED 2026-08-08 — Edition #1 exists.**
+  `scripts/build_newsletter.py` + `newsletter/templates/edition.html.j2`, 41 tests.
+  The mule spent days stockpiling cargo for a consumer that did not exist. It exists.
+  - **Deterministic code owns every fact.** `Days to Draft` renders an asterisked dash because
+    `start_time` is null, and switches to a real countdown the night it populates — no code edit.
+    `Your Slot` reads `draft_order` or a dash, **never** `slot_to_roster_id`.
+  - **The design is CARRIED, not copied.** The frozen template's `<style>` and theme script are
+    extracted at build time; a test asserts the rendered CSS hashes identically. Consequence worth
+    knowing: the unused `.preview-banner` rule survives in the stylesheet. The banner does not.
+  - **Zero network calls.** Trending ids join the board on the frozen `sleeperId`, retiring the
+    plan's 48 per-player lookups — U6 changed that fact after the plan was written.
+  - ⚠️ **The Wire matches FULL names only.** Surname matching was measured against one real night:
+    **10 false positives out of 11.** "Hall of Fame" matched Breece Hall five times; "Kirk Cousins"
+    matched Christian Kirk. Every one of those headlines is now a test. The cost is that
+    *"Nacua ruled out"* is missed — accepted deliberately, and written down as a decision.
+  - **Headlines are grouped by player**, worst news first, with an outlet count. 31 raw matches
+    became 20 groups; five outlets carrying one Gibbs story is one item, not five.
+  - **Verified in a browser at 1536×791**, not just by tests — which is how the Board Version tile
+    was caught wrapping onto two lines.
 - ~~**U10 harden the mule**~~ ✅ **SHIPPED 2026-08-08.** `newsletter/feud_mule.ps1` (v2) +
   `scripts/validate_cargo.py`, 21 tests.
   - **The mule now validates content, not bytes.** Status, content-type, that it parses

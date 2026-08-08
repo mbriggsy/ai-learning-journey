@@ -3,6 +3,24 @@
 > **Actionable next-actions only.** No session history — `git log` has that.
 > Re-ranked every session, so never cite "item N" anywhere; cite the title.
 
+## ▶ WHERE WE ARE — read this first, update it when it changes
+
+```
+plan  ✅ → deepen  ✅ → work  ◀ YOU ARE HERE → ultramode ⬜ (at the Phase 1 boundary, after U6)
+```
+
+**Next action: `/ce-work` on
+[`docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md`](docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md),
+starting with U9.**
+
+**The planning phase is CLOSED.** The plan was deepened 2026-08-07 and does not get another pass.
+If something in it turns out to be wrong, fix it inside `/ce-work` — do not reopen a deepening
+cycle. Reopening is how this project loses its thread: analysis that spawns analysis has no
+stopping condition, and the plan is already outgrowing the code (10 commits, 3 of which changed
+code; 15 units planned, 2 built).
+
+**Ultramode fires once, after U6** — one review of a working spine, not six reviews of fragments.
+
 **Where we are:** the machinery rebuild is planned and Phase 0 is shipped. The two silent paths to
 advising an already-drafted player are closed and covered by **46 tests** (`python -m unittest
 discover -s tests`). What remains is the spine: one source that generates every surface, and

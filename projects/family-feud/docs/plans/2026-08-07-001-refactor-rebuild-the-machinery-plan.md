@@ -491,7 +491,7 @@ end to end; doc corrections.
 #### U1. Close cross-draft contamination
 
 **Goal:** make it impossible to advise off another draft's picks.
-**Files:** `scripts/merge_picks.py`, `draft-kit/test_merge_picks.py`
+**Files:** `scripts/merge_picks.py`, `tests/test_merge_picks.py`
 **Approach:** Read `draft_id` off every incoming pick and off every pick already in `picks.json`.
 Refuse the merge — loudly, non-zero exit — if any pick's `draft_id` differs from the requested
 draft. Also resolve `--check`: it is advertised in both the docstring and the usage string but
@@ -512,7 +512,7 @@ empty real draft now fails closed.
 #### U2. Report unmatched picks
 
 **Goal:** kill the silent name-mismatch path to advising a drafted player.
-**Files:** `draft-kit/draft_engine.py`, `draft-kit/test_engine_matching.py`
+**Files:** `draft-kit/draft_engine.py`, `tests/test_engine_matching.py`
 **Approach:** The engine already computes `b = board_by_name.get(key)` and stores `None` when a pick
 fails to match. Surface it. Any pick that does not resolve to a board entry gets printed in a
 warning block. Off-board picks are normal (4 of 120 in the lab feed) so this is informational, not
@@ -538,7 +538,9 @@ touching anything, so the diff is provably additive.
 
 **Goal:** one spec, three runtimes, provable equivalence.
 **Dependencies:** none
-**Files:** `draft-kit/norm_spec.json`, `draft-kit/normalize.py`, `draft-kit/test_normalize.py`
+**Files:** `draft-kit/normalize.py` (runtime source of truth), `draft-kit/norm_spec.json` (**generated
+from** `normalize.py`, consumed by the JS — never read by the engine at runtime),
+`tests/test_normalize.py`
 **Approach:** Lift the 17-entry ALIASES table and the four normalization steps out of
 `draft_engine.py` into one spec plus golden vectors. Python imports it; the JS port in the live
 board is generated from or tested against the same vectors. Known equivalence traps: Python's
@@ -627,8 +629,8 @@ changes no bytes; the lab feed's 120 picks attribute by id with zero name fallba
 #### U4. The board schema gate
 
 **Goal:** make it impossible to ship a board the engine cannot eat.
-**Dependencies:** U3
-**Files:** `draft-kit/validate_board.py`, `draft-kit/test_validate_board.py`
+**Dependencies:** U3, U14 (soft on U3 — only the `norm()`-uniqueness check needs it)
+**Files:** `scripts/validate_board.py`, `tests/test_validate_board.py`, `tests/fixtures/lab_feed_120.json`
 **Approach:** Static checks across **all 174 rows** (not a top-N sample — that is what the latency
 finding forbids), then an execution gate. Checks, each traceable to a reproduced failure:
 
@@ -727,8 +729,10 @@ widen.
 #### U5. VORP pipeline v1 — historical curve
 
 **Goal:** replace prose with reproducible code; make the refresh arithmetic free.
-**Dependencies:** U4
-**Files:** `draft-kit/scoring.py`, `draft-kit/build_curves.py`, `draft-kit/test_scoring.py`, `draft-kit/cache/`
+**Dependencies:** none — runs in parallel with U4 (the gate consumes U5's output; it does not gate it)
+**Files:** `scripts/scoring.py`, `scripts/build_curves.py`, `tests/test_scoring.py`, `draft-kit/cache/`
+(add a `.gitignore` entry for the cache in the file's existing commented style — 4 nflverse seasons
+is ~33 MB)
 **Approach:** Fetch and cache `stats_player_week_{2022..2025}.csv`. One pure scoring function
 encoding `league.md`. Aggregate to season totals per player, sort within position, average each
 finish rank across the four years → the curve. Board players map in through `pr`. Baselines
@@ -777,8 +781,11 @@ the gate consumes its output. U4 and U5 run in parallel.
 #### U6. The generator — one command, every surface
 
 **Goal:** make "refresh the board" a single verified command.
-**Dependencies:** U4, U5
-**Files:** `draft-kit/build_board.py`, `draft-kit/render_html.py`, `draft-kit/render_pdf.py`, `draft-kit/test_build_board.py`
+**Dependencies:** U3, U14, U4, U5
+**Files:** `scripts/build_board.py`, `scripts/render_html.py`, `scripts/render_pdf.py`,
+`tests/test_build_board.py`, `draft-kit/build_manifest.json`, `draft-kit/.last_good/` (gitignored),
+and **`draft-kit/draft_engine.py`** — the glyph-table edit at `:280` belongs to this unit, or a
+fourth glyph source survives
 **Approach:** Read the source, recompute VORP, run the gate, and only on pass emit the dated
 snapshot, the HTML (preserving the `const DATA = ` line convention — single line, no trailing
 semicolon), and the PDF. **On gate failure, emit nothing and exit non-zero.** Template league shape
@@ -964,7 +971,7 @@ settings, not `draft_engine.py:45`.
 
 **Goal:** notice when the draft becomes real, without depending on anyone remembering.
 **Dependencies:** none (cargo already arrives)
-**Files:** `scripts/watch_draft_state.py`, `scripts/install-watcher.ps1`, `newsletter/data/state/`, `scripts/test_watch_draft_state.py`
+**Files:** `scripts/watch_draft_state.py`, `scripts/install-watcher.ps1`, `newsletter/data/state/`, `tests/test_watch_draft_state.py`
 **Approach:** Diff the current `sleeper_draft.json` / `sleeper_users.json` against the last seen
 snapshot. Fire on: `start_time` going non-null (**the starting gun — rebuild the board**),
 `draft_order` populating (your slot exists), `status` leaving `pre_draft`, and user count changing
@@ -1041,7 +1048,7 @@ payloads arrive off the public internet. Replace `rss_nbc_edge` with **ProFootba
 
 **Goal:** ship the thing Briggsy actually loves.
 **Dependencies:** U3, U10
-**Files:** `newsletter/templates/edition.html.j2`, `scripts/build_newsletter.py`, `scripts/test_build_newsletter.py`
+**Files:** `newsletter/templates/edition.html.j2`, `scripts/build_newsletter.py`, `tests/test_build_newsletter.py`
 **Approach:** Jinja2, with the `<style>` block carried over byte-for-byte and a build-time assertion
 that it still hashes to the original — the design is the asset. Keep `newsletter-template.html`
 frozen in git as the design reference. **Deterministic code owns every fact and number; the LLM owns

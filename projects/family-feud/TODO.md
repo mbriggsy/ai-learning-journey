@@ -33,18 +33,21 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **315 tests**, zero skips
-(`python -m unittest discover -s tests` from the root). Verified by eye, not only by tests: the
-cheat sheet is one page carrying all 174 rows, and the HTML board renders shape-driven round labels
-with no invented rounds.
+gate went **13 findings → 0** by fixing surfaces. **327 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 327 with **1 skip**,
+the live-cargo environment probe. Verified by eye, not only by tests: the cheat sheet is **2 pages
+— the whole 174-row board on page 1**, the plan on page 2 — and the HTML board renders shape-driven
+round labels with no invented rounds.
 
 **Everything below is detailed in**
 [`docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md`](docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md).
 The plan owns *what to build*; this file owns *what's next*.
 
-**⏳ The draft date does not exist.** `start_time` is `null` and Sleeper's UI reads "Draft time has
-not yet set" (verified Aug 7, two sources). `~Aug 29` is a handshake — **it can move earlier.**
-Assume no slack.
+**⏳ The draft date STILL does not exist.** Re-pulled from cargo stamped **2026-08-08 14:29**:
+`status: pre_draft`, `start_time: null`, `draft_order: null`, **6 of 8 seats filled**, and the
+watcher has raised no alert. `~Aug 29` is a handshake — **it can move earlier.** Assume no slack.
+The board's header now says "Draft date not set" rather than asserting a date the draft object
+does not carry.
 
 ---
 
@@ -167,8 +170,11 @@ U9  →  U3  →  U14  →  { U4 ∥ U5 }  →  U6  →  { U7 ∥ U15 }  →  U8
   (six such pairs on this board), so it proposes and hard-stops for a human.
 - ~~**U4 gate**~~ ✅ **SHIPPED 2026-08-08.** `scripts/validate_board.py`, 42 tests. `--fast`
   (static + cross-surface, offline, milliseconds) and `--full` (adds a real-engine replay of the
-  lab feed at prefixes 1, 2, **3**, 4, ... — the reproduced `vbdDelta` break fires at exactly
-  three picks, so deciles would have missed it). **BORN RED with 13 findings, all real drift**
+  lab feed at prefixes 1, 2, **3**, 4, **5**, ... — the reproduced `vbdDelta` break fires at a
+  SINGLE-DIGIT prefix, so deciles of a 120-pick feed, the first of which is 12, would have missed
+  it. It was 3 on the Aug 5 board and is 5 since U6 recomputed VORP and the VBD ranks moved; the
+  test pins the property, not the number). **BORN RED with 13 findings, all real drift** — all
+  thirteen fixed by U6; the gate is green today
   (re-measured 2026-08-08; `--fast` and `--full` both exit 1): `meta.updated` claims Aug 5 while its
   inputs are dated Aug 7-8 (**4** — U5's `vorp_curve.json` became a fourth stale-input witness the
   moment it shipped) · eight `meta.vbd` numbers hardcoded as literals in the board HTML's prose (8) ·

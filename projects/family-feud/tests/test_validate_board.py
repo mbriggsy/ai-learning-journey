@@ -12,12 +12,13 @@ THE GATE IS BORN RED and TestTheRealBoardToday pins exactly which surfaces are d
 is expected to CHANGE when a surface is fixed -- it is a record of known drift, not a target to
 keep green. What it must never do is quietly grow a new failure family nobody noticed.
 
-No network: the dump is a dict built here, or the one U14 pinned. No PDF is synthesised (that
-needs reportlab, which is absent) -- the PDF check is exercised against the real cheat sheet and
-against a missing path.
+No network: the dump is a dict built here, or the one U14 pinned. No PDF is synthesised here --
+the PDF check is exercised against the real cheat sheet, against a missing path, and against a
+player who cannot be on it (the positive control on the text extractor).
 """
 import json
 import os
+import shutil
 import sys
 import tempfile
 import unittest
@@ -320,13 +321,24 @@ class TestPdf(unittest.TestCase):
     def test_a_missing_cheat_sheet_is_refused(self):
         self.assertTrue(V.check_pdf([{"name": "x"}], "/nonexistent/none.pdf"))
 
-    def test_the_real_cheat_sheet_is_short_by_the_k_and_def_rows(self):
-        """Born red, and this pins the exact shape of the drift so a fix is recognisable."""
+    def test_the_real_cheat_sheet_carries_every_board_row(self):
+        """Was born red at '24 of 174' -- all 10 K and all 14 DEF were absent. U6's generator
+        renders every row, so this now pins the fixed state instead of the drift.
+
+        The paired negative control below is what keeps this honest: a check that passes because
+        the extractor silently returns nothing would satisfy this assertion too.
+        """
         with open(V.BOARD, encoding="utf-8") as f:
             rows = json.load(f)["players"]
-        problems = V.check_pdf(rows)
-        self.assertTrue(problems)
-        self.assertIn("24 of 174", problems[0])
+        self.assertEqual(V.check_pdf(rows), [])
+
+    def test_a_player_who_is_not_on_the_sheet_is_reported(self):
+        """Positive control on the instrument. If extract_text returned '' for any reason, the
+        test above would pass while proving nothing -- docs/insights/008."""
+        problems = V.check_pdf([{"name": "Zzyzx Nonexistent"}])
+        self.assertTrue(problems, "check_pdf found a player who cannot be on the sheet, so its "
+                                  "text extraction is not actually reading the PDF")
+        self.assertIn("1 of 1", problems[0])
 
 
 class TestTheExecutionGate(unittest.TestCase):
@@ -370,40 +382,57 @@ class TestTheExecutionGate(unittest.TestCase):
 
 
 class TestTheRealBoardToday(unittest.TestCase):
-    """A RECORD OF KNOWN DRIFT, not a target to keep green.
+    """The board was born red on 13 findings; U6's generator fixed the surfaces and it is green.
 
-    The gate is born red and this test says exactly where. It is EXPECTED to change when a
-    surface is fixed. What it must never do is let a NEW failure family appear unnoticed --
-    which is why it asserts the set of families, not just a count.
+    This class used to be a RECORD OF KNOWN DRIFT enumerating those 13. That record is history
+    now, and the class inverts: the live board must pass every check, and -- because a gate that
+    accepts everything would also pass that -- a mutation of the real board must still be caught.
+
+    The three families it used to pin, for the archaeology:
+        "meta.updated claims"                4  (dump provenance, ledger mtime, dump mtime, curve)
+        "is hardcoded in the HTML's prose"   8  (4 baselineWaiver + 4 lastStarter)
+        "the cheat sheet is missing"         1  (all 10 K and all 14 DEF)
     """
 
-    FAMILIES = {
-        # dump provenance, ledger mtime, dump file mtime, and -- since U5 landed -- the VORP
-        # curve. Four inputs the Aug 5 board now predates. This count went 3 -> 4 the moment
-        # build_curves.py first wrote its output, which is precisely what this test is for.
-        "meta.updated claims": 4,
-        "is hardcoded in the HTML's prose": 8,   # 4 baselineWaiver + 4 lastStarter
-        "the cheat sheet is missing": 1,
-    }
-
-    def test_the_known_drifted_surfaces_are_reported_and_nothing_else_is(self):
+    def test_the_live_board_passes_every_check(self):
         problems = V.validate()
-        for needle, n in self.FAMILIES.items():
-            got = [p for p in problems if needle in p]
-            self.assertEqual(len(got), n, f"{needle!r}: expected {n}, got {len(got)}:\n{got}")
-        unexplained = [p for p in problems
-                       if not any(k in p for k in self.FAMILIES)]
-        self.assertEqual(unexplained, [], "a NEW failure family appeared -- read it, do not "
-                                          "add it to FAMILIES without understanding it")
+        self.assertEqual(problems, [], "the shipped board is drifted; regenerate it with "
+                                       "`python scripts/build_board.py`, never by hand")
 
-    def test_the_gate_exits_nonzero_while_the_board_is_drifted(self):
+    def test_the_gate_exits_zero_on_the_clean_board(self):
         import io
         from contextlib import redirect_stdout
         buf = io.StringIO()
         with redirect_stdout(buf):          # main() prints the whole report; keep it out of the run
             code = V.main([])
-        self.assertEqual(code, 1)
-        self.assertIn("born red on purpose", buf.getvalue())
+        self.assertEqual(code, 0)
+        self.assertIn("every check passed", buf.getvalue())
+
+    def test_the_gate_still_goes_red_on_a_mutated_board(self):
+        """The control that makes the two tests above mean something.
+
+        Plan amendment 4: a verification step that cannot fail loudly is not a verification, and
+        'the board is clean' is satisfied just as well by a gate that has stopped checking. So
+        mutate the real board, assert the mutation actually landed, and assert the gate names it.
+        """
+        with open(V.BOARD, encoding="utf-8") as f:
+            board = json.load(f)
+        victim = board["players"][40]
+        before = victim["vbdDelta"]
+        victim["vbdDelta"] = float(before) + 0.5
+        self.assertNotEqual(victim["vbdDelta"], before,
+                            "the mutation did not alter the fixture, so the gate was never tested")
+
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, True)
+        path = os.path.join(d, "players_data.json")
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(board, f, ensure_ascii=False)
+
+        problems = V.validate(board_path=path)
+        self.assertTrue(problems, "a float vbdDelta passed the gate")
+        self.assertTrue(any(victim["name"] in p for p in problems),
+                        f"the gate went red but never named {victim['name']!r}:\n{problems}")
 
 
 if __name__ == "__main__":

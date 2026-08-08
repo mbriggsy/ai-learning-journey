@@ -40,3 +40,8 @@ draft-kit/cache/player_stats_*.csv
 # gzipped). It is the route to the 2025 season and the long-TD bonuses; see
 # the docstring in scripts/build_curves.py before fetching it again.
 draft-kit/cache/play_by_play_*.csv.gz
+
+# U6: the pre-emit backup the generator restores from when a replace fails mid-set. Per-machine
+# runtime, rebuilt on every build; build_manifest.json IS tracked because it is the proof the
+# surfaces were generated and not hand-edited.
+draft-kit/.last_good/

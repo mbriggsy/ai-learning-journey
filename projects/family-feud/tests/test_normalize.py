@@ -409,7 +409,20 @@ class OneCopyOfTheRules(unittest.TestCase):
         self.assertNotIn("ALIASES =", src)
 
     def test_no_second_copy_of_the_cleaning_regexes_anywhere_in_the_repo(self):
+        """One SOURCE of the rules -- which is not the same as one occurrence of the text.
+
+        KTD-3 requires U6 to emit `const NORM_SPEC` plus its interpreter into the board HTML, so
+        the browser and Python normalise names identically. That emission necessarily reproduces
+        the regexes, and a naive repo-wide grep reads it as the very duplication the rule forbids.
+
+        The distinction is hand-written vs generated, and it is enforced exactly rather than by
+        an exemption: subtract the byte-for-byte output of `normalize.js_source()` first, then
+        search what remains. A generated block cancels out; a hand-edited one does not, because a
+        single edited character stops the subtraction from matching and puts the regex back in
+        the searched text.
+        """
         needles = [r"[^a-z ]", r"\b(jr|sr|ii|iii|iv|v)\b"]
+        generated = normalize.js_source()
         offenders = []
         for dirpath, dirnames, filenames in os.walk(ROOT):
             dirnames[:] = [d for d in dirnames
@@ -426,11 +439,23 @@ class OneCopyOfTheRules(unittest.TestCase):
                         text = f.read()
                 except (UnicodeDecodeError, OSError):
                     continue
+                text = text.replace(generated, "")
                 for needle in needles:
                     if needle in text:
-                        offenders.append(f"{os.path.relpath(path, ROOT)} contains {needle!r}")
+                        offenders.append(f"{os.path.relpath(path, ROOT)} contains {needle!r} "
+                                         f"outside a generated NORM_SPEC block")
         self.assertEqual(offenders, [],
                          "a second copy of the cleaning rules exists:\n" + "\n".join(offenders))
+
+    def test_the_board_html_carries_the_generated_normalizer_verbatim(self):
+        """The paired control. The subtraction above would also pass on an HTML file that had
+        dropped the normalizer entirely, so assert it is actually there and byte-identical."""
+        board = os.path.join(ROOT, "draft-kit", "family-feud-draft-board.html")
+        with open(board, encoding="utf-8") as f:
+            html = f.read()
+        self.assertIn(normalize.js_source(), html,
+                      "the board HTML does not carry the generated normalizer verbatim -- either "
+                      "it was hand-edited or render_html.py stopped emitting it (KTD-3)")
 
 
 if __name__ == "__main__":

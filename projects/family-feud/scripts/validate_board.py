@@ -340,6 +340,82 @@ def check_sleeper_ids(players, ledger, dump):
     return problems
 
 
+def check_generated_fields(d, ledger):
+    """The fields U6's generator stamps onto the source. Nothing validated these before, because
+    before U6 no row carried them -- and a field nothing checks is a field that can be anything.
+
+    Caught in the first staged dry run: the generator wrote the ledger's whole provenance RECORD
+    into every row instead of the id string, doubling the file, and every other check passed.
+    An unchecked new field is exactly as dangerous as an unchecked old one.
+    """
+    problems = []
+    players = d.get("players") or []
+    ids = (ledger.get("ids") or {})
+
+    for p in players:
+        who = f"{p.get('name')!r}"
+        pid = p.get("sleeperId")
+        if pid is None:
+            problems.append(f"{who}: row has no 'sleeperId' -- the generator stamps it from the "
+                            f"ledger so consumers stop joining through a second file")
+        elif not isinstance(pid, str):
+            problems.append(f"{who}: row 'sleeperId' is {type(pid).__name__}, expected a string; "
+                            f"the ledger entry is a provenance record and only its 'sleeperId' "
+                            f"belongs on the row")
+        else:
+            if not (pid.isdigit() or (pid.isalpha() and pid.isupper())):
+                problems.append(f"{who}: row sleeperId {pid!r} is neither a numeric id nor a "
+                                f"team code")
+            frozen = (ids.get(p.get("name")) or {}).get("sleeperId")
+            if frozen is not None and str(frozen) != pid:
+                problems.append(f"{who}: row sleeperId {pid!r} disagrees with the frozen ledger "
+                                f"({frozen!r}) -- the join key on the board is not the one that "
+                                f"was resolved")
+
+        method = p.get("vorpMethod")
+        if not isinstance(method, str) or not method:
+            problems.append(f"{who}: row has no 'vorpMethod'; KTD-6 requires each row to record "
+                            f"which method produced its vorp, or mixed provenance passes "
+                            f"silently")
+        elif p.get("pos") in ("K", "DEF") and method != "carried:kdef-tier-flat":
+            problems.append(f"{who} is {p.get('pos')} but its vorpMethod is {method!r}; K and DEF "
+                            f"values are flat per-tier constants, not curve or projection output")
+        elif p.get("pos") not in ("K", "DEF") and method not in ("carried:board", "curve",
+                                                                 "projection"):
+            problems.append(f"{who}: vorpMethod {method!r} is not a permitted method for a skill "
+                            f"row")
+
+    meta = d.get("meta") or {}
+    for code, spec in (meta.get("badges") or {}).items():
+        glyph = (spec or {}).get("glyph")
+        if not isinstance(glyph, str) or len(glyph) != 1:
+            problems.append(f"meta.badges[{code!r}] has no single-character 'glyph'; the PDF and "
+                            f"the engine would fall back to their own hardcoded tables")
+            continue
+        try:
+            glyph.encode("cp1252")
+        except UnicodeEncodeError:
+            problems.append(f"meta.badges[{code!r}].glyph {glyph!r} is not cp1252-encodable, so "
+                            f"reportlab would silently print a different symbol")
+
+    shape = meta.get("shape")
+    if not isinstance(shape, dict):
+        problems.append("meta.shape is missing -- KTD-7 requires league shape to be stamped from "
+                        "the draft object, not hardcoded in prose or in the renderers")
+    else:
+        for key in ("draft_id", "teams", "rounds"):
+            if not shape.get(key):
+                problems.append(f"meta.shape has no {key!r}")
+        teams, rounds = league_shape(d)
+        if teams and shape.get("teams") and teams != shape["teams"]:
+            problems.append(f"meta.format says {teams} teams but meta.shape says "
+                            f"{shape['teams']} -- two sources for one fact")
+        if rounds and shape.get("rounds") and rounds != shape["rounds"]:
+            problems.append(f"meta.format says {rounds} rounds but meta.shape says "
+                            f"{shape['rounds']} -- two sources for one fact")
+    return problems
+
+
 def check_normalizer_equivalence(players):
     """Per KTD-3 this belongs in the GATE, which runs before every emit -- not only in a test
     suite someone remembers to run. The live board's normalizer is JS; a divergence means the
@@ -383,7 +459,8 @@ def check_html(d, path=HTML):
     problems = []
     if not os.path.exists(path):
         return [f"{os.path.basename(path)} is missing"]
-    html = open(path, encoding="utf-8").read()
+    with open(path, encoding="utf-8") as f:
+        html = f.read()
     m = re.search(r"^const DATA = (\{.*?\});?\s*$", html, re.M | re.S)
     if not m:
         return [f"{os.path.basename(path)} has no `const DATA = ` line"]
@@ -447,7 +524,8 @@ def check_engine_replay(prefixes=PREFIXES, engine=ENGINE, feed=FEED, kit=KIT):
     problems = []
     if not os.path.exists(feed):
         return [f"no lab feed at {feed} -- nothing to replay"]
-    picks = json.load(open(feed, encoding="utf-8"))
+    with open(feed, encoding="utf-8") as f:
+        picks = json.load(f)
     picks.sort(key=lambda p: p["pick_no"])
     draft_id = str(picks[0].get("draft_id")) if picks else None
     import tempfile
@@ -478,7 +556,9 @@ def check_engine_replay(prefixes=PREFIXES, engine=ENGINE, feed=FEED, kit=KIT):
 
 
 def validate(board_path=BOARD, ledger_path=LEDGER, dump_path=DUMP, html=HTML, pdf=PDF,
-             full=False):
+             full=False, kit=KIT):
+    # `kit` is forwarded so the generator can replay the board it is ABOUT to ship rather than the
+    # one already on disk. Without it, --full blesses the wrong file during a staged build.
     with open(board_path, encoding="utf-8") as f:
         d = json.load(f)
     problems = check_structure(d)
@@ -500,11 +580,12 @@ def validate(board_path=BOARD, ledger_path=LEDGER, dump_path=DUMP, html=HTML, pd
                                             ("the pinned dump file", dump_path),
                                             ("the VORP curve", CURVE)])
     problems += check_sleeper_ids(players, ledger, dump)
+    problems += check_generated_fields(d, ledger)
     problems += check_normalizer_equivalence(players)
     problems += check_html(d, html)
     problems += check_pdf(players, pdf)
     if full:
-        problems += check_engine_replay()
+        problems += check_engine_replay(kit=kit)
     return problems
 
 
@@ -523,8 +604,9 @@ def main(argv=None):
         print("\nThis gate is born red on purpose: some surfaces are drifted today and the gate's\n"
               "job is to say so. Fix the surface, never the gate.")
         return 1
-    print(f"board OK [{mode}]: {len(json.load(open(BOARD, encoding='utf-8'))['players'])} rows, "
-          f"every check passed")
+    with open(BOARD, encoding="utf-8") as f:
+        rows = len(json.load(f)["players"])
+    print(f"board OK [{mode}]: {rows} rows, every check passed")
     return 0
 
 

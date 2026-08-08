@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Family Feud · 2026 Draft Board</title>
+<style>
+  :root { color-scheme: light dark; }
+  .viz-root {
+    color-scheme: light;
+    --surface-1: #fcfcfb;
+    --page: #f9f9f7;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --hairline: #e1e0d9;
+    --baseline: #c3c2b7;
+    --ring: rgba(11,11,11,0.10);
+    --wash: rgba(11,11,11,0.04);
+    --pos-rb: #2a78d6;
+    --pos-wr: #eb6834;
+    --pos-te: #1baf7a;
+    --pos-qb: #eda100;
+    --pos-def: #4a3aa7;
+    --pos-k: #e87ba4;
+    --accent: #2a78d6;
+    --good: #006300;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --surface-1: #1a1a19;
+      --page: #0d0d0d;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted: #898781;
+      --hairline: #2c2c2a;
+      --baseline: #383835;
+      --ring: rgba(255,255,255,0.10);
+      --wash: rgba(255,255,255,0.05);
+      --pos-rb: #3987e5;
+      --pos-wr: #d95926;
+      --pos-te: #199e70;
+      --pos-qb: #c98500;
+      --pos-def: #9085e9;
+      --pos-k: #d55181;
+      --accent: #3987e5;
+      --good: #0ca30c;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --page: #0d0d0d;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --hairline: #2c2c2a;
+    --baseline: #383835;
+    --ring: rgba(255,255,255,0.10);
+    --wash: rgba(255,255,255,0.05);
+    --pos-rb: #3987e5;
+    --pos-wr: #d95926;
+    --pos-te: #199e70;
+    --pos-qb: #c98500;
+    --pos-def: #9085e9;
+    --pos-k: #d55181;
+    --accent: #3987e5;
+    --good: #0ca30c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .viz-root { background: var(--page); color: var(--text-primary); min-height: 100vh; }
+  .shell { max-width: 980px; margin: 0 auto; padding: 20px 16px 60px; }
+
+  header.top { padding: 8px 4px 14px; }
+  .kicker { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+  h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.01em; margin-top: 2px; }
+  .sub { font-size: 12.5px; color: var(--text-secondary); margin-top: 4px; line-height: 1.5; }
+  .sub b { color: var(--text-primary); font-weight: 600; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 14px; }
+  .search { flex: 1 1 200px; min-width: 160px; padding: 8px 12px; font-size: 14px; border: 1px solid var(--baseline); border-radius: 8px; background: var(--surface-1); color: var(--text-primary); outline: none; }
+  .search:focus { border-color: var(--accent); }
+  button.ctl { padding: 8px 12px; font-size: 13px; border: 1px solid var(--baseline); border-radius: 8px; background: var(--surface-1); color: var(--text-secondary); cursor: pointer; }
+  button.ctl:hover { background: var(--wash); }
+  .counts { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; margin-left: auto; }
+  .counts b { color: var(--text-primary); }
+
+  nav.tabs { display: flex; gap: 2px; margin-top: 14px; border-bottom: 1px solid var(--hairline); overflow-x: auto; }
+  nav.tabs button { padding: 9px 14px; font-size: 13.5px; font-weight: 600; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+  nav.tabs button:hover { color: var(--text-secondary); }
+  nav.tabs button.on { color: var(--text-primary); border-bottom-color: var(--accent); }
+
+  .queue { margin-top: 12px; padding: 10px 12px; background: var(--surface-1); border: 1px solid var(--hairline); border-radius: 10px; display: none; }
+  .queue.show { display: block; }
+  .queue .qt { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 7px; }
+  .qchips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .qchip { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 4px 9px; border: 1px solid var(--hairline); border-radius: 999px; background: var(--page); cursor: pointer; color: var(--text-primary); }
+  .qchip:hover { border-color: var(--baseline); }
+  .qchip .x { color: var(--text-muted); font-size: 11px; }
+  .qchip.gone { opacity: 0.4; }
+  .qchip.gone .nm { text-decoration: line-through; }
+
+  main { margin-top: 14px; }
+  .panel { background: var(--surface-1); border: 1px solid var(--hairline); border-radius: 12px; overflow: hidden; }
+
+  .divider { display: flex; align-items: center; gap: 10px; padding: 9px 14px 5px; }
+  .divider .lab { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); white-space: nowrap; }
+  .divider .rule { flex: 1; height: 1px; background: var(--hairline); }
+
+  .row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 14px 8px 10px; border-left: 3px solid transparent; cursor: default; }
+  .row:hover { background: var(--wash); }
+  .row.taken { opacity: 0.4; }
+  .row.taken .nm { text-decoration: line-through; }
+  .row.hid { display: none; }
+  .rk { width: 34px; flex: none; text-align: right; font-size: 13px; color: var(--text-muted); font-variant-numeric: tabular-nums; padding-top: 2px; }
+  .poschip { flex: none; display: inline-flex; align-items: center; gap: 5px; padding-top: 2px; width: 44px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .posx { font-size: 11px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.04em; }
+  .mid { flex: 1; min-width: 0; }
+  .line1 { display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
+  .nm { font-size: 14.5px; font-weight: 650; }
+  .tm { font-size: 11.5px; color: var(--text-muted); font-weight: 600; }
+  .pr { font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+    .vorp { flex: none; width: 52px; text-align: right; padding-top: 2px; font-size: 11.5px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+    .vorp .lab { display: block; font-size: 9px; letter-spacing: .05em; color: var(--text-muted); text-transform: uppercase; }
+    .vbdchip { display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 6px; font-size: 10px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .vbdchip.up { color: #1d8a4e; background: rgba(29,138,78,.13); }
+    .vbdchip.dn { color: #c04a3a; background: rgba(192,74,58,.13); }
+    [data-theme="dark"] .vbdchip.up { color: #4fc084; }
+    [data-theme="dark"] .vbdchip.dn { color: #e07b6a; }
+    .ctl.on { background: var(--wash); color: var(--text-primary); border-color: var(--text-muted); }
+  .bdg { font-size: 12px; cursor: help; }
+  .note { font-size: 12px; color: var(--text-secondary); line-height: 1.45; margin-top: 2px; }
+  .rd { flex: none; width: 46px; text-align: right; font-size: 11.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; padding-top: 3px; }
+  .acts { flex: none; display: flex; gap: 4px; padding-top: 0; }
+  .acts button { width: 30px; height: 30px; border: 1px solid transparent; border-radius: 7px; background: none; cursor: pointer; font-size: 14px; color: var(--text-muted); line-height: 1; }
+  .acts button:hover { background: var(--wash); border-color: var(--hairline); }
+  .acts button.star.on { color: var(--pos-qb); }
+  .acts button.take.on { color: var(--text-primary); }
+
+  .strat { padding: 18px 20px 22px; }
+  .strat h2 { font-size: 15px; font-weight: 750; margin: 18px 0 8px; }
+  .strat h2:first-child { margin-top: 0; }
+  .strat ol { padding-left: 20px; }
+  .strat li { font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 7px; }
+  .strat li b, .strat p b { color: var(--text-primary); font-weight: 650; }
+  .strat table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+  .strat td { font-size: 13px; color: var(--text-secondary); padding: 7px 10px 7px 0; border-top: 1px solid var(--hairline); vertical-align: top; line-height: 1.5; }
+  .strat td.k { white-space: nowrap; font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; width: 90px; }
+  .strat p { font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; }
+  .dstgrid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .dstchip { font-size: 12.5px; padding: 5px 10px; border: 1px solid var(--hairline); border-radius: 999px; color: var(--text-primary); background: var(--page); }
+  .dstchip .n { color: var(--text-muted); font-variant-numeric: tabular-nums; margin-right: 5px; }
+
+  footer { margin-top: 16px; font-size: 11.5px; color: var(--text-muted); line-height: 1.6; padding: 0 4px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; padding: 0 4px; }
+  .lg { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--text-secondary); }
+
+  @media print {
+    .controls, nav.tabs, .acts, .queue { display: none !important; }
+    .row.hid { display: flex !important; }
+    .viz-root { background: #fff; }
+  }
+  @media (max-width: 560px) {
+    .note { display: none; }
+    .rd { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="viz-root" id="root">
+  <div class="shell">
+    <header class="top">
+      <div class="kicker">__KICKER__</div>
+      <h1>PoppaBriggsy's Big Board</h1>
+      <div class="sub">Start weekly: __STARTERS__ &nbsp;+&nbsp; __BENCH__ bench · __IR__ IR. Snake, __ROUNDS__ rounds, 2-min clock. <b>Upside build:</b> __PLAYOFF__ make the playoffs — draft ceilings, win December.</div>
+      <div class="legend" id="legend"></div>
+      <div class="controls">
+        <input class="search" id="search" type="search" placeholder="Search player or team…" autocomplete="off">
+        <button class="ctl" id="theme">◐ Theme</button>
+        <button class="ctl" id="reset">Reset board</button>
+        <button class="ctl" id="vbdsort" title="Order the Overall tab by VORP (value over waiver replacement) instead of board rank">⚖ VBD order</button>
+        <div class="counts" id="counts"></div>
+      </div>
+      <nav class="tabs" id="tabs"></nav>
+      <div class="queue" id="queue"><div class="qt">My queue</div><div class="qchips" id="qchips"></div></div>
+    </header>
+    <main>
+      <div class="panel" id="panel"></div>
+    </main>
+    <footer>
+      Rankings synthesized __SYNTH_DATE__ from FantasyPros, FTN, ESPN, Yahoo, CBS, NFL.com, SI, PFF consensus + training-camp reporting, tuned for this league's exact format. Click ✕ to cross a player off, ☆ to queue him. Board state lives in this window — a reload starts clean. Built by Claude for PoppaBriggsy's glorious comeback.
+    </footer>
+  </div>
+</div>
+<script>
+__NORM_SPEC__
+const DATA = __DATA__
+// League shape is read from the draft object at build time and stamped into meta.shape.
+// Nothing below may hardcode a team count, a round count or a round label.
+const SHAPE = DATA.meta.shape;
+const TEAMS = SHAPE.teams, ROUNDS = SHAPE.rounds, CAP = TEAMS * ROUNDS;
+const KDEF_ROUNDS = (ROUNDS - 1) + '-' + ROUNDS;
+// A board row past pick CAP is not in any round -- it is the waiver pool. Saying 'Rd 19'
+// of a 16-round draft invents a round that does not exist.
+function roundOf(r){ return r <= CAP ? Math.ceil(r / TEAMS) : null; }
+
+const POSCOLOR = { RB: 'var(--pos-rb)', WR: 'var(--pos-wr)', TE: 'var(--pos-te)', QB: 'var(--pos-qb)', DEF: 'var(--pos-def)', K: 'var(--pos-k)' };
+const TABS = ['Overall','RB','WR','TE','QB','K','DEF','Strategy'];
+let tab = 'Overall';
+const taken = new Set();
+const queued = new Set();
+let resetArmed = false;
+let vbdOrder = false;
+
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function badgeHtml(p){
+  return p.badges.map(b => {
+    const m = DATA.meta.badges[b];
+    return m ? `<span class="bdg" title="${esc(m.label)}: ${esc(m.desc)}">${m.icon}</span>` : '';
+  }).join('');
+}
+
+function rowHtml(p, useOverallRank){
+  const rk = useOverallRank ? (vbdOrder ? p.vbdRank : p.r) : p.pr;
+  const chip = (typeof p.vbdDelta === 'number' && Math.abs(p.vbdDelta) >= 8 && p.pos !== 'K' && p.pos !== 'DEF')
+    ? `<span class="vbdchip ${p.vbdDelta > 0 ? 'up' : 'dn'}" title="VBD rank ${p.vbdRank} vs board ${p.r} — VBD ${p.vbdDelta > 0 ? 'likes him more' : 'likes him less'} than our board">${p.vbdDelta > 0 ? '▲' : '▼'} VBD ${p.vbdDelta > 0 ? '+' : ''}${p.vbdDelta}</span>` : '';
+  const vorpCell = `<div class="vorp"><span class="lab">vorp</span>${typeof p.vorp === 'number' ? Math.round(p.vorp) : ''}</div>`;
+  return `<div class="row${taken.has(p.r)?' taken':''}" data-r="${p.r}" data-search="${esc((p.name+' '+p.team+' '+p.pos).toLowerCase())}" style="border-left-color:${POSCOLOR[p.pos]}">
+    <div class="rk">${rk}</div>
+    <div class="poschip"><span class="dot" style="background:${POSCOLOR[p.pos]}"></span><span class="posx">${p.pos}</span></div>
+    <div class="mid">
+      <div class="line1"><span class="nm">${esc(p.name)}</span><span class="tm">${p.team}</span><span class="pr">${p.pos}${p.pr}</span>${badgeHtml(p)}${chip}</div>
+      <div class="note">${esc(p.note)}</div>
+    </div>
+    ${vorpCell}
+    <div class="rd">Rd ${(p.pos==='K'||p.pos==='DEF')?KDEF_ROUNDS:(roundOf(p.r)||'—')}</div>
+    <div class="acts">
+      <button class="star${queued.has(p.r)?' on':''}" title="Add to my queue">${queued.has(p.r)?'★':'☆'}</button>
+      <button class="take${taken.has(p.r)?' on':''}" title="Mark drafted / cross off">✕</button>
+    </div>
+  </div>`;
+}
+
+function dividerHtml(label){
+  return `<div class="divider"><span class="lab">${label}</span><span class="rule"></span></div>`;
+}
+
+function renderPanel(){
+  const P = $('panel');
+  if (tab === 'Strategy'){ P.innerHTML = strategyHtml(); return; }
+  let html = '';
+  if (tab === 'Overall'){
+    const sorted = [...DATA.players].sort(vbdOrder ? ((a,b)=>a.vbdRank-b.vbdRank) : ((a,b)=>a.r-b.r));
+    sorted.forEach((p,i)=>{
+      if (i % TEAMS === 0) {
+        const rd = Math.floor(i/TEAMS)+1;
+        const label = rd <= ROUNDS ? `Round ${rd} range` : `Past Rd ${ROUNDS} — waiver pool`;
+        html += dividerHtml(`${label}${vbdOrder?' — VBD order':''}`);
+      }
+      html += rowHtml(p, true);
+    });
+  } else {
+    const pos = tab;
+    const list = DATA.players.filter(p=>p.pos===pos).sort((a,b)=>a.pr-b.pr);
+    let lastTier = null;
+    list.forEach(p=>{
+      if (p.tier !== lastTier){ html += dividerHtml(`Tier ${p.tier}`); lastTier = p.tier; }
+      html += rowHtml(p, false);
+    });
+  }
+  P.innerHTML = html;
+  applySearch();
+}
+
+function strategyHtml(){
+  const s = DATA.strategy;
+  let h = '<div class="strat">';
+  h += '<h2>The Ten Commandments (this league, this format)</h2><ol>';
+  s.rules.forEach(r=>{ h += `<li>${esc(r)}</li>`; });
+  h += '</ol>';
+  if (DATA.meta.vbd){
+    const _bw = ['QB','RB','WR','TE'].map(k => k + DATA.meta.vbd.baselineWaiver[k]).join(' · ');
+    const _ls = ['QB','RB','WR','TE'].map(k => k + DATA.meta.vbd.lastStarter[k]).join(' · ');
+    const _flex = SHAPE.flex * TEAMS;
+    h += `<h2>VBD overlay (added ${esc(DATA.meta.vbd.added)})</h2><p>VORP = points/season over waiver replacement — empirical curves, our exact scoring. Baselines: waiver ${_bw}; last starters ${_ls} (the ${_flex} flex spots fill ${esc(DATA.meta.vbd.flexFill)}). ${esc(DATA.meta.vbd.note)}</p>`;
+  }
+  h += '<h2>Round-by-round plan</h2><table>';
+  s.roundPlan.forEach(rp=>{ h += `<tr><td class="k">Rd ${esc(rp.rounds)}</td><td>${esc(rp.plan)}</td></tr>`; });
+  h += '</table>';
+  h += '<h2>If your draft slot is…</h2><table>';
+  s.slotNotes.forEach(sn=>{ h += `<tr><td class="k">${esc(sn.slot)}</td><td>${esc(sn.note)}</td></tr>`; });
+  h += '</table>';
+  h += `<h2>Defenses (rounds ${KDEF_ROUNDS} only)</h2><div class="dstgrid">`;
+  DATA.dst.forEach(d=>{ h += `<span class="dstchip"><span class="n">${d.rank}</span>${esc(d.team)}</span>`; });
+  h += '</div>';
+  h += `<h2>Kickers</h2><p>${esc(s.kickers)}</p>`;
+  h += '</div>';
+  return h;
+}
+
+function renderTabs(){
+  $('tabs').innerHTML = TABS.map(t=>{
+    let label = t;
+    if (t!=='Overall' && t!=='Strategy'){
+      const n = DATA.players.filter(p=>p.pos===t && taken.has(p.r)).length;
+      if (n>0) label += ` <span style="color:var(--text-muted);font-weight:500">${n}</span>`;
+    }
+    return `<button data-t="${t}" class="${t===tab?'on':''}">${label}</button>`;
+  }).join('');
+}
+
+function renderCounts(){
+  const total = DATA.players.length;
+  const t = taken.size;
+  const by = ['RB','WR','TE','QB','K','DEF'].map(pos=>{
+    const n = DATA.players.filter(p=>p.pos===pos && taken.has(p.r)).length;
+    return `${pos} ${n}`;
+  }).join(' · ');
+  $('counts').innerHTML = `<b>${t}</b>/${total} off the board &nbsp;·&nbsp; ${by}`;
+}
+
+function renderQueue(){
+  const q = [...queued].map(r=>DATA.players.find(p=>p.r===r)).sort((a,b)=>a.r-b.r);
+  $('queue').className = 'queue' + (q.length? ' show':'');
+  $('qchips').innerHTML = q.map(p=>`<span class="qchip${taken.has(p.r)?' gone':''}" data-r="${p.r}" title="Click to remove"><span class="dot" style="background:${POSCOLOR[p.pos]}"></span><span class="nm">${esc(p.name)}</span><span class="x">✕</span></span>`).join('');
+}
+
+function renderLegend(){
+  const b = DATA.meta.badges;
+  $('legend').innerHTML = Object.values(b).map(m=>`<span class="lg">${m.icon} ${esc(m.label)}</span>`).join('') + '<span class="lg">▲▼ VBD vs board (8+ spots)</span>';
+}
+
+function applySearch(){
+  const q = $('search').value.trim().toLowerCase();
+  document.querySelectorAll('#panel .row').forEach(el=>{
+    el.classList.toggle('hid', q !== '' && !el.dataset.search.includes(q));
+  });
+}
+
+function renderAll(){ renderTabs(); renderPanel(); renderCounts(); renderQueue(); }
+
+$('tabs').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-t]');
+  if (!b) return;
+  tab = b.dataset.t;
+  renderAll();
+});
+
+$('panel').addEventListener('click', e=>{
+  const row = e.target.closest('.row');
+  if (!row) return;
+  const r = +row.dataset.r;
+  if (e.target.closest('.take')){
+    taken.has(r) ? taken.delete(r) : taken.add(r);
+    renderAll();
+  } else if (e.target.closest('.star')){
+    queued.has(r) ? queued.delete(r) : queued.add(r);
+    renderAll();
+  }
+});
+
+$('qchips').addEventListener('click', e=>{
+  const c = e.target.closest('.qchip');
+  if (!c) return;
+  queued.delete(+c.dataset.r);
+  renderAll();
+});
+
+$('search').addEventListener('input', applySearch);
+
+$('theme').addEventListener('click', ()=>{
+  const cur = document.documentElement.getAttribute('data-theme');
+  const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const next = (cur ? cur === 'dark' : sysDark) ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+});
+
+$('vbdsort').addEventListener('click', function(){
+  vbdOrder = !vbdOrder;
+  this.classList.toggle('on', vbdOrder);
+  renderAll();
+});
+
+$('reset').addEventListener('click', function(){
+  if (!resetArmed){ resetArmed = true; this.textContent = 'Sure? Click again'; setTimeout(()=>{ resetArmed=false; this.textContent='Reset board'; }, 2500); return; }
+  taken.clear(); queued.clear(); resetArmed = false; this.textContent = 'Reset board';
+  renderAll();
+});
+
+renderLegend();
+renderAll();
+</script>
+</body>
+</html>

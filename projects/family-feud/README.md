@@ -13,7 +13,7 @@ Snake draft, 16 rounds, ~Aug 29. Full PPR, 6 of 8 make the playoffs.
 | **A live draft engine** | reads the cumulative Sleeper picks feed and prints board state, every roster's open needs, run watch, tier cliffs, best-available and VBD leans |
 | **A proven executor mode** | Claude drives Briggsy's logged-in Chrome and clicks the picks. Mock #3: 15/15 manual picks, zero clock misses, roster VORP 1225.8 |
 | **An hourly data mule** | a Windows scheduled task hauling 5 Sleeper endpoints + 5 fantasy RSS feeds to disk, so nothing depends on a network call at draft time |
-| **A draft-state watcher** | the mule's first consumer. Hourly, it notices the moment `start_time` stops being null — or moves — and writes it down, because the date is a handshake that can shift **earlier** |
+| **A draft-state watcher** | the mule's first consumer. Hourly, it notices the moment `start_time` stops being null — or moves — and writes it down, because the date is a handshake that can shift **earlier**. It also refuses to go quiet: stale cargo, a lost baseline, a moved seat, or a re-created draft each raise their own alert |
 
 ## Where things are
 
@@ -50,7 +50,7 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         draft becomes real. Never a notification.
                  resolve_sleeper_ids.py — resolves board rows to Sleeper ids against
                                         the pinned dump. Hard-stops rather than guess.
-tests/           176 tests: python -m unittest discover -s tests  (run from the root)
+tests/           190 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```

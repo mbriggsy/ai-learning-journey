@@ -26,7 +26,7 @@ stopping condition, and the plan still outweighs the code (**13 commits, 5 of wh
 **Ultramode fires once, after U6** — one review of a working spine, not six reviews of fragments.
 
 **State:** both silent paths to advising an already-drafted player are closed, the hauler has its
-first consumer, and the board now joins to Sleeper on a frozen id instead of a name. **176 tests**,
+first consumer, and the board now joins to Sleeper on a frozen id instead of a name. **190 tests**,
 zero skips (`python -m unittest discover -s tests` from the root). What remains is the spine: one
 source that generates every surface.
 
@@ -72,11 +72,16 @@ by Briggsy's decision and two by measurement.
 U9  →  U3  →  U14  →  { U4 ∥ U5 }  →  U6  →  { U7 ∥ U15 }  →  U8  →  U10 → U11 → U12 → U13
 ```
 
-- ~~**U9 draft-state watcher**~~ ✅ **SHIPPED 2026-08-07.** Scheduled task *Family Feud Draft Watcher*
-  runs hourly at :35, six minutes behind the mule. Writes to `newsletter/data/state/DRAFT_ALERTS.md`
-  (gitignored). **Nothing to do here — but know it exists**, because it is what tells you the draft
-  date appeared or moved. If it ever needs re-registering after a folder move:
-  `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-watcher.ps1`
+- ~~**U9 draft-state watcher**~~ ✅ **SHIPPED 2026-08-07**, hardened 2026-08-08. Scheduled task
+  *Family Feud Draft Watcher* runs hourly at :35, six minutes behind the mule. Writes to
+  `newsletter/data/state/DRAFT_ALERTS.md` (gitignored). **Nothing to do here — but know it exists**,
+  because it is what tells you the draft date appeared or moved. If it ever needs re-registering
+  after a folder move: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-watcher.ps1`
+  Four ways it could go deaf are now closed: a **lost baseline** (unreadable snapshot) alerted and
+  exits 1 instead of silently re-baselining and eating the starting gun; a seat that **moves or
+  vanishes** fires, not just one that appears; freshness is measured **per cargo file** (and against
+  the mule's per-source result), not per run; and a **re-created draft** is caught by comparing
+  `sleeper_league.json`'s `draft_id` against the pinned one the mule keeps hauling.
 - ~~**U3 normalizer**~~ ✅ **SHIPPED 2026-08-07** (`522843cd`). `draft-kit/normalize.py` owns the
   rules as data; `norm_spec.json` and the board's JS are generated from it. **Never fork it.**
 - ~~**U14 `sleeperId`**~~ ✅ **SHIPPED 2026-08-07** (`c6379d78` + hardening). 174 ids frozen, 0

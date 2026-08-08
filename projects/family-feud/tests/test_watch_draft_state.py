@@ -73,6 +73,20 @@ class WatchCase(unittest.TestCase):
         w.INBOX, w.STATE, w.SNAPSHOT, w.ALERTS, w.now = self._saved
         self.tmp.cleanup()
 
+    def put_league(self, draft_id=REAL):
+        """sleeper_league.json — the mule hauls it beside the draft object, and it names the
+        league's CURRENT draft_id. The draft object's own URL is pinned, so this is the only
+        thing on disk that can notice the commissioner re-created the draft."""
+        self._write(os.path.join(self.inbox, "sleeper_league.json"),
+                    {"league_id": "L", "draft_id": draft_id, "total_rosters": 8})
+
+    def age_file(self, name, minutes):
+        """Backdate a cargo file's mtime. Freshness has to be measured per FILE, not per mule
+        RUN -- one failed source leaves yesterday's file on disk while run_at is minutes old."""
+        path = os.path.join(self.inbox, name)
+        stamp = (PINNED - datetime.timedelta(minutes=minutes)).timestamp()
+        os.utime(path, (stamp, stamp))
+
     def put_cargo(self, d=None, u=None, age_minutes=5):
         """Write cargo plus a mule_status.json whose run_at is `age_minutes` before the pinned now.
 
@@ -333,13 +347,25 @@ class TestDegradesLoudly(WatchCase):
         self.assertIn("expected an object", out)
 
     def test_corrupt_snapshot_re_establishes_baseline(self):
+        """This test's ORIGINAL expectation encoded the defect: it asserted exit 0.
+
+        Exiting 0 was exactly how the alert got lost -- a silent re-baseline against today's
+        cargo, with the only trace a `note:` on a scheduled task's stdout. The intent below is
+        unchanged and still right (rebuild, do not crash); what changed is that rebuilding is now
+        an EVENT, reported to the alert file at exit 1. Kept rather than deleted, because "must
+        not crash" is a real requirement -- see TestALostBaselineIsNotAFreshStart for the rest.
+        """
         self.baseline()
         with open(w.SNAPSHOT, "w", encoding="utf-8") as f:
             f.write("{broken")
         self.put_cargo(draft(start_time=AUG29), users(*SIX))
         code, out = self.run_watch()
-        self.assertEqual(code, 0, "an unreadable snapshot must rebuild the baseline, not crash")
-        self.assertIn("baseline re-established", out)
+        self.assertEqual(code, 1, "a lost baseline must be reported, not swallowed at exit 0")
+        self.assertIn("BASELINE LOST", out)
+        # the rebuild still happened, which is what the original assertion was protecting
+        self.assertTrue(os.path.exists(w.SNAPSHOT))
+        with open(w.SNAPSHOT, encoding="utf-8") as f:
+            self.assertEqual(json.load(f)["start_time"], AUG29)
 
 
 class TestAlertFileShape(WatchCase):
@@ -379,6 +405,195 @@ class TestSimultaneousTransitions(WatchCase):
         self.assertEqual(code, 1)
         for title in ("STARTING GUN", "YOUR SLOT EXISTS", "STATUS CHANGED", "LEAGUE ROSTER CHANGED"):
             self.assertTrue(self.entry(title), f"{title} must fire in the same run as the others")
+
+
+class TestALostBaselineIsNotAFreshStart(WatchCase):
+    """`first_run = prev is None` conflated two very different states: "no snapshot has ever
+    existed" and "the snapshot is there but unreadable".
+
+    In the second, the watcher silently re-baselined against TODAY'S cargo and exited 0. If the
+    date had appeared while the snapshot was unreadable, STARTING GUN was computed as a diff
+    against a baseline that already contained the date -- so it never fired, and never could
+    again. The one and only trace was a `note:` on the stdout of a scheduled task, which reaches
+    nobody. The alert this project exists to deliver was consumed, permanently, at exit 0.
+    """
+
+    def corrupt_snapshot(self):
+        with open(w.SNAPSHOT, "w", encoding="utf-8") as f:
+            f.write("{ this is not json")
+
+    def test_an_unreadable_snapshot_writes_an_alert_and_exits_1(self):
+        self.put_cargo(draft(start_time=AUG29, draft_order={BRIGGSY: 3}), users(*SIX))
+        self.put_league()
+        self.corrupt_snapshot()
+        code, _ = self.run_watch()
+        self.assertEqual(code, 1, "a lost baseline exited 0 and wrote nothing to the file")
+        e = self.entry("BASELINE LOST")
+        self.assertTrue(e, "nothing was written to the alert FILE")
+        self.assertIn("not valid JSON", e, "the operator is not told WHY the baseline was lost")
+
+    def test_the_alert_states_the_current_values_it_could_not_diff(self):
+        """A lost baseline means transitions may have fired unseen. The only useful thing left
+        is to state where things stand so a human can compare it against what he knew."""
+        self.put_cargo(draft(start_time=AUG29, draft_order={BRIGGSY: 3}), users(*SIX))
+        self.put_league()
+        self.corrupt_snapshot()
+        self.run_watch()
+        e = self.entry("BASELINE LOST")
+        self.assertIn(w.fmt_start_time(AUG29), e, "the current date is not stated")
+        self.assertRegex(e, r"your slot\s+3")
+        self.assertIn("6 of 8", e)
+
+    def test_a_genuine_first_run_stays_silent(self):
+        """Negative control, and the reason the two states must not be conflated: a real first
+        run must NOT write an alert, or the file becomes noise and stops being read."""
+        self.put_cargo(draft(start_time=AUG29), users(*SIX))
+        self.put_league()
+        code, _ = self.run_watch()
+        self.assertEqual(code, 0)
+        self.assertEqual(self.alerts(), "", "a clean first run alerted")
+
+    def test_the_rebaseline_still_happens_so_the_next_run_can_diff(self):
+        self.put_cargo(draft(start_time=AUG29), users(*SIX))
+        self.put_league()
+        self.corrupt_snapshot()
+        self.run_watch()
+        self.put_cargo(draft(start_time=AUG22), users(*SIX))
+        code, _ = self.run_watch()
+        self.assertEqual(code, 1)
+        self.assertTrue(self.entry("DRAFT DATE MOVED"), "the recovered baseline did not diff")
+
+
+class TestTheSlotCanMoveNotJustAppear(WatchCase):
+    """`diff()` only fired on None -> value, so a slot that CHANGED was invisible.
+
+    Sleeper randomises draft_order, and a commissioner can re-randomise it. The alert file is
+    append-only, so the earlier YOUR SLOT EXISTS entry keeps sitting there with a ready-to-run
+    engine command naming the OLD seat -- and the watcher reports "no change" above it.
+    """
+
+    def baseline(self, slot):
+        self.put_cargo(draft(draft_order={BRIGGSY: slot}), users(*SIX))
+        self.put_league()
+        self.run_watch()
+
+    def test_a_slot_that_moves_fires(self):
+        self.baseline(3)
+        self.put_cargo(draft(draft_order={BRIGGSY: 7}), users(*SIX))
+        code, _ = self.run_watch()
+        self.assertEqual(code, 1, "the seat changed and the watcher said nothing")
+        e = self.entry("YOUR SLOT MOVED")
+        self.assertIn("3", e)
+        self.assertIn("7", e)
+        self.assertIn("draft_engine.py 7", e, "the ready-to-run command must name the NEW seat")
+
+    def test_a_slot_that_vanishes_fires(self):
+        self.baseline(3)
+        self.put_cargo(draft(draft_order=None), users(*SIX))
+        code, _ = self.run_watch()
+        self.assertEqual(code, 1)
+        self.assertTrue(self.entry("YOUR SLOT VANISHED"))
+
+    def test_an_unchanged_slot_stays_silent(self):
+        """Negative control -- an alert that fires every hour is an alert nobody reads."""
+        self.baseline(3)
+        self.put_cargo(draft(draft_order={BRIGGSY: 3}), users(*SIX))
+        code, _ = self.run_watch()
+        self.assertEqual(code, 0, self.alerts())
+
+
+class TestFreshnessIsPerFileNotPerRun(WatchCase):
+    """`cargo_age_minutes()` read `run_at` and nothing else, so freshness described the mule's
+    last RUN rather than the files actually being diffed.
+
+    feud_mule.ps1 deletes a failed download only when it lands under 50 bytes, so one failed
+    source leaves YESTERDAY'S sleeper_draft.json on disk while `run_at` is minutes old -- and the
+    guard reports green over cargo that is a day stale. Fifth appearance of the shape this
+    watcher's own comment says has bitten the project four times.
+    """
+
+    def test_a_stale_draft_file_under_a_fresh_run_is_caught(self):
+        self.put_cargo(draft(), users(*SIX), age_minutes=5)     # the RUN is 5 minutes old
+        self.put_league()
+        self.run_watch()                                        # baseline
+        self.put_cargo(draft(), users(*SIX), age_minutes=5)
+        self.put_league()
+        self.age_file("sleeper_draft.json", 1500)               # the FILE is 25 hours old
+        code, _ = self.run_watch()
+        self.assertEqual(code, 1, "a day-old draft file passed as fresh")
+        e = self.entry("CARGO IS STALE — THIS WATCHER IS BLIND")
+        self.assertIn("sleeper_draft.json", e)
+
+    def test_a_source_the_mule_reported_as_failed_is_caught(self):
+        self.put_cargo(draft(), users(*SIX))
+        self.put_league()
+        self.run_watch()
+        self.put_cargo(draft(), users(*SIX))
+        self.put_league()
+        with open(os.path.join(self.inbox, "mule_status.json"), "w", encoding="utf-8-sig") as f:
+            json.dump({"run_at": (PINNED - datetime.timedelta(minutes=5))
+                                 .strftime("%Y-%m-%d %H:%M:%S"), "machine": "t",
+                       "sources": {"sleeper_draft": "FAIL: 404"}}, f)
+        code, _ = self.run_watch()
+        self.assertEqual(code, 1, "the mule reported the source FAILED and the watcher was calm")
+        self.assertIn("FAIL", self.entry("CARGO IS STALE — THIS WATCHER IS BLIND"))
+
+    def test_fresh_files_under_a_fresh_run_stay_silent(self):
+        """Negative control. A freshness check that fires on healthy cargo is worse than none."""
+        self.put_cargo(draft(), users(*SIX))
+        self.put_league()
+        self.run_watch()
+        self.put_cargo(draft(), users(*SIX))
+        self.put_league()
+        code, _ = self.run_watch()
+        self.assertEqual(code, 0, self.alerts())
+
+
+class TestARecreatedDraftCannotHide(WatchCase):
+    """feud_mule.ps1 pins the draft_id INTO ITS URL, and read_cargo() dropped draft_id entirely,
+    so the watcher structurally could not notice that the object it hauls is dead.
+
+    If the commissioner re-creates the draft -- an ordinary pre-draft act -- the mule keeps
+    fetching the OLD draft, whose start_time and draft_order stay null forever. "no change" is
+    then a true statement about the wrong draft, and it would hold right through draft day.
+    sleeper_league.json rides in the same inbox and names the league's current draft_id.
+    """
+
+    def test_a_league_pointing_at_a_different_draft_fires(self):
+        self.put_cargo(draft(), users(*SIX))
+        self.put_league(draft_id="9999999999999999999")
+        code, _ = self.run_watch()
+        self.assertEqual(code, 1, "the mule is hauling a dead draft and nothing said so")
+        e = self.entry("THE DRAFT WAS REPLACED")
+        self.assertIn("9999999999999999999", e)
+        self.assertIn(REAL, e)
+        self.assertIn("feud_mule.ps1", e, "the operator needs to know WHAT to fix")
+
+    def test_matching_ids_stay_silent(self):
+        """Negative control."""
+        self.put_cargo(draft(), users(*SIX))
+        self.put_league()
+        code, _ = self.run_watch()
+        self.assertEqual(code, 0, self.alerts())
+
+    def test_a_missing_league_file_does_not_false_alarm(self):
+        """The check needs both sides. One missing must not read as a mismatch -- a false red
+        here would fire every hour and train the reader to ignore the file."""
+        self.put_cargo(draft(), users(*SIX))
+        code, _ = self.run_watch()
+        self.assertEqual(code, 0, self.alerts())
+
+    def test_a_draft_id_that_changes_between_snapshots_fires(self):
+        self.put_cargo(draft(), users(*SIX))
+        self.put_league()
+        self.run_watch()
+        d = draft()
+        d["draft_id"] = "8888888888888888888"
+        self.put_cargo(d, users(*SIX))
+        self.put_league(draft_id="8888888888888888888")
+        code, _ = self.run_watch()
+        self.assertEqual(code, 1, "the draft object itself was swapped and nothing fired")
+        self.assertTrue(self.entry("THE DRAFT WAS REPLACED"))
 
 
 if __name__ == "__main__":

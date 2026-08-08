@@ -45,3 +45,6 @@ draft-kit/cache/play_by_play_*.csv.gz
 # runtime, rebuilt on every build; build_manifest.json IS tracked because it is the proof the
 # surfaces were generated and not hand-edited.
 draft-kit/.last_good/
+
+# Playwright MCP scratch output (snapshots, console logs, screenshots) from browser verification.
+.playwright-mcp/

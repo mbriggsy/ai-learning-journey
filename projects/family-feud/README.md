@@ -23,7 +23,7 @@ docs/            all prose — start here
   data-access.md         endpoints, curl, the mule, credentials policy
   draft-day-runbook.md   THE operating manual. Read before any draft or mock.
   ranking-methodology.md why the board ranks what it ranks
-  live-board-plan.md     the next feature: a self-updating wall board
+  live-board-plan.md     the self-updating wall board — shipped; this is the design record
   nightly-feud.md        the newsletter — what works, what has never run
   insights/              hard-won lessons, one per file. Read before debugging
                          something that smells familiar.
@@ -70,7 +70,7 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                  run_engine.py        — RUN THE ENGINE THROUGH THIS. Reads seat, teams, rounds
                                         and the roster from the draft object instead of your
                                         memory, and arms the contamination gate for you.
-tests/           372 tests: python -m unittest discover -s tests  (run from the root)
+tests/           387 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```
@@ -185,8 +185,16 @@ under Cowork — 15/15 manual picks, zero clock misses. The browser-driving half
 exercised in this environment. Treat it as unproven here until a mock says otherwise.
 
 **Not working:** The Nightly Feud's build half has never run once — see
-[`docs/nightly-feud.md`](docs/nightly-feud.md). The live auto-updating board isn't built yet,
-though its blocking unknown is now resolved — see [`docs/live-board-plan.md`](docs/live-board-plan.md).
+[`docs/nightly-feud.md`](docs/nightly-feud.md).
+
+**The board polls the live draft now.** Open it and click **▶ Go live** — or open it with `?live=1`
+and it starts itself, which is what a wall display wants. Every 12 seconds it reads the picks feed
+and greys out whoever has gone, stamping each row with the pick number and seat that took him.
+Verified by replaying the committed 120-pick lab feed through a real HTTP endpoint in a browser:
+**116 rows matched, 4 picks unmatched — pick for pick what `draft_engine.py` reports on the same
+feed.** Kill the network mid-session and it keeps the last good board, says the poll failed, and
+backs off; it never blanks and it never un-greys a player on its own. See
+[`docs/live-board-plan.md`](docs/live-board-plan.md).
 
 ⚠️ **The board is an August 5 snapshot and it expires.** Ranks, injuries and ADP move daily in
 August. It must be rebuilt before the real draft. The reminder that used to exist did not survive

@@ -114,6 +114,19 @@
   .row.taken { opacity: 0.4; }
   .row.taken .nm { text-decoration: line-through; }
   .row.hid { display: none; }
+  .pickchip { font-size: 10px; font-weight: 700; letter-spacing: 0.03em; padding: 1px 6px; border-radius: 999px; background: var(--wash); color: var(--text-secondary); border: 1px solid var(--hairline); white-space: nowrap; }
+
+  /* The live bar. Every state is carried by the WORDS -- "LIVE", "paused", "poll failed" -- and
+     the pip only repeats what the text already says. Nothing here may depend on colour alone. */
+  .live { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-top: 10px; padding: 8px 12px; border: 1px solid var(--hairline); border-radius: 10px; background: var(--surface-1); font-size: 12px; color: var(--text-secondary); }
+  .live .pip { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); flex: none; }
+  .live.on .pip { background: var(--good); animation: ffpulse 2s ease-in-out infinite; }
+  .live.err .pip { background: var(--pos-wr); }
+  @keyframes ffpulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  @media (prefers-reduced-motion: reduce) { .live.on .pip { animation: none; } }
+  .live .msg { flex: 1 1 220px; min-width: 160px; line-height: 1.5; }
+  .live b { color: var(--text-primary); font-variant-numeric: tabular-nums; font-weight: 650; }
+  .live .warn { color: var(--pos-wr); font-weight: 650; }
   .rk { width: 34px; flex: none; text-align: right; font-size: 13px; color: var(--text-muted); font-variant-numeric: tabular-nums; padding-top: 2px; }
   .poschip { flex: none; display: inline-flex; align-items: center; gap: 5px; padding-top: 2px; width: 44px; }
   .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
@@ -160,7 +173,7 @@
   .lg { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--text-secondary); }
 
   @media print {
-    .controls, nav.tabs, .acts, .queue { display: none !important; }
+    .controls, nav.tabs, .acts, .queue, .live { display: none !important; }
     .row.hid { display: flex !important; }
     .viz-root { background: #fff; }
   }
@@ -184,6 +197,11 @@
         <button class="ctl" id="reset">Reset board</button>
         <button class="ctl" id="vbdsort" title="Order the Overall tab by VORP (value over waiver replacement) instead of board rank">⚖ VBD order</button>
         <div class="counts" id="counts"></div>
+      </div>
+      <div class="live" id="live">
+        <span class="pip" id="livepip" aria-hidden="true"></span>
+        <button class="ctl" id="golive">▶ Go live</button>
+        <span class="msg" id="livemsg"></span>
       </div>
       <nav class="tabs" id="tabs"></nav>
       <div class="queue" id="queue"><div class="qt">My queue</div><div class="qchips" id="qchips"></div></div>
@@ -270,10 +288,17 @@ function roundOf(r){ return r <= CAP ? Math.ceil(r / TEAMS) : null; }
 const POSCOLOR = { RB: 'var(--pos-rb)', WR: 'var(--pos-wr)', TE: 'var(--pos-te)', QB: 'var(--pos-qb)', DEF: 'var(--pos-def)', K: 'var(--pos-k)' };
 const TABS = ['Overall','RB','WR','TE','QB','K','DEF','Strategy'];
 let tab = 'Overall';
-const taken = new Set();
+// `taken` is the USER'S OWN toggle and nothing else ever writes to it. Polled picks land in
+// `drafted`, a separate collection, because feeding them into `taken` means the operator
+// un-crosses somebody and the very next poll silently crosses him again -- a control that
+// visibly does not work. Splitting them also lets a row say WHY it is off the board.
+const taken = new Set();          // board rank -> crossed off by hand
+const drafted = new Map();        // board rank -> {pick_no, slot} straight from the draft
 const queued = new Set();
 let resetArmed = false;
 let vbdOrder = false;
+
+const offBoard = r => taken.has(r) || drafted.has(r);
 
 const $ = id => document.getElementById(id);
 const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -290,11 +315,15 @@ function rowHtml(p, useOverallRank){
   const chip = (typeof p.vbdDelta === 'number' && Math.abs(p.vbdDelta) >= 8 && p.pos !== 'K' && p.pos !== 'DEF')
     ? `<span class="vbdchip ${p.vbdDelta > 0 ? 'up' : 'dn'}" title="VBD rank ${p.vbdRank} vs board ${p.r} — VBD ${p.vbdDelta > 0 ? 'likes him more' : 'likes him less'} than our board">${p.vbdDelta > 0 ? '▲' : '▼'} VBD ${p.vbdDelta > 0 ? '+' : ''}${p.vbdDelta}</span>` : '';
   const vorpCell = `<div class="vorp"><span class="lab">vorp</span>${typeof p.vorp === 'number' ? Math.round(p.vorp) : ''}</div>`;
-  return `<div class="row${taken.has(p.r)?' taken':''}" data-r="${p.r}" data-search="${esc((p.name+' '+p.team+' '+p.pos).toLowerCase())}" style="border-left-color:${POSCOLOR[p.pos]}">
+  const dr = drafted.get(p.r);
+  // The pick chip is the whole reason a polled row differs from a hand-crossed one: it says the
+  // board did not guess, it was told -- and by whom, at which pick.
+  const takenChip = dr ? `<span class="pickchip" title="Read from the live draft feed">#${dr.pick_no} · seat ${dr.slot}</span>` : '';
+  return `<div class="row${offBoard(p.r)?' taken':''}${dr?' drafted':''}" data-r="${p.r}" data-search="${esc((p.name+' '+p.team+' '+p.pos).toLowerCase())}" style="border-left-color:${POSCOLOR[p.pos]}">
     <div class="rk">${rk}</div>
     <div class="poschip"><span class="dot" style="background:${POSCOLOR[p.pos]}"></span><span class="posx">${p.pos}</span></div>
     <div class="mid">
-      <div class="line1"><span class="nm">${esc(p.name)}</span><span class="tm">${p.team}</span><span class="pr">${p.pos}${p.pr}</span>${badgeHtml(p)}${chip}</div>
+      <div class="line1"><span class="nm">${esc(p.name)}</span><span class="tm">${p.team}</span><span class="pr">${p.pos}${p.pr}</span>${badgeHtml(p)}${chip}${takenChip}</div>
       <div class="note">${esc(p.note)}</div>
     </div>
     ${vorpCell}
@@ -367,7 +396,7 @@ function renderTabs(){
   $('tabs').innerHTML = TABS.map(t=>{
     let label = t;
     if (t!=='Overall' && t!=='Strategy'){
-      const n = DATA.players.filter(p=>p.pos===t && taken.has(p.r)).length;
+      const n = DATA.players.filter(p=>p.pos===t && offBoard(p.r)).length;
       if (n>0) label += ` <span style="color:var(--text-muted);font-weight:500">${n}</span>`;
     }
     return `<button data-t="${t}" class="${t===tab?'on':''}">${label}</button>`;
@@ -376,9 +405,9 @@ function renderTabs(){
 
 function renderCounts(){
   const total = DATA.players.length;
-  const t = taken.size;
+  const t = DATA.players.filter(p=>offBoard(p.r)).length;
   const by = ['RB','WR','TE','QB','K','DEF'].map(pos=>{
-    const n = DATA.players.filter(p=>p.pos===pos && taken.has(p.r)).length;
+    const n = DATA.players.filter(p=>p.pos===pos && offBoard(p.r)).length;
     return `${pos} ${n}`;
   }).join(' · ');
   $('counts').innerHTML = `<b>${t}</b>/${total} off the board &nbsp;·&nbsp; ${by}`;
@@ -387,7 +416,7 @@ function renderCounts(){
 function renderQueue(){
   const q = [...queued].map(r=>DATA.players.find(p=>p.r===r)).sort((a,b)=>a.r-b.r);
   $('queue').className = 'queue' + (q.length? ' show':'');
-  $('qchips').innerHTML = q.map(p=>`<span class="qchip${taken.has(p.r)?' gone':''}" data-r="${p.r}" title="Click to remove"><span class="dot" style="background:${POSCOLOR[p.pos]}"></span><span class="nm">${esc(p.name)}</span><span class="x">✕</span></span>`).join('');
+  $('qchips').innerHTML = q.map(p=>`<span class="qchip${offBoard(p.r)?' gone':''}" data-r="${p.r}" title="Click to remove"><span class="dot" style="background:${POSCOLOR[p.pos]}"></span><span class="nm">${esc(p.name)}</span><span class="x">✕</span></span>`).join('');
 }
 
 function renderLegend(){
@@ -402,7 +431,15 @@ function applySearch(){
   });
 }
 
-function renderAll(){ renderTabs(); renderPanel(); renderCounts(); renderQueue(); }
+// renderPanel() replaces #panel's innerHTML wholesale, which drops the document's scroll offset
+// the moment the new content is shorter than the old. A poll fires on its own schedule, so
+// without this the board yanks itself back toward the top while somebody is reading round 9.
+// Search text and focus survive already -- the input lives outside #panel and is never re-rendered.
+function renderAll(){
+  const y = window.scrollY;
+  renderTabs(); renderPanel(); renderCounts(); renderQueue();
+  if (window.scrollY !== y) window.scrollTo(0, y);
+}
 
 $('tabs').addEventListener('click', e=>{
   const b = e.target.closest('button[data-t]');
@@ -452,8 +489,147 @@ $('reset').addEventListener('click', function(){
   renderAll();
 });
 
+// ------------------------------------------------------------------ U7: the live poll loop
+//
+// The board greys players out as picks land, so the wall display stops being a snapshot. It
+// tracks OTHER people's picks and the clock is 120 seconds, so sub-30s latency is the whole
+// requirement -- there is no case for anything tighter.
+const PICKS_URL = SHAPE.draft_id ? 'https://api.sleeper.app/v1/draft/' + SHAPE.draft_id + '/picks' : null;
+const POLL_MS = 12000, POLL_MAX_MS = 60000;
+
+// JOIN ON THE FROZEN SLEEPER ID FIRST, exactly as draft_engine.py does, and for the reason it
+// learned the hard way: the rendered NAME is the one field that drifts. Board #1 Jahmyr Gibbs,
+// taken at pick 1, came back from Sleeper as "J. Gibbs" and stayed sitting at #1 on the board.
+// U6 stamped `sleeperId` onto every row for exactly this; until now nothing read it. The
+// normalised name is the fallback, and it uses the SAME normalizer the engine and the gate use
+// (KTD-3) -- generated from draft-kit/normalize.py, never hand-ported.
+const BY_ID = new Map(), BY_NAME = new Map();
+DATA.players.forEach(p => {
+  if (p.sleeperId !== null && p.sleeperId !== undefined && p.sleeperId !== '') BY_ID.set(String(p.sleeperId), p);
+  BY_NAME.set(normName(p.name, NORM_SPEC), p);
+});
+
+// The same arithmetic as draft_engine.py's slot_of(). Plain snake -- build_board.py already
+// refused to stamp a shape that was anything else, so this cannot be handed a reversal draft.
+function slotOfPick(n){
+  const rd = Math.floor((n - 1) / TEAMS) + 1;
+  const i = (n - 1) % TEAMS;
+  return (rd % 2 === 1) ? (i + 1) : (TEAMS - i);
+}
+
+let pollTimer = null, isLive = false, pollDelay = POLL_MS;
+let lastOkAt = null, lastError = null, picksIn = 0, unmatchedPicks = 0, vanished = false;
+
+function applyPicks(picks){
+  let changed = false, miss = 0, maxPick = 0;
+  const seen = new Set();
+  picks.forEach(pk => {
+    if (!pk || typeof pk.pick_no !== 'number') return;
+    if (pk.pick_no > maxPick) maxPick = pk.pick_no;
+    const md = pk.metadata || {};
+    const id = (pk.player_id === null || pk.player_id === undefined) ? '' : String(pk.player_id);
+    let row = id ? BY_ID.get(id) : null;
+    if (!row){
+      const nm = ((md.first_name || '') + ' ' + (md.last_name || '')).trim();
+      if (nm) row = BY_NAME.get(normName(nm, NORM_SPEC));
+    }
+    if (!row){ miss++; return; }   // most drafted players simply are not on our 174
+    seen.add(row.r);
+    const prev = drafted.get(row.r);
+    if (!prev || prev.pick_no !== pk.pick_no) changed = true;
+    drafted.set(row.r, { pick_no: pk.pick_no, slot: pk.draft_slot || slotOfPick(pk.pick_no) });
+  });
+  // A pick VANISHING upstream is a real state -- merge_picks.py has a whole flag for it. The
+  // board never un-greys on its own: putting a drafted man back on a wall display nobody is
+  // auditing is the dangerous direction. So it is SURFACED and the row stays crossed.
+  const gone = [...drafted.keys()].some(r => !seen.has(r));
+  if (gone !== vanished) changed = true;
+  vanished = gone;
+  if (miss !== unmatchedPicks || maxPick !== picksIn) changed = true;
+  unmatchedPicks = miss;
+  picksIn = maxPick;
+  return changed;
+}
+
+function renderLive(){
+  const bar = $('live'), msg = $('livemsg'), btn = $('golive');
+  // Every state is carried by the WORDS. The pip only repeats what the text already says.
+  bar.className = 'live' + (isLive ? ' on' : '') + (lastError ? ' err' : '');
+  btn.textContent = isLive ? '⏸ Pause' : '▶ Go live';
+  btn.classList.toggle('on', isLive);
+
+  if (!PICKS_URL){
+    btn.disabled = true;
+    msg.innerHTML = 'This board carries no draft id, so there is nothing to poll. Rebuild it with <b>python scripts/build_board.py</b> once the draft object is readable.';
+    return;
+  }
+  const bits = [isLive ? '<b>LIVE</b>' : 'Polling <b>paused</b>'];
+  if (lastOkAt){
+    bits.push('<b>' + picksIn + '</b> picks in');
+    const next = picksIn + 1;
+    bits.push(next <= CAP ? 'next is <b>#' + next + '</b>, seat <b>' + slotOfPick(next) + '</b>'
+                          : '<b>draft complete</b>');
+    bits.push('updated ' + lastOkAt.toLocaleTimeString());
+  } else {
+    bits.push(isLive ? 'waiting for the first response…'
+                     : 'click <b>Go live</b> to grey players out as the picks land');
+  }
+  let html = bits.join(' · ');
+  if (unmatchedPicks) html += ' <span class="warn">· ' + unmatchedPicks + ' pick' + (unmatchedPicks === 1 ? '' : 's') + ' not on this board</span>';
+  if (vanished) html += ' <span class="warn">· a pick that was here has vanished upstream — rows stay crossed; reload if the draft was rebuilt</span>';
+  if (lastError) html += ' <span class="warn">· poll failed (' + esc(lastError) + ') — showing the last good state, retrying</span>';
+  msg.innerHTML = html;
+}
+
+async function pollOnce(){
+  // CACHE-BUSTING IS NOT OPTIONAL. A live draft's picks feed comes back with
+  // `s-maxage=30, stale-while-revalidate=300`, so a plain fetch every 12s would be handed the
+  // same stale body by the browser and by every CDN hop, and the polling would buy nothing.
+  // NEVER credentials:'include' -- Sleeper answers with a wildcard origin, and wildcard-origin
+  // plus allow-credentials is precisely the pair browsers reject outright.
+  const res = await fetch(PICKS_URL + '?_=' + Date.now(), { cache: 'no-store', credentials: 'omit' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const body = await res.json();
+  if (!Array.isArray(body)) throw new Error('the feed was not an array');
+  return body;
+}
+
+async function tick(){
+  if (!isLive) return;
+  try {
+    const changed = applyPicks(await pollOnce());
+    lastOkAt = new Date();
+    lastError = null;
+    pollDelay = POLL_MS;
+    if (changed) renderAll();          // 174 rows -- only rebuild them when something moved
+  } catch (e){
+    // THE LAST GOOD STATE IS RETAINED. `drafted` is untouched on failure, so a dropped
+    // connection never blanks the board; it visibly stops updating and backs off rather than
+    // hammering a service that is already unhappy.
+    lastError = (e && e.message) ? e.message : String(e);
+    pollDelay = Math.min(pollDelay * 2, POLL_MAX_MS);
+  }
+  renderLive();
+  clearTimeout(pollTimer);
+  if (isLive) pollTimer = setTimeout(tick, pollDelay);
+}
+
+function setLive(on){
+  isLive = on;
+  clearTimeout(pollTimer);
+  renderLive();
+  if (isLive) { pollDelay = POLL_MS; tick(); }
+}
+
+$('golive').addEventListener('click', () => setLive(!isLive));
+
 renderLegend();
 renderAll();
+// A wall display is opened once and left alone, so it takes ?live=1 and starts itself. A laptop
+// opened to read the board does not poll until asked -- silently reaching the network because a
+// file was opened is a surprise, and this file gets opened a lot.
+if (PICKS_URL && new URLSearchParams(location.search).get('live') === '1') setLive(true);
+else renderLive();
 </script>
 </body>
 </html>

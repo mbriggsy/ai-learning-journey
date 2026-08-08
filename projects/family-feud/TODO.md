@@ -6,17 +6,19 @@
 ## ▶ WHERE WE ARE — read this first, update it when it changes
 
 ```
-plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15)  ◀ YOU ARE HERE (U7)
+plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15 · U7)  ◀ YOU ARE HERE (U8)
 ```
 
 **Units shipped:** U1, U2 (Phase 0 gates) · **U9** (draft-state watcher) · **U3** (one normalizer,
 proven equal in two runtimes) · **U14** (`sleeperId` frozen — 174 ids, 0 unresolved) ·
 **U4** (board schema gate, born red on 13 real findings) · **U5** (scoring as code + the empirical
 curve; oracle exact at 2469/2469) · **U6** (the generator — one source, every surface) ·
-**U15** (the engine wrapper — shape read from the draft, not typed) — the last four on 2026-08-08.
+**U15** (the engine wrapper — shape read from the draft, not typed) · **U7** (the board polls the
+live draft) — the last five on 2026-08-08.
 
-**Next action: U7** — the live board poll loop. It is the last Phase-2 unit and the only one of
-the `{ U7 ∥ U15 }` pair still open.
+**Phase 2 is closed.** **Next action: U8** — correct the docs that would mislead under time
+pressure. The runbook still contradicts itself on working directory, so *the draft loop cannot be
+executed as written*; that is a draft-morning trap, not a tidy-up. U8's file list is in the plan.
 
 **The ultramode review RAN 2026-08-08** (13 reviewers, 4-angle adversary panel, 3 refuters per
 finding, `real`/`material` aggregated separately). 77 confirmed after verification, 22 correctly
@@ -33,8 +35,8 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **372 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 372 with **1 skip**,
+gate went **13 findings → 0** by fixing surfaces. **387 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 387 with **1 skip**,
 the live-cargo environment probe. Verified by eye, not only by tests: the cheat sheet is **2 pages
 — the whole 174-row board on page 1**, the plan on page 2 — and the HTML board renders shape-driven
 round labels with no invented rounds.
@@ -84,10 +86,11 @@ fixed (commits `5e7ae390`, `76849ad9`, `fdf190eb`, `13c3ed3b`). What follows is 
 10. **Dead constants in `render_pdf.py`** (`ROW_GAP`, `TIER_LEAD/AFTER`, `SECTION_LEAD`) survive
     the adaptive-density rewrite and duplicate `DENSITY[0]`; tuning them does nothing.
 
-**Escalated on a materiality split, for a human call:** the row-level `sleeperId` U6 stamps has
-**no reader yet** — the engine still joins through `sleeper_ids.json`. Real, and deliberate for
-now (U6 put the key on the board; pointing the engine at it is a separate change with its own
-replay verification). Worth doing in U15's neighbourhood.
+**Escalated on a materiality split — HALF CLOSED 2026-08-08.** The row-level `sleeperId` U6 stamps
+now has a reader: **U7's poll loop joins on it first**, name second, and that path is browser-
+verified against the lab feed. What is still open is the **engine**, which continues to join
+through `sleeper_ids.json`. Pointing it at the board's own key is a separate change needing its
+own replay verification — not hard, but it must not be done blind.
 
 ---
 
@@ -209,6 +212,22 @@ U9  →  U3  →  U14  →  { U4 ∥ U5 }  →  U6  →  { U7 ∥ U15 }  →  U8
     `vorpMethod` per row, `meta.shape` from the live draft object, and
     `meta.badges[code].glyph`, which killed the engine's fourth glyph table.
   - **VORP is CARRIED, not recomputed** — deliberate, per KTD-6. See the note below.
+- ~~**U7 live board poll loop**~~ ✅ **SHIPPED 2026-08-08.** `scripts/templates/board.html`
+  (never the generated HTML — KTD-1), 15 tests. **▶ Go live**, or `?live=1` for a wall display.
+  - **Verified in a browser, not by reading it.** The board was served over HTTP and polled a real
+    endpoint holding `tests/fixtures/lab_feed_120.json`: **116 rows matched, 4 picks unmatched —
+    identical to what `draft_engine.py` reports on the same feed**, and `next is #121, seat 8`
+    matches the engine's `next is pick 121 (slot 8)`. Growth from 20 → 120 picks landed without a
+    reload; scroll held at 1200px on a 10775px page; search text and focus survived.
+  - **`taken` and `drafted` are separate collections.** Polled picks never touch the operator's
+    own cross-off, so un-crossing somebody is no longer undone by the next poll.
+  - **Failure was tested by killing the server**, not by stubbing `fetch`: 116 rows stayed crossed,
+    174 rows stayed rendered, the failure was surfaced, and the backoff climbed 12s → 60s (capped).
+  - **It never un-greys a player on its own.** A shrinking feed is surfaced and the rows stay.
+  - **First reader of the row-level `sleeperId`** — see the escalated item below, now half-closed.
+    Honest limit: on THIS feed the id and name joins agree on all 116, so the id is proven
+    equivalent here, not superior. Its value is insurance against the documented "J. Gibbs" drift,
+    which this fixture does not contain.
 - ~~**U15 engine wrapper**~~ ✅ **SHIPPED 2026-08-08.** `scripts/run_engine.py` + `scripts/shape.py`,
   45 tests. **Run the engine through it** — `python scripts/run_engine.py` from the repo root.
   - Seat, teams, rounds and the whole roster now come from the draft object. The seat is read from

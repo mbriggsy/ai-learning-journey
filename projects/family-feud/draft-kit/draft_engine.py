@@ -2,11 +2,17 @@
 """Family Feud live draft engine.
 Input:  picks.json  — Sleeper /draft/<id>/picks array (cumulative)
         players_data.json — our board
-Usage:  python3 draft_engine.py <my_slot> [teams] [rounds]
+        slot_names.json — optional seat -> human (hand-authored, gitignored)
+        ../newsletter/data/inbox/ — mule cargo, read as an ORACLE only, never required
+Usage:  python3 draft_engine.py <my_slot> [teams] [rounds] [draft_id]
 Output: compact war-room advisory: board state, rosters/needs, runs,
         tier cliffs, picks-until-mine, naive queue (Claude overlays judgment).
+
+The four hand-supplied inputs are cross-checked against the draft itself before any advice is
+computed -- see the input gate below. A wrong seat used to produce a complete, confident advisory
+for somebody else's team and exit 0.
 """
-import json, sys
+import json, os, sys
 from collections import defaultdict, Counter
 
 # The name normalizer lives in ONE place -- draft-kit/normalize.py -- because six things want it
@@ -80,6 +86,166 @@ if EXPECT and PICK_DRAFTS and PICK_DRAFTS != [EXPECT]:
              "!! This is a spent mock advising a live draft. It would have read as correct.\n"
              "!! Move picks.json aside and re-run scripts/merge_picks.py.\n"
              + "!" * 62)
+
+# --- input gate: the hand-supplied inputs, checked against oracles already on disk ---
+#
+# my_slot, teams and rounds are typed at a keyboard on draft morning; slot_names.json is
+# hand-authored. All four share ONE failure shape: a wrong value sits INSIDE the legal range, so
+# the only prior check (1 <= my_slot <= teams) passes it, and the engine prints a complete,
+# confident advisory for somebody else's seat and exits 0. Nothing to notice.
+#
+# The seat is the worst of the four. draft_order is null until near go time, so it gets read live
+# under a 120-second clock -- and roster_id 3 sits one line from it in docs/league.md, which makes
+# "3" the most attractive wrong value in the project and 7/8 likely to be wrong.
+#
+# The corroborating evidence already existed and was being thrown away:
+#   * the mule's cargo carries settings.teams, settings.rounds and (near go time) draft_order
+#   * every pick the operator makes carries picked_by == his user_id beside its draft_slot
+#
+# TWO RULES, both load-bearing:
+#   1. AN ORACLE FOR ANOTHER DRAFT IS NOT EVIDENCE ABOUT THIS ONE. The mule pins draft_id into
+#      its URL, so a re-created draft leaves stale cargo that still parses. Trusting it would
+#      refuse a CORRECT seat -- a false red, which insight 009 records as the more dangerous
+#      direction, because it teaches the operator to skip the gate.
+#   2. A MISSING ORACLE NEVER EXITS. On draft morning a dead mule must not also cost the
+#      advisory. But "I could not check" must never print like "I checked and it is fine" --
+#      that is the whole disease this gate exists to treat.
+BRIGGSY_USER_ID = "1390750540631150592"   # docs/league.md; a test pins this to the watcher's copy
+CARGO_DIR = os.path.join(os.pardir, "newsletter", "data", "inbox")
+
+def _cargo(fname):
+    try:
+        with open(os.path.join(CARGO_DIR, fname), encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:                     # absent, unreadable, or malformed -- all "no oracle"
+        return None
+
+DRAFT, USERS = _cargo("sleeper_draft.json"), _cargo("sleeper_users.json")
+fatal, checked, unsure = [], [], []
+
+_this  = EXPECT or (PICK_DRAFTS[0] if PICK_DRAFTS else None)
+_cid   = str(DRAFT.get("draft_id")) if isinstance(DRAFT, dict) else None
+if DRAFT is None:
+    unsure.append(f"no draft cargo at {os.path.join(CARGO_DIR, 'sleeper_draft.json')} "
+                  f"-- teams, rounds and the seat cannot be checked against the draft")
+elif _this and _cid != _this:
+    unsure.append(f"cargo on disk is draft {_cid}, this advisory is draft {_this} -- cargo "
+                  f"IGNORED as an oracle (a re-created draft, or the mule is pinned to a dead id)")
+    DRAFT = None
+
+# -- the draft's shape --
+_settings = (DRAFT or {}).get("settings") or {}
+for _label, _got, _want in (("teams", TEAMS, _settings.get("teams")),
+                            ("rounds", ROUNDS, _settings.get("rounds"))):
+    if isinstance(_want, int):
+        if _got != _want:
+            fatal.append(f"{_label}={_got} but draft {_cid} says settings.{_label}={_want}")
+        else:
+            checked.append(f"{_label}={_got}")
+
+# picks.json alone can DISPROVE the draft's shape with no cargo at all -- and it is the only
+# oracle left when the cargo belongs to another draft, which is exactly when a live run found the
+# gap below. Both directions are needed, and they are NOT symmetric:
+_seen_slots = [p.get("draft_slot") for p in PICKS
+               if isinstance(p, dict) and isinstance(p.get("draft_slot"), int)]
+_pick_nos = sorted({p.get("pick_no") for p in PICKS
+                    if isinstance(p, dict) and isinstance(p.get("pick_no"), int)})
+_contiguous = bool(_pick_nos) and _pick_nos == list(range(1, len(_pick_nos) + 1))
+
+# ...too SMALL: a seat above the team count cannot exist. True on any number of picks.
+if _seen_slots and max(_seen_slots) > TEAMS:
+    fatal.append(f"teams={TEAMS} but picks.json contains draft_slot {max(_seen_slots)} -- "
+                 f"a seat that cannot exist in a {TEAMS}-team draft")
+# ...too LARGE: once a FULL ROUND has gone by every seat has picked, so the highest seat seen is
+# the team count. Gated on contiguous-from-1 and a completed round because before that the
+# highest seat is merely how far the draft has got -- concluding from it would refuse a CORRECT
+# run, and a false red teaches the operator to skip the gate (insight 009).
+elif _seen_slots and _contiguous and len(_pick_nos) >= TEAMS and max(_seen_slots) != TEAMS:
+    fatal.append(f"teams={TEAMS} but {len(_pick_nos)} contiguous picks never leave draft_slot "
+                 f"{max(_seen_slots)} -- a {TEAMS}-team draft would have used seat {TEAMS} by now")
+
+# The board cannot hold more picks than it has seats. Disproves a round count that is too small.
+if _pick_nos and max(_pick_nos) > TEAMS * ROUNDS:
+    fatal.append(f"picks.json holds pick #{max(_pick_nos)} but teams={TEAMS} x rounds={ROUNDS} "
+                 f"is only {TEAMS * ROUNDS} picks -- the draft cannot be that shape")
+
+# -- the seat --
+_order, _seat_checked = (DRAFT or {}).get("draft_order"), False
+# The oracle gets the same scepticism as the input it judges. draft_order is a bijection
+# user_id -> seat; two ids on one seat is corrupt, and a corrupt oracle must not arbitrate the
+# seat or name the rosters. Not hypothetical -- one was generated by accident while writing the
+# live proof of this gate, and the engine consumed it without a word. (A PARTIAL draft_order is
+# legitimate and stays usable: the league had 6 of 8 seats filled on 2026-08-07.)
+if isinstance(_order, dict) and _order:
+    _dupe_seats = sorted({s for s in _order.values() if list(_order.values()).count(s) > 1})
+    if _dupe_seats:
+        unsure.append(f"draft_order seats more than one user on slot(s) {_dupe_seats} -- it is "
+                      f"corrupt, so it is not used to check the seat or to name the rosters")
+        _order = None
+if isinstance(_order, dict) and _order:
+    _true = _order.get(BRIGGSY_USER_ID)
+    if _true is None:
+        fatal.append(f"draft_order is populated but holds no entry for user_id "
+                     f"{BRIGGSY_USER_ID} -- either that id is wrong or we are not in this draft")
+    elif int(_true) != MY_SLOT:
+        fatal.append(f'my_slot={MY_SLOT} but draft_order["{BRIGGSY_USER_ID}"] = {_true}')
+    else:
+        checked.append(f"my_slot={MY_SLOT} against draft_order")
+        _seat_checked = True
+
+# picked_by is the oracle that exists FIRST: draft_order stays null until near go time, but the
+# moment the operator has made one pick, that pick names his seat in the engine's own input.
+_mine = sorted({p.get("draft_slot") for p in PICKS
+                if isinstance(p, dict) and str(p.get("picked_by") or "") == BRIGGSY_USER_ID
+                and isinstance(p.get("draft_slot"), int)})
+if _mine and _mine != [MY_SLOT]:
+    fatal.append(f"my_slot={MY_SLOT} but our own picked_by appears on draft_slot "
+                 f"{_mine[0] if len(_mine) == 1 else _mine} in picks.json")
+elif _mine:
+    checked.append(f"my_slot={MY_SLOT} against our own picks")
+    _seat_checked = True
+
+# -- the names file: derive the truth where we can, and never print a name known to be wrong --
+_true_names = {}
+if isinstance(_order, dict) and isinstance(USERS, list):
+    _disp = {str(u.get("user_id")): u.get("display_name") for u in USERS
+             if isinstance(u, dict) and u.get("display_name")}
+    _true_names = {s: _disp[str(uid)] for uid, s in _order.items()
+                   if str(uid) in _disp and isinstance(s, int)}
+if _true_names:
+    _wrong = sorted(s for s, nm in SLOT_NAMES.items() if s in _true_names and _true_names[s] != nm)
+    if _wrong:
+        unsure.append(f"slot_names.json disagrees with the draft on seat(s) {_wrong} -- using the "
+                      f"draft's own names. That file is gitignored, so a spent mock's copy is "
+                      f"invisible to git status and labels live seats with the wrong humans")
+    SLOT_NAMES = dict(_true_names)        # sname() reads this at call time
+elif SLOT_NAMES:
+    unsure.append("slot_names.json is hand-authored and could not be checked against the draft")
+
+if fatal:
+    print("!" * 62)
+    print("!! THE ENGINE'S INPUTS DISAGREE WITH THE DRAFT ITSELF")
+    for _m in fatal:
+        print(f"!!   {_m}")
+    print("!! A wrong seat or draft size yields a COMPLETE, CONFIDENT, WRONG advisory --")
+    print("!! plausible rosters, plausible clock, every line of it for another team.")
+    print("!! Fix the arguments and rerun. DO NOT ADVISE OFF THIS.")
+    print("!" * 62)
+    sys.exit(1)
+
+if not _seat_checked:
+    print("*" * 62)
+    # "No USABLE" -- one may be on disk but absent, corrupt, or for another draft. A banner that
+    # states something false about the evidence is the same defect as the one this gate treats.
+    print(f"** my_slot={MY_SLOT} IS UNVERIFIED. No usable draft_order on disk, and no pick in")
+    print(f"** picks.json carries our picked_by yet, so nothing here can confirm the seat.")
+    print(f"** If it is wrong, every line below is a confident wrong answer for another team.")
+    print(f'** Confirm draft_order["{BRIGGSY_USER_ID}"] before acting on this.')
+    print("*" * 62)
+for _m in unsure:
+    print(f"[unverified] {_m}")
+if checked:
+    print("[checked] " + " · ".join(checked))
 
 board_by_name = {}
 board_by_slot = defaultdict(list)     # (team, pos) -> board rows; the unmatched-pick index

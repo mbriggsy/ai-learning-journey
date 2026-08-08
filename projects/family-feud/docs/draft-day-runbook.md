@@ -54,7 +54,11 @@ before you trust a single rank.
    returns the whole cumulative array, so there is no range left to get wrong** — that failure
    mode is retired. The merge discipline and the integrity gate below are what caught it; both stay.*
    The engine now enforces this: it **hard-fails (exit 1) on interior gaps or duplicate pick_nos** in picks.json and refuses to emit board state. If it screams, re-fetch /picks, re-merge, rerun — NEVER advise off a screaming engine. (A missing *newest* pick is undetectable — a tail hole looks identical to "draft is only this far along" — but /picks is cumulative, so that's staleness bounded by poll cadence, not corruption.)
-3. Run: `python3 draft_engine.py <briggsy_slot> <teams> <rounds>`
+3. Run: `python3 draft_engine.py <briggsy_slot> <teams> <rounds> <draft_id>`
+   **Read the first lines of the output before the advisory.** `[checked]` names what the engine
+   confirmed against the draft itself. A `**` banner means the seat could NOT be confirmed —
+   go get `draft_order` before acting. A `!!` block means an argument disagrees with the draft
+   and nothing was computed.
 4. Read the output; compose the advisory (format below); send it. In executor mode, execute the pick instead when it's our clock.
 
 **Cadence — key it off ROOM SPEED, measured in round 1, not just pick distance** (the picks feed is cumulative, so you can never miss picks — only be late with advice):
@@ -109,13 +113,35 @@ Fallbacks: J.Love (same logic, more variance) · Egbuka if both RBs vanish.
 - **If this was the real draft:** stand up the in-season cadence — Tuesday waiver report, Thursday and Sunday morning lineup checks, trade evaluation on demand. **The pre-written prompts for these did not survive Cowork** (they lived in a project doc that could not be exported); they need rebuilding as real scheduled scripts. Tracked in `TODO.md`.
 
 ## Engine quick-reference
-`python3 draft_engine.py <my_slot> [teams=8] [rounds=16]` reading `picks.json` + `players_data.json` (+ optional `slot_names.json`) from cwd. **`my_slot` is required** — it used to default to 3, which meant a forgotten argument produced a complete, confident, wrong advisory that looked identical to a correct one. It now exits with usage instead. Get the real value from the draft's `draft_order` for user_id `1390750540631150592`.
+`python3 draft_engine.py <my_slot> [teams=8] [rounds=16] [draft_id]` reading `picks.json` + `players_data.json` (+ optional `slot_names.json`) from cwd. **`my_slot` is required** — it used to default to 3, which meant a forgotten argument produced a complete, confident, wrong advisory that looked identical to a correct one. It now exits with usage instead. Get the real value from the draft's `draft_order` for user_id `1390750540631150592`.
+
+**The input gate (added 2026-08-08).** Requiring `my_slot` stopped the *forgotten* argument; it did nothing about the *wrong* one, which is the likelier failure — every wrong seat 1..8 passed the only check there was, and `roster_id 3` sits one line from `draft_order` in `docs/league.md`, which makes `3` the most attractive wrong value in the project. The engine now cross-checks all four hand-supplied inputs against evidence already on disk, before computing any advice:
+
+| Input | Checked against |
+|---|---|
+| `my_slot` | `draft_order["1390750540631150592"]` in the mule's cargo; failing that, the `draft_slot` of any pick carrying our `picked_by` |
+| `teams` | the draft's `settings.teams`; and `picks.json` alone, which disproves a count that is too small (a seat above it cannot exist) **or** too large (once a full round has passed, the highest seat seen *is* the team count) |
+| `rounds` | the draft's `settings.rounds`; and a pick number beyond `teams × rounds` |
+| `slot_names.json` | `draft_order` + `sleeper_users.json`. Where they disagree the **draft's names win** and the disagreement is printed — that file is gitignored, so a spent mock's copy is invisible to `git status` and labels live seats with the wrong humans |
+
+Three rules it obeys, each one load-bearing:
+- **A missing oracle never exits.** A dead mule must not also cost the advisory. It prints `[unverified]`, loudly, and runs.
+- **"I could not check" never prints like "I checked."** The seat gets a `**` banner of its own when nothing could confirm it.
+- **An oracle for another draft is not evidence about this one.** The mule pins `draft_id` into its URL, so a re-created draft leaves stale cargo that still parses. Cargo is ignored unless its `draft_id` matches. Trusting it would refuse a *correct* seat — a false red, which [`insight 009`](insights/009-the-test-suite-was-red-against-source-that-no-longer-existed.md) records as the more dangerous direction, because it teaches the operator to skip the gate.
+
+**This is why you pass `draft_id` as arg 4** — without it the engine cannot tie the cargo to this draft, so `teams`/`rounds` go unchecked whenever `picks.json` is empty.
 Board state derives from **max(pick_no)**, with an integrity gate: exit 1 on interior gaps/duplicate pick_nos (see Step 3). `slot_names.json` = `{"<slot>": "<name>"}` → rosters/needs and the between-now-and-you line print names.
 Outputs: board state, last picks, run watch, every roster's composition + open needs, who picks between now and Briggsy, tier cliffs for RB/WR/TE/QB/K/DEF (⚠ at ≤3 left), best available on our board (with `vorp` and `VBD±` chips when the JSON carries them), and a VBD LEANS section — available players VBD ranks ≥8 spots above board rank.
 Name matching canonicalizes common diminutives (Kenny/Kenneth, Cam/Cameron, Mike/Michael, ...) on both board and picks — when adding board entries, still prefer Sleeper's spelling where known.
 Badge glyphs: » = our target · + = breakout · ! = bust risk · † = injury watch · ° = rookie · ^ = riser · v = faller · § = IR-stash.
 
 ## Changelog
+**Aug 8, 2026 — the engine's four hand-typed inputs are now cross-checked (input gate).** Found by an adversarial sweep, not by a failure — which is the point, because this one had no failure mode that looks like a failure. `my_slot`, `teams`, `rounds` and `slot_names.json` were all accepted on the operator's word; the only check in the file was `1 <= my_slot <= teams`, which **every wrong seat passes**. A wrong seat produced a complete, plausible advisory for another manager's team, exit 0 — right down to which roster carried `<== YOU`. Reproduced on the real 120-pick lab feed: slot 3 and slot 5 both exit 0 and disagree on picks-until-you, on `Between now and you`, and on whose roster is ours.
+
+The oracles were already on disk and being discarded: the cargo's `settings.teams`/`settings.rounds`/`draft_order`, and `picked_by` on every pick the operator made. Doctrine folded into the Engine quick-reference above. Two things worth carrying forward beyond this project:
+1. **A live run found a hole the tests did not.** `max(draft_slot) > teams` disproves a team count that is too *small* and says nothing about one that is too *large*; with the cargo belonging to a different draft, `teams=10` sailed through green tests and a green suite. The second rule (once a full round has passed, the highest seat seen *is* the team count) only exists because the gate was run against real data rather than declared finished when the tests passed.
+2. **The gate's own warning text is part of the gate.** A banner reading "No draft_order on disk" when a corrupt one *is* on disk is the same defect the gate exists to treat, one level up.
+
 **Aug 6, 2026 — Mock #3, first CLEAN executor run** (lab room `1390923383440424960`, 8-team PPR ✓, 15 rds, 120s, slot 3, 7 CPU · Claude drove Chrome end-to-end). Result: **15/15 manual picks, zero clock misses, zero AUTO-PICK flips, roster VORP 1225.8 (Mock #2: 1084), 13 of 15 picks at/above board price.** Gibbs fell to 3 (bots took Chase/Bijan 1-2); denial doctrine cashed twice (Breece at 30 forced slot 1 onto Bucky Irving; DeVonta at 46 forced slot 2 onto Waddle); QB window rode out a 4-QB run and still landed Daniels at 62 (+12) — fired with 0:13 left, the run's only scrape. K/DEF: Aubrey + Vikings in the final two rounds while bots burned round-12/14 picks on DEFs. Pass criteria met 4.5/5 (mid-draft queue refreshes partially lost to viewport drift). **Live auto-updating board: GREEN-LIT.** Lessons folded above:
 1. **ctrl+a modifier drops on the bridge** → stray "a" corrupts the search filter; three queue-arms died this way. Fix: triple-click to select box text. (→ Executor mode)
 2. **Queue-row green `⊕` = one-click draft from the queue panel** — second fire path, used twice live. (→ Executor mode)

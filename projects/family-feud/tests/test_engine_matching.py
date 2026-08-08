@@ -39,18 +39,53 @@ def pick(no, first, last, pos, team, slot=None):
             "metadata": {"first_name": first, "last_name": last, "position": pos, "team": team}}
 
 
+BRIGGSY = "1390750540631150592"      # docs/league.md; TestLeagueIdentity pins this to the engine
+
+
+def cargo(teams=8, rounds=16, draft_order=None, draft_id="1"):
+    """A mule-cargo draft object, shaped like newsletter/data/inbox/sleeper_draft.json."""
+    return {"draft_id": draft_id, "league_id": "L", "type": "snake", "status": "drafting",
+            "settings": {"teams": teams, "rounds": rounds}, "draft_order": draft_order,
+            "slot_to_roster_id": {str(i): i for i in range(1, teams + 1)}, "metadata": {}}
+
+
+def user(uid, display):
+    return {"user_id": uid, "display_name": display, "metadata": {}}
+
+
 class EngineCase(unittest.TestCase):
-    def run_engine(self, board_obj, picks, slot=3, teams=8, rounds=16, draft_id=None):
+    def run_engine(self, board_obj, picks, slot=3, teams=8, rounds=16, draft_id=None,
+                   draft_cargo=None, users=None, slot_names=None):
+        """Drive the engine in a throwaway tree that MIRRORS the real layout.
+
+        cwd is <tmp>/draft-kit, so the engine's cargo lookup (../newsletter/data/inbox) resolves
+        inside the tmpdir and never at the real one. Planting no cargo is the honest default: it
+        is the state on any machine where the mule has not run, and it must not fail the suite.
+        """
         with tempfile.TemporaryDirectory() as d:
-            with open(os.path.join(d, "players_data.json"), "w", encoding="utf-8") as f:
+            kit = os.path.join(d, "draft-kit")
+            os.makedirs(kit)
+            with open(os.path.join(kit, "players_data.json"), "w", encoding="utf-8") as f:
                 json.dump(board_obj, f, ensure_ascii=False)
-            with open(os.path.join(d, "picks.json"), "w", encoding="utf-8") as f:
+            with open(os.path.join(kit, "picks.json"), "w", encoding="utf-8") as f:
                 json.dump(picks, f, ensure_ascii=False)
+            if slot_names is not None:
+                with open(os.path.join(kit, "slot_names.json"), "w", encoding="utf-8") as f:
+                    json.dump(slot_names, f, ensure_ascii=False)
+            if draft_cargo is not None or users is not None:
+                inbox = os.path.join(d, "newsletter", "data", "inbox")
+                os.makedirs(inbox)
+                for fname, payload in (("sleeper_draft.json", draft_cargo),
+                                       ("sleeper_users.json", users)):
+                    if payload is not None:
+                        with open(os.path.join(inbox, fname), "w", encoding="utf-8") as f:
+                            json.dump(payload, f, ensure_ascii=False)
             env = dict(os.environ, PYTHONUTF8="1", PYTHONIOENCODING="utf-8")
             argv = [sys.executable, ENGINE, str(slot), str(teams), str(rounds)]
             if draft_id is not None:
                 argv.append(str(draft_id))
-            p = subprocess.run(argv, cwd=d, capture_output=True, text=True, encoding="utf-8", env=env)
+            p = subprocess.run(argv, cwd=kit, capture_output=True, text=True, encoding="utf-8",
+                               env=env)
             return p.returncode, (p.stdout or "") + (p.stderr or "")
 
     def real_board(self):
@@ -382,6 +417,178 @@ class TestTeamCodeAgreement(EngineCase):
         # every team the feed names must be spelled the same way on the board
         self.assertEqual(sorted(pick_teams - board_teams), [],
                          "Sleeper uses a team code the board does not")
+
+
+class TestLeagueIdentity(unittest.TestCase):
+    def test_the_engine_and_the_watcher_agree_on_briggsys_user_id(self):
+        """The id is the oracle for 'is this my seat'. Two copies exist, so pin them together --
+        a drifted copy would silently disable the seat check rather than fail it."""
+        for path in (os.path.join(ROOT, "draft-kit", "draft_engine.py"),
+                     os.path.join(ROOT, "scripts", "watch_draft_state.py")):
+            with open(path, encoding="utf-8") as f:
+                self.assertIn(f'"{BRIGGSY}"', f.read(),
+                              f"{os.path.basename(path)} no longer carries the user_id in "
+                              f"docs/league.md -- the seat check is looking for the wrong man")
+
+
+class TestInputValidation(EngineCase):
+    """my_slot, teams, rounds and slot_names.json are hand-supplied, and a WRONG value for any of
+    them sits inside the legal range. The only pre-existing check was `1 <= my_slot <= teams`,
+    which every wrong seat satisfies -- so the engine produced a complete, confident advisory for
+    somebody else's seat and exited 0.
+
+    The corroborating evidence was already on disk and thrown away: the mule's cargo carries
+    settings.teams / settings.rounds / draft_order, and every pick the operator made carries
+    picked_by next to its draft_slot.
+
+    Two rules the assertions below encode:
+      * a MISSING oracle never exits -- a dead mule must not also cost the advisory on draft
+        morning -- but it must never print like a passed check either.
+      * an oracle for a DIFFERENT draft is not evidence about this one.
+    """
+
+    def small(self):
+        return board([row(i, f"P{i} L{i}", "RB", "KC", i) for i in range(1, 6)])
+
+    def briggsy_pick(self, no, slot):
+        p = pick(no, "Ja'Marr", "Chase", "WR", "CIN", slot=slot)
+        p["picked_by"] = BRIGGSY
+        return p
+
+    # ---- the seat ----
+
+    def test_a_wrong_seat_is_refused_when_draft_order_names_the_right_one(self):
+        code, out = self.run_engine(self.small(), [], slot=3, draft_id="1",
+                                    draft_cargo=cargo(draft_order={BRIGGSY: 5}))
+        self.assertEqual(code, 1, "the engine advised off a seat the draft says is not ours")
+        self.assertIn("my_slot", out)
+        self.assertIn("5", out)
+        self.assertNotIn("BEST AVAILABLE", out, "a refused run must produce no advisory")
+
+    def test_the_right_seat_passes_and_says_it_checked(self):
+        """Positive control. A gate that refuses everything passes every test above."""
+        code, out = self.run_engine(self.small(), [], slot=5, draft_id="1",
+                                    draft_cargo=cargo(draft_order={BRIGGSY: 5}))
+        self.assertEqual(code, 0, out)
+        self.assertIn("BEST AVAILABLE", out)
+        self.assertIn("checked", out.lower())
+
+    def test_a_wrong_seat_is_refused_from_picked_by_alone(self):
+        """draft_order is null until near go time, so picked_by is the oracle that exists first."""
+        picks = [pick(1, "A", "B", "RB", "KC", slot=1), pick(2, "C", "D", "RB", "KC", slot=2),
+                 self.briggsy_pick(3, 3)]
+        code, out = self.run_engine(self.small(), picks, slot=5, draft_id="1")
+        self.assertEqual(code, 1, "our own pick named seat 3 and the engine advised seat 5")
+        self.assertIn("picked_by", out)
+
+    def test_the_seat_is_loudly_unverified_when_no_oracle_exists(self):
+        """The state on every machine before the mule runs. Must not exit -- must not go quiet."""
+        code, out = self.run_engine(self.small(), [], slot=3)
+        self.assertEqual(code, 0, out)
+        self.assertIn("BEST AVAILABLE", out, "a missing oracle must not cost the advisory")
+        self.assertIn("UNVERIFIED", out.upper())
+
+    # ---- the draft's shape ----
+
+    def test_a_wrong_team_count_is_refused_against_the_draft_settings(self):
+        code, out = self.run_engine(self.small(), [], slot=3, teams=10, draft_id="1",
+                                    draft_cargo=cargo(teams=8))
+        self.assertEqual(code, 1)
+        self.assertIn("teams", out.lower())
+
+    def test_a_wrong_round_count_is_refused_against_the_draft_settings(self):
+        code, out = self.run_engine(self.small(), [], slot=3, rounds=14, draft_id="1",
+                                    draft_cargo=cargo(rounds=16))
+        self.assertEqual(code, 1)
+        self.assertIn("rounds", out.lower())
+
+    def test_a_team_count_below_a_seen_draft_slot_is_refused_with_no_cargo_at_all(self):
+        """picks.json alone disproves it: a draft_slot of 8 cannot occur in a 6-team draft."""
+        picks = [pick(i, f"P{i}", f"L{i}", "RB", "KC", slot=i) for i in range(1, 9)]
+        code, out = self.run_engine(self.small(), picks, slot=3, teams=6)
+        self.assertEqual(code, 1)
+        self.assertIn("draft_slot", out)
+
+    def test_a_team_count_above_what_the_seats_ever_reach_is_refused(self):
+        """The asymmetry that a live run exposed: `max(draft_slot) > teams` only disproves a team
+        count that is too SMALL. Too LARGE stayed silent -- and with the real cargo belonging to a
+        different draft, nothing else was left to catch it. Once a full round has gone by, every
+        seat has picked, so the highest seat seen IS the team count."""
+        slots = [1, 2, 3, 4, 5, 6, 7, 8, 8, 7, 6, 5]        # an 8-team snake, 12 picks in
+        picks = [pick(i + 1, f"P{i}", f"L{i}", "RB", "KC", slot=s) for i, s in enumerate(slots)]
+        code, out = self.run_engine(self.small(), picks, slot=3, teams=10)
+        self.assertEqual(code, 1, "a 10-team draft was accepted on a feed that never leaves seat 8")
+        self.assertIn("draft_slot 8", out)
+
+    def test_a_partial_first_round_does_not_false_red_the_team_count(self):
+        """The other half of that rule, and the more important half. Before a full round has been
+        played the highest seat seen is simply how far the draft has got -- concluding a team
+        count from it would refuse a CORRECT run, which is the failure insight 009 is about."""
+        picks = [pick(i, f"P{i}", f"L{i}", "RB", "KC", slot=i) for i in range(1, 4)]
+        code, out = self.run_engine(self.small(), picks, slot=3, teams=8)
+        self.assertEqual(code, 0, f"3 picks into an 8-team draft was refused:\n{out}")
+
+    def test_a_pick_beyond_teams_times_rounds_is_refused(self):
+        """picks.json can disprove the ROUND count too: pick #20 cannot exist in 8 x 2."""
+        picks = [pick(i, f"P{i}", f"L{i}", "RB", "KC", slot=((i - 1) % 8) + 1)
+                 for i in range(1, 21)]
+        code, out = self.run_engine(self.small(), picks, slot=3, teams=8, rounds=2)
+        self.assertEqual(code, 1)
+        self.assertIn("16", out, "the operator must be shown the capacity he exceeded")
+
+    def test_a_draft_order_with_two_people_on_one_seat_is_not_trusted(self):
+        """The oracle gets the same scepticism as the input it judges. A draft_order that seats
+        two user_ids on one slot is corrupt, and a corrupt oracle must not quietly arbitrate the
+        seat or name the rosters. It does not exit -- a broken oracle never costs the advisory --
+        but it must not read as a passed check either.
+
+        Not hypothetical: writing the live proof for this gate, I generated exactly this shape by
+        accident and the engine consumed it without a word.
+        """
+        code, out = self.run_engine(self.small(), [], slot=3, draft_id="1",
+                                    draft_cargo=cargo(draft_order={BRIGGSY: 3, "999": 3}))
+        self.assertEqual(code, 0, "a corrupt oracle must not cost the advisory")
+        self.assertIn("more than one user", out)
+        self.assertIn("UNVERIFIED", out.upper(), "the seat must fall back to unverified")
+
+    # ---- the oracle must be about THIS draft ----
+
+    def test_cargo_from_a_different_draft_is_not_used_as_an_oracle(self):
+        """The mule pins draft_id in its URL, so a re-created draft leaves stale cargo that still
+        parses. Trusting it would refuse a CORRECT seat -- a false red, which insight 009 records
+        as more dangerous than a false green."""
+        code, out = self.run_engine(self.small(), [], slot=3, draft_id="1",
+                                    draft_cargo=cargo(draft_id="999", draft_order={BRIGGSY: 5}))
+        self.assertEqual(code, 0, "stale cargo for another draft refused a correct seat")
+        self.assertIn("999", out, "the operator must be told his cargo is for another draft")
+        self.assertIn("UNVERIFIED", out.upper())
+
+    # ---- the names file ----
+
+    def test_a_stale_slot_names_file_never_prints_the_wrong_human(self):
+        """Measured on a real stale file: it printed `slot 3 (Hunter) <== YOU` -- the rival's name
+        on Briggsy's own seat, in the project whose mission is beating him. It is gitignored, so
+        `git status` cannot show it is stale."""
+        code, out = self.run_engine(
+            self.small(), [], slot=3, draft_id="1",
+            draft_cargo=cargo(draft_order={BRIGGSY: 3, "959308419154886656": 4}),
+            users=[user(BRIGGSY, "PoppaBriggsy"), user("959308419154886656", "briggsy007")],
+            slot_names={"3": "Hunter", "4": "Ryan"})
+        self.assertEqual(code, 0, out)
+        rosters = out.split("ROSTERS / NEEDS")[1]
+        self.assertNotIn("Hunter", rosters, "the stale file's name was printed on a seat")
+        self.assertIn("PoppaBriggsy", rosters, "the derived truth was not used")
+        self.assertIn("slot_names.json", out, "the operator was not told his file disagreed")
+
+    def test_slot_names_are_marked_unverified_when_they_cannot_be_checked(self):
+        """Scoped to the slot_names line specifically. Asserting only on "UNVERIFIED" passed off
+        the SEAT banner, which prints here for an unrelated reason -- an assertion that cannot
+        tell which of two messages fired is not testing either of them."""
+        code, out = self.run_engine(self.small(), [], slot=3, slot_names={"3": "Hunter"})
+        self.assertEqual(code, 0, out)
+        self.assertIn("slot_names.json is hand-authored and could not be checked", out)
+        # and the unchecked name is not silently dropped -- it is the only naming we have
+        self.assertIn("Hunter", out.split("ROSTERS / NEEDS")[1])
 
 
 if __name__ == "__main__":

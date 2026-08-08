@@ -49,7 +49,7 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         draft becomes real. Never a notification.
                  resolve_sleeper_ids.py — resolves board rows to Sleeper ids against
                                         the pinned dump. Hard-stops rather than guess.
-tests/           152 tests: python -m unittest discover -s tests  (run from the root)
+tests/           168 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```

@@ -42,13 +42,15 @@ Assume no slack.
 
 ## 0. Start with `/brief`
 
-Eight insight docs now exist and five landed on 2026-08-07. Three of them
-([`004`](docs/insights/004-name-similarity-could-not-separate-the-two-populations-at-any-threshold.md),
+Ten insight docs now exist. Four of them directly constrain how the next units get built — each
+has a documented wrong answer that looks right:
+[`004`](docs/insights/004-name-similarity-could-not-separate-the-two-populations-at-any-threshold.md),
 [`006`](docs/insights/006-four-verification-steps-that-could-silently-do-nothing.md),
-[`007`](docs/insights/007-presence-is-not-health-the-third-instance-of-one-pattern.md)) directly
-constrain how the next three units get built — the normalizer, the schema gate, and the mule's
-health check each have a documented wrong answer that looks right. Read them before designing, not
-after debugging.
+[`007`](docs/insights/007-presence-is-not-health-the-third-instance-of-one-pattern.md), and
+**[`010`](docs/insights/010-exactly-one-candidate-was-treated-as-proof-of-identity.md) — read this
+one before U4.** A gate that asserts every row has a `sleeperId` without checking the id resolves
+to *that player* is 010 with a schema on top, and "174 ids, 0 unresolved" is a survivor count, not
+an identification. Read them before designing, not after debugging.
 
 ---
 
@@ -146,7 +148,7 @@ Remove-Item -LiteralPath "C:\Users\brigg\ai-learning-journey\projects\family feu
 
 ## Landmines
 
-Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the eight worked cases.
+Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the ten worked cases.
 The four that bite hardest under time pressure:
 
 - **A screaming engine means STOP.** Re-fetch, re-merge, rerun. Never advise off a `picks.json` it

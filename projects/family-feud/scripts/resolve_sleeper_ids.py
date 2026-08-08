@@ -281,13 +281,20 @@ def resolve(board, cache, ledger):
             continue
 
         # A LONE SHARED-TOKEN CANDIDATE IS NOT AN IDENTIFICATION, AND IS ROUTINELY A TEAMMATE.
-        # Six board rows have a same-position teammate sharing exactly one token, so the moment
-        # a name re-renders (or a trade moves the real man off that team) tier 1 goes empty and
-        # tier 2 returns precisely ONE candidate: the teammate. "Marvin Harrison" shares
-        # 'harrison' with Harrison Wallace, also ARI/WR -- and every downstream check passes,
-        # because Wallace really is a WR on ARI. Auto-accepting that freezes the wrong man
-        # permanently. The engine may use this rule to RAISE A WARNING a human reads; a
-        # one-time permanent freeze is a different act and needs a human either way.
+        # Measured against the pinned dump, removing each man from his own bucket (which is what
+        # a trade does), SIX board rows leave tier 2 returning exactly one candidate -- and all
+        # six are a different, real, active player:
+        #     Bijan Robinson ATL RB -> Brian Robinson 8154        shared: robinson
+        #     Josh Allen     BUF QB -> Kyle Allen     5127        shared: allen
+        #     Joe Burrow     CIN QB -> Joe Flacco       19        shared: joe
+        #     Marvin Harrison Jr. ARI WR -> Harrison Wallace 13670  shared: harrison
+        #     Matthew Stafford LAR QB -> Matthew Caldwell 13597   shared: matthew
+        #     Xavier Worthy  KC  WR -> Xavier Loyd     13916      shared: xavier
+        # ZERO rows return two or more, so the ">=2 candidates" hard-stop above would have caught
+        # NONE of them: the dangerous case is the one that looks cleanest. Every downstream check
+        # passes too, because Wallace really is a WR on ARI. Auto-accepting freezes the wrong man
+        # permanently. The engine may use this rule to RAISE A WARNING a human reads; a one-time
+        # permanent freeze is a different act and needs a human either way. (Insight 010.)
         #
         # Reaching here with a `prior` means the prior AGREES with pid -- the guard above
         # `continue`d otherwise -- i.e. an operator already approved this id, so it is honoured

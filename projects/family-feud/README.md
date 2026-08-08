@@ -36,6 +36,8 @@ draft-kit/       the draft-day arsenal (run the engine from in here)
                    and the board's JS are both generated from it. Never fork it.
   sleeper_ids.json every board row's frozen Sleeper id. Append-only ledger, and
                    the key the engine joins live picks on — names drift, ids don't.
+  vorp_curve.json  rank → points by position, averaged over four seasons. Declares
+                   what it excludes and that it does not reproduce the Aug 5 board.
   cache/           the pinned /players/nfl dump the ids were resolved against.
 
 newsletter/      The Nightly Feud machinery + the mule
@@ -52,7 +54,10 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         the pinned dump. Hard-stops rather than guess.
                  validate_board.py    — the schema gate. Refuses to let a board the
                                         engine cannot eat reach draft day. Born red.
-tests/           252 tests: python -m unittest discover -s tests  (run from the root)
+                 scoring.py           — the league's scoring rules as ONE pure function.
+                                        Reproduces nflverse's own PPR exactly, 2469/2469.
+                 build_curves.py      — the empirical VORP curve from nflverse seasons.
+tests/           274 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```

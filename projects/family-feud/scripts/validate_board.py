@@ -38,6 +38,7 @@ BOARD = os.path.join(KIT, "players_data.json")
 HTML = os.path.join(KIT, "family-feud-draft-board.html")
 PDF = os.path.join(KIT, "family-feud-cheat-sheet.pdf")
 LEDGER = os.path.join(KIT, "sleeper_ids.json")
+CURVE = os.path.join(KIT, "vorp_curve.json")     # U5's output; an input the board is built FROM
 DUMP = os.path.join(KIT, "cache", "sleeper_players.json.gz")
 ENGINE = os.path.join(KIT, "draft_engine.py")
 FEED = os.path.join(ROOT, "tests", "fixtures", "lab_feed_120.json")
@@ -496,7 +497,8 @@ def validate(board_path=BOARD, ledger_path=LEDGER, dump_path=DUMP, html=HTML, pd
     problems += check_strategy(d)
     problems += check_meta_freshness(d, ledger, dump,
                                      paths=[("the frozen id ledger", ledger_path),
-                                            ("the pinned dump file", dump_path)])
+                                            ("the pinned dump file", dump_path),
+                                            ("the VORP curve", CURVE)])
     problems += check_sleeper_ids(players, ledger, dump)
     problems += check_normalizer_equivalence(players)
     problems += check_html(d, html)

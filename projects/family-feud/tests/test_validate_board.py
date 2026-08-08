@@ -378,7 +378,10 @@ class TestTheRealBoardToday(unittest.TestCase):
     """
 
     FAMILIES = {
-        "meta.updated claims": 3,       # dump provenance, ledger mtime, dump file mtime
+        # dump provenance, ledger mtime, dump file mtime, and -- since U5 landed -- the VORP
+        # curve. Four inputs the Aug 5 board now predates. This count went 3 -> 4 the moment
+        # build_curves.py first wrote its output, which is precisely what this test is for.
+        "meta.updated claims": 4,
         "is hardcoded in the HTML's prose": 8,   # 4 baselineWaiver + 4 lastStarter
         "the cheat sheet is missing": 1,
     }

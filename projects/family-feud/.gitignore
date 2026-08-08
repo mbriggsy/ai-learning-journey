@@ -28,3 +28,15 @@ newsletter/data/inbox/*
 !newsletter/data/inbox/.gitkeep
 newsletter/data/archive/*
 !newsletter/data/archive/.gitkeep
+
+# nflverse weekly stats are a CACHE, not source: ~1.6MB per season, six seasons on disk, and
+# every byte is re-downloadable from a versioned GitHub release. `draft-kit/cache/` itself is
+# NOT ignored -- sleeper_players.json.gz lives there and IS committed, because U14's frozen ids
+# are only meaningful against the exact dump they were resolved from.
+# The oracle these feed is committed instead, at tests/fixtures/player_stats_2024_reg.csv.gz
+# (one real season, 324KB gzipped), so the scoring tests survive a clean clone.
+draft-kit/cache/player_stats_*.csv
+# Play-by-play is the same deal, an order of magnitude larger (~19MB/season
+# gzipped). It is the route to the 2025 season and the long-TD bonuses; see
+# the docstring in scripts/build_curves.py before fetching it again.
+draft-kit/cache/play_by_play_*.csv.gz

@@ -27,7 +27,7 @@ stopping condition, and the plan still outweighs the code (**13 commits, 5 of wh
 **Ultramode fires once, after U6** — one review of a working spine, not six reviews of fragments.
 
 **State:** both silent paths to advising an already-drafted player are closed, the hauler has its
-first consumer, and the board now joins to Sleeper on a frozen id instead of a name. **252 tests**,
+first consumer, and the board now joins to Sleeper on a frozen id instead of a name. **274 tests**,
 zero skips (`python -m unittest discover -s tests` from the root). What remains is the spine: one
 source that generates every surface.
 
@@ -99,9 +99,20 @@ U9  →  U3  →  U14  →  { U4 ∥ U5 }  →  U6  →  { U7 ∥ U15 }  →  U8
   `meta.updated` claims Aug 5 while its inputs are dated Aug 7-8 (3) · eight `meta.vbd` numbers
   hardcoded as literals in the board HTML's prose (8) · the cheat sheet holds 150 of 174 rows,
   missing every K and DEF (1). **Fix the surface, never the gate.** U6 regenerates them.
-- **U5 VORP** ◀ **NEXT.** Never depended on U4; the gate consumes its output. Note U5 is
-  licensed to change `meta.vbd`'s numbers — which are exactly the eight the gate now refuses to
-  see hardcoded in prose.
+- ~~**U5 VORP**~~ ✅ **SHIPPED 2026-08-08.** `scripts/scoring.py` (league.md as ONE pure
+  function) + `scripts/build_curves.py` → `draft-kit/vorp_curve.json`, 22 tests.
+  **Oracle: 2469/2469 player-seasons reproduce nflverse's own PPR exactly**, so the
+  machinery is proven against an outside reference; the fixture is a real committed season
+  (324KB gz) so it survives a clean clone.
+  **Two documented limits, both from the SOURCE, both with one known route out:** it does
+  not reproduce the Aug 5 board (best 1.84 MAD, measured across every plausible config) and
+  it excludes the 40+/50+ long-TD bonuses. `player_stats_*.csv` stops at 2024 and carries no
+  TD distance; **`play_by_play_*.csv.gz` DOES publish 2025** (verified, 48,771 plays) and has
+  per-play yardage. Prototyped and MEASURED, not assumed: PBP aggregation reproduces 554/607
+  player-seasons exactly, 20 within 2 pts, 33 off by multiples of six (TD attribution —
+  laterals, fumble-recovery TDs). Closing it means reimplementing nflverse's stat builder;
+  shipping unquantified attribution error would be worse than shipping a narrower EXACT
+  basis. **That is the next accuracy win if anyone wants it.**
 - **U6 generator** — staged emit, `.last_good/`, `--verify-only`, one-refresh-one-commit.
 - **U15 engine wrapper** (NEW) — KTD-8's missing owner. Reads shape from the draft object; hard-refuses
   non-snake drafts.

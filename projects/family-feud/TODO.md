@@ -35,8 +35,8 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **424 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 424 with **2 skips**,
+gate went **13 findings → 0** by fixing surfaces. **434 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 434 with **2 skips**,
 both live-cargo environment probes. Verified by eye, not only by tests: the cheat sheet is **2 pages
 — the whole 174-row board on page 1**, the plan on page 2 — and the HTML board renders shape-driven
 round labels with no invented rounds.
@@ -70,9 +70,20 @@ fixed (commits `5e7ae390`, `76849ad9`, `fdf190eb`, `13c3ed3b`). What follows is 
    unguarded, and the unguarded half was the ROSTER, which is what the PDF header prints.
    `meta.shape` gained `scoring_type` (from the draft object's `metadata`) to make it derivable.
    4 mutants killed.
-3. **Nothing ever re-checks `meta.shape` against the draft object it names.** A board built from a
-   dead or superseded draft passes `--verify-only` forever. Fix: a gate check comparing
-   `meta.shape.draft_id` + values against the hauled cargo, with the cargo's age reported.
+3. ~~**Nothing ever re-checks `meta.shape` against the draft object it names.**~~ ✅ **FIXED
+   2026-08-08.** `check_shape_against_draft()` compares `draft_id` and the shape facts against the
+   hauled cargo, and the gate prints the cargo's age on every run. Every other check in the gate
+   compares the board to **itself**, so all of them stay green on a board that is perfectly
+   self-consistent about the wrong draft.
+   - **A re-created draft reports only that** — a different draft's teams/rounds are a different
+     league, not drift, and seven more lines would bury the one fact that matters.
+   - **`status` and `start_time` are deliberately NOT failures.** Both are expected to move, they
+     affect a header string rather than any advice, and the watcher owns them. Failing on them
+     would turn `--verify-only` red on draft morning, when it most needs to be trustworthy.
+   - **Missing cargo is silent, but the gate SAYS it did not check** (`[unverified] meta.shape was
+     NOT re-checked…`). A clean clone must not go red (insight 009).
+   - **The call-site test was missing and the mutation found it:** cutting the check out of
+     `validate()` left all nine unit tests green. Insight 013's exact shape, caught this time.
 4. **`strategy` prose still hardcodes both baselines and league shape**, inside the source
    (KTD-1 + KTD-7). `rules[10]` embeds `QB12/RB41/WR47/TE12`; `slotNotes` embed `Picks 1-3` etc.
    The old-value sweep cannot see them because they are not a quantity it tracks.

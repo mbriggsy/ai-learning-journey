@@ -98,6 +98,120 @@ class GateCase(unittest.TestCase):
                         f"no problem mentioned {needle!r}; got {problems}")
 
 
+class TestShapeAgainstTheDraft(GateCase):
+    """Every other check in this gate compares the board to ITSELF, so all of them stay green on a
+    board built from a draft that has since been re-created -- the board is perfectly
+    self-consistent about the wrong draft, and `--verify-only` blesses it forever. This is the one
+    check that asks whether the board still matches the world."""
+
+    DRAFT = {"draft_id": "111", "season": "2026", "status": "pre_draft", "start_time": None,
+             "type": "snake", "metadata": {"scoring_type": "ppr"},
+             "settings": {"teams": 8, "rounds": 16, "reversal_round": 0, "slots_qb": 1,
+                          "slots_rb": 2, "slots_wr": 2, "slots_te": 1, "slots_k": 1,
+                          "slots_def": 1, "slots_flex": 2, "slots_bn": 6}}
+
+    def setUp(self):
+        super().setUp()
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+
+    def cargo(self, **over):
+        d = json.loads(json.dumps(self.DRAFT))
+        d.update({k: v for k, v in over.items() if k != "settings"})
+        d["settings"].update(over.get("settings") or {})
+        p = os.path.join(self.tmp, f"draft_{len(os.listdir(self.tmp))}.json")
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump(d, f)
+        return p
+
+    def board_with_shape(self, **over):
+        import sys as _s
+        _s.path.insert(0, os.path.join(ROOT, "scripts"))
+        from shape import read_shape
+        shape = dict(read_shape(self.cargo(), "/nonexistent"))
+        shape.update(over)
+        b = json.loads(json.dumps(self.b))
+        b["meta"]["shape"] = shape
+        return b
+
+    def test_a_board_matching_its_draft_is_silent(self):
+        """The control. Without it, a check that flagged everything would pass the rest."""
+        self.assertEqual(
+            V.check_shape_against_draft(self.board_with_shape(), self.cargo(), "/nonexistent"), [])
+
+    def test_a_re_created_draft_is_caught(self):
+        """The mule pins draft_id into its URL, so a re-created draft is exactly the case where
+        the board goes on describing a room nobody is sitting in."""
+        b = self.board_with_shape()
+        problems = V.check_shape_against_draft(b, self.cargo(draft_id="999"), "/nonexistent")
+        self.only(problems, "not the one being run")
+
+    def test_a_re_created_draft_reports_only_that(self):
+        """A different draft's teams and rounds are not drift, they are a different league.
+        Listing seven more mismatches would bury the one fact that matters."""
+        b = self.board_with_shape()
+        problems = V.check_shape_against_draft(
+            b, self.cargo(draft_id="999", settings={"teams": 12, "rounds": 15}), "/nonexistent")
+        self.assertEqual(len(problems), 1, problems)
+
+    def test_a_moved_flex_slot_is_caught(self):
+        """The roster half again -- and nothing else in this gate would have noticed."""
+        b = self.board_with_shape()
+        self.only(V.check_shape_against_draft(b, self.cargo(settings={"slots_flex": 1}),
+                                              "/nonexistent"), "meta.shape.flex")
+
+    def test_a_changed_round_count_is_caught(self):
+        b = self.board_with_shape()
+        self.only(V.check_shape_against_draft(b, self.cargo(settings={"rounds": 15}),
+                                              "/nonexistent"), "meta.shape.rounds")
+
+    def test_the_draft_becoming_real_is_NOT_a_failure(self):
+        """`status` and `start_time` are EXPECTED to move, they affect a header string rather than
+        any advice, and watch_draft_state.py exists to catch them. Failing here would turn
+        --verify-only red on draft morning, the moment it most needs to be trustworthy."""
+        b = self.board_with_shape()
+        live = self.cargo(status="drafting", start_time=1756500000000)
+        self.assertEqual(V.check_shape_against_draft(b, live, "/nonexistent"), [])
+
+    def test_missing_cargo_is_silent_rather_than_a_false_red(self):
+        """A clean clone and CI have no inbox. A gate that failed there teaches people to skip it
+        (insight 009)."""
+        self.assertEqual(
+            V.check_shape_against_draft(self.board_with_shape(), "/nope/x.json", "/nonexistent"),
+            [])
+
+    def test_but_the_gate_SAYS_it_could_not_check(self):
+        """Silent is right; silent AND unremarked is the conflation this repo keeps treating."""
+        line = V.shape_provenance_line(self.board_with_shape(), "/nope/x.json", "/nonexistent")
+        self.assertIn("[unverified]", line)
+        self.assertIn("NOT re-checked", line)
+
+    def test_and_says_what_it_checked_against_when_it_could(self):
+        line = V.shape_provenance_line(self.board_with_shape(), self.cargo(), "/nonexistent")
+        self.assertIn("[checked]", line)
+        self.assertIn("111", line)
+
+    def test_validate_actually_calls_this_check(self):
+        """THE CALL SITE (insight 013), and it was missing.
+
+        Every test above calls `check_shape_against_draft` directly, so cutting
+        `problems += check_shape_against_draft(...)` out of `validate()` left all nine of them
+        green -- a guard with tests and no proof it was wired to anything. Verified by doing
+        exactly that: this is the only one that goes red.
+        """
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, tmp, True)
+        with open(V.BOARD, encoding="utf-8") as f:
+            board = json.load(f)
+        board["meta"]["shape"] = dict(board["meta"]["shape"], draft_id="NOT_THIS_DRAFT")
+        p = os.path.join(tmp, "players_data.json")
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump(board, f, ensure_ascii=False)
+        problems = V.validate(board_path=p, cargo=self.cargo(), league_cargo="/nonexistent")
+        self.assertTrue(any("not the one being run" in x for x in problems),
+                        f"validate() never ran the shape check: {problems}")
+
+
 class TestCleanBoardPassesEveryStaticCheck(GateCase):
     """THE POSITIVE CONTROL. A gate that rejects everything passes every rejection test below."""
 

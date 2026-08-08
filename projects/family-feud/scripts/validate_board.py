@@ -35,7 +35,9 @@ from normalize import norm  # noqa: E402
 import resolve_sleeper_ids as R  # noqa: E402
 #: `shape` is dependency-free on purpose, so importing it here costs the gate nothing and gives it
 #: the SAME renderer the generator uses -- a second copy would be the defect this check exists for.
-from shape import format_line  # noqa: E402
+from shape import format_line, read_shape  # noqa: E402
+from shape import CARGO as SHAPE_CARGO, LEAGUE_CARGO as SHAPE_LEAGUE_CARGO  # noqa: E402
+from shape import Refuse as ShapeRefuse  # noqa: E402
 
 BOARD = os.path.join(KIT, "players_data.json")
 HTML = os.path.join(KIT, "family-feud-draft-board.html")
@@ -293,6 +295,79 @@ def league_shape(d):
     t = re.search(r"(\d+)-team", fmt)
     r = re.search(r"(\d+)\s*rounds", fmt)
     return (int(t.group(1)) if t else None), (int(r.group(1)) if r else None)
+
+
+#: Shape facts that make the board WRONG if they move. `status` and `start_time` are deliberately
+#: absent: both are EXPECTED to change (pre_draft -> drafting, null -> a real date), they affect a
+#: header string rather than any advice, and `watch_draft_state.py` exists to catch exactly them.
+#: Failing the gate on those would turn `--verify-only` red on draft morning -- the moment it most
+#: needs to be trustworthy -- for something that is not wrong.
+SHAPE_FACTS = ("teams", "rounds", "type", "reversal_round", "starters", "flex", "bench")
+
+
+def check_shape_against_draft(d, cargo=SHAPE_CARGO, league_cargo=SHAPE_LEAGUE_CARGO):
+    """Does `meta.shape` still describe the draft it names?
+
+    Every other check in this gate compares the board to ITSELF -- rows against rows, prose against
+    the blob, the PDF against the source. All of them stay green on a board built from a draft that
+    has since been re-created, or that was the wrong draft from the start, because the board is
+    perfectly self-consistent about the wrong thing. `meta.shape` is stamped once at build time and
+    then never questioned again, so `--verify-only` blesses it forever.
+
+    This is the only check that asks whether the board still matches the world.
+
+    IT IS SILENT WHEN THE CARGO CANNOT BE READ. On a clean clone or in CI there is no inbox, and a
+    gate that failed there would be a false red -- which insight 009 records as the more dangerous
+    direction, because it teaches the operator to skip the gate. `main()` reports the
+    could-not-check case in words instead, so "I did not check" never prints like "I checked".
+    """
+    shape = (d.get("meta") or {}).get("shape")
+    if not isinstance(shape, dict):
+        return []                       # check_generated_fields already reports a missing shape
+    try:
+        live = read_shape(cargo, league_cargo)
+    except ShapeRefuse:
+        return []
+
+    stamped_id, live_id = str(shape.get("draft_id") or ""), str(live.get("draft_id") or "")
+    if stamped_id and live_id and stamped_id != live_id:
+        # Report ONLY this. A different draft's teams/rounds are not drift, they are a different
+        # league, and listing seven more mismatches would bury the one fact that matters.
+        return [f"meta.shape was stamped from draft {stamped_id}, but the draft object on disk is "
+                f"{live_id} -- this board describes a draft that is not the one being run. Every "
+                f"other check in this gate passes because the board is self-consistent about the "
+                f"wrong draft. Re-run scripts/build_board.py."]
+
+    problems = []
+    for key in SHAPE_FACTS:
+        was, now = shape.get(key), live.get(key)
+        if now is None or was == now:
+            continue
+        problems.append(f"meta.shape.{key} says {was!r} but draft {live_id or '?'} now says "
+                        f"{now!r} -- the board was built against a league shape that has since "
+                        f"changed. Re-run scripts/build_board.py.")
+    return problems
+
+
+def shape_provenance_line(d, cargo=SHAPE_CARGO, league_cargo=SHAPE_LEAGUE_CARGO, now=None):
+    """What `check_shape_against_draft` was actually able to compare against, in one line.
+
+    The check goes silent when the cargo is unreadable, which is right -- but a silent check that
+    prints nothing is indistinguishable from a check that passed, and that conflation is the
+    disease half this repo's guards exist to treat. So the gate says which it was, every run.
+    """
+    try:
+        live = read_shape(cargo, league_cargo)
+    except ShapeRefuse as e:
+        return ("[unverified] meta.shape was NOT re-checked against the draft object -- "
+                f"{e}. The board could be describing a draft that no longer exists.")
+    try:
+        age = ((now or _dt.datetime.now())
+               - _dt.datetime.fromtimestamp(os.path.getmtime(cargo))).total_seconds() / 60.0
+        age_txt = f"cargo {age:.0f} min old"
+    except OSError:
+        age_txt = "cargo age unknown"
+    return f"[checked] meta.shape against live draft {live.get('draft_id')} ({age_txt})"
 
 
 def check_meta_freshness(d, ledger, dump, paths=()):
@@ -613,7 +688,7 @@ def check_engine_replay(prefixes=PREFIXES, engine=ENGINE, feed=FEED, kit=KIT):
 
 
 def validate(board_path=BOARD, ledger_path=LEDGER, dump_path=DUMP, html=HTML, pdf=PDF,
-             full=False, kit=KIT):
+             full=False, kit=KIT, cargo=SHAPE_CARGO, league_cargo=SHAPE_LEAGUE_CARGO):
     # `kit` is forwarded so the generator can replay the board it is ABOUT to ship rather than the
     # one already on disk. Without it, --full blesses the wrong file during a staged build.
     with open(board_path, encoding="utf-8") as f:
@@ -638,6 +713,7 @@ def validate(board_path=BOARD, ledger_path=LEDGER, dump_path=DUMP, html=HTML, pd
                                             ("the VORP curve", CURVE)])
     problems += check_sleeper_ids(players, ledger, dump)
     problems += check_generated_fields(d, ledger)
+    problems += check_shape_against_draft(d, cargo, league_cargo)
     problems += check_normalizer_equivalence(players, html)
     problems += check_html(d, html)
     problems += check_pdf(players, pdf)
@@ -665,6 +741,12 @@ def main(argv=None):
 
     problems = validate(full=a.full)
     mode = "--full" if a.full else "--fast"
+
+    # Printed on BOTH paths, and before the verdict: whether the one check that compares the board
+    # to the outside world was able to run at all.
+    with open(BOARD, encoding="utf-8") as f:
+        print(shape_provenance_line(json.load(f)))
+
     if problems:
         print(f"!! the board FAILS {len(problems)} check(s) [{mode}]\n")
         for p in problems:

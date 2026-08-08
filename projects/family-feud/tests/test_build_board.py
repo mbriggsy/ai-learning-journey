@@ -179,9 +179,44 @@ class TestDerivations(unittest.TestCase):
             self.assertTrue(p["vorpMethod"])
 
     def test_k_and_def_are_flagged_as_tier_flat_not_curve_derived(self):
+        """Skill rows descend from the curve; K and DEF cannot, because build_curves.py builds
+        QB/RB/WR/TE only. The gap is labelled per row rather than filled with invented values."""
+        want_skill = B.curve_method()
         for p in real_source()["players"]:
-            want = B.VORP_KDEF if p["pos"] in ("K", "DEF") else B.VORP_CARRIED
+            want = B.VORP_KDEF if p["pos"] in ("K", "DEF") else want_skill
             self.assertEqual(p["vorpMethod"], want, p["name"])
+
+    def test_every_skill_row_matches_the_curve_arithmetic_exactly(self):
+        """The value on the board must be reproducible from committed code -- that is the whole
+        reason it stopped being carried."""
+        source = real_source()
+        with open(B.CURVE, encoding="utf-8") as f:
+            curve = json.load(f)["curve"]
+        base = source["meta"]["vbd"]["baselineWaiver"]
+        checked = 0
+        for p in source["players"]:
+            if p["pos"] not in curve:
+                continue
+            want = round(curve[p["pos"]][str(p["pr"])] - curve[p["pos"]][str(base[p["pos"]])], 1)
+            self.assertEqual(p["vorp"], want, p["name"])
+            checked += 1
+        self.assertEqual(checked, 150, "expected all 150 skill rows to be curve-derived")
+
+    def test_recompute_preserves_within_position_order(self):
+        """RB1 stays RB1. The curve is a rank->points lookup with pr as its input, so vorp is
+        monotone in pr by construction; only the CROSS-positional comparison moves."""
+        for pos in ("QB", "RB", "WR", "TE"):
+            rows = sorted((p for p in real_source()["players"] if p["pos"] == pos),
+                          key=lambda p: p["pr"])
+            for a, b in zip(rows, rows[1:]):
+                self.assertGreaterEqual(a["vorp"], b["vorp"], f"{pos}: {a['name']} vs {b['name']}")
+
+    def test_vbdrank_is_a_permutation_and_vbddelta_follows_from_it(self):
+        source = real_source()
+        ranks = sorted(p["vbdRank"] for p in source["players"])
+        self.assertEqual(ranks, list(range(1, len(ranks) + 1)))
+        for p in source["players"]:
+            self.assertEqual(p["vbdDelta"], p["r"] - p["vbdRank"], p["name"])
 
 
 class TestShape(unittest.TestCase):

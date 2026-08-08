@@ -401,8 +401,8 @@ def check_generated_fields(d, ledger):
         elif p.get("pos") in ("K", "DEF") and method != "carried:kdef-tier-flat":
             problems.append(f"{who} is {p.get('pos')} but its vorpMethod is {method!r}; K and DEF "
                             f"values are flat per-tier constants, not curve or projection output")
-        elif p.get("pos") not in ("K", "DEF") and method not in ("carried:board", "curve",
-                                                                 "projection"):
+        elif p.get("pos") not in ("K", "DEF") and not (
+                method.startswith("curve:") or method in ("curve", "projection")):
             problems.append(f"{who}: vorpMethod {method!r} is not a permitted method for a skill "
                             f"row")
 

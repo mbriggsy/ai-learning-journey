@@ -18,6 +18,7 @@ player who cannot be on it (the positive control on the text extractor).
 """
 import json
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -398,16 +399,26 @@ class TestTheExecutionGate(unittest.TestCase):
         """Negative control: the shipped board must survive every prefix at exit 0."""
         self.assertEqual(V.check_engine_replay(kit=V.KIT), [])
 
-    def test_a_float_vbddelta_is_caught_at_exactly_three_picks(self):
-        """Positive control, and the reason the schedule is written out longhand. This board
-        passes an empty-picks run and both of the first two prefixes."""
+    def test_a_float_vbddelta_is_caught_within_the_first_handful_of_picks(self):
+        """Positive control, and the reason the schedule is written out longhand.
+
+        The break fires only once a row with |vbdDelta| >= 8 enters the top-12 window, so the
+        exact prefix depends on which players sit there. It was 3 on the Aug 5 board and moved to
+        5 when U6 recomputed VORP and the VBD ranks shifted -- so this pins the PROPERTY that
+        matters (a single-digit prefix, which deciles of a 120-pick feed would step straight over)
+        rather than the incidental number, which is board data and will move again.
+        """
         def to_float(b):
             for r in b["players"]:
                 r["vbdDelta"] = float(r["vbdDelta"])
         problems = V.check_engine_replay(kit=self.kit_with(to_float))
         self.assertTrue(problems, "a float vbdDelta board replayed clean")
-        self.assertIn("replaying 3 pick(s)", problems[0],
-                      "the schedule must include 3; deciles would have missed this entirely")
+        m = re.search(r"replaying (\d+) pick\(s\)", problems[0])
+        self.assertIsNotNone(m, problems[0])
+        n = int(m.group(1))
+        self.assertLess(n, 10, f"caught only at {n} picks; the first decile of a 120-pick feed is "
+                               f"12, so a decile schedule would have missed this entirely")
+        self.assertIn(n, V.PREFIXES, f"{n} is not in the replay schedule")
 
 
 class TestTheRealBoardToday(unittest.TestCase):

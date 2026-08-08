@@ -88,8 +88,60 @@ SKILL = ("QB", "RB", "WR", "TE")
 #: shipped 2021-2024 curve is not the source KTD-6 assigns to that region, and recomputing from
 #: it would move 143 of 174 rows and hand VBD #1 from Gibbs to Chase. `--diff` reports what a
 #: recompute would do so that stays a visible decision instead of a silent one.
+#: Retained only so a board written before the 2026-08-08 recompute is still
+#: recognisable; the generator never writes it now.
 VORP_CARRIED = "carried:board"
 VORP_KDEF = "carried:kdef-tier-flat"
+
+
+def curve_method(curve_path=CURVE):
+    """`curve:<first>-<last>`, naming the seasons the value actually descends from."""
+    with open(curve_path, encoding="utf-8") as f:
+        yrs = ((json.load(f).get("meta") or {}).get("seasons") or [])
+    return f"curve:{min(yrs)}-{max(yrs)}" if yrs else "curve"
+
+
+def recompute_vorp(players, curve, baselines, method):
+    """Derive `vorp` for every skill row from the curve, then re-rank the whole board.
+
+    WHY THIS REPLACED CARRYING THE BOARD'S NUMBERS. The Aug 5 values were produced by the
+    Cowork-era pipeline, which no longer exists -- they could not be verified, audited, or
+    regenerated, and they were the ONLY figures on the board that the generator did not
+    generate. Worse, they could not survive a refresh: the gate requires
+    {vorp, vbdRank, vbdDelta} all-present-or-all-absent board-wide, so adding one player to the
+    board left a row with no vorp and no way to compute one. The plan's load-bearing requirement
+    is repeated interactive refresh, so carrying was a dead end.
+
+    K AND DEF KEEP THEIR FLAT PER-TIER CONSTANTS. build_curves.py builds QB/RB/WR/TE only, so
+    KTD-6's "K and DEF keep the historical curve" is not satisfiable from the shipped curve.
+    Inventing values would be worse than labelling the gap, so those rows stay carried and say so.
+
+    Within a position nothing reorders -- the curve is a rank->points lookup with `pr` as its
+    input, so vorp is monotone in pr by construction (verified: 0 order violations across all 150
+    skill rows). What moves is the CROSS-positional comparison, which is the only thing VORP is
+    for.
+    """
+    out = []
+    for p in players:
+        q = dict(p)
+        pos, pr = q.get("pos"), q.get("pr")
+        table = curve.get(pos) or {}
+        base = baselines.get(pos)
+        if table and base is not None and str(pr) in table and str(base) in table:
+            # round() is mandatory: 145 of 320 curve subtractions produce float noise
+            # (373.1 - 118.7 = 254.40000000000003), and a float vbdDelta kills the engine.
+            q["vorp"] = round(table[str(pr)] - table[str(base)], 1)
+            q["vorpMethod"] = method
+        else:
+            q["vorpMethod"] = VORP_KDEF
+        out.append(q)
+
+    # Re-rank the whole board on the new values. Ties break on board rank so the ordering is
+    # deterministic -- vbdRank must be contiguous 1..N with no duplicates or the gate refuses.
+    for rank, q in enumerate(sorted(out, key=lambda x: (-x["vorp"], x["r"])), start=1):
+        q["vbdRank"] = rank
+        q["vbdDelta"] = q["r"] - rank
+    return out
 
 
 class Refuse(Exception):
@@ -291,10 +343,6 @@ def check_def_identity(players, names):
     return bad
 
 
-def vorp_method(pos):
-    return VORP_KDEF if pos in ("K", "DEF") else VORP_CARRIED
-
-
 def enrich(d, shape, ledger, dump_meta, names, generator_sha, dirty=False, now=None):
     """Produce the emitted source from the read source. Pure apart from the clock."""
     players = [dict(p) for p in d["players"]]
@@ -316,7 +364,16 @@ def enrich(d, shape, ledger, dump_meta, names, generator_sha, dirty=False, now=N
 
     for p in players:
         p["sleeperId"] = ids[p["name"]]
-        p["vorpMethod"] = vorp_method(p.get("pos"))
+
+    if os.path.exists(CURVE):
+        with open(CURVE, encoding="utf-8") as f:
+            curve = json.load(f).get("curve") or {}
+        baselines = ((d["meta"].get("vbd") or {}).get("baselineWaiver") or {})
+        players = recompute_vorp(players, curve, baselines, curve_method())
+    else:
+        raise Refuse(f"no VORP curve at {CURVE} -- run scripts/build_curves.py. The board's "
+                     f"values must be derivable, not carried from a pipeline that no longer "
+                     f"exists.")
 
     meta = dict(d["meta"])
     badges = {}
@@ -528,42 +585,16 @@ def diff_report(before, after, curve_path=CURVE):
                  f"{max((abs(x[1]) for x in changed), default=0.0)}")
 
     lines.append("")
-    lines.append("  VORP provenance (KTD-6): skill values are CARRIED from the board, not "
-                 "recomputed.")
-    lines.append("  Projection VORP (v2) is deferred, and the shipped curve is the source KTD-6")
-    lines.append("  assigns to baselines and K/DEF -- not to skill-player values.")
-    lines += ["  " + ln for ln in _recompute_preview(after, curve_path)]
+    methods = {}
+    for p in after["players"]:
+        m = p.get("vorpMethod", "?")
+        methods[m] = methods.get(m, 0) + 1
+    lines.append("  VORP provenance (KTD-6), per row:")
+    for m, n in sorted(methods.items()):
+        lines.append(f"    {n:3} rows  {m}")
+    lines.append("  K and DEF keep flat per-tier constants -- build_curves.py builds QB/RB/WR/TE")
+    lines.append("  only, so the curve cannot supply them. Labelled, not invented.")
     return "\n".join(lines)
-
-
-def _recompute_preview(source, curve_path):
-    """What a curve recompute WOULD do. Reported, never applied -- so the decision stays visible
-    instead of being made silently by whoever runs the generator."""
-    if not os.path.exists(curve_path):
-        return ["would-be recompute: no curve on disk, nothing to compare"]
-    with open(curve_path, encoding="utf-8") as f:
-        curve = json.load(f).get("curve") or {}
-    base = ((source.get("meta") or {}).get("vbd") or {}).get("baselineWaiver") or {}
-    deltas, flips = [], []
-    for p in source["players"]:
-        pos, pr = p.get("pos"), p.get("pr")
-        if pos not in curve or str(base.get(pos)) not in curve.get(pos, {}):
-            continue
-        got = curve[pos].get(str(pr))
-        if got is None:
-            continue
-        would = round(got - curve[pos][str(base[pos])], 1)
-        if would != p.get("vorp"):
-            deltas.append((p["name"], p["vorp"], would))
-    deltas.sort(key=lambda x: -abs(x[2] - x[1]))
-    if not deltas:
-        return ["would-be recompute: no change"]
-    top = ", ".join(f"{n} {o}->{w}" for n, o, w in deltas[:3])
-    big = [f"{n} {o}->{w}" for n, o, w in deltas if abs(w - o) >= 10]
-    return [f"would-be recompute from {os.path.basename(curve_path)}: {len(deltas)} row(s) move, "
-            f"max |delta| {max(abs(w - o) for _, o, w in deltas):.1f}",
-            f"  largest: {top}",
-            f"  >=10 pts: {len(big)} row(s)" + (f" e.g. {big[:3]}" if big else "")]
 
 
 # ---------------------------------------------------------------- CLI

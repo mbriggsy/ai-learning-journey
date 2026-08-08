@@ -90,9 +90,9 @@ Three numbers from the board:
 <!-- BEGIN GENERATED worked-example — rewritten by scripts/build_board.py. Do not hand-edit. -->
 | Player | VORP | Read as |
 |--------|------|---------|
-| Jahmyr Gibbs | **268.4** | 268 points/season better than the free RB (RB41 is the bar) |
-| Ja'Marr Chase | **242.7** | 243 points better than the free WR (WR47 is the bar) |
-| Josh Allen | **129.6** | 130 points better than the free QB (QB12 is the bar) |
+| Jahmyr Gibbs | **254.4** | 254 points/season better than the free RB (RB41 is the bar) |
+| Ja'Marr Chase | **256.1** | 256 points better than the free WR (WR47 is the bar) |
+| Josh Allen | **140.0** | 140 points better than the free QB (QB12 is the bar) |
 <!-- END GENERATED worked-example -->
 
 *The two tables above are generated from `draft-kit/players_data.json` on every board refresh. If

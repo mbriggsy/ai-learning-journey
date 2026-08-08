@@ -161,23 +161,33 @@ file. To change the board, edit `players_data.json`'s judgment fields and re-run
 
 ---
 
-### ⚠ ONE DECISION FOR BRIGGSY — VORP is carried, not recomputed
+### ✅ DECIDED 2026-08-08 — VORP is RECOMPUTED from the curve, not carried
 
-U6 did **not** overwrite skill-player `vorp`, and this is the plan's own call rather than caution:
-KTD-6 assigns skill values to **projections** and gives the curve the **replacement baselines and
-K/DEF**, and projection VORP (v2) is explicitly deferred (plan line 430).
+**Briggsy's call: "whatever is the more correct approach."** The deciding argument was not
+accuracy, it was that carrying was a dead end:
 
-**What a recompute from the shipped curve would do, measured:** **143 of 174 rows move**, max
-|Δ| 19.8, and **VBD #1 changes hands — Gibbs 268.4 → 254.4, Chase 242.7 → 256.1.** The cause is a
-season mismatch: the board was built from a 2022-2025 curve and `build_curves.py` ships
-**2021-2024**, whose own metadata says `reproduces_aug5_board: false`.
+- The Aug 5 values came from the **Cowork-era pipeline, which no longer exists**. They could not
+  be verified, audited, or regenerated — the only figures on the board the generator did not
+  generate, in a unit whose entire thesis is that every surface is generated.
+- They **could not survive a refresh.** The gate requires `{vorp, vbdRank, vbdDelta}`
+  all-present-or-all-absent board-wide, so adding one player left a row with no vorp and no way
+  to compute one. The plan's load-bearing requirement is repeated interactive refresh.
 
-Every refresh prints this under "would-be recompute" so the choice stays visible. **Three ways
-forward, in order of my preference:**
-1. **Leave it.** Carried values + honest `vorpMethod`. Costs nothing, changes nothing.
-2. **Rebuild the curve on 2022-2025** to match the board's actual provenance, then compare again.
-   Cheap — `python scripts/build_curves.py --refetch` with `SEASONS` changed.
-3. **Build projection VORP (v2)** — the accuracy win KTD-6 actually wants. Un-deferred work.
+**What moved:** VBD #1 changed hands — **Gibbs 268.4 → 254.4, Chase 242.7 → 256.1.**
+**Within a position nothing reordered** (verified: 0 order violations across all 150 skill rows).
+The curve is a rank→points lookup with `pr` as its input, so vorp is monotone in `pr` by
+construction; what moved is the **cross-positional** comparison, which is the only thing VORP is
+for. RB1 is still RB1.
+
+**Seasons: 2021-2024, and that is the newest window that exists with exact scoring** — verified
+2026-08-08, `player_stats_2025.csv` and `stats_player_week_2025.csv` both **404**. 2025 exists only
+as play-by-play (`play_by_play_2025.csv.gz`, HTTP 200), which needs nflverse's stat builder
+reimplemented and misattributes TDs on ~5% of player-seasons. A narrower EXACT basis beats a wider
+approximate one; revisit 2025 as its own measured unit.
+
+**K and DEF still carry flat per-tier constants** (`carried:kdef-tier-flat`) — `build_curves.py`
+builds QB/RB/WR/TE only, so KTD-6's "K and DEF keep the historical curve" is not satisfiable from
+the shipped curve. Labelled rather than invented. **This is the next real accuracy gap.**
 
 ~~**Blocking prerequisite:** no lab-feed fixture exists**~~ ✅ **RESOLVED** — `tests/fixtures/lab_feed_120.json`
 is committed and verified: 120 picks, `pick_no` contiguous 1→120, every pick carrying `player_id`,

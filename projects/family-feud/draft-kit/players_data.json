@@ -96,11 +96,11 @@
    "playoff_teams": 6
   },
   "build": {
-   "generator_sha": "b3274ada7fbf6bcc9372d6131ff9d139423f0327c1e9ab59e1b3629a3d581635",
-   "source_sha256": "88627e9c0e27c612f3551782d5c3c8ac0cdabdabdb53c940991c3489551af127",
+   "generator_sha": "7e36476f1e46acc248a17276f8abf28108398d1b9405bbdfaff405fd825feadd",
+   "source_sha256": "e413c6f8694845b46ded7b94d2e49c6dcf912e32548093e22a3705c5d20313fb",
    "curve_sha256": "ad26ce6f78fb0983e26a58065a354b9d8471d53100e9fffbe20538d40dc4d115",
    "sleeper_dump_fetched_at": "2026-08-08T01:15:28+00:00",
-   "built_at": "2026-08-08T16:54:17+00:00",
+   "built_at": "2026-08-08T18:32:36+00:00",
    "dirty": false
   }
  },
@@ -116,11 +116,11 @@
     "I"
    ],
    "note": "The 1.01. Contract hold-in at camp (not practicing as of 8/4) — monitor, but Bijan's record deal paves his extension. Elite PPR back.",
-   "vorp": 268.4,
-   "vbdRank": 1,
-   "vbdDelta": 0,
+   "vorp": 254.4,
+   "vbdRank": 2,
+   "vbdDelta": -1,
    "sleeperId": "9221",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 2,
@@ -131,11 +131,11 @@
    "tier": 1,
    "badges": [],
    "note": "Just got the richest RB deal ever (8/3). Stefanski's scheme is a lift. Zero drama, all volume.",
-   "vorp": 225.7,
+   "vorp": 217.7,
    "vbdRank": 3,
    "vbdDelta": -1,
    "sleeperId": "9509",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 3,
@@ -146,11 +146,11 @@
    "tier": 1,
    "badges": [],
    "note": "WR1 overall. Burrow, targets, touchdowns. Boring in the best way.",
-   "vorp": 242.7,
-   "vbdRank": 2,
-   "vbdDelta": 1,
+   "vorp": 256.1,
+   "vbdRank": 1,
+   "vbdDelta": 2,
    "sleeperId": "7564",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 4,
@@ -161,11 +161,11 @@
    "tier": 1,
    "badges": [],
    "note": "Target monster in a Super Bowl offense. Full-PPR gold.",
-   "vorp": 204.0,
-   "vbdRank": 5,
-   "vbdDelta": -1,
+   "vorp": 196.8,
+   "vbdRank": 4,
+   "vbdDelta": 0,
    "sleeperId": "9488",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 5,
@@ -178,11 +178,11 @@
     "I"
    ],
    "note": "Practicing fully, but league discipline still under review — small multi-game suspension risk baked into price.",
-   "vorp": 181.9,
-   "vbdRank": 7,
-   "vbdDelta": -2,
+   "vorp": 182.4,
+   "vbdRank": 6,
+   "vbdDelta": -1,
    "sleeperId": "9493",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 6,
@@ -193,11 +193,11 @@
    "tier": 2,
    "badges": [],
    "note": "Workhorse with Daniel Jones back healthy. Volume you can set a watch to.",
-   "vorp": 212.3,
-   "vbdRank": 4,
-   "vbdDelta": 2,
+   "vorp": 194.6,
+   "vbdRank": 5,
+   "vbdDelta": 1,
    "sleeperId": "6813",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 7,
@@ -208,11 +208,11 @@
    "tier": 2,
    "badges": [],
    "note": "PPR machine. 100+ catches in his sleep.",
-   "vorp": 158.4,
-   "vbdRank": 10,
-   "vbdDelta": -3,
+   "vorp": 159.4,
+   "vbdRank": 8,
+   "vbdDelta": -1,
    "sleeperId": "7547",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 8,
@@ -224,10 +224,10 @@
    "badges": [],
    "note": "Bounce-back bet with Kyler Murray arriving. The talent never left.",
    "vorp": 146.2,
-   "vbdRank": 12,
-   "vbdDelta": -4,
+   "vbdRank": 11,
+   "vbdDelta": -3,
    "sleeperId": "6794",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 9,
@@ -238,11 +238,11 @@
    "tier": 2,
    "badges": [],
    "note": "Lead back for Josh Allen's offense under new HC Joe Brady.",
-   "vorp": 199.8,
-   "vbdRank": 6,
-   "vbdDelta": 3,
+   "vorp": 180.0,
+   "vbdRank": 7,
+   "vbdDelta": 2,
    "sleeperId": "8138",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 10,
@@ -253,11 +253,11 @@
    "tier": 2,
    "badges": [],
    "note": "Elite target share; Pickens arrival actually loosens coverage.",
-   "vorp": 137.4,
-   "vbdRank": 15,
-   "vbdDelta": -5,
+   "vorp": 141.0,
+   "vbdRank": 12,
+   "vbdDelta": -2,
    "sleeperId": "6786",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 11,
@@ -270,11 +270,11 @@
     "X"
    ],
    "note": "Polarizing: age 30 off a 450-touch year — but he is the ONLY healthy SF back. Volume monster or medical bill; you're deciding which.",
-   "vorp": 176.1,
-   "vbdRank": 8,
-   "vbdDelta": 3,
+   "vorp": 158.6,
+   "vbdRank": 9,
+   "vbdDelta": 2,
    "sleeperId": "4034",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 12,
@@ -285,11 +285,11 @@
    "tier": 2,
    "badges": [],
    "note": "Year 2, Kubiak's run-heavy scheme, Cousins stabilizing the offense. Feature role locked.",
-   "vorp": 168.4,
-   "vbdRank": 9,
-   "vbdDelta": 3,
+   "vorp": 155.6,
+   "vbdRank": 10,
+   "vbdDelta": 2,
    "sleeperId": "12527",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 13,
@@ -300,11 +300,11 @@
    "tier": 3,
    "badges": [],
    "note": "Alpha usage when healthy. Stroud's clear No. 1.",
-   "vorp": 120.5,
-   "vbdRank": 20,
-   "vbdDelta": -7,
+   "vorp": 127.9,
+   "vbdRank": 18,
+   "vbdDelta": -5,
    "sleeperId": "7569",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 14,
@@ -315,11 +315,11 @@
    "tier": 1,
    "badges": [],
    "note": "Positional cheat code — TE1 in PPR. Worth a 2nd-round pick in this league.",
-   "vorp": 134.7,
-   "vbdRank": 16,
-   "vbdDelta": -2,
+   "vorp": 133.0,
+   "vbdRank": 15,
+   "vbdDelta": -1,
    "sleeperId": "8130",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 15,
@@ -330,11 +330,11 @@
    "tier": 3,
    "badges": [],
    "note": "Stefanski scheme lift regardless of who wins the QB battle.",
-   "vorp": 112.1,
-   "vbdRank": 24,
-   "vbdDelta": -9,
+   "vorp": 121.0,
+   "vbdRank": 20,
+   "vbdDelta": -5,
    "sleeperId": "8112",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 16,
@@ -347,11 +347,11 @@
     "X"
    ],
    "note": "Talent is elite, situation is a dumpster: Tua and Hill gone, Malik Willis starting. He inherits ALL the touches — but in a bad offense. Discount only.",
-   "vorp": 147.2,
-   "vbdRank": 11,
-   "vbdDelta": 5,
+   "vorp": 138.4,
+   "vbdRank": 14,
+   "vbdDelta": 2,
    "sleeperId": "9226",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 17,
@@ -362,11 +362,11 @@
    "tier": 1,
    "badges": [],
    "note": "Kubiak's heavy-personnel scheme runs through him. The other TE cheat code.",
-   "vorp": 76.8,
-   "vbdRank": 43,
-   "vbdDelta": -26,
+   "vorp": 91.2,
+   "vbdRank": 36,
+   "vbdDelta": -19,
    "sleeperId": "11604",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 18,
@@ -377,11 +377,11 @@
    "tier": 3,
    "badges": [],
    "note": "Blockbuster trade to the Patriots — instant WR1 for Drake Maye. Change of scenery with a chip.",
-   "vorp": 106.8,
-   "vbdRank": 26,
-   "vbdDelta": -8,
+   "vorp": 113.0,
+   "vbdRank": 23,
+   "vbdDelta": -5,
    "sleeperId": "5859",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 19,
@@ -392,11 +392,11 @@
    "tier": 3,
    "badges": [],
    "note": "Mahomes' target hog when on the field. Big ceiling.",
-   "vorp": 101.4,
-   "vbdRank": 28,
-   "vbdDelta": -9,
+   "vorp": 107.8,
+   "vbdRank": 25,
+   "vbdDelta": -6,
    "sleeperId": "10229",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 20,
@@ -407,11 +407,11 @@
    "tier": 3,
    "badges": [],
    "note": "Harbaugh ground-and-pound centerpiece, year 2.",
-   "vorp": 142.9,
-   "vbdRank": 13,
-   "vbdDelta": 7,
+   "vorp": 130.5,
+   "vbdRank": 16,
+   "vbdDelta": 4,
    "sleeperId": "12507",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 21,
@@ -422,11 +422,11 @@
    "tier": 3,
    "badges": [],
    "note": "Three-down role in a top-5 offense.",
-   "vorp": 138.4,
-   "vbdRank": 14,
-   "vbdDelta": 7,
+   "vorp": 130.0,
+   "vbdRank": 17,
+   "vbdDelta": 4,
    "sleeperId": "9224",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 22,
@@ -439,11 +439,11 @@
     "X"
    ],
    "note": "Age-29 workload cliff chatter after a down 2025. Still Saquon. Ceiling pick with a floor warning.",
-   "vorp": 130.1,
-   "vbdRank": 17,
-   "vbdDelta": 5,
+   "vorp": 122.7,
+   "vbdRank": 19,
+   "vbdDelta": 3,
    "sleeperId": "4866",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 23,
@@ -454,11 +454,11 @@
    "tier": 3,
    "badges": [],
    "note": "Kept the Dallas gig rolling; WR1B with spike weeks.",
-   "vorp": 96.9,
-   "vbdRank": 31,
-   "vbdDelta": -8,
+   "vorp": 103.4,
+   "vbdRank": 28,
+   "vbdDelta": -5,
    "sleeperId": "8137",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 24,
@@ -469,11 +469,11 @@
    "tier": 1,
    "badges": [],
    "note": "The only QBs worth an early pick in an 8-teamer are Allen/Lamar — and even then only if they slide to you in Rd 3+. Now with DJ Moore.",
-   "vorp": 129.6,
-   "vbdRank": 18,
-   "vbdDelta": 6,
+   "vorp": 140.0,
+   "vbdRank": 13,
+   "vbdDelta": 11,
    "sleeperId": "4984",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 25,
@@ -487,11 +487,11 @@
     "X"
    ],
    "note": "Super Bowl MVP, richest RB FA deal ever, Chiefs bell-cow hype... and no KC back has hit 1,000 yards since 2017. Pick your religion.",
-   "vorp": 124.9,
-   "vbdRank": 19,
-   "vbdDelta": 6,
+   "vorp": 119.7,
+   "vbdRank": 21,
+   "vbdDelta": 4,
    "sleeperId": "8151",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 26,
@@ -502,11 +502,11 @@
    "tier": 1,
    "badges": [],
    "note": "See Allen. League-winning weeks, but QB is free in this league — don't reach.",
-   "vorp": 99.0,
-   "vbdRank": 30,
-   "vbdDelta": -4,
+   "vorp": 106.7,
+   "vbdRank": 26,
+   "vbdDelta": 0,
    "sleeperId": "4881",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 27,
@@ -517,11 +517,11 @@
    "tier": 4,
    "badges": [],
    "note": "The King keeps not aging. TD floor as sturdy as they come.",
-   "vorp": 119.3,
-   "vbdRank": 21,
-   "vbdDelta": 6,
+   "vorp": 114.4,
+   "vbdRank": 22,
+   "vbdDelta": 5,
    "sleeperId": "3198",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 28,
@@ -534,11 +534,11 @@
     "R"
    ],
    "note": "No. 3 overall pick, projected rookie leader in rush yards/TDs under LaFleur. Draft capital says workhorse.",
-   "vorp": 115.2,
-   "vbdRank": 22,
-   "vbdDelta": 6,
+   "vorp": 108.5,
+   "vbdRank": 24,
+   "vbdDelta": 4,
    "sleeperId": "13287",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 29,
@@ -549,11 +549,11 @@
    "tier": 4,
    "badges": [],
    "note": "Kellen Moore's WR1 with rookie Tyson drawing coverage away.",
-   "vorp": 96.0,
-   "vbdRank": 32,
-   "vbdDelta": -3,
+   "vorp": 99.9,
+   "vbdRank": 30,
+   "vbdDelta": -1,
    "sleeperId": "8144",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 30,
@@ -567,11 +567,11 @@
     "T"
    ],
    "note": "Healthy Mayfield + OC Zac Robinson historically feeds his role. Community breakout darling — and I agree.",
-   "vorp": 93.2,
-   "vbdRank": 33,
-   "vbdDelta": -3,
+   "vorp": 96.8,
+   "vbdRank": 32,
+   "vbdDelta": -2,
    "sleeperId": "12514",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 31,
@@ -585,11 +585,11 @@
     "T"
    ],
    "note": "ACL rehab trending toward Week 1, avoided PUP, ADP discounted to Rd 3-4 money. Harbaugh structure. This is the upside pick that wins leagues.",
-   "vorp": 89.3,
-   "vbdRank": 35,
-   "vbdDelta": -4,
+   "vorp": 92.7,
+   "vbdRank": 34,
+   "vbdDelta": -3,
    "sleeperId": "11632",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 32,
@@ -600,11 +600,11 @@
    "tier": 4,
    "badges": [],
    "note": "Volume in a McVay offense. Corum lurks but the job is his.",
-   "vorp": 113.0,
-   "vbdRank": 23,
-   "vbdDelta": 9,
+   "vorp": 105.7,
+   "vbdRank": 27,
+   "vbdDelta": 5,
    "sleeperId": "8150",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 33,
@@ -615,11 +615,11 @@
    "tier": 4,
    "badges": [],
    "note": "A.J. Brown's exit makes him the clear Philly alpha. Target bump incoming.",
-   "vorp": 86.5,
+   "vorp": 90.6,
    "vbdRank": 37,
    "vbdDelta": -4,
    "sleeperId": "7525",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 34,
@@ -630,11 +630,11 @@
    "tier": 4,
    "badges": [],
    "note": "Lamar's clear WR1, and Likely's exit to the Giants frees up targets underneath.",
-   "vorp": 82.2,
-   "vbdRank": 40,
-   "vbdDelta": -6,
+   "vorp": 86.4,
+   "vbdRank": 39,
+   "vbdDelta": -5,
    "sleeperId": "9997",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 35,
@@ -645,11 +645,11 @@
    "tier": 4,
    "badges": [],
    "note": "Geno Smith is an actual QB upgrade for him. Rebuilt Jets pass game.",
-   "vorp": 77.4,
-   "vbdRank": 42,
-   "vbdDelta": -7,
+   "vorp": 81.3,
+   "vbdRank": 41,
+   "vbdDelta": -6,
    "sleeperId": "8146",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 36,
@@ -660,11 +660,11 @@
    "tier": 4,
    "badges": [],
    "note": "Year 2 with Bryce trending up. Alpha frame, alpha usage.",
-   "vorp": 73.5,
-   "vbdRank": 46,
-   "vbdDelta": -10,
+   "vorp": 79.1,
+   "vbdRank": 44,
+   "vbdDelta": -8,
    "sleeperId": "12526",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 37,
@@ -675,11 +675,11 @@
    "tier": 4,
    "badges": [],
    "note": "Best WR2 in football, WR1 spike weeks.",
-   "vorp": 72.3,
-   "vbdRank": 47,
-   "vbdDelta": -10,
+   "vorp": 76.8,
+   "vbdRank": 46,
+   "vbdDelta": -9,
    "sleeperId": "6801",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 38,
@@ -692,11 +692,11 @@
     "X"
    ],
    "note": "Freshly extended and healthy, but multi-back committee talk won't die. Ceiling's real, so is the annoyance.",
-   "vorp": 107.7,
-   "vbdRank": 25,
-   "vbdDelta": 13,
+   "vorp": 101.6,
+   "vbdRank": 29,
+   "vbdDelta": 9,
    "sleeperId": "8155",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 39,
@@ -710,11 +710,11 @@
     "U"
    ],
    "note": "Traded to Denver for a 1st — Bo Nix's WR1. Analysts calling him the most mispriced player in drafts. Pound the table.",
-   "vorp": 70.8,
-   "vbdRank": 49,
-   "vbdDelta": -10,
+   "vorp": 75.1,
+   "vbdRank": 47,
+   "vbdDelta": -8,
    "sleeperId": "7526",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 40,
@@ -725,11 +725,11 @@
    "tier": 5,
    "badges": [],
    "note": "Herbert's security blanket. PPR floor with juice.",
-   "vorp": 69.0,
-   "vbdRank": 50,
-   "vbdDelta": -10,
+   "vorp": 72.2,
+   "vbdRank": 49,
+   "vbdDelta": -9,
    "sleeperId": "11635",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 41,
@@ -740,11 +740,11 @@
    "tier": 5,
    "badges": [],
    "note": "Jayden Daniels' guy. Perennially underpriced.",
-   "vorp": 65.4,
+   "vorp": 68.6,
    "vbdRank": 52,
    "vbdDelta": -11,
    "sleeperId": "5927",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 42,
@@ -758,11 +758,11 @@
     "T"
    ],
    "note": "DJ Moore traded away, elite per-play metrics, Ben Johnson year 2. Breakout profile screaming.",
-   "vorp": 62.5,
-   "vbdRank": 55,
-   "vbdDelta": -13,
+   "vorp": 65.2,
+   "vbdRank": 53,
+   "vbdDelta": -11,
    "sleeperId": "12519",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 43,
@@ -775,11 +775,11 @@
     "B"
    ],
    "note": "Second-year Ben Johnson TE hype — some rank him near-elite already.",
-   "vorp": 63.6,
-   "vbdRank": 53,
-   "vbdDelta": -10,
+   "vorp": 69.4,
+   "vbdRank": 51,
+   "vbdDelta": -8,
    "sleeperId": "12517",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 44,
@@ -790,11 +790,11 @@
    "tier": 2,
    "badges": [],
    "note": "Target funnel in year 2 with Jones back.",
-   "vorp": 56.3,
-   "vbdRank": 61,
-   "vbdDelta": -17,
+   "vorp": 60.5,
+   "vbdRank": 57,
+   "vbdDelta": -13,
    "sleeperId": "12518",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 45,
@@ -807,11 +807,11 @@
     "X"
    ],
    "note": "Volume intact but regression whispers; Lloyd behind him is healthy.",
-   "vorp": 103.8,
-   "vbdRank": 27,
-   "vbdDelta": 18,
+   "vorp": 99.3,
+   "vbdRank": 31,
+   "vbdDelta": 14,
    "sleeperId": "5850",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 46,
@@ -824,11 +824,11 @@
     "D"
    ],
    "note": "Harbaugh loves him, but injury/'recklessness' chatter is cooling the price.",
-   "vorp": 100.0,
-   "vbdRank": 29,
-   "vbdDelta": 17,
+   "vorp": 95.2,
+   "vbdRank": 33,
+   "vbdDelta": 13,
    "sleeperId": "12481",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 47,
@@ -839,11 +839,11 @@
    "tier": 5,
    "badges": [],
    "note": "Dallas lead back, goal-line work included.",
-   "vorp": 93.0,
-   "vbdRank": 34,
-   "vbdDelta": 13,
+   "vorp": 87.2,
+   "vbdRank": 38,
+   "vbdDelta": 9,
    "sleeperId": "7588",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 48,
@@ -854,11 +854,11 @@
    "tier": 5,
    "badges": [],
    "note": "Signed with the Saints — projected lead-back volume in Kellen Moore's offense.",
-   "vorp": 87.9,
-   "vbdRank": 36,
-   "vbdDelta": 12,
+   "vorp": 83.8,
+   "vbdRank": 40,
+   "vbdDelta": 8,
    "sleeperId": "7543",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 49,
@@ -869,11 +869,11 @@
    "tier": 5,
    "badges": [],
    "note": "Monken scheme, year 2, TD role.",
-   "vorp": 84.2,
-   "vbdRank": 39,
-   "vbdDelta": 10,
+   "vorp": 80.3,
+   "vbdRank": 42,
+   "vbdDelta": 7,
    "sleeperId": "12512",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 50,
@@ -884,11 +884,11 @@
    "tier": 2,
    "badges": [],
    "note": "Rushing floor makes him a weekly ceiling play. Rounds 6-8 is the zone.",
-   "vorp": 86.4,
-   "vbdRank": 38,
-   "vbdDelta": 12,
+   "vorp": 92.6,
+   "vbdRank": 35,
+   "vbdDelta": 15,
    "sleeperId": "11566",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 51,
@@ -899,11 +899,11 @@
    "tier": 2,
    "badges": [],
    "note": "Pure passing volume with Chase/Higgins. Free square in round 7.",
-   "vorp": 75.6,
-   "vbdRank": 45,
-   "vbdDelta": 6,
+   "vorp": 80.0,
+   "vbdRank": 43,
+   "vbdDelta": 8,
    "sleeperId": "6770",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 52,
@@ -916,11 +916,11 @@
     "U"
    ],
    "note": "Just got handed A.J. Brown. Konami-code legs. Sneaky top-5 QB case.",
-   "vorp": 51.1,
-   "vbdRank": 63,
-   "vbdDelta": -11,
+   "vorp": 55.6,
+   "vbdRank": 61,
+   "vbdDelta": -9,
    "sleeperId": "11564",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 53,
@@ -935,11 +935,11 @@
     "T"
    ],
    "note": "Off PUP, 'very much on track' for Week 1 post-ACL. TE1-upside at a discount.",
-   "vorp": 42.1,
-   "vbdRank": 70,
-   "vbdDelta": -17,
+   "vorp": 42.2,
+   "vbdRank": 69,
+   "vbdDelta": -16,
    "sleeperId": "9484",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 54,
@@ -952,11 +952,11 @@
     "X"
    ],
    "note": "Gainwell installed as co-starter post-injury. Talent says buy, usage says caution.",
-   "vorp": 81.5,
-   "vbdRank": 41,
-   "vbdDelta": 13,
+   "vorp": 77.5,
+   "vbdRank": 45,
+   "vbdDelta": 9,
    "sleeperId": "11584",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 55,
@@ -967,11 +967,11 @@
    "tier": 6,
    "badges": [],
    "note": "Explosive lead option in an ascending Maye offense.",
-   "vorp": 75.9,
-   "vbdRank": 44,
-   "vbdDelta": 11,
+   "vorp": 75.1,
+   "vbdRank": 48,
+   "vbdDelta": 7,
    "sleeperId": "12529",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 56,
@@ -984,11 +984,11 @@
     "D"
    ],
    "note": "Age 33, unsustainable 15-TD 2025, career-low YAC. Name-brand tax — let someone else pay it.",
-   "vorp": 60.8,
-   "vbdRank": 56,
-   "vbdDelta": 0,
+   "vorp": 63.8,
+   "vbdRank": 55,
+   "vbdDelta": 1,
    "sleeperId": "2133",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 57,
@@ -1001,11 +1001,11 @@
     "I"
    ],
    "note": "Left Tampa for SF; day-to-day quad. Red-zone role with Purdy in a thin room. 1,000-yard streak on the line.",
-   "vorp": 58.5,
-   "vbdRank": 58,
-   "vbdDelta": -1,
+   "vorp": 61.6,
+   "vbdRank": 56,
+   "vbdDelta": 1,
    "sleeperId": "2216",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 58,
@@ -1018,11 +1018,11 @@
     "X"
    ],
    "note": "Big plays, scarce targets behind ASB/LaPorta/Gibbs.",
-   "vorp": 56.5,
-   "vbdRank": 60,
-   "vbdDelta": -2,
+   "vorp": 58.4,
+   "vbdRank": 59,
+   "vbdDelta": -1,
    "sleeperId": "8148",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 59,
@@ -1033,11 +1033,11 @@
    "tier": 6,
    "badges": [],
    "note": "Traded to Buffalo — Josh Allen finally has a true WR1. Volume could surprise.",
-   "vorp": 50.3,
+   "vorp": 51.9,
    "vbdRank": 64,
    "vbdDelta": -5,
    "sleeperId": "4983",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 60,
@@ -1048,11 +1048,11 @@
    "tier": 6,
    "badges": [],
    "note": "Healthy year = spike weeks. Classic ceiling flex.",
-   "vorp": 48.6,
+   "vorp": 50.1,
    "vbdRank": 65,
    "vbdDelta": -5,
    "sleeperId": "8167",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 61,
@@ -1065,11 +1065,11 @@
     "D"
    ],
    "note": "Two disappointing years and camp 'yips' reports. Talent bet at a falling price — there's a level where I'm in.",
-   "vorp": 47.1,
+   "vorp": 45.2,
    "vbdRank": 66,
    "vbdDelta": -5,
    "sleeperId": "11628",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 62,
@@ -1080,11 +1080,11 @@
    "tier": 6,
    "badges": [],
    "note": "Ben Johnson offense, year 3 breakout window.",
-   "vorp": 45.2,
-   "vbdRank": 67,
-   "vbdDelta": -5,
+   "vorp": 44.1,
+   "vbdRank": 68,
+   "vbdDelta": -6,
    "sleeperId": "11620",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 63,
@@ -1095,11 +1095,11 @@
    "tier": 2,
    "badges": [],
    "note": "Tush-push TDs never go out of style.",
-   "vorp": 35.8,
-   "vbdRank": 76,
-   "vbdDelta": -13,
+   "vorp": 38.3,
+   "vbdRank": 74,
+   "vbdDelta": -11,
    "sleeperId": "6904",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 64,
@@ -1110,11 +1110,11 @@
    "tier": 6,
    "badges": [],
    "note": "Traded to Houston — TD-dependent flex now.",
-   "vorp": 71.8,
-   "vbdRank": 48,
-   "vbdDelta": 16,
+   "vorp": 70.5,
+   "vbdRank": 50,
+   "vbdDelta": 14,
    "sleeperId": "5892",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 65,
@@ -1125,11 +1125,11 @@
    "tier": 6,
    "badges": [],
    "note": "Ben Johnson's backfield, Monangai nipping.",
-   "vorp": 67.9,
-   "vbdRank": 51,
-   "vbdDelta": 14,
+   "vorp": 64.8,
+   "vbdRank": 54,
+   "vbdDelta": 11,
    "sleeperId": "6790",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 66,
@@ -1143,11 +1143,11 @@
     "T"
    ],
    "note": "Etienne left — year-2 lead back with league-winner tag from every analyst who watched the tape.",
-   "vorp": 62.8,
-   "vbdRank": 54,
-   "vbdDelta": 12,
+   "vorp": 59.5,
+   "vbdRank": 58,
+   "vbdDelta": 8,
    "sleeperId": "12490",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 67,
@@ -1160,11 +1160,11 @@
     "R"
    ],
    "note": "No. 4 overall pick, betting favorite to lead all rookies in receiving as Cam Ward's WR1.",
-   "vorp": 42.9,
-   "vbdRank": 69,
-   "vbdDelta": -2,
+   "vorp": 42.0,
+   "vbdRank": 70,
+   "vbdDelta": -3,
    "sleeperId": "13279",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 68,
@@ -1177,11 +1177,11 @@
     "X"
    ],
    "note": "Rodgers' deep threat in McCarthy's offense, but experts flag the price with Pittman added.",
-   "vorp": 41.1,
+   "vorp": 39.9,
    "vbdRank": 72,
    "vbdDelta": -4,
    "sleeperId": "5846",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 69,
@@ -1192,11 +1192,11 @@
    "tier": 7,
    "badges": [],
    "note": "Bounce-back candidate; Trevor's WR1.",
-   "vorp": 39.8,
+   "vorp": 38.6,
    "vbdRank": 73,
    "vbdDelta": -4,
    "sleeperId": "11631",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 70,
@@ -1209,11 +1209,11 @@
     "D"
    ],
    "note": "Waddle's arrival demotes him. Red-zone role survives.",
-   "vorp": 38.0,
-   "vbdRank": 75,
-   "vbdDelta": -5,
+   "vorp": 36.8,
+   "vbdRank": 76,
+   "vbdDelta": -6,
    "sleeperId": "5045",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 71,
@@ -1226,11 +1226,11 @@
     "B"
    ],
    "note": "Target vacuum in Cleveland's wide-open tree. Late-TE1 case.",
-   "vorp": 33.3,
+   "vorp": 32.8,
    "vbdRank": 78,
    "vbdDelta": -7,
    "sleeperId": "12506",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 72,
@@ -1243,11 +1243,11 @@
     "X"
    ],
    "note": "The eternal tease, now with Stefanski scheme hope. Fool me five times...",
-   "vorp": 24.2,
-   "vbdRank": 89,
-   "vbdDelta": -17,
+   "vorp": 22.7,
+   "vbdRank": 90,
+   "vbdDelta": -18,
    "sleeperId": "7553",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 73,
@@ -1258,11 +1258,11 @@
    "tier": 3,
    "badges": [],
    "note": "Reliable, crowded target tree.",
-   "vorp": 21.9,
-   "vbdRank": 92,
-   "vbdDelta": -19,
+   "vorp": 20.1,
+   "vbdRank": 93,
+   "vbdDelta": -20,
    "sleeperId": "10859",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 74,
@@ -1273,11 +1273,11 @@
    "tier": 3,
    "badges": [],
    "note": "Ben Johnson year 2. This is the free QB tier — one of these guys in Rd 8-10.",
-   "vorp": 30.3,
-   "vbdRank": 80,
-   "vbdDelta": -6,
+   "vorp": 33.1,
+   "vbdRank": 77,
+   "vbdDelta": -3,
    "sleeperId": "11560",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 75,
@@ -1288,11 +1288,11 @@
    "tier": 3,
    "badges": [],
    "note": "Lamb + Pickens = volume. Boring points.",
-   "vorp": 23.6,
-   "vbdRank": 91,
-   "vbdDelta": -16,
+   "vorp": 28.1,
+   "vbdRank": 81,
+   "vbdDelta": -6,
    "sleeperId": "3294",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 76,
@@ -1303,11 +1303,11 @@
    "tier": 3,
    "badges": [],
    "note": "Steady QB1 numbers, zero drama.",
-   "vorp": 18.2,
-   "vbdRank": 96,
-   "vbdDelta": -20,
+   "vorp": 21.9,
+   "vbdRank": 91,
+   "vbdDelta": -15,
    "sleeperId": "6797",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 77,
@@ -1321,11 +1321,11 @@
     "X"
    ],
    "note": "Cleared from ACL/LCL tear and pushing for Week 1, but the auto-ceiling era is over. Fine at the right price.",
-   "vorp": 13.2,
-   "vbdRank": 107,
-   "vbdDelta": -30,
+   "vorp": 14.9,
+   "vbdRank": 102,
+   "vbdDelta": -25,
    "sleeperId": "4046",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 78,
@@ -1340,11 +1340,11 @@
     "T"
    ],
    "note": "No. 32 pick; Walker left for KC, Charbonnet on PUP (knee). Sneaky year-1 lead-back path in a Super Bowl offense.",
-   "vorp": 58.8,
-   "vbdRank": 57,
-   "vbdDelta": 21,
+   "vorp": 56.4,
+   "vbdRank": 60,
+   "vbdDelta": 18,
    "sleeperId": "13286",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 79,
@@ -1355,11 +1355,11 @@
    "tier": 7,
    "badges": [],
    "note": "Steady volume, Brooks looming.",
-   "vorp": 56.8,
-   "vbdRank": 59,
-   "vbdDelta": 20,
+   "vorp": 54.7,
+   "vbdRank": 62,
+   "vbdDelta": 17,
    "sleeperId": "7594",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 80,
@@ -1370,11 +1370,11 @@
    "tier": 7,
    "badges": [],
    "note": "Saleh's Titans lean run. Serviceable RB3.",
-   "vorp": 53.4,
-   "vbdRank": 62,
-   "vbdDelta": 18,
+   "vorp": 52.7,
+   "vbdRank": 63,
+   "vbdDelta": 17,
    "sleeperId": "5967",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 81,
@@ -1385,11 +1385,11 @@
    "tier": 7,
    "badges": [],
    "note": "Splitting with Dowdle in McCarthy's offense.",
-   "vorp": 43.8,
-   "vbdRank": 68,
-   "vbdDelta": 13,
+   "vorp": 44.5,
+   "vbdRank": 67,
+   "vbdDelta": 14,
    "sleeperId": "8228",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 82,
@@ -1400,11 +1400,11 @@
    "tier": 7,
    "badges": [],
    "note": "Signed with Pittsburgh; the other half of that split.",
-   "vorp": 41.6,
+   "vorp": 41.2,
    "vbdRank": 71,
    "vbdDelta": 11,
    "sleeperId": "7021",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 83,
@@ -1415,11 +1415,11 @@
    "tier": 7,
    "badges": [],
    "note": "Complementary role behind Henderson.",
-   "vorp": 38.6,
-   "vbdRank": 74,
-   "vbdDelta": 9,
+   "vorp": 37.9,
+   "vbdRank": 75,
+   "vbdDelta": 8,
    "sleeperId": "7611",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 84,
@@ -1432,11 +1432,11 @@
     "X"
    ],
    "note": "Dobbins signing muddies the backfield. Priced like a starter, used like a committee.",
-   "vorp": 31.6,
+   "vorp": 32.6,
    "vbdRank": 79,
    "vbdDelta": 5,
    "sleeperId": "12489",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 85,
@@ -1449,11 +1449,11 @@
     "R"
    ],
    "note": "No. 8 pick, WR2 opposite Olave with soft coverage all year.",
-   "vorp": 34.3,
-   "vbdRank": 77,
-   "vbdDelta": 8,
+   "vorp": 30.7,
+   "vbdRank": 80,
+   "vbdDelta": 5,
    "sleeperId": "13281",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 86,
@@ -1466,11 +1466,11 @@
     "R"
    ],
    "note": "No. 20 pick stepping directly into A.J. Brown's vacated targets with Hurts.",
-   "vorp": 28.4,
-   "vbdRank": 81,
-   "vbdDelta": 5,
+   "vorp": 25.6,
+   "vbdRank": 87,
+   "vbdDelta": -1,
    "sleeperId": "13294",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 87,
@@ -1481,11 +1481,11 @@
    "tier": 8,
    "badges": [],
    "note": "Traded to Pittsburgh — Rodgers' possession guy.",
-   "vorp": 27.9,
-   "vbdRank": 82,
-   "vbdDelta": 5,
+   "vorp": 24.9,
+   "vbdRank": 88,
+   "vbdDelta": -1,
    "sleeperId": "6819",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 88,
@@ -1496,11 +1496,11 @@
    "tier": 8,
    "badges": [],
    "note": "Slot PPR floor when healthy; Egbuka/McMillan pressure.",
-   "vorp": 24.5,
-   "vbdRank": 88,
-   "vbdDelta": 0,
+   "vorp": 21.6,
+   "vbdRank": 92,
+   "vbdDelta": -4,
    "sleeperId": "4037",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 89,
@@ -1511,11 +1511,11 @@
    "tier": 8,
    "badges": [],
    "note": "Kyler upgrade helps everyone in purple.",
-   "vorp": 19.3,
-   "vbdRank": 94,
-   "vbdDelta": -5,
+   "vorp": 18.5,
+   "vbdRank": 95,
+   "vbdDelta": -6,
    "sleeperId": "9756",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 90,
@@ -1529,11 +1529,11 @@
     "D"
    ],
    "note": "Ankle/PUP, off it within a week. Deep-ball role; Warren/Downs eat targets.",
-   "vorp": 17.5,
-   "vbdRank": 97,
-   "vbdDelta": -7,
+   "vorp": 18.0,
+   "vbdRank": 96,
+   "vbdDelta": -6,
    "sleeperId": "8142",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 91,
@@ -1546,11 +1546,11 @@
     "X"
    ],
    "note": "Turns 37 with his QB off knee surgery. The dynasty's last season?",
-   "vorp": 19.2,
-   "vbdRank": 95,
-   "vbdDelta": -4,
+   "vorp": 16.4,
+   "vbdRank": 98,
+   "vbdDelta": -7,
    "sleeperId": "1466",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 92,
@@ -1564,11 +1564,11 @@
     "S"
    ],
    "note": "Achilles, on PUP, Week 1 in real doubt. If he slides far enough he's a stash-and-profit — you have 2 IR slots.",
-   "vorp": 9.7,
-   "vbdRank": 110,
-   "vbdDelta": -18,
+   "vorp": 8.1,
+   "vbdRank": 112,
+   "vbdDelta": -20,
    "sleeperId": "4217",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 93,
@@ -1579,11 +1579,11 @@
    "tier": 4,
    "badges": [],
    "note": "Dak's safety valve.",
-   "vorp": 5.4,
+   "vorp": 4.0,
    "vbdRank": 119,
    "vbdDelta": -26,
    "sleeperId": "8110",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 94,
@@ -1600,7 +1600,7 @@
    "vbdRank": 130,
    "vbdDelta": -36,
    "sleeperId": "8131",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 95,
@@ -1613,11 +1613,11 @@
     "B"
    ],
    "note": "Elite per-route efficiency masked by injuries. Classic post-hype.",
-   "vorp": -3.9,
+   "vorp": -5.3,
    "vbdRank": 140,
    "vbdDelta": -45,
    "sleeperId": "10236",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 96,
@@ -1628,11 +1628,11 @@
    "tier": 7,
    "badges": [],
    "note": "Veteran half of the Denver committee.",
-   "vorp": 26.8,
-   "vbdRank": 87,
-   "vbdDelta": 9,
+   "vorp": 26.5,
+   "vbdRank": 86,
+   "vbdDelta": 10,
    "sleeperId": "6806",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 97,
@@ -1646,10 +1646,10 @@
    ],
    "note": "Projected co-starter with Irving in an RB-target-heavy offense. PPR sneaky.",
    "vorp": 24.2,
-   "vbdRank": 90,
-   "vbdDelta": 7,
+   "vbdRank": 89,
+   "vbdDelta": 8,
    "sleeperId": "7567",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 98,
@@ -1660,11 +1660,11 @@
    "tier": 8,
    "badges": [],
    "note": "Old reliable, reduced role.",
-   "vorp": 20.7,
-   "vbdRank": 93,
-   "vbdDelta": 5,
+   "vorp": 20.1,
+   "vbdRank": 94,
+   "vbdDelta": 4,
    "sleeperId": "4199",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 99,
@@ -1677,11 +1677,11 @@
     "B"
    ],
    "note": "Finally healthy, run-friendly offense. Rd 9-10 lottery ticket with starter upside.",
-   "vorp": 16.7,
-   "vbdRank": 98,
-   "vbdDelta": 1,
+   "vorp": 17.6,
+   "vbdRank": 97,
+   "vbdDelta": 2,
    "sleeperId": "11583",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 100,
@@ -1692,11 +1692,11 @@
    "tier": 4,
    "badges": [],
    "note": "Harbaugh structure, Nabers back. Late QB with legs.",
-   "vorp": 8.1,
-   "vbdRank": 112,
-   "vbdDelta": -12,
+   "vorp": 9.7,
+   "vbdRank": 110,
+   "vbdDelta": -10,
    "sleeperId": "12508",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 101,
@@ -1711,7 +1711,7 @@
    "vbdRank": 131,
    "vbdDelta": -30,
    "sleeperId": "6804",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 102,
@@ -1722,11 +1722,11 @@
    "tier": 4,
    "badges": [],
    "note": "Nacua + Adams until rookie Simpson takes over someday.",
-   "vorp": -18.1,
-   "vbdRank": 151,
-   "vbdDelta": -49,
+   "vorp": -13.6,
+   "vbdRank": 148,
+   "vbdDelta": -46,
    "sleeperId": "421",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 103,
@@ -1739,11 +1739,11 @@
     "D"
    ],
    "note": "His receiver room is a MASH unit. ADP in freefall for a reason.",
-   "vorp": -24.3,
-   "vbdRank": 159,
-   "vbdDelta": -56,
+   "vorp": -20.5,
+   "vbdRank": 157,
+   "vbdDelta": -54,
    "sleeperId": "8183",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 104,
@@ -1754,11 +1754,11 @@
    "tier": 5,
    "badges": [],
    "note": "Streamable weeks 1-18.",
-   "vorp": -32.2,
-   "vbdRank": 166,
-   "vbdDelta": -62,
+   "vorp": -30.1,
+   "vbdRank": 165,
+   "vbdDelta": -61,
    "sleeperId": "3163",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 105,
@@ -1769,11 +1769,11 @@
    "tier": 5,
    "badges": [],
    "note": "Released by ARI, signed vet-minimum in MIN. Jefferson elevates everyone. Competing with J.J. McCarthy.",
-   "vorp": -37.2,
+   "vorp": -34.7,
    "vbdRank": 167,
    "vbdDelta": -62,
    "sleeperId": "5849",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 106,
@@ -1784,11 +1784,11 @@
    "tier": 5,
    "badges": [],
    "note": "Now with Waddle. Rushing floor, growing arm.",
-   "vorp": -44.2,
+   "vorp": -43.8,
    "vbdRank": 168,
    "vbdDelta": -62,
    "sleeperId": "11563",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 107,
@@ -1799,11 +1799,11 @@
    "tier": 5,
    "badges": [],
    "note": "Healthy again with a loaded WR room.",
-   "vorp": -52.8,
+   "vorp": -52.7,
    "vbdRank": 169,
    "vbdDelta": -62,
    "sleeperId": "4892",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 108,
@@ -1816,11 +1816,11 @@
     "U"
    ],
    "note": "Signed with SF Aug 2 — instantly the top healthy back behind CMC (Guerendo torn pec, James broken ribs, Black hurt). Most-added player on all of Sleeper this week. THE handcuff.",
-   "vorp": 13.7,
-   "vbdRank": 106,
-   "vbdDelta": 2,
+   "vorp": 12.5,
+   "vbdRank": 108,
+   "vbdDelta": 0,
    "sleeperId": "7608",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 109,
@@ -1833,11 +1833,11 @@
     "B"
    ],
    "note": "Rookie-year efficiency + red-zone usage. Year 2 pop candidate.",
-   "vorp": 14.2,
-   "vbdRank": 102,
-   "vbdDelta": 7,
+   "vorp": 14.0,
+   "vbdRank": 103,
+   "vbdDelta": 6,
    "sleeperId": "12484",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 110,
@@ -1850,11 +1850,11 @@
     "B"
    ],
    "note": "8 TDs as a rookie, steps into Evans' vacated role.",
-   "vorp": 10.6,
-   "vbdRank": 109,
-   "vbdDelta": 1,
+   "vorp": 12.6,
+   "vbdRank": 107,
+   "vbdDelta": 3,
    "sleeperId": "11618",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 111,
@@ -1867,11 +1867,11 @@
     "B"
    ],
    "note": "Seattle paid him. Deep threat in a scoring machine.",
-   "vorp": 9.3,
+   "vorp": 9.5,
    "vbdRank": 111,
    "vbdDelta": 0,
    "sleeperId": "8676",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 112,
@@ -1884,11 +1884,11 @@
     "U"
    ],
    "note": "Back in SF into a depleted room. Someone has to catch passes there.",
-   "vorp": 5.7,
-   "vbdRank": 118,
-   "vbdDelta": -6,
+   "vorp": 6.7,
+   "vbdRank": 114,
+   "vbdDelta": -2,
    "sleeperId": "5872",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 113,
@@ -1901,11 +1901,11 @@
     "U"
    ],
    "note": "Leading the Jets WR2 race since the trade.",
-   "vorp": 3.8,
-   "vbdRank": 128,
-   "vbdDelta": -15,
+   "vorp": 4.0,
+   "vbdRank": 120,
+   "vbdDelta": -7,
    "sleeperId": "11625",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 114,
@@ -1918,11 +1918,11 @@
     "U"
    ],
    "note": "Daily camp highlights, 17.7 aDOT deep role for Maye.",
-   "vorp": 2.0,
+   "vorp": 2.5,
    "vbdRank": 129,
    "vbdDelta": -15,
    "sleeperId": "9504",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 115,
@@ -1939,7 +1939,7 @@
    "vbdRank": 132,
    "vbdDelta": -17,
    "sleeperId": "9487",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 116,
@@ -1956,7 +1956,7 @@
    "vbdRank": 134,
    "vbdDelta": -18,
    "sleeperId": "9754",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 117,
@@ -1970,11 +1970,11 @@
     "D"
    ],
    "note": "Sprained shoulder in camp on top of sophomore-slump worry.",
-   "vorp": -3.8,
+   "vorp": -4.3,
    "vbdRank": 139,
    "vbdDelta": -22,
    "sleeperId": "11624",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 118,
@@ -1985,11 +1985,11 @@
    "tier": 8,
    "badges": [],
    "note": "PPR glue guy, DJ Moore squeezes him.",
-   "vorp": -8.1,
-   "vbdRank": 142,
-   "vbdDelta": -24,
+   "vorp": -7.8,
+   "vbdRank": 143,
+   "vbdDelta": -25,
    "sleeperId": "8134",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 119,
@@ -2000,11 +2000,11 @@
    "tier": 8,
    "badges": [],
    "note": "Year 2 in a crowded but talented room.",
-   "vorp": -12.6,
-   "vbdRank": 145,
-   "vbdDelta": -26,
+   "vorp": -11.7,
+   "vbdRank": 146,
+   "vbdDelta": -27,
    "sleeperId": "12501",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 120,
@@ -2015,11 +2015,11 @@
    "tier": 8,
    "badges": [],
    "note": "Slot PPR value with Jones healthy.",
-   "vorp": -14.8,
-   "vbdRank": 147,
-   "vbdDelta": -27,
+   "vorp": -14.1,
+   "vbdRank": 149,
+   "vbdDelta": -29,
    "sleeperId": "9500",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 121,
@@ -2030,11 +2030,11 @@
    "tier": 8,
    "badges": [],
    "note": "Chain-mover. Never flashy, always 11 points.",
-   "vorp": -17.0,
-   "vbdRank": 149,
-   "vbdDelta": -28,
+   "vorp": -16.2,
+   "vbdRank": 151,
+   "vbdDelta": -30,
    "sleeperId": "5947",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 122,
@@ -2047,11 +2047,11 @@
     "U"
    ],
    "note": "First-team reps + big ADP spike after strong OTAs. Late flier.",
-   "vorp": 11.2,
-   "vbdRank": 108,
-   "vbdDelta": 14,
+   "vorp": 10.5,
+   "vbdRank": 109,
+   "vbdDelta": 13,
    "sleeperId": "12457",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 123,
@@ -2064,11 +2064,11 @@
     "B"
    ],
    "note": "Healthy, clear path to No. 2 behind a regressing Jacobs.",
-   "vorp": 7.8,
+   "vorp": 7.3,
    "vbdRank": 113,
    "vbdDelta": 10,
    "sleeperId": "11581",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 124,
@@ -2079,11 +2079,11 @@
    "tier": 8,
    "badges": [],
    "note": "Kyren insurance with standalone flex weeks.",
-   "vorp": 3.9,
-   "vbdRank": 127,
-   "vbdDelta": -3,
+   "vorp": 3.2,
+   "vbdRank": 128,
+   "vbdDelta": -4,
    "sleeperId": "11586",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 125,
@@ -2098,7 +2098,7 @@
    "vbdRank": 133,
    "vbdDelta": -8,
    "sleeperId": "12534",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 126,
@@ -2111,11 +2111,11 @@
     "U"
    ],
    "note": "Competing for Washington's starting job after the move.",
-   "vorp": -1.4,
+   "vorp": -1.7,
    "vbdRank": 135,
    "vbdDelta": -9,
    "sleeperId": "8136",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 127,
@@ -2126,11 +2126,11 @@
    "tier": 8,
    "badges": [],
    "note": "The other half of that competition.",
-   "vorp": -5.7,
+   "vorp": -5.9,
    "vbdRank": 141,
    "vbdDelta": -14,
    "sleeperId": "12533",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 128,
@@ -2143,11 +2143,11 @@
     "U"
    ],
    "note": "Winning the Jets RB2 job from Braelon Allen.",
-   "vorp": -10.0,
+   "vorp": -9.7,
    "vbdRank": 144,
    "vbdDelta": -16,
    "sleeperId": "11571",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 129,
@@ -2158,11 +2158,11 @@
    "tier": 8,
    "badges": [],
    "note": "Overtook Emmett Johnson as Walker's backup. Handcuff of note.",
-   "vorp": -13.5,
-   "vbdRank": 146,
-   "vbdDelta": -17,
+   "vorp": -12.5,
+   "vbdRank": 147,
+   "vbdDelta": -18,
    "sleeperId": "11199",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 130,
@@ -2176,11 +2176,11 @@
     "S"
    ],
    "note": "Knee, on PUP. IR-stash candidate if he falls to the last rounds.",
-   "vorp": -17.1,
+   "vorp": -14.2,
    "vbdRank": 150,
    "vbdDelta": -20,
    "sleeperId": "9753",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 131,
@@ -2191,11 +2191,11 @@
    "tier": 4,
    "badges": [],
    "note": "Still Lamar's red-zone guy, and Likely's exit helps his snaps — but the profile is aging and TD-dependent.",
-   "vorp": -8.8,
-   "vbdRank": 143,
-   "vbdDelta": -12,
+   "vorp": -7.2,
+   "vbdRank": 142,
+   "vbdDelta": -11,
    "sleeperId": "5012",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 132,
@@ -2206,11 +2206,11 @@
    "tier": 4,
    "badges": [],
    "note": "Solid when healthy, which is a coin flip.",
-   "vorp": -15.6,
-   "vbdRank": 148,
-   "vbdDelta": -16,
+   "vorp": -11.0,
+   "vbdRank": 145,
+   "vbdDelta": -13,
    "sleeperId": "5022",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 133,
@@ -2221,11 +2221,11 @@
    "tier": 5,
    "badges": [],
    "note": "Maye likes him; A.J. Brown eats first.",
-   "vorp": -20.6,
+   "vorp": -19.0,
    "vbdRank": 155,
    "vbdDelta": -22,
    "sleeperId": "3214",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 134,
@@ -2236,11 +2236,11 @@
    "tier": 5,
    "badges": [],
    "note": "Quietly a top-12 TE case.",
-   "vorp": -24.0,
-   "vbdRank": 158,
-   "vbdDelta": -24,
+   "vorp": -22.6,
+   "vbdRank": 159,
+   "vbdDelta": -25,
    "sleeperId": "9480",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 135,
@@ -2251,11 +2251,11 @@
    "tier": 5,
    "badges": [],
    "note": "Kyler bump possible.",
-   "vorp": -26.5,
-   "vbdRank": 162,
-   "vbdDelta": -27,
+   "vorp": -23.7,
+   "vbdRank": 160,
+   "vbdDelta": -25,
    "sleeperId": "5844",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 136,
@@ -2268,11 +2268,11 @@
     "B"
    ],
    "note": "Year 2 buzz in LA.",
-   "vorp": -28.2,
+   "vorp": -26.7,
    "vbdRank": 163,
    "vbdDelta": -27,
    "sleeperId": "12493",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 137,
@@ -2286,11 +2286,11 @@
     "D"
    ],
    "note": "No. 16 pick but camp setback + behind Mason Taylor. Dynasty > redraft.",
-   "vorp": -30.1,
-   "vbdRank": 165,
-   "vbdDelta": -28,
+   "vorp": -31.6,
+   "vbdRank": 166,
+   "vbdDelta": -29,
    "sleeperId": "13330",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 138,
@@ -2303,11 +2303,11 @@
     "R"
    ],
    "note": "Rd-1 pick in a rebuilt Geno pass game.",
-   "vorp": -18.2,
-   "vbdRank": 152,
-   "vbdDelta": -14,
+   "vorp": -17.5,
+   "vbdRank": 153,
+   "vbdDelta": -15,
    "sleeperId": "13276",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 139,
@@ -2320,11 +2320,11 @@
     "R"
    ],
    "note": "No. 24 pick in Cleveland's wide-open target tree.",
-   "vorp": -20.2,
-   "vbdRank": 154,
-   "vbdDelta": -15,
+   "vorp": -19.7,
+   "vbdRank": 156,
+   "vbdDelta": -17,
    "sleeperId": "13298",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 140,
@@ -2337,11 +2337,11 @@
     "R"
    ],
    "note": "The other Browns rookie WR. Somebody has to catch it.",
-   "vorp": -22.6,
-   "vbdRank": 157,
-   "vbdDelta": -17,
+   "vorp": -22.1,
+   "vbdRank": 158,
+   "vbdDelta": -18,
    "sleeperId": "13346",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 141,
@@ -2354,11 +2354,11 @@
     "B"
    ],
    "note": "Kellen Moore system + upgraded weapons at a QB20 price.",
-   "vorp": -58.8,
+   "vorp": -57.4,
    "vbdRank": 170,
    "vbdDelta": -29,
    "sleeperId": "12545",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 142,
@@ -2371,11 +2371,11 @@
     "B"
    ],
    "note": "Year 2 leap candidate with Tate added.",
-   "vorp": -72.1,
+   "vorp": -69.2,
    "vbdRank": 171,
    "vbdDelta": -29,
    "sleeperId": "12522",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 143,
@@ -2386,11 +2386,11 @@
    "tier": 6,
    "badges": [],
    "note": "Every year we say this is the year.",
-   "vorp": -80.0,
+   "vorp": -78.0,
    "vbdRank": 172,
    "vbdDelta": -29,
    "sleeperId": "7523",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 144,
@@ -2401,11 +2401,11 @@
    "tier": 6,
    "badges": [],
    "note": "Fine streamer in a good offense.",
-   "vorp": -94.0,
+   "vorp": -88.3,
    "vbdRank": 173,
    "vbdDelta": -29,
    "sleeperId": "4943",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 145,
@@ -2416,11 +2416,11 @@
    "tier": 6,
    "badges": [],
    "note": "Final season, reunited with McCarthy. The last dance, Pittsburgh remix.",
-   "vorp": -101.3,
+   "vorp": -97.4,
    "vbdRank": 174,
    "vbdDelta": -29,
    "sleeperId": "96",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 146,
@@ -2434,11 +2434,11 @@
     "R"
    ],
    "note": "Impressing Purdy with Pearsall out for the year.",
-   "vorp": -24.8,
-   "vbdRank": 160,
-   "vbdDelta": -14,
+   "vorp": -24.6,
+   "vbdRank": 161,
+   "vbdDelta": -15,
    "sleeperId": "13417",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 147,
@@ -2451,11 +2451,11 @@
     "I"
    ],
    "note": "Calf, banged up in the SF injury ward.",
-   "vorp": -26.1,
-   "vbdRank": 161,
-   "vbdDelta": -14,
+   "vorp": -25.2,
+   "vbdRank": 162,
+   "vbdDelta": -15,
    "sleeperId": "4950",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 148,
@@ -2469,11 +2469,11 @@
     "S"
    ],
    "note": "Knee, being monitored. IR-stash math applies.",
-   "vorp": -28.2,
+   "vorp": -28.3,
    "vbdRank": 164,
    "vbdDelta": -16,
    "sleeperId": "9502",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 149,
@@ -2486,11 +2486,11 @@
     "D"
    ],
    "note": "Buried behind Pollard and Spears.",
-   "vorp": -19.5,
-   "vbdRank": 153,
-   "vbdDelta": -4,
+   "vorp": -16.6,
+   "vbdRank": 152,
+   "vbdDelta": -3,
    "sleeperId": "13288",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 150,
@@ -2503,11 +2503,11 @@
     "D"
    ],
    "note": "Losing the RB2 race to Isaiah Davis.",
-   "vorp": -20.8,
-   "vbdRank": 156,
-   "vbdDelta": -6,
+   "vorp": -18.0,
+   "vbdRank": 154,
+   "vbdDelta": -4,
    "sleeperId": "11576",
-   "vorpMethod": "carried:board"
+   "vorpMethod": "curve:2021-2024"
   },
   {
    "r": 151,
@@ -2521,8 +2521,8 @@
    ],
    "note": "FP's #1 projected DST; finished DST2 in 2025.",
    "vorp": 27.0,
-   "vbdRank": 83,
-   "vbdDelta": 68,
+   "vbdRank": 82,
+   "vbdDelta": 69,
    "sleeperId": "HOU",
    "vorpMethod": "carried:kdef-tier-flat"
   },
@@ -2536,8 +2536,8 @@
    "badges": [],
    "note": "Elite pass rush carries over.",
    "vorp": 27.0,
-   "vbdRank": 84,
-   "vbdDelta": 68,
+   "vbdRank": 83,
+   "vbdDelta": 69,
    "sleeperId": "DEN",
    "vorpMethod": "carried:kdef-tier-flat"
   },
@@ -2551,8 +2551,8 @@
    "badges": [],
    "note": "Allowed fewest PPG in 2025 (17.2).",
    "vorp": 27.0,
-   "vbdRank": 85,
-   "vbdDelta": 68,
+   "vbdRank": 84,
+   "vbdDelta": 69,
    "sleeperId": "SEA",
    "vorpMethod": "carried:kdef-tier-flat"
   },
@@ -2566,8 +2566,8 @@
    "badges": [],
    "note": "Young front seven keeps arriving.",
    "vorp": 27.0,
-   "vbdRank": 86,
-   "vbdDelta": 68,
+   "vbdRank": 85,
+   "vbdDelta": 69,
    "sleeperId": "LAR",
    "vorpMethod": "carried:kdef-tier-flat"
   },
@@ -2628,8 +2628,8 @@
    "badges": [],
    "note": "Talent everywhere, turnover machine.",
    "vorp": 14.0,
-   "vbdRank": 103,
-   "vbdDelta": 55,
+   "vbdRank": 104,
+   "vbdDelta": 54,
    "sleeperId": "PHI",
    "vorpMethod": "carried:kdef-tier-flat"
   },
@@ -2643,8 +2643,8 @@
    "badges": [],
    "note": "5th-highest scoring unit 2025; Flores blitz chaos.",
    "vorp": 14.0,
-   "vbdRank": 104,
-   "vbdDelta": 55,
+   "vbdRank": 105,
+   "vbdDelta": 54,
    "sleeperId": "MIN",
    "vorpMethod": "carried:kdef-tier-flat"
   },
@@ -2658,8 +2658,8 @@
    "badges": [],
    "note": "Sneaky-good unit, soft early schedule.",
    "vorp": 14.0,
-   "vbdRank": 105,
-   "vbdDelta": 55,
+   "vbdRank": 106,
+   "vbdDelta": 54,
    "sleeperId": "NE",
    "vorpMethod": "carried:kdef-tier-flat"
   },
@@ -2673,8 +2673,8 @@
    "badges": [],
    "note": "Big leg, ascending offense.",
    "vorp": 6.0,
-   "vbdRank": 114,
-   "vbdDelta": 47,
+   "vbdRank": 115,
+   "vbdDelta": 46,
    "sleeperId": "11786",
    "vorpMethod": "carried:kdef-tier-flat"
   },
@@ -2688,8 +2688,8 @@
    "badges": [],
    "note": "Volume scorer in a top offense.",
    "vorp": 6.0,
-   "vbdRank": 115,
-   "vbdDelta": 47,
+   "vbdRank": 116,
+   "vbdDelta": 46,
    "sleeperId": "2747",
    "vorpMethod": "carried:kdef-tier-flat"
   },
@@ -2703,8 +2703,8 @@
    "badges": [],
    "note": "Tucker's heir in a scoring machine.",
    "vorp": 6.0,
-   "vbdRank": 116,
-   "vbdDelta": 47,
+   "vbdRank": 117,
+   "vbdDelta": 46,
    "sleeperId": "12711",
    "vorpMethod": "carried:kdef-tier-flat"
   },
@@ -2718,8 +2718,8 @@
    "badges": [],
    "note": "96.6% FG accuracy led the NFL in 2025.",
    "vorp": 6.0,
-   "vbdRank": 117,
-   "vbdDelta": 47,
+   "vbdRank": 118,
+   "vbdDelta": 46,
    "sleeperId": "5189",
    "vorpMethod": "carried:kdef-tier-flat"
   },
@@ -2733,8 +2733,8 @@
    "badges": [],
    "note": "Watt floor, always streams well.",
    "vorp": 4.0,
-   "vbdRank": 120,
-   "vbdDelta": 45,
+   "vbdRank": 121,
+   "vbdDelta": 44,
    "sleeperId": "PIT",
    "vorpMethod": "carried:kdef-tier-flat"
   },
@@ -2748,8 +2748,8 @@
    "badges": [],
    "note": "Hines-Allen led sack surge.",
    "vorp": 4.0,
-   "vbdRank": 121,
-   "vbdDelta": 45,
+   "vbdRank": 122,
+   "vbdDelta": 44,
    "sleeperId": "JAX",
    "vorpMethod": "carried:kdef-tier-flat"
   },
@@ -2763,8 +2763,8 @@
    "badges": [],
    "note": "Harbaugh defense, solid floor.",
    "vorp": 4.0,
-   "vbdRank": 122,
-   "vbdDelta": 45,
+   "vbdRank": 123,
+   "vbdDelta": 44,
    "sleeperId": "LAC",
    "vorpMethod": "carried:kdef-tier-flat"
   },
@@ -2778,8 +2778,8 @@
    "badges": [],
    "note": "Talent-rich, matchup dependent.",
    "vorp": 4.0,
-   "vbdRank": 123,
-   "vbdDelta": 45,
+   "vbdRank": 124,
+   "vbdDelta": 44,
    "sleeperId": "BAL",
    "vorpMethod": "carried:kdef-tier-flat"
   },
@@ -2793,8 +2793,8 @@
    "badges": [],
    "note": "Opportunistic, good in December.",
    "vorp": 4.0,
-   "vbdRank": 124,
-   "vbdDelta": 45,
+   "vbdRank": 125,
+   "vbdDelta": 44,
    "sleeperId": "GB",
    "vorpMethod": "carried:kdef-tier-flat"
   },
@@ -2808,8 +2808,8 @@
    "badges": [],
    "note": "Improved secondary, score-forced pass rushes.",
    "vorp": 4.0,
-   "vbdRank": 125,
-   "vbdDelta": 45,
+   "vbdRank": 126,
+   "vbdDelta": 44,
    "sleeperId": "DET",
    "vorpMethod": "carried:kdef-tier-flat"
   },
@@ -2823,8 +2823,8 @@
    "badges": [],
    "note": "Spagnuolo magic, playoff-weeks upside.",
    "vorp": 4.0,
-   "vbdRank": 126,
-   "vbdDelta": 45,
+   "vbdRank": 127,
+   "vbdDelta": 44,
    "sleeperId": "KC",
    "vorpMethod": "carried:kdef-tier-flat"
   },

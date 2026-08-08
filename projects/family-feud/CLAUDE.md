@@ -12,7 +12,8 @@ Draft ~Aug 29, 2026. Mission: beat Hunter. [`README.md`](README.md) is the map.
 | [`docs/draft-day-runbook.md`](docs/draft-day-runbook.md) | Draft-day operating instructions + changelog |
 | [`docs/ranking-methodology.md`](docs/ranking-methodology.md) | Why the board ranks what it ranks |
 | [`docs/live-board-plan.md`](docs/live-board-plan.md) | The live auto-updating board (next feature) |
-| [`docs/nightly-feud.md`](docs/nightly-feud.md) | The newsletter — and which half of it has never run |
+| [`docs/nightly-feud.md`](docs/nightly-feud.md) | The newsletter — both halves built, scheduled nightly at 21:45 |
+| [`docs/in-season-plan.md`](docs/in-season-plan.md) | What happens after the draft. A STUB on purpose — read its un-stub trigger before building anything in-season |
 | [`docs/insights/`](docs/insights/) | Hard-won lessons, one per file. Read before debugging something that smells familiar. |
 | `TODO.md` | What's next, ranked |
 

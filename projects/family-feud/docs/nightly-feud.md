@@ -9,7 +9,7 @@ cross-referenced against our board — written to a local HTML page Briggsy keep
 |---|---|
 | **The Mule** — hauls data in, hourly | ✅ **Green, and the green is now earned.** Verified 2026-08-08: 10 sources, 0 failed, every payload parsed and counted rather than weighed. **5 working feeds, 145 items.** |
 | **The build** — turns data into a newsletter | ✅ **Edition #1 published 2026-08-08** (U11). `scripts/build_newsletter.py`. |
-| **The schedule** — publishes it nightly, unattended | ❌ **Not yet.** U12 registers the Windows task. Until then it is a command you run. |
+| **The schedule** — publishes it nightly, unattended | ✅ **Registered 2026-08-08** (U12). Task *Family Feud Newsletter*, **daily at 21:45**, sixteen minutes behind the mule's `:29` haul. Re-register after any folder move: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-newsletter.ps1` |
 
 ```bash
 python scripts/build_newsletter.py            # build tonight's edition

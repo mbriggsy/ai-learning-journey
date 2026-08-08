@@ -24,7 +24,8 @@ docs/            all prose — start here
   draft-day-runbook.md   THE operating manual. Read before any draft or mock.
   ranking-methodology.md why the board ranks what it ranks
   live-board-plan.md     the self-updating wall board — shipped; this is the design record
-  nightly-feud.md        the newsletter — how it builds, and what still isn't scheduled
+  nightly-feud.md        the newsletter — how it builds, and the nightly job that publishes it
+  in-season-plan.md      what happens after the draft. A stub on purpose; read the un-stub trigger
   insights/              hard-won lessons, one per file. Read before debugging
                          something that smells familiar.
   plans/                 implementation plans. The machinery rebuild lives here.
@@ -200,11 +201,18 @@ quoting these.
 under Cowork — 15/15 manual picks, zero clock misses. The browser-driving half has **not** been
 exercised in this environment. Treat it as unproven here until a mock says otherwise.
 
-**The Nightly Feud publishes now.** Its build half had never run once; **Edition #1 went out
+**The Nightly Feud publishes itself now.** Its build half had never run once; **Edition #1 went out
 2026-08-08** — `python scripts/build_newsletter.py`. Deterministic code owns every fact, the design
 is carried byte-for-byte from the frozen template rather than copied, and it makes no network calls.
-What is still missing is the *schedule* (U12): today it is a command you run, not a job that runs
-itself. See [`docs/nightly-feud.md`](docs/nightly-feud.md).
+**It is scheduled** (U12): the *Family Feud Newsletter* task runs **daily at 21:45**, sixteen
+minutes behind the mule's `:29` haul. Its installer proves the job by output freshness rather than
+by an exit code, because a task pointing at a deleted script reports success indefinitely. Back
+issues are not committed; the current edition is. See [`docs/nightly-feud.md`](docs/nightly-feud.md).
+
+**What the season looks like after the draft** is stubbed, not built:
+[`docs/in-season-plan.md`](docs/in-season-plan.md) records the three deliverables, the four Sleeper
+endpoints the mule would need, and the un-stub trigger — `/state/nfl` flipping `season_type` from
+`"pre"` to `"regular"`.
 
 **The board polls the live draft now.** Open it and click **▶ Go live** — or open it with `?live=1`
 and it starts itself, which is what a wall display wants. Every 12 seconds it reads the picks feed

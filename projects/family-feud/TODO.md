@@ -6,8 +6,8 @@
 ## ▶ WHERE WE ARE — read this first, update it when it changes
 
 ```
-plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U7·U8·U10·U11·U12)
-  → review residue ✅ (all 10) → engine join ✅   ◀ HERE (U13, a doc)
+plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U7·U8·U10·U11·U12·U13)
+  → review residue ✅ (all 10) → engine join ✅   ◀ HERE — the build order is EMPTY
 ```
 
 **Units shipped:** U1, U2 (Phase 0 gates) · **U9** (draft-state watcher) · **U3** (one normalizer,
@@ -16,16 +16,22 @@ proven equal in two runtimes) · **U14** (`sleeperId` frozen — 174 ids, 0 unre
 curve; oracle exact at 2469/2469) · **U6** (the generator — one source, every surface) ·
 **U15** (the engine wrapper — shape read from the draft, not typed) · **U7** (the board polls the
 live draft) · **U8** (the runbook's draft loop is executable again) · **U10** (the mule validates
-what it caught) · **U11** (The Nightly Feud publishes) · **U12** (it publishes without a human) —
-the last nine on 2026-08-08.
+what it caught) · **U11** (The Nightly Feud publishes) · **U12** (it publishes without a human) ·
+**U13** (the in-season cadence, stubbed against measured payloads) — the last ten on 2026-08-08.
 
-**Phase 2 closed. U8, U10, U11, U12, review residue #4 and the engine's `sleeperId` join are all
-done.** **Next action: U13** — and it is a planning document (`docs/in-season-plan.md`), not code:
-the three in-season deliverables, the confirmed waiver timing, the mule extension they need
-(`/rosters`, `/matchups/<week>`, `/transactions/<week>` — none hauled today), and the un-stub
-trigger. After that the ranked queue is the two measured accuracy gaps, both in §2: **K and DEF
-still carry flat per-tier constants** (`carried:kdef-tier-flat`, 24 rows) and **the curve stops at
-2024** because exact scoring does not exist for 2025.
+**Phase 2 closed. Every unit U1–U15 is done, all 10 review-residue items are closed, and the
+engine's `sleeperId` join is repointed.** The build order below has nothing left in it.
+
+**Next action: the two measured accuracy gaps**, in this order — both are in §2 and both are about
+the board being *more right*, not about machinery:
+1. **K and DEF carry flat per-tier constants** (`carried:kdef-tier-flat`, **24 of 174 rows**).
+   `build_curves.py` builds QB/RB/WR/TE only, so KTD-6's "K and DEF keep the historical curve" is
+   not satisfiable from the shipped curve. Labelled rather than invented — which is honest, and
+   still means a fifth of the board's VORP is a constant.
+2. **The curve stops at 2024.** `player_stats_2025.csv` is a 404; 2025 exists only as
+   play-by-play, which needs nflverse's stat builder reimplemented and misattributes TDs on ~5% of
+   player-seasons. A narrower EXACT basis beats a wider approximate one, so this is a *measured*
+   decision, not an oversight. Revisit as its own unit with its own error budget.
 
 **The archive question is DECIDED (Briggsy, 2026-08-08): back issues are gitignored.** The
 deciding argument was his: `newsletter/data/archive/` — the cargo each edition is built from — was
@@ -257,11 +263,17 @@ by Briggsy's decision and two by measurement.
 
 ---
 
-## 2. Build order (corrected — this is NOT the old U3→U4→U5→U6)
+## 2. Build order — **COMPLETE.** Every unit below is shipped
 
 ```
-U9  →  U3  →  U14  →  { U4 ∥ U5 }  →  U6  →  { U7 ∥ U15 }  →  U8  →  U10 → U11 → U12 → U13
+U9 ✅ → U3 ✅ → U14 ✅ → { U4 ✅ ∥ U5 ✅ } → U6 ✅ → { U7 ✅ ∥ U15 ✅ } → U8 ✅ → U10 ✅ → U11 ✅ → U12 ✅ → U13 ✅
 ```
+
+**Kept, not deleted, and not as a diary.** Each entry below carries the measured limits and the
+traps found while building it — the `--full` prefix that catches the `vbdDelta` break, the two
+documented VORP limits, the Wire's full-name-only rule and what it costs. Those are the constraints
+on the next change, which is why they stay. The ✅ prose is how you know a limit was *measured*
+rather than assumed.
 
 - ~~**U9 draft-state watcher**~~ ✅ **SHIPPED 2026-08-07**, hardened 2026-08-08. Scheduled task
   *Family Feud Draft Watcher* runs hourly at :35, six minutes behind the mule. Writes to
@@ -360,6 +372,28 @@ U9  →  U3  →  U14  →  { U4 ∥ U5 }  →  U6  →  { U7 ∥ U15 }  →  U8
     the watcher.
   - **The `ok` prefix is a contract** with `watch_draft_state.py`, which keys on it. Tested at the
     call site, not just as a string.
+- ~~**U13 stub the in-season cadence**~~ ✅ **SHIPPED 2026-08-08.** [`docs/in-season-plan.md`](docs/in-season-plan.md).
+  A planning document, no code, no tests — but written against **live payloads pulled 2026-08-08**,
+  not against the plan's description of them, which is the whole point of a stub.
+  - **Un-stub trigger:** `/state/nfl` flips `season_type` `"pre"` → `"regular"`. Measured today:
+    `{"week": 1, "leg": 0, "season_type": "pre", "season_start_date": "2026-08-06"}`.
+  - **Four endpoints the mule would need, all probed live:** `/state/nfl` (200, the keystone —
+    everything else is keyed by week and nothing on disk knows the week), `/league/…/rosters`
+    (200, **8 rosters already exist**, `owner_id` null on the 2 empty seats, `starters` is ten
+    positional slots of `"0"`), `/league/…/matchups/1` and `/league/…/transactions/1` (200, **`[]`**).
+  - ⚠️ **`[]` is a VALID payload and `validate_cargo.py` accepts it** (`ok (2 bytes, 0 entries)`,
+    exit 0) while rejecting `null`. Do **not** "harden" the JSON sources to require `entries > 0` —
+    that reds the mule through the whole pre-season and every quiet week. The consequence to carry
+    instead: for matchups and transactions, empty and broken look identical, so the cargo timestamp
+    stays the only health signal.
+  - ⚠️ **The plan's own U13 text says to record "the confirmed waiver timing." It is not
+    confirmed** — another plan fact that expired. `waiver_day_of_week: 2` with `waiver_type: 0`
+    (rolling priority, so `waiver_budget: 100` is inert). The Wednesday reading is a citation from
+    2025 history that **cannot be reproduced** — `previous_league_id` is still null, re-confirmed
+    today. The doc says: do not hardcode a day, watch the first live cycle.
+  - ⚠️ **Recorded trap: the VORP curve is not a weekly projection.** It is a pre-season
+    rank→points lookup over full seasons 2021-2024. Reusing it for a Sunday start/sit would emit a
+    confident number containing no weekly information. Named explicitly so nobody reaches for it.
 - ~~**U12 schedule the newsletter**~~ ✅ **SHIPPED 2026-08-08.** `scripts/install-newsletter.ps1`,
   task **Family Feud Newsletter**, **daily at 21:45** — sixteen minutes behind the mule's :29 haul
   and ten behind the watcher's :35, so it races neither. Verified registered and green; next run

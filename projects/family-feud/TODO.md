@@ -53,10 +53,11 @@ Assume no slack.
 From the 2026-08-08 ultramode pass. Everything that could produce a **wrong answer** is already
 fixed (commits `5e7ae390`, `76849ad9`, `fdf190eb`, `13c3ed3b`). What follows is real but bounded.
 
-1. **A clean clone cannot run ~20 tests.** `tests/test_build_board.py` calls `B.read_shape()`,
-   which reads `newsletter/data/inbox/sleeper_draft.json` — **gitignored mule cargo that churns
-   hourly**. Fix: commit a cargo fixture under `tests/fixtures/` and have the tests read that.
-   *This is the top item: it makes the suite unreproducible off this machine.*
+1. ~~**A clean clone cannot run ~20 tests.**~~ ✅ **FIXED 2026-08-08.** The suite read gitignored,
+   hourly-churning mule cargo through `read_shape()`. `build()` now takes `cargo=`/`league_cargo=`
+   and the tests pass committed fixtures (`tests/fixtures/sleeper_draft.json`,
+   `sleeper_league.json`). **Measured both ways:** with the cargo hidden the suite went from
+   **22 errors + 2 failures** to **327 OK, 1 skip** — the skip being an explicit environment probe.
 2. **`meta.format` is a hand-typed duplicate of `meta.shape` (KTD-1).** The gate cross-checks only
    `teams` and `rounds` of the ~8 facts they share — and the ROSTER half is what the PDF header
    prints. Fix: derive `meta.format` from `meta.shape` in `enrich()`.

@@ -767,7 +767,10 @@ def verify_only(kit=KIT, full=True):
     return problems
 
 
-def build(allow_dirty=False, full=True, now=None):
+def build(allow_dirty=False, full=True, now=None, cargo=CARGO, league_cargo=LEAGUE_CARGO):
+    # The cargo paths are parameters so the test suite can run off a COMMITTED fixture. They
+    # default to the mule's inbox, which is gitignored and rewritten hourly -- a suite that reads
+    # it passes only on the machine the mule runs on, and a clean clone reported 22 errors.
     dirty = git_dirty()
     if dirty and not allow_dirty:
         raise Refuse("draft-kit/ has uncommitted changes, so a rebuild would destroy work that "
@@ -781,7 +784,7 @@ def build(allow_dirty=False, full=True, now=None):
     before = read_board()
     with open(LEDGER, encoding="utf-8") as f:
         ledger = json.load(f)
-    shape = read_shape()
+    shape = read_shape(cargo, league_cargo)
     names = team_names()
     source = enrich(before, shape, ledger, ledger.get("meta") or {}, names,
                     generator_sha=sha256(os.path.abspath(__file__)), dirty=bool(dirty), now=now)

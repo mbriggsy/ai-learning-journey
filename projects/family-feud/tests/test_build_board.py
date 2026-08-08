@@ -38,12 +38,25 @@ def snapshot(kit):
             if os.path.exists(os.path.join(kit, n))}
 
 
+#: COMMITTED cargo, not the mule's inbox. `newsletter/data/inbox/` is gitignored and rewritten
+#: hourly, so a suite that reads it passes only on the machine the mule runs on -- hiding
+#: sleeper_draft.json turned this suite into 22 errors and 2 failures. These fixtures are a
+#: snapshot of the real draft and league objects and travel with the repo.
+FIXTURES = os.path.join(ROOT, "tests", "fixtures")
+CARGO_DRAFT = os.path.join(FIXTURES, "sleeper_draft.json")
+CARGO_LEAGUE = os.path.join(FIXTURES, "sleeper_league.json")
+
+
+def fixture_shape():
+    return B.read_shape(CARGO_DRAFT, CARGO_LEAGUE)
+
+
 def real_source():
     """The live board, enriched exactly as a build would enrich it."""
     before = B.read_board()
     with open(B.LEDGER, encoding="utf-8") as f:
         ledger = json.load(f)
-    return B.enrich(before, B.read_shape(), ledger, ledger.get("meta") or {},
+    return B.enrich(before, fixture_shape(), ledger, ledger.get("meta") or {},
                     B.team_names(), generator_sha="test")
 
 
@@ -236,7 +249,10 @@ class TestShape(unittest.TestCase):
             json.dump(d, f)
         return p
 
+    @unittest.skipUnless(os.path.exists(B.CARGO), "the mule's cargo is not on this machine")
     def test_the_live_cargo_yields_the_shape(self):
+        """An ENVIRONMENT probe, skipped on a clean clone. Every other test in this file runs
+        off the committed fixture, so the suite is reproducible anywhere."""
         shape = B.read_shape()
         self.assertEqual(shape["type"], "snake")
         self.assertTrue(shape["teams"] and shape["rounds"] and shape["draft_id"])
@@ -487,7 +503,7 @@ class TestTheGuardsAreWired(unittest.TestCase):
         self.addCleanup(setattr, B, "gate_staged", real)
 
         with self.assertRaises(B.Refuse) as ctx:
-            B.build(allow_dirty=True, full=False)
+            B.build(allow_dirty=True, full=False, cargo=CARGO_DRAFT, league_cargo=CARGO_LEAGUE)
         self.assertIn("INJECTED", str(ctx.exception))
         self.assertIn("nothing was written", str(ctx.exception))
         self.assertEqual(snapshot(B.KIT), snapshot(B.KIT))     # live surfaces untouched
@@ -541,7 +557,7 @@ class TestTheGuardsAreWired(unittest.TestCase):
         """The plan's byte-stable criterion was asserted in a commit message and nowhere else.
         Forcing _content_equal to False left the suite green while every rebuild churned."""
         before = snapshot(B.KIT)
-        B.build(allow_dirty=True, full=False)
+        B.build(allow_dirty=True, full=False, cargo=CARGO_DRAFT, league_cargo=CARGO_LEAGUE)
         self.assertEqual(snapshot(B.KIT), before,
                          "an unchanged rebuild changed the bytes on disk")
 
@@ -551,11 +567,11 @@ class TestTheGuardsAreWired(unittest.TestCase):
         B._content_equal = lambda a, b: False       # force a fresh meta.build stamp
         self.addCleanup(setattr, B, "_content_equal", real)
         before = snapshot(B.KIT)
-        B.build(allow_dirty=True, full=False)
+        B.build(allow_dirty=True, full=False, cargo=CARGO_DRAFT, league_cargo=CARGO_LEAGUE)
         self.assertNotEqual(snapshot(B.KIT), before,
                             "build() did not write, so the stability test proves nothing")
         B._content_equal = real
-        B.build(allow_dirty=True, full=False)        # restore a stable board for later tests
+        B.build(allow_dirty=True, full=False, cargo=CARGO_DRAFT, league_cargo=CARGO_LEAGUE)        # restore a stable board for later tests
 
     def test_the_engine_actually_prints_a_glyph_from_the_board(self):
         """Setting BADGE_GLYPH = {} in the engine left all 315 tests green: the only coverage was

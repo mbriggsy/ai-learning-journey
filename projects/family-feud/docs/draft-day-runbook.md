@@ -13,10 +13,38 @@ step is gone — the files are just local now.) Your `picks.json` and optional `
 get written there during the draft; both are gitignored scratch.
 
 - `draft_engine.py` — the analysis engine (tier cliffs incl. K/DEF, run watch, diminutive-alias name matching)
-- `players_data.json` — the board: **174 entries** (150 skill players + 10 K + 14 DEF), tiers, badges — and since the Aug 5 VBD war game, `vorp`/`vbdRank`/`vbdDelta` on every entry (VORP = pts/season over waiver replacement; 4-yr empirical curves, our exact scoring; baselines waiver QB12/RB41/WR47/TE12, last starters QB8/RB21/WR27/TE8). Engine expects this exact filename in cwd.
+- `players_data.json` — the board: **174 entries** (150 skill players + 10 K + 14 DEF), tiers, badges, `vorp`/`vbdRank`/`vbdDelta`, plus the frozen `sleeperId` and a `vorpMethod` on every row. VORP = pts/season over waiver replacement, baselines waiver QB12/RB41/WR47/TE12 and last starters QB8/RB21/WR27/TE8. **Skill values are recomputed from `vorp_curve.json` (seasons 2021-2024, exact scoring) on every build**; K and DEF keep flat per-tier constants and say so, because the curve builds QB/RB/WR/TE only. Engine expects this exact filename in cwd.
 - This runbook.
 
-Note: `draft_rankings_data_2026-08-05.json` **was deleted on 2026-08-08** — it was a date-stamped duplicate that had already drifted (its `dst` and `strategy` disagreed with the board) while having zero readers anywhere in the repo. Git is the archive; do not regenerate it. **Three surfaces, not four.** Rankings are an **Aug 5 snapshot** — fine for mocks; MUST be refreshed before the real draft (re-research rankings/injuries/ADP, regenerate players_data.json, then update every surface in one pass — players_data.json, `family-feud-draft-board.html`, and the cheat-sheet PDF, then run `python3 scripts/validate_board.py --full`, which is what proves they agree). **Three surfaces** — the old `family-feud-draft-board` desktop artifact died with Cowork, and the twin-maintenance rule with it. The HTML file in git is the single source; do not reintroduce the artifact. See [`live-board-plan.md`](live-board-plan.md).
+Note: `draft_rankings_data_2026-08-05.json` **was deleted on 2026-08-08** — it was a date-stamped duplicate that had already drifted (its `dst` and `strategy` disagreed with the board) while having zero readers anywhere in the repo. Git is the archive; do not regenerate it. **Three surfaces, not four.** The old `family-feud-draft-board` desktop artifact died with Cowork, and the twin-maintenance rule with it; do not reintroduce it. See [`live-board-plan.md`](live-board-plan.md).
+
+### 🚫 NEVER hand-edit a surface. Refreshing the board is ONE command *(changed 2026-08-08, U6)*
+
+```bash
+python scripts/build_board.py          # regenerates ALL THREE surfaces from players_data.json
+python scripts/build_board.py --verify-only    # the draft-morning sanity check; writes nothing
+```
+
+This section previously told you to *"update every surface in one pass"* by hand. **That
+instruction is now wrong and will actively hurt you**: `draft-kit/build_manifest.json` carries a
+sha256 per surface, so a hand-edited file makes `--verify-only` go red — and it is the only
+detector that covers the PDF, which has no comment channel to warn you.
+
+- **To change the board**, edit the judgment fields in `players_data.json` — ranks, tiers, badges,
+  notes — and re-run the generator. It recomputes `vorp`/`vbdRank`/`vbdDelta` from the curve,
+  re-derives `dst`, restamps `meta.shape` from the live draft object, and re-renders the HTML and
+  the PDF.
+- It **refuses to emit** unless the schema gate passes on the staged set, and refuses to run at all
+  if `draft-kit/` has uncommitted changes (pass `--allow-dirty` to override, which stamps
+  `meta.build.dirty`).
+- **One refresh = one commit** containing every surface. That is what makes "roll back one commit"
+  the recovery a person can execute at 7am.
+- `python scripts/validate_board.py --full` still exists and still proves the surfaces agree; the
+  generator runs it for you against the staged set before anything is replaced.
+
+⚠️ **Rankings are refreshed as of 2026-08-08 and are still a snapshot.** Re-research
+rankings/injuries/ADP before the real draft, then run the generator. Check `meta.updated` before
+you trust a single rank.
 
 ⚠️ **Nothing will remind you.** A Cowork one-shot trigger used to drop a `REFRESH_BRIEF` into the
 draft kit on Aug 26 as the starting gun for this. That trigger did not survive the migration and

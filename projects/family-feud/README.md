@@ -57,10 +57,32 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                  scoring.py           — the league's scoring rules as ONE pure function.
                                         Reproduces nflverse's own PPR exactly, 2469/2469.
                  build_curves.py      — the empirical VORP curve from nflverse seasons.
-tests/           274 tests: python -m unittest discover -s tests  (run from the root)
+                 build_board.py       — THE GENERATOR. One command regenerates every surface
+                                        from players_data.json. Stages, gates the staged set,
+                                        and emits only on pass — write-all-or-write-none.
+                                        --verify-only is the draft-morning sanity check.
+                 render_html.py       — the board HTML, from templates/board.html
+                 render_pdf.py        — the cheat-sheet PDF. All 174 rows, one page.
+                 templates/board.html — presentation only; every FACT comes from the source
+tests/           327 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```
+
+## Refreshing the board
+
+`players_data.json` is the single source; the HTML and the PDF are **build outputs**. Never edit a
+surface by hand — `draft-kit/build_manifest.json` carries a sha256 per surface and will catch it.
+
+```bash
+python scripts/build_board.py            # regenerate all three surfaces from the source
+python scripts/build_board.py --verify-only    # draft-morning sanity check; writes nothing
+```
+
+Edit the judgment fields in `players_data.json` — ranks, tiers, badges, notes — and re-run. The
+generator recomputes VORP from the curve, re-derives `dst`, restamps `meta.shape` from the live
+draft object, re-renders both surfaces, and **refuses to emit unless the schema gate passes on the
+staged set**. One refresh = one commit.
 
 ## Running the engine
 

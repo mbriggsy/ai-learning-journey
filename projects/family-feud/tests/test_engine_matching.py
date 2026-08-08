@@ -546,6 +546,121 @@ class TestFrozenIdJoin(EngineCase):
         self.assertNotIn("is the same man", head.lower())
 
 
+class TestTheAdvisoryBodyIsPinned(EngineCase):
+    """Everything BELOW the warning block had almost no assertions.
+
+    The suite ran the full advisory only to check the exit code and two header strings, so the
+    snake math, the roster/needs arithmetic, the between-now-and-you list and the BEST AVAILABLE
+    ordering were all unpinned -- seven separate mutations to them left the whole suite green.
+    That is insight 006's shape at the level of a test FILE rather than a single assertion: the
+    advisory looked covered because the suite was green, and the numbers it prints are the ones
+    that decide reach-now-or-wait.
+
+    Every expected value below is computed by hand from the snake rule, not copied from output.
+    8-team snake, slot 3: my picks are 3, 14, 19, 30, 35 ...
+      round 1 (odd)  -> seat 3       -> pick  3
+      round 2 (even) -> seat 8+1-3=6 -> pick  8 + 6 = 14
+      round 3 (odd)  -> seat 3       -> pick 16 + 3 = 19
+    """
+
+    def kit(self):
+        # r and pr deliberately DISAGREE, so ordering by board rank and by positional rank give
+        # different answers. The old probe was #3 overall AND WR1, which survived both.
+        return board([row(1, "Alpha One", "RB", "KC", 1),
+                      row(2, "Bravo Two", "WR", "SF", 3),
+                      row(3, "Charlie Three", "WR", "SF", 1),
+                      row(4, "Delta Four", "RB", "KC", 2),
+                      row(5, "Echo Five", "WR", "SF", 2),
+                      row(6, "Foxtrot Six", "TE", "GB", 1),
+                      row(7, "Golf Seven", "QB", "BUF", 1),
+                      row(8, "Hotel Eight", "K", "NE", 1),
+                      row(9, "India Nine", "DEF", "MIN", 1)])
+
+    def filler(self, n, start=1):
+        """n picks of players who are NOT on the board, so availability is untouched."""
+        return [pick(i, f"Off{i}", f"Board{i}", "RB", "DAL", slot=None)
+                for i in range(start, start + n)]
+
+    # ---- snake math ----
+
+    def test_the_clock_and_my_next_pick_with_no_picks_in(self):
+        code, out = self.run_engine(self.kit(), [], slot=3)
+        self.assertEqual(code, 0, out)
+        self.assertIn("next is pick 1 (slot 1)", out)
+        self.assertIn("YOUR next pick: #3 — 2 picks away", out)
+
+    def test_the_clock_wraps_correctly_into_round_two(self):
+        """Pick 11 is round 2 of an 8-team snake, which counts DOWN: seat 8-(11-1)%8 = 6."""
+        code, out = self.run_engine(self.kit(), self.filler(10), slot=3)
+        self.assertEqual(code, 0, out)
+        self.assertIn("next is pick 11 (slot 6)", out)
+        self.assertIn("YOUR next pick: #14 — 3 picks away", out)
+
+    def test_the_turn_at_the_end_of_round_one(self):
+        code, out = self.run_engine(self.kit(), self.filler(8), slot=3)
+        self.assertIn("next is pick 9 (slot 8)", out)
+        self.assertIn("YOUR next pick: #14 — 5 picks away", out)
+
+    def test_my_own_seat_is_marked_on_the_clock(self):
+        code, out = self.run_engine(self.kit(), self.filler(2), slot=3)
+        self.assertIn("next is pick 3 (slot 3 = YOU)", out)
+
+    def test_the_third_round_pick_is_reached(self):
+        code, out = self.run_engine(self.kit(), self.filler(15), slot=3)
+        self.assertIn("YOUR next pick: #19 — 3 picks away", out)
+
+    # ---- who picks between now and me ----
+
+    def test_between_now_and_you_lists_every_seat_in_order(self):
+        code, out = self.run_engine(self.kit(), [], slot=3)
+        self.assertIn("Between now and you: slot 1, slot 2", out)
+
+    def test_between_now_and_you_follows_the_snake_back_down(self):
+        """From pick 9 to my pick 14, round 2 counts down: seats 8, 7, 6, 5."""
+        code, out = self.run_engine(self.kit(), self.filler(8), slot=3)
+        self.assertIn("Between now and you: slot 8, slot 7, slot 6, slot 5", out)
+
+    # ---- roster needs / STARTERS ----
+
+    def test_an_empty_roster_needs_every_starter_and_two_flex(self):
+        code, out = self.run_engine(self.kit(), [], slot=3)
+        self.assertIn("slot 1: [empty] needs: QBx1, RBx2, WRx2, TEx1, Kx1, DEFx1, FLEXx2", out)
+
+    def test_two_running_backs_close_the_rb_requirement_but_not_flex(self):
+        picks_ = [pick(1, "Alpha", "One", "RB", "KC", slot=1),
+                  pick(2, "Delta", "Four", "RB", "KC", slot=1)]
+        code, out = self.run_engine(self.kit(), picks_, slot=3)
+        self.assertIn("slot 1: [RB2] needs: QBx1, WRx2, TEx1, Kx1, DEFx1, FLEXx2", out)
+
+    def test_a_third_running_back_becomes_a_flex_body(self):
+        picks_ = [pick(i, "Off", f"Board{i}", "RB", "DAL", slot=1) for i in (1, 2, 3)]
+        code, out = self.run_engine(self.kit(), picks_, slot=3)
+        self.assertIn("slot 1: [RB3] needs: QBx1, WRx2, TEx1, Kx1, DEFx1, FLEXx1", out)
+
+    def test_my_seat_carries_the_you_marker_and_nobody_else_does(self):
+        code, out = self.run_engine(self.kit(), [], slot=5)
+        rosters = out.split("ROSTERS / NEEDS")[1].split("TIER CLIFFS")[0]
+        self.assertEqual(rosters.count("<== YOU"), 1)
+        self.assertIn("slot 5: [empty]", rosters)
+        self.assertRegex(rosters, r"slot 5:[^\n]*<== YOU")
+
+    # ---- BEST AVAILABLE ordering ----
+
+    def test_best_available_is_ordered_by_board_rank_not_positional_rank(self):
+        code, out = self.run_engine(self.kit(), [], slot=3)
+        listed = [ln.split()[1] for ln in out.split("BEST AVAILABLE (my board)")[1].splitlines()
+                  if ln.strip() and ln.strip()[0].isdigit()]
+        self.assertEqual(listed[:5], ["Alpha", "Bravo", "Charlie", "Delta", "Echo"],
+                         "BEST AVAILABLE must follow board rank r; this board's pr disagrees")
+
+    def test_a_drafted_player_leaves_the_ordering_intact(self):
+        p = pick(1, "Bravo", "Two", "WR", "SF", slot=1)
+        code, out = self.run_engine(self.kit(), [p], slot=3)
+        listed = [ln.split()[1] for ln in out.split("BEST AVAILABLE (my board)")[1].splitlines()
+                  if ln.strip() and ln.strip()[0].isdigit()]
+        self.assertEqual(listed[:4], ["Alpha", "Charlie", "Delta", "Echo"])
+
+
 class TestLeagueIdentity(unittest.TestCase):
     def test_the_engine_and_the_watcher_agree_on_briggsys_user_id(self):
         """The id is the oracle for 'is this my seat'. Two copies exist, so pin them together --

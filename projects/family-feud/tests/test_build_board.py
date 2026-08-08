@@ -413,6 +413,147 @@ class TestOldValueSweep(unittest.TestCase):
             self.assertNotIn("plans", h)
 
 
+class TestTheGuardsAreWired(unittest.TestCase):
+    """Every test here exists because the guard it covers could be DELETED with the suite still
+    green. A guard nothing can notice the absence of is decoration -- insight 006 at the level of
+    the test suite rather than the code.
+
+    Each one was confirmed by mutation: neuter the guard, watch this go red, restore.
+    """
+
+    def setUp(self):
+        self.kit = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.kit, True)
+        for n in B.SURFACES:
+            shutil.copy(os.path.join(B.KIT, n), self.kit)
+        self.before = snapshot(self.kit)
+
+        # Several tests here call the real build(), which writes the LIVE surfaces -- build() has
+        # no kit override. A test run must not leave the working tree modified (and an
+        # interrupted run must not either), so the exact bytes are captured and restored
+        # unconditionally. `git status` after the suite is part of the suite's contract.
+        self._saved = {}
+        for path in [os.path.join(B.KIT, n) for n in B.SURFACES] + [B.MANIFEST]:
+            if os.path.exists(path):
+                with open(path, "rb") as f:
+                    self._saved[path] = f.read()
+        self.addCleanup(self._restore_live_surfaces)
+
+    def _restore_live_surfaces(self):
+        for path, blob in self._saved.items():
+            with open(path, "wb") as f:
+                f.write(blob)
+
+    def test_a_red_gate_stops_the_emit(self):
+        """Nothing proved the gate was WIRED to anything. Stubbing gate_staged to return [] left
+        the whole suite green -- so a build could ship a board the gate had rejected."""
+        real = B.gate_staged
+        B.gate_staged = lambda staging, full=True: ["INJECTED: the gate rejected this board"]
+        self.addCleanup(setattr, B, "gate_staged", real)
+
+        with self.assertRaises(B.Refuse) as ctx:
+            B.build(allow_dirty=True, full=False)
+        self.assertIn("INJECTED", str(ctx.exception))
+        self.assertIn("nothing was written", str(ctx.exception))
+        self.assertEqual(snapshot(B.KIT), snapshot(B.KIT))     # live surfaces untouched
+
+    def test_the_cp1252_guard_is_wired_into_stage_not_just_defined(self):
+        """assert_pdf_safe was tested as a function. Deleting the `if bad: raise` inside stage()
+        left every test green, because nothing exercised the wiring."""
+        real = B.assert_pdf_safe
+        B.assert_pdf_safe = lambda strings: ["INJECTED: not cp1252-encodable"]
+        self.addCleanup(setattr, B, "assert_pdf_safe", real)
+
+        with tempfile.TemporaryDirectory() as t:
+            with self.assertRaises(B.Refuse) as ctx:
+                B.stage(real_source(), os.path.join(t, "staged"))
+        self.assertIn("INJECTED", str(ctx.exception))
+
+    def test_check_generated_fields_is_wired_into_the_gate(self):
+        """The one gate check no test could notice. Deleting it entirely left 315/315 green,
+        which means every field U6 added was effectively unvalidated."""
+        import validate_board as V
+        real = V.check_generated_fields
+        V.check_generated_fields = lambda d, ledger: ["INJECTED: a generated field is wrong"]
+        self.addCleanup(setattr, V, "check_generated_fields", real)
+        self.assertIn("INJECTED: a generated field is wrong", V.validate(full=False))
+
+    def test_check_generated_fields_actually_rejects_each_field_it_owns(self):
+        import copy
+        import validate_board as V
+        with open(B.LEDGER, encoding="utf-8") as f:
+            ledger = json.load(f)
+        good = B.read_board()
+        self.assertEqual(V.check_generated_fields(good, ledger), [],
+                         "the live board fails its own generated-field check")
+
+        for mutate, needle in (
+            (lambda d: d["players"][0].__setitem__("sleeperId", {"sleeperId": "9221"}), "expected a string"),
+            (lambda d: d["players"][0].__setitem__("sleeperId", "not-an-id!"), "neither a numeric id"),
+            (lambda d: d["players"][0].pop("vorpMethod"), "vorpMethod"),
+            (lambda d: d["meta"]["badges"]["T"].__setitem__("glyph", "☃"), "cp1252"),
+            (lambda d: d["meta"]["badges"]["T"].pop("glyph"), "glyph"),
+            (lambda d: d["meta"].pop("shape"), "meta.shape is missing"),
+        ):
+            d = copy.deepcopy(good)
+            mutate(d)
+            problems = V.check_generated_fields(d, ledger)
+            self.assertTrue(problems, f"no problem reported for the mutation expecting {needle!r}")
+            self.assertTrue(any(needle in p for p in problems),
+                            f"expected {needle!r} in {problems}")
+
+    def test_an_unchanged_rebuild_is_byte_stable(self):
+        """The plan's byte-stable criterion was asserted in a commit message and nowhere else.
+        Forcing _content_equal to False left the suite green while every rebuild churned."""
+        before = snapshot(B.KIT)
+        B.build(allow_dirty=True, full=False)
+        self.assertEqual(snapshot(B.KIT), before,
+                         "an unchanged rebuild changed the bytes on disk")
+
+    def test_byte_stability_is_not_vacuous(self):
+        """Control: the test above would also pass if build() wrote nothing at all."""
+        real = B._content_equal
+        B._content_equal = lambda a, b: False       # force a fresh meta.build stamp
+        self.addCleanup(setattr, B, "_content_equal", real)
+        before = snapshot(B.KIT)
+        B.build(allow_dirty=True, full=False)
+        self.assertNotEqual(snapshot(B.KIT), before,
+                            "build() did not write, so the stability test proves nothing")
+        B._content_equal = real
+        B.build(allow_dirty=True, full=False)        # restore a stable board for later tests
+
+    def test_the_engine_actually_prints_a_glyph_from_the_board(self):
+        """Setting BADGE_GLYPH = {} in the engine left all 315 tests green: the only coverage was
+        a grep of the source. A data-driven table that resolves to empty renders nothing, silently,
+        and the badge column is doctrine on a 120-second clock."""
+        import subprocess
+        import sys as _sys
+        work = os.path.join(self.kit, "run")
+        os.makedirs(work, exist_ok=True)
+        for n in ("players_data.json", "normalize.py", "sleeper_ids.json", "draft_engine.py"):
+            shutil.copy(os.path.join(B.KIT, n), work)
+        with open(os.path.join(B.ROOT, "tests", "fixtures", "lab_feed_120.json"),
+                  encoding="utf-8") as f:
+            picks = json.load(f)
+        picks.sort(key=lambda p: p["pick_no"])
+        with open(os.path.join(work, "picks.json"), "w", encoding="utf-8") as f:
+            json.dump(picks[:77], f, ensure_ascii=False)
+        env = dict(os.environ, PYTHONUTF8="1", PYTHONIOENCODING="utf-8")
+        out = subprocess.run([_sys.executable, os.path.join(work, "draft_engine.py"),
+                              "3", "8", "16", str(picks[0]["draft_id"])],
+                             cwd=work, capture_output=True, text=True, encoding="utf-8",
+                             env=env, timeout=120)
+        self.assertEqual(out.returncode, 0, out.stderr[-400:])
+        # DISTINCTIVE glyphs only. Four of the eight are + ! ^ v, which the engine's ordinary
+        # output contains anyway -- an intersection against all eight is never empty, so the
+        # first version of this assertion passed with BADGE_GLYPH = {} planted. The non-ASCII
+        # four have no other reason to appear. Measured on this fixture: » † ° each appear.
+        distinctive = {"»", "†", "°", "§"}
+        found = distinctive & set(out.stdout)
+        self.assertTrue(found, "the engine printed NO distinctive badge glyph -- the data-driven "
+                               "table resolved to nothing and the badge column silently vanished")
+
+
 class TestVerifyOnly(unittest.TestCase):
     def test_verify_only_passes_against_the_shipped_surfaces(self):
         self.assertEqual(B.verify_only(full=False), [])

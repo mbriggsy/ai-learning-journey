@@ -331,7 +331,11 @@ def _draw_strategy(c, source, page_no, total_pages):
 
 
 def render(source, out_path):
-    c = canvas.Canvas(out_path, pagesize=PAGE)
+    # invariant=1 pins /CreationDate, /ModDate and the document ID. Without it reportlab stamps
+    # wall-clock time into the trailer, so two renders of identical data differ in bytes and every
+    # refresh commits a PDF diff that means nothing. Measured: default output is UNSTABLE across
+    # two identical renders; invariant=1 is byte-identical.
+    c = canvas.Canvas(out_path, pagesize=PAGE, invariant=1)
     board_pages = _draw_board(c, source, total_pages=0)
     c.showPage()
     _draw_strategy(c, source, board_pages + 1, board_pages + 1)

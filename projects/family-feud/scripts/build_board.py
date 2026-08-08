@@ -413,8 +413,16 @@ def emit(staging, kit=KIT, last_good=LAST_GOOD):
 
 
 def write_manifest(kit=KIT, path=MANIFEST):
-    payload = {"surfaces": {n: sha256(os.path.join(kit, n)) for n in SURFACES},
-               "written_at": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds")}
+    surfaces = {n: sha256(os.path.join(kit, n)) for n in SURFACES}
+    # `written_at` is wall-clock, so restamping it on an unchanged rebuild would churn the file
+    # that exists to prove the surfaces did NOT change. Carry it forward when the shas match.
+    written_at = _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds")
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as f:
+            old = json.load(f)
+        if (old.get("surfaces") or {}) == surfaces and old.get("written_at"):
+            written_at = old["written_at"]
+    payload = {"surfaces": surfaces, "written_at": written_at}
     with open(path, "w", encoding="utf-8", newline="\n") as f:
         json.dump(payload, f, ensure_ascii=False, indent=1, sort_keys=True)
         f.write("\n")

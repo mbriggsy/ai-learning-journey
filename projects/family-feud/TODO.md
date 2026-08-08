@@ -11,7 +11,7 @@ plan  ✅ → deepen  ✅ → work  ◀ YOU ARE HERE → ultramode ⬜ (at the P
 
 **Units shipped:** U1, U2 (Phase 0 gates) · **U9** (draft-state watcher) · **U3** (one normalizer,
 proven equal in two runtimes) · **U14** (`sleeperId` frozen — 174 ids, 0 unresolved) ·
-**U4** (board schema gate, born red on 12 real findings) · **U5** (scoring as code + the empirical
+**U4** (board schema gate, born red on 13 real findings) · **U5** (scoring as code + the empirical
 curve; oracle exact at 2469/2469) — the last two on 2026-08-08.
 
 **Next action: **U6, the generator** —
@@ -100,10 +100,12 @@ U9  →  U3  →  U14  →  { U4 ∥ U5 }  →  U6  →  { U7 ∥ U15 }  →  U8
 - ~~**U4 gate**~~ ✅ **SHIPPED 2026-08-08.** `scripts/validate_board.py`, 42 tests. `--fast`
   (static + cross-surface, offline, milliseconds) and `--full` (adds a real-engine replay of the
   lab feed at prefixes 1, 2, **3**, 4, ... — the reproduced `vbdDelta` break fires at exactly
-  three picks, so deciles would have missed it). **BORN RED with 12 findings, all real drift:**
-  `meta.updated` claims Aug 5 while its inputs are dated Aug 7-8 (3) · eight `meta.vbd` numbers
-  hardcoded as literals in the board HTML's prose (8) · the cheat sheet holds 150 of 174 rows,
-  missing every K and DEF (1). **Fix the surface, never the gate.** U6 regenerates them.
+  three picks, so deciles would have missed it). **BORN RED with 13 findings, all real drift**
+  (re-measured 2026-08-08; `--fast` and `--full` both exit 1): `meta.updated` claims Aug 5 while its
+  inputs are dated Aug 7-8 (**4** — U5's `vorp_curve.json` became a fourth stale-input witness the
+  moment it shipped) · eight `meta.vbd` numbers hardcoded as literals in the board HTML's prose (8) ·
+  the cheat sheet holds 150 of 174 rows, missing every K and DEF (1).
+  **Fix the surface, never the gate.** U6 regenerates them.
 - ~~**U5 VORP**~~ ✅ **SHIPPED 2026-08-08.** `scripts/scoring.py` (league.md as ONE pure
   function) + `scripts/build_curves.py` → `draft-kit/vorp_curve.json`, 22 tests.
   **Oracle: 2469/2469 player-seasons reproduce nflverse's own PPR exactly**, so the
@@ -132,8 +134,9 @@ from cwd and matching live picks on `player_id` before falling back to the name.
 is committed and verified: 120 picks, `pick_no` contiguous 1→120, every pick carrying `player_id`,
 all from draft `1390923383440424960`. "Replay the lab feed" now has something to replay.
 
-**Install now, not in draft week:** `jinja2` and `reportlab` are both absent. Both are pure-Python
-`py3-none-any` wheels on 3.14.3, so it's a two-package install. `defusedxml` is already present.
+~~**Install now, not in draft week:** `jinja2` and `reportlab` are both absent.~~ ✅ **RESOLVED** —
+verified 2026-08-08 on Python 3.14.3: `jinja2`, `reportlab` and `defusedxml` all import. U6's PDF
+and template paths have their dependencies.
 
 ---
 
@@ -150,24 +153,6 @@ Re-pull and confirm — **never quote these from a doc**:
 
 Then run the engine **with the draft_id as arg 4** so the contamination gate is armed:
 `python draft_engine.py <slot> 8 16 1390509994847240192`
-
----
-
-## 4. Delete the empty husk
-
-`C:\Users\brigg\ai-learning-journey\projects\family feud` (with the space) is left over from the
-Aug 7 rename. Not empty as previously recorded — it holds one 79-byte
-`.claude/settings.local.json`, **byte-identical** to the live project's, so nothing is lost.
-
-**Blocked:** the permission classifier refused `Remove-Item` *and* `rm -rf` again on 2026-08-07
-(third refusal, two sessions). Needs a settings rule or Briggsy running the line below.
-
-**`-Recurse` is required** — the folder is not empty (it holds `.claude\settings.local.json`), and
-the previously recorded command omitted it, which fails on a directory with children:
-
-```powershell
-Remove-Item -LiteralPath "C:\Users\brigg\ai-learning-journey\projects\family feud" -Recurse -Force
-```
 
 ---
 

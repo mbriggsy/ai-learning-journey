@@ -422,6 +422,79 @@ class TestFormatIsDerived(unittest.TestCase):
         self.assertEqual(board["meta"]["format"], B.format_line(board["meta"]["shape"]))
 
 
+class TestSlotRangesAreDerived(unittest.TestCase):
+    """`strategy.slotNotes[i].slot` held three literal seat ranges -- "Picks 1-3", "Picks 4-6",
+    "Picks 7-8" -- over a team count `meta.shape` already carries. The only check that read them
+    asserted their numbers were inside teams x rounds, which "Picks 1-3" satisfies in a 10-team
+    league while naming a third of the room it claims to name."""
+
+    def test_the_derivation_reproduces_the_labels_the_board_actually_ships(self):
+        """The control, and the proof the fact was right all along -- it was only unguarded.
+        Byte-for-byte, the same bar `format_line` had to clear before it was trusted."""
+        self.assertEqual(B.strategy_slot_ranges(fixture_shape()),
+                         ["Picks 1-3", "Picks 4-6", "Picks 7-8"])
+
+    def test_a_ten_team_room_relabels_every_band(self):
+        """THE DEFECT. Not one of these three labels is right in a 10-team league, and the old
+        in-range check passed all of them."""
+        self.assertEqual(B.strategy_slot_ranges(dict(fixture_shape(), teams=10)),
+                         ["Picks 1-4", "Picks 5-7", "Picks 8-10"])
+
+    def test_the_remainder_goes_to_the_earliest_bands(self):
+        """This is the rule that reproduces 3/3/2 on this league rather than 2/3/3."""
+        self.assertEqual(B.strategy_slot_ranges(dict(fixture_shape(), teams=14)),
+                         ["Picks 1-5", "Picks 6-10", "Picks 11-14"])
+
+    def test_a_single_seat_band_reads_as_one_pick(self):
+        self.assertEqual(B.strategy_slot_ranges(dict(fixture_shape(), teams=3)),
+                         ["Pick 1", "Pick 2", "Pick 3"])
+
+    def test_a_room_too_small_to_divide_is_refused_not_mislabelled(self):
+        """Emitting "Picks 3-2" would be a label on advice for a seat nobody can draft from."""
+        with self.assertRaises(B.UnsupportedShape):
+            B.strategy_slot_ranges(dict(fixture_shape(), teams=2))
+
+    def test_the_generator_restamps_the_slots_from_the_shape_it_is_given(self):
+        """A REAL call-site test (insight 013). Asserting the built board's slots match its own
+        shape proves nothing -- the board on disk already carries the right labels, so a generator
+        that never touches the field passes. Hand `enrich` a 10-team shape and require the output
+        to follow it. Delete the assignment and this goes red."""
+        with open(B.LEDGER, encoding="utf-8") as f:
+            ledger = json.load(f)
+        out = B.enrich(B.read_board(), dict(fixture_shape(), teams=10), ledger,
+                       ledger.get("meta") or {}, B.team_names(), generator_sha="test")
+        self.assertEqual([e["slot"] for e in out["strategy"]["slotNotes"]],
+                         ["Picks 1-4", "Picks 5-7", "Picks 8-10"])
+
+    def test_the_generator_leaves_the_note_alone(self):
+        """The label is data. The note is Briggsy's judgment about drafting from the front, middle
+        or back of a room, and that does not become wrong when the room grows."""
+        with open(B.LEDGER, encoding="utf-8") as f:
+            ledger = json.load(f)
+        before = [e["note"] for e in B.read_board()["strategy"]["slotNotes"]]
+        out = B.enrich(B.read_board(), dict(fixture_shape(), teams=10), ledger,
+                       ledger.get("meta") or {}, B.team_names(), generator_sha="test")
+        self.assertEqual([e["note"] for e in out["strategy"]["slotNotes"]], before)
+
+    def test_the_source_hash_still_describes_the_file_as_read(self):
+        """The derivation writes into a COPY. `meta.build.source_sha256` is the hash of the input,
+        and a derived field leaking into it would quietly change what that field means."""
+        with open(B.LEDGER, encoding="utf-8") as f:
+            ledger = json.load(f)
+        src = B.read_board()
+        expected = hashlib.sha256(B.board_bytes(
+            {"meta": src["meta"], "players": src["players"],
+             "dst": src["dst"], "strategy": src["strategy"]})).hexdigest()
+        out = B.enrich(src, dict(fixture_shape(), teams=10), ledger, ledger.get("meta") or {},
+                       B.team_names(), generator_sha="test")
+        self.assertEqual(out["meta"]["build"]["source_sha256"], expected)
+
+    def test_the_live_board_slots_match_its_own_shape(self):
+        board = B.read_board()
+        self.assertEqual([e["slot"] for e in board["strategy"]["slotNotes"]],
+                         B.strategy_slot_ranges(board["meta"]["shape"]))
+
+
 class TestManifest(unittest.TestCase):
     def test_the_live_surfaces_match_their_manifest(self):
         self.assertEqual(B.check_manifest(), [])

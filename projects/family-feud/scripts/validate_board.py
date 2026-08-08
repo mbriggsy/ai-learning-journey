@@ -276,6 +276,43 @@ def surname_keys(name):
     return keys
 
 
+#: A "baselines ..." clause, up to the first sentence-ending punctuation. The anchor word is
+#: load-bearing -- see baseline_claims.
+_BASELINE_CLAUSE = re.compile(r"baselines?\b([^.;)]*)", re.I)
+_POS_NUM = re.compile(r"\b(QB|RB|WR|TE)\s*(\d+)\b")
+
+
+def baseline_claims(strategy):
+    """Every VBD baseline QUOTED in strategy prose, as (field, position, number).
+
+    `rules[10]` ends "baselines QB12/RB41/WR47/TE12" -- four numbers that are already data in
+    `meta.vbd`, typed a second time into a sentence nothing checked. The remedy is NOT to
+    template the sentence: that would put an f-string in the one place the voice lives. It is to
+    let the prose stay human and make it impossible for it to drift.
+
+    THE ANCHOR WORD IS WHY THIS IS NOT A BLANKET SCAN, and it was chosen by measurement rather
+    than taste. Scanning every `(QB|RB|WR|TE)\\d+` run in strategy prose finds three more on this
+    board right now -- `roundPlan[1]` says "RB2" and `slotNotes[2]` says "WR1" and "RB1" -- and
+    every one of them is ordinal shorthand for a tier, not a baseline. A gate that reds on "a
+    solid RB2" is a gate that gets switched off, and a false red on draft morning is the failure
+    insight 009 is about. So only a clause introduced by "baseline"/"baselines" is read.
+
+    The cost is a real blind spot: rewrite the sentence to say "replacement levels QB12/..." and
+    this quietly checks nothing. That is insight 006's shape -- a verification step that can
+    silently do nothing -- so it ships with a POSITIVE CONTROL in the tests asserting it still
+    finds four claims on the live board. A zero from this function must mean "the prose stopped
+    quoting baselines", never "the instrument stopped reading".
+    """
+    out = []
+    fields = [("rules", strategy.get("rules") or [])]
+    for field, items in fields:
+        for i, item in enumerate(items if isinstance(items, list) else [items]):
+            for clause in _BASELINE_CLAUSE.findall(str(item)):
+                for pos, num in _POS_NUM.findall(clause):
+                    out.append((f"{field}[{i}]", pos, int(num)))
+    return out
+
+
 def check_strategy(d):
     problems = []
     s = d.get("strategy")
@@ -317,6 +354,21 @@ def check_strategy(d):
     for claim in re.findall(r"(\d+)\s+of them", str(s.get("kickers", ""))):
         if int(claim) != k_count:
             problems.append(f"strategy.kickers claims {claim} kickers; the board has {k_count}")
+
+    # VBD baselines quoted in prose must match meta.vbd. See baseline_claims for why this is
+    # anchored on the word "baseline" instead of scanning every position-number run.
+    vbd = (d.get("meta") or {}).get("vbd") or {}
+    waiver = vbd.get("baselineWaiver") or {}
+    starter = vbd.get("lastStarter") or {}
+    for where, pos, num in baseline_claims(s):
+        live = [v for v in (waiver.get(pos), starter.get(pos)) if v is not None]
+        if not live:
+            problems.append(f"strategy.{where} quotes a {pos} baseline of {num}, but meta.vbd "
+                            f"carries no {pos} baseline at all")
+        elif num not in [int(v) for v in live]:
+            problems.append(f"strategy.{where} quotes {pos}{num}, but meta.vbd says "
+                            f"baselineWaiver.{pos}={waiver.get(pos)} / "
+                            f"lastStarter.{pos}={starter.get(pos)}")
 
     # "(name, team)" pairs must match that row's team. Aubrey (DAL), Fairbairn (HOU) ...
     surname_team = {}

@@ -430,6 +430,55 @@ class TestStrategy(GateCase):
         self.only(V.check_strategy(self.b), "One (BUF)")
 
 
+class TestBaselinesQuotedInProse(GateCase):
+    """`rules[10]` ends "baselines QB12/RB41/WR47/TE12" -- four numbers already living in
+    `meta.vbd`, typed a second time into a sentence nothing checked. U5 is licensed to move them."""
+
+    def test_a_baseline_that_no_longer_matches_meta_vbd_is_refused(self):
+        self.b["strategy"]["rules"] = ["VORP over waiver replacement (baselines QB12)."]
+        self.b["meta"]["vbd"]["baselineWaiver"]["QB"] = 14
+        self.only(V.check_strategy(self.b), "quotes QB12")
+
+    def test_a_matching_baseline_passes(self):
+        """The paired control. Without it the refusal above would pass on a check that reds at
+        everything."""
+        self.b["strategy"]["rules"] = ["VORP over waiver replacement (baselines QB12)."]
+        self.assertEqual(V.check_strategy(self.b), [])
+
+    def test_the_last_starter_figure_is_accepted_too(self):
+        """Both dicts are baselines in the prose's sense; only a number in NEITHER is drift."""
+        self.b["strategy"]["rules"] = ["Streaming starts past the baseline QB8."]
+        self.assertEqual(V.check_strategy(self.b), [])
+
+    def test_a_position_meta_vbd_does_not_carry_is_reported(self):
+        self.b["strategy"]["rules"] = ["Baselines RB41 hold all year."]
+        self.only(V.check_strategy(self.b), "no RB baseline at all")
+
+    def test_ordinal_shorthand_outside_a_baseline_clause_is_not_a_finding(self):
+        """MEASURED, NOT ASSUMED, and it is why this is not a blanket scan. The live board's
+        roundPlan says "RB2" and its slotNotes say "WR1"/"RB1" -- tier shorthand, every one. A
+        gate that reds on "a solid RB2" is a gate that gets switched off, and a false red on
+        draft morning is insight 009's failure."""
+        self.b["strategy"]["rules"] = ["Chase a solid RB2 in the middle rounds; WR1 upside wins."]
+        self.b["strategy"]["roundPlan"][0]["plan"] = "an RB2 and a WR3"
+        self.b["strategy"]["slotNotes"][0]["note"] = "take the WR1"
+        self.assertEqual(V.check_strategy(self.b), [])
+
+    def test_the_instrument_registers_a_reading_on_the_live_board(self):
+        """POSITIVE CONTROL (insight 006, insight 008). This check is anchored on the word
+        "baseline", so rewriting the sentence to say "replacement levels QB12/..." would make it
+        quietly examine nothing and report zero problems -- which reads exactly like success.
+        A zero from `baseline_claims` must mean the prose stopped quoting baselines, never that
+        the reader stopped reading."""
+        with open(V.BOARD, encoding="utf-8") as f:
+            live = json.load(f)
+        claims = V.baseline_claims(live["strategy"])
+        self.assertEqual(len(claims), 4, f"the reader found {len(claims)} baseline claims on the "
+                                         f"live board; it should still find four: {claims}")
+        self.assertEqual({pos for _, pos, _ in claims}, {"QB", "RB", "WR", "TE"})
+        self.assertEqual(V.check_strategy(live), [])
+
+
 class TestMetaFreshness(GateCase):
     def test_a_board_older_than_its_inputs_is_refused(self):
         """meta.updated has ZERO readers anywhere in the repo -- a self-reported claim nothing

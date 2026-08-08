@@ -65,11 +65,10 @@ does not carry.
 
 ---
 
-## 0.5 Review residue — **9 of 10 CLOSED 2026-08-08.** One left, and it is deliberate
+## 0.5 Review residue — **ALL 10 CLOSED 2026-08-08**
 
-From the 2026-08-08 ultramode pass. **Only item 4 remains open**, and it is the one that changes
-board *content* rather than machinery — it rewrites `strategy` prose Briggsy has read, so it wants
-his eye rather than a quiet refactor. Everything else below is done.
+From the 2026-08-08 ultramode pass. Nothing here is open. Kept because each entry records a wrong
+answer that looked right, and several are shapes that will recur.
 
 1. ~~**A clean clone cannot run ~20 tests.**~~ ✅ **FIXED 2026-08-08.** The suite read gitignored,
    hourly-churning mule cargo through `read_shape()`. `build()` now takes `cargo=`/`league_cargo=`
@@ -97,35 +96,30 @@ his eye rather than a quiet refactor. Everything else below is done.
      NOT re-checked…`). A clean clone must not go red (insight 009).
    - **The call-site test was missing and the mutation found it:** cutting the check out of
      `validate()` left all nine unit tests green. Insight 013's exact shape, caught this time.
-4. **OPEN — `strategy` prose hardcodes baselines and league shape** (KTD-1 + KTD-7). Left for
-   Briggsy's eye on purpose: it rewrites sentences he has read, which is a **content** change, not
-   a machinery one. Everything needed to do it is below.
-
-   **What is actually hardcoded** (re-measured 2026-08-08):
-   - `strategy.slotNotes[0..2].slot` = `"Picks 1-3"`, `"Picks 4-6"`, `"Picks 7-8"` — three literal
-     seat ranges over `meta.shape.teams` (8). A 10-team league silently mislabels every one.
-   - `strategy.rules[10]` names the VBD baselines in prose. The live values are
-     `meta.vbd.baselineWaiver = {QB:12, RB:41, WR:47, TE:12}` and
-     `lastStarter = {QB:8, RB:21, WR:27, TE:8}` — already data, already on the board, quoted a
-     second time in a sentence nothing checks.
-
-   **The prescription** — same shape as `meta.format`, which this session already did (item 2):
-   1. Add `strategy_slot_ranges(shape)` to `scripts/shape.py`, beside `format_line()`. Split
-      `shape["teams"]` into three near-equal bands and return the `"Picks a-b"` labels. For 8 that
-      must reproduce `1-3 / 4-6 / 7-8` exactly — assert it, the way `format_line` was proven to
-      reproduce its hand-typed string byte-for-byte before being trusted.
-   2. In `enrich()` (`scripts/build_board.py`, right after `meta["format"] = format_line(shape)`),
-      overwrite each `slotNotes[i]["slot"]` from that function. **Leave `note` alone** — the prose
-      is judgment and is Briggsy's.
-   3. For `rules[10]`, do NOT template the sentence. Make the gate check it instead: extend
-      `check_strategy` in `scripts/validate_board.py` to assert every `QB\d+/RB\d+/WR\d+/TE\d+`
-      run found in `rules` matches `meta.vbd`. Deriving the sentence would put an f-string in the
-      one place the voice lives; checking it keeps the prose human and still cannot drift.
-   4. Test both against a 10-team synthetic shape, and mutate each to prove it goes red.
+4. ~~**`strategy` prose hardcodes baselines and league shape** (KTD-1 + KTD-7).~~ ✅ **FIXED
+   2026-08-08.** Two halves, deliberately fixed by two different mechanisms.
+   - **The slot labels are DERIVED.** `shape.strategy_slot_ranges()` splits `meta.shape.teams`
+     into near-equal bands, remainder to the earliest, and `enrich()` restamps each
+     `slotNotes[i].slot`. **It reproduced the hand-typed `Picks 1-3 / 4-6 / 7-8` byte-for-byte**
+     — proven before being trusted, the way `format_line` was, and confirmed a third way: a full
+     rebuild left `draft-kit/` byte-identical. A 10-team room now relabels to `1-4 / 5-7 / 8-10`.
+     **The `note` is untouched** — that prose is judgment about drafting from the front, middle or
+     back of a room, and it does not become wrong when the room grows.
+   - **The baselines are CHECKED, not templated.** Deriving that sentence would put an f-string in
+     the one place the voice lives. `validate_board.baseline_claims()` reads the numbers back out
+     of the prose and the gate compares them to `meta.vbd`.
+   - ⚠️ **A blanket `(QB|RB|WR|TE)\d+` scan — which is what the prescription said — would have
+     been a false-red machine.** Measured before writing it: the live board's `roundPlan[1]` says
+     `"RB2"` and `slotNotes[2]` says `"WR1"`/`"RB1"`, all tier shorthand, none of them baselines.
+     The check is anchored on the word *baseline* instead. That anchor is also a blind spot
+     (rename the clause to "replacement levels" and it silently reads nothing — insight 006), so
+     it ships with a **positive control** asserting it still finds four claims on the live board.
+   - 4 mutants killed. Mutant 2 (remainder to the last bands) was caught by **6** tests including
+     byte-stability, which is what proves the derivation reaches the emitted surface.
 
    **Why the old-value sweep never caught these:** it sweeps *quantities that changed between two
-   builds*. These have not changed, so there is nothing to compare — they are wrong only in the
-   sense that nothing would notice if the league moved underneath them.
+   builds*. These had not changed, so there was nothing to compare — they were wrong only in the
+   sense that nothing would have noticed if the league moved underneath them.
 5. ~~**The PDF prints a VBD arrow on every K and DEF row.**~~ ✅ **FIXED 2026-08-08.** All 24 cleared
    |8| and all 24 drew a green ▲ on the one page you hold, hiding the real steals. The rule is now
    the named predicate `render_pdf.draws_vbd_chip()` rather than a condition buried in a draw call,

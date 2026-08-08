@@ -53,7 +53,8 @@ import render_pdf as RP                                                         
 #: importing jinja2 and reportlab through this file. Re-exported here because `Refuse` is this
 #: module's own refusal vocabulary and `read_shape`/`CARGO` are part of its published surface.
 from shape import (CARGO, LEAGUE_CARGO, CargoUnreadable,           # noqa: E402,F401
-                   Refuse, UnsupportedShape, format_line, read_shape)
+                   Refuse, UnsupportedShape, format_line, read_shape,
+                   strategy_slot_ranges)
 
 BOARD = os.path.join(KIT, "players_data.json")
 HTML = os.path.join(KIT, "family-feud-draft-board.html")
@@ -343,6 +344,21 @@ def enrich(d, shape, ledger, dump_meta, names, generator_sha, dirty=False, now=N
     # the PDF header prints. Derived, so there is nothing left to drift.
     meta["format"] = format_line(shape)
 
+    # KTD-1 + KTD-7 again, one key over. `strategy.slotNotes[i].slot` held literal seat ranges --
+    # "Picks 1-3", "Picks 4-6", "Picks 7-8" -- over a team count `meta.shape` already carries. The
+    # only check that ever read them asserted the numbers were inside teams x rounds, which
+    # "Picks 1-3" satisfies in a 10-team league while describing a third of the room it names.
+    # THE `note` IS DELIBERATELY UNTOUCHED: drafting from the front, middle or back of a room is
+    # judgment, and it does not become wrong when the room grows. Only the label is data.
+    # Derived into a copy on purpose -- `meta.build.source_sha256` above hashes the file AS READ,
+    # which is what "source" means there.
+    strategy = dict(d["strategy"])
+    slot_notes = [dict(e) for e in (strategy.get("slotNotes") or [])]
+    if slot_notes:
+        for entry, label in zip(slot_notes, strategy_slot_ranges(shape, len(slot_notes))):
+            entry["slot"] = label
+        strategy["slotNotes"] = slot_notes
+
     # meta.updated must not claim to predate an input the board was built from -- the gate
     # compares it against the dump's UTC fetch date AND three local mtimes, and the same fetch
     # event can render as two different dates. Take the max so the stamp is true under both.
@@ -371,7 +387,7 @@ def enrich(d, shape, ledger, dump_meta, names, generator_sha, dirty=False, now=N
         "meta": _ordered(meta, META_KEYS),
         "players": [_ordered(p, ROW_KEYS) for p in players],
         "dst": derive_dst(players),
-        "strategy": d["strategy"],
+        "strategy": strategy,
     }
 
     problems = check_def_identity(players, names)

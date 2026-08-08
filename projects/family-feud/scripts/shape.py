@@ -187,3 +187,41 @@ def format_line(shape):
     return " · ".join([f"{int(shape['teams'])}-team", scoring,
                        str(shape.get("type") or "?").title(),
                        f"{int(shape['rounds'])} rounds", roster])
+
+
+def strategy_slot_ranges(shape, bands=3):
+    """`strategy.slotNotes[i].slot` as a pure function of `meta.shape` (KTD-1, KTD-7).
+
+    The three labels were literals -- `"Picks 1-3"`, `"Picks 4-6"`, `"Picks 7-8"` -- describing
+    seat ranges over a team count that lives one key away in `meta.shape`. On this 8-team league
+    they are correct, so nothing was visibly wrong; move to ten teams and every one of them
+    mislabels, while the gate stays green. The only check that looked at them asserted the numbers
+    were inside `teams * rounds` (160 for a 10-team, 16-round draft), which "Picks 1-3" satisfies
+    comfortably while describing a third of the room it claims to describe.
+
+    Same remedy as `format_line`, and for the same reason: derive it so the duplicate is gone,
+    rather than adding a check to guard a duplicate that stays. **The `note` is NOT touched** --
+    the prose is Briggsy's judgment about drafting from the front, middle and back of a room, and
+    that judgment does not become wrong when the room grows.
+
+    Bands are near-equal with the remainder going to the EARLIEST bands, which is what reproduces
+    the hand-typed 3/3/2 on this league byte-for-byte. That reproduction is asserted in the tests
+    before this function is trusted, exactly as `format_line`'s was.
+    """
+    teams = int(shape.get("teams") or 0)
+    bands = int(bands)
+    if bands < 1:
+        raise UnsupportedShape(f"cannot split a draft into {bands} slot bands")
+    if teams < bands:
+        # Refusing beats emitting "Picks 3-2". A room too small to divide into the bands the
+        # board's prose assumes is a shape this strategy section does not describe, and inventing
+        # an empty band would put a label on advice for a seat nobody can draft from.
+        raise UnsupportedShape(f"{teams} teams cannot be split into {bands} slot bands -- the "
+                               f"strategy section assumes a room with a front, a middle and a back")
+    base, extra = divmod(teams, bands)
+    labels, start = [], 1
+    for i in range(bands):
+        end = start + base + (1 if i < extra else 0) - 1
+        labels.append(f"Picks {start}-{end}" if end > start else f"Pick {start}")
+        start = end + 1
+    return labels

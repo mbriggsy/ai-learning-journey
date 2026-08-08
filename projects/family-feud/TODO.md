@@ -41,7 +41,7 @@ Assume no slack.
 
 ## 0. Start with `/brief`
 
-Seven insight docs now exist and four landed on 2026-08-07. Three of them
+Eight insight docs now exist and five landed on 2026-08-07. Three of them
 ([`004`](docs/insights/004-name-similarity-could-not-separate-the-two-populations-at-any-threshold.md),
 [`006`](docs/insights/006-four-verification-steps-that-could-silently-do-nothing.md),
 [`007`](docs/insights/007-presence-is-not-health-the-third-instance-of-one-pattern.md)) directly
@@ -132,7 +132,7 @@ Remove-Item -LiteralPath "C:\Users\brigg\ai-learning-journey\projects\family feu
 
 ## Landmines
 
-Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the seven worked cases.
+Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the eight worked cases.
 The four that bite hardest under time pressure:
 
 - **A screaming engine means STOP.** Re-fetch, re-merge, rerun. Never advise off a `picks.json` it

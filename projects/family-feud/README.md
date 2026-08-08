@@ -35,7 +35,8 @@ draft-kit/       the draft-day arsenal (run the engine from in here)
   draft_rankings_data_2026-08-05.json   ⛔ drifted — see TODO, do not carry forward
   normalize.py     the ONE name normalizer. Rules live here as data; norm_spec.json
                    and the board's JS are both generated from it. Never fork it.
-  sleeper_ids.json every board row's frozen Sleeper id. Append-only ledger.
+  sleeper_ids.json every board row's frozen Sleeper id. Append-only ledger, and
+                   the key the engine joins live picks on — names drift, ids don't.
   cache/           the pinned /players/nfl dump the ids were resolved against.
 
 newsletter/      The Nightly Feud machinery + the mule
@@ -49,7 +50,7 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         draft becomes real. Never a notification.
                  resolve_sleeper_ids.py — resolves board rows to Sleeper ids against
                                         the pinned dump. Hard-stops rather than guess.
-tests/           168 tests: python -m unittest discover -s tests  (run from the root)
+tests/           176 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```
@@ -75,6 +76,17 @@ invisible (`picks.json` is gitignored, so `git status` never shows a spent mock 
 interior gap or a duplicate. If it screams, re-fetch and re-merge — never advise off a picks file
 it rejected. That gate exists because a single dropped pick silently shifts the clock and leaves
 already-drafted players on the available list.
+
+**It also refuses to take your word for it.** `my_slot`, `teams`, `rounds` and `slot_names.json`
+are all cross-checked against the draft itself — the mule's cargo and the `picked_by` on your own
+picks — before any advice is computed. A wrong seat is inside the legal range, so it used to
+produce a complete, plausible advisory for another manager's team and exit 0. A missing oracle
+never blocks the run; it prints `[unverified]` and says exactly what it could not check.
+
+**Picks join on the frozen Sleeper id, not the name.** `sleeper_ids.json` is what makes an
+already-drafted player disappear from the board even when Sleeper renders his name differently
+than we do, or he has changed teams since the board was authored. Without it the engine falls
+back to matching names — and says so.
 
 ## State of play
 

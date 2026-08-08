@@ -66,6 +66,23 @@ except Exception:
 def sname(s):
     return f"slot {s} ({SLOT_NAMES[s]})" if s in SLOT_NAMES else f"slot {s}"
 
+# --- the frozen join key (U14) ---
+# The rendered NAME is the one field that drifts; the Sleeper id does not. sleeper_ids.json
+# freezes one id per board row -- and for a while nothing read it, so this engine kept joining
+# live picks to the board on the name anyway. Board #1 Jahmyr Gibbs, taken at pick 1, rendered
+# by Sleeper as "J. Gibbs" and traded since the board was authored, was reported "not on our
+# board", given the explicit all-clear, and left sitting at #1 on BEST AVAILABLE. The pick
+# carried player_id 9221 -- his frozen id, in our own ledger, thrown away.
+# Optional, like the cargo, and for the same reason: a missing ledger degrades to the name join
+# and SAYS SO. A silent degrade is the exact failure it exists to prevent.
+try:
+    ROW_ID = {nm: str(e["sleeperId"])
+              for nm, e in (json.load(open("sleeper_ids.json", encoding="utf-8")).get("ids")
+                            or {}).items()
+              if isinstance(e, dict) and e.get("sleeperId")}
+except Exception:
+    ROW_ID = {}
+
 # --- contamination gate: the SECOND half of the guard in scripts/merge_picks.py ---
 # That script refuses to merge foreign picks -- and then leaves the file on disk. Its exit code is
 # consumed by nothing; it only ever reaches a human eye, on a 120-second clock, past a wall of "!".
@@ -222,6 +239,22 @@ if _true_names:
 elif SLOT_NAMES:
     unsure.append("slot_names.json is hand-authored and could not be checked against the draft")
 
+# -- the frozen join key: present, complete, or neither --
+_covered = sum(1 for p in BOARD if ROW_ID.get(p["name"]))
+FULL_LEDGER = bool(ROW_ID) and _covered == len(BOARD)
+if not ROW_ID:
+    # NB: this text deliberately avoids the literal section headings the advisory prints. Tests
+    # (and eyes) split the output on those, so a warning that echoes one truncates everything
+    # after it. Found the hard way -- an earlier wording here silently ate the escalation block.
+    unsure.append("no sleeper_ids.json in cwd -- picks join to the board on the rendered NAME, "
+                  "the one field that drifts. A drafted player whose name re-renders would stay "
+                  "on the available list. Run scripts/resolve_sleeper_ids.py")
+elif not FULL_LEDGER:
+    unsure.append(f"sleeper_ids.json covers {_covered} of {len(BOARD)} board rows -- the rest "
+                  f"fall back to the name join. Run scripts/resolve_sleeper_ids.py --verify")
+else:
+    checked.append(f"all {_covered} board rows carry a frozen sleeperId")
+
 if fatal:
     print("!" * 62)
     print("!! THE ENGINE'S INPUTS DISAGREE WITH THE DRAFT ITSELF")
@@ -248,10 +281,13 @@ if checked:
     print("[checked] " + " · ".join(checked))
 
 board_by_name = {}
+board_by_id   = {}                    # frozen sleeperId -> board row; the join that cannot drift
 board_by_slot = defaultdict(list)     # (team, pos) -> board rows; the unmatched-pick index
 for p in BOARD:
     board_by_name[norm(p["name"])] = p
     board_by_slot[(p.get("team"), p.get("pos"))].append(p)
+    if ROW_ID.get(p["name"]):
+        board_by_id[ROW_ID[p["name"]]] = p
 
 def slot_of(pick_no):
     r = (pick_no - 1) // TEAMS + 1
@@ -266,9 +302,11 @@ def my_picks():
 
 # ---- ingest picks ----
 taken_keys = set()
+taken_ids  = set()                   # frozen ids claimed; survives any rendering of the name
+drifted    = []                      # (pick_no, sleeper rendering, board rendering)
 rosters = defaultdict(list)          # slot -> [(pos, name, pick_no)]
 seq = []                             # chronological (pick_no, slot, pos, name, board_r)
-unmatched = []                       # (pick_no, name, pos, [board suspects sharing a surname])
+unmatched = []                       # (pick_no, name, pos, team, player_id)
 for pk in sorted(PICKS, key=lambda x: x["pick_no"]):
     md = pk.get("metadata") or {}
     name = f"{md.get('first_name','')} {md.get('last_name','')}".strip()
@@ -276,8 +314,17 @@ for pk in sorted(PICKS, key=lambda x: x["pick_no"]):
     r, slot = slot_of(pk["pick_no"])
     slot = pk.get("draft_slot", slot)
     key = norm(name)
+    pid = str(pk.get("player_id") or "")
     taken_keys.add(key)
-    b = board_by_name.get(key)
+    # THE FROZEN ID FIRST. It is exact and it does not drift; the name is the fallback, and the
+    # fallback is the only thing that was here before.
+    b = board_by_id.get(pid) if pid else None
+    if b is not None:
+        taken_ids.add(pid)
+        if norm(b["name"]) != key:
+            drifted.append((pk["pick_no"], name, b["name"]))
+    else:
+        b = board_by_name.get(key)
     if b is None:
         # A pick that does not resolve to a board row is usually harmless -- most drafted players
         # simply are not on our 174. But it is ALSO the second, unguarded route to the failure the
@@ -285,7 +332,7 @@ for pk in sorted(PICKS, key=lambda x: x["pick_no"]):
         # availability filters on the BOARD spelling, so when those diverge for the same man he
         # stays on BEST AVAILABLE after being drafted. pick_nos stay contiguous, so the gate below
         # sees nothing wrong. Surfacing every miss is the only way that becomes visible.
-        unmatched.append((pk["pick_no"], name, pos, md.get("team")))
+        unmatched.append((pk["pick_no"], name, pos, md.get("team"), pid))
     rosters[slot].append((pos, name, pk["pick_no"]))
     seq.append((pk["pick_no"], slot, pos, name, b["r"] if b else None))
 
@@ -308,7 +355,10 @@ my_next = next((p for p in mine if p > n), None)
 picks_until_me = (my_next - next_pick_no) if my_next else None
 on_clock_slot = slot_of(next_pick_no)[1] if next_pick_no <= TEAMS*ROUNDS else None
 
-avail = [p for p in BOARD if norm(p["name"]) not in taken_keys]
+# Claimed by EITHER key. The id catches the man whose rendering drifted; the name still catches
+# a pick that carried no player_id, and a board row with no frozen id yet.
+avail = [p for p in BOARD
+         if norm(p["name"]) not in taken_keys and ROW_ID.get(p["name"]) not in taken_ids]
 
 # What the advisory will actually PRINT. Computed once, here, for two reasons: the unmatched-pick
 # warning is printed first but needs to know whether a suspect appears further down (telling the
@@ -354,33 +404,57 @@ def needs(slot):
 # drafted correctly under his own name IS claimed and drops out.
 #
 # tokens() itself now lives in normalize.py beside norm(), sharing one cleaning prefix.
+# Picks the frozen id caught that the name would have missed. Reported, never silent: each line
+# is a place the board's rendering has drifted from Sleeper's, and the id is all that stood
+# between it and an already-drafted man sitting on BEST AVAILABLE.
+if drifted:
+    print(f"--- {len(drifted)} pick(s) matched by frozen id, not by name ---")
+    for pn, sleeper_nm, board_nm in drifted:
+        print(f"     #{pn} Sleeper says {sleeper_nm!r}, our board says {board_nm!r} — joined on "
+              f"the frozen id; the renderings have drifted")
+    print()
+
 if unmatched:
     scored = []
-    for pn, nm, ps, tm in unmatched:
+    for pn, nm, ps, tm, pid in unmatched:
         want = tokens(nm)
         cand = [b for b in board_by_slot.get((tm, ps), [])
                 if norm(b.get("name", "")) not in taken_keys
+                and ROW_ID.get(b.get("name", "")) not in taken_ids
                 and tokens(b.get("name", "")) & want]
-        scored.append((pn, nm, ps, tm, cand))
+        # With a COMPLETE ledger, a pick carrying an id we do not hold is not on our 174 at all.
+        # That inverts this warning's premise -- see below.
+        scored.append((pn, nm, ps, tm, cand,
+                       bool(pid) and FULL_LEDGER and pid not in board_by_id, pid))
     hot = [s for s in scored if s[4]]
     cold = [s for s in scored if not s[4]]
 
     print(f"--- {len(unmatched)} pick(s) did not match the board ---")
     # Escalations first. The block is cumulative and grows all draft; a late warning buried at
     # line 13 of 14, directly above the board state, is a warning nobody reads.
-    for pn, nm, ps, tm, cand in hot:
+    for pn, nm, ps, tm, cand, off_board, pid in hot:
         who = ", ".join(f"#{b.get('r')} {b.get('name')}" for b in cand[:3])
         more = f" (+{len(cand) - 3} more)" if len(cand) > 3 else ""
         print(f"  >> #{pn} {nm} ({ps}/{tm}) did not match, but {who}{more} is on {tm} at {ps}")
-        # Say where to look, or say there is nothing to look at. "listed as available below" was
-        # false for any suspect outside BEST AVAILABLE and the printed cliffs -- the operator
-        # scans, finds nothing, and learns to distrust the next one.
-        if any(b.get("r") in shown_ranks for b in cand):
+        if off_board:
+            # THE PREMISE INVERTS ONCE THE ID JOIN EXISTS. This warning was written for a board
+            # player whose NAME drifted, so a same-slot suspect sharing a token was probably the
+            # same man. The id now catches that case before we ever get here -- so a pick that
+            # reaches this line carries an id we do not hold, which means he is not on our board
+            # at all, and the suspect is a same-position TEAMMATE. Keeping the old wording would
+            # assert an identity the id just disproved, and invite clearing a live row.
+            print(f"     and is UNCLAIMED — but this is a DIFFERENT man: player_id {pid} is none")
+            print(f"     of our {len(board_by_id)} frozen ids, so he is not on our board at all.")
+            print( "     A same-position suspect sharing a surname is a teammate; leave that row.")
+        elif any(b.get("r") in shown_ranks for b in cand):
+            # Say where to look, or say there is nothing to look at. "listed as available below"
+            # was false for any suspect outside BEST AVAILABLE and the printed cliffs -- the
+            # operator scans, finds nothing, and learns to distrust the next one.
             print("     and is UNCLAIMED. If that is the same man he is STILL being recommended below.")
         else:
             print("     and is UNCLAIMED. If that is the same man the board still has him available")
             print("     (deep rank -- not shown in the lists below, so do not go hunting for him).")
-    for pn, nm, ps, tm, cand in cold:
+    for pn, nm, ps, tm, cand, off_board, pid in cold:
         print(f"     #{pn} {nm} ({ps}/{tm}) — not on our board")
     if not hot:
         print("     no unclaimed board row shares a team and position with any of them.")

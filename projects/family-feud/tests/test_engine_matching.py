@@ -53,9 +53,16 @@ def user(uid, display):
     return {"user_id": uid, "display_name": display, "metadata": {}}
 
 
+def ledger_of(*pairs):
+    """{"ids": {board name: {"sleeperId": ...}}} -- the shape resolve_sleeper_ids.py writes."""
+    return {"ids": {nm: {"sleeperId": str(pid), "resolved_on": "2026-08-07",
+                         "evidence": {"matched": "exact_norm"}} for nm, pid in pairs},
+            "unresolved": []}
+
+
 class EngineCase(unittest.TestCase):
     def run_engine(self, board_obj, picks, slot=3, teams=8, rounds=16, draft_id=None,
-                   draft_cargo=None, users=None, slot_names=None):
+                   draft_cargo=None, users=None, slot_names=None, ledger=None):
         """Drive the engine in a throwaway tree that MIRRORS the real layout.
 
         cwd is <tmp>/draft-kit, so the engine's cargo lookup (../newsletter/data/inbox) resolves
@@ -72,6 +79,9 @@ class EngineCase(unittest.TestCase):
             if slot_names is not None:
                 with open(os.path.join(kit, "slot_names.json"), "w", encoding="utf-8") as f:
                     json.dump(slot_names, f, ensure_ascii=False)
+            if ledger is not None:
+                with open(os.path.join(kit, "sleeper_ids.json"), "w", encoding="utf-8") as f:
+                    json.dump(ledger, f, ensure_ascii=False)
             if draft_cargo is not None or users is not None:
                 inbox = os.path.join(d, "newsletter", "data", "inbox")
                 os.makedirs(inbox)
@@ -417,6 +427,123 @@ class TestTeamCodeAgreement(EngineCase):
         # every team the feed names must be spelled the same way on the board
         self.assertEqual(sorted(pick_teams - board_teams), [],
                          "Sleeper uses a team code the board does not")
+
+
+class TestFrozenIdJoin(EngineCase):
+    """U14 froze a Sleeper id for all 174 board rows and NOTHING READ IT. The engine matched live
+    picks to the board on the rendered NAME -- the one field that drifts.
+
+    The failure that forced this, reproduced against the real board before a line was written:
+    board #1 Jahmyr Gibbs is taken at pick 1; Sleeper renders him "J. Gibbs" and he has changed
+    teams since the board was authored. Name join misses. The (team,pos) escalation misses too,
+    because the board says DET and the pick says NE. So the engine printed `not on our board`,
+    added the explicit all-clear `no unclaimed board row shares a team and position`, and left him
+    sitting at #1 on BEST AVAILABLE -- naming an already-drafted man as THE CALL. That is the
+    landmine CLAUDE.md says was closed; this was a second, unguarded road to it.
+
+    The pick carried player_id 9221, which is Gibbs's frozen id in our own ledger.
+
+    Measured over the 120-pick lab feed: 116 picks join by BOTH id and name with ZERO
+    disagreements, 4 by neither (genuinely off our 174). The id join is not a different answer
+    today -- it is the same answer that survives a name drifting tomorrow.
+    """
+
+    GIBBS, BIJAN = "9221", "9509"
+
+    def kit(self):
+        return board([row(1, "Jahmyr Gibbs", "RB", "DET", 1),
+                      row(2, "Bijan Robinson", "RB", "ATL", 2),
+                      row(3, "Ja'Marr Chase", "WR", "CIN", 1)])
+
+    def led(self):
+        return ledger_of(("Jahmyr Gibbs", self.GIBBS), ("Bijan Robinson", self.BIJAN),
+                         ("Ja'Marr Chase", "7564"))
+
+    def drifted_gibbs(self):
+        """Taken at pick 1, re-rendered by Sleeper, and traded since the board was authored."""
+        p = pick(1, "J.", "Gibbs", "RB", "NE")
+        p["player_id"] = self.GIBBS
+        return p
+
+    def best_available(self, out):
+        return out.split("BEST AVAILABLE")[1]
+
+    def test_a_drafted_player_whose_name_AND_team_drift_is_still_removed(self):
+        code, out = self.run_engine(self.kit(), [self.drifted_gibbs()], ledger=self.led())
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("Jahmyr Gibbs", self.best_available(out),
+                         "an already-drafted man is being recommended as THE CALL")
+
+    def test_the_same_input_without_a_ledger_cannot_catch_it_and_says_so(self):
+        """The contrast that justifies the ledger. Name join has no way to see through a drift
+        this size, so the engine must not imply it did -- absence of the ledger is reported."""
+        code, out = self.run_engine(self.kit(), [self.drifted_gibbs()])
+        self.assertEqual(code, 0, out)
+        self.assertIn("sleeper_ids.json", out)
+        self.assertIn("UNVERIFIED", out.upper())
+
+    def test_the_id_join_reports_the_name_it_rescued(self):
+        """Silence here would hide that the board's rendering has drifted from Sleeper's."""
+        code, out = self.run_engine(self.kit(), [self.drifted_gibbs()], ledger=self.led())
+        self.assertEqual(code, 0, out)
+        head = self.warning_block(out)
+        self.assertIn("J. Gibbs", head)
+        self.assertIn("Jahmyr Gibbs", head)
+
+    def test_a_pick_matched_by_id_is_not_reported_as_unmatched(self):
+        code, out = self.run_engine(self.kit(), [self.drifted_gibbs()], ledger=self.led())
+        self.assertNotIn("not on our board", out)
+        self.assertNotIn("no unclaimed board row shares", out,
+                         "the all-clear fired over a player who WAS on our board")
+
+    def test_a_clean_feed_still_joins_and_leaves_the_rest_available(self):
+        """Positive control. A join that claims everything passes every test above."""
+        p = pick(1, "Bijan", "Robinson", "RB", "ATL")
+        p["player_id"] = self.BIJAN
+        code, out = self.run_engine(self.kit(), [p], ledger=self.led())
+        self.assertEqual(code, 0, out)
+        avail = self.best_available(out)
+        self.assertNotIn("Bijan Robinson", avail)
+        self.assertIn("Jahmyr Gibbs", avail)
+        self.assertIn("Ja'Marr Chase", avail)
+
+    def test_a_defense_joins_on_its_team_code(self):
+        """Sleeper's player_id for a DEF is the team code, and U14 asserts the board agrees."""
+        b = board([row(1, "Minnesota Vikings", "DEF", "MIN", 1), row(2, "A B", "RB", "KC", 1)])
+        p = pick(1, "Minnesota", "Vikings", "DEF", "MIN")
+        p["player_id"] = "MIN"
+        code, out = self.run_engine(b, [p], ledger=ledger_of(("Minnesota Vikings", "MIN"),
+                                                             ("A B", "99")))
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("Minnesota Vikings", self.best_available(out))
+
+    def test_a_board_row_with_no_frozen_id_is_reported(self):
+        """A partial ledger is the dangerous middle: present enough to look wired, incomplete
+        enough that some rows are back on a name join with nothing saying which."""
+        led = ledger_of(("Jahmyr Gibbs", self.GIBBS))       # Bijan and Chase missing
+        code, out = self.run_engine(self.kit(), [], ledger=led)
+        self.assertEqual(code, 0, out)
+        self.assertIn("1 of 3", out)
+        self.assertIn("name join", out, "the operator must be told what the rest fall back to")
+
+    def test_an_off_board_pick_is_called_a_different_man_not_the_same_one(self):
+        """The escalation's premise INVERTS once the id join exists.
+
+        It was written for a board player whose name drifted -- so a (team,pos) suspect sharing a
+        token was probably the same man. With the ledger wired, that case is now caught by id. So
+        a pick that reaches the escalation carries an id we do NOT have, which means he is not on
+        our 174 at all -- and a same-position suspect sharing a surname is therefore a TEAMMATE.
+        Keeping the old wording would assert an identity the id just disproved.
+        """
+        b = board([row(1, "Marvin Harrison", "WR", "ARI", 1)])
+        p = pick(1, "Harrison", "Wallace", "WR", "ARI")
+        p["player_id"] = "13670"                            # not in our ledger
+        code, out = self.run_engine(b, [p], ledger=ledger_of(("Marvin Harrison", "11628")))
+        self.assertEqual(code, 0, out)
+        head = self.warning_block(out)
+        self.assertIn("Marvin Harrison", head, "the suspect must be named so it can be judged")
+        self.assertIn("different man", head.lower())
+        self.assertNotIn("is the same man", head.lower())
 
 
 class TestLeagueIdentity(unittest.TestCase):

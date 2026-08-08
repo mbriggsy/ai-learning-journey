@@ -26,7 +26,7 @@ stopping condition, and the plan still outweighs the code (**13 commits, 5 of wh
 **Ultramode fires once, after U6** — one review of a working spine, not six reviews of fragments.
 
 **State:** both silent paths to advising an already-drafted player are closed, the hauler has its
-first consumer, and the board now joins to Sleeper on a frozen id instead of a name. **168 tests**,
+first consumer, and the board now joins to Sleeper on a frozen id instead of a name. **176 tests**,
 zero skips (`python -m unittest discover -s tests` from the root). What remains is the spine: one
 source that generates every surface.
 
@@ -93,7 +93,8 @@ U9  →  U3  →  U14  →  { U4 ∥ U5 }  →  U6  →  { U7 ∥ U15 }  →  U8
 **Board today:** 174 players + 8 dst, `meta.updated: 2026-08-05`. **The ids are frozen in
 `draft-kit/sleeper_ids.json`, NOT on the board rows** — every row still has no `sleeperId` field.
 Stamping them onto the board is U6's job, as the generator's output. Until U6 runs, any consumer
-must join through the ledger.
+must join through the ledger — **the engine now does** (2026-08-08), reading `sleeper_ids.json`
+from cwd and matching live picks on `player_id` before falling back to the name.
 
 ~~**Blocking prerequisite:** no lab-feed fixture exists**~~ ✅ **RESOLVED** — `tests/fixtures/lab_feed_120.json`
 is committed and verified: 120 picks, `pick_no` contiguous 1→120, every pick carrying `player_id`,

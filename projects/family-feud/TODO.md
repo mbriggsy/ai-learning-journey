@@ -35,8 +35,8 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **444 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 444 with **2 skips**,
+gate went **13 findings → 0** by fixing surfaces. **450 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 450 with **2 skips**,
 both live-cargo environment probes. Verified by eye, not only by tests: the cheat sheet is **2 pages
 — the whole 174-row board on page 1**, the plan on page 2 — and the HTML board renders shape-driven
 round labels with no invented rounds.
@@ -53,10 +53,11 @@ does not carry.
 
 ---
 
-## 0.5 Review residue — ranked, advisory, none of it blocks U7/U15
+## 0.5 Review residue — **9 of 10 CLOSED 2026-08-08.** One left, and it is deliberate
 
-From the 2026-08-08 ultramode pass. Everything that could produce a **wrong answer** is already
-fixed (commits `5e7ae390`, `76849ad9`, `fdf190eb`, `13c3ed3b`). What follows is real but bounded.
+From the 2026-08-08 ultramode pass. **Only item 4 remains open**, and it is the one that changes
+board *content* rather than machinery — it rewrites `strategy` prose Briggsy has read, so it wants
+his eye rather than a quiet refactor. Everything else below is done.
 
 1. ~~**A clean clone cannot run ~20 tests.**~~ ✅ **FIXED 2026-08-08.** The suite read gitignored,
    hourly-churning mule cargo through `read_shape()`. `build()` now takes `cargo=`/`league_cargo=`
@@ -92,11 +93,20 @@ fixed (commits `5e7ae390`, `76849ad9`, `fdf190eb`, `13c3ed3b`). What follows is 
    the named predicate `render_pdf.draws_vbd_chip()` rather than a condition buried in a draw call,
    and a test asserts the board HTML applies the same one — the two surfaces disagreed about the
    same fact. **24 arrows removed, 82 real ones kept.**
-6. **`_draw_strategy`'s `block()` silently truncates** prose that runs past the page floor —
-   returns early and drops content with no warning. Today nothing overflows; a longer rule would.
-7. **`old_value_sweep` goes blind when a headline row changes identity.** It sweeps the CURRENT
-   top RB/WR/QB, so if the top RB changes, the previous leader's value is never swept — the
-   refresh that most needs it is the one it cannot see.
+6. ~~**`_draw_strategy`'s `block()` silently truncates.**~~ ✅ **FIXED 2026-08-08.** It returned
+   early, dropped every remaining line and reported success. It now **counts** what it cannot draw
+   and raises `render_pdf.StrategyOverflow` naming the block and the number of lines lost. The PDF
+   has no comment channel and cannot warn you it is incomplete — a sheet missing the eleventh
+   commandment reads as finished. Nothing overflows today, so it ships with a control proving the
+   current prose still renders.
+7. ~~**`old_value_sweep` goes blind when a headline row changes identity.**~~ ✅ **FIXED
+   2026-08-08.** Keys are `vorp[<player name>]`, so when the top RB changed the old key was absent
+   from the new side and `k in new` discarded it — the refresh most likely to leave a stale
+   name-and-number in a doc was the one refresh the sweep could not see. Dropped keys are now
+   resolved against the **full** new board, so a demoted leader is reported only when his number
+   actually moved, and a departed one is reported as gone. ⚠️ **Headline rows are chosen by MAX
+   VORP, not by board rank** — reordering `pr` does not change identity, and an early draft of
+   these tests moved `pr` and proved nothing.
 8. ~~**Badge glyphs are checked for encodability, not uniqueness.**~~ ✅ **FIXED 2026-08-08.**
    `check_badges` now refuses two badges sharing a mark, on **both** surfaces — the PDF `glyph`
    and the HTML `icon`. A duplicate is worse than a blank: a blank looks like nothing, a duplicate

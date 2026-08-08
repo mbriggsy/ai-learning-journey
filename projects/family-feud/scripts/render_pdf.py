@@ -82,6 +82,13 @@ SECTION_AFTER = 10.9                               # 9.25 + 12.6 + 10.9 + 8.0 = 
 VBD_CHIP_THRESHOLD = 8
 VBD_CHIP_EXCLUDES = ("K", "DEF")
 
+#: Lowest baseline page 2's prose may occupy. Was an inline `40` inside the block() closure.
+STRATEGY_FLOOR = 40.0
+
+
+class StrategyOverflow(Exception):
+    """Page 2's prose did not fit and would have been silently truncated."""
+
 
 def draws_vbd_chip(p):
     return (abs(p.get("vbdDelta") or 0) >= VBD_CHIP_THRESHOLD
@@ -423,6 +430,11 @@ def _draw_strategy(c, source, page_no, total_pages):
     c.setFillColor(MUTED)
     c.drawRightString(PAGE[0] - 26, 573, f"PAGE {page_no} / THE PLAN")
 
+    # Every line this page could not fit, per block. Collected rather than returned, because the
+    # only honest response is to refuse the whole sheet -- see the raise at the end of this
+    # function.
+    dropped = []
+
     def block(x, y, title, lines, lead=10.4, size=8.0):
         c.setFillColor(INK)
         c.setFont("Helvetica-Bold", 11)
@@ -430,13 +442,20 @@ def _draw_strategy(c, source, page_no, total_pages):
         y -= 15.2
         c.setFont("Helvetica", size)
         c.setFillColor(MUTED)
+        missed = 0
         for ln in lines:
             for part in _wrap(ln, "Helvetica", size, width):
-                if y < 40:
-                    return y
+                # This used to `return y` here: it stopped drawing, dropped every remaining line,
+                # and reported success. Now it keeps COUNTING what it cannot draw, so the caller
+                # can say how much was lost instead of shipping a sheet quietly missing a rule.
+                if y < STRATEGY_FLOOR:
+                    missed += 1
+                    continue
                 c.drawString(x, y, part)
                 y -= lead
             y -= 2.0
+        if missed:
+            dropped.append((title, missed))
         return y
 
     y = block(cols[0], 540, "THE COMMANDMENTS",
@@ -458,6 +477,19 @@ def _draw_strategy(c, source, page_no, total_pages):
     ls = " · ".join(f"{k}{v}" for k, v in sorted((vbd.get("lastStarter") or {}).items()))
     block(cols[2], y3 - 14, "VBD OVERLAY",
           [f"Waiver baselines: {bw}.", f"Last starters: {ls}.", vbd.get("note", "")])
+
+    # REFUSE RATHER THAN SHIP A SHEET WITH A RULE MISSING. Nothing overflows today, so this has
+    # never fired -- which is exactly why it needs to exist before someone lengthens a rule and
+    # the eleventh commandment quietly stops being printed. The PDF has no comment channel and
+    # cannot warn you it is incomplete; a page that is 95% right is the worst kind of wrong,
+    # because it looks finished. The generator stages before it replaces, so raising here leaves
+    # the surfaces on disk untouched.
+    if dropped:
+        raise StrategyOverflow(
+            "the plan page cannot fit its prose: "
+            + ", ".join(f"{title} lost {n} line(s)" for title, n in dropped)
+            + ". Shorten the prose or lower the font size in _draw_strategy -- but do NOT let it "
+              "ship truncated; a cheat sheet missing a rule reads as complete.")
 
     _footer(c, source, page_no, total_pages)
 

@@ -678,7 +678,32 @@ def old_value_sweep(before, after, root=ROOT):
     the previous value legitimately appears in git history rather than on disk.
     """
     old, new = board_quantities(before), board_quantities(after)
-    stale = {k: v for k, v in old.items() if k in new and new[k] != v and v}
+
+    # A HEADLINE ROW THAT CHANGES IDENTITY USED TO FALL OUT OF THE SWEEP ENTIRELY. The keys are
+    # `vorp[<player name>]`, so the moment the top RB changes, `vorp[<the previous leader>]` is
+    # simply not in `new`, the `k in new` test dropped it, and his value was never swept. That is
+    # backwards: a refresh that changes WHO leads a position is the one most likely to leave a
+    # stale name-and-number sitting in a doc, and it was the one refresh this sweep could not see.
+    #
+    # Dropped keys are now resolved against the FULL new board rather than discarded -- so the old
+    # leader is only reported when his number actually moved, or when he has left the board.
+    after_vorp = {p["name"]: str(p.get("vorp")) for p in (after.get("players") or [])
+                  if p.get("vorp") is not None}
+
+    stale = {}                      # key -> (previous value, what it is now, in words)
+    for k, was in old.items():
+        if not was:
+            continue
+        if k in new:
+            if new[k] != was:
+                stale[k] = (was, repr(new[k]))
+        elif k.startswith("vorp[") and k.endswith("]"):
+            name = k[len("vorp["):-1]
+            now = after_vorp.get(name)
+            if now is None:
+                stale[k] = (was, f"gone -- {name} is no longer on the board at all")
+            elif now != was:
+                stale[k] = (was, f"{now!r} -- {name} is no longer a headline row")
     if not stale:
         return []
 
@@ -699,10 +724,10 @@ def old_value_sweep(before, after, root=ROOT):
                     text = f.read()
             except (UnicodeDecodeError, OSError):
                 continue
-            for key, was in sorted(stale.items()):
+            for key, (was, now) in sorted(stale.items()):
                 if re.search(rf"(?<![\w.]){re.escape(was)}(?![\w.])", text):
                     problems.append(f"{os.path.relpath(path, root)} still says {was!r} for {key}, "
-                                    f"which is now {new[key]!r}")
+                                    f"which is now {now}")
     return problems
 
 

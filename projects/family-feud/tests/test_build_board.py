@@ -493,6 +493,43 @@ class TestOneGlyphSource(unittest.TestCase):
         self.assertEqual(used - declared, set())
 
 
+class TestStrategyOverflowRefuses(unittest.TestCase):
+    """`block()` used to `return y` the moment it ran past the page floor -- it stopped drawing,
+    dropped every remaining line, and reported success. The PDF has no comment channel and cannot
+    warn you it is incomplete, so a sheet missing the eleventh commandment reads as finished."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.source = real_source()
+
+    def test_todays_prose_still_renders(self):
+        """The control. A guard that refused everything would take the whole cheat sheet with it,
+        and this one has never fired in anger -- which is exactly why it needs a control."""
+        out = RP.render(self.source, os.path.join(self.tmp, "ok.pdf"))
+        self.assertTrue(os.path.getsize(out) > 0)
+
+    def test_prose_that_would_be_truncated_refuses_instead(self):
+        import copy
+        src = copy.deepcopy(self.source)
+        src["strategy"]["rules"].append("Never let the cheat sheet lie to you. " * 90)
+        with self.assertRaises(RP.StrategyOverflow):
+            RP.render(src, os.path.join(self.tmp, "over.pdf"))
+
+    def test_the_refusal_says_how_much_was_lost(self):
+        """"It did not fit" is not actionable; "THE COMMANDMENTS lost 37 lines" is."""
+        import copy
+        src = copy.deepcopy(self.source)
+        src["strategy"]["rules"].append("Never let the cheat sheet lie to you. " * 90)
+        try:
+            RP.render(src, os.path.join(self.tmp, "over.pdf"))
+        except RP.StrategyOverflow as e:
+            self.assertIn("COMMANDMENTS", str(e))
+            self.assertRegex(str(e), r"lost \d+ line")
+        else:
+            self.fail("expected StrategyOverflow")
+
+
 class TestPdfLayout(unittest.TestCase):
     """The sheet is held at a table. Nothing may be dropped, and no heading may be orphaned."""
 
@@ -587,6 +624,71 @@ class TestOldValueSweep(unittest.TestCase):
         hits = B.old_value_sweep(before, after)
         self.assertTrue(hits, "the sweep did not notice RB41 surviving in prose")
         self.assertTrue(any("ranking-methodology.md" in h for h in hits), hits)
+
+    def top_two(self, board, pos="RB"):
+        """Headline rows are chosen by MAX VORP, not by board rank -- so identity only changes
+        when vorp changes. Reordering `pr` leaves the headline row exactly where it was, which is
+        a trap worth stating: an early draft of these tests moved `pr` and proved nothing."""
+        rows = sorted([p for p in board["players"] if p["pos"] == pos and p.get("vorp")
+                       is not None], key=lambda p: -p["vorp"])
+        return rows[0], rows[1]
+
+    def sweep_against(self, before, after, text):
+        root = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, root, True)
+        with open(os.path.join(root, "doc.md"), "w", encoding="utf-8") as f:
+            f.write(text)
+        return B.old_value_sweep(before, after, root=root)
+
+    def quote(self, name, value):
+        """A number must be followed by whitespace, not a period: the sweep's boundary regex is
+        `(?![\\w.])`, so 'at 254.4.' does not match while 'at 254.4 points' does. Correct -- a
+        version string is not a board value -- but easy to get wrong when writing a fixture."""
+        return f"The board says {name} is worth {value} points this season.\n"
+
+    def test_a_headline_row_that_changes_identity_is_still_swept(self):
+        """THE REFRESH THE SWEEP COULD NOT SEE.
+
+        The keys are `vorp[<player name>]`, so the moment the top RB changes, the previous
+        leader's key is absent from the new side and the old `k in new` test dropped it -- the
+        refresh most likely to leave a stale name-and-number in a doc was the one refresh this
+        sweep was blind to.
+        """
+        import copy
+        before = B.read_board()
+        after = copy.deepcopy(before)
+        leader, runner_up = self.top_two(after)
+        was = leader["vorp"]
+        # Drop him below the #2, so the headline RB becomes a DIFFERENT PLAYER and his own number
+        # moves. Under the old `k in new` test his key vanished from the new side and his stale
+        # value was never swept at all.
+        leader["vorp"] = runner_up["vorp"] - 10
+        hits = self.sweep_against(before, after, self.quote(leader["name"], was))
+        self.assertTrue(hits, "a former headline row's stale value went unswept")
+        self.assertIn(str(was), hits[0])
+        self.assertIn("no longer a headline row", hits[0])
+
+    def test_a_former_leader_whose_number_did_not_move_is_NOT_reported(self):
+        """No false positives. Losing the top slot does not make a correctly-quoted number stale,
+        and a sweep that cried wolf here would fire on every refresh that reorders a position."""
+        import copy
+        before = B.read_board()
+        after = copy.deepcopy(before)
+        leader, runner_up = self.top_two(after)
+        runner_up["vorp"] = leader["vorp"] + 10           # promote #2; leader's own value intact
+        hits = self.sweep_against(before, after, self.quote(leader["name"], leader["vorp"]))
+        self.assertEqual(hits, [], f"reported a value that did not actually change: {hits}")
+
+    def test_a_headline_player_who_leaves_the_board_is_reported_as_gone(self):
+        import copy
+        before = B.read_board()
+        after = copy.deepcopy(before)
+        leader, _ = self.top_two(after)
+        was = leader["vorp"]
+        after["players"] = [p for p in after["players"] if p["name"] != leader["name"]]
+        hits = self.sweep_against(before, after, self.quote(leader["name"], was))
+        self.assertTrue(hits, "a departed headline player's value went unswept")
+        self.assertIn("no longer on the board", hits[0])
 
     def test_history_is_never_swept(self):
         """docs/insights/ and docs/plans/ quote past values on purpose. Insight 005 records

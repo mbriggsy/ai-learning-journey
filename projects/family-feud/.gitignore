@@ -55,6 +55,16 @@ draft-kit/cache/player_stats_*.csv
 # the docstring in scripts/build_curves.py before fetching it again.
 draft-kit/cache/play_by_play_*.csv.gz
 
+# The expert consensus is the one input here that is SUPPOSED to be stale-checked rather than
+# pinned -- its whole value is being newer than the board. Committing it would put a daily churning
+# 240KB blob in git and, worse, make a clean clone look like it had a current consensus when it had
+# whatever was current the day someone committed. Re-fetch with `consensus.py --refresh`.
+draft-kit/cache/fp_ecr.csv.gz
+# player_ids.csv.gz is the OPPOSITE and IS committed, alongside sleeper_players.json.gz: it is the
+# only bridge from the board's frozen sleeperId to FantasyPros (their own cross-id columns are the
+# literal string "NA" on every row), it barely moves, and on draft morning it must not need a
+# network call to exist.
+
 # U6: the pre-emit backup the generator restores from when a replace fails mid-set. Per-machine
 # runtime, rebuilt on every build; build_manifest.json IS tracked because it is the proof the
 # surfaces were generated and not hand-edited.

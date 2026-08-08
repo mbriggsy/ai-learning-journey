@@ -55,7 +55,59 @@ ROUNDS  = int(sys.argv[3]) if len(sys.argv) > 3 else 16
 EXPECT  = sys.argv[4].strip().rstrip("/") if len(sys.argv) > 4 else None
 if not 1 <= MY_SLOT <= TEAMS:
     sys.exit(f"my_slot {MY_SLOT} is outside 1..{TEAMS} -- check draft_order before advising.")
-STARTERS = {"QB":1, "RB":2, "WR":2, "TE":1, "K":1, "DEF":1}  # + 2 FLEX
+
+# --- roster shape: a typed constant by default, the draft object's own when it is supplied ---
+#
+# These two lines are the ROSTER half of KTD-8. `teams` and `rounds` at least get cross-checked
+# against the cargo below; the starter counts never were, so a league that added a flex or dropped
+# the kicker would leave the ROSTERS/NEEDS block and "their open needs" confidently wrong with no
+# error anywhere -- and "their open needs" is the read on what opponents will take.
+#
+# The defaults stay, so a bare `python draft_engine.py <slot>` behaves exactly as it always has.
+# `scripts/run_engine.py` reads the live shape from the mule's cargo and passes it in through
+# these environment variables. Env rather than argv because argv here is positional and a JSON
+# roster dict has no sane position in it -- and because a shape that arrives out-of-band cannot
+# be typed wrong by hand at 8am, which is the entire point.
+#
+# A malformed value NEVER crashes and NEVER silently wins. It falls back to the defaults and says
+# so in the [unverified] block, because "I could not read the shape you sent me" must not print
+# like "I am using the shape you sent me" -- that conflation is the disease the input gate treats.
+STARTERS = {"QB": 1, "RB": 2, "WR": 2, "TE": 1, "K": 1, "DEF": 1}
+FLEX = 2
+_shape_checked, _shape_notes = [], []
+
+_raw = os.environ.get("FF_STARTERS")
+if _raw:
+    try:
+        _parsed = json.loads(_raw)
+        if not isinstance(_parsed, dict) or not _parsed:
+            raise ValueError("not a non-empty JSON object")
+        _clean = {}
+        for _k, _v in _parsed.items():
+            # bool is a subclass of int in Python and JSON `true` parses to one, so a roster of
+            # {"QB": true} would otherwise sail through as QB=1.
+            if isinstance(_v, bool) or not isinstance(_v, int) or _v < 0:
+                raise ValueError(f"slot {_k!r} = {_v!r} is not a non-negative integer")
+            _clean[str(_k)] = _v
+        if sum(_clean.values()) <= 0:
+            raise ValueError("every starter slot is zero, which is not a roster")
+        STARTERS = _clean
+        _shape_checked.append("starter slots from the draft object")
+    except (ValueError, TypeError) as _e:
+        _shape_notes.append(f"FF_STARTERS was set but is unusable ({_e}) -- falling back to this "
+                            f"file's built-in roster shape, which may not match the live draft")
+
+_raw = os.environ.get("FF_FLEX")
+if _raw not in (None, ""):
+    try:
+        _f = int(_raw)
+        if _f < 0:
+            raise ValueError("negative")
+        FLEX = _f
+        _shape_checked.append(f"{FLEX} FLEX from the draft object")
+    except (ValueError, TypeError):
+        _shape_notes.append(f"FF_FLEX was set to {_raw!r}, which is not a count -- falling back "
+                            f"to {FLEX} FLEX, which may not match the live draft")
 
 _DOC = json.load(open("players_data.json", encoding="utf-8"))
 BOARD = _DOC["players"]
@@ -147,7 +199,9 @@ def _cargo(fname):
         return None
 
 DRAFT, USERS = _cargo("sleeper_draft.json"), _cargo("sleeper_users.json")
-fatal, checked, unsure = [], [], []
+# The roster shape resolved above reports through the same two channels as everything else, so
+# there is ONE place the operator reads "what was checked" and "what could not be".
+fatal, checked, unsure = [], list(_shape_checked), list(_shape_notes)
 
 _this  = EXPECT or (PICK_DRAFTS[0] if PICK_DRAFTS else None)
 _cid   = str(DRAFT.get("draft_id")) if isinstance(DRAFT, dict) else None
@@ -392,8 +446,11 @@ def needs(slot):
     need = []
     for pos, req in STARTERS.items():
         if cnt[pos] < req: need.append(f"{pos}x{req-cnt[pos]}")
-    flex_bodies = max(0, cnt["RB"]-STARTERS["RB"]) + max(0, cnt["WR"]-STARTERS["WR"]) + max(0, cnt["TE"]-STARTERS["TE"])
-    if flex_bodies < 2: need.append(f"FLEXx{2-flex_bodies}")
+    # .get() rather than [] because a draft-supplied roster need not carry every key this file
+    # once hardcoded -- a league that drops the kicker sends no "K", and a KeyError on draft
+    # morning is the worst possible way to learn that.
+    flex_bodies = sum(max(0, cnt[p] - STARTERS.get(p, 0)) for p in ("RB", "WR", "TE"))
+    if flex_bodies < FLEX: need.append(f"FLEXx{FLEX-flex_bodies}")
     return cnt, need
 
 # ---- output ----

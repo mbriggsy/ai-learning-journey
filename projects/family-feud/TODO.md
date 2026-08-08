@@ -6,17 +6,17 @@
 ## ▶ WHERE WE ARE — read this first, update it when it changes
 
 ```
-plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work  ◀ YOU ARE HERE ({ U7 ∥ U15 })
+plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15)  ◀ YOU ARE HERE (U7)
 ```
 
 **Units shipped:** U1, U2 (Phase 0 gates) · **U9** (draft-state watcher) · **U3** (one normalizer,
 proven equal in two runtimes) · **U14** (`sleeperId` frozen — 174 ids, 0 unresolved) ·
 **U4** (board schema gate, born red on 13 real findings) · **U5** (scoring as code + the empirical
-curve; oracle exact at 2469/2469) · **U6** (the generator — one source, every surface) — the last
-three on 2026-08-08.
+curve; oracle exact at 2469/2469) · **U6** (the generator — one source, every surface) ·
+**U15** (the engine wrapper — shape read from the draft, not typed) — the last four on 2026-08-08.
 
-**Next action: `{ U7 ∥ U15 }`** — the live board poll loop and the engine shape wrapper. Both
-depend on U6, which is done and reviewed.
+**Next action: U7** — the live board poll loop. It is the last Phase-2 unit and the only one of
+the `{ U7 ∥ U15 }` pair still open.
 
 **The ultramode review RAN 2026-08-08** (13 reviewers, 4-angle adversary panel, 3 refuters per
 finding, `real`/`material` aggregated separately). 77 confirmed after verification, 22 correctly
@@ -33,8 +33,8 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **327 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 327 with **1 skip**,
+gate went **13 findings → 0** by fixing surfaces. **372 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 372 with **1 skip**,
 the live-cargo environment probe. Verified by eye, not only by tests: the cheat sheet is **2 pages
 — the whole 174-row board on page 1**, the plan on page 2 — and the HTML board renders shape-driven
 round labels with no invented rounds.
@@ -209,10 +209,22 @@ U9  →  U3  →  U14  →  { U4 ∥ U5 }  →  U6  →  { U7 ∥ U15 }  →  U8
     `vorpMethod` per row, `meta.shape` from the live draft object, and
     `meta.badges[code].glyph`, which killed the engine's fourth glyph table.
   - **VORP is CARRIED, not recomputed** — deliberate, per KTD-6. See the note below.
-- **U15 engine wrapper** (NEW) — KTD-8's missing owner. Reads shape from the draft object; hard-refuses
-  non-snake drafts. **Note:** U6 already stamps `meta.shape` (teams/rounds/starters/flex/bench/ir/
-  playoff_teams/draft_id) and already refuses non-snake and `reversal_round != 0` at BUILD time —
-  U15 is the same discipline at RUN time, and `read_shape()` in `build_board.py` is the pattern.
+- ~~**U15 engine wrapper**~~ ✅ **SHIPPED 2026-08-08.** `scripts/run_engine.py` + `scripts/shape.py`,
+  45 tests. **Run the engine through it** — `python scripts/run_engine.py` from the repo root.
+  - Seat, teams, rounds and the whole roster now come from the draft object. The seat is read from
+    `draft_order[<briggsy>]` when it exists and **refuses** rather than guessing when it does not
+    (it is still `null` today, so that refusal is what you will see).
+  - **The roster half was the silent one.** `teams`/`rounds` were at least cross-checked against
+    cargo; `STARTERS` and the flex count were hardcoded in `draft_engine.py` and checked by
+    nothing. They now arrive via `FF_STARTERS`/`FF_FLEX`, with the built-ins as a loud fallback.
+  - **The contamination gate arms itself** when cargo is fresh — and deliberately does NOT when
+    cargo is stale, because a stale id would refuse a *correct* run (insight 009's false red).
+  - **`read_shape()` moved to `scripts/shape.py`** so the wrapper does not inherit jinja2 and
+    reportlab through `build_board.py`. Its refusals are now typed: `CargoUnreadable` (cannot
+    tell — a caller with a fallback may degrade) vs `UnsupportedShape` (an auction or a reversal —
+    never degrade past it). Both still subclass `Refuse`, so the generator is untouched.
+  - **Four mutants killed**, including cutting the engine's `FF_STARTERS` read: the tests assert
+    on the engine's printed needs line, not on the wrapper's dict (insight 013).
 
 **Board today:** 174 players + 8 derived `dst`, `meta.updated: 2026-08-08`, **every row carrying
 `sleeperId` and `vorpMethod`**, `meta.shape` stamped from draft `1390509994847240192`. Never edit
@@ -270,8 +282,10 @@ Re-pull and confirm — **never quote these from a doc**:
 - `/league/.../rosters` — proves which roster_id is whose (Briggsy = roster 3)
 - `/draft/.../traded_picks` — `[]` on Aug 7
 
-Then run the engine **with the draft_id as arg 4** so the contamination gate is armed:
-`python draft_engine.py <slot> 8 16 1390509994847240192`
+Then run the engine **through the wrapper**, from the repo root — it re-reads all four of the
+above from the draft object itself and arms the contamination gate for you:
+`python scripts/run_engine.py` (add the slot — `run_engine.py 3` — until `draft_order` fills).
+Start with `--dry-run` to see every value and where it came from before anything advises you.
 
 ---
 

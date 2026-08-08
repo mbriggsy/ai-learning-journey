@@ -64,7 +64,13 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                  render_html.py       — the board HTML, from templates/board.html
                  render_pdf.py        — the cheat-sheet PDF. All 174 rows, one page.
                  templates/board.html — presentation only; every FACT comes from the source
-tests/           327 tests: python -m unittest discover -s tests  (run from the root)
+                 shape.py             — league shape from the draft object. ONE owner, two
+                                        consumers. Refuses a non-snake draft; distinguishes
+                                        "cannot tell" from "will not compute".
+                 run_engine.py        — RUN THE ENGINE THROUGH THIS. Reads seat, teams, rounds
+                                        and the roster from the draft object instead of your
+                                        memory, and arms the contamination gate for you.
+tests/           372 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```
@@ -87,19 +93,54 @@ staged set**. One refresh = one commit.
 ## Running the engine
 
 ```bash
-python3 scripts/merge_picks.py <draft_id>            # from the repo ROOT — refreshes picks.json
+python3 scripts/merge_picks.py <draft_id>   # from the repo ROOT — refreshes picks.json
+python3 scripts/run_engine.py               # from the repo ROOT — everything else is read
+```
+
+`run_engine.py` is the way in. It reads your seat, the team count, the round count and the roster
+shape **from the draft object the mule already hauls hourly**, hands them to the engine, and prints
+exactly where each number came from before a word of advice appears. Nothing is typed from memory,
+which is the point: `draft_engine.py 3 8 15` against a 16-round draft goes *silent* about your own
+round-16 pick and exits 0, and a changed roster slot makes "their open needs" confidently wrong
+with no error at all.
+
+It also **arms the contamination gate for you** when the cargo is fresh — that flag is optional
+today and a human on a 120-second clock forgets it. When the cargo is stale it deliberately does
+*not*, and says so, because a stale id would refuse a correct run.
+
+Overrides exist and are never quiet — `--teams`, `--rounds`, `--draft-id` each win and announce
+that they won. `--dry-run` resolves everything and launches nothing.
+
+```bash
+python3 scripts/run_engine.py 3             # state the seat yourself (before draft_order fills)
+python3 scripts/run_engine.py --dry-run     # what would it use, and where did each value come from
+```
+
+**It refuses a draft it cannot model.** A non-snake or third-round-reversal draft is a hard stop
+with a non-zero exit, never a fallback: `slot_of()` and `my_picks()` assume plain snake, so
+computing anyway would print a complete, confident advisory on a pick order that is not this
+draft's. A *missing* cargo is different and never blocks the run — it degrades to what you typed,
+out loud, every time.
+
+<details><summary>Running <code>draft_engine.py</code> directly (still supported)</summary>
+
+```bash
 cd draft-kit
 python3 draft_engine.py <briggsy_slot> [teams=8] [rounds=16] [draft_id]
 ```
 
 Two directories, deliberately: the merge script runs from the repo root, the engine from
 `draft-kit/` (it opens `players_data.json`, `picks.json` and an optional `slot_names.json` by
-literal name from the current directory). The merge loop and cadence rules are in
-[`docs/draft-day-runbook.md`](docs/draft-day-runbook.md); do not improvise them.
+literal name from the current directory). `run_engine.py` handles that for you. The merge loop and
+cadence rules are in [`docs/draft-day-runbook.md`](docs/draft-day-runbook.md); do not improvise them.
 
 **Pass the `draft_id` as argument 4.** It is optional only so the engine still runs without it —
 supply it and the engine refuses a `picks.json` belonging to a different draft, which is otherwise
 invisible (`picks.json` is gitignored, so `git status` never shows a spent mock sitting there).
+Run it bare and the roster shape falls back to the constants in the file, which are this league's
+shape as of authoring and are **not** checked against the live draft.
+
+</details>
 
 **The engine refuses to guess.** It derives board state from `max(pick_no)` and hard-exits on an
 interior gap or a duplicate. If it screams, re-fetch and re-merge — never advise off a picks file

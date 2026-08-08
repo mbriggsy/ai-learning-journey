@@ -49,6 +49,12 @@ import validate_board as G                                                      
 import render_html as RH                                                          # noqa: E402
 import render_pdf as RP                                                           # noqa: E402
 
+#: League shape moved to its own module so the draft-day engine wrapper can read it without
+#: importing jinja2 and reportlab through this file. Re-exported here because `Refuse` is this
+#: module's own refusal vocabulary and `read_shape`/`CARGO` are part of its published surface.
+from shape import (CARGO, LEAGUE_CARGO, CargoUnreadable,           # noqa: E402,F401
+                   Refuse, UnsupportedShape, read_shape)
+
 BOARD = os.path.join(KIT, "players_data.json")
 HTML = os.path.join(KIT, "family-feud-draft-board.html")
 PDF = os.path.join(KIT, "family-feud-cheat-sheet.pdf")
@@ -57,8 +63,7 @@ CURVE = os.path.join(KIT, "vorp_curve.json")
 DUMP = os.path.join(KIT, "cache", "sleeper_players.json.gz")
 MANIFEST = os.path.join(KIT, "build_manifest.json")
 LAST_GOOD = os.path.join(KIT, ".last_good")
-CARGO = os.path.join(ROOT, "newsletter", "data", "inbox", "sleeper_draft.json")
-LEAGUE_CARGO = os.path.join(ROOT, "newsletter", "data", "inbox", "sleeper_league.json")
+#: CARGO and LEAGUE_CARGO are imported from `shape` above -- one definition, two consumers.
 
 #: The three surfaces the generator owns. `players_data.json` is both source and output -- it is
 #: read, enriched, and written back, which is why an unchanged rebuild has to be byte-stable.
@@ -142,10 +147,6 @@ def recompute_vorp(players, curve, baselines, method):
         q["vbdRank"] = rank
         q["vbdDelta"] = q["r"] - rank
     return out
-
-
-class Refuse(Exception):
-    """Raised for every condition that must stop the build BEFORE anything is written."""
 
 
 class Incomplete(Exception):
@@ -244,60 +245,12 @@ def git_dirty(paths=("draft-kit",)):
 
 
 # ---------------------------------------------------------------- the draft object (KTD-7)
-
-
-def read_shape(cargo=CARGO, league_cargo=LEAGUE_CARGO):
-    """League shape comes from the draft and league objects, never from a typed constant or prose.
-
-    The mule already hauls both hourly, so there is no new fetch. Stamped with the draft_id it
-    descends from, so `meta.shape` can be re-checked against its origin later.
-
-    It REFUSES rather than guesses on a non-snake or reversal draft: every pick-slot computation
-    in this repo assumes plain snake, and computing a wrong pick order silently is the failure
-    mode this whole rebuild exists to prevent.
-    """
-    if not os.path.exists(cargo):
-        raise Refuse(f"no draft object at {cargo} -- the mule's cargo is how league shape is "
-                     f"known (KTD-7). Run the mule before building.")
-    with open(cargo, encoding="utf-8-sig") as f:
-        d = json.load(f)
-    s = d.get("settings") or {}
-    missing = [k for k in ("teams", "rounds") if not s.get(k)]
-    if missing:
-        raise Refuse(f"the draft object is missing {missing} -- refusing to guess league shape")
-    if d.get("type") != "snake":
-        raise Refuse(f"draft type is {d.get('type')!r}, not 'snake' -- every pick-slot "
-                     f"computation in this repo assumes snake")
-    if s.get("reversal_round"):
-        raise Refuse(f"reversal_round is {s['reversal_round']} -- third-round reversal silently "
-                     f"invalidates every pick-slot computation")
-
-    ls = {}
-    if os.path.exists(league_cargo):
-        with open(league_cargo, encoding="utf-8-sig") as f:
-            ls = (json.load(f).get("settings") or {})
-
-    shape = {
-        "draft_id": str(d.get("draft_id") or ""),
-        "season": str(d.get("season") or ""),
-        "status": d.get("status"),
-        "start_time": d.get("start_time"),
-        "teams": int(s["teams"]),
-        "rounds": int(s["rounds"]),
-        "type": d.get("type"),
-        "reversal_round": int(s.get("reversal_round") or 0),
-        "starters": {"QB": int(s.get("slots_qb") or 0), "RB": int(s.get("slots_rb") or 0),
-                     "WR": int(s.get("slots_wr") or 0), "TE": int(s.get("slots_te") or 0),
-                     "K": int(s.get("slots_k") or 0), "DEF": int(s.get("slots_def") or 0)},
-        "flex": int(s.get("slots_flex") or 0),
-        "bench": int(s.get("slots_bn") or 0),
-        "ir": int(ls.get("reserve_slots") or 0),
-        "playoff_teams": int(ls.get("playoff_teams") or 0),
-    }
-    if ls.get("num_teams") and int(ls["num_teams"]) != shape["teams"]:
-        raise Refuse(f"the draft object says {shape['teams']} teams but the league object says "
-                     f"{ls['num_teams']} -- two sources disagree about league shape")
-    return shape
+#
+# `read_shape` moved to `scripts/shape.py` and is imported at the top of this file, unchanged in
+# behaviour. It left because `run_engine.py` needs league shape on draft morning and must not
+# acquire jinja2 and reportlab as transitive dependencies to get it. Its refusals are now typed:
+# `CargoUnreadable` (we cannot tell) and `UnsupportedShape` (we can tell, and the answer is no),
+# both subclasses of `Refuse`, so nothing here had to change.
 
 
 # ---------------------------------------------------------------- enrichment

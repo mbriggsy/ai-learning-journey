@@ -116,6 +116,9 @@ def read_shape(cargo=CARGO, league_cargo=LEAGUE_CARGO):
         "teams": int(s["teams"]),
         "rounds": int(s["rounds"]),
         "type": d.get("type"),
+        #: The draft object publishes this as `metadata.scoring_type` ("ppr"). It is carried so
+        #: `meta.format` can be DERIVED rather than typed -- see `format_line`.
+        "scoring_type": str((d.get("metadata") or {}).get("scoring_type") or ""),
         "reversal_round": int(s.get("reversal_round") or 0),
         "starters": {"QB": int(s.get("slots_qb") or 0), "RB": int(s.get("slots_rb") or 0),
                      "WR": int(s.get("slots_wr") or 0), "TE": int(s.get("slots_te") or 0),
@@ -130,3 +133,57 @@ def read_shape(cargo=CARGO, league_cargo=LEAGUE_CARGO):
                                f"object says {ls['num_teams']} -- two sources disagree about "
                                f"league shape")
     return shape
+
+
+#: Sleeper's `scoring_type` code -> the words this league's docs already use for it.
+SCORING_LABEL = {"ppr": "Full PPR", "half_ppr": "Half PPR", "std": "Standard"}
+
+#: Roster order as a human reads a league settings page. FLEX sits between TE and K, which is
+#: where it appears on Sleeper and in every doc in this repo.
+_FORMAT_ORDER = ("QB", "RB", "WR", "TE", "K", "DEF")
+
+
+def format_line(shape):
+    """`meta.format` as a pure function of `meta.shape` (KTD-1).
+
+    `meta.format` used to be a hand-typed prose string --
+    `8-team · Full PPR · Snake · 16 rounds · QB/2RB/2WR/TE/2FLEX/K/DEF + 6 BN + 2 IR` -- carrying
+    roughly eight facts that `meta.shape` also carries. The gate cross-checked exactly two of them,
+    `teams` and `rounds`. **The unchecked half is the roster, and the roster is what the PDF header
+    prints**, so a league that moved a flex slot would have shipped a cheat sheet describing a
+    lineup nobody was playing, with every automated check green.
+
+    Deriving it removes the duplicate rather than adding a ninth check to guard it, which is the
+    distinction KTD-1 turns on. The gate now recomputes this and compares exactly, so the only
+    thing it can still catch is a hand-edited surface -- which is precisely what it should catch.
+    """
+    starters = shape.get("starters") or {}
+
+    def slot(pos, n):
+        return pos if n == 1 else f"{n}{pos}"
+
+    slots = [slot(p, int(starters[p])) for p in ("QB", "RB", "WR", "TE")
+             if int(starters.get(p) or 0)]
+    flex = int(shape.get("flex") or 0)
+    if flex:
+        slots.append(slot("FLEX", flex))
+    slots += [slot(p, int(starters[p])) for p in ("K", "DEF") if int(starters.get(p) or 0)]
+    # A league that invents a slot this list does not name must still see it. Silently dropping it
+    # would put the board back to describing a roster that is not the one being drafted.
+    slots += [slot(p, int(starters[p])) for p in sorted(starters)
+              if p not in _FORMAT_ORDER and int(starters.get(p) or 0)]
+
+    roster = "/".join(slots) or "no starters"
+    if shape.get("bench"):
+        roster += f" + {int(shape['bench'])} BN"
+    if shape.get("ir"):
+        roster += f" + {int(shape['ir'])} IR"
+
+    code = str(shape.get("scoring_type") or "").lower()
+    # Never invent "Full PPR" for a draft that did not say so -- an unlabelled scoring type is
+    # reported as unknown rather than assumed to be this league's.
+    scoring = SCORING_LABEL.get(code) or (code.replace("_", " ").upper() if code
+                                          else "Custom scoring")
+    return " · ".join([f"{int(shape['teams'])}-team", scoring,
+                       str(shape.get("type") or "?").title(),
+                       f"{int(shape['rounds'])} rounds", roster])

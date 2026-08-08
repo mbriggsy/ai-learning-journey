@@ -56,15 +56,37 @@ COL0 = 39.0                # first column's name x
 PITCH = 188.5              # measured column pitch
 TOP = 533.8                # first row baseline under the header
 FLOOR = 42.3               # lowest baseline observed on the shipped sheet
-ROW_GAP = 9.25
 
 #: Vertical rhythm, matched to the shipped sheet's MEASURED cost rather than to its raw offsets.
 #: The sheet spends 17.25pt going from one row baseline, past a tier label, to the next row --
 #: and 40.75pt past a section bar. Charging a tier `gap + label + a full row gap` double-counts
 #: the row pitch and inflated the board by ~290pt, which is what pushed a one-page sheet onto
-#: three. TIER_LEAD is 0 because the preceding row's own 9.25 already supplies the separation.
-TIER_LEAD, TIER_AFTER = 0.0, 8.0                   # 9.25 + 0 + 8.0  = 17.25
-SECTION_LEAD, SECTION_AFTER = 12.6, 10.9           # 9.25 + 12.6 + 10.9 + 8.0 = 40.75
+#: three.
+#:
+#: ROW_GAP, TIER_LEAD, TIER_AFTER and SECTION_LEAD used to live here too and were DEAD -- the
+#: adaptive-density rewrite moved every one of them into `DENSITY` below and left the originals
+#: behind, duplicating `DENSITY[0]`. Anyone tuning them would have changed nothing and had no way
+#: to find out. Removed 2026-08-08. `SECTION_AFTER` is the one survivor and is genuinely live:
+#: the per-density `section` value is a LEAD, and this is the trailing half added to it.
+SECTION_AFTER = 10.9                               # 9.25 + 12.6 + 10.9 + 8.0 = 40.75
+
+#: Which rows earn a VBD arrow. A named predicate rather than an inline condition, because the
+#: board HTML applies the SAME rule in JavaScript and the two must not drift -- a rule buried in a
+#: draw call is a rule nothing can test.
+#:
+#: K and DEF carry flat per-tier VORP constants (`carried:kdef-tier-flat`), so their `vbdDelta` is
+#: an artefact of comparing a constant against a curve: all 24 clear |8| and every one drew a green
+#: arrow. Two dozen identical "steal" marks on the one page you actually hold at the table is noise
+#: that hides the real steals. The HTML has always suppressed them; the PDF did not, which made the
+#: two surfaces disagree about the same fact. Fixed 2026-08-08.
+VBD_CHIP_THRESHOLD = 8
+VBD_CHIP_EXCLUDES = ("K", "DEF")
+
+
+def draws_vbd_chip(p):
+    return (abs(p.get("vbdDelta") or 0) >= VBD_CHIP_THRESHOLD
+            and p.get("pos") not in VBD_CHIP_EXCLUDES)
+
 
 #: Density presets, roomiest first. The renderer takes the first that fits the board on ONE page,
 #: because a single sheet you hold at the table is the artefact's whole point. Only if none fit
@@ -297,7 +319,7 @@ def _draw_row(c, x, y, p, badges):
         bx += pdfmetrics.stringWidth(g, "Helvetica-Bold", 7.0) + 1.5
 
     delta = p.get("vbdDelta") or 0
-    if abs(delta) >= 8:
+    if draws_vbd_chip(p):
         up = delta > 0
         c.setFillColor(GOOD if up else BAD)
         c.setFont("Helvetica-Bold", 6.4)

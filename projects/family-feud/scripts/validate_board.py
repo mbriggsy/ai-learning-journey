@@ -33,6 +33,9 @@ sys.path.insert(0, KIT)
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
 from normalize import norm  # noqa: E402
 import resolve_sleeper_ids as R  # noqa: E402
+#: `shape` is dependency-free on purpose, so importing it here costs the gate nothing and gives it
+#: the SAME renderer the generator uses -- a second copy would be the defect this check exists for.
+from shape import format_line  # noqa: E402
 
 BOARD = os.path.join(KIT, "players_data.json")
 HTML = os.path.join(KIT, "family-feud-draft-board.html")
@@ -427,13 +430,19 @@ def check_generated_fields(d, ledger):
         for key in ("draft_id", "teams", "rounds"):
             if not shape.get(key):
                 problems.append(f"meta.shape has no {key!r}")
-        teams, rounds = league_shape(d)
-        if teams and shape.get("teams") and teams != shape["teams"]:
-            problems.append(f"meta.format says {teams} teams but meta.shape says "
-                            f"{shape['teams']} -- two sources for one fact")
-        if rounds and shape.get("rounds") and rounds != shape["rounds"]:
-            problems.append(f"meta.format says {rounds} rounds but meta.shape says "
-                            f"{shape['rounds']} -- two sources for one fact")
+        # meta.format is DERIVED from meta.shape by the generator (KTD-1), so the whole string is
+        # checkable, not just the two numbers a regex could pull out of it. This used to compare
+        # `teams` and `rounds` alone -- leaving the ROSTER half, which the PDF header prints,
+        # guarded by nothing. The only thing this can still catch is a hand-edited surface, which
+        # is exactly what a gate is for.
+        if shape.get("teams") and shape.get("rounds"):
+            want = format_line(shape)
+            got = str(meta.get("format", ""))
+            if got != want:
+                problems.append(f"meta.format is not what meta.shape describes -- it is supposed "
+                                f"to be derived from it, so this is a hand-edit or a stale build.\n"
+                                f"       meta.format: {got!r}\n"
+                                f"       from shape : {want!r}")
     return problems
 
 

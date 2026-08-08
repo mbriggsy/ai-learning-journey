@@ -53,7 +53,7 @@ import render_pdf as RP                                                         
 #: importing jinja2 and reportlab through this file. Re-exported here because `Refuse` is this
 #: module's own refusal vocabulary and `read_shape`/`CARGO` are part of its published surface.
 from shape import (CARGO, LEAGUE_CARGO, CargoUnreadable,           # noqa: E402,F401
-                   Refuse, UnsupportedShape, read_shape)
+                   Refuse, UnsupportedShape, format_line, read_shape)
 
 BOARD = os.path.join(KIT, "players_data.json")
 HTML = os.path.join(KIT, "family-feud-draft-board.html")
@@ -338,6 +338,10 @@ def enrich(d, shape, ledger, dump_meta, names, generator_sha, dirty=False, now=N
                                 ("label", "icon", "glyph", "desc"))
     meta["badges"] = badges
     meta["shape"] = shape
+    # KTD-1: `meta.format` was a hand-typed duplicate of ~8 facts meta.shape already carries, and
+    # the gate cross-checked two of them. The unguarded half was the ROSTER -- which is the half
+    # the PDF header prints. Derived, so there is nothing left to drift.
+    meta["format"] = format_line(shape)
 
     # meta.updated must not claim to predate an input the board was built from -- the gate
     # compares it against the dump's UTC fetch date AND three local mtimes, and the same fetch

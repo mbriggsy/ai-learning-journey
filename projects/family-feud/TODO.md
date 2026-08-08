@@ -35,8 +35,8 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **408 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 408 with **2 skips**,
+gate went **13 findings → 0** by fixing surfaces. **424 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 424 with **2 skips**,
 both live-cargo environment probes. Verified by eye, not only by tests: the cheat sheet is **2 pages
 — the whole 174-row board on page 1**, the plan on page 2 — and the HTML board renders shape-driven
 round labels with no invented rounds.
@@ -63,17 +63,24 @@ fixed (commits `5e7ae390`, `76849ad9`, `fdf190eb`, `13c3ed3b`). What follows is 
    and the tests pass committed fixtures (`tests/fixtures/sleeper_draft.json`,
    `sleeper_league.json`). **Measured both ways:** with the cargo hidden the suite went from
    **22 errors + 2 failures** to **327 OK, 1 skip** — the skip being an explicit environment probe.
-2. **`meta.format` is a hand-typed duplicate of `meta.shape` (KTD-1).** The gate cross-checks only
-   `teams` and `rounds` of the ~8 facts they share — and the ROSTER half is what the PDF header
-   prints. Fix: derive `meta.format` from `meta.shape` in `enrich()`.
+2. ~~**`meta.format` is a hand-typed duplicate of `meta.shape` (KTD-1).**~~ ✅ **FIXED 2026-08-08.**
+   `shape.format_line()` derives it and `enrich()` stamps it; the gate now recomputes the whole
+   string and compares exactly, instead of regexing two of the ~8 shared facts out of it. **The
+   derivation reproduced the hand-typed string byte-for-byte** — the fact was right, it was just
+   unguarded, and the unguarded half was the ROSTER, which is what the PDF header prints.
+   `meta.shape` gained `scoring_type` (from the draft object's `metadata`) to make it derivable.
+   4 mutants killed.
 3. **Nothing ever re-checks `meta.shape` against the draft object it names.** A board built from a
    dead or superseded draft passes `--verify-only` forever. Fix: a gate check comparing
    `meta.shape.draft_id` + values against the hauled cargo, with the cargo's age reported.
 4. **`strategy` prose still hardcodes both baselines and league shape**, inside the source
    (KTD-1 + KTD-7). `rules[10]` embeds `QB12/RB41/WR47/TE12`; `slotNotes` embed `Picks 1-3` etc.
    The old-value sweep cannot see them because they are not a quantity it tracks.
-5. **The PDF prints a VBD arrow on every K and DEF row; the HTML deliberately suppresses it.**
-   All 24 have |vbdDelta| >= 8 so all 24 draw a green ▲, which is noise on the one page you hold.
+5. ~~**The PDF prints a VBD arrow on every K and DEF row.**~~ ✅ **FIXED 2026-08-08.** All 24 cleared
+   |8| and all 24 drew a green ▲ on the one page you hold, hiding the real steals. The rule is now
+   the named predicate `render_pdf.draws_vbd_chip()` rather than a condition buried in a draw call,
+   and a test asserts the board HTML applies the same one — the two surfaces disagreed about the
+   same fact. **24 arrows removed, 82 real ones kept.**
 6. **`_draw_strategy`'s `block()` silently truncates** prose that runs past the page floor —
    returns early and drops content with no warning. Today nothing overflows; a longer rule would.
 7. **`old_value_sweep` goes blind when a headline row changes identity.** It sweeps the CURRENT
@@ -83,8 +90,11 @@ fixed (commits `5e7ae390`, `76849ad9`, `fdf190eb`, `13c3ed3b`). What follows is 
    mark and the legend becomes ambiguous.
 9. **`check_strategy`'s name/team prose check keys on the last whitespace token**, so it silently
    does nothing for suffixed players (`Marvin Harrison Jr.`) — insight 008's shape.
-10. **Dead constants in `render_pdf.py`** (`ROW_GAP`, `TIER_LEAD/AFTER`, `SECTION_LEAD`) survive
-    the adaptive-density rewrite and duplicate `DENSITY[0]`; tuning them does nothing.
+10. ~~**Dead constants in `render_pdf.py`.**~~ ✅ **FIXED 2026-08-08.** `ROW_GAP`, `TIER_LEAD`,
+    `TIER_AFTER` and `SECTION_LEAD` were left behind by the adaptive-density rewrite, duplicating
+    `DENSITY[0]`; tuning them did nothing. Removed. ⚠️ **`SECTION_AFTER` was NOT dead** and is still
+    there — it is used twice, because the per-density `section` value is a LEAD and this is the
+    trailing half added to it. Deleting all five, as the finding implied, would have broken the PDF.
 
 **Escalated on a materiality split — HALF CLOSED 2026-08-08.** The row-level `sleeperId` U6 stamps
 now has a reader: **U7's poll loop joins on it first**, name second, and that path is browser-

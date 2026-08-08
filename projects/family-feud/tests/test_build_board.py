@@ -282,6 +282,146 @@ class TestShape(unittest.TestCase):
             B.read_shape(self.write_draft(), league)
 
 
+class TestVbdChipAgreesAcrossSurfaces(unittest.TestCase):
+    """The PDF drew a VBD arrow on every K and DEF row while the HTML deliberately suppressed
+    them, so the two surfaces disagreed about the same fact. All 24 K/DEF rows clear the |8|
+    threshold because their VORP is a flat per-tier constant compared against a curve -- two dozen
+    identical green arrows on the one page you hold at the table, hiding the real steals."""
+
+    TEMPLATE = os.path.join(ROOT, "scripts", "templates", "board.html")
+
+    def test_a_real_steal_still_earns_its_arrow(self):
+        """The control -- a rule that suppressed everything would also pass every test below."""
+        self.assertTrue(RP.draws_vbd_chip({"pos": "RB", "vbdDelta": 14}))
+        self.assertTrue(RP.draws_vbd_chip({"pos": "WR", "vbdDelta": -9}))
+
+    def test_kickers_and_defenses_never_draw_one(self):
+        for pos in ("K", "DEF"):
+            self.assertFalse(RP.draws_vbd_chip({"pos": pos, "vbdDelta": 68}),
+                             f"{pos} still draws a VBD arrow")
+
+    def test_a_small_delta_draws_nothing(self):
+        self.assertFalse(RP.draws_vbd_chip({"pos": "RB", "vbdDelta": 7}))
+        self.assertFalse(RP.draws_vbd_chip({"pos": "RB"}))
+
+    def test_the_board_html_applies_the_same_rule(self):
+        """The two surfaces cannot share code across Python and JavaScript, so the agreement is
+        asserted instead. If the template drops either exclusion this goes red."""
+        with open(self.TEMPLATE, encoding="utf-8") as f:
+            js = f.read()
+        self.assertIn(f"Math.abs(p.vbdDelta) >= {RP.VBD_CHIP_THRESHOLD}", js)
+        for pos in RP.VBD_CHIP_EXCLUDES:
+            self.assertIn(f"p.pos !== '{pos}'", js)
+
+    def test_the_live_board_has_rows_on_both_sides_of_the_rule(self):
+        """Guards against the rule being trivially satisfied by today's data -- if no row were
+        excluded, or none included, the tests above would prove nothing about this board."""
+        rows = B.read_board()["players"]
+        drawn = [p for p in rows if RP.draws_vbd_chip(p)]
+        hidden = [p for p in rows if p["pos"] in RP.VBD_CHIP_EXCLUDES
+                  and abs(p.get("vbdDelta") or 0) >= RP.VBD_CHIP_THRESHOLD]
+        self.assertTrue(drawn, "no row draws an arrow -- the rule is suppressing everything")
+        self.assertTrue(hidden, "no K/DEF row is being suppressed -- the fix is unexercised")
+
+
+class TestFormatIsDerived(unittest.TestCase):
+    """`meta.format` was a hand-typed duplicate of ~8 facts `meta.shape` already carried, and the
+    gate cross-checked exactly two of them: teams and rounds. The unguarded half is the ROSTER,
+    and the roster is what the PDF header prints -- so a league that moved a flex slot would have
+    shipped a cheat sheet describing a lineup nobody was playing, with every check green."""
+
+    def shape(self, **over):
+        sh = dict(fixture_shape())
+        starters = dict(sh["starters"])
+        starters.update(over.pop("starters", {}))
+        sh.update(over)
+        sh["starters"] = starters
+        return sh
+
+    def test_the_derivation_reproduces_the_string_the_league_actually_ships(self):
+        """The control, and the proof the fact was right all along -- it was only unguarded."""
+        self.assertEqual(
+            B.format_line(self.shape(scoring_type="ppr")),
+            "8-team · Full PPR · Snake · 16 rounds · QB/2RB/2WR/TE/2FLEX/K/DEF + 6 BN + 2 IR")
+
+    def test_a_moved_flex_slot_changes_the_line(self):
+        """THE HALF NOTHING CHECKED. teams and rounds are untouched here, so the old cross-check
+        would have passed this without a murmur."""
+        line = B.format_line(self.shape(scoring_type="ppr", flex=1))
+        self.assertIn("/FLEX/", line)
+        self.assertNotIn("2FLEX", line)
+
+    def test_a_dropped_kicker_leaves_the_line(self):
+        self.assertNotIn("/K/", B.format_line(self.shape(scoring_type="ppr",
+                                                         starters={"K": 0})))
+
+    def test_bench_and_ir_come_from_the_shape(self):
+        line = B.format_line(self.shape(scoring_type="ppr", bench=7, ir=0))
+        self.assertIn("+ 7 BN", line)
+        self.assertNotIn("IR", line)
+
+    def test_an_unlabelled_scoring_type_is_never_assumed_to_be_this_league(self):
+        """Inventing 'Full PPR' for a draft that did not say so is how a board asserts a fact it
+        does not have. The board header prints this string."""
+        self.assertIn("Custom scoring", B.format_line(self.shape(scoring_type="")))
+        self.assertIn("HALF PPR", B.format_line(self.shape(scoring_type="half_ppr")).upper())
+
+    def test_a_slot_the_league_invents_still_appears(self):
+        """Silently dropping an unknown slot would put the board back to describing a roster that
+        is not the one being drafted."""
+        self.assertIn("2SUPERFLEX",
+                      B.format_line(self.shape(scoring_type="ppr",
+                                               starters={"SUPERFLEX": 2})))
+
+    def test_the_generator_restamps_format_from_the_shape_it_is_given(self):
+        """A REAL call-site test (insight 013).
+
+        Asserting `meta.format == format_line(meta.shape)` on the built source proves nothing:
+        the board on disk already carries the right string, so a generator that never touches the
+        field passes. Hand `enrich` a DIFFERENT shape and require the output to follow it --
+        delete the assignment and this goes red.
+        """
+        with open(B.LEDGER, encoding="utf-8") as f:
+            ledger = json.load(f)
+        moved = dict(fixture_shape(), flex=1)
+        out = B.enrich(B.read_board(), moved, ledger, ledger.get("meta") or {},
+                       B.team_names(), generator_sha="test")
+        self.assertIn("/FLEX/", out["meta"]["format"])
+        self.assertNotIn("2FLEX", out["meta"]["format"])
+
+    def test_the_gate_accepts_a_correctly_derived_board(self):
+        """The paired control. Without it, the refusal test below would pass on a gate that
+        refuses everything."""
+        with open(B.LEDGER, encoding="utf-8") as f:
+            ledger = json.load(f)
+        self.assertEqual(B.G.check_generated_fields(real_source(), ledger), [])
+
+    def test_the_gate_catches_a_hand_edited_format(self):
+        """A surface edited by hand is the only thing this check can still catch now that the
+        value is derived -- and it is exactly what a gate is for."""
+        import copy
+        with open(B.LEDGER, encoding="utf-8") as f:
+            ledger = json.load(f)
+        src = copy.deepcopy(real_source())
+        src["meta"]["format"] = src["meta"]["format"].replace("2FLEX", "FLEX")
+        problems = B.G.check_generated_fields(src, ledger)
+        self.assertTrue(any("meta.format" in p for p in problems),
+                        f"the gate missed a hand-edited roster in meta.format: {problems}")
+
+    def test_the_gate_catches_a_shape_that_no_longer_matches_the_prose(self):
+        """The same defect from the other side: shape moves, the prose does not."""
+        import copy
+        with open(B.LEDGER, encoding="utf-8") as f:
+            ledger = json.load(f)
+        src = copy.deepcopy(real_source())
+        src["meta"]["shape"] = dict(src["meta"]["shape"], flex=1)
+        self.assertTrue(any("meta.format" in p for p in B.G.check_generated_fields(src, ledger)))
+
+    def test_the_live_board_format_matches_its_own_shape(self):
+        board = B.read_board()
+        self.assertEqual(board["meta"]["format"], B.format_line(board["meta"]["shape"]))
+
+
 class TestManifest(unittest.TestCase):
     def test_the_live_surfaces_match_their_manifest(self):
         self.assertEqual(B.check_manifest(), [])

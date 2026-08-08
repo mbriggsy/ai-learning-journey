@@ -147,6 +147,12 @@ Case studies from the current board:
 >
 > Breaking the circularity needs real per-player projections rather than a rank→points curve. That
 > is a genuine future unit, not a bug to patch.
+>
+> Worked through in
+> [`insights/005`](insights/005-the-tie-breaker-agreed-with-the-board-by-construction.md) — **which
+> was written 2026-08-07 and did not reach this page until 2026-08-08.** The lesson was recorded
+> and the surface that states the rule kept stating it anyway. An insight nobody propagates is a
+> note, not a fix.
 
 ---
 

@@ -96,8 +96,25 @@ own replay verification — not hard, but it must not be done blind.
 
 ## 0. Start with `/brief`
 
-Fourteen insight docs now exist. Each has a documented wrong answer that looks right. Read them
+Sixteen insight docs now exist. Each has a documented wrong answer that looks right. Read them
 before designing, not after debugging.
+
+**The two from 2026-08-08 are the ones to read before writing any wrapper or any `except`:**
+- **[`015`](docs/insights/015-the-degrade-path-would-have-swallowed-the-refusal.md)** — `read_shape`
+  raised one exception class for "there is no cargo" and "this is an auction draft," which demand
+  opposite responses. The obvious wrapper (`except Refuse: fall back to argv`) would have degraded
+  an auction to typed defaults and advised off a pick order this repo does not model. **Name
+  exceptions for the recovery they permit, not the place they were raised.**
+- **[`016`](docs/insights/016-the-banner-printed-after-the-advisory-it-qualifies.md)** — the
+  provenance banner printed *after* the advisory whenever stdout was redirected, because the parent
+  block-buffers while the child writes straight to the fd. Invisible on a terminal. **Flush before
+  handing stdout to a subprocess**, and check anything loggable through a redirect at least once.
+
+⚠️ **And the meta-lesson from this session:** insight
+[`005`](docs/insights/005-the-tie-breaker-agreed-with-the-board-by-construction.md) correctly
+recorded the VBD circularity on 2026-08-07 — and `ranking-methodology.md` went on stating the
+falsified rule until U8 fixed it a day later. **An insight nobody propagates to the surface that
+states the rule is a note, not a fix.**
 
 **The two from the ultramode review are the ones to read before writing any new guard:**
 - **[`013`](docs/insights/013-every-guard-was-tested-and-not-one-was-proven-connected.md)** — six
@@ -351,7 +368,7 @@ Start with `--dry-run` to see every value and where it came from before anything
 
 ## Landmines
 
-Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the fourteen worked cases.
+Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the sixteen worked cases.
 The four that bite hardest under time pressure:
 
 - **A screaming engine means STOP.** Re-fetch, re-merge, rerun. Never advise off a `picks.json` it

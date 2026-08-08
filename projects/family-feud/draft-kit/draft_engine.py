@@ -57,7 +57,16 @@ if not 1 <= MY_SLOT <= TEAMS:
     sys.exit(f"my_slot {MY_SLOT} is outside 1..{TEAMS} -- check draft_order before advising.")
 STARTERS = {"QB":1, "RB":2, "WR":2, "TE":1, "K":1, "DEF":1}  # + 2 FLEX
 
-BOARD = json.load(open("players_data.json", encoding="utf-8"))["players"]
+_DOC = json.load(open("players_data.json", encoding="utf-8"))
+BOARD = _DOC["players"]
+
+# Badge glyphs come from the board, not from a table in here. There used to be three renderings
+# of the same eight badges -- this file, the HTML, and the PDF -- so a new badge meant editing
+# three places and any one of them silently rendering nothing. U6 stamps meta.badges[code].glyph
+# into the source and every surface reads it. A code with no glyph prints nothing, exactly as the
+# old .get(b, "") did, so an unknown badge still cannot crash the advisory on a 120-second clock.
+BADGE_GLYPH = {code: (spec or {}).get("glyph", "")
+               for code, spec in ((_DOC.get("meta") or {}).get("badges") or {}).items()}
 PICKS = json.load(open("picks.json", encoding="utf-8"))
 try:  # optional: {"2": "DIego", "3": "Hunter", ...} from draft metadata.slot_name_<N>
     SLOT_NAMES = {int(k): str(v) for k, v in json.load(open("slot_names.json", encoding="utf-8")).items()}
@@ -505,7 +514,7 @@ for pos, t, left, rows in cliffs:                 # precomputed above; shown_ran
 
 print("\n--- BEST AVAILABLE (my board) ---")
 for p in best_avail:
-    bdg = "".join({"T":"»","B":"+","X":"!","I":"†","R":"°","U":"^","D":"v","S":"§"}.get(b,"") for b in p["badges"])
+    bdg = "".join(BADGE_GLYPH.get(b, "") for b in p["badges"])
     vb = ""
     if "vorp" in p:
         d = p.get("vbdDelta", 0)

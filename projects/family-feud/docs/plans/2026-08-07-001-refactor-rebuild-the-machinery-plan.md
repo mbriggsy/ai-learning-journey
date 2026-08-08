@@ -1,6 +1,7 @@
 ---
 title: "refactor: Rebuild the machinery — one source, generated surfaces, one hauler, many consumers"
 date: 2026-08-07
+deepened: 2026-08-07
 type: refactor
 depth: deep
 status: ready
@@ -45,8 +46,8 @@ verification — which is precisely how two of the four surfaces silently drifte
 |---|---|
 | `draft-kit/players_data.json` | Correct. `meta.updated: 2026-08-05`, 174 players (48 RB / 59 WR / 20 TE / 23 QB / 14 DEF / 10 K) + 8 `dst` |
 | `draft-kit/family-feud-draft-board.html` | Full ~49.9 KB duplicate at line 200 (`const DATA = …`). Currently deep-equal to the source. No `fetch`, no reference — a copy, not a viewer |
-| `draft-kit/draft_rankings_data_2026-08-05.json` | **Drifted.** `dst[6]` Jaguars (board says Vikings), `dst[8]` Vikings (board says Steelers), `strategy.kickers` still reads *"No kicker board needed in August"*. **Zero readers in the repo** |
-| `draft-kit/family-feud-cheat-sheet.pdf` | **Drifted and incomplete.** Generated Aug 5 18:54, pre-audit. Prints *"6 Jaguars"* and the retired *"I'll call the kicker live"*. **Missing all 24 K/DEF entries** — 150 of 174 rows |
+| `draft-kit/draft_rankings_data_2026-08-05.json` | **Drifted.** `dst[6]` Jaguars (board says Vikings), `dst[8]` Vikings (board says Steelers), and `strategy` forked in **two** keys — `kickers` still reads *"No kicker board needed in August"*, and `rules` also diverged (the original text named only `kickers`). `players` and `meta` are equal. **Zero readers in the repo.** Deleted by KTD-2 |
+| `draft-kit/family-feud-cheat-sheet.pdf` | **Drifted and incomplete.** Generated Aug 5 18:54, pre-audit. **150 of 174 rows — all 14 DEF and all 10 K absent** (re-verified by extraction; the PDF is ASCII85-then-Flate, and a zlib-only read yields zero text, which reads as "empty PDF" rather than "broken reader"). Its DST prose line — `1 Texans 2 Broncos 3 Seahawks 4 Rams 5 Eagles 6 Jaguars` — follows the **drifted twin's** ordering, not the source's, so the PDF was generated from the snapshot rather than from `players_data.json`. **Correction to the original text:** the retired *"I'll call the kicker live"* string is **not** in the PDF; that is a `strategy.kickers` defect in the twin. The PDF's only kicker line states current doctrine correctly (*"K + DEF in Rds 15-16. NO exceptions."*) |
 
 The runbook asserts the dated copy is "kept in sync." It is not. Carrying it forward by rename —
 which the old TODO instructed — would have resurrected three fixed bugs.
@@ -178,45 +179,184 @@ closes the loop — when the draft becomes real, it tells us to refresh.
 
 ## Key Technical Decisions
 
-**KTD-1 — `players_data.json` is the single source; all other surfaces are generated artifacts.**
-The dated snapshot, the HTML `const DATA` blob, and the PDF become build outputs. None is ever
-hand-edited again. This eliminates the mechanism that produced the current drift.
+**KTD-1 — `players_data.json` is the single source, and no field inside it may duplicate another.**
+The HTML `const DATA` blob and the PDF become build outputs. None is ever hand-edited again.
 
-**KTD-2 — The dated twin becomes a true snapshot, or dies.** It has zero readers today and has
-already forked. Recommendation: keep it as a **generated, byte-identical** archival copy written by
-the generator. If it cannot be byte-identical, delete it — a copy that can disagree is worse than
-no copy.
+The original wording stopped at the file boundary, and that is where the deepening found the drift
+actually living. Two duplications sit *inside* the source:
 
-**KTD-3 — One normalizer, one spec, three consumers.** `norm()` currently exists once in Python;
-the live board plan commits to a second JS implementation and the newsletter needs a third. Extract
-one spec with **golden test vectors** that Python, JS, and the gate all run. Divergence would show
-up live, mid-draft, as the board and the advisory disagreeing about who is available.
+- **`dst` is a projection of `players`.** All 8 entries are the DEF rows with `pr` 1-8 — `rank == pr`,
+  same teams, verified across all eight. It is rendered (`draft-kit/family-feud-draft-board.html:284`),
+  so it is live. **The verified drift in the dated twin was in `dst`.** Same-file replication means no
+  cross-*surface* check can ever catch it. The generator derives `dst` from the DEF rows; it is never
+  carried forward. This needs a committed 32-entry team-code→name table, because the DEF rows carry
+  codes (`"HOU"`) while `dst` carries full names (`"Houston Texans"`) and **that mapping exists
+  nowhere in the repo** — it lives only in whoever typed the array.
+- **`strategy` is prose carrying live facts, with zero validation.** It asserts a count ("Kickers are
+  ON the board now — 10 of them"), names three `(player, team)` pairs a single trade invalidates
+  (Aubrey/DAL, Fairbairn/HOU, Dicker/LAC), and hardcodes league shape throughout — `Picks 1-3`,
+  `Picks 4-6`, `picks 17-24`, `rounds 15-16`, `rounds 3-5`, `rounds 6-9`, `6 of 8`, `Bench = 6`.
+  That last set makes **KTD-7 violated inside the source of truth**, not just in the HTML.
 
-**KTD-4 — Add `sleeperId` to every board entry, validated at generation time.** Sleeper picks carry
-`player_id` at both the top level and inside `metadata`. Joining on a stable ID rather than a name
-kills the entire name-mismatch bug class at the root. `norm()` becomes the fallback, not the primary
-key. *This is the highest-leverage single change in the plan.*
+**KTD-2 — DECIDED (Briggsy, 2026-08-07): delete the dated snapshot.**
+`draft-kit/draft_rankings_data_2026-08-05.json` is removed and never regenerated.
+
+Rationale: **git is already the dated archive.** Every historical `players_data.json` is addressable
+by commit, carries a date, and cannot drift. A byte-identical copy has only two reachable states —
+redundant or wrong — so it carries no information by construction. And the plan's own load-bearing
+requirement is *repeated* refresh: keeping the twin means a pile of ~50 KB near-twins in `draft-kit/`
+and a "which one is live?" question on draft morning, which is a fresh instance of the failure class
+this rebuild exists to kill.
+
+**Consequence:** U4 drops its dated-snapshot cross-surface check, and U6 asserts no
+`draft_rankings_data_*.json` can reappear at `draft-kit/` root. Recovery is
+`git checkout <sha> -- draft-kit/` (all four surfaces are git-tracked — verified).
+
+**KTD-3 — One normalizer, one spec, generated — not hand-ported.** The original wording,
+*"generated from **or** tested against the same vectors,"* is an ambiguity rather than a boundary:
+two implementations sharing golden vectors are still two implementations, and vectors only catch
+divergence on inputs someone thought of. The traps this plan itself lists (`/g`, `.filter(Boolean)`,
+non-decomposable non-ASCII) are precisely the class a 20-vector suite passes and a real August
+waiver-wire name fails. **Resolved: "generated from" only.**
+
+"Three consumers" also undercounts, and it undercounts a second *function*. Actual surfaces:
+
+1. `draft-kit/draft_engine.py` — `norm()`
+2. `draft-kit/draft_engine.py` — **`tokens()`, an already-forked second normalizer in the same
+   file.** It repeats three of `norm()`'s four steps verbatim, deliberately skips the alias map, and
+   returns `{first, last}`. It differs in one more detail: `tokens()` coerces via `str(s)` and
+   `norm()` does not, so a non-string board `name` fails loudly today.
+3. the JS port (U7) · 4. the gate's uniqueness check (U4) · 5. U11's Wire matching, which the plan
+   requires to use "normalized tokens" — that is `tokens()`, not `norm()` · 6. U14's resolver
+
+**The spec owns both functions.** `norm_spec.json` holds the 17-entry `ALIASES` table, the ordered
+transformation steps with their regex parameters, and the golden vectors. All four current steps are
+expressible in syntax identical across Python `re` and JS `RegExp`; if a future rule is not portable,
+that is a signal to reject the rule rather than fork. `normalize.py` is a thin **interpreter** of the
+spec, so Python holds no independent copy of the rules either. U6 emits `const NORM_SPEC` into the
+HTML beside `const DATA` plus a small generic JS interpreter.
+
+**The equivalence assertion belongs in the gate, not only in U3's tests** — the gate runs before
+every emit; a test suite runs when someone remembers. `node` is installed, so the gate runs the
+emitted JS over all 174 board names and diffs against Python.
+
+**Extracting `tokens()` forces one decision that must be stated in U14's acceptance criteria:** if
+the shared cleaning helper adopts `str(s)`, today's loud `TypeError` on a malformed name becomes a
+silent coercion. This project's standing preference is loud.
+
+**KTD-4 — Resolve and freeze `sleeperId` on every board entry. Owned by U14.**
+
+*This is the highest-leverage single change in the plan, and in the original draft no unit
+implemented it* — while the Risks section made the permanence of the name join conditional on it
+landing. That gap is now closed by U14.
+
+Verified premises: every pick in the live lab feed carries `player_id` at top level **and** in
+`metadata`, string-equal in 120/120. Skill ids are numeric strings (`"7564"` = Chase); **DEF ids are
+team abbreviations** (`"HOU"`, `"LAR"`), so the schema check must accept both namespaces. The 14 DEF
+rows **already hold their Sleeper id** in the `team` field, making the resolver's real surface
+**160 rows, not 174** — but that convention must be asserted against the dump, not trusted.
+
+**The join is not a simple fallback chain, and getting this wrong re-opens the bug the KTD exists to
+close:**
+
+```
+attribution (which board row is this pick?):   id first, then norm   — ordered fallback
+removal     (is this man off the board?):      id  OR  norm         — set UNION
+```
+
+If *removal* were a fallback chain, a board row holding id A and a pick holding id B for the same man
+— Sleeper id churn, a DEF re-key, a bad resolve — would match neither branch, and **the drafted
+player stays on BEST AVAILABLE.** Keep both keys live for removal.
+
+This also creates a third severity that does not exist today: **matched by name but the ids
+disagree.** That means the primary key is rotting and the operator is silently running on the
+fallback. It must be loud, alongside U2's shipped unmatched block.
 
 **KTD-5 — The gate validates all rows and replays real picks.** Static checks over every one of the
 174 entries, then an execution gate replaying the lab feed at increasing prefix lengths so every
 player passes through the top-12 window. Justified by the latency finding: neither known break mode
 fires on an empty picks file.
 
-**KTD-6 — VORP v1 = historical curve; v2 = projections.** The curve reproduces the current board
-exactly, needs no name join (it keys off `pr`, already present), and is ~80 lines of stdlib. Ship it
-first to get the pipeline into version control. Projections are the better answer — they break the
-circularity — but they carry the join work and a systematic level shift that requires rewriting
-every worked example in the methodology doc. Sequence, don't skip.
+**KTD-6 — DECIDED (Briggsy, 2026-08-07): the curve and projections are each correct in a different
+place, and the board uses both.** His instruction was explicit: *"I want the action to be the most
+accurate and correct — level of change/effort is not in our decision tree. Accuracy wins the day."*
 
-**KTD-7 — Nothing hardcodes league shape.** Not 120, 128, 15, 16, or 8. `draft_engine.py` already
-gets this right (argv-driven, defaults 8/16). The HTML does **not** — line 252 emits round headers up
-to "Round 22 range" and line 233 renders 22 skill players as rounds 17-19, which do not exist. The
-generator templates shape from `meta` / live draft settings.
+The two methods measure different quantities, and the original "v1 now, v2 later" sequencing quietly
+treated them as the same quantity at different fidelities. They are not:
 
-**KTD-8 — Prefer reading shape from the draft object over typed arguments.** Running
-`draft_engine.py 3 8 15` against a 16-round draft makes `my_next` `None`, so the engine goes
-**silent about your own pick in round 16** — the K/DEF round. A wrapper should read `teams`/`rounds`
-from `/draft/<id>` rather than trusting muscle memory.
+| Region | Method | Why |
+|---|---|---|
+| **Replacement baselines** (QB12, RB41, WR47, TE12) | **historical curve** | An average over *ordinary* players. No order-statistic distortion. Sound as-is. |
+| **Player values** (elite tier especially) | **projections** | An expectation, which is the quantity that answers "what will this player score." |
+| **K and DEF** | **historical curve**, flagged | Sleeper ships no FG-distance splits and no points-allowed distribution — most of DST scoring. Projections are structurally incomplete here. |
+
+The finding that forces this ([`005`](../insights/005-the-tie-breaker-agreed-with-the-board-by-construction.md)):
+the curve is an **order statistic on realized outcomes**. "The player who finished RB1" is a slot
+filled each year by whoever's variance broke best — reigning RB1 finished RB26, RB68, and RB3 in
+following years; top-5 retention is 1.3/5 for RBs. So `RB1 = 385.9` describes no identifiable player,
+and mapping it onto a preseason rank inflates the **elite-to-replacement gap** — which is exactly the
+number that says how hard to pay up in rounds 1-2. Measured against real 2026 projections scored
+identically: **Chase 242.7 → 145.1**, mean |diff| 26.4 points.
+
+**Sequencing is unchanged — v1 still ships first** — but its role changes. v1 is the *reproduction
+check* that proves the pipeline is arithmetically correct (0.1 MAD against today's board), and it
+permanently owns replacement baselines and K/DEF. v2 then becomes the number the board ranks on for
+skill players. v1 is no longer a lesser version of v2; it is a component of the final answer.
+
+**Mixed provenance passes every check the plan currently has, and that must be fixed here.** The
+stated invariant is `{vorp, vbdRank, vbdDelta}` all-present-or-all-absent — that is **presence, not
+provenance**. A partial projections pull (the endpoint returned 3,111 records with only 559 carrying
+`pts_ppr`) would leave half the board curve-derived and half projection-derived, every field present,
+gate green — and cross-positional comparison, the plan's stated real value, silently meaningless.
+Therefore: **each row records which method produced its `vorp`, and the gate enforces which method is
+permitted in which region.** Never fall back silently to a stale cache — that is
+[`007`](../insights/007-presence-is-not-health-the-third-instance-of-one-pattern.md)'s shape exactly.
+
+**KTD-7 — Nothing hardcodes league shape.** Not 120, 128, 15, 16, or 8.
+
+Two corrections to the original statement. First, it named **two** sources for one fact — *"the
+generator templates shape from `meta` / live draft settings"* — which is the drift generator this
+plan exists to remove. **Resolved: the draft object is the origin.** `meta.shape` is a copy the
+generator stamps at build time along with the `draft_id` it came from; the HTML reads `meta`; the
+gate asserts `meta.shape` still matches the draft object it claims to descend from.
+
+Second, the claim that *"`draft_engine.py` already gets this right"* **is false**, and it mattered —
+it excused the engine from a rule it violates in four places:
+
+| Anchor | Hardcoded |
+|---|---|
+| `draft-kit/draft_engine.py:45` | `STARTERS = {"QB":1,"RB":2,"WR":2,"TE":1,"K":1,"DEF":1}` — roster shape |
+| `draft-kit/draft_engine.py:174-175` | the FLEX count `2`, twice |
+| `slot_of()` / `my_picks()` | pure snake assumed |
+| `draft-kit/players_data.json` → `strategy` | `Picks 1-3`, `picks 17-24`, `rounds 15-16`, `6 of 8`, `Bench = 6` (see KTD-1) |
+
+The live draft object carries all of it: `slots_qb:1, slots_rb:2, slots_wr:2, slots_te:1, slots_k:1,
+slots_def:1, slots_flex:2, slots_bn:6, teams:8, rounds:16`, plus `type:"snake"` and
+`reversal_round:0`. These drive the ROSTERS/NEEDS block *and* "their open needs" — the engine's read
+on what opponents will take. A settings change makes that advice confidently wrong with no error, and
+a third-round-reversal draft silently invalidates every pick-slot computation.
+
+The four verified HTML defects (anchors re-checked against the unmodified file):
+
+| Anchor | Defect |
+|---|---|
+| `family-feud-draft-board.html:252` — `Round ${Math.floor(i/8)+1} range` | renders **"Round 22 range"** at 174 rows |
+| `:233` — `Math.ceil(p.r/8)` | renders r=129-150 as **Rd 17/18/19** — 22 skill players in rounds that do not exist |
+| `:233` — `(p.pos==='K'\|\|p.pos==='DEF')?'15-16'` | hardcoded round string |
+| `:283` — `<h2>Defenses (rounds 15-16 only)</h2>` | **second** hardcoded round string, which "stop hardcoding 8" would never catch |
+
+**These belong to U6, not U7.** Under KTD-1 the HTML is a generated artifact; if U7 fixed the round
+math it would be hand-editing a generated file, reversing KTD-1 in the first unit after the generator
+lands. U7 already depends on U6, so this is a scope correction, not a resequencing.
+
+**KTD-8 — Read shape from the draft object, not from typed arguments. Owned by U15.**
+
+Running `draft_engine.py 3 8 15` against a 16-round draft makes `my_next` `None`, so the engine goes
+**silent about your own pick in round 16** — the K/DEF round. Like KTD-4, this was stated, agreed
+with, and **owned by no unit**; U15 closes it. The wrapper reads `settings` from the already-hauled
+`newsletter/data/inbox/sleeper_draft.json` (hourly, no new fetch) and feeds `teams`, `rounds`,
+`STARTERS`, and the flex count; argv becomes an override. It hard-refuses on `type != "snake"` or
+`reversal_round != 0` rather than computing a wrong pick order.
 
 **KTD-9 — The Nightly Feud: Jinja2 template, deterministic facts, LLM prose.** The current template
 has zero placeholder tokens and needs variable-length sections, so string substitution can't express
@@ -224,11 +364,55 @@ it without emitting HTML from Python (which is how the CSS rots). Hard rule: **d
 owns every fact and number; the LLM owns only connective prose.** The voice is the asset — it cannot
 be produced by f-strings, and canned rotations read as canned by week two over ~365 nights.
 
-**KTD-10 — Mule health means parseability, not bytes.** `rss_nbc_edge.xml` is an 813 KB HTML page
-that fails XML parse, yet the mule reports `ok (799632 bytes)` because `Fetch-Source` only checks
-`size > 50`. `mule_status.json` reads 10/10 green while the feed chosen for player news is garbage.
-This is the third instance of this project's signature failure — a health signal reporting success
-for something it never checked (`Last Result: 0`, `NumberOfMissedRuns`, now this).
+**Dependency policy, because two installs were about to be discovered in draft week.** Verified on
+this machine: **neither `jinja2` nor `reportlab` is installed.** Both resolve on Python 3.14.3 and
+both ship pure-Python `py3-none-any` wheels (`reportlab-5.0.0`, `jinja2-3.1.6`), so no compiler is
+involved — the risk is real but bounded. U6 correctly vetted reportlab's wheel; KTD-9 got no
+equivalent check. **Install and verify both now, not in draft week**, and pin them. Keep Jinja2:
+variable-length sections and autoescaping are exactly its job, and the argument against f-strings
+holds.
+
+**KTD-10 — Mule health means parseability, not bytes — and validation happens *before* the write.**
+
+Re-measured live at the mule's actual URL
+(`https://www.nbcsports.com/fantasy/football/player-news?rss=1`), which is the one that matters:
+
+```
+HTTP 200 · 803,573 bytes · Content-Type: text/html · <html class="SectionPage"> · 0 <item> elements
+```
+
+It fails on content-type, on parse, and on item count, while passing the only check the mule runs
+(`size > 50`). **Content-Type is the cheapest of the three guards** — one string compare, before any
+parsing — and the plan did not name it. Validate all four: status, content-type, parse, item count.
+
+Parseability audit of today's cargo, for contrast with `mule_status.json`'s 10/10:
+
+| Feed | Bytes | Parses | Items | Mule says |
+|---|---|---|---|---|
+| yahoo_nfl | 283,191 | yes | 50 | ok |
+| cbs_nfl | 35,787 | yes | 36 | ok |
+| espn_nfl | 14,033 | yes | 23 | ok |
+| rotowire | 3,322 | yes | 5 | ok |
+| **nbc_edge** | **801,412** | **no** (line 11) | **0** | **ok** |
+
+**The missing decision is the write policy.** `Fetch-Source` overwrites the inbox file, so validation
+as originally specified turns silent-wrong into loud-empty — better, but the previous good cargo is
+still destroyed by a bad fetch. **Fetch to a temp name, validate, replace only on pass.** A failed
+source then leaves the last good cargo in place, and `mule_status.json` records both the failure
+*and the age of what is still on disk*. That is
+[`007`](../insights/007-presence-is-not-health-the-third-instance-of-one-pattern.md) applied to the
+write path, not only to the report.
+
+**Parse with `defusedxml`, not stdlib ElementTree.** These payloads arrive off the public internet
+and stdlib is vulnerable to entity-expansion by default. `defusedxml` is **already installed on this
+machine** — the hardening is free.
+
+**Open Question 3 is resolved: replace `rss_nbc_edge` with ProFootballTalk**
+(`https://profootballtalk.nbcsports.com/feed/`). Measured: HTTP 200, parses, **30 items, 9 naming
+board players**. It is NBC's own property, so it fills the same editorial slot the broken feed was
+chosen for, at six times Rotowire's volume. Candidates rejected by measurement: FantasyPros RSS
+(404), CBS fantasy RSS (404). Rotowire stays (5 items, all 5 on-board — dense but thin). This takes
+the wire from 4 working feeds to 5 and from 114 items to ~144.
 
 ---
 
@@ -258,7 +442,51 @@ end to end; doc corrections.
 
 ## Implementation Units
 
+> **Deepening amendments (2026-08-07).** Four corrections apply across every unit below; they are
+> stated once here rather than repeated thirteen times.
+>
+> **1 — Tests live in `tests/`, never in `draft-kit/`.** Every unit's `Files:` list named
+> `draft-kit/test_*.py`. `python -m unittest discover -s tests` **will never find those**, and a
+> suite that is never discovered is green because it never ran — [`006`](../insights/006-four-verification-steps-that-could-silently-do-nothing.md)
+> at the plan level. The 46 shipped tests already live in `tests/`; U1 and U2's file lists were
+> simply wrong. All new suites go to `tests/test_<unit>.py`.
+>
+> **2 — Placement rule.** Anything the engine imports lives beside the engine in `draft-kit/`;
+> everything else lives in `scripts/` and derives its paths from `__file__`. **No new file opens
+> anything by literal name from cwd** — `draft_engine.py` is the sole grandfathered exception, and it
+> is exactly why the runbook's Step 3.1/3.3 cwd contradiction exists. Note `draft-kit` is not a valid
+> Python identifier, so nothing under it can ever be imported as a package; importers do a single
+> `sys.path.insert`, as `tests/test_merge_picks.py` already does for `scripts/`.
+>
+> **3 — Corrected sequencing.** U9 moves to Phase 0 and U5 is unblocked from U4:
+>
+> ```
+> U9  →  U3  →  U14  →  { U4  ∥  U5 }  →  U6  →  { U7 ∥ U15 }  →  U8  →  U10 → U11 → U12 → U13
+> ```
+>
+> *U9 first:* it has **Dependencies: none**, reads cargo that already arrives hourly, and is small.
+> The Risks section claimed it was "deliberately early" while it sat in Phase 3 behind nine units.
+> The asymmetry is one-sided — shipping it first costs an alert that cannot yet trigger a one-command
+> rebuild; shipping it last risks never getting the alert while the board silently expires. The room
+> went **4 → 6 of 8 seats in a single day** (2026-08-07) and `start_time` is still null.
+> *U5 unblocked:* the scoring pipeline never touches the gate — the gate consumes its output. U4's
+> listed dependency was a verification preference, not a build dependency. U4's own dependency on U3
+> is soft: only the `norm()`-uniqueness check needs it.
+>
+> **4 — A verification step that cannot fail loudly is not a verification.** Every acceptance
+> criterion below must be able to go red. Concretely, for any unit whose tests assert "the gate
+> rejects X": **a gate that rejects everything passes all of them.** Each such suite must also keep a
+> clean-board positive control, assert the rejection message *names the offending row or field*, and
+> assert the mutation actually altered the fixture before the gate saw it — without that last one it
+> reproduces 006's patch script, whose `str.replace` silently did not apply.
+
 ### Phase 0 — Gates (block everything downstream)
+
+> **U1 and U2 are SHIPPED** (2026-08-07, commits `519e4bb3` and `21c22ce7`) — 46 tests passing via
+> `python -m unittest discover -s tests` from the repo root. Their `Files:` lists below name
+> `draft-kit/test_*.py`; the real suites live in `tests/test_merge_picks.py` and
+> `tests/test_engine_matching.py`. **U9 joins this phase and is built first** (see amendment 3 above).
+> U1 has one reopened item: the `slot_names.json` guard recorded in Risks.
 
 #### U1. Close cross-draft contamination
 
@@ -325,6 +553,77 @@ full 174-name board sweep asserting zero collisions.
 
 **Verification:** identical output from Python and JS across every vector.
 
+**Deepening amendment — extract the shared cleaning prefix, not just `norm()`.** `draft_engine.py`
+holds a *second* normalizer, `tokens()`, which repeats three of `norm()`'s four steps verbatim in the
+same file. Lifting only `norm()` leaves it holding a private copy, free to drift — the exact bug class
+U3 exists to kill. The extraction forces one decision that must be **stated in the acceptance
+criteria**: `tokens()` coerces via `str(s)` and `norm()` does not, so a non-string board `name` fails
+loudly today. If the shared helper adopts `str(s)`, that loud failure becomes a silent coercion. The
+project's standing preference is loud. Per KTD-3 the spec owns **both** functions, `normalize.py`
+interprets the spec rather than re-implementing it, and the JS is generated — not hand-ported.
+
+**Placement correction:** `norm_spec.json` must not be a runtime input read by literal name — that
+would kill the engine from any cwd but `draft-kit/`, and the subprocess test harness (cwd = tmpdir)
+would fail on test #1. `normalize.py` is the runtime source of truth; the spec JSON and golden vectors
+are emitted from it, verified by U4, and consumed by the generated JS.
+
+---
+
+#### U14. Resolve and freeze `sleeperId` — the join key
+
+**Goal:** replace a drifting name join with a stable id, once, under human adjudication.
+**Dependencies:** U3. **Blocks U4 and U6.**
+**Files:** `scripts/resolve_sleeper_ids.py`, `draft-kit/sleeper_ids.json`, `draft-kit/cache/`,
+`tests/test_resolve_sleeper_ids.py`
+
+**Why this unit exists:** KTD-4 calls this the highest-leverage single change in the plan and the
+Risks section makes the permanence of the name join conditional on it — and in the original draft
+**no unit implemented it.** U4's names check ("every board name resolves against the live Sleeper
+dump under `norm()`") *is* the name join it was supposed to replace, performed at generation time and
+then thrown away.
+
+**Approach.** Resolution and validation are different responsibilities and must not share a unit: a
+gate that mutates its input is not a gate. Resolution is non-deterministic against an external corpus,
+needs a pinned snapshot, and needs one-time human adjudication for the ambiguous residue.
+
+Candidate generation per [`004`](../insights/004-name-similarity-could-not-separate-the-two-populations-at-any-threshold.md):
+**`(team, position)` intersected with at least one shared normalized name token.** Never a similarity
+threshold — the floors are inverted (0.800 for genuinely different players, 0.370 for the same man),
+so no threshold exists. A preference rule ("prefer active", "prefer higher `years_exp`") is that same
+threshold in a new costume; 004 retired the *class*, not one instance.
+
+The id is an **input, not an output**: a separate committed ledger `draft-kit/sleeper_ids.json` keyed
+by board name, carrying `{sleeperId, resolved_on, dump_fetched_at, evidence:{team, pos, matched_token}}`.
+The generator **reads and only appends**. A row that already has an id and would now resolve to a
+different one is a hard stop naming both ids — never an overwrite. The effect is that an id change
+becomes a one-line diff in a small file instead of an invisible byte inside a regenerated 53 KB board.
+
+Resolve against a **pinned cached dump** in `draft-kit/cache/` with a recorded fetch timestamp, never
+a live pull at generation time — a live dump moves the candidate set between two runs on the same
+day. This also closes a gap the original plan left open: **U4 as written required the network on
+draft morning**, because the mule hauls league/users/draft/trending, not `/players/nfl`.
+
+**Scope note:** the 14 DEF rows already carry their Sleeper id in the `team` field (`"HOU"`, `"LAR"`),
+so the real surface is **160 rows** — but that convention is asserted against the dump, not trusted.
+
+**Test scenarios:**
+- exactly one candidate → resolved, ledger entry written with its evidence
+- **zero candidates → non-zero exit naming the row and the searched key** `(team, pos, tokens)`
+- **multiple candidates → non-zero exit printing every candidate's `player_id`/`team`/`years_exp`/`status`; never auto-select**
+- post-resolution re-assertion: dump `position` == row `pos` **and** dump `team` == row `team`; a flip on either is a different man or a stale dump
+- bijection: 174 rows → 174 distinct ids (a duplicate id is the documented "one pick removes two rows" failure by a new road)
+- all 14 DEF rows: assert `dump[TEAMCODE].position == "DEF"` rather than trusting the convention
+- a row badged `R` resolving to `years_exp > 0` fails — cheap, and catches the rookie/veteran collision that matters
+- re-running against an unchanged ledger is a no-op (no rewrites, no reordering)
+- a row whose stored id would now resolve differently → hard stop naming both ids
+- an explicit `unresolved: [{name, reason, approved_on}]` block the gate requires, so skipping a
+  genuinely unresolvable row (a retired player on draft morning) becomes a *recorded decision* rather
+  than a silent gap — and any unresolved row is flagged by the engine as name-matched-only, wired into
+  U2's shipped warning block
+
+**Verification:** all 174 rows carry an id or appear in `unresolved` with an approval; re-running
+changes no bytes; the lab feed's 120 picks attribute by id with zero name fallbacks.
+
 #### U4. The board schema gate
 
 **Goal:** make it impossible to ship a board the engine cannot eat.
@@ -367,6 +666,64 @@ and a clean board passing every check.
 
 **Verification:** every mutation the research reproduced is caught before emit.
 
+**Deepening amendments.** Dependencies become **U3, U14**. The gate runs **offline**, against the
+pinned dump U14 caches — never a live pull.
+
+*The gate is born red, and that is correct.* Two of its cross-surface checks fail the moment they are
+written, because the surfaces are drifted today. Acceptance is therefore **"the gate correctly reports
+the known-drifted surfaces as failing"**, not "the gate passes." A gate that must be born green is a
+gate someone weakens until it is.
+
+*Checks the original list did not have, each traceable to a verified defect:*
+
+- **`dst`** — a list of `{rank:int, team:str}`, `rank` unique and contiguous, `len == 8`, entries
+  exactly the top-8 DEF rows by `pr`, and `dst[i].team == NAME[row.team]` through the committed
+  code→name table. The verified drift was **entirely in `dst` and `strategy`** — the two sections a
+  row-level gate never inspects. The truncation rule (14 DEF rows → 8 `dst`) is asserted, not
+  inherited.
+- **`strategy`** — exactly `{rules, roundPlan, slotNotes, kickers}`, each non-empty; every player name
+  in it resolves to a board row through the shared normalizer and any `(name, team)` pair matches that
+  row's team; every count asserted in prose matches a computed count ("10 of them" vs the actual K
+  count); every round/pick number falls within `teams × rounds` from `meta`.
+- **Prose outside the `DATA` blob.** The original cross-surface check inspects only the extracted
+  object, so a refresh on Aug 20 passes deep-equal while shipping a board whose visible header still
+  reads Aug 5. Verified literals: `family-feud-draft-board.html:177` (`Draft ~Aug 29, 2026`), `:195`
+  (`Rankings synthesized Aug 5, 2026` — **the only human-visible date on the board**), and `:275`,
+  which guards on `DATA.meta.vbd` existing and then prints `waiver QB12 · RB41 · WR47 · TE12; last
+  starters QB8 · RB21 · WR27 · TE8` as **literals** while those exact values sit in
+  `meta.vbd.baselineWaiver` / `meta.vbd.lastStarter` as data. It looks data-driven, which is why it
+  survived review — and U5 is licensed to change precisely those numbers. **No number appearing in
+  `meta` may exist as a literal in generated prose; line 275 is the test fixture.**
+- **`meta.updated`** — currently has **zero readers anywhere in the repo** (grepped `.py`/`.html`/`.ps1`).
+  It is a self-reported claim nothing checks and nothing displays. The gate rejects a board whose
+  `meta.updated` predates its newest input (curve cache, dump, ledger): *"claims Aug 5, built from
+  Aug 20 inputs"* is the drift signature and is mechanically detectable. Every generated surface
+  renders it from data.
+- **Badge key-set identity.** Every code in every row's `badges` must be a key of `meta.badges`.
+  `draft_engine.py:280` hardcodes the glyph table with `.get(b,"")`, so an unknown code renders as
+  **nothing, silently**, while the HTML renders `undefined`. "All three renderings agree" must mean
+  *identical key sets*, not agreement on the intersection.
+- **`sleeperId`** present, well-formed in either namespace (numeric string or team code), unique, and
+  resolvable against the pinned dump.
+- **Python↔JS normalizer equivalence** run over all 174 board names (per KTD-3 this belongs in the
+  gate, which runs before every emit, not only in a test suite someone remembers to run).
+
+*Two modes, because the checks have incompatible runtime profiles.* Static row and cross-surface
+checks are milliseconds and offline — safe to run on draft morning. The execution replay is up to 120
+subprocess invocations. The plan never said when the gate runs: **`--fast`** (static + cross-surface)
+and **`--full`** (adds the replay, pre-commit).
+
+*The lab feed does not exist and must be captured.* No fixture exists anywhere in the repo — tracked,
+untracked, or gitignored — so "replay the lab feed" currently has nothing to replay. The spent room
+(`1390923383440424960`) is still live and verified: `status: complete`, 8 teams × 15 rounds, 120
+picks, `pick_no` contiguous 1-120, single `draft_id`, every pick carrying `player_id`. Capture it to
+`tests/fixtures/lab_feed_120.json` (49.5 KB) as a committed fixture. It is a spent mock with
+`league_id: null` and nothing stops Sleeper reaping it.
+
+*Specify the prefix schedule, don't say "increasing."* The reproduced `vbdDelta` break fired at
+**exactly three picks**; deciles would have missed it. The schedule must include 1, 2, **3**, 4, then
+widen.
+
 #### U5. VORP pipeline v1 — historical curve
 
 **Goal:** replace prose with reproducible code; make the refresh arithmetic free.
@@ -393,6 +750,30 @@ PowerShell 5.1, so the literal remedy in CLAUDE.md raises on that one file).
 
 **Verification:** pipeline regenerates today's board from scratch and the gate passes it.
 
+**Deepening amendments.** Dependencies: **none on U4** — the scoring pipeline never touches the gate;
+the gate consumes its output. U4 and U5 run in parallel.
+
+- **Read the baselines, don't re-hardcode them.** `meta.vbd.baselineWaiver` already holds
+  `{QB:12, RB:41, WR:47, TE:12}` and `meta.vbd.lastStarter` holds `{QB:8, RB:21, WR:27, TE:8}`. U5
+  reads them from the board; U4 validates their presence. Re-typing them creates a fourth copy of
+  numbers that already appear in `meta`, in the HTML prose at `:275`, and in the methodology doc.
+- **Protect v1's no-name-join property.** Per KTD-6 the curve keys off `pr`, which is already present.
+  Do not fold U14's resolution into U5 — that would import the join risk into the one component
+  designed to be free of it.
+- **Record `vorp` provenance per row** (curve vs projection), per KTD-6. The stated invariant
+  `{vorp, vbdRank, vbdDelta}` all-present-or-all-absent is **presence, not provenance**: a partial
+  projections pull yields a half-curve, half-projection board with every field present and the gate
+  green, silently voiding cross-positional comparison. The gate enforces which method is permitted in
+  which region — projections for skill-player values, curve for replacement baselines and for K/DEF
+  where Sleeper ships no FG-distance splits and no points-allowed distribution.
+- **Coverage ratchet.** Record the covered fraction of the 174 rows per projections pull and refuse a
+  v2 regeneration if coverage falls below the last accepted pull. Never fall back silently to a stale
+  cache — that is [`007`](../insights/007-presence-is-not-health-the-third-instance-of-one-pattern.md)'s
+  shape.
+- **`utf-8-sig` does not belong here.** The original text filed that note under U5, which has no reason
+  to read `mule_status.json`. It belongs to U10/U11. The blanket rule: anything reading a
+  PowerShell-written file uses `utf-8-sig`; everything else `utf-8`.
+
 #### U6. The generator — one command, every surface
 
 **Goal:** make "refresh the board" a single verified command.
@@ -416,6 +797,72 @@ needs no compiler on 3.14.
 - regenerating an unchanged board is byte-stable (no spurious diffs)
 
 **Verification:** delete all three derived surfaces, run one command, gate passes, engine runs.
+
+**Deepening amendments.** Dependencies become **U3, U14, U4, U5**.
+
+*The emit is not atomic, and the plan predicts its own crash.* "On gate failure, emit nothing" covers
+the gate — **not a crash during emit**. The plan itself forecasts that crash: a badge glyph Helvetica
+cannot encode kills the PDF renderer *after* the HTML has been written. Outcome: new HTML, old PDF,
+gate green, a non-zero exit nobody reads. That is today's drift, reproduced by the machine built to
+prevent it.
+
+**Invariant: write-all-or-write-none.** Generate every surface into a staging directory, run all
+cross-surface checks **against the staged set**, then `os.replace` each into place. Windows gives
+atomic per-file replace but no atomic multi-file move, so step 0 is an unconditional copy of the
+current surfaces into a gitignored `draft-kit/.last_good/`; any replace failure restores from it.
+**Acceptance test: inject a raise inside the PDF renderer and assert zero on-disk files changed
+byte-for-byte.**
+
+*Recovery, which the plan had none of.* All four surfaces are git-tracked (verified), so git is the
+mechanism — it just was never written down:
+- Refuse to run if `git status --porcelain draft-kit/` is non-empty, unless `--allow-dirty`, which
+  stamps `meta.build.dirty: true` so provenance stays honest.
+- **One refresh = one commit** containing every surface plus the id ledger and the curve-cache
+  manifest. Partial commits destroy "roll back one commit," which is the only recovery a person can
+  execute at 7am.
+- `meta.build = {generator_sha, source_sha256, curve_cache_sha, sleeper_dump_fetched_at, built_at}`.
+  Without it, *"which board made this PDF?"* is unanswerable — the exact question that produced the
+  current mess.
+- **`--verify-only` mode**, running every gate check against the on-disk surfaces and writing nothing.
+  This is the draft-morning "is my board sane?" command. It must exist, because otherwise the only way
+  to check the board is to regenerate it — making the risky operation the only diagnostic.
+- `draft-kit/build_manifest.json` carrying a sha256 per generated surface, so `--verify-only` names
+  any file that no longer matches. This is the **only** detector for the plan's central assertion that
+  surfaces are never hand-edited — and it covers the PDF, which has no comment channel. Wire
+  `--verify-only` against the real on-disk surfaces into the test suite, so the suite goes red the
+  moment a surface drifts; a gate invoked only by a human who already suspects a problem is
+  `size > 50` in a lab coat.
+
+*Emit corrections:*
+- **Derive `dst` from the DEF rows** (KTD-1); ship the committed 32-entry team-code→name table it
+  needs. Never carry `dst` forward.
+- **Delete `draft-kit/draft_rankings_data_2026-08-05.json`** (KTD-2) and assert the filename class
+  cannot reappear at `draft-kit/` root.
+- Emit `meta.shape` stamped with the `draft_id` it came from; rewrite `:233` and `:252` to read it;
+  **kill both `'15-16'` strings, including the `<h2>` at `:283`** — naming only "hardcoding 8" leaves
+  that one alive.
+- Emit `const NORM_SPEC` plus the generic JS interpreter (KTD-3); carry `sleeperId` into the HTML blob
+  and the PDF.
+- **Edit `draft-kit/draft_engine.py:280` in this unit** to read `meta.badges[code].glyph`. U6's stated
+  approach names the fix but its `Files:` list contains only generator files, so the engine's
+  hardcoded table would survive as a fourth glyph source. The Latin-1 assertion runs against the
+  `glyph` values (`» † ° §` are safe; the emoji `icon` values are not).
+
+*Completeness, because a refresh must be provably complete and not merely apparently complete:*
+- **Old-value sweep.** The generator holds both the previous and new value of every board-derived
+  quantity. Grep the whole repo — `docs/`, `README.md`, `TODO.md`, HTML prose, newsletter templates —
+  for each *previous* value and fail on any survivor. This is the mechanical form of the
+  stats-single-source rule, and it is only possible because the generator holds both sides.
+- **Generate the worked examples.** `docs/ranking-methodology.md` hardcodes Gibbs 268.4, Chase 242.7,
+  Allen 129.6 and the scoring formula. Wrap its example table in a `BEGIN/END GENERATED` block the
+  generator rewrites; date-stamp any figure the generator cannot own so a stale number reads as
+  history rather than current fact.
+- **One-page refresh diff report** — rows whose `r` changed, rows added or removed, ids that *would*
+  have changed (must be zero), max |Δvorp|, per-position counts before and after. Briggsy reviews that
+  instead of a 53 KB diff. **Without it the interactive refresh loop is unreviewable by construction**,
+  which contradicts the plan's own load-bearing requirement. Ships in U6, not later.
+- The completeness proof is a **round trip**: on a fresh checkout of the refresh commit,
+  `--verify-only` passes *and* the engine exits 0 against the lab feed at every prefix length.
 
 ---
 
@@ -470,11 +917,50 @@ null — three unrelated "3"s), and `mule_status.json`'s BOM.
 **Test scenarios:** `Test expectation: none — documentation.` Verify by executing the runbook's draft
 loop start to finish from a single stated directory.
 
+**Deepening amendment — the runbook carries zero rollback content, and must.** Add a section giving
+the literal restore: resolve the last green build sha, `git checkout <sha> -- draft-kit/`, then run
+`--verify-only` to prove the restored set is self-consistent. Do not make someone browse git history
+under a clock. Also record the two new landmines this plan creates: `draft-kit` is not a valid Python
+identifier so nothing under it is importable as a package, and `normalize.py` locates its spec by
+`__file__` while `draft_engine.py` deliberately opens its inputs relative to **cwd** — two path
+conventions in one directory, the same family as the "absolute paths in scheduled tasks" landmine.
+
+---
+
+#### U15. Engine shape wrapper — read the draft, don't type it
+
+**Goal:** stop the engine trusting muscle memory for league shape.
+**Dependencies:** none (cargo already arrives). Sequence alongside U7.
+**Files:** `scripts/run_engine.py`, `tests/test_run_engine.py`
+
+**Why this unit exists:** KTD-8 was stated, agreed with, and **owned by no unit** — the same defect as
+KTD-4. Nothing in U1-U13 contains an engine wrapper.
+
+**Approach.** Read `settings` from the already-hauled `newsletter/data/inbox/sleeper_draft.json` — no
+new fetch, the mule refreshes it hourly — and feed `teams`, `rounds`, `STARTERS`, and the flex count
+to the engine. Argv becomes an override, not the source. Verified available in that object:
+`slots_qb:1, slots_rb:2, slots_wr:2, slots_te:1, slots_k:1, slots_def:1, slots_flex:2, slots_bn:6,
+teams:8, rounds:16, type:"snake", reversal_round:0`.
+
+**Test scenarios:**
+- `rounds: 16` in cargo, no argv → engine sees 16; the round-16 K/DEF pick is not silent
+- argv override disagrees with cargo → override wins **and says so on stdout**
+- `type != "snake"` or `reversal_round != 0` → **hard refusal**, non-zero exit, naming the value. Every
+  pick-slot computation in `slot_of()` and `my_picks()` assumes pure snake; a third-round-reversal
+  draft silently invalidates all of them — the same failure signature as the integrity-gate landmine,
+  reached by an unguarded route
+- roster shape from cargo differs from the engine's hardcoded `STARTERS` → the wrapper's values win,
+  and the difference is reported
+- cargo missing or stale → degrades to argv **with a stated reason**, never silently
+
+**Verification:** the engine's ROSTERS/NEEDS block and "their open needs" reflect the live draft
+settings, not `draft_engine.py:45`.
+
 ---
 
 ### Phase 3 — The hauler grows consumers
 
-#### U9. Draft-state watcher — the first consumer
+#### U9. Draft-state watcher — the first consumer  ⟵ **BUILT FIRST (moved to Phase 0)**
 
 **Goal:** notice when the draft becomes real, without depending on anyone remembering.
 **Dependencies:** none (cargo already arrives)
@@ -500,6 +986,28 @@ because the date is a handshake and can move earlier.
 
 **Verification:** replay a synthetic sequence and confirm each transition fires exactly once.
 
+**Deepening amendments. This unit moves to Phase 0 and is built first.** It has `Dependencies: none`,
+it consumes cargo that already arrives hourly, and it is small. The Risks section called it "the
+mitigation… deliberately early in the plan" while it sat in Phase 3 behind nine units. Shipping it
+first costs an alert that cannot yet trigger a one-command rebuild; shipping it last risks never
+getting the alert at all, while the board silently expires. The room went **4 → 6 of 8 seats in a
+single day** and `start_time` is still null.
+
+**The guard the plan does not have: stale cargo reads as a quiet league.** The watcher diffs current
+cargo against the last-seen snapshot, so a frozen mule produces *"no change"* forever — indistinguishable
+from a genuinely uneventful day. That is this project's signature failure for the fourth recorded time
+([`002`](../insights/002-a-frozen-success-code-is-indistinguishable-from-a-healthy-one.md),
+[`007`](../insights/007-presence-is-not-health-the-third-instance-of-one-pattern.md)). **Before
+trusting any diff, the watcher reads `run_at` from `mule_status.json` (with `utf-8-sig` — it carries a
+BOM) and treats cargo older than a threshold as its own alert condition.** Freshness is the only
+signal that has survived every instance of this bug in this project. A "no change" verdict computed
+over stale cargo is not a verdict.
+
+Two more unhappy paths to specify: **`start_time` set and then changed** (fire again, naming both the
+old and new datetime — a moved draft is exactly the scenario the unit exists for), and **an alert
+nobody reads for two days** (the alert file is append-only and carries its own age, so the next thing
+to open it sees when the gun actually went off, not just that it did).
+
 #### U10. Harden the mule — validate parseability, not bytes
 
 **Goal:** stop `mule_status.json` reporting green for garbage.
@@ -519,6 +1027,15 @@ is the most fantasy-dense of the working four but ships only 5 items, so a repla
 - `mule_status.json` stays readable by the existing PowerShell reader
 
 **Verification:** run against today's cargo and confirm the status file reports 9/10, not 10/10.
+
+**Deepening amendments** (full reasoning in KTD-10): validate **status, content-type, parse, and item
+count** — content-type is the cheapest guard and the original list omitted it (the live payload is
+`Content-Type: text/html`). **Validate before writing**: fetch to a temp name, replace only on pass, so
+a failed source leaves the last good cargo in place instead of destroying it; record both the failure
+and the age of what remains on disk. Parse with **`defusedxml`**, already installed, since these
+payloads arrive off the public internet. Replace `rss_nbc_edge` with **ProFootballTalk**
+(`https://profootballtalk.nbcsports.com/feed/` — 30 items, 9 naming board players), taking the wire to
+5 working feeds and ~144 items.
 
 #### U11. The Nightly Feud — build the half that never existed
 
@@ -617,20 +1134,67 @@ example and case study in the methodology doc, the HTML blob, and the PDF. The g
 mitigation; until it exists, every refresh is the risk.
 
 **The draft date can move earlier.** `start_time` is null and the target is a handshake. U9 is the
-mitigation, and it is deliberately early in the plan.
+mitigation — and as of the deepening it is **actually early**, moved to Phase 0 and built first. The
+original text asserted it was "deliberately early" while it sat in Phase 3 behind nine units. The room
+went 4 → 6 of 8 seats on 2026-08-07; the leading indicator is already moving.
+
+**A team change between refreshes moves the join key.** `(team, position)` is U14's candidate key, and
+a trade relocates it. On the next refresh the board says DET, the dump says NYJ, zero candidates, hard
+stop — correct *if loud*. The gate additionally checks that every row's `team` matches the cached
+dump's team for that `sleeperId`. Because picks carry `metadata.team_changed_at`, the engine should
+flag a pick whose player changed team after `meta.updated` as "board team stale" — Briggsy reads the
+team code while deciding. **Sequencing consequence: do not run a second interactive refresh before
+`sleeperId` exists.**
+
+**`slot_names.json` is U1's bug one file over.** `draft_engine.py:49-52` reads it inside a bare
+`except Exception`, so a corrupt file silently degrades to no seat names — and **a stale file from a
+spent mock silently labels the wrong humans** in the advisory. It is gitignored, so `git status` never
+shows it: the identical invisibility that made `picks.json` dangerous. U8 establishes the real draft's
+metadata has zero `slot_name_*` keys, so this file is hand-made — a hand-edited, untracked,
+unvalidated surface inside a plan whose thesis is that no surface is hand-edited. **Fold into U1:** the
+file carries the `draft_id` it was built for, and the engine ignores a mismatched file **with a
+warning**, never silently.
+
+**The gate could have needed the network on draft morning.** U4 as originally written validated
+against "the live Sleeper player dump" with no cache and no owner. U14's pinned corpus closes this;
+the risk is recorded because the failure mode — an outage or rate-limit making the gate unrunnable at
+exactly the moment it matters — is not obvious from U4's text alone.
 
 ---
 
 ## Open Questions
 
-1. **Does the dated snapshot survive?** It has zero readers and has already drifted. Generated
-   byte-identical copy, or delete it? *Recommendation: generate it; delete if it can't be exact.*
-2. **How hard should we lean on elite-tier spread** given the order-statistic finding? A doctrine
-   call, not an engineering one.
-3. **Replacement for `rss_nbc_edge`** — the feed chosen for player news is the broken one, and the
-   most fantasy-dense working feed ships 5 items.
-4. **Does the newsletter's LLM prose run per-section or per-edition?** Affects cost, latency, and how
-   gracefully it degrades unattended.
+**All four are resolved as of the 2026-08-07 deepening.** Kept here with their answers rather than
+deleted, so the reasoning survives.
+
+1. **Does the dated snapshot survive?** → **RESOLVED — delete it** (Briggsy, 2026-08-07). Git is
+   already the dated archive; a byte-identical copy's only reachable states are redundant or wrong;
+   and repeated refreshes would pile up near-twins to choose between on draft morning. See KTD-2.
+2. **How hard should we lean on elite-tier spread?** → **RESOLVED — the curve and projections are each
+   correct in a different place** (Briggsy, 2026-08-07: *"accuracy wins the day"*). Replacement
+   baselines and K/DEF keep the historical curve; skill-player values move to projections; per-row
+   provenance is recorded and gate-enforced. See KTD-6.
+3. **Replacement for `rss_nbc_edge`?** → **RESOLVED by measurement — ProFootballTalk**
+   (`https://profootballtalk.nbcsports.com/feed/`): HTTP 200, parses, 30 items, 9 naming board
+   players. NBC's own property, so it fills the same editorial slot at six times Rotowire's volume.
+   FantasyPros and CBS-fantasy RSS both 404. See KTD-10.
+4. **Per-section or per-edition LLM prose?** → **RESOLVED — per-section.** The plan already requires
+   sections to degrade independently ("a missing feed → that section degrades with a stated reason;
+   the edition still publishes"), and a single per-edition call cannot honor that: one failure takes
+   the whole edition's prose with it. Per-section also bounds each prompt to the facts that section
+   owns, which is the cheapest structural guard on KTD-9's hard rule that the LLM never touches a
+   number. Cost and latency are irrelevant at one edition a night. **Degradation:** the edition
+   publishes with facts and no connective prose rather than failing — already an acceptance criterion
+   in U11.
+
+**New question raised by the deepening, and it is a real fork:** should shared code move to an
+importable, hyphen-free package at repo root (e.g. `feud/`) holding `normalize.py`, `norm_spec.json`,
+`scoring.py`, and `validate_board.py`, leaving `draft-kit/` for draft-day-facing artifacts and the
+engine? `draft-kit` cannot be imported as a package, so U9, U11, U14 and U15 all need `sys.path`
+manipulation in production code to reach the shared normalizer. *Recommendation: defer.* The cheaper
+fallback — keep it in `draft-kit/`, put the `sys.path` bootstrap in exactly one shared place, and
+record the `__file__`-vs-cwd rule as a landmine — is reversible, and a directory move before a draft
+is not the risk to take. Revisit after the draft.
 
 ---
 

@@ -87,19 +87,24 @@ def refuse_contaminated(where, foreign, draft_id, n):
 
 
 def main():
-    USAGE = ("usage: merge_picks.py <draft_id> [--check]\n"
-             "  --check merges and reports WITHOUT writing picks.json\n"
+    FLAGS = ("--check", "--rebuild")
+    USAGE = ("usage: merge_picks.py <draft_id> [--check] [--rebuild]\n"
+             "  --check   merges and reports WITHOUT writing picks.json\n"
+             "  --rebuild writes the fetched feed VERBATIM instead of merging into what is on\n"
+             "            disk. Only after a VANISHED warning, once a re-run has confirmed the\n"
+             "            pick really was reversed upstream.\n"
              "  real league draft_id: 1390509994847240192")
     argv = sys.argv[1:]
     check_only = "--check" in argv
+    rebuild = "--rebuild" in argv
     # Reject unknown flags rather than ignoring them. Swallowing `--dry-run` or a mistyped `-check`
     # and then WRITING is the same belief-mismatch that made the fake --check dangerous: the
     # operator thinks nothing happened to disk and is wrong.
-    unknown = [a for a in argv if a.startswith("-") and a != "--check"]
+    unknown = [a for a in argv if a.startswith("-") and a not in FLAGS]
     if unknown:
         sys.exit(f"unrecognised option(s): {' '.join(unknown)}\n"
                  f"Refusing to run rather than guess -- did you mean --check?\n{USAGE}")
-    argv = [a for a in argv if a != "--check"]
+    argv = [a for a in argv if a not in FLAGS]
     if not argv:
         sys.exit(USAGE)
     # A pasted id often arrives with a trailing newline or slash. Comparing that raw against the
@@ -135,9 +140,28 @@ def main():
         refuse_contaminated("THE SLEEPER RESPONSE", foreign, draft_id, len(incoming))
         return 2
 
-    merged = dict(before)
-    merged.update({p["pick_no"]: p for p in incoming})   # union; newest wins, nothing is dropped
-    picks = [merged[k] for k in sorted(merged)]
+    # A DUPLICATE IN THE FEED HAS TO BE SEEN BEFORE THE DICT DESTROYS IT. `merged` is keyed on
+    # pick_no, so the list rebuilt from it CANNOT hold a duplicate -- which made the `dupes` gate
+    # below provably empty and its branch unreachable, while reading as protection and claiming
+    # parity with the engine's copy. The engine's version can genuinely fire, because it reads a
+    # raw list off disk. This one never could. (Insight 006.)
+    incoming_nos = [p["pick_no"] for p in incoming if isinstance(p, dict) and "pick_no" in p]
+    feed_dupes = sorted({x for x in incoming_nos if incoming_nos.count(x) > 1})
+
+    # THE UNION CAN ONLY GROW, so a pick removed upstream became a permanent phantom: pick_nos
+    # stay contiguous, the integrity gate passes, and the engine counts a player as drafted who
+    # is actually available for the rest of the draft. A commissioner reversing a pick is
+    # ordinary. It is also indistinguishable from a truncated fetch -- so this reports and
+    # refuses to decide, rather than guessing in either direction.
+    disappeared = sorted(set(before) - set(incoming_nos))
+
+    if rebuild:
+        picks = sorted((p for p in incoming if isinstance(p, dict) and "pick_no" in p),
+                       key=lambda p: p["pick_no"])
+    else:
+        merged = dict(before)
+        merged.update({p["pick_no"]: p for p in incoming})  # union; newest wins, nothing dropped
+        picks = [merged[k] for k in sorted(merged)]
 
     if not check_only:
         os.makedirs(KIT, exist_ok=True)
@@ -145,14 +169,18 @@ def main():
             json.dump(picks, f, ensure_ascii=False)
 
     # Same gate the engine enforces, reported here so a hole is visible BEFORE the clock matters.
+    # Under --rebuild this one is live, because `picks` is the feed itself rather than dict values.
     nos = [p["pick_no"] for p in picks]
     n = max(nos, default=0)
     dupes = sorted({x for x in nos if nos.count(x) > 1})
     gaps = [i for i in range(1, n + 1) if i not in set(nos)]
 
-    added = len(merged) - len(before)
+    added = len(set(nos) - set(before))
+    dropped = len(set(before) - set(nos))
     where = "picks.json (DRY RUN, not written)" if check_only else "picks.json"
-    print(f"{where}: {len(picks)} picks, highest pick_no {n} ({added} new this fetch)")
+    how = " REBUILT from the feed" if rebuild else ""
+    print(f"{where}{how}: {len(picks)} picks, highest pick_no {n} ({added} new this fetch"
+          + (f", {dropped} dropped)" if dropped else ")"))
     if picks:
         last = picks[-1]
         md = last.get("metadata") or {}
@@ -168,6 +196,34 @@ def main():
         print("!! The engine will refuse to advise. Re-run this script; if a gap persists,")
         print("!! the feed itself is short -- wait one poll and re-run. DO NOT hand-edit.")
         print("!" * 62)
+
+    if feed_dupes:
+        print("!" * 62)
+        print(f"!! THE FEED SERVED DUPLICATE pick_no(s): {feed_dupes}")
+        print("!! Merging is keyed on pick_no, so the duplicate was collapsed -- newest wins,")
+        print("!! and one of the two is now absent from the record entirely.")
+        print("!! Re-run once. If it repeats, Sleeper is serving inconsistent data and the")
+        print("!! merged file cannot be trusted. DO NOT hand-edit it.")
+        print("!" * 62)
+
+    if disappeared and rebuild:
+        # --rebuild IS the operator saying "yes, I confirmed it, drop them". Re-raising the alarm
+        # he just answered would make the escape hatch unusable. Still recorded, never silent.
+        print(f"  --rebuild: dropped {len(disappeared)} pick(s) no longer in the feed: "
+              f"{disappeared}")
+    elif disappeared:
+        print("!" * 62)
+        print(f"!! {len(disappeared)} pick(s) VANISHED from the feed: {disappeared}")
+        print("!! picks.json is a union and can only grow, so they are STILL in the file.")
+        print("!! Either a pick was reversed upstream, or this fetch came back short -- from")
+        print("!! here those look identical, so nothing was decided for you.")
+        print("!! Re-run once. If they are still gone, the pick really was reversed:")
+        print(f"!!   python scripts/merge_picks.py {draft_id} --rebuild")
+        print("!! Until then the engine may count a player as drafted who is available, and")
+        print("!! picks-until-you is off by one.")
+        print("!" * 62)
+
+    if gaps or dupes or feed_dupes or (disappeared and not rebuild):
         return 1
 
     if check_only:

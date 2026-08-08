@@ -26,7 +26,7 @@ stopping condition, and the plan still outweighs the code (**13 commits, 5 of wh
 **Ultramode fires once, after U6** — one review of a working spine, not six reviews of fragments.
 
 **State:** both silent paths to advising an already-drafted player are closed, the hauler has its
-first consumer, and the board now joins to Sleeper on a frozen id instead of a name. **190 tests**,
+first consumer, and the board now joins to Sleeper on a frozen id instead of a name. **197 tests**,
 zero skips (`python -m unittest discover -s tests` from the root). What remains is the spine: one
 source that generates every surface.
 

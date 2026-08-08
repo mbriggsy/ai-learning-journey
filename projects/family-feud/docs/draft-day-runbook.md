@@ -46,6 +46,13 @@ before you trust a single rank.
 1. **`python3 scripts/merge_picks.py <draft_id>`** — one command: fetches `/picks`, merges into
    `draft-kit/picks.json` keyed on `pick_no`, and reports the count, the latest pick, and whether
    there are gaps or duplicates. Run it every cycle, including "just checking" ones.
+   **If it says `VANISHED`, stop and read it.** A union can only grow, so a pick removed upstream
+   (a commissioner reversing one — ordinary) would otherwise stay forever as a phantom: contiguous
+   pick_nos, integrity gate green, and the engine counting a drafted player who is actually
+   available, with picks-until-you off by one for the rest of the draft. A reversal and a
+   truncated fetch look identical from here, so the script does not choose. **Re-run once.** If
+   the pick is still gone it really was reversed — then, and only then,
+   `python3 scripts/merge_picks.py <draft_id> --rebuild` writes the feed verbatim.
 2. It **unions** rather than overwrites, so a truncated response can never delete picks you already
    hold — a short read is a no-op instead of a silent regression. That discipline is why Mock #1's
    briefly-dropped pick 96 was recoverable.
@@ -144,6 +151,12 @@ Name matching canonicalizes common diminutives (Kenny/Kenneth, Cam/Cameron, Mike
 Badge glyphs: » = our target · + = breakout · ! = bust risk · † = injury watch · ° = rookie · ^ = riser · v = faller · § = IR-stash.
 
 ## Changelog
+**Aug 8, 2026 — `merge_picks.py`: a phantom pick, and a duplicate gate that could never fire.** Two defects in the merge, both found by the same sweep. (1) The union can only GROW, so a pick reversed upstream stayed on disk forever — pick_nos contiguous, integrity gate green, engine counting a drafted player who is available. A reversal is indistinguishable from a truncated fetch, so the script now reports and refuses to decide, with `--rebuild` as the escape hatch once a re-run confirms it. (2) `picks` was rebuilt from a dict keyed on `pick_no`, so it could not physically contain a duplicate — making `dupes` provably empty and its branch unreachable, while a comment claimed parity with the engine's gate. The engine's copy CAN fire; this one never could. Duplicates are now checked on the FEED, before the dict destroys them.
+
+Two things worth carrying beyond this file:
+- **A test can encode a defect as a requirement.** `test_short_read_never_deletes` asserted exit 0 — so a fetch returning 3 picks against 120 on disk printed a healthy-looking line and exited clean. Its no-deletion intent was right and is unchanged; the exit code was the bug. Fixed the expectation, kept the test, wrote down why.
+- **An escape hatch must not re-raise the alarm it answers.** The first cut of `--rebuild` still fired the VANISHED warning and exited 1, which made the flag useless for the one job it exists to do.
+
 **Aug 8, 2026 — the engine joins picks on the frozen Sleeper id, not the rendered name.** U14 froze an id for all 174 board rows and **nothing read it** — the engine kept matching on the name, the one field that drifts. Reproduced against the real board: board #1 Jahmyr Gibbs, taken at pick 1, re-rendered as `J. Gibbs` and traded off the team the board records, was reported `not on our board`, given the explicit all-clear, and left at #1 on BEST AVAILABLE. **The engine named an already-drafted man as THE CALL** — the landmine `CLAUDE.md` records as closed, reached by a second unguarded road. The pick carried his frozen id.
 
 Measured over the 120-pick lab feed: 116 picks join by both id and name with **zero disagreements**, 4 by neither (genuinely off our 174). The id join is not a different answer today — it is the same answer that survives a name drifting tomorrow. Doctrine in the Engine quick-reference above. Two notes:

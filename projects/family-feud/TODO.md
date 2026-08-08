@@ -48,15 +48,31 @@ Assume no slack.
 
 ## 0. Start with `/brief`
 
-Ten insight docs now exist. Four of them directly constrain how the next units get built — each
-has a documented wrong answer that looks right:
+Twelve insight docs now exist. Each has a documented wrong answer that looks right. Read them
+before designing, not after debugging.
+
+**The two written during U6 constrain U6 itself** — both are corrections to the closed plan, proven
+by measurement, and both are already reflected in the build:
+- **[`011`](docs/insights/011-the-renderer-did-not-crash-it-printed-a-different-symbol.md)** —
+  reportlab does **not** raise on a glyph Helvetica cannot encode; it silently substitutes
+  ZapfDingbats and prints a different symbol. The plan's `try/except` framing has no exception to
+  catch, and its prescribed **Latin-1** test is the wrong encoding (it rejects `†` and all 34
+  em-dashes). The guard is a **pre-emit cp1252 assertion**.
+- **[`012`](docs/insights/012-the-closed-plans-remedy-would-have-reintroduced-the-plans-own-disease.md)** —
+  the plan's hand-typed 32-entry team table would have created a fresh hand-maintained duplicate,
+  the exact class KTD-1 kills. `dst` is a pure projection of the DEF rows; the pinned dump supplies
+  an identity check instead. A closed plan's *decisions* bind; its *facts* expire.
+
+Also load-bearing:
 [`004`](docs/insights/004-name-similarity-could-not-separate-the-two-populations-at-any-threshold.md),
 [`006`](docs/insights/006-four-verification-steps-that-could-silently-do-nothing.md),
-[`007`](docs/insights/007-presence-is-not-health-the-third-instance-of-one-pattern.md), and
-**[`010`](docs/insights/010-exactly-one-candidate-was-treated-as-proof-of-identity.md) — read this
-one before U4.** A gate that asserts every row has a `sleeperId` without checking the id resolves
-to *that player* is 010 with a schema on top, and "174 ids, 0 unresolved" is a survivor count, not
-an identification. Read them before designing, not after debugging.
+[`007`](docs/insights/007-presence-is-not-health-the-third-instance-of-one-pattern.md),
+[`008`](docs/insights/008-a-broken-instrument-returns-zero-and-zero-reads-like-a-finding.md) —
+**positive-control any PDF extractor before trusting a row count; a zlib-only read of this
+ASCII85-then-Flate PDF returns zero text, which reads as "empty PDF" not "broken reader"** — and
+[`010`](docs/insights/010-exactly-one-candidate-was-treated-as-proof-of-identity.md), whose lesson
+(a lone survivor of a pool narrowed by attributes the wrong answer shares is not identified) is
+what 012's DEF identity check applies.
 
 ---
 
@@ -158,7 +174,7 @@ Then run the engine **with the draft_id as arg 4** so the contamination gate is 
 
 ## Landmines
 
-Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the ten worked cases.
+Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the twelve worked cases.
 The four that bite hardest under time pressure:
 
 - **A screaming engine means STOP.** Re-fetch, re-merge, rerun. Never advise off a `picks.json` it

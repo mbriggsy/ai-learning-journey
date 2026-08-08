@@ -35,8 +35,8 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **434 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 434 with **2 skips**,
+gate went **13 findings → 0** by fixing surfaces. **444 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 444 with **2 skips**,
 both live-cargo environment probes. Verified by eye, not only by tests: the cheat sheet is **2 pages
 — the whole 174-row board on page 1**, the plan on page 2 — and the HTML board renders shape-driven
 round labels with no invented rounds.
@@ -97,10 +97,18 @@ fixed (commits `5e7ae390`, `76849ad9`, `fdf190eb`, `13c3ed3b`). What follows is 
 7. **`old_value_sweep` goes blind when a headline row changes identity.** It sweeps the CURRENT
    top RB/WR/QB, so if the top RB changes, the previous leader's value is never swept — the
    refresh that most needs it is the one it cannot see.
-8. **Badge glyphs are checked for encodability, not uniqueness** — two badges can print the same
-   mark and the legend becomes ambiguous.
-9. **`check_strategy`'s name/team prose check keys on the last whitespace token**, so it silently
-   does nothing for suffixed players (`Marvin Harrison Jr.`) — insight 008's shape.
+8. ~~**Badge glyphs are checked for encodability, not uniqueness.**~~ ✅ **FIXED 2026-08-08.**
+   `check_badges` now refuses two badges sharing a mark, on **both** surfaces — the PDF `glyph`
+   and the HTML `icon`. A duplicate is worse than a blank: a blank looks like nothing, a duplicate
+   says something specific and wrong and the legend confirms both readings. All eight are distinct
+   today and a test asserts it against the live board. 3 mutants killed.
+9. ~~**`check_strategy`'s name/team prose check keys on the last whitespace token.**~~ ✅ **FIXED
+   2026-08-08.** `"Marvin Harrison Jr.".split()[-1]` is `"Jr."`, so prose reading `Harrison (ARI)`
+   matched nothing. **Measured: 10 of 174 rows end in a suffix** — and it was worse than blind,
+   because they all collided on a handful of keys, so `Jr.` mapped to the union of six teams and
+   would have accepted almost any team named beside a `Jr.` surname. `surname_keys()` indexes both
+   forms. Insight 008's shape, so it ships with a **positive control** proving the instrument can
+   register a reading before its zero is trusted.
 10. ~~**Dead constants in `render_pdf.py`.**~~ ✅ **FIXED 2026-08-08.** `ROW_GAP`, `TIER_LEAD`,
     `TIER_AFTER` and `SECTION_LEAD` were left behind by the adaptive-density rewrite, duplicating
     `DENSITY[0]`; tuning them did nothing. Removed. ⚠️ **`SECTION_AFTER` was NOT dead** and is still

@@ -193,6 +193,22 @@ def check_badges(d):
     if used - declared:
         problems.append(f"badge code(s) {sorted(used - declared)} appear on rows but are not keys "
                         f"of meta.badges -- the engine renders them as nothing at all")
+
+    # A MARK MUST IDENTIFY EXACTLY ONE BADGE. Glyphs were checked for cp1252-encodability -- can
+    # this be printed? -- and never for uniqueness -- does printing it mean anything? Two badges
+    # sharing a mark is strictly worse than a missing one: a blank tells you nothing and looks
+    # like nothing, while a duplicate tells you something specific and wrong, and the legend
+    # underneath it confirms both readings. There are eight badges and one row can carry several.
+    for field, surface in (("glyph", "the cheat sheet"), ("icon", "the board's legend")):
+        marks = {}
+        for code, spec in ((d.get("meta") or {}).get("badges") or {}).items():
+            mark = (spec or {}).get(field)
+            if mark:
+                marks.setdefault(mark, []).append(code)
+        for mark, codes in sorted(marks.items()):
+            if len(codes) > 1:
+                problems.append(f"badges {sorted(codes)} all print {field} {mark!r}, so "
+                                f"{surface} cannot say which one a row carries")
     return problems
 
 
@@ -230,6 +246,34 @@ def check_dst(d, dump):
                         f"       board says {want}\n"
                         f"       dst says   {got}")
     return problems
+
+
+#: Generational suffixes, lowercased and stripped of punctuation. Ten of this board's 174 rows end
+#: in one.
+NAME_SUFFIXES = {"jr", "sr", "ii", "iii", "iv", "v"}
+
+
+def surname_keys(name):
+    """Every token the strategy prose might use to refer to this player.
+
+    This check used to key on `name.split()[-1]` alone, which for `Marvin Harrison Jr.` is `Jr.`
+    -- so prose reading `Harrison (ARI)` matched nothing and the check SILENTLY DID NOTHING for
+    every suffixed player. Ten rows on this board end in a suffix, and it was worse than blind:
+    they all collided on a handful of keys, so `Jr.` mapped to the union of six different teams
+    and would have accepted almost any team named beside a `Jr.` surname.
+
+    Insight 008's shape exactly -- a broken instrument returns zero, and zero reads like a clean
+    bill of health. Both keys are indexed, because prose legitimately uses either.
+    """
+    toks = [t for t in str(name or "").split() if t]
+    if not toks:
+        return set()
+    keys = {toks[-1]}
+    body = list(toks)
+    while len(body) > 1 and body[-1].lower().strip(".,") in NAME_SUFFIXES:
+        body.pop()
+    keys.add(body[-1])
+    return keys
 
 
 def check_strategy(d):
@@ -277,8 +321,8 @@ def check_strategy(d):
     # "(name, team)" pairs must match that row's team. Aubrey (DAL), Fairbairn (HOU) ...
     surname_team = {}
     for p in d.get("players", []):
-        surname_team.setdefault(p.get("name", "").split()[-1] if p.get("name") else "", set()
-                                ).add(p.get("team"))
+        for key in surname_keys(p.get("name")):
+            surname_team.setdefault(key, set()).add(p.get("team"))
     prose = " ".join([*(s.get("rules") or []), str(s.get("kickers", "")),
                       *[str(e.get("plan", "")) for e in (s.get("roundPlan") or [])],
                       *[str(e.get("note", "")) for e in (s.get("slotNotes") or [])]])

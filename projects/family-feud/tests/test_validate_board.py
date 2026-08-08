@@ -98,6 +98,91 @@ class GateCase(unittest.TestCase):
                         f"no problem mentioned {needle!r}; got {problems}")
 
 
+class TestSuffixedNamesAreVisibleToTheProseCheck(GateCase):
+    """`check_strategy` keyed its (name, team) index on `name.split()[-1]`, which for
+    `Marvin Harrison Jr.` is `Jr.`. Prose reading `Harrison (ARI)` therefore matched nothing and
+    the check SILENTLY DID NOTHING for ten of this board's rows -- and worse than nothing: they
+    all collided on a handful of keys, so `Jr.` mapped to the union of six teams and would have
+    accepted almost any team named beside a `Jr.` surname. Insight 008's shape."""
+
+    def test_a_suffixed_name_indexes_under_its_surname(self):
+        self.assertIn("Harrison", V.surname_keys("Marvin Harrison Jr."))
+        self.assertIn("Walker", V.surname_keys("Kenneth Walker III"))
+        self.assertIn("Gadsden", V.surname_keys("Oronde Gadsden II"))
+
+    def test_the_raw_last_token_is_still_indexed(self):
+        """Prose legitimately writes either form, so both must resolve."""
+        self.assertIn("Jr.", V.surname_keys("Marvin Harrison Jr."))
+        self.assertIn("Nacua", V.surname_keys("Puka Nacua"))
+
+    def test_a_single_token_name_survives(self):
+        self.assertEqual(V.surname_keys("Cowboys"), {"Cowboys"})
+        self.assertEqual(V.surname_keys(""), set())
+        self.assertEqual(V.surname_keys(None), set())
+
+    def test_a_wrong_team_beside_a_suffixed_name_is_now_CAUGHT(self):
+        """THE POSITIVE CONTROL (insight 008): prove the instrument can register a reading before
+        trusting the zero it returned for years."""
+        b = json.loads(json.dumps(self.b))
+        b["players"][0]["name"] = "Marvin Harrison Jr."
+        b["players"][0]["team"] = "ARI"
+        b["strategy"]["rules"][0] = "Take Harrison (SEA) if he falls."
+        self.only(V.check_strategy(b), "Harrison")
+
+    def test_a_correct_team_beside_a_suffixed_name_still_passes(self):
+        """The paired control -- a check that flagged every prose mention would pass the test
+        above while being useless."""
+        b = json.loads(json.dumps(self.b))
+        b["players"][0]["name"] = "Marvin Harrison Jr."
+        b["players"][0]["team"] = "ARI"
+        b["strategy"]["rules"][0] = "Take Harrison (ARI) if he falls."
+        self.assertEqual([p for p in V.check_strategy(b) if "Harrison" in p], [])
+
+    def test_the_live_board_has_suffixed_rows_so_this_is_not_theoretical(self):
+        with open(V.BOARD, encoding="utf-8") as f:
+            names = [p["name"] for p in json.load(f)["players"]]
+        suffixed = [n for n in names
+                    if n.split()[-1].lower().strip(".,") in V.NAME_SUFFIXES]
+        self.assertTrue(suffixed, "no suffixed rows on the board -- the fix is unexercised")
+
+
+class TestBadgeMarksAreUnique(GateCase):
+    """Glyphs were checked for cp1252-encodability -- can this be printed? -- and never for
+    uniqueness -- does printing it mean anything? A duplicate is worse than a blank: a blank looks
+    like nothing, while a duplicate says something specific and wrong, and the legend confirms
+    both readings."""
+
+    def clash(self, field, mark):
+        b = json.loads(json.dumps(self.b))
+        for code in list(b["meta"]["badges"])[:2]:
+            b["meta"]["badges"][code][field] = mark
+        return b
+
+    def test_the_shipped_badges_are_unique(self):
+        """The control. It reads the LIVE board, not the fixture, so it is also a real assertion
+        about what ships: all eight marks distinct, on both surfaces."""
+        with open(V.BOARD, encoding="utf-8") as f:
+            live = json.load(f)
+        self.assertEqual(V.check_badges(live), [])
+        for field in ("glyph", "icon"):
+            marks = [s[field] for s in live["meta"]["badges"].values() if s.get(field)]
+            self.assertTrue(marks, f"no badge declares a {field}")
+            self.assertEqual(len(marks), len(set(marks)), f"duplicate {field} on the live board")
+
+    def test_two_badges_sharing_a_pdf_glyph_are_caught(self):
+        self.only(V.check_badges(self.clash("glyph", "%")), "cheat sheet")
+
+    def test_two_badges_sharing_an_html_icon_are_caught(self):
+        self.only(V.check_badges(self.clash("icon", "🎯")), "legend")
+
+    def test_distinct_marks_are_not_flagged(self):
+        """The paired control -- a check that flagged every badge would pass both tests above."""
+        b = json.loads(json.dumps(self.b))
+        for i, code in enumerate(b["meta"]["badges"]):
+            b["meta"]["badges"][code]["glyph"] = chr(ord("a") + i)
+        self.assertEqual(V.check_badges(b), [])
+
+
 class TestShapeAgainstTheDraft(GateCase):
     """Every other check in this gate compares the board to ITSELF, so all of them stay green on a
     board built from a draft that has since been re-created -- the board is perfectly

@@ -302,6 +302,55 @@ class TestOneGlyphSource(unittest.TestCase):
         self.assertEqual(used - declared, set())
 
 
+class TestPdfLayout(unittest.TestCase):
+    """The sheet is held at a table. Nothing may be dropped, and no heading may be orphaned."""
+
+    def setUp(self):
+        self.source = real_source()
+        self.pages, self.density = RP.layout(self.source)
+
+    def test_the_whole_board_fits_on_one_page(self):
+        self.assertEqual(len(self.pages), 1,
+                         "the board spilled onto a second page; DENSITY has no preset tight "
+                         "enough, or an item's declared height stopped matching what is drawn")
+
+    def test_every_row_is_placed_exactly_once(self):
+        placed = [p["name"] for page in self.pages for col in page
+                  for _, kind, p in col if kind == "row"]
+        self.assertEqual(len(placed), len(self.source["players"]))
+        self.assertEqual(len(set(placed)), len(placed), "a row was placed twice")
+
+    def test_no_column_ends_on_an_orphaned_heading(self):
+        """A column break after "KICKERS / TIER 1" strands the heading with its rows in the next
+        column -- readable if you already know the board, misleading at a draft."""
+        for page in self.pages:
+            for ci, col in enumerate(page):
+                kinds = [k for _, k, _ in col]
+                if not kinds:
+                    continue
+                tail = kinds[-1]
+                self.assertEqual(tail, "row",
+                                 f"column {ci} ends on a {tail!r} with no row under it")
+
+    def test_no_column_overflows_the_page(self):
+        cap = self.density["top"] - self.density["floor"]
+        for page in self.pages:
+            for ci, col in enumerate(page):
+                used = sum(h for h, _, _ in col)
+                self.assertLessEqual(used, cap + 0.01,
+                                     f"column {ci} is {used:.1f}pt in a {cap:.1f}pt column")
+
+    def test_a_much_larger_board_degrades_to_more_pages_instead_of_cramming(self):
+        """Control: layout() must not silently render an unreadable sheet when the board grows
+        past what the tightest preset can hold."""
+        import copy
+        big = copy.deepcopy(self.source)
+        big["players"] = big["players"] * 3
+        pages, density = RP.layout(big)
+        self.assertGreater(len(pages), 1)
+        self.assertGreaterEqual(density["row"], 8.4, "row pitch went below the readable floor")
+
+
 class TestGeneratedDocs(unittest.TestCase):
     """docs/ranking-methodology.md carried board figures as hand-typed prose."""
 

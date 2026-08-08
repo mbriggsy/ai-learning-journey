@@ -20,7 +20,9 @@ to the next, start a page when the last one is full. Nothing is clipped and noth
 which is what the gate checks.
 """
 
+import datetime as _dt
 import json
+import math
 import os
 import sys
 
@@ -55,8 +57,26 @@ PITCH = 188.5              # measured column pitch
 TOP = 533.8                # first row baseline under the header
 FLOOR = 42.3               # lowest baseline observed on the shipped sheet
 ROW_GAP = 9.25
-TIER_GAP = 8.0             # extra before a tier label
-SECTION_GAP = 31.5         # extra before a section bar
+
+#: Vertical rhythm, matched to the shipped sheet's MEASURED cost rather than to its raw offsets.
+#: The sheet spends 17.25pt going from one row baseline, past a tier label, to the next row --
+#: and 40.75pt past a section bar. Charging a tier `gap + label + a full row gap` double-counts
+#: the row pitch and inflated the board by ~290pt, which is what pushed a one-page sheet onto
+#: three. TIER_LEAD is 0 because the preceding row's own 9.25 already supplies the separation.
+TIER_LEAD, TIER_AFTER = 0.0, 8.0                   # 9.25 + 0 + 8.0  = 17.25
+SECTION_LEAD, SECTION_AFTER = 12.6, 10.9           # 9.25 + 12.6 + 10.9 + 8.0 = 40.75
+
+#: Density presets, roomiest first. The renderer takes the first that fits the board on ONE page,
+#: because a single sheet you hold at the table is the artefact's whole point. Only if none fit
+#: does it fall back to evenly balanced multi-page. Row pitch is never squeezed below 8.4 -- past
+#: that the 7.3pt names start to crowd, and a cheat sheet that is hard to read under a
+#: 120-second clock has failed at the only job it has.
+DENSITY = [
+    {"row": 9.25, "tier": 8.0, "section": 12.6, "top": 533.8, "floor": 42.3},
+    {"row": 9.00, "tier": 7.0, "section": 11.0, "top": 538.0, "floor": 40.0},
+    {"row": 8.70, "tier": 6.2, "section": 10.0, "top": 540.0, "floor": 38.0},
+    {"row": 8.40, "tier": 5.6, "section": 9.0, "top": 542.0, "floor": 36.0},
+]
 
 D_PR = -3.0                # pr right edge, relative to the column's name x
 D_DELTA = 130.5
@@ -108,31 +128,88 @@ def _wrap(text, font, size, width):
     return lines
 
 
-class Flow:
-    """A column cursor that spills to the next column, then to a new page. Nothing is clipped."""
+CAPACITY = TOP - FLOOR
 
-    def __init__(self, c, on_new_page):
-        self.c = c
-        self.on_new_page = on_new_page
-        self.col = 0
-        self.y = TOP
 
-    @property
-    def x(self):
-        return COL0 + self.col * PITCH
+def _glue(items):
+    """Bind every heading to the first row beneath it.
 
-    def need(self, amount):
-        if self.y - amount >= FLOOR:
-            return
-        self.col += 1
-        if self.col >= COLS:
-            self.c.showPage()
-            self.on_new_page(self.c)
-            self.col = 0
-        self.y = TOP
+    A column break is only legal between rows. Breaking after a heading strands "KICKERS / TIER 1"
+    at the foot of one column with its kickers at the head of the next, which is how the first
+    render came out -- readable if you already know the board, actively misleading at a draft.
+    """
+    groups, i = [], 0
+    while i < len(items):
+        if items[i][1] in ("section", "tier"):
+            run = [items[i]]
+            i += 1
+            while i < len(items) and items[i][1] != "row":
+                run.append(items[i])
+                i += 1
+            if i < len(items):                      # carry the first row along
+                run.append(items[i])
+                i += 1
+            groups.append(run)
+        else:
+            groups.append([items[i]])
+            i += 1
+    return groups
 
-    def down(self, amount):
-        self.y -= amount
+
+def _pack(groups, capacity):
+    cols, cur, used = [], [], 0.0
+    for g in groups:
+        h = sum(it[0] for it in g)
+        if cur and used + h > capacity:
+            cols.append(cur)
+            cur, used = [], 0.0
+        cur.extend(g)
+        used += h
+    if cur:
+        cols.append(cur)
+    return cols
+
+
+def _paginate_at(items, capacity, cols_per_page=COLS):
+    """Pack into evenly-filled columns. Balanced rather than filled-to-the-floor: a greedy fill
+    leaves the overflow as one dense column beside three empty ones."""
+    groups = _glue(items)
+    total = sum(it[0] for g in groups for it in g)
+    pages = max(1, math.ceil(total / (cols_per_page * capacity)))
+    target = max(total / (pages * cols_per_page), capacity * 0.55)
+
+    cols = _pack(groups, target)
+    while len(cols) > pages * cols_per_page and target < capacity:
+        target = min(target * 1.05, capacity)
+        cols = _pack(groups, target)
+    if len(cols) > pages * cols_per_page:            # genuinely needs another page
+        pages = math.ceil(len(cols) / cols_per_page)
+
+    cols += [[]] * (pages * cols_per_page - len(cols))
+    return [cols[i:i + cols_per_page] for i in range(0, len(cols), cols_per_page)]
+
+
+def layout(source):
+    """Choose the roomiest density that still fits the board on ONE page.
+
+    A single sheet is the artefact's whole point -- it is held at a table, not scrolled. The
+    board grew from 150 to 174 rows when K and DEF were added, which is enough to overflow the
+    original spacing, so the renderer tightens the gaps between headings before it reaches for a
+    second page. Row pitch has a floor: past ~8.4pt the names crowd, and an unreadable sheet on
+    a 120-second clock is worse than two pages.
+
+    Returns (pages, density). Falls back to the roomiest preset across balanced pages when even
+    the tightest will not fit one -- so a much larger board degrades gracefully instead of
+    silently rendering something cramped.
+    """
+    for d in DENSITY:
+        cap = d["top"] - d["floor"]
+        pages = _paginate_at(board_items(source, d), cap)
+        if len(pages) == 1:
+            return pages, d
+    d = DENSITY[0]
+    cap = d["top"] - d["floor"]
+    return _paginate_at(board_items(source, d), cap), d
 
 
 def _header(c, source, page_no, pages_hint):
@@ -140,9 +217,10 @@ def _header(c, source, page_no, pages_hint):
     shape = meta["shape"]
     c.setFillColor(INK)
     c.setFont("Helvetica-Bold", 17)
-    c.drawString(26, 572, f"{meta.get('league', 'FAMILY FEUD').upper()} "
-                          f"— {shape.get('season', meta.get('leagueId') and '2026')} "
-                          f"DRAFT CHEAT SHEET".replace("  ", " "))
+    season = shape.get("season") or ""
+    title = " ".join(x for x in (meta.get("league", "").upper(), "—", season,
+                                 "DRAFT CHEAT SHEET") if x)
+    c.drawString(26, 572, title)
     c.setFont("Helvetica-Bold", 8)
     c.setFillColor(MUTED)
     c.drawRightString(PAGE[0] - 26, 573, f"PAGE {page_no} / THE BOARD")
@@ -160,7 +238,13 @@ def _footer(c, source, page_no, total):
     meta = source["meta"]
     c.setFont("Helvetica", 6.4)
     c.setFillColor(FAINT)
-    c.drawString(26, 20, f"Synthesized {meta.get('updated', '')} · tuned to "
+    updated = str(meta.get("updated", ""))
+    try:
+        d = _dt.date.fromisoformat(updated)
+        updated = f"{d:%b} {d.day}, {d.year}"        # "Aug 8, 2026", not "2026-08-08"
+    except ValueError:
+        pass
+    c.drawString(26, 20, f"Synthesized {updated} · tuned to "
                          f"{meta.get('league', '')} scoring. Left # = position rank · "
                          f"right edge = overall board rank.")
     c.drawRightString(PAGE[0] - 26, 20,
@@ -168,8 +252,7 @@ def _footer(c, source, page_no, total):
                       f"p.{page_no}/{total}")
 
 
-def _draw_row(c, f, p, badges):
-    x, y = f.x, f.y
+def _draw_row(c, x, y, p, badges):
     c.setFont("Helvetica", 7.3)
     c.setFillColor(MUTED)
     c.drawRightString(x + D_PR, y, str(p["pr"]))
@@ -222,55 +305,64 @@ def _draw_row(c, f, p, badges):
     c.drawRightString(x + D_R, y, str(p["r"]))
 
 
-def _draw_board(c, source, total_pages):
-    badges = source["meta"].get("badges") or {}
-    state = {"page": 1}
+def board_items(source, d=DENSITY[0]):
+    """Flatten the board into a measurable stream: section bars, tier labels, rows.
 
-    def new_page(cv):
-        state["page"] += 1
-        _header(cv, source, state["page"], total_pages)
-        _footer(cv, source, state["page"], total_pages)
-
-    _header(c, source, 1, total_pages)
-    _footer(c, source, 1, total_pages)
-    f = Flow(c, new_page)
-
+    Each item's declared height is exactly what `_draw_board` consumes for it, so the packing
+    arithmetic and the ink can never disagree.
+    """
     by_pos = {}
     for p in source["players"]:
         by_pos.setdefault(p["pos"], []).append(p)
 
+    items = []
     for pos, title, colour in SECTIONS:
         rows = sorted(by_pos.get(pos) or [], key=lambda p: p["pr"])
         if not rows:
             continue
-        f.need(SECTION_GAP + 20.0)
-        f.down(SECTION_GAP)
-        c.setFillColor(HexColor(colour))
-        c.rect(f.x - 13.0, f.y - 1.0, 2.8, 9.5, stroke=0, fill=1)
-        c.setFillColor(INK)
-        c.setFont("Helvetica-Bold", 10)
-        c.drawString(f.x - 6.5, f.y, title)
-        f.down(10.9)
-
+        items.append((d["section"] + SECTION_AFTER, "section", (title, colour)))
         tier = None
         for p in rows:
             if p.get("tier") != tier:
                 tier = p.get("tier")
-                f.need(TIER_GAP + ROW_GAP + 6.0)
-                f.down(TIER_GAP)
-                label = f"TIER {tier}"
-                c.setFont("Helvetica-Bold", 6.4)
-                c.setFillColor(TIERC)
-                c.drawString(f.x, f.y, label)
-                w = pdfmetrics.stringWidth(label, "Helvetica-Bold", 6.4)
-                c.setStrokeColor(RULE)
-                c.setLineWidth(0.5)
-                c.line(f.x + w + 4.0, f.y + 2.3, f.x + 159.5, f.y + 2.3)
-                f.down(8.8)
-            f.need(ROW_GAP)
-            _draw_row(c, f, p, badges)
-            f.down(ROW_GAP)
-    return state["page"]
+                items.append((d["tier"], "tier", tier))
+            items.append((d["row"], "row", p))
+    return items
+
+
+def _draw_board(c, source, pages, total_pages, d, first_page_no=1):
+    badges = source["meta"].get("badges") or {}
+    for n, page in enumerate(pages):
+        page_no = first_page_no + n
+        if n:
+            c.showPage()
+        _header(c, source, page_no, total_pages)
+        _footer(c, source, page_no, total_pages)
+        for ci, col in enumerate(page):
+            x, y = COL0 + ci * PITCH, d["top"]
+            for h, kind, payload in col:
+                if kind == "section":
+                    title, colour = payload
+                    y -= d["section"]
+                    c.setFillColor(HexColor(colour))
+                    c.rect(x - 13.0, y - 1.0, 2.8, 9.5, stroke=0, fill=1)
+                    c.setFillColor(INK)
+                    c.setFont("Helvetica-Bold", 10)
+                    c.drawString(x - 6.5, y, title)
+                    y -= SECTION_AFTER
+                elif kind == "tier":
+                    label = f"TIER {payload}"
+                    c.setFont("Helvetica-Bold", 6.4)
+                    c.setFillColor(TIERC)
+                    c.drawString(x, y, label)
+                    w = pdfmetrics.stringWidth(label, "Helvetica-Bold", 6.4)
+                    c.setStrokeColor(RULE)
+                    c.setLineWidth(0.5)
+                    c.line(x + w + 4.0, y + 2.3, x + 159.5, y + 2.3)
+                    y -= d["tier"]
+                else:
+                    _draw_row(c, x, y, payload, badges)
+                    y -= d["row"]
 
 
 def _draw_strategy(c, source, page_no, total_pages):
@@ -336,9 +428,14 @@ def render(source, out_path):
     # refresh commits a PDF diff that means nothing. Measured: default output is UNSTABLE across
     # two identical renders; invariant=1 is byte-identical.
     c = canvas.Canvas(out_path, pagesize=PAGE, invariant=1)
-    board_pages = _draw_board(c, source, total_pages=0)
+
+    # Lay out BEFORE drawing, so the footers can say "p.1/2" instead of counting as they go.
+    pages, d = layout(source)
+    total = len(pages) + 1                      # + the plan page
+
+    _draw_board(c, source, pages, total, d)
     c.showPage()
-    _draw_strategy(c, source, board_pages + 1, board_pages + 1)
+    _draw_strategy(c, source, total, total)
     c.showPage()
     c.save()
     return out_path

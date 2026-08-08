@@ -75,6 +75,7 @@
   },
   "shape": {
    "draft_id": "1390509994847240192",
+   "season": "2026",
    "status": "pre_draft",
    "start_time": null,
    "teams": 8,
@@ -95,11 +96,11 @@
    "playoff_teams": 6
   },
   "build": {
-   "generator_sha": "d216230fb1ccd9b68434dfbbf98d1c6c67dc3672d85de96492cd0afcaa0561a1",
-   "source_sha256": "5588769927946799aa18a4a3dbd9ffaed52626680fe48e05add48fce4b44299b",
+   "generator_sha": "b3274ada7fbf6bcc9372d6131ff9d139423f0327c1e9ab59e1b3629a3d581635",
+   "source_sha256": "88627e9c0e27c612f3551782d5c3c8ac0cdabdabdb53c940991c3489551af127",
    "curve_sha256": "ad26ce6f78fb0983e26a58065a354b9d8471d53100e9fffbe20538d40dc4d115",
    "sleeper_dump_fetched_at": "2026-08-08T01:15:28+00:00",
-   "built_at": "2026-08-08T16:38:15+00:00",
+   "built_at": "2026-08-08T16:54:17+00:00",
    "dirty": false
   }
  },

@@ -203,6 +203,7 @@ def read_shape(cargo=CARGO, league_cargo=LEAGUE_CARGO):
 
     shape = {
         "draft_id": str(d.get("draft_id") or ""),
+        "season": str(d.get("season") or ""),
         "status": d.get("status"),
         "start_time": d.get("start_time"),
         "teams": int(s["teams"]),

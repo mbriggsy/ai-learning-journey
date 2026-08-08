@@ -13,6 +13,13 @@ draft-kit/slot_names.json
 # The two keepers — logo/deez-nuts/ and logo/hunter-maker/ — ARE tracked.
 logo/archive/
 
+# Watcher state is per-machine runtime, not source. last_seen.json is the diff baseline (it
+# changes every hour, on every machine, and means nothing to anyone else) and DRAFT_ALERTS.md is
+# local output Briggsy reads. Committing either would rewrite the repo hourly for zero value --
+# same reasoning as the inbox below. .gitkeep so a clean clone still has somewhere to write.
+newsletter/data/state/*
+!newsletter/data/state/.gitkeep
+
 # Mule cargo is a CACHE, not source: the hourly job overwrites every file in inbox/
 # (the two RSS feeds alone churn ~1.2MB an hour) and the newsletter build drains it
 # into data/archive/. Committing either would rewrite the repo every hour for zero value.

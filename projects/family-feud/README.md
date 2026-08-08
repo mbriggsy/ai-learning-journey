@@ -13,6 +13,7 @@ Snake draft, 16 rounds, ~Aug 29. Full PPR, 6 of 8 make the playoffs.
 | **A live draft engine** | reads the cumulative Sleeper picks feed and prints board state, every roster's open needs, run watch, tier cliffs, best-available and VBD leans |
 | **A proven executor mode** | Claude drives Briggsy's logged-in Chrome and clicks the picks. Mock #3: 15/15 manual picks, zero clock misses, roster VORP 1225.8 |
 | **An hourly data mule** | a Windows scheduled task hauling 5 Sleeper endpoints + 5 fantasy RSS feeds to disk, so nothing depends on a network call at draft time |
+| **A draft-state watcher** | the mule's first consumer. Hourly, it notices the moment `start_time` stops being null — or moves — and writes it down, because the date is a handshake that can shift **earlier** |
 
 ## Where things are
 
@@ -34,10 +35,15 @@ draft-kit/       the draft-day arsenal (run the engine from in here)
   draft_rankings_data_2026-08-05.json   ⛔ drifted — see TODO, do not carry forward
 
 newsletter/      The Nightly Feud machinery + the mule
-scripts/         install-mule.ps1  — registers and verifies the hourly task
-                 merge_picks.py    — fetches /picks and merges into picks.json;
-                                     refuses picks from a different draft
-tests/           46 tests: python -m unittest discover -s tests  (run from the root)
+                 data/inbox/   mule cargo (gitignored — a cache, not source)
+                 data/state/   watcher baseline + DRAFT_ALERTS.md (gitignored)
+scripts/         install-mule.ps1     — registers and verifies the hourly mule
+                 install-watcher.ps1  — same, for the draft-state watcher
+                 merge_picks.py       — fetches /picks and merges into picks.json;
+                                        refuses picks from a different draft
+                 watch_draft_state.py — reads mule cargo; writes an alert when the
+                                        draft becomes real. Never a notification.
+tests/           72 tests: python -m unittest discover -s tests  (run from the root)
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```
 
@@ -77,8 +83,10 @@ exercised in this environment. Treat it as unproven here until a mock says other
 though its blocking unknown is now resolved — see [`docs/live-board-plan.md`](docs/live-board-plan.md).
 
 ⚠️ **The board is an August 5 snapshot and it expires.** Ranks, injuries and ADP move daily in
-August. It must be rebuilt before the real draft, and the reminder that used to exist did not
-survive the migration. See `TODO.md`.
+August. It must be rebuilt before the real draft. The reminder that used to exist did not survive
+the migration — **`scripts/watch_draft_state.py` replaces it**, and on better terms: the old one
+fired on a hardcoded Aug 26, which is the wrong shape for a date that is still null and can move
+earlier. The watcher fires on the actual transition. See `TODO.md`.
 
 ## History
 

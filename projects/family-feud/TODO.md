@@ -6,7 +6,7 @@
 ## ▶ WHERE WE ARE — read this first, update it when it changes
 
 ```
-plan  ✅ → deepen  ✅ → work  ✅ (through U6) → ultramode  ◀ YOU ARE HERE (Phase 1 boundary)
+plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work  ◀ YOU ARE HERE ({ U7 ∥ U15 })
 ```
 
 **Units shipped:** U1, U2 (Phase 0 gates) · **U9** (draft-state watcher) · **U3** (one normalizer,
@@ -15,9 +15,13 @@ proven equal in two runtimes) · **U14** (`sleeperId` frozen — 174 ids, 0 unre
 curve; oracle exact at 2469/2469) · **U6** (the generator — one source, every surface) — the last
 three on 2026-08-08.
 
-**Next action: the ultramode review**, then `{ U7 ∥ U15 }`. It fires **once**, here, on a working
-spine — one review of generator + gate + scoring + normalizer as an integrated system, not six
-reviews of fragments.
+**Next action: `{ U7 ∥ U15 }`** — the live board poll loop and the engine shape wrapper. Both
+depend on U6, which is done and reviewed.
+
+**The ultramode review RAN 2026-08-08** (13 reviewers, 4-angle adversary panel, 3 refuters per
+finding, `real`/`material` aggregated separately). 77 confirmed after verification, 22 correctly
+rejected. Everything that could produce a wrong answer is fixed and committed; the residue is
+listed below and is advisory, not blocking.
 
 **The planning phase is CLOSED.** The plan was deepened 2026-08-07 and does not get another pass.
 If something in it turns out to be wrong, fix it inside `/ce-work` — do not reopen a deepening
@@ -44,10 +48,59 @@ Assume no slack.
 
 ---
 
+## 0.5 Review residue — ranked, advisory, none of it blocks U7/U15
+
+From the 2026-08-08 ultramode pass. Everything that could produce a **wrong answer** is already
+fixed (commits `5e7ae390`, `76849ad9`, `fdf190eb`, `13c3ed3b`). What follows is real but bounded.
+
+1. **A clean clone cannot run ~20 tests.** `tests/test_build_board.py` calls `B.read_shape()`,
+   which reads `newsletter/data/inbox/sleeper_draft.json` — **gitignored mule cargo that churns
+   hourly**. Fix: commit a cargo fixture under `tests/fixtures/` and have the tests read that.
+   *This is the top item: it makes the suite unreproducible off this machine.*
+2. **`meta.format` is a hand-typed duplicate of `meta.shape` (KTD-1).** The gate cross-checks only
+   `teams` and `rounds` of the ~8 facts they share — and the ROSTER half is what the PDF header
+   prints. Fix: derive `meta.format` from `meta.shape` in `enrich()`.
+3. **Nothing ever re-checks `meta.shape` against the draft object it names.** A board built from a
+   dead or superseded draft passes `--verify-only` forever. Fix: a gate check comparing
+   `meta.shape.draft_id` + values against the hauled cargo, with the cargo's age reported.
+4. **`strategy` prose still hardcodes both baselines and league shape**, inside the source
+   (KTD-1 + KTD-7). `rules[10]` embeds `QB12/RB41/WR47/TE12`; `slotNotes` embed `Picks 1-3` etc.
+   The old-value sweep cannot see them because they are not a quantity it tracks.
+5. **The PDF prints a VBD arrow on every K and DEF row; the HTML deliberately suppresses it.**
+   All 24 have |vbdDelta| >= 8 so all 24 draw a green ▲, which is noise on the one page you hold.
+6. **`_draw_strategy`'s `block()` silently truncates** prose that runs past the page floor —
+   returns early and drops content with no warning. Today nothing overflows; a longer rule would.
+7. **`old_value_sweep` goes blind when a headline row changes identity.** It sweeps the CURRENT
+   top RB/WR/QB, so if the top RB changes, the previous leader's value is never swept — the
+   refresh that most needs it is the one it cannot see.
+8. **Badge glyphs are checked for encodability, not uniqueness** — two badges can print the same
+   mark and the legend becomes ambiguous.
+9. **`check_strategy`'s name/team prose check keys on the last whitespace token**, so it silently
+   does nothing for suffixed players (`Marvin Harrison Jr.`) — insight 008's shape.
+10. **Dead constants in `render_pdf.py`** (`ROW_GAP`, `TIER_LEAD/AFTER`, `SECTION_LEAD`) survive
+    the adaptive-density rewrite and duplicate `DENSITY[0]`; tuning them does nothing.
+
+**Escalated on a materiality split, for a human call:** the row-level `sleeperId` U6 stamps has
+**no reader yet** — the engine still joins through `sleeper_ids.json`. Real, and deliberate for
+now (U6 put the key on the board; pointing the engine at it is a separate change with its own
+replay verification). Worth doing in U15's neighbourhood.
+
+---
+
 ## 0. Start with `/brief`
 
-Twelve insight docs now exist. Each has a documented wrong answer that looks right. Read them
+Fourteen insight docs now exist. Each has a documented wrong answer that looks right. Read them
 before designing, not after debugging.
+
+**The two from the ultramode review are the ones to read before writing any new guard:**
+- **[`013`](docs/insights/013-every-guard-was-tested-and-not-one-was-proven-connected.md)** — six
+  guards in U6 had tests for the guard FUNCTION and none for its CALL SITE. Stubbing `gate_staged`
+  to `[]` left 315/315 green, so nothing proved the gate was wired to the emit at all. Delete a
+  guard's call site: if nothing goes red, the guard is decoration. And a new test is a hypothesis
+  until it has failed once on purpose.
+- **[`014`](docs/insights/014-the-gate-crashed-while-reporting-the-drift-it-exists-to-catch.md)** —
+  the gate died with `UnicodeEncodeError` while PRINTING the drift it had correctly found. The
+  error path is the least-tested code and the only code that ever meets the worst data.
 
 **The two written during U6 constrain U6 itself** — both are corrections to the closed plan, proven
 by measurement, and both are already reflected in the build:
@@ -217,7 +270,7 @@ Then run the engine **with the draft_id as arg 4** so the contamination gate is 
 
 ## Landmines
 
-Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the twelve worked cases.
+Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the fourteen worked cases.
 The four that bite hardest under time pressure:
 
 - **A screaming engine means STOP.** Re-fetch, re-merge, rerun. Never advise off a `picks.json` it

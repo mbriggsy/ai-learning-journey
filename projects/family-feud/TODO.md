@@ -14,7 +14,8 @@ proven equal in two runtimes) · **U14** (`sleeperId` frozen — 174 ids, 0 unre
 **U4** (board schema gate, born red on 13 real findings) · **U5** (scoring as code + the empirical
 curve; oracle exact at 2469/2469) · **U6** (the generator — one source, every surface) ·
 **U15** (the engine wrapper — shape read from the draft, not typed) · **U7** (the board polls the
-live draft) — the last five on 2026-08-08.
+live draft) · **U8** (the runbook's draft loop is executable again) · **U10** (the mule validates
+what it caught) · **U11** (The Nightly Feud publishes) — the last eight on 2026-08-08.
 
 **Phase 2 closed; U8, U10 and U11 done.** **Next action: U12** — schedule the newsletter. Edition #1
 exists but only because a human typed the command; a nightly paper that needs a human is not a

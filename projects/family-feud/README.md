@@ -24,7 +24,7 @@ docs/            all prose — start here
   draft-day-runbook.md   THE operating manual. Read before any draft or mock.
   ranking-methodology.md why the board ranks what it ranks
   live-board-plan.md     the self-updating wall board — shipped; this is the design record
-  nightly-feud.md        the newsletter — what works, what has never run
+  nightly-feud.md        the newsletter — how it builds, and what still isn't scheduled
   insights/              hard-won lessons, one per file. Read before debugging
                          something that smells familiar.
   plans/                 implementation plans. The machinery rebuild lives here.

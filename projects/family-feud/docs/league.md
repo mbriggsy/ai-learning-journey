@@ -17,9 +17,25 @@ draft-day operation lives in [`draft-day-runbook.md`](draft-day-runbook.md).
 | briggsy007 | `959308419154886656` | Hunter, his son (26) | **Commissioner** (`is_owner: true`). The mission is beating him. |
 | RMonk9 | `959230356757045248` | league member | |
 | MattiICE23 | `946163712933732352` | league member | |
+| Kaeperni | `959918157764825088` | league member | |
+| BuschLight420 | `1128840111103348736` | league member | |
 
-**4 of 8 seats filled** as of the 13:54 pull. Four are still empty, so any "who picks between
-us" reasoning built today is provisional — the room is not the room yet.
+🚨 **THE HANDLE `briggsy007` IS NOT BRIGGSY. IT IS HUNTER — the rival.** Briggsy is
+**PoppaBriggsy**, `1390750540631150592`, roster_id 3, *Saquon Deez Nuts*. Confirmed by him directly
+2026-08-09 ("I'm Poppa") and re-verified live the same day: `briggsy007` carries
+`is_owner: true`, PoppaBriggsy carries the team name.
+
+**Why this is the most dangerous name collision in the project:** Briggsy's own email address is
+**briggsy007@gmail.com**, which is handed to every session as user context. The inference
+*"the user is briggsy007@gmail.com, so the `briggsy007` account is the user"* is one short step, it
+feels like confirmation rather than a guess, and it is wrong twice over — it targets **Hunter's
+seat** for our advice and simultaneously loses the one opponent the whole mission is about. Read the
+seat from `draft_order["1390750540631150592"]` and identity from this table; never from the email,
+and never from a handle that merely looks like his.
+
+**6 of 8 seats filled** as of the 2026-08-09 16:29 cargo — but never quote that from here. Re-pull;
+`newsletter/data/inbox/sleeper_users.json` is at most an hour old. Empty seats mean any "who picks
+between us" reasoning is provisional until the room fills.
 
 ## League
 

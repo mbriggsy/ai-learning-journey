@@ -49,6 +49,14 @@ and never overrides them. Changelog entries quote pre-migration paths (`Draft Ki
   provenance, never freshness. `merge_picks.picks_url()` now appends a nonce that must be **unique
   per call** (a nonce fixed at startup is just a second cache key). A `Cache-Control: no-cache`
   request header does NOT work — Cloudflare ignores it. Full write-up: `docs/insights/020`.
+- **`briggsy007` IS HUNTER, NOT BRIGGSY.** Briggsy is **PoppaBriggsy** (`1390750540631150592`,
+  roster_id 3, *Saquon Deez Nuts*); `briggsy007` (`959308419154886656`, `is_owner: true`) is his son
+  Hunter — **the opponent the whole project exists to beat.** The trap: Briggsy's own email is
+  **briggsy007@gmail.com** and is injected into every session, so "the user is briggsy007@gmail.com
+  → the `briggsy007` account is the user" reads as confirmation rather than a guess. It is wrong
+  twice: it aims our advice at Hunter's seat and erases the rival. Confirmed by Briggsy 2026-08-09
+  and re-verified live. Identity comes from [`docs/league.md`](docs/league.md)'s table; never from
+  the email.
 - **`slot_to_roster_id` is NOT the draft slot.** It is the identity map `{1:1 … 8:8}` on this draft
   (re-verified 2026-08-08), so it returns whatever you give it and reads like a confirmation. There
   are **three unrelated "3"s** in this league — Briggsy's slot, his `roster_id`, and this map's `3`

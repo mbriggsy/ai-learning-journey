@@ -1,7 +1,9 @@
 # ============================================================
-#  FEUD MULE v2.0  —  Family Feud data fetcher (Aug 2026)
+#  FEUD MULE v2.1  —  Family Feud data fetcher (Aug 2026)
 #  Runs hourly via Windows Task Scheduler. Fetches Sleeper league
-#  data + fantasy news feeds into data\inbox for The Nightly Feud.
+#  data + fantasy news feeds into data\inbox for The Nightly Feud,
+#  and runs the two draft-kit market fetchers (v2.1) so the expert
+#  consensus and the ADP pool are never older than the last hour.
 #  Every source fails independently; status lands in mule_status.json.
 #
 #  v2 (U10): VALIDATE BEFORE WRITING, AND VALIDATE CONTENT, NOT SIZE.
@@ -102,6 +104,43 @@ function Fetch-Source {
     }
 }
 
+function Run-Fetcher {
+    # Run a Python fetcher that owns its own download-validate-promote cycle, and record its one
+    # line under the same contract Fetch-Source uses: `ok ...` on success, anything else a failure.
+    param([string]$Name, [string]$RelPath)
+
+    if (-not $python) {
+        # Fail SAFE, exactly as Fetch-Source does. "Could not check" is not "fine".
+        $script:results[$Name] = "FAIL: no python on PATH, so the fetcher could not run"
+        return
+    }
+    $script = Join-Path $root $RelPath
+    if (-not (Test-Path $script)) {
+        $script:results[$Name] = "FAIL: $RelPath is missing"
+        return
+    }
+    try {
+        $out = & $python $script --fetch-only 2>&1
+        $code = $LASTEXITCODE
+    } catch {
+        $script:results[$Name] = "FAIL: fetcher threw -- $($_.Exception.Message)"
+        return
+    }
+    # Last non-empty line, same rule as Fetch-Source: a warning on stderr must not be allowed to
+    # displace the `ok` prefix a consumer keys on.
+    $summary = ($out | Where-Object { "$_".Trim() } | Select-Object -Last 1)
+    if ($summary) { $summary = "$summary".Trim() }
+    if (-not $summary) {
+        $summary = if ($code -eq 0) { "ok (fetched)" } else { "FAIL: the fetcher produced no output" }
+    }
+    # A zero exit with a non-ok line, or an ok line with a non-zero exit, is a broken contract --
+    # and silently trusting either half is how "Last Result: 0" fooled this project for hours.
+    if ($code -ne 0 -and "$summary".StartsWith("ok")) {
+        $summary = "FAIL: fetcher exited $code while reporting '$summary'"
+    }
+    $script:results[$Name] = $summary
+}
+
 # ---- Sleeper (public JSON, no auth) ----
 Fetch-Source "sleeper_league"   "https://api.sleeper.app/v1/league/1390509993844809728"       "sleeper_league.json"        "json"
 Fetch-Source "sleeper_users"    "https://api.sleeper.app/v1/league/1390509993844809728/users" "sleeper_users.json"         "json"
@@ -120,13 +159,28 @@ Fetch-Source "rss_espn_nfl"     "https://www.espn.com/espn/rss/nfl/news"        
 Fetch-Source "rss_cbs_nfl"      "https://www.cbssports.com/rss/headlines/nfl/"         "rss_cbs_nfl.xml"    "rss"
 Fetch-Source "rss_pft"          "https://profootballtalk.nbcsports.com/feed/"          "rss_pft.xml"        "rss"
 
+# ---- Draft-kit market data ----
+# These two do NOT land in inbox/ and are NOT fetched here. They are gzipped caches under
+# draft-kit/cache/, and their validation is domain-specific in ways PowerShell has no business
+# expressing: the consensus must still be the Full PPR slice, the ADP pool must still report PPR,
+# and both must still carry the columns every join below them depends on. Re-implementing that
+# here would put the judgment in the one language this repo does not test -- the same reasoning
+# that put validate_cargo.py in Python. So the mule RUNS the fetchers, which already download to
+# `.incoming`, validate, and promote only on a pass, and records what they said.
+#
+# They matter on a schedule because both caches are gitignored on purpose (their value is being
+# newer than the board), so a clean clone has neither -- and draft morning is the worst possible
+# moment to find that out.
+Run-Fetcher "consensus"  "scripts\consensus.py"
+Run-Fetcher "market_adp" "scripts\market.py"
+
 # ---- Status + log ----
 # `validation` tells a consumer these results mean something. A v1 status file records "ok" for a
 # payload nobody looked at, and the two are indistinguishable without this field.
 $status = [ordered]@{
     run_at     = $stamp
     machine    = $env:COMPUTERNAME
-    validation = "status+content-type+parse+items"
+    validation = "status+content-type+parse+items; fetchers self-validate their own schema"
     sources    = $results
 }
 $status | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $inbox "mule_status.json") -Encoding UTF8

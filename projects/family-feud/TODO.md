@@ -38,18 +38,22 @@ Stafford (−30.1) at pick ~85 while letting Lamar Jackson (+106.7) fall 20 spot
 byte-identical ADP for all 256 players while echoing whatever you asked into `meta`. It is a
 BLENDED pool; the league-size correction must keep coming from `vorp` on our side.
 
+**THE MULE HAULS BOTH, HOURLY (v2.1).** `Run-Fetcher` invokes `consensus.py --fetch-only` and
+`market.py --fetch-only`, which own their own download-validate-promote cycle; the mule records
+their one line beside the other ten sources. **12/12 ok, proven end to end** — and proven the other
+way too: with `market.py` renamed away it recorded `FAIL: scripts\market.py is missing`, the other
+eleven sources were unaffected, and **the ADP cache survived byte-for-byte with its mtime unmoved**.
+The validation logic stays in Python deliberately; this repo does not test PowerShell.
+
 **Next action, in order:**
 1. **Port the depth correction into `consensus.py`.** `market.py` has it; the consensus tool does
    not, and its residual 6 disagreements are that artifact, not a real gap. `pr` counts within the
    board's 174 while FantasyPros counts within its 523, so a board RB43 reads as their RB63. Rank
    their list restricted to board rows before comparing, exactly as `market.market_ranks` does.
-2. **Teach the mule to haul the consensus and the ADP pool** so both are ≤1h old on draft morning
-   instead of needing `--refresh`. Both caches are gitignored on purpose, so a clean clone has
-   neither, and draft morning is the worst time to discover that.
-3. **K and DEF carry flat per-tier constants** (`carried:kdef-tier-flat`, **24 of 174 rows**), and
+2. **K and DEF carry flat per-tier constants** (`carried:kdef-tier-flat`, **24 of 174 rows**), and
    their **tiers are the only ordering the re-rank could not re-derive** — no curve exists for
    them, so the old tiers were re-sorted onto the new order rather than invented.
-4. **The curve stops at 2024.** `player_stats_2025.csv` is a 404 (re-verified 2026-08-08); 2025
+3. **The curve stops at 2024.** `player_stats_2025.csv` is a 404 (re-verified 2026-08-08); 2025
    exists only as play-by-play, which needs nflverse's stat builder reimplemented and misattributes
    TDs on ~5% of player-seasons. A narrower EXACT basis beats a wider approximate one — a *measured*
    decision, not an oversight. Revisit as its own unit with its own error budget.
@@ -78,8 +82,8 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **621 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 621 with **10 skips**
+gate went **13 findings → 0** by fixing surfaces. **628 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 628 with **10 skips**
 — 2 live-cargo probes plus 8 that need the gitignored consensus/ADP caches
 (`draft-kit/cache/fp_ecr.csv.gz`, `ffc_adp.json.gz`). Re-measured 2026-08-08 by hiding `newsletter/data/inbox/` **and** the consensus cache,
 not copied from the previous line. Verified by eye, not only by tests: the cheat sheet is **2 pages

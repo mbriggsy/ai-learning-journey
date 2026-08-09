@@ -12,7 +12,7 @@ Snake draft, 16 rounds, ~Aug 29. Full PPR, 6 of 8 make the playoffs.
 | **A 174-player draft board** | 48 RB · 59 WR · 20 TE · 23 QB · 14 DEF · 10 K — every entry tiered, badged, and carrying empirical VORP |
 | **A live draft engine** | reads the cumulative Sleeper picks feed and prints board state, every roster's open needs, run watch, tier cliffs, best-available and VBD leans |
 | **A proven executor mode** | Claude drives Briggsy's logged-in Chrome and clicks the picks. Mock #3: 15/15 manual picks, zero clock misses, roster VORP 1225.8 |
-| **An hourly data mule** | a Windows scheduled task hauling 5 Sleeper endpoints + 5 fantasy RSS feeds to disk, so nothing depends on a network call at draft time. It **validates what it caught** — status, content-type, that it parses, that a feed has items — and **never overwrites good cargo with bad**: a failed source keeps the last payload and records how old it now is |
+| **An hourly data mule** | a Windows scheduled task hauling 5 Sleeper endpoints + 5 fantasy RSS feeds + the expert consensus and the market ADP pool to disk, so nothing depends on a network call at draft time. It **validates what it caught** — status, content-type, that it parses, that a feed has items — and **never overwrites good cargo with bad**: a failed source keeps the last payload and records how old it now is |
 | **A draft-state watcher** | the mule's first consumer. Hourly, it notices the moment `start_time` stops being null — or moves — and writes it down, because the date is a handshake that can shift **earlier**. It also refuses to go quiet: stale cargo, a lost baseline, a moved seat, or a re-created draft each raise their own alert |
 
 ## Where things are
@@ -87,7 +87,7 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         the board. Joins id-to-id, never by name. Also reports
                                         who the consensus ranks that the board does not carry —
                                         the half a rank-gap metric structurally cannot see.
-tests/           621 tests: python -m unittest discover -s tests  (run from the root)
+tests/           628 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```

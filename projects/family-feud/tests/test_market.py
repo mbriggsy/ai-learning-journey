@@ -271,3 +271,94 @@ class TestAgainstTheRealCachedPool(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestTheMulesFetchContract(unittest.TestCase):
+    """`--fetch-only` is what feud_mule.ps1 runs hourly. Its contract is validate_cargo.py's:
+    exit 0 or 1, exactly ONE line on stdout, `ok` as the success prefix.
+
+    The mule keys on that prefix, so a fetcher that succeeded while printing something else would
+    be recorded as a failure -- and one that failed while printing `ok` would be recorded as fine,
+    which is the "Last Result: 0" shape that fooled this project for hours (insight 007).
+    """
+
+    def run_fetch_only(self, module, boom=None):
+        real = module.fetch if module is M else module.refresh
+        if boom is not None:
+            setattr(module, "fetch" if module is M else "refresh",
+                    lambda *a, **k: (_ for _ in ()).throw(boom))
+        buf, stdout = io.StringIO(), sys.stdout
+        sys.stdout = buf
+        try:
+            rc = module.fetch_only()
+        finally:
+            sys.stdout = stdout
+            setattr(module, "fetch" if module is M else "refresh", real)
+        return rc, buf.getvalue()
+
+    def test_a_refusal_exits_1_and_never_says_ok(self):
+        for mod in (M, CO):
+            rc, out = self.run_fetch_only(mod, boom=CO.Refuse("the source moved"))
+            self.assertEqual(rc, 1, mod.__name__)
+            self.assertTrue(out.startswith("FAIL:"), f"{mod.__name__}: {out!r}")
+            self.assertNotIn("ok", out.split(":")[0])
+
+    def test_the_failure_is_exactly_one_line(self):
+        """The mule takes the LAST non-empty line. Extra lines silently change what gets recorded."""
+        for mod in (M, CO):
+            _, out = self.run_fetch_only(mod, boom=CO.Refuse("the source moved"))
+            self.assertEqual(len([x for x in out.splitlines() if x.strip()]), 1, mod.__name__)
+
+    def test_a_success_line_starts_with_ok(self):
+        if not os.path.exists(M.ADP_CACHE):
+            self.skipTest("no cached pool; this asserts the shape of a real success line")
+        doc = M.load()
+        real, M.fetch = M.fetch, lambda *a, **k: doc
+        try:
+            rc, out = self.run_fetch_only(M)
+        finally:
+            M.fetch = real
+        self.assertEqual(rc, 0)
+        self.assertTrue(out.startswith("ok ("), out)
+        self.assertEqual(len([x for x in out.splitlines() if x.strip()]), 1)
+
+
+class TestTheMuleRunsBothFetchers(unittest.TestCase):
+    """The wiring, not the fetchers. Deleting either Run-Fetcher line would leave every test above
+    green while the caches quietly went stale -- and they are gitignored, so a clean clone starts
+    with neither."""
+
+    def mule(self):
+        with open(os.path.join(ROOT, "newsletter", "feud_mule.ps1"), encoding="utf-8") as f:
+            return f.read()
+
+    def test_the_mule_invokes_both_fetchers(self):
+        s = self.mule()
+        self.assertIn('Run-Fetcher "consensus"', s)
+        self.assertIn('Run-Fetcher "market_adp"', s)
+        self.assertIn(r"scripts\consensus.py", s)
+        self.assertIn(r"scripts\market.py", s)
+
+    def test_the_mule_uses_the_fetch_only_contract(self):
+        self.assertIn("--fetch-only", self.mule())
+
+    def test_the_mule_fails_safe_when_python_is_absent(self):
+        s = self.mule()
+        block = s.split("function Run-Fetcher", 1)[1].split("# ---- Sleeper", 1)[0]
+        self.assertIn("no python on PATH", block,
+                      "Run-Fetcher must refuse rather than record a silent pass")
+
+    def test_a_nonzero_exit_cannot_be_recorded_as_ok(self):
+        """Both halves are checked because trusting either alone is how a task that exits 0 while
+        writing nothing reads as healthy (insight 007).
+
+        ANCHORED ON THE CONDITION, not on the message. The first version of this asserted only
+        that the string "exited $code while reporting" appeared, so blanking the `if` to
+        `if ($false)` left the message sitting in dead code and the test stayed green -- a guard
+        with a test and no proof it was live, insight 013 in a language this repo cannot execute
+        under unittest. Structural is the honest ceiling here; it must at least be structural
+        about the part that DOES something.
+        """
+        block = self.mule().split("function Run-Fetcher", 1)[1].split("# ---- Sleeper", 1)[0]
+        self.assertIn('if ($code -ne 0 -and "$summary".StartsWith("ok"))', block)
+        self.assertIn("exited $code while reporting", block)

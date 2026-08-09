@@ -250,9 +250,25 @@ def report(findings, notes, top, board_meta):
     return "\n".join(out)
 
 
+def fetch_only():
+    """The mule's contract, identical to validate_cargo.py's: exit 0 or 1, ONE line on stdout,
+    `ok` as the success prefix."""
+    try:
+        doc = fetch()
+    except CO.Refuse as e:
+        print(f"FAIL: {e}")
+        return 1
+    meta = doc.get("meta") or {}
+    print(f"ok ({len(doc['players'])} players, {meta.get('total_drafts')} drafts, "
+          f"{meta.get('type')})")
+    return 0
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--refresh", action="store_true", help="re-fetch the ADP pool")
+    ap.add_argument("--fetch-only", action="store_true",
+                    help="refresh and report one line; no report. This is what the mule runs.")
     ap.add_argument("--top", type=int, default=15)
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
@@ -260,6 +276,8 @@ def main(argv=None):
         sys.stdout.reconfigure(encoding="utf-8")
     except Exception:
         pass
+    if a.fetch_only:
+        return fetch_only()
     try:
         doc = fetch() if a.refresh else load()
     except CO.Refuse as e:

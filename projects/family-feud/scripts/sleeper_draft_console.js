@@ -17,7 +17,14 @@
  *
  * Usage:
  *   ffFind('Justin Jefferson')    -> what WOULD be drafted; touches nothing. Always run this first.
- *   ffDraft('Justin Jefferson')   -> actually drafts him.
+ *   ffDraft('Justin Jefferson')   -> actually drafts him. Reports a CLICK, never a PICK.
+ *   ffQueue('Justin Jefferson')   -> adds him to the queue, verified by the count incrementing.
+ *
+ * NOT BUILT YET, and the draft-day plan needs them: there is no way from here to READ the queue's
+ * order, REMOVE an entry, or REORDER it -- so "keep the queue ranked" is not yet executable. The
+ * room does expose a REMOVE per entry (recorded in the runbook's Aug 6 queue lab); its selector has
+ * never been captured. Measure it in a mock before writing ffUnqueue()/ffQueueList() -- do not
+ * guess at DOM, which is the whole reason this file exists.
  */
 (function () {
   const NAME_MIN_W = 60, NAME_MAX_W = 220, ROW_MIN_W = 600;
@@ -92,12 +99,16 @@
       }
       if (exact.length === 1) {
         const row = rowOf(exact[0]);
-        const btn = draftButton(row);
+        // The draft control is OPTIONAL here, deliberately. It used to be a refusal, which meant
+        // locate() failed with "already drafted?" whenever the leftmost cell missed the shape test
+        // -- and since ffQueue goes through locate() too, that refusal took the QUEUE down with it.
+        // Queueing needs the row, not the draft button. Only ffDraft needs the button, and it is
+        // the one that refuses now.
         // NOTE: the control is present whether or not it is our turn -- pre-draft it renders flat
         // and inert. Its presence therefore proves nothing about whether a click will pick. Only
         // /picks can say that. See the warning on ffDraft.
-        if (!btn) return { ok: false, reason: 'no draft control on that row -- already drafted?' };
-        return { ok: true, player: ownText(exact[0]), waitedMs: Date.now() - t0, btn };
+        const btn = draftButton(row);
+        return { ok: true, player: ownText(exact[0]), waitedMs: Date.now() - t0, row, btn };
       }
       await new Promise(r => setTimeout(r, 100));
     }
@@ -106,8 +117,11 @@
 
   window.ffFind = async function (playerName) {
     const r = await locate(playerName);
-    const { btn, ...rest } = r;                       // never hand the caller a live handle to click
-    return JSON.stringify(rest);
+    const { btn, row, ...rest } = r;                  // never hand the caller a live handle to click
+    if (!r.ok) return JSON.stringify(rest);
+    // `hasDraftControl` carries the signal the old refusal used to carry, without blocking a queue.
+    // FALSE means the leftmost cell failed the shape test -- most often "he is already drafted".
+    return JSON.stringify({ ...rest, hasDraftControl: !!btn });
   };
 
   /* ffDraft REPORTS A CLICK, NOT A PICK -- and the distinction is the whole point.
@@ -127,7 +141,13 @@
    */
   window.ffDraft = async function (playerName) {
     const r = await locate(playerName);
-    if (!r.ok) return JSON.stringify({ clicked: false, ...r, btn: undefined });
+    if (!r.ok) return JSON.stringify({ clicked: false, ...r, btn: undefined, row: undefined });
+    // The refusal that used to live in locate() lives here, where it belongs: only drafting needs
+    // the draft control. Same wording, so the operator sees no change.
+    if (!r.btn) {
+      return JSON.stringify({ clicked: false, player: r.player,
+                              reason: 'no draft control on that row -- already drafted?' });
+    }
     r.btn.click();
     return JSON.stringify({
       clicked: true,
@@ -137,7 +157,12 @@
     });
   };
 
-  /* THE QUEUE -- THIS IS THE SAFETY NET, AND IT IS PROVEN. 2026-08-09.
+  /* THE QUEUE -- THE MECHANISM IS PROVEN, THE ORACLE WAS NOT. 2026-08-09.
+   *
+   * Read that heading carefully, because the distinction cost us once already. What was proven in
+   * a live room is that AUTO-PICK DRAINS YOUR QUEUE FIRST (the Cameron Dicker measurement below).
+   * What was NOT proven -- and was in fact broken -- is this file's ability to tell you whether a
+   * given player actually made it into the queue. See the oracle note above ffQueue.
    *
    * Three separate controls live in a player row and conflating them is easy:
    *   row.children[0]                      the green + . DRAFTS immediately when on the clock.
@@ -167,20 +192,84 @@
    * reliable read. When a human says they saw it work, believe the human and re-check the
    * instrument first.
    */
-  window.ffQueue = async function (playerName) {
+  /* THE ORACLE, AS A NAMED FUNCTION -- because buried in a click it was wrong and nobody could see it.
+   *
+   * The verdict used to be, inline:  queued: before !== after || label !== null
+   * where before/after were "does the page say 'No players in your queue'". The moment the queue
+   * holds anybody, before === after === false, so the whole verdict collapsed to `label !== null`
+   * -- i.e. "is the string 'QUEUE (n)' rendered anywhere on the page". That is true whenever the
+   * panel is open, so EVERY ADD AFTER THE FIRST reported queued:true unconditionally, click or no
+   * click. And with the panel closed it reported queued:false on a SUCCESSFUL add. It was the exact
+   * sin ffDraft spends fifteen lines warning about -- the browser as oracle for its own action --
+   * reintroduced in the control we call the safety net.
+   *
+   * The only sound read is that the COUNT INCREMENTED BY ONE. Anything else refuses. A predicate
+   * this load-bearing gets a name and a test, the way render_pdf.draws_vbd_chip() does; the cases
+   * below run through node in tests/test_sleeper_draft_console.py.
+   */
+  function readQueue(bodyText) {
+    const m = bodyText.match(/QUEUE \((\d+)\)/);
+    return { count: m ? Number(m[1]) : null, empty: bodyText.includes('No players in your queue') };
+  }
+
+  function queueVerdict(before, after) {
+    // An empty queue renders no "QUEUE (n)" string at all, so 0 -> 1 is the one transition where a
+    // null count is still informative.
+    if (before.empty && !after.empty && (after.count === null || after.count === 1)) {
+      return { verified: true, reason: 'queue went empty -> 1' };
+    }
+    if (before.empty && after.empty) {
+      return { verified: false, reason: 'queue still reads empty -- the click added nothing' };
+    }
+    if (before.count === null || after.count === null) {
+      return { verified: false, reason: 'queue count unreadable -- cannot verify (is the queue panel open?)' };
+    }
+    if (after.count === before.count + 1) {
+      return { verified: true, reason: `queue ${before.count} -> ${after.count}` };
+    }
+    if (after.count === before.count) {
+      return { verified: false, reason: `queue count did not move (still ${before.count})` };
+    }
+    // Moved by something other than +1. Could be a race, could be a drain. Either way this call
+    // cannot claim credit, and guessing is how the last oracle lied.
+    return { verified: false,
+             reason: `queue moved ${before.count} -> ${after.count}, not by one -- refusing to credit this click` };
+  }
+
+  // POLL for the increment. The old code slept a flat 1200ms and read once, which is the very
+  // anti-pattern the comment on locate() condemns -- a slow re-render reads as a failed add.
+  async function pollQueueVerdict(before, budgetMs = 4000) {
+    const t0 = Date.now();
+    let last = { verified: false, reason: 'no read taken' };
+    while (Date.now() - t0 < budgetMs) {
+      last = queueVerdict(before, readQueue(document.body.innerText));
+      if (last.verified) return { ...last, waitedMs: Date.now() - t0 };
+      await new Promise(z => setTimeout(z, 100));
+    }
+    return { ...last, waitedMs: Date.now() - t0, timedOut: true };
+  }
+
+  window.ffQueue = async function (playerName, budgetMs = 4000) {
     const r = await locate(playerName);
-    if (!r.ok) return JSON.stringify({ queued: false, ...r, btn: undefined });
-    let row = r.btn; while (row && row.getBoundingClientRect().width < ROW_MIN_W) row = row.parentElement;
-    const img = row && row.querySelector('img[src*="queue.png"]');
-    if (!img) return JSON.stringify({ queued: false, reason: 'no queue icon in that row' });
-    const before = document.body.innerText.includes('No players in your queue');
+    if (!r.ok) return JSON.stringify({ queued: false, ...r, btn: undefined, row: undefined });
+    const img = r.row.querySelector('img[src*="queue.png"]');
+    if (!img) return JSON.stringify({ queued: false, player: r.player, reason: 'no queue icon in that row' });
+    const before = readQueue(document.body.innerText);
     img.click();
-    await new Promise(z => setTimeout(z, 1200));
-    const after = document.body.innerText.includes('No players in your queue');
-    const label = (document.body.innerText.match(/QUEUE \((\d+)\)/) || [])[1] || null;
-    // Verified against the visible panel, not against the click having happened -- see ffDraft.
-    return JSON.stringify({ queued: before !== after || label !== null, player: r.player, queueCount: label });
+    const v = await pollQueueVerdict(before, budgetMs);
+    return JSON.stringify({
+      queued: v.verified,
+      player: r.player,
+      reason: v.reason,
+      queueCount: readQueue(document.body.innerText).count,
+      waitedMs: v.waitedMs,
+    });
   };
+
+  // Exported so the oracle can be tested without a browser, and so it can be exercised by hand in
+  // the console while a mock is open.
+  window.ffQueueVerdict = queueVerdict;
+  window.ffReadQueue = readQueue;
 
   return 'ffFind(), ffDraft() and ffQueue() installed';
 })();

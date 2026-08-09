@@ -1,0 +1,356 @@
+#!/usr/bin/env python3
+"""The draft-room console script, guarded at the source.
+
+WHAT THESE TESTS ARE AND ARE NOT. They cannot prove a click lands in Sleeper's room -- only a live
+mock can do that. What they DO prove is the half that was broken on 2026-08-09 and could not have
+been caught in a room either, because it reported success: `ffQueue`'s success oracle.
+
+THE DEFECT, so a future edit cannot quietly restore it. The verdict was inline:
+
+    queued: before !== after || label !== null
+
+with before/after being "does the page say 'No players in your queue'". Once the queue holds
+anybody, before === after === false, so the verdict collapsed to `label !== null` -- "is the string
+'QUEUE (n)' rendered anywhere on the page" -- which is true whenever the panel is open. Every add
+after the first therefore returned queued:true whether or not the click did anything, and with the
+panel closed a SUCCESSFUL add returned queued:false. TODO.md had promoted this control to "the
+safety net" and rebuilt the draft-day plan around it.
+
+Following tests/test_normalize.py, the JS runs in real node rather than being pattern-matched, and
+following insight 013 the CALL SITE is tested too: TestFfQueueCallSite drives the real `ffQueue`
+against a stub DOM, so ripping `queueVerdict` back out turns those red rather than leaving the
+predicate green and unwired.
+"""
+import json
+import os
+import re
+import subprocess
+import tempfile
+import unittest
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CONSOLE = os.path.join(ROOT, "scripts", "sleeper_draft_console.js")
+
+
+def read_console():
+    with open(CONSOLE, encoding="utf-8") as f:
+        return f.read()
+
+
+def code_only(src):
+    """The source with comments removed.
+
+    The textual guards below MUST read executable code, not prose. The first version of this file
+    searched the raw source for the old buggy verdict and went red on the comment that documents
+    it -- a detector that punishes writing down the defect trains you to stop writing it down.
+    Verified safe on this file: neither `/*` nor `*/` occurs inside any string or regex literal
+    here (the regexes are /QUEUE \\((\\d+)\\)/, /[A-Za-z]/, /\\s+/ and the apostrophe class), and
+    test_the_stripper_actually_strips is the positive control on that claim.
+    """
+    src = re.sub(r"/\*.*?\*/", "", src, flags=re.S)
+    return "\n".join(l for l in src.splitlines() if not l.strip().startswith("//"))
+
+
+def run_node(js_body):
+    """Run the REAL console script plus `js_body` as one node script, and return its stdout.
+
+    The script is an IIFE that assigns onto `window`, so a global alias is all the shim it needs;
+    everything touching `document` is inside a function and is never reached at load time.
+    """
+    prelude = "globalThis.window = globalThis;\n"
+    with tempfile.TemporaryDirectory() as d:
+        run_js = os.path.join(d, "run.js")
+        with open(run_js, "w", encoding="utf-8") as f:
+            f.write(prelude)
+            f.write(read_console())
+            f.write("\n;\n")
+            f.write(js_body)
+        try:
+            p = subprocess.run(["node", run_js], capture_output=True, text=True,
+                               encoding="utf-8", timeout=60)
+        except FileNotFoundError:
+            raise AssertionError(
+                "node is not on PATH. The draft-room control is JS and this suite is the only "
+                "thing standing between us and a queue oracle that lies. Install node -- do not skip."
+            )
+    if p.returncode != 0:
+        raise AssertionError(f"the console script failed to run:\n{p.stderr[:4000]}")
+    return p.stdout.strip()
+
+
+def verdict(before, after):
+    """queueVerdict(before, after) as evaluated by node. before/after are (count, empty)."""
+    b = {"count": before[0], "empty": before[1]}
+    a = {"count": after[0], "empty": after[1]}
+    out = run_node(
+        f"console.log(JSON.stringify(window.ffQueueVerdict({json.dumps(b)}, {json.dumps(a)})));"
+    )
+    return json.loads(out)
+
+
+# --- the stub room ---------------------------------------------------------------------------
+# One player row, addressed exactly the way the real script addresses a real row: a name cell
+# between 60 and 220px carrying two words, a >=600px row above it, a <60px leftmost cell holding an
+# svg and no text, and a queue icon found by its src. `clickAddsToQueue` decides whether clicking
+# the queue icon actually moves the page's QUEUE (n) text -- which is the whole thing under test.
+STUB_ROOM = r"""
+function buildRoom({ bodyText, clickAddsToQueue, hasDraftControl = true, hasQueueIcon = true,
+                     renderDelayMs = 0 }) {
+  const state = { body: bodyText, clicks: 0 };
+
+  const mk = (o) => {
+    const e = {
+      _text: o.text || '',
+      _rect: { width: o.width || 0, height: o.height || 0 },
+      _svgs: o.svgs || 0,
+      children: o.children || [],
+      parentElement: null,
+      getBoundingClientRect() { return this._rect; },
+      querySelectorAll(sel) { return sel === 'svg' ? new Array(this._svgs).fill({}) : []; },
+      querySelector() { return null; },
+    };
+    e.childNodes = e._text ? [{ nodeType: 3, textContent: e._text }] : [];
+    return e;
+  };
+
+  // renderDelayMs models the thing that makes polling necessary: the room re-renders on its own
+  // clock, so the page has NOT changed by the time the click() call returns. With this at 0 a
+  // single read is indistinguishable from a poll, which is how mutant M6 first survived.
+  const applyAdd = () => {
+    const m = state.body.match(/QUEUE \((\d+)\)/);
+    state.body = m
+      ? state.body.replace(/QUEUE \(\d+\)/, `QUEUE (${Number(m[1]) + 1})`)
+      : state.body.replace('No players in your queue', 'QUEUE (1) Justin Jefferson');
+  };
+  const queueIcon = {
+    src: 'https://sleepercdn.com/images/v2/icons/queue.png',
+    click() {
+      state.clicks += 1;
+      if (!clickAddsToQueue) return;
+      if (renderDelayMs > 0) setTimeout(applyAdd, renderDelayMs);
+      else applyAdd();
+    },
+  };
+
+  const draftCell = mk({ width: 34, height: 26, svgs: 1 });          // <60px, has svg, no text
+  draftCell.click = () => { state.draftClicks = (state.draftClicks || 0) + 1; };
+  const nameCell  = mk({ text: 'Justin Jefferson', width: 150, height: 20 });
+  const row = mk({ width: 700, height: 26, children: hasDraftControl ? [draftCell] : [] });
+  row.querySelector = (sel) => (hasQueueIcon && sel.includes('queue.png') ? queueIcon : null);
+  nameCell.parentElement = row;
+
+  const grid = mk({ width: 900, height: 500 });
+  grid.querySelectorAll = () => [row, draftCell, nameCell];
+
+  globalThis.Event = function (type) { this.type = type; };
+  window.HTMLInputElement = function () {};
+  Object.defineProperty(window.HTMLInputElement.prototype, 'value', {
+    set(v) { this._v = v; }, get() { return this._v; }, configurable: true,
+  });
+  const input = Object.create(window.HTMLInputElement.prototype);
+  input.dispatchEvent = () => true;
+
+  globalThis.document = {
+    get body() { return { innerText: state.body }; },
+    querySelector(sel) {
+      if (sel.includes('Find player')) return input;
+      if (sel.includes('role="grid"')) return grid;
+      return null;
+    },
+  };
+  return state;
+}
+"""
+
+
+class TestTheOracleRefusesWhatItCannotSee(unittest.TestCase):
+    """queueVerdict is the named predicate. Every case here is a way the old inline verdict lied."""
+
+    def test_the_historical_bug_a_click_that_does_nothing_is_not_a_success(self):
+        """THE regression test. Old logic: before===after===false, label!==null -> TRUE.
+
+        This is the case that made every add after the first report success unconditionally."""
+        self.assertEqual(verdict((3, False), (3, False))["verified"], False)
+
+    def test_it_says_why_rather_than_just_no(self):
+        self.assertIn("did not move", verdict((3, False), (3, False))["reason"])
+
+    def test_an_increment_of_one_is_the_only_thing_that_verifies(self):
+        self.assertEqual(verdict((3, False), (4, False))["verified"], True)
+
+    def test_the_first_player_going_into_an_empty_queue_verifies(self):
+        self.assertEqual(verdict((None, True), (1, False))["verified"], True)
+
+    def test_a_queue_that_still_reads_empty_is_a_failed_add(self):
+        v = verdict((None, True), (None, True))
+        self.assertEqual(v["verified"], False)
+        self.assertIn("empty", v["reason"])
+
+    def test_an_unreadable_count_refuses_rather_than_assuming(self):
+        """The old verdict returned TRUE here whenever the panel happened to be rendered. A
+        detector that cannot read its instrument must say so, never pass."""
+        v = verdict((None, False), (None, False))
+        self.assertEqual(v["verified"], False)
+        self.assertIn("unreadable", v["reason"])
+
+    def test_a_jump_of_more_than_one_refuses_to_take_credit(self):
+        v = verdict((3, False), (5, False))
+        self.assertEqual(v["verified"], False)
+        self.assertIn("not by one", v["reason"])
+
+    def test_a_shrinking_queue_is_never_a_success(self):
+        self.assertEqual(verdict((3, False), (2, False))["verified"], False)
+
+    def test_read_queue_parses_the_panel_label(self):
+        out = run_node(
+            "console.log(JSON.stringify(window.ffReadQueue('foo QUEUE (7) bar')));"
+            "console.log(JSON.stringify(window.ffReadQueue('No players in your queue')));"
+        ).splitlines()
+        self.assertEqual(json.loads(out[0]), {"count": 7, "empty": False})
+        self.assertEqual(json.loads(out[1]), {"count": None, "empty": True})
+
+
+class TestFfQueueCallSite(unittest.TestCase):
+    """Insight 013: a predicate nothing calls is decoration. These drive the REAL ffQueue."""
+
+    def _run(self, body_text, click_works, budget=250, **kw):
+        opts = dict(bodyText=body_text, clickAddsToQueue=click_works, **kw)
+        out = run_node(STUB_ROOM + f"""
+        buildRoom({json.dumps(opts)});
+        window.ffQueue('Justin Jefferson', {budget}).then(r => console.log(r));
+        """)
+        return json.loads(out)
+
+    def test_a_dead_click_on_a_nonempty_queue_reports_failure(self):
+        """The exact scenario the old oracle called success."""
+        r = self._run("QUEUE (3) some other page text", click_works=False)
+        self.assertEqual(r["queued"], False)
+        self.assertIn("did not move", r["reason"])
+
+    def test_a_live_click_on_a_nonempty_queue_reports_success(self):
+        r = self._run("QUEUE (3) some other page text", click_works=True)
+        self.assertEqual(r["queued"], True)
+        self.assertEqual(r["queueCount"], 4)
+
+    def test_the_first_add_to_an_empty_queue_reports_success(self):
+        r = self._run("No players in your queue", click_works=True)
+        self.assertEqual(r["queued"], True)
+
+    def test_a_dead_click_on_an_empty_queue_reports_failure(self):
+        r = self._run("No players in your queue", click_works=False)
+        self.assertEqual(r["queued"], False)
+
+    def test_it_names_the_player_it_acted_on(self):
+        self.assertEqual(self._run("QUEUE (1)", click_works=True)["player"], "Justin Jefferson")
+
+    def test_a_missing_queue_icon_refuses(self):
+        r = self._run("QUEUE (3)", click_works=True, hasQueueIcon=False)
+        self.assertEqual(r["queued"], False)
+        self.assertIn("no queue icon", r["reason"])
+
+    def test_it_waits_out_a_slow_re_render_instead_of_reading_once(self):
+        """The reason the fixed 1200ms sleep had to go. The room re-renders on its own clock, so
+        the page has not changed when click() returns; a single read calls a good add a failure --
+        the same false negative locate()'s comment records from the flat 700ms wait.
+
+        This test exists because mutant M6 (return after the first read) SURVIVED the first pass:
+        every case above applied the click's effect synchronously, so none of them could tell a
+        poll from a single read. Insight 019 -- the mutants only probe the axis you suspect."""
+        r = self._run("QUEUE (3) some other page text", click_works=True,
+                      renderDelayMs=300, budget=3000)
+        self.assertEqual(r["queued"], True)
+        self.assertGreaterEqual(r["waitedMs"], 250)
+
+    def test_a_slow_re_render_that_never_arrives_still_reports_failure(self):
+        """The other half: waiting must not become believing. Budget expires before the render."""
+        r = self._run("QUEUE (3) some other page text", click_works=True,
+                      renderDelayMs=5000, budget=300)
+        self.assertEqual(r["queued"], False)
+
+    def test_a_player_with_no_draft_control_can_still_be_queued(self):
+        """The decoupling. locate() used to refuse the whole row when the leftmost cell missed the
+        draft-button shape test, which took the QUEUE down with it -- the safety net was gated on
+        the very control it exists to work around."""
+        r = self._run("QUEUE (3)", click_works=True, hasDraftControl=False)
+        self.assertEqual(r["queued"], True)
+
+
+class TestFfDraftKeepsItsRefusal(unittest.TestCase):
+    """Moving the draft-control check out of locate() must not weaken ffDraft."""
+
+    def _draft(self, **kw):
+        opts = dict(bodyText="QUEUE (0)", clickAddsToQueue=False, **kw)
+        out = run_node(STUB_ROOM + f"""
+        buildRoom({json.dumps(opts)});
+        window.ffDraft('Justin Jefferson').then(r => console.log(r));
+        """)
+        return json.loads(out)
+
+    def test_no_draft_control_still_refuses_with_the_same_wording(self):
+        r = self._draft(hasDraftControl=False)
+        self.assertEqual(r["clicked"], False)
+        self.assertIn("already drafted?", r["reason"])
+
+    def test_it_still_reports_a_click_never_a_pick(self):
+        r = self._draft(hasDraftControl=True)
+        self.assertEqual(r["clicked"], True)
+        self.assertEqual(r["confirmed"], False)
+
+    def test_ff_find_never_hands_back_a_live_handle(self):
+        out = run_node(STUB_ROOM + """
+        buildRoom({ bodyText: 'QUEUE (0)', clickAddsToQueue: false });
+        window.ffFind('Justin Jefferson').then(r => console.log(r));
+        """)
+        r = json.loads(out)
+        self.assertNotIn("btn", r)
+        self.assertNotIn("row", r)
+        self.assertEqual(r["hasDraftControl"], True)
+
+    def test_ff_find_reports_a_missing_draft_control_rather_than_failing(self):
+        out = run_node(STUB_ROOM + """
+        buildRoom({ bodyText: 'QUEUE (0)', clickAddsToQueue: false, hasDraftControl: false });
+        window.ffFind('Justin Jefferson').then(r => console.log(r));
+        """)
+        r = json.loads(out)
+        self.assertEqual(r["ok"], True)
+        self.assertEqual(r["hasDraftControl"], False)
+
+
+class TestTheDefectCannotComeBackTextually(unittest.TestCase):
+    """test_board_live.py's shape: assert the named defect is absent from the emitted source."""
+
+    def test_the_stripper_actually_strips(self):
+        """Positive control (insight 008): a stripper that silently returned everything would make
+        every assertion below vacuously... fail, and one that returned nothing would make them all
+        pass. Prove it removes prose and keeps code before trusting either."""
+        code = code_only(read_console())
+        self.assertNotIn("the browser as oracle for its own action", code)   # prose is gone
+        self.assertIn("function queueVerdict(before, after)", code)          # code survived
+
+    def test_the_old_inline_verdict_is_gone_from_the_code(self):
+        self.assertNotIn("before !== after", code_only(read_console()))
+        # ...and is still WRITTEN DOWN in the comments, which is the only reason it stays fixed.
+        self.assertIn("before !== after", read_console())
+
+    def test_ff_queue_does_not_sleep_a_fixed_interval(self):
+        """The file's own locate() comment condemns this, and ffQueue did it anyway."""
+        self.assertNotIn("setTimeout(z, 1200)", code_only(read_console()))
+
+    def test_ff_queue_delegates_to_the_named_oracle(self):
+        """Insight 013 as a textual backstop to the call-site tests: if someone inlines a verdict
+        into ffQueue again, the delegation disappears."""
+        code = code_only(read_console())
+        body = code[code.index("window.ffQueue ="):code.index("window.ffQueueVerdict")]
+        self.assertIn("pollQueueVerdict(before, budgetMs)", body)
+
+    def test_the_queue_icon_is_still_matched_by_src_not_geometry(self):
+        self.assertIn('img[src*="queue.png"]', code_only(read_console()))
+
+    def test_the_star_is_never_treated_as_the_queue(self):
+        src = read_console()
+        self.assertNotIn('querySelector(\'img[src*="icon_watch_player', src)
+        self.assertNotIn('querySelector("img[src*=\\"icon_watch_player', src)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -31,13 +31,15 @@ ECR; 164 of 174 rows moved. **The edge is not the ranking — it is that this bo
 drafts off a generic list. Verified kept: name/team/pos/`sleeperId` (160/160 agree with live
 Sleeper, positive-controlled) and every note.
 
-**ADP IS IN — `scripts/market.py`, value-vs-price.** Fantasy Football Calculator, PPR, 5,187 drafts,
+**ADP IS IN — `scripts/market.py`, value-vs-price.** Fantasy Football Calculator, PPR, ~5.4k drafts (5,417 on 2026-08-09; churns hourly — read
+`market.py`'s header, never this line),
 joined on the exact `(team, pos, normalized name)` key: **156/174, 0 ambiguous**. The finding it
 exists for: this league starts 1 QB across 8 teams, so replacement is **QB12 and every QB below it
 is worth negative points here** — the market prices for a 12-team room and does not know. It takes
-Stafford (−30.1) at pick ~85 while letting Lamar Jackson (+106.7) fall 20 spots past his value.
+Stafford (−30.1) at pick ~85 while letting Lamar Jackson (+106.7) fall ~21 spots past his value.
+(Re-measured 2026-08-09: Lamar +106.7 exact, wait 21; Stafford −30.1 at 85 exact.)
 ⚠️ **The source's `teams=8` parameter is COSMETIC** — verified, `teams=8` and `teams=12` return
-byte-identical ADP for all 256 players while echoing whatever you asked into `meta`. It is a
+byte-identical ADP for all 257 players while echoing whatever you asked into `meta`. It is a
 BLENDED pool; the league-size correction must keep coming from `vorp` on our side.
 
 **THE MULE HAULS BOTH, HOURLY (v2.1).** `Run-Fetcher` invokes `consensus.py --fetch-only` and
@@ -114,9 +116,25 @@ field. `tests/test_build_curves.py` is new, **14 tests**; that file had none.
 
 ## ▶ NEXT ACTION
 
-**◀ NEXT: the mock-draft harness.** Proven 2026-08-09 that the whole spine already runs against a
+**Two live candidates as of 2026-08-09. Ranked, with the reason each is where it is.**
+
+**◀ 1. THE 2025 WINDOW — the largest accuracy gap, and it just stopped being blocked.** Full
+measurement in *THE 2025 PARK IS VOID* below. One line in `build_curves.py` pointed us at a frozen
+nflverse release; the current one publishes 2025 in exact form, our scoring engine reproduces it
+**1,997/1,997**, and kicking comes along for free at **45/45**. Worth doing first because it moves
+the **top** of the board — a ~25-point RB-vs-WR swing at the elite ranks — which is where picks 1.3
+and 2.6 are decided. Needs its own unit and a stated per-position residual before any surface moves.
+
+**◀ 2. THE MOCK-DRAFT HARNESS.** Proven 2026-08-09 that the whole spine already runs against a
 real Sleeper mock with **zero new code** — see the operating facts below. What is missing is the
-part that beats the clock, and the shape is now decided by measurement rather than taste:
+part that beats the clock, and the shape is now decided by measurement rather than taste.
+⚠️ **Two of its four legs got weaker on 2026-08-09, not stronger** — the queue oracle was found
+lying and is now fixed but **unproven in a room**, and `ffQueue` still cannot read, remove or
+reorder, so leg (c) is "keep adding" rather than "keep ranked". **The shortest path to leg (b) is
+already written and nobody has named it:** `validate_board.check_engine_replay()`
+(`validate_board.py:864-898`) already drives the real engine offline against arbitrary prefixes of
+the committed 120-pick feed — it just **throws stdout away**. Capture that and you have a branch
+precomputer without a browser or a clock.
 
 - **One terminal on the clock, never a fleet.** A draft is maximally coupled — one board, one
   clock, one decision, mutating every 120s — and a live run proved the human-in-terminal loop is
@@ -139,11 +157,17 @@ part that beats the clock, and the shape is now decided by measurement rather th
   attractive wrong answer in the project.
 - **A mock's roster carries `slots_bn: None`.** `read_shape` handles it (bench → 0), and the shape
   banner correctly prints no bench.
-- ✅ **START DRAFT's dialog is a native `window.confirm` — SOLVED, mocks now run unattended.**
-  Override it *before* the click (`window.confirm = () => true`), click, then **restore it
-  immediately** — an auto-accept-everything hook left armed on a page will silently accept a
-  destructive dialog later. Never leave it installed, and never install it on the real league.
-  Text it raises: *"Are you sure you want to start the draft? This action cannot be undone."*
+- 🚨 **START DRAFT is NOT solved, and this entry used to claim it was.** It read
+  *"✅ SOLVED, mocks now run unattended"* — describing a `window.confirm` override. **That technique
+  exists in no file in this repo** (verified 2026-08-09: the only `window.confirm` hits repo-wide
+  are this bullet's own text), and `docs/draft-day-runbook.md:200` — an instruction section, which
+  by CLAUDE.md's precedence rule is current doctrine — says the opposite: *"Have Briggsy click START
+  (or click OK on the dialog) himself."* **A mock still needs a human to start it.** The dialog is
+  real (*"Are you sure you want to start the draft? This action cannot be undone."*) and native
+  dialogs freeze the extension until dismissed. The override + **restore in a `finally`** is still
+  the right design — an auto-accept hook left armed will silently accept a destructive dialog
+  later — but it has to be **written and measured in a mock** before this says SOLVED again. Never
+  install it on the real league.
 - **Miss your clock once and Sleeper puts you on auto-pick and LEAVES you there** for the rest of
   the draft. It drafted rounds 4-15 before this was noticed.
 - **`picked_by` identifies the SEAT OWNER, not the agent.** Auto-pick on a claimed seat still
@@ -171,8 +195,30 @@ all measured:**
   showed our slot got Puka Nacua and Chase went to slot 4 — the clock had expired and the click hit
   a stale un-re-rendered row. **The browser cannot be the oracle for its own action.** Confirm every
   pick with `merge_picks.py <draft_id>` and check the player landed on OUR `draft_slot`. Insight 007.
-- ✅ **THE QUEUE IS THE SAFETY NET, AND IT IS PROVEN (2026-08-09).** **Three different controls
-  live in a player row** and an earlier pass conflated two of them:
+- ⚠️ **THE QUEUE MECHANISM IS PROVEN. ITS ORACLE WAS BROKEN UNTIL 2026-08-09 (later that day) —
+  read this before trusting a `queued:true`.** What a live room proved is that **auto-pick drains
+  your queue first** (the Dicker measurement below). What was NOT proven, and was in fact false, is
+  this repo's ability to tell you whether a player made it in. `ffQueue`'s verdict was
+  `before !== after || label !== null`, where before/after asked *"does the page say 'No players in
+  your queue'"*. **Once the queue holds anybody, both are false**, so the verdict collapsed to
+  *"is the string `QUEUE (n)` rendered anywhere on the page"* — true whenever the panel is open.
+  **Every add after the first returned `queued:true` unconditionally, click or no click**, and with
+  the panel closed a *successful* add returned `queued:false`. That is the exact ffDraft sin — the
+  browser as oracle for its own action — reintroduced inside the control this file had just
+  promoted to "the safety net", and the whole draft-day plan had been rebuilt on top of it.
+  **FIXED:** the verdict is now the named function `queueVerdict()`, which requires the **count to
+  increment by exactly one** and **refuses** on an unreadable count, a no-move, or a jump; the flat
+  1200ms sleep became a poll. `tests/test_sleeper_draft_console.py` runs it in node — **28 tests,
+  6 mutants planted, 6 killed.** ⚠️ **Mutant M6 — "read once instead of polling" — SURVIVED the
+  first pass**, because every stub applied the click synchronously and so could not tell a poll
+  from a single read. Insight 019 again: the mutants only probe the axis you already suspect. The
+  stub now models an async re-render.
+- ⚠️ **`ffQueue` can only ADD.** There is no read of the queue's ORDER, no remove and no reorder —
+  the only read is a `QUEUE (n)` count. So **"keep the queue ranked" is not executable today**; only
+  "keep adding to the queue" is. The room does expose a REMOVE per entry (runbook, Aug 6 queue lab)
+  but **its selector was never captured**. Measure it in a mock before writing `ffQueueList()` /
+  `ffUnqueue()` — guessing at DOM is the reason this file exists.
+- **Three different controls live in a player row** and an earlier pass conflated two of them:
   | control | what it is |
   |---|---|
   | `row.children[0]` (green `+`) | **DRAFTS immediately** when on the clock |
@@ -238,21 +284,51 @@ sanity check. None of that needs touching.
    is the same argument that parked 2025:** a narrower EXACT basis beats a wider approximate one,
    and a DST curve carrying unquantified convention error would be a fabricated number in a column
    the board sorts by. Reopen only with a measured error budget, as its own unit.
-**◀ THE OPEN DATA ITEM — the curve stops at 2024, and re-opening it is a decision.**
-`player_stats_2025.csv` and `stats_player_week_2025.csv` are both **404** (re-verified 2026-08-08
-by HTTP status, twice). 2025 exists only as `play_by_play_2025.csv.gz` (HTTP 200, 48,771 plays,
-already cached), which needs nflverse's stat builder reimplemented. **Prototyped and MEASURED, not
-assumed:** PBP aggregation reproduces **554 of 607** player-seasons exactly, 20 within 2 points,
-and **33 off by multiples of six** — touchdown attribution (laterals, fumble-recovery TDs).
+**🚨 THE 2025 PARK IS VOID — ITS PREMISE WAS FALSE, AND THE CAUSE IS ONE LINE IN OUR OWN REPO.**
+Re-measured 2026-08-09. This entry used to say `player_stats_2025.csv` and
+`stats_player_week_2025.csv` are **both 404**, leaving only play-by-play with ~5% TD-attribution
+error. **The first is 404. The second is 200.**
 
-**The tension, stated plainly, because it is the whole decision:** a 2022-2025 window is one season
-fresher and the freshest season is the one that best describes today's league — against ~5% of
-player-seasons carrying unquantified attribution error, in the table every `vorp` on the board is
-subtracted from. This project's precedent is that a narrower EXACT basis wins, and that precedent
-is why it was parked. **If it is re-opened it needs its own unit and its own error budget** —
-"reproduce nflverse's own weekly totals exactly, or state the residual per position and gate on
-it" — not a quiet swap of the seasons list. Note the K curve just built is 2021-2024 too and would
-have to move with it.
+`build_curves.py:83-84` says *"The plan named `stats_player_week_{year}.csv`. nflverse has since
+renamed the asset; corrected"* and points `URL` at `player_stats/player_stats_{year}.csv`.
+**That correction went the wrong way.** nflverse's **`stats_player` release (published
+2025-07-31)** carries `stats_player_week_1999` … **`stats_player_week_2025`** — 27 seasons, four
+shapes each (`week`/`reg`/`post`/`regpost`). `player_stats_*` is the **frozen legacy release** that
+stops at 2024. The plan was right; the "fix" moved us onto a dead asset, and that single edit is
+the entire reason 2025 was ever parked.
+
+**What was measured, not assumed (all 2026-08-09):**
+- `stats_player_week_2025.csv` — **8.4 MB, 19,422 rows, all 18 REG weeks + POST.** Complete season,
+  nflverse's own stat-builder output. Not something we reimplement.
+- **`scoring.score()` reproduces its published PPR exactly — 1,997 of 1,997 player-seasons on
+  2024.** Zero residual. The oracle transfers intact.
+- **Kicking is folded into the same file** (`fg_made_0_19` … `fg_made_60_`, `pat_made`,
+  `pat_missed`). Against the legacy `player_stats_kicking_2024.csv`: **45 of 45 kickers, 0
+  disagreements** on every bucket. The K curve extends to 2025 with **no new source**, still exact.
+- **145 columns vs the legacy 53.**
+
+**The three costs, also measured — this is the error budget the park demanded:**
+1. ⚠️ **`scoring.py:65` reads `interceptions`; the new file calls it `passing_interceptions`.**
+   A missing key is `_n(None)` → `0.0`, silently. Cost if unhandled: **58 of 1,997 player-seasons
+   wrong, up to 32.0 points.** One alias restores 1,997/1,997. Also renamed: `sacks` →
+   `sacks_suffered`, `sack_yards` → `sack_yards_lost`, `recent_team` → `team`.
+2. ⚠️ **The new release RESTATES 2024.** On nflverse's own published PPR the two releases disagree
+   on **9 of 607** common player-seasons, max **8.0 points**. So this is a basis change, not just an
+   extension — every `vorp` on the board is subtracted from this table.
+3. **The 40+/50+ long-TD bonus limit is UNCHANGED** — no TD-distance column exists.
+   🚨 **Trap: `receiving_40` / `rushing_40` / `passing_40` are chunk-play counts, NOT 40-yard
+   touchdowns.** They are exactly what a session under a clock would grab for `rec_td_40p`.
+
+**Magnitude — raw REG season totals, a direction-and-order read, NOT the real build.** Swapping
+2021 out for 2025 in a 4-season mean: `RB1 +10.9 · RB6 +11.7 · TE24 +6.2 · WR1 −16.1 · WR6 −6.9 ·
+QB1 −10.7`, while the baselines barely move (`QB12 −0.9 · RB41 −1.2 · WR47 −3.3 · TE12 +1.5`).
+Elite RB gains ~12 while elite WR loses ~16 — **a ~25-point swing in RB-vs-WR at the top**, on a
+board where Chase is #1 and Bijan is RB1. That is the range that flips a 1.3 pick, not noise.
+
+**It still needs its own unit and its own gate** — repoint the URL, add the column alias behind a
+test that fails without it, rebuild on 2022-2025, and **state the per-position residual before any
+surface moves**. What changed is that the residual is now a number instead of an unknown. The K
+curve moves with the window.
 
 **The archive question is DECIDED (Briggsy, 2026-08-08): back issues are gitignored.** The
 deciding argument was his: `newsletter/data/archive/` — the cargo each edition is built from — was
@@ -278,10 +354,14 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **682 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 682 with **11 skips**
+gate went **13 findings → 0** by fixing surfaces. **710 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 710 with **15 skips**
 — 2 live-cargo probes plus **9** that need the gitignored consensus/ADP caches
-(`draft-kit/cache/fp_ecr.csv.gz`, `player_ids.csv.gz`, `ffc_adp.json.gz`). Re-measured 2026-08-08 by
+(`draft-kit/cache/fp_ecr.csv.gz`, `ffc_adp.json.gz`) plus **4** (`test_build_curves.TestTheCurveShape`)
+that need the gitignored nflverse season CSVs. ⚠️ **`player_ids.csv.gz` is COMMITTED, not
+gitignored** — `.gitignore:66-69` says so explicitly, and the previous version of this line named it
+as a cause of skips. The 11→15 correction is the four K-curve tests, which the 2026-08-08
+measurement missed because `player_stats_*.csv` was not one of the paths it hid. Re-measured 2026-08-08 by
 actually hiding all four paths and naming every skip, not copied from the previous line — which had
 aged to `628 / 10 / 8` and was wrong on all three. Verified by eye, not only by tests: the cheat sheet is **2 pages
 — the whole 174-row board on page 1**, the plan on page 2 — and the HTML board renders shape-driven
@@ -293,7 +373,8 @@ The plan owns *what to build*; this file owns *what's next*.
 
 **⏳ The draft date STILL does not exist.** Re-pulled from cargo stamped **2026-08-08 20:46**
 (all **12** sources `ok`): `status: pre_draft`, `start_time: null`, `draft_order: null`, **6 of 8
-seats filled**, `type: snake`, `reversal_round: 0`. Parked at 6 seats for ~27 hours. `~Aug 29` is a handshake — **it can move earlier.** Assume no slack.
+seats filled**, `type: snake`, `reversal_round: 0`. Parked at 6 seats since at least 2026-08-07 20:19 (earliest in-repo record) — an anchor, not a
+rolling count, because this line has now been wrong twice. `~Aug 29` is a handshake — **it can move earlier.** Assume no slack.
 The board's header now says "Draft date not set" rather than asserting a date the draft object
 does not carry.
 
@@ -358,7 +439,8 @@ answer that looked right, and several are shapes that will recur.
    |8| and all 24 drew a green ▲ on the one page you hold, hiding the real steals. The rule is now
    the named predicate `render_pdf.draws_vbd_chip()` rather than a condition buried in a draw call,
    and a test asserts the board HTML applies the same one — the two surfaces disagreed about the
-   same fact. **24 arrows removed, 82 real ones kept.**
+   same fact. **24 arrows removed, 95 real ones kept** (82 at the time; the board has been rebuilt
+   since — the 24 removed is still exact and still wired).
 6. ~~**`_draw_strategy`'s `block()` silently truncates.**~~ ✅ **FIXED 2026-08-08.** It returned
    early, dropped every remaining line and reported success. It now **counts** what it cannot draw
    and raises `render_pdf.StrategyOverflow` naming the block and the number of lines lost. The PDF
@@ -542,7 +624,7 @@ rather than assumed.
   check: `python scripts/resolve_sleeper_ids.py --verify` — exit 0 means the join key still holds.
   **A lone shared-token match is never auto-accepted** — it is routinely a same-position teammate
   (six such pairs on this board), so it proposes and hard-stops for a human.
-- ~~**U4 gate**~~ ✅ **SHIPPED 2026-08-08.** `scripts/validate_board.py`, 42 tests. `--fast`
+- ~~**U4 gate**~~ ✅ **SHIPPED 2026-08-08.** `scripts/validate_board.py`, 42 tests as shipped (**88** today). `--fast`
   (static + cross-surface, offline, milliseconds) and `--full` (adds a real-engine replay of the
   lab feed at prefixes 1, 2, **3**, 4, **5**, ... — the reproduced `vbdDelta` break fires at a
   SINGLE-DIGIT prefix, so deciles of a 120-pick feed, the first of which is 12, would have missed
@@ -571,7 +653,7 @@ rather than assumed.
   shipping unquantified attribution error would be worse than shipping a narrower EXACT
   basis. **That is the next accuracy win if anyone wants it.**
 - ~~**U6 generator**~~ ✅ **SHIPPED 2026-08-08.** `scripts/build_board.py` + `render_html.py` +
-  `render_pdf.py` + `scripts/templates/board.html`, 41 tests. **The gate went 13 → 0.**
+  `render_pdf.py` + `scripts/templates/board.html`, 41 tests as shipped (**93** today). **The gate went 13 → 0.**
   - `python scripts/build_board.py` refreshes every surface · `--verify-only` is the draft-morning
     "is my board sane?" command (gate + a sha256 per surface from `draft-kit/build_manifest.json`,
     the only detector that covers the PDF) · `--allow-dirty` stamps `meta.build.dirty`.
@@ -586,7 +668,7 @@ rather than assumed.
     `meta.badges[code].glyph`, which killed the engine's fourth glyph table.
   - **VORP is CARRIED, not recomputed** — deliberate, per KTD-6. See the note below.
 - ~~**U11 The Nightly Feud's build half**~~ ✅ **SHIPPED 2026-08-08 — Edition #1 exists.**
-  `scripts/build_newsletter.py` + `newsletter/templates/edition.html.j2`, 41 tests.
+  `scripts/build_newsletter.py` + `newsletter/templates/edition.html.j2`, 41 tests as shipped (**48** today).
   The mule spent days stockpiling cargo for a consumer that did not exist. It exists.
   - **Deterministic code owns every fact.** `Days to Draft` renders an asterisked dash because
     `start_time` is null, and switches to a real countdown the night it populates — no code edit.
@@ -609,7 +691,7 @@ rather than assumed.
   - **The mule now validates content, not bytes.** Status, content-type, that it parses
     (`defusedxml`), and that a feed carries items. `rss_nbc_edge` had been recorded **ok** every
     hour for days while being a 793 KB web page with zero `<item>` elements — it passed `size > 50`
-    comfortably. **Retired; ProFootballTalk replaces it.** Wire: **5 feeds, 145 items.**
+    comfortably. **Retired; ProFootballTalk replaces it.** Wire: **5 feeds, ~142 items/haul** (read `mule_status.json`, never this line).
   - **Nothing is overwritten until it passes.** v1 downloaded straight onto the live file, so a bad
     response destroyed good cargo and only removed it if under 50 bytes — leaving neither. Fetches
     now land on `<name>.incoming` and are promoted only on a pass. **Proven in an isolated run
@@ -751,9 +833,17 @@ as play-by-play (`play_by_play_2025.csv.gz`, HTTP 200), which needs nflverse's s
 reimplemented and misattributes TDs on ~5% of player-seasons. A narrower EXACT basis beats a wider
 approximate one; revisit 2025 as its own measured unit.
 
-**K and DEF still carry flat per-tier constants** (`carried:kdef-tier-flat`) — `build_curves.py`
+**K and DEF still carry flat per-tier constants** (`carried:kdef-tier-flat`) — but for DIFFERENT
+reasons, and this paragraph used to get K wrong. `build_curves.py`
 builds QB/RB/WR/TE only, so KTD-6's "K and DEF keep the historical curve" is not satisfiable from
-the shipped curve. Labelled rather than invented. **This is the next real accuracy gap.**
+the shipped curve. Labelled rather than invented.
+⚠️ **CORRECTED 2026-08-09:** `build_curves.py` builds QB/RB/WR/TE **and K** — it ships a 41-rank
+exact K curve (announced at the top of this file), and `rerank.value_bands` already derives K tiers
+from it. What K lacks is a **baseline**, and that is a CLOSED DECISION (see *NO K BASELINE* above:
+reopen only by re-running the sim), not an open gap. **DEF is the one with no exact source at all.**
+The sentence that used to end this paragraph — "this is the next real accuracy gap" — invited
+reopening something this file decides two hundred lines earlier. **The next real accuracy gap is the
+2025 window.**
 
 ~~**Blocking prerequisite:** no lab-feed fixture exists**~~ ✅ **RESOLVED** — `tests/fixtures/lab_feed_120.json`
 is committed and verified: 120 picks, `pick_no` contiguous 1→120, every pick carrying `player_id`,
@@ -770,7 +860,7 @@ and template paths have their dependencies.
 Re-pull and confirm — **never quote these from a doc**:
 
 - `/league/1390509993844809728/users` — **6 of 8** seats filled (mule cargo 2026-08-08 17:29). Was
-  4 earlier on Aug 7 — **the room is filling**, and it has been parked at 6 for ~22 hours
+  4 earlier on Aug 7 — **the room is filling**, and it has been parked at 6 since at least 2026-08-07 20:19
 - `/draft/1390509994847240192` — **`draft_order` is still `null`** (17:29 cargo). Read your slot from
   `draft_order["1390750540631150592"]` and **nothing else**
 - `/league/.../rosters` — proves which roster_id is whose (Briggsy = roster 3)
@@ -819,7 +909,7 @@ The four that bite hardest under time pressure:
   ([`007`](docs/insights/007-presence-is-not-health-the-third-instance-of-one-pattern.md))
 - **A foreign source's parameter can be decorative.** Fantasy Football Calculator accepts
   `teams=8`, echoes it into `meta.teams`, and returns **byte-identical ADP to `teams=12`** for all
-  256 players — verified 2026-08-08 by diffing the two responses. Never trust a knob because the
+  257 players — verified 2026-08-08 by diffing the two responses. Never trust a knob because the
   response repeats it back; diff two settings before building on one.
 - **`normalize.norm` STRIPS DIGITS.** `norm("P1")` is `"p"`, so synthetic fixture names like
   `P1..P40` all collapse to one key and every row hard-stops as ambiguous — a fixture that
@@ -833,5 +923,5 @@ The four that bite hardest under time pressure:
 - ~~**`rss_nbc_edge` is not RSS.**~~ ✅ **RETIRED 2026-08-08 (U10).** It returned HTTP 200,
   ~793 KB, `Content-Type: text/html`, zero `<item>` elements — failing content-type, parse *and*
   item count while passing the only check `Fetch-Source` ran (`size > 50`). **ProFootballTalk**
-  replaced it. The wire now carries **5 working feeds, 145 items**. Do not restore the old URL:
+  replaced it. The wire now carries **5 working feeds, ~142 items/haul** (2026-08-09; churns hourly). Do not restore the old URL:
   it is not broken, it was never a feed.

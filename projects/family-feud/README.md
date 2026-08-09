@@ -203,7 +203,7 @@ never *"the gate passes"*. A gate that must be born green is a gate someone weak
 
 **Verified on this machine 2026-08-08:** the engine through `run_engine.py` (shape read from the
 draft, exit 0), the board polling a live feed in a browser, curl to Sleeper, and the mule —
-**10 sources, 0 failed, and this time the "ok" means something**: every payload was parsed and
+**12 sources, 0 failed, and this time the "ok" means something**: every payload was parsed and
 counted, not weighed. The wire carries **5 working feeds and 145 items** (yahoo 50 · cbs 36 ·
 pft 30 · espn 24 · rotowire 5). Item counts move daily; re-read `mule_status.json` rather than
 quoting these.

@@ -7,7 +7,8 @@
 
 ```
 plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U7·U8·U10·U11·U12·U13)
-  → review residue ✅ (all 10) → engine join ✅   ◀ HERE — the build order is EMPTY
+  → review residue ✅ (all 10) → engine join ✅ → provenance ✅ → consensus ✅ → re-rank ✅
+  → ADP ✅ → mule v2.1 ✅   ◀ HERE — the board is DERIVED and refreshes itself hourly
 ```
 
 **Units shipped:** U1, U2 (Phase 0 gates) · **U9** (draft-state watcher) · **U3** (one normalizer,
@@ -94,10 +95,9 @@ round labels with no invented rounds.
 [`docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md`](docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md).
 The plan owns *what to build*; this file owns *what's next*.
 
-**⏳ The draft date STILL does not exist.** Re-pulled from cargo stamped **2026-08-08 17:29**
-(all 10 sources `ok`): `status: pre_draft`, `start_time: null`, `draft_order: null`, **6 of 8 seats
-filled**, `type: snake`, `reversal_round: 0`. The watcher ran 17:35 and has written no
-`DRAFT_ALERTS.md`. `~Aug 29` is a handshake — **it can move earlier.** Assume no slack.
+**⏳ The draft date STILL does not exist.** Re-pulled from cargo stamped **2026-08-08 20:46**
+(all **12** sources `ok`): `status: pre_draft`, `start_time: null`, `draft_order: null`, **6 of 8
+seats filled**, `type: snake`, `reversal_round: 0`. Parked at 6 seats for ~27 hours. `~Aug 29` is a handshake — **it can move earlier.** Assume no slack.
 The board's header now says "Draft date not set" rather than asserting a date the draft object
 does not carry.
 
@@ -570,9 +570,22 @@ The four that bite hardest under time pressure:
 - **A silent engine can also be wrong.** `picks.json` is gitignored, so a spent mock's picks are
   invisible to `git status`. Both `merge_picks.py` and the engine now refuse them — but only the
   engine's check fires if you skip the merge, and only when you pass the draft_id.
-- **Presence is not health.** `Last Result: 0`, `NumberOfMissedRuns`, and the mule's `10/10 ok` are
+- **Presence is not health.** `Last Result: 0`, `NumberOfMissedRuns`, and the mule's `12/12 ok` are
   all untrustworthy. Only the cargo timestamp in `mule_status.json` proves life.
   ([`007`](docs/insights/007-presence-is-not-health-the-third-instance-of-one-pattern.md))
+- **A foreign source's parameter can be decorative.** Fantasy Football Calculator accepts
+  `teams=8`, echoes it into `meta.teams`, and returns **byte-identical ADP to `teams=12`** for all
+  256 players — verified 2026-08-08 by diffing the two responses. Never trust a knob because the
+  response repeats it back; diff two settings before building on one.
+- **`normalize.norm` STRIPS DIGITS.** `norm("P1")` is `"p"`, so synthetic fixture names like
+  `P1..P40` all collapse to one key and every row hard-stops as ambiguous — a fixture that
+  measures nothing while looking busy. Use alphabetic names in any join fixture, and assert the
+  fixture actually joined before trusting what it reports.
+- **JAC/JAX is not finished — it recurs at every new foreign boundary.** U14 fixed it in the
+  board's own field; FantasyPros still says `JAC`, which silently cost the Jaguars defense its
+  consensus row until `rerank.FOREIGN_TEAM_ALIASES` normalised it. Fixing the ROOT applies to
+  fields we own; a foreign source needs an adapter at the boundary. Expect the next source to
+  need one too.
 - ~~**`rss_nbc_edge` is not RSS.**~~ ✅ **RETIRED 2026-08-08 (U10).** It returned HTTP 200,
   ~793 KB, `Content-Type: text/html`, zero `<item>` elements — failing content-type, parse *and*
   item count while passing the only check `Fetch-Source` ran (`size > 50`). **ProFootballTalk**

@@ -40,7 +40,9 @@ nflverse GitHub releases carry stats, injuries and depth charts; both hosts are 
 ## The mule: data on disk, no network required
 
 `newsletter/feud_mule.ps1` runs hourly under the Windows task **"Family Feud Mule"** and drops
-10 sources into `newsletter/data/inbox/` — five Sleeper endpoints plus five fantasy RSS feeds.
+10 sources into `newsletter/data/inbox/` — five Sleeper endpoints plus five fantasy RSS feeds —
+and since v2.1 also runs two draft-kit fetchers (`consensus.py`, `market.py`) that write to
+`draft-kit/cache/` instead. **12 entries in `mule_status.json`; only 10 of them land in the inbox.**
 
 **Every payload is validated before it is allowed to land** *(changed 2026-08-08, U10)* — HTTP
 status, content-type, that it parses, and that a feed actually carries `<item>`/`<entry>` elements.

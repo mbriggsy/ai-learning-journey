@@ -7,7 +7,7 @@ cross-referenced against our board — written to a local HTML page Briggsy keep
 
 | Half | State |
 |---|---|
-| **The Mule** — hauls data in, hourly | ✅ **Green, and the green is now earned.** Verified 2026-08-08: 10 sources, 0 failed, every payload parsed and counted rather than weighed. **5 working feeds, 145 items.** |
+| **The Mule** — hauls data in, hourly | ✅ **Green, and the green is now earned.** Verified 2026-08-08: 12 sources, 0 failed, every payload parsed and counted rather than weighed. **5 working feeds, 145 items.** |
 | **The build** — turns data into a newsletter | ✅ **Edition #1 published 2026-08-08** (U11). `scripts/build_newsletter.py`. |
 | **The schedule** — publishes it nightly, unattended | ✅ **Registered 2026-08-08** (U12). Task *Family Feud Newsletter*, **daily at 21:45**, sixteen minutes behind the mule's `:29` haul. Re-register after any folder move: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-newsletter.ps1` |
 
@@ -50,7 +50,8 @@ are about to draft is hurt when he is not.
 
 ## The Mule
 
-Runs `newsletter/feud_mule.ps1` hourly, dropping 10 sources into `newsletter/data/inbox/`:
+Runs `newsletter/feud_mule.ps1` hourly, dropping 10 sources into `newsletter/data/inbox/`
+(v2.1 also runs two draft-kit fetchers that write to `draft-kit/cache/`, not here):
 five Sleeper endpoints (league, users, draft, trending add, trending drop) and five fantasy RSS
 feeds (Yahoo, Rotowire, ESPN, CBS, **ProFootballTalk**). Each source fails independently — dead
 feeds report `FAIL` in `mule_status.json` and the newsletter is meant to use whatever arrived.

@@ -70,7 +70,7 @@ Finally, players get grouped at the **cliffs** — the points where the projecte
 
 **Tiers are equal-VALUE bands, not equal counts and not the biggest drops** (`rerank.value_bands`). Both alternatives were tried and both are degenerate: equal counts are arbitrary, and on a convex decreasing curve the biggest drops all cluster at the top — that produced WR tiers of `[1,1,1,1,2,1,1,51]`. Equal value bands give a tier list the shape it is supposed to have: a couple of names at the top where points fall away fast, widening as the curve flattens.
 
-⚠️ **K and DEF tiers are the one ordering the re-rank could not derive.** `build_curves.py` builds QB/RB/TE/WR only, so for those **24 rows** (K 10, DEF 14) the old tiers were re-sorted onto the new order rather than invented. They are labelled `carried:kdef-tier-flat` and they are the board's next known accuracy gap.
+⚠️ **DEF tiers are the one ordering the re-rank cannot derive** — and K no longer belongs in that sentence. `build_curves.py` ships an exact **K curve** (39 ranks, from distance-bucketed field goals), so `rerank.value_bands` **derives K tiers** like any other position; what K lacks is a *baseline*, which is a closed decision, not a gap. That leaves the **14 DEF rows**, whose tiers were re-sorted onto the new order rather than invented, labelled `carried:kdef-tier-flat`. DEF has no exact source at all: `player_stats_def_*.csv` is player-level and publishes no points allowed. The board's remaining known gap on the four skill positions is the 40+/50+ long-TD bonus, which needs play-by-play.
 
 ---
 
@@ -83,7 +83,7 @@ One idea drives all the numbers: **a player's value isn't his points — it's hi
 For each player, we project a season point total in our *exact* scoring (full PPR, 4-point passing TDs, 0.04/passing yard, 0.1/rushing and receiving yard, −2 fumbles lost, −1 INT). The projections come from four years of empirical positional scoring curves — what the RB5, the WR20, the TE8 have actually scored in this scoring environment — mapped onto the current rank order.
 
 <!-- BEGIN GENERATED curve-provenance — rewritten by scripts/build_board.py. Do not hand-edit. -->
-**Curve provenance:** seasons 2021–2024, built from nflverse weekly player stats, excluding `long_td_bonus`.
+**Curve provenance:** seasons 2022–2025, built from nflverse weekly player stats, excluding `long_td_bonus`.
 <!-- END GENERATED curve-provenance -->
 
 > **Two corrections, found by reproducing this pipeline (Aug 2026).** This section previously
@@ -117,9 +117,9 @@ Three numbers from the board:
 <!-- BEGIN GENERATED worked-example — rewritten by scripts/build_board.py. Do not hand-edit. -->
 | Player | VORP | Read as |
 |--------|------|---------|
-| Bijan Robinson | **254.4** | 254 points/season better than the free RB (RB41 is the bar) |
-| Ja'Marr Chase | **256.1** | 256 points better than the free WR (WR47 is the bar) |
-| Josh Allen | **140.0** | 140 points better than the free QB (QB12 is the bar) |
+| Bijan Robinson | **268.4** | 268 points/season better than the free RB (RB41 is the bar) |
+| Ja'Marr Chase | **242.7** | 243 points better than the free WR (WR47 is the bar) |
+| Josh Allen | **129.7** | 130 points better than the free QB (QB12 is the bar) |
 <!-- END GENERATED worked-example -->
 
 *The two tables above are generated from `draft-kit/players_data.json` on every board refresh. If

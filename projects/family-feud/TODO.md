@@ -284,7 +284,8 @@ sanity check. None of that needs touching.
    is the same argument that parked 2025:** a narrower EXACT basis beats a wider approximate one,
    and a DST curve carrying unquantified convention error would be a fabricated number in a column
    the board sorts by. Reopen only with a measured error budget, as its own unit.
-**🚨 THE 2025 PARK IS VOID — ITS PREMISE WAS FALSE, AND THE CAUSE IS ONE LINE IN OUR OWN REPO.**
+**✅ THE 2025 PARK WAS VOID, AND THE SWAP IS APPLIED. ITS PREMISE WAS FALSE AND THE CAUSE WAS
+ONE LINE IN OUR OWN REPO.**
 Re-measured 2026-08-09. This entry used to say `player_stats_2025.csv` and
 `stats_player_week_2025.csv` are **both 404**, leaving only play-by-play with ~5% TD-attribution
 error. **The first is 404. The second is 200.**
@@ -325,12 +326,13 @@ QB1 −10.7`, while the baselines barely move (`QB12 −0.9 · RB41 −1.2 · WR
 Elite RB gains ~12 while elite WR loses ~16 — **a ~25-point swing in RB-vs-WR at the top**, on a
 board where Chase is #1 and Bijan is RB1. That is the range that flips a 1.3 pick, not noise.
 
-**✅ THE INSTRUMENT IS BUILT AND THE MEASUREMENT IS DONE (2026-08-09). THE BOARD IS UNTOUCHED —
-the swap itself is Briggsy's call and nothing below has been applied.**
+**✅ MEASURED, THEN APPLIED — 2026-08-09, Briggsy's call. THE BOARD NOW SHIPS ON
+`current` / 2022-2025.**
 
-`build_curves.py` now carries a `SOURCES` table (`legacy` / `current`), a boundary adapter, and an
-oracle. **`DEFAULT_SOURCE` is still `legacy` and the shipped curve is byte-identical** — verified,
-and mutant C6 (flipping the default) turns 6 tests red.
+`build_curves.py` carries a `SOURCES` table (`legacy` / `current`), a boundary adapter, and an
+oracle. **`legacy` stays whole and stays tested** — `test_the_old_basis_is_still_reproducible`
+rebuilds 2021-2024 and pins RB41 118.7 / WR47 148.0, because a swap whose predecessor cannot be
+rebuilt is unauditable the moment it lands.
 
 - **THE ORACLE NOW RUNS INSIDE EVERY BUILD, not just in a test.** `load_season` re-scores every row
   under `STANDARD_PPR` and compares to the source's own `fantasy_points_ppr`, and **hard-stops**
@@ -363,27 +365,30 @@ comparison was `if r in C21` where `C21` is keyed by POSITION, not rank — alwa
 filtered everything and printed a confident zero. Insight 008 exactly: a broken instrument returns
 zero and zero reads like a finding. **The version in the repo carries a positive control.**
 
-**WHAT IT DOES TO THE BOARD — the top of it, which is where picks are decided.** Control: the
-legacy recompute reproduces the shipped board's `vorp` exactly.
+**WHAT IT DID TO THE BOARD — the top of it, which is where picks are decided.** Control before
+applying: the legacy recompute reproduced the then-shipped board's `vorp` exactly.
 
 ```
-        shipped (2021-2024)          measured (2022-2025)
+        was (legacy 2021-2024)       IS NOW (current 2022-2025)
   #1    Ja'Marr Chase   +256.1       Bijan Robinson  +268.4
   #2    Bijan Robinson  +254.4       Ja'Marr Chase   +242.7
   #4    Puka Nacua      +196.8       C. McCaffrey    +212.3
 ```
-**13 of the top 15 change position. Mean vorp shift: RB +4.0, QB −3.4, WR −1.4, TE −1.2.**
-K depth goes 41 → 39 ranks, which reaches K tiers through `rerank.value_bands`.
+**13 of the top 15 changed position. Mean vorp shift: RB +4.0, QB −3.4, WR −1.4, TE −1.2.**
+Baselines moved `QB12 283.5→282.6 · RB41 118.7→117.5 · WR47 148.0→144.8 · TE12 146.9→148.8`, and K
+depth went 41 → 39 ranks, which reaches K tiers through `rerank.value_bands`.
+⚠️ **`old_value_sweep` caught this file quoting the pre-swap numbers as current** on the very
+rebuild that applied the swap — which is the sweep doing exactly the job it was rewritten for.
 
 🚨 **THE FINDING THAT OUTRANKS THE SWAP: 1.1 is inside the noise.** Chase and Bijan are **1.7 points
 apart** on the shipped board, and **the release restatement alone — mean 0.23 — flips them**
 (255.6 vs 256.3). Whatever is decided about the window, *"Chase or Bijan at 1.1"* is not a question
 this board's precision can answer, and it should not be presented as though it were.
 
-**Still open, and deliberately not decided here:** whether to move `DEFAULT_SOURCE` to `current`
-and the window to 2022-2025. Two arguments beyond freshness: the legacy release **will never
-publish 2026 either**, so `legacy` is a dead end on a clock — and the long-TD bonus limit is
-unchanged by all of this.
+**What is still open after the swap:** the long-TD bonus (+1 at 40+, +2 at 50+, stacking) is
+still not computable — no TD-distance column exists on either release, so it needs play-by-play.
+That is now the ONLY remaining accuracy gap on the four skill positions, and DEF remains the only
+position with no exact source at all.
 
 **The archive question is DECIDED (Briggsy, 2026-08-08): back issues are gitignored.** The
 deciding argument was his: `newsletter/data/archive/` — the cargo each edition is built from — was

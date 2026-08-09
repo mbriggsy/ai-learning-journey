@@ -86,7 +86,7 @@ start this week.
 **Inputs:** `rosters` (`starters` vs `players`), `matchups/<week>`, the wire (already hauled).
 
 **⚠️ The projection source does not exist, and the nearest thing to hand is a trap.**
-`draft-kit/vorp_curve.json` is a **pre-season rank→points lookup over full seasons 2021-2024**. It
+`draft-kit/vorp_curve.json` is a **pre-season rank→points lookup over full seasons 2022-2025**. It
 answers "what is a WR27 worth over a season," which is the wrong question for "should I start him
 Sunday." Reusing it for a weekly start/sit would produce a confident number with no weekly
 information in it at all. Either haul a real weekly projection source or have the check report

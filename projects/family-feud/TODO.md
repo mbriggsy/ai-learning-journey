@@ -139,12 +139,41 @@ part that beats the clock, and the shape is now decided by measurement rather th
   attractive wrong answer in the project.
 - **A mock's roster carries `slots_bn: None`.** `read_shape` handles it (bench → 0), and the shape
   banner correctly prints no bench.
-- **START DRAFT is behind a browser confirm dialog.** A JS modal freezes the whole automation
-  channel, so **Claude cannot start a mock unattended** — that gates any overnight-mocks idea.
+- ✅ **START DRAFT's dialog is a native `window.confirm` — SOLVED, mocks now run unattended.**
+  Override it *before* the click (`window.confirm = () => true`), click, then **restore it
+  immediately** — an auto-accept-everything hook left armed on a page will silently accept a
+  destructive dialog later. Never leave it installed, and never install it on the real league.
+  Text it raises: *"Are you sure you want to start the draft? This action cannot be undone."*
 - **Miss your clock once and Sleeper puts you on auto-pick and LEAVES you there** for the rest of
   the draft. It drafted rounds 4-15 before this was noticed.
 - **`picked_by` identifies the SEAT OWNER, not the agent.** Auto-pick on a claimed seat still
   stamps your user_id, so it cannot tell you whether a human chose.
+
+⚠️ **DRIVING THE ROOM — `scripts/sleeper_draft_console.js` (`ffFind` / `ffDraft`), all measured:**
+- **NEVER click the draft room by screenshot coordinate.** Screenshot pixels are not CSS pixels
+  and the scale drifts between captures: viewport is **1536×791 CSS** while successive screenshots
+  came back **1568×750** and **1522×784**, putting a row that lives at CSS y=544 at y=562. **18px
+  of error on a 26px row** — it cost a real pick (McBride, 2.6). Address the DOM instead.
+- **The row's leftmost cell (`row.children[0]`, ~34px, holds an svg, no text) IS the draft button**
+  when you are on the clock. It is NOT a queue button — that misread is what made the first mock
+  look like queue-plus-auto-pick worked.
+- **The player list is VIRTUALISED** — the scroll container is ~98,000px tall with only ~53 name
+  cells in the DOM. Most players cannot be found by querying; **the search box is mandatory**, and
+  it must be driven through React's native value setter, not by assignment.
+- **Do not interleave keystrokes and JS calls.** Executing JS moves focus, so `ctrl+u` → type →
+  run-JS silently lands the keystrokes nowhere. Observed: the box read empty afterwards.
+- **Poll, never sleep.** A fixed 700ms wait reported "no exact match" mid-re-render, which is
+  indistinguishable from "he's already gone." Polling resolved the same lookup in **219ms**.
+- **Match names EXACTLY and fold apostrophes.** `Chase` matches Chase Brown as readily as Ja'Marr
+  Chase; Sleeper's apostrophe differs from the board's. Ambiguity must refuse, never guess.
+- 🚨 **`ffDraft` reports a CLICK, NOT A PICK.** It returned `drafted:true` for Chase while the API
+  showed our slot got Puka Nacua and Chase went to slot 4 — the clock had expired and the click hit
+  a stale un-re-rendered row. **The browser cannot be the oracle for its own action.** Confirm every
+  pick with `merge_picks.py <draft_id>` and check the player landed on OUR `draft_slot`. Insight 007.
+- ⛔ **STILL UNPROVEN: there is no known way to load the queue.** The "keep a ranked queue loaded so
+  a blown clock takes OUR next-best player" safety net has **no verified mechanism** — the `+` is
+  the draft button, and no queue control was ever found. This is the highest-value open item,
+  because it is what makes a missed pick harmless.
 
 The other open item is the 2025 season (below); it was parked by measurement, not by neglect, so
 re-opening it is Briggsy's call and it comes with an error budget attached.

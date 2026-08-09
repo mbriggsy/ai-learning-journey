@@ -112,24 +112,26 @@ field. `tests/test_build_curves.py` is new, **14 tests**; that file had none.
   pts, mean 0.45** across 41 ranks, i.e. immaterial.
 
 **Next action, in order:**
-1. **DECIDE THE KICKER REPLACEMENT RANK — this is Briggsy's call, and it is what still blocks K
-   `vorp`.** The curve exists; `recompute_vorp` needs a curve **and** a baseline, and
-   `meta.vbd.baselineWaiver` carries QB/RB/WR/TE only. Those four came from a **Thunderdome sim,
-   300 rooms × 16 seasons**, which cannot be reproduced here — so deriving a K baseline by any
-   other method would be a fabricated number wearing a measured one's clothes.
-   - The mechanical argument says **K9** (8 teams × 1 K rostered, the 9th is free on waivers). Note
-     the other four do NOT follow that rule — QB12 and TE12 in an 8-team, 1-starter league imply
-     rostered backups, which nobody does at kicker. So K9 is defensible and is **not** consistent
-     with how the other four were produced. That inconsistency is the actual decision.
-   - Until it is made, K rows stay `carried:kdef-tier-flat`, which is honest about the vorp.
-2. ⚠️ **THE LABEL `carried:kdef-tier-flat` IS FALSE FOR K, AND WAS BEFORE TODAY.** Measured against
-   `917c498a` (pre-dating this session's tier work): K tier 2 already held `{6.0, −2.0}` and tier 3
-   `{−2.0, 6.0}`. The earlier consensus re-rank reordered kickers while the carried vorp stayed
-   attached to **players**, so the flat-per-tier property it names died then and nothing noticed.
-   **DEF is genuinely flat** (27/14/4) and still is. Three ways out, in preference order: settle
-   the K baseline above and the question dissolves; or re-map the three constants onto the NEW
-   tiers, which makes the label true without inventing anything; or rename the label. **Renaming
-   touches the gate and its tests — do not do it casually.**
+1. ✅ **DECIDED 2026-08-08 — NO K BASELINE. K `vorp` stays carried, deliberately.** Briggsy's call.
+   The reasoning, so nobody reopens it as an oversight: the curve exists and `recompute_vorp` needs
+   a curve **and** a baseline, but `meta.vbd.baselineWaiver`'s four came from a **Thunderdome sim,
+   300 rooms × 16 seasons** that cannot be reproduced here. The mechanical answer (**K9** — 8 teams
+   × 1 kicker rostered, the 9th free on waivers) is defensible but is **not** how the other four
+   were produced: QB12 and TE12 in an 8-team, 1-starter league imply rostered backups, and nobody
+   rosters a backup kicker. **A fifth baseline derived by a different method is a fabricated number
+   wearing a measured one's clothes** — and the part that actually affects a draft decision, the
+   tiers, is already derived. **Reopen only by re-running the sim**, not by picking a rank.
+2. ~~**THE LABEL `carried:kdef-tier-flat` IS FALSE FOR K**~~ ✅ **FIXED 2026-08-08 (Briggsy's call:
+   re-map the constants onto the new tiers).** It had been false since the consensus re-rank moved
+   kickers while their carried vorp stayed pinned to whichever **player** held it — measured at
+   `917c498a`, K tier 2 held `{6.0, −2.0}` and tier 3 `{−2.0, 6.0}`. DEF was correct only by luck:
+   its ordering had not moved. `build_board.repin_carried_to_tiers()` now pins the distinct
+   constants to the distinct tiers, best to best, on **every** build — K 16/6/−2 → tiers 1/2/3, DEF
+   27/14/4 unchanged (a no-op there, which is what proves the mapping is the one the board was
+   built with). **Nothing invented; 3 vorp values moved, all kickers.** It **refuses** rather than
+   guessing when the counts disagree — four constants across three tiers was never flat-per-tier,
+   and collapsing it quietly would put an invented number under a label saying it was carried.
+   3 mutants planted and killed, including the call site (insight 013).
 3. ⚠️ **DO NOT BUILD A DEF CURVE — the 14 DEF rows should stay labelled.** Sources probed live
    2026-08-08, HTTP 200 and columns actually read: `player_stats_def_2024.csv` is **player-level**,
    so sacks/INT/FF/FR/TD/safety must be aggregated to a team, and **it does not carry points
@@ -171,8 +173,8 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **668 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 668 with **11 skips**
+gate went **13 findings → 0** by fixing surfaces. **672 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 672 with **11 skips**
 — 2 live-cargo probes plus **9** that need the gitignored consensus/ADP caches
 (`draft-kit/cache/fp_ecr.csv.gz`, `player_ids.csv.gz`, `ffc_adp.json.gz`). Re-measured 2026-08-08 by
 actually hiding all four paths and naming every skip, not copied from the previous line — which had

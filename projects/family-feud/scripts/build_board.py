@@ -156,12 +156,52 @@ def recompute_vorp(players, curve, baselines, method):
             q["vorpMethod"] = VORP_KDEF
         out.append(q)
 
+    repin_carried_to_tiers(out)
+
     # Re-rank the whole board on the new values. Ties break on board rank so the ordering is
     # deterministic -- vbdRank must be contiguous 1..N with no duplicates or the gate refuses.
     for rank, q in enumerate(sorted(out, key=lambda x: (-x["vorp"], x["r"])), start=1):
         q["vbdRank"] = rank
         q["vbdDelta"] = q["r"] - rank
     return out
+
+
+def repin_carried_to_tiers(players):
+    """Make `carried:kdef-tier-flat` TRUE by pinning its constants to TIERS, not to players.
+
+    THE LABEL PROMISES A PROPERTY THAT NOTHING WAS ENFORCING, and it had already gone false.
+    Measured on the board at 917c498a, before any of this session's tier work: K tier 2 held
+    {6.0, -2.0} and tier 3 held {-2.0, 6.0}. The consensus re-rank had reordered kickers while
+    their carried vorp stayed attached to the PLAYER who happened to hold it, so the flat-per-tier
+    property died silently and every later reader was trusting a label that no longer described
+    the data. DEF was unaffected only by luck -- its ordering did not move.
+
+    Nothing is invented here. The distinct constants already on the board are re-pinned to the
+    distinct tiers, best to best: K 16.0/6.0/-2.0 onto tiers 1/2/3, DEF 27.0/14.0/4.0 onto 1/2/3
+    (which is already where DEF sits, so it is a no-op there and proves the mapping is the one the
+    board was built with).
+
+    IT REFUSES RATHER THAN GUESSING when the counts disagree. A position with four constants and
+    three tiers was never flat-per-tier in the first place, and quietly collapsing it would put an
+    invented number on the board under a label claiming it was carried. That is the one thing this
+    field must never do.
+    """
+    by_pos = {}
+    for p in players:
+        if p.get("vorpMethod") == VORP_KDEF:
+            by_pos.setdefault(p.get("pos"), []).append(p)
+    for pos, rows in sorted(by_pos.items()):
+        values = sorted({r["vorp"] for r in rows}, reverse=True)
+        tiers = sorted({r["tier"] for r in rows})
+        if len(values) != len(tiers):
+            raise SystemExit(
+                f"{pos}: {len(values)} carried vorp constants {values} but {len(tiers)} tiers "
+                f"{tiers}. '{VORP_KDEF}' claims one constant per tier and that is not "
+                f"recoverable here -- decide what these values mean before rebuilding.")
+        pin = dict(zip(tiers, values))
+        for r in rows:
+            r["vorp"] = pin[r["tier"]]
+    return players
 
 
 class Incomplete(Exception):

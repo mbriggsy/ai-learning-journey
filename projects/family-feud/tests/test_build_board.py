@@ -221,6 +221,49 @@ class TestDerivations(unittest.TestCase):
             checked += 1
         self.assertEqual(checked, 150, "expected all 150 skill rows to be curve-derived")
 
+    def test_the_carried_constants_really_are_flat_PER_TIER(self):
+        """The label `carried:kdef-tier-flat` promises exactly this and nothing was enforcing it.
+        It had already gone false: measured at 917c498a, K tier 2 held {6.0, -2.0} and tier 3 held
+        {-2.0, 6.0}, because the consensus re-rank moved kickers while their carried vorp stayed
+        pinned to whichever PLAYER happened to hold it."""
+        rows = {}
+        for p in real_source()["players"]:
+            if p["vorpMethod"] == B.VORP_KDEF:
+                rows.setdefault(p["pos"], {}).setdefault(p["tier"], set()).add(p["vorp"])
+        self.assertTrue(rows, "no carried rows at all -- has the label been renamed?")
+        for pos, tiers in rows.items():
+            for tier, vals in sorted(tiers.items()):
+                self.assertEqual(len(vals), 1, f"{pos} tier {tier} carries {sorted(vals)}")
+
+    def test_a_better_tier_never_carries_a_worse_constant(self):
+        for pos in ("K", "DEF"):
+            byt = {}
+            for p in real_source()["players"]:
+                if p["pos"] == pos:
+                    byt[p["tier"]] = p["vorp"]
+            vals = [byt[t] for t in sorted(byt)]
+            self.assertEqual(vals, sorted(vals, reverse=True), f"{pos} tiers {byt}")
+
+    def test_repinning_is_WIRED_into_the_recompute(self):
+        """The call site (insight 013). A helper that is never called is decoration, and every
+        assertion above would still pass on a board that happened to be tidy already."""
+        # The real bug's shape: the constants are attached to the WRONG tiers, exactly as they
+        # were after the consensus re-rank moved kickers underneath them. Re-pinning must swap.
+        rows = [{"pos": "K", "pr": i, "tier": t, "vorp": v, "r": i, "vorpMethod": "x"}
+                for i, (t, v) in enumerate([(1, 5.0), (2, 9.0)], 1)]
+        out = B.recompute_vorp(rows, {}, {}, "curve:test")
+        self.assertEqual({r["tier"]: r["vorp"] for r in out}, {1: 9.0, 2: 5.0},
+                         "the better tier must end up with the better constant")
+
+    def test_it_REFUSES_when_the_constants_cannot_be_one_per_tier(self):
+        """Four constants across three tiers was never flat-per-tier. Collapsing it quietly would
+        put an invented number on the board under a label that says it was carried."""
+        rows = [{"pos": "K", "tier": t, "vorp": v, "vorpMethod": B.VORP_KDEF}
+                for t, v in [(1, 9.0), (1, 7.0), (2, 5.0), (3, 1.0)]]
+        with self.assertRaises(SystemExit) as ctx:
+            B.repin_carried_to_tiers(rows)
+        self.assertIn("one constant per tier", str(ctx.exception))
+
     def test_a_curve_without_a_baseline_leaves_the_row_CARRIED(self):
         """K is the live case: build_curves.py ships a kicker table, meta.vbd ships no kicker
         baseline, so every K row must stay labelled rather than quietly acquiring a vorp computed

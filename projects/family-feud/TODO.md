@@ -111,8 +111,19 @@ field. `tests/test_build_curves.py` is new, **14 tests**; that file had none.
   not say which. Blocks count as misses; `--check` prints the sensitivity both ways — **0.0–1.7
   pts, mean 0.45** across 41 ranks, i.e. immaterial.
 
-**Next action, in order:**
-1. ✅ **DECIDED 2026-08-08 — NO K BASELINE. K `vorp` stays carried, deliberately.** Briggsy's call.
+## ▶ NEXT ACTION
+
+⚠️ **THE BUILDABLE QUEUE IS EMPTY. Everything still open needs a decision before it needs code** —
+which is the state to be in three weeks out, not a gap. The one open item is the 2025 season
+(below); it was parked by measurement, not by neglect, so re-opening it is Briggsy's call and it
+comes with an error budget attached.
+
+**Standing work that is not a task:** the mule hauls hourly, the watcher watches, the newsletter
+publishes nightly at 21:45, and `python scripts/build_board.py --verify-only` is the draft-morning
+sanity check. None of that needs touching.
+
+**DECIDED 2026-08-08 — recorded so nobody reopens them as oversights:**
+1. ✅ **NO K BASELINE. K `vorp` stays carried, deliberately.** Briggsy's call.
    The reasoning, so nobody reopens it as an oversight: the curve exists and `recompute_vorp` needs
    a curve **and** a baseline, but `meta.vbd.baselineWaiver`'s four came from a **Thunderdome sim,
    300 rooms × 16 seasons** that cannot be reproduced here. The mechanical answer (**K9** — 8 teams
@@ -143,11 +154,21 @@ field. `tests/test_build_curves.py` is new, **14 tests**; that file had none.
    is the same argument that parked 2025:** a narrower EXACT basis beats a wider approximate one,
    and a DST curve carrying unquantified convention error would be a fabricated number in a column
    the board sorts by. Reopen only with a measured error budget, as its own unit.
-4. **The curve stops at 2024.** `player_stats_2025.csv` and `stats_player_week_2025.csv` are both
-   404 (**re-verified 2026-08-08**, this session, by HTTP status). 2025 exists only as
-   play-by-play, which needs nflverse's stat builder reimplemented and misattributes TDs on ~5% of
-   player-seasons. A narrower EXACT basis beats a wider approximate one — a *measured* decision,
-   not an oversight. Revisit as its own unit with its own error budget.
+**◀ THE ONE OPEN ITEM — the curve stops at 2024, and re-opening it is a decision.**
+`player_stats_2025.csv` and `stats_player_week_2025.csv` are both **404** (re-verified 2026-08-08
+by HTTP status, twice). 2025 exists only as `play_by_play_2025.csv.gz` (HTTP 200, 48,771 plays,
+already cached), which needs nflverse's stat builder reimplemented. **Prototyped and MEASURED, not
+assumed:** PBP aggregation reproduces **554 of 607** player-seasons exactly, 20 within 2 points,
+and **33 off by multiples of six** — touchdown attribution (laterals, fumble-recovery TDs).
+
+**The tension, stated plainly, because it is the whole decision:** a 2022-2025 window is one season
+fresher and the freshest season is the one that best describes today's league — against ~5% of
+player-seasons carrying unquantified attribution error, in the table every `vorp` on the board is
+subtracted from. This project's precedent is that a narrower EXACT basis wins, and that precedent
+is why it was parked. **If it is re-opened it needs its own unit and its own error budget** —
+"reproduce nflverse's own weekly totals exactly, or state the residual per position and gate on
+it" — not a quiet swap of the seasons list. Note the K curve just built is 2021-2024 too and would
+have to move with it.
 
 **The archive question is DECIDED (Briggsy, 2026-08-08): back issues are gitignored.** The
 deciding argument was his: `newsletter/data/archive/` — the cargo each edition is built from — was

@@ -41,6 +41,14 @@ and never overrides them. Changelog entries quote pre-migration paths (`Draft Ki
   impossible pick order, and leaves drafted players on the available list — it will name an
   already-drafted player as THE CALL. Reproduced and fixed Aug 5.
 - **Never advise off a `picks.json` the engine refused.** Re-fetch, merge on `pick_no`, rerun.
+- **The Sleeper picks feed is CDN-cached, and a stale response defeats every gate we own.**
+  Measured 2026-08-09 on a live mock: the un-busted URL was behind on **76 of 77 observations, by
+  up to 16 picks**, and served a `pre_draft` body of 0 picks for 30+ seconds after the draft began.
+  A stale response is a **contiguous prefix**, so it passes the gap gate, the duplicate gate, the
+  contamination gate and `draft_engine.py`'s integrity gate — all of which check shape or
+  provenance, never freshness. `merge_picks.picks_url()` now appends a nonce that must be **unique
+  per call** (a nonce fixed at startup is just a second cache key). A `Cache-Control: no-cache`
+  request header does NOT work — Cloudflare ignores it. Full write-up: `docs/insights/020`.
 - **`slot_to_roster_id` is NOT the draft slot.** It is the identity map `{1:1 … 8:8}` on this draft
   (re-verified 2026-08-08), so it returns whatever you give it and reads like a confirmation. There
   are **three unrelated "3"s** in this league — Briggsy's slot, his `roster_id`, and this map's `3`

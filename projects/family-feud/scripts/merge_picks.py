@@ -17,19 +17,67 @@ cumulative makes this cheap, not unnecessary.
 Writes into draft-kit/ (gitignored scratch) because draft_engine.py opens picks.json by literal
 name from its own cwd.
 """
-import json, os, sys, urllib.request
+import itertools, json, os, sys, time, urllib.request
 
 TIMEOUT = 15
 HERE = os.path.dirname(os.path.abspath(__file__))
 KIT = os.path.join(os.path.dirname(HERE), "draft-kit")
 PICKS = os.path.join(KIT, "picks.json")
 
+CACHE_BUST_PARAM = "cb"
+_nonce_seq = itertools.count(1)
+
+
+def picks_url(draft_id):
+    """The /picks URL carrying a nonce that has never been used before.
+
+    Sleeper serves this endpoint through Cloudflare with `stale-while-revalidate=300` and a TTL
+    that varies by draft status -- measured 2026-08-09 on a live 8-team mock: `s-maxage=30`
+    while `pre_draft`, `15` while `drafting`, `86400` once `complete`. Two consequences, both
+    measured rather than reasoned:
+
+      * The PLAIN url was behind the truth on **76 of 77 observations** during a live draft, by
+        up to **16 picks** (mean 8.1). It is not occasionally stale, it is essentially always
+        stale. Worse, the cached `pre_draft` body (0 picks, 30s TTL) kept being served for 30+
+        seconds after the draft began -- reporting an EMPTY draft while 16 picks were down.
+      * `stale-while-revalidate` hands the STALE copy to the request that triggers the refresh
+        and the fresh one to whoever asks next. One client polling a private draft is always the
+        triggering request, so it never wins the race it started.
+
+    Why the query param and not a header: a `Cache-Control: no-cache` REQUEST header does not
+    work -- measured, Cloudflare ignored it and still answered `cf-cache-status: HIT` with the
+    stale body. A URL nobody has asked for is the only lever available from this side.
+
+    THE NONCE MUST BE UNIQUE ON EVERY CALL. Reusing one just re-reads that nonce's own cached
+    copy, which is the original bug wearing a fix's clothes -- and a completed draft's entry
+    carries a 24-hour TTL, so a repeated nonce can pin you to a day-old answer.
+    """
+    nonce = f"{time.time_ns()}-{os.getpid()}-{next(_nonce_seq)}"
+    return f"https://api.sleeper.app/v1/draft/{draft_id}/picks?{CACHE_BUST_PARAM}={nonce}"
+
+
+def warn_cache_hit():
+    print("!" * 70)
+    print("!! THE CACHE-BUSTER IS NOT WORKING -- a never-before-used URL returned")
+    print("!! cf-cache-status: HIT, which is only possible if the nonce stopped busting.")
+    print("!! Sleeper may have started normalising query params, or a proxy is collapsing")
+    print("!! them. This feed can be up to 16 picks behind the real draft board.")
+    print("!!")
+    print("!! It is NOT a hard failure: this is the behaviour that shipped for months, and a")
+    print("!! false red on draft morning teaches you to skip the check. But treat every")
+    print("!! '0 new this fetch' as suspect and confirm against the Sleeper board by eye.")
+    print("!" * 70)
+
 
 def fetch(draft_id):
-    url = f"https://api.sleeper.app/v1/draft/{draft_id}/picks"
-    req = urllib.request.Request(url, headers={"User-Agent": "family-feud/1.0"})
+    req = urllib.request.Request(picks_url(draft_id),
+                                 headers={"User-Agent": "family-feud/1.0"})
     with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
-        return json.loads(r.read().decode("utf-8"))
+        cache_status = (r.headers.get("cf-cache-status") or "").strip().upper()
+        body = json.loads(r.read().decode("utf-8"))
+    if cache_status == "HIT":
+        warn_cache_hit()
+    return body
 
 
 BAD_SHAPE = ("picks.json exists but is not a Sleeper picks array ({why}).\n"

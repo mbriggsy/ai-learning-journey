@@ -582,9 +582,20 @@ function renderLive(){
 }
 
 async function pollOnce(){
-  // CACHE-BUSTING IS NOT OPTIONAL. A live draft's picks feed comes back with
-  // `s-maxage=30, stale-while-revalidate=300`, so a plain fetch every 12s would be handed the
-  // same stale body by the browser and by every CDN hop, and the polling would buy nothing.
+  // CACHE-BUSTING IS NOT OPTIONAL. The picks feed is Cloudflare-cached with a TTL that depends
+  // on draft status -- re-measured 2026-08-09 across all three: `s-maxage=30` while pre_draft,
+  // `15` while DRAFTING, `86400` once complete, all with `stale-while-revalidate=300`. (This
+  // comment used to say a live draft returns 30; that is the pre_draft number, read off a board
+  // that had not started.) A plain fetch every 12s would be handed the same stale body by the
+  // browser and by every CDN hop, and the polling would buy nothing.
+  //
+  // The nonce goes HERE, per fetch, and must never move up to the PICKS_URL constant: a nonce
+  // fixed at page load is asked for once and cached like any other URL, which is the original
+  // bug wearing a fix's clothes. Measured on a live 8-team mock, the un-busted URL ran up to
+  // 16 picks behind (mean 8.1, behind on 76 of 77 observations) -- because
+  // stale-while-revalidate serves the STALE copy to whoever triggers the refresh and the fresh
+  // one to whoever asks next, so a lone poller never wins the race it started.
+  //
   // NEVER credentials:'include' -- Sleeper answers with a wildcard origin, and wildcard-origin
   // plus allow-credentials is precisely the pair browsers reject outright.
   const res = await fetch(PICKS_URL + '?_=' + Date.now(), { cache: 'no-store', credentials: 'omit' });

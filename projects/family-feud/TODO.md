@@ -8,7 +8,8 @@
 ```
 plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U7·U8·U10·U11·U12·U13)
   → review residue ✅ (all 10) → engine join ✅ → provenance ✅ → consensus ✅ → re-rank ✅
-  → ADP ✅ → mule v2.1 ✅   ◀ HERE — the board is DERIVED and refreshes itself hourly
+  → ADP ✅ → mule v2.1 ✅ → mock proven end-to-end ✅ → CDN staleness fixed ✅
+  ◀ HERE — the board is DERIVED, refreshes itself hourly, and the draft-day feed is no longer stale
 ```
 
 **Units shipped:** U1, U2 (Phase 0 gates) · **U9** (draft-state watcher) · **U3** (one normalizer,
@@ -113,10 +114,40 @@ field. `tests/test_build_curves.py` is new, **14 tests**; that file had none.
 
 ## ▶ NEXT ACTION
 
-⚠️ **THE BUILDABLE QUEUE IS EMPTY. Everything still open needs a decision before it needs code** —
-which is the state to be in three weeks out, not a gap. The one open item is the 2025 season
-(below); it was parked by measurement, not by neglect, so re-opening it is Briggsy's call and it
-comes with an error budget attached.
+**◀ NEXT: the mock-draft harness.** Proven 2026-08-09 that the whole spine already runs against a
+real Sleeper mock with **zero new code** — see the operating facts below. What is missing is the
+part that beats the clock, and the shape is now decided by measurement rather than taste:
+
+- **One terminal on the clock, never a fleet.** A draft is maximally coupled — one board, one
+  clock, one decision, mutating every 120s — and a live run proved the human-in-terminal loop is
+  too slow: the 4.3 clock expired while the engine was being run in Bash.
+- **The answer must exist BEFORE the clock starts.** Pre-compute the branches offline where time
+  is free; on the clock do a LOOKUP, not a deliberation.
+- **Keep a player queued at all times**, so a blown clock degrades to *our* board instead of
+  Sleeper's. Measured cost of not doing this: auto-pick took Tetairoa McMillan (81.3) at 5.3 while
+  **Lamar Jackson (~107) was still on the board and did not go until #40**.
+- **Many terminals only OFF the clock**, one per opposing doctrine, and **forbidden to talk** —
+  opponents that share a brain are not opponents.
+
+⚠️ **OPERATING FACTS FOR ANY MOCK WORK — all measured 2026-08-09, none of them guessable:**
+- **Mocks never appear in `/user/<id>/drafts`.** Only the real league does. The browser URL is the
+  ONLY way to learn a mock's `draft_id`.
+- **A mock's `league_id` is `null`** — that is the signature that distinguishes it from the real draft.
+- **A mock DOES populate `draft_order`** (`{"1390750540631150592": 3}` on all three). The real
+  draft's is still null, so **a mock is the only way to rehearse `run_engine.py`'s seat read.**
+- **`slot_to_roster_id` is the identity map on mocks too** — re-confirmed live, still the most
+  attractive wrong answer in the project.
+- **A mock's roster carries `slots_bn: None`.** `read_shape` handles it (bench → 0), and the shape
+  banner correctly prints no bench.
+- **START DRAFT is behind a browser confirm dialog.** A JS modal freezes the whole automation
+  channel, so **Claude cannot start a mock unattended** — that gates any overnight-mocks idea.
+- **Miss your clock once and Sleeper puts you on auto-pick and LEAVES you there** for the rest of
+  the draft. It drafted rounds 4-15 before this was noticed.
+- **`picked_by` identifies the SEAT OWNER, not the agent.** Auto-pick on a claimed seat still
+  stamps your user_id, so it cannot tell you whether a human chose.
+
+The other open item is the 2025 season (below); it was parked by measurement, not by neglect, so
+re-opening it is Briggsy's call and it comes with an error budget attached.
 
 **Standing work that is not a task:** the mule hauls hourly, the watcher watches, the newsletter
 publishes nightly at 21:45, and `python scripts/build_board.py --verify-only` is the draft-morning
@@ -194,8 +225,8 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **674 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 674 with **11 skips**
+gate went **13 findings → 0** by fixing surfaces. **682 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 682 with **11 skips**
 — 2 live-cargo probes plus **9** that need the gitignored consensus/ADP caches
 (`draft-kit/cache/fp_ecr.csv.gz`, `player_ids.csv.gz`, `ffc_adp.json.gz`). Re-measured 2026-08-08 by
 actually hiding all four paths and naming every skip, not copied from the previous line — which had
@@ -333,8 +364,16 @@ produce **byte-identical advisories** on the 120-pick lab feed at prefixes 1, 3,
 
 ## 0. Start with `/brief`
 
-Nineteen insight docs now exist. Each has a documented wrong answer that looks right. Read them
+Twenty insight docs now exist. Each has a documented wrong answer that looks right. Read them
 before designing, not after debugging.
+
+**Read [`020`](docs/insights/020-the-cdn-served-a-contiguous-prefix-and-every-gate-passed.md)
+before trusting any feed on draft day.** The Sleeper picks endpoint is Cloudflare-cached and the
+un-busted URL was **behind on 76 of 77 observations of a live draft, by up to 16 picks**. A stale
+response is a CONTIGUOUS PREFIX, so it passes the gap gate, the duplicate gate, the contamination
+gate and the engine's integrity gate — every guard here checks *shape* or *provenance*, and none
+checked *freshness*. **U7 already knew and had fixed it in the browser**; the lesson never reached
+the Python fetch site, which is insight 005's meta-lesson landing a second time.
 
 **Read [`019`](docs/insights/019-the-mutants-only-probe-the-axis-you-already-suspect.md) before
 trusting a green mutation run.** Four mutants were planted on the depth correction, all four were
@@ -693,7 +732,7 @@ Start with `--dry-run` to see every value and where it came from before anything
 
 ## Landmines
 
-Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the seventeen worked cases.
+Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the twenty worked cases.
 The four that bite hardest under time pressure:
 
 - ⚠️ **NEVER RENAME `newsletter/data/inbox/` OR `draft-kit/cache/` TO SIMULATE A CLEAN CLONE.**

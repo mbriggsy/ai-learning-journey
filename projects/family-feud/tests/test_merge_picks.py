@@ -321,5 +321,117 @@ class TestTheDuplicateGateCouldNeverFire(MergeCase):
         self.assertNotIn("DUPLICATE", out)
 
 
+class FakeResponse:
+    """Minimal stand-in for what urlopen() yields: a context manager with headers and a body."""
+
+    def __init__(self, body, headers=None):
+        self._body = json.dumps(body).encode("utf-8")
+        self.headers = _Headers(headers or {})
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def read(self):
+        return self._body
+
+
+class _Headers(dict):
+    def get(self, k, default=None):          # urllib headers are case-insensitive; mimic that
+        for key, val in self.items():
+            if key.lower() == k.lower():
+                return val
+        return default
+
+
+class TestCacheBusting(unittest.TestCase):
+    """The picks feed is Cloudflare-cached and the plain URL is essentially always stale.
+
+    Measured 2026-08-09 on a live 8-team mock draft: the un-busted URL was behind the truth on
+    76 of 77 observations, by up to 16 picks, and the cached `pre_draft` body (0 picks) was
+    still being served 30+ seconds after the draft began. A stale response is a CONTIGUOUS
+    PREFIX, so it passes the gap/duplicate gate and the engine's integrity gate cleanly and then
+    names a player who is already gone. Nothing else in the system can catch it.
+    """
+
+    def test_the_url_carries_the_draft_id_and_the_right_endpoint(self):
+        url = merge_picks.picks_url(REAL)
+        self.assertIn(f"/draft/{REAL}/picks", url)
+        self.assertTrue(url.startswith("https://api.sleeper.app/v1/"), url)
+
+    def test_two_calls_never_produce_the_same_url(self):
+        """A nonce reused is a nonce cached. This is the whole fix."""
+        self.assertNotEqual(merge_picks.picks_url(REAL), merge_picks.picks_url(REAL))
+
+    def test_a_thousand_calls_are_all_distinct(self):
+        """time_ns alone can repeat on a coarse clock, which is why a counter is in the nonce."""
+        seen = {merge_picks.picks_url(REAL) for _ in range(1000)}
+        self.assertEqual(len(seen), 1000, "the nonce collided -- the buster is not reliable")
+
+    def test_the_nonce_is_a_query_param_not_part_of_the_path(self):
+        url = merge_picks.picks_url(REAL)
+        self.assertIn(f"?{merge_picks.CACHE_BUST_PARAM}=", url)
+        self.assertEqual(url.count("?"), 1, url)
+
+    # --- CALL SITE (insight 013). The three tests above all stay green if fetch() quietly
+    # builds a plain URL of its own, which is precisely how a guard becomes decoration.
+    def test_fetch_actually_requests_the_busted_url(self):
+        seen = []
+
+        def fake_urlopen(req, timeout=None):
+            seen.append(req.full_url)
+            return FakeResponse([], {"cf-cache-status": "MISS"})
+
+        real = merge_picks.urllib.request.urlopen
+        merge_picks.urllib.request.urlopen = fake_urlopen
+        try:
+            merge_picks.fetch(REAL)
+            merge_picks.fetch(REAL)
+        finally:
+            merge_picks.urllib.request.urlopen = real
+        self.assertEqual(len(seen), 2)
+        for url in seen:
+            self.assertIn(f"?{merge_picks.CACHE_BUST_PARAM}=", url,
+                          "fetch() sent a URL with no cache-buster on it")
+        self.assertNotEqual(seen[0], seen[1],
+                            "fetch() reused a nonce -- the second call reads the first's cache")
+
+    def _fetch_with_status(self, status):
+        # status=None means the header is ABSENT, not present-and-empty -- those are different
+        # states and only the absent one models a response that came nowhere near Cloudflare.
+        headers = {} if status is None else {"cf-cache-status": status}
+
+        def fake_urlopen(req, timeout=None):
+            return FakeResponse([{"pick_no": 1}], headers)
+
+        real = merge_picks.urllib.request.urlopen
+        merge_picks.urllib.request.urlopen = fake_urlopen
+        buf = io.StringIO()
+        try:
+            with redirect_stdout(buf):
+                body = merge_picks.fetch(REAL)
+        finally:
+            merge_picks.urllib.request.urlopen = real
+        return body, buf.getvalue()
+
+    def test_a_hit_on_a_unique_url_is_reported(self):
+        """Only possible if the buster stopped working. Silent would put us back where we were."""
+        body, out = self._fetch_with_status("HIT")
+        self.assertEqual(len(body), 1, "the body must still be returned; this is a warning")
+        self.assertIn("CACHE-BUSTER IS NOT WORKING", out)
+
+    def test_a_miss_says_nothing(self):
+        """Positive control: a warning that fires on the healthy path is noise, not a signal."""
+        _, out = self._fetch_with_status("MISS")
+        self.assertNotIn("CACHE-BUSTER", out)
+
+    def test_a_missing_cache_header_is_not_treated_as_a_hit(self):
+        """No header at all means we cannot tell -- and cannot-tell is not the same as broken."""
+        _, out = self._fetch_with_status(None)
+        self.assertNotIn("CACHE-BUSTER", out)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -124,12 +124,18 @@ SOURCES = {
         "seasons": (2022, 2023, 2024, 2025),
     },
 }
-DEFAULT_SOURCE = "legacy"          # every shipped number came from here; changing it moves the board
+# ✅ FLIPPED 2026-08-09 (Briggsy's call), after the swap was measured rather than argued.
+# `legacy` is kept whole so the old basis stays reproducible and the A/B can be re-run, but every
+# number the board ships now comes from `current`. What decided it: the oracle is exact on BOTH
+# releases so there is no correctness cost, 2025 is the season that best describes today's league,
+# and `player_stats` will never publish 2026 either -- so this move was going to happen anyway and
+# doing it now means doing it unhurried instead of in draft week.
+DEFAULT_SOURCE = "current"
 
 URL = SOURCES["legacy"]["url"]              # kept: referenced by the emitted meta and by tests
 KICK_URL = SOURCES["legacy"]["kick_url"]
 
-SEASONS = (2021, 2022, 2023, 2024)
+SEASONS = SOURCES[DEFAULT_SOURCE]["seasons"]
 POSITIONS = ("QB", "RB", "WR", "TE")
 CURVE_DEPTH = 80                        # deep enough for every baseline; RB41/WR47 are the deepest
 
@@ -407,8 +413,19 @@ def main(argv=None):
         "meta": {
             "seasons": used,
             "seasons_kicking": used_k,
-            "source": URL.format(year="<year>"),
-            "source_kicking": KICK_URL.format(year="<year>"),
+            "release": DEFAULT_SOURCE,
+            "source": SOURCES[DEFAULT_SOURCE]["url"].format(year="<year>"),
+            "source_kicking": (SOURCES[DEFAULT_SOURCE]["kick_url"] or
+                               SOURCES[DEFAULT_SOURCE]["url"]).format(year="<year>"),
+            "release_note": (
+                "nflverse's `player_stats` release is FROZEN at 2024 and 404s on 2025; the live one "
+                "is `stats_player`, which publishes 1999-2025 and folds the kicking columns into "
+                "the weekly file. This repo read the frozen one until 2026-08-09 because a comment "
+                "asserted the rename went the other way. Both are kept in SOURCES so the old basis "
+                "stays reproducible. Column renames are handled by an adapter at the boundary and "
+                "caught by an oracle inside load_season(), which re-scores every row under "
+                "STANDARD_PPR against the source's own fantasy_points_ppr and refuses on any "
+                "disagreement -- a renamed column reads as a ZERO, not an error."),
             "kicker_note": (
                 "K is an EXACT build, not an approximation: nflverse publishes field-goal makes "
                 "already bucketed by distance and the buckets map 1:1 onto league.md's bands. A "
@@ -429,11 +446,21 @@ def main(argv=None):
                               "so the bonus is not computable from this source"),
             "reproduces_aug5_board": False,
             "reproduces_note": ("the Aug 5 board's curve was built on 2022-2025 from nflverse "
-                                "PLAY-BY-PLAY; player_stats publishes no 2025 asset, and carries "
-                                "no TD-distance breakdown. Best achievable agreement from this "
-                                "source is 1.84 MAD on the four baselines. play_by_play_2025 "
-                                "does exist and is the route to closing both gaps -- see the "
-                                "module docstring for the measured starting point."),
+                                "PLAY-BY-PLAY. This curve now covers the SAME SEASONS from "
+                                "nflverse's own weekly stat builder, which is an exact basis "
+                                "rather than a re-derived one, so the remaining gap to Aug 5 is "
+                                "the long-TD bonuses and play-by-play's own TD attribution -- not "
+                                "the season window, which was the larger difference until "
+                                "2026-08-09."),
+            "measured_swap_note": (
+                "Moving from legacy/2021-2024 to current/2022-2025 was measured before it was "
+                "applied, decomposed into its two variables: release alone moved max |vorp| 3.2 "
+                "(mean 0.23, 44 of 174 rows changing vbdRank, concentrated in QB and TE because "
+                "the legacy asset scored ~607 player-seasons a year against ~2000 here); window "
+                "alone moved max |vorp| 19.8 (mean 2.98, 128 of 174 rows). Board effect: Bijan "
+                "Robinson took #1 from Ja'Marr Chase and 13 of the top 15 changed position. NOTE "
+                "the two were 1.7 apart beforehand and the RELEASE change alone flipped them, so "
+                "the top of this board is finer-grained than its own basis."),
         },
         "curve": curve,
     }

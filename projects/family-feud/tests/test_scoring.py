@@ -139,7 +139,16 @@ class TestKickerAndDefenceScoring(unittest.TestCase):
 
 class CurveCase(unittest.TestCase):
     """build() against the committed fixture, with CACHE redirected into a tmpdir so nothing
-    reaches the network and nothing reads the gitignored real cache."""
+    reaches the network and nothing reads the gitignored real cache.
+
+    EVERY build() BELOW PINS source="legacy" ON PURPOSE. The committed oracle fixture
+    (tests/fixtures/player_stats_2024_reg.csv.gz) is a legacy-release file, and these tests are
+    about the MACHINERY -- monotonicity, an absent season, a refetch, the refusal to emit nothing
+    -- not about which release the board currently ships. Letting them ride DEFAULT_SOURCE would
+    mean that flipping the shipped basis silently changes what a machinery test is testing, and on
+    2026-08-09 that is exactly what happened: the flip to `current` sent these looking for
+    stats_player_week_2024.csv, found nothing, and five of them went red for a reason that had
+    nothing to do with what they assert. The values below are the legacy fixture's."""
 
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
@@ -155,14 +164,14 @@ class CurveCase(unittest.TestCase):
         # the same path an unpublished season takes -- so these tests also prove build() still
         # produces a K-less curve rather than crashing when the kicking file is missing.
         self._fetch = B.fetch_season
-        B.fetch_season = lambda year, timeout=120, kicking=False, source=B.DEFAULT_SOURCE: (
+        B.fetch_season = lambda year, timeout=120, kicking=False, source="legacy": (
             None, f"{year}{' kicking' if kicking else ''}: not published upstream")
         self.addCleanup(lambda: setattr(B, "fetch_season", self._fetch))
 
 
 class TestTheCurve(CurveCase):
     def test_the_2024_curve_lands_on_its_measured_values(self):
-        curve, used, _, used_k = B.build(seasons=(2024,))
+        curve, used, _, used_k = B.build(seasons=(2024,), source="legacy")
         self.assertEqual(used, [2024])
         self.assertEqual(used_k, [], "the kicking asset is stubbed absent in this fixture")
         for pos, rank, want in (("QB", 12, 288.4), ("RB", 41, 115.0), ("WR", 47, 147.7),
@@ -173,7 +182,7 @@ class TestTheCurve(CurveCase):
 
     def test_the_curve_descends_within_every_position(self):
         """It is a rank -> points lookup; a non-monotone curve would mean the sort broke."""
-        curve, _, _, _ = B.build(seasons=(2024,))
+        curve, _, _, _ = B.build(seasons=(2024,), source="legacy")
         for pos, rows in curve.items():
             vals = [rows[str(r)] for r in range(1, len(rows) + 1)]
             self.assertEqual(vals, sorted(vals, reverse=True), f"{pos} curve is not descending")
@@ -181,10 +190,10 @@ class TestTheCurve(CurveCase):
     def test_a_season_absent_upstream_is_absent_not_an_error(self):
         """2025 and 2026 both 404 today. A pipeline that crashes on that is unusable all
         preseason, which is exactly when it is needed."""
-        B.fetch_season = lambda year, timeout=120, kicking=False, source=B.DEFAULT_SOURCE: (
+        B.fetch_season = lambda year, timeout=120, kicking=False, source="legacy": (
             None, f"{year}: not published upstream")
         self.addCleanup(lambda: setattr(B, "fetch_season", B_fetch_real))
-        curve, used, notes, _ = B.build(seasons=(2024, 2025, 2026))
+        curve, used, notes, _ = B.build(seasons=(2024, 2025, 2026), source="legacy")
         self.assertEqual(used, [2024])
         self.assertTrue(any("2025" in n for n in notes))
         self.assertTrue(curve["QB"], "the available season still produced a curve")
@@ -193,7 +202,7 @@ class TestTheCurve(CurveCase):
         os.remove(os.path.join(self.tmp, "player_stats_2024.csv"))
         called = []
 
-        def fake(year, timeout=120, kicking=False, source=B.DEFAULT_SOURCE):
+        def fake(year, timeout=120, kicking=False, source="legacy"):
             if kicking:
                 return None, f"{year} kicking: not published upstream"
             called.append(year)
@@ -204,15 +213,15 @@ class TestTheCurve(CurveCase):
             return p, f"{year}: fetched"
         B.fetch_season = fake
         self.addCleanup(lambda: setattr(B, "fetch_season", B_fetch_real))
-        curve, used, _, _ = B.build(seasons=(2024,))
+        curve, used, _, _ = B.build(seasons=(2024,), source="legacy")
         self.assertEqual(called, [2024])
         self.assertEqual(used, [2024])
 
     def test_no_seasons_at_all_refuses_rather_than_emitting_an_empty_curve(self):
-        B.fetch_season = lambda year, timeout=120, kicking=False, source=B.DEFAULT_SOURCE: (None, "gone")
+        B.fetch_season = lambda year, timeout=120, kicking=False, source="legacy": (None, "gone")
         self.addCleanup(lambda: setattr(B, "fetch_season", B_fetch_real))
         with self.assertRaises(SystemExit):
-            B.build(seasons=(2025,))
+            B.build(seasons=(2025,), source="legacy")
 
 
 class TestBaselinesAreReadNotRetyped(unittest.TestCase):

@@ -126,14 +126,22 @@ class TestTheCurveShape(unittest.TestCase):
         self.assertGreater(k1, 120.0)
         self.assertLess(k1, 220.0)
 
-    def test_adding_K_did_not_disturb_the_skill_curve(self):
-        """K comes from a SEPARATE asset and must not touch the four positions that were already
-        measured and shipped."""
+    def test_the_four_baselines_are_where_the_shipped_board_says_they_are(self):
+        """These are the four numbers every `vorp` on the board is subtracted from, so they are
+        pinned rather than trusted. Updated 2026-08-09 when the basis moved to the current release
+        and 2022-2025; the previous pins (RB41 118.7 / WR47 148.0 / QB12 283.5 / TE12 146.9) were
+        the legacy 2021-2024 build and are still reproducible via source="legacy"."""
         curve = BC.build()[0]
+        self.assertEqual(curve["RB"]["41"], 117.5)
+        self.assertEqual(curve["WR"]["47"], 144.8)
+        self.assertEqual(curve["QB"]["12"], 282.6)
+        self.assertEqual(curve["TE"]["12"], 148.8)
+
+    def test_the_old_basis_is_still_reproducible(self):
+        """The A/B must stay runnable, or the swap becomes unauditable the moment it lands."""
+        curve = BC.build(seasons=BC.SOURCES["legacy"]["seasons"], source="legacy")[0]
         self.assertEqual(curve["RB"]["41"], 118.7)
         self.assertEqual(curve["WR"]["47"], 148.0)
-        self.assertEqual(curve["QB"]["12"], 283.5)
-        self.assertEqual(curve["TE"]["12"], 146.9)
 
 
 # ---------------------------------------------------------------------------------------------
@@ -289,10 +297,12 @@ class TestTheFoldedKickingAsset(unittest.TestCase):
 
 class TestTheSourceTableItself(unittest.TestCase):
 
-    def test_the_default_source_is_still_the_one_every_shipped_number_came_from(self):
-        """Flipping this default moves every vorp on the board. It is a decision, not a tidy-up."""
-        self.assertEqual(BC.DEFAULT_SOURCE, "legacy")
-        self.assertEqual(BC.SEASONS, (2021, 2022, 2023, 2024))
+    def test_the_shipped_basis_is_the_one_that_was_decided(self):
+        """Flipping this moves every vorp on the board -- it is a decision, not a tidy-up, and it
+        was taken by Briggsy on 2026-08-09 after the swap was measured. This test is here so the
+        next change to it has to be deliberate too."""
+        self.assertEqual(BC.DEFAULT_SOURCE, "current")
+        self.assertEqual(BC.SEASONS, (2022, 2023, 2024, 2025))
 
     def test_the_legacy_urls_are_untouched(self):
         self.assertIn("/player_stats/player_stats_{year}.csv", BC.URL)

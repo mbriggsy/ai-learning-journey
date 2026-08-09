@@ -22,15 +22,29 @@ what it caught) · **U11** (The Nightly Feud publishes) · **U12** (it publishes
 **Phase 2 closed. Every unit U1–U15 is done, all 10 review-residue items are closed, and the
 engine's `sleeperId` join is repointed.** The build order below has nothing left in it.
 
-**Next action: the two measured accuracy gaps**, in this order — both are in §2 and both are about
-the board being *more right*, not about machinery:
-1. **K and DEF carry flat per-tier constants** (`carried:kdef-tier-flat`, **24 of 174 rows**).
-   `build_curves.py` builds QB/RB/WR/TE only, so KTD-6's "K and DEF keep the historical curve" is
-   not satisfiable from the shipped curve. Labelled rather than invented — which is honest, and
-   still means a fifth of the board's VORP is a constant.
-2. **The curve stops at 2024.** `player_stats_2025.csv` is a 404; 2025 exists only as
-   play-by-play, which needs nflverse's stat builder reimplemented and misattributes TDs on ~5% of
-   player-seasons. A narrower EXACT basis beats a wider approximate one, so this is a *measured*
+**THE BOARD'S ORDERING NOW COMES FROM THE CONSENSUS (2026-08-08).** Briggsy's call: the Cowork-era
+`r`/`pr`/`tier` "carry no weight." `scripts/rerank.py` re-derives them from FantasyPros Full PPR
+ECR; 164 of 174 rows moved. **The edge is not the ranking — it is that this board is priced for an
+8-team, 2-FLEX, full-PPR room** (replacement at QB12/RB41/WR47/TE12) while the rest of the league
+drafts off a generic list. Verified kept: name/team/pos/`sleeperId` (160/160 agree with live
+Sleeper, positive-controlled) and every note.
+
+**Next action, in order:**
+1. **ADP — the actual domination play, and NOT YET PROVEN REACHABLE.** Consensus says who is
+   *good*; it does not say who is *cheap*. Value-vs-ADP is where leagues are won, and it is what
+   the retired "Briggsy's Guy" badge only *claimed* to be. **No ADP source has been verified yet
+   — do not assume one exists until it has been pulled.** FantasyPros' `player_owned_*` columns
+   are ownership %, not ADP.
+2. **The residual 6 disagreements are a DEPTH ARTIFACT, not a real gap.** `pr` counts within the
+   board's 174; FantasyPros counts within its 523. A board RB43 reads as their RB63 because they
+   rank RBs in between that the board does not carry. Fix by ranking their list restricted to
+   board rows before comparing.
+3. **K and DEF carry flat per-tier constants** (`carried:kdef-tier-flat`, **24 of 174 rows**), and
+   their **tiers are the only ordering the re-rank could not re-derive** — no curve exists for
+   them, so the old tiers were re-sorted onto the new order rather than invented.
+4. **The curve stops at 2024.** `player_stats_2025.csv` is a 404 (re-verified 2026-08-08); 2025
+   exists only as play-by-play, which needs nflverse's stat builder reimplemented and misattributes
+   TDs on ~5% of player-seasons. A narrower EXACT basis beats a wider approximate one — a *measured*
    decision, not an oversight. Revisit as its own unit with its own error budget.
 
 **The archive question is DECIDED (Briggsy, 2026-08-08): back issues are gitignored.** The

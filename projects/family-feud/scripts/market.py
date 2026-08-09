@@ -20,7 +20,9 @@ analysts do not -- true, and useless. `vorp` is already priced for THIS room (QB
 this is. Measured: against board rank the residual mean gap was structural; against value it is
 +1.2 with median +2.0, i.e. no systematic artifact left.
 
-TWO ARTIFACTS THAT HAD TO BE REMOVED FIRST, both of which produced a confident wrong list:
+FOUR ARTIFACTS THAT HAD TO BE REMOVED, every one of which produced a confident wrong list. The
+first two were found while building this; the last two on 2026-08-08, by an adversarial pass and
+then by asking the same question one level down:
 
   1. DEPTH. The pool ranks 256 players, the board carries 174, and the ~100 the board does not
      carry occupy ADP slots and inflate every number. Raw `adp - board rank` averaged +2.9 and
@@ -29,6 +31,19 @@ TWO ARTIFACTS THAT HAD TO BE REMOVED FIRST, both of which produced a confident w
   2. RELIABILITY. ADP over 17 drafts is not a price. The floor is a share of the MOST-drafted
      player in the pool rather than an absolute count, so it re-calibrates itself as the sample
      grows through August instead of silently getting stricter or looser.
+  3. POSITION MIX -- artifact 1 wearing a different hat, and it survived artifact 1's own fix.
+     `val` ranks SKILL players only, because K and DEF carry flat constants; the market rank it
+     was subtracted from counted every matched board row. Measured: 10 kickers and defenses land
+     at all-positions ranks 119-151, so 28 of 146 skill rows read as bigger bargains than they
+     are, by up to 10 spots -- most of a round in an 8-team room. Now ranked TWICE: `mkt_all` for
+     the human question "where does the room take him", `mkt` over skill for the subtraction.
+  4. SELF-COUNTING at the spread edges. `mkt_worst` counted the player himself -- correct, a rank
+     includes its holder -- while `mkt_best` at `adp - sd` did not, and neither added a `+1` to
+     compensate, so the best edge ran one rung too GOOD and understated every bargain. Measured
+     before the fix: **`mkt_best` wrong on 133 of 146 skill rows.** This is insight 019's defect
+     on the mirror edge, and the reason `market_ranks` now delegates to `consensus.depth_rank`
+     instead of counting for itself: two implementations of "where does this value slot" is how
+     the two instruments drifted apart in the first place.
 
 THE `teams` PARAMETER IS COSMETIC AND MUST NOT BE TRUSTED. Verified 2026-08-08: `teams=8` and
 `teams=12` return byte-identical ADP for all 256 players while faithfully echoing whatever was
@@ -137,19 +152,43 @@ def reliable(players, share=MIN_DRAFT_SHARE):
     return kept, len(players) - len(kept)
 
 
-def market_ranks(pairs):
-    """Re-rank the market over ONLY the board players, removing the depth artifact.
+#: Market rank is cross-positional -- one ladder, not one per position -- so `depth_rank` gets a
+#: single bucket. The key is arbitrary and never printed.
+POOL = "_pool"
 
-    Each pair also gets the rank at both edges of the market's own spread, so a price nobody
-    agrees on cannot masquerade as a disagreement -- the same treatment consensus.py gives `sd`.
+
+def market_ranks(pairs, prefix="mkt"):
+    """Re-rank the market over EXACTLY the players passed in. Writes `<prefix>`,
+    `<prefix>_best` and `<prefix>_worst`.
+
+    WHICH PLAYERS YOU PASS IN IS THE WHOLE POINT, and getting it wrong is the depth artifact
+    wearing a different hat. `val` is a rank over SKILL players only (K and DEF carry flat
+    constants, so ranking them by `vorp` would be arithmetic theatre) -- so the market rank
+    subtracted from it has to count in that same population. It did not: it counted over every
+    matched board row, K and DEF included. Measured 2026-08-08: 10 kickers and defenses land at
+    all-positions market ranks 119-151, so 28 of 146 skill rows carried an inflated `mkt` by up to
+    10 spots and read as bigger bargains than they are -- most of a round in an 8-team room.
+    `compare()` therefore ranks TWICE: `mkt_all` over everything, for the human-facing "where does
+    the room take him", and `mkt` over skill alone, which is the only one `val` may be compared to.
+
+    IT DELEGATES TO `consensus.depth_rank` RATHER THAN COUNTING HERE. Two implementations of
+    "where does this value slot among these players" is how the two instruments drift, and this
+    one had drifted: `mkt_worst` counted the player himself (correct, since a rank includes its
+    holder) while `mkt_best` at `adp - sd` did not, and neither added a `+1` to compensate.
+    Measured before this rewrite: **`mkt_best` wrong on 133 of 146 skill rows**, `mkt_worst` on 12.
+    It is the same self-counting defect insight 019 records in consensus.py, on the mirror edge --
+    there `worst` ran one rung too deep, here `best` ran one rung too GOOD, which understates every
+    bargain and suppresses the marginal ones outright.
+
+    Each pair gets the rank at both edges of the market's own spread, so a price nobody agrees on
+    cannot masquerade as a disagreement -- the same treatment consensus.py gives `sd`.
     """
-    adps = sorted(a["adp"] for _, a in pairs)
-    for i, (_, a) in enumerate(sorted(pairs, key=lambda t: t[1]["adp"]), 1):
-        a["mkt"] = i
+    ladder = {POOL: sorted(a["adp"] for _, a in pairs)}
     for _, a in pairs:
         sd = abs(float(a.get("stdev") or 0))
-        a["mkt_best"] = max(1, sum(1 for x in adps if x <= a["adp"] - sd))
-        a["mkt_worst"] = max(1, sum(1 for x in adps if x <= a["adp"] + sd))
+        a[prefix] = CO.depth_rank(ladder, POOL, a["adp"], own=a["adp"])
+        a[prefix + "_best"] = CO.depth_rank(ladder, POOL, a["adp"] - sd, own=a["adp"])
+        a[prefix + "_worst"] = CO.depth_rank(ladder, POOL, a["adp"] + sd, own=a["adp"])
     return pairs
 
 
@@ -177,7 +216,7 @@ def compare(board, adp_doc, share=MIN_DRAFT_SHARE):
     # Ranked over EVERY matched board player, then filtered for what to SHOW. Ranking only the
     # reliable ones would shift every rank as the sample grows, so a player's "wait" number would
     # move because somebody else got drafted more, not because his own price changed.
-    market_ranks(pairs)
+    market_ranks(pairs, "mkt_all")            # every matched row, K/DEF included -- display only
     _, dropped = reliable([a for _, a in pairs], share)
     floor = max([a.get("times_drafted") or 0 for _, a in pairs] or [0]) * share
     for _, a in pairs:
@@ -185,7 +224,10 @@ def compare(board, adp_doc, share=MIN_DRAFT_SHARE):
 
     # VALUE rank is over SKILL players only: K and DEF carry flat per-tier constants, so their
     # `vorp` is a label rather than a measurement and ranking by it would be arithmetic theatre.
+    # THE MARKET IS THEREFORE RANKED OVER SKILL TOO, in its own pass -- `val` and `mkt` are
+    # subtracted from one another and printed side by side, so they must count the same men.
     skill = [(b, a) for b, a in pairs if b["pos"] in CO.SKILL]
+    market_ranks(skill, "mkt")
     for i, (b, a) in enumerate(sorted(skill, key=lambda t: -t[0]["vorp"]), 1):
         a["val"] = i
 
@@ -195,6 +237,9 @@ def compare(board, adp_doc, share=MIN_DRAFT_SHARE):
         findings.append({
             "name": b["name"], "pos": b["pos"], "team": b["team"], "vorp": b["vorp"],
             "board_r": b["r"], "value_rank": a["val"], "market_rank": a["mkt"],
+            # The all-positions rank, kept so the size of the correction stays auditable from
+            # --json rather than being something you have to take on trust.
+            "market_rank_all": a["mkt_all"],
             "raw_gap": a["mkt"] - a["val"], "gap": gap, "stdev": a.get("stdev"),
             "times_drafted": a.get("times_drafted"), "adp": a.get("adp"),
             "reliable": a["reliable"],
@@ -229,6 +274,9 @@ def report(findings, notes, top, board_meta):
     out.append(f"  [1] TAKE THESE -- worth more to you than the room charges (top {top})")
     out.append("      'wait' is how many spots past your own valuation the market lets him fall,")
     out.append("      after taking the market's own spread at its least favourable.")
+    out.append("      'you' and 'mkt' BOTH count skill players only, which is what makes them")
+    out.append("      subtractable -- the room really does spend picks on kickers, but a rank that")
+    out.append("      counts them cannot be compared to a value rank that cannot.")
     out.append(f"      {'wait':>5} {'vorp':>8} {'you':>5} {'mkt':>5} {'drafts':>7}  player")
     for f in bargains[:top]:
         out.append(f"      {f['gap']:>+5.0f} {f['vorp']:>8.1f} {f['value_rank']:>5} "

@@ -79,22 +79,22 @@ section [2] — mutant M6). **9 mutants now, 9 killed.**
   none probed *who is in the comparison*, so the clean sweep carried no information about the axis
   that was actually broken — and **a test written in the same pass asserted the bug.**
 
+**✅ `market.py` IS FIXED TOO (2026-08-08) — it had BOTH defects, and only one had been reported.**
+Found by the adversarial fleet, then measured rather than taken on its word:
+- **Position mix.** `val` ranks skill only; the market rank subtracted from it counted every
+  matched row. 10 K/DEF sit at all-positions ranks **119-151**, so **28 of 146** skill rows read as
+  bigger bargains than they are, by up to **10 spots**. Now ranked twice — `mkt_all` for display,
+  `mkt` over skill for the subtraction — and the report SAYS both columns count skill only.
+- **Self-counting, found by asking insight 019's question of a file nobody had flagged.**
+  `mkt_worst` counted the player himself (correct) while `mkt_best` at `adp − sd` did not, and
+  neither added a `+1`: **`mkt_best` wrong on 133 of 146 rows**, one rung too GOOD, understating
+  every bargain. `market_ranks` now delegates to `consensus.depth_rank` — **two implementations of
+  "where does this value slot" is how the two instruments drifted apart.**
+- ⚠️ **All 32 existing market tests stayed green through both changes.** A semantic change nothing
+  notices is insight 013's signal. 7 tests added, 4 mutants planted and killed.
+
 **Next action, in order:**
-1. **`market.py` COMPARES A SKILL-ONLY RANK TO AN ALL-POSITIONS RANK — the same artifact class, one
-   layer over, and this instrument is NOT circular so it is live and actionable.** Found by the
-   adversarial fleet, then **measured directly 2026-08-08** rather than taken on its word:
-   `market_ranks()` ranks over all **156** matched pairs (**146** skill + **10** K/DEF), but `val`
-   is assigned over **skill only**. `surviving_delta(a["val"], a["mkt_best"], a["mkt_worst"])` at
-   `market.py:194` therefore subtracts ranks counted in two different populations.
-   - **Magnitude, measured:** K/DEF land at market ranks **119-151**, so **28 of 146** skill rows
-     have at least one K/DEF ahead of them, inflating `mkt` by up to **10** spots. Direction:
-     `raw_gap = mkt - val` is overstated, so the deepest skill players look like **bigger bargains
-     than they are** — roughly a full round of apparent value in an 8-team room.
-   - **The judgment call before any code:** `mkt` is displayed as *"where the room actually takes
-     him"*, and the room really does spend those picks on kickers — so all-positions is right for
-     DISPLAY and wrong for the SUBTRACTION. Likely fix is a skill-only rank for the comparison,
-     keeping the all-positions `mkt` for the column. Decide that before touching it.
-2. **BUILD THE KICKER CURVE — it is an EXACT build, and it is the cheap half of the K/DEF gap.**
+1. **BUILD THE KICKER CURVE — it is an EXACT build, and it is the cheap half of the K/DEF gap.**
    The 24 `carried:kdef-tier-flat` rows (K=10, DEF=14, re-counted 2026-08-08) split into one easy
    win and one trap. **Sources probed live 2026-08-08, HTTP 200 and columns read, not assumed:**
 
@@ -147,8 +147,8 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **646 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 646 with **11 skips**
+gate went **13 findings → 0** by fixing surfaces. **653 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 653 with **11 skips**
 — 2 live-cargo probes plus **9** that need the gitignored consensus/ADP caches
 (`draft-kit/cache/fp_ecr.csv.gz`, `player_ids.csv.gz`, `ffc_adp.json.gz`). Re-measured 2026-08-08 by
 actually hiding all four paths and naming every skip, not copied from the previous line — which had

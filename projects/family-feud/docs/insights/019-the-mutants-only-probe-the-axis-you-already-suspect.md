@@ -132,6 +132,28 @@ A `locked`-only mutant would have caught the first and missed the second. `unrea
 unreachable. **Absence of a mismatch is not evidence of a match** — insight 007's *presence is not
 health*, one turn of the screw further.
 
+## And a third time, in a different file, from the same question
+
+Asking *"who is in the comparison?"* of `market.py` — which nobody had flagged — found **both**
+defects at once:
+
+- **The population.** `val` ranks skill players only; the market rank subtracted from it counted
+  every matched board row. 10 kickers and defenses sit at all-positions ranks **119-151**, so
+  **28 of 146** skill rows read as bigger bargains than they are, by up to **10 spots**.
+- **The same self-counting bug, on the mirror edge.** `mkt_worst` counted the player himself
+  (correct — a rank includes its holder) while `mkt_best` at `adp - sd` did not, and neither added
+  a `+1`. **`mkt_best` wrong on 133 of 146 rows**, running one rung too GOOD, which understates
+  every bargain and suppresses the marginal ones.
+
+`market_ranks` now delegates to `consensus.depth_rank`. **Two implementations of "where does this
+value slot among these players" is how the two instruments drifted apart**, and there is no reason
+for the second one to exist — the first is hardened by nine mutants.
+
+⚠️ **And note what did NOT happen: changing what `mkt` counts, and fixing both spread edges, left
+all 32 existing market tests green.** A semantic change that no test notices is insight 013's
+signal that the tests were never watching that behaviour. Seven were added and four mutants planted
+before any of it was believed.
+
 ## Evidence
 
 - Independently reproduced before accepting the fleet's numbers (agent findings are claims, not

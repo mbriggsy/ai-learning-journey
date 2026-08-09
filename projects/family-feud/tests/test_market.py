@@ -63,6 +63,92 @@ class TestValidation(unittest.TestCase):
         self.assertIn("schema moved", str(ctx.exception))
 
 
+class TestTheMarketIsRankedInTheSAMEPopulationAsValue(unittest.TestCase):
+    """`val` ranks SKILL players only -- K and DEF carry flat constants, so ranking them by `vorp`
+    would be arithmetic theatre. The market rank subtracted from it therefore has to count the
+    same men. It counted every matched board row instead, K and DEF included: measured on the live
+    board, 10 kickers and defenses land at all-positions ranks 119-151, so 28 of 146 skill rows
+    carried an inflated `mkt` and read as bigger bargains than they are."""
+
+    def setUp(self):
+        # A kicker and a defense the room takes BEFORE the last skill player, which is the whole
+        # mechanism -- if they went last, no skill rank could be inflated by them.
+        self.adp = pool([ap("Ay Back", "RB", "KC", 1.0), ap("Bee Wide", "WR", "SF", 2.0),
+                         ap("Cee Kicker", "K", "NYJ", 3.0), ap("Dee Def", "DEF", "DEN", 4.0),
+                         ap("Ee Tight", "TE", "BUF", 5.0)] + [ap(f"Filler{i}", "RB", "DAL", 50.0 + i)
+                                                              for i in range(100)])
+        self.board = [brow(1, "Ay Back", "RB", "KC", 1, 100.0),
+                      brow(2, "Bee Wide", "WR", "SF", 1, 90.0),
+                      brow(3, "Cee Kicker", "K", "NYJ", 1, 5.0),
+                      brow(4, "Dee Def", "DEF", "DEN", 1, 5.0),
+                      brow(5, "Ee Tight", "TE", "BUF", 1, 80.0)]
+
+    def test_the_skill_rank_does_not_count_the_kicker_and_the_defense(self):
+        f, _ = M.compare(self.board, self.adp)
+        tight = next(x for x in f if x["name"] == "Ee Tight")
+        self.assertEqual(tight["market_rank"], 3, "third SKILL player off the board")
+        self.assertEqual(tight["market_rank_all"], 5, "fifth player off the board overall")
+
+    def test_the_inflated_rank_is_KEPT_so_the_correction_stays_auditable(self):
+        f, _ = M.compare(self.board, self.adp)
+        for x in f:
+            self.assertIn("market_rank_all", x)
+
+    def test_K_and_DEF_never_reach_the_findings_at_all(self):
+        """The positive control: they are ranked for display and excluded from the comparison."""
+        f, _ = M.compare(self.board, self.adp)
+        self.assertEqual({x["pos"] for x in f}, {"RB", "WR", "TE"})
+
+    def test_the_gap_is_computed_from_the_SKILL_rank_not_the_inflated_one(self):
+        """End to end. Ee Tight is the board's 3rd-most-valuable skill player and the market's 3rd
+        skill player off the board, so he is fairly priced and owes nothing. Measured against the
+        all-positions rank he looks like he falls 2 spots -- a bargain manufactured out of two
+        picks the room spent on a kicker and a defense."""
+        f, _ = M.compare(self.board, self.adp)
+        tight = next(x for x in f if x["name"] == "Ee Tight")
+        self.assertEqual(tight["value_rank"], 3)
+        self.assertEqual(tight["raw_gap"], 0, "fairly priced; the K and DEF must not create a gap")
+
+
+class TestTheSpreadEdgesExcludeThePlayerHimself(unittest.TestCase):
+    """The same self-counting defect insight 019 records in consensus.py, on the mirror edge.
+    `mkt_worst` counted the player himself (correct -- a rank includes its holder) while
+    `mkt_best` at `adp - sd` did not, and neither added a +1 to compensate, so `best` ran one rung
+    too GOOD. Measured before the rewrite: mkt_best wrong on 133 of 146 live skill rows."""
+
+    def pairs(self):
+        rows = [({"pos": "RB"}, {"adp": 10.0, "stdev": 3.0}),
+                ({"pos": "RB"}, {"adp": 5.0, "stdev": 0.0}),
+                ({"pos": "RB"}, {"adp": 20.0, "stdev": 0.0}),
+                ({"pos": "RB"}, {"adp": 30.0, "stdev": 0.0})]
+        M.market_ranks(rows)
+        return rows
+
+    def test_at_his_BEST_price_he_still_ranks_behind_the_man_he_never_passed(self):
+        """He is 2nd of four at adp 10. At his best (7.0) he has not passed the man at 5.0, so he
+        is still 2nd. The shipped formula counted only the players at or under 7.0 and returned 1
+        -- promoting him past somebody he never overtook."""
+        a = self.pairs()[0][1]
+        self.assertEqual(a["mkt"], 2)
+        self.assertEqual(a["mkt_best"], 2)
+
+    def test_at_his_WORST_price_he_is_not_his_own_competition(self):
+        """At 13.0 nobody has passed him either -- the next man sits at 20.0 -- so he is still 2nd."""
+        self.assertEqual(self.pairs()[0][1]["mkt_worst"], 2)
+
+    def test_a_wide_spread_still_moves_him(self):
+        """Positive control: the edges must not be pinned to the point estimate. A price nobody
+        agrees on has to widen the band or the whole reliability idea is decorative."""
+        rows = [({"pos": "RB"}, {"adp": 10.0, "stdev": 25.0}),
+                ({"pos": "RB"}, {"adp": 5.0, "stdev": 0.0}),
+                ({"pos": "RB"}, {"adp": 20.0, "stdev": 0.0}),
+                ({"pos": "RB"}, {"adp": 30.0, "stdev": 0.0})]
+        M.market_ranks(rows)
+        a = rows[0][1]
+        self.assertEqual(a["mkt_best"], 1, "at 25 spots better he leads the pool")
+        self.assertEqual(a["mkt_worst"], 4, "at 25 spots worse he trails it")
+
+
 class TestReliabilityFloor(unittest.TestCase):
     """ADP over 17 drafts is not a price."""
 

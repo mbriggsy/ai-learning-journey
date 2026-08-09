@@ -80,6 +80,12 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         fall, and who it overpays for. READ-ONLY. In an 8-team
                                         league replacement is QB12, so QBs below it are worth
                                         NEGATIVE points and the market does not know that.
+                                        Four artifacts had to come out before the list was
+                                        trustworthy — pool depth, thin-sample ADP, the position
+                                        mix ('you' and 'mkt' must count the same men, and K/DEF
+                                        broke that), and self-counting at the spread edges. It
+                                        shares consensus.depth_rank rather than counting for
+                                        itself; two copies is how the two drifted. → insights/019
                  rerank.py            — re-derives r/pr/tier from the consensus. Refuses to write
                                         while a note still claims a board position.
                  consensus.py         — what the board's gap to the expert consensus COSTS in
@@ -95,7 +101,7 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         section [2], who the consensus ranks that the board does
                                         not carry — the half a rank-gap metric cannot see.
                                         → docs/insights/018
-tests/           646 tests: python -m unittest discover -s tests  (run from the root)
+tests/           653 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```

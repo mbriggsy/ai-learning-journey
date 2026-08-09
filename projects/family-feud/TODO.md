@@ -149,7 +149,8 @@ part that beats the clock, and the shape is now decided by measurement rather th
 - **`picked_by` identifies the SEAT OWNER, not the agent.** Auto-pick on a claimed seat still
   stamps your user_id, so it cannot tell you whether a human chose.
 
-⚠️ **DRIVING THE ROOM — `scripts/sleeper_draft_console.js` (`ffFind` / `ffDraft`), all measured:**
+⚠️ **DRIVING THE ROOM — `scripts/sleeper_draft_console.js` (`ffFind` / `ffDraft` / `ffQueue`),
+all measured:**
 - **NEVER click the draft room by screenshot coordinate.** Screenshot pixels are not CSS pixels
   and the scale drifts between captures: viewport is **1536×791 CSS** while successive screenshots
   came back **1568×750** and **1522×784**, putting a row that lives at CSS y=544 at y=562. **18px
@@ -237,7 +238,7 @@ sanity check. None of that needs touching.
    is the same argument that parked 2025:** a narrower EXACT basis beats a wider approximate one,
    and a DST curve carrying unquantified convention error would be a fabricated number in a column
    the board sorts by. Reopen only with a measured error budget, as its own unit.
-**◀ THE ONE OPEN ITEM — the curve stops at 2024, and re-opening it is a decision.**
+**◀ THE OPEN DATA ITEM — the curve stops at 2024, and re-opening it is a decision.**
 `player_stats_2025.csv` and `stats_player_week_2025.csv` are both **404** (re-verified 2026-08-08
 by HTTP status, twice). 2025 exists only as `play_by_play_2025.csv.gz` (HTTP 200, 48,771 plays,
 already cached), which needs nflverse's stat builder reimplemented. **Prototyped and MEASURED, not

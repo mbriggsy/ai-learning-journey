@@ -5,8 +5,8 @@
   "format": "8-team · Full PPR · Snake · 16 rounds · QB/2RB/2WR/TE/2FLEX/K/DEF + 6 BN + 2 IR",
   "updated": "2026-08-08",
   "rankings": {
-   "synthesized": "2026-08-07",
-   "judgment": "928f852f0bf24af4"
+   "synthesized": "2026-08-08",
+   "judgment": "eebd926c144eabb8"
   },
   "owner": "PoppaBriggsy",
   "badges": {
@@ -101,11 +101,11 @@
    "playoff_teams": 6
   },
   "build": {
-   "generator_sha": "772bf9abb898c07a52c4f08f21c89ae885a444d70becf91cef312ebed7cf3a65",
-   "source_sha256": "b5cdaab9f6e5f337e4a9cc755aad6ef3933c0c1b7fbbdc47611829783bfa5d31",
-   "curve_sha256": "ad26ce6f78fb0983e26a58065a354b9d8471d53100e9fffbe20538d40dc4d115",
+   "generator_sha": "21e19f3b983ca5698d3184df22de99b7430fc0a6baa6a9197266b6c1e1b014d2",
+   "source_sha256": "fd74829523d7d9324608958e259ff3786f6acb9ef9599534007da73b77a0ed49",
+   "curve_sha256": "ec90a1bb648176ea654e8e0cc720dd8467acfbb5e6899aa1162f75c942b08839",
    "sleeper_dump_fetched_at": "2026-08-08T01:15:28+00:00",
-   "built_at": "2026-08-09T00:06:26+00:00",
+   "built_at": "2026-08-09T02:49:17+00:00",
    "dirty": false
   }
  },

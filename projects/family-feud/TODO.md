@@ -93,31 +93,55 @@ Found by the adversarial fleet, then measured rather than taken on its word:
 - ⚠️ **All 32 existing market tests stayed green through both changes.** A semantic change nothing
   notices is insight 013's signal. 7 tests added, 4 mutants planted and killed.
 
-**Next action, in order:**
-1. **BUILD THE KICKER CURVE — it is an EXACT build, and it is the cheap half of the K/DEF gap.**
-   The 24 `carried:kdef-tier-flat` rows (K=10, DEF=14, re-counted 2026-08-08) split into one easy
-   win and one trap. **Sources probed live 2026-08-08, HTTP 200 and columns read, not assumed:**
+**✅ THE KICKER CURVE IS BUILT AND K TIERS ARE DERIVED (2026-08-08).** `build_curves.py` now ships a
+**41-rank K curve**, exact — nflverse publishes FG makes already bucketed by distance and the
+buckets map 1:1 onto `league.md`'s bands, verified by asserting they sum to `fg_made` on all 542
+REG rows of 2024 (the loader hard-stops if that ever fails). `rerank.value_bands` derives K tiers
+now, because tiers need no baseline: **3 kicker tiers moved** (Dicker 1→2, Pineiro 2→3, McPherson
+2→3), and exactly **3 fields on the whole board changed**, all `tier`, all K — audited field by
+field. `tests/test_build_curves.py` is new, **14 tests**; that file had none.
+- **The monotonicity test found a defect in the ALREADY-SHIPPED curve.** It is a mean of order
+  statistics, so a rank only means something if the same number of seasons went into it. All four
+  seasons supply **QB to 78, RB 135, WR 212, TE 116, K 41** — so the 80-deep curve was averaging
+  three seasons past QB78 and carried a real inversion there. Now truncated per position at the
+  deepest rank every season supplies. **0 inversions anywhere.** Kickers made it visible because
+  they are the shallowest position there is.
+- **One unstated rule, BOUNDED not assumed:** a blocked FG is neither a make nor a miss in this
+  source (`fg_att` 1115 == made 937 + missed 160 + blocked 18). league.md says "miss: −1" and does
+  not say which. Blocks count as misses; `--check` prints the sensitivity both ways — **0.0–1.7
+  pts, mean 0.45** across 41 ranks, i.e. immaterial.
 
-   - ✅ **K is exact.** `player_stats_kicking_2024.csv` publishes FG makes **already bucketed by
-     distance** — `fg_made_0_19`, `_20_29`, `_30_39`, `_40_49`, `_50_59`, `_60_`, plus `fg_missed`,
-     `pat_made`, `pat_missed`. Those buckets map **1:1** onto `league.md`'s kicker scoring
-     (0-39: 3 · 40-49: **4** · 50-59: **5** · 60+: **6** · miss: **−1** · XP 1 / XP miss −1). No
-     approximation, no attribution guesswork — the same EXACT standard as the QB/RB/WR/TE curve,
-     which is the bar `build_curves.py` set for itself. Extend `build_curves.py` with a K position
-     and 10 rows stop being labelled constants.
-   - ⚠️ **DEF is NOT exact and should NOT be built the same way.** `player_stats_def_2024.csv` is
-     **player-level**, so sacks/INT/FF/FR/TD/safety must be aggregated to a team. Worse, **it does
-     not carry points allowed at all** — the largest and most volatile term in the DST ladder
-     (0 pts → **10** … 35+ → **−4**). That has to come from `nfldata/games.csv`
-     (`home_score`/`away_score`, verified 200), and **Sleeper's points-allowed convention is not
-     confirmed** — whether it charges the defense for points the *opponent's* defense/ST scored is
-     exactly the kind of unstated rule that produces a confident wrong number. Blocked kicks (2 pts)
-     have no clean team-level source either.
-   - **The call this implies, on this project's own precedent:** a narrower EXACT basis beats a
-     wider approximate one — the identical argument that parked 2025. **Ship K, leave DEF labelled.**
-     A `carried:kdef-tier-flat` label is honest; a DST curve carrying unquantified convention error
-     would be a fabricated number in a column the board sorts by.
-2. **The curve stops at 2024.** `player_stats_2025.csv` and `stats_player_week_2025.csv` are both
+**Next action, in order:**
+1. **DECIDE THE KICKER REPLACEMENT RANK — this is Briggsy's call, and it is what still blocks K
+   `vorp`.** The curve exists; `recompute_vorp` needs a curve **and** a baseline, and
+   `meta.vbd.baselineWaiver` carries QB/RB/WR/TE only. Those four came from a **Thunderdome sim,
+   300 rooms × 16 seasons**, which cannot be reproduced here — so deriving a K baseline by any
+   other method would be a fabricated number wearing a measured one's clothes.
+   - The mechanical argument says **K9** (8 teams × 1 K rostered, the 9th is free on waivers). Note
+     the other four do NOT follow that rule — QB12 and TE12 in an 8-team, 1-starter league imply
+     rostered backups, which nobody does at kicker. So K9 is defensible and is **not** consistent
+     with how the other four were produced. That inconsistency is the actual decision.
+   - Until it is made, K rows stay `carried:kdef-tier-flat`, which is honest about the vorp.
+2. ⚠️ **THE LABEL `carried:kdef-tier-flat` IS FALSE FOR K, AND WAS BEFORE TODAY.** Measured against
+   `917c498a` (pre-dating this session's tier work): K tier 2 already held `{6.0, −2.0}` and tier 3
+   `{−2.0, 6.0}`. The earlier consensus re-rank reordered kickers while the carried vorp stayed
+   attached to **players**, so the flat-per-tier property it names died then and nothing noticed.
+   **DEF is genuinely flat** (27/14/4) and still is. Three ways out, in preference order: settle
+   the K baseline above and the question dissolves; or re-map the three constants onto the NEW
+   tiers, which makes the label true without inventing anything; or rename the label. **Renaming
+   touches the gate and its tests — do not do it casually.**
+3. ⚠️ **DO NOT BUILD A DEF CURVE — the 14 DEF rows should stay labelled.** Sources probed live
+   2026-08-08, HTTP 200 and columns actually read: `player_stats_def_2024.csv` is **player-level**,
+   so sacks/INT/FF/FR/TD/safety must be aggregated to a team, and **it does not carry points
+   allowed at all** — the largest and most volatile term in the DST ladder (0 pts → **10** … 35+ →
+   **−4**). That has to come from `nfldata/games.csv` (`home_score`/`away_score`, verified 200),
+   and **Sleeper's points-allowed convention is not confirmed** — whether it charges the defense
+   for points the *opponent's* defense/ST scored is exactly the kind of unstated rule that produces
+   a confident wrong number. Blocked kicks (2 pts) have no clean team-level source either. **This
+   is the same argument that parked 2025:** a narrower EXACT basis beats a wider approximate one,
+   and a DST curve carrying unquantified convention error would be a fabricated number in a column
+   the board sorts by. Reopen only with a measured error budget, as its own unit.
+4. **The curve stops at 2024.** `player_stats_2025.csv` and `stats_player_week_2025.csv` are both
    404 (**re-verified 2026-08-08**, this session, by HTTP status). 2025 exists only as
    play-by-play, which needs nflverse's stat builder reimplemented and misattributes TDs on ~5% of
    player-seasons. A narrower EXACT basis beats a wider approximate one — a *measured* decision,
@@ -147,8 +171,8 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **653 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 653 with **11 skips**
+gate went **13 findings → 0** by fixing surfaces. **668 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 668 with **11 skips**
 — 2 live-cargo probes plus **9** that need the gitignored consensus/ADP caches
 (`draft-kit/cache/fp_ecr.csv.gz`, `player_ids.csv.gz`, `ffc_adp.json.gz`). Re-measured 2026-08-08 by
 actually hiding all four paths and naming every skip, not copied from the previous line — which had

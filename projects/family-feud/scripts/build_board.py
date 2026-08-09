@@ -122,9 +122,19 @@ def recompute_vorp(players, curve, baselines, method):
     board left a row with no vorp and no way to compute one. The plan's load-bearing requirement
     is repeated interactive refresh, so carrying was a dead end.
 
-    K AND DEF KEEP THEIR FLAT PER-TIER CONSTANTS. build_curves.py builds QB/RB/WR/TE only, so
-    KTD-6's "K and DEF keep the historical curve" is not satisfiable from the shipped curve.
+    K AND DEF KEEP THEIR FLAT PER-TIER CONSTANTS, AND AS OF 2026-08-08 FOR DIFFERENT REASONS.
+    The condition below is `table AND base` -- a curve alone is not enough, because vorp is a
+    subtraction against a replacement rank.
+      * DEF has neither. No exact source exists (player_stats_def is player-level and publishes no
+        points allowed), so there is nothing to build a curve from.
+      * K now HAS a curve -- build_curves.py ships one, exact, from the distance-bucketed kicking
+        asset -- and still has no baseline, because meta.vbd.baselineWaiver carries QB/RB/WR/TE
+        only and those four came from a Thunderdome simulation that cannot be reproduced here.
+        Picking a K replacement rank is a DECISION; deriving one by a different method than the
+        other four would be a fabricated number wearing a measured number's clothes.
     Inventing values would be worse than labelling the gap, so those rows stay carried and say so.
+    K TIERS ARE A SEPARATE QUESTION AND ARE NOW DERIVED: `rerank.value_bands` reads the curve and
+    needs no baseline at all, which is why the curve was worth shipping before the decision.
 
     Within a position nothing reorders -- the curve is a rank->points lookup with `pr` as its
     input, so vorp is monotone in pr by construction (verified: 0 order violations across all 150
@@ -593,8 +603,14 @@ def diff_report(before, after, curve_path=CURVE):
     lines.append("  VORP provenance (KTD-6), per row:")
     for m, n in sorted(methods.items()):
         lines.append(f"    {n:3} rows  {m}")
-    lines.append("  K and DEF keep flat per-tier constants -- build_curves.py builds QB/RB/WR/TE")
-    lines.append("  only, so the curve cannot supply them. Labelled, not invented.")
+    # The REASON differs per position now, and stating one reason for both would be a rule that
+    # has already been falsified for K -- the curve exists for it; the baseline does not.
+    lines.append("  K and DEF keep flat per-tier constants, for DIFFERENT reasons:")
+    lines.append("    K   -- build_curves.py DOES ship a kicker curve, but meta.vbd.baselineWaiver")
+    lines.append("           has no K, and vorp needs a replacement rank. Adding one is a DECISION,")
+    lines.append("           not a derivation. (K tiers ARE derived -- value_bands needs no base.)")
+    lines.append("    DEF -- no exact source: player_stats_def is player-level and carries no")
+    lines.append("           points allowed at all. Labelled, not invented.")
     return "\n".join(lines)
 
 

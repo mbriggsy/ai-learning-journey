@@ -46,18 +46,55 @@ way too: with `market.py` renamed away it recorded `FAIL: scripts\market.py is m
 eleven sources were unaffected, and **the ADP cache survived byte-for-byte with its mtime unmoved**.
 The validation logic stays in Python deliberately; this repo does not test PowerShell.
 
+**✅ THE DEPTH CORRECTION IS PORTED (2026-08-08) — and it turned up something bigger.**
+`consensus.py` now ranks BOTH sides inside the board's own depth (`depth_rank()`, one function for
+the point estimate, the spread bounds and the insertion rank of a player the board omits). The six
+"disagreements" were the artifact entire — **all six said "they like him LESS", six for six**, which
+is an instrument reading, not a finding. Also recovered **3 rows that were off-curve** purely
+because their inflated consensus ranks ran past the curve's last measured point: `3 → 0`.
+
+⚠️ **AND SECTION [1] IS NOW PROVEN CIRCULAR — `board pr − restricted consensus rank == 0` on all
+150 rows, zero variance.** `rerank.py` derives the ordering from this same FantasyPros ECR, so the
+section asks whether the consensus disagrees with itself. **The report announces this on every run**
+rather than printing a zero that reads as ~100 experts ratifying the board. What it means going
+forward:
+- **Section [1] is a DRIFT DETECTOR, not a discovery tool.** It wakes when a rank is overruled by
+  hand, or when FantasyPros publishes a scrape newer than the board's synthesis (`2026-08-07`
+  today — they are in lockstep, which is exactly why it is silent).
+- **Section [2] is the only half that still discovers**, because those players were never inputs to
+  the re-rank. It improved: worth-more-than-replacement went **2 → 3**, Jayden Reed 0.0 → **+4.0**.
+- Full write-up: [`docs/insights/018`](docs/insights/018-the-bias-was-the-only-thing-producing-findings.md).
+  **Do not "fix" the zero by loosening the spread filter** — that rebuilds the noise machine.
+
 **Next action, in order:**
-1. **Port the depth correction into `consensus.py`.** `market.py` has it; the consensus tool does
-   not, and its residual 6 disagreements are that artifact, not a real gap. `pr` counts within the
-   board's 174 while FantasyPros counts within its 523, so a board RB43 reads as their RB63. Rank
-   their list restricted to board rows before comparing, exactly as `market.market_ranks` does.
-2. **K and DEF carry flat per-tier constants** (`carried:kdef-tier-flat`, **24 of 174 rows**), and
-   their **tiers are the only ordering the re-rank could not re-derive** — no curve exists for
-   them, so the old tiers were re-sorted onto the new order rather than invented.
-3. **The curve stops at 2024.** `player_stats_2025.csv` is a 404 (re-verified 2026-08-08); 2025
-   exists only as play-by-play, which needs nflverse's stat builder reimplemented and misattributes
-   TDs on ~5% of player-seasons. A narrower EXACT basis beats a wider approximate one — a *measured*
-   decision, not an oversight. Revisit as its own unit with its own error budget.
+1. **BUILD THE KICKER CURVE — it is an EXACT build, and it is the cheap half of the K/DEF gap.**
+   The 24 `carried:kdef-tier-flat` rows (K=10, DEF=14, re-counted 2026-08-08) split into one easy
+   win and one trap. **Sources probed live 2026-08-08, HTTP 200 and columns read, not assumed:**
+
+   - ✅ **K is exact.** `player_stats_kicking_2024.csv` publishes FG makes **already bucketed by
+     distance** — `fg_made_0_19`, `_20_29`, `_30_39`, `_40_49`, `_50_59`, `_60_`, plus `fg_missed`,
+     `pat_made`, `pat_missed`. Those buckets map **1:1** onto `league.md`'s kicker scoring
+     (0-39: 3 · 40-49: **4** · 50-59: **5** · 60+: **6** · miss: **−1** · XP 1 / XP miss −1). No
+     approximation, no attribution guesswork — the same EXACT standard as the QB/RB/WR/TE curve,
+     which is the bar `build_curves.py` set for itself. Extend `build_curves.py` with a K position
+     and 10 rows stop being labelled constants.
+   - ⚠️ **DEF is NOT exact and should NOT be built the same way.** `player_stats_def_2024.csv` is
+     **player-level**, so sacks/INT/FF/FR/TD/safety must be aggregated to a team. Worse, **it does
+     not carry points allowed at all** — the largest and most volatile term in the DST ladder
+     (0 pts → **10** … 35+ → **−4**). That has to come from `nfldata/games.csv`
+     (`home_score`/`away_score`, verified 200), and **Sleeper's points-allowed convention is not
+     confirmed** — whether it charges the defense for points the *opponent's* defense/ST scored is
+     exactly the kind of unstated rule that produces a confident wrong number. Blocked kicks (2 pts)
+     have no clean team-level source either.
+   - **The call this implies, on this project's own precedent:** a narrower EXACT basis beats a
+     wider approximate one — the identical argument that parked 2025. **Ship K, leave DEF labelled.**
+     A `carried:kdef-tier-flat` label is honest; a DST curve carrying unquantified convention error
+     would be a fabricated number in a column the board sorts by.
+2. **The curve stops at 2024.** `player_stats_2025.csv` and `stats_player_week_2025.csv` are both
+   404 (**re-verified 2026-08-08**, this session, by HTTP status). 2025 exists only as
+   play-by-play, which needs nflverse's stat builder reimplemented and misattributes TDs on ~5% of
+   player-seasons. A narrower EXACT basis beats a wider approximate one — a *measured* decision,
+   not an oversight. Revisit as its own unit with its own error budget.
 
 **The archive question is DECIDED (Briggsy, 2026-08-08): back issues are gitignored.** The
 deciding argument was his: `newsletter/data/archive/` — the cargo each edition is built from — was
@@ -83,11 +120,12 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **628 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 628 with **10 skips**
-— 2 live-cargo probes plus 8 that need the gitignored consensus/ADP caches
-(`draft-kit/cache/fp_ecr.csv.gz`, `ffc_adp.json.gz`). Re-measured 2026-08-08 by hiding `newsletter/data/inbox/` **and** the consensus cache,
-not copied from the previous line. Verified by eye, not only by tests: the cheat sheet is **2 pages
+gate went **13 findings → 0** by fixing surfaces. **638 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 638 with **11 skips**
+— 2 live-cargo probes plus **9** that need the gitignored consensus/ADP caches
+(`draft-kit/cache/fp_ecr.csv.gz`, `player_ids.csv.gz`, `ffc_adp.json.gz`). Re-measured 2026-08-08 by
+actually hiding all four paths and naming every skip, not copied from the previous line — which had
+aged to `628 / 10 / 8` and was wrong on all three. Verified by eye, not only by tests: the cheat sheet is **2 pages
 — the whole 174-row board on page 1**, the plan on page 2 — and the HTML board renders shape-driven
 round labels with no invented rounds.
 
@@ -221,8 +259,17 @@ produce **byte-identical advisories** on the 120-pick lab feed at prefixes 1, 3,
 
 ## 0. Start with `/brief`
 
-Seventeen insight docs now exist. Each has a documented wrong answer that looks right. Read them
+Eighteen insight docs now exist. Each has a documented wrong answer that looks right. Read them
 before designing, not after debugging.
+
+**The newest is the one to read before touching any comparison, join or "disagreement" metric:**
+- **[`018`](docs/insights/018-the-bias-was-the-only-thing-producing-findings.md)** — correcting the
+  depth artifact in `consensus.py` took its findings from six to **zero**, because the artifact was
+  the only thing producing them. Underneath sat a tautology: `rerank.py` builds the board's ordering
+  from the very list the board is being compared against. **Before trusting any disagreement metric,
+  check whether the two sides share an ancestor** — and if a bias correction empties your results,
+  that is a result, not a regression. **A tautology that prints six findings is far more dangerous
+  than one that prints none.**
 
 **The two from 2026-08-08 are the ones to read before writing any wrapper or any `except`:**
 - **[`015`](docs/insights/015-the-degrade-path-would-have-swallowed-the-refusal.md)** — `read_shape`

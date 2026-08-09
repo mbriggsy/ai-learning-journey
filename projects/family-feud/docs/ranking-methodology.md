@@ -11,21 +11,40 @@
 
 ## The one-sentence version
 
-The market tells us *when* players get drafted, the league format tells us *what's scarce*, VORP tells us *what scarcity is worth*, and the judgment layer keeps us from doing anything stupid. A player's rank is where those four stop arguing.
+The consensus tells us *the order players come off the board*, the league format tells us *what's scarce*, VORP tells us *what scarcity is worth here*, and the judgment layer tells us *what the numbers can't see*. **The rank is the consensus; the edge is everything stacked beside it.**
+
+---
+
+## ⚠️ What changed on 2026-08-08 — read this before the layers below
+
+**The board's `r`/`pr`/`tier` are no longer hand-synthesized.** `scripts/rerank.py` re-derives them from FantasyPros Full PPR ECR (redraft), on Briggsy's call that the Cowork-era ranks "carry no weight." 164 of 174 rows moved. The layers below used to describe four passes that all pushed on the *rank*; three of them no longer do, and this section says where each one actually lives now.
+
+**The edge was never going to be out-evaluating a hundred analysts.** It is that everything *beside* the rank — the replacement baselines, the tier cuts, the badges, the notes — is priced for an 8-team, 2-FLEX, full-PPR room, while the rest of the league drafts off a list built for 12-team leagues.
+
+| Layer | Where it lives NOW |
+|---|---|
+| The consensus | **`r` and `pr`, outright.** FantasyPros ECR, ranked by `scripts/rerank.py` |
+| The league bend | **`vorp`, not the rank** — replacement at QB12/RB41/WR47/TE12, from `meta.vbd.baselineWaiver` |
+| Tiers | **`tier`** — equal-value bands off this league's own curve (`rerank.value_bands`), not equal counts |
+| Judgment | **Badges and notes, which no longer move the rank.** They sit beside it and argue with it |
+
+One consequence worth stating plainly: **`scripts/consensus.py`'s section [1] is circular** as a result — it compares the board to the list the board was built from, and it says so on every run. Do not read its zero as the experts ratifying the board. See [`insights/018`](insights/018-the-bias-was-the-only-thing-producing-findings.md).
 
 ---
 
 ## The Four Layers
 
-Every rank on the board is built in four passes, in this order.
+Every rank on the board *was* built in four passes. Read them as the four forces still in play — but see the table above for which one owns the number today.
 
-### Layer 1 — The market blend
+### Layer 1 — The consensus ordering
 
-The starting point is a consensus mash of eight expert sources — FantasyPros, FTN, ESPN, Yahoo, CBS, NFL.com, SI, and PFF — plus August training-camp reporting. This anchors the board near real-world ADP (average draft position), and that anchoring is deliberate: **a board is a draft order, not a wish list.** If the room takes Brock Bowers 17th and your board says he's worth 43rd, congratulations — you have a very principled board and you will never roster Brock Bowers. Rank has to reflect where a player can actually be acquired, then the deltas (below) tell you whether that price is a bargain or a tax.
+The board's rank **is** FantasyPros' Full PPR redraft ECR, restricted to the 174 players this board carries. That anchoring is deliberate: **a board is a draft order, not a wish list.** If the room takes Brock Bowers 17th and your board says he's worth 43rd, congratulations — you have a very principled board and you will never roster Brock Bowers. Rank has to reflect where a player can actually be acquired, then the deltas (below) tell you whether that price is a bargain or a tax.
+
+*Historical note, because it explains the shape of everything below:* the ranks used to be a hand-made mash of eight expert sources plus training-camp reporting. That process produced the badges and notes this board still carries, and it is why the judgment layer reads as an argument *with* the rank rather than an input *to* it.
 
 ### Layer 2 — The league bend
 
-Consensus rankings are built for generic 12-team leagues. Family Feud is not generic, so every rank gets pushed around by our actual rules:
+Consensus rankings are built for generic 12-team leagues. Family Feud is not generic. **This no longer bends the rank — it sets the replacement baselines that `vorp` is measured against**, which is where the entire edge now lives:
 
 **Full PPR + two FLEX spots.** You start four or five pass-catchers every week, and every catch is a point. Target hogs rise; touchdown-dependent guys fall.
 
@@ -39,11 +58,19 @@ Consensus rankings are built for generic 12-team leagues. Family Feud is not gen
 
 ### Layer 3 — The judgment pass
 
-Badges and notes: the qualitative layer covering what projections structurally can't know. Camp risers (Waddle to Denver for a 1st), injury discounts with rehab timelines (Nabers' ACL trending toward Week 1), bust-price warnings (CMC at age 30 off a 450-touch season), breakout profiles (Egbuka, Burden, Tuten). This layer moves players in both directions and is the reason the board never matches pure math — on purpose.
+Badges and notes: the qualitative layer covering what projections structurally can't know. Camp risers (Waddle to Denver for a 1st), injury discounts with rehab timelines (Nabers' ACL trending toward Week 1), bust-price warnings (CMC at age 30 off a 450-touch season), breakout profiles (Egbuka, Burden, Tuten).
+
+**This layer no longer moves the rank — and that makes it more useful, not less.** It used to be folded into the number, where it was invisible: a player 8 spots off consensus told you *nothing* about why. Now the rank is the consensus outright and the badges sit beside it as the explicit argument against it. Seven badge codes are live on the board today — **B 17 · U 14 · X 13 · I 12 · R 10 · D 10 · S 3**.
+
+> **The eighth badge is gone on purpose.** `T` ("Briggsy's Guy") was dropped by the re-rank because it asserted a curation that had not actually happened. Do not reintroduce it as decoration.
 
 ### Layer 4 — Tiers
 
 Finally, players get grouped at the **cliffs** — the points where the projected drop-off to the next guy gets steep relative to the small gaps within the group. Tiers, not ranks, are the draft-day decision unit: if four players are left in a tier when your pick comes up, you can wait a round and take whoever survives. If ONE player is left in a tier, you sprint. The exact rank number within a tier is a preference; the tier boundary is the strategy.
+
+**Tiers are equal-VALUE bands, not equal counts and not the biggest drops** (`rerank.value_bands`). Both alternatives were tried and both are degenerate: equal counts are arbitrary, and on a convex decreasing curve the biggest drops all cluster at the top — that produced WR tiers of `[1,1,1,1,2,1,1,51]`. Equal value bands give a tier list the shape it is supposed to have: a couple of names at the top where points fall away fast, widening as the curve flattens.
+
+⚠️ **K and DEF tiers are the one ordering the re-rank could not derive.** `build_curves.py` builds QB/RB/TE/WR only, so for those **24 rows** (K 10, DEF 14) the old tiers were re-sorted onto the new order rather than invented. They are labelled `carried:kdef-tier-flat` and they are the board's next known accuracy gap.
 
 ---
 

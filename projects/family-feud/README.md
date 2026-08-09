@@ -82,12 +82,20 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         NEGATIVE points and the market does not know that.
                  rerank.py            — re-derives r/pr/tier from the consensus. Refuses to write
                                         while a note still claims a board position.
-                 consensus.py         — where the board disagrees with the expert consensus, and
-                                        what the gap COSTS in points. READ-ONLY: it never writes
-                                        the board. Joins id-to-id, never by name. Also reports
-                                        who the consensus ranks that the board does not carry —
-                                        the half a rank-gap metric structurally cannot see.
-tests/           628 tests: python -m unittest discover -s tests  (run from the root)
+                 consensus.py         — what the board's gap to the expert consensus COSTS in
+                                        points. READ-ONLY: it never writes the board. Joins
+                                        id-to-id, never by name. Ranks BOTH sides within the
+                                        board's own depth — FantasyPros counts inside 523 rows
+                                        and this board carries 174, so counting separately
+                                        prices the list-length difference as a disagreement.
+                                        ⚠ Its section [1] is CIRCULAR while rerank.py owns the
+                                        ordering (150/150 rows sit at their consensus rank) and
+                                        it SAYS SO on every run — that zero is an identity, not
+                                        ~100 experts ratifying the board. The live signal is
+                                        section [2], who the consensus ranks that the board does
+                                        not carry — the half a rank-gap metric cannot see.
+                                        → docs/insights/018
+tests/           638 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```

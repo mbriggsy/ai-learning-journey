@@ -89,6 +89,12 @@ class TestTheSurvivingDelta(unittest.TestCase):
         self.assertIsNone(C.surviving_delta(None, 40.0, 60.0))
 
 
+def ladder_of(page, keep=None):
+    """The restricted ladder over `page`, keeping every id unless told otherwise."""
+    ids = keep if keep is not None else {C.clean_id(r["id"]) for r in page}
+    return C.restricted_ecrs(page, ids)
+
+
 class TestSpreadWidensWithDisagreement(unittest.TestCase):
     def setUp(self):
         self.page = C.consensus_rows([
@@ -96,20 +102,124 @@ class TestSpreadWidensWithDisagreement(unittest.TestCase):
             fp_row("2", "Loose Guy", "RB", "SF", 4.0, 30.0),
             *[fp_row(str(10 + i), f"Filler {i}", "RB", "DAL", 5.0 + i, 2.0) for i in range(30)],
         ])
+        self.ladder = ladder_of(self.page)
 
     def test_a_tight_consensus_barely_moves_the_rank(self):
         row = next(r for r in self.page if r["player"] == "Tight Guy")
-        best, worst = C.spread_pos_ranks(self.page, row)
+        best, worst = C.spread_pos_ranks(self.ladder, row)
         self.assertLessEqual(worst - best, 3, "sd 1.0 should not span many ranks")
 
     def test_a_wide_consensus_spans_many_ranks(self):
         row = next(r for r in self.page if r["player"] == "Loose Guy")
-        best, worst = C.spread_pos_ranks(self.page, row)
+        best, worst = C.spread_pos_ranks(self.ladder, row)
         self.assertGreater(worst - best, 10, "sd 30 must widen the band, or the noise survives")
 
     def test_an_unparseable_sd_collapses_to_the_point_estimate(self):
         row = dict(self.page[0], sd="NA")
-        self.assertEqual(C.spread_pos_ranks(self.page, row), (row["pos_rank"], row["pos_rank"]))
+        here = C.depth_rank(self.ladder, row["pos"], row["ecr_f"])
+        self.assertEqual(C.spread_pos_ranks(self.ladder, row), (here, here))
+
+    def test_the_spread_EDGES_are_measured_on_the_restricted_ladder(self):
+        """The half a naive port of this correction drops. `surviving_delta` subtracts the point
+        estimate from these bounds, so bounds counted across all 523 while the estimate counts
+        within the board is a subtraction of two different quantities that still returns a
+        plausible number -- a worse instrument that looks fixed.
+        """
+        row = next(r for r in self.page if r["player"] == "Loose Guy")
+        thin = ladder_of(self.page, {"1", "2"})          # the board carries only these two
+        _, thin_worst = C.spread_pos_ranks(thin, row)
+        _, full_worst = C.spread_pos_ranks(self.ladder, row)
+        # A rank may reach len+1 -- "behind everyone I carry" -- and no further, because that is
+        # the last rung an insertion rank can name.
+        self.assertEqual(thin_worst, len(thin["RB"]) + 1)
+        self.assertLess(thin_worst, full_worst,
+                        "the same sd on a shorter board must not span the longer board's ranks")
+
+
+class TestTheDepthCorrection(unittest.TestCase):
+    """FantasyPros ranks 523; this board carries 174. Counting inside each list separately
+    measures the SIZE OF THE TWO LISTS and prices it in points as if it were a disagreement."""
+
+    def setUp(self):
+        # Three board backs the consensus agrees with EXACTLY -- same men, same order -- with
+        # seven players the board does not carry wedged between each pair.
+        rows = [fp_row("A", "Ay Back", "RB", "KC", 1.0, 0.0)]
+        rows += [fp_row(f"f{i}", f"Filler {i}", "RB", "DAL", 2.0 + i, 0.0) for i in range(7)]
+        rows += [fp_row("B", "Bee Back", "RB", "SF", 9.0, 0.0)]
+        rows += [fp_row(f"g{i}", f"Giller {i}", "RB", "DAL", 10.0 + i, 0.0) for i in range(7)]
+        rows += [fp_row("C", "Cee Back", "RB", "NYJ", 17.0, 0.0)]
+        self.page = C.consensus_rows(rows)
+        self.board = [board_row(1, "Ay Back", "RB", "KC", 1, "sA"),
+                      board_row(2, "Bee Back", "RB", "SF", 2, "sB"),
+                      board_row(3, "Cee Back", "RB", "NYJ", 3, "sC")]
+        self.xw = {"sA": "A", "sB": "B", "sC": "C"}
+
+    def test_the_published_rank_and_the_restricted_rank_really_do_differ_here(self):
+        """The positive control. If the fixture did not actually contain the artifact, every
+        assertion below would pass on broken code -- insight 008's shape."""
+        cee = next(r for r in self.page if r["player"] == "Cee Back")
+        self.assertEqual(cee["pos_rank"], 17, "fixture must reproduce the inflated rank")
+        self.assertEqual(C.depth_rank(ladder_of(self.page, {"A", "B", "C"}), "RB", 17.0), 3)
+
+    def test_perfect_agreement_prices_at_ZERO_not_at_the_length_of_the_list(self):
+        """The decisive one. The board and the experts name the same three men in the same order,
+        so the honest disagreement is nothing. Uncorrected, Cee Back is the board's RB3 against
+        'their RB17' and the gap between those two rungs is reported as a real cost in points."""
+        d, _, _ = C.compare(self.board, self.page, self.xw, CURVE, BASELINES)
+        self.assertEqual(len(d), 3)
+        for row in d:
+            self.assertEqual(row["delta"], 0.0, f"{row['name']} priced a list-length gap as a "
+                                                f"disagreement: {row}")
+            self.assertEqual(row["surviving"], 0.0)
+
+    def test_the_SPREAD_is_restricted_too_measured_through_compare(self):
+        """THE CALL-SITE TEST, and the one that catches the naive port (insight 013). The tests
+        above use sd 0, which collapses the band and makes the spread half invisible -- so a fix
+        that restricted the point estimate and left the bounds counted across all 523 would pass
+        every one of them. Give the same perfectly-agreed fixture a real sd and the two wirings
+        separate: correct, the board's value sits inside its own band and nothing is owed;
+        naively ported, it sits far above a band drawn 14 rungs lower and the instrument invents
+        a 65-point disagreement out of the list length it was supposed to have removed.
+        """
+        page = C.consensus_rows([dict(r, sd="2.0") for r in self.page])
+        d, _, _ = C.compare(self.board, page, self.xw, CURVE, BASELINES)
+        for row in d:
+            self.assertEqual(row["surviving"], 0.0,
+                             f"{row['name']}: bounds and estimate are on different ladders {row}")
+
+    def test_the_published_rank_is_KEPT_so_the_correction_stays_auditable(self):
+        d, _, _ = C.compare(self.board, self.page, self.xw, CURVE, BASELINES)
+        cee = next(x for x in d if x["name"] == "Cee Back")
+        self.assertEqual(cee["cons_pos_rank"], 3)
+        self.assertEqual(cee["cons_pos_rank_published"], 17)
+
+    def test_a_real_disagreement_still_survives_the_correction(self):
+        """The correction must not be a mute button. Demote Cee Back on the board only, and the
+        instrument has to keep saying so."""
+        self.board[2]["pr"] = 12
+        d, _, _ = C.compare(self.board, self.page, self.xw, CURVE, BASELINES)
+        cee = next(x for x in d if x["name"] == "Cee Back")
+        self.assertGreater(cee["delta"], 0.0, "the experts like him MORE and it must show")
+
+    def test_an_omitted_player_is_valued_where_he_would_LAND_on_this_board(self):
+        """Not where he sits on theirs. Priced at his rank among 523 he is worth less than
+        replacement almost by construction, which made this whole section read as bench filler."""
+        # Drop Cee Back so he becomes 'missing', then pad to the depth that section's membership
+        # filter measures (`consensus overall <= len(board)`). The padding is K/DEF because that
+        # is what pads the real board -- 24 of its 174 rows -- and they are excluded from the
+        # comparison before any of this, so they add depth without adding noise.
+        board = self.board[:2] + [board_row(9 + i, f"D{i}", "DEF", "DEN", i + 1, f"D{i}")
+                                  for i in range(15)]
+        self.assertGreaterEqual(len(board), 17, "the fixture must be deep enough to reach him")
+        _, missing, _ = C.compare(board, self.page, self.xw, CURVE, BASELINES)
+        cee = next(m for m in missing if m["name"] == "Cee Back")
+        self.assertEqual(cee["cons_pos_rank"], 3, "two carried backs rank ahead of him, so he is 3")
+        self.assertEqual(cee["cons_pos_rank_published"], 17)
+        self.assertEqual(cee["cons_vorp"], C.vorp(CURVE, BASELINES, "RB", 3))
+
+    def test_a_position_the_board_carries_nobody_at_yields_None_not_a_guess(self):
+        self.assertIsNone(C.depth_rank(ladder_of(self.page, {"A"}), "WR", 1.0))
+        self.assertIsNone(C.depth_rank(ladder_of(self.page, set()), "RB", 1.0))
 
 
 class TestTheSourceSliceIsGuarded(unittest.TestCase):
@@ -189,6 +299,48 @@ class TestCompare(unittest.TestCase):
                         self.page, d, m, notes, top=5)
         self.assertIn("NOT ON YOUR BOARD", text)
         self.assertIn("Ghost Back", text)
+
+
+class TestTheCircularityIsDECLAREDNotHidden(unittest.TestCase):
+    """`rerank.py` builds the board's ordering out of this same FantasyPros list, so with the
+    depth artifact removed the board sits at its consensus rank by construction. An empty
+    section [1] is then a tautology -- and it READS like ~100 experts ratifying the board, which
+    is the worst possible misreading to leave lying around on draft morning (insight 005)."""
+
+    META = {"rankings": {"synthesized": "2026-08-07", "judgment": "abc"}}
+
+    def setUp(self):
+        rows = [fp_row("A", "Ay Back", "RB", "KC", 1.0, 0.0)]
+        rows += [fp_row(f"f{i}", f"Filler {i}", "RB", "DAL", 2.0 + i, 0.0) for i in range(7)]
+        rows += [fp_row("B", "Bee Back", "RB", "SF", 9.0, 0.0)]
+        rows += [fp_row("C", "Cee Back", "RB", "NYJ", 17.0, 0.0)]
+        self.page = C.consensus_rows(rows)
+        self.board = [board_row(1, "Ay Back", "RB", "KC", 1, "sA"),
+                      board_row(2, "Bee Back", "RB", "SF", 2, "sB"),
+                      board_row(3, "Cee Back", "RB", "NYJ", 3, "sC")]
+        self.xw = {"sA": "A", "sB": "B", "sC": "C"}
+
+    def render(self):
+        d, m, notes = C.compare(self.board, self.page, self.xw, CURVE, BASELINES)
+        return C.report(self.META, self.page, d, m, notes, top=5)
+
+    def test_a_board_that_IS_the_consensus_says_so_instead_of_printing_a_proud_zero(self):
+        text = self.render()
+        self.assertIn("CIRCULAR right now", text)
+        self.assertIn("rerank.py", text, "it must name the mechanism, not just the symptom")
+        self.assertIn("2026-08-07", text, "and the date that would end it")
+        self.assertNotIn("YOU AND THE EXPERTS DISAGREE", text,
+                         "a heading announcing a zero is the misreading this exists to prevent")
+
+    def test_ONE_hand_overruled_row_retires_the_banner(self):
+        """The positive control. A banner that prints unconditionally is not an instrument, it is
+        a slogan -- and it would go on claiming circularity through the exact refresh that ends
+        it (insight 008: prove the reading can change before trusting the reading)."""
+        self.board[2]["pr"] = 12
+        text = self.render()
+        self.assertNotIn("CIRCULAR right now", text)
+        self.assertIn("YOU AND THE EXPERTS DISAGREE", text)
+        self.assertIn("2 of 3 rows sit exactly at their consensus rank", text)
 
 
 class TestItNeverWritesTheBoard(unittest.TestCase):

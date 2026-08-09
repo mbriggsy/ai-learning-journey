@@ -316,6 +316,121 @@ class TestFfDraftKeepsItsRefusal(unittest.TestCase):
         self.assertEqual(r["hasDraftControl"], False)
 
 
+START_ROOM = r"""
+function buildStartRoom({ href, hasButton = true, label = 'START DRAFT', clickThrows = false,
+                          priorConfirm = 'native', extraButton = false }) {
+  const state = { clicks: 0, confirmDuringClick: null };
+  const mk = (text) => ({
+    _text: text,
+    childNodes: [{ nodeType: 3, textContent: text }],
+    click() {
+      state.clicks += 1;
+      // Snapshot what window.confirm answers AT CLICK TIME -- that is the property under test.
+      state.confirmDuringClick = window.confirm('Are you sure you want to start the draft?');
+      if (clickThrows) throw new Error('the room blew up mid-click');
+    },
+  });
+  const els = hasButton ? [mk(label)] : [];
+  if (extraButton) els.push(mk(label));
+  els.push(mk('Some other control'));
+  globalThis.location = { href };
+  globalThis.document = { querySelectorAll: () => els };
+  if (priorConfirm === 'native') { try { delete window.confirm; } catch (e) {} }
+  else { window.confirm = priorConfirm; }
+  return state;
+}
+"""
+
+
+class TestStartDraftAnswersTheDialogAndPutsItBack(unittest.TestCase):
+    """The runbook said a human must click START; TODO said it was solved. Neither was executable,
+    so the disagreement could not be settled by running anything. These settle it."""
+
+    MOCK = "https://sleeper.com/draft/nfl/1390923383440424960"
+    REAL = "https://sleeper.com/draft/nfl/1390509994847240192"
+
+    def _run(self, opts, call="{ iAmInAMock: true }", tail=""):
+        out = run_node(START_ROOM + f"""
+        const st = buildStartRoom({json.dumps(opts)});
+        window.ffStartDraft({call}).then(r => {{
+          console.log(r);
+          console.log(JSON.stringify({{ clicks: st.clicks,
+                                        confirmDuringClick: st.confirmDuringClick,
+                                        confirmIsOwnPropAfter:
+                                          Object.prototype.hasOwnProperty.call(window, 'confirm'),
+                                        {tail} }}));
+        }});
+        """).splitlines()
+        return json.loads(out[0]), json.loads(out[1])
+
+    def test_the_confirm_is_answered_true_while_the_click_happens(self):
+        r, st = self._run({"href": self.MOCK})
+        self.assertEqual(r["clicked"], True)
+        self.assertEqual(r["confirmsAnswered"], 1)
+        self.assertEqual(st["confirmDuringClick"], True)
+
+    def test_the_override_is_GONE_afterwards(self):
+        """The safety property. An auto-accept hook left armed silently accepts the next
+        destructive dialog, and nothing reports it."""
+        _, st = self._run({"href": self.MOCK})
+        self.assertFalse(st["confirmIsOwnPropAfter"])
+
+    def test_it_is_restored_even_when_the_click_throws(self):
+        out = run_node(START_ROOM + f"""
+        buildStartRoom({json.dumps({"href": MOCK_URL, "clickThrows": True})});
+        window.ffStartDraft({{ iAmInAMock: true }})
+          .catch(() => {{}})
+          .then(() => console.log(JSON.stringify(
+            {{ armed: Object.prototype.hasOwnProperty.call(window, 'confirm') }})));
+        """)
+        self.assertFalse(json.loads(out)["armed"], "a thrown click left the override installed")
+
+    def test_a_caller_who_already_had_a_confirm_gets_THEIRS_back(self):
+        """Restoring 'the native one' is not the same as restoring what was there."""
+        out = run_node(START_ROOM + f"""
+        window.__sentinel = 0;
+        buildStartRoom({json.dumps({"href": MOCK_URL})});
+        window.confirm = () => {{ window.__sentinel = 42; return false; }};
+        window.ffStartDraft({{ iAmInAMock: true }}).then(() => {{
+          window.confirm('probe');
+          console.log(JSON.stringify({{ sentinel: window.__sentinel }}));
+        }});
+        """)
+        self.assertEqual(json.loads(out)["sentinel"], 42)
+
+    def test_it_refuses_on_the_real_draft(self):
+        r, st = self._run({"href": self.REAL})
+        self.assertEqual(r["started"], False)
+        self.assertIn("REAL draft", r["reason"])
+        self.assertEqual(st["clicks"], 0)
+
+    def test_it_refuses_without_the_explicit_flag(self):
+        """Guard 2 (the draft id) goes stale if the draft is ever re-created. Guard 1 does not."""
+        for call in ("{}", "undefined", "{ iAmInAMock: 'yes' }"):
+            with self.subTest(call=call):
+                r, st = self._run({"href": self.MOCK}, call=call)
+                self.assertEqual(r["started"], False)
+                self.assertEqual(st["clicks"], 0)
+
+    def test_two_start_controls_refuse_rather_than_pick_one(self):
+        r, st = self._run({"href": self.MOCK, "extraButton": True})
+        self.assertIn("refusing", r["reason"])
+        self.assertEqual(st["clicks"], 0)
+
+    def test_no_start_control_is_a_clean_refusal(self):
+        r, _ = self._run({"href": self.MOCK, "hasButton": False})
+        self.assertIn("no \"START DRAFT\" control", r["reason"])
+
+    def test_it_reports_a_click_not_a_started_draft(self):
+        """Same rule as ffDraft: the browser cannot be the oracle for its own action."""
+        r, _ = self._run({"href": self.MOCK})
+        self.assertEqual(r["started"], False)
+        self.assertIn("status left pre_draft", r["note"])
+
+
+MOCK_URL = "https://sleeper.com/draft/nfl/1390923383440424960"
+
+
 class TestTheDefectCannotComeBackTextually(unittest.TestCase):
     """test_board_live.py's shape: assert the named defect is absent from the emitted source."""
 

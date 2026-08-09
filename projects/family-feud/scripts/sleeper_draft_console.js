@@ -266,6 +266,69 @@
     });
   };
 
+  /* ffStartDraft -- START DRAFT raises the room's one native dialog, and this is how we answer it.
+   *
+   * WHY THIS EXISTS AS CODE. The technique was worked out live on 2026-08-09 and then written down
+   * in two places that disagreed: TODO.md said "SOLVED, mocks now run unattended", while
+   * docs/draft-day-runbook.md still said "have Briggsy click START himself" -- an older line that
+   * was never revisited. Neither was executable, so the disagreement could not be settled by
+   * running anything. It can now.
+   *
+   * A native dialog FREEZES the extension: every command times out until a human dismisses it, and
+   * it looks exactly like the bridge dying. So the confirm is neutralised BEFORE the click rather
+   * than answered after it.
+   *
+   * THE RESTORE IS THE WHOLE SAFETY PROPERTY. An auto-accept-everything hook left armed on a page
+   * will silently accept the next destructive dialog that comes along, and nothing will report it.
+   * The restore therefore lives in a `finally` and puts back whatever was there before -- which is
+   * not necessarily the native function, because a previous call may have left its own.
+   *
+   * TWO GUARDS, because "never run this on the real league" is not something to leave to memory:
+   *   1. the caller must pass { iAmInAMock: true }, so it cannot be reached by a stray autocomplete
+   *   2. it refuses outright on the real draft id
+   * ⚠️ Guard 2 goes stale if the league's draft is ever re-created (watch_draft_state.py exists
+   * because that happens). Guard 1 does not, which is why both are here rather than either alone.
+   */
+  const REAL_DRAFT_ID = '1390509994847240192';   // docs/league.md; re-check if the draft is recreated
+
+  function startButton() {
+    const wanted = 'start draft';
+    const hits = [...document.querySelectorAll('button, div, span, a')].filter(
+      el => ownText(el).toLowerCase() === wanted);
+    if (hits.length > 1) return { err: `${hits.length} "START DRAFT" controls -- refusing` };
+    if (!hits.length) return { err: 'no "START DRAFT" control on this page' };
+    return { el: hits[0] };
+  }
+
+  window.ffStartDraft = async function (opts) {
+    if (!opts || opts.iAmInAMock !== true) {
+      return JSON.stringify({ started: false,
+                              reason: 'refusing: call ffStartDraft({ iAmInAMock: true })' });
+    }
+    const url = String(location.href);
+    if (url.includes(REAL_DRAFT_ID)) {
+      return JSON.stringify({ started: false,
+                              reason: `refusing: this is the REAL draft (${REAL_DRAFT_ID})` });
+    }
+    const found = startButton();
+    if (found.err) return JSON.stringify({ started: false, reason: found.err });
+
+    const had = Object.prototype.hasOwnProperty.call(window, 'confirm');
+    const prior = window.confirm;
+    let asked = 0;
+    try {
+      window.confirm = () => { asked += 1; return true; };
+      found.el.click();
+    } finally {
+      // Put back exactly what was there, including "there was no own property".
+      if (had) window.confirm = prior; else { try { delete window.confirm; } catch (e) { window.confirm = prior; } }
+    }
+    // Like ffDraft, this reports a CLICK. Whether the draft actually started is a question for
+    // the API -- `status` flips pre_draft -> drafting on the draft object.
+    return JSON.stringify({ clicked: true, confirmsAnswered: asked, started: false,
+                            note: 'CLICK ONLY -- confirm via /draft/<id> that status left pre_draft' });
+  };
+
   // Exported so the oracle can be tested without a browser, and so it can be exercised by hand in
   // the console while a mock is open.
   window.ffQueueVerdict = queueVerdict;

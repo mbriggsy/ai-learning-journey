@@ -157,17 +157,25 @@ precomputer without a browser or a clock.
   attractive wrong answer in the project.
 - **A mock's roster carries `slots_bn: None`.** `read_shape` handles it (bench → 0), and the shape
   banner correctly prints no bench.
-- 🚨 **START DRAFT is NOT solved, and this entry used to claim it was.** It read
-  *"✅ SOLVED, mocks now run unattended"* — describing a `window.confirm` override. **That technique
-  exists in no file in this repo** (verified 2026-08-09: the only `window.confirm` hits repo-wide
-  are this bullet's own text), and `docs/draft-day-runbook.md:200` — an instruction section, which
-  by CLAUDE.md's precedence rule is current doctrine — says the opposite: *"Have Briggsy click START
-  (or click OK on the dialog) himself."* **A mock still needs a human to start it.** The dialog is
-  real (*"Are you sure you want to start the draft? This action cannot be undone."*) and native
-  dialogs freeze the extension until dismissed. The override + **restore in a `finally`** is still
-  the right design — an auto-accept hook left armed will silently accept a destructive dialog
-  later — but it has to be **written and measured in a mock** before this says SOLVED again. Never
-  install it on the real league.
+- ✅ **START DRAFT runs unattended — `ffStartDraft({ iAmInAMock: true })`, 2026-08-09.**
+  **The story here is the lesson.** This entry claimed *"✅ SOLVED"* for a `window.confirm` override
+  that **existed in no file**, while `docs/draft-day-runbook.md:200` said the opposite — *"have
+  Briggsy click START himself"*. An audit demoted this entry to NOT SOLVED on the grounds that no
+  code existed; **Briggsy overruled it** — the technique had genuinely been worked out live, and the
+  older runbook line was the stale one. Both were right about their own half and **neither was
+  executable, so the disagreement could not be settled by running anything.** It is code now, and
+  both docs point at it.
+  - The confirm is neutralised **before** the click (a native dialog freezes the extension — every
+    command times out and it looks like the bridge died) and restored in a **`finally`**.
+  - ⚠️ **The restore puts back WHATEVER WAS THERE, not "the native one"** — a previous call may have
+    left its own, and mutant S2 proves the difference. An auto-accept hook left armed silently
+    accepts the next destructive dialog and nothing reports it.
+  - **Two deliberately redundant guards:** the explicit `iAmInAMock` flag, and a hard refusal on the
+    real draft id. The id guard **goes stale if the draft is ever re-created** (which
+    `watch_draft_state.py` exists because of), and the flag does not — neither alone is enough.
+  - Like `ffDraft`, it reports a **CLICK**. Confirm `status` left `pre_draft` on the draft object.
+  - **6 mutants planted, 6 killed**, including "never restore" and "arm the override after the
+    click".
 - **Miss your clock once and Sleeper puts you on auto-pick and LEAVES you there** for the rest of
   the draft. It drafted rounds 4-15 before this was noticed.
 - **`picked_by` identifies the SEAT OWNER, not the agent.** Auto-pick on a claimed seat still
@@ -414,8 +422,8 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **725 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 725 with **15 skips**
+gate went **13 findings → 0** by fixing surfaces. **735 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 735 with **15 skips**
 — 2 live-cargo probes plus **9** that need the gitignored consensus/ADP caches
 (`draft-kit/cache/fp_ecr.csv.gz`, `ffc_adp.json.gz`) plus **4** (`test_build_curves.TestTheCurveShape`)
 that need the gitignored nflverse season CSVs. ⚠️ **`player_ids.csv.gz` is COMMITTED, not

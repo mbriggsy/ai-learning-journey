@@ -266,6 +266,97 @@
     });
   };
 
+  /* READING AND UNSTACKING THE QUEUE -- measured in a live room 2026-08-09, not guessed.
+   *
+   * WHY IT MATTERS. Auto-pick drains the queue IN ORDER, so the draft-day job is "keep the queue
+   * ranked", and until now this file could only ADD. You cannot rank a list you cannot read or
+   * reorder, so the whole strategy rested on a control set that did not exist.
+   *
+   * WHAT THE ROOM ACTUALLY RENDERS (mock 1391539007871012864, pre-draft, 3 players queued):
+   *   - each entry carries an element whose OWN TEXT is exactly "REMOVE"
+   *   - two levels up from it is the entry row:
+   *       "Jahmyr Gibbs | RB | DET | ADP | 1.6 | PTS | 331.4 | REMOVE"
+   *   - document order == visual order, and Sleeper labels the first entry "NEXT PICK"
+   *   - a queued player's row in the MAIN LIST loses its queue.png icon entirely, which is why
+   *     ffQueue refuses a double-add at the icon guard rather than at the verdict
+   *
+   * The row is found by walking up from REMOVE until the first text line stops being a stat label,
+   * NOT by a fixed hop count -- two levels is what this build renders and one wrapper div would
+   * break it.
+   */
+  const STAT_LINE = /^(ADP|PTS|REMOVE|NEXT PICK)$/i;
+
+  function queueEntries() {
+    const out = [];
+    for (const el of document.querySelectorAll('*')) {
+      if (ownText(el).toUpperCase() !== 'REMOVE') continue;
+      let row = el.parentElement, hops = 0;
+      while (row && hops < 6) {
+        const first = (row.innerText || '').split('\n')[0].trim();
+        if (first && !STAT_LINE.test(first) && /[A-Za-z]/.test(first)) break;
+        row = row.parentElement; hops++;
+      }
+      if (!row) continue;
+      const lines = (row.innerText || '').split('\n').map(s => s.trim()).filter(Boolean);
+      out.push({ name: lines[0], pos: lines[1] || null, team: lines[2] || null, remove: el });
+    }
+    return out;
+  }
+
+  window.ffQueueList = function () {
+    const q = queueEntries();
+    return JSON.stringify({
+      count: readQueue(document.body.innerText).count,
+      entries: q.map((e, i) => ({ slot: i + 1, name: e.name, pos: e.pos, team: e.team })),
+      // The count comes from the tab label and the entries from the panel. If they disagree the
+      // panel is mid-render or collapsed, and a caller ranking off a short list would silently
+      // drop players -- so say so rather than returning the shorter one.
+      agrees: readQueue(document.body.innerText).count === q.length || q.length === 0,
+    });
+  };
+
+  // Removal is the mirror of the add: verified by the count going DOWN by exactly one.
+  function unqueueVerdict(before, after) {
+    if (before.count === 1 && after.empty) return { verified: true, reason: 'queue 1 -> empty' };
+    if (before.count === null || after.count === null) {
+      return { verified: false, reason: 'queue count unreadable -- cannot verify' };
+    }
+    if (after.count === before.count - 1) {
+      return { verified: true, reason: `queue ${before.count} -> ${after.count}` };
+    }
+    if (after.count === before.count) {
+      return { verified: false, reason: `queue count did not move (still ${before.count})` };
+    }
+    return { verified: false,
+             reason: `queue moved ${before.count} -> ${after.count}, not by one -- refusing to credit this click` };
+  }
+
+  window.ffUnqueue = async function (playerName, budgetMs = 4000) {
+    const want = norm(playerName);
+    const hits = queueEntries().filter(e => norm(e.name) === want);
+    if (hits.length > 1) {
+      return JSON.stringify({ removed: false, reason: `${hits.length} queue entries named that -- refusing` });
+    }
+    if (!hits.length) {
+      return JSON.stringify({ removed: false, reason: 'not in the queue',
+                              queue: queueEntries().map(e => e.name) });
+    }
+    const before = readQueue(document.body.innerText);
+    hits[0].remove.click();
+    const t0 = Date.now();
+    let last = { verified: false, reason: 'no read taken' };
+    while (Date.now() - t0 < budgetMs) {
+      last = unqueueVerdict(before, readQueue(document.body.innerText));
+      if (last.verified) break;
+      await new Promise(z => setTimeout(z, 100));
+    }
+    return JSON.stringify({ removed: last.verified, player: hits[0].name, reason: last.reason,
+                            queueCount: readQueue(document.body.innerText).count,
+                            waitedMs: Date.now() - t0 });
+  };
+
+  window.ffUnqueueVerdict = unqueueVerdict;
+
   /* ffStartDraft -- START DRAFT raises the room's one native dialog, and this is how we answer it.
    *
    * WHY THIS EXISTS AS CODE. The technique was worked out live on 2026-08-09 and then written down

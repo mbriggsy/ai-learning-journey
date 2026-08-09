@@ -316,6 +316,169 @@ class TestFfDraftKeepsItsRefusal(unittest.TestCase):
         self.assertEqual(r["hasDraftControl"], False)
 
 
+QUEUE_PANEL = r"""
+// A stub of the queue PANEL as the live room renders it, measured in mock 1391539007871012864
+// on 2026-08-09: each entry carries an element whose own text is exactly "REMOVE", and two levels
+// up is the row "Jahmyr Gibbs | RB | DET | ADP | 1.6 | PTS | 331.4 | REMOVE".
+function buildPanel(names, { extraWrapper = false, countOverride = null, deadRemove = false } = {}) {
+  const state = { removed: [] };
+  const mk = (text, kids) => {
+    const e = {
+      _text: text || '',
+      children: kids || [],
+      parentElement: null,
+      childNodes: text ? [{ nodeType: 3, textContent: text }] : [],
+      get innerText() {
+        const own = this._text;
+        const kid = (this.children || []).map(c => c.innerText).filter(Boolean).join('\n');
+        return [own, kid].filter(Boolean).join('\n');
+      },
+    };
+    (kids || []).forEach(k => { k.parentElement = e; });
+    return e;
+  };
+
+  // Built lazily, so a REMOVE click really does take the row OUT of the fake DOM. The first
+  // version kept a static element array: the count dropped, the rows stayed, and ffQueueList
+  // correctly reported a disagreement the real room would never produce.
+  const build = () => {
+    const els = [];
+    names.forEach(n => {
+      const rem = mk('REMOVE');
+      // deadRemove models the click that lands and does nothing -- the only state that reaches
+      // the verdict. It is an option rather than an outside monkeypatch because the elements are
+      // rebuilt on every querySelectorAll, so a patched handle is stale by the time it is used.
+      rem.click = deadRemove ? () => {} : () => {
+        state.removed.push(n);
+        const i = names.indexOf(n);
+        if (i >= 0) names.splice(i, 1);
+      };
+      const stats = mk('ADP', [mk('1.6'), mk('PTS'), mk('331.4'), rem]);
+      // extraWrapper puts a layer BETWEEN the stats block and the name row, which is the change
+      // that actually costs a hop. The first version wrapped the name row from the OUTSIDE, which
+      // added no distance between REMOVE and the name and so stressed nothing -- a fixed-hop
+      // implementation passed it.
+      const inner = extraWrapper ? mk('', [stats]) : stats;
+      const row = mk(n, [mk('RB'), mk('DET'), inner]);
+      els.push(rem, stats, inner, row);
+    });
+    return els;
+  };
+
+  globalThis.document = {
+    get body() {
+      const n = countOverride !== null ? countOverride : names.length;
+      return { innerText: n === 0 ? 'No players in your queue' : `QUEUE (${n})\nNEXT PICK` };
+    },
+    querySelectorAll: () => build(),
+  };
+  return state;
+}
+"""
+
+
+class TestReadingAndUnstackingTheQueue(unittest.TestCase):
+    """ffQueueList/ffUnqueue exist because auto-pick drains the queue IN ORDER, so the draft-day
+    job is 'keep it ranked' -- and you cannot rank a list you can only append to."""
+
+    def _run(self, names, body, **kw):
+        opts = json.dumps(kw) if kw else "{}"
+        out = run_node(QUEUE_PANEL + f"""
+        const st = buildPanel({json.dumps(names)}, {opts});
+        (async () => {{ {body} }})();
+        """)
+        return [json.loads(l) for l in out.splitlines() if l.strip()]
+
+    def test_it_reads_the_queue_in_order(self):
+        r = self._run(["Jahmyr Gibbs", "Bijan Robinson", "Ja'Marr Chase"],
+                      "console.log(window.ffQueueList());")[0]
+        self.assertEqual([e["name"] for e in r["entries"]],
+                         ["Jahmyr Gibbs", "Bijan Robinson", "Ja'Marr Chase"])
+        self.assertEqual([e["slot"] for e in r["entries"]], [1, 2, 3])
+        self.assertEqual(r["count"], 3)
+        self.assertTrue(r["agrees"])
+
+    def test_an_empty_queue_reads_as_empty_not_as_an_error(self):
+        r = self._run([], "console.log(window.ffQueueList());")[0]
+        self.assertEqual(r["entries"], [])
+        self.assertIsNone(r["count"])
+
+    def test_it_finds_the_row_by_shape_not_by_a_fixed_hop_count(self):
+        """One extra wrapper div between REMOVE and the name is exactly the kind of change a
+        Sleeper release ships without telling anyone."""
+        r = self._run(["Jahmyr Gibbs", "Bijan Robinson"],
+                      "console.log(window.ffQueueList());", extraWrapper=True)[0]
+        self.assertEqual([e["name"] for e in r["entries"]], ["Jahmyr Gibbs", "Bijan Robinson"])
+
+    def test_it_SAYS_SO_when_the_tab_count_and_the_panel_disagree(self):
+        """A caller re-ranking off a short list would silently drop players. Better to flag it."""
+        r = self._run(["Jahmyr Gibbs", "Bijan Robinson"],
+                      "console.log(window.ffQueueList());", countOverride=5)[0]
+        self.assertFalse(r["agrees"])
+
+    def test_unqueue_removes_and_verifies_by_the_count_going_down(self):
+        r = self._run(["Jahmyr Gibbs", "Bijan Robinson", "Ja'Marr Chase"],
+                      "console.log(await window.ffUnqueue('Bijan Robinson', 500));"
+                      "console.log(window.ffQueueList());")
+        self.assertEqual(r[0]["removed"], True)
+        self.assertEqual(r[0]["reason"], "queue 3 -> 2")
+        self.assertEqual([e["name"] for e in r[1]["entries"]], ["Jahmyr Gibbs", "Ja'Marr Chase"])
+
+    def test_removing_the_last_entry_reads_as_empty(self):
+        r = self._run(["Ja'Marr Chase"],
+                      "console.log(await window.ffUnqueue(\"Ja'Marr Chase\", 500));")[0]
+        self.assertEqual(r["removed"], True)
+        self.assertEqual(r["reason"], "queue 1 -> empty")
+
+    def test_unqueueing_someone_absent_refuses_and_shows_the_queue(self):
+        r = self._run(["Jahmyr Gibbs"],
+                      "console.log(await window.ffUnqueue('Puka Nacua', 500));")[0]
+        self.assertEqual(r["removed"], False)
+        self.assertEqual(r["reason"], "not in the queue")
+        self.assertEqual(r["queue"], ["Jahmyr Gibbs"])
+
+    def test_it_folds_apostrophes_the_same_way_the_player_list_does(self):
+        r = self._run(["Ja’Marr Chase"],
+                      "console.log(await window.ffUnqueue(\"Ja'Marr Chase\", 500));")[0]
+        self.assertEqual(r["removed"], True)
+
+    def test_duplicate_names_refuse_rather_than_removing_one_at_random(self):
+        r = self._run(["Josh Allen", "Josh Allen"],
+                      "console.log(await window.ffUnqueue('Josh Allen', 500));")[0]
+        self.assertEqual(r["removed"], False)
+        self.assertIn("refusing", r["reason"])
+
+    def test_a_dead_remove_click_is_not_reported_as_a_removal(self):
+        r = self._run(["Jahmyr Gibbs", "Bijan Robinson"],
+                      "console.log(await window.ffUnqueue('Bijan Robinson', 300));",
+                      deadRemove=True)[0]
+        self.assertEqual(r["removed"], False)
+        self.assertIn("did not move", r["reason"])
+
+
+class TestTheUnqueueOracle(unittest.TestCase):
+    def _v(self, before, after):
+        b = {"count": before[0], "empty": before[1]}
+        a = {"count": after[0], "empty": after[1]}
+        return json.loads(run_node(
+            f"console.log(JSON.stringify(window.ffUnqueueVerdict({json.dumps(b)}, {json.dumps(a)})));"))
+
+    def test_exactly_minus_one_verifies(self):
+        self.assertTrue(self._v((3, False), (2, False))["verified"])
+
+    def test_no_movement_is_a_failure(self):
+        self.assertFalse(self._v((3, False), (3, False))["verified"])
+
+    def test_a_drop_of_two_refuses_to_take_credit(self):
+        self.assertFalse(self._v((3, False), (1, False))["verified"])
+
+    def test_an_increase_is_never_a_removal(self):
+        self.assertFalse(self._v((3, False), (4, False))["verified"])
+
+    def test_an_unreadable_count_refuses(self):
+        self.assertFalse(self._v((None, False), (None, False))["verified"])
+
+
 START_ROOM = r"""
 function buildStartRoom({ href, hasButton = true, label = 'START DRAFT', clickThrows = false,
                           priorConfirm = 'native', extraButton = false }) {

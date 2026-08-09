@@ -148,8 +148,15 @@ precomputer without a browser or a clock.
   opponents that share a brain are not opponents.
 
 ⚠️ **OPERATING FACTS FOR ANY MOCK WORK — all measured 2026-08-09, none of them guessable:**
-- **Mocks never appear in `/user/<id>/drafts`.** Only the real league does. The browser URL is the
-  ONLY way to learn a mock's `draft_id`.
+- **Mocks never appear in `/user/<id>/drafts`.** Only the real league does. ✅ **But the browser URL
+  is NOT the only way to learn a mock's `draft_id`** — that claim was too strong. Sleeper drives the
+  room over a **Phoenix WebSocket**, so there is no HTTP call to intercept and no id in the DOM, but
+  the mock-draft CARD on `/draftboards` carries the id as its **React key**: walk
+  `__reactFiber$*` up from the card and read the 18-19 digit key. Measured 2026-08-09; that is how
+  `1391539007871012864` was found without a single click into the room.
+- ⚠️ **`1390923383440424960` is NOT a "reusable pre_draft shell"** — this file said it was. All
+  three documented mocks (`...923...`, `...830...`, `...789...`) re-pull as **`complete`**. The
+  first of them is the room the 120-pick lab fixture came from, so of course it is spent.
 - **A mock's `league_id` is `null`** — that is the signature that distinguishes it from the real draft.
 - **A mock DOES populate `draft_order`** (`{"1390750540631150592": 3}` on all three). The real
   draft's is still null, so **a mock is the only way to rehearse `run_engine.py`'s seat read.**
@@ -176,6 +183,14 @@ precomputer without a browser or a clock.
   - Like `ffDraft`, it reports a **CLICK**. Confirm `status` left `pre_draft` on the draft object.
   - **6 mutants planted, 6 killed**, including "never restore" and "arm the override after the
     click".
+  - ✅ **PROVEN IN A LIVE ROOM 2026-08-09.** It returned `confirmsAnswered: 1` — the dialog really
+    was raised and really was answered by the override — the START control disappeared, and the API
+    confirmed `status: drafting` with `start_time` populated. **No human clicked anything.**
+  - ⚠️ **A real browser and the node stub disagree about what "restored" looks like.** In a
+    browser `confirm` is ALWAYS an own property of `window`, so `hasOwnProperty` is true before and
+    after and proves nothing; the real check is that `window.confirm.toString()` still reports
+    `[native code]` and is the same function object. Both were verified live. The code is correct
+    in both worlds because it branches on whether the property existed beforehand.
 - **Miss your clock once and Sleeper puts you on auto-pick and LEAVES you there** for the rest of
   the draft. It drafted rounds 4-15 before this was noticed.
 - **`picked_by` identifies the SEAT OWNER, not the agent.** Auto-pick on a claimed seat still
@@ -221,11 +236,26 @@ all measured:**
   first pass**, because every stub applied the click synchronously and so could not tell a poll
   from a single read. Insight 019 again: the mutants only probe the axis you already suspect. The
   stub now models an async re-render.
-- ⚠️ **`ffQueue` can only ADD.** There is no read of the queue's ORDER, no remove and no reorder —
-  the only read is a `QUEUE (n)` count. So **"keep the queue ranked" is not executable today**; only
-  "keep adding to the queue" is. The room does expose a REMOVE per entry (runbook, Aug 6 queue lab)
-  but **its selector was never captured**. Measure it in a mock before writing `ffQueueList()` /
-  `ffUnqueue()` — guessing at DOM is the reason this file exists.
+- ✅ **"KEEP THE QUEUE RANKED" IS EXECUTABLE NOW — `ffQueueList()` and `ffUnqueue()` exist, and
+  the whole set was PROVEN IN A LIVE ROOM 2026-08-09** (mock `1391539007871012864`).
+  Measured, not guessed: each queue entry carries an element whose **own text is exactly `REMOVE`**,
+  and **two levels up** is the row `"Jahmyr Gibbs | RB | DET | ADP | 1.6 | PTS | 331.4 | REMOVE"`.
+  Document order == visual order, and Sleeper labels the first entry **"NEXT PICK"**.
+  The row is found **by shape, not by a fixed hop count** — one wrapper div would break a hop count,
+  and mutant Q1 proves the difference.
+  - **Live cycle verified 0 → 3 → 0**: three adds, a middle removal, removing the NEXT PICK entry,
+    and the last-one-out `queue 1 -> empty` transition, each correctly reported.
+  - **`ffQueue`'s new oracle was confirmed against the real panel**, including the failure case by
+    **fault injection** — a click that lands on a real queue icon and does nothing returned
+    `queued:false, "queue count did not move (still 3)"`. On that same page state the OLD expression
+    evaluates to `true`. That is the lie, reproduced live and caught.
+  - **`waitedMs` 104-113** against the old flat 1200ms sleep.
+  - ⚠️ **A double-add never reaches the verdict**: Sleeper REMOVES `queue.png` from a queued
+    player's row, so `ffQueue` refuses at the icon guard. An earlier draft of this entry claimed the
+    old code would have said `true` there — it would not, it had the same guard. The verdict is only
+    reachable when the icon is present and the click is inert.
+  - ⚠️ **The icon boxes are 22×22 (star) and 16×16 (queue), NOT the 42×44 / 24×24 this file used
+    to record.** The numbers rotted; matching on `src` is what survived them.
 - **Three different controls live in a player row** and an earlier pass conflated two of them:
   | control | what it is |
   |---|---|
@@ -422,8 +452,8 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **735 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 735 with **15 skips**
+gate went **13 findings → 0** by fixing surfaces. **750 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 750 with **15 skips**
 — 2 live-cargo probes plus **9** that need the gitignored consensus/ADP caches
 (`draft-kit/cache/fp_ecr.csv.gz`, `ffc_adp.json.gz`) plus **4** (`test_build_curves.TestTheCurveShape`)
 that need the gitignored nflverse season CSVs. ⚠️ **`player_ids.csv.gz` is COMMITTED, not

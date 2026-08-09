@@ -170,26 +170,33 @@ part that beats the clock, and the shape is now decided by measurement rather th
   showed our slot got Puka Nacua and Chase went to slot 4 — the clock had expired and the click hit
   a stale un-re-rendered row. **The browser cannot be the oracle for its own action.** Confirm every
   pick with `merge_picks.py <draft_id>` and check the player landed on OUR `draft_slot`. Insight 007.
-- ◀ **THE QUEUE CONTROL IS IDENTIFIED BUT WILL NOT FIRE — the one open mechanism item.**
-  Briggsy pointed it out from a screenshot; **three different controls live in a player row** and
-  this session conflated two of them:
+- ✅ **THE QUEUE IS THE SAFETY NET, AND IT IS PROVEN (2026-08-09).** **Three different controls
+  live in a player row** and an earlier pass conflated two of them:
   | control | what it is |
   |---|---|
   | `row.children[0]` (green `+`) | **DRAFTS immediately** when on the clock |
   | `img[src*="icon_watch_player.png"]` | the star — watchlist, not queue |
-  | `img[src*="queue.png"]` | **the queue button** |
+  | `img[src*="queue.png"]` | **the queue button.** A plain `.click()` works |
   **Match on the image `src`, never on position** — the star's box is 42×44 and the queue icon's
-  24×24, both inside `row.children[2]`, and geometry-based selectors are the pixel problem again.
-  **Activation is UNSOLVED.** Failed against a confirmed-live draft (31 picks, seat 3):
-  `.click()` on the img and on its container · a full synthetic pointer down/up/click sequence ·
-  a real CDP click at the CSS centre from `getBoundingClientRect()`. Plain `.click()` *does* drive
-  New Mock, CLAIM and START DRAFT, so this is specific to this control.
-  **Next to try:** read the React fibre (`__reactProps$…`) off the element and call its `onClick`
-  directly; or calibrate the CDP↔CSS coordinate mapping against a known element first, since the
-  coordinate attempt may simply have missed.
-  **Why it is the highest-value item:** miss a clock once and Sleeper puts you on auto-pick *for
-  the rest of the draft*. With a loaded queue that takes OUR next-best player; without one it takes
-  Sleeper's. That is the difference between a blown pick and a blown draft.
+  24×24, both inside `row.children[2]`; geometry selectors are the pixel problem again.
+  **THE MEASUREMENT:** on a no-time-limit mock with **only Cameron Dicker (K, ADP 172.2)** queued,
+  auto-pick spent **pick 1.3 on the kicker** while Bijan Robinson sat there and went 1.4. Once the
+  queue emptied it reverted to Sleeper's board (Saquon 2.6, Rashee Rice 3.3). Therefore:
+  **auto-pick drains YOUR queue first, in order, and only then falls back to Sleeper's ranks.**
+  **What it changes:** miss a pick and Sleeper puts you on auto-pick for the REST of the draft.
+  With a stocked queue that takes OUR next-best player. Keeping the queue correct has **no
+  deadline**, so the draft-day job stops being "click inside 120 seconds" — which was measurably
+  lost once this session — and becomes "keep the queue ranked". Sleeper even labels the top queue
+  entry **"NEXT PICK"**. `ffQueue()` in `scripts/sleeper_draft_console.js`.
+- ⚠️ **The earlier "the queue control will not fire" conclusion was WRONG, and the lesson is the
+  detector.** Three attempts were called failures by a region-scoped DOM scan while Briggsy could
+  *see* the player sitting in the queue. `document.body.innerText` is the reliable read. **When a
+  human says they saw it work, believe the human and re-check the instrument first** — a broken
+  oracle turns a working mechanism into a closed door.
+- **Draft settings are reachable and scriptable:** the room's ⚙ menu → *Draft Settings* exposes
+  **TIME PER PICK including `No Limit`** and a **CPU Autopick** switch. Set `No Limit` for
+  unhurried mechanism testing. Note the AUTO-PICK toggle in the right-hand panel does **not**
+  respond to `.click()` (the queue icon does) — it needs a real click.
 
 The other open item is the 2025 season (below); it was parked by measurement, not by neglect, so
 re-opening it is Briggsy's call and it comes with an error budget attached.

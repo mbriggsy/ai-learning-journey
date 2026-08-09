@@ -137,36 +137,50 @@
     });
   };
 
-  /* THE QUEUE CONTROL -- IDENTIFIED, NOT YET ACTIVATED. 2026-08-09.
+  /* THE QUEUE -- THIS IS THE SAFETY NET, AND IT IS PROVEN. 2026-08-09.
    *
    * Three separate controls live in a player row and conflating them is easy:
    *   row.children[0]                      the green + . DRAFTS immediately when on the clock.
    *   img[src*="icon_watch_player.png"]    the star. Watchlist, not queue.
-   *   img[src*="queue.png"]                THE QUEUE BUTTON.   <-- match on src, never position
+   *   img[src*="queue.png"]                THE QUEUE BUTTON. A plain .click() works.
    *
-   * Matching on the image src is deliberate: sizes and offsets moved between renders (the star's
-   * box is 42x44, the queue icon's 24x24, and both sit inside row.children[2]), so any selector
-   * built on geometry is the pixel problem again in a new hat.
+   * Match on the image src, never on geometry: the star's box is 42x44 and the queue icon's is
+   * 24x24, both inside row.children[2], so a size- or offset-based selector is the pixel problem
+   * in a new hat.
    *
-   * WHAT DOES NOT WORK, all attempted against a confirmed-live draft (31 picks, our seat 3):
-   *   - img.click() and container.click()
-   *   - a full synthetic PointerEvent/MouseEvent down-up-click sequence on the img
-   *   - a real CDP click at the CSS centre getBoundingClientRect() reported
-   * The plain .click() path DOES drive New Mock, CLAIM and START DRAFT, so this is specific to
-   * this control rather than a general block on programmatic input.
+   * WHY THIS MATTERS MORE THAN ffDraft. Measured on a live no-time-limit mock: with ONLY Cameron
+   * Dicker (K, ADP 172.2) in the queue, auto-pick spent PICK 1.3 on the kicker while Bijan
+   * Robinson sat there and went 1.4. Once the queue emptied it reverted to Sleeper's own board
+   * (Saquon 2.6, Rashee Rice 3.3). So:
    *
-   * NEXT THING TO TRY: read the React fibre off the element (__reactProps$… / __reactFiber$… keys)
-   * and invoke its onClick directly; failing that, calibrate the CDP-coordinate mapping against a
-   * known element before clicking, since the CSS-coordinate attempt may simply have missed.
+   *     AUTO-PICK DRAINS YOUR QUEUE FIRST, IN ORDER, AND ONLY THEN FALLS BACK TO SLEEPER'S RANKS.
    *
-   * WHY IT MATTERS: a loaded queue is the safety net. Miss a clock and Sleeper puts you on
-   * auto-pick permanently -- with a queue it takes OUR next-best player, without one it takes
-   * Sleeper's. That is the difference between a blown pick and a blown draft.
+   * That inverts the clock. Miss a pick and Sleeper puts you on auto-pick for the REST of the
+   * draft -- with a loaded queue that takes OUR next-best player, without one it takes theirs.
+   * Keeping the queue stocked has no deadline, so the job stops being "click within 120 seconds"
+   * (which was measurably lost once) and becomes "keep the queue correct". Sleeper even labels
+   * the top queue entry "NEXT PICK".
+   *
+   * An earlier pass concluded this control "will not fire". That was wrong, and it was wrong
+   * because the DETECTOR was broken, not the click -- a region-scoped DOM scan reported an empty
+   * queue while Briggsy could see the player sitting in it. document.body.innerText is the
+   * reliable read. When a human says they saw it work, believe the human and re-check the
+   * instrument first.
    */
-  window.ffQueueButton = function (playerName) {
-    return document.querySelectorAll('img[src*="queue.png"]').length +
-           ' queue icons on screen (activation still unsolved -- see comment above)';
+  window.ffQueue = async function (playerName) {
+    const r = await locate(playerName);
+    if (!r.ok) return JSON.stringify({ queued: false, ...r, btn: undefined });
+    let row = r.btn; while (row && row.getBoundingClientRect().width < ROW_MIN_W) row = row.parentElement;
+    const img = row && row.querySelector('img[src*="queue.png"]');
+    if (!img) return JSON.stringify({ queued: false, reason: 'no queue icon in that row' });
+    const before = document.body.innerText.includes('No players in your queue');
+    img.click();
+    await new Promise(z => setTimeout(z, 1200));
+    const after = document.body.innerText.includes('No players in your queue');
+    const label = (document.body.innerText.match(/QUEUE \((\d+)\)/) || [])[1] || null;
+    // Verified against the visible panel, not against the click having happened -- see ffDraft.
+    return JSON.stringify({ queued: before !== after || label !== null, player: r.player, queueCount: label });
   };
 
-  return 'ffFind() and ffDraft() installed';
+  return 'ffFind(), ffDraft() and ffQueue() installed';
 })();

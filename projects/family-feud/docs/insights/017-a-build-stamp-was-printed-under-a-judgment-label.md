@@ -85,6 +85,41 @@ Print what you planted. Then ask why a no-op was a no-op.
 - **Fixtures that omit fields the real artifact always carries will pass tests the real artifact
   would fail.** `enrich()` refuses to build a board without `sleeperId`; the fixture had none.
 
+## It was still live on a third surface a day later — found at squeaky, by the calendar
+
+**2026-08-09.** The fix above moved `render_html.py` and `render_pdf.py` onto
+`meta.rankings.synthesized`. **`docs/ranking-methodology.md` was missed**, and its generated block
+went on printing `meta.updated` under the literal word *Rankings*:
+
+> *Rankings snapshot: **August 9, 2026**.*
+
+about a synthesis performed on **August 8**. Same field, same label, same lie — one surface over.
+Insight [`005`](005-the-tie-breaker-agreed-with-the-board-by-construction.md)'s meta-lesson, for
+the second time: **an insight that does not reach every surface stating the rule is a note, not a
+fix.** When 017 was written, "which surfaces print this?" was answered with two.
+
+**How it surfaced is the useful part.** Nobody went looking. A squeaky-clean pass ran the suite,
+two byte-stability tests were red that had been green all evening, and a tracked doc was modified
+that nobody had touched. The only thing that had changed was midnight.
+
+**And the root cause was one line wider than the label.** `meta.updated` was
+`max(today, dump_fetched_at, three mtimes)` — `today` unconditionally in the list, which made a
+data-freshness field into a build timestamp. Measured: a rebuild the next morning rewrote
+`players_data.json`, the board HTML, the cheat-sheet PDF **and** the doc, with byte-identical data.
+The gate's rule is one-sided (`if when_d > claimed_d` — it only complains when an input is *newer*
+than the stamp), so **`max(inputs)` satisfies it exactly and `today` was never buying anything.**
+When the build ran is a build fact and `meta.build` already holds it.
+
+Two lessons, both narrower and more actionable than "guard the pair":
+
+- **A derived timestamp that includes `today` is not a data field, whatever it is named.** It will
+  churn every surface it touches, daily, forever, and the churn looks like a real diff.
+- **A test whose green depends on the artifact having been built today is a time bomb.**
+  `test_an_unchanged_rebuild_is_byte_stable` compares the committed board against a fresh rebuild,
+  so it silently encoded "the committed board was built today." It passed for a full session and
+  went red at midnight. Both mutants confirm the link: restoring `today` to the floors turns the
+  new clock test **and** the byte-stability test red together.
+
 ## Related
 
 - [`013`](013-every-guard-was-tested-and-not-one-was-proven-connected.md) — the call site, again.

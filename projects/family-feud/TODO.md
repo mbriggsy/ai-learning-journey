@@ -194,8 +194,8 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **672 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 672 with **11 skips**
+gate went **13 findings → 0** by fixing surfaces. **674 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 674 with **11 skips**
 — 2 live-cargo probes plus **9** that need the gitignored consensus/ADP caches
 (`draft-kit/cache/fp_ecr.csv.gz`, `player_ids.csv.gz`, `ffc_adp.json.gz`). Re-measured 2026-08-08 by
 actually hiding all four paths and naming every skip, not copied from the previous line — which had
@@ -705,6 +705,18 @@ The four that bite hardest under time pressure:
   mule being resilient, not the technique being safe. Two rules if this measurement is ever needed
   again: **copy the repo to a temp dir instead of renaming in place**, and if you must rename, make
   the restore loop `try/except` per path so one failure cannot orphan the others.
+- ⚠️ **`meta.updated` IS INPUT FRESHNESS, NOT A BUILD CLOCK — do not put `today` back in its
+  floors.** It was `max(today, dump_fetched_at, three mtimes)` until 2026-08-09, which quietly made
+  a data field into a build timestamp: measured, a rebuild the next morning rewrote
+  `players_data.json`, the board HTML, the cheat-sheet PDF **and** `ranking-methodology.md` with
+  byte-identical data. The gate's rule is one-sided (`if when_d > claimed_d` — it only complains
+  when an input is NEWER), so `max(inputs)` satisfies it and `today` bought nothing. **When the
+  build ran is `meta.build`'s job.** Mutant Q1 restores the bug and turns two tests red together.
+- ⚠️ **A test whose green depends on the board having been built TODAY is a time bomb.**
+  `test_an_unchanged_rebuild_is_byte_stable` compares the committed board to a fresh rebuild, so it
+  silently encoded that assumption and went red at midnight after a full green session. It is fine
+  now only because `meta.updated` stopped moving — if a future stamp becomes clock-derived again,
+  this test is where it will show up, at 00:00, looking like something else.
 - **A screaming engine means STOP.** Re-fetch, re-merge, rerun. Never advise off a `picks.json` it
   refused.
 - **A silent engine can also be wrong.** `picks.json` is gitignored, so a spent mock's picks are

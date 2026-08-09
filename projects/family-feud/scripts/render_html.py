@@ -11,9 +11,12 @@ Two conventions the gate enforces and this module must honour:
   else on the line. The gate extracts it with `^const DATA = (\\{.*?\\});?\\s*$` under re.M|re.S,
   and the non-greedy `.*?` stops at the first `}` that ends a line -- so pretty-printed JSON
   produces a JSONDecodeError rather than a mismatch.
-* The one human-visible date (`Rankings synthesized ...`) must agree with `meta.updated`, because
-  a refresh that updates the blob and leaves the header reading the old date passes a deep-equal
-  and still ships a lying board.
+* The one human-visible date (`Rankings synthesized ...`) comes from `meta.rankings.synthesized`,
+  NOT `meta.updated` -- insight 017. The sentence claims a human re-ranked on that date, so it
+  must be fed by the carried record of when that happened; `meta.updated` is input freshness and
+  is derived, so putting it there relabels it into a claim nobody made. The code below has done
+  this since 017; this line said `meta.updated` until 2026-08-09, which is the same class of drift
+  one level up -- a docstring outliving the rule its own module stopped following.
 
 KTD-3: the browser and Python normalise names by the same rules because `const NORM_SPEC` and its
 interpreter are GENERATED from `draft-kit/normalize.py`, not hand-ported. The gate runs the

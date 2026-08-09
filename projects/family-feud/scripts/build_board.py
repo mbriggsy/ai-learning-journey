@@ -417,15 +417,28 @@ def enrich(d, shape, ledger, dump_meta, names, generator_sha, dirty=False, now=N
     # meta.updated must not claim to predate an input the board was built from -- the gate
     # compares it against the dump's UTC fetch date AND three local mtimes, and the same fetch
     # event can render as two different dates. Take the max so the stamp is true under both.
-    today = (now or _dt.date.today())
-    floors = [today]
+    #
+    # ⚠️ `today` IS DELIBERATELY NOT ONE OF THE FLOORS. It used to be, unconditionally, which made
+    # this a BUILD timestamp wearing a data field's name: it advanced every calendar day, so a
+    # rebuild the following morning rewrote players_data.json, the HTML, the PDF and the
+    # methodology doc with byte-identical DATA. Measured 2026-08-09: all four surfaces changed
+    # for no reason but the clock, and `test_an_unchanged_rebuild_is_byte_stable` went red at
+    # midnight having been green all evening.
+    #
+    # The gate's rule is one-sided -- it only complains when an INPUT is NEWER than this stamp
+    # (validate_board.py: `if when_d > claimed_d`) -- so max-of-inputs satisfies it exactly and
+    # `today` was never buying anything. When the build happened is a build fact and `meta.build`
+    # already holds it; this field answers "how fresh is the data", which is a different question.
+    floors = []
     fetched = str(dump_meta.get("dump_fetched_at") or "")[:10]
     if fetched:
         floors.append(_dt.date.fromisoformat(fetched))
     for path in (LEDGER, DUMP, CURVE):
         if os.path.exists(path):
             floors.append(_dt.date.fromtimestamp(os.path.getmtime(path)))
-    meta["updated"] = max(floors).isoformat()
+    # With no inputs on disk at all there is nothing to be newer than, and today is the only
+    # honest answer available. That is a broken checkout, not a normal build.
+    meta["updated"] = (max(floors) if floors else (now or _dt.date.today())).isoformat()
 
     # THE ONE FACT THE GENERATOR REFUSES TO GENERATE. `meta.rankings` records when a human last
     # actually re-ranked, and the digest pins that claim to the judgment it describes. Recomputing
@@ -706,8 +719,18 @@ def methodology_blocks(source, curve_path=CURVE):
     prov = (f"**Curve provenance:** seasons {seasons}, built from {built_from}, "
             f"excluding {excludes}.")
 
-    updated = str(source["meta"].get("updated", ""))
-    when = _dt.date.fromisoformat(updated) if updated else None
+    # THE WORD IS "RANKINGS", SO THE FIELD MUST BE THE RANKINGS' OWN DATE -- insight 017, reaching
+    # the third surface. `render_html.py` and `render_pdf.py` were both moved onto
+    # `meta.rankings.synthesized` when 017 was written; this block was missed and went on printing
+    # `meta.updated`, which is input freshness and used to advance every single day. So the line
+    # read "Rankings snapshot: August 9" about a synthesis performed on August 8 -- a build stamp
+    # under a judgment label, which is 017's exact title. An insight that does not reach every
+    # surface stating the rule is a note, not a fix.
+    synthesized = str(((source["meta"].get("rankings") or {}).get("synthesized")) or "")
+    try:
+        when = _dt.date.fromisoformat(synthesized) if synthesized else None
+    except ValueError:
+        when = None
     snapshot = (f"*Rankings snapshot: {when:%B} {when.day}, {when.year}.*" if when
                 else "*Rankings snapshot: unknown.*")
 

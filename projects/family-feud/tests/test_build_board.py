@@ -221,6 +221,37 @@ class TestDerivations(unittest.TestCase):
             checked += 1
         self.assertEqual(checked, 150, "expected all 150 skill rows to be curve-derived")
 
+    def test_meta_updated_does_not_advance_with_the_CLOCK(self):
+        """It answers "how fresh is the data", not "when did I run". `today` used to be one of the
+        floors unconditionally, which made every rebuild the following morning rewrite
+        players_data.json, the HTML, the PDF and the methodology doc with byte-identical DATA --
+        measured 2026-08-09, all four surfaces changed for no reason but the calendar.
+
+        The gate's rule is one-sided (it only complains when an INPUT is newer than the stamp), so
+        max-of-inputs satisfies it and the clock was never buying anything."""
+        import datetime as _dt
+        src = real_source()
+        with open(B.LEDGER, encoding="utf-8") as f:
+            ledger = json.load(f)
+        far = _dt.date(2099, 12, 31)
+        out = B.enrich(B.read_board(), fixture_shape(), ledger, ledger.get("meta") or {},
+                       B.team_names(), generator_sha="test", now=far)
+        self.assertNotEqual(out["meta"]["updated"], far.isoformat(),
+                            "meta.updated followed the clock instead of the inputs")
+        self.assertEqual(out["meta"]["updated"], src["meta"]["updated"])
+
+    def test_the_methodology_snapshot_line_reads_the_RANKINGS_date(self):
+        """Insight 017 reaching the third surface. render_html and render_pdf were both moved onto
+        meta.rankings.synthesized when 017 was written; this block was missed and printed
+        meta.updated under the word "Rankings", which is 017's exact title."""
+        import copy
+        src = copy.deepcopy(real_source())
+        src["meta"]["updated"] = "2099-01-02"          # input freshness, deliberately absurd
+        src["meta"]["rankings"]["synthesized"] = "2026-03-04"
+        line = B.methodology_blocks(src)["snapshot-date"]
+        self.assertIn("March 4, 2026", line)
+        self.assertNotIn("2099", line, "the snapshot line is fed by meta.updated")
+
     def test_the_carried_constants_really_are_flat_PER_TIER(self):
         """The label `carried:kdef-tier-flat` promises exactly this and nothing was enforcing it.
         It had already gone false: measured at 917c498a, K tier 2 held {6.0, -2.0} and tier 3 held

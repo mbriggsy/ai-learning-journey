@@ -768,6 +768,17 @@ def old_value_sweep(before, after, root=ROOT):
                     text = f.read()
             except (UnicodeDecodeError, OSError):
                 continue
+            # GENERATED BLOCKS ARE NOT PROSE AND CANNOT BE STALE. `write_methodology` rewrites
+            # them from the source on this very run, moments before this sweep looks at them.
+            # Leaving them in produced a guaranteed false red the first time two players SWAPPED
+            # values: Gibbs' vorp went 254.4 -> 217.7 while Bijan's became exactly 254.4, so the
+            # sweep found "254.4" in the freshly regenerated worked-example table -- correct,
+            # current, and attached to a different man -- and reported the generator's own output
+            # as stale. The sweep matches a VALUE, not a value-beside-a-name, so a collision like
+            # that is not distinguishable here; excluding the blocks that are rewritten anyway is.
+            # A guard that cries wolf on a correct board is a guard people learn to override.
+            text = re.sub(r"<!--\s*BEGIN GENERATED.*?<!--\s*END GENERATED[^>]*-->", "",
+                          text, flags=re.S)
             for key, (was, now) in sorted(stale.items()):
                 if re.search(rf"(?<![\w.]){re.escape(was)}(?![\w.])", text):
                     problems.append(f"{os.path.relpath(path, root)} still says {was!r} for {key}, "

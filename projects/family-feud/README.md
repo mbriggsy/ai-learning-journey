@@ -76,12 +76,14 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                  build_newsletter.py  — THE NIGHTLY FEUD. Turns the mule's cargo into an edition.
                                         Facts are computed, never written by a model; the design
                                         is carried from the frozen template; no network calls.
+                 rerank.py            — re-derives r/pr/tier from the consensus. Refuses to write
+                                        while a note still claims a board position.
                  consensus.py         — where the board disagrees with the expert consensus, and
                                         what the gap COSTS in points. READ-ONLY: it never writes
                                         the board. Joins id-to-id, never by name. Also reports
                                         who the consensus ranks that the board does not carry —
                                         the half a rank-gap metric structurally cannot see.
-tests/           568 tests: python -m unittest discover -s tests  (run from the root)
+tests/           596 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```

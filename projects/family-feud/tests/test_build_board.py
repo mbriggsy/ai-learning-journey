@@ -827,20 +827,79 @@ class TestOldValueSweep(unittest.TestCase):
         self.assertTrue(hits, "a departed headline player's value went unswept")
         self.assertIn("no longer on the board", hits[0])
 
+    def headline(self, board):
+        """The row the sweep actually tracks: MAX vorp, not board rank (residue #7)."""
+        return max(board["players"], key=lambda p: p.get("vorp") or 0)
+
     def test_history_is_never_swept(self):
         """docs/insights/ and docs/plans/ quote past values on purpose. Insight 005 records
-        Gibbs at 268.4 as the measurement it was; rewriting it would destroy the evidence."""
+        Gibbs at 268.4 as the measurement it was; rewriting it would destroy the evidence.
+
+        THE EVIDENCE IS PLANTED HERE rather than borrowed from the live repo. This test used to
+        name Jahmyr Gibbs and rely on the real docs happening to quote his value -- true only
+        because he sat in the generated worked-example table. The consensus re-rank put Bijan
+        Robinson in that slot, so the control found nothing and the test went red for a reason
+        with no bearing on the exemption it exists to prove. A control that depends on today's
+        board is not a control.
+        """
         import copy
         before = B.read_board()
         after = copy.deepcopy(before)
-        for p in after["players"]:
-            if p["name"] == "Jahmyr Gibbs":
-                p["vorp"] = 999.9
-        hits = B.old_value_sweep(before, after)
+        victim = self.headline(after)
+        was = victim["vorp"]
+        victim["vorp"] = 999.9
+
+        root = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, root, True)
+        text = self.quote(victim["name"], was)
+        for rel in ("notes.md",
+                    os.path.join("docs", "insights", "005-worked-case.md"),
+                    os.path.join("docs", "plans", "some-plan.md")):
+            path = os.path.join(root, rel)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(text)
+
+        hits = B.old_value_sweep(before, after, root=root)
         self.assertTrue(hits, "control failed: the sweep found nothing at all")
+        self.assertTrue(any("notes.md" in h for h in hits),
+                        f"the plain doc was not swept, so the exemption below proves nothing: {hits}")
         for h in hits:
             self.assertNotIn("insights", h)
             self.assertNotIn("plans", h)
+
+    def test_a_GENERATED_block_is_not_swept(self):
+        """`write_methodology` rewrites those blocks from the source on the same run, moments
+        before the sweep reads them, so they cannot be stale.
+
+        This fired for real: Gibbs' vorp went 254.4 -> 217.7 while Bijan's became exactly 254.4,
+        and the sweep reported the freshly regenerated worked-example table -- correct, current,
+        and about a different player -- as carrying a previous value. The sweep matches a VALUE,
+        not a value beside a name, so that collision is not distinguishable; excluding blocks that
+        are regenerated anyway is. Paired with a control, because a rule that excluded everything
+        would satisfy the first assertion alone.
+        """
+        import copy
+        before = B.read_board()
+        after = copy.deepcopy(before)
+        victim = self.headline(after)
+        was = victim["vorp"]
+        victim["vorp"] = 999.9
+        quote = self.quote(victim["name"], was)
+
+        root = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, root, True)
+        with open(os.path.join(root, "generated.md"), "w", encoding="utf-8") as f:
+            f.write("<!-- BEGIN GENERATED worked-example -->\n" + quote
+                    + "<!-- END GENERATED worked-example -->\n")
+        with open(os.path.join(root, "prose.md"), "w", encoding="utf-8") as f:
+            f.write(quote)                                     # the control
+
+        hits = B.old_value_sweep(before, after, root=root)
+        self.assertTrue(any("prose.md" in h for h in hits),
+                        f"the control was not swept, so the exclusion proves nothing: {hits}")
+        self.assertFalse(any("generated.md" in h for h in hits),
+                         f"a regenerated block was reported as stale: {hits}")
 
 
 class TestTheGuardsAreWired(unittest.TestCase):

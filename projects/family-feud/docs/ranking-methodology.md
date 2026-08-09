@@ -90,7 +90,7 @@ Three numbers from the board:
 <!-- BEGIN GENERATED worked-example — rewritten by scripts/build_board.py. Do not hand-edit. -->
 | Player | VORP | Read as |
 |--------|------|---------|
-| Jahmyr Gibbs | **254.4** | 254 points/season better than the free RB (RB41 is the bar) |
+| Bijan Robinson | **254.4** | 254 points/season better than the free RB (RB41 is the bar) |
 | Ja'Marr Chase | **256.1** | 256 points better than the free WR (WR47 is the bar) |
 | Josh Allen | **140.0** | 140 points better than the free QB (QB12 is the bar) |
 <!-- END GENERATED worked-example -->

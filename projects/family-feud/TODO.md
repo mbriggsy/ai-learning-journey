@@ -57,9 +57,9 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **568 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 568 with **5 skips**
-— 2 live-cargo probes plus 3 that need `draft-kit/cache/fp_ecr.csv.gz`, which is deliberately
+gate went **13 findings → 0** by fixing surfaces. **596 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 596 with **6 skips**
+— 2 live-cargo probes plus 4 that need `draft-kit/cache/fp_ecr.csv.gz`, which is deliberately
 gitignored. Re-measured 2026-08-08 by hiding `newsletter/data/inbox/` **and** the consensus cache,
 not copied from the previous line. Verified by eye, not only by tests: the cheat sheet is **2 pages
 — the whole 174-row board on page 1**, the plan on page 2 — and the HTML board renders shape-driven
@@ -490,11 +490,12 @@ accuracy, it was that carrying was a dead end:
   all-present-or-all-absent board-wide, so adding one player left a row with no vorp and no way
   to compute one. The plan's load-bearing requirement is repeated interactive refresh.
 
-**What moved:** VBD #1 changed hands — **Gibbs 268.4 → 254.4, Chase 242.7 → 256.1.**
-**Within a position nothing reordered** (verified: 0 order violations across all 150 skill rows).
-The curve is a rank→points lookup with `pr` as its input, so vorp is monotone in `pr` by
-construction; what moved is the **cross-positional** comparison, which is the only thing VORP is
-for. RB1 is still RB1.
+**Superseded 2026-08-08 by the consensus re-rank** (`scripts/rerank.py`). The claim that once sat
+here — *"within a position nothing reordered, RB1 is still RB1"* — was true of the VORP recompute
+and is **false now**: `pr` itself is re-derived, so positions reorder by design. Chase is board #1
+and RB1 changed hands from Gibbs to Bijan. What has not changed is the mechanism: vorp is still a
+rank→points lookup with `pr` as its input, monotone in `pr` by construction, and the
+**cross-positional** comparison is still the only thing VORP is for.
 
 **Seasons: 2021-2024, and that is the newest window that exists with exact scoring** — verified
 2026-08-08, `player_stats_2025.csv` and `stats_player_week_2025.csv` both **404**. 2025 exists only

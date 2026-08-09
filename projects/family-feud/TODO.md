@@ -170,10 +170,26 @@ part that beats the clock, and the shape is now decided by measurement rather th
   showed our slot got Puka Nacua and Chase went to slot 4 — the clock had expired and the click hit
   a stale un-re-rendered row. **The browser cannot be the oracle for its own action.** Confirm every
   pick with `merge_picks.py <draft_id>` and check the player landed on OUR `draft_slot`. Insight 007.
-- ⛔ **STILL UNPROVEN: there is no known way to load the queue.** The "keep a ranked queue loaded so
-  a blown clock takes OUR next-best player" safety net has **no verified mechanism** — the `+` is
-  the draft button, and no queue control was ever found. This is the highest-value open item,
-  because it is what makes a missed pick harmless.
+- ◀ **THE QUEUE CONTROL IS IDENTIFIED BUT WILL NOT FIRE — the one open mechanism item.**
+  Briggsy pointed it out from a screenshot; **three different controls live in a player row** and
+  this session conflated two of them:
+  | control | what it is |
+  |---|---|
+  | `row.children[0]` (green `+`) | **DRAFTS immediately** when on the clock |
+  | `img[src*="icon_watch_player.png"]` | the star — watchlist, not queue |
+  | `img[src*="queue.png"]` | **the queue button** |
+  **Match on the image `src`, never on position** — the star's box is 42×44 and the queue icon's
+  24×24, both inside `row.children[2]`, and geometry-based selectors are the pixel problem again.
+  **Activation is UNSOLVED.** Failed against a confirmed-live draft (31 picks, seat 3):
+  `.click()` on the img and on its container · a full synthetic pointer down/up/click sequence ·
+  a real CDP click at the CSS centre from `getBoundingClientRect()`. Plain `.click()` *does* drive
+  New Mock, CLAIM and START DRAFT, so this is specific to this control.
+  **Next to try:** read the React fibre (`__reactProps$…`) off the element and call its `onClick`
+  directly; or calibrate the CDP↔CSS coordinate mapping against a known element first, since the
+  coordinate attempt may simply have missed.
+  **Why it is the highest-value item:** miss a clock once and Sleeper puts you on auto-pick *for
+  the rest of the draft*. With a loaded queue that takes OUR next-best player; without one it takes
+  Sleeper's. That is the difference between a blown pick and a blown draft.
 
 The other open item is the 2025 season (below); it was parked by measurement, not by neglect, so
 re-opening it is Briggsy's call and it comes with an error budget attached.

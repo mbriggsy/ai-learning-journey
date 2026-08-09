@@ -137,5 +137,36 @@
     });
   };
 
+  /* THE QUEUE CONTROL -- IDENTIFIED, NOT YET ACTIVATED. 2026-08-09.
+   *
+   * Three separate controls live in a player row and conflating them is easy:
+   *   row.children[0]                      the green + . DRAFTS immediately when on the clock.
+   *   img[src*="icon_watch_player.png"]    the star. Watchlist, not queue.
+   *   img[src*="queue.png"]                THE QUEUE BUTTON.   <-- match on src, never position
+   *
+   * Matching on the image src is deliberate: sizes and offsets moved between renders (the star's
+   * box is 42x44, the queue icon's 24x24, and both sit inside row.children[2]), so any selector
+   * built on geometry is the pixel problem again in a new hat.
+   *
+   * WHAT DOES NOT WORK, all attempted against a confirmed-live draft (31 picks, our seat 3):
+   *   - img.click() and container.click()
+   *   - a full synthetic PointerEvent/MouseEvent down-up-click sequence on the img
+   *   - a real CDP click at the CSS centre getBoundingClientRect() reported
+   * The plain .click() path DOES drive New Mock, CLAIM and START DRAFT, so this is specific to
+   * this control rather than a general block on programmatic input.
+   *
+   * NEXT THING TO TRY: read the React fibre off the element (__reactProps$… / __reactFiber$… keys)
+   * and invoke its onClick directly; failing that, calibrate the CDP-coordinate mapping against a
+   * known element before clicking, since the CSS-coordinate attempt may simply have missed.
+   *
+   * WHY IT MATTERS: a loaded queue is the safety net. Miss a clock and Sleeper puts you on
+   * auto-pick permanently -- with a queue it takes OUR next-best player, without one it takes
+   * Sleeper's. That is the difference between a blown pick and a blown draft.
+   */
+  window.ffQueueButton = function (playerName) {
+    return document.querySelectorAll('img[src*="queue.png"]').length +
+           ' queue icons on screen (activation still unsolved -- see comment above)';
+  };
+
   return 'ffFind() and ffDraft() installed';
 })();

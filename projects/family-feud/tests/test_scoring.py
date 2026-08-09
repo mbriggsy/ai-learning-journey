@@ -150,12 +150,21 @@ class CurveCase(unittest.TestCase):
         self._cache = B.CACHE
         B.CACHE = self.tmp
         self.addCleanup(lambda: setattr(B, "CACHE", self._cache))
+        # KICKERS COME FROM A SECOND ASSET this fixture does not carry, and an unstubbed miss here
+        # would reach the network from a suite that must never do that. Stubbed absent, which is
+        # the same path an unpublished season takes -- so these tests also prove build() still
+        # produces a K-less curve rather than crashing when the kicking file is missing.
+        self._fetch = B.fetch_season
+        B.fetch_season = lambda year, timeout=120, kicking=False: (
+            None, f"{year}{' kicking' if kicking else ''}: not published upstream")
+        self.addCleanup(lambda: setattr(B, "fetch_season", self._fetch))
 
 
 class TestTheCurve(CurveCase):
     def test_the_2024_curve_lands_on_its_measured_values(self):
-        curve, used, _ = B.build(seasons=(2024,))
+        curve, used, _, used_k = B.build(seasons=(2024,))
         self.assertEqual(used, [2024])
+        self.assertEqual(used_k, [], "the kicking asset is stubbed absent in this fixture")
         for pos, rank, want in (("QB", 12, 288.4), ("RB", 41, 115.0), ("WR", 47, 147.7),
                                 ("TE", 12, 145.4), ("QB", 8, 320.1), ("RB", 21, 200.7),
                                 ("WR", 27, 199.4), ("TE", 8, 174.6)):
@@ -164,7 +173,7 @@ class TestTheCurve(CurveCase):
 
     def test_the_curve_descends_within_every_position(self):
         """It is a rank -> points lookup; a non-monotone curve would mean the sort broke."""
-        curve, _, _ = B.build(seasons=(2024,))
+        curve, _, _, _ = B.build(seasons=(2024,))
         for pos, rows in curve.items():
             vals = [rows[str(r)] for r in range(1, len(rows) + 1)]
             self.assertEqual(vals, sorted(vals, reverse=True), f"{pos} curve is not descending")
@@ -172,9 +181,10 @@ class TestTheCurve(CurveCase):
     def test_a_season_absent_upstream_is_absent_not_an_error(self):
         """2025 and 2026 both 404 today. A pipeline that crashes on that is unusable all
         preseason, which is exactly when it is needed."""
-        B.fetch_season = lambda year, timeout=120: (None, f"{year}: not published upstream")
+        B.fetch_season = lambda year, timeout=120, kicking=False: (
+            None, f"{year}: not published upstream")
         self.addCleanup(lambda: setattr(B, "fetch_season", B_fetch_real))
-        curve, used, notes = B.build(seasons=(2024, 2025, 2026))
+        curve, used, notes, _ = B.build(seasons=(2024, 2025, 2026))
         self.assertEqual(used, [2024])
         self.assertTrue(any("2025" in n for n in notes))
         self.assertTrue(curve["QB"], "the available season still produced a curve")
@@ -183,7 +193,9 @@ class TestTheCurve(CurveCase):
         os.remove(os.path.join(self.tmp, "player_stats_2024.csv"))
         called = []
 
-        def fake(year, timeout=120):
+        def fake(year, timeout=120, kicking=False):
+            if kicking:
+                return None, f"{year} kicking: not published upstream"
             called.append(year)
             with gzip.open(FIXTURE, "rb") as g:
                 p = os.path.join(self.tmp, f"player_stats_{year}.csv")
@@ -192,12 +204,12 @@ class TestTheCurve(CurveCase):
             return p, f"{year}: fetched"
         B.fetch_season = fake
         self.addCleanup(lambda: setattr(B, "fetch_season", B_fetch_real))
-        curve, used, _ = B.build(seasons=(2024,))
+        curve, used, _, _ = B.build(seasons=(2024,))
         self.assertEqual(called, [2024])
         self.assertEqual(used, [2024])
 
     def test_no_seasons_at_all_refuses_rather_than_emitting_an_empty_curve(self):
-        B.fetch_season = lambda year, timeout=120: (None, "gone")
+        B.fetch_season = lambda year, timeout=120, kicking=False: (None, "gone")
         self.addCleanup(lambda: setattr(B, "fetch_season", B_fetch_real))
         with self.assertRaises(SystemExit):
             B.build(seasons=(2025,))

@@ -209,12 +209,31 @@ class TestDerivations(unittest.TestCase):
         base = source["meta"]["vbd"]["baselineWaiver"]
         checked = 0
         for p in source["players"]:
-            if p["pos"] not in curve:
+            # MIRROR `recompute_vorp`'s OWN CONDITION -- a curve alone is not enough, a row is
+            # derived only when it also has a replacement rank. This used to test `pos in curve`
+            # and passed only because K had no curve at all; the moment build_curves.py gained a
+            # kicker table it raised KeyError('K') on the baselines, which is the test telling the
+            # truth: K now has a curve and still has no baseline, so it is still carried.
+            if p["pos"] not in curve or p["pos"] not in base:
                 continue
             want = round(curve[p["pos"]][str(p["pr"])] - curve[p["pos"]][str(base[p["pos"]])], 1)
             self.assertEqual(p["vorp"], want, p["name"])
             checked += 1
         self.assertEqual(checked, 150, "expected all 150 skill rows to be curve-derived")
+
+    def test_a_curve_without_a_baseline_leaves_the_row_CARRIED(self):
+        """K is the live case: build_curves.py ships a kicker table, meta.vbd ships no kicker
+        baseline, so every K row must stay labelled rather than quietly acquiring a vorp computed
+        against some other position's replacement level."""
+        with open(B.CURVE, encoding="utf-8") as f:
+            curve = json.load(f)["curve"]
+        source = real_source()
+        base = source["meta"]["vbd"]["baselineWaiver"]
+        self.assertIn("K", curve, "the kicker curve must exist for this test to mean anything")
+        self.assertNotIn("K", base, "if a K baseline is ever added, K stops being carried")
+        for p in source["players"]:
+            if p["pos"] == "K":
+                self.assertEqual(p["vorpMethod"], B.VORP_KDEF, p["name"])
 
     def test_recompute_preserves_within_position_order(self):
         """RB1 stays RB1. The curve is a rank->points lookup with pr as its input, so vorp is

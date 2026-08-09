@@ -1,5 +1,48 @@
 {
  "curve": {
+  "K": {
+   "1": 172.8,
+   "10": 139.0,
+   "11": 137.5,
+   "12": 134.8,
+   "13": 133.5,
+   "14": 131.2,
+   "15": 128.8,
+   "16": 126.8,
+   "17": 125.8,
+   "18": 124.8,
+   "19": 122.5,
+   "2": 166.0,
+   "20": 118.0,
+   "21": 115.2,
+   "22": 113.5,
+   "23": 108.8,
+   "24": 107.0,
+   "25": 104.5,
+   "26": 103.5,
+   "27": 96.0,
+   "28": 91.8,
+   "29": 82.8,
+   "3": 161.5,
+   "30": 73.5,
+   "31": 69.5,
+   "32": 63.0,
+   "33": 51.8,
+   "34": 40.0,
+   "35": 33.2,
+   "36": 31.0,
+   "37": 25.0,
+   "38": 18.5,
+   "39": 16.8,
+   "4": 157.2,
+   "40": 15.0,
+   "41": 12.0,
+   "5": 154.0,
+   "6": 150.0,
+   "7": 148.5,
+   "8": 147.2,
+   "9": 141.5
+  },
   "QB": {
    "1": 423.5,
    "10": 298.4,
@@ -77,9 +120,7 @@
    "76": 0.3,
    "77": 0.1,
    "78": -0.4,
-   "79": 0.0,
    "8": 311.6,
-   "80": -0.2,
    "9": 305.4
   },
   "RB": {
@@ -334,8 +375,10 @@
    "long_td_bonus"
   ],
   "excludes_note": "league.md scores +1 at 40+ and +2 at 50+ on pass/rush/rec TDs and they stack; nflverse weekly stats carry no TD-distance breakdown, so the bonus is not computable from this source",
+  "kicker_note": "K is an EXACT build, not an approximation: nflverse publishes field-goal makes already bucketed by distance and the buckets map 1:1 onto league.md's bands. A blocked FG is neither a make nor a miss in this source (fg_att == made + missed + blocked, measured), and league.md does not say which it is; blocks are counted as misses here (count_blocked=True) and --check prints the sensitivity both ways.",
+  "no_def_note": "DEF is deliberately absent. player_stats_def_*.csv is PLAYER-level and carries no points allowed at all -- the largest term in the DST ladder -- so a DEF curve would need a second source joined on schedule plus an unconfirmed assumption about Sleeper's points-allowed convention. A narrower EXACT basis beats a wider approximate one; DEF rows stay labelled carried:kdef-tier-flat.",
   "reproduces_aug5_board": false,
-  "reproduces_note": "the Aug 5 board's curve was built on a window including 2025, and nflverse publishes no 2025 player_stats asset; best achievable agreement is 1.84 MAD on the four baselines",
+  "reproduces_note": "the Aug 5 board's curve was built on 2022-2025 from nflverse PLAY-BY-PLAY; player_stats publishes no 2025 asset, and carries no TD-distance breakdown. Best achievable agreement from this source is 1.84 MAD on the four baselines. play_by_play_2025 does exist and is the route to closing both gaps -- see the module docstring for the measured starting point.",
   "scoring": "docs/league.md (Family Feud, full PPR)",
   "seasons": [
    2021,
@@ -343,6 +386,13 @@
    2023,
    2024
   ],
-  "source": "https://github.com/nflverse/nflverse-data/releases/download/player_stats/player_stats_<year>.csv"
+  "seasons_kicking": [
+   2021,
+   2022,
+   2023,
+   2024
+  ],
+  "source": "https://github.com/nflverse/nflverse-data/releases/download/player_stats/player_stats_<year>.csv",
+  "source_kicking": "https://github.com/nflverse/nflverse-data/releases/download/player_stats/player_stats_kicking_<year>.csv"
  }
 }

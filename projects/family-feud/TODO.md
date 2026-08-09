@@ -29,16 +29,23 @@ ECR; 164 of 174 rows moved. **The edge is not the ranking — it is that this bo
 drafts off a generic list. Verified kept: name/team/pos/`sleeperId` (160/160 agree with live
 Sleeper, positive-controlled) and every note.
 
+**ADP IS IN — `scripts/market.py`, value-vs-price.** Fantasy Football Calculator, PPR, 5,187 drafts,
+joined on the exact `(team, pos, normalized name)` key: **156/174, 0 ambiguous**. The finding it
+exists for: this league starts 1 QB across 8 teams, so replacement is **QB12 and every QB below it
+is worth negative points here** — the market prices for a 12-team room and does not know. It takes
+Stafford (−30.1) at pick ~85 while letting Lamar Jackson (+106.7) fall 20 spots past his value.
+⚠️ **The source's `teams=8` parameter is COSMETIC** — verified, `teams=8` and `teams=12` return
+byte-identical ADP for all 256 players while echoing whatever you asked into `meta`. It is a
+BLENDED pool; the league-size correction must keep coming from `vorp` on our side.
+
 **Next action, in order:**
-1. **ADP — the actual domination play, and NOT YET PROVEN REACHABLE.** Consensus says who is
-   *good*; it does not say who is *cheap*. Value-vs-ADP is where leagues are won, and it is what
-   the retired "Briggsy's Guy" badge only *claimed* to be. **No ADP source has been verified yet
-   — do not assume one exists until it has been pulled.** FantasyPros' `player_owned_*` columns
-   are ownership %, not ADP.
-2. **The residual 6 disagreements are a DEPTH ARTIFACT, not a real gap.** `pr` counts within the
-   board's 174; FantasyPros counts within its 523. A board RB43 reads as their RB63 because they
-   rank RBs in between that the board does not carry. Fix by ranking their list restricted to
-   board rows before comparing.
+1. **Port the depth correction into `consensus.py`.** `market.py` has it; the consensus tool does
+   not, and its residual 6 disagreements are that artifact, not a real gap. `pr` counts within the
+   board's 174 while FantasyPros counts within its 523, so a board RB43 reads as their RB63. Rank
+   their list restricted to board rows before comparing, exactly as `market.market_ranks` does.
+2. **Teach the mule to haul the consensus and the ADP pool** so both are ≤1h old on draft morning
+   instead of needing `--refresh`. Both caches are gitignored on purpose, so a clean clone has
+   neither, and draft morning is the worst time to discover that.
 3. **K and DEF carry flat per-tier constants** (`carried:kdef-tier-flat`, **24 of 174 rows**), and
    their **tiers are the only ordering the re-rank could not re-derive** — no curve exists for
    them, so the old tiers were re-sorted onto the new order rather than invented.
@@ -71,10 +78,10 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **596 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 596 with **6 skips**
-— 2 live-cargo probes plus 4 that need `draft-kit/cache/fp_ecr.csv.gz`, which is deliberately
-gitignored. Re-measured 2026-08-08 by hiding `newsletter/data/inbox/` **and** the consensus cache,
+gate went **13 findings → 0** by fixing surfaces. **621 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 621 with **10 skips**
+— 2 live-cargo probes plus 8 that need the gitignored consensus/ADP caches
+(`draft-kit/cache/fp_ecr.csv.gz`, `ffc_adp.json.gz`). Re-measured 2026-08-08 by hiding `newsletter/data/inbox/` **and** the consensus cache,
 not copied from the previous line. Verified by eye, not only by tests: the cheat sheet is **2 pages
 — the whole 174-row board on page 1**, the plan on page 2 — and the HTML board renders shape-driven
 round labels with no invented rounds.

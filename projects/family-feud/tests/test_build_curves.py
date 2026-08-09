@@ -13,6 +13,7 @@ clean clone must not go red (insight 009).
 """
 import os
 import sys
+import tempfile
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -133,6 +134,187 @@ class TestTheCurveShape(unittest.TestCase):
         self.assertEqual(curve["WR"]["47"], 148.0)
         self.assertEqual(curve["QB"]["12"], 283.5)
         self.assertEqual(curve["TE"]["12"], 146.9)
+
+
+# ---------------------------------------------------------------------------------------------
+# THE SOURCE SWITCH. nflverse's `player_stats` release is FROZEN at 2024 and its 2025 asset is a
+# hard 404; the live release is `stats_player`, which publishes 1999-2025. This file used to assert
+# the opposite in a comment, and that one wrong sentence is why the 2025 season was written off.
+# ---------------------------------------------------------------------------------------------
+class TestTheBoundaryAdapter(unittest.TestCase):
+    """`score()` reads nflverse column names, so a rename is not an error -- it is a ZERO."""
+
+    def test_it_fills_a_name_the_source_renamed(self):
+        row = {"passing_interceptions": "3", "passing_yards": "300"}
+        out = BC.adapt_row(row, BC.SOURCES["current"]["aliases"])
+        self.assertEqual(out["interceptions"], "3")
+
+    def test_it_never_overwrites_a_name_the_source_already_carries(self):
+        row = {"interceptions": "1", "passing_interceptions": "9"}
+        self.assertEqual(BC.adapt_row(row, BC.SOURCES["current"]["aliases"])["interceptions"], "1")
+
+    def test_a_source_with_no_aliases_is_passed_through_untouched(self):
+        row = {"passing_yards": "300"}
+        self.assertIs(BC.adapt_row(row, BC.SOURCES["legacy"]["aliases"]), row)
+
+    def test_the_alias_is_what_stands_between_us_and_a_free_point_per_interception(self):
+        """The measured cost of dropping just this one alias was 58 of 1,997 player-seasons on
+        2024, by up to 32 points -- silently, because `_n(None)` is 0.0."""
+        from scoring import score, FAMILY_FEUD
+        raw = {"passing_interceptions": "3"}
+        self.assertEqual(score(raw, FAMILY_FEUD), 0.0)                      # the silent zero
+        adapted = BC.adapt_row(raw, BC.SOURCES["current"]["aliases"])
+        self.assertEqual(score(adapted, FAMILY_FEUD), -3.0)                 # the real value
+
+
+class TestTheOracleRunsInsideTheBuild(unittest.TestCase):
+    """An alias table only covers the renames somebody thought of. Re-scoring every row under
+    STANDARD_PPR and comparing to the source's own `fantasy_points_ppr` covers the rest, which is
+    why it lives in `load_season` rather than only in tests/test_scoring.py."""
+
+    HEAD = ("player_id,player_name,position,season,week,season_type,passing_yards,passing_tds,"
+            "{int_col},receptions,receiving_yards,receiving_tds,fantasy_points_ppr")
+
+    def _load(self, int_col, source, tmp):
+        """One real player -- 3 INTs and a 10-yard catch -- plus all-zero filler.
+
+        Chosen so the two rulesets and the failure mode are three DIFFERENT numbers, because a
+        fixture whose right answer collides with its wrong answer proves nothing:
+            nflverse STANDARD_PPR (INT -2):  1.0 + 1.0 - 6.0 = -4.0   <- fantasy_points_ppr
+            our FAMILY_FEUD       (INT -1):  1.0 + 1.0 - 3.0 = -1.0   <- what totals must hold
+            INTs silently dropped:           1.0 + 1.0       = +2.0
+        The first pass used 2 INTs, which made our-rules land on 0.0 -- indistinguishable at a
+        glance from a row that scored nothing at all.
+
+        The filler is not decoration: `fetch_season` treats anything under 1024 bytes as a failed
+        download and re-fetches, so a small fixture silently becomes a 404 and the loader returns
+        None instead of running the oracle. All three tests in this class failed that way first.
+        The path must also come from `season_path`, because the two sources cache under different
+        stems and a fixture written to the wrong one is simply not there.
+        """
+        old = BC.CACHE
+        BC.CACHE = tmp
+        try:
+            path = BC.season_path(2099, source=source)
+            with open(path, "w", encoding="utf-8", newline="") as f:
+                f.write(self.HEAD.format(int_col=int_col) + "\n")
+                f.write("00-0000001,A Player,WR,2099,1,REG,0,0,3,1,10,0,-4.0\n")
+                for i in range(2, 40):
+                    f.write(f"00-000{i:04d},Filler {i},WR,2099,1,REG,0,0,0,0,0,0,0.0\n")
+            assert os.path.getsize(path) > 1024, "fixture too small -- it will be re-fetched"
+            return BC.load_season(2099, source=source)
+        finally:
+            BC.CACHE = old
+
+    def test_the_expected_schema_passes_and_says_so(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            (totals, _), notes = self._load("passing_interceptions", "current", tmp)
+            self.assertEqual(round(totals["00-0000001"], 1), -1.0)   # our league: INT is -1
+            self.assertTrue(any("oracle exact" in n for n in notes))
+
+    def test_an_UNKNOWN_rename_is_caught_even_though_no_alias_covers_it(self):
+        """The whole point. `interceptions` -> `ints_thrown` is in no alias table, would read as
+        zero, and would ship a curve that looks entirely reasonable."""
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(SystemExit) as cm:
+                self._load("ints_thrown", "current", tmp)
+            self.assertIn("does NOT reproduce", str(cm.exception))
+            self.assertIn("RENAMED COLUMN", str(cm.exception))
+
+    def test_the_oracle_is_not_vacuous(self):
+        """Positive control (insight 008): prove it can FAIL before trusting that it passed. The
+        same fixture under the legacy source has no alias for passing_interceptions, so the INTs
+        vanish and the oracle must fire."""
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(SystemExit):
+                self._load("passing_interceptions", "legacy", tmp)
+
+
+class TestTheFoldedKickingAsset(unittest.TestCase):
+    """On `current`, kicking lives in the SAME weekly file as every other position -- so the K
+    loader now reads a file where ~1,900 of ~2,000 rows per season are not kickers.
+
+    Those rows have no FG and no XP columns, so they score a perfectly real 0.0 and enter the rank
+    distribution as phantom kickers. There is no error and nothing sums wrong; the curve simply
+    fills with zeros past the last real kicker, and `rerank.value_bands` derives K tiers from it.
+    This class exists because mutant C5 -- deleting the position filter -- SURVIVED a full green
+    run: every other test of the folded path needs the gitignored season cache, so on this machine
+    and on a clean clone alike, nothing was looking.
+    """
+    HEAD = ("player_id,player_name,position,season,week,season_type,fg_made,fg_att,fg_missed,"
+            "fg_blocked,fg_made_0_19,fg_made_20_29,fg_made_30_39,fg_made_40_49,fg_made_50_59,"
+            "fg_made_60_,pat_made,pat_missed")
+
+    def _load(self, tmp):
+        old = BC.CACHE
+        BC.CACHE = tmp
+        try:
+            path = BC.season_path(2099, kicking=True, source="current")
+            with open(path, "w", encoding="utf-8", newline="") as f:
+                f.write(self.HEAD + "\n")
+                # Two real kickers: one 40-49 make (4) + 1 XP = 5.0, and one 0-19 make (3) = 3.0.
+                f.write("00-000K001,A Kicker,K,2099,1,REG,1,1,0,0,0,0,0,1,0,0,1,0\n")
+                f.write("00-000K002,B Kicker,K,2099,1,REG,1,1,0,0,1,0,0,0,0,0,0,0\n")
+                for i in range(40):     # the flood: skill players in the same file
+                    f.write(f"00-000W{i:03d},Filler {i},WR,2099,1,REG,0,0,0,0,0,0,0,0,0,0,0,0\n")
+            assert os.path.getsize(path) > 1024
+            return BC.load_kicking_season(2099, source="current")
+        finally:
+            BC.CACHE = old
+
+    def test_only_kickers_reach_the_kicker_totals(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            totals, _ = self._load(tmp)
+            self.assertEqual(len(totals), 2, "a non-kicker got into the kicker distribution")
+            self.assertEqual(sorted(round(v, 1) for v in totals.values()), [3.0, 5.0])
+
+    def test_the_flood_would_be_invisible_without_the_filter(self):
+        """The control that makes the test above mean something: the filler rows really are
+        loadable and really do score 0.0, so their absence is the filter working -- not the
+        fixture failing to produce them."""
+        with tempfile.TemporaryDirectory() as tmp:
+            totals, _ = self._load(tmp)
+            pts, summed = BC.kicking_row_points(
+                {"position": "WR", "fg_made": "0", "fg_missed": "0", "fg_blocked": "0"})
+            self.assertEqual(pts, 0.0)
+            self.assertTrue(summed)          # so it would NOT be caught by the bucket-sum guard
+            self.assertNotIn("00-000W000", totals)
+
+    def test_the_legacy_kicking_asset_needs_no_filter(self):
+        """Belt and braces on the condition itself: `player_stats_kicking_*.csv` contains only
+        kickers, so the filter must stay scoped to the folded source or it starts depending on a
+        `position` column the legacy asset is not guaranteed to carry."""
+        self.assertFalse(BC.SOURCES["legacy"]["kicking_in_main"])
+
+
+class TestTheSourceTableItself(unittest.TestCase):
+
+    def test_the_default_source_is_still_the_one_every_shipped_number_came_from(self):
+        """Flipping this default moves every vorp on the board. It is a decision, not a tidy-up."""
+        self.assertEqual(BC.DEFAULT_SOURCE, "legacy")
+        self.assertEqual(BC.SEASONS, (2021, 2022, 2023, 2024))
+
+    def test_the_legacy_urls_are_untouched(self):
+        self.assertIn("/player_stats/player_stats_{year}.csv", BC.URL)
+        self.assertIn("player_stats_kicking_{year}.csv", BC.KICK_URL)
+
+    def test_the_current_source_points_at_the_release_that_actually_publishes_2025(self):
+        self.assertIn("/stats_player/stats_player_week_{year}.csv", BC.SOURCES["current"]["url"])
+        self.assertIn(2025, BC.SOURCES["current"]["seasons"])
+        self.assertNotIn(2025, BC.SOURCES["legacy"]["seasons"])
+
+    def test_kicking_is_folded_into_the_main_asset_on_the_current_source(self):
+        """It is not a second download there, and asking for one must not 404 the build."""
+        self.assertTrue(BC.SOURCES["current"]["kicking_in_main"])
+        self.assertIsNone(BC.SOURCES["current"]["kick_url"])
+        path, note = BC.fetch_season(2025, kicking=True, source="current")
+        self.assertIsNone(path)
+        self.assertIn("served by the main asset", note)
+
+    def test_the_two_sources_cache_to_different_paths(self):
+        """Or one would silently overwrite the other and the A/B would compare a file with itself."""
+        self.assertNotEqual(BC.season_path(2024, source="legacy"),
+                            BC.season_path(2024, source="current"))
 
 
 if __name__ == "__main__":

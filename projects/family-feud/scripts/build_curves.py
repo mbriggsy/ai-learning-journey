@@ -63,7 +63,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE = os.path.join(ROOT, "draft-kit", "cache")
 OUT = os.path.join(ROOT, "draft-kit", "vorp_curve.json")
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
-from scoring import score, kicker_points, FAMILY_FEUD  # noqa: E402
+from scoring import score, kicker_points, FAMILY_FEUD, STANDARD_PPR  # noqa: E402
 
 
 def _num(v):
@@ -78,13 +78,56 @@ try:
 except Exception:                       # a non-reconfigurable piped stream degrades, never crashes
     pass
 
-URL = ("https://github.com/nflverse/nflverse-data/releases/download/player_stats/"
-       "player_stats_{year}.csv")
-# The plan named `stats_player_week_{year}.csv`. nflverse has since renamed the asset; corrected
-# here rather than by reopening the plan, per its own instruction.
+# ⚠️ THE RENAME GOES THE OTHER WAY, AND BELIEVING OTHERWISE COST US THE 2025 SEASON.
+# This file used to carry: "The plan named `stats_player_week_{year}.csv`. nflverse has since
+# renamed the asset; corrected here rather than by reopening the plan." That is backwards, and the
+# consequence was a year of data written off as unavailable. Measured 2026-08-09 against the GitHub
+# releases API:
+#   * release `stats_player`  -- published 2025-07-31, 542 assets, `stats_player_week_1999` ...
+#     `stats_player_week_2025`. TWENTY-SEVEN seasons, four shapes each. This is the CURRENT one.
+#   * release `player_stats`  -- FROZEN at 2024. `player_stats_2025.csv` is a hard 404, and it will
+#     never publish 2026 either, so `legacy` is a dead end on a clock.
+# The plan was right. Keep both here anyway: `legacy` is what every shipped number was built from,
+# and a source swap that cannot be A/B'd against the old one is not a measurement.
+SOURCES = {
+    "legacy": {
+        "url": ("https://github.com/nflverse/nflverse-data/releases/download/player_stats/"
+                "player_stats_{year}.csv"),
+        "kick_url": ("https://github.com/nflverse/nflverse-data/releases/download/player_stats/"
+                     "player_stats_kicking_{year}.csv"),
+        "stem": "player_stats",
+        "kick_stem": "player_stats_kicking",
+        "kicking_in_main": False,
+        "aliases": {},
+        "seasons": (2021, 2022, 2023, 2024),
+    },
+    "current": {
+        "url": ("https://github.com/nflverse/nflverse-data/releases/download/stats_player/"
+                "stats_player_week_{year}.csv"),
+        # Kicking is FOLDED INTO the same file here -- fg_made_0_19 ... fg_made_60_, pat_made,
+        # pat_missed, identical column names to the legacy kicking asset. Verified 2026-08-09
+        # against player_stats_kicking_2024.csv: 45 of 45 kickers, 0 disagreements on every bucket.
+        "kick_url": None,
+        "stem": "stats_player_week",
+        "kick_stem": "stats_player_week",
+        "kicking_in_main": True,
+        # ⚠️ THE SILENT-ZERO TRAP. `score()` reads `interceptions`; this release calls it
+        # `passing_interceptions`. A missing key is _n(None) -> 0.0, so every INT would score zero
+        # instead of -1 and NOTHING would raise. Measured cost of omitting just this one alias:
+        # 58 of 1,997 player-seasons wrong on 2024, by up to 32.0 points. The oracle in
+        # load_season() is what makes that impossible to ship, not this table -- a table only
+        # covers the renames somebody thought of.
+        "aliases": {"interceptions": "passing_interceptions",
+                    "sacks": "sacks_suffered",
+                    "sack_yards": "sack_yards_lost",
+                    "recent_team": "team"},
+        "seasons": (2022, 2023, 2024, 2025),
+    },
+}
+DEFAULT_SOURCE = "legacy"          # every shipped number came from here; changing it moves the board
 
-KICK_URL = ("https://github.com/nflverse/nflverse-data/releases/download/player_stats/"
-            "player_stats_kicking_{year}.csv")
+URL = SOURCES["legacy"]["url"]              # kept: referenced by the emitted meta and by tests
+KICK_URL = SOURCES["legacy"]["kick_url"]
 
 SEASONS = (2021, 2022, 2023, 2024)
 POSITIONS = ("QB", "RB", "WR", "TE")
@@ -108,16 +151,40 @@ FG_BANDS = {"0-39": ("fg_made_0_19", "fg_made_20_29", "fg_made_30_39"),
 COUNT_BLOCKED_AS_MISS = True
 
 
-def season_path(year, kicking=False):
-    stem = "player_stats_kicking" if kicking else "player_stats"
+def season_path(year, kicking=False, source=DEFAULT_SOURCE):
+    spec = SOURCES[source]
+    stem = spec["kick_stem"] if kicking else spec["stem"]
     return os.path.join(CACHE, f"{stem}_{year}.csv")
 
 
-def fetch_season(year, timeout=120, kicking=False):
+def adapt_row(row, aliases):
+    """Rename a foreign source's columns to the names `scoring.score()` reads.
+
+    THE ADAPTER LIVES AT THE BOUNDARY, NOT IN scoring.py -- the JAC/JAX rule (CLAUDE.md): fix the
+    root for fields we own, adapt at the edge for fields a foreign source owns. `score()` is the
+    executable form of league.md and must not accumulate one branch per upstream schema revision.
+
+    Only fills a name that is ABSENT, so a source carrying both wins with its own.
+    """
+    if not aliases:
+        return row
+    out = dict(row)
+    for want, actual in aliases.items():
+        if not out.get(want) and actual in out:
+            out[want] = out[actual]
+    return out
+
+
+def fetch_season(year, timeout=120, kicking=False, source=DEFAULT_SOURCE):
     """Returns (path, note). A season that does not exist upstream is ABSENT, not an error --
-    2025 and 2026 both 404 today and a pipeline that crashes on that is unusable all preseason."""
-    path = season_path(year, kicking)
-    url = (KICK_URL if kicking else URL).format(year=year)
+    on `legacy` 2025 and 2026 both 404 and a pipeline that crashes on that is unusable all
+    preseason. On `current` 2025 is published; 2026 will not be until the season is played."""
+    spec = SOURCES[source]
+    path = season_path(year, kicking, source)
+    url = (spec["kick_url"] if kicking else spec["url"])
+    if url is None:                     # kicking is folded into the main asset on this source
+        return None, f"{year} kicking: served by the main asset on source '{source}'"
+    url = url.format(year=year)
     label = f"{year} kicking" if kicking else str(year)
     os.makedirs(CACHE, exist_ok=True)
     p = subprocess.run(["curl", "-sL", "--max-time", str(timeout), "-w", "%{http_code}",
@@ -148,16 +215,24 @@ def kicking_row_points(row, count_blocked=COUNT_BLOCKED_AS_MISS):
                          xp_missed=_num(row.get("pat_missed"))), summed
 
 
-def load_kicking_season(year, refetch=False, count_blocked=COUNT_BLOCKED_AS_MISS):
+def load_kicking_season(year, refetch=False, count_blocked=COUNT_BLOCKED_AS_MISS,
+                        source=DEFAULT_SOURCE):
     """Season kicking totals by player id, scored through `scoring.kicker_points`.
 
     Returns (totals, notes). The scoring rules are NOT re-typed here -- `kicker_points` is the
     executable form of league.md and already existed; this only feeds it.
+
+    On `current` the kicking columns live in the MAIN weekly asset, so this reads the same file the
+    skill half does. The column names are identical, which is why nothing below had to change --
+    verified 2026-08-09 on 2024: 45 of 45 kickers agree with the legacy kicking asset on every
+    distance bucket, every miss and every XP.
     """
-    path = season_path(year, kicking=True)
+    spec = SOURCES[source]
+    path = season_path(year, kicking=True, source=source)
     notes = []
     if refetch or not os.path.exists(path) or os.path.getsize(path) < 1024:
-        path, note = fetch_season(year, kicking=True)
+        # On a folded source the main loader has already fetched (or failed on) this exact path.
+        path, note = fetch_season(year, kicking=not spec["kicking_in_main"], source=source)
         notes.append(note)
         if path is None:
             return None, notes
@@ -170,6 +245,11 @@ def load_kicking_season(year, refetch=False, count_blocked=COUNT_BLOCKED_AS_MISS
             pid = row.get("player_id")
             if not pid:
                 continue
+            # A folded asset carries every position; only kickers have attempts, and a row with no
+            # FG and no XP contributes a real 0.0 that would otherwise enter the rank distribution
+            # as a phantom kicker and drag the whole curve down.
+            if spec["kicking_in_main"] and (row.get("position") or "").strip() != "K":
+                continue
             pts, summed = kicking_row_points(row, count_blocked)
             unsummed += 0 if summed else 1
             totals[pid] += pts
@@ -180,35 +260,75 @@ def load_kicking_season(year, refetch=False, count_blocked=COUNT_BLOCKED_AS_MISS
     return totals, notes
 
 
-def load_season(year, refetch=False):
-    path = season_path(year)
+#: How far a player-season may drift from nflverse's own published PPR before the build refuses.
+#: Real defects are whole points -- a dropped INT is 2.0 under STANDARD_PPR, a dropped TD is 6.0 --
+#: so this only absorbs float accumulation over an 18-week sum.
+ORACLE_TOL = 0.01
+
+
+def load_season(year, refetch=False, source=DEFAULT_SOURCE):
+    """Season totals by player id, under the league's rules -- and NEVER without checking the
+    source's own arithmetic first.
+
+    THE ORACLE RUNS ON EVERY BUILD, and it is the only reason a source swap is safe. `score()`
+    reads nflverse column names directly, so a renamed column is not an error, it is a ZERO:
+    `stat.get("interceptions")` on a release that calls it `passing_interceptions` returns None,
+    `_n` turns that into 0.0, and every quarterback silently gains a point per interception. No
+    exception, no warning, a curve that looks entirely reasonable.
+
+    An alias table cannot protect against that, because a table only covers the renames somebody
+    thought of. Re-scoring each row under STANDARD_PPR and comparing to the source's OWN
+    `fantasy_points_ppr` does, because it checks every term at once against an outside reference.
+    This is the same 2469/2469 oracle `tests/test_scoring.py` uses, moved into the pipeline so it
+    guards data we have not seen yet rather than the four seasons we have.
+    """
+    spec = SOURCES[source]
+    path = season_path(year, source=source)
     notes = []
     if refetch or not os.path.exists(path) or os.path.getsize(path) < 1024:
-        path, note = fetch_season(year)
+        path, note = fetch_season(year, source=source)
         notes.append(note)
         if path is None:
             return None, notes
     totals = collections.defaultdict(float)
     position = {}
+    ours = collections.defaultdict(float)
+    theirs = collections.defaultdict(float)
     with open(path, encoding="utf-8", newline="") as f:
-        for row in csv.DictReader(f):
+        for raw in csv.DictReader(f):
             # Regular season only. Playoff weeks are not part of a fantasy season and folding
             # them in would reward the same handful of teams every year.
-            if row.get("season_type") != "REG":
+            if raw.get("season_type") != "REG":
                 continue
-            pid = row.get("player_id")
+            pid = raw.get("player_id")
             if not pid:
                 continue
+            row = adapt_row(raw, spec["aliases"])
             position.setdefault(pid, (row.get("position") or "").strip())
             totals[pid] += score(row, FAMILY_FEUD)
+            ours[pid] += score(row, STANDARD_PPR)
+            theirs[pid] += _num(row.get("fantasy_points_ppr"))
+
+    off = {pid: round(ours[pid] - theirs[pid], 2)
+           for pid in ours if abs(ours[pid] - theirs[pid]) > ORACLE_TOL}
+    if off:
+        worst = sorted(off.items(), key=lambda kv: -abs(kv[1]))[:5]
+        raise SystemExit(
+            f"{year} ({source}): this build does NOT reproduce the source's own fantasy_points_ppr "
+            f"on {len(off)} of {len(ours)} player-seasons (worst: {worst}).\n"
+            f"  Almost certainly a RENAMED COLUMN reading as zero rather than raising. Diff this "
+            f"season's header against SOURCES['{source}']['aliases'] before trusting any curve "
+            f"built from it -- see the silent-zero note on that table.")
+    notes.append(f"{year} ({source}): oracle exact on {len(ours)} player-seasons")
     return (totals, position), notes
 
 
-def build(seasons=SEASONS, refetch=False, depth=CURVE_DEPTH, count_blocked=COUNT_BLOCKED_AS_MISS):
+def build(seasons=SEASONS, refetch=False, depth=CURVE_DEPTH, count_blocked=COUNT_BLOCKED_AS_MISS,
+          source=DEFAULT_SOURCE):
     per_rank = collections.defaultdict(list)
     used, used_k, notes = [], [], []
     for year in seasons:
-        loaded, n = load_season(year, refetch)
+        loaded, n = load_season(year, refetch, source=source)
         notes += n
         if loaded is None:
             continue
@@ -224,7 +344,7 @@ def build(seasons=SEASONS, refetch=False, depth=CURVE_DEPTH, count_blocked=COUNT
     # `player_stats_*.csv` carries no field-goal distances at all -- K is not a position you can
     # extract from the skill file, which is why it was absent from this curve for so long.
     for year in seasons:
-        totals, n = load_kicking_season(year, refetch, count_blocked)
+        totals, n = load_kicking_season(year, refetch, count_blocked, source=source)
         notes += n
         if totals is None:
             continue

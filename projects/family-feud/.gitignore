@@ -50,6 +50,10 @@ newsletter/archive/*
 # The oracle these feed is committed instead, at tests/fixtures/player_stats_2024_reg.csv.gz
 # (one real season, 324KB gzipped), so the scoring tests survive a clean clone.
 draft-kit/cache/player_stats_*.csv
+# Same asset, current release name. nflverse's `player_stats` release is FROZEN at 2024; the live
+# one is `stats_player`, which publishes 1999-2025 and folds kicking into the weekly file. Both
+# stems are ignored because both are pure cache -- see SOURCES in scripts/build_curves.py.
+draft-kit/cache/stats_player_week_*.csv
 # Play-by-play is the same deal, an order of magnitude larger (~19MB/season
 # gzipped). It is the route to the 2025 season and the long-TD bonuses; see
 # the docstring in scripts/build_curves.py before fetching it again.

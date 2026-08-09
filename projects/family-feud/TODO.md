@@ -325,10 +325,65 @@ QB1 −10.7`, while the baselines barely move (`QB12 −0.9 · RB41 −1.2 · WR
 Elite RB gains ~12 while elite WR loses ~16 — **a ~25-point swing in RB-vs-WR at the top**, on a
 board where Chase is #1 and Bijan is RB1. That is the range that flips a 1.3 pick, not noise.
 
-**It still needs its own unit and its own gate** — repoint the URL, add the column alias behind a
-test that fails without it, rebuild on 2022-2025, and **state the per-position residual before any
-surface moves**. What changed is that the residual is now a number instead of an unknown. The K
-curve moves with the window.
+**✅ THE INSTRUMENT IS BUILT AND THE MEASUREMENT IS DONE (2026-08-09). THE BOARD IS UNTOUCHED —
+the swap itself is Briggsy's call and nothing below has been applied.**
+
+`build_curves.py` now carries a `SOURCES` table (`legacy` / `current`), a boundary adapter, and an
+oracle. **`DEFAULT_SOURCE` is still `legacy` and the shipped curve is byte-identical** — verified,
+and mutant C6 (flipping the default) turns 6 tests red.
+
+- **THE ORACLE NOW RUNS INSIDE EVERY BUILD, not just in a test.** `load_season` re-scores every row
+  under `STANDARD_PPR` and compares to the source's own `fantasy_points_ppr`, and **hard-stops**
+  naming the season if they disagree. This is the guard that makes a source swap safe at all: an
+  alias table only covers the renames somebody thought of, and a rename this pipeline does not know
+  about is not an error, it is a **zero**. Legacy re-passes at **2,469** player-seasons (655 + 619 +
+  588 + 607) — the same 2469/2469 the project already documented. Current passes at **2,081 /
+  2,006 / 1,942 / 1,996 / 2,019** for 2021-2025. **Zero residual on either release.**
+- **The adapter lives at the BOUNDARY, not in `scoring.py`** — the JAC/JAX rule. `score()` is the
+  executable form of league.md and must not grow a branch per upstream schema revision.
+- **7 mutants planted, 7 killed.** ⚠️ **C5 survived the first pass**: deleting the
+  `position != "K"` filter on the folded asset. On `current` the K loader reads a file where ~1,900
+  of ~2,000 rows per season are **not kickers** — they carry no FG columns, score a perfectly real
+  `0.0`, pass the bucket-sum guard, and flood the K curve's deep ranks. Nothing caught it because
+  every other test of that path needs the gitignored season cache. Now fixture-tested.
+
+**THE DECOMPOSITION — two variables moved, and they had to be separated.** Same board, same
+baselines, only the curve swapped:
+
+| change | curve ranks that move | max \|vorp\| | mean \|vorp\| | rows changing `vbdRank` |
+|---|---|---|---|---|
+| **release only** (legacy 21-24 → current 21-24) | QB 60/78 · TE 70/80 · WR 12/80 · RB 7/80 | **3.2** | 0.23 | 44 of 174 |
+| **window only** (current 21-24 → current 22-25) | QB 70/78 · RB 78/80 · WR 80/80 · TE 78/80 | **19.8** | 2.98 | 128 of 174 |
+
+The release restatement is **concentrated in QB and TE** — the legacy asset carried ~607 scoring
+player-seasons a year against the current one's ~2,000, so the deep order statistics are taken over
+a different population. RB and WR barely move.
+⚠️ **The first attempt at this table reported "0 of 80 ranks differ" for all four positions.** The
+comparison was `if r in C21` where `C21` is keyed by POSITION, not rank — always false, so it
+filtered everything and printed a confident zero. Insight 008 exactly: a broken instrument returns
+zero and zero reads like a finding. **The version in the repo carries a positive control.**
+
+**WHAT IT DOES TO THE BOARD — the top of it, which is where picks are decided.** Control: the
+legacy recompute reproduces the shipped board's `vorp` exactly.
+
+```
+        shipped (2021-2024)          measured (2022-2025)
+  #1    Ja'Marr Chase   +256.1       Bijan Robinson  +268.4
+  #2    Bijan Robinson  +254.4       Ja'Marr Chase   +242.7
+  #4    Puka Nacua      +196.8       C. McCaffrey    +212.3
+```
+**13 of the top 15 change position. Mean vorp shift: RB +4.0, QB −3.4, WR −1.4, TE −1.2.**
+K depth goes 41 → 39 ranks, which reaches K tiers through `rerank.value_bands`.
+
+🚨 **THE FINDING THAT OUTRANKS THE SWAP: 1.1 is inside the noise.** Chase and Bijan are **1.7 points
+apart** on the shipped board, and **the release restatement alone — mean 0.23 — flips them**
+(255.6 vs 256.3). Whatever is decided about the window, *"Chase or Bijan at 1.1"* is not a question
+this board's precision can answer, and it should not be presented as though it were.
+
+**Still open, and deliberately not decided here:** whether to move `DEFAULT_SOURCE` to `current`
+and the window to 2022-2025. Two arguments beyond freshness: the legacy release **will never
+publish 2026 either**, so `legacy` is a dead end on a clock — and the long-TD bonus limit is
+unchanged by all of this.
 
 **The archive question is DECIDED (Briggsy, 2026-08-08): back issues are gitignored.** The
 deciding argument was his: `newsletter/data/archive/` — the cargo each edition is built from — was
@@ -354,8 +409,8 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **710 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 710 with **15 skips**
+gate went **13 findings → 0** by fixing surfaces. **725 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 725 with **15 skips**
 — 2 live-cargo probes plus **9** that need the gitignored consensus/ADP caches
 (`draft-kit/cache/fp_ecr.csv.gz`, `ffc_adp.json.gz`) plus **4** (`test_build_curves.TestTheCurveShape`)
 that need the gitignored nflverse season CSVs. ⚠️ **`player_ids.csv.gz` is COMMITTED, not

@@ -155,7 +155,7 @@ class CurveCase(unittest.TestCase):
         # the same path an unpublished season takes -- so these tests also prove build() still
         # produces a K-less curve rather than crashing when the kicking file is missing.
         self._fetch = B.fetch_season
-        B.fetch_season = lambda year, timeout=120, kicking=False: (
+        B.fetch_season = lambda year, timeout=120, kicking=False, source=B.DEFAULT_SOURCE: (
             None, f"{year}{' kicking' if kicking else ''}: not published upstream")
         self.addCleanup(lambda: setattr(B, "fetch_season", self._fetch))
 
@@ -181,7 +181,7 @@ class TestTheCurve(CurveCase):
     def test_a_season_absent_upstream_is_absent_not_an_error(self):
         """2025 and 2026 both 404 today. A pipeline that crashes on that is unusable all
         preseason, which is exactly when it is needed."""
-        B.fetch_season = lambda year, timeout=120, kicking=False: (
+        B.fetch_season = lambda year, timeout=120, kicking=False, source=B.DEFAULT_SOURCE: (
             None, f"{year}: not published upstream")
         self.addCleanup(lambda: setattr(B, "fetch_season", B_fetch_real))
         curve, used, notes, _ = B.build(seasons=(2024, 2025, 2026))
@@ -193,7 +193,7 @@ class TestTheCurve(CurveCase):
         os.remove(os.path.join(self.tmp, "player_stats_2024.csv"))
         called = []
 
-        def fake(year, timeout=120, kicking=False):
+        def fake(year, timeout=120, kicking=False, source=B.DEFAULT_SOURCE):
             if kicking:
                 return None, f"{year} kicking: not published upstream"
             called.append(year)
@@ -209,7 +209,7 @@ class TestTheCurve(CurveCase):
         self.assertEqual(used, [2024])
 
     def test_no_seasons_at_all_refuses_rather_than_emitting_an_empty_curve(self):
-        B.fetch_season = lambda year, timeout=120, kicking=False: (None, "gone")
+        B.fetch_season = lambda year, timeout=120, kicking=False, source=B.DEFAULT_SOURCE: (None, "gone")
         self.addCleanup(lambda: setattr(B, "fetch_season", B_fetch_real))
         with self.assertRaises(SystemExit):
             B.build(seasons=(2025,))

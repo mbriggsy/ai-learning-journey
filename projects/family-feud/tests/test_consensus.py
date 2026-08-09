@@ -399,6 +399,36 @@ class TestTheCircularityIsDECLAREDNotHidden(unittest.TestCase):
         self.assertNotIn("YOU AND THE EXPERTS DISAGREE", text,
                          "a heading announcing a zero is the misreading this exists to prevent")
 
+    def test_ONE_UNREACHED_row_cannot_silently_retire_the_banner(self):
+        """The guard's own blind spot. A board row the crosswalk cannot reach is absent from the
+        ladder but still counted in the board's `pr`, so every carried player below him reads one
+        rank better and `locked` collapses -- retiring the banner and handing back the exact
+        '0 disagreements with ~100 experts' framing it exists to prevent. Measured on the live
+        board: dropping one entry took locked from 150/150 to 102/149. It must say INCONCLUSIVE,
+        never go quiet."""
+        del self.xw["sA"]                       # the consensus RB1 becomes unreachable
+        text = self.render()
+        self.assertNotIn("CIRCULAR right now", text)
+        self.assertIn("INCONCLUSIVE, NOT CLEARED", text)
+        self.assertIn("1 board row(s) never reached", text)
+
+    def test_an_unreached_row_that_shifts_NOBODY_still_blocks_the_banner(self):
+        """The other direction, and the one a `locked`-only check cannot see. Drop the LAST man at
+        the position: nobody below him to shift, so `locked` stays complete and the banner fires
+        -- declaring the whole board identical to the consensus while one of its rows was never
+        compared to anything. Absence of a mismatch is not evidence of a match."""
+        del self.xw["sC"]                       # the consensus RB3, with nobody beneath him
+        text = self.render()
+        self.assertNotIn("CIRCULAR right now", text)
+        self.assertIn("INCONCLUSIVE, NOT CLEARED", text)
+
+    def test_a_fully_reached_board_carries_no_inconclusive_warning(self):
+        """Positive control: a warning that always prints is wallpaper, and this one would be
+        read as 'the instrument is broken' on every clean run."""
+        self.assertNotIn("INCONCLUSIVE", self.render())
+        self.board[2]["pr"] = 12                # retire the banner WITHOUT an unmatched row
+        self.assertNotIn("INCONCLUSIVE", self.render())
+
     def test_ONE_hand_overruled_row_retires_the_banner(self):
         """The positive control. A banner that prints unconditionally is not an instrument, it is
         a slogan -- and it would go on claiming circularity through the exact refresh that ends

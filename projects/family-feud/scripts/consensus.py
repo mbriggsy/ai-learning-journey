@@ -490,7 +490,23 @@ def report(board_meta, page, disagreements, missing, notes, top):
     synthesized = (board_meta.get("rankings") or {}).get("synthesized")
 
     live = [d for d in disagreements if (d["surviving"] or 0) != 0]
-    circular = bool(disagreements) and locked == len(disagreements)
+
+    # AN UNREACHED ROW DISARMS THE CIRCULARITY CHECK, SO IT HAS TO SAY SO OUT LOUD. A board row the
+    # crosswalk cannot reach is absent from the ladder but still counted in the board's own `pr`,
+    # so every carried player below him reads one rank better than the board has him -- the depth
+    # artifact again, one row deep. Measured: dropping ONE crosswalk entry (the board's RB1) took
+    # `locked` from 150/150 to 102/149, which silently retires the banner and hands the reader back
+    # the exact "0 disagreements with ~100 experts" framing it exists to prevent. Zero today; the
+    # mule refreshes this crosswalk hourly, so zero is not a property.
+    #
+    # It gates `circular` rather than merely annotating it, because BOTH failure directions are
+    # live and they need one answer. An unreached row EARLY at its position shifts every rank
+    # below it and collapses `locked` (banner wrongly retires); an unreached row LAST at its
+    # position shifts nobody, so `locked` stays complete and the banner fires -- asserting "all
+    # rows sit at their consensus rank" about a board one of whose rows was never checked. You
+    # cannot conclude the board IS the consensus while part of the board was unreachable.
+    unreached = len(notes.get("unmatched") or ())
+    circular = bool(disagreements) and locked == len(disagreements) and not unreached
 
     if circular:
         # No heading announcing a zero, no column legend, no empty table. The finding IS that
@@ -510,6 +526,16 @@ def report(board_meta, page, disagreements, missing, notes, top):
     else:
         out.append(f"  [1] YOU AND THE EXPERTS DISAGREE -- {len(live)} survive the experts' own "
                    f"spread, top {top}")
+        if unreached:
+            out.append(f"      ⚠ INCONCLUSIVE, NOT CLEARED: {unreached} board row(s) never reached "
+                       f"the consensus.")
+            out.append("      They are absent from the ladder but still counted in the board's "
+                       "own `pr`, so")
+            out.append("      EVERY rank below one of them reads one better than it should. "
+                       "Expect spurious")
+            out.append("      one-rung disagreements below, and do NOT read the absence of the "
+                       "circularity")
+            out.append("      banner as evidence that this board carries independent judgment.")
         if disagreements:
             out.append(f"      {locked} of {len(disagreements)} rows sit exactly at their "
                        f"consensus rank and carry no independent judgment")

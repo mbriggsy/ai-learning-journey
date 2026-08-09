@@ -73,14 +73,28 @@ ranked ahead of *himself* at the upper spread edge — `worst` one rung too deep
 band stretched **downward only** and real *"they like him MORE"* findings were returned as zero —
 the exact blind spot the correction exists to remove. Fixed with an `own=` argument that must stay
 **conditional** (a player the board OMITS legitimately reaches `len+1`; over-correcting breaks
-section [2] — mutant M6). **7 mutants now, 7 killed.**
+section [2] — mutant M6). **9 mutants now, 9 killed.**
 - **Read [`019`](docs/insights/019-the-mutants-only-probe-the-axis-you-already-suspect.md) before
   trusting a green mutation run.** All four original mutants probed *which population is ranked*;
   none probed *who is in the comparison*, so the clean sweep carried no information about the axis
   that was actually broken — and **a test written in the same pass asserted the bug.**
 
 **Next action, in order:**
-1. **BUILD THE KICKER CURVE — it is an EXACT build, and it is the cheap half of the K/DEF gap.**
+1. **`market.py` COMPARES A SKILL-ONLY RANK TO AN ALL-POSITIONS RANK — the same artifact class, one
+   layer over, and this instrument is NOT circular so it is live and actionable.** Found by the
+   adversarial fleet, then **measured directly 2026-08-08** rather than taken on its word:
+   `market_ranks()` ranks over all **156** matched pairs (**146** skill + **10** K/DEF), but `val`
+   is assigned over **skill only**. `surviving_delta(a["val"], a["mkt_best"], a["mkt_worst"])` at
+   `market.py:194` therefore subtracts ranks counted in two different populations.
+   - **Magnitude, measured:** K/DEF land at market ranks **119-151**, so **28 of 146** skill rows
+     have at least one K/DEF ahead of them, inflating `mkt` by up to **10** spots. Direction:
+     `raw_gap = mkt - val` is overstated, so the deepest skill players look like **bigger bargains
+     than they are** — roughly a full round of apparent value in an 8-team room.
+   - **The judgment call before any code:** `mkt` is displayed as *"where the room actually takes
+     him"*, and the room really does spend those picks on kickers — so all-positions is right for
+     DISPLAY and wrong for the SUBTRACTION. Likely fix is a skill-only rank for the comparison,
+     keeping the all-positions `mkt` for the column. Decide that before touching it.
+2. **BUILD THE KICKER CURVE — it is an EXACT build, and it is the cheap half of the K/DEF gap.**
    The 24 `carried:kdef-tier-flat` rows (K=10, DEF=14, re-counted 2026-08-08) split into one easy
    win and one trap. **Sources probed live 2026-08-08, HTTP 200 and columns read, not assumed:**
 
@@ -133,8 +147,8 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **643 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 643 with **11 skips**
+gate went **13 findings → 0** by fixing surfaces. **646 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 646 with **11 skips**
 — 2 live-cargo probes plus **9** that need the gitignored consensus/ADP caches
 (`draft-kit/cache/fp_ecr.csv.gz`, `player_ids.csv.gz`, `ffc_adp.json.gz`). Re-measured 2026-08-08 by
 actually hiding all four paths and naming every skip, not copied from the previous line — which had
@@ -635,6 +649,15 @@ Start with `--dry-run` to see every value and where it came from before anything
 Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the seventeen worked cases.
 The four that bite hardest under time pressure:
 
+- ⚠️ **NEVER RENAME `newsletter/data/inbox/` OR `draft-kit/cache/` TO SIMULATE A CLEAN CLONE.**
+  Hit for real 2026-08-08 at 22:29: the hourly mule fired while `inbox/` was renamed away,
+  **recreated it from scratch**, and the restore then failed with `FileExistsError` — which aborted
+  the rest of the restore loop and left **three cache files orphaned as `.hidden`** behind an error
+  message about something else entirely. No damage, purely because the mule re-fetched all three
+  caches in the same run (verified sha256-identical) and `.gitkeep` was recoverable — that is the
+  mule being resilient, not the technique being safe. Two rules if this measurement is ever needed
+  again: **copy the repo to a temp dir instead of renaming in place**, and if you must rename, make
+  the restore loop `try/except` per path so one failure cannot orphan the others.
 - **A screaming engine means STOP.** Re-fetch, re-merge, rerun. Never advise off a `picks.json` it
   refused.
 - **A silent engine can also be wrong.** `picks.json` is gitignored, so a spent mock's picks are

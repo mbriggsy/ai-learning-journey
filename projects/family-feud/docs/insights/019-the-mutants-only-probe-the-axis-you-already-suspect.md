@@ -112,6 +112,26 @@ to be skipped and most likely to pay — insight 013's *"a new test is a hypothe
 failed once on purpose"*, one level up: **a verification method is a hypothesis until something
 it missed has been found by other means.**
 
+## It happened again on the very next guard, and the same question caught it
+
+Applying this insight's own prescription — *what axis did none of my mutants touch?* — to the
+**circularity banner** immediately found a second hole. The check was `locked == len(disagreements)`,
+and a board row the crosswalk cannot reach is absent from the ladder but still counted in the
+board's `pr`. Two opposite failures, both live:
+
+- **An unreached row EARLY at its position** shifts every rank below it, collapses `locked`, and
+  silently retires the banner. Measured: dropping one entry (the board's RB1) took `locked` from
+  **150/150 to 102/149** and handed the reader back the exact *"0 disagreements with ~100 experts"*
+  framing the banner exists to prevent.
+- **An unreached row LAST at its position** shifts nobody, so `locked` stays complete and the
+  banner **fires** — declaring the board identical to the consensus while one of its rows was never
+  compared to anything.
+
+A `locked`-only mutant would have caught the first and missed the second. `unreached` now gates
+`circular` outright: you cannot conclude the board IS the consensus while part of the board was
+unreachable. **Absence of a mismatch is not evidence of a match** — insight 007's *presence is not
+health*, one turn of the screw further.
+
 ## Evidence
 
 - Independently reproduced before accepting the fleet's numbers (agent findings are claims, not
@@ -120,5 +140,11 @@ it missed has been found by other means.**
   then Josh Allen 33.3, Drake Maye 24.4, Gibbs 23.1, Bijan 23.1, McBride 21.8.
 - End-to-end failure, through `compare()`: hand-demote Chase WR1 → WR2 and the shipped band `(1,2)`
   gives `surviving = 0.0`; the correct band `(1,1)` gives **+59.3, "they like him MORE."**
-- **643 tests**, 0 failures. **7 mutants, 7 killed**, source restored byte-identical.
-- The new tests fail on M5, M6 and M7 — verified by planting each, not by assuming.
+- **646 tests**, 0 failures. **9 mutants, 9 killed**, source restored byte-identical.
+- The new tests fail on M5, M6, M7, M8 and M9 — verified by planting each, not by assuming.
+  **M8 is killed by exactly one test**, the shifts-nobody case, which is the one this insight's
+  own question surfaced.
+- **The fleet raised 9 findings and 4 did not survive.** Three were checked by measurement rather
+  than by counting votes and were correctly rejected — a NaN `sd` (the source publishes **0**
+  unparseable `sd` values, so it is unreachable) and tied ECRs (**0 ties** across QB 23 / RB 48 /
+  TE 20 / WR 59). Latent, not live. A rejected finding is still worth measuring once.

@@ -129,9 +129,10 @@ class TestSpreadWidensWithDisagreement(unittest.TestCase):
         thin = ladder_of(self.page, {"1", "2"})          # the board carries only these two
         _, thin_worst = C.spread_pos_ranks(thin, row)
         _, full_worst = C.spread_pos_ranks(self.ladder, row)
-        # A rank may reach len+1 -- "behind everyone I carry" -- and no further, because that is
-        # the last rung an insertion rank can name.
-        self.assertEqual(thin_worst, len(thin["RB"]) + 1)
+        # Loose Guy IS one of the two carried backs, so `len + 1` is a rung that does not exist
+        # for him -- an earlier version of this test asserted exactly that and locked in the
+        # self-counting bug below.
+        self.assertLessEqual(thin_worst, len(thin["RB"]))
         self.assertLess(thin_worst, full_worst,
                         "the same sd on a shorter board must not span the longer board's ranks")
 
@@ -299,6 +300,72 @@ class TestCompare(unittest.TestCase):
                         self.page, d, m, notes, top=5)
         self.assertIn("NOT ON YOUR BOARD", text)
         self.assertIn("Ghost Back", text)
+
+
+class TestAPlayerIsNeverHisOwnCompetition(unittest.TestCase):
+    """`depth_rank` is `bisect_left + 1`, and a carried player is ON the ladder. At his own ECR
+    `bisect_left` excludes him for free, which is why this read as correct -- but the spread
+    probes at `ecr ± sd`, and at `ecr + sd` his own rung sorts strictly below the probe, so he
+    was counted as one of the players ahead of himself. `worst` came back one rung too deep on
+    150 of 150 live rows, always in the same direction."""
+
+    LADDER = {"RB": [10.0, 20.0, 30.0]}
+
+    def row(self, ecr, sd):
+        return dict(fp_row("x", "Mid Back", "RB", "KC", ecr, sd), ecr_f=ecr, pos_rank=2)
+
+    def test_the_worst_edge_does_not_demote_him_past_a_man_he_never_lost_to(self):
+        """Hand-checkable. He is the middle of three carried backs. At his worst he has moved
+        1.0 closer to the back at 30.0 and has not reached him, so he is still RB2."""
+        self.assertEqual(C.spread_pos_ranks(self.LADDER, self.row(20.0, 1.0)), (2, 2))
+
+    def test_the_point_estimate_and_the_best_edge_were_always_right(self):
+        """Stated so the fix is not over-sold: only the upper edge crossed his own rung."""
+        self.assertEqual(C.depth_rank(self.LADDER, "RB", 20.0, own=20.0), 2)
+        self.assertEqual(C.spread_pos_ranks(self.LADDER, self.row(20.0, 5.0))[0], 2)
+
+    def test_a_carried_players_worst_rank_can_never_exceed_the_ladder(self):
+        """The invariant the bug violated. However wide the experts disagree, a man cannot rank
+        behind more players than the board carries -- he is one of them."""
+        for sd in (0.0, 1.0, 9.9, 500.0):
+            worst = C.spread_pos_ranks(self.LADDER, self.row(20.0, sd))[1]
+            self.assertLessEqual(worst, len(self.LADDER["RB"]), f"sd={sd} produced rank {worst}")
+
+    def test_an_OMITTED_player_still_reaches_len_plus_one(self):
+        """The positive control, and the distinction the bug was born from. A player the board
+        does NOT carry has no rung of his own, so 'behind everyone I carry' is a real answer for
+        him. Excluding self unconditionally would have broken section [2] instead."""
+        self.assertEqual(C.depth_rank(self.LADDER, "RB", 99.0), 4)
+        self.assertEqual(C.depth_rank(self.LADDER, "RB", 99.0, own=20.0), 3)
+
+
+class TestTheSuppressedFindingIsReported(unittest.TestCase):
+    """END-TO-END, through compare(). The self-counting bug corrupted `low` and never `high`, so
+    the band stretched downward only and real 'they like him MORE' findings were dropped into the
+    'their spread covers your placement' bucket -- the exact one-directional blind spot the depth
+    correction exists to remove."""
+
+    def setUp(self):
+        rows = [fp_row("A", "Ay Back", "RB", "KC", 1.0, 3.0)]          # a real spread
+        rows += [fp_row(f"f{i}", f"Filler {i}", "RB", "DAL", 2.0 + i, 0.0) for i in range(7)]
+        rows += [fp_row("B", "Bee Back", "RB", "SF", 9.0, 0.0)]
+        rows += [fp_row("C", "Cee Back", "RB", "NYJ", 17.0, 0.0)]
+        self.page = C.consensus_rows(rows)
+        # Ay Back is the consensus RB1 among carried backs, but the board has him at RB2.
+        self.board = [board_row(1, "Ay Back", "RB", "KC", 2, "sA"),
+                      board_row(2, "Bee Back", "RB", "SF", 1, "sB"),
+                      board_row(3, "Cee Back", "RB", "NYJ", 3, "sC")]
+        self.xw = {"sA": "A", "sB": "B", "sC": "C"}
+
+    def test_a_real_they_like_him_MORE_is_not_swallowed_by_a_self_counted_band(self):
+        d, _, _ = C.compare(self.board, self.page, self.xw, CURVE, BASELINES)
+        ay = next(x for x in d if x["name"] == "Ay Back")
+        # Carried ladder is [1.0, 9.0, 17.0]. At ecr+sd = 4.0 nobody has passed him, so his
+        # worst rank is still RB1 and the whole band collapses onto RB1's value.
+        self.assertEqual(ay["spread_pos_ranks"], [1, 1])
+        self.assertEqual(ay["surviving"], 25.0,
+                         "the experts have him a full rung above the board and it must survive")
+        self.assertGreater(ay["surviving"], 0.0, "sign matters: this is 'they like him MORE'")
 
 
 class TestTheCircularityIsDECLAREDNotHidden(unittest.TestCase):

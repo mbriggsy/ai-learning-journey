@@ -261,7 +261,7 @@ def restricted_ecrs(page, keep_fp_ids):
     return by_pos
 
 
-def depth_rank(ecrs_by_pos, pos, ecr):
+def depth_rank(ecrs_by_pos, pos, ecr, own=None):
     """Where `ecr` slots among the players the board carries at `pos`. 1-based, or None.
 
     Strictly-better-plus-one, which is competition ranking and is what makes this directly
@@ -269,13 +269,30 @@ def depth_rank(ecrs_by_pos, pos, ecr):
     different: a board player's rank in the board's units, an omitted player's INSERTION rank
     ("where would he land if I added him"), and the rank an edge of the experts' spread implies.
 
+    ⚠ `own` IS THIS PLAYER'S OWN ECR WHEN HE IS HIMSELF ON THE LADDER, AND OMITTING IT IS A REAL
+    BUG, NOT A TIDINESS ISSUE. A man cannot be one of the players ranked ahead of himself. At his
+    own ECR `bisect_left` excludes him for free (it is left-of-equal), which is exactly why this
+    read as correct -- but the spread probes at `ecr ± sd`, and at `ecr + sd` his own rung sorts
+    strictly BELOW the probe, so he gets counted as his own competition and the rank comes back
+    one too deep. Measured on the live board before this argument existed: `best` right on 150 of
+    150 rows, `worst` wrong on 150 of 150, error `{+1: 150}` -- always, and always one direction.
+
+    The damage was one-sided and therefore invisible in aggregate: only `low` was corrupted, never
+    `high`, so the acceptance band stretched downward only and `surviving_delta` returned 0 --
+    "their spread covers your placement" -- on findings that should have read "they like him MORE".
+    Which is the precise blind spot the depth correction above exists to remove; a one-rung version
+    of it survived inside the fix for it.
+
     None rather than a guess when the position has no carried players at all -- a fabricated rank
     would flow straight into `vorp()` and out into the column this report sorts by.
     """
     e = ecrs_by_pos.get(pos)
     if not e or ecr is None:
         return None
-    return bisect.bisect_left(e, ecr) + 1
+    ahead = bisect.bisect_left(e, ecr)
+    if own is not None and own < ecr:
+        ahead -= 1                    # he is on this ladder; he is not ahead of himself
+    return ahead + 1
 
 
 def spread_pos_ranks(ecrs_by_pos, row):
@@ -291,18 +308,25 @@ def spread_pos_ranks(ecrs_by_pos, row):
     bounds in FantasyPros units is a subtraction of two different quantities that still returns a
     plausible-looking number.
 
+    EVERY CALL PASSES `own=`. This row is on the ladder, so all three ranks must be measured
+    against the OTHER players the board carries -- see `depth_rank`. The point estimate does not
+    strictly need it (its probe equals his own rung, which `bisect_left` already excludes) but it
+    is passed anyway, because the invariant is "a player is never his own competition" and an
+    exception to it is how the next reader talks themselves back into the bug.
+
     NOTHING IS INVENTED. The only inputs are `ecr` and `sd` exactly as published, read through the
     same curve the board already uses. No weighting constant, no confidence score, no formula of
     mine -- an invented number in the column the report SORTS by would be the worst possible place
     to put one.
     """
-    here = depth_rank(ecrs_by_pos, row.get("pos"), row["ecr_f"])
+    mine = row["ecr_f"]
+    here = depth_rank(ecrs_by_pos, row.get("pos"), mine, own=mine)
     try:
         sd = abs(float(row.get("sd")))
     except (TypeError, ValueError):
         return here, here
-    best = depth_rank(ecrs_by_pos, row.get("pos"), row["ecr_f"] - sd)
-    worst = depth_rank(ecrs_by_pos, row.get("pos"), row["ecr_f"] + sd)
+    best = depth_rank(ecrs_by_pos, row.get("pos"), mine - sd, own=mine)
+    worst = depth_rank(ecrs_by_pos, row.get("pos"), mine + sd, own=mine)
     return best, worst
 
 
@@ -369,7 +393,7 @@ def compare(board, page, xw, curve, baselines):
 
         # BOTH SIDES IN THE BOARD'S OWN UNITS. `p["pr"]` counts within 174; the consensus rank has
         # to count within the same population or the subtraction below prices the list sizes.
-        cons_pr = depth_rank(ladder, row["pos"], row["ecr_f"])
+        cons_pr = depth_rank(ladder, row["pos"], row["ecr_f"], own=row["ecr_f"])
         mine = vorp(curve, baselines, p["pos"], p["pr"])
         theirs = vorp(curve, baselines, row["pos"], cons_pr)
         if mine is None or theirs is None:

@@ -66,6 +66,19 @@ forward:
 - Full write-up: [`docs/insights/018`](docs/insights/018-the-bias-was-the-only-thing-producing-findings.md).
   **Do not "fix" the zero by loosening the spread filter** — that rebuilds the noise machine.
 
+⚠️ **THE FIRST VERSION OF THAT FIX SHIPPED A ONE-RUNG COPY OF THE SAME BUG, and it was caught by an
+adversarial pass on an already-green run.** `depth_rank` counted the player as one of the players
+ranked ahead of *himself* at the upper spread edge — `worst` one rung too deep on **150 of 150 rows**,
+897.5 VORP points of spurious band-widening, max **59.3** (Chase). Only `low` was corrupted, so the
+band stretched **downward only** and real *"they like him MORE"* findings were returned as zero —
+the exact blind spot the correction exists to remove. Fixed with an `own=` argument that must stay
+**conditional** (a player the board OMITS legitimately reaches `len+1`; over-correcting breaks
+section [2] — mutant M6). **7 mutants now, 7 killed.**
+- **Read [`019`](docs/insights/019-the-mutants-only-probe-the-axis-you-already-suspect.md) before
+  trusting a green mutation run.** All four original mutants probed *which population is ranked*;
+  none probed *who is in the comparison*, so the clean sweep carried no information about the axis
+  that was actually broken — and **a test written in the same pass asserted the bug.**
+
 **Next action, in order:**
 1. **BUILD THE KICKER CURVE — it is an EXACT build, and it is the cheap half of the K/DEF gap.**
    The 24 `carried:kdef-tier-flat` rows (K=10, DEF=14, re-counted 2026-08-08) split into one easy
@@ -120,8 +133,8 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **638 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 638 with **11 skips**
+gate went **13 findings → 0** by fixing surfaces. **643 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 643 with **11 skips**
 — 2 live-cargo probes plus **9** that need the gitignored consensus/ADP caches
 (`draft-kit/cache/fp_ecr.csv.gz`, `player_ids.csv.gz`, `ffc_adp.json.gz`). Re-measured 2026-08-08 by
 actually hiding all four paths and naming every skip, not copied from the previous line — which had
@@ -259,10 +272,20 @@ produce **byte-identical advisories** on the 120-pick lab feed at prefixes 1, 3,
 
 ## 0. Start with `/brief`
 
-Eighteen insight docs now exist. Each has a documented wrong answer that looks right. Read them
+Nineteen insight docs now exist. Each has a documented wrong answer that looks right. Read them
 before designing, not after debugging.
 
-**The newest is the one to read before touching any comparison, join or "disagreement" metric:**
+**Read [`019`](docs/insights/019-the-mutants-only-probe-the-axis-you-already-suspect.md) before
+trusting a green mutation run.** Four mutants were planted on the depth correction, all four were
+killed, and the shipped code still had a critical off-by-one on **150 of 150 rows** — because every
+mutant probed *which population is ranked* and none probed *who is in the comparison*. **A mutation
+suite measures the imagination of whoever wrote the mutants.** Worse, a test written in the same
+pass **asserted the bug**: a bound that is genuinely correct for a player the board OMITS was
+generalised onto a player the board CARRIES, because one function answered both questions. An
+adversarial fleet found it on a run where everything was already green — which is exactly the state
+where review is most likely to be skipped and most likely to pay.
+
+**The other new one, to read before touching any comparison, join or "disagreement" metric:**
 - **[`018`](docs/insights/018-the-bias-was-the-only-thing-producing-findings.md)** — correcting the
   depth artifact in `consensus.py` took its findings from six to **zero**, because the artifact was
   the only thing producing them. Underneath sat a tautology: `rerank.py` builds the board's ordering

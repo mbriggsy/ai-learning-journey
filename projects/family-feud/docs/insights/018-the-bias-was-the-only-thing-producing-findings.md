@@ -130,15 +130,41 @@ metric, check whether the two sides share an ancestor. If they do, the metric's 
 identity and the instrument must say so itself — a comment in the source is not a defence, because
 the person misreading the zero is reading the *output*.
 
+## ⚠️ The first version of this fix carried a one-rung copy of the same bug
+
+Written down because it is the more useful half of the story. The correction shipped, green,
+mutation-tested — and **`depth_rank` counted the player as one of the players ahead of himself**
+at the upper edge of the spread. `bisect_left` is left-of-equal, so at his own ECR he is excluded
+for free; but `worst` probes at `ecr + sd`, his own rung sorts strictly below that, and he gets
+counted. Measured on the live board: `best` correct on 150 of 150, **`worst` one rung too deep on
+150 of 150, error `{+1: 150}`** — 897.5 VORP points of spurious band-widening, mean 6.0, max
+**59.3** on Ja'Marr Chase.
+
+Only `low` was corrupted, never `high`, so the acceptance band stretched **downward only** and
+`surviving_delta` returned 0 — *"their spread covers your placement"* — on findings that should
+have read *"they like him MORE."* **That is the exact one-directional blind spot this whole
+insight is about, surviving one rung deep inside the fix for it.** Hand-demote Chase from WR1 to
+WR2 — the precise action the circularity banner names as what re-arms section [1] — and a **+59.3
+point** finding reads as nothing to answer for.
+
+The fix is an `own=` argument: a player is never his own competition. It must stay conditional,
+because a player the board **omits** has no rung of his own and `len+1` is a real answer for him —
+over-correcting breaks section [2] instead (mutant M6).
+
+Full lesson in [insight 019](019-the-mutants-only-probe-the-axis-you-already-suspect.md), including
+the test that asserted the bug.
+
 ## Evidence
 
-- **638 tests**, 0 failures (was 628; **10 added**), `python -m unittest discover -s tests`.
-- **4 mutants planted and all 4 killed**, source restored byte-identical:
+- **643 tests**, 0 failures (was 628; **15 added**), `python -m unittest discover -s tests`.
+- **7 mutants planted and all 7 killed**, source restored byte-identical:
   M1 no restriction at all · M2 point estimate reverts to the published rank · M3 omitted players
   revert to the published rank · **M4 the naive port** (estimate restricted, spread left on the
-  full list) — M4 is the one a careless fix would ship, and it was caught only by a **call-site**
-  test through `compare()`, because the direct unit tests of `spread_pos_ranks` pass a ladder in
-  and so cannot see how the caller wires it (insight 013).
+  full list) · **M5 the self-counting bug restored** · **M6 over-correction** (exclude self
+  unconditionally, which breaks the omitted-player insertion rank) · **M7 the fix present but not
+  passed at the call site**. M4 and M7 are both caught only by **call-site** tests through
+  `compare()`, because the direct unit tests of `spread_pos_ranks` pass a ladder in and so cannot
+  see how the caller wires it (insight 013).
 - The circularity banner ships with a **positive control**: overruling one row by hand retires the
   banner and restores the normal section. A banner that printed unconditionally would go on
   claiming circularity through the exact refresh that ends it (insight 008).

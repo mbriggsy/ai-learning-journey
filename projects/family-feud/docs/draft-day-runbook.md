@@ -163,6 +163,23 @@ and email are broken account-wide for this account, so an alert that needs one d
    flag used to be optional and forgettable, and forgetting it is how a spent mock's `picks.json`
    advises a live draft. Overrides are `--teams`, `--rounds`, `--draft-id`; each wins and says so.
    **`--dry-run` prints every value and where it came from without starting the engine.**
+4. **The moment your pick lands — BEFORE you relax — run
+   `python3 scripts/precompute_ladder.py --slot <slot>`.** *(added 2026-08-09)*
+   This is the standing ladder, derived instead of guessed. It costs ~0.1s, it runs the real engine
+   (never a second ranking), and it prints the three things the next window needs: **the queue
+   order** to load into Sleeper, **one market scenario** for who is likely gone by your turn, and
+   **which tier cliffs empty** under it. Whatever it prints is the answer you execute at Step 3's
+   hard rule — on the clock you do a LOOKUP, not a deliberation.
+   - **It will not model your opponents for you, and it says so.** The market scenario backtests at
+     **35%** against the committed 120-pick feed — against a **33%** null model that uses no ADP at
+     all, and a **1%** floor control that proves the metric can tell orderings apart. Read
+     `assumes gone` as *one scenario*, never a forecast. `--backtest` reprints all three arms.
+   - **A name it expects gone is still worth queueing.** Auto-pick skips the dead and takes your
+     top surviving queue entry, so those names are *marked*, not reordered — reordering a real
+     board rank on a 35% guess is a bad trade.
+   - **If it prints the `!!` seat banner, STOP.** It means the engine could not confirm the seat
+     from either oracle, and a wrong seat yields a complete, confident ladder for another team.
+     Read the seat from `draft_order["1390750540631150592"]` and from nothing else.
 
    It **hard-refuses** a non-snake or third-round-reversal draft rather than computing a pick order
    this repo does not model. Missing cargo is different: it degrades to what you typed and says so.
@@ -187,7 +204,7 @@ and email are broken account-wide for this account, so an alert that needs one d
 Claude's hands are claude-in-chrome on Briggsy's logged-in Chrome; eyes stay on the API (poll + engine per Step 3); the browser is touched only to click picks. Mechanics, learned live:
 - **Clock budget:** browser actions cost ~5-15s per round trip (search, click, verify screenshot). Treat a 120s clock as ~90s of decision time. With a standing ladder, execution needs ~15s total: filter, verify, fire.
 - **Player-row icons, left to right (verified in the Aug 6 queue lab):** `+` = **INSTANT DRAFT while on the clock, no confirmation** (pre-draft it no-ops) · `☆` star = watchlist only · **blue document-plus `📄+` = ADD TO QUEUE — works pre-draft and any time.** The queue lives in the right panel's Queue tab (shows a count); each entry has a REMOVE button. The player-card modal has NO action buttons — never open it mid-draft, it's a time sink.
-- **PRE-ARM THE QUEUE.** Before the draft starts, load the round-1 ladder into the queue via the `📄+` icons (top name first). At each window, refresh it to the current ladder's top 2-3 (REMOVE dead names, add new) — skip maintenance when the clock is tight; direct fire stays primary. A loaded queue makes every failure mode safe: missed clock, frozen bridge, native dialog — Sleeper's timeout autopick takes the queue TOP, i.e. OUR guy, not ADP's. (Mock #2 ran the whole draft with an empty queue because the affordance wasn't known; the pick-79 miss would have cost nothing with a loaded queue.) Keep the AUTO-PICK toggle OFF — with a loaded queue it insta-drafts queue-top the moment our turn starts, no judgment applied.
+- **PRE-ARM THE QUEUE.** The ladder to load is the one `scripts/precompute_ladder.py --slot <slot>` prints under **QUEUE THIS ORDER** — it is the engine's own BEST AVAILABLE order, so it needs no judgement applied on top and no second ranking exists to drift from it. *(added 2026-08-09; `ffQueue` / `ffQueueList` / `ffUnqueue` in `scripts/sleeper_draft_console.js` are what put it in and keep it ranked.)* Before the draft starts, load the round-1 ladder into the queue via the `📄+` icons (top name first). At each window, refresh it to the current ladder's top 2-3 (REMOVE dead names, add new) — skip maintenance when the clock is tight; direct fire stays primary. A loaded queue makes every failure mode safe: missed clock, frozen bridge, native dialog — Sleeper's timeout autopick takes the queue TOP, i.e. OUR guy, not ADP's. (Mock #2 ran the whole draft with an empty queue because the affordance wasn't known; the pick-79 miss would have cost nothing with a loaded queue.) Keep the AUTO-PICK toggle OFF — with a loaded queue it insta-drafts queue-top the moment our turn starts, no judgment applied.
 - **Fire sequence on our clock:** click the "Find player" search box → type the target's name (filters list to ~1 row, eliminates wrong-row risk) → screenshot to verify top row = target and the clock cell is ours → click `+` on the top row (y≈513-523) → screenshot confirms the board cell. Sleeper even prints "Projected pick" under the row — a free sanity check.
 - **SECOND fire path — the queue-row green `⊕`:** each queue entry has REMOVE + a green `⊕` at its right edge; on our clock the `⊕` INSTANT-DRAFTS that player (verified twice in Mock #3: Egbuka, DeVonta). When queue-top is THE CALL it's one click with the name label right there — faster and safer than search. Zoom the queue row first if coordinates are in doubt; the `⊕` sits ~50px right of REMOVE.
 - **Clearing the search box: TRIPLE-CLICK the box, then type (or Delete). NEVER ctrl+a.** The bridge drops the ctrl modifier intermittently — ctrl+a then becomes a literal "a" typed into the box (symptom: search shows "aSutton", zero rows match) or a page-wide select-all when the box click missed. This single bug killed three queue-arm attempts in Mock #3 and nearly ate pick 78. Triple-click selects the input's text with no modifiers; typing replaces it.

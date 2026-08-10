@@ -9,7 +9,9 @@
 plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U7·U8·U10·U11·U12·U13)
   → review residue ✅ (all 10) → engine join ✅ → provenance ✅ → consensus ✅ → re-rank ✅
   → ADP ✅ → mule v2.1 ✅ → mock proven end-to-end ✅ → CDN staleness fixed ✅
-  ◀ HERE — the board is DERIVED, refreshes itself hourly, and the draft-day feed is no longer stale
+  → harness leg (c) keep-the-queue-ranked ✅ → leg (b) the ladder precomputer ✅
+  ◀ HERE — the board is DERIVED, the feed is no longer stale, and the ladder is DERIVED too:
+    the answer for the next pick exists before the clock starts, and leg (d) is all that is left
 ```
 
 **Units shipped:** U1, U2 (Phase 0 gates) · **U9** (draft-state watcher) · **U3** (one normalizer,
@@ -116,25 +118,99 @@ field. `tests/test_build_curves.py` is new, **14 tests**; that file had none.
 
 ## ▶ NEXT ACTION
 
-**Two live candidates as of 2026-08-09. Ranked, with the reason each is where it is.**
+**Both of the candidates this section listed on 2026-08-09 are now CLOSED. Read the two
+`✅ DONE` blocks before proposing anything — the queue below is what is actually left.**
 
-**◀ 1. THE 2025 WINDOW — the largest accuracy gap, and it just stopped being blocked.** Full
-measurement in *THE 2025 PARK IS VOID* below. One line in `build_curves.py` pointed us at a frozen
-nflverse release; the current one publishes 2025 in exact form, our scoring engine reproduces it
-**1,997/1,997**, and kicking comes along for free at **45/45**. Worth doing first because it moves
-the **top** of the board — a ~25-point RB-vs-WR swing at the elite ranks — which is where picks 1.3
-and 2.6 are decided. Needs its own unit and a stated per-position residual before any surface moves.
+~~**1. THE 2025 WINDOW.**~~ ✅ **DONE 2026-08-09** — measured, decomposed, and applied on Briggsy's
+call; the board ships on `current` / 2022-2025 and Bijan takes #1. Full write-up in
+*THE 2025 PARK WAS VOID* below. Do not re-open it as a candidate.
+
+~~**2. THE MOCK-DRAFT HARNESS, legs (b) and (c).**~~ ✅ **DONE 2026-08-09** — both built, both
+wired into the runbook, both detailed immediately below.
+
+**WHAT IS ACTUALLY LEFT, ranked:**
+1. **Leg (d) — the off-clock doctrine terminals.** Many terminals, one per opposing doctrine,
+   **forbidden to talk**, running only between windows. Nothing depends on it and it is the only
+   named piece of the harness not built. It is also the only honest route to the thing the
+   precomputer refuses to fake: **a validated opponent model.** Without one, every enumeration
+   over futures is closed-form arithmetic (proven below), so this is not decoration — it is the
+   prerequisite for the whole class of question.
+2. **The long-TD bonus** (+1 at 40+, +2 at 50+, stacking) is still not computable — no TD-distance
+   column exists on either nflverse release, so it needs play-by-play. The ONLY remaining accuracy
+   gap on the four skill positions. 🚨 `receiving_40` / `rushing_40` / `passing_40` are chunk-play
+   counts, **NOT** 40-yard touchdowns — exactly what a session under a clock would grab.
+3. **DEF has no exact source at all** and the 14 rows stay labelled. **Do not build a DEF curve** —
+   the reasoning is in the DECIDED block below and it has not changed.
 
 **◀ 2. THE MOCK-DRAFT HARNESS.** Proven 2026-08-09 that the whole spine already runs against a
-real Sleeper mock with **zero new code** — see the operating facts below. What is missing is the
-part that beats the clock, and the shape is now decided by measurement rather than taste.
-⚠️ **Two of its four legs got weaker on 2026-08-09, not stronger** — the queue oracle was found
-lying and is now fixed but **unproven in a room**, and `ffQueue` still cannot read, remove or
-reorder, so leg (c) is "keep adding" rather than "keep ranked". **The shortest path to leg (b) is
-already written and nobody has named it:** `validate_board.check_engine_replay()`
-(`validate_board.py:864-898`) already drives the real engine offline against arbitrary prefixes of
-the committed 120-pick feed — it just **throws stdout away**. Capture that and you have a branch
-precomputer without a browser or a clock.
+real Sleeper mock with **zero new code** — see the operating facts below. Legs **(b)** and **(c)**
+are now both built and both wired into the runbook; what is left is leg (d), the off-clock
+doctrine terminals, which nothing depends on.
+
+**✅ LEG (b) IS BUILT — `scripts/precompute_ladder.py`, wired into runbook Step 3.4 and PRE-ARM
+THE QUEUE.** One command, ~0.1s, run the moment your pick lands. It shells out to the real engine
+(never a second ranking) and prints the queue order, one market scenario, and which tier cliffs
+that scenario empties. **52 tests, 10 mutants planted and 10 killed.**
+
+🚨 **AND THE FIRST VERSION OF IT WAS A TAUTOLOGY MACHINE — the fourth this project has caught, and
+the largest.** It enumerated futures: sample `gap` players from a pool, run the real engine on each,
+report how often each name tops BEST AVAILABLE and how often each tier empties. 495 engine
+subprocesses. Both tables were then measured against their closed forms and **matched to the digit**:
+
+| output | measured | closed form |
+|---|---|---|
+| tops BEST AVAILABLE, by board rank | 330 / 120 / 36 / 8 / 1 | `C(k-i-1, gap-i)` → 330 / 120 / 36 / 8 / 1 |
+| tier empties (RB T3, 1 left · WR T4, 2 left) | 0.333 · 0.091 | `C(k-L, gap-L)/C(k,gap)` → 0.333 · 0.091 |
+
+Neither number knows anything about football — both are functions of the pool size, the gap, and a
+count the engine already prints **on the same line**. It is the *"survives 67%"* figure the file had
+already deleted for exactly this reason, reprinted as BOTH headline blocks. **Widening the pool does
+not rescue it: the closed form holds for any k.** Only a non-uniform opponent model would make
+enumeration informative, and an unvalidated opponent model is a fabricated number one level deeper.
+**The enumeration is gone**, and `test_the_enumeration_stays_dead` keeps it gone.
+- ⚠️ **Its sampler was independently broken and nothing noticed.** SHA-256 is 32 bytes, so
+  `h[b*4:(b+1)*4]` was **empty** for every draw past the 8th and `int.from_bytes(b"", "big")` is 0
+  — forcing pool[0] into **60 of 60** sampled futures against a uniform expectation of 3.5. It only
+  bites at gap ≥ 9, and with a 12-name pool the space is always exhaustive, so it was invisible.
+  **Widening the pool would have made it live.** A dead code path is not a safe one.
+
+⚠️ **THE ADP EDGE CLAIM WAS FALSIFIED, AND IT WAS LOAD-BEARING.** `market_order()` asserted that
+ordering opponents by our own board "would explore the wrong futures entirely." Scored over 18 stops
+of the committed 120-pick feed: **market ADP 29/84 (35%) · null model, our own board order, 28/84
+(33%) · floor control 1/84 (1%)**. One player in 84. The floor proves the metric *can* tell
+orderings apart — so this is "these two are equivalent", not "the instrument is blind".
+**`--backtest` now reprints all three arms every run**, so it cannot quietly become folklore again.
+
+⚠️ **THE POOL WAS CAPPED AT 12 AND `--pool` WAS A DEAD KNOB.** Candidates came from BEST AVAILABLE,
+which `draft_engine.py:446` caps at `BEST_N = 12`, so `--pool 24` (the default) and the docstring's
+`--pool 30` were both impossible. Measured against the real feed, **37% of the picks that actually
+happen land outside those 12** (35% on our board but deeper, 2% off it entirely) — and every one of
+them can still empty a tier, because `draft_engine.py:456` counts a cliff over the WHOLE tier.
+Folding in the tier-cliff names takes the candidate set to **31-42** with every name still coming
+from the engine's own output. That also lifts the projection's ceiling: it silently modelled at most
+12 removals however far away our pick was, and **an 8-team snake turns a slot-1 or slot-8 seat around
+with a gap of 14.**
+
+⚠️ **THE SEAT WAS TAKEN ON TRUST AND THE ENGINE'S OWN WARNING WAS SWALLOWED.** `run_engine` uses a
+temp cwd, and `draft_engine.py:207` resolves its cargo oracle relative to cwd — so the seat check
+could never run and the `** my_slot=N IS UNVERIFIED **` banner fired on **every** run into a void.
+`stage_cargo()` now puts the cargo where the engine looks, and the banner is surfaced verbatim.
+- ⚠️ **The first version of that fix was a FALSE RED** — it raised the seat alarm on any
+  `[unverified]` line, including the routine "cargo is pinned to a different draft" note that
+  appears on runs whose seat the engine **did** confirm from our own `picked_by`. Insight 009: a
+  false red is the more dangerous direction, because it teaches the operator to skip the gate.
+  The three channels (`**` banner / `[unverified]` / `[checked]`) are parsed separately now.
+- **Proven both ways:** `--slot 1` against a feed whose `picked_by` says slot 3 is REFUSED by the
+  engine's fatal gate, through the precomputer; and with `picked_by` stripped, the banner fires.
+
+⚠️ **TWO MUTANTS SURVIVED THE FIRST PASS — insight 019 again, both on axes I had not probed.**
+- **M4** (price an unpriced player at ADP 9999): the test asserted the right output *for the wrong
+  reason* — an unpriced player sorts last under the fiat too, so both implementations agreed. They
+  diverge only in the order **among** unpriced players. A test now pins board order there.
+- **M8** (never call `stage_cargo`, hardcode `staged`): the function had tests, its **call site had
+  none** — insight 013 exactly. The proof had to come from the engine's own mouth: it can only name
+  the fixture's `draft_id` if it really opened the file we staged, and a negative control asserts
+  that id is absent when there is no cargo.
 
 - **One terminal on the clock, never a fleet.** A draft is maximally coupled — one board, one
   clock, one decision, mutating every 120s — and a live run proved the human-in-terminal loop is
@@ -289,6 +365,15 @@ re-opening it is Briggsy's call and it comes with an error budget attached.
 **Standing work that is not a task:** the mule hauls hourly, the watcher watches, the newsletter
 publishes nightly at 21:45, and `python scripts/build_board.py --verify-only` is the draft-morning
 sanity check. None of that needs touching.
+
+⚠️ **A RED `test_normalize` USUALLY MEANS A REVIEW FLEET LEFT SCRATCH IN THE REPO, not a real
+regression.** On 2026-08-09 an adversarial fleet wrote `ctrl/` (as in *control*) into the project
+root — a copy of `draft-kit/{normalize.py, picks.json, players_data.json}` plus staged cargo — to
+reproduce the precomputer's environment. U3's one-normalizer guard fired on the stray
+`normalize.py`, exactly as designed, and the suite went from a green run to one failure with no
+source change. **Check `git status` for untracked scratch dirs before diagnosing.** Delete the
+scratch; the guard is right, and it is the only thing standing between this repo and a second
+normalizer.
 
 **DECIDED 2026-08-08 — recorded so nobody reopens them as oversights:**
 1. ✅ **NO K BASELINE. K `vorp` stays carried, deliberately.** Briggsy's call.
@@ -452,16 +537,20 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **750 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 750 with **15 skips**
+gate went **13 findings → 0** by fixing surfaces. **802 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 802 with **16 skips**
 — 2 live-cargo probes plus **9** that need the gitignored consensus/ADP caches
-(`draft-kit/cache/fp_ecr.csv.gz`, `ffc_adp.json.gz`) plus **4** (`test_build_curves.TestTheCurveShape`)
+(`draft-kit/cache/fp_ecr.csv.gz`, `ffc_adp.json.gz`) plus **5** (`test_build_curves.TestTheCurveShape`)
 that need the gitignored nflverse season CSVs. ⚠️ **`player_ids.csv.gz` is COMMITTED, not
-gitignored** — `.gitignore:66-69` says so explicitly, and the previous version of this line named it
-as a cause of skips. The 11→15 correction is the four K-curve tests, which the 2026-08-08
-measurement missed because `player_stats_*.csv` was not one of the paths it hid. Re-measured 2026-08-08 by
-actually hiding all four paths and naming every skip, not copied from the previous line — which had
-aged to `628 / 10 / 8` and was wrong on all three. Verified by eye, not only by tests: the cheat sheet is **2 pages
+gitignored** — `.gitignore:66-69` says so explicitly, and an older version of this line named it
+as a cause of skips. Re-measured 2026-08-09 by hiding `fp_ecr.csv.gz`, `ffc_adp.json.gz`,
+`player_stats_*.csv`, `stats_player_week_*.csv`, `player_stats_kicking_*.csv` and
+`newsletter/data/inbox/`, then naming every skip — never copied from the previous line, which had
+aged to `628 / 10 / 8` and then to `750 / 15` and was wrong both times. **The K-curve group is 5,
+not the 4 recorded on 2026-08-08** — that measurement did not hide `player_stats_kicking_*.csv`.
+**The 52 precomputer tests add ZERO skips**: they inject their own cargo and ADP fixtures rather
+than reading the hourly haul (review residue 1), and a test asserts that.
+Verified by eye, not only by tests: the cheat sheet is **2 pages
 — the whole 174-row board on page 1**, the plan on page 2 — and the HTML board renders shape-driven
 round labels with no invented rounds.
 
@@ -597,8 +686,17 @@ produce **byte-identical advisories** on the 120-pick lab feed at prefixes 1, 3,
 
 ## 0. Start with `/brief`
 
-Twenty insight docs now exist. Each has a documented wrong answer that looks right. Read them
+Twenty-one insight docs now exist. Each has a documented wrong answer that looks right. Read them
 before designing, not after debugging.
+
+**Read [`021`](docs/insights/021-the-simulation-had-a-closed-form-and-was-measuring-its-own-sampler.md)
+before building ANY simulation, sweep or enumeration over futures.** The branch precomputer ran 495
+real engine subprocesses per invocation and both of its aggregates matched their **closed forms to
+the digit** — it was an expensive way to evaluate `math.comb`, and its output read as evidence.
+**Compute the closed form first; if it matches, the sampler is measuring itself, not your system.**
+The same file had already deleted a `survives 67%` figure for this exact reason and did not apply
+the lesson one level up. It also hid a sampler bug that could not fire at the current pool size and
+would have gone live the moment the pool was widened.
 
 **Read [`020`](docs/insights/020-the-cdn-served-a-contiguous-prefix-and-every-gate-passed.md)
 before trusting any feed on draft day.** The Sleeper picks endpoint is Cloudflare-cached and the

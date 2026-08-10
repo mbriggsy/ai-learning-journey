@@ -66,6 +66,28 @@ function Fetch-Source {
     $dest = Join-Path $inbox $OutFile
     $tmp  = "$dest.incoming"
 
+    # BUST THE CDN, per source, per call. Sleeper serves its API through Cloudflare and the draft
+    # object carries exactly the policy insight 020 measured on /picks:
+    #     cache-control: public, s-maxage=30, stale-while-revalidate=300, stale-if-error=600
+    # Measured live 2026-08-09 on mock 1392338436949561355: seconds after START DRAFT the un-busted
+    # URL returned `status: pre_draft, draft_order: null` with `Age: 60, cf-cache-status: UPDATING`,
+    # while the busted URL returned `status: drafting, draft_order: {...: 5}`. Same request, same
+    # second, opposite answers -- and the stale one is the one that reads like a finished check.
+    #
+    # WHY IT MATTERS HERE AND NOT JUST IN merge_picks.py. This cargo is what read_shape() and
+    # run_engine.py read for teams, rounds, roster and the SEAT. `draft_order` is null today and
+    # flips to populated near go time; a stale copy keeps reporting null exactly when the seat
+    # oracle finally has something to say. stale-while-revalidate means the request that triggers
+    # the refresh is handed the OLD body, so "fetch twice" is not a fix -- the nonce is.
+    #
+    # Scoped to sleeper.app: the RSS feeds are not Cloudflare-cached this way and a stray query
+    # string on someone else's endpoint is a change we have not measured.
+    if ($Url -match 'api\.sleeper\.app') {
+        $nonce = [guid]::NewGuid().ToString('N')
+        $sep = if ($Url -match '\?') { '&' } else { '?' }
+        $Url = "$Url$sep" + "cb=$nonce"
+    }
+
     try {
         $resp  = Invoke-WebRequest -Uri $Url -Headers $headers -TimeoutSec 30 -UseBasicParsing
         $code  = [int]$resp.StatusCode

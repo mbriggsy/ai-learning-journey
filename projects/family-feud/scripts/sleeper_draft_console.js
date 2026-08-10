@@ -19,12 +19,21 @@
  *   ffFind('Justin Jefferson')    -> what WOULD be drafted; touches nothing. Always run this first.
  *   ffDraft('Justin Jefferson')   -> actually drafts him. Reports a CLICK, never a PICK.
  *   ffQueue('Justin Jefferson')   -> adds him to the queue, verified by the count incrementing.
+ *   ffQueueList()                 -> the queue IN ORDER; document order == visual order.
+ *   ffUnqueue('Justin Jefferson') -> removes him, verified by the count going DOWN by one.
+ *   ffStartDraft({iAmInAMock:true}) -> answers the START DRAFT native confirm. Two guards; see below.
  *
- * NOT BUILT YET, and the draft-day plan needs them: there is no way from here to READ the queue's
- * order, REMOVE an entry, or REORDER it -- so "keep the queue ranked" is not yet executable. The
- * room does expose a REMOVE per entry (recorded in the runbook's Aug 6 queue lab); its selector has
- * never been captured. Measure it in a mock before writing ffUnqueue()/ffQueueList() -- do not
- * guess at DOM, which is the whole reason this file exists.
+ * ⚠️ THIS HEADER SAID "ffQueueList/ffUnqueue NOT BUILT YET" FOR A WHOLE SESSION AFTER THEY SHIPPED,
+ * and the stale claim sat six lines above the working code. It is the same defect as the START
+ * DRAFT entry that TODO.md and the runbook disagreed about: a file's own prose outranking its own
+ * contents in a reader's head. If you add a control here, add it to this list in the same edit.
+ *
+ * PROVEN IN A LIVE ROOM 2026-08-09 (mock 1392338436949561355, created and started from this file):
+ * ffStartDraft returned confirmsAnswered:1 with window.confirm restored to the same native
+ * function object; three ffQueue adds verified empty->1->2->3; ffQueueList agreed with the tab
+ * count; and with the queue loaded, auto-pick took OUR queue-top (Ja'Marr Chase) at pick #5 on our
+ * seat, then fell back to Sleeper's board once the queue drained. The API was the oracle for all
+ * of it -- see the warning on ffDraft.
  */
 (function () {
   const NAME_MIN_W = 60, NAME_MAX_W = 220, ROW_MIN_W = 600;

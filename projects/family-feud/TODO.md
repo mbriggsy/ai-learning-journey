@@ -152,6 +152,33 @@ THE QUEUE.** One command, ~0.1s, run the moment your pick lands. It shells out t
 (never a second ranking) and prints the queue order, one market scenario, and which tier cliffs
 that scenario empties. **52 tests, 10 mutants planted and 10 killed.**
 
+✅ **AND THE WHOLE SPINE IS PROVEN END-TO-END IN A LIVE ROOM — mock `1392338436949561355`,
+2026-08-09, created and driven entirely from this repo with no human click.** Every link, in order:
+- `ffStartDraft({iAmInAMock:true})` returned **`confirmsAnswered: 1`** and left `window.confirm`
+  restored to the **same native function object** — the safety property, checked rather than
+  assumed. Both guards were exercised first and both refused (no flag, and truthy-but-not-`true`).
+- The seat came from `draft_order["1390750540631150592"]` = **5**, a seat deliberately chosen NOT
+  to be 3 so the project's most attractive wrong answer could not pass by coincidence.
+- **The seat oracle was positive- AND negative-controlled live.** With this draft's own cargo
+  staged, `--slot 5` printed `[checked] teams=8 · rounds=15 · my_slot=5 against draft_order`;
+  `--slot 3` was **hard-refused** by the engine (`my_slot=3 but draft_order[...] = 5`), **exit 1**.
+- `merge_picks.py` **refused the first fetch** because `draft-kit/picks.json` still held 18 picks
+  from a spent mock — the contamination gate firing for real, unprompted.
+- The precomputer ran against the live feed, printed **ON THE CLOCK NOW** at pick #5 (gap 0), and
+  mid-draft printed a real 5-pick projection with `LOST to the market: Cam Skattebo`.
+- `ffQueue` loaded its top three **in the printed order**, each verified by the count incrementing
+  (`empty->1`, `1->2`, `2->3`); `ffQueueList` agreed with the tab count; Sleeper labelled our
+  queue-top **NEXT PICK**.
+- 🚨 **With the queue loaded, auto-pick took OUR queue-top — Ja'Marr Chase — at pick #5 on slot 5**,
+  then fell back to Sleeper's board (Omarion Hampton, #12) once the queue drained. Confirmed
+  against `/picks`, never from the browser.
+- ⚠️ **The AUTO-PICK toggle still does not respond to synthetic events** — not `.click()`, not a
+  full pointerdown/mousedown/pointerup/mouseup/click sequence. Only a real click moved it. Its
+  element is `.autopick-toggle`; find it by class and click it for real.
+- ⚠️ **The `+` on `/draftboards` opens the LEAGUE wizard, not the mock creator.** It created a real
+  1-person league (`Ladder Test 0809`, `1392338161744490496`) sitting in the sidebar next to Family
+  Feud. **The mock creator is the `NEW MOCK NFL DRAFT` button in the right-hand panel.**
+
 🚨 **AND THE FIRST VERSION OF IT WAS A TAUTOLOGY MACHINE — the fourth this project has caught, and
 the largest.** It enumerated futures: sample `gap` players from a pool, run the real engine on each,
 report how often each name tops BEST AVAILABLE and how often each tier empties. 495 engine
@@ -365,6 +392,20 @@ re-opening it is Briggsy's call and it comes with an error budget attached.
 **Standing work that is not a task:** the mule hauls hourly, the watcher watches, the newsletter
 publishes nightly at 21:45, and `python scripts/build_board.py --verify-only` is the draft-morning
 sanity check. None of that needs touching.
+
+🚨 **THE CDN CACHE IS ON `/draft/<id>` TOO, AND THE MULE WAS FETCHING IT BARE (fixed 2026-08-09).**
+Insight 020 measured Cloudflare staleness on `/picks` and hardened `merge_picks.picks_url()`. The
+draft-object endpoint carries the **identical** policy — `s-maxage=30, stale-while-revalidate=300`
+— and `feud_mule.ps1` hauled it with no nonce. Measured live seconds after START DRAFT: the
+un-busted URL returned `status: pre_draft, draft_order: null` with `Age: 60,
+cf-cache-status: UPDATING` while the busted URL returned `status: drafting, draft_order: {...: 5}`.
+**Same second, opposite answers, and the stale one reads like a completed check.** That cargo is
+what `read_shape()` and `run_engine.py` read for teams, rounds, roster and **the seat** — and
+`draft_order` flips from null to populated near go time, so a stale copy keeps saying `null`
+exactly when the oracle finally has something to say. **Fixed inside `Fetch-Source`**, not at the
+call site, so all five Sleeper URLs and the next one added are covered; RSS is deliberately
+untouched. Re-run: **12/12 ok.** Full write-up: the 2026-08-09 addendum to
+[`020`](docs/insights/020-the-cdn-served-a-contiguous-prefix-and-every-gate-passed.md).
 
 ⚠️ **A RED `test_normalize` USUALLY MEANS A REVIEW FLEET LEFT SCRATCH IN THE REPO, not a real
 regression.** On 2026-08-09 an adversarial fleet wrote `ctrl/` (as in *control*) into the project

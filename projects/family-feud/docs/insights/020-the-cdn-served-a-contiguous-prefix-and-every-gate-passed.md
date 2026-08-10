@@ -146,3 +146,41 @@ verifying too.**
   anything, and remember `stale-while-revalidate` punishes the lone poller specifically.
 - **When you learn something about a foreign source, grep every call site in the repo before
   closing it.** A fix in one surface is a note until it reaches the others.
+
+## Addendum, 2026-08-09 — the same cache is on `/draft/<id>`, and the mule was fetching it bare
+
+The rule above ends with *"grep every call site in the repo before closing it."* That was written
+about `/picks` and it was not followed all the way. **The draft-object endpoint carries the
+identical Cloudflare policy**, and it was reached un-busted from the one process that runs
+unattended.
+
+Measured live on mock `1392338436949561355`, seconds after `ffStartDraft` clicked START:
+
+```
+cache-control: public, s-maxage=30, stale-while-revalidate=300, stale-if-error=600
+Age: 60          cf-cache-status: UPDATING
+
+  un-busted  ->  status: pre_draft   draft_order: null
+  ?cb=<nonce>->  status: drafting    draft_order: {"1390750540631150592": 5}
+```
+
+Same second, same request, opposite answers — and **the stale one is the one that reads like a
+completed check.** It said the draft had not started when it had, and it said the seat oracle had
+nothing to offer when it had just been populated.
+
+**Why this surface was worse than `/picks`.** `newsletter/feud_mule.ps1` hauls this object hourly,
+and its cargo is what `read_shape()` and `run_engine.py` read for teams, rounds, roster and **the
+seat**. `draft_order` is `null` today and flips to populated near go time. A stale copy therefore
+keeps reporting `null` at precisely the moment the seat oracle finally has something to say — and
+`stale-while-revalidate` means the request that triggers the refresh is handed the OLD body, so
+"just fetch twice" is not a fix.
+
+**Fixed at the function, not the call site.** `Fetch-Source` now appends a per-call GUID nonce to
+any `api.sleeper.app` URL, choosing `?` or `&` correctly and leaving the RSS feeds alone. Five call
+sites are covered today and the sixth one somebody adds next month is covered too — the previous
+fix lived at a single call site, which is how this one got missed. Re-run: **12/12 sources ok.**
+
+**The generalisation, which is the part worth carrying:** the earlier fix was applied to the
+*feed we were thinking about*. The lesson belongs to the *host*. When a shared cache burns you,
+the unit of repair is every endpoint on that origin, and the right place for the repair is the
+one function they all pass through.

@@ -33,7 +33,8 @@ seat** for our advice and simultaneously loses the one opponent the whole missio
 seat from `draft_order["1390750540631150592"]` and identity from this table; never from the email,
 and never from a handle that merely looks like his.
 
-**6 of 8 seats filled** as of the 2026-08-09 16:29 cargo — but never quote that from here. Re-pull;
+**7 of 8 seats filled** as of a live re-pull on 2026-08-12 (the 7th is `kblizzy23`,
+`1392435446868381696`) — but never quote that from here. Re-pull;
 `newsletter/data/inbox/sleeper_users.json` is at most an hour old. Empty seats mean any "who picks
 between us" reasoning is provisional until the room fills.
 

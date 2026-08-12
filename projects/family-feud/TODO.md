@@ -599,10 +599,17 @@ round labels with no invented rounds.
 [`docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md`](docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md).
 The plan owns *what to build*; this file owns *what's next*.
 
-**⏳ The draft date STILL does not exist.** Re-pulled from cargo stamped **2026-08-08 20:46**
-(all **12** sources `ok`): `status: pre_draft`, `start_time: null`, `draft_order: null`, **6 of 8
-seats filled**, `type: snake`, `reversal_round: 0`. Parked at 6 seats since at least 2026-08-07 20:19 (earliest in-repo record) — an anchor, not a
-rolling count, because this line has now been wrong twice. `~Aug 29` is a handshake — **it can move earlier.** Assume no slack.
+**⏳ The draft date STILL does not exist.** Live re-pull **2026-08-12**: `status: pre_draft`,
+`start_time: null`, `draft_order: null`, **7 of 8 seats filled**, `type: snake`,
+`reversal_round: 0`. **The 7th seat is `kblizzy23` (`1392435446868381696`), and it arrived between
+2026-08-09 and 2026-08-12** — this line said 6 and had already been wrong twice when it said it, so
+that is **three times**. Treat every count here as a timestamp, not a fact; the only honest read is
+a re-pull, and `newsletter/data/inbox/sleeper_users.json` is at most an hour old.
+**One seat left. `~Aug 29` is a handshake — it can move earlier.** Assume no slack.
+⚠️ **A blind find-replace on "6 of 8" corrupts the PLAYOFF FORMAT** — `README.md`, `league.md`'s
+*Playoffs* line and the runbook's *Ceiling over floor* bullet all say *"6 of 8 make the playoffs"*,
+which is correct and unrelated. Find them by that phrase, not by line number. Only the seat count
+moves.
 The board's header now says "Draft date not set" rather than asserting a date the draft object
 does not carry.
 

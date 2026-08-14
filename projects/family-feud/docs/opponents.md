@@ -98,7 +98,7 @@ direction as the board's own arithmetic below. **Do not promote it to a law.**
 ## What the board says about the same question
 
 ```
-QB1  129.6        RB1  268.4        WR1  242.7
+QB1  129.7        RB1  268.4        WR1  242.7
 ```
 
 **An elite QB is worth roughly half an elite RB or WR here.** Josh Allen's `vorp` of 129.7 puts his

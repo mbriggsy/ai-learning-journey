@@ -3,7 +3,7 @@
 *Why the board says what it says. Companion to [`../draft-kit/players_data.json`](../draft-kit/players_data.json) (the board itself), [`draft-day-runbook.md`](draft-day-runbook.md) (draft-day operations), [`league.md`](league.md) (the rules all of this is bent around), and [`../draft-kit/family-feud-draft-board.html`](../draft-kit/family-feud-draft-board.html).*
 
 <!-- BEGIN GENERATED snapshot-date — rewritten by scripts/build_board.py. Do not hand-edit. -->
-*Rankings snapshot: August 8, 2026.*
+*Rankings snapshot: August 14, 2026.*
 <!-- END GENERATED snapshot-date -->
 *The ranks expire — the method doesn't. Read this as many times as you want, Briggsy; the numbers get refreshed before draft day.*
 
@@ -117,7 +117,7 @@ Three numbers from the board:
 <!-- BEGIN GENERATED worked-example — rewritten by scripts/build_board.py. Do not hand-edit. -->
 | Player | VORP | Read as |
 |--------|------|---------|
-| Bijan Robinson | **268.4** | 268 points/season better than the free RB (RB41 is the bar) |
+| Jahmyr Gibbs | **268.4** | 268 points/season better than the free RB (RB41 is the bar) |
 | Ja'Marr Chase | **242.7** | 243 points better than the free WR (WR47 is the bar) |
 | Josh Allen | **129.7** | 130 points better than the free QB (QB12 is the bar) |
 <!-- END GENERATED worked-example -->

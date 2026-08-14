@@ -213,7 +213,7 @@ per-seat profiles would have been leg (d)'s own error committed with better data
 here is nothing — no simulator, no seat map, no prior.
 
 **🚨 THE SINGLE MOST ACTIONABLE THING WE LEARNED (2026-08-14), and it corrects this file.**
-`QB1` is worth **129.6** on this board against `RB1` **268.4** and `WR1` **242.7** — **an elite QB
+`QB1` is worth **129.7** on this board against `RB1` **268.4** and `WR1` **242.7** — **an elite QB
 is worth about half an elite RB or WR here**, and Josh Allen's `vorp` of 129.7 puts his value slot
 near **pick 15-18 overall**.
 - ⚠️ **The `Lamar Jackson +106.7` line elsewhere in this file is a VALUE-VS-ADP statement — that
@@ -773,29 +773,42 @@ zero and zero reads like a finding. **The version in the repo carries a positive
 applying: the legacy recompute reproduced the then-shipped board's `vorp` exactly.
 
 ```
-        was (legacy 2021-2024)       IS NOW (current 2022-2025)
+        was (legacy 2021-2024)       AFTER THE SWAP (current 2022-2025, Aug 9)
   #1    Ja'Marr Chase   +256.1       Bijan Robinson  +268.4
   #2    Bijan Robinson  +254.4       Ja'Marr Chase   +242.7
   #4    Puka Nacua      +196.8       C. McCaffrey    +212.3
 ```
+⚠️ **That right-hand column is the Aug-9 board and is NO LONGER what ships** — the 2026-08-14
+re-rank moved Gibbs into RB1. Today it reads `Gibbs +268.4 · Chase +242.7 · Bijan +225.7`. The
+column is kept because it is what the *curve swap* did, which is what this section is about; the
+*ordering* has moved underneath it since. See the 1.01 block below.
 **13 of the top 15 changed position. Mean vorp shift: RB +4.0, QB −3.4, WR −1.4, TE −1.2.**
 Baselines moved `QB12 283.5→282.6 · RB41 118.7→117.5 · WR47 148.0→144.8 · TE12 146.9→148.8`, and K
 depth went 41 → 39 ranks, which reaches K tiers through `rerank.value_bands`.
 ⚠️ **`old_value_sweep` caught this file quoting the pre-swap numbers as current** on the very
 rebuild that applied the swap — which is the sweep doing exactly the job it was rewritten for.
 
-~~🚨 **THE FINDING THAT OUTRANKS THE SWAP: 1.1 is inside the noise.** Chase and Bijan are **1.7
-points apart** on the shipped board.~~ ⚠️ **STALE AND CORRECTED 2026-08-14 — that 1.7 described the
-PRE-SWAP board (Chase 256.1 / Bijan 254.4) and was never re-measured after the swap it appears
-below.** On the board that actually ships they are **25.7 apart** (Bijan 268.4, Chase 242.7).
-**The claim is now measured rather than asserted, and it does not hold:**
-- The per-season spread of `vorp` at each rank is measured (see *THE BOARD'S ERROR BARS* under
-  NEXT ACTION). `RB1` sd **19.3**, `WR1` sd **15.3** — so the 25.7 gap is **1.33 error bars**, and
-  **Bijan outscored Chase in 3 of the 4 seasons** the curve is built from (losing only 2024).
-- **Bijan at 1.1 is supported.** Not overwhelmingly, but it is no longer a coin flip, and
-  presenting it as one is now the error.
-- ⚠️ **The correction direction matters:** a stale "it's all noise" line invites ignoring the
-  board exactly where it is most confident. Re-measure before re-quoting any gap in this file.
+🚨 **THE 1.01 ARGUMENT HAS CHANGED HANDS TWICE, AND THE CURRENT HOLDER IS GIBBS.**
+⚠️ **The whole history below is kept because the direction reversed on a consensus move, not on a
+discovery — which is the reason not to over-trust any of it.**
+- ~~"1.1 is inside the noise — Chase and Bijan are 1.7 points apart"~~ described the **pre-swap**
+  board (Chase 256.1 / Bijan 254.4) and was never re-measured after the swap.
+- ~~"Bijan at 1.1 is supported… they are 25.7 apart (Bijan 268.4, Chase 242.7)"~~ was true of the
+  **2026-08-08 synthesis** and is **STALE AS OF 2026-08-14**.
+- **On the board that ships today** the top of the VORP order is **Gibbs 268.4 · Chase 242.7 ·
+  Bijan 225.7 · McCaffrey 212.3.** Gibbs took RB1 off Bijan in the 2026-08-14 re-rank (board
+  `r` 4 → 2, tier 2 → 1; Bijan 3 → 4, tier 1 → 2). **Chase is now ahead of Bijan by 17.0, not
+  behind him by 25.7** — the sign flipped.
+- ⚠️ **`vorp` IS A RANK→POINTS LOOKUP, SO "RB1 = 268.4" NEVER MOVED — ONLY WHO HOLDS IT DID.**
+  Every `RB1 268.4` elsewhere in this file and in `docs/opponents.md` is a **slot** statement and
+  is still correct. Only sentences naming a **player** went false. Do not "fix" the slot numbers.
+- ⚠️ **NONE OF THIS CLEARS ITS OWN ERROR BARS.** `RB1` sd is **19.3** and `WR1` **15.3**, so the
+  Gibbs-over-Chase gap of 25.7 is ~1.3 error bars — and insight 023 measures this curve as
+  **2.55× overstated at RB1** with per-cell SEM 42.2. The consensus moved two players past each
+  other inside the fog; it did not discover anything. **Quote the ordering, never the margin.**
+- ⚠️ **The correction direction matters:** a stale "it's all noise" line invites ignoring the board
+  exactly where it is most confident. Re-measure before re-quoting any gap in this file — this
+  block has now been wrong in both directions.
 
 **What is still open after the swap:** the long-TD bonus (+1 at 40+, +2 at 50+, stacking).
 ⚠️ **This file's claim that it is "not computable" is FALSE, measured 2026-08-14 — see

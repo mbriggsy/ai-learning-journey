@@ -38,13 +38,26 @@ Reach was confirmed exactly as filed — every anchor in the old REACH block hel
 ⚑ **NO-SOLVE DRIVE RECIPE, so the next walk costs minutes not hours.** `?vault=rec` → Unlock
 (passphrase pre-filled) → *"I forgot my passphrase"* → RecoveryFlow. Recovery word for every plant
 is **`lattice harbor cinder vellum 48 thicket`** (`devSeeds.ts:1079`). For RestoreFlow you need a
-real backup FILE and no 13-step intake is required: unlock any plant → Result → **"Save a backup
+real backup FILE and no full intake is required: unlock any plant → Result → **"Save a backup
 file"** → *Download backup* (an `<a>` with a blob URL, **not** a button — a `button:has-text()`
 selector misses it) → then delete the DB and reload. **`indexedDB.deleteDatabase` is BLOCKED while
 the app holds the connection** — fire it, navigate to `about:blank`, then back; deleting and
 reloading in one step silently leaves the vault in place and you land on Unlock wondering why.
 
-▶ **THE NEXT BUILD — the walk's own findings, ranked. Nothing here needs a new discovery pass.**
+▶ **START HERE NEXT SESSION — and read this line before opening the list below it.**
+**The one actionable item is the ACA re-verify** (dated row above, ~18 days from 2026-08-14, ~1h).
+It is a sourced-research job, not a build: the 8-step `howToClear` in `aca-last-verified.json`, both
+attest tables **hand-RE-TYPED from the IRS PDFs** (never from `health.ts` — that bind goes circular).
+⚠️ Budget for a bot-wall: if a `.gov` primary refuses `curl`, that is the sanctioned exception to
+no-manual-steps — **ask Briggsy to pull the file** rather than downgrading the source.
+
+⚑ **EVERYTHING IN THE WALK-FINDINGS LIST BELOW IS BRIGGSY'S, NOT A BUILD.** Finding 2 is WITHDRAWN
+(refuted same-day). Finding 1's copy pass is OFF (the string is true; only the door is missing, and
+that door is a destructive council-sized decision). Findings 3, 4 and 5 each need his words or a
+framing call. **Do not start any of them without him** — and do not re-derive the copy fix, the
+withdrawal explains exactly why it would ship a false certainty.
+
+**THE WALK'S FINDINGS, ranked — filed 2026-08-14, kept for the reasoning:**
 
 1. **🔴 THE BACKUP DOOR IS PROMISED AND CANNOT EXIST — and the naive fix is a WORSE dead end.**
    `unlockWrongCredential` (rendered on BOTH Unlock and RecoveryFlow) ends *"the saved data may be

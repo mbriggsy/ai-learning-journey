@@ -424,9 +424,37 @@ Briggsy's eye, and should not be re-filed as a copy defect without a read.
 
 ## Tier 1 — the differentiator does not land
 
-### The assumed heir tax bracket — the shipped copy sends the reader to a control that does not exist
+### ✅ CLOSED 2026-08-14 (`2816d036`) — The assumed heir tax bracket: the shipped copy sent the reader to a control that did not exist
 
-`M` · **pilot** · filed 2× — `A23`, `A8`
+`M` → shipped · **pilot** · filed 2× — `A23`, `A8`
+
+**Closure.** The `heir-bracket` seat ships in `AssumptionPanel.tsx` — a radio over the statutory
+ordinary ladder DERIVED from `ordinaryBracketsMFJ` (never re-typed), gated on
+`chosenGoal === 'leave-more'` (under pay-less-tax nothing multiplies by the bracket, so a row there
+would be a hollow door). `ScenarioV3.heirBracket` is additive-optional; `solveDispatch` reads
+`draft.heirBracket ?? solverAssumedHeirBracket.value`.
+
+**Both of this entry's warnings were right, and a third was needed.**
+- The `survivor-ratio` "not a line-for-line template" warning held exactly: the field is
+  additive-OPTIONAL, unseeded, and absence means "took our default".
+- The SegmentedControl-not-PercentField call held, and its reason turned out to be stronger than
+  filed: a closed vocabulary cannot express `24` or `1`, and `afterTaxBequestPerPath` THROWS outside
+  [0, 1) — so no sanity rule was needed at all, and the codec's gate uses an EXCLUSIVE upper bound
+  rather than `needUnitFraction` (which admits 1).
+- The third, unfiled: the goal gate REDS the R7 completeness walk, which renders only two fixtures
+  and demands every registry seat appear. A leave-more fixture was owed with the seat.
+
+**The clause is restored**, in the same commit, per the coupling below — and its comment now records
+that the coupling runs BOTH ways (remove the seat ⇒ drop the clause in that same change).
+
+**Corrected in passing:** three shipped comments asserted an editability that did not exist — the
+`solverAssumedHeirBracket` docblock, its citation string, and its note all said "R7-editable
+(recommendationView.ts registry)" / "the user overrides it", inside the constants provenance a
+reader is meant to trust. All three now name the PANEL as the editor home (the registry NAMES the
+disclosure; the panel HOMES the editor — insight 058), as do the two "inline editor lands later"
+notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is not coming inline.
+
+<details><summary>the original entry — diagnosis and warnings, kept for the reasoning</summary>
 
 - ⚑ **RETITLED 2026-08-02 — the filed claim ("cannot be seen") is HALF FALSE and the truth is worse.**
   It IS disclosed: `recommendationView.ts:88-91` → `copy.ts:2485-2486` → `RecommendationSurface.tsx:477-487`.
@@ -443,6 +471,7 @@ Briggsy's eye, and should not be re-filed as a copy defect without a read.
   existing vault at `needFinite`. `heirBracket` must be additive-OPTIONAL, and the control a
   `SegmentedControl` over the statutory ladder, not a `PercentField`. Full prescription lives in
   `TODO.md`'s heir-bracket entry — the only 2026-08-03 entry no skeptic could refute.
+</details>
 - **Panel only — never asked in intake.** "What bracket will your kids be in?" invites a
   confidently-wrong guess worse than the 24% default. This also sets the precedent for every future
   methodology knob (`market` sits in the same limbo).

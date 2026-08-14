@@ -25,18 +25,34 @@ Chromium at 1536×791 on two seeds. See that entry for what it settled and the O
 employer-coverage premise and refuses the date when it cannot be priced. See that entry for the frame
 defect it caught that the green suite could not, and the one EYE call it leaves.
 
-▶ **THE NEXT BUILD is Tier 1 entry 10** — *the heir-bracket seat*. It is now the only entry that is
-decided AND executable: zero engine change, fully specified, and **the only 2026-08-03 entry no
-skeptic could ever refute**. Entries 2 and 3 are **his forks**, not builds; entry 3's fork got sharper
-evidence (Texas alone is two-thirds of the no-tax coverage gain), so *which of your friends' states
-actually matter* may moot it.
+✅ **Tier 1 entry 10's *heir-bracket seat* SHIPPED 2026-08-14** — the household sets its own heir
+bracket, and three shipped comments that asserted a non-existent editability are corrected.
+
+▶ **NO DECIDED-AND-EXECUTABLE BUILD REMAINS IN TIER 0/1.** Both are shipped. What is left at the top
+of the queue is **his**: entry 2's withhold-vs-disclose fork (blocked on ACA cost-trend research
+either way), entry 3's refuse-or-widen state scope, entry 5's account-total confirm framing, and
+entry 8/9's wordings. **Do not start those.** The largest genuinely-pilot surface left is **Tier 2**
+— the surfaces a friend actually hits (the vault credential ceremonies, `RecoveryFlow`/`RestoreFlow`,
+ColdStart, and 10 of 13 intake steps have never been walked or cold-read), plus the interrupted-intake
+data loss and the missing `schemaVersion` migration ladder. That is where the gap to *a friend betting
+real money* now actually lives.
 
 ⚠️ **Every "next build" here is a user-facing surface — load the four-skill UI loadout (CLAUDE.md)
 before touching a pixel, and read a ⚑ block before trusting any line number in the prose above it.**
 
-⚠️ **The one verification debt still open from 2026-08-03:** the record card's HOLDS face has never been
-seen. `?vault=rec` cannot show it (single bucket, planted payload); it needs a save + re-entry on
-`?seed=buckets`, which costs a **~25-minute** solve.
+⚠️ **The 2026-08-03 verification debt, CORRECTED 2026-08-14 — it was overstated, and the half that
+remains is narrower.** This block used to read *"the record card's HOLDS face has never been seen;
+`?vault=rec` cannot show it."* **The FACE has now been seen** — `?vault=rec` renders
+*"It still lines up with the numbers you've entered."* at 1536×791 (observed in passing while driving
+the heir-bracket seat, which that plant also carries). The seed table said so all along
+(`rec` · `recold` → *holds / superseded*); the debt note contradicted it.
+**What `?vault=rec` genuinely cannot witness is the SEMANTIC case** entry 4 was about: its base is a
+single $1.055M IRA, so every withdrawal order is the identical decumulation and no household can
+visibly *not have taken* the advice. That still needs a save + re-entry on `?seed=buckets`
+(~25-minute solve). **Read the debt as "the advice-not-taken case", never "the face".**
+✅ **Free finding from the same drive:** editing an assumption demotes the record live —
+holds → *"It may no longer fit the two of you."* The fingerprint staleness coupling is now
+witnessed end-to-end, not merely asserted.
 
 ⚠️ **A REAL-BROWSER LOOK IS NOT OPTIONAL ON A COPY CHANGE, and 2026-08-05 proved it twice in one day.**
 Two defects shipped past a fully green suite and died on the rendered frame: a heading whose *"there"*
@@ -835,7 +851,37 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
     deliberately — `copy.ts:1404-1406` records that naming "a withdrawal strategy" cures the panel's
     unglossed-"order" stumble). **Briggsy's words, or ship the engine half first.**
 
-10. **The assumed heir bracket (0.24) — the shipped copy sends the reader to a control that does not exist.**
+10. ✅ **SHIPPED 2026-08-14 (`2816d036`) — the heir bracket is the household's now.**
+    The `heir-bracket` seat is a radio over the statutory ordinary ladder **derived from
+    `ordinaryBracketsMFJ`** (never re-typed), gated on `chosenGoal === 'leave-more'`;
+    `ScenarioV3.heirBracket` is additive-optional and `solveDispatch` reads
+    `draft.heirBracket ?? solverAssumedHeirBracket.value` (`??`, never `||` — an explicitly chosen 0
+    is a real household). **The "adjust it in your assumptions" clause is restored in the same
+    commit**, and its comment now records that the coupling runs BOTH ways.
+    ⚑ **Every filed warning held; the codec's reason was STRONGER than filed.** The closed vocabulary
+    means no `sanity.ts` rule was needed at all — and because `afterTaxBequestPerPath` throws outside
+    **[0, 1)**, the codec gate uses an **EXCLUSIVE** upper bound rather than `needUnitFraction`,
+    which admits `1`. Mutation-proven: loosening `>= 1` to `> 1` reds the `1` case.
+    ⚑ **One thing nobody filed: the goal gate REDS the R7 completeness walk.** That walk renders two
+    fixtures and demands every registry seat appear, so a goal-gated seat needs its own leave-more
+    fixture shipped alongside it.
+    ⚑ **THE FRAME CHANGED THE CONTROL.** It shipped `vertical` (copied from the state picker) — wrong:
+    `vertical` is for long labels that cram, and these rungs are three characters. Seven stacked rows
+    burned ~340px of a scrolling panel; horizontal is **165px**, reads as the ordered ladder it is,
+    and matches the sibling period toggle. Phone measured **45×44 CSS px** per segment (clears WCAG
+    2.2 SC 2.5.8's 24×24).
+    ⚑ **PROVEN LIVE, not believed** — `?vault=rec` carries `chosenGoal: 'leave-more'`, so it drives
+    the seat with no solve. 24% pre-selects from the constant; moving it to 37% demoted the saved
+    record from *"It still lines up with the numbers you've entered"* to *"It may no longer fit the
+    two of you."* **The fingerprint staleness coupling works end-to-end with zero new wiring.**
+    ⚑ **Three shipped comments stopped lying:** the `solverAssumedHeirBracket` docblock, its citation
+    string, AND its note all claimed "R7-editable (recommendationView.ts registry)" / "the user
+    overrides it" — false for six months, inside the constants provenance. All three now name the
+    PANEL (the registry NAMES the disclosure; the panel HOMES the editor, insight 058), as do the two
+    "inline editor lands later" notes. **The editor is not coming inline** — that is deliberate.
+    <details><summary>original entry — the prescription, kept for the reasoning</summary>
+
+    **The assumed heir bracket (0.24) — the shipped copy sends the reader to a control that does not exist.**
     ⚑ **The filed claim ("cannot be seen or edited") is HALF FALSE, and the truth is worse.** It IS
     disclosed — `recommendationView.ts:78-81` → `copy.ts:2352-2353` → `RecommendationSurface.tsx:469-477` —
     and the sentence ends *"— adjust it in your assumptions if that's off."* **There is no heir seat in
@@ -876,9 +922,13 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
     present-tense that the shipped sentence ends *"— adjust it in your assumptions if that's off"*; the XS
     half removed that clause — **correct the register too.**
     **Panel only — never asked in intake** ("what bracket will your kids be in?" invites a confidently-wrong
-    guess worse than the 24% default). Also open: the third locked Tier-2 goal (`live-bigger-now`) does not
-    exist, so R21 ships 2 of 3 · the U17 S7 riders, **neither buildable as filed** (Q7a's gating premise is
-    false — the dialects already co-render; Q7b's whole spec is one line).
+    guess worse than the 24% default).
+    </details>
+
+    ⚠️ **STILL OPEN under this entry, and NOT shipped with the seat:** the third locked Tier-2 goal
+    (`live-bigger-now`) does not exist, so R21 ships **2 of 3** · the U17 S7 riders, **neither
+    buildable as filed** (Q7a's gating premise is false — the dialects already co-render; Q7b's whole
+    spec is one line).
 
 ### Tier 2 — what breaks on someone else's device
 

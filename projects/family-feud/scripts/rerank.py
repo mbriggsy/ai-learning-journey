@@ -192,6 +192,22 @@ def rank_claim_notes(ordered):
     return out
 
 
+def unacknowledged(claims, reviewed):
+    """Which rank-claiming notes have NOT been confirmed by name. The whole --write decision.
+
+    A named predicate rather than a condition inline in main(), for the reason render_pdf's
+    `draws_vbd_chip()` is one: main() needs the gitignored ECR and crosswalk caches to reach this
+    point, so a test of the decision through main() would add skips to a clean clone (review
+    residue 1). This is testable with neither.
+
+    Matching is by NAME and case-insensitive. Deliberately not by index or by note text: an index
+    silently re-points when the board reorders -- which is the exact event that produces claims --
+    and note text would let a reworded note keep an acknowledgement it never earned.
+    """
+    ack = {n.strip().casefold() for n in (reviewed or [])}
+    return [(e, f) for e, f in claims if e["p"]["name"].casefold() not in ack]
+
+
 def apply(doc, ordered, scrape_date):
     """Return a NEW source document. The input is not mutated."""
     out = json.loads(json.dumps(doc))
@@ -264,7 +280,7 @@ def main(argv=None):
 
     claims = rank_claim_notes(ordered)
     reviewed = {n.strip().casefold() for n in (a.notes_reviewed or [])}
-    unacked = [(e, f) for e, f in claims if e["p"]["name"].casefold() not in reviewed]
+    unacked = unacknowledged(claims, a.notes_reviewed)
     if claims:
         print(f"\n!! {len(claims)} note(s) assert a board position and this re-order moves them.")
         print("   Fix the prose, or confirm the claim is STILL TRUE at the new rank and pass")

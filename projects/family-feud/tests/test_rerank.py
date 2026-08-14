@@ -174,6 +174,50 @@ class TestRankClaimingNotes(unittest.TestCase):
         self.assertEqual(self.entries("The 1.01.", old_r=1, new_r=1), [])
 
 
+class TestAcknowledgingARankClaim(unittest.TestCase):
+    """A gate nothing can pass is a wall, and the way past must go stale on its own.
+
+    Sometimes the claim is still TRUE at the new rank -- Jayden Daniels #50 -> #48 keeps
+    "Rounds 6-8 is the zone" correct, because round 6 in an 8-team draft is picks 41-48. Before
+    --notes-reviewed the only routes past were to edit prose that was not wrong, or to weaken the
+    gate. The acknowledgement is BY NAME so that it cannot cover a note nobody has read.
+    """
+
+    def claim(self, name, note="Rounds 6-8 is the zone."):
+        e = {"p": brow(50, name, "QB", "WAS", 5, "s1", note=note), "new_r": 48}
+        return R.rank_claim_notes([e])
+
+    def test_no_acknowledgement_leaves_the_claim_unacked(self):
+        self.assertEqual(len(R.unacknowledged(self.claim("Jayden Daniels"), [])), 1)
+
+    def test_the_right_name_acknowledges_it(self):
+        self.assertEqual(R.unacknowledged(self.claim("Jayden Daniels"), ["Jayden Daniels"]), [])
+
+    def test_the_WRONG_name_does_NOT(self):
+        """The property that makes this an acknowledgement rather than a --force."""
+        self.assertEqual(len(R.unacknowledged(self.claim("Jayden Daniels"), ["Bijan Robinson"])), 1)
+
+    def test_matching_is_case_and_whitespace_insensitive(self):
+        self.assertEqual(R.unacknowledged(self.claim("Jayden Daniels"), ["  jayden daniels "]), [])
+
+    def test_acknowledging_one_of_two_still_blocks_the_other(self):
+        """The failure this exists to prevent: a second note starts claiming a rank on some later
+        refresh and rides in on an acknowledgement written for the first."""
+        claims = self.claim("Jayden Daniels") + self.claim("Somebody Else", "The 1.01.")
+        left = R.unacknowledged(claims, ["Jayden Daniels"])
+        self.assertEqual([e["p"]["name"] for e, _ in left], ["Somebody Else"])
+
+    def test_the_call_site_uses_the_predicate_and_gates_the_WRITE_on_it(self):
+        """Insight 013: the predicate having tests is not evidence the write is gated by it.
+        MUTANT: point the refusal at `claims` instead of `unacked` and --write can never run;
+        drop the check and an unreviewed claim writes silently."""
+        with open(os.path.join(ROOT, "scripts", "rerank.py"), encoding="utf-8") as f:
+            src = f.read()
+        self.assertIn("unacked = unacknowledged(claims, a.notes_reviewed)", src)
+        self.assertIn("if unacked:", src)
+        self.assertIn("REFUSED TO WRITE", src)
+
+
 class TestApply(unittest.TestCase):
     def setUp(self):
         self.doc = {"meta": {"rankings": {"synthesized": "2026-01-01", "judgment": "old"}},

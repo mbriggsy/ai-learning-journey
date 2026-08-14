@@ -79,6 +79,16 @@
       <div class="bd">Sleeper populates <code>draft_order</code> near go time. Until it does, the tile reads a dash rather than a guess: <code>slot_to_roster_id</code> would happily hand you a number, and there are three unrelated threes in this league.</div>
     </div>
     {% endif %}
+
+    {% if alerts %}
+    <p class="lede">{{ alerts|length }} watcher alert{{ '' if alerts|length == 1 else 's' }} on the wire. It checks hourly and only speaks when something actually moves, so every line below is a real change — not a heartbeat.</p>
+    {% for a in alerts %}
+    <div class="item {{ 'bad' if 'STARTING GUN' in a.title or 'MOVED' in a.title or 'REPLACED' in a.title else 'watch' }}">
+      <div class="hd">{{ a.title }} <span class="tag {{ 'hot' if 'STARTING GUN' in a.title or 'MOVED' in a.title else '' }}">{{ a.when.split(' ')[0] }}</span></div>
+      <div class="bd">{{ a.body }}</div>
+    </div>
+    {% endfor %}
+    {% endif %}
   </section>
 
   <section>

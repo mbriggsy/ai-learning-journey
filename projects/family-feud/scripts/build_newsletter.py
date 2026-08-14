@@ -49,6 +49,7 @@ FROZEN = os.path.join(NEWS, "newsletter-template.html")
 TEMPLATE_DIR = os.path.join(NEWS, "templates")
 LIVE = os.path.join(NEWS, "family-feud-newsletter.html")
 BOARD = os.path.join(KIT, "players_data.json")
+ALERTS = os.path.join(NEWS, "data", "state", "DRAFT_ALERTS.md")
 
 sys.path.insert(0, HERE)
 sys.path.insert(0, KIT)
@@ -237,6 +238,49 @@ def league_desk(draft, users, board):
         "order_posted": isinstance((draft or {}).get("draft_order"), dict)
         and bool((draft or {}).get("draft_order")),
     }
+
+
+#: How many alert entries the desk carries. The file is append-only and read late, so the most
+#: recent few are what matter; older ones stay on disk and in git.
+ALERT_LIMIT = 3
+
+_ALERT_HEAD = re.compile(r"^##\s+(?P<title>.+?)\s+[—-]\s+(?P<when>\d{4}-\d{2}-\d{2}[^\n]*)$")
+
+
+def draft_alerts(path=ALERTS, limit=ALERT_LIMIT):
+    """The watcher's alerts, newest first, so the STARTING GUN reaches a surface Briggsy reads.
+
+    WHY THIS EXISTS. `scripts/watch_draft_state.py` is the only thing that notices the draft date
+    appearing or MOVING, and until 2026-08-14 it wrote exclusively to a gitignored markdown file
+    that nothing surfaced -- push and email are broken account-wide, so the delivery chain ended at
+    a file nobody opens. The date itself had a second channel (the Days to Draft tile flips on its
+    own), but "the date MOVED EARLIER", "your slot moved" and "the draft was replaced" had none,
+    and moving earlier is the scenario the watcher exists for.
+
+    Reading a local file keeps the no-network property: this is the watcher's output, already on
+    disk, not a fetch. Missing file is empty, never an exception -- a clean clone has no alerts and
+    a newsletter that dies on that is worse than one with a quiet desk.
+    """
+    try:
+        with open(path, encoding="utf-8") as f:
+            text = f.read()
+    except OSError:
+        return []
+
+    out, cur = [], None
+    for line in text.splitlines():
+        m = _ALERT_HEAD.match(line.strip())
+        if m:
+            cur = {"title": m.group("title").strip(), "when": m.group("when").strip(), "body": []}
+            out.append(cur)
+        elif cur is not None:
+            s = line.strip()
+            # `---` rules and the italic cargo-age footer are furniture, not content.
+            if s and not s.startswith("---") and not s.startswith("_"):
+                cur["body"].append(s)
+    for a in out:
+        a["body"] = " ".join(a["body"])[:400]
+    return list(reversed(out))[:limit]
 
 
 #: Feeds in the order the wire reads them. Rotowire is the most fantasy-dense of the five.
@@ -458,6 +502,7 @@ def build_context(now=None, board_path=BOARD, archive=ARCHIVE):
         "tiles": tiles,
         "draft_note": draft_note,
         "league": league_desk(draft, users, board),
+        "alerts": draft_alerts(),
         "wire": items,
         "market": market,
         "board_rows": len(players),

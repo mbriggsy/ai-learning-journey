@@ -415,5 +415,96 @@ class TestItPublishesWhateverArrived(InboxCase):
             self.assertIn(gap.split("(")[0].strip()[:24], html)
 
 
+ALERT_FILE = """# Draft state alerts
+
+Written by `scripts/watch_draft_state.py`. Append-only — newest at the bottom.
+
+---
+
+## LEAGUE ROSTER CHANGED — 2026-08-12 21:35:02
+
+7 -> 8 of 8 seats filled
+joined: Cltchiefs
+
+_cargo was 6 min old when this ran_
+
+---
+
+## STARTING GUN — 2026-08-27 09:35:02
+
+The draft date EXISTS: Sat 29 Aug 2026, 07:00 PM.
+The board's ORDERING expires -- check meta.rankings.synthesized
+
+_cargo was 4 min old when this ran_
+"""
+
+
+class TestTheWatcherReachesASurfaceBriggsyReads(unittest.TestCase):
+    """The watcher is the only thing that notices the draft date appearing or MOVING, and until
+    2026-08-14 it wrote exclusively to a gitignored markdown file that nothing surfaced. Push and
+    email are broken account-wide, so the delivery chain ended at a file nobody opens.
+
+    The date itself had a second channel — the Days to Draft tile flips on its own. "The date MOVED
+    EARLIER", "your slot moved" and "the draft was replaced" had none, and moving earlier is the
+    scenario the watcher exists for.
+    """
+
+    def setUp(self):
+        self._t = tempfile.TemporaryDirectory()
+        self.path = os.path.join(self._t.name, "DRAFT_ALERTS.md")
+        with open(self.path, "w", encoding="utf-8") as f:
+            f.write(ALERT_FILE)
+
+    def tearDown(self):
+        self._t.cleanup()
+
+    def test_newest_first_because_the_file_is_append_only(self):
+        got = N.draft_alerts(self.path)
+        self.assertEqual([a["title"] for a in got],
+                         ["STARTING GUN", "LEAGUE ROSTER CHANGED"])
+        self.assertTrue(got[0]["when"].startswith("2026-08-27"))
+
+    def test_the_body_drops_furniture_and_keeps_content(self):
+        """`---` rules and the italic cargo-age footer are furniture. Keeping them would put
+        '_cargo was 6 min old_' in the paper as though it were news."""
+        body = N.draft_alerts(self.path)[0]["body"]
+        self.assertIn("The draft date EXISTS", body)
+        self.assertNotIn("cargo was", body)
+        self.assertNotIn("---", body)
+
+    def test_a_missing_file_is_EMPTY_not_an_exception(self):
+        """A clean clone has no alerts. A newsletter that dies on that is worse than a quiet desk."""
+        self.assertEqual(N.draft_alerts(os.path.join(self._t.name, "nope.md")), [])
+
+    def test_the_limit_is_honoured(self):
+        self.assertEqual(len(N.draft_alerts(self.path, limit=1)), 1)
+
+    def test_THE_ALERT_REACHES_THE_RENDERED_PAGE(self):
+        """Insight 013: the parser having tests is not evidence the paper carries the alert.
+        MUTANT: drop `"alerts": draft_alerts()` from build_context and only this goes red."""
+        ctx = N.build_context()
+        ctx["alerts"] = N.draft_alerts(self.path)
+        html = N.render(ctx)
+        self.assertIn("STARTING GUN", html)
+        self.assertIn("The draft date EXISTS", html)
+        self.assertIn("watcher alert", html)
+
+    def test_a_STARTING_GUN_cannot_render_as_a_quiet_note(self):
+        """It must carry the loud styling, or the one entry that matters looks like the roster
+        churn above it. The classes are the frozen design's own -- no new CSS, which is what keeps
+        test_the_style_block_is_byte_identical_to_the_frozen_design green."""
+        ctx = N.build_context()
+        ctx["alerts"] = N.draft_alerts(self.path)
+        html = N.render(ctx)
+        gun = html[html.index("STARTING GUN") - 220:html.index("STARTING GUN") + 60]
+        self.assertIn("item bad", gun)
+        self.assertIn("tag hot", gun)
+
+    def test_the_real_context_wires_the_alerts_key(self):
+        """The call site itself, against the live path -- absent on a clean clone, so this asserts
+        the KEY exists rather than that it has entries."""
+        self.assertIn("alerts", N.build_context())
+
+
 if __name__ == "__main__":
     unittest.main()

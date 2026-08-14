@@ -8,6 +8,7 @@ Draft ~Aug 29, 2026. Mission: beat Hunter. [`README.md`](README.md) is the map.
 | File | Owns |
 |---|---|
 | [`docs/league.md`](docs/league.md) | League identity, IDs, scoring, roster, playoff format — verified against the live API |
+| [`docs/opponents.md`](docs/opponents.md) | What each opponent actually DOES in a draft, measured from their Sleeper history. Identity is `league.md`; behaviour is here |
 | [`docs/data-access.md`](docs/data-access.md) | How to reach Sleeper, the mule, credentials policy |
 | [`docs/draft-day-runbook.md`](docs/draft-day-runbook.md) | Draft-day operating instructions + changelog |
 | [`docs/ranking-methodology.md`](docs/ranking-methodology.md) | Why the board ranks what it ranks |

@@ -10,9 +10,14 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
   → review residue ✅ (all 10) → engine join ✅ → provenance ✅ → consensus ✅ → re-rank ✅
   → ADP ✅ → mule v2.1 ✅ → mock proven end-to-end ✅ → CDN staleness fixed ✅
   → harness leg (c) keep-the-queue-ranked ✅ → leg (b) the ladder precomputer ✅
-  ◀ HERE — the board is DERIVED, the feed is no longer stale, and the ladder is DERIVED too:
-    the answer for the next pick exists before the clock starts, and leg (d) is all that is left
+  → leg (d) KILLED, opponents MEASURED instead ✅ → the board's error bars measured ✅
+  ◀ HERE — the board is DERIVED, the feed is no longer stale, the ladder is DERIVED, and the
+    OPPONENTS ARE MEASURED. The harness is complete. What is missing is not a simulator: it is
+    `draft_order`, which is still null, and which nothing we build can produce.
 ```
+
+**Units shipped:** …and **U16** (the opponent scout — 37 leagues, 18 comparable redrafts,
+20 tests, 6 mutants killed; [`docs/opponents.md`](docs/opponents.md)).
 
 **Units shipped:** U1, U2 (Phase 0 gates) · **U9** (draft-state watcher) · **U3** (one normalizer,
 proven equal in two runtimes) · **U14** (`sleeperId` frozen — 174 ids, 0 unresolved) ·
@@ -139,23 +144,114 @@ wired into the runbook, both detailed immediately below.
    negative control (unchanged cargo ⇒ no entry) so a writer that alerts unconditionally can't pass.
    `scripts/watch_draft_state.py:181-194` is the code; the mock-creation path already exists and is
    proven (`ffStartDraft`, below).
-2. **Leg (d) — the off-clock doctrine terminals.** Many terminals, one per opposing doctrine,
-   **forbidden to talk**, running only between windows. Nothing depends on it and it is the only
-   named piece of the harness not built. It is also the only honest route to the thing the
-   precomputer refuses to fake: **a validated opponent model.** Without one, every enumeration
-   over futures is closed-form arithmetic (proven below), so this is not decoration — it is the
-   prerequisite for the whole class of question.
-3. **The long-TD bonus** (+1 at 40+, +2 at 50+, stacking) is still not computable — no TD-distance
-   column exists on either nflverse release, so it needs play-by-play. The ONLY remaining accuracy
-   gap on the four skill positions. 🚨 `receiving_40` / `rushing_40` / `passing_40` are chunk-play
-   counts, **NOT** 40-yard touchdowns — exactly what a session under a clock would grab.
+2. **Feed the MEASURED opponent profiles into `precompute_ladder.py` as per-seat priors.**
+   Blocked on one fact and one only: **`draft_order` is still `null`**, so we do not know which
+   seat is Hunter's. The profiles exist and are committed ([`docs/opponents.md`](docs/opponents.md));
+   what is missing is the map from seat to opponent. Build the consumer so it is ready the moment
+   the order populates, and make it **refuse rather than guess** when `draft_order` is null —
+   `run_engine.py` already does exactly that and is the pattern to copy.
+3. **Ship the long-TD bonus into `build_curves.py`.** Everything needed is measured and cached;
+   this is now a build, not a question. Worth doing for **correctness only — the edge is ~zero**
+   and the file must say so, or the next session will quote it as an advantage.
 4. **DEF has no exact source at all** and the 14 rows stay labelled. **Do not build a DEF curve** —
-   the reasoning is in the DECIDED block below and it has not changed.
+   the reasoning is in the DECIDED block below and it has not changed. **Re-confirmed 2026-08-14
+   against a NEW source:** Sleeper's own projections carry DEF, but only the `pts_allow_0` bucket
+   and no points-allowed distribution, so they cannot score the largest term in the DST ladder
+   either. Two independent sources, same gap. **Stop looking.**
+5. **Per-player projections as a second instrument** (value-vs-projection, beside `market.py`'s
+   value-vs-price). Feasibility is PROVEN, not assumed — see *SLEEPER SERVES STAT-LINE
+   PROJECTIONS* below. It is the largest remaining build and the one with real upside.
+
+~~**Leg (d) — the off-clock doctrine terminals.**~~ 🚨 **DEAD AS DESIGNED, 2026-08-14. Do not build
+it.** Its stated purpose was *"the only honest route to a validated opponent model."* It proposed
+to reach that by **inventing** one opposing doctrine per terminal — which is a fabricated number
+one level deeper than the enumeration [`021`](docs/insights/021-the-simulation-had-a-closed-form-and-was-measuring-its-own-sampler.md)
+already deleted, and would have been the **fifth** tautology this project caught.
+**The opponents are not hypothetical.** Sleeper serves every pick every one of them has ever made,
+and `scripts/scout_opponents.py` now reads it: **37 leagues, 18 comparable redrafts, measured.**
+Full profiles and their landmines: [`docs/opponents.md`](docs/opponents.md). The remaining piece is
+item 2 above — the seat map — not a simulator.
+
+**🚨 THE SINGLE MOST ACTIONABLE THING WE LEARNED (2026-08-14), and it corrects this file.**
+`QB1` is worth **129.6** on this board against `RB1` **268.4** and `WR1` **242.7** — **an elite QB
+is worth about half an elite RB or WR here**, and Josh Allen's `vorp` of 129.7 puts his value slot
+near **pick 15-18 overall**.
+- ⚠️ **The `Lamar Jackson +106.7` line elsewhere in this file is a VALUE-VS-ADP statement — that
+  the market lets him fall ~21 spots past his price around pick 60. It is NOT an argument for
+  drafting a QB early, and it was misread that way in session on 2026-08-14 before being caught.**
+- **Two of seven opponents (`briggsy007`, `Kaeperni`) reliably spend a top-3-round pick on a QB.**
+  In an 8-team room that pushes elite RB/WR down to us, and our board is already priced for
+  8-team replacement while the blended market ADP is not. **Two independent edges, same direction.**
+- **Nobody in the room takes a TE early except Kaeperni** (median first TE R7-R9). `TE1` is priced
+  **134.7**, above QB1 — ⚠️ **and carries the largest measured spread on the board, sd 30.5.**
+  Uncontested and highest-variance are both true; never quote one without the other.
+
+**📏 THE BOARD'S ERROR BARS ARE MEASURED NOW (2026-08-14).** The board prints `vorp` to one decimal,
+which asserts a precision nobody had ever checked.
+- **Spread of `vorp` at each rank, over the 4 seasons that build the curve:** `RB1` 19.3 · `RB2`
+  **31.5** · `RB4` **35.9** · `WR1` 15.3 · `WR2` 25.3 · `QB1` 22.8 · **`TE1` 30.5** — against
+  deep ranks at `WR20` **4.4** and `RB20` **4.7**. **The fog is concentrated at RB2-4 and TE1-4,
+  which is exactly where picks 1.2 through 2.x land.**
+- **76% of top-12 pairs (50 of 66) hold in ALL FOUR seasons.** The ordering is not mush.
+- **The five pairs it splits on**, which are where the one-decimal precision is fake:
+  Chase over Gibbs **2/4** (board gap **+17.0**) · Chase Brown over St. Brown 2/4 (+10.0) ·
+  JSN over Jeanty 2/4 (+5.7) · Nacua over Taylor 2/4 (+4.1) · Cook over Lamb 2/4 (+1.0).
+- ⚠️ **THIS IS A LOWER BOUND AND MUST ALWAYS BE QUOTED AS ONE.** It measures how much *"what the
+  RB2 slot scores"* varies year to year. It does **not** measure whether the player the consensus
+  ranks RB2 finishes RB2 — almost certainly the larger term, and it needs historical preseason ECR
+  we do not hold. **Probing for that source is the cheapest high-value item not on this list.**
+
+**✅ THE LONG-TD BONUS IS EXACTLY COMPUTABLE — this file said it was not (2026-08-14).**
+The old claim: *"no TD-distance column exists on either release, so it needs play-by-play"*, with
+~5% TD-attribution error attached. **The first half is true and the second is false.**
+- `play_by_play_{year}.csv.gz` (nflverse `pbp` release, ~19 MB/season, **2022-2025 all cached**)
+  carries `touchdown`, `td_player_id`, `yards_gained`, `pass_touchdown`, `rush_touchdown`.
+- **Reconciled against the stat file's OWN td columns: passing 809/809, rushing 511/511, receiving
+  809/809 on 2024, and 811/510/811 on 2025 — ZERO disagreements.** The ~5% figure describes
+  rebuilding whole stat lines from pbp, not attributing touchdowns.
+- 🚨 **ATTRIBUTE TO `td_player_id`, NOT `receiver_player_id`.** The catcher is not always the
+  scorer. Using the catcher disagreed on **5 of 257 receivers** (Lions laterals plus a Josh Allen
+  trick-play catch) **while the season TOTAL still matched at 809** — a pure misattribution, which
+  is the failure mode a total-only check cannot see.
+- **Measured worth, after the baseline cancels: ~nothing.** `QB12` gains **+7.0** against `QB1`'s
+  +8.8, so elite QB nets **+1.8** and QB3-QB30 go NEGATIVE. RB/WR net looked big (+6.8 at RB2,
+  +7.8 at WR2) — ⚠️ **and that is sampling noise**: `WR1`'s +5.2 is drawn from `[0.0, 4.0, 15.0,
+  2.0]`, sd **5.8**, larger than the mean; `TE2` is `[0, 0, 0, 0]`. Long TDs are a rare event, so
+  at a rank the bonus is a lottery over *which player* held the slot. **Only QB is structurally
+  stable (`QB12` = `[6.0, 8.0, 7.0, 7.0]`, sd 0.7) and QB is where it cancels.**
+- **Build it for correctness — `scoring.py`'s own rule, "silently omitting a rule that exists is
+  how a number becomes a lie." Never sell it as edge.**
+- ⚠️ **It cannot do what `league.md` claims for it.** A rank-based curve shifts the average at each
+  rank, so a possession WR2 and a deep-threat WR2 get the identical bonus. Rewarding a specific
+  boom player needs per-player projections — item 5.
+
+**✅ SLEEPER SERVES STAT-LINE PROJECTIONS, AND THEY JOIN PERFECTLY (2026-08-14).**
+`https://api.sleeper.app/projections/nfl/2026?season_type=regular&position[]=...` — 3,300 records,
+`company: rotowire`, season totals with full components (`pass_yd/pass_td/pass_int/rush_yd/rush_td/
+rec/rec_yd/rec_td/fum_lost/2pt`).
+- **Keyed on `player_id` = the `sleeperId` U14 froze. 174 of 174 board rows join, zero misses.**
+  No name matching anywhere in the chain.
+- **ORACLE: `scoring.score()` reproduces their published `pts_ppr` on 556 of 557 skill
+  projections.** The single miss is **us being right** — Travis Hunter carries `idp_int` and
+  `idp_fum_rec` (he plays corner) and their total folds in IDP scoring worth exactly the 4.0 gap.
+  Family Feud has no IDP. **Sleeper's default PPR also charges −1 per INT, same as this league.**
+- 🚨 **THE STRUCTURAL FINDING, which matters more than the source.** `curve[WR][1] = 387.5` is an
+  **order statistic** — what the player who *actually finished* WR1 scored, selected for beating
+  expectations. **No individual player's expectation can equal it.** Rotowire's best WR is
+  **311.1**. The curve overstates the top *as an expectation*; a projection understates the ceiling
+  *as an outcome*. Mean |delta| across 149 skill players **24.5**, max **97.6**. Neither is wrong —
+  they answer different questions, and VBD theory wants the expectation.
+- ⚠️ **`gp` is 18.0 on all 557 projections.** Not one player is projected to miss a game, so
+  availability carries **zero** information in this source. Do not use it as a denominator or as a
+  fragility signal.
+- **K and DEF cannot be scored from it** — kickers carry no sub-40 FG makes, DEF carries only the
+  `pts_allow_0` bucket. Both Aug-8 decisions stand untouched.
 
 **◀ 2. THE MOCK-DRAFT HARNESS.** Proven 2026-08-09 that the whole spine already runs against a
 real Sleeper mock with **zero new code** — see the operating facts below. Legs **(b)** and **(c)**
-are now both built and both wired into the runbook; what is left is leg (d), the off-clock
-doctrine terminals, which nothing depends on.
+are now both built and both wired into the runbook. **Leg (d) is dead as designed** (2026-08-14) —
+the opponent model it existed to fake is now measured from Sleeper instead; see the DEAD AS
+DESIGNED block under NEXT ACTION. **The harness is complete.**
 
 **✅ LEG (b) IS BUILT — `scripts/precompute_ladder.py`, wired into runbook Step 3.4 and PRE-ARM
 THE QUEUE.** One command, ~0.1s, run the moment your pick lands. It shells out to the real engine
@@ -573,15 +669,23 @@ depth went 41 → 39 ranks, which reaches K tiers through `rerank.value_bands`.
 ⚠️ **`old_value_sweep` caught this file quoting the pre-swap numbers as current** on the very
 rebuild that applied the swap — which is the sweep doing exactly the job it was rewritten for.
 
-🚨 **THE FINDING THAT OUTRANKS THE SWAP: 1.1 is inside the noise.** Chase and Bijan are **1.7 points
-apart** on the shipped board, and **the release restatement alone — mean 0.23 — flips them**
-(255.6 vs 256.3). Whatever is decided about the window, *"Chase or Bijan at 1.1"* is not a question
-this board's precision can answer, and it should not be presented as though it were.
+~~🚨 **THE FINDING THAT OUTRANKS THE SWAP: 1.1 is inside the noise.** Chase and Bijan are **1.7
+points apart** on the shipped board.~~ ⚠️ **STALE AND CORRECTED 2026-08-14 — that 1.7 described the
+PRE-SWAP board (Chase 256.1 / Bijan 254.4) and was never re-measured after the swap it appears
+below.** On the board that actually ships they are **25.7 apart** (Bijan 268.4, Chase 242.7).
+**The claim is now measured rather than asserted, and it does not hold:**
+- The per-season spread of `vorp` at each rank is measured (see *THE BOARD'S ERROR BARS* under
+  NEXT ACTION). `RB1` sd **19.3**, `WR1` sd **15.3** — so the 25.7 gap is **1.33 error bars**, and
+  **Bijan outscored Chase in 3 of the 4 seasons** the curve is built from (losing only 2024).
+- **Bijan at 1.1 is supported.** Not overwhelmingly, but it is no longer a coin flip, and
+  presenting it as one is now the error.
+- ⚠️ **The correction direction matters:** a stale "it's all noise" line invites ignoring the
+  board exactly where it is most confident. Re-measure before re-quoting any gap in this file.
 
-**What is still open after the swap:** the long-TD bonus (+1 at 40+, +2 at 50+, stacking) is
-still not computable — no TD-distance column exists on either release, so it needs play-by-play.
-That is now the ONLY remaining accuracy gap on the four skill positions, and DEF remains the only
-position with no exact source at all.
+**What is still open after the swap:** the long-TD bonus (+1 at 40+, +2 at 50+, stacking).
+⚠️ **This file's claim that it is "not computable" is FALSE, measured 2026-08-14 — see
+*THE LONG-TD BONUS IS EXACTLY COMPUTABLE* under NEXT ACTION.** DEF remains the only position with
+no exact source at all.
 
 **The archive question is DECIDED (Briggsy, 2026-08-08): back issues are gitignored.** The
 deciding argument was his: `newsletter/data/archive/` — the cargo each edition is built from — was

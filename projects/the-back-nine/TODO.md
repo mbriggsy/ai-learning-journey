@@ -28,14 +28,43 @@ defect it caught that the green suite could not, and the one EYE call it leaves.
 ✅ **Tier 1 entry 10's *heir-bracket seat* SHIPPED 2026-08-14** — the household sets its own heir
 bracket, and three shipped comments that asserted a non-existent editability are corrected.
 
-▶ **NO DECIDED-AND-EXECUTABLE BUILD REMAINS IN TIER 0/1.** Both are shipped. What is left at the top
-of the queue is **his**: entry 2's withhold-vs-disclose fork (blocked on ACA cost-trend research
-either way), entry 3's refuse-or-widen state scope, entry 5's account-total confirm framing, and
-entry 8/9's wordings. **Do not start those.** The largest genuinely-pilot surface left is **Tier 2**
-— the surfaces a friend actually hits (the vault credential ceremonies, `RecoveryFlow`/`RestoreFlow`,
-ColdStart, and 10 of 13 intake steps have never been walked or cold-read), plus the interrupted-intake
-data loss and the missing `schemaVersion` migration ladder. That is where the gap to *a friend betting
-real money* now actually lives.
+▶ **THE NEXT BUILD (pilot's pick, Briggsy's dealer's-choice grant 2026-08-14) — WALK
+`RecoveryFlow` + `RestoreFlow`, the two *"I lost access to my retirement plan"* screens.**
+NO decided-and-executable build remains in Tier 0/1 — both shipped 2026-08-14, and the rest of the
+top of this queue is **his** (entry 2's withhold fork, entry 3's state scope, entry 5's confirm
+framing, entries 8/9's wordings — **do not start those**). Tier 2 is where the gap to *a friend
+betting real money* now lives, and these two screens are its highest-stakes corner: the product is a
+local-first vault with no server and no password reset, so this pair IS the recovery story. Twice
+today the rendered frame killed a defect a fully green suite could not see; these have **never been
+rendered for a human at all.**
+
+⚑ **WHY THIS ONE AND NOT A KNOWN FIX:** we have zero information about these surfaces, and unknown
+territory on the highest-stakes screens outranks a scoped fix we can already describe. Do discovery
+first; file what the walk finds.
+
+⚑ **REACH — verified 2026-08-14, both are drivable in minutes with NO solve:**
+· `RecoveryFlow` ← any vault plant (`?vault=rec`) → Unlock → **"I forgot my passphrase"**
+  (`copy.unlockForgot`). Mounted at `App.tsx:232`, pre-loaded on `entry.kind === 'unlock'` (`:130`).
+· `RestoreFlow` ← ColdStart → **"Restore from your backup"** (`copy.coldStartRestoreAction`), and
+  from the `damaged` branch. Mounted at `App.tsx:216`/`:242`, pre-loaded on `damaged`/`cold` (`:131`).
+  ⚠️ Reaching ColdStart needs an EMPTY vault — this profile has one planted; clear it first
+  (`indexedDB.deleteDatabase('the-back-nine-vault')`, then reload), or you land on Unlock instead.
+· Both are `lazy()` chunks. `App.tsx:44-48` records that `RecoveryFlow`'s real mount is what made a
+  sibling test flake read as a bare timeout and **cost two wrong diagnoses** — do not re-litigate
+  that as a new bug if a test blinks.
+
+⚑ **PRECISION, so the walk is not mis-scoped:** these are *"never seen RENDERED"*, **not** untested —
+`RecoveryFlow.test.tsx` and `RestoreFlow.test.tsx` both exist. The gap is the eye, not the suite.
+Load the four-skill UI loadout, and read the frame as a person who has just lost access to their
+retirement plan — the tone bar on a screen someone hits while frightened is the whole point.
+
+⚑ **THE RIDE-ALONG (small, scoped, do it only if the walk leaves room):** intake has no
+`beforeunload`, so closing the tab silently destroys up to 13 steps of a household's entire net
+worth. **Do NOT file this as "no beforeunload exists"** — it does, and correctly: `SaveFlow.tsx:76-86`
+guards the export step, and `BackupStep.tsx:11` records a DELIBERATE omission. So `SaveFlow` is the
+shipped template, and the honest fix respects the no-persistence-until-Save hard rule by WARNING, not
+by persisting. Confirm the healthcare.gov step opens in a new tab (it should — a same-tab navigation
+would be the live version of this defect) before sizing it.
 
 ⚠️ **Every "next build" here is a user-facing surface — load the four-skill UI loadout (CLAUDE.md)
 before touching a pixel, and read a ⚑ block before trusting any line number in the prose above it.**
@@ -369,9 +398,13 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    ⚑ **MEASURED: the dev solve took ~25 MINUTES, not ~11.** The landmine figure below was taken on the
    single-bucket `?seed=nc`; a three-bucket household is materially slower (CPU pinned on one core the
    whole time — checked twice, so this is compute, not a hang). Budget accordingly.
-   ⚠️ **Entry 4's record card is still un-eyeballed** — this walk did not save + re-enter, so the HOLDS
-   face was not seen. `?vault=rec` cannot show it either (single bucket, planted payload). Reaching it
-   needs a save + re-entry on THIS seed.
+   ⚠️ **Entry 4's record card — RE-SCOPED 2026-08-14, this bullet was overstated.** It used to say the
+   HOLDS face "was not seen" and that `?vault=rec` "cannot show it either". **`?vault=rec` renders the
+   HOLDS face** — *"It still lines up with the numbers you've entered."*, observed at 1536×791 (see the
+   corrected debt block at the top of this file). What that plant cannot witness is the **semantic**
+   case: a single $1.055M IRA makes every withdrawal order the identical decumulation, so no household
+   can visibly *not have taken* the advice — which is the whole point of entry 4. **That** still needs
+   a save + re-entry on THIS seed.
    <details><summary>why it had to exist</summary>
 
    Confirmed 2026-08-03 by walking every seed: **no dev seed could witness a withdrawal ORDER
@@ -938,7 +971,8 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
     **Accounts, where the couple enters their entire net worth.** No dev seed reaches most of them.
 
 12. **The couple's own data.** An interrupted intake loses the whole household (13 steps, zero persistence,
-    no `beforeunload`, and one step tells them to fetch a number from healthcare.gov **in a new tab**) · the
+    **no `beforeunload` ON INTAKE**, and one step tells them to fetch a number from healthcare.gov
+    **in a new tab**) · the
     `schemaVersion` migration ladder **does not exist as code** — `IntakeApp.tsx:537` refuses anything but
     v3, so the first v4 bump bricks every saved plan *and its backup* · there is **no way to delete the
     vault** (`clearVault` exists; its only caller is the dev seed planter).

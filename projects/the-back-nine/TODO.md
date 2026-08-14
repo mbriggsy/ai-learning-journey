@@ -1083,15 +1083,20 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
     produce a wrong answer today; all mean the net is thinner than it reads. Plus the Medicare-trend
     riders, the open copy obligations, the deferred richer market draw, and the `dateinvert` (c) mint —
     its own session, a size-L parameter hunt.
-    ⚑ **FIVE SHIPPED SURFACES STILL DESCRIBE NC's RETIRED CERTIFICATION CHECKPOINT** (found
-    2026-08-14; S.L. 2026-41 struck every trigger row FY2025-26 → FY2032-33 on 2026-08-02, and
-    `state-tax-nc-last-verified.json:19` correctly records the next live flip as the ~Aug-**2034**
-    accounting). Still asserting the dead ~Aug-2026 event, in present tense: `scripts/verify-state-tax.ts:9-14`
-    (header) and `:41-42` (the `nextDue` doc comment) · `.github/workflows/verify-the-back-nine.yml:46`
-    · and TWO inside the engine — `types.ts:20-22` (*"an NC household stays honestly blocked"*) and
-    `oracleToken.ts:72-73` (*"an NC household waits for the ~Aug-2026 certification"*).
-    `caseStateCompanions.ts:34-38` and `copy.ts:2620` WERE swept 2026-08-02, so these five are
-    stragglers, not policy. XS, one pass, no behaviour change.
+    ✅ **NC's RETIRED CERTIFICATION CHECKPOINT — SWEPT 2026-08-14.** Six shipped surfaces (not the
+    five filed; `CLAUDE.md:35` turned up in the sweep) still asserted the dead ~Aug-2026 event in
+    PRESENT tense after S.L. 2026-41 struck every trigger row FY2025-26 → FY2032-33 on 2026-08-02:
+    `scripts/verify-state-tax.ts` header + its `nextDue` doc comment · `verify-the-back-nine.yml:46`
+    · project `CLAUDE.md:35` · and two in the engine — `constants/types.ts` and
+    `validation/oracleToken.ts`. All now name it as RETIRED, in past tense, and the two engine
+    docblocks additionally record that **`certification-pinnable` currently fires for NOBODY** — the
+    kind survives only because the machinery is generic and the next directional state re-arms it,
+    which is the thing a reader would otherwise mis-infer from an NC example written in the present.
+    The `verify-state-tax.ts` header also gained the source landmine it was missing: NCDOR's rate
+    page and the codified G.S. page both still show the struck "after 2025 — 3.99%", so they read as
+    CONTRADICTING the pinned record until they recompile — **session law wins, do not "correct" the
+    engine table back to a flat 3.99%.** Comment-only; typecheck · lint · 3289 tests · state-tax gate
+    all green. (`copy.ts:2620` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think

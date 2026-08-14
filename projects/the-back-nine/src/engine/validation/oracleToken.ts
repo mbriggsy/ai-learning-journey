@@ -69,8 +69,10 @@ function stateOfKey(key: string): PricedState | null {
 /**
  * Evaluate the pinning clause over THE CONSTANTS THE GRADED RUN ACTUALLY CONSUMES (the
  * per-run-consumed scoping — insights 080/081/088). Directional KIND splits the outcome:
- *  - `certification-pinnable` → BLOCKS this household's token (an NC household waits for the
- *    ~Aug-2026 certification; an FL household on the same build is untouched);
+ *  - `certification-pinnable` → BLOCKS this household's token, and only this one (a household in
+ *    an already-pinned state on the same build is untouched). ⚠️ NO LIVE ENTRY since 2026-08-02:
+ *    NC was the only one and S.L. 2026-41 pinned it, so this arm currently fires for nobody — it
+ *    stays for the next directional state, not as a description of today;
  *  - `methodology-substrate` → collected into `disclosedDirectional`, never blocking;
  *  - an UNCLASSIFIED directional entry (shape-test-forbidden) fails CLOSED as blocking —
  *    the mint predicate never guesses a household's honesty posture optimistically.

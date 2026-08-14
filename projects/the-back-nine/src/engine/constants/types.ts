@@ -17,9 +17,14 @@
 /**
  * The directional KIND split (U14 S0, the Act-4 reconciliation supersession item 5) — how the
  * oracle-token mint predicate treats a still-directional entry the graded run CONSUMES:
- *  - `certification-pinnable` — a dated pin event exists (the NC FY2025-26 revenue certification,
- *    ~Aug 2026). The entry BLOCKS that household's oracle-cleared token until its event pins it —
- *    an NC household stays honestly blocked; FL/PA households are not hostage to NC's calendar.
+ *  - `certification-pinnable` — a dated pin event exists. The entry BLOCKS that household's
+ *    oracle-cleared token until its event pins it, and ONLY that household's: a household whose
+ *    own figures are pinned is never hostage to another state's calendar.
+ *    ⚠️ NO ENTRY CARRIES THIS KIND TODAY (since 2026-08-02) — do not read the old NC example as
+ *    live. NC was the only one: its 2027+ out-years waited on the FY2025-26 revenue certification
+ *    until S.L. 2026-41 § 44.1(a) enacted the schedule outright AND struck every trigger row
+ *    through FY2032-33, so the event it waited on now gates nothing. The kind stays because the
+ *    machinery is generic and the next directional state re-arms it.
  *  - `methodology-substrate` — no dated pin event exists (`productionMarket`, ε's calibration
  *    context, `survivorSpendingRatio`). Does NOT block; the grade ships difference-keyed with the
  *    directional level DISCLOSED. Flipping such an entry's `directionalUntilPinned` to `false`

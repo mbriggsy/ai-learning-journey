@@ -6,12 +6,19 @@
  * transcribed from state statute / DOR primaries (src/engine/constants/stateTax.ts) and
  * flagged `directionalUntilPinned` until re-verified. A stale assumption is the
  * cardinal-sin-optimistic direction:
- *  - NC holds 3.99% FLAT under the hawk veto (§V). The codified 2027+ cuts are
- *    revenue-trigger-conditional (the FY2025-26 certification lands ~Aug 2026) and the
- *    reported budget-deal schedule is unlocated at primary. The instant a LOWER rate pins,
- *    the table must add a step and stale saved vaults (the StateTaxVintageV3 clock); until
- *    then a stale record must not let the build ship on an unverified rate. NC's record
- *    carries the ~Aug-2026 certification checkpoint as its `nextDue`.
+ *  - NC prices an ENACTED STEP SCHEDULE — S.L. 2026-41 (SB 257) § 44.1(a), pinned
+ *    2026-08-02: 2026 = 3.99%, 2027-2029 = 3.49%, 2030-2032 = 3.24%, after 2032 = 2.99%.
+ *    The hawk veto that held 3.99% flat is RETIRED (its one stated reason — the schedule
+ *    "could not be located to primary session law" — no longer holds; it is located).
+ *    The same section STRUCK every revenue-trigger row from FY2025-26 through FY2032-33,
+ *    so the FY2025-26 certification this header used to wait on now gates NOTHING. The
+ *    first SURVIVING trigger is FY2033-34 → TY2035 (0.25pp step, 2.49% floor), i.e. the
+ *    Office of the State Controller's ~Aug-2034 accounting — a decade out, and the only
+ *    mechanism left that can move these rates can only CUT them.
+ *    ⚠️ SOURCE LANDMINE: at pin time NCDOR's rate-schedules page AND the codified G.S.
+ *    105-153.7 page both still showed the struck "after 2025 — 3.99%". Both read as
+ *    CONTRADICTING the record until they recompile. Session law wins — do NOT "correct"
+ *    the engine table back to a 3.99% flat.
  *  - PA / FL are stable (flat 3.07% since 2004 / a constitutional $0) but still re-verified
  *    ANNUALLY for drift.
  *
@@ -38,8 +45,10 @@ export interface StateTaxRecord {
   verifiedOn: string
   status: string
   statusConfirmed: boolean
-  /** Absolute next-due date (NOT a rolling window): NC carries the ~Aug-2026 checkpoint,
-   *  PA/FL an annual cadence. Past it → the build fails until re-verified. */
+  /** Absolute next-due date (NOT a rolling window). EVERY priced state now carries the same
+   *  ANNUAL drift cadence — NC's ~Aug-2026 certification checkpoint was retired 2026-08-02
+   *  when S.L. 2026-41 struck the trigger rows that fed it. Past it → the build fails until
+   *  re-verified. */
   nextDue: string
   /** The load-bearing figures the record attests — a hollow record is not a re-verify. */
   attests: {

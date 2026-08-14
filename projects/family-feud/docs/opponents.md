@@ -25,28 +25,39 @@ their past leagues. Identity lives in [`league.md`](league.md); this file owns *
 happened. Treating one as a forecast without checking it against a floor is how a fabricated
 number gets a measured label — which is exactly what harness leg (d) was killed for.
 
-## The one trait that survived
+## Nothing here predicts an individual. Not one claim survived.
 
-**QB aggression, measured as *which* QB off the board — not which round.** `round` conflates the
-trait with the room: round 3 in a 12-team league and round 3 in an 8-team league are different
-picks, and this sample spans 8-, 10- and 12-team leagues. The league-size-invariant metric
-separates the room cleanly:
+The last candidate was **QB aggression measured league-size-invariantly** — *which* QB off the
+board, not which round. It looked like the one survivor at **76.5% against a 52.9% floor**.
 
-| handle | nth QB off the board, per draft | median | comparable redrafts |
-|---|---|---|---|
-| **briggsy007** (Hunter) | `1 · 1 · 2 · 2 · 3 · 4 · 6` | **2** | 7 |
-| Kaeperni | `1 · 3 · 12` | 3 | 3 |
-| BuschLight420 | `5` | 5 | 1 |
-| RMonk9 | `4 · 6 · 10` | 6 | 3 |
-| MattiICE23 | `2 · 7 · 7 · 10` | 7 | 4 |
-| kblizzy23 · Cltchiefs | **no history at all** | — | 0 |
+🚨 **It did not survive the sample being cleaned.** One **SUPERFLEX** league (`2023 The Big 12`,
+12 teams × 26 rounds) had passed every filter — under the dynasty round cap, snake, full length —
+and in a superflex league a round-1 QB is *correct play*, not a tendency. With it excluded:
 
-Cross-validated on *"takes a top-3 QB off the board"*: **personal 76.5% (13/17) against the best
-constant floor's 52.9% (9/17)**.
+| | cleaned |
+|---|---|
+| personal rule | **62.5%** (10/16) |
+| best constant floor | **50.0%** (8/16) |
+| edge | **+2 of 16 — exactly one standard deviation** |
 
-⚠️ **That is +4 of 17, roughly 2 standard deviations. Suggestive, not established.** It is **not**
-wired into `precompute_ladder.py` and should not be until the sample grows — a 2σ trait does not
-belong in the draft-day decision path.
+Removing a single contaminated draft halved the edge and took it from ~2σ to noise.
+
+**And the sample is thinner than the headline count suggests: 7 DISTINCT DRAFTS.** The "18
+comparable redrafts" are overlapping *drafter-views* — four league members played in the same
+2023 Fantasy Fuccbois draft, several more share AM Lumber. Observations inside one draft are not
+independent: if a room is QB-hungry, everyone in it looks QB-hungry.
+
+The per-drafter medians below are **descriptive only**. They are real records of what happened.
+They do not forecast, and they are deliberately **not** wired into `precompute_ladder.py`.
+
+| handle | nth QB off the board (cleaned) | median | comparable | distinct-draft caveat |
+|---|---|---|---|---|
+| **briggsy007** (Hunter) | `1 · 1 · 2 · 2 · 3 · 4 · 6` | **2** | 7 | all 1QB, clean |
+| Kaeperni | `1 · 3 · 12` | 3 | 3 | |
+| BuschLight420 | `5` | 5 | 1 | |
+| RMonk9 | `4 · 6 · 10` | 6 | 3 | |
+| MattiICE23 | `2 · 7 · 10` | 7 | 3 | 1 superflex draft removed |
+| kblizzy23 · Cltchiefs | **no history at all** | — | 0 | |
 
 **`kblizzy23` and `Cltchiefs` are brand-new Sleeper accounts** with zero NFL leagues 2023-2025,
 both of whom joined in the week before 2026-08-14; their user ids (`1392…`, `1393…`) are the same
@@ -98,18 +109,39 @@ argument.** It says the market lets him fall ~21 spots past his price around pic
 
 ## What we actually do with it
 
-1. **Expect QBs to leave this room early — as a ROOM fact, not a per-seat one.** `takes a QB by
-   round 3` is true in **9 of 18 drafts room-wide**; half the room does it. In an 8-team draft
-   that pushes elite RB/WR down to us, and our board is already priced for 8-team replacement
-   while the blended market ADP is not ([`market.py`](../scripts/market.py)). **This needs no
-   opponent model and survives every floor control — it is just the room's base rate.**
-2. **The elite TE is uncontested.** `waits on TE past R5` is true in **15 of 18** drafts room-wide;
-   only Kaeperni takes one early. The board prices `TE1` at **134.7**, above QB1.
+**One directional expectation, and it is not a number.** Across the **7 distinct** comparable
+drafts, the first QB came off the board at pick:
+
+```
+3 · 6 · 15 · 18 · 20 · 21 · 32          median 18
+ADP board, current: the first QB is Josh Allen at overall #29, and the top 24 contain NO QB
+```
+
+**Six of seven drafts took a QB before the ADP board's first QB.** The one 8-team draft — the only
+sample with Family Feud's shape — was the most extreme: **first QB at pick 3, five QBs gone by
+pick 24.**
+
+⚠️ **Two confounds, both real, and neither removable with what we hold:**
+- **We are comparing 2023-2025 behaviour against a 2026 price list.** If QBs were priced earlier
+  in the ADP in force at the time, the room was at market and this is an artifact. We do not hold
+  historical ADP, so this cannot be checked.
+- **Six of the seven drafts are 10- or 12-team.** Those rooms need more starting QBs, so they
+  consume QBs faster per pick than an 8-team room will. That cuts *against* the finding.
+
+So: **expect QBs to leave earlier here than the ADP sheet implies, and expect elite skill players
+to slide further to us than generic ADP predicts. Treat it as a direction to stay alert to, never
+as a count to plan around.** It is deliberately not encoded anywhere.
+
+The two other room-level regularities are much better supported, because they are near-unanimous
+rather than directional:
+
+1. **The room waits on TE — `past R5` in 15 of 18 drafter-views**, only Kaeperni excepted. The
+   board prices `TE1` at **134.7**, above QB1, and essentially uncontested.
    ⚠️ **And `TE1` carries the largest measured spread on the board — sd 30.5, season draws
    `175.1 · 95.8 · 117.3 · 150.8`.** Best-priced uncontested asset *and* highest-variance bet.
    Those two facts must always travel together.
-3. **Nobody takes a K before round 10. Ever, 18/18.** So neither do we, and there is no edge here
-   — only a way to lose one.
+2. **Nobody takes a K before round 10. 18 of 18, every drafter, every draft.** So neither do we —
+   no edge here, only a way to lose one.
 
 ## Landmines
 
@@ -119,6 +151,16 @@ argument.** It says the market lets him fall ~21 spots past his price around pic
   It is **not** proof of judgment.
 - 🚨 **`round` is not comparable across league sizes**, and using it is what made three of four
   claims fail. Prefer nth-off-the-board, or any metric normalised to the room.
+- 🚨 **SUPERFLEX AND 2QB LEAGUES CORRUPT THE ONE AXIS THESE PROFILES ARE READ FOR**, and one
+  passed every other filter. Where a second QB can start, a round-1 QB is *correct play*, not a
+  tendency. `scout_opponents.is_superflex()` now excludes them by `roster_positions`; do not
+  weaken it. This is the **third** time this project has shipped a denominator quietly containing
+  a different population — `market.py`'s position mix, insight 022's round-vs-league-size, this.
+  **Check the population before the statistic, every time.**
+- 🚨 **"N comparable redrafts" summed across drafters is NOT N independent drafts.** Four members
+  share the 2023 Fantasy Fuccbois draft; several share AM Lumber. 18 drafter-views are **7
+  distinct drafts**, and drafters inside one draft are correlated by construction. Any room-level
+  rate quoted out of this file must say which unit it is counting.
 - **Dynasty startups and keeper-league rookie drafts are excluded from every rate**, and the tool
   reports how many it dropped. A rookie pool has no veterans, so "took no QB" there is the pool,
   not a preference — `market.py`'s position-mix defect, not repeated.

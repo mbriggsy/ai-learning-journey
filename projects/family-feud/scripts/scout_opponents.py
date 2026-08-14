@@ -48,6 +48,23 @@ SEASONS = ("2023", "2024", "2025")
 #: rounds; a keeper league's rookie draft is a handful of picks over a rookie-only pool.
 MIN_PICKS_FOR_REDRAFT = 14
 MAX_ROUNDS_FOR_REDRAFT = 30
+
+
+def is_superflex(roster_positions):
+    """🚨 A SUPERFLEX OR 2QB LEAGUE IS THE MOST DANGEROUS CONTAMINANT IN THIS FILE, because it
+    corrupts the one axis these profiles are read for.
+
+    Where a second QB can start, taking a QB in round 1 is CORRECT PLAY, not a tendency. Folding
+    one superflex draft into a drafter's profile makes him look QB-aggressive when he was merely
+    right. Measured 2026-08-14: `2023 The Big 12` is 12 teams x 26 rounds = 312 picks, so it is
+    under the dynasty round cap, is snake, is full length, and passed EVERY other filter --
+    11 QBs were gone by pick 24 in it. It contaminated MattiICE23's profile until this existed.
+
+    This is the third time this project has shipped a denominator quietly containing a different
+    population (market.py's position mix, insight 022's round-vs-league-size). Check the
+    population before the statistic, every time."""
+    rp = roster_positions or []
+    return any(p in ("SUPER_FLEX", "SUPERFLEX") for p in rp) or rp.count("QB") >= 2
 #: Below this many comparable drafts, print the drafts and refuse to summarise them.
 MIN_DRAFTS = 3
 
@@ -167,9 +184,12 @@ def comparable(record):
     for lg in record["leagues"]:
         for d in lg["drafts"]:
             ctx = dict(d, season=lg["season"], league=lg["name"], teams=lg["teams"],
-                       rec=lg["rec"], record=lg["record"])
+                       rec=lg["rec"], roster_positions=lg.get("roster_positions"),
+                       record=lg["record"],
+                       superflex=is_superflex(lg.get("roster_positions")))
             if (d["type"] == "snake" and len(d["picks"]) >= MIN_PICKS_FOR_REDRAFT
-                    and not (d["rounds"] or 0) > MAX_ROUNDS_FOR_REDRAFT):
+                    and not (d["rounds"] or 0) > MAX_ROUNDS_FOR_REDRAFT
+                    and not ctx["superflex"]):
                 keep.append(ctx)
             else:
                 skip.append(ctx)
@@ -194,8 +214,10 @@ def profile(record, verbose=False):
             print(f"      {s['season']} {s['league']} ({s['teams']}tm, {s['type']}, "
                   f"{len(s['picks'])} picks)")
         return
+    n_sf = sum(1 for s in skip if s.get("superflex"))
     print(f"    {len(keep)} comparable redraft(s); {len(skip)} excluded "
-          f"(dynasty startup / rookie draft)")
+          f"(dynasty startup / rookie draft"
+          f"{f' / {n_sf} SUPERFLEX' if n_sf else ''})")
 
     recs = []
     seen = set()

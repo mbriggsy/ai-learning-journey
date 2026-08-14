@@ -29,11 +29,18 @@ def draft(picks, dtype="snake", rounds=16, slot=3, qb_pick_nos=None):
     }
 
 
-def record(drafts, name="Tester", uid="1"):
+ONE_QB = ["QB", "RB", "RB", "WR", "WR", "TE", "FLEX", "FLEX", "K", "DEF", "BN", "BN"]
+SUPERFLEX = ["QB", "RB", "RB", "WR", "WR", "TE", "FLEX", "SUPER_FLEX", "K", "DEF", "BN"]
+TWO_QB = ["QB", "QB", "RB", "RB", "WR", "WR", "TE", "FLEX", "K", "DEF", "BN"]
+
+
+def record(drafts, name="Tester", uid="1", roster_positions=None):
     return {"user_id": uid, "display_name": name,
             "leagues": [{"season": "2024", "league_id": "L", "name": "Test League", "teams": 8,
-                         "rec": 1.0, "roster_positions": [], "record": None,
-                         "drafts": drafts}]}
+                         "rec": 1.0,
+                         "roster_positions": ONE_QB if roster_positions is None
+                         else roster_positions,
+                         "record": None, "drafts": drafts}]}
 
 
 FULL = [(r, p) for r, p in zip(range(1, 17), "RB WR WR RB QB WR TE RB WR WR RB TE QB WR K DEF".split())]
@@ -85,6 +92,35 @@ class TestSampleDiscipline(unittest.TestCase):
     def test_one_below_the_boundary_is_excluded(self):
         keep, _ = S.comparable(record([draft(FULL[:S.MIN_PICKS_FOR_REDRAFT - 1])]))
         self.assertEqual(keep, [])
+
+    def test_a_superflex_league_is_excluded(self):
+        """🚨 THE CONTAMINANT THAT PASSED EVERY OTHER FILTER.
+
+        Where a second QB can start, a round-1 QB is CORRECT PLAY, not a tendency -- folding one
+        in makes a drafter look QB-aggressive when he was merely right, and QB aggression is the
+        one trait these profiles are read for. Found live 2026-08-14: `2023 The Big 12`, 12 teams
+        x 26 rounds = 312 picks, snake, full length, under the dynasty cap. It cleared every
+        filter and had 11 QBs gone by pick 24."""
+        keep, skip = S.comparable(record([draft(FULL)], roster_positions=SUPERFLEX))
+        self.assertEqual(keep, [], "a SUPER_FLEX league is not a comparable 1QB redraft")
+        self.assertEqual(len(skip), 1)
+        self.assertTrue(skip[0]["superflex"])
+
+    def test_a_two_qb_league_is_excluded(self):
+        """Same population problem, spelled a different way in roster_positions."""
+        keep, _ = S.comparable(record([draft(FULL)], roster_positions=TWO_QB))
+        self.assertEqual(keep, [])
+
+    def test_a_one_qb_league_is_not_flagged_superflex(self):
+        """The negative control: a normal league must NOT be swept up by the new filter."""
+        self.assertFalse(S.is_superflex(ONE_QB))
+        keep, _ = S.comparable(record([draft(FULL)], roster_positions=ONE_QB))
+        self.assertEqual(len(keep), 1)
+
+    def test_missing_roster_positions_is_not_treated_as_superflex(self):
+        """Absent metadata must not silently delete a real draft from the sample."""
+        self.assertFalse(S.is_superflex(None))
+        self.assertFalse(S.is_superflex([]))
 
     def test_excluded_drafts_are_reported_not_dropped(self):
         """Silently dropping them would hide that the sample was ever filtered."""

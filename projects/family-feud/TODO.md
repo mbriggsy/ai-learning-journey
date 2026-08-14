@@ -152,14 +152,22 @@ wired into the runbook, both detailed immediately below.
    than the constant.** Round-based claims lost to the room base rate on three of four. The
    profiles are DESCRIPTIVE, not predictive. Wiring them in would have put a fabricated number
    under a measured label, which is what leg (d) was killed for.
-   - ✅ **One trait survived:** QB aggression as *nth QB off the board* (league-size-invariant;
-     `round` is not). `briggsy007` median **2nd**, `RMonk9` 6th, `MattiICE23` 7th. Personal
-     **76.5% vs the best constant floor's 52.9%** — ⚠️ **+4 of 17, ~2σ, suggestive not
-     established, and deliberately NOT wired into the decision path.**
-   - ✅ **What IS usable needs no model at all:** the ROOM base rates. `QB by round 3` in **9/18**
-     drafts, `waits on TE past R5` in **15/18**, `no K before round 10` in **18/18**. These
-     survive every floor control because they are just the room's own frequencies.
-   - **Re-open only with more drafts** (the room plays every year), never by loosening a floor.
+   - ⚠️ **A last candidate looked like it survived and then did not.** QB aggression as *nth QB
+     off the board* scored **76.5% vs a 52.9% floor** — until a **SUPERFLEX** league was found
+     inside the sample (`2023 The Big 12`, 12tm × 26 rounds, which cleared every filter; a
+     round-1 QB is *correct play* there). Cleaned: **62.5% vs a 50.0% floor, +2 of 16, one
+     standard deviation. NOTHING PREDICTS.** `is_superflex()` now excludes them, +4 tests,
+     +3 mutants.
+   - 🚨 **AND THE SAMPLE WAS NEVER 18.** Those are overlapping *drafter-views* of **7 DISTINCT
+     DRAFTS** — four members share the 2023 Fantasy Fuccbois draft. Only **one** of the seven is
+     8-team. Any rate quoted from this data must say which unit it counts.
+   - ✅ **What survives is near-unanimous room facts and one direction:** `no K before round 10`
+     **18/18**, `waits on TE past R5` **15/18** (drafter-views), and the first QB came off the
+     board before the ADP board's first QB (#29) in **6 of 7 distinct drafts**, median pick 18.
+     ⚠️ **That last one compares 2023-2025 behaviour to a 2026 price list and six of seven rooms
+     are bigger than ours — a direction to stay alert to, not a count to plan around.**
+   - **Re-open only with more distinct 1QB drafts** (the room plays every year), never by
+     loosening a floor and never by counting drafter-views as drafts.
 3. **Ship the long-TD bonus into `build_curves.py`.** Everything needed is measured and cached;
    this is now a build, not a question. Worth doing for **correctness only — the edge is ~zero**
    and the file must say so, or the next session will quote it as an advantage.
@@ -193,13 +201,15 @@ near **pick 15-18 overall**.
 - ⚠️ **The `Lamar Jackson +106.7` line elsewhere in this file is a VALUE-VS-ADP statement — that
   the market lets him fall ~21 spots past his price around pick 60. It is NOT an argument for
   drafting a QB early, and it was misread that way in session on 2026-08-14 before being caught.**
-- **QBs leave this room early — as a ROOM base rate, not a per-seat read.** `QB by round 3` is
-  true in **9 of 18** comparable drafts room-wide; half of them do it. ⚠️ **An earlier draft of
-  this line said "two of seven opponents reliably" do it — that framing did not survive
-  cross-validation** (insight 022) and is corrected here. In an 8-team room the base rate still
-  pushes elite RB/WR down to us, and our board is already priced for 8-team replacement while the
-  blended market ADP is not. **Two independent edges, same direction — and this one needs no
-  opponent model, which is why it survives every floor control.**
+- **QBs appear to leave this room earlier than the market expects — a DIRECTION, not a count.**
+  The first QB went before the ADP board's first QB (Josh Allen, overall **#29**; the top 24
+  contain **no** QB) in **6 of 7 distinct drafts**, median pick **18**. ⚠️ **Two earlier framings
+  of this line were wrong and are corrected here:** "two of seven opponents reliably" did not
+  survive cross-validation, and "9 of 18 drafts" was counting drafter-views as drafts. ⚠️ **And
+  the comparison is 2023-2025 behaviour against a 2026 price list, with six of the seven rooms
+  larger than ours** — both confounds unremovable with what we hold. If it holds, elite RB/WR
+  slide to us, which compounds with the board already being priced for 8-team replacement while
+  the blended ADP is not. **Stay alert to it; do not plan a pick around it.**
 - **The room waits on TE — `past R5` in 15 of 18 drafts**, only Kaeperni excepted. `TE1` is priced
   **134.7**, above QB1 — ⚠️ **and carries the largest measured spread on the board, sd 30.5.**
   Uncontested and highest-variance are both true; never quote one without the other.

@@ -78,13 +78,32 @@ MattiICE23     nth-QB [2, 7, 7, 10]           median 7
 Cross-validated on "takes a top-3 QB off the board": **personal 76.5% (13/17) against the best
 constant floor's 52.9% (9/17)**.
 
-⚠️ **That is +4 of 17, roughly 2 standard deviations. Suggestive, not established, and it must be
-quoted that way.** One trait survived out of everything tested.
-
 ⚠️ **The first version of that result was reported against the leave-one-out ROOM model at 24%,**
 which made the edge look like 76 vs 24. A baseline scoring *below* chance is a broken baseline,
 not a good result — with a bimodal trait and four drafters, leave-one-out makes the room predict
 the opposite of whoever is held out. The honest comparison is against the best constant.
+
+## And then the survivor died too
+
+**A SUPERFLEX league had passed every filter.** `2023 The Big 12` is 12 teams × 26 rounds = 312
+picks: snake, full length, under the dynasty round cap. **Where a second QB can start, a round-1
+QB is correct play, not a tendency** — and 11 QBs were gone by pick 24 in it. It sat inside
+MattiICE23's profile the whole time.
+
+With it excluded:
+
+| | contaminated | cleaned |
+|---|---|---|
+| personal rule | 76.5% (13/17) | **62.5%** (10/16) |
+| best constant floor | 52.9% | **50.0%** |
+| edge | +4 of 17 (~2σ) | **+2 of 16 — one standard deviation** |
+
+**Removing one draft halved the edge and took it from suggestive to noise. Nothing survives.**
+
+**And the sample was never what the headline said.** "18 comparable redrafts" are overlapping
+*drafter-views* of **7 distinct drafts** — four members share the 2023 Fantasy Fuccbois draft.
+Drafters inside one draft are correlated by construction: if a room is QB-hungry, everyone in it
+looks QB-hungry. Only **one** of the seven is 8-team, the shape we actually draft in.
 
 ## Lesson
 
@@ -101,16 +120,32 @@ asked with a league-size-invariant metric, produced the one trait that survived.
 measurement is evidence about the measurement first and the world second.
 
 **Corollary — descriptive and predictive are different words.** Every profile statement in
-`docs/opponents.md` is a true description of what happened. Almost none of them predict. A profile
+`docs/opponents.md` is a true description of what happened. **None of them predict.** A profile
 that cannot beat a constant is a summary of the past, and feeding it to the precomputer would have
 put a fabricated number under a label saying it was measured — the exact failure leg (d) was
 killed for.
 
+**Corollary — check the population before the statistic.** One superflex league was the difference
+between "a trait survived at 2σ" and "nothing survived." It is the third time this project has
+shipped a denominator quietly containing a different population: `market.py` counted K/DEF rows in
+a skill-only rank, the round-vs-league-size defect above, and now this. The filter that catches it
+must be written when the sample is *assembled*, not when a number looks surprising.
+
+**Corollary — count the unit you are actually quoting.** "18 comparable redrafts" were 17
+overlapping drafter-views of **7 distinct drafts**. The inflated count made every rate in this
+analysis look better-supported than it was, and it survived three rounds of review because the
+number was true — it just was not counting what the sentence implied.
+
 ## What was done
 
-- **The general positional prior was not built.** `TODO.md` records the negative result so it is
-  not proposed again.
-- `docs/opponents.md` leads with the cross-validated metric and marks the round-based figures as
-  descriptive only.
-- The one surviving trait is recorded with its error bar attached and is **not** wired into
-  `precompute_ladder.py`; +4 of 17 does not earn a place in the draft-day decision path yet.
+- **Nothing was wired into `precompute_ladder.py`.** Not the positional prior, not the round
+  claims, not the QB-aggression trait. `TODO.md` records the negative result so none of them is
+  proposed again.
+- `scout_opponents.is_superflex()` excludes SUPER_FLEX and 2QB leagues by `roster_positions`,
+  with 4 tests and 3 mutants.
+- `docs/opponents.md` states up front that nothing predicts, quotes the distinct-draft count
+  beside every drafter-view count, and keeps the profiles as description only.
+- **What survived is one DIRECTION with its confounds named:** six of seven drafts took the first
+  QB before the current ADP board's first QB (median pick 18 vs #29). It is compared against a
+  2026 price list rather than the one in force at the time, and six of the seven rooms are larger
+  than ours. It is written down as a thing to stay alert to and is encoded nowhere.

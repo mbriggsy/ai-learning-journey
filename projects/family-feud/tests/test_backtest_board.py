@@ -19,8 +19,8 @@ import os
 import sys
 import unittest
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                                "scripts"))
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "scripts"))
 import backtest_board as B  # noqa: E402
 
 
@@ -159,6 +159,46 @@ class TestTheQbEarlyArm(unittest.TestCase):
         """The guard is `counts == 0`; without it the arm would take two quarterbacks."""
         need, _flex, _t = B.must_fill({"QB": 1, "RB": 0, "WR": 0, "TE": 0})
         self.assertEqual(need["QB"], 0)
+
+
+class TestTheDefaultsAreThePublishedInvocation(unittest.TestCase):
+    """The bare command must reproduce the numbers the docs quote. It did not, and the disagreement
+    was on the SIGN of the headline result.
+
+    Measured 2026-08-14. Old defaults (`--years 2015-2025 --first-test 2019`) give 11 usable
+    seasons and `ORDER margin +35.7 SEM 50.1` -- POSITIVE. Every figure in TODO.md and insight 024
+    is `ORDER -18.9 SEM 36.7` -- NEGATIVE -- from `--years 2010-2025 --first-test 2014`, and that
+    invocation appeared in no file. So `python scripts/backtest_board.py`, the command anybody
+    would obviously run, printed a sign-flipped answer to "is the board better than ADP" and looked
+    exactly as authoritative as the docs it contradicted.
+
+    Pinned on the DEFAULTS rather than by re-running the backtest: the real run needs the
+    gitignored historical-ADP cache and takes minutes, so a test that ran it would add a skip to a
+    clean clone (review residue 1) and be slow enough to get deleted. The defaults are the thing
+    that regressed and the thing worth guarding.
+    """
+
+    def _parser_defaults(self):
+        import argparse
+        import re
+        src = open(os.path.join(ROOT, "scripts", "backtest_board.py"), encoding="utf-8").read()
+        years = re.search(r'add_argument\("--years",\s*default="([^"]+)"', src)
+        first = re.search(r'add_argument\("--first-test",\s*type=int,\s*default=(\d+)', src)
+        self.assertTrue(years and first, "the argparse defaults could not be read")
+        return years.group(1), int(first.group(1))
+
+    def test_the_defaults_reproduce_the_published_table(self):
+        years, first = self._parser_defaults()
+        self.assertEqual(years, "2010-2025",
+                         "narrowing the default year range has flipped ORDER's sign before")
+        self.assertEqual(first, 2014,
+                         "the published 12 held-out seasons start at 2014")
+
+    def test_the_reason_is_written_down_where_it_would_be_changed(self):
+        """A default that is load-bearing and unexplained is a default somebody tidies."""
+        src = open(os.path.join(ROOT, "scripts", "backtest_board.py"), encoding="utf-8").read()
+        self.assertIn("THESE DEFAULTS ARE THE PUBLISHED ONES", src)
+        self.assertIn("+35.7", src, "record what the old defaults printed, or the trap is abstract")
 
 
 if __name__ == "__main__":

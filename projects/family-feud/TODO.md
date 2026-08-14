@@ -274,6 +274,12 @@ order statistic, selected after the fact for beating expectations. **You cannot 
   variance slot (sd 30.5); with the dominant term included **TE1 has the LOWEST total spread of
   the four positional #1s** (60.6 vs RB1's 145.1).
 - ✅ **DECIDED BY MEASUREMENT, NOT BY VOTE — DO NOT REPRICE THE BOARD (2026-08-14).**
+  **Reproduce with `python scripts/backtest_board.py` — bare, no flags** (the defaults ARE the
+  published invocation as of 2026-08-14: `--years 2010-2025 --first-test 2014`). ⚠️ **Until today
+  they were `2015-2025 / 2019`, which prints 11 seasons and `ORDER +35.7 ± 50.1` — POSITIVE, the
+  opposite sign to every figure below — and the real invocation was written down nowhere.** The
+  docs were right and the tool disagreed with them by default. Changing the year range changes the
+  headline; do not narrow it casually.
   `scripts/backtest_board.py` (U18) held out 12 seasons, built every valuation from earlier
   seasons ONLY, ran real 8-team snake drafts at all 8 slots and scored the actual starting
   lineup against the seven opponents inside the same draft.

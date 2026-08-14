@@ -284,9 +284,20 @@ def load(years, quiet=True):
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--first-test", type=int, default=2019,
-                    help="earliest season to hold out (needs MIN_TRAIN_SEASONS before it)")
-    ap.add_argument("--years", default="2015-2025")
+    # 🚨 THESE DEFAULTS ARE THE PUBLISHED ONES, AND THAT IS THE WHOLE POINT (changed 2026-08-14).
+    # They used to be `--years 2015-2025 --first-test 2019`, which yields 11 usable seasons and
+    # `ORDER margin +35.7 SEM 50.1` -- POSITIVE. Every figure quoted in TODO.md and insight 024 is
+    # `ORDER -18.9 SEM 36.7`, NEGATIVE, from `--years 2010-2025 --first-test 2014`, and that
+    # invocation was recorded NOWHERE. So the bare command a future session would obviously run
+    # printed a sign-flipped answer to the headline question and looked exactly as authoritative.
+    # The docs were right; the tool disagreed with them by default. Now it does not.
+    # `test_the_defaults_reproduce_the_published_table` pins this.
+    ap.add_argument("--first-test", type=int, default=2014,
+                    help="earliest season to hold out (needs MIN_TRAIN_SEASONS before it). "
+                         "The default is the one the published figures were computed with.")
+    ap.add_argument("--years", default="2010-2025",
+                    help="season range to load. The default is the published one -- narrowing it "
+                         "changes the headline margins and has flipped ORDER's sign before.")
     args = ap.parse_args()
     lo, _, hi = args.years.partition("-")
     years = tuple(range(int(lo), int(hi) + 1))

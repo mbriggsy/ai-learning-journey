@@ -108,3 +108,24 @@ not something you can detect by reading the result.
   mutant (`y <= target`) that would silently let a curve see the season it is scored on.
 - The four defects are pinned by name in `tests/test_backtest_board.py` so none can return
   quietly.
+
+## A fifth thing, found 2026-08-14: the numbers above had no recorded invocation
+
+Every figure in this file comes from `--years 2010-2025 --first-test 2014`. **That was written
+down nowhere**, and the script's defaults were `--years 2015-2025 --first-test 2019`, which give
+11 usable seasons and **`ORDER margin +35.7 ± 50.1` — positive, the opposite sign to the `−18.9`
+this file reports.**
+
+So `python scripts/backtest_board.py`, the command any future session would obviously run, printed
+a sign-flipped answer to the headline question and looked exactly as authoritative as the document
+it contradicted. Nothing was wrong with the analysis; the *tool disagreed with its own write-up by
+default*, which is a fifth way to get a confident wrong answer out of this harness and belongs
+beside the other four.
+
+**Fixed by making the defaults the published invocation**, so the bare command reproduces this file
+bit-for-bit — verified: `−18.9 ± 36.7`, `+1.5 ± 47.2`, `−49.8 ± 25.6`.
+`TestTheDefaultsAreThePublishedInvocation` pins it and a mutant reverting the range turns it red.
+
+**The general rule this is an instance of:** a published number needs its invocation recorded, or
+the default has to be the invocation. Prefer the second — a recorded flag is a thing someone
+forgets, and a default is a thing they cannot.

@@ -40,11 +40,25 @@ ships:**
 | TE1 | 76.0 | 66.8 | 20.1 | 134.8 | 1.77x |
 
 **The board overstates the top of every position, four for four — and it does not overstate them
-equally.** A uniform error would leave the ordering intact. This one does not: it is worst at QB
-by a factor of five over the next worst, so the board's *cross-position* ordering is distorted,
-not merely its scale.
+equally.** A uniform error would leave the ordering intact. This one does not: QB1 is the most
+overstated of the four in every window, so the board's *cross-position* ordering is distorted, not
+merely its scale.
 
-Stable across windows (2022-2025, 2018-2025, 2015-2025), so this is not a recent-seasons artifact.
+> ⚠️ **CORRECTED 2026-08-14 — "worst at QB by a factor of five" IS A 2015-2017 ARTIFACT, and the
+> line above it claiming this is "stable across windows" was false for that ratio.** Re-measured
+> on all three windows:
+>
+> | window | QB1 overstated | next worst | QB's lead |
+> |---|---|---|---|
+> | 2015-2025 | 12.7× | RB1 2.55× | **4.98×** |
+> | 2018-2025 | 2.59× | RB1 2.56× | **1.01×** |
+> | 2022-2025 | 2.88× | RB1 2.21× | **1.30×** |
+>
+> **What IS stable is the direction, not the magnitude** — QB1 is the most overstated slot in all
+> three windows, and realised QB1 comes to at most about HALF realised RB1/WR1 in each
+> (10.2 vs 105.2/133.9 · 50.1 vs 104.7/113.5 · 45.0 vs 121.6/130.9). That halving is the fact the
+> draft doctrine actually rests on, and it survives. The factor of five does not, and it was the
+> sentence licensing "cross-position ordering is distorted" in its strong form.
 
 ## The headline: an elite QB has been worth nothing here
 
@@ -54,8 +68,27 @@ Realised vorp of the preseason QB1 through QB12, 2015-2025:
 10.2 · 63.4 · -14.6 · 18.6 · 9.0 · 4.7 · 2.6 · -38.8 · -26.7 · -31.0 · -10.3 · -15.3
 ```
 
-**Twelve cells, all at or below zero, over eleven seasons.** QB1's 10.2 ± 26.6 is
-indistinguishable from replacement. The board prices that same slot at **129.7**.
+> 🚨 **CORRECTED 2026-08-14. This paragraph used to read "Twelve cells, all at or below zero, over
+> eleven seasons" — and the row printed directly above it has SIX POSITIVE CELLS** (10.2, 63.4,
+> 18.6, 9.0, 4.7, 2.6). The claim was contradicted by its own data, one line away, in the file's
+> headline paragraph. What follows replaces it.
+
+**Eleven of the twelve are indistinguishable from replacement, and the window matters more than
+the sign.** QB1 is **10.2 ± 26.6** over 2015-2025 — genuinely indistinguishable — but that headline
+is carried by 2015-2017: on **2018-2025 QB1 realises 50.1 ± 20.5, which is 2.4σ ABOVE replacement**,
+and on 2022-2025 it is 45.0 ± 36.9. **"An elite QB has been worth nothing here" is true of the
+widest window and NOT true of the recent one.** The board prices that slot at **129.7** either way.
+
+**One cell does separate, and it is not QB1: QB2, at 63.4 ± 13.8** over 2015-2025 (66.5 ± 16.4 on
+2018-2025). ⚠️ Do not promote that to a finding — it is one of **83** cells measured here, and the
+comparison a draft actually faces is the *paired* QB2 − QB1, which is **+53.2 ± 30.7, t = 1.73**
+and fails the same 2σ bar this file applies to everything else.
+
+⚠️ **THE DOCTRINE IS UNCHANGED, AND IT NEVER RESTED ON THE ZERO.** It rests on the halving above:
+realised QB1 is at most about half realised RB1/WR1 in every window, so a top-3-round quarterback
+passes a back or receiver worth roughly twice as much. That holds at 50.1 exactly as it held at
+10.2. The correction is to the *evidence*, not the *conclusion* — and the QB-in-rounds-6-9 window
+already covers the ADP QB2 this section flags.
 
 This is now the **third independent line** pointing the same way, and the other two were built
 from entirely different data:

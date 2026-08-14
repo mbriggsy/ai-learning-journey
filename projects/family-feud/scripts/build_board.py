@@ -695,14 +695,30 @@ def methodology_blocks(source, curve_path=CURVE):
     vbd = (source["meta"].get("vbd") or {})
     base, last = vbd.get("baselineWaiver") or {}, vbd.get("lastStarter") or {}
 
-    rows = ["| Pos | Last starter league-wide | Waiver replacement (VORP baseline) |",
+    # THE WORD "WAIVER" WAS DOING WORK IT HAD NOT EARNED (corrected 2026-08-14). These four ranks
+    # partition the drafted slots EXACTLY: QB12 + RB41 + WR47 + TE12 = 112, plus 8 kickers and 8
+    # defenses, = 128 = teams x rounds. So each one is the LAST ROSTERED player at its position;
+    # the first genuinely free one is a rank below (QB13, RB42, WR48, TE13). Calling it "the free
+    # RB" overstated the precision by exactly one rank.
+    # ⚠️ THE INTEGERS DO NOT MOVE, and NOT because of what moving them would recommend. They came
+    # from a Thunderdome sim, 300 rooms x 16 seasons, that CANNOT BE REPRODUCED HERE -- the same
+    # reason the NO K BASELINE decision stands. Re-deriving them mechanically would swap a measured
+    # number for a fabricated one wearing its clothes, which is the trade this project refuses
+    # everywhere else. Reopen only by re-running the sim.
+    rows = ["| Pos | Last starter league-wide | Last ROSTERED (the VORP baseline) |",
             "|-----|--------------------------|-------------------------------------|"]
     for pos in ("QB", "RB", "WR", "TE"):
         rows.append(f"| {pos}  | {pos}{last.get(pos, '?')} | **{pos}{base.get(pos, '?')}** |")
+    rows.append("")
+    rows.append("*Those four sum to 112; with 8 kickers and 8 defenses that is 128 — exactly the "
+                "number of players an 8-team, 16-round draft removes. Each baseline is therefore "
+                "the LAST ROSTERED player at its position, and the first genuinely free one sits "
+                "one rank below it.*")
 
     ex = ["| Player | VORP | Read as |", "|--------|------|---------|"]
-    reads = {"RB": "points/season better than the free RB", "WR": "points better than the free WR",
-             "QB": "points better than the free QB"}
+    reads = {"RB": "points/season better than the last rostered RB",
+             "WR": "points better than the last rostered WR",
+             "QB": "points better than the last rostered QB"}
     for p in _headline_rows(source):
         ex.append(f"| {p['name']} | **{p['vorp']}** | {round(p['vorp'])} "
                   f"{reads.get(p['pos'], 'points over replacement')} "

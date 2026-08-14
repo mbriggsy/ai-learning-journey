@@ -100,12 +100,14 @@ Then we subtract the **replacement level**: the best player at that position sit
 Eight teams each start QB / 2 RB / 2 WR / TE / 2 FLEX. History says the league's 16 flex slots fill roughly 11 WR / 5 RB in this format. That pins the last actual starters league-wide, and adding typical bench-hoarding pins the first guy who's genuinely *free*:
 
 <!-- BEGIN GENERATED baselines — rewritten by scripts/build_board.py. Do not hand-edit. -->
-| Pos | Last starter league-wide | Waiver replacement (VORP baseline) |
+| Pos | Last starter league-wide | Last ROSTERED (the VORP baseline) |
 |-----|--------------------------|-------------------------------------|
 | QB  | QB8 | **QB12** |
 | RB  | RB21 | **RB41** |
 | WR  | WR27 | **WR47** |
 | TE  | TE8 | **TE12** |
+
+*Those four sum to 112; with 8 kickers and 8 defenses that is 128 — exactly the number of players an 8-team, 16-round draft removes. Each baseline is therefore the LAST ROSTERED player at its position, and the first genuinely free one sits one rank below it.*
 <!-- END GENERATED baselines -->
 
 **VORP = projected season points above that baseline player.**
@@ -117,9 +119,9 @@ Three numbers from the board:
 <!-- BEGIN GENERATED worked-example — rewritten by scripts/build_board.py. Do not hand-edit. -->
 | Player | VORP | Read as |
 |--------|------|---------|
-| Jahmyr Gibbs | **268.4** | 268 points/season better than the free RB (RB41 is the bar) |
-| Ja'Marr Chase | **242.7** | 243 points better than the free WR (WR47 is the bar) |
-| Josh Allen | **129.7** | 130 points better than the free QB (QB12 is the bar) |
+| Jahmyr Gibbs | **268.4** | 268 points/season better than the last rostered RB (RB41 is the bar) |
+| Ja'Marr Chase | **242.7** | 243 points better than the last rostered WR (WR47 is the bar) |
+| Josh Allen | **129.7** | 130 points better than the last rostered QB (QB12 is the bar) |
 <!-- END GENERATED worked-example -->
 
 *The two tables above are generated from `draft-kit/players_data.json` on every board refresh. If

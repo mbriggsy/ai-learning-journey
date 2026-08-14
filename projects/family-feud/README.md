@@ -95,7 +95,8 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         and this board carries 174, so counting separately
                                         prices the list-length difference as a disagreement.
                                         ⚠ Its section [1] is CIRCULAR while rerank.py owns the
-                                        ordering (150/150 rows sit at their consensus rank) and
+                                        ordering (on 2026-08-08 it was 150/150 rows; it drifts
+                                        between re-ranks -- the run prints the live count) and
                                         it SAYS SO on every run — that zero is an identity, not
                                         ~100 experts ratifying the board. The live signal is
                                         section [2], who the consensus ranks that the board does

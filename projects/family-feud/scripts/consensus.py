@@ -48,7 +48,9 @@ carries both `sleeper_id` and `fantasypros_id`, which is the bridge:
 
 159 of 174 board rows resolve, 0 ambiguous, 0 position disagreements.
 
-THE DEPTH ARTIFACT, AND WHY IT WAS NOT COSMETIC. FantasyPros ranks 523 players; this board carries
+THE DEPTH ARTIFACT, AND WHY IT WAS NOT COSMETIC. FantasyPros ranks FAR MORE players than this
+board carries -- 523 when this was written on 2026-08-08, 505 on 2026-08-14, and it churns with
+every scrape. Read `len(page)`; every LIVE line in this file now does. This board carries
 174. Counting position rank inside each list separately therefore measures the SIZE OF THE TWO
 LISTS, not a disagreement -- a board RB43 read as their RB63, and the gap between those two ranks
 was priced in points and printed as a finding. It biases every row ONE WAY, which is how it was
@@ -476,7 +478,7 @@ def report(board_meta, page, disagreements, missing, notes, top):
         out.append(f"              unmatched: {notes['unmatched'][:8]}")
     if notes.get("ladder"):
         rungs = "  ".join(f"{p}{n}" for p, n in notes["ladder"].items())
-        out.append(f"  ranked in : YOUR board's depth, not FantasyPros' 523 -- {rungs}")
+        out.append(f"  ranked in : YOUR board's depth, not FantasyPros' {len(page)} -- {rungs}")
     out.append("")
 
     # IS SECTION [1] CAPABLE OF SAYING ANYTHING AT ALL? `rerank.py` derives the board's ordering
@@ -543,7 +545,8 @@ def report(board_meta, page, disagreements, missing, notes, top):
         out.append("      favourable. A blank spread swallowing your rank means no real "
                    "disagreement.")
         out.append("      'them' is where the experts put him AMONG THE PLAYERS YOU CARRY -- not")
-        out.append("      his published FantasyPros rank, which counts inside a 523-man list and")
+        out.append(f"      his published FantasyPros rank, which counts inside a {len(page)}-man "
+                   f"list and")
         out.append("      would make every row look worse than yours by the list-length gap.")
         out.append(f"      {'pts':>7}  {'raw':>7}  {'you':>7}  {'them':>7}  {'sd':>5}  player")
         for d in live[:top]:

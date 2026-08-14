@@ -405,8 +405,18 @@ class TestEndToEndAgainstTheRealEngine(unittest.TestCase):
     def _cli(self, *extra):
         """Every CLI test injects the FIXTURE cargo. Reading the live inbox would be
         non-deterministic today and would start FAILING on draft morning, the moment
-        `draft_order` populates and the engine's seat oracle disagrees with a hardcoded slot 3."""
-        return ["--slot", "3", "--feed", FEED, "--cargo", FIXTURES] + list(extra)
+        `draft_order` populates and the engine's seat oracle disagrees with a hardcoded slot 3.
+
+        `--draft-id` is EXPLICIT here and that is not papering over anything. The fixture cargo
+        is the REAL draft (1390509994847240192) while the committed lab feed is spent mock
+        1390923383440424960 -- genuinely two different drafts, so once `reference_draft_id` began
+        sourcing the gate from cargo instead of from the feed, these three chain-level tests
+        started refusing, CORRECTLY. They are about output wording and the `--out` path, not about
+        contamination. On draft morning the two agree, because `merge_picks.py` fills picks.json
+        from the same draft the mule hauls. The DEFAULT (cargo-derived) path is covered by
+        TestTheContaminationGateIsReachable below, which is where it belongs."""
+        return (["--slot", "3", "--feed", FEED, "--cargo", FIXTURES,
+                 "--draft-id", "1390923383440424960"] + list(extra))
 
     def _run(self, cargo_dir=FIXTURES, **kw):
         with open(FEED, encoding="utf-8") as f:
@@ -514,6 +524,101 @@ class TestEndToEndAgainstTheRealEngine(unittest.TestCase):
         test above would pass on a string that comes from somewhere else entirely."""
         res = self._run(at=14, cargo_dir=os.path.join(ROOT, "no", "such", "dir"))
         self.assertFalse(any("1390509994847240192" in n for n in res["engine_notes"]))
+
+
+class TestTheContaminationGateIsReachable(unittest.TestCase):
+    """The gate this file's CALL SITE could never fire, found 2026-08-14.
+
+    `draft_id = a.draft_id or (str(feed[0].get("draft_id")) if feed else "")` sourced the gate's
+    reference from THE VERY FEED THE GATE CHECKS, so `draft_engine.py:173-180` compared a feed
+    against itself and the refusal was structurally unreachable. It was not a dormant branch --
+    `docs/draft-day-runbook.md:167` and `:207` both teach the flagless `--slot <slot>` form, so
+    the unreachable path was the ONLY path anybody ran, and :207 fires the ladder BEFORE the
+    draft starts, ahead of any merge_picks call that would have caught it.
+
+    Measured before the fix: a 38-pick feed from dead mock 1392338436949561355 produced a
+    complete round-6 ladder, exit 0, and persisted a queue headed by Nico Collins while Chase,
+    Gibbs, Nacua and Bijan were all still on the real board. Auto-pick drains queue-top, so a
+    blown clock CASHES the contamination rather than containing it.
+
+    Insight 013 is why these test `main()` and not just `reference_draft_id()`: the function
+    having tests is exactly the state that let the broken call site ship.
+    """
+
+    def setUp(self):
+        if not os.path.exists(os.path.join(ROOT, "draft-kit", "players_data.json")):
+            self.skipTest("no board on this machine")
+        import tempfile
+        self._t = tempfile.TemporaryDirectory()
+        self.out = os.path.join(self._t.name, "ladder.json")
+        # A feed from a draft that is NOT the fixture cargo's draft -- the spent-mock shape.
+        self.foreign = os.path.join(self._t.name, "foreign_feed.json")
+        with open(FEED, encoding="utf-8") as f:
+            picks = json.load(f)[:38]
+        with open(self.foreign, "w", encoding="utf-8") as f:
+            json.dump(picks, f)
+
+    def tearDown(self):
+        self._t.cleanup()
+
+    def _main(self, *extra):
+        import contextlib
+        import io
+        buf = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(buf):
+                rc = PL.main(["--slot", "3", "--cargo", FIXTURES, "--out", self.out] + list(extra))
+        except SystemExit as e:                 # run_engine raises this on an engine refusal
+            return 1, buf.getvalue() + str(e)
+        return rc, buf.getvalue()
+
+    def test_a_foreign_feed_is_REFUSED_through_the_flagless_runbook_form(self):
+        """THE REGRESSION. This is the exact command docs/draft-day-runbook.md:207 teaches."""
+        rc, out = self._main("--feed", self.foreign)
+        self.assertEqual(rc, 1, "the flagless form must refuse a feed from another draft")
+        self.assertIn("IS FROM A DIFFERENT DRAFT", out)
+
+    def test_a_refused_run_PERSISTS_NOTHING(self):
+        """A queue on disk outlives the terminal that printed the refusal, and runbook:207 says
+        to load it into Sleeper. Writing one after refusing would leave the poison in place."""
+        self._main("--feed", self.foreign)
+        self.assertFalse(os.path.exists(self.out),
+                         "a refused run must not leave a ladder for the operator to load")
+
+    def test_the_reference_is_NOT_taken_from_the_feed(self):
+        """MUTANT: restore `a.draft_id or feed[0]["draft_id"]`. The test above would still pass
+        if the id merely came from somewhere -- this pins WHERE. The fixture cargo names the real
+        draft; the feed names the mock; the gate must report the CARGO's id as what it asked for."""
+        _, out = self._main("--feed", self.foreign)
+        self.assertIn("1390509994847240192", out, "the gate must be armed from the cargo")
+        self.assertIn("you asked for : 1390509994847240192", out)
+
+    def test_a_matching_feed_still_RUNS(self):
+        """Positive control. Without it, a `reference_draft_id` that refused unconditionally --
+        or returned a constant nothing matches -- would pass every assertion above."""
+        rc, out = self._main("--feed", FEED, "--at", "14",
+                             "--draft-id", "1390923383440424960")
+        self.assertEqual(rc, 0)
+        self.assertTrue(os.path.exists(self.out))
+        self.assertNotIn("IS FROM A DIFFERENT DRAFT", out)
+
+    def test_an_explicit_draft_id_still_wins(self):
+        rid, line = PL.reference_draft_id("999", cargo_dir=FIXTURES)
+        self.assertEqual(rid, "999")
+        self.assertIn("[given]", line)
+
+    def test_no_cargo_means_UNARMED_AND_LOUD_never_a_silent_fallback(self):
+        """The old code's failure mode was silence WITH a plausible id. Unarmed is acceptable
+        (insight 009 -- a clean clone must not go red); unarmed and quiet is not."""
+        rid, line = PL.reference_draft_id(None, cargo_dir=os.path.join(ROOT, "no", "such", "dir"))
+        self.assertEqual(rid, "", "a missing cargo must never fall back to the feed")
+        self.assertIn("NOT armed", line)
+
+    def test_the_call_site_passes_the_cargo_dir_the_operator_chose(self):
+        """MUTANT M8's shape: hardcoding CARGO here would make --cargo decorative and every test
+        above would still pass, because they all happen to point at the fixtures."""
+        with open(os.path.join(ROOT, "scripts", "precompute_ladder.py"), encoding="utf-8") as f:
+            self.assertIn("reference_draft_id(a.draft_id, a.cargo)", f.read())
 
 
 if __name__ == "__main__":

@@ -66,6 +66,12 @@ ADP_CACHE = os.path.join(KIT, "cache", "ffc_adp.json.gz")
 CARGO = os.path.join(ROOT, "newsletter", "data", "inbox")
 DEFAULT_OUT = os.path.join(ROOT, "newsletter", "data", "state", "ladder.json")
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# ONE owner for "is the mule's cargo fresh enough to trust", two consumers. run_engine.py learned
+# the rule (per FILE, not per run) from the watcher; a second copy here is how two instruments
+# drift apart while both look right.
+from run_engine import freshness                                    # noqa: E402
+
 POS_RANK = re.compile(r"^(QB|RB|WR|TE|K|DEF)\d+$")
 NEXT_PICK = re.compile(r"YOUR next pick:\s*#(\d+)\s*[^\d]*?(\d+)\s+picks? away")
 VBD_LEAN = re.compile(r"^vbd\s+(\d+)\s+\(board\s+(\d+)\)\s+(.+?)\s+(?:QB|RB|WR|TE|K|DEF)\d+")
@@ -254,6 +260,50 @@ def stage_cargo(tmp, cargo_dir=CARGO):
     return staged
 
 
+def reference_draft_id(given, cargo_dir=CARGO):
+    """The id the engine's contamination gate is armed with, and how we know it. NEVER THE FEED.
+
+    This used to be one expression -- `a.draft_id or feed[0]["draft_id"]` -- which sourced the
+    reference from the very file the gate exists to check. `draft_engine.py:173-180` then compared
+    a feed against itself, so the refusal was structurally unreachable and a spent mock's
+    picks.json advised the run silently. It was not a dormant branch: the runbook teaches the
+    flagless form (`--slot <slot>`) at BOTH :167 and :207, so the unreachable path was the only
+    path anybody ran. Measured 2026-08-14 -- a 38-pick feed from dead mock 1392338436949561355
+    produced a complete round-6 ladder, exit 0, and persisted a queue headed by Nico Collins while
+    Chase, Gibbs, Nacua and Bijan were all still on the real board.
+
+    `run_engine.py:202-214` already sourced this correctly. Two tools disagreeing about what
+    "armed" means is exactly how consensus.py and market.py drifted apart, so this mirrors it --
+    including the stale-cargo hold-back, and reusing run_engine's `freshness()` rather than
+    inventing a second staleness rule.
+
+    Returns (draft_id, line). An empty id means NOT ARMED and `line` says so out loud: a missing
+    cargo must never become a false red (insight 009) and a clean clone has no cargo at all.
+    Unarmed-and-loud is still strictly better than the old behaviour, which was unarmed and silent
+    while printing a reference id that looked like proof.
+    """
+    if given:
+        return str(given), f"[given] draft_id={given} -- contamination gate armed"
+
+    path = os.path.join(cargo_dir, "sleeper_draft.json")
+    try:
+        with open(path, encoding="utf-8") as f:
+            cargo_id = (json.load(f) or {}).get("draft_id")
+    except (OSError, ValueError):
+        cargo_id = None
+    if not cargo_id:
+        return "", ("[unknown] no draft_id in cargo -- the contamination gate is NOT armed, so a "
+                    "spent mock's picks.json would pre-arm your queue silently. Pass --draft-id.")
+
+    stale_reasons, age_note = freshness(path)
+    if stale_reasons:
+        return "", ("[held back] the cargo's draft_id is NOT being used: " +
+                    "; ".join(stale_reasons) + ". Arming from a stale id would refuse a CORRECT "
+                    "run if the draft was re-created. Pass --draft-id to arm it yourself.")
+    return str(cargo_id), (f"[draft] draft_id={cargo_id} from the mule's cargo -- contamination "
+                           f"gate armed ({age_note})")
+
+
 def _synth(feed, gone, id_of, slot, teams, draft_id):
     """Append one pick per name in `gone`, contiguously. Refuses on a name it cannot resolve.
 
@@ -350,6 +400,10 @@ def precompute(feed, slot, teams, rounds, draft_id, pool_size=48, at=None, cargo
 
     queue = [n for _, n in base]
     return {
+        # Stamped so the artifact can be audited after the fact. The contaminated ladder.json found
+        # on 2026-08-14 carried a complete, plausible round-6 queue and NO draft_id, so nothing on
+        # disk could say which draft it belonged to. "" means the gate was not armed for this run.
+        "draft_id": str(draft_id or ""),
         "our_pick": our_pick,
         "picks_away": gap,
         "seat_unverified": seat_unverified,
@@ -450,7 +504,8 @@ def main(argv=None):
 
     with open(a.feed, encoding="utf-8") as f:
         feed = json.load(f)
-    draft_id = a.draft_id or (str(feed[0].get("draft_id")) if feed else "")
+    draft_id, gate_line = reference_draft_id(a.draft_id, a.cargo)
+    print(gate_line)
 
     if a.backtest:
         stops = [n for n in range(6, min(len(feed), 100), 4)]

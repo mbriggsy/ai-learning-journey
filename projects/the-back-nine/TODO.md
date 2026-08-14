@@ -63,16 +63,33 @@ reloading in one step silently leaves the vault in place and you land on Unlock 
    case where the sentence is TRUE:** ciphertext corrupt enough to fail decrypt but intact enough to
    pass `probeVault`. Closing THAT needs a pre-clear of an unopenable vault, which `RestoreFlow.tsx:8-12`
    records as **council-killed** (*"the one data-loss path this surface must never reintroduce"*).
-   **So: fix the copy for the healthy-vault screens; the corrupt-ciphertext door is a council-sized,
-   destructive one-way door and is HIS.** Briggsy picked "add the door" 2026-08-14 before the refusal
-   was traced — that clearance is spent, re-ask against these facts.
+   ⚠️ **AND THE COPY FIX IS OFF THE TABLE TOO — corrected 2026-08-14 while attempting it.** The
+   sentence is CONDITIONED (*"If you're sure it's right…"*) and TRUE on the damage branch, where the
+   backup's own `recoveryWrap` opens under the same word. `unlockCopy.test.ts:34-41` pins the both-ways
+   hedge deliberately. So there is **no honest copy edit here**: the remedy named is real, and what is
+   missing is the DOOR to it.
+   **What actually remains is one thing, and it is HIS:** a household whose vault is subtly corrupt is
+   told a TRUE remedy it cannot reach, because reaching it needs `clearVault` on an unopenable vault —
+   the council-killed pre-clear. Size it as a destructive one-way door, not a copy pass. Briggsy picked
+   "add the door" 2026-08-14 before `backup.ts:135` was traced — **that clearance is spent; re-ask
+   against these facts.**
+   ⚑ **The narrow, non-destructive increment that IS available** (unproven, size XS, still needs his
+   word): the Unlock error names the backup but never the recovery word, and *that* door — *"I forgot
+   my passphrase"* — is on the same screen. Naming it costs nothing and breaks no hedge.
 
-2. **🔴 On RecoveryFlow the error and the standing note contradict each other in one frame.** The
-   error's *"your backup is the way in"* renders ~190px above the standing
-   *"This same word also opens your backup file on any device."* — the escape route requires the exact
-   thing the user just got wrong. Both strings individually true; the PAIR is the calm-but-wrong. The
-   phone frame (390×844) puts both in a single glance, so this is worse on mobile, not better. Fold
-   into entry 1's copy fix — same string, same pass.
+2. ❌ **WITHDRAWN 2026-08-14, SAME DAY IT WAS FILED — I was wrong, and the shipped test is why.**
+   Filed as: *"the error's 'your backup is the way in' contradicts the standing 'this same word also
+   opens your backup file' — the escape needs the thing you just got wrong."* **It does not contradict.**
+   The clause is CONDITIONED — *"**If you're sure it's right**, the saved data may be damaged, and your
+   backup is the way in"* — and on that branch (word correct, local `recoveryWrap` ciphertext corrupt,
+   GCM-indistinguishable) the backup carries its **own** `recoveryWrap` under that same word, so it
+   genuinely opens. The two sentences describe the two branches of one honest hedge.
+   ⚠️ **DO NOT "fix" this copy.** `unlockCopy.test.ts:34-41` pins the contract on purpose: both
+   GCM-ambiguous failures share ONE both-ways hedge, *"never a key that asserts the credential is
+   definitely wrong or the data definitely bad."* Dropping the damage clause — which is exactly what
+   the withdrawn finding prescribed — would delete the damage-side hedge and ship a false certainty.
+   **The lesson: a rendered frame is authoritative about what a user SEES and not about whether it is
+   true. The cold read produced the suspicion; only the crypto path settled it.**
 
 3. **🟠 Neither recovery NOR restore ever confirms it worked.** Both land byte-identically on
    *"Are these still your numbers?"* with no acknowledgement that the household is back in, and none

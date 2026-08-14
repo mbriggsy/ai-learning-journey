@@ -148,6 +148,35 @@
    * and check that the player actually landed on OUR draft_slot. Until that comes back, the pick
    * is unconfirmed -- treat it exactly like a `picks.json` the engine refused.
    */
+  /* 🚨 2026-08-14 — ffDraft's CLICK DID NOT DRAFT, AND ffDraft SAID `clicked: true`.
+   *
+   * First live exercise in this environment (Windows + Claude-in-Chrome) since the Cowork
+   * migration. Mock 1394049093545758720, our seat 4, API confirming 3 picks in and #4 next.
+   * ffFind located Ja'Marr Chase in 10ms with hasDraftControl:true. ffDraft returned
+   * {clicked:true}. /picks, cache-busted, immediately after: STILL 3 PICKS. Nothing on slot 4.
+   * What the click actually opened was the PLAYER-CARD MODAL.
+   *
+   * The element was right: DIV.draft-button-wrapper, 34x40, one svg, no own text -- exactly what
+   * draftButton() tests for. The selector is fine; the ACTUATION is what is in doubt.
+   *
+   * THE CAUSE IS NOT SETTLED. Do not "fix" this function until it is. Two live candidates:
+   *   (a) synthetic .click() does not actuate this build. Supporting: the modal's own `Cancel`
+   *       was clicked the same way and the modal STAYED OPEN, while a real Escape keypress closed
+   *       it. The runbook already records the AUTO-PICK toggle as immune to synthetic events. If
+   *       this is the cause, ffQueue and ffUnqueue are affected too -- they also end in .click().
+   *   (b) the button was inert because our CLOCK had not started yet. "Next pick is ours" and "our
+   *       clock is live" are different instants, and locate()'s own note says the control renders
+   *       either way. A click on an inert button plausibly falls through to the row, which is
+   *       precisely what opens the player card.
+   *
+   * Settle it on a NO-LIMIT clock, with the room visibly on our pick for several seconds first,
+   * trying a synthetic click and then a real ref-click. Full write-up: docs/insights/025.
+   *
+   * ⚠️ AND NOTE WHAT SAVED US: the confirm-against-/picks discipline below. It is not ceremony.
+   * Chase DID end up on our slot at #4 via auto-pick, stamped with our own picked_by -- which
+   * looks exactly like proof the click worked. Only the pick COUNT read immediately after the
+   * click separates the two, so take that reading before the clock can expire.
+   */
   window.ffDraft = async function (playerName) {
     const r = await locate(playerName);
     if (!r.ok) return JSON.stringify({ clicked: false, ...r, btn: undefined, row: undefined });
@@ -174,7 +203,9 @@
    * given player actually made it into the queue. See the oracle note above ffQueue.
    *
    * Three separate controls live in a player row and conflating them is easy:
-   *   row.children[0]                      the green + . DRAFTS immediately when on the clock.
+   *   row.children[0]                      the green + . ⚠️ SEE THE WARNING BELOW -- this line
+   *                                        used to read "DRAFTS immediately when on the clock"
+   *                                        and that was FALSIFIED live on 2026-08-14.
    *   img[src*="icon_watch_player.png"]    the star. Watchlist, not queue.
    *   img[src*="queue.png"]                THE QUEUE BUTTON. A plain .click() works.
    *

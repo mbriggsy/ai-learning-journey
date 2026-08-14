@@ -272,6 +272,20 @@ Claude's hands are claude-in-chrome on Briggsy's logged-in Chrome; eyes stay on 
   **Re-install after any page reload** — a reload wipes them and the failure looks like the bridge
   being dead.
 
+> 🚨 **STOP — `ffDraft` IS UNDER SUSPICION AS OF 2026-08-14 EVENING, HOURS AFTER THIS SECTION WAS
+> WRITTEN. Do not walk into a real draft relying on it until the mapping run below has settled it.**
+> On the first live exercise in this environment it returned `{"clicked": true}` and **drafted
+> nobody** — `/picks` still read 3 picks, and what the click opened was the player-card modal. The
+> element it found was correct; the actuation is what failed. Cause unresolved between "synthetic
+> `.click()` does not actuate this build" (the modal's own `Cancel` also failed to close, while a
+> real `Escape` worked) and "the button was inert because our clock had not started". Full
+> write-up and the exact experiment that settles it: [`insights/025`](insights/025-the-click-reported-success-and-drafted-nobody.md).
+>
+> **Until it is settled, the failsafe is the QUEUE, not direct fire** — and the queue's own
+> `.click()` is under the same suspicion, so **verify both against `/picks` before trusting either.**
+> The one thing measured working end-to-end that night was Sleeper's own auto-pick, which filled
+> K at #109 and DEF at #116 on schedule from an empty queue.
+
 - **Fire sequence on our clock — `ffFind` then `ffDraft`, and NEVER a screenshot coordinate.**
   ```js
   ffFind('Ja\'Marr Chase')     // what WOULD be drafted. Touches nothing. ALWAYS first.

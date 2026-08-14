@@ -216,6 +216,54 @@ honest headline stands: **there is no pick left that more analysis can buy.**
 
 ---
 
+## 🎯 NEXT SESSION STARTS HERE — MAP THE DRAFT ROOM, THEN WRITE THE SKILL
+
+**Briggsy's call, 2026-08-14: stop re-learning Sleeper's UI every session.** The evidence he is
+right is in this repo — the runbook already carries *"the window is NOT moving… bullet rewritten so
+future sessions don't blame the human"*, a lesson written down **specifically so it would not be
+re-derived**, and it got re-derived anyway. Prose in a long document is not where procedural
+knowledge survives.
+
+**The blocker to writing that skill is one unresolved measurement.** `ffDraft` returned
+`{"clicked": true}` and drafted nobody — [`insights/025`](docs/insights/025-the-click-reported-success-and-drafted-nobody.md)
+has the full account. **A skill asserting unverified clicks would rot exactly the way the runbook
+section did, so measure first, write second.**
+
+**✅ A MOCK IS ALREADY SITTING THERE, `pre_draft`, NOTHING TO CREATE: `1394132992183517184`**
+(8-team snake, 15 rounds, `league_id: null`, verified). `1394049093545758720` is spent — complete.
+
+**The run, in order:**
+1. 🚨 **SET "No Limit" PER PICK BEFORE STARTING. This is not optional and it is the mistake that
+   cost the last run.** 120s looked ample, so it was skipped; the clock then expired *during the
+   diagnosis*, which lost the pick, flipped the seat to auto-pick for 116 straight picks, and made
+   a second trial in that room impossible. The setting exists so a diagnosis cannot destroy the
+   thing being diagnosed. The in-room `⚙` was not in the a11y tree; the `2 Min Per Pick` label
+   itself is clickable (`ref` it via `find`).
+2. **Settle ffDraft.** On a No-Limit clock, with the room visibly on our pick for several seconds,
+   try a **synthetic `.click()`** and then a **real ref-click** via the computer tool, reading
+   `/picks` (cache-busted) after each. That single comparison decides between cause (a) and (b).
+3. **Then sweep every control the same way** — queue icon, star, `Cancel`, AUTO-PICK toggle, search
+   box — recording synthetic vs real for each. The AUTO-PICK toggle is already known to need a real
+   click; the question is how much else does.
+4. **Write `.claude/skills/sleeper-draft-room/`** from what step 3 measured, **with a 20-second
+   self-test at the top** so the next session RE-PROVES the control instead of trusting a sentence.
+   That self-test is the whole point — it is what the runbook lacked.
+
+**Environment facts that cost time last run and should go straight into the skill:**
+- **Chrome CSP blocks `fetch` to localhost**, so `sleeper_draft_console.js` must be **pasted
+  inline**. `eval` itself is fine. Verify the paste by djb2-hashing each `window.ff*.toString()`
+  in-page (comments stripped, whitespace collapsed) against the same normalisation of the file.
+- **`(async () => {…})()` returns a promise the tool serialises as `{}`.** Three results were lost
+  that way, one of them a call that had actually run. Use top-level `await` in a plain object
+  literal, and treat `{}` as "it ran, go read the state".
+- **The `+` on `/draftboards` is the LEAGUE wizard** (it created the stray `Ladder Test 0809`).
+  The mock creator is **`NEW MOCK NFL DRAFT`** in the right panel; it opens the room directly.
+- **Clicking a mock card on `/draftboards` opens the room in a NEW TAB.**
+- **Screenshot scale oscillates on a window nobody is touching** — 1568×750 and 1568×763 observed
+  in one session. **Never blame the human, and never click by screenshot coordinate.**
+
+---
+
 **WHAT IS ACTUALLY LEFT, ranked:**
 1. 🗓️ **THE FINAL RE-RANK, ~Aug 27, THEN FREEZE.** The board ships on the **2026-08-14** ECR.
    Two preseason weeks and roster cut-downs land before Aug 29, so run *THE REAL REFRESH* in the

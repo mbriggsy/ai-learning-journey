@@ -59,6 +59,14 @@ draft-kit/cache/stats_player_week_*.csv
 # the docstring in scripts/build_curves.py before fetching it again.
 draft-kit/cache/play_by_play_*.csv.gz
 
+# Historical preseason ADP, one small file per season, for scripts/realized_value.py. Unlike the
+# consensus and current-ADP caches these are IMMUTABLE -- 2015's ADP will never change again --
+# so the usual "a committed copy would look current when it is stale" argument does not apply.
+# They are ignored for a different reason: nothing on draft morning reads them, and the test
+# suite runs on fixtures rather than on these, so a clean clone loses nothing. `--refetch` or a
+# plain run rebuilds them in a couple of minutes.
+draft-kit/cache/adp_history/
+
 # Opponent scouting cargo -- one file per league member, every league/draft/pick/roster they have.
 # Pure cache: re-pullable with `scout_opponents.py --fetch`, and it grows every season a member
 # plays. The FINDINGS are committed instead, at docs/opponents.md, which is the surface anybody

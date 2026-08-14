@@ -215,8 +215,44 @@ near **pick 15-18 overall**.
   Uncontested and highest-variance are both true; never quote one without the other.
 - **Nobody takes a K before round 10, 18/18.** No edge here, only a way to lose one.
 
+🚨 **THE BIGGEST FINDING OF 2026-08-14, AND IT NEEDS A DECISION: THE CURVE ANSWERS A QUESTION
+NOBODY CAN DRAFT.** `curve[pos][k]` is *"what did the player who **finished** kth score"* — an
+order statistic, selected after the fact for beating expectations. **You cannot draft a finish.**
+`scripts/realized_value.py` (U17) measures what drafting the preseason #k actually returned, over
+11 seasons of historical ADP joined to real scoring at **98-99% coverage**. Full write-up:
+[`insight 023`](docs/insights/023-the-curve-answers-a-question-nobody-can-draft.md).
+
+| slot | realised (2015-2025) | SEM | board ships | ratio |
+|---|---|---|---|---|
+| **QB1** | **10.2** | 26.6 | **129.7** | **12.7x** |
+| RB1 | 105.2 | 42.2 | 268.4 | 2.55x |
+| WR1 | 133.9 | 26.9 | 242.7 | 1.81x |
+| TE1 | 76.0 | 20.1 | 134.8 | 1.77x |
+
+- 🚨 **AN ELITE QB HAS BEEN WORTH NOTHING IN THIS FORMAT.** Preseason QB1-QB12 realised
+  `10.2 · 63.4 · -14.6 · 18.6 · 9.0 · 4.7 · 2.6 · -38.8 · -26.7 · -31.0 · -10.3 · -15.3` — twelve
+  cells, all at or below zero, eleven seasons. **Third independent line of evidence**, after the
+  board's own arithmetic and the room's 2023 head-to-head results.
+- ⚠️ **The overstatement is NOT uniform** (12.7x at QB against 1.77x at TE), so the board's
+  **cross-position ordering** is distorted, not just its scale. Stable across all three windows.
+- ⚠️ **DO NOT SWAP THE CURVE FOR IT WHOLESALE.** The realised curve is the right *quantity*
+  measured with the wrong *precision* — per-cell SEM 20-42, and it comes out **non-monotonic**
+  (RB3 176.4 beats RB1 105.2; RB7 beats RB5). A straight swap ships a board asserting RB7 > RB1.
+- ⚠️ **It also INVERTS the TE risk reading below.** Term (a) alone said `TE1` was the highest
+  variance slot (sd 30.5); with the dominant term included **TE1 has the LOWEST total spread of
+  the four positional #1s** (60.6 vs RB1's 145.1).
+- **DECISION FOR BRIGGSY, deliberately not taken in-session** (the 2025-swap pattern: measure,
+  decompose, present, apply on his call). Candidates, in the order I'd rank them:
+  1. **Fix the QB block only** — the one place the error is both huge and structurally certain.
+  2. **Ship it as a third instrument** beside `market.py` (value-vs-price) and `consensus.py`
+     (value-vs-experts), reporting disagreements without repricing.
+  3. **Monotone-fit the realised curve and swap** — the real prize, but the fit is a modelling
+     choice that needs its own validation unit.
+  **The board is UNCHANGED until he picks.**
+
 **📏 THE BOARD'S ERROR BARS ARE MEASURED NOW (2026-08-14).** The board prints `vorp` to one decimal,
-which asserts a precision nobody had ever checked.
+which asserts a precision nobody had ever checked. ⚠️ **This section measures only the SMALLER of
+the two error terms — see the block immediately above; term (b) is 1.4x to 25x larger.**
 - **Spread of `vorp` at each rank, over the 4 seasons that build the curve:** `RB1` 19.3 · `RB2`
   **31.5** · `RB4` **35.9** · `WR1` 15.3 · `WR2` 25.3 · `QB1` 22.8 · **`TE1` 30.5** — against
   deep ranks at `WR20` **4.4** and `RB20` **4.7**. **The fog is concentrated at RB2-4 and TE1-4,

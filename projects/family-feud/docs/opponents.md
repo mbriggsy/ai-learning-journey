@@ -121,25 +121,50 @@ ADP board, current: the first QB is Josh Allen at overall #29, and the top 24 co
 sample with Family Feud's shape — was the most extreme: **first QB at pick 3, five QBs gone by
 pick 24.**
 
-⚠️ **Two confounds, both real, and neither removable with what we hold:**
-- **We are comparing 2023-2025 behaviour against a 2026 price list.** If QBs were priced earlier
-  in the ADP in force at the time, the room was at market and this is an artifact. We do not hold
-  historical ADP, so this cannot be checked.
-- **Six of the seven drafts are 10- or 12-team.** Those rooms need more starting QBs, so they
-  consume QBs faster per pick than an 8-team room will. That cuts *against* the finding.
+✅ **THE PRICE-LIST CONFOUND IS REMOVED (2026-08-14).** An earlier version of this section said
+*"we do not hold historical ADP, so this cannot be checked."* We do now — `realized_value.py`
+caches it back to 2015. Compared against the ADP **in force that season**, not 2026's:
+
+| draft | first QB | ADP that year | |
+|---|---|---|---|
+| 2023 Fantasy Fuccbois (8tm) | pick **3** | #19 | **16 early** |
+| 2023 Washington Foreskins (12tm) | 15 | #19 | 4 early |
+| 2024 holmes league (10tm) | 6 | #27 | **21 early** |
+| 2024 AM Lumber (10tm) | 20 | #27 | 7 early |
+| 2025 12-Man League (12tm) | 18 | #23 | 5 early |
+| 2025 AM Lumber (12tm) | 21 | #23 | 2 early |
+| 2024 "2024-2025" (10tm) | 32 | #27 | 5 **late** |
+
+**Six of seven, averaging ~7 picks earlier than the market of the day.** The finding survives the
+control that could have killed it.
+
+⚠️ **One confound remains and it cuts AGAINST the finding: six of the seven drafts are 10- or
+12-team rooms**, which need more starting QBs and so consume them faster per pick than an 8-team
+room will. The single 8-team draft is the most extreme of the seven, which cuts the other way —
+but it is one draft.
 
 So: **expect QBs to leave earlier here than the ADP sheet implies, and expect elite skill players
-to slide further to us than generic ADP predicts. Treat it as a direction to stay alert to, never
-as a count to plan around.** It is deliberately not encoded anywhere.
+to slide further to us than generic ADP predicts. A direction to stay alert to, not a count to
+plan around.** It is deliberately not encoded anywhere.
+
+🚨 **AND THIS IS WHY IT MATTERS MORE THAN IT LOOKS.** Over 11 seasons, drafting the preseason QB1
+has returned **10.2 vorp — indistinguishable from a waiver-wire quarterback**
+([`insight 023`](insights/023-the-curve-answers-a-question-nobody-can-draft.md)). Every QB this
+room takes early is a premium pick spent on approximately nothing, and the player who slides is
+ours.
 
 The two other room-level regularities are much better supported, because they are near-unanimous
 rather than directional:
 
 1. **The room waits on TE — `past R5` in 15 of 18 drafter-views**, only Kaeperni excepted. The
    board prices `TE1` at **134.7**, above QB1, and essentially uncontested.
-   ⚠️ **And `TE1` carries the largest measured spread on the board — sd 30.5, season draws
-   `175.1 · 95.8 · 117.3 · 150.8`.** Best-priced uncontested asset *and* highest-variance bet.
-   Those two facts must always travel together.
+   ⚠️ ~~**And `TE1` carries the largest measured spread on the board — sd 30.5.**~~ **CORRECTED
+   2026-08-14: that ranked risk by the SMALLER of the two error terms and got the answer exactly
+   backwards.** With the dominant term included (`insight 023`), **`TE1` has the LOWEST total
+   spread of the four positional #1s — 60.6, against RB1's 145.1.** The elite TE is uncontested
+   in this room *and* the least volatile premium pick on the board. ⚠️ But the realised value of
+   drafting the preseason TE1 is **76.0, not the 134.8 the board shows** — the board overstates
+   every top slot by roughly 2x.
 2. **Nobody takes a K before round 10. 18 of 18, every drafter, every draft.** So neither do we —
    no edge here, only a way to lose one.
 

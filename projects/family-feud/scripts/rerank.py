@@ -26,6 +26,16 @@ THE NOTES ARE NOT REWRITTEN. A handful assert a board position ("The 1.01", "Rou
 zone") and would become false under a new ordering. This script REPORTS them and refuses to
 --write until they are dealt with, rather than editing prose by regex -- the one thing on this
 board a machine has no business rephrasing.
+
+  ...AND THERE IS A WAY PAST IT, because a gate nothing can pass is a wall (added 2026-08-14).
+  Sometimes the claim is still TRUE at the new rank -- Jayden Daniels moving #50 -> #48 keeps
+  "Rounds 6-8 is the zone" correct, since round 6 in an 8-team draft is picks 41-48. There was no
+  way to record that a human had checked, so the only routes past were to edit prose that was not
+  wrong or to weaken the gate. Both are worse than the third: `--notes-reviewed "<name>" ...`
+  acknowledges specific players BY NAME.
+  Naming them is the whole point. A blanket --force would silently cover the NEXT note to start
+  claiming a rank, which nobody would have read -- the acknowledgement has to go stale on its own
+  when the board moves underneath it, and a name does that while a boolean cannot.
 """
 
 import argparse
@@ -201,6 +211,10 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--write", action="store_true", help="rewrite players_data.json")
     ap.add_argument("--show", type=int, default=25, help="how many moves to print")
+    ap.add_argument("--notes-reviewed", nargs="*", default=[], metavar="NAME",
+                    help="player names whose rank-claiming note you have READ and confirmed still "
+                         "true at the new rank. Named, never blanket: an acknowledgement must go "
+                         "stale on its own when a different note starts claiming a rank.")
     a = ap.parse_args(argv)
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -249,19 +263,35 @@ def main(argv=None):
               f"{p['pos']} {p['name']} ({p['team']})")
 
     claims = rank_claim_notes(ordered)
+    reviewed = {n.strip().casefold() for n in (a.notes_reviewed or [])}
+    unacked = [(e, f) for e, f in claims if e["p"]["name"].casefold() not in reviewed]
     if claims:
         print(f"\n!! {len(claims)} note(s) assert a board position and this re-order moves them.")
-        print("   Fix the prose, then re-run. Notes are not rewritten by machine.")
+        print("   Fix the prose, or confirm the claim is STILL TRUE at the new rank and pass")
+        print("   --notes-reviewed \"<name>\". Notes are not rewritten by machine.")
         for e, frag in claims:
-            print(f"   - {e['p']['name']} (#{e['p']['r']} -> #{e['new_r']}), claims {frag!r}")
+            ack = "  [REVIEWED]" if e["p"]["name"].casefold() in reviewed else ""
+            print(f"   - {e['p']['name']} (#{e['p']['r']} -> #{e['new_r']}), claims {frag!r}{ack}")
             print(f"       {e['p']['note'][:110]}")
+
+    # An acknowledgement for somebody who is NOT claiming a rank is a warning, not a refusal: the
+    # likely cause is a name carried forward from a previous refresh, which is harmless because the
+    # unacked check below is what actually decides. Refusing would punish the careful operator.
+    stray = sorted(reviewed - {e["p"]["name"].casefold() for e, _ in claims})
+    if stray:
+        print(f"\n   note: --notes-reviewed named {len(stray)} player(s) with no rank claim to "
+              f"review ({', '.join(stray)}). Carried over from an earlier refresh? Harmless.")
 
     if not a.write:
         print("\nDRY RUN -- nothing written. Re-run with --write when the moves look right.")
         return 0
-    if claims:
-        print("\n!! REFUSED TO WRITE: fix the notes above first.")
+    if unacked:
+        print(f"\n!! REFUSED TO WRITE: {len(unacked)} note(s) above are unreviewed. Fix the prose, "
+              "or pass --notes-reviewed with each name once you have confirmed the claim holds.")
         return 1
+    if claims:
+        print(f"\n[reviewed] {len(claims)} rank-claiming note(s) confirmed still true by the "
+              f"operator: {', '.join(e['p']['name'] for e, _ in claims)}")
 
     new_doc = apply(doc, ordered, scrape_date)
     with open(BOARD, "wb") as f:

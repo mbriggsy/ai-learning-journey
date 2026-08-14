@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Watch the mule's cargo and say something the day the draft becomes real.
 
-    python3 scripts/watch_draft_state.py            # from the project root (or anywhere)
+    python scripts/watch_draft_state.py             # from the project root (or anywhere)
 
 The draft date does not exist yet. `start_time` is null, Sleeper's own UI reads "Draft time has
 not yet set," and ~Aug 29 is a handshake between eight people -- which means it can move EARLIER.
-The board is an Aug 5 snapshot that expires. Nothing in this project notices when the clock starts;
-the Cowork-era reminder that used to fire did so on a hardcoded Aug 26, which is the wrong shape
-for a date that is not fixed.
+The board's ORDERING expires (read `meta.rankings.synthesized`, never `meta.updated`). Nothing in
+this project notices when the clock starts; the Cowork-era reminder that used to fire did so on a
+hardcoded Aug 26, which is the wrong shape for a date that is not fixed -- and this docstring
+carried its own hardcoded "Aug 5 snapshot" until 2026-08-14, three synthesis dates out of date,
+which is the same defect one level down.
 
 The mule has hauled sleeper_draft.json and sleeper_users.json hourly for days and NOTHING has ever
 read them. This is its first consumer.
@@ -180,9 +182,18 @@ def diff(prev, cur):
 
     was, is_ = prev.get("start_time"), cur.get("start_time")
     if was is None and is_ is not None:
+        # NO DATE IS NAMED HERE ON PURPOSE. This line used to read "The board is an Aug 5 snapshot"
+        # -- hardcoded, and already wrong by three synthesis dates when it was found on 2026-08-14.
+        # `diff()` is pure by contract, so it cannot read the board to get the real one; the answer
+        # is to point at the field instead of asserting a value that rots unattended.
         out.append(("STARTING GUN",
                     f"The draft date EXISTS: {fmt_start_time(is_)}.\n"
-                    f"The board is an Aug 5 snapshot and it expires. Rebuild it."))
+                    f"The board's ORDERING expires -- check meta.rankings.synthesized (NOT "
+                    f"meta.updated, which is input freshness and does not move when the consensus "
+                    f"does). Rebuild it from the repo root:\n"
+                    f"  python scripts/rerank.py            # dry run; then --write\n"
+                    f"  python scripts/build_board.py --rankings-synthesized <scrape date>\n"
+                    f"build_board.py ALONE CANNOT MOVE A RANK."))
     elif was is not None and is_ is not None and was != is_:
         # The whole reason this unit exists: a handshake date can move, and it can move EARLIER.
         out.append(("DRAFT DATE MOVED",
@@ -203,13 +214,19 @@ def diff(prev, cur):
                     f"draft_order[\"{BRIGGSY_USER_ID}\"] = {is_slot}.\n"
                     f"Read it from that and nothing else -- slot_to_roster_id is an identity map "
                     f"and will hand you a plausible wrong answer.\n"
-                    f"Run the engine with: python draft_engine.py {is_slot} 8 16 <draft_id>"))
+                    f"Run the engine from the REPO ROOT: python scripts/run_engine.py {is_slot}\n"
+                    f"Naming the seat is deliberate -- run_engine re-derives it from draft_order "
+                    f"and REFUSES on a disagreement, so this is two independent readings having "
+                    f"to agree rather than one being trusted."))
     elif was_slot is not None and is_slot is not None and was_slot != is_slot:
         out.append(("YOUR SLOT MOVED",
                     f"was slot {was_slot}, now slot {is_slot}.\n"
                     f"This file is append-only, so the YOUR SLOT EXISTS entry above still names "
                     f"{was_slot} -- THIS LINE SUPERSEDES IT.\n"
-                    f"Run the engine with: python draft_engine.py {is_slot} 8 16 <draft_id>"))
+                    f"Run the engine from the REPO ROOT: python scripts/run_engine.py {is_slot}\n"
+                    f"Naming the seat is deliberate -- run_engine re-derives it from draft_order "
+                    f"and REFUSES on a disagreement, so this is two independent readings having "
+                    f"to agree rather than one being trusted."))
     elif was_slot is not None and is_slot is None:
         out.append(("YOUR SLOT VANISHED",
                     f"draft_order no longer holds an entry for {BRIGGSY_USER_ID} (was slot "

@@ -191,7 +191,12 @@ class TestSlotComesFromDraftOrderOnly(WatchCase):
         self.assertEqual(code, 1)
         entry = self.entry("YOUR SLOT EXISTS")
         self.assertIn(f'draft_order["{BRIGGSY}"] = 7', entry)
-        self.assertIn("draft_engine.py 7 8 16", entry, "the ready-to-run command must carry the real slot")
+        self.assertIn("run_engine.py 7", entry, "the ready-to-run command must carry the real slot")
+        self.assertNotIn("draft_engine.py", entry,
+                         "draft_engine.py does not exist at the repo root -- this alert used to "
+                         "print `python draft_engine.py 7 8 16 <draft_id>`, which cannot run from "
+                         "anywhere, with a LITERAL <draft_id> placeholder. It fires at the exact "
+                         "moment the seat appears, which is when a dead command costs most.")
 
     def test_alert_warns_against_slot_to_roster_id(self):
         self.baseline()
@@ -485,7 +490,7 @@ class TestTheSlotCanMoveNotJustAppear(WatchCase):
         e = self.entry("YOUR SLOT MOVED")
         self.assertIn("3", e)
         self.assertIn("7", e)
-        self.assertIn("draft_engine.py 7", e, "the ready-to-run command must name the NEW seat")
+        self.assertIn("run_engine.py 7", e, "the ready-to-run command must name the NEW seat")
 
     def test_a_slot_that_vanishes_fires(self):
         self.baseline(3)
@@ -594,6 +599,87 @@ class TestARecreatedDraftCannotHide(WatchCase):
         code, _ = self.run_watch()
         self.assertEqual(code, 1, "the draft object itself was swapped and nothing fired")
         self.assertTrue(self.entry("THE DRAFT WAS REPLACED"))
+
+
+class TestTheStartingGunAgainstARealSleeperDraftObject(WatchCase):
+    """THE POSITIVE CONTROL TODO.md HAS ASKED FOR SINCE 2026-08-08.
+
+    The start_time branch had four unit tests and every one fed it the hand-built `draft()` dict
+    above -- SIX keys. A real Sleeper draft object carries SEVENTEEN. Our own draft's start_time is
+    still null today, so the world had never once handed this branch a non-null value, and TODO.md
+    correctly rated it "tested-and-adjacent-to-proven" rather than proven. The twin branch beside
+    it (roster changes) is world-proven twice; that asymmetry is exactly why the untested twin was
+    the risk -- same file, same writer, adjacent `if`.
+
+    The object here is REAL and committed verbatim: draft 1391539007871012864, pulled from Sleeper
+    2026-08-14, `status: complete`, `start_time: 1786313864801` = Sun 09 Aug 2026 06:17 PM local.
+    THE VALUE UNDER TEST IS SLEEPER'S, NOT OURS -- that is the whole point. Forcing start_time back
+    to null for the baseline is faithful rather than synthetic: that draft really did sit at
+    `pre_draft` with a null start_time before somebody started it.
+
+    Doing it this way needs no browser and no mock creation, so it costs nothing and cannot take
+    over Briggsy's Chrome. What it does NOT prove is the scheduled task firing -- that half is
+    world-proven twice already by the roster alerts of 2026-08-10 and 2026-08-12.
+    """
+
+    FIXTURE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "fixtures", "sleeper_draft_started.json")
+
+    def real_draft(self, start_time):
+        with open(self.FIXTURE, encoding="utf-8") as f:
+            d = json.load(f)
+        d["start_time"] = start_time
+        return d
+
+    def test_the_fixture_is_a_real_object_not_a_hand_built_one(self):
+        """If this fixture ever gets 'tidied' down to the synthetic shape, the control below stops
+        controlling anything and would still pass."""
+        d = self.real_draft(None)
+        self.assertGreaterEqual(len(d), 15, "a real Sleeper draft object carries ~17 top-level keys")
+        for k in ("creators", "last_message_id", "season_type", "sport", "metadata"):
+            self.assertIn(k, d, f"{k} is in the real object and absent from the synthetic one")
+
+    def test_a_REAL_start_time_fires_the_starting_gun(self):
+        self.baseline(d=self.real_draft(None), u=users(*SIX))
+        self.put_cargo(self.real_draft(1786313864801), users(*SIX))
+        code, _ = self.run_watch()
+        self.assertEqual(code, 1, "a real non-null start_time must raise an alert")
+        entry = self.entry("STARTING GUN")
+        self.assertTrue(entry, "STARTING GUN must exist in the alert FILE, not merely on stdout")
+        self.assertIn("09 Aug 2026", entry, "the alert must name Sleeper's actual date")
+        self.assertIn("Rebuild it", entry)
+
+    def test_the_alert_names_the_field_that_actually_reports_staleness(self):
+        """It used to say 'The board is an Aug 5 snapshot' -- hardcoded, and three synthesis dates
+        stale by the time anyone read it. It must point at the field, and at the right one:
+        meta.updated does NOT move when the consensus does."""
+        self.baseline(d=self.real_draft(None), u=users(*SIX))
+        self.put_cargo(self.real_draft(1786313864801), users(*SIX))
+        self.run_watch()
+        entry = self.entry("STARTING GUN")
+        self.assertIn("meta.rankings.synthesized", entry)
+        self.assertIn("rerank.py", entry, "the generator alone cannot move a rank; say so here")
+        self.assertNotIn("Aug 5", entry, "no hardcoded date may come back into this alert")
+
+    def test_UNCHANGED_real_cargo_is_SILENT(self):
+        """THE NEGATIVE CONTROL, and the one that gives the test above its meaning. A writer that
+        appended an alert unconditionally would pass every assertion above and fail here."""
+        self.baseline(d=self.real_draft(1786313864801), u=users(*SIX))
+        self.put_cargo(self.real_draft(1786313864801), users(*SIX))
+        code, _ = self.run_watch()
+        self.assertEqual(code, 0, "identical cargo must produce no alert")
+        self.assertEqual(self.alerts(), "", "the alert file must still be empty")
+
+    def test_it_fires_ONCE_then_goes_quiet(self):
+        """The alert file is append-only and read late. A gun that keeps firing every hour buries
+        the entry that matters under copies of itself."""
+        self.baseline(d=self.real_draft(None), u=users(*SIX))
+        self.put_cargo(self.real_draft(1786313864801), users(*SIX))
+        self.run_watch()
+        first = self.alerts()
+        code, _ = self.run_watch()
+        self.assertEqual(code, 0, "the second run has nothing new to say")
+        self.assertEqual(self.alerts(), first, "the alert file must not grow on a repeat run")
 
 
 if __name__ == "__main__":

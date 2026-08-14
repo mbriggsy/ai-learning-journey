@@ -4,8 +4,11 @@ Identity and rules. Everything here is **read from the live Sleeper API**, not f
 Doctrine built on top of these facts lives in [`ranking-methodology.md`](ranking-methodology.md);
 draft-day operation lives in [`draft-day-runbook.md`](draft-day-runbook.md).
 
-> **Verified 2026-08-07 13:54** against `newsletter/data/inbox/sleeper_league.json`,
-> `sleeper_draft.json` and `sleeper_users.json` — the mule's own cargo, fetched that minute.
+> **Scoring, lineup and season structure verified 2026-08-07 13:54** against
+> `newsletter/data/inbox/sleeper_league.json`, `sleeper_draft.json` and `sleeper_users.json` — the
+> mule's own cargo, fetched that minute. **Membership and draft state re-pulled live 2026-08-14**
+> (`/league/.../users` and `/draft/1390509994847240192`, cache-busted): 8 of 8 seats,
+> `status: pre_draft`, `start_time: null`, `draft_order: null`.
 > Membership and draft timing move; re-pull before quoting them. See
 > [`data-access.md`](data-access.md) for how.
 
@@ -19,6 +22,8 @@ draft-day operation lives in [`draft-day-runbook.md`](draft-day-runbook.md).
 | MattiICE23 | `946163712933732352` | league member | |
 | Kaeperni | `959918157764825088` | league member | |
 | BuschLight420 | `1128840111103348736` | league member | |
+| kblizzy23 | `1392435446868381696` | league member | Joined by **2026-08-10 03:35** |
+| Cltchiefs | `1393428034064748544` | league member | Joined by **2026-08-12 21:35** — filled the last seat |
 
 🚨 **THE HANDLE `briggsy007` IS NOT BRIGGSY. IT IS HUNTER — the rival.** Briggsy is
 **PoppaBriggsy**, `1390750540631150592`, roster_id 3, *Saquon Deez Nuts*. Confirmed by him directly
@@ -33,10 +38,15 @@ seat** for our advice and simultaneously loses the one opponent the whole missio
 seat from `draft_order["1390750540631150592"]` and identity from this table; never from the email,
 and never from a handle that merely looks like his.
 
-**7 of 8 seats filled** as of a live re-pull on 2026-08-12 (the 7th is `kblizzy23`,
-`1392435446868381696`) — but never quote that from here. Re-pull;
-`newsletter/data/inbox/sleeper_users.json` is at most an hour old. Empty seats mean any "who picks
-between us" reasoning is provisional until the room fills.
+**THE ROOM IS FULL — 8 of 8 seats**, on a live re-pull 2026-08-14. `Cltchiefs` took the last one and
+`scripts/watch_draft_state.py` caught it at **2026-08-12 21:35** (`newsletter/data/state/DRAFT_ALERTS.md`
+is the append-only record, and it is a better source for *when* a seat moved than any inference).
+Re-pull anyway rather than quoting this line; `newsletter/data/inbox/sleeper_users.json` is at most
+an hour old. What being full changes: the caveat that used to live here — *"empty seats mean any
+'who picks between us' reasoning is provisional"* — **is now retired.** All seven opponents are
+known by name, so opponent-model work is no longer waiting on the roster. **`draft_order` is still
+`null`**, so the *order* remains unknown; that is a separate unknown and it is the one that still
+blocks seat-dependent reasoning.
 
 ## League
 

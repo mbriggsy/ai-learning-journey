@@ -129,17 +129,27 @@ call; the board ships on `current` / 2022-2025 and Bijan takes #1. Full write-up
 wired into the runbook, both detailed immediately below.
 
 **WHAT IS ACTUALLY LEFT, ranked:**
-1. **Leg (d) — the off-clock doctrine terminals.** Many terminals, one per opposing doctrine,
+1. 🚨 **POSITIVE-CONTROL THE WATCHER'S `start_time` BRANCH.** Cheap, and it guards the single signal
+   the draft date arrives on. **The room went full on 2026-08-12 21:35, so the leading indicator we
+   had is spent** — from here, `start_time` flipping from `null` is the only warning, and that exact
+   branch has never once been exercised by the world. The roster branch beside it is now live-proven
+   twice (see U9 below), which is precisely why the untested twin is the risk: same file, same
+   writer, adjacent `if`. **The fix:** create a mock with a scheduled start, point the watcher's
+   cargo at it, confirm `DRAFT_ALERTS.md` gains a *"The draft date EXISTS"* entry — then a
+   negative control (unchanged cargo ⇒ no entry) so a writer that alerts unconditionally can't pass.
+   `scripts/watch_draft_state.py:181-194` is the code; the mock-creation path already exists and is
+   proven (`ffStartDraft`, below).
+2. **Leg (d) — the off-clock doctrine terminals.** Many terminals, one per opposing doctrine,
    **forbidden to talk**, running only between windows. Nothing depends on it and it is the only
    named piece of the harness not built. It is also the only honest route to the thing the
    precomputer refuses to fake: **a validated opponent model.** Without one, every enumeration
    over futures is closed-form arithmetic (proven below), so this is not decoration — it is the
    prerequisite for the whole class of question.
-2. **The long-TD bonus** (+1 at 40+, +2 at 50+, stacking) is still not computable — no TD-distance
+3. **The long-TD bonus** (+1 at 40+, +2 at 50+, stacking) is still not computable — no TD-distance
    column exists on either nflverse release, so it needs play-by-play. The ONLY remaining accuracy
    gap on the four skill positions. 🚨 `receiving_40` / `rushing_40` / `passing_40` are chunk-play
    counts, **NOT** 40-yard touchdowns — exactly what a session under a clock would grab.
-3. **DEF has no exact source at all** and the 14 rows stay labelled. **Do not build a DEF curve** —
+4. **DEF has no exact source at all** and the 14 rows stay labelled. **Do not build a DEF curve** —
    the reasoning is in the DECIDED block below and it has not changed.
 
 **◀ 2. THE MOCK-DRAFT HARNESS.** Proven 2026-08-09 that the whole spine already runs against a
@@ -584,7 +594,22 @@ gate went **13 findings → 0** by fixing surfaces. **802 tests**, 0 skips on th
 (`draft-kit/cache/fp_ecr.csv.gz`, `ffc_adp.json.gz`) plus **5** (`test_build_curves.TestTheCurveShape`)
 that need the gitignored nflverse season CSVs. ⚠️ **`player_ids.csv.gz` is COMMITTED, not
 gitignored** — `.gitignore:66-69` says so explicitly, and an older version of this line named it
-as a cause of skips. Re-measured 2026-08-09 by hiding `fp_ecr.csv.gz`, `ffc_adp.json.gz`,
+as a cause of skips.
+📌 **IT CHURNS, AND THE CHURN IS ALMOST ALWAYS INERT — check the BRIDGE, never the bytes.**
+Measured 2026-08-14 across an Aug-8→Aug-14 refresh: the file's bytes and row count both moved
+(12,471 → 12,473 rows, 405 rows changed), and **29 of our 174 board players had a changed row** —
+which looks alarming and is not. The only column that moved for any of them was **`age`**, by exactly
++0.1, i.e. players aging a tenth of a year. **No code in this repo reads `age`.** `consensus.py`
+uses the crosswalk for exactly one thing (line 47): `board.sleeperId → sleeper_id →
+fantasypros_id → FP ECR.id`. Verified directly: **0 of 174 FP bridges changed** (159 of them bridge,
+both before and after — the positive control; and corrupting one id on purpose makes the comparison
+report exactly 1 — the negative control). So the check that settles it is a diff of
+`crosswalk()`'s output restricted to our ids, **not** `git diff` on the gz.
+⚠️ Two traps met while measuring this: `resolve_sleeper_ids.py --verify` prints the **Sleeper dump**
+date (Aug 8), which is a *different artifact* and does not move when this file does — reading it as
+"unchanged" is wrong; and grepping `'age'` in a source file matches the substring inside **`page`**,
+which `consensus.py` uses constantly, so a naive "does the code read this column" grep returns a
+false positive. Search `\[.age.\]`-style patterns, not the bare word. Re-measured 2026-08-09 by hiding `fp_ecr.csv.gz`, `ffc_adp.json.gz`,
 `player_stats_*.csv`, `stats_player_week_*.csv`, `player_stats_kicking_*.csv` and
 `newsletter/data/inbox/`, then naming every skip — never copied from the previous line, which had
 aged to `628 / 10 / 8` and then to `750 / 15` and was wrong both times. **The K-curve group is 5,
@@ -599,13 +624,22 @@ round labels with no invented rounds.
 [`docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md`](docs/plans/2026-08-07-001-refactor-rebuild-the-machinery-plan.md).
 The plan owns *what to build*; this file owns *what's next*.
 
-**⏳ The draft date STILL does not exist.** Live re-pull **2026-08-12**: `status: pre_draft`,
-`start_time: null`, `draft_order: null`, **7 of 8 seats filled**, `type: snake`,
-`reversal_round: 0`. **The 7th seat is `kblizzy23` (`1392435446868381696`), and it arrived between
-2026-08-09 and 2026-08-12** — this line said 6 and had already been wrong twice when it said it, so
-that is **three times**. Treat every count here as a timestamp, not a fact; the only honest read is
-a re-pull, and `newsletter/data/inbox/sleeper_users.json` is at most an hour old.
-**One seat left. `~Aug 29` is a handshake — it can move earlier.** Assume no slack.
+**⏳ The draft date STILL does not exist — but the room is now FULL.** Live re-pull **2026-08-14**:
+`status: pre_draft`, `start_time: null`, `draft_order: null`, **8 of 8 seats**, `type: snake`,
+`reversal_round: 0`. **The 8th is `Cltchiefs` (`1393428034064748544`), caught by the watcher at
+2026-08-12 21:35.** This line has now been stale **four times running** (4 → 6 → 7 → 8), which is the
+whole argument for the rule: treat every count here as a timestamp, not a fact. The only honest read
+is a re-pull; `newsletter/data/inbox/sleeper_users.json` is at most an hour old.
+**And don't infer a date range when the watcher already logged the exact moment** —
+`newsletter/data/state/DRAFT_ALERTS.md` had `kblizzy23` pinned to **2026-08-10 03:35** while this
+file was guessing "between 08-09 and 08-12". The log is on disk, append-only, and free to read.
+**⚠️ THE LEADING INDICATOR HAS TOPPED OUT.** "The room is filling" was the early-warning signal for
+the draft date, and it can no longer move — a full room with `start_time: null` is the state
+immediately *before* a date gets set, not a state with slack in it. `~Aug 29` is a handshake and it
+can move **earlier**. Assume none.
+**What being full unblocks:** all seven opponents are known by name, so opponent-model work
+(harness leg (d)) is no longer waiting on the roster. **`draft_order` is still `null`** — the
+*order* is a separate unknown and it is the one that still blocks seat-dependent reasoning.
 ⚠️ **A blind find-replace on "6 of 8" corrupts the PLAYOFF FORMAT** — `README.md`, `league.md`'s
 *Playoffs* line and the runbook's *Ceiling over floor* bullet all say *"6 of 8 make the playoffs"*,
 which is correct and unrelated. Find them by that phrase, not by line number. Only the seat count
@@ -861,6 +895,18 @@ rather than assumed.
   vanishes** fires, not just one that appears; freshness is measured **per cargo file** (and against
   the mule's per-source result), not per run; and a **re-created draft** is caught by comparing
   `sleeper_league.json`'s `draft_id` against the pinned one the mule keeps hauling.
+  **✅ PROVEN ON THE REAL WORLD, TWICE — not on a fixture (verified 2026-08-14).** `DRAFT_ALERTS.md`
+  carries two entries nobody staged: `6 -> 7 joined kblizzy23` at **2026-08-10 03:35** and
+  `7 -> 8 joined Cltchiefs` at **2026-08-12 21:35**, the second with its own editorial line *"The
+  room is FULL. A date usually follows."* Both fired while no session was watching, both logged the
+  cargo age, and `last_seen.json` advanced to the 8-name roster (re-read 12:38 today). So the
+  **schedule, the cargo read, the diff and the writer are all live-proven.**
+  ⚠️ **What is NOT live-proven is the `start_time` branch specifically** (lines 181-194 — null→set,
+  set→moved, set→null). It shares the proven writer and schedule and it has unit tests, but the world
+  has never yet handed it a non-null `start_time` to react to. That is the one branch draft prep
+  actually depends on, so treat it as *tested-and-adjacent-to-proven*, not proven. The honest
+  positive control costs nothing: point the watcher at a mock draft that HAS a start_time and
+  confirm the alert lands. Worth doing before Aug 29.
 - ~~**U3 normalizer**~~ ✅ **SHIPPED 2026-08-07** (`522843cd`). `draft-kit/normalize.py` owns the
   rules as data; `norm_spec.json` and the board's JS are generated from it. **Never fork it.**
 - ~~**U14 `sleeperId`**~~ ✅ **SHIPPED 2026-08-07** (`c6379d78` + hardening). 174 ids frozen, 0
@@ -1103,8 +1149,9 @@ and template paths have their dependencies.
 
 Re-pull and confirm — **never quote these from a doc**:
 
-- `/league/1390509993844809728/users` — **6 of 8** seats filled (mule cargo 2026-08-08 17:29). Was
-  4 earlier on Aug 7 — **the room is filling**, and it has been parked at 6 since at least 2026-08-07 20:19
+- `/league/1390509993844809728/users` — **8 of 8, full** (live pull 2026-08-14). Went 4 → 6 → 7 → 8
+  across Aug 7–14. Confirm the count anyway: a *full* room is the precondition for a date, so a
+  changed count here is no longer the thing to watch — `start_time` is
 - `/draft/1390509994847240192` — **`draft_order` is still `null`** (17:29 cargo). Read your slot from
   `draft_order["1390750540631150592"]` and **nothing else**
 - `/league/.../rosters` — proves which roster_id is whose (Briggsy = roster 3)

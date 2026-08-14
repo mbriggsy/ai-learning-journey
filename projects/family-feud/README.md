@@ -87,7 +87,16 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         shares consensus.depth_rank rather than counting for
                                         itself; two copies is how the two drifted. → insights/019
                  rerank.py            — re-derives r/pr/tier from the consensus. Refuses to write
-                                        while a note still claims a board position.
+                                        while a note still claims a board position, unless you
+                                        acknowledge it BY NAME with --notes-reviewed.
+                 injury_check.py      — board injury prose vs Sleeper's LIVE designations, joined
+                                        on the frozen sleeperId (174/174). READ-ONLY: it reports a
+                                        disagreement and leaves the sentence to a human, same rule
+                                        as rerank.py. Found 19 rows Sleeper flagged that the board
+                                        was silent about, and one the board flagged that Sleeper
+                                        was not. ⚠ In August `injury_status` is a practice-report
+                                        artifact, not a game-day call — it points at rows to
+                                        re-read and feeds no rank.
                  consensus.py         — what the board's gap to the expert consensus COSTS in
                                         points. READ-ONLY: it never writes the board. Joins
                                         id-to-id, never by name. Ranks BOTH sides within the

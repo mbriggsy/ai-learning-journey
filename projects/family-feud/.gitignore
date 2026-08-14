@@ -91,6 +91,13 @@ draft-kit/cache/fp_ecr.csv.gz
 # Market ADP, same reasoning: its whole value is being current, and a committed copy would make a
 # clean clone look priced when it was priced on whatever day someone committed. `market.py --refresh`.
 draft-kit/cache/ffc_adp.json.gz
+# Live injury designations (injury_check.py), same reasoning and MORE so: a committed copy would
+# make a clean clone look like it had today's injury picture when it had whatever day someone ran
+# it, and that is the one file here whose staleness would be read as reassurance. Re-pull with
+# `injury_check.py --fetch-only`. It is deliberately NOT the same artifact as the pinned
+# sleeper_players.json.gz below -- that one is frozen ON PURPOSE, because U14 resolved the board's
+# ids against it and re-pinning it would move the join key underneath the board.
+draft-kit/cache/sleeper_injuries.json.gz
 # player_ids.csv.gz is the OPPOSITE and IS committed, alongside sleeper_players.json.gz: it is the
 # only bridge from the board's frozen sleeperId to FantasyPros (their own cross-id columns are the
 # literal string "NA" on every row), it barely moves, and on draft morning it must not need a

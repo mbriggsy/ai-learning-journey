@@ -101,7 +101,7 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         section [2], who the consensus ranks that the board does
                                         not carry — the half a rank-gap metric cannot see.
                                         → docs/insights/018
-tests/           682 tests: python -m unittest discover -s tests  (run from the root)
+tests/           861 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```
@@ -115,6 +115,13 @@ surface by hand — `draft-kit/build_manifest.json` carries a sha256 per surface
 python scripts/build_board.py            # regenerate all three surfaces from the source
 python scripts/build_board.py --verify-only    # draft-morning sanity check; writes nothing
 ```
+
+🚨 **Neither of those can move a RANK.** `scripts/rerank.py` is the only writer of `r`/`pr`/`tier`;
+the generator derives `vorp` from `pr`, so on an unchanged source it re-stamps byte-identical data
+and `--verify-only` goes green on a stale ordering. **Re-ranking is its own sequence** — it lives in
+[`docs/draft-day-runbook.md`](docs/draft-day-runbook.md) under *THE REAL REFRESH*, and it is the
+thing to run before a draft. Read `meta.rankings.synthesized` to see how old the ordering is;
+`meta.updated` is input-mtime freshness and does **not** move when the consensus does.
 
 Edit the judgment fields in `players_data.json` — ranks, tiers, badges, notes — and re-run. The
 generator recomputes VORP from the curve, re-derives `dst`, restamps `meta.shape` from the live

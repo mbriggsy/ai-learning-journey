@@ -826,7 +826,7 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **852 tests**, 0 skips on this machine
+gate went **13 findings → 0** by fixing surfaces. **861 tests**, 0 skips on this machine
 (`python -m unittest discover -s tests` from the root); on a clean clone it is 852 with **16 skips**
 — 2 live-cargo probes plus **9** that need the gitignored consensus/ADP caches
 (`draft-kit/cache/fp_ecr.csv.gz`, `ffc_adp.json.gz`) plus **5** (`test_build_curves.TestTheCurveShape`)
@@ -1332,7 +1332,8 @@ rather than assumed.
   - **Four mutants killed**, including cutting the engine's `FF_STARTERS` read: the tests assert
     on the engine's printed needs line, not on the wrapper's dict (insight 013).
 
-**Board today:** 174 players + 8 derived `dst`, `meta.updated: 2026-08-08`, **every row carrying
+**Board today:** 174 players + 8 derived `dst`, `meta.updated: 2026-08-09` (input freshness, NOT
+rank staleness — read `meta.rankings.synthesized`, which is `2026-08-08`), **every row carrying
 `sleeperId` and `vorpMethod`**, `meta.shape` stamped from draft `1390509994847240192`. Never edit
 any surface by hand — `build_manifest.json`'s sha256 will catch it, and `--verify-only` names the
 file. To change the board, edit `players_data.json`'s judgment fields and re-run the generator.

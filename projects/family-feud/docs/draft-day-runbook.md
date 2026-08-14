@@ -30,7 +30,40 @@ step is gone — the files are just local now.)
 
 Note: `draft_rankings_data_2026-08-05.json` **was deleted on 2026-08-08** — it was a date-stamped duplicate that had already drifted (its `dst` and `strategy` disagreed with the board) while having zero readers anywhere in the repo. Git is the archive; do not regenerate it. **Three surfaces, not four.** The old `family-feud-draft-board` desktop artifact died with Cowork, and the twin-maintenance rule with it; do not reintroduce it. See [`live-board-plan.md`](live-board-plan.md).
 
-### 🚫 NEVER hand-edit a surface. Refreshing the board is ONE command *(changed 2026-08-08, U6)*
+### 🚫 NEVER hand-edit a surface. Rebuilding is one command — **RE-RANKING IS A DIFFERENT ONE**
+
+🚨 **`build_board.py` CANNOT MOVE A RANK, AND RUNNING IT ALONE IS THE MOST LIKELY WAY THIS PROJECT
+FAILS ON DRAFT DAY.** *(corrected 2026-08-14; the heading above used to read "Refreshing the board
+is ONE command".)* The generator derives `vorp` from `pr`, and **`scripts/rerank.py` is the only
+writer of `r`/`pr`/`tier` in the repo.** With `pr` untouched the generator re-stamps byte-identical
+data, `--verify-only` then prints `every check passed`, and you draft off a stale ordering with
+three green lights agreeing it was refreshed. The word `rerank` appeared **nowhere in this file**
+until this correction.
+
+**THE REAL REFRESH, in order.** Run it the week of the draft and again ~48h before:
+
+```bash
+python scripts/consensus.py                      # what moved, and what it costs. Writes nothing
+python scripts/rerank.py                         # DRY RUN — prints every move, writes nothing
+python scripts/rerank.py --write                 # rewrites r/pr/tier in players_data.json
+python scripts/build_board.py --rankings-synthesized <the scrape date rerank printed>
+python scripts/build_board.py --verify-only      # gate + a sha256 per surface
+python -m unittest discover -s tests             # from the root
+```
+
+- **`rerank.py` refuses to `--write` while any note asserts a board position**, and it will not
+  rewrite that prose itself — the notes are Briggsy's voice. Fix the sentence, re-run. Exactly
+  **one** row carries such a note today (Jayden Daniels), so this costs one human glance per
+  refresh, which is the gate working rather than a false red.
+- **Commit `draft-kit/` between `--write` and the generator.** `build_board.py` refuses a dirty
+  `draft-kit/`; `--allow-dirty` exists but stamps `meta.build.dirty` and is not what you want here.
+- ⚠️ **`meta.updated` DOES NOT REPORT RANK STALENESS.** It is `max()` over input mtimes
+  (`build_board.py:432-441`) and the ECR is not one of them, so it reads the same on draft morning
+  no matter how far the consensus has moved. **The field that answers "how old is my ordering" is
+  `meta.rankings.synthesized`.** Every place this file used to say "check `meta.updated` before you
+  trust a rank" was pointing at the wrong number.
+
+Rebuilding the *surfaces* from an unchanged source really is one command:
 
 ```bash
 python scripts/build_board.py          # regenerates ALL THREE surfaces from players_data.json
@@ -87,9 +120,13 @@ tasks" landmine:
   project where the blanket `encoding="utf-8"` rule is wrong — it needs `utf-8-sig`. Every other
   JSON read here passes `encoding="utf-8"` and must.
 
-⚠️ **Rankings are refreshed as of 2026-08-08 and are still a snapshot.** Re-research
-rankings/injuries/ADP before the real draft, then run the generator. Check `meta.updated` before
-you trust a single rank.
+⚠️ **Rankings are a snapshot and they expire.** Re-research rankings/injuries/ADP before the real
+draft, then run **THE REAL REFRESH above — `rerank.py --write` and then the generator.** The
+generator alone cannot move a rank.
+**Read `meta.rankings.synthesized`, NOT `meta.updated`,** before you trust a single rank: the
+second is input-mtime freshness and does not move when the consensus does. Measured 2026-08-14 —
+the board's synthesis was `2026-08-08` while `meta.updated` read `2026-08-09` and the live ECR had
+moved **101 of 174 rows**, 20 of them across a tier.
 
 ⚠️ **Something WILL remind you now — but it writes a file, it does not tap you on the shoulder.**
 *(changed 2026-08-08, U9.)* The Cowork one-shot that used to drop a `REFRESH_BRIEF` on a hardcoded
@@ -104,18 +141,37 @@ and email are broken account-wide for this account, so an alert that needs one d
 
 ## Step 1 — Find the draft
 - **Real league draft:** draft_id `1390509994847240192` (league `1390509993844809728`).
-- **Mock draft:** `curl -sL --max-time 15 "https://api.sleeper.app/v1/user/1390750540631150592/drafts/nfl/2026"` — take the most recent entry with status `drafting` (or `pre_draft` about to start). **Expect this to come up empty and plan for it.** Checked live Aug 7: the endpoint returned exactly ONE draft — the real league's — and none of Mocks #1, #2 or #3, even though Briggsy created all three himself. So the old note that "mocks he creates himself may be the only reliable thing here" is optimistic; treat this endpoint as a bonus, not a method. **The reliable path is to ask him to paste the draft room URL** (`sleeper.com/draft/nfl/<draft_id>` — the id is right there in it). He often pre-creates the room hours early (Mock #2's was built ~5h before go time) — check the web app's Mock Drafts tab ("In progress" list) and the draft room URL: `sleeper.com/draft/nfl/<draft_id>`.
+- **Mock draft:** `curl -sL --max-time 15 "https://api.sleeper.app/v1/user/1390750540631150592/drafts/nfl/2026?cb=$(date +%s%N)"` — take the most recent entry with status `drafting` (or `pre_draft` about to start). **Expect this to come up empty and plan for it.** Checked live Aug 7: the endpoint returned exactly ONE draft — the real league's — and none of Mocks #1, #2 or #3, even though Briggsy created all three himself. So the old note that "mocks he creates himself may be the only reliable thing here" is optimistic; treat this endpoint as a bonus, not a method. **The reliable path is to ask him to paste the draft room URL** (`sleeper.com/draft/nfl/<draft_id>` — the id is right there in it). He often pre-creates the room hours early (Mock #2's was built ~5h before go time) — check the web app's Mock Drafts tab ("In progress" list) and the draft room URL: `sleeper.com/draft/nfl/<draft_id>`.
 - **All Sleeper reads go through `curl`** — see [`data-access.md`](data-access.md). Always pass `--max-time 15`.
 
-> **Obsolete since the Cowork migration — do not reintroduce.** This step used to mandate WebFetch
-> and a `?cb=N` cache-buster, because Cowork's sandbox proxy-blocked curl and WebFetch cached for
-> 15 minutes. Here curl works, has no cache, and returns raw JSON — while **WebFetch is banned
-> outright** (no timeout, hangs agents; a hook blocks it). The old "never say *greater than N*, use
-> inclusive ranges" rule was prompt-engineering aimed at WebFetch's small summarizer model and is
-> equally moot. The *substance* underneath it is not moot — see Step 3 on merging and leapfrogging.
+> **Half obsolete, half CORRECTED 2026-08-14 — read both halves.** This step used to mandate
+> WebFetch *and* a `?cb=N` cache-buster, because Cowork's sandbox proxy-blocked curl and WebFetch
+> cached for 15 minutes. **WebFetch is still banned outright** (no timeout, hangs agents; a hook
+> blocks it) and the old "never say *greater than N*, use inclusive ranges" rule was
+> prompt-engineering aimed at WebFetch's summarizer model and is moot.
+>
+> 🚨 **But "curl works, has no cache" was WRONG, and it was the reason the cache-buster got
+> deleted.** The cache is **Cloudflare's edge, not curl's** — curl having no cache of its own says
+> nothing about it. Measured on this machine 2026-08-14: three bare fetches of
+> `/v1/draft/1390509994847240192` returned `cf-cache-status: HIT` under
+> `cache-control: public, s-maxage=30, stale-while-revalidate=300, stale-if-error=600`; the same
+> URL with a **unique** nonce returned `MISS` every time. `stale-while-revalidate=300` means it can
+> hand you a five-minute-old answer.
+>
+> **Append `?cb=<unique nonce>` to EVERY Sleeper read in this file.** Insight 020 measured what it
+> costs not to, seconds after START DRAFT: the bare URL said `status: pre_draft, draft_order: null`
+> while the busted URL said `status: drafting, draft_order: {"1390750540631150592": 5}` — same
+> second, opposite answers, **and the stale one reads exactly like a completed check**. The nonce
+> must be unique **per call**; one fixed at startup is just a second cache key. A
+> `Cache-Control: no-cache` request header does NOT work — Cloudflare ignores it.
+> This matters most at Step 2's **seat read**, because `draft_order` flips from null to populated
+> at go time — precisely when a stale copy keeps saying `null`.
 
 ## Step 2 — Lock the config
-`curl -sL --max-time 15 "https://api.sleeper.app/v1/draft/<draft_id>"`:
+`curl -sL --max-time 15 "https://api.sleeper.app/v1/draft/<draft_id>?cb=$(date +%s%N)"`
+— **the nonce is not optional and must be unique per call**; see the CORRECTED note under Step 1.
+This is the read `draft_order` comes from, and a stale copy says `null` exactly when it stops
+being null:
 - `settings.teams`, `settings.rounds`, `settings.pick_timer` — **read rounds from the API, never assume 16** (Mocks #1 and #2 both ran 15; the real league is 16).
 - `draft_order` — map of user_id → slot. Briggsy = user_id `1390750540631150592`. **His slot is the engine's first argument.** draft_order can be null until near start — re-verify ON draft day, before the first advisory. Slot changes strategy hard: turn slots (1/8) draft in pairs and plan 14 picks ahead; middle slots don't. Slot 2 (Mock #2) is a near-turn: picks come in loose pairs with 3 picks between (e.g. 15/18, 31/34) and 13-pick droughts after — plan both picks of a pair as one decision, including who the between-teams will eat (denial forecasting won Egbuka→Kyren and Skattebo→Daniels).
 - Confirm scoring context (real league = full PPR; make mocks 8-team PPR to mirror it — verify `metadata.scoring_type` via API; Mock #1's lobby was accidentally created as Standard first, Mock #2 verified `ppr` ✓).

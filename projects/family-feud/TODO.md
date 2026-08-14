@@ -162,6 +162,15 @@ THE QUEUE.** One command, ~0.1s, run the moment your pick lands. It shells out t
 (never a second ranking) and prints the queue order, one market scenario, and which tier cliffs
 that scenario empties. **52 tests, 10 mutants planted and 10 killed.**
 
+❓ **ONE OPEN QUESTION FOR BRIGGSY, ONE WORD — should QUEUE lead the precomputer's output?**
+Today the market projection prints first and **QUEUE** sits under it. Under a 120s clock the queue is
+the only *actionable* block (it is what you paste into Sleeper); the projection is the reasoning
+behind it. **Recommendation: flip it — QUEUE first, projection under.** Not changed unilaterally
+because it is the layout of the one thing you read under pressure, and that is your eye's call, not a
+correctness question. Raised twice in the 2026-08-09 session and never answered, so it is written
+down here instead of dying with the session. `scripts/precompute_ladder.py`, the print order at the
+bottom of `main()`.
+
 ✅ **AND THE WHOLE SPINE IS PROVEN END-TO-END IN A LIVE ROOM — mock `1392338436949561355`,
 2026-08-09, created and driven entirely from this repo with no human click.** Every link, in order:
 - `ffStartDraft({iAmInAMock:true})` returned **`confirmsAnswered: 1`** and left `window.confirm`
@@ -188,6 +197,11 @@ that scenario empties. **52 tests, 10 mutants planted and 10 killed.**
 - ⚠️ **The `+` on `/draftboards` opens the LEAGUE wizard, not the mock creator.** It created a real
   1-person league (`Ladder Test 0809`, `1392338161744490496`) sitting in the sidebar next to Family
   Feud. **The mock creator is the `NEW MOCK NFL DRAFT` button in the right-hand panel.**
+  🚧 **BLOCKER, NOT A TASK — that league is still sitting there and only Briggsy can remove it.**
+  Deleting data is outside what this project's automation is permitted to do, so it cannot be scripted
+  away. It is harmless where it is (1 person, never drafted, its own draft id) and the only real cost
+  is that it looks like Family Feud in a sidebar glance on draft morning. Sleeper → `Ladder Test 0809`
+  → league settings → delete, whenever you feel like it. **Do not "clean it up" from a session.**
 
 🚨 **AND THE FIRST VERSION OF IT WAS A TAUTOLOGY MACHINE — the fourth this project has caught, and
 the largest.** It enumerated futures: sample `gap` players from a pool, run the real engine on each,
@@ -252,8 +266,13 @@ could never run and the `** my_slot=N IS UNVERIFIED **` banner fired on **every*
 - **One terminal on the clock, never a fleet.** A draft is maximally coupled — one board, one
   clock, one decision, mutating every 120s — and a live run proved the human-in-terminal loop is
   too slow: the 4.3 clock expired while the engine was being run in Bash.
-- **The answer must exist BEFORE the clock starts.** Pre-compute the branches offline where time
-  is free; on the clock do a LOOKUP, not a deliberation.
+- **The answer must exist BEFORE the clock starts.** Do the work offline where time is free; on the
+  clock do a LOOKUP, not a deliberation. ✏️ **This line used to say "pre-compute the BRANCHES," and
+  the branches turned out to be the one part that could not be pre-computed usefully** — enumerating
+  futures uniformly produces `C(k-i-1, gap-i)`, a fact about the shape of the draw and not about this
+  draft (insight 021). The *principle* is untouched and is exactly what `scripts/precompute_ladder.py`
+  delivers; only the named mechanism was wrong. Reworded 2026-08-14 — **say so if you want the
+  original wording back**, but note that a real branch precompute needs leg (d) first (queue item 2).
 - **Keep a player queued at all times**, so a blown clock degrades to *our* board instead of
   Sleeper's. Measured cost of not doing this: auto-pick took Tetairoa McMillan (81.3) at 5.3 while
   **Lamar Jackson (~107) was still on the board and did not go until #40**.

@@ -313,9 +313,37 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 - ⚠️ **Re-tag: BLOCKED ON RESEARCH.** No sourced ACA cost-trend primary exists in the repo, so a solver block would hold for months over the whole pre-65 population. Near-term move is the copy swap at `copy.ts:894-897`. The excess-APTC field moved to `aca-last-verified.json:41` and `scripts/verify-aca-status.ts:40-72` never declares the key — **it is inert prose, not a gate.**
 - Uncapped excess-APTC clawback — the gate never reads the field, and the copy call is unmade
 
-### Mixed household — the already-retired spouse is priced at zero health cost while the other works
+### ✅ CLOSED 2026-08-14 (`863747d6`) — Mixed household: the already-retired spouse is priced at zero health cost while the other works
 
-`L` · **pilot** · filed 1× — `A40`
+`L` → shipped · **pilot** · filed 1× — `A40`
+
+**Closure.** Intake now ASKS the employer-coverage premise (`employer-coverage` step, gated on the
+exported `anyRetiredPre65WhileAnotherWorks`) and REFUSES the date when the answer is "buying their
+own coverage". `health.employerPlanCoversRetiredMember` is additive-optional within v3 (no version
+bump, no migration). `missingRequiredFacts` remains the ONE authority — nothing new decides.
+
+Three of this entry's own warnings were load-bearing and all three held:
+- **The XL re-size was right, and for exactly the stated reason.** `completeDateDraft()` and
+  `DEV_SEEDS.date` both ARE the defective household, so both fixtures redded until they answered.
+  Twelve tests failed on the first run — the gate biting, not a regression.
+- **The "existing calm grammar cannot express this refusal" warning was correct.** `MissingFact`
+  gained a `kind` (`absent` | `unrepresentable`) and `AnswerStrip` gained the matching arm, exactly
+  as this entry prescribed.
+- **The pre-existing `kindHsa` false claim was real and is FIXED IN THE SAME PASS** (re-tagged
+  `kindHsaBothSpouses`, `unrepresentable`), as this entry asked.
+
+One thing this entry did NOT anticipate, caught only on the rendered frame with the whole suite
+green: the strip's LEAD (*"Your answer takes shape as you go."*) sat above a permanent refusal — a
+keep-going promise over an answer that is never coming. `answerWithheldLead` now leads when every
+blocker is unrepresentable, route-neutral per insight 101 (its extension includes the two-HSA SPINE
+household, so it can never say "your date").
+
+**Residual, and it is an EYE call not a build:** the `healthQuoteHelp` contradiction below now reads
+directly above the new step, which states the working-window rule in its own words — so it looks
+resolved *by adjacency*. That is a tone judgment on a rendered pair; it belongs to the Caddie or
+Briggsy's eye, and should not be re-filed as a copy defect without a read.
+
+<details><summary>the original entry — diagnosis and warnings, kept for the reasoning</summary>
 
 - A mixed household's already-retired pre-65 spouse is silently priced at $0 healthcare during the working window — never asked about, never disclosed
 - ⛑ **BRIGGSY RULED 2026-08-02: ask + refuse** — one employer-coverage question in intake; refuse the date when the answer is no. Honors the ruling the engine already made for itself at `simulate.ts:908-912` ("rejection beats disclosure").
@@ -343,6 +371,7 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
   refusal (`intakeMap.ts:187-188`) already renders as *"Still needed: HSA"* under MissingList's lead
   *"The tool never guesses these — it prices only what you enter"* (`copy.ts:381-382`). That lead is
   false for an answered-but-unpriceable household. Fix it with the new variant.
+</details>
 
 ### Unpriced states — a confident winner computed with zero state income tax
 

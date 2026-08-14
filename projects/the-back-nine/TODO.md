@@ -21,12 +21,15 @@ left is not units. It is the gap between *the build is done* and *a friend can b
 names the crowned withdrawal order and the crowned Roth conversion, and stops. Witnessed live in real
 Chromium at 1536×791 on two seeds. See that entry for what it settled and the ONE increment it left.
 
-▶ **THE NEXT BUILD is Tier 0 entry 1** — *the mixed household's retired spouse priced at $0 healthcare*.
-It is the only remaining Tier-0 defect with a **ruling AND an executable shape**: Briggsy ruled ask +
-refuse (2026-08-02), the 2026-08-03 double-blind found the refusal channel already exists
-(`missingRequiredFacts` is the shipped ONE authority), and the size came DOWN to M-L. **Entry 10** (the
-heir-bracket seat) is the clean alternative — the only 2026-08-03 entry no skeptic could refute, zero
-engine change, fully specified. Entries 2 and 3 are **his forks**, not builds.
+✅ **Tier 0 entry 1's *"retired spouse priced at $0 healthcare"* SHIPPED 2026-08-14** — intake asks the
+employer-coverage premise and refuses the date when it cannot be priced. See that entry for the frame
+defect it caught that the green suite could not, and the one EYE call it leaves.
+
+▶ **THE NEXT BUILD is Tier 1 entry 10** — *the heir-bracket seat*. It is now the only entry that is
+decided AND executable: zero engine change, fully specified, and **the only 2026-08-03 entry no
+skeptic could ever refute**. Entries 2 and 3 are **his forks**, not builds; entry 3's fork got sharper
+evidence (Texas alone is two-thirds of the no-tax coverage gain), so *which of your friends' states
+actually matter* may moot it.
 
 ⚠️ **Every "next build" here is a user-facing surface — load the four-skill UI loadout (CLAUDE.md)
 before touching a pixel, and read a ⚑ block before trusting any line number in the prose above it.**
@@ -88,7 +91,47 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
 
 *The cardinal rule's own list. These are defects, not scope.*
 
-1. **The mixed household's retired spouse is priced at $0 healthcare — so the date comes out too early.**
+1. ✅ **SHIPPED 2026-08-14 (`863747d6`) — the premise is ASKED now, and the answer it cannot price is REFUSED.**
+   One yes/no step (`employer-coverage`, gated on the exported `anyRetiredPre65WhileAnotherWorks`),
+   one additive-optional v3 field (`health.employerPlanCoversRetiredMember` — no version bump, no
+   migration), and one arm in `missingRequiredFacts`. **The authority did not move** — no second
+   "cannot answer" authority was minted.
+   ⚑ **THE FILED PRESCRIPTION WAS WRONG ON THE FRAME, and the shipped `kindHsa` proved it.** Filed:
+   fire the arm "when the fact is absent **OR false**". But that channel renders *"Still needed: X"*
+   under *"The tool never guesses these — it prices only what you enter."* For the household that
+   **answered** *"buying their own coverage"*, nothing is still needed and nothing they can type will
+   ever clear it — a retry invitation that cannot succeed (7b's shape). `kindHsa` had **already
+   shipped** under that frame: two spouses' HSAs rendered *"Still needed: HSA"* to a household that
+   entered two. So `MissingFact` gained a **kind** (`absent` | `unrepresentable`), the two kinds get
+   different words, and **`kindHsa` was re-tagged in the same pass** — the live defect fixed, not cloned.
+   ⚑ **THE RENDERED FRAME CAUGHT A DEFECT THE WHOLE GREEN SUITE COULD NOT.** The strip led with
+   *"Your answer takes shape as you go."* above a permanent refusal — a keep-going promise over an
+   answer that is never coming. Every string was individually true. `answerWithheldLead` now leads
+   when EVERY blocker is unrepresentable, and it is **route-neutral by necessity** (insight 101): its
+   extension covers the two-HSA **spine** household, so it can never say *"your date"*.
+   ⚑ **`?seed=date` WAS the broken household** — Alex 58 working / Sam 60 retired at 58, pre-65. Its
+   own comment brags *"a pre-65 retiree so the ACA quote IS required"*, and the gate then threw that
+   quote away. Seeded `true` (the premise the gate always silently assumed), so it still crowns
+   *"about 8 years out — around 2034"*, unchanged. **New seed `?seed=datesolo`** is the false arm's
+   only live drive; `devSeeds.test.ts` gained a `REFUSAL_SEEDS` map that asserts it refuses for the
+   NAMED reason with NO incidental gaps — a skip-list with no counter-assertion is how a broken seed
+   hides.
+   ⚑ **WITNESSED LIVE** in real Chromium at 1536×791: `?seed=datesolo` renders the cannot-price
+   block; `?seed=date` unchanged; and the question was walked **organically from ColdStart** through
+   all three states (unasked → named as actionable · *"their own"* → refused · *"covered"* → clears),
+   including the mixed frame where BOTH blocks render over their own facts. Gates: typecheck, lint,
+   3273 tests, `verify:fit` (52), doc-stats, aca, state-tax, bundle.
+   ⚑ **The false disclosure claim is swept.** `healthcareStreams.ts:18-21` said the residual was
+   *"disclosed through the §0 channel, D2-owned"*. It was not — `METHODOLOGY_DISCLOSURES` carried
+   five rows (market, longevity, survivor-ss, outlive-order, conversion-tax), **none healthcare**.
+   ⚑ **STILL OPEN, and it is an EYE call, not a build:** `copy.ts healthQuoteHelp` (*"The tool splits
+   it by age for each of you."*) was filed as CONTRADICTING the premise. It now reads directly above
+   the new step, which states the working-window rule in its own words — so the contradiction looks
+   resolved **by adjacency**. That is a tone/comprehension judgment on a rendered pair, so it belongs
+   to the Caddie or Briggsy's eye; do not re-file it as a copy defect without a read.
+   <details><summary>original entry — the diagnosis, kept for the reasoning</summary>
+
+   **The mixed household's retired spouse is priced at $0 healthcare — so the date comes out too early.**
    `healthcareStreams.ts:149` — `windowStart = Math.max(0, ...people.map(p => p.retireOffset))` is a
    *household* max, so an already-retired spouse's own (negative) offset is discarded and their entire
    pre-65 marketplace premium is zeroed across `[0, windowStart)`. The premise is "employer family coverage
@@ -125,6 +168,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    `healthQuoteHelp` doesn't merely fail to disclose, it **contradicts** the premise: *"The tool splits it by
    age for each of you."* (Also: "13 intake steps" is the MAXIMUM — only **8** are unconditional,
    `questions.tsx:1147-1163`.)
+   </details>
 
 2. **Pre-65 ACA premiums are priced real-flat — the sin the Medicare council ruled solver-BLOCKING.**
    `intakeMap.ts:271-291` (`escalateQuote`) builds both the enrolled premium and the SLCSP benchmark from
@@ -989,6 +1033,7 @@ These are the mechanical ones that keep costing hours.*
 | `steer` | the `no-pretax` typed refusal — invite → GoalPicker → calm refusal, no solve |
 | `nc` · `pa` · `fl` · `elsewhere` | the state faces — NC bites, PA is small, FL is $0, elsewhere unpriced |
 | `datenc` | the date-route NC witness |
+| `datesolo` | **the refusal witness** — `?seed=date`'s couple with the ONE field flipped (Sam buys their own pre-65 coverage instead of riding Alex's plan at work). The only live drive of the `unrepresentable` strip block; it renders the cannot-price frame and builds NO date, by design. Its exemption from the all-seeds-build law is asserted, never skipped (`REFUSAL_SEEDS`, `devSeeds.test.ts`) |
 
 **Vault plants** — `?vault=<key>` plants an encrypted vault and lands on Unlock with the passphrase
 pre-filled. **The param strips itself** (`history.replaceState`), so a plain refresh probes the REAL vault

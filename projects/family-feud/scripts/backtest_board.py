@@ -178,11 +178,16 @@ def must_fill(counts):
     return need, flex_need, sum(need.values()) + flex_need
 
 
-def run_draft(pool, value, my_slot):
+def run_draft(pool, value, my_slot, qb_by_round=None):
     """One 8-team snake. `pool` is [(pos, name, points)] in ADP order. `value` maps
     (pos, positional_rank) -> number, or None to draft straight down ADP.
 
-    Returns the points of our best legal starting lineup.
+    `qb_by_round` forces OUR seat to take the best available quarterback in that round -- the
+    measured behaviour of the two opponents in this room who reach for one (docs/opponents.md:
+    briggsy007 takes the 2nd QB off the board on median). It isolates the ONE decision the other
+    arms all agree on, and which every other line of evidence in this repo says is a mistake.
+
+    Returns (our lineup points, our margin over the seven opponents in this same draft).
     """
     pos_rank = {}
     seen = collections.Counter()
@@ -205,6 +210,18 @@ def run_draft(pool, value, my_slot):
             cand = 0
             # With exactly as many picks left as unfilled starter slots, every remaining pick is
             # forced. Restrict to positions that actually reduce the shortfall.
+            if mine and qb_by_round is not None and rnd == qb_by_round                     and counts[seat]["QB"] == 0:
+                forced_qb = next((i for i, (p, _n, _pt) in enumerate(pool)
+                                  if p == "QB" and i not in taken), None)
+                if forced_qb is not None:
+                    pos, nm, pts = pool[forced_qb]
+                    taken.add(forced_qb)
+                    counts[seat][pos] += 1
+                    actual_r[seat][pos].append(pts)
+                    if value is not None:
+                        pv = value.get((pos, pos_rank[forced_qb]))
+                        rosters[seat][pos].append(pv if pv is not None else 0.0)
+                    continue
             need, flex_need, total_need = must_fill(counts[seat])
             rounds_left = ROUNDS - rnd + 1
             forced = None
@@ -293,8 +310,9 @@ def main():
         pool = [(p, nm, actual[(nm, p)]) for nm, p in ranks if (nm, p) in actual]
 
         row, margin = {}, {}
-        for label, val in (("ORDER", oc), ("REALISED", rc), ("ADP floor", None)):
-            runs = [run_draft(pool, val, slot) for slot in range(1, TEAMS + 1)]
+        for label, val, qbr in (("ORDER", oc, None), ("REALISED", rc, None),
+                                ("ADP floor", None, None), ("QB-EARLY", oc, 2)):
+            runs = [run_draft(pool, val, slot, qbr) for slot in range(1, TEAMS + 1)]
             row[label] = statistics.mean(p for p, _m in runs)
             margin[label] = statistics.mean(m for _p, m in runs)
             results[label] += [p for p, _m in runs]
@@ -304,19 +322,20 @@ def main():
     print(f"=== LEAKAGE-FREE BACKTEST · {TEAMS}-team snake · {ROUNDS} rounds · "
           f"all {TEAMS} slots averaged ===")
     print("  starting-lineup points (QB/RB/RB/WR/WR/TE/FLEX/FLEX), higher is better\n")
-    print(f"  {'season':>7} {'train':>6} {'ORDER':>10} {'REALISED':>10} {'ADP floor':>11}"
-          f"   {'winner':<10}")
+    arms_all = ("ORDER", "REALISED", "ADP floor", "QB-EARLY")
+    print(f"  {'season':>7} {'train':>6} " + "".join(f"{a:>11}" for a in arms_all)
+          + f"   {'winner':<10}")
     for target, (row, ntr) in sorted(per_season.items()):
         win = max(row, key=row.get)
-        print(f"  {target:>7} {ntr:>6} {row['ORDER']:10.1f} {row['REALISED']:10.1f} "
-              f"{row['ADP floor']:11.1f}   {win:<10}")
+        print(f"  {target:>7} {ntr:>6} " + "".join(f"{row[a]:11.1f}" for a in arms_all)
+              + f"   {win:<10}")
 
     print(f"\n  {'ALL':>7} {'':>6} " + " ".join(
         f"{statistics.mean(results[k]):10.1f}" for k in ("ORDER", "REALISED")) +
         f" {statistics.mean(results['ADP floor']):11.1f}")
     n = len(results["ORDER"])
     print(f"\n  n = {n} drafts per arm ({len(per_season)} seasons x {TEAMS} slots)")
-    for k in ("ORDER", "REALISED", "ADP floor"):
+    for k in arms_all:
         m = statistics.mean(results[k])
         sd = statistics.pstdev(results[k])
         print(f"  {k:<10} mean {m:8.1f}  sd {sd:7.1f}  SEM {sd/n**0.5:6.1f}")
@@ -331,7 +350,7 @@ def main():
     print("    per-slot n=56 treats correlated drafts as independent -- shown only to expose it")
     print(f"    {'comparison':<24} {'mean':>9} {'SEM(season)':>12} {'sigma':>7}   "
           f"{'verdict':<20} {'[inflated SEM(slot)]':>22}")
-    for a, b in itertools.combinations(("ORDER", "REALISED", "ADP floor"), 2):
+    for a, b in itertools.combinations(("ORDER", "REALISED", "ADP floor", "QB-EARLY"), 2):
         per_slot = [x - y for x, y in zip(results[a], results[b])]
         by_season = [per_season[t][0][a] - per_season[t][0][b] for t in sorted(per_season)]
         m = statistics.mean(by_season)
@@ -349,7 +368,7 @@ def main():
     # Scoring against the seven opponents INSIDE the same draft cancels the season effect (a
     # high-scoring year lifts everyone) and the pool effect. It also buys a free positive
     # control, because one arm plays the same strategy as the opponents it is measured against.
-    arms = ("ORDER", "REALISED", "ADP floor")
+    arms = ("ORDER", "REALISED", "ADP floor", "QB-EARLY")
     print("\n\n=== MARGIN OVER THE ROOM (scored inside each draft; season effect cancelled) ===")
     print("  our starting lineup minus the mean of the seven ADP opponents in the SAME draft\n")
     print(f"  {'season':>7} " + "".join(f"{k:>12}" for k in arms))

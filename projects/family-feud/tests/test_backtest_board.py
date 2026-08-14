@@ -126,5 +126,40 @@ class TestTheFloorIsAnIdentityNotAControl(unittest.TestCase):
         self.assertIn("not a control", src.lower())
 
 
+class TestTheQbEarlyArm(unittest.TestCase):
+    """The arm that tests the ONE decision every other arm agrees on.
+
+    ORDER and REALISED both already decline to take an early quarterback -- the elite QB's
+    marginal value is ~126 against the elite back's ~272 -- so comparing them says nothing about
+    QB timing. QB-EARLY forces the measured behaviour of this room's reachers (docs/opponents.md:
+    briggsy007 takes the 2nd QB off the board on median) so the decision itself is on trial.
+    """
+
+    def _pool(self):
+        # QBs are late by ADP, which is what makes taking one in round 2 a reach.
+        pool = [("RB", f"rb{i}", 300 - i) for i in range(1, 20)]
+        pool += [("WR", f"wr{i}", 290 - i) for i in range(1, 20)]
+        pool += [("TE", f"te{i}", 200 - i) for i in range(1, 10)]
+        pool += [("QB", f"qb{i}", 400 - i) for i in range(1, 10)]
+        return pool
+
+    def test_forcing_a_qb_actually_changes_the_draft(self):
+        """A knob that does nothing is worse than no knob -- it reads as a tested hypothesis."""
+        pool = self._pool()
+        value = {}
+        for pos, base in (("RB", 300), ("WR", 290), ("TE", 200), ("QB", 400)):
+            for k in range(1, 60):
+                value[(pos, k)] = float(base - k)
+        plain, _ = B.run_draft(pool, value, 1, None)
+        forced, _ = B.run_draft(pool, value, 1, 2)
+        self.assertNotEqual(plain, forced,
+                            "forcing a round-2 quarterback must change the resulting roster")
+
+    def test_no_second_qb_is_forced_if_one_is_already_rostered(self):
+        """The guard is `counts == 0`; without it the arm would take two quarterbacks."""
+        need, _flex, _t = B.must_fill({"QB": 1, "RB": 0, "WR": 0, "TE": 0})
+        self.assertEqual(need["QB"], 0)
+
+
 if __name__ == "__main__":
     unittest.main()

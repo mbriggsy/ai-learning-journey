@@ -233,6 +233,16 @@ order statistic, selected after the fact for beating expectations. **You cannot 
   `10.2 · 63.4 · -14.6 · 18.6 · 9.0 · 4.7 · 2.6 · -38.8 · -26.7 · -31.0 · -10.3 · -15.3` — twelve
   cells, all at or below zero, eleven seasons. **Third independent line of evidence**, after the
   board's own arithmetic and the room's 2023 head-to-head results.
+- ✅ **AND THE DECISION ITSELF WAS PUT ON TRIAL — the FOURTH line, and the only one that tests
+  the choice rather than the valuation.** The first backtest could not settle this: `ORDER` and
+  `REALISED` **both already decline** an early QB, so comparing them says nothing about timing.
+  A `QB-EARLY` arm forces a round-2 quarterback (this room's reachers' measured behaviour).
+  Over 12 held-out seasons: margin **−49.8 ± 25.6, 1.9σ below zero, negative in 9 of 12**, and it
+  **loses to all three** other arms (+23.7 / +41.9 / +49.1). ⚠️ **Nothing clears 2σ at n=12** —
+  quote it as four independent lines agreeing, never as proof.
+  **Practical read for draft day: do not spend a top-3-round pick on a quarterback. The measured
+  cost is ~25-50 starting-lineup points a season against a ~1900-point baseline — small, real,
+  and free to avoid.**
 - ⚠️ **The overstatement is NOT uniform** (12.7x at QB against 1.77x at TE), so the board's
   **cross-position ordering** is distorted, not just its scale. Stable across all three windows.
 - ⚠️ **DO NOT SWAP THE CURVE FOR IT WHOLESALE.** The realised curve is the right *quantity*

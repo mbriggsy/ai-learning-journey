@@ -64,6 +64,15 @@ from entirely different data:
    redraft finished 5th and 6th of 8; the two who waited finished 1st and 2nd
    ([`opponents.md`](../opponents.md)).
 3. This — eleven seasons of realised value.
+4. **And the decision itself, put on trial**
+   ([`insight 024`](024-four-broken-simulators-four-confident-answers.md)). The first backtest
+   could not test this at all, because ORDER and REALISED *both already decline* an early
+   quarterback — comparing them says nothing about QB timing. A fourth arm was added that forces
+   a round-2 quarterback, the measured behaviour of this room's two reachers. Over 12 held-out
+   seasons its margin over the room is **−49.8 ± 25.6 (1.9σ below zero), negative in 9 of 12
+   seasons, and it loses to all three other arms** (`ORDER −QB-EARLY +23.7`, `ADP floor +41.9`,
+   `REALISED +49.1`). ⚠️ **No single comparison clears 2σ at n=12** — but every one points the
+   same way, and QB-EARLY is the only arm meaningfully below zero.
 
 ## Why term (b) was always going to dominate
 

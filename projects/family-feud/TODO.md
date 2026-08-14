@@ -11,13 +11,30 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
   → ADP ✅ → mule v2.1 ✅ → mock proven end-to-end ✅ → CDN staleness fixed ✅
   → harness leg (c) keep-the-queue-ranked ✅ → leg (b) the ladder precomputer ✅
   → leg (d) KILLED, opponents MEASURED instead ✅ → the board's error bars measured ✅
-  ◀ HERE — the board is DERIVED, the feed is no longer stale, the ladder is DERIVED, and the
-    OPPONENTS ARE MEASURED. The harness is complete. What is missing is not a simulator: it is
-    `draft_order`, which is still null, and which nothing we build can produce.
+  → the opponent prior FAILED its floor control ✅ → realised value measured ✅
+  → the realised curve FAILED its backtest, board UNCHANGED ✅
+  ◀ HERE — the harness is complete and the board is UNCHANGED ON PURPOSE. Two candidate
+    improvements were built, measured and REJECTED on 2026-08-14; the rejections are the
+    deliverable. What is missing is not a model: it is `draft_order`, still null, which
+    nothing we build can produce.
 ```
 
-**Units shipped:** …and **U16** (the opponent scout — 37 leagues, 18 comparable redrafts,
-20 tests, 6 mutants killed; [`docs/opponents.md`](docs/opponents.md)).
+**Units shipped (2026-08-14):**
+- **U16** — the opponent scout (`scout_opponents.py`), 37 leagues / **7 distinct** comparable
+  1QB redrafts, 24 tests, 9 mutants killed. [`docs/opponents.md`](docs/opponents.md).
+  ⚠️ Its profiles are **descriptive, not predictive** — insight 022.
+- **U17** — realised value of a preseason rank (`realized_value.py`), historical ADP back to
+  2015 at 98-99% join coverage, 10 tests, 5 mutants killed. Insight 023.
+- **U18** — the leakage-free board backtest (`backtest_board.py`), 12 held-out seasons, 4 arms
+  including a floor and a QB-EARLY arm, 16 tests, 5 mutants killed. Insight 024.
+  🚨 **Read insight 024 before trusting ANY simulation result in this repo, including its own** —
+  four modelling errors inside it each produced a confident, different, wrong answer.
+
+**🚨 THE ONE DRAFT-DAY CHANGE THIS SESSION EARNED: do not spend a top-3-round pick on a QB.**
+Four independent lines agree (board arithmetic · 11 seasons of realised QB value ≈ 0 · the room's
+2023 8-team head-to-head · the QB-EARLY backtest arm at −49.8 ± 25.6). ⚠️ **No single line clears
+2σ — quote it as four lines agreeing, never as proof.** `briggsy007` takes the **2nd** QB off the
+board on median, so this is also the room's most reliable source of value falling to us.
 
 **Units shipped:** U1, U2 (Phase 0 gates) · **U9** (draft-state watcher) · **U3** (one normalizer,
 proven equal in two runtimes) · **U14** (`sleeperId` frozen — 174 ids, 0 unresolved) ·
@@ -186,7 +203,8 @@ to reach that by **inventing** one opposing doctrine per terminal — which is a
 one level deeper than the enumeration [`021`](docs/insights/021-the-simulation-had-a-closed-form-and-was-measuring-its-own-sampler.md)
 already deleted, and would have been the **fifth** tautology this project caught.
 **The opponents are not hypothetical.** Sleeper serves every pick every one of them has ever made,
-and `scripts/scout_opponents.py` now reads it: **37 leagues, 18 comparable redrafts, measured.**
+and `scripts/scout_opponents.py` now reads it: **37 leagues, 18 drafter-views of 7 DISTINCT
+comparable 1QB redrafts, measured** (⚠️ the two counts are not the same thing — see insight 022).
 Full profiles and their landmines: [`docs/opponents.md`](docs/opponents.md).
 🚨 **AND THE MEASURED MODEL DID NOT SURVIVE ITS FLOOR CONTROL EITHER — see item 2 above and
 [`insight 022`](docs/insights/022-the-opponent-prior-lost-to-always-guess-wr.md).** Reading the
@@ -210,9 +228,13 @@ near **pick 15-18 overall**.
   larger than ours** — both confounds unremovable with what we hold. If it holds, elite RB/WR
   slide to us, which compounds with the board already being priced for 8-team replacement while
   the blended ADP is not. **Stay alert to it; do not plan a pick around it.**
-- **The room waits on TE — `past R5` in 15 of 18 drafts**, only Kaeperni excepted. `TE1` is priced
-  **134.7**, above QB1 — ⚠️ **and carries the largest measured spread on the board, sd 30.5.**
-  Uncontested and highest-variance are both true; never quote one without the other.
+- **The room waits on TE — `past R5` in 15 of 18 drafter-views**, only Kaeperni excepted. `TE1` is
+  priced **134.7**, above QB1. ⚠️ ~~**and carries the largest measured spread on the board, sd
+  30.5**~~ — **INVERTED AND CORRECTED 2026-08-14**: that ranked risk by the SMALLER of the two
+  error terms. With the dominant term included (insight 023), **`TE1` has the LOWEST total spread
+  of the four positional #1s — 60.6, against RB1's 145.1.** The elite TE is uncontested here *and*
+  the least volatile premium pick. ⚠️ Its REALISED value is **76.0, not the 134.7 shown** — the
+  board overstates every top slot ~2x.
 - **Nobody takes a K before round 10, 18/18.** No edge here, only a way to lose one.
 
 🚨 **THE BIGGEST FINDING OF 2026-08-14, AND IT NEEDS A DECISION: THE CURVE ANSWERS A QUESTION
@@ -804,11 +826,14 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **802 tests**, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 802 with **16 skips**
+gate went **13 findings → 0** by fixing surfaces. **852 tests**, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it is 852 with **16 skips**
 — 2 live-cargo probes plus **9** that need the gitignored consensus/ADP caches
 (`draft-kit/cache/fp_ecr.csv.gz`, `ffc_adp.json.gz`) plus **5** (`test_build_curves.TestTheCurveShape`)
-that need the gitignored nflverse season CSVs. ⚠️ **`player_ids.csv.gz` is COMMITTED, not
+that need the gitignored nflverse season CSVs. **Re-measured 2026-08-14 by hiding every gitignored
+cache** (`fp_ecr`, `ffc_adp`, `adp_history/`, `opponents/`, the season CSVs and
+`newsletter/data/inbox/`) — the skip count did NOT move, so U16/U17/U18's 50 new tests add **zero**
+skips: they run on committed fixtures by design and never touch the caches. ⚠️ **`player_ids.csv.gz` is COMMITTED, not
 gitignored** — `.gitignore:66-69` says so explicitly, and an older version of this line named it
 as a cause of skips.
 📌 **IT CHURNS, AND THE CHURN IS ALMOST ALWAYS INERT — check the BRIDGE, never the bytes.**

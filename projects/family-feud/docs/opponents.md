@@ -4,7 +4,8 @@ What every Family Feud opponent has actually done in a draft, read from Sleeper'
 their past leagues. Identity lives in [`league.md`](league.md); this file owns **behaviour**.
 
 > **Measured 2026-08-14** by `python scripts/scout_opponents.py --fetch`, over every league all
-> eight members played in 2023-2025: **37 leagues, 18 comparable redrafts.** Re-run it rather
+> eight members played in 2023-2025: **37 leagues, 18 drafter-views of 7 DISTINCT comparable 1QB
+> redrafts** (⚠️ those two counts are NOT interchangeable — see the landmine below). Re-run it rather
 > than quoting these numbers — every count here is a timestamp, not a fact.
 
 ## 🚨 Read this before using anything below

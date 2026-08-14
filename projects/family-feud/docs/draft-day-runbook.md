@@ -10,8 +10,8 @@
 **Stand in the repo root and never leave it.** Every command in this runbook runs from there.
 
 This section used to say "`cd` into `draft-kit/` and work there," and that made the draft loop in
-Step 3 **impossible to execute as written**: Step 3.1 (`python3 scripts/merge_picks.py`) only
-resolves from the repo root, and Step 3.3 (`python3 draft_engine.py`) only resolved from
+Step 3 **impossible to execute as written**: Step 3.1 (`python scripts/merge_picks.py`) only
+resolves from the repo root, and Step 3.3 (`python draft_engine.py`) only resolved from
 `draft-kit/`. Following the instructions literally meant one of the two commands failed, and
 finding that out at 8am with a clock running is exactly the wrong time.
 
@@ -193,7 +193,7 @@ being null:
   and refuses rather than guessing when `draft_order` is still null.
 
 ## Step 3 — The loop (repeat until draft complete)
-1. **`python3 scripts/merge_picks.py <draft_id>`** — one command: fetches `/picks`, merges into
+1. **`python scripts/merge_picks.py <draft_id>`** — one command: fetches `/picks`, merges into
    `draft-kit/picks.json` keyed on `pick_no`, and reports the count, the latest pick, and whether
    there are gaps or duplicates. Run it every cycle, including "just checking" ones.
    **If it says `VANISHED`, stop and read it.** A union can only grow, so a pick removed upstream
@@ -202,7 +202,7 @@ being null:
    available, with picks-until-you off by one for the rest of the draft. A reversal and a
    truncated fetch look identical from here, so the script does not choose. **Re-run once.** If
    the pick is still gone it really was reversed — then, and only then,
-   `python3 scripts/merge_picks.py <draft_id> --rebuild` writes the feed verbatim.
+   `python scripts/merge_picks.py <draft_id> --rebuild` writes the feed verbatim.
 2. It **unions** rather than overwrites, so a truncated response can never delete picks you already
    hold — a short read is a no-op instead of a silent regression. That discipline is why Mock #1's
    briefly-dropped pick 96 was recoverable.
@@ -211,7 +211,7 @@ being null:
    returns the whole cumulative array, so there is no range left to get wrong** — that failure
    mode is retired. The merge discipline and the integrity gate below are what caught it; both stay.*
    The engine now enforces this: it **hard-fails (exit 1) on interior gaps or duplicate pick_nos** in picks.json and refuses to emit board state. If it screams, re-fetch /picks, re-merge, rerun — NEVER advise off a screaming engine. (A missing *newest* pick is undetectable — a tail hole looks identical to "draft is only this far along" — but /picks is cumulative, so that's staleness bounded by poll cadence, not corruption.)
-3. Run: **`python3 scripts/run_engine.py`** — from the repo root, same directory as step 1.
+3. Run: **`python scripts/run_engine.py`** — from the repo root, same directory as step 1.
    *(changed 2026-08-08, U15)*
    Pass the seat as `run_engine.py <slot>` while `draft_order` is still null; once it populates,
    the wrapper reads the seat itself. It also reads `teams`, `rounds` and the whole roster from the
@@ -220,7 +220,7 @@ being null:
    advises a live draft. Overrides are `--teams`, `--rounds`, `--draft-id`; each wins and says so.
    **`--dry-run` prints every value and where it came from without starting the engine.**
 4. **The moment your pick lands — BEFORE you relax — run
-   `python3 scripts/precompute_ladder.py --slot <slot>`.** *(added 2026-08-09)*
+   `python scripts/precompute_ladder.py --slot <slot>`.** *(added 2026-08-09)*
    This is the standing ladder, derived instead of guessed. It costs ~0.1s, it runs the real engine
    (never a second ranking), and it prints the three things the next window needs: **the queue
    order** to load into Sleeper, **one market scenario** for who is likely gone by your turn, and
@@ -245,10 +245,14 @@ being null:
    `**` banner means the seat could NOT be confirmed — go get `draft_order` before acting. A `!!`
    block means an argument disagrees with the draft and nothing was computed.
 
-   *The bare `python3 draft_engine.py <slot> <teams> <rounds> <draft_id>` from inside `draft-kit/`
+   *The bare `python draft_engine.py <slot> <teams> <rounds> <draft_id>` from inside `draft-kit/`
    still works and is the fallback if the wrapper ever misbehaves — but run it bare and the roster
    shape falls back to constants inside the file that nothing checks against this draft.*
-4. Read the output; compose the advisory (format below); send it. In executor mode, execute the pick instead when it's our clock.
+
+5. Read the output; compose the advisory (format below); send it. In executor mode, execute the pick instead when it's our clock.
+   *(Renumbered 2026-08-14 — this was a SECOND "4." and, following the indented block above it with
+   no blank line, it rendered as literal text inside step 4 rather than as its own step. Steps 1-4
+   are deliberately untouched: `CLAUDE.md` pins the names "Step 3.1" and "Step 3.3".)*
 
 **Cadence — key it off ROOM SPEED, measured in round 1, not just pick distance** (the picks feed is cumulative, so you can never miss picks — only be late with advice):
 - **FAST room** (picks landing ~15s apart or less — quick-click humans and/or CPU autopick): distance-based pacing fails; a 14-pick gap can evaporate in under a minute. The moment his pick(s) land: one sync → deliver the NEXT window's full pre-call immediately (with snipe ladder, see below) → then poll every ~15-20s continuously, tightening to **10-15s when ≤3 picks away** (Briggsy's calibration after Mock #2 — two picks came down to the wire at 20-25s). **Do not stretch to 45-60s "because the gap looks big" — that exact deviation cost pick 79 in Mock #2.** An all-CPU room (7 bots) is the fastest possible room: 12-pick gaps run ~60-90s. Note the bot-room quirk: the room PAUSES on our clock (bots can't pick past us), so wire-scrapes there are always self-inflicted — see "fire first, narrate after" in Executor mode.
@@ -260,12 +264,62 @@ being null:
 Claude's hands are claude-in-chrome on Briggsy's logged-in Chrome; eyes stay on the API (poll + engine per Step 3); the browser is touched only to click picks. Mechanics, learned live:
 - **Clock budget:** browser actions cost ~5-15s per round trip (search, click, verify screenshot). Treat a 120s clock as ~90s of decision time. With a standing ladder, execution needs ~15s total: filter, verify, fire.
 - **Player-row icons, left to right (verified in the Aug 6 queue lab):** `+` = **INSTANT DRAFT while on the clock, no confirmation** (pre-draft it no-ops) · `☆` star = watchlist only · **blue document-plus `📄+` = ADD TO QUEUE — works pre-draft and any time.** The queue lives in the right panel's Queue tab (shows a count); each entry has a REMOVE button. The player-card modal has NO action buttons — never open it mid-draft, it's a time sink.
-- **PRE-ARM THE QUEUE.** The ladder to load is the one `scripts/precompute_ladder.py --slot <slot>` prints under **QUEUE THIS ORDER** — it is the engine's own BEST AVAILABLE order, so it needs no judgement applied on top and no second ranking exists to drift from it. *(added 2026-08-09; `ffQueue` / `ffQueueList` / `ffUnqueue` in `scripts/sleeper_draft_console.js` are what put it in and keep it ranked.)* Before the draft starts, load the round-1 ladder into the queue via the `📄+` icons (top name first). At each window, refresh it to the current ladder's top 2-3 (REMOVE dead names, add new) — skip maintenance when the clock is tight; direct fire stays primary. A loaded queue makes every failure mode safe: missed clock, frozen bridge, native dialog — Sleeper's timeout autopick takes the queue TOP, i.e. OUR guy, not ADP's. (Mock #2 ran the whole draft with an empty queue because the affordance wasn't known; the pick-79 miss would have cost nothing with a loaded queue.) Keep the AUTO-PICK toggle OFF — with a loaded queue it insta-drafts queue-top the moment our turn starts, no judgment applied.
-- **Fire sequence on our clock:** click the "Find player" search box → type the target's name (filters list to ~1 row, eliminates wrong-row risk) → screenshot to verify top row = target and the clock cell is ours → click `+` on the top row (y≈513-523) → screenshot confirms the board cell. Sleeper even prints "Projected pick" under the row — a free sanity check.
-- **SECOND fire path — the queue-row green `⊕`:** each queue entry has REMOVE + a green `⊕` at its right edge; on our clock the `⊕` INSTANT-DRAFTS that player (verified twice in Mock #3: Egbuka, DeVonta). When queue-top is THE CALL it's one click with the name label right there — faster and safer than search. Zoom the queue row first if coordinates are in doubt; the `⊕` sits ~50px right of REMOVE.
-- **Clearing the search box: TRIPLE-CLICK the box, then type (or Delete). NEVER ctrl+a.** The bridge drops the ctrl modifier intermittently — ctrl+a then becomes a literal "a" typed into the box (symptom: search shows "aSutton", zero rows match) or a page-wide select-all when the box click missed. This single bug killed three queue-arm attempts in Mock #3 and nearly ate pick 78. Triple-click selects the input's text with no modifiers; typing replaces it.
-- **Screenshot capture-scale oscillation (the window is NOT moving):** Briggsy runs Chrome maximized and nobody resizes anything — yet screenshot dimensions oscillate between captures (1522x784 / 1536x735 / 1568x751 of the SAME maximized window in Mock #3). It's the capture pipeline re-scaling, so coordinates read off one screenshot land ±10-15px off in the next moment's click space. Rules: coordinates are only valid from the LATEST screenshot — re-screenshot before any high-stakes click; prefer refs (find tool) for one-off buttons like CLAIM; the search-filter→top-row-`+` flow tolerates it best (row 1 lands y≈509-523 at every scale, and the box/`+` are big targets). Long multi-player batches WILL lose clicks to a mid-batch scale flip — one player per batch when it matters, verify with a screenshot each time.
-- **Queue-arm searches use the FULL "First Last" name — never surname-only.** The Gabe Nabers incident: "Nabers" was typed just as Malik Nabers got sniped at 5.1; Sleeper instantly hides drafted players, the fullback Gabe Nabers (ADP 999) floated to row 1, and a blind positional click queued him. A full-name filter goes to ZERO rows when the target dies mid-action, so the stray click no-ops instead of queueing a random fullback. Corollary: never click a row icon you haven't verified by content in the current screenshot — position alone lies during state changes.
+- **PRE-ARM THE QUEUE.** The ladder to load is the one `scripts/precompute_ladder.py --slot <slot>` prints under **QUEUE THIS ORDER** — it is the engine's own BEST AVAILABLE order, so it needs no judgement applied on top and no second ranking exists to drift from it. *(added 2026-08-09; `ffQueue` / `ffQueueList` / `ffUnqueue` in `scripts/sleeper_draft_console.js` are what put it in and keep it ranked.)* Before the draft starts, load the round-1 ladder **with `ffQueue('<full name>')`, top name first** — *not* by clicking `📄+` icons, which is the pixel path this file deleted on 2026-08-14. `ffQueueList()` reads the queue back in order and document order == visual order, so it is the check that the load actually took; Sleeper labels the first entry **NEXT PICK**. At each window, refresh to the current ladder's top 2-3 (`ffUnqueue` the dead, `ffQueue` the new) — skip maintenance when the clock is tight; direct fire stays primary. A loaded queue makes every failure mode safe: missed clock, frozen bridge, native dialog — Sleeper's timeout autopick takes the queue TOP, i.e. OUR guy, not ADP's. (Mock #2 ran the whole draft with an empty queue because the affordance wasn't known; the pick-79 miss would have cost nothing with a loaded queue.) Keep the AUTO-PICK toggle OFF — with a loaded queue it insta-drafts queue-top the moment our turn starts, no judgment applied.
+- 🚨 **STEP ZERO, BEFORE THE DRAFT STARTS — INSTALL THE CONSOLE. Nothing below runs without it.**
+  Evaluate the whole of `scripts/sleeper_draft_console.js` in the draft-room tab (it is an IIFE
+  that hangs `ffFind` / `ffDraft` / `ffQueue` / `ffQueueList` / `ffUnqueue` / `ffStartDraft` off
+  `window`). Confirm with `typeof window.ffFind === "function"` before you trust any of it.
+  **Re-install after any page reload** — a reload wipes them and the failure looks like the bridge
+  being dead.
+
+- **Fire sequence on our clock — `ffFind` then `ffDraft`, and NEVER a screenshot coordinate.**
+  ```js
+  ffFind('Ja\'Marr Chase')     // what WOULD be drafted. Touches nothing. ALWAYS first.
+  ffDraft('Ja\'Marr Chase')    // fires
+  ```
+  Then, off the clock, `python scripts/merge_picks.py <draft_id>` and confirm the player landed on
+  **our** `draft_slot`.
+  🚨 **`ffDraft` REPORTS A CLICK, NOT A PICK — this is the single most important line in this
+  section.** It returned `drafted: true` for Chase while the API showed our slot got Puka Nacua and
+  Chase went to slot 4: the clock had expired and the click hit a stale un-re-rendered row. **The
+  browser cannot be the oracle for its own action** (insight 007). The API is.
+  - It drives the search box itself, through React's own value setter. **Do not interleave
+    keystrokes and JS calls** — executing JS moves focus, so a `ctrl+u` → type → run-JS sequence
+    lands the keystrokes nowhere; measured, the box read empty afterwards.
+  - It **polls rather than sleeping.** A fixed 700ms wait reported "no exact match" mid-re-render,
+    which is indistinguishable from "he's already gone". Polling resolved the same lookup in 219ms.
+  - It **matches names exactly and folds apostrophes**, and **refuses on ambiguity rather than
+    guessing** — `Chase` matches Chase Brown as readily as Ja'Marr Chase.
+
+- **Queue maintenance is `ffQueue` / `ffQueueList` / `ffUnqueue`, also DOM-addressed.**
+  `ffQueue` verifies by the count **incrementing by exactly one** and refuses on an unreadable
+  count, a no-move or a jump. That oracle was broken until 2026-08-09 — the old verdict collapsed
+  to "is the string `QUEUE (n)` rendered anywhere", so every add after the first returned
+  `queued: true` unconditionally. Do not accept a `true` from anything but the current code.
+
+> 🗑️ **DELETED 2026-08-14 — the two fire paths that used to live here were both
+> SCREENSHOT-COORDINATE methods**, and this repo has measured that method as broken since
+> 2026-08-09: viewport 1536×791 CSS while successive screenshots came back 1568×750 and 1522×784,
+> putting a row that lives at CSS y=544 at y=562. **18px of error on a 26px row, and it cost a real
+> pick (Trey McBride, 2.6.)** The old primary said *"click `+` on the top row (y≈513-523)"*; the old
+> secondary said the queue-row `⊕` *"sits ~50px right of REMOVE"*. `scripts/sleeper_draft_console.js`
+> existed and was live-proven when those bullets were written — the fold was simply never finished
+> (the runbook's last commit landed 26 minutes before the console's final one). **Do not restore
+> them.** The `+` icon itself is still real and still instant-drafts; what is banned is reaching it
+> by pixel. Match on the image `src`, never on position or geometry.
+- **Clearing the search box — MOOT on the console path, still true on the fallback.** `ffFind` /
+  `ffDraft` / `ffQueue` set and clear the box through React's own value setter, so no keystroke is
+  ever sent and none of the below can happen. **If you are ever typing by hand: TRIPLE-CLICK the
+  box, then type (or Delete). NEVER ctrl+a.** The bridge drops the ctrl modifier intermittently —
+  ctrl+a becomes a literal "a" in the box (symptom: search reads "aSutton", zero rows match) or a
+  page-wide select-all when the box click missed. That one bug killed three queue-arm attempts in
+  Mock #3 and nearly ate pick 78. Triple-click selects with no modifiers; typing replaces.
+- **Screenshot capture-scale oscillation (the window is NOT moving):** Briggsy runs Chrome maximized and nobody resizes anything — yet screenshot dimensions oscillate between captures (1522x784 / 1536x735 / 1568x751 of the SAME maximized window in Mock #3, and 1568x750 / 1522x784 against a 1536x791 CSS viewport on 2026-08-09). It's the capture pipeline re-scaling, so coordinates read off one screenshot land ±10-18px off in the next moment's click space.
+  🚨 **THE ONLY RULE IS: DO NOT CLICK THE DRAFT ROOM BY COORDINATE. Address the DOM.** *(rewritten 2026-08-14.)* This bullet used to end by recommending the `search-filter→top-row-+` flow because *"row 1 lands y≈509-523 at every scale"* — **a claim that refutes itself in its own sentence**, since the same paragraph puts the error at ±10-15px on a 26px row. That flow is exactly the one that lost Trey McBride at 2.6. `scripts/sleeper_draft_console.js` derives no coordinate from an image at all, which is the actual fix; the mitigations below are for the residue only.
+  - For a one-off control the console does not wrap (CLAIM, the ⚙ menu), use a **ref from the find tool**, never a pixel.
+  - ⚠️ **The AUTO-PICK toggle is the known exception and it does NOT respond to synthetic events** — not `.click()`, not a full pointerdown/mousedown/pointerup/mouseup/click sequence. Only a real click moves it. Its element is `.autopick-toggle`; find it by class. The queue icon, by contrast, takes a plain `.click()` fine.
+  - ⚠️ **Icon box sizes rot and have already been wrong once** — they are 22×22 (star) and 16×16 (queue) today, not the 42×44 / 24×24 this file used to record. **Match on the image `src`.** Geometry selectors are the pixel problem wearing a different hat.
+- **Queue-arm searches use the FULL "First Last" name — never surname-only.** The Gabe Nabers incident: "Nabers" was typed just as Malik Nabers got sniped at 5.1; Sleeper instantly hides drafted players, the fullback Gabe Nabers (ADP 999) floated to row 1, and a blind positional click queued him. A full-name filter goes to ZERO rows when the target dies mid-action, so the stray click no-ops instead of queueing a random fullback. Corollary: never click a row icon you haven't verified by content — position alone lies during state changes. **`ffFind`/`ffDraft`/`ffQueue` enforce this for you**: they match the full name exactly, fold apostrophes, and **refuse on ambiguity rather than guessing**, so a Gabe-Nabers substitution cannot pass them. Type the full name into them for the same reason you would have typed it into the box.
 - **On the clock with a stale ladder: the search box IS the availability check.** Type the top surviving ladder name (~5-10s) — the row appearing = he's alive = FIRE. Do NOT run a fetch+merge+engine cycle on your own clock to "re-rank for confidence"; engine re-ranks are for BETWEEN windows, or when the entire ladder is confirmed dead. Pick 62 anatomy: queue-arm had failed, ladder was Daniels→Burrow→Hurts with Burrow visibly gone on the board; the correct play was search-verify Daniels immediately (alive → fire, ~15s total); instead a full sync ran first and the fire landed at 0:13. Bot rooms pause on our clock so it cost nothing — a human room punishes that habit with a timeout.
 - **Fire first, narrate after.** On our clock, the click comes BEFORE any chat message, recap, or non-essential screenshot. Mock #2's near-misses (pick 15 fired at 00:28) were caused by composing commentary inside the window, not by slow polling.
 - **Clear the search filter immediately after every pick** — triple-click the box → Delete, per the clearing rule above. **Never ctrl+a.** A stale filter hides the board later. On the completion screen the search box is gone entirely — that's the tell the draft ended.
@@ -302,7 +356,7 @@ Fallbacks: J.Love (same logic, more variance) · Egbuka if both RBs vanish.
 - **If this was the real draft:** stand up the in-season cadence — Tuesday waiver report, Thursday and Sunday morning lineup checks, trade evaluation on demand. **The pre-written prompts for these did not survive Cowork** (they lived in a project doc that could not be exported); they need rebuilding as real scheduled scripts. Tracked in `TODO.md`.
 
 ## Engine quick-reference
-`python3 draft_engine.py <my_slot> [teams=8] [rounds=16] [draft_id]` reading `picks.json` + `players_data.json` (+ optional `slot_names.json`) from cwd. **`my_slot` is required** — it used to default to 3, which meant a forgotten argument produced a complete, confident, wrong advisory that looked identical to a correct one. It now exits with usage instead. Get the real value from the draft's `draft_order` for user_id `1390750540631150592`.
+`python draft_engine.py <my_slot> [teams=8] [rounds=16] [draft_id]` reading `picks.json` + `players_data.json` (+ optional `slot_names.json`) from cwd. **`my_slot` is required** — it used to default to 3, which meant a forgotten argument produced a complete, confident, wrong advisory that looked identical to a correct one. It now exits with usage instead. Get the real value from the draft's `draft_order` for user_id `1390750540631150592`.
 
 **The input gate (added 2026-08-08).** Requiring `my_slot` stopped the *forgotten* argument; it did nothing about the *wrong* one, which is the likelier failure — every wrong seat 1..8 passed the only check there was, and `roster_id 3` sits one line from `draft_order` in `docs/league.md`, which makes `3` the most attractive wrong value in the project. The engine now cross-checks all four hand-supplied inputs against evidence already on disk, before computing any advice:
 

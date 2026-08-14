@@ -131,8 +131,8 @@ staged set**. One refresh = one commit.
 ## Running the engine
 
 ```bash
-python3 scripts/merge_picks.py <draft_id>   # from the repo ROOT — refreshes picks.json
-python3 scripts/run_engine.py               # from the repo ROOT — everything else is read
+python scripts/merge_picks.py <draft_id>   # from the repo ROOT — refreshes picks.json
+python scripts/run_engine.py               # from the repo ROOT — everything else is read
 ```
 
 `run_engine.py` is the way in. It reads your seat, the team count, the round count and the roster
@@ -150,8 +150,8 @@ Overrides exist and are never quiet — `--teams`, `--rounds`, `--draft-id` each
 that they won. `--dry-run` resolves everything and launches nothing.
 
 ```bash
-python3 scripts/run_engine.py 3             # state the seat yourself (before draft_order fills)
-python3 scripts/run_engine.py --dry-run     # what would it use, and where did each value come from
+python scripts/run_engine.py 3             # state the seat yourself (before draft_order fills)
+python scripts/run_engine.py --dry-run     # what would it use, and where did each value come from
 ```
 
 **It refuses a draft it cannot model.** A non-snake or third-round-reversal draft is a hard stop
@@ -164,7 +164,7 @@ out loud, every time.
 
 ```bash
 cd draft-kit
-python3 draft_engine.py <briggsy_slot> [teams=8] [rounds=16] [draft_id]
+python draft_engine.py <briggsy_slot> [teams=8] [rounds=16] [draft_id]
 ```
 
 Two directories, deliberately: the merge script runs from the repo root, the engine from
@@ -206,8 +206,8 @@ which source it used.
 ## Validating the board
 
 ```bash
-python3 scripts/validate_board.py           # static + cross-surface, milliseconds, offline
-python3 scripts/validate_board.py --full    # adds a real-engine replay of the lab feed
+python scripts/validate_board.py           # static + cross-surface, milliseconds, offline
+python scripts/validate_board.py --full    # adds a real-engine replay of the lab feed
 ```
 
 Checks all 174 rows — never a sample, because both known break modes are latent: a float

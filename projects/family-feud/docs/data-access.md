@@ -94,9 +94,36 @@ older docs and are **false in this environment**:
 | Cowork-era rule | Reality here |
 |---|---|
 | "bash curl to api.sleeper.app is proxy-blocked — use WebFetch" | curl works. WebFetch is **banned**. |
-| "WebFetch caches 15 min — append `?cb=1`, `?cb=2`" | No cache. `?cb=` is pointless noise. |
+| "WebFetch caches 15 min — append `?cb=1`, `?cb=2`" | ⚠️ **HALF-WRONG, AND THE WRONG HALF WAS LOAD-BEARING — corrected 2026-08-14.** The *reason* was wrong (it was never WebFetch's cache) and the *remedy* is mandatory. See below. |
 | "Never filter picks with 'greater than N' — use inclusive ranges" | That was prompt-engineering around WebFetch's summarizer model. curl returns raw JSON; filter it in code. |
 
-The **substance** behind that last one still matters, though, and survives the environment
+🚨 **THE CACHE-BUSTER: THE OLD ROW SAID "NO CACHE. `?cb=` IS POINTLESS NOISE." IT IS NOT.**
+The cache is **Cloudflare's edge, not curl's and not WebFetch's** — so "curl has no cache" is a true
+sentence about the wrong thing, and deleting the nonce on the strength of it removed a real guard.
+
+Measured on this machine 2026-08-14, three consecutive bare fetches of
+`/v1/draft/1390509994847240192`:
+
+```
+cache-control: public, s-maxage=30, stale-while-revalidate=300, stale-if-error=600
+cf-cache-status: EXPIRED  →  HIT  →  HIT
+```
+The same URL with a **unique** nonce returned `MISS` all three times. `stale-while-revalidate=300`
+means the edge may hand you a **five-minute-old** answer, and `/picks` carries the identical policy.
+
+**Append `?cb=<unique nonce>` to every Sleeper read.** The nonce must be unique **per call** — one
+fixed at startup is just a second cache key. A `Cache-Control: no-cache` **request** header does
+NOT work; Cloudflare ignores it. `merge_picks.picks_url()` and the mule's `Fetch-Source` already
+do this; hand-typed curls are the gap.
+
+Why it matters more than it sounds: a stale response is a **contiguous prefix**, so it passes the
+gap gate, the duplicate gate, the contamination gate and the engine's integrity gate — every guard
+here checks *shape* or *provenance*, and none checks *freshness*. Insight 020 measured the
+un-busted URL behind on **76 of 77 observations** of a live draft, by up to 16 picks. And seconds
+after START DRAFT the bare URL said `status: pre_draft, draft_order: null` while the busted one
+said `drafting, draft_order: {"1390750540631150592": 5}` — same second, opposite answers, **and the
+stale one reads exactly like a completed check.**
+
+The **substance** behind the third row still matters too, and survives the environment
 change: `/picks` is cumulative, so every fetch must be merged on `pick_no` and never leapfrogged.
 The engine hard-fails on gaps. See the runbook's Step 3.

@@ -43,7 +43,9 @@ draft-kit/       the draft-day arsenal (run the engine from in here)
 
 newsletter/      The Nightly Feud machinery + the mule
                  data/inbox/   mule cargo (gitignored — a cache, not source)
-                 data/state/   watcher baseline + DRAFT_ALERTS.md (gitignored)
+                 data/state/   last_seen.json + ladder.json are gitignored runtime scratch;
+                               DRAFT_ALERTS.md is TRACKED — it is the only channel the
+                               STARTING GUN has, and it writes only on a real transition
 scripts/         install-mule.ps1     — registers and verifies the hourly mule
                  install-watcher.ps1  — same, for the draft-state watcher
                  merge_picks.py       — fetches /picks and merges into picks.json;
@@ -111,7 +113,7 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         section [2], who the consensus ranks that the board does
                                         not carry — the half a rank-gap metric cannot see.
                                         → docs/insights/018
-tests/           861 tests: python -m unittest discover -s tests  (run from the root)
+tests/           907 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```

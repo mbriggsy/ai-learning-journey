@@ -134,7 +134,9 @@ Aug 26 is gone, and good riddance: the draft date is a handshake between eight p
 move earlier**, so a fixed date was the wrong shape. `scripts/watch_draft_state.py` runs hourly at
 :35 and fires on the actual transition — `start_time` going non-null, `draft_order` populating,
 `status` leaving `pre_draft`, a seat moving or vanishing, or the draft being re-created. It writes
-to `newsletter/data/state/DRAFT_ALERTS.md` (gitignored), **never a notification** — Anthropic push
+to `newsletter/data/state/DRAFT_ALERTS.md` (**tracked in git since 2026-08-14** — it is the only
+channel the STARTING GUN has, and the nightly newsletter now surfaces it too), **never a
+notification** — Anthropic push
 and email are broken account-wide for this account, so an alert that needs one does not exist.
 
 **Read that file; it will not come to you.** And still check `meta.updated` before trusting a rank.

@@ -169,7 +169,7 @@ wired into the runbook, both detailed immediately below.
 
 ## ▶▶ 2026-08-14 EVENING SESSION — WHAT CHANGED, read this before the ranked list
 
-**Twelve commits. 852 → 907 tests. The board's ordering was refreshed and four things that could
+**19 commits. 852 → 907 tests. The board's ordering was refreshed and four things that could
 have cost a pick were found and fixed.** None of it was edge; all of it was correctness. The
 honest headline stands: **there is no pick left that more analysis can buy.**
 
@@ -977,7 +977,7 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **861 tests**, 0 skips on this machine
+gate went **13 findings → 0** by fixing surfaces. **907 tests**, 0 skips on this machine
 (`python -m unittest discover -s tests` from the root); on a clean clone it is 852 with **16 skips**
 — 2 live-cargo probes plus **9** that need the gitignored consensus/ADP caches
 (`draft-kit/cache/fp_ecr.csv.gz`, `ffc_adp.json.gz`) plus **5** (`test_build_curves.TestTheCurveShape`)
@@ -1160,7 +1160,12 @@ produce **byte-identical advisories** on the 120-pick lab feed at prefixes 1, 3,
 
 ## 0. Start with `/brief`
 
-Twenty-one insight docs now exist. Each has a documented wrong answer that looks right. Read them
+🚨 **Read [`025`](docs/insights/025-the-click-reported-success-and-drafted-nobody.md) before
+touching the browser half.** `ffDraft` returned `{"clicked": true}` and drafted nobody; the cause
+is recorded as UNRESOLVED rather than guessed, and the experiment that settles it is at the top of
+this file.
+
+Twenty-five insight docs now exist. Each has a documented wrong answer that looks right. Read them
 before designing, not after debugging.
 
 **Read [`021`](docs/insights/021-the-simulation-had-a-closed-form-and-was-measuring-its-own-sampler.md)
@@ -1279,7 +1284,8 @@ rather than assumed.
 
 - ~~**U9 draft-state watcher**~~ ✅ **SHIPPED 2026-08-07**, hardened 2026-08-08. Scheduled task
   *Family Feud Draft Watcher* runs hourly at :35, six minutes behind the mule. Writes to
-  `newsletter/data/state/DRAFT_ALERTS.md` (gitignored). **Nothing to do here — but know it exists**,
+  `newsletter/data/state/DRAFT_ALERTS.md` — **TRACKED since 2026-08-14**, because it is the only
+  channel the STARTING GUN has. **Nothing to do here — but know it exists**,
   because it is what tells you the draft date appeared or moved. If it ever needs re-registering
   after a folder move: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-watcher.ps1`
   Four ways it could go deaf are now closed: a **lost baseline** (unreadable snapshot) alerted and

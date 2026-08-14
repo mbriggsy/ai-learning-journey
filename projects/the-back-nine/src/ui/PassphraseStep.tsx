@@ -5,6 +5,15 @@
  * feedback (names which floor is unmet as text — back-nine-design intake law, plan U8 §A11y) and the
  * `aria-disabled` + announced gate-block (never native `disabled` — an AT user must hear WHY the
  * load-bearing security control won't advance).
+ *
+ * ERROR IDENTIFICATION (WCAG 2.2 SC 3.3.1) — all THREE channels, not just the floor. Announcing an
+ * error is half the contract; the other half is naming the field that holds it, so an AT user who
+ * tabs back after the announcement still finds the control marked invalid and pointed at its
+ * reason. The floor channel always had this; the mismatch channel set `aria-invalid` with no note
+ * to point at, and `externalError` set neither (found 2026-08-14 on the first rendered walk of
+ * RecoveryFlow — a green suite cannot see an orphaned alert). `externalError` marks the PASSPHRASE
+ * field because all three consumers pass a pairing collision about the value being set here
+ * (RecoveryFlow/RestoreFlow `pairError`, SaveFlow `recoveryError`) — never the confirm field.
  */
 import { useEffect, useId, useRef, useState } from 'react'
 import { copy } from './copy'
@@ -12,6 +21,14 @@ import { focusHeading } from '@intake/a11y'
 import type { Announcer } from '@intake/a11y'
 import { evaluatePassphrase, passphrasesMatch, EMPTY_VERDICT, type PassphraseVerdict } from './passphraseStrength'
 import type { FloorCheckedPassphrase } from '@crypto/kdf'
+
+/** Join whichever note ids are live, per `aria-describedby`'s space-separated contract; `undefined`
+ *  when none is, so the attribute is omitted rather than rendered empty (an empty one points an AT
+ *  user at nothing). Both fields can carry two notes at once — the floor and the pairing bounce. */
+function describedBy(...ids: readonly (string | null)[]): string | undefined {
+  const live = ids.filter((id): id is string => id !== null)
+  return live.length > 0 ? live.join(' ') : undefined
+}
 
 export function PassphraseStep({
   heading,
@@ -51,6 +68,8 @@ export function PassphraseStep({
   const passId = useId()
   const confirmId = useId()
   const noteId = useId()
+  const mismatchId = useId()
+  const externalErrId = useId()
 
   const [passphrase, setPassphrase] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -126,8 +145,11 @@ export function PassphraseStep({
             autoCorrect="off"
             spellCheck={false}
             value={passphrase}
-            aria-invalid={showFloor}
-            aria-describedby={showFloor ? noteId : undefined}
+            aria-invalid={showFloor || externalError !== null}
+            aria-describedby={describedBy(
+              showFloor ? noteId : null,
+              externalError !== null ? externalErrId : null,
+            )}
             disabled={busy}
             onChange={(e) => {
               setPassphrase(e.target.value)
@@ -167,6 +189,7 @@ export function PassphraseStep({
             spellCheck={false}
             value={confirm}
             aria-invalid={showMismatch}
+            aria-describedby={showMismatch ? mismatchId : undefined}
             disabled={busy}
             onChange={(e) => {
               setConfirm(e.target.value)
@@ -186,14 +209,14 @@ export function PassphraseStep({
           </button>
         </div>
         {showMismatch && (
-          <p className="save-field__note" role="alert">
+          <p className="save-field__note" id={mismatchId} role="alert">
             {copy.passphraseMismatch}
           </p>
         )}
       </div>
 
       {externalError && (
-        <p className="save-field__note save-field__note--block" role="alert">
+        <p className="save-field__note save-field__note--block" id={externalErrId} role="alert">
           {externalError}
         </p>
       )}

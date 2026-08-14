@@ -946,7 +946,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
 
 ## Operational landmines — these bite hands
 
-*Engineering lessons live in [`docs/insights/`](docs/insights/) (108 of them; cite by full path + slug).
+*Engineering lessons live in [`docs/insights/`](docs/insights/) (109 of them; cite by full path + slug).
 These are the mechanical ones that keep costing hours.*
 
 - **A filed prescription in this repo is ~25-40% executable as written** — thrice-measured (5-of-11,

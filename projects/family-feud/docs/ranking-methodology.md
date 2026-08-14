@@ -38,7 +38,7 @@ Every rank on the board *was* built in four passes. Read them as the four forces
 
 ### Layer 1 — The consensus ordering
 
-The board's rank **is** FantasyPros' Full PPR redraft ECR, restricted to the 174 players this board carries. That anchoring is deliberate: **a board is a draft order, not a wish list.** If the room takes Brock Bowers 17th and your board says he's worth 43rd, congratulations — you have a very principled board and you will never roster Brock Bowers. Rank has to reflect where a player can actually be acquired, then the deltas (below) tell you whether that price is a bargain or a tax.
+The board's rank **is** FantasyPros' Full PPR redraft ECR, restricted to the 174 players this board carries. That anchoring is deliberate: **a board is a draft order, not a wish list.** If the room takes Brock Bowers where the consensus puts him and your board says he is worth two rounds later, congratulations — you have a very principled board and you will never roster Brock Bowers. *(This sentence used to quote "17th" against "43rd". Board 17 is Trey McBride; Bowers has never been 17. The live figures are in the generated table under [Reading vbdDelta](#reading-vbddelta-when-board-and-math-disagree) and are not duplicated here.)* Rank has to reflect where a player can actually be acquired, then the deltas (below) tell you whether that price is a bargain or a tax.
 
 *Historical note, because it explains the shape of everything below:* the ranks used to be a hand-made mash of eight expert sources plus training-camp reporting. That process produced the badges and notes this board still carries, and it is why the judgment layer reads as an argument *with* the rank rather than an input *to* it.
 
@@ -139,17 +139,46 @@ Every player carries three math fields: `vorp` (the number above), `vbdRank` (th
 **Positive delta** → the math likes him *more* than his board slot. Taking him at board price is getting paid.
 **Negative delta** → we're knowingly drafting him *ahead* of the raw math. There'd better be a reason — and there is; that's the point of the layers.
 
-Case studies from the current board:
+Case studies from the current board — **the extremes among players who are actually drafted and
+who clear replacement**, so the table below moves when the board moves:
 
-**Brock Bowers, −26** (board 17, math 43). We pay a real premium over raw season-total math, because season totals miss the *weekly* edge: an elite TE wins you a position every single week while seven other teams start a guy named Brenton. Also Layer 1: he goes in round 2-3 whether we like it or not.
+<!-- BEGIN GENERATED vbd-cases — rewritten by scripts/build_board.py. Do not hand-edit. -->
+| delta | player | board | math | reading |
+|-------|--------|-------|------|---------|
+| **-30** | QB Dak Prescott | 77 | 107 | we draft him AHEAD of the raw math |
+| **-24** | TE Brock Bowers | 19 | 43 | we draft him AHEAD of the raw math |
+| **-23** | QB Justin Herbert | 68 | 91 | we draft him AHEAD of the raw math |
+| **+19** | RB Bucky Irving | 58 | 39 | the math likes him MORE than his board slot |
+| **+19** | RB D'Andre Swift | 60 | 41 | the math likes him MORE than his board slot |
+| **+18** | RB Breece Hall | 41 | 23 | the math likes him MORE than his board slot |
 
-**Josh Jacobs, +18** (board 45, math 27). The market hears regression whispers; the math sees locked-in volume. That's a "value if he's there" flag — tempered by his ⚠️ badge, not overridden by the math.
+**2 of the 3 largest taxes are quarterbacks, and that is structure rather than judgment.** This league starts ONE quarterback across eight teams, so replacement is QB12 and the curve is nearly flat beneath it — `vbdRank` sinks mechanically. Read the non-QB rows for what the layers actually do.
 
-**Josh Allen, +6** (board 24, math 18). Even the math says his fair price is picks ~17-24 — which is why doctrine says only take a *fall*. A six-spot slide isn't a steal; it's retail with a coupon. Steal means past pick 24.
+**Defenses: deltas span +40 to +68 across 14 rows, with 4 at the maximum** — not one shared number. Ignore them either way.
+<!-- END GENERATED vbd-cases -->
 
-**De'Von Achane, +5** (board 16, math 11). Math loves the touches; the Miami Rule caps the rank. Judgment overrides math where math can't see Malik Willis.
+> ⚠️ **Every number in that table used to be hand-typed here, and on 2026-08-14 all five were
+> wrong** — Bowers was quoted at −26 (board 17) when he was board 19 at −24, and **board 17 was
+> Trey McBride**, so one player's rank had been attributed to another. "All defenses, +68" was true
+> of 4 of 14 rows. They are derived now, for the same reason every other figure in this file is.
 
-**All defenses, +68.** Ignore these. VBD genuinely believes a top DST is worth a round-8 pick — season totals say so — but week-to-week DST scoring is a coin flip and streaming off the wire replaces most of it. Doctrine keeps K/DEF in rounds 15-16. The engine treats these deltas as decoration.
+**What the signs mean, which does not change when the ranks do:**
+
+- **A negative delta on an elite TE is the premium we pay on purpose.** Season totals miss the
+  *weekly* edge — an elite tight end wins you a position every single week while seven other teams
+  start a guy named Brenton. Layer 1 applies too: he goes in round 2-3 whether we like it or not.
+- **A positive delta on a high-volume back is a "value if he's there" flag**, not an instruction.
+  The market hears regression whispers; the math sees locked-in touches. A ⚠️ badge tempers it —
+  the math does not override the badge.
+- **A small positive delta on a quarterback is retail with a coupon, not a steal.** If the math's
+  own fair price is roughly where he is going, a few spots of slide is nothing. Steal means a real
+  fall — see the QB-in-rounds-6-9 doctrine above.
+- **A negative delta can be judgment the math cannot see at all.** Situational overrides (the Miami
+  Rule) cap a rank the touch counts love. That is the layer system working, not a disagreement.
+- **Defenses: ignore the deltas in both directions.** VBD genuinely believes a top DST is worth a
+  round-8 pick — season totals say so — but week-to-week DST scoring is a coin flip and streaming
+  off the wire replaces most of it. Doctrine keeps K/DEF in rounds 15-16, and the engine treats
+  these deltas as decoration.
 
 **Rule of thumb: VBD is the tie-breaker, never the boss.** It never reaches across tiers.
 

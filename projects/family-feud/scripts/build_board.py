@@ -736,8 +736,69 @@ def methodology_blocks(source, curve_path=CURVE):
 
     return {"baselines": "\n".join(rows),
             "worked-example": "\n".join(ex),
+            "vbd-cases": vbd_case_block(source),
             "curve-provenance": prov,
             "snapshot-date": snapshot}
+
+
+def vbd_case_block(source):
+    """The vbdDelta case studies, DERIVED. Every one of them used to be hand-typed and every one
+    of them was wrong.
+
+    Measured 2026-08-14 against the shipped board: the doc said Bowers -26 (board 17, math 43) when
+    he was board 19 / delta -24 -- AND BOARD 17 WAS TREY McBRIDE, so one player's rank was
+    attributed to another. Jacobs +18 was +16, Allen +6 was +7, Achane +5 was +8, and "All
+    defenses, +68" was true of 4 of 14 rows against a spread of 40-68. Five examples, five wrong,
+    in the document that explains why the board ranks what it ranks.
+
+    A regex validator was the other option and it re-rots on the next re-rank; deriving cannot.
+    KTD-1: the numbers live in one place and every surface reads them.
+
+    THE FILTER IS THE WHOLE DESIGN, and picking it wrong teaches the opposite of the lesson. The
+    raw extremes are Stafford -65, Nix -64, Goff -62 -- every one a backup quarterback, and none of
+    them an example of "we knowingly draft ahead of the math." They are the 1-QB replacement effect:
+    this league starts one QB across eight teams, so replacement is QB12 and everything below it
+    carries negative vorp, which drags `vbdRank` far below board rank mechanically. Restricting to
+    players who are actually drafted (board rank inside the 128 picks) AND above replacement keeps
+    the cases about judgment. The QB share is then STATED rather than hidden, because even inside
+    that filter the flat QB curve still dominates the tax side.
+    """
+    base = ((source["meta"].get("vbd") or {}).get("baselineWaiver") or {})
+    # How many players actually come off the board, read from the shape rather than assumed. On
+    # this league that is 8 x 16 = 128 -- and it happens to be EXACTLY the number of skill players
+    # ranked above every K and DEF, because rerank.py sinks those below all skill rows.
+    shape = (source["meta"].get("shape") or {})
+    picks = (shape.get("teams") or 0) * (shape.get("rounds") or 0)
+    rows = [p for p in source["players"]
+            if p.get("pos") not in ("K", "DEF") and p.get("vbdDelta") is not None]
+    drafted = [p for p in rows
+               if (not picks or p.get("r", 10 ** 6) <= picks) and (p.get("vorp") or 0) > 0]
+
+    out = ["| delta | player | board | math | reading |",
+           "|-------|--------|-------|------|---------|"]
+    for p in sorted(drafted, key=lambda p: p["vbdDelta"])[:3]:
+        out.append(f"| **{p['vbdDelta']:+d}** | {p['pos']} {p['name']} | {p['r']} | "
+                   f"{p['vbdRank']} | we draft him AHEAD of the raw math |")
+    for p in sorted(drafted, key=lambda p: -p["vbdDelta"])[:3]:
+        out.append(f"| **{p['vbdDelta']:+d}** | {p['pos']} {p['name']} | {p['r']} | "
+                   f"{p['vbdRank']} | the math likes him MORE than his board slot |")
+
+    qb_taxes = sum(1 for p in sorted(drafted, key=lambda p: p["vbdDelta"])[:3] if p["pos"] == "QB")
+    out.append("")
+    out.append(f"**{qb_taxes} of the 3 largest taxes are quarterbacks, and that is structure rather "
+               f"than judgment.** This league starts ONE quarterback across eight teams, so "
+               f"replacement is QB{base.get('QB', '?')} and the curve is nearly flat beneath it — "
+               f"`vbdRank` sinks mechanically. Read the non-QB rows for what the layers actually do.")
+
+    defs = [p for p in source["players"] if p.get("pos") == "DEF" and p.get("vbdDelta") is not None]
+    if defs:
+        ds = sorted({p["vbdDelta"] for p in defs})
+        top = max(ds)
+        n_at = sum(1 for p in defs if p["vbdDelta"] == top)
+        out.append("")
+        out.append(f"**Defenses: deltas span {min(ds):+d} to {top:+d} across {len(defs)} rows, with "
+                   f"{n_at} at the maximum** — not one shared number. Ignore them either way.")
+    return "\n".join(out)
 
 
 def write_methodology(source, path=METHODOLOGY, curve_path=CURVE):

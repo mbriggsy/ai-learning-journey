@@ -252,6 +252,57 @@ class TestDerivations(unittest.TestCase):
         self.assertIn("March 4, 2026", line)
         self.assertNotIn("2099", line, "the snapshot line is fed by meta.updated")
 
+    def test_the_vbd_case_studies_are_DERIVED_and_the_filter_is_the_design(self):
+        """Every one of those five case studies used to be hand-typed, and on 2026-08-14 every one
+        was wrong: Bowers quoted -26 at board 17 when he was board 19 at -24 -- and BOARD 17 IS
+        TREY McBRIDE, so one player's rank had been attributed to another. "All defenses, +68" was
+        true of 4 of 14 rows against a spread of 40-68.
+
+        THE FILTER IS WHAT THIS TEST IS REALLY FOR. The raw delta extremes on this board are
+        Stafford -65, Nix -64, Goff -62 -- every one a BACKUP QUARTERBACK, and none of them an
+        example of "we knowingly draft ahead of the math". They are the 1-QB replacement effect:
+        one QB starts across eight teams, so replacement is QB12 and everything under it carries
+        negative vorp, dragging vbdRank down mechanically. A generator that printed the raw
+        extremes would teach the exact opposite of this section's lesson while looking correct.
+        """
+        block = B.methodology_blocks(real_source())["vbd-cases"]
+        src = real_source()
+        by_name = {p["name"]: p for p in src["players"]}
+
+        rows = [ln for ln in block.splitlines() if ln.startswith("| **")]
+        self.assertGreaterEqual(len(rows), 4, "the table must carry taxes AND bargains")
+        for ln in rows:
+            cells = [c.strip() for c in ln.strip("|").split("|")]
+            name = cells[1].split(" ", 1)[1]
+            p = by_name[name]
+            self.assertEqual(cells[0], f"**{p['vbdDelta']:+d}**", f"{name} delta is not the board's")
+            self.assertEqual(cells[2], str(p["r"]), f"{name} board rank is not the board's")
+            self.assertEqual(cells[3], str(p["vbdRank"]), f"{name} math rank is not the board's")
+            self.assertGreater(p["vorp"], 0, f"{name} is below replacement -- the filter let in the "
+                                             "QB artifact this block exists to keep out")
+
+        shape = src["meta"]["shape"]
+        picks = shape["teams"] * shape["rounds"]
+        for ln in rows:
+            name = [c.strip() for c in ln.strip("|").split("|")][1].split(" ", 1)[1]
+            self.assertLessEqual(by_name[name]["r"], picks,
+                                 "a case study nobody drafts is not a case study")
+
+    def test_the_vbd_block_says_the_QB_share_out_loud(self):
+        """Even inside the filter the flat QB curve dominates the tax side. Hiding that would let a
+        reader take a structural artifact for a judgment premium -- so the block counts it."""
+        block = B.methodology_blocks(real_source())["vbd-cases"]
+        self.assertRegex(block, r"\*\*\d of the 3 largest taxes are quarterbacks")
+        self.assertIn("structure rather than judgment", block)
+
+    def test_the_vbd_block_states_the_DEF_SPREAD_not_one_shared_number(self):
+        """The line it replaces was "All defenses, +68" -- true of 4 of 14 rows."""
+        block = B.methodology_blocks(real_source())["vbd-cases"]
+        defs = [p for p in real_source()["players"] if p["pos"] == "DEF"]
+        self.assertIn(f"across {len(defs)} rows", block)
+        self.assertIn(f"{sum(1 for p in defs if p['vbdDelta'] == max(x['vbdDelta'] for x in defs))} "
+                      f"at the maximum", block)
+
     def test_the_carried_constants_really_are_flat_PER_TIER(self):
         """The label `carried:kdef-tier-flat` promises exactly this and nothing was enforcing it.
         It had already gone false: measured at 917c498a, K tier 2 held {6.0, -2.0} and tier 3 held

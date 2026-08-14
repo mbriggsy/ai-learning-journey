@@ -153,6 +153,82 @@ def parse_cliffs(stdout):
     return out
 
 
+def parse_our_needs(stdout):
+    """The unfilled STARTER slots on OUR roster, read off the engine's own ROSTERS / NEEDS block.
+
+    Parsed rather than recomputed on purpose -- `draft_engine.needs()` already owns this, reading
+    `STARTERS` (which arrives from the live draft object via FF_STARTERS, so a league that drops
+    the kicker is handled) and the FLEX arithmetic. A second implementation here is exactly how
+    consensus.py and market.py drifted apart.
+
+    The engine marks our row with `<== YOU`, which is also the only thing that makes this safe: a
+    positional guess at which line is ours would be wrong the moment the seat changes.
+    Returns [] for "starters full", or e.g. ["Kx1", "DEFx1"].
+    """
+    for line in _section(stdout, "ROSTERS / NEEDS"):
+        if "<== YOU" not in line or "needs:" not in line:
+            continue
+        tail = line.split("needs:", 1)[1].replace("<== YOU", "").strip()
+        if not tail or tail.lower().startswith("starters full"):
+            return []
+        return [t.strip() for t in tail.split(",") if t.strip()]
+    return []
+
+
+def our_remaining_picks(our_pick, teams, rounds):
+    """Every pick number still ours, from `our_pick` to the end of the draft, inclusive."""
+    if not our_pick:
+        return []
+    slot = slot_for_pick(our_pick, teams)
+    return [n for n in range(our_pick, teams * rounds + 1) if slot_for_pick(n, teams) == slot]
+
+
+# The starter slots that CANNOT be filled from the queue, ever, on this board.
+MANDATORY_OFF_BOARD = ("K", "DEF")
+
+
+def mandatory_squeeze(needs, remaining):
+    """Is the queue about to starve a slot the roster REQUIRES? Returns (level, message) or None.
+
+    THE ARITHMETIC, measured 2026-08-14 and exact rather than estimated: this board's best K sits
+    at rank 158 and its best DEF at 151, while an 8x16 draft is 128 picks -- so **the top 128 board
+    ranks are 128 skill players and ZERO K/DEF**, by construction (`rerank.py` sinks both below
+    every skill player). BEST AVAILABLE is defined as lowest-board-rank-available, so **the queue
+    can never contain a kicker or a defense at any depth.** Verified at picks 88/104/112/118 of the
+    committed lab feed: eight names, all skill, every time, while the same output printed `K T2`
+    in its own tier-cliff block.
+
+    That is harmless while a human is picking -- the engine prints `needs: Kx1` and he reads it.
+    It bites in exactly one scenario, and that scenario is RECORDED AS HAVING HAPPENED: miss one
+    clock and Sleeper pins the team to auto-pick FOR THE REST OF THE DRAFT (Mock #2, pick 79 ->
+    autopicks at 82/95/98/111/114), and auto-pick drains YOUR QUEUE top-down before falling back
+    to Sleeper's board. A stocked queue then spends your last picks on a third quarterback while
+    a mandated slot stays empty and scores zero all season.
+
+    ⚠️ THE REMEDY IS THE NULL MODEL, AND THAT IS DELIBERATE. This does NOT re-rank the queue by
+    need. Sorting the queue by roster need is one step from sorting it by vorp, which insight 024
+    recorded finishing 6 RB / 1 WR / 0 K. The floor control wins here: with an EMPTY queue,
+    Sleeper's own board took Dicker (K T1) and the Patriots (DEF T2) on schedule in Mock #2. So the
+    advice is draft them yourself, or clear the queue and let the null model do it -- never a
+    cleverer queue.
+    """
+    short = [n for n in needs if n.split("x")[0] in MANDATORY_OFF_BOARD]
+    if not short:
+        return None
+    owed = sum(int(n.split("x")[1]) for n in short if "x" in n)
+    slack = len(remaining) - owed
+    what = " and ".join(n.split("x")[0] for n in short)
+    if slack < 0:
+        return ("CRITICAL", f"{what} unfilled with only {len(remaining)} pick(s) left -- you can no "
+                            f"longer fill every mandated slot.")
+    if slack == 0:
+        return ("CRITICAL", f"{what} unfilled and EXACTLY {len(remaining)} pick(s) left. Every "
+                            f"remaining pick is spoken for.")
+    if slack <= 2:
+        return ("WARNING", f"{what} unfilled with {len(remaining)} pick(s) left ({slack} to spare).")
+    return None
+
+
 def parse_provenance(stdout):
     """The engine's NON-FATAL channel -> (seat_unverified, notes, checked).
 
@@ -399,7 +475,13 @@ def precompute(feed, slot, teams, rounds, draft_id, pool_size=48, at=None, cargo
         survivors = {n for _, n in prows} | {n for _, _, n in pleans}
 
     queue = [n for _, n in base]
+    our_needs = parse_our_needs(base_out)
+    remaining = our_remaining_picks(our_pick, teams, rounds)
+    squeeze = mandatory_squeeze(our_needs, remaining)
     return {
+        "our_needs": our_needs,
+        "our_remaining_picks": remaining,
+        "mandatory_squeeze": list(squeeze) if squeeze else None,
         # Stamped so the artifact can be audited after the fact. The contaminated ladder.json found
         # on 2026-08-14 carried a complete, plausible round-6 queue and NO draft_id, so nothing on
         # disk could say which draft it belonged to. "" means the gate was not armed for this run.
@@ -606,6 +688,23 @@ def main(argv=None):
             gone = bool(pcliffs) and pcliffs.get(tier, 0) == 0
             flag = "  <- EMPTY under the market projection" if gone else ""
             print(f"   {tier:<8} {left} left — empties only if all {left} go before your turn{flag}")
+
+    # ABOVE the queue deliberately: this changes what you DO with the list underneath it, and a
+    # warning printed after the thing it qualifies is insight 016's exact defect.
+    if res.get("mandatory_squeeze"):
+        level, msg = res["mandatory_squeeze"]
+        print()
+        print("!" * 70)
+        print(f"!! {level}: THE QUEUE CANNOT FILL A MANDATED SLOT.")
+        print(f"!! {msg}")
+        print("!! This board's best K is rank 158 and best DEF 151; an 8x16 draft is 128 picks, so")
+        print("!! the queue below contains NO kicker and NO defense and structurally never can.")
+        print("!! Miss one clock and Sleeper auto-picks the REST of the draft, draining this queue")
+        print("!! top-down over the empty slot -- which then scores zero every week.")
+        print("!! DO ONE OF: draft the missing slot(s) yourself now, or CLEAR THE QUEUE and let")
+        print("!! Sleeper's own need-aware board fill them (it took Dicker + the Patriots on")
+        print("!! schedule in Mock #2). Do NOT re-sort the queue by need -- insight 024.")
+        print("!" * 70)
 
     print()
     print("  QUEUE THIS ORDER (auto-pick drains it top-down, so a blown clock takes OUR man).")

@@ -526,6 +526,93 @@ class TestEndToEndAgainstTheRealEngine(unittest.TestCase):
         self.assertFalse(any("1390509994847240192" in n for n in res["engine_notes"]))
 
 
+ROSTER_BLOCK = """--- ROSTERS / NEEDS ---
+slot 1: [QB1 RB6 WR5 TE1 K1 DEF1] needs: starters full
+slot 2: [QB1 RB6 WR5 TE1 K1 DEF1] needs: starters full
+slot 3: [QB1 RB6 WR5 TE1] needs: Kx1, DEFx1 <== YOU
+slot 4: [QB2 RB4 WR6 TE1 K1 DEF1] needs: starters full
+--- BEST AVAILABLE ---
+"""
+
+
+class TestTheQueueCannotFillAMandatedSlot(unittest.TestCase):
+    """Measured 2026-08-14, and exact rather than estimated.
+
+    This board's best K is rank 158 and best DEF 151, while an 8x16 draft is 128 picks -- so the
+    top 128 board ranks are 128 skill players and ZERO K/DEF, by construction (rerank.py sinks
+    both below every skill player). BEST AVAILABLE is lowest-board-rank-available, so THE QUEUE
+    CAN NEVER CONTAIN A KICKER OR A DEFENSE at any depth. Confirmed against the committed lab
+    feed at picks 88/104/112/118: eight names, all skill, every time.
+
+    Harmless while a human picks -- the engine prints `needs: Kx1` and he reads it. It bites in
+    one recorded scenario: miss a clock and Sleeper pins the team to auto-pick for the REST of the
+    draft (Mock #2, pick 79 -> autopicks at 82/95/98/111/114), and auto-pick drains the queue
+    top-down before falling back to Sleeper's board.
+
+    In the real lab draft our seat took K at #110 and DEF at #115 -- its last two picks, zero
+    slack. That is the state the CRITICAL test below reproduces.
+    """
+
+    def test_it_reads_OUR_row_not_the_first_one(self):
+        """THE AXIS A NAIVE PARSE GETS WRONG (insight 019). slot 1 is 'starters full' and comes
+        first; a positional read returns [] and the warning silently never fires. The `<== YOU`
+        marker is the only safe anchor, and it also survives the seat changing."""
+        self.assertEqual(PL.parse_our_needs(ROSTER_BLOCK), ["Kx1", "DEFx1"])
+
+    def test_starters_full_is_no_needs(self):
+        block = ROSTER_BLOCK.replace("needs: Kx1, DEFx1 <== YOU", "needs: starters full <== YOU")
+        self.assertEqual(PL.parse_our_needs(block), [])
+
+    def test_a_block_with_no_YOU_marker_returns_nothing_rather_than_guessing(self):
+        self.assertEqual(PL.parse_our_needs(ROSTER_BLOCK.replace(" <== YOU", "")), [])
+
+    def test_remaining_picks_follow_the_snake(self):
+        """Slot 3 in an 8-team snake: 19 (r3, odd) then 30 (r4, even) then 35..."""
+        self.assertEqual(PL.our_remaining_picks(19, 8, 5)[:3], [19, 30, 35])
+        self.assertEqual(PL.our_remaining_picks(110, 8, 15), [110, 115])
+
+    def test_CRITICAL_when_every_remaining_pick_is_spoken_for(self):
+        lvl, msg = PL.mandatory_squeeze(["Kx1", "DEFx1"], [110, 115])
+        self.assertEqual(lvl, "CRITICAL")
+        self.assertIn("EXACTLY 2", msg)
+
+    def test_CRITICAL_when_it_is_already_impossible(self):
+        lvl, _ = PL.mandatory_squeeze(["Kx1", "DEFx1"], [115])
+        self.assertEqual(lvl, "CRITICAL")
+
+    def test_WARNING_inside_two_picks_of_slack(self):
+        self.assertEqual(PL.mandatory_squeeze(["Kx1"], [100, 110, 115])[0], "WARNING")
+
+    def test_SILENT_with_room_to_spare(self):
+        """The negative control. A warning that fires in round 3 is one nobody reads by round 14 --
+        insight 009: a false red teaches the operator to skip the gate."""
+        self.assertIsNone(PL.mandatory_squeeze(["Kx1", "DEFx1"], list(range(20, 120, 10))))
+
+    def test_SILENT_when_only_SKILL_slots_are_short(self):
+        """QB/RB/WR/TE/FLEX are all reachable from the queue, so they are not a squeeze. Warning on
+        them would fire almost every round and drown the one case that matters."""
+        self.assertIsNone(PL.mandatory_squeeze(["QBx1", "FLEXx2"], [110, 115]))
+        self.assertIsNone(PL.mandatory_squeeze([], [115]))
+
+    def test_the_warning_prints_ABOVE_the_queue_it_qualifies(self):
+        """Insight 016: a banner printed after the advisory it qualifies is invisible in a redirect
+        and read last under a clock. MUTANT: move the block below the queue loop and this fails."""
+        with open(os.path.join(ROOT, "scripts", "precompute_ladder.py"), encoding="utf-8") as f:
+            src = f.read()
+        self.assertLess(src.index("CANNOT FILL A MANDATED SLOT"),
+                        src.index("QUEUE THIS ORDER (auto-pick drains it"),
+                        "the squeeze warning must be emitted before the queue")
+
+    def test_the_remedy_is_the_NULL_MODEL_not_a_cleverer_queue(self):
+        """Sorting the queue by roster need is one step from sorting it by vorp, which insight 024
+        recorded finishing 6 RB / 1 WR / 0 K. The floor control wins: an EMPTY queue lets Sleeper's
+        own board fill them, which it did on schedule in Mock #2."""
+        with open(os.path.join(ROOT, "scripts", "precompute_ladder.py"), encoding="utf-8") as f:
+            src = f.read()
+        self.assertIn("CLEAR THE QUEUE", src)
+        self.assertIn("Do NOT re-sort the queue by need", src)
+
+
 class TestTheContaminationGateIsReachable(unittest.TestCase):
     """The gate this file's CALL SITE could never fire, found 2026-08-14.
 

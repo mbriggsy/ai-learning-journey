@@ -28,43 +28,90 @@ defect it caught that the green suite could not, and the one EYE call it leaves.
 ✅ **Tier 1 entry 10's *heir-bracket seat* SHIPPED 2026-08-14** — the household sets its own heir
 bracket, and three shipped comments that asserted a non-existent editability are corrected.
 
-▶ **THE NEXT BUILD (pilot's pick, Briggsy's dealer's-choice grant 2026-08-14) — WALK
-`RecoveryFlow` + `RestoreFlow`, the two *"I lost access to my retirement plan"* screens.**
-NO decided-and-executable build remains in Tier 0/1 — both shipped 2026-08-14, and the rest of the
-top of this queue is **his** (entry 2's withhold fork, entry 3's state scope, entry 5's confirm
-framing, entries 8/9's wordings — **do not start those**). Tier 2 is where the gap to *a friend
-betting real money* now lives, and these two screens are its highest-stakes corner: the product is a
-local-first vault with no server and no password reset, so this pair IS the recovery story. Twice
-today the rendered frame killed a defect a fully green suite could not see; these have **never been
-rendered for a human at all.**
+✅ **THE RECOVERY WALK SHIPPED 2026-08-14 — `RecoveryFlow` + `RestoreFlow` have now been rendered
+for a human, end-to-end, at 1536×791 and 390×844.** Both happy paths were driven to completion
+(recovery → new passphrase → hydrate; and a REAL backup file exported, the vault deleted, and the
+plan restored onto the wiped device), plus the wrong-passphrase, wrong-word, too-short,
+mismatch and recovery-collision error frames, and the U8 export ceremony on the way through.
+Reach was confirmed exactly as filed — every anchor in the old REACH block held. Findings below.
 
-⚑ **WHY THIS ONE AND NOT A KNOWN FIX:** we have zero information about these surfaces, and unknown
-territory on the highest-stakes screens outranks a scoped fix we can already describe. Do discovery
-first; file what the walk finds.
+⚑ **NO-SOLVE DRIVE RECIPE, so the next walk costs minutes not hours.** `?vault=rec` → Unlock
+(passphrase pre-filled) → *"I forgot my passphrase"* → RecoveryFlow. Recovery word for every plant
+is **`lattice harbor cinder vellum 48 thicket`** (`devSeeds.ts:1079`). For RestoreFlow you need a
+real backup FILE and no 13-step intake is required: unlock any plant → Result → **"Save a backup
+file"** → *Download backup* (an `<a>` with a blob URL, **not** a button — a `button:has-text()`
+selector misses it) → then delete the DB and reload. **`indexedDB.deleteDatabase` is BLOCKED while
+the app holds the connection** — fire it, navigate to `about:blank`, then back; deleting and
+reloading in one step silently leaves the vault in place and you land on Unlock wondering why.
 
-⚑ **REACH — verified 2026-08-14, both are drivable in minutes with NO solve:**
-· `RecoveryFlow` ← any vault plant (`?vault=rec`) → Unlock → **"I forgot my passphrase"**
-  (`copy.unlockForgot`). Mounted at `App.tsx:232`, pre-loaded on `entry.kind === 'unlock'` (`:130`).
-· `RestoreFlow` ← ColdStart → **"Restore from your backup"** (`copy.coldStartRestoreAction`), and
-  from the `damaged` branch. Mounted at `App.tsx:216`/`:242`, pre-loaded on `damaged`/`cold` (`:131`).
-  ⚠️ Reaching ColdStart needs an EMPTY vault — this profile has one planted; clear it first
-  (`indexedDB.deleteDatabase('the-back-nine-vault')`, then reload), or you land on Unlock instead.
-· Both are `lazy()` chunks. `App.tsx:44-48` records that `RecoveryFlow`'s real mount is what made a
-  sibling test flake read as a bare timeout and **cost two wrong diagnoses** — do not re-litigate
-  that as a new bug if a test blinks.
+▶ **THE NEXT BUILD — the walk's own findings, ranked. Nothing here needs a new discovery pass.**
 
-⚑ **PRECISION, so the walk is not mis-scoped:** these are *"never seen RENDERED"*, **not** untested —
-`RecoveryFlow.test.tsx` and `RestoreFlow.test.tsx` both exist. The gap is the eye, not the suite.
-Load the four-skill UI loadout, and read the frame as a person who has just lost access to their
-retirement plan — the tone bar on a screen someone hits while frightened is the whole point.
+1. **🔴 THE BACKUP DOOR IS PROMISED AND CANNOT EXIST — and the naive fix is a WORSE dead end.**
+   `unlockWrongCredential` (rendered on BOTH Unlock and RecoveryFlow) ends *"the saved data may be
+   damaged, and your backup is the way in."* The entry graph is a closed loop: `unlock →
+   {began, recover}`, `recover → {began, unlock}` (`App.tsx:206-247`); `RestoreFlow` mounts ONLY on
+   `restore-cold` and `damaged`, and `restore-cold` is reachable only from ColdStart, which requires
+   an EMPTY vault (`App.tsx:145`).
+   ⚑ **DO NOT "just add a door" to `restore-cold`.** `backup.ts:134-135` — `restoreVault` returns
+   `{ok:false, reason:'vault-exists'}` when `loadVault().kind === 'vault'`, and its comment records
+   that the AUTHORITATIVE check re-runs inside the serialized write (TOCTOU). A door would march the
+   user through file → word → new passphrase (**two ~1s KDF derives**) and refuse at the end.
+   ⚑ **The sentence is also mostly FALSE, which shrinks the real defect.** The backup file is
+   decrypted with the RECOVERY WORD — the same credential RecoveryFlow uses. Have the word ⇒ recovery
+   opens the plan and the backup is unnecessary; lack it ⇒ the backup is equally unopenable. A
+   genuinely damaged vault never reaches Unlock (it auto-routes to `damaged` → RestoreFlow). **The one
+   case where the sentence is TRUE:** ciphertext corrupt enough to fail decrypt but intact enough to
+   pass `probeVault`. Closing THAT needs a pre-clear of an unopenable vault, which `RestoreFlow.tsx:8-12`
+   records as **council-killed** (*"the one data-loss path this surface must never reintroduce"*).
+   **So: fix the copy for the healthy-vault screens; the corrupt-ciphertext door is a council-sized,
+   destructive one-way door and is HIS.** Briggsy picked "add the door" 2026-08-14 before the refusal
+   was traced — that clearance is spent, re-ask against these facts.
 
-⚑ **THE RIDE-ALONG (small, scoped, do it only if the walk leaves room):** intake has no
-`beforeunload`, so closing the tab silently destroys up to 13 steps of a household's entire net
-worth. **Do NOT file this as "no beforeunload exists"** — it does, and correctly: `SaveFlow.tsx:76-86`
-guards the export step, and `BackupStep.tsx:11` records a DELIBERATE omission. So `SaveFlow` is the
-shipped template, and the honest fix respects the no-persistence-until-Save hard rule by WARNING, not
-by persisting. Confirm the healthcare.gov step opens in a new tab (it should — a same-tab navigation
-would be the live version of this defect) before sizing it.
+2. **🔴 On RecoveryFlow the error and the standing note contradict each other in one frame.** The
+   error's *"your backup is the way in"* renders ~190px above the standing
+   *"This same word also opens your backup file on any device."* — the escape route requires the exact
+   thing the user just got wrong. Both strings individually true; the PAIR is the calm-but-wrong. The
+   phone frame (390×844) puts both in a single glance, so this is worse on mobile, not better. Fold
+   into entry 1's copy fix — same string, same pass.
+
+3. **🟠 Neither recovery NOR restore ever confirms it worked.** Both land byte-identically on
+   *"Are these still your numbers?"* with no acknowledgement that the household is back in, and none
+   that **the new passphrase is now the live one**. `App.tsx:235` passes `notice: null` on recovery and
+   `:243` threads restore's — but that channel is the READ-ONLY caveat (`UnlockCopyKey`), null on a
+   normal open, so there is no success channel at all. The person most recently burned by a credential
+   is given no way to verify the replacement took. Needs a success-notice channel + Briggsy's words.
+
+4. **🟡 The escape sits ABOVE the primary action, systematically, in the `save-actions` family** —
+   RecoveryFlow (word + setNew), RestoreFlow (file + word + setNew), and the backup ceremony
+   (*Not now* above *Finish*). Unlock and ColdStart get it right (primary first, escape below), so it
+   is ONE DOM-order decision in `save-actions`, not six fixes. Framing call — his.
+
+5. **🟡 The raw native browse button** on RestoreFlow's file step is the one place the craft visibly
+   drops, on the screen where trust matters most. `save.css:131-132` protects *"the native control
+   stays — only its frame is brought into the field system; the browse button is the browser's"* —
+   but `::file-selector-button` restyles APPEARANCE without replacing the control, so that rationale
+   does not block it. ⚠️ **The missing `accept` filter is NOT a defect — do not "fix" it.**
+   `RestoreFlow.tsx:210-211`: *"a survivor's renamed/re-extensioned export must never be unpickable."*
+
+⚑ **CHECKED ON THE FRAME AND CLEARED — do not re-file these.** Phone fold holds at 390×844 even with
+the 3-line error rendered (content ends 611px of 844). The export ceremony's `Finish` is
+`aria-disabled`, never native `disabled`. Unlock's error a11y and RestoreFlow's file-error a11y are
+both textbook. Only console error on every route is the known favicon 404.
+
+✅ **THE a11y HALF SHIPPED IN-PASS (`c327e011`)** — `PassphraseStep`'s three error channels now all
+satisfy WCAG 2.2 SC 3.3.1; see the Tier-2 entry below for what it was and why a green suite could not
+see it.
+
+⚑ **THE RIDE-ALONG, RE-SCOPED — its dangerous half does not exist, and its filed prescription is
+wrong.** Intake has no `beforeunload` (confirmed: the repo's ONLY registration is `SaveFlow.tsx:85`),
+but the healthcare.gov step **already opens in a new tab** — `ExternalLink.tsx:6-7,16` states it was
+made `target="_blank"` FOR this exact hazard. So the live-navigation version of the defect is not
+real; what remains is lost typing, not a wrong answer. ⚠️ **The filed arm condition
+`persist.kind === 'unsaved'` is WRONG**: `IntakeApp.tsx:295` `review()` re-enters intake with a
+vault-hydrated draft while `persist.kind` stays `'saved'`, so the guard would be permanently disarmed
+across the documented edit-and-re-save window — the one place real off-disk edits live. `BackupStep.tsx:11`
+records a DELIBERATE omission; `SaveFlow.tsx:76-86` is the shipped template; the no-persistence-until-Save
+hard rule means the honest fix WARNS, never persists.
 
 ⚠️ **Every "next build" here is a user-facing surface — load the four-skill UI loadout (CLAUDE.md)
 before touching a pixel, and read a ⚑ block before trusting any line number in the prose above it.**
@@ -103,7 +150,7 @@ never the words, when the question is about a flag.
 | Fires | What | What breaks |
 |---|---|---|
 | ~~NOW~~ | ~~NC FY2025-26 revenue certification~~ | ✅ **CLOSED 2026-08-02** — S.L. 2026-41 § 44.1(a) enacted the rate schedule *and* struck the trigger rows the certification fed. Withhold lifted, checkpoint retired. |
-| **2026-09-02 00:00 UTC** (09-01 20:00 ET) | ACA rolling window (`verifiedOn: 2026-08-02` + `maxAgeDays: 30`) | `pnpm verify:aca` reds → CI red |
+| **CI: ~2026-09-01 00:00 UTC** · **runtime: 2026-09-02** | ACA rolling window (`verifiedOn: 2026-08-02` + `maxAgeDays: 30`) | **TWO dates, and the split is DELIBERATE — one date here was wrong (corrected 2026-08-14).** `verify:aca` compares float-ms so it reds ~a day EARLIER than the runtime clause's integer-epoch-day compare; `oracleToken.ts:174-176` records that ordering as the safe one. **And it is not only CI:** `evaluateAcaFreshnessClause` (`oracleToken.ts:189-198`) is a RUNTIME clause on the user's own browser clock — once overdue the shipped app WITHHOLDS the recommendation for any household carrying an ACA enrolled premium, and `healthSheetChrome.ts:126` flips the health-sheet status line. No deploy required. Clearing it is the 8-step `howToClear` (~1h, primary sources, both attest tables hand-RE-TYPED from the PDFs — never from `health.ts`, that bind goes circular) |
 | **2027-08-02** | NC `nextDue`, `state-tax-nc-last-verified.json` (annual drift cadence now, not a pending event) | `pnpm verify:state-tax` reds → CI red |
 | **2027-01-01** | `TAX_YEAR` / `COVERAGE_YEAR` / `CONTRIBUTION_YEAR` roll | ✅ **ARMED 2026-08-02** — `annualRoll.tripwire.test.ts` reds the suite (both arms mutation-proven). Clearing it is a **re-sourcing job, never a date bump**; `scaffold.smoke.test.ts:10-13` + `constants.shape.test.ts` red alongside by design |
 | **2027-01-01** | Every organic vault crosses `elapsed ≥ 1` | The aged surfaces stop being dev-plant-only and go live on real households — **the four aged tone calls are due before this** |
@@ -268,8 +315,10 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
      `checkAcaStatus` (`:77-130`) never reads it — **inert prose, confirmed twice.** Declare the key after
      `:71`, push an emptiness problem after `:117`, add it to the `base` fixture at
      `scripts/__tests__/verify-aca-status.test.ts:13-37` (else `:42`'s `toEqual([])` reds), add the
-     emptiness arm mirroring `:72-80`. No `.github/` exists so `verify:aca` is local-only — but the
-     shipped-record arm at that test `:177-181` runs under `pnpm test`, so the new check **genuinely bites**.
+     emptiness arm mirroring `:72-80`. ⚠️ **The "no `.github/` exists so `verify:aca` is local-only"
+     clause this line used to carry was FALSE — corrected 2026-08-14.** CI exists and runs the FULL
+     gate; the scoping error was looking inside `projects/the-back-nine/` when the git root is
+     `ai-learning-journey`. See the CI note under "Standing cadences".
    - **A false negation on the health sheet (XS).** `copy.ts:945/951` list *"the benchmark premium itself"*
      under "Not counted here" while the entered benchmark **is** priced (`intakeMap.ts:582` →
      `healthOverlay.ts:213-223`) — the same false-negation shape O16 fixed on the Roth strings.
@@ -965,12 +1014,22 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
 
 ### Tier 2 — what breaks on someone else's device
 
-11. **The surfaces a friend actually hits have never been walked or cold-read by anyone.** The vault
-    credential ceremonies (Passphrase, Backup, Save, Export), `RecoveryFlow` and `RestoreFlow` — the two
-    *"I lost access to my retirement plan"* screens — plus ColdStart and 10 of 13 intake steps, including
-    **Accounts, where the couple enters their entire net worth.** No dev seed reaches most of them.
+11. **The surfaces a friend actually hits have never been walked or cold-read by anyone.**
+    ✅ **PARTLY CLOSED 2026-08-14** — `RecoveryFlow`, `RestoreFlow`, ColdStart, Unlock and the Backup/
+    Export ceremony have now been walked end-to-end at 1536×791 and 390×844 (findings ranked at the top
+    of this file). **STILL UNWALKED:** the first-Save ceremony (Passphrase + recovery steps) and 10 of
+    the intake steps, including **Accounts, where the couple enters their entire net worth.** No dev
+    seed reaches most of them.
+    ⚑ **What the first walk cost the product, as the argument for doing the rest:** it found a
+    WCAG 3.3.1 gap on all four credential ceremonies that 3,284 green tests could not see — the
+    `externalError` channel announced the negative-pairing bounce and then left BOTH fields reporting
+    themselves valid, so an AT user heard the error once and tabbed back into a control the app called
+    fine. Fixed + mutation-proven in `c327e011`, with the component's first-ever suite. **A green
+    suite cannot see an orphaned alert; only the frame can.**
 
-12. **The couple's own data.** An interrupted intake loses the whole household (13 steps, zero persistence,
+12. **The couple's own data.** An interrupted intake loses the whole household (up to **14** steps —
+    8 unconditional + 6 gated, `questions.tsx:1191-1209`; "13" was the long-standing figure and is one
+    short of the worst case — zero persistence,
     **no `beforeunload` ON INTAKE**, and one step tells them to fetch a number from healthcare.gov
     **in a new tab**) · the
     `schemaVersion` migration ladder **does not exist as code** — `IntakeApp.tsx:537` refuses anything but
@@ -1007,6 +1066,15 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
     produce a wrong answer today; all mean the net is thinner than it reads. Plus the Medicare-trend
     riders, the open copy obligations, the deferred richer market draw, and the `dateinvert` (c) mint —
     its own session, a size-L parameter hunt.
+    ⚑ **FIVE SHIPPED SURFACES STILL DESCRIBE NC's RETIRED CERTIFICATION CHECKPOINT** (found
+    2026-08-14; S.L. 2026-41 struck every trigger row FY2025-26 → FY2032-33 on 2026-08-02, and
+    `state-tax-nc-last-verified.json:19` correctly records the next live flip as the ~Aug-**2034**
+    accounting). Still asserting the dead ~Aug-2026 event, in present tense: `scripts/verify-state-tax.ts:9-14`
+    (header) and `:41-42` (the `nextDue` doc comment) · `.github/workflows/verify-the-back-nine.yml:46`
+    · and TWO inside the engine — `types.ts:20-22` (*"an NC household stays honestly blocked"*) and
+    `oracleToken.ts:72-73` (*"an NC household waits for the ~Aug-2026 certification"*).
+    `caseStateCompanions.ts:34-38` and `copy.ts:2620` WERE swept 2026-08-02, so these five are
+    stragglers, not policy. XS, one pass, no behaviour change.
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think
@@ -1025,6 +1093,14 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
 - `/brief` (read `docs/insights/`) before a unit; `/distill` after.
 - **Delegated build:** native Agent Teams for live-steer **eye-oracle** units; the Workflow tool for
   fire-and-forget **test-oracle** fan-out. Durable laws in memory `feedback-delegated-build-laws`.
+- ⚠️ **CI EXISTS AND EVERY GATE IS ENFORCED — this file asserted the opposite until 2026-08-14.**
+  `.github/workflows/verify-the-back-nine.yml` lives at the **monorepo root** (`ai-learning-journey`),
+  NOT inside `projects/the-back-nine/`, which is why grepping the project dir "proves" there is no CI
+  and has now produced a false claim twice. It triggers on push to `main` + PR on paths
+  `projects/the-back-nine/**` (plus the workflow file itself) and runs, in order: `verify:aca` ·
+  `verify:state-tax` · `lint` · `typecheck` · `verify:doc-stats` · `test` · `build` ·
+  `verify:bundle` · `verify:csp` · `verify:fit`. **All ten.** `vercel.json` carries no
+  `buildCommand`, so a deploy still runs the default build with no gate — CI is the gate, Vercel is not.
 
 ---
 

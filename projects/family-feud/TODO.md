@@ -144,12 +144,22 @@ wired into the runbook, both detailed immediately below.
    negative control (unchanged cargo ⇒ no entry) so a writer that alerts unconditionally can't pass.
    `scripts/watch_draft_state.py:181-194` is the code; the mock-creation path already exists and is
    proven (`ffStartDraft`, below).
-2. **Feed the MEASURED opponent profiles into `precompute_ladder.py` as per-seat priors.**
-   Blocked on one fact and one only: **`draft_order` is still `null`**, so we do not know which
-   seat is Hunter's. The profiles exist and are committed ([`docs/opponents.md`](docs/opponents.md));
-   what is missing is the map from seat to opponent. Build the consumer so it is ready the moment
-   the order populates, and make it **refuse rather than guess** when `draft_order` is null —
-   `run_engine.py` already does exactly that and is the pattern to copy.
+2. ~~**Feed the measured opponent profiles into `precompute_ladder.py` as per-seat priors.**~~
+   🚨 **DO NOT BUILD THIS. Measured and killed the same day, 2026-08-14** — see
+   [`insight 022`](docs/insights/022-the-opponent-prior-lost-to-always-guess-wr.md).
+   Cross-validated leave-one-draft-out, the personal positional prior scored **42.2% against a
+   constant that always guesses WR at 40.6%** — and **for `briggsy007` it scored 35.2%, WORSE
+   than the constant.** Round-based claims lost to the room base rate on three of four. The
+   profiles are DESCRIPTIVE, not predictive. Wiring them in would have put a fabricated number
+   under a measured label, which is what leg (d) was killed for.
+   - ✅ **One trait survived:** QB aggression as *nth QB off the board* (league-size-invariant;
+     `round` is not). `briggsy007` median **2nd**, `RMonk9` 6th, `MattiICE23` 7th. Personal
+     **76.5% vs the best constant floor's 52.9%** — ⚠️ **+4 of 17, ~2σ, suggestive not
+     established, and deliberately NOT wired into the decision path.**
+   - ✅ **What IS usable needs no model at all:** the ROOM base rates. `QB by round 3` in **9/18**
+     drafts, `waits on TE past R5` in **15/18**, `no K before round 10` in **18/18**. These
+     survive every floor control because they are just the room's own frequencies.
+   - **Re-open only with more drafts** (the room plays every year), never by loosening a floor.
 3. **Ship the long-TD bonus into `build_curves.py`.** Everything needed is measured and cached;
    this is now a build, not a question. Worth doing for **correctness only — the edge is ~zero**
    and the file must say so, or the next session will quote it as an advantage.
@@ -169,8 +179,12 @@ one level deeper than the enumeration [`021`](docs/insights/021-the-simulation-h
 already deleted, and would have been the **fifth** tautology this project caught.
 **The opponents are not hypothetical.** Sleeper serves every pick every one of them has ever made,
 and `scripts/scout_opponents.py` now reads it: **37 leagues, 18 comparable redrafts, measured.**
-Full profiles and their landmines: [`docs/opponents.md`](docs/opponents.md). The remaining piece is
-item 2 above — the seat map — not a simulator.
+Full profiles and their landmines: [`docs/opponents.md`](docs/opponents.md).
+🚨 **AND THE MEASURED MODEL DID NOT SURVIVE ITS FLOOR CONTROL EITHER — see item 2 above and
+[`insight 022`](docs/insights/022-the-opponent-prior-lost-to-always-guess-wr.md).** Reading the
+opponents was the right move and it produced real room-level base rates; **believing the
+per-seat profiles would have been leg (d)'s own error committed with better data.** What is left
+here is nothing — no simulator, no seat map, no prior.
 
 **🚨 THE SINGLE MOST ACTIONABLE THING WE LEARNED (2026-08-14), and it corrects this file.**
 `QB1` is worth **129.6** on this board against `RB1` **268.4** and `WR1` **242.7** — **an elite QB
@@ -179,12 +193,17 @@ near **pick 15-18 overall**.
 - ⚠️ **The `Lamar Jackson +106.7` line elsewhere in this file is a VALUE-VS-ADP statement — that
   the market lets him fall ~21 spots past his price around pick 60. It is NOT an argument for
   drafting a QB early, and it was misread that way in session on 2026-08-14 before being caught.**
-- **Two of seven opponents (`briggsy007`, `Kaeperni`) reliably spend a top-3-round pick on a QB.**
-  In an 8-team room that pushes elite RB/WR down to us, and our board is already priced for
-  8-team replacement while the blended market ADP is not. **Two independent edges, same direction.**
-- **Nobody in the room takes a TE early except Kaeperni** (median first TE R7-R9). `TE1` is priced
+- **QBs leave this room early — as a ROOM base rate, not a per-seat read.** `QB by round 3` is
+  true in **9 of 18** comparable drafts room-wide; half of them do it. ⚠️ **An earlier draft of
+  this line said "two of seven opponents reliably" do it — that framing did not survive
+  cross-validation** (insight 022) and is corrected here. In an 8-team room the base rate still
+  pushes elite RB/WR down to us, and our board is already priced for 8-team replacement while the
+  blended market ADP is not. **Two independent edges, same direction — and this one needs no
+  opponent model, which is why it survives every floor control.**
+- **The room waits on TE — `past R5` in 15 of 18 drafts**, only Kaeperni excepted. `TE1` is priced
   **134.7**, above QB1 — ⚠️ **and carries the largest measured spread on the board, sd 30.5.**
   Uncontested and highest-variance are both true; never quote one without the other.
+- **Nobody takes a K before round 10, 18/18.** No edge here, only a way to lose one.
 
 **📏 THE BOARD'S ERROR BARS ARE MEASURED NOW (2026-08-14).** The board prints `vorp` to one decimal,
 which asserts a precision nobody had ever checked.
@@ -368,7 +387,10 @@ could never run and the `** my_slot=N IS UNVERIFIED **` banner fired on **every*
   futures uniformly produces `C(k-i-1, gap-i)`, a fact about the shape of the draw and not about this
   draft (insight 021). The *principle* is untouched and is exactly what `scripts/precompute_ladder.py`
   delivers; only the named mechanism was wrong. Reworded 2026-08-14 — **say so if you want the
-  original wording back**, but note that a real branch precompute needs leg (d) first (queue item 2).
+  original wording back**. ⚠️ **This bullet used to end "a real branch precompute needs leg (d)
+  first" — that route is now closed at both ends** (leg (d) killed as fabrication, and the
+  measured replacement failed its floor control, insight 022). A branch precompute needs a
+  predictive opponent model, and **we have measured that we do not have one.**
 - **Keep a player queued at all times**, so a blown clock degrades to *our* board instead of
   Sleeper's. Measured cost of not doing this: auto-pick took Tetairoa McMillan (81.3) at 5.3 while
   **Lamar Jackson (~107) was still on the board and did not go until #40**.

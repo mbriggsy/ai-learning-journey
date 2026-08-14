@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { AssumptionPanel, type AssumptionPanelProps } from '../AssumptionPanel'
 import { createMemoryModel, type MemoryModel, type MemoryModelSnapshot, type ScenarioDraft, type StickyDisplay } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
@@ -11,6 +11,9 @@ import { planClockAnchor } from '@ui/bandAnnotations'
 import { formatMoney } from '../fields'
 import { missingRequiredFacts } from '../intakeMap'
 import type { BudgetLineItem, SimulationResult } from '@shared/model'
+import { ordinaryBracketsMFJ, ordinaryBracketsSingle } from '@engine/constants/tax'
+import { solverAssumedHeirBracket } from '@engine/constants'
+import { formatBracketPercent } from '@ui/money'
 
 /*
  * The U12 AssumptionPanel battery (P3·U12 · C1). Presentational over props — a fake snapshot
@@ -115,6 +118,14 @@ const LINES: readonly BudgetLineItem[] = [
 ]
 const governedDraft = draftWith(() => ({ ...mixedDraft, budget: LINES, annualSpendingReal: 44_000 }))
 
+/** The LEAVE-MORE household — `mixedDraft` with the Tier-2 goal picked. Its own fixture because the
+ *  heir-bracket seat is goal-gated: the bequest objective is the only thing that reads the bracket,
+ *  so a row under pay-less-tax would be a hollow door. The completeness walk below renders THIS too,
+ *  or the seat has no fixture that can produce it and the walk reds — which is exactly what happened
+ *  when the seat first landed. `heirBracket` is deliberately left ABSENT so the row must fall back to
+ *  the constant default (absence = "took our default", a different fact from choosing 0.24). */
+const leaveMoreDraft = draftWith(() => ({ ...mixedDraft, chosenGoal: 'leave-more' as const }))
+
 /** The UNKNOWN-AGE household: mixedDraft with both birth years (and their derived ages) cleared
  *  and the quote pair cleared. LIVE-REACHABLE, not a synthetic state — resolve once, open
  *  Assumptions, take "edit in the walk-through", and blank a birth year in the names step: the
@@ -196,7 +207,12 @@ describe('the R7 registry completeness walk (the compile gate’s runtime half)'
     const first = renderPanel({ snapshot: snap(mixedDraft) })
     collect()
     first.unmount()
-    renderPanel({ snapshot: snap(governedDraft) })
+    const second = renderPanel({ snapshot: snap(governedDraft) })
+    collect()
+    second.unmount()
+    // The goal-gated arm: `heir-bracket` renders ONLY under leave-more, so without this render the
+    // walk cannot see it and the R7 claim would be unprovable for that seat.
+    renderPanel({ snapshot: snap(leaveMoreDraft) })
     collect()
     // ⚠️ NON-VACUITY CENSUS — the only assertion in this arm lives INSIDE the loop, so an empty
     // (or silently-shrunken) roster passes GREEN while proving nothing, and the R7 completeness
@@ -231,6 +247,108 @@ describe('an unknown-age household — the panel HOMES every fact it names', () 
       missing: missingRequiredFacts(unknownAgeDraft),
     })
     expect(document.querySelector('[data-assumption-seat="health-quote"]')).not.toBeNull()
+  })
+})
+
+// ─── the heir-bracket seat (leave-more only; the R7 obligation the disclosure now points at) ──
+
+describe('the heir-bracket seat — goal-gated, closed vocabulary, derived ladder', () => {
+  /** SCOPED to the seat, never `screen.getAllByRole('radio')`: the open panel renders several other
+   *  radio groups (the spend-period toggle, the state picker, the Medicare-extras fork), so a global
+   *  query silently mixes them in — it reported two "checked" radios and could not find the rung to
+   *  click. A seat-scoped query is also what keeps this battery honest if a new group lands later. */
+  const heirRadios = (): HTMLElement[] => {
+    const seat = document.querySelector('[data-assumption-seat="heir-bracket"]')
+    if (seat === null) throw new Error('the heir-bracket seat did not render — the gate or the row is wrong')
+    return within(seat as HTMLElement).getAllByRole('radio')
+  }
+
+  it('renders ONLY under leave-more — no hollow door where the objective never reads it', () => {
+    // pay-less-tax and an unset goal both leave the bracket inert: nothing in those objectives
+    // multiplies by it, so a knob there would change a number the household can never observe.
+    const a = renderPanel({ snapshot: snap(mixedDraft) }) // chosenGoal absent
+    expect(document.querySelector('[data-assumption-seat="heir-bracket"]')).toBeNull()
+    a.unmount()
+
+    const b = renderPanel({ snapshot: snap(draftWith(() => ({ ...mixedDraft, chosenGoal: 'pay-less-tax' as const }))) })
+    expect(document.querySelector('[data-assumption-seat="heir-bracket"]')).toBeNull()
+    b.unmount()
+
+    renderPanel({ snapshot: snap(leaveMoreDraft) })
+    expect(document.querySelector('[data-assumption-seat="heir-bracket"]')).not.toBeNull()
+  })
+
+  it('offers the STATUTORY ladder derived from the shipped table — never a re-typed list', () => {
+    renderPanel({ snapshot: snap(leaveMoreDraft) })
+    const shown = heirRadios().map((r) => (r.closest('label')?.textContent ?? '').trim())
+    for (const b of ordinaryBracketsMFJ.value) {
+      expect(shown, `the ${b.rate} rung must be offered`).toContain(
+        slots.assumptionHeirBracketOption(formatBracketPercent(b.rate)),
+      )
+    }
+  })
+
+  /** The rung whose FACE reads `rate` — identified by label text, because SegmentedControl renders
+   *  native radios without a `value` attribute (every one reports the DOM default `'on'`). */
+  const rungFor = (rate: number): HTMLElement =>
+    heirRadios().find(
+      (r) =>
+        (r.closest('label')?.textContent ?? '').trim() ===
+        slots.assumptionHeirBracketOption(formatBracketPercent(rate)),
+    )!
+
+  it('pre-selects the CONSTANT default when the household has not chosen (absence ≠ 0.24 stored)', () => {
+    renderPanel({ snapshot: snap(leaveMoreDraft) }) // heirBracket deliberately absent
+    const checked = heirRadios().filter((r) => (r as HTMLInputElement).checked)
+    expect(checked, 'exactly one rung is active — never zero (a fabricated blank) or two').toHaveLength(1)
+    expect((checked[0]!.closest('label')?.textContent ?? '').trim()).toBe(
+      slots.assumptionHeirBracketOption(formatBracketPercent(solverAssumedHeirBracket.value)),
+    )
+  })
+
+  it('a household that HAS chosen sees their own rung, not ours', () => {
+    renderPanel({ snapshot: snap(draftWith(() => ({ ...leaveMoreDraft, heirBracket: 0.12 }))) })
+    const checked = heirRadios().filter((r) => (r as HTMLInputElement).checked)
+    expect(checked).toHaveLength(1)
+    expect((checked[0]!.closest('label')?.textContent ?? '').trim()).toBe(
+      slots.assumptionHeirBracketOption(formatBracketPercent(0.12)),
+    )
+  })
+
+  it('commits the chosen rung as a FRACTION through the one seam', () => {
+    const { props } = renderPanel({ snapshot: snap(leaveMoreDraft) })
+    fireEvent.click(rungFor(0.32))
+    // NOT a call-count assertion: `SegmentedControl` nests its input INSIDE the label, so a click on
+    // the input bubbles to the label, which forwards a second click to its control — one user
+    // gesture, two handler calls. The shipped period-toggle test hits the same artifact and simply
+    // does not count. What actually matters is that the write is IDEMPOTENT, so a doubled gesture
+    // cannot land a different value than a single one — asserted directly below.
+    expect(props.onCommitEdit).toHaveBeenCalled()
+    const results = props.onCommitEdit.mock.calls.map(
+      (c) => (c[0] as (d: ScenarioDraft) => ScenarioDraft)(leaveMoreDraft).heirBracket,
+    )
+    // A FRACTION, not the percent shown on the face — the engine throws outside [0, 1).
+    expect(new Set(results), 'every call of one gesture writes the same fraction').toEqual(new Set([0.32]))
+  })
+
+  it('every offered rung is inside the range the engine accepts — the closed vocabulary IS the guard', () => {
+    // Why no sanity rule was added: `afterTaxBequestPerPath` throws outside [0, 1), and a radio
+    // cannot express 24 or 1. If a future table ever carried a rate ≥ 1 this fails HERE rather
+    // than inside the engine mid-solve.
+    for (const b of ordinaryBracketsMFJ.value) {
+      expect(b.rate, `rung ${b.rate} must satisfy the engine's [0, 1)`).toBeGreaterThanOrEqual(0)
+      expect(b.rate).toBeLessThan(1)
+    }
+  })
+
+  it('the MFJ and Single schedules carry the SAME rate ladder — the vocabulary is filing-agnostic', () => {
+    // The panel builds its rungs from the MFJ table. That is only honest while the two schedules
+    // share a rate ladder (they differ in thresholds, which this question does not ask about). If a
+    // future schedule splits them, this reds instead of silently imposing one filing status's
+    // ladder on every household's heirs.
+    expect(ordinaryBracketsSingle.value.map((b) => b.rate)).toEqual(
+      ordinaryBracketsMFJ.value.map((b) => b.rate),
+    )
   })
 })
 

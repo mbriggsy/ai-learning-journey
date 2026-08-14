@@ -688,6 +688,29 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     }
   })
 
+  // The assumed heir bracket (additive-optional). RANGE-gated on restore, not merely finite: the
+  // engine's `afterTaxBequestPerPath` THROWS outside [0, 1), so this codec is the only thing between
+  // a tampered/corrupt vault and a mid-solve explosion. The upper bound is EXCLUSIVE.
+  it('v3 WITH heirBracket round-trips; ABSENT decodes untouched; anything outside [0, 1) is corrupt — including a percent typed as a fraction', () => {
+    for (const rate of [0, 0.1, 0.24, 0.37, 0.999]) {
+      const s: ScenarioV3 = { ...V3, heirBracket: rate }
+      expect(decodeScenario(encodeScenario(s)), `${rate} must round-trip`).toEqual({ ok: true, scenario: s, droppedAtoms: [] })
+    }
+    // ABSENT: "took our default" — a vault predating the seat decodes unchanged, NOT seeded to 0.24.
+    const decoded = decodeScenario(encodeScenario(V3))
+    expect(decoded).toEqual({ ok: true, scenario: V3, droppedAtoms: [] })
+    if (decoded.ok && decoded.scenario.schemaVersion === 3) expect(decoded.scenario.heirBracket).toBeUndefined()
+    // The rejection arm. `24` is the one that matters most: a percent where a fraction belongs is
+    // FINITE and in no way suspicious to a naive guard, and it detonates inside the engine one beat
+    // later. `1` matters second: it is a legal [0,1] fraction that this field's EXCLUSIVE bound must
+    // still reject, which is why `needUnitFraction` could not be reused.
+    for (const bad of [24, 1, 1.5, -0.01, Number.NaN, Number.POSITIVE_INFINITY, '0.24', null]) {
+      const d = decodeScenario(mutated(V3, (o) => { o.heirBracket = bad }))
+      expect(d.ok, `heirBracket=${String(bad)} must be rejected`).toBe(false)
+      if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('heirBracket')
+    }
+  })
+
   // ───────────────────────────────────────────────────────────────────────────────────────────
   // Act-4 · U17 · S3 — the saved-recommendation record (the FIRST tolerated drop in this codec).
   // ───────────────────────────────────────────────────────────────────────────────────────────

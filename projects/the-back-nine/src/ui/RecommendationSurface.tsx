@@ -526,8 +526,11 @@ function RecommendedBeat({
         {/* Q6 — the leave-more skew median quote (present iff disclosure-worthy). */}
         {view.skew !== undefined && <p className="rec-skew">{view.skew.medianQuote}</p>}
 
-        {/* The disclosures adjacent to the delta (R7 nets) — read-only NOTES (no inert editing affordance
-            ships; the heir-bracket r7-editable seat's inline editor lands with its persisted field). */}
+        {/* The disclosures adjacent to the delta (R7 nets) — read-only NOTES; no editing affordance ships
+            HERE. The heir-bracket seat's editor lives in the AssumptionPanel (shipped 2026-08-14), which
+            is why its note may once again say "adjust it in your assumptions": the clause names a control
+            that now exists. It is NOT coming inline — insight 058's one-editor-home rule plus Result.tsx's
+            measured 67–161px breach put it in the panel deliberately. */}
         {view.disclosures.length > 0 && (
           <ul className="rec-disclosures">
             {view.disclosures.map((d) => (

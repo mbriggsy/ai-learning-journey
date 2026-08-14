@@ -177,6 +177,12 @@ export interface ScenarioDraft
       // stamped-fresh vintage. intake/GoalPicker (U16) reads+writes it; the solve precondition
       // refuses to dispatch while it is unset (no Tier-1-only tie-break crowned as advice).
       | 'chosenGoal'
+      // The assumed heir bracket (additive-optional; ABSENT = the household took our default,
+      // which is a DIFFERENT FACT from having chosen 0.24). It belongs in THIS optional block and
+      // gets NO seed in `createMemoryModel` — seeding it would make every household look like it
+      // had answered, and modelling it on `survivorSpendingRatio` (the required block below)
+      // would fail `needFinite` on every vault written before the seat shipped.
+      | 'heirBracket'
       // Act-4 · U17 — the saved-recommendation record (additive-optional; ABSENT = never saved
       // one). A USER FACT carried via `...draft` at Save (the chosenGoal/retirementState
       // precedent), MINTED ONCE by the S5 save gesture and NEVER re-stamped: putting it in

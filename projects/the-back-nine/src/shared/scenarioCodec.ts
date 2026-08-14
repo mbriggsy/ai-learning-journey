@@ -839,6 +839,20 @@ function checkV3Fields(o: Obj): string[] {
   if (o.chosenGoal !== undefined) {
     needVocab(o, 'chosenGoal', RECOMMENDATION_GOALS, 'scenario')
   }
+  // The assumed heir bracket (additive-optional; absence = took our default, never a seeded 0.24).
+  // RANGE-GATED, not merely finite, and the upper bound is EXCLUSIVE: `afterTaxBequestPerPath`
+  // throws outside [0, 1), and a persisted `24` — a percent where a fraction belongs — is finite
+  // and would pass a finiteness check, then detonate inside the engine one beat later. This codec
+  // is the ONLY [0,1) gate on the restore path (the panel's closed vocabulary cannot express an
+  // out-of-range value, so intake never needs a sanity rule for it). `needUnitFraction` is
+  // deliberately NOT reused: it admits 1, which throws.
+  if (o.heirBracket !== undefined) {
+    needFinite(o, 'heirBracket', 'scenario')
+    const hb = o.heirBracket as number
+    if (hb < 0 || hb >= 1) {
+      throw new Corrupt(`scenario.heirBracket: expected a fraction in [0, 1) (got ${hb})`)
+    }
+  }
   // ─────────────────────────────────────────────────────────────────────────────────────────
   // Act-4 · U17 — the saved-recommendation record: THE FIRST AND ONLY TOLERATED DROP IN THIS
   // CODEC, a DELIBERATE, spec-named divergence from the file's loud-over-silent discipline

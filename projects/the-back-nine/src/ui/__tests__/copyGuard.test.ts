@@ -577,6 +577,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     // Act-4 · U16 §S3b — the heir-bracket disclosure (recDisc* ⇒ require-hedge-swept) + the viz aria
     // sentence (recViz* — NOT control-scoped; universal-gate-swept only). Figures pre-formatted.
     recDiscHeirBracket: slots.recDiscHeirBracket('24'),
+    assumptionHeirBracketOption: slots.assumptionHeirBracketOption('24'),
     recVizAria: slots.recVizAria('Your plan today', '740,000', 'The recommended strategy', '788,000', '48,000'),
     recommendRecordSavedIn: slots.recommendRecordSavedIn(2026),
   }

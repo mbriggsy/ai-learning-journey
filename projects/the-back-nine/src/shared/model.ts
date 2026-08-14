@@ -1797,6 +1797,30 @@ export interface ScenarioV3 {
    *  is corruption named loud (never silently coerced to a default goal — the calm-but-wrong
    *  shape of fabricating a goal the user never picked). */
   readonly chosenGoal?: RecommendationGoal
+  /** The household's ASSUMED HEIR TAX BRACKET — the first-order §1014/IRD marginal rate a
+   *  `leave-more` solve scores the pre-tax + HSA bequest at. ADDITIVE-OPTIONAL within
+   *  schemaVersion 3 (the `chosenGoal`/`rothConversion` tolerant-reader precedent — a vault
+   *  predating the seat lacks the field and decodes unchanged; NO schemaVersion bump).
+   *
+   *  ABSENCE MEANS "TOOK OUR DEFAULT", and that is why it must NEVER be seeded.
+   *  `solveDispatch` reads `draft.heirBracket ?? solverAssumedHeirBracket.value`, so an absent
+   *  field and an explicit 0.24 rank identically — but they are different FACTS, and seeding the
+   *  default into `createMemoryModel` would erase the distinction permanently.
+   *  ⚠️ **DO NOT copy `survivorSpendingRatio`'s shape here.** That field is REQUIRED and seeded
+   *  from the app-default era; a required-field copy would fail `needFinite` on every vault
+   *  written before this shipped — bricking them all at restore.
+   *
+   *  RANGE IS LOAD-BEARING, NOT COSMETIC: `afterTaxBequestPerPath` (`objectiveHeadline.ts`)
+   *  THROWS unless this is finite in **[0, 1)** — note the EXCLUSIVE 1. So the codec range-gates
+   *  it on restore rather than merely checking finiteness: a persisted `24` (a percent typed
+   *  where a fraction belongs) is finite, in-range garbage that would sail through a naive guard
+   *  and blow up inside the engine. `needUnitFraction` is [0, 1] INCLUSIVE and is therefore NOT
+   *  the right helper.
+   *
+   *  RANKING-AFFECTING, and staleness is already handled: `solverRunFingerprint` carries
+   *  `heirBracket`, so editing it demotes a saved recommendation through the shipped path with
+   *  no new wiring. */
+  readonly heirBracket?: number
   /** Act-4 · U17 — the SAVED RECOMMENDATION record (the spec's Q5 payload). ADDITIVE-OPTIONAL
    *  within schemaVersion 3 (the chosenGoal/rothConversion/savedAt tolerant-reader precedent —
    *  a pre-U17 vault lacks the field and decodes unchanged; NO schemaVersion bump). ABSENCE IS
@@ -2260,6 +2284,7 @@ export const SCENARIO_V3_FIELDS = [
   'dateVintage',
   'stateTaxVintage',
   'chosenGoal',
+  'heirBracket',
   'savedRecommendation',
 ] as const
 

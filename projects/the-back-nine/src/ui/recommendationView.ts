@@ -62,9 +62,13 @@ export interface RecommendationDisclosure {
   /** The humane, hedge-bearing disclosure text (already copy-resolved). */
   readonly text: string
   /** The R7 DISPOSITION metadata (NOT a rendered control): `r7-editable` names a seat whose editable
-   *  home exists (heir-bracket); `disclosure` is a held-fixed / by-reference note. U16 renders BOTH as
-   *  read-only notes — no inert editing affordance ships (wall #5); the heir-bracket inline editor lands
-   *  with its persisted field (deferred — see the build deviations). */
+   *  home exists (heir-bracket); `disclosure` is a held-fixed / by-reference note. BOTH render here as
+   *  read-only notes — no inert editing affordance ships on this surface (wall #5).
+   *  ⚠️ THE EDITOR IS NOT AND WILL NOT BE INLINE. It shipped 2026-08-14 as the AssumptionPanel
+   *  `heir-bracket` seat, which is where the earlier "inline editor lands with its persisted field"
+   *  note pointed wrongly: the panel wins on Result.tsx's measured 67–161px breach and on insight
+   *  058's one-editor-home rule. `r7-editable` therefore means "an editable home exists SOMEWHERE",
+   *  never "render a control right here". */
   readonly disposition: 'r7-editable' | 'disclosure'
 }
 

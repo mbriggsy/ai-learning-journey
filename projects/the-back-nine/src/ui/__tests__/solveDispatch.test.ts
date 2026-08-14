@@ -82,6 +82,33 @@ describe('buildSolveRequest — the typed-refusal convention', () => {
     expect(req.candidates.some((c) => c.provenance === 'conventional-baseline')).toBe(true)
   })
 
+  it('the household’s OWN heir bracket wins over the default when they have set one', () => {
+    // The seat's whole point: the R7 default is a DEFAULT. Absence and an explicit value must reach
+    // the ranking differently, or the panel row is decorative.
+    const base = withGoalSeed('fl', 'leave-more', 0xbeef)
+    const chosen = { ...base, heirBracket: 0.37 }
+    const req = buildSolveRequest(chosen, TODAY)
+    if (typeof req === 'string') throw new Error('unreachable')
+    expect(req.ranking.heirBracket).toBe(0.37)
+    expect(req.ranking.heirBracket).not.toBe(solverAssumedHeirBracket.value) // non-vacuous
+  })
+
+  it('an explicitly-chosen ZERO is honoured, never coerced to the default (`??`, never `||`)', () => {
+    // An heir who owes nothing is a real household (a charity, a zero-bracket heir). `||` would
+    // silently overwrite their answer with 0.24 and rank the bequest at a rate they rejected.
+    const base = withGoalSeed('fl', 'leave-more', 0xbeef)
+    const req = buildSolveRequest({ ...base, heirBracket: 0 }, TODAY)
+    if (typeof req === 'string') throw new Error('unreachable')
+    expect(req.ranking.heirBracket).toBe(0)
+  })
+
+  it('pay-less-tax carries NO heir bracket at all — the row is gated for the same reason', () => {
+    const req = buildSolveRequest({ ...withGoalSeed('fl', 'pay-less-tax', 0xbeef), heirBracket: 0.37 }, TODAY)
+    if (typeof req === 'string') throw new Error('unreachable')
+    expect(req.ranking.goal).toBe('pay-less-tax')
+    expect('heirBracket' in req.ranking).toBe(false)
+  })
+
   /**
    * U17 §S5 — THE RECORD IS NOT PART OF THE RUN IDENTITY, and this is the only file that can prove
    * it. `memoryModel.test.ts`'s solve arms dispatch through IN-FILE fakes (`realRequest` /

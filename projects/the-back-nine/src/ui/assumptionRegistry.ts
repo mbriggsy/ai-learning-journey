@@ -38,6 +38,7 @@ import type { CopyKey } from './copy'
  *  panel may render MORE than the registry demands, never less). */
 export type AssumptionSeat =
   | 'survivor-ratio' // the ONE real R7-editable methodology knob (council F1/F3)
+  | 'heir-bracket' // the assumed heir tax bracket — leave-more ONLY (it ranks nothing under pay-less-tax, so no hollow door)
   | 'spend-period' // the entry-period toggle (hidden while a budget governs — the period is inert there)
   | 'market' // the productionMarket disclosure block (visible-with-provenance; editor FILED behind the sourced-bounds flip)
   | 'longevity' // SSA cohort tables — disclosure (a baked constant, not a parameter)
@@ -119,6 +120,11 @@ export const DRAFT_DISPOSITIONS: Record<keyof ScenarioDraft, AssumptionDispositi
   annualSpendingReal: { kind: 'row-editable', seats: ['spend'] },
   spendEntryPeriod: { kind: 'row-editable', seats: ['spend-period'] },
   survivorSpendingRatio: { kind: 'row-editable', seats: ['survivor-ratio'] },
+  // The assumed heir bracket. A REAL ranking parameter for a leave-more solve (it sets the IRD rate
+  // the pre-tax + HSA bequest is scored at, and the recommendation surface already discloses it as
+  // `r7-editable`) — so it owes a genuine editor, not a disclosure. The row is gated on
+  // `chosenGoal === 'leave-more'`, the only goal whose objective reads it.
+  heirBracket: { kind: 'row-editable', seats: ['heir-bracket'] },
   drawdownPolicy: { kind: 'via-sheet', seats: ['drawdown'] },
   drawdownOrder: { kind: 'via-sheet', seats: ['drawdown'] },
   filing: {

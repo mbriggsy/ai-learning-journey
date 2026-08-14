@@ -113,9 +113,17 @@ export const solverConversionNearTieDemotionSeMultiple = sourced(10, {
 /**
  * The R7 ASSUMED HEIR BRACKET (U16 §S3 / F4) — the first-order §1014/IRD marginal rate a `leave-more`
  * solve scores the pre-tax + HSA bequest at when the household has not overridden it. The live solve
- * builder feeds THIS into `ranking.heirBracket`; the S3 disclosure formats whatever it supplies and
- * the R7 registry (`recommendationView.ts`) makes it plain-language editable — so the value is the
- * DEFAULT, never a hidden constant. Representative middle federal ordinary bracket: a household
+ * builder reads `draft.heirBracket ?? THIS` into `ranking.heirBracket`; the S3 disclosure formats
+ * whatever it supplies, and the household's editable home is the ASSUMPTIONS PANEL — the
+ * `heir-bracket` seat, a radio over the statutory ordinary ladder, gated on the leave-more goal
+ * (`recommendationView.ts` NAMES the disclosure; the panel HOMES the editor — one editor home per
+ * fact, insight 058). So the value is genuinely the DEFAULT, never a hidden constant.
+ * (Corrected 2026-08-14: this block, its citation, and its note all asserted an editability that
+ * did not exist — no heir seat was in `assumptionRegistry.ts` or `AssumptionPanel.tsx` at all, and
+ * the disclosure's "adjust it in your assumptions" clause had to be deleted 2026-08-02 for pointing
+ * at a control nobody had built. The seat now exists, so the claim is true — but note it was FALSE
+ * and load-bearing for six months, inside the constants provenance a reader is meant to trust.)
+ * Representative middle federal ordinary bracket: a household
  * inheriting a traditional IRA (IRD, taxed at the heir's ordinary rate) is typically in peak earning
  * years. A METHODOLOGY ASSUMPTION, not a dated legal figure — `directionalUntilPinned`
  * (methodology-substrate: ships disclosed + editable, never blocks the mint; the token's
@@ -125,12 +133,12 @@ export const solverConversionNearTieDemotionSeMultiple = sourced(10, {
  */
 export const solverAssumedHeirBracket = sourced(0.24, {
   citation:
-    'U16 §S3 (F4): the representative middle federal ordinary marginal bracket (24% MFJ, TCJA/OBBBA schedule) as the leave-more IRD/§1014 heir-bracket DEFAULT — R7-editable (recommendationView.ts registry), surfaced not hidden',
+    'U16 §S3 (F4): the representative middle federal ordinary marginal bracket (24% MFJ, TCJA/OBBBA schedule) as the leave-more IRD/§1014 heir-bracket DEFAULT — R7-editable at the AssumptionPanel heir-bracket seat, surfaced not hidden',
   directionalUntilPinned: true,
   // A methodology default (the household edits it); no dated event certifies a heir bracket. Ships
   // disclosed via the R7 note, never blocks — the mint's directional walk never consumes it.
   directionalKind: 'methodology-substrate',
-  note: 'The DEFAULT heir marginal rate the live leave-more solve ranks the after-tax bequest at; the user overrides it in the R7 disclosure. Deliberately outside solverConstants/ALL_CONSTANTS — a ranking default, not a harness-read calibration threshold.',
+  note: 'The DEFAULT heir marginal rate the live leave-more solve ranks the after-tax bequest at; the household overrides it at the AssumptionPanel heir-bracket seat (persisted as ScenarioV3.heirBracket, additive-optional — ABSENT means they took this default). Deliberately outside solverConstants/ALL_CONSTANTS — a ranking default, not a harness-read calibration threshold.',
 })
 
 /** Finiteness-FIRST calibration check (insights 008/010/039): a NaN/Infinity/sentinel is

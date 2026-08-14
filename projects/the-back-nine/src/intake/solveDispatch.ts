@@ -90,8 +90,12 @@ export function buildSolveRequest(draft: ScenarioDraft, todayEpochDay: number): 
   // (candidates.ts), so this restores the predicate's original meaning exactly.
   if (!set.candidates.some((c) => c.conversion !== null && c.anchoredRail !== undefined)) return 'no-pretax'
 
+  // The heir bracket is the household's when they have set one, ours when they have not. `??`, not
+  // `||`: a legitimately-chosen 0 (an heir who owes nothing) must not fall through to the default.
   const ranking: SolverRunRanking =
-    goal === 'leave-more' ? { goal, heirBracket: solverAssumedHeirBracket.value } : { goal }
+    goal === 'leave-more'
+      ? { goal, heirBracket: draft.heirBracket ?? solverAssumedHeirBracket.value }
+      : { goal }
 
   return {
     base,

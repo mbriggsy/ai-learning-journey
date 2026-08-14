@@ -42,6 +42,9 @@ import { rothPlanStartFor, type BandPlanClockAnchor } from '@ui/bandAnnotations'
 import { composeVerdictReading } from '@ui/verdictSentence'
 import { METHODOLOGY_DISCLOSURES, type AssumptionSeat } from '@ui/assumptionRegistry'
 import { productionMarket } from '@engine/reference/methodology'
+import { ordinaryBracketsMFJ } from '@engine/constants/tax'
+import { solverAssumedHeirBracket } from '@engine/constants'
+import { formatBracketPercent } from '@ui/money'
 import { budgetGoverns } from '@budget/budgetModel'
 import { budgetYearZeroFullTotal } from '@budget/budgetToSpending'
 import type { Announcer } from './a11y'
@@ -52,6 +55,24 @@ import { validateField, personField, type SanityViolation } from './sanity'
 import { anyPre65OrUnknown, healthcarePriced, isDateRoute, spendHelpKeyFor, type MissingFact } from './intakeMap'
 import { MedicareExtrasFork, StateResidencePicker, writeWorkingYearInvestment } from './questions'
 import './assumptions.css'
+
+/** The heir-bracket rungs — DERIVED from the shipped federal ordinary-bracket schedule, never
+ *  re-typed (the one-canonical-table rule: a dated figure has exactly one home, and a hand-copied
+ *  ladder would silently keep the old rates the day that table moves).
+ *
+ *  The RATES are what this vocabulary needs; the thresholds are irrelevant here, because the
+ *  question is "which bracket will your heirs be in", not "what income puts them there". MFJ and
+ *  Single carry the identical rate ladder — pinned in `assumptionPanel.test.tsx`, so if a future
+ *  schedule ever splits them this fails loudly instead of quietly imposing one filing status's
+ *  ladder on every household's heirs.
+ *
+ *  Module-level and computed ONCE: the array identity is stable across renders, so the radio group
+ *  never re-mounts mid-edit. */
+const HEIR_BRACKET_OPTIONS: readonly { readonly value: string; readonly label: string }[] =
+  ordinaryBracketsMFJ.value.map((b) => ({
+    value: String(b.rate),
+    label: slots.assumptionHeirBracketOption(formatBracketPercent(b.rate)),
+  }))
 
 export interface AssumptionPanelProps {
   readonly open: boolean
@@ -360,6 +381,45 @@ export function AssumptionPanel({
             />
             {renderErrors('survivorSpendingRatio')}
           </Row>
+
+          {/* The assumed heir bracket — leave-more ONLY. Under pay-less-tax the objective never reads
+              it, so a row there would be a hollow door: a knob whose every setting changes nothing.
+              (`chosenGoal` is set at the GoalPicker on the second beat, so this row is simply absent
+              during first-pass intake — correct, not a gap.)
+
+              A CLOSED VOCABULARY, NOT A PercentField, and that is a correctness choice rather than a
+              style one: `afterTaxBequestPerPath` THROWS outside [0, 1), and survivor-ratio needs a
+              whole intake sanity rule + a blank-refusal path precisely because a free field can
+              express 24 (the percent) or 1 (the throw). A radio over the statutory ladder cannot
+              reach either, so `sanity.ts` stays untouched and there is no blank state to refuse.
+
+              THE LADDER IS DERIVED, NEVER RE-TYPED (the one-canonical-table rule): it is the shipped
+              federal ordinary-bracket schedule. MFJ and Single carry the SAME rate ladder and differ
+              only in thresholds, so the rate vocabulary is filing-agnostic — pinned in the panel
+              test so a future divergence fails loudly instead of silently picking one household's
+              schedule for everyone's heirs. */}
+          {draft.chosenGoal === 'leave-more' && (
+            <Row seat="heir-bracket">
+              {/* HORIZONTAL, deliberately — `vertical` is for long labels that cram in equal-width
+                  segments (the state picker's "Somewhere else — not priced yet"). These rungs are
+                  three characters, so stacking them burned ~340px of a scrolling panel for no gain,
+                  and a left-to-right track also reads as the ORDERED scale it is. */}
+              <SegmentedControl<string>
+                legendKey="assumptionHeirBracketLabel"
+                name="assumption-heir-bracket"
+                value={String(draft.heirBracket ?? solverAssumedHeirBracket.value)}
+                options={HEIR_BRACKET_OPTIONS}
+                onChange={(v) => {
+                  // The value is one of OUR OWN rungs, re-parsed from the radio's string — never a
+                  // typed figure, so it cannot arrive out of range. Committed through the same
+                  // refusing seam as every other row so the panel's touched/forgive bookkeeping and
+                  // the staleness demotion (the fingerprint carries heirBracket) both fire normally.
+                  commitRefusing('heirBracket', (d) => ({ ...d, heirBracket: Number(v) }))
+                }}
+              />
+              <p className="field-help">{copy.assumptionHeirBracketHelp}</p>
+            </Row>
+          )}
 
           {/* The entry period — RE-LABELS the committed figure, never re-bases it (the intake
               segment re-bases mid-entry where the typed digits are the truth; here the

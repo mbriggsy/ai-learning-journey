@@ -1172,6 +1172,15 @@ export const copy = {
     'Research on surviving spouses lands around three-quarters of a couple’s spending. Set it lower and the later years can read easier than they may prove.',
   errSurvivorRatioBlank:
     'Survivor spending needs a share to run on — three-quarters is the researched default.',
+  // The assumed heir bracket — leave-more ONLY (it ranks nothing under pay-less-tax). The help
+  // discloses the UNSAFE DIRECTION the way survivor-ratio's does, because this knob can INVERT the
+  // recommendation rather than merely shade it: the bequest is scored
+  // `pretax * (1 - heirBracket)` while a Roth passes whole, so the value of converting scales
+  // DIRECTLY with this number — set it too low and the tool under-rates the very move it exists to
+  // rank. No jargon on the face: not "IRD", not "§1014", not "marginal rate".
+  assumptionHeirBracketLabel: 'The tax bracket your heirs are likely in when they inherit',
+  assumptionHeirBracketHelp:
+    'Money left in a pre-tax account is taxed at your heirs’ rate when they inherit it; a Roth is not. Set this lower and converting reads as less worthwhile than it may prove.',
   assumptionPeriodLegend: 'Your spending figure reads as…',
   // The panel's period toggle RE-LABELS the committed figure; it never re-bases it (the
   // intake segment re-bases mid-entry, where the typed digits are the truth — here the
@@ -2616,18 +2625,24 @@ export const slots = {
 
   // --- Act-4 · U16 §S3b — the heir-bracket disclosure (leave-more) + the viz aria sentence (AT parity:
   //     every disclosed figure reachable inside the role="img" name). Figures PRE-FORMATTED (money.ts). ---
+  /** One rung of the statutory ordinary-bracket ladder, as a radio label. The ladder itself is
+   *  DERIVED from `ordinaryBracketsMFJ` — never re-typed — so this slot only dresses the figure. */
+  assumptionHeirBracketOption: (percentFormatted: string): string => `${percentFormatted}%`,
   /** The leave-more heir-bracket note — the assumed IRD bracket the after-tax bequest is computed at
    *  (recDisc* ⇒ require-hedge-swept; "Assumes" + "roughly" carry it). The percent arrives pre-formatted.
    *
-   *  ⚠️ THE "adjust it in your assumptions if that's off" CLAUSE WAS DROPPED 2026-08-02 — it was a
-   *  DEAD END. No heir-bracket seat exists in `assumptionRegistry.ts` or `AssumptionPanel.tsx`, so the
-   *  sentence sent the reader hunting for a control we never built. Sending someone looking for
-   *  something that isn't there is worse than saying nothing: they conclude they missed it.
-   *  The R7 obligation is unchanged and still OPEN — this assumption moves the leave-more ranking and
-   *  genuinely should be editable (template: `survivor-ratio`, `AssumptionPanel.tsx:322-348`).
-   *  **Restore the clause in the SAME change that ships the seat — never before it.** */
+   *  ✅ THE "adjust it in your assumptions if that's off" CLAUSE IS RESTORED (2026-08-14), in the same
+   *  change that shipped the seat — which is the ONLY condition under which it may exist. It was
+   *  dropped 2026-08-02 because it was a DEAD END: no heir-bracket seat existed in
+   *  `assumptionRegistry.ts` or `AssumptionPanel.tsx`, so the sentence sent the reader hunting for a
+   *  control we had never built, and someone looking for something that isn't there concludes they
+   *  missed it. The seat now exists (`heir-bracket`, `AssumptionPanel.tsx`, gated on
+   *  `chosenGoal === 'leave-more'` — the only goal whose objective reads the bracket).
+   *  ⚠️ THE COUPLING IS PERMANENT AND RUNS BOTH WAYS: if the seat is ever removed or its gate is
+   *  narrowed so this note can render without a reachable row, DROP THIS CLAUSE IN THE SAME CHANGE.
+   *  The note and the row ship together or not at all. */
   recDiscHeirBracket: (percentFormatted: string): string =>
-    `Assumes your heirs are in roughly the ${percentFormatted}% tax bracket when they inherit.`,
+    `Assumes your heirs are in roughly the ${percentFormatted}% tax bracket when they inherit — adjust it in your assumptions if that’s off.`,
   /** The RecommendationViz accessible sentence (the role="img" name): both arms' magnitudes AND the
    *  delta, so the whole comparison is reachable in the a11y tree (A2 AT-parity). "about" carries the
    *  hedge; every figure arrives pre-formatted (the axis dialect), so the sentence carries no bare numeral. */

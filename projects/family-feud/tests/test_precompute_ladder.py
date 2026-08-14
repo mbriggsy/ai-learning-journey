@@ -614,6 +614,26 @@ class TestTheContaminationGateIsReachable(unittest.TestCase):
         self.assertEqual(rid, "", "a missing cargo must never fall back to the feed")
         self.assertIn("NOT armed", line)
 
+    def test_a_missing_DEFAULT_feed_is_the_pre_draft_state_not_a_crash(self):
+        """runbook:207 pre-arms the queue BEFORE the draft starts. picks.json does not exist then
+        -- merge_picks has had nothing to write -- and this used to raise a bare FileNotFoundError
+        traceback at the one moment the operator has least patience for one. Deleting the spent
+        mock's picks.json (which is the correct state to be in) is what makes it missing."""
+        kit_feed = os.path.join(ROOT, "draft-kit", "picks.json")
+        if os.path.exists(kit_feed):
+            self.skipTest("a live picks.json is present; this asserts the absent case")
+        rc, out = self._main("--draft-id", "1390509994847240192")
+        self.assertEqual(rc, 0)
+        self.assertIn("has not started", out)
+
+    def test_a_missing_EXPLICIT_feed_is_still_a_hard_error(self):
+        """shape.py's rule: "cannot tell" and "will not compute" must not share a branch. A typo'd
+        --feed silently reading as an empty draft would produce a confident round-1 ladder for a
+        draft that is already underway."""
+        rc, out = self._main("--feed", os.path.join(self._t.name, "typo.json"))
+        self.assertEqual(rc, 1)
+        self.assertIn("REFUSED", out)
+
     def test_the_call_site_passes_the_cargo_dir_the_operator_chose(self):
         """MUTANT M8's shape: hardcoding CARGO here would make --cargo decorative and every test
         above would still pass, because they all happen to point at the fixtures."""

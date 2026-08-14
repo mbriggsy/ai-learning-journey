@@ -502,8 +502,23 @@ def main(argv=None):
                     help="score the market projection, its null model and a floor control")
     a = ap.parse_args(argv)
 
-    with open(a.feed, encoding="utf-8") as f:
-        feed = json.load(f)
+    # NO PICKS YET IS THE NORMAL PRE-DRAFT STATE, NOT AN ERROR. runbook:207 fires this before the
+    # draft starts to pre-arm the queue, and at that moment picks.json does not exist -- merge_picks
+    # has had nothing to write. It used to raise a bare FileNotFoundError traceback there, which
+    # reads as a broken tool at the one moment the operator has least patience for one.
+    # The DEFAULT feed missing means "the draft has not started". An EXPLICIT --feed missing is a
+    # typo and must still be a hard error -- shape.py's rule: "cannot tell" and "will not compute"
+    # are different answers and must not share a branch.
+    if not os.path.exists(a.feed):
+        if os.path.abspath(a.feed) != os.path.abspath(os.path.join(KIT, "picks.json")):
+            print(f"!! REFUSED: no such feed: {a.feed}")
+            return 1
+        print(f"[pre-draft] no {os.path.relpath(a.feed, ROOT)} yet -- reading this as a draft that "
+              "has not started. Every pick is still available.")
+        feed = []
+    else:
+        with open(a.feed, encoding="utf-8") as f:
+            feed = json.load(f)
     draft_id, gate_line = reference_draft_id(a.draft_id, a.cargo)
     print(gate_line)
 

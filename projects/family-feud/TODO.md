@@ -13,11 +13,28 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
   → leg (d) KILLED, opponents MEASURED instead ✅ → the board's error bars measured ✅
   → the opponent prior FAILED its floor control ✅ → realised value measured ✅
   → the realised curve FAILED its backtest, board UNCHANGED ✅
-  ◀ HERE — the harness is complete and the board is UNCHANGED ON PURPOSE. Two candidate
-    improvements were built, measured and REJECTED on 2026-08-14; the rejections are the
-    deliverable. What is missing is not a model: it is `draft_order`, still null, which
-    nothing we build can produce.
+  → the harness's own defects found and fixed ✅ → board RE-RANKED on the 08-14 ECR ✅
+  ◀ HERE — the harness is complete, the board's ORDERING is current, and the remaining work
+    is one scheduled re-rank plus one 30-minute mock. Three candidate improvements have now
+    been built, measured and REJECTED (the opponent prior, the realised curve, per-player
+    projections); the rejections are the deliverable. What the 2026-08-14 evening session
+    added was not a model either — it was finding that four things which LOOKED fine could
+    each have cost a pick: a contamination gate that could never fire, a refresh that could
+    not move a rank, a seat read served from a CDN cache, and a queue that could not fill a
+    mandated slot. What is still missing is `draft_order`, still null, which nothing we
+    build can produce.
 ```
+
+❓ **THE ONE OPEN DECISION FOR BRIGGSY — one 30-minute mock, or none?**
+**Recommendation: ONE, scoped to a single API-confirmed manual pick.** Do *not* buy a full dress
+rehearsal: the seat-derivation path was exercised for free on 2026-08-14 against an archived mock's
+still-populated `draft_order`, the ladder runs in 0.239s against the committed fixture, and the
+`start_time` branch is now controlled without a browser. **The one genuinely unproven thing in this
+environment is a single click that lands where it says it landed** — `ffDraft` reports a CLICK, not
+a PICK, and the browser half has not run here since the Cowork migration. It needs Briggsy's Chrome,
+so it is his call to start, not something a session should grab.
+⚠️ The second open question below (should QUEUE lead the precomputer's output?) is still unanswered
+and still one word.
 
 **Units shipped (2026-08-14):**
 - **U16** — the opponent scout (`scout_opponents.py`), 37 leagues / **7 distinct** comparable
@@ -150,17 +167,64 @@ call; the board ships on `current` / 2022-2025 and Bijan takes #1. Full write-up
 ~~**2. THE MOCK-DRAFT HARNESS, legs (b) and (c).**~~ ✅ **DONE 2026-08-09** — both built, both
 wired into the runbook, both detailed immediately below.
 
+## ▶▶ 2026-08-14 EVENING SESSION — WHAT CHANGED, read this before the ranked list
+
+**Twelve commits. 852 → 907 tests. The board's ordering was refreshed and four things that could
+have cost a pick were found and fixed.** None of it was edge; all of it was correctness. The
+honest headline stands: **there is no pick left that more analysis can buy.**
+
+- ✅ **THE BOARD IS RE-RANKED on the 2026-08-14 ECR.** 101 of 174 rows moved, **20 crossed a tier**,
+  and the top of round 1 reordered: **Gibbs #4 → #2 and into tier 1, Bijan #3 → #4 and out of it.**
+  ⚠️ **The 1.01 argument has now reversed twice** — see the corrected block below. Quote the
+  ordering, never the margin: `RB1` sd is 19.3 and insight 023 measures this curve 2.55× overstated
+  at RB1.
+- 🚨 **THE LADDER'S CONTAMINATION GATE COULD NEVER FIRE.** `precompute_ladder.py` armed the engine's
+  cross-draft refusal with `a.draft_id or feed[0]["draft_id"]` — **the reference came from the very
+  feed the gate checks.** Not a dormant branch: the runbook teaches the flagless form at both
+  :167 and :207. Found on disk: `picks.json` holding 38 picks from dead mock `1392338436949561355`,
+  and a persisted `ladder.json` whose queue was headed **Nico Collins** while Chase, Gibbs, Nacua
+  and Bijan were all still available. **Auto-pick drains queue-top, so a blown clock CASHES that.**
+  Now armed from cargo, mirroring `run_engine.py`. Both poisoned files deleted.
+- 🚨 **THE DRAFT-MORNING REFRESH WAS A CEREMONY THAT COULD NOT MOVE A RANK.** `grep -c rerank
+  docs/draft-day-runbook.md` returned **0**. `build_board.py` derives `vorp` from `pr`, so running
+  it alone re-stamps byte-identical data and `--verify-only` prints green over a stale ordering.
+  **THE REAL REFRESH is now written out in the runbook** — and `meta.updated` is input freshness,
+  **not** rank staleness; the field is `meta.rankings.synthesized`.
+- 🚨 **"curl works, has no cache" WAS FALSE and it is why the `?cb=` nonce got deleted.** The cache
+  is **Cloudflare's edge**. Measured: three bare fetches of the draft endpoint returned
+  `cf-cache-status: HIT` under `s-maxage=30, stale-while-revalidate=300`; a unique nonce returned
+  MISS every time. Restored in the runbook and `data-access.md`, which had contradicted each other.
+- ✅ **THE `start_time` BRANCH IS POSITIVE-CONTROLLED** against a **real** Sleeper draft object
+  (`1391539007871012864`, `start_time: 1786313864801`), committed as a fixture. Negative control
+  proves silence is earned; mutants both directions caught (7 and 11 failures).
+- ✅ **THE WATCHER'S ALERTS NOW REACH THE NEWSLETTER**, which is the surface actually read. The
+  date already had the countdown tile; *"date MOVED"*, *"slot moved"* and *"draft replaced"* had
+  **no channel at all**, and moving earlier is the scenario the watcher exists for.
+- ✅ **`scripts/injury_check.py` IS NEW.** 19 board rows carried a live Sleeper injury designation
+  and **no I badge** — including **McCaffrey at board 8** — while Gibbs, the new RB1, still read
+  *"not practicing as of 8/4"* against a blank live status. READ-ONLY; it never rewrites prose.
+- ✅ **THE LADDER NOW WARNS WHEN THE QUEUE CANNOT FILL A MANDATED SLOT.** The top 128 board ranks
+  are 128 skill players and **zero K/DEF** (exact — `rerank.py` sinks both below all skill, and an
+  8×16 draft is 128 picks), so the queue can never contain a kicker or defense. The remedy it
+  prescribes is **the null model** — clear the queue and let Sleeper's need-aware board fill them —
+  never a cleverer queue (insight 024's defect #3).
+- ⚠️ **`backtest_board.py` DISAGREED WITH ITS OWN WRITE-UP BY DEFAULT, ON THE SIGN.** Its defaults
+  gave `ORDER +35.7`; every published figure is `−18.9`, from an invocation recorded nowhere. The
+  defaults **are** the published invocation now.
+- ⚠️ **Five wrong worked examples in `ranking-methodology.md`** (one attributed McBride's rank to
+  Bowers) are **derived** now, as a fifth generated block.
+
+---
+
 **WHAT IS ACTUALLY LEFT, ranked:**
-1. 🚨 **POSITIVE-CONTROL THE WATCHER'S `start_time` BRANCH.** Cheap, and it guards the single signal
-   the draft date arrives on. **The room went full on 2026-08-12 21:35, so the leading indicator we
-   had is spent** — from here, `start_time` flipping from `null` is the only warning, and that exact
-   branch has never once been exercised by the world. The roster branch beside it is now live-proven
-   twice (see U9 below), which is precisely why the untested twin is the risk: same file, same
-   writer, adjacent `if`. **The fix:** create a mock with a scheduled start, point the watcher's
-   cargo at it, confirm `DRAFT_ALERTS.md` gains a *"The draft date EXISTS"* entry — then a
-   negative control (unchanged cargo ⇒ no entry) so a writer that alerts unconditionally can't pass.
-   `scripts/watch_draft_state.py:181-194` is the code; the mock-creation path already exists and is
-   proven (`ffStartDraft`, below).
+1. 🗓️ **THE FINAL RE-RANK, ~Aug 27, THEN FREEZE.** The board ships on the **2026-08-14** ECR.
+   Two preseason weeks and roster cut-downs land before Aug 29, so run *THE REAL REFRESH* in the
+   runbook once more around **Aug 27** — and then **nothing touches `r`/`pr`/`tier` inside 48 hours
+   of the draft.** That rule exists to stop a well-meaning session re-ranking at 7am. Run
+   `python scripts/injury_check.py` in the same pass; it is the only thing that catches a note that
+   healed or a player who got hurt after the synthesis.
+   ⚠️ ~~POSITIVE-CONTROL THE WATCHER'S `start_time` BRANCH~~ ✅ **DONE 2026-08-14** — with a real
+   Sleeper object rather than a mock, so it cost nothing and needed no browser.
 2. ~~**Feed the measured opponent profiles into `precompute_ladder.py` as per-seat priors.**~~
    🚨 **DO NOT BUILD THIS. Measured and killed the same day, 2026-08-14** — see
    [`insight 022`](docs/insights/022-the-opponent-prior-lost-to-always-guess-wr.md).
@@ -193,9 +257,29 @@ wired into the runbook, both detailed immediately below.
    against a NEW source:** Sleeper's own projections carry DEF, but only the `pts_allow_0` bucket
    and no points-allowed distribution, so they cannot score the largest term in the DST ladder
    either. Two independent sources, same gap. **Stop looking.**
-5. **Per-player projections as a second instrument** (value-vs-projection, beside `market.py`'s
-   value-vs-price). Feasibility is PROVEN, not assumed — see *SLEEPER SERVES STAT-LINE
-   PROJECTIONS* below. It is the largest remaining build and the one with real upside.
+5. ~~**Per-player projections as a second instrument.**~~ 🚨 **DO NOT BUILD THIS AS A VALUATION.
+   KILLED 2026-08-14 ON LEAKAGE — it cannot be backtested, and this repo does not ship a valuation
+   it cannot test.** This entry used to call it "the largest remaining build and the one with real
+   upside."
+   - **The fetch works and the join is still perfect** (3,300 records, 174/174 on `sleeperId`,
+     `scoring.score()` reproducing their `pts_ppr` on 556/557). None of that was the problem.
+   - 🚨 **Sleeper's HISTORICAL projections are END-OF-SEASON RESTATEMENTS, not preseason
+     projections.** Measured directly: the **2023** "projection" for **Puka Nacua** is
+     `pts_ppr 229.4, rec 87.0, rec_yd 1004.0` with **`updated_at` = 2024-01-08**, *the day after
+     the 2023 regular season ended*. Nacua actually went 105/1486 as a 5th-round rookie who was
+     **undrafted in most August 2023 leagues**. No August-2023 projection of 87/1004 existed
+     anywhere. **The archive has seen the outcome.**
+   - Therefore any backtest of a projection-based valuation would score a model that already knows
+     the answer — the leakage `backtest_board.py`'s `y <= target` mutant exists to catch, arriving
+     through the data instead of the code. `season_type=pre` returns empty stats for past years, so
+     there is **no clean historical projection from Sleeper at all**.
+   - **What it is still legitimately good for:** the CURRENT season's projections as a *reading*,
+     the way `market.py` is a reading. It must never become a column the board sorts by, and the
+     adversarial pass found even the annotation weak — rotowire falls outside the experts' ±1σ on
+     only **18.7%** of rows, i.e. a below-average draw from the consensus the board already
+     averages, and the source republishes daily so any committed list is stale before Aug 29.
+   - **Re-open only with a genuinely archived PRESEASON projection set** — one whose timestamps
+     predate each season's week 1. Never with this endpoint.
 
 ~~**Leg (d) — the off-clock doctrine terminals.**~~ 🚨 **DEAD AS DESIGNED, 2026-08-14. Do not build
 it.** Its stated purpose was *"the only honest route to a validated opponent model."* It proposed

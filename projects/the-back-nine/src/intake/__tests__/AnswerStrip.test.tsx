@@ -136,4 +136,57 @@ describe('AnswerStrip — the honesty branches (D1 review T3)', () => {
     expect(more.className).toContain('strip-fact') // its own list affordance, not fused text
     expect(screen.queryByText(/\(\+\d+\)/)).toBeNull() // the bare legacy glyph is gone
   })
+
+  it('an UNREPRESENTABLE fact never wears the "still needed" frame — the reader is not sent back to enter it', () => {
+    // The whole defect this kind exists to stop: a household that HAS answered being told the
+    // answer is still needed, under a line promising the tool prices what you enter — an
+    // invitation to a retry that cannot succeed.
+    render(
+      <AnswerStrip
+        snapshot={snap({ kind: 'inputs-incomplete' })}
+        missing={[{ labelKey: 'employerCoverageUnpriced', kind: 'unrepresentable' }]}
+        onRetry={() => {}}
+      />,
+    )
+    expect(screen.getByText(copy.answerCannotPrice)).toBeInTheDocument()
+    expect(screen.getByText(copy.answerCannotPriceTail)).toBeInTheDocument()
+    expect(screen.getByText(copy.employerCoverageUnpriced, { exact: false })).toBeInTheDocument()
+    // The two frames are mutually exclusive on a household with only this fact.
+    expect(screen.queryByText(copy.answerStillNeeded)).toBeNull()
+    expect(screen.queryByText(copy.answerNoSynthesis)).toBeNull()
+  })
+
+  it('a household that is BOTH mid-entry and unpriceable gets both frames, each over its own facts', () => {
+    render(
+      <AnswerStrip
+        snapshot={snap({ kind: 'inputs-incomplete' })}
+        missing={[
+          { labelKey: 'spendLabel' },
+          { labelKey: 'employerCoverageUnpriced', kind: 'unrepresentable' },
+        ]}
+        onRetry={() => {}}
+      />,
+    )
+    expect(screen.getByText(copy.answerStillNeeded)).toBeInTheDocument()
+    expect(screen.getByText(copy.answerCannotPrice)).toBeInTheDocument()
+    // …and neither fact may appear under the other's lead (the collapse this split prevents).
+    const stillNeeded = screen.getByText(copy.answerStillNeeded).closest('p')!
+    const cannotPrice = screen.getByText(copy.answerCannotPrice).closest('p')!
+    expect(stillNeeded.textContent).toContain(copy.spendLabel)
+    expect(stillNeeded.textContent).not.toContain(copy.employerCoverageUnpriced)
+    expect(cannotPrice.textContent).toContain(copy.employerCoverageUnpriced)
+    expect(cannotPrice.textContent).not.toContain(copy.spendLabel)
+  })
+
+  it('an untagged fact still reads as ABSENT (every pre-existing call site stays honest)', () => {
+    render(
+      <AnswerStrip
+        snapshot={snap({ kind: 'inputs-incomplete' })}
+        missing={[{ labelKey: 'spendLabel' }]}
+        onRetry={() => {}}
+      />,
+    )
+    expect(screen.getByText(copy.answerStillNeeded)).toBeInTheDocument()
+    expect(screen.queryByText(copy.answerCannotPrice)).toBeNull()
+  })
 })

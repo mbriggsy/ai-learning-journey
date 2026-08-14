@@ -168,6 +168,13 @@ const stillWorking: ScenarioDraft = {
     // from earnedIncomeReal at the boundary. Alex's IRMAA-MAGI = $150k earned + $30k investment
     // = $180k; retired Sam contributes 0. Override unchanged → byte-identical seeded outcome.
     workingYearInvestmentByPerson: [30_000, 0],
+    // Sam retired at 58 and is 60 — pre-65 while Alex keeps working, so this household is exactly
+    // the one the employer-coverage question exists for, and the flagship date route would be
+    // REFUSED without an answer. Answered `true` (Alex's plan at work covers them both), which is
+    // the premise the window gate silently assumed for every such household before the question
+    // shipped — so `?seed=date` keeps its crown and its outcome stays byte-identical.
+    // The `false` arm has its own witness: `?seed=datesolo`.
+    employerPlanCoversRetiredMember: true,
   },
   annualSpendingReal: 84_000,
   spendEntryPeriod: 'month',
@@ -1000,6 +1007,31 @@ const elsewhereAnswered: ScenarioDraft = { ...retiredOnTrack, retirementState: '
  */
 const dateNcSeed: ScenarioDraft = { ...stillWorkingAllMedicare, retirementState: 'NC' }
 
+/**
+ * THE REFUSAL WITNESS for the employer-coverage premise — `?seed=datesolo`.
+ *
+ * `stillWorking` (Alex 58 working / Sam 60 retired at 58, pre-65) with the ONE field flipped:
+ * Sam buys their own coverage rather than riding Alex's plan at work. Everything else is
+ * byte-identical, so this seed isolates exactly one variable against `?seed=date`.
+ *
+ * WHAT IT DRIVES. `missingRequiredFacts` pushes the `unrepresentable` arm ⇒ `buildDateInput`
+ * returns null ⇒ the strip renders the CANNOT-PRICE block ("Outside what this version can
+ * price… there is nothing here for you to add"), never the "Still needed" block. This is the
+ * only live drive of that rendering, and without it the honest-refusal path would ship as an
+ * undrivable branch behind a green suite (insight 048).
+ *
+ * WHY THE REFUSAL IS RIGHT rather than a price we could have guessed: Sam's pre-65 subsidy keys
+ * off household MAGI, and `acaMagi` carries NO wage term — so a priced bridge year would invent
+ * a phantom near-max subsidy off Alex's invisible $150k salary and understate the cost. The
+ * engine already refuses that outright (`simulate.ts`, "rejection beats disclosure") and names
+ * this household as the canonical blocked instance. Intake now says so instead of silently
+ * pricing Sam at $0.
+ */
+const dateSoloCoverage: ScenarioDraft = {
+  ...stillWorking,
+  health: { ...stillWorking.health, employerPlanCoversRetiredMember: false },
+}
+
 /** The seed registry — `?seed=<key>` selects one. */
 export const DEV_SEEDS = {
   retired: retiredOnTrack,
@@ -1022,6 +1054,7 @@ export const DEV_SEEDS = {
   fl: flAffirmation,
   elsewhere: elsewhereAnswered,
   datenc: dateNcSeed,
+  datesolo: dateSoloCoverage,
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS

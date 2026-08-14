@@ -207,6 +207,21 @@ export const copy = {
   // class — and 'the discount' can't be forward-referenced here; it isn't taught until U11).
   slcspHelp:
     'A different figure from the same quote — a standard reference plan, not necessarily the one you’d pick.',
+  // --- the employer-coverage premise (the mixed-household pre-65 gap) ---
+  // Asked ONLY when someone is still working and someone else has already stopped before 65
+  // (`anyRetiredPre65WhileAnotherWorks`). Until this question existed the tool ASSUMED the
+  // "covers you both" answer for every such household — pricing $0 premiums and $0 out-of-pocket
+  // for the retired one across the whole working window, which pulls the date EARLIER.
+  // No names: `copy.ts` holds static strings, and "the one who has stopped working" is already
+  // the household's own frame. NOT "marketplace"/"ACA"/"exchange" on the question face — the
+  // reader is a spouse with no finance background, and the plain contrast (a plan at work vs
+  // buying your own) is the whole distinction the engine turns on.
+  qEmployerCoverageHeading: 'Coverage while one of you keeps working',
+  employerCoverageLegend: 'Coverage for the one who has stopped working',
+  employerCoverageCovered: 'Covered by the other one’s plan at work',
+  employerCoverageOwn: 'Buying their own coverage',
+  employerCoverageHelp:
+    'While one of you is still working, the tool counts no health costs for the one who has already stopped — which only holds if a plan at work covers them both.',
   qOopHeading: 'Out-of-pocket health costs',
   oopLabel: 'A typical year, out of pocket',
   oopHelp:
@@ -380,6 +395,28 @@ export const copy = {
   answerIncomplete: 'Your answer takes shape as you go.',
   answerStillNeeded: 'Still needed:',
   answerNoSynthesis: 'The tool never guesses these — it prices only what you enter.',
+  // The UNREPRESENTABLE arm. Written from the PREDICATE, not from either poster-child household
+  // (insight 101): its whole extension is "you answered, and this version of the tool has no way
+  // to carry that answer" — true of the two-HSA household and of the household buying its own
+  // pre-65 coverage alongside a working spouse alike. It must NOT borrow `answerStillNeeded`'s
+  // frame: telling a reader who already answered that the answer is "still needed", under a line
+  // promising the tool prices what you enter, invites a retry that cannot succeed. The closing
+  // sentence exists to STOP that retry — it says the ceiling is ours, not their entry's.
+  // THE LEAD, when everything blocking the answer is unrepresentable. `answerIncomplete`
+  // ("Your answer takes shape as you go") is a KEEP-GOING promise, and over a permanent refusal
+  // it is the calm-but-wrong sin in one line: a reader who skims the bold lead keeps entering
+  // data waiting for an answer that will never arrive. Caught on the rendered frame at
+  // 1536×791 with the whole suite green — no assertion could have caught it, because every
+  // string was individually true.
+  // Route-NEUTRAL by necessity (insight 101): this lead's extension covers the two-HSA SPINE
+  // household as well as the date-route one, so it can never say "your date".
+  answerWithheldLead: 'We can’t answer this one honestly, so we won’t guess at it.',
+  answerCannotPrice: 'Outside what this version can price:',
+  answerCannotPriceTail:
+    'This is a limit of the tool, not something missing from your answers — there is nothing here for you to add.',
+  // The two unrepresentable fact names. Each has to read as the object of `answerCannotPrice`.
+  employerCoverageUnpriced: 'Coverage bought on your own while the other one still works',
+  kindHsaBothSpouses: 'Two HSAs, one for each of you',
   answerPending: 'Working it out…',
   answerProvisionalTag: 'Provisional — with what you’ve entered so far',
   answerNotYet:

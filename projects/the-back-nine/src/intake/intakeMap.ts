@@ -77,11 +77,30 @@ export const KIND_TO_BUCKET: Readonly<Record<AccountKind, Bucket>> = {
 // the missing-required-facts surface (the placeholder's naming source)
 // ---------------------------------------------------------------------------
 
+/** WHY a fact stops the answer — the two arms need DIFFERENT WORDS, and collapsing them
+ *  ships a false invitation.
+ *
+ *  `'absent'` is the ordinary arm: the household has not entered this yet, so
+ *  "Still needed: … — the tool never guesses these, it prices only what you enter" is exactly
+ *  true, and entering it clears the block.
+ *
+ *  `'unrepresentable'` is the arm where the household HAS answered and the v1 model cannot
+ *  carry the answer. Nothing they type will clear it. Rendering that under the same
+ *  "still needed / never guesses" frame tells a reader who already answered that they have
+ *  not, and invites a retry that CANNOT succeed — the shape filed against
+ *  `?seed=failing`'s "adjust a number, or re-open this, to try again". `kindHsa` shipped
+ *  under the wrong frame this way: a household entering TWO spouses' HSAs reads
+ *  "Still needed: HSA" having entered two. */
+export type MissingFactKind = 'absent' | 'unrepresentable'
+
 export interface MissingFact {
   /** Catalog key for the placeholder line naming this input. */
   readonly labelKey: CopyKey
   /** Which person it concerns (absent for household-level facts). */
   readonly personIndex?: 0 | 1
+  /** Absent ⇒ `'absent'` (the overwhelmingly common arm; keeps every existing call site
+   *  honest without a churn edit). See {@link MissingFactKind}. */
+  readonly kind?: MissingFactKind
 }
 
 /** Pre-65 OR not-yet-KNOWN age — the ONE ACA-question domain (asked until proven 65+).
@@ -98,6 +117,33 @@ const anyNear65 = (d: ScenarioDraft): boolean =>
 
 export const isDateRoute = (d: ScenarioDraft): boolean =>
   d.people.some((p) => p.workStatus === 'working')
+
+/** The employer-coverage question's ONE domain: someone is still working AND someone else is
+ *  already retired and not yet 65.
+ *
+ *  EXPORTED for the same R7 reason `anyPre65OrUnknown` is (see above) — the missing-fact list,
+ *  the intake step, and any surface that names this fact must gate on the SAME predicate, or
+ *  the app names a fact it does not home.
+ *
+ *  WHY EXACTLY THIS SHAPE. `buildHealthcareStreams` zeroes the entered ACA + OOP schedules
+ *  across `[0, windowStart)`, `windowStart = max_i retireOffset_i`. On the date route
+ *  `dateSearch` re-stamps every STILL-WORKING member's offset to the candidate `Y`
+ *  (`retirementAge > currentAge` is its still-working test) and leaves an already-retired
+ *  member's own (≤ 0) offset verbatim — so for every candidate `Y ≥ 1` that member's own
+ *  pre-65 years are the zeroed ones. The gap is therefore non-empty exactly when a retired
+ *  member has pre-65 years left to lose, i.e. `currentAge < 65`.
+ *
+ *  DELIBERATELY NOT `anyPre65OrUnknown`'s unknown-age arm: an unknown age already blocks the
+ *  answer through `birthYearLabel`, so folding it in here would double-name the same block and
+ *  ask a question whose own domain is not yet known. Once the age lands, this fires on the
+ *  next evaluation.
+ *
+ *  SPINE ROUTE IS UNAFFECTED, PROVEN STRUCTURALLY, NOT ASSUMED: `buildHealthcareStreams` has
+ *  exactly ONE production caller (`dateSearch.ts`), and `buildSpineParams` returns null on the
+ *  date route — so no spine run can carry a window-gated stream. */
+export const anyRetiredPre65WhileAnotherWorks = (d: ScenarioDraft): boolean =>
+  isDateRoute(d) &&
+  d.people.some((p) => p.workStatus === 'retired' && p.currentAge !== undefined && p.currentAge < 65)
 
 /** Every required user-fact still absent for the CURRENT route. Empty ⇒ the
  *  builders produce engine-accepted params (the coupling test pins this). */
@@ -171,6 +217,21 @@ export function missingRequiredFacts(d: ScenarioDraft): readonly MissingFact[] {
     if (d.health.slcspMonthlyToday === undefined) out.push({ labelKey: 'slcspLabel' })
   }
 
+  // The employer-coverage premise (the mixed-household pre-65 gap). The window gate prices an
+  // already-retired pre-65 member at $0 premiums AND $0 out-of-pocket for every year the other
+  // one keeps working — honest ONLY under employer family coverage. Two arms, two kinds:
+  //   ABSENT      — not asked yet; entering it clears the block ("still needed" is true).
+  //   FALSE       — answered, and the v1 engine cannot price it. `simulate.ts`'s wage-blind arm
+  //                 refuses a positive premium on a bridge year (ACA-MAGI has no wage term, so a
+  //                 priced year invents a phantom near-max subsidy), and its own comment names
+  //                 this household as the canonical blocked instance. Nothing the reader types
+  //                 clears this, so it must NOT wear the "still needed" frame.
+  if (anyRetiredPre65WhileAnotherWorks(d)) {
+    const covered = d.health.employerPlanCoversRetiredMember
+    if (covered === undefined) out.push({ labelKey: 'employerCoverageLegend' })
+    else if (!covered) out.push({ labelKey: 'employerCoverageUnpriced', kind: 'unrepresentable' })
+  }
+
   // The IRMAA seed: the engine fail-louds without it when a member is
   // Medicare-enrolled inside the 2-year lookback.
   if (anyNear65(d)) {
@@ -184,8 +245,11 @@ export function missingRequiredFacts(d: ScenarioDraft): readonly MissingFact[] {
   // v1 model limitation, surfaced honestly: the engine carries ONE household
   // HSA owner (the 65+ premium-spend privilege keys to the owner's age) — two
   // spouses' HSAs cannot yet be represented without mis-keying it.
+  // UNREPRESENTABLE, not absent: this household entered TWO HSAs. Under the old untyped shape it
+  // rendered "Still needed: HSA" — naming an input they had already supplied twice, under a line
+  // promising the tool prices what you enter. The block is real; only its frame was wrong.
   const hsaOwners = new Set(d.enteredAccounts.filter((a) => a.kind === 'hsa').map((a) => a.ownerIndex))
-  if (hsaOwners.size > 1) out.push({ labelKey: 'kindHsa' })
+  if (hsaOwners.size > 1) out.push({ labelKey: 'kindHsaBothSpouses', kind: 'unrepresentable' })
 
   return out
 }

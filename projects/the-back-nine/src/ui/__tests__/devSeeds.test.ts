@@ -59,7 +59,33 @@ describe('dev seeds reach a worded (engine-accepted) answer', () => {
   // doesn't lands on an indeterminate/input-failure screen instead of the worded answer + band it
   // exists to cold-read. Iterating the registry auto-covers every seed added later (D2d added the
   // `borderline` spine + `dateborder` date seeds for the two-pane honesty cold-read).
+  /** The seeds that exist to reach an honest REFUSAL rather than a worded answer, each mapped to
+   *  the fact that must refuse it. They are exempt from the acceptance law above — and NOT
+   *  silently: the battery below asserts each one refuses, for the named reason, and that the
+   *  refusal is `unrepresentable` (an "absent" refusal here would mean the seed is merely
+   *  under-filled, i.e. a broken seed wearing an exemption). A skip-list with no counter-assertion
+   *  is how a broken seed hides, so this map is the assertion's SOURCE, never a bypass. */
+  const REFUSAL_SEEDS: Partial<Record<keyof typeof DEV_SEEDS, string>> = {
+    datesolo: 'employerCoverageUnpriced',
+  }
+
   for (const [key, d] of Object.entries(DEV_SEEDS)) {
+    const refusedBy = REFUSAL_SEEDS[key as keyof typeof DEV_SEEDS]
+    if (refusedBy !== undefined) {
+      it(`'${key}' refuses honestly — '${refusedBy}', as an unrepresentable shape`, () => {
+        const facts = missingRequiredFacts(d)
+        const fact = facts.find((m) => m.labelKey === refusedBy)
+        expect(fact, `${key}: must be refused by ${refusedBy}`).toBeDefined()
+        expect(fact?.kind, `${key}: a refusal seed must not read as merely under-filled`).toBe(
+          'unrepresentable',
+        )
+        // Exactly the intended refusal — a second unrelated gap would mean the seed is broken and
+        // its refusal is being reached for the wrong reason (the vacuous-green shape).
+        expect(facts.map((m) => m.labelKey), `${key}: no incidental gaps`).toEqual([refusedBy])
+        expect(buildDateInput(d), `${key}: no date may be built`).toBeNull()
+      })
+      continue
+    }
     it(`'${key}' builds input the engine validator accepts`, () => {
       expect(missingRequiredFacts(d), `${key}: missing required facts`).toEqual([])
       if (isDateRoute(d)) {

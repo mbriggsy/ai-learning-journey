@@ -113,6 +113,10 @@ const completeDateDraft = (): ScenarioDraft =>
       enrolledPremiumMonthlyToday: 1_100,
       slcspMonthlyToday: 1_000,
       workingYearInvestmentByPerson: [30_000, 0],
+      // 60-yo S retired at 58 while 58-yo W keeps working — the mixed pre-65 household the
+      // window gate prices at $0 healthcare, so "complete" now REQUIRES this answer. It was
+      // never complete before; the fact simply had no name. The `false` arm is pinned below.
+      employerPlanCoversRetiredMember: true,
     },
   })
 
@@ -249,7 +253,61 @@ describe('missingRequiredFacts — the placeholder naming source', () => {
         { ownerIndex: 1, kind: 'hsa', ticker: 'VTI', valueToday: 20_000 },
       ] as ScenarioDraft['enteredAccounts'],
     }
-    expect(missingRequiredFacts(twoHsas).map((m) => m.labelKey)).toContain('kindHsa')
+    const fact = missingRequiredFacts(twoHsas).find((m) => m.labelKey === 'kindHsaBothSpouses')
+    expect(fact, 'the two-HSA limitation must still be named').toBeDefined()
+    // It is UNREPRESENTABLE, not absent — they entered two HSAs. Under the old untyped shape this
+    // rendered "Still needed: HSA" beneath "the tool prices only what you enter", telling a
+    // household that supplied the input twice that it was missing. The kind is what stops that.
+    expect(fact?.kind, 'an entered-twice fact must never wear the "still needed" frame').toBe(
+      'unrepresentable',
+    )
+  })
+
+  it('the mixed pre-65 household is ASKED whether work covers the retired one — absence blocks the date', () => {
+    // The window gate zeroes the retired member's premiums AND out-of-pocket across every year the
+    // other keeps working, so an unanswered premise is a real missing fact — and it is ABSENT, the
+    // arm the reader can clear by answering.
+    const d = completeDateDraft()
+    const unasked = {
+      ...d,
+      health: { ...d.health, employerPlanCoversRetiredMember: undefined },
+    }
+    const fact = missingRequiredFacts(unasked).find((m) => m.labelKey === 'employerCoverageLegend')
+    expect(fact, 'an unanswered employer-coverage premise must block the date').toBeDefined()
+    expect(fact?.kind ?? 'absent').toBe('absent')
+    expect(buildDateInput(unasked), 'no date may be built on an unasked premise').toBeNull()
+  })
+
+  it('answering NO refuses the date as UNREPRESENTABLE — never as a fact still to enter', () => {
+    // `false` is a complete answer. The engine cannot price it (ACA-MAGI has no wage term, so
+    // simulate.ts refuses a premium on a bridge year outright), so the refusal must NOT invite a
+    // retry that cannot succeed.
+    const d = completeDateDraft()
+    const own = { ...d, health: { ...d.health, employerPlanCoversRetiredMember: false } }
+    const fact = missingRequiredFacts(own).find((m) => m.labelKey === 'employerCoverageUnpriced')
+    expect(fact, 'a household buying its own pre-65 coverage must be refused').toBeDefined()
+    expect(fact?.kind).toBe('unrepresentable')
+    expect(buildDateInput(own)).toBeNull()
+    // And it must NOT also be named as something still to enter — one honest home, one frame.
+    expect(missingRequiredFacts(own).map((m) => m.labelKey)).not.toContain('employerCoverageLegend')
+  })
+
+  it('the question is NOT asked where the gate cannot bite (no pre-65 retiree, or nobody working)', () => {
+    // The predicate's whole extension, from the other side: a hollow question on a household the
+    // window gate can never touch is its own defect (it invites a wrong answer to an inert fact).
+    // All-retired ⇒ windowStart 0 ⇒ the gate is a verbatim pass-through.
+    const spine = completeSpineDraft()
+    expect(missingRequiredFacts(spine).map((m) => m.labelKey)).not.toContain('employerCoverageLegend')
+    // A retired member ALREADY 65 has no pre-65 year left to lose — Medicare owns those years.
+    const d = completeDateDraft()
+    const retiredAt65 = {
+      ...d,
+      people: [d.people[0]!, { ...d.people[1]!, birthYear: 1961, currentAge: 65 }] as ScenarioDraft['people'],
+      health: { ...d.health, employerPlanCoversRetiredMember: undefined },
+    }
+    expect(missingRequiredFacts(retiredAt65).map((m) => m.labelKey)).not.toContain(
+      'employerCoverageLegend',
+    )
   })
 
   it('an unclassified entered account is named (never a silent default blend)', () => {

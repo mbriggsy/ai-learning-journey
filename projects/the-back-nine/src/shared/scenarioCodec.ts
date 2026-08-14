@@ -154,6 +154,14 @@ function optFinite(o: Obj, field: string, path: string): void {
   if (o[field] !== undefined) needFinite(o, field, path)
 }
 
+/** An OPTIONAL boolean field: absent passes (the additive contract); present must be a real
+ *  boolean. Deliberately NOT truthiness — a persisted `"false"`/`0` would coerce to the WRONG
+ *  arm on a field where `false` is the answer that withholds an answer
+ *  (`health.employerPlanCoversRetiredMember`), so a non-boolean is named corruption. */
+function optBoolean(o: Obj, field: string, path: string): void {
+  if (o[field] !== undefined) needBoolean(o, field, path)
+}
+
 /** A fraction ∈ [0, 1] (finite FIRST). The income-stream entity scalars (survivorPct / taxableFraction
  *  / exclusionFraction) are multiplied away at compile, so the engine's `validateParams` NEVER receives
  *  them to range-check (KTD-4). By the model's own contract (model.ts IncomeStream doc; sanity.ts) the
@@ -391,6 +399,9 @@ function checkHealthIntakeV3(v: unknown, path: string): void {
   if (v.workingYearInvestmentByPerson !== undefined) {
     checkFiniteArray(v.workingYearInvestmentByPerson, `${path}.workingYearInvestmentByPerson`)
   }
+  // Additive-optional within v3 (no version bump): absent ⇒ unanswered, and unanswered is a
+  // MISSING FACT for a mixed pre-65 household, never a silent "covered".
+  optBoolean(v, 'employerPlanCoversRetiredMember', path)
 }
 
 /** One {@link IncomeStream} = the common fields + the `type`-keyed tax-treatment union (KTD-6). The

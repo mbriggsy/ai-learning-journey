@@ -36,14 +36,25 @@ const OUTCOME_WORDS: Readonly<Record<Exclude<OutcomeState, 'indeterminate'>, str
   'already-failing': copy.outcomeAlreadyFailing,
 }
 
-function MissingList({ missing }: { missing: readonly MissingFact[] }) {
-  if (missing.length === 0) return null
-  const names = [...new Set(missing.map((m) => copy[m.labelKey]))]
+/** One kind's block: the lead, the middot-separated fact names, the closing line.
+ *  Extracted so the two kinds share the atomic-unit / overflow behaviour exactly and can
+ *  never drift apart — only their two strings differ. */
+function FactBlock({
+  facts,
+  leadText,
+  tailText,
+}: {
+  readonly facts: readonly MissingFact[]
+  readonly leadText: string
+  readonly tailText: string
+}) {
+  if (facts.length === 0) return null
+  const names = [...new Set(facts.map((m) => copy[m.labelKey]))]
   const shown = names.slice(0, 3)
   return (
     <>
       <p className="strip-secondary">
-        {copy.answerStillNeeded}{' '}
+        {leadText}{' '}
         {/* each fact is an ATOMIC unit (nowrap) so a range like "(62–70)" never splits at
             the en-dash; the list wraps BETWEEN facts at the middot separator (CSS ::before). */}
         {shown.map((name) => (
@@ -57,7 +68,41 @@ function MissingList({ missing }: { missing: readonly MissingFact[] }) {
           </span>
         )}
       </p>
-      <p className="strip-tertiary">{copy.answerNoSynthesis}</p>
+      <p className="strip-tertiary">{tailText}</p>
+    </>
+  )
+}
+
+/** The strip's LEAD over a blocked answer. Keep-going ("takes shape as you go") is only honest
+ *  while something the reader can still enter is holding the answer up. When EVERY blocker is
+ *  unrepresentable, no amount of entry will finish it, and the keep-going lead becomes a promise
+ *  the tool cannot keep — so the lead states the withhold instead. A MIXED household keeps the
+ *  keep-going lead: it has real facts left to enter, and the unrepresentable block below says
+ *  plainly which part is out of reach. */
+export function blockedLeadFor(missing: readonly MissingFact[]): string {
+  const anyActionable = missing.some((m) => (m.kind ?? 'absent') === 'absent')
+  const anyWithheld = missing.some((m) => m.kind === 'unrepresentable')
+  return anyWithheld && !anyActionable ? copy.answerWithheldLead : copy.answerIncomplete
+}
+
+/** The two blocks are SEPARATE and both render when both are non-empty — a household can be
+ *  mid-entry (absent facts) AND carry a shape v1 cannot price at the same time, and collapsing
+ *  them would put an answered fact under "Still needed" or an unentered one under "nothing here
+ *  for you to add". Absent leads: it is the arm the reader can act on. */
+function MissingList({ missing }: { missing: readonly MissingFact[] }) {
+  if (missing.length === 0) return null
+  return (
+    <>
+      <FactBlock
+        facts={missing.filter((m) => (m.kind ?? 'absent') === 'absent')}
+        leadText={copy.answerStillNeeded}
+        tailText={copy.answerNoSynthesis}
+      />
+      <FactBlock
+        facts={missing.filter((m) => m.kind === 'unrepresentable')}
+        leadText={copy.answerCannotPrice}
+        tailText={copy.answerCannotPriceTail}
+      />
     </>
   )
 }
@@ -104,7 +149,7 @@ export function AnswerStrip({
     <aside className="answer-strip" aria-label={copy.answerRegionLabel} aria-live="polite">
       {answer.kind === 'idle' && (
         <>
-          <p className="strip-lead strip-muted">{copy.answerIncomplete}</p>
+          <p className="strip-lead strip-muted">{blockedLeadFor(missing)}</p>
           <MissingList missing={missing} />
         </>
       )}
@@ -115,7 +160,7 @@ export function AnswerStrip({
           strip — a blank hero over a real household, found by the U12·C1 door battery). */}
       {answer.kind === 'inputs-incomplete' && (
         <>
-          <p className="strip-lead strip-muted">{copy.answerIncomplete}</p>
+          <p className="strip-lead strip-muted">{blockedLeadFor(missing)}</p>
           <MissingList missing={missing} />
         </>
       )}
@@ -147,7 +192,7 @@ export function AnswerStrip({
           </>
         ) : answer.outcome.kind === 'input-failure' ? (
           <>
-            <p className="strip-lead strip-muted">{copy.answerIncomplete}</p>
+            <p className="strip-lead strip-muted">{blockedLeadFor(missing)}</p>
             <MissingList missing={missing} />
           </>
         ) : null /* cancelled: a newer run is already in flight — hold quiet */)}
@@ -155,7 +200,7 @@ export function AnswerStrip({
       {answer.kind === 'headline' &&
         (answer.result.headline.outcomeState === 'indeterminate' ? (
           <>
-            <p className="strip-lead strip-muted">{copy.answerIncomplete}</p>
+            <p className="strip-lead strip-muted">{blockedLeadFor(missing)}</p>
             <MissingList missing={missing} />
           </>
         ) : !accountsEntered && negativeStates.has(answer.result.headline.outcomeState) ? (

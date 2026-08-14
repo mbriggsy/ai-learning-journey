@@ -101,6 +101,54 @@ describe('intakeSteps — conditional gates', () => {
     expect(intakeSteps(draft(m)).map((s) => s.id)).toContain('health-quote')
   })
 
+  it('the employer-coverage step appears ONLY for a mixed household with a pre-65 retiree', () => {
+    // Its whole domain: the window gate zeroes an already-retired member's premiums AND
+    // out-of-pocket for every year the other keeps working, so the premise must be asked exactly
+    // where the gate can bite — and nowhere else (a hollow question invites an answer to an inert
+    // fact). Both the working half and the pre-65 half of the predicate are exercised.
+    const m = freshModel()
+    m.update((d) => ({
+      ...d,
+      people: [
+        { ...d.people[0], currentAge: 58, birthYear: 1968 },
+        { ...d.people[1], currentAge: 60, birthYear: 1966 },
+      ],
+    }))
+
+    // All retired ⇒ windowStart 0 ⇒ the gate is a verbatim pass-through ⇒ no question.
+    setStatuses(m, 'retired', 'retired')
+    expect(intakeSteps(draft(m)).map((s) => s.id)).not.toContain('employer-coverage')
+
+    // Both working ⇒ the date sweep stamps ONE shared offset ⇒ no asymmetry ⇒ no question.
+    setStatuses(m, 'working', 'working')
+    expect(intakeSteps(draft(m)).map((s) => s.id)).not.toContain('employer-coverage')
+
+    // Mixed, retiree pre-65 ⇒ the gate bites ⇒ asked.
+    setStatuses(m, 'working', 'retired')
+    expect(intakeSteps(draft(m)).map((s) => s.id)).toContain('employer-coverage')
+
+    // Mixed, but the retiree is already 65 ⇒ Medicare owns those years, nothing left to zero.
+    m.update((d) => ({ ...d, people: [d.people[0], { ...d.people[1], currentAge: 65, birthYear: 1961 }] }))
+    expect(intakeSteps(draft(m)).map((s) => s.id)).not.toContain('employer-coverage')
+  })
+
+  it('the employer-coverage step sits with the health block, never after the accounts loop', () => {
+    // Placement is meaning: the quote says what pre-65 coverage COSTS, this says who pays it
+    // during the working years. Separating them across the long account loop breaks the pairing.
+    const m = freshModel()
+    m.update((d) => ({
+      ...d,
+      people: [
+        { ...d.people[0], currentAge: 58, birthYear: 1968 },
+        { ...d.people[1], currentAge: 60, birthYear: 1966 },
+      ],
+    }))
+    setStatuses(m, 'working', 'retired')
+    const ids = intakeSteps(draft(m)).map((s) => s.id)
+    expect(ids.indexOf('employer-coverage')).toBe(ids.indexOf('health-quote') + 1)
+    expect(ids.indexOf('employer-coverage')).toBeLessThan(ids.indexOf('accounts'))
+  })
+
   it('the IRMAA seed step appears only with a member 64+ (the 2-year lookback reach)', () => {
     const m = freshModel()
     m.update((d) => ({ ...d, people: [{ ...d.people[0], currentAge: 63 }, { ...d.people[1], currentAge: 60 }] }))

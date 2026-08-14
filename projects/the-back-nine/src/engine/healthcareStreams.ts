@@ -17,8 +17,19 @@
  *     holds on the value axis too.
  *   - `windowStart = max(0, max_i retireOffset_i)` — the window opens when the LAST worker
  *     stops (the §0 household-level R33 reading: employer family coverage while anyone works;
- *     a mixed household's retired pre-65 spouse is deliberately unpriced during `[0, Y)`,
- *     disclosed through the §0 channel, D2-owned).
+ *     a mixed household's retired pre-65 spouse is unpriced during `[0, Y)`).
+ *     ⚠️ THE PREMISE IS NOW ASKED, NOT ASSUMED. This gate is honest ONLY when a plan at work
+ *     really does cover the retired member, and it zeroes `oopMedical` as well as the premiums —
+ *     so the understatement compounds and pulls the date EARLIER, the optimistic direction, on
+ *     the flagship route. Intake therefore asks
+ *     (`health.employerPlanCoversRetiredMember`, gated by `anyRetiredPre65WhileAnotherWorks`)
+ *     and REFUSES the date when the answer is no, because `simulate.ts`'s wage-blind arm proves
+ *     the alternative unpriceable rather than merely unpriced.
+ *     (Corrected 2026-08-14: this block used to claim the residual was "disclosed through the §0
+ *     channel, D2-owned". It was not. `METHODOLOGY_DISCLOSURES` carried five rows — market,
+ *     longevity, survivor-ss, outlive-order, conversion-tax — and none of them was healthcare.
+ *     A false disclosure claim in a comment is worse than silence: it retires the very question
+ *     that would have found the defect.)
  *   - Gated working years carry an EXPLICIT 0 — an entered "no premium", never an absent
  *     hole: the validateParams date-route coverage arm treats ABSENT as the error (a silently
  *     healthcare-blind date), while the wage-blind arm rejects only POSITIVE premiums in

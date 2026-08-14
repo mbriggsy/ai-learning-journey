@@ -1522,6 +1522,32 @@ export interface HealthIntakeV3 {
    *  above the steady salary is a DISCLOSED simplification — the override uses the steady figure;
    *  conservative-or-disclose, R40.) */
   readonly workingYearInvestmentByPerson?: readonly number[]
+  /** Does the still-working member's EMPLOYER health plan also cover an already-retired
+   *  pre-65 member, for as long as that work continues?
+   *
+   *  WHY IT IS ASKED AT ALL. `buildHealthcareStreams` window-gates the entered ACA/OOP
+   *  schedules to zero across `[0, windowStart)` where `windowStart` is the HOUSEHOLD max
+   *  retire offset — so a mixed household's already-retired pre-65 member is priced at $0
+   *  healthcare (premiums AND out-of-pocket) for every year the other one keeps working.
+   *  That is only honest under one premise — employer family coverage — and until this
+   *  field existed the premise was never asked and never disclosed, while the understated
+   *  cost pushed the fuck-off date EARLIER (the optimistic cardinal direction) on the
+   *  flagship route.
+   *
+   *  ADDITIVE-OPTIONAL within schemaVersion 3 (the `budget`/`rothConversion` tolerant-reader
+   *  precedent): a pre-existing v3 vault simply lacks the field and decodes unchanged. No
+   *  version bump, no migration ladder.
+   *
+   *  ABSENCE IS NOT "no". Absent ⇒ not yet answered ⇒ a genuinely missing required fact for
+   *  the households {@link anyRetiredPre65WhileAnotherWorks} selects, and NOTHING may default
+   *  it (burned/062 — an in-range default that coincides with a real answer is how a silent
+   *  wrong price ships). `false` is a real answer, and it is the one the tool cannot price:
+   *  a member buying their own pre-65 coverage during someone else's working years has a
+   *  subsidy that depends on household wages, and ACA-MAGI carries NO wage term
+   *  (`healthOverlay.ts` `acaMagi`) — so `simulate.ts` refuses a priced premium on a bridge
+   *  year outright ("rejection beats disclosure"), naming this exact household as the
+   *  canonical instance. Hence ask-and-refuse, never ask-and-guess. */
+  readonly employerPlanCoversRetiredMember?: boolean
 }
 
 /** The display unit the household spend figure was ANSWERED in. An explicit

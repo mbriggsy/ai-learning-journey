@@ -6,7 +6,7 @@ import { fraMonthsForBirthYear } from '@engine/constants/socialSecurity'
 import { medicareExtrasTypical, medicareExtrasTypicalMonthly } from '@engine/constants/health'
 import { budgetGoverns, isActiveAt, isRampedBudget } from '@budget/budgetModel'
 import { budgetYearZeroFullTotal, commitBudgetPatch } from '@budget/budgetToSpending'
-import { anyPre65OrUnknown, spendHelpKeyFor } from './intakeMap'
+import { anyPre65OrUnknown, anyRetiredPre65WhileAnotherWorks, spendHelpKeyFor } from './intakeMap'
 import { BudgetBuilder } from './BudgetBuilder'
 import { CurrencyField, IntegerField, NameField, SegmentedControl, formatMoney, type SegmentOption } from './fields'
 import { FieldError } from './FieldError'
@@ -625,6 +625,50 @@ const healthQuoteStep: StepDef = {
   ),
 }
 
+/** The employer-coverage premise (the mixed-household pre-65 gap). Shown ONLY on
+ *  `anyRetiredPre65WhileAnotherWorks` — the SAME exported predicate the missing-fact list gates
+ *  on, so the app can never name a fact it does not home (the R7 tie `intakeMap` states).
+ *
+ *  NON-BLOCKING (`fields: []`) — the healthQuoteStep / stateStep precedent. The fact is REQUIRED,
+ *  but requiredness is voiced by the answer strip naming it, never by walling the step: an
+ *  advance-gate here would trap a household that wants to keep entering and come back.
+ *
+ *  Two segments, no third "not sure" arm — a hedged option would have to resolve to one of these
+ *  two prices anyway, and picking either on the reader's behalf is the assumption this whole
+ *  question exists to stop making. Unanswered is already a first-class, honestly-named state. */
+const employerCoverageStep: StepDef = {
+  id: 'employer-coverage',
+  headingKey: 'qEmployerCoverageHeading',
+  fields: [],
+  render: (api) => (
+    <>
+      <p className="field-help">{copy.employerCoverageHelp}</p>
+      <SegmentedControl<'covered' | 'own'>
+        legendKey="employerCoverageLegend"
+        name="employer-coverage"
+        vertical
+        value={
+          api.draft.health.employerPlanCoversRetiredMember === undefined
+            ? undefined
+            : api.draft.health.employerPlanCoversRetiredMember
+              ? 'covered'
+              : 'own'
+        }
+        options={[
+          { value: 'covered', labelKey: 'employerCoverageCovered' },
+          { value: 'own', labelKey: 'employerCoverageOwn' },
+        ]}
+        onChange={(v) =>
+          api.update((d) => ({
+            ...d,
+            health: { ...d.health, employerPlanCoversRetiredMember: v === 'covered' },
+          }))
+        }
+      />
+    </>
+  ),
+}
+
 const oopStep: StepDef = {
   id: 'oop-medical',
   headingKey: 'qOopHeading',
@@ -1152,6 +1196,9 @@ export function intakeSteps(draft: ScenarioDraft): readonly StepDef[] {
   // spendHelp generic).
   steps.push(ssStep, anyWorking(draft) ? stateStep : stateStepRetired, spendStep)
   if (anyPre65OrUnknown(draft)) steps.push(healthQuoteStep)
+  // Straight after the quote it qualifies: the quote says what pre-65 coverage COSTS, this says
+  // WHO is paying it during the working years. Gated on the exported predicate, never re-derived.
+  if (anyRetiredPre65WhileAnotherWorks(draft)) steps.push(employerCoverageStep)
   steps.push(oopStep)
   if (anyWorking(draft)) steps.push(workIncomeStep)
   if (anyNearMedicare(draft)) steps.push(irmaaSeedStep, medicareExtrasStep)

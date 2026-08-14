@@ -111,6 +111,9 @@ own validation.
   It does **not** modify the board.
 - `--window-compare` prints the recency/precision trade rather than defaulting it, and
   `--compare-board` prints the disagreement per slot with the board's own player at that rank.
-- **The board is UNCHANGED pending Briggsy's call.** The 2025-window swap set the pattern:
-  measure, decompose, present, then apply on his decision — not silently inside the session that
-  found it.
+- **The board is UNCHANGED — and that is now DECIDED BY MEASUREMENT, not pending.**
+  [`insight 024`](024-four-broken-simulators-four-confident-answers.md) held out 12 seasons and
+  ran real drafts: the realised curve's margin over the room is **+1.5 ± 47.2** against the
+  shipped board's **−18.9 ± 36.7**. Indistinguishable. **A better question, measured worse, is
+  still not a better board.** The measurement in THIS file stands as a description of what the
+  curve means; it is not a licence to swap it.

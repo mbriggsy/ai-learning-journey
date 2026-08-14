@@ -241,14 +241,29 @@ order statistic, selected after the fact for beating expectations. **You cannot 
 - ⚠️ **It also INVERTS the TE risk reading below.** Term (a) alone said `TE1` was the highest
   variance slot (sd 30.5); with the dominant term included **TE1 has the LOWEST total spread of
   the four positional #1s** (60.6 vs RB1's 145.1).
-- **DECISION FOR BRIGGSY, deliberately not taken in-session** (the 2025-swap pattern: measure,
-  decompose, present, apply on his call). Candidates, in the order I'd rank them:
-  1. **Fix the QB block only** — the one place the error is both huge and structurally certain.
-  2. **Ship it as a third instrument** beside `market.py` (value-vs-price) and `consensus.py`
-     (value-vs-experts), reporting disagreements without repricing.
-  3. **Monotone-fit the realised curve and swap** — the real prize, but the fit is a modelling
-     choice that needs its own validation unit.
-  **The board is UNCHANGED until he picks.**
+- ✅ **DECIDED BY MEASUREMENT, NOT BY VOTE — DO NOT REPRICE THE BOARD (2026-08-14).**
+  `scripts/backtest_board.py` (U18) held out 12 seasons, built every valuation from earlier
+  seasons ONLY, ran real 8-team snake drafts at all 8 slots and scored the actual starting
+  lineup against the seven opponents inside the same draft.
+  | arm | margin over the room | |
+  |---|---|---|
+  | ORDER (what the board ships) | **−18.9** ± 36.7 | 0.5σ |
+  | REALISED (insight 023's curve) | **+1.5** ± 47.2 | 0.0σ |
+  | ORDER − REALISED | −25.4 ± 55.6 | 0.5σ |
+  **Nothing is distinguishable.** The realised curve is not better — so it is not shipped.
+  ⚠️ **It is not worse either**; an earlier "REALISED loses at 2.2σ" was an artifact of a
+  strawman drafting bot and evaporated when the simulator was fixed.
+  ⚠️ **AND THE BOARD'S OWN VBD LAYER IS NOT MEASURABLY BETTER THAN DRAFTING STRAIGHT DOWN ADP**
+  (−18.9 ± 36.7). **That is UNRESOLVED, not EQUAL** — 12 seasons cannot resolve a difference this
+  small, and the script prints that sentence every run. Do not quote it as "the board doesn't
+  work", and do not quote it as "the board works".
+  🚨 **FOUR modelling errors were found inside that simulator and EACH produced a confident,
+  publishable-looking, DIFFERENT answer** — no baseline (QBs first), unforced starters (punished a
+  model for its own conclusion), greedy value (six RBs in six rounds), marginal-over-empty-lineup
+  (QBs first again). Read
+  [`insight 024`](docs/insights/024-four-broken-simulators-four-confident-answers.md) **before
+  trusting any simulation result in this repo**, including this one. They were caught only by
+  printing what the arms actually DRAFTED, never by a score.
 
 **📏 THE BOARD'S ERROR BARS ARE MEASURED NOW (2026-08-14).** The board prints `vorp` to one decimal,
 which asserts a precision nobody had ever checked. ⚠️ **This section measures only the SMALLER of

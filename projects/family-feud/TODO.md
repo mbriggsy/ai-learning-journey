@@ -289,6 +289,40 @@ a research job.**
 
 ---
 
+## ▶▶ DO THIS FIRST — THE 2-MINUTE DRESS REHEARSAL (queued 2026-08-15, for a FRESH session)
+
+**Run a full mock draft on the REAL 120-second clock and measure whether the loop fits inside it.**
+
+🚨 **THIS MUST BE RUN BY A SESSION THAT DID NOT DISCOVER THE MECHANICS.** The session that wrote
+`.claude/skills/sleeper-draft-room/` holds the whole answer in context and would pass the test by
+memory, not by the skill — a test it cannot fail, which is this project's sixth tautology and the
+same shape as insight 005 and insight 021. **The skill is the thing under test, not the room.**
+
+**The task, and deliberately not the method:**
+1. Invoke the `sleeper-draft-room` skill and follow it. Run its self-test first.
+2. Create a fresh mock (`1394132992183517184` is SPENT — 15 picks). **Leave the clock at 2 minutes.**
+   That is the point; do NOT set No Limit this time.
+3. Draft our seat through **at least 4 of our picks** using the real Step 3 loop:
+   `merge_picks.py` → `run_engine.py` → `precompute_ladder.py` → fire → confirm against `/picks`.
+4. **TIME EVERY PHASE.** Wall-clock seconds per stage, per pick. This is the deliverable.
+
+**The question being answered** — the repo asserts it and has never measured it since:
+> *"a live run proved the human-in-terminal loop is too slow: the 4.3 clock expired while the
+> engine was being run in Bash"*
+
+Does the loop fit in 120s or not? If it does not, **that is the most important finding left before
+Aug 29** and the fix is a draft-day change, not a code change.
+
+⚠️ **`picked_by` is NOT trustworthy on a running clock** — auto-pick stamps the seat owner's id.
+Read the pick COUNT immediately after each fire. Keep something queued at all times so a blown
+clock degrades to our board, not Sleeper's.
+
+📋 **GRADE THE SKILL AS YOU GO.** Record every moment you needed something the skill did not tell
+you, or where it told you something wrong. That list is worth more than the timings. Report it
+back rather than silently working around it — a gap worked around is a gap that stays.
+
+---
+
 **WHAT IS ACTUALLY LEFT, ranked:**
 1. 🗓️ **THE FINAL RE-RANK, ~Aug 27, THEN FREEZE.** The board ships on the **2026-08-14** ECR.
    Two preseason weeks and roster cut-downs land before Aug 29, so run *THE REAL REFRESH* in the

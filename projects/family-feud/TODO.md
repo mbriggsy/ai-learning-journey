@@ -15,17 +15,19 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
   → the realised curve FAILED its backtest, board UNCHANGED ✅
   → the harness's own defects found and fixed ✅ → board RE-RANKED on the 08-14 ECR ✅
   → the browser half LIVE-PROVEN, an API-confirmed pick ✅ → the room mapped into a skill ✅
-  ◀ HERE (2026-08-15) — **the fire path works and is proven.** `ffDraft` drafted Ja'Marr Chase
-    at pick #1 in a live mock and `/picks` confirmed it on our slot; the cause of the
-    2026-08-14 failure was clicking `row.children[0]`, a handler-less wrapper, when the
-    `onClick` sits on its child. Events bubble UP, never DOWN. Every control in the room is
-    now swept and oracle-confirmed, and the mechanics live in
-    `.claude/skills/sleeper-draft-room/` behind a self-test rather than in prose.
-    **914 tests · 22 test files · 22 scripts · 25 insights.**
-    THE ONE THING LEFT THAT COULD STILL COST PICKS: whether the Step 3 loop fits inside a
-    real 120s clock — never measured, and the repo asserts it does NOT. That is the dress
-    rehearsal queued at the top of this file, and it must be run by a session that did not
-    write the skill. Still missing and unbuildable: `draft_order`, still null.
+  → the 2-minute dress rehearsal RUN, by a session that did not write the skill ✅
+  ◀ HERE (2026-08-15) — **THE LOOP FITS, and the repo's "too slow" claim is now dead.**
+    Seven picks fired on a live 120s clock (mock `1394479498451251200`, seat 5): worst case
+    used **61 of 120s**, typical **24-28s**. All 23 script invocations totalled **5.28s** and
+    the engine never exceeded **0.18s** — **96-98% of every on-clock second was round-trip and
+    agent latency.** The only levers are FEWER ROUND TRIPS and SHORTER OUTPUT, never faster
+    Python. Numbers: [`insight 026`](docs/insights/026-the-loop-fits-and-the-scripts-were-never-the-cost.md).
+    **914 tests · 22 test files · 22 scripts · 26 insights.**
+    Two things that were only ASSERTED are now MEASURED: a deliberately blown clock took our
+    queue-top (#60 = DJ Moore), and `picked_by` stamped our id on that pick we never made.
+    THE ONE THING LEFT THAT COULD STILL COST PICKS: **the queue drains silently and nothing in
+    the loop re-arms it** — three of our seven picks were fired with no safety net at all.
+    `draft_order` is still null on the real draft; it populated correctly on the mock.
 ```
 
 ✅ ~~**THE ONE OPEN DECISION FOR BRIGGSY — one 30-minute mock, or none?**~~ **ANSWERED AND SPENT
@@ -293,7 +295,69 @@ a research job.**
 
 ---
 
-## ▶▶ DO THIS FIRST — THE 2-MINUTE DRESS REHEARSAL (queued 2026-08-15, for a FRESH session)
+## ✅ CLOSED 2026-08-15 — THE DRESS REHEARSAL WAS RUN, BY A SESSION THAT DID NOT WRITE THE SKILL
+
+**Seven picks fired on a live 120-second clock in mock `1394479498451251200` (seat 5, confirmed by
+`draft_order["1390750540631150592"] = 5` once it populated). Zero clocks missed. THE LOOP FITS.**
+
+| pick | protocol | clock at fire | used |
+|---|---|---|---|
+| #5  | merge · engine · ladder as 3 separate calls | `00:59` | **61s (worst)** |
+| #12 | engine+ladder chained | `01:15` | 45s |
+| #21 | chained | `01:36` | 24s |
+| #28 | 3 separate calls, output grepped to 5 lines | `01:32` | 28s |
+| #37 | chained | `01:32` | 28s |
+| #44 | chained | `01:32` | 28s |
+| #53 | chained + queue re-arm in the same trip | `01:36` | 24s |
+
+**23 script invocations totalled 5.28s**; `run_engine.py` never exceeded **0.18s**.
+**96-98% of every on-clock second was round-trip and agent latency.** Full gap analysis, the
+blown-clock positive control, and the five draft-day changes:
+[`insight 026`](docs/insights/026-the-loop-fits-and-the-scripts-were-never-the-cost.md).
+
+### 📋 THE SKILL GRADE — ranked. Only #1 is fixed; the rest are decisions for Briggsy.
+
+1. ✅ **FIXED — the self-test cannot pass on a cold load and tells you to STOP.** Run verbatim at
+   Step 0 as instructed, it returned **7 of 12 FAILED** and *"FAIL — STOP. Re-map before drafting"*
+   on a room that was perfectly healthy: `locate()`'s 4000ms budget expired before the virtualised
+   grid painted (`sawInstead: []`), and the very next `ffFind` succeeded in `waitedMs: 1`. A
+   warm-up call now precedes the assertions. ⚠️ **Honest limit: on a second fresh mock the failure
+   did NOT reproduce** (first-ever `ffFind` returned in 7ms), so the guard is proven *harmless*,
+   not proven *necessary*. It is insurance against an intermittent false red — and a false red is
+   the dangerous direction, because it teaches the operator to skip the gate.
+2. 🚨 **NOTHING RE-ARMS THE QUEUE, AND AN EMPTY QUEUE READS AS HEALTHY.** Six names pre-armed;
+   empty by ~pick 21; **picks #28, #37 and #44 were fired with no safety net.** `precompute_ladder.py`
+   *prints* the order but never loads it, and Step 3 has no re-arm step. Worse,
+   `ffQueueList()` on an empty queue returns **`{count: null, entries: [], agrees: true}`** —
+   `agrees` is true only because `q.length === 0` short-circuits. **Decide: add a re-arm step to
+   Step 3, and make the empty case report `empty: true` instead of `agrees: true`.**
+3. ⚠️ **`ffQueue`'s +1 verification is not robust to concurrent removals.** Asked for 4 names, 3
+   returned `queued: true`, the queue held **2** — Jayden Daniels reported success and was absent
+   (drafted mid-loop, so an unrelated add saw the `+1`). **Only the trailing `ffQueueList()` is
+   trustworthy.** Re-arm cost: ~1.5-2s per name, 5.1s for four.
+4. ⚠️ **Skill Step 1 says "SET No Limit FIRST. Non-negotiable." with no branch for a deliberate
+   clock test** — following it would have destroyed this experiment. Needs a carve-out naming the
+   consequence: at `pick_timer: 120`, `picked_by` is untrustworthy, so read the pick COUNT.
+5. ⚠️ **`run_engine.py` / `precompute_ladder.py` bare are WRONG against a mock**, and neither the
+   skill nor the runbook says so. Bare, they read the REAL league's draft object (`rounds: 16`) and
+   arm the contamination gate with the REAL draft id. Required: `--rounds 15 --draft-id <mock_id>`.
+6. ⚠️ **The `!!` seat-UNVERIFIED banner fires on every pre-draft ladder run**, while the runbook
+   says *"If it prints the `!!` seat banner, STOP."* Pre-draft it is unavoidable (`draft_order` is
+   null, no pick carries our `picked_by`) and it self-clears once our first pick lands. Same
+   false-red shape as #1 — needs a stated exception.
+7. ℹ️ **`.claim-text` comes in TWO nodes per team** (16 for 8 teams), not one. The skill's
+   "verify its parent says the right `Team N`" works, but naive indexing lands 2× off.
+8. ℹ️ **`NEW MOCK NFL DRAFT` navigates the SAME tab.** The skill's "opens in a new tab" is true of
+   clicking an existing mock card, not of creating one.
+
+**What the skill got exactly right, re-proved and worth keeping:** the control map is *exact*
+(wrapper 34×40 owning nothing, button 24×24 owning `onClick`) · `ffDraft` went **7 for 7** with
+`handlerRan: true` and `btnHandlers: ["onClick"]` every time · `ffStartDraft` returned
+`confirmsAnswered: 1` with `window.confirm` verified restored to native · `ffAutoPick` actuated
+both directions via `.slider` and restored · the paste discipline (byte count, not just parse) ·
+**zero screenshot-coordinate clicks all session.**
+
+<details><summary>The original queued task, kept because the reasoning still applies</summary>
 
 **Run a full mock draft on the REAL 120-second clock and measure whether the loop fits inside it.**
 
@@ -325,10 +389,19 @@ clock degrades to our board, not Sleeper's.
 you, or where it told you something wrong. That list is worth more than the timings. Report it
 back rather than silently working around it — a gap worked around is a gap that stays.
 
+</details>
+
 ---
 
 **WHAT IS ACTUALLY LEFT, ranked:**
-1. 🗓️ **THE FINAL RE-RANK, ~Aug 27, THEN FREEZE.** The board ships on the **2026-08-14** ECR.
+1. 🚨 **CLOSE THE QUEUE GAP — the only thing the 2026-08-15 rehearsal found that can still cost a
+   pick.** Three of seven picks were fired with an EMPTY queue and **nothing announced it**. Two
+   small changes, both in the SKILL GRADE above: **(a)** give runbook Step 3 an explicit re-arm
+   step whose only accepted oracle is the trailing `ffQueueList()` — never the per-call
+   `queued: true`, which credits an add that a concurrent removal faked; **(b)** make
+   `ffQueueList()` return `empty: true` instead of `agrees: true` on an empty queue, so the unsafe
+   state stops printing the same reassuring word as the healthy one. Budget ~2s per name.
+2. 🗓️ **THE FINAL RE-RANK, ~Aug 27, THEN FREEZE.** The board ships on the **2026-08-14** ECR.
    Two preseason weeks and roster cut-downs land before Aug 29, so run *THE REAL REFRESH* in the
    runbook once more around **Aug 27** — and then **nothing touches `r`/`pr`/`tier` inside 48 hours
    of the draft.** That rule exists to stop a well-meaning session re-ranking at 7am. Run
@@ -336,7 +409,7 @@ back rather than silently working around it — a gap worked around is a gap tha
    healed or a player who got hurt after the synthesis.
    ⚠️ ~~POSITIVE-CONTROL THE WATCHER'S `start_time` BRANCH~~ ✅ **DONE 2026-08-14** — with a real
    Sleeper object rather than a mock, so it cost nothing and needed no browser.
-2. ~~**Feed the measured opponent profiles into `precompute_ladder.py` as per-seat priors.**~~
+3. ~~**Feed the measured opponent profiles into `precompute_ladder.py` as per-seat priors.**~~
    🚨 **DO NOT BUILD THIS. Measured and killed the same day, 2026-08-14** — see
    [`insight 022`](docs/insights/022-the-opponent-prior-lost-to-always-guess-wr.md).
    Cross-validated leave-one-draft-out, the personal positional prior scored **42.2% against a
@@ -360,15 +433,15 @@ back rather than silently working around it — a gap worked around is a gap tha
      are bigger than ours — a direction to stay alert to, not a count to plan around.**
    - **Re-open only with more distinct 1QB drafts** (the room plays every year), never by
      loosening a floor and never by counting drafter-views as drafts.
-3. **Ship the long-TD bonus into `build_curves.py`.** Everything needed is measured and cached;
+4. **Ship the long-TD bonus into `build_curves.py`.** Everything needed is measured and cached;
    this is now a build, not a question. Worth doing for **correctness only — the edge is ~zero**
    and the file must say so, or the next session will quote it as an advantage.
-4. **DEF has no exact source at all** and the 14 rows stay labelled. **Do not build a DEF curve** —
+5. **DEF has no exact source at all** and the 14 rows stay labelled. **Do not build a DEF curve** —
    the reasoning is in the DECIDED block below and it has not changed. **Re-confirmed 2026-08-14
    against a NEW source:** Sleeper's own projections carry DEF, but only the `pts_allow_0` bucket
    and no points-allowed distribution, so they cannot score the largest term in the DST ladder
    either. Two independent sources, same gap. **Stop looking.**
-5. ~~**Per-player projections as a second instrument.**~~ 🚨 **DO NOT BUILD THIS AS A VALUATION.
+6. ~~**Per-player projections as a second instrument.**~~ 🚨 **DO NOT BUILD THIS AS A VALUATION.
    KILLED 2026-08-14 ON LEAKAGE — it cannot be backtested, and this repo does not ship a valuation
    it cannot test.** This entry used to call it "the largest remaining build and the one with real
    upside."
@@ -401,7 +474,8 @@ already deleted, and would have been the **fifth** tautology this project caught
 and `scripts/scout_opponents.py` now reads it: **37 leagues, 18 drafter-views of 7 DISTINCT
 comparable 1QB redrafts, measured** (⚠️ the two counts are not the same thing — see insight 022).
 Full profiles and their landmines: [`docs/opponents.md`](docs/opponents.md).
-🚨 **AND THE MEASURED MODEL DID NOT SURVIVE ITS FLOOR CONTROL EITHER — see item 2 above and
+🚨 **AND THE MEASURED MODEL DID NOT SURVIVE ITS FLOOR CONTROL EITHER — see the opponent-profiles
+entry in the ranked list above and
 [`insight 022`](docs/insights/022-the-opponent-prior-lost-to-always-guess-wr.md).** Reading the
 opponents was the right move and it produced real room-level base rates; **believing the
 per-seat profiles would have been leg (d)'s own error committed with better data.** What is left
@@ -536,7 +610,7 @@ The old claim: *"no TD-distance column exists on either release, so it needs pla
   how a number becomes a lie." Never sell it as edge.**
 - ⚠️ **It cannot do what `league.md` claims for it.** A rank-based curve shifts the average at each
   rank, so a possession WR2 and a deep-threat WR2 get the identical bonus. Rewarding a specific
-  boom player needs per-player projections — item 5.
+  boom player needs per-player projections — the entry KILLED on leakage in the ranked list.
 
 **✅ SLEEPER SERVES STAT-LINE PROJECTIONS, AND THEY JOIN PERFECTLY (2026-08-14).**
 `https://api.sleeper.app/projections/nfl/2026?season_type=regular&position[]=...` — 3,300 records,
@@ -675,8 +749,12 @@ could never run and the `** my_slot=N IS UNVERIFIED **` banner fired on **every*
   that id is absent when there is no cargo.
 
 - **One terminal on the clock, never a fleet.** A draft is maximally coupled — one board, one
-  clock, one decision, mutating every 120s — and a live run proved the human-in-terminal loop is
-  too slow: the 4.3 clock expired while the engine was being run in Bash.
+  clock, one decision, mutating every 120s. ✏️ **This line used to justify itself with "a live run
+  proved the human-in-terminal loop is too slow: the 4.3 clock expired while the engine was being
+  run in Bash." THAT GENERALISATION IS FALSIFIED — measured 2026-08-15, insight 026.** Seven picks
+  on a live 120s clock used **24-61s**, the engine never exceeded **0.18s**, and 96-98% of the cost
+  was round-trip latency rather than computation. The single-terminal rule still stands on
+  *coupling*, which is the real reason; it no longer needs a speed claim that is not true.
 - **The answer must exist BEFORE the clock starts.** Do the work offline where time is free; on the
   clock do a LOOKUP, not a deliberation. ✏️ **This line used to say "pre-compute the BRANCHES," and
   the branches turned out to be the one part that could not be pre-computed usefully** — enumerating

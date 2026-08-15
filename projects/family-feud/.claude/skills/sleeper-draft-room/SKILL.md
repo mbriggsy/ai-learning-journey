@@ -48,6 +48,14 @@ R.consoleInstalled = ['ffFind','ffDraft','ffQueue','ffUnqueue','ffAutoPick','ffS
 R.readsReact16 = String(window.ffHandlerProps).indexOf('__reactEventHandlers$') !== -1;
 R.searchBoxPresent = !!document.querySelector('input[placeholder*="Find player"]');
 
+// -- WARM-UP, and it is NOT optional. The player grid is virtualised and unpopulated on a
+// cold page load, and locate()'s 4000ms budget can expire before the first row paints. That
+// fails playerFound AND all five draft-control checks below it -- 7 of 12 -- and prints
+// "FAIL: STOP, re-map" over a room that is perfectly healthy. Measured 2026-08-15 on a fresh
+// mock: the first ffFind missed at 4000ms, the very next one found the row in waitedMs:1.
+// A false red here is the DANGEROUS direction: it teaches the operator to skip the gate.
+if (R.searchBoxPresent) { try { await window.ffFind(PLAYER); } catch (e) {} }
+
 // -- the draft control contract (the 2026-08-14 defect lives here) --
 var found = R.searchBoxPresent ? JSON.parse(await window.ffFind(PLAYER)) : { ok: false };
 R.playerFound = found.ok === true;

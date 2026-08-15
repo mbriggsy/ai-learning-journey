@@ -83,13 +83,17 @@ The element found was `DIV.draft-button-wrapper`, 34×40, one `<svg>`, no own te
 
 Two candidates, both consistent with everything observed:
 
-**(a) Synthetic `.click()` does not actuate this build.** Supporting: the modal's `Cancel` was also
+**(a) ❌ WRONG — FALSIFIED 2026-08-15, see the header. Synthetic `.click()` does not actuate this
+build.** Supporting: the modal's `Cancel` was also
 clicked via `.click()` and the modal **stayed open**; a real `Escape` keypress closed it
-immediately. The runbook already records the AUTO-PICK toggle as immune to synthetic events
-including a full pointerdown/mousedown/pointerup/mouseup sequence. If this is the cause,
+immediately. ~~The runbook already records the AUTO-PICK toggle as immune to synthetic events
+including a full pointerdown/mousedown/pointerup/mouseup sequence.~~ ❌ **That runbook line was
+itself wrong and has been corrected — the toggle responds fine to a synthetic click on
+`span.slider`; `.autopick-toggle` is a handler-less wrapper.** If this is the cause,
 `ffDraft`, `ffQueue` and `ffUnqueue` are ALL affected, because every one of them ends in `.click()`.
 
-**(b) The button was inert because our clock had not started.** The API said pick #4 was next, but
+**(b) ❌ NOT THIS FAILURE — a real gate, but not the cause here; see the header. The button was
+inert because our clock had not started.** The API said pick #4 was next, but
 "next pick is ours" and "our clock is live" are not the same instant. `locate()`'s own comment
 says the control renders whether or not it is our turn and *"its presence therefore proves nothing
 about whether a click will pick."* A click on an inert button plausibly falls through to the row,

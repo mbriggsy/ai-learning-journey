@@ -14,25 +14,29 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
   → the opponent prior FAILED its floor control ✅ → realised value measured ✅
   → the realised curve FAILED its backtest, board UNCHANGED ✅
   → the harness's own defects found and fixed ✅ → board RE-RANKED on the 08-14 ECR ✅
-  ◀ HERE — the harness is complete, the board's ORDERING is current, and the remaining work
-    is one scheduled re-rank plus one 30-minute mock. Three candidate improvements have now
-    been built, measured and REJECTED (the opponent prior, the realised curve, per-player
-    projections); the rejections are the deliverable. What the 2026-08-14 evening session
-    added was not a model either — it was finding that four things which LOOKED fine could
-    each have cost a pick: a contamination gate that could never fire, a refresh that could
-    not move a rank, a seat read served from a CDN cache, and a queue that could not fill a
-    mandated slot. What is still missing is `draft_order`, still null, which nothing we
-    build can produce.
+  → the browser half LIVE-PROVEN, an API-confirmed pick ✅ → the room mapped into a skill ✅
+  ◀ HERE (2026-08-15) — **the fire path works and is proven.** `ffDraft` drafted Ja'Marr Chase
+    at pick #1 in a live mock and `/picks` confirmed it on our slot; the cause of the
+    2026-08-14 failure was clicking `row.children[0]`, a handler-less wrapper, when the
+    `onClick` sits on its child. Events bubble UP, never DOWN. Every control in the room is
+    now swept and oracle-confirmed, and the mechanics live in
+    `.claude/skills/sleeper-draft-room/` behind a self-test rather than in prose.
+    **914 tests · 22 test files · 22 scripts · 25 insights.**
+    THE ONE THING LEFT THAT COULD STILL COST PICKS: whether the Step 3 loop fits inside a
+    real 120s clock — never measured, and the repo asserts it does NOT. That is the dress
+    rehearsal queued at the top of this file, and it must be run by a session that did not
+    write the skill. Still missing and unbuildable: `draft_order`, still null.
 ```
 
-❓ **THE ONE OPEN DECISION FOR BRIGGSY — one 30-minute mock, or none?**
-**Recommendation: ONE, scoped to a single API-confirmed manual pick.** Do *not* buy a full dress
-rehearsal: the seat-derivation path was exercised for free on 2026-08-14 against an archived mock's
-still-populated `draft_order`, the ladder runs in 0.239s against the committed fixture, and the
-`start_time` branch is now controlled without a browser. **The one genuinely unproven thing in this
-environment is a single click that lands where it says it landed** — `ffDraft` reports a CLICK, not
-a PICK, and the browser half has not run here since the Cowork migration. It needs Briggsy's Chrome,
-so it is his call to start, not something a session should grab.
+✅ ~~**THE ONE OPEN DECISION FOR BRIGGSY — one 30-minute mock, or none?**~~ **ANSWERED AND SPENT
+2026-08-15. The single API-confirmed pick was bought and it landed.** `ffDraft` drafted Ja'Marr
+Chase at pick #1; `/picks` went 0 → 1 on our slot.
+⚠️ **AND THE ADVICE IN THIS BLOCK WAS WRONG, which is worth keeping.** It said *"do not buy a full
+dress rehearsal"* on the grounds that only the click was unproven. **Briggsy overruled it, and he
+was right:** a No-Limit clock proves the click but deliberately removes the pressure, so it cannot
+answer whether the Step 3 loop *fits in 120 seconds* — the thing the repo already asserts it does
+not. **A single scoped pick was the right first buy; it was never the whole bill.** The rehearsal
+is now queued at the top of this file.
 ⚠️ The second open question below (should QUEUE lead the precomputer's output?) is still unanswered
 and still one word.
 
@@ -826,9 +830,11 @@ all measured:**
   human says they saw it work, believe the human and re-check the instrument first** — a broken
   oracle turns a working mechanism into a closed door.
 - **Draft settings are reachable and scriptable:** the room's ⚙ menu → *Draft Settings* exposes
-  **TIME PER PICK including `No Limit`** and a **CPU Autopick** switch. Set `No Limit` for
-  unhurried mechanism testing. Note the AUTO-PICK toggle in the right-hand panel does **not**
-  respond to `.click()` (the queue icon does) — it needs a real click.
+  **TIME PER PICK including `No Limit`** and a **CPU Autopick** switch. ⚠️ ~~the AUTO-PICK toggle
+  does **not** respond to `.click()` — it needs a real click~~ **CORRECTED 2026-08-15: it responds
+  fine; `.autopick-toggle` is a handler-less wrapper and the `onClick` is on `span.slider` three
+  levels below.** Use `ffAutoPick(true|false)`. Full mechanics:
+  [`.claude/skills/sleeper-draft-room/`](.claude/skills/sleeper-draft-room/SKILL.md).
 
 The other open item is the 2025 season (below); it was parked by measurement, not by neglect, so
 re-opening it is Briggsy's call and it comes with an error budget attached.

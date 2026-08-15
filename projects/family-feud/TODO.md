@@ -224,10 +224,24 @@ future sessions don't blame the human"*, a lesson written down **specifically so
 re-derived**, and it got re-derived anyway. Prose in a long document is not where procedural
 knowledge survives.
 
-**The blocker to writing that skill is one unresolved measurement.** `ffDraft` returned
-`{"clicked": true}` and drafted nobody — [`insights/025`](docs/insights/025-the-click-reported-success-and-drafted-nobody.md)
-has the full account. **A skill asserting unverified clicks would rot exactly the way the runbook
-section did, so measure first, write second.**
+✅ **THE BLOCKER IS GONE — MEASURED AND FIRED 2026-08-15. The room is mapped and every control is
+API- or oracle-confirmed. What remains is WRITING the skill, which is now a transcription job, not
+a research job.**
+- **The cause:** `draftButton()` returned `row.children[0]` = `div.draft-button-wrapper`, which owns
+  **no handler**; the `onClick` is on its child `div.draft-button`. **Events bubble UP, never DOWN.**
+  Fixed, 914 tests, 4 mutants killed. [`insights/025`](docs/insights/025-the-click-reported-success-and-drafted-nobody.md)
+  is now RESOLVED and carries the full live transcript.
+- **The proof:** baseline `/picks` = 0 → `ffDraft("Ja'Marr Chase")` → `pick_no=1, draft_slot=1,
+  picked_by=1390750540631150592`. Live DOM matched prediction exactly (wrapper 34×40 `[]`, button
+  24×24 `["onClick"]`).
+- **Swept and passing:** `ffFind` · `ffDraft` · `ffQueue` · `ffQueueList` · `ffUnqueue` ·
+  `ffAutoPick` (new) · `ffStartDraft` + its three guards. The player-card modal closes via
+  `.modal-item-underlay`.
+- 🚨 **Carry this into the skill: set No Limit because it makes `picked_by` TRUSTWORTHY**, not just
+  because it buys time. Auto-pick fires only on timeout, so `pick_timer: 0` removes the one confound
+  `/picks` cannot rule out.
+- **Mock `1394132992183517184` is now SPENT** (15 picks, ours is #1). Create a fresh one via
+  `NEW MOCK NFL DRAFT` in the right panel — never the `+` on `/draftboards`, that is the league wizard.
 
 **✅ A MOCK IS ALREADY SITTING THERE, `pre_draft`, NOTHING TO CREATE: `1394132992183517184`**
 (8-team snake, 15 rounds, `league_id: null`, verified). `1394049093545758720` is spent — complete.

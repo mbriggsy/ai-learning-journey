@@ -267,7 +267,7 @@ Claude's hands are claude-in-chrome on Briggsy's logged-in Chrome; eyes stay on 
 - **Clock budget:** browser actions cost ~5-15s per round trip (search, click, verify screenshot). Treat a 120s clock as ~90s of decision time. With a standing ladder, execution needs ~15s total: filter, verify, fire.
 - **Player-row icons, left to right (verified in the Aug 6 queue lab):** `+` = **INSTANT DRAFT while on the clock, no confirmation** (pre-draft it no-ops) · `☆` star = watchlist only · **blue document-plus `📄+` = ADD TO QUEUE — works pre-draft and any time.** The queue lives in the right panel's Queue tab (shows a count); each entry has a REMOVE button.
   - 🚨 **"the `+`" MEANS `div.draft-button`, NOT `row.children[0]`. Corrected 2026-08-15.** `row.children[0]` is `div.draft-button-wrapper` — an unstyled **24×24**-content wrapper that owns **no handler**, and clicking it drafts nobody while *opening the player card*. The instant-draft behaviour is true of the child and false of the parent. Reach it as `row.children[0].querySelector('.draft-button')`, never `document.querySelector('.draft-button')` — that class is **not unique** (7 occurrences, 4 contexts, including an auction variant whose handler calls `_hoverPlayer` and never drafts).
-  - ✏️ **RETRACTED: "The player-card modal has NO action buttons."** It carries a lone `Cancel` (observed 2026-08-14). ⚠️ **How that modal closes is still UNMAPPED** — a synthetic click on `Cancel` did not close it while a real `Escape` did, and that comparison is confounded (real-keypress vs synthetic-click, two variables at once; a synthetic Escape was never tried). Predicted to be the same ancestor mistake, **not verified**. The advice stands for a different reason: **never open it mid-draft, because you do not yet know how to close it.**
+  - ✏️ **RETRACTED: "The player-card modal has NO action buttons."** It carries a lone `Cancel`. ✅ **MAPPED 2026-08-15: to close it synthetically, click `.modal-item-underlay`** — that node owns an `onClick`. The `Cancel` `<button>` owns **no** handler and no ancestor within 6 hops owns one, which is exactly why the 2026-08-14 synthetic click on it did nothing. Third instance of the same law. ⚠️ Whatever native listener `Cancel` itself uses is still unmapped and probably always will be — page script cannot enumerate native listeners (`getEventListeners` is DevTools-only). **Use the underlay.** Still avoid opening the card mid-draft; it is a time sink even when closable.
 - **PRE-ARM THE QUEUE.** The ladder to load is the one `scripts/precompute_ladder.py --slot <slot>` prints under **QUEUE THIS ORDER** — it is the engine's own BEST AVAILABLE order, so it needs no judgement applied on top and no second ranking exists to drift from it. *(added 2026-08-09; `ffQueue` / `ffQueueList` / `ffUnqueue` in `scripts/sleeper_draft_console.js` are what put it in and keep it ranked.)* Before the draft starts, load the round-1 ladder **with `ffQueue('<full name>')`, top name first** — *not* by clicking `📄+` icons, which is the pixel path this file deleted on 2026-08-14. `ffQueueList()` reads the queue back in order and document order == visual order, so it is the check that the load actually took; Sleeper labels the first entry **NEXT PICK**. At each window, refresh to the current ladder's top 2-3 (`ffUnqueue` the dead, `ffQueue` the new) — skip maintenance when the clock is tight; direct fire stays primary. A loaded queue makes every failure mode safe: missed clock, frozen bridge, native dialog — Sleeper's timeout autopick takes the queue TOP, i.e. OUR guy, not ADP's. (Mock #2 ran the whole draft with an empty queue because the affordance wasn't known; the pick-79 miss would have cost nothing with a loaded queue.) Keep the AUTO-PICK toggle OFF — with a loaded queue it insta-drafts queue-top the moment our turn starts, no judgment applied.
 - 🚨 **STEP ZERO, BEFORE THE DRAFT STARTS — INSTALL THE CONSOLE. Nothing below runs without it.**
   Evaluate the whole of `scripts/sleeper_draft_console.js` in the draft-room tab (it is an IIFE
@@ -297,9 +297,22 @@ Claude's hands are claude-in-chrome on Briggsy's logged-in Chrome; eyes stay on 
 >
 > Full write-up: [`insights/025`](insights/025-the-click-reported-success-and-drafted-nobody.md).
 >
-> 🚨 **AN EXPLANATION IS NOT AN ACTUATION. There is still no API-confirmed pick through the fixed
-> selector** — the console is 1 attempt / 1 failure, and the old 24/24 pixel path was deleted.
-> **Fire one in a mock before draft day.** Until then the failsafe is the QUEUE.
+> ✅ **AND IT IS NOW LIVE-PROVEN — API-CONFIRMED PICK, mock `1394132992183517184`, 2026-08-15.**
+> Baseline `/picks` = **0**. `ffDraft("Ja'Marr Chase")` → `{clicked:true, handlerRan:true}` in 9 ms.
+> `/picks` cache-busted immediately after → **`pick_no=1, draft_slot=1, Ja'Marr Chase,
+> picked_by=1390750540631150592`**. The live DOM matched the prediction exactly: wrapper **34×40**
+> with `[]` handlers, child `.draft-button` **24×24** with `["onClick"]`.
+> **Every other control was swept in the same run and all passed** — `ffFind`, `ffQueue`
+> (empty→1, 106 ms), `ffQueueList`, `ffUnqueue` (1→empty), and the new `ffAutoPick` both
+> directions plus idempotent. `ffStartDraft`'s three guards all refused first and `window.confirm`
+> came back native.
+>
+> 🚨 **AND SET "No Limit" FOR A BETTER REASON THAN TIME: it is what makes `picked_by` trustworthy.**
+> Auto-pick fires **only on timeout**, so at `pick_timer: 0` it has no trigger and *cannot* be the
+> thing that stamped our id — which is the one confound `/picks` alone cannot rule out. Corroborated
+> three ways in this run: AUTO-PICK read `checked:false`, the queue was empty, and **Sleeper ranked
+> Chase RK 3 while picks #2/#3 took Gibbs and Bijan — auto-pick takes RK 1, so it would never have
+> chosen Chase.** Our click picked a player Sleeper's own board would not have.
 > ✏️ **RETRACTED:** this block used to say the queue's own `.click()` was "under the same
 > suspicion". It never was — `ffQueue` clicks an `<img>` **inside** `div.queue-action[onClick]`,
 > i.e. a descendant, which is structurally correct. That suspicion was an inference from `ffDraft`

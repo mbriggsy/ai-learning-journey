@@ -144,10 +144,70 @@ counts wrapper clicks separately. **4 mutants planted, 4 killed; restoring the o
 7 tests.** (Insight 013 and 019, again: a test written against the same mental model as the code
 ratifies the bug.)
 
-**Still unproven, and it is the thing that matters on 2026-08-29:** no API-confirmed pick has gone
-through the corrected selector. There is currently **no live-proven fire path in this repo** — the
-console is 1 attempt / 1 failure, and the 24/24 pixel path was deleted on 2026-08-14. **An
-explanation is not an actuation.** Fire one in a mock before draft day.
+## ✅✅ LIVE-PROVEN THE SAME DAY — mock `1394132992183517184`, 2026-08-15
+
+An explanation is not an actuation, so one was fired. **`ffDraft` drafted a player and the API
+confirmed it.**
+
+```
+baseline /picks (cache-busted)  ->  0 picks
+ffDraft("Ja'Marr Chase")        ->  {clicked:true, handlerRan:true, btnHandlers:["onClick"]}  9ms
+/picks (cache-busted)           ->  pick_no=1, round=1, draft_slot=1,
+                                    Ja'Marr Chase (WR, CIN),
+                                    picked_by=1390750540631150592   <- PoppaBriggsy
+```
+
+**The live DOM matched both predictions exactly**, which is the part that makes this more than one
+lucky click:
+
+| node | class | rect | handlers |
+|---|---|---|---|
+| `row.children[0]` | `draft-button-wrapper` | **34×40** | **`[]`** |
+| its child | `draft-button` | **24×24** | **`["onClick"]`** |
+
+34×40 is the geometry this very file recorded for the element it clicked on 2026-08-14; 24×24 is
+what the stylesheet says the real button is. Wrapper owns nothing, button owns the handler, button
+is a descendant.
+
+### 🚨 `picked_by` CAN settle it — but only on a No-Limit clock. This file said it never could.
+
+The warning above ("`picked_by` did NOT settle it and cannot") is true **under a running clock** and
+false under No Limit, and the difference is worth more than the pick it proved:
+
+- Auto-pick fires **only when a user runs out of time** (Sleeper's own settings copy). With
+  `pick_timer: 0` **there is no timeout**, so auto-pick has no trigger — it is not merely unlikely,
+  it is mechanically impossible. That removes the ONLY other process that stamps our `picked_by`.
+- Corroborated three more ways: the AUTO-PICK toggle read `checked:false`; the queue was empty; and
+  **Sleeper ranked Chase RK 3** while picks #2 and #3 went Gibbs and Bijan — so auto-pick would have
+  taken RK 1, not Chase. **Our click chose a player Sleeper's own board would not have.**
+
+**So: set No Limit not just to buy diagnosis time, but because it is what makes the oracle
+unambiguous.** That is a better reason than the one this file gave, and it survives being rushed.
+
+### The whole console is now live-proven, control by control
+
+| call | result | oracle |
+|---|---|---|
+| `ffStartDraft` guards ×3 | all refused, `confirm` untouched | in-page |
+| `ffStartDraft({iAmInAMock:true})` | `confirmsAnswered:1`, `confirm` restored native | API: `status` → `drafting` |
+| `ffFind` | found in 0 ms, `hasDraftControl:true` | — |
+| **`ffDraft`** | **`handlerRan:true`** | **API: 0 → pick #1 on our slot** |
+| `ffQueue('Cameron Dicker')` | empty → 1, 106 ms | Sleeper's own queue count |
+| `ffQueueList` | `agrees:true` | cross-check vs count |
+| `ffUnqueue` | 1 → empty, 100 ms | Sleeper's own queue count |
+| `ffAutoPick(true/false)` | toggled both ways; third call idempotent | the checkbox, not the click |
+
+### The last unmapped control, and the bug reproduced on demand
+
+- **Clicking the wrapper re-opened the player card**, live, deliberately — body text grew 3,912
+  chars. The defect is reproducible at will, which is what makes the fix falsifiable.
+- **The modal's `Cancel` is a `<button>` owning NO handler**, and no ancestor within 6 hops owns
+  one — so the 2026-08-14 synthetic click on it genuinely could do nothing. ✅ **But the modal DOES
+  close synthetically: click `.modal-item-underlay`, which owns an `onClick`.** Third instance of
+  the same law. The `Escape` comparison was never needed.
+- ⚠️ **Still not mapped:** whatever native listener `Cancel` itself hangs off. Page script cannot
+  enumerate native listeners (`getEventListeners` is DevTools-only), so this is a limit of the
+  instrument, not a finding. **Use the underlay.**
 
 ## What IS proven, and is worth keeping
 

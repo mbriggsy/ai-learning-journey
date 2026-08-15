@@ -95,7 +95,8 @@ def verdict(before, after):
 # the queue icon actually moves the page's QUEUE (n) text -- which is the whole thing under test.
 STUB_ROOM = r"""
 function buildRoom({ bodyText, clickAddsToQueue, hasDraftControl = true, hasQueueIcon = true,
-                     renderDelayMs = 0 }) {
+                     renderDelayMs = 0, wrapperHasButton = true, draftDisabled = false,
+                     draftSetsPicking = true }) {
   const state = { body: bodyText, clicks: 0 };
 
   const mk = (o) => {
@@ -132,8 +133,35 @@ function buildRoom({ bodyText, clickAddsToQueue, hasDraftControl = true, hasQueu
     },
   };
 
-  const draftCell = mk({ width: 34, height: 26, svgs: 1 });          // <60px, has svg, no text
-  draftCell.click = () => { state.draftClicks = (state.draftClicks || 0) + 1; };
+  // 🚨 THE WRAPPER/BUTTON SPLIT IS THE WHOLE POINT OF THIS STUB.
+  // Until 2026-08-15, draftCell WAS the button, so this suite was structurally incapable of
+  // catching the real defect: draftButton() returned div.draft-button-wrapper, the click never
+  // reached a handler, and 28 tests stayed green through a control that drafted nobody.
+  // row.children[0] is now a handler-LESS wrapper whose clicks are counted SEPARATELY, so any
+  // regression that goes back to clicking it shows up as wrapperClicks > 0 instead of passing.
+  const draftBtn = mk({ width: 24, height: 24, svgs: 1 });
+  draftBtn.classList = {
+    _c: ['draft-button'].concat(draftDisabled ? ['disable'] : []),
+    contains(c) { return this._c.includes(c); },
+    add(c) { if (!this._c.includes(c)) this._c.push(c); },
+  };
+  draftBtn._picking = false;
+  draftBtn.querySelector = (sel) => (sel === '.spinner' && draftBtn._picking ? {} : null);
+  draftBtn.click = () => {
+    state.draftClicks = (state.draftClicks || 0) + 1;
+    // Models _onClickDraft: stopPropagation(), THEN setState({drafting}) -> .picking + spinner.
+    // A DISABLED button reaches neither -- which is exactly the silent failure handlerRan exists
+    // to make audible, since the correctly-aimed click no longer opens a player card to warn us.
+    if (!draftDisabled && draftSetsPicking) {
+      draftBtn.classList.add('picking');
+      draftBtn._picking = true;
+    }
+  };
+
+  const draftCell = mk({ width: 34, height: 40, svgs: 1 });   // the WRAPPER -- carries no handler
+  draftCell.click = () => { state.wrapperClicks = (state.wrapperClicks || 0) + 1; };
+  draftCell.querySelector = (sel) =>
+    (wrapperHasButton && sel === '.draft-button' ? draftBtn : null);
   const nameCell  = mk({ text: 'Justin Jefferson', width: 150, height: 20 });
   const row = mk({ width: 700, height: 26, children: hasDraftControl ? [draftCell] : [] });
   row.querySelector = (sel) => (hasQueueIcon && sel.includes('queue.png') ? queueIcon : null);
@@ -314,6 +342,89 @@ class TestFfDraftKeepsItsRefusal(unittest.TestCase):
         r = json.loads(out)
         self.assertEqual(r["ok"], True)
         self.assertEqual(r["hasDraftControl"], False)
+
+
+class TestItClicksTheButtonAndNotTheBoxAroundIt(unittest.TestCase):
+    """The 2026-08-14 defect, pinned. See draftButton() in the console.
+
+    ffDraft returned {clicked:true} and drafted nobody because draftButton() handed back
+    div.draft-button-wrapper -- a layout div owning no handler -- so the click bubbled UP into the
+    row and opened the player card. The old stub made row.children[0] the button itself, which is
+    why every test here stayed green through it. These four are the ones that would have gone red.
+    """
+
+    def _draft(self, **kw):
+        opts = dict(bodyText="QUEUE (0)", clickAddsToQueue=False, **kw)
+        out = run_node(STUB_ROOM + f"""
+        const st = buildRoom({json.dumps(opts)});
+        window.ffDraft('Justin Jefferson').then(r => console.log(JSON.stringify({{
+          res: JSON.parse(r),
+          draftClicks: st.draftClicks || 0,
+          wrapperClicks: st.wrapperClicks || 0,
+        }})));
+        """)
+        return json.loads(out)
+
+    def test_the_click_lands_on_the_button_never_on_the_wrapper(self):
+        r = self._draft()
+        self.assertEqual(r["res"]["clicked"], True)
+        self.assertEqual(r["draftClicks"], 1, "the .draft-button child must be the node clicked")
+        self.assertEqual(r["wrapperClicks"], 0,
+                         "clicking div.draft-button-wrapper is THE bug -- it drafts nobody")
+
+    def test_a_wrapper_with_no_button_inside_refuses_and_clicks_nothing(self):
+        # The DOM rotated, or the player is gone. Either way a refusal is the only honest answer;
+        # falling back to `|| first` would silently restore the broken click.
+        r = self._draft(wrapperHasButton=False)
+        self.assertEqual(r["res"]["clicked"], False)
+        self.assertIn("already drafted?", r["res"]["reason"])
+        self.assertEqual(r["wrapperClicks"], 0, "a refusal must not click the wrapper as a fallback")
+        self.assertEqual(r["draftClicks"], 0)
+
+    def test_a_disabled_button_is_refused_before_the_click_not_after(self):
+        # Sleeper styles .disable with colour only -- no pointer-events, no overlay -- so the
+        # button accepts the click and silently does nothing. Refuse rather than fire into a void.
+        r = self._draft(draftDisabled=True)
+        self.assertEqual(r["res"]["clicked"], False)
+        self.assertIn("clock is not live", r["res"]["reason"])
+        self.assertEqual(r["draftClicks"], 0, "it must not click a button it has already refused")
+
+    def test_a_click_whose_handler_never_ran_reports_handlerRan_false(self):
+        # THE REGRESSION THE FIX ITSELF CREATES. Aimed correctly, a click that does nothing is
+        # SILENT -- no player card to warn us any more. handlerRan is the replacement alarm.
+        r = self._draft(draftSetsPicking=False)
+        self.assertEqual(r["res"]["clicked"], True)
+        self.assertEqual(r["res"]["handlerRan"], False,
+                         "a click with no .picking/spinner fingerprint must not read as success")
+
+    def test_a_healthy_click_reports_handlerRan_true(self):
+        r = self._draft()
+        self.assertEqual(r["res"]["handlerRan"], True)
+        self.assertEqual(r["res"]["confirmed"], False,
+                         "handlerRan is an in-page signal and must never become confirmation")
+
+
+class TestTheWrapperMistakeCannotComeBackTextually(unittest.TestCase):
+    """Belt and braces: the two one-token edits that would reinstate the defect."""
+
+    def test_draft_button_does_not_return_row_children_zero_directly(self):
+        src = code_only(read_console())
+        m = re.search(r"function draftButton\(row\)\s*\{(.*?)\n  \}", src, re.S)
+        self.assertIsNotNone(m, "draftButton() not found -- did it get renamed?")
+        body = m.group(1)
+        self.assertIn(".draft-button", body,
+                      "draftButton must descend to the child that owns the handler")
+        self.assertNotIn("|| first", body,
+                         "`|| first` silently restores the wrapper click that drafted nobody")
+        self.assertNotIn("auction-button", body,
+                         "auction-button appears 0 times in Sleeper's bundle -- it can never match")
+
+    def test_handler_props_accepts_the_react_16_key(self):
+        # Sleeper runs React 16 (__reactEventHandlers$). Probing only React 17+'s __reactProps$
+        # returns [] on every node and reads exactly like "no handler here" -- a false negative
+        # that would send the next session hunting a phantom. Measured live 2026-08-15.
+        src = code_only(read_console())
+        self.assertIn("__reactEventHandlers$", src)
 
 
 QUEUE_PANEL = r"""

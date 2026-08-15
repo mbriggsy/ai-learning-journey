@@ -1,8 +1,29 @@
 # 025 — The click reported success and drafted nobody
 
-date: 2026-08-14
+date: 2026-08-14 · **RESOLVED 2026-08-15**
 modules: [scripts/sleeper_draft_console.js, docs/draft-day-runbook.md]
-status: **one finding PROVEN, one cause UNRESOLVED — read the split before acting**
+status: **RESOLVED — the cause was NEITHER candidate below. Read this header, then the correction
+at the bottom; the two candidate sections are kept as history and are both WRONG.**
+
+> ## ✅ THE ANSWER: we were clicking the empty box around the button.
+>
+> `draftButton()` returned `row.children[0]` = `div.draft-button-wrapper`, a layout div that owns
+> **no handler at all**. The `onClick` is on its **child**, `div.draft-button`. **DOM events bubble
+> UP, never DOWN** — so the click could never reach the handler, and instead bubbled *up* into
+> `div.player-rank-item2`'s `onPlayerSelected`, which is precisely what opens the player card.
+>
+> **The selector was wrong by exactly one level. The actuation mechanism was never broken.**
+>
+> Confirmed two independent ways on 2026-08-15: by reading Sleeper's shipped 12.1 MB bundle
+> (`draft-button-wrapper` renders at 3 sites, **zero** with an `onClick`), and by walking the live
+> React props in the room. Fixed in `scripts/sleeper_draft_console.js`; 4 mutants planted, 4 killed.
+>
+> **The reusable law, which is the part that travels:** clicking a DESCENDANT of the handler works;
+> clicking an ANCESTOR does nothing *and quietly hands your click to whatever ancestor handler sits
+> above it* — which is how a dead control disguises itself as a different feature working.
+>
+> 🚨 **The DIAGNOSIS is settled. The FIX is still unfired in a live room** — no API-confirmed pick
+> has yet gone through the corrected selector.
 
 ## What happened
 
@@ -39,10 +60,26 @@ unanswerable.
 ## What the click actually did
 
 It opened the **player-card modal** — Chase's age, height, college, rankings, and a lone `Cancel`.
-The element was correctly identified: `DIV.draft-button-wrapper`, 34×40, one `<svg>`, no own text,
-matching `draftButton()`'s shape test exactly. So the selector is right and the actuation is not.
+The element found was `DIV.draft-button-wrapper`, 34×40, one `<svg>`, no own text, matching
+`draftButton()`'s shape test exactly.
+
+> ✏️ **THIS PARAGRAPH ORIGINALLY ENDED "So the selector is right and the actuation is not." THAT
+> WAS EXACTLY INVERTED, and it is the sentence that aimed a full day of investigation at the wrong
+> question.** The shape test passed *because* it reached through children: `first.querySelectorAll('svg')`
+> searches **descendants**, so a test written to describe the BUTTON was satisfied by the WRAPPER
+> and reported the wrong node with total confidence. **A structural test that reaches through
+> children cannot tell you which node it matched** — that is the transferable lesson, and it is a
+> cousin of insight 008 (a broken instrument returns a value that reads like a finding).
+>
+> The geometry recorded here belongs to the wrapper too: `.draft-button` itself is **24×24**, and
+> `draft-button-wrapper` appears **zero** times in the stylesheet — it is unstyled scaffolding
+> sized by the row.
 
 ## 🚨 THE CAUSE IS UNRESOLVED. Do not write it up as settled.
+
+> ⚠️ **HISTORY, PRESERVED — BOTH CANDIDATES BELOW ARE WRONG. Resolved 2026-08-15; see the header.**
+> They are kept because the *reasoning* was sound given what was known, and because the way both
+> were falsified is the useful part. Do not act on either.
 
 Two candidates, both consistent with everything observed:
 
@@ -61,6 +98,56 @@ which is exactly what opens the player card.
 **Settling it needs one clean turn on a No-Limit clock**, where the room has visibly been on our
 pick for several seconds before anything is clicked, and where a synthetic click and a real
 ref-click can be tried in sequence without a timer destroying the trial.
+
+---
+
+## ✅ HOW IT WAS ACTUALLY SETTLED — 2026-08-15, and it needed no draft at all
+
+The paragraph above was wrong about what it would take. **No clock, no pick, and no live draft were
+required** — the question was answerable from Sleeper's own shipped source plus a read-only walk of
+the DOM. Both candidates died, each to a different piece of evidence:
+
+**Cause (a) — "synthetic `.click()` does not actuate this build" — FALSIFIED, twice.**
+- `grep -c isTrusted` over the whole **12.1 MB** app bundle returns **0**. React 16's
+  root-delegated dispatch has no mechanism to distinguish a synthetic click from a human one.
+- **Positive proof, controlled pair, live room:** a synthetic click on `.autopick-toggle .slider`
+  **toggled AUTO-PICK** — the one control this file and the runbook both called immune — while the
+  identical synthetic click on its **wrapper** changed nothing. Restored clean.
+- The three synthetic successes were never luck. `ffQueue` clicks an `<img>` *inside*
+  `div.queue-action[onClick]`; `ffUnqueue` clicks `div.delete-button[onClick]` exactly;
+  `ffStartDraft` clicks a *child* of `div.start-draft-button[onClick]`. **Descendant, exact,
+  descendant.** The two failures are both the ancestor case.
+- ⚠️ The `Cancel`-vs-`Escape` evidence cited for (a) is **confounded** and should never have been
+  weighed as strongly as it was: it compared a *real keypress* against a *synthetic click*, varying
+  two things at once. A synthetic Escape was never tried.
+
+**Cause (b) — "the button was inert because our clock had not started" — a REAL gate, but not this
+failure.** `_onClickDraft` runs `stopPropagation()` **first, unconditionally, before** it tests the
+disabled flag. So a click landing on a *disabled* `.draft-button` dies inside the handler and **the
+modal cannot open**. The modal opened — therefore the click never reached the button, whatever the
+clock was doing. *(The gate itself is real and is now refused explicitly, before the click.)*
+
+### The part that should change behaviour, not just belief
+
+🚨 **Fixing this DELETED our alarm.** While we were clicking the wrapper, failure was *loud* — a
+player card appeared on screen. Aimed correctly, a click on a disabled button is **silent**: no
+pick, no modal, no exception, and a byte-identical `{clicked:true}`. **The fix would have made the
+bug quieter than the bug.** So `ffDraft` now refuses a `.disable` button *before* clicking, and
+after clicking polls for `.picking` / `div.spinner` — state `_onClickDraft` sets inside its own
+body. That `handlerRan` flag is an **intra-handler fingerprint**, the equivalent of
+`ffStartDraft`'s `confirmsAnswered: 1`. It is **not** confirmation: `/picks` remains the only oracle.
+
+**A green suite proved nothing here, and that is the fourth time.** The stub made `row.children[0]`
+the button itself, so the tests were *structurally incapable* of catching this — 28 of them stayed
+green through a control that drafted nobody. The stub now models the wrapper/button split and
+counts wrapper clicks separately. **4 mutants planted, 4 killed; restoring the original bug fails
+7 tests.** (Insight 013 and 019, again: a test written against the same mental model as the code
+ratifies the bug.)
+
+**Still unproven, and it is the thing that matters on 2026-08-29:** no API-confirmed pick has gone
+through the corrected selector. There is currently **no live-proven fire path in this repo** — the
+console is 1 attempt / 1 failure, and the 24/24 pixel path was deleted on 2026-08-14. **An
+explanation is not an actuation.** Fire one in a mock before draft day.
 
 ## What IS proven, and is worth keeping
 

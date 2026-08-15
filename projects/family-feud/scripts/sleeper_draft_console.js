@@ -42,6 +42,26 @@
     return [...el.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
   }
 
+  // Does this node actually OWN a React handler, or does it merely look like a button?
+  //
+  // ⚠️ Sleeper runs React 16, which stores props under __reactEventHandlers$<hash> -- NOT the
+  // __reactProps$<hash> of React 17+. Measured in the live room 2026-08-15. Probing only the
+  // modern key returns [] on EVERY node and reads exactly like "no handler here", which is the
+  // false negative that would send the next session hunting a phantom. Both keys are accepted so
+  // this keeps working if Sleeper upgrades.
+  //
+  // ASSERT with this, never SEARCH with it. The invariant is depth-relative: the node you click
+  // must be at-or-below the node carrying the handler you intend, with no other handler in
+  // between. A tempting rule of "the node must itself carry the behaviour class" is WRONG and
+  // would break ffStartDraft, which deliberately matches div.start-draft-text -- a child owning
+  // NO handler -- and fires correctly by bubbling up to div.start-draft-button.
+  function handlerProps(el) {
+    if (!el) return [];
+    const k = Object.keys(el).find(x => x.startsWith('__reactEventHandlers$')
+                                     || x.startsWith('__reactProps$'));
+    return k ? Object.keys(el[k]).filter(x => /^on[A-Z]/.test(x)) : [];
+  }
+
   function setSearch(text) {
     const input = document.querySelector('input[placeholder*="Find player"]');
     if (!input) throw new Error('search box not found -- is this a draft room?');
@@ -70,14 +90,31 @@
     return row;
   }
 
-  // The draft control is the row's leftmost cell: ~34px wide, holds an svg, carries no text.
-  // Identified structurally rather than by position on screen.
+  // 🚨 THE DRAFT CONTROL IS NOT row.children[0]. THAT IS AN EMPTY WRAPPER. Settled 2026-08-15.
+  //
+  // row.children[0] is div.draft-button-wrapper, which carries a className and NOTHING else --
+  // three render sites in Sleeper's shipped bundle, zero of them with an onClick. The handler
+  // lives on its CHILD, div.draft-button. DOM events bubble UP and never DOWN, so a click on the
+  // wrapper can never reach it; it bubbles UP instead into div.player-rank-item2's
+  // onPlayerSelected, which opens the PLAYER CARD. That is precisely the 2026-08-14 failure.
+  //
+  // ⚠️ AND IT IS WHY THE OLD SHAPE TEST PASSED. It asked `first.querySelectorAll('svg').length`,
+  // which searches DESCENDANTS -- so a test written to describe the BUTTON was satisfied by the
+  // WRAPPER, and reported the wrong node with total confidence. A structural test that reaches
+  // through children cannot tell you WHICH node it matched.
+  //
+  // Scoped to `first` deliberately: `.draft-button` is NOT unique in this app (7 occurrences
+  // across 4 contexts, including the queue panel and an auction variant whose onClick calls
+  // _hoverPlayer and never drafts). A bare document.querySelector('.draft-button') fires the
+  // wrong control. Do NOT add an '.auction-button' fallback either -- that class appears zero
+  // times in the shipped JS.
+  //
+  // Returning null is a REFUSAL and must stay one. Never write `|| first`: that silently restores
+  // the known-broken click at the exact moment the DOM has rotated and a refusal matters most.
   function draftButton(row) {
     const first = row.children[0];
     if (!first) return null;
-    const r = first.getBoundingClientRect();
-    const ok = r.width < 60 && first.querySelectorAll('svg').length > 0 && !ownText(first);
-    return ok ? first : null;
+    return first.querySelector('.draft-button');
   }
 
   // Sleeper renders Ja'Marr with a different apostrophe than our board stores. Fold them, or an
@@ -148,34 +185,50 @@
    * and check that the player actually landed on OUR draft_slot. Until that comes back, the pick
    * is unconfirmed -- treat it exactly like a `picks.json` the engine refused.
    */
-  /* 🚨 2026-08-14 — ffDraft's CLICK DID NOT DRAFT, AND ffDraft SAID `clicked: true`.
+  /* ✅ 2026-08-15 — RESOLVED. WE WERE CLICKING THE EMPTY BOX AROUND THE BUTTON.
    *
-   * First live exercise in this environment (Windows + Claude-in-Chrome) since the Cowork
-   * migration. Mock 1394049093545758720, our seat 4, API confirming 3 picks in and #4 next.
-   * ffFind located Ja'Marr Chase in 10ms with hasDraftControl:true. ffDraft returned
-   * {clicked:true}. /picks, cache-busted, immediately after: STILL 3 PICKS. Nothing on slot 4.
-   * What the click actually opened was the PLAYER-CARD MODAL.
+   * The 2026-08-14 failure: ffDraft returned {clicked:true} and drafted nobody; /picks stayed at
+   * 3; what opened instead was the PLAYER-CARD MODAL. The cause was neither candidate this block
+   * used to name. draftButton() returned row.children[0] -- div.draft-button-wrapper, a layout
+   * div with no handler at all -- so the click bubbled UP to the row's onPlayerSelected. See
+   * draftButton() above for the full account.
    *
-   * The element was right: DIV.draft-button-wrapper, 34x40, one svg, no own text -- exactly what
-   * draftButton() tests for. The selector is fine; the ACTUATION is what is in doubt.
+   * ⚠️ THE OLD TEXT HERE SAID "The selector is fine; the ACTUATION is what is in doubt." That was
+   * EXACTLY INVERTED, and it aimed a full day of investigation at synthetic-vs-real. Both named
+   * causes are now dead, from primary source and from measurement:
    *
-   * THE CAUSE IS NOT SETTLED. Do not "fix" this function until it is. Two live candidates:
-   *   (a) synthetic .click() does not actuate this build. Supporting: the modal's own `Cancel`
-   *       was clicked the same way and the modal STAYED OPEN, while a real Escape keypress closed
-   *       it. The runbook already records the AUTO-PICK toggle as immune to synthetic events. If
-   *       this is the cause, ffQueue and ffUnqueue are affected too -- they also end in .click().
-   *   (b) the button was inert because our CLOCK had not started yet. "Next pick is ours" and "our
-   *       clock is live" are different instants, and locate()'s own note says the control renders
-   *       either way. A click on an inert button plausibly falls through to the row, which is
-   *       precisely what opens the player card.
+   *   (a) "synthetic .click() does not actuate this build" -- FALSIFIED. `isTrusted` appears ZERO
+   *       times in Sleeper's 12.1MB app bundle, and React 16's root-delegated dispatch cannot
+   *       tell a synthetic click from a human one. PROVEN POSITIVELY 2026-08-15 with a controlled
+   *       pair in a live room: a synthetic click on `.autopick-toggle .slider` toggled AUTO-PICK
+   *       -- the one control the runbook called immune to synthetic events -- while the identical
+   *       click on its WRAPPER did nothing. Negative and positive control, same run, restored
+   *       clean. The three synthetic successes were never luck: ffQueue clicks an <img> inside
+   *       div.queue-action[onClick], ffUnqueue clicks div.delete-button[onClick] exactly, and
+   *       ffStartDraft clicks a child of div.start-draft-button[onClick].
    *
-   * Settle it on a NO-LIMIT clock, with the room visibly on our pick for several seconds first,
-   * trying a synthetic click and then a real ref-click. Full write-up: docs/insights/025.
+   *   (b) "the button was inert because our CLOCK had not started" -- REAL AS A GATE, but NOT
+   *       what happened. _onClickDraft runs stopPropagation() FIRST, unconditionally, BEFORE it
+   *       tests the disabled flag. So a click on a DISABLED .draft-button dies inside the handler
+   *       and the modal CANNOT open. The modal opened -- therefore we never touched the button.
    *
-   * ⚠️ AND NOTE WHAT SAVED US: the confirm-against-/picks discipline below. It is not ceremony.
-   * Chase DID end up on our slot at #4 via auto-pick, stamped with our own picked_by -- which
-   * looks exactly like proof the click worked. Only the pick COUNT read immediately after the
-   * click separates the two, so take that reading before the clock can expire.
+   * THE REUSABLE LAW, which is the part worth carrying to any other app:
+   *   DOM EVENTS BUBBLE UP, NEVER DOWN. Clicking a DESCENDANT of the handler works. Clicking an
+   *   ANCESTOR does nothing at all -- and quietly hands your click to whatever ancestor handler
+   *   sits above it, which is how a failure disguises itself as a different feature.
+   *
+   * 🚨 THE FIX DELETES OUR ALARM, WHICH IS THE ONLY REASON handlerRan EXISTS. While we were
+   * clicking the wrapper, failure was LOUD: a player card appeared. Aimed correctly, a click on a
+   * disabled button is SILENT -- no pick, no modal, no exception, and a byte-identical
+   * {clicked:true}. The fix would have made the bug quieter than the bug. So: the disabled state
+   * is refused BEFORE the click, and after it we poll for `.picking` / div.spinner, which
+   * _onClickDraft sets via setState inside the handler body. That is an INTRA-handler fingerprint
+   * -- ffDraft's equivalent of ffStartDraft's confirmsAnswered:1.
+   *
+   * ⚠️ handlerRan IS NOT CONFIRMATION. It proves the handler body ran, never that a pick landed.
+   * The external oracle above is unchanged and non-negotiable: read the pick COUNT from /picks
+   * immediately, and never trust `picked_by` -- it names the SEAT OWNER, so auto-pick on our own
+   * seat stamps the identical id and looks exactly like success.
    */
   window.ffDraft = async function (playerName) {
     const r = await locate(playerName);
@@ -186,10 +239,32 @@
       return JSON.stringify({ clicked: false, player: r.player,
                               reason: 'no draft control on that row -- already drafted?' });
     }
+    // Refuse BEFORE clicking. Sleeper's stylesheet gives `.disable` COLOUR ONLY -- no
+    // pointer-events, no overlay -- so a disabled button happily accepts a click and does nothing.
+    if (r.btn.classList.contains('disable')) {
+      return JSON.stringify({ clicked: false, player: r.player,
+                              reason: 'draft control found but DISABLED -- our clock is not live' });
+    }
+
+    const btnHandlers = handlerProps(r.btn);
     r.btn.click();
+
+    // POLL for the handler's own fingerprint -- never a flat sleep, same reason as locate().
+    let handlerRan = false;
+    const t0 = Date.now();
+    while (Date.now() - t0 < 600) {
+      if (r.btn.classList.contains('picking') || r.btn.querySelector('.spinner')) {
+        handlerRan = true;
+        break;
+      }
+      await new Promise(res => setTimeout(res, 40));
+    }
+
     return JSON.stringify({
       clicked: true,
       player: r.player,
+      handlerRan,        // _onClickDraft's body ran. An IN-PAGE signal, NOT confirmation of a pick.
+      btnHandlers,       // expect ["onClick"]. [] means the DOM rotated -- STOP and re-map.
       confirmed: false,
       note: 'CLICK ONLY -- confirm against /picks that this player is on our draft_slot',
     });
@@ -460,10 +535,71 @@
                             note: 'CLICK ONLY -- confirm via /draft/<id> that status left pre_draft' });
   };
 
+  /* ffAutoPick(true|false) -- AND THIS FILE'S ONE SAFE ACTUATION TESTBED.
+   *
+   * The runbook used to say: "The AUTO-PICK toggle does NOT respond to synthetic events -- not
+   * .click(), not a full pointerdown/mousedown/pointerup/mouseup sequence. Only a real click moved
+   * it. Its element is `.autopick-toggle`; find it by class and click it for real." The diagnosis
+   * was wrong and the prescription named the wrong node. Measured live 2026-08-15:
+   *
+   *     <div class="autopick-toggle">          <- NO handler. What the runbook said to click.
+   *       <div class="custom-switch">          <- no handler
+   *         <div class="switch">               <- no handler
+   *           <input type="checkbox" readonly>
+   *           <span class="slider round">      <- ★ the onClick lives HERE ★
+   *
+   * A synthetic click on the span toggled it first try; the identical click on the wrapper did
+   * nothing. A real click only ever worked because a human clicks a COORDINATE and the browser
+   * hit-tests to the topmost node at that point -- the span. Real clicks find the child by
+   * geometry. Synthetic clicks land exactly where you aim them, which is why aim was everything.
+   *
+   * WHY THIS IS WORTH HAVING BEYOND THE TOGGLE: it is the only handler-bearing control in the room
+   * that is also REVERSIBLE, so it is the right place to re-prove that synthetic actuation still
+   * works after any Sleeper DOM rotation. The draft button's only test is the irreversible action
+   * itself. Run this as the 20-second self-test on draft morning -- if it fails, the DOM has moved
+   * and nothing else in this file should be trusted until it is re-mapped.
+   *
+   * Idempotent on purpose: asking for the state it is already in clicks nothing.
+   */
+  window.ffAutoPick = async function (on) {
+    if (on !== true && on !== false) {
+      return JSON.stringify({ ok: false, reason: 'call ffAutoPick(true) or ffAutoPick(false)' });
+    }
+    const box = document.querySelector('.autopick-toggle input[type=checkbox]');
+    const slider = document.querySelector('.autopick-toggle .slider');
+    if (!box || !slider) {
+      return JSON.stringify({ ok: false,
+                              reason: 'AUTO-PICK toggle not found -- is this a draft room?' });
+    }
+    const before = box.checked;
+    if (before === on) {
+      return JSON.stringify({ ok: true, changed: false, was: before, now: before,
+                              note: 'already in the requested state -- nothing was clicked' });
+    }
+    const sliderHandlers = handlerProps(slider);
+    slider.click();
+
+    // Verify against the CHECKBOX, not against the click. Same discipline as ffDraft.
+    let now = box.checked;
+    const t0 = Date.now();
+    while (Date.now() - t0 < 600 && now === before) {
+      await new Promise(res => setTimeout(res, 40));
+      now = box.checked;
+    }
+    return JSON.stringify({
+      ok: now === on, changed: now !== before, was: before, now,
+      sliderHandlers,   // expect ["onClick"]. [] means the DOM rotated -- STOP and re-map.
+      note: now === on
+        ? 'verified against the checkbox, not against the click'
+        : 'CLICK DID NOT MOVE IT -- the DOM has rotated; re-map before trusting anything here',
+    });
+  };
+
   // Exported so the oracle can be tested without a browser, and so it can be exercised by hand in
   // the console while a mock is open.
   window.ffQueueVerdict = queueVerdict;
   window.ffReadQueue = readQueue;
+  window.ffHandlerProps = handlerProps;   // assert what you are about to click actually owns it
 
-  return 'ffFind(), ffDraft() and ffQueue() installed';
+  return 'ffFind(), ffDraft(), ffQueue() and ffAutoPick() installed';
 })();

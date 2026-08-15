@@ -537,9 +537,11 @@ bottom of `main()`.
 - 🚨 **With the queue loaded, auto-pick took OUR queue-top — Ja'Marr Chase — at pick #5 on slot 5**,
   then fell back to Sleeper's board (Omarion Hampton, #12) once the queue drained. Confirmed
   against `/picks`, never from the browser.
-- ⚠️ **The AUTO-PICK toggle still does not respond to synthetic events** — not `.click()`, not a
-  full pointerdown/mousedown/pointerup/mouseup/click sequence. Only a real click moved it. Its
-  element is `.autopick-toggle`; find it by class and click it for real.
+- ✅ ~~**The AUTO-PICK toggle still does not respond to synthetic events**~~ **CORRECTED 2026-08-15
+  — it responds fine; we were clicking the wrong node.** `.autopick-toggle` is a bare wrapper with
+  no handler; the `onClick` is on `span.slider` three levels below. Events bubble UP, never DOWN,
+  so no sequence fired at an ancestor could ever reach it. Measured with a controlled pair (wrapper
+  → no change, `.slider` → toggled, restored clean). Use `ffAutoPick(true|false)`.
 - ⚠️ **The `+` on `/draftboards` opens the LEAGUE wizard, not the mock creator.** It created a real
   1-person league (`Ladder Test 0809`, `1392338161744490496`) sitting in the sidebar next to Family
   Feud. **The mock creator is the `NEW MOCK NFL DRAFT` button in the right-hand panel.**

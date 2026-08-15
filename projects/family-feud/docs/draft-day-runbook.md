@@ -274,19 +274,37 @@ Claude's hands are claude-in-chrome on Briggsy's logged-in Chrome; eyes stay on 
   **Re-install after any page reload** — a reload wipes them and the failure looks like the bridge
   being dead.
 
-> 🚨 **STOP — `ffDraft` IS UNDER SUSPICION AS OF 2026-08-14 EVENING, HOURS AFTER THIS SECTION WAS
-> WRITTEN. Do not walk into a real draft relying on it until the mapping run below has settled it.**
+> ✅ **DIAGNOSED 2026-08-15 — `ffDraft` WAS CLICKING THE EMPTY BOX AROUND THE BUTTON, AND THE
+> SELECTOR IS FIXED. The diagnosis is settled; the FIX IS STILL UNFIRED IN A LIVE ROOM.**
 > On the first live exercise in this environment it returned `{"clicked": true}` and **drafted
-> nobody** — `/picks` still read 3 picks, and what the click opened was the player-card modal. The
-> element it found was correct; the actuation is what failed. Cause unresolved between "synthetic
-> `.click()` does not actuate this build" (the modal's own `Cancel` also failed to close, while a
-> real `Escape` worked) and "the button was inert because our clock had not started". Full
-> write-up and the exact experiment that settles it: [`insights/025`](insights/025-the-click-reported-success-and-drafted-nobody.md).
+> nobody** — `/picks` still read 3 picks, and what the click opened was the player-card modal.
 >
-> **Until it is settled, the failsafe is the QUEUE, not direct fire** — and the queue's own
-> `.click()` is under the same suspicion, so **verify both against `/picks` before trusting either.**
-> The one thing measured working end-to-end that night was Sleeper's own auto-pick, which filled
-> K at #109 and DEF at #116 on schedule from an empty queue.
+> **The cause was neither of the two this section used to name.** `draftButton()` returned
+> `row.children[0]` = `div.draft-button-wrapper`, a layout div owning **no handler at all**; the
+> `onClick` is on its **child** `div.draft-button`. Events bubble **up, never down**, so the click
+> could not reach it and bubbled *up* into the row's `onPlayerSelected` — which is the player card.
+> ⚠️ **This paragraph used to read "the element it found was correct; the actuation is what
+> failed." That was exactly inverted and it aimed a full day of work at synthetic-vs-real.**
+> - *"synthetic `.click()` does not actuate this build"* — **FALSIFIED.** `isTrusted` appears
+>   **zero** times in Sleeper's 12.1 MB bundle. Proven positively with a controlled pair: a
+>   synthetic click on `.autopick-toggle .slider` toggled AUTO-PICK while the identical click on
+>   its wrapper did nothing.
+> - *"the button was inert because our clock had not started"* — **a real gate, but not this
+>   failure.** `_onClickDraft` runs `stopPropagation()` *before* testing the disabled flag, so a
+>   click on a disabled button cannot open the modal. The modal opened.
+>
+> Full write-up: [`insights/025`](insights/025-the-click-reported-success-and-drafted-nobody.md).
+>
+> 🚨 **AN EXPLANATION IS NOT AN ACTUATION. There is still no API-confirmed pick through the fixed
+> selector** — the console is 1 attempt / 1 failure, and the old 24/24 pixel path was deleted.
+> **Fire one in a mock before draft day.** Until then the failsafe is the QUEUE.
+> ✏️ **RETRACTED:** this block used to say the queue's own `.click()` was "under the same
+> suspicion". It never was — `ffQueue` clicks an `<img>` **inside** `div.queue-action[onClick]`,
+> i.e. a descendant, which is structurally correct. That suspicion was an inference from `ffDraft`
+> with no measurement behind it, and it contradicted this file's own line 49 lines below.
+> **KEEP the `/picks` verification rule regardless** — it is unaffected, and it is what caught the
+> lie in the first place. The one thing measured working end-to-end that night was Sleeper's own
+> auto-pick, which filled K at #109 and DEF at #116 on schedule from an empty queue.
 
 - **Fire sequence on our clock — `ffFind` then `ffDraft`, and NEVER a screenshot coordinate.**
   ```js
@@ -333,7 +351,7 @@ Claude's hands are claude-in-chrome on Briggsy's logged-in Chrome; eyes stay on 
 - **Screenshot capture-scale oscillation (the window is NOT moving):** Briggsy runs Chrome maximized and nobody resizes anything — yet screenshot dimensions oscillate between captures (1522x784 / 1536x735 / 1568x751 of the SAME maximized window in Mock #3, and 1568x750 / 1522x784 against a 1536x791 CSS viewport on 2026-08-09). It's the capture pipeline re-scaling, so coordinates read off one screenshot land ±10-18px off in the next moment's click space.
   🚨 **THE ONLY RULE IS: DO NOT CLICK THE DRAFT ROOM BY COORDINATE. Address the DOM.** *(rewritten 2026-08-14.)* This bullet used to end by recommending the `search-filter→top-row-+` flow because *"row 1 lands y≈509-523 at every scale"* — **a claim that refutes itself in its own sentence**, since the same paragraph puts the error at ±10-15px on a 26px row. That flow is exactly the one that lost Trey McBride at 2.6. `scripts/sleeper_draft_console.js` derives no coordinate from an image at all, which is the actual fix; the mitigations below are for the residue only.
   - For a one-off control the console does not wrap (CLAIM, the ⚙ menu), use a **ref from the find tool**, never a pixel.
-  - ⚠️ **The AUTO-PICK toggle is the known exception and it does NOT respond to synthetic events** — not `.click()`, not a full pointerdown/mousedown/pointerup/mouseup/click sequence. Only a real click moves it. Its element is `.autopick-toggle`; find it by class. The queue icon, by contrast, takes a plain `.click()` fine.
+  - ✅ **The AUTO-PICK toggle responds to a synthetic click fine — we were aiming at the wrong node. Corrected 2026-08-15; use `ffAutoPick(true|false)`.** `.autopick-toggle` is a bare wrapper with **no handler**; the `onClick` lives on `span.slider` **three levels below it** (`.autopick-toggle > .custom-switch > .switch > span.slider`). Nothing dispatched at an ancestor can reach a descendant, which is why even a full pointerdown/mousedown/pointerup/mouseup sequence was futile — the sequence was never the problem, **the target was**. A real click only ever worked because a human clicks a *coordinate* and the browser hit-tests to the topmost node there, which is the span. **Measured with a controlled pair:** wrapper click → no change; `.slider` click → toggled; restored clean. ⚠️ **This bullet previously said the toggle "does NOT respond to synthetic events… find it by class" — that diagnosis was wrong and the prescription named the handler-less node.** The queue icon takes a plain `.click()` fine for the same structural reason: it is an `<img>` *inside* `div.queue-action[onClick]`.
   - ⚠️ **Icon box sizes rot and have already been wrong once** — they are 22×22 (star) and 16×16 (queue) today, not the 42×44 / 24×24 this file used to record. **Match on the image `src`.** Geometry selectors are the pixel problem wearing a different hat.
 - **Queue-arm searches use the FULL "First Last" name — never surname-only.** The Gabe Nabers incident: "Nabers" was typed just as Malik Nabers got sniped at 5.1; Sleeper instantly hides drafted players, the fullback Gabe Nabers (ADP 999) floated to row 1, and a blind positional click queued him. A full-name filter goes to ZERO rows when the target dies mid-action, so the stray click no-ops instead of queueing a random fullback. Corollary: never click a row icon you haven't verified by content — position alone lies during state changes. **`ffFind`/`ffDraft`/`ffQueue` enforce this for you**: they match the full name exactly, fold apostrophes, and **refuse on ambiguity rather than guessing**, so a Gabe-Nabers substitution cannot pass them. Type the full name into them for the same reason you would have typed it into the box.
 - **On the clock with a stale ladder: the search box IS the availability check.** Type the top surviving ladder name (~5-10s) — the row appearing = he's alive = FIRE. Do NOT run a fetch+merge+engine cycle on your own clock to "re-rank for confidence"; engine re-ranks are for BETWEEN windows, or when the entire ladder is confirmed dead. Pick 62 anatomy: queue-arm had failed, ladder was Daniels→Burrow→Hurts with Burrow visibly gone on the board; the correct play was search-verify Daniels immediately (alive → fire, ~15s total); instead a full sync ran first and the fire landed at 0:13. Bot rooms pause on our clock so it cost nothing — a human room punishes that habit with a timeout.

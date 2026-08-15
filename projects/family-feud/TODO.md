@@ -216,7 +216,14 @@ honest headline stands: **there is no pick left that more analysis can buy.**
 
 ---
 
-## 🎯 NEXT SESSION STARTS HERE — MAP THE DRAFT ROOM, THEN WRITE THE SKILL
+## ✅ CLOSED 2026-08-15 — THE ROOM IS MAPPED AND THE SKILL IS WRITTEN
+
+**`.claude/skills/sleeper-draft-room/SKILL.md` exists and leads with a ~20-second self-test that
+RE-PROVES the DOM contract rather than asserting it.** Every row in its control map names the node
+that owns the handler and the oracle that confirms the action. Do not add a claim to it that the
+self-test cannot check — that is the failure mode it was built against.
+
+<details><summary>The original plan for this section, kept because the reasoning still applies</summary>
 
 **Briggsy's call, 2026-08-14: stop re-learning Sleeper's UI every session.** The evidence he is
 right is in this repo — the runbook already carries *"the window is NOT moving… bullet rewritten so
@@ -246,22 +253,23 @@ a research job.**
 **✅ A MOCK IS ALREADY SITTING THERE, `pre_draft`, NOTHING TO CREATE: `1394132992183517184`**
 (8-team snake, 15 rounds, `league_id: null`, verified). `1394049093545758720` is spent — complete.
 
-**The run, in order:**
-1. 🚨 **SET "No Limit" PER PICK BEFORE STARTING. This is not optional and it is the mistake that
-   cost the last run.** 120s looked ample, so it was skipped; the clock then expired *during the
-   diagnosis*, which lost the pick, flipped the seat to auto-pick for 116 straight picks, and made
-   a second trial in that room impossible. The setting exists so a diagnosis cannot destroy the
-   thing being diagnosed. The in-room `⚙` was not in the a11y tree; the `2 Min Per Pick` label
-   itself is clickable (`ref` it via `find`).
-2. **Settle ffDraft.** On a No-Limit clock, with the room visibly on our pick for several seconds,
-   try a **synthetic `.click()`** and then a **real ref-click** via the computer tool, reading
-   `/picks` (cache-busted) after each. That single comparison decides between cause (a) and (b).
-3. **Then sweep every control the same way** — queue icon, star, `Cancel`, AUTO-PICK toggle, search
-   box — recording synthetic vs real for each. The AUTO-PICK toggle is already known to need a real
-   click; the question is how much else does.
-4. **Write `.claude/skills/sleeper-draft-room/`** from what step 3 measured, **with a 20-second
-   self-test at the top** so the next session RE-PROVES the control instead of trusting a sentence.
-   That self-test is the whole point — it is what the runbook lacked.
+**The run, in order — ALL FOUR DONE 2026-08-15. Superseded by the skill; kept for the reasoning.**
+1. ✅ **SET "No Limit" FIRST.** Done, API-confirmed `pick_timer: 0`. ⚠️ **Two corrections:** the
+   `2 Min Per Pick` label is **not** clickable — it owns no handler and no ancestor within 5 hops
+   does; the real path is the `.action-button` whose `onClick` contains `showMenu` → `Draft
+   Settings` → `No Limit` → `UPDATE`. And the **better reason** to set it: auto-pick fires only on
+   timeout, so `pick_timer: 0` makes it impossible and thereby makes `picked_by` trustworthy.
+2. ✅ **ffDraft SETTLED — and by neither candidate.** The real cause was clicking the handler-less
+   wrapper. **A synthetic click drafted Ja'Marr Chase at pick #1**, API-confirmed. The
+   synthetic-vs-real comparison this step planned was never needed: `isTrusted` appears zero times
+   in the bundle, so the axis does not exist.
+3. ✅ **SWEPT.** `ffFind` · `ffDraft` · `ffQueue` · `ffQueueList` · `ffUnqueue` · `ffAutoPick` ·
+   `ffStartDraft`+guards · the player-card modal (closes via `.modal-item-underlay`). ⚠️ **"The
+   AUTO-PICK toggle needs a real click" was FALSE** — it needs the right *node*, `.slider`.
+4. ✅ **SKILL WRITTEN**, self-test first. Its own paste command carries a landmine found while
+   writing it: printing the console to stdout dies on Windows cp1252 (`ʼ`, U+02BC) and emits **zero
+   bytes**, and `node --check` passes on an empty file — so the skill writes to a file and checks
+   the **byte count**, not just the parse.
 
 **Environment facts that cost time last run and should go straight into the skill:**
 - **Chrome CSP blocks `fetch` to localhost**, so `sleeper_draft_console.js` must be **pasted
@@ -274,7 +282,10 @@ a research job.**
   The mock creator is **`NEW MOCK NFL DRAFT`** in the right panel; it opens the room directly.
 - **Clicking a mock card on `/draftboards` opens the room in a NEW TAB.**
 - **Screenshot scale oscillates on a window nobody is touching** — 1568×750 and 1568×763 observed
-  in one session. **Never blame the human, and never click by screenshot coordinate.**
+  in one session, and **1522×784** on 2026-08-15. **Never blame the human, and never click by
+  screenshot coordinate.**
+
+</details>
 
 ---
 

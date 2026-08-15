@@ -685,9 +685,14 @@ all measured:**
   and the scale drifts between captures: viewport is **1536×791 CSS** while successive screenshots
   came back **1568×750** and **1522×784**, putting a row that lives at CSS y=544 at y=562. **18px
   of error on a 26px row** — it cost a real pick (McBride, 2.6). Address the DOM instead.
-- **The row's leftmost cell (`row.children[0]`, ~34px, holds an svg, no text) IS the draft button**
-  when you are on the clock. It is NOT a queue button — that misread is what made the first mock
-  look like queue-plus-auto-pick worked.
+- 🚨 ~~**The row's leftmost cell (`row.children[0]`, ~34px, holds an svg, no text) IS the draft
+  button**~~ **WRONG, and this exact sentence is what broke `ffDraft`. Corrected 2026-08-15.**
+  `row.children[0]` is `div.draft-button-wrapper`, which owns **no handler**; the draft button is
+  its **child** `div.draft-button` (24×24). Clicking the wrapper drafts nobody and opens the player
+  card. The shape test agreed with this line because `querySelectorAll('svg')` searches
+  **descendants** — so it was satisfied by the wrapper while describing the button. Reach it as
+  `row.children[0].querySelector('.draft-button')`. It is still NOT a queue button — that separate
+  misread is what made the first mock look like queue-plus-auto-pick worked.
 - **The player list is VIRTUALISED** — the scroll container is ~98,000px tall with only ~53 name
   cells in the DOM. Most players cannot be found by querying; **the search box is mandatory**, and
   it must be driven through React's native value setter, not by assignment.
@@ -742,9 +747,9 @@ all measured:**
 - **Three different controls live in a player row** and an earlier pass conflated two of them:
   | control | what it is |
   |---|---|
-  | `row.children[0]` (green `+`) | **DRAFTS immediately** when on the clock |
+  | `row.children[0].querySelector('.draft-button')` (green `+`) | **DRAFTS immediately** when on the clock. 🚨 **The CHILD, not `row.children[0]` itself** — the parent `div.draft-button-wrapper` owns no handler and clicking it drafts nobody (corrected 2026-08-15) |
   | `img[src*="icon_watch_player.png"]` | the star — watchlist, not queue |
-  | `img[src*="queue.png"]` | **the queue button.** A plain `.click()` works |
+  | `img[src*="queue.png"]` | **the queue button.** A plain `.click()` works — it is an `<img>` *inside* `div.queue-action[onClick]`, i.e. a descendant, which is why it was never at risk |
   **Match on the image `src`, never on position** — the star's box is 42×44 and the queue icon's
   24×24, both inside `row.children[2]`; geometry selectors are the pixel problem again.
   **THE MEASUREMENT:** on a no-time-limit mock with **only Cameron Dicker (K, ADP 172.2)** queued,

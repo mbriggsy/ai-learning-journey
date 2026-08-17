@@ -83,6 +83,13 @@ draft-kit/cache/adp_history/
 # should be reading -- a committed cache would go stale silently while still looking scouted.
 draft-kit/cache/opponents/
 
+# Full pick sequences for the comparable drafts, for scripts/availability.py. The scouting cache
+# above holds only each member's OWN picks (25 of 192), which cannot answer "who was still on the
+# board", so these are fetched whole. Same call as opponents/: pure cache, re-pullable with
+# `availability.py --fetch`, and nothing on draft morning reads them. The FINDINGS are committed
+# instead -- draft-kit/availability_calibration.json and docs/insights/027.
+draft-kit/cache/draft_feeds/
+
 # The expert consensus is the one input here that is SUPPOSED to be stale-checked rather than
 # pinned -- its whole value is being newer than the board. Committing it would put a daily churning
 # 240KB blob in git and, worse, make a clean clone look like it had a current consensus when it had

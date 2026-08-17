@@ -277,11 +277,25 @@ def market_order(names, cache=ADP_CACHE):
     """Order a candidate set by market price. Returns (ordered_names, source_label).
 
     THE MEASURED VALUE OF DOING THIS, so nobody has to guess at it again. Scored against the
-    committed 120-pick lab feed over 18 stops, the ADP ordering names 29 of 84 of the players who
-    actually went; ordering the SAME candidates by our own board rank names 28 of 84. One player
-    in 84. A deliberately poor ordering of the same candidates scores 23%, so the metric does
-    discriminate -- it simply finds these two orderings equivalent. `--backtest` reprints both
-    arms every run so this can never quietly become folklore again.
+    committed 120-pick lab feed over 18 stops: the ADP ordering names 30 of 84 of the players who
+    actually went (36%); ordering the SAME candidates by our own board rank names 26 of 84 (31%).
+    The two are equivalent within noise -- do NOT quote ADP as the better instrument.
+
+    THE FLOOR CONTROL SCORES 1 of 84 (1%). ✏️ **Corrected 2026-08-15: this docstring said 23%,
+    which was wrong and understated the result badly.** Re-measured by running
+    `--backtest` against `tests/fixtures/lab_feed_120.json` at `--slot 3`. The 29/28 figures above
+    were also pre-2026-08-14; the board has been re-ranked since, which is why they moved.
+
+    WHAT THE 1% FLOOR ACTUALLY BUYS US, and it is more than a positive control. A 31x separation
+    between board order and the deepest-first ordering is direct evidence that the other seats do
+    NOT pick uniformly at random -- they follow consensus. That matters because insight 021 killed
+    the old enumeration for being a tautology, and the tautology held *specifically under uniform
+    sampling*, where survival collapses to C(k-i-1, gap-i)/C(k, gap) with no football in it.
+    Opponents are measurably non-uniform, so an availability estimate built on CONSENSUS ORDER is
+    not the same object insight 021 deleted. It still has to be validated against a real feed
+    before anything quotes it -- but it is not barred in principle.
+
+    `--backtest` reprints all three arms every run so none of this can quietly become folklore.
 
     An earlier version of this docstring claimed that ordering opponents by our own board "would
     explore the wrong futures entirely." That is false, and it was load-bearing for a whole

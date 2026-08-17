@@ -555,6 +555,19 @@ if seq:
     print("Last picks: " + " | ".join(f"{p}. {nm} {ps} (s{sl})" for p, sl, ps, nm, _ in last))
 if picks_until_me is not None:
     print(f"YOUR next pick: #{my_next} — {picks_until_me} picks away")
+    # THE WAIT is the denominator of every now-or-later decision and it was never printed.
+    # "Take Chase Brown now or take the WR and hope Brown lasts?" is unanswerable without
+    # knowing how many opposing picks stand between this pick and the next one we own. The
+    # engine has always known it -- my_picks() computes the whole schedule -- and simply never
+    # said it out loud, so the operator was eyeballing the one number the decision turns on.
+    # Printed as a SEPARATE line rather than folded into the one above, because tests pin that
+    # string exactly and an advisory line is a contract with the person reading it at speed.
+    _after = next((p for p in mine if p > my_next), None)
+    if _after:
+        print(f"THE WAIT: after #{my_next} you pick again at #{_after} "
+              f"— {_after - my_next - 1} opposing picks in between")
+    else:
+        print(f"THE WAIT: #{my_next} is your LAST pick of the draft — nothing comes back to you")
 
 if n:
     runwin = [ps for _, _, ps, _, _ in seq[-8:]]
@@ -581,8 +594,28 @@ if my_next and picks_until_me and picks_until_me > 0:
     print("Their open needs: " + ", ".join(f"{p}({c})" for p, c in posneed.most_common()))
 
 print("\n--- TIER CLIFFS (available) ---")
+# ⚠ MEANS "TAKE ONE NOW", SO IT MUST NOT FIRE ON A TIER NOBODY WOULD TAKE NOW. Measured on a
+# real advisory at pick 19 of 120: K T1, K T2 and DEF T2 all wore ⚠ CLIFF -- the SAME badge as
+# `RB T3: 1 left — Chase Brown`, which was genuinely the decision of the pick. Three fake alarms
+# in identical livery as the one real one, on a 120-second clock. Nobody in this room takes a
+# kicker before round 10 (18 of 18 drafter-views, docs/opponents.md), so those were noise.
+# THE TEST IS OUR OWN BOARD, NOT AN OPPONENT MODEL: a tier is "in play" when at least one of its
+# players is in BEST AVAILABLE -- the consideration set this engine already computes and prints.
+# That is scale-free: late in the draft K and DEF DO reach BEST AVAILABLE and the badge starts
+# firing on its own, with no round threshold hardcoded anywhere.
+# NOTHING IS HIDDEN. A thin tier that is not yet in play still prints its count and says why it
+# is quiet, because silently dropping a warning is how an operator learns to distrust the line.
+# 🚨 DO NOT PUT A SECTION NAME IN A BODY LINE. The quiet marker first read "none in BEST AVAILABLE
+# yet" and broke two tests that locate the section with a bare out.split("BEST AVAILABLE")[1] --
+# the phrase became a second, false delimiter and the split returned a cliff fragment. The ladder
+# survived only because its _section() anchors on "--- <header>" rather than the bare words.
+# Body text must never collide with a header any parser splits on.
+_in_play = {p["r"] for p in best_avail}
 for pos, t, left, rows in cliffs:                 # precomputed above; shown_ranks derives from it
-    flag = "  ⚠ CLIFF" if left <= 3 else ""
+    flag = ""
+    if left <= 3:
+        flag = ("  ⚠ CLIFF" if any(x["r"] in _in_play for x in rows)
+                else f"  · thin, none in the top {BEST_N} yet")
     print(f"{pos} T{t}: {left} left — {', '.join(x['name'] for x in rows)}{flag}")
 
 print("\n--- BEST AVAILABLE (my board) ---")

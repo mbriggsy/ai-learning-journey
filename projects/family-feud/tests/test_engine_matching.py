@@ -966,5 +966,104 @@ class TestInputValidation(EngineCase):
         self.assertIn("Hunter", out.split("ROSTERS / NEEDS")[1])
 
 
+class TestTheWaitIsPrinted(EngineCase):
+    """THE WAIT -- how many opposing picks stand between this pick and the next one we own.
+
+    It is the denominator of every now-or-later decision ("take the last RB in the tier, or take
+    the WR and hope the RB lasts?") and the engine knew it all along without ever saying it, so
+    the operator was eyeballing the one number the decision turns on.
+    """
+
+    def kit(self):
+        return board([row(1, "Alpha One", "RB", "KC", 1),
+                      row(2, "Bravo Two", "WR", "SF", 1),
+                      row(3, "Charlie Three", "WR", "SF", 2)])
+
+    def filler(self, n, start=1):
+        return [pick(i, f"Off{i}", f"Board{i}", "RB", "DAL", slot=None)
+                for i in range(start, start + n)]
+
+    def test_it_names_the_pick_after_next_and_the_gap(self):
+        code, out = self.run_engine(self.kit(), [], slot=3)
+        self.assertEqual(code, 0, out)
+        self.assertIn("YOUR next pick: #3 — 2 picks away", out)
+        self.assertIn("THE WAIT: after #3 you pick again at #14 — 10 opposing picks in between",
+                      out)
+
+    def test_the_gap_counts_opposing_picks_not_the_span_of_pick_numbers(self):
+        """#3 to #14 spans ELEVEN pick numbers but only TEN teams pick in between. An off-by-one
+        here misprices every wait decision by a full pick, in the direction of waiting too long."""
+        code, out = self.run_engine(self.kit(), [], slot=3)
+        self.assertIn("— 10 opposing picks", out)
+        self.assertNotIn("— 11 opposing picks", out)
+
+    def test_a_turn_slot_waits_zero_picks(self):
+        """Slot 8 owns #8 and #9 back to back. Zero opposing picks between them -- which is
+        exactly why a turn must be planned as ONE decision over two names."""
+        code, out = self.run_engine(self.kit(), [], slot=8)
+        self.assertIn("THE WAIT: after #8 you pick again at #9 — 0 opposing picks in between", out)
+
+    def test_the_final_pick_says_nothing_comes_back(self):
+        """Silence here would read as 'the line failed', not as 'there is no next pick'."""
+        code, out = self.run_engine(self.kit(), self.filler(3), slot=3, rounds=2)
+        self.assertEqual(code, 0, out)
+        self.assertIn("THE WAIT: #14 is your LAST pick of the draft", out)
+
+
+class TestTheCliffBadgeOnlyFiresOnTiersInPlay(EngineCase):
+    """⚠ means "take one NOW". Measured on a real advisory at pick 19 of 120, it fired on K T1,
+    K T2 and DEF T2 wearing the identical badge as `RB T3: 1 left — Chase Brown`, which was the
+    actual decision of the pick. Three fake alarms in the same livery as the one real one.
+    """
+
+    def kit(self):
+        rows = [row(i, f"Wide {i}", "WR", "SF", i, tier=1) for i in range(1, 12)]  # ranks 1-11
+        rows.append(row(12, "Thin Back", "RB", "KC", 1, tier=5))     # thin AND inside the top 12
+        rows.append(row(13, "Lone Kicker", "K", "NE", 1, tier=1))    # equally thin, outside it
+        return board(rows)
+
+    def cliff_line(self, out, prefix):
+        hits = [l for l in out.splitlines() if l.startswith(prefix)]
+        self.assertEqual(len(hits), 1, f"expected exactly one {prefix!r} line, got {hits}")
+        return hits[0]
+
+    def test_a_thin_tier_inside_the_consideration_set_keeps_the_alarm(self):
+        code, out = self.run_engine(self.kit(), [], slot=3)
+        self.assertEqual(code, 0, out)
+        self.assertIn("⚠ CLIFF", self.cliff_line(out, "RB T5:"))
+
+    def test_an_equally_thin_tier_outside_it_stays_quiet(self):
+        """THE CONTROLLED PAIR. Both tiers have exactly `1 left`; the ONLY difference is whether
+        anyone would take one now. Without the negative control this rule could suppress
+        everything -- or nothing -- and both tests would still pass on the positive alone."""
+        code, out = self.run_engine(self.kit(), [], slot=3)
+        k = self.cliff_line(out, "K T1:")
+        self.assertIn("1 left — Lone Kicker", k, "the count is never hidden")
+        self.assertNotIn("⚠", k)
+        self.assertIn("thin, none in the top 12 yet", k, "it must say WHY it is quiet")
+
+    def test_the_alarm_arms_itself_when_the_tier_reaches_the_consideration_set(self):
+        """SCALE-FREE, with no round threshold hardcoded anywhere: draft one player, the kicker
+        is now inside the top 12, and the badge turns itself on. This is what lets K and DEF
+        alarm correctly in the last rounds without the engine knowing what round it is."""
+        code, out = self.run_engine(self.kit(),
+                                    [pick(1, "Wide", "1", "WR", "SF", slot=1)], slot=3)
+        self.assertEqual(code, 0, out)
+        self.assertIn("⚠ CLIFF", self.cliff_line(out, "K T1:"))
+
+    def test_no_body_line_collides_with_a_section_header(self):
+        """The quiet marker first read "none in BEST AVAILABLE yet" and became a SECOND, false
+        delimiter -- two tests locating that section with a bare split() got a cliff fragment
+        instead. Body text must never repeat a header a parser splits on."""
+        code, out = self.run_engine(self.kit(), [], slot=3)
+        # AT MOST once, not exactly once: VBD LEANS renders only when some row's vbdRank differs
+        # from its board rank, and this fixture's rows deliberately agree. The property under
+        # test is "a header is never DUPLICATED by body text", which absence satisfies.
+        for header in ("BEST AVAILABLE", "TIER CLIFFS", "ROSTERS / NEEDS", "VBD LEANS"):
+            self.assertLessEqual(out.count(header), 1,
+                                 f"{header!r} is duplicated -- body text is shadowing a section "
+                                 f"rule that parsers split on")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

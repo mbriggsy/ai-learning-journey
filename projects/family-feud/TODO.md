@@ -22,9 +22,19 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
     the engine never exceeded **0.18s** — **96-98% of every on-clock second was round-trip and
     agent latency.** The only levers are FEWER ROUND TRIPS and SHORTER OUTPUT, never faster
     Python. Numbers: [`insight 026`](docs/insights/026-the-loop-fits-and-the-scripts-were-never-the-cost.md).
-    **914 tests · 22 test files · 22 scripts · 26 insights.**
+    **937 tests · 23 test files · 23 scripts · 27 insights.**
     Two things that were only ASSERTED are now MEASURED: a deliberately blown clock took our
     queue-top (#60 = DJ Moore), and `picked_by` stamped our id on that pick we never made.
+    ▸ **2026-08-17 — TWO ADVISORY FIXES SHIPPED, ONE FEATURE MEASURED AND REFUSED.**
+    **`THE WAIT`** now prints the pick after next and the opposing-pick gap — the denominator of
+    every now-or-later call, which the engine always knew and never said out loud. **The ⚠ CLIFF
+    badge stopped crying wolf:** it fired on K/DEF at pick 19 in the same livery as the real
+    decision of the pick; it now fires only on tiers holding a player in BEST AVAILABLE, which is
+    scale-free (9 alarms → 4, and K/DEF arm themselves late with no round threshold hardcoded).
+    🚨 **And the availability indicator — "will he be there at my next pick?" — was built,
+    measured against 7 real human drafts, and DELIBERATELY NOT SHIPPED.** It beats its base rate
+    by +0.095 pooled and is **negative at every gap in the only 8-team room we hold.**
+    [`insight 027`](docs/insights/027-the-availability-model-works-in-every-room-but-ours.md).
     THE ONE THING LEFT THAT COULD STILL COST PICKS: **the queue drains silently and nothing in
     the loop re-arms it** — three of our seven picks were fired with no safety net at all.
     `draft_order` is still null on the real draft; it populated correctly on the mock.
@@ -464,6 +474,31 @@ back rather than silently working around it — a gap worked around is a gap tha
      averages, and the source republishes daily so any committed list is stale before Aug 29.
    - **Re-open only with a genuinely archived PRESEASON projection set** — one whose timestamps
      predate each season's week 1. Never with this endpoint.
+
+~~**The "will he be there at my next pick?" indicator.**~~ 🚨 **BUILT, MEASURED, AND REFUSED
+2026-08-17. Do not ship it — and do not rebuild it from the pooled number.**
+`scripts/availability.py` exists and is the measurement, not the feature. The model is one line:
+`slack = D − G`, where `D` is the still-available players the market ranks above him and `G` is the
+opposing picks until our next turn. Scored on **7 distinct real human drafts** pulled full from
+Sleeper, leave-one-draft-out, with a leakage control.
+- **Pooled it looks shippable: +0.095 over the base rate on the top-24 available.** That number
+  describes 10- and 12-team rooms, which are six of the seven drafts.
+- 🚨 **In the ONLY 8-team room we hold it is negative at EVERY gap** (−0.006 to −0.046). The
+  best-possible in-sample threshold there scores **0.648 against a 0.656 base rate** — a ceiling
+  *below* guessing, handed the fit. Quoting the pooled column at ourselves is
+  [insight 022](docs/insights/022-the-opponent-prior-lost-to-always-guess-wr.md)'s exact error.
+- **The mechanism, and it is why this is not noise:** a 12-team room spends 192 picks on a
+  ~206-deep list and consumes the board; an 8-team room spends 128 on the same list and leaves ~50
+  of the top 180 undrafted. **The best available player comes back to us 47% of the time, against
+  21% in a 12-team room.** Nothing is ever confidently gone, so no threshold can beat "assume he
+  is there".
+- ✅ **THE FINDING WORTH KEEPING:** standard draft advice — *"take him now, he'll never last"* — is
+  written for 12-team rooms. **Ours is far more forgiving of waiting.** ⚠️ Direction only, one
+  draft; never put a percentage on the board.
+- `draft-kit/availability_calibration.json` reads **SILENT at every gap for all 8 seats** and the
+  engine must render nothing where it says SILENT. **Re-open only with more 8-team feeds** (the
+  room plays every year, so 2026 adds one) — never by loosening `MIN_EDGE`.
+  Full write-up: [`insight 027`](docs/insights/027-the-availability-model-works-in-every-room-but-ours.md).
 
 ~~**Leg (d) — the off-clock doctrine terminals.**~~ 🚨 **DEAD AS DESIGNED, 2026-08-14. Do not build
 it.** Its stated purpose was *"the only honest route to a validated opponent model."* It proposed

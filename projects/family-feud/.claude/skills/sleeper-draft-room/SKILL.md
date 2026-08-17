@@ -276,6 +276,18 @@ Verify the paste landed the *current* logic — the install banner alone does no
   `ffStartDraft` additionally hard-refuses on the real draft id.
 - **Miss one clock and Sleeper auto-picks the REST of the draft.** Reproduced exactly: one missed
   pick at #4, then **116 consecutive auto-picks.**
+- 🚨 **A BLANK DRAFT ROOM IS SLEEPER'S BUG, NOT YOURS. Do not debug the console.** Seen
+  2026-08-17: every draft-room route rendered `document.body.innerText.length === 0` — a mock, a
+  freshly created mock, and **the real league draft** — while `/draftboards` rendered normally on
+  the **same bundle**. The console had been wiped by the navigation, so it reads exactly like
+  "my paste failed". The tell is in the console messages, and it is inside Sleeper's own bundle:
+  ```
+  TypeError: Object(...) is not a function   at hW.useLeagueDuesEnforcement
+  ```
+  Confirm with `read_console_messages({onlyErrors: true})` **before** re-pasting anything. The
+  same room had run a full 7-pick rehearsal ~2 hours earlier, so it is a deploy regression and is
+  expected to clear on its own. **The API half is unaffected** — `merge_picks.py`, the engine and
+  the ladder never touch the browser, and drafting from the phone is a different client entirely.
 - **A player-card modal opening when you meant to draft is the signature of clicking an ancestor.**
   It is no longer the alarm it used to be — with correct aim a failed click is *silent*, which is
   why `handlerRan` exists. Treat a missing `handlerRan` as seriously as you would treat that modal.

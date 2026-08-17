@@ -741,5 +741,85 @@ class TestTheDefectCannotComeBackTextually(unittest.TestCase):
         self.assertNotIn('querySelector("img[src*=\\"icon_watch_player', src)
 
 
+class TestSyncPlan(unittest.TestCase):
+    """`syncPlan` decides what to change BEFORE anything is clicked, so it is checkable without a
+    room. It exists because the 2026-08-15 rehearsal fired three of seven picks with an empty
+    queue: precompute_ladder.py prints the order and nothing ever loaded it.
+
+    THE ONE THING IT MUST NOT GET WRONG: Sleeper APPENDS a queued player to the end and auto-pick
+    drains from the TOP, so "just add the missing names" is correct only when the additions belong
+    at the bottom. Being wrong about that silently puts the wrong man first in exactly the
+    situation the queue exists for.
+    """
+
+    def plan(self, current, target):
+        out = run_node("console.log(JSON.stringify(window.ffSyncPlan("
+                       f"{json.dumps(current)}, {json.dumps(target)})));")
+        return json.loads(out)
+
+    def test_an_empty_queue_is_filled_in_target_order(self):
+        p = self.plan([], ["A A", "B B", "C C"])
+        self.assertEqual(p["toAdd"], ["A A", "B B", "C C"])
+        self.assertEqual(p["toRemove"], [])
+        self.assertTrue(p["appendSuffices"])
+
+    def test_the_common_case_is_survivors_plus_a_new_tail(self):
+        """Board order is stable and Sleeper deletes the drafted, so survivors keep their relative
+        order and the new entrant is the next-best man. Appending is correct here."""
+        p = self.plan(["A A", "C C"], ["A A", "C C", "D D"])
+        self.assertEqual(p["toAdd"], ["D D"])
+        self.assertTrue(p["appendSuffices"])
+
+    def test_a_better_man_belonging_on_TOP_refuses_to_append(self):
+        """THE ONE THAT MATTERS. Appending A after C leaves [C, A] and auto-pick would take C.
+        The plan must refuse rather than produce a queue that is quietly in the wrong order."""
+        p = self.plan(["C C"], ["A A", "C C"])
+        self.assertEqual(p["toAdd"], ["A A"])
+        self.assertFalse(p["appendSuffices"])
+        self.assertTrue(p["rebuildNeeded"])
+
+    def test_an_inverted_queue_needs_a_rebuild_even_with_nothing_to_add(self):
+        p = self.plan(["B B", "A A"], ["A A", "B B"])
+        self.assertEqual(p["toAdd"], [])
+        self.assertEqual(p["toRemove"], [])
+        self.assertTrue(p["rebuildNeeded"], "same members, wrong order, still wrong")
+
+    def test_a_name_no_longer_on_the_ladder_is_removed(self):
+        p = self.plan(["A A", "Z Z"], ["A A", "B B"])
+        self.assertEqual(p["toRemove"], ["Z Z"])
+        self.assertEqual(p["toAdd"], ["B B"])
+
+    def test_an_already_correct_queue_is_a_no_op(self):
+        p = self.plan(["A A", "B B"], ["A A", "B B"])
+        self.assertEqual((p["toAdd"], p["toRemove"]), ([], []))
+        self.assertTrue(p["appendSuffices"])
+
+    def test_it_matches_on_normalised_names(self):
+        """`ffQueueList` reads Sleeper's spelling and the ladder prints the board's. The queue
+        would churn forever if 'Ja'Marr Chase' and 'JaʼMarr Chase' looked like two men."""
+        p = self.plan(["Ja’Marr Chase"], ["Ja'Marr Chase"])
+        self.assertEqual((p["toAdd"], p["toRemove"]), ([], []))
+        self.assertTrue(p["appendSuffices"])
+
+
+class TestQueueSyncVerifiesByTheFinalList(unittest.TestCase):
+    """The source guard. ffQueueSync must decide `synced` by reading the queue BACK, never by
+    trusting the per-call results -- measured 2026-08-15, three of four adds reported success and
+    the queue held two."""
+
+    def test_it_compares_against_queueEntries_not_the_step_results(self):
+        src = code_only(read_console())
+        body = src.split("window.ffQueueSync")[1].split("window.ffSyncPlan")[0]
+        self.assertIn("queueEntries()", body, "the verdict must come from the live queue")
+        self.assertIn("after.every", body)
+        self.assertNotIn("steps.every", body, "crediting the per-call results is the known lie")
+
+    def test_it_refuses_a_destructive_rebuild_without_being_asked(self):
+        src = code_only(read_console())
+        body = src.split("window.ffQueueSync")[1].split("window.ffSyncPlan")[0]
+        self.assertIn("opts.rebuild !== true", body,
+                      "clearing the safety net must be opt-in, never a silent side effect")
+
+
 if __name__ == "__main__":
     unittest.main()

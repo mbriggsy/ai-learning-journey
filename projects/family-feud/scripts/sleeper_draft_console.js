@@ -472,6 +472,83 @@
 
   window.ffUnqueueVerdict = unqueueVerdict;
 
+  /* syncPlan -- what has to change to make the live queue equal `target`, decided BEFORE anything
+   * is clicked. Pure, so it is testable without a room; the driver below stays thin on purpose.
+   *
+   * WHY THIS EXISTS. The 2026-08-15 dress rehearsal fired three of seven picks with an EMPTY
+   * queue and nothing said so. `precompute_ladder.py` PRINTS the order and nothing loads it, so
+   * the queue was hand-copied once and never refreshed while Sleeper quietly deleted each player
+   * as he was drafted.
+   *
+   * WHY IT PLANS INSTEAD OF JUST ADDING. Sleeper APPENDS a queued player to the end -- measured,
+   * the count went 1,2,3 in the order we queued -- and auto-pick drains from the TOP. So "just
+   * add the missing names" is only correct when the additions belong at the bottom. That is the
+   * common case (the board order is stable, survivors keep their relative order, the new entrant
+   * is the next-best man) but it is not the only case, and being wrong about it silently puts the
+   * wrong player first in the one situation the queue exists for. So the plan PROJECTS the result
+   * of appending and compares it to the target; when appending would not produce the target it
+   * says `rebuildNeeded` rather than doing something destructive on its own authority.
+   */
+  function syncPlan(current, target) {
+    const c = current.map(norm), t = target.map(norm);
+    const keep = c.filter(n => t.indexOf(n) !== -1);          // survivors, in CURRENT order
+    const toRemove = current.filter(n => t.indexOf(norm(n)) === -1);
+    const toAdd = target.filter(n => c.indexOf(norm(n)) === -1);
+    const projected = keep.concat(toAdd.map(norm));           // what appending would leave
+    const appendSuffices = projected.length === t.length
+                        && projected.every((n, i) => n === t[i]);
+    return { toRemove, toAdd, appendSuffices, rebuildNeeded: !appendSuffices,
+             current: current.slice(), target: target.slice() };
+  }
+
+  /* ffQueueSync(target, opts) -- make Sleeper's queue equal `target`, in order.
+   *
+   * 🚨 THE VERDICT COMES FROM THE FINAL LIST, NEVER FROM THE PER-CALL RESULTS. Measured
+   * 2026-08-15: re-arming four names returned queued:true for three of them and the queue ended
+   * holding two. Jayden Daniels reported `queued:true, count 1` and was not there -- a bot had
+   * drafted him mid-loop, Sleeper removed him, and an unrelated add saw the +1 transition and was
+   * credited with it. `ffQueue`'s +1 oracle is correct about a COUNT and cannot be correct about
+   * an IDENTITY, so this reads the queue back and compares names.
+   */
+  window.ffQueueSync = async function (target, opts) {
+    opts = opts || {};
+    if (!Array.isArray(target) || target.some(n => typeof n !== 'string')) {
+      return JSON.stringify({ synced: false, reason: 'call ffQueueSync(["Name One", ...])' });
+    }
+    const before = queueEntries().map(e => e.name);
+    const plan = syncPlan(before, target);
+    if (plan.rebuildNeeded && opts.rebuild !== true) {
+      return JSON.stringify({
+        synced: false, reason: 'appending would not produce this order -- pass {rebuild:true} to '
+                             + 'clear and reload, which costs ~2s per name',
+        plan: { toRemove: plan.toRemove, toAdd: plan.toAdd }, queue: before, expected: target });
+    }
+    const removals = plan.rebuildNeeded ? before.slice() : plan.toRemove;
+    const additions = plan.rebuildNeeded ? target.slice() : plan.toAdd;
+    const steps = [];
+    for (const name of removals) {
+      steps.push({ op: 'unqueue', name, result: JSON.parse(await window.ffUnqueue(name)) });
+    }
+    for (const name of additions) {
+      steps.push({ op: 'queue', name, result: JSON.parse(await window.ffQueue(name)) });
+    }
+    const after = queueEntries().map(e => e.name);
+    const ok = after.length === target.length
+            && after.every((n, i) => norm(n) === norm(target[i]));
+    return JSON.stringify({
+      synced: ok,
+      queue: after,
+      expected: target,
+      rebuilt: !!plan.rebuildNeeded,
+      steps: steps.map(s => ({ op: s.op, name: s.name,
+                               ok: s.result.queued === true || s.result.removed === true })),
+      note: ok ? 'verified by reading the queue back, not by the per-call results'
+               : 'QUEUE DOES NOT MATCH THE LADDER -- a name may have been drafted mid-sync; '
+                 + 're-run against a freshly computed ladder before trusting the safety net',
+    });
+  };
+  window.ffSyncPlan = syncPlan;      // pure, and tested without a room
+
   /* ffStartDraft -- START DRAFT raises the room's one native dialog, and this is how we answer it.
    *
    * WHY THIS EXISTS AS CODE. The technique was worked out live on 2026-08-09 and then written down

@@ -404,11 +404,20 @@ back rather than silently working around it — a gap worked around is a gap tha
 ---
 
 **WHAT IS ACTUALLY LEFT, ranked:**
-1. 🚨 **CLOSE THE QUEUE GAP — the only thing the 2026-08-15 rehearsal found that can still cost a
-   pick.** Three of seven picks were fired with an EMPTY queue and **nothing announced it**. Two
-   small changes, both in the SKILL GRADE above: **(a)** give runbook Step 3 an explicit re-arm
-   step whose only accepted oracle is the trailing `ffQueueList()` — never the per-call
-   `queued: true`, which credits an add that a concurrent removal faked; **(b)** make
+1. 🚨 **FINISH CLOSING THE QUEUE GAP — the mechanism is built, the live proof is NOT.**
+   `ffQueueSync(target)` exists (2026-08-17): it plans before it clicks, refuses to reorder
+   destructively without `{rebuild:true}`, and decides `synced` by **reading the queue back**
+   rather than trusting the per-call `queued: true` that credited Jayden Daniels for an add he
+   was not present for. `syncPlan` is pure, 7 node tests, and the pasted build was proven
+   behaviourally identical in-browser (same 6 cases, 0 mismatches).
+   🚧 **BUT IT HAS NEVER FIRED AGAINST A REAL QUEUE.** Sleeper's web app began crashing on every
+   draft-room route mid-session — `TypeError ... at hW.useLeagueDuesEnforcement`, inside THEIR
+   bundle, blank body on a mock *and* on the real league draft, while `/draftboards` rendered fine
+   on the same bundle. Signature recorded in the skill's landmines. **First job next session:
+   re-check whether the room renders, then fire `ffQueueSync` end-to-end** (empty→load, append,
+   refuse-reorder, rebuild). Until then treat the safety net as unproven.
+   Still open regardless: **(a)** give runbook Step 3 an explicit re-arm step naming
+   `ffQueueSync` and the trailing `ffQueueList()` as the only accepted oracle; **(b)** make
    `ffQueueList()` return `empty: true` instead of `agrees: true` on an empty queue, so the unsafe
    state stops printing the same reassuring word as the healthy one. Budget ~2s per name.
 2. 🗓️ **THE FINAL RE-RANK, ~Aug 27, THEN FREEZE.** The board ships on the **2026-08-14** ECR.

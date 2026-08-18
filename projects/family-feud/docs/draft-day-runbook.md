@@ -264,6 +264,12 @@ and watch it derive one** — that is the moment the guesswork ends.
    draft object, and **arms the contamination gate for you** when the mule's cargo is fresh — that
    flag used to be optional and forgettable, and forgetting it is how a spent mock's `picks.json`
    advises a live draft. Overrides are `--teams`, `--rounds`, `--draft-id`; each wins and says so.
+   🚨 **AGAINST A MOCK, BARE IS WRONG — and neither this file nor the skill said so until
+   2026-08-17** (it lived only in `docs/insights/026`). Bare, both `run_engine.py` and
+   `precompute_ladder.py` read the **REAL league's** draft object — `rounds: 16`, while mocks here
+   have run 15 — and arm the contamination gate with the **REAL** draft id. Required form on a
+   mock: `python scripts/run_engine.py <slot> --rounds 15 --draft-id <mock_id>`, and the same two
+   flags on the ladder at step 4. The seat goes positionally; a mock has its own `draft_order`.
    **`--dry-run` prints every value and where it came from without starting the engine.**
 4. **The moment your pick lands — BEFORE you relax — run
    `python scripts/precompute_ladder.py --slot <slot>`.** *(added 2026-08-09)*

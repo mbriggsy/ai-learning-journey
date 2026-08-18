@@ -101,7 +101,7 @@ than a moved class, and nothing in this file should be trusted until it is under
 | **Start draft** | the node whose *own text* is `START DRAFT` (`div.start-draft-text`) | **nothing** — fires by bubbling **up** to `div.start-draft-button[onClick]` | API `status` leaves `pre_draft` |
 | **Close player card** | `.modal-item-underlay` | `onClick` | the `.player-card` node disappears |
 | ~~the card's Cancel~~ | ~~`<button>Cancel</button>`~~ | **nothing**, none in 6 ancestors | 🚨 synthetic click does nothing. Use the underlay. |
-| **Claim a seat** | `.claim-text` (verify its parent says the right `Team N`) | `onClick` | the CLAIM label becomes your username |
+| **Claim a seat** | `.claim-text` — 🚨 **there are TWO per team (16 nodes for 8 teams)**, so index N is NOT team N; select by the parent's `Team N` text, never by position | `onClick` | the CLAIM label becomes your username |
 | **Room menu** | the `.action-button` whose `onClick` contains `showMenu` | `onClick` | body text grows; menu items appear |
 | **Settings option** | `.custom-horizontal-select-item` with the wanted text | `onClick` | it gains `.selected` |
 
@@ -150,6 +150,22 @@ Skipping this is what destroyed the 2026-08-14 run: 120s looked ample, the clock
 diagnosis*, the pick was lost, and the seat went to auto-pick for 116 straight picks — making a
 second trial in that room impossible.
 
+> 🚨 **THE ONE CARVE-OUT: A DELIBERATE CLOCK TEST.** *(Added 2026-08-17. Following this step
+> verbatim would have destroyed the 2026-08-15 rehearsal, whose entire purpose was measuring
+> whether the Step 3 loop fits inside a real 120-second clock — No Limit removes the very pressure
+> being measured.)* If the task is to time the loop under a live clock, **leave the timer at 120
+> and know what you give up:**
+> - **`picked_by` becomes untrustworthy.** Auto-pick fires only on timeout, and it stamps the
+>   **seat owner's** id — yours. A pick you never made looks exactly like success. This is the
+>   whole reason No Limit is the default: `pick_timer: 0` makes auto-pick impossible and thereby
+>   makes `picked_by` mean something.
+> - **So confirm every fire by the pick COUNT** in `/picks` (cache-busted), and by the player
+>   landing on your `draft_slot`. Never by `picked_by`.
+> - **Keep the queue armed at all times** (`ffQueueSync`), so a blown clock degrades to OUR board
+>   instead of Sleeper's.
+>
+> Outside that one case, this step stands exactly as written.
+
 **But the better reason is that it makes your oracle trustworthy.** `picked_by` names the **seat
 owner**, not the agent, so auto-pick on your own seat stamps *your* id and looks exactly like
 success. **Auto-pick fires only on timeout** — so at `pick_timer: 0` it is *mechanically impossible*,
@@ -178,7 +194,9 @@ curl -sL --max-time 15 "https://api.sleeper.app/v1/draft/<id>?cb=$(date +%s%N)" 
 
 ### 2. Claim a seat (mocks only)
 
-Click a `.claim-text` **after verifying its parent's text names the team you want**. Claiming
+Click a `.claim-text` **after verifying its parent's text names the team you want** — and note
+there are **TWO `.claim-text` nodes per team (16 for 8 teams)**, so naive indexing lands 2× off and
+claims someone else's seat while looking like it worked. Claiming
 **Team 1** gives you pick 1.1, so you are on the clock the instant the draft starts — the fastest
 path to a fire test. The label becomes your username; that also confirms which account Chrome holds.
 
@@ -308,10 +326,23 @@ Verify the paste landed the *current* logic — the install banner alone does no
 - **Mocks never appear in `/user/<id>/drafts`.** Get a mock's id from the card's React key on
   `/draftboards`, or from the room URL.
 - **The `+` on `/draftboards` is the LEAGUE wizard**, not the mock creator — it once created a stray
-  1-person league. **The mock creator is `NEW MOCK NFL DRAFT` in the right-hand panel.** Clicking a
-  mock card opens the room in a **new tab**.
+  1-person league. **The mock creator is `NEW MOCK NFL DRAFT` in the right-hand panel.**
+  🚨 **The two navigate DIFFERENTLY, and this line used to state only the half that is convenient.**
+  *(Corrected 2026-08-17.)* **`NEW MOCK NFL DRAFT` navigates the SAME tab** — which wipes your
+  console paste, so budget a re-paste immediately after creating one (see *Pasting the console*;
+  a navigation wiping the console is already recorded there). Only clicking an **existing** mock
+  card opens the room in a **new tab**, where the paste survives.
 - **A mock's `league_id` is `null`.** That is the signature separating it from the real draft.
   `ffStartDraft` additionally hard-refuses on the real draft id.
+- 🚨 **IN A MOCK, NEVER RUN `run_engine.py` OR `precompute_ladder.py` BARE.** *(Added 2026-08-17;
+  this lived only in `docs/insights/026` and was in neither this skill nor the runbook.)* Bare,
+  they read the **REAL league's** draft object — `rounds: 16`, where a mock is usually 15 — and arm
+  the contamination gate with the **REAL** draft id. Required form:
+  `python scripts/run_engine.py <slot> --rounds 15 --draft-id <mock_id>`, and the same two flags on
+  `precompute_ladder.py`. The seat goes positionally, because a mock's `draft_order` is its own.
+  *(Since 2026-08-17 the ladder at least can no longer overwrite the live `ladder.json` from a
+  mock — it writes `ladder.<draft_id>.json` and says so — but the ADVICE is still computed against
+  the wrong shape if you forget the flags.)*
 - **Miss one clock and Sleeper auto-picks the REST of the draft.** Reproduced exactly: one missed
   pick at #4, then **116 consecutive auto-picks.**
 - 🚨 **A BLANK DRAFT ROOM IS A SLEEPER DEPLOY REGRESSION, NOT YOUR PASTE. Diagnose with the

@@ -292,6 +292,35 @@ drafted, stamps `#pick · seat`, and polls `/picks` every 12s (backing off to 60
    ⚠️ **That terminal must stay open all night.** Start it before the draft, not during it.
 
 ## Step 3 — The loop (repeat until draft complete)
+
+> 🚨 **RUN STEPS 1-4 AS ONE CHAINED SHELL CALL, AND GREP THE OUTPUT.** *(Added 2026-08-17 —
+> `insight 026` prescribed this on 2026-08-15 and it never reached this file, which is the repo's
+> own meta-lesson: an insight nobody propagates to the surface that states the rule is a note, not
+> a fix.)*
+>
+> **96-98% of every on-clock second is round-trip and agent latency, not Python.** All 23 script
+> invocations of the live rehearsal totalled **5.28s** and `run_engine.py` never exceeded **0.18s**.
+> So the only two levers are **FEWER ROUND TRIPS** and **SHORTER OUTPUT** — never faster code.
+>
+> ```bash
+> python scripts/merge_picks.py <draft_id> \
+>   && python scripts/run_engine.py <slot> \
+>   && python scripts/precompute_ladder.py --slot <slot>
+> ```
+> - **Measured saving: ~16s per pick** vs the same three as separate calls. Re-timed 2026-08-17
+>   against the real draft with the output grepped: **the whole chain ran in 0.617 s.**
+> - **`&&`, not `;`** — a failed merge must stop the chain, not feed a stale `picks.json` to the
+>   engine.
+> - **GREP IT.** Reading the full dump cost **19s** once. `grep -A6 "BEST AVAILABLE"` and
+>   `grep -A4 "QUEUE THIS ORDER"` are the two blocks you act on; add
+>   `grep -E "THE WAIT|Between this pick|Their open needs|⚠ CLIFF|RUN WATCH"` for line four.
+>   ⚠️ **Read the `[source]`/`!!` preamble on the FIRST cycle of the night in full** — grepping it
+>   away every time is how an unarmed contamination gate goes unnoticed.
+> - 🚫 **DO NOT RE-MERGE WHILE ON THE CLOCK.** The feed cannot move: nobody else can pick while it
+>   is your turn. A second merge buys nothing and costs a whole round trip out of ~90 usable
+>   seconds. Merge when a pick lands, not when you are deciding.
+> - **On a MOCK add `--rounds 15 --draft-id <mock_id>` to steps 3 and 4** — see step 3's warning.
+
 1. **`python scripts/merge_picks.py <draft_id>`** — one command: fetches `/picks`, merges into
    `draft-kit/picks.json` keyed on `pick_no`, and reports the count, the latest pick, and whether
    there are gaps or duplicates. Run it every cycle, including "just checking" ones.

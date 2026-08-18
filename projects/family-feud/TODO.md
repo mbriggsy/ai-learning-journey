@@ -597,12 +597,14 @@ back rather than silently working around it — a gap worked around is a gap tha
 
 ### 🆕 FOUND BY A DRIFT SCAN 2026-08-17, NOT YET DONE — ranked by cost if it happens on draft night
 
-7. **INSIGHT 026's PRESCRIPTIONS ARE ONLY HALF-PROPAGATED.** Its "what to do on draft day" list has
-   five items; two reached the runbook tonight (re-arm the queue · the mock flags). **Three did
-   not:** chain merge→engine→ladder into ONE shell call (**measured saving ~16s**), grep the engine
-   output rather than reading the full dump (cost 19s once), and **do not re-merge while on the
-   clock**. `grep -c "chain" docs/draft-day-runbook.md` = 0. This is the repo's own meta-lesson:
-   *an insight nobody propagates to the surface that states the rule is a note, not a fix.*
+7. ✅ **DONE 2026-08-17 — ALL FIVE OF INSIGHT 026's PRESCRIPTIONS ARE NOW IN THE RUNBOOK.** Three
+   of them had never reached it (chain the calls · grep the output · do not re-merge on the clock);
+   `grep -c chain docs/draft-day-runbook.md` was **0**. Step 3 now opens with the chained form,
+   the two greps to act on, and the do-not-re-merge rule. **Re-timed against the real draft: the
+   whole chain — merge + engine + ladder, output grepped — ran in 0.617 s**, which is insight 026's
+   headline proven a second time. ⚠️ The block also says to read the `[source]`/`!!` preamble in
+   full on the FIRST cycle of the night: grepping it away every time is how an unarmed
+   contamination gate goes unnoticed.
 8. **`merge_picks.py` HAS NO RETRY, and it is the first call of every on-clock cycle.**
    `scripts/merge_picks.py:75` is a bare `urlopen(req, timeout=15)`; one Sleeper blip burns 15s,
    then the operator re-runs for another 15 — against a measured worst case of 61s of a 120s clock

@@ -43,18 +43,41 @@ until this correction.
 **THE REAL REFRESH, in order.** Run it the week of the draft and again ~48h before:
 
 ```bash
-python scripts/consensus.py                      # what moved, and what it costs. Writes nothing
+python scripts/consensus.py --refresh            # RE-FETCH FIRST. Do not trust the mule's cache
 python scripts/rerank.py                         # DRY RUN — prints every move, writes nothing
 python scripts/rerank.py --write                 # rewrites r/pr/tier in players_data.json
 python scripts/build_board.py --rankings-synthesized <the scrape date rerank printed>
 python scripts/build_board.py --verify-only      # gate + a sha256 per surface
+python scripts/injury_check.py                   # READ-ONLY. 23 blind rows on 2026-08-17
 python -m unittest discover -s tests             # from the root
 ```
 
+- 🚨 **`--refresh` IS NOT OPTIONAL, and step 1 used to omit it.** *(Added 2026-08-17.)* A bare
+  `consensus.py` reads whatever the mule last left on disk — and the whole point of this pass is
+  that the consensus has MOVED. If the mule has been dead for a week, the bare form prints
+  `0 change position` and **looks exactly like a board that is already current.** That is the
+  project's own landmine ("Last Result: 0 does not mean the mule works") reached through a
+  different door. **Read the `scraped <date>` both scripts print.** If it still equals the board's
+  `meta.rankings.synthesized`, the consensus genuinely has not moved — say so out loud rather than
+  committing a byte-identical rebuild.
+- 🚨 **`injury_check.py` BELONGS IN THIS BLOCK and was only ever written down in `TODO.md`.**
+  *(Added 2026-08-17.)* This runbook is the surface actually followed at 7am, so a step that lives
+  only in the TODO is a step that does not happen. It is the ONLY thing that catches a note that
+  healed or a player hurt after the synthesis, it is strictly read-only, and the count is moving:
+  **19 blind rows on 2026-08-14 → 23 on 2026-08-17**, including **McCaffrey at board 8
+  (Questionable)** and **Jordyn Tyson at 84 (Doubtful, hamstring)**.
 - **`rerank.py` refuses to `--write` while any note asserts a board position**, and it will not
-  rewrite that prose itself — the notes are Briggsy's voice. Fix the sentence, re-run. Exactly
-  **one** row carries such a note today (Jayden Daniels), so this costs one human glance per
-  refresh, which is the gate working rather than a false red.
+  rewrite that prose itself — the notes are Briggsy's voice. Exactly **one** row carries such a
+  note today (Jayden Daniels), so this costs one human glance per refresh, which is the gate
+  working rather than a false red.
+  **Two routes past it, and the second is usually the right one** *(the escape hatch existed in
+  `rerank.py` since it was written and this file never named it — added 2026-08-17)*:
+  - **(a)** the claim is now FALSE at the new rank → fix the sentence and re-run.
+  - **(b)** the claim is STILL TRUE at the new rank → acknowledge it by name:
+    `python scripts/rerank.py --write --notes-reviewed "Jayden Daniels"`.
+    Naming the player IS the acknowledgement, and it goes stale on its own the next time that
+    row moves. **Never edit prose that was not wrong** — `rerank.py`'s own header calls that the
+    worse of the two options, alongside weakening the gate.
 - **Commit `draft-kit/` between `--write` and the generator.** `build_board.py` refuses a dirty
   `draft-kit/`; `--allow-dirty` exists but stamps `meta.build.dirty` and is not what you want here.
 - ⚠️ **`meta.updated` DOES NOT REPORT RANK STALENESS.** It is `max()` over input mtimes

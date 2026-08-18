@@ -11,7 +11,7 @@ promises is encoded here so it re-runs.
 No network. fetch() is monkeypatched; the module's PICKS/KIT paths are redirected into a tmpdir,
 so a test can never touch the real draft-kit/picks.json. That file existing IS the bug under test.
 """
-import io, json, os, sys, tempfile, unittest, urllib.error
+import io, json, os, re, sys, tempfile, unittest, urllib.error
 from contextlib import redirect_stdout
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts"))
@@ -558,6 +558,160 @@ class TestTheFetchRetriesABlipButNeverAnAnswer(unittest.TestCase):
                 merge_picks.fetch(REAL)
         self.assertEqual(len(seen), 2, "both attempts must build their own URL")
         self.assertNotEqual(seen[0], seen[1], "the retry reused the nonce -- see insight 020")
+
+
+class TestTheOperatorIsToldA404IsNotWorthRetrying(MergeCase):
+    """`_is_transient` has always classified a 404 correctly -- but nobody reads a classifier.
+
+    The line the operator actually READS was `picks.json left untouched -- retry, do not advise off
+    stale state`, printed for EVERY failure including the one that means the draft no longer
+    exists. Meanwhile the board renders a dead draft identically to a wifi hiccup ("poll failed ...
+    showing the last good state, retrying", backing off to 60s forever) and the watcher's alert
+    lands in a file nobody is reading mid-draft. Every signal in the operator's face said "try
+    again", about the one failure where trying again can never work.
+
+    These run through main(), not fetch(), because the exit line is a main() behaviour -- and they
+    drive the REAL fetch() so the retry budget is exercised end to end rather than asserted.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.calls = []
+        real_attempt = merge_picks._attempt
+        self.addCleanup(setattr, merge_picks, "_attempt", real_attempt)
+
+    def raising(self, *outcomes):
+        def _fake(draft_id, timeout):
+            self.calls.append(timeout)
+            raise outcomes[min(len(self.calls), len(outcomes)) - 1]
+        merge_picks._attempt = _fake
+
+    def http(self, code, reason):
+        err = urllib.error.HTTPError(REAL, code, reason, {}, io.BytesIO(b""))
+        self.addCleanup(err.close)
+        return err
+
+    def run_main(self):
+        """Like run_merge, but leaves the REAL fetch in place so _attempt drives the outcome."""
+        old = sys.argv
+        sys.argv = ["merge_picks.py", REAL]
+        buf = io.StringIO()
+        try:
+            with redirect_stdout(buf):
+                code = merge_picks.main()
+        except SystemExit as e:
+            code = e.code if isinstance(e.code, int) else 1
+            if isinstance(e.code, str):
+                buf.write(e.code)
+        finally:
+            sys.argv = old
+        return code, buf.getvalue()
+
+    def test_a_404_says_do_NOT_retry(self):
+        # A POPULATED picks.json, because an empty one is the only state draft day never has. It
+        # carries the same draft_id, so the contamination gate passes and nothing else changes.
+        self.write(picks(3))
+        self.raising(self.http(404, "Not Found"))
+        _, out = self.run_main()
+        self.assertIn("do NOT retry", out)
+        self.assertIn("NO LONGER EXISTS", out)
+
+    def test_a_404_makes_the_operator_re_read_the_id_FIRST(self):
+        """🚨 A MISTYPED ID 404s IDENTICALLY. Without this line the message diagnoses a re-created
+        draft with total confidence and sends the operator into a ten-file edit over a typo."""
+        self.raising(self.http(404, "Not Found"))
+        _, out = self.run_main()
+        self.assertIn("mistyped", out)
+        self.assertIn(REAL, out, "the message must echo the id it actually asked for")
+
+    def test_a_404_names_the_remedy_the_operator_has_to_follow(self):
+        """A refusal that does not say what to do next is a refusal the operator argues with under
+        a clock. Ten places carry the draft id; the watcher used to name exactly one of them."""
+        self.raising(self.http(404, "Not Found"))
+        _, out = self.run_main()
+        self.assertIn("docs/draft-day-runbook.md", out)
+        self.assertIn("If the draft was re-created", out)
+
+    def test_a_404_does_not_tell_the_operator_to_retry(self):
+        """🚨 THE MUTANT-KILLER, and the first version of it did not work.
+
+        It asserted `assertNotIn("-- retry,")` -- a LITERAL. An adversarial pass reworded the
+        generic advice in place ("try again shortly") and all eight tests stayed green while the
+        operator was handed retry advice on the one failure that can never succeed. Pinning a
+        paraphrase is insight 019's defect: the test probed the axis nobody had broken.
+
+        Three assertions now. The first pins the ACTUAL OBJECT (`merge_picks.RETRY_ADVICE`), so a
+        mutant that reuses the constant cannot drift past it. The second is the semantic net for
+        hand-written paraphrases: any `retr*` word may appear exactly once, inside `do NOT retry`.
+        The third closes the one hole the regex leaves.
+
+        ⚠️ **THIS IS A DENYLIST, AND DENYLISTS ARE NOT PROOFS.** It catches `retry/retries/retrying/
+        retried` and `try again`. A paraphrase avoiding all of those ("give it another go") would
+        still slip through. Stated plainly rather than left implied -- claiming a denylist is
+        airtight is how the first version of this test shipped believing it pinned a behaviour."""
+        self.raising(self.http(404, "Not Found"))
+        _, out = self.run_main()
+        self.assertNotIn(merge_picks.RETRY_ADVICE, out,
+                         "the do-not-retry path still carries the generic retry advice")
+        self.assertEqual([m.lower() for m in re.findall(r"(?i)retr(?:y|ies|ying|ied)", out)],
+                         ["retry"],
+                         "'retry' may appear exactly once on the 404 path -- in 'do NOT retry'")
+        self.assertNotIn("try again", out.lower(),
+                         "the 404 path is telling the operator to try again in other words")
+
+    def test_the_runbook_section_this_message_names_actually_EXISTS(self):
+        """A remedy pointer is worth exactly the section it lands on. Three operator-facing
+        messages now name this heading; nothing proved it was there. Rename the heading and this
+        goes red instead of sending someone to a section that does not exist, on a clock."""
+        self.raising(self.http(404, "Not Found"))
+        _, out = self.run_main()
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        with open(os.path.join(root, "docs", "draft-day-runbook.md"), encoding="utf-8") as f:
+            runbook = f.read()
+        self.assertIn("If the draft was re-created", out)
+        self.assertIn("### If the draft was re-created", runbook,
+                      "merge_picks points at a runbook section that does not exist")
+
+    def test_the_404_message_explains_why_everything_else_looks_fine(self):
+        """The trap is not the 404, it is the silence around it: the dead object's start_time and
+        draft_order stay null forever, so every other check keeps reading 'nothing has happened
+        yet' right through draft day."""
+        self.raising(self.http(404, "Not Found"))
+        _, out = self.run_main()
+        self.assertIn("start_time", out)
+        self.assertIn("draft_order", out)
+
+    def test_a_404_never_burns_the_retry(self):
+        self.raising(self.http(404, "Not Found"))
+        self.run_main()
+        self.assertEqual(len(self.calls), 1, "a 404 must not consume the retry")
+
+    def test_a_404_leaves_picks_json_untouched(self):
+        self.write(picks(3))
+        self.raising(self.http(404, "Not Found"))
+        code, out = self.run_main()
+        self.assertNotEqual(code, 0)
+        self.assertEqual(len(self.on_disk()), 3, "a failed fetch must never write")
+        self.assertIn("do NOT retry", out,
+                      "the message must survive a POPULATED picks.json -- draft day's only state")
+
+    def test_THE_CONTROL_a_transient_failure_STILL_says_retry(self):
+        """🚨 THE PAIRED CONTROL, and the reason this pair is worth more than either half.
+
+        Without it, deleting the retry advice from EVERY failure path passes every test above --
+        and that would be strictly worse than the bug, because a real Sleeper blip is the common
+        case and retrying it is the correct action."""
+        self.raising(self.http(503, "Service Unavailable"))
+        _, out = self.run_main()
+        self.assertIn("retry, do not advise off stale state", out)
+        self.assertNotIn("do NOT retry", out)
+        self.assertEqual(len(self.calls), 2, "a 5xx is the network -- it must consume the retry")
+
+    def test_a_timeout_also_STILL_says_retry(self):
+        self.raising(TimeoutError("timed out"), TimeoutError("timed out"))
+        _, out = self.run_main()
+        self.assertIn("retry, do not advise off stale state", out)
+        self.assertNotIn("do NOT retry", out)
 
 
 if __name__ == "__main__":

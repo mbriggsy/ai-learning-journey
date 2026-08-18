@@ -239,7 +239,10 @@ def diff(prev, cur):
                     f"the draft object's own id changed: {was_id} -> {is_id}.\n"
                     f"Everything keyed to the old draft -- picks.json, any slot you wrote down -- "
                     f"belongs to a draft that no longer exists.\n"
-                    f"Update the pinned draft_id in newsletter/feud_mule.ps1."))
+                    f"REMEDY: docs/draft-day-runbook.md -- 'If the draft was re-created'.\n"
+                    f"TEN FILES carry this id and feud_mule.ps1 is only the first of them; grep "
+                    f"for the old id rather than trusting any line number. Fixing the mule alone "
+                    f"leaves a board still pinned to the dead draft."))
 
     if prev.get("status") != cur.get("status"):
         out.append(("STATUS CHANGED",
@@ -331,9 +334,14 @@ def main():
                         f"the league points at draft {league_draft}, but the cargo we are "
                         f"watching is draft {cargo['draft_id']}.\n"
                         f"The mule pins its draft_id in the URL, so it is hauling a draft that is "
-                        f"no longer the league's. Its start_time will stay null forever and this "
+                        f"no longer the league's. The mule KEEPS its last-good copy on a failed "
+                        f"fetch, so that cargo's start_time and draft_order stay null and this "
                         f"watcher will keep reporting 'no change' about a dead object.\n"
-                        f"Update the pinned draft_id in newsletter/feud_mule.ps1, then re-run it."))
+                        f"REMEDY: docs/draft-day-runbook.md -- 'If the draft was re-created'.\n"
+                        f"TEN FILES carry this id and feud_mule.ps1 is only the first of them; "
+                        f"grep for the old id rather than trusting any line number. Re-run the "
+                        f"ladder too -- ladder.json is NOT self-healing, and Step 3.5 pipes it "
+                        f"into the room where auto-pick drains it top-down."))
 
     # Capture this BEFORE save() writes the file, or a clean first run reports its own brand-new
     # snapshot as "previously unreadable" -- noise in the one output that has to stay signal-only.

@@ -164,6 +164,144 @@ and email are broken account-wide for this account, so an alert that needs one d
 
 **Read that file; it will not come to you.** And still check `meta.updated` before trusting a rank.
 
+### If the draft was re-created
+
+*(Written 2026-08-18, then corrected the same night by an adversarial review that found nine real
+defects in the first draft — including a verify step that was guaranteed to fail. Every claim below
+was re-read from source after that.)*
+
+🚨 **The commissioner re-creating the room is an ordinary pre-draft act, and this project reads it
+as "nothing has happened yet" right up to go time.**
+
+**THE MECHANISM, because the first draft of this section got it wrong.** It is not that the API
+keeps answering `null` — it is that **the mule's cargo FREEZES.** `Fetch-Source`'s catch
+(`newsletter/feud_mule.ps1:96`) records `FAIL: fetch failed -- …` and **returns without touching the
+destination file**, so `newsletter/data/inbox/sleeper_draft.json` keeps its last good copy. Every
+downstream reader then sees a dead draft's `start_time: null` and `draft_order: null` off a file
+nothing is refreshing — under a **fresh `run_at` timestamp**, which is what makes it look alive.
+
+⚠️ **AND THERE ARE TWO WORLDS. Work out which one you are in before doing anything.**
+
+- **The old draft still resolves (HTTP 200).** Sleeper keeps the abandoned object. **Nothing 404s,
+  nothing errors, the board polls happily and greys nobody out.** The *only* thing that can catch
+  this is the league-vs-cargo comparison in `watch_draft_state.py`'s `main()` — the
+  `str(league_draft) != str(cargo["draft_id"])` check. **This is the silent case and it is the
+  likely one.**
+- **The old draft is gone (HTTP 404).** Now the mule FAILs, `merge_picks.py` refuses, and the board
+  shows `poll failed`. Louder, and easier.
+
+**1 — THE SYMPTOMS. None of them says "the draft was re-created."**
+
+| You see | Where | What it means |
+|---|---|---|
+| **THE DRAFT WAS REPLACED** | `DRAFT_ALERTS.md` | ✅ The real signal, and the only one that fires in the silent case. It is a *file*, not a notification. |
+| the board stays **LIVE**, greys nobody out, `merge_picks` exits 0 with **"0 new"** | everywhere | 🚨 **THE SILENT CASE. There is no error to notice.** A draft that never seems to start is this until proven otherwise. |
+| `sleeper_draft: FAIL: fetch failed -- … [kept previous cargo, N min old]` | `mule_status.json` | The mule is pinned to a draft the API no longer serves — **and it kept the old file.** |
+| **CARGO IS STALE — THIS WATCHER IS BLIND** | `DRAFT_ALERTS.md` (`watch_draft_state.py:314`) | If `sleeper_draft.json` is stale while `sleeper_users.json` is fresh, suspect a re-created draft **before** suspecting the scheduled task. |
+| `fetch failed: HTTP Error 404` | `merge_picks.py` | ✅ Since 2026-08-18 this says **do NOT retry** and points here. |
+| `· poll failed (HTTP 404) — showing the last good state, retrying` | the board | ⚠️ **Backs off 12→24→48→60s and retries forever.** It never says the draft is gone, and it keeps showing a plausible frozen board. |
+
+⚠️ **A 404 here is an answer, not a blip — do not wait it out.** If the board is stuck on
+`poll failed` for more than one cycle, or the room simply never starts, run
+`python scripts/watch_draft_state.py` and read `DRAFT_ALERTS.md` before anything else.
+
+**2 — CONFIRM THE ID BEFORE YOU BELIEVE ANY OF THIS.**
+
+🚨 **A mistyped draft id 404s identically to a deleted one.** The remedy below is a ten-file edit;
+it is the wrong move if you simply pasted the wrong id. Check what you typed against the draft-room
+URL first. Then ask the **league**, never a doc (this file included):
+
+```bash
+curl -sL --max-time 15 "https://api.sleeper.app/v1/league/1390509993844809728?cb=$(date +%s%N)"
+```
+
+Read `.draft_id`. That is the same field the watcher compares. The **league** id is stable across a
+re-created draft — only the draft is replaced.
+
+**3 — THE ORDERED EDIT LIST. Order matters; step 4 undoes step 6 if you swap them.**
+
+🚨 **GREP IS THE METHOD.** Run `grep -rIl "<old_id>" . | grep -v '^\./\.git/'` and work from *its*
+output. **It returns 44 files. Ten of them get changed; the other 34 must be left alone** — that is
+the whole reason this list exists. Identify hits by the surrounding text, **never by line number**:
+the numbers in the first draft of this section had already rotted by the time it was committed.
+
+1. **`newsletter/feud_mule.ps1`** — two lines, `sleeper_draft` and `sleeper_traded`. **Do this
+   FIRST, then run the mule.** Everything generated flows from its cargo, so regenerating before
+   this just re-stamps the dead id.
+2. **`scripts/sleeper_draft_console.js`** — the `REAL_DRAFT_ID` constant behind the `ffStartDraft`
+   guard. 🚨 **`tests/test_sleeper_draft_console.py`'s `REAL` URL must move in the SAME commit** —
+   it is coupled to that constant and the suite goes red otherwise. **This is the one test constant
+   that is not a self-consistent synthetic.**
+3. **`scripts/merge_picks.py`** — the `USAGE` help text. Cosmetic. ⚠️ It is *help text*, not a
+   refusal message; the refusals carry no id, so do not hunt for one.
+4. **REGENERATE THE BOARD — RUN IT YOURSELF. NOTHING ELSE WILL.** ⚠️ The mule does **not** run
+   `build_board.py`; the first draft of this section claimed the board "corrects itself" and that
+   was false. After the mule has re-run:
+   ```bash
+   git status draft-kit/                      # build_board refuses on a dirty draft-kit/
+   python scripts/build_board.py
+   python scripts/build_board.py --verify-only  # the ONLY check comparing meta.shape.draft_id to live cargo
+   ```
+   Then **commit `draft-kit/` as one commit.** One refresh = one commit is what makes the rollback
+   above land on a live board instead of a dead one.
+5. **`draft-kit/.last_good/` — DELETE IT, AND ONLY AFTER STEP 4.** ⚠️ **Order is the whole point.**
+   `emit()` does `rmtree` then copies the **current** surfaces in *before* replacing them, so a
+   rebuild is what *creates* a dead-id rollback copy — and `emit()` restores from it automatically
+   if a later build throws. Deleting it before step 4 accomplishes nothing.
+6. **`draft-kit/picks.json` — DELETE.** It belongs to a draft that no longer exists. The
+   contamination gate will refuse on it anyway; delete it so that refusal never has to fire on the
+   clock. (Gitignored — `git status` will never show it to you.)
+7. **RE-RUN THE LADDER, AND DO NOT SKIP THIS.** 🚨 `newsletter/data/state/ladder.json` is **not**
+   self-healing. `resolve_out`'s divert only stops a foreign ladder from being **written** over that
+   path — **it does nothing about the stale one already sitting there**, and Step 3.5 tells you to
+   pipe exactly that file's `queue` into `ffQueueSync`, where **auto-pick drains it top-down on a
+   blown clock.** Re-run `scripts/precompute_ladder.py` for the new draft and confirm the file's
+   `draft_id` is the new one *before* loading it. The new Sleeper room's queue also starts **empty**.
+8. **Docs:** `docs/league.md` (2) · `docs/data-access.md` (2) · **this file's Step 1 pin** — the
+   `- **Real league draft:** draft_id …` bullet · `TODO.md` (3).
+   ⚠️ **NOT this file's other hit** — the one inside the blockquote beginning
+   *"Half obsolete, half CORRECTED 2026-08-14"*, in the sentence *"three bare fetches … returned
+   `cf-cache-status: HIT`"*. **That measurement was actually taken against that draft; rewriting the
+   id there falsifies it.** Identify it by that sentence, never by a line number.
+
+🚫 **THE 34 TO LEAVE ALONE:**
+- `newsletter/data/state/last_seen.json` — the watcher's `prev` snapshot. **Editing it erases the
+  very detection that fired**, and step 4 of VERIFY depends on it still holding the old id.
+- `newsletter/data/inbox/*` and the ten `newsletter/data/archive/*` days — mule-regenerated and
+  historical.
+- `docs/insights/016-*.md` and `docs/live-board-plan.md` — **history.** That plan's own header says
+  it is a historical record. Editing history to match today destroys the audit trail.
+- Every remaining test constant — `tests/fixtures/sleeper_{draft,league}.json`,
+  `tests/test_watch_draft_state.py`, `test_merge_picks.py`, `test_precompute_ladder.py`,
+  `test_engine_matching.py`. Self-consistent synthetics; changing them tests nothing.
+
+**4 — VERIFY. Run all five; the last two are the ones people skip.**
+
+```bash
+grep -rIl "<old_id>" . | grep -v '^\./\.git/'   # only the 34 do-not-touch files may remain
+python -m unittest discover -s tests            # green
+python scripts/watch_draft_state.py             # 1st run: fires THE DRAFT WAS REPLACED, exit 1
+python scripts/watch_draft_state.py             # 2nd run: quiet, exit 0  <-- THIS is the check
+python scripts/build_board.py --verify-only     # the board's id vs the live cargo
+```
+
+🚨 **THE FIRST WATCHER RUN IS SUPPOSED TO FAIL, and the first draft of this section got this
+wrong — it said "exits 0", which would have had you undoing correct work at 7am.** `save()` writes
+the new snapshot *after* the diff, and `last_seen.json` is on the do-not-touch list, so the old id
+**must** be diffed away exactly once. That first alert is the remedy's own echo. **Anything the
+SECOND run says is real.** (If the hourly task already fired, your first manual run is quiet.)
+
+🚨 **AND RELOAD THE BOARD TAB FROM DISK — no edit can reach it.** `PICKS_URL` is baked from
+`SHAPE.draft_id` at **page load**, and the greyed-out rows are in-memory state from the dead draft.
+Close the tab, reopen `draft-kit/family-feud-draft-board.html`, and confirm the live bar reads
+`LIVE · N picks in` with no `poll failed`.
+
+⚠️ **`run_engine.py --dry-run` is NOT a check on the board.** It returns before it ever starts
+`draft_engine.py`, so it never opens `players_data.json` and cannot see a stale board — it only
+re-reads the cargo you just fixed. Use `build_board.py --verify-only` for that. *(The first draft of
+this section called `--dry-run` "the only check that closes the loop end to end." It was false.)*
+
+
 ## Step 1 — Find the draft
 - **Real league draft:** draft_id `1390509994847240192` (league `1390509993844809728`).
 - **Mock draft:** `curl -sL --max-time 15 "https://api.sleeper.app/v1/user/1390750540631150592/drafts/nfl/2026?cb=$(date +%s%N)"` — take the most recent entry with status `drafting` (or `pre_draft` about to start). **Expect this to come up empty and plan for it.** Checked live Aug 7: the endpoint returned exactly ONE draft — the real league's — and none of Mocks #1, #2 or #3, even though Briggsy created all three himself. So the old note that "mocks he creates himself may be the only reliable thing here" is optimistic; treat this endpoint as a bonus, not a method. **The reliable path is to ask him to paste the draft room URL** (`sleeper.com/draft/nfl/<draft_id>` — the id is right there in it). He often pre-creates the room hours early (Mock #2's was built ~5h before go time) — check the web app's Mock Drafts tab ("In progress" list) and the draft room URL: `sleeper.com/draft/nfl/<draft_id>`.

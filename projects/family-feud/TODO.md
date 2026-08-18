@@ -46,7 +46,7 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
 
   ◀ HERE (2026-08-17 overnight, 17 commits) — **THE PRODUCT IS WRITTEN DOWN, AND FIVE WAYS THE
     ENGINE COULD HAND OVER A CONFIDENT WRONG NUMBER ARE CLOSED.**
-    **999 tests · 23 test files · 23 scripts · 28 insights · 14/14 mule sources.**
+    **1009 tests · 23 test files · 23 scripts · 28 insights · 14/14 mule sources.**
     ✅ **THE FOUR LINES EXIST** — `docs/draft-day-runbook.md` *Advisory format*, replacing the old
       ~5-line one. There is ONE format now. Three worked examples, all real engine output against
       `lab_feed_120.json` at seat 3, plus a BANNED list (no margins · no availability % · no
@@ -99,8 +99,14 @@ half. It is written down now:
   > **The one I passed on** — and what would change my mind
   > **The risk** — what it costs if I am wrong
   > **Before your next pick** — what to watch
-  ⚠️ `docs/draft-day-runbook.md` has an older ~5-line advisory format. **Reconcile them; do not
-  ship two.**
+  ✅ **RECONCILED 2026-08-17 — verified against source 2026-08-18. There is exactly ONE format.**
+  It lives at `docs/draft-day-runbook.md:575` (*Advisory format — THE FOUR LINES*), whose own note
+  at :580 records that it replaced the older ~5-line shape; the banned list is at :603 and three
+  worked examples follow. ⚠️ **Do not go hunting for a second format — you will find `:590`, which
+  quotes one line of the dead one to explain WHY the shape changed. That is rationale, not a
+  template.** ⚠️ The shipped labels are tighter than the four lines quoted above
+  (`THE CALL:` / `Passed on:` / `Risk:` / `Before #<next> (<n> picks):`) — **quote the runbook,
+  never this block.** What is left here is Briggsy's eye on the examples, nothing else.
 
 ✅ ~~**THE ONE OPEN DECISION FOR BRIGGSY — one 30-minute mock, or none?**~~ **ANSWERED AND SPENT
 2026-08-15. The single API-confirmed pick was bought and it landed.** `ffDraft` drafted Ja'Marr
@@ -616,34 +622,210 @@ back rather than silently working around it — a gap worked around is a gap tha
    cache key (insight 020). ⚠️ It also exposed a test-isolation leak: `MergeCase.run_merge`
    monkeypatched module-level `fetch` and never restored it — fixed in `tearDown`.
 
-**▼ THE THREE STILL OPEN — prescriptions, not diagnoses.**
+**▼ THREE STILL OPEN — prescriptions, not diagnoses.** *(Was three, became four, is three again.
+Re-verified item by item against source on 2026-08-18: all three originals were genuinely open,
+**two of the three prescriptions were wrong in ways that would have burned clock**, a fourth was
+found that was in no queue at all, and **item 10 was built and closed that night.**)*
 
 9. **MAKE `precompute_ladder.py --slot` OPTIONAL.** Today it is `required=True`
    (`scripts/precompute_ladder.py:625`), so the seat is typed once per pick window — ~15 more times
    under a clock, and **"3" is this project's most attractive wrong answer** (three unrelated 3s).
-   **THE FIX, exactly:** the file already does `from run_engine import freshness` at
-   `scripts/precompute_ladder.py:73` — extend that to import `watch_draft_state as W`, drop
-   `required=True`, and when `a.slot is None` derive it with `W.my_slot((cargo or {}).get("draft_order"))`,
-   printing the same `[draft] slot=N from draft_order["…"]` line `run_engine.py` prints. **Raise
-   rather than default** when the derivation returns None. ⚠️ **This does NOT remove the pre-draft
-   typing** — `draft_order` is null until go time, so it removes the other fourteen, not the first.
-10. **WRITE THE RE-CREATED-DRAFT REMEDY LIST** into `docs/draft-day-runbook.md` beside the watcher's
+   🚨 **THE PRESCRIPTION THIS ITEM CARRIED UNTIL 2026-08-18 COULD NOT BE TYPED.** It said to derive
+   with `W.my_slot((cargo or {}).get("draft_order"))`. **There is no `cargo` variable in
+   `precompute_ladder.py`, and its `--cargo` is a DIRECTORY** (`CARGO` at `:66` = `…/inbox`, help at
+   `:637` says "mule cargo dir") — it borrowed `run_engine`'s meaning, where `CARGO` (`shape.py:40`)
+   is the FILE `…/inbox/sleeper_draft.json`. **Two constants with the same name, two flags with the
+   same name.** Corrected below; every line number re-verified 2026-08-18 and the patch was applied,
+   run, and reverted (`git status` clean) to prove it.
+
+   **THE FIX, exactly — (a)–(e) are the item; (f) and (g) ship WITH them or the feature
+   under-delivers at the one moment it matters.**
+   - **(a)** `:73` — after `from run_engine import freshness` insert `import watch_draft_state as W`
+     (`# noqa: E402`). Safe: `sys.path.insert` is already at `:69` and `run_engine.py:72` imports the
+     same module, so it loads transitively today anyway.
+   - **(b)** `:625` — `required=True` → `default=None`, and extend the help at `:626-627` with
+     *"Omit it and it is read from draft_order"* (mirroring `run_engine.py:295`).
+   - **(c)** insert after `:664` (`print(gate_line)`) — before `a.slot`'s first consumer at `:668`:
+     `raw, problem = W.load_json(os.path.join(a.cargo, "sleeper_draft.json"), encoding="utf-8-sig")`
+     → `order` → `derived = W.my_slot(order)` → **raise** `SystemExit("NO SEAT. …")` when None →
+     `a.slot = int(derived)` → print `[draft] slot={N} from draft_order["1390750540631150592"]`.
+     ⚠️ **`utf-8-sig`, not `utf-8`** — the two existing readers of that file (`:363`, `:420-423`) use
+     `utf-8`, `run_engine` uses `utf-8-sig`, and a go-time curl can carry a BOM. Match `run_engine`.
+     ⚠️ `W.my_slot` **returns None, never raises** (`watch_draft_state.py:173-176`) — the raise is
+     the caller's job.
+   - **(d)** `:704` — `print(f"!! (you passed --slot {a.slot} to the precomputer)")` **becomes a lie
+     on a derived seat.** Capture `slot_given = a.slot is not None` before (c) and branch on it.
+   - **(e)** NEW TEST in `tests/test_precompute_ladder.py` — nothing covers a bare invocation today.
+     Use the existing `def cargo(self, draft_id=REAL):` temp-dir pattern. ⚠️ **Do NOT point it at
+     `tests/fixtures/sleeper_draft_started.json`** — the reader opens `sleeper_draft.json` by literal
+     name, so the started fixture can never be seen. All 78 + 59 tests stay green through the change.
+   - **(f)** `docs/draft-day-runbook.md:202-213` teaches `--cargo temp/draft.json` (a **FILE**) so the
+     seat comes from a fresh curl at go time, and warns the hourly inbox *"is guaranteed to be
+     behind"* at exactly the moment `draft_order` flips. **The same flag value breaks the
+     precomputer.** Either make its `--cargo` accept a file OR a dir (`os.path.isfile` → use it,
+     `os.path.dirname` for the rest), or document the two-step `mkdir temp/cargo && curl … >
+     temp/cargo/sleeper_draft.json`. Without this the derived seat is read from a possibly
+     60-minute-stale file — and **60 min trips no staleness warning** (threshold 150 min,
+     `watch_draft_state.py:53`).
+   - **(g)** `reference_draft_id` already computes `freshness()` at `:430` and **holds back** a stale
+     draft_id at `:432`; `run_engine` holds back a stale draft_id (`:225-228`) but derives the slot
+     **unconditionally** (`:190-198`). Copying that silence prints a stale-cargo seat with the same
+     confidence as a fresh one. Print the age beside it.
+
+   🚨 **AND THE NEW COST THIS FIX INTRODUCES, which nothing recorded before 2026-08-18: deriving the
+   seat from `draft_order` and then "verifying" it against `draft_order` is a TAUTOLOGY.** The
+   `[checked] … my_slot=N against draft_order` line becomes self-confirming — green off the very file
+   the seat was read from. **The only independent oracle is our own `picked_by` in `picks.json`, and
+   it cannot arm until one of our picks lands**, so from pick #1 to our first the operator reads a
+   `[checked]` line that has checked nothing. That is insight 005 in a new costume, and **it is worse
+   than a typo because it reads as a guard.** Make the line say WHICH oracle confirmed the seat.
+   ⚠️ Bare invocation also becomes MORE attractive in a **mock**, where it would derive the REAL
+   league's seat against a mock whose `draft_order` is its own (`SKILL.md:337-342` already forbids
+   bare runs there — keep that 🚨 and re-point it at the new behaviour).
+   ⚠️ **This does NOT remove the pre-draft typing** — `draft_order` is null until go time (confirmed
+   null again on the 2026-08-18 pull), so it removes the other fourteen, not the first.
+   ✅ **What the typed-seat guard already catches, proved live:** `my_slot=5 but our own picked_by
+   appears on draft_slot 3 in picks.json` — a hard refusal.
+10. ✅ **DONE 2026-08-18 — `docs/draft-day-runbook.md` → `### If the draft was re-created`.** The
+    detector had existed since 08-14 with no remedy; it has one now, plus the two code fixes the
+    doc alone would have left open: `merge_picks.py` **stops telling you to retry a 404** (and makes
+    you re-check the id first, because a typo 404s identically), and both watcher alerts stopped
+    naming 1 of 10 files. **1009 tests** (+10), four mutants planted and killed.
+    🚨 **THE LESSON, and it cost a rewrite: the first draft of that section was confidently wrong in
+    nine places.** An adversarial pass caught them all. Three worth carrying:
+    - **Its verify step was guaranteed to fail.** It said `watch_draft_state.py` "exits 0" after a
+      correct fix — but `save()` writes the snapshot *after* the diff and the doc itself forbids
+      touching `last_seen.json`, so the old id **must** be diffed away exactly once. **The documented
+      success criterion printed the alarm meaning "the draft is gone."** Now: run it twice, and the
+      SECOND run is the check. Proven by running it, not by reading it.
+    - **It claimed `run_engine.py --dry-run` "closes the loop end to end."** It returns before
+      starting `draft_engine.py`, so it never opens the board at all. `build_board.py --verify-only`
+      is the only check that compares `meta.shape.draft_id` to live cargo.
+    - **Its own line numbers had rotted before it was committed** — writing the section shifted four
+      of them, and the arithmetic in the fix was off by ten on two more. **The section now anchors
+      every hit by surrounding text and leads with grep.** ⚠️ *Do not reintroduce line numbers into
+      a remedy doc, or into a runtime alert — the watcher briefly carried `feud_mule.ps1:169`.*
+    ⚠️ **And two "already handled" claims were false, both about auto-pick fodder:**
+    `ladder.json` is NOT self-healing (the divert guards the WRITE path; the stale file already on
+    disk still gets piped into `ffQueueSync`), and `.last_good/` must be deleted **after**
+    regenerating, never before — `emit()` copies the *current* surfaces in before replacing them, so
+    **the rebuild is what creates the dead-id rollback copy.**
+
+~~10. **WRITE THE RE-CREATED-DRAFT REMEDY LIST**~~ into `docs/draft-day-runbook.md` beside the watcher's
     alert. The detector exists (`watch_draft_state.py`); the remedy does not, and a dead id returns
-    **HTTP 404**, so the board sits on `poll failed` forever at a 60s backoff. **THE EXACT LIST, as
-    grepped 2026-08-17 — every place the id is baked in:**
-    `newsletter/feud_mule.ps1:169` (sleeper_draft), `:177` (sleeper_traded) ·
-    `scripts/sleeper_draft_console.js:602` `REAL_DRAFT_ID` (the ffStartDraft guard) ·
-    `scripts/merge_picks.py:196` (the refusal message) ·
-    `draft-kit/players_data.json` `meta.shape.draft_id` **and** `draft-kit/family-feud-draft-board.html:278`
-    (generated — regenerate, never hand-edit) · docs: `league.md:10,54` · `data-access.md:24,105` ·
-    `draft-day-runbook.md:168,181`. Test fixtures carry it too and must NOT be changed.
-11. **TEST `scripts/render_html.py`.** Zero tests today; reached only indirectly via
-    `build_board.py:505`, so a wrong roster line ships silently. **The three worth pinning are the
-    ones that compose prose from `meta.shape`:** `starters_line` (`:52`), `kicker_line` (`:67`),
-    `playoff_line` (`:83`) — feed each a shape with a moved FLEX slot and assert the sentence
-    changes, which is the KTD-1 failure this repo already paid for once. `data_line` (`:41`) and
-    `synth_date` (`:46`) are cheap too. **`scripts/probe_picks_cache.py` stays untested on purpose**
-    — it is a live network probe; **say that in its docstring** so it stops reading as an oversight.
+    **HTTP 404**, so the board sits on `poll failed` forever at a 60s backoff. **Put it between
+    `:165` and `:167`, directly under the watcher paragraph that names the alert**, as
+    `### If the draft was re-created`.
+
+    **1. LEAD WITH THE SYMPTOMS — it has to be reachable from what the operator SEES:**
+    `DRAFT_ALERTS.md` carries **THE DRAFT WAS REPLACED** (`watch_draft_state.py:236` and `:328`) ·
+    `merge_picks.py` prints `fetch failed: HTTP Error 404` **and then the word `retry`** — ⚠️ **ignore
+    it, a 404 is an answer, not a blip** (`_is_transient:109` already returns False for 4xx) · the
+    board reads `· poll failed (HTTP 404) — showing the last good state, retrying` and backs off
+    12→24→48→60s **forever**. 🚨 **Nothing in that chain ever says the draft is gone**, and
+    `start_time`/`draft_order` on the dead object stay null forever — so the whole repo reads
+    *"nothing has happened yet"* right up to go time.
+    **2. GET THE NEW ID FROM THE LEAGUE, NEVER FROM A DOC:**
+    `curl -sL --max-time 15 "https://api.sleeper.app/v1/league/1390509993844809728?cb=$(date +%s%N)"`
+    → read `.draft_id` (the same field `watch_draft_state.py:328` compares).
+    **3. THE ORDERED EDIT LIST — re-grepped and CORRECTED 2026-08-18:**
+    `newsletter/feud_mule.ps1:169` + `:177` — **FIRST, then run the mule**; everything generated flows
+    from its cargo · `scripts/sleeper_draft_console.js:608` `REAL_DRAFT_ID` — ⚠️ **`:608`, not `:602`,
+    and `tests/test_sleeper_draft_console.py:679` MUST move in the same commit** or `:731`/`:733` go
+    red · `scripts/merge_picks.py:196` — ⚠️ this is the `USAGE` **help text**, not "the refusal
+    message"; the refusals carry no id, so grepping for one finds nothing and you doubt the list ·
+    **regenerate, never hand-edit:** `draft-kit/players_data.json:81` and
+    `draft-kit/family-feud-draft-board.html:278` (both stamped by `build_board.py:981` from cargo —
+    automatic once the mule re-runs) · docs `league.md:10,54` · `data-access.md:24,105` ·
+    `draft-day-runbook.md:168,181` · **`TODO.md:1687,1854,1915` — this file carries it too and the
+    old list omitted itself.**
+    🚨 **DELETE, do not edit:** `draft-kit/.last_good/players_data.json:81` and
+    `draft-kit/.last_good/family-feud-draft-board.html:278` — gitignored rollback copies; **left
+    alone, a rollback silently restores a board pinned to the dead draft.** Also delete
+    `draft-kit/picks.json` — it belongs to a draft that no longer exists.
+    🚫 **DO NOT TOUCH:** `newsletter/data/state/last_seen.json:3` (the watcher's `prev` snapshot —
+    editing it erases the detection that fired) · `newsletter/data/state/ladder.json:30` (already
+    handled — `precompute_ladder.py:369-390` diverts a mismatched ladder with a `[held back]` note) ·
+    `newsletter/data/inbox/*` and `archive/*` (mule-regenerated) · `docs/insights/016:15,17` and
+    `docs/live-board-plan.md:53` (**history — that file's own header at `:4` says so**) · every other
+    test constant (`tests/fixtures/sleeper_draft.json`, `sleeper_league.json`,
+    `test_watch_draft_state.py:28`, `test_merge_picks.py:20`,
+    `test_precompute_ladder.py:411,519,526,680,681,712,743`, `test_engine_matching.py:336-347`).
+    ⚠️ **The old line "test fixtures carry it too and must NOT be changed" was flatly wrong for
+    `test_sleeper_draft_console.py:679`** — that one is coupled to the `.js` constant.
+    **4. VERIFY:** `grep -rIn "<old_id>" . | grep -v '^./.git/'` returns only the do-not-touch set,
+    the suite is green, and `python scripts/watch_draft_state.py` exits 0.
+
+    **⊕ THE DOC ALONE LEAVES TWO WRONG SIGNALS IN CODE — fix them in the same session:**
+    - `scripts/watch_draft_state.py:242` and `:336` both end *"Update the pinned draft_id in
+      newsletter/feud_mule.ps1."* — **one file of ten, and it does not even name the second line in
+      that same file.** Re-point both at the new runbook section.
+    - `scripts/merge_picks.py:230` exits *"retry, do not advise off stale state."* — **special-case
+      the 404** (`_is_transient` already classifies it) to say **do NOT retry, the draft is gone**,
+      and pin it with a test asserting no second attempt is made.
+11. **TEST `scripts/render_html.py`.** **Zero *assertions*, not zero coverage** — `render()` already
+    executes in four tests via `B.stage()` (`test_build_board.py:102,115,143,1102`), so a KeyError
+    goes red today; what is unpinned is the **content** of all five functions. All six line numbers
+    below re-verified 2026-08-18. New file `tests/test_render_html.py`, header copied from
+    `test_run_engine.py`, `sys.path.insert(0, os.path.join(ROOT, "scripts"))`.
+
+    🚨 **AND THE HUNT FOUND A LIVE DEFECT THE ITEM ONLY GESTURED AT.** `render_html.py:63` does
+    `parts.insert(4, f"<b>{flex} FLEX</b>")` — **a hardcoded index instead of "after the last of
+    QB/RB/WR/TE that is present."** Reproduced: with `TE: 0` it renders
+    `QB · 2 RB · 2 WR · K · <b>2 FLEX</b> · DEF` — FLEX between K and DEF. ⚠️ **Dormant on the live
+    8-team shape** (all four are non-zero, so 4 happens to be right), so it bites only if a starter
+    slot goes to zero. **Fix the index; keep the live shape as a control so the fix cannot regress.**
+
+    ⚠️ **TWO DRIFTS IN THE OLD PRESCRIPTION — following it literally produces broken or empty tests.**
+    (1) *"feed each a shape"* is wrong for `kicker_line` (`:67`): it takes the **whole source** and
+    does `source["meta"]["shape"]` itself at `:68` — a bare shape raises `KeyError('meta')`.
+    (2) *"a moved FLEX slot"* only exercises `starters_line`. `flex` is read at exactly one place
+    (`:61`); `kicker_line` reads league/teams/format/start_time and `playoff_line` (`:83`) reads
+    teams/playoff_teams — **so a literal reading yields two green tests that assert nothing**, which
+    is the failure this repo has already paid for twice.
+
+    **VARY WHAT EACH ACTUALLY READS:** `starters_line` (`:52`) — the FLEX index above ·
+    `playoff_line` — `playoff_teams` 6 / 0 / absent and `teams` 8 / 12 (⚠️ `shape["teams"]` is
+    REQUIRED, KeyError otherwise) · `kicker_line` — `format` with and without `"PPR"`, `start_time`
+    None vs epoch-**ms** (⚠️ `:74` uses `fromtimestamp` in **local time** — build the expected string
+    with the same call or the test is machine-dependent) · `data_line` (`:41`) — one line, no space
+    after separators, `ensure_ascii=False` survives, `json.loads(out) == source` · `synth_date`
+    (`:46`) — `"2026-08-14"` → `"Aug 14, 2026"` **and** matches `validate_board.py:791`'s own regex
+    `^[A-Z][a-z]+ \d+, \d{4}$`, which is the round-trip that gate depends on.
+
+    **`scripts/probe_picks_cache.py` stays untested on purpose** — a live network probe; **append it
+    to the docstring (ends `:23`)** so its absence reads as a decision, not an oversight.
+    ⚠️ **Update `README.md:116`'s test count in the SAME pass, as the last edit before the commit.**
+
+12. 🆕 **THE MULE'S SOURCE COUNT IS WRONG ON FOUR SURFACES AND SELF-CONTRADICTORY ON TWO OF THEM.**
+    Found 2026-08-18 by a drift scan; **measured against live cargo** (`mule_status.json`, run_at
+    18:29:02) and against `feud_mule.ps1` itself, not against another doc. **The truth: 14 entries in
+    `mule_status.json`, 12 of them landing in the inbox, 7 Sleeper-family endpoints** —
+    `Fetch-Source` at `feud_mule.ps1:167,168,169,177,178,179,180` (7 Sleeper) + `:187-191` (5 RSS) =
+    12 into the inbox, plus `Run-Fetcher` at `:205-206` writing to `draft-kit/cache/`. All four
+    surfaces predate the 2026-08-17 addition of `sleeper_traded` + `sleeper_rosters`.
+    - **`docs/data-access.md:45`** — *"12 entries in mule_status.json; only 10 of them land in the
+      inbox"* → **14 and 12**. 🚨 This is the one line the repo points operators at to reason about
+      cargo without a network call, **and it is wrong in both halves**: an operator auditing it
+      counts 14, concludes two sources are phantom, and distrusts good data under a clock.
+    - **`docs/data-access.md:43`** — *"10 sources … five Sleeper endpoints plus five fantasy RSS"* →
+      **12 sources, seven Sleeper endpoints.** ⚠️ CLAUDE.md names this file as the OWNER of what the
+      mule carries. A doc that owns a truth and states it stale is worse than no doc.
+    - **`docs/nightly-feud.md:53`** — says **10**; **`:10` of the same file says 14.** The file
+      contradicts itself and offers no way to tell which is current. This is the repo's own landmine
+      caught in the act — *"a stat updated mid-session is stale by the commit."*
+    - **`docs/nightly-feud.md:55`** — the **by-name** list *"(league, users, draft, trending add,
+      trending drop)"* omits `sleeper_traded` and `sleeper_rosters`. ⚠️ A by-name list is what a
+      reader trusts to know a fetch exists before writing a consumer — and **`sleeper_traded` having
+      zero readers is a defect this repo already shipped once.**
+    - **`README.md:15`** implies 12 while **`:239` says 14** — and `:15` is in the opening feature
+      table, so **the wrong number wins on every skim** and the right one sits 224 lines below.
+    - **`README.md:237`** heads the block *"Verified on this machine 2026-08-08"* while the sentence
+      it introduces carries the **08-17** number. ⚠️ Under-dating a fresh fact teaches the reader
+      that the stamps are decorative.
+    **THE FIX IS NOT JUST A NEW NUMBER — copy the hedge that already works.** `README.md:240` gets
+    the volatile item counts right *and* says *"Item counts move daily; re-read `mule_status.json`
+    rather than quoting these."* Every line above should point at the live file the same way.
 
 ~~**The "will he be there at my next pick?" indicator.**~~ 🚨 **BUILT, MEASURED, AND REFUSED
 2026-08-17. Do not ship it — and do not rebuild it from the pooled number.**
@@ -791,7 +973,12 @@ the two error terms — see the block immediately above; term (b) is 1.4x to 25x
 - ⚠️ **THIS IS A LOWER BOUND AND MUST ALWAYS BE QUOTED AS ONE.** It measures how much *"what the
   RB2 slot scores"* varies year to year. It does **not** measure whether the player the consensus
   ranks RB2 finishes RB2 — almost certainly the larger term, and it needs historical preseason ECR
-  we do not hold. **Probing for that source is the cheapest high-value item not on this list.**
+  we do not hold. ~~**Probing for that source is the cheapest high-value item not on this list.**~~
+  ✅ **PROBED AND ANSWERED 2026-08-14 by U17 — do not re-open it as an idea.** That larger term is
+  measured in `scripts/realized_value.py` (insight 023), and it deliberately indexes on **FFC ADP,
+  not ECR**: its docstring at :32-35 names the ECR archive and declines it — *"it publishes history
+  back to 2010 and ECR history is a 102 MB archive… they are not the same list."* ⚠️ The residual
+  is only that the measurement runs on ADP; **never describe its input as "the board's own rank."**
 
 **✅ THE LONG-TD BONUS IS EXACTLY COMPUTABLE — this file said it was not (2026-08-14).**
 The old claim: *"no TD-distance column exists on either release, so it needs play-by-play"*, with
@@ -1119,8 +1306,12 @@ all measured:**
   levels below.** Use `ffAutoPick(true|false)`. Full mechanics:
   [`.claude/skills/sleeper-draft-room/`](.claude/skills/sleeper-draft-room/SKILL.md).
 
-The other open item is the 2025 season (below); it was parked by measurement, not by neglect, so
-re-opening it is Briggsy's call and it comes with an error budget attached.
+~~The other open item is the 2025 season (below); it was parked by measurement, not by neglect.~~
+✅ **CLOSED 2026-08-09 — 2025 IS IN THE BASIS AND THIS FILE SAYS OTHERWISE IN FOUR PLACES.**
+`draft-kit/vorp_curve.json` reads `release: current`, `seasons: [2022, 2023, 2024, 2025]`
+(re-verified 2026-08-18). The 404 that every "next accuracy gap" passage rests on describes only
+the **frozen legacy `player_stats_*` release**, which is not what we build from. 🚨 **Three more
+passages below still point at 2025 as the next unit of work — they are history. Do not rebuild it.**
 
 **Standing work that is not a task:** the mule hauls hourly, the watcher watches, the newsletter
 publishes nightly at 21:45, and `python scripts/build_board.py --verify-only` is the draft-morning
@@ -1332,7 +1523,7 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **999 tests** *(re-measured at the END of the
+gate went **13 findings → 0** by fixing surfaces. **1009 tests** *(re-measured at the END of the
 2026-08-17 session. This line read 907, was "corrected" to 946 mid-session, and went stale again
 within the same night as five later commits added tests — hence the rule: **update a count as the
 LAST edit before the commit, never mid-session**)*, 0 skips on this machine
@@ -1521,12 +1712,15 @@ produce **byte-identical advisories** on the 120-pick lab feed at prefixes 1, 3,
 ## 0. Start with `/brief`
 
 🚨 **Read [`025`](docs/insights/025-the-click-reported-success-and-drafted-nobody.md) before
-touching the browser half.** `ffDraft` returned `{"clicked": true}` and drafted nobody; the cause
-is recorded as UNRESOLVED rather than guessed, and the experiment that settles it is at the top of
-this file.
+touching the browser half.** `ffDraft` returned `{"clicked": true}` and drafted nobody.
+✅ **RESOLVED 2026-08-15 — this section said UNRESOLVED until 2026-08-18 and was wrong.** The cause
+was found and is named in 025's own header: the handler-less `div.draft-button-wrapper`. **There is
+no experiment left to run.** Read it for the lesson, not as an open question.
 
-Twenty-five insight docs now exist. Each has a documented wrong answer that looks right. Read them
-before designing, not after debugging.
+**Twenty-eight insight docs now exist** (`001`–`028`, contiguous — verified 2026-08-18; this line
+said twenty-five). Each has a documented wrong answer that looks right. Read them before designing,
+not after debugging. ⚠️ Newest is [`028`](docs/insights/028-writing-the-output-found-what-the-tests-could-not.md)
+— writing the product's own output found what 975 green tests could not.
 
 **Read [`021`](docs/insights/021-the-simulation-had-a-closed-form-and-was-measuring-its-own-sampler.md)
 before building ANY simulation, sweep or enumeration over futures.** The branch precomputer ran 495
@@ -1662,9 +1856,15 @@ rather than assumed.
   ⚠️ **What is NOT live-proven is the `start_time` branch specifically** (lines 181-194 — null→set,
   set→moved, set→null). It shares the proven writer and schedule and it has unit tests, but the world
   has never yet handed it a non-null `start_time` to react to. That is the one branch draft prep
-  actually depends on, so treat it as *tested-and-adjacent-to-proven*, not proven. The honest
+  actually depends on, so treat it as *tested-and-adjacent-to-proven*, not proven. ~~The honest
   positive control costs nothing: point the watcher at a mock draft that HAS a start_time and
-  confirm the alert lands. Worth doing before Aug 29.
+  confirm the alert lands. Worth doing before Aug 29.~~
+  ✅ **DONE 2026-08-14 — do not spend a mock on this.** The positive control was paid with a **real**
+  Sleeper draft object carrying a populated `start_time` (`1391539007871012864`), committed as
+  `tests/fixtures/sleeper_draft_started.json`. `tests/test_watch_draft_state.py` covers all four
+  transitions — appears (:146), unchanged must not re-fire (:162), moved earlier (:167), cleared
+  (:175) — with a negative control and mutants caught both directions. Verified still true
+  2026-08-18.
 - ~~**U3 normalizer**~~ ✅ **SHIPPED 2026-08-07** (`522843cd`). `draft-kit/normalize.py` owns the
   rules as data; `norm_spec.json` and the board's JS are generated from it. **Never fork it.**
 - ~~**U14 `sleeperId`**~~ ✅ **SHIPPED 2026-08-07** (`c6379d78` + hardening). 174 ids frozen, 0

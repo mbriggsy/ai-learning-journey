@@ -132,6 +132,13 @@ def fetch(draft_id, timeouts=ATTEMPT_TIMEOUTS):
     raise last                                      # unreachable; the loop returns or raises
 
 
+#: The generic "the network was the network" advice. NAMED, not inlined, because the 404 path is
+#: defined by NOT saying it -- and a test that pins the absence of a literal string is pinning a
+#: paraphrase, not a behaviour. Proved 2026-08-18: rewording this sentence in place left all eight
+#: 404 tests green while handing the operator retry advice on the one failure that can never
+#: succeed. The constant makes the test and the thing it tests the same object (insight 019).
+RETRY_ADVICE = "picks.json left untouched -- retry, do not advise off stale state."
+
 BAD_SHAPE = ("picks.json exists but is not a Sleeper picks array ({why}).\n"
              "Move it aside and re-run -- do NOT hand-repair it mid-draft.")
 
@@ -228,7 +235,28 @@ def main():
     try:
         incoming = fetch(draft_id)
     except Exception as e:
-        sys.exit(f"fetch failed: {e}\npicks.json left untouched -- retry, do not advise off stale state.")
+        # A 404 IS AN ANSWER AND THE OLD MESSAGE TOLD YOU TO RETRY IT. `_is_transient` already
+        # refuses to burn the retry on a 4xx (it is classified as an answer, not a blip) -- but the
+        # operator-facing exit line said "retry, do not advise off stale state" for EVERY failure,
+        # so the one failure that means THE DRAFT NO LONGER EXISTS read like a flaky network. That
+        # is the whole re-created-draft trap: the board shows "poll failed ... showing the last good
+        # state, retrying" and backs off to 60s forever, the watcher's alert lands in a file nobody
+        # is reading mid-draft, and the only signal in the operator's face says try again.
+        if isinstance(e, urllib.error.HTTPError) and e.code == 404:
+            sys.exit(f"fetch failed: {e}\n"
+                     f"A 404 means THIS DRAFT NO LONGER EXISTS -- do NOT retry, and do not wait\n"
+                     f"for it to come back.\n"
+                     f"FIRST, THOUGH: a mistyped id 404s identically. Confirm {draft_id}\n"
+                     f"against the draft-room URL before touching anything -- the remedy below is\n"
+                     f"a ten-file edit and it is the wrong move if you pasted the wrong id.\n"
+                     f"If the id is right, the usual cause is the commissioner re-creating the\n"
+                     f"room, which is an ordinary pre-draft act. The mule KEEPS its last-good copy\n"
+                     f"of the dead draft on a failed fetch, and in that copy start_time and\n"
+                     f"draft_order are null -- so every other check will keep reading 'nothing has\n"
+                     f"happened yet' off a file nothing is refreshing.\n"
+                     f"REMEDY: docs/draft-day-runbook.md -- 'If the draft was re-created'.\n"
+                     f"picks.json left untouched.")
+        sys.exit(f"fetch failed: {e}\n{RETRY_ADVICE}")
 
     if not isinstance(incoming, list):
         sys.exit(f"unexpected response shape: {type(incoming).__name__}. picks.json left untouched.")

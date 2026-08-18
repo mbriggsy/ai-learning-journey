@@ -20,6 +20,14 @@ seconds after the draft began.
 you and confound the reading -- that happened on the first attempt. And **the summary's
 "catch-up lag" figure is misleading**: the plain URL only ever emits a handful of distinct
 values, so that metric times the sawtooth edges rather than the error. Read `picks behind`.
+
+**DELIBERATELY UNTESTED, and that is a decision rather than an oversight.** There is no
+`tests/test_probe_picks_cache.py` and there should not be. Every line of this file is a live
+network call against a real Sleeper draft under a real CDN policy; the quantity it measures --
+what Cloudflare hands back to a request nobody made before -- cannot be produced by a stub, and a
+test built on one would assert the stub. The only honest test of this instrument is running it
+against a live draft, which is what the 2026-08-09 measurement above is. Stated here because a
+file with no test file beside it otherwise reads as a gap somebody forgot to close.
 """
 import json, sys, time, urllib.request
 

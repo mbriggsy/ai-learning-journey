@@ -46,7 +46,7 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
 
   ◀ HERE (2026-08-17 overnight, 17 commits) — **THE PRODUCT IS WRITTEN DOWN, AND FIVE WAYS THE
     ENGINE COULD HAND OVER A CONFIDENT WRONG NUMBER ARE CLOSED.**
-    **1009 tests · 23 test files · 23 scripts · 28 insights · 14/14 mule sources.**
+    **1042 tests · 24 test files · 23 scripts · 28 insights · 14/14 mule sources.**
     ✅ **THE FOUR LINES EXIST** — `docs/draft-day-runbook.md` *Advisory format*, replacing the old
       ~5-line one. There is ONE format now. Three worked examples, all real engine output against
       `lab_feed_120.json` at seat 3, plus a BANNED list (no margins · no availability % · no
@@ -622,10 +622,13 @@ back rather than silently working around it — a gap worked around is a gap tha
    cache key (insight 020). ⚠️ It also exposed a test-isolation leak: `MergeCase.run_merge`
    monkeypatched module-level `fetch` and never restored it — fixed in `tearDown`.
 
-**▼ THREE STILL OPEN — prescriptions, not diagnoses.** *(Was three, became four, is three again.
-Re-verified item by item against source on 2026-08-18: all three originals were genuinely open,
-**two of the three prescriptions were wrong in ways that would have burned clock**, a fourth was
-found that was in no queue at all, and **item 10 was built and closed that night.**)*
+**▼ ONE STILL OPEN — item 9. Everything else in this block is closed.** *(Was three; a fourth was
+found that was in no queue at all; **10, 11 and 12 were all built and closed on 2026-08-18.**
+Re-verified item by item against source first — all three originals were genuinely open, and **two
+of the three prescriptions were wrong in ways that would have burned clock.** ⚠️ The pattern worth
+carrying: **every one of these three items found a defect its own prescription did not know about**
+— an unarmed 404 message, six stale doc surfaces, and two dormant wrong sentences on the board.
+Writing the test is what found them, not reading the code.)*
 
 9. **MAKE `precompute_ladder.py --slot` OPTIONAL.** Today it is `required=True`
    (`scripts/precompute_ladder.py:625`), so the seat is typed once per pick window — ~15 more times
@@ -763,7 +766,28 @@ found that was in no queue at all, and **item 10 was built and closed that night
     - `scripts/merge_picks.py:230` exits *"retry, do not advise off stale state."* — **special-case
       the 404** (`_is_transient` already classifies it) to say **do NOT retry, the draft is gone**,
       and pin it with a test asserting no second attempt is made.
-11. **TEST `scripts/render_html.py`.** **Zero *assertions*, not zero coverage** — `render()` already
+11. ✅ **DONE 2026-08-18 — `tests/test_render_html.py`, 33 tests, and it found TWO live defects.**
+    Three mutants planted and killed. The shipping board is **byte-identical** after both fixes
+    (sha256 compared against the committed HTML, and `render_html.py` re-run standalone) — **both
+    bugs are dormant on this league's shape and fire only when the shape CHANGES**, which is the
+    one moment a human reads these lines to see what changed.
+    - 🚨 **`starters_line` hardcoded FLEX's position** — `parts.insert(4, …)`, correct only while
+      all four of QB/RB/WR/TE are started. With `TE: 0` it rendered
+      `QB · 2 RB · 2 WR · K · <b>2 FLEX</b> · DEF` — the flex between the kicker and the defense.
+      Now derived from the count of started skill positions.
+    - 🚨 **`kicker_line` would have printed "Full PPR" over a HALF-PPR league.** It decided the
+      label with `"PPR" in str(meta.format)` — and `"PPR" in "Half PPR"` is True. Meanwhile
+      `shape.format_line()` was doing it correctly one file away through `SCORING_LABEL`, under a
+      comment saying never to invent a label. **Two derivations of one fact — the exact KTD-1
+      duplicate `format_line`'s own docstring was written against.** `render_html` now imports the
+      shared map, and a test asserts the two surfaces agree on every known code so the next edit to
+      either is caught by the other.
+    ⚠️ **The item's own prescription would have produced two tests that assert nothing** — see the
+    struck text below: `kicker_line` takes the whole SOURCE (not a shape), and `flex` is read in
+    exactly one place, so "feed each a shape with a moved FLEX slot" is a no-op for two of the three.
+    ✅ **`probe_picks_cache.py`'s docstring now says it is deliberately untested**, with the reason.
+
+~~11. **TEST `scripts/render_html.py`.**~~ **Zero *assertions*, not zero coverage** — `render()` already
     executes in four tests via `B.stage()` (`test_build_board.py:102,115,143,1102`), so a KeyError
     goes red today; what is unpinned is the **content** of all five functions. All six line numbers
     below re-verified 2026-08-18. New file `tests/test_render_html.py`, header copied from
@@ -1534,7 +1558,7 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **1009 tests** *(re-measured at the END of the
+gate went **13 findings → 0** by fixing surfaces. **1042 tests** *(re-measured at the END of the
 2026-08-17 session. This line read 907, was "corrected" to 946 mid-session, and went stale again
 within the same night as five later commits added tests — hence the rule: **update a count as the
 LAST edit before the commit, never mid-session**)*, 0 skips on this machine

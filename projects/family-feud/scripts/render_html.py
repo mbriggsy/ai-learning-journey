@@ -28,12 +28,21 @@ import json
 import os
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
 KIT = os.path.join(ROOT, "draft-kit")
-TEMPLATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates", "board.html")
+TEMPLATE = os.path.join(HERE, "templates", "board.html")
 sys.path.insert(0, KIT)
+sys.path.insert(0, HERE)          # so `shape` resolves when this module is run standalone
 
 import normalize                                                                  # noqa: E402
+#: ONE definition of what a scoring code is called. `shape.format_line()` already maps
+#: `scoring_type` through this and refuses to invent a label for a code it does not know; this
+#: module used to re-derive the same fact with `"PPR" in meta.format`, which is true of the string
+#: "Half PPR" -- so a half-PPR league would have had "Full PPR" printed across its board header.
+#: Two derivations of one fact is how the two drifted apart (KTD-1, the defect `format_line`'s own
+#: docstring was written against). Dormant today because this league is `ppr`.
+from shape import SCORING_LABEL                                                   # noqa: E402
 
 POS_ORDER = ("QB", "RB", "WR", "TE", "K", "DEF")
 
@@ -60,15 +69,32 @@ def starters_line(shape):
             parts.append(f"{n} {pos}")
     flex = shape.get("flex") or 0
     if flex:
-        parts.insert(4, f"<b>{flex} FLEX</b>")
+        # FLEX goes immediately after the last STARTED skill position -- it is a skill slot, and
+        # K/DEF must follow it. This was `parts.insert(4, ...)`, a hardcoded index that is correct
+        # only while all four of QB/RB/WR/TE are non-zero. Set any one of them to 0 -- a legal
+        # Sleeper shape -- and the number of parts ahead of FLEX shifts while the 4 does not:
+        # measured with TE:0, it rendered `QB · 2 RB · 2 WR · K · <b>2 FLEX</b> · DEF`, putting the
+        # flex between the kicker and the defense.
+        #
+        # Dormant on this league as configured (all four are started), so the bug can only appear
+        # when the SHAPE CHANGES -- which is precisely when a human reads this line to confirm what
+        # changed. That is the KTD-1 failure this repo has already paid for once: prose composed
+        # from the source that stops tracking the source.
+        started_skill = sum(1 for p in POS_ORDER[:4] if (shape.get("starters") or {}).get(p, 0))
+        parts.insert(started_skill, f"<b>{flex} FLEX</b>")
     return " · ".join(parts)
 
 
 def kicker_line(source):
     shape = source["meta"]["shape"]
+    # The scoring label comes from the CODE, through the one shared map -- never from a substring
+    # test on the composed `meta.format` prose. `"PPR" in "Half PPR"` is True, so the old form
+    # printed "Full PPR" over a half-PPR league. An unknown code reads "Custom scoring" rather
+    # than being assumed to be this league's, matching `shape.format_line()` exactly.
+    code = str(shape.get("scoring_type") or "").lower()
     bits = [source["meta"].get("league", "Family Feud"),
             f"{shape['teams']}-Team",
-            "Full PPR" if "PPR" in str(source["meta"].get("format", "")) else "Custom scoring"]
+            SCORING_LABEL.get(code) or "Custom scoring"]
     start = shape.get("start_time")
     if start:
         when = _dt.datetime.fromtimestamp(start / 1000)

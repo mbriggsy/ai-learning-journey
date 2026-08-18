@@ -797,7 +797,15 @@ found that was in no queue at all, and **item 10 was built and closed that night
     to the docstring (ends `:23`)** so its absence reads as a decision, not an oversight.
     ⚠️ **Update `README.md:116`'s test count in the SAME pass, as the last edit before the commit.**
 
-12. 🆕 **THE MULE'S SOURCE COUNT IS WRONG ON FOUR SURFACES AND SELF-CONTRADICTORY ON TWO OF THEM.**
+12. ✅ **DONE 2026-08-18 — all six surfaces corrected, re-measured first.** `data-access.md` (both
+    halves + the by-name list), `nightly-feud.md:53,55`, `README.md:15` and the under-dated
+    verification heading at `:237`, plus one the scan missed: the **"presence is not health"
+    landmine still quoted `12/12 ok`**, a string the mule stopped printing on 08-17 — a landmine
+    naming the wrong string is one you scroll past. Every corrected line now points at
+    `mule_status.json` rather than restating a number. ⚠️ **Left as history on purpose:**
+    `insights/020:181`, the 08-07 plan, and TODO's own dated 08-09 record — a closed plan's
+    *decisions* bind, its *facts* expire.
+    ~~🆕 **THE MULE'S SOURCE COUNT IS WRONG ON FOUR SURFACES AND SELF-CONTRADICTORY ON TWO OF THEM.**~~
     Found 2026-08-18 by a drift scan; **measured against live cargo** (`mule_status.json`, run_at
     18:29:02) and against `feud_mule.ps1` itself, not against another doc. **The truth: 14 entries in
     `mule_status.json`, 12 of them landing in the inbox, 7 Sleeper-family endpoints** —
@@ -1328,7 +1336,10 @@ what `read_shape()` and `run_engine.py` read for teams, rounds, roster and **the
 `draft_order` flips from null to populated near go time, so a stale copy keeps saying `null`
 exactly when the oracle finally has something to say. **Fixed inside `Fetch-Source`**, not at the
 call site, so all five Sleeper URLs and the next one added are covered; RSS is deliberately
-untouched. Re-run: **12/12 ok.** Full write-up: the 2026-08-09 addendum to
+untouched. Re-run: **12/12 ok.** ✅ *(That "the next one added is covered" claim was PAID OUT on
+2026-08-17: `sleeper_traded` and `sleeper_rosters` joined and got the nonce for free — 7 Sleeper
+URLs now. The 12/12 above is the 08-09 measurement and stays as written.)* Full write-up: the
+2026-08-09 addendum to
 [`020`](docs/insights/020-the-cdn-served-a-contiguous-prefix-and-every-gate-passed.md).
 
 ⚠️ **A RED `test_normalize` USUALLY MEANS A REVIEW FLEET LEFT SCRATCH IN THE REPO, not a real
@@ -2174,8 +2185,10 @@ The ones that bite hardest under time pressure:
 - **A silent engine can also be wrong.** `picks.json` is gitignored, so a spent mock's picks are
   invisible to `git status`. Both `merge_picks.py` and the engine now refuse them — but only the
   engine's check fires if you skip the merge, and only when you pass the draft_id.
-- **Presence is not health.** `Last Result: 0`, `NumberOfMissedRuns`, and the mule's `12/12 ok` are
-  all untrustworthy. Only the cargo timestamp in `mule_status.json` proves life.
+- **Presence is not health.** `Last Result: 0`, `NumberOfMissedRuns`, and the mule's `14/14 ok` are
+  all untrustworthy. Only the cargo timestamp in `mule_status.json` proves life. *(Said `12/12` until
+  2026-08-18 — a landmine that quotes a string the machine no longer prints is a landmine you scroll
+  past.)*
   ([`007`](docs/insights/007-presence-is-not-health-the-third-instance-of-one-pattern.md))
 - **A foreign source's parameter can be decorative.** Fantasy Football Calculator accepts
   `teams=8`, echoes it into `meta.teams`, and returns **byte-identical ADP to `teams=12`** for all

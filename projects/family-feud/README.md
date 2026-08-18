@@ -12,7 +12,7 @@ Snake draft, 16 rounds, ~Aug 29. Full PPR, 6 of 8 make the playoffs.
 | **A 174-player draft board** | 48 RB · 59 WR · 20 TE · 23 QB · 14 DEF · 10 K — every entry tiered, badged, and carrying empirical VORP |
 | **A live draft engine** | reads the cumulative Sleeper picks feed and prints board state, every roster's open needs, run watch, tier cliffs, best-available and VBD leans |
 | **A proven executor mode** | Claude drives Briggsy's logged-in Chrome and clicks the picks. Mock #3: 15/15 manual picks, zero clock misses, roster VORP 1225.8 |
-| **An hourly data mule** | a Windows scheduled task hauling 5 Sleeper endpoints + 5 fantasy RSS feeds + the expert consensus and the market ADP pool to disk, so nothing depends on a network call at draft time. It **validates what it caught** — status, content-type, that it parses, that a feed has items — and **never overwrites good cargo with bad**: a failed source keeps the last payload and records how old it now is |
+| **An hourly data mule** | a Windows scheduled task hauling 7 Sleeper endpoints + 5 fantasy RSS feeds + the expert consensus and the market ADP pool to disk — **14 sources, 12 of them landing in `newsletter/data/inbox/`** — so nothing depends on a network call at draft time. It **validates what it caught** — status, content-type, that it parses, that a feed has items — and **never overwrites good cargo with bad**: a failed source keeps the last payload and records how old it now is |
 | **A draft-state watcher** | the mule's first consumer. Hourly, it notices the moment `start_time` stops being null — or moves — and writes it down, because the date is a handshake that can shift **earlier**. It also refuses to go quiet: stale cargo, a lost baseline, a moved seat, or a re-created draft each raise their own alert |
 
 ## Where things are
@@ -234,10 +234,12 @@ never *"the gate passes"*. A gate that must be born green is a gate someone weak
 
 ## State of play
 
-**Verified on this machine 2026-08-08:** the engine through `run_engine.py` (shape read from the
-draft, exit 0), the board polling a live feed in a browser, curl to Sleeper, and the mule —
+**Verified on this machine — the engine, board, curl and mule on 2026-08-08; the mule's 14/14
+re-verified 2026-08-17 and again 2026-08-18:** the engine through `run_engine.py` (shape read from
+the draft, exit 0), the board polling a live feed in a browser, curl to Sleeper, and the mule —
 **14 sources, 0 failed, and this time the "ok" means something** *(12 on 2026-08-08; `sleeper_traded`
-and `sleeper_rosters` were added 2026-08-17 and the 14/14 re-verified that day)*: every payload was parsed and
+and `sleeper_rosters` were added 2026-08-17. **12 of the 14 land in the inbox**; the other two are
+the draft-kit fetchers writing to `draft-kit/cache/`)*: every payload was parsed and
 counted, not weighed. The wire carries **5 working feeds and 145 items** (yahoo 50 · cbs 36 ·
 pft 30 · espn 24 · rotowire 5). Item counts move daily; re-read `mule_status.json` rather than
 quoting these.

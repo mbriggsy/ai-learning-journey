@@ -40,9 +40,17 @@ nflverse GitHub releases carry stats, injuries and depth charts; both hosts are 
 ## The mule: data on disk, no network required
 
 `newsletter/feud_mule.ps1` runs hourly under the Windows task **"Family Feud Mule"** and drops
-10 sources into `newsletter/data/inbox/` — five Sleeper endpoints plus five fantasy RSS feeds —
-and since v2.1 also runs two draft-kit fetchers (`consensus.py`, `market.py`) that write to
-`draft-kit/cache/` instead. **12 entries in `mule_status.json`; only 10 of them land in the inbox.**
+12 sources into `newsletter/data/inbox/` — **seven** Sleeper endpoints (`sleeper_league`,
+`sleeper_users`, `sleeper_draft`, `sleeper_traded`, `sleeper_rosters`, `trending_add`,
+`trending_drop`) plus five fantasy RSS feeds — and since v2.1 also runs two draft-kit fetchers
+(`consensus.py`, `market.py`) that write to `draft-kit/cache/` instead.
+**14 entries in `mule_status.json`; 12 of them land in the inbox.**
+⚠️ **Counts move — `mule_status.json` is the answer, not this line.** *(Corrected 2026-08-18: this
+sentence said "12 entries … only 10 land" and the paragraph said "five Sleeper endpoints", both
+written before `sleeper_traded` and `sleeper_rosters` joined on 08-17. It is the one line the repo
+points you at to reason about cargo without a network call, so being wrong in both halves sent an
+auditor looking for two phantom sources. Re-measured against live cargo and the seven
+`Fetch-Source` calls in `feud_mule.ps1` before this correction.)*
 
 **Every payload is validated before it is allowed to land** *(changed 2026-08-08, U10)* — HTTP
 status, content-type, that it parses, and that a feed actually carries `<item>`/`<entry>` elements.

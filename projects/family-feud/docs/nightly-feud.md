@@ -50,11 +50,17 @@ are about to draft is hurt when he is not.
 
 ## The Mule
 
-Runs `newsletter/feud_mule.ps1` hourly, dropping 10 sources into `newsletter/data/inbox/`
-(v2.1 also runs two draft-kit fetchers that write to `draft-kit/cache/`, not here):
-five Sleeper endpoints (league, users, draft, trending add, trending drop) and five fantasy RSS
-feeds (Yahoo, Rotowire, ESPN, CBS, **ProFootballTalk**). Each source fails independently — dead
-feeds report `FAIL` in `mule_status.json` and the newsletter is meant to use whatever arrived.
+Runs `newsletter/feud_mule.ps1` hourly, dropping **12** sources into `newsletter/data/inbox/`
+(v2.1 also runs two draft-kit fetchers that write to `draft-kit/cache/`, not here — **14 entries in
+`mule_status.json` total**): **seven** Sleeper endpoints (league, users, draft, **traded_picks**,
+**rosters**, trending add, trending drop) and five fantasy RSS feeds (Yahoo, Rotowire, ESPN, CBS,
+**ProFootballTalk**). Each source fails independently — dead feeds report `FAIL` in
+`mule_status.json` and the newsletter is meant to use whatever arrived.
+⚠️ *(Corrected 2026-08-18: this said "10 sources" and named only five Sleeper endpoints, while
+line 10 of this same file said 14 — the file contradicted itself with no way to tell which was
+current. `sleeper_traded` and `sleeper_rosters` joined 08-17. A **by-name** list is what a reader
+trusts to know a fetch exists before writing a consumer, and `sleeper_traded` having no reader is
+a gap this repo already closed once.)*
 
 ⚠️ **NBC Edge was retired 2026-08-08 and must not be restored.** Its URL returns HTTP 200 with
 `Content-Type: text/html` and a ~793 KB page carrying zero `<item>` elements — it was never a feed,

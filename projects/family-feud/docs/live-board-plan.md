@@ -1,11 +1,22 @@
 # THE SLICK IDEA — Live Auto-Updating Big Board
 *Idea captured the night of Aug 5→6, 2026 — Briggsy's words: "on the big board, as draft picks are being made it automagically updates. Mind blown, right?" Correct, Briggsy. Mind blown.*
 
-**STATUS (updated Aug 7): Mock #3 PASSED — the executor gate is cleared. Step zero is now also cleared (below). The next session builds the board; there is nothing left to probe first.**
+✅ **STATUS (corrected 2026-08-17): THE BOARD IS BUILT AND LIVE. This file is a historical plan,
+not a work item.** `draft-kit/family-feud-draft-board.html` polls `/picks` every 12s (backing off
+to 60s), greys and strikes the drafted, stamps each with a `#pick · seat N` chip, and retains its
+last good state on a failed fetch. It also carries a manual ☆ "My queue" panel.
+🚨 **The lines below that say "the next session builds the board" are STALE and were still saying
+it ten days later** — they are kept only for the Option A reasoning and the CORS/CSP findings.
+**Read `TODO.md` for what is actually open.** What is genuinely NOT built: the board knows nothing
+about our seat, so it cannot show *"YOUR NEXT PICK: #28 · 7 away"*, and its ☆ queue is a manual
+in-window scratch pad that dies on reload and is wired to neither `ladder.json` nor Sleeper's real
+queue. See *HOW DRAFT NIGHT ACTUALLY RUNS* in `TODO.md` before extending it — the board is a
+**display**, never a control surface.
 
 ## The sequence
 1. ~~Mock #3 first~~ — **✅ PASSED Aug 6, a day ahead of schedule** (executor mode per runbook, now v3.2): 15/15 manual picks, zero clock misses, zero AUTO-PICK flips, roster VORP 1225.8. Full recap in [`draft-day-runbook.md`](draft-day-runbook.md)'s changelog. Pass criteria RETIRED. Note: the lab room `1390923383440424960` is **SPENT** (ran to completion) — any future mock needs a fresh 2-click room (Sleeper remembers settings). The spent room's `/picks` endpoint still serves all 120 picks, which makes it a perfect **static test feed** for the board build.
-2. **NEXT SESSION: build the live board.** Step zero is CLEARED as of Aug 7 (below) — there is nothing left to probe, start writing the poll loop.
+2. ~~**NEXT SESSION: build the live board.**~~ ✅ **DONE — the poll loop shipped.** See the
+   corrected STATUS at the top of this file.
 3. Real draft ~Aug 29 gets both: a lethal executor (proven) AND a self-updating wall display.
 
 ## Step zero — CLEARED 2026-08-07, no probe required
@@ -48,4 +59,8 @@ the same `file://` pattern as the newsletter page. There is no artifact CSP in t
 - Rankings are the **Aug 5 snapshot** — fine for the build and testing; MUST be refreshed before the real draft. The Aug 26 one-shot trigger that was supposed to fire the starting gun **no longer exists** (it died with Cowork). See `TODO.md`.
 - War-room scratch (`picks.json`, `new_picks.json`, `slot_names.json`, any merge script) is gitignored — recreate per runbook Step 3. curl returns the full cumulative array, so the Mock #3 leapfrog failure mode is gone; the integrity gate that caught it stays.
 - League was **4 of 8** as of the Aug 7 pull: PoppaBriggsy, briggsy007 (Hunter, commish), RMonk9, MattiICE23. Four seats still open — see [`league.md`](league.md). Team name: **Saquon Deez Nuts** (logo in [`../logo/deez-nuts/`](../logo/deez-nuts/)).
-- League watch was supposed to ride inside The Nightly Feud. **The Nightly Feud has never run** — see [`nightly-feud.md`](nightly-feud.md) before assuming any of it is live.
+- League watch was supposed to ride inside The Nightly Feud. ✏️ ~~**The Nightly Feud has never
+  run**~~ — **FALSE as of 2026-08-17 and corrected here:** it publishes nightly and unattended.
+  Verified by the artifact, not by belief — `newsletter/family-feud-newsletter.html` read
+  *"Aug 17, 2026 (Edition #10)"* with an mtime of 21:45 that night, with nobody at the keyboard.
+  U11 and U12 shipped it on 2026-08-08. See [`nightly-feud.md`](nightly-feud.md).

@@ -22,7 +22,7 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
     the engine never exceeded **0.18s** — **96-98% of every on-clock second was round-trip and
     agent latency.** The only levers are FEWER ROUND TRIPS and SHORTER OUTPUT, never faster
     Python. Numbers: [`insight 026`](docs/insights/026-the-loop-fits-and-the-scripts-were-never-the-cost.md).
-    **937 tests · 23 test files · 23 scripts · 27 insights.**
+    **946 tests · 23 test files · 23 scripts · 27 insights.**
     Two things that were only ASSERTED are now MEASURED: a deliberately blown clock took our
     queue-top (#60 = DJ Moore), and `picked_by` stamped our id on that pick we never made.
     ▸ **2026-08-17 — TWO ADVISORY FIXES SHIPPED, ONE FEATURE MEASURED AND REFUSED.**
@@ -43,6 +43,35 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
     skill's landmines carry the full list so nobody repeats them.
     `draft_order` is still null on the real draft; it populated correctly on the mock.
 ```
+
+## 🎯 HOW DRAFT NIGHT ACTUALLY RUNS — Briggsy's own words, 2026-08-17. Build against THIS.
+
+Nothing in this repo said what the product IS, so a session could spend itself polishing the wrong
+half. It is written down now:
+
+> *"The main driver is the drafting strategy and adjusting in realtime as to what is happening."*
+
+- **BRIGGSY DRAFTS. Claude advises beside him.** He may hand over the wheel mid-draft — *"there is
+  a chance I let ya do my bidding w/ me just observing"* — so the executor path must stay working,
+  but it is **not** the product.
+- 🚨 **THE BROWSER-CONTROL WORK IS A SIDE QUEST AND HE SAID SO.** He wanted to know what was
+  possible. It is now insurance — the blown-clock safety net and the option to hand over — **not
+  a build priority.** Do not spend a session on it.
+- **Three monitors: Claude · the board · Sleeper.** The board is a **display he reads**, never a
+  control surface — it must never need a click to be useful. **The terminal drives, the board
+  shows.** `draft-kit/family-feud-draft-board.html` is already live (polls `/picks` every 12s,
+  greys the drafted, stamps `#pick · seat`).
+- **THEREFORE THE DELIVERABLE IS WHAT CLAUDE SAYS AT EACH PICK**, not another number on a page.
+  The engine already emits a rich state (BEST AVAILABLE · VBD LEANS · tier cliffs · all-8-seat
+  needs · RUN WATCH · THE WAIT). **Claude is the synthesis layer.** The next build is turning that
+  state into the four lines below — agreed 2026-08-17, and explicitly *"we can play with it and
+  tweak it if needed"*:
+  > **THE CALL** — one name, one clause of why
+  > **The one I passed on** — and what would change my mind
+  > **The risk** — what it costs if I am wrong
+  > **Before your next pick** — what to watch
+  ⚠️ `docs/draft-day-runbook.md` has an older ~5-line advisory format. **Reconcile them; do not
+  ship two.**
 
 ✅ ~~**THE ONE OPEN DECISION FOR BRIGGSY — one 30-minute mock, or none?**~~ **ANSWERED AND SPENT
 2026-08-15. The single API-confirmed pick was bought and it landed.** `ffDraft` drafted Ja'Marr
@@ -408,6 +437,19 @@ back rather than silently working around it — a gap worked around is a gap tha
 ---
 
 **WHAT IS ACTUALLY LEFT, ranked:**
+0. ▶ **BUILD THE ADVISORY — this is the product and it is the next session's job.** Everything
+   below is plumbing next to it. The engine's state is rich enough already; what does not exist is
+   the **synthesis** into the four lines agreed 2026-08-17 (see *HOW DRAFT NIGHT ACTUALLY RUNS* at
+   the top of this file). Concretely:
+   - Write the four-line format into `docs/draft-day-runbook.md` **replacing** the older ~5-line
+     one — two competing formats is worse than either.
+   - Dry-run it against `tests/fixtures/lab_feed_120.json` at several stops (`--slot 3`, that
+     feed's own seat) and read the output as Briggsy would, on a clock. Stage it with
+     `python -c` truncation to a pick, run `scripts/run_engine.py 3 --rounds 15 --draft-id
+     1390923383440424960`, then **delete `draft-kit/picks.json` again** — it is gitignored war-room
+     scratch and a stale one poisons the next run.
+   - ⚠️ **It is a JUDGEMENT surface, so Briggsy's eye is the oracle, not a test.** Show him real
+     output from real stops and let him cut it. Do not gold-plate before he has read one.
 1. ✅ **THE QUEUE GAP IS CLOSED AND LIVE-PROVEN (2026-08-17).** `ffQueueSync(target)` takes the
    `queue` array `precompute_ladder.py` prints and makes Sleeper's queue equal it. **All four
    paths fired in a live room in 2.3s total:** load-from-empty (771ms) · append the next man after

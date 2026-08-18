@@ -608,28 +608,42 @@ back rather than silently working around it — a gap worked around is a gap tha
    headline proven a second time. ⚠️ The block also says to read the `[source]`/`!!` preamble in
    full on the FIRST cycle of the night: grepping it away every time is how an unarmed
    contamination gate goes unnoticed.
-8. **`merge_picks.py` HAS NO RETRY, and it is the first call of every on-clock cycle.**
-   `scripts/merge_picks.py:75` is a bare `urlopen(req, timeout=15)`; one Sleeper blip burns 15s,
-   then the operator re-runs for another 15 — against a measured worst case of 61s of a 120s clock
-   where round trips are 96-98% of the cost. **Two in-process attempts on a shorter timeout is
-   nearly free.** Keep the refusal message; it is correct.
-9. **`precompute_ladder.py --slot` IS REQUIRED, so the seat gets typed ~15 more times under a
-   clock** (`scripts/precompute_ladder.py:583`) — and "3" is this project's most attractive wrong
-   answer. `run_engine.py` can derive it from `draft_order`; the ladder cannot. **Make `--slot`
-   optional and fall back to run_engine's single derivation.** ⚠️ Note the derivation is blind
-   until our first pick lands, so this does NOT remove the need to type it pre-draft — it removes
-   the other fourteen.
-10. **A RE-CREATED DRAFT HAS A DETECTOR AND NO REMEDY.** `watch_draft_state.py` catches it; nothing
-    lists where the id is baked in. It is in at least: `newsletter/feud_mule.ps1:169` (+ the two
-    new sources added 08-17), `scripts/sleeper_draft_console.js` `REAL_DRAFT_ID`, the board's
-    `meta.shape.draft_id`, and ~5 docs. A dead draft id returns **HTTP 404**, so the board would sit
-    on `poll failed` forever at a 60s backoff. **A 20-minute write-up now vs an unbounded scramble
-    on draft morning.**
-11. **`scripts/render_html.py` HAS NO TESTS** (135 lines, 7 functions; `starters_line` /
-    `kicker_line` / `playoff_line` compose the board's prose from `meta.shape`) and is reached only
-    indirectly via `build_board.py:505`. `scripts/probe_picks_cache.py` also has none — that one is
-    a live network probe and arguably untestable offline; **say so in the file** rather than leaving
-    it looking like an oversight.
+8. ✅ **DONE 2026-08-17 — `merge_picks.py` RETRIES A BLIP, on the SAME 15s budget.**
+   `ATTEMPT_TIMEOUTS = (5, 10)` sums to the old single `TIMEOUT`, so the retry costs nothing in the
+   worst case. Escalating, not two equal slices, because six live fetches measured a **96 ms
+   median**. Retries 5xx/timeouts/truncated bodies; **never a 404** (that is an answer — the draft
+   is gone). Nonce rebuilt per attempt or the retry is just a second hit on the same Cloudflare
+   cache key (insight 020). ⚠️ It also exposed a test-isolation leak: `MergeCase.run_merge`
+   monkeypatched module-level `fetch` and never restored it — fixed in `tearDown`.
+
+**▼ THE THREE STILL OPEN — prescriptions, not diagnoses.**
+
+9. **MAKE `precompute_ladder.py --slot` OPTIONAL.** Today it is `required=True`
+   (`scripts/precompute_ladder.py:625`), so the seat is typed once per pick window — ~15 more times
+   under a clock, and **"3" is this project's most attractive wrong answer** (three unrelated 3s).
+   **THE FIX, exactly:** the file already does `from run_engine import freshness` at
+   `scripts/precompute_ladder.py:73` — extend that to import `watch_draft_state as W`, drop
+   `required=True`, and when `a.slot is None` derive it with `W.my_slot((cargo or {}).get("draft_order"))`,
+   printing the same `[draft] slot=N from draft_order["…"]` line `run_engine.py` prints. **Raise
+   rather than default** when the derivation returns None. ⚠️ **This does NOT remove the pre-draft
+   typing** — `draft_order` is null until go time, so it removes the other fourteen, not the first.
+10. **WRITE THE RE-CREATED-DRAFT REMEDY LIST** into `docs/draft-day-runbook.md` beside the watcher's
+    alert. The detector exists (`watch_draft_state.py`); the remedy does not, and a dead id returns
+    **HTTP 404**, so the board sits on `poll failed` forever at a 60s backoff. **THE EXACT LIST, as
+    grepped 2026-08-17 — every place the id is baked in:**
+    `newsletter/feud_mule.ps1:169` (sleeper_draft), `:177` (sleeper_traded) ·
+    `scripts/sleeper_draft_console.js:602` `REAL_DRAFT_ID` (the ffStartDraft guard) ·
+    `scripts/merge_picks.py:196` (the refusal message) ·
+    `draft-kit/players_data.json` `meta.shape.draft_id` **and** `draft-kit/family-feud-draft-board.html:278`
+    (generated — regenerate, never hand-edit) · docs: `league.md:10,54` · `data-access.md:24,105` ·
+    `draft-day-runbook.md:168,181`. Test fixtures carry it too and must NOT be changed.
+11. **TEST `scripts/render_html.py`.** Zero tests today; reached only indirectly via
+    `build_board.py:505`, so a wrong roster line ships silently. **The three worth pinning are the
+    ones that compose prose from `meta.shape`:** `starters_line` (`:52`), `kicker_line` (`:67`),
+    `playoff_line` (`:83`) — feed each a shape with a moved FLEX slot and assert the sentence
+    changes, which is the KTD-1 failure this repo already paid for once. `data_line` (`:41`) and
+    `synth_date` (`:46`) are cheap too. **`scripts/probe_picks_cache.py` stays untested on purpose**
+    — it is a live network probe; **say that in its docstring** so it stops reading as an oversight.
 
 ~~**The "will he be there at my next pick?" indicator.**~~ 🚨 **BUILT, MEASURED, AND REFUSED
 2026-08-17. Do not ship it — and do not rebuild it from the pooled number.**
@@ -1912,8 +1926,27 @@ Start with `--dry-run` to see every value and where it came from before anything
 
 ## Landmines
 
-Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the twenty worked cases.
-The four that bite hardest under time pressure:
+Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the worked cases.
+The ones that bite hardest under time pressure:
+
+- 🚨 **A SCRIPTED EDIT REWRITES THE WHOLE FILE'S LINE ENDINGS, AND THE TEST SUITE CANNOT SEE IT.**
+  This repo runs `core.autocrlf=false`, so the churn is real content and lands in the commit. Hit
+  2026-08-17: a heredoc patch doing `open(p, "w", encoding="utf-8").write(s)` turned a **150-line**
+  addition to `build_curves.py` into a committed **651 insertions / 501 deletions** — 150 lines of
+  load-bearing scoring logic made unreviewable, and `git blame` for the file poisoned. Python text
+  mode translates `\n` → `\r\n` on write; `sed -i` does the reverse. **999 green tests said nothing.**
+  **Use `newline=""` or binary `open(f,'wb')`, and ALWAYS `git diff --stat` before staging** — a
+  line count implausible for the edit is the only signal. Confirm with `git diff -w --stat`.
+  ⚠️ **Before "fixing" one, check you caused it:** `git show <base>:<path> | file -b -`.
+  `tests/test_engine_matching.py` was ALREADY CRLF and must be left alone.
+- ⚠️ **A STAT UPDATED MID-SESSION IS STALE BY THE COMMIT.** The 2026-08-17 pass whose whole job was
+  fixing stale counts shipped `946` on three surfaces and ended the night at `999`, because five
+  later commits added tests. **Update every count as the LAST edit before the final commit.**
+- ⚠️ **REVIEW/MUTATION FLEETS LEAVE WAR-ROOM SCRATCH BEHIND.** A read-only review agent left
+  `draft-kit/picks.json` holding **29 picks from the dead lab draft** on 2026-08-17. It is the
+  poisoned-picks landmine arriving by a road nobody watches. **Sweep `draft-kit/picks.json` and
+  `newsletter/data/state/` after any fan-out**, and note the tell: the suite reports
+  `OK (skipped=1)` instead of `OK`, because one test skips when a live picks.json exists.
 
 - ⚠️ **NEVER RENAME `newsletter/data/inbox/` OR `draft-kit/cache/` TO SIMULATE A CLEAN CLONE.**
   Hit for real 2026-08-08 at 22:29: the hourly mule fired while `inbox/` was renamed away,

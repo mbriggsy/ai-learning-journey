@@ -261,6 +261,36 @@ and watch it derive one** — that is the moment the guesswork ends.
   Our `roster_id` is **derived** from `newsletter/data/inbox/sleeper_rosters.json` (the roster whose
   `owner_id` is `1390750540631150592`) and never quoted from prose — same reason as the seat above.
 
+### 📺 Also in Step 2 — PUT THE BOARD ON MONITOR 2
+
+*(Added 2026-08-17. The board is the display Briggsy reads all night and this file — "the machine's
+operating instructions" — never once told anyone to open it. The only mention was a note about a
+**deleted** Cowork artifact with a similar name.)* It is deliberately a **display, never a control
+surface**: it must never need a click to be useful. The terminal drives; the board shows.
+
+`draft-kit/family-feud-draft-board.html` — all 174 rows with notes and badges, greys out the
+drafted, stamps `#pick · seat`, and polls `/picks` every 12s (backing off to 60s on failure).
+
+**Open it, then read the live bar. That is the whole self-test:**
+- `LIVE · N picks in · next is #M, seat S · updated <time>` → it is polling. Done.
+- `poll failed (HTTP …) — showing the last good state, retrying` → it is not. Use the fallback below.
+
+1. **Try double-clicking the file first** (`?live=1` is not needed — it starts itself when opened
+   as a wall display). ⚠️ **This path is NOT PROVEN.** The server half is fine — measured
+   2026-08-17, Sleeper returns `access-control-allow-origin: *` even for `Origin: null`, which is
+   what a `file://` page sends — but **Chrome's own `file://` fetch behaviour was never tested**
+   (Playwright refuses the `file:` protocol, and the browser extension was unavailable). Believe
+   the live bar, not this paragraph.
+2. **If the bar does not go LIVE within ~15 seconds, serve it — this path IS proven:**
+   ```bash
+   cd draft-kit && python -m http.server 8765 --bind 127.0.0.1
+   # then open http://127.0.0.1:8765/family-feud-draft-board.html?live=1
+   ```
+   Verified end to end 2026-08-17 against the **real** draft: `LIVE · 0 picks in · next is #1,
+   seat 1`, 174 rows rendered, polling confirmed by the timestamp advancing between reads. The only
+   console error is a favicon 404 from the bare server — harmless.
+   ⚠️ **That terminal must stay open all night.** Start it before the draft, not during it.
+
 ## Step 3 — The loop (repeat until draft complete)
 1. **`python scripts/merge_picks.py <draft_id>`** — one command: fetches `/picks`, merges into
    `draft-kit/picks.json` keyed on `pick_no`, and reports the count, the latest pick, and whether

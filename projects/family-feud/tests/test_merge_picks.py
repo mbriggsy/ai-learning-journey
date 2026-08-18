@@ -11,7 +11,7 @@ promises is encoded here so it re-runs.
 No network. fetch() is monkeypatched; the module's PICKS/KIT paths are redirected into a tmpdir,
 so a test can never touch the real draft-kit/picks.json. That file existing IS the bug under test.
 """
-import io, json, os, sys, tempfile, unittest
+import io, json, os, sys, tempfile, unittest, urllib.error
 from contextlib import redirect_stdout
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts"))
@@ -39,9 +39,17 @@ class MergeCase(unittest.TestCase):
         self.picks_path = os.path.join(self.kit, "picks.json")
         self._kit, self._picks = merge_picks.KIT, merge_picks.PICKS
         merge_picks.KIT, merge_picks.PICKS = self.kit, self.picks_path
+        # 🚨 `run_merge` monkeypatches the MODULE-LEVEL `fetch`, and for a long time nothing put it
+        # back. Every test that ran after the first MergeCase therefore saw a stubbed `fetch`
+        # forever -- harmless while nothing tested `fetch` itself, and instantly fatal the moment
+        # something did (2026-08-17: eight failures, all of them the leak rather than the code).
+        # A fixture that escapes its own test is the same family as the war-room scratch files
+        # this repo already sweeps for.
+        self._fetch = merge_picks.fetch
 
     def tearDown(self):
         merge_picks.KIT, merge_picks.PICKS = self._kit, self._picks
+        merge_picks.fetch = self._fetch
         self.tmp.cleanup()
 
     def write(self, obj):
@@ -431,6 +439,125 @@ class TestCacheBusting(unittest.TestCase):
         """No header at all means we cannot tell -- and cannot-tell is not the same as broken."""
         _, out = self._fetch_with_status(None)
         self.assertNotIn("CACHE-BUSTER", out)
+
+
+class TestTheFetchRetriesABlipButNeverAnAnswer(unittest.TestCase):
+    """`fetch()` is the FIRST call of every on-clock cycle and had no retry at all: one Sleeper
+    blip burned the whole 15s, then the operator re-ran for another 15 -- against a measured worst
+    case of 61s of a 120s clock where round trips are 96-98% of the cost (insight 026).
+
+    The budget did NOT grow. `ATTEMPT_TIMEOUTS` sums to the old single timeout, so this buys a
+    retry without spending one extra second in the worst case.
+    """
+
+    def setUp(self):
+        self.calls = []
+        self.real_attempt = merge_picks._attempt
+        self.addCleanup(setattr, merge_picks, "_attempt", self.real_attempt)
+
+    def stub(self, *outcomes):
+        """Each outcome is either an exception to raise or a body to return, in order."""
+        def _fake(draft_id, timeout):
+            self.calls.append(timeout)
+            o = outcomes[len(self.calls) - 1]
+            if isinstance(o, Exception):
+                raise o
+            return o, "MISS"
+        merge_picks._attempt = _fake
+
+    def run_fetch(self):
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            out = merge_picks.fetch(REAL)
+        return out, buf.getvalue()
+
+    def test_the_total_budget_did_not_grow(self):
+        """The control that keeps this a free win. If someone 'improves' this by adding a third
+        attempt at the same timeouts, the worst case silently doubles on a 120-second clock."""
+        self.assertEqual(sum(merge_picks.ATTEMPT_TIMEOUTS), merge_picks.TIMEOUT)
+        self.assertEqual(merge_picks.TIMEOUT, 15)
+
+    def test_a_blip_is_retried_and_the_second_attempt_wins(self):
+        self.stub(TimeoutError("timed out"), [{"pick_no": 1}])
+        out, printed = self.run_fetch()
+        self.assertEqual(out, [{"pick_no": 1}])
+        self.assertEqual(len(self.calls), 2)
+
+    def test_the_retry_is_ANNOUNCED(self):
+        """A retry that hides a flaky network lets the operator believe the room is quiet when the
+        fetch is failing -- and '0 new this fetch' already looks like calm."""
+        self.stub(TimeoutError("timed out"), [])
+        _, printed = self.run_fetch()
+        self.assertIn("fetch attempt 1 failed", printed)
+        self.assertIn("fresh nonce", printed)
+
+    def test_the_attempts_escalate_rather_than_splitting_evenly(self):
+        """A genuinely slow network must not be turned into a hard failure by slicing the budget
+        into pieces too small to succeed in."""
+        self.stub(TimeoutError("x"), [])
+        self.run_fetch()
+        self.assertEqual(self.calls, [5, 10])
+        self.assertLess(self.calls[0], self.calls[1])
+
+    def test_a_404_is_an_ANSWER_and_is_not_retried(self):
+        """The draft is gone -- probably re-created. Retrying wastes clock AND delays the operator
+        learning something they must act on."""
+        # fp must be a real file object: HTTPError is closeable, and passing None makes it
+        # emit a ResourceWarning when it is collected, which is noise in a clean suite.
+        err = urllib.error.HTTPError(REAL, 404, "Not Found", {}, io.BytesIO(b""))
+        self.addCleanup(err.close)
+        self.stub(err, [{"pick_no": 1}])
+        with self.assertRaises(urllib.error.HTTPError):
+            self.run_fetch()
+        self.assertEqual(len(self.calls), 1, "a 404 must not consume the retry")
+
+    def test_a_500_IS_retried(self):
+        """The paired control on the line above: 5xx is the network, not an answer."""
+        err = urllib.error.HTTPError(REAL, 503, "Service Unavailable", {}, io.BytesIO(b""))
+        self.addCleanup(err.close)
+        self.stub(err, [{"pick_no": 1}])
+        out, _ = self.run_fetch()
+        self.assertEqual(out, [{"pick_no": 1}])
+        self.assertEqual(len(self.calls), 2)
+
+    def test_a_truncated_body_is_transient_and_is_retried(self):
+        self.stub(json.JSONDecodeError("Expecting value", "", 0), [{"pick_no": 1}])
+        out, _ = self.run_fetch()
+        self.assertEqual(len(self.calls), 2)
+
+    def test_both_attempts_failing_still_raises_so_the_caller_refuses(self):
+        """merge_picks' own handler turns this into 'picks.json left untouched -- retry, do not
+        advise off stale state', which is the correct end state and must survive."""
+        self.stub(TimeoutError("a"), TimeoutError("b"))
+        with self.assertRaises(TimeoutError):
+            self.run_fetch()
+        self.assertEqual(len(self.calls), 2)
+
+    def test_EVERY_ATTEMPT_GETS_A_FRESH_NONCE(self):
+        """🚨 THE ONE THAT MAKES THE RETRY SAFE RATHER THAN HARMFUL.
+
+        Sleeper serves /picks through Cloudflare. If both attempts reused one URL, the retry would
+        be a second request against the SAME cache key -- insight 020's exact defect ("a nonce
+        fixed at startup is just a second cache key"), which measured the un-busted URL behind on
+        76 of 77 observations by up to 16 picks. A retry that re-asks the same cache is not a
+        retry; it is a second chance to be told the same stale thing, on a clock, with more
+        confidence."""
+        seen = []
+        real_url = merge_picks.picks_url
+
+        def spy(draft_id):
+            u = real_url(draft_id)
+            seen.append(u)
+            raise TimeoutError("forced")        # fail every attempt so both URLs get built
+
+        merge_picks.picks_url = spy
+        self.addCleanup(setattr, merge_picks, "picks_url", real_url)
+        merge_picks._attempt = self.real_attempt        # exercise the REAL attempt path
+        with self.assertRaises(TimeoutError):
+            with redirect_stdout(io.StringIO()):
+                merge_picks.fetch(REAL)
+        self.assertEqual(len(seen), 2, "both attempts must build their own URL")
+        self.assertNotEqual(seen[0], seen[1], "the retry reused the nonce -- see insight 020")
 
 
 if __name__ == "__main__":

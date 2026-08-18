@@ -17,9 +17,22 @@ cumulative makes this cheap, not unnecessary.
 Writes into draft-kit/ (gitignored scratch) because draft_engine.py opens picks.json by literal
 name from its own cwd.
 """
-import itertools, json, os, sys, time, urllib.request
+import itertools, json, os, sys, time, urllib.error, urllib.request
 
-TIMEOUT = 15
+#: Per-attempt timeouts, in order. THE SUM IS THE OLD SINGLE TIMEOUT, deliberately: this buys a
+#: retry without spending one extra second in the worst case.
+#:
+#: WHY RETRY AT ALL. This is the FIRST call of every on-clock cycle, and it had none -- one Sleeper
+#: blip burned the whole 15s, then the operator re-ran for another 15, against a measured worst
+#: case of 61s of a 120s clock where round trips are 96-98% of the cost (insight 026).
+#:
+#: WHY ESCALATING RATHER THAN THREE EQUAL SLICES. Measured 2026-08-17 against the live endpoint,
+#: six consecutive fetches: median **96 ms**, max **128 ms** -- so the first slice is ~50x the
+#: real latency and a blip is retried almost immediately. But a genuinely slow network (his home
+#: wifi under load) must not be turned into a hard failure by slicing 15s into pieces too small to
+#: succeed in, so the second attempt gets the larger share.
+ATTEMPT_TIMEOUTS = (5, 10)
+TIMEOUT = sum(ATTEMPT_TIMEOUTS)         # kept: the total budget, and referenced by tests/docs
 HERE = os.path.dirname(os.path.abspath(__file__))
 KIT = os.path.join(os.path.dirname(HERE), "draft-kit")
 PICKS = os.path.join(KIT, "picks.json")
@@ -69,15 +82,54 @@ def warn_cache_hit():
     print("!" * 70)
 
 
-def fetch(draft_id):
+def _attempt(draft_id, timeout):
+    """One fetch, with a nonce that has never been used before.
+
+    🚨 `picks_url()` IS CALLED PER ATTEMPT, NOT ONCE AND REUSED. The nonce must be unique per call
+    or the retry is just a second request against the same Cloudflare cache key -- which is
+    insight 020's exact defect ("a nonce fixed at startup is just a second cache key"), and it
+    would make the retry actively harmful: it would turn one stale read into two.
+    """
     req = urllib.request.Request(picks_url(draft_id),
                                  headers={"User-Agent": "family-feud/1.0"})
-    with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+    with urllib.request.urlopen(req, timeout=timeout) as r:
         cache_status = (r.headers.get("cf-cache-status") or "").strip().upper()
         body = json.loads(r.read().decode("utf-8"))
-    if cache_status == "HIT":
-        warn_cache_hit()
-    return body
+    return body, cache_status
+
+
+def _is_transient(e):
+    """Retry a blip; never retry an answer.
+
+    A 404 means this draft is gone -- retrying it wastes clock and, worse, delays the operator
+    learning something they must act on (the draft was re-created). A 4xx generally is an ANSWER.
+    A timeout, a dropped connection, a 5xx or a truncated body that fails to parse are all the
+    network being the network.
+    """
+    if isinstance(e, urllib.error.HTTPError):
+        return e.code >= 500
+    return isinstance(e, (urllib.error.URLError, TimeoutError, OSError,
+                          json.JSONDecodeError, ValueError))
+
+
+def fetch(draft_id, timeouts=ATTEMPT_TIMEOUTS):
+    last = None
+    for i, t in enumerate(timeouts, 1):
+        try:
+            body, cache_status = _attempt(draft_id, t)
+        except Exception as e:                      # noqa: BLE001 -- classified immediately below
+            last = e
+            if i == len(timeouts) or not _is_transient(e):
+                raise
+            # SAY IT. A retry that hides a flaky network lets the operator believe the room is
+            # quiet when the fetch is failing -- and "0 new this fetch" already looks like calm.
+            print(f"   fetch attempt {i} failed ({type(e).__name__}: {e}); retrying once with a "
+                  f"fresh nonce and a {timeouts[i]}s budget")
+            continue
+        if cache_status == "HIT":
+            warn_cache_hit()
+        return body
+    raise last                                      # unreachable; the loop returns or raises
 
 
 BAD_SHAPE = ("picks.json exists but is not a Sleeper picks array ({why}).\n"

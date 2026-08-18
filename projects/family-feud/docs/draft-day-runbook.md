@@ -174,6 +174,34 @@ and email are broken account-wide for this account, so an alert that needs one d
 — **the nonce is not optional and must be unique per call**; see the CORRECTED note under Step 1.
 This is the read `draft_order` comes from, and a stale copy says `null` exactly when it stops
 being null:
+
+🚨 **SEND THAT CURL SOMEWHERE — `--cargo` IS THE FLAG, and it was documented nowhere until
+2026-08-17.** By default `run_engine.py` and `precompute_ladder.py` read the draft object from the
+mule's **hourly** cargo (`newsletter/data/inbox/sleeper_draft.json`). `draft_order` flips
+null → populated **at go time**, which is precisely the moment that file is guaranteed to be
+behind — and the staleness warning does not help, because the watcher's threshold is 150 minutes,
+so a 60-minute-old file prints nothing and reads healthy. Step 2 told you to curl the draft object
+and gave the output nowhere to go. It goes here:
+
+```bash
+curl -sL --max-time 15 "https://api.sleeper.app/v1/draft/<draft_id>?cb=$(date +%s%N)" > temp/draft.json
+python scripts/run_engine.py --cargo temp/draft.json --dry-run    # confirm the seat, launch nothing
+python scripts/run_engine.py --cargo temp/draft.json              # then for real
+```
+
+**Do this once at go time and you never type a seat again.** With `draft_order` populated the
+wrapper derives the seat itself and says which oracle confirmed it. Until then, a typed seat now
+prints **`🚨 NOTHING HAS CHECKED IT`** rather than the old line, which claimed the engine
+cross-checks a typed seat against `draft_order` and your own picks — **both of those oracles are
+structurally empty before your first pick lands**, so that reassurance was unearned at exactly the
+pick where a wrong seat costs the most.
+
+⚠️ **RUN IT TODAY AND IT REFUSES — THAT IS THE CORRECT ANSWER, NOT A BROKEN COMMAND.** Verified
+2026-08-17 against a live 729-byte curl: with no seat argument it exits 2 with `!! NO SEAT ...
+draft_order holds no entry for user_id 1390750540631150592 (it stays null until near go time —
+that is normal, not a fault)`. Pre-draft, pass the seat positionally and read the 🚨 line as the
+true statement it is. **The first thing to do when the room goes live is re-run this with no seat
+and watch it derive one** — that is the moment the guesswork ends.
 - `settings.teams`, `settings.rounds`, `settings.pick_timer` — **read rounds from the API, never assume 16** (Mocks #1 and #2 both ran 15; the real league is 16).
 - `draft_order` — map of user_id → slot. Briggsy = user_id `1390750540631150592`. **His slot is the engine's first argument.** draft_order can be null until near start — re-verify ON draft day, before the first advisory. Slot changes strategy hard: turn slots (1/8) draft in pairs and plan 14 picks ahead; middle slots don't. Slot 2 (Mock #2) is a near-turn: picks come in loose pairs with 3 picks between (e.g. 15/18, 31/34) and 13-pick droughts after — plan both picks of a pair as one decision, including who the between-teams will eat (denial forecasting won Egbuka→Kyren and Skattebo→Daniels).
 - Confirm scoring context (real league = full PPR; make mocks 8-team PPR to mirror it — verify `metadata.scoring_type` via API; Mock #1's lobby was accidentally created as Standard first, Mock #2 verified `ppr` ✓).

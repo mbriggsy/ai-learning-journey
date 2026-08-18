@@ -185,9 +185,10 @@ def resolve(argv_slot, teams=None, rounds=None, draft_id=None,
     # draft_order is the ONE legitimate source (never slot_to_roster_id -- it is an identity map
     # today, so it hands back a plausible wrong answer, and there are three unrelated "3"s in
     # this league). The watcher already owns that rule; this calls it rather than repeating it.
+    raw, problem = W.load_json(cargo, encoding="utf-8-sig")
+    order = (raw or {}).get("draft_order") if isinstance(raw, dict) else None
     if plan["slot"] is None:
-        raw, problem = W.load_json(cargo, encoding="utf-8-sig")
-        derived = W.my_slot((raw or {}).get("draft_order")) if isinstance(raw, dict) else None
+        derived = W.my_slot(order)
         if derived is None:
             raise NoSeat(problem or
                          f'draft_order holds no entry for user_id {W.BRIGGSY_USER_ID} '
@@ -195,9 +196,24 @@ def resolve(argv_slot, teams=None, rounds=None, draft_id=None,
                          lines)
         plan["slot"] = int(derived)
         lines.append(f'[draft] slot={plan["slot"]} from draft_order["{W.BRIGGSY_USER_ID}"]')
+    elif W.my_slot(order) is not None:
+        lines.append(f"[given] slot={plan['slot']} from the command line -- and the engine WILL "
+                     f"cross-check it, because this cargo's draft_order carries an entry for you")
     else:
-        lines.append(f"[given] slot={plan['slot']} from the command line "
-                     f"(the engine cross-checks it against draft_order and your own picks)")
+        # THIS LINE USED TO PROMISE A CHECK THAT PROVABLY COULD NOT RUN. It read "(the engine
+        # cross-checks it against draft_order and your own picks)" unconditionally -- but both of
+        # the engine's seat oracles are structurally empty before our first pick lands:
+        # `draft_order` is null until near go time, and no pick carries our `picked_by` yet. So at
+        # the one moment a typed seat is most likely to be wrong AND most expensive -- pick #1 --
+        # the operator was told a guard had their back that had not yet armed. That is insight
+        # 009's false reassurance pointed the other way: not a red that should be green, but a
+        # green that was never checked. Say which oracle is blind and when it wakes up.
+        lines.append(f"[given] slot={plan['slot']} from the command line -- 🚨 NOTHING HAS "
+                     f"CHECKED IT. This cargo's draft_order is empty for you, so that oracle is "
+                     f"blind, and the picks oracle cannot arm until one of YOUR picks has landed. "
+                     f"A wrong seat here yields a complete, confident advisory for another "
+                     f"manager's team. Both oracles self-arm at go time -- re-run then, and if "
+                     f"the cargo is behind, refresh it: --cargo <a file you just curled>")
 
     # --- the contamination gate --------------------------------------------------------------
     if plan["draft_id"]:

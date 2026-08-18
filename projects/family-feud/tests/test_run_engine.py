@@ -257,6 +257,42 @@ class TestResolve(Tmp):
         self.assertEqual(plan["slot"], 7)
         self.assertTrue(any("[given] slot=7" in ln for ln in lines))
 
+    def test_a_typed_seat_says_NOTHING_HAS_CHECKED_IT_while_draft_order_is_empty(self):
+        """This line used to promise a cross-check unconditionally: "(the engine cross-checks it
+        against draft_order and your own picks)". Both of the engine's seat oracles are
+        structurally EMPTY before our first pick lands -- draft_order is null until near go time,
+        and no pick carries our picked_by yet -- so at pick #1, the moment a typed seat is most
+        likely wrong and most expensive, the operator was told a guard had their back that had not
+        armed. insight 009's false reassurance, pointed at green instead of red.
+
+        The live cargo still reads draft_order: null today (2026-08-17), so this is the branch
+        that actually fires in the war room right now."""
+        plan, lines = self.resolve(slot=7, cargo=self.draft(draft_order=None))
+        seat = [ln for ln in lines if "slot=7" in ln]
+        self.assertEqual(len(seat), 1)
+        self.assertIn("NOTHING HAS CHECKED IT", seat[0])
+        # It must not claim the check happens, in either tense.
+        self.assertNotIn("cross-checks it", seat[0])
+
+    def test_a_typed_seat_promises_the_check_ONLY_when_draft_order_can_deliver_it(self):
+        """The paired control. Without it, the test above passes on a wrapper that has simply
+        stopped believing in the cross-check at all -- and the check is real once go time
+        populates draft_order."""
+        cargo = self.draft(draft_order={BRIGGSY: 5, "other": 1})
+        plan, lines = self.resolve(slot=5, cargo=cargo)
+        seat = [ln for ln in lines if "slot=5" in ln]
+        self.assertEqual(len(seat), 1)
+        self.assertIn("WILL cross-check", seat[0])
+        self.assertNotIn("NOTHING HAS CHECKED IT", seat[0])
+
+    def test_the_unchecked_seat_warning_names_the_way_out(self):
+        """A warning that does not say how to clear itself is a dead end under a 120s clock. The
+        way out is a freshly-curled draft object -- which is what --cargo is FOR, and which was
+        documented nowhere until 2026-08-17."""
+        _, lines = self.resolve(slot=7, cargo=self.draft(draft_order=None))
+        seat = next(ln for ln in lines if "slot=7" in ln)
+        self.assertIn("--cargo", seat)
+
 
 class TestContaminationGate(Tmp):
     """The gate is optional today and a human under a 120-second clock forgets it. Arming it

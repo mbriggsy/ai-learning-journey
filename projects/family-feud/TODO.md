@@ -35,8 +35,12 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
     measured against 7 real human drafts, and DELIBERATELY NOT SHIPPED.** It beats its base rate
     by +0.095 pooled and is **negative at every gap in the only 8-team room we hold.**
     [`insight 027`](docs/insights/027-the-availability-model-works-in-every-room-but-ours.md).
-    THE ONE THING LEFT THAT COULD STILL COST PICKS: **the queue drains silently and nothing in
-    the loop re-arms it** — three of our seven picks were fired with no safety net at all.
+    ✅ **AND THE QUEUE GAP IS CLOSED** — `ffQueueSync` fired all four paths in a live room in
+    **2.3s**, verified by reading Sleeper's queue back rather than trusting per-call results.
+    ⚠️ **Sleeper shipped a broken bundle that day and then fixed it** (`d308ab2e` → `a4db3d0e`);
+    every draft room rendered an empty `#root` for hours. **Diagnose that with the bundle hash** —
+    four plausible causes were chased and all four were wrong, including tab visibility. The
+    skill's landmines carry the full list so nobody repeats them.
     `draft_order` is still null on the real draft; it populated correctly on the mock.
 ```
 
@@ -404,22 +408,19 @@ back rather than silently working around it — a gap worked around is a gap tha
 ---
 
 **WHAT IS ACTUALLY LEFT, ranked:**
-1. 🚨 **FINISH CLOSING THE QUEUE GAP — the mechanism is built, the live proof is NOT.**
-   `ffQueueSync(target)` exists (2026-08-17): it plans before it clicks, refuses to reorder
-   destructively without `{rebuild:true}`, and decides `synced` by **reading the queue back**
-   rather than trusting the per-call `queued: true` that credited Jayden Daniels for an add he
-   was not present for. `syncPlan` is pure, 7 node tests, and the pasted build was proven
-   behaviourally identical in-browser (same 6 cases, 0 mismatches).
-   🚧 **BUT IT HAS NEVER FIRED AGAINST A REAL QUEUE.** Sleeper's web app began crashing on every
-   draft-room route mid-session — `TypeError ... at hW.useLeagueDuesEnforcement`, inside THEIR
-   bundle, blank body on a mock *and* on the real league draft, while `/draftboards` rendered fine
-   on the same bundle. Signature recorded in the skill's landmines. **First job next session:
-   re-check whether the room renders, then fire `ffQueueSync` end-to-end** (empty→load, append,
-   refuse-reorder, rebuild). Until then treat the safety net as unproven.
-   Still open regardless: **(a)** give runbook Step 3 an explicit re-arm step naming
+1. ✅ **THE QUEUE GAP IS CLOSED AND LIVE-PROVEN (2026-08-17).** `ffQueueSync(target)` takes the
+   `queue` array `precompute_ladder.py` prints and makes Sleeper's queue equal it. **All four
+   paths fired in a live room in 2.3s total:** load-from-empty (771ms) · append the next man after
+   one was drafted away (438ms) · **refuse** an unpermitted reorder (1ms, queue untouched) ·
+   `{rebuild:true}` to force the order (1127ms). Final queue read back from Sleeper matched the
+   target exactly. It decides `synced` by **reading the queue back**, never the per-call
+   `queued: true` that once credited Jayden Daniels for an add he was not present for.
+   Two small things still open: **(a)** give runbook Step 3 an explicit re-arm step naming
    `ffQueueSync` and the trailing `ffQueueList()` as the only accepted oracle; **(b)** make
    `ffQueueList()` return `empty: true` instead of `agrees: true` on an empty queue, so the unsafe
-   state stops printing the same reassuring word as the healthy one. Budget ~2s per name.
+   state stops printing the same reassuring word as the healthy one.
+   ⚠️ **And budget from the measurement, not from the old estimate:** a full 3-name sync is
+   **under ~1.2s**, not the ~2s per name the first hand-rolled loop cost.
 2. 🗓️ **THE FINAL RE-RANK, ~Aug 27, THEN FREEZE.** The board ships on the **2026-08-14** ECR.
    Two preseason weeks and roster cut-downs land before Aug 29, so run *THE REAL REFRESH* in the
    runbook once more around **Aug 27** — and then **nothing touches `r`/`pr`/`tier` inside 48 hours

@@ -224,8 +224,32 @@ Check the **pick COUNT moved** and the player is on **your** `draft_slot`. ⚠�
 
 A blown clock then degrades to *your* board instead of Sleeper's. Measured cost of not doing it:
 auto-pick took Tetairoa McMillan (81.3) at 5.3 while Lamar Jackson (~107) sat there until #40.
-`ffQueue` verifies against Sleeper's own `QUEUE (n)` count and credits **+1 exactly** — never a
-"did something change" heuristic.
+
+**Use `ffQueueSync`, not a hand-rolled loop.** One call, fed the `queue` array
+`precompute_ladder.py` prints, and it is the whole re-arm:
+
+```js
+await window.ffQueueSync(["Puka Nacua", "Jaxon Smith-Njigba", "Amon-Ra St. Brown"])
+// -> {"synced":true,"queue":[...],"note":"verified by reading the queue back..."}
+```
+
+Live-proven 2026-08-17, all four paths in **2.3s total**: load-from-empty (771ms), append the next
+man after one was drafted away (438ms), **refuse** a reorder it was not given permission for (1ms,
+queue untouched), and `{rebuild:true}` to force the order (1127ms).
+
+- 🚨 **`synced` comes from READING THE QUEUE BACK, never from the per-call results.** Measured
+  2026-08-15: re-arming four names returned `queued:true` for three and the queue held **two** —
+  Jayden Daniels reported success and was absent, because a bot drafted him mid-loop and an
+  unrelated add saw the `+1` and was credited with it. `ffQueue`'s oracle is correct about a
+  **count** and cannot be correct about an **identity**.
+- 🚨 **It refuses to reorder destructively.** Sleeper APPENDS and auto-pick drains from the TOP, so
+  "just add the missing names" is right only when the additions belong at the bottom — the common
+  case, since board order is stable and survivors keep their relative order. When appending would
+  not produce the target it returns `synced:false` with the plan rather than clearing your safety
+  net on its own authority. Pass `{rebuild:true}` only when you mean it.
+- ⚠️ **The queue drains silently and an empty one does NOT read as a problem** — `ffQueueList()`
+  returns `{count:null, entries:[], agrees:true}` when empty, because `agrees` short-circuits on
+  zero. Three of seven rehearsal picks were fired with no safety net and nothing said so.
 
 ---
 
@@ -276,18 +300,25 @@ Verify the paste landed the *current* logic — the install banner alone does no
   `ffStartDraft` additionally hard-refuses on the real draft id.
 - **Miss one clock and Sleeper auto-picks the REST of the draft.** Reproduced exactly: one missed
   pick at #4, then **116 consecutive auto-picks.**
-- 🚨 **A BLANK DRAFT ROOM IS SLEEPER'S BUG, NOT YOURS. Do not debug the console.** Seen
-  2026-08-17: every draft-room route rendered `document.body.innerText.length === 0` — a mock, a
-  freshly created mock, and **the real league draft** — while `/draftboards` rendered normally on
-  the **same bundle**. The console had been wiped by the navigation, so it reads exactly like
-  "my paste failed". The tell is in the console messages, and it is inside Sleeper's own bundle:
+- 🚨 **A BLANK DRAFT ROOM IS A SLEEPER DEPLOY REGRESSION, NOT YOUR PASTE. Diagnose with the
+  BUNDLE HASH.** Seen and then resolved on 2026-08-17. Every draft-room route left
+  `<div id="root"></div>` **completely empty** — a mock, a fresh mock, and the real league draft —
+  while `/draftboards` rendered fine in the same tab. Because a navigation wipes the console, it
+  reads exactly like "my paste failed". It is not.
+  **The one diagnostic that settles it:**
+  ```js
+  [...document.querySelectorAll('script[src*="bundle-"]')].map(s => s.src.split('/').pop())
   ```
-  TypeError: Object(...) is not a function   at hW.useLeagueDuesEnforcement
-  ```
-  Confirm with `read_console_messages({onlyErrors: true})` **before** re-pasting anything. The
-  same room had run a full 7-pick rehearsal ~2 hours earlier, so it is a deploy regression and is
-  expected to clear on its own. **The API half is unaffected** — `merge_picks.py`, the engine and
-  the ladder never touch the browser, and drafting from the phone is a different client entirely.
+  Broken: `bundle-d308ab2ef522ca31eaf5958ba526293a.js`. Fixed: `bundle-a4db3d0e2f64aa859605db77478bd940.js`.
+  **A changed hash with the room still blank means it is you; an unchanged hash means wait.**
+  ⚠️ **Four hypotheses were chased and every one was wrong** — don't repeat them: it was not the
+  browser instance (only one was connected), not cache or a service worker (fresh profile, zero
+  registrations), not `?ftue=commish`, and **not tab visibility** — the room stayed blank at a
+  confirmed `visibilityState: "visible"`. `hasFocus: false` is fine and never mattered.
+  There was one `TypeError ... at hW.useLeagueDuesEnforcement` early on; it never reproduced and
+  was a red herring. **The API half is unaffected throughout** — `merge_picks.py`, the engine and
+  the ladder never open a browser. ✅ The self-test PASSES unchanged on the new bundle, so the
+  wrapper/button contract survived the deploy.
 - **A player-card modal opening when you meant to draft is the signature of clicking an ancestor.**
   It is no longer the alarm it used to be — with correct aim a failed click is *silent*, which is
   why `handlerRan` exists. Treat a missing `handlerRan` as seriously as you would treat that modal.

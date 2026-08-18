@@ -67,8 +67,8 @@ ROOT = os.path.dirname(HERE)
 KIT = os.path.join(ROOT, "draft-kit")
 sys.path.insert(0, HERE)
 
-from shape import (CARGO, LEAGUE_CARGO, CargoUnreadable,           # noqa: E402
-                   UnsupportedShape, read_shape)
+from shape import (CARGO, LEAGUE_CARGO, ROSTERS_CARGO, TRADED_CARGO,   # noqa: E402
+                   CargoUnreadable, UnsupportedShape, read_shape, read_traded_picks)
 import watch_draft_state as W                                      # noqa: E402
 
 ENGINE = os.path.join(KIT, "draft_engine.py")
@@ -122,7 +122,8 @@ def freshness(cargo):
 
 
 def resolve(argv_slot, teams=None, rounds=None, draft_id=None,
-            cargo=CARGO, league_cargo=LEAGUE_CARGO):
+            cargo=CARGO, league_cargo=LEAGUE_CARGO,
+            traded_cargo=TRADED_CARGO, rosters_cargo=ROSTERS_CARGO):
     """Work out what the engine should be told, and why. Returns (plan, lines).
 
     `plan` carries what to launch with; `lines` is the human-readable derivation, printed in full
@@ -213,6 +214,15 @@ def resolve(argv_slot, teams=None, rounds=None, draft_id=None,
         lines.append("[unknown] no draft_id available -- the contamination gate is NOT armed, so "
                      "a spent mock's picks.json would advise this run silently. Pass --draft-id.")
 
+    # --- traded picks -------------------------------------------------------------------------
+    # LAST, deliberately. `UnsupportedShape` from here aborts the run, and when it does the
+    # operator needs the whole derivation above it -- which draft, how fresh, which seat -- to act
+    # on the refusal. Raising before those lines exist would print the alarm with nothing under it.
+    traded, traded_lines = read_traded_picks(traded_cargo, rosters_cargo,
+                                             user_id=W.BRIGGSY_USER_ID)
+    plan["traded"] = traded
+    lines.extend(traded_lines)
+
     return plan, lines
 
 
@@ -274,12 +284,17 @@ def main(argv=None):
     p.add_argument("--cargo", default=CARGO, help="path to the draft object")
     p.add_argument("--league-cargo", dest="league_cargo", default=LEAGUE_CARGO,
                    help="path to the league object")
+    p.add_argument("--traded-cargo", dest="traded_cargo", default=TRADED_CARGO,
+                   help="path to the draft's traded-picks list")
+    p.add_argument("--rosters-cargo", dest="rosters_cargo", default=ROSTERS_CARGO,
+                   help="path to the league's rosters (how roster_id is derived)")
     p.add_argument("--dry-run", action="store_true",
                    help="resolve and print the shape, launch nothing")
     a = p.parse_args(argv)
 
     try:
-        plan, lines = resolve(a.slot, a.teams, a.rounds, a.draft_id, a.cargo, a.league_cargo)
+        plan, lines = resolve(a.slot, a.teams, a.rounds, a.draft_id, a.cargo, a.league_cargo,
+                              a.traded_cargo, a.rosters_cargo)
     except NoSeat as e:
         # The derivation prints FIRST. Being told the seat is unknowable is far more useful
         # beside what the cargo did say -- fresh? which draft? -- than on its own.

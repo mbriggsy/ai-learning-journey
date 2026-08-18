@@ -134,7 +134,8 @@ BLENDED pool; the league-size correction must keep coming from `vorp` on our sid
 
 **THE MULE HAULS BOTH, HOURLY (v2.1).** `Run-Fetcher` invokes `consensus.py --fetch-only` and
 `market.py --fetch-only`, which own their own download-validate-promote cycle; the mule records
-their one line beside the other ten sources. **12/12 ok, proven end to end** — and proven the other
+their one line beside the other twelve sources. **14/14 ok, proven end to end** *(12/12 on
+2026-08-08; `sleeper_traded` + `sleeper_rosters` added 2026-08-17)* — and proven the other
 way too: with `market.py` renamed away it recorded `FAIL: scripts\market.py is missing`, the other
 eleven sources were unaffected, and **the ADP cache survived byte-for-byte with its mtime unmoved**.
 The validation logic stays in Python deliberately; this repo does not test PowerShell.
@@ -187,12 +188,18 @@ Found by the adversarial fleet, then measured rather than taken on its word:
   notices is insight 013's signal. 7 tests added, 4 mutants planted and killed.
 
 **✅ THE KICKER CURVE IS BUILT AND K TIERS ARE DERIVED (2026-08-08).** `build_curves.py` now ships a
-**41-rank K curve**, exact — nflverse publishes FG makes already bucketed by distance and the
+**39-rank K curve**, exact — nflverse publishes FG makes already bucketed by distance and the
 buckets map 1:1 onto `league.md`'s bands, verified by asserting they sum to `fg_made` on all 542
 REG rows of 2024 (the loader hard-stops if that ever fails). `rerank.value_bands` derives K tiers
 now, because tiers need no baseline: **3 kicker tiers moved** (Dicker 1→2, Pineiro 2→3, McPherson
 2→3), and exactly **3 fields on the whole board changed**, all `tier`, all K — audited field by
 field. `tests/test_build_curves.py` is new, **14 tests**; that file had none.
+⚠️ **BOTH NUMBERS IN THAT PARAGRAPH WENT STALE AND ARE CORRECTED HERE (2026-08-17, verified against
+the artifacts).** The curve is **39 ranks, not 41** — the 08-09 baseline swap re-truncated it
+(recorded further down this file: *"K depth went 41 → 39 ranks"*), and `draft-kit/vorp_curve.json`
+reads `len(curve["K"]) == 39` today. And **Dicker is tier 1 again**: the live board has
+`Cameron Dicker r163 tier 1`, alongside `Fairbairn r162 t1` and `Aubrey r158 t1`, which is the
+elite-K trio the runbook names. Only `Pineiro 2→3` (r168 t3) and `McPherson 2→3` (r170 t3) survive.
 - **The monotonicity test found a defect in the ALREADY-SHIPPED curve.** It is a mean of order
   statistics, so a rank only means something if the same number of seasons went into it. All four
   seasons supply **QB to 78, RB 135, WR 212, TE 116, K 41** — so the 80-deep curve was averaging
@@ -202,7 +209,7 @@ field. `tests/test_build_curves.py` is new, **14 tests**; that file had none.
 - **One unstated rule, BOUNDED not assumed:** a blocked FG is neither a make nor a miss in this
   source (`fg_att` 1115 == made 937 + missed 160 + blocked 18). league.md says "miss: −1" and does
   not say which. Blocks count as misses; `--check` prints the sensitivity both ways — **0.0–1.7
-  pts, mean 0.45** across 41 ranks, i.e. immaterial.
+  pts, mean 0.45** across the curve's ranks, i.e. immaterial.
 
 ## ▶ NEXT ACTION
 
@@ -358,7 +365,7 @@ a research job.**
 blown-clock positive control, and the five draft-day changes:
 [`insight 026`](docs/insights/026-the-loop-fits-and-the-scripts-were-never-the-cost.md).
 
-### 📋 THE SKILL GRADE — ranked. Only #1 is fixed; the rest are decisions for Briggsy.
+### 📋 THE SKILL GRADE — ranked. **#1, #2 and #3 are FIXED; #4-#8 are still open (re-verified 2026-08-17).**
 
 1. ✅ **FIXED — the self-test cannot pass on a cold load and tells you to STOP.** Run verbatim at
    Step 0 as instructed, it returned **7 of 12 FAILED** and *"FAIL — STOP. Re-map before drafting"*
@@ -1214,7 +1221,8 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **907 tests**, 0 skips on this machine
+gate went **13 findings → 0** by fixing surfaces. **946 tests** *(re-measured 2026-08-17; this line
+read 907)*, 0 skips on this machine
 (`python -m unittest discover -s tests` from the root); on a clean clone it is 852 with **16 skips**
 — 2 live-cargo probes plus **9** that need the gitignored consensus/ADP caches
 (`draft-kit/cache/fp_ecr.csv.gz`, `ffc_adp.json.gz`) plus **5** (`test_build_curves.TestTheCurveShape`)
@@ -1763,8 +1771,9 @@ approximate one; revisit 2025 as its own measured unit.
 reasons, and this paragraph used to get K wrong. `build_curves.py`
 builds QB/RB/WR/TE only, so KTD-6's "K and DEF keep the historical curve" is not satisfiable from
 the shipped curve. Labelled rather than invented.
-⚠️ **CORRECTED 2026-08-09:** `build_curves.py` builds QB/RB/WR/TE **and K** — it ships a 41-rank
-exact K curve (announced at the top of this file), and `rerank.value_bands` already derives K tiers
+⚠️ **CORRECTED 2026-08-09:** `build_curves.py` builds QB/RB/WR/TE **and K** — it ships a 39-rank
+exact K curve *(re-verified against `vorp_curve.json` 2026-08-17; this said 41, which was the
+pre-baseline-swap depth)*, and `rerank.value_bands` already derives K tiers
 from it. What K lacks is a **baseline**, and that is a CLOSED DECISION (see *NO K BASELINE* above:
 reopen only by re-running the sim), not an open gap. **DEF is the one with no exact source at all.**
 The sentence that used to end this paragraph — "this is the next real accuracy gap" — invited

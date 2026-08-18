@@ -20,7 +20,7 @@ waiver report, which needs one completed week of transactions behind it.
 
 ## What the mule must haul first
 
-None of these four are hauled today. `newsletter/feud_mule.ps1` carries 12 sources (10 into the inbox, 2 into `draft-kit/cache/`); these would
+None of these four are hauled today. `newsletter/feud_mule.ps1` carries 14 sources (12 into the inbox, 2 into `draft-kit/cache/`); these would
 make it 14, and `scripts/validate_cargo.py` already handles the `json` kind, so the extension is
 four `Fetch-Source` lines and nothing else.
 

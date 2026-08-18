@@ -113,7 +113,7 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         section [2], who the consensus ranks that the board does
                                         not carry — the half a rank-gap metric cannot see.
                                         → docs/insights/018
-tests/           907 tests: python -m unittest discover -s tests  (run from the root)
+tests/           946 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```
@@ -236,7 +236,8 @@ never *"the gate passes"*. A gate that must be born green is a gate someone weak
 
 **Verified on this machine 2026-08-08:** the engine through `run_engine.py` (shape read from the
 draft, exit 0), the board polling a live feed in a browser, curl to Sleeper, and the mule —
-**12 sources, 0 failed, and this time the "ok" means something**: every payload was parsed and
+**14 sources, 0 failed, and this time the "ok" means something** *(12 on 2026-08-08; `sleeper_traded`
+and `sleeper_rosters` were added 2026-08-17 and the 14/14 re-verified that day)*: every payload was parsed and
 counted, not weighed. The wire carries **5 working feeds and 145 items** (yahoo 50 · cbs 36 ·
 pft 30 · espn 24 · rotowire 5). Item counts move daily; re-read `mule_status.json` rather than
 quoting these.
@@ -267,8 +268,13 @@ feed.** Kill the network mid-session and it keeps the last good board, says the 
 backs off; it never blanks and it never un-greys a player on its own. See
 [`docs/live-board-plan.md`](docs/live-board-plan.md).
 
-⚠️ **The board is an August 5 snapshot and it expires.** Ranks, injuries and ADP move daily in
-August. It must be rebuilt before the real draft. The reminder that used to exist did not survive
+⚠️ **The board ships on the 2026-08-14 ECR and it expires.** *(Corrected 2026-08-17 — this line
+said "August 5 snapshot" through two re-ranks. Read the date from
+`draft-kit/players_data.json` → `meta.rankings.synthesized`, never from prose, and never from
+`meta.updated`, which reports INPUT freshness and reads `2026-08-09` today.)* Ranks, injuries and
+ADP move daily in August. It must be rebuilt before the real draft — but **not inside 48 hours of
+it**: `TODO.md` freezes `r`/`pr`/`tier` at that point, and believing this line is 24 days stale is
+exactly what would trip a well-meaning re-rank at 7am on draft morning. The reminder that used to exist did not survive
 the migration — **`scripts/watch_draft_state.py` replaces it**, and on better terms: the old one
 fired on a hardcoded Aug 26, which is the wrong shape for a date that is still null and can move
 earlier. The watcher fires on the actual transition. See `TODO.md`.

@@ -167,6 +167,15 @@ function Run-Fetcher {
 Fetch-Source "sleeper_league"   "https://api.sleeper.app/v1/league/1390509993844809728"       "sleeper_league.json"        "json"
 Fetch-Source "sleeper_users"    "https://api.sleeper.app/v1/league/1390509993844809728/users" "sleeper_users.json"         "json"
 Fetch-Source "sleeper_draft"    "https://api.sleeper.app/v1/draft/1390509994847240192"        "sleeper_draft.json"         "json"
+# Added 2026-08-17. These two exist ONLY so `shape.read_traded_picks` can run without a network
+# call on the clock. `/traded_picks` has been `[]` since 2026-08-07 and had ZERO readers in this
+# repo -- and one traded pick falsifies "your next pick is #N" and "picks until you" for the rest
+# of the draft, silently, exit 0. `/rosters` is how our `roster_id` is DERIVED (the currency
+# traded picks are denominated in), so a trade between two other teams can be told apart from one
+# that touches us -- refusing on the former would be a false red, which insight 009 records as the
+# more dangerous direction. Neither is on any hot path; they are here so draft night has no fetch.
+Fetch-Source "sleeper_traded"   "https://api.sleeper.app/v1/draft/1390509994847240192/traded_picks" "sleeper_traded_picks.json" "json"
+Fetch-Source "sleeper_rosters"  "https://api.sleeper.app/v1/league/1390509993844809728/rosters"  "sleeper_rosters.json"      "json"
 Fetch-Source "trending_add"     "https://api.sleeper.app/v1/players/nfl/trending/add?lookback_hours=24&limit=25"  "sleeper_trending_add.json"  "json"
 Fetch-Source "trending_drop"    "https://api.sleeper.app/v1/players/nfl/trending/drop?lookback_hours=24&limit=25" "sleeper_trending_drop.json" "json"
 

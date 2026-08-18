@@ -74,6 +74,14 @@ class Tmp(unittest.TestCase):
         if "cargo" not in kw:
             kw["cargo"] = self.draft()
         kw.setdefault("league_cargo", "/nonexistent")
+        # Traded-picks and rosters cargo are pinned to a non-path for the SAME reason league_cargo
+        # is: their real defaults live in `newsletter/data/inbox/`, which is gitignored. Left to
+        # default, every test in this file would take the "cargo present, empty list" branch on
+        # this laptop and the "cargo absent" branch on a clean clone -- both green, for different
+        # reasons, which is the shape docs/insights/009 keeps catching. Tests that mean to
+        # exercise traded picks pass the paths explicitly.
+        kw.setdefault("traded_cargo", "/nonexistent")
+        kw.setdefault("rosters_cargo", "/nonexistent")
         return R.resolve(slot, **kw)
 
 
@@ -444,6 +452,152 @@ class TestEngineHonoursTheShape(unittest.TestCase):
         out = self.run_engine(FF_FLEX="two")
         self.assertIn("FF_FLEX was set to 'two'", out)
         self.assertIn("FLEXx2", self.seat_one(out))
+
+
+# ------------------------------------------------------------------- traded picks (2026-08-17)
+
+
+class TestTradedPicks(Tmp):
+    """`/traded_picks` had ZERO readers in this repo until 2026-08-17, and one traded pick
+    falsifies "your next pick is #N" and "picks until you" for the rest of the draft -- silently,
+    exit 0, with the integrity gate green. It has been `[]` since 2026-08-07, which is exactly why
+    nothing noticed.
+
+    THE POINT OF THIS CLASS IS THE SPLIT, not the refusal. Refusing on ANY traded pick is the
+    obvious build and the wrong one: a trade between two other teams moves none of our numbers,
+    and hard-stopping the war room for it is a false red -- the direction docs/insights/009 records
+    as the more dangerous one, because it teaches the operator to skip the gate. So every refusal
+    test below is paired with a control proving the same path ACCEPTS the case it must accept.
+
+    Every branch here was positive-controlled live against the real wrapper before these tests
+    were written (exit 2 / 0 / 0 / 0 / 2 across the five cases), so they lock observed behaviour
+    rather than asserting the author's intent -- docs/insights/019.
+    """
+
+    def rosters(self, owner_of_3=BRIGGSY):
+        p = os.path.join(self.tmp, f"rosters_{next(_seq)}.json")
+        # Mirrors the live shape read from /league/<id>/rosters on 2026-08-17: roster 3 is ours,
+        # roster 1 is briggsy007 -- who is HUNTER, not Briggsy (CLAUDE.md's identity landmine).
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump([{"roster_id": 1, "owner_id": "959308419154886656"},
+                       {"roster_id": 2, "owner_id": "959230356757045248"},
+                       {"roster_id": 3, "owner_id": owner_of_3}], f)
+        return p
+
+    def traded(self, *entries):
+        p = os.path.join(self.tmp, f"traded_{next(_seq)}.json")
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump(list(entries), f)
+        return p
+
+    @staticmethod
+    def pick(roster_id, prev, new, rnd=4):
+        return {"season": "2026", "round": rnd, "roster_id": roster_id,
+                "previous_owner_id": prev, "owner_id": new, "draft_id": "111"}
+
+    # --- the controls, first. Without these, a function that refused everything would pass. ---
+
+    def test_an_empty_traded_list_is_accepted_and_says_the_snake_is_plain(self):
+        plan, lines = self.resolve(traded_cargo=self.traded(), rosters_cargo=self.rosters())
+        self.assertTrue(plan["traded"]["checked"])
+        self.assertEqual(plan["traded"]["count"], 0)
+        self.assertTrue(any("traded picks: none" in ln for ln in lines))
+
+    def test_a_trade_between_two_OTHER_teams_does_not_stop_the_run(self):
+        """THE LOAD-BEARING CONTROL. Our pick numbers are untouched by roster 1 -> roster 2, so
+        refusing here would cost the whole advisory for something that cannot move a single number
+        we print."""
+        plan, lines = self.resolve(traded_cargo=self.traded(self.pick(1, 1, 2)),
+                                   rosters_cargo=self.rosters())
+        self.assertEqual(len(plan["traded"]["others"]), 1)
+        self.assertEqual(plan["traded"]["ours"], [])
+        # ...and it must still be LOUD. A warning nobody reads is the same as no warning.
+        #
+        # THE ASSERTION IS ON THE HEADLINE LINE ITSELF, not on "some line shouts". The first
+        # version of this test asked `any(ln.startswith("!!"))`, and mutant M6 -- which downgrades
+        # only the headline -- SURVIVED it, because the per-pick detail lines underneath still
+        # start with `!!`. A test that passes while the thing it names goes quiet is exactly
+        # docs/insights/013's shape, caught here by the mutation run rather than on draft night.
+        headline = [ln for ln in lines if "none of them ours" in ln]
+        self.assertEqual(len(headline), 1)
+        self.assertTrue(headline[0].startswith("!!"), headline[0])
+
+    # --- the refusals ---
+
+    def test_a_traded_pick_that_is_OURS_refuses(self):
+        with self.assertRaises(S.UnsupportedShape) as cm:
+            self.resolve(traded_cargo=self.traded(self.pick(3, 3, 5)),
+                         rosters_cargo=self.rosters())
+        self.assertIn("OUR roster (3)", str(cm.exception))
+
+    def test_a_pick_traded_TO_us_refuses_too_not_only_one_traded_away(self):
+        """`previous_owner_id` and `owner_id` are BOTH checked. A pick acquired changes our pick
+        set exactly as much as a pick sold, and testing only the sold direction would leave half
+        the guard dead -- docs/insights/019's whole lesson."""
+        with self.assertRaises(S.UnsupportedShape):
+            self.resolve(traded_cargo=self.traded(self.pick(6, 6, 3)),
+                         rosters_cargo=self.rosters())
+
+    def test_traded_picks_with_no_rosters_cargo_refuses_rather_than_guessing(self):
+        """"Might be ours" is not a state anyone can draft from."""
+        with self.assertRaises(S.UnsupportedShape) as cm:
+            self.resolve(traded_cargo=self.traded(self.pick(1, 1, 2)),
+                         rosters_cargo="/nonexistent")
+        self.assertIn("roster_id could not be derived", str(cm.exception))
+        # The remedy must be IN the refusal. A refusal that does not say how to clear itself is a
+        # dead end under a 120-second clock.
+        self.assertIn("rosters", str(cm.exception))
+
+    # --- absence is reported, never silently passed ---
+
+    def test_a_missing_traded_cargo_does_not_block_the_run_but_is_declared(self):
+        """A dead mule must not also cost the advisory -- but a check that silently passes when
+        its input is missing is the gate that could never fire, which this repo has caught twice.
+        So: run, and say out loud that it was NOT checked."""
+        plan, lines = self.resolve(traded_cargo="/nonexistent", rosters_cargo=self.rosters())
+        self.assertFalse(plan["traded"]["checked"])
+        self.assertTrue(any("NOT checked" in ln for ln in lines))
+
+    def test_malformed_traded_cargo_is_declared_unchecked_rather_than_crashing(self):
+        p = os.path.join(self.tmp, "broken.json")
+        with open(p, "w", encoding="utf-8") as f:
+            f.write("{not json")
+        plan, lines = self.resolve(traded_cargo=p, rosters_cargo=self.rosters())
+        self.assertFalse(plan["traded"]["checked"])
+        self.assertTrue(any("NOT checked" in ln for ln in lines))
+
+    # --- roster_id derivation: the one number this whole guard is denominated in ---
+
+    def test_our_roster_id_is_derived_from_the_owner_id_never_from_a_constant(self):
+        rid, note = S.our_roster_id(self.rosters(), user_id=BRIGGSY)
+        self.assertEqual(rid, 3)
+        self.assertIn(BRIGGSY, note)
+
+    def test_roster_id_moves_when_the_cargo_says_it_moved(self):
+        """The positive control against a hardcoded 3. `docs/league.md` states roster_id 3 in
+        prose and there are THREE unrelated "3"s in this league -- if this function ever starts
+        returning the doc's number instead of the cargo's, this test is what says so."""
+        p = os.path.join(self.tmp, "moved.json")
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump([{"roster_id": 7, "owner_id": BRIGGSY}], f)
+        self.assertEqual(S.our_roster_id(p, user_id=BRIGGSY)[0], 7)
+
+    def test_two_rosters_claiming_us_is_not_derivable(self):
+        """Picking the first of two would be docs/insights/010 -- one candidate treated as proof
+        of identity -- committed with two."""
+        p = os.path.join(self.tmp, "dupe.json")
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump([{"roster_id": 3, "owner_id": BRIGGSY},
+                       {"roster_id": 5, "owner_id": BRIGGSY}], f)
+        rid, note = S.our_roster_id(p, user_id=BRIGGSY)
+        self.assertIsNone(rid)
+        self.assertIn("expected exactly 1", note)
+
+    def test_shape_py_refuses_to_own_the_user_id_constant(self):
+        """There is exactly one BRIGGSY_USER_ID in this repo and it lives in watch_draft_state.
+        A default here would make a second one, and the two would drift."""
+        with self.assertRaises(ValueError):
+            S.our_roster_id(self.rosters())
 
 
 if __name__ == "__main__":

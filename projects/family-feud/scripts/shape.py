@@ -39,6 +39,8 @@ import os
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CARGO = os.path.join(ROOT, "newsletter", "data", "inbox", "sleeper_draft.json")
 LEAGUE_CARGO = os.path.join(ROOT, "newsletter", "data", "inbox", "sleeper_league.json")
+TRADED_CARGO = os.path.join(ROOT, "newsletter", "data", "inbox", "sleeper_traded_picks.json")
+ROSTERS_CARGO = os.path.join(ROOT, "newsletter", "data", "inbox", "sleeper_rosters.json")
 
 
 class Refuse(Exception):
@@ -133,6 +135,148 @@ def read_shape(cargo=CARGO, league_cargo=LEAGUE_CARGO):
                                f"object says {ls['num_teams']} -- two sources disagree about "
                                f"league shape")
     return shape
+
+
+def our_roster_id(rosters_cargo=ROSTERS_CARGO, user_id=None):
+    """Our `roster_id`, DERIVED from the rosters cargo. Returns (roster_id, note).
+
+    `roster_id` is the currency `/traded_picks` is denominated in -- both `owner_id` and
+    `previous_owner_id` are roster ids, not user ids -- so a traded pick cannot be attributed
+    without this.
+
+    IT IS DERIVED HERE AND NOWHERE ELSE, and that is the whole point. `docs/league.md` states
+    `roster_id 3` in prose, and CLAUDE.md records why quoting it is a trap: there are THREE
+    unrelated "3"s in this league (Briggsy's draft slot, his roster_id, and `slot_to_roster_id`'s
+    identity-map value), sitting within a line of each other in that doc. Reading the roster whose
+    `owner_id` equals our user id is the only form that cannot return a plausible wrong answer --
+    it is keyed on the one id that is unambiguous. Verified live 2026-08-17: roster_id 3 owns
+    user 1390750540631150592, and roster_id 1 is `briggsy007`, who is HUNTER.
+
+    Absence is not an error here. It returns (None, why) and lets the caller decide -- the caller
+    is the one that knows whether it holds a safe fallback.
+    """
+    if user_id is None:
+        raise ValueError("user_id is required -- shape.py does not own that constant "
+                         "(watch_draft_state.BRIGGSY_USER_ID does, and there is exactly one)")
+    if not os.path.exists(rosters_cargo):
+        return None, (f"no rosters cargo at {rosters_cargo} -- roster_id cannot be derived, so a "
+                      f"traded pick cannot be attributed to a team")
+    try:
+        with open(rosters_cargo, encoding="utf-8-sig") as f:
+            rosters = json.load(f)
+    except (json.JSONDecodeError, ValueError, OSError) as e:
+        return None, f"the rosters cargo at {rosters_cargo} could not be read ({e})"
+    if not isinstance(rosters, list):
+        return None, f"the rosters cargo is {type(rosters).__name__}, not a list"
+
+    mine = [r for r in rosters
+            if isinstance(r, dict) and str(r.get("owner_id") or "") == str(user_id)]
+    if len(mine) != 1:
+        # Zero means we are not in this league's rosters; more than one means Sleeper returned
+        # something this function does not understand. Both are "cannot tell", never a guess --
+        # picking the first of two would be insight 010's exact error (one candidate treated as
+        # proof of identity) committed with two.
+        return None, (f"{len(mine)} of {len(rosters)} rosters have owner_id {user_id} -- expected "
+                      f"exactly 1, so roster_id is NOT derivable")
+    rid = mine[0].get("roster_id")
+    if rid is None:
+        return None, "our roster carries no roster_id"
+    return int(rid), f"roster_id={int(rid)} derived from rosters cargo on owner_id {user_id}"
+
+
+def read_traded_picks(traded_cargo=TRADED_CARGO, rosters_cargo=ROSTERS_CARGO, user_id=None):
+    """Traded draft picks, classified by whether they touch US. Returns (verdict, lines).
+
+    WHY THIS EXISTS AT ALL. Every pick-slot computation in this repo -- `slot_of()`, `my_picks()`,
+    "your next pick is #N", "picks until you", the ROSTERS/NEEDS attribution -- assumes each seat
+    owns the picks its snake position implies. **One traded pick falsifies that for the rest of
+    the draft**, and nothing anywhere read the endpoint that says so: `grep -rn traded_picks
+    scripts/ draft-kit/` returned ZERO readers on 2026-08-17. The failure is the integrity-gate
+    landmine's exact signature -- a complete, confident, internally consistent advisory, exit 0 --
+    reached by a road with no gate on it. `[]` today and every day since 2026-08-07, which is
+    precisely why it was never noticed.
+
+    WHY IT IS NOT A BLANKET REFUSAL, WHICH IS THE OBVIOUS BUILD AND THE WRONG ONE.
+    A trade between two OTHER teams does not move a single one of our pick numbers. Hard-stopping
+    the war room at 8pm because Hunter and seat 6 swapped a 12th-rounder would be a false red --
+    and this repo has already caught three (the skill's cold-load self-test, the `!!` seat banner
+    pre-draft, `precompute_ladder`'s stale-id gate), each one teaching the operator to skip a gate.
+    insight 009 records the false red as the MORE dangerous direction. So this classifies:
+
+      * a pick where WE are the owner or the previous owner -> `UnsupportedShape`. Our own pick
+        set is wrong and there is no honest advisory to give. Never degrade past it.
+      * a pick between two other teams -> a LOUD warning, and the run continues. Our pick numbers
+        are still exact; what degrades is which roster to attribute that one pick to.
+      * picks exist but roster_id could not be derived -> `UnsupportedShape`, because "might be
+        ours" is not a state anyone can draft from. The remedy is one curl, and it is named.
+
+    WHY ABSENCE IS NOT AN ERROR. A missing cargo file returns `checked: False` and says so. Making
+    it fatal would break `build_board.py` on a clean clone for a hypothetical, and a check that
+    silently passes when its input is missing is the "gate that could never fire" this project has
+    now caught twice. Neither. It reports what it did and did not check, out loud, every run.
+    """
+    lines = []
+    verdict = {"checked": False, "count": 0, "ours": [], "others": [], "roster_id": None}
+
+    if not os.path.exists(traded_cargo):
+        lines.append(f"[unknown] no traded-picks cargo at {traded_cargo} -- NOT checked. A traded "
+                     f"pick would make every 'picks until you' count wrong for the rest of the "
+                     f"draft, silently. Re-run the mule, or: curl -sL --max-time 15 "
+                     f"\"https://api.sleeper.app/v1/draft/<draft_id>/traded_picks\"")
+        return verdict, lines
+    try:
+        with open(traded_cargo, encoding="utf-8-sig") as f:
+            traded = json.load(f)
+    except (json.JSONDecodeError, ValueError, OSError) as e:
+        lines.append(f"[unknown] the traded-picks cargo could not be read ({e}) -- NOT checked")
+        return verdict, lines
+    if not isinstance(traded, list):
+        lines.append(f"[unknown] the traded-picks cargo is {type(traded).__name__}, not a list "
+                     f"-- NOT checked")
+        return verdict, lines
+
+    verdict["checked"] = True
+    verdict["count"] = len(traded)
+    if not traded:
+        lines.append("[draft] traded picks: none -- the snake is plain, so every pick number "
+                     "this engine prints is exact")
+        return verdict, lines
+
+    rid, rid_note = our_roster_id(rosters_cargo, user_id=user_id)
+    verdict["roster_id"] = rid
+    if rid is None:
+        raise UnsupportedShape(
+            f"{len(traded)} traded pick(s) exist in this draft and roster_id could not be derived "
+            f"to tell whether any are OURS ({rid_note}). Every 'your next pick is #N' and 'picks "
+            f"until you' would be a guess. Fix the input rather than the gate: curl -sL "
+            f"--max-time 15 \"https://api.sleeper.app/v1/league/<league_id>/rosters\" > "
+            f"newsletter/data/inbox/sleeper_rosters.json")
+
+    for t in traded:
+        if not isinstance(t, dict):
+            continue
+        owners = {t.get("owner_id"), t.get("previous_owner_id"), t.get("roster_id")}
+        (verdict["ours"] if rid in owners else verdict["others"]).append(t)
+
+    if verdict["ours"]:
+        detail = "; ".join(
+            f"round {t.get('round')} of roster {t.get('roster_id')} "
+            f"({t.get('previous_owner_id')} -> {t.get('owner_id')})" for t in verdict["ours"])
+        raise UnsupportedShape(
+            f"{len(verdict['ours'])} traded pick(s) involve OUR roster ({rid}): {detail}. "
+            f"`my_picks()` derives our picks from our seat's snake positions and every one of "
+            f"them is now wrong -- as is 'picks until you', for the rest of the draft. This repo "
+            f"does not model traded picks and will not guess at one under a clock.")
+
+    lines.append(f"[draft] {rid_note}")
+    lines.append(f"!! {len(verdict['others'])} TRADED PICK(S) IN THIS DRAFT, none of them ours. "
+                 f"Our own pick numbers are still EXACT -- keep drafting. What is now wrong is "
+                 f"WHICH TEAM picks at those slots, so 'their open needs' and the ROSTERS/NEEDS "
+                 f"attribution may name the wrong roster there. Do not read a denial play off it.")
+    for t in verdict["others"]:
+        lines.append(f"!!   round {t.get('round')} of roster {t.get('roster_id')}: "
+                     f"{t.get('previous_owner_id')} -> {t.get('owner_id')}")
+    return verdict, lines
 
 
 #: Sleeper's `scoring_type` code -> the words this league's docs already use for it.

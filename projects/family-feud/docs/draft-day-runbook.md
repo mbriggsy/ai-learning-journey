@@ -193,6 +193,22 @@ being null:
   most attractive wrong answer in the project. Read the seat from
   `draft_order["1390750540631150592"]` and **from nothing else**. `run_engine.py` does exactly that
   and refuses rather than guessing when `draft_order` is still null.
+- 🚨 **TRADED PICKS — checked automatically since 2026-08-17, and you should still glance at it.**
+  Every pick-slot computation in this repo assumes each seat owns the picks its snake position
+  implies. **One traded pick falsifies "your next pick is #N" and "picks until you" for the rest of
+  the draft** — silently, exit 0, integrity gate green. It has been `[]` since 2026-08-07, which is
+  exactly why nothing read it until now. The mule hauls it hourly
+  (`newsletter/data/inbox/sleeper_traded_picks.json`), so `run_engine.py` costs no fetch, and it
+  does not treat all trades alike:
+  - a pick **we** traded away or acquired → **hard refusal, exit 2.** There is no honest advisory.
+  - a trade **between two other teams** → the run continues with a `!!` warning. Our pick numbers
+    are still exact; what is now wrong is which roster to attribute those picks to, so **do not
+    read a denial play off ROSTERS/NEEDS at those slots.**
+  - **cargo absent** → the run continues and says `[unknown] ... NOT checked`. A dead mule must not
+    also cost the advisory — but silence would be the gate that could never fire.
+  To check it by hand: `curl -sL --max-time 15 "https://api.sleeper.app/v1/draft/<draft_id>/traded_picks?cb=$(date +%s%N)"`.
+  Our `roster_id` is **derived** from `newsletter/data/inbox/sleeper_rosters.json` (the roster whose
+  `owner_id` is `1390750540631150592`) and never quoted from prose — same reason as the seat above.
 
 ## Step 3 — The loop (repeat until draft complete)
 1. **`python scripts/merge_picks.py <draft_id>`** — one command: fetches `/picks`, merges into

@@ -279,17 +279,42 @@ and watch it derive one** — that is the moment the guesswork ends.
    - **A name it expects gone is still worth queueing.** Auto-pick skips the dead and takes your
      top surviving queue entry, so those names are *marked*, not reordered — reordering a real
      board rank on a 35% guess is a bad trade.
-   - **If it prints the `!!` seat banner, STOP.** It means the engine could not confirm the seat
-     from either oracle, and a wrong seat yields a complete, confident ladder for another team.
-     Read the seat from `draft_order["1390750540631150592"]` and from nothing else.
+   - **The `!!` seat banner: STOP means STOP *once the draft is live*. Before it starts, the
+     banner is unavoidable and is NOT a red.** *(Corrected 2026-08-17 — this bullet used to say
+     "STOP" unconditionally.)* A wrong seat really does yield a complete, confident ladder for
+     another team, so the banner earns its size. But both of its oracles are **structurally
+     empty** before your first pick lands: `draft_order` is null until near go time, and no pick
+     carries our `picked_by` yet. Run the precomputer tonight and it fires **every time** —
+     verified 2026-08-17 against the real draft, and note what else was true of that run:
+     **the full ladder printed underneath it and the exit code was 0.** The tool does not think
+     this is fatal, and neither should you.
+     - **Pre-draft:** expected. Confirm the seat by another route, then use the ladder.
+     - **Once the draft is live:** the banner should be GONE — it self-clears the moment
+       `draft_order` populates or our first pick lands. **If it still fires then, that IS a stop.**
+     - Either way the seat comes from `draft_order["1390750540631150592"]` and from nothing else.
+     ⚠️ Treating an unavoidable banner as a red is how an operator learns to skip the gate — the
+     same false-red shape as the skill's cold-load self-test. The fix is a stated exception, never
+     a quieter banner.
 
    It **hard-refuses** a non-snake or third-round-reversal draft rather than computing a pick order
    this repo does not model. Missing cargo is different: it degrades to what you typed and says so.
 
    **Read the first lines of the output before the advisory.** The wrapper's block names the source
    of every number; then `[checked]` names what the engine confirmed against the draft itself. A
-   `**` banner means the seat could NOT be confirmed — go get `draft_order` before acting. A `!!`
-   block means an argument disagrees with the draft and nothing was computed.
+   `**` banner means the seat could NOT be confirmed — go get `draft_order` before acting.
+
+   🚨 **`!!` DOES NOT MEAN ONE THING, AND THIS LINE USED TO CLAIM IT DID.** *(Corrected
+   2026-08-17; it read "a `!!` block means an argument disagrees with the draft and nothing was
+   computed", which is false of two of the four cases below.)* Read the TEXT, not the glyph:
+   | `!!` block | exit | computed anything? | what to do |
+   |---|---|---|---|
+   | `THE ENGINE'S INPUTS DISAGREE WITH THE DRAFT ITSELF` | **1** | no | **STOP.** Fix the arguments, rerun |
+   | `picks.json IS MISSING / HAS DUPLICATE pick(s)` | **1** | no | **STOP.** Re-fetch, re-merge, rerun |
+   | `my_slot=N IS UNVERIFIED` *(the precomputer re-badges the engine's `**` as `!!`)* | 0 | **yes — full ladder** | pre-draft: expected. Live: stop |
+   | `THE QUEUE CANNOT FILL A MANDATED SLOT` | 0 | **yes — full ladder** | act on it; the block names both remedies |
+   **The two glyphs are not one contract across two tools:** `draft_engine.py` prints the seat
+   warning as `**`, and `precompute_ladder.py` prints the same condition as `!!`. Do not go hunting
+   for the other glyph under a clock — verified in both sources 2026-08-17.
 
    *The bare `python draft_engine.py <slot> <teams> <rounds> <draft_id>` from inside `draft-kit/`
    still works and is the fallback if the wrapper ever misbehaves — but run it bare and the roster
@@ -477,7 +502,7 @@ Two consequences worth knowing at the table:
 - **`--- N pick(s) matched by frozen id, not by name ---`** means the board's spelling has drifted from Sleeper's. Not an error; the join held. Worth noting for the next board rebuild.
 - **The escalation's meaning has INVERTED.** It used to mean *"this might be the same man under a drifted name."* The id now catches that case first, so anything still reaching the escalation carries an id we do not hold — meaning he is **not on our board at all**, and a same-position suspect sharing a surname is a **teammate**. The engine says so explicitly now. Do not clear that board row.
 Board state derives from **max(pick_no)**, with an integrity gate: exit 1 on interior gaps/duplicate pick_nos (see Step 3). `slot_names.json` = `{"<slot>": "<name>"}` → rosters/needs and the between-now-and-you line print names.
-Outputs: board state, last picks, run watch, every roster's composition + open needs, who picks between now and Briggsy, tier cliffs for RB/WR/TE/QB/K/DEF (⚠ at ≤3 left), best available on our board (with `vorp` and `VBD±` chips when the JSON carries them), and a VBD LEANS section — available players VBD ranks ≥8 spots above board rank.
+Outputs: board state, last picks, run watch, every roster's composition + open needs, who picks between now and Briggsy, tier cliffs for RB/WR/TE/QB/K/DEF (**⚠ CLIFF needs BOTH halves: ≤3 left AND at least one of them in BEST AVAILABLE** — a tier that is thin but not yet in play prints `· thin, none in the top 12 yet` and no ⚠, so **a 1-left tier can legitimately carry no warning**; reproduced 2026-08-17 on the lab feed at pick 40: `RB T5: 1 left — Cam Skattebo · thin, none in the top 12 yet`. The second half was added deliberately to stop the badge crying wolf on K/DEF in round 2 — it is scale-free and hardcodes no round threshold. Nothing is hidden: every thin tier still prints its count and says why it is quiet), best available on our board (with `vorp` and `VBD±` chips when the JSON carries them), and a VBD LEANS section — available players VBD ranks ≥8 spots above board rank.
 Name matching canonicalizes common diminutives (Kenny/Kenneth, Cam/Cameron, Mike/Michael, ...) on both board and picks — when adding board entries, still prefer Sleeper's spelling where known.
 Badge glyphs: » = our target · + = breakout · ! = bust risk · † = injury watch · ° = rookie · ^ = riser · v = faller · § = IR-stash.
 

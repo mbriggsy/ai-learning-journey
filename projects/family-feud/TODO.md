@@ -42,6 +42,34 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
     four plausible causes were chased and all four were wrong, including tab visibility. The
     skill's landmines carry the full list so nobody repeats them.
     `draft_order` is still null on the real draft; it populated correctly on the mock.
+
+  ◀ HERE (2026-08-17 overnight, 10 commits) — **THE PRODUCT IS WRITTEN DOWN, AND FOUR WAYS THE
+    ENGINE COULD HAND OVER A CONFIDENT WRONG NUMBER ARE CLOSED.**
+    **985 tests · 23 test files · 23 scripts · 27 insights · 14/14 mule sources.**
+    ✅ **THE FOUR LINES EXIST** — `docs/draft-day-runbook.md` *Advisory format*, replacing the old
+      ~5-line one. There is ONE format now. Three worked examples, all real engine output against
+      `lab_feed_120.json` at seat 3, plus a BANNED list (no margins · no availability % · no
+      "he'll never last" · never call the QB rule proven · never invent a player fact).
+    ✅ **`/traded_picks` HAS A READER.** It had ZERO, and one traded pick voids "your next pick is
+      #N" and "picks until you" for the rest of the draft, exit 0. It classifies rather than
+      blanket-refuses: OUR pick traded → refuse; two other teams → warn and keep drafting.
+    ✅ **THE SEAT STOPPED PROMISING A CHECK IT CANNOT RUN.** A typed seat printed "the engine
+      cross-checks it" while BOTH oracles were structurally empty pre-draft. Now prints
+      `🚨 NOTHING HAS CHECKED IT` — and `--cargo` is documented (it was in zero docs).
+    ✅ **THE EMPTY QUEUE STOPPED READING HEALTHY** — and a SECOND masked state turned up: a blind
+      panel (label says QUEUE(3), zero rows) also returned `agrees:true`, which is worse because it
+      produces a wrong ACTION.
+    ✅ **A MOCK CAN NO LONGER OVERWRITE THE LIVE `ladder.json`** — it happened TWICE in one session
+      while testing, leaving a dead lab queue where auto-pick would drain it.
+    ✅ **THE ENGINE PRINTS THE SCOUT NOTE** (top 5) — the "one clause of why" — and now prints the
+      between-seats line **while you are on the clock**, which it never did. Line 4 of the advisory
+      is exactly that question, so its own denominator had been missing.
+    ✅ **THE BOARD HAS A RUNBOOK STEP** (it never did) and was verified live on the real draft.
+    ✅ **THE LONG-TD BONUS IS MEASURED** — `build_curves.py --long-td-probe`. See the ranked list;
+      the reason it is safe is NOT that it is small.
+    🚨 **THE STANDING LESSON OF THE NIGHT:** three separate defects were found by WRITING THE
+      WORKED EXAMPLES, not by reading code. Composing the actual advisory is the strongest test
+      this repo has of whether the engine says what a human needs.
 ```
 
 ## 🎯 HOW DRAFT NIGHT ACTUALLY RUNS — Briggsy's own words, 2026-08-17. Build against THIS.
@@ -365,7 +393,7 @@ a research job.**
 blown-clock positive control, and the five draft-day changes:
 [`insight 026`](docs/insights/026-the-loop-fits-and-the-scripts-were-never-the-cost.md).
 
-### 📋 THE SKILL GRADE — ranked. **#1, #2 and #3 are FIXED; #4-#8 are still open (re-verified 2026-08-17).**
+### 📋 THE SKILL GRADE — ✅ **ALL EIGHT CLOSED (2026-08-17).** Kept for the reasoning, not as a queue.
 
 1. ✅ **FIXED — the self-test cannot pass on a cold load and tells you to STOP.** Run verbatim at
    Step 0 as instructed, it returned **7 of 12 FAILED** and *"FAIL — STOP. Re-map before drafting"*
@@ -444,19 +472,24 @@ back rather than silently working around it — a gap worked around is a gap tha
 ---
 
 **WHAT IS ACTUALLY LEFT, ranked:**
-0. ▶ **BUILD THE ADVISORY — this is the product and it is the next session's job.** Everything
-   below is plumbing next to it. The engine's state is rich enough already; what does not exist is
-   the **synthesis** into the four lines agreed 2026-08-17 (see *HOW DRAFT NIGHT ACTUALLY RUNS* at
-   the top of this file). Concretely:
-   - Write the four-line format into `docs/draft-day-runbook.md` **replacing** the older ~5-line
-     one — two competing formats is worse than either.
-   - Dry-run it against `tests/fixtures/lab_feed_120.json` at several stops (`--slot 3`, that
-     feed's own seat) and read the output as Briggsy would, on a clock. Stage it with
-     `python -c` truncation to a pick, run `scripts/run_engine.py 3 --rounds 15 --draft-id
-     1390923383440424960`, then **delete `draft-kit/picks.json` again** — it is gitignored war-room
-     scratch and a stale one poisons the next run.
-   - ⚠️ **It is a JUDGEMENT surface, so Briggsy's eye is the oracle, not a test.** Show him real
-     output from real stops and let him cut it. Do not gold-plate before he has read one.
+0. ▶ **BRIGGSY READS THE FOUR LINES AND CUTS THEM. THE ONLY THING LEFT HERE IS HIS EYE.**
+   ✅ **BUILT 2026-08-17.** The format, the discipline and three worked examples are in
+   `docs/draft-day-runbook.md` → *Advisory format — THE FOUR LINES*, and the old ~5-line format is
+   GONE (both its heading and the second reference to it). **There is one format.**
+   - ⚠️ **It is a JUDGEMENT surface, so his eye is the oracle, not a test — that has not happened
+     yet, and it is the whole of this item now.** Show him the three worked examples (#3 round 1,
+     #30 mid-run, #94 under K/DEF pressure) and let him cut. He said *"we can play with it and
+     tweak it if needed"*. **Do not gold-plate before he has read one.**
+   - 🚨 **THE PREMISE OF THIS ITEM WAS WRONG AND THAT IS WORTH KEEPING.** It said "the engine's
+     state is rich enough already". It was not. Writing the examples found **three** gaps, none of
+     which code review had found: the `note` (the literal "one clause of why") was loaded and never
+     printed; the between-seats line went silent exactly when we were ON the clock, which is when
+     line 4 needs it; and a draft example asserted seats from memory that the engine could not have
+     corrected. **Composing the real advisory is this repo's strongest test of the engine.** Do
+     that again after any engine change.
+   - To re-run a stop: stage `lab_feed_120.json` truncated to a pick count, run
+     `scripts/run_engine.py 3 --rounds 15 --draft-id 1390923383440424960`, then **delete
+     `draft-kit/picks.json`** — gitignored war-room scratch, and a stale one poisons the next run.
 1. ✅ **THE QUEUE GAP IS CLOSED AND LIVE-PROVEN (2026-08-17).** `ffQueueSync(target)` takes the
    `queue` array `precompute_ladder.py` prints and makes Sleeper's queue equal it. **All four
    paths fired in a live room in 2.3s total:** load-from-empty (771ms) · append the next man after
@@ -464,10 +497,18 @@ back rather than silently working around it — a gap worked around is a gap tha
    `{rebuild:true}` to force the order (1127ms). Final queue read back from Sleeper matched the
    target exactly. It decides `synced` by **reading the queue back**, never the per-call
    `queued: true` that once credited Jayden Daniels for an add he was not present for.
-   Two small things still open: **(a)** give runbook Step 3 an explicit re-arm step naming
-   `ffQueueSync` and the trailing `ffQueueList()` as the only accepted oracle; **(b)** make
-   `ffQueueList()` return `empty: true` instead of `agrees: true` on an empty queue, so the unsafe
-   state stops printing the same reassuring word as the healthy one.
+   ✅ **BOTH REMAINING HALVES CLOSED 2026-08-17.** (a) Runbook **Step 3.5** is the re-arm step,
+   naming `ffQueueSync`, the ladder's own *QUEUE THIS ORDER* output, `ladder.json`'s `queue` key,
+   and the trailing `ffQueueList()` as the only accepted oracle. Executor mode's bullet, which
+   still taught the superseded hand-rolled loop, is corrected. (b) `ffQueueList()` returns
+   `empty: true` — and measuring first found a **SECOND** masked state the plan had not:
+   a **blind panel** (tab label says `QUEUE (3)`, panel renders zero rows) ALSO returned
+   `agrees: true`. That one is worse, because it produces a wrong ACTION: "empty" sends you to
+   `{rebuild:true}` to re-arm a queue that was already correct, destroying it. So `empty` keys off
+   Sleeper's own words ("No players in your queue"), **never off `entries.length`**, and `agrees`
+   is now only the label-vs-panel cross-check (`null` when there is no label to check).
+   ⚠️ **All 68 existing console tests stayed green through a change that flips `agrees` from true
+   to false on a real case** — insight 013's signal, and it meant both unsafe states were untested.
    ⚠️ **And budget from the measurement, not from the old estimate:** a full 3-name sync is
    **under ~1.2s**, not the ~2s per name the first hand-rolled loop cost.
 2. 🗓️ **THE FINAL RE-RANK, ~Aug 27, THEN FREEZE.** The board ships on the **2026-08-14** ECR.
@@ -502,9 +543,29 @@ back rather than silently working around it — a gap worked around is a gap tha
      are bigger than ours — a direction to stay alert to, not a count to plan around.**
    - **Re-open only with more distinct 1QB drafts** (the room plays every year), never by
      loosening a floor and never by counting drafter-views as drafts.
-4. **Ship the long-TD bonus into `build_curves.py`.** Everything needed is measured and cached;
-   this is now a build, not a question. Worth doing for **correctness only — the edge is ~zero**
-   and the file must say so, or the next session will quote it as an advantage.
+4. 🟡 **THE LONG-TD BONUS IS MEASURED AND PROBE-SHIPPED. FOLDING IT INTO THE CURVE IS BRIGGSY'S
+   CALL, and the natural moment is the ~Aug 27 refresh.** `build_curves.py --long-td-probe`
+   (2026-08-17) builds the curve twice and prints the delta. **It writes nothing**, so the shipped
+   curve's `excludes: ["long_td_bonus"]` stays TRUE. Same shape as `availability.py`: the
+   measurement ships, the feature waits for a human.
+   - **The join is perfect** — `td_player_id`/`passer_player_id` are the same gsis domain as the
+     weekly file's `player_id`: **486 bonus rows over 2022-2025, 0 unjoinable.**
+   - 🚨 **THIS ENTRY USED TO SAY "correctness only — the edge is ~zero", AND THAT WAS RIGHT FOR
+     THE WRONG REASON.** league.md scores the bonus *"on pass, rush AND receiving TDs"*, so the
+     **PASSER is credited too** — credit only the scorer and you miss every QB, which is most of
+     the effect. The raw effect is therefore LARGEST at the position this project has four
+     independent lines of doctrine about: **+8.7 at QB1, +12.9 at QB6**, vs +2.8 RB1, +1.0 TE1.
+   - ✅ **But the board prices VORP, not the curve — and the bonus lifts the QB12 BASELINE by +7.0
+     at the same time, so it very nearly CANCELS.** `QB1 VORP 129.7 → 131.4 (+1.7)`; **QB1 as a
+     share of RB1 goes 48% → 49%**; the largest move anywhere is WR2 at +7.8, inside RB1's own
+     sd of 19.3. **The no-early-QB doctrine survives, and now it has survived a test it had not
+     been given.**
+   - **So the honest sentence is not "the bonus is small" — it is "the bonus is nearly UNIFORM
+     WITHIN A POSITION, so it cancels in the only number that decides a pick."** Write that, not
+     the old one, or a future session will re-derive the alarm from the raw column.
+   - **To fold it in:** feed `long_td_bonus(year)` into `load_season`'s totals inside `build()`,
+     regenerate, drop `long_td_bonus` from `meta.excludes`, and re-run the board. Changes no
+     decision — which is exactly why it needs a human watching rather than a background rebuild.
 5. **DEF has no exact source at all** and the 14 rows stay labelled. **Do not build a DEF curve** —
    the reasoning is in the DECIDED block below and it has not changed. **Re-confirmed 2026-08-14
    against a NEW source:** Sleeper's own projections carry DEF, but only the `pts_allow_0` bucket
@@ -533,6 +594,37 @@ back rather than silently working around it — a gap worked around is a gap tha
      averages, and the source republishes daily so any committed list is stale before Aug 29.
    - **Re-open only with a genuinely archived PRESEASON projection set** — one whose timestamps
      predate each season's week 1. Never with this endpoint.
+
+### 🆕 FOUND BY A DRIFT SCAN 2026-08-17, NOT YET DONE — ranked by cost if it happens on draft night
+
+7. **INSIGHT 026's PRESCRIPTIONS ARE ONLY HALF-PROPAGATED.** Its "what to do on draft day" list has
+   five items; two reached the runbook tonight (re-arm the queue · the mock flags). **Three did
+   not:** chain merge→engine→ladder into ONE shell call (**measured saving ~16s**), grep the engine
+   output rather than reading the full dump (cost 19s once), and **do not re-merge while on the
+   clock**. `grep -c "chain" docs/draft-day-runbook.md` = 0. This is the repo's own meta-lesson:
+   *an insight nobody propagates to the surface that states the rule is a note, not a fix.*
+8. **`merge_picks.py` HAS NO RETRY, and it is the first call of every on-clock cycle.**
+   `scripts/merge_picks.py:75` is a bare `urlopen(req, timeout=15)`; one Sleeper blip burns 15s,
+   then the operator re-runs for another 15 — against a measured worst case of 61s of a 120s clock
+   where round trips are 96-98% of the cost. **Two in-process attempts on a shorter timeout is
+   nearly free.** Keep the refusal message; it is correct.
+9. **`precompute_ladder.py --slot` IS REQUIRED, so the seat gets typed ~15 more times under a
+   clock** (`scripts/precompute_ladder.py:583`) — and "3" is this project's most attractive wrong
+   answer. `run_engine.py` can derive it from `draft_order`; the ladder cannot. **Make `--slot`
+   optional and fall back to run_engine's single derivation.** ⚠️ Note the derivation is blind
+   until our first pick lands, so this does NOT remove the need to type it pre-draft — it removes
+   the other fourteen.
+10. **A RE-CREATED DRAFT HAS A DETECTOR AND NO REMEDY.** `watch_draft_state.py` catches it; nothing
+    lists where the id is baked in. It is in at least: `newsletter/feud_mule.ps1:169` (+ the two
+    new sources added 08-17), `scripts/sleeper_draft_console.js` `REAL_DRAFT_ID`, the board's
+    `meta.shape.draft_id`, and ~5 docs. A dead draft id returns **HTTP 404**, so the board would sit
+    on `poll failed` forever at a 60s backoff. **A 20-minute write-up now vs an unbounded scramble
+    on draft morning.**
+11. **`scripts/render_html.py` HAS NO TESTS** (135 lines, 7 functions; `starters_line` /
+    `kicker_line` / `playoff_line` compose the board's prose from `meta.shape`) and is reached only
+    indirectly via `build_board.py:505`. `scripts/probe_picks_cache.py` also has none — that one is
+    a live network probe and arguably untestable offline; **say so in the file** rather than leaving
+    it looking like an oversight.
 
 ~~**The "will he be there at my next pick?" indicator.**~~ 🚨 **BUILT, MEASURED, AND REFUSED
 2026-08-17. Do not ship it — and do not rebuild it from the pooled number.**

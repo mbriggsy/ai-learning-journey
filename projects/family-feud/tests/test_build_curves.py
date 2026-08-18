@@ -327,5 +327,102 @@ class TestTheSourceTableItself(unittest.TestCase):
                             BC.season_path(2024, source="current"))
 
 
+class TestTheLongTdBonusCount(unittest.TestCase):
+    """`long_td_bonus` counts the one scoring rule the curve has always excluded.
+
+    It is a PROBE, not a shipped change (see `long_td_probe`'s docstring for the measurement that
+    decided that), but the arithmetic still has to be right or the measurement it feeds is worth
+    nothing. The two things that can silently be wrong here are the STACK and the PASSER.
+    """
+
+    COLS = ["season_type", "touchdown", "yards_gained", "pass_touchdown", "rush_touchdown",
+            "td_player_id", "passer_player_id"]
+
+    def pbp(self, rows):
+        """A gzipped play-by-play stub with only the columns this reader touches."""
+        import csv as _csv
+        import gzip as _gzip
+        d = tempfile.mkdtemp()
+        self.addCleanup(__import__("shutil").rmtree, d, True)
+        p = os.path.join(d, "pbp.csv.gz")
+        with _gzip.open(p, "wt", encoding="utf-8", newline="") as f:
+            w = _csv.DictWriter(f, fieldnames=self.COLS)
+            w.writeheader()
+            for r in rows:
+                w.writerow({c: r.get(c, "") for c in self.COLS})
+        return p
+
+    @staticmethod
+    def td(yards, kind="pass", scorer="S", passer="P", season_type="REG"):
+        return {"season_type": season_type, "touchdown": "1", "yards_gained": str(yards),
+                "pass_touchdown": "1" if kind == "pass" else "",
+                "rush_touchdown": "1" if kind == "rush" else "",
+                "td_player_id": scorer,
+                "passer_player_id": passer if kind == "pass" else ""}
+
+    def test_a_50_yard_td_stacks_both_bonuses(self):
+        """league.md:80 -- +1 at 40+ AND a further +2 at 50+, they STACK. A 50-yarder is +3, not
+        +2. Getting this wrong understates every long score by a third."""
+        b = BC.long_td_bonus(2024, self.pbp([self.td(55, kind="rush", scorer="R")]))
+        self.assertEqual(b["R"], 3.0)
+
+    def test_a_40_to_49_yard_td_is_only_the_first_bonus(self):
+        b = BC.long_td_bonus(2024, self.pbp([self.td(45, kind="rush", scorer="R")]))
+        self.assertEqual(b["R"], 1.0)
+
+    def test_39_yards_earns_nothing(self):
+        """The boundary control. 40 is inclusive; 39 is not."""
+        b = BC.long_td_bonus(2024, self.pbp([self.td(39, kind="rush", scorer="R")]))
+        self.assertEqual(b, {})
+        b = BC.long_td_bonus(2024, self.pbp([self.td(40, kind="rush", scorer="R")]))
+        self.assertEqual(b["R"], 1.0)
+
+    def test_the_PASSER_is_credited_as_well_as_the_receiver(self):
+        """🚨 THE FINDING. league.md scores the bonus "on pass, rush AND receiving TDs", so one
+        50-yard touchdown pass pays BOTH men +3. Crediting only the scorer misses every
+        quarterback -- which is most of the effect, and made a first pass at this look like a
+        receiver story when it is overwhelmingly a QB one."""
+        b = BC.long_td_bonus(2024, self.pbp([self.td(60, kind="pass", scorer="WR", passer="QB")]))
+        self.assertEqual(b["WR"], 3.0)
+        self.assertEqual(b["QB"], 3.0)
+
+    def test_a_rushing_td_credits_nobody_else(self):
+        """The control on the line above: a rush must not invent a passer."""
+        b = BC.long_td_bonus(2024, self.pbp([self.td(60, kind="rush", scorer="R", passer="P")]))
+        self.assertEqual(b, {"R": 3.0})
+
+    def test_a_kick_return_td_is_not_a_pass_rush_or_receiving_td(self):
+        """`touchdown == 1` alone is NOT the discriminator. Kick, punt, fumble and interception
+        returns all carry it, and league.md scores none of them."""
+        row = {"season_type": "REG", "touchdown": "1", "yards_gained": "99",
+               "pass_touchdown": "", "rush_touchdown": "", "td_player_id": "KR"}
+        self.assertEqual(BC.long_td_bonus(2024, self.pbp([row])), {})
+
+    def test_the_postseason_is_excluded(self):
+        """Same rule as the curve itself: playoff weeks are not part of a fantasy season."""
+        b = BC.long_td_bonus(2024, self.pbp([self.td(60, kind="rush", scorer="R",
+                                                     season_type="POST")]))
+        self.assertEqual(b, {})
+
+    def test_bonuses_accumulate_across_plays(self):
+        b = BC.long_td_bonus(2024, self.pbp([self.td(41, kind="rush", scorer="R"),
+                                             self.td(70, kind="rush", scorer="R")]))
+        self.assertEqual(b["R"], 4.0)
+
+    def test_an_uncached_season_returns_None_rather_than_an_empty_count(self):
+        """None means "I could not look"; {} means "I looked and there were none". A probe that
+        collapses those two reports a real season as a season with no long touchdowns."""
+        self.assertIsNone(BC.long_td_bonus(1999, os.path.join(tempfile.mkdtemp(), "nope.csv.gz")))
+
+    def test_the_shipped_curve_still_declares_the_exclusion(self):
+        """The probe must not have quietly become a feature. As long as the default build excludes
+        the bonus, the artifact has to keep SAYING so -- and this is what notices if someone wires
+        the probe into `build()` without regenerating and re-labelling."""
+        import json as _json
+        with open(os.path.join(BC.ROOT, "draft-kit", "vorp_curve.json"), encoding="utf-8") as f:
+            meta = _json.load(f)["meta"]
+        self.assertIn("long_td_bonus", meta.get("excludes", []))
+
+
 if __name__ == "__main__":
     unittest.main()

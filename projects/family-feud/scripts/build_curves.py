@@ -32,6 +32,22 @@ TWO THINGS THIS PIPELINE CANNOT DO, both recorded in the output rather than pape
    `excludes: ["long_td_bonus"]`, because a number that silently drops a scoring rule is a lie
    with a decimal point on it.
 
+   ✅ **AND IT IS NOW MEASURED RATHER THAN ASSUMED — `--long-td-probe` (2026-08-17).** The bonus
+   IS computable from the play-by-play cache, and the join is perfect (486 bonus rows over
+   2022-2025, **0 unjoinable**). What the measurement found is the reason it still is not shipped
+   by default, and it is not "the effect is small":
+     * The raw effect is LARGEST at the position this project has the most doctrine about --
+       **+8.7 at QB1 and +12.9 at QB6**, against +2.8 at RB1 and +1.0 at TE1 -- because the rule
+       pays the PASSER as well as the receiver.
+     * But the board prices VORP, not the raw curve, and the bonus lifts the QB12 BASELINE by
+       +7.0 at the same time. It therefore **very nearly cancels**: QB1 VORP moves 129.7 -> 131.4,
+       and QB1 as a share of RB1 goes **48% -> 49%**. The largest move anywhere is WR2 at +7.8,
+       inside RB1's own sd of 19.3.
+   So: **the bonus is nearly uniform within a position, so it cancels in the only number that
+   decides a pick.** Folding it in is safe hygiene that changes no decision -- which is exactly
+   why it belongs in a deliberate refresh with a human watching, not in a background rebuild.
+   Until someone does that, this pipeline keeps excluding it AND keeps saying so.
+
 BOTH GAPS HAVE ONE CAUSE AND ONE KNOWN ROUTE OUT: THE SOURCE. docs/ranking-methodology.md says
 the original curve came from nflverse **play-by-play**, not these weekly stats -- and that is
 the difference that matters:
@@ -53,6 +69,7 @@ starting point for whoever closes it.
 import argparse
 import collections
 import csv
+import gzip
 import json
 import os
 import statistics
@@ -399,11 +416,144 @@ def baselines_from_board(board_path=os.path.join(ROOT, "draft-kit", "players_dat
     return vbd.get("baselineWaiver") or {}, vbd.get("lastStarter") or {}
 
 
+PBP_PATH = os.path.join(CACHE, "play_by_play_{year}.csv.gz")
+
+
+def long_td_bonus(year, path=None):
+    """{player_id: bonus points} for one REG season, counted from play-by-play. None if uncached.
+
+    THE PASSER IS CREDITED TOO, and that is the whole finding. league.md:80 scores the bonus "on
+    pass, rush AND receiving TDs", so a 50-yard touchdown pass pays the quarterback AND the
+    receiver. Crediting only `td_player_id` (the scorer) misses every QB -- which is most of the
+    effect, and the reason a first pass at this looked like a receiver story.
+
+    +1 at 40+, a further +2 at 50+, and they STACK, so a 50-yarder is worth +3. That is exactly
+    what `scoring.py` computes (`td_40p * 1 + td_50p * 2`, with a 50+ TD counted in BOTH buckets),
+    so this function and the scorer cannot drift on the rule.
+
+    Kick, punt, fumble and interception return touchdowns are NOT pass, rush or receiving TDs and
+    are deliberately excluded -- `pass_touchdown`/`rush_touchdown` are the discriminator, not
+    `touchdown` alone.
+
+    Join: `td_player_id`/`passer_player_id` are gsis ids, the same domain as the weekly file's
+    `player_id`. Measured 2026-08-17 over all four seasons: **486 bonus rows joined, 0 unjoinable.**
+    """
+    p = path or PBP_PATH.format(year=year)
+    if not os.path.exists(p):
+        return None
+    bonus = collections.defaultdict(float)
+    with gzip.open(p, "rt", encoding="utf-8", newline="") as f:
+        for r in csv.DictReader(f):
+            if r.get("season_type") != "REG" or r.get("touchdown") != "1":
+                continue
+            y = _num(r.get("yards_gained"))
+            if y < 40:
+                continue
+            pts = 1.0 + (2.0 if y >= 50 else 0.0)
+            scorer = r.get("td_player_id")
+            if r.get("pass_touchdown") == "1":
+                if scorer:
+                    bonus[scorer] += pts
+                if r.get("passer_player_id"):
+                    bonus[r["passer_player_id"]] += pts
+            elif r.get("rush_touchdown") == "1":
+                if scorer:
+                    bonus[scorer] += pts
+    return dict(bonus)
+
+
+def long_td_probe(seasons=SEASONS):
+    """Build the curve twice -- shipped, and with the long-TD bonus folded in -- and return both.
+
+    🚨 THIS IS A MEASUREMENT, NOT A FEATURE, AND THE MEASUREMENT IS WHY.
+    TODO called shipping the bonus "correctness only -- the edge is ~zero". That was written
+    before anyone counted, and the raw counts look alarming for exactly the position this project
+    has the most doctrine about: over 2022-2025 the bonus adds **+8.7 to QB1 and +12.9 to QB6**,
+    against +2.8 at RB1 and +1.0 at TE1.
+
+    But the board does not price the curve -- it prices VORP, `curve[k] - curve[baseline]`, and
+    the bonus lifts the QB12 BASELINE by +7.0 at the same time. So it very nearly CANCELS:
+    **QB1 VORP moves 129.7 -> 131.4 (+1.7)**, and QB1 as a share of RB1 goes **48% -> 49%**.
+    The largest move anywhere is WR2 at +7.8, comfortably inside RB1's own sd of 19.3.
+
+    So the honest summary is not "the bonus is small" -- it is **"the bonus is nearly uniform
+    within a position, so it cancels in the only number that decides a pick."** Shipping it changes
+    no decision. That is what makes it safe hygiene rather than a re-valuation, and it is why this
+    prints instead of writing: the shipped curve's `excludes: ["long_td_bonus"]` stays TRUE until
+    someone deliberately regenerates, which belongs in the ~Aug 27 refresh with Briggsy's eyes on
+    it, not in a background run.
+    """
+    out = {}
+    for with_bonus in (False, True):
+        per_rank, used, joined, missed = collections.defaultdict(list), [], 0, 0
+        for year in seasons:
+            loaded, _ = load_season(year)
+            if loaded is None:
+                continue
+            totals, position = loaded
+            if with_bonus:
+                for pid, extra in (long_td_bonus(year) or {}).items():
+                    if pid in totals:
+                        totals[pid] += extra
+                        joined += 1
+                    else:
+                        missed += 1
+            used.append(year)
+            for pos in POSITIONS:
+                vals = sorted((v for pid, v in totals.items() if position.get(pid) == pos),
+                              reverse=True)
+                for rank, v in enumerate(vals[:CURVE_DEPTH], 1):
+                    per_rank[(pos, rank)].append(v)
+        out["after" if with_bonus else "before"] = {
+            pos: _table(per_rank, pos, len(used), CURVE_DEPTH) for pos in POSITIONS}
+        if with_bonus:
+            out["joined"], out["unjoinable"], out["seasons"] = joined, missed, used
+    return out
+
+
+def _print_long_td_probe():
+    r = long_td_probe()
+    before, after = r["before"], r["after"]
+    print(f"seasons: {r['seasons']} | bonus rows joined: {r['joined']} | "
+          f"unjoinable: {r['unjoinable']}")
+    waiver, _ = baselines_from_board()
+    print(f"baselines read from the board: {waiver}\n")
+    print(f"{'slot':<7}{'raw now':>9}{'raw after':>11}{'Δraw':>7}"
+          f"{'VORP now':>10}{'VORP after':>12}{'ΔVORP':>8}")
+    print("-" * 64)
+    for pos in POSITIONS:
+        bl = waiver.get(pos)
+        b0, b1 = before[pos].get(str(bl)), after[pos].get(str(bl))
+        for k in (1, 2, 3, 6):
+            a0, a1 = before[pos].get(str(k)), after[pos].get(str(k))
+            if None in (a0, a1, b0, b1):
+                continue
+            print(f"{pos}{k:<5}{a0:>9.1f}{a1:>11.1f}{a1 - a0:>+7.1f}"
+                  f"{a0 - b0:>10.1f}{a1 - b1:>12.1f}{(a1 - b1) - (a0 - b0):>+8.1f}")
+        print()
+    q = (before["QB"].get("1"), after["QB"].get("1"),
+         before["QB"].get(str(waiver.get("QB"))), after["QB"].get(str(waiver.get("QB"))))
+    for pos in ("RB", "WR"):
+        p = (before[pos].get("1"), after[pos].get("1"),
+             before[pos].get(str(waiver.get(pos))), after[pos].get(str(waiver.get(pos))))
+        if None not in q + p:
+            print(f"QB1 as a share of {pos}1:  now {(q[0]-q[2])/(p[0]-p[2]):.0%}"
+                  f"  ->  after {(q[1]-q[3])/(p[1]-p[3]):.0%}")
+    print("\nNOTHING WAS WRITTEN. The shipped curve still excludes the bonus, and still says so.")
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Build the empirical VORP curve.")
     ap.add_argument("--refetch", action="store_true", help="re-download every season")
     ap.add_argument("--check", action="store_true", help="compute and report; write nothing")
+    ap.add_argument("--long-td-probe", dest="long_td_probe", action="store_true",
+                    help="measure what the long-TD bonus WOULD do to the curve and to VORP. "
+                         "Writes nothing. See long_td_probe() for why this is a probe.")
     a = ap.parse_args(argv)
+
+    if a.long_td_probe:
+        _print_long_td_probe()
+        return 0
 
     curve, used, notes, used_k = build(refetch=a.refetch)
     for n in notes:

@@ -1065,5 +1065,63 @@ class TestTheCliffBadgeOnlyFiresOnTiersInPlay(EngineCase):
                                  f"rule that parsers split on")
 
 
+class TestTheScoutNoteReachesTheAdvisory(EngineCase):
+    """The advisory's contract is "one name, one clause of WHY", and the why-material is the board
+    row's own `note`. It was loaded and never printed, so composing a call meant a SECOND round
+    trip into players_data.json -- and round trips are 96-98% of every on-clock second (insight
+    026). Printed for the top NOTE_N only, because that insight's other lever is shorter output.
+    """
+
+    def board_of(self, n, note_prefix="why he is worth it"):
+        return board([row(i, f"P{i}", "RB", "DET", i, note=f"{note_prefix} {i}")
+                      for i in range(1, n + 1)])
+
+    def test_the_top_candidates_carry_their_note(self):
+        code, out = self.run_engine(self.board_of(8), [], slot=3)
+        self.assertEqual(code, 0, out)
+        body = out.split("BEST AVAILABLE (my board)")[1]
+        self.assertIn("↳ why he is worth it 1", body)
+        self.assertIn("↳ why he is worth it 5", body)
+
+    def test_only_the_realistic_candidate_set_carries_one(self):
+        """The control on NOTE_N. Without it, "print the note" and "print every note" pass the
+        same test, and the output grows by twelve lines on a 120-second clock."""
+        code, out = self.run_engine(self.board_of(8), [], slot=3)
+        body = out.split("BEST AVAILABLE (my board)")[1]
+        self.assertNotIn("↳ why he is worth it 6", body)
+        self.assertEqual(body.count("↳"), 5)
+
+    def test_a_note_that_STARTS_WITH_A_DIGIT_is_not_read_as_a_board_row(self):
+        """🚨 THE ONE THAT MATTERS. Two parsers identify a board row by its first token being a
+        digit -- precompute_ladder's section reader (`toks[0].isdigit()`) and this file's own
+        ordering tests (`ln.strip()[0].isdigit()`). FOUR notes on the real board begin with a
+        digit today (Isaiah Likely, Jalen McMillan, Minnesota Vikings, Eddy Pineiro).
+
+        A bare indented note would therefore be parsed AS A BOARD ROW, and its second word taken
+        as a player name -- which reaches the queue the operator loads into Sleeper, where
+        auto-pick drains it top-down on a blown clock. The `↳` marker makes that impossible
+        rather than unlikely, and this test is what says the marker is still doing it."""
+        code, out = self.run_engine(self.board_of(8, note_prefix="2025 was his breakout, season"),
+                                    [], slot=3)
+        self.assertEqual(code, 0, out)
+        body = out.split("BEST AVAILABLE (my board)")[1]
+        rowish = [ln for ln in body.splitlines() if ln.strip() and ln.strip()[0].isdigit()]
+        # Exactly the 8 real board rows -- not one of the 5 notes.
+        self.assertEqual(len(rowish), 8, f"a note leaked into the row parse:\n" + "\n".join(rowish))
+        names = [ln.split()[1] for ln in rowish]
+        self.assertEqual(names, [f"P{i}" for i in range(1, 9)],
+                         "a note's second word is being read as a player name")
+
+    def test_a_row_with_no_note_prints_no_marker(self):
+        """Absence must be silent, not an empty `↳`. A dangling marker reads as a truncated note
+        and sends the operator looking for text that was never there."""
+        b = board([row(1, "Alpha", "RB", "DET", 1, note=""),
+                   row(2, "Bravo", "WR", "SF", 1, note="a real clause")])
+        code, out = self.run_engine(b, [], slot=3)
+        body = out.split("BEST AVAILABLE (my board)")[1]
+        self.assertEqual(body.count("↳"), 1)
+        self.assertIn("↳ a real clause", body)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

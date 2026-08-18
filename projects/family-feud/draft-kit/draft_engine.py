@@ -444,6 +444,14 @@ avail = [p for p in BOARD
 # operator to "look below" for a line that was never printed burns clock and disarms the next
 # warning), and computing it twice would let the two copies drift.
 BEST_N, CLIFF_N = 12, 5
+#: How many of BEST AVAILABLE carry their scout note. The advisory's contract is "one name, one
+#: clause of WHY", and the why-material is the `note` on the board's own rows -- 174 of them,
+#: mean 60 characters. It was computed, loaded, and never printed, so composing a call meant
+#: opening players_data.json in a SECOND round trip. Round trips are 96-98% of every on-clock
+#: second (insight 026), so five extra lines of reading buys back a whole trip. Five, not twelve:
+#: the realistic candidate set at any one pick is the top handful, and insight 026's other lever
+#: is SHORTER OUTPUT.
+NOTE_N = 5
 best_avail = sorted(avail, key=lambda x: x["r"])[:BEST_N]
 cliffs = []                                   # (pos, tier, total_left, [rows shown])
 for _pos in ["RB", "WR", "TE", "QB", "K", "DEF"]:
@@ -619,7 +627,7 @@ for pos, t, left, rows in cliffs:                 # precomputed above; shown_ran
     print(f"{pos} T{t}: {left} left — {', '.join(x['name'] for x in rows)}{flag}")
 
 print("\n--- BEST AVAILABLE (my board) ---")
-for p in best_avail:
+for _i, p in enumerate(best_avail):
     bdg = "".join(BADGE_GLYPH.get(b, "") for b in p["badges"])
     vb = ""
     if "vorp" in p:
@@ -627,6 +635,17 @@ for p in best_avail:
         chip = f" VBD{d:+d}" if abs(d) >= 8 else ""
         vb = f" · vorp {p['vorp']:.0f}{chip}"
     print(f"{p['r']:>3} {p['name']} {p['pos']}{p['pr']} {p['team']} {bdg}{vb}")
+    # 🚨 THE `↳` IS LOAD-BEARING, NOT DECORATION. Two parsers identify a board row by its first
+    # token being a digit -- precompute_ladder._section's reader (`toks[0].isdigit()`) and
+    # test_engine_matching's ordering tests (`ln.strip()[0].isdigit()`). FOUR notes on this board
+    # begin with a digit (Isaiah Likely, Jalen McMillan, Minnesota Vikings, Eddy Pineiro), so a
+    # bare indented note would be read as a board row and its second WORD as a player name.
+    # Leading with a non-digit marker makes that impossible rather than unlikely.
+    # Checked before shipping this: no note on the board contains a section header, a `---` rule,
+    # or a newline, so it cannot become a false delimiter either -- the trap this file's own
+    # comment above the cliff loop already records.
+    if _i < NOTE_N and p.get("note"):
+        print(f"      ↳ {p['note']}")
 
 # VBD steals: available where VBD rank beats board rank by 8+ (skill positions)
 if any("vorp" in p for p in avail):

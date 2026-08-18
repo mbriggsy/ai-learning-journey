@@ -45,7 +45,7 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
 
   ◀ HERE (2026-08-17 overnight, 10 commits) — **THE PRODUCT IS WRITTEN DOWN, AND FOUR WAYS THE
     ENGINE COULD HAND OVER A CONFIDENT WRONG NUMBER ARE CLOSED.**
-    **985 tests · 23 test files · 23 scripts · 27 insights · 14/14 mule sources.**
+    **985 tests · 23 test files · 23 scripts · 28 insights · 14/14 mule sources.**
     ✅ **THE FOUR LINES EXIST** — `docs/draft-day-runbook.md` *Advisory format*, replacing the old
       ~5-line one. There is ONE format now. Three worked examples, all real engine output against
       `lab_feed_120.json` at seat 3, plus a BANNED list (no margins · no availability % · no

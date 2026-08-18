@@ -435,7 +435,13 @@
     // Those two are not the same claim: a collapsed or mid-render panel also yields zero entries
     // while the queue is perfectly healthy, and calling THAT empty would send a caller to
     // ffQueueSync({rebuild:true}) to "fix" a queue that was already correct -- destroying it.
-    const empty = label.empty && q.length === 0;
+    // `label.count === 0` is belt-and-braces on top of the placeholder string. Today Sleeper
+    // renders NO `QUEUE (n)` text at zero (measured 2026-08-09), so `label.count` is null and the
+    // placeholder is the only signal -- but if a release ever starts rendering a literal
+    // `QUEUE (0)`, the placeholder disappears and an empty queue would come back `empty:false,
+    // agrees:true`: fully reassuring, and the exact defect this whole field exists to kill. One
+    // extra term closes that off without touching any state reachable today.
+    const empty = (label.empty || label.count === 0) && q.length === 0;
     return JSON.stringify({
       count: label.count,
       entries: q.map((e, i) => ({ slot: i + 1, name: e.name, pos: e.pos, team: e.team })),

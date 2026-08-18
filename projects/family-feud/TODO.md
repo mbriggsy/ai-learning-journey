@@ -46,7 +46,7 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
 
   ◀ HERE (2026-08-17 overnight, 17 commits) — **THE PRODUCT IS WRITTEN DOWN, AND FIVE WAYS THE
     ENGINE COULD HAND OVER A CONFIDENT WRONG NUMBER ARE CLOSED.**
-    **998 tests · 23 test files · 23 scripts · 28 insights · 14/14 mule sources.**
+    **999 tests · 23 test files · 23 scripts · 28 insights · 14/14 mule sources.**
     ✅ **THE FOUR LINES EXIST** — `docs/draft-day-runbook.md` *Advisory format*, replacing the old
       ~5-line one. There is ONE format now. Three worked examples, all real engine output against
       `lab_feed_120.json` at seat 3, plus a BANNED list (no margins · no availability % · no
@@ -408,8 +408,10 @@ blown-clock positive control, and the five draft-day changes:
    empty by ~pick 21; **picks #28, #37 and #44 were fired with no safety net.** `precompute_ladder.py`
    *prints* the order but never loads it, and Step 3 has no re-arm step. Worse,
    `ffQueueList()` on an empty queue returns **`{count: null, entries: [], agrees: true}`** —
-   `agrees` is true only because `q.length === 0` short-circuits. **Decide: add a re-arm step to
-   Step 3, and make the empty case report `empty: true` instead of `agrees: true`.**
+   `agrees` is true only because `q.length === 0` short-circuits. ~~**Decide: add a re-arm step to
+   Step 3, and make the empty case report `empty: true` instead of `agrees: true`.**~~
+   ✅ **BOTH DONE 2026-08-17** — runbook Step 3.5 is the re-arm step, and `ffQueueList()` returns
+   `empty: true`. See ranked item 1 for the second masked state that measuring turned up.
 3. ⚠️ **`ffQueue`'s +1 verification is not robust to concurrent removals.** Asked for 4 names, 3
    returned `queued: true`, the queue held **2** — Jayden Daniels reported success and was absent
    (drafted mid-loop, so an unrelated add saw the `+1`). **Only the trailing `ffQueueList()` is
@@ -1316,7 +1318,7 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **998 tests** *(re-measured at the END of the
+gate went **13 findings → 0** by fixing surfaces. **999 tests** *(re-measured at the END of the
 2026-08-17 session. This line read 907, was "corrected" to 946 mid-session, and went stale again
 within the same night as five later commits added tests — hence the rule: **update a count as the
 LAST edit before the commit, never mid-session**)*, 0 skips on this machine

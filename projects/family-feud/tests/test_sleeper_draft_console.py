@@ -529,6 +529,28 @@ class TestReadingAndUnstackingTheQueue(unittest.TestCase):
         self.assertTrue(r["agrees"])
         self.assertIsNone(r.get("note"))
 
+    def test_a_literal_QUEUE_0_label_still_reads_as_empty(self):
+        """Future-proofing, added 2026-08-17 after an adversarial pass pointed at it.
+
+        Today Sleeper renders NO `QUEUE (n)` text at zero (measured 2026-08-09) -- the placeholder
+        string "No players in your queue" is the only signal, so `empty` keying off it is correct.
+        But if a release ever starts rendering a literal `QUEUE (0)`, the placeholder disappears and
+        an empty queue would come back `empty:false, agrees:true` -- FULLY REASSURING while there
+        is no safety net, which is the precise defect the `empty` field exists to kill, returning
+        by a different door. One extra term (`|| label.count === 0`) closes it.
+
+        Note `agrees:true` is CORRECT here -- a label of 0 and zero rows do agree. `empty` is the
+        safety signal; `agrees` is only the cross-check. Two fields, two questions."""
+        out = run_node(QUEUE_PANEL + """
+        globalThis.document = { get body(){ return { innerText: 'QUEUE (0)\\nNEXT PICK' }; },
+                                querySelectorAll: () => [] };
+        (async () => { console.log(window.ffQueueList()); })();
+        """)
+        r = json.loads(out)
+        self.assertEqual(r["count"], 0)
+        self.assertTrue(r["empty"], "a zero label with zero rows is an EMPTY QUEUE")
+        self.assertIn("ffQueueSync", r["note"])
+
     def test_a_BLIND_PANEL_is_not_reported_as_an_empty_queue(self):
         """THE DANGEROUS ONE, and it was returning `agrees: true` until 2026-08-17.
 

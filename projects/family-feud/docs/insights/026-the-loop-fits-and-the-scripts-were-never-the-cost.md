@@ -93,6 +93,14 @@ Nothing in Step 3 re-arms it; `precompute_ladder.py` *prints* the order but neve
 short-circuits the check, and `count` is `null` because Sleeper renders no `QUEUE (n)` text at
 zero. **The unsafe state and the healthy state print the same reassuring word.**
 
+> ✅ **FIXED 2026-08-17 — this paragraph describes the OLD contract and is kept as the record of
+> what was measured here.** `ffQueueList()` now returns `empty: true` plus a `note` naming
+> `ffQueueSync`, and `agrees` is only the label-vs-panel cross-check (`null` when there is no
+> label). Measuring it first also found a **second** state the same short-circuit was masking: a
+> **blind panel** — tab label says `QUEUE (3)`, panel renders zero rows — also returned
+> `agrees: true`, and that one is worse because it produces a wrong *action*. `empty` therefore
+> keys off Sleeper's own words, never off `entries.length`.
+
 ⚠️ **`ffQueue`'s +1 verification is not robust to concurrent removals.** Re-arming four names
 returned `queued: true` for three; the queue ended holding **two**. Jayden Daniels reported
 `queued: true, count: 1` and was not in the final queue — a bot drafted him mid-loop and Sleeper

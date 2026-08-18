@@ -20,14 +20,20 @@ waiver report, which needs one completed week of transactions behind it.
 
 ## What the mule must haul first
 
-None of these four are hauled today. `newsletter/feud_mule.ps1` carries 14 sources (12 into the inbox, 2 into `draft-kit/cache/`); these would
-make it 14, and `scripts/validate_cargo.py` already handles the `json` kind, so the extension is
-four `Fetch-Source` lines and nothing else.
+**Three** of these four are not hauled today — ✅ **`/league/<id>/rosters` joined the mule on
+2026-08-17**, for a draft-day reason rather than an in-season one: it is how `shape.our_roster_id()`
+derives our `roster_id`, which is the currency `/traded_picks` is denominated in.
+`newsletter/feud_mule.ps1` carries **14** sources (12 into the inbox, 2 into `draft-kit/cache/`);
+the remaining three would make it **17**, and `scripts/validate_cargo.py` already handles the `json`
+kind, so the extension is three `Fetch-Source` lines and nothing else.
+*(Corrected 2026-08-17: the source count was bumped 12→14 without its two dependent clauses, which
+left this paragraph saying rosters was unhauled while the same night's commit hauled it, and
+"carries 14 … would make it 14".)*
 
 | Endpoint | Measured 2026-08-08 | Why it is needed |
 |---|---|---|
 | `/state/nfl` | 200, 207 bytes, `season_type: "pre"`, `week: 1` | **The keystone.** Every other endpoint below is keyed by week, and nothing on disk knows what week it is. Haul this first or the rest cannot be addressed. |
-| `/league/<id>/rosters` | 200, **8 rosters** | Who owns whom. Already meaningful pre-draft — see the shape note below. |
+| ✅ `/league/<id>/rosters` | 200, **8 rosters** — hauled hourly since 2026-08-17 | Who owns whom. Already meaningful pre-draft — see the shape note below. **Already live**: `shape.our_roster_id()` reads it to attribute a traded pick. |
 | `/league/<id>/matchups/<week>` | 200, **`[]`** | Weekly opponent + what each roster actually started. |
 | `/league/<id>/transactions/<week>` | 200, **`[]`** | Waiver claims, free-agent adds, trades. |
 

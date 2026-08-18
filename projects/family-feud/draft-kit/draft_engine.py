@@ -119,7 +119,24 @@ BOARD = _DOC["players"]
 # old .get(b, "") did, so an unknown badge still cannot crash the advisory on a 120-second clock.
 BADGE_GLYPH = {code: (spec or {}).get("glyph", "")
                for code, spec in ((_DOC.get("meta") or {}).get("badges") or {}).items()}
-PICKS = json.load(open("picks.json", encoding="utf-8"))
+# NO PICKS YET IS THE NORMAL PRE-DRAFT STATE, NOT AN ERROR -- and this used to raise a bare
+# FileNotFoundError traceback, which reads as a broken tool at the one moment the operator has
+# least patience for one. `precompute_ladder.py` already handled the identical state gracefully, so
+# the two tools disagreed at the seam: run them back to back before the draft starts and the ladder
+# says "[pre-draft] ... a draft that has not started" while the engine dumped a Python stack trace.
+# Found 2026-08-17 by an adversarial pass; the exposure is narrow (Step 3.1 creates the file before
+# Step 3.3 runs) but it is the state the machine is in EVERY time anyone rehearses the loop.
+#
+# A MALFORMED file stays fatal, and that distinction is shape.py's rule: "I cannot tell" and "I can
+# tell and the answer is no" demand opposite responses. Absent means the draft has not started.
+# Corrupt means something wrote garbage where the board state lives, and advising off it is exactly
+# what the integrity gate below exists to prevent.
+try:
+    PICKS = json.load(open("picks.json", encoding="utf-8"))
+except FileNotFoundError:
+    print("[pre-draft] no picks.json yet -- reading this as a draft that has not started. "
+          "Every pick is still available.")
+    PICKS = []
 try:  # optional: {"2": "DIego", "3": "Hunter", ...} from draft metadata.slot_name_<N>
     SLOT_NAMES = {int(k): str(v) for k, v in json.load(open("slot_names.json", encoding="utf-8")).items()}
 except Exception:

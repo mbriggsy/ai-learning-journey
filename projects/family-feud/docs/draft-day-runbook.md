@@ -622,11 +622,20 @@ goes first and the context goes last. He reads left-to-right and can stop after 
 
 ### Worked examples — real engine output, real stops
 
-> ⚠️ **All three are real `run_engine.py` output against `tests/fixtures/lab_feed_120.json`, seat 3,
-> re-read line by line on 2026-08-17.** An earlier draft of the #30 example asserted "slots 4 and 6
-> pick before you" from memory — the real answer is **slot 2, slot 1, slot 1, slot 2**. That is the
-> banned-list's last rule catching its own author, and it is also why the engine now prints the
-> between-seats line *while you are on the clock*, which it never used to.
+> ⚠️ **All three are real `run_engine.py` output against `tests/fixtures/lab_feed_120.json`, seat 3.**
+> An earlier draft of the #30 example asserted "slots 4 and 6 pick before you" from memory — the
+> real answer is **slot 2, slot 1, slot 1, slot 2**. That is the banned-list's last rule catching
+> its own author, and it is also why the engine now prints the between-seats line *while you are on
+> the clock*, which it never used to.
+>
+> 🚨 **AND "re-read line by line" WAS ITSELF A CLAIM THIS BLOCK COULD NOT CASH — an adversarial
+> pass found two more errors after it was written, both in numbers quoted from the engine's own
+> output:** #30 said *"Smith's TIER is 21 deep"* when 21 is **WR T5 + T6 combined** and his own
+> tier held **five**; and #94's Risk line said *"spend three on skill and the last two are forced"*
+> out of four picks, which is arithmetically impossible. Both corrected. **The lesson is the one
+> this section already teaches: a number that does not appear verbatim in the block quoted above it
+> is a number you are inventing** — which is exactly how *"WR T5/T6 hold 21 between them"*, true one
+> line earlier, became false the moment it was attached to one man's tier.
 
 <details><summary><b>#3 — round 1, on the clock, and the wait is the longest of the night</b></summary>
 
@@ -660,7 +669,8 @@ VBD LEANS is six RBs deep.
 THE CALL: **Breece Hall** — six straight VBD leans are RBs and five of the last eight picks were
   RBs; RB T5 is down to four while WR T5/T6 still hold 21 between them.
 Passed on: **DeVonta Smith** — higher board rank, and A.J. Brown's exit makes him the Philly alpha.
-  Flip if you'd rather bank the certain target share: Smith's TIER is 21 deep and Hall's is four.
+  Flip if you'd rather bank the certain target share. Their own tiers are the same size (WR T5 five,
+  RB T5 four) — it's the SHELF underneath that differs: 16 more in WR T6 against 9 in RB T6.
 Risk: Hall's note is committee talk, not health — he's freshly extended. If the backfield splits you
   spent round 4 on an RB3 and still owe two receivers.
 Before #35 (4 picks): only slots 1 and 2 pick, twice each — and BOTH still need a TE while TE T3 is
@@ -675,17 +685,19 @@ read than the wrong "slots 4 and 6 need WR" ever was.
 
 <details><summary><b>#94 — round 12, on the clock, and the two seats behind you need exactly what you need</b></summary>
 
-State: our roster `[QB1 RB5 WR4 TE1]` — `needs: DEFx1, Kx1` and nothing else, with picks **#94,
-#99, #110, #115** left. `Between this pick and #99: slot 2, slot 1, slot 1, slot 2` ·
+State: our roster `[QB1 RB5 WR4 TE1]` — `needs: DEFx1, Kx1` and nothing else, holding **#94, #99,
+#110, #115**. ⚠️ **That is seat 3's tail in the fixture's FIFTEEN rounds. The real league is
+sixteen**, where seat 3 also owns **#126** — so on draft night count one more.
+`Between this pick and #99: slot 2, slot 1, slot 1, slot 2` ·
 **`Their open needs: DEF(4), K(4)`** · `DEF T1: 3 left` (Rams gone) · `K T1: 3 left`.
 
 ```
-THE CALL: **Michael Pittman Jr.** — best skill left on the board and the last pick you can spend
-  freely; traded to Pittsburgh as Rodgers' possession guy.
+THE CALL: **Michael Pittman Jr.** — one of only two picks left that are yours to spend; traded to
+  Pittsburgh as Rodgers' possession guy.
 Passed on: **Justin Herbert** — ranks higher, but you have your QB. Only worth it as a stream, and
   this roster has no bench room to stream from.
-Risk: none at this pick — the risk is the ROUND. You owe K and DEF and hold four picks. Spend three
-  on skill and the last two are forced onto whatever is left.
+Risk: none at this pick — the risk is the ROUND. Four picks left and two mandated slots owed, so
+  exactly TWO are free. Spend a third on skill and you cannot fill both.
 Before #99 (4 picks): 🚨 slots 1 and 2 pick twice each and BOTH need DEF and K — the same two slots
   you need. DEF T1 is already down to three (HOU/DEN/SEA). Nobody has taken a kicker and 18 of 18
   measured drafts wait past round 10, so K is safe; **DEF is the one that can actually be taken from

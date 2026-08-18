@@ -16,13 +16,14 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
   → the harness's own defects found and fixed ✅ → board RE-RANKED on the 08-14 ECR ✅
   → the browser half LIVE-PROVEN, an API-confirmed pick ✅ → the room mapped into a skill ✅
   → the 2-minute dress rehearsal RUN, by a session that did not write the skill ✅
-  ◀ HERE (2026-08-15) — **THE LOOP FITS, and the repo's "too slow" claim is now dead.**
+  ── 2026-08-15 — **THE LOOP FITS, and the repo's "too slow" claim is now dead.**
     Seven picks fired on a live 120s clock (mock `1394479498451251200`, seat 5): worst case
     used **61 of 120s**, typical **24-28s**. All 23 script invocations totalled **5.28s** and
     the engine never exceeded **0.18s** — **96-98% of every on-clock second was round-trip and
     agent latency.** The only levers are FEWER ROUND TRIPS and SHORTER OUTPUT, never faster
     Python. Numbers: [`insight 026`](docs/insights/026-the-loop-fits-and-the-scripts-were-never-the-cost.md).
-    **946 tests · 23 test files · 23 scripts · 27 insights.**
+    **946 tests · 23 test files · 23 scripts · 27 insights** *(as of that date — current counts are
+    in the 08-17 block below, and this line is history)*.
     Two things that were only ASSERTED are now MEASURED: a deliberately blown clock took our
     queue-top (#60 = DJ Moore), and `picked_by` stamped our id on that pick we never made.
     ▸ **2026-08-17 — TWO ADVISORY FIXES SHIPPED, ONE FEATURE MEASURED AND REFUSED.**
@@ -43,9 +44,9 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
     skill's landmines carry the full list so nobody repeats them.
     `draft_order` is still null on the real draft; it populated correctly on the mock.
 
-  ◀ HERE (2026-08-17 overnight, 10 commits) — **THE PRODUCT IS WRITTEN DOWN, AND FOUR WAYS THE
+  ◀ HERE (2026-08-17 overnight, 17 commits) — **THE PRODUCT IS WRITTEN DOWN, AND FIVE WAYS THE
     ENGINE COULD HAND OVER A CONFIDENT WRONG NUMBER ARE CLOSED.**
-    **985 tests · 23 test files · 23 scripts · 28 insights · 14/14 mule sources.**
+    **998 tests · 23 test files · 23 scripts · 28 insights · 14/14 mule sources.**
     ✅ **THE FOUR LINES EXIST** — `docs/draft-day-runbook.md` *Advisory format*, replacing the old
       ~5-line one. There is ONE format now. Three worked examples, all real engine output against
       `lab_feed_120.json` at seat 3, plus a BANNED list (no margins · no availability % · no
@@ -1315,9 +1316,13 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **946 tests** *(re-measured 2026-08-17; this line
-read 907)*, 0 skips on this machine
-(`python -m unittest discover -s tests` from the root); on a clean clone it is 852 with **16 skips**
+gate went **13 findings → 0** by fixing surfaces. **998 tests** *(re-measured at the END of the
+2026-08-17 session. This line read 907, was "corrected" to 946 mid-session, and went stale again
+within the same night as five later commits added tests — hence the rule: **update a count as the
+LAST edit before the commit, never mid-session**)*, 0 skips on this machine
+(`python -m unittest discover -s tests` from the root); on a clean clone it was 852 with **16 skips**
+⚠️ *(that clean-clone pair belongs to the 907 era and has NOT been re-measured — treat it as
+"roughly 55 fewer than local", not as a current number)*
 — 2 live-cargo probes plus **9** that need the gitignored consensus/ADP caches
 (`draft-kit/cache/fp_ecr.csv.gz`, `ffc_adp.json.gz`) plus **5** (`test_build_curves.TestTheCurveShape`)
 that need the gitignored nflverse season CSVs. **Re-measured 2026-08-14 by hiding every gitignored

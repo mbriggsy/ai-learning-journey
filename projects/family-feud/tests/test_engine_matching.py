@@ -38,6 +38,13 @@ def board(players):
             "dst": [], "strategy": {}}
 
 
+class RawPicks:
+    """Write picks.json VERBATIM rather than as JSON -- the only way to test a corrupt file."""
+
+    def __init__(self, text):
+        self.text = text
+
+
 def pick(no, first, last, pos, team, slot=None):
     return {"pick_no": no, "draft_id": "1", "draft_slot": slot or ((no - 1) % 8 + 1),
             "round": (no - 1) // 8 + 1, "player_id": str(no), "picked_by": "u",
@@ -80,8 +87,17 @@ class EngineCase(unittest.TestCase):
             os.makedirs(kit)
             with open(os.path.join(kit, "players_data.json"), "w", encoding="utf-8") as f:
                 json.dump(board_obj, f, ensure_ascii=False)
-            with open(os.path.join(kit, "picks.json"), "w", encoding="utf-8") as f:
-                json.dump(picks, f, ensure_ascii=False)
+            # `picks=None` means DO NOT WRITE THE FILE -- distinct from `picks=[]`, which writes an
+            # empty array. That is the real pre-draft state on any machine before the first merge,
+            # and it used to raise a bare FileNotFoundError traceback that no test could see
+            # because this helper always created the file. `picks=RAW_PICKS(...)` writes a literal
+            # string, for the corrupt case.
+            if picks is not None:
+                with open(os.path.join(kit, "picks.json"), "w", encoding="utf-8") as f:
+                    if isinstance(picks, RawPicks):
+                        f.write(picks.text)
+                    else:
+                        json.dump(picks, f, ensure_ascii=False)
             if slot_names is not None:
                 with open(os.path.join(kit, "slot_names.json"), "w", encoding="utf-8") as f:
                     json.dump(slot_names, f, ensure_ascii=False)
@@ -1101,6 +1117,56 @@ class TestTheCliffBadgeOnlyFiresOnTiersInPlay(EngineCase):
             self.assertLessEqual(out.count(header), 1,
                                  f"{header!r} is duplicated -- body text is shadowing a section "
                                  f"rule that parsers split on")
+
+
+class TestNoPicksYetIsTheNormalPreDraftState(EngineCase):
+    """`json.load(open("picks.json"))` was unguarded, so the engine raised a bare
+    FileNotFoundError traceback before the draft started -- while `precompute_ladder.py` handled the
+    identical state with a clean `[pre-draft]` line. The two tools disagreed at the seam: run them
+    back to back tonight and one explains itself while the other dumps a Python stack trace.
+
+    A traceback at 7am reads as a broken tool, and this is the state the machine is in EVERY time
+    anyone rehearses the loop before the draft starts.
+
+    ⚠️ THE SPLIT IS THE POINT, and it is shape.py's rule: ABSENT means "the draft has not started"
+    and is fine; CORRUPT means something wrote garbage where board state lives and must stay fatal.
+    "I cannot tell" and "I can tell and the answer is no" demand opposite responses.
+    """
+
+    def kit(self):
+        return board([row(1, "Alpha One", "RB", "KC", 1),
+                      row(2, "Bravo Two", "WR", "SF", 1)])
+
+    def test_an_absent_picks_file_is_pre_draft_not_a_crash(self):
+        code, out = self.run_engine(self.kit(), None, slot=3)
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("Traceback", out)
+        self.assertIn("[pre-draft] no picks.json yet", out)
+
+    def test_it_still_delivers_the_whole_advisory(self):
+        """Degrading must not mean going quiet. Pre-draft is exactly when the pre-arm happens, so
+        BEST AVAILABLE and THE WAIT have to be there."""
+        code, out = self.run_engine(self.kit(), None, slot=3)
+        self.assertIn("BOARD STATE: 0 picks in", out)
+        self.assertIn("BEST AVAILABLE", out)
+        self.assertIn("THE WAIT", out)
+        self.assertIn("Alpha One", out.split("BEST AVAILABLE")[1])
+
+    def test_an_empty_array_is_NOT_reported_as_a_missing_file(self):
+        """The control that keeps the two states apart. `[]` on disk is a merge that ran and found
+        nothing; no file at all is a merge that never ran. Both are pre-draft, only one is silent."""
+        code, out = self.run_engine(self.kit(), [], slot=3)
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("[pre-draft] no picks.json yet", out)
+        self.assertIn("BOARD STATE: 0 picks in", out)
+
+    def test_a_CORRUPT_picks_file_stays_fatal(self):
+        """🚨 The half that must NOT be softened. Catching this alongside the absent case would let
+        the engine advise off a board state it could not read -- which is what the integrity gate
+        exists to prevent, reached by a politer route."""
+        code, out = self.run_engine(self.kit(), RawPicks("{not json at all"), slot=3)
+        self.assertNotEqual(code, 0, "a corrupt picks.json must never be treated as pre-draft")
+        self.assertNotIn("[pre-draft] no picks.json yet", out)
 
 
 class TestTheScoutNoteReachesTheAdvisory(EngineCase):

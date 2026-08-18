@@ -320,10 +320,44 @@ and watch it derive one** — that is the moment the guesswork ends.
    still works and is the fallback if the wrapper ever misbehaves — but run it bare and the roster
    shape falls back to constants inside the file that nothing checks against this draft.*
 
-5. Read the output; compose the advisory (format below); send it. In executor mode, execute the pick instead when it's our clock.
+5. 🚨 **RE-ARM THE QUEUE IN THE SAME BREATH — every cycle, not just before the draft.**
+   *(Added 2026-08-17.)* **The queue drains and nothing refills it.** The 2026-08-15 rehearsal
+   pre-armed six names; it was **empty by ~pick 21**, and **picks #28, #37 and #44 were fired with
+   no safety net at all** — while `ffQueueList()` returned the same reassuring word it returns for
+   a healthy queue. That is fixed, but nothing re-arms itself. This step is the re-arm.
+
+   Feed step 4's own order into ONE call — never a hand-rolled `ffQueue` loop:
+   ```js
+   await window.ffQueueSync(["<1st>", "<2nd>", "<3rd>"])
+   await window.ffQueueList()
+   ```
+   The names are the numbered list `precompute_ladder.py` just printed under **QUEUE THIS ORDER**;
+   top 3-5 is the working size. The identical array is on disk as the `"queue"` key of
+   `newsletter/data/state/ladder.json`, so it can be piped rather than retyped.
+
+   - ✅ **THE ONLY ACCEPTED ORACLE IS `"synced": true` PLUS A TRAILING `ffQueueList()` SHOWING
+     `"empty": false` AND THE NAMES IN ORDER.** `ffQueueSync` decides `synced` by reading the queue
+     back from Sleeper — never from the per-call `queued: true`, which once credited Jayden
+     Daniels for an add he was not present for (he had been drafted mid-loop and an unrelated add
+     saw the `+1`). A count can be right about a **number** and wrong about an **identity**.
+   - ⚠️ **`"empty": true` means NO SAFETY NET — re-arm before the clock starts.** It ships a `note`
+     naming this call. **`"agrees": false` with `entries: []` is a different problem**: the queue
+     is fine and the *reader* is blind (panel collapsed or mid-render). **Do not "fix" that with
+     `{rebuild:true}`** — you would destroy a correct queue. Re-read instead.
+   - **It refuses a destructive reorder rather than clearing your net on its own authority.**
+     `synced:false` + a plan means appending would not produce the target; pass `{rebuild:true}`
+     only when you mean it.
+   - **Budget from the measurement, not the old estimate: a full 3-name sync is under ~1.2s**, and
+     all four paths together measured **2.3s** in a live room. The hand-rolled loop it replaced
+     cost ~2s *per name*.
+   - **A name the projection expects gone is still worth queueing** — auto-pick skips the dead and
+     takes your top survivor, so those names are marked, not reordered.
+
+6. Read the output; compose the advisory (format below); send it. In executor mode, execute the pick instead when it's our clock.
    *(Renumbered 2026-08-14 — this was a SECOND "4." and, following the indented block above it with
    no blank line, it rendered as literal text inside step 4 rather than as its own step. Steps 1-4
-   are deliberately untouched: `CLAUDE.md` pins the names "Step 3.1" and "Step 3.3".)*
+   are deliberately untouched: `CLAUDE.md` pins the names "Step 3.1" and "Step 3.3". Renumbered
+   again 2026-08-17 when the queue re-arm became step 5 — still nothing above step 5 moved.)*
 
 **Cadence — key it off ROOM SPEED, measured in round 1, not just pick distance** (the picks feed is cumulative, so you can never miss picks — only be late with advice):
 - **FAST room** (picks landing ~15s apart or less — quick-click humans and/or CPU autopick): distance-based pacing fails; a 14-pick gap can evaporate in under a minute. The moment his pick(s) land: one sync → deliver the NEXT window's full pre-call immediately (with snipe ladder, see below) → then poll every ~15-20s continuously, tightening to **10-15s when ≤3 picks away** (Briggsy's calibration after Mock #2 — two picks came down to the wire at 20-25s). **Do not stretch to 45-60s "because the gap looks big" — that exact deviation cost pick 79 in Mock #2.** An all-CPU room (7 bots) is the fastest possible room: 12-pick gaps run ~60-90s. Note the bot-room quirk: the room PAUSES on our clock (bots can't pick past us), so wire-scrapes there are always self-inflicted — see "fire first, narrate after" in Executor mode.
@@ -337,11 +371,15 @@ Claude's hands are claude-in-chrome on Briggsy's logged-in Chrome; eyes stay on 
 - **Player-row icons, left to right (verified in the Aug 6 queue lab):** `+` = **INSTANT DRAFT while on the clock, no confirmation** (pre-draft it no-ops) · `☆` star = watchlist only · **blue document-plus `📄+` = ADD TO QUEUE — works pre-draft and any time.** The queue lives in the right panel's Queue tab (shows a count); each entry has a REMOVE button.
   - 🚨 **"the `+`" MEANS `div.draft-button`, NOT `row.children[0]`. Corrected 2026-08-15.** `row.children[0]` is `div.draft-button-wrapper` — an unstyled **24×24**-content wrapper that owns **no handler**, and clicking it drafts nobody while *opening the player card*. The instant-draft behaviour is true of the child and false of the parent. Reach it as `row.children[0].querySelector('.draft-button')`, never `document.querySelector('.draft-button')` — that class is **not unique** (7 occurrences, 4 contexts, including an auction variant whose handler calls `_hoverPlayer` and never drafts).
   - ✏️ **RETRACTED: "The player-card modal has NO action buttons."** It carries a lone `Cancel`. ✅ **MAPPED 2026-08-15: to close it synthetically, click `.modal-item-underlay`** — that node owns an `onClick`. The `Cancel` `<button>` owns **no** handler and no ancestor within 6 hops owns one, which is exactly why the 2026-08-14 synthetic click on it did nothing. Third instance of the same law. ⚠️ Whatever native listener `Cancel` itself uses is still unmapped and probably always will be — page script cannot enumerate native listeners (`getEventListeners` is DevTools-only). **Use the underlay.** Still avoid opening the card mid-draft; it is a time sink even when closable.
-- **PRE-ARM THE QUEUE.** The ladder to load is the one `scripts/precompute_ladder.py --slot <slot>` prints under **QUEUE THIS ORDER** — it is the engine's own BEST AVAILABLE order, so it needs no judgement applied on top and no second ranking exists to drift from it. *(added 2026-08-09; `ffQueue` / `ffQueueList` / `ffUnqueue` in `scripts/sleeper_draft_console.js` are what put it in and keep it ranked.)* Before the draft starts, load the round-1 ladder **with `ffQueue('<full name>')`, top name first** — *not* by clicking `📄+` icons, which is the pixel path this file deleted on 2026-08-14. `ffQueueList()` reads the queue back in order and document order == visual order, so it is the check that the load actually took; Sleeper labels the first entry **NEXT PICK**. At each window, refresh to the current ladder's top 2-3 (`ffUnqueue` the dead, `ffQueue` the new) — skip maintenance when the clock is tight; direct fire stays primary. A loaded queue makes every failure mode safe: missed clock, frozen bridge, native dialog — Sleeper's timeout autopick takes the queue TOP, i.e. OUR guy, not ADP's. (Mock #2 ran the whole draft with an empty queue because the affordance wasn't known; the pick-79 miss would have cost nothing with a loaded queue.) Keep the AUTO-PICK toggle OFF — with a loaded queue it insta-drafts queue-top the moment our turn starts, no judgment applied.
+- **PRE-ARM THE QUEUE.** The ladder to load is the one `scripts/precompute_ladder.py --slot <slot>` prints under **QUEUE THIS ORDER** — it is the engine's own BEST AVAILABLE order, so it needs no judgement applied on top and no second ranking exists to drift from it. *(added 2026-08-09; `ffQueue` / `ffQueueList` / `ffUnqueue` in `scripts/sleeper_draft_console.js` are what put it in and keep it ranked.)* 🚨 **USE `ffQueueSync(<the queue array>)` — ONE CALL, both directions.** *(Corrected 2026-08-17. This bullet used to say "load the round-1 ladder with `ffQueue('<full name>')`, top name first" and "at each window, refresh to the current ladder's top 2-3 (`ffUnqueue` the dead, `ffQueue` the new)". That hand-rolled loop cost ~2s **per name**; `ffQueueSync` ran all four paths in **2.3s total** and, unlike the loop, decides success by **reading the queue back** rather than trusting per-call results — the loop once credited Jayden Daniels for an add he was not present for.)* Still *not* by clicking `📄+` icons, which is the pixel path this file deleted on 2026-08-14. The trailing `ffQueueList()` is the only accepted check that the load took — read **`"empty": false`** and the names in order; document order == visual order, and Sleeper labels the first entry **NEXT PICK**. Skip maintenance when the clock is tight; direct fire stays primary. **Full re-arm procedure and its failure modes: Step 3.5 above.** A loaded queue makes every failure mode safe: missed clock, frozen bridge, native dialog — Sleeper's timeout autopick takes the queue TOP, i.e. OUR guy, not ADP's. (Mock #2 ran the whole draft with an empty queue because the affordance wasn't known; the pick-79 miss would have cost nothing with a loaded queue.) Keep the AUTO-PICK toggle OFF — with a loaded queue it insta-drafts queue-top the moment our turn starts, no judgment applied.
 - 🚨 **STEP ZERO, BEFORE THE DRAFT STARTS — INSTALL THE CONSOLE. Nothing below runs without it.**
   Evaluate the whole of `scripts/sleeper_draft_console.js` in the draft-room tab (it is an IIFE
-  that hangs `ffFind` / `ffDraft` / `ffQueue` / `ffQueueList` / `ffUnqueue` / `ffStartDraft` off
-  `window`). Confirm with `typeof window.ffFind === "function"` before you trust any of it.
+  that hangs `ffFind` / `ffDraft` / `ffQueue` / `ffQueueList` / `ffUnqueue` / **`ffQueueSync`** /
+  **`ffAutoPick`** / `ffStartDraft` off `window`). *(The first two bolded were missing from this
+  list until 2026-08-17 — `ffQueueSync` is the ONLY re-arm mechanism, so a session working from
+  this line alone re-armed the safety net by hand or not at all.)* Confirm with
+  `typeof window.ffQueueSync === "function"` before you trust any of it — check the NEWEST helper,
+  not the oldest, because a stale paste has `ffFind` and lacks the rest.
   **Re-install after any page reload** — a reload wipes them and the failure looks like the bridge
   being dead.
 

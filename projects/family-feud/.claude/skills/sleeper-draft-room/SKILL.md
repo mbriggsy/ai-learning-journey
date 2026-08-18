@@ -93,7 +93,8 @@ than a moved class, and nothing in this file should be trusted until it is under
 |---|---|---|---|
 | **Draft a player** | `row.children[0].querySelector('.draft-button')` — **24×24** | `onClick` | **`/picks` pick count**, cache-busted. Nothing else. |
 | ~~the wrapper~~ | ~~`row.children[0]` = `.draft-button-wrapper` — 34×40~~ | **nothing** | 🚨 clicking it drafts nobody and opens the player card |
-| **Queue** | `img[src*="queue.png"]` (inside `div.queue-action[onClick]`) | — (descendant, fine) | Sleeper's own `QUEUE (n)` count, **+1 exactly** |
+| **Queue** | `img[src*="queue.png"]` (inside `div.queue-action[onClick]`) | — (descendant, fine) | Sleeper's own `QUEUE (n)` count, **+1 exactly** — but a count is right about a **number** and cannot be right about an **identity**; for that, only the trailing `ffQueueList()` read-back counts |
+| **Re-arm the whole queue** | `ffQueueSync([...])` — one call, both directions | (drives Queue + Unqueue) | `synced:true` **from reading the queue back**, plus `ffQueueList()` showing `empty:false` and the names in order |
 | **Unqueue** | the entry's `REMOVE` (`div.delete-button[onClick]`) | `onClick` | `QUEUE (n)`, **−1 exactly** |
 | **AUTO-PICK** | `.autopick-toggle .slider` | `onClick` | the `input[type=checkbox]`'s `.checked` |
 | ~~the toggle box~~ | ~~`.autopick-toggle`~~ | **nothing** | 🚨 3 levels above the handler; no event sequence reaches it |
@@ -247,9 +248,22 @@ queue untouched), and `{rebuild:true}` to force the order (1127ms).
   case, since board order is stable and survivors keep their relative order. When appending would
   not produce the target it returns `synced:false` with the plan rather than clearing your safety
   net on its own authority. Pass `{rebuild:true}` only when you mean it.
-- ⚠️ **The queue drains silently and an empty one does NOT read as a problem** — `ffQueueList()`
-  returns `{count:null, entries:[], agrees:true}` when empty, because `agrees` short-circuits on
-  zero. Three of seven rehearsal picks were fired with no safety net and nothing said so.
+- 🚨 **The queue drains silently — so read `empty`, and never infer it from `entries.length`.**
+  *(FIXED 2026-08-17. This bullet used to say the unsafe state reads as healthy; it no longer
+  does.)* `ffQueueList()` now returns:
+  | state | `count` | `entries` | `empty` | `agrees` | what it means |
+  |---|---|---|---|---|---|
+  | queue is empty | `null` | `[]` | **`true`** | `null` | 🚨 **NO SAFETY NET — re-arm now.** Carries a `note` naming `ffQueueSync` |
+  | healthy | `3` | 3 rows | `false` | `true` | verified |
+  | **panel blind** | `3` | `[]` | `false` | **`false`** | ⚠️ the queue is FINE, the reader is not |
+  | label ≠ panel | `5` | 3 rows | `false` | `false` | mid-render or collapsed |
+  **`agrees` used to short-circuit `true` on zero entries, which masked TWO unsafe states at once**
+  — the genuinely empty queue (three of seven 2026-08-15 rehearsal picks were fired that way and
+  nothing said so) *and* the blind panel. The blind panel is the worse of the two: it produces a
+  wrong ACTION, because "empty" sends you to `{rebuild:true}` to re-arm a queue that was already
+  correct, destroying it. **`empty` keys off Sleeper's own words — "No players in your queue" —
+  never off `entries.length`**, and `agrees` is now only the label-vs-panel cross-check, `null`
+  when there is no label to check against.
 
 ---
 

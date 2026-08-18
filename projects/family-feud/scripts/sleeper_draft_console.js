@@ -20,7 +20,14 @@
  *   ffDraft('Justin Jefferson')   -> actually drafts him. Reports a CLICK, never a PICK.
  *   ffQueue('Justin Jefferson')   -> adds him to the queue, verified by the count incrementing.
  *   ffQueueList()                 -> the queue IN ORDER; document order == visual order.
+ *                                    `empty:true` is the UNSAFE state -- re-arm before the clock.
+ *                                    `agrees:false` with `entries:[]` is the OPPOSITE problem:
+ *                                    the queue is fine and the reader is blind. Do NOT rebuild.
  *   ffUnqueue('Justin Jefferson') -> removes him, verified by the count going DOWN by one.
+ *   ffQueueSync(['A','B','C'])    -> makes the queue EQUAL that array. One call, both directions,
+ *                                    verified by reading the queue back. {rebuild:true} to force
+ *                                    an order it would otherwise refuse to impose destructively.
+ *   ffAutoPick(true|false)        -> actuates the AUTO-PICK slider; verified by the checkbox.
  *   ffStartDraft({iAmInAMock:true}) -> answers the START DRAFT native confirm. Two guards; see below.
  *
  * ⚠️ THIS HEADER SAID "ffQueueList/ffUnqueue NOT BUILT YET" FOR A WHOLE SESSION AFTER THEY SHIPPED,
@@ -420,13 +427,33 @@
 
   window.ffQueueList = function () {
     const q = queueEntries();
+    // READ THE LABEL ONCE. It used to be read twice -- once for `count`, once inside `agrees` --
+    // so the number reported and the number compared could come from two different renders of a
+    // virtualised panel. Nothing ever caught that because the two reads almost always agree.
+    const label = readQueue(document.body.innerText);
+    // `empty` is the DOM's OWN word for it ("No players in your queue"), not merely `q.length === 0`.
+    // Those two are not the same claim: a collapsed or mid-render panel also yields zero entries
+    // while the queue is perfectly healthy, and calling THAT empty would send a caller to
+    // ffQueueSync({rebuild:true}) to "fix" a queue that was already correct -- destroying it.
+    const empty = label.empty && q.length === 0;
     return JSON.stringify({
-      count: readQueue(document.body.innerText).count,
+      count: label.count,
       entries: q.map((e, i) => ({ slot: i + 1, name: e.name, pos: e.pos, team: e.team })),
-      // The count comes from the tab label and the entries from the panel. If they disagree the
-      // panel is mid-render or collapsed, and a caller ranking off a short list would silently
-      // drop players -- so say so rather than returning the shorter one.
-      agrees: readQueue(document.body.innerText).count === q.length || q.length === 0,
+      // AN EMPTY QUEUE IS THE UNSAFE STATE AND MUST NOT PRINT THE HEALTHY WORD.
+      //
+      // `agrees` used to be `label.count === q.length || q.length === 0`, and that short-circuit
+      // masked TWO different unsafe states, both reading `agrees: true` -- measured 2026-08-17:
+      //   * the queue is genuinely EMPTY (no safety net at all). Picks #28, #37 and #44 of the
+      //     2026-08-15 rehearsal were fired in exactly this state and nothing said so.
+      //   * the panel rendered ZERO rows while the tab label said QUEUE (3). The queue is fine;
+      //     the reader is blind. This one is worse, because it produces a wrong ACTION rather
+      //     than a missing warning.
+      // `agrees` is now ONLY the label-vs-panel cross-check, and `null` when there is no label to
+      // check against -- because "I could not check" must never print like "I checked".
+      empty: empty,
+      agrees: label.count === null ? null : label.count === q.length,
+      note: empty ? 'QUEUE IS EMPTY -- no safety net. Re-arm: ffQueueSync(<the ladder queue>)'
+                  : undefined,
     });
   };
 

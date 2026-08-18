@@ -513,6 +513,39 @@ class TestReadingAndUnstackingTheQueue(unittest.TestCase):
         r = self._run([], "console.log(window.ffQueueList());")[0]
         self.assertEqual(r["entries"], [])
         self.assertIsNone(r["count"])
+        # THE POINT, added 2026-08-17. `agrees` used to short-circuit TRUE on `q.length === 0`, so
+        # the no-safety-net queue printed the same reassuring word as the verified one. Picks #28,
+        # #37 and #44 of the 2026-08-15 rehearsal were fired in exactly this state and nothing said
+        # so. `empty` is first-class now, and `agrees` is null because there is no label to check.
+        self.assertTrue(r["empty"])
+        self.assertIsNone(r["agrees"])
+        self.assertIn("ffQueueSync", r["note"])
+
+    def test_a_loaded_queue_is_not_empty(self):
+        """The positive control. A hardcoded `empty: true` passes the test above; only this says
+        the flag tracks anything."""
+        r = self._run(["Jahmyr Gibbs"], "console.log(window.ffQueueList());")[0]
+        self.assertFalse(r["empty"])
+        self.assertTrue(r["agrees"])
+        self.assertIsNone(r.get("note"))
+
+    def test_a_BLIND_PANEL_is_not_reported_as_an_empty_queue(self):
+        """THE DANGEROUS ONE, and it was returning `agrees: true` until 2026-08-17.
+
+        Zero rows rendered while the tab label still says QUEUE (3). The queue is HEALTHY; the
+        reader is blind. The old short-circuit could not tell this apart from a genuinely empty
+        queue -- and the two demand opposite actions. Believing "empty" here sends the operator to
+        `ffQueueSync(..., {rebuild:true})` to re-arm a queue that was already correct, which
+        reorders or destroys it under a clock.
+
+        So `empty` keys off the DOM's own words ("No players in your queue"), never off
+        `entries.length` -- and this case must come back FLAGGED, not reassuring."""
+        r = self._run([], "console.log(window.ffQueueList());", countOverride=3)[0]
+        self.assertEqual(r["entries"], [])
+        self.assertEqual(r["count"], 3)
+        self.assertFalse(r["empty"], "a blind panel is not an empty queue")
+        self.assertFalse(r["agrees"], "the label says 3 and the panel says 0 -- that is a conflict")
+        self.assertIsNone(r.get("note"))
 
     def test_it_finds_the_row_by_shape_not_by_a_fixed_hop_count(self):
         """One extra wrapper div between REMOVE and the name is exactly the kind of change a

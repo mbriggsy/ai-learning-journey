@@ -728,5 +728,95 @@ class TestTheContaminationGateIsReachable(unittest.TestCase):
             self.assertIn("reference_draft_id(a.draft_id, a.cargo)", f.read())
 
 
+class TestAMockCannotOverwriteTheLiveLadder(unittest.TestCase):
+    """`ladder.json` was ONE fixed path regardless of which draft produced it, so every mock,
+    rehearsal and lab run overwrote the live war-room queue with a ladder for a draft nobody is in.
+
+    It happened TWICE in one session on 2026-08-17 while testing unrelated changes, leaving a queue
+    headed `Josh Downs, Brock Purdy, Travis Kelce` from a dead lab feed. That matters because the
+    runbook's own re-arm step tells the operator to load `ladder.json`'s `queue` into Sleeper --
+    where auto-pick drains it top-down the moment a clock is blown. The repo already records this
+    exact shape once (the 2026-08-14 ladder headed by Nico Collins); the gate added then armed the
+    CONTAMINATION check, which reads picks.json. Nothing guarded the OUTPUT path.
+    """
+
+    REAL, MOCK = "1390509994847240192", "1394479498451251200"
+
+    def setUp(self):
+        import shutil
+        import tempfile
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.default = os.path.join(self.tmp, "state", "ladder.json")
+
+    def cargo(self, draft_id=REAL):
+        d = os.path.join(self.tmp, "inbox")
+        os.makedirs(d, exist_ok=True)
+        with open(os.path.join(d, "sleeper_draft.json"), "w", encoding="utf-8") as f:
+            json.dump({"draft_id": draft_id}, f)
+        return d
+
+    def test_this_leagues_own_draft_writes_the_live_ladder(self):
+        """The control. Without it, a function that always scoped the path would pass every
+        refusal test below while making the live ladder unreachable."""
+        path, note = PL.resolve_out(None, self.REAL, self.cargo(), self.default)
+        self.assertEqual(path, self.default)
+        self.assertIsNone(note)
+
+    def test_a_mock_is_written_somewhere_else_and_SAYS_SO(self):
+        path, note = PL.resolve_out(None, self.MOCK, self.cargo(), self.default)
+        self.assertNotEqual(path, self.default)
+        self.assertIn(self.MOCK, os.path.basename(path))
+        self.assertIn("CANNOT overwrite", note)
+        # The note has to name the real draft too, or the operator cannot tell which is which.
+        self.assertIn(self.REAL, note)
+
+    def test_an_explicit_out_always_wins(self):
+        """An operator saying where to put it is not a mistake, and a guard that overrode them
+        would just get worked around."""
+        mine = os.path.join(self.tmp, "mine.json")
+        path, note = PL.resolve_out(mine, self.MOCK, self.cargo(), self.default)
+        self.assertEqual(path, mine)
+        self.assertIsNone(note)
+
+    def test_no_cargo_at_all_still_writes_the_live_ladder(self):
+        """A clean clone has no cargo. Refusing to write anywhere would be a false red, and this
+        function's job is preventing an overwrite, not gating the run."""
+        path, note = PL.resolve_out(None, self.MOCK, os.path.join(self.tmp, "nope"), self.default)
+        self.assertEqual(path, self.default)
+        self.assertIsNone(note)
+
+    def test_identity_does_not_depend_on_the_files_age(self):
+        """A league's draft id does not change when the file gets old, so identity must not read
+        mtime at all."""
+        d = self.cargo()
+        os.utime(os.path.join(d, "sleeper_draft.json"), (0, 0))     # ancient
+        self.assertEqual(PL.cargo_draft_id(d), self.REAL)
+        path, _ = PL.resolve_out(None, self.MOCK, d, self.default)
+        self.assertNotEqual(path, self.default, "an old cargo must not re-open the overwrite")
+
+    def test_the_out_guard_asks_IDENTITY_not_the_arming_id(self):
+        """🚨 THE DISTINCTION THIS WHOLE PAIR OF FUNCTIONS EXISTS FOR, guarded textually because
+        the failure is invisible at runtime here.
+
+        `reference_draft_id` decides what to ARM THE CONTAMINATION GATE with, and correctly
+        returns "" for a stale cargo -- arming from a stale id would refuse a CORRECT run if the
+        draft were re-created. `resolve_out` asks a different question: *which draft is the real
+        one*. If it reused the arming id, a stale cargo would yield "" -- falsy -- and the guard
+        would fall straight through to the live path, silently re-enabling the overwrite for
+        exactly the operator whose mule has stopped.
+
+        This cannot be positive-controlled in a tmpdir: `freshness()` deliberately declines to
+        judge any cargo outside the mule's own inbox (`run_engine.freshness`), so no temp file can
+        be made "stale". Asserting the call site is what is available, and it is the same technique
+        this file already uses for the contamination gate's own reference."""
+        with open(PL.__file__, encoding="utf-8") as f:
+            src = f.read()
+        body = src.split("def resolve_out(")[1].split("\ndef ")[0]
+        self.assertIn("cargo_draft_id(", body)
+        self.assertNotIn("reference_draft_id(", body,
+                         "resolve_out must ask identity, not the arming id -- see this docstring")
+
+
 if __name__ == "__main__":
     unittest.main()

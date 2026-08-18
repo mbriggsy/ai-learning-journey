@@ -561,6 +561,9 @@ print(" ===")
 if seq:
     last = seq[-min(6,len(seq)):]
     print("Last picks: " + " | ".join(f"{p}. {nm} {ps} (s{sl})" for p, sl, ps, nm, _ in last))
+# Bound here, not inside the branch below: the "between" block downstream reads it, and relying on
+# short-circuit evaluation to dodge a NameError is a trap one refactor deep.
+_wait_after = None
 if picks_until_me is not None:
     print(f"YOUR next pick: #{my_next} — {picks_until_me} picks away")
     # THE WAIT is the denominator of every now-or-later decision and it was never printed.
@@ -571,6 +574,7 @@ if picks_until_me is not None:
     # Printed as a SEPARATE line rather than folded into the one above, because tests pin that
     # string exactly and an advisory line is a contract with the person reading it at speed.
     _after = next((p for p in mine if p > my_next), None)
+    _wait_after = _after
     if _after:
         print(f"THE WAIT: after #{my_next} you pick again at #{_after} "
               f"— {_after - my_next - 1} opposing picks in between")
@@ -590,16 +594,38 @@ for slot in range(1, TEAMS + 1):
     comp = " ".join(f"{p}{cnt[p]}" for p in ["QB","RB","WR","TE","K","DEF"] if cnt[p])
     print(f"{sname(slot)}: [{comp or 'empty'}] needs: {', '.join(need) or 'starters full'}{tag}")
 
-# teams picking between now and my next pick
+# Teams picking between now and my next pick.
+#
+# 🚨 THIS BLOCK USED TO GO SILENT AT THE ONE MOMENT IT MATTERS MOST. The guard was
+# `picks_until_me > 0`, so the instant it became OUR clock -- `picks_until_me == 0`, the pick
+# actually being made -- it printed nothing at all. THE WAIT gave the COUNT of opposing picks
+# before our next turn and this block gave the SEATS, and they were never on screen together:
+# on the clock you got the count with no seats, off the clock you got seats for a turn you were
+# not taking yet. "Before your next pick" -- line four of the advisory -- is exactly the question
+# "who picks before I pick again, and what do they need", so the advisory's own denominator was
+# missing from the state it is composed from. Found 2026-08-17 while writing the worked examples:
+# a draft of the #30 example asserted "slots 4 and 6 pick before you" from memory; the real answer
+# is slot 2, slot 1, slot 1, slot 2, and nothing on screen could have corrected it.
+#
+# The window differs by case and the LABEL says which, because two different questions must never
+# share a sentence:
+#   off the clock -> who picks before our turn        (unchanged string; two tests pin it)
+#   on the clock  -> who picks between this pick and the next one we own
+_window, _label = None, None
 if my_next and picks_until_me and picks_until_me > 0:
-    between = [slot_of(p)[1] for p in range(next_pick_no, my_next)]
+    _window, _label = range(next_pick_no, my_next), "Between now and you"
+elif my_next and picks_until_me == 0 and _wait_after:
+    _window, _label = range(my_next + 1, _wait_after), f"Between this pick and #{_wait_after}"
+if _window is not None:
+    between = [slot_of(p)[1] for p in _window]
     posneed = Counter()
     for s in between:
         _, nd = needs(s)
         for item in nd:
             posneed[item.split("x")[0]] += 1
-    print(f"\nBetween now and you: " + ", ".join(sname(s) for s in between))
-    print("Their open needs: " + ", ".join(f"{p}({c})" for p, c in posneed.most_common()))
+    if between:
+        print(f"\n{_label}: " + ", ".join(sname(s) for s in between))
+        print("Their open needs: " + ", ".join(f"{p}({c})" for p, c in posneed.most_common()))
 
 print("\n--- TIER CLIFFS (available) ---")
 # ⚠ MEANS "TAKE ONE NOW", SO IT MUST NOT FIRE ON A TIER NOBODY WOULD TAKE NOW. Measured on a

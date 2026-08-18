@@ -1009,6 +1009,44 @@ class TestTheWaitIsPrinted(EngineCase):
         self.assertEqual(code, 0, out)
         self.assertIn("THE WAIT: #14 is your LAST pick of the draft", out)
 
+    def test_ON_THE_CLOCK_it_names_the_seats_that_pick_before_we_pick_again(self):
+        """🚨 THE BLOCK USED TO GO SILENT AT THE ONE MOMENT IT MATTERS MOST.
+
+        The guard was `picks_until_me > 0`, so the instant it became OUR clock -- `== 0`, the pick
+        actually being made -- the seat list vanished. THE WAIT gave the COUNT of opposing picks
+        and this gave the SEATS, and they were never on screen together: on the clock, a count with
+        no seats; off it, seats for a turn not being taken yet.
+
+        Line four of the advisory is literally "who picks before I pick again, and what do they
+        need", so the advisory's own denominator was missing from the state it is composed from.
+        Found while writing the runbook's worked examples: a draft asserted "slots 4 and 6 pick
+        before you" from memory, the real answer was slot 2, slot 1, slot 1, slot 2, and nothing
+        on screen could have corrected it."""
+        code, out = self.run_engine(self.kit(), self.filler(2), slot=3)
+        self.assertEqual(code, 0, out)
+        self.assertIn("YOUR next pick: #3 — 0 picks away", out)
+        # 8-team snake: after #3 comes #14, so picks 4-13 are slots 4,5,6,7,8 then 8,7,6,5,4.
+        self.assertIn("Between this pick and #14: slot 4, slot 5, slot 6, slot 7, slot 8, "
+                      "slot 8, slot 7, slot 6, slot 5, slot 4", out)
+        self.assertIn("Their open needs:", out)
+
+    def test_off_the_clock_the_original_wording_is_untouched(self):
+        """The control, and a compatibility pin. Two different questions must never share a
+        sentence -- and the off-clock string is the one two other tests already depend on."""
+        code, out = self.run_engine(self.kit(), [], slot=3)
+        self.assertIn("YOUR next pick: #3 — 2 picks away", out)
+        self.assertIn("Between now and you: slot 1, slot 2", out)
+        self.assertNotIn("Between this pick and", out)
+
+    def test_a_turn_slot_on_the_clock_prints_no_empty_between_line(self):
+        """Slot 8 owns #8 and #9 back to back, so on the clock at #8 there is NOBODY in between.
+        An empty `Between this pick and #9:` line would read as a render failure and send the
+        operator looking for names that do not exist."""
+        code, out = self.run_engine(self.kit(), self.filler(7), slot=8)
+        self.assertEqual(code, 0, out)
+        self.assertIn("THE WAIT: after #8 you pick again at #9 — 0 opposing picks in between", out)
+        self.assertNotIn("Between this pick and", out)
+
 
 class TestTheCliffBadgeOnlyFiresOnTiersInPlay(EngineCase):
     """⚠ means "take one NOW". Measured on a real advisory at pick 19 of 120, it fired on K T1,

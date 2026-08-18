@@ -482,19 +482,150 @@ Claude's hands are claude-in-chrome on Briggsy's logged-in Chrome; eyes stay on 
 - **A missed clock silently flips the team to AUTO-PICK** (avatar chip literally reads "AUTO"; the queue panel's AUTO-PICK toggle goes green). Sleeper then autopicks ALL subsequent picks instantly. After ANY timeout: kill the toggle FIRST, then resume. (Mock #2: one missed clock at 79 → autos through 82/95/98/111/114 before the flip was caught. Bounded damage — see changelog — but pure luck the auto took the ladder-top Pollard at 82.)
 - **Native browser dialogs freeze the extension completely** — every CDP command times out until a human dismisses the dialog; it looks like the bridge died. The web app throws exactly one: the START DRAFT confirm ("This action cannot be undone"). In-room actions (picking, searching) never raise native dialogs. ✅ **This no longer needs a human** (2026-08-09): `ffStartDraft({ iAmInAMock: true })` in `scripts/sleeper_draft_console.js` neutralises the confirm *before* the click and restores whatever was there in a `finally`. ⚠️ **The restore is the safety property, not a nicety** — an auto-accept hook left armed silently accepts the next destructive dialog and nothing reports it. Two guards, deliberately redundant: the explicit `iAmInAMock` flag, and a hard refusal on the real draft id (which goes stale if the draft is ever re-created, which is why the flag exists too). *This bullet said the opposite until 2026-08-09, while `TODO.md` said it was solved — neither was executable, so the disagreement could not be settled by running anything. It can now: `tests/test_sleeper_draft_console.py`, 6 mutants killed including "never restore".*
 - **Room setup:** creating/entering the room from a Claude-controlled tab in his profile works fine (same login/cookies). The room card in Mock Drafts opens the draft room in a NEW tab — use that tab's id for everything after.
-- Announcements switch to past tense — "I took X, here's why" — with the same 5-line advisory shape. Briggsy heckles; a chat veto before the click is still honored.
+- Announcements switch to past tense — "I took X, here's why" — with the same **four lines** (see *Advisory format* below), `THE CALL` becoming what was taken. *(Corrected 2026-08-17: this said "the same 5-line advisory shape", which was the format this file replaced.)* Briggsy heckles; a chat veto before the click is still honored.
 
-## Advisory format (keep it to ~5 lines, he's mid-draft)
+## Advisory format — THE FOUR LINES
+
+> **This is the product.** Briggsy drafts; the terminal drives; the board on monitor 2 is a display
+> he reads. The engine already emits a rich state — **what he actually consumes is these four
+> lines.** Agreed with Briggsy 2026-08-17, and explicitly *"we can play with it and tweak it if
+> needed"*: his eye is the oracle here, not a test. *(This section REPLACED an older ~5-line format
+> on 2026-08-17. There is one format. If you find a second one anywhere, this is the live one.)*
+
 ```
-Pick 27 in: Hunter took D.Henry — his 3rd RB. RB run live (5 of last 8).
-⚠ RB Tier 4 cliff: 2 left, and slot 5 needs one before you.
-THE CALL: **Kyren Williams** — cliff position; WR T4 is fat and flows back to you.
-Fallbacks: J.Love (same logic, more variance) · Egbuka if both RBs vanish.
+THE CALL: **<Name>** — <one clause of why>
+Passed on: **<Name>** — <what would flip it>
+Risk: <what it costs if I'm wrong, in roster terms>
+Before #<next> (<n> picks): <what to watch>
 ```
-- Bold THE CALL. One line of reasoning. Max two fallbacks *when he's on the clock*.
-- **Pre-calls sent ahead of his window carry a 3-4 name ladder per pick slot** ("if X gone → Y → Z → W"). In Mock #1 a pre-call's primary AND first fallback both vanished in the 5 picks before his turn; the ladder makes snipes cost zero round-trips. In executor mode the ladder IS the execution plan: on the clock, fire the top surviving name with no recomputation.
-- Briggsy holds the veto, always. If he overrides, adapt without sulking; recompute from his actual roster.
-- Trash-talk garnish welcome (he's competing against his son, Hunter — likely `briggsy007`, the commissioner).
+
+**Why this shape and not the old one:** the old format opened with *"Pick 27 in: Hunter took
+D.Henry"* — state Briggsy is already looking at on two other monitors. Under a clock the answer
+goes first and the context goes last. He reads left-to-right and can stop after line 1.
+
+### What each line owes him
+
+| Line | Must be | Must never be |
+|---|---|---|
+| **THE CALL** | ONE name, bolded, first thing on the line. One clause of why, taken from the board's own `↳` note or a measured fact. | A shortlist. Two names here is not a call. |
+| **Passed on** | The real runner-up **plus the trigger that flips it** — the condition, not a hedge. This is the line that lets him override *intelligently* instead of just overruling. | "…but either is fine." If they were equal, say so and pick on the tie-breaker. |
+| **Risk** | The concrete cost **in roster terms** — what he is short of, and when. | "He might underperform." Every player might. |
+| **Before #N** | Forward-looking only: the gap from `THE WAIT`, who picks between (`Between now and you` + `Their open needs`), and the one cliff that could move. | A recap of what just happened. |
+
+### 🚨 Banned in all four lines — each of these is a measured landmine, not a style note
+
+- **Never quote a margin as if it were precise.** Quote the *ordering*. `RB1` sd is **19.3**, and
+  insight 023 measures this curve **2.55× overstated at RB1** — the board ships RB1 at 268.4 against
+  a realised **105.2**. "He's the better player" survives that. "He's worth 40 more points" does not.
+- **Never put a percentage on availability.** `availability.py` was built, measured against 7 real
+  drafts, and **refused**: it is negative at *every* gap in the only 8-team room we hold
+  (insight 027). `draft-kit/availability_calibration.json` reads SILENT at every gap for all 8 seats.
+- **Never say "take him now, he'll never last."** That is 12-team advice. In an 8-team room the best
+  available player comes back to us **47%** of the time against **21%** in a 12-team room — 128 picks
+  over a ~206-deep list leaves ~50 of the top 180 undrafted. **Ours is far more forgiving of
+  waiting.** *(Direction only, one draft — never a number on the board.)*
+- **Never present the no-early-QB rule as proof.** It is **four independent lines agreeing** (board
+  arithmetic · 11 seasons of realised QB value ≈ 0 · the room's 2023 head-to-head · the QB-EARLY
+  backtest arm at −49.8 ± 25.6). **None clears 2σ.** Say "four lines agree", never "it's proven".
+- **Never invent a player fact.** The `↳` note under each of the top 5 in BEST AVAILABLE is the
+  sourced material. If the note does not say it, do not say it. *(This rule has already earned its
+  place: a draft of the worked example below called Breece Hall an injury risk. His note reads
+  "Freshly extended and healthy" — the risk is a **committee**.)*
+
+### Worked examples — real engine output, real stops
+
+> ⚠️ **All three are real `run_engine.py` output against `tests/fixtures/lab_feed_120.json`, seat 3,
+> re-read line by line on 2026-08-17.** An earlier draft of the #30 example asserted "slots 4 and 6
+> pick before you" from memory — the real answer is **slot 2, slot 1, slot 1, slot 2**. That is the
+> banned-list's last rule catching its own author, and it is also why the engine now prints the
+> between-seats line *while you are on the clock*, which it never used to.
+
+<details><summary><b>#3 — round 1, on the clock, and the wait is the longest of the night</b></summary>
+
+State: Chase and Bijan gone. `RB T1: 1 left — Jahmyr Gibbs ⚠ CLIFF` · `WR T2: 2 left ⚠` ·
+`WR T3: 2 left ⚠` · `THE WAIT: after #3 you pick again at #14 — 10 opposing picks in between`.
+
+```
+THE CALL: **Jahmyr Gibbs** — last man in RB T1, and that tier empties with him.
+Passed on: **Puka Nacua** — flip only if you'd rather carry a suspension question than a contract
+  one; his note has league discipline still under review. Four men sit across WR T2/T3, one across RB T1.
+Risk: Gibbs' note is a camp hold-in, not practising as of 8/4. If it runs long you spent 1.03 on a
+  man who debuts in week 4 — and you still owe two WRs and a TE.
+Before #14 (10 picks): the longest gap you'll have all night — slots 4-8, then 8-4 back. Both
+  ⚠ WR tiers are two deep, so the realistic question at #14 is which of those four is left, not
+  whether one is.
+```
+**Why it reads this way:** one name, one clause. "Passed on" carries a *trigger* — and an honest
+one, because Nacua's note has its own risk rather than being the safe alternative. The risk line is
+roster-shaped ("you still owe two WRs and a TE"), not "he might bust". Only the last line looks
+forward, and it names the gap and the seats rather than predicting who survives.
+</details>
+
+<details><summary><b>#30 — round 4, an RB run is live, and two teams pick twice before you</b></summary>
+
+State: `RUN WATCH (last 8): RB:5` · our roster `[RB2 WR1]` · `TE T3: 3 left ⚠ CLIFF` ·
+`THE WAIT: after #30 you pick again at #35 — 4 opposing picks in between` ·
+`Between this pick and #35: slot 2, slot 1, slot 1, slot 2` · `Their open needs: ... TE(4) ...` ·
+VBD LEANS is six RBs deep.
+
+```
+THE CALL: **Breece Hall** — six straight VBD leans are RBs and five of the last eight picks were
+  RBs; RB T5 is down to four while WR T5/T6 still hold 21 between them.
+Passed on: **DeVonta Smith** — higher board rank, and A.J. Brown's exit makes him the Philly alpha.
+  Flip if you'd rather bank the certain target share: Smith's TIER is 21 deep and Hall's is four.
+Risk: Hall's note is committee talk, not health — he's freshly extended. If the backfield splits you
+  spent round 4 on an RB3 and still owe two receivers.
+Before #35 (4 picks): only slots 1 and 2 pick, twice each — and BOTH still need a TE while TE T3 is
+  down to three with Loveland the only one in your top 12. This room usually waits on TE (15 of 18
+  drafter-views past R5); these two are the exception that would break it.
+```
+**The judgement:** *rounds 3-5, same-tier candidates → lean RB* — and the live run makes it more
+than a tie-breaker. Note what is NOT said: no point margins, no "Hall won't last". Note also what
+the corrected seat list bought: "two teams, both needing TE, picking four times" is a far sharper
+read than the wrong "slots 4 and 6 need WR" ever was.
+</details>
+
+<details><summary><b>#94 — round 12, on the clock, and the two seats behind you need exactly what you need</b></summary>
+
+State: our roster `[QB1 RB5 WR4 TE1]` — `needs: DEFx1, Kx1` and nothing else, with picks **#94,
+#99, #110, #115** left. `Between this pick and #99: slot 2, slot 1, slot 1, slot 2` ·
+**`Their open needs: DEF(4), K(4)`** · `DEF T1: 3 left` (Rams gone) · `K T1: 3 left`.
+
+```
+THE CALL: **Michael Pittman Jr.** — best skill left on the board and the last pick you can spend
+  freely; traded to Pittsburgh as Rodgers' possession guy.
+Passed on: **Justin Herbert** — ranks higher, but you have your QB. Only worth it as a stream, and
+  this roster has no bench room to stream from.
+Risk: none at this pick — the risk is the ROUND. You owe K and DEF and hold four picks. Spend three
+  on skill and the last two are forced onto whatever is left.
+Before #99 (4 picks): 🚨 slots 1 and 2 pick twice each and BOTH need DEF and K — the same two slots
+  you need. DEF T1 is already down to three (HOU/DEN/SEA). Nobody has taken a kicker and 18 of 18
+  measured drafts wait past round 10, so K is safe; **DEF is the one that can actually be taken from
+  you.** Take the top DEF at #99, kicker at #110 or #115.
+```
+**What changes when you're NOT on the clock:** a pre-call carries a **3-4 name ladder** per slot
+("if X gone → Y → Z"), because in Mock #1 a pre-call's primary *and* first fallback both vanished in
+the five picks before his turn. The ladder is `precompute_ladder.py`'s own output — on the clock you
+do a lookup, not a deliberation.
+
+⚠️ **This is the example that shows why line 4 exists.** `Their open needs: DEF(4), K(4)` is the
+whole pick. Without it the obvious call is "grab a kicker, you need one" — and it would be wrong,
+because kickers are the one thing nobody is competing for and defenses are.
+</details>
+
+### Standing rules that outlive the format
+
+- **Bold THE CALL.** It is the one thing he must be able to find without reading.
+- **Pre-calls carry a 3-4 name ladder per pick slot.** In executor mode the ladder IS the execution
+  plan: fire the top surviving name with no recomputation.
+- **Announcements after the fact switch to past tense** — "I took X, here's why" — same four lines,
+  `THE CALL` becoming what was taken.
+- **Briggsy holds the veto, always.** If he overrides, adapt without sulking and recompute from his
+  actual roster. A chat veto before the click is honoured even in executor mode.
+- **Trash-talk garnish welcome.** He is drafting against his son Hunter — who is **`briggsy007`**,
+  the commissioner, **roster_id 1**, and **not** Briggsy. *(Briggsy is `PoppaBriggsy`,
+  `1390750540631150592`, roster_id 3. His own email is briggsy007@gmail.com, which is exactly why
+  this trap keeps getting sprung — see `CLAUDE.md`.)*
 
 ## Standing doctrine (from the strategy pillars — enforce these)
 - Rounds 1-4: RB/WR (or elite TE). Allen/Lamar only as a falling steal — and a ~6-spot fall is NOT a steal in an 8-teamer (passed on it in Mock #1 at 16 and Mock #2 at 31, correctly both times). VBD fair price on Allen ≈ pick 17-24, so "steal" means past that.

@@ -350,6 +350,48 @@ def stage_cargo(tmp, cargo_dir=CARGO):
     return staged
 
 
+def cargo_draft_id(cargo_dir=CARGO):
+    """This league's draft id as the cargo states it, with no freshness judgement. Identity only.
+
+    Deliberately NOT `reference_draft_id`: that one decides what to ARM the contamination gate
+    with and correctly withholds a stale id, returning "". Here the question is a different one --
+    *which draft is the real one* -- and for that a day-old cargo is a perfectly good answer,
+    because the league's draft id does not change when the file gets old. Reusing the armed id
+    would make a stale cargo silently re-enable the very overwrite this exists to prevent.
+    """
+    try:
+        with open(os.path.join(cargo_dir, "sleeper_draft.json"), encoding="utf-8") as f:
+            return str((json.load(f) or {}).get("draft_id") or "")
+    except (OSError, ValueError):
+        return ""
+
+
+def resolve_out(given, draft_id, cargo_dir=CARGO, default_out=DEFAULT_OUT):
+    """Where the ladder is written. Returns (path, note-or-None).
+
+    🚨 WHY THIS IS NOT JUST `--out or DEFAULT_OUT`. `ladder.json` was ONE fixed path regardless of
+    which draft produced it, so every mock, rehearsal and lab run overwrote the live war-room
+    ladder with a queue for a draft nobody is in. That is not hypothetical: it happened TWICE in
+    one session on 2026-08-17 while testing unrelated changes, leaving a queue headed `Josh Downs,
+    Brock Purdy, Travis Kelce` from a dead lab feed -- and the runbook's own re-arm step tells the
+    operator to load `ladder.json`'s `queue` into Sleeper, where auto-pick drains it top-down on a
+    blown clock. The repo already records this exact shape once (the 2026-08-14 poisoned ladder
+    headed by Nico Collins); the gate added then armed the CONTAMINATION check, which reads
+    picks.json. Nothing guarded the OUTPUT path.
+
+    An explicit `--out` always wins -- the operator saying where to put it is not a mistake.
+    """
+    if given:
+        return given, None
+    real = cargo_draft_id(cargo_dir)
+    if real and draft_id and str(draft_id) != real:
+        scoped = os.path.join(os.path.dirname(default_out), f"ladder.{draft_id}.json")
+        return scoped, (f"[held back] this ladder was computed for draft {draft_id}, but this "
+                        f"league's draft is {real} -- writing to {os.path.basename(scoped)} so it "
+                        f"CANNOT overwrite the live queue. Pass --out to override.")
+    return default_out, None
+
+
 def reference_draft_id(given, cargo_dir=CARGO):
     """The id the engine's contamination gate is armed with, and how we know it. NEVER THE FEED.
 
@@ -593,7 +635,10 @@ def main(argv=None):
     # haul. A test that reads the live inbox is non-deterministic today and would start failing on
     # draft morning the moment `draft_order` populates (review residue 1).
     ap.add_argument("--cargo", default=CARGO, help="mule cargo dir to stage for the seat oracle")
-    ap.add_argument("--out", default=DEFAULT_OUT)
+    ap.add_argument("--out", default=None,
+                    help="where to write the ladder. Defaults to newsletter/data/state/ladder.json "
+                         "for THIS league's draft, and to a draft-scoped filename for any other -- "
+                         "see cargo_draft_id()")
     ap.add_argument("--backtest", action="store_true",
                     help="score the market projection, its null model and a floor control")
     a = ap.parse_args(argv)
@@ -729,11 +774,14 @@ def main(argv=None):
         mark = "  [projection expects him gone]" if n in expect_gone else ""
         print(f"   {i}. {n}{mark}")
 
-    out_dir = os.path.dirname(os.path.abspath(a.out))
+    out_path, out_note = resolve_out(a.out, draft_id, a.cargo)
+    out_dir = os.path.dirname(os.path.abspath(out_path))
     os.makedirs(out_dir, exist_ok=True)
-    with open(a.out, "w", encoding="utf-8") as f:
+    with open(out_path, "w", encoding="utf-8") as f:
         json.dump(res, f, indent=1, ensure_ascii=False)
-    print(f"\nwrote {a.out}")
+    if out_note:
+        print(f"\n{out_note}")
+    print(f"\nwrote {out_path}")
     return 0
 
 

@@ -172,8 +172,16 @@ second trial in that room impossible.
 
 **But the better reason is that it makes your oracle trustworthy.** `picked_by` names the **seat
 owner**, not the agent, so auto-pick on your own seat stamps *your* id and looks exactly like
-success. **Auto-pick fires only on timeout** — so at `pick_timer: 0` it is *mechanically impossible*,
-which removes the one confound `/picks` alone cannot rule out.
+success. ~~Auto-pick fires only on timeout — so at `pick_timer: 0` it is mechanically impossible~~
+🚨 **HALF-FALSE, and the false half burned a whole mock on 2026-08-19.** `pick_timer: 0` disarms
+only the TIMEOUT autopick. **Mocks carry a SECOND, independent clock: `CPU Autopick`, further down
+the same Draft Settings modal, DEFAULTING TO `60Seconds`** — after 60s on a CLAIMED seat the CPU
+fires and stamps the **seat owner's id**, indistinguishable from your own fire. Mock #1 that day
+(`1395856103018881024`): picks #5 and #12 landed under our id, never fired by us, then the whole
+120-pick draft completed CPU-vs-CPU while the settings modal was being fought. **Set BOTH to
+NoLimit before starting** — only then is `picked_by` trustworthy. The API cannot verify the second
+clock: `settings.cpu_autopick` is `1` either way and no delay field is public — the UI selection is
+the only readable receipt, and the room HOLDING on your first pick is the only proof.
 
 Path (the in-room ⚙ is **not** in the a11y tree, and the `2 Min Per Pick` label owns **no handler** —
 it is inert text; an older runbook line claiming it is clickable was wrong):
@@ -317,6 +325,27 @@ Verify the paste landed the *current* logic — the install banner alone does no
 ---
 
 ## Landmines
+
+- 🚨 **THE DRAFT SETTINGS MODAL, measured 2026-08-19 (all four cost real time):**
+  (a) **`CPU Autopick` is below the fold** — the modal scrolls, and until you scroll, its section
+  is not merely off-screen, it is **absent from the DOM**, so a full-page text hunt honestly
+  reports it does not exist. Scroll the modal's scroller to the bottom first.
+  (b) **Option labels concatenate their sublabels**: the node's textContent is `NoLimit`,
+  `2Minutes`, `60Seconds` — an exact-match on `'No Limit'` finds nothing and reads like a missing
+  feature.
+  (c) **Opening Draft Settings twice STACKS two whole modals** — two UPDATE buttons at the
+  IDENTICAL rect. An exact-text query refuses on the duplicate (correctly); resolve with
+  `document.elementFromPoint(...)` to click whichever is really on top, and prefer never reopening:
+  set EVERYTHING in one visit, one UPDATE.
+  (d) **An open room menu adds a second `Start Draft`** — `ffStartDraft` refuses on the pair.
+  Close the menu (underlay/Escape) or click `div.start-draft-text` directly after verifying
+  `div.start-draft-button` owns `onClick`.
+- 🚨 **Sleeper's DISPLAY names differ from the board's names, and the browser search only speaks
+  display.** Measured: board `Kenneth Gainwell` → room `Kenny Gainwell`; `ffDraft("Kenneth …")`
+  returned `no exact match` with an EMPTY grid, which reads like a virtualisation blip. When an
+  exact fire misses a player the engine swears is available, **probe with a partial search (last
+  name) and read what the grid actually calls him** before diagnosing anything else. The data-side
+  join is immune (frozen sleeperIds); only the search box is exposed.
 
 - **`(async () => {…})()` returns a promise the browser tool serialises as `{}`.** Three results were
   lost that way, one from a call that had actually run. **Use top-level `await`** and end with a

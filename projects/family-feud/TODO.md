@@ -315,6 +315,20 @@ elite-K trio the runbook names. Only `Pineiro 2→3` (r168 t3) and `McPherson 2�
 
 ### ▶ CLAUDE CAN TAKE THESE UNATTENDED — ranked by cost if it happens on draft night
 
+🆕 **FOUND BY THE 2026-08-19 EXECUTOR MOCK (#2, `1395858325018537984`), not yet done — two engine
+candidates, both needing source-reads before prescribing (insight 028):**
+1. **The ladder said nothing at exactly-N-picks-for-N-mandated-slots.** At pick #85: five picks
+   left, five open mandated slots (RB×2/TE/K/DEF), queue top = a SECOND QB — taking it would have
+   made a zero-scoring starting slot mathematically certain, and `mandatory_squeeze` stayed
+   SILENT with K and DEF both still open. Read its trigger in `precompute_ladder.py` first: it may
+   key on a tighter picks-remaining window by design. Candidate: an ENDGAME line when
+   `picks_remaining == open_mandated_slots` — every pick must fill one, say so above the queue.
+2. **Queue-top needed a judgment overlay for the last five picks** — the naive queue is the
+   engine's stated contract ("Claude overlays judgment"), and it held: fired queue-top for picks
+   5-76 (11 straight), then filled TE/RB/RB/K/DEF off the tier tables. Not a defect; written down
+   so the next session doesn't re-derive WHEN the overlay starts mattering (answer: when FLEX is
+   full and mandated slots ≈ picks left).
+
 **▼ ALL SIX CLOSED 2026-08-19, plus the three parenthetical small ones** — six builders in
 parallel, one adversarial verifier each, then the full suite centrally (which caught the one
 thing the targeted runs could not: a literal `†` in a new engine COMMENT tripping

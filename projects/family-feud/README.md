@@ -11,7 +11,7 @@ Snake draft, 16 rounds, ~Aug 29. Full PPR, 6 of 8 make the playoffs.
 |---|---|
 | **A 174-player draft board** | 48 RB · 59 WR · 20 TE · 23 QB · 14 DEF · 10 K — every entry tiered, badged, and carrying empirical VORP |
 | **A live draft engine** | reads the cumulative Sleeper picks feed and prints board state, every roster's open needs, run watch, tier cliffs, best-available and VBD leans |
-| **A proven executor mode** | Claude drives Briggsy's logged-in Chrome and clicks the picks. Mock #3: 15/15 manual picks, zero clock misses, roster VORP 1225.8 |
+| **A proven executor mode** | Claude drives Briggsy's logged-in Chrome and clicks the picks. Live-proven 2026-08-15: an API-confirmed fire at pick #1, then seven picks on a live 120s clock, worst case 61s, zero missed. Never yet run on the real league draft |
 | **An hourly data mule** | a Windows scheduled task hauling 7 Sleeper endpoints + 5 fantasy RSS feeds + the expert consensus and the market ADP pool to disk — **14 sources, 12 of them landing in `newsletter/data/inbox/`** — so nothing depends on a network call at draft time. It **validates what it caught** — status, content-type, that it parses, that a feed has items — and **never overwrites good cargo with bad**: a failed source keeps the last payload and records how old it now is |
 | **A draft-state watcher** | the mule's first consumer. Hourly, it notices the moment `start_time` stops being null — or moves — and writes it down, because the date is a handshake that can shift **earlier**. It also refuses to go quiet: stale cargo, a lost baseline, a moved seat, or a re-created draft each raise their own alert |
 
@@ -240,13 +240,33 @@ the draft, exit 0), the board polling a live feed in a browser, curl to Sleeper,
 **14 sources, 0 failed, and this time the "ok" means something** *(12 on 2026-08-08; `sleeper_traded`
 and `sleeper_rosters` were added 2026-08-17. **12 of the 14 land in the inbox**; the other two are
 the draft-kit fetchers writing to `draft-kit/cache/`)*: every payload was parsed and
-counted, not weighed. The wire carries **5 working feeds and 145 items** (yahoo 50 · cbs 36 ·
-pft 30 · espn 24 · rotowire 5). Item counts move daily; re-read `mule_status.json` rather than
+counted, not weighed. The wire carries **5 working feeds and 142 items** (yahoo 50 · cbs 36 ·
+pft 30 · espn 21 · rotowire 5). Item counts move daily; re-read `mule_status.json` rather than
 quoting these.
 
-**Proven, but not since the migration:** executor mode. Its evidence is Mock #3 on Aug 6, run
-under Cowork — 15/15 manual picks, zero clock misses. The browser-driving half has **not** been
-exercised in this environment. Treat it as unproven here until a mock says otherwise.
+**Executor mode is proven in this environment — twice, on live mocks, and the limits matter as
+much as the proof.** *(Corrected 2026-08-19 — this entry read "Proven, but not since the migration"
+and cited Mock #3 on Aug 6 under Cowork; it went stale on 2026-08-15.)* **The click actuates:**
+`ffDraft` took Ja'Marr Chase at **pick #1** of mock `1394132992183517184` on 2026-08-15 and `/picks`
+confirmed it — 0 picks before, `pick_no=1, draft_slot=1` after, fired on a No-Limit clock chosen so
+that auto-pick could not be the one who did it. **And the whole loop fits a real clock:** seven picks
+fired on a live 120-second timer in mock `1394479498451251200` from seat 5, zero clocks missed. Worst
+case used **61 of 120 seconds**; five of the seven took **24-28s** and one took 45. All **23 script
+invocations totalled 5.28 seconds** and `run_engine.py` never exceeded **0.18s** — **96-98% of every
+on-clock second was round-trip and agent latency, not computation.** Fewer round trips and shorter
+output are the only levers that exist; faster Python buys nothing. Per-pick table:
+[`insight 026`](docs/insights/026-the-loop-fits-and-the-scripts-were-never-the-cost.md).
+
+⚠️ **It has never been run on the real league draft.** Every fire above is a mock — a room of bots,
+a seat Sleeper handed us, and an unlimited supply of retries. The real draft has humans, a
+`draft_order` that is still `null`, and one attempt.
+
+🚨 **And `picked_by` cannot tell our pick from Sleeper's while a clock is running.** Pick #60 of that
+same rehearsal was deliberately left to expire. The timeout autopick took **our queue-top** (DJ Moore
+— so the queue safety net is measured, not assumed) **and stamped our user id on a pick we provably
+did not make.** Under a running clock the only trustworthy oracle is the pick COUNT and the player
+identity; `picked_by` becomes trustworthy only at `pick_timer: 0`, where auto-pick has no trigger at
+all.
 
 **The Nightly Feud publishes itself now.** Its build half had never run once; **Edition #1 went out
 2026-08-08** — `python scripts/build_newsletter.py`. Deterministic code owns every fact, the design

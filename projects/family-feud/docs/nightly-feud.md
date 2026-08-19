@@ -112,9 +112,13 @@ newsletter/
                                    theme script; it never writes to this file.
   templates/edition.html.j2     <- presentation only; every fact arrives from the builder
   feud_mule.ps1                 <- the data mule (Task Scheduler runs this hourly)
-  archive/                      <- dated back issues, one per build. The edition NUMBER is
-                                   this directory's .html count + 1 — self-healing, no
-                                   state file to lose.
+  archive/                      <- dated back issues, one per DAY (U12), named
+                                   YYYY-MM-DD-edition-N.html. A second build the same day
+                                   republishes the same N and OVERWRITES that file in place
+                                   — the day's latest build wins. N is one past the number of
+                                   DISTINCT DAYS already published, not this directory's
+                                   .html count, so a stray duplicate cannot inflate every
+                                   edition after it. Self-healing, no state file to lose.
   data/
     inbox/                      <- fresh cargo, mule writes / build reads   [gitignored]
     archive/                    <- consumed cargo by date, debug trail      [gitignored]

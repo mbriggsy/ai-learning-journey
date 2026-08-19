@@ -181,7 +181,8 @@ class TestTheDefaultsAreThePublishedInvocation(unittest.TestCase):
     def _parser_defaults(self):
         import argparse
         import re
-        src = open(os.path.join(ROOT, "scripts", "backtest_board.py"), encoding="utf-8").read()
+        with open(os.path.join(ROOT, "scripts", "backtest_board.py"), encoding="utf-8") as f:
+            src = f.read()
         years = re.search(r'add_argument\("--years",\s*default="([^"]+)"', src)
         first = re.search(r'add_argument\("--first-test",\s*type=int,\s*default=(\d+)', src)
         self.assertTrue(years and first, "the argparse defaults could not be read")
@@ -196,7 +197,8 @@ class TestTheDefaultsAreThePublishedInvocation(unittest.TestCase):
 
     def test_the_reason_is_written_down_where_it_would_be_changed(self):
         """A default that is load-bearing and unexplained is a default somebody tidies."""
-        src = open(os.path.join(ROOT, "scripts", "backtest_board.py"), encoding="utf-8").read()
+        with open(os.path.join(ROOT, "scripts", "backtest_board.py"), encoding="utf-8") as f:
+            src = f.read()
         self.assertIn("THESE DEFAULTS ARE THE PUBLISHED ONES", src)
         self.assertIn("+35.7", src, "record what the old defaults printed, or the trap is abstract")
 

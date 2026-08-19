@@ -46,7 +46,7 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
 
   ◀ HERE (2026-08-17 overnight, 17 commits) — **THE PRODUCT IS WRITTEN DOWN, AND FIVE WAYS THE
     ENGINE COULD HAND OVER A CONFIDENT WRONG NUMBER ARE CLOSED.**
-    **1042 tests · 24 test files · 23 scripts · 28 insights · 14/14 mule sources.**
+    **1042 tests · 24 test files · 23 scripts · 29 insights · 14/14 mule sources.**
     ✅ **THE FOUR LINES EXIST** — `docs/draft-day-runbook.md` *Advisory format*, replacing the old
       ~5-line one. There is ONE format now. Three worked examples, all real engine output against
       `lab_feed_120.json` at seat 3, plus a BANNED list (no margins · no availability % · no
@@ -1752,10 +1752,12 @@ touching the browser half.** `ffDraft` returned `{"clicked": true}` and drafted 
 was found and is named in 025's own header: the handler-less `div.draft-button-wrapper`. **There is
 no experiment left to run.** Read it for the lesson, not as an open question.
 
-**Twenty-eight insight docs now exist** (`001`–`028`, contiguous — verified 2026-08-18; this line
+**Twenty-nine insight docs now exist** (`001`–`029`, contiguous — verified 2026-08-18; this line
 said twenty-five). Each has a documented wrong answer that looks right. Read them before designing,
-not after debugging. ⚠️ Newest is [`028`](docs/insights/028-writing-the-output-found-what-the-tests-could-not.md)
-— writing the product's own output found what 975 green tests could not.
+not after debugging. ⚠️ Newest is [`029`](docs/insights/029-the-line-numbers-rotted-while-i-was-writing-the-doc.md)
+— **a `file:line` citation is a cache with no invalidation**, and writing a doc full of them is
+what shifts them. Cite by content. Its predecessor [`028`](docs/insights/028-writing-the-output-found-what-the-tests-could-not.md)
+is the same family: writing the product's own output found what 975 green tests could not.
 
 **Read [`021`](docs/insights/021-the-simulation-had-a-closed-form-and-was-measuring-its-own-sampler.md)
 before building ANY simulation, sweep or enumeration over futures.** The branch precomputer ran 495

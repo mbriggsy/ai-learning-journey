@@ -197,7 +197,7 @@ nothing is refreshing — under a **fresh `run_at` timestamp**, which is what ma
 | **THE DRAFT WAS REPLACED** | `DRAFT_ALERTS.md` | ✅ The real signal, and the only one that fires in the silent case. It is a *file*, not a notification. |
 | the board stays **LIVE**, greys nobody out, `merge_picks` exits 0 with **"0 new"** | everywhere | 🚨 **THE SILENT CASE. There is no error to notice.** A draft that never seems to start is this until proven otherwise. |
 | `sleeper_draft: FAIL: fetch failed -- … [kept previous cargo, N min old]` | `mule_status.json` | The mule is pinned to a draft the API no longer serves — **and it kept the old file.** |
-| **CARGO IS STALE — THIS WATCHER IS BLIND** | `DRAFT_ALERTS.md` (`watch_draft_state.py:314`) | If `sleeper_draft.json` is stale while `sleeper_users.json` is fresh, suspect a re-created draft **before** suspecting the scheduled task. |
+| **CARGO IS STALE — THIS WATCHER IS BLIND** | `DRAFT_ALERTS.md` (`watch_draft_state.py`, the cargo-age check) | If `sleeper_draft.json` is stale while `sleeper_users.json` is fresh, suspect a re-created draft **before** suspecting the scheduled task. |
 | `fetch failed: HTTP Error 404` | `merge_picks.py` | ✅ Since 2026-08-18 this says **do NOT retry** and points here. |
 | `· poll failed (HTTP 404) — showing the last good state, retrying` | the board | ⚠️ **Backs off 12→24→48→60s and retries forever.** It never says the draft is gone, and it keeps showing a plausible frozen board. |
 

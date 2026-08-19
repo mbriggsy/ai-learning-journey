@@ -892,14 +892,50 @@ def main(argv=None):
     print(f"candidates   : {res['pool_size']} by {res['pool_source']}")
 
     pj = res["projection"]
-    print()
+
     if not res["picks_away"]:
         # gap 0 means the clock is OURS right now. There is no future to project, and printing an
         # empty "assumes these 0 go first" is noise at the one moment the operator has no time to
         # read past it. Runbook Step 3's hard rule: act on the ladder, do not start a cycle.
+        print()
         print("  >> YOU ARE ON THE CLOCK NOW. No projection applies — take the top of the QUEUE")
         print("     below. Do NOT start a fetch/merge/engine cycle on your own clock.")
-    else:
+
+    # ABOVE the queue deliberately: this changes what you DO with the list underneath it, and a
+    # warning printed after the thing it qualifies is insight 016's exact defect.
+    if res.get("mandatory_squeeze"):
+        level, msg = res["mandatory_squeeze"]
+        print()
+        print("!" * 70)
+        print(f"!! {level}: THE QUEUE CANNOT FILL A MANDATED SLOT.")
+        print(f"!! {msg}")
+        print("!! This board's best K is rank 158 and best DEF 151; an 8x16 draft is 128 picks, so")
+        print("!! the queue below contains NO kicker and NO defense and structurally never can.")
+        print("!! Miss one clock and Sleeper auto-picks the REST of the draft, draining this queue")
+        print("!! top-down over the empty slot -- which then scores zero every week.")
+        print("!! DO ONE OF: draft the missing slot(s) yourself now, or CLEAR THE QUEUE and let")
+        print("!! Sleeper's own need-aware board fill them (it took Dicker + the Patriots on")
+        print("!! schedule in Mock #2). Do NOT re-sort the queue by need -- insight 024.")
+        print("!" * 70)
+
+    # THE QUEUE PRINTS FIRST, CONTEXT UNDER IT -- Briggsy ratified the flip 2026-08-19 ("flip
+    # it!") after the question was raised three times. The queue is the ACTION: it is the list
+    # ffQueueSync loads and the list a blown clock drains, and a reader under a clock takes the
+    # top of the output, not the bottom. Two things still print ABOVE it on purpose: the on-clock
+    # banner (at gap 0 it frames what the queue is for, at the one moment nobody reads past line
+    # one) and the mandatory-squeeze warning (insight 016, its own comment above). The runbook's
+    # `grep -A4 "QUEUE THIS ORDER"` is position-independent and does not care where the block sits.
+    print()
+    print("  QUEUE THIS ORDER (auto-pick drains it top-down, so a blown clock takes OUR man).")
+    print("  A name the projection expects gone is still worth queueing — auto-pick skips the")
+    print("  dead and takes your top SURVIVOR — so they are marked, not reordered.")
+    expect_gone = set(res["queue_expected_gone"])
+    for i, n in enumerate(res["queue"][:8], 1):
+        mark = "  [projection expects him gone]" if n in expect_gone else ""
+        print(f"   {i}. {n}{mark}")
+
+    if res["picks_away"]:
+        print()
         print("  THE MARKET PROJECTION — ONE scenario, not a forecast. --backtest scores it.")
         if pj["short_by"]:
             print(f"  ⚠ models only {len(pj['assumes_gone'])} of the {res['picks_away']} picks "
@@ -927,32 +963,6 @@ def main(argv=None):
             gone = bool(pcliffs) and pcliffs.get(tier, 0) == 0
             flag = "  <- EMPTY under the market projection" if gone else ""
             print(f"   {tier:<8} {left} left — empties only if all {left} go before your turn{flag}")
-
-    # ABOVE the queue deliberately: this changes what you DO with the list underneath it, and a
-    # warning printed after the thing it qualifies is insight 016's exact defect.
-    if res.get("mandatory_squeeze"):
-        level, msg = res["mandatory_squeeze"]
-        print()
-        print("!" * 70)
-        print(f"!! {level}: THE QUEUE CANNOT FILL A MANDATED SLOT.")
-        print(f"!! {msg}")
-        print("!! This board's best K is rank 158 and best DEF 151; an 8x16 draft is 128 picks, so")
-        print("!! the queue below contains NO kicker and NO defense and structurally never can.")
-        print("!! Miss one clock and Sleeper auto-picks the REST of the draft, draining this queue")
-        print("!! top-down over the empty slot -- which then scores zero every week.")
-        print("!! DO ONE OF: draft the missing slot(s) yourself now, or CLEAR THE QUEUE and let")
-        print("!! Sleeper's own need-aware board fill them (it took Dicker + the Patriots on")
-        print("!! schedule in Mock #2). Do NOT re-sort the queue by need -- insight 024.")
-        print("!" * 70)
-
-    print()
-    print("  QUEUE THIS ORDER (auto-pick drains it top-down, so a blown clock takes OUR man).")
-    print("  A name the projection expects gone is still worth queueing — auto-pick skips the")
-    print("  dead and takes your top SURVIVOR — so they are marked, not reordered.")
-    expect_gone = set(res["queue_expected_gone"])
-    for i, n in enumerate(res["queue"][:8], 1):
-        mark = "  [projection expects him gone]" if n in expect_gone else ""
-        print(f"   {i}. {n}{mark}")
 
     out_path, out_note = resolve_out(a.out, draft_id, cargo_dir, draft_file=draft_file)
     out_dir = os.path.dirname(os.path.abspath(out_path))

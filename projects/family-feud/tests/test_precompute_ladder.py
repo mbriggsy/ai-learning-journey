@@ -643,6 +643,20 @@ class TestTheQueueCannotFillAMandatedSlot(unittest.TestCase):
                         src.index("QUEUE THIS ORDER (auto-pick drains it"),
                         "the squeeze warning must be emitted before the queue")
 
+    def test_the_queue_LEADS_and_the_context_follows(self):
+        """Briggsy ratified the flip 2026-08-19 ("flip it!"): the queue is the ACTION, the
+        projection and the cliffs are context, and a reader under a clock takes the top of the
+        output. Only the on-clock banner and the squeeze warning may print above it (the test
+        above pins the squeeze half). MUTANT: move the projection back above the queue and this
+        fails."""
+        with open(os.path.join(ROOT, "scripts", "precompute_ladder.py"), encoding="utf-8") as f:
+            src = f.read()
+        q = src.index("QUEUE THIS ORDER (auto-pick drains it")
+        self.assertLess(q, src.index("THE MARKET PROJECTION — ONE scenario"),
+                        "the projection must print BELOW the queue, not above it")
+        self.assertLess(q, src.index("TIER CLIFFS — the CONDITION"),
+                        "the cliffs must print BELOW the queue, not above it")
+
     def test_the_remedy_is_the_NULL_MODEL_not_a_cleverer_queue(self):
         """Sorting the queue by roster need is one step from sorting it by vorp, which insight 024
         recorded finishing 6 RB / 1 WR / 0 K. The floor control wins: an EMPTY queue lets Sleeper's

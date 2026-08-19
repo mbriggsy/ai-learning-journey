@@ -289,8 +289,12 @@ elite-K trio the runbook names. Only `Pineiro 2→3` (r168 t3) and `McPherson 2�
    The runbook asserts *"never eat more than ~30s of his 120"* and **that number has never been
    measured.** Claude can stand the room up and pre-measure chain-exit → four-lines-delivered; the
    read and the click need his hands.
-3. **Should QUEUE lead the precomputer's output?** One word. Raised three times, never answered.
-   Recommendation stands: flip it.
+3. ✅ **RESOLVED 2026-08-19 — BRIGGSY: "flip it baby!"** QUEUE THIS ORDER now prints FIRST,
+   directly under the gate lines; the projection and cliffs follow as context. The on-clock banner
+   and the mandatory-squeeze warning still print ABOVE it on purpose (insight 016), both their
+   "queue below" texts stay literally true, and the runbook's `grep -A4 "QUEUE THIS ORDER"` never
+   cared about position. Pinned by `test_the_queue_LEADS_and_the_context_follows` — mutant
+   (projection moved back above) planted, killed as an assertion FAILURE, restored green.
 4. ✅ **RATIFIED BY BRIGGSY 2026-08-19: *"we should include all scoring rules into our draft
    board."*** The probe ran the same day (writes nothing): ΔVORP spans −0.8 to +7.8, biggest movers
    QB6 +5.9 / RB2 +6.8 / WR2 +7.8 — small and near-uniform, no rank flip in sight. **EXECUTE AT THE

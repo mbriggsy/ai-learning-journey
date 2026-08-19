@@ -117,8 +117,20 @@ BOARD = _DOC["players"]
 # three places and any one of them silently rendering nothing. U6 stamps meta.badges[code].glyph
 # into the source and every surface reads it. A code with no glyph prints nothing, exactly as the
 # old .get(b, "") did, so an unknown badge still cannot crash the advisory on a 120-second clock.
-BADGE_GLYPH = {code: (spec or {}).get("glyph", "")
+# `isinstance` rather than `spec or {}`: a badge table shaped {"I": "Injury watch"} -- a plausible
+# hand-edit of the board -- makes `.get` an AttributeError at IMPORT time, i.e. before a single
+# line of the advisory prints, on the one file the operator opens under a clock. Everything else
+# in this file degrades loudly instead of dying; the badge table gets the same treatment.
+_BADGE_SPEC = {str(code): (spec if isinstance(spec, dict) else {})
                for code, spec in ((_DOC.get("meta") or {}).get("badges") or {}).items()}
+BADGE_GLYPH = {code: spec.get("glyph", "") for code, spec in _BADGE_SPEC.items()}
+# The LABEL for each glyph, from the same source and for the same reason: the advisory printed
+# glyph marks against player names with no key anywhere on screen, so the one surface that is read
+# under a 120-second clock was the only one that never said what its own marks meant (the HTML and
+# the PDF both carry a key). `label` falls back to the badge CODE rather than to "" -- an unlabelled
+# glyph must still be listed, because a mark with no entry in the key reads as a mark that means
+# nothing rather than one whose name is missing.
+BADGE_LABEL = {code: (spec.get("label") or code) for code, spec in _BADGE_SPEC.items()}
 # NO PICKS YET IS THE NORMAL PRE-DRAFT STATE, NOT AN ERROR -- and this used to raise a bare
 # FileNotFoundError traceback, which reads as a broken tool at the one moment the operator has
 # least patience for one. `precompute_ladder.py` already handled the identical state gracefully, so
@@ -642,7 +654,18 @@ if _window is not None:
             posneed[item.split("x")[0]] += 1
     if between:
         print(f"\n{_label}: " + ", ".join(sname(s) for s in between))
-        print("Their open needs: " + ", ".join(f"{p}({c})" for p, c in posneed.most_common()))
+        # 🚨 SAY WHAT THE NUMBER COUNTS, IN THE SAME LINE. `posneed` is incremented ONCE PER PICK
+        # in the window whose seat still has that hole -- not once per open slot (a seat needing
+        # RBx2 adds 1, not 2) and not once per TEAM (a seat that picks twice before us adds 2).
+        # Unlabelled, it reads as teams: at pick 3 of an 8-team draft the window is 10 picks and
+        # the line printed `DEF(10)`, a count larger than the league, which is the tell that it was
+        # never teams. The gloss is appended to THIS line rather than printed under it because the
+        # runbook's line-four grep (`Their open needs`) would drop a separate line, and the whole
+        # point is that the unit travels with the number. The `Their open needs: ` prefix is
+        # unchanged -- three worked examples in the runbook quote it verbatim.
+        print("Their open needs: " + ", ".join(f"{p}({c})" for p, c in posneed.most_common())
+              + f" — (n) = how many of those {len(between)} picks come from a team still "
+                f"missing it")
 
 print("\n--- TIER CLIFFS (available) ---")
 # ⚠ MEANS "TAKE ONE NOW", SO IT MUST NOT FIRE ON A TIER NOBODY WOULD TAKE NOW. Measured on a
@@ -665,8 +688,14 @@ _in_play = {p["r"] for p in best_avail}
 for pos, t, left, rows in cliffs:                 # precomputed above; shown_ranks derives from it
     flag = ""
     if left <= 3:
+        # "the top {BEST_N}" named no list: the reader is looking at a POSITION's tier, so the
+        # nearest reading is "the top 12 of this position", which is not what _in_play means --
+        # it is the top {BEST_N} of everything still available, the block printed at the bottom.
+        # The two spaces before `·` are LOAD-BEARING (precompute_ladder.parse_cliffs cuts the tail
+        # on `\s{2,}[⚠·]` before splitting names on commas, and this text contains a comma), and
+        # the wording must not carry the literal section heading -- see the rule just above.
         flag = ("  ⚠ CLIFF" if any(x["r"] in _in_play for x in rows)
-                else f"  · thin, none in the top {BEST_N} yet")
+                else f"  · thin, none in the top {BEST_N} available on our board yet")
     print(f"{pos} T{t}: {left} left — {', '.join(x['name'] for x in rows)}{flag}")
 
 print("\n--- BEST AVAILABLE (my board) ---")
@@ -689,6 +718,30 @@ for _i, p in enumerate(best_avail):
     # comment above the cliff loop already records.
     if _i < NOTE_N and p.get("note"):
         print(f"      ↳ {p['note']}")
+
+# THE KEY TO THE GLYPHS PRINTED ABOVE, and every part of that sentence is deliberate.
+#
+# BELOW THE ROWS, NEVER ABOVE THEM. precompute_ladder._section() collects every line under
+# `--- BEST AVAILABLE` until the next `---` rule and hands them to a reader that takes the FIRST
+# TOKEN of each as a board rank. A key line printed above the rows would still be read -- placement
+# is not what saves it -- so the line ALSO leads with a fixed non-digit word, which is what actually
+# makes it unparseable as a row (`BADGE`.isdigit() is False no matter what any label says; four
+# notes on the real board already begin with a digit, which is why the `↳` marker exists).
+# Below is still the right place for a different reason: a key read before the marks it explains is
+# a legend for nothing, and the operator's eye lands on rank 1, not on the footer.
+#
+# ONLY THE MARKS ACTUALLY ON SCREEN. The board defines eight badges; the printed rows wear 2, 3
+# and 5 of them at picks 0, 20 and 93 of the lab feed (measured, not guessed). Keying all eight
+# would gloss glyphs nobody can see and roughly double the line on a 120-second clock -- insight
+# 026's lever is SHORTER output. Nothing else in the advisory prints a badge, so `best_avail` is
+# the complete set of what needs a key.
+# Labels only, never `desc`: eight descriptions run to ~40 characters each, and a key that wraps is
+# a key nobody reads. No badges on screen prints NOTHING -- an empty `BADGE KEY:` reads as a render
+# failure, the same defect the note marker avoids by staying silent on a row with no note.
+_seen_badges = [c for c, g in BADGE_GLYPH.items()
+                if g and any(c in (p.get("badges") or ()) for p in best_avail)]
+if _seen_badges:
+    print("BADGE KEY: " + " · ".join(f"{BADGE_GLYPH[c]} {BADGE_LABEL[c]}" for c in _seen_badges))
 
 # VBD steals: available where VBD rank beats board rank by 8+ (skill positions)
 if any("vorp" in p for p in avail):

@@ -38,6 +38,15 @@ def board(players):
             "dst": [], "strategy": {}}
 
 
+def board_with_badges(players, badges):
+    """The same board with a real `meta.badges` table stamped in -- the shape build_board.py
+    writes, each code carrying its own `glyph` and `label`. `board()` ships that table EMPTY, which
+    is what every other fixture here wants: no glyphs on the rows, so no key under them."""
+    b = board(players)
+    b["meta"]["badges"] = badges
+    return b
+
+
 class RawPicks:
     """Write picks.json VERBATIM rather than as JSON -- the only way to test a corrupt file."""
 
@@ -1054,6 +1063,35 @@ class TestTheWaitIsPrinted(EngineCase):
         self.assertIn("Between now and you: slot 1, slot 2", out)
         self.assertNotIn("Between this pick and", out)
 
+    def test_the_open_needs_line_says_what_its_numbers_COUNT(self):
+        """`Their open needs: DEF(10)` -- in an EIGHT-team league. The number carried no unit, and
+        the only reading a human has for "their needs" is TEAMS, so a count larger than the league
+        read as a broken line (or worse, as ten opponents chasing a defense).
+
+        It is neither teams nor open slots. `posneed` is incremented once per PICK in the window
+        whose seat still has that hole: a seat picking twice in the window adds 2, and a seat
+        needing RBx2 adds 1, not 2. `RB(10)` alongside `DEF(10)` below, with every one of those
+        seats empty, is the proof of the second half -- summed open SLOTS would print RB(20)
+        against DEF(10), and that is the label this line does NOT get to claim."""
+        code, out = self.run_engine(self.kit(), self.filler(2), slot=3)
+        self.assertEqual(code, 0, out)
+        hits = [l for l in out.splitlines() if l.startswith("Their open needs:")]
+        self.assertEqual(len(hits), 1, out)
+        line = hits[0]
+        # the window is picks #4-#13: slots 4,5,6,7,8,8,7,6,5,4 -- TEN picks across FIVE teams
+        self.assertIn("DEF(10)", line, "precondition: the count that reads as nonsense")
+        self.assertIn("RB(10)", line, "a seat needing RBx2 still adds ONE -- these are not slots")
+        self.assertIn("how many of those 10 picks come from a team still missing it", line)
+
+    def test_the_open_needs_LABEL_itself_is_unchanged(self):
+        """`Their open needs: ` is quoted verbatim by three worked examples in the runbook and is
+        one of five alternatives in its line-four grep. The UNIT was missing, not the label -- so
+        the gloss rides on the same line rather than replacing the prefix or living under it,
+        where that grep would drop it."""
+        code, out = self.run_engine(self.kit(), [], slot=3)
+        self.assertIn("Their open needs: ", out)
+        self.assertIn("how many of those 2 picks", out, "the unit travels WITH the numbers")
+
     def test_a_turn_slot_on_the_clock_prints_no_empty_between_line(self):
         """Slot 8 owns #8 and #9 back to back, so on the clock at #8 there is NOBODY in between.
         An empty `Between this pick and #9:` line would read as a render failure and send the
@@ -1094,7 +1132,28 @@ class TestTheCliffBadgeOnlyFiresOnTiersInPlay(EngineCase):
         k = self.cliff_line(out, "K T1:")
         self.assertIn("1 left — Lone Kicker", k, "the count is never hidden")
         self.assertNotIn("⚠", k)
-        self.assertIn("thin, none in the top 12 yet", k, "it must say WHY it is quiet")
+        self.assertIn("thin, none in the top 12 available on our board yet", k,
+                      "it must say WHY it is quiet")
+
+    def test_the_quiet_marker_says_the_top_12_of_WHAT(self):
+        """`· thin, none in the top 12 yet` named no list. The reader is looking at ONE position's
+        tier, so the nearest reading is "the top 12 kickers" -- and the rule is nothing of the
+        kind: it is the top 12 of everything still available, the block printed at the bottom.
+
+        🚨 AND IT STILL MUST NOT SAY `BEST AVAILABLE`. Two tests here locate that block with a
+        bare `out.split("BEST AVAILABLE")`, so the phrase in a body line becomes a SECOND, false
+        delimiter -- recorded in this file's own `test_no_body_line_collides_with_a_section_header`
+        and in draft_engine.py's comment above the cliff loop."""
+        code, out = self.run_engine(self.kit(), [], slot=3)
+        k = self.cliff_line(out, "K T1:")
+        self.assertNotIn("BEST AVAILABLE", k,
+                         "the quiet marker must never repeat a heading a parser splits on")
+        self.assertRegex(k, r"top 12 available on our board",
+                         "the top 12 has to name the list it means")
+        # The two spaces before `·` are what precompute_ladder.parse_cliffs cuts the tail on
+        # (`\s{2,}[⚠·]`) before splitting the names on commas -- and this marker CONTAINS a comma.
+        # Lose them and "thin" is parsed as a player and queued.
+        self.assertIn("  · thin,", k, "the two-space `  ·` marker is the ladder's cut point")
 
     def test_the_alarm_arms_itself_when_the_tier_reaches_the_consideration_set(self):
         """SCALE-FREE, with no round threshold hardcoded anywhere: draft one player, the kicker
@@ -1225,6 +1284,112 @@ class TestTheScoutNoteReachesTheAdvisory(EngineCase):
         body = out.split("BEST AVAILABLE (my board)")[1]
         self.assertEqual(body.count("↳"), 1)
         self.assertIn("↳ a real clause", body)
+
+
+class TestTheBadgeKeyGlossesTheGlyphsOnScreen(EngineCase):
+    """The rows print `† ! ^ v °` beside player names and NOTHING on screen said what they meant.
+    The HTML board and the PDF both carry a key; the terminal advisory -- the one surface actually
+    read under a 120-second clock -- was the only one that never did, so decoding a mark meant a
+    second round trip into players_data.json (insight 026: round trips are 96-98% of an on-clock
+    second). `meta.badges` already carries a label per code, so the key is READ, never re-typed.
+    """
+
+    BADGES = {"I": {"glyph": "†", "label": "Injury watch", "desc": "rehab/suspension situation"},
+              "X": {"glyph": "!", "label": "Bust risk", "desc": "the price is too rich"},
+              "U": {"glyph": "^", "label": "Riser", "desc": "ADP climbing"}}
+
+    def kit(self, badges=None):
+        """13 ranked rows, so rank 13 falls OUTSIDE the top 12 the engine prints. `^ Riser` lives
+        there and nowhere else -- the control for "only what is on screen gets a key"."""
+        rows = [row(i, f"Player {i}", "WR", "SF", i) for i in range(1, 14)]
+        rows[0]["badges"] = ["I"]
+        rows[7]["badges"] = ["X"]
+        rows[12]["badges"] = ["U"]
+        return board_with_badges(rows, badges if badges is not None else self.BADGES)
+
+    def body(self, out):
+        return out.split("BEST AVAILABLE (my board)")[1]
+
+    def test_it_glosses_every_glyph_printed_on_the_rows(self):
+        code, out = self.run_engine(self.kit(), [], slot=3)
+        self.assertEqual(code, 0, out)
+        self.assertIn("BADGE KEY: † Injury watch · ! Bust risk", self.body(out))
+
+    def test_the_key_is_printed_BELOW_the_rows_it_glosses(self):
+        """🚨 THE PLACEMENT IS A PARSER CONTRACT, not a layout preference.
+        `precompute_ladder._section()` collects every line under `--- BEST AVAILABLE` up to the
+        next `---` rule and hands them to a reader that takes the first token of each as a board
+        rank; `precompute` then refuses a parse that finds fewer than 3 rows, and the rows it does
+        find become THE QUEUE that auto-pick drains top-down on a blown clock. A key above the
+        rows would also be a legend for marks the reader has not met yet."""
+        code, out = self.run_engine(self.kit(), [], slot=3)
+        lines = self.body(out).splitlines()
+        rows_at = [i for i, ln in enumerate(lines) if ln.strip() and ln.strip()[0].isdigit()]
+        key_at = [i for i, ln in enumerate(lines) if ln.startswith("BADGE KEY:")]
+        self.assertEqual(len(key_at), 1, "exactly one key line")
+        self.assertEqual(len(rows_at), 12, "precondition: the twelve rows parsed as rows")
+        self.assertGreater(key_at[0], max(rows_at),
+                           "the key must come AFTER every row it explains")
+
+    def test_the_key_line_can_never_be_read_as_a_board_row(self):
+        """Placement is not what makes it safe -- leading with a fixed non-digit word is. FOUR
+        notes on the real board already begin with a digit, which is why the `↳` marker exists;
+        a badge LABEL is free to do the same. `BADGE`.isdigit() is False whatever the label says."""
+        badges = {"R": {"glyph": "°", "label": "2026 rookie class"}}
+        b = self.kit(badges)
+        for r in b["players"]:
+            r["badges"] = ["R"]
+        code, out = self.run_engine(b, [], slot=3)
+        self.assertEqual(code, 0, out)
+        rowish = [ln for ln in self.body(out).splitlines() if ln.strip() and ln.strip()[0].isdigit()]
+        self.assertEqual(len(rowish), 12, "the key leaked into the row parse:\n" + "\n".join(rowish))
+        self.assertIn("BADGE KEY: ° 2026 rookie class", self.body(out))
+
+    def test_only_the_glyphs_ON_SCREEN_get_an_entry(self):
+        """The board defines eight badges; the top 12 wear two or three. Printing all eight would
+        gloss marks nobody can see and cost lines on a clock -- insight 026's other lever is
+        SHORTER output. `^ Riser` sits on rank 13 in this fixture, one row past the cut."""
+        code, out = self.run_engine(self.kit(), [], slot=3)
+        body = self.body(out)
+        self.assertNotIn("Riser", body, "a badge nobody can see must not be in the key")
+        self.assertNotIn("^", body)
+
+    def test_a_board_with_no_badges_prints_no_key_at_all(self):
+        """Absence is silent. An empty `BADGE KEY:` reads as a render failure -- the same defect
+        the note marker avoids by staying quiet on a row that has no note."""
+        rows = [row(i, f"Player {i}", "WR", "SF", i) for i in range(1, 5)]
+        code, out = self.run_engine(board_with_badges(rows, self.BADGES), [], slot=3)
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("BADGE KEY", out)
+
+    def test_a_badge_with_no_glyph_prints_nothing_and_gets_no_entry(self):
+        """The row rendering already drops an unknown/glyphless code silently (`.get(b, "")`), so
+        a key entry for it would name a mark that is not on the row -- worse than no key."""
+        badges = dict(self.BADGES, Z={"label": "No glyph at all"})
+        b = self.kit(badges)
+        b["players"][1]["badges"] = ["Z"]
+        code, out = self.run_engine(b, [], slot=3)
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("No glyph at all", out)
+        self.assertIn("BADGE KEY: † Injury watch · ! Bust risk", self.body(out))
+
+    def test_a_MALFORMED_badge_table_degrades_instead_of_killing_the_advisory(self):
+        """`meta.badges` is stamped by build_board.py, but players_data.json is a JSON file a human
+        can open on draft morning. `{"I": "Injury watch"}` -- a plausible hand-edit -- turned the
+        glyph lookup into an AttributeError at IMPORT time, before the first line of the advisory.
+        Everything else in that file degrades loudly rather than dying; so does this."""
+        code, out = self.run_engine(self.kit({"I": "Injury watch"}), [], slot=3)
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("Traceback", out)
+        self.assertNotIn("BADGE KEY", out, "a table with no glyphs has nothing to gloss")
+        self.assertIn("Player 1", self.body(out), "and the advisory itself is untouched")
+
+    def test_the_key_does_not_shadow_a_section_heading(self):
+        """Body text that repeats a heading becomes a second, false delimiter -- the exact defect
+        the quiet-tier marker shipped once already."""
+        code, out = self.run_engine(self.kit(), [], slot=3)
+        for header in ("BEST AVAILABLE", "TIER CLIFFS", "ROSTERS / NEEDS", "VBD LEANS"):
+            self.assertLessEqual(out.count(header), 1, f"{header!r} is duplicated")
 
 
 if __name__ == "__main__":

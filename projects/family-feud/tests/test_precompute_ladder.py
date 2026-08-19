@@ -101,6 +101,46 @@ class TestTheParsersActuallyRead(unittest.TestCase):
     def test_cliffs_return_NOTHING_when_the_block_is_absent(self):
         self.assertEqual(PL.parse_cliffs("nothing here"), {})
 
+    def test_a_QUIET_tiers_flag_is_not_read_as_two_extra_players(self):
+        """🚨 THE ONE THAT SHIPPED. The engine appends ONE of two flags after two spaces --
+        `  ⚠ CLIFF`, or `  · thin, none in the top {BEST_N} yet` -- and the quiet one CONTAINS A
+        COMMA. The parser stripped only the CLIFF literal, so the other was split as if it were
+        names: measured at pick 93 of the lab feed, `K T1: 3 left` produced FOUR names, the third
+        being `Cameron Dicker  · thin` and the fourth an invented player, `none in the top 12 yet`.
+
+        All four corrupted tiers were K and DEF -- the positions quiet ALL NIGHT -- and these names
+        flow into `candidates`, i.e. into the QUEUE that auto-pick drains on a blown clock, in
+        exactly the endgame rounds where the kicker and the defense get taken."""
+        quiet = ("--- TIER CLIFFS (available) ---\n"
+                 "K T1: 3 left — Brandon Aubrey, Ka'imi Fairbairn, Cameron Dicker"
+                 "  · thin, none in the top 12 yet\n")
+        got = PL.parse_cliffs(quiet)["K T1"]
+        self.assertEqual(got, (3, ["Brandon Aubrey", "Ka'imi Fairbairn", "Cameron Dicker"]))
+        self.assertNotIn("none in the top 12 yet", got[1], "the flag was read as a player")
+
+    def test_THE_INVARIANT_names_never_outnumber_the_count(self):
+        """The check nobody was making. The COUNT is every available player in the tier; the NAMES
+        are the first CLIFF_N=5 of them -- so `len(names) == min(count, 5)` on every tier, always.
+        The corruption above broke it on four tiers at once and nothing noticed."""
+        both = ("--- TIER CLIFFS (available) ---\n"
+                "RB T3: 1 left — Chase Brown  ⚠ CLIFF\n"
+                "K T2: 2 left — Cam Little, Jason Myers  · thin, none in the top 12 yet\n"
+                "WR T8: 15 left — A Aa, B Bb, C Cc, D Dd, E Ee\n")
+        for tier, (count, names) in PL.parse_cliffs(both).items():
+            with self.subTest(tier=tier):
+                self.assertEqual(len(names), min(count, 5),
+                                 f"{tier}: {count} left but {len(names)} names {names}")
+
+    def test_the_fix_survives_the_quiet_text_being_REWORDED(self):
+        """Cut on the MARKER, not on either literal. `BEST_N` is a constant that can move and the
+        quiet sentence is queued to be reworded -- a fix pinned to 'none in the top 12 yet' would
+        silently rot back into the bug."""
+        reworded = ("--- TIER CLIFFS (available) ---\n"
+                    "K T1: 2 left — Brandon Aubrey, Cam Little"
+                    "  · thin, but none of them is among the 20 best players left\n")
+        self.assertEqual(PL.parse_cliffs(reworded)["K T1"],
+                         (2, ["Brandon Aubrey", "Cam Little"]))
+
     def test_the_next_pick_line_is_read(self):
         m = PL.NEXT_PICK.search(REAL)
         self.assertEqual((int(m.group(1)), int(m.group(2))), (19, 4))

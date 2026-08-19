@@ -162,7 +162,20 @@ def parse_cliffs(stdout):
         names = []
         if "—" in line:                          # the engine's em-dash separator
             tail = line.split("—", 1)[1]
-            tail = tail.replace("⚠ CLIFF", "").strip()
+            # 🚨 CUT THE ENGINE'S TRAILING FLAG BEFORE SPLITTING ON COMMAS. It appends one of two
+            # flags after TWO SPACES (draft_engine.py: "  ⚠ CLIFF" or
+            # "  · thin, none in the top {BEST_N} yet") -- and the quiet one CONTAINS A COMMA.
+            # Stripping only the CLIFF literal left the other to be split as if it were names:
+            # measured at pick 93 of the lab feed, `K T1` reported 3 left and produced FOUR names,
+            # the third being "Cameron Dicker  · thin" and the fourth the invented player "none in
+            # the top 12 yet". All four corrupted tiers were K and DEF -- the positions that are
+            # quiet ALL NIGHT -- and these names flow straight into `candidates`, i.e. into the
+            # QUEUE that auto-pick drains on a blown clock, in exactly the endgame rounds where
+            # the kicker and defense get taken.
+            #
+            # Cut on the MARKER, not on either literal, so this survives BEST_N changing and
+            # survives a reword of the quiet-tier text. No board name contains "⚠" or "·".
+            tail = re.split(r"\s{2,}[⚠·]", tail)[0]
             names = [x.strip() for x in tail.split(",") if x.strip()]
         out[f"{m.group(1)} T{m.group(2)}"] = (int(m.group(3)), names)
     return out

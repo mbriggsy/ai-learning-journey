@@ -812,7 +812,37 @@ goes first and the context goes last. He reads left-to-right and can stop after 
   rewritten in plain terms. ⚠️ **This is the one banned-list rule a test can never catch**, because
   the sentence is perfectly correct — it fails on the reader, and the reader is the oracle.
   **Write the mechanism, not the term:** *"bench him and swap by matchup week to week"*, never
-  *"stream him"*. Same for *handcuff*, *zero-RB*, *bell-cow*, *smash spot* — say what it means.
+  *"stream him"*. Same for *handcuff*, *zero-RB*, *bell-cow*, *smash spot*, *target share*,
+  *alpha*, *hold-in*, *committee* — say what it means.
+  **And if the `↳` note already carries the gloss, the advisory carries the GLOSS, not the term.**
+  Gibbs' note reads *"Contract hold-in at camp (not practicing as of 8/4)"* — **the parenthetical
+  IS the line**; the two words in front of it are not. ⚠️ **Gloss BEFORE the term or instead of it,
+  never after.** The #30 Risk line explained *committee* one sentence too late — after he had
+  already stopped reading.
+- 🚨 **Never use `RB3` / `TE1` / `WR2` as a QUALITY label — that token means three different things
+  on one screen.** In BEST AVAILABLE it is a positional RANK (`Christian McCaffrey RB3` = the third
+  best RB alive); inside the roster block `[RB2 WR1]` it is a COUNT of men you own; and in loose
+  talk it means a quality grade. Say **"your third back"**, **"a startable TE"**, **"your second
+  receiver"**. ⚠️ **And know the roster before you grade one:** this league starts **2 RB + 2 FLEX**,
+  so a third back is a **FLEX starter**, not a bench player — an earlier draft of the #30 Risk line
+  was going to call him exactly that.
+- 🚨 **`slot` means a draft SEAT and nothing else in these four lines.** A roster opening is a
+  **roster spot**. The engine prints `slot 1, slot 2` for seats and `DEFx1, Kx1` for openings; the
+  #94 line used both senses **twenty words apart**, on the line whose whole job is the override
+  decision. This is the project's most dangerous word — CLAUDE.md already records **three unrelated
+  "3"s** in this league.
+- 🚨 **Quote the opponent numbers in the unit `scout_opponents.py` actually measures.**
+  [`docs/opponents.md`](opponents.md) is explicit that **18 drafter-views are 7 distinct drafts**,
+  and *"any room-level rate quoted out of this file must say which unit it is counting."* Both
+  worked examples got this wrong in opposite directions — one said *"drafter-views"* (a word that
+  exists nowhere he can see), the other said *"18 of 18 measured drafts"* (the claim opponents.md
+  forbids). Write it out: *"we watched these managers draft 18 times across 7 different leagues."*
+- ⚠️ **Every pick reference is the engine's own `#N`, or a spelled-out "round N".** Never `1.03` —
+  the product prints that notation nowhere, and the same four-line block already says `#14` two
+  lines later.
+- ⚠️ **Never coin a metaphor and capitalise it.** *"it's the SHELF underneath that differs"* reads
+  as established project vocabulary he is expected to already own; nothing prints the word. Say
+  **"the next tier down"**, which maps onto the TIER CLIFFS block he is looking at.
 - **Never invent a player fact.** The `↳` note under each of the top 5 in BEST AVAILABLE is the
   sourced material. If the note does not say it, do not say it. *(This rule has already earned its
   place: a draft of the worked example below called Breece Hall an injury risk. His note reads
@@ -843,9 +873,10 @@ State: Chase and Bijan gone. `RB T1: 1 left — Jahmyr Gibbs ⚠ CLIFF` · `WR T
 ```
 THE CALL: **Jahmyr Gibbs** — last man in RB T1, and that tier empties with him.
 Passed on: **Puka Nacua** — flip only if you'd rather carry a suspension question than a contract
-  one; his note has league discipline still under review. Four men sit across WR T2/T3, one across RB T1.
-Risk: Gibbs' note is a camp hold-in, not practising as of 8/4. If it runs long you spent 1.03 on a
-  man who debuts in week 4 — and you still owe two WRs and a TE.
+  one; his note has league discipline still under review. Four men sit across WR T2/T3, one across
+  RB T1.
+Risk: Gibbs is at camp refusing to practise until he gets paid — no practice as of 8/4. If it runs
+  long you spent #3 on a man who debuts in week 4, and you still owe two WRs and a TE.
 Before #14 (10 picks): the longest gap you'll have all night — slots 4-8, then 8-4 back. Both
   ⚠ WR tiers are two deep, so the realistic question at #14 is which of those four is left, not
   whether one is.
@@ -864,16 +895,19 @@ State: `RUN WATCH (last 8): RB:5` · our roster `[RB2 WR1]` · `TE T3: 3 left �
 VBD LEANS is six RBs deep.
 
 ```
-THE CALL: **Breece Hall** — six straight VBD leans are RBs and five of the last eight picks were
-  RBs; RB T5 is down to four while WR T5/T6 still hold 21 between them.
-Passed on: **DeVonta Smith** — higher board rank, and A.J. Brown's exit makes him the Philly alpha.
-  Flip if you'd rather bank the certain target share. Their own tiers are the same size (WR T5 five,
-  RB T5 four) — it's the SHELF underneath that differs: 16 more in WR T6 against 9 in RB T6.
-Risk: Hall's note is committee talk, not health — he's freshly extended. If the backfield splits you
-  spent round 4 on an RB3 and still owe two receivers.
+THE CALL: **Breece Hall** — the six best values left on the board are all RBs, and five of the
+  last eight picks were RBs; RB T5 is down to four while WR T5/T6 still hold 21 between them.
+Passed on: **DeVonta Smith** — higher board rank, and A.J. Brown's exit makes him the first read in
+  Philly. Flip if you'd rather bank a receiver you know gets thrown to constantly. Their tiers are
+  NEARLY the same size (WR T5 five, RB T5 four) — what differs is the next tier down: 16 receivers
+  left in WR T6 against 9 backs in RB T6.
+Risk: Hall's note is about splitting carries between several backs, not about his health — he's
+  freshly extended. If that split happens you spent round 4 on your third back, a FLEX filler
+  rather than one of your two starting RBs, and still owe two receivers.
 Before #35 (4 picks): only slots 1 and 2 pick, twice each — and BOTH still need a TE while TE T3 is
-  down to three with Loveland the only one in your top 12. This room usually waits on TE (15 of 18
-  drafter-views past R5); these two are the exception that would break it.
+  down to three, with Loveland the only one among the 12 best players left. We watched these
+  managers draft 18 times across 7 leagues; in 15 of the 18 their first TE came after round 5 —
+  these two are the exception that would break it.
 ```
 **The judgement:** *rounds 3-5, same-tier candidates → lean RB* — and the live run makes it more
 than a tie-breaker. Note what is NOT said: no point margins, no "Hall won't last". Note also what
@@ -893,16 +927,17 @@ sixteen**, where seat 3 also owns **#126** — so on draft night count one more.
 THE CALL: **Michael Pittman Jr.** — one of only two picks left that are yours to spend; traded to
   Pittsburgh as Rodgers' possession guy.
 Passed on: **Justin Herbert** — ranks higher, but you already have your QB and this league starts
-  one. A second QB only pays if you can bench him and swap by matchup week to week; with four picks
-  left and DEF + K owed, you have no bench room to do that.
-Risk: none at this pick — the risk is the ROUND. Four picks left and two mandated slots owed, so
-  exactly TWO are free. Spend a third on skill and you cannot fill both.
-Before #99 (4 picks): 🚨 slots 1 and 2 pick twice each and BOTH need DEF and K — the same two slots
-  you need. DEF T1 is already down to three (HOU/DEN/SEA). Nobody has taken a kicker and 18 of 18
-  measured drafts wait past round 10, so K is safe; **DEF is the one that can actually be taken from
-  you.** Take the top DEF at #99, kicker at #110 or #115.
+  one. A second QB only pays if you can bench him and swap by matchup week to week; with four
+  picks left and DEF + K owed, you have no bench room to do that.
+Risk: none at this pick — the risk is the ROUND. Four picks left, and two are already spoken for by
+  the DEF and K your roster must start, so only TWO are free. Spend a third on another RB/WR/TE
+  and you cannot fill both.
+Before #99 (4 picks): 🚨 slots 1 and 2 pick twice each and BOTH need DEF and K — the same two roster
+  spots you need. DEF T1 is already down to three (HOU/DEN/SEA). Nobody has taken a kicker, and in
+  all 18 of those manager-drafts nobody took one before round 10, so K is safe; **DEF is the one
+  that can actually be taken from you.** Take the top DEF at #99, kicker at #110 or #115.
 ```
-**What changes when you're NOT on the clock:** a pre-call carries a **3-4 name ladder** per slot
+**What changes when you're NOT on the clock:** a pre-call carries a **3-4 name ladder** per pick
 ("if X gone → Y → Z"), because in Mock #1 a pre-call's primary *and* first fallback both vanished in
 the five picks before his turn. The ladder is `precompute_ladder.py`'s own output — on the clock you
 do a lookup, not a deliberation.

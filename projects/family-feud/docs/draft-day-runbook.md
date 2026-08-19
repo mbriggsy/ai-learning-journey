@@ -315,7 +315,9 @@ SECOND run says is real.** (If the hourly task already fired, your first manual 
 
 🚨 **AND RELOAD THE BOARD TAB FROM DISK — no edit can reach it.** `PICKS_URL` is baked from
 `SHAPE.draft_id` at **page load**, and the greyed-out rows are in-memory state from the dead draft.
-Close the tab, reopen `draft-kit/family-feud-draft-board.html`, and confirm the live bar reads
+Close the tab, reopen `draft-kit/family-feud-draft-board.html`, **click `▶ Go live` again** — a
+reopened board comes back **paused**, so a fresh tab reads `Polling paused`, never `LIVE`, unless
+you opened the `?live=1` URL (see Step 2's monitor-2 section) — then confirm the live bar reads
 `LIVE · N picks in` with no `poll failed`.
 
 ⚠️ **`run_engine.py --dry-run` is NOT a check on the board.** It returns before it ever starts
@@ -323,6 +325,54 @@ Close the tab, reopen `draft-kit/family-feud-draft-board.html`, and confirm the 
 re-reads the cargo you just fixed. Use `build_board.py --verify-only` for that. *(The first draft of
 this section called `--dry-run` "the only check that closes the loop end to end." It was false.)*
 
+
+## Step 0 — Arm the room (BOTH modes)
+
+*(Added 2026-08-19. It is **Step 0** so nothing below renumbers — `CLAUDE.md` pins the names
+"Step 3.1" and "Step 3.3".)* 🚨 **THIS INSTRUCTION USED TO LIVE ONLY INSIDE "Executor mode" — the
+one section an advisor-mode session is told it does not need**, since executor mode "adds the
+Executor mode section's rules **on top of** everything else" (top of this file). But Step 3.5's
+queue re-arm is **mandatory every cycle in both modes** and it calls `window.ffQueueSync`, which
+does not exist until this paste happens. An advisor-mode session following this file in order
+therefore reached a mandatory step with an unarmed bridge, and the failure reads like a dead
+extension rather than a skipped step.
+
+**Advisor mode needs the queue as much as executor mode does.** Sleeper's timeout autopick takes
+the queue **TOP**, so a loaded queue is what turns a missed clock into *our* guy instead of ADP's.
+Briggsy clicking the picks himself does not change that; it only changes whose hands do the
+clicking.
+
+**WHAT TO PASTE.** The whole of `scripts/sleeper_draft_console.js`, evaluated in the draft-room tab.
+It is a single IIFE (`scripts/sleeper_draft_console.js:45` → `:715`) that hangs **13** helpers off
+`window`: the eight you drive — `ffFind` · `ffDraft` · `ffQueue` · `ffQueueList` · `ffUnqueue` ·
+**`ffQueueSync`** · `ffAutoPick` · `ffStartDraft` — plus five to assert with: `ffSyncPlan`,
+`ffQueueVerdict`, `ffUnqueueVerdict`, `ffReadQueue`, `ffHandlerProps`. **A partial paste installs
+nothing** — measured 2026-08-19 by evaluating the file truncated at three different points: every
+one threw `SyntaxError` with **zero** `ff*` on `window`. There is no half-armed state to diagnose.
+- *Executor mode:* Claude evaluates it in the room's tab through claude-in-chrome.
+- *Advisor mode:* it goes in the draft-room tab's own DevTools console (F12 → Console).
+- The paste mechanics — why it must go in **inline** rather than be fetched, the comment-stripping
+  command, and the byte-count check that catches an empty file `node --check` would pass — live in
+  `.claude/skills/sleeper-draft-room/SKILL.md` under *Pasting the console*. **Invoke that skill
+  before any browser work on sleeper.com**; its own self-test runs this check first.
+
+**HOW TO CONFIRM IT TOOK — CHECK THE NEWEST HELPER, NOT THE OLDEST.** A stale paste from an older
+copy of the file has `ffFind` and lacks the rest:
+
+```js
+typeof window.ffQueueSync === "function"     // must be "function" before you trust any of it
+```
+
+🚨 **DO NOT READ THE INSTALL BANNER AS CONFIRMATION.** The IIFE's return value is the literal
+string `ffFind(), ffDraft(), ffQueue() and ffAutoPick() installed`
+(`scripts/sleeper_draft_console.js:714`) — **`ffQueueSync` is not in it**, and neither are
+`ffQueueList`, `ffUnqueue` or `ffStartDraft`. That sentence is prose that drifted behind its own
+file; the `typeof` above is the oracle.
+
+⚠️ **RE-INSTALL AFTER ANY RELOAD OR SAME-TAB NAVIGATION** — both wipe every `ff*` helper, and the
+failure looks exactly like the bridge being dead. Sleeper's **`NEW MOCK NFL DRAFT`** button
+navigates the *same* tab, so budget a re-paste immediately after creating a mock; clicking an
+*existing* mock card opens a new tab, where the paste survives.
 
 ## Step 1 — Find the draft
 - **Real league draft:** draft_id `1390509994847240192` (league `1390509993844809728`).
@@ -445,21 +495,57 @@ and watch it derive one** — that is the moment the guesswork ends.
 *(Added 2026-08-17. The board is the display Briggsy reads all night and this file — "the machine's
 operating instructions" — never once told anyone to open it. The only mention was a note about a
 **deleted** Cowork artifact with a similar name.)* It is deliberately a **display, never a control
-surface**: it must never need a click to be useful. The terminal drives; the board shows.
+surface**: the terminal drives, the board shows, and **no pick ever depends on a click landing
+here.** *(Corrected 2026-08-19. This used to read "it must never need a click to be useful," which
+is false of the one click that arms it — see step 1 below. It needs exactly **one**, at setup, and
+none thereafter; served with `?live=1` it needs none at all.)*
 
 `draft-kit/family-feud-draft-board.html` — all 174 rows with notes and badges, greys out the
-drafted, stamps `#pick · seat`, and polls `/picks` every 12s (backing off to 60s on failure).
+drafted, stamps `#pick · seat`, and **once live** polls `/picks` every 12s, backing off
+12→24→48→60s on failure (`const POLL_MS = 12000, POLL_MAX_MS = 60000;`). It starts **paused** —
+`let pollTimer = null, isLive = false, …` — in both the template and the built board.
 
 **Open it, then read the live bar. That is the whole self-test:**
-- `LIVE · N picks in · next is #M, seat S · updated <time>` → it is polling. Done.
+- `Polling paused · click Go live to grey players out as the picks land` → **it is open and it is
+  NOT polling.** This is what a double-clicked board says, every time, and it is a *correct* state,
+  not a fault — click `▶ Go live`. *(This bullet was missing until 2026-08-19, which left the only
+  state you actually see first unaccounted for.)*
+- `LIVE · N picks in · next is #M, seat S · updated <time>` → it is polling. Done. (Between the
+  click and the first response it reads `LIVE · waiting for the first response…` — the click fires
+  a fetch immediately, so that text should be gone in about a second, not in 12.)
 - `poll failed (HTTP …) — showing the last good state, retrying` → it is not. Use the fallback below.
 
-1. **Try double-clicking the file first** (`?live=1` is not needed — it starts itself when opened
-   as a wall display). ⚠️ **This path is NOT PROVEN.** The server half is fine — measured
+One more state exists and means the board, not the network, is wrong: `This board carries no draft
+id, so there is nothing to poll…` with `▶ Go live` **disabled** — a board built while the draft
+object was unreadable. Rebuild it. Today's board carries `draft_id 1390509994847240192`, so you
+should never see it.
+
+1. **Double-click the file, then click `▶ Go live`** (top-left of the live bar; it becomes
+   `⏸ Pause`). 🚨 **DOUBLE-CLICKING ALONE NEVER STARTS POLLING, AND THIS STEP SAID IT DID UNTIL
+   2026-08-19** — it read *"`?live=1` is not needed — it starts itself when opened as a wall
+   display."* It arms itself **only** off the query string, in the **last executable line of the
+   file** — byte-identical in the template and in the built board you actually double-click:
+   ```js
+   if (PICKS_URL && new URLSearchParams(location.search).get('live') === '1') setLive(true);
+   else renderLive();
+   ```
+   ```bash
+   grep -n "live') === '1'" scripts/templates/board.html draft-kit/family-feud-draft-board.html
+   ```
+   *(Grep it rather than trusting a line number — the board is regenerated and those rot.)*
+
+   **A `file://` URL has no query string**, so it takes the `else renderLive()` branch and sits at
+   `Polling paused` for as long as you leave it there — which is what you would be reading all
+   night while the board silently showed nobody drafted.
+   **The button is the design, not a workaround:** the comment above that line says a laptop
+   opened to read the board "does not poll until asked — silently reaching the network because a
+   file was opened is a surprise, and this file gets opened a lot."
+   ⚠️ **The FETCH half of this path is still NOT PROVEN.** The server half is fine — measured
    2026-08-17, Sleeper returns `access-control-allow-origin: *` even for `Origin: null`, which is
    what a `file://` page sends — but **Chrome's own `file://` fetch behaviour was never tested**
-   (Playwright refuses the `file:` protocol, and the browser extension was unavailable). Believe
-   the live bar, not this paragraph.
+   (Playwright refuses the `file:` protocol, and the browser extension was unavailable). So after
+   clicking `▶ Go live`, believe the live bar, not this paragraph: if it does not reach
+   `LIVE · N picks in` within ~15 seconds, go to 2.
 2. **If the bar does not go LIVE within ~15 seconds, serve it — this path IS proven:**
    ```bash
    cd draft-kit && python -m http.server 8765 --bind 127.0.0.1
@@ -603,6 +689,10 @@ drafted, stamps `#pick · seat`, and polls `/picks` every 12s (backing off to 60
    no safety net at all** — while `ffQueueList()` returned the same reassuring word it returns for
    a healthy queue. That is fixed, but nothing re-arms itself. This step is the re-arm.
 
+   ⚠️ **`window.ffQueueSync` exists only if `Step 0 — Arm the room` was done — and Step 0 is owed in
+   BOTH modes.** If it reads `undefined`, that is a skipped Step 0, not a dead bridge; go back and
+   paste the console.
+
    Feed step 4's own order into ONE call — never a hand-rolled `ffQueue` loop:
    ```js
    await window.ffQueueSync(["<1st>", "<2nd>", "<3rd>"])
@@ -649,16 +739,12 @@ Claude's hands are claude-in-chrome on Briggsy's logged-in Chrome; eyes stay on 
   - 🚨 **"the `+`" MEANS `div.draft-button`, NOT `row.children[0]`. Corrected 2026-08-15.** `row.children[0]` is `div.draft-button-wrapper` — an unstyled **24×24**-content wrapper that owns **no handler**, and clicking it drafts nobody while *opening the player card*. The instant-draft behaviour is true of the child and false of the parent. Reach it as `row.children[0].querySelector('.draft-button')`, never `document.querySelector('.draft-button')` — that class is **not unique** (7 occurrences, 4 contexts, including an auction variant whose handler calls `_hoverPlayer` and never drafts).
   - ✏️ **RETRACTED: "The player-card modal has NO action buttons."** It carries a lone `Cancel`. ✅ **MAPPED 2026-08-15: to close it synthetically, click `.modal-item-underlay`** — that node owns an `onClick`. The `Cancel` `<button>` owns **no** handler and no ancestor within 6 hops owns one, which is exactly why the 2026-08-14 synthetic click on it did nothing. Third instance of the same law. ⚠️ Whatever native listener `Cancel` itself uses is still unmapped and probably always will be — page script cannot enumerate native listeners (`getEventListeners` is DevTools-only). **Use the underlay.** Still avoid opening the card mid-draft; it is a time sink even when closable.
 - **PRE-ARM THE QUEUE.** The ladder to load is the one `scripts/precompute_ladder.py --slot <slot>` prints under **QUEUE THIS ORDER** — it is the engine's own BEST AVAILABLE order, so it needs no judgement applied on top and no second ranking exists to drift from it. *(added 2026-08-09; `ffQueue` / `ffQueueList` / `ffUnqueue` in `scripts/sleeper_draft_console.js` are what put it in and keep it ranked.)* 🚨 **USE `ffQueueSync(<the queue array>)` — ONE CALL, both directions.** *(Corrected 2026-08-17. This bullet used to say "load the round-1 ladder with `ffQueue('<full name>')`, top name first" and "at each window, refresh to the current ladder's top 2-3 (`ffUnqueue` the dead, `ffQueue` the new)". That hand-rolled loop cost ~2s **per name**; `ffQueueSync` ran all four paths in **2.3s total** and, unlike the loop, decides success by **reading the queue back** rather than trusting per-call results — the loop once credited Jayden Daniels for an add he was not present for.)* Still *not* by clicking `📄+` icons, which is the pixel path this file deleted on 2026-08-14. The trailing `ffQueueList()` is the only accepted check that the load took — read **`"empty": false`** and the names in order; document order == visual order, and Sleeper labels the first entry **NEXT PICK**. Skip maintenance when the clock is tight; direct fire stays primary. **Full re-arm procedure and its failure modes: Step 3.5 above.** A loaded queue makes every failure mode safe: missed clock, frozen bridge, native dialog — Sleeper's timeout autopick takes the queue TOP, i.e. OUR guy, not ADP's. (Mock #2 ran the whole draft with an empty queue because the affordance wasn't known; the pick-79 miss would have cost nothing with a loaded queue.) Keep the AUTO-PICK toggle OFF — with a loaded queue it insta-drafts queue-top the moment our turn starts, no judgment applied.
-- 🚨 **STEP ZERO, BEFORE THE DRAFT STARTS — INSTALL THE CONSOLE. Nothing below runs without it.**
-  Evaluate the whole of `scripts/sleeper_draft_console.js` in the draft-room tab (it is an IIFE
-  that hangs `ffFind` / `ffDraft` / `ffQueue` / `ffQueueList` / `ffUnqueue` / **`ffQueueSync`** /
-  **`ffAutoPick`** / `ffStartDraft` off `window`). *(The first two bolded were missing from this
-  list until 2026-08-17 — `ffQueueSync` is the ONLY re-arm mechanism, so a session working from
-  this line alone re-armed the safety net by hand or not at all.)* Confirm with
-  `typeof window.ffQueueSync === "function"` before you trust any of it — check the NEWEST helper,
-  not the oldest, because a stale paste has `ffFind` and lacks the rest.
-  **Re-install after any page reload** — a reload wipes them and the failure looks like the bridge
-  being dead.
+- 🚨 **THE CONSOLE MUST ALREADY BE INSTALLED, AND THAT IS NOW `Step 0 — Arm the room (BOTH modes)`,
+  above Step 1. Nothing in this section runs without it.** *(Moved there 2026-08-19.)* What to
+  paste, the `typeof window.ffQueueSync === "function"` check, why the install banner is not that
+  check, and the reload rule all live in Step 0 — **deliberately not restated here.** This bullet
+  being the only copy is precisely the defect Step 0 fixes: advisor mode is told this whole section
+  sits *on top of* everything else, so it skipped the one paste Step 3.5 depends on.
 
 > ✅ **DIAGNOSED 2026-08-15 — `ffDraft` WAS CLICKING THE EMPTY BOX AROUND THE BUTTON, AND THE
 > SELECTOR IS FIXED. The diagnosis is settled; the FIX IS STILL UNFIRED IN A LIVE ROOM.**
@@ -989,7 +1075,25 @@ because kickers are the one thing nobody is competing for and defenses are.
 ## After the draft
 - Full-roster recap: his team, grade, best value, biggest reach avoided, waiver-watch names for week 1.
 - **If this was a mock:** debrief what to tune, then **fold the lessons INTO the instruction sections above** (instructions stay current truth — never leave contradictions between a lesson and a step) and add a changelog entry. Edit this file directly and commit it.
-- **If this was the real draft:** stand up the in-season cadence — Tuesday waiver report, Thursday and Sunday morning lineup checks, trade evaluation on demand. **The pre-written prompts for these did not survive Cowork** (they lived in a project doc that could not be exported); they need rebuilding as real scheduled scripts. Tracked in `TODO.md`.
+- **If this was the real draft:** 🚨 **DO NOT START BUILDING THE IN-SEASON CADENCE.** It is not this
+  file's to hand out. [`in-season-plan.md`](in-season-plan.md) owns all three deliverables — the
+  Tuesday waiver report, the Thursday/Sunday lineup check, and trade evaluation on demand — and it
+  is **a STUB on purpose**, because "a design written against imagined payloads is a design that
+  gets thrown away." Its un-stub trigger is one live read:
+  ```bash
+  curl -sL --max-time 15 "https://api.sleeper.app/v1/state/nfl?cb=$(date +%s%N)"
+  ```
+  It un-stubs when `season_type` flips **`"pre"` → `"regular"`** (measured `"pre"` on 2026-08-08;
+  `/state/nfl` is still **not** hauled by the mule — `newsletter/feud_mule.ps1` has no
+  `Fetch-Source` for it — so this is a live curl, not a cargo read). Until that flip: read that
+  doc, build nothing. Then start with what it names first — the mule sources, then the waiver
+  report, which additionally needs one completed week of transactions behind it.
+  *(Rewritten 2026-08-19. This bullet used to say the pre-Cowork prompts "need rebuilding as real
+  scheduled scripts. Tracked in `TODO.md`" — an instruction the owning doc forbids twice: "nothing
+  here is worth building before that flip," and its **What NOT to build** list bans a second
+  scheduled task per deliverable outright, since "every breakage this project has had was a
+  scheduled task with a path in it." A weekly report is a branch inside the existing nightly
+  newsletter job, not a fourth Task Scheduler entry.)*
 
 ## Engine quick-reference
 `python draft_engine.py <my_slot> [teams=8] [rounds=16] [draft_id]` reading `picks.json` + `players_data.json` (+ optional `slot_names.json`) from cwd. **`my_slot` is required** — it used to default to 3, which meant a forgotten argument produced a complete, confident, wrong advisory that looked identical to a correct one. It now exits with usage instead. Get the real value from the draft's `draft_order` for user_id `1390750540631150592`.

@@ -48,6 +48,7 @@ python scripts/rerank.py                         # DRY RUN — prints every move
 python scripts/rerank.py --write                 # rewrites r/pr/tier in players_data.json
 python scripts/build_board.py --allow-dirty --rankings-synthesized <the scrape date rerank printed>
 python scripts/build_board.py --verify-only      # gate + a sha256 per surface
+python scripts/board_diff.py                     # what moved vs the previous synthesis — the eyeball receipt
 python scripts/injury_check.py                   # READ-ONLY. 23 blind rows on 2026-08-17
 python -m unittest discover -s tests             # from the root
 git add draft-kit/ && git commit                 # ONE refresh = ONE commit, every surface

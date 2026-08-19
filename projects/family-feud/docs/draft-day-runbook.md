@@ -100,8 +100,10 @@ is the receipt that it was a copy-edit.
     Naming the player IS the acknowledgement, and it goes stale on its own the next time that
     row moves. **Never edit prose that was not wrong** — `rerank.py`'s own header calls that the
     worse of the two options, alongside weakening the gate.
-- **Commit `draft-kit/` between `--write` and the generator.** `build_board.py` refuses a dirty
-  `draft-kit/`; `--allow-dirty` exists but stamps `meta.build.dirty` and is not what you want here.
+- ~~Commit `draft-kit/` between `--write` and the generator~~ **KILLED 2026-08-19 — it directly
+  contradicted the 🚨 `--allow-dirty` bullet above.** A mid-sequence commit holds new ranks with
+  old surfaces — the exact inconsistent state the one-refresh-one-commit rule exists to prevent.
+  `--allow-dirty` with its honest `meta.build.dirty: true` stamp IS the designed path on a refresh.
 - ⚠️ **`meta.updated` DOES NOT REPORT RANK STALENESS.** It is `max()` over input mtimes
   (`build_board.py:432-441`) and the ECR is not one of them, so it reads the same on draft morning
   no matter how far the consensus has moved. **The field that answers "how old is my ordering" is

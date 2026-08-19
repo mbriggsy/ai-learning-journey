@@ -134,6 +134,32 @@ The same logic produces the RB-vs-WR lean: the free WR47 in this league scores ~
 
 ---
 
+## The queue is not the board (2026-08-19)
+
+The board answers "how good is he" -- ECR ordering, empirical VORP, one truth per player, and
+nothing in this section changed. **The QUEUE answers a different question: "what do I take NOW,
+given my roster"** -- and since 2026-08-19 it is computed, not read off the board:
+
+- **Marginal lineup value**: a candidate is worth what he adds to the best legal starting lineup,
+  with unfilled slots pre-filled at *replacement* (insight 024's defect-4 fix -- an empty-slot
+  counterfactual degenerates to raw points and takes a QB first overall). Over an empty roster
+  this reproduces vorp order exactly; once WR2 and both FLEX fill, the next receiver's delta
+  collapses to zero and the backs rise.
+- **Zero-delta candidates fall back to board order** -- bench value is insurance, and ordering
+  insurance by the board beats a weighting constant nobody measured.
+- **K/DEF are deferred to the endgame**: flat within a tier, their delta cannot decay while every
+  bench body's upside does. Measured cost on the gate fixture: 13.0 VORP of DEF tier, accepted,
+  because a DEF at pick #69 is an instant human override.
+- **The endgame is forced**: when open mandated slots equal picks remaining, the queue is
+  filtered to the positions that must be filled and says so.
+
+**The receipt**: `scripts/replay_mock.py` replays the recorded 2026-08-19 executor mock (seat 5,
+120 picks) with our seat's strategy swapped. Board-order queue-top, unattended: nine receivers,
+five quarterbacks, zero RB/K/DEF, 695.4 startable VORP. Lineup-delta: every slot filled, K/DEF
+last, **1087.2** -- +391.8. One room, fixed opponents: a structural reading, never a win-rate
+claim (insight 024: twelve held-out seasons could not resolve win rates; one mock cannot).
+Implementation shared with the backtest in `draft-kit/lineup_value.py`.
+
 ## Reading vbdDelta (when board and math disagree)
 
 Every player carries three math fields: `vorp` (the number above), `vbdRank` (the whole board re-sorted by pure VORP), and `vbdDelta` = **board rank − vbdRank**.

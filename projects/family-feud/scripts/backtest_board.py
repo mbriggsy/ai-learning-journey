@@ -43,6 +43,7 @@ sys.path.insert(0, os.path.join(ROOT, "scripts"))
 sys.path.insert(0, os.path.join(ROOT, "draft-kit"))
 
 import realized_value as RV  # noqa: E402
+import lineup_value as LV  # noqa: E402  (draft-kit -- the ONE marginal-lineup implementation)
 
 POSITIONS = RV.POSITIONS
 TEAMS = 8
@@ -79,22 +80,14 @@ def marginal_value(proj, roster_proj, pos, k, fill):
     """What this player ADDS TO A STARTABLE LINEUP -- the correct way to spend a pick.
 
     🚨 WITHOUT THIS THE VALUE ARMS ARE A STRAWMAN. Greedy VORP-max with position caps drafted
-    SIX running backs in the first six rounds (measured on 2023) and then scrambled for a
-    quarterback, because raw vorp has no idea you can only start two backs and two flex. Nobody
-    drafts that way off this board, so beating it proves nothing about the board.
-
-    Marginal lineup value handles positional saturation for free -- the third back is worth only
-    what he adds as a FLEX, and the seventh is worth nothing. It still needs `fill`, the
-    replacement level an undrafted slot is worth; see best_lineup for why an empty slot is the
-    wrong counterfactual.
+    SIX running backs in the first six rounds (measured on 2023) -- insight 024, defect 3. The
+    implementation moved to draft-kit/lineup_value.py on 2026-08-19 so the LIVE queue and this
+    backtest share one set of bones; the reasoning lives there now.
     """
     v = proj.get((pos, k))
     if v is None:
         return None
-    before = best_lineup(roster_proj, fill)
-    after = dict(roster_proj)
-    after[pos] = after.get(pos, []) + [v]
-    return best_lineup(after, fill) - before
+    return LV.marginal_pts(v, pos, roster_proj, fill, STARTERS, FLEX_OK, FLEX_SLOTS)
 
 
 def _raw(per, n):
@@ -126,56 +119,23 @@ def realised_curve(seasons):
 
 
 def best_lineup(roster_pts, fill=None):
-    """Points of the best legal starting lineup. {pos: [points]} -> float.
+    """Points of the best legal starting lineup, this backtest's slot structure.
 
-    Required slots are position-specific and FLEX is a superset of RB/WR/TE, so filling the
-    required slots with the best at each position and then FLEX from whatever remains is optimal
-    -- you must start two backs whatever else you hold.
-
-    `fill` is the points an UNFILLED starter slot is worth.
-      * None (scoring)  -> zero. An empty slot really does score nothing on Sunday.
-      * {pos: pts}      -> replacement level, and this is what makes the draft logic VBD.
-
-    🚨 WHY `fill` EXISTS. Marginal value over an EMPTY lineup is just raw points, so at pick 1.1
-    every slot is empty and the model degenerates to "who scores most" -- which is always a
-    quarterback. Measured: the arm took a QB first overall. The correct counterfactual is not an
-    empty slot but THE PLAYER YOU COULD GET AT THAT SLOT LATER, which is replacement level. With
-    the lineup notionally pre-filled at replacement, the first back is worth ~272 over his
-    baseline and the first quarterback ~127 over his, which is the whole point of value-based
-    drafting -- and saturation still falls out for free, because a seventh back improves nothing.
+    🚨 WHY `fill` EXISTS (insight 024, defect 4): marginal value over an EMPTY lineup is raw
+    points and takes a quarterback first overall. The correct counterfactual is replacement
+    level. Full reasoning and the shared implementation: draft-kit/lineup_value.py.
     """
-    pool = {p: sorted(v, reverse=True) for p, v in roster_pts.items()}
-    total, leftover = 0.0, []
-    for pos, n in STARTERS.items():
-        take = pool.get(pos, [])[:n]
-        if len(take) < n:
-            pad = 0.0 if fill is None else fill.get(pos, 0.0)
-            take = take + [pad] * (n - len(take))
-        total += sum(take)
-        leftover += pool.get(pos, [])[n:] if pos in FLEX_OK else []
-    flex = sorted(leftover, reverse=True)[:FLEX_SLOTS]
-    if len(flex) < FLEX_SLOTS:
-        pad = 0.0 if fill is None else max(fill.get(p, 0.0) for p in FLEX_OK)
-        flex = flex + [pad] * (FLEX_SLOTS - len(flex))
-    return total + sum(flex)
+    return LV.best_lineup(roster_pts, fill, STARTERS, FLEX_OK, FLEX_SLOTS)
 
 
 def must_fill(counts):
     """Positions this roster still HAS to draft, and how many picks that needs.
 
-    🚨 WITHOUT THIS THE TEST IS CIRCULAR. `best_lineup` scores an empty starter slot as zero, so
-    an arm whose curve says quarterbacks are worthless simply never drafts one and eats a 0 --
-    which is precisely what the REALISED curve says, so the test would punish the model for its
-    own conclusion. No real manager does that: he takes a quarterback late and collects
-    replacement-level production. Applied identically to every arm, including the floor.
+    🚨 WITHOUT THIS THE TEST IS CIRCULAR (insight 024, defect 2): an arm whose curve says
+    quarterbacks are worthless would never draft one and eat a 0 -- punishing the model for its
+    own conclusion. Shared implementation: draft-kit/lineup_value.py.
     """
-    need = {"QB": max(0, STARTERS["QB"] - counts["QB"]),
-            "RB": max(0, STARTERS["RB"] - counts["RB"]),
-            "WR": max(0, STARTERS["WR"] - counts["WR"]),
-            "TE": max(0, STARTERS["TE"] - counts["TE"])}
-    spare = sum(max(0, counts[p] - STARTERS[p]) for p in FLEX_OK)
-    flex_need = max(0, FLEX_SLOTS - spare)
-    return need, flex_need, sum(need.values()) + flex_need
+    return LV.must_fill(counts, STARTERS, FLEX_OK, FLEX_SLOTS)
 
 
 def run_draft(pool, value, my_slot, qb_by_round=None):

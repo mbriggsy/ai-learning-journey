@@ -1163,7 +1163,8 @@ class TestTheGuardsAreWired(unittest.TestCase):
         import sys as _sys
         work = os.path.join(self.kit, "run")
         os.makedirs(work, exist_ok=True)
-        for n in ("players_data.json", "normalize.py", "sleeper_ids.json", "draft_engine.py"):
+        for n in ("players_data.json", "normalize.py", "sleeper_ids.json", "draft_engine.py",
+                  "lineup_value.py", "vorp_curve.json"):
             shutil.copy(os.path.join(B.KIT, n), work)
         with open(os.path.join(B.ROOT, "tests", "fixtures", "lab_feed_120.json"),
                   encoding="utf-8") as f:

@@ -1242,7 +1242,7 @@ class TestTheScoutNoteReachesTheAdvisory(EngineCase):
     def test_the_top_candidates_carry_their_note(self):
         code, out = self.run_engine(self.board_of(8), [], slot=3)
         self.assertEqual(code, 0, out)
-        body = out.split("BEST AVAILABLE (my board)")[1]
+        body = out.split("BEST AVAILABLE (my board)")[1].split("\n---")[0]
         self.assertIn("↳ why he is worth it 1", body)
         self.assertIn("↳ why he is worth it 5", body)
 
@@ -1250,7 +1250,7 @@ class TestTheScoutNoteReachesTheAdvisory(EngineCase):
         """The control on NOTE_N. Without it, "print the note" and "print every note" pass the
         same test, and the output grows by twelve lines on a 120-second clock."""
         code, out = self.run_engine(self.board_of(8), [], slot=3)
-        body = out.split("BEST AVAILABLE (my board)")[1]
+        body = out.split("BEST AVAILABLE (my board)")[1].split("\n---")[0]
         self.assertNotIn("↳ why he is worth it 6", body)
         self.assertEqual(body.count("↳"), 5)
 
@@ -1267,7 +1267,7 @@ class TestTheScoutNoteReachesTheAdvisory(EngineCase):
         code, out = self.run_engine(self.board_of(8, note_prefix="2025 was his breakout, season"),
                                     [], slot=3)
         self.assertEqual(code, 0, out)
-        body = out.split("BEST AVAILABLE (my board)")[1]
+        body = out.split("BEST AVAILABLE (my board)")[1].split("\n---")[0]
         rowish = [ln for ln in body.splitlines() if ln.strip() and ln.strip()[0].isdigit()]
         # Exactly the 8 real board rows -- not one of the 5 notes.
         self.assertEqual(len(rowish), 8, f"a note leaked into the row parse:\n" + "\n".join(rowish))
@@ -1281,7 +1281,7 @@ class TestTheScoutNoteReachesTheAdvisory(EngineCase):
         b = board([row(1, "Alpha", "RB", "DET", 1, note=""),
                    row(2, "Bravo", "WR", "SF", 1, note="a real clause")])
         code, out = self.run_engine(b, [], slot=3)
-        body = out.split("BEST AVAILABLE (my board)")[1]
+        body = out.split("BEST AVAILABLE (my board)")[1].split("\n---")[0]
         self.assertEqual(body.count("↳"), 1)
         self.assertIn("↳ a real clause", body)
 
@@ -1308,7 +1308,10 @@ class TestTheBadgeKeyGlossesTheGlyphsOnScreen(EngineCase):
         return board_with_badges(rows, badges if badges is not None else self.BADGES)
 
     def body(self, out):
-        return out.split("BEST AVAILABLE (my board)")[1]
+        # Bounded at the next --- rule, exactly as precompute_ladder._section reads it: since
+        # 2026-08-19 a LINEUP DELTAS section follows this one, and an unbounded tail would count
+        # its rows too -- the parser under test never sees them.
+        return out.split("BEST AVAILABLE (my board)")[1].split("\n---")[0]
 
     def test_it_glosses_every_glyph_printed_on_the_rows(self):
         code, out = self.run_engine(self.kit(), [], slot=3)

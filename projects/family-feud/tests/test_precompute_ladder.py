@@ -44,6 +44,11 @@ WR T5: 10 left — Nico Collins, George Pickens
  27 Kenneth Walker III RB11 KC ^! · vorp 125 VBD+8
  30 Lamar Jackson QB2 BAL  · vorp 99
 
+--- LINEUP DELTAS (my roster) ---
+  1 Kenneth Walker III RB11 KC  · Δ +125.0
+  2 Lamar Jackson QB2 BAL  · Δ +99.0
+  3 Nico Collins WR9 HOU  · Δ +0.0, bench — board #13
+
 --- VBD LEANS (value over board rank) ---
 vbd  18 (board  26) Josh Allen QB1 · vorp 130
 vbd  19 (board  27) Kenneth Walker III RB11 · vorp 125
@@ -482,9 +487,16 @@ class TestEndToEndAgainstTheRealEngine(unittest.TestCase):
         self.assertGreater(res["pool_size"], 12)
 
     def test_the_queue_is_the_engines_order_not_ours(self):
-        """Re-sorting it here would be the second implementation this file exists to avoid."""
+        """Re-sorting it here would be the second implementation this file exists to avoid.
+        Since 2026-08-19 the engine's queue-order section is LINEUP DELTAS (marginal lineup
+        value over MY roster), not BEST AVAILABLE -- but the invariant is unchanged: the ladder
+        transmits the engine's order, it never invents one."""
         res = self._run(at=14)
-        self.assertEqual(res["queue"], [b["name"] for b in res["baseline"]])
+        self.assertEqual(res["queue"], [d["name"] for d in res["lineup_deltas"]])
+        self.assertNotEqual(res["queue"], [b["name"] for b in res["baseline"]],
+                            "queue == board order would mean the delta section is not wired "
+                            "(possible but wildly unlikely mid-draft: it requires every marginal "
+                            "value to agree with board rank at pick 14)")
 
     def test_names_the_projection_expects_gone_are_MARKED_not_reordered(self):
         """Reordering the queue on a projection that backtests at 35% would trade real board rank

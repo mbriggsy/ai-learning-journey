@@ -50,9 +50,12 @@ was independently broken anyway: SHA-256 is 32 bytes, so `h[b*4:(b+1)*4]` was em
 past the 8th and forced pool[0] into 60 of 60 sampled futures.
 
 WHAT SURVIVES IS WHAT ONE ENGINE RUN CAN SAY, plus one concrete future:
-  * THE QUEUE -- the engine's own BEST AVAILABLE order. Auto-pick drains a queue top-down, so a
-    blown clock takes OUR next-best instead of Sleeper's. Needs no branching: BEST AVAILABLE is
-    *defined* as lowest-board-rank-available (`draft_engine.py:447`), so the list simply shortens.
+  * THE QUEUE -- the engine's LINEUP DELTAS order (since 2026-08-19): what each candidate adds
+    to MY starting lineup, replacement-prefilled, with the engine's ENDGAME must-fill filter
+    already applied. Auto-pick drains a queue top-down, so a blown clock takes OUR next-best
+    instead of Sleeper's. Before 2026-08-19 this was BEST AVAILABLE (board order); the naive
+    queue drafted nine receivers and five quarterbacks when replayed without a human -- see
+    scripts/replay_mock.py for the measurement that retired it.
   * THE MARKET PROJECTION -- one future, the `gap` cheapest-ADP players gone. Not a guess about any
     individual opponent, and BACKTESTED rather than asserted (`--backtest`).
   * THE CLIFF CONDITION -- "this tier empties only if all N of these go first", where N is the
@@ -128,6 +131,25 @@ def parse_best_available(stdout):
     """
     rows = []
     for line in _section(stdout, "BEST AVAILABLE"):
+        toks = line.split()
+        if len(toks) < 3 or not toks[0].isdigit():
+            continue
+        pos_at = next((i for i, t in enumerate(toks) if POS_RANK.match(t)), None)
+        if pos_at is None or pos_at < 2:
+            continue
+        rows.append((int(toks[0]), " ".join(toks[1:pos_at])))
+    return rows
+
+
+def parse_lineup_deltas(stdout):
+    """The LINEUP DELTAS block -> [(list_rank, name), ...] in the engine's own order.
+
+    Same row anatomy as BEST AVAILABLE (rank, name tokens, position-rank token), same
+    suffix-proof anchoring. This is the QUEUE's source since 2026-08-19: marginal lineup value
+    over MY roster, with the engine's ENDGAME filter already applied -- so a queue built here
+    inherits the must-fill arithmetic without re-deriving it."""
+    rows = []
+    for line in _section(stdout, "LINEUP DELTAS"):
         toks = line.split()
         if len(toks) < 3 or not toks[0].isdigit():
             continue
@@ -564,7 +586,7 @@ def precompute(feed, slot, teams, rounds, draft_id, pool_size=48, at=None, cargo
         # The same two files check_engine_replay copies, and deliberately NOT sleeper_ids.json: the
         # engine reads its join key off the board's own rows now, and copying the ledger in would
         # let a regression back to "the ledger must be in cwd" pass here and fail on draft morning.
-        for name in ("players_data.json", "normalize.py"):
+        for name in ("players_data.json", "normalize.py", "lineup_value.py", "vorp_curve.json"):
             shutil.copy(os.path.join(KIT, name), work)
         staged = stage_cargo(t, cargo_dir, draft_file)
 
@@ -618,7 +640,18 @@ def precompute(feed, slot, teams, rounds, draft_id, pool_size=48, at=None, cargo
         watch = [nm for _, _, nm in parse_vbd_leans(base_out)][:6]
         survivors = {n for _, n in prows} | {n for _, _, n in pleans}
 
-    queue = [n for _, n in base]
+        deltas = parse_lineup_deltas(base_out)
+        if not deltas:
+            raise SystemExit("could not read the engine's LINEUP DELTAS block -- refusing to "
+                             "emit a ladder whose queue would silently fall back to board order. "
+                             "The engine's output format moved, or the engine predates the "
+                             "2026-08-19 lineup-delta queue.")
+
+    # THE QUEUE IS LINEUP-DELTA ORDER, NOT BOARD ORDER -- Briggsy's 2026-08-19 ask ("recommend
+    # picks I wouldn't override"), gated by scripts/replay_mock.py: +391.8 startable VORP over
+    # the board-order queue on the recorded 2026-08-19 mock, K/DEF deferred to the endgame, all
+    # mandated slots filled. Board order remains BEST AVAILABLE's business.
+    queue = [n for _, n in deltas]
     our_needs = parse_our_needs(base_out)
     remaining = our_remaining_picks(our_pick, teams, rounds)
     squeeze = mandatory_squeeze(our_needs, remaining)
@@ -639,6 +672,7 @@ def precompute(feed, slot, teams, rounds, draft_id, pool_size=48, at=None, cargo
         "pool_source": pool_src,
         "pool_size": len(pool),
         "baseline": [{"rank": r, "name": n} for r, n in base],
+        "lineup_deltas": [{"rank": r, "name": n} for r, n in deltas],
         "queue": queue,
         "queue_expected_gone": [n for n in queue if n in set(proj_gone)],
         "cliffs_now": {k: v[0] for k, v in cliffs.items()},

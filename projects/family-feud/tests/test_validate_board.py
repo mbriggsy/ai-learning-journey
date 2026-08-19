@@ -819,7 +819,8 @@ class TestTheExecutionGate(unittest.TestCase):
         self.addCleanup(shutil.rmtree, d, True)
         kit = os.path.join(d, "draft-kit")
         os.makedirs(kit)
-        for n in ("players_data.json", "normalize.py", "sleeper_ids.json"):
+        for n in ("players_data.json", "normalize.py", "sleeper_ids.json",
+                  "lineup_value.py", "vorp_curve.json"):
             shutil.copy(os.path.join(V.KIT, n), kit)
         p = os.path.join(kit, "players_data.json")
         with open(p, encoding="utf-8") as f:

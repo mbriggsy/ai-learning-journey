@@ -315,15 +315,22 @@ elite-K trio the runbook names. Only `Pineiro 2→3` (r168 t3) and `McPherson 2�
 
 ### ▶ CLAUDE CAN TAKE THESE UNATTENDED — ranked by cost if it happens on draft night
 
-🆕 **FOUND BY THE 2026-08-19 EXECUTOR MOCK (#2, `1395858325018537984`), not yet done — two engine
-candidates, both needing source-reads before prescribing (insight 028):**
-1. **The ladder said nothing at exactly-N-picks-for-N-mandated-slots.** At pick #85: five picks
+✅ **BOTH CLOSED THE SAME EVENING — Briggsy: "you know I fucking do!" → THE LINEUP-DELTA QUEUE
+SHIPPED.** The queue now ranks by marginal lineup value (replacement-prefilled, insight 024's
+surviving formulation, extracted from the backtest into `draft-kit/lineup_value.py` and shared),
+with the ENDGAME forced at N-picks-for-N-slots and K/DEF deferred until forcing. Gate:
+`scripts/replay_mock.py` on the recorded mock — board-order queue unattended drafted **nine WRs +
+five QBs, 695.4 startable VORP**; lineup-delta drafted a human-shaped roster, every slot filled,
+**1087.2 (+391.8)**. 1170 tests, four mutants killed across the day. The two items below are what
+shipped; kept for the reasoning.
+1. ~~**The ladder said nothing at exactly-N-picks-for-N-mandated-slots.**~~ (the forcing IS the fix) At pick #85: five picks
    left, five open mandated slots (RB×2/TE/K/DEF), queue top = a SECOND QB — taking it would have
    made a zero-scoring starting slot mathematically certain, and `mandatory_squeeze` stayed
    SILENT with K and DEF both still open. Read its trigger in `precompute_ladder.py` first: it may
    key on a tighter picks-remaining window by design. Candidate: an ENDGAME line when
    `picks_remaining == open_mandated_slots` — every pick must fill one, say so above the queue.
-2. **Queue-top needed a judgment overlay for the last five picks** — the naive queue is the
+2. ~~**Queue-top needed a judgment overlay for the last five picks**~~ (the arithmetic half of
+   the overlay is IN the queue now; taste and injury reads remain human) — the naive queue is the
    engine's stated contract ("Claude overlays judgment"), and it held: fired queue-top for picks
    5-76 (11 straight), then filled TE/RB/RB/K/DEF off the tier tables. Not a defect; written down
    so the next session doesn't re-derive WHEN the overlay starts mattering (answer: when FLEX is

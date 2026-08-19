@@ -5,8 +5,11 @@ Input:  picks.json  — Sleeper /draft/<id>/picks array (cumulative)
         slot_names.json — optional seat -> human (hand-authored, gitignored)
         ../newsletter/data/inbox/ — mule cargo, read as an ORACLE only, never required
 Usage:  python3 draft_engine.py <my_slot> [teams] [rounds] [draft_id]
-Output: compact war-room advisory: board state, rosters/needs, runs,
-        tier cliffs, picks-until-mine, naive queue (Claude overlays judgment).
+Output: compact war-room advisory: board state, rosters/needs, runs, tier cliffs,
+        picks-until-mine, and the LINEUP DELTAS queue -- marginal value over MY starting
+        lineup (since 2026-08-19; the queue was board-order 'naive' before that, with the
+        roster judgment overlaid by hand. Claude's overlay is now taste and injury reads,
+        not arithmetic).
 
 The four hand-supplied inputs are cross-checked against the draft itself before any advice is
 computed -- see the input gate below. A wrong seat used to produce a complete, confident advisory
@@ -412,7 +415,8 @@ def my_picks():
 taken_keys = set()
 taken_ids  = set()                   # frozen ids claimed; survives any rendering of the name
 drifted    = []                      # (pick_no, sleeper rendering, board rendering)
-rosters = defaultdict(list)          # slot -> [(pos, name, pick_no)]
+rosters = defaultdict(list)
+my_board_rows = []          # slot -> [(pos, name, pick_no)]
 seq = []                             # chronological (pick_no, slot, pos, name, board_r)
 unmatched = []                       # (pick_no, name, pos, team, player_id)
 for pk in sorted(PICKS, key=lambda x: x["pick_no"]):
@@ -441,6 +445,8 @@ for pk in sorted(PICKS, key=lambda x: x["pick_no"]):
         # stays on BEST AVAILABLE after being drafted. pick_nos stay contiguous, so the gate below
         # sees nothing wrong. Surfacing every miss is the only way that becomes visible.
         unmatched.append((pk["pick_no"], name, pos, md.get("team"), pid))
+    if slot == MY_SLOT and b is not None:
+        my_board_rows.append(b)          # my roster joined to the board, for the lineup math below
     rosters[slot].append((pos, name, pk["pick_no"]))
     seq.append((pk["pick_no"], slot, pos, name, b["r"] if b else None))
 
@@ -742,6 +748,77 @@ _seen_badges = [c for c, g in BADGE_GLYPH.items()
                 if g and any(c in (p.get("badges") or ()) for p in best_avail)]
 if _seen_badges:
     print("BADGE KEY: " + " · ".join(f"{BADGE_GLYPH[c]} {BADGE_LABEL[c]}" for c in _seen_badges))
+
+# --- LINEUP DELTAS: what each candidate ADDS TO MY STARTING LINEUP -------------------------------
+#
+# Briggsy's ask, 2026-08-19: "how do we get the engine to recommend picks I wouldn't override?"
+# The answer is the marginal-lineup-value formulation that insight 024 paid for four times in the
+# backtest (draft-kit/lineup_value.py carries the reasoning): a player is worth what he adds to
+# the best legal starting lineup, with unfilled slots pre-filled at REPLACEMENT. Over an empty
+# roster this reproduces vorp order exactly; once WR2 and both FLEX fill, the tenth receiver's
+# delta collapses to zero and the backs rise -- which is the judgment the queue used to need
+# overlaid by hand. BEST AVAILABLE above stays board-order on purpose: "how good is he" and "what
+# do I take NOW" are different questions, and the board keeps answering the first.
+#
+# Zero-delta rows fall back to BOARD ORDER, deliberately: a bench pick's value is insurance, and
+# ordering insurance by the board beats inventing a weighting constant nobody measured.
+#
+# THE ENDGAME GUARD (must_fill): the 2026-08-19 mock reached five-picks-for-five-mandated-slots
+# with the naive queue offering a SECOND quarterback. When every remaining pick is spoken for,
+# the list below is FILTERED to the positions that must be filled, and says so above the rows --
+# above, because a warning printed after the thing it qualifies is insight 016's defect.
+import lineup_value as _LV
+_pts_by_id, _lv_fill = _LV.load_live_values(os.path.dirname(os.path.abspath(__file__)))
+_FLEX_OK = ("RB", "WR", "TE")
+
+def _cand_pts(p):
+    sid = p.get("sleeperId")
+    if sid is not None and str(sid) in _pts_by_id:
+        return _pts_by_id[str(sid)]
+    return float(p.get("vorp", 0.0)) + _lv_fill.get(p["pos"], 0.0)
+
+_my_pts = defaultdict(list)
+for _b in my_board_rows:
+    _my_pts[_b["pos"]].append(_cand_pts(_b))
+_my_counts = Counter(pos for pos, _, _ in rosters[MY_SLOT])
+_need, _flex_need, _must_total = _LV.must_fill(_my_counts, STARTERS, _FLEX_OK, FLEX)
+_my_remaining = ROUNDS - len(rosters[MY_SLOT])
+
+_pool = sorted(avail, key=lambda x: x["r"])
+_cands = _pool[:_LV.CANDIDATE_WINDOW]
+# K/DEF rank ~151+ and never enter the window -- DEFERRED on purpose, on the board's own
+# numbers: their vorp is flat WITHIN a tier (every T1 K is 16.0), so their delta
+# cannot decay, while every bench candidate's upside does. The endgame filter below pulls them
+# from the full pool the moment the slots are mandated. Across tiers their vorp does decay a
+# little: the 2026-08-19 replay measured deferral costing 13.0 VORP of DEF tier -- accepted,
+# because the alternative was the math taking a DEF at pick #69, an instant human override,
+# which is the exact failure this feature exists to end.
+_forced = _must_total >= _my_remaining and _my_remaining > 0
+if _forced:
+    _allowed = {pos for pos, k in _need.items() if k > 0}
+    if _flex_need > 0:
+        _allowed |= set(_FLEX_OK)
+    # rebuild from the FULL pool: the window may hold none of a mandated position
+    _cands = [p for _pos in sorted(_allowed) for p in
+              [x for x in _pool if x["pos"] == _pos][:3]]
+
+_scored = sorted(((_LV.marginal_pts(_cand_pts(p), p["pos"], _my_pts, _lv_fill,
+                                    STARTERS, _FLEX_OK, FLEX), p) for p in _cands),
+                 key=lambda t: (-t[0], t[1]["r"]))
+
+print()
+print("--- LINEUP DELTAS (my roster) ---")
+if _forced:
+    _slots_txt = ", ".join(f"{pos}x{k}" for pos, k in _need.items() if k > 0)
+    if _flex_need:
+        _slots_txt += (", " if _slots_txt else "") + f"FLEXx{_flex_need}"
+    print(f"!! ENDGAME: {_my_remaining} pick(s) left and {_must_total} starting slot(s) open "
+          f"({_slots_txt}).")
+    print("!! Every remaining pick must fill one -- the rows below are filtered to those positions.")
+for _i, (_d, p) in enumerate(_scored[:BEST_N], 1):
+    _tail = f"· Δ {_d:+.1f}" if _d > 0.05 else f"· Δ +0.0, bench — board #{p['r']}"
+    print(f"{_i:>3} {p['name']} {p['pos']}{p['pr']} {p['team']}  {_tail}")
+
 
 # VBD steals: available where VBD rank beats board rank by 8+ (skill positions)
 if any("vorp" in p for p in avail):

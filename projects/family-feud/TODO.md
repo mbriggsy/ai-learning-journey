@@ -44,6 +44,28 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
     skill's landmines carry the full list so nobody repeats them.
     `draft_order` is still null on the real draft; it populated correctly on the mock.
 
+  ── 2026-08-18 (12 commits, 999 → **1066 tests**) — **THE RANKED QUEUE IS EMPTY, AND THE THING
+    THAT EMPTIED IT FOUND FOUR BUGS NO TEST WAS EVER GOING TO.**
+    Items 9-12 all closed, plus a jargon sweep of the product's own words. ✅ **The re-created-draft
+    remedy** (the detector had shipped 08-14 with no remedy) · **`merge_picks` stops telling you to
+    retry a 404** · **`--slot` is optional and the derived-seat tautology is DECLARED** ·
+    **`precompute_ladder` has a traded-picks gate** and **`parse_cliffs` stopped inventing players**
+    · **33 tests for `render_html`** · six stale doc surfaces · [`insight 029`](docs/insights/029-the-line-numbers-rotted-while-i-was-writing-the-doc.md).
+    🚨 **THREE OF THE FOUR REGRESSIONS WERE MINE, SHIPPED THE SAME NIGHT, AND EVERY ONE WAS FOUND BY
+    RUNNING THE THING RATHER THAN BY A GREEN TEST:**
+    - **The `--cargo FILE` form I added, then wrote into the runbook with a ✅, could overwrite the
+      live `ladder.json`.** `cargo_draft_id` joined `sleeper_draft.json` onto a path already a file,
+      returned `""`, and `resolve_out`'s `if real and draft_id and …` short-circuited to the live
+      path. **The runs that could not be ARMED were exactly the runs allowed to OVERWRITE.**
+      1057 tests were green over it — every `--cargo FILE` test passed `--out` and `--draft-id`,
+      the two flags that disable the guards the form breaks.
+    - **My first circularity warning was a FALSE RED.** `parse_provenance` keeps the whole
+      `[checked] …` line as ONE string, so filtering whole lines announced *"NOTHING has
+      independently confirmed the seat"* on a run where `against our own picks` sat in that line.
+      The test passed because it only asserted the word CIRCULAR.
+    - **The board notes still carried the jargon the format bans** — and the format names those
+      notes as THE CALL's only legal source, so the rule and its source contradicted each other.
+
   ◀ HERE (2026-08-17 overnight, 17 commits) — **THE PRODUCT IS WRITTEN DOWN, AND FIVE WAYS THE
     ENGINE COULD HAND OVER A CONFIDENT WRONG NUMBER ARE CLOSED.**
     **1066 tests · 24 test files · 23 scripts · 29 insights · 14/14 mule sources.**
@@ -245,6 +267,77 @@ elite-K trio the runbook names. Only `Pineiro 2→3` (r168 t3) and `McPherson 2�
   source (`fg_att` 1115 == made 937 + missed 160 + blocked 18). league.md says "miss: −1" and does
   not say which. Blocks count as misses; `--check` prints the sensitivity both ways — **0.0–1.7
   pts, mean 0.45** across the curve's ranks, i.e. immaterial.
+
+## ▶ NEXT ACTION — as of 2026-08-18, ~11 days out, draft still UNSCHEDULED
+
+**Live state, re-pulled 20:29 cargo: `status: pre_draft`, `start_time: null`, `draft_order: null`,
+room 8/8 full, traded_picks `[]`.** Nothing is on a hard clock except the ~Aug 27 refresh.
+
+### ⚑ WAITING ON BRIGGSY — decisions, not work. Nothing below moves without him.
+
+1. **READ THE #3 AND #30 WORKED EXAMPLES** (`docs/draft-day-runbook.md` → *Advisory format — THE
+   FOUR LINES*). **His eye is the stated oracle and only #94 has reached him** — that one pass
+   produced *"what is a 'stream'?"*, the first defect in this product found by a human reading it.
+   Eleven more of that class were swept out of all three examples on 08-18 and the board notes were
+   swept to match, **so his read now buys new information rather than re-finding known defects.**
+2. **ONE ADVISOR-MODE MOCK, 4-5 rounds.** 🚨 **Every live measurement in this repo is EXECUTOR
+   mode.** The product — Briggsy drafting, Claude advising in four lines — has never been run in
+   its current form; the only advisor run on record is Mock #1 (Aug 5), which predates
+   `run_engine.py`, `precompute_ladder.py`, the monitor-2 board and the four-line format itself.
+   The runbook asserts *"never eat more than ~30s of his 120"* and **that number has never been
+   measured.** Claude can stand the room up and pre-measure chain-exit → four-lines-delivered; the
+   read and the click need his hands.
+3. **Should QUEUE lead the precomputer's output?** One word. Raised three times, never answered.
+   Recommendation stands: flip it.
+4. **Long-TD bonus — fold into the curve at the Aug 27 refresh, yes or no?** Show him
+   `python scripts/build_curves.py --long-td-probe` first (writes nothing). Honest framing: *the
+   bonus is nearly uniform within a position, so it largely cancels in the only number that decides
+   a pick* — never "it's small", never as edge.
+5. **Delete the stray `Ladder Test 0809` league** (Sleeper → league settings). Confirmed live and
+   not scriptable — deleting data is outside what this project's automation may do.
+
+### ▶ CLAUDE CAN TAKE THESE UNATTENDED — ranked by cost if it happens on draft night
+
+1. **`docs/draft-day-runbook.md` needs a `## Step 0 — Arm the room (BOTH modes)` above Step 1.**
+   Step 3's mandatory re-arm calls `window.ffQueueSync`, **which only exists if the browser console
+   was pasted** — and that instruction lives only in the Executor section, which advisor mode is
+   told to skip. Move its substance up, leave a pointer behind, and add one line above the
+   `ffQueueSync` block saying it needs Step 0 in **both** modes.
+2. **The engine's terminal output carries three unglossed tokens, one of them inverted.**
+   (a) badge glyphs `† ! + ^ v » ° §` print with **no legend** — build a key from `meta.badges`
+   (which already holds `label`/`desc`) and print it **after** the BEST AVAILABLE rows, never
+   before: `_section()` reads the first token of each line under the header and would parse a key
+   line as a row. (b) `· thin, none in the top {BEST_N} yet` — top 12 of *what*; reword **without**
+   the literal `BEST AVAILABLE`, since two tests do `out.split("BEST AVAILABLE")`. (c)
+   `Their open needs: DEF(4)` counts **PICKS, not teams** — at pick 3 it prints `DEF(10)` in an
+   8-team league, which is the tell. Label it.
+   ⚠️ **Do NOT rename the `--- VBD LEANS ---` header in the same commit** unless
+   `precompute_ladder`'s `_section(stdout, "VBD LEANS")` literal moves with it and the suite is
+   green — the doc-side wording fix already landed and got most of the value at zero parser risk.
+3. **Runbook Step 2 says double-clicking the board starts it polling. It does not.**
+   `board.html` gates polling on `new URLSearchParams(location.search).get('live') === '1'`, so a
+   double-clicked `file://` page **never** polls. Say *"then click ▶ Go live"*, and add the missing
+   third self-test state as the FIRST bullet.
+4. **`scripts/templates/board.html`'s ☆ panel is labelled `My queue` and is wired to nothing** — it
+   is a local scratch pad, not Sleeper's queue, and the two are confusable at a glance on monitor 2.
+   Rename the heading and the row button's `title`; template only, then rebuild and commit
+   `draft-kit/` as ONE commit.
+5. **`README.md`'s State of play still says executor mode is "Proven, but not since the migration"**
+   — it was proven since: Ja'Marr Chase drafted at pick #1, API-confirmed (08-15), and seven picks
+   on a live 120s clock. Replace with the receipts **and their limits** (never run on the real
+   league draft; `picked_by` untrustworthy on a running clock).
+6. **`watch_draft_state.py` has no T-minus alarm** — `diff()` fires only on transition, so it says
+   STARTING GUN once and is then silent through draft day. Add a time-based entry (clock passed IN,
+   since `diff()` is pure by contract) firing T-7/T-48/T-6 with a `fired` dict in `last_seen.json`.
+   Also add `newsletter/data/state/DRAFT_ALERTS.md` to CLAUDE.md's *Where truth lives* table — **an
+   alert channel nobody is told to open is not a channel.**
+
+*(Also open, small: `docs/nightly-feud.md`'s folder map says "one per build" where U12 made it one
+per DAY; the runbook's After-the-draft bullet tells the next session to build in-season scripts
+while `docs/in-season-plan.md` — the named owner — forbids it until `/state/nfl` flips to
+`regular`; and two `ResourceWarning: unclosed file` in `tests/test_backtest_board.py`.)*
+
+---
 
 ## ▶ NEXT ACTION
 
@@ -2202,6 +2295,33 @@ Start with `--dry-run` to see every value and where it came from before anything
 
 Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the worked cases.
 The ones that bite hardest under time pressure:
+
+- 🚨 **A TEST CAN ASSERT THE HOLE, AND ITS DOCSTRING CAN ARGUE FOR IT.**
+  `test_no_cargo_at_all_still_writes_the_live_ladder` pinned a MOCK ladder with no cargo going to
+  the LIVE `ladder.json` — under a docstring that read *"this function's job is preventing an
+  overwrite"*. It was defending a real principle (insight 009: refusing a clean clone is a false
+  red) and had drawn the wrong boundary from it: **writing somewhere useful and writing to the live
+  queue are different things.** When a test blocks a safety fix, read what it was DEFENDING before
+  you either delete it or obey it — the answer here was a third path (`ladder.unarmed.json`).
+- 🚨 **INSIGHT 013 FIRED FOUR TIMES IN ONE NIGHT: a function's tests say nothing about its CALL
+  SITE.** `read_traded_picks` had eleven tests while the ladder never called it. `resolve_out` had
+  ninety-six green tests while `main()` handed it the wrong argument. **Mutate the CALL SITE, not
+  the function** — that is the only thing that surfaced either.
+  ⚠️ **And an untestable call site is how both survived:** `def resolve_out(..., default_out=DEFAULT_OUT)`
+  binds the module global at IMPORT time, so the only way to exercise `main()` was to let it write
+  the real war-room ladder. **A default argument that captures a path makes the function untestable
+  and the bug invisible.** Resolve it at call time.
+- 🚨 **A REWRITE THAT "JUST CLEANS UP THE WORDING" CAN SMUGGLE IN A JUDGMENT CHANGE.** Caught twice
+  on 2026-08-18. *"Streamable weeks 1-18"* nearly became *"Startable every week, matchup-proof"* — a
+  STRONGER claim. *"you spent round 4 on an RB3"* nearly became *"on a bench back"* — **false in a
+  league that starts 2 RB + 2 FLEX, where a third back is a flex STARTER.** Expand acronyms and
+  describe mechanisms; never re-grade a player while editing prose. The generator's
+  `rank changed: 0 · vorp changed: 0` is the receipt that a note edit really was a copy-edit.
+- ⚠️ **`--cargo` MEANT OPPOSITE THINGS IN THE TWO SCRIPTS** — a FILE in `run_engine.py`, a DIR in
+  `precompute_ladder.py`, same flag name, same doc. It made the runbook's go-time step work for one
+  and silently misbehave for the other, and it made a written prescription for a change literally
+  untypeable. **Both accept either form now.** Expect this shape wherever two scripts share a flag
+  name; check what the constant actually points at before believing the name.
 
 - 🚨 **A SCRIPTED EDIT REWRITES THE WHOLE FILE'S LINE ENDINGS, AND THE TEST SUITE CANNOT SEE IT.**
   This repo runs `core.autocrlf=false`, so the churn is real content and lands in the commit. Hit

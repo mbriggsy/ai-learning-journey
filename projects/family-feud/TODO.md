@@ -298,16 +298,16 @@ elite-K trio the runbook names. Only `Pineiro 2→3` (r168 t3) and `McPherson 2�
    curve's `excludes`, and update the provenance line in `docs/ranking-methodology.md` (~:86) in the
    same pass — the curve's "still excludes and still says so" honesty contract is the thing to keep
    true.
-5. **Delete the stray `Ladder Test 0809` league — NOW PHONE-ONLY, and the desktop cost is already
-   zero.** Measured 2026-08-19 with Briggsy's explicit go-ahead to delete: the league still exists
-   (API returns it; PoppaBriggsy sole member + commissioner, roster 1) **but the web client no
-   longer lists it** — the sidebar shows Family Feud alone, and every league route
-   (`/leagues/<id>`, `/predraft`, `/settings`, even the draft room's back arrow) redirects to
-   Family Feud. The draft room itself OPENS (`/draft/nfl/1392338162356875264`) but its menu has no
-   delete. So the sidebar-confusion cost this item guarded against is already gone on desktop, and
-   **no web path to Delete League exists — do not re-attempt from a session.** The one remaining
-   path is the phone: **Sleeper app → Ladder Test 0809 → League Settings → Delete League** (~20s,
-   commissioner action), whenever Briggsy feels like it.
+5. ✅ **RESOLVED 2026-08-19 — BRIGGSY ARCHIVED IT, which closes the item's actual cost.** The
+   mystery measured earlier that day (league exists via API, PoppaBriggsy sole member, yet the web
+   sidebar omits it and `/leagues/<id>`, `/predraft`, `/settings` and the draft room's back arrow
+   all redirect to Family Feud while `/draft/nfl/1392338162356875264` still opens) has a mundane
+   root cause: **he archived the league from his phone days earlier** when he couldn't find a
+   delete. Archive hides a league from the active list on every surface — so the draft-morning
+   sidebar-glance confusion this item existed to prevent is gone, phone included. The league still
+   EXISTS (archive ≠ delete); truly deleting it remains a phone-app commissioner action inside the
+   archived-leagues view, and is now optional hygiene, not a risk. **No web path to league
+   deletion exists — do not re-attempt from a session.**
 
 ### ▶ CLAUDE CAN TAKE THESE UNATTENDED — ranked by cost if it happens on draft night
 

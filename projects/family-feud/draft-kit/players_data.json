@@ -6,7 +6,7 @@
   "updated": "2026-08-09",
   "rankings": {
    "synthesized": "2026-08-14",
-   "judgment": "3e96f82c5edde498"
+   "judgment": "b7af885a1533a708"
   },
   "owner": "PoppaBriggsy",
   "badges": {
@@ -102,10 +102,10 @@
   },
   "build": {
    "generator_sha": "89febca8ef0659d8993fb578720124f8da961b3ea3b9e0ac6a2671c1fa7cf39d",
-   "source_sha256": "bddc5a08945430cbd21a96175e25893b72a1241a7703afe04568862c10b30ee4",
+   "source_sha256": "37309e62c681831330351f884c267e732b5bb8cfd84e710d59eb47e25449642f",
    "curve_sha256": "d22fe8e55dae76f1e9cf32288960d55926586531849c66050dcbf5d3f27e5822",
    "sleeper_dump_fetched_at": "2026-08-08T01:15:28+00:00",
-   "built_at": "2026-08-19T00:25:05+00:00",
+   "built_at": "2026-08-19T01:14:06+00:00",
    "dirty": true
   }
  },
@@ -135,7 +135,7 @@
    "badges": [
     "I"
    ],
-   "note": "Contract hold-in at camp (not practicing as of 8/4) — monitor, but Bijan's record deal paves his extension. Elite PPR back.",
+   "note": "At camp but refusing to practise until he's paid (not practicing as of 8/4) — monitor, but Bijan's record deal paves his extension. Elite PPR back.",
    "vorp": 268.4,
    "vbdRank": 1,
    "vbdDelta": 1,
@@ -212,7 +212,7 @@
    "pr": 5,
    "tier": 3,
    "badges": [],
-   "note": "Elite target share; Pickens arrival actually loosens coverage.",
+   "note": "Gets a huge share of Dallas's throws; Pickens arrival actually loosens coverage.",
    "vorp": 146.2,
    "vbdRank": 12,
    "vbdDelta": -5,
@@ -304,7 +304,7 @@
    "pr": 9,
    "tier": 5,
    "badges": [],
-   "note": "Alpha usage when healthy. Stroud's clear No. 1.",
+   "note": "Used like a true No. 1 when healthy. Stroud's clear favourite target.",
    "vorp": 106.8,
    "vbdRank": 26,
    "vbdDelta": -13,
@@ -456,7 +456,7 @@
    "pr": 13,
    "tier": 5,
    "badges": [],
-   "note": "A.J. Brown's exit makes him the clear Philly alpha. Target bump incoming.",
+   "note": "A.J. Brown's exit makes him Philadelphia's clear first read. More throws coming his way.",
    "vorp": 93.2,
    "vbdRank": 33,
    "vbdDelta": -10,
@@ -520,7 +520,7 @@
    "badges": [
     "I"
    ],
-   "note": "ACL rehab trending toward Week 1, avoided PUP, ADP discounted to Rd 3-4 money. Harbaugh structure. This is the upside pick that wins leagues.",
+   "note": "ACL rehab trending toward Week 1, never placed on the physically-unable-to-perform list, and going in rounds 3-4 rather than earlier. Harbaugh structure. This is the upside pick that wins leagues.",
    "vorp": 89.3,
    "vbdRank": 35,
    "vbdDelta": -8,
@@ -538,7 +538,7 @@
     "U",
     "X"
    ],
-   "note": "Super Bowl MVP, richest RB FA deal ever, Chiefs bell-cow hype... and no KC back has hit 1,000 yards since 2017. Pick your religion.",
+   "note": "Super Bowl MVP, richest free-agent RB deal ever, hype that he'll get nearly every Chiefs carry... and no KC back has hit 1,000 yards since 2017. Pick your religion.",
    "vorp": 124.9,
    "vbdRank": 19,
    "vbdDelta": 9,
@@ -598,7 +598,7 @@
    "pr": 17,
    "tier": 5,
    "badges": [],
-   "note": "Year 2 with Bryce trending up. Alpha frame, alpha usage.",
+   "note": "Year 2 with Bryce trending up. Built like a No. 1 and used like one.",
    "vorp": 77.4,
    "vbdRank": 42,
    "vbdDelta": -10,
@@ -745,7 +745,7 @@
    "badges": [
     "X"
    ],
-   "note": "Freshly extended and healthy, but multi-back committee talk won't die. Ceiling's real, so is the annoyance.",
+   "note": "Freshly extended and healthy, but the talk that they'll split carries between several backs won't die. Ceiling's real, so is the annoyance.",
    "vorp": 113.0,
    "vbdRank": 23,
    "vbdDelta": 18,
@@ -777,7 +777,7 @@
    "badges": [
     "X"
    ],
-   "note": "Volume intact but regression whispers; Lloyd behind him is healthy.",
+   "note": "Volume intact but whispers that last year's production won't repeat; Lloyd behind him is healthy.",
    "vorp": 103.8,
    "vbdRank": 27,
    "vbdDelta": 16,
@@ -871,7 +871,7 @@
    "badges": [
     "D"
    ],
-   "note": "Age 33, unsustainable 15-TD 2025, career-low YAC. Name-brand tax — let someone else pay it.",
+   "note": "Age 33, unsustainable 15-TD 2025, career-low yards after the catch. Name-brand tax — let someone else pay it.",
    "vorp": 60.8,
    "vbdRank": 56,
    "vbdDelta": -7,
@@ -1074,7 +1074,7 @@
    "pr": 23,
    "tier": 6,
    "badges": [],
-   "note": "Traded to Houston — TD-dependent flex now.",
+   "note": "Traded to Houston — a flex whose points now come mostly from touchdowns.",
    "vorp": 71.7,
    "vbdRank": 48,
    "vbdDelta": 14,
@@ -1205,7 +1205,7 @@
     "I",
     "U"
    ],
-   "note": "Off PUP, 'very much on track' for Week 1 post-ACL. TE1-upside at a discount.",
+   "note": "Off the physically-unable-to-perform list, 'very much on track' for Week 1 post-ACL. Startable-TE upside at a discount.",
    "vorp": 42.1,
    "vbdRank": 70,
    "vbdDelta": 0,
@@ -1223,7 +1223,7 @@
     "R",
     "B"
    ],
-   "note": "No. 32 pick; Walker left for KC, Charbonnet on PUP (knee). Sneaky year-1 lead-back path in a Super Bowl offense.",
+   "note": "No. 32 pick; Walker left for KC, Charbonnet on the physically-unable-to-perform list (knee). Sneaky year-1 lead-back path in a Super Bowl offense.",
    "vorp": 58.8,
    "vbdRank": 57,
    "vbdDelta": 14,
@@ -1506,7 +1506,7 @@
     "I",
     "D"
    ],
-   "note": "Ankle/PUP, off it within a week. Deep-ball role; Warren/Downs eat targets.",
+   "note": "Ankle — on the physically-unable-to-perform list, off it within a week. Deep-ball role; Warren/Downs eat targets.",
    "vorp": 19.1,
    "vbdRank": 96,
    "vbdDelta": -7,
@@ -1523,7 +1523,7 @@
    "badges": [
     "X"
    ],
-   "note": "Dobbins signing muddies the backfield. Priced like a starter, used like a committee.",
+   "note": "Dobbins signing muddies the backfield. Priced like a starter, used as one of several backs.",
    "vorp": 33.0,
    "vbdRank": 79,
    "vbdDelta": 11,
@@ -1555,7 +1555,7 @@
    "badges": [
     "D"
    ],
-   "note": "His receiver room is a MASH unit. ADP in freefall for a reason.",
+   "note": "His whole receiver room is hurt. Sliding down draft boards for a reason.",
    "vorp": 0.0,
    "vbdRank": 128,
    "vbdDelta": -36,
@@ -1654,7 +1654,7 @@
    "pr": 34,
    "tier": 7,
    "badges": [],
-   "note": "Veteran half of the Denver committee.",
+   "note": "The veteran in Denver's split backfield.",
    "vorp": 24.2,
    "vbdRank": 90,
    "vbdDelta": 8,
@@ -1719,7 +1719,7 @@
     "I",
     "S"
    ],
-   "note": "Achilles, on PUP, Week 1 in real doubt. If he slides far enough he's a stash-and-profit — you have 2 IR slots.",
+   "note": "Achilles, on the physically-unable-to-perform list, Week 1 in real doubt. If he slides far enough park him on IR and profit — you have 2 IR slots.",
    "vorp": 9.8,
    "vbdRank": 110,
    "vbdDelta": -8,
@@ -2034,7 +2034,7 @@
    "pr": 15,
    "tier": 5,
    "badges": [],
-   "note": "Still Lamar's red-zone guy, and Likely's exit helps his snaps — but the profile is aging and TD-dependent.",
+   "note": "Still Lamar's red-zone guy, and Likely's exit helps his snaps — but he's aging and nearly all his points come from touchdowns.",
    "vorp": -15.6,
    "vbdRank": 148,
    "vbdDelta": -26,
@@ -2116,7 +2116,7 @@
     "I",
     "S"
    ],
-   "note": "Knee, on PUP. IR-stash candidate if he falls to the last rounds.",
+   "note": "Knee, on the physically-unable-to-perform list. Worth parking on IR if he falls to the last rounds.",
    "vorp": 0.0,
    "vbdRank": 131,
    "vbdDelta": -4,
@@ -2332,7 +2332,7 @@
    "badges": [
     "U"
    ],
-   "note": "Daily camp highlights, 17.7 aDOT deep role for Maye.",
+   "note": "Daily camp highlights, Maye throws to him 17.7 yards downfield on average — a pure deep role.",
    "vorp": -24.7,
    "vbdRank": 160,
    "vbdDelta": -20,
@@ -2434,7 +2434,7 @@
    "badges": [
     "U"
    ],
-   "note": "First-team reps + big ADP spike after strong OTAs. Late flier.",
+   "note": "First-team reps + a big jump in where he's being drafted after strong OTAs. Late flier.",
    "vorp": -13.4,
    "vbdRank": 146,
    "vbdDelta": 0,
@@ -2483,7 +2483,7 @@
    "pr": 47,
    "tier": 8,
    "badges": [],
-   "note": "Overtook Emmett Johnson as Walker's backup. Handcuff of note.",
+   "note": "Overtook Emmett Johnson as Walker's backup. Worth owning if you drafted Walker.",
    "vorp": -19.5,
    "vbdRank": 153,
    "vbdDelta": -4,
@@ -2500,7 +2500,7 @@
    "badges": [
     "U"
    ],
-   "note": "Signed with SF Aug 2 — instantly the top healthy back behind CMC (Guerendo torn pec, James broken ribs, Black hurt). Most-added player on all of Sleeper this week. THE handcuff.",
+   "note": "Signed with SF Aug 2 — instantly the top healthy back behind Christian McCaffrey (Guerendo torn pec, James broken ribs, Black hurt). Most-added player on all of Sleeper this week. THE man to own if you drafted McCaffrey — he inherits the job the day McCaffrey goes down.",
    "vorp": -20.8,
    "vbdRank": 156,
    "vbdDelta": -6,
@@ -2931,11 +2931,11 @@
    },
    {
     "rounds": "9-12",
-    "plan": "Upside swings only: rookie RBs, breakout WRs, second TE if punting. No 'boring vet' picks."
+    "plan": "Upside swings only: rookie RBs, breakout WRs, second TE if you skipped TE early. No 'boring vet' picks."
    },
    {
     "rounds": "13-14",
-    "plan": "Handcuffs & stashes: Herbert (SF), IR-slot arbitrage, camp risers."
+    "plan": "Backups to starters, and stashes: Herbert (SF), using the IR slot to park an injured man, camp risers."
    },
    {
     "rounds": "15-16",
@@ -2945,7 +2945,7 @@
   "slotNotes": [
    {
     "slot": "Picks 1-3",
-    "note": "Gibbs/Bijan/Chase. Lock a Tier-1, come back at 14-16 for the best faller. Watch the Gibbs hold-in news."
+    "note": "Gibbs/Bijan/Chase. Lock a Tier-1, come back at 14-16 for the best faller. Watch the Gibbs contract news — he's at camp refusing to practise until he's paid."
    },
    {
     "slot": "Picks 4-6",

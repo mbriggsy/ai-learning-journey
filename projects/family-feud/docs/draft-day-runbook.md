@@ -843,6 +843,15 @@ goes first and the context goes last. He reads left-to-right and can stop after 
 - ⚠️ **Never coin a metaphor and capitalise it.** *"it's the SHELF underneath that differs"* reads
   as established project vocabulary he is expected to already own; nothing prints the word. Say
   **"the next tier down"**, which maps onto the TIER CLIFFS block he is looking at.
+- ✅ **THE BOARD'S OWN NOTES WERE SWEPT TO MATCH THIS RULE (2026-08-18).** They are THE CALL's only
+  legal source, so a banned term surviving in a note reaches him through the board no matter how
+  carefully the advisory is written — the two rules below collide otherwise. 30 strings across 26
+  notes plus `roundPlan` and `slotNotes`: *handcuff · bell-cow · alpha · hold-in · committee ·
+  target share · TD-dependent · TE1-upside · arbitrage · punting*, and the acronyms *PUP · ADP ·
+  aDOT · YAC · MASH · CMC*. **Zero remain on the shipped board or the PDF.** ⚠️ **Deliberately
+  KEPT:** `PPR` (the league's own format, printed in the header), and *Breakout / Bust risk / IR
+  stash* — those are **badge labels with a legend on the page**, so they are glossed where he reads
+  them. Over-sanitising the notes would flatten his voice for no gain.
 - **Never invent a player fact.** The `↳` note under each of the top 5 in BEST AVAILABLE is the
   sourced material. If the note does not say it, do not say it. *(This rule has already earned its
   place: a draft of the worked example below called Breece Hall an injury risk. His note reads

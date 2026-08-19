@@ -270,8 +270,8 @@ elite-K trio the runbook names. Only `Pineiro 2→3` (r168 t3) and `McPherson 2�
 
 ## ▶ NEXT ACTION — as of 2026-08-18, ~11 days out, draft still UNSCHEDULED
 
-**Live state, re-pulled 20:29 cargo: `status: pre_draft`, `start_time: null`, `draft_order: null`,
-room 8/8 full, traded_picks `[]`.** Nothing is on a hard clock except the ~Aug 27 refresh.
+**Live state, re-pulled 2026-08-19 11:29 cargo: `status: pre_draft`, `start_time: null`,
+`draft_order: null`, room 8/8 full.** Nothing is on a hard clock except the ~Aug 27 refresh.
 
 ### ⚑ WAITING ON BRIGGSY — decisions, not work. Nothing below moves without him.
 
@@ -310,6 +310,16 @@ room 8/8 full, traded_picks `[]`.** Nothing is on a hard clock except the ~Aug 2
    commissioner action), whenever Briggsy feels like it.
 
 ### ▶ CLAUDE CAN TAKE THESE UNATTENDED — ranked by cost if it happens on draft night
+
+**▼ ALL SIX CLOSED 2026-08-19, plus the three parenthetical small ones** — six builders in
+parallel, one adversarial verifier each, then the full suite centrally (which caught the one
+thing the targeted runs could not: a literal `†` in a new engine COMMENT tripping
+`test_build_board`'s one-glyph-source guard — reworded, not excepted). 1066 → **1103 tests**,
+seven commits, pushed. Kept for the reasoning; nothing below is open. Two finds worth keeping:
+the console's install banner names 4 of 13 helpers (Step 0 now says the `typeof ffQueueSync`
+check is the only oracle, and the skill's self-test roster was widened to all 13 the same day),
+and the board's **paused-after-polling** live-bar line differs from healthy LIVE by two words —
+the most confusable pair on monitor 2.
 
 1. **`docs/draft-day-runbook.md` needs a `## Step 0 — Arm the room (BOTH modes)` above Step 1.**
    Step 3's mandatory re-arm calls `window.ffQueueSync`, **which only exists if the browser console

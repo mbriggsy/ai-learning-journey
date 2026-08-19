@@ -43,8 +43,12 @@ then run this. It is **read-only except one AUTO-PICK toggle, which it restores.
 // FF DRAFT-ROOM SELF-TEST -- re-proves the DOM contract instead of trusting this file.
 var R = {}, PLAYER = 'Ja\'Marr Chase';   // any player still on the board
 
-R.consoleInstalled = ['ffFind','ffDraft','ffQueue','ffUnqueue','ffAutoPick','ffStartDraft',
-                      'ffHandlerProps'].every(function (k) { return typeof window[k] === 'function'; });
+// ALL 13 helpers, not a sample -- a STALE full paste (an old console file) passes any subset
+// that omits the newest names, and ffQueueSync is the only re-arm mechanism. Roster verified
+// against `grep "window.ff" scripts/sleeper_draft_console.js` 2026-08-19.
+R.consoleInstalled = ['ffFind','ffDraft','ffQueue','ffQueueList','ffUnqueue','ffUnqueueVerdict',
+                      'ffQueueSync','ffSyncPlan','ffStartDraft','ffAutoPick','ffQueueVerdict',
+                      'ffReadQueue','ffHandlerProps'].every(function (k) { return typeof window[k] === 'function'; });
 R.readsReact16 = String(window.ffHandlerProps).indexOf('__reactEventHandlers$') !== -1;
 R.searchBoxPresent = !!document.querySelector('input[placeholder*="Find player"]');
 

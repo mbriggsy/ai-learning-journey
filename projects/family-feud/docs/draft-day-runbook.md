@@ -348,7 +348,14 @@ and gave the output nowhere to go. It goes here:
 curl -sL --max-time 15 "https://api.sleeper.app/v1/draft/<draft_id>?cb=$(date +%s%N)" > temp/draft.json
 python scripts/run_engine.py --cargo temp/draft.json --dry-run    # confirm the seat, launch nothing
 python scripts/run_engine.py --cargo temp/draft.json              # then for real
+python scripts/precompute_ladder.py --cargo temp/draft.json       # SAME FLAG, same file
 ```
+
+✅ **`precompute_ladder.py --cargo` accepts that same file as of 2026-08-18, and it did not before.**
+Its `--cargo` had always meant a **directory** while `run_engine.py`'s meant a **file** — same flag
+name, same doc, opposite meanings — so the go-time technique above worked for one script and
+silently did the wrong thing for the other. It now takes either, and stages a file under the name
+the engine opens by literal name.
 
 **Do this once at go time and you never type a seat again.** With `draft_order` populated the
 wrapper derives the seat itself and says which oracle confirmed it. Until then, a typed seat now
@@ -442,9 +449,19 @@ drafted, stamps `#pick · seat`, and polls `/picks` every 12s (backing off to 60
 >
 > ```bash
 > python scripts/merge_picks.py <draft_id> \
->   && python scripts/run_engine.py <slot> \
->   && python scripts/precompute_ladder.py --slot <slot>
+>   && python scripts/run_engine.py \
+>   && python scripts/precompute_ladder.py
 > ```
+> ✅ **THE SEAT IS NO LONGER TYPED IN THIS CHAIN (2026-08-18).** Both scripts derive it from
+> `draft_order` and **refuse rather than default** when it is still null. That removes ~15 typings
+> of a number whose most attractive wrong answer is `3` — Briggsy's slot, his `roster_id`, and
+> `slot_to_roster_id`'s identity-map `3` are three unrelated 3s.
+> ⚠️ **PRE-DRAFT YOU STILL TYPE IT** (`run_engine.py <slot>` / `--slot <n>`): `draft_order` is null
+> until near go time, so this removes the other fourteen, not the first.
+> 🚨 **AND READ THE `[!]` LINE WHEN THE SEAT IS DERIVED.** A derived seat makes the engine's
+> `[checked] … against draft_order` self-confirming — it compared the value against the file it
+> came from. The precomputer now says so and names the one oracle that IS independent (our own
+> `picked_by`), which cannot arm until one of our picks has landed.
 > - **Measured saving: ~16s per pick** vs the same three as separate calls. Re-timed 2026-08-17
 >   against the real draft with the output grepped: **the whole chain ran in 0.617 s.**
 > - **`&&`, not `;`** — a failed merge must stop the chain, not feed a stale `picks.json` to the

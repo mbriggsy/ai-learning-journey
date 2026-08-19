@@ -340,6 +340,10 @@ Verify the paste landed the *current* logic — the install banner alone does no
   the contamination gate with the **REAL** draft id. Required form:
   `python scripts/run_engine.py <slot> --rounds 15 --draft-id <mock_id>`, and the same two flags on
   `precompute_ladder.py`. The seat goes positionally, because a mock's `draft_order` is its own.
+  🚨 **THIS GOT MORE DANGEROUS ON 2026-08-18, NOT LESS.** `--slot` is optional now, so the bare form
+  is the one your fingers reach for — and bare in a mock derives the **REAL league's seat** from the
+  **REAL league's cargo** and hands it to a mock whose `draft_order` is unrelated. That is a
+  complete, confident ladder for a seat you are not sitting in. **In a mock, always pass the seat.**
   *(Since 2026-08-17 the ladder at least can no longer overwrite the live `ladder.json` from a
   mock — it writes `ladder.<draft_id>.json` and says so — but the ADVICE is still computed against
   the wrong shape if you forget the flags.)*

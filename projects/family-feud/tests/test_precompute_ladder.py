@@ -723,9 +723,32 @@ class TestTheContaminationGateIsReachable(unittest.TestCase):
 
     def test_the_call_site_passes_the_cargo_dir_the_operator_chose(self):
         """MUTANT M8's shape: hardcoding CARGO here would make --cargo decorative and every test
-        above would still pass, because they all happen to point at the fixtures."""
-        with open(os.path.join(ROOT, "scripts", "precompute_ladder.py"), encoding="utf-8") as f:
-            self.assertIn("reference_draft_id(a.draft_id, a.cargo)", f.read())
+        above would still pass, because they all happen to point at the fixtures.
+
+        ⚠️ THIS USED TO ASSERT THE SOURCE TEXT `reference_draft_id(a.draft_id, a.cargo)`. That
+        pinned a spelling rather than a behaviour, and it went red on 2026-08-18 for a rename that
+        changed nothing it cared about (`a.cargo` -> `cargo_dir`, after --cargo learned to accept a
+        FILE as well as a dir). A test that breaks on a rename and would survive a real regression
+        is the wrong way round. It now points --cargo at a cargo naming a DIFFERENT draft and
+        asserts the gate reports THAT id -- which no hardcoded CARGO can satisfy."""
+        other = os.path.join(self._t.name, "other_cargo")
+        os.makedirs(other, exist_ok=True)
+        with open(os.path.join(other, "sleeper_draft.json"), "w", encoding="utf-8") as f:
+            json.dump({"draft_id": "1394479498451251200"}, f)      # a real mock, not the fixture
+        import contextlib
+        import io
+        buf = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(buf):
+                PL.main(["--slot", "3", "--cargo", other, "--out", self.out,
+                         "--feed", self.foreign])
+        except SystemExit as e:
+            buf.write(str(e))
+        out = buf.getvalue()
+        self.assertIn("1394479498451251200", out,
+                      "the gate was armed from somewhere other than the --cargo the operator chose")
+        self.assertNotIn("you asked for : 1390509994847240192", out,
+                         "--cargo is decorative: the default inbox armed the gate instead")
 
 
 class TestAMockCannotOverwriteTheLiveLadder(unittest.TestCase):
@@ -816,6 +839,211 @@ class TestAMockCannotOverwriteTheLiveLadder(unittest.TestCase):
         self.assertIn("cargo_draft_id(", body)
         self.assertNotIn("reference_draft_id(", body,
                          "resolve_out must ask identity, not the arming id -- see this docstring")
+
+
+class TestTheSeatCanBeDerivedInsteadOfTyped(unittest.TestCase):
+    """`--slot` was `required=True`, so the seat was retyped once per pick window -- ~15 times
+    under a 120s clock, with "3" as this project's most attractive wrong answer (Briggsy's slot,
+    his roster_id, and slot_to_roster_id's identity-map 3 are three unrelated 3s).
+
+    🚨 AND THE FIX BUYS A NEW HAZARD THE ITEM DID NOT NAME. Deriving the seat FROM `draft_order`
+    and then letting the engine "verify" it AGAINST `draft_order` is a tautology -- the engine
+    compares a value against the file it came from and cannot disagree. It still prints
+    `[checked] my_slot=N against draft_order`, which READS LIKE A GUARD. That is insight 005's
+    tie-breaker-agrees-with-the-board defect in a new costume. Half of this class is about the
+    derivation working; the other half is about it saying so.
+    """
+
+    REAL = "1390509994847240192"
+    #: The draft `lab_feed_120.json` actually came from. Engine-running tests must name it or the
+    #: contamination gate refuses BEFORE the engine runs -- which silently turns every assertion
+    #: about engine output into an assertion about a refusal banner.
+    LAB = "1390923383440424960"
+
+    def setUp(self):
+        if not os.path.exists(os.path.join(ROOT, "draft-kit", "players_data.json")):
+            self.skipTest("no board on this machine")
+        import shutil
+        import tempfile
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.out = os.path.join(self.tmp, "ladder.json")
+
+    def cargo(self, draft_order=None, draft_id=LAB, name="sleeper_draft.json", encoding="utf-8"):
+        """A cargo DIR holding one draft object. `draft_order=None` is the live pre-draft state."""
+        d = os.path.join(self.tmp, "inbox")
+        os.makedirs(d, exist_ok=True)
+        p = os.path.join(d, name)
+        with open(p, "w", encoding=encoding) as f:
+            json.dump({"draft_id": draft_id, "draft_order": draft_order}, f)
+        return d, p
+
+    def run_main(self, *argv):
+        import contextlib
+        import io
+        buf = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(buf):
+                rc = PL.main(list(argv))
+        except SystemExit as e:
+            return 1, buf.getvalue() + str(e)
+        return rc, buf.getvalue()
+
+    # ---- the derivation itself ----------------------------------------------------------------
+
+    def test_a_populated_draft_order_supplies_the_seat_and_SAYS_WHERE_FROM(self):
+        d, _ = self.cargo({PL.W.BRIGGSY_USER_ID: 5})
+        _, out = self.run_main("--cargo", d, "--out", self.out, "--feed", FEED, "--at", "8",
+                               "--draft-id", self.LAB)
+        self.assertIn("slot=5", out)
+        self.assertIn(f'draft_order["{PL.W.BRIGGSY_USER_ID}"]', out,
+                      "the seat must name the key it came from, not just the number")
+
+    def test_a_NULL_draft_order_REFUSES_rather_than_defaulting(self):
+        """🚨 THE ONE THAT MATTERS. `draft_order` is null until near go time -- which is the state
+        the live draft is in TODAY -- so this is the ordinary path, not an edge case. Defaulting to
+        anything here produces a complete, confident ladder for another manager's team."""
+        d, _ = self.cargo(None)
+        rc, out = self.run_main("--cargo", d, "--out", self.out, "--feed", FEED)
+        self.assertEqual(rc, 1)
+        self.assertIn("NO SEAT", out)
+        self.assertFalse(os.path.exists(self.out), "a refused run must persist no ladder")
+
+    def test_the_refusal_says_the_null_is_NORMAL_not_a_fault(self):
+        """A refusal that reads like a malfunction gets worked around. This one is the expected
+        pre-draft state and has to say so, or the operator goes hunting for a broken mule."""
+        d, _ = self.cargo(None)
+        _, out = self.run_main("--cargo", d, "--out", self.out, "--feed", FEED)
+        self.assertIn("NORMAL", out)
+        self.assertIn("--slot", out, "the refusal must name the way forward")
+
+    def test_the_refusal_names_the_two_wrong_answers_by_name(self):
+        d, _ = self.cargo(None)
+        _, out = self.run_main("--cargo", d, "--out", self.out, "--feed", FEED)
+        self.assertIn("roster_id", out)
+        self.assertIn("slot_to_roster_id", out)
+
+    def test_a_draft_order_that_omits_US_also_refuses(self):
+        """Populated, but for other people. `my_slot` returns None here exactly as for null, and
+        the two must not be allowed to diverge into 'populated therefore fine'."""
+        d, _ = self.cargo({"9999999999999999999": 4})
+        rc, out = self.run_main("--cargo", d, "--out", self.out, "--feed", FEED)
+        self.assertEqual(rc, 1)
+        self.assertIn("NO SEAT", out)
+
+    def test_a_BOM_in_a_hand_saved_draft_object_still_reads(self):
+        """utf-8-sig, matching run_engine and NOT this file's two older readers. The go-time step
+        curls the draft object to a file by hand, and a BOM there would refuse a perfectly good
+        seat at the worst possible moment."""
+        d, _ = self.cargo({PL.W.BRIGGSY_USER_ID: 6}, encoding="utf-8-sig")
+        _, out = self.run_main("--cargo", d, "--out", self.out, "--feed", FEED, "--at", "8",
+                               "--draft-id", self.LAB)
+        self.assertIn("slot=6", out)
+
+    def test_THE_CONTROL_an_explicit_slot_still_wins_and_is_not_derived(self):
+        """Without this, a derivation that ignored --slot entirely would pass everything above."""
+        d, _ = self.cargo({PL.W.BRIGGSY_USER_ID: 5})
+        _, out = self.run_main("--slot", "2", "--cargo", d, "--out", self.out, "--feed", FEED,
+                               "--at", "8", "--draft-id", self.LAB)
+        self.assertNotIn("slot=5", out, "an explicitly passed seat must not be overwritten")
+        self.assertNotIn("[draft] slot=", out, "nothing was derived, so nothing should say it was")
+
+    # ---- --cargo may be a FILE, which is what the runbook's go-time step produces --------------
+
+    def test_a_cargo_FILE_is_accepted_the_way_run_engine_takes_one(self):
+        """The runbook's go-time step curls the draft to `temp/draft.json` and passes it, because
+        the hourly inbox is guaranteed to be behind at the exact moment draft_order flips. That
+        form worked for run_engine.py and silently did the wrong thing here -- same flag name,
+        opposite meaning."""
+        _, p = self.cargo({PL.W.BRIGGSY_USER_ID: 7}, name="draft.json")
+        _, out = self.run_main("--cargo", p, "--out", self.out, "--feed", FEED, "--at", "8",
+                               "--draft-id", self.LAB)
+        self.assertIn("slot=7", out)
+
+    def test_resolve_cargo_maps_both_forms(self):
+        d, p = self.cargo({PL.W.BRIGGSY_USER_ID: 1}, name="draft.json")
+        self.assertEqual(PL.resolve_cargo(p), (p, os.path.dirname(os.path.abspath(p))))
+        self.assertEqual(PL.resolve_cargo(d), (os.path.join(d, "sleeper_draft.json"), d))
+
+    def test_a_staged_file_reaches_the_engine_under_the_name_it_opens(self):
+        """`draft_engine.py` opens `sleeper_draft.json` by LITERAL NAME, so a `temp/draft.json`
+        must be copied under that name or the seat oracle silently never runs."""
+        import tempfile
+        _, p = self.cargo({PL.W.BRIGGSY_USER_ID: 7}, name="draft.json")
+        with tempfile.TemporaryDirectory() as t:
+            staged = PL.stage_cargo(t, os.path.dirname(p), p)
+            self.assertIn("sleeper_draft.json", staged)
+            self.assertTrue(os.path.exists(
+                os.path.join(t, "newsletter", "data", "inbox", "sleeper_draft.json")))
+
+    # ---- the tautology ------------------------------------------------------------------------
+
+    def test_A_DERIVED_SEAT_DECLARES_THE_draft_order_CHECK_CIRCULAR(self):
+        """🚨 THE LOAD-BEARING TEST. The engine prints `[checked] my_slot=N against draft_order`.
+        When the seat was TYPED that is two independent readings agreeing. When it was DERIVED from
+        draft_order it is the file agreeing with itself -- and it prints identically. Without this
+        line the operator reads a green guard that guarded nothing."""
+        d, _ = self.cargo({PL.W.BRIGGSY_USER_ID: 3})
+        _, out = self.run_main("--cargo", d, "--out", self.out, "--feed", FEED, "--at", "8",
+                               "--draft-id", self.LAB)
+        if "against draft_order" not in out:
+            self.skipTest("the engine did not run its draft_order oracle on this feed")
+        self.assertIn("CIRCULAR", out)
+
+    def test_the_INDEPENDENT_oracle_is_NAMED_once_our_picks_have_landed(self):
+        """🚨 THE TEST THAT WOULD HAVE CAUGHT THE FIRST VERSION OF THIS WARNING.
+
+        `parse_provenance` keeps the whole `[checked] ...` line as ONE string and the engine joins
+        several claims into it with ' · '. The first cut filtered whole LINES, so on a run where
+        `my_slot=3 against our own picks` was present it still announced 'NOTHING here has
+        independently confirmed the seat' -- a false red, which insight 009 names as the direction
+        that teaches an operator to ignore the warning. The unit test passed because it only
+        asserted the word CIRCULAR. RUNNING IT is what found this."""
+        d, _ = self.cargo({PL.W.BRIGGSY_USER_ID: 3})
+        _, out = self.run_main("--cargo", d, "--out", self.out, "--feed", FEED, "--at", "5",
+                               "--draft-id", self.LAB)
+        self.assertIn("against our own picks", out)
+        self.assertIn("The independent confirmation is", out)
+        self.assertNotIn("NOTHING here has independently confirmed", out,
+                         "our own picked_by HAD confirmed the seat -- this is the false red")
+
+    def test_a_NON_SEAT_claim_is_not_mistaken_for_independent_confirmation(self):
+        """The opposite error, and the dangerous one. The engine reports 'all 174 board rows carry
+        a frozen sleeperId' on the SAME line -- it is not a seat oracle at all. Counting it would
+        announce independent confirmation of a seat nothing had confirmed.
+
+        `--at 2` is before slot 3 has picked, so draft_order is the only seat claim available."""
+        d, _ = self.cargo({PL.W.BRIGGSY_USER_ID: 3})
+        _, out = self.run_main("--cargo", d, "--out", self.out, "--feed", FEED, "--at", "2",
+                               "--draft-id", self.LAB)
+        self.assertIn("sleeperId", out, "the fixture must actually carry a non-seat claim")
+        self.assertNotIn("against our own picks", out, "our picks must NOT have landed yet")
+        self.assertIn("NOTHING here has independently confirmed", out)
+        self.assertNotIn("The independent confirmation is", out,
+                         "a sleeperId claim was counted as confirming the SEAT")
+
+    def test_A_TYPED_SEAT_DOES_NOT_GET_THE_CIRCULARITY_WARNING(self):
+        """The paired control, and the reason the pair is worth more than either half. A warning
+        printed unconditionally would pass the test above while destroying the distinction it
+        exists to draw -- and would train the operator to ignore it."""
+        d, _ = self.cargo({PL.W.BRIGGSY_USER_ID: 3})
+        _, out = self.run_main("--slot", "3", "--cargo", d, "--out", self.out, "--feed", FEED,
+                               "--at", "8", "--draft-id", self.LAB)
+        self.assertNotIn("CIRCULAR", out,
+                         "a typed seat checked against draft_order is a REAL check")
+
+    def test_the_unverified_banner_says_whether_the_seat_was_typed_or_derived(self):
+        """It used to say `(you passed --slot N)` unconditionally -- which becomes a false
+        statement about the operator the moment the seat is derived."""
+        d, _ = self.cargo({PL.W.BRIGGSY_USER_ID: 3})
+        _, derived = self.run_main("--cargo", d, "--out", self.out, "--feed", FEED, "--at", "8",
+                                   "--draft-id", self.LAB)
+        _, typed = self.run_main("--slot", "3", "--cargo", d, "--out", self.out, "--feed", FEED,
+                                 "--at", "8", "--draft-id", self.LAB)
+        for out, word in ((derived, "DERIVED"), (typed, "passed on the command line")):
+            if "!!" not in out:
+                continue                     # the seat verified, so no banner -- nothing to assert
+            self.assertIn(word, out)
 
 
 if __name__ == "__main__":

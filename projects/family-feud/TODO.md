@@ -46,7 +46,7 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
 
   ◀ HERE (2026-08-17 overnight, 17 commits) — **THE PRODUCT IS WRITTEN DOWN, AND FIVE WAYS THE
     ENGINE COULD HAND OVER A CONFIDENT WRONG NUMBER ARE CLOSED.**
-    **1042 tests · 24 test files · 23 scripts · 29 insights · 14/14 mule sources.**
+    **1057 tests · 24 test files · 23 scripts · 29 insights · 14/14 mule sources.**
     ✅ **THE FOUR LINES EXIST** — `docs/draft-day-runbook.md` *Advisory format*, replacing the old
       ~5-line one. There is ONE format now. Three worked examples, all real engine output against
       `lab_feed_120.json` at seat 3, plus a BANNED list (no margins · no availability % · no
@@ -622,15 +622,52 @@ back rather than silently working around it — a gap worked around is a gap tha
    cache key (insight 020). ⚠️ It also exposed a test-isolation leak: `MergeCase.run_merge`
    monkeypatched module-level `fetch` and never restored it — fixed in `tearDown`.
 
-**▼ ONE STILL OPEN — item 9. Everything else in this block is closed.** *(Was three; a fourth was
-found that was in no queue at all; **10, 11 and 12 were all built and closed on 2026-08-18.**
-Re-verified item by item against source first — all three originals were genuinely open, and **two
-of the three prescriptions were wrong in ways that would have burned clock.** ⚠️ The pattern worth
-carrying: **every one of these three items found a defect its own prescription did not know about**
-— an unarmed 404 message, six stale doc surfaces, and two dormant wrong sentences on the board.
-Writing the test is what found them, not reading the code.)*
+**▼ NOTHING LEFT OPEN IN THIS BLOCK — 9, 10, 11 and 12 all closed 2026-08-18.** *(Was three; a
+fourth was found that was in no queue at all. Re-verified item by item against source first — all
+three originals were genuinely open, and **two of the three prescriptions were wrong in ways that
+would have burned clock.**)*
 
-9. **MAKE `precompute_ladder.py --slot` OPTIONAL.** Today it is `required=True`
+🚨 **THE PATTERN, AND IT HELD FOR ALL FOUR: every item found a defect its own prescription did not
+know about, and in every case it was BUILDING the thing that found it — never re-reading the code.**
+An unarmed 404 message · six stale doc surfaces · two dormant wrong sentences on the board · a
+false-red warning in the very code written to prevent a false confirmation. **Three of the four
+were found by running the thing, not by a test that passed.** That is [`028`](docs/insights/028-writing-the-output-found-what-the-tests-could-not.md)
+measured a fourth time — treat "the prescription is written, just apply it" as the start of the
+investigation, not the end of it.
+
+9. ✅ **DONE 2026-08-18 — the seat is derived, and the tautology it buys is DECLARED.** Omit
+   `--slot` and it comes from `draft_order`; it **refuses rather than defaulting** when that is
+   null. 78 → 93 tests in that file, four mutants planted and killed.
+   - 🚨 **THE HAZARD THE ITEM NAMED IS HANDLED, NOT AVOIDED.** A derived seat makes the engine's
+     `[checked] … against draft_order` self-confirming — it compares the value to the file it came
+     from. Every derived run now prints `[!] THAT draft_order CHECK IS CIRCULAR ON THIS RUN` and
+     names the one independent oracle (our own `picked_by`), or says plainly that **nothing** has
+     confirmed the seat when our picks have not landed. A typed seat gets no warning, because there
+     the check is real — that pair is the point.
+   - 🚨 **AND THE FIRST VERSION OF THAT WARNING WAS A FALSE RED, caught by RUNNING it, not by the
+     test.** `parse_provenance` keeps the whole `[checked] …` line as ONE string with claims joined
+     by ` · `, so filtering whole lines announced *"NOTHING has independently confirmed the seat"*
+     on a run where `against our own picks` sat in the same line. The unit test passed because it
+     only asserted the word CIRCULAR. ⚠️ The opposite error is the dangerous one and is now pinned
+     too: *"all 174 board rows carry a frozen sleeperId"* rides that same line and **must not** count
+     as confirming a seat.
+   - ✅ **`--cargo` NOW TAKES A FILE OR A DIR.** It meant a **dir** here and a **file** in
+     `run_engine.py` — same flag name, opposite meanings — so the runbook's go-time
+     `--cargo temp/draft.json` step worked for one script and silently did the wrong thing for the
+     other. ⚠️ **That collision is also what made this item's original prescription untypeable:** it
+     said `(cargo or {}).get("draft_order")`, borrowing `run_engine`'s meaning of a name that does
+     not exist here.
+   - ✅ The derived seat prints the **cargo age** beside it — `draft_order` flips at go time, which
+     is exactly when the hourly inbox is behind, and 60 minutes trips no staleness warning (the
+     threshold is 150).
+   - ⚠️ **`SKILL.md`'s mock warning got STRONGER, not weaker:** bare is now the form your fingers
+     reach for, and bare in a mock derives the REAL league's seat for a mock whose `draft_order` is
+     its own. **In a mock, always pass the seat.**
+   - ⚠️ **A test that asserted SOURCE TEXT went red for a rename that changed nothing it cared
+     about** (`a.cargo` → `cargo_dir`). Replaced with a behavioural one that points `--cargo` at a
+     different draft and asserts the gate reports *that* id — which no hardcoded `CARGO` satisfies.
+
+~~9. **MAKE `precompute_ladder.py --slot` OPTIONAL.**~~ Today it is `required=True`
    (`scripts/precompute_ladder.py:625`), so the seat is typed once per pick window — ~15 more times
    under a clock, and **"3" is this project's most attractive wrong answer** (three unrelated 3s).
    🚨 **THE PRESCRIPTION THIS ITEM CARRIED UNTIL 2026-08-18 COULD NOT BE TYPED.** It said to derive
@@ -1558,7 +1595,7 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **1042 tests** *(re-measured at the END of the
+gate went **13 findings → 0** by fixing surfaces. **1057 tests** *(re-measured at the END of the
 2026-08-17 session. This line read 907, was "corrected" to 946 mid-session, and went stale again
 within the same night as five later commits added tests — hence the rule: **update a count as the
 LAST edit before the commit, never mid-session**)*, 0 skips on this machine

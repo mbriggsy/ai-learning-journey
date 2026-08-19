@@ -1,9 +1,23 @@
 #!/usr/bin/env python3
 """The ladder precomputer -- move the deliberation OFF the clock.
 
-    python scripts/precompute_ladder.py --slot 3
+    python scripts/precompute_ladder.py                     # seat derived from draft_order
+    python scripts/precompute_ladder.py --slot 3            # seat typed (REQUIRED pre-draft)
+    python scripts/precompute_ladder.py --cargo temp/draft.json     # go-time, off a fresh curl
     python scripts/precompute_ladder.py --slot 3 --feed tests/fixtures/lab_feed_120.json --at 18
     python scripts/precompute_ladder.py --slot 3 --backtest
+
+THE SEAT. `--slot` was required until 2026-08-18, so it was retyped once per pick window -- ~15
+times under a 120s clock, on a number whose most attractive wrong answer is `3` (Briggsy's slot,
+his roster_id, and slot_to_roster_id's identity-map 3 are three unrelated 3s). Omit it and it comes
+from `draft_order`, and the derivation REFUSES rather than defaulting when that is still null --
+which it is until near go time, so this removes the other fourteen typings, not the first.
+
+🚨 A DERIVED SEAT MAKES THE ENGINE'S `against draft_order` CHECK CIRCULAR, and it still prints
+green. The engine compares the seat against the very file it was read from and cannot disagree.
+This file says so on every derived run and names the only independent oracle (our own `picked_by`,
+which cannot arm until one of OUR picks has landed). Insight 005 in a new costume -- worse than a
+typo, because it reads as a guard.
 
 WHY THIS EXISTS. A live mock proved the human-in-terminal loop is too slow: the 4.3 clock expired
 while the engine was being run in Bash, Sleeper flipped the team to auto-pick and took Tetairoa
@@ -71,6 +85,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # the rule (per FILE, not per run) from the watcher; a second copy here is how two instruments
 # drift apart while both look right.
 from run_engine import freshness                                    # noqa: E402
+import watch_draft_state as W                                       # noqa: E402
 
 POS_RANK = re.compile(r"^(QB|RB|WR|TE|K|DEF)\d+$")
 NEXT_PICK = re.compile(r"YOUR next pick:\s*#(\d+)\s*[^\d]*?(\d+)\s+picks? away")
@@ -331,18 +346,47 @@ def market_order(names, cache=ADP_CACHE):
     return ordered, src
 
 
-def stage_cargo(tmp, cargo_dir=CARGO):
+def resolve_cargo(given):
+    """`--cargo` may be the mule's inbox DIR or a single draft-object FILE. Returns (file, dir).
+
+    🚨 THE SAME FLAG NAME MEANS OPPOSITE THINGS IN THE TWO SCRIPTS, and it has already cost real
+    time. `run_engine.py --cargo` takes a FILE (`shape.CARGO` is `.../inbox/sleeper_draft.json`);
+    this script's has always taken a DIR (`CARGO` here is `.../inbox`). The runbook's go-time step
+    -- curl the draft to `temp/draft.json` and pass it, because the hourly inbox is guaranteed to
+    be behind at exactly the moment `draft_order` flips -- therefore worked for one script and
+    silently did the wrong thing for the other. A written prescription for this very change was
+    untypeable for the same reason: it assumed a `cargo` dict that does not exist here.
+
+    Accepting both makes the go-time technique identical for both scripts, which is the only form
+    an operator can be expected to remember under a clock.
+    """
+    if os.path.isfile(given):
+        return given, os.path.dirname(os.path.abspath(given))
+    return os.path.join(given, "sleeper_draft.json"), given
+
+
+def stage_cargo(tmp, cargo_dir=CARGO, draft_file=None):
     """Put the mule's cargo where the engine looks for it, so its SEAT CHECK can actually run.
 
     `draft_engine.py:207` resolves `os.pardir/newsletter/data/inbox` relative to ITS cwd, and we
     run it in a temp dir. Without this the seat oracle is structurally unavailable and the engine
     can only ever say UNVERIFIED. Staging is best-effort: a clean clone has no cargo, and a missing
     oracle must never turn into a false red (insight 009) -- it turns into a warning we print.
+
+    `draft_file` lets a caller stage a draft object that is not named `sleeper_draft.json` -- the
+    go-time `temp/draft.json` case. It is copied UNDER the name the engine opens by literal name,
+    because the engine looks the file up by name and would otherwise never see it.
     """
     dest = os.path.join(tmp, "newsletter", "data", "inbox")
     os.makedirs(dest, exist_ok=True)
     staged = []
+    if draft_file and os.path.isfile(draft_file) and \
+            os.path.basename(draft_file) != "sleeper_draft.json":
+        shutil.copy(draft_file, os.path.join(dest, "sleeper_draft.json"))
+        staged.append("sleeper_draft.json")
     for name in ("sleeper_draft.json", "sleeper_users.json"):
+        if name in staged:
+            continue
         src = os.path.join(cargo_dir, name)
         if os.path.exists(src):
             shutil.copy(src, dest)
@@ -462,7 +506,8 @@ def _synth(feed, gone, id_of, slot, teams, draft_id):
     return synth
 
 
-def precompute(feed, slot, teams, rounds, draft_id, pool_size=48, at=None, cargo_dir=CARGO):
+def precompute(feed, slot, teams, rounds, draft_id, pool_size=48, at=None, cargo_dir=CARGO,
+               draft_file=None):
     feed = sorted((p for p in feed if p.get("pick_no")), key=lambda p: p["pick_no"])
     if at is not None:
         feed = feed[:at]
@@ -478,7 +523,7 @@ def precompute(feed, slot, teams, rounds, draft_id, pool_size=48, at=None, cargo
         # let a regression back to "the ledger must be in cwd" pass here and fail on draft morning.
         for name in ("players_data.json", "normalize.py"):
             shutil.copy(os.path.join(KIT, name), work)
-        staged = stage_cargo(t, cargo_dir)
+        staged = stage_cargo(t, cargo_dir, draft_file)
 
         base_out = run_engine(feed, slot, teams, rounds, draft_id, work)
         base = parse_best_available(base_out)
@@ -568,7 +613,8 @@ def precompute(feed, slot, teams, rounds, draft_id, pool_size=48, at=None, cargo
     }
 
 
-def backtest(feed, slot, teams, rounds, draft_id, stops, pool_size=48, cargo_dir=CARGO):
+def backtest(feed, slot, teams, rounds, draft_id, stops, pool_size=48, cargo_dir=CARGO,
+             draft_file=None):
     """Score the market projection against a feed whose future we already know -- WITH A NULL MODEL.
 
     The projection claims the next `gap` picks take the cheapest ADP still available. That is an
@@ -622,9 +668,11 @@ def backtest(feed, slot, teams, rounds, draft_id, stops, pool_size=48, cargo_dir
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Pre-compute the answer for our next pick, offline.")
     ap.add_argument("--feed", default=os.path.join(KIT, "picks.json"))
-    ap.add_argument("--slot", type=int, required=True,
+    ap.add_argument("--slot", type=int, default=None,
                     help="OUR draft slot. Read it from draft_order[\"1390750540631150592\"] and "
-                         "from nothing else -- roster_id and slot_to_roster_id are NOT the seat.")
+                         "from nothing else -- roster_id and slot_to_roster_id are NOT the seat. "
+                         "OMIT IT and it is derived from the cargo's draft_order, which REFUSES "
+                         "rather than defaulting when draft_order is still null.")
     ap.add_argument("--teams", type=int, default=8)
     ap.add_argument("--rounds", type=int, default=16)
     ap.add_argument("--draft-id", default=None)
@@ -634,7 +682,9 @@ def main(argv=None):
     # Injectable so a rehearsal -- and the suite -- can point at a fixture instead of the hourly
     # haul. A test that reads the live inbox is non-deterministic today and would start failing on
     # draft morning the moment `draft_order` populates (review residue 1).
-    ap.add_argument("--cargo", default=CARGO, help="mule cargo dir to stage for the seat oracle")
+    ap.add_argument("--cargo", default=CARGO,
+                    help="mule cargo DIR, or a single draft-object FILE (the go-time "
+                         "`curl > temp/draft.json` case -- same form run_engine.py takes)")
     ap.add_argument("--out", default=None,
                     help="where to write the ladder. Defaults to newsletter/data/state/ladder.json "
                          "for THIS league's draft, and to a draft-scoped filename for any other -- "
@@ -660,13 +710,40 @@ def main(argv=None):
     else:
         with open(a.feed, encoding="utf-8") as f:
             feed = json.load(f)
-    draft_id, gate_line = reference_draft_id(a.draft_id, a.cargo)
+    draft_file, cargo_dir = resolve_cargo(a.cargo)
+    draft_id, gate_line = reference_draft_id(a.draft_id, cargo_dir)
     print(gate_line)
+
+    # WHERE THE SEAT CAME FROM, captured BEFORE the derivation can overwrite it. Every message
+    # below has to be able to tell a typed seat from a derived one, and "a.slot is not None" stops
+    # being that question the instant we assign to it.
+    slot_given = a.slot is not None
+    if not slot_given:
+        raw, problem = W.load_json(draft_file, encoding="utf-8-sig")
+        # utf-8-sig, matching run_engine and NOT the two readers a few lines up in this file: a
+        # hand-saved or curl'd draft object can carry a BOM, and `utf-8` dies on it.
+        order = (raw or {}).get("draft_order") if isinstance(raw, dict) else None
+        derived = W.my_slot(order)
+        if derived is None:
+            raise SystemExit(
+                "NO SEAT. It was not given and this cargo cannot supply one: "
+                + (problem or f'draft_order holds no entry for user_id {W.BRIGGSY_USER_ID}')
+                + ".\ndraft_order stays null until near go time -- that is NORMAL, not a fault.\n"
+                  "Pass --slot <n>, read from draft_order and NOTHING else: roster_id and "
+                  "slot_to_roster_id are not the seat, and slot_to_roster_id is the identity map "
+                  "{1:1 ... 8:8} on this draft, so it returns whatever you give it.")
+        a.slot = int(derived)
+        _, age_note = freshness(draft_file)
+        # THE AGE IS NOT DECORATION. draft_order flips null -> populated AT GO TIME, which is
+        # precisely when the hourly inbox is guaranteed to be behind. A seat derived from a
+        # 60-minute-old file trips no staleness warning (the threshold is 150 min) and prints with
+        # exactly the confidence of a fresh one. Say how old it was and let the operator judge.
+        print(f'[draft] slot={a.slot} from draft_order["{W.BRIGGSY_USER_ID}"] -- {age_note}')
 
     if a.backtest:
         stops = [n for n in range(6, min(len(feed), 100), 4)]
         rows = backtest(feed, a.slot, a.teams, a.rounds, draft_id, stops, pool_size=a.pool,
-                        cargo_dir=a.cargo)
+                        cargo_dir=cargo_dir, draft_file=draft_file)
         if not rows:
             print(f"BACKTEST scored NOTHING: {len(feed)}-pick feed yielded no stop with a gap and "
                   "a projection. Nothing here is a measurement -- do not read a score into it.")
@@ -693,7 +770,7 @@ def main(argv=None):
         return 0
 
     res = precompute(feed, a.slot, a.teams, a.rounds, draft_id, pool_size=a.pool, at=a.at,
-                     cargo_dir=a.cargo)
+                     cargo_dir=cargo_dir, draft_file=draft_file)
 
     if res["seat_unverified"]:
         # The engine's own words, not a paraphrase -- it owns this warning and a second wording
@@ -701,12 +778,46 @@ def main(argv=None):
         print("!" * 66)
         for b in res["seat_banner"]:
             print(f"!! {b}")
-        print(f"!! (you passed --slot {a.slot} to the precomputer)")
+        print(f"!! (the precomputer used slot {a.slot}, "
+              f"{'passed on the command line' if slot_given else 'DERIVED from draft_order'})")
         print("!" * 66)
     for n in res["engine_notes"]:
         print(f"[unverified] {n}")
     if res["seat_checked"]:
         print(f"[checked] {' · '.join(res['seat_checked'])}")
+        # 🚨 A DERIVED SEAT MAKES THE draft_order CHECK SELF-CONFIRMING, AND IT STILL PRINTS GREEN.
+        # The engine has two oracles (draft_engine.py: "against draft_order" and "against our own
+        # picks"). When the operator TYPED the seat, the first is a real check -- two independent
+        # readings having to agree. When we derived the seat FROM draft_order, the engine compares
+        # that value against the very file it came from and can only ever agree. It is insight
+        # 005's tie-breaker-agrees-with-the-board defect in a new costume, and it is worse than a
+        # typo because it reads as a guard.
+        #
+        # We do NOT rewrite the engine's words (it owns them; a second wording is a second thing
+        # to keep in step). We say which of its checks is worth something.
+        # SPLIT THE LINE INTO ITS CLAIMS FIRST. `parse_provenance` keeps the whole `[checked] ...`
+        # line as ONE string, and the engine joins several claims into it with " · ". Filtering
+        # whole lines therefore said "NOTHING has independently confirmed the seat" on a run where
+        # `my_slot=3 against our own picks` was sitting in the same line -- a false red, and
+        # insight 009's point is that a false red is the direction that teaches you to ignore the
+        # warning entirely. Caught by running it, not by the test that asserted only "CIRCULAR".
+        claims = [c.strip() for entry in res["seat_checked"] for c in entry.split("·") if c.strip()]
+        circular = [c for c in claims if "draft_order" in c]
+        if circular and not slot_given:
+            # ONLY SEAT CLAIMS COUNT AS CONFIRMING THE SEAT. The engine also reports things like
+            # "all 174 board rows carry a frozen sleeperId" on this same line; treating that as
+            # independent confirmation would be the opposite error, and the dangerous one.
+            independent = [c for c in claims if "draft_order" not in c and "my_slot" in c]
+            print("[!] THAT draft_order CHECK IS CIRCULAR ON THIS RUN -- the seat was DERIVED from "
+                  "draft_order, so the engine compared it against its own source and could not "
+                  "have disagreed.")
+            if independent:
+                print(f"[!] The independent confirmation is: {' · '.join(independent)}.")
+            else:
+                print("[!] NOTHING here has independently confirmed the seat. The only oracle that "
+                      "can is our own picked_by in picks.json, and it cannot arm until one of OUR "
+                      "picks has landed -- so from pick #1 until our first, this line proves "
+                      "nothing. Pass --slot to make the draft_order check mean something.")
 
     print(f"our next pick: #{res['our_pick']} ({res['picks_away']} away)")
     print(f"candidates   : {res['pool_size']} by {res['pool_source']}")

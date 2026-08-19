@@ -770,6 +770,15 @@ goes first and the context goes last. He reads left-to-right and can stop after 
 - **Never present the no-early-QB rule as proof.** It is **four independent lines agreeing** (board
   arithmetic · 11 seasons of realised QB value ≈ 0 · the room's 2023 head-to-head · the QB-EARLY
   backtest arm at −49.8 ± 25.6). **None clears 2σ.** Say "four lines agree", never "it's proven".
+- 🚨 **Never use a piece of fantasy jargon these four lines have not spelled out.** Briggsy has
+  **120 seconds**; a word he has to decode is a stall, and the stall lands on the line whose whole
+  job is letting him override *intelligently*. **Found by Briggsy himself on 2026-08-18**, reading
+  the #94 example below: *"what is a 'stream'?"* — the Passed-on line said Herbert was *"only worth
+  it as a stream, and this roster has no bench room to stream from."* True, unreadable, and now
+  rewritten in plain terms. ⚠️ **This is the one banned-list rule a test can never catch**, because
+  the sentence is perfectly correct — it fails on the reader, and the reader is the oracle.
+  **Write the mechanism, not the term:** *"bench him and swap by matchup week to week"*, never
+  *"stream him"*. Same for *handcuff*, *zero-RB*, *bell-cow*, *smash spot* — say what it means.
 - **Never invent a player fact.** The `↳` note under each of the top 5 in BEST AVAILABLE is the
   sourced material. If the note does not say it, do not say it. *(This rule has already earned its
   place: a draft of the worked example below called Breece Hall an injury risk. His note reads
@@ -849,8 +858,9 @@ sixteen**, where seat 3 also owns **#126** — so on draft night count one more.
 ```
 THE CALL: **Michael Pittman Jr.** — one of only two picks left that are yours to spend; traded to
   Pittsburgh as Rodgers' possession guy.
-Passed on: **Justin Herbert** — ranks higher, but you have your QB. Only worth it as a stream, and
-  this roster has no bench room to stream from.
+Passed on: **Justin Herbert** — ranks higher, but you already have your QB and this league starts
+  one. A second QB only pays if you can bench him and swap by matchup week to week; with four picks
+  left and DEF + K owed, you have no bench room to do that.
 Risk: none at this pick — the risk is the ROUND. Four picks left and two mandated slots owed, so
   exactly TWO are free. Spend a third on skill and you cannot fill both.
 Before #99 (4 picks): 🚨 slots 1 and 2 pick twice each and BOTH need DEF and K — the same two slots

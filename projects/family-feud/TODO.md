@@ -291,12 +291,23 @@ room 8/8 full, traded_picks `[]`.** Nothing is on a hard clock except the ~Aug 2
    read and the click need his hands.
 3. **Should QUEUE lead the precomputer's output?** One word. Raised three times, never answered.
    Recommendation stands: flip it.
-4. **Long-TD bonus — fold into the curve at the Aug 27 refresh, yes or no?** Show him
-   `python scripts/build_curves.py --long-td-probe` first (writes nothing). Honest framing: *the
-   bonus is nearly uniform within a position, so it largely cancels in the only number that decides
-   a pick* — never "it's small", never as edge.
-5. **Delete the stray `Ladder Test 0809` league** (Sleeper → league settings). Confirmed live and
-   not scriptable — deleting data is outside what this project's automation may do.
+4. ✅ **RATIFIED BY BRIGGSY 2026-08-19: *"we should include all scoring rules into our draft
+   board."*** The probe ran the same day (writes nothing): ΔVORP spans −0.8 to +7.8, biggest movers
+   QB6 +5.9 / RB2 +6.8 / WR2 +7.8 — small and near-uniform, no rank flip in sight. **EXECUTE AT THE
+   AUG 27 REFRESH:** rebuild the curve with the bonus folded in, drop `long_td_bonus` from the
+   curve's `excludes`, and update the provenance line in `docs/ranking-methodology.md` (~:86) in the
+   same pass — the curve's "still excludes and still says so" honesty contract is the thing to keep
+   true.
+5. **Delete the stray `Ladder Test 0809` league — NOW PHONE-ONLY, and the desktop cost is already
+   zero.** Measured 2026-08-19 with Briggsy's explicit go-ahead to delete: the league still exists
+   (API returns it; PoppaBriggsy sole member + commissioner, roster 1) **but the web client no
+   longer lists it** — the sidebar shows Family Feud alone, and every league route
+   (`/leagues/<id>`, `/predraft`, `/settings`, even the draft room's back arrow) redirects to
+   Family Feud. The draft room itself OPENS (`/draft/nfl/1392338162356875264`) but its menu has no
+   delete. So the sidebar-confusion cost this item guarded against is already gone on desktop, and
+   **no web path to Delete League exists — do not re-attempt from a session.** The one remaining
+   path is the phone: **Sleeper app → Ladder Test 0809 → League Settings → Delete League** (~20s,
+   commissioner action), whenever Briggsy feels like it.
 
 ### ▶ CLAUDE CAN TAKE THESE UNATTENDED — ranked by cost if it happens on draft night
 

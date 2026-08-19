@@ -4,14 +4,17 @@
 ✅ **STATUS (corrected 2026-08-17): THE BOARD IS BUILT AND LIVE. This file is a historical plan,
 not a work item.** `draft-kit/family-feud-draft-board.html` polls `/picks` every 12s (backing off
 to 60s), greys and strikes the drafted, stamps each with a `#pick · seat N` chip, and retains its
-last good state on a failed fetch. It also carries a manual ☆ "My queue" panel.
+last good state on a failed fetch. It also carries a manual ☆ **"Shortlist (local)"** panel.
 🚨 **The lines below that say "the next session builds the board" are STALE and were still saying
 it ten days later** — they are kept only for the Option A reasoning and the CORS/CSP findings.
 **Read `TODO.md` for what is actually open.** What is genuinely NOT built: the board knows nothing
-about our seat, so it cannot show *"YOUR NEXT PICK: #28 · 7 away"*, and its ☆ queue is a manual
-in-window scratch pad that dies on reload and is wired to neither `ladder.json` nor Sleeper's real
-queue. See *HOW DRAFT NIGHT ACTUALLY RUNS* in `TODO.md` before extending it — the board is a
-**display**, never a control surface.
+about our seat, so it cannot show *"YOUR NEXT PICK: #28 · 7 away"*, and its ☆ **Shortlist (local)**
+panel is a manual in-window scratch pad that dies on reload and is wired to neither `ladder.json`
+nor Sleeper's real queue. **That panel was labelled "My queue" until 2026-08-19** — renamed because
+on monitor 2 a glance at starred names under that heading reads as "the Sleeper queue is armed"
+when nothing on Sleeper has been touched; the visible label now carries no "queue" at all, and the
+footer prose and the ☆ tooltip say so in full. See *HOW DRAFT NIGHT ACTUALLY RUNS* in `TODO.md`
+before extending it — the board is a **display**, never a control surface.
 
 ## The sequence
 1. ~~Mock #3 first~~ — **✅ PASSED Aug 6, a day ahead of schedule** (executor mode per runbook, now v3.2): 15/15 manual picks, zero clock misses, zero AUTO-PICK flips, roster VORP 1225.8. Full recap in [`draft-day-runbook.md`](draft-day-runbook.md)'s changelog. Pass criteria RETIRED. Note: the lab room `1390923383440424960` is **SPENT** (ran to completion) — any future mock needs a fresh 2-click room (Sleeper remembers settings). The spent room's `/picks` endpoint still serves all 120 picks, which makes it a perfect **static test feed** for the board build.

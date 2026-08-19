@@ -204,13 +204,21 @@
         <span class="msg" id="livemsg"></span>
       </div>
       <nav class="tabs" id="tabs"></nav>
-      <div class="queue" id="queue"><div class="qt">My queue</div><div class="qchips" id="qchips"></div></div>
+      <!-- The heading must never contain the word "queue". This panel is a LOCAL scratch pad: the
+           rows you starred in THIS browser window, dead on reload, wired to nothing. Sleeper's real
+           queue (armed by ffQueueSync, drained by timeout auto-pick) is a different thing on a
+           different screen, and on monitor 2 under a clock a glance at a panel labelled "My queue"
+           holding your starred names reads as "the Sleeper queue is armed" when it is not. A glance
+           reads WORDS, not sentences, so the disambiguation lives in the footer prose and in the
+           button tooltip (surfaces you read with time) and the word is simply absent here.
+           (No double hyphens in this comment: HTML forbids them inside a comment.) -->
+      <div class="queue" id="queue"><div class="qt">Shortlist (local)</div><div class="qchips" id="qchips"></div></div>
     </header>
     <main>
       <div class="panel" id="panel"></div>
     </main>
     <footer>
-      Rankings synthesized Aug 14, 2026 from FantasyPros, FTN, ESPN, Yahoo, CBS, NFL.com, SI, PFF consensus + training-camp reporting, tuned for this league's exact format. Click ✕ to cross a player off, ☆ to queue him. Board state lives in this window — a reload starts clean. Built by Claude for PoppaBriggsy's glorious comeback.
+      Rankings synthesized Aug 14, 2026 from FantasyPros, FTN, ESPN, Yahoo, CBS, NFL.com, SI, PFF consensus + training-camp reporting, tuned for this league's exact format. Click ✕ to cross a player off, ☆ to add him to the local Shortlist — a scratch pad in this browser window that never touches your Sleeper queue. Board state lives in this window; a reload starts clean. Built by Claude for PoppaBriggsy's glorious comeback.
     </footer>
   </div>
 </div>
@@ -294,6 +302,9 @@ let tab = 'Overall';
 // visibly does not work. Splitting them also lets a row say WHY it is off the board.
 const taken = new Set();          // board rank -> crossed off by hand
 const drafted = new Map();        // board rank -> {pick_no, slot} straight from the draft
+// `queued` / `#queue` / `renderQueue` are the LOCAL SHORTLIST -- internal names kept only so the
+// CSS and the ids stay stable. Nothing here reaches Sleeper. The user-visible label deliberately
+// says "Shortlist (local)" and never "queue"; do not rename it back to match these identifiers.
 const queued = new Set();
 let resetArmed = false;
 let vbdOrder = false;
@@ -329,7 +340,7 @@ function rowHtml(p, useOverallRank){
     ${vorpCell}
     <div class="rd">Rd ${(p.pos==='K'||p.pos==='DEF')?KDEF_ROUNDS:(roundOf(p.r)||'—')}</div>
     <div class="acts">
-      <button class="star${queued.has(p.r)?' on':''}" title="Add to my queue">${queued.has(p.r)?'★':'☆'}</button>
+      <button class="star${queued.has(p.r)?' on':''}" title="Add to local Shortlist — this window only, never your Sleeper queue">${queued.has(p.r)?'★':'☆'}</button>
       <button class="take${taken.has(p.r)?' on':''}" title="Mark drafted / cross off">✕</button>
     </div>
   </div>`;

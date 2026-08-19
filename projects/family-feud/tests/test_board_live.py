@@ -132,6 +132,84 @@ class TestTheNamedTraps(unittest.TestCase):
         self.assertIn("get('live') === '1'", src)
 
 
+class TestTheLocalShortlistIsNeverLabelledLikeSleepersQueue(unittest.TestCase):
+    """🚨 A LABEL, NOT A FEATURE -- and the cost model is a GLANCE, not a read.
+
+    The ☆ panel is a local scratch pad: the rows you starred in this browser window. It dies on
+    reload and is wired to nothing. Sleeper's real queue -- the one `ffQueueSync` arms and timeout
+    auto-pick drains -- is a different mechanism on a different screen, and the only thing that
+    ever connected the two was the word on the heading. It said `My queue` until 2026-08-19, so on
+    monitor 2 under a 2-minute clock a glance at that panel full of starred names read as *"the
+    Sleeper queue is armed"* while nothing on Sleeper had been touched. That is a false positive on
+    the one control whose whole job is to survive a blown clock.
+
+    So the assertion is about the GLANCE SURFACE: the heading may not contain the word `queue` at
+    all. Not "must be worded carefully" -- absent. A glance reads words, not sentences, and
+    `LOCAL SHORTLIST -- NOT THE SLEEPER QUEUE` puts the trigger word right back on the wall. The
+    disambiguation belongs on the surfaces you read with TIME (the footer prose, the ☆ tooltip),
+    and those are pinned separately below.
+
+    Both files are checked. The template is the source; the board is what actually gets opened, and
+    the two drift the moment somebody edits the template without rebuilding.
+    """
+
+    #: The panel heading, `<div class="qt">...</div>` -- the one string a passer-by reads.
+    QT = re.compile(r'<div class="qt">(.*?)</div>', re.S)
+    #: The ☆ row button's tooltip. The markup lives inside a JS template literal, so `class` carries
+    #: a `${...}` interpolation and `[^>]*?` has to cross it to reach `title`.
+    STAR_TITLE = re.compile(r'<button class="star[^>]*?title="([^"]*)"')
+
+    def headings(self):
+        for path in (TEMPLATE, BOARD):
+            found = self.QT.findall(read(path))
+            self.assertEqual(len(found), 1,
+                             f"expected exactly one .qt panel heading in {path}, found {len(found)}")
+            yield path, found[0]
+
+    def titles(self):
+        for path in (TEMPLATE, BOARD):
+            found = self.STAR_TITLE.findall(read(path))
+            self.assertEqual(len(found), 1,
+                             f"expected exactly one star button title in {path}, found {len(found)}")
+            yield path, found[0]
+
+    def test_the_heading_never_carries_the_word_queue(self):
+        """MUTANT: put `My queue` back and this goes red in both files."""
+        for path, heading in self.headings():
+            self.assertNotIn("queue", heading.lower(),
+                             f"{path}: the star panel heading reads {heading!r} -- a glance at that "
+                             f"over starred names says Sleeper's queue is armed when it is not")
+
+    def test_the_heading_says_what_it_actually_is(self):
+        """Absence is only half of it. Removing the word and leaving `Starred` would be equally
+        confusable -- the heading has to name the thing (a shortlist) and its scope (local)."""
+        for path, heading in self.headings():
+            low = heading.lower()
+            self.assertIn("shortlist", low, f"{path}: heading {heading!r} does not name the panel")
+            self.assertIn("local", low,
+                          f"{path}: heading {heading!r} does not say the shortlist is local, which "
+                          f"is the entire distinction from Sleeper's queue")
+
+    def test_the_star_tooltip_does_not_offer_to_queue_him(self):
+        """The tooltip said `Add to my queue`. It is read on hover -- with time -- so unlike the
+        heading it MAY name Sleeper's queue, but only to deny it."""
+        for path, title in self.titles():
+            low = title.lower()
+            self.assertNotIn("add to my queue", low, f"{path}: the star tooltip is the old wording")
+            self.assertIn("shortlist", low, f"{path}: tooltip {title!r} does not name the panel")
+            self.assertIn("local", low, f"{path}: tooltip {title!r} does not say it is local")
+
+    def test_the_footer_prose_denies_the_connection_outright(self):
+        """The footer is the one surface with room for a sentence, and it is where a first-time
+        reader learns what ☆ does. It used to say `☆ to queue him`, which is the same false
+        promise in prose."""
+        for path in (TEMPLATE, BOARD):
+            src = read(path)
+            self.assertNotIn("☆ to queue him", src, f"{path}: the footer still says star-queues-him")
+            self.assertRegex(src, r"never touches your Sleeper queue",
+                             f"{path}: the footer no longer denies the Sleeper connection")
+
+
 class TestTheLiveBarDoesNotDependOnColour(unittest.TestCase):
     def test_every_state_is_carried_by_words(self):
         """Briggsy is colour blind. The pip may only repeat what the text already says."""

@@ -16,6 +16,7 @@ Draft ~Aug 29, 2026. Mission: beat Hunter. [`README.md`](README.md) is the map.
 | [`docs/nightly-feud.md`](docs/nightly-feud.md) | The newsletter — both halves built, scheduled nightly at 21:45 |
 | [`docs/in-season-plan.md`](docs/in-season-plan.md) | What happens after the draft. A STUB on purpose — read its un-stub trigger before building anything in-season |
 | [`docs/insights/`](docs/insights/) | Hard-won lessons, one per file. Read before debugging something that smells familiar. |
+| [`newsletter/data/state/DRAFT_ALERTS.md`](newsletter/data/state/DRAFT_ALERTS.md) | Everything `scripts/watch_draft_state.py` has ever fired — the draft date appearing or MOVING, your slot appearing/moving/vanishing, a re-created draft, dead cargo, and the T-7/T-48/T-6 countdown. Append-only, newest last. Push and email are dead account-wide, so this file IS the delivery — **open it at the start of a session, not when you go looking** |
 | `TODO.md` | What's next, ranked |
 
 **Precedence:** the runbook's instruction sections are current doctrine; its changelog is history

@@ -28,9 +28,16 @@ BRIGGSY = "1390750540631150592"
 REAL = "1390509994847240192"
 
 # Aug 29 2026, 7:00 PM local, in the epoch MILLISECONDS Sleeper actually ships.
-AUG29 = int(datetime.datetime(2026, 8, 29, 19, 0).timestamp() * 1000)
+DRAFT_DAY = datetime.datetime(2026, 8, 29, 19, 0)
+AUG29 = int(DRAFT_DAY.timestamp() * 1000)
 AUG22 = int(datetime.datetime(2026, 8, 22, 19, 0).timestamp() * 1000)
+# A reschedule target, deliberately LATER so a stale fired-flag would have room to suppress it.
+SEP5_DAY = datetime.datetime(2026, 9, 5, 19, 0)
+SEP5 = int(SEP5_DAY.timestamp() * 1000)
 
+# The default wall clock. It sits 21 days 23 hours before DRAFT_DAY, which is OUTSIDE every
+# countdown threshold -- that is load-bearing, because it is what keeps the transition tests below
+# free of countdown entries they never asked for.
 PINNED = datetime.datetime(2026, 8, 7, 20, 0, 0)
 
 
@@ -67,7 +74,12 @@ class WatchCase(unittest.TestCase):
         w.STATE = self.state
         w.SNAPSHOT = os.path.join(self.state, "last_seen.json")
         w.ALERTS = os.path.join(self.state, "DRAFT_ALERTS.md")
-        w.now = lambda: PINNED
+        # The clock is an ATTRIBUTE, not a constant, because the countdown tests have to advance
+        # it. Everything that fabricates cargo below reads self.clock rather than PINNED, so
+        # moving the clock moves the fixtures with it -- otherwise the first advance would make
+        # every file on disk look hours stale and CARGO IS STALE would drown the test.
+        self.clock = PINNED
+        w.now = lambda: self.clock
 
     def tearDown(self):
         w.INBOX, w.STATE, w.SNAPSHOT, w.ALERTS, w.now = self._saved
@@ -84,7 +96,7 @@ class WatchCase(unittest.TestCase):
         """Backdate a cargo file's mtime. Freshness has to be measured per FILE, not per mule
         RUN -- one failed source leaves yesterday's file on disk while run_at is minutes old."""
         path = os.path.join(self.inbox, name)
-        stamp = (PINNED - datetime.timedelta(minutes=minutes)).timestamp()
+        stamp = (self.clock - datetime.timedelta(minutes=minutes)).timestamp()
         os.utime(path, (stamp, stamp))
 
     def put_cargo(self, d=None, u=None, age_minutes=5):
@@ -99,7 +111,7 @@ class WatchCase(unittest.TestCase):
         if u is not None:
             self._write(os.path.join(self.inbox, "sleeper_users.json"), u)
         if age_minutes is not None:
-            run_at = (PINNED - datetime.timedelta(minutes=age_minutes)).strftime("%Y-%m-%d %H:%M:%S")
+            run_at = (self.clock - datetime.timedelta(minutes=age_minutes)).strftime("%Y-%m-%d %H:%M:%S")
             with open(os.path.join(self.inbox, "mule_status.json"), "w", encoding="utf-8-sig") as f:
                 json.dump({"run_at": run_at, "machine": "test", "sources": {}}, f)
 
@@ -625,6 +637,19 @@ class TestTheStartingGunAgainstARealSleeperDraftObject(WatchCase):
     FIXTURE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                            "fixtures", "sleeper_draft_started.json")
 
+    def setUp(self):
+        super().setUp()
+        # THE CLOCK IS MOVED BACK HERE ON PURPOSE, and finding out why cost a red test.
+        # The fixture's real start_time is Sun 09 Aug 2026 06:17 PM, which sits 1 day 22 hours
+        # after PINNED -- INSIDE the T-48 countdown threshold. Left at PINNED, every run in this
+        # class also emits a countdown entry, and test_UNCHANGED_real_cargo_is_SILENT (the
+        # negative control that gives the rest of the class its meaning) fails for a reason that
+        # has nothing to do with what it is controlling. This class is about the TRANSITION
+        # writer, so the clock is put outside every threshold rather than the control being
+        # weakened to tolerate a countdown. The countdown against this same real object is
+        # exercised deliberately at the bottom of the class.
+        self.clock = datetime.datetime(2026, 7, 1, 12, 0, 0)
+
     def real_draft(self, start_time):
         with open(self.FIXTURE, encoding="utf-8") as f:
             d = json.load(f)
@@ -680,6 +705,370 @@ class TestTheStartingGunAgainstARealSleeperDraftObject(WatchCase):
         code, _ = self.run_watch()
         self.assertEqual(code, 0, "the second run has nothing new to say")
         self.assertEqual(self.alerts(), first, "the alert file must not grow on a repeat run")
+
+    def test_the_countdown_runs_off_SLEEPERS_OWN_start_time(self):
+        """The countdown's arithmetic has never been handed a value the world produced either.
+
+        Same reasoning as the class above it: our own start_time is null, so every other countdown
+        test in this file feeds it a number we made up. This one uses Sleeper's -- draft
+        1391539007871012864, `start_time: 1786313864801` = Sun 09 Aug 2026 06:17 PM local -- and
+        walks the clock to 30 hours before it, which is inside T-48 and outside T-6.
+        """
+        self.baseline(d=self.real_draft(1786313864801), u=users(*SIX))
+        self.clock = datetime.datetime(2026, 8, 9, 18, 17, 44) - datetime.timedelta(hours=30)
+        self.put_cargo(self.real_draft(1786313864801), users(*SIX))
+        for name in ("sleeper_draft.json", "sleeper_users.json"):
+            self.age_file(name, 5)
+        code, _ = self.run_watch()
+        self.assertEqual(code, 1, "nothing counted down toward a real Sleeper start_time")
+        e = self.entry("T-48 HOURS TO THE DRAFT")
+        self.assertTrue(e, "T-48 must reach the alert FILE")
+        self.assertIn("1 day, 6 hours", e, "the body must state the real gap to Sleeper's date")
+        self.assertIn("09 Aug 2026", e)
+        self.assertEqual(self.entry("T-6 HOURS TO THE DRAFT"), "",
+                         "30 hours out is not inside T-6")
+
+
+class TestTheCountdown(WatchCase):
+    """`diff()` fires on TRANSITIONS, so once STARTING GUN announced the date the watcher went
+    silent -- for the entire run-up, which is the part where prep either happens or doesn't.
+
+    The countdown is the opposite kind of alert: it fires on the passage of TIME toward
+    `start_time`, i.e. precisely when nothing is changing. Every test below therefore moves the
+    CLOCK and leaves the cargo alone, which is the case the whole rest of this file cannot reach.
+
+    `start_time` is null in the real league today, so none of this can be proven by running the
+    watcher for real yet. That makes the negative controls here the load-bearing ones.
+    """
+
+    def fresh_cargo(self, start=AUG29):
+        """Cargo whose mtimes track the CURRENT pinned clock.
+
+        Advancing the clock without this leaves every file looking days old, and CARGO IS STALE
+        buries the entry under test. Freshness is per FILE in this watcher, deliberately.
+        """
+        self.put_cargo(draft(start_time=start), users(*SIX))
+        self.put_league()
+        for name in ("sleeper_draft.json", "sleeper_users.json"):
+            self.age_file(name, 5)
+
+    def arm(self, start=AUG29):
+        """Baseline with the date ALREADY known, so what fires next is the countdown and never
+        STARTING GUN. Asserting silence here also proves PINNED sits outside every threshold."""
+        self.fresh_cargo(start)
+        code, _ = self.run_watch()
+        self.assertEqual(code, 0, self.alerts())
+        self.assertEqual(self.alerts(), "", "arming must be silent -- 22 days out is no threshold")
+
+    def at(self, start=AUG29, **before):
+        """Move the wall clock to `before` ahead of DRAFT_DAY, re-lay fresh cargo, run."""
+        self.clock = DRAFT_DAY - datetime.timedelta(**before)
+        self.fresh_cargo(start)
+        return self.run_watch()
+
+    def headers(self):
+        """Just the countdown headers, in the order they were appended."""
+        return [ln for ln in self.alerts().splitlines() if ln.startswith("## T-")]
+
+    def snapshot(self):
+        with open(w.SNAPSHOT, encoding="utf-8") as f:
+            return json.load(f)
+
+    # --- the null case, which is the world TODAY ------------------------------------------
+    def test_a_null_start_time_counts_down_to_nothing(self):
+        """The draft is unscheduled: Sleeper ships `start_time: null`. A countdown that divided by
+        that, or guessed ~Aug 29 from the docs, would fire against a date nobody set."""
+        self.put_cargo(draft(start_time=None), users(*SIX))
+        self.put_league()
+        self.run_watch()
+        for offset in (dict(days=30), dict(days=3), dict(hours=1)):
+            self.clock = DRAFT_DAY - datetime.timedelta(**offset)
+            self.fresh_cargo(start=None)
+            code, _ = self.run_watch()
+            self.assertEqual(code, 0, self.alerts())
+        self.assertEqual(self.alerts(), "", "a null start_time must produce no countdown at all")
+
+    def test_a_null_start_time_arms_no_flag_that_could_outlive_it(self):
+        """A flag written while the date is null would be keyed to `None` and could only ever
+        suppress something later. Nothing may be recorded until there is a date."""
+        self.put_cargo(draft(start_time=None), users(*SIX))
+        self.put_league()
+        self.run_watch()
+        self.clock = DRAFT_DAY - datetime.timedelta(days=1)
+        self.fresh_cargo(start=None)
+        self.run_watch()
+        self.assertEqual(self.snapshot()["fired"], {})
+
+    # --- each threshold, once -------------------------------------------------------------
+    def test_t7_fires_when_the_week_mark_is_crossed(self):
+        self.arm()
+        code, _ = self.at(days=6, hours=12)
+        self.assertEqual(code, 1, "the week mark passed and the watcher said nothing")
+        e = self.entry("T-7 DAYS TO THE DRAFT")
+        self.assertTrue(e, "T-7 DAYS TO THE DRAFT must exist in the alert FILE, not just stdout")
+        self.assertIn("6 days, 12 hours", e, "the body must state the REAL distance, not the label")
+        self.assertIn("29 Aug 2026", e, "the alert must name the date it is counting down to")
+        self.assertIn("rerank.py", e, "T-7 is the last unhurried moment to rebuild the ordering")
+
+    def test_each_threshold_fires_exactly_once_and_in_order(self):
+        self.arm()
+        for kw in (dict(days=6, hours=12), dict(hours=40), dict(hours=5)):
+            code, _ = self.at(**kw)
+            self.assertEqual(code, 1, f"nothing fired at {kw}")
+            code, _ = self.run_watch()          # same clock, same cargo, immediately again
+            self.assertEqual(code, 0, f"{kw} re-fired on a repeat run: {self.alerts()}")
+        self.assertEqual(
+            [h.split(" TO THE DRAFT")[0] for h in self.headers()],
+            ["## T-7 DAYS", "## T-48 HOURS", "## T-6 HOURS"],
+            "three alarms, once each, nearest last -- this file is read top-to-bottom")
+
+    def test_the_body_of_each_alarm_names_the_real_gap(self):
+        self.arm()
+        self.at(hours=40)
+        self.assertIn("1 day, 16 hours", self.entry("T-48 HOURS TO THE DRAFT"))
+        self.at(hours=5)
+        self.assertIn("5 hours", self.entry("T-6 HOURS TO THE DRAFT"))
+        self.assertIn("runbook", self.entry("T-6 HOURS TO THE DRAFT"),
+                      "six hours out, the only useful instruction is to open the runbook")
+
+    def test_it_stays_silent_outside_every_threshold(self):
+        """Negative control. An alarm that fires on an ordinary Tuesday is an alarm nobody reads,
+        and this file is append-only -- noise in it is permanent."""
+        self.arm()
+        code, _ = self.at(days=8)
+        self.assertEqual(code, 0, self.alerts())
+        self.assertEqual(self.headers(), [])
+
+    def test_a_start_time_in_the_past_never_fires_a_countdown(self):
+        """Every threshold is behind a draft that has already begun. Announcing one then would be
+        a false statement about the time left, in a file that is taken at face value."""
+        self.arm()
+        self.clock = DRAFT_DAY + datetime.timedelta(hours=2)
+        self.fresh_cargo()
+        code, _ = self.run_watch()
+        self.assertEqual(code, 0, self.alerts())
+        self.assertEqual(self.headers(), [])
+
+    # --- a date that appears already inside a threshold ------------------------------------
+    def test_a_date_set_inside_a_threshold_fires_only_the_NEAREST_alarm(self):
+        """DOCUMENTED POLICY, pinned here so it cannot drift back into either failure.
+
+        A date set four hours out has T-7, T-48 and T-6 all behind it on the first run that sees
+        it. Announcing "T-7 DAYS" would put a false headline in an append-only file; announcing
+        nothing would leave the loudest possible case completely silent. The nearest crossed
+        threshold is the only answer that is both true and not silent.
+        """
+        self.clock = DRAFT_DAY - datetime.timedelta(hours=4)
+        self.put_cargo(draft(start_time=None), users(*SIX))
+        self.put_league()
+        for name in ("sleeper_draft.json", "sleeper_users.json"):
+            self.age_file(name, 5)
+        self.run_watch()                                    # baseline: date not yet set
+
+        self.fresh_cargo()                                  # the date appears, 4 hours out
+        code, _ = self.run_watch()
+        self.assertEqual(code, 1)
+        self.assertTrue(self.entry("STARTING GUN"), "the date appearing is still a transition")
+        self.assertTrue(self.entry("T-6 HOURS TO THE DRAFT"))
+        self.assertIn("4 hours", self.entry("T-6 HOURS TO THE DRAFT"))
+        self.assertEqual(self.entry("T-7 DAYS TO THE DRAFT"), "",
+                         "'T-7 DAYS' over a draft four hours away is a lie in a file read late")
+        self.assertEqual(self.entry("T-48 HOURS TO THE DRAFT"), "")
+
+    def test_the_skipped_alarms_are_marked_fired_and_never_arrive_late(self):
+        self.clock = DRAFT_DAY - datetime.timedelta(hours=4)
+        self.put_cargo(draft(start_time=None), users(*SIX))
+        self.put_league()
+        for name in ("sleeper_draft.json", "sleeper_users.json"):
+            self.age_file(name, 5)
+        self.run_watch()
+        self.fresh_cargo()
+        self.run_watch()
+        self.assertEqual(sorted(self.snapshot()["fired"][str(AUG29)]),
+                         ["T-48 HOURS", "T-6 HOURS", "T-7 DAYS"])
+        self.clock = DRAFT_DAY - datetime.timedelta(hours=1)
+        self.fresh_cargo()
+        code, _ = self.run_watch()
+        self.assertEqual(code, 0, "a threshold skipped as already-past must not arrive later")
+
+    # --- a rescheduled draft --------------------------------------------------------------
+    def test_a_reschedule_re_arms_every_alarm(self):
+        """The reason this project has a watcher at all: ~Aug 29 is a handshake and it MOVES.
+
+        The fired flags are keyed by the start_time they were announced FOR, so a new date starts
+        with a clean set. A flat list of alarm names would look identical in the snapshot and would
+        silently swallow the entire countdown for the new date.
+        """
+        self.arm()
+        self.at(days=6, hours=12)                           # T-7 fires for Aug 29
+        self.assertTrue(self.entry("T-7 DAYS TO THE DRAFT"))
+
+        self.fresh_cargo(start=SEP5)                        # rescheduled a week later
+        code, _ = self.run_watch()
+        self.assertEqual(code, 1)
+        self.assertTrue(self.entry("DRAFT DATE MOVED"))
+        self.assertEqual(len(self.headers()), 1, "the new date is 13 days out -- nothing is due")
+
+        self.clock = SEP5_DAY - datetime.timedelta(days=6)  # inside T-7 of the NEW date
+        self.fresh_cargo(start=SEP5)
+        code, _ = self.run_watch()
+        self.assertEqual(code, 1, "the old date's flags suppressed the new date's countdown")
+        self.assertEqual(len(self.headers()), 2)
+        self.assertIn("05 Sep 2026", self.alerts().rsplit("## T-", 1)[-1],
+                      "the re-armed alarm must count down to the NEW date")
+
+    def test_the_flags_are_kept_per_date_not_pooled(self):
+        self.arm()
+        self.at(days=6, hours=12)
+        self.fresh_cargo(start=SEP5)
+        self.run_watch()
+        self.clock = SEP5_DAY - datetime.timedelta(days=6)
+        self.fresh_cargo(start=SEP5)
+        self.run_watch()
+        fired = self.snapshot()["fired"]
+        self.assertEqual(fired.get(str(AUG29)), ["T-7 DAYS"])
+        self.assertEqual(fired.get(str(SEP5)), ["T-7 DAYS"])
+
+    # --- the state that makes "once" work -------------------------------------------------
+    def test_the_snapshot_records_which_alarms_have_fired(self):
+        """Without this the countdown re-fires every hour and buries the file it writes to."""
+        self.arm()
+        self.at(days=6, hours=12)
+        self.assertEqual(self.snapshot()["fired"], {str(AUG29): ["T-7 DAYS"]})
+
+    def test_a_no_op_run_does_not_grow_the_alert_file(self):
+        self.arm()
+        self.at(days=6, hours=12)
+        first = self.alerts()
+        for _ in range(5):
+            self.run_watch()
+        self.assertEqual(self.alerts(), first, "five quiet runs re-announced the same alarm")
+
+    def test_an_unreadable_fired_block_re_arms_rather_than_silences(self):
+        """Garbage in that field must fail toward SPEAKING TWICE, never toward silence. A watcher
+        that goes quiet on bad state is exactly the failure this whole file exists to prevent."""
+        self.arm()
+        self.at(days=6, hours=12)
+        snap = self.snapshot()
+        snap["fired"] = "not a dict"
+        with open(w.SNAPSHOT, "w", encoding="utf-8") as f:
+            json.dump(snap, f)
+        self.clock = DRAFT_DAY - datetime.timedelta(days=6, hours=11)
+        self.fresh_cargo()
+        code, _ = self.run_watch()
+        self.assertEqual(code, 1, "a corrupt fired block silenced the countdown")
+        self.assertEqual(len(self.headers()), 2)
+
+
+class TestALostBaselineDoesNotSWALLOWTheCountdown(WatchCase):
+    """THE REGRESSION SHAPE THIS FILE ALREADY CARRIES A SCAR FROM, one field over.
+
+    STARTING GUN was once lost because it was computed against a baseline that had already been
+    re-written to contain the date -- state advanced before the alert had a chance to fire, with
+    the only trace a `note:` on a scheduled task's stdout. The countdown's `fired` dict is the same
+    kind of state, and the same mistake is available: have `save()` pre-mark every threshold the
+    new baseline happens to be inside. That is silent, permanent, and looks exactly like a healthy
+    quiet run. The rule that prevents it: `fired` may ONLY be advanced by t_minus() itself.
+    """
+
+    def cargo(self, start=AUG29):
+        self.put_cargo(draft(start_time=start), users(*SIX))
+        self.put_league()
+        for name in ("sleeper_draft.json", "sleeper_users.json"):
+            self.age_file(name, 5)
+
+    def snapshot(self):
+        with open(w.SNAPSHOT, encoding="utf-8") as f:
+            return json.load(f)
+
+    def test_a_genuine_first_run_inside_a_threshold_fires_on_the_NEXT_run(self):
+        """A first run is silent by design. That must cost the countdown a run, never the alarm."""
+        self.clock = DRAFT_DAY - datetime.timedelta(days=3)
+        self.cargo()
+        code, out = self.run_watch()
+        self.assertEqual(code, 0)
+        self.assertIn("baseline established", out)
+        self.assertEqual(self.snapshot()["fired"], {},
+                         "a fresh baseline pre-marked the thresholds it was already inside")
+
+        self.clock = DRAFT_DAY - datetime.timedelta(days=2, hours=23)
+        self.cargo()
+        code, _ = self.run_watch()
+        self.assertEqual(code, 1, "the baseline run consumed the alarm permanently")
+        self.assertTrue(self.entry("T-7 DAYS TO THE DRAFT"))
+
+    def test_a_lost_baseline_does_not_mark_the_countdown_fired(self):
+        self.clock = DRAFT_DAY - datetime.timedelta(days=20)
+        self.cargo()
+        self.run_watch()
+
+        self.clock = DRAFT_DAY - datetime.timedelta(days=3)
+        self.cargo()
+        with open(w.SNAPSHOT, "w", encoding="utf-8") as f:
+            f.write("{ this is not json")
+        code, _ = self.run_watch()
+        self.assertEqual(code, 1)
+        self.assertTrue(self.entry("BASELINE LOST"))
+        self.assertEqual(self.snapshot()["fired"], {},
+                         "the rebuilt baseline pre-marked T-7 -- the alarm is now gone forever")
+
+        self.clock = DRAFT_DAY - datetime.timedelta(days=2, hours=23)
+        self.cargo()
+        code, _ = self.run_watch()
+        self.assertEqual(code, 1, "a lost baseline swallowed the countdown, silently and for good")
+        self.assertTrue(self.entry("T-7 DAYS TO THE DRAFT"))
+
+
+class TestDiffStaysPure(WatchCase):
+    """`diff()` is pure BY CONTRACT and the countdown is the first thing in it that needs a clock.
+
+    The contract is what lets the watcher be tested at all: pin the inputs, get the outputs. A
+    now() call inside diff() would be invisible in every existing test here and would only show up
+    the day someone tried to replay a snapshot.
+    """
+
+    PREV = {"draft_id": REAL, "start_time": None, "status": "pre_draft",
+            "draft_order": None, "managers": list(SIX)}
+    CUR = {"draft_id": REAL, "start_time": AUG29, "status": "pre_draft",
+           "draft_order": None, "managers": list(SIX)}
+
+    def test_diff_does_not_call_now(self):
+        w.now = lambda: (_ for _ in ()).throw(AssertionError("diff() reached for the clock"))
+        entries, fired = w.diff(self.PREV, self.CUR,
+                                DRAFT_DAY - datetime.timedelta(days=3), {})
+        titles = [t for t, _ in entries]
+        self.assertIn("STARTING GUN", titles)
+        self.assertIn("T-7 DAYS TO THE DRAFT", titles)
+        self.assertEqual(fired, {str(AUG29): ["T-7 DAYS"]})
+
+    def test_diff_without_a_moment_still_reports_transitions(self):
+        """Omitting the clock must cost the countdown and nothing else -- a caller that has no
+        clock to give still needs the transitions."""
+        entries, fired = w.diff(self.PREV, self.CUR)
+        self.assertEqual([t for t, _ in entries], ["STARTING GUN"])
+        self.assertEqual(fired, {})
+
+    def test_the_same_inputs_give_the_same_answer_twice(self):
+        moment = DRAFT_DAY - datetime.timedelta(days=3)
+        first = w.diff(self.PREV, self.CUR, moment, {})
+        second = w.diff(self.PREV, self.CUR, moment, {})
+        self.assertEqual(first, second)
+
+    def test_the_caller_s_fired_dict_is_not_mutated(self):
+        """Returned, never mutated in place -- otherwise main() could not decide whether to
+        persist it, and a caller's dict would change under it."""
+        mine = {}
+        w.diff(self.PREV, self.CUR, DRAFT_DAY - datetime.timedelta(days=3), mine)
+        self.assertEqual(mine, {}, "diff() edited the dict it was handed")
+
+    def test_a_malformed_fired_argument_cannot_crash_the_watcher(self):
+        """main() launders this through load_fired(), but diff() takes it from any caller. A
+        traceback here would take the whole watcher down, and its every failure mode is silence."""
+        for junk in ({"x": 5}, {"x": None}, {"x": "T-7 DAYS"}, {None: []}):
+            entries, fired = w.diff(self.PREV, self.CUR,
+                                    DRAFT_DAY - datetime.timedelta(days=3), junk)
+            self.assertIn("T-7 DAYS TO THE DRAFT", [t for t, _ in entries],
+                          f"{junk!r} silenced the countdown instead of being ignored")
 
 
 if __name__ == "__main__":

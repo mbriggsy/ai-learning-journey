@@ -14,6 +14,15 @@ which is the same defect one level down.
 The mule has hauled sleeper_draft.json and sleeper_users.json hourly for days and NOTHING has ever
 read them. This is its first consumer.
 
+TWO KINDS OF ALERT LIVE HERE AND THEY FAIL IN OPPOSITE DIRECTIONS. Transitions (`diff`) fire on a
+CHANGE between two snapshots, so they say nothing while the world sits still -- which is how
+STARTING GUN could announce a date and then be silent for every one of the days between it and the
+draft. Countdowns (`t_minus`) fire on the passage of TIME toward `start_time`, so they speak
+precisely when nothing is changing. `diff()` is pure by contract, so the countdown's clock is
+PASSED IN rather than read; the "already announced" flags ride in `last_seen.json` beside the
+snapshot, keyed by the `start_time` they were announced FOR so a rescheduled draft cannot inherit
+the old date's silence.
+
 Output is a FILE, always. Anthropic push and email notifications are broken account-wide for this
 account, so an alert that depends on a notification is an alert that does not exist. The file is
 append-only and every entry carries the moment it fired, so opening it late still tells you WHEN
@@ -51,6 +60,45 @@ BRIGGSY_USER_ID = "1390750540631150592"
 # The mule runs hourly. Two consecutive misses is a real signal, not jitter -- during the Aug 7
 # folder rename it silently dropped its 11:29 and 12:29 runs while every status field stayed green.
 STALE_AFTER_MINUTES = 150
+
+# --- the countdown ---------------------------------------------------------------------------
+# (title stem, seconds before start_time), ORDERED MOST DISTANT FIRST. t_minus() relies on that
+# order to pick the nearest crossed threshold, so do not sort this by name.
+T_MINUS = (
+    ("T-7 DAYS", 7 * 24 * 60 * 60),
+    ("T-48 HOURS", 48 * 60 * 60),
+    ("T-6 HOURS", 6 * 60 * 60),
+)
+
+# Every body states the REAL distance ({left}) as well as the threshold in the header, because the
+# header is a label and the label is the part that can go stale between firing and being read.
+# Commands are verified runnable from the REPO ROOT -- a dead command in an alert costs most at the
+# exact moment the alert fires (see the run_engine.py assertion in tests/test_watch_draft_state.py).
+T_MINUS_BODY = {
+    "T-7 DAYS":
+        "The draft is {left} away -- {when}.\n"
+        "The board's ORDERING expires; check meta.rankings.synthesized (NOT meta.updated, which "
+        "is input freshness and does not move when the consensus does). A week out is the last "
+        "unhurried moment to rebuild it. From the REPO ROOT:\n"
+        "  python scripts/rerank.py            # dry run; then --write\n"
+        "  python scripts/build_board.py --rankings-synthesized <scrape date>\n"
+        "build_board.py ALONE CANNOT MOVE A RANK.",
+    "T-48 HOURS":
+        "The draft is {left} away -- {when}.\n"
+        "Two days out the room stops changing and the prep has to be real. From the REPO ROOT:\n"
+        "  python scripts/validate_board.py    # the board is not trusted until this passes\n"
+        "  python scripts/run_engine.py        # re-derives your seat and REFUSES rather than "
+        "guessing while draft_order is null\n"
+        "Read docs/draft-day-runbook.md end to end now, not on the clock -- Step 3 is the loop "
+        "you will actually run.",
+    "T-6 HOURS":
+        "The draft is {left} away -- {when}.\n"
+        "Open docs/draft-day-runbook.md and stay in it. From the REPO ROOT:\n"
+        "  python scripts/precompute_ladder.py   # prints QUEUE THIS ORDER; pre-arm the queue\n"
+        "  python scripts/run_engine.py          # the advisory loop\n"
+        "From here on RE-PULL rather than trusting anything on disk, and never quote league "
+        "membership, draft time or slot from memory or from a doc.",
+}
 
 
 def now():
@@ -144,6 +192,107 @@ def fmt_start_time(ms):
         return f"unreadable ({ms!r})"
 
 
+def start_datetime(ms):
+    """start_time as a local naive datetime, or None if it is unset or unreadable.
+
+    None is the answer TODAY -- the draft is unscheduled and Sleeper ships `start_time: null` --
+    and it is also the answer if the field ever comes back as garbage. Both mean "nothing to count
+    down to", and the countdown must be silent rather than clever about either.
+    """
+    if ms is None:
+        return None
+    try:
+        return datetime.datetime.fromtimestamp(int(ms) / 1000)
+    except (TypeError, ValueError, OSError, OverflowError):
+        return None
+
+
+def humanise_gap(seconds):
+    """`3 days, 4 hours` -- the distance actually remaining, in the units a human acts on."""
+    seconds = int(max(0, seconds))
+    days, rem = divmod(seconds, 24 * 60 * 60)
+    hours, rem = divmod(rem, 60 * 60)
+    minutes = rem // 60
+    parts = []
+    if days:
+        parts.append(f"{days} day{'' if days == 1 else 's'}")
+    if hours:
+        parts.append(f"{hours} hour{'' if hours == 1 else 's'}")
+    # Minutes are noise beside days; they are the whole story inside the last hour.
+    if minutes and not days:
+        parts.append(f"{minutes} minute{'' if minutes == 1 else 's'}")
+    return ", ".join(parts) or "under a minute"
+
+
+def load_fired(prev):
+    """Which countdown alarms have already been announced, KEYED BY THE start_time THEY WERE
+    ANNOUNCED FOR.
+
+    The key is the whole trick. A flat list of names would survive a reschedule and silently
+    swallow all three alarms for the NEW date -- the same shape as the STARTING GUN bug this file
+    already carries a comment about: an alert suppressed by state that was never about it.
+    Anything malformed reads as "nothing has fired", which is the safe direction: it can only make
+    an alarm speak twice, never make it silent.
+    """
+    fired = (prev or {}).get("fired")
+    if not isinstance(fired, dict):
+        return {}
+    return {str(k): [str(n) for n in v]
+            for k, v in fired.items() if isinstance(v, (list, tuple))}
+
+
+def t_minus(start_time, moment, fired):
+    """Countdown alarms as `start_time` approaches. Returns (entries, fired).
+
+    PURE. `moment` is a parameter and not a now() call precisely because diff() is pure by
+    contract -- the clock is obtained once by the caller and threaded in, so a test can pin it and
+    so two alerts in one run can never disagree about what time it is.
+
+    `fired` is returned rather than mutated; the caller persists it into last_seen.json.
+    """
+    # Copied, and copied DEFENSIVELY: main() routes this through load_fired(), but diff() takes
+    # `fired` from any caller and a bare list(v) over a non-sequence raises. A watcher that
+    # crashes goes quiet exactly when something is wrong, which is the one thing it may never do.
+    fired = {str(k): list(v) for k, v in (fired or {}).items()
+             if isinstance(v, (list, tuple))}
+    when = start_datetime(start_time)
+    if when is None or moment is None:
+        # NOTHING IS RECORDED HERE ON PURPOSE. The alarms must arm themselves the moment a real
+        # date appears, so an unscheduled draft may not leave a flag behind that outlives it.
+        return [], fired
+
+    remaining = (when - moment).total_seconds()
+    if remaining <= 0:
+        # The draft has started, or is long over. Every threshold is behind us and announcing one
+        # would be a false statement about the time left. No flag is written either: the flags are
+        # keyed to this start_time, so there is no future alarm here left to suppress.
+        return [], fired
+
+    key = str(start_time)
+    already = fired.get(key, [])
+    crossed = [name for name, secs in T_MINUS if remaining <= secs and name not in already]
+    if not crossed:
+        return [], fired
+
+    # ALREADY-INSIDE-A-THRESHOLD POLICY -- a deliberate choice, not an accident of the loop.
+    # If a date is set 3 days out, T-7 and T-48 are BOTH already behind us on the first run that
+    # sees it. We announce the NEAREST crossed threshold and mark the more distant ones fired
+    # without announcing them.
+    #   - Announcing "T-7 DAYS" over a draft that is 3 days away puts a false headline in a file
+    #     that is read late and taken at face value. DRAFT_ALERTS.md is append-only; a wrong line
+    #     in it never gets corrected, it just sits there.
+    #   - Announcing nothing at all would leave the loudest case -- a date set four hours out --
+    #     completely silent, and silence is this watcher's one unforgivable failure mode.
+    # Firing the nearest threshold is the only option that is both true and never silent. On the
+    # ordinary hourly cadence exactly one threshold is ever crossed per run, so this rule and
+    # "fire each one as you cross it" are the same rule; they only differ in the case above and in
+    # the case where the mule was down across two thresholds, where the nearer one is the truth.
+    fire = crossed[-1]                              # T_MINUS is ordered most distant first
+    fired[key] = already + crossed
+    body = T_MINUS_BODY[fire].format(left=humanise_gap(remaining), when=fmt_start_time(start_time))
+    return [(f"{fire} TO THE DRAFT", body)], fired
+
+
 def read_cargo():
     """Current draft + users state, reduced to just what a transition can be detected on."""
     draft, d_problem = load_json(os.path.join(INBOX, "sleeper_draft.json"))
@@ -176,8 +325,16 @@ def my_slot(draft_order):
     return draft_order.get(BRIGGSY_USER_ID)
 
 
-def diff(prev, cur):
-    """Transitions worth waking someone for, most urgent first. Pure -- no I/O, no clock."""
+def diff(prev, cur, moment=None, fired=None):
+    """Everything worth waking someone for, most urgent first. Returns (entries, fired).
+
+    PURE -- no I/O, and NO CLOCK READ. The countdown needs the current time, so the time arrives as
+    the `moment` parameter; `now()` is called once by main() and threaded in. Omit it and the
+    countdown simply stays quiet, which keeps the transition half usable on its own.
+
+    `fired` in, `fired` out: the countdown's "already announced" flags are state, and state that
+    diff() mutated in place would make it a liar about being pure.
+    """
     out = []
 
     was, is_ = prev.get("start_time"), cur.get("start_time")
@@ -204,6 +361,13 @@ def diff(prev, cur):
         out.append(("DRAFT DATE UNSET",
                     f"start_time went back to null (was {fmt_start_time(was)}). "
                     f"Someone cleared it in Sleeper."))
+
+    # The one alert in this file that is NOT a transition. It sits here, directly under the
+    # start_time block, because it is the same subject: STARTING GUN says the clock exists, and
+    # these say how much of it is left. On the run where a date appears already inside a threshold
+    # both fire, in that order, which reads correctly top-to-bottom in the append-only file.
+    countdown, fired = t_minus(is_, moment, fired)
+    out.extend(countdown)
 
     # A seat can APPEAR, MOVE, or VANISH. Only the first was ever detected, so a re-randomised
     # draft_order reported "no change" -- while the append-only alert file kept the earlier YOUR
@@ -261,7 +425,7 @@ def diff(prev, cur):
             lines.append("The room is FULL. A date usually follows.")
         out.append(("LEAGUE ROSTER CHANGED", "\n".join(lines)))
 
-    return out
+    return out, fired or {}
 
 
 def write_alerts(entries, cargo_run_note):
@@ -282,6 +446,11 @@ def write_alerts(entries, cargo_run_note):
 
 def main():
     cargo, problems = read_cargo()
+
+    # ONE reading of the clock for the whole run, obtained HERE and threaded into diff(). The
+    # countdown must not read the clock itself -- diff() is pure by contract, and a function that
+    # reaches for now() cannot be pinned by a test or replayed against a snapshot.
+    moment = now()
 
     age, age_problem = cargo_age_minutes()
     if age is None:
@@ -358,7 +527,12 @@ def main():
 
     if first_run or baseline_lost:
         os.makedirs(STATE, exist_ok=True)
-        save(cargo)
+        # THE COUNTDOWN FLAGS ARE WRITTEN EMPTY HERE, DELIBERATELY. Pre-marking the thresholds a
+        # brand-new baseline happens to be inside would be the STARTING GUN bug reborn one field
+        # over: an alarm suppressed by state that was written before the alarm ever had a chance
+        # to fire, with no trace anywhere. Empty means the next run -- an hour later -- announces
+        # the nearest threshold. `fired` may only ever be advanced by t_minus() itself.
+        save(cargo, {})
         if baseline_lost:
             entries.append(("BASELINE LOST — TRANSITIONS MAY HAVE PASSED UNSEEN",
                             f"the previous snapshot could not be read: {prev_problem}.\n"
@@ -389,8 +563,9 @@ def main():
             return 1
         return 0
 
-    entries.extend(diff(prev, cargo))
-    save(cargo)
+    transitions, fired = diff(prev, cargo, moment, load_fired(prev))
+    entries.extend(transitions)
+    save(cargo, fired)
 
     if not entries:
         print(f"no change ({len(cargo['managers'])} of 8 seats, "
@@ -407,10 +582,15 @@ def main():
     return 1
 
 
-def save(cargo):
+def save(cargo, fired=None):
+    """The snapshot, plus the countdown's fired flags.
+
+    They share ONE file on purpose: the flags are only meaningful against the start_time in the
+    same object, and two files can go out of step with each other in a way one file cannot.
+    """
     with open(SNAPSHOT, "w", encoding="utf-8") as f:
-        json.dump({"seen_at": now().strftime("%Y-%m-%d %H:%M:%S"), **cargo}, f,
-                  ensure_ascii=False, indent=1)
+        json.dump({"seen_at": now().strftime("%Y-%m-%d %H:%M:%S"), **cargo,
+                   "fired": fired or {}}, f, ensure_ascii=False, indent=1)
 
 
 if __name__ == "__main__":

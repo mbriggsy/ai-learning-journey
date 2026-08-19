@@ -1176,6 +1176,51 @@ class TestTheSeatCanBeDerivedInsteadOfTyped(unittest.TestCase):
                 continue                     # the seat verified, so no banner -- nothing to assert
             self.assertIn(word, out)
 
+    def test_A_TRADED_PICK_OF_OURS_REFUSES_THE_WHOLE_LADDER(self):
+        """🚨 `run_engine.py` hard-refuses this and the ladder had NO GATE AT ALL -- `grep -n traded
+        scripts/precompute_ladder.py` returned zero. The runbook teaches a standalone
+        `precompute_ladder.py` call at Step 4 (the moment your pick lands), so that was the ungated
+        path to the identical wrong answer, shelling out to the same engine.
+
+        A traded pick voids "your next pick is #N", which is the ladder's ENTIRE premise: both the
+        projection and the QUEUE are built from the gap to that pick. And Step 3.5 loads that queue
+        into Sleeper, where auto-pick drains it top-down.
+
+        Tested through main(), not through `read_traded_picks` -- the function already had eleven
+        tests in test_run_engine.py while this file's call site had none, which is the exact shape
+        of insight 013 and the fourth time it has bitten tonight."""
+        traded = os.path.join(self.tmp, "traded.json")
+        rosters = os.path.join(self.tmp, "rosters.json")
+        with open(rosters, "w", encoding="utf-8") as f:                 # roster 3 is OURS
+            json.dump([{"roster_id": 3, "owner_id": PL.W.BRIGGSY_USER_ID}], f)
+        with open(traded, "w", encoding="utf-8") as f:                  # ...and it was traded away
+            json.dump([{"season": "2026", "round": 4, "roster_id": 3,
+                        "previous_owner_id": 3, "owner_id": 1, "draft_id": self.REAL}], f)
+        d, _ = self.cargo({PL.W.BRIGGSY_USER_ID: 3})
+        rc, out = self.run_main("--cargo", d, "--out", self.out, "--feed", FEED, "--at", "8",
+                                "--draft-id", self.LAB,
+                                "--traded-cargo", traded, "--rosters-cargo", rosters)
+        self.assertEqual(rc, 2, "a traded pick of ours must refuse, exit 2, exactly as run_engine does")
+        self.assertIn("SHAPE THE LADDER DOES NOT MODEL", out)
+        self.assertFalse(os.path.exists(self.out),
+                         "a refused run must not leave a queue for the operator to load")
+
+    def test_THE_CONTROL_no_traded_picks_still_produces_a_ladder(self):
+        """Without this, a gate that refused unconditionally would pass the test above and quietly
+        stop the ladder from ever being produced -- on a draft where `/traded_picks` returns `[]`,
+        which is what it returns today."""
+        traded = os.path.join(self.tmp, "traded_empty.json")
+        rosters = os.path.join(self.tmp, "rosters2.json")
+        with open(traded, "w", encoding="utf-8") as f:
+            json.dump([], f)
+        with open(rosters, "w", encoding="utf-8") as f:
+            json.dump([{"roster_id": 3, "owner_id": PL.W.BRIGGSY_USER_ID}], f)
+        d, _ = self.cargo({PL.W.BRIGGSY_USER_ID: 3})
+        rc, _ = self.run_main("--cargo", d, "--out", self.out, "--feed", FEED, "--at", "8",
+                              "--draft-id", self.LAB,
+                              "--traded-cargo", traded, "--rosters-cargo", rosters)
+        self.assertEqual(rc, 0)
+        self.assertTrue(os.path.exists(self.out), "the clean case must still write a ladder")
 
 if __name__ == "__main__":
     unittest.main()

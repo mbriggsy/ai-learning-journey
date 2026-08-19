@@ -113,7 +113,7 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         section [2], who the consensus ranks that the board does
                                         not carry — the half a rank-gap metric cannot see.
                                         → docs/insights/018
-tests/           1064 tests: python -m unittest discover -s tests  (run from the root)
+tests/           1066 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```

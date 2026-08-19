@@ -86,6 +86,12 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # drift apart while both look right.
 from run_engine import freshness                                    # noqa: E402
 import watch_draft_state as W                                       # noqa: E402
+# ONE traded-picks gate, two consumers -- the same reason `freshness` is imported rather
+# than re-derived. run_engine.py hard-refuses a draft whose pick order is not a plain snake;
+# this file shells out to the SAME engine and had no gate at all, so the runbook's standalone
+# `precompute_ladder.py` call was the ungated path to the identical wrong answer.
+from shape import (TRADED_CARGO, ROSTERS_CARGO, UnsupportedShape,   # noqa: E402
+                   read_traded_picks)
 
 POS_RANK = re.compile(r"^(QB|RB|WR|TE|K|DEF)\d+$")
 NEXT_PICK = re.compile(r"YOUR next pick:\s*#(\d+)\s*[^\d]*?(\d+)\s+picks? away")
@@ -719,6 +725,10 @@ def main(argv=None):
     # Injectable so a rehearsal -- and the suite -- can point at a fixture instead of the hourly
     # haul. A test that reads the live inbox is non-deterministic today and would start failing on
     # draft morning the moment `draft_order` populates (review residue 1).
+    ap.add_argument("--traded-cargo", dest="traded_cargo", default=TRADED_CARGO,
+                    help="path to the draft's traded-picks list (same flag name as run_engine.py)")
+    ap.add_argument("--rosters-cargo", dest="rosters_cargo", default=ROSTERS_CARGO,
+                    help="path to the league's rosters (same flag name as run_engine.py)")
     ap.add_argument("--cargo", default=CARGO,
                     help="mule cargo DIR, or a single draft-object FILE (the go-time "
                          "`curl > temp/draft.json` case -- same form run_engine.py takes)")
@@ -776,6 +786,28 @@ def main(argv=None):
         # 60-minute-old file trips no staleness warning (the threshold is 150 min) and prints with
         # exactly the confidence of a fresh one. Say how old it was and let the operator judge.
         print(f'[draft] slot={a.slot} from draft_order["{W.BRIGGSY_USER_ID}"] -- {age_note}')
+
+    # --- traded picks -----------------------------------------------------------------------
+    # AFTER the draft id and the seat, deliberately: when this refuses, the operator needs the
+    # derivation above it to act on the refusal (run_engine.py:233-236 makes the same call for the
+    # same reason). A traded pick voids "your next pick is #N" -- which is the ladder's entire
+    # premise, since the projection and the queue are both built from the gap to that pick.
+    try:
+        _traded, traded_lines = read_traded_picks(a.traded_cargo, a.rosters_cargo,
+                                                  user_id=W.BRIGGSY_USER_ID)
+    except UnsupportedShape as e:
+        print("!" * 66)
+        print("!! THIS DRAFT IS A SHAPE THE LADDER DOES NOT MODEL")
+        print(f"!!   {e}")
+        print("!! The projection and the QUEUE are both built from the gap to YOUR next pick, and")
+        print("!! a traded pick means that gap is not what a plain snake says it is. A ladder")
+        print("!! computed anyway would be a complete, confident queue for the wrong pick order --")
+        print("!! and Step 3.5 loads it into Sleeper, where auto-pick drains it top-down.")
+        print("!! Refusing is the only correct behaviour here.")
+        print("!" * 66)
+        return 2
+    for ln in traded_lines:
+        print(ln)
 
     if a.backtest:
         stops = [n for n in range(6, min(len(feed), 100), 4)]

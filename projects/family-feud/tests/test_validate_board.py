@@ -694,9 +694,19 @@ class TestRankingsProvenance(GateCase):
         self.assertEqual(V.check_rankings_provenance(self.b), [])
 
     def test_a_moved_ranking_without_a_restamp_is_REFUSED(self):
+        """Anchored on the RECOMPUTED DIGEST, not on the message's wording.
+
+        This asserted the literal phrase "RANKINGS MOVED" until 2026-08-18 and went red when that
+        wording was corrected -- the message said RANKINGS for a change to any of
+        r/pr/tier/badges/note, and a reworded note is not a moved ranking. Pinning a sentence made
+        the test fire on a prose fix while a real regression (a check that stopped recomputing and
+        just complained) would have sailed through. The digest is the behaviour: it can only appear
+        if the check actually re-derived it from the mutated board."""
         b = json.loads(json.dumps(self.b))
         b["players"][0]["pr"] = 99
-        self.only(V.check_rankings_provenance(b), "RANKINGS MOVED")
+        problems = V.check_rankings_provenance(b)
+        self.only(problems, V.judgment_sha(b["players"]))
+        self.only(problems, str(b["meta"]["rankings"]["judgment"]))
 
     def test_the_refusal_names_the_way_out(self):
         b = json.loads(json.dumps(self.b))
@@ -789,7 +799,9 @@ class TestRankingsProvenance(GateCase):
         with open(p, "w", encoding="utf-8") as f:
             json.dump(board, f, ensure_ascii=False)
         problems = V.validate(board_path=p)
-        self.assertTrue(any("RANKINGS MOVED" in x for x in problems),
+        # The recomputed digest, not the message's wording -- see the sibling test for why.
+        digest = V.judgment_sha(board["players"])
+        self.assertTrue(any(digest in x for x in problems),
                         f"validate() never ran the rankings check: {problems}")
 
 

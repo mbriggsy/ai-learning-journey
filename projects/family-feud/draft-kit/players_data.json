@@ -6,7 +6,7 @@
   "updated": "2026-08-09",
   "rankings": {
    "synthesized": "2026-08-14",
-   "judgment": "f1a958148df8d75d"
+   "judgment": "3e96f82c5edde498"
   },
   "owner": "PoppaBriggsy",
   "badges": {
@@ -101,12 +101,12 @@
    "playoff_teams": 6
   },
   "build": {
-   "generator_sha": "aaa4384d240ee91e7ecdd24daba1b3512313dd66fe4cebd3f60b7afcc5a92f97",
-   "source_sha256": "b0733c16acff96ada6059f74139efac954de555e190c0555d20e961b45b4aab5",
+   "generator_sha": "89febca8ef0659d8993fb578720124f8da961b3ea3b9e0ac6a2671c1fa7cf39d",
+   "source_sha256": "bddc5a08945430cbd21a96175e25893b72a1241a7703afe04568862c10b30ee4",
    "curve_sha256": "d22fe8e55dae76f1e9cf32288960d55926586531849c66050dcbf5d3f27e5822",
    "sleeper_dump_fetched_at": "2026-08-08T01:15:28+00:00",
-   "built_at": "2026-08-14T21:09:46+00:00",
-   "dirty": false
+   "built_at": "2026-08-19T00:25:05+00:00",
+   "dirty": true
   }
  },
  "players": [
@@ -1766,7 +1766,7 @@
    "pr": 16,
    "tier": 5,
    "badges": [],
-   "note": "Streamable weeks 1-18.",
+   "note": "A usable fill-in QB in any week, all season.",
    "vorp": -37.1,
    "vbdRank": 167,
    "vbdDelta": -62,
@@ -2081,7 +2081,7 @@
    "pr": 21,
    "tier": 6,
    "badges": [],
-   "note": "Fine streamer in a good offense.",
+   "note": "Fine fill-in QB in a good offense.",
    "vorp": -80.0,
    "vbdRank": 172,
    "vbdDelta": -47,
@@ -2635,7 +2635,7 @@
    "pr": 8,
    "tier": 3,
    "badges": [],
-   "note": "Watt floor, always streams well.",
+   "note": "Watt floor -- a safe weekly fill-in.",
    "vorp": 4.0,
    "vbdRank": 119,
    "vbdDelta": 40,

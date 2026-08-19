@@ -754,10 +754,19 @@ def check_rankings_provenance(d):
         problems.append("meta.rankings.judgment is empty, so nothing pins the synthesis date to "
                         "the rankings it describes")
     elif stored != actual:
+        # SAY WHICH FIELDS, AND DO NOT SAY "RANKINGS". This read "the RANKINGS MOVED" until
+        # 2026-08-18, and `note` is one of JUDGMENT_KEYS -- so rewording a note fired a message
+        # asserting the ordering had changed when nothing had. The remedy it then prescribes is
+        # `--rankings-synthesized <today>`, which on a copy-edit stamps a FRESH synthesis date over
+        # a stale ordering and hides exactly what that date exists to expose. A message that names
+        # the wrong cause hands you the wrong fix with total confidence.
         problems.append(
-            f"the RANKINGS MOVED but meta.rankings still claims they were synthesized {when} "
-            f"(judgment {stored}, recomputed {actual}). Every surface prints that date. Re-run "
-            f"with --rankings-synthesized YYYY-MM-DD to record when the new judgment was made.")
+            f"the board's JUDGMENT changed ({' / '.join(JUDGMENT_KEYS)}) but meta.rankings still "
+            f"claims it was synthesized {when} (judgment {stored}, recomputed {actual}). Every "
+            f"surface prints that date. Re-run with --rankings-synthesized YYYY-MM-DD to record "
+            f"when the new judgment was made -- and if you only REWORDED a note and moved no rank, "
+            f"pass {when} again: the digest updates, the date stays true, and the board keeps "
+            f"telling you how old its ordering really is.")
     return problems
 
 

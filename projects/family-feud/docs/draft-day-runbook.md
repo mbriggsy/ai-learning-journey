@@ -46,11 +46,33 @@ until this correction.
 python scripts/consensus.py --refresh            # RE-FETCH FIRST. Do not trust the mule's cache
 python scripts/rerank.py                         # DRY RUN — prints every move, writes nothing
 python scripts/rerank.py --write                 # rewrites r/pr/tier in players_data.json
-python scripts/build_board.py --rankings-synthesized <the scrape date rerank printed>
+python scripts/build_board.py --allow-dirty --rankings-synthesized <the scrape date rerank printed>
 python scripts/build_board.py --verify-only      # gate + a sha256 per surface
 python scripts/injury_check.py                   # READ-ONLY. 23 blind rows on 2026-08-17
 python -m unittest discover -s tests             # from the root
+git add draft-kit/ && git commit                 # ONE refresh = ONE commit, every surface
 ```
+
+- 🚨 **`--allow-dirty` IS REQUIRED HERE AND THIS BLOCK OMITTED IT UNTIL 2026-08-18 — the sequence
+  as written could not run.** `rerank.py --write` edits `players_data.json`, which IS one of the
+  three surfaces, so `draft-kit/` is dirty by definition at step 4 and the bare generator refuses:
+  *"draft-kit/ has uncommitted changes, so a rebuild would destroy work that is not in git."* Found
+  by running it, not by reading it. **Do not "fix" this by committing between steps** — a commit
+  holding new ranks with old surfaces is exactly the inconsistent state the one-refresh-one-commit
+  rule exists to prevent, and it is what the 7am rollback would land on.
+- ⚠️ **The build stamps `meta.build.dirty: true` when you do this.** That is honest and expected on
+  a refresh — it records that the build read an uncommitted source. It is not a defect to chase.
+
+🚨 **PASSING A NEW DATE IS A CLAIM. Do not make it for a wording change.** `--rankings-synthesized`
+records **when a human made the judgment**, and `JUDGMENT_KEYS` is `r · pr · tier · badges · note` —
+so **editing a note trips the gate even when no rank moved.** If you only reworded a note, re-pass
+**the date already in `meta.rankings.synthesized`**: the digest updates, the date stays true, and
+the board keeps telling you how old its ordering really is. Moving the date on a copy-edit would
+hide that the ordering is still from the previous scrape — the same trap as `meta.updated`, and the
+docstring on `judgment_sha` already names it (the JAC→JAX fix would have "made the date lie").
+**Done for real on 2026-08-18:** three notes reworded, rebuilt with `--rankings-synthesized
+2026-08-14` (unchanged), and the generator reported **`rank changed: 0 · vorp changed: 0`** — which
+is the receipt that it was a copy-edit.
 
 - 🚨 **`--refresh` IS NOT OPTIONAL, and step 1 used to omit it.** *(Added 2026-08-17.)* A bare
   `consensus.py` reads whatever the mule last left on disk — and the whole point of this pass is

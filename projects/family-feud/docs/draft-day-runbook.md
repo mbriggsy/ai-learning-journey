@@ -766,7 +766,13 @@ Claude's hands are claude-in-chrome on Briggsy's logged-in Chrome; eyes stay on 
 > **This is the product.** Briggsy drafts; the terminal drives; the board on monitor 2 is a display
 > he reads. The engine already emits a rich state — **what he actually consumes is these four
 > lines.** Agreed with Briggsy 2026-08-17, and explicitly *"we can play with it and tweak it if
-> needed"*: his eye is the oracle here, not a test. *(This section REPLACED an older ~5-line format
+> needed"*: his eye is the oracle here, not a test.
+> ✅ **AND THAT ORACLE HAS NOW FIRED — RATIFIED BY BRIGGSY 2026-08-19: *"worked examples look
+> good."*** All three examples have had his eye. **This is the shipping format; do not redesign the
+> shape on a later session's taste.** Tweaks stay welcome by his own standing note; a rewrite does
+> not. ⚠️ **What his read does NOT cover is the shape under a clock** — he approved these at rest,
+> not at two minutes a pick. That is what the advisor-mode mock is for, and it is still unrun.
+> *(This section REPLACED an older ~5-line format
 > on 2026-08-17. There is one format. If you find a second one anywhere, this is the live one.)*
 
 ```

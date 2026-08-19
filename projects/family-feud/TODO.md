@@ -275,11 +275,13 @@ room 8/8 full, traded_picks `[]`.** Nothing is on a hard clock except the ~Aug 2
 
 ### ⚑ WAITING ON BRIGGSY — decisions, not work. Nothing below moves without him.
 
-1. **READ THE #3 AND #30 WORKED EXAMPLES** (`docs/draft-day-runbook.md` → *Advisory format — THE
-   FOUR LINES*). **His eye is the stated oracle and only #94 has reached him** — that one pass
-   produced *"what is a 'stream'?"*, the first defect in this product found by a human reading it.
-   Eleven more of that class were swept out of all three examples on 08-18 and the board notes were
-   swept to match, **so his read now buys new information rather than re-finding known defects.**
+1. ✅ **DONE — RATIFIED BY BRIGGSY 2026-08-19: *"worked examples look good."*** All three have now
+   had his eye, which is the format's ONLY oracle — there is no test for whether an advisory reads
+   right under a clock. **THE FOUR LINES ARE THE SHIPPING FORMAT.** ⚠️ **Do not redesign the shape
+   on a later session's taste.** His standing note still applies — *"we can play with it and tweak
+   it if needed"* — so tweaks are welcome; a rewrite is not. 🚨 **The one thing his read cannot
+   cover is the shape UNDER A CLOCK**, which is what the advisor-mode mock below is for: he
+   approved these reading them at rest, not at 2 minutes a pick.
 2. **ONE ADVISOR-MODE MOCK, 4-5 rounds.** 🚨 **Every live measurement in this repo is EXECUTOR
    mode.** The product — Briggsy drafting, Claude advising in four lines — has never been run in
    its current form; the only advisor run on record is Mock #1 (Aug 5), which predates

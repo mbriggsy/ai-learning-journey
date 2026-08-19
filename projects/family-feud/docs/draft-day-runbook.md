@@ -373,6 +373,18 @@ python scripts/run_engine.py --cargo temp/draft.json              # then for rea
 python scripts/precompute_ladder.py --cargo temp/draft.json       # SAME FLAG, same file
 ```
 
+🚨 **AND THE FIRST VERSION OF THAT FLAG PUT A HOLE UNDER THIS EXACT COMMAND — fixed the same
+night, recorded because the shape recurs.** `--cargo <file>` made `cargo_draft_id` join
+`sleeper_draft.json` onto a path that was already a file, find nothing, and return `""` — and the
+ladder-overwrite divert read `if real and draft_id and …`, so an empty id **short-circuited
+straight to the live `ladder.json`**. Reproduced: the dir form diverted correctly while the file
+form wrote the live queue **with no note at all**. Step 3.5 then pipes that file into
+`ffQueueSync`, where auto-pick drains it top-down. **The runs that could not be ARMED were exactly
+the runs allowed to OVERWRITE.** Both halves are closed — the file reaches the identity read, and
+an unarmed run now writes `ladder.unarmed.json` and says so. ⚠️ **1057 tests were green over it**,
+because every `--cargo FILE` test passed `--out` and `--draft-id`, the two flags that disable the
+guards the form broke.
+
 ✅ **`precompute_ladder.py --cargo` accepts that same file as of 2026-08-18, and it did not before.**
 Its `--cargo` had always meant a **directory** while `run_engine.py`'s meant a **file** — same flag
 name, same doc, opposite meanings — so the go-time technique above worked for one script and

@@ -394,7 +394,7 @@ def stage_cargo(tmp, cargo_dir=CARGO, draft_file=None):
     return staged
 
 
-def cargo_draft_id(cargo_dir=CARGO):
+def cargo_draft_id(cargo_dir=CARGO, draft_file=None):
     """This league's draft id as the cargo states it, with no freshness judgement. Identity only.
 
     Deliberately NOT `reference_draft_id`: that one decides what to ARM the contamination gate
@@ -402,15 +402,20 @@ def cargo_draft_id(cargo_dir=CARGO):
     *which draft is the real one* -- and for that a day-old cargo is a perfectly good answer,
     because the league's draft id does not change when the file gets old. Reusing the armed id
     would make a stale cargo silently re-enable the very overwrite this exists to prevent.
+
+    `draft_file` is the go-time `--cargo temp/draft.json` form. Without it this joined
+    "sleeper_draft.json" onto a path that was already a FILE, found nothing, and returned "" --
+    see the refusal in `resolve_out` for what that then unlocked.
     """
     try:
-        with open(os.path.join(cargo_dir, "sleeper_draft.json"), encoding="utf-8") as f:
+        with open(draft_file or os.path.join(cargo_dir, "sleeper_draft.json"),
+                  encoding="utf-8-sig") as f:
             return str((json.load(f) or {}).get("draft_id") or "")
     except (OSError, ValueError):
         return ""
 
 
-def resolve_out(given, draft_id, cargo_dir=CARGO, default_out=DEFAULT_OUT):
+def resolve_out(given, draft_id, cargo_dir=CARGO, default_out=None, draft_file=None):
     """Where the ladder is written. Returns (path, note-or-None).
 
     🚨 WHY THIS IS NOT JUST `--out or DEFAULT_OUT`. `ladder.json` was ONE fixed path regardless of
@@ -425,10 +430,29 @@ def resolve_out(given, draft_id, cargo_dir=CARGO, default_out=DEFAULT_OUT):
 
     An explicit `--out` always wins -- the operator saying where to put it is not a mistake.
     """
+    # RESOLVED AT CALL TIME, not bound at def time. `default_out=DEFAULT_OUT` in the signature
+    # captured the module global when this file was IMPORTED, so a test could not redirect it --
+    # which meant the only way to exercise main()'s wiring was to let it write the REAL war-room
+    # ladder. An untestable call site is how the a.cargo/cargo_dir bug below survived a mutation
+    # run: M15 (restore `resolve_out(a.out, draft_id, a.cargo)`) passed 96 green tests, because
+    # every test called this function directly and none called main(). Insight 013, fourth time.
+    default_out = default_out or DEFAULT_OUT
     if given:
         return given, None
-    real = cargo_draft_id(cargo_dir)
-    if real and draft_id and str(draft_id) != real:
+    real = cargo_draft_id(cargo_dir, draft_file)
+    if not real:
+        # 🚨 UNARMED MUST NOT MEAN "WRITE THE LIVE QUEUE". This used to fall through to
+        # `default_out`, so the ONE case where we cannot tell whose draft this is was the case
+        # allowed to overwrite the war-room ladder -- the guards that refuse to ARM were exactly
+        # the runs let through. Reachable for real since 2026-08-18: `--cargo temp/draft.json`
+        # (the form the runbook now teaches at go time) made `cargo_draft_id` join
+        # "sleeper_draft.json" onto a FILE, find nothing, and return "". Reproduced: the dir form
+        # diverted correctly while the file form wrote the live path with no note at all.
+        scoped = os.path.join(os.path.dirname(default_out), "ladder.unarmed.json")
+        return scoped, ("[held back] this cargo cannot say which draft is this league's, so "
+                        "nothing here can prove this ladder belongs in the live queue -- writing "
+                        "to ladder.unarmed.json instead. Pass --out to override.")
+    if draft_id and str(draft_id) != real:
         scoped = os.path.join(os.path.dirname(default_out), f"ladder.{draft_id}.json")
         return scoped, (f"[held back] this ladder was computed for draft {draft_id}, but this "
                         f"league's draft is {real} -- writing to {os.path.basename(scoped)} so it "
@@ -885,7 +909,7 @@ def main(argv=None):
         mark = "  [projection expects him gone]" if n in expect_gone else ""
         print(f"   {i}. {n}{mark}")
 
-    out_path, out_note = resolve_out(a.out, draft_id, a.cargo)
+    out_path, out_note = resolve_out(a.out, draft_id, cargo_dir, draft_file=draft_file)
     out_dir = os.path.dirname(os.path.abspath(out_path))
     os.makedirs(out_dir, exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:

@@ -46,7 +46,7 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
 
   ◀ HERE (2026-08-17 overnight, 17 commits) — **THE PRODUCT IS WRITTEN DOWN, AND FIVE WAYS THE
     ENGINE COULD HAND OVER A CONFIDENT WRONG NUMBER ARE CLOSED.**
-    **1057 tests · 24 test files · 23 scripts · 29 insights · 14/14 mule sources.**
+    **1061 tests · 24 test files · 23 scripts · 29 insights · 14/14 mule sources.**
     ✅ **THE FOUR LINES EXIST** — `docs/draft-day-runbook.md` *Advisory format*, replacing the old
       ~5-line one. There is ONE format now. Three worked examples, all real engine output against
       `lab_feed_120.json` at seat 3, plus a BANNED list (no margins · no availability % · no
@@ -1595,7 +1595,7 @@ bind; its *facts* expire.
 
 **State: the spine exists.** One command regenerates every surface, refuses to emit unless the gate
 passes on the STAGED set, and restores from `.last_good/` if a replace fails mid-set. The board
-gate went **13 findings → 0** by fixing surfaces. **1057 tests** *(re-measured at the END of the
+gate went **13 findings → 0** by fixing surfaces. **1061 tests** *(re-measured at the END of the
 2026-08-17 session. This line read 907, was "corrected" to 946 mid-session, and went stale again
 within the same night as five later commits added tests — hence the rule: **update a count as the
 LAST edit before the commit, never mid-session**)*, 0 skips on this machine

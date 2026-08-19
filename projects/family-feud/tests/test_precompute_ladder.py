@@ -802,10 +802,101 @@ class TestAMockCannotOverwriteTheLiveLadder(unittest.TestCase):
         self.assertEqual(path, mine)
         self.assertIsNone(note)
 
-    def test_no_cargo_at_all_still_writes_the_live_ladder(self):
-        """A clean clone has no cargo. Refusing to write anywhere would be a false red, and this
-        function's job is preventing an overwrite, not gating the run."""
+    def test_no_cargo_at_all_writes_a_SCOPED_ladder_never_the_live_one(self):
+        """🚨 THIS TEST ASSERTED THE HOLE UNTIL 2026-08-18.
+
+        It read `test_no_cargo_at_all_still_writes_the_live_ladder` and its own docstring said
+        *"this function's job is preventing an overwrite"* -- while the case it pinned is a MOCK
+        ladder (`self.MOCK`) with no cargo to identify the league, going to the LIVE path. That is
+        the 2026-08-17 poisoned-ladder incident exactly, blessed by a test.
+
+        The false-red concern behind it is real and is still honoured: a clean clone must not be
+        REFUSED. It is not -- it gets a ladder, at `ladder.unarmed.json`, with a note saying why.
+        Writing somewhere useful and writing to the live queue are different things, and conflating
+        them is what let the runs that could not be ARMED be the runs allowed to OVERWRITE.
+
+        Reachable for real since `--cargo` learned to take a FILE: `cargo_draft_id` joined
+        "sleeper_draft.json" onto a path that was already a file, found nothing, returned "", and
+        fell through here -- on the exact command the runbook teaches at go time."""
         path, note = PL.resolve_out(None, self.MOCK, os.path.join(self.tmp, "nope"), self.default)
+        self.assertNotEqual(path, self.default, "an unarmed run must never claim the live queue")
+        self.assertEqual(os.path.basename(path), "ladder.unarmed.json")
+        self.assertEqual(os.path.dirname(path), os.path.dirname(self.default),
+                         "it must still land somewhere the operator will look")
+        self.assertIn("held back", note or "", "a silent divert is how this went unnoticed")
+
+    def test_a_clean_clone_is_not_REFUSED_it_just_writes_elsewhere(self):
+        """The control for the rule above: insight 009's false-red direction is the dangerous one,
+        so prove this still produces a path and a reason rather than an exception or None."""
+        path, note = PL.resolve_out(None, self.MOCK, os.path.join(self.tmp, "nope"), self.default)
+        self.assertTrue(path)
+        self.assertTrue(note)
+
+    def test_THE_GO_TIME_FILE_FORM_CANNOT_OVERWRITE_THE_LIVE_LADDER(self):
+        """🚨 THE REGRESSION THIS PAIR EXISTS FOR, reproduced before it was fixed.
+
+        `--cargo temp/draft.json` is what `docs/draft-day-runbook.md` now tells the operator to run
+        at go time, and Step 3.5 pipes the resulting queue into `ffQueueSync` where Sleeper's
+        auto-pick drains it top-down on a blown clock. Measured 2026-08-18: the DIR form diverted
+        correctly while the FILE form wrote the live path with no note at all."""
+        f = os.path.join(self.tmp, "draft.json")
+        with open(f, "w", encoding="utf-8") as fh:
+            json.dump({"draft_id": self.REAL}, fh)
+        path, note = PL.resolve_out(None, self.MOCK, os.path.dirname(f), self.default, draft_file=f)
+        self.assertNotEqual(path, self.default)
+        self.assertEqual(os.path.basename(path), f"ladder.{self.MOCK}.json",
+                         "the file form must divert by draft id, exactly as the dir form does")
+        self.assertIn(self.REAL, note or "", "the note must name the league's real draft")
+
+    def test_MAIN_WIRES_THE_FILE_FORM_THROUGH_insight_013_for_the_fourth_time(self):
+        """🚨 THE CALL-SITE TEST, AND ITS ABSENCE IS WHY THIS SHIPPED.
+
+        Everything above calls `resolve_out` directly. A mutation run proved that is not enough:
+        restoring the real bug at the call site -- `resolve_out(a.out, draft_id, a.cargo)`, handing
+        a FILE to the parameter that gets `os.path.join`ed with "sleeper_draft.json" -- left all 96
+        tests GREEN. The function had tests; its wiring had none. That is insight 013's exact shape
+        and the fourth time this repo has made it.
+
+        It could not be written before `default_out` became call-time resolvable, because the only
+        way to reach main()'s path was to let it write the real war-room ladder."""
+        import contextlib
+        import io as _io
+        real_default = PL.DEFAULT_OUT
+        self.addCleanup(setattr, PL, "DEFAULT_OUT", real_default)
+        PL.DEFAULT_OUT = self.default            # a temp path -- never the real state dir
+
+        f = os.path.join(self.tmp, "draft.json")     # go-time form, naming THIS league
+        with open(f, "w", encoding="utf-8") as fh:
+            json.dump({"draft_id": self.REAL, "draft_order": {PL.W.BRIGGSY_USER_ID: 3}}, fh)
+
+        buf = _io.StringIO()
+        try:
+            with contextlib.redirect_stdout(buf):
+                PL.main(["--cargo", f, "--feed", FEED, "--at", "8",
+                         "--draft-id", "1390923383440424960"])   # a DIFFERENT draft than the cargo
+        except SystemExit as e:
+            buf.write(str(e))
+        out = buf.getvalue()
+        self.assertFalse(os.path.exists(self.default),
+                         "main() wrote the live ladder for a draft the cargo says is not ours")
+        self.assertIn("held back", out, "main() must surface the divert, not swallow it")
+        # ⚠️ "held back" ALONE DOES NOT PIN THE WIRING -- both diverts say it. With the call site
+        # mis-wired, `cargo_draft_id` finds nothing, `real` is "", and the run lands on the UNARMED
+        # path: still safe (that guard is the second layer), but it means the cargo was never read.
+        # Assert the run was ARMED -- the note can only name this league's real draft if the file
+        # actually reached `cargo_draft_id`.
+        self.assertIn(self.REAL, out,
+                      "the divert never read the cargo -- the file is not reaching cargo_draft_id")
+        self.assertNotIn("unarmed", out,
+                         "main() fell back to the unarmed path; the --cargo FILE was not wired through")
+
+    def test_the_file_form_still_writes_the_live_ladder_for_THIS_leagues_draft(self):
+        """The positive control. A divert that fired unconditionally would pass everything above
+        and quietly stop the war-room queue from ever being written on draft night."""
+        f = os.path.join(self.tmp, "draft.json")
+        with open(f, "w", encoding="utf-8") as fh:
+            json.dump({"draft_id": self.REAL}, fh)
+        path, note = PL.resolve_out(None, self.REAL, os.path.dirname(f), self.default, draft_file=f)
         self.assertEqual(path, self.default)
         self.assertIsNone(note)
 

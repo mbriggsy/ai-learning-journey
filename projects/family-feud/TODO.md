@@ -277,8 +277,8 @@ elite-K trio the runbook names. Only `Pineiro 2→3` (r168 t3) and `McPherson 2�
 which now carries THREE ratified payloads: the curve rebuild on fresh ECR, the long-TD fold
 (item 4 below), and a look at the 4 above-replacement players the consensus ranks that the board
 does not carry (Wan'Dale Robinson / Michael Wilson ~19 VORP — board membership, Briggsy's call).
-**Current: 1177 tests · 28 test files · 26 scripts · 30 insights** *(chamber added 2026-08-20)*.
-The one item needing his
+**Current: 1177 tests · 28 test files · 26 scripts · 31 insights** *(chamber + campaign 1 added
+2026-08-20)*. The one item needing his
 hands remains the ADVISOR-MODE MOCK (item 2) — and it matters MORE now: the four lines will ride
 the new lineup-delta queue (insight 030), which no human has yet read under a clock.
 
@@ -308,6 +308,10 @@ the new lineup-delta queue (insight 030), which no human has yet read under a cl
    the roster row was absent from the act-on view, so Risk-in-roster-terms was written by
    inference at both grepped stops). THE CALL streams first and the queue stays armed, so a blown
    compose degrades to OUR queue-top, not Sleeper's board.
+   🆕 **THE MOCK NOW CARRIES A THIRD DELIVERABLE — D-A from the torture-chamber campaign
+   (2026-08-20): deliberately blow ONE clock with the queue emptied and record what Sleeper's
+   auto-pick takes.** Insight 031: our "unattended is safe" result is rented from an n=1 model of
+   that fallback; this measurement buys the deed. Costs one pick of one mock we are running anyway.
 3. ✅ **RESOLVED 2026-08-19 — BRIGGSY: "flip it baby!"** QUEUE THIS ORDER now prints FIRST,
    directly under the gate lines; the projection and cliffs follow as context. The on-clock banner
    and the mandatory-squeeze warning still print ABOVE it on purpose (insight 016), both their
@@ -342,6 +346,15 @@ the new lineup-delta queue (insight 030), which no human has yet read under a cl
    to prevent. Positive control already banked: insight 030 reproduced to the decimal, twice,
    through the real code path. This experiment is subordinate to draft-day readiness and dies
    instantly if it competes with the advisor-mode mock, the ~Aug 27 refresh, or the freeze.
+   ✅ **CAMPAIGN 1 COMPLETE 2026-08-20 — battery run, verified, reported.** 2,200 rooms + sweeps
+   + a 3-verifier adversarial pass. **Read [`docs/torture-chamber-campaign-1.md`](docs/torture-chamber-campaign-1.md)
+   — its THREE DECISIONS section is the whole ask:** **D-A** measure Sleeper's real blown-clock
+   fallback (one deliberately-blown clock, folds into the advisor-mode mock above — insight 031:
+   the "unattended is safe" null is RENTED from an n=1 fallback model; pure-ADP fallback strands
+   DEF 380/380) · **D-B** the dead-QB bench stack (real, in the shipping engine, 2-4 surplus QBs
+   in realistic rooms; remedy = his call, natural moment = the Aug 27 refresh) · **D-C**
+   supply-aware squeeze line (advisory-only hardening, low urgency). Campaigns 2 (greedy vs
+   lookahead) and 3 (the Seat Book) now have a licensed simulator waiting.
    ✅ **PHASE 1 COMPLETE THE SAME DAY — `scripts/chamber.py`, all D4 controls green, pinned by
    `tests/test_chamber.py` (7 tests, suite 1177 OK):** control-030 exact (1087.2 to the
    decimal) · closed-form room exact · mutant hard-set CAUGHT (forcing-removed needed the

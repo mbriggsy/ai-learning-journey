@@ -497,9 +497,16 @@ def check_feasibility(room, starters, flex_slots, supply_trace=None):
         if chances:
             preventable[pos] = chances
     if preventable:
+        # Show the LAST chances, and say how many there were. The first version printed
+        # `c[:4]` -- the FIRST four chances, always our rounds-1-4 picks by construction --
+        # and the Phase 3 verifier caught the campaign report quoting it as "the last chance
+        # is round 4" when the measured last chance was round 5-6 in all 444 finding rooms.
+        # An instrument's display truncation became an analysis error; never truncate the
+        # decision-bearing end of a list.
         return [{"invariant": "C5-preventable", "detail":
                  f"policy-attributable stranding: {sorted(starved)} exhausted, but supply was "
-                 f"still positive at our pick(s) { {p: c[:4] for p, c in preventable.items()} } "
+                 f"still positive at "
+                 f"{ {p: f'{len(c)} of our picks, last chances {c[-4:]}' for p, c in preventable.items()} } "
                  f"and the policy deferred (supply-blind deferral -- catalog E3's pool gap)",
                  "events": room.events}], []
     return [], [{"invariant": "H4", "detail": f"board supply exhausted for {starved} before "

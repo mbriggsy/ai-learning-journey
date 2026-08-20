@@ -731,6 +731,21 @@ should never see it.
      cost ~2s *per name*.
    - **A name the projection expects gone is still worth queueing** — auto-pick skips the dead and
      takes your top survivor, so those names are marked, not reordered.
+   - 🆕 **THE QUEUE NEVER OFFERS A SECOND QUARTERBACK (2026-08-20, Briggsy's D-B call: "no
+     multiple QBs unless extreme value").** With QB1 rostered, every further QB is a bench body
+     that can never start or flex here, yet the zero-delta tail orders by board rank — the
+     torture chamber measured unattended queues benching 4-6 QBs in ADP-shaped rooms, and the
+     08-19 mock's queue offered a second QB live. The engine now filters QBs from LINEUP DELTAS
+     once the slot is filled. **The extreme-value exception is YOURS, not the queue's:** a
+     falling QB still shows in BEST AVAILABLE and VBD LEANS; taking him is a deliberate override,
+     never an auto-pick outcome.
+   - ⚠️ **UNATTENDED SAFETY PAST THE ARMED QUEUE IS UNVERIFIED (insight 031).** In pinned-auto-pick
+     simulations the 12-name queue covered only 1-6 of the unattended picks; everything after
+     rides Sleeper's own fallback, observed exactly once (Mock #2: Dicker, the Patriots).
+     Working hypothesis (Briggsy 2026-08-20): **pure best-available — off Sleeper's own list**,
+     which slots K/DEF at sane late spots and would explain Mock #2 without any need-awareness.
+     The next mock deliberately blows one clock with the queue emptied to measure it (D-A,
+     campaign 1). Until that datum lands: attended is proven, a blown clock is a bounded bet.
 
 6. Read the output; compose the advisory (format below); send it. In executor mode, execute the pick instead when it's our clock.
    *(Renumbered 2026-08-14 — this was a SECOND "4." and, following the indented block above it with

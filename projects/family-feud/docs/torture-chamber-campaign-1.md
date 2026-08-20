@@ -7,7 +7,27 @@
 > kill it; every number a verifier corrected is shown corrected, with the wrong version named.
 > Batteries are seed-reproducible; verifier scratch work is quoted from their reports.
 
-## ▶ THE THREE DECISIONS FOR BRIGGSY — the campaign's entire actionable output
+## ▶ THE THREE DECISIONS — ✅ ALL THREE ANSWERED BY BRIGGSY 2026-08-20, same day
+
+- **D-A — answered: working hypothesis is PURE BEST-AVAILABLE.** The load-bearing refinement:
+  best-available *off Sleeper's own list*, which slots K/DEF at sane late-round spots — that
+  reading explains Mock #2's Dicker/Patriots observation with zero need-awareness. The
+  blown-clock measurement stays queued on the advisor-mode mock (it decides which list the
+  fallback draws from); the runbook carries the honest unattended sentence until it lands.
+- **D-B — RATIFIED AND SHIPPED THE SAME DAY: "no multiple QBs unless extreme value."** The
+  queue never offers QB2+ (engine + both mirrors, pinned by `NoSecondQb` tests); the
+  extreme-value exception stays HUMAN — a falling QB still surfaces in BEST AVAILABLE and VBD
+  LEANS for a deliberate override. Verified after shipping: all D4 controls green, equivalence
+  0/96 divergences, full battery re-run identical except the pile is gone — **QB exactly 1 in
+  120/120 probe rooms** (was modal 4), bench flowing back to skill insurance.
+- **D-C — CLOSED AS DON'T-BUILD, on Briggsy's question and the numbers:** real-pool position
+  exhaustion cannot happen in an 8-man league (32 K / 32 DEF for 8 teams; the chamber's
+  exhaustions were its own closed-universe artifact plus hoarding this room has never shown).
+  The alarm-blindness stays documented in the catalog (E3) in case league shape ever changes.
+
+*(The section below is the pre-decision text, kept as written for the record.)*
+
+## THE THREE DECISIONS FOR BRIGGSY — the campaign's entire actionable output
 
 **D-A · Measure Sleeper's real blown-clock fallback (fold into the advisor-mode mock).**
 The chamber's scariest result is not a defect in our code — it is an ASSUMPTION we are

@@ -124,6 +124,14 @@ same brain (`replay()`, :48-103) — the fast path, governed by G.
   the SORT uses exact values: negatives sort below all zeros regardless of rank, and a Δ=+0.04
   row sorts above every true zero while wearing the bench label. **Assert board-order only over
   rows whose delta is exactly 0.0, never over rows wearing the label.**
+  **AMENDED 2026-08-20 (D-B, ratified by Briggsy: "no multiple QBs unless extreme value"):**
+  with the QB slot filled, QBs are filtered from the candidates entirely
+  (`draft_engine.py`, anchor `NO SECOND QUARTERBACK IN THE QUEUE`; mirrored in
+  `replay_mock.py`'s delta arm and `chamber.FastPolicy.ranked`). So the zero-delta board-order
+  fallback now excludes exactly one position class: QB-with-need-zero. Pinned by
+  `tests/test_chamber.py::NoSecondQb` at the engine level (the replay fixture never exercises
+  it). Measured effect: the campaign's QB pile (modal 4 in ADP rooms) collapsed to exactly 1
+  in 120/120 probe rooms, bench flowing to RB/WR/TE insurance.
 - **B5 (PROMISED — a cap, not a guarantee).** Queue depth is CAPPED at `BEST_N = 12`
   (`draft_engine.py:481`, `:818`) — exactly 12 only when ≥12 candidates survive; the endgame
   filter (≤3 per allowed position) and thin pools print fewer, so the queue is SHORTEST exactly

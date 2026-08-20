@@ -786,6 +786,20 @@ _my_remaining = ROUNDS - len(rosters[MY_SLOT])
 
 _pool = sorted(avail, key=lambda x: x["r"])
 _cands = _pool[:_LV.CANDIDATE_WINDOW]
+# NO SECOND QUARTERBACK IN THE QUEUE -- Briggsy's call, 2026-08-20 (torture-chamber campaign 1,
+# decision D-B: "no multiple QBs unless extreme value"). With the QB slot filled, every further
+# QB is a zero-delta bench body that can never start or flex here (1 QB slot, FLEX is RB/WR/TE)
+# -- yet the zero-delta tail orders by BOARD RANK, and the chamber measured ADP-shaped rooms
+# leaving QBs on top of that ordering perpetually: the unattended queue benched 4-6 QBs (modal
+# 4), and the 2026-08-19 mock's queue offered a second QB live. So a filled-QB roster removes
+# QBs from the QUEUE's candidates entirely. The "extreme value" exception is deliberately NOT
+# arithmetic: a falling QB still shows in BEST AVAILABLE and VBD LEANS, and taking him is a
+# human override -- the queue is what auto-pick may drain, and auto-pick must never spend a
+# pick on a second quarterback. (need["QB"] stays > 0 until QB1 is rostered, so this never
+# starves the slot; the ENDGAME rebuild is untouched -- it only ever demands positions with
+# open need.)
+if _need.get("QB", 0) == 0:
+    _cands = [p for p in _cands if p["pos"] != "QB"]
 # K/DEF rank ~151+ and never enter the window -- DEFERRED on purpose, on the board's own
 # numbers: their vorp is flat WITHIN a tier (every T1 K is 16.0), so their delta
 # cannot decay, while every bench candidate's upside does. The endgame filter below pulls them

@@ -120,6 +120,77 @@ class MetadataSplitBrain(unittest.TestCase):
         self.assertTrue(any(p in ("K", "DEF") for p in broken), broken)
 
 
+class NoSecondQb(unittest.TestCase):
+    """D-B, Briggsy 2026-08-20: 'no multiple QBs unless extreme value.' The QUEUE never offers
+    QB2+ (auto-pick must not spend a pick on one); the extreme-value fall stays a human
+    override via BEST AVAILABLE / VBD LEANS. Pinned at the ENGINE level because the committed
+    replay fixture never tempts a second QB into winning -- this test is the mirror's pin too."""
+
+    def _deltas_positions(self, picks, my_slot, board):
+        real = chamber.RealPolicy(8, 16, draft_id="dbtest")
+        try:
+            with open(os.path.join(real.work, "picks.json"), "w", encoding="utf-8") as f:
+                json.dump(picks, f, ensure_ascii=False)
+            env = dict(os.environ, PYTHONUTF8="1", PYTHONIOENCODING="utf-8")
+            p = subprocess.run(
+                [sys.executable, real.engine, str(my_slot), "8", "16", "dbtest"],
+                cwd=real.work, capture_output=True, text=True,
+                encoding="utf-8", env=env, timeout=120)
+            self.assertEqual(p.returncode, 0,
+                             (p.stdout or "")[-500:] + (p.stderr or "")[-500:])
+            names = [n for _, n in chamber.parse_lineup_deltas(p.stdout)]
+            by_name = {r["name"]: r["pos"] for r in board["players"]}
+            return [by_name.get(n, "?") for n in names]
+        finally:
+            real.close()
+
+    def test_engine_queue_has_no_second_qb_and_still_offers_the_first(self):
+        board, curve = chamber.load_board()
+        oa, _ = chamber.adp_order(board)
+        seats = {s: chamber.bot_adp(0, oa) for s in range(1, 9) if s != 1}
+        pol = chamber.FastPolicy(board, curve, dict(LV.LIVE_STARTERS), LV.FLEX_SLOTS, 16)
+        room = chamber.Room(board, curve, seats, my_slot=1, teams=8, rounds=16,
+                            draft_id="dbtest")
+        early = None
+        while len(room.picks) < 64:
+            no = len(room.picks) + 1
+            slot = chamber.slot_for_pick(no, 8)
+            row = pol.choose(room) if slot == 1 else seats[slot](room, slot)
+            room.take(slot, row)
+            if len(room.picks) == 16:
+                early = list(room.picks)
+        counts = {p: c for p, c in
+                  __import__("collections").Counter(
+                      r["pos"] for r in room.rosters[1]).items()}
+        self.assertEqual(counts.get("QB", 0), 1,
+                         f"fast path should roster exactly one QB by pick 64, got {counts}")
+        # negative control: QB still unfilled at 16 picks -> the engine's queue OFFERS a QB
+        qb_open = [r for r in room.rosters[1][:2] if r["pos"] == "QB"]
+        if not qb_open:
+            self.assertIn("QB", self._deltas_positions(early, 1, board),
+                          "with the QB slot open the queue must still offer one")
+        # the pin: QB filled -> the engine's queue contains NO QB row at all
+        self.assertNotIn("QB", self._deltas_positions(room.picks, 1, board),
+                         "the queue offered a second quarterback -- D-B regressed")
+
+    def test_qb_pile_collapses_in_the_adp_room(self):
+        """The room that measured QB:4 before the rule (probe adp:4.0 room 0) now rosters
+        exactly one."""
+        import random
+        board, curve = chamber.load_board()
+        ob = sorted(board["players"], key=lambda r: r["r"])
+        oa, _ = chamber.adp_order(board)
+        starters, flex = dict(LV.LIVE_STARTERS), LV.FLEX_SLOTS
+        pol = chamber.FastPolicy(board, curve, starters, flex, 16)
+        seats = chamber.make_seats(["adp"], 4.0, board, curve, starters, flex, 1,
+                                   ob, oa, lambda room: None)
+        room = chamber.Room(board, curve, seats, my_slot=1, rounds=16, draft_id="dbpile",
+                            rng=random.Random("probe:adp:4.0:0"))
+        res = chamber.run_room(room, pol.choose, starters, flex, 16)
+        self.assertEqual(res["roster"].get("QB", 0), 1, dict(res["roster"]))
+        self.assertEqual(res["status"], "PASS", res["violations"])
+
+
 class Equivalence(unittest.TestCase):
     def test_one_room_fast_equals_real(self):
         """G1/U3: fast path == real engine at every our-pick state of one ensemble room. The

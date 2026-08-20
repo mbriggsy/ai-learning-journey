@@ -342,6 +342,8 @@ class FastPolicy:
                                                    self.flex_slots)
         remaining = self.rounds - len(my_rows)
         cands = pool[:self.window]
+        if need.get("QB", 0) == 0:      # no-second-QB queue rule (D-B, Briggsy 2026-08-20)
+            cands = [r for r in cands if r["pos"] != "QB"]
         if self.forcing and must_total >= remaining > 0:
             allowed = {p for p, k in need.items() if k > 0}
             if flex_need > 0:
@@ -689,6 +691,8 @@ def control_closed_form():
             need, flex_need, must_total = LV.must_fill(counts, starters, FLEX_OK, flex_slots)
             remaining = rounds - len(my_rows)
             cands = pool[:LV.CANDIDATE_WINDOW]
+            if need.get("QB", 0) == 0:  # no-second-QB queue rule (D-B) -- mirrored in the walk
+                cands = [r for r in cands if r["pos"] != "QB"]
             if must_total >= remaining > 0:
                 allowed = {p for p, k in need.items() if k > 0}
                 if flex_need > 0:

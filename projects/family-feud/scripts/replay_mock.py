@@ -71,6 +71,14 @@ def replay(picks, board_doc, curve_doc, my_slot, strategy, starters, flex_slots)
         cands = pool[:LV.CANDIDATE_WINDOW]
         my_remaining = rounds - len(my_rows)
         need, flex_need, must_total = LV.must_fill(my_counts, starters, FLEX_OK, flex_slots)
+        if strategy == "delta" and need.get("QB", 0) == 0:
+            # Mirrors draft_engine.py's no-second-QB queue rule (Briggsy 2026-08-20, campaign 1
+            # decision D-B) -- the delta arm IS the shipping policy, so the mirror is mandatory
+            # (two implementations drifting is the market/consensus failure). The naive arm stays
+            # UNFILTERED on purpose: it reproduces recorded history. ⚠ The committed fixture never
+            # tempts a second QB into winning, so this line's real pin is the engine-level test in
+            # tests/test_chamber.py, not the 030 numbers.
+            cands = [r for r in cands if r["pos"] != "QB"]
         if strategy == "delta":
             # K/DEF are DEFERRED until the endgame forces them, on the board's own numbers:
             # their vorp is flat WITHIN a tier (every T1 K is 16.0), so their delta

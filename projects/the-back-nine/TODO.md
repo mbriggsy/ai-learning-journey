@@ -1198,7 +1198,10 @@ These are the mechanical ones that keep costing hours.*
   Revert with Edit.
 - **Never measure the tree while an agent fleet works in it** — their scratch files produce bogus doc-stat
   reds and bogus test counts. Never run the Caddie walk concurrently with the full suite (CPU contention
-  times out the final-tier waits).
+  times out the final-tier waits). **A PARALLEL SESSION on another project is the same hazard from
+  outside the tree:** 2026-08-20, three RecoveryFlow tests (the ~1s KDF waits) red inside a full run
+  whose imports took 260s, then green isolated AND green on a full re-run — re-run the failing file
+  alone before believing any timing-shaped red.
 - **A StructuredOutput schema that asks for too much output fails the whole call** (insight 084). Split the
   fan-out; never ask one agent for dozens of long fields at once.
 - **`?vault=` / unlock / save need a secure context** (`crypto.subtle`) — localhost or https, never a bare

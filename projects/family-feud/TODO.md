@@ -270,6 +270,42 @@ elite-K trio the runbook names. Only `Pineiro 2→3` (r168 t3) and `McPherson 2�
   not say which. Blocks count as misses; `--check` prints the sensitivity both ways — **0.0–1.7
   pts, mean 0.45** across the curve's ranks, i.e. immaterial.
 
+## 🚨 HANDOFF FROM THE 2026-08-20 LUNCH MOCK (session cleared mid-day — read before any draft work)
+
+**The advisor-mode mock RAN and COLLAPSED at pick #37** — mock draft `1390889254560739328`,
+Briggsy seat 5, 8-team/PPR/**16 rounds**/120s, drafted from his phone, DRAFT COMPLETE 128/128
+(feed is authoritative and re-pullable by that id; `draft-kit/picks.json` holds all 128).
+Picks #5/#12/#21/#28 were advised four-lines live (Chase / Jefferson / Chase Brown / Nabers —
+#12 and #28 were his overrides of the call, which is the format working). At #37 the session
+spent his clock on a browser queue-sync that hung 45s instead of firing the advisory → clock
+blew → seat flipped AUTO → rounds 8-16 drafted themselves. Own goals and findings, in order:
+
+1. **D-A IS MEASURED (campaign 1) — write the insight + close the TODO item.** With the queue
+   holding survivors, blown clocks took **queue-top in order** (#44 Bucky Irving, #53 D'Andre
+   Swift) — the net works, live, twice. With the queue DRY, Sleeper's naked fallback took:
+   #60 Jameson Williams WR · #69 Christian Watson WR · #76 Tucker Kraft TE · **#85 Dak Prescott
+   QB2** (its list happily benches a second QB — the exact thing our queue now refuses) ·
+   #92 Alec Pierce WR · then K/DEF in the tail (picks 101-128 in the feed, unexamined — pull
+   them and record WHERE Sleeper slotted K/DEF vs Mock #2's Dicker/Patriots observation).
+2. **`precompute_ladder.py --cargo FILE` IS STILL BROKEN despite the runbook's ✅-closed
+   (2026-08-18) claim.** Reproduced twice live: bare `--cargo temp/draft.json` printed
+   `no draft_id in cargo -- gate NOT armed` and **wrote the LIVE `newsletter/data/state/ladder.json`**;
+   with `--draft-id <mock>` added the gate armed but it **STILL wrote the live path** — the
+   mock-divert to `ladder.<draft_id>.json` never fired either way. `run_engine.py --cargo FILE`
+   reads the same file's draft_id fine, so the defect is the ladder's identity read alone.
+   Fix + test both halves, then correct the runbook's ✅. **And delete/regenerate the stray
+   mock ladder now sitting at `newsletter/data/state/ladder.json`.**
+3. **Runbook rule to add (Step 3.5):** on HIS clock the advisory goes out BEFORE any browser
+   call — queue maintenance lives between windows only. claude-in-chrome CDP timed out 45s
+   twice mid-draft (one loss was reply-only — the sync had landed; verify by reading the queue,
+   insight-007 shape). After 2 timeouts: declare the bridge dead for the session, keep advising
+   API-only, and say so.
+4. **Live-clock advisor sessions need a LOWER effort setting** (Briggsy's own diagnosis, and he
+   is right: ultracode/xhigh latency cannot hold a 120s cadence). `/effort medium` before the
+   next live run. Also: **an all-bot room has no warm window** — CPUs finish in ~20-30s, so
+   every compose is cold, on his clock. The real rehearsal wants a slower room (humans, or a
+   longer timer) — the lab's warm-path number is still unmeasured.
+
 ## ▶ NEXT ACTION — as of 2026-08-20, ~9 days out, draft still UNSCHEDULED
 
 **Live state, re-pulled 2026-08-20 15:29 cargo: `status: pre_draft`, `start_time: null`,

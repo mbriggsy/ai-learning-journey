@@ -43,6 +43,9 @@ file"** → *Download backup* (an `<a>` with a blob URL, **not** a button — a 
 selector misses it) → then delete the DB and reload. **`indexedDB.deleteDatabase` is BLOCKED while
 the app holds the connection** — fire it, navigate to `about:blank`, then back; deleting and
 reloading in one step silently leaves the vault in place and you land on Unlock wondering why.
+⚠️ **AND ANY OTHER TAB with the app open blocks it the same way** (bit again 2026-08-20: the
+deleting tab did the about:blank dance correctly while a second tab held the connection — the
+vault silently survived a "successful" deletion). Close every other app tab first.
 
 ✅ **THE ACA RE-VERIFY CLEARED 2026-08-20 — full 8-step chain, 7 parallel primary-source legs,
 zero bot-walls.** Regime UNCHANGED (reverted; both temporary provisions still "before January 1,

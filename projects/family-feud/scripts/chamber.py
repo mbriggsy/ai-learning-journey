@@ -323,13 +323,16 @@ class FastPolicy:
         self.window = window if window is not None else LV.CANDIDATE_WINDOW
         self.forcing, self.rebuild_n, self.naive = forcing, rebuild_n, naive
 
-    def choose(self, room):
+    def ranked(self, room):
+        """The full ranked candidate list at this state -- what the ladder's queue would hold
+        (window + forcing filter + (-delta, rank) order). choose() is ranked()[0]; the static
+        drain arms ranked()[:12] so the armed queue mirrors the shipping ladder exactly."""
         pool = sorted(room.available(), key=lambda r: r["r"])
         if not pool:
             room.events.append(("EMPTY_POOL", len(room.picks) + 1))
-            return None
+            return []
         if self.naive:                                    # H3 plant: the board-order queue
-            return pool[0]
+            return pool
         my_rows = room.rosters[room.my_slot]
         my_pts = defaultdict(list)
         for r in my_rows:
@@ -347,10 +350,51 @@ class FastPolicy:
                      for r in [x for x in pool if x["pos"] == pos][:self.rebuild_n]]
             if not cands:                                 # C7: total exhaustion, observed not fatal
                 room.events.append(("FORCED_EMPTY", len(room.picks) + 1, sorted(allowed)))
-                return pool[0]                            # the null-model surrogate, flagged
-        return min(cands, key=lambda r: (-LV.marginal_pts(
+                return pool[:1]                           # the null-model surrogate, flagged
+        return sorted(cands, key=lambda r: (-LV.marginal_pts(
             self.pts_by_id[str(r["sleeperId"])], r["pos"], my_pts, self.fill,
             self.starters, FLEX_OK, self.flex_slots), r["r"]))
+
+    def choose(self, room):
+        ranked = self.ranked(room)
+        return ranked[0] if ranked else None
+
+
+class StaticDrainPolicy:
+    """The blown-clock actor -- Mock #2's death scenario priced with OUR queue armed.
+
+    Attended picks (before `miss_at`) behave exactly like FastPolicy and re-arm a 12-name
+    queue each time (B5's cap, mirrored from BEST_N). From our `miss_at`-th pick onward the
+    operator is GONE (Sleeper pins auto-pick after one missed clock -- Mock #2: pick 79 ->
+    autopicks at 82/95/98/111/114): every later our-pick drains the LAST ARMED queue's first
+    surviving name, and when none survive it falls to the Sleeper-board surrogate --
+    need-aware over ADP order, the GENEROUS model of Sleeper's fallback (its need-awareness
+    is an n=1 observation, catalog E2, so findings that depend on the surrogate say so).
+    Events: STATIC_SERVED / STATIC_QUEUE_EMPTY, so every room says which regime each pick
+    came from."""
+
+    QUEUE_DEPTH = 12                                     # BEST_N -- catalog B5
+
+    def __init__(self, fast, miss_at, fallback_ordering, starters, flex_slots):
+        self.fast, self.miss_at = fast, miss_at
+        self.fallback = bot_need_aware(0.0, fallback_ordering, starters, flex_slots)
+        self.armed = None
+        self.our_picks_made = 0
+
+    def choose(self, room):
+        self.our_picks_made += 1
+        if self.our_picks_made < self.miss_at:
+            ranked = self.fast.ranked(room)
+            self.armed = [r["name"] for r in ranked[:self.QUEUE_DEPTH]]
+            return ranked[0] if ranked else None
+        for name in (self.armed or []):
+            row = next((r for r in room.available() if r["name"] == name), None)
+            if row is not None:
+                self.armed = self.armed[self.armed.index(name) + 1:]
+                room.events.append(("STATIC_SERVED", len(room.picks) + 1, name))
+                return row
+        room.events.append(("STATIC_QUEUE_EMPTY", len(room.picks) + 1))
+        return self.fallback(room, room.my_slot)
 
 
 class RealPolicy:
@@ -427,24 +471,39 @@ def check_offpolicy_slack(trace):
     return out
 
 
-def check_feasibility(room, starters, flex_slots):
-    """H4: was the room feasible at all? Infeasible = at some our-pick, the remaining board
-    supply of a mandated position was already below our unfilled need AND every later our-pick
-    could not recover it. Conservative closed form: supply(pos) < need(pos) at the moment the
-    LAST copy of pos left the board while our need was open. Reported separately, never pooled."""
+def check_feasibility(room, starters, flex_slots, supply_trace=None):
+    """H4: separate "no strategy could fill it" from "the POLICY declined to fill it while it
+    still could". The first battery run buried 100 policy-attributable strandings under
+    INFEASIBLE because this check only looked at the END state -- while an omniscient drafter
+    would simply have taken a K in round 5 when 7 were still on the board. The retrospective
+    is the classifier now: `supply_trace` carries (pick_no, {pos: supply_at_that_our_pick})
+    for every our-pick, recorded by run_room BEFORE the policy chose. A starved position that
+    ever showed supply > 0 at one of our picks was PREVENTABLE -- that is a C5/C7 FINDING
+    against the deferral, not an infeasible room. Truly infeasible = the position was already
+    gone at every our-pick from the first (bots ate it before we ever picked)."""
     my = room.my_slot
     need_now = {p: n for p, n in LV.must_fill(
         Counter(r["pos"] for r in room.rosters[my]), starters, FLEX_OK, flex_slots)[0].items()
         if n > 0}
     if not need_now:
-        return []
+        return [], []
     supply = Counter(r["pos"] for r in room.available())
     starved = {p: n for p, n in need_now.items() if supply.get(p, 0) < n}
-    if starved:
-        return [{"invariant": "H4", "detail": f"board supply exhausted for {starved} "
-                 f"(supply now {dict(supply)}) -- classify INFEASIBLE if no our-pick could have "
-                 f"filled it in time; else it is a C5/C7 FINDING", "events": room.events}]
-    return []
+    if not starved:
+        return [], []
+    preventable = {}
+    for pos in starved:
+        chances = [no for no, sup in (supply_trace or []) if sup.get(pos, 0) > 0]
+        if chances:
+            preventable[pos] = chances
+    if preventable:
+        return [{"invariant": "C5-preventable", "detail":
+                 f"policy-attributable stranding: {sorted(starved)} exhausted, but supply was "
+                 f"still positive at our pick(s) { {p: c[:4] for p, c in preventable.items()} } "
+                 f"and the policy deferred (supply-blind deferral -- catalog E3's pool gap)",
+                 "events": room.events}], []
+    return [], [{"invariant": "H4", "detail": f"board supply exhausted for {starved} before "
+                 f"our first opportunity -- genuinely infeasible", "events": room.events}]
 
 
 def check_kdef_window(board):
@@ -498,17 +557,20 @@ def score_room(room, starters, flex_slots):
 # ---------------------------------------------------------------------------------------------
 
 def run_room(room, policy_choose, starters, flex_slots, rounds):
-    trace = []
+    trace, supply_trace = [], []
     def policy(r):
         counts = Counter(x["pos"] for x in r.rosters[r.my_slot])
         _, _, must_total = LV.must_fill(counts, starters, FLEX_OK, flex_slots)
         trace.append((len(r.picks) + 1, rounds - len(r.rosters[r.my_slot]), must_total))
+        supply_trace.append((len(r.picks) + 1,
+                             Counter(x["pos"] for x in r.available())))
         return policy_choose(r)
     room.run(policy)
+    preventable, infeasible = check_feasibility(room, starters, flex_slots, supply_trace)
     violations = (check_slots_filled(room, starters, flex_slots)
                   + check_offpolicy_slack(trace)
-                  + check_twins(room, starters, flex_slots))
-    infeasible = check_feasibility(room, starters, flex_slots)
+                  + check_twins(room, starters, flex_slots)
+                  + preventable)
     lineup, bench = score_room(room, starters, flex_slots)
     status = ("INFEASIBLE" if infeasible else
               "FINDING" if violations else "PASS")
@@ -772,7 +834,49 @@ def equivalence(rooms_n=20, sigma=6.0, seed=1):
 # Briggsy's eye (plan, Phase 0 gate; TODO item 6). The gate is printed on every run.
 # ---------------------------------------------------------------------------------------------
 
-def battery(rooms_n=200, seed=1, report=None):
+ROUND1 = [
+    {"names": ["board"], "sigma": 0.0}, {"names": ["board"], "sigma": 4.0},
+    {"names": ["adp"], "sigma": 4.0}, {"names": ["adp"], "sigma": 10.0},
+    {"names": ["need"], "sigma": 6.0}, {"names": ["facts"], "sigma": 6.0},
+    {"names": ["chaos"], "sigma": 8.0},
+    {"names": ["sniper", "board"], "sigma": 4.0},
+    {"names": ["run", "adp"], "sigma": 6.0},
+    {"names": ["hoarder", "hoarder", "hoarder", "adp"], "sigma": 4.0},
+    {"names": ["sniper", "hoarder", "chaos", "need"], "sigma": 8.0},
+]
+
+#: Round 2 -- the off-policy edges (catalog C6's real hunting ground) plus milder hoarding.
+#: `miss_at`: from our Nth pick on, the operator is gone and the STATIC armed queue drains
+#: (StaticDrainPolicy -- the Mock #2 pinned-auto-pick scenario, priced with OUR queue).
+ROUND2 = [
+    {"names": ["adp"], "sigma": 4.0, "miss_at": 4},
+    {"names": ["adp"], "sigma": 4.0, "miss_at": 8},
+    {"names": ["adp"], "sigma": 4.0, "miss_at": 11},
+    {"names": ["facts"], "sigma": 6.0, "miss_at": 8},
+    {"names": ["sniper", "board"], "sigma": 4.0, "miss_at": 8},
+    {"names": ["hoarder", "adp", "adp", "adp", "adp", "adp", "adp"], "sigma": 4.0},
+    {"names": ["hoarder", "hoarder", "adp", "adp", "adp", "adp", "adp"], "sigma": 6.0},
+    {"names": ["chaos"], "sigma": 14.0},
+    {"names": ["board"], "sigma": 0.0},
+]
+
+#: Round 3 -- compound worst-cases: starvation UNDER pinned drain, stacked adversaries,
+#: run-storms, near-zero-noise ADP (is the QB pile noise-driven? -- no is the hypothesis).
+ROUND3 = [
+    {"names": ["hoarder", "hoarder", "hoarder", "hoarder", "hoarder", "hoarder", "adp"],
+     "sigma": 4.0, "miss_at": 6},
+    {"names": ["sniper", "hoarder", "hoarder", "hoarder", "hoarder", "hoarder", "hoarder"],
+     "sigma": 4.0},
+    {"names": ["hoarder", "hoarder", "hoarder", "hoarder", "hoarder", "hoarder", "adp"],
+     "sigma": 4.0},
+    {"names": ["run", "run", "run", "adp", "adp", "adp", "adp"], "sigma": 8.0},
+    {"names": ["need"], "sigma": 6.0, "miss_at": 2},
+    {"names": ["adp"], "sigma": 2.0},
+    {"names": ["facts"], "sigma": 12.0},
+]
+
+
+def battery(rooms_n=200, seed=1, report=None, scenario_set="round1"):
     board, curve = load_board()
     trip = check_kdef_window(board) + check_inversions(board)
     if trip:
@@ -787,18 +891,13 @@ def battery(rooms_n=200, seed=1, report=None):
     pol = FastPolicy(board, curve, starters, flex_slots, rounds)
     get_top = lambda room: pol.choose(room)
 
-    scenarios = [
-        (["board"], 0.0), (["board"], 4.0), (["adp"], 4.0), (["adp"], 10.0),
-        (["need"], 6.0), (["facts"], 6.0), (["chaos"], 8.0),
-        (["sniper", "board"], 4.0), (["run", "adp"], 6.0),
-        (["hoarder", "hoarder", "hoarder", "adp"], 4.0),
-        (["sniper", "hoarder", "chaos", "need"], 8.0),
-    ]
+    scenarios = {"round1": ROUND1, "round2": ROUND2, "round3": ROUND3}[scenario_set]
     counts = Counter()
     findings = []
     per = max(1, rooms_n // len(scenarios))
     total = 0
-    for names, sigma in scenarios:
+    for sc in scenarios:
+        names, sigma, miss_at = sc["names"], sc["sigma"], sc.get("miss_at")
         for j in range(per):
             i = total
             total += 1
@@ -808,19 +907,23 @@ def battery(rooms_n=200, seed=1, report=None):
                                ob, oa, get_top)
             room = Room(board, curve, seats, my_slot=my_slot, teams=teams, rounds=rounds,
                         draft_id=f"chamber-{seed}-{i}", rng=rng)
-            res = run_room(room, pol.choose, starters, flex_slots, rounds)
+            actor = (StaticDrainPolicy(pol, miss_at, oa, starters, flex_slots).choose
+                     if miss_at else pol.choose)
+            res = run_room(room, actor, starters, flex_slots, rounds)
             counts[res["status"]] += 1
             if res["status"] != "PASS":
                 findings.append({"room": i, "scenario": names, "sigma": sigma,
-                                 "my_slot": my_slot, **{k: res[k] for k in
+                                 "miss_at": miss_at, "my_slot": my_slot,
+                                 **{k: res[k] for k in
                                  ("status", "violations", "infeasible", "events",
                                   "lineup", "roster")}})
     # H4: the three counts must sum to rooms generated -- printed, never implied.
     print(f"battery: {total} rooms -> PASS {counts['PASS']} · FINDING {counts['FINDING']} · "
           f"INFEASIBLE {counts['INFEASIBLE']} (sum {sum(counts.values())})")
     print(f"battery: ADP source = {adp_src}")
-    print("battery: ⚠ RESULTS ARE NOT READABLE until the invariant catalog passes Briggsy's "
-          "eye (TODO item 6, the Phase 0 gate).")
+    print("battery: catalog ratified by Briggsy 2026-08-20 (\"gate's open\") -- results are "
+          "readable. Findings still owe Phase 3: minimal repro + adversarial verification "
+          "before anyone acts on one (plan D6).")
     if report:
         with open(report, "w", encoding="utf-8") as f:
             json.dump({"rooms": total, "counts": dict(counts), "adp_source": adp_src,
@@ -838,6 +941,10 @@ def main(argv=None):
     ap.add_argument("--sigma", type=float, default=6.0)
     ap.add_argument("--report", default=None,
                     help="battery: write the JSON report here (sandbox path, never state/)")
+    ap.add_argument("--set", dest="scenario_set", default="round1",
+                    choices=["round1", "round2", "round3"],
+                    help="battery: which scenario battery to fire (round2 = static-drain "
+                         "off-policy probes + milder hoarding)")
     a = ap.parse_args(argv)
     if a.cmd == "control-030":
         return control_030()
@@ -847,7 +954,7 @@ def main(argv=None):
         return control_mutants()
     if a.cmd == "equivalence":
         return equivalence(a.rooms, a.sigma, a.seed)
-    return battery(a.rooms, a.seed, a.report)
+    return battery(a.rooms, a.seed, a.report, a.scenario_set)
 
 
 if __name__ == "__main__":

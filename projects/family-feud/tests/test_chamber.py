@@ -133,8 +133,8 @@ class Equivalence(unittest.TestCase):
 class BatterySandbox(unittest.TestCase):
     def test_sandbox_and_accounting(self):
         """D7 + H4: a battery run writes NOTHING outside its --report path, and PASS/FINDING/
-        INFEASIBLE counts sum to rooms generated -- no silent drops. The gate line prints on
-        every run so results cannot quietly be read before the catalog passes Briggsy's eye."""
+        INFEASIBLE counts sum to rooms generated -- no silent drops. The D6 line prints on
+        every run so no finding is quietly acted on before its Phase 3 verification."""
         state_dir = os.path.join(ROOT, "newsletter", "data", "state")
         before = {f: os.path.getmtime(os.path.join(state_dir, f))
                   for f in os.listdir(state_dir)}
@@ -148,7 +148,7 @@ class BatterySandbox(unittest.TestCase):
                  for f in os.listdir(state_dir)}
         self.assertEqual(before, after, "the battery touched the war-room state dir")
         self.assertEqual(sum(doc["counts"].values()), doc["rooms"])
-        self.assertIn("NOT READABLE until the invariant catalog", out)
+        self.assertIn("owe Phase 3", out)
 
 
 if __name__ == "__main__":

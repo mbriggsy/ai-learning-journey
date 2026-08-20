@@ -56,10 +56,69 @@ not a regime event; a FIFTH number ≥119-107 is what warrants a fresh sweep. Th
 overstated claims caught and stricken, incl. this record's own false 5-of-5 chain-check (seam 1's
 2.10→3.14 is a genuine statutory discontinuity — do not "fix" a correct transcription against it).
 
-▶ **START HERE NEXT SESSION: the two executable non-Briggsy items are** (1) the `?seed=buckets`
-save + re-entry witness for the record card's advice-not-taken case (~25-min solve; the debt block
-above), and (2) the next walk — the first-Save ceremony + the 10 unwalked intake steps including
-**Accounts** (Tier-2 entry 11; the no-solve drive recipe above cuts the cost).
+✅ **BOTH OF THOSE RAN THE SAME DAY (2026-08-20) — the intake walk AND the buckets save/re-entry
+witness.** The full organic lifecycle is now SEEN: real `?seed=buckets` solve (leave-more, ~5 CPU-min;
+the ~25-min figure was that day's load, not the work) → committed no-change card → first-Save ceremony
+→ real Unlock → the record card's HOLDS face from the REAL pipeline (never before rendered except from
+a hand-planted payload) → sequencing edit demotes it live ("It may no longer fit the two of you") →
+reverting RE-PROMOTES it (the fingerprint coupling is symmetric, witnessed both ways). The first-Save
+ceremony held: mismatch error calm + a11y-correct, the negative-pairing bounce explains itself ("one
+guess opens both"), the success frame names both futures. Entry 7's open increment CONFIRMED live: the
+no-change card never names WHICH path, on the one seed where naming would differentiate.
+
+**THE INTAKE WALK'S FINDINGS, ranked — filed 2026-08-20. ALL BRIGGSY'S OR COUNCIL-SIZED, not builds
+(the standing walk-findings rule). Full detail + anchors mid-walk were verified live; household: mixed
+(worker + retiree, both pre-65), NC, 4 accounts, at 1536×791. Desktop only — phone intake is UNWALKED.**
+
+1. **🔴 THE COMPLETED-INTAKE DEAD END, compounded by zero persistence.** Leave ONE
+   conditionally-revealed fact blank (allowed — every step is non-blocking and advances; witnessed:
+   the retired spouse's stop-age, whose field appears only after the "Already retired" radio,
+   `questions.tsx:191-197`) and finish intake: the handoff frame renders the answer strip ("Still
+   needed: The age work stopped") over an EMPTY main — **zero buttons, links, or inputs on the entire
+   page** (DOM-enumerated; console clean, so it is the designed composition, not a crash). No door to
+   supply the fact, no way back, the AssumptionPanel row that edits it (`AssumptionPanel.tsx:640-646`)
+   unreachable — and nothing persists pre-save, so the only visible exit (refresh) destroys all ~12
+   steps of typed data. Missing-fact arm: `intakeMap.ts:166-167`. **The door's shape is a framing
+   call — his or council's.**
+2. **🟠 ACCOUNTS: a bad allocation is silently DISCARDED, and the debt resurfaces generically.**
+   Typed 60/50/10 (=120%); "Add this account" committed the account and dropped the three numbers
+   with no message; the only trace is the strip's "Still needed: How is it invested?" — a question
+   the user believes they answered. Edit reopens with the allocation EMPTY (balance + contribution
+   survive). Sibling of the register's account-magnitude entry (no `touched` channel).
+3. **🟡 Error copy speaks to the absurd reading:** birth year "62" → "Ages past 119 are beyond what
+   the projection can model." True, never says "four-digit year". · **The tax-returns step names no
+   1040 line** ("Income, two years back" — AGI? MAGI?), and the second field has no gloss. · **Plain
+   bank cash has no labeled home** among the 7 account kinds ("Brokerage / taxable" is mechanically
+   right; the label doesn't say so). · The account editor's commit button reads "Add this account"
+   inside an EDIT (edit-in-place works; label only). · The SS start-year label is future-tense over a
+   legitimately-past range for an already-claimed retiree.
+4. **🟡 "Still being finalized" reads as a PROGRESS state and is a PERMANENT disclosure.**
+   `recGradeNoteShape` (`copy.ts:1665`) renders on the buckets leave-more run and cost this walk 30
+   minutes of waiting for a "finalization" that is not a process — it discloses directional
+   methodology substrate (live keys exist: `solverConversionNearTieDemotionSeMultiple` and
+   `solverAssumedHeirBracket` are `directionalUntilPinned: true`), and types.ts records NO dated pin
+   event exists. A friend reads "come back later for the real answer" — there is no later. His words.
+   ⚑ **AND TWO SHIPPED COMMENTS SAY THE NOTE IS DORMANT — false, it renders.** `copy.ts:1663`
+   ("Dormant today (no methodology-substrate directional entry is live)") and `solve.ts:215-216`
+   ("the common case today — no methodology-substrate directional entry is live"). Comment-only sweep,
+   pilot-executable, but TRACE which keys actually feed `disclosedDirectional` before writing.
+5. **EYE/tone:** the spending step's all-in gloss is ~90 words of carve-outs in one paragraph (the
+   densest frame of the walk) · ColdStart's "about five minutes" sits above a fetch-a-healthcare-quote
+   sidebar · the still-needed counter GROWS after honest answers (gated steps un-gate) · the record
+   demotion's reason line says "Your numbers have changed" when a SETTING changed · recovery/restore
+   still land with no success frame while first-Save gets "✓ Your plan is saved" — the pattern exists
+   in the family (walk-finding 3's ask now has an in-family precedent to copy).
+6. **Input to Tier-0 entry 1's open EYE call, witnessed live:** the health-quote step's "splits it by
+   age for each of you" renders one Continue from the employer-coverage step's "counts no health costs
+   for the one who has already stopped." Each true alone; the JOIN (what happens to the combined quote
+   I typed?) is still left to inference. Adjacency helps; it does not close.
+
+▶ **START HERE NEXT SESSION — executable without Briggsy:** (1) the **pay-less-tax vitest probe on
+`DEV_SEEDS.buckets`** through the real builder + engine at fast counts (the `solveWitness` pattern) —
+hunting an ACTIVE multi-bucket crown, which is the only thing that can witness BOTH entry 4's
+advice-not-taken semantics AND entry 7's conversion-row card on a multi-bucket household; (2) the
+"dormant" comment sweep from finding 4 (trace `disclosedDirectional`'s feeding keys first); (3) the
+**phone-viewport (390×844) intake walk** — the desktop walk cleared the copy, not the fold.
 
 ⚑ **EVERYTHING IN THE WALK-FINDINGS LIST BELOW IS BRIGGSY'S, NOT A BUILD.** Finding 2 is WITHDRAWN
 (refuted same-day). Finding 1's copy pass is OFF (the string is true; only the door is missing, and
@@ -164,8 +223,15 @@ the heir-bracket seat, which that plant also carries). The seed table said so al
 (`rec` · `recold` → *holds / superseded*); the debt note contradicted it.
 **What `?vault=rec` genuinely cannot witness is the SEMANTIC case** entry 4 was about: its base is a
 single $1.055M IRA, so every withdrawal order is the identical decumulation and no household can
-visibly *not have taken* the advice. That still needs a save + re-entry on `?seed=buckets`
-(~25-minute solve). **Read the debt as "the advice-not-taken case", never "the face".**
+visibly *not have taken* the advice. ⚠️ **RE-SCOPED 2026-08-20 — the prescribed save + re-entry on
+`?seed=buckets` RAN, and it cannot witness the semantic case either.** The buckets leave-more crown
+is the household's OWN proportional order (`noChange` — witnessed live), so there is no advice to
+not-take; what the run DID witness is the full organic record pipeline (mint → persist → unlock →
+holds → demote → re-promote), which had never been seen outside hand-planted payloads. The semantic
+witness needs an **ACTIVE multi-bucket crown**, which no current seed produces — probe
+`buckets`+pay-less-tax in vitest first (see START HERE), and mint a seed only if that misses too.
+**Read the debt as "the advice-not-taken case", never "the face" — and know its prescription has now
+missed twice.**
 ✅ **Free finding from the same drive:** editing an assumption demotes the record live —
 holds → *"It may no longer fit the two of you."* The fingerprint staleness coupling is now
 witnessed end-to-end, not merely asserted.
@@ -1057,9 +1123,11 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
 11. **The surfaces a friend actually hits have never been walked or cold-read by anyone.**
     ✅ **PARTLY CLOSED 2026-08-14** — `RecoveryFlow`, `RestoreFlow`, ColdStart, Unlock and the Backup/
     Export ceremony have now been walked end-to-end at 1536×791 and 390×844 (findings ranked at the top
-    of this file). **STILL UNWALKED:** the first-Save ceremony (Passphrase + recovery steps) and 10 of
-    the intake steps, including **Accounts, where the couple enters their entire net worth.** No dev
-    seed reaches most of them.
+    of this file). ✅ **THE REST CLOSED 2026-08-20 AT DESKTOP** — the full organic intake (ColdStart →
+    every step incl. Accounts, a real mixed household typed in by hand) and the first-Save ceremony
+    (passphrase + recovery word + backup + success frame) walked end-to-end at 1536×791; findings in
+    the 2026-08-20 block at the top. **STILL UNWALKED: the same intake at 390×844** — the desktop walk
+    cleared the copy and the mechanics, not the phone fold.
     ⚑ **What the first walk cost the product, as the argument for doing the rest:** it found a
     WCAG 3.3.1 gap on all four credential ceremonies that 3,284 green tests could not see — the
     `externalError` channel announced the negative-pairing bounce and then left BOTH fields reporting

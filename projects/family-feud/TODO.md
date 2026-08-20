@@ -330,8 +330,17 @@ the new lineup-delta queue (insight 030), which no human has yet read under a cl
    EXISTS (archive ≠ delete); truly deleting it remains a phone-app commissioner action inside the
    archived-leagues view, and is now optional hygiene, not a risk. **No web path to league
    deletion exists — do not re-attempt from a session.**
-
-### ▶ CLAUDE CAN TAKE THESE UNATTENDED — ranked by cost if it happens on draft night
+6. **THE TORTURE CHAMBER (side experiment, ratified 2026-08-20: "cleared for takeoff") — Phase 0
+   gate is HIS EYE on the invariant catalog.** The plan is
+   [`docs/torture-chamber-plan.md`](docs/torture-chamber-plan.md); the catalog is
+   [`docs/torture-chamber-invariants.md`](docs/torture-chamber-invariants.md) — fleet-verified v2
+   (six agents: 14 CONFIRMED · 8 CORRECTED · 1 REFUTED · 31 missed contracts folded in; the
+   standouts are the catalog's own "two-minute read"). Phase 1 (simulator core + D4 controls) may
+   build while the catalog awaits him; **no Phase 2 battery result is readable until the catalog
+   has passed his eye** — findings read through unratified oracles are the thing the gate exists
+   to prevent. Positive control already banked: insight 030 reproduced to the decimal, twice,
+   through the real code path. This experiment is subordinate to draft-day readiness and dies
+   instantly if it competes with the advisor-mode mock, the ~Aug 27 refresh, or the freeze.
 
 ✅ **BOTH CLOSED THE SAME EVENING — Briggsy: "you know I fucking do!" → THE LINEUP-DELTA QUEUE
 SHIPPED.** The queue now ranks by marginal lineup value (replacement-prefilled, insight 024's

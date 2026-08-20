@@ -268,10 +268,16 @@ elite-K trio the runbook names. Only `Pineiro 2→3` (r168 t3) and `McPherson 2�
   not say which. Blocks count as misses; `--check` prints the sensitivity both ways — **0.0–1.7
   pts, mean 0.45** across the curve's ranks, i.e. immaterial.
 
-## ▶ NEXT ACTION — as of 2026-08-18, ~11 days out, draft still UNSCHEDULED
+## ▶ NEXT ACTION — as of 2026-08-20, ~9 days out, draft still UNSCHEDULED
 
-**Live state, re-pulled 2026-08-19 11:29 cargo: `status: pre_draft`, `start_time: null`,
-`draft_order: null`, room 8/8 full.** Nothing is on a hard clock except the ~Aug 27 refresh.
+**Live state, re-pulled 2026-08-20 10:29 cargo: `status: pre_draft`, `start_time: null`,
+`draft_order: null`, room 8/8 full.** Nothing is on a hard clock except the ~Aug 27 refresh —
+which now carries THREE ratified payloads: the curve rebuild on fresh ECR, the long-TD fold
+(item 4 below), and a look at the 4 above-replacement players the consensus ranks that the board
+does not carry (Wan'Dale Robinson / Michael Wilson ~19 VORP — board membership, Briggsy's call).
+**Current: 1170 tests · 27 test files · 25 scripts · 30 insights.** The one item needing his
+hands remains the ADVISOR-MODE MOCK (item 2) — and it matters MORE now: the four lines will ride
+the new lineup-delta queue (insight 030), which no human has yet read under a clock.
 
 ### ⚑ WAITING ON BRIGGSY — decisions, not work. Nothing below moves without him.
 

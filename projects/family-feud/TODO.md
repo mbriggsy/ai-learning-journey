@@ -277,7 +277,8 @@ elite-K trio the runbook names. Only `Pineiro 2→3` (r168 t3) and `McPherson 2�
 which now carries THREE ratified payloads: the curve rebuild on fresh ECR, the long-TD fold
 (item 4 below), and a look at the 4 above-replacement players the consensus ranks that the board
 does not carry (Wan'Dale Robinson / Michael Wilson ~19 VORP — board membership, Briggsy's call).
-**Current: 1170 tests · 27 test files · 25 scripts · 30 insights.** The one item needing his
+**Current: 1177 tests · 28 test files · 26 scripts · 30 insights** *(chamber added 2026-08-20)*.
+The one item needing his
 hands remains the ADVISOR-MODE MOCK (item 2) — and it matters MORE now: the four lines will ride
 the new lineup-delta queue (insight 030), which no human has yet read under a clock.
 
@@ -341,6 +342,19 @@ the new lineup-delta queue (insight 030), which no human has yet read under a cl
    to prevent. Positive control already banked: insight 030 reproduced to the decimal, twice,
    through the real code path. This experiment is subordinate to draft-day readiness and dies
    instantly if it competes with the advisor-mode mock, the ~Aug 27 refresh, or the freeze.
+   ✅ **PHASE 1 COMPLETE THE SAME DAY — `scripts/chamber.py`, all D4 controls green, pinned by
+   `tests/test_chamber.py` (7 tests, suite 1177 OK):** control-030 exact (1087.2 to the
+   decimal) · closed-form room exact · mutant hard-set CAUGHT (forcing-removed needed the
+   11-round forcing-bite room — see catalog D3: **the forcing is nearly redundant on the
+   shipped shape**, pool shrinkage pulls K/DEF into the window anyway; `rebuild-1` honestly
+   uncatchable on a zero-inversion board) · **G1 equivalence PASS, 416 our-pick states across
+   26 rooms, 0 divergences — the fast path is licensed.** Building Phase 1 found and pinned a
+   NEW catalog entry the fleet had missed: **B8, the metadata split-brain** (a pick with a
+   valid id but empty `metadata.position` keeps the lineup math right while corrupting
+   `must_fill` to `{'?': N}` — forcing fired five rounds early with K/DEF in the rebuild;
+   dormant on real feeds, hard H7 contract for synthetic ones, demonstrated in the engine by
+   `test_split_brain_is_real_in_the_engine`). **Next: Phase 2 battery — BLOCKED on the Phase 0
+   gate (his eye on the catalog), by design.**
 
 ✅ **BOTH CLOSED THE SAME EVENING — Briggsy: "you know I fucking do!" → THE LINEUP-DELTA QUEUE
 SHIPPED.** The queue now ranks by marginal lineup value (replacement-prefilled, insight 024's

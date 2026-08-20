@@ -142,6 +142,16 @@ same brain (`replay()`, :48-103) — the fast path, governed by G.
   green (`draft_engine.py:440-447`, anchor `second, unguarded route`). Sole defense is the
   human-read unmatched-picks report. Torture room: drifted name + missing id, assert the
   drafted man is absent from the queue.
+- **B8 (EMERGENT — the metadata split-brain; MEASURED LIVE in the chamber's first equivalence
+  run, 2026-08-20).** The inverse of B6: a pick with a valid `player_id` but empty/absent
+  `metadata` joins the board by frozen id — so `my_board_rows` and every lineup delta stay
+  CORRECT — while `rosters[]` takes its POSITION from `metadata.position` alone
+  (`draft_engine.py:425` `md.get("position", "?")`, `:450`). Our roster then counts as
+  `{"?": N}`, `must_fill` sees ZERO filled slots, and **forcing fires rounds early with K/DEF
+  in the rebuild** (observed: DEF topping the queue at our 9th pick of a 16-round room).
+  Value math right, forcing arithmetic corrupted. Dormant on real Sleeper feeds (metadata is
+  always populated); a hard H7 contract for synthetic ones — and a real-feed torture probe:
+  what does a partially-populated metadata (position missing, name present) do on draft night?
 
 ## C — The endgame forcing
 
@@ -206,6 +216,17 @@ same brain (`replay()`, :48-103) — the fast path, governed by G.
   (verified 2026-08-20): 3 hoarded Ks or 7 DEFs exhaust the position → C7. Scope: exhaustion is
   of the ENGINE'S board pool; real Sleeper bots can draft off-board K/DEF (32 exist), which
   changes nothing for chamber rooms whose picks come from the board.
+- **D3 (EMERGENT — the forcing is nearly redundant on the shipped shape; MEASURED by the
+  mutant control, 2026-08-20).** In benign full-length rooms, `forcing-removed` was INVISIBLE:
+  by the natural forcing time (~pick 110+ of 128), pool shrinkage has pulled K/DEF inside the
+  40-deep window anyway, and their positive deltas (open slot pre-fills at 0.0 — B2) beat the
+  zero-delta bench, so the un-forced policy fills them regardless. The forcing's bite is real
+  but THIN: it requires the pool to still hold 40+ skill players above K/DEF at our final
+  picks — reachable via K/DEF hoarding plus deep-drafting rooms, and provable in a shortened
+  room (the mutant control's 11-round forcing-bite room strands both slots the moment forcing
+  is removed). Consequence: the forcing is the belt over the window's suspenders — keep both,
+  and know that battery findings about forcing will concentrate in exotic rooms, not benign
+  ones.
 
 ## E — Squeeze warnings (advisory surface)
 
@@ -317,7 +338,9 @@ same brain (`replay()`, :48-103) — the fast path, governed by G.
   swapping the metrics mis-ranks arms and cannot reproduce H1.
 - **H7 (room-generator preconditions).** Synthetic picks: well-formed (`pick_no` ≥ 1 present —
   A5/A8), `draft_id` stamped on every pick (A6), `picked_by` stamped consistently or omitted
-  (A7), feeds sorted before `_synth` (A4), integrity-checked before the fast path (G2).
+  (A7), **`metadata` populated with `first_name`/`last_name`/`position`/`team`** (B8 — an empty
+  metadata corrupts the forcing arithmetic while every other gate stays green; caught live
+  2026-08-20), feeds sorted before `_synth` (A4), integrity-checked before the fast path (G2).
   Synthetic boards: full row schema (`name/r/pr/pos/tier/badges` hard-indexed — KeyError
   mid-print otherwise), **unique normalized names** (`board_by_name` and the ladder's `id_of`
   are both last-wins — a duplicate silently aliases two players), no `⚠`/`·` in names (corrupts

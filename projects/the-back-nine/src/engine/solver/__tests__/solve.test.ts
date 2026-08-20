@@ -238,10 +238,11 @@ describe('solve() — conversions RANK (the trend clause clear) + the withheld c
   })
 
   it('seam (ii): copies the token’s mintedOver.disclosedDirectional onto the payload VERBATIM — the []-hardcode mutant reds here', () => {
-    // The live mint produces an EMPTY disclosedDirectional today (no methodology-substrate entry is
-    // directional), so every other arm exercises the copy only with [] — a `disclosedDirectional: []`
-    // hardcode in solve.ts survives them all. Drive the copy with a NON-empty list (the mint CAN produce
-    // one — oracleToken collects directional methodology-substrate keys, oracleToken.test's pinning arms):
+    // This suite's FIXTURE tokens carry disclosedDirectional: [], so every other arm exercises the
+    // copy only with [] — a `disclosedDirectional: []` hardcode in solve.ts survives them all. (The
+    // real mint is NON-empty on any default-assumptions run — methodology.productionMarket +
+    // survivorSpendingRatio are live directional substrate; corrected 2026-08-20, this comment used
+    // to claim the live mint was empty.) Drive the copy with a NON-empty list:
     // fingerprint is unchanged (disclosedDirectional is NOT a fingerprint input), so solve() recommends
     // and must carry the token's list through verbatim (the hawk phasing law — the figure and its
     // disclosure land together, never fed from an empty default).

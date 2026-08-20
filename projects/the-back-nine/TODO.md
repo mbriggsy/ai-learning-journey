@@ -92,16 +92,19 @@ no-change card never names WHICH path, on the one seed where naming would differ
    right; the label doesn't say so). · The account editor's commit button reads "Add this account"
    inside an EDIT (edit-in-place works; label only). · The SS start-year label is future-tense over a
    legitimately-past range for an already-claimed retiree.
-4. **🟡 "Still being finalized" reads as a PROGRESS state and is a PERMANENT disclosure.**
-   `recGradeNoteShape` (`copy.ts:1665`) renders on the buckets leave-more run and cost this walk 30
-   minutes of waiting for a "finalization" that is not a process — it discloses directional
-   methodology substrate (live keys exist: `solverConversionNearTieDemotionSeMultiple` and
-   `solverAssumedHeirBracket` are `directionalUntilPinned: true`), and types.ts records NO dated pin
-   event exists. A friend reads "come back later for the real answer" — there is no later. His words.
-   ⚑ **AND TWO SHIPPED COMMENTS SAY THE NOTE IS DORMANT — false, it renders.** `copy.ts:1663`
-   ("Dormant today (no methodology-substrate directional entry is live)") and `solve.ts:215-216`
-   ("the common case today — no methodology-substrate directional entry is live"). Comment-only sweep,
-   pilot-executable, but TRACE which keys actually feed `disclosedDirectional` before writing.
+4. **🟡 "Still being finalized" reads as a PROGRESS state and is a PERMANENT disclosure — and it is
+   the DEFAULT face of every real recommendation, not an edge case.** `recGradeNoteShape` renders on
+   the buckets leave-more run and cost this walk 30 minutes of waiting for a "finalization" that is
+   not a process. ✅ **TRACED + SWEPT 2026-08-20 (same session):** the feeders are
+   `methodology.productionMarket` + `methodology.survivorSpendingRatio` (both live directional
+   methodology-substrate; `consumedConstantEntries` includes them whenever the run carries the
+   default bytes — i.e. essentially every household; `solver.*` entries are EXCLUDED from the walk,
+   so this line's first filing named the wrong keys and the trace refuted it before the sweep). All
+   FIVE stale "dormant / no entry is live" comments corrected (`copy.ts`, `recommendationView.ts`,
+   `recommendationView.test.ts`, `solve.ts`, `solve.test.ts`). Also noted: the hand-planted
+   `?vault=rec` payload carries `disclosedDirectional: []` (`devSeeds.ts:1427`), so the plants HIDE a
+   note every real run shows. **What remains is the WORDING — his words:** "still being finalized"
+   promises a later that never comes; types.ts records no dated pin event exists for these entries.
 5. **EYE/tone:** the spending step's all-in gloss is ~90 words of carve-outs in one paragraph (the
    densest frame of the walk) · ColdStart's "about five minutes" sits above a fetch-a-healthcare-quote
    sidebar · the still-needed counter GROWS after honest answers (gated steps un-gate) · the record

@@ -552,7 +552,9 @@ describe('recommendationView — the grade signal state + the ShapeDisclosure se
   })
 
   it('SEAM (ii): the ShapeDisclosure note lights from the payload’s OWN disclosedDirectional (not an empty default)', () => {
-    // Dormant by default (no methodology-substrate directional entry is live).
+    // The FIXTURE defaults to disclosedDirectional: [] — the real mint is non-empty on any
+    // default-assumptions run (methodology.productionMarket + survivorSpendingRatio, both live
+    // directional substrate; corrected 2026-08-20). This arm proves the empty case stays quiet.
     expect(asRec(recommendationView(committed(leaveMoreRec()), { spineConfidence: spine })).grade.shapeNote).toBeUndefined()
     // The day a substrate ships directional, the note lights from the figure’s OWN disclosure (the hawk
     // phasing law: the figure and its disclosure land together, never fed from an empty default).

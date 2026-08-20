@@ -1660,7 +1660,11 @@ export const copy = {
 
   // The ShapeDisclosure note (composeShapeDisclosure → HUMANE): the grade's LEVEL rides methodology
   // substrate that isn't final, so treat the exact edge as a lean, not a lock. recGradeNote* ⇒ swept
-  // ("could" carries it). Dormant today (no methodology-substrate directional entry is live).
+  // ("could" carries it). ⚠️ LIVE ON ESSENTIALLY EVERY REAL RUN (corrected 2026-08-20 — this line
+  // said "dormant" while the note rendered): `methodology.productionMarket` and
+  // `methodology.survivorSpendingRatio` are both directional methodology-substrate, and the pinning
+  // walk consumes them whenever the run carries the default bytes — i.e. any household that has not
+  // overridden those assumptions. Witnessed rendering on the ?seed=buckets leave-more commit.
   recGradeNoteShape:
     'A couple of the figures behind this are still being finalized, so the exact gap could shift — it’s a lean here, not a lock.',
   // The coin-flip HINGE — names WHAT IT HINGES ON from the payload's named driver (never a fabricated

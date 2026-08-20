@@ -161,8 +161,10 @@ export interface RecommendationGradeView {
    *  shown figure — conservative, quiet), or the median rounds to the hero's own displayed figure. */
   readonly deltaQualifier: string | undefined
   /** The ShapeDisclosure note (the grade's LEVEL rides still-directional methodology substrate) —
-   *  present iff `directionalLevel`. Dormant today (no methodology-substrate directional entry is live);
-   *  the seam is wired so it lights the day one lands. */
+   *  present iff `directionalLevel`. LIVE on essentially every real run (corrected 2026-08-20 — this
+   *  line said "dormant" while the note rendered): `methodology.productionMarket` +
+   *  `methodology.survivorSpendingRatio` are directional substrate the pinning walk consumes
+   *  whenever the run carries the default bytes. */
   readonly shapeNote: string | undefined
   /** The coin-flip HINGE — names WHAT the near-tie hinges on from the payload's named driver (the
    *  sampling-noise sentinel renders the sampling-framed hinge, never a fabricated cause). `undefined`

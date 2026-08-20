@@ -212,8 +212,11 @@ export interface SolveRecommendation {
    *  `mintedOver.disclosedDirectional` — U16 §S3, seam (ii)). Copied onto the recommendation so the
    *  grade's ShapeDisclosure note (`composeShapeDisclosure`) rides the SAME substrate the token was
    *  cleared against — the honesty-hawk phasing law: the figure and its disclosure land TOGETHER, never
-   *  a structurally-dormant disclosure fed from an empty default. Empty ⇒ no shape note (the common case
-   *  today — no methodology-substrate directional entry is live). Engine-pure, additive. */
+   *  a structurally-dormant disclosure fed from an empty default. Empty ⇒ no shape note — but the live
+   *  mint is NON-empty on any default-assumptions run (`methodology.productionMarket` +
+   *  `methodology.survivorSpendingRatio` are directional substrate the pinning walk consumes whenever
+   *  the run carries the default bytes; corrected 2026-08-20 — this line said the empty case was
+   *  "the common case today" while the note rendered on every real commit). Engine-pure, additive. */
   readonly disclosedDirectional: readonly string[]
   readonly solverCodeVersion: number
 }

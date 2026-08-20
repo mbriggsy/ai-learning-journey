@@ -272,7 +272,7 @@ elite-K trio the runbook names. Only `Pineiro 2→3` (r168 t3) and `McPherson 2�
 
 ## ▶ NEXT ACTION — as of 2026-08-20, ~9 days out, draft still UNSCHEDULED
 
-**Live state, re-pulled 2026-08-20 10:29 cargo: `status: pre_draft`, `start_time: null`,
+**Live state, re-pulled 2026-08-20 15:29 cargo: `status: pre_draft`, `start_time: null`,
 `draft_order: null`, room 8/8 full.** Nothing is on a hard clock except the ~Aug 27 refresh —
 which now carries THREE ratified payloads: the curve rebuild on fresh ECR, the long-TD fold
 (item 4 below), and a look at the 4 above-replacement players the consensus ranks that the board

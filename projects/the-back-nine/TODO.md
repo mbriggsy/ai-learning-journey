@@ -116,12 +116,20 @@ no-change card never names WHICH path, on the one seed where naming would differ
    for the one who has already stopped." Each true alone; the JOIN (what happens to the combined quote
    I typed?) is still left to inference. Adjacency helps; it does not close.
 
-▶ **START HERE NEXT SESSION — executable without Briggsy:** (1) the **pay-less-tax vitest probe on
-`DEV_SEEDS.buckets`** through the real builder + engine at fast counts (the `solveWitness` pattern) —
-hunting an ACTIVE multi-bucket crown, which is the only thing that can witness BOTH entry 4's
-advice-not-taken semantics AND entry 7's conversion-row card on a multi-bucket household; (2) the
-"dormant" comment sweep from finding 4 (trace `disclosedDirectional`'s feeding keys first); (3) the
-**phone-viewport (390×844) intake walk** — the desktop walk cleared the copy, not the fold.
+✅ **THE PAY-LESS-TAX PROBE RAN SAME-DAY AND HIT: buckets + pay-less-tax crowns an ACTIVE
+sequencing arm at fast counts** — `winner grid:bracket-fill:0` ("Low-tax room first", no conversion)
+over `baseline:proportional:0`, `noChange: false` (probe JSON in the session scratchpad;
+256 paths / `_gradeMinPaths` 50, the `solveWitness` seams). ⚠️ Fast counts are NOT the browser's
+16k-path precision — "precision moves the crown" is a measured lesson — so the browser witness
+decides. **If it holds, ONE full-precision drive buys BOTH open witnesses:** entry 4's
+advice-not-taken semantic case (save the ACTIVE record, re-enter unchanged → the HOLDS face over a
+household observably NOT running the crowned order) and the winning-plan card's order row on a
+multi-bucket household. The comment sweep from finding 4 also shipped same-day (`8f06800d`).
+
+▶ **START HERE NEXT SESSION — executable without Briggsy:** (1) the **full-precision browser drive
+of `?seed=buckets` + pay-less-tax** (see the probe block above — clear the vault first, the
+save-flow needs a cold device); (2) the **phone-viewport (390×844) intake walk** — the desktop walk
+cleared the copy, not the fold.
 
 ⚑ **EVERYTHING IN THE WALK-FINDINGS LIST BELOW IS BRIGGSY'S, NOT A BUILD.** Finding 2 is WITHDRAWN
 (refuted same-day). Finding 1's copy pass is OFF (the string is true; only the door is missing, and

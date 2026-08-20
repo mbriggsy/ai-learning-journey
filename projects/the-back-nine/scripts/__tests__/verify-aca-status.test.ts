@@ -175,8 +175,9 @@ describe('ACA enhanced-subsidy re-verify gate logic', () => {
  * The reverse (constant fresh, record stale) is loud — CI reds — which is exactly why the quiet
  * direction is the one that needed a test.
  *
- * ⏰ THIS IS A DATED SEAM, NOT A HYPOTHETICAL: the record's own 30-day window reds 2026-08-25, so it
- * gets hand-edited on a known schedule. These arms fire at the moment of that edit.
+ * ⏰ THIS IS A DATED SEAM, NOT A HYPOTHETICAL: the record's own 30-day window reds a month after
+ * every re-verify, so it gets hand-edited on a known schedule. These arms fire at the moment of
+ * that edit. (This line used to name the next red date; it rotted on the first re-verify.)
  *
  * NOTE FOR A DELIBERATE DIVERGENCE: if the two windows are ever intentionally split, CI's must stay
  * ≤ the runtime's, or the build gate stops being the early warning for the withhold.

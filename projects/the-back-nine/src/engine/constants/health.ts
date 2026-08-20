@@ -31,8 +31,8 @@ export const acaEnhancedSubsidyStatus = sourced(
     enhancedExpired: '2025-12-31',
     regime2026: 'reverted to pre-ARPA (400% FPL cliff back; higher contribution %s)',
     pendingExtension:
-      'H.R. 1834 (a shell vehicle; the ACA substance arrived by substitute) passed the House 2026-01-08 (230–196) and has sat on Senate Legislative Calendar No. 319 since 2026-02-10 — THE SENATE HAS NEVER VOTED ON IT (the S 3385 cloture failure, 51–48, PREDATES it by four weeks and is not the answer to it). NOT enacted as of 2026-08-02; a later enactment WOULD be retroactive to all of 2026 (H.R. 1834 §1(c) is tax-year based), but only for months the household actually PAID a Marketplace premium (§36B(c)(2)(A)), and it runs only THROUGH TAX YEAR 2028 — §1(a)/(b) substitute “before January 1, 2029”, so the toggle it would flip is a three-year extension, never a permanent restoration',
-    verifiedOn: '2026-08-02',
+      'H.R. 1834 (a shell vehicle; the ACA substance arrived by substitute) passed the House 2026-01-08 (230–196) and has sat on Senate Legislative Calendar No. 319 since 2026-02-10 — THE SENATE HAS NEVER VOTED ON IT (the S 3385 cloture failure, 51–48, PREDATES it by four weeks and is not the answer to it), and when the must-pass Senate CR (H.R. 6500) passed 90–6 on 2026-08-08 not one of its 13 filed amendments touched §36B. NOT enacted as of 2026-08-20; a later enactment WOULD be retroactive to all of 2026 (H.R. 1834 §1(c) is tax-year based), but only for months the household actually PAID a Marketplace premium (§36B(c)(2)(A)), and it runs only THROUGH TAX YEAR 2028 — §1(a)/(b) substitute “before January 1, 2029”, so the toggle it would flip is a three-year extension, never a permanent restoration',
+    verifiedOn: '2026-08-20',
   },
   {
     citation: 'pre65-healthcare doc',

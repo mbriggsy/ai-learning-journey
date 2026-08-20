@@ -44,12 +44,22 @@ selector misses it) → then delete the DB and reload. **`indexedDB.deleteDataba
 the app holds the connection** — fire it, navigate to `about:blank`, then back; deleting and
 reloading in one step silently leaves the vault in place and you land on Unlock wondering why.
 
-▶ **START HERE NEXT SESSION — and read this line before opening the list below it.**
-**The one actionable item is the ACA re-verify** (dated row above, ~18 days from 2026-08-14, ~1h).
-It is a sourced-research job, not a build: the 8-step `howToClear` in `aca-last-verified.json`, both
-attest tables **hand-RE-TYPED from the IRS PDFs** (never from `health.ts` — that bind goes circular).
-⚠️ Budget for a bot-wall: if a `.gov` primary refuses `curl`, that is the sanctioned exception to
-no-manual-steps — **ask Briggsy to pull the file** rather than downgrading the source.
+✅ **THE ACA RE-VERIFY CLEARED 2026-08-20 — full 8-step chain, 7 parallel primary-source legs,
+zero bot-walls.** Regime UNCHANGED (reverted; both temporary provisions still "before January 1,
+2026"; ceiling still PL 119-102; tables re-typed and identical). The clock now reds ~2026-09-19
+(dated row below). **What the pass changed:** the forward flip window MOVED — the Senate passed its
+own clean CR (H.R. 6500, 90-6, 2026-08-08, §106(3) end date **2026-12-11**; zero ACA amendments
+even filed), so the **Sept 14–30 CR endgame is the highest-risk attachment window and the next
+re-verify (~Sep 19 due) lands INSIDE it — treat that one as hot, not routine.** Four enrolled bills
+sit at the President (would become PL 119-103…106), all pre-swept clean — their signing is EXPECTED,
+not a regime event; a FIFTH number ≥119-107 is what warrants a fresh sweep. Three fabricated/
+overstated claims caught and stricken, incl. this record's own false 5-of-5 chain-check (seam 1's
+2.10→3.14 is a genuine statutory discontinuity — do not "fix" a correct transcription against it).
+
+▶ **START HERE NEXT SESSION: the two executable non-Briggsy items are** (1) the `?seed=buckets`
+save + re-entry witness for the record card's advice-not-taken case (~25-min solve; the debt block
+above), and (2) the next walk — the first-Save ceremony + the 10 unwalked intake steps including
+**Accounts** (Tier-2 entry 11; the no-solve drive recipe above cuts the cost).
 
 ⚑ **EVERYTHING IN THE WALK-FINDINGS LIST BELOW IS BRIGGSY'S, NOT A BUILD.** Finding 2 is WITHDRAWN
 (refuted same-day). Finding 1's copy pass is OFF (the string is true; only the door is missing, and
@@ -180,7 +190,7 @@ never the words, when the question is about a flag.
 | Fires | What | What breaks |
 |---|---|---|
 | ~~NOW~~ | ~~NC FY2025-26 revenue certification~~ | ✅ **CLOSED 2026-08-02** — S.L. 2026-41 § 44.1(a) enacted the rate schedule *and* struck the trigger rows the certification fed. Withhold lifted, checkpoint retired. |
-| **CI: ~2026-09-01 00:00 UTC** · **runtime: 2026-09-02** | ACA rolling window (`verifiedOn: 2026-08-02` + `maxAgeDays: 30`) | **TWO dates, and the split is DELIBERATE — one date here was wrong (corrected 2026-08-14).** `verify:aca` compares float-ms so it reds ~a day EARLIER than the runtime clause's integer-epoch-day compare; `oracleToken.ts:174-176` records that ordering as the safe one. **And it is not only CI:** `evaluateAcaFreshnessClause` (`oracleToken.ts:189-198`) is a RUNTIME clause on the user's own browser clock — once overdue the shipped app WITHHOLDS the recommendation for any household carrying an ACA enrolled premium, and `healthSheetChrome.ts:126` flips the health-sheet status line. No deploy required. Clearing it is the 8-step `howToClear` (~1h, primary sources, both attest tables hand-RE-TYPED from the PDFs — never from `health.ts`, that bind goes circular) |
+| **CI: ~2026-09-19 00:00 UTC** · **runtime: 2026-09-20** | ACA rolling window (`verifiedOn: 2026-08-20` + `maxAgeDays: 30`) — ⚠️ the due date lands INSIDE the Sept 14–30 CR endgame (the Senate returns ~09-14 against a 09-30 funding cliff; two clean competing CRs, House 12-04 / Senate 12-11), which the record names the highest-risk §36B attachment window — run that pass EARLY in the week of Sep 14 and read `forwardClock` first | **TWO dates, and the split is DELIBERATE — one date here was wrong (corrected 2026-08-14).** `verify:aca` compares float-ms so it reds ~a day EARLIER than the runtime clause's integer-epoch-day compare; `oracleToken.ts:174-176` records that ordering as the safe one. **And it is not only CI:** `evaluateAcaFreshnessClause` (`oracleToken.ts:189-198`) is a RUNTIME clause on the user's own browser clock — once overdue the shipped app WITHHOLDS the recommendation for any household carrying an ACA enrolled premium, and `healthSheetChrome.ts:126` flips the health-sheet status line. No deploy required. Clearing it is the 8-step `howToClear` (~1h, primary sources, both attest tables hand-RE-TYPED from the PDFs — never from `health.ts`, that bind goes circular) |
 | **2027-08-02** | NC `nextDue`, `state-tax-nc-last-verified.json` (annual drift cadence now, not a pending event) | `pnpm verify:state-tax` reds → CI red |
 | **2027-01-01** | `TAX_YEAR` / `COVERAGE_YEAR` / `CONTRIBUTION_YEAR` roll | ✅ **ARMED 2026-08-02** — `annualRoll.tripwire.test.ts` reds the suite (both arms mutation-proven). Clearing it is a **re-sourcing job, never a date bump**; `scaffold.smoke.test.ts:10-13` + `constants.shape.test.ts` red alongside by design |
 | **2027-01-01** | Every organic vault crosses `elapsed ≥ 1` | The aged surfaces stop being dev-plant-only and go live on real households — **the four aged tone calls are due before this** |

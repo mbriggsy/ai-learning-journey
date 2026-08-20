@@ -116,20 +116,27 @@ no-change card never names WHICH path, on the one seed where naming would differ
    for the one who has already stopped." Each true alone; the JOIN (what happens to the combined quote
    I typed?) is still left to inference. Adjacency helps; it does not close.
 
-✅ **THE PAY-LESS-TAX PROBE RAN SAME-DAY AND HIT: buckets + pay-less-tax crowns an ACTIVE
-sequencing arm at fast counts** — `winner grid:bracket-fill:0` ("Low-tax room first", no conversion)
-over `baseline:proportional:0`, `noChange: false` (probe JSON in the session scratchpad;
-256 paths / `_gradeMinPaths` 50, the `solveWitness` seams). ⚠️ Fast counts are NOT the browser's
-16k-path precision — "precision moves the crown" is a measured lesson — so the browser witness
-decides. **If it holds, ONE full-precision drive buys BOTH open witnesses:** entry 4's
-advice-not-taken semantic case (save the ACTIVE record, re-enter unchanged → the HOLDS face over a
-household observably NOT running the crowned order) and the winning-plan card's order row on a
-multi-bucket household. The comment sweep from finding 4 also shipped same-day (`8f06800d`).
+⚑ **THE PAY-LESS-TAX HUNT RAN SAME-DAY, AND THE FULL-PRECISION RUN REFUTED ITS OWN FAST-COUNT
+PROBE — the advice-not-taken prescription has now missed THREE times.** At 256 paths the probe hit
+(`winner grid:bracket-fill:0` ACTIVE over `baseline:proportional:0`, `noChange: false` — probe JSON
+in the session scratchpad), but the 16k-path browser drive landed the NO-DOLLAR register — *"You're
+already on one of the strongest paths"* + the coin-flip hinge (*"which one edges ahead can come down
+to chance"*). Read per the four-disjunct law: at full precision the bracket-fill edge sits inside
+display noise, so the surface honestly declines to urge the switch. **"Precision moves the crown"
+is now measured TWICE on this one seed** (leave-more's probe crown carried a conversion the 16k run
+dropped; pay-less-tax's probe crown was ACTIVE and the 16k run collapsed it) — `buckets` is
+precision-MARGINAL by construction, which is exactly why both goals grade "A close call".
+**The honest state of entry 4's semantic witness:** no current seed renders the advice-not-taken
+frame at full precision. The fork: (a) mint a seed tuned so an order gap SURVIVES 16k paths — a
+size-L parameter hunt (the `dateinvert (c)` class, its own session); or (b) accept the synthetic
+RecommendationSurface/recommendationView coverage as the frame's permanent home — the same
+conclusion `devSeeds.test.ts`'s 2026-07-22 note reached for the old no-change shape, and the
+PIPELINE half (mint → persist → unlock → holds → demote → re-promote) is now witnessed live
+regardless. **Lean: (b)** — the render is pinned synthetically, the pipeline is witnessed, and the
+hunt's marginal value is one eyeball frame; but the scope call is his if (a) tempts anyone.
 
-▶ **START HERE NEXT SESSION — executable without Briggsy:** (1) the **full-precision browser drive
-of `?seed=buckets` + pay-less-tax** (see the probe block above — clear the vault first, the
-save-flow needs a cold device); (2) the **phone-viewport (390×844) intake walk** — the desktop walk
-cleared the copy, not the fold.
+▶ **START HERE NEXT SESSION — executable without Briggsy: the phone-viewport (390×844) intake
+walk** — the desktop walk cleared the copy and the mechanics, not the fold.
 
 ⚑ **EVERYTHING IN THE WALK-FINDINGS LIST BELOW IS BRIGGSY'S, NOT A BUILD.** Finding 2 is WITHDRAWN
 (refuted same-day). Finding 1's copy pass is OFF (the string is true; only the door is missing, and

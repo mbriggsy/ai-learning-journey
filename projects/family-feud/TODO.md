@@ -122,11 +122,13 @@ half. It is written down now:
   > **The risk** — what it costs if I am wrong
   > **Before your next pick** — what to watch
   ✅ **RECONCILED 2026-08-17 — verified against source 2026-08-18. There is exactly ONE format.**
-  It lives at `docs/draft-day-runbook.md:575` (*Advisory format — THE FOUR LINES*), whose own note
-  at :580 records that it replaced the older ~5-line shape; the banned list is at :603 and three
-  worked examples follow. ⚠️ **Do not go hunting for a second format — you will find `:590`, which
-  quotes one line of the dead one to explain WHY the shape changed. That is rationale, not a
-  template.** ⚠️ The shipped labels are tighter than the four lines quoted above
+  It lives in `docs/draft-day-runbook.md` under the heading **`## Advisory format — THE FOUR
+  LINES`** — find it by that heading, never by line number: the `:575`/`:580`/`:603` numbers this
+  block once quoted had rotted to `:853`+ by 2026-08-20 (insight 029 doing exactly what it says).
+  The section's own closing note records that it replaced the older ~5-line shape; the 🚨 *Banned*
+  heading and three worked examples follow inside it. ⚠️ **Do not go hunting for a second format —
+  the "Why this shape and not the old one" paragraph quotes one line of the dead one to explain WHY
+  the shape changed. That is rationale, not a template.** ⚠️ The shipped labels are tighter than the four lines quoted above
   (`THE CALL:` / `Passed on:` / `Risk:` / `Before #<next> (<n> picks):`) — **quote the runbook,
   never this block.** What is left here is Briggsy's eye on the examples, nothing else.
 
@@ -295,6 +297,16 @@ the new lineup-delta queue (insight 030), which no human has yet read under a cl
    The runbook asserts *"never eat more than ~30s of his 120"* and **that number has never been
    measured.** Claude can stand the room up and pre-measure chain-exit → four-lines-delivered; the
    read and the click need his hands.
+   ✅ **CLAUDE'S HALF PRE-MEASURED 2026-08-20** (lab, 3 fresh stops — #14/#51/#83, deliberately NOT
+   the worked-example stops, Briggsy at work): chain 0.6-0.8s every time; chain-exit →
+   four-lines-delivered **61.3s (full read) · 43.4s · 54.7s (grepped)** — all COLD composes, upper
+   bounds. **So the cold path does not fit ~30s; the runbook's ~30s is the WARM path** (pre-call
+   staged during the wait → on-clock lookup + delta), **which is still the mock's number to
+   measure — plus the half no lab can supply: Briggsy READING four lines at 2 min a pick.** Two
+   grep gaps found composing and fixed in the runbook the same day (queue grep returned 2 names;
+   the roster row was absent from the act-on view, so Risk-in-roster-terms was written by
+   inference at both grepped stops). THE CALL streams first and the queue stays armed, so a blown
+   compose degrades to OUR queue-top, not Sleeper's board.
 3. ✅ **RESOLVED 2026-08-19 — BRIGGSY: "flip it baby!"** QUEUE THIS ORDER now prints FIRST,
    directly under the gate lines; the projection and cliffs follow as context. The on-clock banner
    and the mandatory-squeeze warning still print ABOVE it on purpose (insight 016), both their

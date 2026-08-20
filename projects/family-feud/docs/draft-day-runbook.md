@@ -592,6 +592,15 @@ should never see it.
 > - **GREP IT.** Reading the full dump cost **19s** once. `grep -A6 "BEST AVAILABLE"` and
 >   `grep -A4 "QUEUE THIS ORDER"` are the two blocks you act on; add
 >   `grep -E "THE WAIT|Between this pick|Their open needs|⚠ CLIFF|RUN WATCH"` for line four.
+>   ⚠️ **ADVISOR MODE needs a wider net — two gaps measured composing at #51 and #83 in the
+>   2026-08-20 lab pre-rehearsal:** (a) the `-A4` queue grep returns only TWO names, because the
+>   ladder's own two-line explanation paragraph eats the window — use `grep -A10 "QUEUE THIS
+>   ORDER"`; (b) **nothing above captures YOUR roster**, and line 3 of the four lines is Risk *in
+>   roster terms* — add `grep -F "<== YOU"` (the engine's own `slot N: [...] needs: ... <== YOU`
+>   row). Without it both stops were composed by inferring the roster from the queue's
+>   construction — exactly the derived-number habit the banned list exists to stop. *(The badge
+>   legend also doesn't survive the greps; the `^`/`+` glyphs at #51/#83 arrived unglossed. Minor —
+>   no advisory line needed them — but know the full dump has the key if one ever matters.)*
 >   ⚠️ **Read the `[source]`/`!!` preamble on the FIRST cycle of the night in full** — grepping it
 >   away every time is how an unarmed contamination gate goes unnoticed.
 > - 🚫 **DO NOT RE-MERGE WHILE ON THE CLOCK.** The feed cannot move: nobody else can pick while it
@@ -733,6 +742,17 @@ should never see it.
 - **FAST room** (picks landing ~15s apart or less — quick-click humans and/or CPU autopick): distance-based pacing fails; a 14-pick gap can evaporate in under a minute. The moment his pick(s) land: one sync → deliver the NEXT window's full pre-call immediately (with snipe ladder, see below) → then poll every ~15-20s continuously, tightening to **10-15s when ≤3 picks away** (Briggsy's calibration after Mock #2 — two picks came down to the wire at 20-25s). **Do not stretch to 45-60s "because the gap looks big" — that exact deviation cost pick 79 in Mock #2.** An all-CPU room (7 bots) is the fastest possible room: 12-pick gaps run ~60-90s. Note the bot-room quirk: the room PAUSES on our clock (bots can't pick past us), so wire-scrapes there are always self-inflicted — see "fire first, narrate after" in Executor mode.
 - **SLOW room** (real-draft pace, humans actually using the 120s clock): after his pick lands, sync once → pre-call for his next window; ≥4 picks out, sync every ~60-90s; ≤3 away, burst every ~20-30s; on the clock, final sync and deliver THE CALL immediately — never eat more than ~30s of his 120.
 - Rooms can change speed (humans step away → CPU autopick takes over). If two consecutive polls show a pace shift, switch modes.
+- 📏 **The COLD-COMPOSE penalty is now MEASURED (2026-08-20 lab pre-rehearsal, 3 fresh stops —
+  #14 / #51 / #83 against `lab_feed_120.json`, deliberately not the worked-example stops): composing
+  all four lines from scratch on the clock, no pre-call staged, took 61.3s (full-output read) /
+  43.4s / 54.7s (grepped) from chain-exit to advisory-delivered.** Upper bounds — each bracket also
+  carried rehearsal narration and one extra tool round-trip — but the direction is settled: **a cold
+  compose does not fit the ~30s budget above.** That budget describes the WARM path (pre-call staged
+  during the wait; on-clock = final sync + lookup + delta) and the warm number is still unmeasured —
+  the advisor-mode mock owns it. Mitigations when a cold compose happens anyway: THE CALL is the
+  first line out, so the actionable name lands well before the rest — and the queue is already armed
+  in Sleeper, so a blown compose degrades to OUR queue-top, never to Sleeper's board. The chain
+  itself re-confirmed at ~0.6-0.8s per stop: the scripts remain never the cost (insight 026).
 - **HARD RULE (any mode): if the engine's output says the next pick is OURS — or 1 away — do NOT start a sleep/fetch/engine cycle. Act on the standing ladder first; sync afterward.** The ladder exists precisely so no round-trips are needed on the clock.
 
 ## Executor mode — driving the picks in the Sleeper web draft room *(added Aug 6 after Mock #2)*

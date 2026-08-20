@@ -26,6 +26,7 @@ docs/            all prose — start here
   live-board-plan.md     the self-updating wall board — shipped; this is the design record
   nightly-feud.md        the newsletter — how it builds, and the nightly job that publishes it
   in-season-plan.md      what happens after the draft. A stub on purpose; read the un-stub trigger
+  jargon.md              the decoder — every term of art in plain English
   insights/              hard-won lessons, one per file. Read before debugging
                          something that smells familiar.
   plans/                 implementation plans. The machinery rebuild lives here.

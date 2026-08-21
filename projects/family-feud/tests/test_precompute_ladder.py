@@ -898,21 +898,72 @@ class TestAMockCannotOverwriteTheLiveLadder(unittest.TestCase):
         self.assertTrue(path)
         self.assertTrue(note)
 
-    def test_THE_GO_TIME_FILE_FORM_CANNOT_OVERWRITE_THE_LIVE_LADDER(self):
-        """🚨 THE REGRESSION THIS PAIR EXISTS FOR, reproduced before it was fixed.
+    def test_an_UNARMED_run_cannot_claim_the_live_path_even_with_healthy_cargo(self):
+        """🚨 THE OTHER HALF OF THE UNARMED RULE, reproduced live 2026-08-20 before it was fixed.
 
-        `--cargo temp/draft.json` is what `docs/draft-day-runbook.md` now tells the operator to run
-        at go time, and Step 3.5 pipes the resulting queue into `ffQueueSync` where Sleeper's
-        auto-pick drains it top-down on a blown clock. Measured 2026-08-18: the DIR form diverted
-        correctly while the FILE form wrote the live path with no note at all."""
+        The lunch mock's bare `--cargo temp/draft.json` printed "gate NOT armed" (draft_id="")
+        and then wrote the LIVE ladder.json anyway: `real` was non-empty, and the mismatch check
+        was `if draft_id and ...` -- skippable by exactly the runs that could not be armed. The
+        runs that cannot be ARMED must never be the runs allowed to OVERWRITE (the 2026-08-18
+        principle, applied to the arming id this time instead of the identity)."""
+        path, note = PL.resolve_out(None, "", self.cargo(), self.default)
+        self.assertNotEqual(path, self.default, "an unarmed run must never claim the live queue")
+        self.assertEqual(os.path.basename(path), "ladder.unarmed.json")
+        self.assertIn("held back", note or "")
+
+    def test_reference_draft_id_ARMS_from_a_go_time_FILE(self):
+        """The bare `--cargo temp/draft.json` form must arm the gate from the file itself --
+        that is `run_engine.py`'s own behaviour (its --cargo IS a file), and the 2026-08-20 lunch
+        mock proved the un-armed alternative: "no draft_id in cargo -- gate NOT armed" printed on
+        the exact command the runbook teaches."""
         f = os.path.join(self.tmp, "draft.json")
         with open(f, "w", encoding="utf-8") as fh:
-            json.dump({"draft_id": self.REAL}, fh)
-        path, note = PL.resolve_out(None, self.MOCK, os.path.dirname(f), self.default, draft_file=f)
-        self.assertNotEqual(path, self.default)
-        self.assertEqual(os.path.basename(path), f"ladder.{self.MOCK}.json",
-                         "the file form must divert by draft id, exactly as the dir form does")
-        self.assertIn(self.REAL, note or "", "the note must name the league's real draft")
+            json.dump({"draft_id": self.MOCK}, fh)
+        rid, line = PL.reference_draft_id(None, cargo_dir=os.path.dirname(f), draft_file=f)
+        self.assertEqual(rid, self.MOCK)
+        self.assertIn("armed", line)
+        self.assertNotIn("NOT armed", line)
+
+    def test_A_MOCKS_OWN_DRAFT_OBJECT_CANNOT_VOUCH_FOR_ITSELF(self):
+        """🚨 THE 2026-08-20 LUNCH-MOCK REGRESSION, both halves, at the main() wiring level.
+
+        `--cargo <the mock's own draft object>` with `--draft-id <mock>` wrote the LIVE
+        ladder.json with the gate reading "armed": resolve_out's "which draft is the league's"
+        answer came from the very file being judged, so `real == draft_id` was a tautology.
+        Identity must come from the mule's inbox and nowhere else; with that, the same command
+        diverts to ladder.<mock>.json.
+
+        The mock's id here is the LAB FEED's own draft_id, because in the live incident the feed
+        and the passed draft object were the same mock -- an id the feed does not carry would be
+        refused by the engine's contamination gate first (which is itself the arming fix working,
+        but it is a different guard than the one this test pins)."""
+        import contextlib
+        import io as _io
+        feed_id = "1390923383440424960"              # lab_feed_120.json's own draft_id
+        self.addCleanup(setattr, PL, "DEFAULT_OUT", PL.DEFAULT_OUT)
+        self.addCleanup(setattr, PL, "CARGO", PL.CARGO)
+        PL.DEFAULT_OUT = self.default
+        PL.CARGO = self.cargo()                      # the league's identity: REAL
+
+        f = os.path.join(self.tmp, "draft.json")     # the MOCK's own draft object
+        with open(f, "w", encoding="utf-8") as fh:
+            json.dump({"draft_id": feed_id, "draft_order": {PL.W.BRIGGSY_USER_ID: 3}}, fh)
+
+        buf = _io.StringIO()
+        try:
+            with contextlib.redirect_stdout(buf):
+                PL.main(["--cargo", f, "--feed", FEED, "--at", "8"])   # BARE -- no --draft-id
+        except SystemExit as e:
+            buf.write(str(e))
+        out = buf.getvalue()
+        self.assertFalse(os.path.exists(self.default),
+                         "a mock's own draft object vouched for itself onto the live path")
+        self.assertIn("held back", out)
+        self.assertNotIn("NOT armed", out,
+                         "the bare file form must arm the gate from the file (the other half)")
+        self.assertIn(f"ladder.{feed_id}.json", out,
+                      "the divert must be BY ID -- armed from the file, identity from the inbox")
+        self.assertIn(self.REAL, out, "the note must name the league's real draft")
 
     def test_MAIN_WIRES_THE_FILE_FORM_THROUGH_insight_013_for_the_fourth_time(self):
         """🚨 THE CALL-SITE TEST, AND ITS ABSENCE IS WHY THIS SHIPPED.
@@ -927,9 +978,10 @@ class TestAMockCannotOverwriteTheLiveLadder(unittest.TestCase):
         way to reach main()'s path was to let it write the real war-room ladder."""
         import contextlib
         import io as _io
-        real_default = PL.DEFAULT_OUT
-        self.addCleanup(setattr, PL, "DEFAULT_OUT", real_default)
+        self.addCleanup(setattr, PL, "DEFAULT_OUT", PL.DEFAULT_OUT)
+        self.addCleanup(setattr, PL, "CARGO", PL.CARGO)
         PL.DEFAULT_OUT = self.default            # a temp path -- never the real state dir
+        PL.CARGO = self.cargo()                  # the league's identity source: REAL
 
         f = os.path.join(self.tmp, "draft.json")     # go-time form, naming THIS league
         with open(f, "w", encoding="utf-8") as fh:
@@ -946,25 +998,44 @@ class TestAMockCannotOverwriteTheLiveLadder(unittest.TestCase):
         self.assertFalse(os.path.exists(self.default),
                          "main() wrote the live ladder for a draft the cargo says is not ours")
         self.assertIn("held back", out, "main() must surface the divert, not swallow it")
-        # ⚠️ "held back" ALONE DOES NOT PIN THE WIRING -- both diverts say it. With the call site
-        # mis-wired, `cargo_draft_id` finds nothing, `real` is "", and the run lands on the UNARMED
-        # path: still safe (that guard is the second layer), but it means the cargo was never read.
-        # Assert the run was ARMED -- the note can only name this league's real draft if the file
-        # actually reached `cargo_draft_id`.
+        # ⚠️ "held back" ALONE DOES NOT PIN THE WIRING -- both diverts say it. If identity never
+        # reached the mule's inbox, `real` is "" and the run lands on the UNARMED path: still safe
+        # (that guard is the second layer), but it means the inbox was never read. Assert the
+        # divert NAMED the league's real draft, which only the inbox can supply.
         self.assertIn(self.REAL, out,
-                      "the divert never read the cargo -- the file is not reaching cargo_draft_id")
+                      "the divert never read the inbox -- identity is not reaching cargo_draft_id")
         self.assertNotIn("unarmed", out,
-                         "main() fell back to the unarmed path; the --cargo FILE was not wired through")
+                         "main() fell back to the unarmed path; identity was not wired through")
 
     def test_the_file_form_still_writes_the_live_ladder_for_THIS_leagues_draft(self):
-        """The positive control. A divert that fired unconditionally would pass everything above
-        and quietly stop the war-room queue from ever being written on draft night."""
-        f = os.path.join(self.tmp, "draft.json")
+        """The positive control, at the same main() wiring level as the regression pair. A divert
+        that fired unconditionally would pass everything above and quietly stop the war-room queue
+        from ever being written on draft night -- insight 009's false-red direction.
+
+        "This league's draft" is the lab feed's id here, so the feed, the go-time file and the
+        inbox all agree -- draft night's exact shape."""
+        import contextlib
+        import io as _io
+        feed_id = "1390923383440424960"              # lab_feed_120.json's own draft_id
+        self.addCleanup(setattr, PL, "DEFAULT_OUT", PL.DEFAULT_OUT)
+        self.addCleanup(setattr, PL, "CARGO", PL.CARGO)
+        PL.DEFAULT_OUT = self.default
+        PL.CARGO = self.cargo(feed_id)               # inbox says this league's draft...
+
+        f = os.path.join(self.tmp, "draft.json")     # ...and the go-time file IS this league's
         with open(f, "w", encoding="utf-8") as fh:
-            json.dump({"draft_id": self.REAL}, fh)
-        path, note = PL.resolve_out(None, self.REAL, os.path.dirname(f), self.default, draft_file=f)
-        self.assertEqual(path, self.default)
-        self.assertIsNone(note)
+            json.dump({"draft_id": feed_id, "draft_order": {PL.W.BRIGGSY_USER_ID: 3}}, fh)
+
+        buf = _io.StringIO()
+        try:
+            with contextlib.redirect_stdout(buf):
+                PL.main(["--cargo", f, "--feed", FEED, "--at", "8"])
+        except SystemExit as e:
+            buf.write(str(e))
+        out = buf.getvalue()
+        self.assertTrue(os.path.exists(self.default),
+                        "the guard must not stop draft night's own ladder from being written")
+        self.assertNotIn("held back", out)
 
     def test_identity_does_not_depend_on_the_files_age(self):
         """A league's draft id does not change when the file gets old, so identity must not read

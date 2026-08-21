@@ -426,17 +426,25 @@ python scripts/run_engine.py --cargo temp/draft.json              # then for rea
 python scripts/precompute_ladder.py --cargo temp/draft.json       # SAME FLAG, same file
 ```
 
-🚨 **AND THE FIRST VERSION OF THAT FLAG PUT A HOLE UNDER THIS EXACT COMMAND — fixed the same
-night, recorded because the shape recurs.** `--cargo <file>` made `cargo_draft_id` join
-`sleeper_draft.json` onto a path that was already a file, find nothing, and return `""` — and the
-ladder-overwrite divert read `if real and draft_id and …`, so an empty id **short-circuited
-straight to the live `ladder.json`**. Reproduced: the dir form diverted correctly while the file
-form wrote the live queue **with no note at all**. Step 3.5 then pipes that file into
-`ffQueueSync`, where auto-pick drains it top-down. **The runs that could not be ARMED were exactly
-the runs allowed to OVERWRITE.** Both halves are closed — the file reaches the identity read, and
-an unarmed run now writes `ladder.unarmed.json` and says so. ⚠️ **1057 tests were green over it**,
-because every `--cargo FILE` test passed `--out` and `--draft-id`, the two flags that disable the
-guards the form broke.
+🚨 **AND THE FIRST VERSION OF THAT FLAG PUT A HOLE UNDER THIS EXACT COMMAND — and the first FIX
+of the hole shipped a deeper copy of it, so this paragraph has now been wrong once and is written
+by the third pass.** `--cargo <file>` made `cargo_draft_id` join `sleeper_draft.json` onto a path
+that was already a file, find nothing, and return `""` — and the ladder-overwrite divert read
+`if real and draft_id and …`, so an empty id **short-circuited straight to the live
+`ladder.json`**. The 2026-08-18 "fix" handed the FILE to the identity read — which let a mock's
+own draft object **vouch for itself** (`real == draft_id`, both read from the same file), and the
+2026-08-20 lunch mock wrote the live ladder **twice**, once bare ("gate NOT armed", then wrote it
+anyway) and once with `--draft-id` (armed, "equal", wrote it). Step 3.5 then pipes that file into
+`ffQueueSync`, where auto-pick drains it top-down. **Fixed for real 2026-08-21, split by owner:
+the ARMING id may come from the passed file** (an independent check of the feed is still an
+independent check — `run_engine.py`'s own behaviour), **but IDENTITY — which draft is this
+league's — only ever comes from the mule's inbox.** A mock therefore diverts to
+`ladder.<draft_id>.json`, and an unarmed run writes `ladder.unarmed.json` and says so — an empty
+arming id can no longer skip the divert. Pinned at the `main()` wiring level
+(`test_A_MOCKS_OWN_DRAFT_OBJECT_CANNOT_VOUCH_FOR_ITSELF` + the positive control), because ⚠️
+**1057 green tests sat over the first hole and 1179 over the second** — every earlier
+`--cargo FILE` test passed `--out` or `--draft-id`-matching-the-file, the exact flags that
+disable the guards the form broke.
 
 ✅ **`precompute_ladder.py --cargo` accepts that same file as of 2026-08-18, and it did not before.**
 Its `--cargo` had always meant a **directory** while `run_engine.py`'s meant a **file** — same flag
@@ -606,6 +614,14 @@ should never see it.
 > - 🚫 **DO NOT RE-MERGE WHILE ON THE CLOCK.** The feed cannot move: nobody else can pick while it
 >   is your turn. A second merge buys nothing and costs a whole round trip out of ~90 usable
 >   seconds. Merge when a pick lands, not when you are deciding.
+> - 🚨 **ON HIS CLOCK, THE ADVISORY GOES OUT BEFORE ANY BROWSER CALL — queue maintenance lives
+>   between windows only.** *(Added 2026-08-21 from the 08-20 lunch mock, where a queue-sync that
+>   hung 45s on his clock cost the advisory, blew the clock, and flipped the seat to AUTO for the
+>   rest of the draft.)* claude-in-chrome CDP timed out 45s twice that day, and one loss was
+>   reply-only — the sync had actually landed, so verify by READING the queue back (insight 007's
+>   shape), never by the call's own result. **After 2 timeouts in a session: declare the bridge
+>   dead, keep advising API-only, and say so out loud.** The queue is the blown-clock net, but a
+>   stale queue plus a delivered advisory beats a fresh queue plus a missed clock every time.
 > - **On a MOCK add `--rounds 15 --draft-id <mock_id>` to steps 3 and 4** — see step 3's warning.
 
 1. **`python scripts/merge_picks.py <draft_id>`** — one command: fetches `/picks`, merges into

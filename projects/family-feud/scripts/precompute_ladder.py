@@ -435,8 +435,8 @@ def stage_cargo(tmp, cargo_dir=CARGO, draft_file=None):
     return staged
 
 
-def cargo_draft_id(cargo_dir=CARGO, draft_file=None):
-    """This league's draft id as the cargo states it, with no freshness judgement. Identity only.
+def cargo_draft_id(cargo_dir=CARGO):
+    """This league's draft id as the MULE'S cargo states it, with no freshness judgement.
 
     Deliberately NOT `reference_draft_id`: that one decides what to ARM the contamination gate
     with and correctly withholds a stale id, returning "". Here the question is a different one --
@@ -444,20 +444,27 @@ def cargo_draft_id(cargo_dir=CARGO, draft_file=None):
     because the league's draft id does not change when the file gets old. Reusing the armed id
     would make a stale cargo silently re-enable the very overwrite this exists to prevent.
 
-    `draft_file` is the go-time `--cargo temp/draft.json` form. Without it this joined
-    "sleeper_draft.json" onto a path that was already a FILE, found nothing, and returned "" --
-    see the refusal in `resolve_out` for what that then unlocked.
+    🚨 NO `draft_file` PARAMETER, ON PURPOSE. It had one for two days (2026-08-18 -> 08-20) and
+    that WAS the hole: reading identity from the go-time `--cargo FILE` let a mock's own draft
+    object vouch for itself -- `real == draft_id`, both read from the same file -- and the
+    2026-08-20 lunch mock wrote the live `ladder.json` twice with the gate reading "armed".
+    A file the operator passed can say which draft IT is; only the mule's inbox says which draft
+    is OURS. Reproduced live before this fix; pinned by the wiring tests, not just unit tests,
+    because the last version of this bug survived 96 green tests at the call site (M15).
     """
     try:
-        with open(draft_file or os.path.join(cargo_dir, "sleeper_draft.json"),
-                  encoding="utf-8-sig") as f:
+        with open(os.path.join(cargo_dir, "sleeper_draft.json"), encoding="utf-8-sig") as f:
             return str((json.load(f) or {}).get("draft_id") or "")
     except (OSError, ValueError):
         return ""
 
 
-def resolve_out(given, draft_id, cargo_dir=CARGO, default_out=None, draft_file=None):
+def resolve_out(given, draft_id, cargo_dir=CARGO, default_out=None):
     """Where the ladder is written. Returns (path, note-or-None).
+
+    `cargo_dir` must be the MULE'S inbox (or a stand-in for it in tests) -- never a directory
+    derived from a `--cargo FILE`'s location, and there is no `draft_file` parameter by design:
+    see `cargo_draft_id` for the two days it had one and what that cost.
 
     🚨 WHY THIS IS NOT JUST `--out or DEFAULT_OUT`. `ladder.json` was ONE fixed path regardless of
     which draft produced it, so every mock, rehearsal and lab run overwrote the live war-room
@@ -480,7 +487,7 @@ def resolve_out(given, draft_id, cargo_dir=CARGO, default_out=None, draft_file=N
     default_out = default_out or DEFAULT_OUT
     if given:
         return given, None
-    real = cargo_draft_id(cargo_dir, draft_file)
+    real = cargo_draft_id(cargo_dir)
     if not real:
         # 🚨 UNARMED MUST NOT MEAN "WRITE THE LIVE QUEUE". This used to fall through to
         # `default_out`, so the ONE case where we cannot tell whose draft this is was the case
@@ -493,7 +500,17 @@ def resolve_out(given, draft_id, cargo_dir=CARGO, default_out=None, draft_file=N
         return scoped, ("[held back] this cargo cannot say which draft is this league's, so "
                         "nothing here can prove this ladder belongs in the live queue -- writing "
                         "to ladder.unarmed.json instead. Pass --out to override.")
-    if draft_id and str(draft_id) != real:
+    if not draft_id:
+        # 🚨 THE OTHER HALF OF "UNARMED MUST NOT MEAN WRITE THE LIVE QUEUE". The 2026-08-18 fix
+        # guarded `real` being empty but let an empty ARMING id fall through: the lunch mock's
+        # bare `--cargo temp/draft.json` printed "gate NOT armed" and then wrote the live path,
+        # because `real` (read, back then, from that same file) was non-empty and the mismatch
+        # check below is skippable by exactly the runs that could not be armed.
+        scoped = os.path.join(os.path.dirname(default_out), "ladder.unarmed.json")
+        return scoped, ("[held back] the contamination gate is not armed, so nothing proves this "
+                        f"ladder was computed for this league's draft ({real}) -- writing to "
+                        "ladder.unarmed.json instead. Pass --draft-id, or --out to override.")
+    if str(draft_id) != real:
         scoped = os.path.join(os.path.dirname(default_out), f"ladder.{draft_id}.json")
         return scoped, (f"[held back] this ladder was computed for draft {draft_id}, but this "
                         f"league's draft is {real} -- writing to {os.path.basename(scoped)} so it "
@@ -501,8 +518,16 @@ def resolve_out(given, draft_id, cargo_dir=CARGO, default_out=None, draft_file=N
     return default_out, None
 
 
-def reference_draft_id(given, cargo_dir=CARGO):
+def reference_draft_id(given, cargo_dir=CARGO, draft_file=None):
     """The id the engine's contamination gate is armed with, and how we know it. NEVER THE FEED.
+
+    `draft_file` is the go-time `--cargo temp/draft.json` form: a draft OBJECT the operator just
+    fetched, which is an independent source from the picks feed the gate checks -- arming from it
+    is `run_engine.py`'s own behaviour (its `--cargo` IS a file). Without this parameter the bare
+    file form looked for `sleeper_draft.json` NEXT TO the passed file, found nothing, and printed
+    "gate NOT armed" on the exact command the runbook teaches (reproduced 2026-08-20). Arming from
+    the file is safe in a way that resolve_out reading identity from it is not: a wrong armed id
+    makes the engine REFUSE, while a wrong identity lets a mock OVERWRITE.
 
     This used to be one expression -- `a.draft_id or feed[0]["draft_id"]` -- which sourced the
     reference from the very file the gate exists to check. `draft_engine.py:173-180` then compared
@@ -526,9 +551,11 @@ def reference_draft_id(given, cargo_dir=CARGO):
     if given:
         return str(given), f"[given] draft_id={given} -- contamination gate armed"
 
-    path = os.path.join(cargo_dir, "sleeper_draft.json")
+    path = draft_file or os.path.join(cargo_dir, "sleeper_draft.json")
     try:
-        with open(path, encoding="utf-8") as f:
+        # utf-8-sig, matching run_engine: a hand-saved or curl'd go-time draft object can carry a
+        # BOM, and `utf-8` dies on it. utf-8-sig reads both.
+        with open(path, encoding="utf-8-sig") as f:
             cargo_id = (json.load(f) or {}).get("draft_id")
     except (OSError, ValueError):
         cargo_id = None
@@ -541,7 +568,8 @@ def reference_draft_id(given, cargo_dir=CARGO):
         return "", ("[held back] the cargo's draft_id is NOT being used: " +
                     "; ".join(stale_reasons) + ". Arming from a stale id would refuse a CORRECT "
                     "run if the draft was re-created. Pass --draft-id to arm it yourself.")
-    return str(cargo_id), (f"[draft] draft_id={cargo_id} from the mule's cargo -- contamination "
+    src = "the mule's cargo" if draft_file is None else draft_file
+    return str(cargo_id), (f"[draft] draft_id={cargo_id} from {src} -- contamination "
                            f"gate armed ({age_note})")
 
 
@@ -792,8 +820,16 @@ def main(argv=None):
         with open(a.feed, encoding="utf-8") as f:
             feed = json.load(f)
     draft_file, cargo_dir = resolve_cargo(a.cargo)
-    draft_id, gate_line = reference_draft_id(a.draft_id, cargo_dir)
+    # The file form and the dir form part ways HERE, and the two halves go to different owners:
+    # the ARMING id may come from the passed file (an independent check of the feed is still an
+    # independent check), but IDENTITY -- which draft is this league's -- may only ever come from
+    # the mule's inbox. Handing the file to both is how the 2026-08-20 self-vouching overwrite
+    # happened; `identity_dir` below is the other half of that fix.
+    file_form = os.path.isfile(a.cargo)
+    draft_id, gate_line = reference_draft_id(a.draft_id, cargo_dir,
+                                             draft_file if file_form else None)
     print(gate_line)
+    identity_dir = CARGO if file_form else cargo_dir
 
     # WHERE THE SEAT CAME FROM, captured BEFORE the derivation can overwrite it. Every message
     # below has to be able to tell a typed seat from a derived one, and "a.slot is not None" stops
@@ -998,7 +1034,7 @@ def main(argv=None):
             flag = "  <- EMPTY under the market projection" if gone else ""
             print(f"   {tier:<8} {left} left — empties only if all {left} go before your turn{flag}")
 
-    out_path, out_note = resolve_out(a.out, draft_id, cargo_dir, draft_file=draft_file)
+    out_path, out_note = resolve_out(a.out, draft_id, identity_dir)
     out_dir = os.path.dirname(os.path.abspath(out_path))
     os.makedirs(out_dir, exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:

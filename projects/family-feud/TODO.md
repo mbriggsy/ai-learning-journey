@@ -287,24 +287,24 @@ blew → seat flipped AUTO → rounds 8-16 drafted themselves. Own goals and fin
    QB2** (its list happily benches a second QB — the exact thing our queue now refuses) ·
    #92 Alec Pierce WR · then K/DEF in the tail (picks 101-128 in the feed, unexamined — pull
    them and record WHERE Sleeper slotted K/DEF vs Mock #2's Dicker/Patriots observation).
-2. **`precompute_ladder.py --cargo FILE` IS STILL BROKEN despite the runbook's ✅-closed
-   (2026-08-18) claim.** Reproduced twice live: bare `--cargo temp/draft.json` printed
-   `no draft_id in cargo -- gate NOT armed` and **wrote the LIVE `newsletter/data/state/ladder.json`**;
-   with `--draft-id <mock>` added the gate armed but it **STILL wrote the live path** — the
-   mock-divert to `ladder.<draft_id>.json` never fired either way. `run_engine.py --cargo FILE`
-   reads the same file's draft_id fine, so the defect is the ladder's identity read alone.
-   Fix + test both halves, then correct the runbook's ✅. **And delete/regenerate the stray
-   mock ladder now sitting at `newsletter/data/state/ladder.json`.**
-3. **Runbook rule to add (Step 3.5):** on HIS clock the advisory goes out BEFORE any browser
-   call — queue maintenance lives between windows only. claude-in-chrome CDP timed out 45s
-   twice mid-draft (one loss was reply-only — the sync had landed; verify by reading the queue,
-   insight-007 shape). After 2 timeouts: declare the bridge dead for the session, keep advising
-   API-only, and say so.
+2. ✅ **FIXED 2026-08-21, live-proven on the recorded lunch mock.** The 08-18 "fix" had handed
+   the go-time FILE to the identity read, so a mock's own draft object vouched for itself
+   (`real == draft_id`, same file). Split by owner now: the ARMING id may come from the passed
+   file (run_engine's own behaviour — bare `--cargo FILE` arms the gate), but IDENTITY only ever
+   comes from the mule's inbox — a mock diverts to `ladder.<draft_id>.json`, and an unarmed run
+   can no longer skip the divert (`ladder.unarmed.json`). Pinned at the main() wiring level
+   (`test_A_MOCKS_OWN_DRAFT_OBJECT_CANNOT_VOUCH_FOR_ITSELF` + positive control), runbook ✅
+   corrected, poisoned live `ladder.json` deleted. 1181 tests green.
+3. ✅ **DONE 2026-08-21** — the advisor-first rule is in the runbook's Step 3 preamble: advisory
+   before any browser call on his clock, queue maintenance between windows only, 2 CDP timeouts
+   = bridge declared dead for the session (verify syncs by reading the queue back, insight-007
+   shape).
 4. **Live-clock advisor sessions need a LOWER effort setting** (Briggsy's own diagnosis, and he
    is right: ultracode/xhigh latency cannot hold a 120s cadence). `/effort medium` before the
-   next live run. Also: **an all-bot room has no warm window** — CPUs finish in ~20-30s, so
-   every compose is cold, on his clock. The real rehearsal wants a slower room (humans, or a
-   longer timer) — the lab's warm-path number is still unmeasured.
+   next live run *(he set it himself 2026-08-21 before mock #4)*. Also: **an all-bot room has no
+   warm window** — CPUs finish in ~20-30s, so every compose is cold, on his clock. The real
+   rehearsal wants a slower room (humans, or a longer timer) — the lab's warm-path number is
+   still unmeasured.
 
 ## ▶ NEXT ACTION — as of 2026-08-20, ~9 days out, draft still UNSCHEDULED
 

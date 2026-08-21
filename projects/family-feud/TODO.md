@@ -44,6 +44,22 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
     skill's landmines carry the full list so nobody repeats them.
     `draft_order` is still null on the real draft; it populated correctly on the mock.
 
+  ── 2026-08-21 — **THE ADVISOR-MODE MOCK RAN CLEAN, END TO END, AND D-A IS MEASURED.**
+    Mock `1396604748777418752` (8-team/15rd/5:00, seat 5, Briggsy on his phone): **13 picks
+    advised in the four lines under a live clock, zero timeouts, zero missed wakes; warm path
+    measured 20-40s from clock-start to advisory, every cycle.** It took EIGHT rooms to get
+    there — five died of four stacked orchestration defects plus one delivery defect, all
+    named and structurally fixed (persistent Monitor replaces one-shot watchers; advisory =
+    final message of its turn; room-preconditions checklist; AUTOPICK-off after any burn):
+    insights [032](docs/insights/032-the-loop-died-of-a-manual-step-six-rooms-in-a-row.md) ·
+    [033](docs/insights/033-the-advisory-that-was-posted-but-never-rendered.md), runbook
+    §"The advisor loop that finally ran clean". **D-A: blown-clock fallback took Jameson
+    Williams (#53, deliberate) and Bhayshul Tuten (#60, accidental bonus) — list-shaped, not
+    roster-shaped; consistent with pure best-available off Sleeper's list** (campaign-1 doc
+    D-A block has the full record + what it does NOT prove). Also shipped same morning:
+    the `precompute_ladder --cargo FILE` self-vouching overwrite closed for real (identity
+    now only ever from the mule's inbox), 1181 tests.
+
   ── 2026-08-18 (12 commits, 999 → **1066 tests**) — **THE RANKED QUEUE IS EMPTY, AND THE THING
     THAT EMPTIED IT FOUND FOUR BUGS NO TEST WAS EVER GOING TO.**
     Items 9-12 all closed, plus a jargon sweep of the product's own words. ✅ **The re-created-draft
@@ -280,7 +296,11 @@ Picks #5/#12/#21/#28 were advised four-lines live (Chase / Jefferson / Chase Bro
 spent his clock on a browser queue-sync that hung 45s instead of firing the advisory → clock
 blew → seat flipped AUTO → rounds 8-16 drafted themselves. Own goals and findings, in order:
 
-1. **D-A IS MEASURED (campaign 1) — write the insight + close the TODO item.** With the queue
+1. ✅ **CLOSED 2026-08-21 — both halves.** The 101-128 tail is examined and recorded in the
+   campaign-1 D-A block: fallback filled the auto seat's DEF at #117 (R15) and K at #124
+   (R16) — Dicker/Patriots is no longer n=1 — and took Stafford at #108 as that roster's
+   THIRD QB. The live burn measurement (Jamo #53 / Tuten #60) is in the same block.
+   ~~**D-A IS MEASURED (campaign 1) — write the insight + close the TODO item.**~~ With the queue
    holding survivors, blown clocks took **queue-top in order** (#44 Bucky Irving, #53 D'Andre
    Swift) — the net works, live, twice. With the queue DRY, Sleeper's naked fallback took:
    #60 Jameson Williams WR · #69 Christian Watson WR · #76 Tucker Kraft TE · **#85 Dak Prescott
@@ -327,7 +347,10 @@ the new lineup-delta queue (insight 030), which no human has yet read under a cl
    it if needed"* — so tweaks are welcome; a rewrite is not. 🚨 **The one thing his read cannot
    cover is the shape UNDER A CLOCK**, which is what the advisor-mode mock below is for: he
    approved these reading them at rest, not at 2 minutes a pick.
-2. **ONE ADVISOR-MODE MOCK, 4-5 rounds.** 🚨 **Every live measurement in this repo is EXECUTOR
+2. ✅ **DONE 2026-08-21 — FULL 15 ROUNDS, CLEAN.** 13 picks advised under clock, warm path
+   20-40s measured, D-A measured (see the 08-21 block in WHERE WE ARE). The 🚨 below is
+   history — the product has now been run in its current form, live, by its user.
+   ~~**ONE ADVISOR-MODE MOCK, 4-5 rounds.**~~ 🚨 **Every live measurement in this repo is EXECUTOR
    mode.** The product — Briggsy drafting, Claude advising in four lines — has never been run in
    its current form; the only advisor run on record is Mock #1 (Aug 5), which predates
    `run_engine.py`, `precompute_ladder.py`, the monitor-2 board and the four-line format itself.

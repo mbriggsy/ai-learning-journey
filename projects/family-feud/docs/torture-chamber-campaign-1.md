@@ -11,9 +11,29 @@
 
 - **D-A — answered: working hypothesis is PURE BEST-AVAILABLE.** The load-bearing refinement:
   best-available *off Sleeper's own list*, which slots K/DEF at sane late-round spots — that
-  reading explains Mock #2's Dicker/Patriots observation with zero need-awareness. The
-  blown-clock measurement stays queued on the advisor-mode mock (it decides which list the
-  fallback draws from); the runbook carries the honest unattended sentence until it lands.
+  reading explains Mock #2's Dicker/Patriots observation with zero need-awareness. ~~The
+  blown-clock measurement stays queued on the advisor-mode mock~~ ✅ **MEASURED 2026-08-21,
+  advisor-mode mock `1396604748777418752`, seat 5, queue empty by design:**
+  - **Pick #53 (deliberate burn):** fallback took **Jameson Williams WR** — our board's call
+    was McLaurin (r44); Jamo sat at our r53/WR27. **Pick #60 (accidental bonus — the auto
+    flip caught it before the toggle was flipped off):** **Bhayshul Tuten RB** — our board's
+    call was Kraft (bench TE); Tuten sat in our RB T6. Both are coherent
+    early-50s/60s *skill* picks off a generic list, neither is need-aware (the roster
+    already held 3 RB / 3 WR; #60 took a fourth RB with FLEX open), and neither touched
+    K/DEF at picks 53/60 — all **consistent with pure best-available off Sleeper's own
+    list, and inconsistent with need-awareness.** Bonus corroboration from the same
+    afternoon's failed rooms (auto-drained after timeouts): #12 De'Von Achane twice in two
+    different rooms, #21 Derrick Henry, #28 Kyren Williams — stable, list-shaped, not
+    roster-shaped. ⚠️ *What this does NOT prove:* WHICH list (Sleeper's visible rankings are
+    not exposed via the public API, so "their list" is inferred from pick shape, not read).
+  - **The K/DEF-slotting half is corroborated too (2026-08-21, from the recorded 08-20
+    lunch-mock feed `1390889254560739328`, whose auto-drained tail had sat unexamined):**
+    the fallback filled the auto seat's **DEF at #117 (R15)** and **K at #124 (R16)** —
+    sane final-two-rounds slots, exactly the E2 shape — so Dicker/Patriots is no longer an
+    n=1 observation. Same tail: it took **Matthew Stafford at #108 as that roster's THIRD
+    QB** (Dak had landed at #85), which is need-blindness demonstrated twice in one seat —
+    the exact stack our D-B `NoSecondQb` queue now refuses.
+    The runbook's honest unattended sentence can now cite live data instead of a model.
 - **D-B — RATIFIED AND SHIPPED THE SAME DAY: "no multiple QBs unless extreme value."** The
   queue never offers QB2+ (engine + both mirrors, pinned by `NoSecondQb` tests); the
   extreme-value exception stays HUMAN — a falling QB still surfaces in BEST AVAILABLE and VBD

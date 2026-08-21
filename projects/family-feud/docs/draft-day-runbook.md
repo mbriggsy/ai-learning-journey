@@ -786,7 +786,41 @@ should never see it.
   itself re-confirmed at ~0.6-0.8s per stop: the scripts remain never the cost (insight 026).
 - **HARD RULE (any mode): if the engine's output says the next pick is OURS — or 1 away — do NOT start a sleep/fetch/engine cycle. Act on the standing ladder first; sync afterward.** The ladder exists precisely so no round-trips are needed on the clock.
 
-## Executor mode — driving the picks in the Sleeper web draft room *(added Aug 6 after Mock #2)*
+### ✅ The advisor loop that finally ran clean (2026-08-21, mock `1396604748777418752` — 13 picks advised, zero misses). USE THIS SHAPE.
+
+Proven end-to-end after five rooms died of four stacked orchestration defects
+([insight 032](insights/032-the-loop-died-of-a-manual-step-six-rooms-in-a-row.md),
+[033](insights/033-the-advisory-that-was-posted-but-never-rendered.md)). The measured warm
+path: **advisory delivered 20-40s after his clock start, every cycle** — the ~30s budget
+above finally has receipts, and the cold-compose penalty never fired because one-away
+pre-staging absorbed it.
+
+1. **The wake mechanism is a persistent Monitor, armed ONCE per room — never a one-shot
+   background watcher.** A one-shot needs a manual re-arm after every wake, and that step
+   was dropped three times in one afternoon, including immediately after writing down the
+   rule. The monitor polls `/picks` every 3s (unique nonce per call) and emits events for:
+   draft started · HIS CLOCK (next pick is his) · ONE AWAY (pick after next is his) ·
+   draft complete. **Conditions are evaluated against current state on every poll** — never
+   edge-triggered on the count changing — so a pause/resume or a bot sprint past the
+   trigger state cannot blind it. Dedup by pick number, not by count delta.
+2. **ONE AWAY = pre-stage:** run merge → engine, hold the composed lines. **HIS CLOCK =
+   deliver.** In a bot sprint the ONE AWAY event may never fire (bots outrun the poll) —
+   the HIS CLOCK event alone must be sufficient, and it is, because his clock-state
+   persists for minutes while bot states last seconds.
+3. **🚨 THE ADVISORY IS THE FINAL MESSAGE OF ITS TURN. NOTHING AFTER IT — no timestamp
+   call, no stats note, no housekeeping.** Mid-turn text (text followed by another tool
+   call) may never render on Briggsy's side: room 6 lost a 5-minute clock to an advisory
+   that was composed 24s in and demoted to mid-turn by a trailing `Get-Date`. Timing
+   instrumentation belongs INSIDE the chain call, appended to the same shell invocation.
+4. **Mock-room preconditions — verify via API and say GO before he starts, every room:**
+   `pick_timer` (5:00 for bot mocks — a 120s bot room has no warm window, measured three
+   times now), seat via `draft_order["1390750540631150592"]` (or verify at the started
+   event if still null), monitor armed. New boards do NOT inherit the previous board's
+   timer.
+5. **Sleeper flips the seat to AUTO-PICK when a clock expires, and auto + bots drain the
+   rest of the draft in seconds.** This is the amplifier that turns one missed advisory
+   into a lost room. After ANY blown clock — deliberate (the D-A burn) or not — the
+   AUTOPICK slider must be flipped OFF before his next window, and say so out loud.
 Claude's hands are claude-in-chrome on Briggsy's logged-in Chrome; eyes stay on the API (poll + engine per Step 3); the browser is touched only to click picks. Mechanics, learned live:
 - **Clock budget:** browser actions cost ~5-15s per round trip (search, click, verify screenshot). Treat a 120s clock as ~90s of decision time. With a standing ladder, execution needs ~15s total: filter, verify, fire.
 - **Player-row icons, left to right (verified in the Aug 6 queue lab):** `+` = **INSTANT DRAFT while on the clock, no confirmation** (pre-draft it no-ops) · `☆` star = watchlist only · **blue document-plus `📄+` = ADD TO QUEUE — works pre-draft and any time.** The queue lives in the right panel's Queue tab (shows a count); each entry has a REMOVE button.

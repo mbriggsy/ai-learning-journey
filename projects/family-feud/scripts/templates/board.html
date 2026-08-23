@@ -212,7 +212,6 @@
         <button class="ctl" id="golive">▶ Go live</button>
         <span class="msg" id="livemsg"></span>
       </div>
-      <nav class="tabs" id="tabs"></nav>
       <!-- The heading must never contain the word "queue". This panel is a LOCAL scratch pad: the
            rows you starred in THIS browser window, dead on reload, wired to nothing. Sleeper's real
            queue (armed by ffQueueSync, drained by timeout auto-pick) is a different thing on a
@@ -223,6 +222,11 @@
            (No double hyphens in this comment: HTML forbids them inside a comment.) -->
       <div class="queue" id="queue"><div class="qt">Shortlist (local)</div><div class="qchips" id="qchips"></div></div>
     </header>
+    <!-- OUTSIDE header.top on purpose: position:sticky is bounded by its PARENT's box, so tabs
+         inside the header stop sticking the moment the header scrolls off -- measured before this
+         moved (tabsTop -1228 at scrollY 1500). As a sibling of <main> the sticky scope is the
+         whole page, which is the behaviour Briggsy asked for. -->
+    <nav class="tabs" id="tabs"></nav>
     <main>
       <div class="panel" id="panel"></div>
     </main>

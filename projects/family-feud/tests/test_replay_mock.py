@@ -25,6 +25,17 @@ ACTUAL_FIRST_10 = ["Ja'Marr Chase", "Drake London", "Nico Collins", "Chris Olave
                    "DeVonta Smith", "Garrett Wilson", "Drake Maye", "Mike Evans",
                    "Carnell Tate", "Parker Washington"]
 
+#: The BOARD THAT DROVE THAT DRAFT -- the 2026-08-14 synthesis, frozen from git commit 5d091f98.
+#: The live drafter fired queue-top off THIS ordering, so fidelity is only checkable against it:
+#: the 2026-08-21 re-rank flipped Parker Washington past Carnell Tate and the fidelity test broke
+#: on the first refresh after this gate was born (2026-08-23) -- correctly reporting that the
+#: LIVE board no longer matches history, which is not what the test asks. This is a FIXTURE with
+#: a reader, not the dead date-stamped archive board_diff.py's header banned: that copy had zero
+#: readers and drifted; this one is load-bearing input to a recorded event, like the picks file
+#: beside it. The PROPERTY tests below (delta beats naive, slots filled, K/DEF deferred) stay on
+#: the live board on purpose -- they are claims about every refresh, not about 08-19.
+BOARD_AS_DRAFTED = os.path.join(ROOT, "tests", "fixtures", "board_as_drafted_20260819.json")
+
 
 def _arms():
     with open(RM.FIXTURE, encoding="utf-8") as f:
@@ -45,8 +56,15 @@ class TestTheReplayGate(unittest.TestCase):
 
     def test_the_naive_arm_reproduces_the_real_draft(self):
         """FIDELITY FIRST: a counterfactual from a replay that cannot reproduce the factual is
-        insight 024's broken-simulator shape. Queue-top live == queue-top replayed, ten for ten."""
-        _, log, _ = self.arms["naive"]
+        insight 024's broken-simulator shape. Queue-top live == queue-top replayed, ten for ten
+        -- against the board AS IT WAS when the live queue fired (see BOARD_AS_DRAFTED)."""
+        with open(RM.FIXTURE, encoding="utf-8") as f:
+            picks = json.load(f)
+        with open(BOARD_AS_DRAFTED, encoding="utf-8") as f:
+            board = json.load(f)
+        _, curve = RM.load_board()      # scoring only; fidelity asserts NAMES, picked by rank
+        _, log = RM.replay(picks, board, curve, 5, "naive",
+                           dict(LV.LIVE_STARTERS), LV.FLEX_SLOTS)
         self.assertEqual([n for _, n in log[:10]], ACTUAL_FIRST_10)
 
     def test_both_arms_draft_a_full_fifteen(self):

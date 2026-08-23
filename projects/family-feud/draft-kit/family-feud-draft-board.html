@@ -73,14 +73,11 @@
   .viz-root { background: var(--page); color: var(--text-primary); min-height: 100vh; }
   .shell { max-width: 980px; margin: 0 auto; padding: 20px 16px 60px; }
 
-  /* The WHOLE header pins (Briggsy: search + tabs reachable in the heat of battle); the
-     .masthead inside it folds away once scrolled so rows get their space back. The sticky
-     element must be the header itself -- a sticky child is bounded by its parent's box, the
-     trap the first tabs-only version measured and died of. */
-  header.top { padding: 8px 4px 0; position: sticky; top: 0; z-index: 6; background: var(--page); }
-  header.top.condensed { box-shadow: 0 6px 12px -8px var(--ring); }
-  .masthead { max-height: 220px; opacity: 1; overflow: hidden; transition: max-height 0.18s ease, opacity 0.15s ease; }
-  header.top.condensed .masthead { max-height: 0; opacity: 0; }
+  /* The WHOLE header pins, title included -- Briggsy's call, stated twice (2026-08-23): a folding
+     masthead was offered and declined; everything above and inclusive of the tabs stays put. The
+     sticky element must be the header itself -- a sticky child is bounded by its parent's box,
+     the trap the first tabs-only version measured and died of. */
+  header.top { padding: 8px 4px 0; position: sticky; top: 0; z-index: 6; background: var(--page); box-shadow: 0 6px 12px -8px var(--ring); }
   .kicker { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
   h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.01em; margin-top: 2px; }
   .sub { font-size: 12.5px; color: var(--text-secondary); margin-top: 4px; line-height: 1.5; }
@@ -196,11 +193,9 @@
 <div class="viz-root" id="root">
   <div class="shell">
     <header class="top">
-      <!-- .masthead collapses when scrolled (the .condensed toggle below): the whole header is
-           sticky so the SEARCH BOX, live bar and tabs are reachable mid-battle (Briggsy's ask,
-           2026-08-23 -- "if I need to search for someone I don't wanna have to scroll"), but
-           pinning the title and legend too would eat ~40% of a wall display whose job is rows.
-           Tools pin; decoration folds. -->
+      <!-- The whole header -- masthead included -- is sticky: Briggsy's call, stated twice.
+           A scroll-folding masthead shipped briefly on 2026-08-23 and was declined the same day;
+           don't reintroduce it uninvited. -->
       <div class="masthead">
         <div class="kicker">Family Feud · 8-Team · Full PPR · Draft date not set</div>
         <h1>PoppaBriggsy's Big Board</h1>
@@ -722,22 +717,6 @@ function setLive(on){
 }
 
 $('golive').addEventListener('click', () => setLive(!isLive));
-
-// Fold the masthead once scrolled so the pinned header carries only tools. 120px ≈ the masthead's
-// own height: past it the title is off-screen anyway, so nothing visibly "jumps" at the toggle.
-// Hysteresis (120 down / 40 up) so it cannot flicker at the boundary while the fold itself
-// changes the page height under the scroll position.
-(function () {
-  const top = document.querySelector('header.top');
-  let condensed = false;
-  function onScroll(){
-    const y = window.scrollY;
-    const want = condensed ? y > 40 : y > 120;
-    if (want !== condensed){ condensed = want; top.classList.toggle('condensed', condensed); }
-  }
-  addEventListener('scroll', onScroll, { passive: true });
-  onScroll();
-})();
 
 function applyDraftInput(){
   const box = $('draftid');

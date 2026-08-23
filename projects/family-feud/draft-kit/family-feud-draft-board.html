@@ -84,6 +84,8 @@
   .search:focus { border-color: var(--accent); }
   button.ctl { padding: 8px 12px; font-size: 13px; border: 1px solid var(--baseline); border-radius: 8px; background: var(--surface-1); color: var(--text-secondary); cursor: pointer; }
   button.ctl:hover { background: var(--wash); }
+  input.ctl.draftid { width: 21ch; padding: 8px 10px; font: 12px ui-monospace, Consolas, monospace; border: 1px solid var(--baseline); border-radius: 8px; background: var(--surface-1); color: var(--text-primary); }
+  input.ctl.draftid:focus { outline: none; border-color: var(--text-muted); }
   .counts { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; margin-left: auto; }
   .counts b { color: var(--text-primary); }
 
@@ -200,6 +202,9 @@
       </div>
       <div class="live" id="live">
         <span class="pip" id="livepip" aria-hidden="true"></span>
+        <input class="ctl draftid" id="draftid" type="text" inputmode="numeric" autocomplete="off"
+               placeholder="league draft"
+               title="Which draft to poll. Paste a mock's draft id — or its whole sleeper.com URL, the id gets extracted. Empty = this board's own league draft. Enter applies.">
         <button class="ctl" id="golive">▶ Go live</button>
         <span class="msg" id="livemsg"></span>
       </div>
@@ -505,7 +510,56 @@ $('reset').addEventListener('click', function(){
 // The board greys players out as picks land, so the wall display stops being a snapshot. It
 // tracks OTHER people's picks and the clock is 120 seconds, so sub-30s latency is the whole
 // requirement -- there is no case for anything tighter.
-const PICKS_URL = SHAPE.draft_id ? 'https://api.sleeper.app/v1/draft/' + SHAPE.draft_id + '/picks' : null;
+// WHICH draft gets polled. SHAPE.draft_id is the baked league draft; a MOCK's id can be
+// supplied per-open via ?draft=<id> or the input beside Go live (Briggsy's ask, 2026-08-23 —
+// mock rehearsals kept needing a code edit to point monitor 2 at the room). DELIBERATELY NOT
+// remembered in localStorage: a silently persisted mock override on draft morning is the
+// poisoned-ladder shape on a display surface. The override lives where it can be SEEN — the
+// input box and the URL bar — and nowhere else.
+let draftOverride = '';
+function parseDraftId(raw){
+  // A bare id, or a pasted room URL ("https://sleeper.com/draft/nfl/1396…") — the id is the
+  // trailing digit run either way. 15-20 digits: Sleeper ids are 18-19 today; the slack is
+  // deliberate, the format is theirs to change.
+  const m = String(raw || '').match(/(\d{15,20})\s*$/);
+  return m ? m[1] : '';
+}
+function activeDraftId(){ return draftOverride || SHAPE.draft_id || ''; }
+function picksUrl(){
+  const id = activeDraftId();
+  return id ? 'https://api.sleeper.app/v1/draft/' + id + '/picks' : null;
+}
+
+// The override draft's own pick cap (teams × rounds), fetched ONCE when applied. Without it a
+// 15-round mock on this 16-round board reads "next is #121" forever instead of "draft
+// complete" — seen on the first visual check of this feature. And a draft whose TEAM count
+// differs is REFUSED outright: slotOfPick() runs on the baked TEAMS, so an off-size room
+// would grey rows under silently wrong seat labels, which is worse than no board at all.
+let overrideCap = null;
+async function vetOverride(id){
+  overrideCap = null;
+  try {
+    const res = await fetch('https://api.sleeper.app/v1/draft/' + id + '?_=' + Date.now(),
+                            { cache: 'no-store', credentials: 'omit' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const s = ((await res.json()) || {}).settings || {};
+    if (s.teams && s.teams !== TEAMS){
+      lastError = 'that draft is ' + s.teams + '-team; this board is priced for ' + TEAMS +
+                  '-team and its seat math would lie — override cleared';
+      draftOverride = '';
+      $('draftid').value = '';
+      const u = new URL(location.href); u.searchParams.delete('draft');
+      history.replaceState(null, '', u);
+    } else if (s.teams && s.rounds){
+      overrideCap = s.teams * s.rounds;
+    }
+  } catch (e){
+    // A vet that cannot read the object does not block polling -- the poll loop surfaces its
+    // own failures, and refusing on a transient fetch error would be a false red (insight 009).
+    lastError = 'could not read that draft (' + ((e && e.message) || e) + ') — polling it anyway';
+  }
+  renderLive();
+}
 const POLL_MS = 12000, POLL_MAX_MS = 60000;
 
 // JOIN ON THE FROZEN SLEEPER ID FIRST, exactly as draft_engine.py does, and for the reason it
@@ -569,16 +623,22 @@ function renderLive(){
   btn.textContent = isLive ? '⏸ Pause' : '▶ Go live';
   btn.classList.toggle('on', isLive);
 
-  if (!PICKS_URL){
+  if (!picksUrl()){
     btn.disabled = true;
-    msg.innerHTML = 'This board carries no draft id, so there is nothing to poll. Rebuild it with <b>python scripts/build_board.py</b> once the draft object is readable.';
+    msg.innerHTML = 'This board carries no draft id, so there is nothing to poll. Paste a mock\'s draft id (or its sleeper.com URL) in the box, or rebuild with <b>python scripts/build_board.py</b> once the draft object is readable.';
     return;
   }
+  btn.disabled = false;   // the input can add an id to a board baked without one
   const bits = [isLive ? '<b>LIVE</b>' : 'Polling <b>paused</b>'];
+  // The WORDS say whose picks are greying the wall. A mock override that looked identical to
+  // the league feed would be this board's most confusable state (cf. paused-vs-LIVE, two words
+  // apart) — so it is named on every render, not styled.
+  if (draftOverride) bits.push('polling <b>mock ' + esc(draftOverride) + '</b> — not the league draft');
   if (lastOkAt){
     bits.push('<b>' + picksIn + '</b> picks in');
     const next = picksIn + 1;
-    bits.push(next <= CAP ? 'next is <b>#' + next + '</b>, seat <b>' + slotOfPick(next) + '</b>'
+    const cap = (draftOverride && overrideCap) ? overrideCap : CAP;
+    bits.push(next <= cap ? 'next is <b>#' + next + '</b>, seat <b>' + slotOfPick(next) + '</b>'
                           : '<b>draft complete</b>');
     bits.push('updated ' + lastOkAt.toLocaleTimeString());
   } else {
@@ -609,7 +669,7 @@ async function pollOnce(){
   //
   // NEVER credentials:'include' -- Sleeper answers with a wildcard origin, and wildcard-origin
   // plus allow-credentials is precisely the pair browsers reject outright.
-  const res = await fetch(PICKS_URL + '?_=' + Date.now(), { cache: 'no-store', credentials: 'omit' });
+  const res = await fetch(picksUrl() + '?_=' + Date.now(), { cache: 'no-store', credentials: 'omit' });
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const body = await res.json();
   if (!Array.isArray(body)) throw new Error('the feed was not an array');
@@ -617,7 +677,7 @@ async function pollOnce(){
 }
 
 async function tick(){
-  if (!isLive) return;
+  if (!isLive || !picksUrl()) return;
   try {
     const changed = applyPicks(await pollOnce());
     lastOkAt = new Date();
@@ -645,12 +705,44 @@ function setLive(on){
 
 $('golive').addEventListener('click', () => setLive(!isLive));
 
+function applyDraftInput(){
+  const box = $('draftid');
+  const raw = box.value.trim();
+  const id = raw ? parseDraftId(raw) : '';
+  if (raw && !id){
+    lastError = 'that is not a draft id or a sleeper.com draft URL';
+    renderLive();
+    return;
+  }
+  if (id === draftOverride){ box.value = id; return; }   // still normalise a re-pasted URL
+  draftOverride = id;
+  box.value = id;
+  // A different draft is a different reality: drop everything the POLL wrote and start clean.
+  // `taken` is untouched on purpose — it is the user's own hand-toggles and the poll never
+  // writes it (the contract at the top of this file).
+  drafted.clear(); picksIn = 0; unmatchedPicks = 0; vanished = false;
+  lastOkAt = null; lastError = null;
+  const u = new URL(location.href);
+  if (id) u.searchParams.set('draft', id); else u.searchParams.delete('draft');
+  history.replaceState(null, '', u);   // survives reload IN THE URL BAR, visibly — never silently
+  renderAll(); renderLive();
+  if (id) vetOverride(id);
+  if (isLive){ pollDelay = POLL_MS; clearTimeout(pollTimer); tick(); }
+}
+$('draftid').addEventListener('keydown', e => { if (e.key === 'Enter'){ applyDraftInput(); e.target.blur(); } });
+$('draftid').addEventListener('blur', applyDraftInput);
+
 renderLegend();
+// ?draft=<id> makes a full pasteable mock URL possible (board.html?draft=139…&live=1) — the
+// same override as the input, arriving by link. Read before first render so the words are
+// right from the first paint.
+const urlDraft = parseDraftId(new URLSearchParams(location.search).get('draft'));
+if (urlDraft){ draftOverride = urlDraft; $('draftid').value = urlDraft; vetOverride(urlDraft); }
 renderAll();
 // A wall display is opened once and left alone, so it takes ?live=1 and starts itself. A laptop
 // opened to read the board does not poll until asked -- silently reaching the network because a
 // file was opened is a surprise, and this file gets opened a lot.
-if (PICKS_URL && new URLSearchParams(location.search).get('live') === '1') setLive(true);
+if (picksUrl() && new URLSearchParams(location.search).get('live') === '1') setLive(true);
 else renderLive();
 </script>
 </body>

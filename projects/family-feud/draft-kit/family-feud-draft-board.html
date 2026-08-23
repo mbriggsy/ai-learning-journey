@@ -89,7 +89,11 @@
   .counts { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; margin-left: auto; }
   .counts b { color: var(--text-primary); }
 
-  nav.tabs { display: flex; gap: 2px; margin-top: 14px; border-bottom: 1px solid var(--hairline); overflow-x: auto; }
+  /* Sticky: mid-draft you are deep in round 9 and the position tabs must not be a scroll away
+     (Briggsy's ask, 2026-08-23). Solid --page backdrop so rows slide under cleanly; z-index above
+     row content. Tabs only -- pinning the search/live rows too would eat ~90px of a wall display
+     whose whole job is showing rows. */
+  nav.tabs { display: flex; gap: 2px; margin-top: 14px; border-bottom: 1px solid var(--hairline); overflow-x: auto; position: sticky; top: 0; background: var(--page); z-index: 5; }
   nav.tabs button { padding: 9px 14px; font-size: 13.5px; font-weight: 600; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
   nav.tabs button:hover { color: var(--text-secondary); }
   nav.tabs button.on { color: var(--text-primary); border-bottom-color: var(--accent); }
@@ -208,7 +212,6 @@
         <button class="ctl" id="golive">▶ Go live</button>
         <span class="msg" id="livemsg"></span>
       </div>
-      <nav class="tabs" id="tabs"></nav>
       <!-- The heading must never contain the word "queue". This panel is a LOCAL scratch pad: the
            rows you starred in THIS browser window, dead on reload, wired to nothing. Sleeper's real
            queue (armed by ffQueueSync, drained by timeout auto-pick) is a different thing on a
@@ -219,6 +222,11 @@
            (No double hyphens in this comment: HTML forbids them inside a comment.) -->
       <div class="queue" id="queue"><div class="qt">Shortlist (local)</div><div class="qchips" id="qchips"></div></div>
     </header>
+    <!-- OUTSIDE header.top on purpose: position:sticky is bounded by its PARENT's box, so tabs
+         inside the header stop sticking the moment the header scrolls off -- measured before this
+         moved (tabsTop -1228 at scrollY 1500). As a sibling of <main> the sticky scope is the
+         whole page, which is the behaviour Briggsy asked for. -->
+    <nav class="tabs" id="tabs"></nav>
     <main>
       <div class="panel" id="panel"></div>
     </main>

@@ -945,12 +945,16 @@ Claude's hands are claude-in-chrome on Briggsy's logged-in Chrome; eyes stay on 
 > good."*** All three examples have had his eye. **This is the shipping format; do not redesign the
 > shape on a later session's taste.** Tweaks stay welcome by his own standing note; a rewrite does
 > not. ⚠️ **What his read does NOT cover is the shape under a clock** — he approved these at rest,
-> not at two minutes a pick. That is what the advisor-mode mock is for, and it is still unrun.
+> not at two minutes a pick. ✅ **That mock RAN 2026-08-21 — 13 picks advised live, and the shape
+> held under the clock** (his overrides at #28 and the Saquon question both worked in-format).
 > *(This section REPLACED an older ~5-line format
 > on 2026-08-17. There is one format. If you find a second one anywhere, this is the live one.)*
+> 🆕 **Tweak by Briggsy 2026-08-23, post-mock:** THE CALL carries **(POS, Team)** after the name —
+> `#37: **DeVonta Smith** (WR, Eagles)`. His ask, verbatim shape. One glance saves him a lookup
+> on a name he half-knows.
 
 ```
-THE CALL: **<Name>** — <one clause of why>
+THE CALL: **<Name>** (<POS>, <Team>) — <one clause of why>
 Passed on: **<Name>** — <what would flip it>
 Risk: <what it costs if I'm wrong, in roster terms>
 Before #<next> (<n> picks): <what to watch>
@@ -964,7 +968,7 @@ goes first and the context goes last. He reads left-to-right and can stop after 
 
 | Line | Must be | Must never be |
 |---|---|---|
-| **THE CALL** | ONE name, bolded, first thing on the line. One clause of why, taken from the board's own `↳` note or a measured fact. | A shortlist. Two names here is not a call. |
+| **THE CALL** | ONE name, bolded, first thing on the line, then **(POS, Team)** — *(Briggsy's 2026-08-23 tweak)*. One clause of why, taken from the board's own `↳` note or a measured fact. | A shortlist. Two names here is not a call. |
 | **Passed on** | The real runner-up **plus the trigger that flips it** — the condition, not a hedge. This is the line that lets him override *intelligently* instead of just overruling. | "…but either is fine." If they were equal, say so and pick on the tie-breaker. |
 | **Risk** | The concrete cost **in roster terms** — what he is short of, and when. | "He might underperform." Every player might. |
 | **Before #N** | Forward-looking only: the gap from `THE WAIT`, who picks between (`Between now and you` + `Their open needs`), and the one cliff that could move. | A recap of what just happened. |
@@ -1060,7 +1064,7 @@ State: Chase and Bijan gone. `RB T1: 1 left — Jahmyr Gibbs ⚠ CLIFF` · `WR T
 `WR T3: 2 left ⚠` · `THE WAIT: after #3 you pick again at #14 — 10 opposing picks in between`.
 
 ```
-THE CALL: **Jahmyr Gibbs** — last man in RB T1, and that tier empties with him.
+THE CALL: **Jahmyr Gibbs** (RB, Lions) — last man in RB T1, and that tier empties with him.
 Passed on: **Puka Nacua** — flip only if you'd rather carry a suspension question than a contract
   one; his note has league discipline still under review. Four men sit across WR T2/T3, one across
   RB T1.
@@ -1084,7 +1088,7 @@ State: `RUN WATCH (last 8): RB:5` · our roster `[RB2 WR1]` · `TE T3: 3 left �
 VBD LEANS is six RBs deep.
 
 ```
-THE CALL: **Breece Hall** — the six best values left on the board are all RBs, and five of the
+THE CALL: **Breece Hall** (RB, Jets) — the six best values left on the board are all RBs, and five of the
   last eight picks were RBs; RB T5 is down to four while WR T5/T6 still hold 21 between them.
 Passed on: **DeVonta Smith** — higher board rank, and A.J. Brown's exit makes him the first read in
   Philly. Flip if you'd rather bank a receiver you know gets thrown to constantly. Their tiers are
@@ -1113,7 +1117,7 @@ sixteen**, where seat 3 also owns **#126** — so on draft night count one more.
 **`Their open needs: DEF(4), K(4)`** · `DEF T1: 3 left` (Rams gone) · `K T1: 3 left`.
 
 ```
-THE CALL: **Michael Pittman Jr.** — one of only two picks left that are yours to spend; traded to
+THE CALL: **Michael Pittman Jr.** (WR, Steelers) — one of only two picks left that are yours to spend; traded to
   Pittsburgh as Rodgers' possession guy.
 Passed on: **Justin Herbert** — ranks higher, but you already have your QB and this league starts
   one. A second QB only pays if you can bench him and swap by matchup week to week; with four

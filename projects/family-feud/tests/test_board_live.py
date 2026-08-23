@@ -55,7 +55,12 @@ class TestTheNamedTraps(unittest.TestCase):
         every 12s without busting it is served the same stale body and buys nothing at all."""
         src = read(BOARD)
         self.assertIn("cache: 'no-store'", src)
-        self.assertRegex(src, r"PICKS_URL \+ '\?_=' \+ Date\.now\(\)")
+        # The nonce is appended PER FETCH to the freshly-built URL — never baked into a constant
+        # or into picksUrl()'s return, which would be one cache key asked for forever (the
+        # original bug wearing a fix's clothes).
+        self.assertRegex(src, r"picksUrl\(\) \+ '\?_=' \+ Date\.now\(\)")
+        self.assertNotRegex(src, r"function picksUrl[\s\S]{0,200}Date\.now",
+                            "the nonce moved inside picksUrl() — that is a constant with extra steps")
 
     def test_polled_picks_never_write_to_the_users_own_toggle(self):
         """THE DUAL-DUTY BUG. `taken` is the operator's manual cross-off. If polled picks landed
@@ -91,14 +96,29 @@ class TestTheNamedTraps(unittest.TestCase):
         """Every count comes from meta.shape. A literal 8 or 16 in here is the KTD-1 defect this
         whole rebuild exists to remove, and it survives a league settings change silently."""
         src = read(BOARD)
-        body = src[src.index("const PICKS_URL"):]
+        body = src[src.index("let draftOverride"):]
         self.assertRegex(body, r"function slotOfPick[\s\S]{0,200}TEAMS")
         self.assertNotRegex(body, r"[^\w](8|16)\s*\)\s*\+\s*1",
                             "the snake arithmetic carries a hardcoded league size")
 
-    def test_the_draft_id_comes_from_the_stamped_shape(self):
+    def test_the_draft_id_comes_from_the_stamped_shape_with_a_VISIBLE_override(self):
+        """The baked default is still SHAPE.draft_id, never a hardcoded id — and since 2026-08-23
+        (Briggsy's ask) a MOCK id can override it per-open. The override's contract is that it
+        lives where it can be SEEN: the input box and the URL bar. localStorage would let a mock
+        override silently survive to draft morning on a wall display — the poisoned-ladder shape
+        on a surface nobody audits — so its absence from this file is load-bearing."""
         src = read(TEMPLATE)
-        self.assertIn("SHAPE.draft_id ? 'https://api.sleeper.app/v1/draft/' + SHAPE.draft_id", src)
+        self.assertIn("draftOverride || SHAPE.draft_id", src,
+                      "the baked league draft must remain the default identity source")
+        self.assertIn("'https://api.sleeper.app/v1/draft/' + id + '/picks'", src)
+        # Scoped to the live-poll section: the THEME toggle persists via localStorage
+        # legitimately, and that is none of this test's business.
+        poll = src[src.index("let draftOverride"):]
+        self.assertNotIn("localStorage", poll,
+                         "a persisted draft override is the silent-mock-on-draft-morning trap")
+        # The override must be NAMED in the live bar's words — the paused-vs-LIVE lesson: the
+        # most confusable states are the ones distinguished by styling instead of words.
+        self.assertIn("not the league draft", src)
 
     def test_a_failed_poll_keeps_the_last_good_state(self):
         """A dropped connection must never blank a wall board. Verified in the browser by killing

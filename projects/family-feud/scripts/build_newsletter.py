@@ -29,6 +29,7 @@ nightly job that fails on a bad night, so it does not.
 """
 import argparse
 import datetime as _dt
+import email.utils as _eut
 import glob
 import hashlib
 import html as _html
@@ -89,7 +90,13 @@ def mule_status():
 
 
 def feed_items(name):
-    """(title, link) per <item>, or [] -- a feed that failed validation simply is not there."""
+    """(title, link, when) per <item>, or [] -- a feed that failed validation simply is not there.
+
+    `when` is a LOCAL-TIME display string ("Aug 23, 9:41 PM") or "" -- parsed from RSS `pubDate`
+    (RFC 2822) or Atom `published`/`updated` (ISO 8601), converted from the feed's own zone.
+    Display-formatted HERE because every consumer is a rendered surface, and "" on a parse
+    failure keeps the headline: a timestamp is garnish, and dropping news over garnish would
+    invert the section's whole rule (Briggsy's ask, 2026-08-24: stamp the headlines)."""
     path = os.path.join(INBOX, name)
     if not os.path.exists(path):
         return []
@@ -106,9 +113,30 @@ def feed_items(name):
         # printing the raw entity at the reader.
         title = _html.unescape(node.findtext("title") or "").strip()
         link = (node.findtext("link") or "").strip()
+        when = _item_when(node)
         if title:
-            out.append((title, link))
+            out.append((title, link, when))
     return out
+
+
+def _item_when(node):
+    """The item's publish moment as a local display string, or ''."""
+    raw = (node.findtext("pubDate")
+           or node.findtext("{http://www.w3.org/2005/Atom}published")
+           or node.findtext("{http://www.w3.org/2005/Atom}updated") or "").strip()
+    if not raw:
+        return ""
+    dt = None
+    try:
+        dt = _eut.parsedate_to_datetime(raw)
+    except (TypeError, ValueError):
+        try:
+            dt = _dt.datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        except ValueError:
+            return ""
+    if dt.tzinfo is not None:
+        dt = dt.astimezone()          # the reader's clock, not the feed's
+    return f"{dt:%b} {dt.day}, {dt.strftime('%I:%M %p').lstrip('0')}"
 
 
 # ------------------------------------------------------------------ matching the wire to the board
@@ -206,14 +234,20 @@ def tile_values(draft, users, board, now):
     slot = order.get(BRIGGSY_USER_ID) if isinstance(order, dict) else None
     slot_tile = str(slot) if slot else "—"
 
-    # The tile is a 26px number in a quarter-width box. `meta.updated` is an ISO date, and
-    # "2026-08-08" wraps onto two lines and breaks the row -- measured in the browser, not
-    # guessed. The design's own example reads "Aug 5", so match it.
+    # The tile is a 26px number in a quarter-width box; ISO dates wrap and break the row --
+    # measured in the browser, not guessed. The design's own example reads "Aug 5", so match it.
+    # 🚨 THE SOURCE IS `meta.rankings.synthesized`, NEVER `meta.updated`. The tile read `updated`
+    # until 2026-08-24 and told Briggsy "Aug 9" across two re-ranks (08-14, 08-21) -- `updated`
+    # is INPUT freshness and the runbook already names this exact confusion ("meta.updated is
+    # input freshness, not rank staleness"). A board-version tile that does not move on a re-rank
+    # is the refresh ceremony bug on a surface he reads at breakfast.
+    raw = ((board.get("meta") or {}).get("rankings") or {}).get("synthesized") \
+        or (board.get("meta") or {}).get("updated")
     try:
-        stamp = _dt.date.fromisoformat(str(board["meta"]["updated"]))
+        stamp = _dt.date.fromisoformat(str(raw))
         board_tile = f"{stamp:%b} {stamp.day}"
     except (TypeError, ValueError):
-        board_tile = str(board["meta"]["updated"])
+        board_tile = str(raw)
 
     return ([{"num": seats, "lbl": "Seats Filled"},
              {"num": draft_tile, "lbl": "Days to Draft" + ("*" if draft_note else "")},
@@ -280,7 +314,28 @@ def draft_alerts(path=ALERTS, limit=ALERT_LIMIT):
                 cur["body"].append(s)
     for a in out:
         a["body"] = " ".join(a["body"])[:400]
+
+    # AN APPEND-ONLY ALARM NEVER SOUNDS THE ALL-CLEAR, so a healed "CARGO IS STALE" reads as a
+    # live emergency for days (Briggsy asked "is this still accurate?" on 2026-08-24 about an
+    # alert that had healed within two minutes of firing on 08-21). The alert is HISTORY and
+    # stays; what press time can add is the present: if the cargo is fresh NOW, say so on the
+    # alert itself. 150 min is the watcher's own staleness threshold, not a new rule.
+    for a in out:
+        if "CARGO IS STALE" in a["title"].upper():
+            age = _cargo_age_minutes()
+            if age is not None and age <= 150:
+                a["recovered"] = f"since recovered — cargo was {age:.0f} min old at press time"
     return list(reversed(out))[:limit]
+
+
+def _cargo_age_minutes(path=None):
+    """Minutes since the mule last wrote sleeper_draft.json, or None. mtime, same as the watcher:
+    per-file, because one failed source leaves yesterday's file under a fresh run_at."""
+    try:
+        mt = os.path.getmtime(path or os.path.join(INBOX, "sleeper_draft.json"))
+        return max(0.0, (_dt.datetime.now().timestamp() - mt) / 60)
+    except OSError:
+        return None
 
 
 #: Feeds in the order the wire reads them. Rotowire is the most fantasy-dense of the five.
@@ -345,7 +400,7 @@ def wire(players):
     groups, seen_titles = {}, set()
     for feed in WIRE_FEEDS:
         source = feed.replace("rss_", "").replace(".xml", "").replace("_nfl", "")
-        for title, link in feed_items(feed):
+        for title, link, when in feed_items(feed):
             key = title.strip().lower()
             if key in seen_titles:
                 continue
@@ -353,7 +408,8 @@ def wire(players):
             if not hits:
                 continue
             seen_titles.add(key)
-            item = {"title": title, "link": link, "kind": classify(title), "source": source,
+            item = {"title": title, "link": link, "when": when,
+                    "kind": classify(title), "source": source,
                     "players": [{"name": p["name"], "pos": p["pos"], "team": p["team"],
                                  "r": p["r"], "tier": p["tier"]} for p in hits]}
             who = tuple(sorted(p["r"] for p in hits))

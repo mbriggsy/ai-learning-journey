@@ -84,8 +84,8 @@
     <p class="lede">{{ alerts|length }} watcher alert{{ '' if alerts|length == 1 else 's' }} on the wire. It checks hourly and only speaks when something actually moves, so every line below is a real change — not a heartbeat.</p>
     {% for a in alerts %}
     <div class="item {{ 'bad' if 'STARTING GUN' in a.title or 'MOVED' in a.title or 'REPLACED' in a.title else 'watch' }}">
-      <div class="hd">{{ a.title }} <span class="tag {{ 'hot' if 'STARTING GUN' in a.title or 'MOVED' in a.title else '' }}">{{ a.when.split(' ')[0] }}</span></div>
-      <div class="bd">{{ a.body }}</div>
+      <div class="hd">{{ a.title }} <span class="tag {{ 'hot' if 'STARTING GUN' in a.title or 'MOVED' in a.title else '' }}">{{ a.when.split(' ')[0] }}</span>{% if a.recovered %} <span class="tag up">RECOVERED</span>{% endif %}</div>
+      <div class="bd">{{ a.body }}{% if a.recovered %} <em style="opacity:.75">({{ a.recovered }})</em>{% endif %}</div>
     </div>
     {% endfor %}
     {% endif %}
@@ -107,7 +107,7 @@
         {% for p in item.players %}
         <strong>{{ p.name }}</strong> — {{ p.pos }}, {{ p.team }}, board #{{ p.r }}, tier {{ p.tier }}{{ '' if loop.last else ' · ' }}
         {% endfor %}
-        <span style="opacity:.7"> ({{ item.outlets|join(', ') }}{% if item.also %}, and {{ item.also }} more headline{{ '' if item.also == 1 else 's' }} on the same story{% endif %})</span>
+        <span style="opacity:.7"> ({{ item.outlets|join(', ') }}{% if item.when %} · {{ item.when }}{% endif %}{% if item.also %}, and {{ item.also }} more headline{{ '' if item.also == 1 else 's' }} on the same story{% endif %})</span>
       </div>
     </div>
     {% endfor %}

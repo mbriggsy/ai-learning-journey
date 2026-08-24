@@ -230,6 +230,17 @@ class TestTiles(InboxCase):
         tiles, _ = N.tile_values(self.draft(), [], self.BOARD_DOC, _dt.datetime(2026, 8, 8))
         self.assertEqual(tiles[3]["num"], "Aug 8")
 
+    def test_board_version_is_the_SYNTHESIS_date_not_input_freshness(self):
+        """🚨 The tile read `meta.updated` until 2026-08-24 and told Briggsy "Aug 9" across TWO
+        re-ranks -- `updated` is input freshness, and the runbook names this exact confusion.
+        A Board Version tile that does not move on a re-rank is the refresh-ceremony bug on the
+        one surface he reads at breakfast. `updated` stays as the fallback for a board built
+        before the rankings block existed -- the previous test pins that path."""
+        doc = {"meta": {"updated": "2026-08-09",
+                        "rankings": {"synthesized": "2026-08-21"}}, "players": BOARD}
+        tiles, _ = N.tile_values(self.draft(), [], doc, _dt.datetime(2026, 8, 24))
+        self.assertEqual(tiles[3]["num"], "Aug 21")
+
     def test_seats_come_from_the_users_list(self):
         users = [{"display_name": f"m{i}"} for i in range(6)]
         tiles, _ = N.tile_values(self.draft(), users, self.BOARD_DOC, _dt.datetime(2026, 8, 8))
@@ -504,6 +515,73 @@ class TestTheWatcherReachesASurfaceBriggsyReads(unittest.TestCase):
         """The call site itself, against the live path -- absent on a clean clone, so this asserts
         the KEY exists rather than that it has entries."""
         self.assertIn("alerts", N.build_context())
+
+    def test_a_healed_stale_cargo_alert_says_RECOVERED_at_press_time(self):
+        """An append-only alarm never sounds the all-clear: the 08-21 stale-cargo alert healed
+        within two minutes and still read as a live emergency on 08-24 -- Briggsy had to ASK
+        whether it was true. The alert stays (it is history); press time adds the present."""
+        with open(self.path, "a", encoding="utf-8") as f:
+            f.write("\n## CARGO IS STALE — THIS WATCHER IS BLIND — 2026-08-21 10:50:40\n\n"
+                    "- last mule run was 922 minutes ago.\n")
+        real = N._cargo_age_minutes
+        self.addCleanup(setattr, N, "_cargo_age_minutes", real)
+        N._cargo_age_minutes = lambda path=None: 12.0
+        a = N.draft_alerts(self.path)[0]
+        self.assertIn("CARGO IS STALE", a["title"])
+        self.assertIn("since recovered", a.get("recovered", ""))
+        self.assertIn("12 min old", a["recovered"])
+
+    def test_a_STILL_stale_cargo_alert_gets_no_false_all_clear(self):
+        """The inverse control: recovery is claimed only when the cargo is actually fresh now.
+        A RECOVERED tag on a still-dead mule would be worse than no tag at all."""
+        with open(self.path, "a", encoding="utf-8") as f:
+            f.write("\n## CARGO IS STALE — THIS WATCHER IS BLIND — 2026-08-21 10:50:40\n\n"
+                    "- last mule run was 922 minutes ago.\n")
+        real = N._cargo_age_minutes
+        self.addCleanup(setattr, N, "_cargo_age_minutes", real)
+        N._cargo_age_minutes = lambda path=None: 900.0
+        a = N.draft_alerts(self.path)[0]
+        self.assertNotIn("recovered", a)
+
+
+class TestWireTimestamps(InboxCase):
+    """Briggsy's ask, 2026-08-24: stamp the headlines. The stamp is garnish -- a parse failure
+    must keep the headline, or the timestamp feature deletes news."""
+
+    def test_pubdate_becomes_a_local_display_stamp(self):
+        self.write("rss_pft.xml",
+                   "<rss><channel><item><title>Puka Nacua gets paid</title>"
+                   "<link>x</link><pubDate>Sat, 23 Aug 2026 21:41:00 GMT</pubDate>"
+                   "</item></channel></rss>")
+        items = N.feed_items("rss_pft.xml")
+        self.assertEqual(len(items), 1)
+        title, link, when = items[0]
+        self.assertIn("Aug", when)
+        self.assertIn("M", when)                      # AM/PM present
+        self.assertNotIn("GMT", when)                 # converted to the reader's clock
+
+    def test_a_missing_or_garbled_pubdate_keeps_the_headline(self):
+        self.write("rss_pft.xml",
+                   "<rss><channel>"
+                   "<item><title>No date here</title><link>x</link></item>"
+                   "<item><title>Bad date here</title><link>y</link>"
+                   "<pubDate>yesterday-ish</pubDate></item>"
+                   "</channel></rss>")
+        items = N.feed_items("rss_pft.xml")
+        self.assertEqual([t for t, _, _ in items], ["No date here", "Bad date here"])
+        self.assertEqual([w for _, _, w in items], ["", ""])
+
+    def test_the_stamp_reaches_the_rendered_wire_item(self):
+        """Insight 013 again: the parser having the field is not the paper carrying it."""
+        self.write("rss_pft.xml",
+                   "<rss><channel><item><title>Puka Nacua gets paid</title>"
+                   "<link>x</link><pubDate>Sat, 23 Aug 2026 21:41:00 GMT</pubDate>"
+                   "</item></channel></rss>")
+        ctx = N.build_context()
+        ctx["wire"] = N.wire(BOARD)
+        self.assertTrue(ctx["wire"] and ctx["wire"][0]["when"])
+        html = N.render(ctx)
+        self.assertIn(ctx["wire"][0]["when"], html)
 
 
 if __name__ == "__main__":

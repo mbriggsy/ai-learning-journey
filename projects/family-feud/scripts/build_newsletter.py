@@ -315,16 +315,20 @@ def draft_alerts(path=ALERTS, limit=ALERT_LIMIT):
     for a in out:
         a["body"] = " ".join(a["body"])[:400]
 
-    # AN APPEND-ONLY ALARM NEVER SOUNDS THE ALL-CLEAR, so a healed "CARGO IS STALE" reads as a
+    # AN APPEND-ONLY ALARM NEVER SOUNDS THE ALL-CLEAR, so a healed "CARGO IS STALE" read as a
     # live emergency for days (Briggsy asked "is this still accurate?" on 2026-08-24 about an
-    # alert that had healed within two minutes of firing on 08-21). The alert is HISTORY and
-    # stays; what press time can add is the present: if the cargo is fresh NOW, say so on the
-    # alert itself. 150 min is the watcher's own staleness threshold, not a new rule.
-    for a in out:
-        if "CARGO IS STALE" in a["title"].upper():
-            age = _cargo_age_minutes()
-            if age is not None and age <= 150:
-                a["recovered"] = f"since recovered — cargo was {age:.0f} min old at press time"
+    # alert that had healed within two minutes of firing on 08-21). His call, same day: a
+    # recovered alarm does not belong in the paper at all -- this desk is for real changes, and
+    # "the mule hiccuped and healed itself" is not one. A STILL-stale cargo keeps its alert.
+    # (First fix tagged them RECOVERED instead of dropping them; he overruled it within the hour.)
+    # 150 min is the watcher's own staleness threshold, not a new rule. The file keeps every
+    # entry either way -- this filters the PAPER, never the history.
+    def _still_news(a):
+        if "CARGO IS STALE" not in a["title"].upper():
+            return True
+        age = _cargo_age_minutes()
+        return age is None or age > 150
+    out = [a for a in out if _still_news(a)]
     return list(reversed(out))[:limit]
 
 

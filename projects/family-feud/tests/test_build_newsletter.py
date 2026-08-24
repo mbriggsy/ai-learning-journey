@@ -516,24 +516,27 @@ class TestTheWatcherReachesASurfaceBriggsyReads(unittest.TestCase):
         the KEY exists rather than that it has entries."""
         self.assertIn("alerts", N.build_context())
 
-    def test_a_healed_stale_cargo_alert_says_RECOVERED_at_press_time(self):
-        """An append-only alarm never sounds the all-clear: the 08-21 stale-cargo alert healed
-        within two minutes and still read as a live emergency on 08-24 -- Briggsy had to ASK
-        whether it was true. The alert stays (it is history); press time adds the present."""
+    def test_a_healed_stale_cargo_alert_is_DROPPED_from_the_paper(self):
+        """An append-only alarm never sounds the all-clear: the 08-21 stale-cargo alert healed in
+        two minutes and still read as a live emergency on 08-24 -- Briggsy had to ASK whether it
+        was true. His call: a recovered alarm is not news; drop it. (A first fix tagged it
+        RECOVERED instead -- overruled the same hour; do not resurrect the tag uninvited.)
+        The FILE keeps the entry -- only the paper filters."""
         with open(self.path, "a", encoding="utf-8") as f:
             f.write("\n## CARGO IS STALE — THIS WATCHER IS BLIND — 2026-08-21 10:50:40\n\n"
                     "- last mule run was 922 minutes ago.\n")
         real = N._cargo_age_minutes
         self.addCleanup(setattr, N, "_cargo_age_minutes", real)
         N._cargo_age_minutes = lambda path=None: 12.0
-        a = N.draft_alerts(self.path)[0]
-        self.assertIn("CARGO IS STALE", a["title"])
-        self.assertIn("since recovered", a.get("recovered", ""))
-        self.assertIn("12 min old", a["recovered"])
+        titles = [a["title"] for a in N.draft_alerts(self.path)]
+        self.assertFalse(any("CARGO IS STALE" in t for t in titles),
+                         "a healed alarm rendered as news")
+        self.assertEqual(titles, ["STARTING GUN", "LEAGUE ROSTER CHANGED"],
+                         "the filter must drop ONLY the healed alarm, never real alerts")
 
-    def test_a_STILL_stale_cargo_alert_gets_no_false_all_clear(self):
-        """The inverse control: recovery is claimed only when the cargo is actually fresh now.
-        A RECOVERED tag on a still-dead mule would be worse than no tag at all."""
+    def test_a_STILL_stale_cargo_alert_keeps_its_place_in_the_paper(self):
+        """The inverse control: a genuinely dead mule stays on the front page. Dropping THAT
+        would be the filter eating the one alert that needs a human."""
         with open(self.path, "a", encoding="utf-8") as f:
             f.write("\n## CARGO IS STALE — THIS WATCHER IS BLIND — 2026-08-21 10:50:40\n\n"
                     "- last mule run was 922 minutes ago.\n")
@@ -541,7 +544,7 @@ class TestTheWatcherReachesASurfaceBriggsyReads(unittest.TestCase):
         self.addCleanup(setattr, N, "_cargo_age_minutes", real)
         N._cargo_age_minutes = lambda path=None: 900.0
         a = N.draft_alerts(self.path)[0]
-        self.assertNotIn("recovered", a)
+        self.assertIn("CARGO IS STALE", a["title"])
 
 
 class TestWireTimestamps(InboxCase):

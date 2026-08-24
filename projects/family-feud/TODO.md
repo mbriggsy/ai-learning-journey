@@ -44,6 +44,36 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
     skill's landmines carry the full list so nobody repeats them.
     `draft_order` is still null on the real draft; it populated correctly on the mock.
 
+  ── 2026-08-23/24 — **THE EXECUTOR MOCK WON ITS ROOM ON THE FRESH BOARD, AND EVERY READER
+    SURFACE GOT ITS DRAFT-WEEK TUNE-UP.** **1187 tests · 28 test files · 26 scripts · 33 insights.**
+    ✅ **THE BOARD IS RE-RANKED ON THE 2026-08-21 ECR** (120 moves; McBride 17→20 and OUT of
+    tier 1, vorp −58; top 16 untouched). The refresh's first collision with the replay gate is
+    fixed at the root: fidelity replays against the board AS DRAFTED (frozen fixture
+    `tests/fixtures/board_as_drafted_20260819.json`), property tests stay on the live board.
+    ⚠️ The refresh commit `bfe5ee12` went out past a red suite — a `;` where the chain needed
+    `&&`; owned in `eda135ba`'s message. The remaining Aug-27 payloads (long-TD curve fold,
+    board-membership look: Wan'Dale/Michael Wilson — **a third Wilson sighting at #79 of the
+    executor mock**) are STILL OWED at the refresh.
+    ✅ **EXECUTOR MODE, LIVE, ON THE NEW BOARD: first place again** (mock `1397335874177396736`,
+    seat 5, 15 fires, 15 API confirms, ~30-60s/window, zero close clocks; startable 2181, +31
+    over 2nd). **Lamar at #28 = the first draft to cash the QB market edge** — the delta queue
+    surfaced him top in round 4, exactly the fall `market.py` predicted. The morning's ladder
+    identity fix ran live all game (every mock ladder diverted to `ladder.<mock_id>.json`).
+    Honest note: the delta queue built a 2-RB roster with zero RB bench — fine vs bots,
+    **human-eye override lane on draft night**. Display-name landmines confirmed twice more
+    (Fannin/Godwin/Pittman lose their "Jr." in Sleeper's search).
+    ✅ **MONITOR 2 IS DRAFT-WEEK READY:** draft-id input beside Go live (paste a mock URL, id
+    extracted; override visible in input+URL only, NEVER localStorage; off-size rooms refused;
+    mock named in the live bar's words) · the whole header PINS — title through tabs (Briggsy's
+    call, stated twice; a folding masthead shipped for an hour and was declined — **do not
+    reintroduce it**; sticky child in a parent box is a no-op, the header itself is sticky).
+    ✅ **THE NEWSLETTER'S FOUR FIXES:** Board Version = `meta.rankings.synthesized` (it read
+    `meta.updated` and said "Aug 9" across two re-ranks) · healed stale-cargo alarms are DROPPED
+    from the paper (his call; still-stale keeps its alert, both directions pinned; the FILE keeps
+    all history) · wire headlines carry local-time pubDate stamps · wire links open new windows.
+    ✅ **THE FOUR LINES carry (POS, Team)** after the name — his post-mock tweak, in the runbook
+    template + all three worked examples.
+
   ── 2026-08-21 — **THE ADVISOR-MODE MOCK RAN CLEAN, END TO END, AND D-A IS MEASURED.**
     Mock `1396604748777418752` (8-team/15rd/5:00, seat 5, Briggsy on his phone): **13 picks
     advised in the four lines under a live clock, zero timeouts, zero missed wakes; warm path
@@ -326,17 +356,17 @@ blew → seat flipped AUTO → rounds 8-16 drafted themselves. Own goals and fin
    rehearsal wants a slower room (humans, or a longer timer) — the lab's warm-path number is
    still unmeasured.
 
-## ▶ NEXT ACTION — as of 2026-08-20, ~9 days out, draft still UNSCHEDULED
+## ▶ NEXT ACTION — as of 2026-08-24, ~5 days out, draft still UNSCHEDULED
 
-**Live state, re-pulled 2026-08-20 15:29 cargo: `status: pre_draft`, `start_time: null`,
-`draft_order: null`, room 8/8 full.** Nothing is on a hard clock except the ~Aug 27 refresh —
-which now carries THREE ratified payloads: the curve rebuild on fresh ECR, the long-TD fold
-(item 4 below), and a look at the 4 above-replacement players the consensus ranks that the board
-does not carry (Wan'Dale Robinson / Michael Wilson ~19 VORP — board membership, Briggsy's call).
-**Current: 1179 tests · 28 test files · 26 scripts · 31 insights** *(chamber + campaign 1 added
-2026-08-20)*. The one item needing his
-hands remains the ADVISOR-MODE MOCK (item 2) — and it matters MORE now: the four lines will ride
-the new lineup-delta queue (insight 030), which no human has yet read under a clock.
+**Live state, re-pulled 2026-08-24 09:29 cargo: `status: pre_draft`, `start_time: null`,
+`draft_order: null`, room 8/8 full.** The one hard clock is the **~Aug 27 refresh**, now
+carrying TWO remaining ratified payloads (the ECR re-rank half already ran 08-23 on the 08-21
+scrape — run it AGAIN at ~T-48h on whatever is newest): the **long-TD curve fold** (item 4
+below, EXECUTE AT THE REFRESH) and the **board-membership look** (Wan'Dale Robinson / Michael
+Wilson ~19 VORP — Briggsy's call; Wilson has now gone off-board in a mock THREE times).
+**Current: 1187 tests · 28 test files · 26 scripts · 33 insights** *(counts from 2026-08-24;
+re-run, never copy)*. Both cockpit modes are now live-proven first-place on mocks — what remains
+before the freeze is refresh payloads and draft-day logistics, not build.
 
 ### ⚑ WAITING ON BRIGGSY — decisions, not work. Nothing below moves without him.
 

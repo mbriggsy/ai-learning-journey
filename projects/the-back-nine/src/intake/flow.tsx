@@ -123,8 +123,9 @@ export function IntakeFlow({
   const advance = useCallback(() => {
     // Attempt-to-advance: this step's fields become touched, then its rules
     // gate the move. Rules whose inputs are absent simply don't fire — an
-    // unanswered-but-required fact reaches the engine as a burned/062 sentinel
-    // and renders indeterminate, never a hard wall here.
+    // unanswered-but-required fact never reaches the engine: the builders return null on it,
+    // pre-first-resolve the store stays `idle` and the strip names it (memoryModel's recompute),
+    // post-first-resolve it demotes to `inputs-incomplete` — never a hard wall here.
     const nextTouched = new Set(touched)
     for (const f of step.fields) nextTouched.add(f)
     setTouched(nextTouched)

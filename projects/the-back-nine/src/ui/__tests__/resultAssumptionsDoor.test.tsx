@@ -5,7 +5,9 @@ import { cleanup, render, screen, fireEvent, waitFor, within } from '@testing-li
 import { Result } from '../Result'
 import { appModel } from '../appModel'
 import { resolvedFocusKey } from '../answerView'
-import { copy } from '@ui/copy'
+import { copy, slots } from '@ui/copy'
+import { missingRequiredFacts } from '@intake/intakeMap'
+import { DEV_SEEDS } from '../devSeeds'
 import type { MemoryModelSnapshot } from '@store/memoryModel'
 
 /*
@@ -130,6 +132,96 @@ describe('the Assumptions door — the seat swap + the hatch gate', () => {
     plantAnswer({ kind: 'compute-error', reason: 'engine-unavailable' })
     renderResult()
     expect(door()).toBeInTheDocument()
+  })
+
+  it('THE COMPLETED-INTAKE DEAD END (2026-08-20 walk): idle + a missing required fact + NOT computing offers the door — its siblings are gone (planted-fail: drop the idle arm → red)', () => {
+    // The pristine draft has every required fact missing and NO answer was ever planted: this is
+    // the frame a household lands on after finishing intake with one gated fact blank — the strip
+    // says "Still needed: …" and, until 2026-09-03, the page had ZERO interactive elements.
+    renderResult()
+    expect(door(), 'the escape hatch is the only way to supply the missing fact').toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: copy.leverSequencingCta })).toBeNull()
+    expect(screen.queryByRole('button', { name: copy.budgetCta })).toBeNull()
+  })
+
+  it('…and when the repair remounts the actions row while the panel is open, Close lands focus on the NEW door, never <body> (planted-fail: drop the panel’s restoreFallback → red)', async () => {
+    // Supplying the missing fact from a panel row flips IntakeApp's `computing` for one beat
+    // (idle with nothing missing → pending): the actions row unmounts and remounts, so the door
+    // element the sheet captured at open is disconnected by close time. Simulated here through
+    // the `computing` prop, which is the exact lever that unmounts the row.
+    const view = render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
+    const opener = door()!
+    opener.focus()
+    fireEvent.click(opener)
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    view.rerender(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing />)
+    expect(opener.isConnected, 'the captured door unmounted with the row').toBe(false)
+    view.rerender(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
+    const reborn = door()!
+    expect(reborn).not.toBe(opener)
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: copy.leverCancel }))
+    await waitFor(() => expect(document.activeElement).toBe(reborn))
+  })
+
+  it('an UNREPRESENTABLE-only dead end (?seed=datesolo — the retiree buys their own pre-65 coverage while the other works) reads as the strip’s WITHHOLD, never as "Still needed" (the review’s P1: nothing typed can clear it)', () => {
+    appModel.update(() => DEV_SEEDS.datesolo)
+    const facts = missingRequiredFacts(appModel.getSnapshot().draft)
+    expect(facts.map((f) => f.labelKey)).toEqual(['employerCoverageUnpriced'])
+    expect(facts[0]!.kind).toBe('unrepresentable')
+    renderResult()
+    fireEvent.click(door()!)
+    const text = screen.getByRole('dialog').textContent ?? ''
+    expect(text).toContain(copy.answerWithheldLead)
+    expect(text).toContain(copy.answerCannotPrice)
+    expect(text).toContain(copy.employerCoverageUnpriced)
+    expect(text).toContain(copy.answerCannotPriceTail)
+    expect(text).not.toContain(copy.answerStillNeeded)
+    expect(text).not.toContain(copy.answerIncomplete)
+  })
+
+  it('a MIXED household (facts still to enter AND two HSAs) keeps BOTH blocks — an unentered fact never lands under "nothing here for you to add"', () => {
+    appModel.update((d) => ({
+      ...d,
+      enteredAccounts: [
+        { ownerIndex: 0, kind: 'hsa', valueToday: 50_000, manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 } },
+        { ownerIndex: 1, kind: 'hsa', valueToday: 40_000, manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 } },
+      ],
+    }))
+    const facts = missingRequiredFacts(appModel.getSnapshot().draft)
+    expect(facts.some((f) => f.kind === 'unrepresentable')).toBe(true)
+    expect(facts.some((f) => (f.kind ?? 'absent') === 'absent')).toBe(true)
+    renderResult()
+    fireEvent.click(door()!)
+    const text = screen.getByRole('dialog').textContent ?? ''
+    expect(text).toContain(copy.answerIncomplete) // keep-going lead: there IS something left to enter
+    expect(text).toContain(copy.answerStillNeeded)
+    expect(text).toContain(copy.answerCannotPrice)
+    expect(text).toContain(copy.kindHsaBothSpouses)
+  })
+
+  it('while the repair compute runs (pending) the echo speaks the strip’s working line, never the quiet "edits flow into your answer"', () => {
+    // Open on the dead-end frame, then the repair's compute begins: the answer flips to pending and
+    // IntakeApp's `computing` withholds the row — the panel (Result-level) stays open through it.
+    const view = render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
+    fireEvent.click(door()!)
+    plantAnswer({ kind: 'pending' })
+    view.rerender(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing />)
+    const text = screen.getByRole('dialog').textContent ?? ''
+    expect(text).toContain(copy.answerPending)
+    expect(text).not.toContain(copy.assumptionEchoQuiet)
+  })
+
+  it('…and the aria-modal echo NAMES the missing facts there, never the quiet "edits flow into your answer" line (planted-fail: drop the echo arm → red)', () => {
+    renderResult()
+    fireEvent.click(door()!)
+    const dialog = screen.getByRole('dialog')
+    expect(dialog.textContent).toContain(copy.answerIncomplete)
+    expect(dialog.textContent).toContain(copy.answerStillNeeded)
+    // The overflow reads as one more fact in the SAME list — the strip's middot, not a bare space.
+    const names = [...new Set(missingRequiredFacts(appModel.getSnapshot().draft).map((m) => copy[m.labelKey]))]
+    expect(names.length).toBeGreaterThan(3)
+    expect(dialog.textContent).toContain(` · ${slots.factsMore(names.length - 3)}`)
+    expect(dialog.textContent).not.toContain(copy.assumptionEchoQuiet)
   })
 
   it('a via-sheet row routes panel→sheet WITHOUT the panel’s exit stealing focus back out of the new modal (the sheet→sheet focus law)', async () => {

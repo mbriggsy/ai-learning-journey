@@ -608,11 +608,61 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 - Post-ceremony landing announce is UNPROVEN — needs a real NVDA/VoiceOver pass
 - THREE NEVER-COLD-READ FACES — fold into the S6/S7 aged-seed walk, never standalone (datesplit, datemixed, the save ceremony)
 
+### The dead-end repair beat — four residuals the 2026-09-03 review confirmed and did not build
+
+`S–M` · **pilot** · filed 2026-09-03 (the completed-intake dead-end fix's ultramode review; all verified real + new, P2/P3)
+
+- **(P2) Close DURING the repair compute strands focus on <body>.** Supplying the missing fact flips
+  `computing` true for the compute; the actions row (and the door) is withheld for that beat, so
+  `restoreToAssumptionsDoor` — the ONLY rung of every sheet's `restoreFallback` — resolves null if the
+  panel closes inside it (the shipped pin closes AFTER the row is back). FIX: give the fallback a second
+  rung that survives `computing`: `document.querySelector('[data-door="assumptions"]') ??
+  document.querySelector('main.result')` with `tabIndex={-1}` on `<main className="result">`
+  (Result.tsx ~:610) AND a `:focus-visible` rule so the programmatic landing paints no full-page ring
+  (a calm-tone design call — run it through the UI loadout, not a mechanical edit). Never the strip:
+  it is the `aria-live` region. Pin: open on the dead-end frame, `rerender(computing)`, Close WHILE
+  computing, assert `document.activeElement` is the landmark (not `!== body`). Also covers the
+  via-sheet Apply route, the likelier real trigger. `verify:fit` re-run (the attribute touches the
+  protected crunch frame's DOM; no layout effect).
+- **(P2) A SECOND panel edit during the repair compute can crown a verdict on superseded inputs.**
+  `memoryModel.recompute`'s pre-first-resolve arm returns WITHOUT minting an epoch when a builder
+  nulls (`memoryModel.ts` ~:725-732), so if the household re-blanks a fact while the first compute is
+  in flight, that run still lands (nothing out-epochs it) — a confident verdict painted over an
+  incomplete draft until the next edit, and `pending` can latch. FIX (the verifier's refinement, not
+  the finding's blanket one): keep `if (everResolved) { …inputs-incomplete… }` and add
+  `else if (dispatchedEpoch > committedEpoch) { const e = ++dispatchedEpoch; void
+  deps.client.engine.setLatestEpoch(e); commit(e, { kind: 'idle' }) }` — mid-intake stays
+  byte-identical (no in-flight ⇒ no mint), the idle-with-missing shape the three new predicates handle
+  is restored, the in-flight resolve is discarded by contract (f). Pin with the fakeClient's
+  controllable `run` promise: dispatch, re-blank a fact, resolve the first run, assert `answer.kind`
+  is `idle` (never `headline`) and the strip names the fact.
+- **(P3) `computing` is all-or-nothing, so the dead-end frame also paints the save slot** when the
+  draft is READY but the answer is idle — the unrepresentable-only case (`datesolo`), where
+  `scenarioFromDraft` builds and `deriveResultSave` offers "Keep this answer" over an answerless
+  frame. On absent-fact dead ends the slot is 'none' (not ready). DECIDE + PIN: either a distinct
+  `deadEnd` signal from IntakeApp that renders the hatch + in-frame disclaimer while still withholding
+  the save slot / backup door / record card, or name the sibling-parity choice (inputs-incomplete
+  already ships the slot) in the audit note. Either way a pin on what the save slot does there.
+- **(P3) On the DATE route the repaired dead end lands with no AT feedback**: the hero's one-shot
+  landing announce is consumed under `sheetOpen`, and the panel echo has no `date` arm (its first
+  branch reads the spine's sticky `displayed`, null on the date route), so the aria-modal falls to the
+  quiet line while the answer commits behind it. FIX: a `date` arm in the echo rendering the same
+  composed hero lead the surface uses (`heroLead`/`composeDateSplit`), keyed so `role="status"`
+  announces on commit. Do NOT take the "smaller" alternative (fire the landing announce when the
+  sheet closes) — it races ControlSheet's `restoreFocus` and contradicts ConfidenceStatement's
+  documented "the panel's own close/steer owns where focus goes next". Sibling, pre-existing:
+  `compute-error` also falls to the quiet line in the panel — file with this, fix together.
+
 ### The couple's own data — no draft saving, no format migration, no way to delete
 
 `L` · **pilot** · filed 3× — `A45`, `A49`, `A53`
 
 - An interrupted intake loses the entire household — no draft persistence, no resume, and the tool promises "about five minutes"
+  - ⚑ Cross-reference (2026-09-03): the completed-intake dead end made this loss reachable in ONE
+    refresh — finish intake with one gated fact blank and the page had no door at all. The door is
+    back (`IntakeApp`'s `computing` no longer conflates the idle-with-missing-facts frame with the
+    crunch); what remains here is the persistence question itself, a security-posture decision
+    (plaintext draft outside the encrypted vault) — never a build without a ruling.
 - The schemaVersion "migration ladder" does not exist as code — it is a refusal, so the first bump to v4 strands every saved plan
 - No user-facing way to delete the vault — the couple's entire net worth cannot be removed from the device that holds it
 
@@ -625,6 +675,22 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 - SOLVE LANE — cancel is dark + the deferred interactive tier
 
 ## Tier 3 — Briggsy’s call (taste, scope, one-way doors)
+
+### The completed-intake door's IDEAL shape — quiet hatch, primary "finish" CTA, or re-enter at the step
+
+`S–M` · **briggsy** · filed 2026-09-03 (the 2026-08-20 intake walk's finding 1, decision half)
+
+- What SHIPPED 2026-09-03 is the quiet hatch the plan already ratified: on a completed intake with a
+  required fact still blank, "The assumptions behind this" renders over the "Still needed: …" strip,
+  its aria-modal echo names the facts, and the panel rows (or "Walk through everything again") are the
+  way to supply them. It reinterprets the LETTER of the 2026-07-02 "remove the opportunity" ruling
+  (idle/pending ⇒ the row is withheld) to honor its RATIONALE (the crunch + the remedy carve-out) —
+  flagged for the owner's audit, reversible, one frame.
+- The fork that is his: keep the quiet hatch as the door, add a PRIMARY "finish the missing fact"
+  action on that frame, or re-enter intake AT the missing step (`IntakeFlow` has no start-at-step
+  API — `flow.tsx` `useState(0)` — so that arm is a new prop plus a scope call). And the frame's
+  strip lead "Your answer takes shape as you go." is mid-intake copy on a FINISHED intake — a tone
+  call, Caddie-clearable under the batched-oracle law or his words.
 
 ### The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed
 

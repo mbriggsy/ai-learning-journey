@@ -50,6 +50,7 @@ import { budgetYearZeroFullTotal } from '@budget/budgetToSpending'
 import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
 import { CurrencyField, IntegerField, PercentField, SegmentedControl, formatMoney, formatPercent } from './fields'
+import { blockedLeadFor, missingFactNames } from './AnswerStrip'
 import { FieldError } from './FieldError'
 import { validateField, personField, type SanityViolation } from './sanity'
 import { anyPre65OrUnknown, healthcarePriced, isDateRoute, spendHelpKeyFor, type MissingFact } from './intakeMap'
@@ -96,6 +97,11 @@ export interface AssumptionPanelProps {
   /** The guided re-walk (F4 — moved inside the panel) + the via-intake collection rows. */
   readonly onReview: () => void
   readonly onClose: () => void
+  /** Where focus lands on close when the door that OPENED the panel has unmounted mid-open — the
+   *  completed-intake dead-end repair (2026-09-03): supplying the missing fact from a panel row
+   *  flips Result's `computing` for one beat, the actions row remounts, and the captured door
+   *  is a disconnected element at close; without this, focus strands on <body>. */
+  readonly restoreFallback?: () => HTMLElement | null
 }
 
 /** One panel row, stamped with its registry seat — the R7 completeness walk reads these. */
@@ -160,6 +166,7 @@ export function AssumptionPanel({
   onOpenHealth,
   onReview,
   onClose,
+  restoreFallback,
 }: AssumptionPanelProps) {
   const announcerRef = useRef<Announcer | null>(null)
   const { draft, answer, displayed } = snapshot
@@ -304,11 +311,26 @@ export function AssumptionPanel({
   // worse; band ORDER is never re-derived UI-side). Improved or unchanged ⇒ nothing (calm).
   const echoVerdict = displayed !== null ? composeVerdictReading(displayed) : null
   const worsened = displayed !== null && baseline !== null && displayed.xOfTen < baseline.xOfTen
-  const missingLine = (() => {
-    const names = [...new Set(missing.map((m) => copy[m.labelKey]))]
-    const shown = names.slice(0, 3)
-    const more = names.length > shown.length ? ` ${slots.factsMore(names.length - shown.length)}` : ''
-    return `${copy.answerStillNeeded} ${shown.join(' · ')}${more}`
+  // THE INCOMPLETE ECHO READS THE KIND OF EACH FACT, exactly as the strip does (2026-09-03, the
+  // dead-end fix's review): `missingRequiredFacts` emits ABSENT facts (the reader's to enter) and
+  // UNREPRESENTABLE ones (answered, and v1 cannot carry the answer — nothing typed will ever clear
+  // them). This panel used to file both under "Still needed" — the exact calm-but-wrong frame
+  // copy.ts legislates against by name — and the frame was unreachable here until the dead-end
+  // door landed; `?seed=datesolo` and the two-HSA household now open onto it. The lead is the
+  // strip's own (`blockedLeadFor`: keep-going only while something is left to enter), each kind
+  // gets its own line only when its bucket is non-empty, and the names come through the ONE shared
+  // producer (`missingFactNames`) so the two surfaces can never disagree on what "N more" hides.
+  const missingEcho = (() => {
+    const line = (facts: readonly MissingFact[], lead: string): string | null => {
+      if (facts.length === 0) return null
+      const { shown, more } = missingFactNames(facts)
+      return `${lead} ${shown.join(' · ')}${more > 0 ? ` · ${slots.factsMore(more)}` : ''}`
+    }
+    return {
+      lead: blockedLeadFor(missing),
+      stillNeeded: line(missing.filter((m) => (m.kind ?? 'absent') === 'absent'), copy.answerStillNeeded),
+      cannotPrice: line(missing.filter((m) => m.kind === 'unrepresentable'), copy.answerCannotPrice),
+    }
   })()
 
   const total = draft.enteredAccounts.reduce((s, a) => s + (a.valueToday || 0), 0)
@@ -321,7 +343,13 @@ export function AssumptionPanel({
         : draft.annualSpendingReal
 
   return (
-    <ControlSheet open={open} title={copy.assumptionTitle} onClose={onClose} announcerRef={announcerRef}>
+    <ControlSheet
+      open={open}
+      title={copy.assumptionTitle}
+      onClose={onClose}
+      announcerRef={announcerRef}
+      restoreFallback={restoreFallback}
+    >
       <p className="control-sheet__intro">{copy.assumptionIntro}</p>
 
       {/* The live answer echo — a RESERVED box (insight 035: sized to its tallest arm in
@@ -337,10 +365,23 @@ export function AssumptionPanel({
                 hue-only change — the reader is color blind); catastrophe-gated by name. */}
             {worsened && <p className="ap-echo__shift">{copy.assumptionTruerPicture}</p>}
           </>
-        ) : answer.kind === 'inputs-incomplete' ? (
+        ) : answer.kind === 'pending' ? (
+          // The crunch, seen from inside the modal (reachable since the dead-end repair — the panel
+          // stays open while the first compute runs): the strip's own working line, never the quiet
+          // "edits flow into your answer" over an answer that is not there yet.
+          <p className="ap-echo__lead ap-echo__lead--muted">{copy.answerPending}</p>
+        ) : answer.kind === 'inputs-incomplete' || (answer.kind === 'idle' && missing.length > 0) ? (
+          // The incomplete arm covers BOTH incomplete homes: the post-first-resolve demotion and the
+          // pre-first-resolve idle dead end (2026-09-03) — the panel is the AT user's only readout here.
           <>
-            <p className="ap-echo__lead ap-echo__lead--muted">{copy.answerIncomplete}</p>
-            <p className="ap-echo__dollar">{missingLine}</p>
+            <p className="ap-echo__lead ap-echo__lead--muted">{missingEcho.lead}</p>
+            {missingEcho.stillNeeded !== null && <p className="ap-echo__dollar">{missingEcho.stillNeeded}</p>}
+            {missingEcho.cannotPrice !== null && (
+              <>
+                <p className="ap-echo__dollar">{missingEcho.cannotPrice}</p>
+                <p className="ap-echo__lead ap-echo__lead--muted">{copy.answerCannotPriceTail}</p>
+              </>
+            )}
           </>
         ) : (
           <p className="ap-echo__lead ap-echo__lead--muted">{copy.assumptionEchoQuiet}</p>

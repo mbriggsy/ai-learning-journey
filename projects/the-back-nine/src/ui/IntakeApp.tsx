@@ -717,7 +717,19 @@ export default function IntakeApp({
     // withholds its whole actions row there: an affordance we don't want used during the
     // crunch shouldn't exist (Briggsy, 2026-07-02). A compute-error is NOT computing — the
     // actions row (Review = fix the inputs) is that failure's remedy.
-    const computing = snapshot.answer.kind === 'idle' || snapshot.answer.kind === 'pending'
+    // ⚠️ `idle` IS TWO STATES, AND ONLY ONE IS THE CRUNCH (2026-09-03 — the 2026-08-20 intake walk's
+    // completed-intake dead end). Idle with NOTHING missing is the one-frame window between
+    // setPhase('result') and recompute's synchronous `pending` flip — still the crunch, and this
+    // keeps that frame byte-identical for every seed route, vault return and fit-gate arm. Idle WITH
+    // a missing required fact is a TERMINAL non-answer: memoryModel's recompute returns WITHOUT
+    // dispatching pre-first-resolve when a builder nulls, so nothing is ever "worked out" — and
+    // treating it as computing withheld the whole actions row, including the plan-ratified escape
+    // hatch (3-controls.md:251 "reachable even while the answer is indeterminate"), over a strip
+    // saying "Still needed: …" with NO door to supply it and nothing persisted. The 2026-07-02
+    // ruling's rationale (the crunch + the remedy carve-out) is honored; its letter ("idle") is
+    // read as the crunch it meant. Flagged for Briggsy's audit at product cadence, not parked.
+    const computing =
+      snapshot.answer.kind === 'pending' || (snapshot.answer.kind === 'idle' && missing.length === 0)
     return (
       <Result
         onReview={review}

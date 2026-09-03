@@ -26,13 +26,20 @@ vi.mock('../Result', () => ({
     backup,
     onReview,
     stalenessNote = false,
+    computing,
   }: {
     save: { kind: string }
     backup?: { onSave: () => void }
     onReview: () => void
     stalenessNote?: boolean
+    computing?: boolean
   }) => (
-    <div data-save-kind={save.kind} data-backup={backup ? 'offered' : 'none'} data-staleness={String(stalenessNote)}>
+    <div
+      data-save-kind={save.kind}
+      data-backup={backup ? 'offered' : 'none'}
+      data-staleness={String(stalenessNote)}
+      data-computing={String(computing)}
+    >
       result stub
       <button type="button" onClick={onReview}>
         review-stub
@@ -286,5 +293,31 @@ describe('IntakeApp — the completed-intake period disarm (the council-ratified
     await screen.findByText('result stub')
     fireEvent.click(screen.getByRole('button', { name: 'review-stub' }))
     expect(screen.getByText('flow stub')).toHaveAttribute('data-period-confirmed', 'false')
+  })
+})
+
+describe('IntakeApp — the completed-intake dead end (2026-08-20 walk finding 1, build half)', () => {
+  // The recompute is mocked (nothing ever resolves), so the answer stays `idle` after completion —
+  // which is exactly the two-faced frame under test: idle WITH a missing required fact is a terminal
+  // non-answer and must NOT read as computing (the actions row + the escape hatch render); idle with
+  // NOTHING missing is the crunch window and must (the row stays withheld, byte-identical).
+  it('a completed intake with ONE gated fact blank (the retiree’s stop-age) is NOT computing — the row and its door render over the "Still needed" strip', async () => {
+    const [you, spouse] = DEV_SEEDS.retired.people
+    appModel.update(() => ({
+      ...DEV_SEEDS.retired,
+      people: [you, { ...spouse, workStatus: 'retired' as const, retirementAge: undefined }],
+    }))
+    render(<IntakeApp />)
+    fireEvent.click(screen.getByRole('button', { name: 'complete-stub' }))
+    const stub = await screen.findByText('result stub')
+    expect(stub).toHaveAttribute('data-computing', 'false')
+  })
+
+  it('a completed intake with NOTHING missing and nothing yet resolved IS computing — the crunch frame is untouched (kills the "always false" mutant)', async () => {
+    appModel.update(() => DEV_SEEDS.retired)
+    render(<IntakeApp />)
+    fireEvent.click(screen.getByRole('button', { name: 'complete-stub' }))
+    const stub = await screen.findByText('result stub')
+    expect(stub).toHaveAttribute('data-computing', 'true')
   })
 })

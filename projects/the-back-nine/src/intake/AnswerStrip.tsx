@@ -49,8 +49,7 @@ function FactBlock({
   readonly tailText: string
 }) {
   if (facts.length === 0) return null
-  const names = [...new Set(facts.map((m) => copy[m.labelKey]))]
-  const shown = names.slice(0, 3)
+  const { shown, more } = missingFactNames(facts)
   return (
     <>
       <p className="strip-secondary">
@@ -62,9 +61,9 @@ function FactBlock({
             {name}
           </span>
         ))}
-        {names.length > shown.length && (
+        {more > 0 && (
           <span className="strip-fact" key="__more">
-            {slots.factsMore(names.length - shown.length)}
+            {slots.factsMore(more)}
           </span>
         )}
       </p>
@@ -79,6 +78,15 @@ function FactBlock({
  *  the tool cannot keep — so the lead states the withhold instead. A MIXED household keeps the
  *  keep-going lead: it has real facts left to enter, and the unrepresentable block below says
  *  plainly which part is out of reach. */
+/** The names a block of missing facts shows — deduped, the first three, the rest as a count. ONE
+ *  producer for every surface that lists missing facts (the strip's FactBlock and the assumptions
+ *  panel's aria-modal echo), so the two can never disagree on what "N more" hides. */
+export function missingFactNames(facts: readonly MissingFact[]): { readonly shown: readonly string[]; readonly more: number } {
+  const names = [...new Set(facts.map((m) => copy[m.labelKey]))]
+  const shown = names.slice(0, 3)
+  return { shown, more: names.length - shown.length }
+}
+
 export function blockedLeadFor(missing: readonly MissingFact[]): string {
   const anyActionable = missing.some((m) => (m.kind ?? 'absent') === 'absent')
   const anyWithheld = missing.some((m) => m.kind === 'unrepresentable')

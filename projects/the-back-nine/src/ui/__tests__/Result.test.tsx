@@ -4,6 +4,8 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent } from '@testing-library/react'
 import { Result, type ResultSaveProp } from '../Result'
 import { copy } from '../copy'
+import { appModel } from '../appModel'
+import { DEV_SEEDS } from '../devSeeds'
 
 /**
  * The Result screen's SAVE SLOT — the six-state rendering contract over the resultSave.ts
@@ -12,7 +14,11 @@ import { copy } from '../copy'
  * independent of the hero's state. Key laws: the pending line is a status (never blocks),
  * the refusal is an alert WITH a retry, and 'none' renders no slot at all (no claim).
  */
-afterEach(cleanup)
+const pristineDraft = appModel.getSnapshot().draft
+afterEach(() => {
+  cleanup()
+  appModel.update(() => pristineDraft) // the module singleton must not leak between tests
+})
 
 const renderSave = (save: ResultSaveProp) => render(<Result onReview={vi.fn()} save={save} computing={false} />)
 
@@ -24,14 +30,17 @@ describe('Result — the actions row is withheld while the answer computes', () 
     expect(screen.queryByText(copy.savedBadge)).toBeNull()
   })
 
-  it('once computing clears, the row appears as one beat — slot rendered; the Assumptions door still gates on a resolved-or-demoted answer (idle here ⇒ withheld)', () => {
+  it('once computing clears, the row appears as one beat — slot rendered; the Assumptions door still gates on a resolved-or-demoted answer (idle with NOTHING missing ⇒ withheld)', () => {
     // U12 (F4): the Review button left this row — the guided re-walk lives inside the
     // AssumptionPanel now (resultAssumptionsDoor.test.tsx owns the door + re-walk coverage).
+    // A COMPLETE draft: idle here is the one-frame crunch window (nothing missing, nothing yet
+    // dispatched), so the hatch offers no door — same law as its four siblings. This pin used to
+    // run on the PRISTINE draft (every fact missing), which is the completed-intake DEAD END, not
+    // the crunch — resultAssumptionsDoor.test.tsx now pins that frame the other way (2026-09-03).
+    appModel.update(() => DEV_SEEDS.retired)
     render(<Result onReview={vi.fn()} save={{ kind: 'clean' }} computing={false} />)
     expect(document.querySelector('.result-actions')).not.toBeNull()
     expect(screen.getByText(copy.savedBadge)).toBeInTheDocument()
-    // The module appModel is untouched here (answer 'idle', pre-first-resolve): the hatch
-    // gate offers no door on an idle non-answer — same law as its four siblings.
     expect(screen.queryByRole('button', { name: copy.assumptionDoorCta })).toBeNull()
   })
 })

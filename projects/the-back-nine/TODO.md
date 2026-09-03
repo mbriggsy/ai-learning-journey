@@ -77,7 +77,46 @@ a build; it SHIPPED the same day (below). Findings 1, 3, 4, 5 each carry their o
 stand.** Full detail + anchors mid-walk were verified live; household: mixed (worker + retiree, both
 pre-65), NC, 4 accounts, at 1536×791. Desktop only — phone intake is UNWALKED.
 
-1. **🔴 THE COMPLETED-INTAKE DEAD END, compounded by zero persistence.** Leave ONE
+1. ✅ **THE DOOR IS BACK — BUILD HALF SHIPPED 2026-09-03; the door's IDEAL shape stays yours
+   (register, Tier 3).** The dead end was a CONFLATION, not a missing surface: `IntakeApp` read
+   `computing = idle || pending`, but pre-first-resolve a missing required fact leaves the answer
+   `idle` FOREVER (memoryModel's recompute returns without dispatching), so the "Working it out…"
+   withhold hid the plan-ratified escape hatch (3-controls.md:251 "reachable even while the answer is
+   indeterminate") over a strip saying "Still needed: …". Now `computing = pending || (idle && nothing
+   missing)` — the one-frame crunch window stays byte-identical — the hatch gate gains the
+   idle-with-missing arm, and the panel's aria-modal echo names the missing facts there (it used to
+   read "Edits here flow straight into your answer." — the strip is behind the modal). **Witnessed
+   live at 1536×791 on the walk's exact household:** Sam's stop-age left blank → "Still needed: The
+   age work stopped" with "The assumptions behind this" rendered → open → echo names it → Sam's
+   stop-age row filled → the answer resolved straight to FINAL ("On the line · 7 of 10") with every
+   door back. Also witnessed and FIXED in-pass: the repair flips `computing` for one beat, the
+   actions row remounts, and the panel's sheet had no `restoreFallback` (every sibling sheet did) —
+   Close stranded focus on <body>; it now lands on the re-born door. Three planted mutants killed
+   (computing revert · hatch arm · echo arm) + a fourth for the fallback; 3318 tests. ⚠️ **Flagged
+   for your audit, not parked:** this reads the LETTER of your 2026-07-02 "remove the opportunity"
+   ruling (idle/pending ⇒ withheld) against its RATIONALE (the crunch + the remedy carve-out) —
+   reversible, one frame.
+   ⚑ **THE UNIT-BOUNDARY REVIEW (5 Opus lenses, 18 findings verified) — ONE P1 FIXED IN-PASS, FOUR
+   RESIDUALS FILED.** The P1: the panel's echo was KIND-BLIND — it filed every missing fact under
+   "Still needed", and the door I restored made that frame reachable on a household whose only
+   blocker is UNREPRESENTABLE (`?seed=datesolo`: the retiree buys their own pre-65 coverage while the
+   other works; the two-HSA household) — "Still needed" over a fact nothing typed can clear, inside an
+   aria-modal, contradicting the strip's honest withhold behind it: the exact sin copy.ts legislates
+   against by name. The echo now reads the kind through the strip's own producers (`blockedLeadFor`
+   + a shared `missingFactNames`), each kind on its own line only when non-empty, and gained the
+   `pending` arm the repair beat newly reaches. Pinned on `datesolo`, a two-HSA draft, a MIXED
+   draft (both blocks stay), and pending; two mutants killed. **Residuals, register Tier 2 "The
+   dead-end repair beat" — all pilot, each with its exact fix.**
+   **STILL YOURS (register, Tier 3 — "The completed-intake door's ideal shape"):** the quiet hatch is
+   what shipped; a primary "finish the missing fact" CTA, or re-entering intake AT the missing step
+   (needs a new IntakeFlow start-at-step prop — `flow.tsx` has no API), are the alternatives. The
+   finished-frame strip lead "Your answer takes shape as you go." is a TONE call (Caddie-clearable) —
+   NOT parked by the "copy pass is OFF" line below, which belongs to the 2026-08-14 backup-door finding.
+   The zero-persistence half is the register's "couple's own data" entry (cross-referenced there), a
+   security-posture decision — never plaintext storage without a ruling.
+   <details><summary>original finding — kept for the reasoning</summary>
+
+   **🔴 THE COMPLETED-INTAKE DEAD END, compounded by zero persistence.** Leave ONE
    conditionally-revealed fact blank (allowed — every step is non-blocking and advances; witnessed:
    the retired spouse's stop-age, whose field appears only after the "Already retired" radio,
    `questions.tsx:191-197`) and finish intake: the handoff frame renders the answer strip ("Still
@@ -87,6 +126,7 @@ pre-65), NC, 4 accounts, at 1536×791. Desktop only — phone intake is UNWALKED
    unreachable — and nothing persists pre-save, so the only visible exit (refresh) destroys all ~12
    steps of typed data. Missing-fact arm: `intakeMap.ts:166-167`. **The door's shape is a framing
    call — his or council's.**
+   </details>
 2. ✅ **SHIPPED 2026-09-03 — a typed split that does not make 100 BLOCKS "Add this account" with
    the child's own alert on every leg; nothing is discarded.** `AllocationEntry` reports the three-way
    state (`valid | blank | invalid`) to the parent on every change (insight 059's shape — the

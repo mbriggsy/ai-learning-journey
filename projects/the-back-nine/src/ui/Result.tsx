@@ -313,11 +313,17 @@ export function Result({
   // post-first-resolve `inputs-incomplete` demotion, the post-first-resolve fallback arms
   // (a date input-failure / an indeterminate headline — the strip is showing, the hero fell
   // back), AND compute-error (its comment above names editing inputs as the remedy — a
-  // remedy needs its door; the old Review button was unconditional here). While computing
-  // (pre-first-resolve) it is withheld with the whole row, the existing law.
+  // remedy needs its door; the old Review button was unconditional here), AND the pre-first-
+  // resolve idle frame with a missing required fact (the completed-intake dead end — see the arm
+  // below). While computing — `pending`, or idle with NOTHING missing (IntakeApp's `computing`) —
+  // it is withheld with the whole row, the existing law.
   const hatchReachable =
     focusKey !== undefined ||
     snapshot.answer.kind === 'inputs-incomplete' ||
+    // The completed-intake dead end (2026-09-03): pre-first-resolve, a missing required fact
+    // leaves the answer idle FOREVER (no dispatch) — the strip names the fact, and this panel's
+    // rows are the only way to supply it. Idle with nothing missing stays withheld (the crunch).
+    (snapshot.answer.kind === 'idle' && missing.length > 0) ||
     snapshot.answer.kind === 'compute-error' ||
     (elevated.kind === 'fallback' &&
       (snapshot.answer.kind === 'headline' || snapshot.answer.kind === 'date'))
@@ -759,6 +765,9 @@ export function Result({
           onReview()
         }}
         onClose={() => setAssumptionsOpen(false)}
+        // The panel's own trigger is the landmark — re-queried at close, because the dead-end
+        // repair remounts the actions row while the panel is open (see AssumptionPanelProps).
+        restoreFallback={restoreToAssumptionsDoor}
       />
       {/* §S2 — the GoalPicker: the Tier-2 goal choice that PRECEDES the solve. Reuses the ControlSheet
           focus contract verbatim; a confirmed pick writes `chosenGoal` + dispatches. The via-panel

@@ -4,8 +4,9 @@ import { intakeSteps } from '@intake/questions'
 import { AnswerStrip } from '@intake/AnswerStrip'
 import { isDateRoute, missingRequiredFacts } from '@intake/intakeMap'
 import { validateDraft, type FieldPath } from '@intake/sanity'
+import { subscribeUnsavedBuffers, unsavedBuffersHeld } from '@intake/unsavedBuffer'
 import type { SolverRunFingerprint } from '@engine/validation/solverRunFingerprint'
-import type { ScenarioDraft } from '@store/memoryModel'
+import { draftIdentityKey, type ScenarioDraft } from '@store/memoryModel'
 import { deriveSavedRecommendationStatus, type SavedRecommendationStatus } from '@store/savedRecommendation'
 import { mintSavedRecommendation } from '@store/savedRecommendationMint'
 import type { SavedRecommendationV3 } from '@shared/model'
@@ -14,8 +15,9 @@ import { Result } from './Result'
 import { scenarioFromDraft, currentEpochDay } from './scenarioFromDraft'
 import { draftFromScenario } from './draftFromScenario'
 import { deriveRecommendationSave, type RecommendationSaveRefusal } from './recommendationSaveView'
-import { agedBalancesYearFor, deriveResultSave, persistSeedFor, type PersistState } from './resultSave'
+import { agedBalancesYearFor, deriveResultSave, persistSeedFor, type PersistState, unsavedWorkPending } from './resultSave'
 import { describeSaveFailure } from './unlockCopy'
+import { useUnloadGuard } from './unloadGuard'
 import { PendingPanel } from './PendingPanel'
 import { ReEntry } from './ReEntry'
 import { composeReentry, type ReentryView } from './reentryChrome'
@@ -193,6 +195,44 @@ export default function IntakeApp({
   // The Save beat appears only when the draft is genuinely persistable (an indeterminate answer
   // can reach the result screen — the gate, not the screen, decides saveability).
   const saveReady = useMemo(() => scenarioFromDraft(snapshot.draft), [snapshot.draft])
+  // THE UNSAVED-WORK GUARD (2026-09-03 — the 2026-08-20 walk's "couple's own data" finding, the
+  // honest half). Nothing persists until Save (the D1 law, docs/plans/2-first-answer.md:145), so a
+  // tab close / refresh mid-intake silently discarded every typed step. This WARNS through the
+  // browser's own beforeunload dialog (ui/unloadGuard.ts — which also HOLDS the PWA update-apply
+  // gate for the same window, so "Refresh now" refuses instead of racing the dialog) and writes
+  // nothing. It arms on "would a reload lose typed work?", read from TWO derived operands and never
+  // a touched set (IntakeFlow's `touched` is a VALIDATION set marked on every attempt-to-advance
+  // and it dies on the flip to 'result', where the biggest loss window — a complete, never-saved
+  // household — lives):
+  //  · the DRAFT — resultSave.ts `unsavedWorkPending`, disk-derived: with no vault, "has the draft
+  //    moved from its mount baseline"; with one, the dirty badge's own compare against the LAST
+  //    COMMITTED model (so dialog and badge can never disagree);
+  //  · the OPEN ENTRY BUFFERS — intake/unsavedBuffer.ts: the atomic forms (an account, an income
+  //    stream, the staged budget, the typed Roth plan) hold a whole answer in component state until
+  //    an explicit commit, invisible to the draft compare — over a saved-and-clean vault that is the
+  //    returning household's entire session, and the unit review found an eight-field account
+  //    reloading away silently there. Each form holds while its state differs from its seed.
+  // No phase gate: both operands are false on their own in every draft-free phase and true exactly
+  // where typed work is at risk, including SaveFlow's pre-commit steps; the draft operand disarms
+  // the instant the ceremony COMMITS (SaveFlow's `onCommitted`, below), after which SaveFlow's
+  // export-step guard is the single owner of the post-commit window. The baseline is the draft at
+  // mount — re-pointed at a DEV `?seed=` install (it applies in a post-mount effect; without the
+  // re-point every seed route, i.e. the Caddie walk and `pnpm verify:fit`, would arm on landing). A
+  // hydrated vault needs no baseline write: persist flips to 'saved' and the compare goes disk-side.
+  // Chromium shows the dialog only after sticky user activation — a programmatic-only draft never
+  // sees one (not a bug). The same-tab healthcare.gov link is target="_blank" (ExternalLink.tsx).
+  // ACCEPTED RESIDUALS, both bounded to ONE field: (a) text fields commit on blur (fields.tsx), so
+  // a single un-blurred field's in-progress text is in neither operand; (b) the listener registers
+  // in a passive effect one scheduler task after the commit that first arms it, so the reload-button
+  // click that blurs the very FIRST committed field of a session can beat the registration. Any
+  // second field means the first is in the draft and the guard is up.
+  const baselineRef = useRef<ScenarioDraft>(snapshot.draft)
+  const draftKey = useMemo(() => draftIdentityKey(snapshot.draft), [snapshot.draft])
+  const buffersHeld = useSyncExternalStore(subscribeUnsavedBuffers, unsavedBuffersHeld)
+  const guarding =
+    unsavedWorkPending(persist, saveReady, draftKey !== draftIdentityKey(baselineRef.current)) ||
+    buffersHeld > 0
+  useUnloadGuard(guarding)
   /**
    * U17 §S5 — THE REMEMBERED RECOMMENDATION'S TRICHOTOMY, DERIVED ONCE PER FRAME.
    *
@@ -509,6 +549,7 @@ export default function IntakeApp({
       const draft = resolveDevSeed(seed)
       if (draft === null || cancelled) return
       appModel.update(() => draft)
+      baselineRef.current = draft // the seed IS the baseline — a seed route lands with nothing to lose
       setDevSeedApplied(true)
       await revealAndSharpen()
     })
@@ -671,10 +712,13 @@ export default function IntakeApp({
             }
             setPhase('result')
           }}
+          // Record what the ceremony COMMITTED the instant it commits — the same render-captured
+          // scenario passed as its prop (the save phase renders no edit surface, so it cannot have
+          // drifted). AT the commit, not at the Done tap: the unsaved-work guard above reads
+          // `persist`, and between firstSave landing and Done the household sits on "Your plan is
+          // saved" — a beforeunload dialog there would be alarm-when-fine, a lie in the safe direction.
+          onCommitted={() => setPersist({ kind: 'saved', scenario: saveReady.scenario })}
           onComplete={() => {
-            // Record what the ceremony COMMITTED — the same render-captured scenario passed as
-            // its prop (the save phase renders no edit surface, so it cannot have drifted).
-            setPersist({ kind: 'saved', scenario: saveReady.scenario })
             // The record rode that scenario to disk, so the recommendation's save LANDED. It is
             // recorded as an EVENT rather than left to a view transition because this whole subtree
             // unmounts across the ceremony (the branch above returns before Result renders), so

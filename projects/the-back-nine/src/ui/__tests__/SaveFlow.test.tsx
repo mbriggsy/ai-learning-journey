@@ -56,6 +56,13 @@ function submitPassphraseStep(labels: { field: string; confirm: string }, value:
   fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
 }
 
+/** The leave-page probe: dispatch the browser's own event, read whether a handler claimed it. */
+const wouldWarn = (): boolean => {
+  const ev = new Event('beforeunload', { cancelable: true })
+  window.dispatchEvent(ev)
+  return ev.defaultPrevented
+}
+
 /** Drive the real ceremony to the point where firstSave has been dispatched (securing). */
 async function reachSecuring() {
   submitPassphraseStep({ field: copy.passphraseLabel, confirm: copy.passphraseConfirmLabel }, DAILY)
@@ -68,33 +75,47 @@ describe('SaveFlow — the Fork B update-apply hold across commit→export', () 
   it('holds through securing AND export, and releases on unmount (never a leaked hold)', async () => {
     let commit: (v: unknown) => void = () => {}
     firstSave.mockImplementation(() => new Promise((res) => (commit = res)))
-    const { unmount } = render(<SaveFlow scenario={scenario()} onCancel={vi.fn()} onComplete={vi.fn()} />)
+    const onCommitted = vi.fn()
+    const { unmount } = render(
+      <SaveFlow scenario={scenario()} onCancel={vi.fn()} onCommitted={onCommitted} onComplete={vi.fn()} />,
+    )
 
     // Pre-ceremony baseline: the credential steps hold nothing (a reload there loses only
-    // un-committed form input — beforeunload's scope, not the toast's).
+    // un-committed form input — beforeunload's scope, not the toast's). SaveFlow's OWN leave-page
+    // guard is not up here either — pre-commit typing is IntakeApp's guard's window, not this one's.
     expect(await readyToApplyUpdate(idleGate)).toBe(true)
+    expect(wouldWarn()).toBe(false)
 
     await reachSecuring()
     // Securing: the KDF derive runs before its write is enqueued — the hold (not the write
     // signal) is what refuses the gate here.
     expect(await readyToApplyUpdate(idleGate)).toBe(false)
 
+    expect(onCommitted).not.toHaveBeenCalled() // nothing on disk yet — the caller's guard stays armed
     commit({ ok: true })
     await screen.findByRole('heading', { name: copy.exportHeading })
-    // Export: vault committed, backup not yet saved — the pure-read window stays held.
+    // The commit is reported AT the commit (before the export step), so the caller's unsaved-work
+    // guard disarms exactly when the disk holds the plan — and SaveFlow's own export guard takes over.
+    expect(onCommitted).toHaveBeenCalledTimes(1)
+    // Export: vault committed, backup not yet saved — the pure-read window stays held, AND the
+    // export step's leave-page dialog is armed (the one window this component guards).
     expect(await readyToApplyUpdate(idleGate)).toBe(false)
+    expect(wouldWarn()).toBe(true)
 
     unmount()
     expect(await readyToApplyUpdate(idleGate)).toBe(true)
+    expect(wouldWarn()).toBe(false) // the listener leaves with the component — never a leaked dialog
   })
 
   it('releases the hold on the ERROR exit — a failed save must not wedge the update prompt forever', async () => {
     firstSave.mockResolvedValue({ ok: false, reason: 'quota' })
-    render(<SaveFlow scenario={scenario()} onCancel={vi.fn()} onComplete={vi.fn()} />)
+    const onCommitted = vi.fn()
+    render(<SaveFlow scenario={scenario()} onCancel={vi.fn()} onCommitted={onCommitted} onComplete={vi.fn()} />)
 
     await reachSecuring()
     const alert = await screen.findByRole('alert')
     expect(alert.textContent).toBe(copy.saveErrorQuota)
+    expect(onCommitted).not.toHaveBeenCalled() // a refused save never reports a commit
     expect(await readyToApplyUpdate(idleGate)).toBe(true)
   })
 })

@@ -2188,7 +2188,7 @@ export function scenarioIdentityKey(scenario: ScenarioV3): string {
 /** {@link scenarioIdentityKey}'s recursive worker: plain objects rebuild with SORTED keys, arrays
  *  keep element order, every primitive carries a TYPE PREFIX so a number, a numeric-looking
  *  string and a boolean can never share an encoding at the same position. */
-function canonicalIdentityToken(v: unknown): string {
+export function canonicalIdentityToken(v: unknown): string {
   if (v === null) return 'N'
   if (v === undefined) return 'U'
   switch (typeof v) {
@@ -2213,7 +2213,7 @@ function canonicalIdentityToken(v: unknown): string {
       // never carry one — reaching here means a caller handed us something that never came off
       // disk. Loud, never a silently-equal encoding.
       throw new Error(
-        `[scenarioIdentityKey] non-serializable value of type ${typeof v} — a disk identity must be plain data`,
+        `[canonicalIdentityToken] non-serializable value of type ${typeof v} — an identity key is over plain data only (scenarioIdentityKey, draftIdentityKey, bufferMoved)`,
       )
   }
 }

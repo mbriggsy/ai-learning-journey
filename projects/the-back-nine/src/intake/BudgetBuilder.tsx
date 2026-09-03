@@ -57,6 +57,7 @@ import { anchorTarget } from '@budget/budgetToSpending'
 import { useLiveAnnouncer, focusHeading } from './a11y'
 import { formatMoney } from './fields'
 import { BudgetLineItem } from './BudgetLineItem'
+import { bufferMoved, useUnsavedBufferHold } from './unsavedBuffer'
 import './sheetShell.css'
 import './budget.css'
 
@@ -138,6 +139,12 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose, variant
   const [attempted, setAttempted] = useState(false)
   const dirtyRef = useRef(false)
   const items = useMemo(() => rows.map((r) => r.item), [rows])
+  // THE OPEN-BUFFER HOLD (unsavedBuffer.ts): staged rows that differ from the governing budget are
+  // typed work the draft cannot see until Apply. Gated on `open || dirty` because close-without-
+  // apply PRESERVES the rows (the open-edge rule above) — still work — while a closed, clean sheet
+  // may hold rows the next open will re-seed, which are not. `dirtyRef` is written in the same
+  // handlers that set the rows, so the render that follows reads it current.
+  useUnsavedBufferHold((open || dirtyRef.current) && bufferMoved(items, draft.budget ?? []))
 
   // The blocked-Apply announce region (clear-after-announce — the one live-region idiom).
   // The node lives INSIDE the open-gated portal, so it mounts only when the sheet opens —

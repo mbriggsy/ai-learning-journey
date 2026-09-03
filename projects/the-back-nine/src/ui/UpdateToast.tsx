@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { copy } from './copy'
 import { readyToApplyUpdate } from './updateGate'
@@ -29,6 +29,11 @@ export function UpdateToast() {
   // not fire a second skipWaiting. A ref (not state) — it must survive across the await
   // without its own re-render, and it is reset if we end up deferring.
   const applyingRef = useRef(false)
+  // A refused tap SAYS so (2026-09-03): the gate now also holds across the whole unsaved-work
+  // window (unloadGuard.ts), which can be a long intake — a live-looking "Refresh now" that does
+  // nothing and says nothing is the silent dead-button shape the account form was just cured of.
+  // The held line replaces the ready line until the next tap; "Later" resets it with the prompt.
+  const [held, setHeld] = useState(false)
 
   const apply = (): void => {
     if (applyingRef.current) return
@@ -41,8 +46,10 @@ export function UpdateToast() {
           setNeedRefresh(false)
           void updateServiceWorker(true)
         } else {
-          // A write is still in flight OR the Save ceremony is mid commit→export — leave the
-          // prompt up; the user re-clicks once the ceremony (or write) is done.
+          // A write is still in flight, the Save ceremony is mid commit→export, OR typed work is
+          // unsaved (the leave-page guard is armed) — leave the prompt up, say why, and let the
+          // user re-tap once it is saved.
+          setHeld(true)
           applyingRef.current = false
         }
       } catch {
@@ -59,11 +66,18 @@ export function UpdateToast() {
     <div className="update-toast" role="status" aria-live="polite">
       {needRefresh && (
         <>
-          <span className="update-toast__text">{copy.updateReady}</span>
+          <span className="update-toast__text">{held ? copy.updateHeld : copy.updateReady}</span>
           <button type="button" className="update-toast__action" onClick={apply}>
             {copy.updateReload}
           </button>
-          <button type="button" className="update-toast__dismiss" onClick={() => setNeedRefresh(false)}>
+          <button
+            type="button"
+            className="update-toast__dismiss"
+            onClick={() => {
+              setHeld(false)
+              setNeedRefresh(false)
+            }}
+          >
             {copy.updateLater}
           </button>
         </>

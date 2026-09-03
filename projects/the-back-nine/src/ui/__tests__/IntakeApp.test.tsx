@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
-import { cleanup, render, screen, fireEvent } from '@testing-library/react'
+import { act, cleanup, render, screen, fireEvent } from '@testing-library/react'
 
 /**
  * IntakeApp's read-only GLUE (Fork C ii) — the one link neither seam test reaches:
@@ -28,7 +28,7 @@ vi.mock('../Result', () => ({
     stalenessNote = false,
     computing,
   }: {
-    save: { kind: string }
+    save: { kind: string; onKeep?: () => void }
     backup?: { onSave: () => void }
     onReview: () => void
     stalenessNote?: boolean
@@ -44,11 +44,31 @@ vi.mock('../Result', () => ({
       <button type="button" onClick={onReview}>
         review-stub
       </button>
+      {save.kind === 'first' && (
+        <button type="button" onClick={save.onKeep}>
+          keep-stub
+        </button>
+      )}
       {backup && (
         <button type="button" onClick={backup.onSave}>
           save-backup-stub
         </button>
       )}
+    </div>
+  ),
+}))
+// SaveFlow stubbed to its two callbacks so the unsaved-work guard's ceremony hand-off is drivable
+// without the crypto graph: commit-stub = firstSave landed (onCommitted); done-stub = the Done tap.
+vi.mock('../SaveFlow', () => ({
+  SaveFlow: ({ onCommitted, onComplete }: { onCommitted: () => void; onComplete: () => void }) => (
+    <div>
+      save stub
+      <button type="button" onClick={onCommitted}>
+        save-commit-stub
+      </button>
+      <button type="button" onClick={onComplete}>
+        save-done-stub
+      </button>
     </div>
   ),
 }))
@@ -91,6 +111,9 @@ import { appModel } from '../appModel'
 import { scenarioFromDraft } from '../scenarioFromDraft'
 import { DEV_SEEDS } from '../devSeeds'
 import { copy } from '../copy'
+import { readyToApplyUpdate } from '../updateGate'
+import { holdUnsavedBuffer } from '@intake/unsavedBuffer'
+import type { ScenarioDraft } from '@store/memoryModel'
 
 // A complete, persistable household — the same fixture the seeds prove against the real engine.
 const ready = scenarioFromDraft(DEV_SEEDS.retired)
@@ -319,5 +342,132 @@ describe('IntakeApp — the completed-intake dead end (2026-08-20 walk finding 1
     fireEvent.click(screen.getByRole('button', { name: 'complete-stub' }))
     const stub = await screen.findByText('result stub')
     expect(stub).toHaveAttribute('data-computing', 'true')
+  })
+})
+
+describe('IntakeApp — the unsaved-work guard (beforeunload warns, never persists)', () => {
+  // The probe: dispatch the browser's own event and read whether a handler claimed it. jsdom fires
+  // no dialog, so `defaultPrevented` IS the observable (Playwright auto-accepts beforeunload when no
+  // dialog listener is registered, so an e2e can never see it either).
+  const wouldWarn = () => {
+    const ev = new Event('beforeunload', { cancelable: true })
+    window.dispatchEvent(ev)
+    return ev.defaultPrevented
+  }
+  const bump = (d: ScenarioDraft): ScenarioDraft => ({
+    ...d,
+    annualSpendingReal: (d.annualSpendingReal ?? 0) + 1_000,
+  })
+
+  it('a hydrated vault → Review with NO edit does not warn (the filed persist.kind arm would have been permanently disarmed here — the guard is disk-derived instead)', async () => {
+    render(<IntakeApp hydrateFromVault />)
+    await affirmGate()
+    await screen.findByText('result stub')
+    expect(wouldWarn()).toBe(false)
+    fireEvent.click(screen.getByRole('button', { name: 'review-stub' }))
+    await screen.findByText('flow stub')
+    expect(wouldWarn()).toBe(false) // re-entered intake over a saved plan, nothing typed yet
+  })
+
+  it('an edit that moves the answer off the disk WARNS; editing it back does not (the badge’s own compare)', async () => {
+    render(<IntakeApp hydrateFromVault />)
+    await affirmGate()
+    await screen.findByText('result stub')
+    const before = appModel.getSnapshot().draft
+    await act(async () => appModel.update(bump))
+    expect(wouldWarn()).toBe(true)
+    await act(async () => appModel.update(() => before))
+    expect(wouldWarn()).toBe(false)
+  })
+
+  it('a FRESH intake: untouched → no warning; typed → warns through completion; the ceremony’s COMMIT disarms it (not the Done tap)', async () => {
+    appModel.update(() => DEV_SEEDS.retired) // a complete draft, so the result screen offers the first-save CTA
+    render(<IntakeApp />)
+    await screen.findByText('flow stub')
+    expect(wouldWarn()).toBe(false) // the mount draft IS the baseline
+    await act(async () => appModel.update(bump))
+    expect(wouldWarn()).toBe(true) // typed work with no vault behind it
+    fireEvent.click(screen.getByRole('button', { name: 'complete-stub' }))
+    await screen.findByText('result stub')
+    expect(wouldWarn()).toBe(true) // the complete-but-never-saved result screen is the biggest loss window
+    fireEvent.click(screen.getByRole('button', { name: 'keep-stub' }))
+    await screen.findByText('save stub')
+    expect(wouldWarn()).toBe(true) // the pre-commit ceremony steps are still un-saved typing
+    fireEvent.click(screen.getByRole('button', { name: 'save-commit-stub' }))
+    expect(wouldWarn()).toBe(false) // the disk holds the plan — "Your plan is saved" must never warn
+    fireEvent.click(screen.getByRole('button', { name: 'save-done-stub' }))
+    await screen.findByText('result stub')
+    expect(wouldWarn()).toBe(false)
+  })
+
+  it('a DEV `?seed=` install re-points the baseline: the seed route lands with nothing to lose, and only a later edit arms it', async () => {
+    // The mount draft is deliberately NOT the seed, so the install MOVES the draft — without the
+    // re-point the guard would read that move as typed work and every seed route (the Caddie walk,
+    // `pnpm verify:fit`) would arm on landing.
+    appModel.update(() => bump(DEV_SEEDS.retired))
+    render(<IntakeApp seed="retired" />)
+    await screen.findByText('result stub') // the seed applied and revealed
+    expect(screen.getByText('result stub')).toHaveAttribute('data-save-kind', 'first')
+    expect(wouldWarn()).toBe(false)
+    await act(async () => appModel.update(bump))
+    expect(wouldWarn()).toBe(true)
+  })
+
+  it('a BOGUS `?seed=` key applies nothing and leaves the baseline at the mount draft — a later edit still arms', async () => {
+    appModel.update(() => DEV_SEEDS.retired)
+    render(<IntakeApp seed="not-a-real-seed-key" />)
+    await act(async () => {}) // flush the dynamic devSeeds import + its null early-return
+    await act(async () => {})
+    expect(wouldWarn()).toBe(false) // nothing applied, nothing moved
+    await act(async () => appModel.update(bump))
+    expect(wouldWarn()).toBe(true)
+  })
+
+  it('an OPEN ENTRY BUFFER arms the guard over a saved-and-clean vault — the draft compare alone cannot see it (the unit review’s hole)', async () => {
+    render(<IntakeApp hydrateFromVault />)
+    await affirmGate()
+    await screen.findByText('result stub')
+    expect(wouldWarn()).toBe(false) // disk matches the answer — the draft operand is quiet
+    let release: () => void = () => {}
+    await act(async () => {
+      release = holdUnsavedBuffer() // what AccountEntry / OtherIncomeEntry / BudgetBuilder / RothLever raise while their local state has moved
+    })
+    expect(wouldWarn()).toBe(true)
+    await act(async () => release())
+    expect(wouldWarn()).toBe(false)
+  })
+
+  it('an armed guard HOLDS the update-apply gate — "Refresh now" must refuse, never race the dialog after skipWaiting', async () => {
+    const idleGate = { isWriteInFlight: () => false, whenNoWriteInFlight: async () => {} }
+    appModel.update(() => DEV_SEEDS.retired)
+    render(<IntakeApp />)
+    await screen.findByText('flow stub')
+    expect(await readyToApplyUpdate(idleGate)).toBe(true)
+    await act(async () => appModel.update(bump))
+    expect(wouldWarn()).toBe(true)
+    expect(await readyToApplyUpdate(idleGate)).toBe(false) // one fact: armed ⇒ held
+    const before = appModel.getSnapshot().draft
+    await act(async () => appModel.update(() => ({ ...before, annualSpendingReal: DEV_SEEDS.retired.annualSpendingReal })))
+    expect(wouldWarn()).toBe(false)
+    expect(await readyToApplyUpdate(idleGate)).toBe(true)
+  })
+
+  it('a READ-ONLY tab still warns on an edit — the typing is lost either way, so the dialog tells the truth (the deliberate no-special-case)', async () => {
+    render(<IntakeApp hydrateFromVault readOnly />)
+    await affirmGate(true)
+    await screen.findByText('result stub')
+    expect(wouldWarn()).toBe(false)
+    await act(async () => appModel.update(bump))
+    expect(wouldWarn()).toBe(true)
+  })
+
+  it('unmounting an ARMED IntakeApp removes the listener — a route change or crash screen never inherits a stale dialog', async () => {
+    appModel.update(() => DEV_SEEDS.retired)
+    const { unmount } = render(<IntakeApp />)
+    await screen.findByText('flow stub')
+    await act(async () => appModel.update(bump))
+    expect(wouldWarn()).toBe(true)
+    unmount()
+    expect(wouldWarn()).toBe(false)
   })
 })

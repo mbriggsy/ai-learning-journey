@@ -18,6 +18,7 @@
  * ranking — the reader hears it here, not in a footnote).
  */
 import { useEffect, useRef, useState } from 'react'
+import { bufferMoved, useUnsavedBufferHold } from './unsavedBuffer'
 import type { RothConversionPlan, TwoArmControl } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { ControlPreview } from '@store/controlPreview'
@@ -50,6 +51,12 @@ interface PlanDraft {
 const startYearPassed = (p: PlanDraft, anchor: BandPlanClockAnchor): boolean =>
   p.startYear !== undefined && Number.isInteger(p.startYear) &&
   offsetHasPassed(p.startYear - anchor.startCalendarYear, anchor.yearsSincePlanBuilt)
+/** The plan the sheet opens with — the applied plan mapped back through the plan clock, or the
+ *  wall-year default. ONE producer for the open-edge re-seed and the unsaved-buffer compare. */
+const seedPlan = (applied: RothConversionPlan | undefined, anchor: BandPlanClockAnchor): PlanDraft =>
+  applied === undefined
+    ? { startYear: anchor.startCalendarYear + anchor.yearsSincePlanBuilt, years: 5 }
+    : { amount: applied.annualAmountReal, startYear: rothPlanStartFor(anchor, applied.startYearOffset).year, years: applied.years }
 const complete = (p: PlanDraft, anchor: BandPlanClockAnchor): RothConversionPlan | null =>
   p.amount !== undefined && Number.isFinite(p.amount) && p.amount > 0 &&
   p.startYear !== undefined && Number.isInteger(p.startYear) &&
@@ -114,14 +121,14 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
   useEffect(() => {
     if (!open) return
     resetForOpen()
-    setPlan(
-      applied === undefined
-        ? { startYear: savedAnchor.startCalendarYear + savedAnchor.yearsSincePlanBuilt, years: 5 }
-        : { amount: applied.annualAmountReal, startYear: rothPlanStartFor(savedAnchor, applied.startYearOffset).year, years: applied.years },
-    )
+    setPlan(seedPlan(applied, savedAnchor))
     // (deps deliberately narrow: open-edge re-seed only — the BudgetBuilder precedent; the
     // anchor cannot change while the sheet is open, same as the draft)
   }, [open])
+  // THE OPEN-BUFFER HOLD (unsavedBuffer.ts): a typed plan is component state until Apply, invisible
+  // to the draft-reading unsaved-work guard. Hold while the open sheet's plan differs from its seed
+  // (the same producer the re-seed uses); Apply/Remove close the sheet and release.
+  useUnsavedBufferHold(open && bufferMoved(plan, seedPlan(applied, savedAnchor)))
   // Preview on every COMPLETE committed plan (fields commit on blur — discrete, never per-drag).
   // A cleared/incomplete plan WITHDRAWS the comparison (request null) — a stale delta over no
   // entered plan is a confident readout of nothing (ultramode 2026-07-03).

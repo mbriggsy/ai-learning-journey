@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { agedBalancesYearFor, deriveResultSave, type PersistState } from '../resultSave'
+import { agedBalancesYearFor, deriveResultSave, unsavedWorkPending, type PersistState } from '../resultSave'
 import { scenarioFromDraft, currentEpochDay, type SaveReady } from '../scenarioFromDraft'
 import { DEV_SEEDS, doctorRecordHolds, doctorRecordSuperseded } from '../devSeeds'
 import { scenarioIdentity, type SavedRecommendationV3, type ScenarioV3 } from '@shared/model'
@@ -345,5 +345,44 @@ describe('deriveResultSave — a record the codec DROPS, in all three disk state
     // …and the direction is the record's, not the plan's: the same disk against the live operand
     // that KEPT that very record reads clean.
     expect(deriveResultSave({ kind: 'saved', scenario: onDisk }, kept)).toEqual({ kind: 'clean' })
+  })
+})
+
+describe('unsavedWorkPending — the beforeunload guard’s one decision (would a reload lose typed work?)', () => {
+  const saved: PersistState = { kind: 'saved', scenario: retired.scenario }
+  const failed: PersistState = { kind: 'save-failed', scenario: retired.scenario, errorKey: 'saveErrorQuota' }
+
+  it('no vault + a draft that has NOT moved from its baseline → nothing to lose', () => {
+    expect(unsavedWorkPending({ kind: 'unsaved' }, retired, false)).toBe(false)
+    expect(unsavedWorkPending({ kind: 'unsaved' }, notReady, false)).toBe(false)
+  })
+
+  it('no vault + a moved draft → armed, complete or not (a reload recovers nothing)', () => {
+    expect(unsavedWorkPending({ kind: 'unsaved' }, retired, true)).toBe(true)
+    expect(unsavedWorkPending({ kind: 'unsaved' }, notReady, true)).toBe(true)
+  })
+
+  it('a vault whose disk matches the current answer → nothing to lose, whatever the baseline says (disk-derived, never tracked)', () => {
+    expect(unsavedWorkPending(saved, retired, true)).toBe(false)
+    expect(unsavedWorkPending(saved, retired, false)).toBe(false)
+  })
+
+  it('a vault behind the current answer → armed (the same compare the dirty badge makes)', () => {
+    expect(unsavedWorkPending(saved, borderline, false)).toBe(true)
+  })
+
+  it('a vault + an INCOMPLETE answer → armed (hydrate refuses a non-ready model, so a later !ready can only be typing)', () => {
+    expect(unsavedWorkPending(saved, notReady, false)).toBe(true)
+  })
+
+  it('save-failed + an answer edited back to the disk → nothing to lose (alarm-when-fine is a lie in the safe direction)', () => {
+    expect(unsavedWorkPending(failed, retired, false)).toBe(false)
+    expect(unsavedWorkPending(failed, borderline, false)).toBe(true)
+  })
+
+  it('an in-flight re-save still holds the PREVIOUS commit on disk → armed until the write lands; the same answer → clean', () => {
+    const saving: PersistState = { kind: 'saving', scenario: retired.scenario }
+    expect(unsavedWorkPending(saving, borderline, false)).toBe(true)
+    expect(unsavedWorkPending(saving, retired, false)).toBe(false)
   })
 })

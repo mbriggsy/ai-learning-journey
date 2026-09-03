@@ -658,6 +658,25 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 `L` · **pilot** · filed 3× — `A45`, `A49`, `A53`
 
 - An interrupted intake loses the entire household — no draft persistence, no resume, and the tool promises "about five minutes"
+  - ✅ The WARN half shipped 2026-09-03: `IntakeApp` arms `beforeunload` on two derived operands —
+    the disk-derived "would a reload lose typed work?" (`resultSave.ts unsavedWorkPending`) OR an
+    open entry buffer (`intake/unsavedBuffer.ts`: AccountEntry, OtherIncomeEntry, the budget
+    builder, the Roth lever each hold while their local state differs from its seed) — through
+    `ui/unloadGuard.ts`, which pairs the dialog with the PWA update-apply hold so "Refresh now"
+    refuses (and says so, `copy.updateHeld`) instead of racing the dialog after skipWaiting; the
+    draft operand disarms the instant the ceremony commits (`SaveFlow onCommitted`).
+    Persistence/resume itself stays open here — a plaintext draft outside the encrypted vault is a
+    security-posture ruling, not a build.
+  - ⚑ Accepted residuals of the warn half (2026-09-03 review; each bounded, none a build without a
+    ruling): a single un-blurred field's in-progress text (blur-commit, fields.tsx) · the first
+    arming edit of a session can race the passive effect's listener registration when the
+    reload-button click is the blur (one field) · `memoryModel.ts ensureSeed()` mints the CRN seed
+    outside `notify()` — harmless today (every seed/vault carries one), a latent false-arm if a
+    seedless draft recomputes before typing (fix: mint through `update()`) · a read-only tab's
+    refusal remedy is a reload and an edit there arms the dialog on that very remedy — truthful,
+    noisy · the single-pick sheets (SequencingControl, HealthcareSheet) do NOT hold by judgment (a
+    differing radio is a one-tap preview) — flip it in `unsavedBuffer.ts`'s header if his eye
+    disagrees.
   - ⚑ Cross-reference (2026-09-03): the completed-intake dead end made this loss reachable in ONE
     refresh — finish intake with one gated fact blank and the page had no door at all. The door is
     back (`IntakeApp`'s `computing` no longer conflates the idle-with-missing-facts frame with the

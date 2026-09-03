@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { BudgetBuilder, medicalExceedsTotal } from '../BudgetBuilder'
+import { unsavedBuffersHeld } from '../unsavedBuffer'
 import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
 import { copy, slots } from '@ui/copy'
@@ -577,5 +578,21 @@ describe('BudgetBuilder — sheet chrome (overlay contract)', () => {
     fireEvent.click(screen.getByRole('button', { name: copy.budgetCancel }))
     expect(onClose).toHaveBeenCalledTimes(1)
     expect(onApply).not.toHaveBeenCalled()
+  })
+})
+
+describe('BudgetBuilder — the open-buffer hold (the unsaved-work guard’s second operand)', () => {
+  // Staged rows are typed work the draft cannot see until Apply — and close-without-apply
+  // PRESERVES them (the open-edge rule), so a closed dirty sheet still holds; only unmount, or an
+  // Apply/escape that brings the rows and the draft back into agreement, releases.
+  it('a fresh open sheet holds nothing; a staged line holds; closing without Apply keeps holding; unmount releases', () => {
+    const { rerender, unmount } = render(<Host draft={draftWith()} />)
+    expect(unsavedBuffersHeld()).toBe(0) // rows seeded from the draft ARE the draft
+    fireEvent.click(addBtn())
+    expect(unsavedBuffersHeld()).toBe(1)
+    rerender(<Host draft={draftWith()} open={false} />)
+    expect(unsavedBuffersHeld()).toBe(1) // preserved work is still work
+    unmount()
+    expect(unsavedBuffersHeld()).toBe(0)
   })
 })

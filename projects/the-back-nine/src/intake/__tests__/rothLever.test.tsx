@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { RothLever } from '../RothLever'
+import { unsavedBuffersHeld } from '../unsavedBuffer'
 import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
 import type { ControlPreview } from '@store/controlPreview'
@@ -550,5 +551,20 @@ describe('RothLever — close-then-reopen discards an in-flight preview (open-ed
       preview.resolvers[0]!(okPreview(8, 6)) // A lands under a superseded generation
     })
     expect(document.querySelector('.control-preview__delta')).toBeNull()
+  })
+})
+
+describe('RothLever — the open-buffer hold (the unsaved-work guard’s second operand)', () => {
+  it('the seeded open sheet holds nothing; a typed amount holds; closing the sheet releases', () => {
+    const { rerender } = render(
+      <RothLever open savedAnchor={ANCHOR} draft={draftWith(withPretax)} preview={vi.fn(() => null)} onApply={noop} onRemove={noop} onClose={noop} />,
+    )
+    expect(unsavedBuffersHeld()).toBe(0) // the open-edge seed IS the baseline
+    commitField(screen.getByLabelText(copy.leverRothAmountLabel), '50,000')
+    expect(unsavedBuffersHeld()).toBe(1)
+    rerender(
+      <RothLever open={false} savedAnchor={ANCHOR} draft={draftWith(withPretax)} preview={vi.fn(() => null)} onApply={noop} onRemove={noop} onClose={noop} />,
+    )
+    expect(unsavedBuffersHeld()).toBe(0) // Apply / Remove / Close all close the sheet
   })
 })

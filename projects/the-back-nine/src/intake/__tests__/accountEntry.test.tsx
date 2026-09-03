@@ -5,6 +5,7 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent } from '@testing-library/react'
 import { AccountEntry } from '../AccountEntry'
 import { classifyLegs, legsOf } from '../AllocationEntry'
+import { unsavedBuffersHeld } from '../unsavedBuffer'
 import { IntakeFlow } from '../flow'
 import { intakeSteps } from '../questions'
 import { missingRequiredFacts } from '../intakeMap'
@@ -633,5 +634,25 @@ describe('the accounts step — loop mechanics through the real flow', () => {
     fireEvent.click(screen.getByRole('button', { name: copy.accountRemoveConfirm }))
     expect(m.getSnapshot().draft.enteredAccounts).toHaveLength(0)
     expect(screen.getByText(copy.accountsEmpty)).toBeInTheDocument()
+  })
+})
+
+describe('AccountEntry — the open-buffer hold (the unsaved-work guard’s second operand)', () => {
+  // The whole form is component state until Add commits it, invisible to the draft-reading guard:
+  // over a saved-and-clean vault an eight-field account would reload away with no dialog. The form
+  // HOLDS while it has moved from what it opened with, and releases on every exit.
+  it('a blank new form holds nothing; the first committed field holds; clearing it back releases; unmount releases', () => {
+    const { unmount } = render(
+      <AccountEntry draft={modelWith({}).getSnapshot().draft} onSave={vi.fn()} onCancel={() => {}} />,
+    )
+    expect(unsavedBuffersHeld()).toBe(0) // an open-but-empty form is not alarm-when-fine
+    setMoney(copy.accountValueLabel, '100000')
+    expect(unsavedBuffersHeld()).toBe(1)
+    setMoney(copy.accountValueLabel, '')
+    expect(unsavedBuffersHeld()).toBe(0) // back to what it opened with — nothing to lose
+    fireEvent.click(screen.getByLabelText(copy.kindBrokerage))
+    expect(unsavedBuffersHeld()).toBe(1)
+    unmount()
+    expect(unsavedBuffersHeld()).toBe(0) // Cancel / Add / a crash all leave the same way
   })
 })

@@ -6,6 +6,7 @@ import { colaRateInRange } from '@shared/incomeBounds'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { CurrencyField, IntegerField, PercentField, SegmentedControl } from './fields'
 import { FieldError } from './FieldError'
+import { bufferMoved, useUnsavedBufferHold } from './unsavedBuffer'
 
 /**
  * One other-income stream, one focused form (R40 · KTD-3/4/6/7/8). Named
@@ -151,6 +152,10 @@ function fromInitial(initial: IncomeStream | undefined, draft: ScenarioDraft): F
 export function OtherIncomeEntry({ draft, initial, onSave, onCancel }: OtherIncomeEntryProps) {
   const id = useId()
   const [form, setForm] = useState<FormState>(() => fromInitial(initial, draft))
+  // THE OPEN-BUFFER HOLD (unsavedBuffer.ts): a stream commits ATOMICALLY, so until Save the whole
+  // form is component state the draft-reading unsaved-work guard cannot see. Hold while it has
+  // moved from what it opened with; Save, Cancel and unmount release through the effect cleanup.
+  useUnsavedBufferHold(bufferMoved(form, fromInitial(initial, draft)))
   const [showAdvanced, setShowAdvanced] = useState(false)
   // The single "what's still missing to save" key shown at the bottom (one calm
   // line, not a per-field nag — the form blocks Save until complete).

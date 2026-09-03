@@ -24,6 +24,10 @@ export const copy = {
   updateReady: 'A new version is ready — refresh whenever you’re done.',
   updateReload: 'Refresh now',
   updateLater: 'Later',
+  // The refused tap's reason (2026-09-03): the apply gate holds while a save is landing, the
+  // ceremony is between commit and backup, or typed work is unsaved (the leave-page guard). One
+  // line true on all three arms — "save first" is the remedy for each.
+  updateHeld: 'Not just yet — save what you’re working on first. The update can wait.',
   // --- the cold-start frame (R1 as the product's face; one calm entry) ---
   coldStartQuestion: 'Can we retire — and how do we do it best?',
   coldStartOrientation:

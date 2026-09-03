@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent } from '@testing-library/react'
 import { OtherIncomeEntry, survivorNoteFor } from '../OtherIncomeEntry'
+import { unsavedBuffersHeld } from '../unsavedBuffer'
 import { IntakeFlow } from '../flow'
 import { intakeSteps } from '../questions'
 import { compileIncomeStreams } from '../otherIncome'
@@ -637,5 +638,20 @@ describe('the form output is engine-consumable (form → compileIncomeStreams)',
     expect(leaf.grossSurvivor![0]).toBeCloseTo(21_600, 5) // 36000 × 0.6
     expect(leaf.grossSurvivor![1]).toBeCloseTo(20_970.873786, 5) // 34951.4563… × 0.6
     expect(leaf.grossSurvivor![3]).toBeCloseTo(19_767.059842, 5) // 32945.0997… × 0.6
+  })
+})
+
+describe('OtherIncomeEntry — the open-buffer hold (the unsaved-work guard’s second operand)', () => {
+  // A stream commits ATOMICALLY, so until Save the whole form is component state the draft-reading
+  // guard cannot see. The form HOLDS while it has moved from what it opened with.
+  it('a blank new form holds nothing; a picked type holds; a typed amount keeps it; unmount releases', () => {
+    renderEntry(modelWithPeople())
+    expect(unsavedBuffersHeld()).toBe(0) // open-but-empty is not alarm-when-fine
+    fireEvent.click(screen.getByLabelText(copy.incomeTypePension))
+    expect(unsavedBuffersHeld()).toBe(1)
+    setMoney(copy.incomeAmountLabel, '30000')
+    expect(unsavedBuffersHeld()).toBe(1) // one hold per form, however many fields moved
+    cleanup()
+    expect(unsavedBuffersHeld()).toBe(0)
   })
 })

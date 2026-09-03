@@ -89,9 +89,29 @@ describe('UpdateToast — the update-ready prompt and its apply gate', () => {
     await waitFor(() => expect(h.isWriteInFlight).toHaveBeenCalled())
     expect(h.updateServiceWorker).not.toHaveBeenCalled()
     expect(h.setNeedRefresh).not.toHaveBeenCalled() // prompt untouched — the user re-clicks after the ceremony
+    // A refused tap SAYS so (2026-09-03): the held line replaces the ready line — the gate now also
+    // holds across the whole unsaved-work window, so a silent no-op "Refresh now" would be a
+    // live-looking dead button for the length of an intake.
+    await screen.findByText(copy.updateHeld)
+    expect(screen.queryByText(copy.updateReady)).toBeNull()
     // Release the hold and re-click: now it applies — proving the HOLD (nothing else) blocked it.
     release()
     fireEvent.click(reloadBtn())
     await waitFor(() => expect(h.updateServiceWorker).toHaveBeenCalledWith(true))
+  })
+
+  it('"Later" after a refused tap resets the held line with the prompt — the next update-ready frame opens calm', async () => {
+    h.needRefresh = true
+    render(<UpdateToast />)
+    const release = holdUpdateApply()
+    fireEvent.click(reloadBtn())
+    await screen.findByText(copy.updateHeld)
+    fireEvent.click(screen.getByRole('button', { name: copy.updateLater }))
+    expect(h.setNeedRefresh).toHaveBeenCalledWith(false)
+    // The mocked hook keeps needRefresh true, so the toast stays rendered — which is exactly what
+    // lets this assert the TEXT reset on its own, independent of the prompt's visibility.
+    expect(screen.getByText(copy.updateReady)).toBeInTheDocument()
+    expect(screen.queryByText(copy.updateHeld)).toBeNull()
+    release()
   })
 })

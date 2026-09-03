@@ -63,6 +63,41 @@ export type ResultSaveView =
 const sameScenario = (a: ScenarioV3, b: ScenarioV3): boolean =>
   scenarioIdentityKey(a) === scenarioIdentityKey(b)
 
+/**
+ * THE UNSAVED-WORK GUARD's one decision (2026-09-03 — the 2026-08-20 walk's "couple's own data"
+ * finding, the honest half): would a reload lose typed work? Disk-derived like everything else here
+ * (DIRTY IS COMPUTED, NEVER TRACKED). With NO vault a reload recovers nothing, so the question is
+ * whether the draft has moved from its mount baseline (the caller compares identity keys); with a
+ * vault a reload recovers `persist.scenario` — the LAST COMMITTED model — so the question is whether
+ * the current answer differs from it (the badge's own `sameScenario`, so the dialog and the badge can
+ * never disagree) OR is not even complete (hydrate refuses a non-ready model, so a later !ready can
+ * only be an edit). NEVER the view kinds above: 'none' hides readOnly AND !ready, both of which can
+ * be real unsaved typing. readOnly is not special-cased — the typing is lost either way, so the
+ * dialog tells the truth. The guard WARNS (the browser's own dialog) and writes nothing: the
+ * no-write-until-Save seam (docs/plans/2-first-answer.md:145) is a decision, not an oversight.
+ */
+export function unsavedWorkPending(
+  persist: PersistState,
+  ready: SaveReady,
+  draftMovedFromBaseline: boolean,
+): boolean {
+  switch (persist.kind) {
+    case 'unsaved':
+      return draftMovedFromBaseline
+    case 'saving':
+    case 'save-failed':
+    case 'saved':
+      // All three carry the LAST COMMITTED model: during an in-flight re-save the disk still
+      // holds the previous commit (so the guard stays up until the write lands), and after a
+      // refused one it never moved. An edit back to the disk reads clean in every arm.
+      return !ready.ready || !sameScenario(ready.scenario, persist.scenario)
+    default: {
+      const _exhaustive: never = persist
+      throw new Error(`unsavedWorkPending: unmapped persist state ${String(_exhaustive)}`)
+    }
+  }
+}
+
 export function deriveResultSave(persist: PersistState, ready: SaveReady, readOnly = false): ResultSaveView {
   // A READ-ONLY session (a 2nd tab holds the writer — captured ONCE at unlock, session.ts) has no
   // functioning save surface: `session.save()` REFUSES (not-writable → "reload to edit"), so a

@@ -73,6 +73,7 @@ import type {
   SimulationResult,
   TickerClassification,
 } from '@shared/model'
+import { canonicalIdentityToken } from '@shared/model'
 import type { DateSearchInput } from '@engine/dateSearch'
 import { appDefaultEraFor, CURRENT_APP_DEFAULT_VERSION } from '@shared/appDefaults'
 import { fromWire, dateSearchFromWire, solveFromWire } from '@engine/engineWire'
@@ -527,6 +528,14 @@ const defaultMintSeed = (): number => {
   crypto.getRandomValues(buf)
   return buf[0]! // integer in [0, 2^32) — satisfies the engine's integer-seed gate
 }
+
+/** The in-memory draft's identity key — IntakeApp's unsaved-work guard (2026-09-03) compares the
+ *  LIVE draft with its mount baseline through the SAME canonicalizer the disk compare uses
+ *  (model.ts `scenarioIdentityKey`), so a keystroke that changes nothing, or is edited back, reads
+ *  clean. Drafts are plain JSON data (HealthDraft holes encode as 'U' on both sides); the
+ *  canonicalizer THROWS on a function/symbol/bigint, which is the honest failure for a draft that
+ *  never came off a keyboard. */
+export const draftIdentityKey = (d: ScenarioDraft): string => canonicalIdentityToken(d)
 
 export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
   const mintSeed = deps.mintSeed ?? defaultMintSeed

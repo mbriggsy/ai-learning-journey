@@ -99,22 +99,32 @@ vi.mock('../stalenessExposure', async (importOriginal) => {
 
 /** The ceremony, reduced to its two exits + ONE fact about what it was handed: does the scenario it
  *  would commit CARRY the record? (insight 066 — echo the prop the arm asserts, never a marker that
- *  swallows it.) */
+ *  swallows it.) The completed exit reports the COMMIT first — the real SaveFlow fires `onCommitted`
+ *  in firstSave's ok arm, steps before the Done tap reaches `onComplete` (the unsaved-work guard,
+ *  2026-09-03), and `persist` flips to 'saved' on that commit, never on Done. */
 vi.mock('../SaveFlow', () => ({
   SaveFlow: ({
     scenario,
     onCancel,
+    onCommitted,
     onComplete,
   }: {
     scenario: { readonly savedRecommendation?: unknown }
     onCancel: () => void
+    onCommitted: () => void
     onComplete: () => void
   }) => (
     <div data-testid="ceremony" data-carries-record={String(scenario.savedRecommendation !== undefined)}>
       <button type="button" onClick={onCancel}>
         cancel-ceremony-stub
       </button>
-      <button type="button" onClick={onComplete}>
+      <button
+        type="button"
+        onClick={() => {
+          onCommitted()
+          onComplete()
+        }}
+      >
         complete-ceremony-stub
       </button>
     </div>

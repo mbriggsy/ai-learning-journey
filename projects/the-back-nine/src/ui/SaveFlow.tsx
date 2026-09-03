@@ -6,9 +6,14 @@
  * → complete. BOTH credentials are USER-CHOSEN, so there is no system-minted secret to display
  * or capture — the old phrase-display + positional-capture beats retired with the BIP-39 phrase.
  *
- * The `beforeunload` guard runs ONLY on the export step: the single window where the vault is
+ * The `beforeunload` guard HERE runs ONLY on the export step: the single window where the vault is
  * committed on disk but the off-device backup (the survivor's findable artifact) is not yet
- * saved. The recovery step is pre-commit (nothing on disk), so it needs no guard.
+ * saved. The pre-commit steps (passphrase, recovery, securing) are covered by IntakeApp's
+ * unsaved-work guard (2026-09-03 — un-committed typing is a reload loss too), which disarms the
+ * instant this ceremony COMMITS: `onCommitted` fires in firstSave's ok arm, BEFORE the export step
+ * mounts, so the two guards hand off with no gap and no overlap — and the 'complete' step ("Your
+ * plan is saved") carries neither, because nothing is left to lose there. Both registrations go
+ * through ui/unloadGuard.ts, which pairs the dialog with the update-apply hold (below).
  *
  * Holds the ONE polite live region (back-nine-design: a single announcer, clear-after-announce),
  * mounted once at the top so it never goes stale across step swaps.
@@ -20,6 +25,7 @@ import { useLiveAnnouncer, focusHeading } from '@intake/a11y'
 import { PendingPanel } from './PendingPanel'
 import { getVaultSession } from './vaultSession'
 import { holdUpdateApply } from './updateGate'
+import { useUnloadGuard } from './unloadGuard'
 import { PassphraseStep } from './PassphraseStep'
 import { ExportConfirm } from './ExportConfirm'
 import type { ScenarioV3 } from '@shared/model'
@@ -46,10 +52,14 @@ function firstSaveErrorKey(reason: FirstSaveReason): SaveErrorKey {
 export function SaveFlow({
   scenario,
   onCancel,
+  onCommitted,
   onComplete,
 }: {
   readonly scenario: ScenarioV3
   readonly onCancel: () => void
+  /** Fired the instant `firstSave` lands the vault (the ok arm) — the disk now holds the plan, so the
+   *  caller's unsaved-work guard disarms HERE, not at the Done tap several steps later. */
+  readonly onCommitted: () => void
   readonly onComplete: () => void
 }) {
   const [step, setStep] = useState<Step>('passphrase')
@@ -74,17 +84,9 @@ export function SaveFlow({
   }, [step])
 
   // beforeunload guard: only on export — the vault is committed but the off-device backup
-  // (the survivor's findable artifact) is not yet saved.
-  const guarding = step === 'export'
-  useEffect(() => {
-    if (!guarding) return
-    const handler = (e: BeforeUnloadEvent) => {
-      e.preventDefault()
-      e.returnValue = ''
-    }
-    window.addEventListener('beforeunload', handler)
-    return () => window.removeEventListener('beforeunload', handler)
-  }, [guarding])
+  // (the survivor's findable artifact) is not yet saved. The shared hook (unloadGuard.ts) also
+  // holds the update-apply gate for the same window — the law the next comment states.
+  useUnloadGuard(step === 'export')
 
   // Fork B: hold the PWA update-apply across securing + export. The write gate alone cannot
   // cover this window — securing's ~1s KDF derive runs BEFORE its write is enqueued (no write
@@ -93,7 +95,8 @@ export function SaveFlow({
   // off-device backup while believing the save finished. Securing is included so the hold is
   // up BEFORE the commit lands — the write-drain→export handoff has no uncovered instant.
   // beforeunload (above) deliberately does NOT stop the intentional reload; this hold is what
-  // makes the toast refuse instead. Effect-cleanup release: an unmount can never leak the hold.
+  // makes the toast refuse instead. On export it overlaps the hook's own hold — the counter is
+  // built for exactly that. Effect-cleanup release: an unmount can never leak the hold.
   const holdingUpdate = step === 'securing' || step === 'export'
   useEffect(() => {
     if (!holdingUpdate) return
@@ -123,6 +126,7 @@ export function SaveFlow({
     const session = await getVaultSession()
     const result = await session.firstSave(scenario, daily, recovery)
     if (result.ok) {
+      onCommitted()
       setStep('export')
     } else if (result.reason === 'recovery-equals-passphrase') {
       setRecoveryError(copy.recoveryEqualsError)

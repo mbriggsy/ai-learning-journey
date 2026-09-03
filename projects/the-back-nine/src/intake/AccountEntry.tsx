@@ -6,6 +6,7 @@ import type { ScenarioDraft } from '@store/memoryModel'
 import { CurrencyField, SegmentedControl } from './fields'
 import { FieldError } from './FieldError'
 import { AllocationEntry, classifyLegs, legsOf, type AllocationReport } from './AllocationEntry'
+import { bufferMoved, useUnsavedBufferHold } from './unsavedBuffer'
 import {
   annualAdditionsCeilingFor,
   ceilingParams,
@@ -89,9 +90,11 @@ type AddBlock =
   | { readonly kind: 'allocation' }
   | { readonly kind: 'ceiling'; readonly messageKey: SlottedErrorKey; readonly params: SlottedErrorParams }
 
-export function AccountEntry({ draft, initial, onSave, onCancel }: AccountEntryProps) {
-  const id = useId()
-  const [form, setForm] = useState<FormState>({
+/** The form as seeded from a committed account (or blank for a new one) — ONE producer, read by
+ *  the initial state AND by the unsaved-buffer compare below, so "has this form moved?" is
+ *  measured against exactly what it opened with. */
+function formFrom(initial: EnteredAccount | undefined): FormState {
+  return {
     ownerIndex: (initial?.ownerIndex as 0 | 1) ?? 0,
     kind: initial?.kind,
     valueToday: initial?.valueToday,
@@ -104,7 +107,17 @@ export function AccountEntry({ draft, initial, onSave, onCancel }: AccountEntryP
     // a stored 60/50/10 would otherwise re-commit untouched under a screen showing 60/50/10.
     allocationInvalid:
       initial?.manualBlend !== undefined && classifyLegs(legsOf(initial.manualBlend)).kind === 'invalid',
-  })
+  }
+}
+
+export function AccountEntry({ draft, initial, onSave, onCancel }: AccountEntryProps) {
+  const id = useId()
+  const [form, setForm] = useState<FormState>(() => formFrom(initial))
+  // THE OPEN-BUFFER HOLD (unsavedBuffer.ts): this whole form lives in component state until Add
+  // commits it, so the draft-reading unsaved-work guard cannot see it — over a saved-and-clean
+  // vault an eight-field account would reload away with no dialog. Hold while the form has moved
+  // from what it opened with; Add, Cancel and unmount all release through the effect cleanup.
+  useUnsavedBufferHold(bufferMoved(form, formFrom(initial)))
   const [ceilingError, setCeilingError] = useState<{
     readonly messageKey: SlottedErrorKey
     readonly params: SlottedErrorParams

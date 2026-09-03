@@ -211,36 +211,21 @@ PIPELINE half (mint → persist → unlock → holds → demote → re-promote) 
 regardless. **Lean: (b)** — the render is pinned synthetically, the pipeline is witnessed, and the
 hunt's marginal value is one eyeball frame; but the scope call is his if (a) tempts anyone.
 
-▶ **START HERE NEXT SESSION (hand-off written 2026-09-03 at 84% context — three commits landed
-this session: `41f9edee` the allocation silent discard + its four siblings · `530e6545` insight 110 ·
-`53486a39` the completed-intake dead end + the review's P1; CI for the last: run 33798494514 — poll
-it by id, read `conclusion`, never a watch exit code).**
+▶ **START HERE NEXT SESSION (hand-off written 2026-09-03, second session of the day — one commit
+landed: the intake beforeunload guard + the two holes its unit-boundary review found, `git log -1`;
+the three earlier commits of the day are `41f9edee` · `530e6545` · `53486a39`).**
 
-**FIRST: item 3 of the 2026-09-03 ranked plan is STAGED, not applied — the intake beforeunload guard.**
-The verify→skeptic pass corrected the filed shape (the arm is DISK-derived, never `persist.kind` or the
-flow's `touched`; the ceremony must report its commit AT `firstSave`'s ok arm via a new SaveFlow
-`onCommitted`, or "Your plan is saved" would warn). Three count-checked edit scripts sit in
-`temp/item3/` (gitignored; squeaky clears it — copy them out first if a squeaky runs before this):
-`node temp/item3/edit-item3.js` (model.ts exports `canonicalIdentityToken` · memoryModel gains
-`draftIdentityKey` · resultSave gains `unsavedWorkPending` · SaveFlow gains `onCommitted` + header ·
-IntakeApp gets the guard after `saveReady`, the seed-install baseline re-point, and the ceremony
-hand-off) → `node temp/item3/edit-item3-tests.js` (six seam arms · SaveFlow ok/refused arms · the
-IntakeApp probe: hydrate→Review no edit ⇒ no warn, edit ⇒ warn, edit back ⇒ no, fresh intake typed ⇒
-warns through completion and the pre-commit steps, the COMMIT disarms) → typecheck · targeted tests ·
-plant/kill mutants (drop the guard effect; report at onComplete instead of onCommitted) · lint · full
-suite · doc-stats → `node temp/item3/edit-item3-docs.js` (TODO entry 12 + the ride-along block +
-register bullet) → real-browser look: type one field → refresh → dialog; `/?seed=retired` → refresh →
-NO dialog; finish a ceremony to "Your plan is saved" → refresh → NO dialog (Playwright auto-ACCEPTS
-beforeunload with no dialog listener — assert `defaultPrevented` in jsdom or `page.on('dialog')` in
-e2e; no spec can stall on it) → unit-boundary review (`/ultramode-code-review`, model:'opus' on every
-spawn) → commit → push. Every anchor in the scripts was verified against source THIS session; if one
-throws "expected 1 match", the tree moved — re-anchor, do not force.
+**FIRST: nothing is staged — item 3 SHIPPED. Start at item 4 of the ranked plan below.** The apply
+recipe that used to sit here ran verbatim (its scripts had to become `.cjs` under the package's
+`"type": "module"` — no content changed) and the outcome, the review's findings and the residuals are
+all recorded in the ride-along block further down. `temp/item3/` is spent; squeaky may clear it.
 
 **THEN, the 2026-09-03 ranked plan, as re-verified by 24 agents (12 verify→skeptic pairs; 10 of 12
 verifiers refuted on a material point) — statuses current:**
 1. ✅ Allocation silent discard (+4 siblings) — `41f9edee`.
 2. ✅ Completed-intake dead end, build half — `53486a39`. Decision half yours (register Tier 3).
-3. ⏳ Intake beforeunload — STAGED above.
+3. ✅ Intake beforeunload — shipped this session, with the review's two holes (the open entry
+   buffers · the PWA "Refresh now" collision) closed in the same commit. See the ride-along block.
 4. The phone-viewport (390×844) intake walk — findings only, no fixes; the desktop walk cleared the
    copy and the mechanics, not the fold.
 5. Solve-lane cancel (M): an edit mid-solve leaves the superseded solve burning the ONE shared worker
@@ -272,7 +257,13 @@ step heading to blur, then Continue · a power/network blip drops Vite's websock
 page to ColdStart mid-walk · `:nth-match(label:has-text("…"), N)` is the selector for the sr-only
 radios (the label intercepts the click) · CLAUDE_CODE_SUBAGENT_MODEL=opus is set in settings.json
 since today — a fresh terminal picks it up; STILL pass `model: 'opus'` on every spawn and check
-`/tasks` shows Opus.
+`/tasks` shows Opus · **(second session)** a temp script must be `.cjs` — the package is
+`"type": "module"`, so `require` throws in a `.js` · the Playwright MCP's `browser_navigate` STALLS
+the full 60s on a `beforeunload` dialog (the stall IS the witness; `browser_handle_dialog(accept:false)`
+clears it and the page survives) · Playwright `fill` on a formatted currency field APPENDS ("6,500" +
+"6600" → "65,006,600"); click → Ctrl+A → `pressSequentially` replaces · "Edit in the walk-through"
+lands on step 1, never the section's step (no start-at-step API) · a `?seed=` route bypasses the vault
+even when one exists; the plain `/` route is the Unlock check.
 
 ⚑ **EVERYTHING IN THE WALK-FINDINGS LIST BELOW IS BRIGGSY'S, NOT A BUILD.** Finding 2 is WITHDRAWN
 (refuted same-day). Finding 1's copy pass is OFF (the string is true; only the door is missing, and
@@ -355,6 +346,70 @@ both textbook. Only console error on every route is the known favicon 404.
 satisfy WCAG 2.2 SC 3.3.1; see the Tier-2 entry below for what it was and why a green suite could not
 see it.
 
+✅ **THE RIDE-ALONG SHIPPED 2026-09-03 — the intake now WARNS before a reload loses typed work, and
+writes nothing.** `IntakeApp` arms the browser's own `beforeunload` dialog on ONE disk-derived
+decision (`resultSave.ts unsavedWorkPending`): with no vault, "has the draft moved from its mount
+baseline" (identity-keyed through the same canonicalizer as the dirty badge; a DEV `?seed=` re-points
+the baseline so seed routes never arm); with a vault, "does the current answer differ from the LAST
+COMMITTED model, or is it incomplete" — the badge's own compare, so dialog and badge can never
+disagree. No phase gate (the predicate is false in every draft-free phase), never IntakeFlow's
+`touched` (a validation set that dies on the flip to result). The verify→skeptic pass caught the one
+hole the filed shape had: the ceremony's commit was only reported at the Done tap, so "Your plan is
+saved" would have warned — `SaveFlow` now fires `onCommitted` in `firstSave`'s ok arm and the two
+guards hand off with no gap and no overlap. Pinned: six seam arms, the SaveFlow ok/refused arms, and
+an `IntakeApp` probe (hydrate → Review with no edit → NO warning; edit → warns; edit back → no;
+fresh intake → typed → warns through completion and the pre-commit steps → the COMMIT disarms it).
+Playwright auto-ACCEPTS `beforeunload` when no dialog listener is registered, so no e2e spec can
+stall on it — and none can see it; `defaultPrevented` in jsdom is the observable.
+⚑ **WITNESSED LIVE in real Chromium at 1536×791, all three recipe scenarios plus the hydrated arm:**
+one blurred field on a fresh intake raised the REAL dialog (the Playwright MCP's `navigate` stalls the
+full 60s on it — that stall is the witness; "stay" kept the page with the typing intact); `?seed=retired`
+reloaded with no dialog; an assumption edit on the seed stayed armed through the passphrase and
+recovery steps, the commit disarmed it, and "Your plan is saved" reloaded clean; a real unlock landed
+the re-entry gate and the result unarmed, an edit armed it AND flipped the badge to "Save your
+changes" in the same frame, and editing back cleared both.
+⚑ **THE UNIT-BOUNDARY REVIEW (9 lenses incl. two adversaries on distinct angles, 49 agents, 18
+findings, each refuted by 2–3 independent verifiers voting real/material SEPARATELY) FOUND TWO REAL
+HOLES — FOUR LENSES CONVERGED ON EACH — AND THEY SHIPPED IN THE SAME COMMIT:**
+(1) **The guard was blind to the atomic entry forms.** `AccountEntry`, `OtherIncomeEntry`, the budget
+builder's staged rows and the Roth lever's typed plan hold a whole answer in component state until
+an explicit commit, invisible to the draft compare — so over a saved-and-clean vault (the returning
+household's entire session) an eight-field account reloaded away with no dialog, far wider than the
+one un-blurred field the header accepted. Closed with the house's own hold pattern
+(`intake/unsavedBuffer.ts`, updateGate's counter shape): each of the four forms holds while its state
+differs from its seed (`bufferMoved`, the disk compare's canonicalizer), released by effect cleanup on
+Add/Cancel/unmount, and the guard ORs the live count in. **Witnessed live on `?seed=retired`:** Add an
+account → one balance → armed with the draft untouched → Never mind → clear; the budget sheet → one
+staged line → armed → Cancel (rows preserved) → STILL armed → reopen → remove → clear. The single-pick
+sheets (Sequencing, Healthcare) deliberately do NOT hold — a differing radio is a one-tap preview and
+the dialog would be louder than the loss; that line lives in one file.
+(2) **The guard made the PWA "Refresh now" reload refusable AFTER skipWaiting.** In prompt mode the
+toast sends skipWaiting first and the reload arrives later from the new worker's `controlling` event;
+an armed dialog answered "Stay" cancelled that reload after the new worker had taken the page and
+dropped the old build's chunks — version skew, toast gone, the apply latched. SaveFlow already stated
+the law ("the hold is what makes the toast refuse instead"); it is now STRUCTURAL: `ui/unloadGuard.ts`
+is the one hook behind both registrations and raises `holdUpdateApply` for exactly the armed window.
+A refused tap now SAYS so (`copy.updateHeld`, the toast's held line) instead of being a live-looking
+button that does nothing for the length of an intake. Not witnessable in dev (PWA is disabled under
+`pnpm dev`); pinned at the gate seam and the toast component.
+Also in-pass: the jsdom probe cannot see a dropped `preventDefault()` (jsdom folds the dialog's two
+channels), so `warnBeforeUnload` is exported and pinned on both; `unsavedWorkPending` gained the house
+`never` arm and the `saving` case; the read-only no-special-case, the export-step guard, the
+bogus-seed baseline, unmount-removes-listener and armed⇒gate-held are all pinned. Fifteen mutants
+killed across the two rounds.
+**ACCEPTED RESIDUALS, filed in the register under "The couple's own data":** (a) one un-blurred
+field (blur-commit); (b) the very first arming edit of a session can race the passive effect's
+registration if the reload-button click is what blurs it — bounded to that one field; (c)
+`memoryModel.ts ensureSeed()` mints the CRN seed outside `notify()` — harmless today (every dev seed
+and every vault carries one), a latent false-arm if a seedless draft ever recomputes before typing;
+(d) a read-only tab's refusal remedy is a reload button, and an edit there arms the dialog on the
+very remedy — truthful (the typing IS lost), noisy; (e) `draftIdentityKey(baselineRef.current)` is
+recomputed per render — a few KB of JSON, unmeasured.
+**Thrown out by verification (4 of 18):** a ref-read-during-render idiom note (the lint rule is off;
+not material); the duplicated effect (moot — one hook now); an insight-048 "open-coded in the render
+path" note; the canonicalizer's throw attribution (cosmetic — fixed anyway).
+<details><summary>the re-scope that preceded it — kept for the reasoning</summary>
+
 ⚑ **THE RIDE-ALONG, RE-SCOPED — its dangerous half does not exist, and its filed prescription is
 wrong.** Intake has no `beforeunload` (confirmed: the repo's ONLY registration is `SaveFlow.tsx:85`),
 but the healthcare.gov step **already opens in a new tab** — `ExternalLink.tsx:6-7,16` states it was
@@ -365,6 +420,7 @@ vault-hydrated draft while `persist.kind` stays `'saved'`, so the guard would be
 across the documented edit-and-re-save window — the one place real off-disk edits live. `BackupStep.tsx:11`
 records a DELIBERATE omission; `SaveFlow.tsx:76-86` is the shipped template; the no-persistence-until-Save
 hard rule means the honest fix WARNS, never persists.
+</details>
 
 ⚠️ **Every "next build" here is a user-facing surface — load the four-skill UI loadout (CLAUDE.md)
 before touching a pixel, and read a ⚑ block before trusting any line number in the prose above it.**
@@ -1289,11 +1345,13 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
     fine. Fixed + mutation-proven in `c327e011`, with the component's first-ever suite. **A green
     suite cannot see an orphaned alert; only the frame can.**
 
-12. **The couple's own data.** An interrupted intake loses the whole household (up to **14** steps —
-    8 unconditional + 6 gated, `questions.tsx:1191-1209`; "13" was the long-standing figure and is one
-    short of the worst case — zero persistence,
-    **no `beforeunload` ON INTAKE**, and one step tells them to fetch a number from healthcare.gov
-    **in a new tab**) · the
+12. **The couple's own data.** ✅ **The warn half SHIPPED 2026-09-03** (see the ride-along block at the
+    top): a reload mid-intake, on the never-saved result screen, or on an edited-but-not-re-saved
+    hydrated plan now raises the browser's dialog; the healthcare.gov link is a new tab and never
+    fires it. **Still open:** persistence itself — an interrupted intake still loses the whole
+    household (up to **14** steps — 8 unconditional + 6 gated, `questions.tsx:1191-1209`) if the
+    reader confirms the dialog, because nothing is written until Save (the D1 law; a plaintext
+    draft outside the vault is a security-posture ruling, never a build) · the
     `schemaVersion` migration ladder **does not exist as code** — `IntakeApp.tsx:537` refuses anything but
     v3, so the first v4 bump bricks every saved plan *and its backup* · there is **no way to delete the
     vault** (`clearVault` exists; its only caller is the dev seed planter).

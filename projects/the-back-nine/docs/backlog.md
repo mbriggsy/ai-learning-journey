@@ -92,6 +92,24 @@
   the now-overbroad comments at `copy.ts:1121-1123` and `AssumptionPanel.tsx:214-215`
   ("structurally impossible"). No test pinned the string — one was added with the fix above.
 
+### A repeat "Add this account" tap over an already-visible block changes nothing perceptible
+
+`XS` · **pilot** · filed 2026-09-03 (the allocation-fix ultramode review — two lenses converged; verified P3)
+
+- The Add-time block re-renders the SAME `role="alert"` node with identical text: no new announcement,
+  no focus move, no pixel change (`AccountEntry.tsx` `save()` sets a flag over a `showing` predicate
+  that was already true; the ceiling arm has the identical shape). The error IS on screen and bound to
+  the fields, so it is not a dead end — but a second tap on the primary CTA reads as a broken button.
+- The house grammar has no precedent for focus-on-block (OtherIncomeEntry renders the line and stops),
+  so this was NOT built with the 2026-09-03 fix. The honest closes are: move focus to the first
+  offending control on block (also insight 054's remedy affordance; scrolls it into view on the phone),
+  or re-mount the alert on a block counter so AT re-announces. Decide ONCE for all three arms of the
+  Add gate (missing fact · allocation · ceiling), never for one.
+- Sibling residual, same function: `save()` reads the render closure, so a same-task type+tap on the
+  BALANCE sees `valueToday` undefined and names "Still need the balance today." over a typed figure
+  (insight 036's shape; `CurrencyField` commits on blur only). The line is honest and a second tap
+  heals it — P3. A live re-parse of the balance input on block would close it.
+
 ### Account balances have no typo defense
 
 `M` (filed `S`) · **pilot** · filed 1× — `A51`

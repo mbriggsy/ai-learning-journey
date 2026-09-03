@@ -50,7 +50,7 @@ interface Holding {
 
 ## The current holdings model (as-built)
 
-The intake is **exact-allocation, per account.** Each account is entered with one precise stock/bond/cash % (sum-to-100 enforced in the component so an invalid split never leaves it), value-weighted across accounts into **one household `stockWeight` ∈ [0,1]**. The engine consumes that single `stockWeight` under the single shared market draw / CRN contract — asset-location is deliberately **forbidden** (the engine never models *which* assets sit in *which* account for growth or tax). A single-ticker-per-account lookup and a "mostly stocks" quick-pick are **not used**; the precise per-account allocation is the entry. An absent or unrecognized ticker requires a manual blend — a blend is never a silent default (burned/062).
+The intake is **exact-allocation, per account.** Each account is entered with one precise stock/bond/cash % (sum-to-100 enforced in the component so an invalid split never leaves it — and, since 2026-09-03, "Add this account" refuses a typed-but-not-100 split rather than committing the account blend-less), value-weighted across accounts into **one household `stockWeight` ∈ [0,1]**. The engine consumes that single `stockWeight` under the single shared market draw / CRN contract — asset-location is deliberately **forbidden** (the engine never models *which* assets sit in *which* account for growth or tax). A single-ticker-per-account lookup and a "mostly stocks" quick-pick are **not used**; the precise per-account allocation is the entry. An absent or unrecognized ticker requires a manual blend — a blend is never a silent default (burned/062).
 
 ---
 

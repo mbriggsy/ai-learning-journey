@@ -69,9 +69,13 @@ ceremony held: mismatch error calm + a11y-correct, the negative-pairing bounce e
 guess opens both"), the success frame names both futures. Entry 7's open increment CONFIRMED live: the
 no-change card never names WHICH path, on the one seed where naming would differentiate.
 
-**THE INTAKE WALK'S FINDINGS, ranked — filed 2026-08-20. ALL BRIGGSY'S OR COUNCIL-SIZED, not builds
-(the standing walk-findings rule). Full detail + anchors mid-walk were verified live; household: mixed
-(worker + retiree, both pre-65), NC, 4 accounts, at 1536×791. Desktop only — phone intake is UNWALKED.**
+**THE INTAKE WALK'S FINDINGS, ranked — filed 2026-08-20.** ⚠️ **The blanket "ALL BRIGGSY'S OR
+COUNCIL-SIZED, not builds" header this list used to carry was WRONG for finding 2 — it carried no
+per-finding owner reason, the message string and the block pattern were both already shipped, and
+a 2026-09-03 verify→skeptic pass (the only one of twelve with zero refutations) re-classified it as
+a build; it SHIPPED the same day (below). Findings 1, 3, 4, 5 each carry their own owner reason and
+stand.** Full detail + anchors mid-walk were verified live; household: mixed (worker + retiree, both
+pre-65), NC, 4 accounts, at 1536×791. Desktop only — phone intake is UNWALKED.
 
 1. **🔴 THE COMPLETED-INTAKE DEAD END, compounded by zero persistence.** Leave ONE
    conditionally-revealed fact blank (allowed — every step is non-blocking and advances; witnessed:
@@ -83,11 +87,40 @@ no-change card never names WHICH path, on the one seed where naming would differ
    unreachable — and nothing persists pre-save, so the only visible exit (refresh) destroys all ~12
    steps of typed data. Missing-fact arm: `intakeMap.ts:166-167`. **The door's shape is a framing
    call — his or council's.**
-2. **🟠 ACCOUNTS: a bad allocation is silently DISCARDED, and the debt resurfaces generically.**
+2. ✅ **SHIPPED 2026-09-03 — a typed split that does not make 100 BLOCKS "Add this account" with
+   the child's own alert on every leg; nothing is discarded.** `AllocationEntry` reports the three-way
+   state (`valid | blank | invalid`) to the parent on every change (insight 059's shape — the
+   empty-vs-invalid distinction preserved at the primitive); `AccountEntry` blocks Add on `invalid`
+   through ONE discriminated `buildAccount()` (the OtherIncomeEntry pattern). BLANK still commits
+   blend-less and flows to the "Still needed" gate. Witnessed live at 1536×791: typed-invalid
+   blocked · repair releases · edit-to-invalid blocked · blank commits and the strip count grows.
+   ⚑ **THE UNIT-BOUNDARY REVIEW (5 Opus lenses, 20 findings verified) FOUND FOUR SIBLINGS IN THE
+   SAME FUNCTION AND THEY SHIPPED IN THE SAME COMMIT:** (a) the OLDER arm one line above the fix —
+   Add with no kind or no balance was a bare `return`, a live-looking primary button that did nothing
+   and said nothing (the un-swept twin of the income form's own WCAG 3.3.1 fix) — now names its fact
+   ("Still need the kind of account." / "Still need the balance today.", bound to the balance field)
+   and the kind group carries `aria-required` + the visible "(required)" marker; (b) EDITING a
+   committed 60/30/10 to 70/30/10 re-committed the STALE valid blend while the screen showed 70 — the
+   keystroke report closes it; (c) a bare `Number()` valued "1e2"/"0x64" as 100 and refused "60%" with
+   a message about the SUM — legs now parse on the `parsePercent` grammar and a bad leg names ITSELF
+   ("Each of these is a number from 0 to 100."); (d) a legacy `simple` blend (pre-2026-06-17 vaults)
+   seeded three BLANK legs over a live blend — legs seed through the exported `blendOf`, and the
+   parent classifies a seeded blend at mount instead of trusting it. Three planted mutants killed per
+   round; 3314 tests; doc-stats green.
+   ⚑ **ACCEPTED RESIDUALS, filed in the register (not built — no house precedent, P3 by the
+   verifiers):** a REPEAT Add tap over an already-visible block changes nothing perceptible (no focus
+   move, no re-announce — the same shape on the ceiling arm); and `save()` reads the render closure,
+   so a same-task type+tap on the BALANCE sees it undefined (insight 036) — the named line makes that
+   honest and a second tap heals it. The stale-closure shape on the allocation legs is closed by the
+   keystroke report.
+   <details><summary>original finding — kept for the reasoning</summary>
+
+   **🟠 ACCOUNTS: a bad allocation is silently DISCARDED, and the debt resurfaces generically.**
    Typed 60/50/10 (=120%); "Add this account" committed the account and dropped the three numbers
    with no message; the only trace is the strip's "Still needed: How is it invested?" — a question
    the user believes they answered. Edit reopens with the allocation EMPTY (balance + contribution
    survive). Sibling of the register's account-magnitude entry (no `touched` channel).
+   </details>
 3. **🟡 Error copy speaks to the absurd reading:** birth year "62" → "Ages past 119 are beyond what
    the projection can model." True, never says "four-digit year". · **The tax-returns step names no
    1040 line** ("Income, two years back" — AGI? MAGI?), and the second field has no gloss. · **Plain

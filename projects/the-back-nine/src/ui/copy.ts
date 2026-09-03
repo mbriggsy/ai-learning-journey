@@ -302,6 +302,15 @@ export const copy = {
   classifierBondPct: 'Bonds %',
   classifierCashPct: 'Cash %',
   errClassifierSum: 'Those percentages need to add up to 100.',
+  // A leg that is not a plain 0–100 number (a typed "1e2", a minus, 150) — named as ITS
+  // OWN fault, never as the sum's (the sibling range lines above it are the voice).
+  errClassifierNumber: 'Each of these is a number from 0 to 100.',
+  // The specific "still needed to add" lines — the account editor's twin of the
+  // errIncome*Required family below: a blocked Add always names what's missing in plain
+  // text (WCAG 3.3.1, never a silent dead button). Until 2026-09-03 this editor's Add was
+  // a silent no-op on a missing kind or balance.
+  errAccountKindRequired: 'Still need the kind of account.',
+  errAccountValueRequired: 'Still need the balance today.',
   // --- other income in retirement (R40 — pension/rental/alimony/annuity/other;
   //     opt-in off the 5-minute path; session-only until the vault is saved) ---
   qOtherIncomeHeading: 'Other income (in retirement)',

@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent } from '@testing-library/react'
 import { AccountEntry } from '../AccountEntry'
+import { classifyLegs, legsOf } from '../AllocationEntry'
 import { IntakeFlow } from '../flow'
 import { intakeSteps } from '../questions'
 import { missingRequiredFacts } from '../intakeMap'
@@ -158,20 +159,103 @@ describe('AccountEntry — allocation entry (exact %)', () => {
     })
   })
 
-  it('an invalid (non-100) split is NEVER silently committed as a default blend — the flow-gate names it (burned/062)', () => {
+  // The 2026-08-20 intake walk's silent-discard finding, closed 2026-09-03: a TYPED split that
+  // does not make 100 used to be a child-local error that "Add this account" ignored — the account
+  // committed with NO blend and no message, and the debt resurfaced only as a generic "Still
+  // needed: How is it invested?" over a question the household believes it answered. Now the
+  // parent hears the three-way state (valid | blank | invalid) and BLOCKS Add on invalid with the
+  // child's own alert forced visible; BLANK keeps flowing to the missing-fact gate (below).
+  it('a TYPED but non-100 split BLOCKS Add with the sum error on every field; repairing it commits the repaired blend (burned/062 — never a silent discard)', () => {
     const m = modelWith({})
     const { onSave } = renderEntry(m)
     fireEvent.click(screen.getByLabelText(copy.kindRothIra))
     setMoney(copy.accountValueLabel, '100000')
-    // 60 + 30 + 20 = 110 ≠ 100 — AllocationEntry refuses to emit it (no onClassify).
     fireEvent.change(screen.getByLabelText(copy.classifierStockPct), { target: { value: '60' } })
     fireEvent.change(screen.getByLabelText(copy.classifierBondPct), { target: { value: '30' } })
     fireEvent.change(screen.getByLabelText(copy.classifierCashPct), { target: { value: '20' } })
     fireEvent.blur(screen.getByLabelText(copy.classifierCashPct))
     fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
-    // The account commits (kind + balance present) but carries NO blend — never a
-    // stale/partial default — so missingRequiredFacts NAMES it (the honest gate that
-    // keeps an unallocated account from reaching the engine with a guessed mix).
+    expect(onSave).not.toHaveBeenCalled() // 110 ≠ 100 — the editor stays open
+    const alert = screen.getByRole('alert')
+    expect(alert.textContent).toBe(copy.errClassifierSum)
+    for (const labelKey of ['classifierStockPct', 'classifierBondPct', 'classifierCashPct'] as const) {
+      const field = screen.getByLabelText(copy[labelKey])
+      expect(field).toHaveAttribute('aria-invalid', 'true')
+      expect(field).toHaveAttribute('aria-describedby', alert.id)
+    }
+    // Repair → the repaired blend commits (the block is a gate, not a dead end).
+    fireEvent.change(screen.getByLabelText(copy.classifierCashPct), { target: { value: '10' } })
+    fireEvent.blur(screen.getByLabelText(copy.classifierCashPct))
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
+    expect(onSave).toHaveBeenCalledTimes(1)
+    expect(onSave.mock.calls[0]![0]).toMatchObject({
+      manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
+    })
+  })
+
+  it('Add without a prior blur still blocks a typed non-100 split (the tap that lands before the blur reported)', () => {
+    const m = modelWith({})
+    const { onSave } = renderEntry(m)
+    fireEvent.click(screen.getByLabelText(copy.kindRothIra))
+    setMoney(copy.accountValueLabel, '100000')
+    fireEvent.change(screen.getByLabelText(copy.classifierStockPct), { target: { value: '60' } })
+    fireEvent.change(screen.getByLabelText(copy.classifierBondPct), { target: { value: '50' } })
+    fireEvent.change(screen.getByLabelText(copy.classifierCashPct), { target: { value: '10' } })
+    // No blur: jsdom's click fires none, and a same-task blur+tap has the same shape (insight 036).
+    expect(screen.queryByRole('alert')).toBeNull() // silent while typing (validate-on-blur law)
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
+    expect(onSave).not.toHaveBeenCalled()
+    const alert = screen.getByRole('alert') // the Add-time block FORCES the same alert node
+    expect(alert.textContent).toBe(copy.errClassifierSum)
+    // Both halves of the association law on the FORCED path (the blur path pins them above).
+    for (const labelKey of ['classifierStockPct', 'classifierBondPct', 'classifierCashPct'] as const) {
+      const field = screen.getByLabelText(copy[labelKey])
+      expect(field).toHaveAttribute('aria-invalid', 'true')
+      expect(field).toHaveAttribute('aria-describedby', alert.id)
+    }
+    // Forgiven on re-edit — the forced error clears the instant a leg is touched.
+    fireEvent.change(screen.getByLabelText(copy.classifierBondPct), { target: { value: '30' } })
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it('EDITING a committed valid blend into a non-100 split never re-commits the stale valid one (the second arm)', () => {
+    const m = modelWith({})
+    const onSave = vi.fn()
+    render(
+      <AccountEntry
+        draft={m.getSnapshot().draft}
+        initial={{
+          ownerIndex: 0,
+          kind: 'roth-ira',
+          valueToday: 100_000,
+          manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
+        }}
+        onSave={onSave}
+        onCancel={() => {}}
+      />,
+    )
+    expect(screen.getByLabelText(copy.classifierStockPct)).toHaveValue('60')
+    fireEvent.change(screen.getByLabelText(copy.classifierStockPct), { target: { value: '70' } })
+    fireEvent.blur(screen.getByLabelText(copy.classifierStockPct))
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
+    expect(onSave).not.toHaveBeenCalled() // the screen shows 70/30/10 — the old 60/30/10 must not ship
+    expect(screen.getByRole('alert').textContent).toBe(copy.errClassifierSum)
+    fireEvent.change(screen.getByLabelText(copy.classifierStockPct), { target: { value: '60' } })
+    fireEvent.blur(screen.getByLabelText(copy.classifierStockPct))
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
+    expect(onSave).toHaveBeenCalledTimes(1)
+    expect(onSave.mock.calls[0]![0]).toMatchObject({
+      manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
+    })
+  })
+
+  it('a BLANK allocation commits without a blend and the flow-gate NAMES it — the honest not-answered-yet channel, unchanged', () => {
+    const m = modelWith({})
+    const { onSave } = renderEntry(m)
+    fireEvent.click(screen.getByLabelText(copy.kindRothIra))
+    setMoney(copy.accountValueLabel, '100000')
+    // Nothing typed in any leg — not an invalid split, a question not yet answered.
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
     expect(onSave).toHaveBeenCalledTimes(1)
     const account = onSave.mock.calls[0]![0]
     expect(account.manualBlend).toBeUndefined()
@@ -180,6 +264,214 @@ describe('AccountEntry — allocation entry (exact %)', () => {
       enteredAccounts: [account],
     }).map((f) => f.labelKey)
     expect(missing).toContain('classifierLegend')
+  })
+
+  it('a blank leg reads as zero — 100 / blank / blank is a VALID 100/0/0 split (unchanged semantics)', () => {
+    const m = modelWith({})
+    const { onSave } = renderEntry(m)
+    fireEvent.click(screen.getByLabelText(copy.kindRothIra))
+    setMoney(copy.accountValueLabel, '100000')
+    fireEvent.change(screen.getByLabelText(copy.classifierStockPct), { target: { value: '100' } })
+    fireEvent.blur(screen.getByLabelText(copy.classifierStockPct))
+    expect(screen.queryByRole('alert')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
+    expect(onSave).toHaveBeenCalledTimes(1)
+    expect(onSave.mock.calls[0]![0]).toMatchObject({
+      manualBlend: { kind: 'exact', stockPct: 100, bondPct: 0, cashPct: 0 },
+    })
+  })
+
+  it('Add without a prior blur on a VALID split commits the FRESH blend — and a valid-then-changed split with no blur is blocked (the keystroke report is load-bearing)', () => {
+    // Arm 1: the keystroke report carries a valid split to Add with no blur in between.
+    const m = modelWith({})
+    const { onSave } = renderEntry(m)
+    fireEvent.click(screen.getByLabelText(copy.kindRothIra))
+    setMoney(copy.accountValueLabel, '100000')
+    fireEvent.change(screen.getByLabelText(copy.classifierStockPct), { target: { value: '60' } })
+    fireEvent.change(screen.getByLabelText(copy.classifierBondPct), { target: { value: '30' } })
+    fireEvent.change(screen.getByLabelText(copy.classifierCashPct), { target: { value: '10' } })
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave })) // no blur
+    expect(onSave).toHaveBeenCalledTimes(1)
+    expect(onSave.mock.calls[0]![0]).toMatchObject({
+      manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
+    })
+
+    cleanup()
+    // Arm 2: a valid split changed to invalid with NO blur must not commit the stale valid one.
+    const { onSave: onSave2 } = renderEntry(modelWith({}))
+    fireEvent.click(screen.getByLabelText(copy.kindRothIra))
+    setMoney(copy.accountValueLabel, '100000')
+    fireEvent.change(screen.getByLabelText(copy.classifierStockPct), { target: { value: '60' } })
+    fireEvent.change(screen.getByLabelText(copy.classifierBondPct), { target: { value: '30' } })
+    fireEvent.change(screen.getByLabelText(copy.classifierCashPct), { target: { value: '10' } })
+    fireEvent.change(screen.getByLabelText(copy.classifierCashPct), { target: { value: '20' } }) // now 110
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave })) // still no blur
+    expect(onSave2).not.toHaveBeenCalled()
+    expect(screen.getByRole('alert').textContent).toBe(copy.errClassifierSum)
+  })
+
+  it('CLEARING every leg of a committed blend is not an error — the account re-commits blend-less and the gate names it (the blank report is reachable)', () => {
+    const m = modelWith({})
+    const onSave = vi.fn()
+    render(
+      <AccountEntry
+        draft={m.getSnapshot().draft}
+        initial={{
+          ownerIndex: 0,
+          kind: 'roth-ira',
+          valueToday: 100_000,
+          manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
+        }}
+        onSave={onSave}
+        onCancel={() => {}}
+      />,
+    )
+    for (const labelKey of ['classifierStockPct', 'classifierBondPct', 'classifierCashPct'] as const) {
+      fireEvent.change(screen.getByLabelText(copy[labelKey]), { target: { value: '' } })
+    }
+    fireEvent.blur(screen.getByLabelText(copy.classifierCashPct))
+    expect(screen.queryByRole('alert')).toBeNull() // blank is "not answered", never a sum error
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
+    expect(onSave).toHaveBeenCalledTimes(1)
+    const account = onSave.mock.calls[0]![0]
+    expect(account.manualBlend).toBeUndefined() // the old 60/30/10 is GONE, not re-committed
+    const missing = missingRequiredFacts({
+      ...m.getSnapshot().draft,
+      enteredAccounts: [account],
+    }).map((f) => f.labelKey)
+    expect(missing).toContain('classifierLegend')
+  })
+
+  it('a leg typed with a % sign is the number it shows ("60%" = 60); a leg that is not a plain 0–100 number is refused as ITS OWN fault, never as the sum\'s', () => {
+    const m = modelWith({})
+    const { onSave } = renderEntry(m)
+    fireEvent.click(screen.getByLabelText(copy.kindRothIra))
+    setMoney(copy.accountValueLabel, '100000')
+    fireEvent.change(screen.getByLabelText(copy.classifierStockPct), { target: { value: '60%' } })
+    fireEvent.change(screen.getByLabelText(copy.classifierBondPct), { target: { value: ' 30 ' } })
+    fireEvent.change(screen.getByLabelText(copy.classifierCashPct), { target: { value: '10' } })
+    fireEvent.blur(screen.getByLabelText(copy.classifierCashPct))
+    expect(screen.queryByRole('alert')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
+    expect(onSave).toHaveBeenCalledTimes(1)
+    expect(onSave.mock.calls[0]![0]).toMatchObject({
+      manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
+    })
+
+    cleanup()
+    // "1e2" used to be silently valued as 100 by a bare Number(); it is refused, and the
+    // message names the leg, not the sum (which would be a false diagnosis).
+    const { onSave: onSave2 } = renderEntry(modelWith({}))
+    fireEvent.click(screen.getByLabelText(copy.kindRothIra))
+    setMoney(copy.accountValueLabel, '100000')
+    fireEvent.change(screen.getByLabelText(copy.classifierStockPct), { target: { value: '1e2' } })
+    fireEvent.blur(screen.getByLabelText(copy.classifierStockPct))
+    expect(screen.getByRole('alert').textContent).toBe(copy.errClassifierNumber)
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
+    expect(onSave2).not.toHaveBeenCalled()
+    // 150 sums with nothing to 100 and is out of range — same message, same block.
+    fireEvent.change(screen.getByLabelText(copy.classifierStockPct), { target: { value: '150' } })
+    fireEvent.blur(screen.getByLabelText(copy.classifierStockPct))
+    expect(screen.getByRole('alert').textContent).toBe(copy.errClassifierNumber)
+  })
+
+  it('a legacy `simple` blend seeds the legs it will re-commit (cash ⇒ 0 / 0 / 100), never three blanks over a live blend', () => {
+    const m = modelWith({})
+    const onSave = vi.fn()
+    render(
+      <AccountEntry
+        draft={m.getSnapshot().draft}
+        initial={{ ownerIndex: 0, kind: 'roth-ira', valueToday: 100_000, manualBlend: { kind: 'simple', choice: 'cash' } }}
+        onSave={onSave}
+        onCancel={() => {}}
+      />,
+    )
+    expect(screen.getByLabelText(copy.classifierStockPct)).toHaveValue('0')
+    expect(screen.getByLabelText(copy.classifierBondPct)).toHaveValue('0')
+    expect(screen.getByLabelText(copy.classifierCashPct)).toHaveValue('100')
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
+    expect(onSave).toHaveBeenCalledTimes(1)
+    // Untouched, the household's own prior answer re-commits — and it IS what the screen showed.
+    expect(onSave.mock.calls[0]![0].manualBlend).toEqual({ kind: 'simple', choice: 'cash' })
+  })
+})
+
+describe('classifyLegs — the one rule behind the keystroke report and the blur check', () => {
+  it.each([
+    [{ stock: '60', bond: '30', cash: '10' }, 'valid'],
+    [{ stock: '100', bond: '', cash: '' }, 'valid'], // a blank leg reads as 0
+    [{ stock: '', bond: '', cash: '' }, 'blank'],
+    [{ stock: '60', bond: '30', cash: '20' }, 'invalid'],
+    [{ stock: '33.3', bond: '33.3', cash: '33.4' }, 'valid'], // decimals: float noise must not fail the sum
+    [{ stock: '0.1', bond: '66.6', cash: '33.3' }, 'valid'], // 0.1 + 66.6 + 33.3 === 99.99999999999999 in JS
+    [{ stock: '-10', bond: '60', cash: '50' }, 'invalid'], // sums to 100, but a negative leg is not a number 0–100
+    [{ stock: '150', bond: '0', cash: '0' }, 'invalid'],
+    [{ stock: 'abc', bond: '0', cash: '0' }, 'invalid'],
+    [{ stock: '1e2', bond: '0', cash: '0' }, 'invalid'], // exponent is refused (a bare Number() valued it 100)
+    [{ stock: '0x64', bond: '0', cash: '0' }, 'invalid'], // hex is refused
+    [{ stock: '60%', bond: '30', cash: '10' }, 'valid'], // % is formatting noise
+  ] as const)('%j → %s', (legs, kind) => {
+    expect(classifyLegs(legs).kind).toBe(kind)
+  })
+
+  it('names the reason: a bad leg is `range`, three good legs that miss 100 are `sum`', () => {
+    expect(classifyLegs({ stock: '-10', bond: '60', cash: '50' })).toEqual({ kind: 'invalid', reason: 'range' })
+    expect(classifyLegs({ stock: '1e2', bond: '0', cash: '0' })).toEqual({ kind: 'invalid', reason: 'range' })
+    expect(classifyLegs({ stock: '60', bond: '30', cash: '20' })).toEqual({ kind: 'invalid', reason: 'sum' })
+  })
+
+  it('a valid split emits the exact blend, blank legs as 0', () => {
+    expect(classifyLegs({ stock: '100', bond: '', cash: '' })).toEqual({
+      kind: 'valid',
+      blend: { kind: 'exact', stockPct: 100, bondPct: 0, cashPct: 0 },
+    })
+    expect(classifyLegs({ stock: '60%', bond: '30', cash: '10' })).toEqual({
+      kind: 'valid',
+      blend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
+    })
+  })
+
+  it('legsOf renders a stored blend through the ONE rendering — exact verbatim, simple via its documented blend, absent as blanks', () => {
+    expect(legsOf({ kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 })).toEqual({ stock: '60', bond: '30', cash: '10' })
+    expect(legsOf({ kind: 'simple', choice: 'bonds' })).toEqual({ stock: '0', bond: '100', cash: '0' })
+    expect(legsOf(undefined)).toEqual({ stock: '', bond: '', cash: '' })
+  })
+})
+
+describe('AccountEntry — a blocked Add ALWAYS names the missing fact (WCAG 3.3.1), never a silent dead button', () => {
+  it('Add with no kind picked names the kind; picking one clears the line; Add with no balance names the balance, BOUND to that field', () => {
+    const m = modelWith({})
+    const { onSave } = renderEntry(m)
+    // Nothing answered — the old code returned silently here (a live-looking button that did nothing).
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
+    expect(onSave).not.toHaveBeenCalled()
+    expect(screen.getByRole('alert').textContent).toBe(copy.errAccountKindRequired)
+    // Answering the fact forgives the line (no lingering alert over a supplied answer).
+    fireEvent.click(screen.getByLabelText(copy.kindRothIra))
+    expect(screen.queryByRole('alert')).toBeNull()
+    // Kind picked, balance blank: the balance line, associated with the balance field.
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
+    expect(onSave).not.toHaveBeenCalled()
+    const alert = screen.getByRole('alert')
+    expect(alert.textContent).toBe(copy.errAccountValueRequired)
+    const balance = screen.getByLabelText(copy.accountValueLabel)
+    expect(balance).toHaveAttribute('aria-invalid', 'true')
+    expect(balance).toHaveAttribute('aria-describedby', expect.stringContaining(alert.id))
+    // Forgiven on re-edit: the first keystroke drops the line.
+    fireEvent.focus(balance)
+    fireEvent.change(balance, { target: { value: '1' } })
+    expect(screen.queryByRole('alert')).toBeNull()
+    fireEvent.change(balance, { target: { value: '100000' } })
+    fireEvent.blur(balance)
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
+    expect(onSave).toHaveBeenCalledTimes(1)
+  })
+
+  it('the kind group advertises requiredness up front — aria-required on every radio and the visible "(required)" marker, text not color', () => {
+    renderEntry(modelWith({}))
+    expect(screen.getByLabelText(copy.kindRothIra)).toHaveAttribute('aria-required', 'true')
+    expect(screen.getByLabelText(copy.kind401k)).toHaveAttribute('aria-required', 'true')
+    expect(screen.getByText(copy.fieldRequiredMarker)).toBeInTheDocument()
   })
 })
 

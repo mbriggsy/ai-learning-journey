@@ -269,7 +269,11 @@ const CLASSIFICATION_BLENDS: Readonly<
   cash: { stock: 0, bond: 0, cash: 100 },
 }
 
-function blendOf(c: TickerClassification): { stock: number; bond: number; cash: number } {
+/** The ONE rendering of a classification as three percentages — the engine's stockWeight
+ *  derivation reads it (below), and the allocation editor seeds its legs from it so what the
+ *  screen shows is exactly what an untouched Add re-commits (a legacy 'simple' blend used to
+ *  seed three BLANK legs while the parent silently kept and re-committed it; 2026-09-03). */
+export function blendOf(c: TickerClassification): { stock: number; bond: number; cash: number } {
   return c.kind === 'simple'
     ? CLASSIFICATION_BLENDS[c.choice]
     : { stock: c.stockPct, bond: c.bondPct, cash: c.cashPct }

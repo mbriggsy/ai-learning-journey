@@ -211,8 +211,68 @@ PIPELINE half (mint → persist → unlock → holds → demote → re-promote) 
 regardless. **Lean: (b)** — the render is pinned synthetically, the pipeline is witnessed, and the
 hunt's marginal value is one eyeball frame; but the scope call is his if (a) tempts anyone.
 
-▶ **START HERE NEXT SESSION — executable without Briggsy: the phone-viewport (390×844) intake
-walk** — the desktop walk cleared the copy and the mechanics, not the fold.
+▶ **START HERE NEXT SESSION (hand-off written 2026-09-03 at 84% context — three commits landed
+this session: `41f9edee` the allocation silent discard + its four siblings · `530e6545` insight 110 ·
+`53486a39` the completed-intake dead end + the review's P1; CI for the last: run 33798494514 — poll
+it by id, read `conclusion`, never a watch exit code).**
+
+**FIRST: item 3 of the 2026-09-03 ranked plan is STAGED, not applied — the intake beforeunload guard.**
+The verify→skeptic pass corrected the filed shape (the arm is DISK-derived, never `persist.kind` or the
+flow's `touched`; the ceremony must report its commit AT `firstSave`'s ok arm via a new SaveFlow
+`onCommitted`, or "Your plan is saved" would warn). Three count-checked edit scripts sit in
+`temp/item3/` (gitignored; squeaky clears it — copy them out first if a squeaky runs before this):
+`node temp/item3/edit-item3.js` (model.ts exports `canonicalIdentityToken` · memoryModel gains
+`draftIdentityKey` · resultSave gains `unsavedWorkPending` · SaveFlow gains `onCommitted` + header ·
+IntakeApp gets the guard after `saveReady`, the seed-install baseline re-point, and the ceremony
+hand-off) → `node temp/item3/edit-item3-tests.js` (six seam arms · SaveFlow ok/refused arms · the
+IntakeApp probe: hydrate→Review no edit ⇒ no warn, edit ⇒ warn, edit back ⇒ no, fresh intake typed ⇒
+warns through completion and the pre-commit steps, the COMMIT disarms) → typecheck · targeted tests ·
+plant/kill mutants (drop the guard effect; report at onComplete instead of onCommitted) · lint · full
+suite · doc-stats → `node temp/item3/edit-item3-docs.js` (TODO entry 12 + the ride-along block +
+register bullet) → real-browser look: type one field → refresh → dialog; `/?seed=retired` → refresh →
+NO dialog; finish a ceremony to "Your plan is saved" → refresh → NO dialog (Playwright auto-ACCEPTS
+beforeunload with no dialog listener — assert `defaultPrevented` in jsdom or `page.on('dialog')` in
+e2e; no spec can stall on it) → unit-boundary review (`/ultramode-code-review`, model:'opus' on every
+spawn) → commit → push. Every anchor in the scripts was verified against source THIS session; if one
+throws "expected 1 match", the tree moved — re-anchor, do not force.
+
+**THEN, the 2026-09-03 ranked plan, as re-verified by 24 agents (12 verify→skeptic pairs; 10 of 12
+verifiers refuted on a material point) — statuses current:**
+1. ✅ Allocation silent discard (+4 siblings) — `41f9edee`.
+2. ✅ Completed-intake dead end, build half — `53486a39`. Decision half yours (register Tier 3).
+3. ⏳ Intake beforeunload — STAGED above.
+4. The phone-viewport (390×844) intake walk — findings only, no fixes; the desktop walk cleared the
+   copy and the mechanics, not the fold.
+5. Solve-lane cancel (M): an edit mid-solve leaves the superseded solve burning the ONE shared worker
+   while the edit's own recompute queues behind it; Tier A = `worker.terminate()` + respawn behind a
+   stable forwarding handle (Comlink's pending promises never settle on terminate — reject them
+   yourself), triggered from `update()` when the fingerprint moves (no UI can re-dispatch while
+   pending); the U16 "no second worker" ruling allows a SEQUENTIAL respawn. Register: "The solve lane".
+6. Date-route one-liner (S) via a Caddie card — words must be true on all FOUR date-hero framings
+   (anchor on WORK STATUS, never "a date ahead of you"); the one token yours: does it promise parity.
+7. `?seed=failing` typed refusal (M): the frame is decided by the code's own contract (mint-failed is
+   for CODE defects; an unwitnessable household gets a typed refusal); `recHoldGeneric` is a truthful
+   interim; the exact sentence is yours (copy.ts names the N=1 word-pick for this seed).
+8. PWA icons (S, silhouette-first, his eye audits) → WebKit e2e arm (M) → enlarged-text fit arm (S,
+   CDP `Page.setFontSizes` — probed live in this repo's Chromium — council only on a protected red).
+9. Aged-window disclosure note (S; the ranking fork stays yours, three arms with corrected costs, due
+   before 2027-01-01) · migration ladder scaffold (S; the honest legacy state names NO remedy — the
+   backup carries the same bytes) · HSA-forfeit + LTC "What this leaves out" section (M; pilot per the
+   register — the queue's owner call is the account-total confirm only).
+10. Hygiene session (M): nine items, the copyGuard scope canary first (six `rec*` keys sit in neither
+    scope today).
+**Also filed today, pilot, with exact fixes:** register Tier 2 "The dead-end repair beat" (four
+residuals from item 2's review) and "A repeat Add tap over an already-visible block" (from item 1's).
+
+**Landmines this session added:** the Bash tool mangles heredocs carrying nested quotes — write the
+script to a file with the Write tool and `node` it · `.playwright-mcp` drops screenshots in the
+PROJECT ROOT — `mv` them out before `git add` · Playwright `fill` + an immediate Continue click can
+land without a blur and not advance (seen once on the OOP step; a real tap blurs first) — click the
+step heading to blur, then Continue · a power/network blip drops Vite's websocket and full-reloads the
+page to ColdStart mid-walk · `:nth-match(label:has-text("…"), N)` is the selector for the sr-only
+radios (the label intercepts the click) · CLAUDE_CODE_SUBAGENT_MODEL=opus is set in settings.json
+since today — a fresh terminal picks it up; STILL pass `model: 'opus'` on every spawn and check
+`/tasks` shows Opus.
 
 ⚑ **EVERYTHING IN THE WALK-FINDINGS LIST BELOW IS BRIGGSY'S, NOT A BUILD.** Finding 2 is WITHDRAWN
 (refuted same-day). Finding 1's copy pass is OFF (the string is true; only the door is missing, and

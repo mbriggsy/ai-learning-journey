@@ -917,6 +917,31 @@ describe('recommendationView — the winning-plan card (what the crowned plan SE
     expect(slots.rothPlanEcho('43,000', 2026, true, 9)).toContain('started in 2026')
   })
 
+  it('a ONE-YEAR window on an aged vault agrees in number — "that year", never "those years" (the at/past-RMD clamp)', () => {
+    const base = leaveMoreRec()
+    // `conversionWindowFor` (solveAnchor.ts) clamps the window to ≥ 1 year, so every at/past-RMD household
+    // ranks a ONE-year schedule — and on an aged vault it renders the PASSED arm, which hardcoded the plural
+    // "Those years are counted from…" after a correctly-singular "for 1 year" (shipped until 2026-09-04; no
+    // test covered `years: 1, passed: true`).
+    const card = cardOf({ ...base, winner: withConversion(base.winner, conv(43_617, 0, 1)) }, {
+      spineConfidence: spine,
+      planClock: { startCalendarYear: 2026, yearsSincePlanBuilt: 3 },
+    })
+    expect(card.conversionLine).toBe(slots.rothPlanRanked('43,000', 1, 2026, true))
+    expect(card.conversionLine).toContain('for 1 year.')
+    expect(card.conversionLine, 'number agreement: one year is never "those years"').not.toContain('years')
+    expect(card.conversionLine, 'the one fact the second sentence carries: WHICH year').toContain('That year is 2026')
+    // The passed-arm laws hold on the singular arm too: no commencement claim in any tense, and the build
+    // year is never re-based onto the wall clock.
+    expect(card.conversionLine).not.toContain('started')
+    expect(card.conversionLine).not.toContain('starting')
+    expect(card.conversionLine).not.toContain('2029')
+    // The un-passed singular arm keeps the echo's plain wording (the window sentence is shared).
+    expect(slots.rothPlanRanked('43,000', 1, 2026, false)).toBe(
+      'Converting ~$43,000 a year for 1 year, starting in 2026.',
+    )
+  })
+
   it('a FRESH plan still reads as plainly as the echo did — the fix costs the common case nothing', () => {
     const base = leaveMoreRec()
     const card = cardOf({ ...base, winner: withConversion(base.winner, conv(43_617, 0, 9)) })

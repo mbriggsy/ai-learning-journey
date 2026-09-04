@@ -605,6 +605,15 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     }
   })
 
+  it('the crowned schedule\'s SINGULAR passed arm holds the same voice — the catalog samples only the plural (one sample per key)', () => {
+    // The at/past-RMD one-year clamp renders this arm on every aged vault; a catalog keyed one-sample-per-slot
+    // never reaches it, so it is swept here under the slot gates (no free-numeral — a calendar year is the
+    // sanctioned numeric channel, the same split the SLOT_RENDER loop applies).
+    const rendered = slots.rothPlanRanked('43,000', 1, 2026, true)
+    expect(rendered, 'number agreement').not.toContain('years')
+    expect(lintCopy(rendered, ['false-certainty', 'advice-verb', 'superlative']), rendered).toEqual([])
+  })
+
   it('verdict money-clauses hardcode no numeral in the template (slot-discipline)', () => {
     const S = '§§§' // a non-numeric sentinel — any digit left is a hardcoded one in the template
     for (const rendered of [

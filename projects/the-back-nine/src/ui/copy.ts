@@ -2333,8 +2333,15 @@ export const slots = {
    *
    * BOTH ARMS ARE TRUE. The un-passed arm is the echo's wording verbatim (nothing was wrong with it).
    * The passed arm makes NO commencement claim: it states the window's LENGTH and says what the window
-   * is counted from, which holds whatever the wall clock reads. Two sentences, one fact each — the
-   * em-dash apposition that would have fitted it on one line is banned on load-bearing figures.
+   * is counted from (or, for a ONE-year window, which year it is), which holds whatever the wall clock
+   * reads. Two sentences, one fact each — the em-dash apposition that would have fitted it on one line
+   * is banned on load-bearing figures.
+   *
+   * NUMBER AGREEMENT (2026-09-04): the passed arm's second sentence used to hardcode the plural "Those
+   * years are counted from…" after a correctly-singular "for 1 year" — live for every at/past-RMD
+   * household on an aged vault (`conversionWindowFor` clamps the window to ≥ 1 year), and no test
+   * covered `years: 1, passed: true`. The singular keeps the SAME vocabulary ("the first year of this
+   * plan") so no second phrasing is minted for one fact.
    */
   rothPlanRanked: (
     amountFormatted: string,
@@ -2343,9 +2350,10 @@ export const slots = {
     firstYearPassed: boolean,
   ): string => {
     const window = `Converting ~$${amountFormatted} a year for ${years} year${years === 1 ? '' : 's'}`
-    return firstYearPassed
-      ? `${window}. Those years are counted from ${firstYear}, the first year of this plan.`
-      : `${window}, starting in ${firstYear}.`
+    if (!firstYearPassed) return `${window}, starting in ${firstYear}.`
+    return years === 1
+      ? `${window}. That year is ${firstYear}, the first year of this plan.`
+      : `${window}. Those years are counted from ${firstYear}, the first year of this plan.`
   },
 
   /** U17 §S6 — THE APPLIED CONVERSION'S OWN PASSED START, STATED RATHER THAN REFUSED.

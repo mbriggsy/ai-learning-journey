@@ -145,12 +145,13 @@ describe('solve wire pack/unpack (§S5 (4))', () => {
     expect(view.payload.runnerUp).toBeUndefined()
   })
 
-  it('the plain payload arms cross unchanged (no buffers): refused / token-withheld / mint-failed', () => {
+  it('the plain payload arms cross unchanged (no buffers): refused / token-withheld / mint-failed / unwitnessable', () => {
     const plain: SolvePayload[] = [
       { kind: 'refused', reason: 'fingerprint-mismatch', detail: 'x', solverCodeVersion: 1 },
       { kind: 'withheld', reason: 'demotion-axis-uncalibrated', detail: 'x', winnerId: 'a', runnerUpId: 'b', surplusRegime: true, solverCodeVersion: 1 },
       { kind: 'token-withheld', reasons: [{ kind: 'state-certification-pending', state: 'NC' }], disclosedDirectional: [], solverCodeVersion: 1 },
       { kind: 'mint-failed', stage: 'roster', detail: 'x', solverCodeVersion: 1 },
+      { kind: 'unwitnessable', reason: 'perturbation-inert', detail: 'x', solverCodeVersion: 1 },
     ]
     for (const p of plain) {
       expect(packSolveWire(p)).toEqual(p) // identity (no arm to transfer)

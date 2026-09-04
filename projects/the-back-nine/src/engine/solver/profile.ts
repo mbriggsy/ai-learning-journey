@@ -52,7 +52,7 @@ export interface SolveProfile {
   /** The held-out grade family size m (the grade runs winner+runner-up across it). */
   readonly bFamilySize: number
   /** The solve's outcome kind — a `recommended` profile measured the FULL search + grade; any other
-   *  kind (token-withheld / mint-failed / refused / withheld / aborted) short-circuited earlier and
+   *  kind (token-withheld / mint-failed / unwitnessable / refused / withheld / aborted) short-circuited earlier and
    *  the caller must NOT read its `solveMs` as a full-solve worst case. */
   readonly payloadKind: SolvePayload['kind']
 }

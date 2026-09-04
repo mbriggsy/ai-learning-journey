@@ -219,7 +219,7 @@ function packArm(arm: SolveArm): SolveArmWire {
 }
 
 /** Pack the solve payload into wire form — the recommended arm's three distributions become buffers;
- *  every other arm (refused / withheld / token-withheld / mint-failed) is plain data carried verbatim. */
+ *  every other arm (refused / withheld / aborted / token-withheld / mint-failed / unwitnessable) is plain data carried verbatim. */
 export function packSolveWire(payload: SolvePayload): SolveWire {
   if (payload.kind !== 'recommended') return payload
   return {

@@ -99,7 +99,7 @@ function mintToken(): OracleClearedToken {
     tieTolerance: 0, // the run tolerance the fingerprint pins (matches solveInput's tieTolerance)
   })
   if (!('report' in stabilityOut)) {
-    throw new Error(`stability must pass: ${(stabilityOut as { violations: readonly string[] }).violations.join(' | ')}`)
+    throw new Error(`stability must pass: ${(stabilityOut as { violations: readonly { text: string }[] }).violations.map((v) => v.text).join(' | ')}`)
   }
   const mint = mintOracleToken({
     params: BASE,
@@ -595,7 +595,7 @@ describe('solve() — the displayed baseline is the household’s OWN entered st
       tieTolerance: 0,
     })
     if (!('report' in stabilityOut)) {
-      throw new Error(`stability must pass: ${(stabilityOut as { violations: readonly string[] }).violations.join(' | ')}`)
+      throw new Error(`stability must pass: ${(stabilityOut as { violations: readonly { text: string }[] }).violations.map((v) => v.text).join(' | ')}`)
     }
     const mint = mintOracleToken({
       params: BASE_UB,

@@ -891,6 +891,14 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     expect(isMortalityKey('assumptionSurvivorRatioHelp'), 'survivor-substring keys ride the survivor net').toBe(true)
     expect(isMortalityKey('assumptionSurvivorSsValue')).toBe(true)
     expect(isMortalityKey('assumptionMarketFloorNote'), 'non-mortality panel chrome stays out').toBe(false)
+    // 2026-09-04 — the generic HOLD joins the net BY NAME: it is the fail-closed line for any hold with
+    // no authored reason (`withheldReasonText`'s default) AND the UNWITNESSABLE refusal's interim line,
+    // and that set of readers INCLUDES the already-failing household (`?seed=failing`) — the rethink
+    // clause's own worst-moment class — so the net must hold for the worst reader on the key. Control
+    // arm: a sibling hold that names its own reason stays out.
+    expect(isMortalityKey('recHoldGeneric'), 'the fail-closed hold line whose readers include the already-failing cohort').toBe(true)
+    expect(isMortalityKey('recHoldDemotionAxis'), 'a hold that names its own reason stays out').toBe(false)
+    expect(lintCopy(copy.recHoldGeneric, ['catastrophe'])).toEqual([])
     // The line itself passes the gate it joined (the catalog sweep above covers it too — this
     // arm keeps the pairing visible next to the scope pin).
     expect(lintCopy(copy.assumptionTruerPicture, ['catastrophe'])).toEqual([])

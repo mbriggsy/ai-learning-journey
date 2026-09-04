@@ -291,7 +291,7 @@ describe('S6 — mintOracleToken: the assembled gate (reports required, clauses 
     tieTolerance: 0, // identity-only (the fingerprint pins it)
   })
   if (!('report' in stabilityOut)) {
-    throw new Error(`stability must pass to build the mint battery: ${(stabilityOut as { violations: readonly string[] }).violations.join(' | ')}`)
+    throw new Error(`stability must pass to build the mint battery: ${(stabilityOut as { violations: readonly { text: string }[] }).violations.map((v) => v.text).join(' | ')}`)
   }
   const stabilityReport = stabilityOut.report
   const today = epochDayFromIsoDate(acaEnhancedSubsidyStatus.value.verifiedOn) + 5

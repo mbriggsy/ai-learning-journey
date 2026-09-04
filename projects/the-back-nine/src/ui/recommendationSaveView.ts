@@ -137,7 +137,7 @@ export function deriveRecommendationSave(input: RecommendationSaveInput): Recomm
 
   // (3) There must be a LIVE RECOMMENDATION to save. `stale`, `pending`, `blocked`, `idle`,
   // `compute-error` and every non-`recommended` committed payload (refused / withheld /
-  // token-withheld / mint-failed) have no crowned winner, so there is nothing a record could
+  // token-withheld / mint-failed / unwitnessable) have no crowned winner, so there is nothing a record could
   // describe — and offering to "keep" one would promise a mint that `mintSavedRecommendation`
   // cannot make. No claim.
   if (solve.kind !== 'committed' || solve.payload.kind !== 'recommended') return { kind: 'none' }

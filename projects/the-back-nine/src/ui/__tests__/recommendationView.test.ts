@@ -12,7 +12,7 @@ import { headlineStatisticFromDistribution } from '@engine/solver/objectiveHeadl
 import type { SolveArm, SolveRecommendation } from '@engine/solver/solve'
 import type { SolvePayload, SolveTokenWithheld } from '@engine/solver/solveEntry'
 import type { GradeResult } from '@engine/validation/gradeCalibration'
-import { lintCopy } from '../copyGuard'
+import { isMortalityKey, lintCopy } from '../copyGuard'
 import type { WithheldReason } from '@engine/validation/oracleToken'
 import type { SolverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 import type { SolveAnswer } from '@store/memoryModel'
@@ -21,6 +21,7 @@ import type { BandPlanClockAnchor } from '../bandAnnotations'
 import {
   recommendationView,
   withheldReasonText,
+  unwitnessableReasonText,
   disclosuresFor,
   DISCLOSURE_ORDER,
   type RecommendedView,
@@ -182,6 +183,44 @@ describe('recommendationView — refusals / mint-failures route to ONE calm unav
     expect(copy.recHoldDemotionAxis, 'never asserts a near-tie the guard did not measure').not.toMatch(
       /\b(neck and neck|close call|near-?tie|dead heat|too close to call)\b/i,
     )
+  })
+
+  // THE UNWITNESSABLE HOUSEHOLD (2026-09-04) — `?seed=failing`'s bin. The harness's +1,000 conversion
+  // perturbation cannot move a household that is exhausted in year 0 (every recorded vector is zero
+  // whatever is converted), so ranking stability is VACUOUS there by construction. It used to arrive as `mint-failed` and render the "try again"
+  // line pinned above — a retry that cannot succeed (insight 109's impossible-retry shape). It is a
+  // DECISION now, so it renders the humane HOLD, exactly like the demotion withhold.
+  it('the unwitnessable household renders the HUMANE HOLD, never the "try again" card (a retry cannot succeed)', () => {
+    for (const reason of ['perturbation-inert', 'perturbation-infeasible'] as const) {
+      const p: SolvePayload = {
+        kind: 'unwitnessable',
+        reason,
+        detail: 'perturbation arm VACUOUS: nothing moved (insight 029)',
+        solverCodeVersion: 1,
+      }
+      const v = recommendationView(committed(p))
+      expect(v.kind, `${reason}: a decision we can explain is never dressed as a malfunction`).toBe('held')
+      if (v.kind !== 'held') throw new Error('unreachable')
+      expect(v.heading).toBe(copy.recommendHeldHeading)
+      expect(v.reasons).toEqual([unwitnessableReasonText(reason)])
+      // The interim reason line IS the generic hold — by decision (his sentence is pending), not by
+      // fallthrough — and it is DISTINCT from the malfunction card's line.
+      expect(v.reasons[0]).toBe(copy.recHoldGeneric)
+      expect(v.reasons[0]).not.toBe(copy.recommendUnavailable)
+      // The engine's diagnostic stays INTERNAL — the household reads the humane reason only.
+      expect(v.reasons[0]).not.toMatch(/VACUOUS|insight|perturbation|029/i)
+    }
+    // NON-VACUITY: a mint-failed on the very same stability stage still reads the malfunction card —
+    // the two bins are distinguishable on the frame, which is the whole point of the arm.
+    const mf = recommendationView(committed({ kind: 'mint-failed', stage: 'stability', detail: 'x', solverCodeVersion: 1 }))
+    expect(mf.kind).toBe('unavailable')
+    // The interim line's readers INCLUDE the already-failing cohort (`?seed=failing`), so it wears the
+    // catastrophe net BY NAME (copyGuard.ts) and clears it — plus the control-scope gates every
+    // recHold* key wears.
+    expect(isMortalityKey('recHoldGeneric'), 'the worst-moment cohort\'s line joins the catastrophe net').toBe(true)
+    expect(
+      lintCopy(copy.recHoldGeneric, ['catastrophe', 'require-hedge', 'false-certainty', 'advice-verb', 'superlative']),
+    ).toEqual([])
   })
 })
 

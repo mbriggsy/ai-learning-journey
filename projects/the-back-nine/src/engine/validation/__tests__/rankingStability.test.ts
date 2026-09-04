@@ -11,7 +11,13 @@ import type { PersonInputs, SimulationParams } from '@shared/model'
 import type { Distribution } from '@shared/model'
 import { enumerateCandidates, type CandidateStrategy } from '../../solver/candidates'
 import { caseIiBuildBase } from '../../reference/solver-cases/caseBracketFill'
-import { decisionSurfaceIdentical, runRankingStability } from '../rankingStability'
+import {
+  decisionSurfaceIdentical,
+  householdVacuity,
+  runRankingStability,
+  type RankingStabilityFailure,
+  type StabilityViolationClass,
+} from '../rankingStability'
 import { solverRunFingerprint } from '../solverRunFingerprint'
 
 /** The ranking objective the report's fingerprint pins (U15 §S0.2). The stability CHECK is
@@ -119,7 +125,7 @@ describe('runRankingStability — the live K-candidate CRN pass', () => {
       ranking,
       tieTolerance: 0, // identity-only (the fingerprint pins it); this world ranks at an exact 0
     })
-    expect('report' in out, 'ok' in out && out.ok === false ? (out as { violations: readonly string[] }).violations.join(' | ') : '').toBe(true)
+    expect('report' in out, 'ok' in out && out.ok === false ? out.violations.map((v) => v.text).join(' | ') : '').toBe(true)
     if ('report' in out) {
       expect(out.report.candidateCount).toBe(candidates.length)
       expect(out.report.minSurvivorCrossings).toBeGreaterThan(0) // burned/027 — never vacuous
@@ -142,7 +148,9 @@ describe('runRankingStability — the live K-candidate CRN pass', () => {
     const out = runRankingStability({ base, candidates, seedA: 1, seedB: 2, perturbIndex: 1, siblingIndex: 2, ranking, tieTolerance: 0 })
     expect('report' in out).toBe(false)
     if ('ok' in out && !out.ok) {
-      expect(out.violations.some((v) => /survivor regime.*vacuous/.test(v))).toBe(true)
+      expect(out.violations.some((v) => v.class === 'survivor-vacuous' && /survivor regime.*vacuous/.test(v.text))).toBe(true)
+      // A WORLD-shape vacuity is the harness's to refuse (mint-failed), never a household's refusal.
+      expect(householdVacuity(out), 'no sampled deaths is a world defect, not an unwitnessable household').toBeNull()
     }
   }, 60_000)
 
@@ -164,7 +172,11 @@ describe('runRankingStability — the live K-candidate CRN pass', () => {
     const out = runRankingStability({ base: inert, candidates, seedA: 0xa11ce, seedB: 0xb0b5eed, perturbIndex: 1, siblingIndex: 2, ranking, tieTolerance: 0 })
     expect('report' in out).toBe(false)
     if ('ok' in out && !out.ok) {
-      expect(out.violations.some((v) => /perturbation arm VACUOUS.*nothing moved/.test(v))).toBe(true)
+      expect(out.violations.some((v) => v.class === 'perturbation-inert' && /perturbation arm VACUOUS.*nothing moved/.test(v.text))).toBe(true)
+      // THE HOUSEHOLD CLASS (2026-09-04): an inert perturbation is a property of the household the
+      // harness cannot witness — the classifier names it so `solveEntry` can refuse it as a decision
+      // (`kind: 'unwitnessable'`) instead of binning a household as a code defect (`mint-failed`).
+      expect(householdVacuity(out)).toBe('perturbation-inert')
     }
   }, 240_000)
 
@@ -177,7 +189,60 @@ describe('runRankingStability — the live K-candidate CRN pass', () => {
     const out = runRankingStability({ base, candidates, seedA: 1, seedB: 2, perturbIndex: 0, siblingIndex: 1, ranking, tieTolerance: 0 })
     expect('report' in out).toBe(false)
     if ('ok' in out && !out.ok) {
-      expect(out.violations.some((v) => /misconfigured/.test(v))).toBe(true)
+      expect(out.violations.some((v) => v.class === 'perturbation-misconfigured' && /misconfigured/.test(v.text))).toBe(true)
+      expect(householdVacuity(out), 'a misconfigured arm is the caller\'s defect, never a household refusal').toBeNull()
     }
   }, 120_000)
+})
+
+// ---- householdVacuity — the law that decides "the household's refusal" vs "the harness broke" -------
+
+describe('householdVacuity — every violation must be household-conditioned, or the harness broke (2026-09-04)', () => {
+  const v = (cls: StabilityViolationClass): { readonly class: StabilityViolationClass; readonly text: string } => ({
+    class: cls,
+    text: `synthetic ${cls}`,
+  })
+  const fail = (...classes: readonly StabilityViolationClass[]): RankingStabilityFailure => ({
+    ok: false,
+    violations: classes.map(v),
+  })
+
+  it('an all-household list carries its class — both household branches', () => {
+    expect(householdVacuity(fail('perturbation-inert'))).toBe('perturbation-inert')
+    expect(householdVacuity(fail('perturbation-infeasible'))).toBe('perturbation-infeasible')
+  })
+
+  it('ONE harness-class violation beside a household vacuity means the gate broke — null, so mint-failed wins', () => {
+    // A code defect never hides behind a household's refusal: the recommender must not ship on a run
+    // whose harness reported a genuine break, however the household happens to look.
+    expect(householdVacuity(fail('perturbation-inert', 'dimension-moved'))).toBeNull()
+    expect(householdVacuity(fail('survivor-vacuous', 'perturbation-inert'))).toBeNull()
+    expect(householdVacuity(fail('perturbation-law-broke', 'perturbation-infeasible'))).toBeNull()
+  })
+
+  it('every harness class alone is null — the typed refusal reaches exactly the two household classes', () => {
+    const harness: readonly StabilityViolationClass[] = [
+      'dimension-moved',
+      'survivor-vacuous',
+      'perturbation-misconfigured',
+      'sibling-unscored',
+      'perturbation-law-broke',
+    ]
+    for (const cls of harness) expect(householdVacuity(fail(cls)), cls).toBeNull()
+    // Exhaustive by construction: the seven classes are the five above plus the two household ones.
+    const all: Record<StabilityViolationClass, true> = {
+      'dimension-moved': true,
+      'survivor-vacuous': true,
+      'perturbation-misconfigured': true,
+      'sibling-unscored': true,
+      'perturbation-law-broke': true,
+      'perturbation-inert': true,
+      'perturbation-infeasible': true,
+    }
+    expect(Object.keys(all)).toHaveLength(harness.length + 2)
+  })
+
+  it('an empty list is not a failure at all', () => {
+    expect(householdVacuity(fail())).toBeNull()
+  })
 })

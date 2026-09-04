@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register: **43 open items** (51 entries, 8 closed and kept as records; the runner-up entry is half-closed and counted open — re-counted 2026-09-04) consolidated
+> The complete open register: **45 open items** (53 entries, 8 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open — re-counted 2026-09-04) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -273,6 +273,92 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 - ⚑ **BRIGGSY DECIDES:** on `leave-more` a converting winner is the EXPECTED crown for a well-funded
   household, so an honest withhold likely fires for the **modal** target user — a hold, not an answer.
   Ship the hold, or go straight to calibrating the demotion width on the dollar axes?
+
+### ✅ CLOSED 2026-09-04 (the mechanism) — `?seed=failing` mint-fails: the household the harness cannot witness is a TYPED refusal now, not a code defect; its own sentence stays open, his
+
+`M` · **pilot (the mechanism, shipped) · briggsy (the sentence)** · filed 2026-08-05 in `TODO.md` only (the witness probe, "7b"); register entry filed with the build
+
+- **What shipped.** Ranking stability's perturbation law needs its ONE +$1,000 step on the first anchored
+  conversion candidate to MOVE that candidate's own recorded decision surface (insight 029's presence
+  companion). On a household exhausted inside the window (the seed: a $60k IRA under a ~$72k year-one
+  draw, both retired, low SS — every path depletes in year 0 before the year's tax accrues, so every
+  recorded vector is zero whatever is converted; $50,268 and its $51,268 variant both run UNCLAMPED
+  inside the pool, and $200k moves nothing either) nothing moves, and the harness binned that
+  `mint-failed{stability}` — the bin reserved for
+  HARNESS defects — which `recommendationView` rendered as the generic *"We couldn't work out a
+  recommendation just now — adjust a number, or re-open this, to try again"*: a retry that cannot succeed
+  (insight 109's shape), on the cohort least able to afford a wrong frame. Now every stability violation
+  carries a TYPED class beside its prose (`rankingStability.ts` `StabilityViolationClass` — five harness
+  classes, two household classes), `householdVacuity()` names the household class iff EVERY violation is
+  household-conditioned (one harness-class violation beside it ⇒ the gate broke ⇒ `mint-failed` still
+  wins), `solveWithMint` returns a new `SolvePayload` arm `{ kind: 'unwitnessable', reason:
+  'perturbation-inert' | 'perturbation-infeasible', detail }`, and `committedView` routes it to the humane
+  HOLD (`recommendHeldHeading` + `recHoldGeneric`) — a decision the surface explains, never a malfunction.
+  The bin is named off the TRIGGER — the harness's own step leaving the varied candidate's surface
+  byte-identical — never the verdict, and the criterion is the SURFACE, never the pool's room for the
+  dollars: it is verdict-blind (a $900k household with pretax 0 reaches it by the OTHER route, both arms
+  clamping to `min(planned, pretax − rmd)` — the solveEntry test) and a failing household whose surface
+  still responds never reaches it. ⚑ The first draft of every comment in the build said "the pool cannot
+  absorb the perturbation" — the review fleet's engine lens refuted it on the seed itself (the pool
+  absorbs it with $8,732 to spare); a mechanism inferred from the verdict is not the mechanism the code
+  ran. Insight 114.
+- **Witnessed.** Both goals through the real builder + engine (`devSeeds.test.ts`, 256 paths — the
+  household dies in year one, so the solve is sub-second even at full precision) and live in real Chromium
+  at 1536×791 on `?seed=failing` → leave-more: the held card renders ~4 s after the goal pick, the
+  unavailable note is gone, console clean but the known favicon 404. Three mutants killed (the classifier
+  returning null · the view routing to unavailable · the mortality-net seat dropped); the mutant REVERT
+  landmine it cost is in `TODO.md`.
+- **OPEN, HIS — the sentence, AND the heading.** `recHoldGeneric` is the interim reason line by decision
+  (hedge-bearing, catastrophe-clean, nothing in it false), but FOUR temporal promises ride the frame and
+  none is keepable for a structurally inert household — "for now", "can't yet stand behind" and "we'd
+  rather wait than guess" in the string, plus a second "for now" in `recommendHeldHeading`, which is
+  SHARED with the token-withheld and demotion holds. So the household-true frame is TWO keys, not one:
+  his N=1 sentence as its own reason key, and its own heading (a heading field on the held view, or a
+  second key) — swapping the reason line alone leaves a "for now" on the frame. Insight 101 binds the
+  sentence: true across the predicate's WHOLE extension — every route to an unmoved surface (both arms
+  clamped to the same headroom; a household exhausted inside the window; both arms infeasible), never
+  "already failing", and never "your pool can't take the dollars" (false on the seed). Whatever key
+  lands there is added BY NAME to `isMortalityKey` (`copyGuard.ts` — `recHoldGeneric` joined that net
+  the same day because its readers INCLUDE this cohort). The seam is `unwitnessableReasonText`
+  (`recommendationView.ts`); the render pin to extend is the `unwitnessable household` arm in
+  `recommendationView.test.ts`.
+- **Measured, not fixed:** the post-solve frame on this seed sits **149 px past the fold at 1536×791**
+  (document 940 / viewport 791). The old unavailable note measures 74 px in the same slot against the
+  held card's 110 px, so **113 px of that is inherited** — `failing` is not a fit-gate spine seed and the
+  committed / held renders are outside `verify:fit` by record (`vertical-fit.spec.ts:391-397`). The
+  recommendation channel's post-solve frames are unmeasured territory on every seed (the `TODO.md`
+  landmine); this is the first measured number.
+- **Edge accepted:** a rail-anchored amount landing EXACTLY on the post-RMD headroom would make the
+  +$1,000 variant cap to the SAME conversion (`taxOverlay.ts:1444` — `min(planned, pretax − rmd)`, the
+  RMD reserved first) and read as `perturbation-inert` on an otherwise rankable household — a
+  to-the-dollar coincidence of the rail search against the pool (`candidates.ts` rejects amounts ABOVE
+  headroom, not equal), and the old bin refused it too; it now refuses more honestly. `perturbationPair`
+  perturbs the FIRST conversion candidate only; on this seed all four share one bracket-edge amount and
+  every amount from $0 to $200k ties, so the one step the harness takes is representative here — but the
+  gate witnesses ONE step, and any sentence must claim no more. `perturbation-infeasible` (both arms
+  `SimInfeasible`) has no known sole-violation construction — infeasibility is world-conditioned, the
+  sibling goes infeasible too and `sibling-unscored` co-fires ⇒ mint-failed — so it is pinned by the
+  partition-typed constructors (`harnessViolation` / `householdViolation`: a cross-partition mis-tag is a
+  compile error), not by a world.
+
+### The goal picker tells an already-failing household "with the basics covered"
+
+`S` · **pilot (the gate) · briggsy (the words)** · filed 2026-09-04 (seen live on the `?seed=failing` witness walk)
+
+- `copy.goalPickerIntro` — *"With the basics covered, pick the one thing your plan should lean toward."*
+  — renders unconditionally (`GoalPicker.tsx:75`) above the two goals, and the picker opens from the "See
+  the recommended strategy" door on EVERY spine verdict, including *"Already short — 0 of 10 futures your
+  plan covers"*. On that household the lead is FALSE: the basics are not covered, and the sentence asserts
+  the one thing the verdict directly above it just denied — the calm-but-wrong shape, on the cohort least
+  able to absorb it, one tap before the honest hold of the entry above.
+- The picker is verdict-blind by construction (props `open · current · onPick · onClose`; no outcome
+  state reaches it), so the GATE is a build: thread the spine's outcome state (or a `basicsCovered`
+  boolean derived where the door is offered, `Result.tsx`) and pick a verdict-true lead — or make the
+  lead verdict-neutral. The WORDS are his; the fork (a second key for the failing cohort vs one neutral
+  lead) is a Caddie card, not a park. Whatever key renders to the failing cohort joins `isMortalityKey`
+  by name (the entry above's law).
+- Hiding the strategy door on a failing household is a FRAMING call, not a copy fix — that door is where
+  the household is told, honestly, that the harness cannot rank it.
 
 ### Post-65 non-qualified HSA money is silently forfeited
 

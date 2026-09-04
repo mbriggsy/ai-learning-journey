@@ -2,7 +2,8 @@
  * U15 §S5 — mint-then-solve (`solveEntry.ts`): the worker orchestration that runs U14's harness
  * (the optimality oracle + K-candidate ranking stability), mints the oracle-cleared token, and hands
  * it to `solve()`. Every exit is a NAMED bin (insight 092): recommended, token-withheld (an honesty
- * gate fired), mint-failed (the harness gate itself broke / the roster can't be validated). The token
+ * gate fired), mint-failed (the harness gate itself broke / the roster can't be validated),
+ * unwitnessable (the harness cannot witness THIS household — a typed refusal, 2026-09-04). The token
  * never crosses a wire (it is branded) — it is minted and consumed entirely here.
  */
 import { describe, expect, it } from 'vitest'
@@ -12,6 +13,7 @@ import { epochDayFromIsoDate } from '../../validation/oracleToken'
 import { acaEnhancedSubsidyStatus } from '@engine/constants'
 import type { SolverRunRanking } from '../../validation/solverRunFingerprint'
 import { perturbationPair, solveWithMint, type SolveRequest } from '../solveEntry'
+import { SOLVER_CODE_VERSION } from '../solverCodeVersion'
 
 const baseFor = (state?: RetirementState): SimulationParams => ({
   initialPortfolio: 900_000,
@@ -114,4 +116,43 @@ describe('solveWithMint — the named bins (insight 092)', () => {
     if (out.kind !== 'mint-failed') throw new Error('unreachable')
     expect(out.stage).toBe('roster')
   }, 120_000)
+
+  // THE UNWITNESSABLE HOUSEHOLD (2026-09-04). Ranking stability's perturbation law needs the +1,000
+  // conversion variant to MOVE the varied candidate's own decision surface. THIS world reaches the
+  // class by the CLAMP route: with pretax 0, both arms clamp to the same post-RMD headroom (the engine
+  // caps a conversion at `min(planned, pretax − rmd)`, taxOverlay.ts:1444), so nothing moves BY
+  // CONSTRUCTION on a comfortably-funded household — which is also the proof the bin is verdict-blind.
+  // The live witness `?seed=failing` (devSeeds.test.ts) reaches the SAME class by the OTHER route:
+  // its arms run unclamped and tie because every path is exhausted in year 0. Either way it is the
+  // household's property, not the harness's defect — so it exits as a typed refusal the surface can
+  // explain, never `mint-failed` (reserved for code defects, and rendered as a "try again" a
+  // structurally-inert household can never satisfy).
+  it('UNWITNESSABLE on a household the perturbation cannot move (pretax 0): the typed refusal, never mint-failed', () => {
+    const base = baseFor()
+    const inert: SimulationParams = {
+      ...base,
+      overlay: { ...base.overlay!, buckets: { taxable: 800_000, pretax: 0, roth: 100_000 } },
+    }
+    const out = solveWithMint(requestFor({ base: inert }))
+    expect(out.kind, 'a decision the surface can explain, never a defect bin').toBe('unwitnessable')
+    if (out.kind !== 'unwitnessable') throw new Error('unreachable')
+    expect(out.reason).toBe('perturbation-inert')
+    expect(out.solverCodeVersion).toBe(SOLVER_CODE_VERSION)
+    // The stability prose rides along as DIAGNOSTIC detail (never rendered) — the same sentence the
+    // old mint-failed carried, so a log reader sees exactly what the harness saw.
+    expect(out.detail).toMatch(/nothing moved/)
+    expect(out.detail, 'the mint-failed head is NOT prepended — this is not a CRN break').not.toMatch(/CRN break/)
+  }, 240_000)
+
+  it('a HARNESS-class stability failure still MINT-FAILS — a code / world defect never hides behind a household refusal', () => {
+    // A fixed-horizon world samples no deaths ⇒ no path enters the survivor regime ⇒ the CRN claim
+    // is vacuous for a WORLD reason (burned/027). That is the harness refusing to bless a run it
+    // cannot prove, not a household the harness cannot witness — the classifier must keep them apart.
+    const out = solveWithMint(requestFor({ base: { ...baseFor(), longevityMode: 'fixed-horizon' } }))
+    expect(out.kind).toBe('mint-failed')
+    if (out.kind !== 'mint-failed') throw new Error('unreachable')
+    expect(out.stage).toBe('stability')
+    expect(out.detail).toMatch(/CRN break/)
+    expect(out.detail).toMatch(/survivor regime/)
+  }, 240_000)
 })

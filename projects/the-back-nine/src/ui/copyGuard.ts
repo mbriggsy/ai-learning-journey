@@ -75,19 +75,26 @@ export function isVerdictKey(key: string): boolean {
 export function isSurvivorKey(key: string): boolean {
   return /survivor/i.test(key)
 }
-/** Mortality-facing copy that must carry NO catastrophe/alarm lexicon — survivor copy PLUS three
+/** Mortality-facing copy that must carry NO catastrophe/alarm lexicon — survivor copy PLUS four
  *  worst-moment keys that aren't survivor-scoped: the dead-cohort scrub note
  *  (`bandReadoutThinNote`, council 2026-06-28), the already-failing verdict clause
  *  (`verdictRethinkClause`, council 2026-06-29 — a 0-of-10 plan invites "destitute"/"ruin"/"disaster"),
  *  and the U12 truer-picture line (`assumptionTruerPicture` — it renders exactly when an edit
  *  just WORSENED the displayed verdict, the same worst-moment class; the spec joins it to this
- *  gate BY NAME so a future dramatic edit can't ship green). */
+ *  gate BY NAME so a future dramatic edit can't ship green), and the generic recommendation HOLD
+ *  (`recHoldGeneric` — the FAIL-CLOSED line for any hold whose true reason has no authored sentence:
+ *  `withheldReasonText`'s default and, since 2026-09-04, the interim line of the UNWITNESSABLE
+ *  refusal. That set of readers INCLUDES the already-failing household (`?seed=failing`) though the
+ *  bin is verdict-blind (`SolveUnwitnessable` in solveEntry.ts), so the net must hold for the WORST
+ *  reader on the key, never the modal one; the sentence that replaces it must be added here BY NAME
+ *  too, or it ships un-swept). */
 export function isMortalityKey(key: string): boolean {
   return (
     isSurvivorKey(key) ||
     key === 'bandReadoutThinNote' ||
     key === 'verdictRethinkClause' ||
-    key === 'assumptionTruerPicture'
+    key === 'assumptionTruerPicture' ||
+    key === 'recHoldGeneric'
   )
 }
 

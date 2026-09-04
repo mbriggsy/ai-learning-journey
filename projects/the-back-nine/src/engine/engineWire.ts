@@ -209,7 +209,7 @@ export function twoArmFromWire(wire: TwoArmWire): TwoArmResult {
 // the ONLY buffers in the transfer list (Act-1's typed-array discipline); everything else — the pruned
 // field's scalar selection scores, the grade, the named driver, the surplus-regime flag, the withheld-
 // lever enumeration, `SOLVER_CODE_VERSION` — crosses by structured clone. Every other payload arm
-// (refused / withheld / token-withheld / mint-failed) is already plain data and crosses unchanged.
+// (refused / withheld / aborted / token-withheld / mint-failed / unwitnessable) is already plain data and crosses unchanged.
 //
 // The per-solve allocation is sized for THREE distributions + scalars, never K full distributions —
 // keeping Act-1's "fresh per run, retains none" discipline true at K-candidate scale (plan line 178).
@@ -253,7 +253,7 @@ export type SolveRecommendedWire = Omit<SolveRecommendation, 'winner' | 'runnerU
 }
 
 /** The worker's solve return contract — the recommended payload (buffers) or any plain-data payload
- *  arm (refused / withheld / token-withheld / mint-failed), or a calm error for an UNEXPECTED throw. */
+ *  arm (refused / withheld / aborted / token-withheld / mint-failed / unwitnessable), or a calm error for an UNEXPECTED throw. */
 export type SolveWire =
   | SolveRecommendedWire
   | Exclude<SolvePayload, SolveRecommendation>
@@ -312,7 +312,7 @@ function armFromWire(arm: SolveArmWire): SolveArm {
 export function solveFromWire(wire: SolveWire): SolveResultView {
   if (wire.kind === 'calm-error') return { ok: false, reason: wire.reason }
   if (wire.kind !== 'recommended') {
-    // refused / withheld / token-withheld / mint-failed are plain data — carried verbatim.
+    // refused / withheld / aborted / token-withheld / mint-failed / unwitnessable are plain data — carried verbatim.
     return { ok: true, payload: wire }
   }
   const { winner, runnerUp, noActionBaseline, ...rest } = wire

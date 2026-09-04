@@ -785,7 +785,7 @@ describe('the recommend-second witness seed (engine-proven solve regime)', () =>
    * and reddened `pnpm test` from that commit onward while passing in isolation every time it was
    * checked, which is exactly how it got through. Green-when-filtered is not green.
    */
-  const solveWitness = (key: 'surplus' | 'buckets' | 'health', goal: 'leave-more' | 'pay-less-tax') => {
+  const solveWitness = (key: 'surplus' | 'buckets' | 'health' | 'failing', goal: 'leave-more' | 'pay-less-tax') => {
     const draft: ScenarioDraft = { ...DEV_SEEDS[key], chosenGoal: goal }
     const req0 = buildSolveRequest(draft, FRESH)
     expect(typeof req0, `${key}: buildSolveRequest must BUILD (a typed refusal here is a broken seed)`).not.toBe('string')
@@ -849,6 +849,35 @@ describe('the recommend-second witness seed (engine-proven solve regime)', () =>
       'the crown is an ACTIVE move (a beneficial conversion beats the conventional) — never no-change',
     ).toBe(false)
   }, 60_000)
+
+  /**
+   * THE UNWITNESSABLE WITNESS (2026-09-04) — `?seed=failing` through the REAL builder + engine on BOTH
+   * goals. Until this arm existed the household came back `mint-failed{stability}` — the harness's
+   * "nothing moved" vacuity: a $60k IRA under a ~$72k year-one draw depletes on every path in year 0
+   * before the year's tax accrues, so every recorded vector is zero whatever is converted ($50,268 and
+   * its $51,268 variant both run UNCLAMPED inside the pool) — and rendered the generic "try again" line, a retry that
+   * cannot succeed because the vacuity is structural (register: "`?seed=failing` mint-fails"). It is a
+   * TYPED refusal now, named off the trigger (the perturbation), never off the verdict.
+   * THE MUTANT KILLER: `householdVacuity` returning null reds both goals back to `mint-failed`.
+   */
+  for (const goal of ['leave-more', 'pay-less-tax'] as const) {
+    it(`'failing' (${goal}) is UNWITNESSABLE through the real solve — the typed refusal, never mint-failed`, () => {
+      const p = solveWitness('failing', goal)
+      expect(p.kind, 'the harness cannot witness this household — a decision, not a defect').toBe('unwitnessable')
+      if (p.kind !== 'unwitnessable') return
+      expect(p.reason).toBe('perturbation-inert')
+      expect(p.solverCodeVersion).toBe(SOLVER_CODE_VERSION)
+      // Non-vacuity: the seed still IS the household the trigger describes — one small pre-tax pool
+      // under a spend that outruns it in year one. A future "repair" of the seed that funds it would
+      // make the pin above pass for the wrong reason, so it must fail HERE first.
+      const [ira] = DEV_SEEDS.failing.enteredAccounts
+      expect(DEV_SEEDS.failing.enteredAccounts, 'one pre-tax pool, nothing else to draw on').toHaveLength(1)
+      expect(ira?.kind).toBe('traditional-ira')
+      expect(DEV_SEEDS.failing.annualSpendingReal, 'the spend outruns the whole pool inside year one').toBeGreaterThan(
+        ira?.valueToday ?? Number.POSITIVE_INFINITY,
+      )
+    }, 60_000)
+  }
 
   /**
    * THE MULTI-BUCKET WITNESS — the first seed on which the withdrawal ORDER is observable at all, and

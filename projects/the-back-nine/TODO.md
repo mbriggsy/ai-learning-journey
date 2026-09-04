@@ -5,7 +5,7 @@
 > the roadmap carry the test count under `verify:doc-stats` (this file re-typing it rotted twice, so
 > `d5df3609` made pointing the rule).
 >
-> **The full open register is [`docs/backlog.md`](docs/backlog.md)** — 43 open items, each traced to the raw
+> **The full open register is [`docs/backlog.md`](docs/backlog.md)** — 45 open items, each traced to the raw
 > obligations behind it. This file ranks only what is next; **a queue of ~16 is not the open surface, so
 > read the register before filing anything as new.**
 >
@@ -227,8 +227,11 @@ landed: `3c4c64c5` the intake beforeunload guard + the two holes its unit-bounda
 33806460606 green), and `2eb0eebd` the solve-lane cancel (CI run 33823723825 — poll it by id, read
 `conclusion`); the three earlier commits of the day are `41f9edee` · `530e6545` · `53486a39`).**
 
-**FIRST: nothing is staged — items 3 AND 5 SHIPPED. Start at item 4 (the phone walk, findings only)
-or item 6 of the ranked plan below; items 6–8 each need your words or your eye.** The apply
+**FIRST: nothing is staged — items 3, 5 and 7 (the mechanism) SHIPPED, and so did the `rothPlanRanked`
+singular defect under 9a (the 2026-09-04 session, `8a6fc6b7` + the typed-refusal commit). Start at item 4
+(the phone walk, findings only) or item 8 of the ranked plan below; 6 needs your parity word, 7 your
+sentence, and the new item 11 (the goal picker's "basics covered" lead on a failing household) your words
+over a pilot gate.** The apply
 recipe that used to sit here ran verbatim (its scripts had to become `.cjs` under the package's
 `"type": "module"` — no content changed) and the outcome, the review's findings and the residuals are
 all recorded in the ride-along block further down. `temp/item3/` is spent; squeaky may clear it.
@@ -239,9 +242,9 @@ below as a ⚑ 2026-09-04 clause and into the entries they cite. Same pass: regi
 re-derived (43 open · 51 entries · 8 closed; roadmap's per-tier list and "Portfolio holdings" row were
 wrong), four lying source comments swept (`db.ts:273`, `Result.tsx:345-347`, `tokens.css:119`,
 `model.ts:2253`) and Plan 4's dead "record carries seedA/seedB" clause struck. **Pilot-buildable with no
-word from him:** items 4, 7 (the mechanism), 8 (all three arms), 9b, 9c, 10, and the shipped
-`rothPlanRanked` singular defect (under 9a). **His tokens, batched:** item 6's parity word · item 7's
-sentence · item 9a's ranking fork (three arms now written in the register) · the `ensureSeed` fix shape.
+word from him:** items 4, 8 (all three arms), 9b, 9c, 10, and item 11's gate — item 7's mechanism and the
+`rothPlanRanked` singular defect (under 9a) both SHIPPED 2026-09-04. **His tokens, batched:** item 6's parity word · item 7's
+sentence · item 9a's ranking fork (three arms now written in the register) · the `ensureSeed` fix shape · item 11's lead (the goal picker over a failing household — the gate is pilot, the words yours).
 
 **THEN, the 2026-09-03 ranked plan, as re-verified by 24 agents (12 verify→skeptic pairs; 10 of 12
 verifiers refuted on a material point) — statuses current:**
@@ -289,7 +292,13 @@ verifiers refuted on a material point) — statuses current:**
    committed rec whose spouse un-retires lands `stale` (not `blocked`) and the gate drops the stale card's
    own re-open door with it. `Result.tsx:345-347`'s "covers the date route honestly" comment was FALSE —
    swept 2026-09-04.
-7. `?seed=failing` typed refusal (M): the frame is decided by the code's own contract (mint-failed is
+7. ✅ **SHIPPED 2026-09-04 — THE MECHANISM: the unwitnessable household is a typed refusal now
+   (`unwitnessable{perturbation-inert}` → the humane HOLD, `recHoldGeneric` as the interim line); the
+   sentence stays yours.** Register Tier 0 "`?seed=failing` mint-fails" carries the witness (both goals
+   through builder + engine; live at 1536×791, the held card ~4 s after the goal pick), the three mutants,
+   the 149 px fold measurement (113 px of it inherited from the old note) and the accepted headroom edge;
+   insight 114. The prescription below held on every anchor — a rarity here. Original filing:
+   `?seed=failing` typed refusal (M): the frame is decided by the code's own contract (mint-failed is
    for CODE defects; an unwitnessable household gets a typed refusal); `recHoldGeneric` is a truthful
    interim; the exact sentence is yours (copy.ts names the N=1 word-pick for this seed).
    ⚑ **2026-09-04:** the MECHANISM is pilot — build it behind `recHoldGeneric`, bring him the sentence. Re-probed:
@@ -307,7 +316,7 @@ verifiers refuted on a material point) — statuses current:**
    pre-empted by `no-pretax`, `solveDispatch.ts:79-91`). Landmines: the catastrophe gate does NOT sweep a
    new key — add it BY NAME to `isMortalityKey` (`copyGuard.ts:85-91`); the witness test needs the explicit
    `60_000` timeout every `solveWitness` caller carries + the helper's key union widened
-   (`src/ui/__tests__/devSeeds.test.ts:788`). 7b is in this file only — file it in the register with the build.
+   (`src/ui/__tests__/devSeeds.test.ts:788`). 7b was in this file only — filed in the register with the build (2026-09-04).
 8. PWA icons (S, silhouette-first, his eye audits) · WebKit e2e arm (M) · enlarged-text fit arm (S,
    CDP `Page.setFontSizes` — council only on a protected red).
    ⚑ **2026-09-04:** INDEPENDENT, not a chain — the text arm rides CDP (Chromium-only) so it can never share
@@ -370,8 +379,29 @@ verifiers refuted on a material point) — statuses current:**
     FIRST ENGINE RUN, `plans/2-first-answer.md:68`) with no test that would catch it. His ruling, framed as
     those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:2253` and
     `plans/4-recommendation.md:282`.
+11. The goal picker's lead on a failing household (S): `copy.goalPickerIntro` — "With the basics covered,
+    pick the one thing your plan should lean toward." — renders unconditionally (`GoalPicker.tsx:75`) and the
+    picker opens from the strategy door on EVERY spine verdict, so an "Already short — 0 of 10" household is
+    told the basics are covered one tap before the honest hold (seen live 2026-09-04 on the `?seed=failing`
+    witness walk). The GATE is pilot — the picker is verdict-blind (props `open · current · onPick ·
+    onClose`); thread the outcome state or a `basicsCovered` boolean from where the door is offered
+    (`Result.tsx`). The WORDS are yours, and the fork (a second key for the failing cohort vs one
+    verdict-neutral lead) is a Caddie card. Register: Tier 0 "The goal picker tells an already-failing
+    household".
+
 **Also filed today, pilot, with exact fixes:** register Tier 2 "The dead-end repair beat" (four
 residuals from item 2's review) and "A repeat Add tap over an already-visible block" (from item 1's).
+
+**Landmines the 2026-09-04 session added:** a mutant REVERT anchored on a line that also appears elsewhere
+fails the exactly-once check and leaves the mutant PLANTED while the chain reads green (the unwitnessable
+arm's mutant line — `{ kind: 'unavailable', …, detail: payload.detail }` — is the aborted arm's line too);
+verify the revert with the same grep count as the plant, on a UNIQUE anchor · `grep -c` returning 0 exits
+1 and breaks an `&&` chain — the step after it silently never ran (cost one re-run) · `grep -c $'\r'` lied
+about line endings in this Bash tool (2,689 CR lines counted in an LF file) — trust `git diff --stat` and
+node's `raw.includes('\r\n')` · `String.prototype.replace` with a replacement carrying `$$` eats a dollar
+sign (the window sentence lost its `$`; the existing pins caught it) — split/join, never replace · the
+`failing` seed's live solve is sub-second even at full precision (the household dies in year one), so a
+`?seed=failing` browser witness costs seconds, not the 11-minute budget — the goal-pick → held card was ~4 s · the MECHANISM I inferred for the bin ("the pool cannot absorb the perturbation") was refuted by the review fleet on the seed itself (the pool absorbs it with $8,732 to spare; every path depletes in year 0 so the surface is all-zero) — a 5-lens review with 2 refuters per finding confirmed 14 of 31, and the P1s were all this one false mechanism laundered into eight docstrings; probe a mechanism before writing it into the docstring a sentence will be authored from.
 
 **Landmines this session added:** the Bash tool mangles heredocs carrying nested quotes — write the
 script to a file with the Write tool and `node` it · `.playwright-mcp/` and `temp/` are BOTH gitignored
@@ -1431,7 +1461,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    (verdict-scoped) matches its seat siblings. The three arms + sizes are now written in the register
    ("The aged surface"); the shipped singular/plural defect is under ranked item 9.
 
-7b. **`?seed=failing` mint-fails — the bad-news household gets a "something went wrong" card.** *(Found
+7b. ✅ **CLOSED 2026-09-04 — the typed refusal shipped (register Tier 0, same title); only the sentence stays open, his.** ~~`?seed=failing` mint-fails — the bad-news household gets a "something went wrong" card.~~ *(Found
    2026-08-05 by the witness probe; filed nowhere before.)* Both goals return
    `{kind:'mint-failed', stage:'stability'}` with detail *"perturbation arm VACUOUS: the +1,000
    conversion perturbation left the varied candidate's own decision surface byte-identical — nothing
@@ -1690,7 +1720,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
 
 ## Operational landmines — these bite hands
 
-*Engineering lessons live in [`docs/insights/`](docs/insights/) (109 of them; cite by full path + slug).
+*Engineering lessons live in [`docs/insights/`](docs/insights/) (114 of them; cite by full path + slug).
 These are the mechanical ones that keep costing hours.*
 
 - **A filed prescription in this repo is ~25-40% executable as written** — thrice-measured (5-of-11,

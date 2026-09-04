@@ -261,6 +261,7 @@ describe('deriveRecommendationSave — the guard order', () => {
       { kind: 'aborted', detail: 'dev text', solverCodeVersion: SOLVER_CODE_VERSION },
       { kind: 'token-withheld', reasons: [], disclosedDirectional: [], solverCodeVersion: SOLVER_CODE_VERSION },
       { kind: 'mint-failed', stage: 'oracle', detail: 'dev text', solverCodeVersion: SOLVER_CODE_VERSION },
+      { kind: 'unwitnessable', reason: 'perturbation-inert', detail: 'dev text', solverCodeVersion: SOLVER_CODE_VERSION },
     ]
     for (const payload of payloads) {
       expect(view({ solve: committed(payload) }), `${payload.kind} is not mintable`).toEqual({ kind: 'none' })
@@ -273,6 +274,7 @@ describe('deriveRecommendationSave — the guard order', () => {
       aborted: true,
       'token-withheld': true,
       'mint-failed': true,
+      unwitnessable: true,
     }
     expect(Object.keys(covered)).toHaveLength(payloads.length)
     // PAIRED POSITIVE — the recommended payload on the SAME frame offers.

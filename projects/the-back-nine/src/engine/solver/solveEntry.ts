@@ -21,6 +21,7 @@
  * levers enumerate, never silently drop).
  *
  * EVERY EXIT IS A NAMED BIN (insight 092): mint-failed (the harness gate itself broke — never ship),
+ * unwitnessable (the harness cannot witness THIS household — a typed refusal, not a defect; 2026-09-04),
  * token-withheld (a real honesty gate fired — state cert / stale ACA / uncalibrated ε), or `solve()`'s
  * own refused / withheld / recommended. No path silently produces nothing.
  *
@@ -30,7 +31,7 @@
 import type { SimulationParams } from '@shared/model'
 import type { SolverRunRanking } from '../validation/solverRunFingerprint'
 import { runOptimalityOracle } from '../validation/optimalityOracle'
-import { runRankingStability } from '../validation/rankingStability'
+import { householdVacuity, runRankingStability, type HouseholdVacuity } from '../validation/rankingStability'
 import { mintOracleToken, type WithheldReason } from '../validation/oracleToken'
 import { deriveSeedB } from '../validation/heldOutSeed'
 import { SOLVER_CASES } from '../reference/solver-cases'
@@ -60,8 +61,34 @@ export interface SolveMintFailed {
   readonly solverCodeVersion: number
 }
 
+/** THE HARNESS CANNOT WITNESS THIS HOUSEHOLD (2026-09-04). Ranking stability's perturbation law needs
+ *  its ONE +$1,000 step on the first anchored conversion candidate to MOVE that candidate's own
+ *  recorded decision surface (insight 029's presence companion), and on this household it does not:
+ *  both arms clamp to the same post-RMD headroom (`min(planned, pretax − rmd)`, `taxOverlay.ts:1444`
+ *  — a pretax-0 world), or the household is exhausted inside the conversion window so every recorded
+ *  vector is zero whatever is converted (`?seed=failing`: a $60k IRA under a ~$72k year-one draw
+ *  converts $50,268 and its $51,268 variant UNCLAMPED and still moves nothing — every path depletes
+ *  in year 0 before the year's tax accrues), or the perturbed candidate and its variant are both
+ *  infeasible (`rankingStability.ts` has the three routes in full). Nothing in the harness broke, so
+ *  this is a typed REFUSAL the surface can explain as a decision — never `mint-failed`, which is
+ *  reserved for code defects and renders the generic "try again" line, a retry that cannot succeed
+ *  here: the vacuity is structural, not transient. The bin is named off its TRIGGER — the harness's
+ *  own step leaving the surface byte-identical — never off the verdict a household happens to carry:
+ *  the criterion is whether the varied candidate's OWN surface moves, not whether the pool has room
+ *  for the dollars. It is verdict-blind — a $900k household with pretax 0 reaches it
+ *  (solveEntry.test.ts), and a failing household whose surface still responds never does. Sibling of
+ *  the pre-dispatch `no-pretax` refusal (`solveDispatch.ts`), which pre-empts the roster arm the same
+ *  way — this one is only knowable after the engine has run, so it lands as a payload arm. */
+export interface SolveUnwitnessable {
+  readonly kind: 'unwitnessable'
+  readonly reason: HouseholdVacuity
+  /** The stability prose — diagnostic only, NEVER rendered (the view speaks its own humane line). */
+  readonly detail: string
+  readonly solverCodeVersion: number
+}
+
 /** The full worker-side solve payload (the wire's value model). */
-export type SolvePayload = SolveResult | SolveTokenWithheld | SolveMintFailed
+export type SolvePayload = SolveResult | SolveTokenWithheld | SolveMintFailed | SolveUnwitnessable
 
 export interface SolveRequest {
   readonly base: SimulationParams
@@ -159,7 +186,15 @@ export function solveWithMint(request: SolveRequest, shouldAbort?: ShouldAbort):
     tieTolerance,
   })
   if (!('report' in stabilityOut)) {
-    return mintFailed('stability', `ranking stability found a CRN break: ${stabilityOut.violations.join(' | ')}`)
+    const detail = stabilityOut.violations.map((v) => v.text).join(' | ')
+    // THE HOUSEHOLD, NOT THE HARNESS: every violation is a household-conditioned vacuity ⇒ the typed
+    // refusal. One harness-class violation beside it ⇒ the gate broke on this run ⇒ mint-failed wins
+    // (a code defect never hides behind a household's refusal — `householdVacuity` is that law).
+    const vacuity = householdVacuity(stabilityOut)
+    if (vacuity !== null) {
+      return { kind: 'unwitnessable', reason: vacuity, detail, solverCodeVersion: SOLVER_CODE_VERSION }
+    }
+    return mintFailed('stability', `ranking stability found a CRN break: ${detail}`)
   }
 
   // COOPERATIVE ABORT (§S6) — the harness gates (the 2K-candidate ranking stability) just finished;

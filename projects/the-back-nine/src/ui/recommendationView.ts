@@ -7,8 +7,8 @@
  * named driver, `skewDisclosure`, `withheldConversionLevers`) — to a fully copy-RESOLVED view, and
  * RE-DERIVES NONE of it (the held-out A-decides / B-displays split is this surface's CRN; every wall
  * below is a corollary). It handles EVERY payload shape (active rec / surplus / no-change / withheld
- * (token + conversion) / refused / mint-failed / demotion / aborted / the §S1 stale demotion / compute
- * error) — a payload shape without a render is a broken state.
+ * (token + conversion) / refused / mint-failed / unwitnessable / demotion / aborted / the §S1 stale
+ * demotion / compute error) — a payload shape without a render is a broken state.
  *
  * FOUR walls this layer enforces (encoded as tests, not conventions):
  *  · Q6 — the DISPLAYED figure is source-checked against what RANKED before any figure is built:
@@ -29,7 +29,7 @@ import type { DrawdownPolicy, RecommendationGoal } from '@shared/model'
 import type { PricedState } from '@engine/constants/stateTax'
 import type { WithheldReason } from '@engine/validation/oracleToken'
 import type { SolveRecommendation } from '@engine/solver/solve'
-import type { SolvePayload, SolveTokenWithheld } from '@engine/solver/solveEntry'
+import type { SolvePayload, SolveTokenWithheld, SolveUnwitnessable } from '@engine/solver/solveEntry'
 import { assertObjectiveMatchesHeadline } from '@engine/solver/objectiveHeadline'
 import type { SolveAnswer, SolvePreconditionGap } from '@store/memoryModel'
 import { twoFuturesCeiling } from '@viz/TwoFutures'
@@ -350,6 +350,34 @@ export function withheldReasonText(reason: WithheldReason): string {
   }
 }
 
+/**
+ * The UNWITNESSABLE household's reason line (2026-09-04). Both household classes read the GENERIC hold
+ * — an interim by decision: the ranking IS a number we cannot stand behind here (the harness could not
+ * witness it), and the frame is the deliberate-decision HOLD, never the "try again" malfunction card
+ * (a retry cannot succeed — the vacuity is structural). WHAT IS STILL SOFT IS NOT ONE WORD: four
+ * temporal promises ride this frame and none is keepable for a structurally inert household — "for
+ * now", "can't YET stand behind" and "we'd rather WAIT than guess" in the string, plus a second "for
+ * now" in the heading it renders under (`recommendHeldHeading`, shared with the token-withheld and
+ * demotion holds). They ship because the frame they replace was worse (insight 109), not because they
+ * are true here. The household-true frame is therefore TWO keys, not one: Briggsy's N=1 sentence as
+ * its OWN reason key (`recHoldUnwitnessable`, say) AND its own heading (a heading field on the held
+ * view, or a second key) — swapping the reason line alone leaves a "for now" on the frame. Whatever
+ * key lands here is added BY NAME to `isMortalityKey`: this arm's readers INCLUDE the already-failing
+ * worst moment (`?seed=failing` is the live witness), so the catastrophe net must hold for the worst
+ * reader on the key (`recHoldGeneric` joined that net the day this arm shipped, on the same ground).
+ * Insight 101 binds the sentence: it must be true across the predicate's WHOLE extension — every
+ * route to an unmoved surface (both arms clamped to the same headroom; a household exhausted inside
+ * the window; both arms infeasible — `rankingStability.ts` has them in full) — never its poster-child
+ * household, and never "your pool can't take the dollars", which is false on that very seed.
+ */
+export function unwitnessableReasonText(reason: SolveUnwitnessable['reason']): string {
+  switch (reason) {
+    case 'perturbation-inert':
+    case 'perturbation-infeasible':
+      return copy.recHoldGeneric
+  }
+}
+
 // ---- the entry ------------------------------------------------------------------------------------
 
 export interface RecommendationViewOpts {
@@ -420,6 +448,15 @@ function committedView(payload: SolvePayload, opts: RecommendationViewOpts | und
       return { kind: 'unavailable', note: copy.recommendUnavailable, detail: `${payload.reason}: ${payload.detail}` }
     case 'mint-failed':
       return { kind: 'unavailable', note: copy.recommendUnavailable, detail: `${payload.stage}: ${payload.detail}` }
+    case 'unwitnessable':
+      // THE HARNESS CANNOT WITNESS THIS HOUSEHOLD (2026-09-04) — a DECISION the surface can explain,
+      // routed to the humane HOLD like the demotion withhold above. Until this arm existed the
+      // household was binned `mint-failed` and read the generic "try again" line: a retry invitation
+      // that cannot succeed, because the +1,000 perturbation is inert on it by construction (every
+      // path depletes in year 0, so no recorded statistic can respond to any conversion —
+      // `?seed=failing`), not transiently.
+      // The engine's `detail` stays INTERNAL; the household reads the humane reason only.
+      return { kind: 'held', heading: copy.recommendHeldHeading, reasons: [unwitnessableReasonText(payload.reason)] }
     case 'aborted':
       // A superseded solve (the store holds the aborted bin, never commits it) — defensive calm arm.
       return { kind: 'unavailable', note: copy.recommendUnavailable, detail: payload.detail }

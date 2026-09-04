@@ -267,7 +267,7 @@ describe('runSearch — A/B discipline + the U14 K-candidate stability runs over
       })
       expect(
         'report' in stability,
-        'ok' in stability && stability.ok === false ? stability.violations.join(' | ') : '',
+        'ok' in stability && stability.ok === false ? stability.violations.map((v) => v.text).join(' | ') : '',
       ).toBe(true)
       if ('report' in stability) {
         // candidateCount === search's evaluated count ⇒ the check ran over search's EXACT set.

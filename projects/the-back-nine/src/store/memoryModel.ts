@@ -294,7 +294,7 @@ export type SolveAnswer =
   // one home the committed arm uses; never a closure-side mirror, the §S1 forked-seam trap).
   | { readonly kind: 'pending'; readonly label: 'solving'; readonly fingerprint: SolverRunFingerprint }
   // A solve committed — the reconstructed payload (recommended / refused / withheld /
-  // token-withheld / mint-failed; each its own structured flag via `payload.kind`). `fingerprint`
+  // token-withheld / mint-failed / unwitnessable; each its own structured flag via `payload.kind`). `fingerprint`
   // is the solver-run identity it was solved on (§S1) — the committed arm carries WHAT IT SOLVED
   // ON, so a later draft edit diffs a freshly-built fingerprint against it (source-bound to
   // solverRunFingerprint, never a bespoke mirror).

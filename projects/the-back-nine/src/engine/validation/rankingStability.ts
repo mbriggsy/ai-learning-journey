@@ -80,9 +80,82 @@ export interface RankingStabilityReport {
   readonly fingerprint: SolverRunFingerprint
 }
 
+/** The CLASS of a stability violation, typed BESIDE the prose so no consumer ever substring-matches
+ *  a sentence. The five HARNESS classes are code / world defects — the recommender must not ship
+ *  (`solveEntry.ts` bins them `mint-failed`). The two HOUSEHOLD classes are insight 029's presence
+ *  companion failing on a household the harness cannot WITNESS — a typed refusal (`solveEntry.ts`,
+ *  `kind: 'unwitnessable'`), never a defect, and never the generic "try again" card: the vacuity is
+ *  structural, so a retry cannot succeed (insight 109's impossible-retry shape).
+ *
+ *  `perturbation-inert` fires when the harness's ONE +$1,000 step on the first anchored conversion
+ *  candidate leaves that candidate's whole recorded decision surface byte-identical
+ *  (`decisionSurfaceIdentical`). The criterion is whether the varied candidate's OWN surface moves —
+ *  never whether the pool has room for the dollars — and two disjoint routes are known, so any
+ *  sentence about the class must cover both: (i) CLAMP-inert — both arms clamp to the same post-RMD
+ *  pre-tax headroom, `min(planned, pretax − rmd)` (`taxOverlay.ts:1444`): a pretax-0 world, or a rail
+ *  amount sitting exactly on the headroom; (ii) EXHAUSTED-in-window — the household depletes inside
+ *  the conversion window, so every recorded vector is identically zero whatever is converted:
+ *  `?seed=failing` (a $60k IRA under a ~$72k year-one draw) converts $50,268 and its $51,268 variant
+ *  UNCLAMPED inside the pool and still moves nothing, because every path depletes in year 0 and the
+ *  depletion break (`taxOverlay.ts:1831`) precedes the year's tax accrual (`:1853`) — terminals,
+ *  depletion years, lifetime tax and Medicare cost are all 0 for every amount from $0 to $200k
+ *  (probed 2026-09-04). The bin is verdict-blind: a $900k household with pretax 0 reaches it by
+ *  route (i) (solveEntry.test.ts) and a failing household whose surface still responds never does.
+ *  `perturbation-infeasible` — the perturbed candidate and its variant both `SimInfeasible` — is the
+ *  second household class; no known construction reaches it ALONE today (infeasibility is
+ *  world-conditioned, so the sibling is infeasible too and `sibling-unscored` co-fires ⇒ the
+ *  classifier returns null ⇒ mint-failed), so it is pinned by the partition types below, not by a
+ *  world that cannot be built. */
+export type StabilityViolationClass =
+  | 'dimension-moved'
+  | 'survivor-vacuous'
+  | 'perturbation-misconfigured'
+  | 'sibling-unscored'
+  | 'perturbation-law-broke'
+  | 'perturbation-inert'
+  | 'perturbation-infeasible'
+
+export interface StabilityViolation {
+  readonly class: StabilityViolationClass
+  readonly text: string
+}
+
+/** The household-conditioned vacuity classes — the harness cannot witness THIS household. */
+export type HouseholdVacuity = Extract<StabilityViolationClass, 'perturbation-inert' | 'perturbation-infeasible'>
+
+const HOUSEHOLD_VACUITY: readonly HouseholdVacuity[] = ['perturbation-inert', 'perturbation-infeasible']
+const isHouseholdVacuity = (c: StabilityViolationClass): c is HouseholdVacuity =>
+  (HOUSEHOLD_VACUITY as readonly StabilityViolationClass[]).includes(c)
+
+/** The harness partition — every class that is NOT a household vacuity. */
+type HarnessClass = Exclude<StabilityViolationClass, HouseholdVacuity>
+/** Construct a violation IN ITS PARTITION. The class field is the load-bearing decision between
+ *  `mint-failed` (never ship) and the typed household refusal, and four of the seven emit sites below
+ *  are unreachable by any world a test can build — so a cross-partition mis-tag
+ *  (`harnessViolation('perturbation-inert', …)`, which would route a real CRN break to the calm HOLD)
+ *  is a COMPILE error here, killed by the type system rather than by a test that cannot be written. */
+const harnessViolation = (cls: HarnessClass, text: string): StabilityViolation => ({ class: cls, text })
+const householdViolation = (cls: HouseholdVacuity, text: string): StabilityViolation => ({ class: cls, text })
+
 export interface RankingStabilityFailure {
   readonly ok: false
-  readonly violations: readonly string[]
+  readonly violations: readonly StabilityViolation[]
+}
+
+/**
+ * The failure is the HOUSEHOLD's, not the harness's — the class to refuse on, or `null`.
+ *
+ * EVERY violation must be household-conditioned: one harness-class violation beside a vacuity means
+ * the gate itself broke on this run, and `mint-failed` must win (a code defect never hides behind a
+ * household's refusal). An empty list is not a failure at all (`null`). The two household branches
+ * are mutually exclusive `else if` arms of one perturbation check, so an all-household list carries
+ * exactly one class — the first is returned.
+ */
+export function householdVacuity(failure: RankingStabilityFailure): HouseholdVacuity | null {
+  const first = failure.violations[0]
+  if (first === undefined) return null
+  if (!failure.violations.every((v) => isHouseholdVacuity(v.class))) return null
+  return first.class as HouseholdVacuity
 }
 
 export function runRankingStability(opts: {
@@ -106,15 +179,18 @@ export function runRankingStability(opts: {
   readonly tieTolerance: number
 }): { readonly report: RankingStabilityReport } | RankingStabilityFailure {
   const { base, candidates, seedA, seedB, perturbIndex, siblingIndex, ranking, tieTolerance } = opts
-  const violations: string[] = []
+  const violations: StabilityViolation[] = []
 
   // 1. Dimension invariance — the draw schedule's whole input tuple, per candidate.
   for (const [i, c] of candidates.entries()) {
     const p = applyCandidate(base, c)
     if (p.paths !== base.paths || p.maxHorizonYears !== base.maxHorizonYears || p.people.length !== base.people.length) {
       violations.push(
-        `candidate ${i} moved a draw dimension: (${p.paths}, ${p.maxHorizonYears}, ${p.people.length}) vs base ` +
-          `(${base.paths}, ${base.maxHorizonYears}, ${base.people.length})`,
+        harnessViolation(
+          'dimension-moved',
+          `candidate ${i} moved a draw dimension: (${p.paths}, ${p.maxHorizonYears}, ${p.people.length}) vs base ` +
+            `(${base.paths}, ${base.maxHorizonYears}, ${base.people.length})`,
+        ),
       )
     }
   }
@@ -134,7 +210,10 @@ export function runRankingStability(opts: {
       const crossings = o.distribution.survivorConditioned?.survivorPhasePaths
       if (crossings === undefined || !(crossings > 0)) {
         violations.push(
-          `candidate ${i} seed ${s === 0 ? 'A' : 'B'}: no path entered the survivor regime — the CRN claim would be vacuous (burned/027)`,
+          harnessViolation(
+            'survivor-vacuous',
+            `candidate ${i} seed ${s === 0 ? 'A' : 'B'}: no path entered the survivor regime — the CRN claim would be vacuous (burned/027)`,
+          ),
         )
         continue
       }
@@ -146,7 +225,12 @@ export function runRankingStability(opts: {
   const perturbed = candidates[perturbIndex]
   const sibling = candidates[siblingIndex]
   if (perturbed?.conversion == null || sibling === undefined || perturbIndex === siblingIndex) {
-    violations.push('perturbation arm misconfigured: perturbIndex must name a conversion candidate ≠ siblingIndex')
+    violations.push(
+      harnessViolation(
+        'perturbation-misconfigured',
+        'perturbation arm misconfigured: perturbIndex must name a conversion candidate ≠ siblingIndex',
+      ),
+    )
   } else {
     const variant: CandidateStrategy = {
       ...perturbed,
@@ -158,11 +242,14 @@ export function runRankingStability(opts: {
     const original = outcomesBySeed[0]![siblingIndex]!
     const rerunS = rerunSibling!
     if (original.kind !== 'scored' || rerunS.kind !== 'scored') {
-      violations.push('perturbation arm: the sibling must be a scored candidate on seed A')
+      violations.push(harnessViolation('sibling-unscored', 'perturbation arm: the sibling must be a scored candidate on seed A'))
     } else if (!decisionSurfaceIdentical(original.distribution, rerunS.distribution)) {
       violations.push(
-        'THE PERTURBATION LAW BROKE: perturbing one candidate’s conversion amount changed a SIBLING’s ' +
-          'decision surface — shared state or draw-consumption coupling has entered the evaluation path',
+        harnessViolation(
+          'perturbation-law-broke',
+          'THE PERTURBATION LAW BROKE: perturbing one candidate’s conversion amount changed a SIBLING’s ' +
+            'decision surface — shared state or draw-consumption coupling has entered the evaluation path',
+        ),
       )
     }
     // The presence companion (insight 029): the +1,000 must have MOVED the varied candidate —
@@ -171,15 +258,28 @@ export function runRankingStability(opts: {
     const rerunV = rerunVariant!
     if (originalPerturbed.kind === 'scored' && rerunV.kind === 'scored') {
       if (decisionSurfaceIdentical(originalPerturbed.distribution, rerunV.distribution)) {
+        // HOUSEHOLD class (not harness): the varied candidate's OWN surface did not move — both arms
+        // clamped to the same headroom, or the household is exhausted inside the window so every
+        // recorded vector is zero whatever is converted (see the class docs). The harness cannot
+        // witness this household; the criterion is the surface, never the pool's room for the dollars.
         violations.push(
-          'perturbation arm VACUOUS: the +1,000 conversion perturbation left the varied candidate’s own ' +
-            'decision surface byte-identical — nothing moved, so sibling-identity proves no decoupling (insight 029)',
+          householdViolation(
+            'perturbation-inert',
+            'perturbation arm VACUOUS: the +1,000 conversion perturbation left the varied candidate’s own ' +
+              'decision surface byte-identical — nothing moved, so sibling-identity proves no decoupling (insight 029)',
+          ),
         )
       }
     } else if (originalPerturbed.kind === 'infeasible' && rerunV.kind === 'infeasible') {
+      // HOUSEHOLD class (not harness): the anchored conversion cannot be executed on this household at
+      // all. No known world reaches this ALONE (the class docs) — the sibling goes infeasible too and
+      // `sibling-unscored` co-fires, so the classifier returns null and the run mint-fails.
       violations.push(
-        'perturbation arm VACUOUS: the perturbed candidate and its +1,000 variant are BOTH infeasible — ' +
-          'no movement is witnessable (insight 029)',
+        householdViolation(
+          'perturbation-infeasible',
+          'perturbation arm VACUOUS: the perturbed candidate and its +1,000 variant are BOTH infeasible — ' +
+            'no movement is witnessable (insight 029)',
+        ),
       )
     } // exactly one infeasible ⇒ the perturbation demonstrably moved the outcome — presence held
     if (rerunV.kind === 'infeasible') infeasibleCount += 1

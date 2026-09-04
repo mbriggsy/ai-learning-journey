@@ -3,7 +3,7 @@
 *Why the board says what it says. Companion to [`../draft-kit/players_data.json`](../draft-kit/players_data.json) (the board itself), [`draft-day-runbook.md`](draft-day-runbook.md) (draft-day operations), [`league.md`](league.md) (the rules all of this is bent around), and [`../draft-kit/family-feud-draft-board.html`](../draft-kit/family-feud-draft-board.html).*
 
 <!-- BEGIN GENERATED snapshot-date — rewritten by scripts/build_board.py. Do not hand-edit. -->
-*Rankings snapshot: August 21, 2026.*
+*Rankings snapshot: August 28, 2026.*
 <!-- END GENERATED snapshot-date -->
 *The ranks expire — the method doesn't. Read this as many times as you want, Briggsy; the numbers get refreshed before draft day.*
 
@@ -173,12 +173,12 @@ who clear replacement**, so the table below moves when the board moves:
 <!-- BEGIN GENERATED vbd-cases — rewritten by scripts/build_board.py. Do not hand-edit. -->
 | delta | player | board | math | reading |
 |-------|--------|-------|------|---------|
-| **-29** | QB Dak Prescott | 78 | 107 | we draft him AHEAD of the raw math |
-| **-24** | QB Brock Purdy | 88 | 112 | we draft him AHEAD of the raw math |
+| **-31** | QB Dak Prescott | 76 | 107 | we draft him AHEAD of the raw math |
 | **-23** | TE Trey McBride | 20 | 43 | we draft him AHEAD of the raw math |
-| **+19** | RB Cam Skattebo | 55 | 36 | the math likes him MORE than his board slot |
+| **-23** | QB Brock Purdy | 89 | 112 | we draft him AHEAD of the raw math |
 | **+19** | RB Bucky Irving | 60 | 41 | the math likes him MORE than his board slot |
-| **+18** | RB Jeremiyah Love | 40 | 22 | the math likes him MORE than his board slot |
+| **+18** | RB Jeremiyah Love | 41 | 23 | the math likes him MORE than his board slot |
+| **+18** | RB Cam Skattebo | 57 | 39 | the math likes him MORE than his board slot |
 
 **2 of the 3 largest taxes are quarterbacks, and that is structure rather than judgment.** This league starts ONE quarterback across eight teams, so replacement is QB12 and the curve is nearly flat beneath it — `vbdRank` sinks mechanically. Read the non-QB rows for what the layers actually do.
 

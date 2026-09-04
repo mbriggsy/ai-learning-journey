@@ -1137,7 +1137,15 @@ class TestTheGuardsAreWired(unittest.TestCase):
 
     def test_an_unchanged_rebuild_is_byte_stable(self):
         """The plan's byte-stable criterion was asserted in a commit message and nowhere else.
-        Forcing _content_equal to False left the suite green while every rebuild churned."""
+        Forcing _content_equal to False left the suite green while every rebuild churned.
+
+        The baseline is a FIXTURE build, not the live kit as committed. Until 2026-09-03 this
+        snapshotted the on-disk surfaces -- built from the mule's live cargo -- and rebuilt from
+        the fixture cargo, so "unchanged" was only true while the two cargos agreed on
+        `meta.shape`. They agreed for a month by coincidence (both `start_time: null`), and the
+        test went red the day the real draft date and `draft_order` appeared. Two builds from the
+        same input is the criterion; the live surfaces are restored by setUp's cleanup."""
+        B.build(allow_dirty=True, full=False, cargo=CARGO_DRAFT, league_cargo=CARGO_LEAGUE)
         before = snapshot(B.KIT)
         B.build(allow_dirty=True, full=False, cargo=CARGO_DRAFT, league_cargo=CARGO_LEAGUE)
         self.assertEqual(snapshot(B.KIT), before,

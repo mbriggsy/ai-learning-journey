@@ -222,13 +222,14 @@ PIPELINE half (mint → persist → unlock → holds → demote → re-promote) 
 regardless. **Lean: (b)** — the render is pinned synthetically, the pipeline is witnessed, and the
 hunt's marginal value is one eyeball frame; but the scope call is his if (a) tempts anyone.
 
-▶ **START HERE NEXT SESSION (hand-off written 2026-09-03, second session of the day — two commits
-landed: `3c4c64c5` the intake beforeunload guard + the two holes its unit-boundary review found (CI
-33806460606 green), and `2eb0eebd` the solve-lane cancel (CI run 33823723825 — poll it by id, read
-`conclusion`); the three earlier commits of the day are `41f9edee` · `530e6545` · `53486a39`).**
+▶ **START HERE NEXT SESSION (hand-off written 2026-09-04 — two commits landed: `8a6fc6b7` the
+`rothPlanRanked` singular fix + the CLAUDE.md count pointer (CI 33915306718 green), and `add8dea8` the
+unwitnessable-household typed refusal + its 5-lens review corrections + insight 114 (CI 33920629134
+green); the 2026-09-03 commits were `3c4c64c5` (CI 33806460606 green) · `2eb0eebd` (CI 33823723825
+green) · `41f9edee` · `530e6545` · `53486a39`).**
 
 **FIRST: nothing is staged — items 3, 5 and 7 (the mechanism) SHIPPED, and so did the `rothPlanRanked`
-singular defect under 9a (the 2026-09-04 session, `8a6fc6b7` + the typed-refusal commit). Start at item 4
+singular defect under 9a (the 2026-09-04 session, `8a6fc6b7` + `add8dea8`). Start at item 4
 (the phone walk, findings only) or item 8 of the ranked plan below; 6 needs your parity word, 7 your
 sentence, and the new item 11 (the goal picker's "basics covered" lead on a failing household) your words
 over a pilot gate.** The apply

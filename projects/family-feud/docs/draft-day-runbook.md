@@ -459,14 +459,15 @@ cross-checks a typed seat against `draft_order` and your own picks — **both of
 structurally empty before your first pick lands**, so that reassurance was unearned at exactly the
 pick where a wrong seat costs the most.
 
-⚠️ **RUN IT TODAY AND IT REFUSES — THAT IS THE CORRECT ANSWER, NOT A BROKEN COMMAND.** Verified
-2026-08-17 against a live 729-byte curl: with no seat argument it exits 2 with `!! NO SEAT ...
-draft_order holds no entry for user_id 1390750540631150592 (it stays null until near go time —
-that is normal, not a fault)`. Pre-draft, pass the seat positionally and read the 🚨 line as the
-true statement it is. **The first thing to do when the room goes live is re-run this with no seat
-and watch it derive one** — that is the moment the guesswork ends.
+✅ **THE GUESSWORK ENDED 2026-09-03, THREE DAYS OUT.** `draft_order` populated and a bare
+`run_engine.py --dry-run` printed `[draft] slot=6 from draft_order["1390750540631150592"]`;
+`precompute_ladder.py` derived the same seat and printed a full ladder (`our next pick: #6`).
+*History:* until then a bare run exited 2 with `!! NO SEAT ... draft_order holds no entry for
+user_id 1390750540631150592`, verified 2026-08-17 — that refusal was correct, and it is what you
+will see again only if the draft is re-created. **On draft morning, run it bare and confirm it still
+says 6** before the first advisory.
 - `settings.teams`, `settings.rounds`, `settings.pick_timer` — **read rounds from the API, never assume 16** (Mocks #1 and #2 both ran 15; the real league is 16).
-- `draft_order` — map of user_id → slot. Briggsy = user_id `1390750540631150592`. **His slot is the engine's first argument.** draft_order can be null until near start — re-verify ON draft day, before the first advisory. Slot changes strategy hard: turn slots (1/8) draft in pairs and plan 14 picks ahead; middle slots don't. Slot 2 (Mock #2) is a near-turn: picks come in loose pairs with 3 picks between (e.g. 15/18, 31/34) and 13-pick droughts after — plan both picks of a pair as one decision, including who the between-teams will eat (denial forecasting won Egbuka→Kyren and Skattebo→Daniels).
+- `draft_order` — map of user_id → slot. Briggsy = user_id `1390750540631150592`. **His slot is the engine's first argument, and it is 6** (populated 2026-09-03; Hunter is 3). Re-verify ON draft day, before the first advisory — a re-created draft resets it to null. **Seat 6 shape:** picks 6/11, 22/27, 38/43 … — near pairs with 4 picks between and 10-pick droughts after; plan each pair as one decision, and Hunter picks 3 ahead of us in odd rounds, 3 behind in even. Slot changes strategy hard: turn slots (1/8) draft in pairs and plan 14 picks ahead; middle slots don't. Slot 2 (Mock #2) is a near-turn: picks come in loose pairs with 3 picks between (e.g. 15/18, 31/34) and 13-pick droughts after — plan both picks of a pair as one decision, including who the between-teams will eat (denial forecasting won Egbuka→Kyren and Skattebo→Daniels).
 - Confirm scoring context (real league = full PPR; make mocks 8-team PPR to mirror it — verify `metadata.scoring_type` via API; Mock #1's lobby was accidentally created as Standard first, Mock #2 verified `ppr` ✓).
 - **Slot names — and the real draft does NOT have them.** Re-measured against the live draft object
   2026-08-08: `metadata` carries **exactly four keys — `description`, `league_type`, `name`,
@@ -477,13 +478,14 @@ and watch it derive one** — that is the moment the guesswork ends.
   real source, and the engine already reads it. `slot_names.json` remains an optional hand-authored
   override (`{"2": "DIego", "3": "Hunter", ...}`, written into `draft-kit/`) and the engine prints
   a disagreement rather than trusting it. All-CPU mock rooms have no names at all — skip the file.
-- 🚨 **`slot_to_roster_id` IS NOT YOUR SLOT.** It is the identity map `{1:1 … 8:8}` on this draft
-  (verified live 2026-08-08), so it will hand back whatever you put in and look like a confirmation.
-  There are **three unrelated "3"s** in this league — Briggsy's user slot, his `roster_id`, and this
-  map's `3` — and `roster_id 3` sits one line away in [`league.md`](league.md), which makes "3" the
-  most attractive wrong answer in the project. Read the seat from
-  `draft_order["1390750540631150592"]` and **from nothing else**. `run_engine.py` does exactly that
-  and refuses rather than guessing when `draft_order` is still null.
+- 🚨 **`slot_to_roster_id` IS NOT YOUR SLOT.** Live 2026-09-03 it reads
+  `{1:2, 2:5, 3:1, 4:4, 5:6, 6:3, 7:7, 8:8}` — a **slot→roster** map, and Briggsy's row is `6: 3`
+  (seat 6, roster 3). Until the order was set it was the identity map `{1:1 … 8:8}` and handed back
+  whatever you put in. Either way **"3" is the most attractive wrong answer in the project**: it is
+  Briggsy's `roster_id`, it sits one line from his name in [`league.md`](league.md), and it is now
+  **Hunter's seat.** Read the seat from `draft_order["1390750540631150592"]` and **from nothing
+  else**. `run_engine.py` does exactly that — `--dry-run` printed `slot=6` on 2026-09-03 with no
+  argument — and refuses rather than guessing if `draft_order` ever reads null again.
 - 🚨 **TRADED PICKS — checked automatically since 2026-08-17, and you should still glance at it.**
   Every pick-slot computation in this repo assumes each seat owns the picks its snake position
   implies. **One traded pick falsifies "your next pick is #N" and "picks until you" for the rest of
@@ -587,8 +589,13 @@ should never see it.
 > `draft_order` and **refuse rather than default** when it is still null. That removes ~15 typings
 > of a number whose most attractive wrong answer is `3` — Briggsy's slot, his `roster_id`, and
 > `slot_to_roster_id`'s identity-map `3` are three unrelated 3s.
-> ⚠️ **PRE-DRAFT YOU STILL TYPE IT** (`run_engine.py <slot>` / `--slot <n>`): `draft_order` is null
-> until near go time, so this removes the other fourteen, not the first.
+> ✅ **AND SINCE 2026-09-03 YOU DO NOT TYPE IT PRE-DRAFT EITHER.** `draft_order` populated three
+> days out (Briggsy **seat 6**, Hunter seat 3); both scripts derived `slot=6` bare that night. The
+> bare form is the draft-day chain. **Typing `run_engine.py 6` is still worth one run on draft
+> morning**, and the watcher's YOUR SLOT EXISTS entry says why: a typed seat is re-derived from
+> `draft_order` and REFUSED on disagreement, so that is two readings having to agree; bare, the
+> `[!]` line tells you the check is circular. Typing a seat is also the fallback if `draft_order`
+> resets (a re-created draft — the watcher fires on that).
 > 🚨 **AND READ THE `[!]` LINE WHEN THE SEAT IS DERIVED.** A derived seat makes the engine's
 > `[checked] … against draft_order` self-confirming — it compared the value against the file it
 > came from. The precomputer now says so and names the one oracle that IS independent (our own
@@ -644,8 +651,8 @@ should never see it.
    The engine now enforces this: it **hard-fails (exit 1) on interior gaps or duplicate pick_nos** in picks.json and refuses to emit board state. If it screams, re-fetch /picks, re-merge, rerun — NEVER advise off a screaming engine. (A missing *newest* pick is undetectable — a tail hole looks identical to "draft is only this far along" — but /picks is cumulative, so that's staleness bounded by poll cadence, not corruption.)
 3. Run: **`python scripts/run_engine.py`** — from the repo root, same directory as step 1.
    *(changed 2026-08-08, U15)*
-   Pass the seat as `run_engine.py <slot>` while `draft_order` is still null; once it populates,
-   the wrapper reads the seat itself. It also reads `teams`, `rounds` and the whole roster from the
+   The wrapper reads the seat itself from `draft_order` (populated 2026-09-03: **slot 6**); pass
+   it as `run_engine.py <slot>` only if that map reads null again. It also reads `teams`, `rounds` and the whole roster from the
    draft object, and **arms the contamination gate for you** when the mule's cargo is fresh — that
    flag used to be optional and forgettable, and forgetting it is how a spent mock's `picks.json`
    advises a live draft. Overrides are `--teams`, `--rounds`, `--draft-id`; each wins and says so.
@@ -670,18 +677,17 @@ should never see it.
    - **A name it expects gone is still worth queueing.** Auto-pick skips the dead and takes your
      top surviving queue entry, so those names are *marked*, not reordered — reordering a real
      board rank on a 35% guess is a bad trade.
-   - **The `!!` seat banner: STOP means STOP *once the draft is live*. Before it starts, the
-     banner is unavoidable and is NOT a red.** *(Corrected 2026-08-17 — this bullet used to say
-     "STOP" unconditionally.)* A wrong seat really does yield a complete, confident ladder for
-     another team, so the banner earns its size. But both of its oracles are **structurally
-     empty** before your first pick lands: `draft_order` is null until near go time, and no pick
-     carries our `picked_by` yet. Run the precomputer tonight and it fires **every time** —
-     verified 2026-08-17 against the real draft, and note what else was true of that run:
-     **the full ladder printed underneath it and the exit code was 0.** The tool does not think
-     this is fatal, and neither should you.
-     - **Pre-draft:** expected. Confirm the seat by another route, then use the ladder.
-     - **Once the draft is live:** the banner should be GONE — it self-clears the moment
-       `draft_order` populates or our first pick lands. **If it still fires then, that IS a stop.**
+   - **The `!!` seat banner: STOP means STOP.** *(Re-corrected 2026-09-03; from 2026-08-17 to
+     then this bullet carried a pre-draft exception, because `draft_order` was null and the banner
+     fired on every pre-draft run.)* **That exception is retired:** `draft_order` populated
+     2026-09-03 and the same night's bare `precompute_ladder.py` run printed NO `!!` banner —
+     it printed `[checked] … my_slot=6 against draft_order` plus the `[!]` circularity note and a
+     full ladder, exit 0. So **from now on a `!!` seat banner on the real draft is a red at any
+     time**, pre-draft included: it means `draft_order` lost our user_id, which is what a
+     re-created draft looks like. Go get `draft_order` before acting.
+     - The `[!]` line is different and expected: it says the `draft_order` check is circular (the
+       seat came from the file it was checked against) and that our own `picked_by` is the only
+       independent oracle, which cannot arm until our first pick lands. Read it, don't fear it.
      - Either way the seat comes from `draft_order["1390750540631150592"]` and from nothing else.
      ⚠️ Treating an unavoidable banner as a red is how an operator learns to skip the gate — the
      same false-red shape as the skill's cold-load self-test. The fix is a stated exception, never

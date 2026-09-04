@@ -42,7 +42,7 @@ plan ✅ → deepen ✅ → work ✅ (U6) → ultramode ✅ → work ✅ (U15·U
     every draft room rendered an empty `#root` for hours. **Diagnose that with the bundle hash** —
     four plausible causes were chased and all four were wrong, including tab visibility. The
     skill's landmines carry the full list so nobody repeats them.
-    `draft_order` is still null on the real draft; it populated correctly on the mock.
+    `draft_order` populated on the real draft 2026-09-03 (Briggsy seat 6); it had populated correctly on the mock first.
 
   ── 2026-08-23/24 — **THE EXECUTOR MOCK WON ITS ROOM ON THE FRESH BOARD, AND EVERY READER
     SURFACE GOT ITS DRAFT-WEEK TUNE-UP.** **1187 tests · 28 test files · 26 scripts · 33 insights.**
@@ -356,14 +356,20 @@ blew → seat flipped AUTO → rounds 8-16 drafted themselves. Own goals and fin
    rehearsal wants a slower room (humans, or a longer timer) — the lab's warm-path number is
    still unmeasured.
 
-## ▶ NEXT ACTION — as of 2026-08-24, ~5 days out, draft still UNSCHEDULED
+## ▶ NEXT ACTION — as of 2026-09-03, ~3 days out, draft SCHEDULED Sun 09-06 18:45 ET, seat 6
 
-**Live state, re-pulled 2026-08-24 09:29 cargo: `status: pre_draft`, `start_time: null`,
-`draft_order: null`, room 8/8 full.** The one hard clock is the **~Aug 27 refresh**, now
-carrying TWO remaining ratified payloads (the ECR re-rank half already ran 08-23 on the 08-21
-scrape — run it AGAIN at ~T-48h on whatever is newest): the **long-TD curve fold** (item 4
-below, EXECUTE AT THE REFRESH) and the **board-membership look** (Wan'Dale Robinson / Michael
-Wilson ~19 VORP — Briggsy's call; Wilson has now gone off-board in a mock THREE times).
+**Live state, re-pulled 2026-09-03 22:17 (cache-busted curl + fresh cargo): `status: pre_draft`,
+`start_time: 2026-09-06 18:45 ET`, `draft_order` SET — Briggsy seat 6, Hunter seat 3
+(`docs/league.md` → Draft order), room 8/8 full.** The ECR re-rank ran again 2026-09-03 on the
+**08-28 scrape** (104 moves; Jeanty 13→28 on a `Questionable (Knee)` the board carries no note
+for). **Run it ONCE MORE at ~T-48h (Fri 09-04 evening) on whatever FantasyPros has published by
+then** — `consensus.py --refresh` prints the scrape date; if it still says 08-28, say so and do
+not commit a byte-identical rebuild. TWO ratified payloads are still waiting for that refresh and
+did NOT run 09-03 because they are Briggsy's calls, not the re-rank's: the **long-TD curve fold**
+(item 4 below, EXECUTE AT THE REFRESH) and the **board-membership look** (Wan'Dale Robinson /
+Michael Wilson ~19 VORP — Wilson has now gone off-board in a mock THREE times). **Jeanty's note
+needs Briggsy's voice too** — a 15-spot consensus drop on a Questionable knee at pick-range 6/11
+is exactly what `injury_check.py` exists to surface, and the note still reads "Feature role locked."
 **Current: 1187 tests · 28 test files · 26 scripts · 33 insights** *(counts from 2026-08-24;
 re-run, never copy)*. Both cockpit modes are now live-proven first-place on mocks — what remains
 before the freeze is refresh payloads and draft-day logistics, not build.

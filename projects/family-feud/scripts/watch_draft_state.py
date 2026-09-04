@@ -376,8 +376,9 @@ def diff(prev, cur, moment=None, fired=None):
     if was_slot is None and is_slot is not None:
         out.append(("YOUR SLOT EXISTS",
                     f"draft_order[\"{BRIGGSY_USER_ID}\"] = {is_slot}.\n"
-                    f"Read it from that and nothing else -- slot_to_roster_id is an identity map "
-                    f"and will hand you a plausible wrong answer.\n"
+                    f"Read it from that and nothing else -- slot_to_roster_id maps a SLOT to a "
+                    f"ROSTER (identity {{1:1..8:8}} until the order is set) and will hand you a "
+                    f"plausible wrong answer.\n"
                     f"Run the engine from the REPO ROOT: python scripts/run_engine.py {is_slot}\n"
                     f"Naming the seat is deliberate -- run_engine re-derives it from draft_order "
                     f"and REFUSES on a disagreement, so this is two independent readings having "

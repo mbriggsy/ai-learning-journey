@@ -163,7 +163,8 @@ Overrides exist and are never quiet — `--teams`, `--rounds`, `--draft-id` each
 that they won. `--dry-run` resolves everything and launches nothing.
 
 ```bash
-python scripts/run_engine.py 3             # state the seat yourself (before draft_order fills)
+python scripts/run_engine.py               # seat derived from draft_order (slot 6 since 2026-09-03)
+python scripts/run_engine.py 6             # state the seat yourself — only if draft_order reads null
 python scripts/run_engine.py --dry-run     # what would it use, and where did each value come from
 ```
 
@@ -259,8 +260,9 @@ output are the only levers that exist; faster Python buys nothing. Per-pick tabl
 [`insight 026`](docs/insights/026-the-loop-fits-and-the-scripts-were-never-the-cost.md).
 
 ⚠️ **It has never been run on the real league draft.** Every fire above is a mock — a room of bots,
-a seat Sleeper handed us, and an unlimited supply of retries. The real draft has humans, a
-`draft_order` that is still `null`, and one attempt.
+a seat Sleeper handed us, and an unlimited supply of retries. The real draft has humans and one
+attempt. Its `draft_order` populated 2026-09-03 (Briggsy seat 6, Hunter seat 3) — the wrapper
+derives the seat now, so the one remaining unrehearsed input is the humans.
 
 🚨 **And `picked_by` cannot tell our pick from Sleeper's while a clock is running.** Pick #60 of that
 same rehearsal was deliberately left to expire. The timeout autopick took **our queue-top** (DJ Moore

@@ -59,13 +59,14 @@ and never overrides them. Changelog entries quote pre-migration paths (`Draft Ki
   twice: it aims our advice at Hunter's seat and erases the rival. Confirmed by Briggsy 2026-08-09
   and re-verified live. Identity comes from [`docs/league.md`](docs/league.md)'s table; never from
   the email.
-- **`slot_to_roster_id` is NOT the draft slot.** It is the identity map `{1:1 … 8:8}` on this draft
-  (re-verified 2026-08-08), so it returns whatever you give it and reads like a confirmation. There
-  are **three unrelated "3"s** in this league — Briggsy's slot, his `roster_id`, and this map's `3`
-  — and `roster_id 3` sits a line away in `docs/league.md`, which makes "3" the most attractive
-  wrong answer in the project. Read the seat from `draft_order["1390750540631150592"]` and nothing
-  else. `scripts/run_engine.py` does exactly that, and refuses rather than guessing when
-  `draft_order` is still `null` (it is, today).
+- **`slot_to_roster_id` is NOT the draft slot.** Live 2026-09-03 it reads `{1:2, 2:5, 3:1, 4:4,
+  5:6, 6:3, 7:7, 8:8}` — it maps a **slot to a roster**, and the row `6: 3` is Briggsy: seat 6,
+  roster 3. Before the order was set it was the identity map `{1:1 … 8:8}` and returned whatever
+  you gave it. Either way, **`roster_id 3` is not a seat**, and `3` is now Hunter's slot, which
+  makes "3" the most attractive wrong answer in the project. Read the seat from
+  `draft_order["1390750540631150592"]` and nothing else. `scripts/run_engine.py` does exactly that:
+  as of 2026-09-03 it derives **slot 6** with no argument, and it refuses rather than guessing if
+  `draft_order` ever reads `null` again (a re-created draft would do that).
 - **The real draft object has NO `metadata.slot_name_*`.** Its `metadata` carries exactly four keys:
   `description`, `league_type`, `name`, `scoring_type`. Those slot-name fields existed in **Mock #1's
   room** and were generalised into doctrine; do not go hunting for them under a clock.

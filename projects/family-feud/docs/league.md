@@ -8,7 +8,9 @@ draft-day operation lives in [`draft-day-runbook.md`](draft-day-runbook.md).
 > `newsletter/data/inbox/sleeper_league.json`, `sleeper_draft.json` and `sleeper_users.json` — the
 > mule's own cargo, fetched that minute. **Membership and draft state re-pulled live 2026-08-14**
 > (`/league/.../users` and `/draft/1390509994847240192`, cache-busted): 8 of 8 seats,
-> `status: pre_draft`, `start_time: null`, `draft_order: null`.
+> `status: pre_draft`, `start_time: null`, `draft_order: null`. **Draft time and order re-pulled
+> live 2026-09-03 22:17** (cache-busted `/draft/1390509994847240192`): `start_time` set to
+> **Sun 2026-09-06 18:45 ET**, `draft_order` populated — see [Draft order](#draft-order) below.
 > Membership and draft timing move; re-pull before quoting them. See
 > [`data-access.md`](data-access.md) for how.
 
@@ -44,18 +46,44 @@ is the append-only record, and it is a better source for *when* a seat moved tha
 Re-pull anyway rather than quoting this line; `newsletter/data/inbox/sleeper_users.json` is at most
 an hour old. What being full changes: the caveat that used to live here — *"empty seats mean any
 'who picks between us' reasoning is provisional"* — **is now retired.** All seven opponents are
-known by name, so opponent-model work is no longer waiting on the roster. **`draft_order` is still
-`null`**, so the *order* remains unknown; that is a separate unknown and it is the one that still
-blocks seat-dependent reasoning.
+known by name, so opponent-model work is no longer waiting on the roster. ~~**`draft_order` is
+still `null`**, so the *order* remains unknown~~ — **populated as of 2026-09-03.** Seat-dependent
+reasoning is unblocked; the order is below.
+
+## Draft order
+
+**Re-pulled live 2026-09-03 22:17.** Snake, so odd rounds run 1→8 and even rounds 8→1.
+
+| Slot | Sleeper | Who |
+|---|---|---|
+| 1 | RMonk9 | |
+| 2 | Kaeperni | |
+| 3 | briggsy007 | **Hunter** |
+| 4 | MattiICE23 | |
+| 5 | BuschLight420 | |
+| 6 | **PoppaBriggsy** | **Briggsy — us** |
+| 7 | kblizzy23 | |
+| 8 | Cltchiefs | |
+
+- **Briggsy is seat 6.** Picks 6 · 11 · 22 · 27 · 38 · 43 … (round *n* odd: `8(n-1)+6`; even:
+  `8n-5`). Picks come in **near pairs with 4 picks between** (6/11, 22/27) and **10-pick droughts**
+  after — plan each pair as one decision.
+- **Hunter is seat 3.** He picks 3 before Briggsy in odd rounds and 3 after in even rounds; the
+  seats between them (4, 5) are MattiICE23 and BuschLight420.
+- `slot_to_roster_id` is now `{1:2, 2:5, 3:1, 4:4, 5:6, 6:3, 7:7, 8:8}` — slot 6 → roster 3 is
+  Briggsy's row. It is a slot→roster map, never a seat lookup.
+- `scripts/run_engine.py` and `precompute_ladder.py` derive the seat from
+  `draft_order["1390750540631150592"]` with no argument (verified `--dry-run` 2026-09-03: `slot=6`).
 
 ## League
 
 - **"Family Feud"**, league_id `1390509993844809728`, season **2026**, **8 teams**, status `pre_draft`
 - **Draft:** draft_id `1390509994847240192` — **snake**, **16 rounds**, **120s** clock,
   `reversal_round: 0` (plain snake; third-round reversal is off, and Briggsy ruled it out Aug 5)
-- `start_time: null` and `draft_order: null` — **Briggsy's slot is genuinely unknown until near
-  go time.** Informally targeted ~Aug 29. The slot is the engine's first argument, so this is
-  the one fact draft morning must resolve before anything else.
+- **`start_time`: Sun 2026-09-06 18:45 ET** (`1788734700000`), **`draft_order`: set — Briggsy is
+  seat 6** (both live 2026-09-03; see [Draft order](#draft-order)). Until 2026-08-31 both were
+  `null`, and the runbook's "pre-draft you still type the seat" doctrine dates from then. Re-pull
+  on draft morning anyway: a re-created draft resets both, and the watcher fires on that.
 - `type: 0` = **redraft.** (`max_keepers: 1` and `draft_rounds: 3` are Sleeper's vestigial
   keeper defaults and mean nothing in a redraft league — don't let them spook you.)
 

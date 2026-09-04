@@ -211,11 +211,13 @@ PIPELINE half (mint → persist → unlock → holds → demote → re-promote) 
 regardless. **Lean: (b)** — the render is pinned synthetically, the pipeline is witnessed, and the
 hunt's marginal value is one eyeball frame; but the scope call is his if (a) tempts anyone.
 
-▶ **START HERE NEXT SESSION (hand-off written 2026-09-03, second session of the day — one commit
-landed: the intake beforeunload guard + the two holes its unit-boundary review found, `git log -1`;
-the three earlier commits of the day are `41f9edee` · `530e6545` · `53486a39`).**
+▶ **START HERE NEXT SESSION (hand-off written 2026-09-03, second session of the day — two commits
+landed: `3c4c64c5` the intake beforeunload guard + the two holes its unit-boundary review found, and
+the solve-lane cancel (`git log -1`); the three earlier commits of the day are `41f9edee` ·
+`530e6545` · `53486a39`).**
 
-**FIRST: nothing is staged — item 3 SHIPPED. Start at item 4 of the ranked plan below.** The apply
+**FIRST: nothing is staged — items 3 AND 5 SHIPPED. Start at item 4 (the phone walk, findings only)
+or item 6 of the ranked plan below; items 6–8 each need your words or your eye.** The apply
 recipe that used to sit here ran verbatim (its scripts had to become `.cjs` under the package's
 `"type": "module"` — no content changed) and the outcome, the review's findings and the residuals are
 all recorded in the ride-along block further down. `temp/item3/` is spent; squeaky may clear it.
@@ -228,11 +230,8 @@ verifiers refuted on a material point) — statuses current:**
    buffers · the PWA "Refresh now" collision) closed in the same commit. See the ride-along block.
 4. The phone-viewport (390×844) intake walk — findings only, no fixes; the desktop walk cleared the
    copy and the mechanics, not the fold.
-5. Solve-lane cancel (M): an edit mid-solve leaves the superseded solve burning the ONE shared worker
-   while the edit's own recompute queues behind it; Tier A = `worker.terminate()` + respawn behind a
-   stable forwarding handle (Comlink's pending promises never settle on terminate — reject them
-   yourself), triggered from `update()` when the fingerprint moves (no UI can re-dispatch while
-   pending); the U16 "no second worker" ruling allows a SEQUENTIAL respawn. Register: "The solve lane".
+5. ✅ Solve-lane cancel — shipped this session as the edit-time kill (see the ⚑ block below the
+   landmines). Register: "The solve lane" (the interactive tier + the main-thread freeze stay open).
 6. Date-route one-liner (S) via a Caddie card — words must be true on all FOUR date-hero framings
    (anchor on WORK STATUS, never "a date ahead of you"); the one token yours: does it promise parity.
 7. `?seed=failing` typed refusal (M): the frame is decided by the code's own contract (mint-failed is
@@ -264,6 +263,58 @@ clears it and the page survives) · Playwright `fill` on a formatted currency fi
 "6600" → "65,006,600"); click → Ctrl+A → `pressSequentially` replaces · "Edit in the walk-through"
 lands on step 1, never the section's step (no start-at-step API) · a `?seed=` route bypasses the vault
 even when one exists; the plain `/` route is the Unlock check.
+
+⚑ **THE SOLVE-LANE CANCEL SHIPPED 2026-09-03 (ranked item 5) — an edit mid-solve now frees the worker
+in seconds instead of minutes.** The prescription held on re-verification (a rarity here): the
+worker's `runSolve` is ONE synchronous call with no yield point anywhere in `src/engine/solver` (the
+cooperative seam's predicate cannot even cross the structured clone), so a superseded solve kept
+the one shared worker for its remaining minutes while the edit's own recompute queued behind it.
+`engineClient.ts createResettableEngine` is a stable forwarding handle over a replaceable worker:
+every call is raced against a per-generation signal (a Comlink promise never settles after a
+terminate), `reset()` terminates + respawns SEQUENTIALLY, spawn-first (a failed respawn keeps the
+old worker, never a released proxy), and a worker death rejects with a distinct `EngineDeadError`
+(compute-error, never a forever-hang). `memoryModel.update()` demotes a pending solve to `stale` the
+instant a ranking-affecting edit moves its fingerprint — through `commitSolve`, so the epoch advance
+precedes the reset and the killed dispatch's rejection is HELD by the guard that already existed —
+then resets the worker; `recompute()` holds on a reset. **Witnessed live at 1536×791:** 37 s into a
+`?seed=retired` leave-more solve ("this can take a few minutes"), a spend edit flipped the card to
+"This strategy read is out of date" on the spot and the headline had recomputed to "On the line"
+before the probe could start; console clean.
+⚑ **THE DESIGN WAS ATTACKED BEFORE IT WAS BUILT (4 lenses, 54 agents, 11 corrections confirmed, 14
+rejected)** and every correction is in: racing the RAW rejecting signal (a `.catch` derivative
+RESOLVES undefined — every killed call would have rendered a compute-error), the guarded respawn,
+the fingerprint carried ON the pending arm (never a closure mirror), a typed handle literal (a new
+`EngineApi` method cannot fall out of the race), the false "every update recomputes" premise
+corrected in the comment (the intake's `api.update` recomputes on ADVANCE — the held answer is the
+strip's existing cadence), the old pending-during-edit pin rewritten to the stronger guarantee, and
+fakes whose `reset` actually rejects in-flight calls so the pins are not vacuous. **THE POST-BUILD
+REVIEW (8 lenses, resumed once across a session-limit cut, 5 confirmed) then found the design's own
+leak and it shipped in the same commit:** racing every call against a never-settling per-generation
+signal RETAINS every settled result through the signal's reaction list for the worker's whole life
+(a verifier measured ~10× the array-buffer heap over ten dropped payloads) — the handle now tracks
+in-flight rejecters in a set that empties as each call settles. Also from that review: the
+"every consumer holds" sentence in architecture §11 was an overclaim (the handle only makes a reset
+DISTINGUISHABLE; memoryModel's lanes hold, controlPreview deliberately renders its calm error arm —
+now said in both places and pinned); every one of the six forwarded methods is pinned against the
+kill; the kill is pinned as confined to `pending`; the resolve-time guard is driven by the one path
+that bypasses the kill (a builder that derives a different request for the same draft); `update()`'s
+interface doc names the cancel; the three fingerprint compares collapsed into one `fingerprintMoved`.
+Twelve mutants killed in the second round. **The ruling was
+read from its primary text:** U16 §S1's "the spine lane never starves" was scoped to the FIRST
+beat's dispatch order; the U15 profile's 72 s solve is the trigger the ruling itself named — the
+spec now carries the dated amendment, and `docs/architecture.md` §11 the new contract (insight 113).
+**Residuals, filed in the register:** the kill is ONE-WAY (an edit-then-revert has destroyed the
+run; the resolve-time compare would have kept it — decided: minutes of a frozen headline were the
+worse sin; the stale card's door is the recovery) · the stale card now fires mid-"solving…" the
+instant the user types, and its body "Your answer above already reflects them" is true only once
+the follow-up recompute lands seconds later (pre-existing on the committed→stale path; Caddie, not a
+blocker) · a dead worker settles as compute-error and recovers on reload — a bounded auto-respawn is
+the next honest increment · the respawn's module-eval cost on the first post-reset call is
+unmeasured on the reference device · the live region announces nothing on pending→stale (an AT user
+hears "working on it" and is never told the run was killed — a Caddie/a11y read, pre-existing shape
+on committed→stale) · eleven byte-identical `EngineClient` fakes cost a 19-file sweep for one new
+member (a shared test helper is hygiene-session material) · `ensureSeed()` still mints outside
+`notify()` (item 3's note).
 
 ⚑ **EVERYTHING IN THE WALK-FINDINGS LIST BELOW IS BRIGGSY'S, NOT A BUILD.** Finding 2 is WITHDRAWN
 (refuted same-day). Finding 1's copy pass is OFF (the string is true; only the door is missing, and

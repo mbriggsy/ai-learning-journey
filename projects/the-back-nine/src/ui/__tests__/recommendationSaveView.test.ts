@@ -238,7 +238,7 @@ describe('deriveRecommendationSave — the guard order', () => {
   it('no LIVE recommendation ⇒ no claim — every non-recommended solve state and every non-recommended payload', () => {
     const solveStates: readonly SolveAnswer[] = [
       { kind: 'idle' },
-      { kind: 'pending', label: 'solving' },
+      { kind: 'pending', label: 'solving', fingerprint: 'fp' },
       { kind: 'blocked', gap: 'goal-unset', label: 'goal-unset' },
       { kind: 'blocked', gap: 'no-pretax', label: 'no-pretax' },
       { kind: 'stale', label: 'inputs-changed' },

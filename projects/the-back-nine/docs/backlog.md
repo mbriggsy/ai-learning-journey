@@ -691,7 +691,26 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 
 - The main-thread engine fallback freezes the tab for the whole solve and never says so
 - The WASM port — the measurement gate is BUILT and has fired; the port itself is deferred
-- SOLVE LANE — cancel is dark + the deferred interactive tier
+- SOLVE LANE — ✅ the CANCEL shipped 2026-09-03 (the edit-time kill: `engineClient.ts
+  createResettableEngine` + `memoryModel.update()` — a ranking-affecting edit during a pending solve
+  demotes to `stale` and resets the worker sequentially; insight 113) · the deferred interactive
+  tier stays open
+  - ⚑ Residuals of the cancel (2026-09-03, each recorded, none a build without a ruling): the kill
+    is ONE-WAY — an edit that is then reverted has still destroyed the run (the old resolve-time
+    compare would have kept it); decided as the lesser sin against minutes of a frozen headline, the
+    stale card's own door is the recovery · the stale card fires mid-"solving…" on the first
+    keystroke and its body "Your answer above already reflects them" is true only once the
+    follow-up recompute lands (pre-existing on committed→stale; a Caddie read, not a blocker) · a
+    worker DEATH (`EngineDeadError`) settles every call as the calm compute-error and recovers on
+    reload — a bounded auto-respawn is the next increment · the respawn's engine-module re-evaluation
+    on the first post-reset call is unmeasured on the reference device · the guard's coverage equals
+    the solve fingerprint's: an edit that moves the spine's params but not the solve request leaves
+    the solve running and that recompute queued (none known today) · the live region announces
+    nothing on pending→stale (an AT user hears "working on it" and is never told the run was killed;
+    the committed→stale path has the same silence) · a worker `error` event a LIVE worker survives
+    (an uncaught throw outside a Comlink call) marks the generation dead until the next reset —
+    deliberate (Comlink's expose catches every in-call error), recorded · eleven byte-identical
+    `EngineClient` test fakes — one new member cost a 19-file sweep (hygiene: a shared helper)
 
 ## Tier 3 — Briggsy’s call (taste, scope, one-way doors)
 

@@ -24,9 +24,11 @@ const h = vi.hoisted(() => {
   return { deferreds, runTwoArm }
 })
 
-vi.mock('../engineClient', () => ({
-  engineClient: { engine: { runTwoArm: h.runTwoArm }, runningInWorker: true },
-  engine: { runTwoArm: h.runTwoArm },
+vi.mock('../engineClient', async (importOriginal) => ({
+  // The real module's classes stay real (EngineResetError is what the reset arm is pinned on); only
+  // the singleton client is replaced. (The bare `engine` re-export this mock used to mirror is gone.)
+  ...(await importOriginal<typeof import('../engineClient')>()),
+  engineClient: { engine: { runTwoArm: h.runTwoArm }, runningInWorker: true, reset: () => {} },
 }))
 
 import { previewRunsInWorker, runControlPreview } from '../controlPreview'
@@ -80,6 +82,13 @@ describe('runControlPreview — totality: a REJECTING engine call never escapes'
     const p = runControlPreview(params, 1, control)
     h.deferreds[0]!.reject(new Error('worker died'))
     await expect(p).resolves.toEqual({ kind: 'error', reason: 'worker died' })
+  })
+
+  it('a worker RESET (EngineResetError) with the ticket still latest is the calm error arm — deliberately NOT "stale", which the sheet would discard and sit on pending forever', async () => {
+    const { EngineResetError } = await import('../engineClient')
+    h.runTwoArm.mockRejectedValueOnce(new EngineResetError())
+    const result = await runControlPreview(params, 1, control)
+    expect(result.kind).toBe('error') // the sheet renders copy.leverPreviewError, never the reason text
   })
 
   it('a rejection that already LOST the ticket race resolves {kind:"stale"} (superseded, not surfaced as error)', async () => {

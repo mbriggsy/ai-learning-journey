@@ -130,6 +130,19 @@ conversion-grade render lands.
   beat committed — the spine lane never starves. Deferred-with-trigger: a second worker /
   per-candidate abort revives only if the profile proves the (already-committed-first) spine
   lane still starves.
+  ⚑ **AMENDED 2026-09-03 (ranked item 5, the solve-lane cancel).** The sentence "the spine lane
+  never starves" was scoped to the FIRST beat's dispatch ordering and is FALSE for a spine
+  recompute dispatched AFTER the solve: the worker's `runSolve` is one synchronous call (no yield
+  point anywhere in `src/engine/solver`; a cooperative predicate cannot cross the structured
+  clone), so an edit made during the 72 s solve the U15 profile measured leaves its own recompute
+  queued behind a run that now describes a superseded household — the starvation this bullet
+  named as its own trigger, and the landmine U15's spec handed forward. What shipped honors both
+  sentences: **a SEQUENTIAL worker reset** (`engineClient.ts createResettableEngine` —
+  terminate + respawn on a fingerprint-moving edit during a pending solve, from `memoryModel`'s
+  `update()`), never two live workers and zero bundle cost; the per-candidate abort and the live
+  worker-epoch transport stay deferred exactly as below. The trade recorded with it: the kill is
+  one-way (an edit that is then reverted has still destroyed the run — the household re-invites),
+  which was judged the lesser sin against minutes of a frozen headline.
 - **Invalidation source-binds to `solverRunFingerprint`** — never a bespoke epoch mirror (the
   forked-seam trap). The committed solve arm carries what it solved on; a draft mutation that
   changes the fingerprint demotes the committed rec to a structured **stale/re-solve state**

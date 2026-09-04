@@ -49,7 +49,7 @@ import type { SolverRunFingerprint } from '@engine/validation/solverRunFingerpri
 afterEach(cleanup)
 
 const IDLE: SolveAnswer = { kind: 'idle' }
-const PENDING: SolveAnswer = { kind: 'pending', label: 'solving' }
+const PENDING: SolveAnswer = { kind: 'pending', label: 'solving', fingerprint: 'fp' }
 
 const liveRegion = () => document.querySelector('.recommendation-surface [role="status"]')
 
@@ -111,7 +111,7 @@ describe('RecommendationSurface — the pending tell', () => {
       })
       expect(liveRegion()?.textContent).toBe('')
       // A second render at the SAME pending kind must not re-speak (no stale re-announce loop).
-      rerender(<RecommendationSurface solve={{ kind: 'pending', label: 'solving' }} />)
+      rerender(<RecommendationSurface solve={{ kind: 'pending', label: 'solving', fingerprint: 'fp' }} />)
       expect(liveRegion()?.textContent).toBe('')
     } finally {
       vi.useRealTimers()

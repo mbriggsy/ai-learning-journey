@@ -119,7 +119,7 @@ describe('recommendationView — the entry + non-committed states', () => {
   it('idle / blocked / pending / stale / compute-error each render honestly', () => {
     expect(recommendationView({ kind: 'idle' })).toEqual({ kind: 'idle' })
     expect(recommendationView({ kind: 'blocked', gap: 'goal-unset', label: 'goal-unset' })).toEqual({ kind: 'blocked', gap: 'goal-unset' })
-    expect(recommendationView({ kind: 'pending', label: 'solving' })).toEqual({ kind: 'pending' })
+    expect(recommendationView({ kind: 'pending', label: 'solving', fingerprint: 'fp' })).toEqual({ kind: 'pending' })
     expect(recommendationView({ kind: 'stale', label: 'inputs-changed' })).toEqual({ kind: 'stale', heading: copy.recommendStaleHeading, body: copy.recommendStaleBody })
     const err = recommendationView({ kind: 'compute-error', reason: 'worker died' })
     expect(err).toEqual({ kind: 'unavailable', note: copy.recommendUnavailable, detail: 'worker died' })

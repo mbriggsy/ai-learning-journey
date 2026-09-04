@@ -87,6 +87,7 @@ function fakeClient() {
   const solvePending: Array<(w: SolveWire) => void> = []
   const client: EngineClient = {
     runningInWorker: true,
+    reset: () => {},
     engine: {
       ping: async () => 'pong' as const,
       run: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,

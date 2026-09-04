@@ -19,6 +19,7 @@ import { copy } from '@ui/copy'
 
 const nullClient: EngineClient = {
   runningInWorker: true,
+  reset: () => {},
   engine: {
     ping: async () => 'pong' as const,
     run: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,

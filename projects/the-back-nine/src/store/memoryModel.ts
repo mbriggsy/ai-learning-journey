@@ -95,7 +95,7 @@ import { solverRunFingerprint, type SolverRunFingerprint } from '@engine/validat
 // The display-geometry constants the sticky gates read — the engine's OWN exported values
 // (never re-typed; the same objects confidence.ts computes the emitted margins against).
 import { DOLLAR_STEP, STATE_OPTIMISM_RANK, SURVIVAL_GRID } from '@engine/confidence'
-import type { EngineClient } from './engineClient'
+import { isEngineReset, type EngineClient } from './engineClient'
 
 // ---------------------------------------------------------------------------
 // The draft shape — ScenarioV3 mid-population. Same fields, same names; the
@@ -289,8 +289,10 @@ export type SolveAnswer =
   // buckets), never a worker-computed refusal — two calm states, both naming the true reason.
   | { readonly kind: 'blocked'; readonly gap: SolvePreconditionGap; readonly label: SolvePreconditionGap }
   // A solve is in flight (the calm "working on it" window). `label` is a machine key; the
-  // wait's CHARACTER is deferred (profile.ts), so no copy rides here.
-  | { readonly kind: 'pending'; readonly label: 'solving' }
+  // wait's CHARACTER is deferred (profile.ts), so no copy rides here. `fingerprint` is WHAT IT IS
+  // SOLVING ON — the edit-time kill in `update()` diffs a fresh fingerprint against it (the same
+  // one home the committed arm uses; never a closure-side mirror, the §S1 forked-seam trap).
+  | { readonly kind: 'pending'; readonly label: 'solving'; readonly fingerprint: SolverRunFingerprint }
   // A solve committed — the reconstructed payload (recommended / refused / withheld /
   // token-withheld / mint-failed; each its own structured flag via `payload.kind`). `fingerprint`
   // is the solver-run identity it was solved on (§S1) — the committed arm carries WHAT IT SOLVED
@@ -368,7 +370,10 @@ export interface MemoryModel {
   getSnapshot(): MemoryModelSnapshot
   /** Apply an edit to the draft (back-nav-safe: every step reads/writes THIS
    *  model — no per-step local copy to lose). Does NOT auto-recompute: the flow
-   *  calls `recompute()` on question-COMMIT (never per keystroke). */
+   *  calls `recompute()` on question-COMMIT (never per keystroke). It DOES cancel (§S6): a
+   *  ranking-affecting edit while a solve is PENDING demotes it to `stale` and resets the engine
+   *  worker, which rejects every call in flight on it — a queued recompute or preview is killed,
+   *  not resumed, and the caller owes the next dispatch. */
   update(mutate: (draft: ScenarioDraft) => ScenarioDraft): void
   /** Dispatch the state-appropriate engine run for the current draft: the
    *  date-search when ≥1 person's ASKED work status is 'working'; the spine
@@ -571,7 +576,9 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
   let dispatchedEpoch = 0
   let committedEpoch = 0
   // U15 — the solve's OWN epoch pair (commit-if-newer on the solve channel, so a rapid
-  // re-invite discards a stale in-flight solve; worker-side cooperative cancel is S6/cancel.ts).
+  // re-invite discards a stale in-flight solve). The lane's CANCEL is the edit-time kill in
+  // `update()` — a worker reset, since the solve is one synchronous call; cancel.ts's cooperative
+  // seam stays the deferred granularity call (U16 §S1).
   let solveDispatchedEpoch = 0
   let solveCommittedEpoch = 0
 
@@ -631,8 +638,9 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
   // transition, and committing the stale resolve OVER the newer state is exactly the bug the epoch
   // pair closes). `pending` is the sole exception: it does not advance the committed epoch, it MARKS
   // the newest dispatch (solveDispatchedEpoch), and the resolve path additionally HOLDS unless its
-  // own epoch IS that newest dispatch (the lane has no worker-side cancel yet — the epoch pair carries
-  // the whole discipline).
+  // own epoch IS that newest dispatch (the epoch pair carries the whole discipline; the edit-time
+  // kill in `update()` advances it BEFORE it resets the worker, which is what holds the killed
+  // dispatch's rejection).
   const commitSolve = (epoch: number, next: SolveAnswer): void => {
     // The UNCONDITIONAL commit-epoch guard (§S6 — cancel.ts's pure seam): a resolved solve commits
     // ONLY if strictly newer than the last committed. A superseded solve NEVER renders, whatever its
@@ -670,11 +678,19 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
   // caller owns the notify. Returns true iff it demoted. It NEVER dispatches: re-solving is invited,
   // never stormed on a draft edit (the planted auto-re-solve mutant re-dispatches here, which the
   // no-auto-resolve test forbids).
+  // THE ONE "did the ranking inputs move?" compare, shared by the committed demotion, the edit-time
+  // kill and the resolve-time guard — a null fresh fingerprint (the draft can no longer build a run)
+  // is itself a move. Three sites, one derivation.
+  const fingerprintMoved = (against: SolverRunFingerprint): boolean => {
+    const fresh = currentDraftFingerprint()
+    return fresh === null || fresh !== against
+  }
+  const STALE_SOLVE: SolveAnswer = { kind: 'stale', label: 'inputs-changed' }
+
   const invalidateStaleSolve = (): boolean => {
     if (solveAnswer.kind !== 'committed') return false
-    const fresh = currentDraftFingerprint()
-    if (fresh !== null && fresh === solveAnswer.fingerprint) return false
-    solveAnswer = { kind: 'stale', label: 'inputs-changed' }
+    if (!fingerprintMoved(solveAnswer.fingerprint)) return false
+    solveAnswer = STALE_SOLVE
     return true
   }
 
@@ -688,6 +704,29 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
 
     update(mutate) {
       draft = mutate(draft)
+      // §S6 — THE EDIT-TIME KILL (2026-09-03, ranked item 5). A fingerprint-moving edit while a solve
+      // is PENDING supersedes the run. The worker's runSolve is ONE synchronous call (no yield point
+      // in src/engine/solver; the cooperative seam's predicate cannot even cross the wire), so the
+      // superseded solve would keep the ONE worker for its remaining minutes while THIS edit's own
+      // recompute queued behind it — and would resolve into `stale` anyway (the pending-during-edit
+      // guard). Demote NOW through commitSolve, minting through `++solveDispatchedEpoch`: the killed
+      // dispatch's rejection (and, on the main-thread fallback, its late resolve) is then held by BOTH
+      // guards — dispatchSolve's `epoch !== solveDispatchedEpoch` and commitSolve's committed-epoch
+      // compare — and, the part that is LOAD-BEARING, the dispatched epoch stays monotonic PAST the
+      // stale commit, so the household's next re-invite mints strictly above it (a `+ 1` commit
+      // without the advance would collide the next dispatch with the committed epoch and discard
+      // that solve forever — pinned). Then reset the worker so the recompute that follows this edit
+      // lands in seconds, not minutes. The reset is SEQUENTIAL (one worker at a
+      // time — U16 §S1's ruling in letter and rationale; its premise "the spine lane never starves"
+      // was scoped to the FIRST beat, and the U15 profile's 72 s solve is the measured starvation the
+      // ruling named as its trigger). THE TRADE, decided: the kill is one-way — an edit that is then
+      // reverted has still destroyed the run (the resolve-time compare would have kept it), and the
+      // household re-invites through the stale card's own door; minutes of a frozen headline were the
+      // worse sin. A non-fingerprint edit leaves the solve running. Never an auto-re-solve.
+      if (solveAnswer.kind === 'pending' && fingerprintMoved(solveAnswer.fingerprint)) {
+        commitSolve(++solveDispatchedEpoch, STALE_SOLVE)
+        deps.client.reset()
+      }
       // §S1 invalidation: a draft edit that changes the solver-run fingerprint demotes a committed
       // recommendation to `stale` — never a stale rec rendered as current, and NEVER an auto-re-solve
       // (re-solving is invited, not stormed). A no-op for every non-committed solve state.
@@ -734,7 +773,7 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
       if (anyWorking ? input === null : params === null) {
         if (everResolved) {
           const epoch = ++dispatchedEpoch
-          void deps.client.engine.setLatestEpoch(epoch)
+          void deps.client.engine.setLatestEpoch(epoch).catch(() => {}) // best-effort cancel signal (see below)
           commit(epoch, { kind: 'inputs-incomplete' })
         }
         return
@@ -746,8 +785,10 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
       // an in-flight date sweep (FIFO on the same port), not only a date→date
       // supersession. ORDER IS LOAD-BEARING (C3 item (b)): this commit must reach
       // the worker before the next dispatch so an older sweep cancels between
-      // candidates. Harmless + idempotent for the spine route (run() ignores it).
-      void deps.client.engine.setLatestEpoch(epoch)
+      // candidates. Harmless + idempotent for the spine route (run() ignores it). Fire-and-forget,
+      // so its rejection is swallowed HERE: a worker reset (or a dead worker) rejects it, and a void
+      // promise must never surface as an unhandled rejection — it is a best-effort signal either way.
+      void deps.client.engine.setLatestEpoch(epoch).catch(() => {})
       if (answer.kind === 'idle') {
         // `pending` exists only in the pre-first-resolve window; once anything
         // has committed we hold the last answer visible (no re-blank).
@@ -788,9 +829,16 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
               : { kind: 'compute-error', reason: res.reason },
           )
         }
-      } catch {
-        // A rejected engine promise (worker death, clone failure) is the calm
-        // compute-error mode — never an uncaught rejection into the UI.
+      } catch (e) {
+        // A RESET — this run was killed by the household's own edit (`update()` → `client.reset()`)
+        // — HOLDS the prior answer (the no-re-blank contract): the killed run described a superseded
+        // draft, and this lane's next dispatch carries the edit. On the Result screen every update is
+        // paired with its recompute (recomputeBoth / recompute('final')); in the intake the next
+        // question-commit advance recomputes (flow.tsx) — the strip's existing cadence, no worse than
+        // the not-yet-recomputed edit it already tolerates between advances. Never a compute-error
+        // render for a run the household killed. Any OTHER rejection (a dead worker, a clone
+        // failure) is the calm compute-error mode — never an uncaught rejection into the UI.
+        if (isEngineReset(e)) return
         commit(epoch, { kind: 'compute-error', reason: 'engine-unavailable' })
       }
     },
@@ -842,7 +890,7 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
       // every payload arm is a NAMED bin (insight 092).
       const dispatchedFingerprint = fingerprintOf(request)
       const epoch = ++solveDispatchedEpoch
-      solveAnswer = { kind: 'pending', label: 'solving' }
+      solveAnswer = { kind: 'pending', label: 'solving', fingerprint: dispatchedFingerprint }
       notify()
       try {
         const wire = await deps.client.engine.runSolve(request)
@@ -854,25 +902,27 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
         // aborted bin explicitly and hold. (Reachable only once the worker-epoch transport is wired —
         // the granularity call deferred to the profile, §S6 — but handled now so it is never rendered.)
         if (view.ok && view.payload.kind === 'aborted') return
-        // HOLD unless this dispatch is still the latest. The solve lane has NO worker-side cancel yet,
-        // so the epoch pair must carry the whole discipline: an OLDER solve resolving after a NEWER
-        // dispatch must not render its stale result over the newer pending (the date route's
-        // cancelled-hold mirror). commitSolve's own committed-epoch guard is defense-in-depth; this
-        // guard is load-bearing while the newer dispatch is still PENDING (nothing committed yet).
+        // HOLD unless this dispatch is still the latest. The epoch pair carries the whole discipline:
+        // an OLDER solve resolving after a NEWER dispatch must not render its stale result over the
+        // newer pending (the date route's cancelled-hold mirror), and — since the edit-time kill in
+        // `update()` advances the epoch before it resets the worker — a KILLED dispatch's late resolve
+        // (the main-thread fallback, which has no worker to reset) lands here and holds too. commitSolve's
+        // own committed-epoch guard is defense-in-depth; this guard is load-bearing while the newer
+        // dispatch is still PENDING (nothing committed yet).
         if (epoch !== solveDispatchedEpoch) return
         if (view.ok) {
-          // PENDING-DURING-EDIT guard (§S1, the calm-but-wrong close): if the draft's fingerprint
-          // moved WHILE this solve was in flight (an edit during the ~72s wait), the just-computed
-          // rec already describes a superseded household — commit the `stale` state, never a rec for
-          // the old inputs shown as current for even one frame. A fresh fingerprint that still
-          // matches means no ranking-affecting edit landed, and the rec stands.
-          const fresh = currentDraftFingerprint()
-          const stillCurrent = fresh !== null && fresh === dispatchedFingerprint
+          // PENDING-DURING-EDIT guard (§S1, the calm-but-wrong close) — DEFENSE-IN-DEPTH since the
+          // §S6 edit-time kill in `update()`: a fingerprint-moving EDIT now demotes and out-epochs
+          // this dispatch before it can resolve, so through `update()` this arm cannot fire. It stays
+          // for the one path that bypasses the kill — the injected builder deriving a different
+          // request for the SAME draft at resolve time than it did at dispatch (pinned with exactly
+          // that builder): the just-computed rec would describe a superseded household, so commit
+          // `stale`, never a rec for the old inputs shown as current for even one frame.
           commitSolve(
             epoch,
-            stillCurrent
-              ? { kind: 'committed', payload: view.payload, fingerprint: dispatchedFingerprint }
-              : { kind: 'stale', label: 'inputs-changed' },
+            fingerprintMoved(dispatchedFingerprint)
+              ? STALE_SOLVE
+              : { kind: 'committed', payload: view.payload, fingerprint: dispatchedFingerprint },
           )
         } else {
           commitSolve(epoch, { kind: 'compute-error', reason: view.reason })
@@ -880,6 +930,8 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
       } catch {
         // A rejected engine promise (worker death, clone failure) is the calm compute-error mode —
         // but still epoch-held: a superseded dispatch's rejection must not blank the newer pending.
+        // The edit-time kill's own rejection (EngineResetError) lands here and is held by this same
+        // guard — `update()` advanced the epoch before it reset the worker, so no reset-specific arm.
         if (epoch !== solveDispatchedEpoch) return
         commitSolve(epoch, { kind: 'compute-error', reason: 'engine-unavailable' })
       }

@@ -54,6 +54,7 @@ const wires = vi.hoisted(() => ({
 vi.mock('@store/engineClient', () => ({
   engineClient: {
     runningInWorker: false,
+    reset: () => {},
     engine: {
       ping: async () => 'pong' as const,
       run: async () => wires.run,

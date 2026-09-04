@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createMemoryModel, type MemoryModel, type ParamsBuilders, type ScenarioDraft, type SolveBlockReason } from '../memoryModel'
-import type { EngineClient } from '../engineClient'
+import { EngineDeadError, EngineResetError, type EngineClient } from '../engineClient'
 import type { DateSearchInput } from '@engine/dateSearch'
 import type { DateSearchWire, EngineWire, SolveWire } from '@engine/engineWire'
 import type { SolveRequest } from '@engine/solver/solveEntry'
@@ -39,12 +39,25 @@ interface Call {
 
 /** A controllable fake engine client: date-search + solve promises resolve only when the
  *  test releases them (out-of-order races become deterministic). */
-function fakeClient(opts?: { runWire?: EngineWire; runningInWorker?: boolean }) {
+function fakeClient(opts?: { runWire?: EngineWire; runningInWorker?: boolean; resetRejects?: boolean }) {
   const calls: Call[] = []
   const datePending: Array<(w: DateSearchWire) => void> = []
   const solvePending: Array<(w: SolveWire) => void> = []
+  // The reset's OBSERVABLE contract (the real handle's, engineClient.test.ts): every call in flight
+  // on the killed worker rejects with EngineResetError. Counted, so an arm can pin "reset exactly
+  // once". `resetRejects: false` models the main-thread fallback, whose reset is a no-op — the
+  // in-flight solve there finishes anyway, for the old draft.
+  const dateRejects: Array<(e: Error) => void> = []
+  const solveRejects: Array<(e: Error) => void> = []
+  let resets = 0
   const client: EngineClient = {
     runningInWorker: opts?.runningInWorker ?? true,
+    reset: () => {
+      resets += 1
+      if (opts?.resetRejects === false) return
+      for (const reject of dateRejects.splice(0)) reject(new EngineResetError())
+      for (const reject of solveRejects.splice(0)) reject(new EngineResetError())
+    },
     engine: {
       ping: async () => 'pong' as const,
       run: async (params, seed) => {
@@ -57,8 +70,9 @@ function fakeClient(opts?: { runWire?: EngineWire; runningInWorker?: boolean }) 
       },
       runDateSearch: (input, seed, tier, requestEpoch) => {
         calls.push({ method: 'runDateSearch', args: [input, seed, tier, requestEpoch] })
-        return new Promise<DateSearchWire>((resolve) => {
+        return new Promise<DateSearchWire>((resolve, reject) => {
           datePending.push(resolve)
+          dateRejects.push(reject)
         })
       },
       // P3·U10 — unused by these mechanics tests (the two-arm surface has its own battery).
@@ -66,13 +80,14 @@ function fakeClient(opts?: { runWire?: EngineWire; runningInWorker?: boolean }) 
       // U15 — the solve dispatch. Controllable: the test releases each resolve deterministically.
       runSolve: (request) => {
         calls.push({ method: 'runSolve', args: [request] })
-        return new Promise<SolveWire>((resolve) => {
+        return new Promise<SolveWire>((resolve, reject) => {
           solvePending.push(resolve)
+          solveRejects.push(reject)
         })
       },
     },
   }
-  return { client, calls, datePending, solvePending }
+  return { client, calls, datePending, solvePending, resets: () => resets }
 }
 
 const dateBuilders: ParamsBuilders = {
@@ -437,6 +452,7 @@ describe('memoryModel — real-engine spine dispatch', () => {
   it('renders a real headline through the actual wire (deterministic under the injected seed)', async () => {
     const realClient: EngineClient = {
       runningInWorker: false,
+      reset: () => {},
       engine: {
         ping: async () => engineApi.ping(),
         run: async (p, s, o) => engineApi.run(p, s, o), // forward the bandFan option the spine now requests
@@ -623,7 +639,7 @@ describe('memoryModel — the solve lifecycle (§S5 (5))', () => {
     const model = createMemoryModel({ client, builders: solveBuilders(() => REAL_SOLVE_REQUEST) })
     await withCommittedSpine(model, datePending) // recommend-second: the spine beat must commit first
     const p = model.dispatchSolve()
-    expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' })
+    expect(model.getSnapshot().solve).toMatchObject({ kind: 'pending', label: 'solving' })
     solvePending[0]!(refusedWire)
     await p
     const solve = model.getSnapshot().solve
@@ -658,7 +674,7 @@ describe('memoryModel — the solve lifecycle (§S5 (5))', () => {
     const model = createMemoryModel({ client, builders: solveBuilders(() => REAL_SOLVE_REQUEST) })
     await withCommittedSpine(model, datePending)
     const inFlight = model.dispatchSolve() // #1 — deferred, pending
-    expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' })
+    expect(model.getSnapshot().solve).toMatchObject({ kind: 'pending', label: 'solving' })
     // Clear the goal + re-dispatch → the goal-unset blocked branch (now epoch-minting + committing).
     model.update((d) => ({ ...d, chosenGoal: undefined }))
     await model.dispatchSolve()
@@ -678,10 +694,10 @@ describe('memoryModel — the solve lifecycle (§S5 (5))', () => {
     await withCommittedSpine(model, datePending)
     const first = model.dispatchSolve() // #1 pending
     const second = model.dispatchSolve() // #2 pending (newer)
-    expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' })
+    expect(model.getSnapshot().solve).toMatchObject({ kind: 'pending', label: 'solving' })
     solvePending[0]!(refusedWire) // release the STALE #1
     await first
-    expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' }) // pending STAYS
+    expect(model.getSnapshot().solve).toMatchObject({ kind: 'pending', label: 'solving' }) // pending STAYS
     solvePending[1]!({ kind: 'mint-failed', stage: 'roster', detail: 'newer', solverCodeVersion: 1 })
     await second
     const solve = model.getSnapshot().solve
@@ -697,17 +713,18 @@ describe('memoryModel — the solve lifecycle (§S5 (5))', () => {
     const model = createMemoryModel({ client, builders: solveBuilders(() => REAL_SOLVE_REQUEST) })
     await withCommittedSpine(model, datePending)
     const p = model.dispatchSolve()
-    expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' })
+    expect(model.getSnapshot().solve).toMatchObject({ kind: 'pending', label: 'solving' })
     const abortedWire: SolveWire = { kind: 'aborted', detail: 'superseded', solverCodeVersion: 1 }
     solvePending[0]!(abortedWire)
     await p
     // Held — never committed to an answer (the pending window stands until a real solve lands).
-    expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' })
+    expect(model.getSnapshot().solve).toMatchObject({ kind: 'pending', label: 'solving' })
   })
 
   it('a rejected solve promise commits the calm compute-error mode (never an uncaught rejection)', async () => {
     const client: EngineClient = {
       runningInWorker: true,
+      reset: () => {},
       engine: {
         ping: async () => 'pong' as const,
         run: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
@@ -786,7 +803,7 @@ describe('memoryModel — recommend-second ordering (§S1)', () => {
     await withCommittedSpine(model, datePending) // spine 'date' beat commits → everResolved
     void model.dispatchSolve()
     expect(calls.filter((c) => c.method === 'runSolve')).toHaveLength(1) // now the solve reaches the worker
-    expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' })
+    expect(model.getSnapshot().solve).toMatchObject({ kind: 'pending', label: 'solving' })
   })
 })
 
@@ -928,20 +945,21 @@ describe('memoryModel — fingerprint invalidation (§S1)', () => {
     expect('tier' in solve).toBe(false) // tier-less like every solve state (wall #4)
   })
 
-  it('a rec RESOLVING onto an already-edited draft lands `stale`, never committed-as-current (pending-during-edit)', async () => {
-    // The draft is edited WHILE the solve is in flight (an edit during the ~72s wait). The resolving
-    // rec is for the superseded household — it must commit `stale`, not a rec shown as current.
-    const { client, solvePending, datePending } = fakeClient()
+  it('an edit mid-flight lands `stale` — at the EDIT since the edit-time kill (§S6), never a rec shown as current', async () => {
+    // The draft is edited WHILE the solve is in flight (an edit during the ~72s wait). Until
+    // 2026-09-03 the demotion waited for the doomed solve to RESOLVE (minutes of a frozen headline
+    // behind it); now `update()` supersedes the run the instant a ranking-affecting input moves and
+    // resets the worker. Either way: never a rec for the old inputs shown as current.
+    const { client, solvePending, datePending, resets } = fakeClient()
     const model = createMemoryModel({ client, builders: solveBuilders(fingerprintSensitiveDispatch) })
     await withCommittedSpine(model, datePending) // tieTolerance 0 at dispatch
     const p = model.dispatchSolve()
-    expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' })
-    // Edit the draft mid-flight — the fingerprint moves under the pending solve (pending is not
-    // 'committed', so update()'s invalidation is a no-op; the commit path must catch it).
-    model.update((d) => ({ ...d, retirementState: 'NC' }))
-    expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' }) // still pending
-    solvePending[0]!(refusedWire) // the in-flight solve (for the OLD draft) resolves
-    await p
+    expect(model.getSnapshot().solve).toMatchObject({ kind: 'pending', label: 'solving' })
+    model.update((d) => ({ ...d, retirementState: 'NC' })) // the fingerprint moves under the pending solve
+    expect(model.getSnapshot().solve).toEqual({ kind: 'stale', label: 'inputs-changed' }) // demoted NOW
+    expect(resets()).toBe(1) // and the worker was reset — its in-flight runSolve rejected
+    solvePending[0]!(refusedWire) // a late settle is a no-op on the already-rejected promise
+    await p // dispatchSolve's catch: the epoch advanced before the reset → held
     expect(model.getSnapshot().solve).toEqual({ kind: 'stale', label: 'inputs-changed' }) // never current
   })
 
@@ -1044,5 +1062,183 @@ describe('memoryModel — the saved-recommendation record is a USER FACT on the 
     expect(model.getSnapshot().draft.savedRecommendation).toBeUndefined()
     model.update((d) => ({ ...d, retirementState: 'NC' }))
     expect(model.getSnapshot().draft.savedRecommendation).toBeUndefined()
+  })
+})
+
+describe('memoryModel — THE EDIT-TIME KILL (§S6, 2026-09-03 — the solve-lane cancel)', () => {
+  // The worker's runSolve is one synchronous call, so a superseded solve would hold the ONE worker for
+  // its remaining minutes with the edit's own recompute queued behind it. A fingerprint-moving edit
+  // during pending now demotes at the edit and resets the worker; the killed dispatch is HELD through
+  // the epoch advance that precedes the reset. Each arm plants the mutant it kills.
+
+  it('the pending arm CARRIES the fingerprint it is solving on (one home — never a closure-side mirror)', async () => {
+    const { client, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(() => REAL_SOLVE_REQUEST) })
+    await withCommittedSpine(model, datePending)
+    void model.dispatchSolve()
+    const solve = model.getSnapshot().solve
+    if (solve.kind !== 'pending') throw new Error('unreachable')
+    expect(solve.fingerprint).toBe(model.currentDraftFingerprint())
+  })
+
+  it('a NON-fingerprint edit during pending leaves the solve running — no demotion, no reset (a name is not a ranking input)', async () => {
+    const { client, solvePending, datePending, resets } = fakeClient()
+    // A constant request: no draft edit can move its fingerprint.
+    const model = createMemoryModel({ client, builders: solveBuilders(() => REAL_SOLVE_REQUEST) })
+    await withCommittedSpine(model, datePending)
+    const p = model.dispatchSolve()
+    model.update((d) => ({ ...d, retirementState: 'NC' }))
+    expect(model.getSnapshot().solve).toMatchObject({ kind: 'pending', label: 'solving' })
+    expect(resets()).toBe(0)
+    solvePending[0]!(refusedWire)
+    await p
+    expect(model.getSnapshot().solve.kind).toBe('committed')
+  })
+
+  it('a headline recompute queued behind the killed solve is dropped and HELD — the prior answer stays, never a compute-error, nothing auto-re-dispatched', async () => {
+    const { client, solvePending, datePending, resets } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(fingerprintSensitiveDispatch) })
+    await withCommittedSpine(model, datePending) // answer: the committed 'date' beat
+    const before = model.getSnapshot().answer
+    const solve = model.dispatchSolve()
+    const queued = model.recompute() // a spine sweep now queued behind the solve on the one port
+    expect(datePending).toHaveLength(2)
+    expect(solvePending).toHaveLength(1)
+    model.update((d) => ({ ...d, retirementState: 'NC' })) // the kill — BOTH in-flight calls reject
+    expect(resets()).toBe(1)
+    await queued
+    await solve
+    expect(model.getSnapshot().answer).toEqual(before) // held: the next question-commit dispatch carries the edit
+    expect(model.getSnapshot().solve).toEqual({ kind: 'stale', label: 'inputs-changed' })
+    expect(datePending).toHaveLength(2) // no auto-re-dispatch on either lane
+    expect(solvePending).toHaveLength(1)
+  })
+
+  it('on the main-thread FALLBACK (no worker to kill) the killed dispatch\'s LATE RESOLVE is held by the epoch advance alone', async () => {
+    const { client, solvePending, datePending, resets } = fakeClient({ runningInWorker: false, resetRejects: false })
+    const model = createMemoryModel({ client, builders: solveBuilders(fingerprintSensitiveDispatch) })
+    await withCommittedSpine(model, datePending)
+    const p = model.dispatchSolve()
+    model.update((d) => ({ ...d, retirementState: 'NC' }))
+    expect(model.getSnapshot().solve).toEqual({ kind: 'stale', label: 'inputs-changed' })
+    expect(resets()).toBe(1) // called — a no-op on the fallback
+    solvePending[0]!(refusedWire) // the solve finishes anyway, for the OLD draft
+    await p
+    expect(model.getSnapshot().solve).toEqual({ kind: 'stale', label: 'inputs-changed' }) // never current
+  })
+
+  it('a reset rejection HOLDS the headline; a DEAD worker is the calm compute-error — the two rejections route differently', async () => {
+    // A bespoke client: the first sweep commits, the second rejects as a RESET, the third as a DEATH.
+    let sweep = 0
+    const client: EngineClient = {
+      runningInWorker: true,
+      reset: () => {},
+      engine: {
+        ping: async () => 'pong' as const,
+        run: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+        setLatestEpoch: async () => {},
+        runDateSearch: async () => {
+          sweep += 1
+          if (sweep === 2) throw new EngineResetError()
+          if (sweep === 3) throw new EngineDeadError('chunk failed to load')
+          return { kind: 'date-search', outcome: { kind: 'input-failure', reason: 'x' } } as const
+        },
+        runTwoArm: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+        runSolve: async () => refusedWire,
+      },
+    }
+    const model = createMemoryModel({ client, builders: dateBuilders })
+    model.update(workingDraft)
+    await model.recompute()
+    const committed = model.getSnapshot().answer
+    expect(committed.kind).toBe('date')
+    await model.recompute() // sweep 2: killed by a reset → HELD
+    expect(model.getSnapshot().answer).toEqual(committed)
+    await model.recompute() // sweep 3: the worker died → the calm compute-error mode
+    expect(model.getSnapshot().answer).toEqual({ kind: 'compute-error', reason: 'engine-unavailable' })
+  })
+
+  it('a rejected fire-and-forget setLatestEpoch (a reset landing on the cancel signal) never throws out of recompute', async () => {
+    const client: EngineClient = {
+      runningInWorker: true,
+      reset: () => {},
+      engine: {
+        ping: async () => 'pong' as const,
+        run: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+        setLatestEpoch: async () => {
+          throw new EngineResetError()
+        },
+        runDateSearch: async () => ({ kind: 'date-search', outcome: { kind: 'input-failure', reason: 'x' } }) as const,
+        runTwoArm: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+        runSolve: async () => refusedWire,
+      },
+    }
+    const model = createMemoryModel({ client, builders: dateBuilders })
+    model.update(workingDraft)
+    await expect(model.recompute()).resolves.toBeUndefined()
+    expect(model.getSnapshot().answer.kind).toBe('date')
+  })
+})
+
+describe('memoryModel — the edit-time kill keeps the dispatched epoch MONOTONIC past the stale commit', () => {
+  it('after a kill, a RE-INVITED solve commits — its epoch mints strictly above the stale commit (a `+ 1` commit without the advance would collide and discard it forever)', async () => {
+    const { client, solvePending, datePending, resets } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(fingerprintSensitiveDispatch) })
+    await withCommittedSpine(model, datePending)
+    const killed = model.dispatchSolve()
+    model.update((d) => ({ ...d, retirementState: 'NC' })) // the kill
+    expect(resets()).toBe(1)
+    await killed
+    expect(model.getSnapshot().solve).toEqual({ kind: 'stale', label: 'inputs-changed' })
+    const reinvited = model.dispatchSolve() // the stale card's own door
+    expect(model.getSnapshot().solve).toMatchObject({ kind: 'pending', label: 'solving' })
+    solvePending[1]!(refusedWire)
+    await reinvited
+    expect(model.getSnapshot().solve.kind).toBe('committed') // never discarded by its own stale commit
+  })
+})
+
+describe('memoryModel — the edit-time kill is CONFINED to a pending solve', () => {
+  it('a fingerprint-moving edit over a COMMITTED solve demotes through invalidateStaleSolve and never resets the worker (nothing is running)', async () => {
+    const { client, solvePending, datePending, resets } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(fingerprintSensitiveDispatch) })
+    await withCommittedSpine(model, datePending)
+    const p = model.dispatchSolve()
+    solvePending[0]!(refusedWire)
+    await p
+    expect(model.getSnapshot().solve.kind).toBe('committed')
+    model.update((d) => ({ ...d, retirementState: 'NC' }))
+    expect(model.getSnapshot().solve).toEqual({ kind: 'stale', label: 'inputs-changed' })
+    expect(resets()).toBe(0) // a kill hoisted onto every fingerprint-moving edit would reset here
+  })
+
+  it('an edit that makes the request UNBUILDABLE during pending (the null-fingerprint disjunct) kills too', async () => {
+    const { client, datePending, resets } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(fingerprintSensitiveDispatch) })
+    await withCommittedSpine(model, datePending)
+    void model.dispatchSolve()
+    expect(model.getSnapshot().solve).toMatchObject({ kind: 'pending', label: 'solving' })
+    model.update((d) => ({ ...d, chosenGoal: undefined })) // the builder now refuses → fresh fingerprint null
+    expect(model.getSnapshot().solve).toEqual({ kind: 'stale', label: 'inputs-changed' })
+    expect(resets()).toBe(1)
+  })
+})
+
+describe('memoryModel — the resolve-time guard is the second derivation, driven by the one path that bypasses the kill', () => {
+  it('a builder that derives a DIFFERENT request for the same draft at resolve time than at dispatch commits `stale`, never a rec shown as current', async () => {
+    // No update() at all — the fingerprint moves under the pending solve through the builder alone,
+    // which is the only way to reach the resolve-time arm now that the edit-time kill owns edits.
+    let builds = 0
+    const shifting = (d: ScenarioDraft): SolveRequest | SolveBlockReason =>
+      d.chosenGoal === undefined ? 'spine-unready' : realRequest({ tieTolerance: builds++ === 0 ? 0 : 1 })
+    const { client, solvePending, datePending, resets } = fakeClient()
+    const model = createMemoryModel({ client, builders: solveBuilders(shifting) })
+    await withCommittedSpine(model, datePending)
+    const p = model.dispatchSolve() // build #1 → tieTolerance 0
+    expect(model.getSnapshot().solve).toMatchObject({ kind: 'pending', label: 'solving' })
+    solvePending[0]!(refusedWire)
+    await p // build #2 at resolve → tieTolerance 1 → moved → stale
+    expect(model.getSnapshot().solve).toEqual({ kind: 'stale', label: 'inputs-changed' })
+    expect(resets()).toBe(0) // nothing was killed — this is the resolve-time derivation alone
   })
 })

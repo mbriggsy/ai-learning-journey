@@ -198,7 +198,8 @@ export function RecommendationSurface({
   }, [landed, onAnnounced, announcer])
 
   // §S5 (c) — THE TICKET, composed where BOTH producers are in scope and NARROWED rather than cast.
-  // `solve` is a `SolveAnswer` and `fingerprint` exists only on its committed arm; `view` is a
+  // `solve` is a `SolveAnswer` and `fingerprint` exists on its committed arm (and, since the 2026-09-03
+  // edit-time kill, on the pending arm — but this seat reads the committed one only); `view` is a
   // `RecommendationView` and `mode` only on `RecommendedView` — both reads are TS2339 unwrapped, and a
   // cast here would compile, lint, and leave every trichotomy arm green while stamping a record with
   // the wrong run (model.ts:1813-1820 documents that exact shape). The two values are lifted into

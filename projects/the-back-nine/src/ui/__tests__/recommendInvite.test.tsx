@@ -339,7 +339,7 @@ describe('U17 §S5 — the record card’s re-open is the returning household’
     // are frames where the dispatch cannot deliver a fresh solve, so a door here would be a promise the
     // re-dispatch breaks. A cost line with no control beside it is the same dead promise, spelled out.
     for (const solve of [
-      { kind: 'pending', label: 'solving' },
+      { kind: 'pending', label: 'solving', fingerprint: 'fp' },
       { kind: 'blocked', gap: 'no-pretax', label: 'no-pretax' },
     ] as const satisfies readonly SolveAnswer[]) {
       plantResolved()

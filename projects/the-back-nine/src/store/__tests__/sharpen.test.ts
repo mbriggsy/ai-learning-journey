@@ -278,6 +278,7 @@ function realSpineClient() {
   const epochCommits: number[] = []
   const client: EngineClient = {
     runningInWorker: true,
+    reset: () => {},
     engine: {
       ping: async () => 'pong' as const,
       run: async (params, seed, opts) => engineApi.run(params, seed, opts),

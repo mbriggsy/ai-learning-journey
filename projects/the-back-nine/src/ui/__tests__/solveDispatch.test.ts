@@ -191,6 +191,7 @@ const realEngine = {
 /** The full real client (arms a/b). */
 const realClient: EngineClient = {
   runningInWorker: false,
+  reset: () => {},
   engine: { ...realEngine, runSolve: async (r) => engineApi.runSolve(r) },
 }
 
@@ -201,6 +202,7 @@ function controllableClient(): { client: EngineClient; solvePending: Array<(w: S
   let solveCalls = 0
   const client: EngineClient = {
     runningInWorker: false,
+    reset: () => {},
     engine: {
       ...realEngine,
       runSolve: () => {
@@ -266,18 +268,22 @@ describe('the live recommend-second arc — real draft → real engine', () => {
     expect(solve.fingerprint).toBe(expected)
   }, 120_000)
 
-  it('a fingerprint-moving edit mid-flight lands STALE, never committed-as-current (through the real builder)', async () => {
+  it('a fingerprint-moving edit mid-flight lands STALE at the EDIT (the §S6 edit-time kill, through the real builder), never committed-as-current', async () => {
     const { client, solvePending } = controllableClient()
     const model = createMemoryModel({ client, builders: realBuilders(), mintSeed: () => 0xc0ffee })
     model.update(() => withGoalSeed('fl', 'leave-more'))
     await model.recompute() // real spine → headline → everResolved + seed minted
     const p = model.dispatchSolve() // real builder builds the request; runSolve held pending
-    expect(model.getSnapshot().solve).toEqual({ kind: 'pending', label: 'solving' })
-    // Edit a ranking-affecting field WHILE in flight (drop the priced state) — the run fingerprint moves.
+    expect(model.getSnapshot().solve).toMatchObject({ kind: 'pending', label: 'solving' })
+    // Edit a ranking-affecting field WHILE in flight (drop the priced state) — the REAL builder's
+    // fingerprint moves, so update() demotes NOW and resets the worker (this client's reset is a
+    // no-op, so the in-flight solve still resolves late — the main-thread fallback's shape — and the
+    // epoch the kill advanced holds it).
     model.update((d) => ({ ...d, retirementState: undefined }))
+    expect(model.getSnapshot().solve).toEqual({ kind: 'stale', label: 'inputs-changed' }) // at the edit
     solvePending[0]!({ kind: 'refused', reason: 'bucket-precondition', detail: 'x', solverCodeVersion: 1 })
     await p
-    expect(model.getSnapshot().solve).toEqual({ kind: 'stale', label: 'inputs-changed' })
+    expect(model.getSnapshot().solve).toEqual({ kind: 'stale', label: 'inputs-changed' }) // the late resolve is held
   }, 60_000)
 
   it('recommend-second: NO dispatch before the spine beat commits (through the real builder)', async () => {

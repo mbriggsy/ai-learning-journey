@@ -343,9 +343,12 @@ export function Result({
   // tier-less solve channel. U16 §S1 — the ALL-RETIRED (spine) route only in v1: the live solve base
   // is `buildSpineParams` (retirement params), and a still-working household's honest base is the
   // CROWNED date, whose offset this dispatch does not yet thread — so the working-route
-  // recommend-second is a follow-up increment (the builder's `spine-unready` refusal covers the date
-  // route honestly). Both fit-gate affordance seeds (`retired`, `nc`) are all-retired, so this gate
-  // does not regress the measured posture.
+  // recommend-second is a follow-up increment. ⚠️ The builder's `spine-unready` refusal does NOT
+  // cover the date route (corrected 2026-09-04): no control on that route can open the GoalPicker,
+  // so the refusal is never minted there, and a non-idle body the store still holds after a route
+  // flip is DROPPED by the gate below — the date route is silent on strategy today (register:
+  // "Date-route recommend-second parity"). Both fit-gate affordance seeds (`retired`, `nc`) are
+  // all-retired, so this gate does not regress the measured posture.
   const solve = snapshot.solve
   // The invite door is INVITABLE whenever a first-or-fresh solve is the honest next step: no beat yet
   // (idle), a goal-unset precondition (steer to the picker), OR a `compute-error` channel (a worker

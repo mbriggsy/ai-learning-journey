@@ -2250,7 +2250,10 @@ export interface HealthcareVintageV3 {
    *  sourcing unit). ADDITIVE-OPTIONAL (a pre-trend stamp lacks it — absent = not-comparable,
    *  quiet; never coerced to "unchanged"). A Trustees-edition adoption mints a new vintage and
    *  fires the clock on every vault saved under the old table BY DESIGN (the extras-2026b
-   *  precedent) — the trend prices every Medicare-bearing year, so no exposure gate. */
+   *  precedent). NOT every run, though: `partBPricingByT` is built only under
+   *  `healthcareEnabled && taxEnabled` (`taxOverlay.ts`), so a run that built no healthcare
+   *  overlay re-prices nothing under a new edition — the staleness compare carries that exposure
+   *  gate (`staleness.ts`, U17 §S4, insight 087; this clause used to claim "no exposure gate"). */
   readonly partBTrendVintage?: string
 }
 

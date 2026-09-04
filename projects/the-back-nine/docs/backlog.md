@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register: **42 open items** (48 entries, 6 closed and kept as records) consolidated
+> The complete open register: **43 open items** (51 entries, 8 closed and kept as records; the runner-up entry is half-closed and counted open — re-counted 2026-09-04) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -562,7 +562,7 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 - Date-route recommend-second parity gap — the entire still-working audience gets NO strategy recommendation, silently
 - Not-yet-retired (working) household: the recommendation surface does not exist at all
 - R10/R29 — recommend-second is entirely absent for a not-yet-retired (date-route) household
-- ⚠️ **The filed "cheap interim" is WRONG — do NOT drop the `Result.tsx:476` gate alone.** It renders an **empty `<div>`**, not the refusal. And reusing `recommendSpineUnreadyNote` would tell a household with a COMPLETE answer that its answer is incomplete — a new false claim, worse than the silence it replaces. The honest interim is a route-true one-liner admitting the v1 limit, seated and re-measured under `verify:fit` (~89px headroom); **Briggsy blesses the words.**
+- ⚠️ **The filed "cheap interim" is WRONG — do NOT drop the `Result.tsx:482` gate alone** (`:476` at filing). It renders an **empty `<div>`**, not the refusal. And reusing `recommendSpineUnreadyNote` would tell a household with a COMPLETE answer that its answer is incomplete — a new false claim, worse than the silence it replaces. The honest interim is a route-true one-liner admitting the v1 limit, seated above `.result-quiet-row` on the DATE grid (`fuckOffDate.css`, not `confidence.css`) — the date arms of `verify:fit` assert ORDER only and the "~89px headroom" figure is the SPINE idle frame's (see Tier 4), so its vertical cost is a manual 1536×791 measure (corrected 2026-09-04). A chaired Caddie card ships the sentence; **the one token Briggsy holds is whether it promises parity.**
 - DATE-ROUTE RECOMMEND-SECOND PARITY (+ Q1 survivalContext + heir bracket)
 
 ### The detail-door era — nowhere to see how a number was reached
@@ -672,7 +672,11 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
     arming edit of a session can race the passive effect's listener registration when the
     reload-button click is the blur (one field) · `memoryModel.ts ensureSeed()` mints the CRN seed
     outside `notify()` — harmless today (every seed/vault carries one), a latent false-arm if a
-    seedless draft recomputes before typing (fix: mint through `update()`) · a read-only tab's
+    seedless draft recomputes before typing (⚑ 2026-09-04: the filed fix "mint through `update()`"
+    only turns a DEFERRED false-arm into an immediate one; the alternative — an eager mint in
+    `createMemoryModel` — breaks the WRITTEN contract #1b "minted exactly once at the first engine
+    run" (`plans/2-first-answer.md:68`, `model.ts:1666-1668`) with no test that would catch it — a
+    ruling between those two arms) · a read-only tab's
     refusal remedy is a reload and an edit there arms the dialog on that very remedy — truthful,
     noisy · the single-pick sheets (SequencingControl, HealthcareSheet) do NOT hold by judgment (a
     differing radio is a one-tap preview) — flip it in `unsavedBuffer.ts`'s header if his eye
@@ -685,7 +689,7 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 - The schemaVersion "migration ladder" does not exist as code — it is a refusal, so the first bump to v4 strands every saved plan
 - No user-facing way to delete the vault — the couple's entire net worth cannot be removed from the device that holds it
 
-### The solve lane — long runs, no cancel, and a silently frozen tab
+### The solve lane — long runs, the interactive tier, and a silently frozen tab (the edit-time cancel shipped 2026-09-03)
 
 `XL` · **pilot** · filed 3× — `A55`, `A6`, `S70`
 
@@ -735,6 +739,24 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 `M` · **briggsy** · filed 1× — `S39`
 
 - Mid-flight Roth conversion: engine re-anchoring unit + the withdrawn two-futures preview (Briggsy's call)
+- ⚑ **THE CROWNED WINDOW'S BUILD-YEAR ANCHOR — the three arms, written down 2026-09-04 so the fork is
+  presentable (the queue cited "three arms with corrected costs" that existed nowhere).** Cause:
+  `conversionWindowFor` (`solveAnchor.ts:201-208`) returns `startYearOffset: 0` = the plan's BUILD year,
+  and `RothLever.complete()` refuses a passed start (`RothLever.tsx:60-66`), so on an aged vault the crowned
+  conversion cannot be enacted as priced — and for an at/past-RMD household (1-year clamp, `:206-207`) the
+  window is WHOLLY elapsed after New Year's, not partly. Every organic 2026 vault crosses this on
+  2027-01-01 with no deploy. **Arm 1 — re-anchor the window to the wall year** (engine; MOVES the
+  ranking → `SOLVER_CODE_VERSION` bump → every saved record invalidates; size M; cost: an aged household's
+  saved recommendation demotes on re-open). **Arm 2 — refuse to crown a conversion whose window began
+  before the wall year** (engine; changes what crowns, also a version bump; size S–M; cost: aged
+  households lose conversion recommendations entirely until re-solved — and the refusal needs its own
+  honest words). **Arm 3 — disclose only** (view + copy; size S; the plan clock is already threaded —
+  `Result.tsx:489` → `recommendationView.ts:371`; true under both engine arms and removed by whichever
+  lands; cost: the recommendation stays un-enactable and the reader is merely TOLD). Tier-1 7c rules
+  "Do NOT fix this in copy" — so arm 3 alone is a decision, not a default. Sizes are the pilot's
+  estimates. Whichever arm: gate any note on GRID provenance / winner≠baseline, never on `start.passed`
+  alone (`recommendationView.ts:446-455` — under the fallback the crown can be the household's OWN
+  baseline with THEIR start, the exact false claim `leverRothAlreadyApplied` exists to prevent).
 
 ### The essentials median line on the band
 

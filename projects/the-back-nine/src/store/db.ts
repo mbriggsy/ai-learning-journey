@@ -270,7 +270,8 @@ export async function markBackupMade(db: VaultDb): Promise<VaultWrite> {
   })
 }
 
-/** Wipe the vault (the restore-over-damaged path + tests/e2e). One transaction. */
+/** Wipe the vault (the dev seed planter + tests/e2e — the restore-over-damaged pre-clear was
+ *  council-killed, see `RestoreFlow.tsx`; no production surface calls this). One transaction. */
 export async function clearVault(db: VaultDb): Promise<void> {
   const tx = db.transaction(VAULT_STORE_NAME, 'readwrite')
   void tx.objectStore(VAULT_STORE_NAME).clear()

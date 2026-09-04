@@ -5,7 +5,7 @@
 > the roadmap carry the test count under `verify:doc-stats` (this file re-typing it rotted twice, so
 > `d5df3609` made pointing the rule).
 >
-> **The full open register is [`docs/backlog.md`](docs/backlog.md)** — 42 open items, each traced to the raw
+> **The full open register is [`docs/backlog.md`](docs/backlog.md)** — 43 open items, each traced to the raw
 > obligations behind it. This file ranks only what is next; **a queue of ~16 is not the open surface, so
 > read the register before filing anything as new.**
 >
@@ -168,6 +168,17 @@ pre-65), NC, 4 accounts, at 1536×791. Desktop only — phone intake is UNWALKED
    right; the label doesn't say so). · The account editor's commit button reads "Add this account"
    inside an EDIT (edit-in-place works; label only). · The SS start-year label is future-tense over a
    legitimately-past range for an already-claimed retiree.
+   ⚑ **2026-09-04 anchors** (all still live): `errAgeBeyondModel` `copy.ts:631` / rule `sanity.ts:412-424` ·
+   IRMAA labels `copy.ts:252-255`, the gloss-less second field `questions.tsx:917-928` (its step is
+   non-blocking by design — a blank seed blocks the ANSWER via `intakeMap.ts:236-242`, not the step) ·
+   `ACCOUNT_KINDS` `model.ts:1425-1433` + labels `copy.ts:289-295` · `copy.accountSave` rendered
+   unconditionally at `AccountEntry.tsx:357-364` (`initial` already tells the form it is editing;
+   `FIELD_OP_ALLOWLIST` `copyGuard.ts:260-263` already admits save/edit/add, so a sibling key needs no guard
+   edit) · `ssClaimLabel` `copy.ts:77` is route-blind — the route-true twin idiom is
+   `stateStep`/`stateStepRetired` (`questions.tsx:569`/`:592`, picked at `:1197`). The mechanics of the
+   edit-label, the SS tense and the missing `helpKey` are one-key/one-prop each; the bank-cash home is a
+   SCHEMA call (`ACCOUNT_KINDS` feeds the codec vocabulary `scenarioCodec.ts:363` and `contributionCeilingFor`
+   `sanity.ts:111`). Words stay yours as filed.
 4. **🟡 "Still being finalized" reads as a PROGRESS state and is a PERMANENT disclosure — and it is
    the DEFAULT face of every real recommendation, not an edge case.** `recGradeNoteShape` renders on
    the buckets leave-more run and cost this walk 30 minutes of waiting for a "finalization" that is
@@ -222,6 +233,16 @@ recipe that used to sit here ran verbatim (its scripts had to become `.cjs` unde
 `"type": "module"` — no content changed) and the outcome, the review's findings and the residuals are
 all recorded in the ride-along block further down. `temp/item3/` is spent; squeaky may clear it.
 
+⚑ **2026-09-04 (b9-1) RE-VERIFY — 20 agents, 10 verify→skeptic pairs, ALL TEN skeptics refuted their verifier on
+a material point.** Every open item's SUBSTANCE holds; the corrections are folded into each ranked line
+below as a ⚑ 2026-09-04 clause and into the entries they cite. Same pass: register/roadmap/README counts
+re-derived (43 open · 51 entries · 8 closed; roadmap's per-tier list and "Portfolio holdings" row were
+wrong), four lying source comments swept (`db.ts:273`, `Result.tsx:345-347`, `tokens.css:119`,
+`model.ts:2253`) and Plan 4's dead "record carries seedA/seedB" clause struck. **Pilot-buildable with no
+word from him:** items 4, 7 (the mechanism), 8 (all three arms), 9b, 9c, 10, and the shipped
+`rothPlanRanked` singular defect (under 9a). **His tokens, batched:** item 6's parity word · item 7's
+sentence · item 9a's ranking fork (three arms now written in the register) · the `ensureSeed` fix shape.
+
 **THEN, the 2026-09-03 ranked plan, as re-verified by 24 agents (12 verify→skeptic pairs; 10 of 12
 verifiers refuted on a material point) — statuses current:**
 1. ✅ Allocation silent discard (+4 siblings) — `41f9edee`.
@@ -230,27 +251,132 @@ verifiers refuted on a material point) — statuses current:**
    buffers · the PWA "Refresh now" collision) closed in the same commit. See the ride-along block.
 4. The phone-viewport (390×844) intake walk — findings only, no fixes; the desktop walk cleared the
    copy and the mechanics, not the fold.
+   ⚑ **2026-09-04:** the 2026-08-20 walk's typed values were NEVER recorded (second time — record them this
+   time). Mint from `?seed=date`'s shape (Alex 58 working / Sam 60 retired at 58, `devSeeds.ts:127-184`)
+   + NC + two extra accounts → 12 of the 14 steps reached; every organic account needs a typed
+   Stocks/Bonds/Cash blend (the ticker input is retired, `AccountEntry.tsx:21-22`; a resolvable blend is a
+   REQUIRED fact) and the account form's FIRST control is the owner segment — toggle it for Sam's Roth.
+   Drive `pnpm dev --port 4193 --strictPort` → `http://127.0.0.1:4193/` (`pnpm dev` is bare `vite`, no
+   pinned port, and the Playwright MCP's PERSISTENT profile already holds a vault on 5173/5174/4199 — a
+   plain `/` there may land on Unlock, not ColdStart; verify the h1 reads the cold-start question before
+   typing). Fidelity ceiling — say it in the findings header: `browser_resize` sets the CSS viewport only,
+   no DPR, no touch, so `(pointer: coarse)` never matches and keyboard occlusion is OUT of instrument
+   range (geometry proxy at most). THREE of the filed phone checks do not exist — no sticky Continue
+   (`.intake-nav` is plain flow), no account-editor SHEET (inline `.account-entry`), no health-quote
+   SIDEBAR (two fields + a muted paragraph). Grade instead: the `.answer-strip` `<aside>` above EVERY step
+   (7.5rem reserved floor, `intake.css:54-67`) · the nav blackout while an account form is open
+   (`intake.css:478-480` — Continue/Back vanish, only Add/Never-mind act, a scroll away on a phone) · the
+   centered ColdStart's TOP-clip at 844 (`intake.css:648-656`) · the un-tokened `.resource-links` ↗ links
+   (three sites) · the progress thread's 1..12 denominator. There is NO one-frame fit law at phone and
+   none for intake; the phone laws are the disclaimer two-mount swap (`vertical-fit.spec.ts:1116-1123`),
+   content-never-yields, targets ≥24×24 (44 practical), never-color-alone. The `beforeunload` guard shipped
+   2026-09-03 arms after the first typed field: never `browser_navigate` mid-walk without
+   `browser_handle_dialog(accept:false)` ready. Screenshots: pass `filename:` (relative; `scale` is a
+   REQUIRED arg) and copy into `temp/phone-walk/` — squeaky clears it, so transcribe findings here first.
 5. ✅ Solve-lane cancel — shipped this session as the edit-time kill (see the ⚑ block below the
    landmines). Register: "The solve lane" (the interactive tier + the main-thread freeze stay open).
 6. Date-route one-liner (S) via a Caddie card — words must be true on all FOUR date-hero framings
    (anchor on WORK STATUS, never "a date ahead of you"); the one token yours: does it promise parity.
+   ⚑ **2026-09-04:** the framings are no-date · now (today/arrived) · past · future (`heroLead`,
+   `FuckOffDate.tsx:183-202`; the split household's floor line has its own six arms, `:209-238`). Seat =
+   the else-arm of the `Result.tsx:482` gate, gated ALSO on `focusKey !== undefined` (else it prints beside
+   the non-answer strip on an inputs-incomplete date frame); CSS in `fuckOffDate.css` — NOT
+   `confidence.css`, the date grid is its own (`:220-236`) and its first free cell is r3c1 above the
+   protected disclaimer; the key lands in verdict scope through the `fuckoff` substring net
+   (`copyGuard.ts:72`) so free-numeral bites — no bare digit. The date arms of `verify:fit` assert ORDER
+   only (only `dip` + `datenc` carry the exhaustive doors-last sweep) — add a presence pin to the `?seed=dip`
+   describe and measure the vertical cost by hand. The line must also be true on the route-FLIP frame: a
+   committed rec whose spouse un-retires lands `stale` (not `blocked`) and the gate drops the stale card's
+   own re-open door with it. `Result.tsx:345-347`'s "covers the date route honestly" comment was FALSE —
+   swept 2026-09-04.
 7. `?seed=failing` typed refusal (M): the frame is decided by the code's own contract (mint-failed is
    for CODE defects; an unwitnessable household gets a typed refusal); `recHoldGeneric` is a truthful
    interim; the exact sentence is yours (copy.ts names the N=1 word-pick for this seed).
-8. PWA icons (S, silhouette-first, his eye audits) → WebKit e2e arm (M) → enlarged-text fit arm (S,
-   CDP `Page.setFontSizes` — probed live in this repo's Chromium — council only on a protected red).
+   ⚑ **2026-09-04:** the MECHANISM is pilot — build it behind `recHoldGeneric`, bring him the sentence. Re-probed:
+   both goals still `mint-failed{stability}` at 256 paths; the detail's HEAD reads "ranking stability
+   found a CRN break:" (`solveEntry.ts:162`) — the payload itself calls the household a code defect.
+   Shape: `rankingStability` emits a TYPED class beside the prose for BOTH vacuous branches (`:168-177`
+   scored-identical — the one `failing` hits — and `:180-183` both-infeasible; the failure type is
+   `RankingStabilityFailure` `:83-86`; never substring-match the prose) → a new `SolvePayload` arm
+   (`solveEntry.ts:64`) → routed by `recommendationView.ts`'s exhaustive `committedView` (`:393-427`) to
+   `{kind:'held'}`; the wire carries non-recommended arms verbatim; no `SOLVER_CODE_VERSION` bump (nothing
+   ranks). Name the bin off the TRIGGER (the pre-tax pool cannot absorb a +$1,000 conversion — the $60k
+   IRA is drained by a ~$72k year-one draw), NOT "already-failing": a failing household whose pool still
+   absorbs $1,000 never reaches it. Precedent that decides the frame: the roster arm already treats "the
+   harness cannot witness this household" as a typed pre-dispatch refusal (`solveEntry.ts:142-146` →
+   pre-empted by `no-pretax`, `solveDispatch.ts:79-91`). Landmines: the catastrophe gate does NOT sweep a
+   new key — add it BY NAME to `isMortalityKey` (`copyGuard.ts:85-91`); the witness test needs the explicit
+   `60_000` timeout every `solveWitness` caller carries + the helper's key union widened
+   (`src/ui/__tests__/devSeeds.test.ts:788`). 7b is in this file only — file it in the register with the build.
+8. PWA icons (S, silhouette-first, his eye audits) · WebKit e2e arm (M) · enlarged-text fit arm (S,
+   CDP `Page.setFontSizes` — council only on a protected red).
+   ⚑ **2026-09-04:** INDEPENDENT, not a chain — the text arm rides CDP (Chromium-only) so it can never share
+   the WebKit project; all three are pilot (register `M` · **pilot**; "his eye audits" is the post-hoc
+   batched-oracle read, not a gate). ICONS: `manifest: false` (`vite.config.ts:36`) disables the plugin's
+   icon precache, so ship `includeAssets` (or image globs) WITH the files or the installed PWA has no
+   offline icon (proven against `dist/sw.js`); the favicon 404 is a SECOND sub-task (`public/favicon.ico`
+   + `<link rel="icon">` — `index.html` has none); no brand mark exists to quarry — the color-blind-safe
+   SVG glyph vocabulary (GradeSignal / verdictSignal / BandLegend) is the silhouette source; CSP already
+   allows `img-src 'self'`. WEBKIT: `playwright install webkit` IS required (the on-disk `webkit-2272` is a
+   stale revision — `@playwright/test` 1.60.0 needs 2287, launch fails today) + `webkit` on
+   `verify-the-back-nine.yml:66`; scope at TEST level — `vault.spec.ts:62` (trust loop) + `:84`
+   (second-tab read-only), never the whole file: the KDF spike `:106-137` asserts a Chromium-only
+   thread-pool fact; the arm proves the IndexedDB / Web Locks / BroadcastChannel / `storage.persist()`
+   paths RUN in WebKit — it does NOT verify Safari eviction (nothing in the repo executes a real eviction;
+   both harnesses model it with a wipe). ENLARGED TEXT: `Page.setFontSizes` re-probed 2026-09-04 against
+   the repo's chromium-1223 — the param shape is `{ fontSizes: { standard: 24, fixed: 24 } }` (the flat
+   form is rejected); it propagates because the type scale is rem/clamp with ZERO literal-px `font-size`
+   rules; the `newCDPSession` pattern is at `caddie-walk.spec.ts:293`; re-run the 8 REAL+TIER one-frame
+   arms (4 spine seeds × 2), not all 52; PROTECTED = `vertical-fit.spec.ts:16-20`.
 9. Aged-window disclosure note (S; the ranking fork stays yours, three arms with corrected costs, due
    before 2027-01-01) · migration ladder scaffold (S; the honest legacy state names NO remedy — the
    backup carries the same bytes) · HSA-forfeit + LTC "What this leaves out" section (M; pilot per the
    register — the queue's owner call is the account-total confirm only).
-10. Hygiene session (M): nine items, the copyGuard scope canary first (six `rec*` keys sit in neither
-    scope today).
+   ⚑ **2026-09-04, each re-scoped:** (a) THE AGED NOTE IS NOT PILOT — Tier-1 7c rules "Do NOT fix this in
+   copy" and both nearest register entries are **briggsy** (`backlog.md:733`, `:780`); the "three arms with
+   corrected costs" existed NOWHERE — they are now written, with sizes, under the register's "The aged
+   surface" entry. A shipped copy defect on the SAME cohort IS pilot: `rothPlanRanked` (`copy.ts:2339-2350`)
+   hardcodes the plural "Those years are counted from…" after a correctly-singular "for 1 year" — live for
+   any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:206-207`) — and no test
+   covers `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
+   PRESCRIBED: `model.ts:1386-1388` mints synthetic entered accounts from the old aggregates "so the ladder
+   stays total"; the write primitive exists (`db.ts:221 rewriteModel`, pinned `db.test.ts:180`); today's
+   ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:930-947`), and a v1 vault survives
+   every store seam on real IndexedDB (`e2e/vaultHarness.ts:19-20`) to die only at `IntakeApp.tsx:578`.
+   Two new defects ride with it: `session.ts:464-468` claims the writer and UNLOCKS before the version is
+   judged (the recovery path claims unconditionally, `:539`), and `backup.ts:209-213` LANDS a legacy backup
+   on a clean device and only then dead-ends. Size M–L, not S. His word narrows to the TERMINAL arm's
+   sentence (v1, or a genuinely unmigratable shape) — and "legacy" already means "a v3 vault missing
+   additive-optional fields" (`staleness.ts:24`, `resultSave.ts:146`), so the new reason must not reuse it.
+   Five docs call the refuse-ladder "the migration ladder" (`architecture.md:204`, `plans/1-engine.md:142`,
+   `plans/3-controls.md:40`, `product.md:165`; `roadmap.md:63` fixed 2026-09-04) — sweep with the build.
+   (c) THE LEAVES-OUT SECTION is pilot (register `:277`, `:283`); anchors + the four traps are under
+   Tier-0 entry 5 below.
+10. Hygiene session (M): the copyGuard scope canary first (six `rec*` keys sit in neither scope today).
+    ⚑ **2026-09-04:** "nine items" was UNSOURCED (no such list exists anywhere; Tier-4 "The gates that don't
+    bite" carries 14 filed bullets = 13 distinct, one of them the CVD probe Briggsy parked). The real
+    copyGuard defect is ONE key: `recVizAria` (`copy.ts:2666`) speaks three dollar figures + a delta to a
+    screen reader outside require-hedge — the AT twin of the gated `recDeltaTypical` — and its exclusion is
+    a RECORDED decision (`copyGuard.test.ts:577-578`), so the fix reverses a stated call, not an accident.
+    Fix = RENAME it onto an existing control prefix (`recDeltaVizAria`; a new `recViz` prefix would red
+    three correctly hedge-free labels) + a catalog canary over `/^rec(?!over)/` (a bare `/^rec/` reds 16
+    innocent `recovery*` intake keys) with a NAMED allowlist that SPLITS flat keys from slots (unscoped flat
+    keys get 2 gates, unscoped slots get 3 + catastrophe). Scope is decided ONLY in the test file
+    (`lintCopy` is scope-agnostic) — the canary is a row there, not a gate. The 11 byte-identical
+    `EngineClient` fakes cost an 18-file sweep (not 19) — a shared helper. `ensureSeed()`: the two queue
+    files DISAGREED (the register's residual list says "none a build without a ruling", this file carried no
+    flag) and BOTH candidate fixes cost something — "mint through `update()`" turns a deferred false-arm
+    into an immediate one; an eager mint in `createMemoryModel` breaks the WRITTEN contract #1b (mint at the
+    FIRST ENGINE RUN, `plans/2-first-answer.md:68`) with no test that would catch it. His ruling, framed as
+    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:2253` and
+    `plans/4-recommendation.md:282`.
 **Also filed today, pilot, with exact fixes:** register Tier 2 "The dead-end repair beat" (four
 residuals from item 2's review) and "A repeat Add tap over an already-visible block" (from item 1's).
 
 **Landmines this session added:** the Bash tool mangles heredocs carrying nested quotes — write the
-script to a file with the Write tool and `node` it · `.playwright-mcp` drops screenshots in the
-PROJECT ROOT — `mv` them out before `git add` · Playwright `fill` + an immediate Continue click can
+script to a file with the Write tool and `node` it · `.playwright-mcp/` and `temp/` are BOTH gitignored
+(`.gitignore:24`, `:4`) — the `mv`-before-`git add` half was stale; what matters is DESTINATION: pass a
+relative `filename:` on `browser_take_screenshot` (`scale` is a REQUIRED arg) and copy into `temp/<walk>/` · Playwright `fill` + an immediate Continue click can
 land without a blur and not advance (seen once on the OOP step; a real tap blurs first) — click the
 step heading to blur, then Continue · a power/network blip drops Vite's websocket and full-reloads the
 page to ColdStart mid-walk · `:nth-match(label:has-text("…"), N)` is the selector for the sr-only
@@ -697,6 +823,16 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    conversion ranking **with** the new disclosure (what the BLOCKED-ON-RESEARCH tag silently assumes), or
    does the token gain an **ACA pricing-mode clause** that withholds the ranking — as Medicare's did — until
    a sourced trend lands?
+   ⚑ **2026-09-04 anchors + two unfiled facts:** `escalateQuote` is `intakeMap.ts:339-359` (not `:271-291`);
+   the "Not counted here" pair is `copy.ts:916` / `:921` (not `:895/:897`) and the surface is SIX strings
+   (`:916, :921, :935, :937, :945, :947` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
+   ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
+   affirmation, not append to it) + the two health-control siblings (`:1013`, `:1019`), which CANNOT take it
+   (gated on `statePriced` alone — `copy.ts:1005-1007`). Unfiled: `shadowRateHeadroom` (`copy.ts:2442`)
+   quotes cliff headroom against an SLCSP that never trends — the headroom figure inherits the held-price
+   optimism; and there is NO ACA cost-trend constant at all (`health.ts` carries only `medicareCostTrend`)
+   — ACA premiums are the one health channel with no trend, no clause AND no disclosure, in the
+   optimistic direction.
 
 3. **A household outside {NC, PA, FL} gets a confident winner computed with zero state income tax.**
    Reduce-to-spine `+0` is keyed on `PRICED_STATES` membership, so an unpriced state ranks strategies with
@@ -741,6 +877,15 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    degenerate overlay ($0 portfolio) builds no overlay and would read as unpriced (**false refusal**), and
    the state step is deliberately **non-blocking** (`questions.tsx:569-575`), so refusing on ABSENT walls
    every household that skipped it.
+   ⚑ **2026-09-04:** "no token on the headline/date" is TRUE; "no honesty gate at all" would be FALSE — a
+   state-tax disclosure already renders on both first-answer surfaces (`composeVerdictMedicareResidual`,
+   `stateTaxDisclosure.ts:41` → `ConfidenceStatement.tsx:454` + `FuckOffDate.tsx:409`; off-roster arm
+   `copy.ts:1061` "State income tax isn't priced yet…"). The REAL gap is its GATE: it rides
+   `medicarePricedNote` (`healthSheetChrome.ts:336-341` — Medicare-priced AND no health door), so it ships
+   for the all-65+ population and is ABSENT for every pre-65 / health-door household — the fuck-off-date
+   audience. A THIRD token-less lane exists: `runTwoArm` (`engineProtocol.ts:321`, the U10 control
+   preview), gated by copy only. Anchors: `stateStep` `questions.tsx:569`, `fields: []` at `:576`, the
+   retired twin `:592`.
 
 4. ✅ **SHIPPED 2026-08-03 (`bd851f24`) — the record card no longer implies the household acted.**
    `copy.ts` `recommendRecordHolds` now reads *"It still lines up with the numbers you've entered."*
@@ -881,6 +1026,29 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
      Healthcare sheet. So: ship the section with only the two genuinely-homeless items (HSA forfeit + LTC),
      or make the panel section NIIT's canonical home and prune the other two — the repo's own
      one-honest-home-per-fact law (`healthSheetChrome.ts:333`) forbids a silent third.
+     ⚑ **2026-09-04 re-anchor (drifted AGAIN, +62/+101 in a month) + four traps the build must clear.** The
+     panel is `src/intake/AssumptionPanel.tsx` — section a opens `:393` / closes `:561`, section b `:564` /
+     `:843`, footer `:849`, the disclosures map `:527-559`; the `assumption*` prefix law is
+     `copy.ts:1111-1122` (keys `:1123-1248`); the panel fit arm is `vertical-fit.spec.ts:1125-1160`;
+     `sheetShell.css:34-35`/`:94`; the overlays are `src/engine/healthOverlay.ts:746-750` and
+     `src/engine/taxOverlay.ts:1802-1805` (there is no `overlays/` dir). NIIT's two homes confirmed
+     (`recommendationView.ts:90` unconditional; `copy.ts:1012-1013`) — the scope fork is self-resolving:
+     HSA + LTC only. TRAP 1 — `Row` REQUIRES a `seat` from the CLOSED 22-member `AssumptionSeat` union
+     (`AssumptionPanel.tsx:108`, `assumptionRegistry.ts:39-61`): a leaves-out row is a hand-rolled
+     `<li className="ap-row">` or a registry extension — "mirror the section" yields only the shell.
+     TRAP 2 — a heading literally "What this leaves out" that names two items is ITSELF a completeness claim
+     the constants falsify (`health.ts:72/:112/:120/:135/:316` declare four more OUT-but-disclosed facts) —
+     scope the heading or name them. TRAP 3 — the HSA sentence must be true across ALL THREE zeroing
+     branches (`taxOverlay.ts:1811-1817`, `:1831-1836`, `:1956-1959`): on each, EVERY bucket is zeroed
+     because the path DEPLETED, so a bequest-framed sentence ("dropped from what's left to your heirs")
+     names a state the engine cannot reach; the honest harm is that the plan is COUNTED AS HAVING RUN OUT
+     while HSA dollars remain unspent (understated survival), because HSA outflow is qualified-medical-only
+     and the general draw cannot name the bucket. "Dropped" is guard-safe; "draw … HSA" reds
+     `copyGuard.ts:243`; `FALSE_CERTAINTY_INTERNAL` (`copyGuard.ts:136-145`) is universal and
+     non-suppressible — "can't run out while the HSA lasts" reds. TRAP 4 — `verify:doc-stats` reds on ANY
+     added test until README `:80` + roadmap `:167` move in the same commit. Sweep THREE comment spans (the
+     `healthOverlay.ts:747-749` "a sweep found NO user-facing disclosure" clause becomes false the moment the
+     section ships — rewrite the whole `:746-750`). Caddie walk before "shipped".
 
    ⚑ **CLOSED AS PHANTOM — the date-route ACA clock does NOT over-alarm.** The date route simulates all 11
    offsets (`dateSearch.ts:425/450/457`) and candidate Y=0 carries the base ACA stream **ungated**
@@ -1251,6 +1419,17 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    year, which moves the ranking and needs a `SOLVER_CODE_VERSION` bump, or refuse to crown a conversion
    whose window has partly elapsed). Both are real ranking decisions. Witness: any `?vault=`-aged plant
    driven to a committed ACTIVE recommendation.
+   ⚑ **2026-09-04:** `complete()` is `RothLever.tsx:60-66` (refusal conjunct `:63`; `startYearPassed`
+   `:51-53`) — the filed `:53-56` straddles two functions. "Partly elapsed" UNDER-COVERS the cohort: the
+   1-year clamp (`solveAnchor.ts:206-207`) makes the window WHOLLY elapsed for any at/past-RMD household
+   after New Year's — say "has begun before the wall year". The plan clock IS threaded to the composer
+   today (`Result.tsx:489` → `recommendationView.ts:371` → `:499` `start.passed`), so a note is a one-field
+   add — but gate it on GRID provenance / winner≠baseline, never on `start.passed` alone: the `:446-455`
+   precondition names the fallback under which the crown can be the household's OWN baseline with THEIR
+   start, and `leverRothAlreadyApplied` exists to stop exactly that false "un-enactable" claim. Key-name
+   trap: `roth*`/`recDisc*` prefixes force require-hedge onto an arithmetic fact; `recommendAction*`
+   (verdict-scoped) matches its seat siblings. The three arms + sizes are now written in the register
+   ("The aged surface"); the shipped singular/plural defect is under ranked item 9.
 
 7b. **`?seed=failing` mint-fails — the bad-news household gets a "something went wrong" card.** *(Found
    2026-08-05 by the witness probe; filed nowhere before.)* Both goals return
@@ -1266,6 +1445,11 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    `_gradeMinPaths: 50` (the `devSeeds.test.ts` `solveWitness` pattern). Decide whether an inert
    perturbation on an already-failing household is a MINT failure at all, or a typed refusal with its
    own honest words.
+   ⚑ **2026-09-04:** re-probed, still mint-fails both goals; the quoted detail above is the TAIL — its head is
+   "ranking stability found a CRN break:" (`solveEntry.ts:162`); the violation is the scored-identical
+   branch `rankingStability.ts:168-177`; the `solveWitness` helper is `src/ui/__tests__/devSeeds.test.ts:788`.
+   DECIDED as pilot (the frame, not the sentence): the roster arm already treats "the harness cannot
+   witness this household" as a typed pre-dispatch refusal, not a defect — build shape under ranked item 7.
 
 8. **The whole still-working audience gets no strategy — silently.** `Result.tsx:476` gates
    `RecommendationSurface` off for the date route entirely and `:362` gates the invite door. The
@@ -1280,6 +1464,13 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
    **Briggsy blesses the words.** Full parity stays council-sized — the crowned offset lives in the
    committed answer, not the draft, and anchoring candidates at a future retirement year is a real ranking
    question.
+   ⚑ **2026-09-04 anchors:** the gates are `Result.tsx:482` (surface) and `:369` (the invite conjunct; door
+   `:547-554`); a THIRD exclusion kills the record card at its producer (`IntakeApp.tsx:284`). Strike
+   "~89px headroom" — that is the SPINE idle frame's figure; the date arms of `verify:fit` assert ORDER only
+   (spec header `:21-22`). `Result.tsx:345-347`'s "covers the date route honestly" comment was FALSE (never
+   minted there; a route-flip render is dropped) — swept 2026-09-04. A crowned-offset params builder ALREADY
+   exists (`buildControlPreviewParams`, `intakeMap.ts:1071-1080`), so parity's base shape is not from zero.
+   Build shape under ranked item 6.
 
 9. **A modest-pre-tax household is refused a withdrawal-order answer the engine could compute.**
     `solveDispatch.ts:79` returns `'no-pretax'` when no *conversion* candidate survives — but a
@@ -1299,6 +1490,10 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
     not ranking an order here, and that sentence is a real drafting call (the current wording was chosen
     deliberately — `copy.ts:1404-1406` records that naming "a withdrawal strategy" cures the panel's
     unglossed-"order" stumble). **Briggsy's words, or ship the engine half first.**
+    ⚑ **2026-09-04 anchors:** the described arm is `solveDispatch.ts:91` (`:78` is the separate no-tax-overlay
+    arm; `~:79` was mis-pointed at filing — the file is untouched since 2026-08-14); the refusal string is
+    `copy.ts:1537-1538` with its three-rewrite comment `:1514-1536` (`:1404-1408` now holds an unrelated
+    save-refusal block).
 
 10. ✅ **SHIPPED 2026-08-14 (`2816d036`) — the heir bracket is the household's now.**
     The `heir-bracket` seat is a radio over the statutory ordinary ladder **derived from
@@ -1403,16 +1598,23 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
     household (up to **14** steps — 8 unconditional + 6 gated, `questions.tsx:1191-1209`) if the
     reader confirms the dialog, because nothing is written until Save (the D1 law; a plaintext
     draft outside the vault is a security-posture ruling, never a build) · the
-    `schemaVersion` migration ladder **does not exist as code** — `IntakeApp.tsx:537` refuses anything but
-    v3, so the first v4 bump bricks every saved plan *and its backup* · there is **no way to delete the
-    vault** (`clearVault` exists; its only caller is the dev seed planter).
+    `schemaVersion` migration ladder **does not exist as code** — `IntakeApp.tsx:578` refuses anything but
+    v3, and the brick runs in the LEGACY direction: a v4 blob is caught honestly upstream
+    (`scenarioCodec.ts:947` → `unlockNewerVersion`), but the moment a future build writes v4, today's v3
+    vaults fall into the arm v1/v2 sit in now — decode-ok, then "That didn't work. Try again." over a
+    reload that cannot succeed (`IntakeApp.tsx:670-687`) — and their backups fail identically (same bytes,
+    `backup.ts:84-93`) · there is **no way to delete the vault** (`clearVault` exists; its only PRODUCTION
+    caller is the dev seed planter, `devSeeds.ts:1637` — eight test/e2e files also call it).
 
 13. **Also:** no icons at all, so the "local-first PWA" is not installable · Chromium-only verification
     while the durability story is explicitly about Safari eviction · the fit law is never checked at
     enlarged text · no single-person household (a solo friend is withheld forever or must invent a spouse)
     · **no document a friend reads** — the in-app honest-limits total is two sentences, and the app tells
-    them to "validate with a professional" while handing that professional nothing readable · the solve
-    lane has no cancel and can freeze the tab silently (`engineClient.ts:50`).
+    them to "validate with a professional" while handing that professional nothing readable · ✅ the solve
+    lane's EDIT-TIME cancel shipped 2026-09-03 (`engineClient.ts:177 createResettableEngine` +
+    `memoryModel.ts:726-729`); what remains is the interactive tier and the MAIN-THREAD FALLBACK, which still
+    freezes the tab for the whole solve and says nothing — its `reset` is a documented no-op
+    (`engineClient.ts:45-57`; the old `:50` anchor named nothing about freezing).
 
 ### Tier 3 — Briggsy's call
 
@@ -1432,11 +1634,17 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
 
 ### Tier 4 — hygiene
 
-16. **The gates that don't bite (14 filed items)** — R7's registry is one level deep, copyGuard's scope is
+16. **The gates that don't bite (14 filed bullets — 13 distinct, the last two the same deferral filed
+    twice; the CVD one is PARKED, below)** — R7's registry is one level deep, copyGuard's scope is
     a prefix allowlist with no forcing function on new keys, and several arms still cannot fail. None can
     produce a wrong answer today; all mean the net is thinner than it reads. Plus the Medicare-trend
     riders, the open copy obligations, the deferred richer market draw, and the `dateinvert` (c) mint —
     its own session, a size-L parameter hunt.
+    ⚑ **2026-09-04:** two bullets were half-dead and are closed — the `partBTrendVintage` "no exposure gate"
+    clause was swept in `staleness.ts:550-553` but still lived verbatim at `model.ts:2253` (swept), and
+    Plan 4's "the record carries `seedA`/`seedB`" (`plans/4-recommendation.md:282`) had outlived its own
+    "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:1878-1900`) has no seed
+    field (struck in the plan).
     ✅ **NC's RETIRED CERTIFICATION CHECKPOINT — SWEPT 2026-08-14.** Six shipped surfaces (not the
     five filed; `CLAUDE.md:35` turned up in the sweep) still asserted the dead ~Aug-2026 event in
     PRESENT tense after S.L. 2026-41 struck every trigger row FY2025-26 → FY2032-33 on 2026-08-02:
@@ -1506,7 +1714,8 @@ These are the mechanical ones that keep costing hours.*
   excludes the committed + held renders — a live solve blows the 120s budget). So *"seat it and re-measure
   under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
   1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`:1773`), a once-measured
-  prose figure the spec never asserts — **never budget a different surface against it.**
+  prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's
+  arms assert ORDER only (spec header `:21-22`) — no date frame has ever been fit-measured either.
 - **A live solve is minutes, not seconds — budget for it.** A dev-build `?seed=nc` solve measured **~11
   minutes** (2026-08-03) — but that is the SINGLE-BUCKET figure and it does not generalize: the
   three-bucket `?seed=buckets` measured **~25 minutes** the same day. Bucket count moves this a lot;

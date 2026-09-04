@@ -212,9 +212,9 @@ regardless. **Lean: (b)** — the render is pinned synthetically, the pipeline i
 hunt's marginal value is one eyeball frame; but the scope call is his if (a) tempts anyone.
 
 ▶ **START HERE NEXT SESSION (hand-off written 2026-09-03, second session of the day — two commits
-landed: `3c4c64c5` the intake beforeunload guard + the two holes its unit-boundary review found, and
-the solve-lane cancel (`git log -1`); the three earlier commits of the day are `41f9edee` ·
-`530e6545` · `53486a39`).**
+landed: `3c4c64c5` the intake beforeunload guard + the two holes its unit-boundary review found (CI
+33806460606 green), and `2eb0eebd` the solve-lane cancel (CI run 33823723825 — poll it by id, read
+`conclusion`); the three earlier commits of the day are `41f9edee` · `530e6545` · `53486a39`).**
 
 **FIRST: nothing is staged — items 3 AND 5 SHIPPED. Start at item 4 (the phone walk, findings only)
 or item 6 of the ranked plan below; items 6–8 each need your words or your eye.** The apply

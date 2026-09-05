@@ -222,7 +222,8 @@ PIPELINE half (mint → persist → unlock → holds → demote → re-promote) 
 regardless. **Lean: (b)** — the render is pinned synthetically, the pipeline is witnessed, and the
 hunt's marginal value is one eyeball frame; but the scope call is his if (a) tempts anyone.
 
-▶ **START HERE NEXT SESSION (hand-off written 2026-09-05 — item 12 SHIPPED in ONE commit: the four
+✅ **(SUPERSEDED as the entry point by the b9-3 START HERE further down — kept for the survivor list it
+introduces) hand-off written 2026-09-05 midday — item 12 SHIPPED in ONE commit: the four
 result charts' text layer, SVG DRAWS / HTML WRITES; see item 12 below and the register's "phone intake
 walk" finding 1 for what it settled). The 2026-09-04 commits were `8a6fc6b7` + `add8dea8` (both CI green).**
 
@@ -250,6 +251,101 @@ layouts (no `document.fonts` re-run), the chart pages themselves under the ENFOR
 synthetic). **THEN his eye / the Caddie:** a walk of the four faces at REAL + PHONE (the three-register
 collapse, the HTML-over-svg look, the hidden interim ticks, the RV above-bar-labels fork). Council-filed,
 not built: the band's keyboard lockout (SC 2.1.1), `prefers-contrast` / `forced-colors` absent.**
+
+▶ **START HERE (b9-3) — the plan, ranked, all anchors re-opened 2026-09-05 evening:** (1) harden the
+chart-text gate in ONE pass on `e2e/chart-text.spec.ts` in the sequencing order at the end of the block below,
+then run `pnpm verify:fit` for real; (2) the doc-truth sweep (the STILL OPEN list under (9) + the P1 residue),
+second commit; (3) `/council` on the crown callout + the ladder's left label column, TOGETHER (survivor (8));
+(4) the RV gate as its own serialized script (survivor (1)); (5) the Caddie walk of the four chart faces;
+(6) then ranked items 8 · 10 · 11 · the phone P2s 2–4 — all verified pilot-buildable.
+**THE EXECUTABLE SOURCE for every item below is `temp/chart-text/verify-0905-b9-2/verify-digest.md`** (per
+item: the verifier's report, the skeptic's material refutations, and the CORRECTED prescription with exact
+file/line/change — read the `S.correctedPrescription` line, it supersedes the verifier's; the full JSON is
+`verify-result.json` beside it, `survivors-digest.md` is the review fleet's 40 findings it worked from). The
+block below is the summary; the digest is the recipe. `temp/chart-text/` is KEPT — do not let a squeaky clear it.
+
+⚑ **2026-09-05 (b9-2) RE-VERIFY of the ten survivors — 34 agents, 17 verify→skeptic pairs, 16 of 17 skeptics
+refuted their verifier on a material point. Status per survivor, corrected:** (1) OPEN, size **L** not S —
+the blocker is PARALLELISM, not the timeout: `playwright.fit.config.ts:29` is `fullyParallel: true` with no
+`workers` key (71 tests on 10 workers), so a 5-min core-saturating solve beside the 1.2–1.6 min arms reds
+them; ship the RV arm as its OWN serialized script (`verify:fit:rv`, `workers: 1`, `test.setTimeout(900_000)`
+— the inner committed-lockup wait is 720 s, so 600 s kills the test before its own expect), in a NEW spec that
+must be added to `playwright.config.ts:20`'s `testIgnore` DENYLIST (the CSP harness auto-collects every
+`e2e/*.spec.ts` and the `?seed=` routes are DCE'd there), importing the audit helpers from a NON-spec module
+(extract `audit`/`assertChartText`/`floorPx` to `e2e/chartTextAudit.ts` first — no spec imports another spec
+here; importing one executes its `test.describe` bodies); `audit()` is `document.querySelector` so the
+runner-up needs its own call on `.rec-runnerup__viz .rv-host`; insert `.rec-viz-box` in the bound chain
+BEFORE `main`. The vitest pin is XS and ships alone (fold into the existing `it` at
+`RecommendationViz.test.tsx:44-53`, NOT a new `it` — doc-stats). Four surfaces overclaim RV coverage until
+the arm lands: `docs/architecture.md:321/:327`, `back-nine-design/SKILL.md:47`, **`CLAUDE.md:37`**, and
+`backlog.md:733` ("witnessed at 1088" — the FLOOR capture holds zero RV nodes). (2) OPEN, M — build
+`auditReadout` as a SIBLING helper (never widen `:73`'s selector: the readout's bound is the PLOT, the card
+bound cannot see the plot-exit, and the pairwise loop is not its contract); sweep ALL 49 lattice columns
+(`LATTICE_POINTS`, `bandData.ts:28` — a 5-point sample leaves the 0.48 px rule-cover window unsampled), hover
+on REAL, touch + a same-column re-tap DISMISS on PHONE; ⚠️ **do NOT apply the "parity" one-liner to
+`TwoFutures.tsx:439`** (`plotLeftF: fx(TF_PLOT.left)`) — TF's plot is 0.571 h against a shared 38 % cap, so
+the flip parks the box ON the rule; and the TF y-tick occlusion is unreachable anyway (min box left 102 px vs
+the 84 px tick column, swept). The band's in-pass fixes (plot bound `ConfidenceBand.tsx:637-638`, touch
+dismissal `:489-491/:530-541`, the observer `chartText.tsx:329-336`) all SHIPPED — only the pure
+`placeReadoutX` extraction + its vertex battery remain (S; T3 as first filed was arithmetically wrong — the
+function returns 160, not 92). (3) OPEN, S — named `boundSelector` per chart, delete `?? main` outright,
+KEEP `[role="dialog"]` explicit for TF (its x-axis row sits 0.25–1.95 px below `.tf-host`; a `?? fig`
+fallback reds NARROW), and the ladder cannot be bounded by its own figure either (`on track` is 44.3 px of
+ink in a 43.2 px column at 320 — bound it to `.result-hero`/`main.result` with the gutter, and sweep
+`oddsLadderGeometry.ts:35-36`'s width-unqualified "84 units holds it" claim). (4) OPEN, S — the
+`--fx` restore at `:210` (`setProperty('--fx','')`) DELETES React's authored value; save + write back; bind
+`:207` to `/leaves its bound/` (after (3)'s rename) and `:214` to `/under the .*px floor/`; plant an
+OVERPRINT by copying `--fy` between two `.band-tick`s and a NAMED-HIDDEN by `data-ct-hidden` on one named
+annotation (not all — the band's "70 / 69" interim ANNOTATION is legitimately hidden on every arm); the
+reader's-font + reduced-motion oracles need non-vacuity guards (`:225/:232` are bare `Math.min` over a
+filter). Never title it "and only it". (5) OPEN, S — add `priority: el.hasAttribute('data-ct-priority')`
++ `!n.priority &&` in the whitelist; KEEP the class regex (TF ticks carry no `data-ct-optional`); add a
+non-vacuity pin on the ladder arm that a priority node was audited — ⚠️ `e2e/` is OUTSIDE `tsconfig.json:33`'s
+`include`, so nothing typechecks these specs and an undefined field goes silently green. (6) OPEN, **M** —
+add the `borderline` band arm; the y-ticks get their OWN live-measured bound (`assertTickColumn`), the
+general bound stays the card (at 320 the 45 px dollar borrows ~9 px of drawer padding BY DESIGN); never
+import from `twoPaneHonestyFloor.test.ts` (its top-level `describe` re-runs on import — hoist
+`WIDEST_TICK_INK_PX` to a non-test module); sweep `bandGeometry.ts:34`'s "narrowest shipping arm (308 px)" —
+320 ships. (7) OPEN, S — `minFontPx` from every element owning a direct text node, SWAP it into `:103` (the
+digest's version never consumed the field), keep containment/overlap on the parent box; plant a leaf shrink
+as its control. (8) OPEN — **COUNCIL, size L, not a pilot clamp.** The filed cap is wrong by 4 units (the
+callout sits 5 units above the ring, not 9 — `gap = CROWN_RING_R + 5`), and with the right cap the clamp
+cannot close the gap on either arm filed (0.97 px short at 320/root-16, 2.41 px at 390/root-20), so every
+case falls to the `--side` branch — which has NEVER rendered and has NO CSS rule (`.ladder-crown` centres;
+`--side`'s start/end anchor is never honoured). `PLOT.top = 64` only ties by 0.17 px. SIBLING, unfiled, same
+mechanism: the ladder's LEFT label column (`AXIS_FX = fx(PLOT.left − 8)`, 84 units) overflows the figure by
+1.1 px at 320/root-16 and 13.4 px at 320/root-20 under the rem-fixed `on track` label. What yields when the
+room runs out is a design SHAPE call — convene, decide both together. (9) PARTLY SHIPPED — the crown
+comments, the RV "156 units", band.css's "33–71 px", the "$2.25M" exemplar and the "Study the range" claim
+all landed in-pass. STILL OPEN (all comment/test, S): `clampX` (delete `bandGeometry.ts:161-165` as one
+range); `copy.ts:575` READOUT_W (write **38 %**, `chartText.css:131` — the digest's 48 % is stale); the
+non-scaling-stroke blanket in THREE places (`ConfidenceBand.tsx:29-31`, `bandGeometry.ts:22-23`, **`band.css:90`**);
+`bandGeometry.ts:29` "~50 px" (per-arm: ~54 at 1536, ~35 at the floor, one-row only); `ConfidenceBand.tsx:428`
+"second or third row"; `chartText.css:16-18` register roster + `RecommendationViz.tsx:27-28` register claim;
+`oddsLadderGeometry.ts:43-45`'s self-denying arithmetic; the chartText.css "token surface" shadow comment
+(unverified by the fleet — read it before editing); `twoPaneHonestyFloor.test.ts` strip-once at module load
++ the ladder retirement pin (`it.each` over both CSS files, drop the dead local strip at `:104`);
+`ConfidenceBand.test.tsx:209` selector-scoped font-size pin; a SOURCE pin that the six `--ct-ty` registers
+carry `px` (the real-Chromium transform oracle is vacuous until the RV arm exists — the only `valign="top"`
+node is the RV hero). Doc-truth residue of the four in-pass P1s (XS): `architecture.md:321` still lists
+"leaders" as svg (TF's are `.ct-leader` HTML now); `twoFutures.css:50-56` is a dead `.tf__leader` rule +
+`:5-7` header; `chartText.css:62-65`; `chartText.tsx:301-302` "Never covers the rule" (true only for
+host > 250 px — worst overlap is `10 − 0.04·H` px). (10) the placeholder note is unreachable from any seed
+(dev-preview only — `plans/2-first-answer.md:205` still calls it a shipping state); font-swap: no
+`document.fonts` hook anywhere, fonts load via JS imports in `main.tsx` — an INFERENCE, not a repro; CSP:
+`?seed=` is DCE'd from `dist/`, the only chart under enforced headers is `csp.spec.ts`'s full intake, one
+`next()` short of the Result — add a CSSOM-landed probe there (assert the custom prop / computed transform,
+NOT `left > 0` — end-anchored ticks go negative). ALSO from the critic, all OPEN + pilot (M together): a
+`PHONE_LS` 844×390 arm; `gotoVaultFinal` + `?vault=stale` (aged spine) + `?vault=datestale` (the
+MAX-cardinality band — FOUR named markers; the crowned work-stops marker SURVIVES there, `offsetHasPassed(9,2)`
+is false — never write "withdraws" into that comment); the enlarge-modal arm on
+**`.band-modal__dialog figure.band-figure`** (a bare selector returns the INLINE band — vacuous), pin
+`modalRows <= inlineRows`, and wait on the computed transform, not `settleLayout` (motion's transform
+animation is not guaranteed in `getAnimations()`). `band.css:215-217` + `BandLegend.tsx:4-6` still claim
+the legend is "never the sole non-color signal" — false for the TIERS (no production `callouts` caller);
+the honest word is the only SIGHTED tier channel (AT gets the sr-only range sentence); build-vs-accept is a
+council fork. ⚠️ Sequencing: (3), (4), (5), (7), (6), (1) all rewrite `e2e/chart-text.spec.ts` on
+overlapping lines — land them as ONE pass in that order, bottom-up per file, then run the gate.
 
 **FIRST: nothing is staged — items 3, 5 and 7 (the mechanism) SHIPPED, and so did the `rothPlanRanked`
 singular defect under 9a (the 2026-09-04 session, `8a6fc6b7` + `add8dea8`). Item 4 WALKED the same session
@@ -394,7 +490,7 @@ verifiers refuted on a material point) — statuses current:**
 10. Hygiene session (M): the copyGuard scope canary first (six `rec*` keys sit in neither scope today).
     ⚑ **2026-09-04:** "nine items" was UNSOURCED (no such list exists anywhere; Tier-4 "The gates that don't
     bite" carries 14 filed bullets = 13 distinct, one of them the CVD probe Briggsy parked). The real
-    copyGuard defect is ONE key: `recVizAria` (`copy.ts:2666`) speaks three dollar figures + a delta to a
+    copyGuard defect is ONE key: `recVizAria` (`copy.ts:2674` — was filed `:2666`) speaks three dollar figures + a delta to a
     screen reader outside require-hedge — the AT twin of the gated `recDeltaTypical` — and its exclusion is
     a RECORDED decision (`copyGuard.test.ts:577-578`), so the fix reverses a stated call, not an accident.
     Fix = RENAME it onto an existing control prefix (`recDeltaVizAria`; a new `recViz` prefix would red
@@ -410,12 +506,16 @@ verifiers refuted on a material point) — statuses current:**
     those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:2253` and
     `plans/4-recommendation.md:282`.
 11. The goal picker's lead on a failing household (S): `copy.goalPickerIntro` — "With the basics covered,
-    pick the one thing your plan should lean toward." — renders unconditionally (`GoalPicker.tsx:75`) and the
+    pick the one thing your plan should lean toward." — renders unconditionally (`src/intake/GoalPicker.tsx:75` — the INTAKE layer, there is no `src/ui/GoalPicker.tsx`) and the
     picker opens from the strategy door on EVERY spine verdict, so an "Already short — 0 of 10" household is
     told the basics are covered one tap before the honest hold (seen live 2026-09-04 on the `?seed=failing`
     witness walk). The GATE is pilot — the picker is verdict-blind (props `open · current · onPick ·
-    onClose`); thread the outcome state or a `basicsCovered` boolean from where the door is offered
-    (`Result.tsx`). The WORDS are yours, and the fork (a second key for the failing cohort vs one
+    onClose · restoreFallback`, `GoalPicker.tsx:37-53`); thread the outcome state or a `basicsCovered` boolean from where the door is offered
+    (`Result.tsx` — TWO doors, not one: the invite at `:550` is `focusKey`-gated, the re-pick at `:493` sits
+    inside `RecommendationSurface`; gate the lead from ONE predicate both doors share, and do not write
+    "indeterminate never reaches here" into the comment — it does, `snapshot.displayed` is null there, that
+    is what saves it). The register's standing law rides with it: whatever key renders to the failing
+    cohort joins `isMortalityKey` by name (`backlog.md:359-360`). The WORDS are yours, and the fork (a second key for the failing cohort vs one
     verdict-neutral lead) is a Caddie card. Register: Tier 0 "The goal picker tells an already-failing
     household".
 12. ✅ **SHIPPED 2026-09-05 — the result charts' text layer: SVG DRAWS, HTML WRITES (council

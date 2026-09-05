@@ -2,17 +2,30 @@
  * src/viz/recommendationViz.css — the recommend-second two-arm comparison (Act-4 · U16 §S3b).
  * Static classes only (style-src 'self' — no inline styles); the series COLORS arrive as SVG
  * presentation attributes from palette.ts, so this file owns the NON-COLOR channels only: the
- * fill texture (the hatch stroke), the marker/label type, the $0 floor, and the delta bracket.
+ * fill texture (the hatch stroke), the marker geometry, the $0 floor, and the delta bracket.
  * A FIXED aspect-ratio (mirrors RV_VIEW 560×210) reserves the box so the lockup never reflows
  * when the figures land (the CLS law).
+ *
+ * TEXT: this file styles NO chart text. Since 2026-09-05 (council wf_ecbe0ab2-7bb) the axis labels,
+ * both end-of-bar labels and the delta hero are HTML in the shared chart text layer — chartText.css
+ * owns the registers (xs axis / sm labels / lg display-face hero). The class names below that end in
+ * a text role (.rv__axis, .rv__bar-label, .rv__delta) are the HTML nodes' hooks, carrying color only.
  */
+
+/* the fade wrapper + the text-layer host: blocks that take the box's width. */
+.rv-reveal,
+.rv-host {
+  display: block;
+}
 
 .rv {
   display: block;
   inline-size: 100%;
   block-size: auto;
   /* A viewBox alone gives an SVG no intrinsic ratio; without this the box computes to height 0.
-     Mirror RV_VIEW (560×210) — change them together. */
+     Mirror RV_VIEW (560×210) from RecommendationViz.tsx — and note the THIRD mirror,
+     src/ui/styles/recommendation.css (the .rec-viz-box CLS reservation). All three change together
+     or the placeholder and the chart disagree in height. */
   aspect-ratio: 560 / 210;
 }
 
@@ -47,17 +60,15 @@
   vector-effect: non-scaling-stroke;
 }
 
-.rv__axis,
-.rv__bar-label {
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  fill: var(--ink-muted);
+/* the HTML text hooks — color only; size + face come from the text layer's registers. */
+.rv__axis {
+  color: var(--ink-muted);
 }
-
 .rv__bar-label {
-  font-size: 13px;
-  fill: var(--ink);
+  color: var(--ink);
+}
+.rv__delta {
+  color: var(--ink);
 }
 
 /* The delta bracket + its dotted tip guides — the guides are DOTTED (distinct from the solid $0
@@ -73,14 +84,4 @@
   stroke: var(--ink);
   stroke-width: 1.25;
   vector-effect: non-scaling-stroke;
-}
-
-/* The delta magnitude — the HERO channel: the largest figure on the chart, tabular so it never
-   jitters as it morphs. */
-.rv__delta {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: var(--weight-semibold);
-  font-variant-numeric: tabular-nums;
-  fill: var(--ink);
 }

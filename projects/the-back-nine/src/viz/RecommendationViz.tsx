@@ -18,18 +18,25 @@
  *     drawable — a magnitude can never be truncated to exaggerate a gap).
  *   - CALM: draws ONCE (opacity fade), morphs on recompute, never replays; reduced motion drops the
  *     fade and the final DOM is byte-identical (no signal lives in the animation).
- *   - CSP-clean: every dynamic value is an SVG geometry/presentation ATTRIBUTE (never an inline style);
+ *   - CSP-clean: every dynamic svg value is a geometry/presentation ATTRIBUTE (never an inline style);
  *     the hatch is an SVG <pattern> def, not injected CSS.
  *   - CLS: a FIXED viewBox in a fixed-dimension container (recommendationViz.css) — the lockup never
  *     reflows when the figures land.
+ *   - SVG DRAWS, HTML WRITES (council wf_ecbe0ab2-7bb, 2026-09-05): the svg holds the bars, markers,
+ *     floor, guides and bracket; the $0 / ceiling axis labels, both direct end-of-bar labels and the
+ *     delta HERO are HTML in the chart text layer (chartText.tsx), sized on the type scale (xs / sm /
+ *     lg — the hero keeps the display face). An end label WRAPS inside its column on a narrow box
+ *     instead of running off the chart (svg text rendered 7.7–13 CSS px and had 7 units of slack).
  *
  * STRING-FREE: every word arrives via `labels` (twoFuturesChrome's sibling — the ui layer composes
  * them from copy.ts, pre-formats every figure). The renderer types no copy — the layer boundary keeps
  * it structural.
  */
+import { useRef } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { SERIES } from './palette'
 import { twoFuturesCeiling } from './TwoFutures'
+import { ChartText, ChartTextHost, ChartTextLayer, useCollisionLayout } from './chartText'
 import './recommendationViz.css'
 
 export interface RecommendationVizLabels {
@@ -49,9 +56,21 @@ export interface RecommendationVizLabels {
 }
 
 const RV_VIEW = { w: 560, h: 210 } as const
-const RV_PLOT = { left: 24, right: 168, top: 40, bottom: 176 } as const
+/** `right` is the end-label column (192 units; was 168): at a 358px phone box the 24-character
+ *  "The recommended strategy" at --text-xs needs ~105 CSS px to wrap in TWO lines — the 168-unit
+ *  column rendered 100 px and wrapped it to three, whose last line touched the delta hero below
+ *  (measured 2026-09-05). The bars give up ~6% of their run for it. */
+const RV_PLOT = { left: 24, right: 192, top: 40, bottom: 176 } as const
 const BAR_H = 30
 const ROW_GAP = 26
+
+/** Motion timings — mirror the band's --dur-reveal / --ease-out (numeric for motion). */
+const EASE_OUT = [0.23, 1, 0.32, 1] as const
+const DRAW_S = 0.42
+
+/** viewBox → host fractions (the text layer's coordinate system). */
+const fx = (x: number): number => x / RV_VIEW.w
+const fy = (y: number): number => y / RV_VIEW.h
 
 export function RecommendationViz({
   withoutMagnitude,
@@ -63,6 +82,10 @@ export function RecommendationViz({
   readonly labels: RecommendationVizLabels
 }) {
   const reduce = useReducedMotion() ?? false
+  const hostRef = useRef<HTMLSpanElement>(null)
+  // The two end labels WRAP inside their column on a narrow box; where their rendered boxes would
+  // touch (a 358px phone), the measured pass pushes the lower one down (chartText 'separate-y').
+  useCollisionLayout(hostRef, 'separate-y', [labels.withLabel, labels.withoutLabel], '.rv__bar-label[data-ct-item]')
   // The SAME humane ceiling the axis-max label was formatted against (twoFuturesCeiling), so the bar
   // geometry and the "~$820k" gridline label can never disagree. Floors to a drawable axis.
   const ceiling = twoFuturesCeiling(Math.max(withoutMagnitude, withMagnitude, 0))
@@ -83,86 +106,117 @@ export function RecommendationViz({
   const gapLo = Math.min(withoutTipX, withTipX)
   const gapHi = Math.max(withoutTipX, withTipX)
   const gapMid = (gapLo + gapHi) / 2
+  const hasBracket = gapHi - gapLo >= 1
+
+  // The end-label column: start-anchored 12 units past the plot's right edge, allowed to WRAP within
+  // the room left to the viewBox edge (RV_PLOT.right − 12 = 180 units — the same fraction of the host
+  // at every width; derived, so a move of RV_PLOT.right cannot rot it).
+  const labelX = RV_PLOT.left + plotW + 12
+  const labelWidth = (RV_VIEW.w - labelX) / RV_VIEW.w
 
   return (
-    <motion.svg
-      className="rv"
-      viewBox={`0 0 ${RV_VIEW.w} ${RV_VIEW.h}`}
-      role="img"
-      aria-label={labels.ariaSummary}
+    // The whole chart — svg + its text layer — fades in ONCE (the text used to ride the svg's fade).
+    <motion.span
+      className="rv-reveal"
       initial={{ opacity: reduce ? 1 : 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: reduce ? 0 : 0.3, ease: [0.23, 1, 0.32, 1] }}
+      transition={{ duration: reduce ? 0 : DRAW_S, ease: EASE_OUT }}
     >
-      <defs>
-        {/* The recommended arm's FILL TEXTURE — a diagonal hatch (the non-color redundant channel the
-            baseline's solid fill lacks). An SVG pattern def, never injected CSS (CSP-clean). */}
-        <pattern id="rv-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-          <rect width="6" height="6" fill={SERIES.two.color} />
-          <line className="rv__hatch-line" x1="0" y1="0" x2="0" y2="6" />
-        </pattern>
-      </defs>
+      <ChartTextHost className="rv-host" ref={hostRef}>
+        <svg className="rv" viewBox={`0 0 ${RV_VIEW.w} ${RV_VIEW.h}`} role="img" aria-label={labels.ariaSummary}>
+          <defs>
+            {/* The recommended arm's FILL TEXTURE — a diagonal hatch (the non-color redundant channel the
+                baseline's solid fill lacks). An SVG pattern def, never injected CSS (CSP-clean). */}
+            <pattern id="rv-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <rect width="6" height="6" fill={SERIES.two.color} />
+              <line className="rv__hatch-line" x1="0" y1="0" x2="0" y2="6" />
+            </pattern>
+          </defs>
 
-      {/* The $0 ruin-floor anchor (solid) + the axis frame labels. */}
-      <line className="rv__floor" x1={RV_PLOT.left} y1={RV_PLOT.top - 10} x2={RV_PLOT.left} y2={RV_PLOT.bottom} />
-      <text className="rv__axis" x={RV_PLOT.left} y={RV_PLOT.bottom + 16}>
-        {labels.floorLabel}
-      </text>
-      <text className="rv__axis rv__axis--end" x={RV_PLOT.left + plotW} y={RV_PLOT.bottom + 16} textAnchor="end">
-        {labels.axisMaxLabel}
-      </text>
+          {/* The $0 ruin-floor anchor (solid). Its label + the ceiling label are in the text layer. */}
+          <line className="rv__floor" x1={RV_PLOT.left} y1={RV_PLOT.top - 10} x2={RV_PLOT.left} y2={RV_PLOT.bottom} />
 
-      {/* WITHOUT (baseline / today's plan): series one — blue, SOLID fill, circle end marker. */}
-      <rect
-        className="rv__bar"
-        data-arm="without"
-        data-fill="solid"
-        x={RV_PLOT.left}
-        y={withoutY}
-        width={withoutLen}
-        height={BAR_H}
-        fill={SERIES.one.color}
-        rx={3}
-      />
-      <circle className="rv__marker" data-arm="without" cx={withoutTipX} cy={withoutY + BAR_H / 2} r={5} fill={SERIES.one.color} />
-      <text className="rv__bar-label" x={RV_PLOT.left + plotW + 12} y={withoutY + BAR_H / 2 + 4}>
-        {labels.withoutLabel}
-      </text>
+          {/* WITHOUT (baseline / today's plan): series one — blue, SOLID fill, circle end marker. */}
+          <rect
+            className="rv__bar"
+            data-arm="without"
+            data-fill="solid"
+            x={RV_PLOT.left}
+            y={withoutY}
+            width={withoutLen}
+            height={BAR_H}
+            fill={SERIES.one.color}
+            rx={3}
+          />
+          <circle className="rv__marker" data-arm="without" cx={withoutTipX} cy={withoutY + BAR_H / 2} r={5} fill={SERIES.one.color} />
 
-      {/* WITH (recommended): series two — vermilion, HATCH fill (texture, not hue), triangle end marker. */}
-      <rect
-        className="rv__bar rv__bar--with"
-        data-arm="with"
-        data-fill="hatch"
-        x={RV_PLOT.left}
-        y={withY}
-        width={withLen}
-        height={BAR_H}
-        fill="url(#rv-hatch)"
-        rx={3}
-      />
-      <polygon
-        className="rv__marker"
-        data-arm="with"
-        points={`${withTipX},${withY + BAR_H / 2 - 6} ${withTipX - 6},${withY + BAR_H / 2 + 5} ${withTipX + 6},${withY + BAR_H / 2 + 5}`}
-        fill={SERIES.two.color}
-      />
-      <text className="rv__bar-label rv__bar-label--with" x={RV_PLOT.left + plotW + 12} y={withY + BAR_H / 2 + 4}>
-        {labels.withLabel}
-      </text>
+          {/* WITH (recommended): series two — vermilion, HATCH fill (texture, not hue), triangle end marker. */}
+          <rect
+            className="rv__bar rv__bar--with"
+            data-arm="with"
+            data-fill="hatch"
+            x={RV_PLOT.left}
+            y={withY}
+            width={withLen}
+            height={BAR_H}
+            fill="url(#rv-hatch)"
+            rx={3}
+          />
+          <polygon
+            className="rv__marker"
+            data-arm="with"
+            points={`${withTipX},${withY + BAR_H / 2 - 6} ${withTipX - 6},${withY + BAR_H / 2 + 5} ${withTipX + 6},${withY + BAR_H / 2 + 5}`}
+            fill={SERIES.two.color}
+          />
 
-      {/* The DELTA bracket — the measured gap between the two bar tips IS the hero magnitude. Dotted
-          guides drop from each tip to the bracket line, distinct from the solid $0 floor. */}
-      {gapHi - gapLo >= 1 && (
-        <>
-          <line className="rv__guide" x1={withoutTipX} y1={withoutY + BAR_H} x2={withoutTipX} y2={bracketY} />
-          <line className="rv__guide" x1={withTipX} y1={withY + BAR_H} x2={withTipX} y2={bracketY} />
-          <line className="rv__bracket" x1={gapLo} y1={bracketY} x2={gapHi} y2={bracketY} />
-        </>
-      )}
-      <text className="rv__delta" data-role="delta-hero" x={gapHi - gapLo >= 1 ? gapMid : RV_PLOT.left} y={bracketY + 20} textAnchor={gapHi - gapLo >= 1 ? 'middle' : 'start'}>
-        {labels.deltaLabel}
-      </text>
-    </motion.svg>
+          {/* The DELTA bracket — the measured gap between the two bar tips IS the hero magnitude. Dotted
+              guides drop from each tip to the bracket line, distinct from the solid $0 floor. */}
+          {hasBracket && (
+            <>
+              <line className="rv__guide" x1={withoutTipX} y1={withoutY + BAR_H} x2={withoutTipX} y2={bracketY} />
+              <line className="rv__guide" x1={withTipX} y1={withY + BAR_H} x2={withTipX} y2={bracketY} />
+              <line className="rv__bracket" x1={gapLo} y1={bracketY} x2={gapHi} y2={bracketY} />
+            </>
+          )}
+        </svg>
+        <ChartTextLayer className="rv-text">
+          {/* the axis frame labels bracket the plot's TOP edge — the $0 anchor at the floor line's head,
+              the humane ceiling at the plot's right edge — in the 40-unit headroom above the first bar.
+              (Below the bars the bottom margin belongs to the delta hero; on a 358px phone box the two
+              could not share it — measured 2026-09-05.) */}
+          <ChartText className="rv__axis rv__axis--floor" fx={fx(RV_PLOT.left + 6)} fy={fy(RV_PLOT.top - 20)} anchor="start" valign="middle">
+            {labels.floorLabel}
+          </ChartText>
+          <ChartText className="rv__axis rv__axis--end" fx={fx(RV_PLOT.left + plotW)} fy={fy(RV_PLOT.top - 20)} anchor="end" valign="middle">
+            {labels.axisMaxLabel}
+          </ChartText>
+          {/* the direct end-of-bar labels (a REQUIRED non-color channel — never dropped; they wrap). On
+              the xs register, strong: the two bars sit 56 units apart, and at a 358px box a 24-character
+              label already wraps to two lines at xs — the sm register wrapped it to three and overprinted
+              its neighbour (measured 2026-09-05). */}
+          <ChartText className="rv__bar-label" fx={fx(labelX)} fy={fy(withoutY + BAR_H / 2)} anchor="start" valign="middle" strong wrapWidth={labelWidth} collide>
+            {labels.withoutLabel}
+          </ChartText>
+          <ChartText className="rv__bar-label rv__bar-label--with" fx={fx(labelX)} fy={fy(withY + BAR_H / 2)} anchor="start" valign="middle" strong wrapWidth={labelWidth} collide>
+            {labels.withLabel}
+          </ChartText>
+          {/* The delta magnitude — the HERO channel: the largest figure on the chart, in the display face,
+              tabular so it never jitters as it morphs; centred under the bracket, or start-anchored at the
+              floor when the two tips coincide (no bracket to centre on). */}
+          <ChartText
+            className="rv__delta"
+            fx={fx(hasBracket ? gapMid : RV_PLOT.left)}
+            fy={fy(bracketY + 10)}
+            anchor={hasBracket ? 'middle' : 'start'}
+            valign="top"
+            register="lg"
+            display
+            strong
+          >
+            <span data-role="delta-hero">{labels.deltaLabel}</span>
+          </ChartText>
+        </ChartTextLayer>
+      </ChartTextHost>
+    </motion.span>
   )
 }

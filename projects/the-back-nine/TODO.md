@@ -222,11 +222,34 @@ PIPELINE half (mint → persist → unlock → holds → demote → re-promote) 
 regardless. **Lean: (b)** — the render is pinned synthetically, the pipeline is witnessed, and the
 hunt's marginal value is one eyeball frame; but the scope call is his if (a) tempts anyone.
 
-▶ **START HERE NEXT SESSION (hand-off written 2026-09-04 — two commits landed: `8a6fc6b7` the
-`rothPlanRanked` singular fix + the CLAUDE.md count pointer (CI 33915306718 green), and `add8dea8` the
-unwitnessable-household typed refusal + its 5-lens review corrections + insight 114 (CI 33920629134
-green); the 2026-09-03 commits were `3c4c64c5` (CI 33806460606 green) · `2eb0eebd` (CI 33823723825
-green) · `41f9edee` · `530e6545` · `53486a39`).**
+▶ **START HERE NEXT SESSION (hand-off written 2026-09-05 — item 12 SHIPPED in ONE commit: the four
+result charts' text layer, SVG DRAWS / HTML WRITES; see item 12 below and the register's "phone intake
+walk" finding 1 for what it settled). The 2026-09-04 commits were `8a6fc6b7` + `add8dea8` (both CI green).**
+
+**FIRST — the review fleet's SURVIVORS that did NOT ship (108 agents, 51 findings, 40 survived; four P1s
+FIXED and re-witnessed before the commit; the rest are pilot-buildable and ranked here). The full digest is
+`temp/chart-text/review-result.json` (KEEP `temp/chart-text/` — every measurement, frame and script of the
+build lives there): (1) **RecommendationViz has NO gate row** — add a `solve:surplus` arm to
+`e2e/chart-text.spec.ts` (PHONE + FLOOR, `test.setTimeout(600_000)`, open `details.rec-runnerup`, bound
+`.rec-viz-box`) AND the `svg text` count-0 pin in `RecommendationViz.test.tsx` (the other three charts
+have it); (2) the scrub READOUT is invisible to the gate — an `auditReadout` helper driving a hover (REAL)
+and a touch (PHONE) and asserting inside-the-plot + not-over-the-rule + not-over-the-tick-column; (3) the
+containment bound falls to `main` for the ladder — make it a NAMED per-chart argument, and give the ladder
+its own planted-fail arm; (4) only 2 of 6 oracles carry a planted-fail control (plant an OVERPRINT; bind
+each `toThrow` to its oracle's message); (5) the "nothing named hidden" check whitelists every
+`.ladder-xtick` incl. the priority "today"; (6) the widest-tick household is never rendered by the gate —
+add `?seed=borderline` (the $1.5M ceiling's seven-glyph quarters, 45 px); (7) the floor oracle reads only
+the `.ct-text` parent — make it leaf-aware; (8) the crown callout's headroom at rung 9 is ~4 px on the phone
+and scales with width while the callout does not — clamp its measured top to the host (`--ct-dy`); (9)
+hygiene: `clampX` is dead (bandGeometry.ts), `copy.ts` still cites `READOUT_W`, ConfidenceBand's header
+overclaims "non-scaling-stroke on every stroked path" (axis/grid/rules carry none), chartText.css says
+"token surface" above a hand-typed `rgb(11 24 19 / 0.18)` shadow, the ladder's @container retirement has
+no test and twoPaneHonestyFloor's other pins are not comment-stripped; (10) UNMEASURED: the indeterminate
+placeholder note (now `--text-sm` nowrap — no seed reaches it), webfont-swap staleness of the measured
+layouts (no `document.fonts` re-run), the chart pages themselves under the ENFORCED CSP (the probe is
+synthetic). **THEN his eye / the Caddie:** a walk of the four faces at REAL + PHONE (the three-register
+collapse, the HTML-over-svg look, the hidden interim ticks, the RV above-bar-labels fork). Council-filed,
+not built: the band's keyboard lockout (SC 2.1.1), `prefers-contrast` / `forced-colors` absent.**
 
 **FIRST: nothing is staged — items 3, 5 and 7 (the mechanism) SHIPPED, and so did the `rothPlanRanked`
 singular defect under 9a (the 2026-09-04 session, `8a6fc6b7` + `add8dea8`). Item 4 WALKED the same session
@@ -395,15 +418,50 @@ verifiers refuted on a material point) — statuses current:**
     (`Result.tsx`). The WORDS are yours, and the fork (a second key for the failing cohort vs one
     verdict-neutral lead) is a Caddie card. Register: Tier 0 "The goal picker tells an already-failing
     household".
-12. The result charts' text layer (M, pilot, P1 on EVERY viewport): both SVGs draw into a fixed 560-wide
-    viewBox, so the band's tick labels render at 6.6 CSS px on a phone and 8–10 on the laptop, and each
-    file's label-drop guard sits just below the phone width. Register Tier 2 "The phone intake walk", finding
-    1, carries the refuters' corrected shape — a step ladder of user-unit sizes with `LABEL_CHAR_PX` scaled
-    alongside; NOT a bare `@container` font bump (it breaks the band's de-collision). Then items 2–4 of that
-    entry (the strip above the fold · the reserved floor · the editor's focus) are the phone-specific P2s.
+12. ✅ **SHIPPED 2026-09-05 — the result charts' text layer: SVG DRAWS, HTML WRITES (council
+    wf_ecbe0ab2-7bb, 8/10, council-decided).** The scope was FOUR charts, not two (RecommendationViz and
+    TwoFutures shared the 560 viewBox with no drop guard at all). Measured first in real Chromium (2 fleets,
+    18 agents; `temp/chart-text/`, KEPT): band ticks 6.9 CSS px on the phone / 8.0 at the 1088 floor / 10.0
+    on your 1536 window; the phone's only dollar channel (the touch readout) at 6–7 px AND it vanished 600 ms
+    after the finger lifted (an ungated `pointerleave`, the comment beside it claiming the pin held); the
+    band's named moments at weight 400 since U6 (a compound selector that never matched); raising the
+    browser font SHRANK phone chart text (6.88 → 5.99). The council's red team killed every in-svg lift — an
+    end-anchored `$2.25M` at any legible size clips LEFT into a plausible WRONG dollar with every proposed
+    gate green — so every word left the svg: `src/viz/chartText.tsx` (positions by viewBox fraction as
+    CSSOM custom properties — proven under the served CSP; three borrowed registers xs/sm/lg; collisions
+    from MEASURED boxes, no glyph constant anywhere), the band's annotation block in flow under a 380-unit
+    viewBox (the fit-law frames got SHORTER: 398 → 344 px at REAL), the ladder's crown callout above its
+    dot with more ceiling headroom, RV/TF end labels that WRAP. Ride-alongs in the same commit: the touch
+    pin (the ladder's `pointerType` gate), the dead selector, the ≤260/280 drop guards retired, seven stale
+    comments/pointers, and NEW GATES — `e2e/chart-text.spec.ts` on the fit harness (rendered px ≥ `--text-xs`
+    read from tokens · containment in the card · pairwise non-overlap · nothing named hidden · text grows
+    with the reader's font · reduced-motion identity · planted CLIP + SHRINK controls; 19 arms green) and
+    the CSSOM-under-CSP probe in `design-tokens.spec.ts`. Every chart witnessed at 1536×791, 1088×800 and
+    390×844 (RV via two 5-min solves). Full detail + residuals: register Tier 2 "The phone intake walk",
+    finding 1; the contract is `docs/architecture.md §12`; insights 115 + 116.
+    ⚑ **FLAGGED FOR YOUR EYE (yours-to-close, shipped at high confidence):** (a) the three-register
+    COLLAPSE (20 ad-hoc px sizes → xs/sm/lg; RV's end labels landed on xs strong because sm wrapped them to
+    three lines on the phone) — amends my "common factor" premise; (b) the LOOK of HTML text over an svg
+    plot on all four charts; (c) an unnamed interim age tick now HIDES when it would overprint a named
+    moment (the cure for the "70 / 69 reads as a rendering defect" cold-read flag) instead of taking a row.
+    A Caddie walk of the four faces is the next honest step; then items 2–4 of that register entry (the
+    strip above the fold · the reserved floor · the editor's focus) are the phone-specific P2s.
 
 **Also filed today, pilot, with exact fixes:** register Tier 2 "The dead-end repair beat" (four
 residuals from item 2's review) and "A repeat Add tap over an already-visible block" (from item 1's).
+
+**Landmines the 2026-09-05 session added (the chart text layer; the instrument half is insight 116):** a
+`node -e "…"` string carrying `$2.25M` lost its dollar to SHELL interpolation and broke the quote — write
+every script to a file with the Write tool and run it, never inline · the Bash tool persists any output
+over ~30 KB to a file and shows 2 KB — read the file with the Read tool, don't re-run · `document.fonts.check`
+returns true for a face that does not exist · `getBBox()` on svg text is the em box, not the ink · a
+first-match regex over a stylesheet matched the retirement COMMENT and went green (match `selector {`,
+comment-strip first) · a Playwright `:not(:checked)` locator re-resolves after the click — pin by
+`[value=…]` · a `<span>` host for absolute children collapses their percentage positions onto one point —
+`display:block` it · a unitless `0` in a custom property that feeds `calc()` invalidates the WHOLE
+declaration (`transform` fell to `none`) — `0px` · `?seed=datemixed` renders no ladder; `?seed=failing` is a
+RESOLVED band, not the placeholder; `solve:nc` renders no `svg.rv` — only `solve:surplus` does (~5 min) ·
+the dev server for measurement lives on **4197** (4190 fit · 4195 caddie · 4180/4181 CSP).
 
 **Landmines the 2026-09-04 session added:** a mutant REVERT anchored on a line that also appears elsewhere
 fails the exactly-once check and leaves the mutant PLANTED while the chain reads green (the unwitnessable

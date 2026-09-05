@@ -2,14 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   AT_RANGE_COHORT_MIN,
   COHORT_FADE,
-  LABEL_PAD,
-  LABEL_ROWS,
   PLOT,
   PLOT_H,
   PLOT_W,
-  READOUT_GAP,
-  READOUT_TOP,
-  READOUT_W,
   VIEWBOX,
   areaPath,
   ELAPSED_DIM,
@@ -19,9 +14,7 @@ import {
   isThinCohort,
   linePath,
   nearestLatticeIndex,
-  placeAnnotationLabels,
   placeholderPath,
-  placeReadoutBox,
   selectAtRangeColumn,
   xForYear,
   yForDollars,
@@ -190,106 +183,6 @@ describe('bandGeometry — the indeterminate placeholder is wide + un-data-like'
   })
 })
 
-describe('bandGeometry — annotation label de-collision (no same-row overlap)', () => {
-  // The coverage gap that let the row-1 collision ship: the original fixtures used 3 well-spaced
-  // annotations, never exercising the multi-row path. These assert the placer's load-bearing
-  // invariant — TWO labels on the SAME row must clear each other by LABEL_PAD — on the dense
-  // household-clock set. Char counts mirror what the component passes: max(label, ages) length.
-  type Item = { name: string; yearsFromNow: number; chars: number }
-  const item = (name: string, yearsFromNow: number, ages: string): Item => ({
-    name,
-    yearsFromNow,
-    chars: Math.max(name.length, ages.length),
-  })
-
-  /** The worst (smallest) horizontal clearance between any two labels sharing a row. A value < 0
-   *  is a real overlap (the cardinal sin); the placer must keep it ≥ 0 (ideally ≥ LABEL_PAD). */
-  function worstSameRowClearance(items: readonly Item[], horizonYears: number): number {
-    const placed = placeAnnotationLabels(items, horizonYears)
-    let worst = Number.POSITIVE_INFINITY
-    for (let i = 0; i < placed.length; i++) {
-      for (let j = i + 1; j < placed.length; j++) {
-        if (placed[i]!.level !== placed[j]!.level) continue
-        // items are left→right, so j is the right neighbour: clearance = j.left − i.right.
-        const clearance = placed[j]!.extent[0] - placed[i]!.extent[1]
-        if (clearance < worst) worst = clearance
-      }
-    }
-    return worst
-  }
-
-  // The NORMAL retirement-couple case the verifier measured: Today (pinned far-left) + two close
-  // retirements + survivor + horizon. Pre-fix, "You retire" and "Sam retires" BOTH fell to row 1
-  // and overlapped by ~61px.
-  const DENSE: Item[] = [
-    item('Today', 0, '61 / 59'),
-    item('You retire', 4, '65 / 63'),
-    item('Sam retires', 6, '67 / 65'),
-    item('Survivor years', 28, '~86 / 84'),
-    item('Horizon', 33, '94 / 92'),
-  ]
-
-  it('the dense two-retirements set has NO overlapping labels on any shared row (the bug, fixed)', () => {
-    // The load-bearing assertion: it FAILS against the pre-fix placer (which piled both retirements
-    // onto row 1 → a large negative clearance) and PASSES now (each gets its own row).
-    expect(worstSameRowClearance(DENSE, 33)).toBeGreaterThanOrEqual(0)
-  })
-
-  it('the two close retirements land on DIFFERENT rows', () => {
-    const placed = placeAnnotationLabels(DENSE, 33)
-    const you = placed[1]!
-    const sam = placed[2]!
-    expect(you.level).not.toBe(sam.level)
-  })
-
-  it('every annotation lands within the allowed rows', () => {
-    for (const p of placeAnnotationLabels(DENSE, 33)) {
-      expect(p.level).toBeGreaterThanOrEqual(0)
-      expect(p.level).toBeLessThan(LABEL_ROWS)
-    }
-  })
-
-  it('the Survivor↔Horizon right-edge pair still de-collides (the original fix holds)', () => {
-    const placed = placeAnnotationLabels(DENSE, 33)
-    const survivor = placed[3]!
-    const horizon = placed[4]!
-    expect(survivor.level).not.toBe(horizon.level)
-  })
-
-  it('PLANTED control: two labels at the SAME x DO collide on row 0, forcing a stagger', () => {
-    // Proves the overlap math is real — two identical-x wide labels cannot share row 0; the second
-    // must move to a different row, and the result still has no same-row overlap.
-    const same: Item[] = [item('Work A', 10, '70 / 68'), item('Work B', 10, '70 / 68')]
-    const placed = placeAnnotationLabels(same, 33)
-    expect(placed[0]!.level).not.toBe(placed[1]!.level)
-    expect(worstSameRowClearance(same, 33)).toBeGreaterThanOrEqual(0)
-  })
-
-  it('deep-stacks gracefully: three labels at the same x take three distinct rows', () => {
-    const triple: Item[] = [
-      item('A', 12, '70 / 70'),
-      item('B', 12, '70 / 70'),
-      item('C', 12, '70 / 70'),
-    ]
-    const levels = placeAnnotationLabels(triple, 33).map((p) => p.level)
-    expect(new Set(levels).size).toBe(3)
-  })
-
-  it('a well-spaced set keeps everything on row 0 (no needless stagger)', () => {
-    const spaced: Item[] = [item('Today', 0, '61 / 59'), item('Mid', 16, '77 / 75'), item('Horizon', 33, '94 / 92')]
-    // ensure the de-collision doesn't over-trigger and push well-separated labels down.
-    const onRow0 = placeAnnotationLabels(spaced, 33).filter((p) => p.level === 0).length
-    expect(onRow0).toBeGreaterThanOrEqual(2)
-  })
-
-  it('LABEL_PAD breathing room: a same-row pair clears by at least LABEL_PAD when it fits', () => {
-    // For the spaced set, the same-row neighbours must clear by the comfortable pad, not merely 0.
-    const spaced: Item[] = [item('Today', 0, '61 / 59'), item('Mid', 16, '77 / 75'), item('Horizon', 33, '94 / 92')]
-    expect(worstSameRowClearance(spaced, 33)).toBeGreaterThanOrEqual(LABEL_PAD)
-  })
-})
-
-// ── dead-cohort de-emphasis (back-nine-design §3) ─────────────────────────────────────────────
 describe('cohortFadeOpacity — fade the small-cohort tail without erasing it', () => {
   it('a full cohort draws at full opacity, a near-dead cohort at the faint floor', () => {
     expect(cohortFadeOpacity(1)).toBe(1)
@@ -416,51 +309,6 @@ describe('nearestLatticeIndex — snap a cursor x to the nearest sampled column'
     expect(nearestLatticeIndex(Number.NaN, N)).toBe(0)
     expect(nearestLatticeIndex(200, 1)).toBe(0)
     expect(nearestLatticeIndex(200, 0)).toBe(0)
-  })
-})
-
-describe('placeReadoutBox — the box never clips an edge AND never paints over the rule', () => {
-  it('a left-half scrub puts the box to the RIGHT of the rule; a right-half scrub flips it LEFT', () => {
-    const leftRule = PLOT.left + 0.2 * PLOT_W
-    const rightRule = PLOT.left + 0.9 * PLOT_W
-    expect(placeReadoutBox(leftRule, READOUT_W).tx).toBe(leftRule + READOUT_GAP)
-    // right-half rule flips the box LEFT; its right edge is the rule minus the gap.
-    const right = placeReadoutBox(rightRule, READOUT_W)
-    expect(right.tx + READOUT_W).toBeCloseTo(rightRule - READOUT_GAP, 6)
-  })
-
-  // The CORE invariant of the flip fix: at EVERY lattice vertex the box must stay inside the plot AND
-  // never contain the rule x (the opaque box must not paint over the live "where I'm pointing" rule).
-  // The old fixed-0.6 threshold violated this for the dead-center vertices (i≈24–28); this sweep is the
-  // planted regression guard — it FAILS against the old threshold and passes now.
-  it('at every one of the 49 lattice vertices the box stays in-plot AND the rule x is never inside it', () => {
-    for (let i = 0; i < LATTICE_POINTS; i++) {
-      const scrubX = PLOT.left + (i / (LATTICE_POINTS - 1)) * PLOT_W
-      const { tx } = placeReadoutBox(scrubX, READOUT_W)
-      // in-plot (no left/right clip)
-      expect(tx, `vertex ${i} left edge`).toBeGreaterThanOrEqual(PLOT.left)
-      expect(tx + READOUT_W, `vertex ${i} right edge`).toBeLessThanOrEqual(PLOT.right + 1e-6)
-      // rule NOT strictly inside the box span [tx, tx+W] (no occlusion of the rule/dots)
-      const ruleInside = scrubX > tx + 1e-6 && scrubX < tx + READOUT_W - 1e-6
-      expect(ruleInside, `vertex ${i} (x=${scrubX.toFixed(1)}) rule inside box [${tx.toFixed(1)}, ${(tx + READOUT_W).toFixed(1)}]`).toBe(false)
-    }
-  })
-
-  it('forces the edge clamp non-vacuously: a left-flipped scrub just past the boundary clamps tx to PLOT.left', () => {
-    // scrubX just above the flip boundary (PLOT.right − GAP − W = 302): the left-placed raw (scrubX −
-    // GAP − W) goes below PLOT.left and MUST clamp to PLOT.left — deleting the clamp would clip the left
-    // edge here. (At the old test's edges the clamp never fired, so it could be deleted green.)
-    const scrubX = PLOT.right - READOUT_GAP - READOUT_W + 4 // 306
-    const { tx } = placeReadoutBox(scrubX, READOUT_W)
-    expect(tx).toBe(PLOT.left)
-    expect(tx + READOUT_W).toBeLessThanOrEqual(PLOT.right)
-    expect(scrubX).toBeGreaterThanOrEqual(tx + READOUT_W) // rule still clear of (right-of) the box
-  })
-
-  it('is pinned to the fixed top gutter (never bobs with the cursor, never covers the mid-plot median)', () => {
-    expect(placeReadoutBox(PLOT.left + 50, READOUT_W).ty).toBe(READOUT_TOP)
-    expect(placeReadoutBox(PLOT.right - 50, READOUT_W).ty).toBe(READOUT_TOP)
-    expect(READOUT_TOP).toBeLessThan((PLOT.top + PLOT.bottom) / 2) // sits above the plot's vertical middle
   })
 })
 

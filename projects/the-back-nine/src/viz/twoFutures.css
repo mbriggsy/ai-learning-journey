@@ -3,9 +3,20 @@
  * Static classes only (style-src 'self' — no inline styles); the series COLORS arrive as SVG
  * presentation attributes from palette.ts, so this file owns only the non-color channels:
  * stroke weight, the dash geometry (a series-identity channel — held in screen pixels by
- * non-scaling-stroke), the dotted leader (deliberately distinct from BOTH series strokes so a
- * displaced end label can never read as a third series), and the quiet axis type.
+ * non-scaling-stroke), and the dotted leader (deliberately distinct from BOTH series strokes so a
+ * displaced end label can never read as a third series).
+ *
+ * TEXT: this file styles NO chart text. Since 2026-09-05 (council wf_ecbe0ab2-7bb) the axis labels,
+ * the year ticks, both end labels and the scrub readout are HTML in the shared chart text layer —
+ * chartText.css owns the registers (xs axis / sm strong end labels / sm readout). The .tf__axis and
+ * .tf__label classes below are the HTML nodes' hooks, carrying color only.
  */
+
+/* the fade wrapper + the text-layer host: blocks that take the sheet's width. */
+.tf-reveal,
+.tf-host {
+  display: block;
+}
 
 .tf {
   display: block;
@@ -44,21 +55,12 @@
   vector-effect: non-scaling-stroke;
 }
 
-.tf__axis,
-.tf__label {
-  font-family: inherit;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  fill: var(--ink-muted);
+/* the HTML text hooks — color only; size + face come from the text layer's registers. */
+.tf__axis {
+  color: var(--ink-muted);
 }
-
-.tf__axis--end {
-  text-anchor: end;
-}
-
 .tf__label {
-  font-size: 13px;
-  fill: var(--ink);
+  color: var(--ink);
 }
 
 /* ── fan-parity axis chrome (station-2 cold-read 2026-07-08) ─────────────────────────────────
@@ -68,14 +70,11 @@
   stroke-dasharray: 2 4;
 }
 
-.tf__axis--ytick {
-  text-anchor: end;
-}
-
 /* ── the hover scrub (the fan's band-scrub vocabulary on the TF plot) ────────────────────────
    Visuals never eat the pointer; only the transparent capture rect listens. The rule is SOLID
    (reads as "where I'm pointing now"); the per-arm dots carry each series' own marker SHAPE
-   (circle/triangle — identity by shape, never hue) over a paper halo so they read on the lines. */
+   (circle/triangle — identity by shape, never hue) over a paper halo so they read on the lines.
+   The worded readout box is HTML (chartText.css .ct-readout). */
 .tf__scrub {
   pointer-events: none;
 }
@@ -94,34 +93,4 @@
   stroke: var(--paper-raised);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
-}
-
-/* the readout box — token surface, never a re-typed hex (canonical-source rule). */
-.tf__readout-box {
-  fill: var(--paper-raised);
-  stroke: var(--line-control);
-  stroke-width: 1;
-  filter: drop-shadow(0 1px 2px rgb(11 24 19 / 0.18));
-}
-
-.tf__readout-text {
-  font-family: var(--font-body);
-  font-variant-numeric: tabular-nums;
-}
-
-.tf__readout-ages {
-  fill: var(--ink);
-  font-size: 12.5px;
-  font-weight: var(--weight-semibold);
-}
-
-.tf__readout-label {
-  fill: var(--ink-muted);
-  font-size: 11px;
-}
-
-.tf__readout-value {
-  fill: var(--ink);
-  font-size: 13px;
-  font-weight: var(--weight-semibold);
 }

@@ -166,6 +166,48 @@ describe('ConfidenceBand — resolved fan', () => {
       expect(ruleHas(cls, 'vector-effect: non-scaling-stroke')).toBe(true)
     }
   })
+
+  it('SVG draws, HTML writes: the svg carries NO <text>; every word lives in the aria-hidden text layer + annotation block', () => {
+    // Council wf_ecbe0ab2-7bb (2026-09-05): svg text scaled with the fixed 560-wide viewBox and rendered
+    // at 6.9–10 CSS px on every shipping arm; any lift inside the svg clipped an end-anchored dollar
+    // into a plausible WRONG one. So the svg holds geometry only and the text layer holds the words —
+    // at the type scale, never scaled. A <text> creeping back into the svg is the regression this pins.
+    const { container } = render(<ConfidenceBand data={resolved()} labels={labels} />)
+    expect(container.querySelectorAll('svg text')).toHaveLength(0)
+    // the y-tick dollars (incl. the $0 anchor — design-law §3's honesty proof) are HTML in the layer
+    const ticks = [...container.querySelectorAll('.band-text .band-tick')].map((n) => n.textContent)
+    expect(ticks).toContain('$0')
+    expect(container.querySelector('.band-tick--floor')?.textContent).toBe('$0')
+    // the layer is the SIGHTED channel: aria-hidden, so the a11y tree keeps the svg caption + the
+    // per-annotation aria-labels + the panel's sr-only sentence (O3 — no SR tick-ladder).
+    expect(container.querySelector('.band-text')?.getAttribute('aria-hidden')).toBe('true')
+    expect(container.querySelector('.band-annotations')?.getAttribute('aria-hidden')).toBe('true')
+  })
+
+  it('the named-moment labels are STRONG and paired with their ages in the annotation block (source-bound to chartText.css)', () => {
+    // The annotation NAME line (Today / Work stops / Plan horizon) is the band's one register above
+    // the axis numbers — ink + semibold, a non-color signal. It shipped DEAD in the svg era from U6
+    // (b1ff189a) to 2026-09-05: a compound `.band-frame-text.is-strong` rule matched nothing, so every
+    // named moment rendered at weight 400 in the muted tick fill for three months, invisible at 8–10
+    // CSS px. jsdom computes no stylesheet, so the pin is two-part: the DOM (every name carries the
+    // strong class beside its ages line) and the CSS text (the strong class IS ink + semibold).
+    const { container } = render(<ConfidenceBand data={resolved()} labels={labels} />)
+    const items = container.querySelectorAll('.band-annotations .band-annotation')
+    expect(items.length).toBe(resolved().annotations.length)
+    for (const item of items) {
+      expect(item.querySelector('.ct-block__name.band-annotation__name')).not.toBeNull()
+      expect(item.querySelector('.ct-block__sub.band-annotation__ages')).not.toBeNull()
+    }
+    const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'chartText.css'), 'utf8')
+    const name = css.match(/\.ct-block__name\s*\{([^}]*)\}/)
+    expect(name, 'chartText.css must style .ct-block__name').not.toBeNull()
+    expect(name![1]).toContain('font-weight: var(--weight-semibold)')
+    expect(name![1]).toContain('color: var(--ink)')
+    // and the band's own stylesheet styles NO chart text any more (a font-size here is the regression)
+    const band = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'band.css'), 'utf8')
+    const rules = band.replace(/\/\*[\s\S]*?\*\//g, '') // comments may NAME the history; rules may not
+    expect(/font-size:\s*\d/.test(rules.split('.band-drawer__pull')[0]!), 'band.css must not size chart text').toBe(false)
+  })
 })
 
 // U17 §S2 — the aged elapsed-segment demotion (council wf_f4ced3c8-2f6): a STATIC second

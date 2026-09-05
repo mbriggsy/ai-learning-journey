@@ -1,0 +1,235 @@
+/*
+ * src/viz/chartText.css — THE CHART TEXT LAYER (council wf_ecbe0ab2-7bb, 2026-09-05: "SVG draws,
+ * HTML writes"). Every word and numeral a chart shows is HTML positioned OVER (or in flow BELOW)
+ * the chart's <svg>; the svg keeps paths, rules, dots and marks only.
+ *
+ * WHY: each chart draws into a FIXED 560-wide viewBox at width:100%, so SVG <text> sized in user
+ * units rendered at userPx × (figureWidth / 560) — measured 2026-09-05 at 6.1–8.3 CSS px on a 390
+ * phone, 8.0–9.5 at the 1088 two-pane floor, 10–11.5 on Briggsy's 1536 window (temp/chart-text,
+ * kept). Any lift INSIDE the svg clips an end-anchored numeral against its fixed user-unit gutter
+ * and renders a plausible WRONG dollar ("$2.25M" → "25M") on the household's only position→dollar
+ * decoder (the red team's decisive attack). HTML text fails SAFE: it wraps, it follows the reader's
+ * browser font size (a phone reader who raised their font used to get SMALLER chart text —
+ * 6.88 → 5.99 CSS px), and it never scales with the viewBox.
+ *
+ * THE THREE BORROWED REGISTERS (insight 082 — borrow a register an equal-rank subordinate already
+ * wears, never a novel size): --text-xs (13px) for ticks, axis captions and annotation lines;
+ * --text-sm for emphasized labels (series end labels, the crown, every scrub readout); --text-lg
+ * for the one hero figure (the RecommendationViz delta). No chart types a px size of its own.
+ *
+ * POSITIONING: `--fx` / `--fy` are FRACTIONS of the host box (svg x / viewBox width, svg y /
+ * viewBox height), written as React style-prop custom properties. Those are CSSOM property writes
+ * (React never emits a style ATTRIBUTE on the client), which the strict style-src 'self' policy
+ * permits — proven under the enforced headers by e2e/design-tokens.spec.ts, and already shipped
+ * at src/intake/flow.tsx (the progress thread's width). The host box is width:100% at the svg's
+ * fixed aspect, so a fraction of the host IS the svg coordinate — no measurement, no scale math.
+ *
+ * A11Y: the layer is aria-hidden. It is the SIGHTED channel; the a11y tree keeps the svg's
+ * role="img" caption, the per-annotation aria-labels and the single ratified .sr-only range
+ * sentence (council 2026-06-29 / O3 2026-07-10) — nothing a screen reader hears changes.
+ */
+
+/* the positioned host: wraps the svg so the layer's percentages resolve against the svg's box. */
+.ct-host {
+  position: relative;
+  display: block;
+}
+
+.ct-layer {
+  position: absolute;
+  inset: 0;
+  /* the pointer belongs to the svg's transparent capture rect underneath; text never eats it. */
+  pointer-events: none;
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+}
+
+/* one positioned text node. `--fx`/`--fy` are fractions of the host; the anchor classes set the
+   translate so the point (fx, fy) is the text's start / middle / end (x) and top / middle / bottom
+   (y) — the SVG text-anchor grammar, in HTML. */
+.ct-text {
+  position: absolute;
+  left: calc(var(--fx, 0) * 100%);
+  top: calc(var(--fy, 0) * 100%);
+  /* `--ct-dy` is the measured 'separate-y' push (px) a lower series label receives when its
+     rendered (wrapped) box would touch the one above — written by useCollisionLayout. */
+  transform: translate(var(--ct-tx, 0), calc(var(--ct-ty, -50%) + var(--ct-dy, 0px)));
+  white-space: nowrap;
+  line-height: var(--leading-tight);
+  font-size: var(--text-xs);
+}
+/* `0px`, never a bare `0`: these substitute into the calc() above, and a unitless zero there is a
+   <number> — `<number> + <length>` fails type-checking, the declaration goes invalid at computed-
+   value time and the WHOLE transform falls back to none (the review caught the hero hanging half
+   a width right of its bracket). */
+.ct-text--start { --ct-tx: 0px; }
+.ct-text--middle { --ct-tx: -50%; }
+.ct-text--end { --ct-tx: -100%; }
+.ct-text--vtop { --ct-ty: 0px; }
+.ct-text--vmiddle { --ct-ty: -50%; }
+.ct-text--vbottom { --ct-ty: -100%; }
+
+.ct-text--xs { font-size: var(--text-xs); }
+.ct-text--sm { font-size: var(--text-sm); }
+.ct-text--lg { font-size: var(--text-lg); }
+
+/* the strong register: ink + semibold — one rank above the axis numbers (the band's named moments,
+   the ladder crown, series end labels). */
+.ct-text--strong {
+  color: var(--ink);
+  font-weight: var(--weight-semibold);
+}
+/* the ONE display-face text on any chart: the RecommendationViz delta hero — the display leading, so
+   a 22px figure occupies ~25px of the viewBox's bottom margin, not ~29 (it grazed the axis labels). */
+.ct-text--display {
+  font-family: var(--font-display);
+  font-weight: var(--weight-display);
+  line-height: var(--leading-display);
+}
+.ct-text--italic {
+  font-style: italic;
+}
+/* a label allowed to WRAP inside a column (series end labels): the width is a fraction of the host
+   too, so the column never clips a numeral — it wraps it. */
+.ct-text--wrap {
+  white-space: normal;
+  max-width: calc(var(--fw, 1) * 100%);
+  line-height: var(--leading-tight);
+}
+
+/* a collider the measured layout HID (a tick that would overprint its neighbour). Hidden, never
+   removed — the a11y tree does not read this layer, and the gate asserts how many are hidden and
+   that no NAMED item ever is. */
+.ct-text[data-ct-hidden],
+.ct-block__item[data-ct-hidden],
+.ct-block__tail[data-ct-hidden] {
+  visibility: hidden;
+}
+
+/* ── the scrub readout box (band + TwoFutures): HTML over the plot, positioned by the measured
+      placement hook (`--rx`/`--ry` in px inside the host). Token surface, never a re-typed hex. */
+.ct-readout {
+  position: absolute;
+  left: var(--rx, 0px);
+  top: var(--ry, 0px);
+  display: grid;
+  gap: 1px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--paper-raised);
+  border: 1px solid var(--line-control);
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 2px rgb(11 24 19 / 0.18);
+  font-size: var(--text-sm);
+  line-height: var(--leading-tight);
+  width: max-content;
+  /* never wider than one side of the PLOT, so the placement hook can always seat it beside the rule
+     inside the plot — never over the rule, never over the y-tick column (the position→dollar decoder
+     the review found it covering when it was allowed the whole host). 38% of the host is under half
+     of the narrowest plot (a 308px phone figure: plot 246px, box ≤ 117px). Figures never break; the
+     worded label + note lines wrap — HTML fails safe. */
+  max-width: 38%;
+  color: var(--ink);
+}
+.ct-readout__ages {
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+.ct-readout__label {
+  color: var(--ink-muted);
+  font-size: var(--text-xs);
+  white-space: normal;
+}
+.ct-readout__value {
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+.ct-readout__note {
+  color: var(--ink-muted);
+  font-style: italic;
+  font-size: var(--text-xs);
+  white-space: normal;
+}
+
+/* ── an ELBOW leader from a series' end marker to its (measured, possibly pushed) end label: a dotted
+      horizontal run at the marker's y, then a dotted vertical drop at the label column's edge. It
+      lives in the text layer so the SAME measured pass that pushes the label ('separate-y' writes
+      `--ct-dy` to the leader as the label's tail) moves the leader's end with it — an svg leader
+      drawn to the pre-push y pointed up to 39 px away from its label (the review, phone arm). */
+.ct-leader {
+  position: absolute;
+  left: calc(var(--fx, 0) * 100%);
+  width: calc(var(--fw, 0) * 100%);
+  border-right: 1px dotted var(--ink-muted);
+  pointer-events: none;
+}
+/* the label sits BELOW its marker: the run is the top edge, the drop grows by the push. */
+.ct-leader--down {
+  top: calc(var(--fy, 0) * 100%);
+  height: calc(var(--fh, 0) * 100% + var(--ct-dy, 0px));
+  border-top: 1px dotted var(--ink-muted);
+}
+/* the label sits ABOVE its marker: the run is the bottom edge; a push moves the top down. */
+.ct-leader--up {
+  top: calc(var(--fy, 0) * 100% + var(--ct-dy, 0px));
+  height: calc(var(--fh, 0) * 100% - var(--ct-dy, 0px));
+  border-bottom: 1px dotted var(--ink-muted);
+}
+
+/* ── the annotation block: HTML in flow BELOW an svg whose gutter it replaces. Items are placed at
+      their svg x (a fraction) and stacked into measured rows; a dashed TAIL rises from each label
+      to the svg's bottom edge so a staggered label still reads as its rule's label, never as a
+      stray. Row height is authored from the type scale (two lines of --text-xs), never measured. */
+.ct-block {
+  /* a <span> (legal inside the band's enlarge <button>) made a block: an inline box has no height
+     to reserve and gives its absolute children a near-zero containing block, so every percentage
+     position collapses onto one point — measured live on the first render of this layer. */
+  display: block;
+  position: relative;
+  --ct-row-h: calc(2 * var(--text-xs) * var(--leading-tight));
+  --ct-row-gap: var(--space-1);
+  --ct-tail-base: var(--space-2);
+  /* reserved from the row count the measured layout produced: rows × row height + gaps + the
+     tail base above row 0. */
+  height: calc(
+    var(--ct-tail-base) + var(--ct-rows, 1) * var(--ct-row-h) + (var(--ct-rows, 1) - 1) * var(--ct-row-gap)
+  );
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+}
+/* a single-line block (axis ticks with no second line): one line of --text-xs per row. */
+.ct-block--line {
+  --ct-row-h: calc(var(--text-xs) * var(--leading-tight));
+  --ct-tail-base: var(--space-1);
+}
+.ct-block__item {
+  position: absolute;
+  left: calc(var(--fx, 0) * 100%);
+  top: calc(var(--ct-tail-base) + var(--ct-row, 0) * (var(--ct-row-h) + var(--ct-row-gap)));
+  transform: translateX(var(--ct-tx, -50%));
+  white-space: nowrap;
+  line-height: var(--leading-tight);
+  font-size: var(--text-xs);
+  text-align: center;
+}
+.ct-block__item.ct-text--start { text-align: left; }
+.ct-block__item.ct-text--end { text-align: right; }
+.ct-block__name {
+  display: block;
+  color: var(--ink);
+  font-weight: var(--weight-semibold);
+}
+.ct-block__sub {
+  display: block;
+}
+/* the tail: a dashed hairline at the item's TRUE x from the block's top edge down to its row —
+   the svg rule's continuation, so a row-1 label is visibly tied to its moment. */
+.ct-block__tail {
+  position: absolute;
+  left: calc(var(--fx, 0) * 100%);
+  top: 0;
+  height: calc(var(--ct-tail-base) + var(--ct-row, 0) * (var(--ct-row-h) + var(--ct-row-gap)));
+  border-left: 1px dashed var(--line-control);
+  transform: translateX(-0.5px);
+}

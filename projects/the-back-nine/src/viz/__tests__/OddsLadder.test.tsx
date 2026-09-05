@@ -4,7 +4,7 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render } from '@testing-library/react'
 import { OddsLadder, type OddsLadderLabels } from '../OddsLadder'
 import { OKABE_ITO } from '../palette'
-import { BAR_Y, PLOT, yForRung, xForOffset, nearestOffsetIndex } from '../oddsLadderGeometry'
+import { BAR_Y, PLOT, VIEWBOX, yForRung, xForOffset, nearestOffsetIndex } from '../oddsLadderGeometry'
 import type { DateOffsetReading, DateTrackOutcome } from '@shared/model'
 
 // jsdom has no matchMedia (useReducedMotion reads it) — provide a benign stub (reduce = false).
@@ -119,10 +119,12 @@ describe('OddsLadder — the honest discrete odds ladder', () => {
 
   it('anchors the bar label in the LEFT MARGIN beside its bar (the rung-anchor family — never inside the plot where real curves collide with it)', () => {
     const { getByText } = render(<OddsLadder track={track} labels={labels} />)
+    // HTML in the text layer (2026-09-05): positioned by viewBox FRACTIONS, end-anchored 8 units left
+    // of the axis — the same column as the "X of 10" rung anchors.
     const bar = getByText('on track')
-    expect(bar).toHaveAttribute('text-anchor', 'end')
-    expect(Number(bar.getAttribute('x'))).toBeLessThan(PLOT.left) // the margin, not the plot
-    expect(Number(bar.getAttribute('y'))).toBeCloseTo(BAR_Y + 4, 3) // beside its own bar
+    expect(bar.classList.contains('ct-text--end')).toBe(true)
+    expect(Number(bar.style.getPropertyValue('--fx'))).toBeCloseTo((PLOT.left - 8) / VIEWBOX.width, 6) // the margin, not the plot
+    expect(Number(bar.style.getPropertyValue('--fy'))).toBeCloseTo(BAR_Y / VIEWBOX.height, 6) // beside its own bar
   })
 
   it('NEVER prints "10 of 10" — anywhere, including the a11y tree (the ceiling clamp holds)', () => {
@@ -143,15 +145,17 @@ describe('OddsLadder — the honest discrete odds ladder', () => {
 
   it('labels the y-axis with a quiet "X of 10" odds scale (so a dot reads off the axis), decorative + capped below the ceiling', () => {
     const { container } = render(<OddsLadder track={track} labels={labels} />)
-    const yAxis = container.querySelector('.ladder-yaxis')
-    expect(yAxis).not.toBeNull()
-    // decorative duplication — the per-mark aria already speaks each dot's odds, so the scale is aria-hidden.
-    expect(yAxis).toHaveAttribute('aria-hidden', 'true')
-    const ticks = [...container.querySelectorAll('.ladder-yaxis .ladder-yaxis-label')]
+    const layer = container.querySelector('.ladder-text')
+    expect(layer).not.toBeNull()
+    // decorative duplication — the per-mark aria already speaks each dot's odds, so the layer is aria-hidden.
+    expect(layer).toHaveAttribute('aria-hidden', 'true')
+    const ticks = [...container.querySelectorAll<HTMLElement>('.ladder-text .ladder-yaxis-label')]
     // the scale reads through the SAME clamped "X of 10" slot the marks use (plot ≡ text everywhere).
     expect(ticks.map((t) => t.textContent)).toEqual(['3 of 10', '5 of 10', '7 of 10'])
-    // each anchor sits at its rung's height — the axis is honest (label N drawn at yForRung(N)).
-    expect(Number(ticks[0]?.getAttribute('y'))).toBeCloseTo(yForRung(3) + 4, 3)
+    // each anchor sits at its rung's height — the axis is honest (label N placed at yForRung(N)).
+    expect(Number(ticks[0]?.style.getPropertyValue('--fy'))).toBeCloseTo(yForRung(3) / VIEWBOX.height, 6)
+    // and the svg itself carries NO text: the words never scale with the viewBox again.
+    expect(container.querySelectorAll('svg text')).toHaveLength(0)
     // STOPS below the on-track bar (~9): no "9 of 10"/"10 of 10" on the AXIS — the headroom above is
     // the "you can never reach certain" signal (it must never be labelled).
     expect(ticks.some((t) => /9 of 10|10 of 10/.test(t.textContent ?? ''))).toBe(false)
@@ -216,9 +220,7 @@ describe('OddsLadder — the aged wall-time re-base', () => {
   it('drops passed stop-years and re-bases ticks + aria + readout to years-from-today', () => {
     // track offsets [2,4,6,8,12], elapsed 3 → plan-2 drops; displays [1,3,5,9].
     const { container } = render(<OddsLadder track={track} labels={labels} yearsSincePlanBuilt={3} />)
-    const ticks = [...container.querySelectorAll('.ladder-frame-text .ladder-droppable-label')]
-      .map((t) => t.textContent)
-      .slice(0, -1) // the last frame-text node is the axis caption
+    const ticks = [...container.querySelectorAll('.ladder-xtick')].map((t) => t.textContent)
     expect(ticks).toEqual(['1', '3', '5', '9'])
     // the dropped plan-2 mark is gone from EVERY channel: dots, aria, and the stacked readout.
     expect(container.querySelectorAll('.ladder-dot').length).toBe(4)
@@ -245,9 +247,7 @@ describe('OddsLadder — the aged wall-time re-base', () => {
   it('a boundary mark (planOffset == elapsed) survives as the "today" tick', () => {
     // elapsed 2 → plan-2 re-bases to display 0; the injected formatOffset maps 0 → "today".
     const { container } = render(<OddsLadder track={track} labels={labels} yearsSincePlanBuilt={2} />)
-    const ticks = [...container.querySelectorAll('.ladder-frame-text .ladder-droppable-label')].map(
-      (t) => t.textContent,
-    )
+    const ticks = [...container.querySelectorAll('.ladder-xtick')].map((t) => t.textContent)
     expect(ticks).toContain('today')
     expect(container.querySelectorAll('.ladder-dot').length).toBe(5) // nothing dropped
   })

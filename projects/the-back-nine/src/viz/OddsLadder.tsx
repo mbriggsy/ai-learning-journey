@@ -30,8 +30,15 @@
  *     tooltip is gone.
  *   - CALM MOTION (back-nine-design §3 / emil): the marks DRAW once (opacity fade), never replay;
  *     prefers-reduced-motion drops the fade and the FINAL DOM is identical (no signal in animation).
- *   - CSP-clean (style-src 'self'): every dynamic value is an SVG presentation/geometry ATTRIBUTE
- *     (the vermilion from palette.ts), never an inline `style`; non-scaling-stroke holds line weight.
+ *   - CSP-clean (style-src 'self'): every dynamic svg value is a presentation/geometry ATTRIBUTE
+ *     (the vermilion from palette.ts), never an inline style; non-scaling-stroke holds line weight.
+ *   - SVG DRAWS, HTML WRITES (council wf_ecbe0ab2-7bb, 2026-09-05): the svg holds the grid, the
+ *     bar, the dots and the scrub rule; every word and numeral — the "X of 10" axis, the bar label,
+ *     the crown's odds + "your date" tell, the x-axis offsets and caption — is HTML in the chart
+ *     text layer (chartText.tsx), sized on the type scale so it renders at the same CSS px on a
+ *     358px phone figure and a 576px single-column one (svg text scaled with the viewBox and
+ *     measured 7.0–9.7 CSS px). The x-axis block sits in flow under the svg, whose viewBox no
+ *     longer reserves a label gutter below the floor.
  *
  * STRING-FREE: every word + numeral arrives via `labels` (src/ui fills from copy.ts); the renderer
  * types no copy and no number — it reads the marks and formats through the injected slots.
@@ -54,6 +61,7 @@ import {
   domainMaxYears,
   nearestOffsetIndex,
 } from './oddsLadderGeometry'
+import { ChartText, ChartTextHost, ChartTextLayer, useCollisionLayout, type CtStyle } from './chartText'
 import './oddsLadder.css'
 
 /** Marker radii (viewBox px). The crown is larger and ringed; a NON-DURABLE dot (below-bar OR a
@@ -71,9 +79,21 @@ const CROWN_RING_R = 9
  *  (rung 9 = "on track"; no rung-10 label) so the headroom above stays the "never certain" signal. */
 const Y_AXIS_LABEL_RUNGS = [3, 5, 7] as const
 
+/** At the CEILING rung the crown callout sits BESIDE its dot (there is no headroom above the top
+ *  rung — in the svg era the rung-10 odds line sat at a zero-unit ink margin); every lower rung
+ *  stacks it above the ring, where PLOT.top's headroom was sized to hold two lines on the narrowest
+ *  arm. */
+const CROWN_SIDE_RUNG = 10
+
 /** Motion timings — mirror band.css's --dur-reveal / --ease-out (numeric for motion). */
 const EASE_OUT = [0.23, 1, 0.32, 1] as const
 const DRAW_S = 0.42
+
+/** viewBox → host fractions (the text layer's coordinate system). */
+const fx = (x: number): number => x / VIEWBOX.width
+const fy = (y: number): number => y / VIEWBOX.height
+/** The y-axis label column: end-anchored 8 units left of the axis, as the svg labels were. */
+const AXIS_FX = fx(PLOT.left - 8)
 
 /** The copy the ladder renders — all injected by @ui (oddsLadderChrome) from copy.ts. The renderer
  *  formats nothing itself: the odds clamp ("better than 9 in 10") and the calm voice live in copy. */
@@ -146,6 +166,7 @@ export function OddsLadder({ track, labels, yearsSincePlanBuilt = 0 }: OddsLadde
     if (e.pointerType !== 'touch') setScrubIdx(null)
   }
   const scrubbed = scrubIdx === null ? null : (marks[scrubIdx] ?? null)
+  const crown = marks.find((m) => m.isCrown)
 
   return (
     <figure className="ladder-figure">
@@ -162,58 +183,76 @@ export function OddsLadder({ track, labels, yearsSincePlanBuilt = 0 }: OddsLadde
           </span>
         ))}
       </p>
-      <svg
-        className="ladder-svg"
-        viewBox={`0 0 ${VIEWBOX.width} ${VIEWBOX.height}`}
-        preserveAspectRatio="xMidYMid meet"
-        role="img"
-        aria-label={labels.caption}
-      >
-        <LadderFrame barLabel={labels.barLabel} />
-        <LadderYAxis formatOdds={labels.formatOdds} />
-        <motion.g
-          initial={firstDraw && !reduce ? { opacity: 0 } : false}
-          animate={{ opacity: 1 }}
-          transition={{ duration: reduce ? 0 : DRAW_S, ease: EASE_OUT }}
+      <ChartTextHost className="ladder-plot">
+        <svg
+          className="ladder-svg"
+          viewBox={`0 0 ${VIEWBOX.width} ${VIEWBOX.height}`}
+          preserveAspectRatio="xMidYMid meet"
+          role="img"
+          aria-label={labels.caption}
         >
-          {marks.map((m) => (
-            // Keyed on the DURABLE plan offset: display re-bases, identity doesn't (council
-            // 2026-07-10 — a re-key would replay the draw-once fade, insight 047).
-            <LadderMark key={m.planOffsetYears} mark={m} domainMax={domainMax} labels={labels} />
-          ))}
-        </motion.g>
-        <LadderXAxis marks={marks} domainMax={domainMax} labels={labels} />
-        {/* the live scrub rule — SOLID (reads as "where I'm pointing", not a named moment) + the
-            transparent capture surface, topmost so no dot creates a dead zone. */}
-        <g className="ladder-scrub" aria-hidden="true">
-          {scrubbed !== null && (
-            <line
-              className="ladder-scrub-rule"
-              x1={xForOffset(scrubbed.offsetYears, domainMax)}
-              y1={PLOT.top}
-              x2={xForOffset(scrubbed.offsetYears, domainMax)}
-              y2={PLOT.bottom}
+          <LadderFrame />
+          <motion.g
+            initial={firstDraw && !reduce ? { opacity: 0 } : false}
+            animate={{ opacity: 1 }}
+            transition={{ duration: reduce ? 0 : DRAW_S, ease: EASE_OUT }}
+          >
+            {marks.map((m) => (
+              // Keyed on the DURABLE plan offset: display re-bases, identity doesn't (council
+              // 2026-07-10 — a re-key would replay the draw-once fade, insight 047).
+              <LadderMark key={m.planOffsetYears} mark={m} domainMax={domainMax} labels={labels} />
+            ))}
+          </motion.g>
+          {/* the live scrub rule — SOLID (reads as "where I'm pointing", not a named moment) + the
+              transparent capture surface, topmost so no dot creates a dead zone. */}
+          <g className="ladder-scrub" aria-hidden="true">
+            {scrubbed !== null && (
+              <line
+                className="ladder-scrub-rule"
+                x1={xForOffset(scrubbed.offsetYears, domainMax)}
+                y1={PLOT.top}
+                x2={xForOffset(scrubbed.offsetYears, domainMax)}
+                y2={PLOT.bottom}
+              />
+            )}
+            <rect
+              className="ladder-scrub-capture"
+              x={PLOT.left}
+              y={PLOT.top}
+              width={PLOT_W}
+              height={PLOT_H}
+              fill="transparent"
+              onPointerMove={onScrub}
+              onPointerDown={onScrub}
+              onPointerLeave={onLeave}
             />
-          )}
-          <rect
-            className="ladder-scrub-capture"
-            x={PLOT.left}
-            y={PLOT.top}
-            width={PLOT_W}
-            height={PLOT_H}
-            fill="transparent"
-            onPointerMove={onScrub}
-            onPointerDown={onScrub}
-            onPointerLeave={onLeave}
-          />
-        </g>
-      </svg>
+          </g>
+        </svg>
+        <ChartTextLayer className="ladder-text">
+          {/* the y-axis odds scale: a few "X of 10" anchors in the left margin so each dot's HEIGHT
+              reads as odds off the axis (no per-dot clutter, no smooth line, no 0–100% / certainty).
+              Decorative — the per-mark a11y already speaks each dot's odds. */}
+          {Y_AXIS_LABEL_RUNGS.map((rung) => (
+            <ChartText key={rung} className="ladder-yaxis-label" fx={AXIS_FX} fy={fy(yForRung(rung))} anchor="end" valign="middle">
+              {labels.formatOdds(rung)}
+            </ChartText>
+          ))}
+          {/* THE ON-TRACK BAR's label — a QUIET y-axis anchor in the left margin (the same family as
+              the "X of 10" rung anchors; the margin at rung 8.5 is structurally free — both earlier
+              in-plot placements collided with real curves, cold-read 2026-07-03). */}
+          <ChartText className="ladder-bar-label" fx={AXIS_FX} fy={fy(BAR_Y)} anchor="end" valign="middle">
+            {labels.barLabel}
+          </ChartText>
+          {crown !== undefined && <CrownCallout mark={crown} domainMax={domainMax} labels={labels} />}
+        </ChartTextLayer>
+      </ChartTextHost>
+      <LadderXAxis marks={marks} domainMax={domainMax} labels={labels} />
     </figure>
   )
 }
 
 /* ── the frame: the rung detent grid, the y-axis, the floor, and the on-track bar ─────────────── */
-function LadderFrame({ barLabel }: { barLabel: string }) {
+function LadderFrame() {
   return (
     <g aria-hidden="true">
       {/* faint reference line at every integer rung — the readable detents (odds read at this coarse
@@ -240,34 +279,8 @@ function LadderFrame({ barLabel }: { barLabel: string }) {
         strokeWidth={1.4}
       />
       {/* THE ON-TRACK BAR — at the TRUE 8.5 midpoint, solid + heavier (distinct from the dashed grid),
-          so clearing dots sit visibly above it and failing dots below. Its label is a QUIET y-axis
-          anchor in the left margin (the same family + styling as the "X of 10" rung anchors below
-          it — the margin at rung 8.5 is structurally free). The two earlier in-plot placements both
-          collided with real curves (cold-read 2026-07-03). */}
+          so clearing dots sit visibly above it and failing dots below. Its label is HTML (text layer). */}
       <line className="ladder-bar" x1={PLOT.left} y1={BAR_Y} x2={PLOT.right} y2={BAR_Y} />
-      <text className="ladder-yaxis-label ladder-droppable-label" x={PLOT.left - 8} y={BAR_Y + 4} textAnchor="end">
-        {barLabel}
-      </text>
-    </g>
-  )
-}
-
-/* ── the y-axis odds scale: a few "X of 10" anchors in the left margin so each dot's HEIGHT reads as
-   odds off the axis (no per-dot clutter, no smooth line, no 0–100% / certainty). Decorative — the
-   per-mark a11y already speaks each dot's odds — so aria-hidden, and droppable on the narrowest drawer. */
-function LadderYAxis({ formatOdds }: { formatOdds: (rung: number) => string }) {
-  return (
-    <g className="ladder-yaxis" textAnchor="end" aria-hidden="true">
-      {Y_AXIS_LABEL_RUNGS.map((rung) => (
-        <text
-          key={rung}
-          className="ladder-yaxis-label ladder-droppable-label"
-          x={PLOT.left - 8}
-          y={yForRung(rung) + 4}
-        >
-          {formatOdds(rung)}
-        </text>
-      ))}
     </g>
   )
 }
@@ -288,8 +301,9 @@ function LadderMark({
   const desc = labels.describeMark(mark)
 
   if (mark.isCrown) {
-    // the durable date: the reserved vermilion accent + a ring (halo) + the direct "your date" tell +
-    // its odds. Vermilion is a presentation attribute from palette (CSP-safe), redundant with shape.
+    // the durable date: the reserved vermilion accent + a ring (halo); the direct "your date" tell +
+    // its odds are HTML in the text layer (CrownCallout). Vermilion is a presentation attribute from
+    // palette (CSP-safe), redundant with shape.
     return (
       <g role="img" aria-label={desc}>
         <circle
@@ -301,17 +315,6 @@ function LadderMark({
           stroke={OKABE_ITO.vermilion}
         />
         <circle className="ladder-dot ladder-dot--crown" cx={x} cy={y} r={CROWN_R} fill={OKABE_ITO.vermilion} />
-        <text className="ladder-odds ladder-droppable-label" x={x} y={y - 30} textAnchor="middle">
-          {labels.formatOdds(mark.rung)}
-        </text>
-        <text
-          className="ladder-callout ladder-callout--crown ladder-droppable-label"
-          x={x}
-          y={y - 16}
-          textAnchor="middle"
-        >
-          {labels.crownLabel}
-        </text>
       </g>
     )
   }
@@ -339,7 +342,56 @@ function LadderMark({
   )
 }
 
-/* ── the household-clock x-axis: a tick under each evaluated offset + a caption ────────────────── */
+/** The crown's two-line callout — its odds (the strong register) over the direct "your date" tell —
+ *  stacked ABOVE the ringed dot (PLOT.top's headroom holds it at every rung below the ceiling), or
+ *  BESIDE the dot at the ceiling rung ({@link CROWN_SIDE_RUNG}: no headroom above the top rung, and
+ *  below it sit the bar and the neighbouring dots). Anchored by edge proximity — a right-edge crown
+ *  end-anchors so its words stay inside the figure, a left-edge one start-anchors — the band's own
+ *  labelAnchor rule. */
+function CrownCallout({ mark, domainMax, labels }: { mark: CurveMark; domainMax: number; labels: OddsLadderLabels }) {
+  const x = xForOffset(mark.offsetYears, domainMax)
+  const y = yForRung(mark.rung)
+  const gap = CROWN_RING_R + 5
+  const side = mark.rung >= CROWN_SIDE_RUNG
+  const nearRight = x > PLOT.right - 28
+  const nearLeft = x < PLOT.left + 28
+  if (side) {
+    // beside the ceiling dot: to its right unless the crown is at the right edge.
+    const toLeft = x > (PLOT.left + PLOT.right) / 2
+    return (
+      <ChartText
+        className="ladder-crown ladder-crown--side"
+        fx={fx(toLeft ? x - gap : x + gap)}
+        fy={fy(y)}
+        anchor={toLeft ? 'end' : 'start'}
+        valign="middle"
+        register="sm"
+        strong
+      >
+        <span className="ladder-crown__odds">{labels.formatOdds(mark.rung)}</span>
+        <span className="ladder-crown__tell">{labels.crownLabel}</span>
+      </ChartText>
+    )
+  }
+  return (
+    <ChartText
+      className="ladder-crown"
+      fx={fx(x)}
+      fy={fy(y - gap)}
+      anchor={nearRight ? 'end' : nearLeft ? 'start' : 'middle'}
+      valign="bottom"
+      register="sm"
+      strong
+    >
+      <span className="ladder-crown__odds">{labels.formatOdds(mark.rung)}</span>
+      <span className="ladder-crown__tell">{labels.crownLabel}</span>
+    </ChartText>
+  )
+}
+
+/* ── the household-clock x-axis (HTML in flow under the svg): a tick label under each evaluated
+   offset + the caption. Ticks that would overprint a neighbour HIDE (the "today" tick has priority
+   over its numeral neighbours); the a11y tree is untouched — every mark speaks its own offset. ── */
 function LadderXAxis({
   marks,
   domainMax,
@@ -349,21 +401,23 @@ function LadderXAxis({
   domainMax: number
   labels: OddsLadderLabels
 }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const ticks = marks.map((m) => ({ key: m.planOffsetYears, fx: fx(xForOffset(m.offsetYears, domainMax)), text: labels.formatOffset(m.offsetYears), today: m.offsetYears === 0 }))
+  useCollisionLayout(ref, 'hide', [ticks.map((t) => `${t.key}:${t.fx}:${t.text}`).join('|')])
+  const blockStyle: CtStyle = { '--ct-rows': 1 }
   return (
-    <g className="ladder-frame-text" textAnchor="middle" aria-hidden="true">
-      {marks.map((m) => (
-        <text
-          key={m.planOffsetYears}
-          className="ladder-droppable-label"
-          x={xForOffset(m.offsetYears, domainMax)}
-          y={PLOT.bottom + 20}
-        >
-          {labels.formatOffset(m.offsetYears)}
-        </text>
-      ))}
-      <text className="ladder-axis-caption ladder-droppable-label" x={(PLOT.left + PLOT.right) / 2} y={PLOT.bottom + 42}>
-        {labels.xAxisLabel}
-      </text>
-    </g>
+    <span className="ladder-xaxis" aria-hidden="true">
+      <span className="ct-block ct-block--line ladder-xticks" ref={ref} style={blockStyle}>
+        {ticks.map((t) => {
+          const s: CtStyle = { '--fx': t.fx }
+          return (
+            <span key={t.key} className="ct-block__item ladder-xtick ct-text--middle" data-ct-item={String(t.key)} data-ct-priority={t.today ? '' : undefined} style={s}>
+              {t.text}
+            </span>
+          )
+        })}
+      </span>
+      <span className="ladder-xcaption">{labels.xAxisLabel}</span>
+    </span>
   )
 }

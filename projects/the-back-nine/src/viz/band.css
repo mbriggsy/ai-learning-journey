@@ -2,26 +2,33 @@
  * src/viz/band.css — layout + STATIC token colors for the ConfidenceBand, its drawer, and the
  * enlarge modal. Loaded by the components.
  *
- * CSP DISCIPLINE (style-src 'self', no 'unsafe-inline'): all styling lives in THIS stylesheet
- * (classes), never in per-element `style={{…}}` attributes. The only colors set as SVG
+ * CSP DISCIPLINE (style-src 'self', no 'unsafe-inline'): all styling lives in stylesheets
+ * (classes), never in a style ATTRIBUTE string or an injected <style>. The only colors set as SVG
  * presentation ATTRIBUTES (fill=) are the two DYNAMIC band fills, whose values come from
  * palette.ts via scale.ts `bandStopCss()` — presentation attributes are NOT governed by
  * style-src (palette.ts CSP NOTE). Every STATIC color here is a token var() (the median ink
  * line, axis lines, text), never a re-typed hex (the canonical-source rule; tokens.css owns the
  * values, the CVD test source-binds to them).
  *
- * The motion library animates the path `d`, opacity, and transforms via the CSSOM (el.style set
- * by JS) — that is NOT a style ATTRIBUTE and is CSP-safe. We use NO motion layout-animation
- * feature (those inject a <style> element — the <MotionConfig nonce> landmine); only attribute /
- * transform / opacity tweens.
+ * CSSOM writes are permitted and used: the motion library animates the path `d`, opacity, and
+ * transforms via el.style set by JS, and the chart TEXT LAYER (chartText.css) positions every
+ * label through React style-prop custom properties (`--fx`/`--fy`), which React applies via the
+ * CSSOM as well — neither is a style attribute (e2e/design-tokens.spec.ts proves the write lands
+ * under the enforced headers). We use NO motion layout-animation feature (those inject a <style>
+ * element — the <MotionConfig nonce> landmine); only attribute / transform / opacity tweens.
+ *
+ * TEXT: this file styles NO chart text. Since 2026-09-05 (council wf_ecbe0ab2-7bb) every word
+ * and numeral the band shows is HTML in the shared chart text layer — see chartText.css for the
+ * registers and the reason (svg text scaled with the viewBox and rendered at 6.9–10 CSS px).
  */
 
 /* ── the band figure ──────────────────────────────────────────────────────────────────────── */
 .band-figure {
   margin: 0;
-  /* a container so the label-drop @container query measures the BAND's width, not the
-     viewport's — the band can sit in a narrow drawer on a wide screen. */
-  container-type: inline-size;
+}
+/* the non-enlargeable wrapper (coarse pointer): a block, like the enlarge button it stands in for. */
+.band-chart {
+  display: block;
 }
 
 .band-svg {
@@ -32,8 +39,9 @@
   touch-action: manipulation;
 }
 
-/* the click-anywhere affordance on the band (mouse convenience; the keyboard/AT path is the
-   explicit "Study the range" button below it, so the band carries no extra tabstop). */
+/* the zoom cursor over an enlargeable band — the band IS the enlarge button (.band-enlarge-surface
+   wraps it, one affordance for mouse and keyboard/AT); the class rides the svg so the cursor reads
+   over the plot itself. */
 .band-svg.is-enlargeable {
   cursor: zoom-in;
 }
@@ -47,24 +55,10 @@
 .band-grid {
   stroke: var(--line-control);
 }
-.band-frame-text {
-  fill: var(--ink-muted);
-  font-family: var(--font-body);
-  font-size: 12.5px;
-  font-variant-numeric: tabular-nums;
-}
-.band-frame-text.is-strong {
-  fill: var(--ink);
-  font-weight: var(--weight-semibold);
-}
+/* the household-clock rules: dashed, from the plot top to the svg's bottom edge, where the HTML
+   annotation block's dashed tail continues each one down to its label (chartText.css .ct-block). */
 .band-annotation-rule {
   stroke: var(--line-control);
-}
-.band-callout {
-  fill: var(--ink);
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: var(--weight-semibold);
 }
 
 /* the median p50 overlay LINE — MUST be ink, never series-blue (the blue-on-blue CVD landmine,
@@ -91,23 +85,19 @@
   stroke-dasharray: 3 6;
   vector-effect: non-scaling-stroke;
 }
-.band-placeholder-note {
-  fill: var(--ink-muted);
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-style: italic;
-}
+/* (the placeholder's worded note is HTML in the text layer — chartText.css .ct-text--sm italic) */
 
 /* all stroked band geometry keeps its weight in screen px across viewports. */
 .band-area {
   vector-effect: non-scaling-stroke;
 }
 
-/* ── the hover/scrub readout ──────────────────────────────────────────────────────────────────
-   Pointer-only (aria-hidden); positioned by SVG transform/x/y ATTRIBUTES, so nothing here is an
-   inline style (CSP style-src 'self'). The visuals never intercept the pointer; the transparent
-   capture rect does. No transitions — the readout is glued to the snapped detent and the final DOM
-   is identical with motion on or off. */
+/* ── the hover/scrub layer ────────────────────────────────────────────────────────────────────
+   Pointer-only (aria-hidden). The svg half (rule + dots) is positioned by geometry ATTRIBUTES; the
+   worded readout is HTML in the text layer (chartText.css .ct-readout), placed from its measured
+   width. The visuals never intercept the pointer; the transparent capture rect does. No
+   transitions — the readout is glued to the snapped detent and the final DOM is identical with
+   motion on or off. */
 .band-scrub {
   pointer-events: none;
 }
@@ -116,15 +106,16 @@
 .band-scrub-capture {
   pointer-events: all;
 }
-/* ONLY the enlarged (modal) variant traps a horizontal touch-drag as a scrub; the drawer leaves
-   touch alone (it taps to enlarge) and must not steal page scroll.
+/* BOTH variants trap a horizontal touch-drag as a scrub; they differ only in what they concede to
+   the page. The ENLARGED (modal) variant denies touch outright — it owns the viewport, nothing
+   behind it needs to scroll (it is reachable only on a hybrid device: ConfidenceBandPanel withholds
+   the modal under a coarse pointer). The DRAWER concedes vertical pans (pan-y, next rule).
    The rect-level rule alone is NOT enough: WebKit does not reliably honor touch-action on inner
    SVG children, so a real phone still claimed the glide as a pan and fired pointercancel — the
    scrub froze at the press point and every new value needed a fresh press ("I have to click and
    hold over and over", Briggsy's live phone read, 2026-07-10). The deny therefore ALSO sits on
-   the svg ROOT (`data-variant` is the render hook reserved for exactly this per-variant CSS)
-   and on the modal's figure — the HTML-ancestor seat every engine honors. The drawer variant
-   keeps default touch-action everywhere: page scroll over the inline chart must survive. */
+   the svg ROOT (`data-variant` is the LIVE per-variant render hook these two rules key off) and
+   on the modal's figure — the HTML-ancestor seat every engine honors. */
 .band-scrub-capture--enlarged,
 .band-svg[data-variant='enlarged'],
 .band-modal__dialog .band-figure {
@@ -160,49 +151,16 @@
   stroke: var(--ink);
   stroke-width: 1.4;
 }
-/* the readout box — token surface, never a re-typed hex (canonical-source rule). */
-.band-readout-box {
-  fill: var(--paper-raised);
-  stroke: var(--line-control);
-  stroke-width: 1;
-  filter: drop-shadow(0 1px 2px rgb(11 24 19 / 0.18));
-}
-.band-readout-text {
-  font-family: var(--font-body);
-  font-variant-numeric: tabular-nums;
-}
-.band-readout-ages {
-  fill: var(--ink);
-  font-size: 12.5px;
-  font-weight: var(--weight-semibold);
-}
-.band-readout-label {
-  fill: var(--ink-muted);
-  font-size: 11px;
-}
-.band-readout-value {
-  fill: var(--ink);
-  font-size: 13px;
-  font-weight: var(--weight-semibold);
-}
-.band-readout-note {
-  fill: var(--ink-muted);
-  font-size: 12px;
-  font-style: italic;
-}
+/* (the readout box + its lines are HTML — chartText.css .ct-readout / .ct-readout__*.)
 
-/* responsive label drop (back-nine-design §3 / phase-2 responsive-SVG contract): below a
-   legible band width, DROP the tick + annotation labels rather than shrink them past legibility.
-   ~260 CSS px of band width is the floor where the 12.5px@560-viewBox glyphs fall under ~6px on
-   screen — drop them; the band shape + non-scaling strokes still carry the signal. The scrubber
-   readout drops with them (its text is sub-legible at that width, and a touch user there can't
-   hover-scrub anyway — the drawer is mouse-only). */
-@container (max-width: 260px) {
-  .band-droppable-label,
-  .band-scrub {
-    display: none;
-  }
-}
+   RETIRED 2026-09-05: the `@container (max-width: 260px)` label-DROP guard. It existed because svg
+   text scaled with the viewBox — "below a legible band width, drop the labels rather than shrink
+   them" — with the floor written as "~6px on screen", a number no law ever set (docs/plans/
+   2-first-answer.md names a hard minimum text px and never values it). It never fired on a
+   shipping arm (the narrowest, a 390 phone, renders a 308px figure) while the labels it guarded
+   rendered at 6.9 CSS px anyway; and dropping the y-tick dollars is a content loss (WCAG 1.4.10)
+   with no substitute channel permitted (O3). HTML text never scales with the figure, so there is
+   nothing left to drop. */
 
 /* ── the drawer (direction B — the on-demand range, pulled open) ──────────────────────────── */
 .band-drawer {
@@ -324,10 +282,13 @@
   padding: var(--space-6) var(--space-6) var(--space-7);
 }
 
-/* The enlarged band fits the viewport: cap its WIDTH by viewport height (the band is ~560:500, so
-   width 68vh → height ~61vh), leaving room for the title, the legend BELOW the band, and the dialog
-   padding — all within the dialog's max-height so the modal never grows a scrollbar that reveals
-   nothing already off-screen. (68vh, not 82vh: the horizontal legend shares the height budget.) */
+/* The enlarged band fits the viewport: cap its WIDTH by viewport height. The svg is 560:380 since
+   2026-09-05 (its label gutter moved to the HTML annotation block below it), so width 68vh → svg
+   height ~46vh plus a one- or two-row annotation block (~42–80 CSS px: chartText.css .ct-block's
+   tail base 8 + rows × 33.8 + gaps), leaving room for the title,
+   the legend BELOW the band, and the dialog padding — all within the dialog's max-height so the
+   modal never grows a scrollbar that reveals nothing already off-screen. (68vh, not 82vh: the
+   horizontal legend shares the height budget; the shorter aspect leaves slack, deliberately unspent.) */
 .band-modal__dialog .band-figure {
   max-inline-size: min(100%, 68vh);
   margin-inline: auto;

@@ -17,7 +17,7 @@ export default defineConfig({
   // playwright.caddie.config.ts — dev servers, because their `?seed=` routes are DCE'd out of
   // dist/). Against THIS dist harness those specs would fail confusingly (no seeds) — keep each
   // harness to its own specs. Run them via `pnpm verify:fit` / `pnpm caddie:walk`.
-  testIgnore: ['**/vertical-fit.spec.ts', '**/caddie-walk.spec.ts'],
+  testIgnore: ['**/vertical-fit.spec.ts', '**/chart-text.spec.ts', '**/caddie-walk.spec.ts'],
   fullyParallel: true,
   forbidOnly: !!process.env.CI, // a stray test.only fails CI rather than silently narrowing the gate
   retries: process.env.CI ? 1 : 0,

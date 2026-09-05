@@ -22,7 +22,10 @@ import { defineConfig } from '@playwright/test'
  */
 export default defineConfig({
   testDir: './e2e',
-  testMatch: '**/vertical-fit.spec.ts',
+  // The chart TEXT gate (e2e/chart-text.spec.ts, 2026-09-05) rides this harness: like the fit law it
+  // needs the dev-only `?seed=` routes and a real browser's layout — and riding `verify:fit` is what
+  // makes it CI-enforced (a gate wired into no workflow is not a gate).
+  testMatch: ['**/vertical-fit.spec.ts', '**/chart-text.spec.ts'],
   fullyParallel: true,
   forbidOnly: !!process.env.CI, // a stray test.only fails CI rather than silently narrowing the gate
   retries: process.env.CI ? 1 : 0,

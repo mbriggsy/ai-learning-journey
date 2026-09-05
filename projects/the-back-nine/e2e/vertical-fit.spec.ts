@@ -51,7 +51,8 @@ import { copy, slots, staticDisclosures } from '../src/ui/copy'
 // The viewport constants (REAL/TIER/SHOWCASE/FLOOR/PHONE) and the settle recipe live in
 // e2e/reviewSurface.ts — the ONE canonical home, shared with the Caddie cold-read walk.
 
-/** The three spine seeds the council named for the frame contract. The priced-Medicare disclosure
+/** The FOUR spine seeds the frame contract walks — the council's three plus `nc`, the NC priced
+ *  face (its own rationale sits on its entry below). The priced-Medicare disclosure
  *  lines (`.cs-medicare-note` affirmation + `.cs-medicare-residual`) are per-seed HONEST, not
  *  blanket: they render only for an all-65+ household with NO ACA door (showMedicarePricedNote,
  *  keyed off the run's pricing facts never ages — insight 080) — `retired` (66/65) and `budget`
@@ -242,7 +243,7 @@ async function assertMedicareSnugLeading(page: Page): Promise<void> {
   }
 }
 
-// ── the spine frame matrix: {budget, retired, health} × {REAL, TIER, SHOWCASE} ────────────────
+// ── the spine frame matrix: {budget, retired, health, nc} × {REAL, TIER, SHOWCASE} ────────────
 
 for (const { seed, medicareNote } of SPINE_SEEDS) {
   test.describe(`?seed=${seed} — the one-frame fit law`, () => {
@@ -1085,14 +1086,17 @@ test.describe(`?seed=datenc — the NC clause on the date residual + the order c
 
 test.describe(`the honesty floor — 68rem exactly (${FLOOR.width}×${FLOOR.height})`, () => {
   test.use({ viewport: FLOOR })
-  test('the band keeps its percentile labels at the tightest in-range pane', async ({ page }) => {
+  test('the band keeps its dollar ticks at the tightest in-range pane', async ({ page }) => {
     await gotoSeedFinal(page, 'retired')
     await assertResolvedSpine(page)
-    // The ≤260px container query (band.css) must NOT fire at the 68rem floor: the labels are
-    // the color-blind reader's honesty channel (the never-color-alone law).
-    const labels = page.locator('.cs-band .band-droppable-label')
-    expect(await labels.count(), 'the band rendered no droppable labels at all').toBeGreaterThan(0)
+    // The y-tick dollars are the color-blind reader's position→dollar decoder (the never-color-alone
+    // law; O3 permits no SR substitute). They are HTML in the chart text layer since 2026-09-05 —
+    // never scaled, never dropped — so PRESENCE + visibility is the contract here; the rendered size,
+    // containment and non-overlap are chart-text.spec.ts's gate on every arm.
+    const labels = page.locator('.cs-band .band-tick')
+    expect(await labels.count(), 'the band rendered no dollar ticks at all').toBeGreaterThan(0)
     await expect(labels.first()).toBeVisible()
+    await expect(page.locator('.cs-band .band-tick--floor'), 'the $0 anchor — design-law §3’s honesty proof — must render').toHaveText('$0')
     // The 3 legend rows ride the same floor (band shape alone must never carry the encoding).
     await expect(page.locator('.cs-band .band-legend__row')).toHaveCount(3)
   })
@@ -1598,10 +1602,9 @@ test.describe(`the arrived date return (?vault=datearrived) — the aged x-axis 
     // aged year-0 endpoint, and `Today` is the wall-time marker §S2 places at x = years-elapsed.
     // Both must be present — asserting only the first would pass on a band that lost its wall
     // clock entirely, which is the two-time-bases defect in its other direction.
-    // `allTextContents`, never `allInnerTexts`: these are SVG <text> nodes and `innerText` is an
-    // HTMLElement property — it comes back null for every one of them, which reads as "the band
-    // drew no labels" when the band drew six.
-    const strongLabels = await page.locator('.fod-band .band-droppable-label.is-strong').allTextContents()
+    // The named moments are the annotation block's NAME lines (HTML, chart text layer, 2026-09-05);
+    // an interim age tick renders an EMPTY name, so the empty strings are filtered, not counted.
+    const strongLabels = (await page.locator('.fod-band .band-annotation__name').allTextContents()).filter((t) => t !== '')
     expect(
       strongLabels,
       `the aged band must name the BUILD year at year 0, never "Today" (U17 §S0). Labels: ${JSON.stringify(strongLabels)}`,

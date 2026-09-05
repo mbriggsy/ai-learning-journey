@@ -20,15 +20,23 @@ import type { BandSample } from './bandData'
 
 /** The single fixed viewBox. ALL band variants (drawer + enlarged) share it; the container
  *  scales it via width:100%/height:auto + preserveAspectRatio, and `non-scaling-stroke` keeps
- *  line weight + dash geometry constant in screen px across viewports. The height reserves a
- *  label gutter BELOW the $0 baseline (PLOT.bottom) deep enough for the de-collision's stacked
- *  rows — the normal retirement-couple case (Today + two close retirements within a few years)
- *  needs THREE rows, whose deepest line lands at PLOT.bottom + 112 = 484 (< 500). */
-export const VIEWBOX = { width: 560, height: 500 } as const
+ *  line weight + dash geometry constant in screen px across viewports. The svg holds GEOMETRY
+ *  ONLY (council wf_ecbe0ab2-7bb, 2026-09-05 — "SVG draws, HTML writes"): every label is HTML in
+ *  the chart text layer, so the viewBox reserves NO label gutter below the $0 baseline — just the
+ *  8-unit tail the annotation rules run to before the HTML annotation block takes over in flow.
+ *  (Until 2026-09-05 the height was 500: a 128-unit gutter for three stacked rows of svg text that
+ *  rendered at 6.9–10 CSS px; the HTML block below the svg now holds those rows at the type scale,
+ *  and the emptied gutter hands ~50 px back to the one-frame fit law on the two-pane arms.) */
+export const VIEWBOX = { width: 560, height: 380 } as const
 
-/** The plot rectangle inside the viewBox (room left for the y labels and the x annotations). */
+/** The plot rectangle inside the viewBox. `left` is the y-tick column: the HTML tick labels are
+ *  end-anchored 8 units left of the axis, and 92 units holds the widest catalog dollar (the seven-glyph "$0.375M" / "$1.125M" quarters of a $1.5M ceiling
+ *  at --text-xs) INSIDE the figure on the narrowest shipping arm (a 308px phone figure — measured
+ *  2026-09-05, temp/chart-text/precondition.json: 45 CSS px of ink + the 4 px gap against the 50.6
+ *  px the column renders at). Was 78 in the svg-text era. `right` leaves the horizon rule's label
+ *  room to end-anchor. */
 export const PLOT = {
-  left: 78,
+  left: 92,
   right: 540,
   top: 30,
   /** The $0 baseline — the ruin floor. */
@@ -174,40 +182,10 @@ export function nearestLatticeIndex(viewBoxX: number, latticeCount: number): num
   return idx < 0 ? 0 : idx > latticeCount - 1 ? latticeCount - 1 : idx
 }
 
-/** Readout box width (viewBox px). Single-sourced so {@link placeReadoutBox}'s edge-clamp and the
- *  rendered `<rect>` width agree by construction. Sized for the widest line — the spelled-out range
- *  label "Eight in ten land between" and the thin-cohort note — at the ~12.5px readout text. */
-export const READOUT_W = 224
-/** Horizontal text inset inside the readout box (viewBox px) — the usable line width is
- *  `READOUT_W − 2 × READOUT_PAD_X`. Lives HERE (not in the renderer) so the design-tokens
- *  e2e width gate binds to the same figure the box math uses (insight 032 — a test without
- *  a source bind is not a pin). */
-export const READOUT_PAD_X = 12
-/** Gap (viewBox px) between the scrubber rule and the readout box, so the on-rule dots stay visible. */
-export const READOUT_GAP = 14
-/** The readout box is pinned to the TOP gutter — a fixed y that never bobs with the cursor and never
- *  overlaps the median ink line (which lives mid-plot). */
-export const READOUT_TOP = PLOT.top + 6
-
-/**
- * Place the readout box for a scrubber sitting at `scrubX`. The box flips to the side OPPOSITE the
- * rule's half (rule in the left ~60% → box to the RIGHT, else LEFT) — a single mid-plot flip rather
- * than chasing the cursor (calmer, and it keeps the box clear of the rule + its dots). `tx` is then
- * clamped so the box's full width stays inside [PLOT.left, PLOT.right] — it can never clip either plot
- * edge at i=0 or i=48. `ty` is the fixed top-gutter pin. Pure; unit-tested at both edges + the flip.
- */
-export function placeReadoutBox(scrubX: number, boxW: number): { readonly tx: number; readonly ty: number } {
-  // Flip LEFT as soon as a right-placed box would overflow the plot — derived from the box FIT, not a
-  // magic fraction. A fixed 0.6·PLOT_W threshold was WIDER than the clip boundary, so for scrubX in the
-  // dead-center zone the right-placed box clamped back ONTO the rule (the opaque box painting over the
-  // live "where I'm pointing now" rule + its top dot). Tying the flip to the overflow keeps the box
-  // clear of the rule at EVERY lattice vertex (proven by the all-vertex sweep test).
-  const flipLeft = scrubX + READOUT_GAP + boxW > PLOT.right
-  const raw = flipLeft ? scrubX - READOUT_GAP - boxW : scrubX + READOUT_GAP
-  const maxTx = PLOT.right - boxW
-  const tx = raw < PLOT.left ? PLOT.left : raw > maxTx ? maxTx : raw
-  return { tx, ty: READOUT_TOP }
-}
+// (The svg-era readout box — READOUT_W / READOUT_PAD_X / READOUT_GAP / READOUT_TOP + placeReadoutBox —
+// left with the text layer on 2026-09-05: the readout is HTML now, hugs its own content, and is placed
+// from its MEASURED width by chartText.useReadoutPlacement — no fixed user-unit width for a catalog
+// string to clip against.)
 
 /** The dead-cohort dollar-withdrawal gate for the hover/scrub readout: TRUE where the surviving-couple
  *  cohort has thinned past the SAME {@link COHORT_FADE}.full onset at which the fan begins to visually
@@ -337,75 +315,21 @@ export function selectAtRangeColumn(samples: readonly BandSample[], cohortMin: n
   return null
 }
 
-// ── annotation label placement (pure, testable) ──────────────────────────────────────────────
-// The household-clock annotations (Today / each retirement / survivor boundary / horizon) render
-// as a vertical rule + a two-line text label (name + both spouses' ages). When two moments sit
-// close on the x-axis their labels would overprint, so the placer stacks a colliding label onto a
-// lower ROW. The placement is WIDTH-AWARE (a wide, edge-anchored label collides even at a generous
-// center-gap) and lives HERE as pure math so it is unit-testable without rendering.
+// ── annotation label anchoring ────────────────────────────────────────────────────────────────
+// The household-clock annotations (Today / each retirement / survivor boundary / horizon) render as
+// a vertical svg RULE plus an HTML label (name + both spouses' ages) in the annotation block under
+// the svg. Only the ANCHOR is geometry the renderer needs from here; the de-collision that used to
+// live beside it (a greedy row placer over a 6.6-units-per-glyph estimate, LABEL_CHAR_PX, with a
+// test that derived its expectations from the same constant) was retired 2026-09-05 — colliding
+// labels are now stacked from their MEASURED boxes by chartText.useCollisionLayout, so no text
+// metric ever reaches an svg coordinate and the emitted `d` strings stay byte-stable at every width.
 
 export type LabelAnchor = 'start' | 'middle' | 'end'
-
-/** Comfortable clear-space (viewBox px) required between two same-row label boxes. */
-export const LABEL_PAD = 12
-/** Approx advance width (viewBox px) of one glyph at the 12.5px Source Sans 3 label — generous so
- *  placement errs toward breathing room rather than overlap. */
-export const LABEL_CHAR_PX = 6.6
-/** Rows the placer may stack into. THREE — the normal retirement-couple case clusters THREE close
- *  moments at the left (Today, pinned at the edge, plus two retirements a few years out and a few
- *  years apart), so two rows cannot separate them (Today pushes the first retirement to row 1, and
- *  the second retirement then collides with it there). The viewBox height reserves room for all
- *  three rows below the $0 baseline (deepest line at PLOT.bottom + 112 < VIEWBOX.height). */
-export const LABEL_ROWS = 3
 
 /** Anchor for a label at viewBox x: end-anchored near the right edge (so its text never spills past
  *  the plot), start-anchored near the left, middle otherwise. */
 export function labelAnchor(x: number): LabelAnchor {
   return x > PLOT.right - 28 ? 'end' : x < PLOT.left + 28 ? 'start' : 'middle'
-}
-
-/** The horizontal box [left, right] a label occupies, given its anchor + its widest line's length. */
-export function labelExtent(x: number, anchor: LabelAnchor, chars: number): [number, number] {
-  const w = chars * LABEL_CHAR_PX
-  if (anchor === 'end') return [x - w, x]
-  if (anchor === 'start') return [x, x + w]
-  return [x - w / 2, x + w / 2]
-}
-
-export interface PlacedLabel {
-  /** The annotation's clamped svg x (where the rule sits). */
-  readonly x: number
-  readonly anchor: LabelAnchor
-  /** The row this label stacks onto (0 = top row, 1 = staggered below). */
-  readonly level: number
-  /** The label's occupied [left, right] box, for overlap assertions. */
-  readonly extent: readonly [number, number]
-}
-
-/**
- * Greedy multi-row label placement. For each annotation (LEFT→RIGHT by `yearsFromNow`), drop its
- * label onto the FIRST row whose running right-edge it clears by {@link LABEL_PAD} — consulting
- * THAT row's edge, not always row 0 (the row-1 collision bug: two close labels both fell to row 1
- * and overlapped because row 1's own running edge was written but never read). If no row clears
- * (extreme density) it lands on the last row — a rare graceful degrade, never a crash.
- *
- * Each input carries the moment's x-year and its widest text line's char count (max of the name
- * line and the ages line). Returns one {@link PlacedLabel} per input, in the same order.
- */
-export function placeAnnotationLabels(
-  items: readonly { readonly yearsFromNow: number; readonly chars: number }[],
-  horizonYears: number,
-): PlacedLabel[] {
-  const rowRight = new Array<number>(LABEL_ROWS).fill(Number.NEGATIVE_INFINITY)
-  return items.map((it) => {
-    const x = clampX(xForYear(it.yearsFromNow, horizonYears))
-    const anchor = labelAnchor(x)
-    const extent = labelExtent(x, anchor, it.chars)
-    let level = rowRight.findIndex((edge) => extent[0] >= edge + LABEL_PAD)
-    if (level === -1) level = LABEL_ROWS - 1
-    rowRight[level] = extent[1]
-    return { x, anchor, level, extent }
-  })
 }
 
 function clamp01(t: number): number {

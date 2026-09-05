@@ -8,10 +8,7 @@ import {
   TwoFutures,
   composeTfReadoutLines,
   tfNearestYear,
-  tfPlaceReadout,
-  tfReadoutWidth,
   twoFuturesCeiling,
-  visibleXTicks,
   type TwoFuturesLabels,
   type TwoFuturesPoint,
   type TwoFuturesReadoutRow,
@@ -108,60 +105,6 @@ describe('twoFuturesCeiling — hand-derived ceilings on the fan-shared humane l
   })
 })
 
-describe('visibleXTicks — endpoint-collision guard on the ages-dialect axis (cold-read 2026-07-10)', () => {
-  // The live collision this guard exists for: the retired seed (66/65, truncated horizon 27)
-  // puts its first decade tick ("70 / 69") at year 4 — a few viewBox px past the end of
-  // "Today 66 / 65". The endpoint carries the named moment; the colliding tick yields.
-  const RETIRED = {
-    today: 'Today 66 / 65',
-    horizon: '93 / 92',
-    ticks: [
-      { years: 4, label: '70 / 69' },
-      { years: 14, label: '80 / 79' },
-    ],
-    maxYears: 27,
-  }
-
-  it('drops the tick colliding with the Today endpoint, keeps the clear one (the live ?seed=retired shape)', () => {
-    const kept = visibleXTicks(RETIRED.ticks, RETIRED.today, RETIRED.horizon, RETIRED.maxYears)
-    expect(kept.map((t) => t.label)).toEqual(['80 / 79'])
-  })
-
-  it('drops a tick colliding with the HORIZON endpoint label', () => {
-    const kept = visibleXTicks(
-      [{ years: 26, label: '92 / 91' }],
-      RETIRED.today,
-      RETIRED.horizon,
-      RETIRED.maxYears,
-    )
-    expect(kept).toEqual([])
-  })
-
-  it('the guard reads the real label widths — the same tick clears a short Today label and yields to a wide one (non-vacuous)', () => {
-    // Year 6 on the 27-year plot centers ~152 viewBox-px in: past a 5-char "today" extent,
-    // inside a 13-char "Today 66 / 65" extent — one tick, two label widths, opposite verdicts.
-    const tick = [{ years: 6, label: '72 / 71' }]
-    expect(visibleXTicks(tick, 'today', RETIRED.horizon, RETIRED.maxYears).map((t) => t.label)).toEqual([
-      '72 / 71',
-    ])
-    expect(visibleXTicks(tick, RETIRED.today, RETIRED.horizon, RETIRED.maxYears)).toEqual([])
-  })
-
-  it('the rendered axis carries only the surviving ticks', () => {
-    const { container } = render(
-      <TwoFutures
-        withArm={withArm}
-        withoutArm={withoutArm}
-        labels={{ ...labels, todayLabel: RETIRED.today, horizonLabel: RETIRED.horizon }}
-        xTicks={RETIRED.ticks}
-      />,
-    )
-    // maxYears here is the arms' 30 (close enough to the retired shape for the same verdict).
-    const rendered = [...container.querySelectorAll('.tf__axis--xtick')].map((el) => el.textContent)
-    expect(rendered).toEqual(['80 / 79'])
-  })
-})
-
 describe('TwoFutures — the render gate', () => {
   it('renders NOTHING when either arm has fewer than 2 points (a line needs two)', () => {
     const one: TwoFuturesPoint[] = [{ yearsFromNow: 0, medianReal: 500_000 }]
@@ -196,13 +139,20 @@ describe('TwoFutures — non-color identity (the reader is color blind)', () => 
 describe('TwoFutures — converging end labels never collide', () => {
   it('the two end labels separate by at least the minimum (≈26px) even as the lines converge', () => {
     const { container } = render(<TwoFutures withArm={withArm} withoutArm={withoutArm} labels={labels} />)
-    const labelNodes = container.querySelectorAll<SVGTextElement>('text.tf__label')
+    // HTML in the text layer (2026-09-05): positioned by viewBox FRACTIONS; the first-pass geometric
+    // separation is what the elbow leaders' drops are drawn to, so it is pinned here in viewBox units — the
+    // text layer then MEASURES the rendered (possibly wrapped) boxes and pushes further if needed.
+    const labelNodes = container.querySelectorAll<HTMLElement>('.tf__label')
     expect(labelNodes).toHaveLength(2)
-    const y0 = Number(labelNodes[0]!.getAttribute('y'))
-    const y1 = Number(labelNodes[1]!.getAttribute('y'))
+    const y0 = Number(labelNodes[0]!.style.getPropertyValue('--fy')) * TF_VIEW.h
+    const y1 = Number(labelNodes[1]!.style.getPropertyValue('--fy')) * TF_VIEW.h
     // The raw end-y's are ~2px apart (500k vs 508k on an 800k axis); the separation logic pushes
     // the labels to exactly LABEL_MIN_SEPARATION apart so a reader can tell them apart.
     expect(Math.abs(y0 - y1)).toBeGreaterThanOrEqual(25.9)
+    // and both are marked for the measured vertical pass (never dropped — a required channel)
+    for (const n of labelNodes) expect(n.hasAttribute('data-ct-item')).toBe(true)
+    // the svg itself carries NO text: the words never scale with the viewBox again.
+    expect(container.querySelectorAll('svg text')).toHaveLength(0)
   })
 })
 
@@ -286,23 +236,6 @@ describe('the pure scrub helpers (the jsdom-unreachable pointer glue’s tested 
     expect(tfNearestYear(Number.NaN, 30)).toBe(0)
   })
 
-  it('tfPlaceReadout sits right of the rule while it fits, flips left near the right edge, and never leaves the plot', () => {
-    const boxW = 160
-    const nearLeft = tfPlaceReadout(TF_PLOT.left, boxW)
-    expect(nearLeft.tx).toBeGreaterThanOrEqual(TF_PLOT.left)
-    expect(nearLeft.tx + boxW).toBeLessThanOrEqual(plotRight)
-    const nearRight = tfPlaceReadout(plotRight, boxW)
-    expect(nearRight.tx + boxW).toBeLessThanOrEqual(plotRight)
-    expect(nearRight.tx).toBeLessThan(plotRight - boxW + 1) // flipped left of the rule
-    // every lattice x keeps the box fully inside the plot (the all-vertex sweep, fan precedent)
-    for (let y = 0; y <= 30; y++) {
-      const x = TF_PLOT.left + (y / 30) * (plotRight - TF_PLOT.left)
-      const { tx } = tfPlaceReadout(x, boxW)
-      expect(tx).toBeGreaterThanOrEqual(TF_PLOT.left)
-      expect(tx + boxW).toBeLessThanOrEqual(plotRight)
-    }
-  })
-
   it('composeTfReadoutLines: ages lead (dropping when unsupplied); an ended arm’s pair drops with its line', () => {
     const full = composeTfReadoutLines(labels, {
       yearsFromNow: 5,
@@ -319,12 +252,6 @@ describe('the pure scrub helpers (the jsdom-unreachable pointer glue’s tested 
     const noAges = composeTfReadoutLines(labels, { yearsFromNow: 5, ages: '', withValue: '$1', withoutValue: '$2' })
     expect(noAges[0]!.kind).toBe('label')
   })
-
-  it('tfReadoutWidth hugs the longest line with a calm floor', () => {
-    expect(tfReadoutWidth([{ text: 'x' }])).toBe(120)
-    const wide = tfReadoutWidth([{ text: 'A considerably longer series label' }])
-    expect(wide).toBeGreaterThan(120)
-  })
 })
 
 describe('TwoFutures — reduced motion changes nothing about the final DOM', () => {
@@ -333,14 +260,15 @@ describe('TwoFutures — reduced motion changes nothing about the final DOM', ()
   async function settled(reduce: boolean) {
     REDUCE = reduce
     const { container } = render(<TwoFutures withArm={withArm} withoutArm={withoutArm} labels={labels} />)
-    const svg = container.querySelector('svg')!
-    await waitFor(() => expect(svg).toHaveStyle('opacity: 1'))
+    // the fade rides the reveal wrapper (svg + text layer together) since 2026-09-05
+    const reveal = container.querySelector('.tf-reveal')!
+    await waitFor(() => expect(reveal).toHaveStyle('opacity: 1'))
     const shape = {
       lines: container.querySelectorAll('path.tf__line').length,
       dashed: container.querySelectorAll('path.tf__line--dashed').length,
       circles: container.querySelectorAll('circle.tf__marker').length,
       polygons: container.querySelectorAll('polygon.tf__marker').length,
-      labels: container.querySelectorAll('text.tf__label').length,
+      labels: container.querySelectorAll('.tf__label').length,
     }
     cleanup()
     REDUCE = false

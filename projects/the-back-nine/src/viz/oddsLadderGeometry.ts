@@ -25,17 +25,25 @@ import { BAR_RUNG, LADDER_MAX_RUNG } from './curveMarks'
 /** The single fixed viewBox. Both ladder render contexts share it; the container scales it via
  *  width:100% + preserveAspectRatio, and `non-scaling-stroke` holds line weight constant across
  *  viewports. Landscape (time across, a short 0–10 ladder up) — the ladder is wider than tall.
- *  Height reserves a gutter below the floor for the x-axis offset labels. */
-export const VIEWBOX = { width: 560, height: 340 } as const
+ *  The svg holds GEOMETRY ONLY (council wf_ecbe0ab2-7bb, 2026-09-05 — "SVG draws, HTML writes"):
+ *  the x-axis offset labels + caption are an HTML block in flow under the svg, so the height
+ *  reserves no label gutter below the floor — just an 8-unit margin. (Was 340 with a 64-unit
+ *  gutter for svg text that rendered at 7.0–8.7 CSS px.) */
+export const VIEWBOX = { width: 560, height: 284 } as const
 
-/** The plot rectangle inside the viewBox: room left for the rung axis + the bar's "on track" label,
- *  a top margin so a rung-10 (ceiling) dot has headroom (it is never clipped at the very edge — the
- *  headroom is itself the "you can never reach certain" signal), and a bottom gutter for the
- *  household-clock offset labels. */
+/** The plot rectangle inside the viewBox: room left for the rung axis + the bar's "on track" label
+ *  (HTML at --text-xs, end-anchored 8 units left of the axis — 84 units holds "on track" inside the
+ *  figure on a 358px phone figure), a top margin so a rung-10 (ceiling) dot has headroom (it is
+ *  never clipped at the very edge — the headroom is itself the "you can never reach certain"
+ *  signal; the crown's callout stacks ABOVE its dot at every rung below the ceiling and sits BESIDE it
+ *  only at rung 10 — OddsLadder's CROWN_SIDE_RUNG), and the floor at the bottom. */
 export const PLOT = {
   left: 92,
   right: 528,
-  top: 40,
+  /** 56 (was 40 in the svg-text era): the headroom above the ceiling rung now also seats the crown's
+   *  two-line HTML callout ABOVE a rung-9 dot on the narrowest arm (a 358px phone figure renders the
+   *  56 units as ~36 px; the callout needs ~37 px above the ring's 14-unit gap — measured 2026-09-05). */
+  top: 56,
   /** rung 0 — the floor (0 of 10). */
   bottom: 276,
 } as const

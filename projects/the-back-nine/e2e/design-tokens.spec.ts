@@ -1,6 +1,4 @@
 import { test, expect } from '@playwright/test'
-import { copy } from '../src/ui/copy'
-import { READOUT_PAD_X, READOUT_W } from '../src/viz/bandGeometry'
 
 /**
  * Design-token REALITY proofs (real Chromium, real built dist/, real enforced CSP from
@@ -114,84 +112,52 @@ test.describe('design tokens — fonts + the figure law', () => {
 })
 
 /**
- * The scrub-readout STATIC line widths (council fast-follow 2026-06-28, filed at the
- * bandReadoutThinNote wording decision): SVG <text> does not wrap, so a catalog string wider
- * than the readout box's usable width silently CLIPS out of the box — and the thin-note IS the
- * honesty clause (the dead-cohort withdrawal). The one-off measure at mint covered the string
- * as it was that day; this arm re-measures the LIVE catalog strings in the shipped face under
- * the enforced CSP on every build, bound to the same READOUT_W/READOUT_PAD_X the box math uses
- * (insight 032 — no source bind, no pin). Probes are class-styled clones inside an UNSCALED
- * svg (no viewBox ⇒ 1 user unit = 1 CSS px = 1 band viewBox unit), so getComputedTextLength()
- * returns exactly the units READOUT_W is stated in.
+ * THE CHART TEXT LAYER'S CSP PREMISE (council wf_ecbe0ab2-7bb, 2026-09-05). Every word on the four
+ * result charts is HTML positioned by React style-prop custom properties (`--fx`/`--fy`,
+ * src/viz/chartText.tsx). React applies a style prop through the CSSOM (element.style.setProperty),
+ * which the strict `style-src 'self'` policy does NOT govern — a style ATTRIBUTE string does. This
+ * arm proves BOTH halves in the real browser under the real served headers (the same harness as
+ * csp.spec.ts): a CSSOM custom-property position LANDS, and the discriminating control — the same
+ * position written as a style attribute string — is BLOCKED. If Chromium ever changed either, the
+ * text layer would silently pile every label at the origin; this is where that would go red.
+ *
+ * (Until 2026-09-05 this file also pinned the svg readout box's fixed width against the catalog
+ * strings — the box is HTML now and hugs its content, so a catalog string can no longer clip.)
  */
-test.describe('the band scrub readout — static catalog lines fit the box', () => {
-  test('bandReadoutThinNote + the widest static label fit; the probe can fail', async ({ page }) => {
+test.describe('the chart text layer — CSSOM custom properties land under the enforced CSP', () => {
+  test('a --fx custom property set via the CSSOM positions the node; a style ATTRIBUTE string is blocked', async ({ page }) => {
     await page.goto('/')
-    // The .band-readout-* rules ship in the LAZY IntakeApp chunk's stylesheet (band.css rides
-    // ConfidenceBand), which '/' loads via App.tsx's post-mount chunk WARM — an async race the
-    // probe must not run ahead of (it lost on CI while winning locally — the class silently
-    // absent ⇒ the probe inherits the 18px body size; insight 070: wait for the PRESENCE the
-    // awaited event mints — the rule itself — never assume; a never-arriving rule times out RED).
-    await page.waitForFunction(() =>
-      [...document.styleSheets].some((s) => {
-        try {
-          return [...s.cssRules].some((r) => r.cssText.includes('.band-readout-note'))
-        } catch {
-          return false
-        }
-      }),
-    )
-    const measured = await page.evaluate(
-      async (texts) => {
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-        svg.setAttribute('width', '800')
-        svg.setAttribute('height', '120')
-        svg.style.position = 'absolute'
-        svg.style.visibility = 'hidden'
-        document.body.appendChild(svg)
-        const probe = (text: string, cls: string) => {
-          const t = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-          t.setAttribute('class', cls)
-          t.textContent = text
-          svg.appendChild(t)
-          return t
-        }
-        const note = probe(texts.note, 'band-readout-text band-readout-note')
-        const label = probe(texts.label, 'band-readout-text band-readout-label')
-        const overflow = probe(
-          `${texts.note} ${texts.note} ${texts.note}`,
-          'band-readout-text band-readout-note',
-        )
-        await document.fonts.ready
-        const noteStyle = getComputedStyle(note)
-        return {
-          note: note.getComputedTextLength(),
-          label: label.getComputedTextLength(),
-          overflow: overflow.getComputedTextLength(),
-          fontFamily: noteStyle.fontFamily,
-          fontSize: noteStyle.fontSize,
-          faceLoaded: document.fonts.check('12px "Source Sans 3 Variable"'),
-        }
-      },
-      { note: copy.bandReadoutThinNote, label: copy.bandReadoutRangeLabel },
-    )
-
-    // The probe measured the REAL face at the REAL size — a fallback face or a dead class
-    // would make the fit assertion vacuous (insight 029/033: verify the gate's target).
-    expect(measured.faceLoaded, 'Source Sans 3 Variable not loaded — the measure ran on a fallback').toBe(true)
-    expect(measured.fontFamily).toContain('Source Sans 3')
-    expect(measured.fontSize, 'the .band-readout-note face moved — recalibrate this gate').toBe('12px')
-
-    const usable = READOUT_W - 2 * READOUT_PAD_X
-    expect(
-      measured.note,
-      `bandReadoutThinNote renders ${measured.note}px of ${usable}px usable — the honesty clause clips`,
-    ).toBeLessThanOrEqual(usable)
-    expect(
-      measured.label,
-      `bandReadoutRangeLabel renders ${measured.label}px of ${usable}px usable`,
-    ).toBeLessThanOrEqual(usable)
-    // Control arm (burned/070 — the proof must be able to fail): a tripled string overflows.
-    expect(measured.overflow, 'the width probe cannot detect an overflow — it is vacuous').toBeGreaterThan(usable)
+    const probe = await page.evaluate(() => {
+      const host = document.createElement('div')
+      host.style.position = 'relative'
+      host.style.width = '400px'
+      host.style.height = '40px'
+      host.style.visibility = 'hidden'
+      document.body.appendChild(host)
+      // the text layer's channel: CSSOM property writes
+      const cssom = document.createElement('span')
+      cssom.style.position = 'absolute'
+      cssom.style.setProperty('--fx', '0.5')
+      cssom.style.left = 'calc(var(--fx) * 100%)'
+      cssom.textContent = 'x'
+      host.appendChild(cssom)
+      // the control: the same position as a style ATTRIBUTE string (what style-src 'self' forbids)
+      const attr = document.createElement('span')
+      attr.setAttribute('style', 'position:absolute;left:300px')
+      attr.textContent = 'x'
+      host.appendChild(attr)
+      const out = {
+        cssomLeft: parseFloat(getComputedStyle(cssom).left),
+        attrLeft: getComputedStyle(attr).left,
+        attrPosition: getComputedStyle(attr).position,
+      }
+      host.remove()
+      return out
+    })
+    // 0.5 × 400px host = 200px: the CSSOM write landed
+    expect(probe.cssomLeft, 'the CSSOM custom-property position did not land — the text layer would collapse').toBeCloseTo(200, 0)
+    // the attribute string was refused (an unpositioned span reports left "auto"): the CSP is enforced
+    expect(probe.attrPosition, 'a style ATTRIBUTE applied under the served CSP — the policy is not enforced (bypassCSP?)').toBe('static')
+    expect(probe.attrLeft).toBe('auto')
   })
 })

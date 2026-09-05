@@ -1,22 +1,27 @@
 /*
  * src/viz/oddsLadder.css — layout + STATIC token colors for the D2c OddsLadder.
  *
- * CSP DISCIPLINE (style-src 'self', no 'unsafe-inline'): all styling lives HERE (classes), never in
- * per-element `style={{…}}`. The ONLY color set as an SVG presentation ATTRIBUTE is the vermilion
- * crown (from palette.ts — a data accent), and presentation attributes are NOT governed by style-src
- * (palette.ts CSP NOTE). Every STATIC color here is a token var() (ink, lines, paper), never a
- * re-typed hex — tokens.css owns the values, the CVD test source-binds to them.
+ * CSP DISCIPLINE (style-src 'self', no 'unsafe-inline'): all styling lives in stylesheets (classes),
+ * never in a style ATTRIBUTE string or an injected <style>. The ONLY color set as an SVG presentation
+ * ATTRIBUTE is the vermilion crown (from palette.ts — a data accent), and presentation attributes are
+ * NOT governed by style-src (palette.ts CSP NOTE). Every STATIC color here is a token var() (ink,
+ * lines, paper), never a re-typed hex — tokens.css owns the values, the CVD test source-binds to them.
+ * The chart text layer positions its labels through React style-prop custom properties — CSSOM
+ * writes, permitted (chartText.css header).
  *
  * The crown's vermilion is the ONE chromatic accent the ladder spends, redundant with the ring +
  * the "your date" tell + the dot's height — color is never the sole signal (the reader is
  * color-blind). The crown CALLOUT text is ink (vermilion text fails the 4.5:1 floor); only the DOT
  * + ring wear the hue.
+ *
+ * TEXT: this file styles NO svg text. Since 2026-09-05 (council wf_ecbe0ab2-7bb) every word and
+ * numeral the ladder shows is HTML in the shared chart text layer — see chartText.css for the
+ * registers and the reason (svg text scaled with the viewBox and rendered at 7.0–9.7 CSS px). The
+ * ladder-specific HTML pieces (the crown callout, the x-axis block) are styled at the bottom.
  */
 
 .ladder-figure {
   margin: 0;
-  /* the @container label-drop measures the LADDER's width (it can sit in a narrow drawer). */
-  container-type: inline-size;
 }
 
 .ladder-svg {
@@ -37,15 +42,13 @@
   vector-effect: non-scaling-stroke;
 }
 /* THE ON-TRACK BAR at true 8.5 — solid + heavier than the dashed grid, so position (above = clears,
-   below = dips) reads at a glance. Ink, never hue. */
+   below = dips) reads at a glance. Ink, never hue. Its label is HTML (.ladder-bar-label, the same
+   register + column as the "X of 10" rung anchors). */
 .ladder-bar {
   stroke: var(--ink);
   stroke-width: 1.6;
   vector-effect: non-scaling-stroke;
 }
-/* the bar's label rides .ladder-yaxis-label (a quiet margin anchor beside its bar — the same
-   family as the "X of 10" rung anchors; both prior in-plot placements collided with real curves,
-   cold-read 2026-07-03). */
 
 /* ── the marks (shape encodes state; color redundant) ────────────────────────────────────────── */
 .ladder-dot {
@@ -75,32 +78,6 @@
 .ladder-ring {
   stroke-width: 1.6;
   vector-effect: non-scaling-stroke;
-}
-
-/* ── the callouts + odds ─────────────────────────────────────────────────────────────────────── */
-.ladder-odds {
-  fill: var(--ink);
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: var(--weight-semibold);
-  font-variant-numeric: tabular-nums;
-}
-/* the y-axis odds scale — quiet "X of 10" anchors in the left margin so a dot's height reads as odds
-   off the axis (back-nine-design §2/§3: the X-of-10 frame, no per-dot clutter, no 0–100%/certainty). */
-.ladder-yaxis-label {
-  fill: var(--ink-muted);
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-}
-.ladder-callout {
-  font-family: var(--font-body);
-  font-size: 12px;
-}
-/* the crown's "your date" — ink + semibold (NOT vermilion text: it fails the 4.5:1 floor). */
-.ladder-callout--crown {
-  fill: var(--ink);
-  font-weight: var(--weight-semibold);
 }
 
 /* ── the scrub (the band's grammar: a solid "where I'm pointing" rule + a reserved readout) ───── */
@@ -135,25 +112,43 @@
   visibility: visible;
 }
 
-/* ── the household-clock x-axis ──────────────────────────────────────────────────────────────── */
-.ladder-frame-text {
-  fill: var(--ink-muted);
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
+/* ── the HTML text pieces the ladder owns (registers + positioning: chartText.css) ─────────────── */
+/* the crown callout: its odds (--text-sm, strong) stacked over the direct "your date" tell (--text-xs),
+   centered on the dot's x, above the ring — or BESIDE the dot at the ceiling rung (.ladder-crown--side,
+   OddsLadder's CROWN_SIDE_RUNG = 10: start-anchored to its right, end-anchored to its left past mid-plot). */
+.ladder-crown {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  line-height: var(--leading-tight);
 }
-.ladder-axis-caption {
-  fill: var(--ink-muted);
-  font-size: 11px;
+.ladder-crown__odds {
+  display: block;
+}
+.ladder-crown__tell {
+  display: block;
+  font-size: var(--text-xs);
+}
+/* the x-axis block in flow under the svg: one line of offset ticks (hidden where they would
+   overprint — the "today" tick has priority), then the caption as a quiet overline. */
+.ladder-xaxis {
+  display: block;
+}
+.ladder-xtick {
+  color: var(--ink-muted);
+}
+.ladder-xcaption {
+  display: block;
+  margin-top: var(--space-1);
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
   text-transform: uppercase;
   letter-spacing: var(--tracking-overline);
 }
 
-/* responsive label drop (back-nine-design §3 / phase-2 responsive-SVG contract): below a legible
-   width, DROP the text labels rather than shrink them past legibility — the dots + the bar still
-   carry the shape signal, and the a11y tree (per-mark aria-labels) is untouched. */
-@container (max-width: 280px) {
-  .ladder-droppable-label {
-    display: none;
-  }
-}
+/* RETIRED 2026-09-05: the `@container (max-width: 280px)` label-DROP guard — svg text scaled with the
+   viewBox, so below a width the labels were hidden rather than shrunk further; it never fired on a
+   shipping arm and dropping the odds axis is a content loss. HTML text does not scale; nothing is
+   left to drop. */

@@ -101,16 +101,20 @@
     viewports, so the 68rem-breakpoint honesty-floor derivation below is UNTOUCHED (the gate's
     worst case is min(available, cap) = available at 1088px — twoPaneHonestyFloor.test.ts). */
   --pane-band-min: 23rem; /* the two-pane band column floor (grid col 2 minmax). Keeps the band-figure
-    (pane width − ~50px .band-drawer chrome) above the 260px label-drop floor (src/viz/band.css:179)
-    even at the tightest in-range width. */
+    (pane width − ~50px .band-drawer chrome) wide enough that its HTML y-tick column (PLOT.left − 8
+    viewBox units, rendered at figure/560) holds the widest catalog dollar at --text-xs — the gate is
+    src/ui/__tests__/twoPaneHonestyFloor.test.ts. (Until 2026-09-05 the floor was the svg-text era's
+    260px label-DROP @container in band.css, since retired with the chart text layer.) */
   --bp-laptop: 68rem; /* the two-pane breakpoint. NOTE: @media can't read a custom property, so this
     value is RE-STATED as a literal in the @media rules that two-pane the result (search "--bp-laptop"
     to find every mirror). DERIVATION (proven against source, council 2026-06-29): at 68rem/1088px,
     minus ~56px .result gutters, the band pane = 1088 − 56 − 576 (--measure left pane) − 48 (--space-9
-    gap) = 408px; minus ~50px .band-drawer chrome (band.css:192 padding 48 + 2px border) = a 358px
-    band-figure — ~98px clear of the 260px label-drop floor. 60rem yields ~230px and SILENTLY drops the
-    never-color-alone percentile labels (the color-blind reader's honesty channel), so 68rem is the
-    floor, never 60–64rem. */
+    gap) = 408px; minus ~50px .band-drawer chrome (band.css `.band-drawer`: 24+24 padding, 1px border
+    per side) = a 358px band-figure — CONFIRMED in real Chromium 2026-09-05 (358.0 at 1088×800). Its
+    y-tick column renders 84 × 358/560 ≈ 54px against 45px of ink for the widest dollar at --text-xs;
+    60rem would yield a ~230px figure and a ~35px column that cannot hold one, so 68rem is the floor,
+    never 60–64rem. (The svg-text era's derivation compared the same 358 to a 260px label-DROP floor —
+    retired 2026-09-05 with the chart text layer; the labels no longer scale or drop.) */
   --laptop-fit-height: 800px; /* THE ONE-FRAME FIT LAW (council 2026-07-08, wf_a2d93977-960): a
     resolved two-pane answer + the R13 disclaimer land inside a viewport THIS tall with no scroll.
     ONE source — app.css / result.css / confidence.css comments point HERE (a 768-vs-800

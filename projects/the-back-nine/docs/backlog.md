@@ -666,7 +666,7 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 
 - The app has no icons at all — the "local-first PWA" is not installable and its tab/bookmark is unidentifiable
 - No WebKit arm anywhere — the app is verified only in Chromium, while the vault's durability story is explicitly about Safari's eviction
-- The one-frame honesty law is verified only at fixed pixel viewports — never at the enlarged text setting this audience actually uses
+- The one-frame honesty law is verified only at fixed pixel viewports — never at the enlarged text setting this audience actually uses. *(Partial, 2026-09-05: the four charts' text now FOLLOWS the browser font — `e2e/chart-text.spec.ts` asserts the smallest chart text grows at a 20px default; the svg era shrank it. The fit law itself is still unmeasured under a raised default.)*
 
 ### Nothing a friend can read, nothing a professional can read
 
@@ -708,7 +708,42 @@ covers Sam · OOP $3,000 · four accounts (Alex 401(k) $900k 60/30/10 +$20k +$8k
 $150k basis $100k 70/20/10 · Sam Traditional IRA $120k 50/40/10) · no other income → "about 5 years out — around 2031, about 9 of 10 odds",
 final tier ~30 s after the provisional.
 
-1. **P1, EVERY viewport, not only the phone — the two result charts' whole text layer renders at 6.5–8 CSS px at 390 and 8–10 on the
+1. ✅ **SHIPPED 2026-09-05 — SVG DRAWS, HTML WRITES (council wf_ecbe0ab2-7bb, 8/10; `docs/architecture.md §12`; insights 115 + 116).**
+   The scope was FOUR charts, not two: `RecommendationViz` (560×210) and `TwoFutures` (560×280) shared the fixed viewBox with no drop guard
+   at all. MEASURED first in real Chromium (two fleets, 18 agents; `temp/chart-text/`, KEPT): band ticks **6.9 CSS px on the 390 phone (308px
+   figure) · 8.0 at the 1088 floor (358) · 10.0 on the 1536 window (446)**; the band's readout label 6.1 on the phone; the ladder's svg text
+   7.0–9.7; RV 7.7–8.3 on the phone; TF 7.5–8.1 on the phone but 16–17.5 on the laptop (a fixed 752px dialog). Three findings the walk had
+   NOT filed: the phone's only dollar channel (the touch-scrub readout) vanished 600 ms after the finger lifted (`ConfidenceBand.tsx` cleared
+   on an ungated `pointerleave` while the comment beside it claimed the pin held); the band's named moments had rendered at weight 400 in the
+   muted tick fill since U6 (`b1ff189a` shipped a compound `.band-frame-text.is-strong` over a parent/child class pairing); and raising the
+   browser font SHRANK phone chart text (6.88 → 5.99 CSS px at a 24px default — rem chrome eats the fixed viewport). The register's
+   294/353 figures were a 375px-content artifact; the phone renders 308/358. **The council's red team killed the filed FIX SHAPE and every
+   in-svg lift:** an end-anchored `$2.25M` at any legible size clips LEFT against its fixed 70-unit gutter into a plausible WRONG dollar on
+   the household's only position→dollar decoder (O3), with every proposed font-size gate green. So every word left the svg: the shared text
+   layer `src/viz/chartText.tsx` (viewBox-fraction positions as React style-prop custom properties — CSSOM, proven under the served CSP with
+   a blocked-attribute control in `design-tokens.spec.ts`; three borrowed registers xs/sm/lg; colliders from MEASURED boxes — `LABEL_CHAR_PX`,
+   `TF_AXIS_CHAR_W`, `TF_READOUT_CHAR_W`, `placeAnnotationLabels`, `READOUT_*` all deleted), the band's annotation block in flow under a
+   380-unit viewBox (the emptied gutter made the fit-law frames SHORTER: 398 → 344 px at REAL, 320 → 285 at the floor — measured as the
+   council's blocking precondition: one row on every fit-law household, two on the scrolling date route, never three), `PLOT.left` 78 → 92
+   (band + TF parity), the ladder's viewBox 340 → 284 with `PLOT.top` 40 → 56 so the crown callout sits ABOVE a rung-9 dot (beside it at the
+   ceiling), RV/TF end labels that WRAP with a measured vertical pass, the ≤260/280 drop guards retired, the touch pin gated on
+   `pointerType`, the dead selector made a descendant. GATES: `e2e/chart-text.spec.ts` on the fit harness (19 arms — rendered px ≥ `--text-xs`
+   read from tokens · containment in the card · pairwise non-overlap · nothing named hidden · text grows with the reader's font ·
+   reduced-motion identity · planted CLIP + SHRINK controls) and `twoPaneHonestyFloor.test.ts` re-pointed to the y-tick column's geometry.
+   Witnessed at 1536×791 / 1088×800 / 390×844 on all four charts. **RESIDUALS (pilot unless marked):** (a) ⚑ HIS — the three-register
+   collapse and the HTML-over-svg look (Caddie walk owed on the four faces); (b) ⚑ HIS — an unnamed interim age tick now HIDES on a
+   collision (the cure for the cold-read's "70 / 69 reads as a defect" flag) rather than taking a row; (c) RV's end labels ride `--text-xs`
+   strong in a column widened 168 → 192 units (sm wrapped a 24-char label to THREE lines on the phone and overprinted its neighbour; at xs
+   in the old column it still wrapped to three and touched the hero) — the bars gave up ~6% of their run; the honest longer fix is
+   above-bar labels (the plot widens again), a layout fork for his eye; the RV axis labels moved to the plot's TOP edge because a 134px phone
+   box could not hold them and the hero below the bars; (d) TF's scrub readout stays mouse/pen-only BY DESIGN (the sheets scroll under touch) —
+   the band and ladder now pin on touch, so a phone reader has no TF dollar channel; (e) the band callouts seam is supported by the layer but
+   no production caller fills it (`bandData.ts`); (f) filed by the council, not built: the band's keyboard lockout (SC 2.1.1 — the enlarge
+   button is the only tabstop, the scrub has no keyboard path), `prefers-contrast` / `forced-colors` absent repo-wide; (g) the 320 reflow arm
+   lets a y-tick borrow up to ~6px of its card's padding (inside the card, on screen) — the gate's bound is the card, not the svg box.
+   <details><summary>original finding — kept for the reasoning (its 294/353 phone figures were a 375px-content artifact)</summary>
+
+   **P1, EVERY viewport, not only the phone — the two result charts' whole text layer renders at 6.5–8 CSS px at 390 and 8–10 on the
    laptop.** Both SVGs draw into a FIXED 560-wide viewBox (`bandGeometry.ts:27`, `oddsLadderGeometry.ts:29`) at `width:100%`, so rendered
    size = user px × width/560: the band's `.band-frame-text` 12.5 → 6.6 at the 294px phone figure (the $0 / $1.25M … tick labels are ~4px
    of ink beside 15px body copy); the ladder's y-axis 11 → 6.9 at 353. Each file's label-DROP guard (`band.css:200` ≤260 · `oddsLadder.css:155`
@@ -720,6 +755,7 @@ final tier ~30 s after the provisional.
    FIX SHAPE: a step ladder of user-unit sizes (or one size stamped from the measured container width) targeting a rendered 10–13 CSS px on
    every tier, `LABEL_CHAR_PX` scaled with it, the drop thresholds re-tuned to be the last resort for a genuinely narrow drawer. The $0
    anchor tick is design-law §3's honesty proof — it must be legible, never dropped.
+   </details>
 2. **P2, phone — the answer strip, the entire "answer during entry" surface, sits above the fold on arrival at EVERY step after the first
    (y −51 … −178), including the flagship first provisional reading, which landed on step 12 where only `aria-live` announced it.** The
    refuters' experiment: it is NOT `focus()`'s scroll-into-view (arrival is identical with focus scrolling forced off) — the shell's scroll

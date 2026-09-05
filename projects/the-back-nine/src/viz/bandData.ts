@@ -122,8 +122,11 @@ export interface BandLabels {
   /** Accessible name of the x-axis group (e.g. "Years from now"). */
   readonly xAxisLabel: string
   /** Legend rows describing the three emphasis tiers, in plain words (most-likely / middle
-   *  half / 8-in-10). The legend is supplementary; the in-place callouts carry the primary
-   *  non-color signal. */
+   *  half / 8-in-10). TODAY THE LEGEND IS THE PRIMARY non-color channel for the tiers: no production
+   *  caller supplies `callouts` (ConfidenceStatement.tsx and FuckOffDate.tsx both omit them —
+   *  resolveBandData defaults them to `[]` below), so the in-place callouts render only in tests. The
+   *  callout seam stays supported (the text layer renders them when supplied); the claim that they
+   *  carry the primary signal was false from U6 until 2026-09-05. */
   readonly legendMedian: string
   readonly legendInner: string
   readonly legendOuter: string

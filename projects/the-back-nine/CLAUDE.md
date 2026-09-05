@@ -34,7 +34,7 @@ Precedence on conflict: the **roadmap's You-Are-Here table** wins on build statu
 | `pnpm verify:aca` | ACA enhanced-subsidy **re-verify** gate (fails if `aca-last-verified.json` is stale/unconfirmed) |
 | `pnpm verify:state-tax` | State-income-tax **re-verify** gate for the priced roster {NC, PA, FL} (mirrors `verify:aca`; all three sit on the same **annual** drift cadence — NC's ~Aug-2026 rate-certification checkpoint was retired 2026-08-02 by S.L. 2026-41 § 44.1(a)) |
 | `pnpm verify:csp` | Real-Chromium **CSP enforcement** gate (`e2e/csp.spec.ts` serves `dist/` through `vercel.json`'s headers — a blocked inline script + a blocked cross-origin fetch, each with a no-CSP control arm) |
-| `pnpm verify:fit` | Real-Chromium **vertical-fit** gate (`e2e/vertical-fit.spec.ts` on `pnpm dev` — the one-frame fit law + the date-route order contract; own harness `playwright.fit.config.ts`) |
+| `pnpm verify:fit` | Real-Chromium **vertical-fit** gate (`e2e/vertical-fit.spec.ts` on `pnpm dev` — the one-frame fit law + the date-route order contract; own harness `playwright.fit.config.ts`) **+ the chart-text gate** (`e2e/chart-text.spec.ts`, same harness: every chart word ≥ `--text-xs`, inside its card, never overprinting, on PHONE/320/FLOOR/REAL — [`docs/architecture.md §12`](docs/architecture.md)) |
 | `pnpm verify:doc-stats` | Doc test-count **drift** gate (README + roadmap must match the live `vitest` suite) |
 
 ## Layers & import boundaries (ESLint-enforced)

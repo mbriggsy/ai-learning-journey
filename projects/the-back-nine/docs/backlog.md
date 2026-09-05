@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register: **45 open items** (53 entries, 8 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open — re-counted 2026-09-04) consolidated
+> The complete open register: **46 open items** (54 entries, 8 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open — re-counted 2026-09-04) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -693,6 +693,83 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 - ViewOnlyBanner, UpdateToast and AppErrorBoundary render on every session and have never appeared in any bundle or card
 - Post-ceremony landing announce is UNPROVEN — needs a real NVDA/VoiceOver pass
 - THREE NEVER-COLD-READ FACES — fold into the S6/S7 aged-seed walk, never standalone (datesplit, datemixed, the save ceremony)
+
+### The phone intake walk (390×844, 2026-09-04) — fifteen defects and two copy items, all filed, none built
+
+`M` · **pilot (1–15) · briggsy (16)** · filed 2026-09-04 — the ranked queue's item 4, walked end-to-end by the pilot on the Playwright MCP
+(19 frames + the per-step DOM log in `temp/phone-walk/`, KEPT past this session by Briggsy's call), then graded by a 4-lens fleet with two
+source-reading refuters per finding: 32 of 47 confirmed, 15 refuted — including four of the pilot's own candidates. The refuters' CORRECTED
+fixes are the prescriptions below; their full text is `temp/phone-walk/review-result-final.json` — transcribe anything still needed before
+a squeaky clears `temp/`. **Fidelity ceiling:** CSS viewport only — no DPR, no touch (`(pointer: coarse)` never matches), and headless
+Chromium reserves a 15px CLASSIC scrollbar, so content ran at 375px; a real phone is 390 with overlay scrollbars. The typed household:
+Alex 58 working ($150k pay, PIA $2,333/mo from 2035, $30k investment income) · Sam 60 retired at 58 (PIA $2,000/mo from 2033) · NC ·
+$84,000/yr all-in (typed under the monthly default first — R19 refused it, textbook) · premium $1,100 / benchmark $1,000 · employer plan
+covers Sam · OOP $3,000 · four accounts (Alex 401(k) $900k 60/30/10 +$20k +$8k match · Sam Roth IRA $200k 70/20/10 · Alex brokerage
+$150k basis $100k 70/20/10 · Sam Traditional IRA $120k 50/40/10) · no other income → "about 5 years out — around 2031, about 9 of 10 odds",
+final tier ~30 s after the provisional.
+
+1. **P1, EVERY viewport, not only the phone — the two result charts' whole text layer renders at 6.5–8 CSS px at 390 and 8–10 on the
+   laptop.** Both SVGs draw into a FIXED 560-wide viewBox (`bandGeometry.ts:27`, `oddsLadderGeometry.ts:29`) at `width:100%`, so rendered
+   size = user px × width/560: the band's `.band-frame-text` 12.5 → 6.6 at the 294px phone figure (the $0 / $1.25M … tick labels are ~4px
+   of ink beside 15px body copy); the ladder's y-axis 11 → 6.9 at 353. Each file's label-DROP guard (`band.css:200` ≤260 · `oddsLadder.css:155`
+   ≤280) sits just BELOW the phone width, and band.css's own comment encodes the floor as "~6px". Refuters: the laptop two-pane band figure
+   is 358px → 8.0 CSS px, his 1536×791 → 9.95 — the phone is the worst case, not a special case; the LADDER half is P3 (a touch PINS the
+   `.ladder-readout` sentence at body size — `OddsLadder.tsx:129-146` — so it is wayfinding, not information, loss; the crown's "9 of 10"
+   repeats the h2 subline); a bare `@container` font bump BREAKS the band's de-collision (`LABEL_CHAR_PX = 6.6` at `bandGeometry.ts:350-359`
+   assumes 12.5px) and `.band-callout` is never supplied; one container step re-scales inside its own range (a 1.7× cliff at the boundary).
+   FIX SHAPE: a step ladder of user-unit sizes (or one size stamped from the measured container width) targeting a rendered 10–13 CSS px on
+   every tier, `LABEL_CHAR_PX` scaled with it, the drop thresholds re-tuned to be the last resort for a genuinely narrow drawer. The $0
+   anchor tick is design-law §3's honesty proof — it must be legible, never dropped.
+2. **P2, phone — the answer strip, the entire "answer during entry" surface, sits above the fold on arrival at EVERY step after the first
+   (y −51 … −178), including the flagship first provisional reading, which landed on step 12 where only `aria-live` announced it.** The
+   refuters' experiment: it is NOT `focus()`'s scroll-into-view (arrival is identical with focus scrolling forced off) — the shell's scroll
+   position simply carries across the step swap, so `scroll-margin` is inert. FIX: on step change scroll the shell to 0 (strip + thread +
+   heading in view) and keep focus-to-heading with `preventScroll: true`; verify the heading still lands in view at 844 under the strip's
+   tallest state (item 3).
+3. **P2, phone — the strip's 7.5rem reserved floor (`intake.css` `.answer-strip`) is exceeded on 9 of 11 steps (139–186px vs 120),** so
+   the mid-interaction reflow the comment exists to prevent is live at phone width. FIX: derive the reserve from the structural cap —
+   `missingFactNames` caps at 3 names + one "N more" (`AnswerStrip.tsx:83-87`) — at the narrowest width, as a container-query arm; never the
+   186 sample.
+4. **P2 — focus lands on `<body>` on every account-editor transition** (open · commit · Edit · Never mind): nothing in the a11y tree says a
+   form opened, and on the phone the editor's only exits ("Add this account" / "Never mind") sit 200px+ below the fold with the nav blacked
+   out (`intake.css:478-480`). Sibling of Tier 0 "A repeat Add tap over an already-visible block". FIX: give `AccountEntry` its own
+   `tabIndex={-1}` heading ("Add an account" / "Edit this account" — which also closes the shipped "Add this account"-inside-an-edit label
+   defect) focused on mount through `focusHeading`, AND focus the list heading / the new row on the return leg.
+5. **P2 — the progress thread runs BACKWARD in the a11y tree:** `aria-valuenow/max` moved 1/9 → 2/9 → 3/12 as the work answers un-gated
+   steps, so the announced percentage can fall after an honest answer and disagree with the painted fill. FIX: announce POSITION, never a
+   percentage of a moving denominator (the design law's "quiet thread, SR-announced position").
+6. **P2, phone — a blocked Continue is a silent no-op, and on two-screen steps the error it refuses over can be off-screen.** Family of
+   Tier 2 "The dead-end repair beat". FIX: focus the first offending control on block (insight 054's remedy).
+7. **P2 — "Still needed: Cost basis" names the fact, never the account or its owner, over four committed rows** (the producer holds
+   `ownerIndex` + kind and drops both). FIX: name the account through the strip's producer ("Cost basis — Alex's brokerage account").
+8. **P2, phone — on the empty accounts step the filled Continue outranks "Add an account", and the only objection is the strip,
+   off-screen.** Refuter: the predicate is NOT `length === 0` — the gate is `intakeMap.ts:193-195` (date route: Σ `valueToday` ≤ 0 →
+   blocked); the emphasis inversion must key off that same gate. FIX: while it blocks, Add is primary and Continue quiet.
+9. **P3, phone — the account list mixes two row layouts at 390** (short names keep Edit/Remove inline right-aligned, long names wrap them
+   under). Refuter: `flex-wrap: nowrap` is broken — `.account-row` has a THIRD flex child, the live `FieldError` (`questions.tsx:1008-1010`,
+   `sanity.ts:358-380`). FIX: at narrow widths make the actions a fixed row under the summary on EVERY row.
+10. **P3 — the three blend legs lack `enterKeyHint`** (add after `autoComplete` at `AllocationEntry.tsx:145`, the `fields.tsx` attribute
+    order), and `enterkeyhint` is hardcoded "next" everywhere including the last field of every step ("done" law).
+11. **P3 — loose field hints are not wired by `aria-describedby`** (the SS claim-year range, "Your full retirement age is 67.", the Sex
+    survival-tables note).
+12. **P3 — the account editor pre-selects the owner** (person 0): a required per-person fact carrying a silent default, 957px above its
+    commit; the desktop walk's seed shape masks it.
+13. **P3 — eight "Edit" / "Remove" buttons with no row identity** in the a11y tree (the budget list already carries row-specific names).
+14. **P3 — the intake shell has no `<main>` landmark** — the longest surface in the product is the only one without one.
+15. **P3, phone — the Continue row and the account editor's exits are consistently a scroll below the fold on the paired-person steps**
+    (names 1433px, Social Security 1675px, the editor 1487–1740px) — the phone scrolls by design, so no defect on its own; recorded because
+    2, 4 and 8 compound it.
+16. **HIS WORDS (refuted as defects, true as observations):** the R19 period alarm names two readings and quotes neither — a reader
+    computes 84,000 × 12 himself ("$84,000 a month is about $1,008,000 a year — tap the one you meant" is the never-force-the-reader
+    shape; one refuter confirmed it verbatim, the second vote died on a safeguard) · the floor line quotes a relative distance ("about a
+    year sooner") beside a hero that quotes an absolute year · the 124-word spend gloss (306px) between the field and the period control —
+    both in ONE viewport (the pilot's "a full scroll below" was wrong), density not fold.
+
+**CLEARED by the fleet (do not re-file):** the focused heading "flush at y0" (the background holds clean; refuted) · the ssa.gov link's
+22px height (SC 2.5.8 met by the spacing exception) · money fields "without a format example" (the law inverts it) · "(required)" on one
+control (it renders on five) · R19 under the monthly default (textbook: aria-invalid + role=alert + icon, cleared by "Each year") · the
+disclaimer two-mount swap (holds: in-frame mount dark, trailing mount after the doors) · no horizontal overflow anywhere · every button
+≥44px tall · focus-to-heading on every step · labels above every field, `inputmode` right on every field.
 
 ### The dead-end repair beat — four residuals the 2026-09-03 review confirmed and did not build
 

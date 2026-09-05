@@ -5,7 +5,7 @@
 > the roadmap carry the test count under `verify:doc-stats` (this file re-typing it rotted twice, so
 > `d5df3609` made pointing the rule).
 >
-> **The full open register is [`docs/backlog.md`](docs/backlog.md)** — 45 open items, each traced to the raw
+> **The full open register is [`docs/backlog.md`](docs/backlog.md)** — 46 open items, each traced to the raw
 > obligations behind it. This file ranks only what is next; **a queue of ~16 is not the open surface, so
 > read the register before filing anything as new.**
 >
@@ -229,8 +229,10 @@ green); the 2026-09-03 commits were `3c4c64c5` (CI 33806460606 green) · `2eb0ee
 green) · `41f9edee` · `530e6545` · `53486a39`).**
 
 **FIRST: nothing is staged — items 3, 5 and 7 (the mechanism) SHIPPED, and so did the `rothPlanRanked`
-singular defect under 9a (the 2026-09-04 session, `8a6fc6b7` + `add8dea8`). Start at item 4
-(the phone walk, findings only) or item 8 of the ranked plan below; 6 needs your parity word, 7 your
+singular defect under 9a (the 2026-09-04 session, `8a6fc6b7` + `add8dea8`). Item 4 WALKED the same session
+(fifteen defects + two copy items filed in the register, none built; the tape is KEPT in `temp/phone-walk/`
+by Briggsy's call — 19 frames, the DOM log, both fleet results). Start at the new item 12 (the result charts'
+text layer, P1 on EVERY viewport, pilot) or item 8 of the ranked plan below; 6 needs your parity word, 7 your
 sentence, and the new item 11 (the goal picker's "basics covered" lead on a failing household) your words
 over a pilot gate.** The apply
 recipe that used to sit here ran verbatim (its scripts had to become `.cjs` under the package's
@@ -245,7 +247,7 @@ wrong), four lying source comments swept (`db.ts:273`, `Result.tsx:345-347`, `to
 `model.ts:2253`) and Plan 4's dead "record carries seedA/seedB" clause struck. **Pilot-buildable with no
 word from him:** items 4, 8 (all three arms), 9b, 9c, 10, and item 11's gate — item 7's mechanism and the
 `rothPlanRanked` singular defect (under 9a) both SHIPPED 2026-09-04. **His tokens, batched:** item 6's parity word · item 7's
-sentence · item 9a's ranking fork (three arms now written in the register) · the `ensureSeed` fix shape · item 11's lead (the goal picker over a failing household — the gate is pilot, the words yours).
+sentence · item 9a's ranking fork (three arms now written in the register) · the `ensureSeed` fix shape · item 11's lead (the goal picker over a failing household — the gate is pilot, the words yours) · the phone walk's two copy items (register Tier 2 "The phone intake walk", finding 16: the R19 alarm quoting both readings, and the floor line's absolute year).
 
 **THEN, the 2026-09-03 ranked plan, as re-verified by 24 agents (12 verify→skeptic pairs; 10 of 12
 verifiers refuted on a material point) — statuses current:**
@@ -253,7 +255,11 @@ verifiers refuted on a material point) — statuses current:**
 2. ✅ Completed-intake dead end, build half — `53486a39`. Decision half yours (register Tier 3).
 3. ✅ Intake beforeunload — shipped this session, with the review's two holes (the open entry
    buffers · the PWA "Refresh now" collision) closed in the same commit. See the ride-along block.
-4. The phone-viewport (390×844) intake walk — findings only, no fixes; the desktop walk cleared the
+4. ✅ **WALKED 2026-09-04 — fifteen defects + two copy items, filed in the register (Tier 2 "The phone intake
+   walk"), none built; the typed household is recorded there this time.** The P1 is not phone-only: both
+   result charts render their text at 6.5–8 CSS px on a phone and 8–10 on the laptop (item 12). Four of the
+   pilot's own candidates were refuted by the fleet (listed under CLEARED there). Original filing:
+   The phone-viewport (390×844) intake walk — findings only, no fixes; the desktop walk cleared the
    copy and the mechanics, not the fold.
    ⚑ **2026-09-04:** the 2026-08-20 walk's typed values were NEVER recorded (second time — record them this
    time). Mint from `?seed=date`'s shape (Alex 58 working / Sam 60 retired at 58, `devSeeds.ts:127-184`)
@@ -389,6 +395,12 @@ verifiers refuted on a material point) — statuses current:**
     (`Result.tsx`). The WORDS are yours, and the fork (a second key for the failing cohort vs one
     verdict-neutral lead) is a Caddie card. Register: Tier 0 "The goal picker tells an already-failing
     household".
+12. The result charts' text layer (M, pilot, P1 on EVERY viewport): both SVGs draw into a fixed 560-wide
+    viewBox, so the band's tick labels render at 6.6 CSS px on a phone and 8–10 on the laptop, and each
+    file's label-drop guard sits just below the phone width. Register Tier 2 "The phone intake walk", finding
+    1, carries the refuters' corrected shape — a step ladder of user-unit sizes with `LABEL_CHAR_PX` scaled
+    alongside; NOT a bare `@container` font bump (it breaks the band's de-collision). Then items 2–4 of that
+    entry (the strip above the fold · the reserved floor · the editor's focus) are the phone-specific P2s.
 
 **Also filed today, pilot, with exact fixes:** register Tier 2 "The dead-end repair beat" (four
 residuals from item 2's review) and "A repeat Add tap over an already-visible block" (from item 1's).

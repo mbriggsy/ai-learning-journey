@@ -31,10 +31,12 @@ export const VIEWBOX = { width: 560, height: 380 } as const
 
 /** The plot rectangle inside the viewBox. `left` is the y-tick column: the HTML tick labels are
  *  end-anchored 8 units left of the axis, and 92 units holds the widest catalog dollar (the seven-glyph "$0.375M" / "$1.125M" quarters of a $1.5M ceiling
- *  at --text-xs) INSIDE the figure on the narrowest shipping arm (a 308px phone figure — measured
- *  2026-09-05, temp/chart-text/precondition.json: 45 CSS px of ink + the 4 px gap against the 50.6
- *  px the column renders at). Was 78 in the svg-text era. `right` leaves the horizon rule's label
- *  room to end-anchor. */
+ *  at --text-xs) INSIDE the figure on a 390 phone (a 308px figure — measured 2026-09-05,
+ *  temp/chart-text/precondition.json: 45 CSS px of ink + the 4 px gap against the 50.6 px the
+ *  column renders at). On the 320 reflow arm the gate also walks (chart-text.spec.ts ARMS) the
+ *  figure is 238px and that dollar borrows 9.3px of the drawer's padding instead — bounded live
+ *  there by the gate's assertTickColumn, never by this comment. Was 78 in the svg-text era.
+ *  `right` leaves the horizon rule's label room to end-anchor. */
 export const PLOT = {
   left: 92,
   right: 540,

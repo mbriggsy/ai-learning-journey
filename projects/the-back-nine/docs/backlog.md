@@ -730,7 +730,8 @@ final tier ~30 s after the provisional.
    `pointerType`, the dead selector made a descendant. GATES: `e2e/chart-text.spec.ts` on the fit harness (19 arms — rendered px ≥ `--text-xs`
    read from tokens · containment in the card · pairwise non-overlap · nothing named hidden · text grows with the reader's font ·
    reduced-motion identity · planted CLIP + SHRINK controls) and `twoPaneHonestyFloor.test.ts` re-pointed to the y-tick column's geometry.
-   Witnessed at 1536×791 / 1088×800 / 390×844 on all four charts. **RESIDUALS (pilot unless marked):** (a) ⚑ HIS — the three-register
+   Witnessed at 1536×791 / 1088×800 / 390×844 on the band, the ladder and TwoFutures; RecommendationViz was witnessed at 1536 and 390 only
+   (the 1088 capture holds no RV node) and its gate arm is still open (see the RV gate entry). **RESIDUALS (pilot unless marked):** (a) ⚑ HIS — the three-register
    collapse and the HTML-over-svg look (Caddie walk owed on the four faces); (b) ⚑ HIS — an unnamed interim age tick now HIDES on a
    collision (the cure for the cold-read's "70 / 69 reads as a defect" flag) rather than taking a row; (c) RV's end labels ride `--text-xs`
    strong in a column widened 168 → 192 units (sm wrapped a 24-char label to THREE lines on the phone and overprinted its neighbour; at xs
@@ -740,7 +741,35 @@ final tier ~30 s after the provisional.
    the band and ladder now pin on touch, so a phone reader has no TF dollar channel; (e) the band callouts seam is supported by the layer but
    no production caller fills it (`bandData.ts`); (f) filed by the council, not built: the band's keyboard lockout (SC 2.1.1 — the enlarge
    button is the only tabstop, the scrub has no keyboard path), `prefers-contrast` / `forced-colors` absent repo-wide; (g) the 320 reflow arm
-   lets a y-tick borrow up to ~6px of its card's padding (inside the card, on screen) — the gate's bound is the card, not the svg box.
+   lets an end-anchored label borrow its card's padding (inside the card, on screen) — the gate's bound is the CARD named per chart, not the svg
+   box. The old "~6px" is retired (not reproducible from any kept artefact). MEASURED by the gate's own `borderline` arm (2026-09-05): on the
+   three seeds the gate ran before that arm the band's widest tick at 320 is 32.1px against a 35.7px column — no borrow at all; the shipped
+   worst case (`borderline`'s `$0.375M`, 45.0px) hangs 9.3px left of the 238px figure into the drawer's 25px chrome, 15.7px clear of the card
+   edge (`assertTickColumn` reds it inside 4px); the ladder's "on track" (44.3px against a 43.2px column on a 288px figure) takes ~1px of the
+   page gutter, which is why the ladder's bound is `main.result` — it has no padded card of its own (council 2026-09-05 owns what yields there);
+   (h) ⚑ HIS + council-HELD — **"what yields when the room runs out" on the 320 arm** (council wf_1b45326f-9e8, 2026-09-05, 8/10 —
+   `docs/council-log.md`; the law it wrote is `docs/architecture.md §12` "the room is not the ink"). THREE exhibits, one mechanism: the band's
+   scrub readout's nowrap lines paint 13.0px past their own border box on every column of the 238px host (the 38% cap is ACQUITTED — it bounds
+   the BOX, not the ink — and 2.4px past the plot at the flip column; at a 20px root the same shape reaches the 390 phone); the ladder crown's
+   headroom at rung 9 (escapes the figure top at 320 and at root-20; PLOT.top 64 ties by 0.17px, 68 compresses every rung — geometry change
+   REJECTED); the ladder's "on track" label column (~1px into the gutter at 320/root-16, ~13px at root-20 — DERIVED, now rendered by the
+   root-20 instrument arm, never sanctioned); and a FOURTH the instrument's first render found (2026-09-05): at 320 × root-20 the rung-7
+   "7 of 10" anchor OVERPRINTS "on track" (22 viewBox units of rung spacing = 11.3px on the 288px figure, against two ~21px-tall --text-xs
+   anchors) — the same column, declared with it (`test.fail` on the ladder instrument; the `[instrument]` stdout line carries the numbers).
+   A hide-on-collision layout over the rung anchors (the x-tick precedent — the anchors are wayfinding, "on track" is the named one) is the
+   obvious remedy shape; it lands with the column's other oracles, not alone. SHIPPED with the verdict: `.ladder-crown--side` (the ceiling branch had NO CSS rule and no seed
+   reached it — `?seed=atceiling` renders it on every arm now), the instrument (a classic-scrollbar 320 arm, the 320 × root-20 arms that
+   RENDER + REPORT the three quantities as run annotations, the readout under the reader's-font arm, a five-line seed guard on the readout
+   sweep), `fonts.ready` re-place in both chart-text hooks. STILL OPEN — the remedy for the readout's 320 shape, a taste fork the council held
+   for HIS cold read at 320 + the instrument's numbers: (a) `min-width: min-content` on `.ct-readout` (the dissent — design-engineer + 3;
+   flips to SHIP if min-content is CONSTANT across the 49 columns at every catalog composition, or reserved by a hidden widest specimen, AND
+   the ~16/49 rule-covered columns with a 62%×79% box cold-read acceptable), (b) wrap the figures (rejected by "figures never break" unless a
+   deliberate two-line dollar), (c) the readout LEAVES the plot for a flow row in the drawer reserved at its tallest (~115px against the
+   one-frame fit law — measure `verify:fit` against the reserved height first). Whatever lands, land its oracles WITH it, each with a plant:
+   every readout LINE inside its own border box; the crown vs the MARKS bounded to the figure; the side flip's monotonicity. Until then the
+   gate's 320 readout arms are `test.fail`-DECLARED expected failures (`HELD_READOUT_320` in `e2e/chart-text.spec.ts`) — Playwright reds the
+   run the day one passes, which is the forcing function to delete the declaration with the remedy. The TwoFutures readout on a fine-pointer
+   320 host is the same shape (its ~117px content-sized box against a ~166px plot cannot clear the rule mid-corridor) and rides the same hold.
    <details><summary>original finding — kept for the reasoning (its 294/353 phone figures were a 375px-content artifact)</summary>
 
    **P1, EVERY viewport, not only the phone — the two result charts' whole text layer renders at 6.5–8 CSS px at 390 and 8–10 on the

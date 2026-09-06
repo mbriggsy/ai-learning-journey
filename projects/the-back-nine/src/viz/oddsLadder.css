@@ -122,6 +122,19 @@
   text-align: center;
   line-height: var(--leading-tight);
 }
+/* BESIDE the dot the two lines must sit flush against the dot's side, so the text alignment follows
+   the primitive's anchor class instead of centring: start-anchored (right of the dot) ragged-right,
+   end-anchored (left of the dot) ragged-left. Until 2026-09-05 this branch had NO rule (council
+   wf_1b45326f-9e8 — the ceiling crown centred its lines inside an anchored box); `?seed=atceiling`
+   renders it and the chart-text gate walks it on every arm. */
+.ladder-crown--side.ct-text--start {
+  justify-items: start;
+  text-align: left;
+}
+.ladder-crown--side.ct-text--end {
+  justify-items: end;
+  text-align: right;
+}
 .ladder-crown__odds {
   display: block;
 }

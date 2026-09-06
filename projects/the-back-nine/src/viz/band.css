@@ -39,13 +39,6 @@
   touch-action: manipulation;
 }
 
-/* the zoom cursor over an enlargeable band — the band IS the enlarge button (.band-enlarge-surface
-   wraps it, one affordance for mouse and keyboard/AT); the class rides the svg so the cursor reads
-   over the plot itself. */
-.band-svg.is-enlargeable {
-  cursor: zoom-in;
-}
-
 /* axis + grid — token colors, never hue. The horizontal $ gridlines ride the SAME visible
    weight as the vertical milestone rules (cold-read 2026-07-03: --line-soft horizontals read
    "way too faint" against the clearly-legible verticals — one grid, one weight). */
@@ -87,7 +80,10 @@
 }
 /* (the placeholder's worded note is HTML in the text layer — chartText.css .ct-text--sm italic) */
 
-/* all stroked band geometry keeps its weight in screen px across viewports. */
+/* the DATA strokes keep their weight in screen px across viewports (.band-median, .band-area,
+   .band-placeholder-edge, .band-scrub-rule, .band-scrub-dot). The FRAME above — .band-axis,
+   .band-grid, .band-annotation-rule — deliberately carries no vector-effect and scales with the
+   figure, dash patterns included. */
 .band-area {
   vector-effect: non-scaling-stroke;
 }

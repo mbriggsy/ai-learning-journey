@@ -43,6 +43,9 @@ describe('RecommendationViz — the accessible figure', () => {
 
   it('carries the direct end-of-bar labels for BOTH arms (no color legend)', () => {
     const { container } = renderViz()
+    // SVG draws, HTML writes (council wf_ecbe0ab2-7bb, 2026-09-05): a <text> back inside the chart
+    // svg is the regression — the words would scale with the 560-unit viewBox again.
+    expect(container.querySelectorAll('svg text')).toHaveLength(0)
     const text = container.textContent ?? ''
     expect(text).toContain(LABELS.withLabel)
     expect(text).toContain(LABELS.withoutLabel)

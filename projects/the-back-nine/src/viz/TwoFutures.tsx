@@ -422,7 +422,12 @@ function TfScrubLayer({
 
 /** The readout box — HTML in the text layer, hugging its own lines and seated beside the rule from
  *  its MEASURED width (the svg era sized it from a 6.6-units-per-glyph estimate that the 13px value
- *  line already exceeded). A truncated arm simply has no dot and no readout pair at this year. */
+ *  line already exceeded). Seated inside the PLOT, the band's contract (ConfidenceBand ScrubReadout):
+ *  a whole-host corridor let it drift over the end-label column — the REQUIRED non-color channel —
+ *  at the later years (chart-text gate, 2026-09-05). The box is content-sized (~117 px at the lever
+ *  sheet's 752 px host) against a 430 px plot, so one side always has room there; a host under
+ *  ~430 px would have to cover the rule, which only a touch device (no scrub) reaches today.
+ *  A truncated arm simply has no dot and no readout pair at this year. */
 function TfReadout({
   labels,
   row,
@@ -436,7 +441,9 @@ function TfReadout({
 }) {
   const boxRef = useRef<HTMLSpanElement>(null)
   const lines = composeTfReadoutLines(labels, row)
-  useReadoutPlacement(boxRef, { hostRef, ruleFx: lines.length > 0 ? fx(ruleX) : null, plotLeftF: 0, plotRightF: 1, topF: READOUT_TOP_FY })
+  // TF_PLOT.right is a MARGIN (the end-label column), not a coordinate — the plot's right edge is
+  // TF_VIEW.w − TF_PLOT.right, exactly as the capture rect's width is computed above.
+  useReadoutPlacement(boxRef, { hostRef, ruleFx: lines.length > 0 ? fx(ruleX) : null, plotLeftF: fx(TF_PLOT.left), plotRightF: fx(TF_VIEW.w - TF_PLOT.right), topF: READOUT_TOP_FY })
   if (lines.length === 0) return null
   return (
     <span className="ct-readout tf__readout" ref={boxRef} data-tf-readout="">

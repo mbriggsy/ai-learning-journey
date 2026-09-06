@@ -275,10 +275,24 @@ export function useCollisionLayout(
     const host = hostRef.current
     if (!host) return
     layoutCollisions(host, mode, selector)
-    if (typeof ResizeObserver === 'undefined') return
+    // The webfonts load through JS imports (main.tsx) under font-display: swap, so the first layout
+    // can measure FALLBACK glyphs; a swap changes the items' widths but not the HOST's box, so the
+    // ResizeObserver below never fires for it. Re-run once when the fonts settle (council
+    // wf_1b45326f-9e8, 2026-09-05). Cancel-guarded: a host unmounted before the fonts land is skipped.
+    let live = true
+    const fonts = typeof document !== 'undefined' ? document.fonts : undefined
+    if (fonts) void fonts.ready.then(() => live && layoutCollisions(host, mode, selector))
+    if (typeof ResizeObserver === 'undefined') {
+      return () => {
+        live = false
+      }
+    }
     const ro = new ResizeObserver(() => layoutCollisions(host, mode, selector))
     ro.observe(host)
-    return () => ro.disconnect()
+    return () => {
+      live = false
+      ro.disconnect()
+    }
     // the caller names what moves the labels (their ids, positions and strings) in `deps`
   }, [hostRef, mode, selector, ...deps])
 }
@@ -299,7 +313,9 @@ export interface ReadoutPlacementOpts {
 
 /**
  * Place the readout box beside its rule from the box's MEASURED width: right of the rule while
- * that fits inside the plot, else left; then clamp fully inside the plot. Never covers the rule.
+ * that fits inside the plot, else left; then clamp fully inside the plot. Never covers the rule while
+ * the host is wider than ~250 CSS px (chartText.css .ct-readout carries the derivation) — and the
+ * width it measures is the BORDER BOX: a nowrap line can paint past it on a host too narrow for the cap.
  * (The svg era did this in user units against a fixed READOUT_W — a catalog string wider than the
  * box clipped silently; an HTML box hugs its content, so the only question left is WHERE.)
  */
@@ -327,12 +343,26 @@ export function useReadoutPlacement(boxRef: RefObject<HTMLElement | null>, opts:
       box.style.setProperty('--ry', `${(topF * hostH).toFixed(2)}px`)
     }
     place()
+    // A webfont swap after the first paint re-sizes the box's lines; the box observer below sees a
+    // box that GROWS, but a swap to a narrower face shrinks it and is still seen — the one-shot on
+    // fonts.ready is belt-and-braces for the same reason useCollisionLayout carries it (its host
+    // never resizes on a swap). Cancel-guarded for an unmount before the fonts land.
+    let live = true
+    const fonts = typeof document !== 'undefined' ? document.fonts : undefined
+    if (fonts) void fonts.ready.then(() => live && place())
     // --rx/--ry are absolute px: a PINNED touch readout (the finger has lifted) must follow a rotation
     // or a resize, so re-place on either box moving — the same observer discipline as useCollisionLayout.
-    if (typeof ResizeObserver === 'undefined') return
+    if (typeof ResizeObserver === 'undefined') {
+      return () => {
+        live = false
+      }
+    }
     const ro = new ResizeObserver(() => place())
     ro.observe(host)
     ro.observe(box)
-    return () => ro.disconnect()
+    return () => {
+      live = false
+      ro.disconnect()
+    }
   }, [boxRef, hostRef, ruleFx, plotLeftF, plotRightF, topF])
 }

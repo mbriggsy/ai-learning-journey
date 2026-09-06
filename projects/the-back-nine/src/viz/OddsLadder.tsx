@@ -345,18 +345,20 @@ function LadderMark({
 /** The crown's two-line callout — its odds (the strong register) over the direct "your date" tell —
  *  stacked ABOVE the ringed dot (PLOT.top's headroom holds it at every rung below the ceiling), or
  *  BESIDE the dot at the ceiling rung ({@link CROWN_SIDE_RUNG}: no headroom above the top rung, and
- *  below it sit the bar and the neighbouring dots). Anchored by edge proximity — a right-edge crown
- *  end-anchors so its words stay inside the figure, a left-edge one start-anchors — the band's own
- *  labelAnchor rule. */
+ *  below it sit the bar and the neighbouring dots). Two DIFFERENT side rules, on purpose:
+ *   · ABOVE anchors by edge proximity — a right-edge crown end-anchors so its words stay inside the
+ *     figure, a left-edge one start-anchors, else centred — the band's own labelAnchor rule.
+ *   · BESIDE bisects the plot: right of the dot on the left half, left of it on the right half. The
+ *     ceiling reads "better than 9 in 10" (the clamped proportion, copy.ts), ~2× the width of an
+ *     "N of 10" crown, so a mid-plot ceiling crown may fit on NEITHER side of the narrowest arm —
+ *     the flip's monotonicity + a crown-vs-marks bound are HELD council work (docs/council-log.md
+ *     2026-09-05); this branch's alignment rule is `.ladder-crown--side` (oddsLadder.css). */
 function CrownCallout({ mark, domainMax, labels }: { mark: CurveMark; domainMax: number; labels: OddsLadderLabels }) {
   const x = xForOffset(mark.offsetYears, domainMax)
   const y = yForRung(mark.rung)
   const gap = CROWN_RING_R + 5
-  const side = mark.rung >= CROWN_SIDE_RUNG
-  const nearRight = x > PLOT.right - 28
-  const nearLeft = x < PLOT.left + 28
-  if (side) {
-    // beside the ceiling dot: to its right unless the crown is at the right edge.
+  if (mark.rung >= CROWN_SIDE_RUNG) {
+    // beside the ceiling dot: to its right on the left half of the plot, to its left past mid-plot.
     const toLeft = x > (PLOT.left + PLOT.right) / 2
     return (
       <ChartText
@@ -373,6 +375,9 @@ function CrownCallout({ mark, domainMax, labels }: { mark: CurveMark; domainMax:
       </ChartText>
     )
   }
+  // above the ring: edge proximity decides the anchor (28 units ≈ half a two-line callout's width).
+  const nearRight = x > PLOT.right - 28
+  const nearLeft = x < PLOT.left + 28
   return (
     <ChartText
       className="ladder-crown"

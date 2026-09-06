@@ -72,7 +72,12 @@ export async function settleLayout(page: Page): Promise<void> {
 export async function gotoSeedFinal(page: Page, seed: string): Promise<void> {
   await page.goto(`/?seed=${seed}`)
   await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({
-    timeout: 90_000,
+    timeout: FINAL_TIER_MS,
   })
   await settleLayout(page)
 }
+
+/** How long a FINAL-tier render may take: a date seed's 16k-path final is ~60 s alone and ~1.5× that
+ *  beside other solves (playwright.fit.config.ts caps the local worker count for exactly this reason).
+ *  Every wait on the `data-answer-tier="final"` anchor reads this, never a re-typed 90_000. */
+export const FINAL_TIER_MS = 150_000

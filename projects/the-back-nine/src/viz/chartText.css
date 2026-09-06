@@ -123,11 +123,20 @@
   font-size: var(--text-sm);
   line-height: var(--leading-tight);
   width: max-content;
-  /* never wider than one side of the PLOT, so the placement hook can always seat it beside the rule
-     inside the plot — never over the rule, never over the y-tick column (the position→dollar decoder
-     the review found it covering when it was allowed the whole host). 38% of the host is under half
-     of the narrowest plot (a 308px phone figure: plot 246px, box ≤ 117px). Figures never break; the
-     worded label + note lines wrap — HTML fails safe. */
+  /* CAPPED so the placement hook can seat the box clear of the y-tick column (the position→dollar
+     decoder the review found it covering when the box was allowed the whole host) and, on every host
+     wider than ~250 px, clear of the rule. The cap is SCALE-INVARIANT: the plot is 448/560 = 0.800 of
+     the host, so 38% sits under the 0.400 half-plot at every width (council 2026-09-05 re-verified it
+     at source). What it does NOT promise: (1) "beside the rule" — the right seat fits only while
+     rule + 10px + box ≤ plot right, so at a mid-plot rule the LEFT seat takes it below a ~500px host,
+     and the clamps in useReadoutPlacement fire only when the rule is also within gap+box of the left
+     wall; the worst-case box-over-rule overlap is 10 − 0.04·host px — a hairline below 250px.
+     (2) The INK: this caps the BORDER BOX only. `width: max-content` + nowrap lines keep the grid
+     track at the nowrap min-content, so on a host under ~306px the lines paint PAST the border
+     (13px on the chart-text gate's 320 arm, a 238px host). That shape — contain the ink, never widen
+     the room — is HELD council work (docs/council-log.md 2026-09-05); the gate's 320 readout arms are
+     declared expected failures until it lands. Figures never break; the worded label + note lines
+     wrap — HTML fails safe. */
   max-width: 38%;
   color: var(--ink);
 }

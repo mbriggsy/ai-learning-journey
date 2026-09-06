@@ -17,10 +17,13 @@ import { PLOT, VIEWBOX } from '@viz/bandGeometry'
  * asserted the worst-case pane stayed above 260px. That contract is retired with the svg text
  * (chartText.css): the ticks are HTML at --text-xs, they never scale and are never dropped, and the
  * question becomes GEOMETRIC — does the y-tick column (PLOT.left − 8 units, rendered at
- * figure/560) hold the widest six-glyph dollar at the type scale on the narrowest two-pane pane?
- * The widest shipping tick measured 45 CSS px of ink at --text-xs ("$1.25M", "$2.25M" — real
- * Chromium, 2026-09-05, temp/chart-text/precondition.json); the real-browser gate
- * (e2e/chart-text.spec.ts) measures the LIVE ink at every arm. This is the arithmetic tripwire that
+ * figure/560) hold the widest CATALOG dollar at the type scale on the narrowest two-pane pane?
+ * The widest shipping tick measured 45 CSS px of ink at --text-xs — the seven-glyph "$0.375M" /
+ * "$1.125M" (the $1.5M-ceiling household: niceCeil's 1.5×10^k rung, quartered by buildYTicks);
+ * "$2.25M" and the other six-glyph ticks measure only 38.5 (real Chromium, 2026-09-05). The
+ * real-browser gate (e2e/chart-text.spec.ts) re-measures that same dollar live on all four viewport
+ * arms, on ?seed=borderline — the household whose $1.5M ceiling quarters into it — and bounds the
+ * borrow it takes of the drawer's padding on the 320 arm (assertTickColumn). This is the arithmetic tripwire that
  * fires at edit time: a future change to the breakpoint, the gap, the measure, the drawer chrome or
  * PLOT.left that would starve the column fails HERE, loudly, before a browser is opened.
  *
@@ -34,7 +37,7 @@ const bandCss = readFileSync(join(here, '..', '..', 'viz', 'band.css'), 'utf8')
 
 const REM_PX = 16
 /** The widest catalog tick's ink at --text-xs (13px), measured in real Chromium 2026-09-05 — the
- *  e2e gate re-measures it live; this constant only sizes the edit-time tripwire. */
+ *  e2e gate re-measures it live on ?seed=borderline; this constant only sizes the edit-time tripwire. */
 const WIDEST_TICK_INK_PX = 45
 /** The tick is end-anchored 8 viewBox units left of the axis (ConfidenceBand TICK_FX). */
 const TICK_INSET_UNITS = 8

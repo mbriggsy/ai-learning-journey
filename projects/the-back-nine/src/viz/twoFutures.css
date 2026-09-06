@@ -2,9 +2,10 @@
  * src/viz/twoFutures.css — the two-futures comparison chart (P3·U10).
  * Static classes only (style-src 'self' — no inline styles); the series COLORS arrive as SVG
  * presentation attributes from palette.ts, so this file owns only the non-color channels:
- * stroke weight, the dash geometry (a series-identity channel — held in screen pixels by
- * non-scaling-stroke), and the dotted leader (deliberately distinct from BOTH series strokes so a
- * displaced end label can never read as a third series).
+ * stroke weight and the dash geometry (a series-identity channel — held in screen pixels by
+ * non-scaling-stroke). The dotted end-label leader moved to the text layer on 2026-09-05
+ * (chartText.css .ct-leader) so the measured label push writes both the label and its tie; its
+ * dotted-vs-dashed distinction from BOTH series strokes still carries the "never a third series" job.
  *
  * TEXT: this file styles NO chart text. Since 2026-09-05 (council wf_ecbe0ab2-7bb) the axis labels,
  * the year ticks, both end labels and the scrub readout are HTML in the shared chart text layer —
@@ -47,13 +48,8 @@
   stroke-dasharray: 7 5;
 }
 
-.tf__leader {
-  stroke: var(--ink-muted);
-  stroke-width: 1;
-  stroke-dasharray: 1 3;
-  stroke-linecap: round;
-  vector-effect: non-scaling-stroke;
-}
+/* the elbow leader is HTML in the text layer — chartText.css .ct-leader owns its dotted borders;
+   this file adds nothing (the svg-era .tf__leader stroke rules were inert on the HTML span). */
 
 /* the HTML text hooks — color only; size + face come from the text layer's registers. */
 .tf__axis {

@@ -206,7 +206,20 @@ describe('ConfidenceBand — resolved fan', () => {
     // and the band's own stylesheet styles NO chart text any more (a font-size here is the regression)
     const band = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'band.css'), 'utf8')
     const rules = band.replace(/\/\*[\s\S]*?\*\//g, '') // comments may NAME the history; rules may not
-    expect(/font-size:\s*\d/.test(rules.split('.band-drawer__pull')[0]!), 'band.css must not size chart text').toBe(false)
+    // Scope by SELECTOR, never by file position, and match ANY value form. The old pin split on
+    // '.band-drawer__pull' and read only the PREFIX — 1903 of 5206 chars, containing no font-size at
+    // all — and required a DIGIT after the colon, so a token var() walked past it too. Both halves
+    // of the likely regression shape were invisible (3 of the 4 rules here are var(--text-*), as are
+    // all 8 registers in chartText.css). Only the drawer/modal CHROME may size text: band.css's header
+    // "this file styles NO chart text"; architecture.md §12 "No chart types a px size of its own".
+    const CHROME = /^\.band-(drawer__pull|legend|modal__title|modal__close)/
+    const sized = [...rules.matchAll(/([^{}]+)\{([^{}]*)\}/g)]
+      .filter((m) => /font-size\s*:/.test(m[2]!))
+      .map((m) => m[1]!.trim().split('\n').pop()!.trim())
+    expect(sized.length, 'band.css sizes no text at all — this pin went vacuous, re-derive it').toBeGreaterThan(0)
+    for (const sel of sized) {
+      expect(CHROME.test(sel), `band.css: \`${sel}\` sets a font-size — only the drawer/modal chrome may size text`).toBe(true)
+    }
   })
 })
 

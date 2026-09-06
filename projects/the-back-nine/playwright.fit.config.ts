@@ -27,12 +27,21 @@ export default defineConfig({
   // makes it CI-enforced (a gate wired into no workflow is not a gate).
   testMatch: ['**/vertical-fit.spec.ts', '**/chart-text.spec.ts'],
   fullyParallel: true,
+  // The date seeds are CPU-BOUND: a 16k-path final across two arms takes ~60 s alone, and the two
+  // specs render ~26 of them. Playwright's default (50% of logical cores) is 10 workers on a 20-thread
+  // laptop — ten concurrent solves saturate the cores and stretch a 60 s final past the tier wait
+  // (measured 2026-09-05: the datesplit arms timed out only once the chart-text spec grew to 18 date
+  // renders). Locally, cap to the solve's real cost; CI (ubuntu-latest, 4 vCPU → 2 workers) is left
+  // at the default, where contention never arose.
+  workers: process.env.CI ? undefined : '30%',
   forbidOnly: !!process.env.CI, // a stray test.only fails CI rather than silently narrowing the gate
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   // Each spec waits for the FINAL engine tier (provisional tags gone) before measuring — the
-  // 16k-path final across two-arm seeds is slow on CI hardware, so the per-test budget is generous.
-  timeout: 120_000,
+  // 16k-path final across two-arm seeds is slow on CI hardware, and two tests here render a date
+  // seed TWICE (the reduced-motion and reader's-font comparisons), so the per-test budget holds two
+  // finals (reviewSurface FINAL_TIER_MS) plus the measurement.
+  timeout: 180_000,
   use: {
     baseURL: 'http://127.0.0.1:4190', // 127.0.0.1, NOT localhost (dodges the IPv4/IPv6 readiness flake)
     serviceWorkers: 'block', // PWA is disabled in dev (devOptions.enabled:false) — blocked anyway so a

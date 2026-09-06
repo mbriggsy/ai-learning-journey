@@ -2,6 +2,9 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render } from '@testing-library/react'
+import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { ChartText, ChartTextHost, ChartTextLayer, layoutCollisions } from '../chartText'
 
 /**
@@ -200,5 +203,32 @@ describe('layoutCollisions — separate-y: a lower box is pushed down by its ove
     box(wo!, 400, 100, 150, 20)
     layoutCollisions(h, 'separate-y', '.l[data-ct-item]')
     expect(wo!.style.getPropertyValue('--ct-dy')).toBe('')
+  })
+})
+
+// ── the anchor registers must be TYPED, not just zero (the 2026-09-05 `--ct-ty: 0` defect) ────────
+describe('chartText.css — the anchor registers are <length-percentage>, never a bare number', () => {
+  it('every .ct-text--* anchor value carries a unit or is a percentage', () => {
+    const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'chartText.css'), 'utf8')
+    // WHY THIS PIN AND NOT A GENERAL RULE. `--ct-ty` substitutes into a calc() — `.ct-text`'s
+    // `translate(var(--ct-tx, 0), calc(var(--ct-ty, -50%) + var(--ct-dy, 0px)))` — where a bare `0`
+    // is a <number>, `<number> + <length>` fails type-checking, the declaration is invalid at
+    // computed-value time and the WHOLE transform falls back to `none`, taking the horizontal anchor
+    // with it. That shipped: `.ct-text--vtop { --ct-ty: 0 }` left the RecommendationViz delta hero
+    // anchored at the bracket midpoint — and the real-browser gate cannot see that case yet (no RV arm),
+    // so this edit-time pin is what holds it. It is NOT a general "properties in calc() need units"
+    // rule: --fx/--fy/--fw/--fh/--ct-row/--ct-rows are DELIBERATELY unitless multipliers inside
+    // calc(). These six rules are the whole exposed surface — the only other property in that
+    // calc(), --ct-dy, is JS-written and always px (useCollisionLayout, and only when dy > 0).
+    const LENGTH_PCT = /^-?(?:\d+\.?\d*|\.\d+)(?:px|%|rem|em)$/
+    const regs = [...css.matchAll(/\.ct-text--(start|middle|end|vtop|vmiddle|vbottom)\s*\{\s*(--ct-t[xy])\s*:\s*([^;}]+)[;\s]*\}/g)].map((m) => ({
+      cls: m[1]!,
+      prop: m[2]!,
+      value: m[3]!.trim(),
+    }))
+    expect(regs.length, 'the six anchor registers are no longer one-declaration rules — re-derive this pin, it just went vacuous').toBe(6)
+    for (const r of regs) {
+      expect(LENGTH_PCT.test(r.value), `.ct-text--${r.cls} sets ${r.prop}: ${r.value} — a bare number here invalidates the .ct-text calc() and transform falls back to none`).toBe(true)
+    }
   })
 })

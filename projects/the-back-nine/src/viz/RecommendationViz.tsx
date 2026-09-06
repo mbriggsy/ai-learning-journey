@@ -24,8 +24,9 @@
  *     reflows when the figures land.
  *   - SVG DRAWS, HTML WRITES (council wf_ecbe0ab2-7bb, 2026-09-05): the svg holds the bars, markers,
  *     floor, guides and bracket; the $0 / ceiling axis labels, both direct end-of-bar labels and the
- *     delta HERO are HTML in the chart text layer (chartText.tsx), sized on the type scale (xs / sm /
- *     lg — the hero keeps the display face). An end label WRAPS inside its column on a narrow box
+ *     delta HERO are HTML in the chart text layer (chartText.tsx), sized on the type scale — xs for
+ *     the axis frame and BOTH end-of-bar labels, lg for the hero, which keeps the display face
+ *     (this chart uses no sm). An end label WRAPS inside its column on a narrow box
  *     instead of running off the chart (svg text rendered 7.7–13 CSS px and had 7 units of slack).
  *
  * STRING-FREE: every word arrives via `labels` (twoFuturesChrome's sibling — the ui layer composes
@@ -57,8 +58,9 @@ export interface RecommendationVizLabels {
 
 const RV_VIEW = { w: 560, h: 210 } as const
 /** `right` is the end-label column (192 units; was 168): at a 358px phone box the 24-character
- *  "The recommended strategy" at --text-xs needs ~105 CSS px to wrap in TWO lines — the 168-unit
- *  column rendered 100 px and wrapped it to three, whose last line touched the delta hero below
+ *  "The recommended strategy" at --text-xs needs ~105 CSS px to wrap in TWO lines — the old
+ *  right: 168 left a LABEL ROOM of only 156 units (100 CSS px at that box; right: 192 leaves 180
+ *  units = 115 px) and wrapped it to three, whose last line touched the delta hero below
  *  (measured 2026-09-05). The bars give up ~6% of their run for it. */
 const RV_PLOT = { left: 24, right: 192, top: 40, bottom: 176 } as const
 const BAR_H = 30

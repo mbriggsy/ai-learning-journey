@@ -1032,6 +1032,22 @@ const dateSoloCoverage: ScenarioDraft = {
   health: { ...stillWorking.health, employerPlanCoversRetiredMember: false },
 }
 
+/**
+ * The CEILING crown — the odds ladder's BESIDE-the-dot branch (`OddsLadder` CROWN_SIDE_RUNG): `date`'s
+ * couple so over-funded that stopping TODAY already clears with a quantized lower bound ≥ 0.95, so the
+ * crowned mark sits at rung 10 and its callout renders beside the dot reading the clamped ceiling
+ * proportion ("better than 9 in 10" — never "10 of 10"). Until 2026-09-05 no seed reached that branch
+ * and its alignment rule did not exist (council wf_1b45326f-9e8: `.ladder-crown--side`, oddsLadder.css);
+ * the chart-text gate walks it on every arm. Balances tuned in real Chromium 2026-09-05.
+ */
+const atCeilingSeed: ScenarioDraft = {
+  ...stillWorking,
+  enteredAccounts: [
+    { ...stillWorking.enteredAccounts[0]!, valueToday: 2_700_000 },
+    { ...stillWorking.enteredAccounts[1]!, valueToday: 600_000 },
+  ],
+}
+
 /** The seed registry — `?seed=<key>` selects one. */
 export const DEV_SEEDS = {
   retired: retiredOnTrack,
@@ -1055,6 +1071,7 @@ export const DEV_SEEDS = {
   elsewhere: elsewhereAnswered,
   datenc: dateNcSeed,
   datesolo: dateSoloCoverage,
+  atceiling: atCeilingSeed,
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS

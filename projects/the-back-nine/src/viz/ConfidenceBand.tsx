@@ -628,9 +628,10 @@ function ScrubReadout({
   const boxRef = useRef<HTMLSpanElement>(null)
   const x = xForYear(s.yearsFromNow, data.horizonYears)
   // Seated inside the PLOT — never over the y-tick column (O3's position→dollar decoder; a pinned box
-  // there re-creates the very "$1.5M reads $1" misread this whole layer exists to prevent) and never
-  // over the rule. The box's max-width (chartText.css .ct-readout, 38% of the host) is under half of
-  // the narrowest plot, so one side always has room.
+  // there re-creates the very "$1.5M reads $1" misread this whole layer exists to prevent) and, on
+  // every host wider than ~250 CSS px, never over the rule. The box's max-width (chartText.css
+  // .ct-readout, 38% of the host) is under the 0.4-of-host half-plot at EVERY width; what that cap
+  // does and does not promise (the ink is not bounded by it) is derived on that rule.
   useReadoutPlacement(boxRef, {
     hostRef,
     ruleFx: row ? fx(x) : null,

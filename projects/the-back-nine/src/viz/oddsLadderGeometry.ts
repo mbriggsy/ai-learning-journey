@@ -32,8 +32,14 @@ import { BAR_RUNG, LADDER_MAX_RUNG } from './curveMarks'
 export const VIEWBOX = { width: 560, height: 284 } as const
 
 /** The plot rectangle inside the viewBox: room left for the rung axis + the bar's "on track" label
- *  (HTML at --text-xs, end-anchored 8 units left of the axis — 84 units holds "on track" inside the
- *  figure on a 358px phone figure), a top margin so a rung-10 (ceiling) dot has headroom (it is
+ *  (HTML at --text-xs, end-anchored 8 units left of the axis. 84 units = 0.15 of the figure, and
+ *  "on track" is a FIXED 44.3px of ink at --text-xs, so the column holds it only above a ~365px
+ *  figure: measured inside at 358/408/496 (2026-09-05); on the chart-text gate's 320 arm the 288px
+ *  figure gives a 43.2px column and the label sits ~1px into the page gutter — rendered by that arm,
+ *  bounded there by `main.result` (the page column, the ladder's only padded ancestor), never by the
+ *  figure. What yields there is HELD council work (docs/council-log.md 2026-09-05): do NOT tighten
+ *  the bound and do NOT move `left` off the 92 it shares with bandGeometry and TF_PLOT to buy the
+ *  pixel back), a top margin so a rung-10 (ceiling) dot has headroom (it is
  *  never clipped at the very edge — the headroom is itself the "you can never reach certain"
  *  signal; the crown's callout stacks ABOVE its dot at every rung below the ceiling and sits BESIDE it
  *  only at rung 10 — OddsLadder's CROWN_SIDE_RUNG), and the floor at the bottom. */
@@ -41,8 +47,13 @@ export const PLOT = {
   left: 92,
   right: 528,
   /** 56 (was 40 in the svg-text era): the headroom above the ceiling rung now also seats the crown's
-   *  two-line HTML callout ABOVE a rung-9 dot on the narrowest arm (a 358px phone figure renders the
-   *  56 units as ~36 px; the callout needs ~37 px above the ring's 14-unit gap — measured 2026-09-05). */
+   *  two-line HTML callout ABOVE a rung-9 dot on the narrowest arm. A rung-9 crown gets MORE than
+   *  these 56 units: its dot sits one rung lower (yForRung(9) = 78) and the callout's bottom anchors
+   *  a further CROWN_RING_R + 5 = 14 units up, at 64 — which on a 358px phone figure renders ~41 CSS
+   *  px against a callout measured at 36.6 px, ~4 px of clearance (2026-09-05). On the 320 arm and
+   *  at a raised browser font that clearance goes negative — what yields is HELD council work
+   *  (docs/council-log.md 2026-09-05); moving this value was REJECTED there (64 ties by 0.17px, 68
+   *  compresses every rung on every arm). */
   top: 56,
   /** rung 0 — the floor (0 of 10). */
   bottom: 276,

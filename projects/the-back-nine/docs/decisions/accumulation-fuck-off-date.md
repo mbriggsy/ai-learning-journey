@@ -3,7 +3,6 @@ title: The accumulation / fuck-off-date engine — the permanent §0–§7 decis
 doc-type: decision
 status: decided
 created: 2026-06-17
-updated: 2026-06-18
 derives-from: [docs/product.md, docs/architecture.md]
 sources: [docs/research/engine-validation-and-tax.md, docs/research/pre65-healthcare.md]
 ---

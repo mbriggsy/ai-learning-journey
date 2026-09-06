@@ -1,3 +1,9 @@
+---
+title: "U15 — The Solver Core — build spec (council-ratified)"
+doc-type: build-spec
+status: shipped
+---
+
 # U15 — The Solver Core — build spec (council-ratified)
 
 > **Identity:** Act 4's second unit (`U15` — search / objective / select / cancel / profile

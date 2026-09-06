@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register: **46 open items** (54 entries, 8 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open — re-counted 2026-09-04) consolidated
+> The complete open register: **48 open items** (56 entries, 8 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open — re-counted 2026-09-06, when two Tier-3 entries moved in from the queue) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -215,6 +215,44 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 - ⚑ Anchor drift: `noChange: false` is `devSeeds.ts:1330` (not `:1322`); the winner literal is `:1316`
   (not `:1308`). `copy.ts:1309-1313` is the card-FAMILY header — nothing defends the holds sentence
   today, so the fix must **add** a comment, not rewrite one.
+- ⚑ **The semantic witness ("the advice not taken") — the debt record, moved from the queue 2026-09-06:** ⚠️ **The 2026-08-03 verification debt, CORRECTED 2026-08-14 — it was overstated, and the half that
+  remains is narrower.** This block used to read *"the record card's HOLDS face has never been seen;
+  `?vault=rec` cannot show it."* **The FACE has now been seen** — `?vault=rec` renders
+  *"It still lines up with the numbers you've entered."* at 1536×791 (observed in passing while driving
+  the heir-bracket seat, which that plant also carries). The seed table said so all along
+  (`rec` · `recold` → *holds / superseded*); the debt note contradicted it.
+  **What `?vault=rec` genuinely cannot witness is the SEMANTIC case** this entry is about: its base is a
+  single $1.055M IRA, so every withdrawal order is the identical decumulation and no household can
+  visibly *not have taken* the advice. ⚠️ **RE-SCOPED 2026-08-20 — the prescribed save + re-entry on
+  `?seed=buckets` RAN, and it cannot witness the semantic case either.** The buckets leave-more crown
+  is the household's OWN proportional order (`noChange` — witnessed live), so there is no advice to
+  not-take; what the run DID witness is the full organic record pipeline (mint → persist → unlock →
+  holds → demote → re-promote), which had never been seen outside hand-planted payloads. The semantic
+  witness needs an **ACTIVE multi-bucket crown**, which no current seed produces — probe
+  `buckets`+pay-less-tax in vitest first, and mint a seed only if that misses too.
+  **Read the debt as "the advice-not-taken case", never "the face" — and know its prescription has now
+  missed twice.**
+  ✅ **Free finding from the same drive:** editing an assumption demotes the record live —
+  holds → *"It may no longer fit the two of you."* The fingerprint staleness coupling is now
+  witnessed end-to-end, not merely asserted.
+- ⚑ ⚑ **THE PAY-LESS-TAX HUNT RAN SAME-DAY, AND THE FULL-PRECISION RUN REFUTED ITS OWN FAST-COUNT
+  PROBE — the advice-not-taken prescription has now missed THREE times.** At 256 paths the probe hit
+  (`winner grid:bracket-fill:0` ACTIVE over `baseline:proportional:0`, `noChange: false` — probe JSON
+  in the session scratchpad), but the 16k-path browser drive landed the NO-DOLLAR register — *"You're
+  already on one of the strongest paths"* + the coin-flip hinge (*"which one edges ahead can come down
+  to chance"*). Read per the four-disjunct law: at full precision the bracket-fill edge sits inside
+  display noise, so the surface honestly declines to urge the switch. **"Precision moves the crown"
+  is now measured TWICE on this one seed** (leave-more's probe crown carried a conversion the 16k run
+  dropped; pay-less-tax's probe crown was ACTIVE and the 16k run collapsed it) — `buckets` is
+  precision-MARGINAL by construction, which is exactly why both goals grade "A close call".
+  **The honest state of entry 4's semantic witness:** no current seed renders the advice-not-taken
+  frame at full precision. The fork: (a) mint a seed tuned so an order gap SURVIVES 16k paths — a
+  size-L parameter hunt (the `dateinvert (c)` class, its own session); or (b) accept the synthetic
+  RecommendationSurface/recommendationView coverage as the frame's permanent home — the same
+  conclusion `devSeeds.test.ts`'s 2026-07-22 note reached for the old no-change shape, and the
+  PIPELINE half (mint → persist → unlock → holds → demote → re-promote) is now witnessed live
+  regardless. **Lean: (b)** — the render is pinned synthetically, the pipeline is witnessed, and the
+  hunt's marginal value is one eyeball frame; but the scope call is his if (a) tempts anyone.
 
 ### ~~Well-funded household with a converting winner crashes into a calm "unavailable"~~ — **CLOSED 2026-08-03** (`e7bf0485`)
 
@@ -359,6 +397,19 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
   by name (the entry above's law).
 - Hiding the strategy door on a failing household is a FRAMING call, not a copy fix — that door is where
   the household is told, honestly, that the harness cannot rank it.
+- ⚑ **Folded 2026-09-06 from the queue's superseded b9-3 plan (its item 11) — the gate mechanics, pilot:** The goal picker's lead on a failing household (S): `copy.goalPickerIntro` — "With the basics covered,
+  pick the one thing your plan should lean toward." — renders unconditionally (`src/intake/GoalPicker.tsx:75` — the INTAKE layer, there is no `src/ui/GoalPicker.tsx`) and the
+  picker opens from the strategy door on EVERY spine verdict, so an "Already short — 0 of 10" household is
+  told the basics are covered one tap before the honest hold (seen live 2026-09-04 on the `?seed=failing`
+  witness walk). The GATE is pilot — the picker is verdict-blind (props `open · current · onPick ·
+  onClose · restoreFallback`, `GoalPicker.tsx:37-53`); thread the outcome state or a `basicsCovered` boolean from where the door is offered
+  (`Result.tsx` — TWO doors, not one: the invite at `:550` is `focusKey`-gated, the re-pick at `:493` sits
+  inside `RecommendationSurface`; gate the lead from ONE predicate both doors share, and do not write
+  "indeterminate never reaches here" into the comment — it does, `snapshot.displayed` is null there, that
+  is what saves it). The register's standing law rides with it: whatever key renders to the failing
+  cohort joins `isMortalityKey` by name (`backlog.md:359-360`). The WORDS are yours, and the fork (a second key for the failing cohort vs one
+  verdict-neutral lead) is a Caddie card. Register: Tier 0 "The goal picker tells an already-failing
+  household".
 
 ### Post-65 non-qualified HSA money is silently forfeited
 
@@ -1076,6 +1127,107 @@ disclaimer two-mount swap (holds: in-frame mount dark, trailing mount after the 
 - BLOCKED, NOT DROPPED — the no-dollar compose face has no live witness; ultimately HIS call
 - TWO ARMED COPY/FRAMING FORKS awaiting his read — the F3 legend dissent (O14) and the 'elsewhere' uncapped grade (O15)
 - THE FIDUCIARY'S CURRENT-LAW-AS-WRITTEN CAVEAT — his yes/no, never a rider; unanswered since 2026-07-09
+
+### The 2026-08-14 recovery walk's open findings — the backup door that cannot exist · no success frame · the escape above the primary · the raw browse button
+
+`XS–M` · **briggsy** · filed 2026-08-14 in the queue, moved here 2026-09-06 (RecoveryFlow + RestoreFlow rendered for a human end-to-end at 1536×791 and 390×844; the a11y half shipped in-pass, `c327e011`)
+
+- ⚑ **All four are his — none is a build.** The copy pass on the backup-door finding is OFF (the string is true; only the door is missing, and that door is a destructive council-sized decision). Do not re-derive the copy fix: a fifth finding, withdrawn the same day it was filed, prescribed exactly that and would have shipped a false certainty — `unlockCopy.test.ts:34-41` pins the both-ways hedge on purpose (both GCM-ambiguous failures share ONE hedge, never a key that asserts the credential is definitely wrong or the data definitely bad).
+- **🔴 THE BACKUP DOOR IS PROMISED AND CANNOT EXIST — and the naive fix is a WORSE dead end.**
+  `unlockWrongCredential` (rendered on BOTH Unlock and RecoveryFlow) ends *"the saved data may be
+  damaged, and your backup is the way in."* The entry graph is a closed loop: `unlock →
+  {began, recover}`, `recover → {began, unlock}` (`App.tsx:206-247`); `RestoreFlow` mounts ONLY on
+  `restore-cold` and `damaged`, and `restore-cold` is reachable only from ColdStart, which requires
+  an EMPTY vault (`App.tsx:145`).
+  ⚑ **DO NOT "just add a door" to `restore-cold`.** `backup.ts:134-135` — `restoreVault` returns
+  `{ok:false, reason:'vault-exists'}` when `loadVault().kind === 'vault'`, and its comment records
+  that the AUTHORITATIVE check re-runs inside the serialized write (TOCTOU). A door would march the
+  user through file → word → new passphrase (**two ~1s KDF derives**) and refuse at the end.
+  ⚑ **The sentence is also mostly FALSE, which shrinks the real defect.** The backup file is
+  decrypted with the RECOVERY WORD — the same credential RecoveryFlow uses. Have the word ⇒ recovery
+  opens the plan and the backup is unnecessary; lack it ⇒ the backup is equally unopenable. A
+  genuinely damaged vault never reaches Unlock (it auto-routes to `damaged` → RestoreFlow). **The one
+  case where the sentence is TRUE:** ciphertext corrupt enough to fail decrypt but intact enough to
+  pass `probeVault`. Closing THAT needs a pre-clear of an unopenable vault, which `RestoreFlow.tsx:8-12`
+  records as **council-killed** (*"the one data-loss path this surface must never reintroduce"*).
+  ⚠️ **AND THE COPY FIX IS OFF THE TABLE TOO — corrected 2026-08-14 while attempting it.** The
+  sentence is CONDITIONED (*"If you're sure it's right…"*) and TRUE on the damage branch, where the
+  backup's own `recoveryWrap` opens under the same word. `unlockCopy.test.ts:34-41` pins the both-ways
+  hedge deliberately. So there is **no honest copy edit here**: the remedy named is real, and what is
+  missing is the DOOR to it.
+  **What actually remains is one thing, and it is HIS:** a household whose vault is subtly corrupt is
+  told a TRUE remedy it cannot reach, because reaching it needs `clearVault` on an unopenable vault —
+  the council-killed pre-clear. Size it as a destructive one-way door, not a copy pass. Briggsy picked
+  "add the door" 2026-08-14 before `backup.ts:135` was traced — **that clearance is spent; re-ask
+  against these facts.**
+  ⚑ **The narrow, non-destructive increment that IS available** (unproven, size XS, still needs his
+  word): the Unlock error names the backup but never the recovery word, and *that* door — *"I forgot
+  my passphrase"* — is on the same screen. Naming it costs nothing and breaks no hedge.
+- **🟠 Neither recovery NOR restore ever confirms it worked.** Both land byte-identically on
+  *"Are these still your numbers?"* with no acknowledgement that the household is back in, and none
+  that **the new passphrase is now the live one**. `App.tsx:235` passes `notice: null` on recovery and
+  `:243` threads restore's — but that channel is the READ-ONLY caveat (`UnlockCopyKey`), null on a
+  normal open, so there is no success channel at all. The person most recently burned by a credential
+  is given no way to verify the replacement took. Needs a success-notice channel + Briggsy's words.
+
+- **🟡 The escape sits ABOVE the primary action, systematically, in the `save-actions` family** —
+  RecoveryFlow (word + setNew), RestoreFlow (file + word + setNew), and the backup ceremony
+  (*Not now* above *Finish*). Unlock and ColdStart get it right (primary first, escape below), so it
+  is ONE DOM-order decision in `save-actions`, not six fixes. Framing call — his.
+
+- **🟡 The raw native browse button** on RestoreFlow's file step is the one place the craft visibly
+  drops, on the screen where trust matters most. `save.css:131-132` protects *"the native control
+  stays — only its frame is brought into the field system; the browse button is the browser's"* —
+  but `::file-selector-button` restyles APPEARANCE without replacing the control, so that rationale
+  does not block it. ⚠️ **The missing `accept` filter is NOT a defect — do not "fix" it.**
+  `RestoreFlow.tsx:210-211`: *"a survivor's renamed/re-extensioned export must never be unpickable."*
+- ⚑ Checked on the frame and CLEARED — do not re-file: the phone fold holds at 390×844 with the 3-line error rendered (content ends 611 px of 844); the export ceremony's Finish is `aria-disabled`, never native `disabled`; Unlock's error a11y and RestoreFlow's file-error a11y are textbook; the only console error on every route is the known favicon 404.
+
+### The 2026-08-20 desktop intake walk's open findings — error-copy nits · "still being finalized" · five tone reads · the health-quote join
+
+`S` · **briggsy** · filed 2026-08-20 in the queue, moved here 2026-09-06 (desktop only, 1536×791, mixed worker + retiree household, NC, 4 accounts; findings 1–2 shipped 2026-09-03 — the completed-intake door and the allocation discard — and have their own entries)
+
+- **🟡 Error copy speaks to the absurd reading:** birth year "62" → "Ages past 119 are beyond what
+  the projection can model." True, never says "four-digit year". · **The tax-returns step names no
+  1040 line** ("Income, two years back" — AGI? MAGI?), and the second field has no gloss. · **Plain
+  bank cash has no labeled home** among the 7 account kinds ("Brokerage / taxable" is mechanically
+  right; the label doesn't say so). · The account editor's commit button reads "Add this account"
+  inside an EDIT (edit-in-place works; label only). · The SS start-year label is future-tense over a
+  legitimately-past range for an already-claimed retiree.
+  ⚑ **2026-09-04 anchors** (all still live): `errAgeBeyondModel` `copy.ts:631` / rule `sanity.ts:412-424` ·
+  IRMAA labels `copy.ts:252-255`, the gloss-less second field `questions.tsx:917-928` (its step is
+  non-blocking by design — a blank seed blocks the ANSWER via `intakeMap.ts:236-242`, not the step) ·
+  `ACCOUNT_KINDS` `model.ts:1425-1433` + labels `copy.ts:289-295` · `copy.accountSave` rendered
+  unconditionally at `AccountEntry.tsx:357-364` (`initial` already tells the form it is editing;
+  `FIELD_OP_ALLOWLIST` `copyGuard.ts:260-263` already admits save/edit/add, so a sibling key needs no guard
+  edit) · `ssClaimLabel` `copy.ts:77` is route-blind — the route-true twin idiom is
+  `stateStep`/`stateStepRetired` (`questions.tsx:569`/`:592`, picked at `:1197`). The mechanics of the
+  edit-label, the SS tense and the missing `helpKey` are one-key/one-prop each; the bank-cash home is a
+  SCHEMA call (`ACCOUNT_KINDS` feeds the codec vocabulary `scenarioCodec.ts:363` and `contributionCeilingFor`
+  `sanity.ts:111`). Words stay yours as filed.
+- **🟡 "Still being finalized" reads as a PROGRESS state and is a PERMANENT disclosure — and it is
+  the DEFAULT face of every real recommendation, not an edge case.** `recGradeNoteShape` renders on
+  the buckets leave-more run and cost this walk 30 minutes of waiting for a "finalization" that is
+  not a process. ✅ **TRACED + SWEPT 2026-08-20 (same session):** the feeders are
+  `methodology.productionMarket` + `methodology.survivorSpendingRatio` (both live directional
+  methodology-substrate; `consumedConstantEntries` includes them whenever the run carries the
+  default bytes — i.e. essentially every household; `solver.*` entries are EXCLUDED from the walk,
+  so this line's first filing named the wrong keys and the trace refuted it before the sweep). All
+  FIVE stale "dormant / no entry is live" comments corrected (`copy.ts`, `recommendationView.ts`,
+  `recommendationView.test.ts`, `solve.ts`, `solve.test.ts`). Also noted: the hand-planted
+  `?vault=rec` payload carries `disclosedDirectional: []` (`devSeeds.ts:1427`), so the plants HIDE a
+  note every real run shows. **What remains is the WORDING — his words:** "still being finalized"
+  promises a later that never comes; types.ts records no dated pin event exists for these entries.
+- **EYE/tone:** the spending step's all-in gloss is ~90 words of carve-outs in one paragraph (the
+  densest frame of the walk) · ColdStart's "about five minutes" sits above a fetch-a-healthcare-quote
+  sidebar · the still-needed counter GROWS after honest answers (gated steps un-gate) · the record
+  demotion's reason line says "Your numbers have changed" when a SETTING changed · recovery/restore
+  still land with no success frame while first-Save gets "✓ Your plan is saved" — the pattern exists
+  in the family (walk-finding 3's ask now has an in-family precedent to copy).
+- **Input to the Tier-0 "retired spouse priced at $0 healthcare" entry's open EYE call (`healthQuoteHelp`), witnessed live:** the health-quote step's "splits it by
+  age for each of you" renders one Continue from the employer-coverage step's "counts no health costs
+  for the one who has already stopped." Each true alone; the JOIN (what happens to the combined quote
+  I typed?) is still left to inference. Adjacency helps; it does not close.
 
 ## Tier 4 — hygiene (no user-visible wrong answer)
 

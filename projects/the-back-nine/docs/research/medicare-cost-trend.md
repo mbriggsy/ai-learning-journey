@@ -1,3 +1,12 @@
+---
+title: The Medicare-cost-trend research packet (the `medicareCostTrend` sourcing unit's substrate)
+doc-type: research
+status: shipped
+created: 2026-07-19
+derives-from: [docs/product.md]
+sources: [docs/research/pre65-healthcare.md]
+---
+
 # The Medicare-cost-trend research packet (the `medicareCostTrend` sourcing unit's substrate)
 
 > **Provenance:** research fan-out **wf_933cef3b-16b** (2026-07-19 — 6 hunter angles + an

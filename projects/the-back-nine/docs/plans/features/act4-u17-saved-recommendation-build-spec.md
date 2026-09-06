@@ -1,7 +1,9 @@
 ---
 title: U17 — Stale-saved-recommendation handling + the aged-surface coupling (build spec)
+doc-type: build-spec
 date: 2026-07-24
-status: RATIFIED — council wf_f4ced3c8-2f6, 8/10 high, hawk veto fired + HONORED into the shape
+status: shipped
+note: RATIFIED — council wf_f4ced3c8-2f6, 8/10 high, hawk veto fired + HONORED into the shape; U17 closed at S6 2026-08-02 (S7 deferred by ruling)
 supersedes: plan 4's §U17 prose wherever they conflict
 ---
 

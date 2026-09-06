@@ -1,3 +1,9 @@
+---
+title: "U13 build spec — the council-ratified corrected package (2026-07-09, wf_a1ef7e25-64d, 9/10)"
+doc-type: build-spec
+status: shipped
+---
+
 # U13 build spec — the council-ratified corrected package (2026-07-09, wf_a1ef7e25-64d, 9/10)
 
 > The executable shape for ce-work. Supersedes the U13 plan section (`3-controls.md` L270–315) wherever they

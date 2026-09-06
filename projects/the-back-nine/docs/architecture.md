@@ -3,7 +3,6 @@ title: The Back Nine — Architecture (how the engine works + the load-bearing i
 doc-type: architecture
 status: living
 created: 2026-06-17
-updated: 2026-07-18
 derives-from: [docs/product.md]
 sources: [docs/research/engine-validation-and-tax.md, docs/research/pre65-healthcare.md]
 ---

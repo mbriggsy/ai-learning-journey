@@ -1,7 +1,9 @@
 ---
 title: U7 item (e1) — the survivor-conditioned engine distribution (design, PENDING BLESSING)
+doc-type: build-spec
 date: 2026-06-27
-status: e1 + e1b + e1c + e2 (UI) ALL BUILT — e2 cold-read cleared 2026-06-27; U7 survivor readout COMPLETE
+status: shipped
+note: e1 + e1b + e1c + e2 (UI) ALL BUILT — e2 cold-read cleared 2026-06-27; U7 survivor readout COMPLETE
 phase: Act 2 · U7
 modules: [src/engine/simulate.ts, src/engine/confidence.ts, src/shared/model.ts]
 ---

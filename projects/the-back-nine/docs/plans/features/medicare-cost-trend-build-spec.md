@@ -1,3 +1,9 @@
+---
+title: "The Medicare-cost-trend sourcing unit — build spec"
+doc-type: build-spec
+status: shipped
+---
+
 # The Medicare-cost-trend sourcing unit — build spec
 
 > **Provenance:** research packet [`docs/research/medicare-cost-trend.md`](../../research/medicare-cost-trend.md)

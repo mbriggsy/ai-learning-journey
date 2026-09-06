@@ -3,7 +3,6 @@ title: The Back Nine — Product (why, what, and the R1–R40 requirements ledge
 doc-type: product
 status: living
 created: 2026-06-17
-updated: 2026-07-18
 sources: [docs/research/engine-validation-and-tax.md, docs/research/pre65-healthcare.md]
 ---
 

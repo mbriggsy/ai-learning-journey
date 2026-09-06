@@ -3,7 +3,6 @@ title: The Back Nine — Roadmap (where we are, what is next)
 doc-type: roadmap
 status: living
 created: 2026-06-17
-updated: 2026-07-18
 derives-from: [docs/product.md]
 ---
 

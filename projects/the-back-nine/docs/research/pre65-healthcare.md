@@ -3,7 +3,6 @@ title: Pre-65 Healthcare — ACA-PTC / HSA / IRMAA reference + re-verify gate
 doc-type: research
 status: shipped
 created: 2026-06-17
-updated: 2026-06-18
 derives-from: [docs/product.md]
 sources: [docs/research/engine-validation-and-tax.md]
 ---

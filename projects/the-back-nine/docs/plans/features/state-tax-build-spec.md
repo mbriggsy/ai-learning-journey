@@ -1,3 +1,9 @@
+---
+title: "The State-Tax Engine Unit — build spec (council-ratified)"
+doc-type: build-spec
+status: shipped
+---
+
 # The State-Tax Engine Unit — build spec (council-ratified)
 
 > **Identity:** a wf-tracked Act-3-adjacent engine+intake unit, **not a U-number**. Scope was

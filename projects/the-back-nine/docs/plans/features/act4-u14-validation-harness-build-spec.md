@@ -1,3 +1,9 @@
+---
+title: "U14 — The Solver Validation Harness — build spec (council-ratified)"
+doc-type: build-spec
+status: shipped
+---
+
 # U14 — The Solver Validation Harness — build spec (council-ratified)
 
 > **Identity:** Act 4's first unit (`U14`, the oracle that GATES U15 — plan contract #1).

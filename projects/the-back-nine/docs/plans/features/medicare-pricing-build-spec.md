@@ -1,3 +1,9 @@
+---
+title: "The Post-65 Medicare Pricing Engine Unit — Build Spec"
+doc-type: build-spec
+status: shipped
+---
+
 # The Post-65 Medicare Pricing Engine Unit — Build Spec
 
 > **Provenance:** council-ratified 2026-07-10, **9/10 high, NO veto, action=execute** (run `wf_4c8cd836-b22`, 9 elders + red team, 23 agents; `docs/council-log.md` top row) over a 6-reader recon sweep (`wf_8bacb39a-59a`). This is the executable shape; where it conflicts with older prose (TODO.md:50's filing, the roadmap note), **this spec supersedes**, each supersession dated. The closest sibling precedent is the senior-bonus sunset unit (council-log 2026-07-09): ONE commit, no riders, DND-012 hand-derived fixtures on the runtime path, dev-seed drift recorded before any re-tune.

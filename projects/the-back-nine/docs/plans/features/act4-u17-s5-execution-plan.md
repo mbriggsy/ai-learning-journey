@@ -1,3 +1,9 @@
+---
+title: "U17 S5 — execution plan (the build order)"
+doc-type: build-spec
+status: shipped
+---
+
 # U17 S5 — execution plan (the build order)
 
 > **What this is.** The ordered, buildable steps for S5, derived 2026-07-26 from a six-seam read-only

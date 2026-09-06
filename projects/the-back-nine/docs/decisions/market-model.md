@@ -3,7 +3,6 @@ title: The market-return model — i.i.d. parametric lognormal, and the three ca
 doc-type: decision
 status: ratified
 created: 2026-06-30
-updated: 2026-06-30
 derives-from: [docs/product.md, docs/architecture.md]
 sources: [src/engine/rng.ts, src/engine/simulate.ts, src/engine/confidence.ts, src/engine/reference/methodology.ts, src/engine/historical.ts, src/engine/__tests__/simulate.test.ts]
 ---

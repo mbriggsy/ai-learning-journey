@@ -1,7 +1,7 @@
 ---
 title: "U16 — Recommendation Surface: build spec"
 doc-type: build-spec
-status: ratified
+status: shipped
 created: 2026-07-22
 council: wf_8d4c6f65-415 (8/10 RATIFY, execute; hawk veto fired + HONORED into the shape)
 supersedes: "docs/plans/4-recommendation.md §Unit 16 where they conflict (each supersession dated); the DEAD-COPY list below is binding"

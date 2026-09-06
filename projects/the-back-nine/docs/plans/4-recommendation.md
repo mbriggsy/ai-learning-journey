@@ -3,7 +3,6 @@ title: "Act 4 — Solver & Recommendation (the differentiator)"
 doc-type: plan
 status: shipped
 created: 2026-06-17
-updated: 2026-06-18
 derives-from: [docs/product.md, docs/roadmap.md]
 sources: [docs/research/engine-validation-and-tax.md, docs/research/pre65-healthcare.md]
 ---

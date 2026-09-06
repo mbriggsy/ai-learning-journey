@@ -3,7 +3,6 @@ title: Portfolio holdings & basis — the household-blend model, the multi-holdi
 doc-type: decision
 status: ratified
 created: 2026-06-18
-updated: 2026-06-29
 derives-from: [docs/product.md, docs/architecture.md]
 sources: [docs/architecture.md]
 ---
@@ -68,7 +67,7 @@ It also *improves the answer's fidelity*, not just the UX: for a single-fund acc
 
 ---
 
-## The multi-holding entry (recommendation — pending ATC ratification)
+## The multi-holding entry (RATIFIED by the 2026-06-29 council — shape ratified, build deferred past U8)
 
 > Briggsy, 2026-06-14 — *"why aren't we just letting folks input what securities they own? … if we can't even do what they do then why would they use our tool?"*
 
@@ -83,7 +82,7 @@ Every brokerage app shows you **holdings** — a list of positions. The recommen
 
 This does **not** make us a position-level portfolio analyzer — we do not track each holding's growth; **one blended `stockWeight` is the deliberate engine design** (asset-location forbidden for CRN). It makes the **intake match how people see their accounts** and derives the mix more accurately, **without faking a precision the honest engine doesn't have** (the cardinal rule — canonical in [docs/product.md](../product.md)).
 
-### Open ATC sub-decisions (pending ratification, with recommendations)
+### The three ATC sub-decisions — all RESOLVED 2026-06-29 (kept for the record)
 
 These were the open ATC calls; **the 2026-06-29 council resolved all three** (see the **Council ratification** section above — these lines are kept for the record but are superseded where marked RESOLVED):
 

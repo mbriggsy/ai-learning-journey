@@ -3,7 +3,6 @@ title: The Social Security computation — the §1–§12 decision record (own +
 doc-type: decision
 status: decided
 created: 2026-06-18
-updated: 2026-06-18
 derives-from: [docs/product.md, docs/architecture.md]
 sources: [docs/research/engine-validation-and-tax.md]
 ---

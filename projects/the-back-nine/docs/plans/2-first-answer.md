@@ -3,7 +3,6 @@ title: "Act 2 — The First Visible Answer (the magic moment)"
 doc-type: plan
 status: shipped
 created: 2026-06-17
-updated: 2026-06-24
 derives-from: [docs/product.md, docs/roadmap.md]
 sources: [docs/architecture.md, docs/research/engine-validation-and-tax.md, docs/research/pre65-healthcare.md]
 ---

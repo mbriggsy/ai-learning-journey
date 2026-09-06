@@ -3,7 +3,6 @@ title: The Back Nine — Glossary
 doc-type: reference
 status: living
 created: 2026-06-17
-updated: 2026-06-18
 derives-from: [docs/product.md, docs/architecture.md]
 ---
 

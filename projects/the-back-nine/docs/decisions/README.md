@@ -3,7 +3,6 @@ title: The Back Nine — Decision Records
 doc-type: readme
 status: living
 created: 2026-06-17
-updated: 2026-06-30
 derives-from: [docs/product.md]
 ---
 

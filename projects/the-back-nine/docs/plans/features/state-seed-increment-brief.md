@@ -1,3 +1,9 @@
+---
+title: "The state-carrying seed increment — build brief"
+doc-type: build-spec
+status: shipped
+---
+
 # The state-carrying seed increment — build brief
 
 **Status: EXECUTABLE (pilot-decided 2026-07-16 under Briggsy's full-decision-rights GO; no council convened — no one-way doors, no framing forks: every deliverable is DEV-only or a test).** The parent law is [`state-tax-build-spec.md`](state-tax-build-spec.md) (ratified 2026-07-15) — where this brief is silent, the spec + house idioms govern. The filed requirement is `docs/caddie/cold-read-log.md:37`: the four unwalkable priced faces ride "a state-carrying seed increment (seed + walk targets + fit arms + outcome pins) before their first cold read."

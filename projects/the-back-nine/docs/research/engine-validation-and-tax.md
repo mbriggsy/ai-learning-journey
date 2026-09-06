@@ -3,7 +3,6 @@ title: Engine validation and tax reference (the validation contract + the tax/lo
 doc-type: research
 status: shipped
 created: 2026-06-17
-updated: 2026-06-18
 derives-from: [docs/product.md]
 sources: [docs/research/pre65-healthcare.md]
 ---

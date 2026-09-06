@@ -3,7 +3,6 @@ title: "Act 3 — Controls"
 doc-type: plan
 status: shipped
 created: 2026-06-17
-updated: 2026-07-03
 derives-from: [docs/product.md, docs/roadmap.md]
 ---
 

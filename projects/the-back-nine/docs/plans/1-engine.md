@@ -3,7 +3,6 @@ title: "Act 1 — The Engine"
 doc-type: plan
 status: shipped
 created: 2026-06-17
-updated: 2026-06-18
 derives-from: [docs/product.md, docs/roadmap.md]
 lifecycle:
   coded: 2026-06-11

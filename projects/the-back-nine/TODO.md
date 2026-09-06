@@ -252,7 +252,76 @@ synthetic). **THEN his eye / the Caddie:** a walk of the four faces at REAL + PH
 collapse, the HTML-over-svg look, the hidden interim ticks, the RV above-bar-labels fork). Council-filed,
 not built: the band's keyboard lockout (SC 2.1.1), `prefers-contrast` / `forced-colors` absent.**
 
-▶ **START HERE (b9-3) — the plan, ranked, all anchors re-opened 2026-09-05 evening:** (1) harden the
+▶ **START HERE (b9-4) — hand-off 2026-09-05 late evening. The b9-3 plan's steps 1–3 SHIPPED: `32c1231d`
+(the gate hardened in one pass + the council's ship-now list) · `b4b27a60` (the hygiene sweep) · `8748e4f5`
+(the CI fix — a Windows-pinned ink threshold) · `abf1ab38` (insights 117–121). CI run 34005602885 is GREEN on
+Linux (97 fit tests, 11.8 m). Enter here; the b9-3 block below is history — do not re-execute it.**
+
+**HIS EYE FIRST (⚑ council-HELD 2026-09-05 — `docs/council-log.md`; the law is `docs/architecture.md §12`
+"the room is not the ink"):** the 320 arm's readout shape + the ceiling crown over the dots. Eight PNGs in
+`temp/cold-read-320/` (KEEP — `INDEX.md` names them): 01/02 the readout's dollar lines hanging out of their
+card at 320 (root-16 / root-20), 03 the same on the 390 phone at root-20, 05 "on track" 13 px into the gutter
+touching "7 of 10" at 320 × root-20, 06/07 the NEW ceiling crown (`?seed=atceiling`) aligned beside its dot but
+printing across the year-1..3 dots on every arm. Pilot's lean: below ~306 px of host the readout LEAVES the
+plot for a flow row in the drawer reserved at its tallest (a contained box still covers 62%×79% of that plot);
+the dissent's cheap alternative is `min-width: min-content` on `.ct-readout` (wins if min-content is constant
+across the 49 columns and the ~16/49 rule-covered columns cold-read acceptable). Whatever he picks lands WITH
+its oracles, each with a plant: every readout LINE inside its own border box; the crown vs the MARKS bounded
+to the figure (the ceiling crown over the neighbouring ceiling dots is the live case); the side flip's
+monotonicity; a hide-on-collision layout over the rung anchors for "7 of 10" vs "on track" at 320 × root-20
+(the x-tick precedent — the anchors are wayfinding, "on track" is the named one). THEN delete the `test.fail`
+declarations (`HELD_READOUT_320` in `e2e/chart-text.spec.ts`: the readout sweep on NARROW + NARROW-SCROLLBAR,
+TwoFutures' readout on NARROW-SCROLLBAR, the reader's-font readout test, the root-20 ladder instrument) —
+Playwright reds the run the day one passes. The `[instrument]` stdout lines carry the numbers (320 × root-20:
+readout ink 45.9 px past its box locally / 49.2 on Linux; the crown's top 13.5 px above the svg host; "on
+track" 13.3 px into the gutter, 4.6 px over rung 7).
+
+**THEN, ranked — all pilot-buildable; the recipes are `temp/chart-text/verify-0905-b9-2/verify-digest.md`
+(KEEP; read each item's `S.correctedPrescription`, it supersedes the verifier's):**
+(1) **The RV gate as its OWN serialized script** (digest `rv-gate-row`, L). Extract `audit` / `assertChartText`
+/ `floorPx` / `auditReadout` / `assertReadout` from `e2e/chart-text.spec.ts` into `e2e/chartTextAudit.ts` (no
+spec imports another spec — importing one runs its describes). New `e2e/chart-text-rv.spec.ts` on the
+committed-lockup household (`?seed=surplus`, a ~5–7 min solve) auditing `.rv-host` AND
+`.rec-runnerup__viz .rv-host` (audit() is `querySelector` — one call per host), bound `.rec-viz-box` BEFORE
+`main`. Its own `playwright.fit-rv.config.ts` (`workers: 1`, `test.setTimeout(900_000)` — the inner
+committed-lockup wait is 720 s), `verify:fit:rv` in package.json AND in
+`.github/workflows/verify-the-back-nine.yml` (monorepo root — a local-only gate is not a gate). Add the new
+spec to `playwright.config.ts:20`'s `testIgnore` DENYLIST (the CSP harness auto-collects `e2e/*.spec.ts`; the
+`?seed=` routes are DCE'd there) and keep it OUT of the fit config's `testMatch`. Then restore "every chart
+word" in `CLAUDE.md`'s verify:fit row, `docs/architecture.md §12`'s gate bullet, the back-nine-design
+`SKILL.md`, and `docs/backlog.md` — all four say RV is unit-pinned only today. The RV hero is the ONLY
+`valign="top"` node, so the e2e transform-anchor oracle covers the `--ct-ty` class only once this arm lands
+(`chartText.test.tsx`'s source pin holds it until then).
+(2) **The critic's arms** (digest `critic-arms`, M together): a `PHONE_LS` 844×390 arm; `gotoVaultFinal` +
+`?vault=stale` + `?vault=datestale` (the MAX-cardinality band — FOUR named markers; the crowned work-stops
+marker SURVIVES there, never write "withdraws"); the enlarge-modal arm on `.band-modal__dialog
+figure.band-figure` (a bare selector returns the INLINE band — vacuous), pin `modalRows <= inlineRows`, wait
+on the computed transform, not `settleLayout`.
+(3) **The unmeasured trio** (digest `critic-docs-unmeasured`): the placeholder note is dev-preview-only
+(`plans/2-first-answer.md:205` still calls it a shipping state — fix the plan); font-swap staleness now has
+the `fonts.ready` one-shot in both hooks but NO gate — a probe that loads with the webfonts blocked then
+released; a CSSOM-landed probe in `csp.spec.ts` under ENFORCED headers (assert the custom prop / computed
+transform, NOT `left > 0` — end-anchored ticks go negative).
+(4) Ranked 8 (icons / webkit text), 10 + 11 (the guards; the goal picker's "basics covered" lead on a failing
+household needs HIS words over a pilot gate), the phone P2s 2–4 — digest `ranked-8-icons-webkit-text`,
+`ranked-10-11-guards`, `phone-walk-2-4`.
+(5) `band.css` + `BandLegend.tsx` still claim the legend is "never the sole non-color signal" — false for the
+TIERS (no production `callouts` caller); build-vs-accept is a council fork.
+(6) The Caddie walk of the four chart faces at REAL + PHONE (the three-register collapse, the HTML-over-svg
+look, the hidden interim ticks, the RV above-bar-labels fork).
+
+**LANDMINES (new this session):** `e2e/` is outside `tsconfig.json`'s include — nothing typechecks the specs,
+so every new audit field needs a non-vacuity pin (the `data-ct-priority` pin is the pattern). Ink px differ
+by rasterizer — 45.0 Windows / 42.0 Linux for the same glyphs (insight 118): pin structure by TEXT, floor ink
+with a cross-platform margin, never a Windows number. A synthetic tap at an element's EXACT edge dispatches
+nothing on 390@3 (insight 119) — inset 1 px. `test.fail` + a timeout = a real failure (insight 120) —
+instrument tests measure first, assert last, and load ONCE (`setRootFont20` BEFORE `gotoSeedFinal`). Local
+fit workers are capped at 30% (insight 121); `FINAL_TIER_MS` (150 s, `e2e/reviewSurface.ts`) is the one anchor
+wait — `vertical-fit.spec.ts` still re-types `90_000` in eight places (harmless at 6 workers; hoist when
+touched). `atceiling` is a DATE seed (~45 s/arm) and rides all five arms. `temp/probe/` is spent;
+`temp/chart-text/`, `temp/cold-read-320/` and `temp/phone-walk/` are KEPT — no squeaky clears them.
+
+✅ **(SUPERSEDED as the entry point by b9-4 above — kept for the sequencing record)** ▶ **START HERE (b9-3) — the plan, ranked, all anchors re-opened 2026-09-05 evening:** (1) harden the
 chart-text gate in ONE pass on `e2e/chart-text.spec.ts` in the sequencing order at the end of the block below,
 then run `pnpm verify:fit` for real; (2) the doc-truth sweep (the STILL OPEN list under (9) + the P1 residue),
 second commit; (3) `/council` on the crown callout + the ladder's left label column, TOGETHER (survivor (8));

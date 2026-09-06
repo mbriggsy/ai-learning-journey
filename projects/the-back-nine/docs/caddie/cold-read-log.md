@@ -20,6 +20,19 @@ one-way doors, framing-level forks, or genuine pilot doubt — reason logged) ·
 
 ---
 
+## 2026-09-06 — HIS EYE on the AS-BUILT rewrite's one user-facing copy change: the annuity "tax-free part" help (`src/ui/copy.ts:380`, `incomeTaxableHelp`) — CALM
+
+Not a Caddie card — a pilot-flagged read. The rewrite (`85fb5dc1`) corrected the direction word in the
+annuity help: the old text called holding the entered tax-free share steady for life *"a conservative
+simplification"*; the R40 decision record rules that direction OPTIMISTIC (once the paid-in amount would
+have been recovered, the real stream turns fully taxable). The shipped sentence now ends *"— the tool holds
+that share steady for life, which reads a little better than reality once the paid-in amount would have been
+recovered."* Flagged for his eye in the b9-6 hand-off and read 2026-09-06 with no annuity knowledge (his own
+framing — exactly the reader the calm law is written for). **His read: "feels calm."** Nothing owed. Tape:
+the pilot predicted calm; the eye agreed.
+
+---
+
 ## 2026-08-01 (late) — THE FORMAL PANEL CHAIRING the earlier walk left owed: DOORS 1 + 4, the CVD arms, the `sr-only` channel and the phone rhythm — `vault:rec` · `vault:recold`, both viewports (re-walk 4/4 green; bundle `temp/caddie/2026-08-01-21-22-00`, **⚠️ squeaky clears `temp/` — the verbatims below are the durable record**)
 
 **Why it existed.** The morning's Card 8 was an honest PILOT read of the captures, and said so: *"a source read is not a cold read… doors 1 and 4, the CVD arms, the `sr-only` channel and the phone rhythm are UNREAD by any oracle."* This is that panel — seven fresh-context lenses (first-look · naive-spouse · copy-law→refuter · calm/honesty · CVD · phone-rhythm · false-PASS hunter), de-authored inputs, corpus-calibrated except the cold first-look.

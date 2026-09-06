@@ -31,10 +31,9 @@ adjudicates the class); (K) → a Tier 4 bullet on *The gates that don't bite* (
 is rewritten (FIVE stale clauses, not three). The SaveFlow CI flake (`bc026ef4`'s red run) is fixed at the
 test — `SaveFlow.test.tsx` read a passive-effect listener synchronously after a DOM-presence wait.
 
-**HIS EYE:** the rewrite's one user-facing copy change — `copy.ts`'s annuity exclusion help now says holding the
-tax-free share steady *"reads a little better than reality once the paid-in amount would have been recovered"*
-(the R40 record rules the direction OPTIMISTIC; the old text said "conservative"). Read it once for calm; no
-annuity knowledge needed. **Then the b9-4 plan below is the queue.** Two hygiene entries filed this morning,
+**HIS EYE — READ 2026-09-06, CALM:** the rewrite's one user-facing copy change (`src/ui/copy.ts:380`, the annuity
+"tax-free part" help; the R40 record rules the held share OPTIMISTIC) — his read "feels calm", logged in
+`docs/caddie/cold-read-log.md`; nothing owed. **The b9-4 plan below is the queue.** Two hygiene entries filed this morning,
 unranked: the solver profile's `rankableCount` divergence and the state-tax roster's two re-verify dates (both
 Tier 4; the deadline table below now carries both dates).
 

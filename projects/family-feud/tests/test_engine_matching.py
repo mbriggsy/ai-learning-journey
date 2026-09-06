@@ -482,15 +482,17 @@ class TestTeamCodeAgreement(EngineCase):
                          "a drafted Jaguar is still being recommended")
 
     def test_an_undrifted_feed_escalates_nobody(self):
-        """Second control: the real feed's 4 unmatched picks are genuinely off our board, so
-        nothing should be escalated. A check that always fires would pass both tests above."""
+        """Second control: the real feed's 2 unmatched picks (two kickers) are genuinely off our
+        board, so nothing should be escalated. A check that always fires would pass both tests
+        above. It was 4 until 2026-09-06, when Wan'Dale Robinson and Michael Wilson -- the other
+        two off-board picks in this feed -- were added to the board."""
         with open(self.FEED, encoding="utf-8") as f:
             picks = json.load(f)
         code, out = self.run_engine(self.real_board(), picks,
                                     draft_id="1390923383440424960")
         self.assertEqual(code, 0)
         block = self.warning_block(out)
-        self.assertIn("4 pick(s) did not match", block)
+        self.assertIn("2 pick(s) did not match", block)
         self.assertNotIn("is UNCLAIMED", block)
 
     def test_no_board_row_uses_a_team_code_absent_from_the_lab_feed_picks(self):

@@ -9,7 +9,7 @@ Snake draft, 16 rounds, ~Aug 29. Full PPR, 6 of 8 make the playoffs.
 
 | | |
 |---|---|
-| **A 174-player draft board** | 48 RB · 59 WR · 20 TE · 23 QB · 14 DEF · 10 K — every entry tiered, badged, and carrying empirical VORP |
+| **A 176-player draft board** | 48 RB · 61 WR · 20 TE · 23 QB · 14 DEF · 10 K — every entry tiered, badged, and carrying empirical VORP |
 | **A live draft engine** | reads the cumulative Sleeper picks feed and prints board state, every roster's open needs, run watch, tier cliffs, best-available, VBD leans — and LINEUP DELTAS, the roster-aware queue that replayed +391.8 startable VORP over board order (2026-08-19) |
 | **A proven executor mode** | Claude drives Briggsy's logged-in Chrome and clicks the picks. Live-proven 2026-08-15: an API-confirmed fire at pick #1, then seven picks on a live 120s clock, worst case 61s, zero missed. Never yet run on the real league draft |
 | **An hourly data mule** | a Windows scheduled task hauling 7 Sleeper endpoints + 5 fantasy RSS feeds + the expert consensus and the market ADP pool to disk — **14 sources, 12 of them landing in `newsletter/data/inbox/`** — so nothing depends on a network call at draft time. It **validates what it caught** — status, content-type, that it parses, that a feed has items — and **never overwrites good cargo with bad**: a failed source keeps the last payload and records how old it now is |
@@ -66,7 +66,7 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         and emits only on pass — write-all-or-write-none.
                                         --verify-only is the draft-morning sanity check.
                  render_html.py       — the board HTML, from templates/board.html
-                 render_pdf.py        — the cheat-sheet PDF. All 174 rows, one page.
+                 render_pdf.py        — the cheat-sheet PDF. All 176 rows, one page.
                  templates/board.html — presentation only; every FACT comes from the source
                  shape.py             — league shape from the draft object. ONE owner, two
                                         consumers. Refuses a non-snake draft; distinguishes
@@ -104,7 +104,7 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         points. READ-ONLY: it never writes the board. Joins
                                         id-to-id, never by name. Ranks BOTH sides within the
                                         board's own depth — FantasyPros counts inside 523 rows
-                                        and this board carries 174, so counting separately
+                                        and this board carries 176, so counting separately
                                         prices the list-length difference as a disagreement.
                                         ⚠ Its section [1] is CIRCULAR while rerank.py owns the
                                         ordering (on 2026-08-08 it was 150/150 rows; it drifts
@@ -224,7 +224,7 @@ python scripts/validate_board.py           # static + cross-surface, millisecond
 python scripts/validate_board.py --full    # adds a real-engine replay of the lab feed
 ```
 
-Checks all 174 rows — never a sample, because both known break modes are latent: a float
+Checks all 176 rows — never a sample, because both known break modes are latent: a float
 `vbdDelta` passes an empty-picks run and kills the whole advisory three picks in. It also checks
 the things a row-level gate never looks at, which is where the verified drift actually was:
 `dst`, `strategy`, the HTML's prose outside the data blob, and the cheat sheet.

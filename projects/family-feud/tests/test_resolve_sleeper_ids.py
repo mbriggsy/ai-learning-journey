@@ -672,7 +672,7 @@ class TheShippedArtifacts(unittest.TestCase):
         missing = [r["name"] for r in self.board
                    if r["name"] not in ids and r["name"] not in unresolved]
         self.assertEqual(missing, [], f"{len(missing)} board rows have no id and no approval")
-        self.assertEqual(len(self.board), 174)
+        self.assertEqual(len(self.board), 176)
 
     def test_the_ids_are_a_bijection(self):
         vals = [e["sleeperId"] for e in self.ledger["ids"].values()]
@@ -712,13 +712,14 @@ class TheShippedArtifacts(unittest.TestCase):
         self.assertEqual(stray, [], "a board team code Sleeper does not use -- see JAC/JAX")
 
     def test_the_lab_feed_attributes_by_id_with_zero_name_fallbacks(self):
-        """U14's headline verification. 4 of the 120 picks are genuinely off our board."""
+        """U14's headline verification. 2 of the 120 picks are genuinely off our board (two
+        kickers). It was 4 until 2026-09-06, when Robinson and Wilson joined the board."""
         with open(REAL_FEED, encoding="utf-8") as f:
             feed = json.load(f)
         by_id = {e["sleeperId"] for e in self.ledger["ids"].values()}
         on_board = [p for p in feed if p["player_id"] in by_id]
-        self.assertEqual(len(on_board), 116)
-        self.assertEqual(len(feed) - len(on_board), 4)
+        self.assertEqual(len(on_board), 118)
+        self.assertEqual(len(feed) - len(on_board), 2)
 
     def test_the_committed_ledger_matches_what_the_committed_dump_resolves(self):
         entries, problems = R.resolve(self.board, self.cache, self.ledger)

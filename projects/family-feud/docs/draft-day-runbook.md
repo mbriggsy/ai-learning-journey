@@ -25,7 +25,7 @@ both are gitignored scratch. (Under Cowork these had to be staged into a sandbox
 step is gone — the files are just local now.)
 
 - `draft_engine.py` — the analysis engine (tier cliffs incl. K/DEF, run watch, diminutive-alias name matching)
-- `players_data.json` — the board: **174 entries** (150 skill players + 10 K + 14 DEF), tiers, badges, `vorp`/`vbdRank`/`vbdDelta`, plus the frozen `sleeperId` and a `vorpMethod` on every row. VORP = pts/season over waiver replacement, baselines waiver QB12/RB41/WR47/TE12 and last starters QB8/RB21/WR27/TE8. **Skill values are recomputed from `vorp_curve.json` (seasons **2022-2025**, exact scoring) on every build**; K and DEF keep flat per-tier constants, for different reasons — the curve builds QB/RB/WR/TE **and K**, so K has a curve but no BASELINE (a closed decision), while DEF has no exact source at all. Engine expects this exact filename in cwd.
+- `players_data.json` — the board: **176 entries** (152 skill players + 10 K + 14 DEF), tiers, badges, `vorp`/`vbdRank`/`vbdDelta`, plus the frozen `sleeperId` and a `vorpMethod` on every row. VORP = pts/season over waiver replacement, baselines waiver QB12/RB41/WR47/TE12 and last starters QB8/RB21/WR27/TE8. **Skill values are recomputed from `vorp_curve.json` (seasons **2022-2025**, exact scoring) on every build**; K and DEF keep flat per-tier constants, for different reasons — the curve builds QB/RB/WR/TE **and K**, so K has a curve but no BASELINE (a closed decision), while DEF has no exact source at all. Engine expects this exact filename in cwd.
 - This runbook.
 
 Note: `draft_rankings_data_2026-08-05.json` **was deleted on 2026-08-08** — it was a date-stamped duplicate that had already drifted (its `dst` and `strategy` disagreed with the board) while having zero readers anywhere in the repo. Git is the archive; do not regenerate it. **Three surfaces, not four.** The old `family-feud-draft-board` desktop artifact died with Cowork, and the twin-maintenance rule with it; do not reintroduce it. See [`live-board-plan.md`](live-board-plan.md).
@@ -513,7 +513,7 @@ here.** *(Corrected 2026-08-19. This used to read "it must never need a click to
 is false of the one click that arms it — see step 1 below. It needs exactly **one**, at setup, and
 none thereafter; served with `?live=1` it needs none at all.)*
 
-`draft-kit/family-feud-draft-board.html` — all 174 rows with notes and badges, greys out the
+`draft-kit/family-feud-draft-board.html` — all 176 rows with notes and badges, greys out the
 drafted, stamps `#pick · seat`, and **once live** polls `/picks` every 12s, backing off
 12→24→48→60s on failure (`const POLL_MS = 12000, POLL_MAX_MS = 60000;`). It starts **paused** —
 `let pollTimer = null, isLive = false, …` — in both the template and the built board.

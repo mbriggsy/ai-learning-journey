@@ -200,7 +200,7 @@ class NonStringIsLoud(unittest.TestCase):
 class BoardSweep(unittest.TestCase):
     def test_every_board_name_normalizes_to_a_distinct_key(self):
         players, _ = board_names()
-        self.assertEqual(len(players), 174, "board size changed -- re-verify this sweep")
+        self.assertEqual(len(players), 176, "board size changed -- re-verify this sweep")
         self.assertEqual(self.sweep(players), {},
                          "two board rows share a norm() key -- one pick would remove both")
 

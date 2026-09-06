@@ -219,7 +219,7 @@ class TestDerivations(unittest.TestCase):
             want = round(curve[p["pos"]][str(p["pr"])] - curve[p["pos"]][str(base[p["pos"]])], 1)
             self.assertEqual(p["vorp"], want, p["name"])
             checked += 1
-        self.assertEqual(checked, 150, "expected all 150 skill rows to be curve-derived")
+        self.assertEqual(checked, 152, "expected all 152 skill rows to be curve-derived")
 
     def test_meta_updated_does_not_advance_with_the_CLOCK(self):
         """It answers "how fresh is the data", not "when did I run". `today` used to be one of the

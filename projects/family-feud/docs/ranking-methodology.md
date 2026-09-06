@@ -182,7 +182,7 @@ who clear replacement**, so the table below moves when the board moves:
 
 **2 of the 3 largest taxes are quarterbacks, and that is structure rather than judgment.** This league starts ONE quarterback across eight teams, so replacement is QB12 and the curve is nearly flat beneath it — `vbdRank` sinks mechanically. Read the non-QB rows for what the layers actually do.
 
-**Defenses: deltas span +40 to +68 across 14 rows, with 4 at the maximum** — not one shared number. Ignore them either way.
+**Defenses: deltas span +42 to +70 across 14 rows, with 4 at the maximum** — not one shared number. Ignore them either way.
 <!-- END GENERATED vbd-cases -->
 
 > ⚠️ **Every number in that table used to be hand-typed here, and on 2026-08-14 all five were

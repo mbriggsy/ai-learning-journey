@@ -1560,6 +1560,18 @@
       "resolved_on": "2026-08-07",
       "sleeperId": "6819"
     },
+    "Michael Wilson": {
+      "dump_fetched_at": "2026-08-08T01:15:28+00:00",
+      "evidence": {
+        "dump_name": "Michael Wilson",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "ARI"
+      },
+      "resolved_on": "2026-09-06",
+      "sleeperId": "10232"
+    },
     "Mike Evans": {
       "dump_fetched_at": "2026-08-08T01:12:13+00:00",
       "evidence": {
@@ -2052,6 +2064,18 @@
       "resolved_on": "2026-08-07",
       "sleeperId": "12518"
     },
+    "Wan'Dale Robinson": {
+      "dump_fetched_at": "2026-08-08T01:15:28+00:00",
+      "evidence": {
+        "dump_name": "Wan'Dale Robinson",
+        "matched": "exact_norm",
+        "matched_token": null,
+        "pos": "WR",
+        "team": "TEN"
+      },
+      "resolved_on": "2026-09-06",
+      "sleeperId": "8126"
+    },
     "Xavier Worthy": {
       "dump_fetched_at": "2026-08-08T01:12:13+00:00",
       "evidence": {
@@ -2090,7 +2114,7 @@
     }
   },
   "meta": {
-    "board_rows": 174,
+    "board_rows": 176,
     "dump_fetched_at": "2026-08-08T01:15:28+00:00",
     "dump_source": "https://api.sleeper.app/v1/players/nfl"
   },

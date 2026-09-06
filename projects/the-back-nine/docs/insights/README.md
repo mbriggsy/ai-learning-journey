@@ -5,8 +5,9 @@ numbered `NNN-kebab-slug.md`. Added via `/distill` after debugging something who
 root cause wasn't obvious; surfaced via `/brief` before related work.
 
 **Citation format:** reference an insight by its **full relative path + title slug**
-(e.g. `docs/insights/001-some-lesson.md`), not a bare number — and cross-repo
-citations carry the full path too (e.g. `projects/burned/docs/insights/072-...`),
+(the shape `docs/insights/NNN-a-short-kebab-slug.md`); a bare in-repo number ("insight 074") is
+acceptable shorthand where this index resolves it, matching `CLAUDE.md` — but cross-repo
+citations ALWAYS carry the full path (e.g. `projects/burned/docs/insights/072-...`),
 never just `burned/072`. These sibling-project lessons are sometimes cited in
 shorthand; decode each by its full path: `burned/NNN` → `projects/burned/docs/insights/NNN`;
 `DND NNN` → `projects/archive/do-not-disturb/docs/insights/NNN`;

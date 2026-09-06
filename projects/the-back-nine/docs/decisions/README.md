@@ -26,6 +26,6 @@ A record belongs here when its reasoning is **expensive to reconstruct** and **r
 ## Decisions that live elsewhere (on purpose)
 
 - **Product-level locked decisions (D1–D6)** — what "best" means (lexicographic), recommend-second, the four-act shape, the solver search space, the curse defense, the tax scope, and the identical-tax-fidelity rule (both candidate arms scored at full fidelity; there is no tax-blind arm) — live in [../product.md §4](../product.md). They govern the *product*, not a single engine subsystem.
-- **The solver-validation oracle cases (i–v)** — the conventional-ordering preconditions, bracket-fill marginal-rate equalization, the cliff-aware ceiling, the after-tax-to-heirs known-best, and the no-change case — live in the recommendation plan, [../plans/4-recommendation.md](../plans/4-recommendation.md), because they are the solver's correctness fixtures.
+- **The solver-validation oracle cases (i–v)** — the conventional-ordering preconditions, bracket-fill marginal-rate equalization, the cliff-aware ceiling, the after-tax-to-heirs known-best, and the no-change case — live in the recommendation plan, [../plans/4-recommendation.md](../plans/4-recommendation.md), because they are the solver's correctness fixtures. *(The shipped roster is seven: cases (i)–(v) plus the NC and PA state companions of case (i) — the roadmap's U14 row.)*
 
 When a decision that currently lives in a plan grows enough cross-repo reach to be cited by §-number from multiple subsystems, graduate it into its own record here.

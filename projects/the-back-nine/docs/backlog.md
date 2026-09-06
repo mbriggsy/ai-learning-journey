@@ -263,7 +263,7 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 - ⚑ **The engine one-liner is HALF the fix.** `recommendationView.ts:315-317` maps `withheld` to the
   SAME generic `copy.recommendUnavailable` as `compute-error`, so widening the guard alone converts a
   crash into an **identical generic card**. Route it through `heldView`'s shape (`:329-335`) with a new
-  `recHoldDemotionAxis` key — `copyGuard.ts:112` makes `recHold*` require-hedge, so it must wear a modal.
+  `recHoldDemotionAxis` key — `copyGuard.ts:118` makes `recHold*` require-hedge, so it must wear a modal.
 - ⚑ **Four comments would become NEW false claims** and must be swept in the same commit —
   `select.ts:116-117`, `select.ts:284-286`, `solve.ts:151-152`, `solve.ts:481-483` each currently assert
   the `leave-more` arm *"falls through to a THROW."* This is the exact class `30e5bc31` just cleaned up.
@@ -365,12 +365,14 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 `M` · **pilot** · filed 1× — `A24`
 
 - R38 — the post-65 non-qualified HSA path is unrouted and its conservative forfeit is disclosed only in a code comment
+- ⚑ **Negatives (the register's half — the live prescription is the ranked entry in `TODO.md`):** the false *"(conservative, disclosed)"* comment at `healthOverlay.ts:747` was corrected 2026-08-02 — the disclosure itself is still OWED; `taxOverlay.ts:1803-1805` still calls the forfeit *"a DISCLOSED non-feature"* — the same false claim in the file that owns the mechanism; sweep both in the disclosing commit. **Do not write "stays put" / "simply sits"** — the balance is DESTROYED (`buckets = EMPTY_BUCKETS` → `terminalHsaReal = 0` → bequest $0); the sentence must say DROPPED, and must hold across all three zeroing branches (each fires because the path DEPLETED, so a bequest-framed sentence names a state the engine cannot reach — the honest harm is a plan counted as run-out while HSA dollars sit unspent). "draw … HSA" reds `copyGuard.ts:243`; "can't run out while the HSA lasts" reds `FALSE_CERTAINTY_INTERNAL`.
 
 ### Long-term care is neither modeled nor listed as left out
 
 `M` · **pilot** · filed 1× — `A48`
 
 - Long-term care — the largest un-modeled retirement risk — is neither in the model nor in the OUT-but-disclosed list the product otherwise keeps religiously
+- ⚑ **Negatives (the register's half — the live prescription is the ranked entry in `TODO.md`):** the R13 disclaimer is the WRONG home (vertical-fit pinned); the recommended home is a third *"What this leaves out"* section of the assumptions panel (`src/intake/AssumptionPanel.tsx`) — **not** data-only (`METHODOLOGY_DISCLOSURES` rows render inside section a's "On your behalf"). **Scope is the HSA forfeit + LTC only** — NIIT is NOT homeless (`recommendationView.ts` emits it on every committed rec; the Healthcare sheet carries it) and a silent third home breaks the one-honest-home law. A heading literally "What this leaves out" that names two items is itself a completeness claim the constants falsify (`health.ts` declares four more OUT-but-disclosed facts) — scope the heading or name them. `Row` requires a `seat` from the CLOSED `AssumptionSeat` union, so a leaves-out row is a hand-rolled `<li className="ap-row">` or a registry extension. The TODO entry's anchors drifted twice in a month (+14, then +62/+101) — open every cited line.
 
 ### The staleness clocks — a false alarm today, and the state-tax arm parked
 
@@ -648,7 +650,7 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 - Date-route recommend-second parity gap — the entire still-working audience gets NO strategy recommendation, silently
 - Not-yet-retired (working) household: the recommendation surface does not exist at all
 - R10/R29 — recommend-second is entirely absent for a not-yet-retired (date-route) household
-- ⚠️ **The filed "cheap interim" is WRONG — do NOT drop the `Result.tsx:482` gate alone** (`:476` at filing). It renders an **empty `<div>`**, not the refusal. And reusing `recommendSpineUnreadyNote` would tell a household with a COMPLETE answer that its answer is incomplete — a new false claim, worse than the silence it replaces. The honest interim is a route-true one-liner admitting the v1 limit, seated above `.result-quiet-row` on the DATE grid (`fuckOffDate.css`, not `confidence.css`) — the date arms of `verify:fit` assert ORDER only and the "~89px headroom" figure is the SPINE idle frame's (see Tier 4), so its vertical cost is a manual 1536×791 measure (corrected 2026-09-04). A chaired Caddie card ships the sentence; **the one token Briggsy holds is whether it promises parity.**
+- ⚠️ **The filed "cheap interim" is WRONG — do NOT drop the `Result.tsx:485` gate alone** (`:476` at filing). It renders an **empty `<div>`**, not the refusal. And reusing `recommendSpineUnreadyNote` would tell a household with a COMPLETE answer that its answer is incomplete — a new false claim, worse than the silence it replaces. The honest interim is a route-true one-liner admitting the v1 limit, seated above `.result-quiet-row` on the DATE grid (`fuckOffDate.css`, not `confidence.css`) — the date arms of `verify:fit` assert ORDER only and the "~89px headroom" figure is the SPINE idle frame's (see Tier 4), so its vertical cost is a manual 1536×791 measure (corrected 2026-09-04). A chaired Caddie card ships the sentence; **the one token Briggsy holds is whether it promises parity.**
 - DATE-ROUTE RECOMMEND-SECOND PARITY (+ Q1 survivalContext + heir bracket)
 
 ### The detail-door era — nowhere to see how a number was reached

@@ -222,18 +222,18 @@ The C-units are first-class engine content — they land at engine altitude, ext
 
 ## Load-bearing pinned facts
 
-These figures are load-bearing — the exact values matter and must not be paraphrased. (Dated tax/health/contribution constants live canonically, year-keyed and cited, in `src/engine/constants/`; the values below are the engine pins the unit bodies above depend on.)
+These facts are load-bearing — which is exactly why their VALUES are not re-typed here (a copy rots: this block carried a stale gross-up bound for seven weeks, until 2026-09-06). Each line names the pin and where it lives; open that home for the number. (Dated tax/health/contribution constants live canonically, year-keyed and cited, in `src/engine/constants/`.)
 
-- Trinity corporate arm: **37/39 ≈ 94.9% vs the published 95.1%**, same failing cohorts (1965/66) — `damodaranSeries.ts`.
-- Bengen proxy: Damodaran 10-yr-Treasury arm, **SAFEMAX-analogue ~3.67% vs the published 4.15%**, worst-cohort structure 1966/65/64.
-- SSA cohort pin (1969/1972 cohorts, TR2024/Alt2): **S(90|65) male 0.3209 / female 0.4348 / couple 0.6162**; retired Gompertz fit 0.2799/0.3800/0.554 (was optimistic). `SURVIVAL_MAX_AGE` 115→119.
-- Survivor-spending ratio default **~75%**, grounded to the Blanchett literature, directional-until-pinned.
+- Trinity corporate arm — the 37/39-cohort pass rate vs the published rate, same failing cohorts: [research/engine-validation-and-tax.md](../research/engine-validation-and-tax.md) (validation anchors) · `damodaranSeries.ts`.
+- Bengen proxy — the Damodaran 10-yr-Treasury SAFEMAX-analogue vs the published figure, the worst-cohort structure: the research doc's validation anchors.
+- SSA cohort pin (1969/1972 cohorts, TR2024/Alt2) — S(90|65) per person + couple, the retired (optimistic) Gompertz fit, `SURVIVAL_MAX_AGE`: the research doc's validation anchors + `src/engine/constants/`.
+- Survivor-spending ratio default (Blanchett-grounded, directional-until-pinned): [research/engine-validation-and-tax.md](../research/engine-validation-and-tax.md) §Engine numeric bounds.
 - Gross-up worst-case contraction factor `k` + `GROSS_UP_MAX_PASSES`: pinned in [architecture.md §7.1](../architecture.md), never re-typed here. *(This line carried the M5-era `k ≈ 0.74` / 128 passes until 2026-09-06 — superseded by the state-tax unit, `c7e5936c` 2026-07-15.)*
-- RMD ages: **72 (≤1950) / 73 (1951–1959) / 75 (1960+)**.
-- PBKDF2 **600,000** iterations → AES-GCM-256. *(Historical: U4 shipped the recovery credential as a BIP-39 12-word phrase with an HKDF-SHA-256 wrap; the **U8 rework (council 2026-06-30) superseded it** with a second user-chosen passphrase, PBKDF2-600k, same floor — current truth in [architecture.md §7.3](../architecture.md).)*
-- Passphrase floor: **`zxcvbn-ts` score ≥ 3 AND length ≥ 12**.
-- Never-depleted sentinel **`NEVER_DEPLETED = -1`**.
-- Date-search: **`z = 1.645` one-sided**, paths pinned at **16,000** so `z·SE ≤ ½·SURVIVAL_GRID` at the bar; bar = `BANDS.onTrack`.
+- RMD ages by birth year (statutory): `src/engine/rmd.ts` + the constants module — [architecture.md §7.1](../architecture.md).
+- The KDF iteration floor → AES-GCM-256: [architecture.md §7.3](../architecture.md) + `src/crypto/kdf.ts`. *(Historical: U4 shipped the recovery credential as a BIP-39 12-word phrase with an HKDF-SHA-256 wrap; the **U8 rework (council 2026-06-30) superseded it** with a second user-chosen passphrase, PBKDF2-600k, same floor — current truth in [architecture.md §7.3](../architecture.md).)*
+- Passphrase floor (`zxcvbn-ts` score AND an independent length floor — both must clear): [architecture.md §7.3](../architecture.md).
+- The never-depleted sentinel `NEVER_DEPLETED` (a finite number, never `Infinity`/`NaN` — DND 009): [architecture.md §8](../architecture.md).
+- Date-search: the one-sided `z`, the final-tier path pin, the quantize-before-compare idiom, bar = `BANDS.onTrack`: [architecture.md §9](../architecture.md) + `dateSearch.ts`.
 
 (Live build metrics — the test count and bundle size — are not immutable facts; they live once in [roadmap.md](../roadmap.md#validation-gates).)
 

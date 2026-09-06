@@ -71,7 +71,7 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **INCOME_TYPES / COLA_MODES** — the R40 other-income vocabulary, single-sourced as `const` arrays (in `src/shared/model.ts`) that the intake and the restore codec both import: `INCOME_TYPES` = pension / rental / alimony / annuity / other; `COLA_MODES` = real-flat / nominal-flat / fixed-pct. → [product.md](product.md) (R40.1–R40.2)
 
-**Insight & cross-repo citation IDs** — a numbered, hard-won engineering lesson, cited by **full relative path** (`docs/insights/NNN-…` for this project; sibling-project lessons carry their full path too). The full-path rule + the `burned`/`DND`/`AJS` shorthand decoder: [insights/README.md](insights/README.md).
+**Insight & cross-repo citation IDs** — a numbered, hard-won engineering lesson, cited by **full relative path** (`docs/insights/NNN-…`; a bare in-repo number is acceptable shorthand where the index resolves it — sibling-project lessons ALWAYS carry their full path). The full-path rule + the `burned`/`DND`/`AJS` shorthand decoder: [insights/README.md](insights/README.md).
 
 **IRMAA** — the post-65 Medicare premium **surcharge**, set on a **2-year-lagged** MAGI lookback, with hard per-person step-cliffs. → [architecture.md §7.2](architecture.md)
 

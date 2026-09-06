@@ -5,9 +5,11 @@
 > the roadmap carry the test count under `verify:doc-stats` (this file re-typing it rotted twice, so
 > `d5df3609` made pointing the rule).
 >
-> **The full open register is [`docs/backlog.md`](docs/backlog.md)** — 46 open items, each traced to the raw
-> obligations behind it. This file ranks only what is next; **a queue of ~16 is not the open surface, so
-> read the register before filing anything as new.**
+> **The full open register is [`docs/backlog.md`](docs/backlog.md)** — the open COUNT lives only in that file's own
+> header (never re-typed here; it rotted twice), each entry traced to the raw obligations behind it. This
+> file ranks only what is next; **a ranked queue is not the open surface, so read the register before
+> filing anything as new.** The split is by KIND: the register carries every NEGATIVE finding (what was
+> refuted, what must not be built or re-derived); this file carries the ranking + the live prescription.
 >
 > ⚠️ **NEVER cite "TODO item N."** These numbers are re-ranked every session, so a citation written today
 > silently resolves to a *different* live item later — worse than dangling. (Live examples: `council-log.md`
@@ -932,7 +934,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
 > itself drifted ~80 lines in `copy.ts` (two of its four anchors landed on unrelated Medicare strings,
 > one on a comment). Every anchor in entry 7 was re-opened and corrected before that build started.
 >
-> **The measured hit rate on filed prescriptions here is five-times-confirmed at ~25-40%.** Every ⚑ block
+> **The measured hit rate on filed prescriptions here is ~25-40%** (the samples live ONCE, in the landmines section at the end of this file; the durable form is insight 105). Every ⚑ block
 > dated 2026-08-03 or later is post-refutation; the prose above it is the original filing, kept so the
 > drift stays visible. **Open every cited line before executing it.**
 >
@@ -1960,7 +1962,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
 
 ## Operational landmines — these bite hands
 
-*Engineering lessons live in [`docs/insights/`](docs/insights/) (114 of them; cite by full path + slug).
+*Engineering lessons live in [`docs/insights/`](docs/insights/) (one file per lesson; cite by full path + slug).
 These are the mechanical ones that keep costing hours.*
 
 - **A filed prescription in this repo is ~25-40% executable as written** — thrice-measured (5-of-11,

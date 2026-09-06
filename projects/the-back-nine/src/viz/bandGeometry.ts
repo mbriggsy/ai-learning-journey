@@ -19,19 +19,24 @@
 import type { BandSample } from './bandData'
 
 /** The single fixed viewBox. ALL band variants (drawer + enlarged) share it; the container
- *  scales it via width:100%/height:auto + preserveAspectRatio, and `non-scaling-stroke` keeps
- *  line weight + dash geometry constant in screen px across viewports. The svg holds GEOMETRY
+ *  scales it via width:100%/height:auto + preserveAspectRatio, and `non-scaling-stroke` keeps the
+ *  DATA strokes' weight constant in screen px across viewports (the FRAME — .band-axis, .band-grid,
+ *  .band-annotation-rule — carries none and scales with the figure, dash patterns included; see
+ *  ConfidenceBand's header). The svg holds GEOMETRY
  *  ONLY (council wf_ecbe0ab2-7bb, 2026-09-05 — "SVG draws, HTML writes"): every label is HTML in
  *  the chart text layer, so the viewBox reserves NO label gutter below the $0 baseline — just the
  *  8-unit tail the annotation rules run to before the HTML annotation block takes over in flow.
  *  (Until 2026-09-05 the height was 500: a 128-unit gutter for three stacked rows of svg text that
  *  rendered at 6.9–10 CSS px; the HTML block below the svg now holds those rows at the type scale,
- *  and the emptied gutter hands ~50 px back to the one-frame fit law on the two-pane arms.) */
+ *  and the emptied gutter hands ~54 px back to the one-frame fit law on the 1536 two-pane arm
+ *  (398 → 344 px) and ~35 px at the 1088 floor (320 → 285) for a ONE-row household; a two-row
+ *  date-route band gives back only ~16 px there and ~0 at the floor. docs/architecture.md §12.) */
 export const VIEWBOX = { width: 560, height: 380 } as const
 
 /** The plot rectangle inside the viewBox. `left` is the y-tick column: the HTML tick labels are
- *  end-anchored 8 units left of the axis, and 92 units holds the widest catalog dollar (the seven-glyph "$0.375M" / "$1.125M" quarters of a $1.5M ceiling
- *  at --text-xs) INSIDE the figure on a 390 phone (a 308px figure — measured 2026-09-05,
+ *  end-anchored 8 units left of the axis, and 92 units holds the widest catalog dollar — the
+ *  seven-glyph "$0.375M" / "$1.125M" quarters of a $1.5M ceiling, at --text-xs — INSIDE the
+ *  figure on a 390 phone (a 308px figure — measured 2026-09-05,
  *  temp/chart-text/precondition.json: 45 CSS px of ink + the 4 px gap against the 50.6 px the
  *  column renders at). On the 320 reflow arm the gate also walks (chart-text.spec.ts ARMS) the
  *  figure is 238px and that dollar borrows 9.3px of the drawer's padding instead — bounded live
@@ -159,11 +164,6 @@ export function placeholderPath(horizonYears: number): string {
     `Q${midX},${roundCoord(bottom + PLOT_H * 0.06)} ${x0},${bottom}` +
     `Z`
   )
-}
-
-/** Clamp an svg x to the plot's horizontal span (a label rule never escapes the plot). */
-export function clampX(x: number): number {
-  return x < PLOT.left ? PLOT.left : x > PLOT.right ? PLOT.right : x
 }
 
 // ── hover/scrub geometry (the on-demand readout) ──────────────────────────────────────────────

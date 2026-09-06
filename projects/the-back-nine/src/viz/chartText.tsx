@@ -299,6 +299,24 @@ export function useCollisionLayout(
 
 /* ── the scrub readout placement ────────────────────────────────────────────────────────────── */
 
+/** The gap between the scrub rule and the readout box, in host px. */
+const CT_READOUT_GAP_PX = 10
+
+/** The readout box's x in HOST px, from measured widths: right of the rule while that fits inside
+ *  the plot, else left; then clamped fully inside the plot. Pure numbers, no DOM — "Exported for
+ *  tests" exactly like {@link layoutCollisions}. PRECONDITION the caller owns: 2·boxWmax + gap ≤
+ *  (plotRightF − plotLeftF)·hostW, or a clamped box can cover its own rule (chartText.css .ct-readout
+ *  derives where the shipped 38% cap satisfies it: hosts wider than ~250 px). */
+export function placeReadoutX(hostW: number, boxW: number, ruleFx: number, plotLeftF: number, plotRightF: number, gap = CT_READOUT_GAP_PX): number {
+  const rule = ruleFx * hostW
+  const left = plotLeftF * hostW
+  const right = plotRightF * hostW
+  let x = rule + gap + boxW <= right ? rule + gap : rule - gap - boxW
+  if (x < left) x = left
+  if (x + boxW > right) x = Math.max(left, right - boxW)
+  return x
+}
+
 export interface ReadoutPlacementOpts {
   /** the host the box lives in (percentages + px resolve against it). */
   readonly hostRef: RefObject<HTMLElement | null>
@@ -330,15 +348,8 @@ export function useReadoutPlacement(boxRef: RefObject<HTMLElement | null>, opts:
       const hostW = hostRect.width
       const hostH = hostRect.height
       if (hostW === 0) return
-      const gap = 10
       const boxW = box.getBoundingClientRect().width
-      const rule = ruleFx * hostW
-      const left = plotLeftF * hostW
-      const right = plotRightF * hostW
-      const fitsRight = rule + gap + boxW <= right
-      let x = fitsRight ? rule + gap : rule - gap - boxW
-      if (x < left) x = left
-      if (x + boxW > right) x = Math.max(left, right - boxW)
+      const x = placeReadoutX(hostW, boxW, ruleFx, plotLeftF, plotRightF)
       box.style.setProperty('--rx', `${x.toFixed(2)}px`)
       box.style.setProperty('--ry', `${(topF * hostH).toFixed(2)}px`)
     }

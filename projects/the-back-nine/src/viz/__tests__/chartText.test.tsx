@@ -5,7 +5,7 @@ import { cleanup, render } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { ChartText, ChartTextHost, ChartTextLayer, layoutCollisions } from '../chartText'
+import { ChartText, ChartTextHost, ChartTextLayer, layoutCollisions, placeReadoutX } from '../chartText'
 
 /**
  * The chart TEXT LAYER (council wf_ecbe0ab2-7bb, 2026-09-05 — "SVG draws, HTML writes").
@@ -230,5 +230,61 @@ describe('chartText.css — the anchor registers are <length-percentage>, never 
     for (const r of regs) {
       expect(LENGTH_PCT.test(r.value), `.ct-text--${r.cls} sets ${r.prop}: ${r.value} — a bare number here invalidates the .ct-text calc() and transform falls back to none`).toBe(true)
     }
+  })
+})
+
+// ── the readout placer — pure numbers, the contract the svg era pinned and a4b334c2 deleted ───────
+describe('placeReadoutX — beside the rule while that fits, else the other side, then clamped inside the plot', () => {
+  // Constants by hand (DND 012): the band's plot is PLOT.left 92 .. PLOT.right 540 of a 560 viewBox
+  // (bandGeometry.ts), consumed as fractions of the host; gap 10 (CT_READOUT_GAP_PX).
+  const L = 92 / 560
+  const R = 540 / 560
+
+  it('a left-half scrub seats the box RIGHT of the rule: rule + gap', () => {
+    // rule 200, box 120: 200 + 10 + 120 = 330 ≤ 540 → 210
+    expect(placeReadoutX(560, 120, 200 / 560, L, R)).toBe(210)
+  })
+
+  it('a right-half scrub FLIPS the box left of the rule: rule − gap − box', () => {
+    // rule 500: 500 + 130 = 630 > 540 → 500 − 10 − 120 = 370 (≥ 92, and 370 + 120 = 490 ≤ 540)
+    expect(placeReadoutX(560, 120, 500 / 560, L, R)).toBe(370)
+  })
+
+  it('the LEFT clamp is reachable: a flipped box that would leave the plot seats on its left edge', () => {
+    // The precondition (2·box + gap ≤ plot) is broken ON PURPOSE to reach the clamp arm: rule 100,
+    // box 440 → 100 + 450 > 540 flips; 100 − 10 − 440 = −350 < 92 → clamped to 92 (92 + 440 = 532 fits).
+    expect(placeReadoutX(560, 440, 100 / 560, L, R)).toBe(92)
+  })
+
+  it('a box WIDER than the plot seats on the left edge (the right clamp cannot do better)', () => {
+    // rule 300, box 500 (> the 448-unit plot): flips to −210 → 92; 92 + 500 > 540 → max(92, 40) = 92
+    expect(placeReadoutX(560, 500, 300 / 560, L, R)).toBe(92)
+  })
+
+  it('on the 390 phone (a 308px host, the 38% cap) every lattice vertex seats the box inside the plot and clear of its rule', () => {
+    // The scrub SNAPS to one of 49 lattice columns whose rule x is linear across the plot
+    // (bandGeometry xForYear); the state space is finite, so walk it all. boxW = 0.38 × 308 (the cap).
+    // The continuous worst case at this host clears by ~2.4 px; the lattice never lands there —
+    // its worst vertex clears by ~6 px (measured 2026-09-05). Below a ~250 px host the continuous
+    // infimum crosses zero (chartText.css .ct-readout carries the derivation) — that regime is HELD
+    // council work and is NOT asserted here.
+    const hostW = 308
+    const boxW = 0.38 * hostW
+    const left = L * hostW
+    const right = R * hostW
+    let flips = 0
+    for (let i = 0; i < 49; i++) {
+      const ruleFx = (92 + (448 * i) / 48) / 560
+      const rule = ruleFx * hostW
+      const x = placeReadoutX(hostW, boxW, ruleFx, L, R)
+      expect(x, `vertex ${i}: the box leaves the plot on the left`).toBeGreaterThanOrEqual(left - 1e-9)
+      expect(x + boxW, `vertex ${i}: the box leaves the plot on the right`).toBeLessThanOrEqual(right + 1e-9)
+      const clear = x > rule || x + boxW < rule
+      expect(clear, `vertex ${i}: the box covers its own rule (x ${x.toFixed(2)}, rule ${rule.toFixed(2)}, box ${boxW.toFixed(2)})`).toBe(true)
+      if (x < rule) flips++
+    }
+    // non-vacuity: both seats are exercised across the sweep
+    expect(flips, 'no vertex flipped left — the sweep exercised one branch only').toBeGreaterThan(0)
+    expect(flips, 'every vertex flipped left — the sweep exercised one branch only').toBeLessThan(49)
   })
 })

@@ -32,8 +32,15 @@ import { PLOT, VIEWBOX } from '@viz/bandGeometry'
  */
 
 const here = dirname(fileURLToPath(import.meta.url))
-const tokensCss = readFileSync(join(here, '..', 'styles', 'tokens.css'), 'utf8')
-const bandCss = readFileSync(join(here, '..', '..', 'viz', 'band.css'), 'utf8')
+/** Insight 116: a first-match regex over a stylesheet cannot tell a rule from a comment, and every
+ *  pin in this file is a first-match regex. Read DECLARATIONS only. Verified 2026-09-05: stripping
+ *  changes no value asserted here (bp-laptop 68 / content-wide 70 / measure 36 / space-9 3 /
+ *  space-6 1.5 / --gutter max 1.75, and the .band-drawer block match is byte-identical) — it only
+ *  closes the door on a future comment that quotes a token or a rule. */
+const stripComments = (css: string): string => css.replace(/\/\*[\s\S]*?\*\//g, '')
+const tokensCss = stripComments(readFileSync(join(here, '..', 'styles', 'tokens.css'), 'utf8'))
+const bandCss = stripComments(readFileSync(join(here, '..', '..', 'viz', 'band.css'), 'utf8'))
+const ladderCss = stripComments(readFileSync(join(here, '..', '..', 'viz', 'oddsLadder.css'), 'utf8'))
 
 const REM_PX = 16
 /** The widest catalog tick's ink at --text-xs (13px), measured in real Chromium 2026-09-05 — the
@@ -101,10 +108,14 @@ describe('two-pane honesty floor — the band keeps a legible y-tick column at t
     expect(tickColumnPx - WIDEST_TICK_INK_PX, 'two-pane tick-column slack shrank below 4px — re-check PLOT.left / the breakpoint').toBeGreaterThan(4)
   })
 
-  it('the svg-era label-drop guard stays retired: band.css carries no @container rule', () => {
-    // The 260px drop was a content loss (WCAG 1.4.10) with no permitted substitute; HTML text has
-    // nothing to drop. Match RULE position only — the retirement comment names the old rule as history.
-    const rules = bandCss.replace(/\/\*[\s\S]*?\*\//g, '')
-    expect(/@container\s*\(/.test(rules), 'a @container rule is back in band.css — the drop guard was retired 2026-09-05').toBe(false)
+  it.each([
+    ['band.css', () => bandCss],
+    ['oddsLadder.css', () => ladderCss],
+  ])('the svg-era label-drop guard stays retired: %s carries no @container rule', (name, read) => {
+    // Both drops were content losses (WCAG 1.4.10) with no permitted substitute channel; HTML text
+    // has nothing to drop. The sources are comment-stripped at module load, which is load-bearing
+    // here: both files' retirement notes QUOTE the old rules, so the raw text matches and only the
+    // declarations must not.
+    expect(/@container\s*\(/.test(read()), `a @container rule is back in ${name} — the drop guard was retired 2026-09-05`).toBe(false)
   })
 })

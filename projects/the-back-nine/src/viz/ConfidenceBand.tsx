@@ -26,9 +26,13 @@
  *     538px enlarged one, wraps instead of clipping, and follows the reader's browser font size.
  *     The viewBox no longer reserves a label gutter below the $0 floor; the annotation block sits
  *     in flow under the svg and stacks colliding labels into MEASURED rows.
- *   - responsive: one fixed viewBox, `non-scaling-stroke` on every stroked path; text never scales
- *     with the viewBox, so nothing is ever dropped for width (the ≤260px label-drop guard of the
- *     svg-text era is retired).
+ *   - responsive: one fixed viewBox; `non-scaling-stroke` on every DATA stroke (.band-area,
+ *     .band-median, .band-placeholder-edge, .band-scrub-rule, .band-scrub-dot) so the colorblind
+ *     line-WEIGHT encoding holds in screen px. The FRAME strokes carry none: .band-axis,
+ *     .band-grid and .band-annotation-rule scale with the figure, dash patterns included — a
+ *     1-unit frame stroke renders 0.55 CSS px on the 308px phone figure, 0.80 on the 446px
+ *     two-pane one. Text never scales with the viewBox, so nothing is ever dropped for width (the
+ *     ≤260px label-drop guard of the svg-text era is retired).
  *
  * STRING-FREE: every label arrives via the `labels` / data props (src/viz imports only @shared).
  */
@@ -425,7 +429,8 @@ function AnnotationRules({ annotations, horizonYears }: { annotations: readonly 
  * height is reserved from the row count the layout produced (two lines of --text-xs per row), so
  * nothing below it moves while the answer is being read. The fit-law arms carry ONE row on every
  * spine household (temp/chart-text/precondition.json, 2026-09-05); the date route, which scrolls by
- * design, is where a second or third row appears.
+ * design, is where a SECOND row appears. A third has never been measured (docs/architecture.md §12,
+ * insight 115: "one or two, never three").
  */
 function AnnotationBlock({ annotations, horizonYears }: { annotations: readonly XAnnotation[]; horizonYears: number }) {
   const ref = useRef<HTMLSpanElement>(null)

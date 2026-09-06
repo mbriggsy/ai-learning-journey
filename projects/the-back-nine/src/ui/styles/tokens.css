@@ -145,6 +145,7 @@
   /* ----- elevation (used sparingly — hairlines do most of the work) ----- */
   --shadow-soft: 0 2px 12px rgb(11 61 46 / 0.08);
   --shadow-raised: 0 8px 28px rgb(11 61 46 / 0.12);
+  --shadow-hairline: 0 1px 2px rgb(11 24 19 / 0.18); /* a readout box's lift off the plot it covers */
 
   /* ----- motion (emil-design-eng: strong custom curves; UI under 300ms;
    *        transitions/springs only — never restart-from-zero keyframes on dynamic UI) ----- */

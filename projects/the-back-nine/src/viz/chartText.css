@@ -13,9 +13,10 @@
  * 6.88 → 5.99 CSS px), and it never scales with the viewBox.
  *
  * THE THREE BORROWED REGISTERS (insight 082 — borrow a register an equal-rank subordinate already
- * wears, never a novel size): --text-xs (13px) for ticks, axis captions and annotation lines;
- * --text-sm for emphasized labels (series end labels, the crown, every scrub readout); --text-lg
- * for the one hero figure (the RecommendationViz delta). No chart types a px size of its own.
+ * wears, never a novel size): --text-xs (13px) for ticks, axis captions, annotation lines and
+ * RecommendationViz's two end-of-bar labels; --text-sm for emphasized labels (TwoFutures' series
+ * end labels, the ladder crown, the band's placeholder note, every scrub readout); --text-lg for
+ * the one hero figure (the RecommendationViz delta). No chart types a px size of its own.
  *
  * POSITIONING: `--fx` / `--fy` are FRACTIONS of the host box (svg x / viewBox width, svg y /
  * viewBox height), written as React style-prop custom properties. Those are CSSOM property writes
@@ -59,10 +60,13 @@
   line-height: var(--leading-tight);
   font-size: var(--text-xs);
 }
-/* `0px`, never a bare `0`: these substitute into the calc() above, and a unitless zero there is a
-   <number> — `<number> + <length>` fails type-checking, the declaration goes invalid at computed-
-   value time and the WHOLE transform falls back to none (the review caught the hero hanging half
-   a width right of its bracket). */
+/* `--ct-ty` is `0px`, never a bare `0`: it substitutes into the calc() above, where a unitless zero
+   is a <number>, `<number> + <length>` fails type-checking, the declaration goes invalid at
+   computed-value time and the WHOLE transform falls back to none (the review caught the
+   RecommendationViz hero hanging half a width right of its bracket; chartText.test.tsx pins all six
+   registers as <length-percentage>). `--ct-tx` is substituted directly into translate() /
+   translateX(), where a unitless zero is a legal <length> — it carries `0px` as hygiene only, so a
+   later move into a calc cannot repeat the bug. */
 .ct-text--start { --ct-tx: 0px; }
 .ct-text--middle { --ct-tx: -50%; }
 .ct-text--end { --ct-tx: -100%; }
@@ -119,7 +123,7 @@
   background: var(--paper-raised);
   border: 1px solid var(--line-control);
   border-radius: var(--radius-md);
-  box-shadow: 0 1px 2px rgb(11 24 19 / 0.18);
+  box-shadow: var(--shadow-hairline);
   font-size: var(--text-sm);
   line-height: var(--leading-tight);
   width: max-content;

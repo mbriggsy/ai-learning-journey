@@ -744,8 +744,9 @@ final tier ~30 s after the provisional.
    lets an end-anchored label borrow its card's padding (inside the card, on screen) — the gate's bound is the CARD named per chart, not the svg
    box. The old "~6px" is retired (not reproducible from any kept artefact). MEASURED by the gate's own `borderline` arm (2026-09-05): on the
    three seeds the gate ran before that arm the band's widest tick at 320 is 32.1px against a 35.7px column — no borrow at all; the shipped
-   worst case (`borderline`'s `$0.375M`, 45.0px) hangs 9.3px left of the 238px figure into the drawer's 25px chrome, 15.7px clear of the card
-   edge (`assertTickColumn` reds it inside 4px); the ladder's "on track" (44.3px against a 43.2px column on a 288px figure) takes ~1px of the
+   worst case (`borderline`'s `$0.375M`, 45.0px on Windows / 42.0px on Linux CI — FreeType rounds glyph advances to whole pixels) hangs
+   9.3px (6.3 on Linux) left of the 238px figure into the drawer's 25px chrome, 15.7px clear of the card edge (`assertTickColumn` reds it
+   inside 4px; its seed guard pins the seven-glyph dollar by TEXT and floors the ink at 40, which both rasterizers clear); the ladder's "on track" (44.3px against a 43.2px column on a 288px figure) takes ~1px of the
    page gutter, which is why the ladder's bound is `main.result` — it has no padded card of its own (council 2026-09-05 owns what yields there);
    (h) ⚑ HIS + council-HELD — **"what yields when the room runs out" on the 320 arm** (council wf_1b45326f-9e8, 2026-09-05, 8/10 —
    `docs/council-log.md`; the law it wrote is `docs/architecture.md §12` "the room is not the ink"). THREE exhibits, one mechanism: the band's

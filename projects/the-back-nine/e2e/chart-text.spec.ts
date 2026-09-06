@@ -99,7 +99,8 @@ async function floorPx(page: Page): Promise<number> {
  *  `.band-modal-open` body lock). The per-chart reasons, measured 2026-09-05:
  *   · band → `.band-drawer` (ConfidenceBandPanel.tsx) or the enlarge `[role="dialog"]`: the dollars
  *     end-anchor at TICK_FX = 84/560 = 0.15 of the figure, and the widest catalog dollar is 45 px of
- *     ink at --text-xs (`borderline`'s seven-glyph "$0.375M" / "$1.125M"). On the 320 arm that column
+ *     ink at --text-xs on Windows, 42 on Linux CI (`borderline`'s seven-glyph "$0.375M" / "$1.125M";
+ *     FreeType rounds glyph advances to whole pixels). On the 320 arm that column
  *     renders narrower than the dollar, so it hangs LEFT of `figure.band-figure` into the drawer's
  *     own padding — `assertTickColumn` carries the tighter, live-measured bound for that borrow,
  *     with the arm-by-arm numbers in its own docblock.
@@ -230,22 +231,32 @@ const TICK_CLEARANCE_PX = 4
  *  clear of the CARD edge, where a clip (the plausible-WRONG-dollar attack) would start. The
  *  allowance is READ from the live card at each arm, exactly as `floorPx` reads --text-xs: a typed
  *  25 would go quietly wrong the day the drawer is re-spaced.
- *  MEASURED (the `borderline` arm, this gate, 2026-09-05 — `room` is 25.0 px on every arm: the
- *  drawer's 24 px padding + 1 px border): the 45.0 px "$0.375M" / "$1.125M" sit 21.9 px INSIDE the
- *  figure at REAL (446 px figure), 8.7 px inside at FLOOR (358), 1.2 px inside at PHONE (308), and
- *  hang 9.3 px LEFT of it on the 320 arm (238 px figure, a 35.7 px column) — 15.7 px clear of the
- *  card edge. Every other catalog dollar is narrower (38.5, 32.1, 12.9 px). */
+ *  MEASURED (the `borderline` arm, this gate, 2026-09-05, Windows/DirectWrite — `room` is 25.0 px on
+ *  every arm: the drawer's 24 px padding + 1 px border): the 45.0 px "$0.375M" / "$1.125M" sit 21.9 px
+ *  INSIDE the figure at REAL (446 px figure), 8.7 px inside at FLOOR (358), 1.2 px inside at PHONE
+ *  (308), and hang 9.3 px LEFT of it on the 320 arm (238 px figure, a 35.7 px column) — 15.7 px clear
+ *  of the card edge. Every other catalog dollar is narrower (38.5, 32.1, 12.9 px). Linux CI renders
+ *  the same glyphs ~3 px narrower (FreeType's whole-pixel advances): 42.0 px, a 6.3 px borrow at 320. */
 function assertTickColumn(a: Audit, label: string): void {
   const ticks = a.nodes.filter((n) => !n.hidden && /band-tick/.test(n.cls))
   expect(ticks.length, `${label}: fewer than two y-ticks — the tick oracle has nothing to measure`).toBeGreaterThan(1)
   const widest = Math.max(...ticks.map((n) => n.right - n.left))
-  // Non-vacuity: this arm exists to render the WIDEST catalog dollar (a MAX, never a min — `$0` is a
-  // .band-tick too). If the household's ceiling leaves the 1.5 rung, the arm still passes every
-  // other oracle while proving nothing — so fail.
+  // Non-vacuity, two halves: this arm exists to render the WIDEST catalog dollar — the seven-glyph
+  // quarters of a 1.5-rung ceiling ("$0.375M" / "$1.125M", bandData buildYTicks) — so (1) such a
+  // dollar must be ON the axis (the household's ceiling still lands on the 1.5 rung), and (2) its ink
+  // must be the widest thing the catalog renders (a MAX, never a min — `$0` is a .band-tick too). The
+  // ink floor is PLATFORM-AWARE: the same Source Sans 3 glyphs measure 45.0 px on Windows (DirectWrite,
+  // fractional advances) and 42.0 px on Linux CI (FreeType rounds each advance to a whole pixel —
+  // seven glyphs lose ~3 px; measured 2026-09-05 when a Windows-pinned 44 reddened CI). 40 clears both
+  // and still excludes every six-glyph dollar (38.5 / ~36).
+  expect(
+    ticks.some((n) => /^\$\d\.\d{3}M$/.test(n.text)),
+    `${label}: no seven-glyph quarter dollar on the axis (${ticks.map((n) => n.text).join(' ')}) — this seed no longer quarters a 1.5-rung ceiling; the arm proves nothing, re-pick the seed`,
+  ).toBe(true)
   expect(
     widest,
-    `${label}: the widest y-tick is ${widest.toFixed(1)}px of ink — this seed no longer renders the widest catalog dollar (~45px at --text-xs); the arm proves nothing, re-pick the seed`,
-  ).toBeGreaterThanOrEqual(44)
+    `${label}: the widest y-tick is ${widest.toFixed(1)}px of ink — narrower than the widest catalog dollar renders on any platform (45.0 Windows / 42.0 Linux at --text-xs); the arm proves nothing, re-pick the seed`,
+  ).toBeGreaterThanOrEqual(40)
   const room = a.chartBox.left - a.bound.left // the card padding a tick is permitted to borrow
   for (const n of ticks) {
     const borrow = a.chartBox.left - n.left

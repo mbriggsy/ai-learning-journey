@@ -83,3 +83,28 @@ Run the engine from the REPO ROOT: python scripts/run_engine.py 6
 Naming the seat is deliberate -- run_engine re-derives it from draft_order and REFUSES on a disagreement, so this is two independent readings having to agree rather than one being trusted.
 
 _cargo was 6 min old when this ran_
+
+---
+
+## CARGO IS STALE — THIS WATCHER IS BLIND — 2026-09-04 15:52:51
+
+- last mule run was 324 minutes ago.
+- sleeper_draft.json on disk was last written 324 minutes ago.
+- sleeper_users.json on disk was last written 324 minutes ago.
+The mule runs hourly; anything past 150 minutes means it missed at least two runs.
+Until it is fixed, 'no change' below means 'no new data', NOT 'nothing happened'.
+Re-run scripts/install-mule.ps1 — it re-derives every path from its own location.
+
+_cargo was 324 min old when this ran_
+
+---
+
+## T-48 HOURS TO THE DRAFT — 2026-09-04 19:35:01
+
+The draft is 1 day, 23 hours away -- Sun 06 Sep 2026, 06:45 PM.
+Two days out the room stops changing and the prep has to be real. From the REPO ROOT:
+  python scripts/validate_board.py    # the board is not trusted until this passes
+  python scripts/run_engine.py        # re-derives your seat and REFUSES rather than guessing while draft_order is null
+Read docs/draft-day-runbook.md end to end now, not on the clock -- Step 3 is the loop you will actually run.
+
+_cargo was 6 min old when this ran_

@@ -1,11 +1,20 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { readdirSync } from 'node:fs'
 import {
   parseVitestList,
   extractClaim,
   checkDocStats,
   TRACKED_SURFACES,
+  parseBacklogHeader,
+  countBacklogEntries,
+  checkBacklogCount,
+  findStrayCounts,
+  checkInsightsIndex,
+  strayCountSurfaces,
+  BACKLOG_SURFACE,
+  INSIGHTS_DIR,
 } from '../verify-doc-stats'
 
 describe('doc test-count drift sentinel', () => {
@@ -117,6 +126,114 @@ describe('doc test-count drift sentinel', () => {
         expect(claim, `${surface} carries no readable "NNN tests across NN files" claim`).not.toBeNull()
       }
       expect(new Set(onDisk.map((s) => JSON.stringify(s.claim))).size).toBe(1)
+    })
+  })
+})
+
+describe('the register + insights arms (2026-09-06 — the numbers the doc audit found rotting)', () => {
+  const header = (open: number, entries: number, closed: number, half = 'two entries are half-closed') =>
+    `# The Back Nine — Open Backlog\n\n> The complete open register: **${open} open items** (${entries} entries, ${closed} closed and kept as records; ${half} and counted open — re-counted) consolidated\n> from **136 raw obligations**.\n`
+  const body = (headings: string[]) => `\n## Tier 0 — calm-but-wrong\n\n${headings.map((h) => `### ${h}\n\n- a bullet\n`).join('\n')}`
+
+  describe('parseBacklogHeader', () => {
+    it('reads open / entries / closed and a word-valued half-closed count', () => {
+      expect(parseBacklogHeader(header(48, 56, 8))).toEqual({ open: 48, entries: 56, closed: 8, halfClosed: 2 })
+    })
+    it('reads a digit-valued half-closed count and defaults it to 0 when absent', () => {
+      expect(parseBacklogHeader(header(48, 56, 8, '3 entries are half-closed'))!.halfClosed).toBe(3)
+      expect(parseBacklogHeader(header(48, 56, 8, 'nothing'))!.halfClosed).toBe(0)
+    })
+    it('returns null when the header phrasing is gone (the vacuous-guard trap)', () => {
+      expect(parseBacklogHeader('# Backlog\n\n> 48 items remain open.\n')).toBeNull()
+    })
+    it('reads only the first dozen lines — a count deep in the body is not the header', () => {
+      expect(parseBacklogHeader('# Backlog\n' + '\n'.repeat(20) + '**48 open items** (56 entries, 8 closed')).toBeNull()
+    })
+  })
+
+  describe('countBacklogEntries', () => {
+    it('counts ### headings below the first ## Tier heading, ~~struck~~ and ✅ ones as closed-marked', () => {
+      const c = '# Backlog\n\n### Not an entry (above the tiers)\n' + body(['Open one', '~~Closed one~~ — **CLOSED**', '✅ CLOSED (the mechanism) — half', 'Open two'])
+      expect(countBacklogEntries(c)).toEqual({ entries: 4, closedMarked: 2 })
+    })
+    it('finds nothing without a tier heading', () => {
+      expect(countBacklogEntries('# Backlog\n\n### A heading\n')).toEqual({ entries: 0, closedMarked: 0 })
+    })
+  })
+
+  describe('checkBacklogCount', () => {
+    const goodBody = body(['A', 'B', '~~C~~ closed', '✅ CLOSED D (half — counted open)', 'E'])
+    it('passes when the header matches the body and its own arithmetic', () => {
+      // 5 entries; ~~C~~ + ✅D marked = 2 = closed 1 + half-closed 1; open = 5 − 1 = 4
+      expect(checkBacklogCount(header(4, 5, 1, 'one entry is half-closed') + goodBody)).toEqual({ ok: true })
+    })
+    it('FAILS an entry added without bumping the header', () => {
+      const r = checkBacklogCount(header(4, 5, 1, 'one entry is half-closed') + goodBody + '\n### F (new, unbumped)\n')
+      expect(r.ok).toBe(false)
+      expect(r.reason).toContain('header says 5 entries; the body holds 6')
+    })
+    it('FAILS an entry struck through without bumping the closed count', () => {
+      const r = checkBacklogCount(header(4, 5, 1, 'one entry is half-closed') + body(['A', '~~B~~', '~~C~~', '✅ D', 'E']))
+      expect(r.ok).toBe(false)
+      expect(r.reason).toContain('half-closed = 2; the body marks 3')
+    })
+    it('FAILS a header whose own arithmetic does not add up', () => {
+      const r = checkBacklogCount(header(5, 5, 1, 'one entry is half-closed') + goodBody)
+      expect(r.ok).toBe(false)
+      expect(r.reason).toContain('5 entries − 1 closed = 4')
+    })
+    it('FAILS when the header claim is gone or the body has no entries', () => {
+      expect(checkBacklogCount('# Backlog\n' + goodBody).ok).toBe(false)
+      expect(checkBacklogCount(header(4, 5, 1)).ok).toBe(false)
+    })
+    it('passes on the REAL register — header phrasing readable, body counted, and they agree', () => {
+      // Deliberately live, unlike the test-count arm: a register edit that adds or closes an
+      // entry bumps the header IN THE SAME EDIT, so a red here is the defect, not churn.
+      const real = readFileSync(join(process.cwd(), BACKLOG_SURFACE), 'utf-8')
+      expect(parseBacklogHeader(real), 'the register header no longer carries the "**N open items** (M entries, K closed" phrasing').not.toBeNull()
+      expect(countBacklogEntries(real).entries).toBeGreaterThanOrEqual(40)
+      expect(checkBacklogCount(real)).toEqual({ ok: true })
+    })
+    it('the singular half-closed form parses too ("one entry is half-closed" → 1)', () => {
+      expect(parseBacklogHeader(header(4, 5, 1, 'one entry is half-closed'))!.halfClosed).toBe(1)
+    })
+  })
+
+  describe('findStrayCounts', () => {
+    it('flags both re-typed phrasings and ignores everything else', () => {
+      expect(
+        findStrayCounts([
+          { surface: 'a.md', content: 'leaving **46 open items** in the register' },
+          { surface: 'b.md', content: 'consolidated into a 43-item open register' },
+          { surface: 'c.md', content: 'the open count lives in the register header' },
+          { surface: 'd.md', content: '46 open questions remain' },
+        ]),
+      ).toEqual(['a.md', 'b.md'])
+    })
+    it('the REAL doc set types the count nowhere but the register header', () => {
+      const cwd = process.cwd()
+      const surfaces = strayCountSurfaces(cwd)
+      expect(surfaces).toContain('README.md')
+      expect(surfaces).toContain('docs/roadmap.md')
+      expect(surfaces).not.toContain(BACKLOG_SURFACE)
+      expect(surfaces.some((s) => s.startsWith('docs/insights/'))).toBe(false)
+      expect(findStrayCounts(surfaces.map((surface) => ({ surface, content: readFileSync(join(cwd, surface), 'utf-8') })))).toEqual([])
+    })
+  })
+
+  describe('checkInsightsIndex', () => {
+    it('reports a file missing from the index and a link to a file that does not exist', () => {
+      const r = checkInsightsIndex('- [001 — a](001-a.md)\n- [003 — c](003-c.md)\n', ['001-a.md', '002-b.md', 'README.md'])
+      expect(r).toEqual({ ok: false, missingFromIndex: ['002-b.md'], danglingInIndex: ['003-c.md'] })
+    })
+    it('ignores non-insight files on disk and non-insight links in the index', () => {
+      const r = checkInsightsIndex('- [001](001-a.md) · see [CLAUDE.md](../../CLAUDE.md)', ['001-a.md', 'README.md', 'notes.txt'])
+      expect(r.ok).toBe(true)
+    })
+    it('the REAL index matches the REAL directory, both ways', () => {
+      const dir = join(process.cwd(), INSIGHTS_DIR)
+      const r = checkInsightsIndex(readFileSync(join(dir, 'README.md'), 'utf-8'), readdirSync(dir))
+      expect(r).toEqual({ ok: true, missingFromIndex: [], danglingInIndex: [] })
     })
   })
 })

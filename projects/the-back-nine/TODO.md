@@ -6,7 +6,7 @@
 > `d5df3609` made pointing the rule).
 >
 > **The full open register is [`docs/backlog.md`](docs/backlog.md)** — the open COUNT lives only in that file's own
-> header (never re-typed here; it rotted twice), each entry traced to the raw obligations behind it. This
+> header (never re-typed here; it rotted twice — `verify:doc-stats` gates it since 2026-09-06), each entry traced to the raw obligations behind it. This
 > file ranks only what is next; **a ranked queue is not the open surface, so read the register before
 > filing anything as new.** The split is by KIND: the register carries every NEGATIVE finding (what was
 > refuted, what must not be built or re-derived); this file carries the ranking + the live prescription.

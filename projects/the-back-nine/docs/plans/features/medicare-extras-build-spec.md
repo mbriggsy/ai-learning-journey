@@ -57,7 +57,7 @@ status: shipped
 - **R7 via a TOP-LEVEL draft key** (a nested `health.*` sub-field dodges the compile gate —
   assumptionRegistry.ts:84 landmine).
 
-## F3 — engine channel (HARD LOCK — red-team Attack 2, verified healthOverlay.ts:486)
+## F3 — engine channel (HARD LOCK — red-team Attack 2, verified healthOverlay.ts:689-702)
 
 - Extras fund as a **per-person HETEROGENEOUS VECTOR** — Σ over {living ∩ enrolled} of that
   person's own premium × 12, **ending at each death** — **NEVER `enrolledCount × average`**
@@ -86,7 +86,7 @@ status: shipped
   STAYS (endogenous — wf_cc065e3b-bc1) · the real-flat clause EXPANDS to cover the new base.
   (Likely resolves O11 — oopHelp's blanket "premiums" becomes literally true.)
 
-## F5 — disclosure routing (HARD LOCK — red-team Attack 1, verified healthSheetChrome.ts:325 + Result.tsx:170)
+## F5 — disclosure routing (HARD LOCK — red-team Attack 1, verified healthSheetChrome.ts:325 + Result.tsx:217-221)
 
 - The extras affirmative + per-person adopted-typical provenance + the bi-directional disclosure
   MUST have a **RENDERED HOME for BOTH populations** — `verdictMedicareResidual`
@@ -104,7 +104,7 @@ status: shipped
 ## Ship gates
 
 - Codec range-gate the persisted per-person dollar with the EXISTING `needNonNegativeDollar`
-  (scenarioCodec.ts:342-351, throws Corrupt) — NOT the siblings' optFinite (a negative extras
+  (scenarioCodec.ts:384, throws Corrupt) — NOT the siblings' optFinite (a negative extras
   premium is optimistic). ScenarioV3 additive-optional (no v4).
 - DND-012 externally-derived fixtures (incl. the F3 asymmetric survivor golden).
 - verify:fit arms re-pinned **WITHOUT assuming monotone shrink** (the omission axis shrinks but

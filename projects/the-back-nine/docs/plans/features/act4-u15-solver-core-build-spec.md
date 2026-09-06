@@ -28,7 +28,7 @@ status: shipped
 
 **The false belief the veto kills:** an un-fingerprinted token attests "THIS household's
 recommendation is validated" while proving only that SOME household passed —
-`mintedOver` binds no household (oracleToken.ts:288-295) and `RankingStabilityReport`
+`mintedOver` binds no household (oracleToken.ts:258-269) and `RankingStabilityReport`
 carries counts/seeds only (rankingStability.ts:66). U14's single in-line call site made
 that harmless; U15's solve entry is the second consumer being born (insight 020's shape).
 
@@ -69,7 +69,7 @@ that harmless; U15's solve entry is the second consumer being born (insight 020'
   goal to the statistic the harness already computes and forwards; it hosts **no parallel
   scorer** (a solver-native scorer pins finitely many fixtures and drifts between them —
   the seam contract evaluate.ts:5-13 names for exactly this council).
-- **Export the module-private `tier2`** (evaluate.ts:155) so `select.ts` composes shrinkage
+- **Export the module-private `tier2`** (evaluate.ts:168) so `select.ts` composes shrinkage
   and tie-break on the one orientation — no re-derived sign conventions.
 - The lexicographic contract is unchanged from the plan: Tier-1 survival floor in the
   spine's `X of 10`; survival-equivalence decided by the **A-side CRN-difference selection

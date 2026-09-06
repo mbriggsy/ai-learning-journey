@@ -34,10 +34,10 @@
 > - **the health sheet's "benchmark premium" false negation** — `bd851f24`.
 >
 > Also corrected: the "widening the state roster bricks every saved vault" blocker is **FALSE**, and its
-> prescribed remedy would have re-opened the hole `stateTax.ts:421-25` was minted to close. And the heir
+> prescribed remedy would have re-opened the hole `stateTax.ts:422-431` was minted to close. And the heir
 > entry (`:370`) still asserts present-tense a clause the XS half removed on 2026-08-02.
 >
-> **Anchors throughout this file are pre-2026-08-03 and have drifted** — open every cited line.
+> **Anchors throughout this file were re-verified 2026-09-06** (a verify→skeptic fleet over 646 line-numbered citations across the doc set: 310 relocated, 12 retired as gone, 58 inside kept-for-the-reasoning blocks left as written). They drift again with every commit — still open every cited line before acting on it.
 >
 > **This file is the register, not the queue.** The ranked next-actions live in [`TODO.md`](../TODO.md).
 > Tiers are by worst consequence, never by size — the cardinal rule is that calm-but-wrong is the sin.
@@ -76,20 +76,20 @@
   exists to close, so the unit is named outright now.
 - ⚑ **RE-SEVERITY 2026-08-03 (verification fleet) — this is a three-tap path to a wrong plan, not a copy
   nit.** Anchor drift first: the cold-read log cites `copy.ts:1119`; the live string is
-  **`copy.ts:1124-1125`**. The panel toggle (`AssumptionPanel.tsx:364-366`) writes `spendEntryPeriod`
+  **`copy.ts:1224-1225`**. The panel toggle (`AssumptionPanel.tsx:478-481`) writes `spendEntryPeriod`
   only — the stored amount holds and the SHOWN amount jumps exactly 12× (`:281-286`). The
   identical-looking INTAKE segment (`questions.tsx:432-450`) does the **opposite**: digits hold and
   `annualSpendingReal` re-bases 12×. That sentence is the only thing distinguishing the two controls, and
   it says *"switching this never changes the amount."* Flip to "Each year", see 78,000 where 6,500 was,
   believe the sentence, retype 6,500 → the plan runs on **$6,500/yr**. Nothing catches it:
-  `PANEL_PROVENANCE` (`sanity.ts:216`) disarms `spend-period-unconfirmed`, and 6,500 is under
+  `PANEL_PROVENANCE` (`AssumptionPanel.tsx:258`) disarms `spend-period-unconfirmed`, and 6,500 is under
   `SPEND_AMBIGUOUS_MIN` anyway.
 - ⚑ **A first replacement draft was written and REJECTED — do not re-derive it.** It dropped the live
   string's *"entered"* clause for *"reads on this sheet — the same money either way."* That is **false**:
-  both spend commits (`AssumptionPanel.tsx:486-496`, `questions.tsx:409-422`) multiply by 12 under
-  `'month'`, and `spendEntryPeriod` is **persisted** (`scenarioCodec.ts:700`), so the toggle sets the unit
+  both spend commits (`AssumptionPanel.tsx:601-611`, `questions.tsx:409-422`) multiply by 12 under
+  `'month'`, and `spendEntryPeriod` is **persisted** (`scenarioCodec.ts:711`), so the toggle sets the unit
   for the NEXT typed figure, across sessions. Any rewrite must keep the entry-unit disclosure. Also fix
-  the now-overbroad comments at `copy.ts:1121-1123` and `AssumptionPanel.tsx:214-215`
+  the now-overbroad comments at `copy.ts:1198-1200` and `AssumptionPanel.tsx:244-245`
   ("structurally impossible"). No test pinned the string — one was added with the fix above.
 
 ### A repeat "Add this account" tap over an already-visible block changes nothing perceptible
@@ -205,15 +205,15 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 - ⚑ **A drafted fix was REFUTED 2026-08-03 — do not execute the obvious one.** The reasoning was going to
   be *"`noChange: false` means the winner differs from the household's plan, so 'it still matches' is
   false."* **That is engine-wrong:** `noChange` compares the winner to a FIXED conventional prior
-  (`select.ts:313`, `:324-329`), never to the entered `drawdownPolicy` — so a defending comment built on
+  (`select.ts:383-398`, ` (⚑ gone 2026-09-06 — the cited claim — that noChange compares the winner to a FIXED conventional prior — no longer exists anywhere: isNoChange (select.ts:383-396) anchors on the USER baseline and falls back to the conventional index only when no user baseline was enumerated, so relocating the number would attach a line to an inverted claim)`), never to the entered `drawdownPolicy` — so a defending comment built on
   it would mint a NEW false engine claim into `copy.ts`.
-- ⚑ **`?vault=rec` CANNOT WITNESS this defect.** `devSeeds.ts:951` → `retiredOnTrack` holds **one**
+- ⚑ **`?vault=rec` CANNOT WITNESS this defect.** `devSeeds.ts:854-856` → `retiredOnTrack` holds **one**
   traditional IRA, so `proportional` and `taxable-first` are the identical decumulation and the
   cold-read's *"SWITCH to Brokerage first"* names an account that does not exist. **A multi-account
   witness plant must be built before any regression pin here means anything** — which is what pushes this
   from `S` to `M`.
-- ⚑ Anchor drift: `noChange: false` is `devSeeds.ts:1330` (not `:1322`); the winner literal is `:1316`
-  (not `:1308`). `copy.ts:1309-1313` is the card-FAMILY header — nothing defends the holds sentence
+- ⚑ Anchor drift: `noChange: false` is `devSeeds.ts:1435` (not `:1322`); the winner literal is `:1421`
+  (not `:1308`). `copy.ts:1409-1413` is the card-FAMILY header — nothing defends the holds sentence
   today, so the fix must **add** a comment, not rewrite one.
 - ⚑ **The semantic witness ("the advice not taken") — the debt record, moved from the queue 2026-09-06:** ⚠️ **The 2026-08-03 verification debt, CORRECTED 2026-08-14 — it was overstated, and the half that
   remains is narrower.** This block used to read *"the record card's HOLDS face has never been seen;
@@ -293,19 +293,19 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 - Over-funded (≥98% survival) household whose winning strategy converts: generic "unavailable" or a calm-error, not a named refusal — and the code comments say this is unreachable when it is NOT
 - R22/R9 — a leave-more surplus household with a conversion winner CRASHES to 'engine-unavailable' instead of an honest withhold
 - ⚑ **Crash path CONFIRMED reachable end-to-end (verification fleet 2026-08-03), and MORE likely than
-  filed.** `select.ts:245-247`'s conventional-incumbent tie-break crowns the non-converting baseline as
+  filed.** `select.ts:280-282`'s conventional-incumbent tie-break crowns the non-converting baseline as
   runner-up whenever only one conversion's advantage survives shrinkage — so
   winner-converts/runner-up-doesn't is the **natural** shape for a well-funded leave-more household, not
-  a rare one. Real guard is `select.ts:287-291`; the throw is `gradeCalibration.ts:172-177` via
-  `gradeOnFamily:200`; the catch narrow is `solve.ts:346`, rethrow `:347`.
-- ⚑ **The engine one-liner is HALF the fix.** `recommendationView.ts:315-317` maps `withheld` to the
+  a rare one. Real guard is `select.ts:333-336`; the throw is `gradeCalibration.ts:172-177` via
+  `gradeOnFamily:200`; the catch narrow is `solve.ts:349`, rethrow `:350`.
+- ⚑ **The engine one-liner is HALF the fix.** `recommendationView.ts:437-446` maps `withheld` to the
   SAME generic `copy.recommendUnavailable` as `compute-error`, so widening the guard alone converts a
   crash into an **identical generic card**. Route it through `heldView`'s shape (`:329-335`) with a new
-  `recHoldDemotionAxis` key — `copyGuard.ts:118` makes `recHold*` require-hedge, so it must wear a modal.
+  `recHoldDemotionAxis` key — `copyGuard.ts:119` makes `recHold*` require-hedge, so it must wear a modal.
 - ⚑ **Four comments would become NEW false claims** and must be swept in the same commit —
-  `select.ts:116-117`, `select.ts:284-286`, `solve.ts:151-152`, `solve.ts:481-483` each currently assert
+  `select.ts:134-135`, `select.ts:321-328`, `solve.ts:151-152`, `solve.ts:484-487` each currently assert
   the `leave-more` arm *"falls through to a THROW."* This is the exact class `30e5bc31` just cleaned up.
-- ⚑ **RED-GATE RISK:** `select.test.ts:292` asserts `kind === 'selected'` on a live-shaped leave-more
+- ⚑ **RED-GATE RISK:** `select.test.ts:293` asserts `kind === 'selected'` on a live-shaped leave-more
   world, and `:294`'s comment literally encodes the defect (*"leave-more never routes to withheld"*).
   Check it before shipping. No existing fixture covers leave-more + a converting winner.
 - ⚑ **BRIGGSY DECIDES:** on `leave-more` a converting winner is the EXPECTED crown for a well-funded
@@ -416,7 +416,7 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 `M` · **pilot** · filed 1× — `A24`
 
 - R38 — the post-65 non-qualified HSA path is unrouted and its conservative forfeit is disclosed only in a code comment
-- ⚑ **Negatives (the register's half — the live prescription is the ranked entry in `TODO.md`):** the false *"(conservative, disclosed)"* comment at `healthOverlay.ts:747` was corrected 2026-08-02 — the disclosure itself is still OWED; `taxOverlay.ts:1803-1805` still calls the forfeit *"a DISCLOSED non-feature"* — the same false claim in the file that owns the mechanism; sweep both in the disclosing commit. **Do not write "stays put" / "simply sits"** — the balance is DESTROYED (`buckets = EMPTY_BUCKETS` → `terminalHsaReal = 0` → bequest $0); the sentence must say DROPPED, and must hold across all three zeroing branches (each fires because the path DEPLETED, so a bequest-framed sentence names a state the engine cannot reach — the honest harm is a plan counted as run-out while HSA dollars sit unspent). "draw … HSA" reds `copyGuard.ts:243`; "can't run out while the HSA lasts" reds `FALSE_CERTAINTY_INTERNAL`.
+- ⚑ **Negatives (the register's half — the live prescription is the ranked entry in `TODO.md`):** the false *"(conservative, disclosed)"* comment at `healthOverlay.ts:747` was corrected 2026-08-02 — the disclosure itself is still OWED; `taxOverlay.ts:1803-1805` still calls the forfeit *"a DISCLOSED non-feature"* — the same false claim in the file that owns the mechanism; sweep both in the disclosing commit. **Do not write "stays put" / "simply sits"** — the balance is DESTROYED (`buckets = EMPTY_BUCKETS` → `terminalHsaReal = 0` → bequest $0); the sentence must say DROPPED, and must hold across all three zeroing branches (each fires because the path DEPLETED, so a bequest-framed sentence names a state the engine cannot reach — the honest harm is a plan counted as run-out while HSA dollars sit unspent). "draw … HSA" reds `copyGuard.ts:250`; "can't run out while the HSA lasts" reds `FALSE_CERTAINTY_INTERNAL`.
 
 ### Long-term care is neither modeled nor listed as left out
 
@@ -431,7 +431,7 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 
 - ✅ **Date-route ACA clock over-alarm — CLOSED AS PHANTOM (2026-08-02).** It does not over-alarm: the date
   route simulates all 11 offsets (`dateSearch.ts:425/450/457`) and candidate Y=0 carries the base ACA
-  stream **ungated** (`healthcareStreams.ts:149` → `windowStart = 0`, a pass-through), so
+  stream **ungated** (`healthcareStreams.ts:158-160` → `windowStart = 0`, a pass-through), so
   `exposure.aca === 'priced'` *proves* the ACA tables were consumed. The clock is load-bearing.
 - ⚠️ **BUT THE FILED FIX IS A LIVE TRAP — do not execute it.** The prescription still sitting in
   `stalenessExposure.ts:115-117` ("re-derive the exposure against the CROWNED offset") would **silence**
@@ -456,7 +456,7 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
   the offset becomes 2, understating income vs poverty and OVERSTATING subsidies — the optimistic
   direction; "fix" the apparent staleness by syncing them and the cliff moves against every pre-65
   household). A hardcoded year only pins today; the relationship keeps biting after the roll.
-- Enforced in CI — `pnpm test` runs at `.github/workflows/verify-the-back-nine.yml:56`.
+- Enforced in CI — `pnpm test` runs at `.github/workflows/verify-the-back-nine.yml:57`.
 - ⚠️ Known and unchanged: a red tripwire reds the GitHub check but does **not** block a Vercel deploy.
   True of all three pre-existing tripwires — the house posture, not a gap this introduced.
 
@@ -465,9 +465,9 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 `L` · **pilot** · filed 2× — `A39`, `S25`
 
 - Pre-65 ACA premiums are priced REAL-FLAT — the exact sin the Medicare council ruled solver-BLOCKING, with no trend, no oracle clause, and no disclosure
-- ⚠️ **The fix is NOT a Part B copy-paste.** Part B’s schedule is built INSIDE the engine, which is why the oracle token can witness it; the ACA escalator lives in **intake** (`intakeMap.ts:271-291`), which the engine cannot import — so an `ACA_PRICING_MODE` flag bolted onto intakeMap would be the exact lying-mirror `oracleToken.ts:113-119` warns about. The honest fix moves the schedule build to an engine-owned `buildAcaPricingSchedule` beside `partBPricingByT` (`taxOverlay.ts:1110`).
-- ⚠️ Anchor corrections: `healthOverlay.ts:296` is a **closing brace**, not a consumer (real seam `taxOverlay.ts:1689` + `:1731-1738` → `healthOverlay.ts:270`); the strings claiming the coupling is priced are `copy.ts:894-897`, not `copy.ts:924`.
-- ⚠️ **Re-tag: BLOCKED ON RESEARCH.** No sourced ACA cost-trend primary exists in the repo, so a solver block would hold for months over the whole pre-65 population. Near-term move is the copy swap at `copy.ts:894-897`. The excess-APTC field moved to `aca-last-verified.json:41` and `scripts/verify-aca-status.ts:40-72` never declares the key — **it is inert prose, not a gate.**
+- ⚠️ **The fix is NOT a Part B copy-paste.** Part B’s schedule is built INSIDE the engine, which is why the oracle token can witness it; the ACA escalator lives in **intake** (`intakeMap.ts:336-345`), which the engine cannot import — so an `ACA_PRICING_MODE` flag bolted onto intakeMap would be the exact lying-mirror `oracleToken.ts:113-119` warns about. The honest fix moves the schedule build to an engine-owned `buildAcaPricingSchedule` beside `partBPricingByT` (`taxOverlay.ts:1110`).
+- ⚠️ Anchor corrections: `healthOverlay.ts:296` is a **closing brace**, not a consumer (real seam `taxOverlay.ts:1689` + `:1731-1738` → `healthOverlay.ts:270`); the strings claiming the coupling is priced are `copy.ts:944-947`, not `copy.ts:924`.
+- ⚠️ **Re-tag: BLOCKED ON RESEARCH.** No sourced ACA cost-trend primary exists in the repo, so a solver block would hold for months over the whole pre-65 population. Near-term move is the copy swap at `copy.ts:944-947`. The excess-APTC field moved to `aca-last-verified.json:41` and `scripts/verify-aca-status.ts:40-72` never declares the key — **it is inert prose, not a gate.**
 - Uncapped excess-APTC clawback — the gate never reads the field, and the copy call is unmade
 
 ### ✅ CLOSED 2026-08-14 (`863747d6`) — Mixed household: the already-retired spouse is priced at zero health cost while the other works
@@ -504,29 +504,29 @@ Briggsy's eye, and should not be re-filed as a copy defect without a read.
 
 - A mixed household's already-retired pre-65 spouse is silently priced at $0 healthcare during the working window — never asked about, never disclosed
 - ⛑ **BRIGGSY RULED 2026-08-02: ask + refuse** — one employer-coverage question in intake; refuse the date when the answer is no. Honors the ruling the engine already made for itself at `simulate.ts:908-912` ("rejection beats disclosure").
-- ⚠️ **The obvious fix is REJECTED by shipped code — do NOT simply un-gate the premium.** `simulate.ts:913-919` refuses any finite-positive `enrolledPremium[t]` on a bridge year, so un-gating makes every date candidate fail: no answer at all, rather than a later one. `acaMagi` (`healthOverlay.ts:99-101`) also carries no wage term, so a priced year would be optimistic a NEW way. Scope is wider than filed — the gate zeroes `oopMedical` too (`healthcareStreams.ts:168-170`). And `healthcareStreams.test.ts:64` promises a pre-65 case that **does not exist in the file**, so the genuinely-broken case is untested.
+- ⚠️ **The obvious fix is REJECTED by shipped code — do NOT simply un-gate the premium.** `simulate.ts:913-919` refuses any finite-positive `enrolledPremium[t]` on a bridge year, so un-gating makes every date candidate fail: no answer at all, rather than a later one. `acaMagi` (`healthOverlay.ts:99-101`) also carries no wage term, so a priced year would be optimistic a NEW way. Scope is wider than filed — the gate zeroes `oopMedical` too (`healthcareStreams.ts:181`). And `healthcareStreams.test.ts:64` promises a pre-65 case that **does not exist in the file**, so the genuinely-broken case is untested.
 - ⚑ **RE-SIZE `L` → `XL` (verification fleet 2026-08-03), and the reason is the fixtures.** The defective
   household **IS the canonical date fixture**: `intakeMap.test.ts:105-118` `completeDateDraft()` is a
   working person + a retired 60-year-old, used in ~18 assertions including the render-anchor coupling
   test at `:129-137`; `devSeeds.ts:127-181` `stillWorking` = **`DEV_SEEDS.date`**, the flagship
   `?seed=date`, clones it verbatim and its own comment says *"a pre-65 retiree so the ACA quote IS
   required."* So every cold read of the fuck-off date ran on the broken household — it is not
-  "untested", it is asserted **GREEN**. `devSeeds.test.ts:64-66` pins `missingRequiredFacts → []` for
+  "untested", it is asserted **GREEN**. `devSeeds.test.ts:90` pins `missingRequiredFacts → []` for
   EVERY seed, so the refusal channel reds the coupling battery + devSeeds until both fixtures answer the
   new question.
 - ⚑ **"Refuse through the existing calm input-failure grammar" is NOT executable — that grammar cannot
   express this refusal.** `answerView.ts:221` maps `input-failure` to `fallback` and **drops `reason`**;
-  `AnswerStrip.tsx:148-152` then renders `copy.answerIncomplete` + a MissingList built from the DRAFT. A
+  `AnswerStrip.tsx:158-163` then renders `copy.answerIncomplete` + a MissingList built from the DRAFT. A
   household with no missing facts gets an **empty strip** — the "empty-missing dead-end"
   `intakeMap.ts:146` already warns about. A new `MissingFact` refusal variant plus a matching AnswerStrip
   arm is **mandatory, not optional**.
-- ⚑ **Shipped copy CONTRADICTS the premise — it is not merely silent.** `copy.ts:203-204`
+- ⚑ **Shipped copy CONTRADICTS the premise — it is not merely silent.** `copy.ts:207-208`
   (`healthQuoteHelp`) promises *"A quote for everyone under 65 in the household… The tool splits it by
-  age for each of you"*, and `escalateQuote` (`intakeMap.ts:276`) really does include the retired
+  age for each of you"*, and `escalateQuote` (`intakeMap.ts:339-346`) really does include the retired
   spouse's age share — before `healthcareStreams` zeroes it. That line must change in the same pass.
 - ⚑ **Pre-existing false claim in the channel this fix would reuse:** the two-HSA-owner model-limitation
-  refusal (`intakeMap.ts:187-188`) already renders as *"Still needed: HSA"* under MissingList's lead
-  *"The tool never guesses these — it prices only what you enter"* (`copy.ts:381-382`). That lead is
+  refusal (`intakeMap.ts:251-252`) already renders as *"Still needed: HSA"* under MissingList's lead
+  *"The tool never guesses these — it prices only what you enter"* (`copy.ts:410`). That lead is
   false for an answered-but-unpriceable household. Fix it with the new variant.
 </details>
 
@@ -622,7 +622,9 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 - ✅ **(XS) SHIPPED 2026-08-02 — the dead-end clause is GONE.** `copy.ts:2485-2486` now states the
   assumption and stops; its comment (`:2478-2484`) carries the coupling: **restore the clause in the SAME
   change that ships the seat, never before it.** (This bullet asserted the clause was still live until
-  2026-08-05; corrected against the source.)
+  2026-08-05; corrected against the source.) ⚑ **2026-09-06:** the clause was RESTORED on 2026-08-14 in the
+  same change that shipped the heir-bracket seat — exactly the coupling this bullet prescribed — and lives at
+  `copy.ts:2669-2670` under the comment at `:2659-2668` that states the both-ways coupling.
 - **(M) STILL OPEN** — add the real editable row. ⚠️ `survivor-ratio` (`AssumptionPanel.tsx:336-362`) is
   **not** a line-for-line template: it is a REQUIRED v3 field, and copying that shape bricks every
   existing vault at `needFinite`. `heirBracket` must be additive-OPTIONAL, and the control a
@@ -665,8 +667,8 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 `L` · **pilot** · filed 1× — `A13`
 
 - Modest-pre-tax household: refused a SEQUENCING recommendation the engine could actually compute
-- ⚠️ **DOWN-RANKED — the filed fix is UNSHIPPABLE as written.** `solveEntry.ts:140-147` mint-fails the roster *before* `solve()` runs, and `rankingStability.ts:145-153` knows only a conversion-**amount** perturbation — so dispatching the sequencing-only field would surface `mint-failed{roster}` **live**, the exact state `solveDispatch.ts:76` forbids in its own comment. Doing it properly needs a second validation law under every shipped recommendation, a one-way door on what "validated" means.
-- **Near-term, honest, XS:** fix `copy.ts:1408` only — it says a *withdrawal strategy* needs more pre-tax when only the **conversion** half does. Sequencing across taxable and Roth is real and rankable.
+- ⚠️ **DOWN-RANKED — the filed fix is UNSHIPPABLE as written.** `solveEntry.ts:167-174` mint-fails the roster *before* `solve()` runs, and `rankingStability.ts:224-237` knows only a conversion-**amount** perturbation — so dispatching the sequencing-only field would surface `mint-failed{roster}` **live**, the exact state `solveDispatch.ts:80` forbids in its own comment. Doing it properly needs a second validation law under every shipped recommendation, a one-way door on what "validated" means.
+- **Near-term, honest, XS:** fix `copy.ts:1537-1538` only — it says a *withdrawal strategy* needs more pre-tax when only the **conversion** half does. Sequencing across taxable and Roth is real and rankable.
 
 ### ~~The recommendation never names the winning strategy, the runner-up, or what to do~~ — **the STRATEGY half CLOSED 2026-08-05 (`db371655`); the RUNNER-UP half stays open**
 
@@ -691,7 +693,7 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
   increment left, and it is specified in `TODO.md`'s entry 7 (it needs a `custom` branch, a third ui
   bucket map, and a seed that can witness a custom winner, which none exists).
 - **STILL OPEN — R23: the runner-up is retained but never IDENTIFIED**, and its `why` is one
-  content-free constant (`copy.ts:1599`) naming neither arm, while `payload.runnerUp.id`/`.policy` sit
+  content-free constant (`copy.ts:1699-1700`) naming neither arm, while `payload.runnerUp.id`/`.policy` sit
   unused. The winning-plan card's own vocabulary is now the obvious material for it.
 
 ### Date-route recommend-second parity — the working household gets no strategy at all
@@ -1033,11 +1035,11 @@ disclaimer two-mount swap (holds: in-frame mount dark, trailing mount after the 
   before the wall year** (engine; changes what crowns, also a version bump; size S–M; cost: aged
   households lose conversion recommendations entirely until re-solved — and the refusal needs its own
   honest words). **Arm 3 — disclose only** (view + copy; size S; the plan clock is already threaded —
-  `Result.tsx:489` → `recommendationView.ts:371`; true under both engine arms and removed by whichever
+  `Result.tsx:489` → `recommendationView.ts:393-399`; true under both engine arms and removed by whichever
   lands; cost: the recommendation stays un-enactable and the reader is merely TOLD). Tier-1 7c rules
   "Do NOT fix this in copy" — so arm 3 alone is a decision, not a default. Sizes are the pilot's
   estimates. Whichever arm: gate any note on GRID provenance / winner≠baseline, never on `start.passed`
-  alone (`recommendationView.ts:446-455` — under the fallback the crown can be the household's OWN
+  alone (`recommendationView.ts:483-492` — under the fallback the crown can be the household's OWN
   baseline with THEIR start, the exact false claim `leverRothAlreadyApplied` exists to prevent).
 
 ### The essentials median line on the band
@@ -1215,7 +1217,7 @@ disclaimer two-mount swap (holds: in-frame mount dark, trailing mount after the 
   so this line's first filing named the wrong keys and the trace refuted it before the sweep). All
   FIVE stale "dormant / no entry is live" comments corrected (`copy.ts`, `recommendationView.ts`,
   `recommendationView.test.ts`, `solve.ts`, `solve.test.ts`). Also noted: the hand-planted
-  `?vault=rec` payload carries `disclosedDirectional: []` (`devSeeds.ts:1427`), so the plants HIDE a
+  `?vault=rec` payload carries `disclosedDirectional: []` (`devSeeds.ts:1444`), so the plants HIDE a
   note every real run shows. **What remains is the WORDING — his words:** "still being finalized"
   promises a later that never comes; types.ts records no dated pin event exists for these entries.
 - **EYE/tone:** the spending step's all-in gloss is ~90 words of carve-outs in one paragraph (the
@@ -1242,7 +1244,7 @@ disclaimer two-mount swap (holds: in-frame mount dark, trailing mount after the 
   **not executable** — new lines in `.rec-committed__rest` need a **manual 1536×791 measure** against the
   protected in-frame R13 disclaimer.
 - **The "~89px headroom" figure is not this surface's.** It is the SPINE idle frame
-  (`vertical-fit.spec.ts:1773`), a once-measured prose number the spec never asserts — it logs headroom
+  (`vertical-fit.spec.ts:1810`), a once-measured prose number the spec never asserts — it logs headroom
   (`:1845`) and asserts only binary in-frame relations. The committed frame's headroom is **unmeasured**.
 - The date route scrolls BY DESIGN (spec header `:21-22`); its arms assert **order** only.
 

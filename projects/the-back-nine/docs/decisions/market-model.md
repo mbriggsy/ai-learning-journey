@@ -28,7 +28,7 @@ Each path-year's market return is drawn from a **parameterized lognormal**, **in
 1. `buildDraws` generates a matrix of standard normals from one seeded `mulberry32` stream — stateless Box-Muller, two uniforms per normal, in a **dimension-only order** so two parameter sets under one seed consume byte-identical draws (the CRN substrate; `simulate.ts:62`, `rng.ts:46`). The only stochastic draws are **stock, bond, and longevity** — there is no third market factor (`simulate.ts:69-87`).
 2. The user's **simple-space, real** moments `(mean, stdDev)` per asset convert to the exact `(μ, σ)` of the underlying normal via `toLogMoments`, **with the `−σ²/2` volatility drag** (`rng.ts:73`).
 3. Each year: `simpleR = exp(μ + σ·z) − 1` (`simpleReturnFromNormal`, `rng.ts:82`) — a lognormal one-plus-return by construction.
-4. Stock and bond are coupled by a **single Cholesky step**: `zb = ρ·zs + √(1−ρ²)·zbRaw` (`simulate.ts:1219`). One shared `(stock, bond)` draw per path-year drives every bucket; buckets differ only in tax treatment (the no-asset-location invariant).
+4. Stock and bond are coupled by a **single Cholesky step**: `zb = ρ·zs + √(1−ρ²)·zbRaw` (`simulate.ts:1514`). One shared `(stock, bond)` draw per path-year drives every bucket; buckets differ only in tax treatment (the no-asset-location invariant).
 
 Two moment sets exist (`methodology.ts`): `validationMarket` (Ibbotson SBBI, calibrates the Mode-B band only) and `productionMarket` (Pfau/Kitces high-CAPE, the conservative real-user default, ~3–3.5% safe band). Both are **REAL, simple-space**; both are fully user-overridable — the engine injects nothing.
 
@@ -48,7 +48,7 @@ So that the caveats below are read as *distributional*, not as defect-hunting, t
 
 i.i.d. lognormal has **zero autocorrelation**: `simpleReturnFromNormal(lm, z)` has no term that knows what last year did. The 1966 retiree was not killed by a single deep tail draw — they were killed by a **sustained, autocorrelated, inflation-front-loaded grind**. i.i.d. can only produce that shape as a freak run of independent unlucky years, at a probability mass **below** what history assigns it.
 
-This is sharper than a tail-thinness complaint because of **how the headline is computed**: the reading is a **survival *count*** (`survivors / paths`), not a percentile of terminal wealth (`confidence.ts:6`). The on-track verdict that decides whether a friend retires fires at **85% survival** (`BANDS.onTrack = 0.85`, `confidence.ts:43-47`). What sets that count is *how many paths cross zero* — driven by clustered grinds in the **middle** of the distribution, exactly the shape i.i.d. under-samples. (The deep-tail p10 of terminal wealth feeds only the *dollar* room/trim hint, `confidence.ts:138` — not the headline state.)
+This is sharper than a tail-thinness complaint because of **how the headline is computed**: the reading is a **survival *count*** (`survivors / paths`), not a percentile of terminal wealth (`confidence.ts:6`). The on-track verdict that decides whether a friend retires fires at **85% survival** (`BANDS.onTrack = 0.85`, `confidence.ts:43-47`). What sets that count is *how many paths cross zero* — driven by clustered grinds in the **middle** of the distribution, exactly the shape i.i.d. under-samples. (The deep-tail p10 of terminal wealth feeds only the *dollar* room/trim hint, `confidence.ts:207` — not the headline state.)
 
 **Net:** the model under-counts the paths that deplete via sequence risk → **overstates the survival fraction → overstates the X-of-10 headline, precisely at the 85% decision line.** Optimistic, on the axis the product swears off.
 
@@ -71,7 +71,7 @@ And the anchor itself is a high-side draw: the historical series are **US-only**
 
 ## §5 — Caveat C: inflation is a fixed deflator — **direction: OPTIMISTIC for inflation-driven regimes**
 
-The spine is **real-space only**: `validateParams` rejects nominal returns (`market.returnsAreReal` must be true, `market.space` must be `'simple'`; `simulate.ts:546-547`), and `buildDraws` generates **no inflation draw** — `simulate.ts` never reads `.inflation` (zero references). Inflation is a **constant 3% deflator** baked into the real moments.
+The spine is **real-space only**: `validateParams` rejects nominal returns (`market.returnsAreReal` must be true, `market.space` must be `'simple'`; `simulate.ts:600-601`), and `buildDraws` generates **no inflation draw** — `simulate.ts` never reads `.inflation` (zero references). Inflation is a **constant 3% deflator** baked into the real moments.
 
 The tell: `methodology.ts:36` carries `inflation: { mean: 0.03, stdDev: 0.041 }` — **a standard deviation that sits in the assumptions and is consumed by nothing.** Inflation *variance*, and its *correlation to poor real returns* — the actual engine of 1966, where a high-inflation regime erodes real returns in a sustained, correlated way — are **not modeled**. There is no back door; the field is inert.
 

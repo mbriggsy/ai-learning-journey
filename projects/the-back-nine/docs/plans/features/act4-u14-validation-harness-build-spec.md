@@ -49,7 +49,7 @@ status: shipped
      notes and browser-pull the graduated 1955–61 bands to byte-pin when cheap. The
      consumed-set derivation reads the *reachable* value's pin status, so the coarse
      entry-level flag no longer falsely blocks.
-   - **`medicareExtrasTypical`** (`health.ts:207`) — pin to a 2026 Medigap-G / Part-D
+   - **`medicareExtrasTypical`** (`health.ts:265`) — pin to a 2026 Medigap-G / Part-D
      refresh (the $164 figure lags 2026 filings +12–26%, the **optimistic** direction —
      this is a real pin task, not paperwork).
    - **`survivorSpendingRatio`** (`methodology.ts:85`) — methodology-substrate KIND
@@ -82,7 +82,7 @@ status: shipped
 - **Cliff-anchored, not uniform:** grid points pinned just under every active ACA/IRMAA
   threshold + local bisection refinement — and the bisection **segments its bracket at each
   jump** (a bisection spanning a discontinuity finds a phantom root — insight 013). The
-  ceiling substrate is the shipped `bracketFillCeilings` seam (`model.ts:407-416`) — reuse,
+  ceiling substrate is the shipped `bracketFillCeilings` seam (`model.ts:445`) — reuse,
   never re-derive (insight 068: fill to the *binding effective* ceiling via the branch's own
   predicate, never the nominal bracket top).
 - Imported by BOTH this harness and U15's `search.ts` — the two can never drift to

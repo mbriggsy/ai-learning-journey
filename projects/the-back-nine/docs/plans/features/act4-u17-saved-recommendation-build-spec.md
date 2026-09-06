@@ -26,16 +26,16 @@ here exists because the aged surface that record lands on is not yet honest.
    via the persisted seed when no clock fired is what keeps the screenshot promise. U17's real content is
    the **action-warning copy register**, not a re-presentation mechanism.
 2. **The "Act-4 `schemaVersion` 3 bump" is counterfactual.** v3 is the shipped forward-written shape
-   (`model.ts:1567`; codec `> 3` = newer-version). `savedRecommendation?` lands **additive-optional within
+   (`model.ts:1643-1648`; codec `> 3` = newer-version). `savedRecommendation?` lands **additive-optional within
    v3**, presence-keyed, following the `rothConversion` / `savedAt` / `retirementState` precedents
-   (`scenarioCodec.ts:508-511` is the pattern to copy).
+   (`scenarioCodec.ts:731-734` is the pattern to copy).
 
 ---
 
 ## The spine of the spec
 
 Q1 is **a correctness failure wearing a tone costume**. Five readers stumbled the same three facets, one
-grading the pair tension-real in the **optimistic** direction. `bandAnnotations.test.ts:170-184` pins the
+grading the pair tension-real in the **optimistic** direction. `bandAnnotations.test.ts:217-242` pins the
 current render as intended — **that test is the artifact this unit changes.** A test that pins a defect is
 the defect's second copy, not evidence.
 
@@ -50,7 +50,7 @@ both**.
 ### S0.1 ONE exported arrived predicate
 
 Today the "has this offset already passed?" test is **re-typed** in two places:
-`curveMarks.ts:118` (`m.planOffsetYears >= elapsedYears`) and `FuckOffDate.tsx:296-298`
+`curveMarks.ts (⚑ gone 2026-09-06 — the re-typed m.planOffsetYears >= elapsedYears compare no longer exists — U17 §S0.1 shipped the exported predicate (curveMarks.ts:107, consumed at :143))` (`m.planOffsetYears >= elapsedYears`) and `FuckOffDate.tsx (⚑ gone 2026-09-06 — the re-typed heroTrack.offsetYears < elapsedYears compare is gone; the band now calls the shared predicate (FuckOffDate.tsx:197, :232, :364))`
 (`heroTrack.offsetYears < elapsedYears`). Export **one** predicate, strict `planOffset < elapsed`, and
 consume it from **both** the ladder and the band.
 
@@ -63,14 +63,14 @@ consume it from **both** the ladder and the band.
 
 ### S0.2 `elapsedPlanYears` is years-since-BUILT — rename it and prose it
 
-`Result.tsx:127-133` derives the anchor from `startCalendarYear`, which is the plan's **BUILD** year
-(written once at `memoryModel.ts:522`, never re-anchored, survives every re-save). Four separate comments
-already forbid attributing that quantity to the save (`staleness.ts:26`, `resultSave.ts:91`,
-`copy.ts:1594`, `FuckOffDate.tsx:128`) — and the band's `'saved'` label does exactly that.
+`Result.tsx:169-178` derives the anchor from `startCalendarYear`, which is the plan's **BUILD** year
+(written once at `memoryModel.ts:565`, never re-anchored, survives every re-save). Four separate comments
+already forbid attributing that quantity to the save (`staleness.ts:26`, `resultSave.ts:172`,
+`copy.ts:2542`, `FuckOffDate.tsx:148`) — and the band's `'saved'` label does exactly that.
 
 - **Rename** the field to name what it is (years since the plan was BUILT). Prose every consumer comment to
   *"since you built this plan."*
-- **The balance vintage stays on `savedAt`** (`agedBalancesYearFor`, `resultSave.ts:99-109`) — unchanged.
+- **The balance vintage stays on `savedAt`** (`agedBalancesYearFor`, `resultSave.ts:180-190`) — unchanged.
 - **Clamp to `[0, horizonYears)`** and **refuse aloud** outside it. A skewed clock refuses; it never
   redraws.
 
@@ -86,7 +86,7 @@ already forbid attributing that quantity to the save (`staleness.ts:26`, `result
   aloud. **The low-end clamp must be pinned by an arm that can actually witness it** — a non-integer
   negative, since a negative *integer* is nulled downstream by the `yearsSinceBuilt > 0` gate and so
   passes vacuously (insight 029).
-- **The user-visible label follows the rename.** `bandAnnotations.ts:66-82`'s aged arm currently renders
+- **The user-visible label follows the rename.** `bandAnnotations.ts:162-174`'s aged arm currently renders
   `bandClockSavedLabel` (`'Your save'`) + `bandClockSavedDesc` (*"When you saved this — ages A and B"*)
   at plan-year 0. On a **re-saver** (built last year, saved five minutes ago) that is **false**, and it
   contradicts the fresh "Saved to this device" badge on the same screen. The label must name the BUILD
@@ -97,11 +97,11 @@ already forbid attributing that quantity to the save (`staleness.ts:26`, `result
 `Result.test.tsx` contains **zero** references to `startCalendarYear`, `elapsedPlanYears`, or `savedAt` —
 the seam that chooses the clock for the entire aged surface is **unasserted**. Everything downstream is
 well pinned (all four `agedLadderMarks` rails at `curveMarks.test.ts:181-216`; the saved/today swap on
-both routes; the sort order with a deliberate red-path witness at `bandAnnotations.test.ts:111-122`; the
+both routes; the sort order with a deliberate red-path witness at `bandAnnotations.test.ts:158-169`; the
 strict `<` on both sides) — but **every one of those tests is handed an elapsed value.**
 
 The divergence stayed invisible because **every aged fixture makes the two clocks agree**:
-`doctorStaleVault` ages `savedAt` and `startCalendarYear` **together** (`devSeeds.ts:1028-1029`,
+`doctorStaleVault` ages `savedAt` and `startCalendarYear` **together** (`devSeeds.ts:1188-1189`,
 deliberately, for save-moment coherence). This is insight 073's class exactly.
 
 - **Required new arm:** a **re-saver** fixture — fresh `savedAt`, old `startCalendarYear` — asserting the
@@ -129,11 +129,11 @@ different schedule on a different day.
 
 **The ruling:** speak the **calendar year** — `startCalendarYear + startYearOffset` — on both sides.
 
-- **READ:** `rothPlanEcho` (`copy.ts:1759-1767`) stops saying *"starting in about N years"* and names the
-  year. Both render sites re-point in the SAME commit (`AssumptionPanel.tsx:374-382`,
-  `RothLever.tsx:172-176`) — insight 086: splitting a copy key orphans every renderer not re-pointed with
+- **READ:** `rothPlanEcho` (`copy.ts:2285`) stops saying *"starting in about N years"* and names the
+  year. Both render sites re-point in the SAME commit (`AssumptionPanel.tsx:499-509`,
+  `RothLever.tsx:241-247`) — insight 086: splitting a copy key orphans every renderer not re-pointed with
   it.
-- **WRITE:** the `RothLever` input (`RothLever.tsx:158-164`, labelled *"Starting how many years from
+- **WRITE:** the `RothLever` input (`RothLever.tsx:210-217`, labelled *"Starting how many years from
   now"* — wall-time words over a plan-time value) speaks the calendar year too, and **refuses a past
   start** aloud.
 - **Suppress when unanchored** (no `startCalendarYear` available) rather than fabricate — the
@@ -142,8 +142,8 @@ different schedule on a different day.
 - **File** (do NOT build here): re-anchoring the engine's own conversion semantics.
 
 **Coverage note:** `rothPlanEcho` has **zero** aged coverage today — both its tests run at elapsed 0
-(`assumptionPanel.test.tsx:415-422` compares the slot against its own output, pinning routing not the
-sentence; `copyGuard.test.ts:208` is a bare string). **The `RothLever` sheet echo has no assertions of any
+(`assumptionPanel.test.tsx:592-599` compares the slot against its own output, pinning routing not the
+sentence; `copyGuard.test.ts:502` is a bare string). **The `RothLever` sheet echo has no assertions of any
 kind** (`grep control-plan__echo` → the CSS rule and the JSX, nothing else). Note also that `RothLever`
 *does* receive a `savedAnchor` (`:80`, `:82`) but routes it only to `composeTwoFutures` at `:130` — the
 echo sentence three lines above never sees it.
@@ -172,9 +172,9 @@ echo sentence three lines above never sees it.
 
 1. **No future-tense named marker may render left of Today.** Withdraw at the **ARRAY** — so it leaves the
    a11y tree too — **never clamp** (a negative offset handed to the x-scale silently pins to the left edge:
-   a fresh lie, the rail `curveMarks.ts:96-111` already names). Surviving markers speak **ONE age base**.
+   a fresh lie, the rail `curveMarks.ts:116-121` already names). Surviving markers speak **ONE age base**.
 2. **The elapsed fan segment is de-emphasised by a STATIC mask/overlay** nested in the cohort-fade group
-   (`ConfidenceBand.tsx:199-226`) — **never a re-trimmed `d`**, which breaks the morph and the
+   (`ConfidenceBand.tsx:304-344`) — **never a re-trimmed `d`**, which breaks the morph and the
    vertex-snapped scrub. **Non-colour channel PLUS a11y text** (colour is never the only signal).
 3. **Clipping is REJECTED** and the reason is load-bearing: a fan clipped to Today reads as a projection
    from a **KNOWN current balance** — which is precisely the optimistic misread. Retain-and-demote keeps
@@ -188,7 +188,7 @@ echo sentence three lines above never sees it.
 
 ### The artifact that changes
 
-`src/ui/__tests__/bandAnnotations.test.ts:170-184` — *"AGED: 'Your save' at 0 + wall-Today at elapsed, the
+`src/ui/__tests__/bandAnnotations.test.ts:217-242` — *"AGED: 'Your save' at 0 + wall-Today at elapsed, the
 work-stops marker untouched at its crowned offset"* — currently pins `work-stops` at x=1 with Today at x=2
 and reasons that the crowned offset *"stays in PLAN time … its x is calendar-stable."* **Rewrite it to the
 new contract.** Do not silently delete it: the replacement carries a comment naming this spec and the
@@ -248,12 +248,12 @@ headline, where it would read as current).
 - **Atomic, presence-keyed, fail-closed but NON-FATAL:** a corrupt/unknown record **drops the atom and
   keeps the model**. A saved plan must never become unopenable because its recommendation record went bad.
 - **INSIGHT 073 IS BINDING HERE (it names U17 by name):** any stamp this payload carries joins
-  `scenarioIdentity` (`model.ts:1828-1831`) — or its own normalizer — **in the same commit**, and the
+  `scenarioIdentity` (`model.ts:2148`) — or its own normalizer — **in the same commit**, and the
   aged-copy fixture ships with it. Otherwise every identity compare silently becomes a clock compare and
-  every same-day test stays green. Enumerate the identity consumers first: `resultSave.ts:48-49` (the two
+  every same-day test stays green. Enumerate the identity consumers first: `resultSave.ts:63-64` (the two
   compares) and the round-trip guard.
-- **Carry into review, do not fix blind:** `resultSave.ts:13-14` justifies its `JSON.stringify` compare
-  with *"decodeScenario builds every object."* It does **not** — `scenarioCodec.ts:679` is a validated
+- **Carry into review, do not fix blind:** `resultSave.ts:23-25` justifies its `JSON.stringify` compare
+  with *"decodeScenario builds every object."* It does **not** — `scenarioCodec.ts:938-940` is a validated
   pass-through cast. The behavior is safe today only because `JSON.parse` preserves `encodeScenario`'s
   insertion order. A future reorder breaks dirty-detection silently.
 
@@ -273,7 +273,7 @@ headline, where it would read as current).
 
 ## S4 — Q4: the action-warning copy register (exposure-gated naming)
 
-**A clock names itself only where the run was EXPOSED to it.** `staleness.ts:218-254` shows five clocks are
+**A clock names itself only where the run was EXPOSED to it.** `staleness.ts (⚑ gone 2026-09-06 — no clock is a bare vintage compare any more — S4 shipped the injected exposure gate, and 218-254 is now that gate's own type (ExposureRead + StalenessExposure))` shows five clocks are
 **bare vintage compares** — naming `aca-status` at an all-65+ household is **alarm-when-fine**, insight 101
 inverted (a refusal/warning arm must describe the predicate's whole extension, and must not claim exposure
 the household never had).
@@ -302,8 +302,8 @@ the household never had).
 
 ## S5 — The save gesture goes live
 
-U16 shipped the gesture **absent** with a **reserved inert slot** (`RecommendationSurface.tsx:298-303`,
-pinned at `RecommendationSurface.test.tsx:212-224`) and a **no-auto-save pin**
+U16 shipped the gesture **absent** with a **reserved inert slot** (`RecommendationSurface.tsx:603-605`,
+pinned at `RecommendationSurface.test.tsx:339-350`) and a **no-auto-save pin**
 (`solveNoAutoSave.test.ts`). **The gesture and the v3 write land TOGETHER here.**
 
 - The reserved slot becomes the real control; its "layout space only" test is **replaced**, not deleted.
@@ -319,9 +319,9 @@ pinned at `RecommendationSurface.test.tsx:212-224`) and a **no-auto-save pin**
     (`:534`) and returns a bare `{ ok: true }` — `RecoveryUnlockResult` (`:117-118`) carries **no** `readOnly`,
     so `deriveResultSave`'s `readOnly` parameter does **not** cover this state.
   - **read-only second tab** → the existing `UnlockResult.readOnly` (`:466`), already threaded into
-    `deriveResultSave(persist, ready, readOnly)` (`resultSave.ts:66`).
+    `deriveResultSave(persist, ready, readOnly)` (`resultSave.ts:101`).
 
-  `save()`'s `{ ok:false, reason:'not-writable' }` (`session.ts:594`) is the last-resort backstop, never the gate.
+  `save()`'s `{ ok:false, reason:'not-writable' }` (`session.ts:597`) is the last-resort backstop, never the gate.
 
 > **AMENDED 2026-07-26 — what S3/S4 handed this stage that the original 13 lines could not name.** S3 built
 > the whole substrate and S4 deliberately declined the copy; both created obligations that are NOT inferable
@@ -329,27 +329,27 @@ pinned at `RecommendationSurface.test.tsx:212-224`) and a **no-auto-save pin**
 >
 > - **THE COPY REGISTER LANDS HERE, not in S4** (see S4's stamp for why). Model it on
 >   `recommendStale{Heading,Body,ReopenCta}` — `copy.ts` for the strings AND
->   `RecommendationSurface.tsx:127-137` for the render shape (the `role="status"` card with heading, body,
+>   `RecommendationSurface.tsx:372-379` for the render shape (the `role="status"` card with heading, body,
 >   and the re-open button); name the re-open's cost the way `recommendPendingLabel` does. **Key PREFIX picks
 >   the copyGuard gates:** `staleness*`/`reentry*` are hedge-, verdict- AND control-EXEMPT by documented law,
 >   the weakest net in the catalog, so a `savedRec*` warning key needs its own explicit guard arm (S4 added
 >   three; copy that pattern). **⚠️ Where to look, corrected 2026-07-26:** "the three S4 added" are arms in
->   the TEST file (`copyGuard.test.ts:130-136`), **not** in `copyGuard.ts` — there is nothing named
+>   the TEST file (`copyGuard.test.ts:226-298`), **not** in `copyGuard.ts` — there is nothing named
 >   `staleness`/`reentry`/`savedRec` in the gate SOURCE at all, so grepping `copyGuard.ts` for the pattern
 >   returns zero hits and must NOT be read as "already handled." The lists a `savedRec*` key is measured
 >   against are `VERDICT_KEY_PREFIXES` (`copyGuard.ts:63-65`) and `CONTROL_KEY_PREFIXES` (`:102-116`).
-> - **THE FOUR MINT OBLIGATIONS.** (1) Call `validateSavedRecommendation` (`scenarioCodec.ts:671`) BEFORE the
+> - **THE FOUR MINT OBLIGATIONS.** (1) Call `validateSavedRecommendation` (`scenarioCodec.ts:682`) BEFORE the
 >   record touches the draft — it has ZERO product callers today. (2) A non-empty `droppedAtoms` at the
 >   gesture must REFUSE ALOUD and must never report a saved recommendation (insight 100: the gesture promised
 >   an affordance, so it owes a rendered outcome). (3) `noDollarRegister` is COPIED from the composed view,
 >   never re-derived record-side — and the reachable register is **`RecommendedView.mode === 'no-change'`**
->   (`recommendationView.ts:162`, assigned `:407`), NOT the module-local `noDollar` const at `:377`. (4) The
+>   (`recommendationView.ts:223`, assigned `:646`), NOT the module-local `noDollar` const at `:616`. (4) The
 >   `fingerprint` has no type bind and cannot get one (`solverRunFingerprint.ts:61` is a bare
 >   `export type … = string`), so the bind must be a TEST: mint from a REAL `solverRunFingerprint(...)` call
 >   → encode → decode → the trichotomy reads `current`.
 > - **TWO CORRECTIONS to how this stage has been described** — *both were themselves partly wrong and are
 >   re-corrected 2026-07-26; read the amended form.* (a) S5 must not **DEFINE** a second fingerprint
->   computation — `memoryModel.ts:623-638` already has `fingerprintOf`/`currentDraftFingerprint` in exactly
+>   computation — `memoryModel.ts:658-672` already has `fingerprintOf`/`currentDraftFingerprint` in exactly
 >   the `SolverRunFingerprint | null` shape the trichotomy wants, and `:620-622` explicitly bans a re-typed
 >   subset. **But this does NOT mean "no seam work here":** both are private closures inside
 >   `createMemoryModel` (`:513`) and **neither is on the returned surface (`:654`)**, so S5's seam work is
@@ -363,7 +363,7 @@ pinned at `RecommendationSurface.test.tsx:212-224`) and a **no-auto-save pin**
 >   scenario with no record vs a live scenario whose record was just dropped. **Those are identical, so an
 >   invalid mint reads CLEAN.** The dirty flip holds only for a VALID record — never use it as evidence the
 >   mint landed.
-> - **Sweep while you are in `session.ts`:** `:443-444` claims `scenarioFromDraft` "REFUSES on a non-empty
+> - **Sweep while you are in `session.ts`:** ` (⚑ gone 2026-09-06 — the sweep is already done — the comment no longer claims scenarioFromDraft REFUSES, it now states the opposite explicitly, so nothing remains at this anchor to correct)` claims `scenarioFromDraft` "REFUSES on a non-empty
 >   list." It does not (`scenarioFromDraft.ts:115` returns `ready:true`, and `draftFromScenario.test.ts:556`
 >   pins that a dropped atom never refuses the whole save). Stale from the pre-F-pass cut; the recovery-path
 >   twin at `:518-520` does not repeat the error.
@@ -380,20 +380,20 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   domain the engine prices.
 - **Required engine-acceptance pin:** hydrate → `buildSpineParams` → `validateParams` accepts → the run
   resolves to a **real** `outcomeState`, never the R19 indeterminate. (Model it on
-  `devSeeds.test.ts:517-536`, the `statestale` arm — the `it(` is `:517`, its rationale comment
+  `devSeeds.test.ts:635-660`, the `statestale` arm — the `it(` is `:643`, its rationale comment
   `:511-516`. **Corrected 2026-07-27: this line read `:500-524`, which lands a builder inside the
   neighbouring staleness-clock arm (`it(` at `:483`) and yields the wrong pin.**)
 - **Pre-existing gap to close while here:** the `stale` plant (full doctor, spine route) has **no FAST
   engine-acceptance pin** — its `−2y startCalendarYear` aging is the exact mutation that broke `statestale`
   and produced insight 085. Its sibling has the unit pin; it doesn't. That is the insight-051 tell.
   **CORRECTED 2026-07-26 (the earlier flat "no engine-acceptance pin" was overstated):** two witnesses DO
-  exist — `e2e/vertical-fit.spec.ts:951-1020` drives `?vault=stale` through a real unlock and asserts
+  exist — `e2e/vertical-fit.spec.ts:1167-1200` drives `?vault=stale` through a real unlock and asserts
   `assertResolvedSpine`, which requires `.confidence-reveal[data-twopane]`, emitted only when the run
-  resolves (never on R19 indeterminate); and `devSeeds.test.ts:202-228` runs the SAME doctor's output through
+  resolves (never on R19 indeterminate); and `devSeeds.test.ts:303-320` runs the SAME doctor's output through
   `runDateSearch` (which calls `validateParams` internally) on the `datestale` base. So the plant is proven
   — by a ~90-second browser gate and by a differently-named wrapper on the other route. The real gap is the
   missing FAST `buildSpineParams → validateParams → runEngine → outcomeState` unit arm on the spine path,
-  which is what `devSeeds.test.ts:727-730`'s own header asks for ("fails HERE (fast) instead of only in the
+  which is what `devSeeds.test.ts:1009-1018`'s own header asks for ("fails HERE (fast) instead of only in the
   90-second Chromium run"). Add that; do not write it up as uncovered.
 - **Walk both seeds** (`datearrived` + the existing aged plant) in the Caddie walk.
 - **File** from the walk: the arrived-walk's state-tax blindness.
@@ -407,10 +407,10 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
 ### Q7a — the RecommendationViz endpoint labels: ADMITTED **CONDITIONALLY**
 
 Verified: the bars carry arm **names** at their ends plus the delta hero and the `$0`/ceiling axis frame;
-each bar's own dollar value renders **only** in `ariaSummary` (`recommendationView.ts:433-441`,
-`copy.ts:2002-2003`). The AT-over-sighted inversion is real and nobody disputed it.
+each bar's own dollar value renders **only** in `ariaSummary` (`recommendationView.ts:681-687`,
+`copy.ts:2674`). The AT-over-sighted inversion is real and nobody disputed it.
 
-**But** `recommendationView.ts:436-448` carries a **deliberate dialect split** — endpoints are humane
+**But** `recommendationView.ts:675-687` carries a **deliberate dialect split** — endpoints are humane
 `$X.XM` (`formatAbsoluteDollar`), the delta is grouped digits — safe today only because they never
 co-render. Shipping them adjacent under two dialects would print figures that **subtract to something other
 than the hero**: a NEW falsehood on the decision surface.

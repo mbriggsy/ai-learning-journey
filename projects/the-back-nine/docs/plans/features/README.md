@@ -10,8 +10,9 @@ created: 2026-09-06
 Every unit past Act 1 that fired a pre-build council carries its ratified build spec here. A spec is the
 *executable* shape the act plan's prose was refined into — its precedence declaration at the top names what
 it supersedes and dates each supersession. All of them are **shipped** (the roadmap's You-Are-Here table is
-the authority on per-unit status; a spec never re-types it). Line anchors inside a spec predate its build
-and have drifted — open every cited line before acting on it.
+the authority on per-unit status; a spec never re-types it). Line anchors inside a spec were re-verified
+2026-09-06 (verify→skeptic, every citation opened; a `⚑ gone` marker names a cited thing the build itself
+retired) — they drift again with every commit, so still open every cited line before acting on it.
 
 | Spec | Unit / capability |
 |---|---|

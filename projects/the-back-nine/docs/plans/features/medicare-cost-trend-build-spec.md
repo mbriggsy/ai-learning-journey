@@ -92,7 +92,7 @@ status: shipped
   surchargeScale}: table years deflate nominal→real horizon-matched; pre-anchor clamps to the
   anchor; post-2035 rides the ultimate escalator off the 2035 real value (C0). The (b)-content
   twin table is PREPARED for the probe (never committed as the shipped value unless S3 rules (b)).
-- **S1 — consumption (taxOverlay).** The once-bound `partBBaseMonthly` (taxOverlay.ts:1161)
+- **S1 — consumption (taxOverlay).** The once-bound `partBBaseMonthly` (taxOverlay.ts:1097-1112)
   becomes the per-year resolved pair at `startCalendarYear + t`; `medicareAnnualCost` + the
   readout split's `irmaaTierSurchargeMonthly` call BOTH read the same resolved pair (the
   base-vs-surcharge split stays single-producer by construction). `PART_B_PRICING_MODE` flips

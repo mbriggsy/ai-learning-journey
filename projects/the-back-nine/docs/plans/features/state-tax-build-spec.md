@@ -29,11 +29,11 @@ status: shipped
 
 ## S0 — the sentinel reconciliation lands FIRST (contradictions mean STOP)
 
-- `src/engine/constants/tax.ts:336-344` `stateIncomeTax` is `OUT-but-disclosed` with the note
+- `src/engine/constants/tax.ts:342-359` `stateIncomeTax` is `OUT-but-disclosed` with the note
   *"Configurable context; neither sequencing nor conversion moves it"* — now **FALSE** for the
   roster (NC taxes conversions at the flat rate; the D6 falsifiable rule "IN iff sequencing or
   a conversion can move it" **reclassifies state IN** for priced states). Reconcile the
-  sentinel, the `inOutRule` sibling (tax.ts:347-354), and the module banner (tax.ts:1-9)
+  sentinel, the `inOutRule` sibling (tax.ts:361-369), and the module banner (tax.ts:1-9)
   BEFORE any pricing code, and sweep every consumer of the old "state isn't priced" wording
   (the S5 disclosure map is the render-side half of this sweep).
 
@@ -76,7 +76,7 @@ status: shipped
 ## S2 — engine shape
 
 1. **Placement:** a pure per-state family beside taxCore's primitives, joining the SAME
-   per-year gross-up fixed point as a **second addend at `taxOverlay.ts:888`**
+   per-year gross-up fixed point as a **second addend at `taxOverlay.ts:867-879`**
    (`solveGrossWithdrawal`) — never bolted on after convergence. `GrossUpContext` gains the
    state code; the calendar threads as `startCalendarYear + t` (the senior-bonus pattern —
    the rate lookup **CONSUMES the year** so a future pinned step-down actually prices,
@@ -123,7 +123,7 @@ status: shipped
    graduated state (SC/GA/DE) joins the roster** — standing constraint, named in the rails
    comment.
 9. **Accounting:** state tax folds into the year's tax-paid surface the way federal does
-   (`taxPaidThisYear`, taxOverlay.ts:1707 family) — one lifetime-tax lens, no parallel ledger
+   (`taxPaidThisYear`, taxOverlay.ts:1787 family) — one lifetime-tax lens, no parallel ledger
    in v1.
 
 ## S3 — intake + the R7 seat

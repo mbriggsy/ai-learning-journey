@@ -42,7 +42,7 @@ change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` + the dr
    - **Absent `savedAt`** (every vault saved before U13): the "~N years since your save" claim is
      SUPPRESSED — never fabricated from `startCalendarYear`, never defaulted to "today".
 2. **`taxVintageDetail?: TaxVintageV3`** — atomic object minted by **`taxVintageStamp()` in
-   `src/engine/constants/tax.ts`** (mirror `healthcareVintageStamp`, health.ts:327-336). Keyed on
+   `src/engine/constants/tax.ts`** (mirror `healthcareVintageStamp`, health.ts:422). Keyed on
    `TAX_YEAR` + the legal basis string. The legacy opaque `taxVintage: string` stays untouched (add-only).
    - RMD-age rule (effectiveFrom 2033) + senior-bonus sunset (sunsetAfter 2028) are **NOT stamped** —
      they are DERIVED read-time communication notes against LIVE constants (they're already deterministic
@@ -53,7 +53,7 @@ change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` + the dr
      `asOf`, or a hand-set snapshot date — whichever the blend single-source gate prefers; it lives under
      the reference gate, NOT `CONSTANTS_VINTAGE`).
 4. **`CURRENT_APP_DEFAULT_VERSION`** — the canonical constant (today's value `'p2-d1'`), single home in
-   `src/shared/` (leaf — importable by store + ui), replacing the bare literal in memoryModel.ts:392.
+   `src/shared/` (leaf — importable by store + ui), replacing the bare literal in memoryModel.ts:567.
 5. **`scenarioFromDraft` re-stamps ALL vintages fresh at every save** — taxVintageDetail, healthcareVintage
    (already does), dateVintage, appDefaultVersion, savedAt. Insight-058: N writers of a reconciliation
    invariant; the save path is the ONE stamp writer.
@@ -74,7 +74,7 @@ change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` + the dr
   - `controls`: `{ taxMoved }` — `taxVintageDetail` vs `taxVintageStamp()`; absent stamp = not-applicable.
     Plus the DERIVED notes: RMD-age era + senior-bonus sunset from (birthYear, startCalendarYear,
     todayEpochDay) against live constants. The senior-bonus note quotes **mfjBothSpouses65 = $350k**
-    (tax.ts:126) — never the one-spouse $250k (red-team constraint (d); MFJ product by construction).
+    (tax.ts:133) — never the one-spouse $250k (red-team constraint (d); MFJ product by construction).
   - `healthcare`: `{ acaMoved, … }` — saved `healthcareVintage` vs `healthcareVintageStamp()`; the
     applicable-% clock rides the DOCUMENTED proxy (coverageYear + acaStatus + acaVerifiedOn; the
     reVerifyEveryBuild CI gate is the real mid-year detector — Q4, no new field).

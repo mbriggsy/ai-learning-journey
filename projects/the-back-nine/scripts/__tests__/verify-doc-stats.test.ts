@@ -15,6 +15,11 @@ import {
   strayCountSurfaces,
   BACKLOG_SURFACE,
   INSIGHTS_DIR,
+  stripArchived,
+  checkCitations,
+  citationSurfaces,
+  buildSourceResolver,
+  CITATION_LOG_SURFACES,
 } from '../verify-doc-stats'
 
 describe('doc test-count drift sentinel', () => {
@@ -234,6 +239,52 @@ describe('the register + insights arms (2026-09-06 — the numbers the doc audit
       const dir = join(process.cwd(), INSIGHTS_DIR)
       const r = checkInsightsIndex(readFileSync(join(dir, 'README.md'), 'utf-8'), readdirSync(dir))
       expect(r).toEqual({ ok: true, missingFromIndex: [], danglingInIndex: [] })
+    })
+  })
+
+  describe('checkCitations — every line-numbered citation resolves (the structural half of anchor truth)', () => {
+    const files: Record<string, string[]> = {
+      'staleness.ts': ['a', 'b', 'c', '', 'e', 'f'],
+      'src/ui/copy.ts': ['x', 'y'],
+    }
+    const resolve = (cited: string): string[] | null => files[cited] ?? files[cited.split('/').pop()!] ?? null
+    it('passes an in-range citation, a range, a path-form citation and an en-dash range', () => {
+      const docs = [{ surface: 'd.md', content: 'see `staleness.ts:2` and `staleness.ts:1-3`, `src/ui/copy.ts:2`, `staleness.ts:5–6`' }]
+      expect(checkCitations(docs, resolve)).toEqual([])
+    })
+    it('FAILS a missing file, an out-of-range line, a blank-only range and a malformed short range, naming the doc line', () => {
+      const docs = [{ surface: 'd.md', content: 'ok `staleness.ts:1`\n`gone.ts:3` · `staleness.ts:9` · `staleness.ts:4` · `staleness.ts:1812-13`' }]
+      const p = checkCitations(docs, resolve)
+      expect(p.map((x) => `${x.line}:${x.citation}:${x.reason.split(' (')[0]}`)).toEqual([
+        '2:gone.ts:3:file not found',
+        '2:staleness.ts:9:out of range',
+        '2:staleness.ts:4:cites only blank line(s)',
+        '2:staleness.ts:1812-13:malformed range',
+      ])
+    })
+    it('ignores citations inside <details> blocks (archived reasoning) without shifting line numbers', () => {
+      const content = 'live `staleness.ts:1`\n<details><summary>old</summary>\n`gone.ts:1`\n</details>\n`gone.ts:2`'
+      expect(stripArchived(content).split('\n')).toHaveLength(5)
+      const p = checkCitations([{ surface: 'd.md', content }], resolve)
+      expect(p).toEqual([{ surface: 'd.md', line: 5, citation: 'gone.ts:2', reason: 'file not found' }])
+    })
+    it('the REAL live docs resolve every citation — and the roster excludes the dated logs + insights', () => {
+      // Live on purpose (like the register arm): a citation to a deleted file or a vanished line is a
+      // defect the moment it lands, and the fix belongs in the same commit as the code move.
+      const cwd = process.cwd()
+      const surfaces = citationSurfaces(cwd)
+      expect(surfaces).toContain('TODO.md')
+      expect(surfaces).toContain('docs/backlog.md')
+      for (const log of CITATION_LOG_SURFACES) expect(surfaces).not.toContain(log)
+      expect(surfaces.some((s) => s.startsWith('docs/insights/'))).toBe(false)
+      const docs = surfaces.map((surface) => ({ surface, content: readFileSync(join(cwd, surface), 'utf-8') }))
+      expect(checkCitations(docs, buildSourceResolver(cwd))).toEqual([])
+    })
+    it('the resolver finds the monorepo-root CI workflow by bare name and a bare basename under src/', () => {
+      const r = buildSourceResolver(process.cwd())
+      expect(r('verify-the-back-nine.yml', 1, 1)).not.toBeNull()
+      expect(r('staleness.ts', 1, 1)).not.toBeNull()
+      expect(r('no-such-file-anywhere.ts', 1, 1)).toBeNull()
     })
   })
 })

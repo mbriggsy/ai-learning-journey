@@ -310,7 +310,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
      and the fit gate's panel arm (`vertical-fit.spec.ts:1136-1165`) asserts only that the dialog box fits
      **and** `scrollHeight > clientHeight` — content growth makes the second assertion *more* true.
      ⚑ **The drafted HSA sentence would have DENIED the very forfeit it discloses — do not ship "stays
-     put" / "simply sits."** The balance is not parked, it is **destroyed**: `taxOverlay.ts:1812-13` sets
+     put" / "simply sits."** The balance is not parked, it is **destroyed**: `taxOverlay.ts:1812-1813` sets
      `buckets = EMPTY_BUCKETS` (hsa: 0) → `simulate.ts:1730` `terminalHsaReal = 0` →
      `objectiveHeadline.ts:58` bequest contribution **$0**. On the exact path the sentence names, the HSA
      adds nothing to the leave-more dollar the reader sees. **The sentence must say the balance is DROPPED.**

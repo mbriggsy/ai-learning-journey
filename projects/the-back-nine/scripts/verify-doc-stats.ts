@@ -222,6 +222,114 @@ export function strayCountSurfaces(cwd: string): string[] {
   return out
 }
 
+// ---------------------------------------------------------------------------
+// Arm 4 — every line-numbered code citation resolves (the file exists; the line is in range and not
+// blank). This is the STRUCTURAL half of anchor truth, zero false positives by construction. The
+// semantic half — "is the cited THING still at that line" — cannot be gated without a fingerprint
+// convention (an identifier-proximity heuristic measured 21–42 % false positives on freshly verified
+// citations, 2026-09-06); it is re-verified by the anchor fleet at unit boundaries instead.
+// ---------------------------------------------------------------------------
+
+/** `file.ts:NNN` / `path/file.tsx:NNN-MMM` (en-dash ranges too), inside or outside backticks. */
+export const CITATION = /((?:[\w.-]+\/)*[\w.-]+\.(?:ts|tsx|css|json|yml|html|mjs|cjs)):(\d+)(?:[-–](\d+))?/g
+
+/** Blank out the INSIDE of every `<details>…</details>` block (archived reasoning, kept for the record —
+ *  its citations describe the code as it was) while preserving line count, so line numbers in the
+ *  report stay true. */
+export function stripArchived(content: string): string {
+  return content.replace(/<details>[\s\S]*?<\/details>/g, (block) => block.replace(/[^\n]/g, ' '))
+}
+
+export interface CitationProblem {
+  surface: string
+  line: number
+  citation: string
+  reason: string
+}
+
+/** `resolve(cited)` returns the cited file's lines, or null when no such file exists. A bare basename
+ *  may match several files; the resolver returns the FIRST candidate whose range works, so the check
+ *  stays zero-false-positive at the cost of not catching an ambiguous bare name. */
+export function checkCitations(
+  docs: { surface: string; content: string }[],
+  resolve: (cited: string, from: number, to: number) => string[] | null,
+): CitationProblem[] {
+  const problems: CitationProblem[] = []
+  for (const { surface, content } of docs) {
+    const lines = stripArchived(content).replace(/\r\n/g, '\n').split('\n')
+    lines.forEach((l, i) => {
+      for (const m of l.matchAll(CITATION)) {
+        const cited = m[1]!
+        const from = Number(m[2])
+        const to = m[3] ? Number(m[3]) : from
+        if (to < from) { problems.push({ surface, line: i + 1, citation: m[0], reason: 'malformed range (end before start — write the full end line, e.g. 1812-1813)' }); continue }
+        const src = resolve(cited, from, to)
+        if (!src) { problems.push({ surface, line: i + 1, citation: m[0], reason: 'file not found' }); continue }
+        if (from > src.length || to > src.length) { problems.push({ surface, line: i + 1, citation: m[0], reason: `out of range (file has ${src.length} lines)` }); continue }
+        if (src.slice(from - 1, to).every((s) => s.trim() === '')) problems.push({ surface, line: i + 1, citation: m[0], reason: 'cites only blank line(s)' })
+      }
+    })
+  }
+  return problems
+}
+
+/** Docs whose citations are LIVE claims: the queue, the register, and every doc under docs/ except the
+ *  insights and the dated logs (a council row or a cold-read entry cites a line as it was). */
+export const CITATION_LOG_SURFACES = ['docs/council-log.md', 'docs/caddie/cold-read-log.md', 'docs/caddie/tape.md'] as const
+
+export function citationSurfaces(cwd: string): string[] {
+  const out: string[] = ['TODO.md']
+  const walk = (dir: string): void => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const p = join(dir, e.name)
+      if (e.isDirectory()) {
+        if (e.name !== 'insights') walk(p)
+      } else if (e.name.endsWith('.md')) {
+        const rel = relative(cwd, p).replace(/\\/g, '/')
+        if (!(CITATION_LOG_SURFACES as readonly string[]).includes(rel)) out.push(rel)
+      }
+    }
+  }
+  if (existsSync(join(cwd, 'docs'))) walk(join(cwd, 'docs'))
+  return out.filter((f) => existsSync(join(cwd, f)))
+}
+
+/** Index every source-ish file under the project (plus the monorepo-root workflow dir, where CI lives)
+ *  by basename, so a bare `staleness.ts:627` resolves. */
+export function buildSourceResolver(cwd: string): (cited: string, from: number, to: number) => string[] | null {
+  const byBase = new Map<string, string[]>()
+  const SKIP = new Set(['node_modules', '.git', 'dist', 'temp', '.playwright-mcp', 'coverage'])
+  const walk = (dir: string): void => {
+    if (!existsSync(dir)) return
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const p = join(dir, e.name)
+      if (e.isDirectory()) { if (!SKIP.has(e.name)) walk(p) }
+      else if (/\.(ts|tsx|css|json|yml|html|mjs|cjs)$/.test(e.name)) {
+        const list = byBase.get(e.name) ?? []
+        list.push(p)
+        byBase.set(e.name, list)
+      }
+    }
+  }
+  walk(cwd)
+  walk(join(cwd, '..', '..', '.github'))
+  const cache = new Map<string, string[]>()
+  const linesOf = (p: string): string[] => {
+    let v = cache.get(p)
+    if (!v) { v = readFileSync(p, 'utf-8').replace(/\r\n/g, '\n').split('\n'); cache.set(p, v) }
+    return v
+  }
+  return (cited, from, to) => {
+    const direct = join(cwd, cited)
+    if (cited.includes('/') && existsSync(direct)) return linesOf(direct)
+    const base = cited.split('/').pop()!
+    const candidates = (byBase.get(base) ?? []).filter((p) => p.replace(/\\/g, '/').endsWith(cited))
+    if (candidates.length === 0) return null
+    const inRange = candidates.find((p) => { const l = linesOf(p); return to <= l.length && !l.slice(from - 1, to).every((s) => s.trim() === '') })
+    return linesOf(inRange ?? candidates[0]!)
+  }
+}
+
 /** Resolve vitest's own CLI entry from its package.json `bin` — so we invoke it
  *  through `node` directly (no shell, no `pnpm.cmd` Windows resolution problem,
  *  no command string for anything to inject into). */
@@ -316,12 +424,23 @@ function main(): number {
     for (const f of idx.danglingInIndex) console.error(`  STALE  ${INSIGHTS_DIR}/README.md — links ${f}, which does not exist`)
   }
 
+  // Arm 4 — every line-numbered citation resolves.
+  const citationDocs = citationSurfaces(cwd).map((surface) => ({ surface, content: readFileSync(join(cwd, surface), 'utf-8') }))
+  const problems = checkCitations(citationDocs, buildSourceResolver(cwd))
+  const citationCount = citationDocs.reduce((n, d) => n + [...stripArchived(d.content).matchAll(CITATION)].length, 0)
+  if (problems.length === 0) {
+    console.log(`  OK     ${citationCount} line-numbered citations across ${citationDocs.length} docs resolve (file exists, line in range, not blank)`)
+  } else {
+    failed = true
+    for (const p of problems) console.error(`  STALE  ${p.surface}:${p.line} — ${p.citation} — ${p.reason}`)
+  }
+
   if (failed) {
     console.error('[verify:doc-stats] FAILED — see the STALE / STRAY lines above.')
     return 1
   }
   console.log(
-    `[verify:doc-stats] OK — every tracked surface matches the live suite (${actual.cases} tests / ${actual.files} files); the register header, its single home and the insights index all hold.`,
+    `[verify:doc-stats] OK — every tracked surface matches the live suite (${actual.cases} tests / ${actual.files} files); the register header, its single home, the insights index and every line-numbered citation hold.`,
   )
   return 0
 }

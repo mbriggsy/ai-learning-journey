@@ -64,7 +64,10 @@ const DEV_CRN_SEED = 0xbada55
  * RECORDED before any re-tune, the pricing-unit precedent). The IRA moved 1.00M → 1.055M: the
  * probed window is NARROW — +40k lands the twin exactly AT the 0.85 edge (band-edge fragile),
  * +60k lifts the NC face over the edge too (killing the nc seed's crossing purpose); +55k
- * restores twin 0.8585 on-track / NC 0.8425 borderline with balanced margins both sides.
+ * restored twin 0.8585 on-track / NC 0.8425 borderline with balanced margins both sides — a state that
+ * ENDED when S.L. 2026-41's 2027+ rate cut was pinned into `ncRateSchedule` (2026-08-02): NC now lands
+ * ON-TRACK beside its twin, so no priced-state seed crosses the band today. A purpose-built
+ * band-crossing seed + its state-off twin is Briggsy's call (register Tier 3).
  */
 const retiredOnTrack: ScenarioDraft = {
   people: [
@@ -1253,7 +1256,7 @@ function agedStateProfile(state: PricedState): string {
  * healthcare / date vintages are left FRESH (a same-year save carries same-year vintages) — so the
  * ONLY clock that fires is the state-tax one: the `stalenessStateTax` note renders in ISOLATION
  * (a cleaner face-#4 cold read), and the affirm recompute lands the SAME engine-proven verdict as
- * `?seed=nc` (borderline).
+ * `?seed=nc` (on-track since the NC rate cut was pinned 2026-08-02; it read borderline at mint).
  *
  * EXPORTED for the devSeeds battery (like {@link doctorStaleVault}). Fail-loud if handed a
  * non-priced-state base — the ONLY legitimate caller is a priced-state aged plant (`statestale`).

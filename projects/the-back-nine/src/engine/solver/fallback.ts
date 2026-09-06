@@ -29,8 +29,9 @@
 import { sourced, isCalibrated, type Sourced } from '@engine/constants'
 
 /**
- * The reduced-path count for the INTERACTIVE tier's search/ranking (rung 3). UN-TUNED: a −1
- * out-of-range sentinel (burned/062), not a guessed path count — the reference-device profile pins it.
+ * The reduced-path count for the INTERACTIVE tier's search/ranking (rung 3). PINNED 2026-07-22 by the
+ * reference-device profile (see the citation); it shipped as a −1 out-of-range sentinel (burned/062),
+ * never a guessed path count, until that measurement landed.
  * NOTE it governs ONLY the search/selection path count; the grade + displayed figures always run at
  * `solverMinBPaths` (the held-out floor is never crossed — the honest-degrade contract).
  */
@@ -44,8 +45,9 @@ export const solverInteractivePaths: Sourced<number> = sourced(4_000, {
 
 /**
  * The candidate-count CEILING (rung 2): above it, coarse-then-refine engages instead of scoring every
- * anchored point at full precision. UN-TUNED sentinel — the largest cliff-anchored grid the reference
- * device can score inside the interactive window is a MEASUREMENT, not a guess.
+ * anchored point at full precision. PINNED 2026-07-22 (a −1 sentinel until then) — the largest
+ * cliff-anchored grid the reference device can score inside the interactive window is a MEASUREMENT,
+ * not a guess.
  */
 export const solverCandidateCeiling: Sourced<number> = sourced(5, {
   citation:
@@ -56,9 +58,10 @@ export const solverCandidateCeiling: Sourced<number> = sourced(5, {
 })
 
 /**
- * The number of coarse-pass SURVIVORS the refine grid re-anchors around (rung 1). UN-TUNED sentinel —
- * how many coarse winners must survive to guarantee the refined optimum is not pruned is a
- * measurement + a stability argument the reference-device profile begins, never a guessed k.
+ * The number of coarse-pass SURVIVORS the refine grid re-anchors around (rung 1). PINNED 2026-07-22
+ * (a −1 sentinel until then) — how many coarse winners must survive to guarantee the refined optimum
+ * is not pruned is a measurement + a stability argument from the reference-device profile, never a
+ * guessed k.
  */
 export const solverCoarseSurvivors: Sourced<number> = sourced(2, {
   citation:
@@ -123,9 +126,11 @@ export function assertFallbackCalibratedOver(values: FallbackKnobValues): void {
 }
 
 /**
- * FAIL-CLOSED guard (the `assertDemotionAxisCalibrated` posture, S4.5): the U16 interactive/full
- * router MUST call this before consuming any knob. It THROWS while any knob is an un-tuned sentinel —
- * a guessed compute-routing threshold is refused, never silently applied (burned/062).
+ * FAIL-CLOSED guard (the `assertDemotionAxisCalibrated` posture, S4.5): the interactive/full router
+ * MUST call this before consuming any knob — that router is NOT built (the interactive tier is an open
+ * register entry), so today no live path consumes the knobs and only the red-arm tests drive this guard.
+ * It THROWS while any knob is an un-tuned sentinel — a guessed compute-routing threshold is refused,
+ * never silently applied (burned/062). All three knobs have been PINNED since 2026-07-22.
  */
 export function assertFallbackCalibrated(): void {
   assertFallbackCalibratedOver({

@@ -9,8 +9,9 @@
  * rule (insight 078 — a defect-class sweep by meaning, not by string), each gated independently at
  * its own home.
  *
- * FIVE HOMES, not the spec's four. state-tax-build-spec.md:208 pins "×4 homes" — the three composed
- * below plus the spend-help branch (`spendHelpKeyFor`, intakeMap:913). The RECOMMENDATION surface's
+ * FIVE HOMES. The build spec's S5 section (state-tax-build-spec.md, rewritten 2026-09-06 to name all five;
+ * it pinned "×4 homes" until then) — the three composed
+ * below plus the spend-help branch (`spendHelpKeyFor`, intakeMap:981). The RECOMMENDATION surface's
  * disclosure rail is the FIFTH, and it was born unguarded: `recDiscStateTax` shipped as the only
  * household-DEPENDENT builder with no condition, so an NC household read "this compares federal tax
  * only" three inches under a spine that had just named their state. Before the 2026-08-02 NC lift no

@@ -24,7 +24,7 @@ sources: [docs/research/pre65-healthcare.md]
 All verified byte-for-byte against `https://www.cms.gov/files/document/2026-medicare-trustees-report.pdf`:
 
 1. **Table V.E2 (p.207) — projected standard monthly Part B premium, NOMINAL, per year:**
-   2026 **$202.90** (finalized) · 2027 $209.50 · 2028 $224.50 · 2029 $238.50 · 2030 $255.50 ·
+   2026 **$202.90** (finalized — the runtime home is `partB2026` in `src/engine/constants/health.ts`; the CMS-sourced pin and its provenance live in [pre65-healthcare.md](pre65-healthcare.md), this row is the Trustees' own V.E2 transcription and must agree with it) · 2027 $209.50 · 2028 $224.50 · 2029 $238.50 · 2030 $255.50 ·
    2031 $272.10 · 2032 $290.20 · 2033 **$313.60** · 2034 $338.50 · 2035 $360.60.
    (Anchors: 2024 $174.70 · 2025 $185.00. Secondary press prints 2033 as $313.65 — the primary
    PDF prints **$313.60**; primary wins.) Table V.E3 (p.208) holds the IRMAA add-ons 2007–2035

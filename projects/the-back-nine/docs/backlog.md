@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **48 open items** (56 entries, 8 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open — re-counted 2026-09-06, when two Tier-3 entries moved in from the queue) consolidated
+> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **54 open items** (62 entries, 8 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open — re-counted 2026-09-06, when two Tier-3 entries moved in from the queue and six entries were filed from the as-built doc rewrite) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -417,6 +417,7 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 
 - R38 — the post-65 non-qualified HSA path is unrouted and its conservative forfeit is disclosed only in a code comment
 - ⚑ **Negatives (the register's half — the live prescription is the ranked entry in `TODO.md`):** the false *"(conservative, disclosed)"* comment at `healthOverlay.ts:747` was corrected 2026-08-02 — the disclosure itself is still OWED; `taxOverlay.ts:1803-1805` still calls the forfeit *"a DISCLOSED non-feature"* — the same false claim in the file that owns the mechanism; sweep both in the disclosing commit. **Do not write "stays put" / "simply sits"** — the balance is DESTROYED (`buckets = EMPTY_BUCKETS` → `terminalHsaReal = 0` → bequest $0); the sentence must say DROPPED, and must hold across all three zeroing branches (each fires because the path DEPLETED, so a bequest-framed sentence names a state the engine cannot reach — the honest harm is a plan counted as run-out while HSA dollars sit unspent). "draw … HSA" reds `copyGuard.ts:250`; "can't run out while the HSA lasts" reds `FALSE_CERTAINTY_INTERNAL`.
+- A SECOND owed HSA disclosure, filed 2026-09-06 from the accumulation record's rewrite: §6 there assigned D2 the sentence *"if you keep funding an HSA after you stop full-time work, your real free-date may be slightly earlier"* with a copyGuard catalog scenario. No such string exists in `copy.ts`; the direction is conservative (the model under-credits the funding), so it is a missing explanation, not a wrong number — ship it with the forfeit sentence above, in the same "What this leaves out" home.
 
 ### Long-term care is neither modeled nor listed as left out
 
@@ -578,6 +579,37 @@ Briggsy's eye, and should not be re-filed as a copy defect without a read.
   the pre-65 ACA real-flat pricing entry above.
 - The `PricedState` widening tripwire in `composeRecStateTaxDisclosure` fires on a **new roster member**;
   it does NOT fire on a rate-schedule change to an existing one. That gap is the thing to close first.
+
+### A rental stream's real rise is unmodeled AND undisclosed — optimistic at the ACA cliff, with no cliff fixture
+
+`M` · **pilot** · filed 2026-09-06 (the R40 record's as-built rewrite; every absence re-grepped by its skeptic)
+
+- The record (`docs/decisions/other-income-r40.md`) rules the rental net-real-rise omission OPTIMISTIC and compounding at the 400%-FPL cliff — the miss there is an entire unsubsidized bridge-year premium — and ruled that the magnitude be DISCLOSED in the rental copy. No such disclosure exists in `copy.ts`'s R40 block.
+- No rental-at-the-cliff fixture exists under any `__tests__` directory, and no integration arm asserts the ACA subsidy rise — the only healthcare-on R40 arms are age-67 Medicare households asserting Medicare cost, never a premium tax credit. A regression at the cliff is silent.
+- Same family, filed here rather than as three entries: the alimony payer-death and the simple-COLA simplifications are optimistic and undisclosed on every user surface; the §86-once seam is pinned only on a pre-tax-only pool (`realizedGain ≠ 0` is never exercised with an R40 stream).
+- Fix shape: one rental-copy disclosure sentence naming the direction (his words — copy), a rental household planted at the cliff in the healthcare test file, and one R40 arm with `healthcareEnabled` on a pre-65 household.
+
+### The Social Security statement's default figure assumes continued earnings — a stop-early household reads a rosier at-FRA benefit and is never routed to the $0-future-earnings estimate
+
+`S` · **pilot** (the routing) · **briggsy** (the words) · filed 2026-09-06 (the SS decision record §9; confirmed by its skeptic)
+
+- The intake's SS amount help (`ssAmountLabel` / `ssAmountHelp`, `copy.ts`) warns only "not the one for age 62 or 70". The mySSA statement figure assumes earnings continue to FRA; a household that stops work early is overstated in the rosy direction, and nothing in `src/` mentions the estimator, future earnings, or the mySSA "$0 future earnings" setting.
+- Fix shape: one help sentence routing a stop-early household to the mySSA estimator with future earnings set to $0 (the link home already exists — `linkFindSsStatement`, `questions.tsx`); the words are his.
+
+### `belowFloor` stops at the overlay — a household under the 100%-FPL floor is never told
+
+`M` · **pilot** · filed 2026-09-06 (the accumulation record's as-built rewrite; the absence re-grepped by its skeptic)
+
+- `belowFloor` exists only in `healthOverlay.ts` (`:150`, `:303`, `:404`, `:411`) and its own test file. No consumer in `taxOverlay.ts`, `simulate.ts`, `dateSearch.ts`, the shared model or any UI file — the per-track floor disclosure `docs/decisions/accumulation-fuck-off-date.md` §6 owes was never threaded. The engine computes the flag and drops it.
+- Fix shape: carry the flag through the yearly result to the readout the way `belowFloor`'s sibling facts travel, and disclose it on the health sheet (his words) — never a silent optimistic PTC on a household that qualifies for none.
+
+### The survivor step-down attribution — "as one Social Security benefit ends" reads wrong for a pension-heavy household
+
+`S` · **pilot** · filed 2026-09-06 (the U7 spec's as-built rewrite; confirmed by its skeptic)
+
+- `verdictSurvivorStepDown` (`copy.ts`) attributes the whole monthly drop to Social Security. The figure also covers a lost pension or earned income — the minority case per the record, but a household whose survivor cliff is mostly a lost pension reads the cause wrong while the number is right.
+- The revisit trigger the copy's own comment named ("when D2 wires real households") fired 2026-06-28 and never ran; the comment now points here.
+- Fix shape: attribute by the dominant component (the engine already carries each stream's survivor variant), keep the median scope; the sentence is his words if it changes.
 
 ## Tier 1 — the differentiator does not land
 
@@ -1000,7 +1032,21 @@ disclaimer two-mount swap (holds: in-frame mount dark, trailing mount after the 
     deliberate (Comlink's expose catches every in-call error), recorded · eleven byte-identical
     `EngineClient` test fakes — one new member cost a 19-file sweep (hygiene: a shared helper)
 
+### A vault saved before the extras spend-help boundary flip double-counts its Part D / Medigap premiums — no migration, no clock
+
+`M` · **pilot** · filed 2026-09-06 (the Medicare-extras spec's as-built rewrite; the unfiled obligation confirmed by two skeptics)
+
+- The extras unit flipped the spend-help boundary (`503213f4`): premiums the household used to type into spending are now priced by the engine. A vault saved BEFORE the flip still carries them inside its spending AND gets them priced — a double count. The council required a named follow-up for the installed base; none was filed and no staleness clock keys on it.
+- Pessimistic-safe (the household reads slightly worse), so not the cardinal sin — but it is an undetected wrong number on every pre-flip vault. Fix shape: a vault-vintage clock on the extras boundary (`src/store/staleness.ts` already keys on vintages) + the calm note; the words are his.
+
 ## Tier 3 — Briggsy’s call (taste, scope, one-way doors)
+
+### No priced-state seed crosses the confidence band any more — the fit matrix lost its borderline two-pane coverage when NC's rate cut was pinned
+
+`M` · **briggsy** · filed 2026-09-06 (the state-seed brief's rewrite; measured by its skeptic: `devSeeds.test.ts` 66/66, NC on-track beside its twin)
+
+- `?seed=nc` and `?vault=statestale` were minted BORDERLINE (NC 0.8425 vs the twin's 0.8585). S.L. 2026-41's 2027+ cut, pinned 2026-08-02, lifted NC onto ON-TRACK — so the vertical-fit matrix and the Caddie walk no longer exercise a borderline two-pane on any priced-state household, while five comments/test names still said they did (swept 2026-09-06).
+- The fix is a NEW purpose-built band-crossing seed with its own state-off twin (`devSeeds.test.ts:487-495` files the shape) — a seed mint is a taste + scope call (which household, which state, how close to the bar), so it is his, not a pilot build.
 
 ### The completed-intake door's IDEAL shape — quiet hatch, primary "finish" CTA, or re-enter at the step
 
@@ -1293,6 +1339,7 @@ disclaimer two-mount swap (holds: in-frame mount dark, trailing mount after the 
 - False source comment (b) — kill "the record stores the seed" in Plan 4 BEFORE S5 mints
 - DEFERRED BUILD — the richer market draw: block-bootstrap + stochastic correlated inflation
 - THE RICHER MARKET DRAW — block-bootstrap + stochastic correlated inflation
+- The date-search grade never routes through U14's held-out seed B (filed 2026-09-06, confirmed by grep): `deriveSeedB` / `heldOutSeed` live in `solver/search.ts`, `solver/solve.ts`, `solver/solveEntry.ts`, `validation/gradeCalibration.ts` and nowhere in `dateSearch.ts`, `dateSearchProfile.ts`, `dateOdds.ts` or `FuckOffDate.tsx` — the fuck-off date's confidence is a one-seed statistic while the recommendation's is held-out. The accumulation record §3c states it; the curse-defense law (product D-decisions) says it should not be.
 
 ### Deferred engine builds and the missing regression arms
 

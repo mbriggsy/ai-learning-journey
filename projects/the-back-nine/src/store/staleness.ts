@@ -262,7 +262,7 @@ export interface StalenessExposure {
    *  §415(c) match trim inside `contributionStreamsFor`, which never runs for them). */
   readonly contributions: ExposureRead
   /** Does the run's stock weight READ the dated ticker-blend table (`blendTableReadForRun`)?
-   *  `resolveBlend` (`intakeMap.ts:214-216`) consults it ONLY for an account whose ticker hits
+   *  `resolveBlend` (`intakeMap.ts:290`) consults it ONLY for an account whose ticker hits
    *  a row; an all-manual-blend household — or one whose portfolio totals $0, where
    *  `householdStockWeight` returns null and the run takes the inert `?? 0` — is PROVABLY
    *  inert under any `BLEND_SNAPSHOT_AS_OF` bump. `'priced'` still never NAMES itself (see

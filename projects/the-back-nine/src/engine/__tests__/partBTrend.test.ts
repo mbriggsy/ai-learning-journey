@@ -261,7 +261,7 @@ describe('buildPartBPricingSchedule — shape (c): deflated V.E2, pre-anchor cla
       expect(sched[10]!.scales.partB).toBeGreaterThan(sched[9]!.scales.partB)
     })
 
-    it('DND-009 — the derived Part B surcharge path reproduces the Trustees’ OWN Table V.E3 within CMS rounding (±$0.30), 2027–2035', () => {
+    it('DND-009 — the derived Part B surcharge path reproduces the Trustees’ OWN Table V.E3 within CMS rounding (max($0.50, 0.2%)), 2027–2035', () => {
       // Table V.E3 (p.208–209, transcribed verbatim from the primary PDF by the Part D research
       // pass — an INDEPENDENT CMS computation, not our formula's echo): the per-tier Part B
       // income-related monthly adjustment amounts. Our design derives that path as

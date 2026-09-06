@@ -377,7 +377,7 @@ export const copy = {
     'Blank means it pays for life. Set an age only if it ends earlier — a term-certain annuity, say.',
   incomeTaxableLabel: 'The taxable part each year',
   incomeTaxableHelp:
-    'Leave blank to treat it as fully taxable (the safe default). Lower it only if part of it is a tax-free return of what was paid in — a conservative simplification the tool holds steady.',
+    'Leave blank to treat it as fully taxable (the safe default). Lower it only if part of it is a tax-free return of what was paid in — the tool holds that share steady for life, which reads a little better than reality once the paid-in amount would have been recovered.',
   // The session-only "nothing saved yet" affordance — reserved slot, neutral
   // text + icon, never a red badge (color is never the only signal — insight 035).
   notSavedYet: 'Nothing’s saved to this device yet — that happens when you save your plan.',
@@ -2223,7 +2223,9 @@ export const slots = {
    *  reads cleanly as the pre-tax income drop — the em-dash now binds only to the SS income cause, not
    *  the (excluded) tax effect. The "one Social Security benefit ends" attribution is kept
    *  median-scoped for v1 (the representative retired household; $X also covers any lost
-   *  pension/earned income, the minority case) — revisit when D2 wires real households. */
+   *  pension/earned income, the minority case). D2 shipped 2026-06-28 and the revisit never ran —
+   *  it is an OPEN register entry ("The survivor step-down attribution"); a household whose cliff is
+   *  mostly a lost pension reads this sentence wrong until it lands. */
   verdictSurvivorStepDown: (perMonthDropFormatted: string): string =>
     `If one of you is on your own later, the household’s monthly income steps down about $${perMonthDropFormatted} — as one Social Security benefit ends. Taxes also move to a single filer’s brackets.`,
 

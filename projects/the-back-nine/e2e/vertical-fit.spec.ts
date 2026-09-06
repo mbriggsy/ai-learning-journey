@@ -293,8 +293,8 @@ for (const { seed, medicareNote } of SPINE_SEEDS) {
 // own posture; this arm proves that invariant AND records where the affordance itself lands at each
 // walk tier. (The DATE-route "doors last" order contract needs no new arm: the affordance is a
 // quiet-row child, so the existing dip/datenc order checks — which exclude the quiet-row subtree —
-// already cover it.) The affordance is inert-on-click until §S3 wires the intakeMap solve builder into
-// appModel; its PRESENCE + posture (what this arm measures) needs no builder.
+// already cover it.) The affordance opens the GoalPicker and dispatches the solve (U16 §S3 shipped
+// 2026-07-22); its PRESENCE + posture (what this arm measures) needs no solve, so this arm never waits on one.
 
 const AFFORDANCE_SEEDS = ['retired', 'nc'] as const
 
@@ -844,9 +844,9 @@ async function assertPricedSpineFrame(
 // survives all the way onto the BORDERLINE hero — the exact insight-033 question this increment
 // exists to answer: the affirm+residual set is outcome-scoped in copy but outcome-INDEPENDENT in
 // gating, so a band-crossing verdict still names the state).
-test.describe(`?seed=nc — the NC state clause on the borderline priced residual (${REAL.width}×${REAL.height} @ 2.5dpr)`, () => {
+test.describe(`?seed=nc — the NC state clause on the priced residual (${REAL.width}×${REAL.height} @ 2.5dpr)`, () => {
   test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
-  test('the borderline hero still names North Carolina; the unpriced monolith clause is gone', async ({ page }) => {
+  test('the hero still names North Carolina (on-track since the 2026-08-02 rate pin; it read borderline at mint); the unpriced monolith clause is gone', async ({ page }) => {
     await gotoSeedFinal(page, 'nc')
     await assertResolvedSpine(page)
     await assertMedicareNote(page, true)
@@ -1321,7 +1321,7 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
 
 test.describe(`the state-tax staleness return (?vault=statestale) — the isolated clock + the NC-clause echo frame (${REAL.width}×${REAL.height})`, () => {
   test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
-  test('the gate fires the state-tax clock in isolation, decision pair in-frame; the echoed borderline hero names NC and holds the one-frame law', async ({ page }) => {
+  test('the gate fires the state-tax clock in isolation, decision pair in-frame; the echoed hero names NC and holds the one-frame law', async ({ page }) => {
     await page.goto('/?vault=statestale')
     const unlock = page.getByRole('button', { name: 'Open my plan' })
     await expect(unlock, 'the statestale plant did not land on the unlock screen').toBeVisible({
@@ -1393,7 +1393,7 @@ test.describe(`the state-tax staleness return (?vault=statestale) — the isolat
     await expect(page.locator('.cs-staleness-note')).toBeVisible()
     await expect(
       page.locator('.cs-medicare-residual'),
-      'the NC state clause must ride the echoed borderline hero',
+      'the NC state clause must ride the echoed hero',
     ).toContainText('Your North Carolina state income tax is reflected in these numbers')
 
     // THE ECHO WHITESPACE BUDGET (insight 075) — pinned by COMPUTED style so a deleted

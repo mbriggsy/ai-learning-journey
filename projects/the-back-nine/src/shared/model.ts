@@ -116,8 +116,8 @@ export interface PersonInputs {
  *  `socialSecurityReal` scalar (NOT `pia`, NOT `birthYear`: a v1/v2 blob never had them). The live
  *  {@link PersonInputs} now carries `pia` + `birthYear`; `Scenario`(v1) and {@link ScenarioV2}
  *  reference THIS legacy shape so dropping `socialSecurityReal` from the base does not strip it from
- *  the persisted v1/v2 type shapes (plan §10). No v1/v2 blobs exist in the wild yet (save/load is
- *  unbuilt), so this is pure type/codec hygiene — do NOT extend `PersonInputs` (the SS field differs)
+ *  the persisted v1/v2 type shapes (plan §10). No v1/v2 blobs exist in the wild (no build ever wrote one —
+ *  the first Save shipped in U8 writing v3), so this is pure type/codec hygiene — do NOT extend `PersonInputs` (the SS field differs)
  *  and do NOT add `pia`/`birthYear` here. */
 export interface PersonInputsLegacy {
   readonly sex: Sex

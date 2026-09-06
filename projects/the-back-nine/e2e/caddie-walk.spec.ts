@@ -965,8 +965,8 @@ for (const target of TARGETS) {
           // are where a driven lever preview inherits (or fails to inherit) the stale
           // timeline; that interplay was an uncaptured landmine while only the spine-stale
           // vault opened its doors.
-          // Increment 5: `statestale` JOINS the door walk — the affirm lands the BORDERLINE
-          // NC-clause hero, and the Assumptions door opens the panel on the ANSWERED
+          // Increment 5: `statestale` JOINS the door walk — the affirm lands the NC-clause hero
+          // (on-track since the 2026-08-02 rate pin; borderline when this increment shipped), and the Assumptions door opens the panel on the ANSWERED
           // retirement-state seat (the priced/answered picker-row face — face #2 of the
           // state-carrying increment, uncapturable on any non-door state).
           // U17 §S6: `datearrived` JOINS the door walk, for increment 4's own stated reason —

@@ -5,7 +5,7 @@
  * WHAT IS ACTUALLY AT STAKE: the draw schedule is a pure function of `(seed, paths,
  * maxHorizon, peopleCount)` — so the ONE way a candidate can fork the shared futures is by
  * MOVING A DIMENSION. The apply seam guarantees it cannot (S1); this harness PROVES the
- * guarantee live over the same candidate set U15 will score, on BOTH seed-sets (A selects,
+ * guarantee live over the same candidate set U15 scores (shipped 2026-07-18), on BOTH seed-sets (A selects,
  * B carries the rendered figures + the grade — both must be CRN-correct internally):
  *
  *  1. DIMENSION INVARIANCE — every applied candidate's `(paths, maxHorizonYears,

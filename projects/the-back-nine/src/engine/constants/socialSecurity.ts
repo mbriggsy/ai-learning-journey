@@ -172,7 +172,7 @@ export const spousalRate = sourced<number>(0.5, {
   pinTo: 'POMS RS 00202.020',
   legalBasis: '42 U.S.C. §402(b)/(c)',
   reVerifyEveryBuild: true,
-  note: 'WATCH: a scored-but-UNENACTED proposal would phase 50%→33% by 2042 (SSA OACT solvency provisions, family.html). Base rate is 50% as of 2026-06-14. A `verify:ss` CI gate to catch enactment at build time is a future hardening (TODO) — for now the reVerifyEveryBuild marker + this note flag the watch.',
+  note: 'WATCH: a scored-but-UNENACTED proposal would phase 50%→33% by 2042 (SSA OACT solvency provisions, family.html). Base rate is 50% as of 2026-06-14. The enactment watch is the dated tripwire `constants/__tests__/spousalRate.reverify.tripwire.test.ts` (a `verify:ss` script was considered and REJECTED — its header says why); the reVerifyEveryBuild marker + this note flag the watch.',
 })
 
 /** Deemed filing (BBA-2015 §831; POMS GN 00204.035): DOB on/after Jan 2, 1954 ⇒

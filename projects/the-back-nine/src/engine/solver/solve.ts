@@ -244,9 +244,9 @@ function armOfB(evaluation: CandidateEvaluation, goal: OracleGoal): SolveArm | u
 }
 
 /** Enumerate every withheld conversion lever (insight 092) with the structured trend reason +
- *  its anchored-rail direction. The reason is the LIVE Medicare-trend clause read (unsourced today
- *  ⇒ `medicare-trend-unsourced`); a future sourced+trended pricing clears it and these levers rejoin
- *  the ranked field. */
+ *  its anchored-rail direction. The reason is the LIVE Medicare-trend clause read: the trend has been
+ *  sourced + trended since 2026-07-19 (the Medicare-cost-trend unit), so conversions RANK and this
+ *  arm is reachable only if the trend entry regresses to unsourced (⇒ `medicare-trend-unsourced`). */
 export function enumerateWithheldConversionLevers(
   conversionCandidates: readonly CandidateStrategy[],
 ): readonly WithheldConversionLever[] {

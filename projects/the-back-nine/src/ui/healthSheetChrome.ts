@@ -316,7 +316,7 @@ export function composeRegimeFutures(
  * THE INPUTS ARE PRICING FACTS, NEVER AGES — this is the insight-080 fix, and it is STRUCTURAL. The
  * predecessor (`medicareUnpriced`) keyed the disclosure off ages: every member a known 65+. At write
  * time that equalled the pricing-complement because the intake gate (which needs a pre-65 member) was
- * the ONLY producer of `healthcareEnabled`. Then `dateSearch.ts:222` became a SECOND producer — it
+ * the ONLY producer of `healthcareEnabled`. Then `dateSearch.ts:229` became a SECOND producer — it
  * forces `healthcareEnabled: true` on every date candidate — and the age predicate silently lied: a
  * still-working all-65+ household read "Medicare not priced" over numbers Medicare had already moved.
  * Keying the disclosure off the RUN's own pricing decision closes that by construction, and this

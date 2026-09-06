@@ -354,11 +354,11 @@ export function decideTrack(curve: readonly OffsetSurvival[], paths: number): Da
  * survivors). This routes to D1's input-incomplete placeholder for free (a validateParams
  * rejection IS input failure) and applies identically to both tiers.
  *
- * V1 TRACKS: the degenerate single-total-spend budget makes the floor and lifestyle tracks
- * byte-identical, so ONE curve is evaluated and both tracks read it (the dates COINCIDE —
- * R27; rendered as one). The result SHAPE admits every mixed case now; P3·U9's two-track
- * budget compilation threads two spending figures through this same sweep (the behavioral
- * mixed tests ride U9 — insight 014).
+ * TRACKS (as built, P3·U9): a budget-carrying input sweeps BOTH tracks in the same
+ * ~(window+1) sims — LIFESTYLE reads the full-spend curve, FLOOR reads the floor curve (the
+ * decide step below). The degenerate single-total-spend budget keeps ONE aliased track
+ * object, so both dates coincide (R27; rendered as one) and every pre-U9 run stays
+ * byte-identical — test-pinned. The behavioral mixed cases are U9's tests (insight 014).
  */
 export async function runDateSearch(
   input: DateSearchInput,

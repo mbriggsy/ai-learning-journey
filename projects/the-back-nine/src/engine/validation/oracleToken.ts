@@ -12,8 +12,8 @@
  *
  * This module hosts the PER-RUN clauses (S0): the pinning clause over the run's own consumed
  * constants, the Medicare-trend block, the ACA freshness clause, and the ε-calibration clause.
- * The S6 assembly (`mintOracleToken`) composes them with the fixture-battery reports once the
- * S2–S5 runners exist; the clauses are exported pure so each carries its own planted-fail tests
+ * The S6 assembly (`mintOracleToken`) composes them with the fixture-battery reports from the
+ * S2–S5 runners (all shipped, U14 2026-07-18); the clauses are exported pure so each carries its own planted-fail tests
  * (insight 048 — never an honesty gate inlined where tests can't drive it).
  */
 import type { SimulationParams } from '@shared/model'
@@ -276,7 +276,7 @@ export type MintOutcome =
 /**
  * Mint the oracle-cleared token for ONE graded household (S6.2's withheld-until list):
  *
- *  - the five oracle cases passed on their declared preconditions → the branded
+ *  - the seven oracle cases (i)–(v) + the NC/PA state companions of (i) passed on their declared preconditions → the branded
  *    {@link OracleReport} is a REQUIRED parameter (mintable only by `runOptimalityOracle`
  *    on a clean roster — a planted wrong-best yields failures, never a report, so no token);
  *  - K-candidate ranking stability → the branded {@link RankingStabilityReport} likewise;

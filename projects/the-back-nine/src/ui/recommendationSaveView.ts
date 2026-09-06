@@ -117,7 +117,7 @@ export function deriveRecommendationSave(input: RecommendationSaveInput): Recomm
   const { persist, solve, ready, readOnly, status, inFlight, refusal } = input
 
   // (1) A READ-ONLY session makes NO claim at all — the same override, for the same reason, as
-  // `deriveResultSave` (resultSave.ts:66-73): `session.save()` REFUSES in this tab, so a CTA is a
+  // `deriveResultSave` (resultSave.ts:101-108): `session.save()` REFUSES in this tab, so a CTA is a
   // dead end and a badge would claim a save this tab never made. Its comment names App's standing
   // View-only banner as "the whole disclosure", so this file authors NO second read-only sentence —
   // two disclosures of one fact read as two facts. This outranks even a standing refusal: the
@@ -143,7 +143,7 @@ export function deriveRecommendationSave(input: RecommendationSaveInput): Recomm
   if (solve.kind !== 'committed' || solve.payload.kind !== 'recommended') return { kind: 'none' }
 
   // (4) An answer the save gate cannot encode cannot carry a record to disk either — the record
-  // rides the SCENARIO. Mirrors `deriveResultSave`'s own `!ready.ready ⇒ none` (resultSave.ts:77).
+  // rides the SCENARIO. Mirrors `deriveResultSave`'s own `!ready.ready ⇒ none` (resultSave.ts:112).
   if (!ready.ready) return { kind: 'none' }
 
   // (5) The write this gesture started is in flight. Ranked ABOVE the saved arm on purpose: during

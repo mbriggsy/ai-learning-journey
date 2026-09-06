@@ -183,12 +183,12 @@ describe('deriveStaleness — the tax clock', () => {
   it('is EXPOSURE-GATED on the overlay existing, NOT on healthcare — a run with a tax overlay and no healthcare still fires (the clock reads its OWN bit)', () => {
     // THE REPLACED CLAIM (U17 §S4's F-pass): this arm used to assert the federal clock takes NO
     // exposure gate, on the premise "a household without an overlay reaches no verdict to be
-    // stale about". That premise is FALSE — `buildParams` (intakeMap.ts:601-608) returns a full
+    // stale about". That premise is FALSE — `buildParams` (intakeMap.ts:672-688) returns a full
     // params object for the $0-portfolio/no-overlay household and it gets a real verdict. A test
     // that pins a defect is the defect's second copy, so it is rewritten, not relaxed.
     //
     // What survives is the half that WAS true and still matters: `taxEnabled: true` is hardcoded
-    // on every built overlay (intakeMap.ts:545), so the gate must be `overlayBuilt` — a clock
+    // on every built overlay (intakeMap.ts:625), so the gate must be `overlayBuilt` — a clock
     // wired to `medicare` instead would silence a real federal rulebook move for this household.
     const s = freshSave()
     const basisMoved = { ...s, taxVintageDetail: { ...s.taxVintageDetail!, legalBasis: 'TCJA (pre-OBBBA)' } }
@@ -199,7 +199,7 @@ describe('deriveStaleness — the tax clock', () => {
 
   it('is SILENT for the DEGENERATE household — no overlay ⇒ `taxEnabled` never set ⇒ consumedConstants skips the whole `tax.` family ⇒ their recompute is byte-identical under any vintage', () => {
     // The population: save-ready, $0 accounts, Social-Security-only income ⇒ `buildOverlay`'s
-    // early return (intakeMap.ts:470-475). Reachable — `stalenessExposure.test.ts` builds exactly
+    // early return (intakeMap.ts:550-555). Reachable — `stalenessExposure.test.ts` builds exactly
     // this draft and proves `missingRequiredFacts` is empty for it.
     const s = freshSave()
     const basisMoved = { ...s, taxVintageDetail: { ...s.taxVintageDetail!, legalBasis: 'TCJA (pre-OBBBA)' } }
@@ -634,7 +634,7 @@ describe('deriveStaleness — the date clocks', () => {
     // The population: 66/retired holding everything + 62/working holding nothing. They ARE on
     // the date route, and `dateSearch.ts:230` DOES force `accumulation` onto every candidate —
     // but it fills it from the BASE overlay's streams, and `contributionStreamsFor` returns `{}`
-    // for a non-working owner (intakeMap.ts:362). Their candidates sweep with empty streams and
+    // for a non-working owner (intakeMap.ts:439-442). Their candidates sweep with empty streams and
     // read no limit. Same fixture, same moved stamp, ONE differing read (insight 029).
     const s = freshDateSave()
     const bumped = {

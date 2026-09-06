@@ -10,14 +10,14 @@
  * THE BUDGET SHAPE (what the ratio should be). `solveWithMint` runs, in single-`simulate` units at the
  * base's path count:
  *   ranking stability ≈ 2·|roster|  (the roster on seed-A + seed-B)
- * + search            ≈ 2·|rankable| (the sequencing-only subset on both seed-sets)
+ * + search            ≈ 2·|rankable| (the ranked subset on both seed-sets — the whole roster since 2026-07-19)
  * + the grade         ≈ 2·`solverBFamilySize` (winner + runner-up across the m-draw held-out family)
  * + named-driver + the cheap 2-path optimality oracle over the committed fixtures.
  * So the honest expectation is LINEAR in the candidate count — `ratioVsSingle ≈ 2(|roster| + |rankable|)
  * + 2·m + O(1)`. A ratio that grows SUPER-linearly in the roster is a regression (an accidental
  * re-evaluation or re-draw per candidate — the same class `dateSearchProfile` watches). The ABSOLUTE
- * interactive-window threshold is DEFERRED TO MEASUREMENT on a mid-tier reference device (the knobs in
- * `fallback.ts` stay sentinel-guarded until then) — this module REPORTS, it does not JUDGE.
+ * interactive-window threshold was DEFERRED TO MEASUREMENT on a mid-tier reference device, which landed
+ * 2026-07-22 and PINNED the `fallback.ts` knobs (U16 §S0.1) — this module REPORTS, it does not JUDGE.
  *
  * PURE (engine-purity lint): the clock is INJECTED (`now`) — the engine reads no `performance`/`Date`
  * of its own; the caller (the worker shell / a script, OUTSIDE src/engine) passes
@@ -41,9 +41,15 @@ export interface SolveProfile {
   readonly ratioVsSingle: number
   /** The FULL enumerated roster size (sequencing arms + the conversion grid). */
   readonly candidateCount: number
-  /** The sequencing-only subset actually ranked (the conversions are withheld + enumerated). */
+  /** The `conversion === null` subset — what the PRE-TREND-FLIP solve ranked. ⚠️ Conversions rank too
+   *  since 2026-07-19 (`solve.ts`'s `rankable` DERIVES from the live Medicare-trend clause), so on a
+   *  conversion-bearing roster this UNDER-reports the ranked set and the budget shape above reads low
+   *  against it; re-deriving it from the clause is a code change, not a comment fix. */
   readonly rankableCount: number
-  /** The withheld conversion-grid size (the ranking-stability perturbation material). */
+  /** The conversion-grid size (`candidateCount − rankableCount`) — WITHHELD only under the trend
+   *  clause's blocking arm, and conversions have RANKED since 2026-07-19. It is the ranking-stability
+   *  perturbation material either way: that law REQUIRES a conversion candidate to perturb, so the
+   *  grid rides the 2·|roster| sweep whether or not the clause blocks. */
   readonly conversionCount: number
   /** The path count every measured run used (the base's — a real final crown pins 16,000). */
   readonly paths: number

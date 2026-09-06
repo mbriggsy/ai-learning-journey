@@ -16,11 +16,7 @@ premium**" — a plausible mechanism mirroring the Part B design (surcharge ∝ 
 cost-share identity, which the primary CONFIRMS for Part B to ≤0.2% across V.E3). The primary
 falsified it for Part D: across the 2030 §11201 formula reset the per-tier add-ons jump by
 DIFFERENT ratios (tier 1 ≈ 3.57×, tier 5 ≈ 2.46×) while the base premium jumps 1.77× — no
-scalar scale, and no derivation off the base, can reproduce Table V.E4's own rows. The
-implementation shipped V.E4 VERBATIM per tier (the scales interface went per-tier so the scalar
-shape is structurally unrepresentable), with the mechanism correction recorded as a dated note
-in the build spec and the council log's action cell — the ARM (source-it) stood; only the
-guessed mechanics moved.
+scalar scale, and no derivation off the base, can reproduce Table V.E4's own rows.
 
 ## Root Cause
 
@@ -28,6 +24,13 @@ guessed mechanics moved.
 BEHAVIOR is still a premise. This is the same law one level up — a ratified premise about the
 SOURCE's OWN STRUCTURE (how a table's rows relate) is still a premise, verifiable only by the
 table itself. A council can settle the decision arms; it cannot settle what a primary prints.
+
+## Fix
+
+The implementation shipped V.E4 VERBATIM per tier (the scales interface went per-tier so the
+scalar shape is structurally unrepresentable), with the mechanism correction recorded as a
+dated note in the build spec and the council log's action cell — the ARM (source-it) stood;
+only the guessed mechanics moved.
 
 ## Key Insight
 

@@ -19,11 +19,14 @@ correct — *for the solver*.
 
 U11 then reused the same helper for a **marginal** readout: the shadow-rate line probed
 `(PTC(magi) − PTC(magi + 1000)) / 1000` to quote "the marketplace help the next dollar burns."
+The readout overstated the marginal rate by a phantom term.
+
+## Root Cause
+
 For an anchor **at or past the cliff**, the cliff-removed helper happily returns the
 flat-extended top-band slope (~10¢/$) — a smooth drag the real household cannot experience,
-because its credit is *already zero*. The readout overstated the marginal rate by a phantom
-term. (A smaller sibling: a $1,000 forward probe that *straddles* the 133%-FPL applicable-%
-jump averages that discontinuity into the slope.)
+because its credit is *already zero*. (A smaller sibling: a $1,000 forward probe that
+*straddles* the 133%-FPL applicable-% jump averages that discontinuity into the slope.)
 
 Both errors were **conservative-direction** (a scarier number, never the calm-but-wrong sin),
 which is why they survived to review — nothing downstream could notice a teaching percentage

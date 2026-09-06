@@ -43,7 +43,7 @@ witnesses (probed before pinning): the degenerate $0-accounts draft and the
 small-IRA draft each assert `buildSolveRequest(...) === 'no-pretax'`, so the
 reworded sentence's justification is bitten, not narrated.
 
-## Lesson
+## Key Insight
 
 When a structured refusal reason gets a rendered sentence, derive the sentence
 from the refusal's **predicate** and enumerate the predicate's extension before

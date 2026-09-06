@@ -15,8 +15,12 @@ sentence ("The extra-coverage premiums and the drug-plan piece of the income sur
 flat…", ~+50 chars over its predecessor) passed the local `verify:fit` 28/28 on Windows — and
 put CI RED (run 29696587230): on ubuntu's text metrics the sentence wrapped ONE extra line on
 the budget composite (the tallest frame), pushing the protected R13 disclaimer to bottom=801
-vs the 800 fold. One pixel, Linux only — the burned/055 class (a green local Windows run is
-not proof) recurring through the COPY channel: nobody edited layout, someone edited a SENTENCE.
+vs the 800 fold.
+
+## Root Cause
+
+One pixel, Linux only — the burned/055 class (a green local Windows run is not proof)
+recurring through the COPY channel: nobody edited layout, someone edited a SENTENCE.
 
 ## Fix
 

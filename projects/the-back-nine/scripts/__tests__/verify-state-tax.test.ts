@@ -77,13 +77,33 @@ describe('state-tax re-verify gate logic (mirrors verify:aca)', () => {
 })
 
 describe('the shipped roster records — one per PRICED_STATE, well-formed (the missing-record gate)', () => {
-  it('every PRICED_STATES record file exists and passes the checker just after verifiedOn', () => {
+  it('every PRICED_STATES record file exists, passes the checker just after verifiedOn, and is judged on its OWN nextDue — the roster reds at the EARLIEST date, never the latest', () => {
     // Roster-driven: this loops the SAME PRICED_STATES the gate does, so a new priced state
     // with no record fails here too (belt-and-suspenders with the gate's missing-file check).
-    for (const state of PRICED_STATES) {
+    const roster = PRICED_STATES.map((state) => {
       const path = join(process.cwd(), recordFileFor(state))
       const rec = JSON.parse(readFileSync(path, 'utf-8')) as StateTaxRecord
       expect(checkStateTaxRecord(state, rec, justAfter), `${state} record well-formed`).toEqual([])
+      return { state, rec, dueMs: Date.parse(rec.nextDue) }
+    })
+
+    // A shared ANNUAL cadence is NOT a shared DEADLINE: each `nextDue` is that state's own
+    // verification anniversary, and `main()` calls `checkStateTaxRecord` once per state
+    // (`verify-state-tax.ts:120`, `:135`) against that record's own date (`:104-112`). So one day
+    // past the EARLIEST date on the roster the gate is ALREADY red while every later-dated record
+    // is still green — the roster's effective deadline is the earliest, never the latest. Written
+    // date-agnostically so it cannot rot when a record is re-verified (and it still holds if the
+    // dates ever converge); it REDS if the roster is ever judged against one shared/latest date,
+    // which is the unsafe direction — that refactor would silently swallow the earlier deadline.
+    const earliestMs = Math.min(...roster.map((r) => r.dueMs))
+    const dayPastEarliest = earliestMs + 86_400_000
+    for (const { state, rec, dueMs } of roster) {
+      const overdue = checkStateTaxRecord(state, rec, dayPastEarliest).some((p) =>
+        p.includes('past its nextDue'),
+      )
+      expect(overdue, `${state} (nextDue ${rec.nextDue}) one day past the roster's earliest`).toBe(
+        dueMs === earliestMs,
+      )
     }
   })
 

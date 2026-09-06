@@ -23,3 +23,5 @@ This folder is the project's documentation. For the overview — what The Back N
 | The verified reference numbers (Trinity/Bengen, tax, ACA/IRMAA) | [research/engine-validation-and-tax.md](research/engine-validation-and-tax.md) · [pre65-healthcare.md](research/pre65-healthcare.md) |
 | Any unfamiliar term (CRN, reduce-to-spine, MAGI, the fuck-off date…) | [glossary.md](glossary.md) |
 | Hard-won gotchas + lessons (wired to `/brief` and `/distill`) | [insights/](insights/) |
+
+**Frontmatter is decorative here, and five files deliberately have none.** Nearly every `.md` file under `docs/` opens with a YAML block; the exceptions are the append-only logs and registers — `backlog.md`, `council-log.md`, `caddie/cold-read-log.md`, `caddie/tape.md` — plus `insights/README.md`, all indexed above as authority. Nothing machine-reads any of it: `verify:doc-stats` has no frontmatter arm. `status:` is descriptive prose, not a closed enum — `shipped`, `living`, `decided` and `ratified` are all in use, and `decided` / `ratified` track no consistent provenance, so neither implies a council chaired it; the numbered insight entries carry frontmatter with no `status:` key at all.

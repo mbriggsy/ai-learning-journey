@@ -45,10 +45,10 @@ export interface StateTaxRecord {
   verifiedOn: string
   status: string
   statusConfirmed: boolean
-  /** Absolute next-due date (NOT a rolling window). EVERY priced state now carries the same
-   *  ANNUAL drift cadence — NC's ~Aug-2026 certification checkpoint was retired 2026-08-02
-   *  when S.L. 2026-41 struck the trigger rows that fed it. Past it → the build fails until
-   *  re-verified. */
+  /** Absolute next-due date (NOT a rolling window), judged PER RECORD; past it → build fails.
+   *  One ANNUAL drift cadence for every priced state (NC's ~Aug-2026 checkpoint retired 2026-08-02
+   *  when S.L. 2026-41 struck the trigger rows that fed it) — but a shared cadence is NOT a shared
+   *  DEADLINE: each date is that state's own anniversary, so the roster's real deadline is the EARLIEST. */
   nextDue: string
   /** The load-bearing figures the record attests — a hollow record is not a re-verify. */
   attests: {

@@ -19,61 +19,43 @@
 **Where we are:** all four acts are built; Act 4 closed at U17·S6 (S7 deferred, Briggsy's ruling). What is
 left is not units. It is the gap between *the build is done* and *a friend can bet real money on this*.
 
-▶ **START HERE (b9-5) — hand-off 2026-09-06 ~06:40, the window ran out MID-FLEET.** Tonight, in order: the
-`/doc-audit` five (`02521579` · `5a4d7017` · `777bf579` · `b3e6f00a` · `d5b8e283`) + insight 122 (`90c940af`) · the
-anchor re-verify — 646 line-numbered citations, ten verifiers each shadowed by a skeptic (`61c57ff5`) · `verify:doc-stats`
-arm 4, every citation must resolve (`bc026ef4`) · then **the AS-BUILT REWRITE** (the last commit before this line): 21 docs
-— the 4 act plans, the 12 build specs, the 5 decision records — each rewritten in place by an Opus rewriter (every sentence
-true today, decisions + rationale kept, every ⚑ marker folded, never-built prescriptions deleted) and then a skeptic that
-refuted AND fixed (every skeptic refuted its rewriter, 2–8 fixes each — never ship a rewriter's doc without its skeptic).
-Ride-alongs in that commit: ~30 stale source comments corrected against code (`dateSearch.ts` tracks · `fallback.ts` knobs ·
-`select.ts` + `solve.ts` trend premise · `oracleToken.ts` ×2 · `rankingStability.ts` · `stateTaxDisclosure.ts` ·
-`staleness.ts` · `model.ts` · `AccountEntry.tsx` · `socialSecurity.ts` note · `partBTrend.test.ts` title ·
-`taxOverlay.test.ts` C3 comment · the "borderline" NC seed wording in `devSeeds.ts` + both e2e specs · `csp.spec.ts`);
-one user-facing copy fix — `copy.ts` annuity exclusion help called holding the share steady "conservative", the R40 record
-rules it OPTIMISTIC (his eye on the new sentence); architecture §7.7's dead SS names + the spousal-excess END gate (first
-death of either spouse); roadmap rows U3 (HSA spend IS built) · U11 (Part B trended; the typical is a pointer) · U14 (dip
-figures are `devSeeds.ts`'s) · the Part D per-tier clause; SIX register entries filed (Tier 0: the rental cliff omission ·
-the SS statement's continued-earnings default · `belowFloor` never threaded · the survivor step-down attribution; Tier 2:
-the pre-flip extras double count; Tier 3: the lost borderline two-pane coverage) + two bullets (the second owed HSA
-disclosure; the date grade never on seed B) — header 54 open / 62 entries, gated.
+▶ **START HERE (b9-6) — hand-off 2026-09-06 morning.** The 2026-09-06 `/doc-audit` + the AS-BUILT rewrite of
+21 docs are COMPLETE and verified: every skeptic pass committed; every finding of the five audit reports
+re-judged against the tree (fixed, deliberately accepted, or never real — the five survivors landed this
+morning); every skeptic report harvested for unfiled defects — 22 survived refutation and are landed or filed.
+The hand-off's filings: (H) → Tier 1 *The three U17 action-warning branches plan 4 specified and the build
+never shipped…*; (I) → Tier 2 *A re-save that never touches the knob reclassifies a took-the-default household
+as an overrider…* (the engine-domain blind spot is its BULLET — `src/store/staleness.ts:53-62` already
+adjudicates the class); (K) → a Tier 4 bullet on *The gates that don't bite* (Tier 4, not the hand-off's Tier 2
+— no `src/` consumer); (J) needed NOTHING — all four items were already on the register. The roadmap U15 row
+is rewritten (FIVE stale clauses, not three). The SaveFlow CI flake (`bc026ef4`'s red run) is fixed at the
+test — `SaveFlow.test.tsx` read a passive-effect listener synchronously after a DOM-presence wait.
 
-**ALL 21 SKEPTIC PASSES LANDED AND ARE COMMITTED** (the last, u17s5, found 25 stale citations its rewriter had kept on
-the brief's assurance — the citation layer of a doc written against files that then grew must be re-opened, never inherited).
-Their reports are the record of every refutation. plan4's skeptic confirmed the THREE unbuilt U17 behaviours (H) — file that
-Tier-1 entry first. ⚠️ The U17 spec's skeptic found its REWRITER had
-dropped seven citations that were exact and fabricated two — the rewriter inferred staleness from a touched file instead of
-opening the line. Treat any rewriter changelog's "dropped citation" as unverified. Their reports land in
-`C:/Users/brigg/AppData/Local/Temp/claude/C--Users-brigg-ai-learning-journey-projects-the-back-nine/ebcccb6b-8ffd-49e6-bd71-9c0456f7407f/scratchpad/skeptic-<name>.md`
-(the briefs, every rewriter changelog and the anchor ledger sit beside them — KEEP that folder). `git status`; read each
-report; if one was cut mid-sentence finish it from the report; `pnpm verify:doc-stats` + the link check; commit as
-"docs(rewrite): the last seven skeptic passes". **THEN file only what those reports CONFIRM** (bump the gated header in the
-same edit): (H) plan4 — three U17 behaviours specified, unbuilt, in no register: same-strategy-degraded copy · the
-retroactive-ACA past-cost note · the gate-red branch on the token's withheld reason (a household re-opening while the token
-is withheld gets four causes, none saying the build cannot stand behind its rankings) → Tier 1; (I) u13 — the engine-domain
-blind spot (a unit that starts pricing something new moves the answer with every stamp equal and fires no note) · the
-`appDefaults.ts` re-save edge reclassifying a took-the-default household as an overrider · `APP_DEFAULT_ERAS` holds one era
-so the spine clock has no reachable production arm → Tier 0/2; (J) u17 — the arrived band's elapsed segment carried by
-opacity ALONE (breaches the non-colour-channel law) · `?vault=stale` forcing RMDs two years early, pinned as found · the
-withdrawn work-stops marker reading missing rather than restrained · Q7a's dialect split still co-rendering (the false
-premise its deferral rests on) → Tier 0/3; (K) plan2 — `checkPassphraseFloor` is the ONLY weak-passphrase defense and its
-tests cannot detect the pack-less failure the plan names → Tier 2. **THEN the one doc fix verified and not landed:** the
-roadmap U15 row (`docs/roadmap.md:96`) is stale in three clauses — "the demotion-axis refusal FAIL-CLOSED
-(unreachable-live…)" (reachable since 2026-07-19) · "conversions trend-blocked BY DESIGN" (they rank since 2026-07-19) ·
-"all −1 knobs FAIL-CLOSED until the reference profile pins them" (pinned 2026-07-22) — rewrite each to the dated truth;
-`src/engine/solver/fallback.ts` + `select.ts` carry the corrected comments to copy from. Then the b9-4 plan below is still
-the queue.
+**HIS EYE:** the rewrite's one user-facing copy change — `copy.ts`'s annuity exclusion help now says holding the
+tax-free share steady *"reads a little better than reality once the paid-in amount would have been recovered"*
+(the R40 record rules the direction OPTIMISTIC; the old text said "conservative"). Read it once for calm; no
+annuity knowledge needed. **Then the b9-4 plan below is the queue.** Two hygiene entries filed this morning,
+unranked: the solver profile's `rankableCount` divergence and the state-tax roster's two re-verify dates (both
+Tier 4; the deadline table below now carries both dates).
 
-**LANDMINES tonight:** an identifier-proximity anchor gate measured 21–42 % false positives on freshly verified citations
-— REJECTED; arm 4 is structural only (file exists · line in range · not blank · range well-formed), the semantic half is the
-anchor fleet · a Git-Bash `grep -c` for carriage returns lies about CRLF here — node decides EOL per file · an inline
-`node -e` given a `/c/...` path fails — write scripts to files · two of my OWN "AS BUILT: never created" annotations from
-the truth pass were WRONG (`BudgetBuilder.tsx`, `BudgetLineItem.tsx`, `SequencingControl.tsx`, `HealthcareSheet.tsx` live in
-`src/intake/`) — never assert "never built" from one `ls src/ui`; the rewrite caught it · a rewriter's own defect list is
-~1/3 stale by the time you read it (two skeptics caught rewriters reporting defects already fixed in the tree) — verify
-before chasing.
+**LANDMINES (2026-09-06):** an identifier-proximity anchor gate measured 21–42 % false positives on freshly
+verified citations — REJECTED; arm 4 is structural only (file exists · line in range · not blank · range
+well-formed), the semantic half is the anchor fleet · arm 4 never scans `src/**`, README.md, CLAUDE.md, or
+`.md:NN` doc-to-doc citations — ~40 stale SOURCE-comment citations were re-pointed by hand this morning
+(register: *The gates that don't bite*) · a Git-Bash `grep -c` for carriage returns lies about CRLF here —
+node decides EOL per file · `grep -ni "a|b"` without `-E` treats `|` literally and returns NOTHING — that
+false negative produced the u13 spec's "no e2e walks" sentence in `85fb5dc1`; alternation needs `-E` · an
+inline `node -e` given a `/c/...` path fails — write scripts to files · the 2026-09-06 scratchpad's
+`linkcheck.mjs` collapses runs of spaces to one hyphen (GitHub maps EACH space) — its "8 broken anchors" were
+all false positives; the doc set has zero broken links · parallel owners in ONE working tree shift each other's
+line numbers mid-read (insight 083) — a citation written against a file another owner is editing is unverified
+until every owner lands; re-run `verify:doc-stats` last · two "AS BUILT: never created" annotations from the
+truth pass were WRONG (`BudgetBuilder.tsx`, `BudgetLineItem.tsx`, `SequencingControl.tsx`, `HealthcareSheet.tsx`
+live in `src/intake/`) — never assert "never built" from one `ls src/ui` · a rewriter's own defect list is ~1/3
+stale by the time you read it (two skeptics caught rewriters reporting defects already fixed in the tree) —
+verify before chasing.
 
-▶ **(b9-4, still the ranked plan — enter here after b9-5's cleanup) hand-off 2026-09-05 late evening. The b9-3 plan's steps 1–3 SHIPPED: `32c1231d`
+▶ **(b9-4, the ranked plan — enter here) hand-off 2026-09-05 late evening. The b9-3 plan's steps 1–3 SHIPPED: `32c1231d`
 (the gate hardened in one pass + the council's ship-now list) · `b4b27a60` (the hygiene sweep) · `8748e4f5`
 (the CI fix — a Windows-pinned ink threshold) · `abf1ab38` (insights 117–121). CI run 34005602885 is GREEN on
 Linux (97 fit tests, 11.8 m). Enter here. (The b9-2 / b9-3 hand-offs that used to follow were deleted 2026-09-06 with the doc audit — git log + the kept digest are the record; their still-open re-verify clauses are folded into the ranked entries below as ⚑ blocks.)**
@@ -109,8 +91,10 @@ committed-lockup wait is 720 s), `verify:fit:rv` in package.json AND in
 `.github/workflows/verify-the-back-nine.yml` (monorepo root — a local-only gate is not a gate). Add the new
 spec to `playwright.config.ts:20`'s `testIgnore` DENYLIST (the CSP harness auto-collects `e2e/*.spec.ts`; the
 `?seed=` routes are DCE'd there) and keep it OUT of the fit config's `testMatch`. Then restore "every chart
-word" in `CLAUDE.md`'s verify:fit row, `docs/architecture.md §12`'s gate bullet, the back-nine-design
-`SKILL.md`, and `docs/backlog.md` — all four say RV is unit-pinned only today. The RV hero is the ONLY
+word" in `docs/roadmap.md:171`'s Vertical-fit-+-chart-text gate row, `docs/architecture.md:326`'s §12 gate
+bullet (phrased "pinned at unit level only") and the back-nine-design `SKILL.md:47` — NOT `docs/backlog.md`
+(it carries no such clause) and NOT `CLAUDE.md` (its verify:fit row now points at the roadmap row instead of
+restating it). The RV hero is the ONLY
 `valign="top"` node, so the e2e transform-anchor oracle covers the `--ct-ty` class only once this arm lands
 (`chartText.test.tsx`'s source pin holds it until then).
 (2) **The critic's arms** (digest `critic-arms`, M together): a `PHONE_LS` 844×390 arm; `gotoVaultFinal` +
@@ -119,7 +103,7 @@ marker SURVIVES there, never write "withdraws"); the enlarge-modal arm on `.band
 figure.band-figure` (a bare selector returns the INLINE band — vacuous), pin `modalRows <= inlineRows`, wait
 on the computed transform, not `settleLayout`.
 (3) **The unmeasured trio** (digest `critic-docs-unmeasured`): the placeholder note is dev-preview-only
-(`plans/2-first-answer.md:205` still calls it a shipping state — fix the plan); font-swap staleness now has
+(`plans/2-first-answer.md:204` is now a pointer at the roadmap and `:205` is blank after the 2026-09-06 audit — re-read the plan's placeholder sentence before assuming the doc half is still owed); font-swap staleness now has
 the `fonts.ready` one-shot in both hooks but NO gate — a probe that loads with the webfonts blocked then
 released; a CSSOM-landed probe in `csp.spec.ts` under ENFORCED headers (assert the custom prop / computed
 transform, NOT `left > 0` — end-anchored ticks go negative).
@@ -159,7 +143,8 @@ touched). `atceiling` is a DATE seed (~45 s/arm) and rides all five arms. `temp/
 | Fires | What | What breaks |
 |---|---|---|
 | ~~NOW~~ | ~~NC FY2025-26 revenue certification~~ | ✅ **CLOSED 2026-08-02** — S.L. 2026-41 § 44.1(a) enacted the rate schedule *and* struck the trigger rows the certification fed. Withhold lifted, checkpoint retired. |
-| **CI: ~2026-09-19 00:00 UTC** · **runtime: 2026-09-20** | ACA rolling window (`verifiedOn: 2026-08-20` + `maxAgeDays: 30`) — ⚠️ the due date lands INSIDE the Sept 14–30 CR endgame (the Senate returns ~09-14 against a 09-30 funding cliff; two clean competing CRs, House 12-04 / Senate 12-11), which the record names the highest-risk §36B attachment window — run that pass EARLY in the week of Sep 14 and read `forwardClock` first | **TWO dates, and the split is DELIBERATE — one date here was wrong (corrected 2026-08-14).** `verify:aca` compares float-ms so it reds ~a day EARLIER than the runtime clause's integer-epoch-day compare; `oracleToken.ts:174-176` records that ordering as the safe one. **And it is not only CI:** `evaluateAcaFreshnessClause` (`oracleToken.ts:189-198`) is a RUNTIME clause on the user's own browser clock — once overdue the shipped app WITHHOLDS the recommendation for any household carrying an ACA enrolled premium, and `healthSheetChrome.ts:126` flips the health-sheet status line. No deploy required. Clearing it is the 8-step `howToClear` (~1h, primary sources, both attest tables hand-RE-TYPED from the PDFs — never from `health.ts`, that bind goes circular) |
+| **CI: ~2026-09-19 00:00 UTC** · **runtime: 2026-09-20** | ACA rolling window (`verifiedOn: 2026-08-20` + `maxAgeDays: 30`) — ⚠️ the due date lands INSIDE the Sept 14–30 CR endgame (the Senate returns ~09-14 against a 09-30 funding cliff; two clean competing CRs, House 12-04 / Senate 12-11), which the record names the highest-risk §36B attachment window — run that pass EARLY in the week of Sep 14 and read `forwardClock` first | **TWO dates, and the split is DELIBERATE — one date here was wrong (corrected 2026-08-14).** `verify:aca` compares float-ms so it reds ~a day EARLIER than the runtime clause's integer-epoch-day compare; `oracleToken.ts:174-176` records that ordering as the safe one. **And it is not only CI:** `evaluateAcaFreshnessClause` (`oracleToken.ts:191-201`) is a RUNTIME clause on the user's own browser clock — once overdue the shipped app WITHHOLDS the recommendation for any household carrying an ACA enrolled premium, and `healthSheetChrome.ts:126` flips the health-sheet status line. No deploy required. Clearing it is the 8-step `howToClear` (~1h, primary sources, both attest tables hand-RE-TYPED from the PDFs — never from `health.ts`, that bind goes circular) |
+| **2027-07-15** | PA + FL `nextDue`, `state-tax-pa-last-verified.json` / `state-tax-fl-last-verified.json` (annual drift cadence) — **the roster's real deadline: it fires 18 days BEFORE NC's** | `pnpm verify:state-tax` reds → CI red |
 | **2027-08-02** | NC `nextDue`, `state-tax-nc-last-verified.json` (annual drift cadence now, not a pending event) | `pnpm verify:state-tax` reds → CI red |
 | **2027-01-01** | `TAX_YEAR` / `COVERAGE_YEAR` / `CONTRIBUTION_YEAR` roll | ✅ **ARMED 2026-08-02** — `annualRoll.tripwire.test.ts` reds the suite (both arms mutation-proven). Clearing it is a **re-sourcing job, never a date bump**; `scaffold.smoke.test.ts:10-13` + `constants.shape.test.ts` red alongside by design |
 | **2027-01-01** | Every organic vault crosses `elapsed ≥ 1` | The aged surfaces stop being dev-plant-only and go live on real households — **the four aged tone calls are due before this** |
@@ -168,6 +153,12 @@ touched). `atceiling` is a DATE seed (~45 s/arm) and rides all five arms. `temp/
 
 ⚠️ **The ACA deadline is a ROLLING window, never an absolute `nextDue`** — grepping `nextDue` to inventory
 deadlines silently misses it. It has been filed a notch late twice, both times in the unsafe direction.
+
+⚠️ **The priced roster reds in TWO waves, not one** — same ANNUAL cadence, different dates: each record's
+`nextDue` is its own verification's anniversary, and `scripts/verify-state-tax.ts:120` loops `PRICED_STATES`
+judging each against its own date (`:104-112`), so PA + FL red 18 days before NC. The gate prints every
+state's `next due` on each run (`:141-143`), so a red build is never ambiguous — the gap is in PLANNING:
+schedule the July pass, or the first thing that tells you is a blocked build.
 
 ---
 
@@ -256,7 +247,7 @@ deadlines silently misses it. It has been filed a notch late twice, both times i
      gate; the scoping error was looking inside `projects/the-back-nine/` when the git root is
      `ai-learning-journey`. See the CI note under "Standing cadences".
    - **A false negation on the health sheet (XS).** `copy.ts:945/951` list *"the benchmark premium itself"*
-     under "Not counted here" while the entered benchmark **is** priced (`intakeMap.ts:582` →
+     under "Not counted here" while the entered benchmark **is** priced (`intakeMap.ts:650` →
      `healthOverlay.ts:213-223`) — the same false-negation shape O16 fixed on the Roth strings.
    </details>
 
@@ -682,10 +673,10 @@ These are the mechanical ones that keep costing hours.*
   then read `conclusion`. A watch exit code lies in **both** directions.
 - **`pnpm verify:bundle` reads `dist/` WITHOUT rebuilding.** A stale `dist/` is a false green; this has
   bitten twice. Fresh `pnpm build` first, every time.
-- **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:391-397`
+- **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:392-402`
   excludes the committed + held renders — a live solve blows the 120s budget). So *"seat it and re-measure
   under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
-  1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`:1773`), a once-measured
+  1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`:1810`), a once-measured
   prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's
   arms assert ORDER only (spec header `:21-22`) — no date frame has ever been fit-measured either.
 - **A live solve is minutes, not seconds — budget for it.** A dev-build `?seed=nc` solve measured **~11

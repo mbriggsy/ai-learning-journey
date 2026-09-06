@@ -202,7 +202,7 @@ export function RecommendationSurface({
   // edit-time kill, on the pending arm — but this seat reads the committed one only); `view` is a
   // `RecommendationView` and `mode` only on `RecommendedView` — both reads are TS2339 unwrapped, and a
   // cast here would compile, lint, and leave every trichotomy arm green while stamping a record with
-  // the wrong run (model.ts:1813-1820 documents that exact shape). The two values are lifted into
+  // the wrong run (model.ts:1889-1897 documents that exact shape). The two values are lifted into
   // CONSTS so the handler closes over already-narrowed data — parameter narrowing does not survive
   // into a closure.
   const ticket: RecommendationSaveTicket | undefined =

@@ -62,11 +62,11 @@ import { copy } from '../src/ui/copy'
  *    an uncaptured landmine (stale-timeline inheritance unverified).
  *
  * Increment 5 (2026-07-16, the state-carrying seed increment's cold-read faces):
- *  - `vault:statestale` — the aged-STATE-profile plant (a fresh-vintage NC save whose OWN state
- *    profile drifted one rate-step back) joins the DOOR walk: the affirm lands the BORDERLINE
- *    NC-clause hero, and the Assumptions door opens the panel on the ANSWERED retirement-state
- *    seat (the priced/answered picker-row face). It also rides the UPDATE-route arm — the
- *    stateTaxMoved household's "update them" exit is the same walk-through as `vault:stale`.
+ *  - `vault:statestale` — the aged-STATE-profile plant (a fresh-vintage NC save whose OWN state profile
+ *    drifted one rate-step back) joins the DOOR walk: the affirm lands the NC-clause hero (borderline at
+ *    the time; on-track since the 2026-08-02 rate pin), and the Assumptions door opens the panel on the
+ *    ANSWERED retirement-state seat (the priced/answered picker-row face). It also rides the UPDATE-route
+ *    arm — the stateTaxMoved household's "update them" exit is the same walk-through as `vault:stale`.
  *  - The CVD SELECTED-PICKER face — `intake:fork` picks NC, then captures the answered state
  *    picker as a device-scale crop AND under each CVD arm (captureCvdRegion): the priced-state
  *    read law is that the active segment survives WITHOUT hue (weight+fill+ring, .segment-active).

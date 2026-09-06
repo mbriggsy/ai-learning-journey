@@ -154,7 +154,7 @@ The originally-planned edge ("one per-path future: a constructed final-working-y
 
 ## The units that implement this record
 
-**Per-unit build status lives ONCE, in the roadmap's [You-Are-Here table](../roadmap.md#the-you-are-here-table)** — that table is the authority and this record never re-types it, with one gap it does not cover: **B1** (the U3·M5 HSA spend side) has no row of its own there, and the U3 row's note still reads that the HSA spend side is not yet built. Against source it is built — `hsaQualifiedSpend` lives at `healthOverlay.ts:759` and is consumed by the overlay's yearly funding at `taxOverlay.ts:1625`, with the `oopMedical` stream threaded from `healthcareStreams.ts` through `simulate.ts`, `taxOverlay.ts` and `dateSearch.ts`. Below is the review provenance each unit closed on, which the table does not carry.
+**Per-unit build status lives ONCE, in the roadmap's [You-Are-Here table](../roadmap.md#the-you-are-here-table)** — that table is the authority and this record never re-types it, with one gap it does not cover: **B1** (the U3·M5 HSA spend side) has no row of its own there — its status rides the U3 row's note, which reads it as built decumulation-side. Source agrees: `hsaQualifiedSpend` lives at `healthOverlay.ts:759` and is consumed by the overlay's yearly funding at `taxOverlay.ts:1625`, with the `oopMedical` stream threaded from `healthcareStreams.ts` through `simulate.ts`, `taxOverlay.ts` and `dateSearch.ts`. Below is the review provenance each unit closed on, which the table does not carry.
 
 | Unit | What it implements | Review provenance at close | Where it ships |
 |---|---|---|---|

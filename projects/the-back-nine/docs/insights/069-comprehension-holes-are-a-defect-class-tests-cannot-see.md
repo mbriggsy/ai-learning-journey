@@ -31,6 +31,8 @@ Seven distinct comprehension holes, all one family — copy that made the reader
    read as a data bug ("test data issue?").
 7. **Missing anchors** — "the next step could add ~$1,100" without what you pay *before* it.
 
+## Root Cause
+
 Every one of these was invisible to the suite **by construction**: tests pin strings; they
 cannot detect that a correct string fails to communicate. The ultramode lenses (correctness,
 honesty, a11y) all judged the *content* right — none of them read as a person who doesn't

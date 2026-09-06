@@ -94,7 +94,7 @@ export interface AcaRecord {
   strickenCitations: string
   /**
    * The re-verify chain the gate's Fix line points at (mirrors `StateTaxRecord.howToClear`,
-   * `verify-state-tax.ts:53`, where it is likewise the final member). `main()` prints
+   * `verify-state-tax.ts:62`, where it is likewise the final member). `main()` prints
    * "(see howToClear)" — so before this field existed the gate's own repair instruction named a
    * key that nothing required the record to carry, and `pinTo`/`summary` above were declared
    * required and read by nothing at all.
@@ -138,7 +138,7 @@ export function checkAcaStatus(rec: Partial<AcaRecord>, nowMs: number): string[]
     checkTable('enhancedPercentage', rec.attests.enhancedPercentage)
   }
 
-  // The record's own operator-facing attestations — the mirror of `verify-state-tax.ts:86-88`,
+  // The record's own operator-facing attestations — the mirror of `verify-state-tax.ts:95-97`,
   // which pushes a problem for an empty `primarySources`. All three are DECLARED on `AcaRecord`
   // and none was read; `main()` below prints "(see howToClear)", so the gate's own repair
   // instruction pointed at a field nothing required to exist. Falsy, NOT trimmed — the state-tax

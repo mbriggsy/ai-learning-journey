@@ -993,7 +993,7 @@ export const copy = {
     'Medicare premiums look back two years at your income — money converted at 63 can show up in the premium bill at 65. Each step is sharp: one dollar over it and the higher charge applies for that whole year.',
   // ⚠️ "the benchmark premium itself" WAS IN BOTH LISTS AND WAS FALSE — struck 2026-08-03.
   // The benchmark (SLCSP) is not merely counted, it is the ANCHOR of the whole credit:
-  // `intakeMap.ts:582` builds `slcsp` into the overlay params, `taxOverlay.ts:264` calls it "the
+  // `intakeMap.ts:650` builds `slcsp` into the overlay params, `taxOverlay.ts:264` calls it "the
   // §36B PTC basis", and `slidingScalePtc` (healthOverlay.ts:213-223) computes
   // `max(0, slcsp − applicable% × MAGI)` FROM it. Telling the reader the tool ignores the one
   // figure the discount is calculated from is the same false-negation shape O16 fixed on the Roth

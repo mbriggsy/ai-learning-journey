@@ -59,7 +59,7 @@ text FOLLOWING the reader's browser font (the svg era shrank phone chart text fr
 reader turned their font UP), reduced-motion identity — each with a planted CLIP and a planted shrink as
 its control.
 
-## Rules
+## Key Insight
 
 - **Measure the RENDERED size of any text that lives in a scaled coordinate system, in the real browser,
   at every shipping arm.** `getComputedStyle(el).fontSize × hypot(getScreenCTM().a, .b)` is the number

@@ -11,7 +11,7 @@
  * mandatory first call (the `assertDemotionAxisCalibrated` posture, S4.5) and stays provably-biting
  * through the `…Over` test seam — a future un-pinned/edited knob is refused, never silently applied.
  *
- * THE THREE RUNGS (structured; the ALGORITHMS wait on the measurement):
+ * THE THREE RUNGS (structured; the knobs are pinned, the ALGORITHMS unbuilt — U16 §S5, deferred):
  *  1. COARSE-THEN-REFINE — a coarse pass over a capped candidate set, then cliff anchoring re-applied
  *     around the SURVIVORS (the refine grid is dense only near the coarse winners). Both the coarse
  *     cap and the survivor count are knobs.
@@ -75,9 +75,11 @@ export const solverCoarseSurvivors: Sourced<number> = sourced(2, {
  *  interactive tier trades search-path precision for latency; the full-precision tier is the confirm. */
 export type SolveComputeTier = 'interactive' | 'full-precision'
 
-/** The coarse-then-refine plan (rung 1 + 2) in structured form — every field a sentinel-guarded knob
- *  until the reference-device profile pins it. Carried, never yet DECIDED (the algorithm waits on the
- *  measurement; `assertFallbackCalibrated` fails closed while any field is uncalibrated). */
+/** The coarse-then-refine plan (rung 1 + 2) in structured form. Its three fields are the knobs above,
+ *  PINNED 2026-07-22 (`:38` / `:52` / `:66`, each `directionalUntilPinned: false`) — what is still
+ *  unbuilt is the ALGORITHM that would consume them: U16 §S5, DECIDED-and-deferred on the record
+ *  with a named revival trigger (the build spec's standing posture), never "waiting on the
+ *  measurement". `assertFallbackCalibrated` still fails closed while any field is uncalibrated. */
 export interface CoarseThenRefinePlan {
   /** The candidate-count ceiling above which the coarse pass engages (rung 2). */
   readonly candidateCeiling: number

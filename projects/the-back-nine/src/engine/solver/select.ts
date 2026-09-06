@@ -312,10 +312,10 @@ export function selectCore(input: SelectCoreInput): SelectionResult {
   // §S4.5 the demotion-margin refusal → a structured withheld state (never an uncaught throw). In the
   // surplus regime the grade rides the goal's DOLLAR axis; the pay-less-tax conversion-near-tie margin
   // is a scale-free SE-multiple calibrated ONLY on a Medicare-bearing post-trend-flip world, so it
-  // could NOT be calibrated in U15 (the trend constant was unsourced then — insight 091; it was
-  // sourced 2026-07-19 and the margin calibrated with it, `constants/solver.ts`). A conversion winner
-  // over a non-conversion runner-up on that axis would trip `gradeCalibration`'s fail-closed throw;
-  // we route it here instead.
+  // could NOT be calibrated in U15 (the trend constant was unsourced then — insight 091; sourced 2026-07-19, the
+  // MULTIPLE was calibrated with it on the SURVIVAL axis ONLY — `constants/solver.ts`'s note; `demotionAxisCalibrated`
+  // refuses every non-`survival` statistic — so the DOLLAR-axis width this refusal guards is STILL uncalibrated, which
+  // is why it is live, not dead). A conversion winner over a non-conversion runner-up on that axis would trip `gradeCalibration`'s fail-closed throw; we route it here instead.
   // ⚠️ EXPIRED PREMISE (was: "UNREACHABLE live — conversions stay trend-blocked"). Since 2026-07-19
   // Part B prices trended and conversions rank live, so this IS reachable. Do not read it as dead code.
   //

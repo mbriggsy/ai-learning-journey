@@ -34,7 +34,7 @@
  * fingerprint identically, and the goal is not a constant at all).
  *
  * PURE (engine-purity lint): no clock, no entropy, no environment — a deterministic function of
- * its three arguments.
+ * its four arguments (the run pair joined the v1 triple in the §S0.2 v2 widening, 2026-07-19).
  */
 import type { SimulationParams } from '@shared/model'
 import { solverCandidateId, type CandidateStrategy } from '../solver/candidates'

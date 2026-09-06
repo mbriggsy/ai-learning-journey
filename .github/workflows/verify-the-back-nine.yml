@@ -43,8 +43,8 @@ jobs:
       # Fail fast on a stale/unconfirmed ACA legislative assumption.
       - run: pnpm verify:aca
       # Fail fast on a stale/unconfirmed/missing state-tax record (the priced roster {NC,PA,FL} —
-      # all three now on the same ANNUAL drift cadence; NC's ~Aug-2026 certification checkpoint was
-      # retired 2026-08-02 when S.L. 2026-41 struck the trigger rows). Mirrors verify:aca.
+      # all on the same ANNUAL drift cadence but each on its OWN nextDue; NC's ~Aug-2026 checkpoint was
+      # retired 2026-08-02 when S.L. 2026-41 struck the trigger rows). Reds in TWO waves 18 days apart, earliest record first. Mirrors verify:aca.
       - run: pnpm verify:state-tax
       - run: pnpm lint
       - run: pnpm typecheck

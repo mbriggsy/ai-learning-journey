@@ -26,8 +26,8 @@
  * before being caught (two reviewers, 2026-07-25): `overlayBuilt` and `medicare` do NOT currently
  * disagree on any reachable household. There is no "accounts but no marketplace quote pair"
  * witness — the pair is a REQUIRED fact for any household with a pre-65 member
- * (`intakeMap.ts:159-166`), and an all-65+ household takes the Medicare-only branch, which sets
- * `healthcareEnabled: true` with no quote pair at all (`intakeMap.ts:581`). So for every draft this
+ * (`intakeMap.ts:211-217`), and an all-65+ household takes the Medicare-only branch, which sets
+ * `healthcareEnabled: true` with no quote pair at all (`intakeMap.ts:658`). So for every draft this
  * function actually evaluates (the missing-facts arm has already returned), an overlay exists IFF
  * healthcare is on. **The two predicates are perfectly correlated today.**
  *
@@ -110,7 +110,7 @@ const read = (priced: boolean): ExposureRead => (priced ? 'priced' : 'unpriced')
  * silent stale on the more consequential clock. That is precisely the trade the paragraph above
  * says was rejected, and precisely insight 103's shape (a rule written to kill an over-alarm must
  * be checked in the SILENCING direction). `acaPricedForRun` already exists and is exported
- * (`intakeMap.ts:896`) — the predicate was never the missing piece.
+ * (`intakeMap.ts:970`) — the predicate was never the missing piece.
  *
  * THE ACTUAL FIX — AND ONE OF ITS TWO ARMS IS ALSO A TRAP (corrected 2026-08-02, the second time
  * this comment's own prescription has had to be withdrawn).

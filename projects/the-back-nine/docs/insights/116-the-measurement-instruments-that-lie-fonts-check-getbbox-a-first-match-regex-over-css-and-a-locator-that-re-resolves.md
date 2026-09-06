@@ -47,7 +47,7 @@ well-formed value — a boolean, a rectangle, a number, an element — that LOOK
 - Pin a Playwright radio by an attribute that survives the click (`[value="…"]`), never by the state the
   click changes.
 
-## Rules
+## Key Insight
 
 - **Run the negative control on any instrument before trusting its positive.** If a check cannot return
   false for a known-false input, it is not checking what its name says.

@@ -3,7 +3,7 @@ title: A filed prescription does not inherit the trust of its diagnosis — audi
 date: 2026-07-27
 phase: U17 — the S5 residue sweep (the pre-work before S6)
 modules: [TODO.md, src/ui/styles/recommendation.css, src/ui/__tests__/recommendationSaveGesture.test.tsx, src/ui/devSeeds.ts, .claude/workflows/caddie.js]
-tags: [process, queue, prescriptions, verification, mobile-first, mutation-testing, dev-seeds]
+tags: [process, queue, prescriptions, verification, mobile-first, mutation-testing, dev-seeds, insight-017]
 ---
 
 ## Problem
@@ -82,4 +82,6 @@ Any long-lived work queue, any `⚑ FILED` note, any in-source comment that tell
 to do. It is the same class as insight 018 (grep the plan BODIES, headers lie) and insight 081 (a
 re-derivation forks at the producer's first early return) — a statement that was true where it was
 written, believed somewhere it is not. It also sharpens insight 086: when splitting or reordering,
-re-point every consumer *and* re-check every note that described the old shape.
+re-point every consumer *and* re-check every note that described the old shape. And it is
+insight 017 at build altitude — 017 found the same law inside a doc-review fold (even confirmed
+prescriptions need source-verification before folding), this one inside a filed queue entry.

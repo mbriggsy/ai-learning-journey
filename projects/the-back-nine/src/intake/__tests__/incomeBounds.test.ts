@@ -11,7 +11,7 @@ import { productionMarket } from '@engine/reference/methodology'
 describe('income bounds — the fixed-pct COLA range gate', () => {
   it('the ceiling stays AT OR ABOVE the model inflation mean — a future inflation re-pin cannot silently un-ground it', () => {
     // productionMarket.value.inflation.mean is the deflator the overlay compile divides by
-    // (intakeMap.ts:448 → otherIncome.ts). If it rose above COLA_PCT_MAX, a fixed-pct COLA at the
+    // (intakeMap.ts:540-544 → otherIncome.ts). If it rose above COLA_PCT_MAX, a fixed-pct COLA at the
     // ceiling would be real-declining and the grounding claim would be false — bind them.
     expect(COLA_PCT_MAX.value).toBeGreaterThanOrEqual(productionMarket.value.inflation.mean)
   })

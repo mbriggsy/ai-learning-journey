@@ -261,8 +261,11 @@ status: shipped
   from `PRICED_STATES`, so a new priced state cannot ship without a record. RED-proven on both
   a planted-stale record and a missing one. **All three states now sit on the ANNUAL drift
   cadence** — NC's FY2025-26 rate-certification checkpoint was retired 2026-08-02 when
-  S.L. 2026-41 § 44.1(a) struck the trigger rows it waited on (`nextDue` 2027-08-02; PA and FL
-  2027-07-15). Shape difference from the ACA mirror: these records carry an ABSOLUTE `nextDue`,
+  S.L. 2026-41 § 44.1(a) struck the trigger rows it waited on. **One cadence is not one deadline:**
+  NC's `nextDue` is 2027-08-02 while PA's and FL's are 2027-07-15, and `scripts/verify-state-tax.ts:120`
+  judges each record against its own `nextDue` (`:104-112`), so the gate reds in TWO waves 18 days
+  apart — the roster's real deadline is PA/FL's, not NC's, and a July pass that clears PA + FL leaves
+  NC red in August. Shape difference from the ACA mirror: these records carry an ABSOLUTE `nextDue`,
   while `aca-last-verified.json` uses a ROLLING window from `verifiedOn` + `maxAgeDays` —
   grepping `nextDue` to inventory deadlines silently misses the ACA gate. Deferred states get a
   record only when built.

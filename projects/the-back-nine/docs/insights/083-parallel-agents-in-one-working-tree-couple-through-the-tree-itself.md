@@ -11,8 +11,7 @@ tags: [parallel-agents, shared-working-tree, scratch-fixtures, vitest-globs, eol
 The extras build ran a parallel **seed-tuner** agent in the SAME working tree as the
 coordinator (building the engine/intake halves) and a sibling test-writer. The tuner's work was
 excellent — drift recorded before re-tune, six knobs landed, 24/24 pins green — but the
-transcript records three coupling surfaces where agents sharing one tree interfere through the
-tree itself, none of which any agent's own green gates can see:
+transcript records three coupling surfaces:
 
 1. **The collected scratch probe.** The tuner wrote its drift-capture probe as a temp test at
    the project root — its own words: *"reliably picked up by vitest."* Reliably-collected cuts
@@ -28,6 +27,11 @@ tree itself, none of which any agent's own green gates can see:
    the sibling tests expecting exactly my retired edit."* The coordination HELD, but only by
    shared context at dispatch: two agents held write-expectations over one fixture surface with
    no mechanism making the expectation binding.
+
+## Root Cause
+
+Agents sharing one tree interfere through the tree itself — and no agent's own green gates can
+see any of it.
 
 ## Fix
 

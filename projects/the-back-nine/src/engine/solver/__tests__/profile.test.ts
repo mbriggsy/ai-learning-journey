@@ -83,8 +83,8 @@ describe('profileSolve — measures a full worker-side solve against its baselin
     const profile = profileSolve(requestFor(), () => performance.now())
     expect(profile.payloadKind).toBe('recommended') // measured the FULL search + grade, not a gate short-circuit
     expect(profile.candidateCount).toBe(5)
-    expect(profile.rankableCount).toBe(3) // the sequencing-only subset ranked
-    expect(profile.conversionCount).toBe(2) // the withheld conversion grid
+    expect(profile.rankableCount).toBe(3) // the `conversion === null` subset — NOT what solve ranks since 2026-07-19
+    expect(profile.conversionCount).toBe(2) // the conversion grid — WITHHELD only under the trend clause's blocking arm
     expect(profile.paths).toBe(256)
     expect(profile.maxHorizonYears).toBe(40)
     expect(profile.bFamilySize).toBe(solverBFamilySize.value)

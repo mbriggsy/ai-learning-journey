@@ -15,9 +15,11 @@
  * (`vitest list`): a glob UNDERCOUNTS (it misses scripts/__tests__/**), so a
  * hand-rolled glob guard would falsely flag the correct number as stale.
  *
- * Three more arms landed with the 2026-09-06 doc audit, which found that of the five
+ * Five more arms landed with the 2026-09-06 doc audit, which found that of the five
  * hand-typed numbers with a declared single home, four had rotted — every one of them
- * ungated. The arms gate the survivors the same way the test count is gated:
+ * ungated. Arms 1–3 gate the survivors the same way the test count is gated; arms 4–5
+ * gate the two doc facts the same audit found unguarded — where a citation POINTS, and
+ * whether an insight can actually be READ:
  *   1. THE REGISTER'S OPEN COUNT (`docs/backlog.md`'s header) must equal what the file's
  *      own body holds — entry headings minus the ones marked closed — and the header's
  *      arithmetic must add up. It rotted twice by hand before this.
@@ -26,6 +28,12 @@
  *      two different numbers).
  *   3. THE INSIGHTS INDEX (`docs/insights/README.md`) must list every insight file and
  *      nothing that does not exist — `/brief` and `/distill` key on it.
+ *   4. EVERY LINE-NUMBERED CODE CITATION in the live docs must RESOLVE — the file exists,
+ *      the line is in range and not blank, the range is well-formed.
+ *   5. EVERY NUMBERED INSIGHT carries the four sections `/distill` declares required
+ *      (`## Problem`, `## Root Cause`, `## Fix`, `## Key Insight`). Arm 3 only proves the
+ *      index knows a file EXISTS; that says nothing about whether `/brief` can read a root
+ *      cause out of it, and eleven files had to be normalized by hand before this landed.
  */
 import { execFileSync } from 'node:child_process'
 import { readFileSync, existsSync, readdirSync } from 'node:fs'
@@ -200,6 +208,50 @@ export function checkInsightsIndex(
   const missingFromIndex = [...onDisk].filter((f) => !linked.has(f)).sort()
   const danglingInIndex = [...linked].filter((f) => !onDisk.has(f)).sort()
   return { ok: missingFromIndex.length === 0 && danglingInIndex.length === 0, missingFromIndex, danglingInIndex }
+}
+
+// ---------------------------------------------------------------------------
+// Arm 5 — every numbered insight carries the four sections `/distill` declares required.
+// Arm 3 proves the INDEX knows a file exists; this proves the FILE can be read.
+// ---------------------------------------------------------------------------
+
+/** The four headings `/distill` declares required in every insight file. */
+export const INSIGHT_SECTIONS = ['## Problem', '## Root Cause', '## Fix', '## Key Insight'] as const
+
+/**
+ * Which required sections each numbered insight is missing (an empty result ⇒ every file complies).
+ *
+ * PREFIX match per line, ON PURPOSE: a heading may carry a trailing clause naming what it covers —
+ * 016 heads its root-cause section `## Root Cause — the ways a browser-enforcement test is GREEN
+ * while proving nothing`, 072 its fix `## Fix (three laws, one seam)` — and both count as PRESENT.
+ * The boundary is end-of-line, whitespace, an em dash or an opening paren, so a DIFFERENT section
+ * whose name merely STARTS with a required one (`## Root Causes`) does NOT count: an exact `^…$`
+ * match would red 016 and 072, a bare `startsWith` would green a section that is not the one asked
+ * for.
+ *
+ * Two things this deliberately does NOT gate:
+ *   • `## Also Applies To` — eleven numbered insights legitimately end at `## Key Insight`, and the
+ *     index itself calls that closing section "not universal". Requiring it would red files that are
+ *     complete as written.
+ *   • Section ORDER — 068 runs Problem → Root Cause → Key Insight → Fix, 072 runs Problem → Fix →
+ *     Root Cause → Key Insight. Both read fine; gating order would force rewrites that change no
+ *     meaning, and the sections are addressed by NAME (`/brief` greps them), never by position.
+ *
+ * Only `NNN-*.md` files are judged — `README.md` is the index, which is arm 3's job.
+ */
+export function checkInsightSections(
+  files: { name: string; content: string }[],
+): { file: string; missing: string[] }[] {
+  const out: { file: string; missing: string[] }[] = []
+  for (const { name, content } of files) {
+    if (!/^\d{3}-.*\.md$/.test(name)) continue
+    const body = content.replace(/\r\n/g, '\n')
+    const missing = INSIGHT_SECTIONS.filter(
+      (s) => !new RegExp(`^${s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?=$|\\s|—|\\()`, 'm').test(body),
+    )
+    if (missing.length > 0) out.push({ file: name, missing: [...missing] })
+  }
+  return out
 }
 
 /** The doc surfaces arm 2 sweeps: the three root docs + everything under docs/ except the
@@ -435,12 +487,24 @@ function main(): number {
     for (const p of problems) console.error(`  STALE  ${p.surface}:${p.line} — ${p.citation} — ${p.reason}`)
   }
 
+  // Arm 5 — every numbered insight carries the four required sections.
+  const insightFiles = (existsSync(insightsDir) ? readdirSync(insightsDir) : [])
+    .filter((f) => /^\d{3}-.*\.md$/.test(f))
+    .map((name) => ({ name, content: readFileSync(join(insightsDir, name), 'utf-8') }))
+  const sectionGaps = checkInsightSections(insightFiles)
+  if (sectionGaps.length === 0) {
+    console.log(`  OK     ${INSIGHTS_DIR} — every numbered insight carries Problem / Root Cause / Fix / Key Insight`)
+  } else {
+    failed = true
+    for (const g of sectionGaps) console.error(`  STALE  ${INSIGHTS_DIR}/${g.file} — missing ${g.missing.join(', ')}`)
+  }
+
   if (failed) {
     console.error('[verify:doc-stats] FAILED — see the STALE / STRAY lines above.')
     return 1
   }
   console.log(
-    `[verify:doc-stats] OK — every tracked surface matches the live suite (${actual.cases} tests / ${actual.files} files); the register header, its single home, the insights index and every line-numbered citation hold.`,
+    `[verify:doc-stats] OK — every tracked surface matches the live suite (${actual.cases} tests / ${actual.files} files); the register header, its single home, the insights index, every line-numbered citation and every insight's four required sections hold.`,
   )
   return 0
 }

@@ -46,7 +46,7 @@ its valence are properties of the SENTENCE it lands in, which the slot cannot se
   templates, mutant red→reverted) — the sentinel path had zero test coverage before this
   (fixtures stopped at count 6; insight 048's untested-gate trap at the copy layer).
 
-## Rules
+## Key Insight
 
 1. When a formatter can return a WORDED phrase in place of a numeral phrase, audit every
    composing template at the sentinel: does a prefix hedge stack? does the sentinel's valence

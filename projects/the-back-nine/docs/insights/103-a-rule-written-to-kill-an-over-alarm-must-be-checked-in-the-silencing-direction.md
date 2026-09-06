@@ -61,7 +61,7 @@ The same review pass found three more clocks failing in the *silencing*-adjacent
 question was finally asked in both directions (tax naming itself for an overlay-less household,
 contributions for a household with empty streams, blend for a manual-blend portfolio).
 
-## Lesson
+## Key Insight
 
 **When you write a rule to suppress false positives, immediately construct its worst false NEGATIVE and
 decide whether you can live with it.** The suppression direction always feels like rigor, which is

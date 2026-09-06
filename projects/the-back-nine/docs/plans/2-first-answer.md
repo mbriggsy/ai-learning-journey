@@ -177,7 +177,7 @@ A provisional negative reading is tied to incompleteness ("not yet — with what
 
 **Requirements.** R2 (no color-alone), R4 (range on demand), R23-substrate (two futures legible without chart-soup — the *encoding*).
 
-**Shipped (foundation):** `src/viz/palette.ts` (the single source for the non-color signal **primitives** — luminance ramp, named shape/marker set, line-style set), `src/viz/scale.ts`, and the colorblind dev gate (`src/viz/__tests__/colorblind.test.tsx`, `scale.test.ts`, `scale.pbt.test.ts`).
+**Shipped (foundation):** `src/viz/palette.ts` (the single source for the non-color signal **primitives** — luminance ramp, named shape/marker set, line-style set), `src/viz/scale.ts`, and the colorblind gate (`src/viz/__tests__/colorblind.test.tsx`, `scale.test.ts`, `scale.pbt.test.ts`) — a vitest file `pnpm test` runs and CI enforces on every push, never the dev-only gate the plan named (see below).
 
 **Shipped (render):** `src/viz/ConfidenceBand.tsx` with `BandEnlargeModal.tsx`, `ConfidenceBandPanel.tsx`, `BandLegend.tsx`, `bandGeometry.ts`, `bandData.ts`, `curveMarks.ts`, `band.css`, plus the shared chart-text layer `chartText.tsx` / `chartText.css` (see the responsive-SVG contract below). *(Act 3 added `src/viz/TwoFutures.tsx` + `twoFutures.css` against the Roth control's real emission, reusing this unit's encoding tokens; Act 3/4 added `OddsLadder.tsx` and `RecommendationViz.tsx` on the same primitives.)*
 

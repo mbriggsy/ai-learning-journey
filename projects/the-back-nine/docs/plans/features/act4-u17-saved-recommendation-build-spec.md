@@ -499,8 +499,13 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   *looking*, and its own deliverable was the plant that finally made them visible. Four of the six were
   fixed 2026-07-30/31 (the Roth door calling an executed conversion a typo, `d8f35d8c`; the lever refusal
   denying a date the same screen plots, `72d638d9`; the premise line contradicting its own axis,
-  `d5e7b466`; and the band flip onto the lifestyle crown, `8d4d4e58`). Card 1's two-odds collision and
-  Cards 6–7's record-card verb remain open.
+  `d5e7b466`; and the band flip onto the lifestyle crown, `8d4d4e58`). A fifth followed: **Cards 6–7's
+  record-card verb is closed too** — the showing-verb was replaced 2026-07-31 (`532cad82`; `copy.ts:1482`
+  now reads "It may no longer fit the two of you.", with a standing prohibition on ever restoring it at
+  `copy.ts:1453-1460`), and the false "still matches" holds line 2026-08-03 (`bd851f24`; `copy.ts:1445`).
+  Card 1's two-odds collision remains open, as does the OTHER half of Cards 6–7 — naming the strategy on
+  the holds face, Briggsy's own ruling, carried in the register as "The saved-record card does not name
+  the strategy".
 - **Filed from the walk:** the arrived-walk's state-tax blindness.
 - **The aged band's x-axis has its first real-browser arm.** Before S6 no fit arm asserted it — the aged
   axis appeared nowhere in `e2e/`, so §S0's rename had shipped on unit arms alone. `?vault=datearrived` is

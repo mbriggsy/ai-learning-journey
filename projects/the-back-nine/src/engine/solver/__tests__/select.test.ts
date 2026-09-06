@@ -343,8 +343,10 @@ describe('§S4.4 the surplus-regime flag — trips ONLY on A/B agreement within 
 describe('§S4.5 the demotion-margin refusal → a STRUCTURED withheld state (never an uncaught throw)', () => {
   // A surplus + pay-less-tax world where the winner is a CONVERSION lever and the runner-up is NOT — the
   // grade would ride the pay-less-tax dollar axis, whose conversion-near-tie demotion margin CANNOT be
-  // calibrated in U15 (insight 091). Unreachable in a live sequencing-only solve (conversions stay
-  // trend-blocked); planted-seam-tested here that the refusal routes structurally, never throws.
+  // calibrated in U15 (insight 091). ⚠️ EXPIRED PREMISE (was: "unreachable in a live sequencing-only
+  // solve — conversions stay trend-blocked"): Part B prices trended since 2026-07-19 and conversions
+  // rank live, so this shape IS reachable — planted here to keep the arm deterministic, and it proves
+  // the refusal routes structurally, never throws.
   const X_CONV: CandidateStrategy = { policy: 'proportional', conversion: conv(30_000), provenance: 'grid' }
   const Z_CONV: CandidateStrategy = { policy: 'pre-tax-first', conversion: conv(20_000), provenance: 'grid' }
 

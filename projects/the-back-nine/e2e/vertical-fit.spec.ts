@@ -63,12 +63,12 @@ const SPINE_SEEDS = [
   { seed: 'retired', medicareNote: true },
   { seed: 'health', medicareNote: false },
   // The NC priced face (the state-carrying seed increment): a `retired` (retiredOnTrack) clone in
-  // North Carolina. The NC flat-tax drag pushes the state-absent twin's on-track DOWN across the
-  // band edge to BORDERLINE — the FIRST borderline in this matrix, so the auto 3-viewport set also
-  // proves the borderline two-pane (word + ruin-tail band) holds the one-frame law. Its state clause
-  // is OUTCOME-independent (statePricedNote = pricedStateForRun off the built params, never the
-  // verdict), so it reads the same affirmation shape as an on-track priced household; the clause
-  // TEXT is pinned by the bespoke `?seed=nc` residual arm below (the matrix never reads the words).
+  // North Carolina. The NC flat-tax drag pushed the state-absent twin's on-track DOWN across the band
+  // edge to BORDERLINE until S.L. 2026-41's rate cut was pinned (2026-08-02): NC lands ON-TRACK beside
+  // its twin now, so this face no longer proves the borderline two-pane (word + ruin-tail band) holds
+  // the one-frame law on a PRICED-STATE household. Its state clause is OUTCOME-independent
+  // (statePricedNote = pricedStateForRun off the built params, never the verdict), so the affirmation
+  // shape is unchanged by the pin; the clause TEXT is pinned by the `?seed=nc` arm below, never here.
   { seed: 'nc', medicareNote: true },
 ] as const
 
@@ -391,15 +391,15 @@ for (const vp of [REAL, TIER] as const) {
 //
 // WHY THE COMMITTED / HELD RENDERS ARE NOT MEASURED HERE (recorded, 2026-07-22): a live solve on the
 // DEV server runs FULL PRECISION (16k paths through the mint's oracle gate + search + grade) — MEASURED
-// on this reference machine at 80s (nc → held, which short-circuits at the mint) to 200s+ (surplus →
-// recommended), FAR past this harness's 120s per-test budget. The fit gate is architected for the fast
-// SPINE tier (`data-answer-tier="final"`, seconds), NOT the solve channel (there is no live path-count
-// seam — S5 deferred, wall #2 fixes every displayed figure at `solverMinBPaths`). So the committed /
-// held OUTCOMES are engine-proven where they are tractable — solveDispatch.test.ts drives the REAL
-// builder → REAL engine at the fast test counts (nc → token-withheld{state-cert}, fl → recommended) —
-// and their RENDER SHAPES in RecommendationSurface.test.tsx; this real-browser arm owns the two facts
-// only Chromium can settle: the pending tell's live presence, and the CLS alignment of the reserved
-// well to the real committed grade lockup.
+// on this reference machine at 80s (nc → held, which short-circuited at the mint until the 2026-08-02
+// rate pin — that floor is GONE, nc COMMITS now) to 200s+ (surplus → recommended), FAR past this
+// harness's 120s per-test budget. The fit gate is built for the fast SPINE tier
+// (`data-answer-tier="final"`, seconds), NOT the solve channel (no live path-count seam — S5 deferred,
+// wall #2 fixes every displayed figure at `solverMinBPaths`). So the committed / held OUTCOMES are engine-proven where
+// tractable — solveDispatch.test.ts drives the REAL builder → REAL engine at the fast test counts
+// (nc → recommended since the rate pin, fl → recommended) — and their RENDER SHAPES in
+// RecommendationSurface.test.tsx; this real-browser arm owns the two facts only Chromium can settle: the pending
+// tell's live presence, and the CLS alignment of the reserved well to the real committed grade lockup.
 //
 // THE CLS ALIGNMENT (measured, no solve): the committed `.rec-grade` lockup is injected into the live
 // `.recommendation-surface` (real CSS, real fonts, real wrap at the `--measure` reading width) and
@@ -841,9 +841,9 @@ async function assertPricedSpineFrame(
 }
 
 // nc: the residual-TEXT pin at the REAL tier (the matrix proves the frame; this proves the clause
-// survives all the way onto the BORDERLINE hero — the exact insight-033 question this increment
-// exists to answer: the affirm+residual set is outcome-scoped in copy but outcome-INDEPENDENT in
-// gating, so a band-crossing verdict still names the state).
+// survives onto the hero — a BORDERLINE one until the 2026-08-02 rate pin — the exact insight-033
+// question this increment exists to answer: the affirm+residual set is outcome-scoped in copy but
+// outcome-INDEPENDENT in gating, so a band-crossing verdict would still name the state — no priced-state seed crosses the band today).
 test.describe(`?seed=nc — the NC state clause on the priced residual (${REAL.width}×${REAL.height} @ 2.5dpr)`, () => {
   test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
   test('the hero still names North Carolina (on-track since the 2026-08-02 rate pin; it read borderline at mint); the unpriced monolith clause is gone', async ({ page }) => {
@@ -1312,12 +1312,12 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
 // ── the state-tax staleness return (?vault=statestale — the state-carrying seed increment) ────
 // The state-tax analog of ?vault=stale, on the LIGHT doctor (F2 supersession, 2026-07-15): the
 // NC-priced spine household saved ~150d ago with startCalendarYear UNTOUCHED (2026) and the tax /
-// healthcare / blend stamps FRESH — ONLY the state profile diverged. So the re-entry gate fires
-// the stalenessStateTax clock in ISOLATION (an NC rate step must never read as a federal /
-// healthcare / blend change), and — unlike the full doctor that stranded a 2024 anchor below
-// simulate.ts's priced-state lower bound (R19 calm indeterminate) — the affirm recompute resolves
-// a REAL borderline verdict whose residual names North Carolina. This is the only live route to
-// the stalenessStateTax note AND to the state clause on a writable stale return.
+// healthcare / blend stamps FRESH — ONLY the state profile diverged. So the re-entry gate fires the
+// stalenessStateTax clock in ISOLATION (an NC rate step must never read as a federal / healthcare /
+// blend change), and — unlike the full doctor that stranded a 2024 anchor below simulate.ts's
+// priced-state lower bound (R19 calm indeterminate) — the affirm recompute resolves a REAL verdict
+// (borderline at mint; on-track since the 2026-08-02 rate pin) whose residual names North Carolina. This
+// is the only live route to the stalenessStateTax note AND to the state clause on a writable stale return.
 
 test.describe(`the state-tax staleness return (?vault=statestale) — the isolated clock + the NC-clause echo frame (${REAL.width}×${REAL.height})`, () => {
   test.use({ viewport: REAL, deviceScaleFactor: 2.5 })

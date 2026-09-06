@@ -58,7 +58,7 @@ Requiring the fields also made the exhaustiveness pin structural: the overlay is
 of a green suite — which mattered, because a verifier proved deleting `appDefaultVersion` left the
 entire suite green (one app-default era exists and it IS current, so that clock cannot fire).
 
-## Lesson
+## Key Insight
 
 **When a rule moves between types, state its premise out loud and check it holds at the
 destination.** The tell is a contract sentence that reads as a general principle ("absent = not

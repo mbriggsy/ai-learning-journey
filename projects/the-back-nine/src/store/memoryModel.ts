@@ -938,7 +938,7 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
     },
 
     // Surfaced, never re-defined: the ONE fresh-fingerprint derivation lives at the closure above
-    // (`:620-622` bans a re-typed subset). S5's trichotomy consumes it through this member.
+    // (`:654-657` bans a re-typed subset). S5's trichotomy consumes it through this member.
     currentDraftFingerprint,
   }
 }

@@ -4,6 +4,18 @@ Hard-won, non-obvious engineering lessons for this project. One file per insight
 numbered `NNN-kebab-slug.md`. Added via `/distill` after debugging something whose
 root cause wasn't obvious; surfaced via `/brief` before related work.
 
+**Section template:** `## Problem`, `## Root Cause`, `## Fix`, `## Key Insight` and a closing
+`## Also Applies To` — the five sections `/distill` declares required. Every numbered insight
+carries the first four; the closing one is not universal, and a few files append a dated
+`## Extended` / `## Reinforced` / `## Refinement` of their own. A heading may carry a trailing
+clause naming what it covers (016's `## Root Cause — the ways a browser-enforcement test is
+GREEN while proving nothing`, 089's `## Fix (the pattern)`) but never a different name: the
+generalizable-rule section is `## Key Insight`, never `## Rules` or `## Lesson`. `verify:doc-stats`
+arm 5 GATES those first four headings in every numbered file, matched by PREFIX so a trailing clause
+passes while a different name that merely starts with one (`## Root Causes`) does not; the closing
+`## Also Applies To` and the section ORDER stay deliberately ungated (068 and 072 reorder). Arm 3 is
+the companion check — it matches this index to the directory by filename.
+
 **Citation format:** reference an insight by its **full relative path + title slug**
 (the shape `docs/insights/NNN-a-short-kebab-slug.md`); a bare in-repo number ("insight 074") is
 acceptable shorthand where this index resolves it, matching `CLAUDE.md` — but cross-repo

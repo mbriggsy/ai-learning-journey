@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **54 open items** (62 entries, 8 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open — re-counted 2026-09-06, when two Tier-3 entries moved in from the queue and six entries were filed from the as-built doc rewrite) consolidated
+> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **58 open items** (66 entries, 8 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open — re-counted 2026-09-06, when two Tier-3 entries moved in from the queue, six entries were filed from the as-built doc rewrite, and two more from its skeptic passes: plan 4's three unbuilt U17 action-warning branches, and the `appDefaults.ts` re-save that reclassifies a took-the-default household as an overrider; two hygiene entries from the morning's completion check — the state-tax roster's two re-verify dates, and the solver profile's `rankableCount`) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -363,7 +363,7 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 - **Measured, not fixed:** the post-solve frame on this seed sits **149 px past the fold at 1536×791**
   (document 940 / viewport 791). The old unavailable note measures 74 px in the same slot against the
   held card's 110 px, so **113 px of that is inherited** — `failing` is not a fit-gate spine seed and the
-  committed / held renders are outside `verify:fit` by record (`vertical-fit.spec.ts:391-397`). The
+  committed / held renders are outside `verify:fit` by record (`vertical-fit.spec.ts:392-402`). The
   recommendation channel's post-solve frames are unmeasured territory on every seed (the `TODO.md`
   landmine); this is the first measured number.
 - **Edge accepted:** a rail-anchored amount landing EXACTLY on the post-RMD headroom would make the
@@ -745,6 +745,18 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 - The "detail-door era" — the post-U16 unit that owns every filed detail-hunger residue
 - THE DETAIL-DOOR ERA — its own post-U16 unit + walk
 
+### The three U17 action-warning branches plan 4 specified and the build never shipped — same-strategy-degraded copy, the retroactive-ACA past-cost note, the gate-red branch on the token's withheld reason
+
+`M` · **pilot** · filed 2026-09-06 (plan 4's as-built rewrite + its skeptic; all three re-confirmed absent from `src/` and from this register at filing)
+
+- `docs/plans/4-recommendation.md:313` names all three as specified-and-not-shipped and records that none of them appears here; `:337` repeats them in the not-built list, and the ruling that keeps the register alive is `:23` ("the **action-warning copy register** (unchanged, still needed …)"). The finding is not new — only unregistered, which is what this entry fixes.
+- **Same-strategy-degraded.** An invited re-solve that returns the SAME strategy with a fallen grade or a flipped delta sign owes copy saying so — the memory holds on identity while the confidence behind it moved. Confirmed absent: `grep -rn "same-strategy\|sameStrategy" src/` and `grep -rni "flipped delta\|fallen grade" src/` return nothing (every `degraded` hit in `src/` is worker-spawn or a view fallback). ⚑ Unlike its two siblings its reasoning is NOT kept below `docs/plans/4-recommendation.md:313` — that line's own parenthetical plus the ruling at `:23` is the whole of it, so whoever builds it starts from those two lines and nothing else.
+- **The retroactive-ACA past-cost note.** The enhanced regime can be restored retroactively to all of 2026 — `src/engine/constants/health.ts:34` (H.R. 1834 §1(c) is tax-year based, and only for months a Marketplace premium was actually PAID), `:25`, `:104` — so a conversion or withdrawal the household has already executed can carry a different cost after the fact. The record answers FORWARD only: the ACA status rides the `healthcareVintage` stamp inside the record's era (`docs/plans/4-recommendation.md:315`), which demotes the saved verdict and says nothing about the past action. The specified line is at that same `:315` — *"a recent law change may apply to a past year, so an action you may already have taken could now carry a different cost — worth revisiting with a pro"*. Confirmed absent: `grep -rln "retroactive" src/` hits only `engine/constants/{contributions,health,types}.ts`, their shape test and `shared/model.ts` — nothing under `src/ui/` or `src/store/`. ⚑ The four dated legislative-status notes are NOT coverage: `acaCostStatus` / `…Enhanced` / `…Overdue` / `…EnhancedOverdue` (`src/ui/copy.ts:2398`, `:2402`, `:2411`, `:2413`) are all forward-looking — "Congress could still restore them — last checked …". ⚑ It must stay GENERIC: neither execution nor tax-year is tracked, which is why `:315` phrases it conditionally and routes to a professional. Any wording implying we know what the household did, or when, is a fabricated claim.
+- **The gate-red branch on the token's withheld reason.** `SavedRecordStanding` (`src/ui/recommendationSaveView.ts:244-246`) resolves `holds | superseded` over the four trichotomy causes only (`src/store/savedRecommendation.ts:38-50`), and none of them says *we cannot currently stand behind this build's rankings*. The card's producer gates on phase / vault / record / save-readiness / date-route and never on the token (`src/ui/IntakeApp.tsx:271-284`), and the card renders in every solve state (`src/ui/Result.tsx:522`); the only token mention in either module is the SAVE gate (`recommendationSaveView.ts:140`), so token-withheld is handled at save time and nowhere at re-entry. The sharpest instance needs no code change at all: `aca-unverified` is a rolling 30-day window on `verifiedOn` (`src/engine/constants/solver.ts:70`, `:74`), so a deployed build ages into a withheld token while the fingerprint, `SOLVER_CODE_VERSION` and every rulebook stamp stay identical — no cause can fire, the returning household reads "It still lines up with the numbers you've entered." (`src/ui/copy.ts:1445`), and after taking the card's own re-open the withheld hold renders on the SAME frame as that reassurance. The per-reason wording to carry forward is `docs/plans/4-recommendation.md:316`: ACA status unverified → do not act until the status is confirmed; a rec-relevant primary still directional or ε uncalibrated → not validated on this version yet — never blaming the law when a primary is merely un-pinned.
+- **Tier 1, not Tier 0, and the reason is narrow.** The holds line is scoped by its own defending comment (`src/ui/copy.ts:1416-1429`) to conjunct 1 — fingerprint identity — which stays literally true under a withheld token; the card quotes no remembered grade, verdict or figure; and the true reason is one click away through `withheldReasonText` (`src/ui/recommendationView.ts:334-349`), whose five arms U16 already renders on the live surface (`src/engine/validation/oracleToken.ts:43-49`). A missing disclosure branch, not a wrong number.
+- ⚑ **Do NOT build the gate-red arm as a fifth `SavedRecommendationSupersededCause`.** A withheld token is not a demotion of the memory — the memory may be perfectly current. It is a property of THIS BUILD, so it belongs beside the standing split, never inside `causes`, whose exhaustive `Record` (`src/ui/recommendationSaveView.ts:218`) is the compile-time bind that fails the assembly site when a fifth cause lands; widening it would silently retire that bind's meaning.
+- ⚑ **None of the three is card copy alone — the shipped card does not re-solve.** `Result.tsx:398`'s `onReopen` opens the GoalPicker and nothing more, and the only `dispatchSolve()` on that surface is inside `pickGoal` (`Result.tsx:407`). Each branch needs the card to speak a RE-SOLVED verdict against the remembered one, so this belongs to whatever unit gives the invited re-open a landing surface — filing it as a copy sweep would produce strings nothing can reach.
+
 ## Tier 2 — what breaks on someone else’s device
 
 ### The app on someone else's device — no icons, no Safari, no large text
@@ -1032,16 +1044,27 @@ disclaimer two-mount swap (holds: in-frame mount dark, trailing mount after the 
     deliberate (Comlink's expose catches every in-call error), recorded · eleven byte-identical
     `EngineClient` test fakes — one new member cost a 19-file sweep (hygiene: a shared helper)
 
-### A vault saved before the extras spend-help boundary flip double-counts its Part D / Medigap premiums — no migration, no clock
+### A vault saved before either spend-help boundary flip double-counts its Medicare premiums — Part B and IRMAA as well as Part D / Medigap, no migration, no clock
 
-`M` · **pilot** · filed 2026-09-06 (the Medicare-extras spec's as-built rewrite; the unfiled obligation confirmed by two skeptics)
+`M` · **pilot** · filed 2026-09-06 (the Medicare-extras and Medicare-pricing specs' as-built rewrites; both unfiled obligations confirmed by their skeptics)
 
-- The extras unit flipped the spend-help boundary (`503213f4`): premiums the household used to type into spending are now priced by the engine. A vault saved BEFORE the flip still carries them inside its spending AND gets them priced — a double count. The council required a named follow-up for the installed base; none was filed and no staleness clock keys on it.
-- Pessimistic-safe (the household reads slightly worse), so not the cardinal sin — but it is an undetected wrong number on every pre-flip vault. Fix shape: a vault-vintage clock on the extras boundary (`src/store/staleness.ts` already keys on vintages) + the calm note; the words are his.
+- **TWO flips, one defect.** The pricing unit (`3454c224`, 2026-07-10) moved **base Part B and its IRMAA surcharge** out of typed spending; the extras unit (`503213f4`, 2026-07-11) moved **Part D / Medigap / Medicare Advantage**. The live boundary sentence now carries both — "Leave out the Medicare premiums the tool prices itself: Part B, its income surcharge, and any Part D, Medigap, or Medicare Advantage premium" (`src/ui/copy.ts:117`, and the identical priced-state twin at `:131`). A vault saved BEFORE either flip still carries those premiums inside its spending AND gets them priced — a double count. Each unit's council required a NAMED follow-up for the installed base; neither was filed (the pricing spec records its own at `docs/plans/features/medicare-pricing-build-spec.md:42`) and no staleness clock keys on either.
+- Pessimistic-safe (the household reads slightly worse) against a ~zero real pre-launch base, so neither was a ship blocker — but it is an undetected wrong number on every pre-flip vault, and the re-entry walk-through is the only thing that corrects it today.
+- ⚑ **The fix is NOT a new clock, and the extras filing's original prescription was wrong.** `src/store/staleness.ts:60-62` rules it out in its own words: the sanctioned mechanism when a real installed base exists is a Q7 saved-era entry (`src/shared/appDefaults.ts` — the add-only era map exists for exactly this class; `ERAS` at `:35`, `CURRENT_APP_DEFAULT_VERSION` at `:41`), "not a new clock here". ONE era entry covering BOTH boundaries — never two clocks, and never a clock that names Part D while staying silent about Part B — plus the calm note; the words are his.
+
+### A re-save that never touches the knob reclassifies a took-the-default household as an overrider — and the note built to protect them is then withheld
+
+`S` · **pilot** · filed 2026-09-06 (the U13 build spec's as-built rewrite + its skeptic; documented in-source, deliberately not built around, and now unowned)
+
+- Every save re-stamps `appDefaultVersion` to the current era (`src/ui/scenarioFromDraft.ts:86`) while the draft's `survivorSpendingRatio` rides through untouched, so a household that saw the "we've updated our default assumptions" note and re-saved WITHOUT touching the knob ends up stamped CURRENT over the OLD era's value. On the next default move `deriveStaleness` (`src/store/staleness.ts:417-422`) compares that value against the wrong era's default, reads it as a deliberate override, and silently withholds the exact note built to protect them — the inverted honesty `src/shared/appDefaults.ts:9-15` names as calm-but-wrong. The edge is stated in-source at `appDefaults.ts:23-26`.
+- **Not live today, and NOT gated on real vaults existing.** `ERAS` holds one entry (`src/shared/appDefaults.ts:35-41`) and an older build's bare literal resolves to not-comparable, so no note can fire at all (`appDefaults.ts:17`). The trigger is a SECOND methodology-default era shipping; the wrong withholding lands on the era move after that. Filing it as a live installed-base gap would mis-rank it.
+- **The engine-domain blind spot is the same map's other unowned half.** `src/store/staleness.ts:53-62` names it: these clocks diff CONSTANT vintages, never whether the APP ITSELF started pricing something it previously didn't, so a pre-unit vault recomputes with every stamp equal and fires no note. Held immaterial at ship (base ~zero, drift conservative) with the remedy named — a Q7 saved-era entry, "not a new clock here" (`:60-62`) — but nothing MAKES an engine-domain unit mint one, and the two instances that already shipped are the entry above.
+- ⚑ **The fork is named in source and deliberately not ruled** — "Resolving that (re-seat vs re-ask) is a U17-era question" (`src/shared/appDefaults.ts:23-26`) — and its named owner passed without answering: U17 closed at S6, S7 deferred by ruling (`docs/roadmap.md:99`). Do not implement re-seat or re-ask without the ruling, and do not edit an existing era entry to work around it: the map is add-only by ratified contract. Whoever adds era #2 owes the decision in the same change.
+- Distinct from Tier 4's "`appDefaultVersion` era arm has no BEHAVIOURAL witness until a second era ships", which is a missing test rather than this reclassification.
 
 ## Tier 3 — Briggsy’s call (taste, scope, one-way doors)
 
-### No priced-state seed crosses the confidence band any more — the fit matrix lost its borderline two-pane coverage when NC's rate cut was pinned
+### No priced-state seed crosses the confidence band any more — the fit matrix lost its PRICED-STATE borderline two-pane coverage when NC's rate cut was pinned
 
 `M` · **briggsy** · filed 2026-09-06 (the state-seed brief's rewrite; measured by its skeptic: `devSeeds.test.ts` 66/66, NC on-track beside its twin)
 
@@ -1283,9 +1306,19 @@ disclaimer two-mount swap (holds: in-frame mount dark, trailing mount after the 
 
 `S` · **pilot** · filed 2026-08-03 (verification fleet)
 
-- `e2e/vertical-fit.spec.ts:391-397` **explicitly excludes the committed and held recommendation
-  renders** — a live solve is 80–200s against the spec's 120s budget (confirmed empirically 2026-08-03:
-  a dev-build `?seed=nc` solve took **~11 minutes**). Only an *injected* `.rec-grade` lockup is measured.
+- `e2e/vertical-fit.spec.ts:392-402` **explicitly excludes the committed and held recommendation
+  renders** — a live solve blows the spec's 120s per-test budget (measured 2026-08-03: a dev-build
+  `?seed=nc` solve took **~11 minutes**). Only an *injected* `.rec-grade` lockup is measured.
+- **The exclusion holds on the BUDGET premise, never on the retired `nc → held` one.** That block's
+  recorded 2026-07-22 band put its 80s floor on `nc` short-circuiting at the mint, and named the
+  compensating coverage as `nc → token-withheld{state-cert}`. S.L. 2026-41 § 44.1(a) pinned NC's rate
+  schedule (2026-08-02) and the seam that comment cites now asserts the opposite
+  (`src/ui/__tests__/solveDispatch.test.ts:235` — "the Q5 held render is retired with the
+  certification block" — and `:247` `expect(solve.payload.kind).toBe('recommended')`), so `nc` commits,
+  it is the SLOW arm, and the 80s floor is gone — which makes the exclusion MORE true, not less. Both
+  copies of that stale band were corrected 2026-09-06: this bullet's, and the spec comment's own
+  (`e2e/vertical-fit.spec.ts:394-395` and `:400` now record the retirement in place). Never re-derive
+  a solve-channel budget from the retired figures.
 - So any queue item prescribing *"seat it and re-measure under `pnpm verify:fit`"* for that surface is
   **not executable** — new lines in `.rec-committed__rest` need a **manual 1536×791 measure** against the
   protected in-frame R13 disclaimer.
@@ -1335,11 +1368,14 @@ disclaimer two-mount swap (holds: in-frame mount dark, trailing mount after the 
 - Any future dated tripwire must NOT be worded as detecting enactment
 - Missing regression arm: nothing pins fan-on ≡ fan-off with a budget present
 - `appDefaultVersion` era arm has no BEHAVIOURAL witness until a second era ships
+- The passphrase floor's dictionary packs have no test arm that DEPENDS on them — a silently pack-less estimator reads green. `checkPassphraseFloor` (`src/crypto/kdf.ts:112-119`) is the sole minter of the `FloorCheckedPassphrase` brand and therefore the only thing between a weak credential and the PBKDF2-600k wrap, and its score clause is only as strong as the `language-common` + `language-en` packs configured inside `loadZxcvbn` (`src/crypto/kdf.ts:90-104`, `setOptions` at `:96-100`) — a pack-less core still RETURNS a score, so the floor degrades silently instead of throwing. Measured twice against this repo's `@zxcvbn-ts/core`, pack-less → packed: `password` 2→0 (still under `PASSPHRASE_MIN_SCORE` 3, `kdf.ts:44`, so that arm's `below-min-score` assertion passes either way), `aaaaaaaaaaaaaaaaaaaa` 0→0, `xK9#mQ2$vL7` 4→4, six emoji 0→0, the accepting arm `plinth otter vivid casket 92 lampoon` 4→4 — but `iloveyoubaby` **4→1**, and at twelve code points it clears `PASSPHRASE_MIN_LENGTH` (`kdf.ts:45`), so a pack-less estimator would mint the carrier for it with every arm green (`src/crypto/__tests__/kdf.test.ts:175-180`, `:182-189`, `:191-198`, `:200-205`, `:207-210` — each rejection decided by length or by the dictionary-free repeat matcher). The UI layer is blind too: `src/ui/__tests__/passphraseStrength.test.ts:34`'s only score-floor fixture is another dictionary-free repeat. FIX: one dictionary-only rejection arm — a ≥12-code-point common phrase scoring ≥3 pack-less and <3 packed (`iloveyoubaby` is the measured witness) — so the packs become load-bearing on a green suite. Stated in prose at `docs/plans/2-first-answer.md:249`; this is that gap moved onto the open surface. ⚑ Tier 4 by this file's own definition (no user-visible wrong answer); the severity argument — it is the SOLE at-rest defense for real financial PII — is Briggsy's to promote.
+- `blendTableReadForRun` re-implements `resolveBlend`'s branch condition and nothing binds the two. `resolveBlend` (`src/intake/intakeMap.ts:294-300`) reads the dated blend table only when `account.ticker` is set AND `findBlendRow` hits, BEFORE falling through to `tickerClassifications` and then `manualBlend`; the mirror (`intakeMap.ts:946-951`) re-types that as `a.valueToday > 0 && a.ticker !== undefined && findBlendRow(a.ticker) !== undefined`. Sharing `findBlendRow` pins the LOOKUP, never the PRECEDENCE — and the mirror's own header claims exactly that shared-call defense (`:939`, "called HERE with the SAME function, never a re-typed ticker list"), which is the reasoning that would wave a reorder through, while the source comment names a discipline nothing enforces (`:285-289` — "if the branch order here ever changes, change it there in the same edit"). NEITHER direction is pinned: `src/ui/__tests__/stalenessExposure.test.ts:79` binds the exposure RECORD to the mirror, and no test exercises the `tickerClassifications` fallback with a table-hitting ticker at all — so a reorder putting the manual classification first breaks no test and silently flips U17 §S4's staleness exposure. Tier 4 because the shipped intake collects no ticker (`src/shared/model.ts:1443-1448`; the retirement is recorded at `src/intake/AccountEntry.tsx:21-23`, and Tier 2's R37 bullet already calls the bundled blend table dead code) — a ticker reaches the predicate only through a dev seed or a legacy restored vault (`src/shared/scenarioCodec.ts:364` still decodes the field). ⚑ Do not assume U8 re-opens it: the ratified holdings shape is `{ label; blend; valueToday }` with `label` a LABEL, "never a live-price key (R36)" (`docs/plans/2-first-answer.md:320`). FIX: one test pinning the precedence — an account whose ticker BOTH hits a table row and carries a differing `tickerClassifications` entry, asserting `resolveBlend` returns the TABLE's weight while `blendTableReadForRun` reads true on the same draft.
 - False source comment (a) — `partBTrendVintage`'s "no exposure gate" clause in `model.ts`
 - False source comment (b) — kill "the record stores the seed" in Plan 4 BEFORE S5 mints
 - DEFERRED BUILD — the richer market draw: block-bootstrap + stochastic correlated inflation
 - THE RICHER MARKET DRAW — block-bootstrap + stochastic correlated inflation
 - The date-search grade never routes through U14's held-out seed B (filed 2026-09-06, confirmed by grep): `deriveSeedB` / `heldOutSeed` live in `solver/search.ts`, `solver/solve.ts`, `solver/solveEntry.ts`, `validation/gradeCalibration.ts` and nowhere in `dateSearch.ts`, `dateSearchProfile.ts`, `dateOdds.ts` or `FuckOffDate.tsx` — the fuck-off date's confidence is a one-seed statistic while the recommendation's is held-out. The accumulation record §3c states it; the curse-defense law (product D-decisions) says it should not be.
+- `verify:doc-stats` arm 4 never scans `src/**`, `README.md`, `CLAUDE.md`, or `.md:NN` doc-to-doc citations — its surface list is `TODO.md` plus a walk over `docs/` (`citationSurfaces` in `scripts/verify-doc-stats.ts`) and its `CITATION` regex names code extensions only — so every line-numbered citation inside a SOURCE comment is un-gated by construction. The doc layer was re-anchored in `61c57ff5`; the source-comment layer was not, and ~40 stale source-comment citations were re-pointed by hand on 2026-09-06 (the u17s5 skeptic's six, then the whole `intakeMap.ts` family across `intakeMap.ts`, `staleness.ts`, `stalenessExposure.ts`, `copy.ts`, `savedRecommendation.ts` and three tests — every anchor into a file that grew rots together). Fix shape: extend arm 4's surfaces to comments under `src/**`, `e2e/**` and `scripts/**` plus README.md and CLAUDE.md, structural half only, and widen the regex to `.md`. ⚑ NEGATIVE — do NOT re-arm the semantic half: the identifier-proximity heuristic measured 21–42 % false positives on freshly verified citations and was rejected at `bc026ef4`.
 
 ### Deferred engine builds and the missing regression arms
 
@@ -1347,3 +1383,52 @@ disclaimer two-mount swap (holds: in-frame mount dark, trailing mount after the 
 
 - SMALL-DEFERRALS BUCKET — nine items, each on its OWN trigger (scrub e2e · DateBand band · 2 AssumptionPanel · 5 small)
 
+### The priced roster's re-verify records red on two dates, and only the later one was on a clock surface
+
+`S` · **pilot** · filed 2026-09-06 (the state-tax build spec's skeptic pass; graded fragile-not-wrong)
+
+- `state-tax-pa-last-verified.json:6` and `state-tax-fl-last-verified.json:6` both carry `nextDue` **2027-07-15**;
+  `state-tax-nc-last-verified.json:6` carries **2027-08-02**. Three records, TWO dates, 18 days apart.
+  `scripts/verify-state-tax.ts:120` loops `PRICED_STATES` (`src/engine/constants/stateTax.ts:50`) and `:104-112`
+  judges each record against its OWN `nextDue`, so `pnpm verify:state-tax` reds in two waves — PA + FL first, NC
+  18 days later. Probe-proven at a fixed clock: 2027-07-16 reds PA and FL while NC is still green.
+- The roster's real deadline is the EARLIEST record's, not NC's. **The gap is planning, not diagnosis:** the gate
+  prints every passing state's `verified … next due …` on the same run (`:141-143`; `failed` at `:139` does not
+  break the loop), so a red build always shows all three dates — but nothing SCHEDULES the July pass, so the
+  first thing that names it is a blocked build. Not wrong today: all three records are `statusConfirmed: true`
+  and in-window; the queue's deadline table now carries both dates.
+- Tier 4 is provable: `grep -rn "nextDue" src/ scripts/ --include=*.ts` hits only `scripts/verify-state-tax.ts`
+  and its test — no `src/` consumer at all, so a stale state-tax record reds CI and nothing else. Contrast the
+  ACA record, whose staleness is a RUNTIME withhold via `evaluateAcaFreshnessClause`
+  (`src/engine/validation/oracleToken.ts:191-201`).
+- ⚑ **NEGATIVE — the gate is NOT the defect; do not "fix" it.** It already reds per record. Judging the roster
+  against one shared (latest) date would silently swallow the earlier deadline — the unsafe direction.
+  `scripts/verify-state-tax.ts:48-51` states the cadence-vs-deadline distinction at the field itself, and the
+  roster test in `scripts/__tests__/verify-state-tax.test.ts:80-110` now REDS on that refactor (date-agnostic:
+  one day past the earliest `nextDue`, exactly the earliest-dated records must be overdue).
+- ⚑ **NEGATIVE — do NOT collapse the dates by bumping `verifiedOn`/`nextDue` on a state nobody re-read.** Every
+  record's `howToClear` says "Do NOT just bump the date." Convergence has to fall out of ONE re-verify pass that
+  genuinely re-reads all three primaries, which means re-reading PA and FL early and paying for it. The ACA
+  record is not the model either — it is a ROLLING `verifiedOn` + `maxAgeDays` window, deliberately a different
+  shape.
+
+### The solver profile's `rankableCount` still counts the pre-trend-flip subset — a healthy conversion-bearing solve can read SUPER-linear
+
+`S` · **pilot** · filed 2026-09-06 (plan 4's skeptic pass; confirmed against source by the roadmap owner's skeptic)
+
+- `src/engine/solver/profile.ts:109` computes `rankableCount` as `request.candidates.filter((c) => c.conversion
+  === null).length` — the sequencing-only subset the solve ranked BEFORE the Medicare-cost-trend unit — while
+  `src/engine/solver/solve.ts:459-464` derives the live `rankable` from `enumerateWithheldConversionLevers`,
+  which is the WHOLE roster whenever the trend clause is clear (conversions rank since 2026-07-19). The module's
+  own budget shape (`profile.ts:12-17`) says search ≈ 2·|rankable| and now names the whole roster; the field it
+  is judged against does not.
+- Consequence: on a conversion-bearing roster `ratioVsSingle` (`profile.ts:116`) is judged against an
+  expectation whose |rankable| term is under-counted, so a HEALTHY solve reads SUPER-linear — the exact
+  regression signal the module exists to raise. Instrument only: `profile.ts` REPORTS, never judges, and no
+  shipped path consumes it — no user-visible wrong answer. But it is the WASM-trigger measurement the roadmap's
+  U15 row names, so a false super-linear reading would mis-fire that decision.
+- Fix shape: derive the field from `enumerateWithheldConversionLevers`'s output exactly as `solve.ts:459-464`
+  does (one shared helper, never a second `conversion === null` filter), and re-pin `profile.test.ts:86-87`,
+  which today asserts the `conversion === null` subset BY NAME. ⚑ NEGATIVE — the comments at `profile.ts:44-52`
+  and `profile.test.ts:86-87` state the divergence deliberately; do not re-label the field "what solve ranks"
+  without changing the computation.

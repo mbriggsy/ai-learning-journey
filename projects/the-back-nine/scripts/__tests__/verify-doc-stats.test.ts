@@ -12,6 +12,8 @@ import {
   checkBacklogCount,
   findStrayCounts,
   checkInsightsIndex,
+  checkInsightSections,
+  INSIGHT_SECTIONS,
   strayCountSurfaces,
   BACKLOG_SURFACE,
   INSIGHTS_DIR,
@@ -239,6 +241,61 @@ describe('the register + insights arms (2026-09-06 — the numbers the doc audit
       const dir = join(process.cwd(), INSIGHTS_DIR)
       const r = checkInsightsIndex(readFileSync(join(dir, 'README.md'), 'utf-8'), readdirSync(dir))
       expect(r).toEqual({ ok: true, missingFromIndex: [], danglingInIndex: [] })
+    })
+  })
+
+  describe('checkInsightSections — every numbered insight carries the four /distill sections', () => {
+    /** A compliant insight: the four required headings, in the usual order. */
+    const full = (extra = '') =>
+      `# 001 — a title\n\n## Problem\n\nx\n\n## Root Cause\n\ny\n\n## Fix\n\nz\n\n## Key Insight\n\nw\n${extra}`
+
+    it('passes a file carrying all four, and never judges README.md (the index belongs to arm 3)', () => {
+      expect(
+        checkInsightSections([
+          { name: '001-a.md', content: full('\n## Also Applies To\n\nq\n') },
+          { name: 'README.md', content: '# Insights\n\n- [001 — a](001-a.md)\n' },
+        ]),
+      ).toEqual([])
+    })
+
+    it('reports EXACTLY the section that is missing', () => {
+      expect(checkInsightSections([{ name: '002-b.md', content: full().replace('## Root Cause\n\ny\n\n', '') }])).toEqual([
+        { file: '002-b.md', missing: ['## Root Cause'] },
+      ])
+    })
+
+    it('counts a heading carrying a trailing clause — 016 and 072 really head theirs that way', () => {
+      // Verbatim shapes from docs/insights/016-…md:12 and 072-…md:35.
+      const content =
+        '## Problem\n\nx\n\n## Root Cause — the ways a browser-enforcement test is GREEN while proving nothing\n\ny\n\n## Fix (three laws, one seam)\n\nz\n\n## Key Insight\n\nw\n'
+      expect(checkInsightSections([{ name: '003-c.md', content }])).toEqual([])
+    })
+
+    it('does NOT count a different section that merely STARTS with a required name ("## Root Causes")', () => {
+      // The trap a bare startsWith falls into: the boundary must be end-of-line, whitespace,
+      // an em dash or "(" — never a further letter.
+      expect(checkInsightSections([{ name: '004-d.md', content: full().replace('## Root Cause\n', '## Root Causes\n') }])).toEqual([
+        { file: '004-d.md', missing: ['## Root Cause'] },
+      ])
+    })
+
+    it('gates neither ## Also Applies To (eleven files end at Key Insight) nor section ORDER (068, 072)', () => {
+      // 072's real order: Problem → Fix → Root Cause → Key Insight, and no Also Applies To.
+      const reordered = '## Problem\n\nx\n\n## Fix\n\nz\n\n## Root Cause\n\ny\n\n## Key Insight\n\nw\n'
+      expect(checkInsightSections([{ name: '005-e.md', content: reordered }])).toEqual([])
+    })
+
+    it('the REAL insights directory — every numbered file carries all four', () => {
+      // Live on purpose (like the register + citation arms): a `/distill` that drops a section is a
+      // defect the moment the file lands, and the fix belongs in that same commit. The floor pins
+      // the arm to a non-empty roster — an emptied directory would otherwise pass vacuously.
+      const dir = join(process.cwd(), INSIGHTS_DIR)
+      const files = readdirSync(dir)
+        .filter((f) => /^\d{3}-.*\.md$/.test(f))
+        .map((name) => ({ name, content: readFileSync(join(dir, name), 'utf-8') }))
+      expect(files.length).toBeGreaterThanOrEqual(100)
+      expect(INSIGHT_SECTIONS).toHaveLength(4)
+      expect(checkInsightSections(files)).toEqual([])
     })
   })
 

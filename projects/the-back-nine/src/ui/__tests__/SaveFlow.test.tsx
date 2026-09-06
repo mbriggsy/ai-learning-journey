@@ -100,7 +100,10 @@ describe('SaveFlow — the Fork B update-apply hold across commit→export', () 
     // Export: vault committed, backup not yet saved — the pure-read window stays held, AND the
     // export step's leave-page dialog is armed (the one window this component guards).
     expect(await readyToApplyUpdate(idleGate)).toBe(false)
-    expect(wouldWarn()).toBe(true)
+    // AWAITED, never read straight through: the listener is armed by a PASSIVE effect
+    // (unloadGuard.ts:40-48's `useEffect`), which can flush AFTER the heading `findByRole` above
+    // resolved on the DOM mutation. The hold read one line up cannot race — it is up since securing.
+    await waitFor(() => expect(wouldWarn()).toBe(true))
 
     unmount()
     expect(await readyToApplyUpdate(idleGate)).toBe(true)

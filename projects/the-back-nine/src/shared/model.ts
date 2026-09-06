@@ -1310,12 +1310,12 @@ export interface DateBand {
 export type DateSearchOutcome =
   | {
       readonly kind: 'dates'
-      /** The essentials-floor track. In the v1 degenerate (single-total-spend) budget the
-       *  two tracks are byte-identical and the dates COINCIDE (rendered as one); the
-       *  P3·U9 budget split separates them. The SHAPE admits every mixed case now —
-       *  {floor: date, lifestyle: no-date}, the mirrors, and floor > lifestyle (the
-       *  100%-FPL-floor signature, correct surprising-but-honest output) — the behavioral
-       *  mixed tests ride U9 (insight 014). */
+      /** The essentials-floor track. In the v1 degenerate (single-total-spend) budget the two
+       *  tracks are byte-identical and the dates COINCIDE (rendered as one); the P3·U9 budget
+       *  split separates them. The SHAPE admits every mixed case now — {floor: date, lifestyle:
+       *  no-date}, the mirrors, and floor > lifestyle (the 100%-FPL-floor signature, correct
+       *  surprising-but-honest output); the mixed cases are pinned at the DECISION layer
+       *  (`dateSplit.test.ts:56`/`:67`/`:77`, insight 014), the `dateinvert` seed still OWED. */
       readonly floor: DateTrackOutcome
       /** The full-budget lifestyle track (terminates independently). */
       readonly lifestyle: DateTrackOutcome
@@ -1762,9 +1762,9 @@ export interface ScenarioV3 {
    *  bracket refresh). Minted by `taxVintageStamp()` (tax.ts) from the canonical constants,
    *  WRITTEN FRESH at every save (write-time truth — the healthcareVintage precedent), read
    *  by U13's staleness comparator at unlock. The legacy string stays untouched (add-only).
-   *  RMD-age rule + senior-bonus sunset are deliberately NOT stamped — they are birth-year/
-   *  calendar-DERIVED communication notes against the LIVE constants (already deterministic
-   *  inside the engine), never stamp-compares. */
+   *  RMD-age rule + senior-bonus sunset are deliberately NOT stamped and neither got a CLOCK —
+   *  the plan's "derived read-time note" for both was withdrawn in the U13 build. Neither has
+   *  derivable drift; a change to either RULE fires the tax clock (`staleness.ts:33-47`). */
   readonly taxVintageDetail?: TaxVintageV3
   /** P3·U13 — the date-surface vintage (the two fixture clocks the fuck-off-date answer
    *  decays on): the contribution-limit table year (the catch-up step-down shapes the
@@ -1899,9 +1899,9 @@ export interface SavedRecommendationV3 {
    *  WHAT S5 MUST DO ABOUT IT, since the type cannot: mint this from the COMMITTED
    *  `SolveAnswer.fingerprint` (`memoryModel.ts` — the committed arm carries it, and since the
    *  2026-09-03 edit-time kill the pending arm does too; produced by the private `fingerprintOf` at
-   *  `:623-627`) — the identity of the run this record actually describes — and NEVER from a fresh
+   *  `:658`) — the identity of the run this record actually describes — and NEVER from a fresh
    *  recompute taken at save time. The trichotomy's `freshFingerprint` is the OTHER operand,
-   *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:633-638`): what the draft WOULD solve
+   *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:668`): what the draft WOULD solve
    *  now. The two are equal at the mint and diverge afterwards, and that divergence IS the mechanism
    *  — so minting from the fresh side instead would stamp the record with inputs the recommendation
    *  was never computed against, which on a stale draft is a calm-but-wrong memory rather than a

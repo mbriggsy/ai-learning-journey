@@ -52,7 +52,10 @@ until every owner lands; re-run `verify:doc-stats` last · two "AS BUILT: never 
 truth pass were WRONG (`BudgetBuilder.tsx`, `BudgetLineItem.tsx`, `SequencingControl.tsx`, `HealthcareSheet.tsx`
 live in `src/intake/`) — never assert "never built" from one `ls src/ui` · a rewriter's own defect list is ~1/3
 stale by the time you read it (two skeptics caught rewriters reporting defects already fixed in the tree) —
-verify before chasing.
+verify before chasing · a Bash heredoc holding a long JSON with apostrophes truncated mid-string here, and another ate a
+backslash inside a regex — write big edit payloads and scripts with the Write tool, then run the file · a screenshot proves ONE
+column: a per-width seat is governed by the WIDEST column, so "looks great" at the mid column hid the column-0 overflow on the
+390 phone — measure the whole catalog before reading a frame as proof (insight 123).
 
 ▶ **(b9-4, the ranked plan — enter here) hand-off 2026-09-05 late evening. The b9-3 plan's steps 1–3 SHIPPED: `32c1231d`
 (the gate hardened in one pass + the council's ship-now list) · `b4b27a60` (the hygiene sweep) · `8748e4f5`

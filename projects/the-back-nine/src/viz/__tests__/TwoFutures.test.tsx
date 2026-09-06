@@ -222,6 +222,37 @@ describe('TwoFutures — the scrub capture surface (rows-supplied only; pointer 
   })
 })
 
+describe('TwoFutures — the readout’s FLOW seat (the row under the plot, inside the lever sheet)', () => {
+  const rows: TwoFuturesReadoutRow[] = [
+    { yearsFromNow: 0, ages: '66 / 64', withValue: '$800k', withoutValue: '$800k' },
+    { yearsFromNow: 30, ages: '96 / 94', withValue: '$508k', withoutValue: '$500k' },
+  ]
+
+  it('holds one column per readout row, each the same lines the in-plot box would show', () => {
+    const { container } = render(<TwoFutures withArm={withArm} withoutArm={withoutArm} labels={labels} rows={rows} />)
+    const row = container.querySelector('.tf__readout-row')!
+    expect(row).not.toBeNull()
+    expect(row.querySelectorAll('[data-ct-readout-item]')).toHaveLength(rows.length)
+    const first = row.querySelectorAll('[data-ct-readout-item]')[0]!
+    expect([...first.querySelectorAll('[data-ct-readout-line]')].map((l) => l.textContent)).toEqual(
+      composeTfReadoutLines(labels, rows[0]!).map((l) => l.text),
+    )
+  })
+
+  it('nothing scrubbed: no column is active and no in-plot box is rendered', () => {
+    const { container } = render(<TwoFutures withArm={withArm} withoutArm={withoutArm} labels={labels} rows={rows} />)
+    expect(container.querySelectorAll('[data-ct-readout-item][data-active]')).toHaveLength(0)
+    expect(container.querySelector('.ct-readout')).toBeNull()
+  })
+
+  it('publishes the measured seat on the chart’s outermost element (the gate’s only view of the decision)', () => {
+    const { container } = render(<TwoFutures withArm={withArm} withoutArm={withoutArm} labels={labels} rows={rows} />)
+    // jsdom lays nothing out, so the decision defaults to the plot seat; the two real seats are
+    // unit-pinned in chartText.test.tsx and gated in a real browser by e2e/chart-text.spec.ts.
+    expect(container.querySelector('.tf-reveal')!.getAttribute('data-readout-seat')).toBe('plot')
+  })
+})
+
 describe('the pure scrub helpers (the jsdom-unreachable pointer glue’s tested core)', () => {
   const plotRight = TF_VIEW.w - TF_PLOT.right
 

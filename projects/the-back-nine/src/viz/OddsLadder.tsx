@@ -44,7 +44,7 @@
  * types no copy and no number — it reads the marks and formats through the injected slots.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { OKABE_ITO } from './palette'
 import { agedLadderMarks, curveMarks, type CurveMark } from './curveMarks'
@@ -61,7 +61,7 @@ import {
   domainMaxYears,
   nearestOffsetIndex,
 } from './oddsLadderGeometry'
-import { ChartText, ChartTextHost, ChartTextLayer, useCollisionLayout, type CtStyle } from './chartText'
+import { ChartText, ChartTextHost, ChartTextLayer, useCollisionLayout, type CtAnchor, type CtStyle } from './chartText'
 import './oddsLadder.css'
 
 /** Marker radii (viewBox px). The crown is larger and ringed; a NON-DURABLE dot (below-bar OR a
@@ -79,11 +79,21 @@ const CROWN_RING_R = 9
  *  (rung 9 = "on track"; no rung-10 label) so the headroom above stays the "never certain" signal. */
 const Y_AXIS_LABEL_RUNGS = [3, 5, 7] as const
 
-/** At the CEILING rung the crown callout sits BESIDE its dot (there is no headroom above the top
- *  rung — in the svg era the rung-10 odds line sat at a zero-unit ink margin); every lower rung
- *  stacks it above the ring, where PLOT.top's headroom was sized to hold two lines on the narrowest
- *  arm. */
-const CROWN_SIDE_RUNG = 10
+/** The gap between the ringed crown dot's CENTRE and the callout's bottom edge, in viewBox units —
+ *  the ring's own radius plus 5 units of air, so the words never graze the halo.
+ *
+ *  THE RESIDUAL THIS LEAVES, so nobody re-derives it: a crowned date always CLEARS the bar, so its
+ *  rung is 9 or 10 (curveMarks: `clears ⟺ rung ≥ 9`, round(8.5) = 9). At rung 10 the anchor is at
+ *  `yForRung(10) − 14` = 42, clear ABOVE PLOT.top. At rung 9 it is at 64, i.e. 8 units BELOW
+ *  PLOT.top's 56 — so an above-seated rung-9 callout's last line sits 8 units (7.1 px at REAL)
+ *  inside the plot, and the scrub rule drawn at the crown's OWN column passes behind that line. It
+ *  is a hairline behind a tell, and it is BOUNDED: the callout's bottom is only
+ *  `CROWN_GAP − CROWN_RING_R` = 5 units above its own halo ring, and the gate's crown-vs-marks
+ *  oracle (e2e/chart-text.spec.ts `assertCrown`) reds the instant it reaches it. Closing it outright
+ *  means anchoring at `min(yForRung(rung) − CROWN_GAP, PLOT.top)`, which costs the PHONE arm its
+ *  above seat (40.9 px of headroom becomes 35.8, under a 36.6 px callout) — a taste call his eye has
+ *  not been asked. Do not "fix" it silently in either direction. */
+const CROWN_GAP = CROWN_RING_R + 5
 
 /** Motion timings — mirror band.css's --dur-reveal / --ease-out (numeric for motion). */
 const EASE_OUT = [0.23, 1, 0.32, 1] as const
@@ -94,6 +104,103 @@ const fx = (x: number): number => x / VIEWBOX.width
 const fy = (y: number): number => y / VIEWBOX.height
 /** The y-axis label column: end-anchored 8 units left of the axis, as the svg labels were. */
 const AXIS_FX = fx(PLOT.left - 8)
+
+/* ── the crown callout's TWO SEATS, decided per WIDTH before paint ──────────────────────────────
+ *
+ * THE LAW (council wf_1b45326f-9e8, 2026-09-05 → docs/architecture.md §12 "the room is not the
+ * ink"; executed on his eye's ruling of temp/cold-read-320, pictures 06 + 07, 2026-09-06): a
+ * fraction-authored room bounds a BOX and is silent about the INK, which is rem-fixed. Contain the
+ * ink; never widen the room (moving PLOT.top was REJECTED at council — 64 ties by 0.17 px, 68
+ * compresses every rung on every arm). Where containment and in-plot seating are jointly
+ * unsatisfiable, the words LEAVE the plot for flow reserved at their TALLEST.
+ *
+ * The BESIDE-the-dot branch died with that ruling: at the ceiling rung the callout used to sit
+ * flush against its dot, and "better than 9 in 10" then printed straight across the year-2..5 dots
+ * on BOTH the 320 arm and the 1536 laptop (pictures 06 + 07 — crowded on both). ONE rule now
+ * serves every rung: ABOVE the ring while the measured headroom holds the callout, else the flow
+ * row above the plot. The dot, its ring and the vermilion accent never move — only the words do.
+ */
+
+/** Which seat the crown callout takes at the current width. */
+export type CrownSeat = 'above' | 'flow'
+
+/** The room a rung's callout has above it, in HOST px: the callout is BOTTOM-anchored at
+ *  `yForRung(rung) − CROWN_GAP` viewBox units, and the host renders the full viewBox height, so
+ *  that anchor sits exactly this many px below the host's top edge — every one of them is room the
+ *  two lines may grow into. Pure; exported for tests. */
+export function crownHeadroomPx(rung: number, hostHeightPx: number): number {
+  return fy(yForRung(rung) - CROWN_GAP) * hostHeightPx
+}
+
+/**
+ * The ABOVE seat is legal iff the callout's MEASURED height fits that headroom. One clause, because
+ * the callout is a fixed pair of `nowrap` lines on two rem-fixed registers: its height is a function
+ * of the reader's font alone, while the headroom is a fraction of a width — so the two cross, and
+ * they cross at a different width for every rung.
+ *
+ * Pure numbers, no DOM — "Exported for tests" exactly like `placeReadoutX` (src/viz/chartText.tsx).
+ * Nothing laid out (jsdom, a host with no box yet) keeps the ABOVE seat: the decision is only ever
+ * made from real geometry, never from a phantom zero.
+ */
+export function crownSeat(calloutHeightPx: number, headroomPx: number): CrownSeat {
+  if (!(calloutHeightPx > 0) || !(headroomPx > 0)) return 'above'
+  return calloutHeightPx <= headroomPx ? 'above' : 'flow'
+}
+
+/** The callout's horizontal anchor, by EDGE PROXIMITY — the band's own labelAnchor rule: a crown
+ *  near the right edge END-anchors so its words stay inside the figure, a left-edge one
+ *  START-anchors, everything between is centred (28 units ≈ half a two-line callout's width). ONE
+ *  rule for BOTH seats, so the words hang off the same edge whichever seat they take. */
+function crownAnchorFor(x: number): CtAnchor {
+  return x > PLOT.right - 28 ? 'end' : x < PLOT.left + 28 ? 'start' : 'middle'
+}
+
+/**
+ * Decide the crown's seat before paint, and again on a host/probe resize and once on
+ * `document.fonts.ready` (a webfont swap re-sizes the callout's lines without resizing the host —
+ * the same reason both chart-text layout hooks carry it).
+ *
+ * The height is ALWAYS read off the row's hidden PROBE, never off whichever callout happens to be
+ * on screen: the probe is in the DOM in both seats, so one surface produces the decision in both
+ * and the seat cannot depend on the seat that preceded it. Re-deciding therefore cannot oscillate —
+ * and the row growing in the flow seat never moves the host, whose height follows its width alone.
+ */
+function useCrownSeat(
+  hostRef: RefObject<HTMLElement | null>,
+  probeRef: RefObject<HTMLElement | null>,
+  rung: number | null,
+  deps: readonly unknown[],
+): CrownSeat {
+  const [seat, setSeat] = useState<CrownSeat>('above')
+  useLayoutEffect(() => {
+    const host = hostRef.current
+    const probe = probeRef.current
+    if (!host || !probe || rung === null) return
+    const decide = () => {
+      const hostH = host.getBoundingClientRect().height
+      if (hostH === 0) return // not laid out (jsdom) — never decide from a phantom geometry
+      setSeat(crownSeat(probe.getBoundingClientRect().height, crownHeadroomPx(rung, hostH)))
+    }
+    decide()
+    let live = true
+    const fonts = typeof document !== 'undefined' ? document.fonts : undefined
+    if (fonts) void fonts.ready.then(() => live && decide())
+    if (typeof ResizeObserver === 'undefined') {
+      return () => {
+        live = false
+      }
+    }
+    const ro = new ResizeObserver(() => decide())
+    ro.observe(host)
+    ro.observe(probe)
+    return () => {
+      live = false
+      ro.disconnect()
+    }
+    // the caller names what moves the ink (the composed words) in `deps`
+  }, [hostRef, probeRef, rung, ...deps])
+  return seat
+}
 
 /** The copy the ladder renders — all injected by @ui (oddsLadderChrome) from copy.ts. The renderer
  *  formats nothing itself: the odds clamp ("better than 9 in 10") and the calm voice live in copy. */
@@ -168,8 +275,20 @@ export function OddsLadder({ track, labels, yearsSincePlanBuilt = 0 }: OddsLadde
   const scrubbed = scrubIdx === null ? null : (marks[scrubIdx] ?? null)
   const crown = marks.find((m) => m.isCrown)
 
+  // THE CROWN'S SEAT (his eye, 2026-09-06): the callout's words sit above their ringed dot only
+  // while the measured headroom holds them; otherwise they leave for the reserved row above the
+  // plot. The row renders in BOTH seats (collapsed in the above seat) because its hidden probe is
+  // the ONE surface the decision is measured from.
+  const hostRef = useRef<HTMLSpanElement>(null)
+  const crownProbeRef = useRef<HTMLSpanElement>(null)
+  const crownX = crown === undefined ? null : xForOffset(crown.offsetYears, domainMax)
+  const crownOdds = crown === undefined ? '' : labels.formatOdds(crown.rung)
+  const seat = useCrownSeat(hostRef, crownProbeRef, crown?.rung ?? null, [crownOdds, labels.crownLabel])
+
   return (
-    <figure className="ladder-figure">
+    // `data-crown-seat` is the render hook the chart-text gate reads the decision from — the seat is
+    // measured before paint and can only be checked against the geometry that produced it.
+    <figure className="ladder-figure" data-crown-seat={crown === undefined ? undefined : seat}>
       {/* The reserved readout (insight 035 — the box NEVER changes height): every mark's sentence
           renders STACKED in one grid cell, visibility-hidden except the scrubbed one, so the box
           is always exactly as tall as the LONGEST reading wraps at the CURRENT width — a fixed
@@ -183,7 +302,17 @@ export function OddsLadder({ track, labels, yearsSincePlanBuilt = 0 }: OddsLadde
           </span>
         ))}
       </p>
-      <ChartTextHost className="ladder-plot">
+      {crown !== undefined && crownX !== null && (
+        <CrownRow
+          seat={seat}
+          fxValue={fx(crownX)}
+          anchor={crownAnchorFor(crownX)}
+          odds={crownOdds}
+          tell={labels.crownLabel}
+          ref={crownProbeRef}
+        />
+      )}
+      <ChartTextHost className="ladder-plot" ref={hostRef}>
         <svg
           className="ladder-svg"
           viewBox={`0 0 ${VIEWBOX.width} ${VIEWBOX.height}`}
@@ -243,7 +372,11 @@ export function OddsLadder({ track, labels, yearsSincePlanBuilt = 0 }: OddsLadde
           <ChartText className="ladder-bar-label" fx={AXIS_FX} fy={fy(BAR_Y)} anchor="end" valign="middle">
             {labels.barLabel}
           </ChartText>
-          {crown !== undefined && <CrownCallout mark={crown} domainMax={domainMax} labels={labels} />}
+          {/* the callout only ever renders in the ABOVE seat; in the FLOW seat the same two lines
+              are the row's, above the plot — never both, so the crown is never read twice. */}
+          {crown !== undefined && crownX !== null && seat === 'above' && (
+            <CrownCallout rung={crown.rung} x={crownX} odds={crownOdds} tell={labels.crownLabel} />
+          )}
         </ChartTextLayer>
       </ChartTextHost>
       <LadderXAxis marks={marks} domainMax={domainMax} labels={labels} />
@@ -342,55 +475,73 @@ function LadderMark({
   )
 }
 
-/** The crown's two-line callout — its odds (the strong register) over the direct "your date" tell —
- *  stacked ABOVE the ringed dot (PLOT.top's headroom holds it at every rung below the ceiling), or
- *  BESIDE the dot at the ceiling rung ({@link CROWN_SIDE_RUNG}: no headroom above the top rung, and
- *  below it sit the bar and the neighbouring dots). Two DIFFERENT side rules, on purpose:
- *   · ABOVE anchors by edge proximity — a right-edge crown end-anchors so its words stay inside the
- *     figure, a left-edge one start-anchors, else centred — the band's own labelAnchor rule.
- *   · BESIDE bisects the plot: right of the dot on the left half, left of it on the right half. The
- *     ceiling reads "better than 9 in 10" (the clamped proportion, copy.ts), ~2× the width of an
- *     "N of 10" crown, so a mid-plot ceiling crown may fit on NEITHER side of the narrowest arm —
- *     the flip's monotonicity + a crown-vs-marks bound are HELD council work (docs/council-log.md
- *     2026-09-05); this branch's alignment rule is `.ladder-crown--side` (oddsLadder.css). */
-function CrownCallout({ mark, domainMax, labels }: { mark: CurveMark; domainMax: number; labels: OddsLadderLabels }) {
-  const x = xForOffset(mark.offsetYears, domainMax)
-  const y = yForRung(mark.rung)
-  const gap = CROWN_RING_R + 5
-  if (mark.rung >= CROWN_SIDE_RUNG) {
-    // beside the ceiling dot: to its right on the left half of the plot, to its left past mid-plot.
-    const toLeft = x > (PLOT.left + PLOT.right) / 2
-    return (
-      <ChartText
-        className="ladder-crown ladder-crown--side"
-        fx={fx(toLeft ? x - gap : x + gap)}
-        fy={fy(y)}
-        anchor={toLeft ? 'end' : 'start'}
-        valign="middle"
-        register="sm"
-        strong
-      >
-        <span className="ladder-crown__odds">{labels.formatOdds(mark.rung)}</span>
-        <span className="ladder-crown__tell">{labels.crownLabel}</span>
-      </ChartText>
-    )
-  }
-  // above the ring: edge proximity decides the anchor (28 units ≈ half a two-line callout's width).
-  const nearRight = x > PLOT.right - 28
-  const nearLeft = x < PLOT.left + 28
+/** The crown's ABOVE seat: the two-line callout — its odds (the strong register) over the direct
+ *  "your date" tell — stacked ABOVE the ringed dot, bottom-anchored {@link CROWN_GAP} units clear of
+ *  the halo and anchored by {@link crownAnchorFor}'s edge-proximity rule. ONE rule for every rung
+ *  since 2026-09-06: the BESIDE-the-dot ceiling branch is gone (it printed across the year-2..5 dots
+ *  on every arm — his eye, temp/cold-read-320 pictures 06 + 07). This renders only where
+ *  {@link crownSeat} measured room for it; otherwise the words are in {@link CrownRow}. */
+function CrownCallout({ rung, x, odds, tell }: { rung: number; x: number; odds: string; tell: string }) {
   return (
     <ChartText
       className="ladder-crown"
       fx={fx(x)}
-      fy={fy(y - gap)}
-      anchor={nearRight ? 'end' : nearLeft ? 'start' : 'middle'}
+      fy={fy(yForRung(rung) - CROWN_GAP)}
+      anchor={crownAnchorFor(x)}
       valign="bottom"
       register="sm"
       strong
     >
-      <span className="ladder-crown__odds">{labels.formatOdds(mark.rung)}</span>
-      <span className="ladder-crown__tell">{labels.crownLabel}</span>
+      <span className="ladder-crown__odds">{odds}</span>
+      <span className="ladder-crown__tell">{tell}</span>
     </ChartText>
+  )
+}
+
+/**
+ * The crown's FLOW seat: the same two lines in a reserved row directly above the svg, held at the
+ * crown's own x under the same edge-proximity anchor — so the words still point at the date they
+ * name, they simply stopped standing on the dots. The row RESERVES its height at both seats' worth
+ * of ink and never changes it (insight 035; `.ladder-readout` above it is the shipped precedent),
+ * so the plot cannot move under a reader who resizes into or out of the flow seat.
+ *
+ * The PROBE is why the row renders even in the ABOVE seat, where it reserves nothing: an empty,
+ * hidden copy of the callout is the ONE surface {@link useCrownSeat} measures, in both seats
+ * (`display: none` measures zero, and the seat could never be re-decided from it). Out of flow and
+ * never painted — it measures, it never renders.
+ *
+ * STRING-FREE: both words arrive from the caller (labels → copy.ts), as everywhere else here.
+ */
+function CrownRow({
+  seat,
+  fxValue,
+  anchor,
+  odds,
+  tell,
+  ref,
+}: {
+  readonly seat: CrownSeat
+  readonly fxValue: number
+  readonly anchor: CtAnchor
+  readonly odds: string
+  readonly tell: string
+  readonly ref?: React.Ref<HTMLSpanElement>
+}) {
+  const rowStyle: CtStyle = { '--ct-rows': 1 }
+  const itemStyle: CtStyle = { '--fx': fxValue }
+  return (
+    <span className="ct-block ladder-crown-row" data-seat={seat} aria-hidden="true" style={rowStyle}>
+      <span className="ladder-crown ladder-crown-row__probe" data-ladder-crown-probe="" ref={ref}>
+        <span className="ladder-crown__odds">{odds}</span>
+        <span className="ladder-crown__tell">{tell}</span>
+      </span>
+      {seat === 'flow' && (
+        <span className={`ct-block__item ladder-crown ladder-crown-row__item ct-text--${anchor}`} style={itemStyle}>
+          <span className="ladder-crown__odds">{odds}</span>
+          <span className="ladder-crown__tell">{tell}</span>
+        </span>
+      )}
+    </span>
   )
 }
 

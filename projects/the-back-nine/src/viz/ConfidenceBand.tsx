@@ -37,7 +37,7 @@
  * STRING-FREE: every label arrives via the `labels` / data props (src/viz imports only @shared).
  */
 
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { bandStopCss } from './scale'
 import { BAND_FILL_INNER_P, BAND_FILL_OUTER_P } from './palette'
@@ -59,7 +59,18 @@ import {
 } from './bandGeometry'
 import { composeReadoutLines } from './bandData'
 import type { BandViewData, BandLabels, BandTooltipRow, ReadoutLineKind, XAnnotation, YTick } from './bandData'
-import { ChartText, ChartTextHost, ChartTextLayer, useCollisionLayout, useReadoutPlacement, type CtStyle } from './chartText'
+import {
+  ChartReadoutRow,
+  ChartText,
+  ChartTextHost,
+  ChartTextLayer,
+  useCollisionLayout,
+  useReadoutPlacement,
+  useReadoutSeat,
+  type CtReadoutLine,
+  type CtReadoutSeat,
+  type CtStyle,
+} from './chartText'
 import './band.css'
 
 /** A resolved fan (the only state the scrubber attaches to — the placeholder has no per-year data). */
@@ -120,9 +131,34 @@ export function ConfidenceBand({ data, labels, onEnlarge, enlargeLabel, variant 
   // rather than point it at superseded-scale dollars.
   const [scrubIdx, setScrubIdx] = useState<number | null>(null)
   const hostRef = useRef<HTMLSpanElement>(null)
+  const rowRef = useRef<HTMLSpanElement>(null)
 
   const isEnlargeable = onEnlarge !== undefined
   const resolved = data.kind === 'resolved' ? data : null
+
+  // THE SEAT (his eye, 2026-09-06): every column's reading is composed ONCE here and rendered into
+  // the flow row, which is both the words' second seat and the surface the decision is measured
+  // from. The composition is the same pure seam the in-plot box uses — one honesty decision
+  // (composeReadoutLines + the dead-cohort withdrawal), two renderings of it.
+  const readoutColumns: readonly (readonly CtReadoutLine[])[] = useMemo(
+    () =>
+      resolved
+        ? resolved.tooltipRows.map((row, i) =>
+            composeReadoutLines(labels, row, isThinCohort(resolved.samples[i]?.cohortFraction)).map((l) => ({
+              text: l.text,
+              className: `band-readout__line ${READOUT_LINE_CLASS[l.kind]}`,
+            })),
+          )
+        : [],
+    [resolved, labels],
+  )
+  const seat = useReadoutSeat({
+    hostRef,
+    rowRef,
+    plotLeftF: fx(PLOT.left),
+    plotRightF: fx(PLOT.right),
+    deps: [readoutColumns],
+  })
 
   const chart = (
     <>
@@ -147,14 +183,20 @@ export function ConfidenceBand({ data, labels, onEnlarge, enlargeLabel, variant 
               the pointer over the whole plot). Resolved-only — the placeholder carries no per-year data. */}
           {resolved && <ScrubLayer data={resolved} idx={scrubIdx} setIdx={setScrubIdx} variant={variant} />}
         </svg>
-        <BandTextLayer data={data} labels={labels} scrubIdx={scrubIdx} hostRef={hostRef} />
+        <BandTextLayer data={data} labels={labels} scrubIdx={scrubIdx} hostRef={hostRef} seat={seat} />
       </ChartTextHost>
       <AnnotationBlock annotations={data.annotations} horizonYears={data.horizonYears} />
+      {/* BELOW the annotation block, never between it and the svg: the block's dashed tails must keep
+          touching the plot's bottom edge (chartText.css .ct-block__tail). Reserved at its tallest in
+          the flow seat; present-but-zero in the plot seat, where it is only the measurement surface. */}
+      <ChartReadoutRow seat={seat} columns={readoutColumns} activeIndex={scrubIdx} className="band-readout-row" ref={rowRef} />
     </>
   )
 
   return (
-    <figure className="band-figure">
+    // `data-readout-seat` is the render hook the chart-text gate reads the decision from — the seat is
+    // measured before paint and can only be checked against the geometry that produced it.
+    <figure className="band-figure" data-readout-seat={seat}>
       {isEnlargeable ? (
         // The graph IS the enlarge trigger: one focusable affordance for mouse AND keyboard/AT.
         // The wrapping <button> carries the click + native Enter/Space; the inner svg keeps its
@@ -176,11 +218,13 @@ function BandTextLayer({
   labels,
   scrubIdx,
   hostRef,
+  seat,
 }: {
   data: BandViewData
   labels: BandLabels
   scrubIdx: number | null
   hostRef: React.RefObject<HTMLElement | null>
+  seat: CtReadoutSeat
 }) {
   return (
     <ChartTextLayer className="band-text">
@@ -228,7 +272,9 @@ function BandTextLayer({
           {data.placeholderNote}
         </ChartText>
       )}
-      {data.kind === 'resolved' && scrubIdx !== null && (
+      {/* the box only ever renders in the PLOT seat; in the FLOW seat the same lines are the row's
+          (ConfidenceBand's readoutColumns) — never both, so no reading is ever shown twice. */}
+      {data.kind === 'resolved' && scrubIdx !== null && seat === 'plot' && (
         <ScrubReadout data={data} labels={labels} idx={scrubIdx} hostRef={hostRef} />
       )}
     </ChartTextLayer>
@@ -610,8 +656,9 @@ const READOUT_LINE_CLASS: Record<ReadoutLineKind, string> = {
   note: 'ct-readout__note',
 }
 
-/** The readout box — HTML in the text layer, placed beside the rule from its MEASURED width
- *  (useReadoutPlacement), top-pinned and side-flipped clear of the rule. Each line is a label WORD
+/** The readout box — the PLOT seat of the readout (the flow seat is the ChartReadoutRow above,
+ *  rendering the same composed lines): HTML in the text layer, placed beside the rule from its
+ *  MEASURED width (useReadoutPlacement), top-pinned and side-flipped clear of the rule. Each line is a label WORD
  *  (from copy.ts) composed around the PRE-FORMATTED figures — the renderer never types a numeral. The
  *  ages line drops when no household-clock closure was supplied; on a thinned cohort the dollar lines
  *  give way to the calm withdrawal note. This is the sanctioned comprehension channel (council
@@ -633,10 +680,10 @@ function ScrubReadout({
   const boxRef = useRef<HTMLSpanElement>(null)
   const x = xForYear(s.yearsFromNow, data.horizonYears)
   // Seated inside the PLOT — never over the y-tick column (O3's position→dollar decoder; a pinned box
-  // there re-creates the very "$1.5M reads $1" misread this whole layer exists to prevent) and, on
-  // every host wider than ~250 CSS px, never over the rule. The box's max-width (chartText.css
-  // .ct-readout, 38% of the host) is under the 0.4-of-host half-plot at EVERY width; what that cap
-  // does and does not promise (the ink is not bounded by it) is derived on that rule.
+  // there re-creates the very "$1.5M reads $1" misread this whole layer exists to prevent) and never
+  // over the rule: this component renders ONLY in the plot seat, and useReadoutSeat grants that seat
+  // only where the box (its capped max-content) plus the gap fits beside a MID-plot rule — which is
+  // exactly placeReadoutX's precondition, so neither of its clamps can fire at any column.
   useReadoutPlacement(boxRef, {
     hostRef,
     ruleFx: row ? fx(x) : null,

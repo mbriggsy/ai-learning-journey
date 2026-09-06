@@ -33,7 +33,7 @@ test — `SaveFlow.test.tsx` read a passive-effect listener synchronously after 
 
 **HIS EYE — READ 2026-09-06, CALM:** the rewrite's one user-facing copy change (`src/ui/copy.ts:380`, the annuity
 "tax-free part" help; the R40 record rules the held share OPTIMISTIC) — his read "feels calm", logged in
-`docs/caddie/cold-read-log.md`; nothing owed. **The b9-4 plan below is the queue.** Two hygiene entries filed this morning,
+`docs/caddie/cold-read-log.md`; nothing owed. **The b9-4 plan below is the queue** — its HIS EYE FIRST item, the council-held 320 shape, was RULED and BUILT the same day; the two forks it left for his eye are written there. Two hygiene entries filed this morning,
 unranked: the solver profile's `rankableCount` divergence and the state-tax roster's two re-verify dates (both
 Tier 4; the deadline table below now carries both dates).
 
@@ -59,24 +59,26 @@ verify before chasing.
 (the CI fix — a Windows-pinned ink threshold) · `abf1ab38` (insights 117–121). CI run 34005602885 is GREEN on
 Linux (97 fit tests, 11.8 m). Enter here. (The b9-2 / b9-3 hand-offs that used to follow were deleted 2026-09-06 with the doc audit — git log + the kept digest are the record; their still-open re-verify clauses are folded into the ranked entries below as ⚑ blocks.)**
 
-**HIS EYE FIRST (⚑ council-HELD 2026-09-05 — `docs/council-log.md`; the law is `docs/architecture.md §12`
-"the room is not the ink"):** the 320 arm's readout shape + the ceiling crown over the dots. Eight PNGs in
-`temp/cold-read-320/` (KEEP — `INDEX.md` names them): 01/02 the readout's dollar lines hanging out of their
-card at 320 (root-16 / root-20), 03 the same on the 390 phone at root-20, 05 "on track" 13 px into the gutter
-touching "7 of 10" at 320 × root-20, 06/07 the NEW ceiling crown (`?seed=atceiling`) aligned beside its dot but
-printing across the year-1..3 dots on every arm. Pilot's lean: below ~306 px of host the readout LEAVES the
-plot for a flow row in the drawer reserved at its tallest (a contained box still covers 62%×79% of that plot);
-the dissent's cheap alternative is `min-width: min-content` on `.ct-readout` (wins if min-content is constant
-across the 49 columns and the ~16/49 rule-covered columns cold-read acceptable). Whatever he picks lands WITH
-its oracles, each with a plant: every readout LINE inside its own border box; the crown vs the MARKS bounded
-to the figure (the ceiling crown over the neighbouring ceiling dots is the live case); the side flip's
-monotonicity; a hide-on-collision layout over the rung anchors for "7 of 10" vs "on track" at 320 × root-20
-(the x-tick precedent — the anchors are wayfinding, "on track" is the named one). THEN delete the `test.fail`
-declarations (`HELD_READOUT_320` in `e2e/chart-text.spec.ts`: the readout sweep on NARROW + NARROW-SCROLLBAR,
-TwoFutures' readout on NARROW-SCROLLBAR, the reader's-font readout test, the root-20 ladder instrument) —
-Playwright reds the run the day one passes. The `[instrument]` stdout lines carry the numbers (320 × root-20:
-readout ink 45.9 px past its box locally / 49.2 on Linux; the crown's top 13.5 px above the svg host; "on
-track" 13.3 px into the gutter, 4.6 px over rung 7).
+**HIS EYE — RULED 2026-09-06 AND BUILT THE SAME DAY:** the council-held 320 shape (`docs/council-log.md` 2026-09-05; the
+law is `docs/architecture.md §12`, "the room is not the ink"). His read of the eight pictures in `temp/cold-read-320/` (KEEP):
+01/02/03 crowded, 08 great, 04/05 ok, 06/07 crowded — logged in `docs/caddie/cold-read-log.md`. Built with its oracles, nine plants
+biting: the scrub readout takes a MEASURED seat per width — in the plot while the widest column's box fits beside a mid-plot rule
+and under the cap, else a flow row under the annotations reserved at its tallest (`readoutSeat` / `useReadoutSeat` /
+`ChartReadoutRow`, `src/viz/chartText.tsx`; TwoFutures rides the same seat); the crown's BESIDE branch is deleted — above its
+dot while the measured headroom holds the callout, else a flow row above the plot (`crownSeat` / `useCrownSeat`,
+`src/viz/OddsLadder.tsx`); the ladder's "on track" column ACCEPTED as rendered and PINNED (6 px overprint / 16 px gutter at
+320 × root-20). Every `HELD_READOUT_320` declaration and the ladder's `test.fail` are gone; `verify:fit` is green end to end.
+**TWO FORKS FOR HIS EYE** — `temp/cold-read-320-after/` (KEEP) re-shoots the same eight pictures against the build:
+(1) the 390 phone at normal font now takes the FLOW seat too: picture 08's in-plot box cannot survive the ink oracle because
+column 0's degenerate today-range ("$1.055M – $1.055M") needs a box 31 px wider than the cap, and the seat is per width so the
+widest column governs. Pilot's lean: ACCEPT the row on the phone (contained, calm, consistent across the phone's fonts). The
+only honest lever back is the composition — collapse a degenerate today-range to one figure in `composeReadoutLines`
+(`src/viz/bandData.ts`) and re-measure — never the room. (2) a rung-9 crown seated ABOVE dips its "your date" tell 5–7 px into
+the plot's top (7.1 / 5.8 / 5.1 px at REAL / FLOOR / PHONE), so a scrub rule at its own column passes behind it — pre-existing,
+bounded by the marks oracle (4.4 / 3.6 / 3.2 px of ring clearance); clamping the anchor to `PLOT.top` would cost the phone its
+above seat (40.9 → 35.8 px of headroom against a 36.6 px callout). Pilot's lean: leave it, watch it at the next cold read. ⚠️ Watch
+item: the ceiling crown misses its above seat at 1536 by 0.5 px of headroom (~7 px of figure width) — a wider result column would
+silently seat it above, the shape his eye ruled crowded in another form (`CROWN_SEAT_MARGIN_PX` keeps CI stable across it).
 
 **THEN, ranked — all pilot-buildable; the recipes are `temp/chart-text/verify-0905-b9-2/verify-digest.md`
 (KEEP; read each item's `S.correctedPrescription`, it supersedes the verifier's):**

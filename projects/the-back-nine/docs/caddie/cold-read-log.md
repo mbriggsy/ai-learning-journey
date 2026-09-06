@@ -20,6 +20,28 @@ one-way doors, framing-level forks, or genuine pilot doubt — reason logged) ·
 
 ---
 
+## 2026-09-06 — HIS EYE on the council-HELD 320 shape: the eight pictures in `temp/cold-read-320/` — RULED, BUILT the same day
+
+Not a Caddie card — the council (2026-09-05) held one taste call for his cold read: what yields when the room
+runs out on the 320 arm. He read the eight captures (`INDEX.md` names them): **01 / 02 / 03 crowded** (the
+scrub readout at 320 root-16, 320 root-20 and the 390 phone root-20 — the dollar line past its box, the box over
+most of the plot); **08 great** (the 390 phone at root-16, in-plot); **04 / 05 ok** (the ladder's "on track"
+column at 320, touching the rung-7 anchor at root-20); **06 / 07 crowded** (the ceiling crown beside its dot,
+printing across the year dots at 320 AND at 1536). The pilot's lean on the readout (leave the plot for a
+reserved flow row) and on the crown (lift it) matched; the dissent's `min-width: min-content` is dead.
+**Built the same day** (architecture §12 carries the law; the oracles ride `e2e/chart-text.spec.ts` with nine
+plants): the readout's MEASURED seat per width, the crown above-or-flow with the BESIDE branch deleted, the
+ladder column ACCEPTED as rendered and pinned (6 px overprint / 16 px gutter at 320 × root-20).
+**Two forks the build surfaced, for his second read** (`temp/cold-read-320-after/` re-shoots the same eight):
+(1) the 390 phone at normal font takes the flow seat too — picture 08's in-plot box cannot survive the ink
+oracle because column 0's degenerate today-range needs a box 31 px wider than the cap, and the seat is per
+width so the widest column governs (pilot's lean: accept the row; the only honest lever back is the
+composition, never the room); (2) a rung-9 crown seated above dips its "your date" tell 5–7 px into the
+plot's top, where a scrub rule at its own column passes behind it — pre-existing, bounded by the marks
+oracle (pilot's lean: leave it, watch it).
+
+---
+
 ## 2026-09-06 — HIS EYE on the AS-BUILT rewrite's one user-facing copy change: the annuity "tax-free part" help (`src/ui/copy.ts:380`, `incomeTaxableHelp`) — CALM
 
 Not a Caddie card — a pilot-flagged read. The rewrite (`85fb5dc1`) corrected the direction word in the

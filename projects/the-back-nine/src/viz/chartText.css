@@ -111,37 +111,54 @@
   visibility: hidden;
 }
 
-/* ── the scrub readout box (band + TwoFutures): HTML over the plot, positioned by the measured
-      placement hook (`--rx`/`--ry` in px inside the host). Token surface, never a re-typed hex. */
+/* ── the scrub readout (band + TwoFutures) ────────────────────────────────────────────────────
+      TWO SEATS, decided per WIDTH before paint (chartText.tsx useReadoutSeat; his eye on the 320
+      cold read, 2026-09-06): the BOX below, absolutely positioned over the plot beside its rule
+      (`--rx`/`--ry` in px inside the host) while its ink is containable there — else the words
+      LEAVE for `.ct-readout-row`, in flow under the plot. Token surface, never a re-typed hex. */
+
+/* the box's WIDTH CAP, authored ONCE for both consumers: the box takes it as its max-width, and the
+   seat predicate reads it off the ROW — where there is no box on screen to read it from. The cap is
+   SCALE-INVARIANT: the band's plot is 448/560 = 0.800 of the host, so 38% sits under the 0.400
+   half-plot at every width (council 2026-09-05 re-verified it at source; the seven seats that
+   indicted it on circular arithmetic all withdrew). */
+.ct-host,
+.ct-readout-row {
+  --ct-readout-cap: 38%;
+}
+
+/* the box's own CHROME, authored once for the box and for the empty probe the seat predicate
+   measures it with: the predicate must add padding + border to the ink to know the box's real
+   width, and a re-typed 26px would go quietly wrong the day the box is re-spaced. */
+.ct-readout,
+.ct-readout-row__chrome {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line-control);
+}
+
 .ct-readout {
   position: absolute;
   left: var(--rx, 0px);
   top: var(--ry, 0px);
   display: grid;
   gap: 1px;
-  padding: var(--space-2) var(--space-3);
   background: var(--paper-raised);
-  border: 1px solid var(--line-control);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-hairline);
   font-size: var(--text-sm);
   line-height: var(--leading-tight);
   width: max-content;
-  /* CAPPED so the placement hook can seat the box clear of the y-tick column (the position→dollar
-     decoder the review found it covering when the box was allowed the whole host) and, on every host
-     wider than ~250 px, clear of the rule. The cap is SCALE-INVARIANT: the plot is 448/560 = 0.800 of
-     the host, so 38% sits under the 0.400 half-plot at every width (council 2026-09-05 re-verified it
-     at source). What it does NOT promise: (1) "beside the rule" — the right seat fits only while
-     rule + 10px + box ≤ plot right, so at a mid-plot rule the LEFT seat takes it below a ~500px host,
-     and the clamps in useReadoutPlacement fire only when the rule is also within gap+box of the left
-     wall; the worst-case box-over-rule overlap is 10 − 0.04·host px — a hairline below 250px.
-     (2) The INK: this caps the BORDER BOX only. `width: max-content` + nowrap lines keep the grid
-     track at the nowrap min-content, so on a host under ~306px the lines paint PAST the border
-     (13px on the chart-text gate's 320 arm, a 238px host). That shape — contain the ink, never widen
-     the room — is HELD council work (docs/council-log.md 2026-09-05); the gate's 320 readout arms are
-     declared expected failures until it lands. Figures never break; the worded label + note lines
-     wrap — HTML fails safe. */
-  max-width: 38%;
+  /* The cap bounds the BORDER BOX only — `width: max-content` + nowrap lines keep the grid track at
+     the nowrap min-content, so a line whose ink exceeds the capped track paints PAST the border. The
+     widest column needs a 147.1px box on the gate's 320 arm (a 238px host, cap 90.4) and 148.2px on
+     the 390 phone (cap 117.0) — measured 2026-09-06 on the fit harness.
+     That is why the box is not seated here unconditionally any more: useReadoutSeat measures the
+     widest unbreakable ink against this cap AND against half the plot, and hands the words to
+     `.ct-readout-row` where either fails ("the room is not the ink" — docs/architecture.md §12).
+     In THIS seat the ink is therefore inside the border by construction, and the box clears its own
+     rule at every column (the second clause implies useReadoutPlacement's precondition, so neither
+     of its clamps can fire). Figures never break; the worded label + note lines wrap — HTML fails safe. */
+  max-width: var(--ct-readout-cap);
   color: var(--ink);
 }
 .ct-readout__ages {
@@ -162,6 +179,65 @@
   font-style: italic;
   font-size: var(--text-xs);
   white-space: normal;
+}
+
+/* ── the readout's FLOW seat: the row the words leave the plot for ────────────────────────────
+   Every column's reading is stacked in ONE grid cell and visibility-hidden except the scrubbed
+   one, so the row is always exactly as tall as the LONGEST reading wraps at the CURRENT width and
+   nothing on the page moves while the reader scrubs (insight 035; `.ladder-readout` in
+   oddsLadder.css is the shipped precedent). The same always-rendered items are what makes the
+   seat MEASURABLE with no box on screen (chartText.tsx measureReadoutInk).
+   The rule and the dots still draw in the plot — you always see WHERE you are; only the words
+   moved, and the geometry did not (no PLOT constant moves — rejected at council 2026-09-05). */
+.ct-readout-row {
+  /* a grid in BOTH seats: the stack (and the `justify-self` that makes an item hug its ink) is the
+     measurement surface, so it must lay out the same way whichever seat is in force. */
+  display: grid;
+  position: relative;
+  margin-block-start: var(--space-2);
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-sm);
+  line-height: var(--leading-tight);
+  color: var(--ink);
+}
+/* the PLOT seat: the row reserves NOTHING — but it must still lay out, because the ink it holds is
+   what the next decision is made from (`display: none` measures zero and the seat could never
+   change back). Zero block-size + clipped + hidden is a row that is present and invisible. */
+.ct-readout-row[data-seat='plot'] {
+  block-size: 0;
+  margin-block-start: 0;
+  overflow: hidden;
+  visibility: hidden;
+}
+/* one column's reading. `justify-self: start` so the item hugs its own content (a stretched grid
+   item would measure the ROW's width, and the seat predicate needs the ink's). */
+.ct-readout-row__item {
+  grid-area: 1 / 1;
+  justify-self: start;
+  display: grid;
+  gap: 1px;
+  visibility: hidden;
+}
+.ct-readout-row__item[data-active] {
+  visibility: visible;
+}
+/* each line hugs its own ink, so the widest UNBREAKABLE line is measurable — and never exceeds the
+   row, so a figure that cannot break still cannot paint past the card. */
+.ct-readout-row__line {
+  inline-size: max-content;
+  max-inline-size: 100%;
+}
+/* the chrome probe (chartText.tsx ChartReadoutRow): an EMPTY box carrying the readout's padding +
+   border, so its own width IS the chrome. Out of flow and never painted — it measures, it never
+   renders. `inline-size: max-content` on empty content is zero content + the chrome, whatever
+   `box-sizing` the page sets. */
+.ct-readout-row__chrome {
+  position: absolute;
+  inline-size: max-content;
+  block-size: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* ── an ELBOW leader from a series' end marker to its (measured, possibly pushed) end label: a dotted

@@ -375,7 +375,14 @@ describe('RothLever — the without-arm is named honestly when a conversion is a
     await act(async () => {
       preview.resolvers.at(-1)!(okPreview(8, 6, { withSeries: true }))
     })
-    await waitFor(() => expect(screen.getByText(copy.tfChartRothWithoutApplied)).toBeInTheDocument())
+    // The PRESENCE query is scoped to the END LABEL — the required non-color channel this test is
+    // about. Since 2026-09-06 the same word is also composed into the readout's FLOW row
+    // (src/viz/chartText.tsx ChartReadoutRow renders EVERY year's reading, stacked and hidden, so
+    // the row can be reserved at its tallest), so an unscoped getByText now matches once per year.
+    await waitFor(() => expect(screen.getByText(copy.tfChartRothWithoutApplied, { selector: '.tf__label' })).toBeInTheDocument())
+    // The ABSENCE query stays UNSCOPED, deliberately: the mislabel must appear nowhere on this
+    // surface — the readout row composes `labels.withoutLabel` too, so scoping this one would stop
+    // it catching the same lie leaking through the second seat.
     expect(screen.queryByText(copy.tfChartRothWithout)).toBeNull() // "Today’s plan" would be a lie here
   })
 })

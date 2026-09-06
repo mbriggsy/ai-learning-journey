@@ -37,23 +37,34 @@ export const VIEWBOX = { width: 560, height: 284 } as const
  *  figure: measured inside at 358/408/496 (2026-09-05); on the chart-text gate's 320 arm the 288px
  *  figure gives a 43.2px column and the label sits ~1px into the page gutter — rendered by that arm,
  *  bounded there by `main.result` (the page column, the ladder's only padded ancestor), never by the
- *  figure. What yields there is HELD council work (docs/council-log.md 2026-09-05): do NOT tighten
- *  the bound and do NOT move `left` off the 92 it shares with bandGeometry and TF_PLOT to buy the
- *  pixel back), a top margin so a rung-10 (ceiling) dot has headroom (it is
- *  never clipped at the very edge — the headroom is itself the "you can never reach certain"
- *  signal; the crown's callout stacks ABOVE its dot at every rung below the ceiling and sits BESIDE it
- *  only at rung 10 — OddsLadder's CROWN_SIDE_RUNG), and the floor at the bottom. */
+ *  figure. ACCEPTED AS RENDERED by his eye 2026-09-06 (temp/cold-read-320, pictures 04 + 05: the
+ *  root-20 arm puts 55.3px of ink 13.3px into the gutter and touches the rung-7 anchor by 4.6px —
+ *  "look ok"), and PINNED there under two named bounds in e2e/chart-text.spec.ts
+ *  (ACCEPTED_ONTRACK_OVERPRINT_PX / ACCEPTED_LABEL_GUTTER_PX) that RED beyond it. So: do NOT tighten
+ *  the bound, do NOT add a hide-on-collision layout, and do NOT move `left` off the 92 it shares
+ *  with bandGeometry and TF_PLOT to buy the pixel back — that move was REJECTED at council
+ *  2026-09-05 for breaking band/TF parity), a top margin so a rung-10 (ceiling) dot has headroom (it
+ *  is never clipped at the very edge — the headroom is itself the "you can never reach certain"
+ *  signal), and the floor at the bottom. */
 export const PLOT = {
   left: 92,
   right: 528,
-  /** 56 (was 40 in the svg-text era): the headroom above the ceiling rung now also seats the crown's
-   *  two-line HTML callout ABOVE a rung-9 dot on the narrowest arm. A rung-9 crown gets MORE than
-   *  these 56 units: its dot sits one rung lower (yForRung(9) = 78) and the callout's bottom anchors
-   *  a further CROWN_RING_R + 5 = 14 units up, at 64 — which on a 358px phone figure renders ~41 CSS
-   *  px against a callout measured at 36.6 px, ~4 px of clearance (2026-09-05). On the 320 arm and
-   *  at a raised browser font that clearance goes negative — what yields is HELD council work
-   *  (docs/council-log.md 2026-09-05); moving this value was REJECTED there (64 ties by 0.17px, 68
-   *  compresses every rung on every arm). */
+  /** 56 (was 40 in the svg-text era): the headroom above the ceiling rung is what a crown callout
+   *  stacks into. A rung-9 crown gets MORE than these 56 units — its dot sits one rung lower
+   *  (yForRung(9) = 78) and the callout's bottom anchors a further CROWN_RING_R + 5 = 14 units up,
+   *  at 64 — while a CEILING crown's anchor is at 56 − 14 = 42, the tightest room on the chart.
+   *  WHAT YIELDS WHEN IT RUNS OUT IS SETTLED (his eye, 2026-09-06): the callout is seated by
+   *  MEASUREMENT, not by rung — OddsLadder's `useCrownSeat` grants the above seat only while the
+   *  rendered callout fits the headroom this constant implies, and otherwise the WORDS leave for a
+   *  reserved row above the plot (`.ladder-crown-row`). So this number does not have to hold two
+   *  lines on every arm, and moving it to make it do so was REJECTED at council 2026-09-05 (64 ties
+   *  by 0.17px, 68 compresses every rung on every arm). MEASURED on the gate's arms 2026-09-06: a
+   *  rung-9 crown takes the above seat at REAL / FLOOR / PHONE (56.7 / 46.6 / 40.9 px of headroom
+   *  against a 37.7 / 37.7 / 36.6 px callout) and the row on both 320 arms; a CEILING crown takes
+   *  the row on every shipping arm — its anchor is 42 of the 560 viewBox units below the host top,
+   *  so its headroom is 42/560 = 7.5% of the FIGURE's width, and a 37.7px callout needs a ~503px
+   *  figure against the 496 the widest render gives. SEVEN PIXELS, not a structural impossibility —
+   *  a re-spaced page column could hand the ceiling its above seat, so re-measure, never assume. */
   top: 56,
   /** rung 0 — the floor (0 of 10). */
   bottom: 276,

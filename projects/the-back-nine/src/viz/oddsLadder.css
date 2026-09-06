@@ -113,27 +113,19 @@
 }
 
 /* ── the HTML text pieces the ladder owns (registers + positioning: chartText.css) ─────────────── */
-/* the crown callout: its odds (--text-sm, strong) stacked over the direct "your date" tell (--text-xs),
-   centered on the dot's x, above the ring — or BESIDE the dot at the ceiling rung (.ladder-crown--side,
-   OddsLadder's CROWN_SIDE_RUNG = 10: start-anchored to its right, end-anchored to its left past mid-plot). */
+/* the crown callout: its odds (--text-sm, strong) stacked over the direct "your date" tell
+   (--text-xs), at the dot's x under the edge-proximity anchor (OddsLadder crownAnchorFor). TWO
+   SEATS, decided per WIDTH before paint (OddsLadder useCrownSeat; his eye on temp/cold-read-320,
+   pictures 06 + 07, 2026-09-06): ABOVE the ring while the measured headroom holds the two lines —
+   else they LEAVE for `.ladder-crown-row` below, in flow above the plot. The BESIDE-the-dot ceiling
+   branch (`.ladder-crown--side`, shipped 2026-09-05) is GONE with that ruling: flush against its dot
+   the ceiling's "better than 9 in 10" printed straight across the year-2..5 dots on the 320 arm AND
+   the 1536 laptop. The dot, its ring and the vermilion accent never moved — only the words did. */
 .ladder-crown {
   display: grid;
   justify-items: center;
   text-align: center;
   line-height: var(--leading-tight);
-}
-/* BESIDE the dot the two lines must sit flush against the dot's side, so the text alignment follows
-   the primitive's anchor class instead of centring: start-anchored (right of the dot) ragged-right,
-   end-anchored (left of the dot) ragged-left. Until 2026-09-05 this branch had NO rule (council
-   wf_1b45326f-9e8 — the ceiling crown centred its lines inside an anchored box); `?seed=atceiling`
-   renders it and the chart-text gate walks it on every arm. */
-.ladder-crown--side.ct-text--start {
-  justify-items: start;
-  text-align: left;
-}
-.ladder-crown--side.ct-text--end {
-  justify-items: end;
-  text-align: right;
 }
 .ladder-crown__odds {
   display: block;
@@ -141,6 +133,73 @@
 .ladder-crown__tell {
   display: block;
   font-size: var(--text-xs);
+}
+
+/* ── the crown's FLOW seat: the row the words leave the plot for ──────────────────────────────
+   A `.ct-block` (chartText.css) directly above the svg, holding ONE item at the crown's own `--fx`
+   under the same anchor the above seat uses. The rung, its dot, its ring and the scrub rule all
+   still draw in the plot — you still see WHICH date is crowned; only the words moved, and no
+   geometry did (every PLOT change was REJECTED at council 2026-09-05). */
+/* COMPOUND, like the register rule below and for the same reason — and here it is load-bearing, not
+   hygiene. `.ct-block` (chartText.css) authors BOTH customs re-authored below at the SAME specificity,
+   and the two rules ship in DIFFERENT lazily-loaded CSS chunks (verified in dist/ 2026-09-06:
+   `.ct-block{` lands in the TwoFutures chunk, `.ladder-crown-row` in the IntakeApp chunk), so a bare
+   selector would win or lose on which chunk the browser loaded last — a lever sheet opened once could
+   flip it. `.ct-block` winning would reserve --space-2 + 2×--text-xs×1.3 = 41.8px and push the item
+   8px down inside it: the crown's words step down and the plot steps down with them, the exact jump
+   the reserve exists to prevent. It is also INVISIBLE to every oracle — 41.8px still holds the 36.4px
+   ink, so `assertCrown`'s reserve clause stays green — and invisible to the gate besides, which runs
+   on `pnpm dev`, where the order is module-import order and this rule already wins. Specificity is
+   the only thing that settles it. Measured 2026-09-06: the row reserves 37.7 / 36.6 / 36.4px against
+   a 37.7 / 36.6 / 36.4px callout on REAL / PHONE / the 320 arms — the ink exactly. */
+.ct-block.ladder-crown-row {
+  /* the callout is TWO lines on TWO registers — the odds at --text-sm over the tell at --text-xs —
+     so `.ct-block`'s own "2 × --text-xs" row is a fraction of a line short of what this row renders.
+     Authored from the registers it actually wears, never measured (the block's discipline). */
+  --ct-row-h: calc((var(--text-sm) + var(--text-xs)) * var(--leading-tight));
+  --ct-tail-base: 0px;
+  margin-block-end: var(--space-1);
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+/* the ABOVE seat: the row reserves NOTHING — but it must still lay out, because the probe inside it
+   is what the next decision is measured from (`display: none` measures zero and the seat could never
+   change back). Zero height + clipped + hidden is a row that is present and invisible. */
+.ct-block.ladder-crown-row[data-seat='above'] {
+  height: 0;
+  margin-block-end: 0;
+  overflow: hidden;
+  visibility: hidden;
+}
+/* the PROBE (OddsLadder CrownRow): a hidden, out-of-flow copy of the callout carrying the same two
+   registers, so its HEIGHT is the callout's height whichever seat is in force — measured, never
+   re-typed, and readable with no callout on screen. */
+.ladder-crown-row__probe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  pointer-events: none;
+  white-space: nowrap;
+}
+/* the crown's own register, authored once for the probe and for the row's visible item — the same
+   pair `.ct-text--sm` + `.ct-text--strong` gives the in-plot callout. Compound selectors so the
+   cascade never turns on which stylesheet a bundler emitted first. */
+.ladder-crown-row__probe,
+.ct-block__item.ladder-crown-row__item {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+  line-height: var(--leading-tight);
+}
+/* the item follows its anchor: `.ct-block__item` already turns the anchor class into the translate
+   and the text-align; the grid needs its inline alignment to follow too, or a start-anchored crown
+   would centre its short second line inside a box hung off the left edge. */
+.ladder-crown-row__item.ct-text--start {
+  justify-items: start;
+}
+.ladder-crown-row__item.ct-text--end {
+  justify-items: end;
 }
 /* the x-axis block in flow under the svg: one line of offset ticks (hidden where they would
    overprint — the "today" tick has priority), then the caption as a quiet overline. */

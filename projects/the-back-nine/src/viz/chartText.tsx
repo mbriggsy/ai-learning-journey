@@ -18,6 +18,9 @@
  *                        screenshot-determinism contract, restored rather than argued).
  *   - useReadoutPlacement — places a scrub readout box beside its rule, inside the plot, from the
  *                        box's MEASURED width.
+ *   - useReadoutSeat / <ChartReadoutRow> — the SEAT decision (his eye, 2026-09-06): the readout's
+ *                        words sit in the plot only while their ink is containable there; otherwise
+ *                        they LEAVE for a flow row reserved at its tallest. Measured before paint.
  *
  * CSP: `--fx`/`--fy` are React style-prop custom properties — CSSOM writes at runtime, which the
  * strict style-src 'self' policy permits (e2e/design-tokens.spec.ts proves it under the enforced
@@ -26,7 +29,7 @@
  *
  * STRING-FREE: this file types no copy and no number; every child is caller-supplied.
  */
-import { useLayoutEffect, type CSSProperties, type ReactNode, type Ref, type RefObject } from 'react'
+import { useLayoutEffect, useState, type CSSProperties, type ReactNode, type Ref, type RefObject } from 'react'
 import './chartText.css'
 
 export type CtAnchor = 'start' | 'middle' | 'end'
@@ -376,4 +379,201 @@ export function useReadoutPlacement(boxRef: RefObject<HTMLElement | null>, opts:
       ro.disconnect()
     }
   }, [boxRef, hostRef, ruleFx, plotLeftF, plotRightF, topF])
+}
+
+/* ── the readout SEAT: in the plot, or in a flow row ─────────────────────────────────────────────
+ *
+ * THE LAW (council 2026-09-05, docs/council-log.md → docs/architecture.md §12 "the room is not the
+ * ink"; his eye on the 320 cold read, 2026-09-06): a fraction-authored room bounds a BOX and is
+ * silent about the INK, which is rem-fixed. Contain the ink; never widen the room. Where
+ * containment and in-plot seating are jointly unsatisfiable, the words LEAVE the plot for flow
+ * reserved at their TALLEST — they never grow in place (the `min-width: min-content` dissent was
+ * put to his eye on temp/cold-read-320 and rejected: pictures 01–03 read as CROWDED, the dollar
+ * line painting past the box and the box covering most of the plot).
+ *
+ * The decision is per WIDTH, never per column: it is taken from the WIDEST column, so it cannot
+ * flip while the reader scrubs. It is taken in a layout effect (before paint), and re-taken when
+ * the host resizes or the webfonts settle — the discipline the two hooks above already carry.
+ */
+
+/** Which seat the scrub readout takes at the current width. */
+export type CtReadoutSeat = 'plot' | 'flow'
+
+/** One composed readout line, as the row renders it: the caller owns every word (string-free viz). */
+export interface CtReadoutLine {
+  readonly text: string
+  /** the kind class the chart maps its line kind to (`ct-readout__ages` … `ct-readout__note`). */
+  readonly className: string
+}
+
+/** What the seat predicate must know about the readout's ink at the current width — every number
+ *  MEASURED off the flow row (which is always in the DOM, so the box need not be on screen). */
+export interface CtReadoutInk {
+  /** The widest UNBREAKABLE line across every column. A line that WRAPS can never paint past the
+   *  box (it re-wraps into it); a `white-space: nowrap` line — every figure, and the ages — is the
+   *  one that can, so its ink is the box's real minimum. */
+  readonly widestInkPx: number
+  /** The widest column's own max-content — what `width: max-content` gives the box before the cap. */
+  readonly widestColumnPx: number
+  /** The box's own padding + border (measured off the row's chrome probe, never re-typed). */
+  readonly chromePx: number
+}
+
+/**
+ * The in-plot seat is legal iff BOTH hold at this width:
+ *  1. the widest unbreakable ink + the box's chrome fits INSIDE the box's own max-width cap — so no
+ *     line can paint past its border (the defect his eye ruled on: the widest column needs a 147.1 px
+ *     box on the 320 arm's 238 px host, where the cap allows 90.4 — measured 2026-09-06);
+ *  2. the box as it would actually render (`max-content`, capped) plus the rule gap fits beside a
+ *     MID-plot rule: `box + gap ≤ plot / 2`. This is `placeReadoutX`'s stated precondition made
+ *     live — it implies `2·box + gap ≤ plot`, so neither clamp in that placer can ever fire and the
+ *     box can never cover its own rule, at any column.
+ *
+ * Pure numbers, no DOM — "Exported for tests" exactly like {@link placeReadoutX}. Nothing laid out
+ * (jsdom, a host with no box yet, or a chart with no columns to read out) keeps the PLOT seat: the
+ * decision is only ever made from real geometry. That "was anything measured" test is the widest
+ * COLUMN and the plot's width, never the widest INK — zero unbreakable ink is a real measurement of
+ * a real household, not an absent one: {@link CtReadoutInk.widestInkPx} is 0 whenever every line
+ * WRAPS, which `composeReadoutLines` (src/viz/bandData.ts) produces when the ages line is dropped
+ * (no household-clock closure) and the thinned cohort has withdrawn the dollars, leaving only the
+ * `white-space: normal` note. Keying the guard on the ink would skip clause 2 entirely there and
+ * seat a box on a host with no room to clear its own rule — clause 1 is vacuously true for ink that
+ * cannot overflow, so clause 2 is exactly the one that still has to bind.
+ */
+export function readoutSeat(ink: CtReadoutInk, capPx: number, plotWidthPx: number, gap = CT_READOUT_GAP_PX): CtReadoutSeat {
+  if (!(ink.widestColumnPx > 0) || !(plotWidthPx > 0)) return 'plot'
+  const boxPx = Math.min(ink.widestColumnPx + ink.chromePx, capPx)
+  return ink.widestInkPx + ink.chromePx <= capPx && boxPx + gap <= plotWidthPx / 2 ? 'plot' : 'flow'
+}
+
+/** Measure the ink the readout needs at this width, off the flow row's own items — they are always
+ *  in the DOM (stacked in one grid cell, visibility-hidden except the active one), so their boxes
+ *  are real at the current width and font whichever seat is in force. Exported for tests. */
+export function measureReadoutInk(row: HTMLElement): CtReadoutInk {
+  let widestInkPx = 0
+  let widestColumnPx = 0
+  for (const item of row.querySelectorAll<HTMLElement>('[data-ct-readout-item]')) {
+    widestColumnPx = Math.max(widestColumnPx, item.getBoundingClientRect().width)
+    for (const line of item.querySelectorAll<HTMLElement>('[data-ct-readout-line]')) {
+      // WHICH lines can overflow is CSS's call (chartText.css sets `white-space` per kind), read
+      // back here rather than re-derived from the kind — one source, no drift.
+      if (getComputedStyle(line).whiteSpace !== 'nowrap') continue
+      widestInkPx = Math.max(widestInkPx, line.getBoundingClientRect().width)
+    }
+  }
+  const probe = row.querySelector<HTMLElement>('[data-ct-readout-chrome]')
+  return { widestInkPx, widestColumnPx, chromePx: probe ? probe.getBoundingClientRect().width : 0 }
+}
+
+/** The box's max-width cap in px, READ from the row's `--ct-readout-cap` (chartText.css authors it
+ *  once for the box and the row together). A cap that cannot be read is no cap — the half-plot
+ *  clause still binds, so an unreadable custom property degrades to a looser seat, never to a
+ *  box that silently clips its ink. */
+function readoutCapPx(row: HTMLElement, hostW: number): number {
+  const raw = getComputedStyle(row).getPropertyValue('--ct-readout-cap').trim()
+  const n = parseFloat(raw)
+  if (!Number.isFinite(n)) return Number.POSITIVE_INFINITY
+  return raw.endsWith('%') ? (n / 100) * hostW : n
+}
+
+export interface ReadoutSeatOpts {
+  /** the plot host (the box's percentages and the plot fractions resolve against it). */
+  readonly hostRef: RefObject<HTMLElement | null>
+  /** the flow row — the measurement surface AND the seat the words take when they leave. */
+  readonly rowRef: RefObject<HTMLElement | null>
+  /** the plot's horizontal extent as fractions of the host (the same pair the placer takes). */
+  readonly plotLeftF: number
+  readonly plotRightF: number
+  /** what changes the INK (the composed line strings) — the caller names it, as useCollisionLayout does. */
+  readonly deps: readonly unknown[]
+}
+
+/** Decide the seat before paint, and again on a host/row resize and once on `document.fonts.ready`
+ *  (a swap re-sizes the ink without resizing the host — the same reason both hooks above carry it). */
+export function useReadoutSeat({ hostRef, rowRef, plotLeftF, plotRightF, deps }: ReadoutSeatOpts): CtReadoutSeat {
+  const [seat, setSeat] = useState<CtReadoutSeat>('plot')
+  useLayoutEffect(() => {
+    const host = hostRef.current
+    const row = rowRef.current
+    if (!host || !row) return
+    const decide = () => {
+      const hostW = host.getBoundingClientRect().width
+      if (hostW === 0) return // not laid out (jsdom) — never decide from a phantom geometry
+      setSeat(readoutSeat(measureReadoutInk(row), readoutCapPx(row, hostW), (plotRightF - plotLeftF) * hostW))
+    }
+    decide()
+    let live = true
+    const fonts = typeof document !== 'undefined' ? document.fonts : undefined
+    if (fonts) void fonts.ready.then(() => live && decide())
+    if (typeof ResizeObserver === 'undefined') {
+      return () => {
+        live = false
+      }
+    }
+    // The row is observed as well as the host: the row's width is what a wrapping line wraps at, and
+    // it is the box the flow seat reserves. Re-deciding cannot oscillate — the row's content is the
+    // SAME in both seats, so the measurement does not depend on the seat it produced.
+    const ro = new ResizeObserver(() => decide())
+    ro.observe(host)
+    ro.observe(row)
+    return () => {
+      live = false
+      ro.disconnect()
+    }
+    // the caller names what moves the ink (the composed strings) in `deps`
+  }, [hostRef, rowRef, plotLeftF, plotRightF, ...deps])
+  return seat
+}
+
+/**
+ * The FLOW seat: every column's reading rendered stacked in ONE grid cell, visibility-hidden except
+ * the scrubbed one, so the row is always exactly as tall as the LONGEST reading wraps at the current
+ * width and NOTHING on the page moves while the reader scrubs (insight 035 — a live region above
+ * content must reserve its box; the ladder's `.ladder-readout` in src/viz/oddsLadder.css is the
+ * shipped precedent this copies). In the PLOT seat the row reserves nothing but still LAYS OUT —
+ * `display: none` measures zero, and the seat could never be re-decided from it.
+ *
+ * aria-hidden like the rest of the text layer: the a11y tree keeps the svg's caption and the
+ * per-annotation sentences; this is the sighted channel.
+ *
+ * STRING-FREE: every word arrives on `columns`.
+ */
+export function ChartReadoutRow({
+  seat,
+  columns,
+  activeIndex,
+  className,
+  ref,
+}: {
+  readonly seat: CtReadoutSeat
+  /** one entry per scrub column, in column order — each the lines that column reads. */
+  readonly columns: readonly (readonly CtReadoutLine[])[]
+  /** the scrubbed column, or null when nothing is scrubbed (the row stays blank AND reserved). */
+  readonly activeIndex: number | null
+  readonly className?: string
+  /** the row the seat hook measures — pass the same ref to {@link useReadoutSeat}. */
+  readonly ref?: Ref<HTMLSpanElement>
+}) {
+  return (
+    <span
+      className={className ? `ct-readout-row ${className}` : 'ct-readout-row'}
+      data-seat={seat}
+      aria-hidden="true"
+      ref={ref}
+    >
+      {/* the chrome probe: an EMPTY box carrying the readout's own padding + border (chartText.css
+          declares them for the box and this probe in one rule), so its width IS the chrome the seat
+          predicate adds to the ink — measured, never re-typed, and readable with no box on screen. */}
+      <span className="ct-readout-row__chrome" data-ct-readout-chrome="" />
+      {columns.map((lines, i) => (
+        <span key={i} className="ct-readout-row__item" data-ct-readout-item="" data-active={i === activeIndex ? '' : undefined}>
+          {lines.map((l, j) => (
+            <span key={j} className={`ct-readout-row__line ${l.className}`} data-ct-readout-line="">
+              {l.text}
+            </span>
+          ))}
+        </span>
+      ))}
+    </span>
+  )
 }

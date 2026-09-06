@@ -308,6 +308,54 @@ describe('ConfidenceBand — the indeterminate placeholder', () => {
   })
 })
 
+describe('ConfidenceBand — the readout’s FLOW seat (the row the words leave the plot for)', () => {
+  // The seat itself is decided from MEASURED geometry (chartText useReadoutSeat, unit-pinned in
+  // chartText.test.tsx and gated in a real browser by e2e/chart-text.spec.ts). jsdom lays nothing
+  // out, so the seat here is always the default 'plot' — what THIS battery pins is the composition:
+  // the row is always in the DOM, it holds EVERY column's reading (that is what reserves its height
+  // and what the seat is measured from), and it sits BELOW the annotation block.
+  it('holds one column per tooltip row, each the same lines the in-plot box would show', () => {
+    const data = resolved()
+    const { container } = render(<ConfidenceBand data={data} labels={labels} />)
+    const row = container.querySelector('.band-readout-row')!
+    expect(row).not.toBeNull()
+    expect(row.querySelectorAll('[data-ct-readout-item]')).toHaveLength(data.tooltipRows.length)
+    // composeReadoutLines' full composition for a live column: ages, the range label + figure, the
+    // most-likely label + figure (the honesty seam is shared with the box — one decision, two seats)
+    const first = row.querySelectorAll('[data-ct-readout-item]')[0]!
+    expect([...first.querySelectorAll('[data-ct-readout-line]')].map((l) => l.textContent)).toEqual([
+      `${labels.readoutAgesLabel} ${data.tooltipRows[0]!.ages}`,
+      labels.readoutRangeLabel,
+      `${data.tooltipRows[0]!.low}${labels.readoutRangeJoiner}${data.tooltipRows[0]!.high}`,
+      labels.readoutMedianLabel,
+      data.tooltipRows[0]!.median,
+    ])
+  })
+
+  it('nothing scrubbed: no column is active and no in-plot box is rendered (the row is blank, and reserved)', () => {
+    const { container } = render(<ConfidenceBand data={resolved()} labels={labels} />)
+    expect(container.querySelectorAll('[data-ct-readout-item][data-active]')).toHaveLength(0)
+    expect(container.querySelector('.ct-readout')).toBeNull()
+  })
+
+  it('sits BELOW the annotation block — the block’s dashed tails must keep touching the plot', () => {
+    const { container } = render(<ConfidenceBand data={resolved()} labels={labels} />)
+    const annotations = container.querySelector('.band-annotations')!
+    const row = container.querySelector('.band-readout-row')!
+    expect(annotations.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('the figure publishes the measured seat as data-readout-seat (the gate’s only view of the decision)', () => {
+    const { container } = render(<ConfidenceBand data={resolved()} labels={labels} />)
+    expect(container.querySelector('figure.band-figure')!.getAttribute('data-readout-seat')).toBe('plot')
+  })
+
+  it('the INDETERMINATE placeholder composes no columns (it carries no per-year data to read out)', () => {
+    const { container } = render(<ConfidenceBand data={indeterminate()} labels={labels} />)
+    expect(container.querySelectorAll('.band-readout-row [data-ct-readout-item]')).toHaveLength(0)
+  })
+})
+
 describe('ConfidenceBand — prefers-reduced-motion: identical FINAL rendered state (no info in motion)', () => {
   // The hard invariant: the final rendered DOM is identical with motion on vs off — no signal
   // lives only in the animation. The FINAL geometry is the pure bandGeometry output; we settle

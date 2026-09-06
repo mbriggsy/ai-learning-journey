@@ -16,7 +16,7 @@ Playwright's `test.fail(condition, reason)` marks a test as EXPECTED to fail: th
 
 ## Fix
 
-`test.fail(isNarrowArm(arm), HELD_READOUT_320)` on the 320 readout arms and the root-20 ladder instrument, each naming the council entry. The instrument tests measure and report first (`test.info().annotations` + a stdout line), assert last. The ladder instrument loads ONCE at root-20 (the CDP font-size emulation is per-target and survives navigation) instead of load-then-reload, halving its solve cost.
+`test.fail(isNarrowArm(arm), HELD_READOUT_320)` on the 320 readout arms and the root-20 ladder instrument, each naming the council entry. *(2026-09-06: the four readout declarations were deleted the day their remedy shipped — the measured flow-row seat; the ladder instrument's became a dated ACCEPTED bound instead of a `test.fail`, the other honest exit.)* The instrument tests measure and report first (`test.info().annotations` + a stdout line), assert last. The ladder instrument loads ONCE at root-20 (the CDP font-size emulation is per-target and survives navigation) instead of load-then-reload, halving its solve cost.
 
 ## Key Insight
 

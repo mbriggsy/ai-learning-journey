@@ -45,11 +45,21 @@
  * copy.ts, pre-formats every figure); the renderer types no copy — the layer boundary (viz
  * imports only @shared + siblings) is what keeps it that way, structurally.
  */
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { SERIES } from './palette'
 import { niceCeil, type YTick } from './bandData'
-import { ChartText, ChartTextHost, ChartTextLayer, useCollisionLayout, useReadoutPlacement, type CtStyle } from './chartText'
+import {
+  ChartReadoutRow,
+  ChartText,
+  ChartTextHost,
+  ChartTextLayer,
+  useCollisionLayout,
+  useReadoutPlacement,
+  useReadoutSeat,
+  type CtReadoutLine,
+  type CtStyle,
+} from './chartText'
 import './twoFutures.css'
 
 export interface TwoFuturesPoint {
@@ -192,6 +202,7 @@ export function TwoFutures({
 }) {
   const reduce = useReducedMotion() ?? false
   const hostRef = useRef<HTMLSpanElement>(null)
+  const rowRef = useRef<HTMLSpanElement>(null)
   const [year, setYear] = useState<number | null>(null)
   const all = [...withArm, ...withoutArm]
   const drawable = withArm.length >= 2 && withoutArm.length >= 2
@@ -210,6 +221,25 @@ export function TwoFutures({
   // host to lay out.
   useCollisionLayout(hostRef, 'hide', [maxYears, xTicks?.map((t) => `${t.years}:${t.label}`).join('|') ?? '', labels.todayLabel, labels.horizonLabel], '.tf__axis--x[data-ct-item]')
   useCollisionLayout(hostRef, 'separate-y', [withArm, withoutArm, labels.withLabel, labels.withoutLabel], '.tf__label[data-ct-item]')
+
+  // THE SEAT (the band's contract, on the TF plot — his eye 2026-09-06): every year's reading is
+  // composed once, rendered into the flow row, and the row is what the decision is measured from.
+  // TF's plot is the narrower of the two (320 of 560 units against the band's 448), so a lever sheet
+  // narrow enough hands the words to the row sooner than the band does at the same width.
+  const readoutColumns: readonly (readonly CtReadoutLine[])[] = useMemo(
+    () =>
+      (rows ?? []).map((r) =>
+        composeTfReadoutLines(labels, r).map((l) => ({ text: l.text, className: `tf__readout-line ${KIND_CLASS[l.kind]}` })),
+      ),
+    [rows, labels],
+  )
+  const seat = useReadoutSeat({
+    hostRef,
+    rowRef,
+    plotLeftF: fx(TF_PLOT.left),
+    plotRightF: fx(TF_VIEW.w - TF_PLOT.right),
+    deps: [readoutColumns],
+  })
 
   if (!drawable) return null
 
@@ -238,12 +268,15 @@ export function TwoFutures({
   const labelX = plotRight + 14
   const labelWidth = (TF_VIEW.w - labelX) / TF_VIEW.w
 
-  const row = year === null || rows === undefined ? undefined : rows.find((r) => r.yearsFromNow === year)
+  const rowIdx = year === null || rows === undefined ? -1 : rows.findIndex((r) => r.yearsFromNow === year)
+  const row = rowIdx < 0 ? undefined : rows![rowIdx]
 
   return (
     // The whole chart — svg + its text layer — fades in ONCE (the text used to ride the svg's fade).
+    // `data-readout-seat` is the render hook the chart-text gate reads the seat decision from.
     <motion.span
       className="tf-reveal"
+      data-readout-seat={seat}
       initial={{ opacity: reduce ? 1 : 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: reduce ? 0 : DRAW_S, ease: EASE_OUT }}
@@ -332,9 +365,13 @@ export function TwoFutures({
           <ChartText className="tf__label tf__label--with" fx={fx(labelX)} fy={fy(labelWithY)} anchor="start" valign="middle" register="sm" strong wrapWidth={labelWidth} collide itemKey="with">
             {labels.withLabel}
           </ChartText>
-          {row !== undefined && year !== null && <TfReadout labels={labels} row={row} ruleX={px(year)} hostRef={hostRef} />}
+          {/* the box is the PLOT seat only; in the FLOW seat the same lines are the row's, below. */}
+          {row !== undefined && year !== null && seat === 'plot' && <TfReadout labels={labels} row={row} ruleX={px(year)} hostRef={hostRef} />}
         </ChartTextLayer>
       </ChartTextHost>
+      {/* the flow seat: under the plot, inside the lever sheet — reserved at its tallest, so the
+          sheet never re-flows under the reader's cursor as the years are scrubbed. */}
+      <ChartReadoutRow seat={seat} columns={readoutColumns} activeIndex={rowIdx < 0 ? null : rowIdx} className="tf__readout-row" ref={rowRef} />
     </motion.span>
   )
 }
@@ -424,10 +461,11 @@ function TfScrubLayer({
  *  its MEASURED width (the svg era sized it from a 6.6-units-per-glyph estimate that the 13px value
  *  line already exceeded). Seated inside the PLOT, the band's contract (ConfidenceBand ScrubReadout):
  *  a whole-host corridor let it drift over the end-label column — the REQUIRED non-color channel —
- *  at the later years (chart-text gate, 2026-09-05). The box is content-sized (~117 px at the lever
- *  sheet's 752 px host) against a 430 px plot, so one side always has room there; a host under
- *  ~430 px would have to cover the rule, which only a touch device (no scrub) reaches today.
- *  A truncated arm simply has no dot and no readout pair at this year. */
+ *  at the later years (chart-text gate, 2026-09-05). It renders ONLY in the plot seat: useReadoutSeat
+ *  grants that seat only where the capped box plus the gap fits beside a MID-plot rule, so the box
+ *  can never be clamped over its own rule on a narrow sheet — where it does not fit, the words are in
+ *  the flow row under the plot instead. A truncated arm simply has no dot and no readout pair at
+ *  this year. */
 function TfReadout({
   labels,
   row,

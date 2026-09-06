@@ -193,11 +193,11 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 - `AcaRecord` has no top-level `primarySources` array where `StateTaxRecord` requires one — the two
   record shapes should converge on the stricter one.
 
-### The saved-record card claims the advice still holds when the couple never took it
+### The saved-record card does not name the strategy (Briggsy ruling — its false "still matches" line closed 2026-08-03)
 
 `M` · **briggsy** · filed 5× — `A30`, `S1`, `S13`, `S31`, `S38`
 
-- OPEN BLOCKER: the saved-record card still asserts "It still matches your plan as it stands today." while the door beneath it shows the household never executed the advice
+- ✅ **CLOSED 2026-08-03 (`bd851f24`)** — the card asserted "It still matches your plan as it stands today." while the door beneath it showed the household never executed the advice; the holds line is now `recommendRecordHolds` = "It still lines up with the numbers you've entered." (`copy.ts:1445`, the defending comment `copy.ts:1416-1429`). *The live half of this entry is the strategy-naming ruling below.*
 - HIS EYE — the record card's strategy naming (half 2)
 - S6 (f) HALF 2 — naming the strategy on the record card (a Briggsy ruling, not a build)
 - ⚑⚑ RECORD CARD HALF (2) — naming the strategy on Cards 6-7 (Briggsy ruling, DO NOT PILOT-FIX)

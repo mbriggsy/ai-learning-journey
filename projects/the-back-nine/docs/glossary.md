@@ -61,7 +61,7 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **Fuck-off date** — the working/product name for the not-yet-retired household's first answer: *"when is work optional?"*, delivered as **two confidence-graded dates** (floor + lifestyle). The user-facing label holds the calm advisor voice. → [product.md §3](product.md), [decisions/accumulation-fuck-off-date.md](decisions/accumulation-fuck-off-date.md)
 
-**Gross-up** — the tax overlay's bounded fixed-point: raise the withdrawal enough to cover spending **plus** the tax on that withdrawal (worst-case contraction `k ≈ 0.74`, `GROSS_UP_MAX_PASSES = 128`). → [architecture.md §7.1](architecture.md)
+**Gross-up** — the tax overlay's bounded fixed-point: raise the withdrawal enough to cover spending **plus** the tax on that withdrawal (the worst-case contraction factor `k` and `GROSS_UP_MAX_PASSES` are pinned ONCE in architecture §7.1 — never re-typed here). → [architecture.md §7.1](architecture.md)
 
 **Hedge (the hedge on the headline)** — every recommendation/control readout must carry its probabilistic qualifier **on the primary surface**, never buried in tapped-away math. Enforced by the require-the-hedge lint. → [product.md §6](product.md)
 

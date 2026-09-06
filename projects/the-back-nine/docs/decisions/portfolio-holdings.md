@@ -64,7 +64,7 @@ It also *improves the answer's fidelity*, not just the UX: for a single-fund acc
 
 ## The CSP / R36 constraint that shapes the design
 
-`connect-src 'self'` + R36 forbid any runtime price fetch. So holdings are entered as **(ticker, dollar value)** — the value read off the statement — **never (ticker, shares × live price)**. The ticker drives the *blend*; the entered dollars drive the *weight*. (Shares-only entry is a non-starter without a price source we are not allowed to fetch.) The account's `valueToday` can be **derived** as the sum of its holdings (with a manual-override + reconcile path), or kept as a separate entry cross-checked against the holdings sum. A holding's ticker/CUSIP is a **label + asset-class hint**, never a live-price key — the same no-runtime-external-fetch architecture the whole product rides (strict CSP, offline-first PWA, deterministic replay).
+`connect-src 'self'` + R36 forbid any runtime price fetch. So holdings are entered as **(ticker, dollar value)** — the value read off the statement — **never (ticker, shares × live price)**. The ticker drives the *blend*; the entered dollars drive the *weight*. (Shares-only entry is a non-starter without a price source we are not allowed to fetch.) The account's `valueToday` stays the required, authoritative balance — the holdings derive the **blend only**, and the `valueToday − Σ(holdings)` residual is visibly reconciled (the PINNED INVARIANT above; deriving the balance from the holdings sum is **rejected** — this sentence offered that fork until 2026-09-06). A holding's ticker/CUSIP is a **label + asset-class hint**, never a live-price key — the same no-runtime-external-fetch architecture the whole product rides (strict CSP, offline-first PWA, deterministic replay).
 
 ---
 

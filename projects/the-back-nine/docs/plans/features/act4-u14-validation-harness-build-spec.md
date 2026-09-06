@@ -23,7 +23,9 @@
      FY25-26 certification; `verify:state-tax` `nextDue: 2026-09-01`), any healthcare /
      Strand-5 primary that goes directional → **BLOCKS that household's token until its
      event pins it**. An NC household stays honestly blocked to ~Aug-2026 — never laundered.
-     FL/PA households are not hostage to NC's calendar.
+     FL/PA households are not hostage to NC's calendar. *(⚑ SUPERSEDED 2026-08-02: NC pinned by
+     S.L. 2026-41 — no live entry is certification-pinnable today; the KIND split stands as the
+     mechanism, its worked example is history.)*
    - **methodology substrate** (no dated pin event exists): `productionMarket`, ε's
      calibration context, `survivorSpendingRatio` → does **NOT** block; the grade ships
      **difference-keyed** with the directional level **DISCLOSED** (S4.5). **Flipping

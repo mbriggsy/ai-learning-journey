@@ -57,7 +57,7 @@
   budget-deal schedule could not be located to primary session law — **never price 3.49%/2027
   until one of them pins it.** Holding the higher rate overstates tax = conservative. The S6
   re-verify record carries the Aug-2026 checkpoint; the instant a lower rate pins, update the
-  table + the U13 tax clock stales saved vaults honestly.
+  table + the U13 tax clock stales saved vaults honestly. **⚑ SUPERSEDED 2026-08-02:** S.L. 2026-41 § 44.1(a) enacted the step schedule — `ncRateSchedule` now prices the enacted out-year rates with `directionalUntilPinned: false`, the Aug-2026 checkpoint is retired, and `verify:state-tax` sits on the annual cadence (`nextDue: 2027-08-02`); [architecture.md §7.1 / §8](../../architecture.md).
 - **PA (primary-pinned):** flat **3.07%** (stable since 2004, no scheduled change); **NO**
   standard deduction/exemption; **eight income classes, NOT AGI-based** — the engine assembles
   PA's base from its own converged channels (S2.2), never a rate on the federal figure.

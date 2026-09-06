@@ -1,10 +1,26 @@
+---
+title: "The engine disagreeing with a hand-derivation is the ORACLE running in reverse — trace the mechanism before \"fixing\" either side"
+date: 2026-07-18
+phase: Act 4 (solver & recommendation)
+modules: []
+tags: []  # backfilled 2026-09-06 (doc audit) — tag by hand when next touched
+---
+
 # 091 — The engine disagreeing with a hand-derivation is the ORACLE running in reverse — trace the mechanism before "fixing" either side
+
+## Problem
 
 **Context (U14, 2026-07-18).** Authoring oracle case (i) (the constant-marginal-rate world), the fixture's closed form assumed `basis == value ⇒ realizedGain ≡ 0 for the whole horizon` and set growth to +3% real "because conventional-wisdom optimality is about growth." First run: the engine's lifetime tax came back **$20,818.58 higher** than the hand ledger on the taxable-first arm — and the engine was right. The taxable bucket's VALUE scales by growth every year while its BASIS deliberately does not (`taxOverlay.ts` — appreciation is unrealized gain; scaling basis would zero all future gain), so `basis == value` is true only at t = 0: every year-1+ draw realizes a growing gain fraction at the 20% stacked rate, feeding the gross-up. The premise didn't survive its own world's second year.
 
+## Root Cause
+
 **The reframe that matters:** the disagreement was not a fixture bug to patch — it was the **oracle working in reverse**. The whole DND-012 design exists so that when the engine and an independent derivation disagree, SOMETHING true is learned. Here the derivation was wrong, and the divergence pinpointed the exact omitted mechanism (unscaled basis) in one subtraction. Had the numbers been quietly reconciled by loosening the tolerance or "correcting" the engine-side expectation, the fixture would have shipped as a false gate.
 
+## Fix
+
 **The fix shape:** the case's POINT (a constant marginal rate) never needed growth — `r = 0` restores `basis == value` for ALL years and makes every closed form exact. The retired premise is now a NAMED rule boundary in the fixture ("r = 0 AND basis == value ⇒ realizedGain ≡ 0 in EVERY year — with r > 0 the unscaled basis makes year-1+ draws realize gains"), so the next author inherits the boundary instead of the trap.
+
+## Key Insight
 
 **Rules:**
 1. **When the engine and an independent derivation disagree, treat the engine as a candidate truth and trace the MECHANISM of the divergence before touching either side.** The delta's magnitude and direction are diagnostic data (here: ~4,164/yr × 5 in the conservative direction → a per-year tax channel the ledger omitted → gains). "Fixing" the fixture to match, or the engine to match, without the trace converts the oracle into a rubber stamp.

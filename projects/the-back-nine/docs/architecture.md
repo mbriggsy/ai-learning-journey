@@ -42,7 +42,7 @@ The one-screen version of *what you must never break*. Each links to its full co
 
 The code is split into layers with one-directional import boundaries, **enforced by ESLint** (`pnpm lint`):
 
-```
+```text
 engine · crypto · store · intake · budget · viz · ui · shared
 ```
 

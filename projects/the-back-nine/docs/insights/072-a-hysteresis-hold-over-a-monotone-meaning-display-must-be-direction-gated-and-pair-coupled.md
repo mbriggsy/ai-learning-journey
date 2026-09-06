@@ -1,8 +1,16 @@
+---
+title: "a hysteresis hold over a monotone-meaning display must be direction-gated and pair-coupled (prove it with a property sweep whose legal set derives from the producer)"
+date: 2026-07-09
+phase: Act 3 (the levers)
+modules: []
+tags: []  # backfilled 2026-09-06 (doc audit) — tag by hand when next touched
+---
+
 # 072 — a hysteresis hold over a monotone-meaning display must be direction-gated and pair-coupled (prove it with a property sweep whose legal set derives from the producer)
 
 **Date:** 2026-07-09 · **Unit:** U12 closers (the sharpen-loop ultramode review) · **Severity:** P1, the cardinal-sin class
 
-## What happened
+## Problem
 
 The U12 sticky-display seam (`resolveStickyDisplay`, memoryModel.ts) held ANY one-step
 display flip whose new reading landed within EPS of a flip edge. Its comment claimed the
@@ -24,7 +32,7 @@ reading **falling** exactly onto an edge held the **rosier** prior:
 Eight of twelve review lenses independently converged on this one defect (the 017
 convergence beacon), every refuter voting confirm 3-0.
 
-## The fix shape (three laws, one seam)
+## Fix (three laws, one seam)
 
 1. **The conservative-direction law:** every hold is direction-gated — hold only a
    display LESS optimistic than the raw reading (the lower count, the lower-ranked word,
@@ -38,7 +46,7 @@ convergence beacon), every refuter voting confirm 3-0.
    (unchanged) or itself held — otherwise both adopt. This makes the displayed pair
    provably either prev's pair or raw's pair, both engine-emittable.
 
-## The part enumeration missed — why the property sweep is the real proof
+## Root Cause — the part enumeration missed; why the property sweep is the real proof
 
 My first fix used **one-sided** coupling (count-holds require a stable word), verified by
 hand-enumerating the edge cases. The full-grid property sweep — every `(prev, raw)`
@@ -56,7 +64,7 @@ Two properties, both derived from the producer (nothing hand-typed to drift):
 The sweep kills every mutant the named pins kill, plus the classes nobody named
 (4 sticky mutants + it caught the live mirror bug during the fold itself).
 
-## The lesson
+## Key Insight
 
 - A sticky/hysteresis/debounce display over a scale with a MEANING direction
   (better/worse, safe/unsafe) is not neutral smoothing: state **which direction may

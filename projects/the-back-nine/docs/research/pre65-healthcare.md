@@ -98,7 +98,7 @@ Healthcare cost in retirement is **income-sensitive continuously across age 65.*
 
 **4b. Pre-65 ACA — the same-year MAGI feedback loop (a true fixed point):**
 This year's MAGI sets this year's PTC, which changes net premium, which changes the gross withdrawal needed to fund spending, which changes MAGI — circular:
-```
+```text
 PTC         = max(0, SLCSP_benchmark − applicable_pct(FPL%) × MAGI)   # 0 if MAGI > 400% FPL (cliff, 2026)
 net_premium = full_premium − PTC
 gross_wd    = spending_need + taxes + net_premium

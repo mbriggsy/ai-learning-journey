@@ -1,8 +1,16 @@
+---
+title: "Comprehension holes are a defect class tests cannot see — only a cold reader finds them"
+date: 2026-07-03
+phase: Act 3 (the levers)
+modules: []
+tags: []  # backfilled 2026-09-06 (doc audit) — tag by hand when next touched
+---
+
 # Comprehension holes are a defect class tests cannot see — only a cold reader finds them
 
 **Date:** 2026-07-03 · **Unit:** P3·U11 (the Healthcare sheet) · **Caught by:** Briggsy's N=1 cold read — nine rounds in one night; zero of them visible to 1,930+ green tests
 
-## The trap
+## Problem
 
 A surface can pass every test, every review lens, and every honesty gate while being
 **incomprehensible to its actual reader**. The Healthcare sheet shipped ultramode-reviewed
@@ -28,7 +36,7 @@ cannot detect that a correct string fails to communicate. The ultramode lenses (
 honesty, a11y) all judged the *content* right — none of them read as a person who doesn't
 already know the mechanism.
 
-## The fix shape
+## Fix
 
 - The law is codified (memory `dont-make-users-think` + `back-nine-design` microcopy law):
   every referenced quantity quoted in-sentence; distances ride with both endpoints; derived
@@ -43,7 +51,7 @@ already know the mechanism.
   shadow affordance) — content is never cut to fit. The one time it was tried (the intro,
   rationalized as "redundant"), the rationalization was motivated by the pixel budget.
 
-## The rule
+## Key Insight
 
 Copy that references what it doesn't quote, derives what it doesn't attribute, or speaks the
 mechanism's language is a **defect**, not a style choice — and no oracle in the repo can catch

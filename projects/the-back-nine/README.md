@@ -87,7 +87,7 @@ React 19 · TypeScript 5.9 (strict-plus) · Vite 8 · Vitest 4 · `fast-check` p
 
 The codebase is layered with hard, lint-enforced import boundaries:
 
-```
+```text
 engine · crypto · store · intake · budget · viz · ui · shared
 ```
 

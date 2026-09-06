@@ -1,3 +1,11 @@
+---
+title: "A fixed em-reserve is a guess that drifts — reserve layout by stacking the REAL content hidden"
+date: 2026-07-03
+phase: Act 3 (the levers)
+modules: []
+tags: []  # backfilled 2026-09-06 (doc audit) — tag by hand when next touched
+---
+
 # A fixed em-reserve is a guess that drifts — reserve layout by stacking the REAL content hidden
 
 ## Problem

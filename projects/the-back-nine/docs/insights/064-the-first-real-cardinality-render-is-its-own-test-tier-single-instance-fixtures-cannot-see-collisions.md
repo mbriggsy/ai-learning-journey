@@ -1,3 +1,11 @@
+---
+title: "The first real-cardinality render is its own test tier — single-instance fixtures cannot see collision defects"
+date: 2026-07-03
+phase: Act 3 (the levers)
+modules: []
+tags: []  # backfilled 2026-09-06 (doc audit) — tag by hand when next touched
+---
+
 # The first real-cardinality render is its own test tier — single-instance fixtures cannot see collision defects
 
 ## Problem

@@ -99,7 +99,7 @@ A golden asserts `factor = 0.7000` (pre-round) at 62/FRA67 and `1.24` at 70/FRA6
 ### §4 — Spousal: the Method C excess (the `max()` rule is wrong)
 
 For person *L* (potential spousal recipient) on person *H*'s record (the higher PIA):
-```
+```text
 excessFull   = max(0, SPOUSAL_RATE·H.pia − L.pia)              // 50% of H's PIA, minus L's own PIA, floored
 ownAdjusted  = adjustOwnBenefit(L.pia, L.claim, L.fra)         // worker schedule (5/9…)
 excessAdj    = reduceSpouseExcess(excessFull, L.claim, L.fra)  // spouse schedule (25/36…), NO DRCs
@@ -191,7 +191,7 @@ Restated as the two things that must never regress: the survivor reduction facto
 **Why the pure core was right.** The pure `survivorBenefitAnnual` correctly trusts `deceased.claimAge` as the *realized* claim age — its input contract. The bug lived entirely in the **integration seam**, the only layer that knows the stochastic timeline; it fed the pure core a **planned** value as if it were realized.
 
 **The fix (shipped):**
-```
+```text
 realizedClaimAgeAtDeath(plannedClaimAge, birthYear, ageAtDeath)
   = max(min(planned, ageAtDeath), ⌊FRA⌋)
 ```

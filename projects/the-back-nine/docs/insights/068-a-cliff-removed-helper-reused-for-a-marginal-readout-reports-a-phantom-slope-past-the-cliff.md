@@ -1,8 +1,16 @@
+---
+title: "A cliff-removed helper reused for a marginal readout reports a phantom slope past the cliff"
+date: 2026-07-03
+phase: Act 3 (the levers)
+modules: []
+tags: []  # backfilled 2026-09-06 (doc audit) — tag by hand when next touched
+---
+
 # A cliff-removed helper reused for a marginal readout reports a phantom slope past the cliff
 
 **Date:** 2026-07-03 · **Unit:** P3·U11 (the shadow-rate readout) · **Caught by:** the ultramode correctness lens; verified against source
 
-## The trap
+## Problem
 
 `slidingScalePtc` is deliberately **cliff-removed**: the 400%-FPL cliff is applied by its ONE
 consumer that owns the branch (`solveAcaFundedGross` hoists the discontinuity into an explicit
@@ -21,7 +29,7 @@ Both errors were **conservative-direction** (a scarier number, never the calm-bu
 which is why they survived to review — nothing downstream could notice a teaching percentage
 being too high.
 
-## The rule
+## Key Insight
 
 **A helper that was deliberately stripped of a discontinuity is only safe in consumers that
 re-own the branch.** When you reuse it for a *derivative* quantity (a slope, a marginal rate, a
@@ -33,14 +41,14 @@ here?* If nobody does, gate the derivative on the branch's own predicate (here:
 every known discontinuity — the table's own jump list already exists
 (`applicablePctDiscontinuityFractions`) precisely so consumers don't rediscover this.
 
-## The fix that shipped
+## Fix
 
 `healthSheetChrome.composeHealthSheet` zeroes the drag term when the empirical anchor sits past
 a live cliff (the credit is gone; the honest marginal is the ordinary bracket alone). The 133%
 straddle stays as a disclosed, conservative, teaching-grade residual — its fix (a bounded probe)
 rides whenever the readout earns more precision.
 
-## Where this class lives in this repo
+## Also Applies To
 
 - `slidingScalePtc` (cliff-removed) vs `solveAcaFundedGross` (owns the 400% branch).
 - `applicableContributionFraction` (jump at 133% in the reverted table) — any finite-difference

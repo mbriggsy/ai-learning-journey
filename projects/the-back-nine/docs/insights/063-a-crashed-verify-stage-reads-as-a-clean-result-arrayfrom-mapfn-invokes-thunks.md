@@ -1,3 +1,11 @@
+---
+title: "A crashed verify stage reads as a clean result — Array.from's mapFn INVOKES what you meant to defer"
+date: 2026-07-03
+phase: Act 3 (the levers)
+modules: []
+tags: []  # backfilled 2026-09-06 (doc audit) — tag by hand when next touched
+---
+
 # A crashed verify stage reads as a clean result — Array.from's mapFn INVOKES what you meant to defer
 
 ## Problem

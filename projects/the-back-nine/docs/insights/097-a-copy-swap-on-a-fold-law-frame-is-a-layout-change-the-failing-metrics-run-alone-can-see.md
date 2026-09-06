@@ -1,4 +1,14 @@
+---
+title: "A copy swap on a fold-law frame is a LAYOUT change only the failing-metrics environment can see — and the shortest true referent is the cure, not whitespace surgery"
+date: 2026-07-19
+phase: Act 4 (solver & recommendation)
+modules: []
+tags: []  # backfilled 2026-09-06 (doc audit) — tag by hand when next touched
+---
+
 # 097 — A copy swap on a fold-law frame is a LAYOUT change only the failing-metrics environment can see — and the shortest true referent is the cure, not whitespace surgery
+
+## Problem
 
 **Context (the Medicare-cost-trend unit, 2026-07-19).** The trend unit's interim residual
 sentence ("The extra-coverage premiums and the drug-plan piece of the income surcharge are held
@@ -8,12 +18,16 @@ the budget composite (the tallest frame), pushing the protected R13 disclaimer t
 vs the 800 fold. One pixel, Linux only — the burned/055 class (a green local Windows run is
 not proof) recurring through the COPY channel: nobody edited layout, someone edited a SENTENCE.
 
+## Fix
+
 **The cure was the truth getting shorter, not the frame getting looser.** The same day's Part D
 sourcing pass made the interim sentence FALSE (the drug-plan piece now trends), so the referent
 narrowed again to "The extra-coverage premiums are held flat…" — back inside the one-line
 class — and CI went green (run 29697251176) with zero whitespace surgery. The insight-075 trap
 was live and avoided: a whitespace fix authored on Windows would have been a shipped guess,
 unprovable in the environment that failed.
+
+## Key Insight
 
 **Rules:**
 1. **Treat every copy edit that lands on a fold-law frame as a layout change.** The fit gate's
@@ -27,6 +41,8 @@ unprovable in the environment that failed.
    resort, never the first.
 3. **A 1px CI-only fold breach is not flaky CI** — it is the fold law working in the one
    environment whose metrics can catch it. Never suppress, re-run, or tolerance it away.
+
+## Also Applies To
 
 **Also applies to:** any real-browser layout gate whose enforcement environment differs from
 the dev box (font metrics, DPR, line-height rounding); disclosure/legalese strings that grow by

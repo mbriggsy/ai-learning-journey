@@ -1,4 +1,14 @@
+---
+title: "A ratified MECHANISM is still a premise: the primary's own table outranks the council's guessed scaling (and only per-figure verbatim consumption survives a formula reset)"
+date: 2026-07-19
+phase: Act 4 (solver & recommendation)
+modules: []
+tags: []  # backfilled 2026-09-06 (doc audit) — tag by hand when next touched
+---
+
 # 098 — A ratified MECHANISM is still a premise: the primary's own table outranks the council's guessed scaling (and only per-figure verbatim consumption survives a formula reset)
+
+## Problem
 
 **Context (the Part D sourcing pass, 2026-07-19).** The trend council (wf_c673339e-257) ratified
 the Part D surcharge arm as "its OWN IRA-2022 6%-capped path **tied to the Part D base
@@ -12,10 +22,14 @@ shape is structurally unrepresentable), with the mechanism correction recorded a
 in the build spec and the council log's action cell — the ARM (source-it) stood; only the
 guessed mechanics moved.
 
+## Root Cause
+
 **The insight-074 tail, extended one level:** 074 said a council-ratified premise about ENGINE
 BEHAVIOR is still a premise. This is the same law one level up — a ratified premise about the
 SOURCE's OWN STRUCTURE (how a table's rows relate) is still a premise, verifiable only by the
 table itself. A council can settle the decision arms; it cannot settle what a primary prints.
+
+## Key Insight
 
 **Rules:**
 1. **When a council ratifies "derive Y from X via mechanism M," the build's first act is to
@@ -32,6 +46,8 @@ table itself. A council can settle the decision arms; it cannot settle what a pr
 3. **Record mechanism corrections as dated notes at BOTH decision homes** (the build spec's
    stamp + the council log's action cell) so the next reader sees the ruling's arm honored and
    the mechanics superseded — never a silent divergence from a ratified text.
+
+## Also Applies To
 
 **Also applies to:** any constants family where a council/plan names a derivation shape before
 the primary is fully transcribed; tax provisions with scheduled formula changes (the IRMAA

@@ -1,3 +1,11 @@
+---
+title: "a NaN survives `?? default`, so an unguarded sibling input stream becomes a calm-but-wrong crash"
+date: 2026-06-06
+phase: Act 1 (the engine)
+modules: []
+tags: []  # backfilled 2026-09-06 (doc audit) — tag by hand when next touched
+---
+
 # 008 — a NaN survives `?? default`, so an unguarded sibling input stream becomes a calm-but-wrong crash
 
 ## Problem

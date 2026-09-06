@@ -38,8 +38,9 @@ the SS statement's continued-earnings default · `belowFloor` never threaded · 
 the pre-flip extras double count; Tier 3: the lost borderline two-pane coverage) + two bullets (the second owed HSA
 disclosure; the date grade never on seed B) — header 54 open / 62 entries, gated.
 
-**FIRST — TWO SKEPTIC PASSES WERE STILL EDITING AT THE CUT** (plan4 · u17s5; their doc edits after the last commit
-are UNCOMMITTED in the tree — the other nineteen landed and are in it). ⚠️ The U17 spec's skeptic found its REWRITER had
+**FIRST — ONE SKEPTIC PASS WAS STILL EDITING AT THE CUT** (u17s5 — `docs/plans/features/act4-u17-s5-execution-plan.md`;
+its edits after the last commit are UNCOMMITTED in the tree — the other twenty landed and are committed; plan4's skeptic
+confirmed the THREE unbuilt U17 behaviours (H) — file that Tier-1 entry first). ⚠️ The U17 spec's skeptic found its REWRITER had
 dropped seven citations that were exact and fabricated two — the rewriter inferred staleness from a touched file instead of
 opening the line. Treat any rewriter changelog's "dropped citation" as unverified. Their reports land in
 `C:/Users/brigg/AppData/Local/Temp/claude/C--Users-brigg-ai-learning-journey-projects-the-back-nine/ebcccb6b-8ffd-49e6-bd71-9c0456f7407f/scratchpad/skeptic-<name>.md`

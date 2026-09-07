@@ -108,3 +108,77 @@ Two days out the room stops changing and the prep has to be real. From the REPO 
 Read docs/draft-day-runbook.md end to end now, not on the clock -- Step 3 is the loop you will actually run.
 
 _cargo was 6 min old when this ran_
+
+---
+
+## T-6 HOURS TO THE DRAFT — 2026-09-06 13:35:01
+
+The draft is 5 hours, 9 minutes away -- Sun 06 Sep 2026, 06:45 PM.
+Open docs/draft-day-runbook.md and stay in it. From the REPO ROOT:
+  python scripts/precompute_ladder.py   # prints QUEUE THIS ORDER; pre-arm the queue
+  python scripts/run_engine.py          # the advisory loop
+From here on RE-PULL rather than trusting anything on disk, and never quote league membership, draft time or slot from memory or from a doc.
+
+_cargo was 6 min old when this ran_
+
+---
+
+## DRAFT DATE MOVED — 2026-09-06 18:35:01
+
+was  Sun 06 Sep 2026, 06:45 PM
+now  Sun 06 Sep 2026, 07:00 PM
+Re-check every assumption keyed to the old date.
+
+_cargo was 6 min old when this ran_
+
+---
+
+## T-6 HOURS TO THE DRAFT — 2026-09-06 18:35:01
+
+The draft is 24 minutes away -- Sun 06 Sep 2026, 07:00 PM.
+Open docs/draft-day-runbook.md and stay in it. From the REPO ROOT:
+  python scripts/precompute_ladder.py   # prints QUEUE THIS ORDER; pre-arm the queue
+  python scripts/run_engine.py          # the advisory loop
+From here on RE-PULL rather than trusting anything on disk, and never quote league membership, draft time or slot from memory or from a doc.
+
+_cargo was 6 min old when this ran_
+
+---
+
+## DRAFT DATE MOVED — 2026-09-06 19:35:01
+
+was  Sun 06 Sep 2026, 07:00 PM
+now  Sun 06 Sep 2026, 08:30 PM
+Re-check every assumption keyed to the old date.
+
+_cargo was 6 min old when this ran_
+
+---
+
+## T-6 HOURS TO THE DRAFT — 2026-09-06 19:35:01
+
+The draft is 54 minutes away -- Sun 06 Sep 2026, 08:30 PM.
+Open docs/draft-day-runbook.md and stay in it. From the REPO ROOT:
+  python scripts/precompute_ladder.py   # prints QUEUE THIS ORDER; pre-arm the queue
+  python scripts/run_engine.py          # the advisory loop
+From here on RE-PULL rather than trusting anything on disk, and never quote league membership, draft time or slot from memory or from a doc.
+
+_cargo was 6 min old when this ran_
+
+---
+
+## DRAFT DATE MOVED — 2026-09-06 21:35:01
+
+was  Sun 06 Sep 2026, 08:30 PM
+now  Sun 06 Sep 2026, 08:33 PM
+Re-check every assumption keyed to the old date.
+
+_cargo was 6 min old when this ran_
+
+---
+
+## STATUS CHANGED — 2026-09-06 21:35:01
+
+'pre_draft' -> 'drafting'
+
+_cargo was 6 min old when this ran_

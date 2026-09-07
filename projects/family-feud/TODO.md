@@ -3,6 +3,30 @@
 > **Actionable next-actions only.** No session history — `git log` has that.
 > Re-ranked every session, so never cite "item N" anywhere; cite the title.
 
+## 🏈 THE REAL DRAFT IS DONE — 2026-09-06, 8:33–9:41 PM, draft `1390509994847240192`, seat 6
+
+**One action owed before Week 1 kickoff (the only open item from draft night):**
+1. Move **Tank Dell** (WR, HOU — Sleeper tags him `IR`, ACL+MCL) to an IR slot.
+2. Add a defense from waivers into the freed spot. **Minnesota Vikings** and **Pittsburgh Steelers**
+   (board DEF tier 2) were both undrafted at 9:41 PM; re-check the free-agent list, do not assume.
+
+**Roster as drafted (16):** Taylor, Chase Brown, London, Collins, Flowers, Maye, Swift, Fannin,
+Odunze, Stevenson, Godwin, Pittman, Pollard, Wan'Dale Robinson, Bates (K), Dell (IR stash).
+Board VORP total ranks **1st of 8** seats; Hunter's (seat 3) ranks 6th — ordering only, never a
+margin (insight 023). Briggsy overrode twice: Flowers over Maye at #38, Pittman over Pollard at #91.
+
+**Draft-night landmines for the debrief / distill (not yet folded into the runbook or skill):**
+- `ffQueueSync` with `{rebuild:true}` and any bridge call over ~3 DOM ops **timed out the CDP
+  evaluate at 45s** four times in a live 8-human room while picks were landing; once it left the
+  queue EMPTY between two of our picks. The side effects still ran. Rule that held: **2 ops per
+  call, read the queue back in the same call.**
+- Sleeper's room strips name suffixes: `Kenneth Walker`, `Luther Burden`, `Harold Fannin`,
+  `Marvin Harrison`, `Michael Pittman`, `Kenny Gainwell` — every `III`/`Jr.` board name missed.
+- The draft-room tab left the extension's tab group once (before the gun); the queue survived
+  server-side, the bridge did not. Re-paste took 10s. Keep the paste file in `temp/`.
+- The runbook's post-draft rule stands: **do NOT build in-season cadence** until `/state/nfl`
+  reads `season_type: "regular"` (`docs/in-season-plan.md`).
+
 ## ▶ WHERE WE ARE — read this first, update it when it changes
 
 ```

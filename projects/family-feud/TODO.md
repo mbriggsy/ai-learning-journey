@@ -23,6 +23,20 @@
 3. **Watch before Sunday:** Sleeper tags **Zay Flowers `Questionable`** (undisclosed). If he is
    Out on Sunday morning, Odunze or Godwin into the flex.
 
+**SEASON OUTLOOK (2026-09-07): [`docs/season-outlook-2026.md`](docs/season-outlook-2026.md)** -- the 93-agent
+draft-night analysis, pilot-verified; phone page https://claude.ai/code/artifact/8ece5a57-5e63-4f3b-9340-5686e517fc06.
+Its calendar, owed by us:
+- **Before Wed 2026-09-09 8:20 p.m. ET:** drop Gainwell for a QB2 whose bye is NOT week 11 (Purdy / Dart / Lawrence /
+  Goff; never Love or Darnold), drop Pittman for a TE2 whose bye is NOT week 11 (Schultz / Goedert / Okonkwo /
+  Strange / Hockenson; never Henry or Barner). Both were free agents at 08:00 ET. Read CHI/BAL/NE injury reports
+  before setting FLEX2 (Swift vs Stevenson); verify the auto-set ten.
+- **Week 6:** Bates AND the Vikings both bye -- two-for-two swap that week (bye-safe K: Bass / McLaughlin / Boswell;
+  DEF: Chiefs / Steelers / Bears / Cowboys; NOT Patriots or Packers, bye 11).
+- **Week 8 vs Hunter:** his worst week (McCaffrey + Montgomery bye). Never trade him a RB or any week-8 flex body.
+  Read his transaction log every Wednesday; if he adds Rachaad White or Jalen Coker the block is gone.
+- **Weeks 9-10:** the trade deadline is week 11; week 13 (Taylor + Flowers bye) is the only hole a trade must fix.
+- **Zero trades survived adversarial review** -- every TE "upgrade" on the market ranks below Fannin on our board.
+
 **Roster as drafted (16):** Taylor, Chase Brown, London, Collins, Flowers, Maye, Swift, Fannin,
 Odunze, Stevenson, Godwin, Pittman, Pollard, Wan'Dale Robinson, Bates (K), Dell (IR stash).
 Board VORP total ranks **1st of 8** seats; Hunter's (seat 3) ranks 6th — ordering only, never a

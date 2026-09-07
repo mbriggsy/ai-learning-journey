@@ -12,8 +12,16 @@
    `a.link-button.cell-position[aria-label="Slot <POS> - <Full Name>"]` and the `<a>` owns the
    `onClick` (the position badge inside it owns nothing); click the starter's `<a>`, then the bench
    player's `<a>`, then confirm on `/league/<id>/rosters`. Worth folding into the skill.
-2. Optional: drop Wan'Dale Robinson for **Kenny Gainwell** (RB, TB — top undrafted on the board);
-   Zach Charbonnet (PUP) is a second IR stash if the league's IR setting accepts PUP.
+2. ~~Optional: drop Wan'Dale Robinson for Kenny Gainwell~~ **DONE 2026-09-06 ~10:05 PM**, a
+   completed `free_agent` transaction on `/transactions/1` (adds Gainwell, drops Robinson). Done
+   from `/leagues/<id>/players`: search via the React value setter, the row's
+   `a.player-action-button.add` owns `onClick`, the drop dialog is `[role="alertdialog"]` whose
+   roster rows are `a.link-button.team-roster-item` (click one -> `.selected`), then the
+   `Add Player` button. Worth folding into the skill alongside the lineup control.
+   Charbonnet (PUP) is NOT an IR option here: `reserve_allow_na: 0`, `reserve_allow_dnr: 0`; the
+   IR slot accepts IR, Out, Suspended, COVID only.
+3. **Watch before Sunday:** Sleeper tags **Zay Flowers `Questionable`** (undisclosed). If he is
+   Out on Sunday morning, Odunze or Godwin into the flex.
 
 **Roster as drafted (16):** Taylor, Chase Brown, London, Collins, Flowers, Maye, Swift, Fannin,
 Odunze, Stevenson, Godwin, Pittman, Pollard, Wan'Dale Robinson, Bates (K), Dell (IR stash).

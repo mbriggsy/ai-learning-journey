@@ -7,9 +7,11 @@
 
 **Pre-Week-1 action — DONE 2026-09-06 ~9:50 PM, verified on `/league/.../rosters`:** Tank Dell sits in
 `reserve` (IR), **Minnesota Vikings** in the DEF slot, 17 players (16 + IR). Still open:
-1. **Lineup check:** the API showed **Drake London on the BENCH and Chris Godwin starting** at WR
-   after the IR move — Sleeper's default ordering, not a choice. London (board 11) starts over
-   Godwin (board 71). Fix in the app before Thursday's kickoff.
+1. ~~Lineup check~~ **DONE 2026-09-06 ~9:55 PM, API-verified:** London starts at WR, Godwin to the
+   bench. Set from the browser on `/leagues/<id>/team`: each roster row is
+   `a.link-button.cell-position[aria-label="Slot <POS> - <Full Name>"]` and the `<a>` owns the
+   `onClick` (the position badge inside it owns nothing); click the starter's `<a>`, then the bench
+   player's `<a>`, then confirm on `/league/<id>/rosters`. Worth folding into the skill.
 2. Optional: drop Wan'Dale Robinson for **Kenny Gainwell** (RB, TB — top undrafted on the board);
    Zach Charbonnet (PUP) is a second IR stash if the league's IR setting accepts PUP.
 

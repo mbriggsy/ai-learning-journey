@@ -123,15 +123,15 @@ Verified against the live `scoring_settings` tonight. Full PPR, 1.0 per receptio
 
 ### Bench and IR
 
-| Player | Team | Sleeper | Board | Bye | Read |
-|---|---|---|---|---|---|
-| Rome Odunze | CHI | 207.9 | r59 T6 | 10 | Our best trade chip and our bye cover in Weeks 6, 8, 11 and 13. Questionable (right leg). |
-| Rhamondre Stevenson | NE | 169.0 | r70 T6 | **11** | The most underpriced player we own tonight. Do not trade him. |
-| Chris Godwin | TB | 173.6 | r71 T6 | 10 | Starts in zero of 17 weeks on paper, but he is our only spare receiver in Week 8. Do not drop before Week 8. |
-| Michael Pittman Jr. | PIT | 170.9 | r80 T7 | 9 | Zero optimal starts. New team, 42-year-old QB, no preseason reps, soft-tissue injury, listed second behind Metcalf. **The drop.** |
-| Tony Pollard | TEN | 160.1 | r81 T6 | 9 | Zero optimal starts, but healthy, untagged, and the confirmed lead back in Tennessee. He is our Swift insurance. |
-| Kenny Gainwell | TB | 152.3 | r94 T7 | 10 | Zero optimal starts, lowest board rank on the active roster, and his handcuff value protects BuschLight420's Bucky Irving, not us. **The drop.** |
-| Tank Dell (IR) | HOU | 51.9 | r146 T8 | 8 | Correctly parked. Costs no roster space. Torn ACL and MCL with surgery, and he took roughly a 53% pay cut on 2026-09-04 ($3.624M scheduled down to just over $1.7M), which is Houston's own estimate of his 2026 value. |
+| Player | Pos | Team | Sleeper | Board | Bye | Read |
+|---|---|---|---|---|---|---|
+| Rome Odunze | WR | CHI | 207.9 | r59 T6 | 10 | Our best trade chip and our bye cover in Weeks 6, 8, 11 and 13. Questionable (right leg). |
+| Rhamondre Stevenson | RB | NE | 169.0 | r70 T6 | **11** | The most underpriced player we own tonight. Do not trade him. |
+| Chris Godwin | WR | TB | 173.6 | r71 T6 | 10 | Starts in zero of 17 weeks on paper, but he is our only spare receiver in Week 8. Do not drop before Week 8. |
+| Michael Pittman Jr. | WR | PIT | 170.9 | r80 T7 | 9 | Zero optimal starts. New team, 42-year-old QB, no preseason reps, soft-tissue injury, listed second behind Metcalf. **The drop.** |
+| Tony Pollard | RB | TEN | 160.1 | r81 T6 | 9 | Zero optimal starts, but healthy, untagged, and the confirmed lead back in Tennessee. He is our Swift insurance. |
+| Kenny Gainwell | RB | TB | 152.3 | r94 T7 | 10 | Zero optimal starts, lowest board rank on the active roster, and his handcuff value protects BuschLight420's Bucky Irving, not us. **The drop.** |
+| Tank Dell (IR) | WR | HOU | 51.9 | r146 T8 | 8 | Correctly parked. Costs no roster space. Torn ACL and MCL with surgery, and he took roughly a 53% pay cut on 2026-09-04 ($3.624M scheduled down to just over $1.7M), which is Houston's own estimate of his 2026 value. |
 
 ### The four live questions, with sources
 

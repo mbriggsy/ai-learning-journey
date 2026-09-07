@@ -23,6 +23,16 @@
 3. **Watch before Sunday:** Sleeper tags **Zay Flowers `Questionable`** (undisclosed). If he is
    Out on Sunday morning, Odunze or Godwin into the flex.
 
+**IR STASH DONE 2026-09-07 09:50 ET, API-verified:** Christian Kirk (WR SF, IR designated to return, calf; eligible
+Week 5 vs SEA, 2026-10-11; Pearsall out for the year so the target vacuum is real) in the second IR slot alongside Dell.
+Roster otherwise unchanged (Gainwell cycled out and back in three free-agent transactions, 09:48 / 09:50). Mechanic for
+the skill: Sleeper will not add straight to IR on a full bench -- add-with-drop, then on `/team` click the player's
+`a[aria-label="Slot BN - <Name>"]`, then the target `a[aria-label="Empty"]` whose child carries `.ir`, then re-add.
+**Landmine:** a minimized Chrome window reports a 0x0 viewport and Sleeper's virtualized player grid renders NO rows,
+so every search reads "no match" and screenshots fail with "0 width"; `resize_window` does not un-minimize -- close
+the tab so the extension opens a fresh window. **Watch:** the week SF activates Kirk (or HOU activates Dell) Sleeper
+pulls the tag and FREEZES the roster until a spot is cleared.
+
 **SEASON OUTLOOK (2026-09-07): [`docs/season-outlook-2026.md`](docs/season-outlook-2026.md)** -- the 93-agent
 draft-night analysis, pilot-verified; phone page https://claude.ai/code/artifact/8ece5a57-5e63-4f3b-9340-5686e517fc06.
 Its calendar, owed by us:

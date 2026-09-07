@@ -5,10 +5,13 @@
 
 ## 🏈 THE REAL DRAFT IS DONE — 2026-09-06, 8:33–9:41 PM, draft `1390509994847240192`, seat 6
 
-**One action owed before Week 1 kickoff (the only open item from draft night):**
-1. Move **Tank Dell** (WR, HOU — Sleeper tags him `IR`, ACL+MCL) to an IR slot.
-2. Add a defense from waivers into the freed spot. **Minnesota Vikings** and **Pittsburgh Steelers**
-   (board DEF tier 2) were both undrafted at 9:41 PM; re-check the free-agent list, do not assume.
+**Pre-Week-1 action — DONE 2026-09-06 ~9:50 PM, verified on `/league/.../rosters`:** Tank Dell sits in
+`reserve` (IR), **Minnesota Vikings** in the DEF slot, 17 players (16 + IR). Still open:
+1. **Lineup check:** the API showed **Drake London on the BENCH and Chris Godwin starting** at WR
+   after the IR move — Sleeper's default ordering, not a choice. London (board 11) starts over
+   Godwin (board 71). Fix in the app before Thursday's kickoff.
+2. Optional: drop Wan'Dale Robinson for **Kenny Gainwell** (RB, TB — top undrafted on the board);
+   Zach Charbonnet (PUP) is a second IR stash if the league's IR setting accepts PUP.
 
 **Roster as drafted (16):** Taylor, Chase Brown, London, Collins, Flowers, Maye, Swift, Fannin,
 Odunze, Stevenson, Godwin, Pittman, Pollard, Wan'Dale Robinson, Bates (K), Dell (IR stash).

@@ -131,7 +131,7 @@ Verified against the live `scoring_settings` tonight. Full PPR, 1.0 per receptio
 | Michael Pittman Jr. | WR | PIT | 170.9 | r80 T7 | 9 | Zero optimal starts. New team, 42-year-old QB, no preseason reps, soft-tissue injury, listed second behind Metcalf. **The drop.** |
 | Tony Pollard | RB | TEN | 160.1 | r81 T6 | 9 | Zero optimal starts, but healthy, untagged, and the confirmed lead back in Tennessee. He is our Swift insurance. |
 | Kenny Gainwell | RB | TB | 152.3 | r94 T7 | 10 | Zero optimal starts, lowest board rank on the active roster, and his handcuff value protects BuschLight420's Bucky Irving, not us. **The drop.** |
-| Tank Dell (IR) | WR | HOU | 51.9 | r146 T8 | 8 | Correctly parked. Costs no roster space. Torn ACL and MCL with surgery, and he took roughly a 53% pay cut on 2026-09-04 ($3.624M scheduled down to just over $1.7M), which is Houston's own estimate of his 2026 value. |
+| Tank Dell (IR) | WR | HOU | 51.9 | r146 T8 | 8 | Correctly parked. Costs no roster space. The knee is the December 2024 injury (ACL, MCL, LCL, dislocated kneecap, meniscus; multiple surgeries; missed all of 2025), not a fresh tear. Houston opened 2026 with him on IR designated to return: out the first four games, eligible Week 5 (Sun 2026-10-11 vs Tennessee) at the earliest, then a 21-day practice window before activation. Caserio (early Sept): "closer" but "not quite there," still regaining top-end speed. He took a pay cut on 2026-09-04 ($3.624M down to just over $1.7M). Sources: Houston Chronicle, SI, NBC Sports, FOX, 2026-09-06/07. |
 
 ### The four live questions, with sources
 
@@ -476,7 +476,7 @@ Six of eight make the playoffs, so qualifying is close to automatic and is the w
 - **The exact trade-deadline instant** (start of Week 11 vs. end). No Sleeper documentation found. Treat the start of Week 11 as the deadline.
 - **Whether a tight end can fill our FLEX slots.** The label is plain "FLEX," which should mean RB/WR/TE, but no team in this league currently starts a tight end at FLEX, so we have no in-league proof.
 - **Marvin Harrison Jr.'s "camp yips"** could not be confirmed or refuted. Every source found attributes his 12-game 2025 to a concussion, an appendectomy and heel injuries.
-- **Tank Dell's actual return timeline.** "Week 5" is an eligibility floor, not a projection. ESPN's return dates are boilerplate eligibility markers: our own Dell shows 2026-10-11 with a torn ACL and MCL, and nobody comes back from that in five weeks.
+- **Tank Dell's actual return date.** Week 5 (2026-10-11) is the eligibility floor for IR designated to return, not a projection. Corrected 2026-09-07: the injury is from December 2024 and he missed all of 2025, so a 2026 return is the plan, not a long shot; the open question is which week Houston activates him inside the 21-day window, and the team has said he is "on his own plan." Re-check the Texans' practice reports from Week 5 on.
 - **Why Devaughn Vele spiked to 107,380 adds tonight.** Jordyn Tyson's IR placement is a week old and does not by itself explain a Sunday-night surge. There may be unreported Sunday news.
 
 ### Where the two projection sources disagree

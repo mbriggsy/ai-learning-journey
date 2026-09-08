@@ -209,8 +209,14 @@
   margin-top: var(--space-5);
 }
 /* the legend swatch is paired with a distinct OUTLINE-STYLE per row (solid / hairline / dashed)
-   so the three tiers separate without depending on the fill hue — the legend reinforces the
-   in-place callouts, it is never the sole non-color signal. */
+   so the three tiers separate without depending on the fill hue. IT IS THE ONLY SIGHTED CHANNEL
+   THAT NAMES THE TIERS TODAY: no production caller supplies the in-place callouts (bandData.ts,
+   BandLabels; the register's chart-text residual (e), a council fork), so this outline
+   differentiation is the whole non-color story for a sighted reader. The AT reader is served
+   instead, on the normal branch — the legend is aria-hidden and the sr-only range sentence speaks
+   both load-bearing tiers verbatim (bandPanelChrome.ts composeBandAtRange, council O3 2026-07-10);
+   the depletion branches speak "most likely" but never the eight-in-ten tier, and the sentence
+   withdraws when no cohort-clean column qualifies — a silence O3 itself filed open. */
 .band-legend__sw {
   width: 22px;
   height: 11px;

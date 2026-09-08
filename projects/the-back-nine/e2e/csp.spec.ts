@@ -153,6 +153,13 @@ test.describe('CSP — real browser enforcement', () => {
   })
 
   test("engine module Web Worker constructs + round-trips under worker-src 'self' — through the REAL intake", async ({ page }) => {
+    // This walk is a full intake + TWO engine round trips (the strip's provisional reading, then the
+    // Result's). Playwright's 30 s default cannot hold it on a 4-vCPU runner, and the 60 / 90 s waits
+    // below are dead letters without a test budget above them (a matcher timeout never clamps to the
+    // test deadline — the test dies first with a bare "Test timeout", and no custom message prints).
+    // Scoped to THIS test, not the config: the fast control arms keep the default so a hang there
+    // still reads as one (playwright.fit.config.ts carries the same hardware reasoning).
+    test.setTimeout(180_000)
     // RETARGETED at D1 (the U0 smoke readout is gone): drives the real product
     // path — cold start → the guided intake → a live provisional engine reading
     // — under the ENFORCED policy. Strictly stronger than the smoke arm: the
@@ -255,7 +262,46 @@ test.describe('CSP — real browser enforcement', () => {
     await next()
     await expect(page.getByTestId('engine-reading')).toHaveText(/of 10/, { timeout: 60_000 })
 
-    // No worker-src/script-src/style-src violation anywhere along the real path.
+    // R40's opt-in other-income loop is the LAST intake step (src/intake/questions.tsx pushes
+    // `otherIncomeStep` after the accounts step, with `fields: []`, so nothing blocks the advance) —
+    // one more Continue completes the intake (flow.tsx onComplete → IntakeApp `complete` →
+    // setPhase('result')) and lands the Result, so a REAL chart's text layer is proven under the REAL
+    // enforced headers. The fit harness structurally cannot do this: `?seed=` is DCE'd out of dist/
+    // (playwright.config.ts), and design-tokens.spec.ts's CSSOM proof is a synthetic node, not a chart.
+    await next()
+    await expect(page.locator('main.result')).toBeAttached({ timeout: 90_000 })
+    const tick = page.locator('figure.band-figure .band-tick').first()
+    await expect(tick, 'the Result rendered no band y-tick — retarget this probe at whichever chart the Result carries').toBeAttached({ timeout: 90_000 })
+    // Quiescence only, not a dependency: the fonts.ready one-shot re-runs layoutCollisions, which
+    // writes --ct-row / --ct-rows / --ct-dy / data-ct-hidden — a transform (--ct-dy), visibility
+    // (data-ct-hidden) and the annotation block's top/height (--ct-row / --ct-rows) — never `left`;
+    // and the band tick passes no `collide`, so it is not a [data-ct-item] and that pass cannot touch
+    // it at all. The two operands below are read in ONE synchronous evaluate, so the ratio holds
+    // mid-swap regardless.
+    await page.evaluate(() => document.fonts.ready)
+    const placed = await tick.evaluate((el) => {
+      const cs = getComputedStyle(el)
+      // offsetParent is .ct-layer (position:absolute, inset:0 — chartText.css): the containing block
+      // the `calc(var(--fx) * 100%)` percentage resolves against. By DEFINITION the containing block,
+      // never a by-name `closest('.ct-layer')` guess — and null-tolerant, so the authored message
+      // below prints instead of a TypeError past both diagnostics.
+      const parent = (el as HTMLElement).offsetParent as HTMLElement | null
+      return { fx: cs.getPropertyValue('--fx').trim(), left: parseFloat(cs.left), layerW: parent ? parent.getBoundingClientRect().width : -1 }
+    })
+    expect(placed.fx, 'the chart text layer wrote no --fx under the enforced CSP').not.toBe('')
+    expect(placed.layerW, 'the tick has no offsetParent box — a display:none ancestor, or .ct-layer lost position:absolute').toBeGreaterThan(0)
+    // The used `left` IS the resolved calc: the CSSOM custom property landed on a real chart under the
+    // real headers. Assert the RESOLUTION, never the on-screen edge — a y-tick is anchor="end"
+    // (ConfidenceBand.tsx TICK_FX + chartText.css .ct-text--end), so its left edge legitimately sits
+    // outside the host box on a narrow arm (the register's chart-text residual (g)). An edge bound
+    // would false-red.
+    expect(
+      Math.abs(placed.left - parseFloat(placed.fx) * placed.layerW),
+      'the CSSOM --fx did not resolve into a position on a real chart under the enforced headers',
+    ).toBeLessThan(1.5)
+
+    // No worker-src/script-src/style-src violation anywhere along the real path — the chart render
+    // above included.
     const v = await violations(page)
     expect(v.some((x) => /worker-src|script-src|style-src/.test(x.violatedDirective))).toBe(false)
   })

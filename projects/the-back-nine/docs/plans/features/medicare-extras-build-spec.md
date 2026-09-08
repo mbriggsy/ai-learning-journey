@@ -234,7 +234,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
 - **verify:fit arms re-pinned WITHOUT assuming monotone shrink** — the omission axis shrank but
   the real-flat clause broadened. The fit spec now pins non-typical extras arms explicitly
   (`e2e/vertical-fit.spec.ts:817`, `:1401-1403`), and the CSP intake walk learned the fork step
-  (`e2e/csp.spec.ts:231`, the one integration gap `503213f4` left, fixed in `e921f2bb`).
+  (`e2e/csp.spec.ts:238`, the one integration gap `503213f4` left, fixed in `e921f2bb`).
 - **Color-blind-safe encoding** on adopted-vs-entered / typical-vs-your-bill / priced-vs-residual:
   every distinction is carried in words, never a hue. Each door fact line states its provenance in
   prose ("the figure you entered" / "as you answered" / "a typical figure … not an actual bill"),

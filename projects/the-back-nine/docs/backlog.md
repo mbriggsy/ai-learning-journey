@@ -840,8 +840,19 @@ final tier ~30 s after the provisional.
    in the old column it still wrapped to three and touched the hero) — the bars gave up ~6% of their run; the honest longer fix is
    above-bar labels (the plot widens again), a layout fork for his eye; the RV axis labels moved to the plot's TOP edge because a 134px phone
    box could not hold them and the hero below the bars; (d) TF's scrub readout stays mouse/pen-only BY DESIGN (the sheets scroll under touch) —
-   the band and ladder now pin on touch, so a phone reader has no TF dollar channel; (e) the band callouts seam is supported by the layer but
-   no production caller fills it (`bandData.ts`); (f) filed by the council, not built: the band's keyboard lockout (SC 2.1.1 — the enlarge
+   the band and ladder now pin on touch, so a phone reader has no TF dollar channel; (e) ⚑ COUNCIL — the band callouts seam is supported by the layer but
+   no production caller fills it (`bandData.ts`; the only two production `resolveBandData` calls, in `ConfidenceStatement.tsx` and `FuckOffDate.tsx`,
+   both omit it), so `BandLegend` is TODAY THE ONLY SIGHTED channel that names the three tiers — against back-nine-design §2's preference for
+   in-place edge labels over a legend (the AT reader is served ON THE NORMAL BRANCH: the legend is aria-hidden and the sr-only range sentence speaks both
+   load-bearing tiers verbatim — `bandPanelChrome.ts` composeBandAtRange, council O3 2026-07-10; the two depletion branches speak
+   "most likely" but never the eight-in-ten tier (`bandAtRangeRuin` / `bandAtRangeGone` in `copy.ts`), and the sentence WITHDRAWS
+   when no cohort-clean interior column qualifies while all three legend rows still render — a silence O3 itself filed open). NOT a CVD defect: the swatch rows are outline-differentiated (`band.css`, solid / hairline / dashed) and
+   §2's binding clause bans a legend keyed by COLOR. The cost is the eye round-trip §2 exists to remove. DECIDE (council): build in-place tier
+   callouts on the band's most-read surface, or record an accepted deviation with a reason — the two source comments now say the true state; (i) two of
+   the four `document.fonts.ready` one-shots are ungated BY DESIGN (2026-09-07): `useCollisionLayout` and `useReadoutSeat` are pinned by
+   `chartText.test.tsx`'s deferred-fonts describe (each mutant-proven) because theirs is the sole re-decide — the ink a swap resizes lives in boxes
+   no ResizeObserver watches; the readout placement hook (`chartText.tsx`) and the ladder crown (`OddsLadder.tsx useCrownSeat`) observe the very
+   box the swap resizes, so their one-shots are belt-and-braces and an arm would prove nothing the observer does not already guarantee; (f) filed by the council, not built: the band's keyboard lockout (SC 2.1.1 — the enlarge
    button is the only tabstop, the scrub has no keyboard path), `prefers-contrast` / `forced-colors` absent repo-wide; (g) the 320 reflow arm
    lets an end-anchored label borrow its card's padding (inside the card, on screen) — the gate's bound is the CARD named per chart, not the svg
    box. The old "~6px" is retired (not reproducible from any kept artefact). MEASURED by the gate's own `borderline` arm (2026-09-05): on the

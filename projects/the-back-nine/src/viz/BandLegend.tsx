@@ -2,8 +2,15 @@
  * src/viz/BandLegend.tsx — the band's three-tier legend (median line / middle-half / 8-in-10),
  * shared by the inline drawer (vertical STACK) and the enlarge modal (horizontal ROW). Decorative
  * (aria-hidden) — the in-place axis text + the household-clock annotations carry the primary
- * non-color signal; the legend reinforces the three ink-density tiers, each paired with a distinct
- * OUTLINE style so the tiers separate without depending on hue (back-nine-design §2). Swatch fills
+ * non-color signal FOR THE DOLLARS AND THE MOMENTS. For the three TIERS this legend is the only
+ * SIGHTED channel today: the in-place callouts seam has no production caller (bandData.ts,
+ * BandLabels; the register's chart-text residual (e), a council fork). The AT reader is not left
+ * out on the normal branch — this node is aria-hidden and the sr-only range sentence speaks both
+ * load-bearing tiers verbatim (bandPanelChrome.ts composeBandAtRange, council O3 2026-07-10); the
+ * depletion branches speak "most likely" but never the eight-in-ten tier, and the sentence withdraws
+ * when no cohort-clean column qualifies, a silence O3 itself filed open. That is why each row
+ * pairs its swatch with a distinct OUTLINE style, so the tiers separate without depending on hue.
+ * back-nine-design §2 prefers in-place labels — a live, recorded deviation. Swatch fills
  * are SVG `fill` PRESENTATION attributes (CSP-safe, source-bound to palette.ts — never a re-typed hex).
  *
  * STRING-FREE: every row label arrives via the `labels` prop (src/ui fills from copy.ts).

@@ -98,7 +98,8 @@ job 19 min against `verify`'s 16, so the new gate costs the pipeline ~3 min of w
 the register's chart-text paragraph, the spec header, the audit's SCOPE comment, `chartText.test.tsx`'s "no RV arm"
 comment. ⚠️ NO 320 ARM — every arm is a ~6–8 min test around a full-precision solve (measured 2026-09-07: 8.0 / 7.7 / 6.0 min,
 21.8 min for the gate) and the RV has never rendered at 320 for anyone (filed under *The gates that don't bite*).
-(2) ✅ **SHIPPED 2026-09-07 — the critic's arms** (digest `critic-arms`). `PHONE_LS` (844×390 @3, touch) rides the arm
+(2) ✅ **SHIPPED 2026-09-07 — the critic's arms** (digest `critic-arms`; `96e87e0f`, CI run 34182664841 green — the `verify` job
+grew 16 → 24 min on the runner's two workers with the sixteen new fit tests, the RV job 22 min beside it). `PHONE_LS` (844×390 @3, touch) rides the arm
 loop (+7 tests) and is the FIRST arm where the CEILING crown seats ABOVE (a 576 px ladder figure → 43.2 px of headroom
 against the 37.7 px callout; both crown tables are two-valued now, and the "ALL FLOW / widest 496 px" docblock was
 corrected — 496 was the widest DESKTOP figure); its band readout seats in the PLOT (526 px host). `gotoVaultFinal` lives in
@@ -115,16 +116,35 @@ Two landmines the build surfaced: taps land in VIEWPORT coordinates — on a 390
 fold after settleLayout's scroll-to-origin, so the sweep scrolls the capture rect into view first; and `<ChartReadoutRow>`
 renders in BOTH seats (hidden in the plot seat) and marks `data-active` either way, so the touch pin/dismiss locator is
 seat-aware, never an OR (the first plot-seat touch arm counted 2 for 1).
-(3) **The unmeasured trio** (digest `critic-docs-unmeasured`): the placeholder note is dev-preview-only
-(`plans/2-first-answer.md:204` is now a pointer at the roadmap and `:205` is blank after the 2026-09-06 audit — re-read the plan's placeholder sentence before assuming the doc half is still owed); font-swap staleness now has
-the `fonts.ready` one-shot in both hooks but NO gate — a probe that loads with the webfonts blocked then
-released; a CSSOM-landed probe in `csp.spec.ts` under ENFORCED headers (assert the custom prop / computed
-transform, NOT `left > 0` — end-anchored ticks go negative).
+(3) ✅ **SHIPPED 2026-09-07 — the unmeasured trio + the two doc-truth gaps** (digest `critic-docs-unmeasured`).
+The placeholder note: RECORDED as dev-preview-only on both surfaces (`plans/2-first-answer.md`'s "named viz state"
+bullet — the digest's `:205` anchor was three commits stale: the 2026-09-06 doc work walked the bullet 205 → 197 (`02521579`,
+the truth pass) → 196 (`777bf579`, the structure pass) → 194 (`85fb5dc1`, the AS-BUILT rewrite, which left the sentence
+byte-identical), and at :194 the doc half was still owed — and the note's own comment in
+`ConfidenceBand.tsx`; `answerView.ts` routes indeterminate to the AnswerStrip, no seed lands on it, nothing measures
+its nowrap line). Font-swap staleness: the gate is a VITEST, not a probe — no e2e arm can see it, every chart-text
+arm awaits `fonts.ready` before it measures; `chartText.test.tsx` now renders `useCollisionLayout` AND `useReadoutSeat`
+under a deferred `document.fonts.ready` and asserts the rows / the seat stay at the fallback-glyph answer until it
+resolves and re-take after (+ the unmount cancel guard), each mutant-proven (its one-shot removed → exactly that test
+reds). SCOPE, honestly: four one-shots ship; these two are the sole-mechanism ones (the ink a swap resizes lives in
+boxes no ResizeObserver watches). The readout placement hook and the ladder crown observe the very box a swap resizes —
+belt-and-braces there, no arm (register: the chart-text paragraph's residual (i)). The CSSOM chart probe:
+`csp.spec.ts`'s real-intake walk now takes the last Continue, lands the Result, and asserts a rendered band y-tick's
+used `left` equals `--fx` × the layer width under the enforced headers (the RESOLUTION, never the edge — an
+end-anchored tick goes negative on a narrow arm); architecture §12's "Positions are CSSOM writes" bullet names it.
+Gap 5's two false source comments (`band.css`, `BandLegend.tsx`: "never the sole non-color signal") now say the true
+state — the legend is the only SIGHTED tier channel, the AT reader has the sr-only range sentence — and the
+register's residual (e) is filed as the COUNCIL fork it is (ranked (5) below).
 (4) Ranked 8 (icons / webkit text), 10 + 11 (the guards; the goal picker's "basics covered" lead on a failing
 household needs HIS words over a pilot gate), the phone P2s 2–4 — digest `ranked-8-icons-webkit-text`,
 `ranked-10-11-guards`, `phone-walk-2-4`.
-(5) `band.css` + `BandLegend.tsx` still claim the legend is "never the sole non-color signal" — false for the
-TIERS (no production `callouts` caller); build-vs-accept is a council fork.
+(5) ⚑ COUNCIL — the band's three tiers have no in-place callouts: `resolveBandData`'s only two production callers
+(`ConfidenceStatement.tsx`, `FuckOffDate.tsx`) omit the seam and `bandData.ts` defaults it to `[]`, so `BandLegend` is the
+only SIGHTED channel naming them — a live recorded deviation from back-nine-design §2 (the AT reader has the sr-only
+range sentence on the normal branch, `bandPanelChrome.ts` composeBandAtRange, council O3). The two source comments were
+corrected 2026-09-07 under (3) — do NOT re-fix them; the phrase "never the sole non-color signal" now exists nowhere in
+source. DECIDE: build the in-place tier callouts on the band's most-read surface, or accept the deviation with a reason.
+Register: the chart-text paragraph's residual (e).
 (6) The Caddie walk of the four chart faces at REAL + PHONE (the three-register collapse, the HTML-over-svg
 look, the hidden interim ticks, the RV above-bar-labels fork).
 

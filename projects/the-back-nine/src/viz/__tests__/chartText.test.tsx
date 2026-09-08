@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest'
 import '@testing-library/jest-dom/vitest'
-import { cleanup, render } from '@testing-library/react'
+import { act, cleanup, render } from '@testing-library/react'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -15,6 +15,7 @@ import {
   measureReadoutInk,
   placeReadoutX,
   readoutSeat,
+  useCollisionLayout,
   useReadoutSeat,
   type CtReadoutLine,
 } from '../chartText'
@@ -502,5 +503,116 @@ describe('ChartReadoutRow — every column always in the DOM, exactly one of the
     const row = container.querySelector('.ct-readout-row')!
     expect(row.querySelectorAll('[data-ct-readout-item][data-active]')).toHaveLength(0)
     expect(row.querySelectorAll('[data-ct-readout-item]')).toHaveLength(SEAT_COLUMNS.length)
+  })
+})
+
+// ── useCollisionLayout — the webfont swap re-runs the measured layout ─────────────────────────────
+// Both self-hosted variable fonts load through JS imports under `font-display: swap` (main.tsx), so
+// a cold-cache reader's first layout measures SYSTEM-FALLBACK glyphs; the swap then changes every
+// item's box but not the HOST's (a fixed-aspect svg at width:100%; the block's height is authored
+// from --ct-rows + rem tokens), so the ResizeObserver never fires for it. The hook re-runs ONCE on
+// `document.fonts.ready` (council wf_1b45326f-9e8, 2026-09-05). No e2e gate can see this: every
+// chart-text arm awaits `document.fonts.ready` inside settleLayout BEFORE it measures, so every gate
+// measurement is post-swap — this edit-time pin is the whole forcing function.
+describe('useCollisionLayout — the layout taken on fallback glyphs is re-taken once the webfonts settle', () => {
+  /** jsdom has no `document.fonts`: install a deferred one the test resolves by hand. */
+  function installDeferredFonts(): () => void {
+    let settle!: () => void
+    const ready = new Promise<void>((resolve) => {
+      settle = resolve
+    })
+    Object.defineProperty(document, 'fonts', { configurable: true, value: { ready } })
+    return settle
+  }
+  const uninstallFonts = () => {
+    delete (document as unknown as { fonts?: unknown }).fonts
+  }
+
+  function Probe() {
+    const ref = useRef<HTMLDivElement>(null)
+    useCollisionLayout(ref, 'stagger', [])
+    return (
+      <div ref={ref} data-testid="host">
+        <span data-ct-item="a" />
+        <span data-ct-item="b" />
+      </div>
+    )
+  }
+
+  it('the host learns the POST-swap row count only after document.fonts.ready resolves', async () => {
+    const settle = installDeferredFonts()
+    try {
+      const { getByTestId } = render(<Probe />)
+      const host = getByTestId('host')
+      // The first pass ran in the layout effect against jsdom's all-zero boxes ("not laid out") — the
+      // fallback-metrics stand-in: one reserved row, nothing placed.
+      expect(host.style.getPropertyValue('--ct-rows')).toBe('1')
+      // The "swap": the two named items now measure as overlapping boxes. Nothing has re-run yet — the
+      // host's own box did not change, so no ResizeObserver could have fired (jsdom has none anyway).
+      const [a, b] = [...host.querySelectorAll<HTMLElement>('[data-ct-item]')]
+      box(a!, 0, 50)
+      box(b!, 40, 60)
+      await Promise.resolve()
+      expect(host.style.getPropertyValue('--ct-rows'), 'the layout re-ran before the fonts settled — nothing should have triggered it').toBe('1')
+      // The fonts settle: the one-shot re-measures and the second named label takes a second row.
+      settle()
+      await Promise.resolve()
+      await Promise.resolve()
+      expect(host.style.getPropertyValue('--ct-rows'), 'the layout was not re-taken on document.fonts.ready — a cold-cache reader keeps the fallback-glyph rows').toBe('2')
+      expect(b!.style.getPropertyValue('--ct-row')).toBe('1')
+    } finally {
+      uninstallFonts()
+    }
+  })
+
+  it('a host unmounted before the fonts land is skipped (the cancel guard) — no write to a detached host', async () => {
+    const settle = installDeferredFonts()
+    try {
+      const { getByTestId, unmount } = render(<Probe />)
+      const host = getByTestId('host')
+      const [a, b] = [...host.querySelectorAll<HTMLElement>('[data-ct-item]')]
+      box(a!, 0, 50)
+      box(b!, 40, 60)
+      unmount()
+      settle()
+      await Promise.resolve()
+      await Promise.resolve()
+      expect(host.style.getPropertyValue('--ct-rows'), 'the fonts one-shot wrote to a host that had already unmounted').toBe('1')
+    } finally {
+      uninstallFonts()
+    }
+  })
+
+  // The SEAT shares the sole-mechanism shape: its ink is measured off nowrap lines a swap resizes
+  // without resizing the observed host or row, so neither ResizeObserver fires and the one-shot is
+  // the only re-decide. (The readout placement hook and the ladder crown observe the very box a swap
+  // resizes — belt-and-braces there, and no arm here.)
+  it('useReadoutSeat: the seat decided on fallback glyphs is re-decided once the webfonts settle', async () => {
+    const restoreMeasure = fakeMeasure('38%')
+    const settle = installDeferredFonts()
+    try {
+      const { container } = render(<SeatHarness hostClass="w446" columns={SEAT_COLUMNS} />)
+      const readback = () => container.querySelector('[data-seat-readback]')!.textContent
+      // REAL's numbers: 128.8 + 26 chrome ≤ the 169.5 cap, box 164 + 10 ≤ the 178.4 half-plot → PLOT.
+      expect(readback()).toBe('plot')
+      // The "swap": the widest unbreakable figure now measures 300 px (the fake measurer reads widths
+      // off class tokens). Neither the host nor the row changed size, so nothing else can re-decide.
+      const figure = [...container.querySelectorAll<HTMLElement>('[data-ct-readout-line]')].find((el) => /\bw128\.8\b/.test(el.className))!
+      expect(figure, 'the fixture lost its 128.8 px figure line').toBeTruthy()
+      figure.className = figure.className.replace(/\bw128\.8\b/, 'w300')
+      await act(async () => {
+        await Promise.resolve()
+      })
+      expect(readback(), 'the seat was re-decided before the fonts settled — nothing should have triggered it').toBe('plot')
+      await act(async () => {
+        settle()
+        await Promise.resolve()
+        await Promise.resolve()
+      })
+      expect(readback(), 'the seat was not re-decided on document.fonts.ready — a cold-cache reader keeps the fallback-glyph seat (326 px of ink + chrome against a 169.5 px cap)').toBe('flow')
+    } finally {
+      uninstallFonts()
+      restoreMeasure()
+    }
   })
 })

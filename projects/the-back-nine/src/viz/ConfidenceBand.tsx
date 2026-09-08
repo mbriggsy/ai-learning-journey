@@ -259,7 +259,11 @@ function BandTextLayer({
         ))}
       {data.kind === 'indeterminate' && (
         // the non-color tell is the ABSENCE of a median + the wide dashed envelope; the note says so
-        // in words, centered on the plot.
+        // in words, centered on the plot. UNGATED AND UNMEASURED: no production route renders this
+        // (answerView.ts sends an indeterminate headline to the AnswerStrip fallback; devSeeds.ts —
+        // every seed lands CONFIDENT), so this --text-sm NOWRAP line has never been measured at 320
+        // or PHONE. Reached only through the DEV preview harness (preview/U7Preview.tsx, gated by
+        // import.meta.env.DEV in main.tsx) and vitest. Wiring it means measuring it first.
         <ChartText
           className="band-placeholder-note"
           fx={fx(xForYear(data.horizonYears / 2, data.horizonYears))}

@@ -138,15 +138,19 @@ register's residual (e) is filed as the COUNCIL fork it is (ranked (5) below).
 (4) Ranked 8 (icons / webkit text), 10 + 11 (the guards; the goal picker's "basics covered" lead on a failing
 household needs HIS words over a pilot gate), the phone P2s 2–4 — digest `ranked-8-icons-webkit-text`,
 `ranked-10-11-guards`, `phone-walk-2-4`.
-(5) ⚑ COUNCIL — the band's three tiers have no in-place callouts: `resolveBandData`'s only two production callers
-(`ConfidenceStatement.tsx`, `FuckOffDate.tsx`) omit the seam and `bandData.ts` defaults it to `[]`, so `BandLegend` is the
-only SIGHTED channel naming them — a live recorded deviation from back-nine-design §2 (the AT reader has the sr-only
-range sentence on the normal branch, `bandPanelChrome.ts` composeBandAtRange, council O3). The two source comments were
-corrected 2026-09-07 under (3) — do NOT re-fix them; the phrase "never the sole non-color signal" now exists nowhere in
-source. DECIDE: build the in-place tier callouts on the band's most-read surface, or accept the deviation with a reason.
-Register: the chart-text paragraph's residual (e).
+(5) ✅ COUNCIL-DECIDED 2026-09-08 (8/10, executed — `docs/council-log.md`): the §2 tier-callout deviation is ACCEPTED — A rejected
+on un-oracled wrong-region risk, the `isThinCohort` bypass and the morph teleport, NOT on room (the pilot's "vertical ink budget"
+reason was FALSE — the Honesty Hawk's veto, honored: the text layer is absolutely positioned, zero flow cost). The register's
+residual (e) carries the reason of record, the three banned sentences, the ⚑ preconditions for any future build and the
+pre-registered reopen trigger; four source comments say it. NEW FINDING filed Tier 3: the legend's OUTLINE key is a PHANTOM (the
+band's areas are fill-only; the dash is the indeterminate placeholder's silhouette) — fix the key (bind to fills + nesting) THEN
+gate, ranked ahead of any callout. ⚑ HIS EYE on the Caddie walk (ranked (6)): the redraw's shape (nested chip vs deleting the two
+outlines) and the outer band's grayscale edge strength; the walk also asks "point to the middle half" and a faded-column read.
 (6) The Caddie walk of the four chart faces at REAL + PHONE (the three-register collapse, the HTML-over-svg
-look, the hidden interim ticks, the RV above-bar-labels fork).
+look, the hidden interim ticks, the RV above-bar-labels fork) — plus, from the 2026-09-08 council: the legend swatch redraw's
+shape (nested chip vs deleting the two phantom outlines), the outer band's grayscale edge strength, and the pre-registered
+at-rest question "point to the middle half" + a faded-column read (a fail re-opens the callout decision); and the aged date
+band's three-row block at 390 / 1088 (`?vault=datestale`).
 
 **LANDMINES (new this session):** `e2e/` is outside `tsconfig.json`'s include — nothing typechecks the specs,
 so every new audit field needs a non-vacuity pin (the `data-ct-priority` pin is the pattern). Ink px differ
@@ -603,7 +607,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     surface*) · the chart
     framing forks (whose range is shaded, which odds the ladder quotes, the axis units) · `?vault=stale`'s
     MEANING ruling (both obvious repairs are measured dead ends) · the three-doors rhythm on `datemixed` ·
-    the essentials median line · the record card's strategy naming (half 2) · the phone-rhythm pass · the
+    the essentials median line · the legend swatch redraw's shape + the outer band's edge strength (council
+    2026-09-08, on the ranked-(6) walk) · the record card's strategy naming (half 2) · the phone-rhythm pass · the
     fiduciary's current-law-as-written caveat, unanswered since 2026-07-09.
     ⚑ **On-surface re-audit owed** for the two Card 9 / GoalPicker fixes that shipped without it — a
     chat-approved change does not survive his re-read on the surface (the 2026-07-11 false-PASS lesson).

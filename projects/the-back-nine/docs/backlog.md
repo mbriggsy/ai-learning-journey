@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **58 open items** (66 entries, 8 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open — re-counted 2026-09-06, when two Tier-3 entries moved in from the queue, six entries were filed from the as-built doc rewrite, and two more from its skeptic passes: plan 4's three unbuilt U17 action-warning branches, and the `appDefaults.ts` re-save that reclassifies a took-the-default household as an overrider; two hygiene entries from the morning's completion check — the state-tax roster's two re-verify dates, and the solver profile's `rankableCount`) consolidated
+> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **59 open items** (67 entries, 8 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open — re-counted 2026-09-06, when two Tier-3 entries moved in from the queue, six entries were filed from the as-built doc rewrite, and two more from its skeptic passes: plan 4's three unbuilt U17 action-warning branches, and the `appDefaults.ts` re-save that reclassifies a took-the-default household as an overrider; two hygiene entries from the morning's completion check — the state-tax roster's two re-verify dates, and the solver profile's `rankableCount`) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -840,15 +840,25 @@ final tier ~30 s after the provisional.
    in the old column it still wrapped to three and touched the hero) — the bars gave up ~6% of their run; the honest longer fix is
    above-bar labels (the plot widens again), a layout fork for his eye; the RV axis labels moved to the plot's TOP edge because a 134px phone
    box could not hold them and the hero below the bars; (d) TF's scrub readout stays mouse/pen-only BY DESIGN (the sheets scroll under touch) —
-   the band and ladder now pin on touch, so a phone reader has no TF dollar channel; (e) ⚑ COUNCIL — the band callouts seam is supported by the layer but
+   the band and ladder now pin on touch, so a phone reader has no TF dollar channel; (e) ✅ COUNCIL-DECIDED 2026-09-08 (8/10, `docs/council-log.md`): the band callouts seam is supported by the layer but
    no production caller fills it (`bandData.ts`; the only two production `resolveBandData` calls, in `ConfidenceStatement.tsx` and `FuckOffDate.tsx`,
-   both omit it), so `BandLegend` is TODAY THE ONLY SIGHTED channel that names the three tiers — against back-nine-design §2's preference for
-   in-place edge labels over a legend (the AT reader is served ON THE NORMAL BRANCH: the legend is aria-hidden and the sr-only range sentence speaks both
-   load-bearing tiers verbatim — `bandPanelChrome.ts` composeBandAtRange, council O3 2026-07-10; the two depletion branches speak
-   "most likely" but never the eight-in-ten tier (`bandAtRangeRuin` / `bandAtRangeGone` in `copy.ts`), and the sentence WITHDRAWS
-   when no cohort-clean interior column qualifies while all three legend rows still render — a silence O3 itself filed open). NOT a CVD defect: the swatch rows are outline-differentiated (`band.css`, solid / hairline / dashed) and
-   §2's binding clause bans a legend keyed by COLOR. The cost is the eye round-trip §2 exists to remove. DECIDE (council): build in-place tier
-   callouts on the band's most-read surface, or record an accepted deviation with a reason — the two source comments now say the true state; (i) two of
+   both omit it), so `BandLegend` is the ONLY SIGHTED tier channel AT REST on every arm, and the ONLY tier channel at all on thin-cohort
+   columns (the readout withdraws its figures where the cohort dies); the scrub readout names the outer and median tiers on POINTER only —
+   in the plot at REAL and the landscape phone, in a flow row on the other four arms. ACCEPTED as a deviation from back-nine-design §2's
+   preferred FORM (in-place labels): the swatches are fill-keyed so §2's binding COLOR clause holds, and building the callouts carries
+   un-oracled risk — a caller-anchored label can name the WRONG region (no marks oracle, no callout-vs-readout oracle), it bypasses
+   `isThinCohort` (the gate that withdraws figures exactly where the cohort thins) and it teleports against the band's 260 ms morph.
+   Direction of the omission: OPTIMISTIC, disclosed (a reader who cannot match a tier reads the wide envelope as the likely range). The AT
+   reader is served on the normal branch (the sr-only range sentence, `bandPanelChrome.ts` composeBandAtRange, council O3 2026-07-10); the
+   depletion branches never speak the eight-in-ten tier and the sentence withdraws when no cohort-clean column qualifies — a NAMED silence.
+   ⚑ BANNED from this record and from source (the Honesty Hawk's veto, honored): "the callouts are blocked by vertical ink budget" (false —
+   the text layer is absolutely positioned, zero flow cost); "no mechanical defect" (the outline key IS one — the Tier 3 phantom-key entry);
+   "the readout already names two tiers in place" (false at rest, on thin columns, and on four of six arms). ⚑ DO-NOT-EXECUTE PRECONDITIONS
+   for any future callout build: ONE placement helper in `bandPanelChrome.ts`, never per-route; the anchor derived in-renderer from the drawn
+   samples and routed through `isThinCohort`; THREE oracles with planted fails (band marks-clearance, callout-vs-readout, morph-synchrony); a
+   `.band-callout` rule + its reduced-motion sibling; copy through copyGuard. REOPEN TRIGGER, pre-registered: on the owed Caddie walk
+   (residual (a)) ask a reader the at-rest question "point to the middle half" and a faded-column read — a fail converts this deviation into a
+   comprehension defect and the MEDIAN-ONLY callout (the council's banked fallback) ships behind the preconditions; (i) two of
    the four `document.fonts.ready` one-shots are ungated BY DESIGN (2026-09-07): `useCollisionLayout` and `useReadoutSeat` are pinned by
    `chartText.test.tsx`'s deferred-fonts describe (each mutant-proven) because theirs is the sole re-decide — the ink a swap resizes lives in boxes
    no ResizeObserver watches; the readout placement hook (`chartText.tsx`) and the ladder crown (`OddsLadder.tsx useCrownSeat`) observe the very
@@ -1305,6 +1315,23 @@ disclaimer two-mount swap (holds: in-frame mount dark, trailing mount after the 
   age for each of you" renders one Continue from the employer-coverage step's "counts no health costs
   for the one who has already stopped." Each true alone; the JOIN (what happens to the combined quote
   I typed?) is still left to inference. Adjacency helps; it does not close.
+
+### The legend's outline key is a phantom — the band's areas are fill-only, and the swatches wear outlines nothing draws
+
+`S` · **pilot** (the key fix + its gate) · **briggsy** (the redraw's shape, on the owed Caddie walk) · filed 2026-09-08 by the council (the
+legend-deviation session, 8/10 — `docs/council-log.md`)
+
+- `BandLegend.tsx` pairs each swatch with an OUTLINE — 2 px solid on the middle-half row, 1 px dashed on the eight-in-ten row (`band.css`
+  `.band-legend__sw--inner` / `--outer`) — while `ConfidenceBand.tsx` draws both areas as FILL-only `.band-area` paths and the median as a
+  line: no drawn edge matches either outline, and the dash echoes `.band-placeholder-edge`, the INDETERMINATE silhouette no shipping route
+  renders. A reader keying on the outlines matches nothing; the swatch FILLS (the same `BAND_FILL_*` stops) do reproduce the chart's ink
+  density, which is how the tiers actually separate — luminance plus nesting.
+- FIX FIRST, THEN GATE (the council's ordering): bind the swatches to the fills + nesting (a nested chip that mirrors the chart's composition,
+  or simply delete the two phantom outlines — his call), THEN land an a11y regression gate on the corrected keying; never gate the phantom.
+  Ranked ahead of any callout build. The redraw ships ALONE on the chart-text residual (a)'s owed Caddie walk (one visual change at a time),
+  together with the standing unconfirmed flag that the outer band's grayscale edge is the page's faintest boundary (`docs/caddie/cold-read-log.md`).
+- ⚑ NEGATIVE: do not "fix" the key by adding outlines to the DRAWN areas — that widens the chart's ink to meet a legend, the inverse of the
+  seat law ("contain the ink; never widen the room").
 
 ## Tier 4 — hygiene (no user-visible wrong answer)
 

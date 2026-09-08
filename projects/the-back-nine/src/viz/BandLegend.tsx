@@ -3,14 +3,19 @@
  * shared by the inline drawer (vertical STACK) and the enlarge modal (horizontal ROW). Decorative
  * (aria-hidden) — the in-place axis text + the household-clock annotations carry the primary
  * non-color signal FOR THE DOLLARS AND THE MOMENTS. For the three TIERS this legend is the only
- * SIGHTED channel today: the in-place callouts seam has no production caller (bandData.ts,
- * BandLabels; the register's chart-text residual (e), a council fork). The AT reader is not left
- * out on the normal branch — this node is aria-hidden and the sr-only range sentence speaks both
+ * SIGHTED channel AT REST on every arm, and the only tier channel at all on thin-cohort columns
+ * (the readout withdraws its figures there): the in-place callouts seam has no production caller
+ * (bandData.ts BandLabels). The council ACCEPTED that §2 deviation on 2026-09-08 (the register's
+ * chart-text residual (e): the reason of record, and the sentences it BANS). The AT reader is served
+ * on the normal branch — this node is aria-hidden and the sr-only range sentence speaks both
  * load-bearing tiers verbatim (bandPanelChrome.ts composeBandAtRange, council O3 2026-07-10); the
- * depletion branches speak "most likely" but never the eight-in-ten tier, and the sentence withdraws
- * when no cohort-clean column qualifies, a silence O3 itself filed open. That is why each row
- * pairs its swatch with a distinct OUTLINE style, so the tiers separate without depending on hue.
- * back-nine-design §2 prefers in-place labels — a live, recorded deviation. Swatch fills
+ * depletion branches never speak the eight-in-ten tier and the sentence withdraws when no
+ * cohort-clean column qualifies, a named silence. ⚠️ THE SWATCH OUTLINES KEY NOTHING (the council's
+ * new finding): the band's areas are FILL-only and its median a line, so the solid / dashed outlines
+ * below match no drawn edge — the dash is the indeterminate placeholder's silhouette. The FILLS do
+ * reproduce the chart's ink density and nesting. Fix-then-gate is filed (register Tier 3 "The
+ * legend's outline key is a phantom"); the redraw's shape waits for his eye on the owed Caddie walk,
+ * so the outlines stay unchanged here until then. Swatch fills
  * are SVG `fill` PRESENTATION attributes (CSP-safe, source-bound to palette.ts — never a re-typed hex).
  *
  * STRING-FREE: every row label arrives via the `labels` prop (src/ui fills from copy.ts).

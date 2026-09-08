@@ -243,6 +243,11 @@ function BandTextLayer({
           {t.label}
         </ChartText>
       ))}
+      {/* The in-place tier callouts — a supported seam NO production caller fills and NO stylesheet
+          styles (`.band-callout` has no rule): the council (2026-09-08) accepted the legend as the
+          tier channel and filed the preconditions a build must meet before this map carries anything
+          (the register's chart-text residual (e), its ⚑ block — one placement helper, isThinCohort-
+          routed anchors, three planted-fail oracles, a rule + its reduced-motion sibling). Tests only. */}
       {data.kind === 'resolved' &&
         data.callouts.map((c) => (
           <ChartText

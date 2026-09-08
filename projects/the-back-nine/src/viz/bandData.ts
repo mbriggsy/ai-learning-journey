@@ -101,8 +101,13 @@ export interface XAnnotation {
   readonly description: string
 }
 
-/** Two in-place text callouts that name the band's regions directly on the chart (never a
- *  color legend — back-nine-design §2). Positions are caller-chosen in band-data terms. */
+/** An in-place text callout naming a band region directly on the chart — the seam back-nine-design
+ *  §2 prefers over a legend. Positions are CALLER-chosen in band-data terms, and that is the seam's
+ *  recorded hazard: a caller-anchored label can name the WRONG region (dollarMax and horizon differ
+ *  per household), it bypasses isThinCohort, and no oracle checks it against the marks or the
+ *  readout — so the council (2026-09-08) ACCEPTED the legend as the tier channel and filed the
+ *  preconditions any future build must meet (the register's chart-text residual (e), its ⚑ block).
+ *  No production caller supplies these today; the type is an array, never a count. */
 export interface BandCallout {
   readonly id: string
   readonly yearsFromNow: number

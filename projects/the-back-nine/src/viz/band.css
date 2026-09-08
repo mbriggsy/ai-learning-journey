@@ -208,15 +208,21 @@
   row-gap: var(--space-2);
   margin-top: var(--space-5);
 }
-/* the legend swatch is paired with a distinct OUTLINE-STYLE per row (solid / hairline / dashed)
-   so the three tiers separate without depending on the fill hue. IT IS THE ONLY SIGHTED CHANNEL
-   THAT NAMES THE TIERS TODAY: no production caller supplies the in-place callouts (bandData.ts,
-   BandLabels; the register's chart-text residual (e), a council fork), so this outline
-   differentiation is the whole non-color story for a sighted reader. The AT reader is served
-   instead, on the normal branch — the legend is aria-hidden and the sr-only range sentence speaks
-   both load-bearing tiers verbatim (bandPanelChrome.ts composeBandAtRange, council O3 2026-07-10);
-   the depletion branches speak "most likely" but never the eight-in-ten tier, and the sentence
-   withdraws when no cohort-clean column qualifies — a silence O3 itself filed open. */
+/* THE SWATCH OUTLINES ARE A PHANTOM KEY (council 2026-09-08; register Tier 3 "The legend's outline
+   key is a phantom"): the band draws its two areas as FILL-only paths and its median as a line
+   (ConfidenceBand.tsx .band-area / .band-median) — nothing on the chart wears the 2px solid or the
+   1px dashed outline these swatches carry, and the dash echoes .band-placeholder-edge, the
+   INDETERMINATE silhouette no shipping route renders. The tiers separate on the chart by ink
+   DENSITY (luminance) and nesting, which the swatch FILLS do reproduce; the outlines key nothing.
+   Fix-then-gate is filed (bind the swatches to the fills + nesting, THEN the a11y regression gate
+   on the corrected key); the redraw's visual shape is HIS eye's on the owed Caddie walk — until
+   then the outlines stay, deliberately unchanged, so one visual change lands at a time. The legend
+   is the ONLY SIGHTED channel naming the tiers AT REST on every arm (the council ACCEPTED the §2
+   deviation — the register's chart-text residual (e) carries the reason of record and the banned
+   sentences); the AT reader is served on the normal branch by the sr-only range sentence
+   (bandPanelChrome.ts composeBandAtRange, council O3 2026-07-10), which never speaks the
+   eight-in-ten tier on the depletion branches and withdraws when no cohort-clean column qualifies
+   — a named silence. */
 .band-legend__sw {
   width: 22px;
   height: 11px;

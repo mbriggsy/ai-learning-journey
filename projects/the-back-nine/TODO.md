@@ -92,16 +92,29 @@ on `playwright.fit-rv.config.ts` (`workers: 1`, port 4192, 900 s per test, the 7
 to the committed lockup at PHONE / FLOOR / REAL and audits the primary AND runner-up charts against `.rec-viz-box`,
 pins the chart's shape (five nodes, both bar labels visible, the hero on `valign="top"`), and plants the unitless
 `--ct-ty` on the hero so the anchor oracle is proved to bite on the node that had the bug; a HELD card reds. `verify:fit:rv`
-in package.json + its OWN CI job (`verify-rv-chart-text`, parallel with `verify`); in the CSP harness's `testIgnore`
-denylist. Doc truth swept: roadmap gate row, architecture §12, CLAUDE.md Commands (+ a row), README, the design skill,
+in package.json + its OWN CI job (`verify-rv-chart-text`, parallel with `verify` — CI run 34179395027, `c135a99c`: the RV
+job 19 min against `verify`'s 16, so the new gate costs the pipeline ~3 min of wall-clock); in the CSP harness's
+`testIgnore` denylist. Doc truth swept: roadmap gate row, architecture §12, CLAUDE.md Commands (+ a row), README, the design skill,
 the register's chart-text paragraph, the spec header, the audit's SCOPE comment, `chartText.test.tsx`'s "no RV arm"
 comment. ⚠️ NO 320 ARM — every arm is a ~6–8 min test around a full-precision solve (measured 2026-09-07: 8.0 / 7.7 / 6.0 min,
 21.8 min for the gate) and the RV has never rendered at 320 for anyone (filed under *The gates that don't bite*).
-(2) **The critic's arms** (digest `critic-arms`, M together): a `PHONE_LS` 844×390 arm; `gotoVaultFinal` +
-`?vault=stale` + `?vault=datestale` (the MAX-cardinality band — FOUR named markers; the crowned work-stops
-marker SURVIVES there, never write "withdraws"); the enlarge-modal arm on `.band-modal__dialog
-figure.band-figure` (a bare selector returns the INLINE band — vacuous), pin `modalRows <= inlineRows`, wait
-on the computed transform, not `settleLayout`.
+(2) ✅ **SHIPPED 2026-09-07 — the critic's arms** (digest `critic-arms`). `PHONE_LS` (844×390 @3, touch) rides the arm
+loop (+7 tests) and is the FIRST arm where the CEILING crown seats ABOVE (a 576 px ladder figure → 43.2 px of headroom
+against the 37.7 px callout; both crown tables are two-valued now, and the "ALL FLOW / widest 496 px" docblock was
+corrected — 496 was the widest DESKTOP figure); its band readout seats in the PLOT (526 px host). `gotoVaultFinal` lives in
+`reviewSurface.ts`; `?vault=stale` runs on every arm (the aged spine takes TWO rows everywhere — recorded as
+`AGED_SPINE_ROWS`, with "Plan built" + "Today" pinned present) and `?vault=datestale` on PHONE + FLOOR with all FOUR named
+moments pinned present — and it measured THREE annotation rows (recorded as `AGED_DATE_ROWS`; the geometry is in the test:
+"Work stops"@9 overlaps both "Plan built"@0 and "Today"@2 on the 308 and 358 px figures, two rows at REAL's 446; the derived
+first-fit crossover is ~428 px). §12's "never three" was a
+measurement of the FRESH routes and now carries the aged amendment (architecture §12, `ConfidenceBand.tsx`'s block
+comment); the three-row block is HIS EYE's (register: *The aged surface*). The enlarge-modal arm audits
+`.band-modal__dialog figure.band-figure` against the dialog, PROVES the scope resolved a wider figure than the inline one
+(537.9 vs 446 px), waits on the dialog's computed transform reaching identity, and pins rows `<=` inline as a canary.
+Two landmines the build surfaced: taps land in VIEWPORT coordinates — on a 390 px-tall viewport the drawer is below the
+fold after settleLayout's scroll-to-origin, so the sweep scrolls the capture rect into view first; and `<ChartReadoutRow>`
+renders in BOTH seats (hidden in the plot seat) and marks `data-active` either way, so the touch pin/dismiss locator is
+seat-aware, never an OR (the first plot-seat touch arm counted 2 for 1).
 (3) **The unmeasured trio** (digest `critic-docs-unmeasured`): the placeholder note is dev-preview-only
 (`plans/2-first-answer.md:204` is now a pointer at the roadmap and `:205` is blank after the 2026-09-06 audit — re-read the plan's placeholder sentence before assuming the doc half is still owed); font-swap staleness now has
 the `fonts.ready` one-shot in both hooks but NO gate — a probe that loads with the webfonts blocked then
@@ -123,7 +136,7 @@ nothing on 390@3 (insight 119) — inset 1 px. `test.fail` + a timeout = a real 
 instrument tests measure first, assert last, and load ONCE (`setRootFont20` BEFORE `gotoSeedFinal`). Local
 fit workers are capped at 30% (insight 121); `FINAL_TIER_MS` (150 s, `e2e/reviewSurface.ts`) is the one anchor
 wait — `vertical-fit.spec.ts` still re-types `90_000` in eight places (harmless at 6 workers; hoist when
-touched). `atceiling` is a DATE seed (~45 s/arm) and rides all five arms. `temp/probe/` is spent;
+touched). `atceiling` is a DATE seed (~45 s/arm) and rides EVERY arm in the loop (six since PHONE_LS). `temp/probe/` is spent;
 `temp/chart-text/`, `temp/cold-read-320/` and `temp/phone-walk/` are KEPT — no squeaky clears them.
 
 > **Superseded hand-offs deleted 2026-09-06 (the doc audit):** b9-2 (2026-09-05 midday — `8a6fc6b7` · `add8dea8`) and b9-3
@@ -147,7 +160,7 @@ touched). `atceiling` is a DATE seed (~45 s/arm) and rides all five arms. `temp/
 | **2027-07-15** | PA + FL `nextDue`, `state-tax-pa-last-verified.json` / `state-tax-fl-last-verified.json` (annual drift cadence) — **the roster's real deadline: it fires 18 days BEFORE NC's** | `pnpm verify:state-tax` reds → CI red |
 | **2027-08-02** | NC `nextDue`, `state-tax-nc-last-verified.json` (annual drift cadence now, not a pending event) | `pnpm verify:state-tax` reds → CI red |
 | **2027-01-01** | `TAX_YEAR` / `COVERAGE_YEAR` / `CONTRIBUTION_YEAR` roll | ✅ **ARMED 2026-08-02** — `annualRoll.tripwire.test.ts` reds the suite (both arms mutation-proven). Clearing it is a **re-sourcing job, never a date bump**; `scaffold.smoke.test.ts:10-13` + `constants.shape.test.ts` red alongside by design |
-| **2027-01-01** | Every organic vault crosses `elapsed ≥ 1` | The aged surfaces stop being dev-plant-only and go live on real households — **the four aged tone calls are due before this** |
+| **2027-01-01** | Every organic vault crosses `elapsed ≥ 1` | The aged surfaces stop being dev-plant-only and go live on real households — **the aged tone calls (the four filed + the aged date band's three-row block, 2026-09-07) are due before this** |
 | **2028-01-01** | IRMAA top-tier re-index tripwire | Test reds by design |
 | **2034-08** | NC's successor flip event — the Office of the State Controller's FY2033-34 final accounting (trigger $40,258,000,000 → TY2035, 0.25pp step, 2.49% floor) | Nothing breaks; it is the only mechanism left that can move NC's rates, and it can only CUT |
 
@@ -565,7 +578,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     arms (4 spine seeds × 2), not all 52; PROTECTED = `vertical-fit.spec.ts:16-20`.
 
 14. **His eye, the standing block.** The stacked tape rows (07-08 → 07-23, which also score the
-    Opus-vs-Sonnet Caddie flip) · the four aged-surface tone calls, **due before 2027-01-01** · the chart
+    Opus-vs-Sonnet Caddie flip) · the aged-surface tone calls, **due before 2027-01-01** — the four filed
+    plus the aged date band's THREE-row annotation block on the phone / 1088 (2026-09-07, register *The aged
+    surface*) · the chart
     framing forks (whose range is shaded, which odds the ladder quotes, the axis units) · `?vault=stale`'s
     MEANING ruling (both obvious repairs are measured dead ends) · the three-doors rhythm on `datemixed` ·
     the essentials median line · the record card's strategy naming (half 2) · the phone-rhythm pass · the
@@ -713,7 +728,7 @@ These are the mechanical ones that keep costing hours.*
   LAN IP over http.
 - **`verify:fit`'s `?seed=dip` arm is LOAD-SENSITIVE and can red the whole gate on a busy machine.**
   Measured 2026-08-05: it PASSES isolated at 1.1m and FAILED at 1.5m inside the full parallel run, on
-  `gotoSeedFinal`'s final-tier wait (`FINAL_TIER_MS` = 150 s today, `reviewSurface.ts:83`; it was 90 s when this was filed) — the heaviest date seed
+  `gotoSeedFinal`'s final-tier wait (`FINAL_TIER_MS` = 150 s today, `reviewSurface.ts:87`; it was 90 s when this was filed) — the heaviest date seed
   sweeping 11 offsets at final precision. **Do NOT just raise the 90s** (insight 106: a fix that raises a
   bound must prove that bound is the one that binds, and three prescriptions in a row adjusting a clock
   means the wait is the wrong instrument). The wait is on REAL compute, so it is slow rather than

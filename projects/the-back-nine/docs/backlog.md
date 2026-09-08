@@ -826,7 +826,7 @@ final tier ~30 s after the provisional.
    council's blocking precondition: one row on every fit-law household, two on the scrolling date route, never three), `PLOT.left` 78 → 92
    (band + TF parity), the ladder's viewBox 340 → 284 with `PLOT.top` 40 → 56 so the crown callout sits ABOVE a rung-9 dot (beside it at the
    ceiling), RV/TF end labels that WRAP with a measured vertical pass, the ≤260/280 drop guards retired, the touch pin gated on
-   `pointerType`, the dead selector made a descendant. GATES: `e2e/chart-text.spec.ts` on the fit harness (19 arms — rendered px ≥ `--text-xs`
+   `pointerType`, the dead selector made a descendant. GATES: `e2e/chart-text.spec.ts` on the fit harness (the arm loop over PHONE / the landscape phone / two 320 arms / FLOOR / REAL — the landscape phone, the aged vault returns and the enlarge modal's transformed frame joined 2026-09-07 — rendered px ≥ `--text-xs`
    read from tokens · containment in the card · pairwise non-overlap · nothing named hidden · text grows with the reader's font ·
    reduced-motion identity · planted CLIP + SHRINK controls) and `twoPaneHonestyFloor.test.ts` re-pointed to the y-tick column's geometry.
    Witnessed at 1536×791 / 1088×800 / 390×844 on the band, the ladder and TwoFutures; RecommendationViz was witnessed by hand at 1536 and 390
@@ -1086,6 +1086,7 @@ disclaimer two-mount swap (holds: in-frame mount dark, trailing mount after the 
 `M` · **briggsy** · filed 1× — `S39`
 
 - Mid-flight Roth conversion: engine re-anchoring unit + the withdrawn two-futures preview (Briggsy's call)
+- ⚑ HIS EYE (filed 2026-09-07 with the aged chart-text arms): the aged DATE band's annotation block takes THREE rows on the phone and the 1088 floor (`e2e/chart-text.spec.ts` `AGED_DATE_ROWS`, measured — "Work stops" at year 9 overlaps both "Plan built" at year 0 and "Today" at year 2 on the 308 and 358 px figures; two rows at REAL's 446), and the aged SPINE band takes two on every arm (`AGED_SPINE_ROWS`). Every oracle passes (readable, inside its card, no overprint); the band renders inline on the answer frame and the aged spine's two-row frame holds the one-frame law under `vertical-fit`'s `?vault=stale` REAL arm, while the aged date route scrolls by design — but a three-row block under the phone's fan is a shape his eye has never read. Not a build: the honest levers are all product (thin the aged named set, merge "Plan built" into "Today"'s label, or accept), and the wall-time Today marker is the U13 one-time-base law. Read it at the next aged cold read (`?vault=datestale` at 390 and 1088).
 - ⚑ **THE CROWNED WINDOW'S BUILD-YEAR ANCHOR — the three arms, written down 2026-09-04 so the fork is
   presentable (the queue cited "three arms with corrected costs" that existed nowhere).** Cause:
   `conversionWindowFor` (`solveAnchor.ts:201-208`) returns `startYearOffset: 0` = the plan's BUILD year,

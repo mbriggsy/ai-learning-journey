@@ -1,5 +1,5 @@
 import { test, expect, type BrowserContext, type Page } from '@playwright/test'
-import { REAL, REAL_DPR, FLOOR, PHONE, PHONE_DPR, FINAL_TIER_MS, gotoSeedFinal, settleLayout } from './reviewSurface'
+import { REAL, REAL_DPR, FLOOR, PHONE, PHONE_DPR, PHONE_LS, FINAL_TIER_MS, gotoSeedFinal, gotoVaultFinal, settleLayout } from './reviewSurface'
 import { type Audit, type Rect, TOL, floorPx, audit, assertChartText } from './chartTextAudit'
 /* The band's scrub SNAPS to one of LATTICE_POINTS columns, so the readout's whole placement state
  * space is finite — the sweep below walks EVERY column rather than sampling a few (importing from
@@ -20,9 +20,13 @@ import { LATTICE_POINTS } from '../src/viz/bandData'
  * oracles, every `toThrow` bound to that oracle's own message, so a green here is a green that could have
  * been red (insight 032 / 016).
  *
- * WHAT IT PINS, on every VIEWPORT arm the product ships to (PHONE 390 @3 touch · a 320 reflow arm ·
- * FLOOR 1088 · REAL 1536 @2.5), over FOUR households — the two dense date routes, the one-frame
- * spine, and `borderline`, the widest-y-tick household (45 CSS px of ink) — never all of them:
+ * WHAT IT PINS, on every VIEWPORT arm the product ships to (PHONE 390 @3 touch · PHONE_LS, the
+ * landscape phone 844×390 @3 touch · a 320 reflow arm · FLOOR 1088 · REAL 1536 @2.5), over FIVE
+ * households — the two dense date routes, the one-frame spine, `borderline`, the widest-y-tick
+ * household (45 CSS px of ink), and `atceiling`, the ceiling crown — never all of them; plus the
+ * AGED spine return (`?vault=stale`) on every arm INSIDE that loop, and — off it — `?vault=datestale`,
+ * the max-cardinality band, on PHONE + FLOOR, and the enlarge modal's TRANSFORMED frame (REAL, the
+ * fine-pointer-only affordance):
  *  - THE FLOOR: every visible chart text node renders at ≥ --text-xs, measured at the LEAF — a child
  *    with its own font-size (`.ladder-crown__tell` is --text-xs inside a --text-sm crown) is measured,
  *    not its parent's register. The floor is READ from tokens.css at runtime, never re-typed here —
@@ -551,6 +555,13 @@ const TF = ['.tf-host', '[role="dialog"]'] as const
 
 const ARMS = [
   { name: 'PHONE', use: { viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true } },
+  // The LANDSCAPE phone: a coarse pointer over the WIDEST phone chart of any arm (a 526 px band
+  // figure against portrait's 308 — temp/chart-text/ink.md, 2026-09-05), carrying two of the ink
+  // sweep's six tightest slack rows (`Your date` −3.501, `Work stops` +8.409 — ink.md §2; the
+  // tightest overall, `9 of 10` at −5.217, is FLOOR's, and §2 rules both negatives an em-box overlap,
+  // not clipping). Touch, so the enlarge affordance is absent (ConfidenceBandPanel.tsx, fine-pointer
+  // only) and TwoFutures' readout arm skips, like PHONE.
+  { name: 'PHONE_LS', use: { viewport: PHONE_LS, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true } },
   { name: 'NARROW', use: { viewport: { width: 320, height: 800 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true } },
   // WCAG 1.4.10's LITERAL test condition: 320 CSS px in a desktop UA whose classic scrollbar takes
   // layout width (every other 320 arm is isMobile — overlay scrollbars — so the gate could not see
@@ -567,6 +578,9 @@ const ARMS = [
  *  predicate oracle, and only this table can see it. The numbers behind it (band, `retired`):
  *    · REAL   446px host → plot 356.8, half 178.4, cap 169.5; widest ink 128.8 + 26 chrome = 154.8
  *             ≤ 169.5, box min(138 + 26, 169.5) + 10 = 174 ≤ 178.4 → PLOT.
+ *    · PHONE_LS (2026-09-07) 526px host → plot 420.8, half 210.4, cap 199.9; widest ink 128.8 + 26
+ *             chrome = 154.8 ≤ 199.9, box min(138 + 26, 199.9) + 10 = 174 ≤ 210.4 → PLOT — WIDER
+ *             than REAL: below the two-pane breakpoint the single column sits at its measure cap.
  *    · FLOOR  358px host → cap 136.0; 154.8 > 136.0 → FLOW (the cap clause, not the room).
  *    · PHONE  308px host → cap 117.0; 148.2 > 117.0 → FLOW (the box would have to be 31px WIDER than
  *             the cap allows to hold its widest line — the box does not clip, the line paints out).
@@ -575,11 +589,17 @@ const ARMS = [
  *  Update it from a measured run, never from a guess — and never to make a red go away. */
 const BAND_SEAT: Readonly<Record<string, CtSeat>> = {
   PHONE: 'flow',
+  PHONE_LS: 'plot',
   NARROW: 'flow',
   'NARROW-SCROLLBAR': 'flow',
   FLOOR: 'flow',
   REAL: 'plot',
 }
+
+/** The AGED spine band's annotation rows (?vault=stale), MEASURED 2026-09-07 on all six arms: "Plan
+ *  built"@0 + "Today"@2 overlap everywhere, so two — one more than the fresh spine. Recorded, never
+ *  decreed (the aged-spine test carries the reasoning). Update it from a measured run only. */
+const AGED_SPINE_ROWS = '2'
 /** The same, for TwoFutures inside a lever sheet. Fine-pointer arms only — TF's scrub is mouse/pen
  *  (TwoFutures.tsx onMove). Its readout is a shorter composition than the fan's (two arm figures, no
  *  range), so its ink clears the cap everywhere measured and it is the ROOM clause that decides:
@@ -600,23 +620,30 @@ const TF_SEAT: Readonly<Record<string, CtSeat>> = {
  *  a remedy that quietly took one seat everywhere would satisfy the predicate oracle, and only a
  *  recorded table can see it.
  *
- *  It is ALL FLOW, and that is the finding rather than an omission: the callout is two rem-fixed
- *  lines — 36.6px on the phone's 15.2px --text-sm, 37.7px once the clamp tops out at 16px — while
- *  the ceiling's headroom is a FRACTION of the figure's width: the anchor sits 42 of the 560 viewBox
- *  units below the host's top, i.e. 42/560 = 7.5% of the figure, so a 37.7px callout needs a
- *  37.7 / 0.075 = ~503px ladder figure and the widest this product ever renders is 496px. It misses
- *  by SEVEN PIXELS OF FIGURE WIDTH — which is the same 0.5px of headroom REAL falls short by, and
- *  exactly why REAL sits inside CROWN_SEAT_MARGIN_PX below. Not "structurally impossible": one
- *  re-spaced page column away, so re-measure rather than assume. The ceiling rung is why the
- *  BESIDE-the-dot branch existed; there was never room, and printing across the year-2..5 dots is
- *  what "no room" used to look like (temp/cold-read-320, pictures 06 + 07).
+ *  It is FLOW on every desktop and portrait arm, and that is the finding rather than an omission:
+ *  the callout is two rem-fixed lines — 36.6px on the phone's 15.2px --text-sm, 37.7px once the
+ *  clamp tops out at 16px — while the ceiling's headroom is a FRACTION of the figure's width: the
+ *  anchor sits 42 of the 560 viewBox units below the host's top, i.e. 42/560 = 7.5% of the figure,
+ *  so a 37.7px callout needs a 37.7 / 0.075 = ~503px ladder figure and the widest figure the
+ *  TWO-PANE tier renders is 496px. It misses by SEVEN PIXELS OF FIGURE WIDTH — which is the same
+ *  0.5px of headroom REAL falls short by, and exactly why REAL sits inside CROWN_SEAT_MARGIN_PX
+ *  below. Not "structurally impossible" — and it is the BREAKPOINT that decides, not the device:
+ *  below the two-pane split the single column sits at its measure cap and the figure is 576px at
+ *  every width from ~632 to 1087 CSS px (measured, temp/chart-text/raw-1b-sweep-rv.json), so the
+ *  LANDSCAPE PHONE at 844 gets 43.2px of headroom and seats ABOVE by 5.5px — the one arm in the
+ *  loop where the ceiling crown clears, and what makes this table two-valued. The
+ *  ceiling rung is why the BESIDE-the-dot branch existed; there was never room on the arms his eye
+ *  read, and printing across the year-2..5 dots is what "no room" used to look like
+ *  (temp/cold-read-320, pictures 06 + 07).
  *  MEASURED 2026-09-06 (Windows/DirectWrite): REAL a 496px figure → a 251.5px host, 37.2px of
- *  headroom against a 37.7px callout (FLOW by 0.5px — the closest any arm comes); FLOOR a 408px
- *  figure → a 206.9px host, 30.6px; PHONE a 358px figure → a 181.5px host, 26.8px against 36.6;
- *  the 320 arms a 288px figure → a 146.0px host, 21.6px against 36.4.
+ *  headroom against a 37.7px callout (FLOW by 0.5px — the closest any desktop arm comes); FLOOR a
+ *  408px figure → a 206.9px host, 30.6px; PHONE a 358px figure → a 181.5px host, 26.8px against
+ *  36.6; the 320 arms a 288px figure → a 146.0px host, 21.6px against 36.4. PHONE_LS, 2026-09-07: a
+ *  576px figure → a 292.1px host, 43.2px against 37.7 ⇒ ABOVE (5.5px clear).
  *  Update it from a measured run, never from a guess — and never to make a red go away. */
 const CROWN_SEAT_CEILING: Readonly<Record<string, CrownSeat>> = {
   PHONE: 'flow',
+  PHONE_LS: 'above',
   NARROW: 'flow',
   'NARROW-SCROLLBAR': 'flow',
   FLOOR: 'flow',
@@ -629,9 +656,11 @@ const CROWN_SEAT_CEILING: Readonly<Record<string, CrownSeat>> = {
  *    · REAL  a 251.5px host → 56.7px of headroom for a 37.7px callout ⇒ ABOVE (19.0px clear).
  *    · FLOOR a 206.9px host → 46.6px vs 37.7 ⇒ ABOVE (8.9px).
  *    · PHONE a 181.5px host → 40.9px vs 36.6 ⇒ ABOVE (4.3px — the tightest above seat that ships).
+ *    · PHONE_LS (2026-09-07) a 292.1px host → 65.8px vs 37.7 ⇒ ABOVE (28.1px — the roomiest).
  *    · the 320 arms → FLOW. */
 const CROWN_SEAT_RUNG9: Readonly<Record<string, CrownSeat>> = {
   PHONE: 'above',
+  PHONE_LS: 'above',
   NARROW: 'flow',
   'NARROW-SCROLLBAR': 'flow',
   FLOOR: 'above',
@@ -639,9 +668,14 @@ const CROWN_SEAT_RUNG9: Readonly<Record<string, CrownSeat>> = {
 }
 
 /** The crown's non-vacuity claim is made over the UNION of the two tables, because the seat is a
- *  function of the seed's RUNG as well as the arm's width: the ceiling never fits above anywhere,
- *  the rung below it fits on the three widest arms. Either table alone would under-state the
- *  catalog; together they hold both seats. */
+ *  function of the seed's RUNG as well as the arm's width: on `atceiling` the crown clears ONLY on
+ *  the landscape phone's un-split 576px column (43.2px of headroom against a 37.7px callout) and
+ *  takes the flow row on every other arm; one rung lower, on `datesplit`, it clears on the four
+ *  widest arms — REAL · FLOOR · PHONE_LS · PHONE — and takes the row only on the two 320s. Since the
+ *  landscape arm landed (2026-09-07) each table is two-valued on its own, so the union is not what
+ *  rescues the claim from vacuity today — it is what keeps it honest the next time one seed's
+ *  catalog collapses to a single seat, as the ceiling's did until then: CROWN_SEAT_CEILING's second
+ *  value is ONE arm with 5.5px of clearance, which a token re-tune could take back. */
 const CROWN_SEATS_OBSERVED: Readonly<Record<string, CrownSeat>> = {
   ...Object.fromEntries(Object.entries(CROWN_SEAT_CEILING).map(([arm, seat]) => [`atceiling/${arm}`, seat])),
   ...Object.fromEntries(Object.entries(CROWN_SEAT_RUNG9).map(([arm, seat]) => [`datesplit/${arm}`, seat])),
@@ -751,6 +785,34 @@ for (const arm of ARMS) {
       expect(rows, `${arm.name}: the spine household grew a second annotation row`).toBe('1')
     })
 
+    test('the AGED spine band (?vault=stale): one more named moment, still readable and never overprinting', async ({ page }) => {
+      // The aged arm renames year 0 to "Plan built" AND pushes a SECOND named wall-time "Today" at
+      // x = years-since-built (src/ui/bandAnnotations.ts, the spine deriver) — two named labels two
+      // years apart on this plant's 27-year axis (ages 66 / 65 at build to 93 / 92 at the horizon,
+      // measured on all six arms 2026-09-07). No ?seed= route produces that pair, and the council's
+      // blocking precondition sweep measured ZERO vault routes (temp/chart-text/precondition.log),
+      // so this row count had never been measured anywhere before this arm.
+      await gotoVaultFinal(page, 'stale')
+      const floor = await floorPx(page)
+      const a = await audit(page, ...BAND)
+      assertChartText(a, floor, `${arm.name} band/vault-stale`)
+      // NON-VACUITY: the aged pair is actually on the chart — the arm exists for the second named
+      // label, so a plant that stopped ageing would pass every oracle above while proving nothing.
+      // Copy source: bandClockBuiltLabel / bandClockTodayLabel in src/ui/copy.ts.
+      const named = a.nodes.filter((n) => !n.hidden && /ct-block__item/.test(n.cls)).map((n) => n.text)
+      expect(named.some((t) => /^Plan built/.test(t)), `${arm.name}: no "Plan built" label — the plant is not aged (${named.join(' | ')})`).toBe(true)
+      expect(named.some((t) => /^Today/.test(t)), `${arm.name}: no wall-time "Today" label beside "Plan built" (${named.join(' | ')})`).toBe(true)
+      // THE ROW COUNT, recorded from the first measurement of this route (2026-09-07): TWO on every
+      // arm from 320 to 1536 — "Plan built" at year 0 and "Today" at year 2 overlap on every width
+      // this product renders, so the aged spine takes one row more than the fresh spine's one
+      // (docs/architecture.md §12 records the fresh count; this arm is the aged amendment). Recorded,
+      // never a re-typed "1" (the fresh pin above) and never a loose "<= 2": a remedy that changed the
+      // aged pair or the pack would move this number, and only a recorded value can see it.
+      const rows = await page.locator('figure.band-figure .band-annotations').evaluate((el) => getComputedStyle(el).getPropertyValue('--ct-rows').trim())
+      report(`${arm.name} ?vault=stale: annotation rows = ${rows}; named moments = ${named.join(' | ')}`)
+      expect(rows, `${arm.name}: the aged spine band's row count moved (recorded ${AGED_SPINE_ROWS}) — re-measure and update AGED_SPINE_ROWS`).toBe(AGED_SPINE_ROWS)
+    })
+
     test('the widest-tick household (a $1.5M ceiling quartered into seven-glyph dollars): the dollar column holds', async ({ page }) => {
       // `borderline` is the only spine seed in the measured catalog whose y-ticks reach the 45 CSS px
       // worst case ($0.375M / $1.125M — buildYTicks quarters a niceCeil 1.5 rung, an ordinary Back
@@ -792,7 +854,13 @@ for (const arm of ARMS) {
       const floor = await floorPx(page)
       assertBothSeatsObserved(BAND_SEAT, 'band')
       const idleHeight = await page.locator('figure.band-figure').first().evaluate((f) => f.getBoundingClientRect().height)
-      // scoped to the inline figure — the enlarge modal renders a second `rect.band-scrub-capture--enlarged`
+      // scoped to the inline figure — the enlarge modal renders a second `rect.band-scrub-capture--enlarged`.
+      // Taps and hovers land in VIEWPORT coordinates: on the landscape phone (390 px tall) the drawer
+      // sits below the fold after settleLayout's scroll-to-origin, and a tap at a y past the viewport
+      // dispatches nothing (measured 2026-09-07: PHONE_LS @lattice 0, "never rendered"). Bring the
+      // capture rect on screen, THEN read its box — every rect below is re-read in the same frame.
+      await page.locator('figure.band-figure rect.band-scrub-capture').first().scrollIntoViewIfNeeded()
+      await twoFrames(page)
       const cap = (await page.locator('figure.band-figure rect.band-scrub-capture').first().boundingBox())!
       expect(cap, 'the band drew no scrub capture rect').toBeTruthy()
       const touch = 'hasTouch' in arm.use
@@ -856,8 +924,15 @@ for (const arm of ARMS) {
         const mid = Math.floor((LATTICE_POINTS - 1) / 2)
         expect(mid, 'pick a dismissal column the sweep did not end on').not.toBe(last)
         const mx = xAt(mid)
-        // the pinned reading, WHICHEVER seat it took: the in-plot box, or the row's active column.
-        const readout = page.locator('figure.band-figure .band-readout, figure.band-figure .ct-readout-row [data-ct-readout-item][data-active]')
+        // the pinned reading, in the seat this arm MEASURED: the in-plot box, or the row's active
+        // column. Seat-aware, never an OR: <ChartReadoutRow> renders in BOTH seats (in the plot seat
+        // it is the visibility-hidden measuring surface, chartText.tsx) and marks `data-active` on
+        // the pinned column either way — so on a plot-seat touch arm (PHONE_LS, the first one,
+        // 2026-09-07) an OR-locator counts the box AND the hidden row item, 2 for 1.
+        const readout =
+          seen === 'plot'
+            ? page.locator('figure.band-figure .band-readout')
+            : page.locator('figure.band-figure .ct-readout-row [data-ct-readout-item][data-active]')
         await page.touchscreen.tap(mx, y)
         await expect(readout).toHaveCount(1)
         await page.touchscreen.tap(mx, y)
@@ -1089,8 +1164,9 @@ test.describe('chart text — the oracles bite (planted-fail controls)', () => {
 /* On REAL with `datesplit` — the rung-9 crown, the one seed/arm pair in the catalog that takes the
  * ABOVE seat with real room (19.0px of it). That is the seat where a plant can actually put the
  * words back on the dots, which is the shape his eye ruled on; a control on an arm already in the
- * flow seat would prove nothing about the oracle that matters. (`atceiling` cannot serve: the
- * ceiling rung has no room on ANY shipping arm — see CROWN_SEAT_CEILING.)
+ * flow seat would prove nothing about the oracle that matters. (`atceiling` cannot serve here: on
+ * this control's own arm, REAL, the ceiling rung misses the above seat by 0.5px; the landscape phone
+ * is the one arm that clears it, by 5.5px — see CROWN_SEAT_CEILING.)
  *
  * It then NARROWS THE SAME SOLVED PAGE to 320 — the only place in this suite where the seat is
  * re-decided rather than decided at mount, so the only proof `useCrownSeat`'s ResizeObserver runs —
@@ -1541,5 +1617,117 @@ test.describe('chart text — reduced motion changes nothing', () => {
       'shape() does not discriminate',
     ).not.toEqual(shape(motion))
     expect(shape(reduced)).toEqual(shape(motion))
+  })
+})
+
+// ── the AGED DATE band (?vault=datestale) — the MAX-CARDINALITY arm, two arms only ───────────────
+// The highest named-marker count any live route produces: the aged deriver renames year 0 to
+// "Plan built" and adds a wall-time "Today" at x = years-since-built (src/ui/bandAnnotations.ts),
+// AND the crowned work-stops marker SURVIVES here — the base (`datesplit`) crowns LIFESTYLE at 9 at
+// the final tier against a 2-year elapsed window (src/ui/devSeeds.ts, doctorStaleVault), and the
+// band rides that track, not the floor's 2 (src/ui/answerView.ts reads `band.track` /
+// `band.offsetYears`; the live label is "Work stops", not "Essentials date"). So
+// offsetHasPassed(9, 2) is false (src/viz/curveMarks.ts) and the §S2.1 withdrawal in
+// bandAnnotations.ts never fires: FOUR named markers against a fresh date seed's three.
+// (?vault=datearrived is the plant where the withdrawal DOES fire — e2e/vertical-fit.spec.ts, the
+// arrived arm.) Scoped to two arms deliberately: a date sweep costs ~55–72 s per arm, and PHONE and
+// FLOOR carry the least block-vs-gutter slack at two rows (temp/chart-text/precondition.log SUMMARY:
+// PHONE −0.6 px, FLOOR 10.8; REAL has 30.9). REAL is the cheapest future add if budget allows.
+/** The aged date band's annotation rows per arm, MEASURED 2026-09-07 (temp/chart-text/probe-datestale-rows.json:
+ *  PHONE 3 · FLOOR 3 · REAL 2, the last not gated here). Recorded, never decreed — the test below
+ *  explains the geometry. Update it from a measured run, and never to make a red go away. */
+const AGED_DATE_ROWS: Readonly<Record<string, string>> = { PHONE: '3', FLOOR: '3' }
+for (const arm of [
+  { name: 'PHONE', use: { viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true } },
+  { name: 'FLOOR', use: { viewport: FLOOR } },
+] as const) {
+  test.describe(`chart text — the aged date band (?vault=datestale) — ${arm.name} (${arm.use.viewport.width}×${arm.use.viewport.height})`, () => {
+    test.use(arm.use)
+
+    test('four named moments: readable, inside, never overprinting, and the recorded row count', async ({ page }) => {
+      await gotoVaultFinal(page, 'datestale')
+      const floor = await floorPx(page)
+      const a = await audit(page, ...BAND)
+      assertChartText(a, floor, `${arm.name} band/vault-datestale`)
+      // NON-VACUITY: the densest named set that ships — "Plan built"@0, "Today"@2, the surviving
+      // work-stops crown, and "Plan horizon". A plant that lost any of the four would pass every
+      // oracle above while proving less than this arm claims. Copy source: bandClockBuiltLabel /
+      // bandClockTodayLabel / the work-stops label (src/ui/copy.ts).
+      const named = a.nodes.filter((n) => !n.hidden && /ct-block__item/.test(n.cls)).map((n) => n.text)
+      for (const want of [/^Plan built/, /^Today/, /^Work stops/, /^Plan horizon/]) {
+        expect(named.some((t) => want.test(t)), `${arm.name}: the aged date band lost a named moment (${want}) — named: ${named.join(' | ')}`).toBe(true)
+      }
+      // THE ROW COUNT, recorded from the first measurement of this route (2026-09-07) — never the
+      // fresh routes' "one or two, never three" (docs/architecture.md §12 records that as a
+      // measurement of FRESH routes; this arm is the amendment). The third row is GEOMETRY, not a
+      // layout defect: on a narrow figure "Work stops" at year 9 overlaps BOTH "Plan built" at year 0
+      // and "Today" at year 2 (PHONE, 308 px figure: Work stops [85, 146.6] vs Plan built [50.6, 104.5]
+      // and Today [65.1, 100.7]; FLOOR, 358 px: [103.8, 165.4] vs [58.8, 112.7] / [75.7, 111.3]), so
+      // the stagger — which packs MEASURED boxes — needs a third row; at REAL (446 px) Work stops
+      // starts at 136.9, clear of Plan built's 127.1, and the band takes two. The first-fit crossover
+      // from the 6 px pad and those rem-fixed boxes is a ~428 px figure — DERIVED, between the measured
+      // 358 (three) and 446 (two); no arm sits on it. A remedy that thinned
+      // the named set or changed the pack would move this number, and only a recorded value can see
+      // it (the seat tables' discipline). The three-row block on the aged date route is an
+      // aged-surface tone item for HIS eye (the register's aged-surface entry).
+      const rows = await page.locator('figure.band-figure .band-annotations').evaluate((el) => getComputedStyle(el).getPropertyValue('--ct-rows').trim())
+      report(`${arm.name} ?vault=datestale: annotation rows = ${rows}; named moments = ${named.join(' | ')}`)
+      expect(rows, `${arm.name}: the aged date band's row count moved (recorded ${AGED_DATE_ROWS[arm.name]}) — re-measure and update AGED_DATE_ROWS`).toBe(AGED_DATE_ROWS[arm.name])
+    })
+  })
+}
+
+// ── the ENLARGE modal: the one arm whose collision pass measures a TRANSFORMED frame ─────────────
+// The dialog animates scale 0.96 → 1 (src/viz/BandEnlargeModal.tsx) while useCollisionLayout
+// measures on layout-effect + ResizeObserver — neither re-fires on a transform, so a row assignment
+// computed under the 0.96 frame would never be corrected. REAL only: the affordance is FINE-POINTER
+// ONLY (src/viz/ConfidenceBandPanel.tsx — `(pointer: coarse)` hides it), so no touch arm can reach it.
+test.describe(`chart text — the enlarge modal (the transformed frame) — REAL (${REAL.width}×${REAL.height})`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+
+  test('the enlarged band holds every text contract on the settled frame, and never needs MORE rows than the inline one', async ({ page }) => {
+    await gotoSeedFinal(page, 'retired')
+    const floor = await floorPx(page)
+    const inlineRows = await page.locator('figure.band-figure .band-annotations').evaluate((el) => getComputedStyle(el).getPropertyValue('--ct-rows').trim())
+    await page.locator('.band-enlarge-surface').first().click()
+    const dialog = page.locator('.band-modal__dialog')
+    await expect(dialog, 'the enlarge modal did not open').toBeVisible()
+    // The 0.96 → 1 entry is driven by motion@12, which does NOT reliably register with
+    // document.getAnimations() — so settleLayout alone can return mid-transform, and this is the ONE
+    // arm whose whole point is the settled frame (the only prior measurement of this modal used a
+    // hard 600 ms wait, temp/chart-text/verify-modal.mjs). Wait for the dialog's own transform to
+    // reach identity, THEN settle layout.
+    await page.waitForFunction(
+      () => {
+        const d = document.querySelector('.band-modal__dialog')
+        if (!d) return false
+        const t = getComputedStyle(d).transform
+        return t === 'none' || t === 'matrix(1, 0, 0, 1, 0, 0)'
+      },
+      undefined,
+      { timeout: 10_000 },
+    )
+    await settleLayout(page)
+    // THE SCOPED SELECTOR: audit() resolves document.querySelector, and the modal is portaled to
+    // document.body AFTER #root (BandEnlargeModal.tsx createPortal) while both bands render the same
+    // `figure.band-figure` — a bare selector returns the INLINE band and this arm would silently
+    // re-test it. Prove the scope resolved a DIFFERENT figure before trusting the audit.
+    const modal = await audit(page, '.band-modal__dialog figure.band-figure', '[role="dialog"]')
+    const inline = await audit(page, ...BAND)
+    const modalW = modal.chartBox.right - modal.chartBox.left
+    const inlineW = inline.chartBox.right - inline.chartBox.left
+    expect(modalW, 'the modal audit resolved the INLINE figure — the scoped selector is not scoping').not.toBe(inlineW)
+    expect(modalW, 'the enlarged figure is not wider than the inline one — nothing was enlarged').toBeGreaterThan(inlineW)
+    assertChartText(modal, floor, 'REAL band/enlarged')
+    const modalRows = await page.locator('.band-modal__dialog figure.band-figure .band-annotations').evaluate((el) => getComputedStyle(el).getPropertyValue('--ct-rows').trim())
+    report(`REAL enlarge modal: figure ${modalW.toFixed(1)} px vs inline ${inlineW.toFixed(1)}; rows = ${modalRows} (inline ${inlineRows})`)
+    // A canary, not this arm's contract: the enlarged figure is min(100%, 68vh) of the dialog
+    // (band.css), 537.9 px at 791 against the inline 446, so a wider frame can never NEED more rows
+    // (the stagger packs MEASURED boxes, chartText.tsx). Equality is NOT the contract — the modal may
+    // resolve a collision the drawer cannot. The arm's real coverage is assertChartText on a frame no
+    // gate had ever measured. Both reads must be a count: `Number('')` is 0, and 0 <= 1 would pass.
+    expect(modalRows, 'the enlarged band published no --ct-rows — the row canary would be vacuous').toMatch(/^\d+$/)
+    expect(inlineRows, 'the inline band published no --ct-rows — the row canary would be vacuous').toMatch(/^\d+$/)
+    expect(Number(modalRows), `the enlarged band needs MORE rows (${modalRows}) than the inline one (${inlineRows}) — the collision pass measured the 0.96 entry frame`).toBeLessThanOrEqual(Number(inlineRows))
   })
 })

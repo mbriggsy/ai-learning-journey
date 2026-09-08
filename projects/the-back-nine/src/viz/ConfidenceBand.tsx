@@ -474,9 +474,16 @@ function AnnotationRules({ annotations, horizonYears }: { annotations: readonly 
  * staggered label to the svg's bottom edge so it still reads as its rule's label. The block's
  * height is reserved from the row count the layout produced (two lines of --text-xs per row), so
  * nothing below it moves while the answer is being read. The fit-law arms carry ONE row on every
- * spine household (temp/chart-text/precondition.json, 2026-09-05); the date route, which scrolls by
- * design, is where a SECOND row appears. A third has never been measured (docs/architecture.md §12,
- * insight 115: "one or two, never three").
+ * FRESH spine household (temp/chart-text/precondition.json, 2026-09-05); the fresh date route, which
+ * scrolls by design, is where a SECOND row appears (docs/architecture.md §12, insight 115: "one or
+ * two, never three" — a measurement of the fresh routes). The AGED returns take one more, measured
+ * 2026-09-07 and recorded in e2e/chart-text.spec.ts (AGED_SPINE_ROWS / AGED_DATE_ROWS): the aged
+ * spine TWO on every arm ("Plan built" and the wall-time "Today" two years apart overlap at every
+ * width), the aged date route THREE at the 308 px phone and 358 px floor figures ("Work stops" at
+ * year 9 overlaps both; the derived first-fit crossover is a ~428 px figure) and two at REAL's 446.
+ * The band renders INLINE on the answer frame (ConfidenceBandPanel, a static card — no door), so the
+ * aged spine's second row rides a frame the fit gate measures: vertical-fit's `?vault=stale` REAL
+ * arm holds the one-frame law with it in place. The aged date route scrolls by design.
  */
 function AnnotationBlock({ annotations, horizonYears }: { annotations: readonly XAnnotation[]; horizonYears: number }) {
   const ref = useRef<HTMLSpanElement>(null)

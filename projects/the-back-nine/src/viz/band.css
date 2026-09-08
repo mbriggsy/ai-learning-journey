@@ -280,11 +280,14 @@
 
 /* The enlarged band fits the viewport: cap its WIDTH by viewport height. The svg is 560:380 since
    2026-09-05 (its label gutter moved to the HTML annotation block below it), so width 68vh → svg
-   height ~46vh plus a one- or two-row annotation block (~42–80 CSS px: chartText.css .ct-block's
-   tail base 8 + rows × 33.8 + gaps), leaving room for the title,
-   the legend BELOW the band, and the dialog padding — all within the dialog's max-height so the
-   modal never grows a scrollbar that reveals nothing already off-screen. (68vh, not 82vh: the
-   horizontal legend shares the height budget; the shorter aspect leaves slack, deliberately unspent.) */
+   height ~46vh plus the annotation block (chartText.css .ct-block's tail base 8 + rows × 33.8 +
+   gaps: ~42 CSS px at one row, ~80 at two — every fresh route — and ~118 at three, which only the
+   AGED date return produces on a figure under ~428 px: the 1088 floor is a fine-pointer arm, so
+   that block can reach this modal there, unmeasured — the modal arm of e2e/chart-text.spec.ts
+   runs `retired` at REAL), leaving room for the title, the legend BELOW the band, and the dialog
+   padding — all within the dialog's max-height so the modal never grows a scrollbar that reveals
+   nothing already off-screen. (68vh, not 82vh: the horizontal legend shares the height budget; the
+   shorter aspect leaves slack, deliberately unspent.) */
 .band-modal__dialog .band-figure {
   max-inline-size: min(100%, 68vh);
   margin-inline: auto;

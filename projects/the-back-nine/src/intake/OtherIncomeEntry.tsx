@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { copy, slots, type CopyKey } from '@ui/copy'
 import type { ColaMode, IncomeStream, IncomeTaxTreatment, IncomeType } from '@shared/model'
 import { INCOME_TYPES } from '@shared/model'
@@ -6,6 +6,7 @@ import { colaRateInRange } from '@shared/incomeBounds'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { CurrencyField, IntegerField, PercentField, SegmentedControl } from './fields'
 import { FieldError } from './FieldError'
+import { focusHeading } from './a11y'
 import { bufferMoved, useUnsavedBufferHold } from './unsavedBuffer'
 
 /**
@@ -151,6 +152,11 @@ function fromInitial(initial: IncomeStream | undefined, draft: ScenarioDraft): F
 
 export function OtherIncomeEntry({ draft, initial, onSave, onCancel }: OtherIncomeEntryProps) {
   const id = useId()
+  // The editor's own heading — AccountEntry's twin, same reasoning, same scrolling default.
+  const headingRef = useRef<HTMLHeadingElement | null>(null)
+  useEffect(() => {
+    focusHeading(headingRef.current)
+  }, [])
   const [form, setForm] = useState<FormState>(() => fromInitial(initial, draft))
   // THE OPEN-BUFFER HOLD (unsavedBuffer.ts): a stream commits ATOMICALLY, so until Save the whole
   // form is component state the draft-reading unsaved-work guard cannot see. Hold while it has
@@ -296,6 +302,10 @@ export function OtherIncomeEntry({ draft, initial, onSave, onCancel }: OtherInco
 
   return (
     <div className="income-entry">
+      {/* h3, never h2 — see AccountEntry's twin. */}
+      <h3 className="entry-heading" tabIndex={-1} ref={headingRef}>
+        {initial === undefined ? copy.otherIncomeEntryAddHeading : copy.otherIncomeEntryEditHeading}
+      </h3>
       <SegmentedControl<'0' | '1'>
         legendKey="incomeOwnerLegend"
         name="income-owner"

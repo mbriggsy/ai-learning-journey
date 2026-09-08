@@ -574,11 +574,12 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     recDeltaTypicalNone: slots.recDeltaTypicalNone('48,000'),
     recDeltaTypicalBehind: slots.recDeltaTypicalBehind('48,000', '9,000'),
     recHoldStateCert: slots.recHoldStateCert('North Carolina'),
-    // Act-4 · U16 §S3b — the heir-bracket disclosure (recDisc* ⇒ require-hedge-swept) + the viz aria
-    // sentence (recViz* — NOT control-scoped; universal-gate-swept only). Figures pre-formatted.
+    // Act-4 · U16 §S3b — the heir-bracket disclosure AND the viz aria sentence, both control-scoped
+    // (recDisc* / recDelta* ⇒ require-hedge-swept). The aria sentence was renamed onto recDelta* on
+    // 2026-09-08: an AT reader hears the same figures the chart shows, so the same modal law binds it.
     recDiscHeirBracket: slots.recDiscHeirBracket('24'),
     assumptionHeirBracketOption: slots.assumptionHeirBracketOption('24'),
-    recVizAria: slots.recVizAria('Your plan today', '740,000', 'The recommended strategy', '788,000', '48,000'),
+    recDeltaVizAria: slots.recDeltaVizAria('Your plan today', '740,000', 'The recommended strategy', '788,000', '48,000'),
     recommendRecordSavedIn: slots.recommendRecordSavedIn(2026),
   }
 
@@ -958,6 +959,43 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     // gate polarity: a bald deterministic claim FAILS, a hedged one PASSES
     expect(lintCopy('The conversion saves you three years.', ['require-hedge']).length, 'bald → fail').toBeGreaterThan(0)
     expect(lintCopy('Converting could help in about 8 of 10 futures.', ['require-hedge']), 'hedged → pass').toEqual([])
+  })
+
+  // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
+  // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
+  // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:693-702, 775-791), which are correctly
+  // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
+  // the two universal gates (the `entries` loops at the top of this file — superlative and free-numeral
+  // are verdict-scoped); an unscoped SLOT rides the three voice gates + catastrophe (the SLOT_RENDER loop
+  // above) and NEVER the flat loops. Allowlisting is legal only for FIGURE-FREE chrome — pinned below.
+  const REC_SCOPED = /^rec(?!over)/
+  const UNSCOPED_FLAT_REC: readonly string[] = [
+    'recVizWithLabel', 'recVizWithoutLabel', 'recVizRunnerUpLabel',
+    'recGradeAriaUngraded', 'recSeeRunnerUp',
+  ]
+
+  it('every rec* key is verdict-scoped, control-scoped, or a NAMED figure-free exception', () => {
+    const flat = Object.keys(copy).filter((k) => REC_SCOPED.test(k))
+    const slotNames = Object.keys(slots).filter((k) => REC_SCOPED.test(k))
+    expect(flat.length, 'the rec* surface is non-empty (the net works)').toBeGreaterThan(40)
+    expect(slotNames.length, 'the rec* SLOT surface is non-empty too').toBeGreaterThan(0)
+    // Non-vacuity: the `over` exclusion is load-bearing AND live — the recovery keys exist and stay out.
+    const recovery = Object.keys(copy).filter((k) => /^recover/.test(k))
+    expect(recovery.length, 'the recovery keys exist').toBeGreaterThan(0)
+    expect(recovery.some((k) => REC_SCOPED.test(k)), 'and the net excludes every one').toBe(false)
+
+    const unscopedFlat = flat.filter((k) => !isVerdictKey(k) && !isControlKey(k))
+    expect(unscopedFlat.slice().sort()).toEqual([...UNSCOPED_FLAT_REC].sort())
+    // Every exception is figure-free chrome: a numeral or a dollar sign makes it a plan-moving claim,
+    // which belongs in a scope, not on this list.
+    for (const k of UNSCOPED_FLAT_REC) {
+      expect(copy[k as CopyKey], `${k} is allowlisted, so it must speak no figure`).not.toMatch(/[\d$]/)
+    }
+    // No SLOT may sit outside both scopes: a slot exists to carry a FIGURE, so an unscoped one is the
+    // pre-rename `recVizAria` shape by construction.
+    const unscopedSlots = slotNames.filter((k) => !isVerdictKey(k) && !isControlKey(k))
+    expect(unscopedSlots, 'a rec* slot carries a figure — it must be scoped').toEqual([])
   })
 
   it('require-hedge catches bald deterministic control claims (≥8) — the calm-but-wrong family', () => {

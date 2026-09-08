@@ -678,7 +678,7 @@ function recommendedView(payload: SolveRecommendation, opts: RecommendationViewO
             // The ENDPOINTS are portfolio-scale ABSOLUTES → the humane $X.XM prose dialect
             // (formatAbsoluteDollar); the DELTA between them stays grouped digits (deltaFigure), a smaller
             // difference that reads naturally grouped — the spine's dialect for the lockup's absolutes.
-            ariaSummary: slots.recVizAria(
+            ariaSummary: slots.recDeltaVizAria(
               copy.recVizWithoutLabel,
               formatAbsoluteDollar(baseM),
               copy.recVizWithLabel,
@@ -825,7 +825,7 @@ function runnerUpVizFor(payload: SolveRecommendation, isNoChange: boolean): Reco
     floorLabel: formatAxisDollar(0),
     axisMaxLabel: `~${formatAxisDollar(ceiling)}`,
     // The ENDPOINTS ride the absolute $X.XM prose dialect; the winner-vs-runner-up GAP stays grouped.
-    ariaSummary: slots.recVizAria(
+    ariaSummary: slots.recDeltaVizAria(
       copy.recVizRunnerUpLabel,
       formatAbsoluteDollar(runM),
       copy.recVizWithLabel,

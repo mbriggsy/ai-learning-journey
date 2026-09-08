@@ -279,6 +279,14 @@ export const copy = {
     'One at a time, from your statements — type, balance, what it holds, and what still goes in each year.',
   accountsEmpty: 'No accounts yet.',
   addAccount: 'Add an account',
+  // The account loop's two SWAPPED VIEWS each own a heading (2026-09-08). Tapping Add or Edit
+  // replaces the whole step body with the editor, and returning replaces it again — a swap the
+  // step heading above never reflects, because the step never changed. Without these the reader
+  // (sighted or not) was handed a new screenful of fields with nothing naming it, and focus stayed
+  // wherever the vanished button had been. Both are h3 under the step's h2 — never a second h2.
+  accountEntryAddHeading: 'Add an account',
+  accountEntryEditHeading: 'Edit this account',
+  accountsListHeading: 'Your accounts',
   accountSave: 'Add this account',
   accountCancel: 'Never mind',
   accountEdit: 'Edit',
@@ -322,6 +330,10 @@ export const copy = {
     'Money that keeps coming in after work stops — a pension, a rental, an annuity, alimony. Skip this if none applies.',
   otherIncomeEmpty: 'No other income added.',
   addOtherIncome: 'Add other income',
+  // The other-income loop's twin of `accountEntryAddHeading` above — same swap, same law.
+  otherIncomeEntryAddHeading: 'Add other income',
+  otherIncomeEntryEditHeading: 'Edit this income',
+  otherIncomeListHeading: 'Your other income',
   otherIncomeSave: 'Add this income',
   otherIncomeCancel: 'Never mind',
   otherIncomeEdit: 'Edit',
@@ -2672,8 +2684,14 @@ export const slots = {
     `Assumes your heirs are in roughly the ${percentFormatted}% tax bracket when they inherit — adjust it in your assumptions if that’s off.`,
   /** The RecommendationViz accessible sentence (the role="img" name): both arms' magnitudes AND the
    *  delta, so the whole comparison is reachable in the a11y tree (A2 AT-parity). "about" carries the
-   *  hedge; every figure arrives pre-formatted (the axis dialect), so the sentence carries no bare numeral. */
-  recVizAria: (withoutLabel: string, withoutFig: string, withLabel: string, withFig: string, deltaFig: string): string =>
+   *  hedge; every figure arrives pre-formatted (the axis dialect), so the sentence carries no bare numeral.
+   *  NAMED onto the `recDelta*` control prefix (`CONTROL_KEY_PREFIXES`, copyGuard.ts:119) so `require-hedge`
+   *  BITES it the way it bites its visual twin `recDeltaTypical`: the AT reader hears the same figures the
+   *  sighted reader sees, so the same modal law must hold. A `recViz` prefix was rejected — it would red the
+   *  three correctly hedge-free arm labels (`recVizWithLabel`/`recVizWithoutLabel`/`recVizRunnerUpLabel`,
+   *  :1749-1756 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
+   *  `isControlKey` was rejected — it breaks that predicate's "by prefix ALONE" law (copyGuard.ts:125). */
+  recDeltaVizAria: (withoutLabel: string, withoutFig: string, withLabel: string, withFig: string, deltaFig: string): string =>
     `${withoutLabel} lands near about $${withoutFig}; ${withLabel} about $${withFig} — a difference of about $${deltaFig}.`,
   // --- Act-4 · U17 §S5 — the saved record's AGE on the card. ---
   /** The mint year, spoken as a calendar year rather than a day count. It rides a SLOT because the

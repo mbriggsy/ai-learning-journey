@@ -66,8 +66,10 @@ jobs:
       # crypto does nothing for cleartext in the JS heap). The vitest guard checks the vercel.json
       # STRING; this serves dist/ through a header-applying harness and asserts a real Chromium blocks
       # an injected inline script + still constructs the engine worker. --with-deps pulls the OS libs
-      # headless chromium needs on ubuntu; chromium-only (we don't test firefox/webkit).
-      - run: pnpm exec playwright install --with-deps chromium
+      # the headless browsers need on ubuntu. WebKit is installed for the @cross-browser vault arms
+      # ONLY — playwright.config.ts's second project greps for that tag, so CSP enforcement itself is
+      # still proven in Chromium alone, and firefox is still untested.
+      - run: pnpm exec playwright install --with-deps chromium webkit
       - run: pnpm verify:csp
       # The real-browser VERTICAL-FIT gate (council 2026-07-08): the one-frame fit law
       # (--laptop-fit-height) + the date-route order contract, driven through `pnpm dev` on its own

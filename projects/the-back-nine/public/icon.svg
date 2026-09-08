@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="The Back Nine">
+  <!--
+    public/icon.svg is the app mark. THE SILHOUETTE IS THE CHANNEL.
+
+    The reader is COLOR BLIND, so this mark carries no information in hue: it is cream ink
+    (#faf7f2, the on-brand token in src/ui/styles/tokens.css) on the house green (#0b3d2e, the brand
+    token there) — the same green index.html's theme-color meta and public/manifest.webmanifest's
+    background_color and theme_color ship, so an installed tile matches its own splash. Desaturate
+    it and nothing is lost; the read is entirely FORM. No gradient, no text, no second color.
+
+    The form is a PIN FLAG standing on the crown of a green: a shallow arc (the putting surface),
+    one vertical staff rising from its apex, one solid pennant flying right. Three marks, one
+    weight. It names the product literally (the back nine is golf's closing stretch) and it survives
+    the 16 px favicon, where a fan, a chart or a monogram would mush; a baseline, an upright and a
+    triangle stay pairwise legible at any size.
+
+    Stroke vocabulary is quarried from the shipped glyph sets (VERDICT_GLYPH in
+    src/ui/verdictSignal.tsx, GRADE_GLYPH in src/ui/GradeSignal.tsx): a single stroke weight at the
+    house proportion (2 on a 24 grid is 8.3% of the frame; 44 on this 512 grid is 8.6%), round caps,
+    round joins, no fill on the open strokes. The pennant is the one deliberate departure. It is
+    FILLED rather than outlined, because a hollow triangle about 5 px across at favicon size closes
+    into a blob.
+
+    GEOMETRY AND SAFE ZONE (measured off the rendered 512 px pixels, not computed from the path
+    data): the ink spans x 96..415, y 94..405 — 320 by 312 px, 62.5% of the frame wide and 60.9%
+    tall, horizontally dead centre, sitting 6 px above the frame's vertical centre for the optical
+    lift an icon wants, and covering 12.6% of the tile. That is the "any" framing. The maskable
+    variant is this same file drawn at 86% on the same ground: the farthest corner of that ink box
+    is 227 px from centre, so at 86% it is 195 px, inside the 205 px radius of the 80% diameter safe
+    circle the maskable spec reserves.
+
+    THIS FILE IS THE SOURCE OF TRUTH. Every raster (icon-192, icon-512, icon-512-maskable at 86%,
+    apple-touch-icon at 180, and the 16 / 32 / 48 frames inside favicon.ico at 106%) is this SVG
+    drawn centred at that scale on an opaque #0b3d2e ground and screenshot at deviceScaleFactor 1.
+    Nothing else is needed to reproduce them. scripts/__tests__/pwa-icons.test.ts is the standing
+    gate that the rasters, the manifest and index.html still agree with each other.
+
+    (No double hyphen may appear in this comment. XML forbids it inside a comment, and an SVG that
+    fails to parse renders as a broken-image glyph with no error anywhere — it screenshots as a
+    plain green square, which is exactly how the first cut of these icons was silently wrong.)
+  -->
+  <rect width="512" height="512" fill="#0b3d2e"/>
+  <g fill="none" stroke="#faf7f2" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
+    <!-- the green's crown -->
+    <path d="M118 384 Q256 348 394 384"/>
+    <!-- the flagstick, footed on the crown -->
+    <path d="M256 366 V116"/>
+  </g>
+  <!-- the pennant: filled so it holds its triangle at 16 px, hairline stroked for the same round
+       corner language as the strokes above -->
+  <path d="M256 116 L408 174 L256 232 Z" fill="#faf7f2" stroke="#faf7f2" stroke-width="14" stroke-linejoin="round"/>
+</svg>

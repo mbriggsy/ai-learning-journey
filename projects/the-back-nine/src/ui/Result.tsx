@@ -374,6 +374,30 @@ export function Result({
       solve.kind === 'compute-error' ||
       (solve.kind === 'blocked' && solve.gap === 'goal-unset'))
 
+  // §S2 — THE GOAL PICKER'S LEAD IS VERDICT-GATED. "With the basics covered" is false on the cohort
+  // the door still opens the picker for. Gated on the sticky DISPLAY triple the verdict sentence
+  // itself renders from (the U12 C2 raw/sticky split in answerView's `headline` arm), never the raw
+  // headline — a hysteresis frame must not show the lead over a failing sentence. A POSITIVE list: a
+  // new OutcomeState falls to silence rather than inheriting the claim. 'borderline' ("On the line")
+  // is deliberately IN — the Caddie killed the "basics covered" premise tension on that verdict with
+  // receipts (docs/caddie/cold-read-log.md, the 2026-07-23 U16 recommend-second walk, Card 1
+  // `solve:nc`); this closes the already-failing hole it left open and must not re-litigate the
+  // cleared arm. This expression evaluates on EVERY render, indeterminate frames included; there it
+  // is `snapshot.displayed === null` that silences the lead, not the door — `displayed` is non-null
+  // exactly on a non-indeterminate spine verdict (the Phase B commit-coherence invariant answerView
+  // trusts), and null on the date route / error / inputs-incomplete too (memoryModel's `commit`
+  // re-resolves it on every commit; the rule is stated on `MemoryModelSnapshot.displayed`). EVERY
+  // route into the picker is covered by construction — there is ONE <GoalPicker> element and the
+  // gate rides its prop, never a door's own condition. Which matters, because the routes in are
+  // FOUR: the quiet-row invite (focusKey-gated, `solveInvitable`), the record card's `onReopen`
+  // minted below, and the stale + committed beats' re-picks (`onRepick` into RecommendationSurface)
+  // — the last three ride the solve/record channels, NOT `focusKey`.
+  const goalLeadPremiseHolds =
+    snapshot.displayed !== null &&
+    (snapshot.displayed.outcomeState === 'on-track' ||
+      snapshot.displayed.outcomeState === 'over-funded' ||
+      snapshot.displayed.outcomeState === 'borderline')
+
   // THE CARD AND ITS DOOR, MINTED IN ONE EXPRESSION — the fork the F-B chair fix closed: label, cost
   // line and onClick are inseparable, and the surface's dead-button law (no handler ⇒ no control)
   // makes divergence unrepresentable.
@@ -781,6 +805,7 @@ export function Result({
         current={snapshot.draft.chosenGoal}
         onPick={pickGoal}
         onClose={() => setGoalOpen(false)}
+        basicsCovered={goalLeadPremiseHolds}
         restoreFallback={restoreToAssumptionsDoor}
       />
     </main>

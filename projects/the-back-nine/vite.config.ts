@@ -37,7 +37,19 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         // Precache the shell INCLUDING the hashed engine-worker .js chunk so the
         // offline shell can spin the engine on a second visit.
-        globPatterns: ['**/*.{js,css,html,webmanifest,woff2}'],
+        //
+        // png/svg/ico carry the APP MARK (public/icon.svg + the rasters cut from it, listed in
+        // public/manifest.webmanifest's `icons` and linked from index.html). They are here because
+        // `manifest: false` above is deliberate — a hand-authored manifest means vite-plugin-pwa
+        // never sees an icon list, so it precaches none of them, and an installed PWA that opens
+        // offline would show a blank tile. ONE mechanism, named: do NOT also add `includeAssets`,
+        // which would enumerate the same files a second time. `globIgnores` below stays untouched —
+        // it is for dead font subsets only, and no image belongs in it.
+        //
+        // No CSP or harness change is needed for this, and neither should be re-opened: vercel.json
+        // already ships `img-src 'self' data:` (and `manifest-src 'self'`), and the CSP harness
+        // scripts/serve-dist-with-headers.ts already maps .svg / .png / .ico in its MIME table.
+        globPatterns: ['**/*.{js,css,html,webmanifest,woff2,png,svg,ico}'],
         // The fontsource CSS registers every language subset behind unicode-range —
         // the browser lazily fetches only what it renders (English UI: latin, plus
         // latin-ext for diacritic names), but the precache would eagerly fetch ALL

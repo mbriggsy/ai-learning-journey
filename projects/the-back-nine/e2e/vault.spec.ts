@@ -10,6 +10,14 @@
  *
  * The store/crypto source is bundled at spec time with vite's JS API — no separate
  * build artifact to go stale, no new dependency.
+ *
+ * CROSS-BROWSER SCOPE — and its honest boundary. The two `@cross-browser`-tagged arms below
+ * ALSO run under WebKit (playwright.config.ts's second project greps for that tag); the KDF
+ * spike stays Chromium-only, because its recorded verdict is about Chromium's WebCrypto
+ * thread pool. What the WebKit arms prove: the IndexedDB / Web Locks / BroadcastChannel paths
+ * RUN there, and the `vault-caps` annotation RECORDS which storage capabilities that engine
+ * exposes. What they do NOT prove: Safari's eviction behaviour. Nothing in this repo executes
+ * a real eviction — both harnesses model it with a wipe (`clearVault`).
  */
 import { expect, test } from '@playwright/test'
 import { resolve } from 'node:path'
@@ -59,9 +67,9 @@ declare global {
   }
 }
 
-test('the full trust loop holds on real IndexedDB: save → lock → unlock → export → wipe → restore', async ({
+test('the full trust loop holds on real IndexedDB: save → lock → unlock → export → wipe → restore', { tag: '@cross-browser' }, async ({
   page,
-}) => {
+}, testInfo) => {
   await page.goto(CONTROL_ORIGIN)
   await page.addScriptTag({ content: harnessBundle })
   const report = await page.evaluate(() => window.VaultHarness.runTrustLoop())
@@ -79,9 +87,32 @@ test('the full trust loop holds on real IndexedDB: save → lock → unlock → 
   expect(report.restoreOk).toBe(true)
   expect(report.reopenWithNewPassphraseOk).toBe(true)
   expect(report.restoredModelEqual).toBe(true)
+
+  // WHICH platform the green above was earned on — recorded per project, following the KDF
+  // spike's pattern (annotation + console line). Without it a WebKit green could prove less
+  // than this spec's own sentence: `underWebLock` in src/store/db.ts falls through to a bare
+  // `fn()` when Web Locks is absent, so the single-active-writer story would then be riding on
+  // session.ts's BroadcastChannel alone.
+  const capsLine =
+    `[vault-caps] project=${testInfo.project.name} webLocks=${report.caps.hasWebLocks} ` +
+    `persist=${report.caps.hasPersist} broadcastChannel=${report.caps.hasBroadcastChannel}`
+  testInfo.annotations.push({ type: 'vault-caps', description: capsLine })
+  console.log(capsLine)
+
+  // Assert the ONE capability the loop's claim depends on. `storage.persist()` is deliberately
+  // ADVISORY in this product — `requestPersist` in src/store/db.ts returns null when it is
+  // missing and swallows a throw, on the rule that a throwing persist() must never turn a
+  // committed save into a failure — so asserting it would red the gate for a capability the
+  // shipped code does not require. A browser missing it is the recorded line above, not a red.
+  expect(
+    report.caps.hasWebLocks,
+    'the trust loop must run under a REAL Web Lock, not underWebLock’s bare-fn fallback in src/store/db.ts',
+  ).toBe(true)
 })
 
-test('a REAL second tab unlocking an active vault is read-only and its write is refused', async ({ context }) => {
+test('a REAL second tab unlocking an active vault is read-only and its write is refused', { tag: '@cross-browser' }, async ({
+  context,
+}) => {
   const page1 = await context.newPage()
   await page1.goto(CONTROL_ORIGIN)
   await page1.addScriptTag({ content: harnessBundle })

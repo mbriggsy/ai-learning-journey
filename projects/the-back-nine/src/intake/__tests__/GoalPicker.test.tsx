@@ -14,7 +14,9 @@ import { RECOMMENDATION_GOALS } from '@shared/model'
  *  - real labelled radios derived from the canonical RECOMMENDATION_GOALS array, each with a gloss;
  *  - the UNSET SENTINEL (burned/062): a first open pre-selects NOTHING and the confirm is disabled —
  *    never a silent default (the planted default-select mutant dies here);
- *  - a RE-pick pre-selects the standing choice and a confirmed pick calls back with the goal.
+ *  - a RE-pick pre-selects the standing choice and a confirmed pick calls back with the goal;
+ *  - the INTRO LEAD IS VERDICT-GATED (`basicsCovered`) — omitted, never reworded, when the verdict
+ *    the household just read does not support its premise, and the dialog stays fully usable.
  */
 
 // jsdom has no matchMedia (the sheet's useReducedMotion reads it) — benign stub.
@@ -46,7 +48,7 @@ const payLess = () => radio(/Pay less tax/)
 
 describe('GoalPicker — the dialog + radio grammar', () => {
   it('renders a labelled dialog with ONE radio per canonical goal, each carrying its gloss', () => {
-    render(<GoalPicker open current={undefined} onPick={noop} onClose={noop} />)
+    render(<GoalPicker open basicsCovered current={undefined} onPick={noop} onClose={noop} />)
     const dialog = screen.getByRole('dialog')
     expect(dialog).toHaveAttribute('aria-modal', 'true')
     // The heading names the dialog (aria-labelledby → the title).
@@ -66,9 +68,9 @@ describe('GoalPicker — the dialog + radio grammar', () => {
     // Mount CLOSED then open (the app's real shape — the announcer/focus effects must fire on the
     // open TRANSITION, not only a mounted-open first render).
     const { rerender } = render(
-      <GoalPicker open={false} current={undefined} onPick={noop} onClose={onClose} />,
+      <GoalPicker open={false} basicsCovered current={undefined} onPick={noop} onClose={onClose} />,
     )
-    rerender(<GoalPicker open current={undefined} onPick={noop} onClose={onClose} />)
+    rerender(<GoalPicker open basicsCovered current={undefined} onPick={noop} onClose={onClose} />)
     await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
     // Focus lands on the heading (tabIndex -1), not a radio.
     expect(screen.getByRole('heading', { name: copy.goalPickerTitle })).toHaveFocus()
@@ -87,7 +89,7 @@ describe('GoalPicker — the dialog + radio grammar', () => {
 
 describe('GoalPicker — the UNSET SENTINEL (never a silent default)', () => {
   it('a first open pre-selects NOTHING and the confirm is DISABLED', () => {
-    render(<GoalPicker open current={undefined} onPick={noop} onClose={noop} />)
+    render(<GoalPicker open basicsCovered current={undefined} onPick={noop} onClose={noop} />)
     // No radio is checked — the choice is genuinely unset (burned/062: never a plausible default).
     expect(screen.getAllByRole('radio').some((r) => (r as HTMLInputElement).checked)).toBe(false)
     // The confirm cannot fire a solve on an un-chosen goal.
@@ -95,7 +97,7 @@ describe('GoalPicker — the UNSET SENTINEL (never a silent default)', () => {
   })
 
   it('the confirm CTA is visibly MUTED until a pick — the disabled state flips to enabled on pick (F-D)', () => {
-    render(<GoalPicker open current={undefined} onPick={noop} onClose={noop} />)
+    render(<GoalPicker open basicsCovered current={undefined} onPick={noop} onClose={noop} />)
     // Unpicked: the native `disabled` state drives the shipped muted treatment (.btn-primary:disabled —
     // opacity, a LIGHTNESS cue, never hue), so a spouse never reads a full-saturation CTA as ready to act.
     expect(confirmBtn()).toBeDisabled()
@@ -106,7 +108,7 @@ describe('GoalPicker — the UNSET SENTINEL (never a silent default)', () => {
 
   it('picking a goal enables the confirm, and confirming reports THAT goal', () => {
     const onPick = vi.fn()
-    render(<GoalPicker open current={undefined} onPick={onPick} onClose={noop} />)
+    render(<GoalPicker open basicsCovered current={undefined} onPick={onPick} onClose={noop} />)
     fireEvent.click(payLess())
     expect((payLess() as HTMLInputElement).checked).toBe(true)
     expect(confirmBtn()).toBeEnabled()
@@ -117,7 +119,7 @@ describe('GoalPicker — the UNSET SENTINEL (never a silent default)', () => {
 
   it('a confirm without a pick is inert (disabled — never a defaulted dispatch)', () => {
     const onPick = vi.fn()
-    render(<GoalPicker open current={undefined} onPick={onPick} onClose={noop} />)
+    render(<GoalPicker open basicsCovered current={undefined} onPick={onPick} onClose={noop} />)
     fireEvent.click(confirmBtn()) // disabled ⇒ no-op
     expect(onPick).not.toHaveBeenCalled()
   })
@@ -125,16 +127,33 @@ describe('GoalPicker — the UNSET SENTINEL (never a silent default)', () => {
 
 describe('GoalPicker — the RE-pick (the standing choice, a new dispatch)', () => {
   it('re-opening pre-selects the standing goal (a re-pick is not the unset sentinel)', () => {
-    render(<GoalPicker open current={'leave-more'} onPick={noop} onClose={noop} />)
+    render(<GoalPicker open basicsCovered current={'leave-more'} onPick={noop} onClose={noop} />)
     expect((leaveMore() as HTMLInputElement).checked).toBe(true)
     expect(confirmBtn()).toBeEnabled()
   })
 
   it('a re-pick reports the DIFFERENT goal (the visible re-solve trigger)', () => {
     const onPick = vi.fn()
-    render(<GoalPicker open current={'leave-more'} onPick={onPick} onClose={noop} />)
+    render(<GoalPicker open basicsCovered current={'leave-more'} onPick={onPick} onClose={noop} />)
     fireEvent.click(payLess())
     fireEvent.click(confirmBtn())
     expect(onPick).toHaveBeenCalledWith('pay-less-tax')
+  })
+})
+
+describe('GoalPicker — the lead is verdict-gated', () => {
+  it('renders the intro only when the household’s verdict supports its premise', () => {
+    render(<GoalPicker open basicsCovered current={undefined} onPick={noop} onClose={noop} />)
+    expect(screen.getByText(copy.goalPickerIntro)).toBeInTheDocument()
+    cleanup()
+    // The already-failing cohort: the lead would assert what the verdict one tap above just denied,
+    // so it is OMITTED — the dialog stays fully usable without it (title, both radios, the confirm).
+    render(
+      <GoalPicker open basicsCovered={false} current={undefined} onPick={noop} onClose={noop} />,
+    )
+    expect(screen.queryByText(copy.goalPickerIntro)).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: copy.goalPickerTitle })).toBeInTheDocument()
+    expect(screen.getAllByRole('radio')).toHaveLength(RECOMMENDATION_GOALS.length)
+    expect(confirmBtn()).toBeInTheDocument()
   })
 })

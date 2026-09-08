@@ -19,23 +19,58 @@
 **Where we are:** all four acts are built; Act 4 closed at U17·S6 (S7 deferred, Briggsy's ruling). What is
 left is not units. It is the gap between *the build is done* and *a friend can bet real money on this*.
 
-▶ **START HERE (b9-6) — hand-off 2026-09-06 morning.** The 2026-09-06 `/doc-audit` + the AS-BUILT rewrite of
-21 docs are COMPLETE and verified: every skeptic pass committed; every finding of the five audit reports
-re-judged against the tree (fixed, deliberately accepted, or never real — the five survivors landed this
-morning); every skeptic report harvested for unfiled defects — 22 survived refutation and are landed or filed.
-The hand-off's filings: (H) → Tier 1 *The three U17 action-warning branches plan 4 specified and the build
-never shipped…*; (I) → Tier 2 *A re-save that never touches the knob reclassifies a took-the-default household
-as an overrider…* (the engine-domain blind spot is its BULLET — `src/store/staleness.ts:53-62` already
-adjudicates the class); (K) → a Tier 4 bullet on *The gates that don't bite* (Tier 4, not the hand-off's Tier 2
-— no `src/` consumer); (J) needed NOTHING — all four items were already on the register. The roadmap U15 row
-is rewritten (FIVE stale clauses, not three). The SaveFlow CI flake (`bc026ef4`'s red run) is fixed at the
-test — `SaveFlow.test.tsx` read a passive-effect listener synchronously after a DOM-presence wait.
+▶ **START HERE (b9-7) — hand-off 2026-09-08 morning.** The b9-4 ranked plan below is DISCHARGED through (5): (1) the RV
+gate `c135a99c` · (2) the critic's arms `96e87e0f` · (3) the unmeasured trio `da881de5` · (5) the legend council `2d671144`
+— each CI-green by run id — and (4) five of six arms integrated and committed as the item-4 commit (`git log -1 -- .`,
+2026-09-08; its gates: typecheck · lint · 3474 tests / 172 files · doc-stats · build · bundle · csp with WebKit · fit 119).
+**THE DEBT THIS SESSION LEAVES, in order:**
+(a) **The adversarial review of the item-4 integration is OWED.** Items 1–3 each got a 4-lens × 3-refuter review before
+commit and each found 10–21 defects in the first draft; item 4 shipped on the builders' own gates with NO independent
+review. First thing: the same review shape over `git diff 2d671144..HEAD -- projects/the-back-nine .github`; fix; commit.
+(b) **~97 line-numbered citations drifted and are wrong-but-green.** The phone arm added +12 lines to `copy.ts` (after
+`addAccount`) and +32 to `questions.tsx`; item 10 added ~8 more to `copy.ts` near `recDeltaVizAria`. doc-stats only reds a
+citation that lands on a BLANK line (five were fixed), so ~94 stale cites remain across TODO.md, `docs/council-log.md`,
+`docs/caddie/cold-read-log.md` and eight plan docs. The builder's old→new map is
+`temp/phone-walk/phone-walk-2-4-citation-drift.txt` (arm C's shift ONLY — item 10's is not in it) and its generator is
+NOT idempotent (a "skip if already correct" guard is vacuous against a pure insertion). Do NOT run it blind: re-anchor with
+a verify→skeptic fleet that OPENS each line (the 2026-09-06 shape), the map as a hint.
+(c) **The 24 px fit-law council is OWED.** Its first sitting lost all eleven elders to the session limit
+(`wf_05173c0f-4b7`; the limit resets 02:20). Re-dispatch `Workflow({ name: 'council', weight: 'full' })` with the issue
++ context from `temp/fit-24px/measurements.md` and the register's *The app on someone else's device* third bullet; the
+held-out block is `temp/fit-24px/arm-c-enlarged-text-fit.patch` (KEEP — it reds `verify:fit` as delivered). Framing:
+a documented scroll asserted as ORDER (the date route's contract) vs a large-text regime (a design unit).
+(d) ✅ DONE at hand-off — the six builder worktrees (`wf_b55ea9cc-c0c-1..6`) are deregistered and their directories
+deleted (git's own remove left them "not empty" — pnpm junctions; PowerShell `Remove-Item -Recurse -Force` did it); every
+patch and artefact was harvested first (`temp/icons/`, `temp/phone-walk/`, `temp/fit-24px/`, all KEEP).
+(e) **The phone strip-reserve fork** (register *The phone intake walk* item 3): the two-block strip measured 278 px =
+17.4 rem, Continue lands at y 1,378 on the Social Security step at scroll 0 — a reserve sized for a rare state taxes
+every step; his eye or a council, not a pilot number.
+(f) **Ranked (6)**, the Caddie walk of the four chart faces at REAL + PHONE — now also carrying the legend swatch redraw's
+shape + the outer edge (council 2026-09-08), the pre-registered "point to the middle half" + faded-column read, the aged
+date band's three-row block at 390 / 1088, the icon silhouette (`temp/icons/preview.png`), the RV above-bar-labels fork.
+**HIS EYE, post-hoc (the batched-oracle law):** the icon silhouette · the three-row aged date block · the legend
+swatches (deliberately unchanged until the walk) · the goal picker with its lead OMITTED on `?seed=failing`.
 
-**HIS EYE — READ 2026-09-06, CALM:** the rewrite's one user-facing copy change (`src/ui/copy.ts:380`, the annuity
-"tax-free part" help; the R40 record rules the held share OPTIMISTIC) — his read "feels calm", logged in
-`docs/caddie/cold-read-log.md`; nothing owed. **The b9-4 plan below is the queue** — its HIS EYE FIRST item, the council-held 320 shape, was RULED and BUILT the same day; the two forks it left for his eye are written there. Two hygiene entries filed this morning,
-unranked: the solver profile's `rankableCount` divergence and the state-tax roster's two re-verify dates (both
-Tier 4; the deadline table below now carries both dates).
+**LANDMINES (2026-09-08):** a `council` Workflow can lose EVERY elder to the 5-hour session limit and returns a "hawk
+seat crashed → re-dispatch" verdict — never execute one; re-dispatch after the reset · jsdom 29 has NO
+`document.scrollingElement` (the TS lib types it non-optional) — the guard must be nullish, a `!== null` check threw in 60
+tests · `settleLayout` ENDS in `scrollTo(0,0)` — a gate whose subject is the scroll position must not call it before
+measuring (the first mutant went green for exactly that) · a Playwright `.click()` scrolls its target into view — use an
+in-page `button.click()` when the offset is the subject · `?seed=datesolo` NEVER stamps `data-answer-tier="final"` (the
+refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result` · Playwright's 390×844 mobile emulation
+reports `innerHeight` 862 (870 on the first step) against a 844 `visualViewport` — pick one deliberately · WebKit has no
+`navigator.storage.persist()` — record, never assert · `git diff` elides binary assets — the icons patch needed
+`--binary`, or the manifest ships pointing at files that do not exist · a `--` inside an SVG XML comment breaks the
+rasterizer SILENTLY · `copyGuard.test.ts` is CRLF (the one CRLF file seen this session) — detect EOL per file, always ·
+a canary that enumerates the LIVE catalog (`Object.keys(slots)`) is not redded by a fixture-only mutant — plant in
+`copy.ts` · the CSP real-intake test ran under Playwright's 30 s DEFAULT with 60 / 90 s waits inside it (dead letters:
+a matcher timeout never clamps to the test deadline, and no custom message prints) — `test.setTimeout` scoped to the one
+heavy test · `<ChartReadoutRow>` renders in BOTH seats and marks `data-active` either way — seat-aware locators, never
+an OR · taps and hovers land in VIEWPORT coordinates — on a 390-tall viewport scroll the target into view first ·
+`gh run list --commit` needs the FULL sha; match `headSha.startsWith` instead · a detached
+`pwsh -Command "cmd *> log; Add-Content …"` never appended its exit line — read Playwright's own summary · the digest's
+anchors were three days stale on EVERY item (chart-text.spec.ts 254 → 1,750 lines) — the builders re-derived all of
+them, and a verifier that trusts a skeptic's line number is as wrong as one that trusts the verifier's.
 
 **LANDMINES (2026-09-06):** an identifier-proximity anchor gate measured 21–42 % false positives on freshly
 verified citations — REJECTED; arm 4 is structural only (file exists · line in range · not blank · range
@@ -57,7 +92,7 @@ backslash inside a regex — write big edit payloads and scripts with the Write 
 column: a per-width seat is governed by the WIDEST column, so "looks great" at the mid column hid the column-0 overflow on the
 390 phone — measure the whole catalog before reading a frame as proof (insight 123).
 
-▶ **(b9-4, the ranked plan — enter here) hand-off 2026-09-05 late evening. The b9-3 plan's steps 1–3 SHIPPED: `32c1231d`
+▶ **(b9-4, the ranked plan — DISCHARGED through (5) on 2026-09-07/08, (6) remains; enter at the b9-7 START HERE above) hand-off 2026-09-05 late evening. The b9-3 plan's steps 1–3 SHIPPED: `32c1231d`
 (the gate hardened in one pass + the council's ship-now list) · `b4b27a60` (the hygiene sweep) · `8748e4f5`
 (the CI fix — a Windows-pinned ink threshold) · `abf1ab38` (insights 117–121). CI run 34005602885 is GREEN on
 Linux (97 fit tests, 11.8 m). Enter here. (The b9-2 / b9-3 hand-offs that used to follow were deleted 2026-09-06 with the doc audit — git log + the kept digest are the record; their still-open re-verify clauses are folded into the ranked entries below as ⚑ blocks.)**
@@ -135,9 +170,21 @@ end-anchored tick goes negative on a narrow arm); architecture §12's "Positions
 Gap 5's two false source comments (`band.css`, `BandLegend.tsx`: "never the sole non-color signal") now say the true
 state — the legend is the only SIGHTED tier channel, the AT reader has the sr-only range sentence — and the
 register's residual (e) is filed as the COUNCIL fork it is (ranked (5) below).
-(4) Ranked 8 (icons / webkit text), 10 + 11 (the guards; the goal picker's "basics covered" lead on a failing
-household needs HIS words over a pilot gate), the phone P2s 2–4 — digest `ranked-8-icons-webkit-text`,
-`ranked-10-11-guards`, `phone-walk-2-4`.
+(4) ✅ FIVE OF SIX ARMS SHIPPED 2026-09-08 (six isolated-worktree builders, each mutant-proven, integrated by the pilot; the
+integration's adversarial review is OWED — see the START HERE). Item 10: `recVizAria` → `recDeltaVizAria` on the control prefix
++ the `/^rec(?!over)/` scope canary (the measured unscoped set: five figure-free flat keys, zero slots; four mutants). Item 11: the
+goal picker's lead is verdict-gated (`basicsCovered`, REQUIRED, from the sticky `displayed` triple as a POSITIVE list incl.
+`borderline`; FOUR controls open the picker, one predicate; the lead is OMITTED on the failing cohort — the WORDS stay his;
+`goalLeadGate.test.tsx` pins the wiring). Phone P2s 2 + 4: a step change resets the document scroll (the DOCUMENT is the
+scroller; jsdom lacks `scrollingElement` — nullish guard) and the account / other-income editors + lists got focusable h3s;
+`e2e/intake-fold.spec.ts` (3 tests, on the fit harness + the CSP denylist) gates it. Icons: six assets rasterized from
+`public/icon.svg`, the manifest `icons` array, the favicon links, the workbox glob — installable, precached, `pwa-icons.test.ts`;
+⚑ HIS EYE post-hoc: `temp/icons/preview.png`. WebKit: a second Playwright project greps `@cross-browser` for the two vault arms;
+WebKit exposes NO `navigator.storage.persist()` (recorded, never asserted — `db.ts` calls it advisory). STOPPED, honestly:
+phone P2 3 (the strip reserve — the two-block strip measured 278 px = 17.4 rem, Continue lands at y 1,378 on the Social
+Security step at scroll 0; a viewport-tax fork, register *The phone intake walk* item 3) and the ENLARGED-TEXT fit arm (all
+eight 24 px arms red inside the PROTECTED set; the block is held out at `temp/fit-24px/`, the council is OWED — register
+*The app on someone else's device*, third bullet).
 (5) ✅ COUNCIL-DECIDED 2026-09-08 (8/10, executed — `docs/council-log.md`): the §2 tier-callout deviation is ACCEPTED — A rejected
 on un-oracled wrong-region risk, the `isThinCohort` bypass and the morph teleport, NOT on room (the pilot's "vertical ink budget"
 reason was FALSE — the Honesty Hawk's veto, honored: the text layer is absolutely positioned, zero flow cost). The register's
@@ -346,7 +393,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    no-tax seven moves coverage ~14% → ~27%, of which **Texas alone is two-thirds** — so *which of your
    friends' states actually matter* may make the fork moot. Landmines for the refuse arm: insight-081's
    degenerate overlay ($0 portfolio) builds no overlay and would read as unpriced (**false refusal**), and
-   the state step is deliberately **non-blocking** (`questions.tsx:569-575`), so refusing on ABSENT walls
+   the state step is deliberately **non-blocking** (`questions.tsx:570-576`), so refusing on ABSENT walls
    every household that skipped it.
    ⚑ **2026-09-04:** "no token on the headline/date" is TRUE; "no honesty gate at all" would be FALSE — a
    state-tax disclosure already renders on both first-answer surfaces (`composeVerdictMedicareResidual`,
@@ -355,8 +402,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    `medicarePricedNote` (`healthSheetChrome.ts:336-341` — Medicare-priced AND no health door), so it ships
    for the all-65+ population and is ABSENT for every pre-65 / health-door household — the fuck-off-date
    audience. A THIRD token-less lane exists: `runTwoArm` (`engineProtocol.ts:321`, the U10 control
-   preview), gated by copy only. Anchors: `stateStep` `questions.tsx:569`, `fields: []` at `:576`, the
-   retired twin `:592`.
+   preview), gated by copy only. Anchors: `stateStep` `questions.tsx:570`, `fields: []` at `:577`, the
+   retired twin `:593`.
 
 4. ✅ **SHIPPED 2026-08-03 (`bd851f24`) — the record card no longer implies the household acted.** What remains — naming the strategy (his ruling) and the advice-not-taken semantic witness that has now missed three times — lives in the register entry "The saved-record card does not name the strategy".
 
@@ -590,9 +637,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     SVG glyph vocabulary (GradeSignal / verdictSignal / BandLegend) is the silhouette source; CSP already
     allows `img-src 'self'`. WEBKIT: `playwright install webkit` IS required (the on-disk `webkit-2272` is a
     stale revision — `@playwright/test` 1.60.0 needs 2287, launch fails today) + `webkit` on
-    `verify-the-back-nine.yml:70` (the `verify` job's install — NOT the `:107` twin in the `verify-rv-chart-text`
-    job); scope at TEST level — `vault.spec.ts:62` (trust loop) + `:84`
-    (second-tab read-only), never the whole file: the KDF spike `:106-137` asserts a Chromium-only
+    `verify-the-back-nine.yml:72` (the `verify` job's install — NOT the `:109` twin in the `verify-rv-chart-text`
+    job); scope at TEST level — `vault.spec.ts:70` (trust loop) + `:113`
+    (second-tab read-only), never the whole file: the KDF spike `:137-168` asserts a Chromium-only
     thread-pool fact; the arm proves the IndexedDB / Web Locks / BroadcastChannel / `storage.persist()`
     paths RUN in WebKit — it does NOT verify Safari eviction (nothing in the repo executes a real eviction;
     both harnesses model it with a wipe). ENLARGED TEXT: `Page.setFontSizes` re-probed 2026-09-04 against
@@ -655,17 +702,19 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     a model of him. Reach for the human before building the simulator.
 
 ---
-    ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 10, the hygiene session) — its 2026-09-04 re-verify clause, still live:** Hygiene session (M): the copyGuard scope canary first (six `rec*` keys sit in neither scope today).
+    ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 10, the hygiene session) — its 2026-09-04 re-verify clause:** Hygiene session (M): the copyGuard scope canary **DONE 2026-09-08**; everything after it in this paragraph is still live.
     ⚑ **2026-09-04:** "nine items" was UNSOURCED (no such list exists anywhere; Tier-4 "The gates that don't
     bite" carries 14 filed bullets = 13 distinct, one of them the CVD probe Briggsy parked). The real
-    copyGuard defect is ONE key: `recVizAria` (`copy.ts:2674` — was filed `:2666`) speaks three dollar figures + a delta to a
-    screen reader outside require-hedge — the AT twin of the gated `recDeltaTypical` — and its exclusion is
-    a RECORDED decision (`copyGuard.test.ts:577-578`), so the fix reverses a stated call, not an accident.
-    Fix = RENAME it onto an existing control prefix (`recDeltaVizAria`; a new `recViz` prefix would red
-    three correctly hedge-free labels) + a catalog canary over `/^rec(?!over)/` (a bare `/^rec/` reds 16
-    innocent `recovery*` intake keys) with a NAMED allowlist that SPLITS flat keys from slots (unscoped flat
-    keys get 2 gates, unscoped slots get 3 + catastrophe). Scope is decided ONLY in the test file
-    (`lintCopy` is scope-agnostic) — the canary is a row there, not a gate. The 11 byte-identical
+    copyGuard defect was ONE key: the RecommendationViz aria slot spoke three dollar figures + a delta to a
+    screen reader outside require-hedge — the AT twin of the gated `recDeltaTypical` — and its exclusion was
+    a RECORDED decision in the SLOT_RENDER fixture's own comment, so the fix reversed a stated call, not an
+    accident. **DONE 2026-09-08:** RENAMED onto the existing `recDelta` control prefix (`recDeltaVizAria`,
+    `copy.ts:2682`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
+    `require-hedge` on its own) + a catalog canary over `/^rec(?!over)/` (a bare `/^rec/` reds the 16
+    innocent `recovery*`/`recover*` intake keys) with a NAMED allowlist that SPLITS flat keys from slots
+    (unscoped flat keys get 2 gates, unscoped slots get 3 + catastrophe). Scope is decided ONLY in the test
+    file (`copyGuard.test.ts`, "every rec* key is verdict-scoped, control-scoped, or a NAMED figure-free
+    exception"; `lintCopy` stays scope-agnostic) — the canary is a row there, not a gate. The 11 byte-identical
     `EngineClient` fakes cost an 18-file sweep (not 19) — a shared helper. `ensureSeed()`: the two queue
     files DISAGREED (the register's residual list says "none a build without a ruling", this file carried no
     flag) and BOTH candidate fixes cost something — "mint through `update()`" turns a deferred false-arm

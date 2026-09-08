@@ -384,32 +384,30 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 `S` · **pilot (the gate) · briggsy (the words)** · filed 2026-09-04 (seen live on the `?seed=failing` witness walk)
 
 - `copy.goalPickerIntro` — *"With the basics covered, pick the one thing your plan should lean toward."*
-  — renders unconditionally (`GoalPicker.tsx:75`) above the two goals, and the picker opens from the "See
-  the recommended strategy" door on EVERY spine verdict, including *"Already short — 0 of 10 futures your
-  plan covers"*. On that household the lead is FALSE: the basics are not covered, and the sentence asserts
-  the one thing the verdict directly above it just denied — the calm-but-wrong shape, on the cohort least
-  able to absorb it, one tap before the honest hold of the entry above.
-- The picker is verdict-blind by construction (props `open · current · onPick · onClose`; no outcome
-  state reaches it), so the GATE is a build: thread the spine's outcome state (or a `basicsCovered`
-  boolean derived where the door is offered, `Result.tsx`) and pick a verdict-true lead — or make the
-  lead verdict-neutral. The WORDS are his; the fork (a second key for the failing cohort vs one neutral
-  lead) is a Caddie card, not a park. Whatever key renders to the failing cohort joins `isMortalityKey`
-  by name (the entry above's law).
+  — used to render unconditionally above the two goals, and the picker opens on EVERY spine verdict,
+  including *"Already short — 0 of 10 futures your plan covers"*. On that household the lead was FALSE:
+  the basics are not covered, and the sentence asserted the one thing the verdict directly above it just
+  denied — the calm-but-wrong shape, on the cohort least able to absorb it, one tap before the honest
+  hold of the entry above.
+- ✅ **THE GATE SHIPPED 2026-09-08 (pilot); the WORDS stay his.** `GoalPicker.tsx` takes a REQUIRED
+  `basicsCovered` boolean (no default — a default would be the silent stand-in burned/062 bans) and
+  renders the lead only when it holds; `Result.tsx` derives it from the sticky DISPLAY triple the verdict
+  sentence itself renders from (`snapshot.displayed`, never the raw headline — a hysteresis frame must not
+  show the lead over a failing sentence) as a POSITIVE list — `on-track`, `over-funded`, `borderline` (the
+  Caddie cleared the On-the-line premise with receipts, Card 1 of the 2026-07-23 U16 walk in
+  `docs/caddie/cold-read-log.md`) — so a new OutcomeState falls to silence rather than inheriting the
+  claim, and an indeterminate frame is silenced by `displayed === null`, not by any door. FOUR controls
+  open the picker, not two (the invite, the record card's re-open, the stale and committed beats'
+  re-picks) and all four read the one predicate. On the failing cohort the lead is OMITTED — never swapped
+  for a cheerier sentence: silence is the only wording true on every cohort until the failing-cohort
+  lead is authored. Pinned by `GoalPicker.test.tsx` (the component) and `goalLeadGate.test.tsx` (the
+  wiring, on every outcome state + the no-verdict frame), each half mutant-proven (gate always-true,
+  gate removed, wiring hardcoded — 3/4/3 reds).
+- STILL OPEN — the words: a second key for the failing cohort vs one verdict-neutral lead is a Caddie
+  card, not a park. Whatever key renders to the failing cohort joins `isMortalityKey` by name (the entry
+  above's law; the `basicsCovered` docblock carries it forward so the next author sees it).
 - Hiding the strategy door on a failing household is a FRAMING call, not a copy fix — that door is where
   the household is told, honestly, that the harness cannot rank it.
-- ⚑ **Folded 2026-09-06 from the queue's superseded b9-3 plan (its item 11) — the gate mechanics, pilot:** The goal picker's lead on a failing household (S): `copy.goalPickerIntro` — "With the basics covered,
-  pick the one thing your plan should lean toward." — renders unconditionally (`src/intake/GoalPicker.tsx:75` — the INTAKE layer, there is no `src/ui/GoalPicker.tsx`) and the
-  picker opens from the strategy door on EVERY spine verdict, so an "Already short — 0 of 10" household is
-  told the basics are covered one tap before the honest hold (seen live 2026-09-04 on the `?seed=failing`
-  witness walk). The GATE is pilot — the picker is verdict-blind (props `open · current · onPick ·
-  onClose · restoreFallback`, `GoalPicker.tsx:37-53`); thread the outcome state or a `basicsCovered` boolean from where the door is offered
-  (`Result.tsx` — TWO doors, not one: the invite at `:550` is `focusKey`-gated, the re-pick at `:493` sits
-  inside `RecommendationSurface`; gate the lead from ONE predicate both doors share, and do not write
-  "indeterminate never reaches here" into the comment — it does, `snapshot.displayed` is null there, that
-  is what saves it). The register's standing law rides with it: whatever key renders to the failing
-  cohort joins `isMortalityKey` by name (`backlog.md:359-360`). The WORDS are yours, and the fork (a second key for the failing cohort vs one
-  verdict-neutral lead) is a Caddie card. Register: Tier 0 "The goal picker tells an already-failing
-  household".
 
 ### Post-65 non-qualified HSA money is silently forfeited
 
@@ -763,9 +761,9 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 
 `M` · **pilot** · filed 3× — `A46`, `A50`, `A54`
 
-- The app has no icons at all — the "local-first PWA" is not installable and its tab/bookmark is unidentifiable
-- No WebKit arm anywhere — the app is verified only in Chromium, while the vault's durability story is explicitly about Safari's eviction
-- The one-frame honesty law is verified only at fixed pixel viewports — never at the enlarged text setting this audience actually uses. *(Partial, 2026-09-05: the four charts' text now FOLLOWS the browser font — `e2e/chart-text.spec.ts` asserts the smallest chart text grows at a 20px default; the svg era shrank it. The fit law itself is still unmeasured under a raised default.)*
+- ✅ **SHIPPED 2026-09-08 — the app has icons and is installable.** `public/icon.svg` (the source: one stroked mark on the house ink `#0b3d2e`, quarried from the verdict/grade glyph vocabulary, reads by SHAPE at 16 px and 512 px) rasterized deterministically into `icon-192.png`, `icon-512.png`, `icon-512-maskable.png` (art inside the centre 80 %), `apple-touch-icon.png` (180, opaque) and a hand-packed `favicon.ico` (16/32/48, PNG-in-ICO); the manifest carries the `icons` array (any + maskable), `index.html` the three link tags (the favicon 404 is gone), and `vite.config.ts`'s workbox glob carries png/svg/ico so the installed PWA's icon survives offline — proven by the icon rows in `dist/sw.js` (32 → 38 precache entries, +25 KiB) with the initial-JS budget unmoved by the icons (262.6 KiB before and after in the builder's tree; the integrated tree reads 263.0 — the phone arm's three copy keys); `scripts/__tests__/pwa-icons.test.ts` pins the manifest ↔ file ↔ link agreement (8 tests, each mutant-proven). ⚑ HIS EYE, post-hoc (the batched-oracle read, never a gate): the silhouette itself — `temp/icons/preview.png` (1024 px) and the 8× favicon rasters in `temp/icons/qa-sheet.png`.
+- WebKit reaches only the VAULT seam. *(Partial, 2026-09-08: `playwright.config.ts` gained a second project that greps `@cross-browser`, so `e2e/vault.spec.ts`'s trust loop and read-only-second-tab arms run a second time under WebKit — and the loop now RECORDS the engine's storage-capability triple. Measured on that first run: WebKit exposes Web Locks and BroadcastChannel but **not** `navigator.storage.persist()`, which Chromium does. Still open: every UI surface is verified in Chromium alone, and nothing anywhere executes a real eviction — the durability story about Safari is modelled with a wipe in both harnesses, never observed.)*
+- The one-frame honesty law at the enlarged text setting this audience actually uses — MEASURED 2026-09-08, and it FAILS. *(The charts' text follows the browser font since 2026-09-05 — `e2e/chart-text.spec.ts` asserts the smallest chart text grows at a 20 px default.)* The fit law itself: a new block in `e2e/vertical-fit.spec.ts` re-drove the eight one-frame spine arms ({budget, retired, health, nc} × {REAL, TIER}) at a 24 px root via CDP `Page.setFontSizes` (falsifiability pinned — the root reads 16 → 24 on every arm; the mutant reds) and ALL EIGHT are red inside `assertFrameFits`, with the offenders in the PROTECTED set: the verdict (bottom ≈1,341–1,347 px), the priced-Medicare affirmation + residual (≈1,695–2,085), the band (≈1,174–1,177) and the R13 disclaimer (≈2,591–3,048) against 791 / 800 px viewports — 52–67 of the 68–81 measured elements below the fold, the disclaimer at 3.2–3.8× the viewport; the 16 px control over the same eight pairs passes 8/8. Mechanism: both the type and the spacing scales are rem and `src/**/*.css` has no px font-size, so a raised default multiplies type AND whitespace by 1.5× while the budget (`window.innerHeight`) does not move. ⚑ COUNCIL (convened 2026-09-08): does the one-frame law bind at any reader font (a large-text density regime — a design unit), or is a DOCUMENTED SCROLL asserted as ORDER (the date route's contract) the honest answer at an enlarged default? The measured block is HELD OUT of the tree until the ruling (`temp/fit-24px/arm-c-enlarged-text-fit.patch`, KEEP — it reds `verify:fit` as delivered); ⚑ NEGATIVE: never a `SanctionedDoors` flag (it un-protects the ancestor chain incl. the disclaimer), never raise `--laptop-fit-height` (it never reaches the assertion), never `test.fail()`.
 
 ### Nothing a friend can read, nothing a professional can read
 
@@ -793,7 +791,7 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 - Post-ceremony landing announce is UNPROVEN — needs a real NVDA/VoiceOver pass
 - THREE NEVER-COLD-READ FACES — fold into the S6/S7 aged-seed walk, never standalone (datesplit, datemixed, the save ceremony)
 
-### The phone intake walk (390×844, 2026-09-04) — fifteen defects and two copy items, all filed, none built
+### The phone intake walk (390×844, 2026-09-04) — fifteen defects and two copy items; items 1, 2 and 4 built, the rest open
 
 `M` · **pilot (1–15) · briggsy (16)** · filed 2026-09-04 — the ranked queue's item 4, walked end-to-end by the pilot on the Playwright MCP
 (19 frames + the per-step DOM log in `temp/phone-walk/`, KEPT past this session by Briggsy's call), then graded by a 4-lens fleet with two
@@ -900,21 +898,63 @@ final tier ~30 s after the provisional.
    every tier, `LABEL_CHAR_PX` scaled with it, the drop thresholds re-tuned to be the last resort for a genuinely narrow drawer. The $0
    anchor tick is design-law §3's honesty proof — it must be legible, never dropped.
    </details>
-2. **P2, phone — the answer strip, the entire "answer during entry" surface, sits above the fold on arrival at EVERY step after the first
-   (y −51 … −178), including the flagship first provisional reading, which landed on step 12 where only `aria-live` announced it.** The
-   refuters' experiment: it is NOT `focus()`'s scroll-into-view (arrival is identical with focus scrolling forced off) — the shell's scroll
-   position simply carries across the step swap, so `scroll-margin` is inert. FIX: on step change scroll the shell to 0 (strip + thread +
-   heading in view) and keep focus-to-heading with `preventScroll: true`; verify the heading still lands in view at 844 under the strip's
-   tallest state (item 3).
-3. **P2, phone — the strip's 7.5rem reserved floor (`intake.css` `.answer-strip`) is exceeded on 9 of 11 steps (139–186px vs 120),** so
-   the mid-interaction reflow the comment exists to prevent is live at phone width. FIX: derive the reserve from the structural cap —
-   `missingFactNames` caps at 3 names + one "N more" (`AnswerStrip.tsx:83-87`) — at the narrowest width, as a container-query arm; never the
-   186 sample.
-4. **P2 — focus lands on `<body>` on every account-editor transition** (open · commit · Edit · Never mind): nothing in the a11y tree says a
-   form opened, and on the phone the editor's only exits ("Add this account" / "Never mind") sit 200px+ below the fold with the nav blacked
-   out (`intake.css:478-480`). Sibling of Tier 0 "A repeat Add tap over an already-visible block". FIX: give `AccountEntry` its own
-   `tabIndex={-1}` heading ("Add an account" / "Edit this account" — which also closes the shipped "Add this account"-inside-an-edit label
-   defect) focused on mount through `focusHeading`, AND focus the list heading / the new row on the return leg.
+2. ✅ **SHIPPED 2026-09-08 — a step change resets the document scroll, so the answer strip arrives on screen.** *(Filed as: the answer
+   strip, the entire "answer during entry" surface, sits above the fold on arrival at EVERY step after the first — y −51 … −178 —
+   including the flagship first provisional reading, which landed on the last step where only `aria-live` announced it.)*
+   **THE SCROLLER IS THE DOCUMENT, NOT THE SHELL:** `.intake-shell` declares no `overflow`, and neither does `html` or `body` — so every
+   remedy aimed at scrolling *the shell* was aimed at nothing. The filed experiment ("it is NOT `focus()`'s scroll-into-view") is half
+   right, and the half it misses is the mechanism: measured in real Chromium at 390×844 on the `?seed=datesolo` re-walk (2026-09-08), a
+   carried 120 px survived the swap untouched while a carried 400 px was pulled to 0 by the focus scroll alone. The browser scrolls only
+   once the incoming heading is off screen, and that heading sits ~308–400 px down the page — so precisely the small offsets a phone
+   reader produces are the ones that survive. And they are the norm: Continue's bottom edge lies below the 862 px window at scroll 0 on
+   **six of that route's twelve steps**, reaching 1430 px on the Social Security step. On the walk, four steps arrived scrolled, three of
+   them leaving the strip 48 px, 210 px and 152 px above the fold. SHIPPED: `useFocusHeadingOnStep` focuses with `preventScroll` and then
+   sets `document.scrollingElement.scrollTop = 0`. `focusHeading`'s default stays FALSE — of its seventeen call sites exactly this one
+   opts in; the vault ceremonies among the rest have no e2e coverage, so a flipped default would regress them invisibly.
+   ⚑ **LANDMINE — jsdom does not implement `scrollingElement`.** `'scrollingElement' in document` is false under jsdom 29.x, so the read is
+   `undefined` while the DOM lib types it `Element | null`: a `!== null` guard typechecks, passes lint, and then throws in every jsdom test
+   that mounts the flow (60 of them). The guard must be nullish. (`window.scrollTo` is the wrong instrument for the opposite reason — jsdom
+   logs "Not implemented" and that line prints through the whole intake suite.)
+   ⚑ **LANDMINE — `settleLayout` must not sit in this gate's arrival path.** Its last act is `window.scrollTo(0, 0)`, so used before the
+   arrival read it performs the very reset the arm claims to measure. Caught by mutant: with it in place, deleting the reset left all three
+   tests GREEN. GATE: `e2e/intake-fold.spec.ts` on the fit harness (listed in its `testMatch`, so `verify:fit` and therefore CI enforce it;
+   listed in the CSP harness's `testIgnore` denylist so it is not collected there) — a deliberate carried offset before every advance, with
+   a non-vacuity assertion that the carry actually landed, then scroll 0 · strip top ≥ 0 · step heading above the fold on each arrival.
+3. **P2, phone — STILL OPEN, and the reserve is NOT the fix.** The filed floor breach is real — the strip's `min-block-size: 7.5rem`
+   (`intake.css`, `.answer-strip`) measures 120 px against a **186 px** one-block strip at 390 CSS px — but the filed prescription's premise
+   is wrong twice over, and the blocking measurement (2026-09-08, real Chromium, `?seed=datesolo` → the AssumptionPanel re-walk → clear a
+   required field so an ABSENT block paints beside the UNREPRESENTABLE one — the only route to that state, since every dev seed is a
+   complete draft) killed the remedy rather than sizing it:
+   - **The structural cap is TWO blocks, not one.** `MissingList` renders an ABSENT block *and* an UNREPRESENTABLE one — a household can be
+     mid-entry and carry a shape v1 cannot price at the same time — each with its own lead line, its own tail line, and its own
+     `missingFactNames` cap of 3 names + one "N more". MEASURED: **278 px (17.4 rem)** with three absent names + "1 more" beside one
+     unrepresentable name. Even the *minimal* two-block state (one name in each) is 231 px.
+   - **Continue is already below the fold, so every rem of reserve is spent on the question.** See item 2's figures: six of twelve steps at
+     scroll 0, up to 1430 px. A 17.4 rem phone reserve — sized for a state most households never reach — would push every question further
+     down for all of them.
+   NOT SHIPPED, deliberately: no `@container` arm, and **no `container-type: inline-size` on `.intake-shell`**. That declaration implies
+   `contain: layout` (the classic `position: fixed` trap) and exists only to serve the query; with no query to serve it is a landmine bought
+   for nothing. `min-block-size: 7.5rem` stands as the wide-viewport base. ⚑ **DO NOT re-derive a reserve from the 186 px sample, and do not
+   re-file the "scrollY 253 / Continue at y776 / under 70 px of headroom" arithmetic that circulated in review** — those numbers appear
+   nowhere in the walk log; the measured figures above replace them. THE FORK, for his eye: accept the reflow at phone width (the strip's
+   content changes only on a question commit, and item 2 now guarantees the whole strip is on screen when it does), or find a composition
+   that shrinks the two-block worst case instead of reserving for it.
+4. ✅ **SHIPPED 2026-09-08 — both list steps' view swaps name themselves and take focus.** *(Filed as: focus lands on `<body>` on every
+   account-editor transition — open · commit · Edit · Never mind — with nothing in the a11y tree saying a form opened, and on the phone the
+   editor's only exits sitting 200 px+ below the fold with the step nav blacked out.)* **THE LIST HEADING DID NOT EXIST — it was built, not
+   focused.** `AccountEntry` and `OtherIncomeEntry` each gained a `tabIndex={-1}` heading ("Add an account" / "Edit this account" · "Add
+   other income" / "Edit this income"), and the accounts and other-income LISTS each gained their own ("Your accounts" / "Your other
+   income") — all four **h3, never h2**: eleven singular `getByRole('heading', { level: 2 })` queries across five intake test files would
+   throw on a second h2.
+   ⚑ Focus here takes the **scrolling default**, NOT item 2's `preventScroll`. The editor swap is not a step change —
+   `useFocusHeadingOnStep` keys on the step id, while `editing` lives inside `AccountsStep` / `OtherIncomeStep` — so item 2's reset never
+   fires on it, and the browser's scroll-into-view is exactly what brings a below-the-fold editor, and its exits, into view.
+   ⚑ The list-heading effect SKIPS its first render (a `useRef` flag), so arriving on the step does not steal the focus the flow just gave
+   the step heading; both hooks sit ABOVE the editor's early return (rules of hooks).
+   ⚑ **This does NOT close the "Add this account"-inside-an-edit label defect**, as the filed prescription claimed it would. `copy.accountSave`
+   is untouched (25 references in `accountEntry.test.tsx`); that item stays open on its own. GATE: `e2e/intake-fold.spec.ts` asserts the
+   focused element is the editor's own h3 after Add and after Edit, and the list's h3 after Never mind, on BOTH loops, with the step's single
+   h2 pinned alongside; mutant-proven — delete the mount focus and the arm reds on `BODY`.
 5. **P2 — the progress thread runs BACKWARD in the a11y tree:** `aria-valuenow/max` moved 1/9 → 2/9 → 3/12 as the work answers un-gated
    steps, so the announced percentage can fall after an honest answer and disagree with the painted fill. FIX: announce POSITION, never a
    percentage of a moving denominator (the design law's "quiet thread, SR-announced position").
@@ -1288,7 +1328,7 @@ disclaimer two-mount swap (holds: in-frame mount dark, trailing mount after the 
   unconditionally at `AccountEntry.tsx:357-364` (`initial` already tells the form it is editing;
   `FIELD_OP_ALLOWLIST` `copyGuard.ts:260-263` already admits save/edit/add, so a sibling key needs no guard
   edit) · `ssClaimLabel` `copy.ts:77` is route-blind — the route-true twin idiom is
-  `stateStep`/`stateStepRetired` (`questions.tsx:569`/`:592`, picked at `:1197`). The mechanics of the
+  `stateStep`/`stateStepRetired` (`questions.tsx:570`/`:593`, picked at `:1229`). The mechanics of the
   edit-label, the SS tense and the missing `helpKey` are one-key/one-prop each; the bank-cash home is a
   SCHEMA call (`ACCOUNT_KINDS` feeds the codec vocabulary `scenarioCodec.ts:363` and `contributionCeilingFor`
   `sanity.ts:111`). Words stay yours as filed.

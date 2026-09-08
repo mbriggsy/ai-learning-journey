@@ -25,7 +25,10 @@ export default defineConfig({
   // The chart TEXT gate (e2e/chart-text.spec.ts, 2026-09-05) rides this harness: like the fit law it
   // needs the dev-only `?seed=` routes and a real browser's layout — and riding `verify:fit` is what
   // makes it CI-enforced (a gate wired into no workflow is not a gate).
-  testMatch: ['**/vertical-fit.spec.ts', '**/chart-text.spec.ts'],
+  // The phone intake FOLD gate (e2e/intake-fold.spec.ts, 2026-09-08) rides it for the same two
+  // reasons: it enters through a dev-only `?seed=` route, and listing it here is what makes it
+  // CI-enforced.
+  testMatch: ['**/vertical-fit.spec.ts', '**/chart-text.spec.ts', '**/intake-fold.spec.ts'],
   fullyParallel: true,
   // The date seeds are CPU-BOUND: a 16k-path final across two arms takes ~60 s alone, and the two
   // specs render ~26 of them. Playwright's default (50% of logical cores) is 10 workers on a 20-thread

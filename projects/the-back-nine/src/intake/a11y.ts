@@ -6,8 +6,11 @@
  * focus moves to the new step's HEADING (`tabindex="-1"`), NEVER the input —
  * auto-focusing an input pops the mobile keyboard before the user can read the
  * question, and the heading-as-focus-target IS the announcement (no
- * double-announce). The heading must be faded with OPACITY ONLY while focused
- * on mount — a `visibility`/`autoAlpha` toggle makes `.focus()` a silent no-op
+ * double-announce) — and on an intake STEP CHANGE the document scroll is reset
+ * to 0 with it, so the answer strip (the whole answer-during-entry surface) is
+ * in view on arrival rather than scrolled off the top of the window. The
+ * heading must be faded with OPACITY ONLY while focused on mount — a
+ * `visibility`/`autoAlpha` toggle makes `.focus()` a silent no-op
  * (ai-journey-stats/006, generalized from a modal to a wizard step).
  *
  * THE ONE LIVE REGION: a single visually-hidden polite region carries only
@@ -19,17 +22,57 @@ import { useCallback, useEffect, useMemo, useRef } from 'react'
 
 /** Move focus to a step/verdict heading. The heading carries `tabIndex={-1}`
  *  (focusable, not tabbable). Safe to call mid-enter-animation — the step
- *  fades with opacity only, so focus() always takes. */
-export function focusHeading(el: HTMLElement | null): void {
-  el?.focus({ preventScroll: false })
+ *  fades with opacity only, so focus() always takes.
+ *
+ *  `preventScroll` DEFAULTS TO FALSE and must stay that way: every other caller
+ *  (the vault ceremonies, the two result heroes, the two intake sheets, the two
+ *  list-step editors and their lists) relies on the browser scrolling the freshly-
+ *  focused heading into view, and several of them have no e2e coverage at all —
+ *  flipping the default would regress them invisibly. The opt-in is used by exactly
+ *  ONE of the call sites, `useFocusHeadingOnStep` below, which owns the scroll
+ *  position itself. */
+export function focusHeading(
+  el: HTMLElement | null,
+  opts?: { readonly preventScroll?: boolean },
+): void {
+  el?.focus({ preventScroll: opts?.preventScroll ?? false })
 }
 
 /** React hook: returns a ref to attach to the current step's heading; focuses
- *  it whenever `stepId` changes (including the first mount of the flow). */
+ *  it whenever `stepId` changes (including the first mount of the flow), and
+ *  puts the page back at the top so the step is entered from its own first line.
+ *
+ *  WHY THE RESET. The DOCUMENT is the scroller — `.intake-shell` declares no
+ *  `overflow` and neither does `html` or `body` (base.css) — so the scroll offset
+ *  survives the step swap. On a phone the reader routinely has to scroll to reach
+ *  Continue: measured 2026-09-08 at 390 CSS px on the `?seed=datesolo` re-walk,
+ *  Continue's bottom edge sits below the 862 px window at scroll 0 on SIX of that
+ *  route's twelve steps, reaching 1430 px on the Social Security step. The answer
+ *  strip sits ABOVE the step heading, so a carried offset lands it off the top of
+ *  the window: on that walk four steps arrived scrolled, three of them with the
+ *  strip 48 px, 210 px and 152 px above the fold (the pay, retirement-state and
+ *  health-coverage steps).
+ *
+ *  WHY `preventScroll` HERE AND NOWHERE ELSE. `focus()` scrolls its target into
+ *  view, and on this surface that scroll really fires — but only once the incoming
+ *  heading is off screen, and the heading sits ~308–400 px down the page: a carried
+ *  400 px was pulled to 0 by the focus scroll alone, while a carried 120 px was left
+ *  exactly where it was (both measured in the same session). So the offsets a phone
+ *  reader actually produces are the ones the browser leaves alone. Focusing WITHOUT
+ *  scroll and resetting afterwards makes the landing frame the same one every time,
+ *  instead of one that depends on how far the reader had scrolled. */
 export function useFocusHeadingOnStep(stepId: string) {
   const ref = useRef<HTMLHeadingElement | null>(null)
   useEffect(() => {
-    focusHeading(ref.current)
+    focusHeading(ref.current, { preventScroll: true })
+    // `document.scrollingElement`, not `window.scrollTo`: jsdom logs "Not implemented:
+    // window.scrollTo" and that line would print through every intake test in the suite.
+    // THE GUARD IS NULLISH, NOT `!== null`: jsdom (29.x) does not implement
+    // `scrollingElement` at all — `'scrollingElement' in document` is false there, so the
+    // read is `undefined` while the DOM lib types it `Element | null`. A `!== null` guard
+    // typechecks, passes lint, and throws in every jsdom test that mounts the flow.
+    const scroller = document.scrollingElement ?? undefined
+    if (scroller !== undefined) scroller.scrollTop = 0
   }, [stepId])
   return ref
 }

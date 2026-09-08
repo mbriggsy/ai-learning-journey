@@ -39,6 +39,7 @@ export function GoalPicker({
   current,
   onPick,
   onClose,
+  basicsCovered,
   restoreFallback,
 }: {
   readonly open: boolean
@@ -49,6 +50,19 @@ export function GoalPicker({
    *  discipline — this sheet never touches the model). */
   readonly onPick: (goal: RecommendationGoal) => void
   readonly onClose: () => void
+  /** Does the verdict the household just READ support the intro's premise ("With the basics
+   *  covered…")? The picker is otherwise verdict-blind, and the strategy door opens it on EVERY
+   *  spine verdict — including "Already short — 0 of 10", where that lead asserts exactly what the
+   *  verdict above it denied. FALSE ⇒ the lead is OMITTED, never swapped for a cheerier one:
+   *  silence is the only wording true on every cohort until the failing-cohort lead is authored
+   *  (docs/backlog.md, "The goal picker tells an already-failing household \"with the basics
+   *  covered\"" — the words are Briggsy's, the second-key-vs-neutral-lead fork a Caddie card).
+   *  REQUIRED, not defaulted — a default would be the silent stand-in burned/062 bans (the sibling
+   *  law on `current` in this same props block).
+   *  ⚠️ WHEN THAT LEAD IS AUTHORED: whatever key renders to the failing cohort is added BY NAME to
+   *  `isMortalityKey` (copyGuard.ts) — the register binds it, and that net reaches a non-survivor
+   *  key only by name. */
+  readonly basicsCovered: boolean
   /** The via-panel focus-restore fallback (ControlSheet contract). */
   readonly restoreFallback?: () => HTMLElement | null
 }) {
@@ -72,7 +86,7 @@ export function GoalPicker({
       announcerRef={announcerRef}
       restoreFallback={restoreFallback}
     >
-      <p className="field-help">{copy.goalPickerIntro}</p>
+      {basicsCovered && <p className="field-help">{copy.goalPickerIntro}</p>}
       {/* Real labelled radios (the control-policy grammar): the picked row thickens its border —
           weight, never hue (the color-blind law). One radiogroup; the fieldset/legend names it. */}
       <fieldset className="control-policies">

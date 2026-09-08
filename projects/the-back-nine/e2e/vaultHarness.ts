@@ -1,9 +1,9 @@
 /**
- * The U4 vault e2e harness — bundled at spec time (vite JS API, IIFE) and injected
- * into a REAL Chromium page on the no-CSP control origin. Everything the vitest
- * suite proved against shims (fake-indexeddb, node BroadcastChannel, no Web Locks)
- * re-runs here against the real platform: real IndexedDB transactions/rollback,
- * real Web Locks, real cross-TAB BroadcastChannel, real `navigator.storage`.
+ * The U4 vault e2e harness — bundled at spec time (vite JS API, IIFE) and injected into a
+ * REAL browser page (Chromium; also WebKit, for the spec's @cross-browser arms) on the
+ * no-CSP control origin. Everything the vitest suite proved against shims (fake-indexeddb,
+ * node BroadcastChannel, no Web Locks) re-runs here against the real platform: real
+ * IndexedDB transactions/rollback, real Web Locks, real cross-TAB BroadcastChannel.
  *
  * Each exported function returns plain JSON-able data (the spec asserts node-side).
  */
@@ -66,6 +66,28 @@ export interface TrustLoopReport {
   readonly restoreOk: boolean
   readonly reopenWithNewPassphraseOk: boolean
   readonly restoredModelEqual: boolean
+  /** WHICH platform storage capabilities the engine running this loop actually exposes —
+   *  measured, never assumed. Both of the first two are DEGRADABLE in `src/store/db.ts`:
+   *  `underWebLock` falls through to a bare `fn()` when Web Locks is absent, and
+   *  `requestPersist` returns null on absence and swallows a throw. So every boolean above
+   *  can be true in an engine that has neither, and a cross-browser green would prove less
+   *  than `vault.spec.ts`'s docblock claims. That spec records all three per project. */
+  readonly caps: PlatformCaps
+}
+
+export interface PlatformCaps {
+  readonly hasWebLocks: boolean
+  readonly hasPersist: boolean
+  readonly hasBroadcastChannel: boolean
+}
+
+/** Read in the page, at the end of the loop the report describes. */
+function platformCaps(): PlatformCaps {
+  return {
+    hasWebLocks: typeof navigator.locks?.request === 'function',
+    hasPersist: typeof navigator.storage?.persist === 'function',
+    hasBroadcastChannel: typeof BroadcastChannel === 'function',
+  }
 }
 
 /** The full save → lock → unlock → export → wipe → restore loop on REAL IndexedDB. */
@@ -115,6 +137,7 @@ export async function runTrustLoop(): Promise<TrustLoopReport> {
     restoreOk: restored.ok,
     reopenWithNewPassphraseOk: reopenResult.ok,
     restoredModelEqual: modelsEqual(restoredModel, { ...MODEL, annualSpendingReal: 51_000 }),
+    caps: platformCaps(),
   }
 }
 

@@ -471,6 +471,17 @@
   gap: var(--space-5);
 }
 
+/* The two SWAPPED VIEWS of a list step name themselves (AccountEntry / OtherIncomeEntry and the
+ * lists they swap with). Both are h3 under the step's h2 — one step below the question, clearly
+ * above the field labels — so --text-lg against the step heading's --text-xl. The display face,
+ * weight and brand colour come from base.css's h1-h3 rule; only the size is set here.
+ * Both carry tabindex="-1" as focus targets; base.css already zeroes the ring for a focused
+ * heading, so no outline work is needed. Spacing is the parent's flex `gap`, never a margin. */
+.entry-heading,
+.list-heading {
+  font-size: var(--text-lg);
+}
+
 /* While an account entry form is open, ITS actions are the only actions — the
  * step's Continue/Back yield (two stacked primary CTAs read as a broken
  * screen, and advancing mid-entry would abandon the form). Commit or cancel

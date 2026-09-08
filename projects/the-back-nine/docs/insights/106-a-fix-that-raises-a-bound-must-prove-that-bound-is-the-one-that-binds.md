@@ -20,7 +20,7 @@ sighting was `Error: Test timed out in 5000ms`; this was
 
 ## Root Cause
 
-The filed fix raised **vitest's per-test `testTimeout` from 5s to 20s** (`vite.config.ts:97-98`).
+The filed fix raised **vitest's per-test `testTimeout` from 5s to 20s** (`vite.config.ts:123`).
 That change was real and was genuinely applied — verified in source, not assumed.
 
 But the failing arm carries **its own inner budget**:

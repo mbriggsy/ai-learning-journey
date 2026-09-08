@@ -1,10 +1,11 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { copy, type CopyKey, type SlottedErrorKey, type SlottedErrorParams } from '@ui/copy'
 import type { AccountKind, EnteredAccount, TickerClassification } from '@shared/model'
 import { ACCOUNT_KINDS } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { CurrencyField, SegmentedControl } from './fields'
 import { FieldError } from './FieldError'
+import { focusHeading } from './a11y'
 import { AllocationEntry, classifyLegs, legsOf, type AllocationReport } from './AllocationEntry'
 import { bufferMoved, useUnsavedBufferHold } from './unsavedBuffer'
 import {
@@ -113,6 +114,15 @@ function formFrom(initial: EnteredAccount | undefined): FormState {
 
 export function AccountEntry({ draft, initial, onSave, onCancel }: AccountEntryProps) {
   const id = useId()
+  // THE EDITOR'S OWN HEADING (2026-09-08). This form REPLACES the step body; the step heading
+  // above it does not change, so without this the swap is announced to nobody and focus is left
+  // on a button that no longer exists. Focus moves here on mount with the SCROLLING default —
+  // unlike the step-change hook, this is not a step change, so nothing else is repositioning the
+  // page and the browser's scroll-into-view is what brings a below-the-fold editor into view.
+  const headingRef = useRef<HTMLHeadingElement | null>(null)
+  useEffect(() => {
+    focusHeading(headingRef.current)
+  }, [])
   const [form, setForm] = useState<FormState>(() => formFrom(initial))
   // THE OPEN-BUFFER HOLD (unsavedBuffer.ts): this whole form lives in component state until Add
   // commits it, so the draft-reading unsaved-work guard cannot see it — over a saved-and-clean
@@ -221,6 +231,11 @@ export function AccountEntry({ draft, initial, onSave, onCancel }: AccountEntryP
 
   return (
     <div className="account-entry">
+      {/* h3, never h2: the step's own `.step-heading` is the only h2 on screen and a second one
+          would break every singular level-2 query in the intake suite. */}
+      <h3 className="entry-heading" tabIndex={-1} ref={headingRef}>
+        {initial === undefined ? copy.accountEntryAddHeading : copy.accountEntryEditHeading}
+      </h3>
       <SegmentedControl<'0' | '1'>
         legendKey="accountOwnerLegend"
         name="account-owner"

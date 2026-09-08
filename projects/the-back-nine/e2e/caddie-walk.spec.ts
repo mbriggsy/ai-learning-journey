@@ -505,7 +505,7 @@ async function walkDoors(page: Page, outDir: string): Promise<void> {
     const isAssumptions = (await door.getAttribute('data-door')) === 'assumptions'
     // ⚑ THE RECOMMEND-INVITE DOOR IS NOT A LEVER SHEET, and treating it as one broke this walk on
     // its own DEFAULT target. `driveLeverPreview` classifies a sheet STRUCTURALLY — "does it carry
-    // `.control-policies` radios" — and `GoalPicker.tsx:78` renders its goal radiogroup with that
+    // `.control-policies` radios" — and `GoalPicker.tsx:92` renders its goal radiogroup with that
     // exact class, the same one `SequencingControl`/`HealthcareSheet` use. So on every target where
     // `solveInvitable` holds, the walk opened this door, CHECKED A GOAL RADIO as a side effect, then
     // waited 120s for a TwoFutures `svg.tf` that the GoalPicker never renders — and this door is

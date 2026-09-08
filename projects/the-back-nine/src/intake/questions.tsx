@@ -6,6 +6,7 @@ import { fraMonthsForBirthYear } from '@engine/constants/socialSecurity'
 import { medicareExtrasTypical, medicareExtrasTypicalMonthly } from '@engine/constants/health'
 import { budgetGoverns, isActiveAt, isRampedBudget } from '@budget/budgetModel'
 import { budgetYearZeroFullTotal, commitBudgetPatch } from '@budget/budgetToSpending'
+import { focusHeading } from './a11y'
 import { anyPre65OrUnknown, anyRetiredPre65WhileAnotherWorks, spendHelpKeyFor } from './intakeMap'
 import { BudgetBuilder } from './BudgetBuilder'
 import { CurrencyField, IntegerField, NameField, SegmentedControl, formatMoney, type SegmentOption } from './fields'
@@ -939,6 +940,21 @@ function AccountsStep({ api }: { api: StepApi }) {
   // Remove is two-tap (no undo once gone): the first tap arms the row, the
   // second removes it (D1 review DA4 — a destructive action needs a confirm).
   const [confirmRemove, setConfirmRemove] = useState<number | null>(null)
+  // THE RETURN LEG of the editor swap (2026-09-08). Committing or cancelling unmounts the editor
+  // and re-renders the list; the step heading never changed, so nothing announced the return and
+  // focus fell to the body. Both hooks sit ABOVE the editor branch below — it returns early, and a
+  // hook after it would not run on the editor render (rules of hooks).
+  const listHeadingRef = useRef<HTMLHeadingElement | null>(null)
+  const firstRender = useRef(true)
+  useEffect(() => {
+    // Arriving ON the step must not steal the focus the flow just gave the step heading — only a
+    // return FROM the editor claims it.
+    if (firstRender.current) {
+      firstRender.current = false
+      return
+    }
+    if (editing === null) focusHeading(listHeadingRef.current)
+  }, [editing])
 
   if (editing !== null) {
     const initial = editing === 'new' ? undefined : api.draft.enteredAccounts[editing]
@@ -963,6 +979,9 @@ function AccountsStep({ api }: { api: StepApi }) {
   return (
     <>
       <p className="field-help">{copy.accountsIntro}</p>
+      <h3 className="list-heading" tabIndex={-1} ref={listHeadingRef}>
+        {copy.accountsListHeading}
+      </h3>
       {api.draft.enteredAccounts.length === 0 && (
         <p className="accounts-empty">{copy.accountsEmpty}</p>
       )}
@@ -1059,6 +1078,16 @@ const accountsStep = (draft: ScenarioDraft): StepDef => ({
 function OtherIncomeStep({ api }: { api: StepApi }) {
   const [editing, setEditing] = useState<number | 'new' | null>(null)
   const [confirmRemove, setConfirmRemove] = useState<number | null>(null)
+  // AccountsStep's return leg, verbatim — same swap, same early return, same hooks-above-it rule.
+  const listHeadingRef = useRef<HTMLHeadingElement | null>(null)
+  const firstRender = useRef(true)
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false
+      return
+    }
+    if (editing === null) focusHeading(listHeadingRef.current)
+  }, [editing])
 
   if (editing !== null) {
     const initial = editing === 'new' ? undefined : api.draft.incomeStreams[editing]
@@ -1083,6 +1112,9 @@ function OtherIncomeStep({ api }: { api: StepApi }) {
   return (
     <>
       <p className="field-help">{copy.otherIncomeIntro}</p>
+      <h3 className="list-heading" tabIndex={-1} ref={listHeadingRef}>
+        {copy.otherIncomeListHeading}
+      </h3>
       {api.draft.incomeStreams.length === 0 && (
         <p className="accounts-empty">{copy.otherIncomeEmpty}</p>
       )}

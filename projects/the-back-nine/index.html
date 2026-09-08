@@ -4,6 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- The app mark (public/icon.svg is the single silhouette source; every raster is cut from it).
+         The .ico declares all three frames it really carries — its 16px frame is drawn with a little
+         more ink than a browser downscaling the SVG would give, so letting it win at 16px is the
+         point. The SVG follows for the browsers that prefer a vector at any density, and the
+         apple-touch-icon (opaque ground — iOS composites alpha onto white) serves an iOS home
+         screen. All same-origin, so `img-src 'self'` in vercel.json already covers them. -->
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#0b3d2e" />
     <meta name="description" content="A personal retirement and tax-strategy co-pilot." />
     <title>The Back Nine</title>

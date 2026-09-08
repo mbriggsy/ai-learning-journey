@@ -308,7 +308,7 @@ to a single commit.
   to ~$X"), never a bare "it's skewed", never a second chart, never a second ranking authority
   (insight 093).
 - **AT parity (a11y amendment A2):** the viz's `role="img"` `aria-label` sentence carries BOTH arm
-  magnitudes AND the delta (`RecommendationViz.tsx:128`, composed by `copy.recVizAria`) — the
+  magnitudes AND the delta (`RecommendationViz.tsx:128`, composed by `slots.recDeltaVizAria`) — the
   TwoFutures/OddsLadder precedent, so the picture is never the only place a figure lives. The
   median quote, the skew note and every withheld reason are real TEXT in the a11y tree beside the
   lockup rather than folded into that label; scrub stays pointer-only sugar.

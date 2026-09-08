@@ -113,7 +113,8 @@ pnpm verify:bundle  # initial-JS byte-budget sentinel (≤ 300 KiB entry)
 pnpm verify:aca     # fails if the ACA enhanced-subsidy status is stale/unconfirmed
 pnpm verify:state-tax  # fails if a priced state's {NC, PA, FL} tax record is stale/unconfirmed
 pnpm verify:csp     # real-Chromium CSP enforcement walk (Playwright)
-pnpm verify:fit     # real-Chromium vertical-fit + chart-text gates — the one-frame fit law + every chart word legible, on the dev server
+pnpm verify:fit     # real-Chromium vertical-fit + chart-text gates — the one-frame fit law + every band / ladder / TwoFutures word legible, on the dev server
+pnpm verify:fit:rv  # real-Chromium RecommendationViz chart-text gate — the fourth chart on its own serialized solve harness (~6–8 min per arm)
 pnpm verify:doc-stats  # the doc numbers with a single home (test count, register count, insights index) + every code citation resolves + every insight carries its four sections
 ```
 

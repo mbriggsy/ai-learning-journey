@@ -1,8 +1,12 @@
 name: Verify The Back Nine
 
 # Unlike verify-ai-journey-stats.yml (build-only), the-back-nine's engine + crypto
-# ARE the product, so CI runs the FULL gate: ACA re-verify, lint (layer boundaries
-# + engine purity), typecheck, tests, build, and the initial-JS byte budget.
+# ARE the product, so CI runs the FULL gate — eleven scripts across two parallel jobs:
+# `verify` — ACA re-verify, state-tax re-verify, lint (layer boundaries + engine
+# purity), typecheck, doc-stats, tests, build, the initial-JS byte budget, the
+# real-Chromium CSP enforcement walk and the real-Chromium vertical-fit + chart-text
+# gate; `verify-rv-chart-text` — the RecommendationViz chart-text gate on its own
+# serialized solve harness (three ~6–8 min arms, each a full-precision solve).
 
 on:
   push:
@@ -75,5 +79,37 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report
+          path: projects/the-back-nine/playwright-report/
+          retention-days: 14
+
+  # The RecommendationViz chart-text gate — its OWN job, in parallel with `verify`: the one chart
+  # that exists only after a full-precision (16k-path) worker solve, ~6–8 min per arm × three arms,
+  # SERIALIZED (`workers: 1`, playwright.fit-rv.config.ts) so each solve gets the whole runner.
+  # Beside verify:fit's date-seed finals it would starve them of cores (the reason it is not in that
+  # harness); appended to the job above it would double its wall-clock. Needs no dist/ — it drives
+  # `pnpm dev`'s `?seed=surplus` route on its own port (4192), so it installs and boots on its own.
+  verify-rv-chart-text:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: projects/the-back-nine
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: projects/the-back-nine/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm verify:fit:rv
+      # Its own report artifact (a distinct name — two jobs uploading `playwright-report` collide).
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report-rv
           path: projects/the-back-nine/playwright-report/
           retention-days: 14

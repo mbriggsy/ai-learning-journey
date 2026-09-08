@@ -85,22 +85,18 @@ silently seat it above, the shape his eye ruled crowded in another form (`CROWN_
 
 **THEN, ranked — all pilot-buildable; the recipes are `temp/chart-text/verify-0905-b9-2/verify-digest.md`
 (KEEP; read each item's `S.correctedPrescription`, it supersedes the verifier's):**
-(1) **The RV gate as its OWN serialized script** (digest `rv-gate-row`, L). Extract `audit` / `assertChartText`
-/ `floorPx` / `auditReadout` / `assertReadout` from `e2e/chart-text.spec.ts` into `e2e/chartTextAudit.ts` (no
-spec imports another spec — importing one runs its describes). New `e2e/chart-text-rv.spec.ts` on the
-committed-lockup household (`?seed=surplus`, a ~5–7 min solve) auditing `.rv-host` AND
-`.rec-runnerup__viz .rv-host` (audit() is `querySelector` — one call per host), bound `.rec-viz-box` BEFORE
-`main`. Its own `playwright.fit-rv.config.ts` (`workers: 1`, `test.setTimeout(900_000)` — the inner
-committed-lockup wait is 720 s), `verify:fit:rv` in package.json AND in
-`.github/workflows/verify-the-back-nine.yml` (monorepo root — a local-only gate is not a gate). Add the new
-spec to `playwright.config.ts:20`'s `testIgnore` DENYLIST (the CSP harness auto-collects `e2e/*.spec.ts`; the
-`?seed=` routes are DCE'd there) and keep it OUT of the fit config's `testMatch`. Then restore "every chart
-word" in `docs/roadmap.md:171`'s Vertical-fit-+-chart-text gate row, `docs/architecture.md:326`'s §12 gate
-bullet (phrased "pinned at unit level only") and the back-nine-design `SKILL.md:47` — NOT `docs/backlog.md`
-(it carries no such clause) and NOT `CLAUDE.md` (its verify:fit row now points at the roadmap row instead of
-restating it). The RV hero is the ONLY
-`valign="top"` node, so the e2e transform-anchor oracle covers the `--ct-ty` class only once this arm lands
-(`chartText.test.tsx`'s source pin holds it until then).
+(1) ✅ **SHIPPED 2026-09-07 — the RV gate as its OWN serialized script** (digest `rv-gate-row`). `e2e/chartTextAudit.ts`
+carries the audit core (`Node`/`Rect`/`Audit`, `floorPx`, `audit`, `TOL`, `assertChartText` — the readout and crown
+helpers stayed in `chart-text.spec.ts`, they are band/ladder-specific and the RV has neither); `e2e/chart-text-rv.spec.ts`
+on `playwright.fit-rv.config.ts` (`workers: 1`, port 4192, 900 s per test, the 720 s lockup wait) drives `?seed=surplus`
+to the committed lockup at PHONE / FLOOR / REAL and audits the primary AND runner-up charts against `.rec-viz-box`,
+pins the chart's shape (five nodes, both bar labels visible, the hero on `valign="top"`), and plants the unitless
+`--ct-ty` on the hero so the anchor oracle is proved to bite on the node that had the bug; a HELD card reds. `verify:fit:rv`
+in package.json + its OWN CI job (`verify-rv-chart-text`, parallel with `verify`); in the CSP harness's `testIgnore`
+denylist. Doc truth swept: roadmap gate row, architecture §12, CLAUDE.md Commands (+ a row), README, the design skill,
+the register's chart-text paragraph, the spec header, the audit's SCOPE comment, `chartText.test.tsx`'s "no RV arm"
+comment. ⚠️ NO 320 ARM — every arm is a ~6–8 min test around a full-precision solve (measured 2026-09-07: 8.0 / 7.7 / 6.0 min,
+21.8 min for the gate) and the RV has never rendered at 320 for anyone (filed under *The gates that don't bite*).
 (2) **The critic's arms** (digest `critic-arms`, M together): a `PHONE_LS` 844×390 arm; `gotoVaultFinal` +
 `?vault=stale` + `?vault=datestale` (the MAX-cardinality band — FOUR named markers; the crowned work-stops
 marker SURVIVES there, never write "withdraws"); the enlarge-modal arm on `.band-modal__dialog
@@ -557,7 +553,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     SVG glyph vocabulary (GradeSignal / verdictSignal / BandLegend) is the silhouette source; CSP already
     allows `img-src 'self'`. WEBKIT: `playwright install webkit` IS required (the on-disk `webkit-2272` is a
     stale revision — `@playwright/test` 1.60.0 needs 2287, launch fails today) + `webkit` on
-    `verify-the-back-nine.yml:66`; scope at TEST level — `vault.spec.ts:62` (trust loop) + `:84`
+    `verify-the-back-nine.yml:70` (the `verify` job's install — NOT the `:107` twin in the `verify-rv-chart-text`
+    job); scope at TEST level — `vault.spec.ts:62` (trust loop) + `:84`
     (second-tab read-only), never the whole file: the KDF spike `:106-137` asserts a Chromium-only
     thread-pool fact; the arm proves the IndexedDB / Web Locks / BroadcastChannel / `storage.persist()`
     paths RUN in WebKit — it does NOT verify Safari eviction (nothing in the repo executes a real eviction;
@@ -597,7 +594,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     ✅ **NC's RETIRED CERTIFICATION CHECKPOINT — SWEPT 2026-08-14.** Six shipped surfaces (not the
     five filed; `CLAUDE.md:35` turned up in the sweep) still asserted the dead ~Aug-2026 event in
     PRESENT tense after S.L. 2026-41 struck every trigger row FY2025-26 → FY2032-33 on 2026-08-02:
-    `scripts/verify-state-tax.ts` header + its `nextDue` doc comment · `verify-the-back-nine.yml:46`
+    `scripts/verify-state-tax.ts` header + its `nextDue` doc comment · `verify-the-back-nine.yml:50-51`
     · project `CLAUDE.md:35` · and two in the engine — `constants/types.ts` and
     `validation/oracleToken.ts`. All now name it as RETIRED, in past tense, and the two engine
     docblocks additionally record that **`certification-pinnable` currently fires for NOBODY** — the
@@ -648,9 +645,10 @@ schedule the July pass, or the first thing that tells you is a blocked build.
   `.github/workflows/verify-the-back-nine.yml` lives at the **monorepo root** (`ai-learning-journey`),
   NOT inside `projects/the-back-nine/`, which is why grepping the project dir "proves" there is no CI
   and has now produced a false claim twice. It triggers on push to `main` + PR on paths
-  `projects/the-back-nine/**` (plus the workflow file itself) and runs, in order: `verify:aca` ·
-  `verify:state-tax` · `lint` · `typecheck` · `verify:doc-stats` · `test` · `build` ·
-  `verify:bundle` · `verify:csp` · `verify:fit`. **All ten.** `vercel.json` carries no
+  `projects/the-back-nine/**` (plus the workflow file itself) and runs TWO parallel jobs: `verify`, in order —
+  `verify:aca` · `verify:state-tax` · `lint` · `typecheck` · `verify:doc-stats` · `test` · `build` ·
+  `verify:bundle` · `verify:csp` · `verify:fit` — and `verify-rv-chart-text`, which runs `verify:fit:rv` alone
+  (three serialized ~6–8 min arms, each a full-precision solve; since 2026-09-07). **All eleven.** `vercel.json` carries no
   `buildCommand`, so a deploy still runs the default build with no gate — CI is the gate, Vercel is not.
 
 ---

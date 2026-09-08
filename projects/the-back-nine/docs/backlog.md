@@ -457,7 +457,7 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
   the offset becomes 2, understating income vs poverty and OVERSTATING subsidies — the optimistic
   direction; "fix" the apparent staleness by syncing them and the cliff moves against every pre-65
   household). A hardcoded year only pins today; the relationship keeps biting after the roll.
-- Enforced in CI — `pnpm test` runs at `.github/workflows/verify-the-back-nine.yml:57`.
+- Enforced in CI — `pnpm test` runs at `.github/workflows/verify-the-back-nine.yml:61`.
 - ⚠️ Known and unchanged: a red tripwire reds the GitHub check but does **not** block a Vercel deploy.
   True of all three pre-existing tripwires — the house posture, not a gap this introduced.
 
@@ -829,8 +829,11 @@ final tier ~30 s after the provisional.
    `pointerType`, the dead selector made a descendant. GATES: `e2e/chart-text.spec.ts` on the fit harness (19 arms — rendered px ≥ `--text-xs`
    read from tokens · containment in the card · pairwise non-overlap · nothing named hidden · text grows with the reader's font ·
    reduced-motion identity · planted CLIP + SHRINK controls) and `twoPaneHonestyFloor.test.ts` re-pointed to the y-tick column's geometry.
-   Witnessed at 1536×791 / 1088×800 / 390×844 on the band, the ladder and TwoFutures; RecommendationViz was witnessed at 1536 and 390 only
-   (the 1088 capture holds no RV node) and its gate arm is still open (see the RV gate entry). **RESIDUALS (pilot unless marked):** (a) ⚑ HIS — the three-register
+   Witnessed at 1536×791 / 1088×800 / 390×844 on the band, the ladder and TwoFutures; RecommendationViz was witnessed by hand at 1536 and 390
+   only (the 1088 capture holds no RV node) until its gate arm landed 2026-09-07 — `e2e/chart-text-rv.spec.ts` on its own serialized harness
+   (`playwright.fit-rv.config.ts`, `verify:fit:rv`, its own CI job): the committed lockup on `?seed=surplus` at PHONE / FLOOR / REAL, primary
+   AND runner-up, the shared oracles (`e2e/chartTextAudit.ts`) plus the unitless-`--ct-ty` plant on the hero; no 320 arm (Tier 4, *The gates
+   that don't bite*). **RESIDUALS (pilot unless marked):** (a) ⚑ HIS — the three-register
    collapse and the HTML-over-svg look (Caddie walk owed on the four faces); (b) ⚑ HIS — an unnamed interim age tick now HIDES on a
    collision (the cure for the cold-read's "70 / 69 reads as a defect" flag) rather than taking a row; (c) RV's end labels ride `--text-xs`
    strong in a column widened 168 → 192 units (sm wrapped a 24-char label to THREE lines on the phone and overprinted its neighbour; at xs
@@ -1365,6 +1368,7 @@ disclaimer two-mount swap (holds: in-frame mount dark, trailing mount after the 
 - False source comment (b) — kill "the record stores the seed" in Plan 4 BEFORE S5 mints
 - DEFERRED BUILD — the richer market draw: block-bootstrap + stochastic correlated inflation
 - THE RICHER MARKET DRAW — block-bootstrap + stochastic correlated inflation
+- The RecommendationViz chart-text gate has NO 320 arm (filed 2026-09-07 with the gate): `e2e/chart-text-rv.spec.ts` runs PHONE / FLOOR / REAL only — every arm is a ~6–8 min test around a full-precision solve, and the RV has never been rendered at 320 CSS px by anyone (the other three charts carry `NARROW` + `NARROW-SCROLLBAR` arms in `chart-text.spec.ts`, WCAG 1.4.10's literal condition). Cheapest honest add: a resize arm inside the REAL context after its audit (`page.setViewportSize` to 320×800 — a desktop UA with a classic scrollbar, the `NARROW-SCROLLBAR` shape) plus a pin that the host re-laid out; a fresh-context 320 arm costs a fourth solve. Either way it is a NEW measurement: the end labels wrap harder in a narrower `.rec-viz-box` and the register's residual (c) already flags the label column as a layout fork for his eye — budget for a red on first run.
 - The date-search grade never routes through U14's held-out seed B (filed 2026-09-06, confirmed by grep): `deriveSeedB` / `heldOutSeed` live in `solver/search.ts`, `solver/solve.ts`, `solver/solveEntry.ts`, `validation/gradeCalibration.ts` and nowhere in `dateSearch.ts`, `dateSearchProfile.ts`, `dateOdds.ts` or `FuckOffDate.tsx` — the fuck-off date's confidence is a one-seed statistic while the recommendation's is held-out. The accumulation record §3c states it; the curse-defense law (product D-decisions) says it should not be.
 - `verify:doc-stats` arm 4 never scans `src/**`, `README.md`, `CLAUDE.md`, or `.md:NN` doc-to-doc citations — its surface list is `TODO.md` plus a walk over `docs/` (`citationSurfaces` in `scripts/verify-doc-stats.ts`) and its `CITATION` regex names code extensions only — so every line-numbered citation inside a SOURCE comment is un-gated by construction. The doc layer was re-anchored in `61c57ff5`; the source-comment layer was not, and ~40 stale source-comment citations were re-pointed by hand on 2026-09-06 (the u17s5 skeptic's six, then the whole `intakeMap.ts` family across `intakeMap.ts`, `staleness.ts`, `stalenessExposure.ts`, `copy.ts`, `savedRecommendation.ts` and three tests — every anchor into a file that grew rots together). Fix shape: extend arm 4's surfaces to comments under `src/**`, `e2e/**` and `scripts/**` plus README.md and CLAUDE.md, structural half only, and widen the regex to `.md`. ⚑ NEGATIVE — do NOT re-arm the semantic half: the identifier-proximity heuristic measured 21–42 % false positives on freshly verified citations and was rejected at `bc026ef4`.
 

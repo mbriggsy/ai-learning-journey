@@ -13,11 +13,13 @@ import { defineConfig } from '@playwright/test'
  */
 export default defineConfig({
   testDir: './e2e',
-  // The vertical-fit gate and the Caddie walk ride their OWN harnesses (playwright.fit.config.ts /
-  // playwright.caddie.config.ts — dev servers, because their `?seed=` routes are DCE'd out of
-  // dist/). Against THIS dist harness those specs would fail confusingly (no seeds) — keep each
-  // harness to its own specs. Run them via `pnpm verify:fit` / `pnpm caddie:walk`.
-  testIgnore: ['**/vertical-fit.spec.ts', '**/chart-text.spec.ts', '**/caddie-walk.spec.ts'],
+  // The vertical-fit gate, the RecommendationViz solve arm and the Caddie walk ride their OWN
+  // harnesses (playwright.fit.config.ts / playwright.fit-rv.config.ts / playwright.caddie.config.ts —
+  // dev servers, because their `?seed=` routes are DCE'd out of dist/). Against THIS dist harness
+  // those specs would fail confusingly (no seeds) — keep each harness to its own specs. Run them via
+  // `pnpm verify:fit` / `pnpm verify:fit:rv` / `pnpm caddie:walk`. This is a DENYLIST: a new
+  // e2e/*.spec.ts is collected here by default, so a new dev-server spec must be added to it.
+  testIgnore: ['**/vertical-fit.spec.ts', '**/chart-text.spec.ts', '**/chart-text-rv.spec.ts', '**/caddie-walk.spec.ts'],
   fullyParallel: true,
   forbidOnly: !!process.env.CI, // a stray test.only fails CI rather than silently narrowing the gate
   retries: process.env.CI ? 1 : 0,

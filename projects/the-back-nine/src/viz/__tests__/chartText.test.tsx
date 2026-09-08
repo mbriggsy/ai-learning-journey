@@ -227,8 +227,10 @@ describe('chartText.css — the anchor registers are <length-percentage>, never 
     // is a <number>, `<number> + <length>` fails type-checking, the declaration is invalid at
     // computed-value time and the WHOLE transform falls back to `none`, taking the horizontal anchor
     // with it. That shipped: `.ct-text--vtop { --ct-ty: 0 }` left the RecommendationViz delta hero
-    // anchored at the bracket midpoint — and the real-browser gate cannot see that case yet (no RV arm),
-    // so this edit-time pin is what holds it. It is NOT a general "properties in calc() need units"
+    // anchored at the bracket midpoint. The real-browser gate holds it LIVE (e2e/chart-text-rv.spec.ts
+    // renders that hero on its serialized solve arm and plants the unitless zero on it, expecting the
+    // anchor oracle to red); this edit-time pin holds it at `pnpm test` speed, on the stylesheet — the
+    // one surface where the bare zero can be typed. It is NOT a general "properties in calc() need units"
     // rule: --fx/--fy/--fw/--fh/--ct-row/--ct-rows are DELIBERATELY unitless multipliers inside
     // calc(). These six rules are the whole exposed surface — the only other property in that
     // calc(), --ct-dy, is JS-written and always px (useCollisionLayout, and only when dy > 0).

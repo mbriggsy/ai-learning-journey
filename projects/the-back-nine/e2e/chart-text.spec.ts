@@ -1,5 +1,6 @@
 import { test, expect, type BrowserContext, type Page } from '@playwright/test'
 import { REAL, REAL_DPR, FLOOR, PHONE, PHONE_DPR, FINAL_TIER_MS, gotoSeedFinal, settleLayout } from './reviewSurface'
+import { type Audit, type Rect, TOL, floorPx, audit, assertChartText } from './chartTextAudit'
 /* The band's scrub SNAPS to one of LATTICE_POINTS columns, so the readout's whole placement state
  * space is finite — the sweep below walks EVERY column rather than sampling a few (importing from
  * ../src is this directory's precedent: caddie-walk.spec.ts reads the copy catalog the same way). */
@@ -57,179 +58,14 @@ import { LATTICE_POINTS } from '../src/viz/bandData'
  *  - REDUCED MOTION: the text layer renders the same node set with motion on and off.
  *
  * Every measurement waits for the FINAL engine tier (gotoSeedFinal) and a settled layout (settleLayout).
+ * The audit core — the node measurement (`audit`), the legibility floor (`floorPx`) and the oracles
+ * (`assertChartText`) — lives in `chartTextAudit.ts`, shared with the RecommendationViz arm in
+ * `chart-text-rv.spec.ts`.
  *
- * NOT covered here, by design: RecommendationViz rides its own serialized solve arm (`verify:fit:rv`,
- * open in the register — a full-precision solve beside these arms would starve them of cores).
+ * NOT covered here, by design: RecommendationViz rides its own serialized solve arm
+ * (`chart-text-rv.spec.ts` on playwright.fit-rv.config.ts, `verify:fit:rv`) — the one chart that
+ * exists only after a full-precision solve, which beside these arms would starve them of cores.
  */
-
-type Node = {
-  readonly text: string
-  readonly cls: string
-  readonly fontPx: number
-  /** the smallest font-size among the elements inside this node that own a text run — the leaf floor */
-  readonly minFontPx: number
-  readonly left: number
-  readonly right: number
-  readonly top: number
-  readonly bottom: number
-  readonly hidden: boolean
-  readonly optional: boolean
-  readonly priority: boolean
-  /** the computed transform — `none` only ever means a type-invalid var() in the anchor chain */
-  readonly transform: string
-}
-type Rect = { readonly left: number; readonly right: number; readonly top: number; readonly bottom: number }
-type Audit = {
-  /** the CARD the node set must stay inside — named per chart at the call site (audit()'s note) */
-  readonly bound: Rect
-  readonly boundSel: string
-  /** The chart's OWN figure box. `bound` above is the CARD the containment oracle uses; this is the
-   *  tighter box the y-tick borrow is measured against (`assertTickColumn`). */
-  readonly chartBox: Rect
-  readonly nodes: readonly Node[]
-  readonly svgTextCount: number
-}
-
-/** The legibility floor, read from the live stylesheet: the computed size of a --text-xs probe. */
-async function floorPx(page: Page): Promise<number> {
-  return page.evaluate(() => {
-    const p = document.createElement('span')
-    p.style.fontSize = 'var(--text-xs)'
-    p.textContent = 'x'
-    document.body.appendChild(p)
-    const px = parseFloat(getComputedStyle(p).fontSize)
-    p.remove()
-    return px
-  })
-}
-
-/** Every chart text node inside `figureSelector`, measured against `boundSelector` — the chart's own
- *  CARD, NAMED per chart, never a fallback chain (a chart whose bound is missing fails loudly).
- *  A node may legitimately sit a few px outside the <svg> box and inside the card's padding — on
- *  screen, unclipped (nothing on the drawer path sets `overflow: hidden`; band.css's only one is the
- *  `.band-modal-open` body lock). The per-chart reasons, measured 2026-09-05:
- *   · band → `.band-drawer` (ConfidenceBandPanel.tsx) or the enlarge `[role="dialog"]`: the dollars
- *     end-anchor at TICK_FX = 84/560 = 0.15 of the figure, and the widest catalog dollar is 45 px of
- *     ink at --text-xs on Windows, 42 on Linux CI (`borderline`'s seven-glyph "$0.375M" / "$1.125M";
- *     FreeType rounds glyph advances to whole pixels). On the 320 arm that column
- *     renders narrower than the dollar, so it hangs LEFT of `figure.band-figure` into the drawer's
- *     own padding — `assertTickColumn` carries the tighter, live-measured bound for that borrow,
- *     with the arm-by-arm numbers in its own docblock.
- *   · TwoFutures → the lever sheet `[role="dialog"]`: the x-axis row is centred at XAXIS_FY = 267/280
- *     of the host with a fixed ~17 px box, so it rides (8.45 − 0.0464 × hostH) px BELOW the host —
- *     0.25 px at PHONE (a 175 px host), ~2 px on the 320 arm. The dialog is its true card; a bare
- *     `.tf-host` bound reds the 320 arm on legitimate layout.
- *   · ladder → `main.result`: the ladder has no padded card of its OWN — `.fod-ladder`, `.fuck-off-date`
- *     and `.result-hero` all carry zero horizontal padding — so its first padded ancestor is the page
- *     column, whose gutter is the padding; its end-anchored "on track" label is 44.3 px of ink against
- *     a 0.15 × 288 = 43.2 px column on the 320 arm, i.e. ~1 px into that gutter. RESIDUAL: main's rect
- *     is document-tall, so the ladder's vertical containment here is weak — the CROWN therefore
- *     carries its own containment bound against `figure.ladder-figure` (`assertCrown`), and the label
- *     column's 320 × root-20 state is ACCEPTED under two named bounds his eye set on 2026-09-06
- *     (ACCEPTED_ONTRACK_OVERPRINT_PX / ACCEPTED_LABEL_GUTTER_PX, at the instrument below).
- *  A label that leaves the NAMED bound is the clipped-dollar defect this gate exists to catch. */
-async function audit(page: Page, figureSelector: string, boundSelector: string): Promise<Audit> {
-  return page.evaluate(
-    ({ sel, boundSel }) => {
-      const fig = document.querySelector(sel)
-      if (!fig) throw new Error(`chart-text: no figure matches ${sel}`)
-      const bound = fig.closest(boundSel)
-      if (!bound) throw new Error(`chart-text: ${sel} has no ancestor matching ${boundSel} — name a real card`)
-      const fb = bound.getBoundingClientRect()
-      // a display:contents ancestor generates NO box (.fod-graphs, .reveal__lead, .reveal__actions):
-      // a zero rect would fail every node instead of bounding it.
-      if (fb.width === 0 || fb.height === 0) throw new Error(`chart-text: the bound ${boundSel} has no box (display:contents?)`)
-      const cb = fig.getBoundingClientRect()
-      const rect = (r: DOMRect) => ({ left: r.left, right: r.right, top: r.top, bottom: r.bottom })
-      const nodes = [...fig.querySelectorAll<HTMLElement>('.ct-text, .ct-block__item')].map((el) => {
-        const cs = getComputedStyle(el)
-        const b = el.getBoundingClientRect()
-        // The floor is a LEAF property. A child with its own font-size — `.ladder-crown__tell`
-        // (oddsLadder.css, --text-xs inside a --text-sm crown) — is invisible to the parent's
-        // computed size. Walk every element that OWNS a direct non-empty text node (any depth, no diff
-        // against the parent) and take the smallest. Containment + non-overlap stay on the PARENT box:
-        // `.ct-block__name` / `.ct-block__sub` are display:block siblings that legitimately stack, so
-        // adding leaves to those sets would flag legal layout as a collision. (`3` is TEXT_NODE — the
-        // spec's own `Node` type shadows the DOM's in type space.)
-        const owners = [el, ...el.querySelectorAll<HTMLElement>('*')].filter((n) =>
-          [...n.childNodes].some((c) => c.nodeType === 3 && (c.textContent ?? '').trim() !== ''),
-        )
-        const sizes = owners.map((n) => parseFloat(getComputedStyle(n).fontSize))
-        return {
-          text: (el.textContent ?? '').trim(),
-          cls: el.className,
-          fontPx: parseFloat(cs.fontSize),
-          minFontPx: sizes.length ? Math.min(...sizes) : parseFloat(cs.fontSize),
-          left: b.left,
-          right: b.right,
-          top: b.top,
-          bottom: b.bottom,
-          hidden: cs.visibility === 'hidden' || cs.display === 'none' || el.hasAttribute('data-ct-hidden'),
-          optional: el.hasAttribute('data-ct-optional'),
-          priority: el.hasAttribute('data-ct-priority'),
-          transform: cs.transform,
-        }
-      })
-      return { bound: rect(fb), boundSel, chartBox: rect(cb), nodes, svgTextCount: fig.querySelectorAll('svg text').length }
-    },
-    { sel: figureSelector, boundSel: boundSelector },
-  )
-}
-
-const TOL = 1 // px — sub-pixel rounding at fractional device scales
-
-function assertChartText(a: Audit, floor: number, label: string): void {
-  expect(a.svgTextCount, `${label}: the svg must carry NO <text> — every word is HTML`).toBe(0)
-  const visible = a.nodes.filter((n) => !n.hidden && n.text !== '')
-  expect(visible.length, `${label}: no visible chart text at all`).toBeGreaterThan(0)
-  for (const n of visible) {
-    expect(
-      n.minFontPx,
-      `${label}: "${n.text}" has a line at ${n.minFontPx}px (the node itself is ${n.fontPx}px) — under the ${floor}px floor (--text-xs)`,
-    ).toBeGreaterThanOrEqual(floor - 0.01)
-    // THE ANCHOR. The whole `transform` is ONE declaration (chartText.css: `.ct-text` and
-    // `.ct-block__item` each own one), so if any var() in it substitutes a value of the wrong TYPE the
-    // declaration is invalid at computed-value time and transform falls back to `none`, taking the
-    // horizontal anchor with it. A mis-anchored label still sits inside its card and can still
-    // overprint nothing, so no other oracle here can see it. Every node this gate audits declares a
-    // transform, so `none` is only ever this failure. SCOPE, honestly: the 2026-09-05 `--ct-ty: 0`
-    // defect lived on the only valign="top" node in src/viz — the RecommendationViz hero — which this
-    // gate does not render yet; the edit-time twin in src/viz/__tests__/chartText.test.tsx holds that
-    // case, and this arm holds the same failure class on the three charts rendered here.
-    expect(
-      n.transform,
-      `${label}: "${n.text}" computes transform:none — a var() in chartText.css's transform chain is type-invalid (a unitless 0 inside the calc())`,
-    ).not.toBe('none')
-    expect(
-      n.left >= a.bound.left - TOL && n.right <= a.bound.right + TOL && n.top >= a.bound.top - TOL && n.bottom <= a.bound.bottom + TOL,
-      `${label}: "${n.text}" [${n.left.toFixed(1)},${n.right.toFixed(1)}]×[${n.top.toFixed(1)},${n.bottom.toFixed(1)}] leaves its bound ${a.boundSel} ` +
-        `[${a.bound.left.toFixed(1)},${a.bound.right.toFixed(1)}]×[${a.bound.top.toFixed(1)},${a.bound.bottom.toFixed(1)}]`,
-    ).toBe(true)
-  }
-  for (let i = 0; i < visible.length; i++) {
-    for (let j = i + 1; j < visible.length; j++) {
-      const p = visible[i]!
-      const q = visible[j]!
-      const overlap = p.left < q.right - 0.5 && p.right > q.left + 0.5 && p.top < q.bottom - 0.5 && p.bottom > q.top + 0.5
-      expect(overlap, `${label}: "${p.text}" overprints "${q.text}"`).toBe(false)
-    }
-  }
-  // a hidden node must be an OPTIONAL one (an interim age tick or an intermediate x tick) — and NEVER a
-  // PRIORITY one: `data-ct-priority` is the 'hide' layout's own never-hide flag (src/viz/chartText.tsx,
-  // layoutCollisions 'hide' — priority boxes seed `kept` and are never iterated for a clash), and the
-  // ladder's "today" tick wears it while sharing the `.ladder-xtick` class with its numeral neighbours
-  // (src/viz/OddsLadder.tsx, the x-axis block), so the class whitelist alone would let a named moment
-  // vanish. NOTE the 'stagger' branch partitions on `data-ct-optional` and never reads priority; today
-  // nothing emits both, so this clause is safe there — a future priority item inside a stagger host
-  // (the band's annotation block) would need that branch taught the flag before it could be hidden
-  // without reddening here.
-  for (const n of a.nodes.filter((n) => n.hidden)) {
-    expect(
-      !n.priority && (n.optional || /tf__axis--xtick|ladder-xtick/.test(n.cls)),
-      `${label}: a NAMED label was hidden: "${n.text}"${n.priority ? ' — a data-ct-priority node; the layout must never hide one' : ''}`,
-    ).toBe(true)
-  }
-}
 
 /** The clearance a borrowed dollar must keep from the card's edge — the same 4 px the two-pane
  *  edit-time tripwire keeps as tick-column slack (twoPaneHonestyFloor.test.ts) and bandGeometry's
@@ -708,7 +544,7 @@ function assertCrown(c: CrownAudit, label: string): void {
  *  `settleLayout`'s animation scan. */
 const twoFrames = (page: Page) => page.evaluate(() => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))))
 
-/** figure → the card it must stay inside. Reasons + measurements: audit()'s note above. */
+/** figure → the card it must stay inside. Reasons + measurements: audit()'s note in `chartTextAudit.ts`. */
 const BAND = ['figure.band-figure', '.band-drawer, [role="dialog"]'] as const
 const LADDER = ['figure.ladder-figure', 'main.result'] as const
 const TF = ['.tf-host', '[role="dialog"]'] as const

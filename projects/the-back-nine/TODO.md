@@ -21,8 +21,9 @@ left is not units. It is the gap between *the build is done* and *a friend can b
 
 ▶ **START HERE (b9-7) — hand-off 2026-09-08 morning.** The b9-4 ranked plan below is DISCHARGED through (5): (1) the RV
 gate `c135a99c` · (2) the critic's arms `96e87e0f` · (3) the unmeasured trio `da881de5` · (5) the legend council `2d671144`
-— each CI-green by run id — and (4) five of six arms integrated and committed as the item-4 commit (`git log -1 -- .`,
-2026-09-08; its gates: typecheck · lint · 3474 tests / 172 files · doc-stats · build · bundle · csp with WebKit · fit 119).
+— each CI-green by run id — and (4) five of six arms integrated and committed as `31cba0fe` (2026-09-08; its local gates:
+typecheck · lint · 3474 tests / 172 files · doc-stats · build · bundle 263.0 KiB · csp with WebKit 15/1 · fit 119; CI run
+**34228947445** was in progress at hand-off — read its conclusion BY ID first: `gh run view 34228947445 --json status,conclusion`).
 **THE DEBT THIS SESSION LEAVES, in order:**
 (a) **The adversarial review of the item-4 integration is OWED.** Items 1–3 each got a 4-lens × 3-refuter review before
 commit and each found 10–21 defects in the first draft; item 4 shipped on the builders' own gates with NO independent

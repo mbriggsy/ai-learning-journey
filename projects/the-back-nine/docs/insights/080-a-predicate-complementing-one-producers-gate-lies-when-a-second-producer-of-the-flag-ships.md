@@ -8,7 +8,7 @@ tags: [predicate, proxy, disclosure, honesty, producer, complement, docstring, r
 
 ## Problem
 
-`medicareUnpriced` (healthSheetChrome.ts:302-308) keys the "Medicare's own costs aren't
+`medicareUnpriced` (retired 2026-07-10 by this insight's fix; the scar is healthSheetChrome.ts:317) keyed the "Medicare's own costs aren't
 priced into these numbers yet… would pull the picture down some, never up" disclosure off
 AGES (every member a known 65+). On the date route that statement is FALSE today: a
 still-working all-65+ household sees the note over numbers Medicare already moved. It

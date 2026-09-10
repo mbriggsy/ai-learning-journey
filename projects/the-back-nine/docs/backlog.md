@@ -213,8 +213,8 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
   witness plant must be built before any regression pin here means anything** — which is what pushes this
   from `S` to `M`.
 - ⚑ Anchor drift: `noChange: false` is `devSeeds.ts:1439` (not `:1322`); the winner literal is `:1425`
-  (not `:1308`). `copy.ts:1421-1425` is the card-FAMILY header — nothing defends the holds sentence
-  today, so the fix must **add** a comment, not rewrite one.
+  (not `:1308`). `copy.ts:1421-1425` is the card-FAMILY header — the holds sentence's defending comment is
+  `copy.ts:1427-1456` (added 2026-08-03), and it already carries the ⚠️ NEVER DEFEND THIS LINE WITH `noChange` warning.
 - ⚑ **The semantic witness ("the advice not taken") — the debt record, moved from the queue 2026-09-06:** ⚠️ **The 2026-08-03 verification debt, CORRECTED 2026-08-14 — it was overstated, and the half that
   remains is narrower.** This block used to read *"the record card's HOLDS face has never been seen;
   `?vault=rec` cannot show it."* **The FACE has now been seen** — `?vault=rec` renders
@@ -298,15 +298,16 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
   winner-converts/runner-up-doesn't is the **natural** shape for a well-funded leave-more household, not
   a rare one. Real guard is `select.ts:334-337`; the throw is `gradeCalibration.ts:172-177` via
   `gradeOnFamily:200`; the catch narrow is `solve.ts:349`, rethrow `:350`.
-- ⚑ **The engine one-liner is HALF the fix.** `recommendationView.ts:437-446` maps `withheld` to the
-  SAME generic `copy.recommendUnavailable` as `compute-error`, so widening the guard alone converts a
-  crash into an **identical generic card**. Route it through `heldView`'s shape (`:329-335`) with a new
-  `recHoldDemotionAxis` key — `copyGuard.ts:119` makes `recHold*` require-hedge, so it must wear a modal.
+- ⚑ **The engine one-liner was HALF the fix (pre-fix record, DISCHARGED 2026-08-03).** The withheld arm
+  (today `recommendationView.ts:439-448`) MAPPED `withheld` to the SAME generic `copy.recommendUnavailable`
+  as `compute-error`, so widening the guard alone would have converted a crash into an **identical generic
+  card**. It was routed through the held shape (`case 'withheld'` returns `{ kind: 'held', … }`; `heldView` is
+  `recommendationView.ts:469`) with a new `recHoldDemotionAxis` key — `copyGuard.ts:119` makes `recHold*` require-hedge, so it must wear a modal.
 - ⚑ **Four comments would become NEW false claims** and must be swept in the same commit —
-  `select.ts:134-135`, `select.ts:322-329`, `solve.ts:151-152`, `solve.ts:484-487` each currently assert
-  the `leave-more` arm *"falls through to a THROW."* This is the exact class `30e5bc31` just cleaned up.
+  `select.ts:134-135`, `select.ts:322-329`, `solve.ts:151-152`, `solve.ts:484-487` each asserted, before the 2026-08-03 sweep,
+  that the `leave-more` arm *"falls through to a THROW"* (all four read past-tense today). This is the exact class `30e5bc31` just cleaned up.
 - ⚑ **RED-GATE RISK:** `select.test.ts:293` asserts `kind === 'selected'` on a live-shaped leave-more
-  world, and `:294`'s comment literally encodes the defect (*"leave-more never routes to withheld"*).
+  world, and its comment at `:295-297` now records the opposite outright (*"NOT 'leave-more never routes to withheld' — since 2026-08-03 it can"*).
   Check it before shipping. No existing fixture covers leave-more + a converting winner.
 - ⚑ **BRIGGSY DECIDES:** on `leave-more` a converting winner is the EXPECTED crown for a well-funded
   household, so an honest withhold likely fires for the **modal** target user — a hold, not an answer.
@@ -432,11 +433,12 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
   route simulates all 11 offsets (`dateSearch.ts:425/450/457`) and candidate Y=0 carries the base ACA
   stream **ungated** (`healthcareStreams.ts:158-160` → `windowStart = 0`, a pass-through), so
   `exposure.aca === 'priced'` *proves* the ACA tables were consumed. The clock is load-bearing.
-- ⚠️ **BUT THE FILED FIX IS A LIVE TRAP — do not execute it.** The prescription still sitting in
-  `stalenessExposure.ts:115-117` ("re-derive the exposure against the CROWNED offset") would **silence**
+- ⚠️ **BUT THE FILED FIX IS A LIVE TRAP — do not execute it.** The prescription that once sat in
+  `stalenessExposure.ts` ("re-derive the exposure against the CROWNED offset" — WITHDRAWN inside the comment
+  itself on 2026-08-02, `stalenessExposure.ts:118-124` marks it ✗ DO NOT) would have **silenced**
   the ACA clock for exactly the household whose date a subsidy flip moved — insight 103's shape recurring
-  inside the comment that cites insight 103. Rewrite `stalenessExposure.ts:86-133` to record the sweep
-  argument and delete the trap; its render-chain anchors are 20–60 lines stale as well.
+  inside the comment that cites insight 103. DISCHARGED: `stalenessExposure.ts:86-133` records the sweep
+  argument and marks the trap ✗ DO NOT (2026-08-02); its render-chain anchors were re-anchored 2026-09-10.
 - ⚠️ THE STATE-TAX AGGREGATE ARM — council-shaped, parked behind a trigger; DO NOT BUILD AS FILED
 - Council fork: state-tax exposure — widen `pricedState` vs add a 7th `stateTax: ExposureRead` field
 - Standing trigger — the state clock's unknown arm (unreachable in-build today)
@@ -466,7 +468,7 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 - Pre-65 ACA premiums are priced REAL-FLAT — the exact sin the Medicare council ruled solver-BLOCKING, with no trend, no oracle clause, and no disclosure
 - ⚠️ **The fix is NOT a Part B copy-paste.** Part B’s schedule is built INSIDE the engine, which is why the oracle token can witness it; the ACA escalator lives in **intake** (`intakeMap.ts:336-345`), which the engine cannot import — so an `ACA_PRICING_MODE` flag bolted onto intakeMap would be the exact lying-mirror `oracleToken.ts:114-122` warns about. The honest fix moves the schedule build to an engine-owned `buildAcaPricingSchedule` beside `partBPricingByT` (`taxOverlay.ts:1110`).
 - ⚠️ Anchor corrections: `healthOverlay.ts:296` is a **closing brace**, not a consumer (real seam `taxOverlay.ts:1689` + `:1731-1738` → `healthOverlay.ts:270`); the strings claiming the coupling is priced are `copy.ts:956-959`, not `copy.ts:924`.
-- ⚠️ **Re-tag: BLOCKED ON RESEARCH.** No sourced ACA cost-trend primary exists in the repo, so a solver block would hold for months over the whole pre-65 population. Near-term move is the copy swap at `copy.ts:956-959`. The excess-APTC field moved to `aca-last-verified.json:41` and `scripts/verify-aca-status.ts:40-72` never declares the key — **it is inert prose, not a gate.**
+- ⚠️ **Re-tag: BLOCKED ON RESEARCH.** No sourced ACA cost-trend primary exists in the repo, so a solver block would hold for months over the whole pre-65 population. Near-term move is the copy swap at `copy.ts:956-959`. The excess-APTC field moved to `aca-last-verified.json:41` and `scripts/verify-aca-status.ts:40-103` declares and REQUIRES the key (`adjacentButSharp` at `:90`, `needProse` at `:169`, since 2026-08-03) — **but the gate is presence-only: nothing checks that the prose models the uncapped clawback.**
 - Uncapped excess-APTC clawback — the gate never reads the field, and the copy call is unmade
 
 ### ✅ CLOSED 2026-08-14 (`863747d6`) — Mixed household: the already-retired spouse is priced at zero health cost while the other works
@@ -1106,7 +1108,7 @@ disclaimer two-mount swap (holds: in-frame mount dark, trailing mount after the 
 
 `M` · **pilot** · filed 2026-09-06 (the Medicare-extras and Medicare-pricing specs' as-built rewrites; both unfiled obligations confirmed by their skeptics)
 
-- **TWO flips, one defect.** The pricing unit (`3454c224`, 2026-07-10) moved **base Part B and its IRMAA surcharge** out of typed spending; the extras unit (`503213f4`, 2026-07-11) moved **Part D / Medigap / Medicare Advantage**. The live boundary sentence now carries both — "Leave out the Medicare premiums the tool prices itself: Part B, its income surcharge, and any Part D, Medigap, or Medicare Advantage premium" (`src/ui/copy.ts:117`, and the identical priced-state twin at `:131`). A vault saved BEFORE either flip still carries those premiums inside its spending AND gets them priced — a double count. Each unit's council required a NAMED follow-up for the installed base; neither was filed (the pricing spec records its own at `docs/plans/features/medicare-pricing-build-spec.md:42`) and no staleness clock keys on either.
+- **TWO flips, one defect.** The pricing unit (`3454c224`, 2026-07-10) moved **base Part B and its IRMAA surcharge** out of typed spending; the extras unit (`503213f4`, 2026-07-11) moved **Part D / Medigap / Medicare Advantage**. The live boundary sentence now carries both — "Leave out the Medicare premiums the tool prices itself: Part B, its income surcharge, and any Part D, Medigap, or Medicare Advantage premium" (`src/ui/copy.ts:117`, and the priced-state twin at `:131`, whose Medicare clause is identical — its state sentence deliberately flips). A vault saved BEFORE either flip still carries those premiums inside its spending AND gets them priced — a double count. Each unit's council required a NAMED follow-up for the installed base; neither was filed (the pricing spec records its own at `docs/plans/features/medicare-pricing-build-spec.md:42`) and no staleness clock keys on either.
 - Pessimistic-safe (the household reads slightly worse) against a ~zero real pre-launch base, so neither was a ship blocker — but it is an undetected wrong number on every pre-flip vault, and the re-entry walk-through is the only thing that corrects it today.
 - ⚑ **The fix is NOT a new clock, and the extras filing's original prescription was wrong.** `src/store/staleness.ts:60-62` rules it out in its own words: the sanctioned mechanism when a real installed base exists is a Q7 saved-era entry (`src/shared/appDefaults.ts` — the add-only era map exists for exactly this class; `ERAS` at `:35`, `CURRENT_APP_DEFAULT_VERSION` at `:41`), "not a new clock here". ONE era entry covering BOTH boundaries — never two clocks, and never a clock that names Part D while staying silent about Part B — plus the calm note; the words are his.
 

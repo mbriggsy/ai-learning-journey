@@ -342,7 +342,7 @@ describe('RecommendationSurface — §S4 comparative depth + honest-limits + re-
    * tap must never slide the R13 disclaimer and the quiet doors below it up into the pointer). So
    * the three structural asserts survive VERBATIM under the arms that still draw nothing, and the
    * POPULATED counterpart — a real control, and the `aria-hidden` DROPPED — lives in the §S5
-   * battery below. `onRepick === undefined ⇒ no dead door` (:207-209) is the precedent.
+   * battery below. `onRepick === undefined ⇒ no dead door` (:331-333) is the precedent.
    */
   it('THE RESERVED SAVE SLOT is the verbatim empty reservation on every arm that draws no control (CLS)', () => {
     const unwired = render(<RecommendationSurface solve={committedRec()} onRepick={vi.fn()} />)

@@ -244,9 +244,9 @@ export function AssumptionPanel({
   // ⚠️ CORRECTED 2026-08-03 — this used to end "…the panel's own period toggle RE-LABELS, never
   // re-bases, so the 12× misentry the rule guards is structurally impossible on this surface."
   // THAT WAS FALSE, and it was the load-bearing half of the justification. The toggle does only
-  // re-label (it writes `spendEntryPeriod` alone), but the spend commit below (:500-510, the
-  // `entered * 12` arm at :507) multiplies by 12 under 'month' — so a 12× misentry is entirely
-  // possible here, and the re-label is what INVITES it: `spendDisplayed` (:295-300) jumps 12× on a
+  // re-label (it writes `spendEntryPeriod` alone), but the spend commit below (:601-611, the
+  // `entered * 12` arm at :608) multiplies by 12 under 'month' — so a 12× misentry is entirely
+  // possible here, and the re-label is what INVITES it: `spendDisplayed` (:338-343) jumps 12× on a
   // flip, and the reader's natural repair is to retype the digits they remember under the new
   // unit. `assumptionPeriodHelp` was rewritten the same day to name both halves, and pinned.
   //

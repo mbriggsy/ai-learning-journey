@@ -10,7 +10,7 @@
  *
  * WHY IT'S LOAD-BEARING (the SOLE defense). A `colaMode:'fixed-pct'` stream compiles to a
  * deterministic, SEEDLESS per-year overlay `annualRealToday * ((1+colaPct)/(1+inflationMean))^t`
- * (src/engine/reference/otherIncome.ts:51-56). Because it lifts every Monte-Carlo path's income floor
+ * (src/intake/otherIncome.ts:51-56). Because it lifts every Monte-Carlo path's income floor
  * IDENTICALLY, the confidence fan is structurally BLIND to an over-optimistic in-range COLA — it
  * narrows toward success, never widens to flag it. So this range gate is the ONLY thing standing
  * between a mis-entered 30%/yr (~$689M/yr by year 40, under the engine's $1e12 finiteness cap) and a

@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 import { REAL, REAL_DPR, TIER, SHOWCASE, FLOOR, PHONE, gotoSeedFinal, settleLayout } from './reviewSurface'
-// THE SHIPPED CATALOG, never re-typed here (the `e2e/design-tokens.spec.ts:2` precedent). Every
+// THE SHIPPED CATALOG, never re-typed here (the `e2e/caddie-walk.spec.ts:9` precedent). Every
 // string this spec injects or reads back is the one the app ships: a spec-local literal would pin a
 // reservation, a clause list or a heading against a fiction, and a re-word that overflowed the real
 // box would escape the gate silently (U17 §S5 step 14).
@@ -635,7 +635,7 @@ for (const seed of DEAD_RAIL_SEEDS) {
 //
 // EVERY STRING COMES FROM THE SHIPPED CATALOG (`copy`), never re-typed here. A spec-local literal
 // would pin the reservation against a fiction: re-word the ceremony hint one line longer and the
-// gate would stay green while the real control overflowed. `e2e/design-tokens.spec.ts:2` is the
+// gate would stay green while the real control overflowed. `e2e/caddie-walk.spec.ts:9` is the
 // precedent for importing src into an e2e spec.
 //
 // INJECTED, not solved: a live committed solve is 80–200s (recorded above), past this harness's

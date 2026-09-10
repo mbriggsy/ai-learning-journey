@@ -2,8 +2,8 @@ import { test, expect, type Page } from '@playwright/test'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { REAL, REAL_DPR, PHONE, PHONE_DPR, gotoSeedFinal, settleLayout } from './reviewSurface'
-/* The no-anchor arm's handle reads the CATALOG, never a re-typed sentence (the `design-tokens`
- * spec's precedent). A hardcoded literal here is a second copy of the product's words: U17 §S6
+/* The no-anchor arm's handle reads the CATALOG, never a re-typed sentence (this import is the
+ * precedent the fit specs cite). A hardcoded literal here is a second copy of the product's words: U17 §S6
  * reworded this exact string, and a literal would have re-broken the only walk that reaches the
  * face — the same blind spot `c55913b0` had just repaired. */
 import { copy } from '../src/ui/copy'

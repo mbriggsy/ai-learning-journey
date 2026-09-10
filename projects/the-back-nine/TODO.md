@@ -309,8 +309,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (a) `healthOverlay.ts:296` is a **closing brace**, not a consumer; the real seam is `taxOverlay.ts:1689`
    + `:1731-1738` → `healthOverlay.ts:270`. (b) `copy.ts:1053` is a Medicare eyebrow; the strings that claim
    the coupling is priced are **`copy.ts:956-959`**. (c) the excess-APTC field moved to
-   `aca-last-verified.json:41` (was `:21`) and `scripts/verify-aca-status.ts:40-72` never declares the key
-   — **the clawback gate is inert prose**, not a gate.
+   `aca-last-verified.json:41` (was `:21`) and `scripts/verify-aca-status.ts:40-103` declares and REQUIRES the key
+   (`adjacentButSharp` at `:90`, `needProse` at `:169`, since 2026-08-03) — **the gate is presence-only**: nothing checks that the prose models the uncapped clawback.
    ⚑ **STRUCTURAL — this is why it isn't a Part B copy-paste:** Part B's schedule is built INSIDE the
    engine, which is why the oracle token can witness it. The ACA escalator lives in **intake**
    (`intakeMap.ts:339-359`), which the engine cannot import — so an `ACA_PRICING_MODE` flag bolted onto
@@ -322,8 +322,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    was WRONG THREE WAYS.** (a) *"stop claiming the coupling is fully priced"* — **the coupling IS fully
    priced.** A conversion enters `nonSSordinary` → `acaMagi` (`healthOverlay.ts:99-101`) → `slidingScalePtc`
    → net premium, in both preview arms. The fault is the **closed "Not counted here:" list** omitting the
-   held-price modeling choice, while the sibling health-sheet list (`copy.ts:1013/1019`) does name the
-   benchmark. (b) *"priced real-flat"* **understates what IS modelled** — `escalateQuote` climbs with the
+   held-price modeling choice, while the sibling health-sheet list ONCE named the benchmark — struck 2026-08-03 as FALSE in
+   both lists (`copy.ts:1006-1019`); what is genuinely unmodelled about it is the COST TREND (`copy.ts:1021-1023`). (b) *"priced real-flat"* **understates what IS modelled** — `escalateQuote` climbs with the
    age-rating curve (0.765 → 3.000 at 64). Only the **cost trend** is missing; the schedule is not flat, so
    **do NOT borrow `verdictResidualTail`'s "held flat in today's dollars"** — verbatim it is a NEW false
    claim on this surface. (c) the editable strings are **`copy.ts:957` and `:959`** (`956`/`958` are key
@@ -529,8 +529,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 8. **The whole still-working audience gets no strategy — silently.** `Result.tsx:509` gates
    `RecommendationSurface` off for the date route entirely and `:362` gates the invite door. The
    `blocked{spine-unready}` note that would explain it lives *inside* the gated-off component, so a working
-   couple sees the date answer and **zero words** about strategy. `Result.tsx:345-347`'s comment claims "the
-   builder's `spine-unready` refusal covers the date route honestly" — it does not render.
+   couple sees the date answer and **zero words** about strategy. `Result.tsx:345-347`'s comment now records the
+   opposite (corrected 2026-09-04): the builder's `spine-unready` refusal does NOT cover the date route, so no note is minted there at all.
    ⚑ **THE FILED "CHEAP INTERIM" IS WRONG — do not execute it.** Dropping the `!isDateRoute` gate at
    `:476` alone renders an **empty `<div>`**, not the refusal: the note is not reachable on that path. And
    reusing `recommendSpineUnreadyNote` would tell a household with a **complete** answer that its answer is
@@ -620,12 +620,13 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     backup carries the same bytes) · HSA-forfeit + LTC "What this leaves out" section (M; pilot per the
     register — the queue's owner call is the account-total confirm only).
     ⚑ **2026-09-04, each re-scoped:** (a) THE AGED NOTE IS NOT PILOT — Tier-1 7c rules "Do NOT fix this in
-    copy" and both nearest register entries are **briggsy** (`backlog.md:733`, `:780`); the "three arms with
+    copy" and the two nearest register entries are owned **council** (`backlog.md:734`) and **pilot** (`:780`) — neither is a copy fix; the "three arms with
     corrected costs" existed NOWHERE — they are now written, with sizes, under the register's "The aged
-    surface" entry. A shipped copy defect on the SAME cohort IS pilot: `rothPlanRanked` (`copy.ts:2360-2371`)
-    hardcodes the plural "Those years are counted from…" after a correctly-singular "for 1 year" — live for
-    any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:206-207`) — and no test
-    covers `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
+    surface" entry. A shipped copy defect on the SAME cohort WAS pilot and is FIXED (2026-09-04: the singular arm ships at
+    `copy.ts:2368-2370` under the NUMBER AGREEMENT post-mortem at `copy.ts:2354`, covered by `copyGuard.test.ts:621`):
+    `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
+    live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:206-207`) — and no test
+    covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
     PRESCRIBED: `model.ts:1386-1388` mints synthetic entered accounts from the old aggregates "so the ladder
     stays total"; the write primitive exists (`db.ts:231 rewriteModel`, pinned `db.test.ts:180`); today's
     ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:930-947`), and a v1 vault survives

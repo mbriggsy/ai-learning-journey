@@ -44,17 +44,19 @@ config's worker-sizing comment re-counted · the SVG source hashed against its r
 `scripts/icons/` · intake-fold asserts the strip's top. TWO were stale citations, fixed in this hand-off's commit:
 `copy.ts:2683` → `:2706` + `recommendationView.ts:681-687` → `:697-703` (u17 saved-rec build spec) and `copy.ts:2682` →
 `:2706` (this file's item-10 entry). Nothing from the review is open.
-(b) **Line-numbered citations drifted and are wrong-but-green — WIDER than first filed.** The item-4 integration shifted
-FOUR source files, not two: `copy.ts` (+12 after `addAccount`, +8 near `recDeltaVizAria`), `questions.tsx` (+32),
-`Result.tsx` (+25 at `:377`) and `AccountEntry.tsx` (+14 at `:115`). The 2026-09-08 evening review found stale cites in
-the REGISTER (`docs/backlog.md` — six: `Result.tsx:485/522/398/407/489`, `AccountEntry.tsx:357-364`), in SOURCE comments
-(`copy.ts`'s `recDeltaVizAria` docblock and `copyGuard.test.ts`'s canary comment — neither scanned by doc-stats), and in
-`act4-u17-s5-execution-plan.md` + the u16/u17 specs (eleven `Result.tsx` cites ≥ `:377`) — on top of the first-filed
-TODO.md / `docs/council-log.md` / `docs/caddie/cold-read-log.md` / plan-doc set. doc-stats reds only a citation on a BLANK
-line, so every one is green. Re-anchor with a verify→skeptic fleet that OPENS each line (the 2026-09-06 shape) over EVERY
-tracked `.md` AND every `file:NN` inside `src/**`, `e2e/**`, `scripts/**` comments; the builder's old→new map
-(`temp/phone-walk/phone-walk-2-4-citation-drift.txt`, arm C's shift only, generator NOT idempotent) is a hint at most — never
-run it blind.
+(b) ✅ **DONE 2026-09-10 — every line-numbered citation re-anchored against today's tree**, three commits: `a1eca4e4`
+(1,268 named citations across 133 surfaces — every tracked `.md` AND every `file:NN` in `src/**`, `e2e/**`, `scripts/**`
+comments; 64-agent verify→skeptic fleet, 920 re-opened, 337 drifted + 53 comma-list continuations applied, 17 stale-things
+held back), `6bc863fc` (the 26 prose claims that were FALSE beside a live anchor, each made true — nothing retired,
+past-tensed), `026ab3ff` (287 bare `:NN` continuations attributed to their named neighbour, 16-agent fleet re-opening
+EVERY item, 60 edits applied — 30 re-anchors, 18 prose inserts naming the file where the nearest citation was the wrong
+one, the rest number fixes). **What is STILL not covered, honestly:** 106 bare `:NN` tokens with NO named citation anywhere
+in their paragraph (unattributable by any reader either — they need the file named in prose before they can be checked);
+`.md:NN` doc-to-doc citations (outside `verify:doc-stats` arm 4; the two into `backlog.md` were fixed by hand, no inventory
+exists for the rest); 45 bare tokens deliberately left as written (the frozen 24 px measurement record quotes wrong numbers
+to refute them; the register's "(not `:1322`)" / "`:476` at filing" clauses are preserved refuted anchors). The tooling is
+this session's scratchpad (`cite-inventory.mjs` / `cite-bare-inventory.mjs` → batches → the two Workflow scripts →
+`cite-apply.mjs` / `cite-bare-apply.mjs` / `apply-edits.mjs`), all same-line, EOL-preserving, occurrence-checked.
 (c) **The 24 px fit-law council is OWED.** Its first sitting lost all eleven elders to the session limit
 (`wf_05173c0f-4b7`; the limit resets 02:20). Re-dispatch `Workflow({ name: 'council', weight: 'full' })` with the issue
 + context from `e2e/held/fit-24px-measurements.md` and the register's *The app on someone else's device* third bullet; the
@@ -73,6 +75,17 @@ shape + the outer edge (council 2026-09-08), the pre-registered "point to the mi
 date band's three-row block at 390 / 1088, the icon silhouette (`scripts/icons/preview.png`), the RV above-bar-labels fork.
 **HIS EYE, post-hoc (the batched-oracle law):** the icon silhouette · the three-row aged date block · the legend
 swatches (deliberately unchanged until the walk) · the goal picker with its lead OMITTED on `?seed=failing`.
+
+**LANDMINES (2026-09-10):** a content-only read of a cited range misses drift whenever today's lines still "read
+plausibly" — six wrong-"correct" verdicts survived that way in one batch; the skeptic that caught them DIFFED the cited
+range against the tree at the last re-anchor commit (`61c57ff5`), and a range that was a clean syntactic unit THEN and a
+ragged one NOW is drift regardless of how it reads · the citation regex captures only the FIRST number of `foo.ts:72,95,120`
+and nothing of a bare `:232` — both forms are citations and both drift; inventory them separately · a bare token's
+nearest preceding named citation is the WRONG file 70 times in 287 (the sentence names another file in prose) — attribution
+is a guess a verifier must check, never a fact · a machine crash mid-session leaves the commit and loses the hand-off:
+read `git log` before the START HERE, and treat any "OWED" line older than the newest commit as suspect · the Dell's crash
+corrupted the monorepo's `.git/index` (all-zero header): back it up, delete it, `git reset` rebuilds it from HEAD with the
+working tree untouched; `fsck` proves nothing else was hit.
 
 **LANDMINES (2026-09-08):** a `council` Workflow can lose EVERY elder to the 5-hour session limit and returns a "hawk
 seat crashed → re-dispatch" verdict — never execute one; re-dispatch after the reset · jsdom 29 has NO

@@ -523,9 +523,12 @@ export function Result({
           fold-priority fix, 2026-07-10 — the pulled-forward TODO-7 / Caddie-#3 inversion): every
           UNPROTECTED affordance below it degrades past the fold FIRST, so the protected honesty
           caveat wins the frame (the Hawk's veto; the trailing App mount is the structural first
-          casualty). Visible ONLY at the laptop two-pane, where app.css hides the trailing mount;
-          display:none below that width — the phone renders byte-identically (same words, one
-          visible mount, Disclaimer.tsx has the contract). */}
+          casualty). Visible at EVERY width whenever a verdict has committed (council 2026-09-10,
+          wf_d2b1d05a-001 — until then it was display:none below the laptop two-pane, which left the
+          phone's only caveat AFTER the doors, the inversion this mount exists to prevent); app.css
+          hides the trailing mount behind main.result's data-inframe-disclaimer attribute (same
+          words, one visible mount, Disclaimer.tsx has the contract). On the scrolling tiers the law
+          is ORDER + REACHABILITY, gated in e2e/vertical-fit.spec.ts. */}
       <Disclaimer inFrame />
       {/* THE REMEMBERED-RECORD CARD — DOM-ordered BELOW the disclaimer, joining the doors as a
           sanctioned below-fold casualty (Briggsy's ruling, 2026-07-26, on measured numbers).
@@ -632,8 +635,9 @@ export function Result({
 
   return (
     // data-inframe-disclaimer mirrors the actions row EXACTLY (withheld while computing): app.css
-    // hides the page-trailing disclaimer behind it at the laptop tier, so a frame with no visible
-    // disclaimer is unrepresentable — the trailing mount stands whenever the in-frame one is out.
+    // hides the page-trailing disclaimer behind it at EVERY width (tier-independent since
+    // 2026-09-10), so a frame with no visible disclaimer is unrepresentable — the trailing mount
+    // stands whenever the in-frame one is out.
     <main className="result" data-inframe-disclaimer={computing ? undefined : true} data-answer-tier={answerTier}>
       <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
       <div className="result-hero">

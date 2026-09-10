@@ -57,12 +57,29 @@ exists for the rest); 45 bare tokens deliberately left as written (the frozen 24
 to refute them; the register's "(not `:1322`)" / "`:476` at filing" clauses are preserved refuted anchors). The tooling is
 this session's scratchpad (`cite-inventory.mjs` / `cite-bare-inventory.mjs` → batches → the two Workflow scripts →
 `cite-apply.mjs` / `cite-bare-apply.mjs` / `apply-edits.mjs`), all same-line, EOL-preserving, occurrence-checked.
-(c) **The 24 px fit-law council is OWED.** Its first sitting lost all eleven elders to the session limit
-(`wf_05173c0f-4b7`; the limit resets 02:20). Re-dispatch `Workflow({ name: 'council', weight: 'full' })` with the issue
-+ context from `e2e/held/fit-24px-measurements.md` and the register's *The app on someone else's device* third bullet; the
-held-out block is `e2e/held/fit-24px-enlarged-text-arm.patch` (both TRACKED since 2026-09-08 evening — squeaky clears
-`temp/` unconditionally; the patch is an INSTRUMENT that reds `verify:fit` as delivered, never land it unchanged). Framing:
-a documented scroll asserted as ORDER (the date route's contract) vs a large-text regime (a design unit).
+(c) ✅ **DONE 2026-09-10 — the 24 px fit-law council SAT (wf_d2b1d05a-001, 21 agents, 8/10, executed) and its ruling is
+BUILT.** The decisive fact the first sitting never had: in a media query `rem` reads the BROWSER DEFAULT font, so at 24 px
+`68rem` is 1632 px and both 1536×791 and 1280×800 render the sub-68rem STACKED tier — the eight reds measured the wrong tier
+(every offender was the trailing footer). Ruling: (C) framing; the breakpoint STAYS rem; the density regime (A) REJECTED on
+mechanics (⚑ do-not-execute in the register); and the real find — a LIVE inversion, the phone's only caveat AFTER the doors
+since July — FIXED first: the two-mount swap is keyed to the verdict at every width (`app.css`), `aria-describedby`
+verdict→caveat (`Disclaimer.tsx` exports the id), the scrolling tiers' law is ORDER + REACHABILITY. The gate
+(`e2e/vertical-fit.spec.ts`: `assertTier` · `assertOneVisibleDisclaimer` re-cut · `assertCaveatOrderAndReach` ·
+`raiseDefaultFont`): the 16 px phone arm, 24 px at 1536 + 1280 for the four spine seeds (the one-frame magnitude recorded
+as an instrument), a reduced-motion companion — 14 arms green; FOUR planted mutants proven and reverted (the tier-keyed
+swap back → 14 red; the CDP send dropped → 13 red, the phone arm alone green; the mount moved below the doors → 10 red;
+`main.result` clipped `overflow:hidden` → 10 red on REACH — the FIRST reach check used `scrollIntoView`, which scrolls a
+clipped ancestor programmatically and passed that mutant; the shipped check scrolls the DOCUMENT and hit-tests the caveat's
+centre). Records: council-log row, architecture §12, the register entry rewritten + the phone-walk entry's false "cleared"
+line withdrawn, the held patch DELETED (its arm landed re-cut), the measurements file kept as the instrument record;
+`scripts/__tests__/breakpoint-mirrors.test.ts` binds all 16 `68rem` mirrors (9 files) to `--bp-laptop`, `FLOOR` derived.
+**NEW FORK, filed in the register (his or a council's, never a pilot number):** at Chrome's one-click Large (20 px) the
+1536 laptop STAYS two-pane and budget / retired / nc RED the one-frame law — the save slot ends 806–871 px and the
+PROTECTED caveat 877–936 px against 791 (health fits); the 20 px arm RECORDS (root pin + tier + one caveat + the walk as a
+test annotation) and does not assert the fit until the fork is ruled. **HIS EYE:** the phone's caveat now sits ABOVE the
+doors (`temp/council-24px/phone-16px-retired.png` + `-first-frame`), the 24 px laptop stack, the 20 px overrun
+(`laptop-20px-budget.png`) — all on the ranked (6) Caddie walk. Residual: `twoPaneHonestyFloor.test.ts:45`'s literal
+`REM_PX = 16` (a shared constant would cross e2e→src the wrong way; leave until a src-side home exists).
 (d) ✅ DONE at hand-off — the six builder worktrees (`wf_b55ea9cc-c0c-1..6`) are deregistered and their directories
 deleted (git's own remove left them "not empty" — pnpm junctions; PowerShell `Remove-Item -Recurse -Force` did it); every
 patch and artefact was harvested first; the IRREPLACEABLE pieces are now tracked (`e2e/held/` for the 24 px instrument +

@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, type Page, type BrowserContext, type CDPSession } from '@playwright/test'
 import { REAL, REAL_DPR, TIER, SHOWCASE, FLOOR, PHONE, gotoSeedFinal, settleLayout } from './reviewSurface'
 // THE SHIPPED CATALOG, never re-typed here (the `e2e/caddie-walk.spec.ts:9` precedent). Every
 // string this spec injects or reads back is the one the app ships: a spec-local literal would pin a
@@ -180,20 +180,146 @@ async function assertFrameFits(
   ).toEqual([])
 }
 
-/** BOTH R13 mounts must exist (the two-mount contract), and exactly the tier's one is visible:
- *  a zero-disclaimer frame and a doubled frame are equally unrepresentable. */
+/** The layout TIER the page actually rendered — read from the breakpoint itself, never inferred
+ *  from the viewport width: in a media query `rem` reads the BROWSER DEFAULT font, so a 24 px
+ *  default makes `68rem` 1632 px and a 1536-wide laptop a sub-68rem device (council 2026-09-10).
+ *  The literal mirrors tokens.css's --bp-laptop (a source-bind test pins every mirror). */
+async function assertTier(page: Page, tier: 'laptop' | 'narrow'): Promise<void> {
+  const twoPane = await page.evaluate(() => window.matchMedia('(min-width: 68rem)').matches)
+  expect(
+    twoPane,
+    `the page rendered the ${twoPane ? 'two-pane' : 'stacked'} tier, the arm expected ${tier}`,
+  ).toBe(tier === 'laptop')
+}
+
+/** BOTH R13 mounts must exist (the two-mount contract), and exactly ONE is visible — the in-frame
+ *  mount on every committed verdict, at every width (council 2026-09-10; until then the in-frame
+ *  mount was dark below 68rem and the TRAILING footer, after the doors, was the phone's only
+ *  caveat). A zero-disclaimer frame and a doubled frame are equally unrepresentable. The tier is
+ *  asserted SEPARATELY (assertTier) — the two stopped implying each other on 2026-09-10. */
 async function assertOneVisibleDisclaimer(page: Page, tier: 'laptop' | 'narrow'): Promise<void> {
+  await assertTier(page, tier)
   const inFrame = page.locator('footer.disclaimer.disclaimer--in-frame')
   const trailing = page.locator('footer.disclaimer:not(.disclaimer--in-frame)')
   await expect(inFrame, 'the in-frame R13 mount (Result.tsx) is missing').toHaveCount(1)
   await expect(trailing, 'the page-trailing R13 mount (App.tsx) is missing').toHaveCount(1)
-  if (tier === 'laptop') {
-    await expect(inFrame).toBeVisible()
-    await expect(trailing).toBeHidden()
-  } else {
-    await expect(trailing).toBeVisible()
-    await expect(inFrame).toBeHidden()
+  await expect(inFrame, 'the in-frame caveat must be visible on a committed verdict').toBeVisible()
+  await expect(trailing, 'the trailing mount must hide behind data-inframe-disclaimer').toBeHidden()
+}
+
+/** THE SCROLLING TIERS' HONESTY LAW — ORDER + REACHABILITY (council 2026-09-10, wf_d2b1d05a-001;
+ *  the Hawk's scoped veto). A tier that scrolls by design (the phone; any width the reader's font
+ *  makes sub-68rem) cannot promise one frame, so it promises: (1) ORDER — the caveat sits ABOVE the
+ *  quiet doors in rendered geometry (not merely DOM order — a grid seat or a CSS reorder could
+ *  invert the pixels), and the doors are the LAST thing in the answer: no element of main.result
+ *  outside the doors row ends below the doors row's top; (2) REACHABILITY — the caveat can be
+ *  brought fully into the viewport by scrolling (order alone would pass a caveat trapped inside an
+ *  overflow:hidden ancestor). No proximity ratio: the Hawk withdrew his own 1.0 × innerHeight bound
+ *  as a chosen number (insight 065) — the distance is RECORDED by the caller, never asserted.
+ *  (3) the verdict names the caveat: h2.cs-word[aria-describedby] resolves to the in-frame mount. */
+async function assertCaveatOrderAndReach(page: Page, expectVerdictLink: boolean): Promise<void> {
+  const caveat = page.locator('footer.disclaimer.disclaimer--in-frame')
+  const doors = page.locator('.result-quiet-row')
+  await expect(caveat).toBeVisible()
+  await expect(doors).toHaveCount(1)
+  const geometry = await page.evaluate(() => {
+    const c = document.querySelector('footer.disclaimer.disclaimer--in-frame')!.getBoundingClientRect()
+    const doorsEl = document.querySelector('.result-quiet-row')!
+    // The doors row is `display: contents` in single column (its own rect is all zeros), so its
+    // geometry is the union of its RENDERED descendants — the doors themselves.
+    let dTop = Infinity
+    for (const el of doorsEl.querySelectorAll<HTMLElement>('*')) {
+      const r = el.getBoundingClientRect()
+      if (r.height > 0 && r.top < dTop) dTop = r.top
+    }
+    const d = { y: dTop }
+    const scrollY = window.scrollY
+    // everything in the answer that is NOT inside the doors row, and renders (has a box)
+    let lastNonDoorBottom = -Infinity
+    let lastNonDoorDesc = ''
+    for (const el of document.querySelectorAll<HTMLElement>('main.result *')) {
+      // skip the doors themselves AND every ancestor that encloses them (a wrapper legitimately
+      // ends where its last child, the doors, ends) — only SIBLING content may not trail the doors
+      if (doorsEl.contains(el) || el.contains(doorsEl) || el.closest('.sr-only')) continue
+      const r = el.getBoundingClientRect()
+      if (r.height === 0) continue
+      if (r.bottom > lastNonDoorBottom) {
+        lastNonDoorBottom = r.bottom
+        lastNonDoorDesc = `${el.tagName.toLowerCase()}${el.className ? '.' + String(el.className).split(' ')[0] : ''}`
+      }
+    }
+    return {
+      caveatBottom: c.bottom + scrollY,
+      doorsTop: d.y + scrollY,
+      lastNonDoorBottom: lastNonDoorBottom + scrollY,
+      lastNonDoorDesc,
+      caveatHeight: c.height,
+      innerHeight: window.innerHeight,
+    }
+  })
+  expect(
+    geometry.caveatBottom,
+    `ORDER: the caveat (bottom ${geometry.caveatBottom.toFixed(1)}) must sit above the quiet doors (top ${geometry.doorsTop.toFixed(1)})`,
+  ).toBeLessThanOrEqual(geometry.doorsTop + 1)
+  expect(
+    geometry.lastNonDoorBottom,
+    `ORDER: the doors must be LAST — ${geometry.lastNonDoorDesc} ends below the doors row's top`,
+  ).toBeLessThanOrEqual(geometry.doorsTop + 1)
+  expect(geometry.caveatHeight, 'REACH: the caveat is taller than the viewport').toBeLessThanOrEqual(
+    geometry.innerHeight,
+  )
+  // REACH: scroll the DOCUMENT (never scrollIntoView — that scrolls an overflow:hidden ancestor
+  // programmatically, which a reader's wheel cannot; the M4 mutant proved it passes a clipped
+  // caveat) to the caveat's own top, re-measure, and HIT-TEST its centre: the element the browser
+  // finds at that point must be the caveat or something inside it, so no ancestor clips it.
+  const reached = await page.evaluate(() => {
+    const el = document.querySelector<HTMLElement>('footer.disclaimer.disclaimer--in-frame')!
+    const docTop = el.getBoundingClientRect().top + window.scrollY
+    window.scrollTo({ top: Math.max(0, docTop - 4), behavior: 'instant' as ScrollBehavior })
+    const r = el.getBoundingClientRect()
+    const hit = document.elementFromPoint(r.left + r.width / 2, r.top + Math.min(r.height / 2, window.innerHeight / 2))
+    return {
+      top: r.top,
+      bottom: r.bottom,
+      innerHeight: window.innerHeight,
+      hitIsCaveat: hit !== null && (hit === el || el.contains(hit)),
+      hitDesc: hit ? `${hit.tagName.toLowerCase()}.${String((hit as HTMLElement).className).split(' ')[0]}` : 'nothing',
+      scrolledTo: window.scrollY,
+    }
+  })
+  expect(reached.top, 'REACH: after scrolling the document to it the caveat starts above the window').toBeGreaterThanOrEqual(-1)
+  expect(reached.bottom, 'REACH: after scrolling the document to it the caveat ends below the window').toBeLessThanOrEqual(
+    reached.innerHeight + 1,
+  )
+  expect(
+    reached.hitIsCaveat,
+    `REACH: the point at the caveat's centre hits ${reached.hitDesc}, not the caveat — an ancestor clips it (document scrolled to ${reached.scrolledTo})`,
+  ).toBe(true)
+  if (expectVerdictLink) {
+    const link = await page.locator('h2.cs-word').getAttribute('aria-describedby')
+    const caveatId = await caveat.getAttribute('id')
+    expect(link, 'the verdict must name the caveat in aria-describedby').toBe(caveatId)
   }
+  await page.evaluate(() => window.scrollTo(0, 0))
+}
+
+/** The reader's browser default font, raised through CDP `Page.setFontSizes` (Chromium-only — this
+ *  harness's one project). Falsifiability (insight 016): the root px is pinned to have RISEN before
+ *  any geometry is read, so a silently-ignored, renamed or reshaped CDP call reds instead of
+ *  measuring the 16 px frame. ORDER matters: the emulation is per-target, so it is sent on the
+ *  cheap bare `/` navigation and the seed route is navigated AFTER it. */
+async function raiseDefaultFont(
+  page: Page,
+  context: BrowserContext,
+  px: number,
+): Promise<{ at16: number; raised: number; cdp: CDPSession }> {
+  const rootPx = (): Promise<number> =>
+    page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize))
+  await page.goto('/')
+  const at16 = await rootPx()
+  const cdp = await context.newCDPSession(page)
+  await cdp.send('Page.setFontSizes', { fontSizes: { standard: px, fixed: px } })
+  return { at16, raised: await rootPx(), cdp }
 }
 
 /** The density tier is WHITESPACE-ONLY and boundary-exact: `.result` padding-block steps
@@ -1115,14 +1241,108 @@ test.describe(`the band legend (${REAL.width}×${REAL.height})`, () => {
   })
 })
 
-// ── the narrow tier: the trailing mount stands, the in-frame mount is dark ────────────────────
+// ── the scrolling tiers: ORDER + REACHABILITY, never one frame (council 2026-09-10) ──────────
+// The phone at the reader's default font, and the laptop at a raised default (68rem reads the
+// BROWSER default, so at 24 px both 1536 and 1280 render the stacked tier). Until 2026-09-10 the
+// phone arm asserted the trailing mount visible and the in-frame mount dark — certifying the
+// inversion (caveat AFTER the doors, on the phone since July) as the contract. Now: tier asserted
+// first, one visible mount (the in-frame one), the caveat above the doors, the doors last, the
+// caveat reachable by scroll, the verdict naming the caveat. No fit assertion on any scrolling tier.
 
-test.describe(`the phone tier (${PHONE.width}×${PHONE.height})`, () => {
+test.describe(`the phone tier (${PHONE.width}×${PHONE.height}) — ORDER + REACHABILITY at the default font`, () => {
   test.use({ viewport: PHONE })
-  test('exactly one visible disclaimer — the page-trailing mount', async ({ page }) => {
+  test('retired: one visible caveat, above the doors, doors last, reachable', async ({ page }) => {
     await gotoSeedFinal(page, 'retired')
-    // The phone scrolls by design — no fit assertion. The two-mount swap is the contract here.
+    await assertResolvedSpine(page)
     await assertOneVisibleDisclaimer(page, 'narrow')
+    await assertCaveatOrderAndReach(page, true)
+  })
+})
+
+// ── the reader's raised default font (CDP Page.setFontSizes) — the two regimes ─────────────────
+// (a) 20 px: Chrome's one-click "Large". 68rem is 1360 px there, so the 1536 laptop STAYS two-pane
+//     with 1.25× rem ink against the same 791 px budget — the binding case, first MEASURED
+//     2026-09-10 (68rem binds every root ≤ 22.6 px on his window; measured headroom at 16 px was
+//     ~2 px). THE MEASUREMENT: budget / retired / nc RED the one-frame law — the save slot ends at
+//     806–871 px and the PROTECTED in-frame caveat at 877–936 px against the 791 px frame (86–145 px
+//     past the fold); health fits (offenders=none). That is the PRODUCT finding the council
+//     pre-registered as a NEW FORK (register: "The app on someone else's device"), never a density
+//     regime (rejected on mechanics) and never a `test.fail()`. Until the fork is decided this arm
+//     RECORDS: it pins the root rose, the tier is two-pane, one caveat is visible, and logs the
+//     walk — it does NOT assert the fit (a red gate would stall every other arm behind a product
+//     decision that is Briggsy's). The assertion returns with the fork's ruling.
+// (b) 24 px: 68rem is 1632 px, so 1536 and 1280 both render the stacked tier — the scrolling law.
+//     The 2026-09-08 measurement asserted the one-frame law on this tier and red all eight arms
+//     against the trailing footer; the magnitude is still RECORDED here (frameReport, non-asserting)
+//     so the instrument survives, but the assertion is ORDER + REACHABILITY.
+// The 16 px control for both families is the spine matrix above (the same seeds, the same walk).
+for (const { seed } of SPINE_SEEDS) {
+  test.describe(`?seed=${seed} — the one-frame law at a 20 px default (${REAL.width}×${REAL.height}, two-pane)`, () => {
+    test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+    test(`${seed}: everything but the doors fits one frame at a 20 px root`, async ({ page, context }) => {
+      const { at16, cdp } = await raiseDefaultFont(page, context, 20)
+      await gotoSeedFinal(page, seed)
+      const at20 = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize))
+      expect(at20, `Page.setFontSizes never took (root ${at16}px → ${at20}px)`).toBeGreaterThan(at16)
+      await assertResolvedSpine(page)
+      await assertOneVisibleDisclaimer(page, 'laptop')
+      const report = await frameReport(page, true)
+      console.log(
+        `[20px-root fit] seed=${seed} ${REAL.width}x${REAL.height} root=${at16}→${at20}px: counted=${report.counted} offenders=${
+          report.offenders.length === 0 ? 'none' : report.offenders.map((o) => `${o.desc}@${o.bottom}`).join(', ')
+        }`,
+      )
+      // RECORDED, NOT ASSERTED — the fork is filed (see the block comment above). The walk floor
+      // still guards vacuity: a page that did not render cannot pass as "measured".
+      expect(report.counted, 'frame walk counted too few elements — page did not render').toBeGreaterThan(
+        WALK_FLOOR,
+      )
+      test.info().annotations.push({
+        type: '20px-root one-frame law (RECORDED — fork owed)',
+        description: `${report.offenders.length} element(s) past the ${REAL.height}px fold: ${
+          report.offenders.map((o) => `${o.desc}@${o.bottom}`).join(', ') || 'none'
+        }`,
+      })
+      await cdp.detach()
+    })
+  })
+
+  for (const vp of [REAL, TIER] as const) {
+    const scale = vp === REAL ? { deviceScaleFactor: REAL_DPR } : {}
+    test.describe(`?seed=${seed} — ORDER + REACHABILITY at a 24 px default (${vp.width}×${vp.height}, stacked)`, () => {
+      test.use({ viewport: vp, ...scale })
+      test(`${seed}: the caveat above the doors, doors last, reachable — no fit claim`, async ({ page, context }) => {
+        const { at16, cdp } = await raiseDefaultFont(page, context, 24)
+        await gotoSeedFinal(page, seed)
+        const at24 = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize))
+        expect(at24, `Page.setFontSizes never took (root ${at16}px → ${at24}px)`).toBeGreaterThan(at16)
+        await assertResolvedSpine(page)
+        await assertOneVisibleDisclaimer(page, 'narrow')
+        // INSTRUMENT, not oracle: the one-frame magnitude on the stacked tier, recorded for the log.
+        const report = await frameReport(page, true)
+        console.log(
+          `[24px-root instrument] seed=${seed} ${vp.width}x${vp.height} root=${at16}→${at24}px: counted=${report.counted} belowFold=${report.offenders.length} caveatBottom=${
+            report.offenders.find((o) => o.desc.includes('disclaimer'))?.bottom ?? 'in-frame'
+          }`,
+        )
+        await assertCaveatOrderAndReach(page, true)
+        await cdp.detach()
+      })
+    })
+  }
+}
+
+test.describe(`reduced motion — the 24 px scrolling law holds without the entrance choreography (${REAL.width}×${REAL.height})`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR, reducedMotion: 'reduce' })
+  test('retired: the caveat above the doors, doors last, reachable', async ({ page, context }) => {
+    const { at16, cdp } = await raiseDefaultFont(page, context, 24)
+    await gotoSeedFinal(page, 'retired')
+    const at24 = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize))
+    expect(at24, `Page.setFontSizes never took (root ${at16}px → ${at24}px)`).toBeGreaterThan(at16)
+    await assertResolvedSpine(page)
+    await assertOneVisibleDisclaimer(page, 'narrow')
+    await assertCaveatOrderAndReach(page, true)
+    await cdp.detach()
   })
 })
 

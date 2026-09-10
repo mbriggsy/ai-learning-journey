@@ -20,8 +20,17 @@ export const REAL_DPR = 2.5
 export const TIER = { width: 1280, height: 800 }
 /** The tall showcase: two-pane, but ABOVE the 840px density boundary — generous rhythm. */
 export const SHOWCASE = { width: 1871, height: 917 }
+/** The two-pane breakpoint in REM, mirroring `--bp-laptop` in src/ui/styles/tokens.css (@media
+ *  cannot read a custom property, so every @media rule re-states it as a literal too).
+ *  scripts/__tests__/breakpoint-mirrors.test.ts pins THIS constant and every CSS/matchMedia mirror
+ *  against the token, so the seam can never drift silently. */
+export const BP_LAPTOP_REM = 68
+/** The browser's DEFAULT root font size in px — what one rem resolves to when the user has not
+ *  raised it. Named, not inlined (council 2026-09-10): a raised default changes what 68rem resolves
+ *  to, so a reader of FLOOR sees exactly which assumption the pixel width rests on. */
+export const BROWSER_DEFAULT_PX = 16
 /** 68rem exactly — the two-pane breakpoint's tightest in-range width (the honesty floor). */
-export const FLOOR = { width: 1088, height: 800 }
+export const FLOOR = { width: BP_LAPTOP_REM * BROWSER_DEFAULT_PX, height: 800 }
 /** The phone arm — only the disclaimer-tier contract applies (the phone scrolls by design). */
 export const PHONE = { width: 390, height: 844 }
 /** The phone DPR (typical modern handset) — pair with PHONE wherever a context is created. */

@@ -53,30 +53,42 @@
    2026-07-08, wf_a2d93977-960). Result.tsx carries a second, `--in-frame` mount DOM-ordered
    ABOVE the quiet doors, so the doors — never the honesty caveat — are what any overflow pushes
    past the fold (the Hawk's veto: the trailing footer is structurally the FIRST casualty).
-   Exactly ONE mount is ever visible:
-   - below the laptop breakpoint the in-frame mount is display:none and the trailing footer
-     stands — the phone renders byte-identically to before;
-   - at ≥ 68rem, main.result stamps data-inframe-disclaimer whenever the in-frame mount is
-     rendered (it is withheld with the whole actions row while computing), and THAT attribute —
-     never a bare `main.result` guess — hides the trailing sibling. A pending/computing result
+   Exactly ONE mount is ever visible, and the swap is keyed to the VERDICT, never to the tier
+   (council 2026-09-10, the 24 px fit fork — wf_d2b1d05a-001):
+   - main.result stamps data-inframe-disclaimer whenever the in-frame mount is rendered (it is
+     withheld with the whole actions row while computing), and THAT attribute — never a bare
+     `main.result` guess — hides the trailing sibling AT EVERY WIDTH. A pending/computing result
      carries no attribute, so the trailing footer stays visible there (zero-disclaimer frames
-     are unrepresentable). Both mounts read the same staticDisclosures strings. */
+     are unrepresentable). Both mounts read the same staticDisclosures strings.
+   - Until 2026-09-10 both rules lived inside the 68rem query, so below the laptop breakpoint the
+     in-frame mount was display:none (gone from the accessibility tree) and the trailing footer —
+     the page's LAST element, after the record card, the backup door and the quiet doors — was
+     the only caveat: the reader met the exits before "this can be wrong". That was the exact
+     inversion this swap exists to prevent, live on the phone since July, and it is also what an
+     enlarged browser default (a 24 px root makes a 1536 px laptop a sub-68rem device — 68rem is
+     1632 px there) put in front of the large-text reader. The scrolling tiers' honesty contract
+     is ORDER + REACHABILITY (caveat above the doors, doors last, the caveat reachable by scroll —
+     e2e/vertical-fit.spec.ts); the one-frame law binds the ≥68rem two-pane tier only. */
 .disclaimer--in-frame {
+  display: block;
+  /* Single-column chrome (phone, and any width the reader's font makes sub-68rem): the caveat
+     seats between the answer's own rows and the degradable tail, so it reads as the frame's
+     footer rule, not as a page footer — no deep bottom padding, the doors row follows it. */
+  margin-block-start: var(--space-6);
+  padding: var(--space-4) var(--gutter) 0;
+}
+main.result[data-inframe-disclaimer] ~ .disclaimer {
   display: none;
 }
 
 @media (min-width: 68rem) {
   .disclaimer--in-frame {
-    display: block;
     /* In-frame chrome: the grid row-gap owns the spacing above; the hairline + fine print read
        as the frame's own footer rule. No deep bottom padding — the doors row follows it.
        (--space-2, not -3: the worst seed's doors row peeked 2px past Briggsy's 791px frame —
        measured 2026-07-08; neutral chrome pays, per the whitespace-only law.) */
     margin-block-start: 0;
     padding: var(--space-2) var(--gutter) 0;
-  }
-  main.result[data-inframe-disclaimer] ~ .disclaimer {
-    display: none;
   }
 }
 

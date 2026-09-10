@@ -6,6 +6,9 @@ import { Result } from '../Result'
 import { appModel } from '../appModel'
 import { resolvedFocusKey } from '../answerView'
 import { staticDisclosures } from '../copy'
+import { IN_FRAME_DISCLAIMER_ID } from '../Disclaimer'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 /**
  * The IN-FRAME R13 disclaimer contract ("buttons drop below" — Briggsy's fork call, council
@@ -26,9 +29,13 @@ import { staticDisclosures } from '../copy'
  *  3. ONE SOURCE — the in-frame mount renders the same staticDisclosures strings as the App
  *     mount (the words can never fork).
  *
- * The per-viewport VISIBILITY swap (in-frame hidden on the phone, trailing hidden at the laptop
- * tier) is CSS @media behavior jsdom cannot compute — that half of the contract belongs to the
- * real-browser vertical-fit gate (council-mandated Playwright project), not this file.
+ * The VISIBILITY swap (the trailing mount hidden behind the attribute — at EVERY width since the
+ * 2026-09-10 council, wf_d2b1d05a-001; until then only at ≥68rem, which left the phone's caveat
+ * AFTER the doors) is CSS behavior jsdom cannot compute — that half of the contract, plus the
+ * scrolling tiers' ORDER + REACHABILITY law and the verdict→caveat `aria-describedby` link,
+ * belongs to the real-browser vertical-fit gate (council-mandated Playwright project), not this
+ * file. What this file CAN pin of the link: the in-frame mount carries the exported id the verdict
+ * names (item 4 below) — a renamed id would sever the description silently.
  */
 
 vi.mock('../answerView', async (importOriginal) => {
@@ -102,6 +109,20 @@ describe('the in-frame R13 disclaimer (the Hawk order contract)', () => {
     const { container } = renderResult(true)
     expect(container.querySelector('main.result')!).not.toHaveAttribute('data-inframe-disclaimer')
     expect(inFrameDisclaimer(container)).toBeNull()
+  })
+
+  it('the in-frame mount carries the exported id the verdict names in aria-describedby (one id, never re-typed)', () => {
+    plantResolved()
+    const { container } = renderResult()
+    const disclaimer = inFrameDisclaimer(container)!
+    expect(disclaimer.id).toBe(IN_FRAME_DISCLAIMER_ID)
+    expect(container.querySelector('footer.disclaimer:not(.disclaimer--in-frame)')?.id ?? '').toBe('')
+    // The hero verdict (ConfidenceStatement's h2.cs-word) names this id; a jsdom Result on the pristine
+    // draft carries no committed headline, so the LINK itself is asserted in the real browser
+    // (e2e/vertical-fit.spec.ts, the scrolling-tier ORDER arms). This pins the id's one home.
+    expect(readFileSync(resolve(__dirname, '../ConfidenceStatement.tsx'), 'utf8')).toContain(
+      'aria-describedby={IN_FRAME_DISCLAIMER_ID}',
+    )
   })
 
   it('data-answer-tier is ABSENT until a verdict commits — independent of the actions-row attribute', () => {

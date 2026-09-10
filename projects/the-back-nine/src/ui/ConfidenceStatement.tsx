@@ -40,6 +40,7 @@ import { OUTCOME_PRESENTATION } from './outcomeStates'
 import { VerdictIcon } from './verdictSignal'
 import { SurvivorReadout } from './SurvivorReadout'
 import { TwoTierHeadline } from './TwoTierHeadline'
+import { IN_FRAME_DISCLAIMER_ID } from './Disclaimer'
 import { floorRelief } from './twoTier'
 import { axisDollarFormatterFor, formatAxisDollar } from './money'
 import { composeVerdictReading } from './verdictSentence'
@@ -357,7 +358,7 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
           {view.provisional && <p className="cs-provisional">{copy.answerProvisionalTag}</p>}
           <div className="cs-verdict">
             <VerdictIcon key={`glyph:${lockupKey}`} state={s.outcomeState} className={swapCls('cs-glyph')} />
-            <h2 className="cs-word" tabIndex={-1} ref={headingRef}>
+            <h2 className="cs-word" tabIndex={-1} ref={headingRef} aria-describedby={IN_FRAME_DISCLAIMER_ID}>
               <span key={`word:${lockupKey}`} className={swapCls('cs-word__text')}>
                 {shownWord}
               </span>

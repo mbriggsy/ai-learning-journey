@@ -100,7 +100,7 @@ describe('anchoredConversionAmounts — the cliff-anchored grid', () => {
     // suite; `solveAnchor.test.ts:123-129` asserts the anchor FIELD and never enumerates, and the
     // sibling arms are strictly weaker predicates (ascending / deduped / integer, lines 117-119)
     // which all survive a missing rail. So census the three INDEPENDENT branches (candidates.ts:282
-    // ACA, :247 IRMAA, :263 bracket) by KIND, with counts read from the canonical year-keyed tables
+    // ACA, :294 IRMAA, :310 bracket) by KIND, with counts read from the canonical year-keyed tables
     // rather than from the enumerator under test.
     const anchors = anchoredConversionAmounts(anchor)
     const kinds = anchors.map((a) => a.rail.kind)

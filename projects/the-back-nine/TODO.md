@@ -368,9 +368,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    a sourced trend lands?
    ⚑ **2026-09-04 anchors + two unfiled facts:** `escalateQuote` is `intakeMap.ts:339-359` (not `:271-291`);
    the "Not counted here" pair is `copy.ts:928` / `:933` (not `:895/:897`) and the surface is SIX strings
-   (`:916, :921, :935, :937, :945, :947` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
+   (`:928, :933, :947, :949, :957, :959` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
-   affirmation, not append to it) + the two health-control siblings (`:1013`, `:1019`), which CANNOT take it
+   affirmation, not append to it) + the two health-control siblings (`:1025`, `:1031`), which CANNOT take it
    (gated on `statePriced` alone — `copy.ts:1017-1019`). Unfiled: `shadowRateHeadroom` (`copy.ts:2464`)
    quotes cliff headroom against an SLCSP that never trends — the headroom figure inherits the held-price
    optimism; and there is NO ACA cost-trend constant at all (`health.ts` carries only `medicareCostTrend`)
@@ -411,7 +411,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    `checkStateTaxVintageV3` (`scenarioCodec.ts:552-557`) is hand-written and compels no `needString`. Safe
    because `scenarioCodec.ts:793-794` gates `retirementState` via `needVocab(STATE_ROSTER)`, so no
    pre-widening vault can *be* a household in a newly-priced state. The prescribed remedy — loosening
-   `stateTax.ts:427-431` — would **re-open the exact hole that tie was minted to close** (`:421-25`).
+   `stateTax.ts:427-431` — would **re-open the exact hole that tie was minted to close** (`:422-426`).
    ⚑ **His call, sharpened:** does the refusal reach the **headline + date** (`engineProtocol.ts:277`/`:314`)
    or stop at the strategy? Gating only `solve()` leaves a state-blind first answer for everyone off the
    roster; gating all three blanks the product's magic moment for **~86% of US households**. Widening to the
@@ -457,8 +457,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      Anchors drifted +14: the two `<section className="ap-section">` opens are **`:331` and `:463`**, close
      `:742`, footer `:748`. **It is NOT data-only** — `METHODOLOGY_DISCLOSURES` rows render *inside* section
      a's single `<ul>` (`AssumptionPanel.tsx:527-559`), so an entry there lands in "On your behalf". A third
-     section is **~18 lines of new JSX** mirroring `:463-467`, + 1 heading and 2 line keys in `copy.ts`'s
-     `assumption*` block (hedge/verdict-EXEMPT at `:1043-1053`; avoid `copyGuard.ts:250`'s
+     section is **~18 lines of new JSX** mirroring `:564-568`, + 1 heading and 2 line keys in `copy.ts`'s
+     `assumption*` block (hedge/verdict-EXEMPT at `:1123-1134`; avoid `copyGuard.ts:250`'s
      `/(tap|draw|pull) … hsa/`), + **no CSS change** (`.ap-section*`/`.ap-row*` are generic). **Fit is safe
      and gets safer:** the panel scrolls (`sheetShell.css` `.control-sheet` 88dvh/94dvh, `overflow-y:auto`)
      and the fit gate's panel arm (`vertical-fit.spec.ts:1136-1165`) asserts only that the dialog box fits
@@ -498,7 +498,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      and the general draw cannot name the bucket. "Dropped" is guard-safe; "draw … HSA" reds
      `copyGuard.ts:250`; `FALSE_CERTAINTY_INTERNAL` (`copyGuard.ts:143-152`) is universal and
      non-suppressible — "can't run out while the HSA lasts" reds. TRAP 4 — `verify:doc-stats` reds on ANY
-     added test until README `:80` + roadmap `:167` move in the same commit. Sweep THREE comment spans (the
+     added test until README `:80` + roadmap `:165` move in the same commit. Sweep THREE comment spans (the
      `healthOverlay.ts:747-749` "a sweep found NO user-facing disclosure" clause becomes false the moment the
      section ships — rewrite the whole `:746-750`). Caddie walk before "shipped".
 
@@ -527,12 +527,12 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    unwitnessable — mint the seed first or leave it.
 
 8. **The whole still-working audience gets no strategy — silently.** `Result.tsx:509` gates
-   `RecommendationSurface` off for the date route entirely and `:362` gates the invite door. The
+   `RecommendationSurface` off for the date route entirely and `:372` gates the invite door. The
    `blocked{spine-unready}` note that would explain it lives *inside* the gated-off component, so a working
    couple sees the date answer and **zero words** about strategy. `Result.tsx:345-347`'s comment now records the
    opposite (corrected 2026-09-04): the builder's `spine-unready` refusal does NOT cover the date route, so no note is minted there at all.
    ⚑ **THE FILED "CHEAP INTERIM" IS WRONG — do not execute it.** Dropping the `!isDateRoute` gate at
-   `:476` alone renders an **empty `<div>`**, not the refusal: the note is not reachable on that path. And
+   `:509` alone renders an **empty `<div>`**, not the refusal: the note is not reachable on that path. And
    reusing `recommendSpineUnreadyNote` would tell a household with a **complete** answer that its answer is
    incomplete — a new false claim, worse than the silence. The honest interim is a **route-true one-liner**
    admitting the v1 limit in its own words, seated and re-measured under `verify:fit` (~89px headroom).
@@ -542,7 +542,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    ⚑ **2026-09-04 anchors:** the gates are `Result.tsx:509` (surface) and `:372` (the invite conjunct; door
    `:574-582`); a THIRD exclusion kills the record card at its producer (`IntakeApp.tsx:284`). Strike
    "~89px headroom" — that is the SPINE idle frame's figure; the date arms of `verify:fit` assert ORDER only
-   (spec header `:21-22`). `Result.tsx:345-347`'s "covers the date route honestly" comment was FALSE (never
+   (spec header `vertical-fit.spec.ts:21-22`). `Result.tsx:345-347`'s "covers the date route honestly" comment was FALSE (never
    minted there; a route-flip render is dropped) — swept 2026-09-04. A crowned-offset params builder ALREADY
    exists (`buildControlPreviewParams`, `intakeMap.ts:1071-1080`), so parity's base shape is not from zero.
    Build shape under ranked item 6.
@@ -638,7 +638,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     additive-optional fields" (`staleness.ts:24`, `resultSave.ts:146`), so the new reason must not reuse it.
     Five docs call the refuse-ladder "the migration ladder" (`architecture.md:204`, `plans/1-engine.md:142`,
     `plans/3-controls.md:40`, `product.md:165`; `roadmap.md:63` fixed 2026-09-04) — sweep with the build.
-    (c) THE LEAVES-OUT SECTION is pilot (register `:277`, `:283`); anchors + the four traps are under
+    (c) THE LEAVES-OUT SECTION is pilot (register `:415`, `:423`); anchors + the four traps are under
     Tier-0 entry 5 below.
 
 13. **Also:** ✅ icons + an installable PWA shipped 2026-09-08 · WebKit reaches only the VAULT seam (2026-09-08 — the two
@@ -667,7 +667,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     stale revision — `@playwright/test` 1.60.0 needs 2287, launch fails today) + `webkit` on
     `verify-the-back-nine.yml:72` (the `verify` job's install — NOT the `:109` twin in the `verify-rv-chart-text`
     job); scope at TEST level — `vault.spec.ts:70` (trust loop) + `:121`
-    (second-tab read-only), never the whole file: the KDF spike `:137-168` asserts a Chromium-only
+    (second-tab read-only), never the whole file: the KDF spike `:145-176` asserts a Chromium-only
     thread-pool fact; the arm RECORDS the storage capability triple and asserts only Web Locks — WebKit exposes NO
     `navigator.storage.persist()` (measured 2026-09-08; `db.ts` calls it advisory) — it does NOT verify Safari eviction (nothing in the repo executes a real eviction;
     both harnesses model it with a wipe). ENLARGED TEXT: `Page.setFontSizes` re-probed 2026-09-04 against

@@ -261,7 +261,7 @@ export default function IntakeApp({
    * THE DATE-ROUTE CONJUNCT IS THE STRUCTURAL FORM OF Result.tsx's OWN SUPPRESSION.
    * `exposureForDraft` carries a hard prohibition — "DO NOT LIFT THIS FUNCTION TO A CROWNED
    * SURFACE… the base read WOULD lie there" (stalenessExposure.ts:81-84) — and on a date route it
-   * takes exactly the arm that reads the PRE-SWEEP base ACA overlay (:150-155), while the result
+   * takes exactly the arm that reads the PRE-SWEEP base ACA overlay (:166-171), while the result
    * screen it would feed sits beside a CROWNED date. `savedRecommendation.ts:88-94` proves no
    * record can be BORN on a date route, but the frame is reachable the other way round (a
    * household saves a record, then a spouse un-retires), and Result already refuses to render the

@@ -390,7 +390,7 @@ the catalog — so a new warning register needs its own explicit guard arm. The 
 `copyGuard.ts`: there is nothing named `staleness`, `reentry` or `recommendRecord` in the gate SOURCE at
 all, so grepping `copyGuard.ts` for those returns zero hits and must never be read as "already handled." The
 lists a key is measured against are `VERDICT_KEY_PREFIXES` (`copyGuard.ts:63-65`) and
-`CONTROL_KEY_PREFIXES` (`:102-116`) — and `recommendSave*`/`recommendRecord*` fall under the `recommend`
+`CONTROL_KEY_PREFIXES` (`:109-123`) — and `recommendSave*`/`recommendRecord*` fall under the `recommend`
 verdict prefix, unlike `staleness*`, so they clear the scoped gates rather than being exempt from them.
 
 **The four mint obligations**, all discharged in `src/store/savedRecommendationMint.ts`:
@@ -403,7 +403,7 @@ verdict prefix, unlike `staleness*`, so they clear the scoped gates rather than 
 3. `noDollarRegister` is **COPIED from the composed view, never re-derived record-side**
    (`savedRecommendationMint.ts:89`, `:100`, `:133`). The reachable register is
    `RecommendedView.mode === 'no-change'` (`recommendationView.ts:223`, assigned `:648`), NOT the
-   module-local `noDollar` const at `:616`.
+   module-local `noDollar` const at `:618`.
 4. The `fingerprint` has no type bind and cannot get one — `solverRunFingerprint.ts:61` is a bare
    `export type … = string` — so the bind is a TEST: mint from a REAL `solverRunFingerprint(...)` call,
    encode, decode, and assert the trichotomy reads `current`.
@@ -465,7 +465,7 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   a new producer of persisted state, and the engine's fail-loud gates are part of its consumer chain. Age
   only inside the domain the engine prices. The probe settled the plant as `base: 'dip'`, aging depth 6
   (`ARRIVED_PLAN_YEARS` at `devSeeds.ts:1285`, registry entry `:1621`, doctor `doctorArrivedVault`
-  at `:1331`).
+  at `:1332`).
 - **The engine-acceptance pin ships:** hydrate → `buildSpineParams` → `validateParams` accepts → the run
   resolves to a **real** `outcomeState`, never the R19 indeterminate. It was modelled on the `statestale`
   arm at `devSeeds.test.ts:636-660`, whose rationale comment is `:587-597`.

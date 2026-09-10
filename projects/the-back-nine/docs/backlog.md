@@ -35,7 +35,7 @@
 >
 > Also corrected: the "widening the state roster bricks every saved vault" blocker is **FALSE**, and its
 > prescribed remedy would have re-opened the hole `stateTax.ts:422-431` was minted to close. And the heir
-> entry (`:370`) still asserts present-tense a clause the XS half removed on 2026-08-02.
+> entry (the RETITLED 2026-08-02 bullet under the CLOSED heir block below) once asserted present-tense a clause the XS half removed on 2026-08-02 — it reads past tense today ("USED TO end").
 >
 > **Anchors throughout this file were re-verified 2026-09-06** (a verify→skeptic fleet over 646 line-numbered citations across the doc set: 310 relocated, 12 retired as gone, 58 inside kept-for-the-reasoning blocks left as written). They drift again with every commit — still open every cited line before acting on it.
 >
@@ -77,7 +77,7 @@
 - ⚑ **RE-SEVERITY 2026-08-03 (verification fleet) — this is a three-tap path to a wrong plan, not a copy
   nit.** Anchor drift first: the cold-read log cites `copy.ts:1119`; the live string is
   **`copy.ts:1236-1237`**. The panel toggle (`AssumptionPanel.tsx:478-481`) writes `spendEntryPeriod`
-  only — the stored amount holds and the SHOWN amount jumps exactly 12× (`:281-286`). The
+  only — the stored amount holds and the SHOWN amount jumps exactly 12× (`:338-343`). The
   identical-looking INTAKE segment (`questions.tsx:433-451`) does the **opposite**: digits hold and
   `annualSpendingReal` re-bases 12×. That sentence is the only thing distinguishing the two controls, and
   it says *"switching this never changes the amount."* Flip to "Each year", see 78,000 where 6,500 was,
@@ -1402,7 +1402,7 @@ legend-deviation session, 8/10 — `docs/council-log.md`)
   protected in-frame R13 disclaimer.
 - **The "~89px headroom" figure is not this surface's.** It is the SPINE idle frame
   (`vertical-fit.spec.ts:1810`), a once-measured prose number the spec never asserts — it logs headroom
-  (`:1845`) and asserts only binary in-frame relations. The committed frame's headroom is **unmeasured**.
+  (`:1882`) and asserts only binary in-frame relations. The committed frame's headroom is **unmeasured**.
 - The date route scrolls BY DESIGN (spec header `:21-22`); its arms assert **order** only.
 
 ### Health-constant riders — Medicare-trend fixes and pinning the out-of-pocket figures
@@ -1468,11 +1468,11 @@ legend-deviation session, 8/10 — `docs/council-log.md`)
 
 - `state-tax-pa-last-verified.json:6` and `state-tax-fl-last-verified.json:6` both carry `nextDue` **2027-07-15**;
   `state-tax-nc-last-verified.json:6` carries **2027-08-02**. Three records, TWO dates, 18 days apart.
-  `scripts/verify-state-tax.ts:120` loops `PRICED_STATES` (`src/engine/constants/stateTax.ts:50`) and `:104-112`
+  `scripts/verify-state-tax.ts:120` loops `PRICED_STATES` (`src/engine/constants/stateTax.ts:50`) and `verify-state-tax.ts:104-112`
   judges each record against its OWN `nextDue`, so `pnpm verify:state-tax` reds in two waves — PA + FL first, NC
   18 days later. Probe-proven at a fixed clock: 2027-07-16 reds PA and FL while NC is still green.
 - The roster's real deadline is the EARLIEST record's, not NC's. **The gap is planning, not diagnosis:** the gate
-  prints every passing state's `verified … next due …` on the same run (`:141-143`; `failed` at `:139` does not
+  prints every passing state's `verified … next due …` on the same run (`verify-state-tax.ts:141-143`; `failed` at `:139` does not
   break the loop), so a red build always shows all three dates — but nothing SCHEDULES the July pass, so the
   first thing that names it is a blocked build. Not wrong today: all three records are `statusConfirmed: true`
   and in-window; the queue's deadline table now carries both dates.

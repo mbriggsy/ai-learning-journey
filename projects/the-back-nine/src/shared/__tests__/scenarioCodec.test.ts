@@ -921,15 +921,15 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     // modelled is a defect in the VALIDATOR, not a hostile payload, and a validator's own
     // dependency can be made to fail: `needInteger` (:122-127) calls `Number.isInteger`.
     // Spying THAT — value-targeted, so nothing else in this ~100-arm file can see it — reaches
-    // :866 through the REAL decodeScenario with no prototype pollution and no injection seam
+    // :899 through the REAL decodeScenario with no prototype pollution and no injection seam
     // added to shipping code.
     const SENTINEL = 777_777_777 // unique in V3; an integer, and outside the epoch-day range
     const bytes = mutated({ ...V3, savedRecommendation: RECORD }, (o) => {
       ;(o.savedRecommendation as Obj).mintedAt = SENTINEL
     })
     // CONTROL — and it is a STRONG one, not a formality. Un-spied, this exact record is the
-    // TOLERATED drop, and the detail proves execution reached :584's RANGE check, i.e. it got
-    // PAST :582's `needInteger` — so the arm below is provably injecting at a line the decode
+    // TOLERATED drop, and the detail proves execution reached :595's RANGE check, i.e. it got
+    // PAST :593's `needInteger` — so the arm below is provably injecting at a line the decode
     // really executes, not passing because the record died earlier for some other reason.
     const tolerated = decodeScenario(bytes)
     expect(tolerated.ok, 'control: a bad record is tolerated, the vault still opens').toBe(true)

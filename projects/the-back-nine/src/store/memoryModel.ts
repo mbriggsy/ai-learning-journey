@@ -445,7 +445,7 @@ export interface MemoryModel {
 // LIFECYCLE: session-only, captured at the resolve→verdict transition inside
 // commit(), freed across indeterminate / error / date-route / inputs-incomplete
 // commits (the seam applies only to a complete spine answer — an escape-hatch
-// edit on an indeterminate answer is defined non-sticky, plan :243), re-seated
+// edit on an indeterminate answer is defined non-sticky, plan 3-controls.md:242), re-seated
 // on re-entry by the deterministic recompute (U13's read). NEVER serialized —
 // it lives beside the epochs, structurally outside the draft (the shape tie
 // makes a draft field a compile error).

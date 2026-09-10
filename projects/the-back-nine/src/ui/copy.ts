@@ -2701,7 +2701,7 @@ export const slots = {
    *  BITES it the way it bites its visual twin `recDeltaTypical`: the AT reader hears the same figures the
    *  sighted reader sees, so the same modal law must hold. A `recViz` prefix was rejected — it would red the
    *  three correctly hedge-free arm labels (`recVizWithLabel`/`recVizWithoutLabel`/`recVizRunnerUpLabel`,
-   *  :1761-1768 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
+   *  copy.ts:1761-1768 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
    *  `isControlKey` was rejected — it breaks that predicate's "by prefix ALONE" law (copyGuard.ts:125). */
   recDeltaVizAria: (withoutLabel: string, withoutFig: string, withLabel: string, withFig: string, deltaFig: string): string =>
     `${withoutLabel} lands near about $${withoutFig}; ${withLabel} about $${withFig} — a difference of about $${deltaFig}.`,

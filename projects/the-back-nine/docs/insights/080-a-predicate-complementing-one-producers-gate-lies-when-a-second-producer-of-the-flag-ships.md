@@ -25,7 +25,7 @@ But `dateSearch.ts:229` is a SECOND producer: `buildCandidateParams` forces
 `healthcareEnabled: true` on every date candidate ("a silently healthcare-blind date is
 never an open path", :144-145). The moment a second producer sets the underlying flag by
 its own rule, "complement of producer #1's gate" stops being "complement of the decision."
-Compounding it: the docstring (:294-301) explicitly CLAIMS insight-027 compliance
+Compounding it: the docstring (then :294-301) explicitly CLAIMS insight-027 compliance
 ("mirrors the CREATOR's domain, not a proxy") — reviewers read the citation as the
 compliance and passed over it.
 

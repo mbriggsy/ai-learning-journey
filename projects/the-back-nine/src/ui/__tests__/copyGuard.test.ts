@@ -1097,7 +1097,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   //     The killed line was "…switching this never changes the amount." The panel toggle really
   //     does leave `annualSpendingReal` alone — but the SHOWN figure jumps exactly 12×
   //     (`spendDisplayed`, AssumptionPanel.tsx:338-343) while the sentence says nothing moved, and
-  //     the panel's own commit (:486-496) multiplies by 12 under 'month'. So the reader's natural
+  //     the panel's own commit (:601-611) multiplies by 12 under 'month'. So the reader's natural
   //     repair — retype the digits they remember — commits a plan off by 12× in the UNSAFE
   //     direction, and nothing downstream catches it (PANEL_PROVENANCE disarms the force-confirm;
   //     the resulting figure is under SPEND_AMBIGUOUS_MIN regardless). The copy IS the defense

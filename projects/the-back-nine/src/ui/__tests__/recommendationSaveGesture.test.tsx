@@ -759,7 +759,7 @@ describe('the record-card memo — a DATE route refuses the card structurally', 
      *
      * WHY THE CONJUNCT IS THE ONLY THING STANDING THERE — the reason a mutant here is dangerous
      * rather than redundant. `Result.tsx` gates the whole RECOMMENDATION SURFACE off on a date route
-     * (`:476`), but `SavedRecordCard` mounts OUTSIDE that gate (`:508`). So Result's own date
+     * (`:509`), but `SavedRecordCard` mounts OUTSIDE that gate (`:546`). So Result's own date
      * suppression does NOT cover the card: delete the memo's conjunct and a crowned-date frame draws
      * a record card fed by an exposure read its own producer forbids.
      *

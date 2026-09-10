@@ -226,7 +226,7 @@ describe('the healthcare door — the engine PRICED domain only, categorical (co
   })
 
   it('a STILL-WORKING all-65+ household (date route) also wears the residual note — Medicare is priced structurally, never a false "unpriced" claim (insight 080 regression)', () => {
-    // dateSearch.ts:222 forces healthcareEnabled true on every candidate, so a 66/65 still-working
+    // dateSearch.ts:229 forces healthcareEnabled true on every candidate, so a 66/65 still-working
     // household prices Medicare on the date route even though it reaches no ACA door. The retired
     // age-predicate falsely called this "Medicare not priced"; the route-aware seam prices it.
     plantResolved()

@@ -17,7 +17,7 @@ describe('income bounds — the fixed-pct COLA range gate', () => {
   })
 
   it('the literal ceiling is EXACTLY parsePercent("5") so a real 5% rider clears the inclusive bound (no float razor-edge)', () => {
-    // The council's load-bearing float fact: 5/100 (what parsePercent('5') returns, fields.tsx:172) is
+    // The council's load-bearing float fact: 5/100 (what parsePercent('5') returns, fields.tsx:187) is
     // the SAME IEEE-754 double as the literal 0.05, so an entered 5% is <= 0.05 with zero risk — which
     // is exactly why 0.05 (not a padded 0.06) has an EMPTY false-reject set.
     expect(5 / 100).toBe(COLA_PCT_MAX.value)

@@ -8,7 +8,7 @@ tags: [copy-sweep, comments, prop-docs, drift, false-comment, review, same-meani
 
 ## Problem
 
-The O14 sweep's own council found a comment at `copy.ts:114` claiming a drift-pin
+The O14 sweep's own council found a comment at `copy.ts:123` claiming a drift-pin
 ("a copyGuard test pins the shared endpoints") that did not exist — a false comment that
 would have bitten the very next twin reword. The sweep fixed that class: the pin was built
 first, the comment corrected. Then the post-sweep ultramode review (9 lenses, 2 adversaries,
@@ -26,7 +26,7 @@ duplicated state with no compiler, no test, and no lint binding them to the thin
 describe. A reword updates the single source of truth and every *executable* consumer goes
 green — while the comment channel silently keeps the old claim. In a repo whose comments are
 load-bearing law (dated rulings, invariant descriptions, "verbatim" claims), a stale comment
-is not noise: it is a false claim a future maintainer will act on (the `copy.ts:114` case
+is not noise: it is a false claim a future maintainer will act on (the `copy.ts:123` case
 nearly did exactly that).
 
 ## Fix

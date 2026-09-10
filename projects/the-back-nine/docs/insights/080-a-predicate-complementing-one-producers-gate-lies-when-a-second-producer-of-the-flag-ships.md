@@ -21,7 +21,7 @@ builder caught it.
 The predicate was written as the exact complement of the INTAKE gate (`healthcarePriced`
 needs a pre-65 member), and at write time that was the truth: the intake was the only
 producer of `healthcareEnabled`, so age-complement ≡ pricing-complement — on the spine.
-But `dateSearch.ts:222` is a SECOND producer: `buildCandidateParams` forces
+But `dateSearch.ts:229` is a SECOND producer: `buildCandidateParams` forces
 `healthcareEnabled: true` on every date candidate ("a silently healthcare-blind date is
 never an open path", :144-145). The moment a second producer sets the underlying flag by
 its own rule, "complement of producer #1's gate" stops being "complement of the decision."

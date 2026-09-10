@@ -109,7 +109,7 @@ status: shipped
   table contract fail-loud — ascending contiguous from anchor+1, the Part D rows on the SAME year
   lattice, every figure finite > 0 (burned/062). The (b)-content twin table existed only in the
   working tree for the S3 probe and died with the ruling — it never shipped as dead code.
-- **S1 — consumption (taxOverlay).** The once-bound `partBBaseMonthly` (`taxOverlay.ts:1097-1112`)
+- **S1 — consumption (taxOverlay).** The once-bound `partBBaseMonthly` (`taxOverlay.ts:1110-1119`)
   became the per-year resolved pair at `startCalendarYear + t`, gated on the healthcare-priced arm;
   `medicareAnnualCost` + the readout split's `irmaaTierSurchargeMonthly` BOTH read the same
   resolved pair (the base-vs-surcharge split stays single-producer by construction — the scales are

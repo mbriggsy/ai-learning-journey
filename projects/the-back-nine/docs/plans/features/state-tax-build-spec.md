@@ -41,7 +41,7 @@ status: shipped
   a conversion can move it" **reclassifies state IN** for priced states). The sentinel was
   reconciled BEFORE any pricing code and now carries
   `{ status: 'IN-for-roster; OUT-but-disclosed-elsewhere', pricedRoster: 'NC, PA, FL' }`; the
-  `inOutRule` sibling (tax.ts:361-369) and the module banner (tax.ts:1-9) moved with it, and
+  `inOutRule` sibling (tax.ts:361-369) and the module banner (tax.ts:1-15) moved with it, and
   every consumer of the old "state isn't priced" wording was swept (the S5 disclosure map is
   the render-side half of that sweep).
 
@@ -122,7 +122,7 @@ status: shipped
    flat rate enters additively at the federal-worst corner instead of multiplied. The
    re-derived worst-case contraction factor and the raised `GROSS_UP_MAX_PASSES` have ONE home,
    [architecture.md §7.1](../../architecture.md) and `taxOverlay.ts:507`; the derivation is
-   justified in the comment at `taxOverlay.ts:466-490` with the new corner. The convergence
+   justified in the comment at `taxOverlay.ts:445-505` with the new corner. The convergence
    stress sweep was **RE-RUN STATE-ON at the federal-worst corner** (small-net × low-basis ×
    large-SS × NC) — a state-OFF or large-net probe samples the benign regime (insight 006's
    exact trap).
@@ -214,8 +214,8 @@ status: shipped
    own affirmation ships, rather than silently dressing a future SC household in Florida's
    "no state income tax" words.
 3. **FIVE disclosure homes, not the four this plan first named** — `verdictMedicareResidual`
-   (copy.ts:1060), `rothOmissionsNote` (copy.ts:915), `controlHealthOmissionsNote`
-   (copy.ts:1012), the spendHelp branch (`spendHelpKeyFor`, intakeMap:981), and the
+   (copy.ts:1072), `rothOmissionsNote` (copy.ts:927), `controlHealthOmissionsNote`
+   (copy.ts:1024), the spendHelp branch (`spendHelpKeyFor`, intakeMap:981), and the
    RECOMMENDATION surface's disclosure rail (`recDiscStateTax`). The fifth was born unguarded:
    it shipped as the only household-DEPENDENT builder with no condition, so an NC household
    would read "this compares federal tax only" three inches under a spine that had just named

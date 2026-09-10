@@ -97,7 +97,7 @@ export function curveMarks(track: DateTrackOutcome): readonly CurveMark[] {
  *
  * STRICT `<`, and the strictness is load-bearing: at `planOffsetYears === yearsSincePlanBuilt`
  * the stop-year is TODAY — still a real choice, still the hero's own claim — so it is NOT
- * passed (the ladder keeps its "stopping today" crown, `FuckOffDate.test.tsx:208-212`). Only a
+ * passed (the ladder keeps its "stopping today" crown, `FuckOffDate.test.tsx:209-213`). Only a
  * year strictly BEFORE today is history, and history is not an option an options chart plots.
  *
  * @param planOffsetYears the DURABLE plan offset (whole sim-years from the plan's start year)

@@ -841,7 +841,7 @@ export function spineAcaPriced(d: ScenarioDraft): boolean {
  *  BOTH DIRECTIONS, AND WHERE EACH IS VALID:
  *    · FALSE is EXACT everywhere. `buildCandidateParams` derives each candidate's ACA stream
  *      from this one through `buildHealthcareStreams`, which only WINDOW-GATES an entered
- *      stream and never synthesizes one (`healthcareStreams.ts:167-170`), so gating can only
+ *      stream and never synthesizes one (`healthcareStreams.ts:179-181`), so gating can only
  *      SHRINK positives: no base stream ⇒ no candidate offset can price ACA ⇒ the household is
  *      PROVEN unexposed (`date65`, the all-65+ still-working seed, is the witness). That is the
  *      arm the staleness silence rides, and it cannot lie.

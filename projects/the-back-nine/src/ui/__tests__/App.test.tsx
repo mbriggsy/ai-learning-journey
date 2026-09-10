@@ -82,7 +82,7 @@ afterEach(() => {
   //
   // THE MECHANISM, proven not guessed. `mockClear()` resets recorded CALLS but does NOT drain the
   // `mockResolvedValueOnce` QUEUE (verified with a two-arm scratch test: queue a one-shot, clear,
-  // and the NEXT test still receives it). Meanwhile `App.tsx:91` does `await import('./vaultSession')`
+  // and the NEXT test still receives it). Meanwhile `App.tsx:142` does `await import('./vaultSession')`
   // BEFORE it calls `probeVault()`, so under load that call can land after its own test has ended —
   // `cleanup()` sets the effect's `cancelled` flag so no state is set, but the CALL still happens and
   // still takes a value off the queue. The two defects compose in both directions: a late call steals
@@ -155,7 +155,7 @@ describe('App — the survivor door composes into the re-entry gate (J1, ultramo
     // two-call-site shape resolves `['STUB','REAL']`, the memoized shape `['STUB','STUB']`.
     //
     // WHAT USED TO SIT HERE, AND WHY IT IS GONE: an `await import('../RecoveryFlow')` added as a
-    // "determinism first, not a bigger number" fix. It was neither. `App.tsx:79` already warms this
+    // "determinism first, not a bigger number" fix. It was neither. `App.tsx:130` already warms this
     // exact chunk the moment `entry.kind === 'unlock'`, and `driveToUnlockScreen()` above awaits that
     // screen — so the module was warm before that line ever ran. It changed nothing, and the only
     // real edit in the commit that added it was the budget raise its own comment forbade.
@@ -216,7 +216,7 @@ describe("App — ColdStart's restore door routes to the shared RestoreFlow and 
    *
    * The two arms above are BRANCH tests: each asserts where a probe verdict routes. Neither can
    * catch the defect that broke them, because the defect is in how the verdict is SUPPLIED — a
-   * one-shot mock, drained by a call arriving from outside its own test (App.tsx:91 awaits a
+   * one-shot mock, drained by a call arriving from outside its own test (App.tsx:142 awaits a
    * dynamic import before probing, so its call can land after `cleanup()`), leaving the queuing
    * test to fall through to the default 'vault' and render the unlock screen.
    *

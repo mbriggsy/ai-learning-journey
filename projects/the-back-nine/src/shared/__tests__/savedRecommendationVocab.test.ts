@@ -4,7 +4,7 @@
  * `src/shared` is a LEAF — it must not import a feature layer (the eslint layer ban), so
  * `SAVED_RECOMMENDATION_GRADES` is a RE-DECLARED copy of the engine's `Grade` union rather than an
  * import. A TEST is exempt from that ban (the established idiom: `MAX_REAL_DOLLAR` ↔
- * `ENGINE_MAX_DOLLAR`, scenarioCodec.ts:53-63 + scenarioCodec.test.ts's source-bind arm), so this
+ * `ENGINE_MAX_DOLLAR`, scenarioCodec.ts:51-64 + scenarioCodec.test.ts's source-bind arm), so this
  * is where the mirror is held to the original.
  *
  * WHAT GOES WRONG WITHOUT IT: the engine adds a third grade (say `'wait'`). Nothing breaks. The

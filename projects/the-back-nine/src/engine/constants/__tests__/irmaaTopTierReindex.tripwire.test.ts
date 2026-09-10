@@ -7,7 +7,7 @@
  *
  * THE GAP IT GUARDS: the IRMAA schedule's first four MFJ/single thresholds inflation-index every
  * year, but the TOP tier (≥ the highest single / MFJ thresholds) is statutorily FROZEN through
- * `irmaa.topTierFrozenThrough` (= 2027) and then RE-INDEXES for 2028 (health.ts:164; CMS 2026 IRMAA
+ * `irmaa.topTierFrozenThrough` (= 2027) and then RE-INDEXES for 2028 (health.ts:165; CMS 2026 IRMAA
  * fact sheet). The engine prices IRMAA off the constant table verbatim — so once wall-clock 2028
  * arrives, a build still carrying the 2027-frozen top-tier thresholds is pricing a stale top tier
  * (the interior tiers also re-index annually, but the frozen top tier is the one with a HARD dated

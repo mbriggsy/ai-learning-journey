@@ -17,7 +17,7 @@ agent.
 wrong in ways that would have cost the session:
 
 - **The date-route mutant's recipe would have gone RED on unmutated source.** It prescribed asserting
-  `exposureForDraft` is never called on a date mount — but `IntakeApp.tsx:589` calls it
+  `exposureForDraft` is never called on a date mount — but `IntakeApp.tsx:630` calls it
   unconditionally inside the hydrate effect, before the phase the arm names.
 - **The phone-CLS fix named a tier that does not exist.** It prescribed "a `@media` bump on
   `.rec-save-slot` at the phone tier" in a **mobile-first** codebase whose only breakpoint is

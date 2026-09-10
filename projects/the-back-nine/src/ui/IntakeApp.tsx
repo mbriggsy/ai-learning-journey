@@ -255,7 +255,7 @@ export default function IntakeApp({
    * a render body for the same reason.
    *
    * `!saveReady.ready ⇒ undefined` mirrors `deriveResultSave`'s own `!ready.ready ⇒ none`
-   * (resultSave.ts:77): conjunct 3 needs a normalized household scenario to overlay the record's
+   * (resultSave.ts:112): conjunct 3 needs a normalized household scenario to overlay the record's
    * era onto, and an unencodable answer has none.
    *
    * THE DATE-ROUTE CONJUNCT IS THE STRUCTURAL FORM OF Result.tsx's OWN SUPPRESSION.
@@ -340,7 +340,7 @@ export default function IntakeApp({
   // unreachable (deriveResultSave can never offer the ceremony once a vault exists). The gate
   // reads the store's CURRENT draft, never the render closure (insight 036 — a commit-on-blur
   // edit and this click can share a task). `session.save` is total over typed results and its
-  // {ok:true} arm has no post-commit throw window (session.ts:574-593), so the catch below only
+  // {ok:true} arm has no post-commit throw window (session.ts:596-614), so the catch below only
   // ever speaks for a save that did NOT land — "didn't finish" stays honest (insight 052).
   //
   // U17 §S5 — IT IS THE ONE WRITE PRODUCER, AND IT NOW RETURNS ITS OUTCOME. There is exactly one
@@ -394,7 +394,7 @@ export default function IntakeApp({
    * U17 §S5 — THE SAVE GESTURE FOR THE RECOMMENDATION ON SCREEN.
    *
    * THE ORDER IS THE WHOLE DESIGN: the mint is PROBED AND REFUSED BEFORE THE STORE IS TOUCHED, and
-   * the store is touched before anything reaches disk. `scenarioCodec.ts:660-664` names this
+   * the store is touched before anything reaches disk. `scenarioCodec.ts:671-674` names this
    * function as the seam that "MUST validate its own mint HERE, before the record ever touches the
    * draft", and the reason is a DATA-LOSS case, not tidiness: if the disk already holds a VALID
    * record and a new mint is invalid, the codec deletes the bad record from the LIVE operand only,

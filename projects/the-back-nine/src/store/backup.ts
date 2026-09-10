@@ -48,7 +48,7 @@ export type RestoreResult =
        *  with the CORRECT credential is cryptographically indistinguishable from a wrong
        *  credential with an intact wrap. The P2 copy must hedge BOTH ways ("that recovery
        *  word doesn't match this backup — or the file is damaged; try another export").
-       *  `recovery-equals-passphrase` MIRRORS firstSave (session.ts:321): a new daily
+       *  `recovery-equals-passphrase` MIRRORS firstSave (session.ts:331): a new daily
        *  passphrase equal to the recovery credential would let the everyday passphrase open
        *  the cloud-resident backup (the file carries ONLY the recoveryWrap), collapsing the
        *  negative pairing — the exact collision firstSave hard-blocks. */
@@ -134,7 +134,7 @@ export async function restoreVault(
   const existing = await loadVault(db)
   if (existing.kind === 'vault') return { ok: false, reason: 'vault-exists' }
 
-  // MIRROR firstSave's negative-pairing guard (session.ts:321): the export file carries ONLY the
+  // MIRROR firstSave's negative-pairing guard (session.ts:331): the export file carries ONLY the
   // recoveryWrap, so a new daily passphrase equal to the recovery credential would let the everyday
   // passphrase open the cloud-resident backup — the exact collision firstSave hard-blocks. Restore is
   // the survivor's re-entry door, where reusing the one memorable recovery word as the daily is most

@@ -30,7 +30,7 @@ export interface CitedBound {
 
 /**
  * Max sustained fixed-pct nominal COLA. WRITTEN AS THE LITERAL `0.05` so `parsePercent('5') === 0.05`
- * exactly (fields.tsx:172, `5/100` is the same IEEE-754 double as the literal) — a real 5% annuity
+ * exactly (fields.tsx:187, `5/100` is the same IEEE-754 double as the literal) — a real 5% annuity
  * rider clears the INCLUSIVE `<= 0.05` with zero float risk, so 0.05's false-reject set is empty.
  */
 export const COLA_PCT_MAX: CitedBound = {

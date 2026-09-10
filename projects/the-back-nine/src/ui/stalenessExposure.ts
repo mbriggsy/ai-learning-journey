@@ -10,7 +10,7 @@
  *
  * THE LAW THIS FILE OBEYS (insights 080/081/088): every read below comes from a BUILT PARAMS
  * OUTPUT. Never an age, never a geography, never a re-derivation of a builder's inputs.
- *   · Insight 080's scar (`healthSheetChrome.ts:307-321`): a predicate keyed on "every member
+ *   · Insight 080's scar (`healthSheetChrome.ts:316-321`): a predicate keyed on "every member
  *     65+" equalled the pricing complement only until `dateSearch` became a SECOND producer of
  *     `healthcareEnabled` — then it silently lied.
  *   · Insight 081: a re-derivation forks from its producer at the producer's first early
@@ -85,7 +85,7 @@ const read = (priced: boolean): ExposureRead => (priced ? 'priced' : 'unpriced')
  *
  * AND BE HONEST ABOUT WHERE THIS ONE ALREADY TRAVELS (a reviewer's catch, 2026-07-25 — the clause
  * above overstated its own boundary). This read feeds `rulesMoved`, and `rulesMoved` is carried to
- * `IntakeApp.tsx:394` → `Result.tsx:518,533` → `FuckOffDate.tsx:393`, which renders the standing
+ * `IntakeApp.tsx:819` → `Result.tsx:648,663` → `FuckOffDate.tsx:422`, which renders the standing
  * hero echo BESIDE THE CROWNED DATE. So for a 63-working/67-retired household with the required
  * quote pair, a moved `acaStatus` names the ACA line at the gate (honest — the gate is pre-crown)
  * and ALSO lights that echo, even where a crown ≥2 years out puts both members at 65+ and the
@@ -117,7 +117,7 @@ const read = (priced: boolean): ExposureRead => (priced ? 'priced' : 'unpriced')
  *
  * ✗ "Re-derive the exposure against the CROWNED offset" — DO NOT. It is the same insight-103 shape a
  *   third time. The date route SWEEPS every offset (`dateSearch.ts:425/450/457`) and candidate Y=0
- *   carries the base ACA stream UNGATED (`healthcareStreams.ts:149` → `windowStart = 0`, so
+ *   carries the base ACA stream UNGATED (`healthcareStreams.ts:160` → `windowStart = 0`, so
  *   `windowGate` is a pass-through). So `exposure.aca === 'priced'` PROVES the ACA tables were
  *   consumed somewhere in the sweep — it is not an over-read. Re-deriving against the crown alone
  *   would silence the ACA line for a household whose crown sits at 65+ *precisely because* a subsidy

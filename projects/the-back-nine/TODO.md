@@ -252,7 +252,7 @@ measurements moved to `e2e/held/` and the icon generator + sheets to `scripts/ic
 | Fires | What | What breaks |
 |---|---|---|
 | ~~NOW~~ | ~~NC FY2025-26 revenue certification~~ | ✅ **CLOSED 2026-08-02** — S.L. 2026-41 § 44.1(a) enacted the rate schedule *and* struck the trigger rows the certification fed. Withhold lifted, checkpoint retired. |
-| **CI: ~2026-09-19 00:00 UTC** · **runtime: 2026-09-20** | ACA rolling window (`verifiedOn: 2026-08-20` + `maxAgeDays: 30`) — ⚠️ the due date lands INSIDE the Sept 14–30 CR endgame (the Senate returns ~09-14 against a 09-30 funding cliff; two clean competing CRs, House 12-04 / Senate 12-11), which the record names the highest-risk §36B attachment window — run that pass EARLY in the week of Sep 14 and read `forwardClock` first | **TWO dates, and the split is DELIBERATE — one date here was wrong (corrected 2026-08-14).** `verify:aca` compares float-ms so it reds ~a day EARLIER than the runtime clause's integer-epoch-day compare; `oracleToken.ts:174-176` records that ordering as the safe one. **And it is not only CI:** `evaluateAcaFreshnessClause` (`oracleToken.ts:191-201`) is a RUNTIME clause on the user's own browser clock — once overdue the shipped app WITHHOLDS the recommendation for any household carrying an ACA enrolled premium, and `healthSheetChrome.ts:126` flips the health-sheet status line. No deploy required. Clearing it is the 8-step `howToClear` (~1h, primary sources, both attest tables hand-RE-TYPED from the PDFs — never from `health.ts`, that bind goes circular) |
+| **CI: ~2026-09-19 00:00 UTC** · **runtime: 2026-09-20** | ACA rolling window (`verifiedOn: 2026-08-20` + `maxAgeDays: 30`) — ⚠️ the due date lands INSIDE the Sept 14–30 CR endgame (the Senate returns ~09-14 against a 09-30 funding cliff; two clean competing CRs, House 12-04 / Senate 12-11), which the record names the highest-risk §36B attachment window — run that pass EARLY in the week of Sep 14 and read `forwardClock` first | **TWO dates, and the split is DELIBERATE — one date here was wrong (corrected 2026-08-14).** `verify:aca` compares float-ms so it reds ~a day EARLIER than the runtime clause's integer-epoch-day compare; `oracleToken.ts:176-178` records that ordering as the safe one. **And it is not only CI:** `evaluateAcaFreshnessClause` (`oracleToken.ts:191-201`) is a RUNTIME clause on the user's own browser clock — once overdue the shipped app WITHHOLDS the recommendation for any household carrying an ACA enrolled premium, and `healthSheetChrome.ts:126` flips the health-sheet status line. No deploy required. Clearing it is the 8-step `howToClear` (~1h, primary sources, both attest tables hand-RE-TYPED from the PDFs — never from `health.ts`, that bind goes circular) |
 | **2027-07-15** | PA + FL `nextDue`, `state-tax-pa-last-verified.json` / `state-tax-fl-last-verified.json` (annual drift cadence) — **the roster's real deadline: it fires 18 days BEFORE NC's** | `pnpm verify:state-tax` reds → CI red |
 | **2027-08-02** | NC `nextDue`, `state-tax-nc-last-verified.json` (annual drift cadence now, not a pending event) | `pnpm verify:state-tax` reds → CI red |
 | **2027-01-01** | `TAX_YEAR` / `COVERAGE_YEAR` / `CONTRIBUTION_YEAR` roll | ✅ **ARMED 2026-08-02** — `annualRoll.tripwire.test.ts` reds the suite (both arms mutation-proven). Clearing it is a **re-sourcing job, never a date bump**; `scaffold.smoke.test.ts:10-13` + `constants.shape.test.ts` red alongside by design |
@@ -307,8 +307,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    clause**.
    ⚑ **Audit corrections 2026-08-02 — three anchors were wrong and the fix shape is NOT Part B's:**
    (a) `healthOverlay.ts:296` is a **closing brace**, not a consumer; the real seam is `taxOverlay.ts:1689`
-   + `:1731-1738` → `healthOverlay.ts:270`. (b) `copy.ts:973` is a Medicare eyebrow; the strings that claim
-   the coupling is priced are **`copy.ts:916-921`**. (c) the excess-APTC field moved to
+   + `:1731-1738` → `healthOverlay.ts:270`. (b) `copy.ts:1053` is a Medicare eyebrow; the strings that claim
+   the coupling is priced are **`copy.ts:956-959`**. (c) the excess-APTC field moved to
    `aca-last-verified.json:41` (was `:21`) and `scripts/verify-aca-status.ts:40-72` never declares the key
    — **the clawback gate is inert prose**, not a gate.
    ⚑ **STRUCTURAL — this is why it isn't a Part B copy-paste:** Part B's schedule is built INSIDE the
@@ -326,14 +326,14 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    benchmark. (b) *"priced real-flat"* **understates what IS modelled** — `escalateQuote` climbs with the
    age-rating curve (0.765 → 3.000 at 64). Only the **cost trend** is missing; the schedule is not flat, so
    **do NOT borrow `verdictResidualTail`'s "held flat in today's dollars"** — verbatim it is a NEW false
-   claim on this surface. (c) the editable strings are **`copy.ts:916` and `:921`** (`894`/`896` are key
+   claim on this surface. (c) the editable strings are **`copy.ts:957` and `:959`** (`956`/`958` are key
    names), and both must move together.
    ⚑ **The direction claim must be CLIFF-SCOPED, never blanket.** `healthOverlay.ts:222`+`:294` give
    under-cliff net = `enrolled − slcsp + contribution`, and `intakeMap.ts:649-650` scale **both** streams by
    the same `escalateQuote` factor — so under the cliff a missing trend is **zero** when E=S
-   (`devSeeds.ts:584/585` = 4200/4200) and **reversed (pessimistic)** when E<S, which `copy.ts:209` invites.
+   (`devSeeds.ts:587/588` = 4200/4200) and **reversed (pessimistic)** when E<S, which `copy.ts:209` invites.
    It bites one-way optimistic **only over the cliff** (`healthOverlay.ts:299-303`, full enrolled premium).
-   The shipped sibling `recDiscAcaSlcsp` (`copy.ts:1746-1747`) hedges bidirectionally on this exact fact and
+   The shipped sibling `recDiscAcaSlcsp` (`copy.ts:1758-1759`) hedges bidirectionally on this exact fact and
    `medicare-pricing-build-spec.md:43` bans the false unidirectional. Draft to append to BOTH strings:
    *"One modeling choice: these prices step up with your ages, not with the way plan prices themselves climb
    — so a conversion that crosses the income line could cost more than shown."*
@@ -341,7 +341,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`bd851f24`). The gate turned out to be **seven** undeclared fields, not one (`discriminatingProof`,
    `nothingEnactedChain`, `pendingExtension`, `retroactivity`, `adjacentButSharp`, `forwardClock`,
    `strickenCitations`) — all now declared + required, with array arms that reject `[]` (truthy) and
-   blank links; mutation-proven against the shipped record. And `copy.ts:1013/1019` no longer list the
+   blank links; mutation-proven against the shipped record. And `copy.ts:1025/1031` no longer list the
    benchmark premium as uncounted — it is the §36B PTC basis. **What REMAINS open here: the
    cliff-scoped disclosure sentence, and the withhold-vs-disclose fork below.**
    <details><summary>the two shipped XS entries</summary>
@@ -367,11 +367,11 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    does the token gain an **ACA pricing-mode clause** that withholds the ranking — as Medicare's did — until
    a sourced trend lands?
    ⚑ **2026-09-04 anchors + two unfiled facts:** `escalateQuote` is `intakeMap.ts:339-359` (not `:271-291`);
-   the "Not counted here" pair is `copy.ts:916` / `:921` (not `:895/:897`) and the surface is SIX strings
+   the "Not counted here" pair is `copy.ts:928` / `:933` (not `:895/:897`) and the surface is SIX strings
    (`:916, :921, :935, :937, :945, :947` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
    affirmation, not append to it) + the two health-control siblings (`:1013`, `:1019`), which CANNOT take it
-   (gated on `statePriced` alone — `copy.ts:1005-1007`). Unfiled: `shadowRateHeadroom` (`copy.ts:2442`)
+   (gated on `statePriced` alone — `copy.ts:1017-1019`). Unfiled: `shadowRateHeadroom` (`copy.ts:2464`)
    quotes cliff headroom against an SLCSP that never trends — the headroom figure inherits the held-price
    optimism; and there is NO ACA cost-trend constant at all (`health.ts` carries only `medicareCostTrend`)
    — ACA premiums are the one health channel with no trend, no clause AND no disclosure, in the
@@ -388,7 +388,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    Pricing is membership-keyed at `taxOverlay.ts:867`; `PRICED_STATES` is `constants/stateTax.ts:50`; the
    flip is pinned live at `optimalityOracle.test.ts:194-205` (NC crowns the 12%-top anchor, the state-absent
    twin the 22%-top). Correction (a) is **half-stale** — the `state-certification-pending` WithheldReason
-   (`oracleToken.ts:48`), its humane string (`recommendationView.ts:336-337`) and the whole *held* card
+   (`oracleToken.ts:48`), its humane string (`recommendationView.ts:338-339`) and the whole *held* card
    still ship and are tested; only the **live trigger** is gone, so a new arm is an addition, not a build.
    Correction (b) is **confirmed exact**: `mintOracleToken` has one live call site (`solveEntry.ts:214`),
    reached only via `engineApi.runSolve`; `engineApi.run` (`engineProtocol.ts:277` — headline/confidence)
@@ -403,8 +403,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    ⚑ **Real costs the partial omits.** `verify-state-tax.ts:120` loops `PRICED_STATES`, so **every state
    added is a new annual red-build gate with its own `nextDue`** (FL already carries one). Per state:
    `model.ts:317` STATE_ROSTER · a sourced(0) constants entry + profile · `copy.ts` `stateOption<X>` +
-   `verdictResidualState<X>` (the exhaustive switches at `stateTaxDisclosure.ts:47-60` and `:122-134` fail
-   `tsc` until written) · `recommendationView.ts:316-320` · the intake picker **4 → 11 vertical arms**
+   `verdictResidualState<X>` (the exhaustive switches at `stateTaxDisclosure.ts:48-61` and `:123-135` fail
+   `tsc` until written) · `recommendationView.ts:318-322` · the intake picker **4 → 11 vertical arms**
    against `verify:fit`. Engine cost is genuinely near-zero (`stateTax.ts:132` structural early return).
    ⚑ **The filed "every saved vault decodes Corrupt" blocker is FALSE — do not act on it, and do NOT loosen
    the compile tie.** `_V3FieldsCover` (`model.ts:2296-2298`) covers only `keyof ScenarioV3`;
@@ -422,8 +422,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    every household that skipped it.
    ⚑ **2026-09-04:** "no token on the headline/date" is TRUE; "no honesty gate at all" would be FALSE — a
    state-tax disclosure already renders on both first-answer surfaces (`composeVerdictMedicareResidual`,
-   `stateTaxDisclosure.ts:41` → `ConfidenceStatement.tsx:454` + `FuckOffDate.tsx:409`; off-roster arm
-   `copy.ts:1061` "State income tax isn't priced yet…"). The REAL gap is its GATE: it rides
+   `stateTaxDisclosure.ts:42` → `ConfidenceStatement.tsx:454` + `FuckOffDate.tsx:409`; off-roster arm
+   `copy.ts:1073` "State income tax isn't priced yet…"). The REAL gap is its GATE: it rides
    `medicarePricedNote` (`healthSheetChrome.ts:336-341` — Medicare-priced AND no health door), so it ships
    for the all-65+ population and is ABSENT for every pre-65 / health-door household — the fuck-off-date
    audience. A THIRD token-less lane exists: `runTwoArm` (`engineProtocol.ts:321`, the U10 control
@@ -442,7 +442,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `sanity.ts:51-74`). ⚑ **Size is M, not S, and a ceiling is the wrong instrument:** a 10× slip on
      $500k is $5M — a perfectly coherent household, so no threshold catches it. The shape that works is
      **one confirm on the household TOTAL** at the accounts step (the figure the engine actually consumes),
-     reusing the running total already rendered at `copy.ts:1879` / `questions.tsx:1019-1021`.
+     reusing the running total already rendered at `copy.ts:1891` / `questions.tsx:1052-1054`.
      ⚑ **"Briggsy sets the number" is the WRONG ask — there IS no honest number** (every total is
      coherent, so any threshold is the guessed plausibility band burned/062 bans). The only rule that
      invents nothing is an **unconditional** one-tap confirm for any household with ≥1 account. That is a
@@ -481,10 +481,10 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      ⚑ **2026-09-04 re-anchor (drifted AGAIN, +62/+101 in a month) + four traps the build must clear.** The
      panel is `src/intake/AssumptionPanel.tsx` — section a opens `:393` / closes `:561`, section b `:564` /
      `:843`, footer `:849`, the disclosures map `:527-559`; the `assumption*` prefix law is
-     `copy.ts:1111-1122` (keys `:1123-1248`); the panel fit arm is `vertical-fit.spec.ts:1129-1165`;
+     `copy.ts:1123-1134` (keys `:1135-1260`); the panel fit arm is `vertical-fit.spec.ts:1129-1165`;
      `sheetShell.css:34-35`/`:94`; the overlays are `src/engine/healthOverlay.ts:746-750` and
      `src/engine/taxOverlay.ts:1802-1805` (there is no `overlays/` dir). NIIT's two homes confirmed
-     (`recommendationView.ts:90` unconditional; `copy.ts:1012-1013`) — the scope fork is self-resolving:
+     (`recommendationView.ts:90` unconditional; `copy.ts:1024-1025`) — the scope fork is self-resolving:
      HSA + LTC only. TRAP 1 — `Row` REQUIRES a `seat` from the CLOSED 22-member `AssumptionSeat` union
      (`AssumptionPanel.tsx:108`, `assumptionRegistry.ts:39-61`): a leaves-out row is a hand-rolled
      `<li className="ap-row">` or a registry extension — "mirror the section" yields only the shell.
@@ -526,7 +526,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    inversion and a $0 collapse). **No seed produces a `custom` winner**, so that branch would ship
    unwitnessable — mint the seed first or leave it.
 
-8. **The whole still-working audience gets no strategy — silently.** `Result.tsx:485` gates
+8. **The whole still-working audience gets no strategy — silently.** `Result.tsx:509` gates
    `RecommendationSurface` off for the date route entirely and `:362` gates the invite door. The
    `blocked{spine-unready}` note that would explain it lives *inside* the gated-off component, so a working
    couple sees the date answer and **zero words** about strategy. `Result.tsx:345-347`'s comment claims "the
@@ -539,8 +539,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    **Briggsy blesses the words.** Full parity stays council-sized — the crowned offset lives in the
    committed answer, not the draft, and anchoring candidates at a future retirement year is a real ranking
    question.
-   ⚑ **2026-09-04 anchors:** the gates are `Result.tsx:482` (surface) and `:372` (the invite conjunct; door
-   `:547-554`); a THIRD exclusion kills the record card at its producer (`IntakeApp.tsx:284`). Strike
+   ⚑ **2026-09-04 anchors:** the gates are `Result.tsx:509` (surface) and `:372` (the invite conjunct; door
+   `:574-582`); a THIRD exclusion kills the record card at its producer (`IntakeApp.tsx:284`). Strike
    "~89px headroom" — that is the SPINE idle frame's figure; the date arms of `verify:fit` assert ORDER only
    (spec header `:21-22`). `Result.tsx:345-347`'s "covers the date route honestly" comment was FALSE (never
    minted there; a route-flip render is dropped) — swept 2026-09-04. A crowned-offset params builder ALREADY
@@ -550,7 +550,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (anchor on WORK STATUS, never "a date ahead of you"); the one token yours: does it promise parity.
    ⚑ **2026-09-04:** the framings are no-date · now (today/arrived) · past · future (`heroLead`,
    `FuckOffDate.tsx:183-202`; the split household's floor line has its own six arms, `:209-238`). Seat =
-   the else-arm of the `Result.tsx:485` gate, gated ALSO on `focusKey !== undefined` (else it prints beside
+   the else-arm of the `Result.tsx:509` gate, gated ALSO on `focusKey !== undefined` (else it prints beside
    the non-answer strip on an inputs-incomplete date frame); CSS in `fuckOffDate.css` — NOT
    `confidence.css`, the date grid is its own (`:220-236`) and its first free cell is r3c1 above the
    protected disclaimer; the key lands in verdict scope through the `fuckoff` substring net
@@ -563,25 +563,25 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 
 9. **A modest-pre-tax household is refused a withdrawal-order answer the engine could compute.**
     `solveDispatch.ts:91` returns `'no-pretax'` when no *conversion* candidate survives — but a
-    conversion-free candidate survives for **every entry in `SEARCHED_POLICIES`** (`candidates.ts:331-337`),
-    and `solve.ts:452-457` already implements that exact partition for the trend-blocked case.
-    ⚑ **DOWN-RANKED — the filed fix is UNSHIPPABLE as written.** `solveEntry.ts:140-147` mint-fails the
-    roster *before* `solve()` runs, and `rankingStability.ts:145-153` knows only a conversion-**amount**
+    conversion-free candidate survives for **every entry in `SEARCHED_POLICIES`** (`candidates.ts:394-400`),
+    and `solve.ts:459-464` already implements that exact partition for the trend-blocked case.
+    ⚑ **DOWN-RANKED — the filed fix is UNSHIPPABLE as written.** `solveEntry.ts:167-174` mint-fails the
+    roster *before* `solve()` runs, and `rankingStability.ts:224-238` knows only a conversion-**amount**
     perturbation. So dispatching the sequencing-only field would surface `mint-failed{roster}` **live** —
     the exact state `solveDispatch.ts:80` forbids in its own comment. Making it real needs a second
     validation law (a sequencing perturbation) under every shipped recommendation, which is a one-way door
     on what "validated" means.
     ⚑⚑ **AND THE "CHEAP COPY FIX" IS ITSELF A TRAP — found 2026-08-02 while attempting it.** The filed
-    near-term move was to reword `copy.ts:1537-1538` so it blames only the **conversion** half rather than "a
+    near-term move was to reword `copy.ts:1549-1550` so it blames only the **conversion** half rather than "a
     withdrawal strategy." **Do not.** The code still returns `'no-pretax'` and runs NO solve, so a sentence
     saying only conversions are blocked would promise a withdrawal-order answer we never deliver — trading
     a false CAUSE for a false PROMISE, which is strictly worse. Any honest rewording must ALSO say we are
     not ranking an order here, and that sentence is a real drafting call (the current wording was chosen
-    deliberately — `copy.ts:1535-1536` records that naming "a withdrawal strategy" cures the panel's
+    deliberately — `copy.ts:1547-1548` records that naming "a withdrawal strategy" cures the panel's
     unglossed-"order" stumble). **Briggsy's words, or ship the engine half first.**
     ⚑ **2026-09-04 anchors:** the described arm is `solveDispatch.ts:91` (`:78` is the separate no-tax-overlay
     arm; `~:79` was mis-pointed at filing — the file is untouched since 2026-08-14); the refusal string is
-    `copy.ts:1537-1538` with its three-rewrite comment `:1514-1536` (`:1404-1408` now holds an unrelated
+    `copy.ts:1549-1550` with its three-rewrite comment `:1526-1548` (`:1404-1408` now holds an unrelated
     save-refusal block).
 
 10. ✅ **SHIPPED 2026-08-14 (`2816d036`) — the heir bracket is the household's now.** Register Tier 1 records the closure and the three swept comments.
@@ -605,7 +605,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     register under this entry's title): a reload mid-intake, on the never-saved result screen, or on an edited-but-not-re-saved
     hydrated plan now raises the browser's dialog; the healthcare.gov link is a new tab and never
     fires it. **Still open:** persistence itself — an interrupted intake still loses the whole
-    household (up to **14** steps — 8 unconditional + 6 gated, `questions.tsx:1191-1209`) if the
+    household (up to **14** steps — 8 unconditional + 6 gated, `questions.tsx:1236-1254`) if the
     reader confirms the dialog, because nothing is written until Save (the D1 law; a plaintext
     draft outside the vault is a security-posture ruling, never a build) · the
     `schemaVersion` migration ladder **does not exist as code** — `IntakeApp.tsx:578` refuses anything but
@@ -614,7 +614,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     vaults fall into the arm v1/v2 sit in now — decode-ok, then "That didn't work. Try again." over a
     reload that cannot succeed (`IntakeApp.tsx:670-687`) — and their backups fail identically (same bytes,
     `backup.ts:84-93`) · there is **no way to delete the vault** (`clearVault` exists; its only PRODUCTION
-    caller is the dev seed planter, `devSeeds.ts:1654` — eight test/e2e files also call it).
+    caller is the dev seed planter, `devSeeds.ts:1658` — eight test/e2e files also call it).
     ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 9 — the aged note, the v2→v3 ladder, the leaves-out section) — its 2026-09-04 re-verify clause, still live:** Aged-window disclosure note (S; the ranking fork stays yours, three arms with corrected costs, due
     before 2027-01-01) · migration ladder scaffold (S; the honest legacy state names NO remedy — the
     backup carries the same bytes) · HSA-forfeit + LTC "What this leaves out" section (M; pilot per the
@@ -622,12 +622,12 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     ⚑ **2026-09-04, each re-scoped:** (a) THE AGED NOTE IS NOT PILOT — Tier-1 7c rules "Do NOT fix this in
     copy" and both nearest register entries are **briggsy** (`backlog.md:733`, `:780`); the "three arms with
     corrected costs" existed NOWHERE — they are now written, with sizes, under the register's "The aged
-    surface" entry. A shipped copy defect on the SAME cohort IS pilot: `rothPlanRanked` (`copy.ts:2339-2350`)
+    surface" entry. A shipped copy defect on the SAME cohort IS pilot: `rothPlanRanked` (`copy.ts:2360-2371`)
     hardcodes the plural "Those years are counted from…" after a correctly-singular "for 1 year" — live for
     any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:206-207`) — and no test
     covers `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
     PRESCRIBED: `model.ts:1386-1388` mints synthetic entered accounts from the old aggregates "so the ladder
-    stays total"; the write primitive exists (`db.ts:221 rewriteModel`, pinned `db.test.ts:180`); today's
+    stays total"; the write primitive exists (`db.ts:231 rewriteModel`, pinned `db.test.ts:180`); today's
     ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:930-947`), and a v1 vault survives
     every store seam on real IndexedDB (`e2e/vaultHarness.ts:19-20`) to die only at `IntakeApp.tsx:578`.
     Two new defects ride with it: `session.ts:464-468` claims the writer and UNLOCKS before the version is
@@ -665,7 +665,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     allows `img-src 'self'`. WEBKIT: `playwright install webkit` IS required (the on-disk `webkit-2272` is a
     stale revision — `@playwright/test` 1.60.0 needs 2287, launch fails today) + `webkit` on
     `verify-the-back-nine.yml:72` (the `verify` job's install — NOT the `:109` twin in the `verify-rv-chart-text`
-    job); scope at TEST level — `vault.spec.ts:70` (trust loop) + `:113`
+    job); scope at TEST level — `vault.spec.ts:70` (trust loop) + `:121`
     (second-tab read-only), never the whole file: the KDF spike `:137-168` asserts a Chromium-only
     thread-pool fact; the arm RECORDS the storage capability triple and asserts only Web Locks — WebKit exposes NO
     `navigator.storage.persist()` (measured 2026-09-08; `db.ts` calls it advisory) — it does NOT verify Safari eviction (nothing in the repo executes a real eviction;
@@ -718,7 +718,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     page and the codified G.S. page both still show the struck "after 2025 — 3.99%", so they read as
     CONTRADICTING the pinned record until they recompile — **session law wins, do not "correct" the
     engine table back to a flat 3.99%.** Comment-only; typecheck · lint · 3289 tests · state-tax gate
-    all green. (`copy.ts:2620` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
+    all green. (`copy.ts:2659` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think
@@ -936,7 +936,7 @@ like prod; re-planting is an explicit re-entry of the URL, never a refresh side 
 
 ⚑ **NO-SOLVE DRIVE RECIPE, so the next walk costs minutes not hours.** `?vault=rec` → Unlock
 (passphrase pre-filled) → *"I forgot my passphrase"* → RecoveryFlow. Recovery word for every plant
-is **`lattice harbor cinder vellum 48 thicket`** (`devSeeds.ts:1096`). For RestoreFlow you need a
+is **`lattice harbor cinder vellum 48 thicket`** (`devSeeds.ts:1100`). For RestoreFlow you need a
 real backup FILE and no full intake is required: unlock any plant → Result → **"Save a backup
 file"** → *Download backup* (an `<a>` with a blob URL, **not** a button — a `button:has-text()`
 selector misses it) → then delete the DB and reload. **`indexedDB.deleteDatabase` is BLOCKED while

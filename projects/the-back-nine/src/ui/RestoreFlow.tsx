@@ -7,7 +7,7 @@
  *
  * NO pre-`clearVault`, NO refuse-over-damaged — council-killed: `restoreVault` validates and
  * decrypts BEFORE any write (backup.ts:124-173) and `writeVault` clears in-transaction
- * (db.ts:197), so a bad file / wrong word attempt leaves a still-recoverable damaged vault
+ * (db.ts:220), so a bad file / wrong word attempt leaves a still-recoverable damaged vault
  * untouched. A pre-clear here would DESTROY it — the one data-loss path this surface must never
  * reintroduce.
  *

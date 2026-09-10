@@ -312,7 +312,7 @@ describe('deriveResultSave — a record the codec DROPS, in all three disk state
     expect(dropped.droppedAtoms[0]).toContain('savedRecommendation')
     expect(dropped.droppedAtoms[0]).toContain('mintedAt')
     // …and it is GONE from the returned scenario. MUTANT (delete the `delete` at
-    // scenarioCodec.ts:867): the report still fires, this line reds, and case (b) below flips.
+    // scenarioCodec.ts:900): the report still fires, this line reds, and case (b) below flips.
     expect(dropped.scenario.savedRecommendation).toBeUndefined()
     // NON-VACUITY: the SAME pipeline keeps a valid record, so the drop above is the record being
     // bad — not this pipeline losing records.

@@ -140,8 +140,8 @@ describe('restore OVER a damaged vault (the survivor device-rot path — was unc
   // Every other restore test wipes to no-vault (clearVault) first. The REAL survivor
   // scenario is a device whose on-disk vault bit-rotted to a partial/damaged set — the
   // `damaged` arm restore actually flows through. restoreVault refuses only `kind:'vault'`
-  // (backup.ts:125,185), so it proceeds over `damaged`; writeVault clears the store IN the
-  // same transaction before writing (db.ts:197), so no pre-clearVault is needed and none
+  // (backup.ts:135,208), so it proceeds over `damaged`; writeVault clears the store IN the
+  // same transaction before writing (db.ts:220), so no pre-clearVault is needed and none
   // is called — a pre-clear would destroy this recoverable vault if the restore then failed.
   it('restores a partial (2-of-3) damaged vault to a clean vault, openable with the new passphrase', async () => {
     const { db, session } = await vaulted()
@@ -179,7 +179,7 @@ describe('restore OVER a damaged vault (the survivor device-rot path — was unc
     const restored = await restoreVault(db, exported.file, RECOVERY_PASSPHRASE, await floorPass(NEW_PASSPHRASE))
     expect(restored).toEqual({ ok: true })
 
-    // The stray is GONE — the in-transaction clear (db.ts:197) is what makes a
+    // The stray is GONE — the in-transaction clear (db.ts:220) is what makes a
     // pre-clearVault redundant AND harmful (it would destroy a recoverable vault on failure).
     expect(await storeKeys(db)).toEqual(['model', 'passphraseWrap', 'recoveryWrap'])
     const reopened = createSession(db)
@@ -253,7 +253,7 @@ describe('negative pairing (proven, not believed)', () => {
     await clearVault(db)
 
     // The survivor reuses their one memorable recovery word as the new daily passphrase — the exact
-    // collision firstSave hard-blocks (session.ts:321). The export file (recoveryWrap only) would then
+    // collision firstSave hard-blocks (session.ts:331). The export file (recoveryWrap only) would then
     // be openable by the everyday passphrase, so restore must refuse it just as firstSave does — and
     // nothing may land on disk (a rejected restore leaves the wiped state untouched).
     const restored = await restoreVault(db, exported.file, RECOVERY_PASSPHRASE, await floorPass(RECOVERY_PASSPHRASE))

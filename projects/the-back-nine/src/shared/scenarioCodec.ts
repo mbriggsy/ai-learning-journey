@@ -186,7 +186,7 @@ function needUnitFraction(o: Obj, field: string, path: string): void {
 function needColaRate(o: Obj, field: string, path: string): void {
   needFinite(o, field, path)
   const n = o[field] as number
-  // Reuse the ONE shared predicate the two intake gates use (sanity.ts:414, OtherIncomeEntry.tsx:201)
+  // Reuse the ONE shared predicate the two intake gates use (sanity.ts:515, OtherIncomeEntry.tsx:217)
   // so all THREE gates run byte-identical range logic — the band's inclusivity can never silently
   // desync via a hand-copied comparison (insight 020). needFinite ran first (colaRateInRange assumes a
   // finite caller — a NaN passes every relational compare, insights 008/010).
@@ -333,7 +333,7 @@ function checkTickerClassification(v: unknown, path: string): void {
     needFinite(v, 'stockPct', path)
     needFinite(v, 'bondPct', path)
     needFinite(v, 'cashPct', path)
-    // The exact blend is collapsed downstream by stockWeightForBlend (tickerBlend.ts:1596), which
+    // The exact blend is collapsed downstream by stockWeightForBlend (tickerBlend.ts:1608), which
     // THROWS on any negative component or a zero sum — an UNCAUGHT throw in the hydrate/render builder,
     // never a calm typed failure. The codec is the SOLE restore-path gate, so mirror that exact
     // invariant here (insight 027: derive the guard from the hazard-creator's own domain) → a damaged
@@ -861,7 +861,7 @@ function checkV3Fields(o: Obj): string[] {
   // WHY THE DIVERGENCE IS RIGHT HERE AND NOWHERE ELSE. Every other field in this codec is part
   // of the ANSWER: a bad `people[0].pia` or a bad budget line means the plan we would recompute
   // is not the plan that was saved, so refusing loudly (→ the terminal "data damaged" door,
-  // session.ts:437-441 / 507-511) is the honest outcome. This record is a MEMORY OF A PAST
+  // session.ts:437-441 / 516-520) is the honest outcome. This record is a MEMORY OF A PAST
   // RECOMMENDATION — nothing in the household's plan depends on it. Bouncing the entire vault,
   // and with it every balance, budget line and date the household entered, because their saved
   // recommendation went bad would be a catastrophic over-reaction: the plan is the asset, the

@@ -43,7 +43,7 @@ import type { OracleGoal } from './evaluate'
 /**
  * The ranking objective the fingerprint pins. NOT on `SimulationParams` on purpose: the engine is
  * GOAL-AGNOSTIC (`simulate` produces a distribution; the goal selects WHICH statistic ranks — the
- * seam evaluate.ts:29 names). It is threaded explicitly so a token minted for `leave-more` can
+ * seam evaluate.ts:5 names). It is threaded explicitly so a token minted for `leave-more` can
  * never bless a `pay-less-tax` solve (a different objective ⇒ a different winner over the same
  * candidates). `heirBracket` rides here because it too is ranking-affecting (it sets the IRD
  * discount every leave-more bequest is scored at) and is absent from the engine params.

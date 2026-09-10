@@ -15,7 +15,7 @@ as one lump sum" — describing a household the intake **cannot produce** (every
 The same-day replacement claimed "this plan has none entered" — true for the
 poster-child household (zero pre-tax dollars) but **false for a reachable
 sibling**: a household with a $25k traditional IRA sitting below every
-rail-anchored conversion amount (`candidates.ts:323` rejects over-headroom
+rail-anchored conversion amount (`candidates.ts:386` rejects over-headroom
 amounts) yields a conversion-free roster and lands the SAME `'no-pretax'` arm.
 That household read a confident claim about its own entries that was simply wrong
 — the calm-but-wrong cardinal sin, inside a note that had just been rewritten to

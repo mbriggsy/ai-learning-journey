@@ -146,7 +146,7 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
   // plan's own start year is the discriminator, derived through the ONE producer — never re-typed.
   //
   // ⚠️ The open-edge re-seed above keeps its OWN `rothPlanStartFor(savedAnchor, applied.startYearOffset).year`
-  // call on purpose: `planClockSeam.test.ts:228-230` source-binds that exact text. Folding the two
+  // call on purpose: `planClockSeam.test.ts:268-270` source-binds that exact text. Folding the two
   // call sites into one const deletes the pinned substring and reds the seam arm with a failure that
   // reads as a source-bind violation and says nothing about this fix. Do not "simplify" them.
   const appliedStartYear = applied === undefined ? undefined : rothPlanStartFor(savedAnchor, applied.startYearOffset).year

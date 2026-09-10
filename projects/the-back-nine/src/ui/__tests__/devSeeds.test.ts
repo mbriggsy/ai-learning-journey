@@ -953,7 +953,7 @@ describe('the no-pretax steer witness seed (engine-proven refusal regime)', () =
   // (probed 2026-07-23 before pinning — recorded, not assumed):
   it("the SMALL-IRA sub-arm: entered pre-tax dollars BELOW every rail still land 'no-pretax' (the reword's justification, test-proven)", () => {
     // The steer household + one $25k traditional IRA: overlay PRESENT with pretax 25,000, yet every
-    // rail-anchored conversion amount exceeds the post-RMD headroom (candidates.ts:323), so the
+    // rail-anchored conversion amount exceeds the post-RMD headroom (candidates.ts:386), so the
     // roster is conversion-free and the builder refuses 'no-pretax'. This is the household the
     // note's "doesn't have enough of them entered" was reworded FOR — the claim is now bitten.
     const blend = { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 } as const
@@ -1332,7 +1332,7 @@ describe('the arrived aged plant (the first live route to the hero\'s dateInYear
     ).toBeLessThan(depth)
     // NOT an incidental observation: the floor crowning at 0 is exactly why this plant lights ONE
     // arrived arm and not two. `floorLineText` short-circuits offset 0 BEFORE the three-way split
-    // (FuckOffDate.tsx:197, mirroring heroLead's free-today precedence), so `dateFloorCoveredPast`
+    // (FuckOffDate.tsx:226, mirroring heroLead's free-today precedence), so `dateFloorCoveredPast`
     // cannot fire here — its live route is and remains `?vault=datestale`. Arm 3 proves the
     // consequence on the renderer rather than leaving it as a comment.
     expect(out.floor.offsetYears, 'the floor crowns at 0 — the plain covered line, never the Past arm').toBe(0)

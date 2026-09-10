@@ -584,7 +584,7 @@ describe('the save gesture — R1: with no vault the tap MINTS and opens the cer
      *
      * So this arm FORCES the two apart — the only way the difference becomes observable — by
      * making the fresh read return a sentinel no committed run could produce. The gesture consumes
-     * `currentDraftFingerprint()` nowhere (`IntakeApp.tsx:415-433` reads only the snapshot), so the
+     * `currentDraftFingerprint()` nowhere (`IntakeApp.tsx:455-473` reads only the snapshot), so the
      * mock cannot perturb the path under test.
      *
      * MUTANT: `s.solve.fingerprint` → `appModel.currentDraftFingerprint()` at the mint — this reds.

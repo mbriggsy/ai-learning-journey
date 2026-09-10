@@ -210,7 +210,7 @@ export function Result({
   // re-derivation of the builder's inputs (insight 080; the ultramode fold's sharpening: the age
   // predicate diverged from the run at buildOverlay's degenerate early-return — the SS-only
   // $0-portfolio all-65+ household built NO overlay yet read "priced" from its ages). Spine:
-  // `spineMedicarePriced` = the headline builder's own output. Date route: dateSearch.ts:222 forces
+  // `spineMedicarePriced` = the headline builder's own output. Date route: dateSearch.ts:229 forces
   // healthcareEnabled true on every candidate, so Medicare is priced structurally. The household
   // with a priced run but NO Healthcare door (all-65+ — healthcarePriced needs a pre-65 member)
   // wears the "Medicare is priced in" affirmation + the narrowed residual.

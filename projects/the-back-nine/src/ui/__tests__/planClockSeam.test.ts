@@ -253,7 +253,7 @@ describe('U17 §S0.1 — ONE exported arrived predicate, consumed (never re-type
     // the `)` of `formatMoney(...)`, which is argument ONE, so arguments 2+ — exactly where a
     // raw offset or a re-typed year sum would be handed in — were unreachable by it. An
     // occurrence count over the same source is both simpler and stronger: the panel reads the
-    // raw offset EXACTLY once, at the producer call (`AssumptionPanel.tsx:150`), so any second
+    // raw offset EXACTLY once, at the producer call (`AssumptionPanel.tsx:178`), so any second
     // read — handed to the echo, or re-summed against the anchor — reds regardless of argument
     // position or nesting depth.
     expect(
@@ -275,7 +275,7 @@ describe('U17 §S0.1 — ONE exported arrived predicate, consumed (never re-type
 
   it('the two consumers AGREE at the boundary by construction (the behavioral half of the bind)', () => {
     // Same track, same clock: at crown == plan clock the ladder keeps a mark at display 0 AND
-    // the withdraw predicate reads false — the pair that `FuckOffDate.test.tsx:208-212` pins on
+    // the withdraw predicate reads false — the pair that `FuckOffDate.test.tsx:209-213` pins on
     // the rendered surface, asserted here at the seam so a future split is caught upstream.
     const track: DateTrackOutcome = {
       kind: 'confirmed-date',
@@ -306,8 +306,8 @@ describe('U17 §S6 — the aged premise and the Today tick must not contradict e
    * against it.
    *
    * WHY THIS ARM HAD TO BE WRITTEN RATHER THAN ASSUMED: every existing consumer renders THROUGH the
-   * slot — `FuckOffDate.test.tsx:327,334`, `ConfidenceStatement.test.tsx:601,614`,
-   * `copyGuard.test.ts:307-308` all call `slots.bandAgedPremise*(...)` and compare to its own
+   * slot — `FuckOffDate.test.tsx:328,335`, `ConfidenceStatement.test.tsx:601,614`,
+   * `copyGuard.test.ts:450-451` all call `slots.bandAgedPremise*(...)` and compare to its own
    * output. They follow ANY reword silently, in both directions. Without the arm below, the §S6 fix
    * passes green and so does a future revert of it — the wording would be pinned by nothing at all.
    *

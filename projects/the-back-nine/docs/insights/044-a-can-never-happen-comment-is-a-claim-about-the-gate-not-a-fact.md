@@ -17,7 +17,7 @@ can never be violated by a real fan."* The seam's only dollar guard was `dollarM
 ## Root Cause
 
 The premise was false. `validateParams` admits `initialPortfolio === 0` (`finiteNonNeg` is `x >= 0`);
-only the **accumulation** construct rejects a $0 start (`simulate.ts:683`). A $0-portfolio,
+only the **accumulation** construct rejects a $0 start (`simulate.ts:779`). A $0-portfolio,
 income-funded decumulation household (lives on Social Security / a pension) is a valid — and
 plausible — run. Its fan is all-$0 ⇒ `maxP90 = 0` ⇒ `dollarMax = max(niceCeil(0)=0, 0) = 0`.
 

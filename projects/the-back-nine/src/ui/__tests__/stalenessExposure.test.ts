@@ -9,7 +9,7 @@
  *
  * THE ARM THAT MATTERS MOST is the AGE/OVERLAY DIVERGENCE: a household whose AGES say "all 65+,
  * Medicare priced" while its BUILT OVERLAY says "no healthcare at all". Insight 080's scar
- * (`healthSheetChrome.ts:307-321`) is that an age-keyed predicate equalled the pricing
+ * (`healthSheetChrome.ts:316-330`) is that an age-keyed predicate equalled the pricing
  * complement right up until a second producer of `healthcareEnabled` shipped, then silently
  * lied. A fixture where the two answers COINCIDE cannot tell an age gate from an overlay gate —
  * so this one is built to make them disagree.
@@ -135,7 +135,7 @@ describe('exposureForDraft — the DATE route', () => {
   })
 
   it('ACA reads UNPRICED (proven) when the base overlay carries no quote stream — window-gating can only shrink, never synthesize', () => {
-    // `buildHealthcareStreams` only WINDOW-GATES an entered stream (healthcareStreams.ts:167-170),
+    // `buildHealthcareStreams` only WINDOW-GATES an entered stream (healthcareStreams.ts:178-181),
     // so with no base stream NO candidate offset can price ACA. FALSE here is exact.
     const d = DEV_SEEDS.date65
     expect(dateBaseAcaPriced(d), 'no candidate could price ACA').toBe(false)

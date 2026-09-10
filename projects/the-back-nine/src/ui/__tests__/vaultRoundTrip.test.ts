@@ -1,7 +1,7 @@
 /**
  * The FULL-STORE round-trip on the REAL v3 scenario shape (U8 decrypt-on-return spine).
  *
- * The existing byte-identity test (session.test.ts:66) round-trips a hand-written v1 MODEL,
+ * The existing byte-identity test (session.test.ts:83) round-trips a hand-written v1 MODEL,
  * so the rich v3 field set (incomeStreams / filing / startCalendarYear / health / per-person
  * workStatus) never travels encode→writeVault→loadVault→decode. This closes that gap: a real
  * ScenarioV3 (built by the same scenarioFromDraft path the Save ceremony uses) is saved,

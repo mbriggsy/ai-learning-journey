@@ -7,7 +7,7 @@
  * byte-for-byte the shipped single-date composition) or a SPLIT, (2) what the subordinate
  * essentials line says, and (3) whether the R27 floor>lifestyle inversion disclosure rides.
  *
- * THE CLAIM ASSIGNMENT (the council's Q3 ruling — the live answerView.ts:143 fix): the
+ * THE CLAIM ASSIGNMENT (the council's Q3 ruling — the live answerView.ts:214-215 fix): the
  * "work-optional / fuck-off" claim attaches ONLY to the FULL-LIFESTYLE track — the hero
  * lead, odds, tradeoff, disclosures, and the odds ladder all read `lifestyle`. The floor
  * is "essentials covered by ~year X", NEVER "work-optional by ~X" — presenting the easier

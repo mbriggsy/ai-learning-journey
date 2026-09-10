@@ -912,8 +912,8 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
 
   it('a NON-Corrupt throw from INSIDE a validator ESCAPES decodeScenario — a programming defect is never laundered into a calm dropped atom', () => {
     // THE TWO RE-THROWS THIS COVERS, and they CHAIN, so one arm holds both:
-    //   `scenarioCodec.ts:866`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
-    //   `scenarioCodec.ts:911`  `throw e`                              (decodeScenario's outer catch)
+    //   `scenarioCodec.ts:899`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
+    //   `scenarioCodec.ts:944`  `throw e`                              (decodeScenario's outer catch)
     // Both were UNEXERCISED. They were filed as "correct-by-inspection but SEAM-LESS" on the
     // reasoning that decodeScenario builds its input from `JSON.parse` — data properties only,
     // no getters — and that no validator here recurses or calls a method on an unchecked value.
@@ -1095,7 +1095,7 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
   })
 
   it('the exact blend rejects a negative component and a zero-sum blend (mirrors stockWeightForBlend, which throws downstream)', () => {
-    // stockWeightForBlend (tickerBlend.ts:1596) throws on any negative component or a zero sum — an
+    // stockWeightForBlend (tickerBlend.ts:1608) throws on any negative component or a zero sum — an
     // UNCAUGHT crash in the hydrate/render builder. The codec is the sole restore-path gate, so it must
     // surface these as calm 'corrupt' BEFORE the collapse (a finite-only check let them through).
     expect(decodeScenario(mutated(V3, (o) => { (o.tickerClassifications as Obj).VFIAX = { kind: 'exact', stockPct: -50, bondPct: 100, cashPct: 50 } })).ok).toBe(false)

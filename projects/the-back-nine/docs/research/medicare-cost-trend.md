@@ -15,7 +15,7 @@ sources: [docs/research/pre65-healthcare.md]
 > NAMED abstention per insight 092; its territory is partially covered by the cross-checker's
 > independent KFF/CRFB corroborations, and the build should not lean on secondary color beyond
 > what is cited here). **Consumer:** the `medicareCostTrend` Unsourced sentinel
-> (`src/engine/constants/health.ts:192`) + the Part-B pricing flip (`PART_B_PRICING_MODE`,
+> (`src/engine/constants/health.ts:204`) + the Part-B pricing flip (`PART_B_PRICING_MODE`,
 > taxOverlay) + the U15 fold's trend-unblock tripwire (solve.ts's conversion partition) + the
 > post-flip demotion-margin calibration (U15 council Q4d).
 

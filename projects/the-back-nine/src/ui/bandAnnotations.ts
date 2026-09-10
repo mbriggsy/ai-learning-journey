@@ -61,7 +61,7 @@ const HORIZON_TICK_PAD_YEARS = 3
  *
  * THE CLOCK IS THE BUILD CLOCK, NOT THE SAVE CLOCK (U17 §S0.2 — the rename that made the field
  * say what it always computed). Both members derive from `startCalendarYear`, which is written
- * ONCE when the plan is built (`memoryModel.ts:522`) and survives every re-save untouched. The
+ * ONCE when the plan is built (`memoryModel.ts:565`) and survives every re-save untouched. The
  * SAVE's own vintage is `savedAt` and lives on a separate rail (`agedBalancesYearFor`) — a
  * re-saver (built last year, saved five minutes ago) has an aged plan clock and NO aged
  * balances at all, which is exactly the household the old 'Your save' label lied to.

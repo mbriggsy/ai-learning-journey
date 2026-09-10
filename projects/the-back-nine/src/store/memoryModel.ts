@@ -26,7 +26,7 @@
  *      any resolved result older than the latest committed epoch, so racing
  *      in-flight runs never render a stale intermediate.
  *
- * THE DATE-ROUTE EPOCH ORDER (C3 forward item (b), engineProtocol.ts:64-81):
+ * THE DATE-ROUTE EPOCH ORDER (C3 forward item (b), engineProtocol.ts:100-108):
  * result-discard alone cannot stop a sweep already running worker-side — the
  * dispatcher calls `engine.setLatestEpoch(epoch)` BEFORE
  * `engine.runDateSearch(..., epoch)` (same MessagePort ⇒ FIFO ⇒ the commit
@@ -416,7 +416,7 @@ export interface MemoryModel {
 //    FLIP EDGES, computed on the same quantized value the band compare reads);
 //  - the dollar gates on the $/month margin — NOTE THE INVERTED SENSE:
 //    `perMonthReal.marginToEdge` is the distance to the ROUNDED DISPLAY VALUE
-//    (confidence.ts:195), so the flip edge sits at DOLLAR_STEP/2 − margin. This
+//    (confidence.ts:239), so the flip edge sits at DOLLAR_STEP/2 − margin. This
 //    seam is that emission's FIRST consumer (insight 047: audit a contract its
 //    first consumer never stressed) — the sense difference is deliberate there
 //    and compensated HERE, in one place.

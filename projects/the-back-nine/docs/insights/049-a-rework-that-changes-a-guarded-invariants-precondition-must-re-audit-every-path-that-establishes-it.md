@@ -10,7 +10,7 @@ tags: [negative-pairing, recovery-rework, invariant-precondition, mirror-path, r
 
 The negative-pairing invariant — *the export file carries ONLY the recoveryWrap, so the everyday
 passphrase must never also open the cloud-resident backup* — is enforced by `firstSave` rejecting
-`recovery == daily` (`session.ts:321`, reason `recovery-equals-passphrase`, with a UI mirror + a test).
+`recovery == daily` (`session.ts:331`, reason `recovery-equals-passphrase`, with a UI mirror + a test).
 `restoreVault` (`backup.ts`) is the **mirror mint path**: it re-establishes the daily credential
 (mints a fresh passphraseWrap from `newPassphrase`) while keeping the file's recoveryWrap verbatim — and
 it holds **both plaintexts in scope** — yet performed **no equality check**. A wiped-device survivor who

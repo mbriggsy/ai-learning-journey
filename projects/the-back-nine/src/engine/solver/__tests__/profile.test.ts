@@ -107,7 +107,7 @@ describe('profileSolve — measures a full worker-side solve against its baselin
     //
     // Safe by construction: both members are already retired with zero earned income, so this
     // household has NO bridge years and cannot trip simulate.ts's wage-blind ACA rejection arm
-    // (which fires only when someone is still working — `isBridgeYear`, simulate.ts:895-897).
+    // (which fires only when someone is still working — `isBridgeYear`, simulate.ts:894-897).
     // `irmaaMagiSeed` is REQUIRED once healthcare prices: the 66-year-old is Medicare-enrolled at
     // t=0 and IRMAA reads MAGI on a 2-year lookback, so the two pre-simulation years must be given
     // rather than computed as a silent ≈$0 (which would understate the surcharge). Without it the

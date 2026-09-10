@@ -112,7 +112,7 @@ export type ResaveCopyKey = 'saveErrorQuota' | 'saveErrorReadOnly' | 'saveErrorF
 /**
  * Map a re-save refusal to its calm copy. The honesty decision here: `not-writable` on the
  * result screen means this tab cannot write — in practice a READ-ONLY open (a 2nd tab held
- * the writer at unlock; `secondTab` is captured ONCE, session.ts:295) — and the ONLY remedy
+ * the writer at unlock; `secondTab` is captured ONCE, session.ts:466) — and the ONLY remedy
  * is a RELOAD. It must never map to `saveErrorBusy`, whose "Close it there, then try again"
  * is a retry that cannot succeed in a read-only session (the same lying-dead-end shape the
  * edit-and-re-save fix exists to retire). Exhaustive with the house `never`-default.

@@ -165,7 +165,7 @@ describe('ACA enhanced-subsidy re-verify gate logic', () => {
  * independent places that feed TWO DIFFERENT CONSUMERS, and nothing compared them.
  *
  *   `aca-last-verified.json`            → read by `verify:aca` (scripts/verify-aca-status.ts) = CI
- *   `acaEnhancedSubsidyStatus` (health) → read by `oracleToken.ts:178-198` = the RUNTIME WITHHOLD
+ *   `acaEnhancedSubsidyStatus` (health) → read by `oracleToken.ts:180-200` = the RUNTIME WITHHOLD
  *
  * `solver.ts:67` already states the contract in prose — *"one calendar, two enforcement layers"* —
  * and prose is not enforcement. The failure mode is asymmetric and quiet in the dangerous

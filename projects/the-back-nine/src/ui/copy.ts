@@ -1213,11 +1213,11 @@ export const copy = {
   //
   // ⚠️ THE TOGGLE SETS THE ENTRY UNIT TOO, AND THE OLD SENTENCE HID IT (fixed 2026-08-03).
   // It read "switching this never changes the amount" — but the SHOWN figure jumps exactly 12×
-  // (`spendDisplayed`, AssumptionPanel.tsx:295-300), so the reader watches the number move while
+  // (`spendDisplayed`, AssumptionPanel.tsx:338-343), so the reader watches the number move while
   // being told nothing moved. The natural repair is to retype the old digits, and the panel's own
-  // commit (AssumptionPanel.tsx:500-510, the `entered * 12` arm at :507) then multiplies by 12
+  // commit (AssumptionPanel.tsx:601-611, the `entered * 12` arm at :608) then multiplies by 12
   // under 'month' — so a household "correcting" 78,000 back to 6,500 under 'Each year' commits a
-  // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:230) hard-disarms
+  // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:258) hard-disarms
   // `spend-period-unconfirmed` (sanity.ts:329-352, the disarm read at :340) on this surface, and
   // 6,500 is under SPEND_AMBIGUOUS_MIN (sanity.ts:74) regardless — so the rule could not have
   // caught it even armed. The replacement must therefore say BOTH halves — the money is
@@ -1405,7 +1405,7 @@ export const copy = {
   recommendSaveSavedBadge: 'Saved to this device — your plan and this strategy read',
   // THE REFUSALS. None carries a retry control: the mint is deterministic, so a retry re-fails
   // identically, and an affordance that cannot succeed is the lying-remedy shape
-  // (Result.tsx:364-372). Each says what did NOT happen, in the reader's frame.
+  // (Result.tsx:468-476). Each says what did NOT happen, in the reader's frame.
   recommendSaveRefusalRecordInvalidHeading: 'This strategy read couldn’t be kept',
   recommendSaveRefusalRecordInvalidBody:
     'We couldn’t build a record of it, so nothing reached this device — your plan here is exactly as you left it. The answer above is still current.',
@@ -1536,7 +1536,7 @@ export const copy = {
   // ("401(k)" is deliberately absent — the verdict scope's free-numeral gate; "a pre-tax workplace
   // plan" is the numeral-free equivalent, and the re-entry read-back teaches the full roster.)
   // REWORDED same-day (review wf_6f89fe6f-35a P1, refuters 2-0): the first draft claimed "this plan
-  // has none entered" — FALSE on the small-IRA arm (candidates.ts:323 rejects every rail-anchored
+  // has none entered" — FALSE on the small-IRA arm (candidates.ts:386 rejects every rail-anchored
   // conversion amount above the post-RMD headroom, so a household with a $25k IRA below every rail
   // ALSO lands no-pretax). "needs more … than this plan has entered" is true on BOTH sub-arms (zero
   // entered, and entered-but-under-every-rail — extension-monotone, insight 101), and the steer's
@@ -1997,7 +1997,7 @@ export const slots = {
    *
    *  ⚠️ DO NOT "FIX" THIS BY DROPPING THE TODAY TICK. That inverts the contradiction into the
    *  defect U13/§S0 already fixed — `bandAnnotations.ts:51-56` records it live from the first
-   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:1565-1566` forbids a band that loses
+   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:1603-1604` forbids a band that loses
    *  its wall clock BY NAME. The tick is right; the sentence was wrong. */
   bandAgedPremiseFresh: (buildYear: number): string =>
     `This range runs from ${buildYear}, when the plan was built — the years since are modeled, not records. What you actually hold today is undetermined until you re-confirm.`,
@@ -2380,7 +2380,7 @@ export const slots = {
    *  WHY IT CANNOT SAY "under way": `startYearPassed` proves only that the START is behind the wall
    *  clock — a 4-year schedule begun in 2024 is FINISHED by 2029, and "already under way" would be
    *  false there. Every clause here is true whether the schedule is running or complete; deciding
-   *  what a mid-flight start MEANS to the engine is the re-anchoring fork FILED at RothLever.tsx:48-49,
+   *  what a mid-flight start MEANS to the engine is the re-anchoring fork FILED at RothLever.tsx:49-50,
    *  and this copy deliberately does not pre-empt it.
    *
    *  IT PROMISES ONLY WHAT EXISTS (insight 100). Apply is genuinely unreachable here — `complete()`
@@ -2397,7 +2397,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the two
    *  universal gates (no false certainty, no advice verb), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:711` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:894` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,

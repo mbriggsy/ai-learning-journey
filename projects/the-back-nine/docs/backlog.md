@@ -76,9 +76,9 @@
   exists to close, so the unit is named outright now.
 - ⚑ **RE-SEVERITY 2026-08-03 (verification fleet) — this is a three-tap path to a wrong plan, not a copy
   nit.** Anchor drift first: the cold-read log cites `copy.ts:1119`; the live string is
-  **`copy.ts:1224-1225`**. The panel toggle (`AssumptionPanel.tsx:478-481`) writes `spendEntryPeriod`
+  **`copy.ts:1236-1237`**. The panel toggle (`AssumptionPanel.tsx:478-481`) writes `spendEntryPeriod`
   only — the stored amount holds and the SHOWN amount jumps exactly 12× (`:281-286`). The
-  identical-looking INTAKE segment (`questions.tsx:432-450`) does the **opposite**: digits hold and
+  identical-looking INTAKE segment (`questions.tsx:433-451`) does the **opposite**: digits hold and
   `annualSpendingReal` re-bases 12×. That sentence is the only thing distinguishing the two controls, and
   it says *"switching this never changes the amount."* Flip to "Each year", see 78,000 where 6,500 was,
   believe the sentence, retype 6,500 → the plan runs on **$6,500/yr**. Nothing catches it:
@@ -86,10 +86,10 @@
   `SPEND_AMBIGUOUS_MIN` anyway.
 - ⚑ **A first replacement draft was written and REJECTED — do not re-derive it.** It dropped the live
   string's *"entered"* clause for *"reads on this sheet — the same money either way."* That is **false**:
-  both spend commits (`AssumptionPanel.tsx:601-611`, `questions.tsx:409-422`) multiply by 12 under
+  both spend commits (`AssumptionPanel.tsx:601-611`, `questions.tsx:410-423`) multiply by 12 under
   `'month'`, and `spendEntryPeriod` is **persisted** (`scenarioCodec.ts:711`), so the toggle sets the unit
   for the NEXT typed figure, across sessions. Any rewrite must keep the entry-unit disclosure. Also fix
-  the now-overbroad comments at `copy.ts:1198-1200` and `AssumptionPanel.tsx:244-245`
+  the now-overbroad comments at `copy.ts:1210-1212` and `AssumptionPanel.tsx:244-245`
   ("structurally impossible"). No test pinned the string — one was added with the fix above.
 
 ### A repeat "Add this account" tap over an already-visible block changes nothing perceptible
@@ -197,7 +197,7 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 
 `M` · **briggsy** · filed 5× — `A30`, `S1`, `S13`, `S31`, `S38`
 
-- ✅ **CLOSED 2026-08-03 (`bd851f24`)** — the card asserted "It still matches your plan as it stands today." while the door beneath it showed the household never executed the advice; the holds line is now `recommendRecordHolds` = "It still lines up with the numbers you've entered." (`copy.ts:1445`, the defending comment `copy.ts:1416-1429`). *The live half of this entry is the strategy-naming ruling below.*
+- ✅ **CLOSED 2026-08-03 (`bd851f24`)** — the card asserted "It still matches your plan as it stands today." while the door beneath it showed the household never executed the advice; the holds line is now `recommendRecordHolds` = "It still lines up with the numbers you've entered." (`copy.ts:1457`, the defending comment `copy.ts:1427-1456`). *The live half of this entry is the strategy-naming ruling below.*
 - HIS EYE — the record card's strategy naming (half 2)
 - S6 (f) HALF 2 — naming the strategy on the record card (a Briggsy ruling, not a build)
 - ⚑⚑ RECORD CARD HALF (2) — naming the strategy on Cards 6-7 (Briggsy ruling, DO NOT PILOT-FIX)
@@ -205,15 +205,15 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 - ⚑ **A drafted fix was REFUTED 2026-08-03 — do not execute the obvious one.** The reasoning was going to
   be *"`noChange: false` means the winner differs from the household's plan, so 'it still matches' is
   false."* **That is engine-wrong:** `noChange` compares the winner to a FIXED conventional prior
-  (`select.ts:383-398`, ` (⚑ gone 2026-09-06 — the cited claim — that noChange compares the winner to a FIXED conventional prior — no longer exists anywhere: isNoChange (select.ts:383-396) anchors on the USER baseline and falls back to the conventional index only when no user baseline was enumerated, so relocating the number would attach a line to an inverted claim)`), never to the entered `drawdownPolicy` — so a defending comment built on
+  (`select.ts:383-398`, ` (⚑ gone 2026-09-06 — the cited claim — that noChange compares the winner to a FIXED conventional prior — no longer exists anywhere: isNoChange (select.ts:384-397) anchors on the USER baseline and falls back to the conventional index only when no user baseline was enumerated, so relocating the number would attach a line to an inverted claim)`), never to the entered `drawdownPolicy` — so a defending comment built on
   it would mint a NEW false engine claim into `copy.ts`.
-- ⚑ **`?vault=rec` CANNOT WITNESS this defect.** `devSeeds.ts:854-856` → `retiredOnTrack` holds **one**
+- ⚑ **`?vault=rec` CANNOT WITNESS this defect.** `devSeeds.ts:857-859` → `retiredOnTrack` holds **one**
   traditional IRA, so `proportional` and `taxable-first` are the identical decumulation and the
   cold-read's *"SWITCH to Brokerage first"* names an account that does not exist. **A multi-account
   witness plant must be built before any regression pin here means anything** — which is what pushes this
   from `S` to `M`.
-- ⚑ Anchor drift: `noChange: false` is `devSeeds.ts:1435` (not `:1322`); the winner literal is `:1421`
-  (not `:1308`). `copy.ts:1409-1413` is the card-FAMILY header — nothing defends the holds sentence
+- ⚑ Anchor drift: `noChange: false` is `devSeeds.ts:1439` (not `:1322`); the winner literal is `:1425`
+  (not `:1308`). `copy.ts:1421-1425` is the card-FAMILY header — nothing defends the holds sentence
   today, so the fix must **add** a comment, not rewrite one.
 - ⚑ **The semantic witness ("the advice not taken") — the debt record, moved from the queue 2026-09-06:** ⚠️ **The 2026-08-03 verification debt, CORRECTED 2026-08-14 — it was overstated, and the half that
   remains is narrower.** This block used to read *"the record card's HOLDS face has never been seen;
@@ -296,14 +296,14 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
   filed.** `select.ts:280-282`'s conventional-incumbent tie-break crowns the non-converting baseline as
   runner-up whenever only one conversion's advantage survives shrinkage — so
   winner-converts/runner-up-doesn't is the **natural** shape for a well-funded leave-more household, not
-  a rare one. Real guard is `select.ts:333-336`; the throw is `gradeCalibration.ts:172-177` via
+  a rare one. Real guard is `select.ts:334-337`; the throw is `gradeCalibration.ts:172-177` via
   `gradeOnFamily:200`; the catch narrow is `solve.ts:349`, rethrow `:350`.
 - ⚑ **The engine one-liner is HALF the fix.** `recommendationView.ts:437-446` maps `withheld` to the
   SAME generic `copy.recommendUnavailable` as `compute-error`, so widening the guard alone converts a
   crash into an **identical generic card**. Route it through `heldView`'s shape (`:329-335`) with a new
   `recHoldDemotionAxis` key — `copyGuard.ts:119` makes `recHold*` require-hedge, so it must wear a modal.
 - ⚑ **Four comments would become NEW false claims** and must be swept in the same commit —
-  `select.ts:134-135`, `select.ts:321-328`, `solve.ts:151-152`, `solve.ts:484-487` each currently assert
+  `select.ts:134-135`, `select.ts:322-329`, `solve.ts:151-152`, `solve.ts:484-487` each currently assert
   the `leave-more` arm *"falls through to a THROW."* This is the exact class `30e5bc31` just cleaned up.
 - ⚑ **RED-GATE RISK:** `select.test.ts:293` asserts `kind === 'selected'` on a live-shaped leave-more
   world, and `:294`'s comment literally encodes the defect (*"leave-more never routes to withheld"*).
@@ -435,7 +435,7 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 - ⚠️ **BUT THE FILED FIX IS A LIVE TRAP — do not execute it.** The prescription still sitting in
   `stalenessExposure.ts:115-117` ("re-derive the exposure against the CROWNED offset") would **silence**
   the ACA clock for exactly the household whose date a subsidy flip moved — insight 103's shape recurring
-  inside the comment that cites insight 103. Rewrite `stalenessExposure.ts:86-117` to record the sweep
+  inside the comment that cites insight 103. Rewrite `stalenessExposure.ts:86-133` to record the sweep
   argument and delete the trap; its render-chain anchors are 20–60 lines stale as well.
 - ⚠️ THE STATE-TAX AGGREGATE ARM — council-shaped, parked behind a trigger; DO NOT BUILD AS FILED
 - Council fork: state-tax exposure — widen `pricedState` vs add a 7th `stateTax: ExposureRead` field
@@ -464,9 +464,9 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 `L` · **pilot** · filed 2× — `A39`, `S25`
 
 - Pre-65 ACA premiums are priced REAL-FLAT — the exact sin the Medicare council ruled solver-BLOCKING, with no trend, no oracle clause, and no disclosure
-- ⚠️ **The fix is NOT a Part B copy-paste.** Part B’s schedule is built INSIDE the engine, which is why the oracle token can witness it; the ACA escalator lives in **intake** (`intakeMap.ts:336-345`), which the engine cannot import — so an `ACA_PRICING_MODE` flag bolted onto intakeMap would be the exact lying-mirror `oracleToken.ts:113-119` warns about. The honest fix moves the schedule build to an engine-owned `buildAcaPricingSchedule` beside `partBPricingByT` (`taxOverlay.ts:1110`).
-- ⚠️ Anchor corrections: `healthOverlay.ts:296` is a **closing brace**, not a consumer (real seam `taxOverlay.ts:1689` + `:1731-1738` → `healthOverlay.ts:270`); the strings claiming the coupling is priced are `copy.ts:944-947`, not `copy.ts:924`.
-- ⚠️ **Re-tag: BLOCKED ON RESEARCH.** No sourced ACA cost-trend primary exists in the repo, so a solver block would hold for months over the whole pre-65 population. Near-term move is the copy swap at `copy.ts:944-947`. The excess-APTC field moved to `aca-last-verified.json:41` and `scripts/verify-aca-status.ts:40-72` never declares the key — **it is inert prose, not a gate.**
+- ⚠️ **The fix is NOT a Part B copy-paste.** Part B’s schedule is built INSIDE the engine, which is why the oracle token can witness it; the ACA escalator lives in **intake** (`intakeMap.ts:336-345`), which the engine cannot import — so an `ACA_PRICING_MODE` flag bolted onto intakeMap would be the exact lying-mirror `oracleToken.ts:114-122` warns about. The honest fix moves the schedule build to an engine-owned `buildAcaPricingSchedule` beside `partBPricingByT` (`taxOverlay.ts:1110`).
+- ⚠️ Anchor corrections: `healthOverlay.ts:296` is a **closing brace**, not a consumer (real seam `taxOverlay.ts:1689` + `:1731-1738` → `healthOverlay.ts:270`); the strings claiming the coupling is priced are `copy.ts:956-959`, not `copy.ts:924`.
+- ⚠️ **Re-tag: BLOCKED ON RESEARCH.** No sourced ACA cost-trend primary exists in the repo, so a solver block would hold for months over the whole pre-65 population. Near-term move is the copy swap at `copy.ts:956-959`. The excess-APTC field moved to `aca-last-verified.json:41` and `scripts/verify-aca-status.ts:40-72` never declares the key — **it is inert prose, not a gate.**
 - Uncapped excess-APTC clawback — the gate never reads the field, and the copy call is unmade
 
 ### ✅ CLOSED 2026-08-14 (`863747d6`) — Mixed household: the already-retired spouse is priced at zero health cost while the other works
@@ -699,7 +699,7 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 
 - Modest-pre-tax household: refused a SEQUENCING recommendation the engine could actually compute
 - ⚠️ **DOWN-RANKED — the filed fix is UNSHIPPABLE as written.** `solveEntry.ts:167-174` mint-fails the roster *before* `solve()` runs, and `rankingStability.ts:224-237` knows only a conversion-**amount** perturbation — so dispatching the sequencing-only field would surface `mint-failed{roster}` **live**, the exact state `solveDispatch.ts:80` forbids in its own comment. Doing it properly needs a second validation law under every shipped recommendation, a one-way door on what "validated" means.
-- **Near-term, honest, XS:** fix `copy.ts:1537-1538` only — it says a *withdrawal strategy* needs more pre-tax when only the **conversion** half does. Sequencing across taxable and Roth is real and rankable.
+- **Near-term, honest, XS:** fix `copy.ts:1549-1550` only — it says a *withdrawal strategy* needs more pre-tax when only the **conversion** half does. Sequencing across taxable and Roth is real and rankable.
 
 ### ~~The recommendation never names the winning strategy, the runner-up, or what to do~~ — **the STRATEGY half CLOSED 2026-08-05 (`db371655`); the RUNNER-UP half stays open**
 
@@ -724,7 +724,7 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
   increment left, and it is specified in `TODO.md`'s entry 7 (it needs a `custom` branch, a third ui
   bucket map, and a seed that can witness a custom winner, which none exists).
 - **STILL OPEN — R23: the runner-up is retained but never IDENTIFIED**, and its `why` is one
-  content-free constant (`copy.ts:1699-1700`) naming neither arm, while `payload.runnerUp.id`/`.policy` sit
+  content-free constant (`copy.ts:1711-1712`) naming neither arm, while `payload.runnerUp.id`/`.policy` sit
   unused. The winning-plan card's own vocabulary is now the obvious material for it.
 
 ### Date-route recommend-second parity — the working household gets no strategy at all
@@ -734,7 +734,7 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 - Date-route recommend-second parity gap — the entire still-working audience gets NO strategy recommendation, silently
 - Not-yet-retired (working) household: the recommendation surface does not exist at all
 - R10/R29 — recommend-second is entirely absent for a not-yet-retired (date-route) household
-- ⚠️ **The filed "cheap interim" is WRONG — do NOT drop the `Result.tsx:485` gate alone** (`:476` at filing). It renders an **empty `<div>`**, not the refusal. And reusing `recommendSpineUnreadyNote` would tell a household with a COMPLETE answer that its answer is incomplete — a new false claim, worse than the silence it replaces. The honest interim is a route-true one-liner admitting the v1 limit, seated above `.result-quiet-row` on the DATE grid (`fuckOffDate.css`, not `confidence.css`) — the date arms of `verify:fit` assert ORDER only and the "~89px headroom" figure is the SPINE idle frame's (see Tier 4), so its vertical cost is a manual 1536×791 measure (corrected 2026-09-04). A chaired Caddie card ships the sentence; **the one token Briggsy holds is whether it promises parity.**
+- ⚠️ **The filed "cheap interim" is WRONG — do NOT drop the `Result.tsx:509` gate alone** (`:476` at filing). It renders an **empty `<div>`**, not the refusal. And reusing `recommendSpineUnreadyNote` would tell a household with a COMPLETE answer that its answer is incomplete — a new false claim, worse than the silence it replaces. The honest interim is a route-true one-liner admitting the v1 limit, seated above `.result-quiet-row` on the DATE grid (`fuckOffDate.css`, not `confidence.css`) — the date arms of `verify:fit` assert ORDER only and the "~89px headroom" figure is the SPINE idle frame's (see Tier 4), so its vertical cost is a manual 1536×791 measure (corrected 2026-09-04). A chaired Caddie card ships the sentence; **the one token Briggsy holds is whether it promises parity.**
 - DATE-ROUTE RECOMMEND-SECOND PARITY (+ Q1 survivalContext + heir bracket)
 
 ### The detail-door era — nowhere to see how a number was reached
@@ -750,11 +750,11 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 
 - `docs/plans/4-recommendation.md:313` names all three as specified-and-not-shipped and records that none of them appears here; `:337` repeats them in the not-built list, and the ruling that keeps the register alive is `:23` ("the **action-warning copy register** (unchanged, still needed …)"). The finding is not new — only unregistered, which is what this entry fixes.
 - **Same-strategy-degraded.** An invited re-solve that returns the SAME strategy with a fallen grade or a flipped delta sign owes copy saying so — the memory holds on identity while the confidence behind it moved. Confirmed absent: `grep -rn "same-strategy\|sameStrategy" src/` and `grep -rni "flipped delta\|fallen grade" src/` return nothing (every `degraded` hit in `src/` is worker-spawn or a view fallback). ⚑ Unlike its two siblings its reasoning is NOT kept below `docs/plans/4-recommendation.md:313` — that line's own parenthetical plus the ruling at `:23` is the whole of it, so whoever builds it starts from those two lines and nothing else.
-- **The retroactive-ACA past-cost note.** The enhanced regime can be restored retroactively to all of 2026 — `src/engine/constants/health.ts:34` (H.R. 1834 §1(c) is tax-year based, and only for months a Marketplace premium was actually PAID), `:25`, `:104` — so a conversion or withdrawal the household has already executed can carry a different cost after the fact. The record answers FORWARD only: the ACA status rides the `healthcareVintage` stamp inside the record's era (`docs/plans/4-recommendation.md:315`), which demotes the saved verdict and says nothing about the past action. The specified line is at that same `:315` — *"a recent law change may apply to a past year, so an action you may already have taken could now carry a different cost — worth revisiting with a pro"*. Confirmed absent: `grep -rln "retroactive" src/` hits only `engine/constants/{contributions,health,types}.ts`, their shape test and `shared/model.ts` — nothing under `src/ui/` or `src/store/`. ⚑ The four dated legislative-status notes are NOT coverage: `acaCostStatus` / `…Enhanced` / `…Overdue` / `…EnhancedOverdue` (`src/ui/copy.ts:2398`, `:2402`, `:2411`, `:2413`) are all forward-looking — "Congress could still restore them — last checked …". ⚑ It must stay GENERIC: neither execution nor tax-year is tracked, which is why `:315` phrases it conditionally and routes to a professional. Any wording implying we know what the household did, or when, is a fabricated claim.
-- **The gate-red branch on the token's withheld reason.** `SavedRecordStanding` (`src/ui/recommendationSaveView.ts:244-246`) resolves `holds | superseded` over the four trichotomy causes only (`src/store/savedRecommendation.ts:38-50`), and none of them says *we cannot currently stand behind this build's rankings*. The card's producer gates on phase / vault / record / save-readiness / date-route and never on the token (`src/ui/IntakeApp.tsx:271-284`), and the card renders in every solve state (`src/ui/Result.tsx:522`); the only token mention in either module is the SAVE gate (`recommendationSaveView.ts:140`), so token-withheld is handled at save time and nowhere at re-entry. The sharpest instance needs no code change at all: `aca-unverified` is a rolling 30-day window on `verifiedOn` (`src/engine/constants/solver.ts:70`, `:74`), so a deployed build ages into a withheld token while the fingerprint, `SOLVER_CODE_VERSION` and every rulebook stamp stay identical — no cause can fire, the returning household reads "It still lines up with the numbers you've entered." (`src/ui/copy.ts:1445`), and after taking the card's own re-open the withheld hold renders on the SAME frame as that reassurance. The per-reason wording to carry forward is `docs/plans/4-recommendation.md:316`: ACA status unverified → do not act until the status is confirmed; a rec-relevant primary still directional or ε uncalibrated → not validated on this version yet — never blaming the law when a primary is merely un-pinned.
-- **Tier 1, not Tier 0, and the reason is narrow.** The holds line is scoped by its own defending comment (`src/ui/copy.ts:1416-1429`) to conjunct 1 — fingerprint identity — which stays literally true under a withheld token; the card quotes no remembered grade, verdict or figure; and the true reason is one click away through `withheldReasonText` (`src/ui/recommendationView.ts:334-349`), whose five arms U16 already renders on the live surface (`src/engine/validation/oracleToken.ts:43-49`). A missing disclosure branch, not a wrong number.
+- **The retroactive-ACA past-cost note.** The enhanced regime can be restored retroactively to all of 2026 — `src/engine/constants/health.ts:34` (H.R. 1834 §1(c) is tax-year based, and only for months a Marketplace premium was actually PAID), `:25`, `:104` — so a conversion or withdrawal the household has already executed can carry a different cost after the fact. The record answers FORWARD only: the ACA status rides the `healthcareVintage` stamp inside the record's era (`docs/plans/4-recommendation.md:315`), which demotes the saved verdict and says nothing about the past action. The specified line is at that same `:315` — *"a recent law change may apply to a past year, so an action you may already have taken could now carry a different cost — worth revisiting with a pro"*. Confirmed absent: `grep -rln "retroactive" src/` hits only `engine/constants/{contributions,health,types}.ts`, their shape test and `shared/model.ts` — nothing under `src/ui/` or `src/store/`. ⚑ The four dated legislative-status notes are NOT coverage: `acaCostStatus` / `…Enhanced` / `…Overdue` / `…EnhancedOverdue` (`src/ui/copy.ts:2410`, `:2414`, `:2423`, `:2425`) are all forward-looking — "Congress could still restore them — last checked …". ⚑ It must stay GENERIC: neither execution nor tax-year is tracked, which is why `:315` phrases it conditionally and routes to a professional. Any wording implying we know what the household did, or when, is a fabricated claim.
+- **The gate-red branch on the token's withheld reason.** `SavedRecordStanding` (`src/ui/recommendationSaveView.ts:244-246`) resolves `holds | superseded` over the four trichotomy causes only (`src/store/savedRecommendation.ts:38-50`), and none of them says *we cannot currently stand behind this build's rankings*. The card's producer gates on phase / vault / record / save-readiness / date-route and never on the token (`src/ui/IntakeApp.tsx:271-284`), and the card renders in every solve state (`src/ui/Result.tsx:546`); the only token mention in either module is the SAVE gate (`recommendationSaveView.ts:140`), so token-withheld is handled at save time and nowhere at re-entry. The sharpest instance needs no code change at all: `aca-unverified` is a rolling 30-day window on `verifiedOn` (`src/engine/constants/solver.ts:70`, `:74`), so a deployed build ages into a withheld token while the fingerprint, `SOLVER_CODE_VERSION` and every rulebook stamp stay identical — no cause can fire, the returning household reads "It still lines up with the numbers you've entered." (`src/ui/copy.ts:1457`), and after taking the card's own re-open the withheld hold renders on the SAME frame as that reassurance. The per-reason wording to carry forward is `docs/plans/4-recommendation.md:316`: ACA status unverified → do not act until the status is confirmed; a rec-relevant primary still directional or ε uncalibrated → not validated on this version yet — never blaming the law when a primary is merely un-pinned.
+- **Tier 1, not Tier 0, and the reason is narrow.** The holds line is scoped by its own defending comment (`src/ui/copy.ts:1427-1456`) to conjunct 1 — fingerprint identity — which stays literally true under a withheld token; the card quotes no remembered grade, verdict or figure; and the true reason is one click away through `withheldReasonText` (`src/ui/recommendationView.ts:336-351`), whose five arms U16 already renders on the live surface (`src/engine/validation/oracleToken.ts:43-49`). A missing disclosure branch, not a wrong number.
 - ⚑ **Do NOT build the gate-red arm as a fifth `SavedRecommendationSupersededCause`.** A withheld token is not a demotion of the memory — the memory may be perfectly current. It is a property of THIS BUILD, so it belongs beside the standing split, never inside `causes`, whose exhaustive `Record` (`src/ui/recommendationSaveView.ts:218`) is the compile-time bind that fails the assembly site when a fifth cause lands; widening it would silently retire that bind's meaning.
-- ⚑ **None of the three is card copy alone — the shipped card does not re-solve.** `Result.tsx:398`'s `onReopen` opens the GoalPicker and nothing more, and the only `dispatchSolve()` on that surface is inside `pickGoal` (`Result.tsx:407`). Each branch needs the card to speak a RE-SOLVED verdict against the remembered one, so this belongs to whatever unit gives the invited re-open a landing surface — filing it as a copy sweep would produce strings nothing can reach.
+- ⚑ **None of the three is card copy alone — the shipped card does not re-solve.** `Result.tsx:422`'s `onReopen` opens the GoalPicker and nothing more, and the only `dispatchSolve()` on that surface is inside `pickGoal` (`Result.tsx:431`). Each branch needs the card to speak a RE-SOLVED verdict against the remembered one, so this belongs to whatever unit gives the invited re-open a landing surface — filing it as a copy sweep would produce strings nothing can reach.
 
 ## Tier 2 — what breaks on someone else’s device
 
@@ -969,7 +969,7 @@ final tier ~30 s after the provisional.
    off-screen.** Refuter: the predicate is NOT `length === 0` — the gate is `intakeMap.ts:193-195` (date route: Σ `valueToday` ≤ 0 →
    blocked); the emphasis inversion must key off that same gate. FIX: while it blocks, Add is primary and Continue quiet.
 9. **P3, phone — the account list mixes two row layouts at 390** (short names keep Edit/Remove inline right-aligned, long names wrap them
-   under). Refuter: `flex-wrap: nowrap` is broken — `.account-row` has a THIRD flex child, the live `FieldError` (`questions.tsx:1008-1010`,
+   under). Refuter: `flex-wrap: nowrap` is broken — `.account-row` has a THIRD flex child, the live `FieldError` (`questions.tsx:1042-1047`,
    `sanity.ts:358-380`). FIX: at narrow widths make the actions a fixed row under the summary on EVERY row.
 10. **P3 — the three blend legs lack `enterKeyHint`** (add after `autoComplete` at `AllocationEntry.tsx:145`, the `fields.tsx` attribute
     order), and `enterkeyhint` is hardcoded "next" everywhere including the last field of every step ("done" law).
@@ -1163,11 +1163,11 @@ disclaimer two-mount swap (holds: in-frame mount dark, trailing mount after the 
   before the wall year** (engine; changes what crowns, also a version bump; size S–M; cost: aged
   households lose conversion recommendations entirely until re-solved — and the refusal needs its own
   honest words). **Arm 3 — disclose only** (view + copy; size S; the plan clock is already threaded —
-  `Result.tsx:489` → `recommendationView.ts:393-399`; true under both engine arms and removed by whichever
+  `Result.tsx:516` → `recommendationView.ts:395-401`; true under both engine arms and removed by whichever
   lands; cost: the recommendation stays un-enactable and the reader is merely TOLD). Tier-1 7c rules
   "Do NOT fix this in copy" — so arm 3 alone is a decision, not a default. Sizes are the pilot's
   estimates. Whichever arm: gate any note on GRID provenance / winner≠baseline, never on `start.passed`
-  alone (`recommendationView.ts:483-492` — under the fallback the crown can be the household's OWN
+  alone (`recommendationView.ts:485-494` — under the fallback the crown can be the household's OWN
   baseline with THEIR start, the exact false claim `leverRothAlreadyApplied` exists to prevent).
 
 ### The essentials median line on the band
@@ -1324,14 +1324,14 @@ disclaimer two-mount swap (holds: in-frame mount dark, trailing mount after the 
   right; the label doesn't say so). · The account editor's commit button reads "Add this account"
   inside an EDIT (edit-in-place works; label only). · The SS start-year label is future-tense over a
   legitimately-past range for an already-claimed retiree.
-  ⚑ **2026-09-04 anchors** (all still live): `errAgeBeyondModel` `copy.ts:631` / rule `sanity.ts:412-424` ·
-  IRMAA labels `copy.ts:252-255`, the gloss-less second field `questions.tsx:917-928` (its step is
+  ⚑ **2026-09-04 anchors** (all still live): `errAgeBeyondModel` `copy.ts:643` / rule `sanity.ts:412-424` ·
+  IRMAA labels `copy.ts:252-255`, the gloss-less second field `questions.tsx:919-929` (its step is
   non-blocking by design — a blank seed blocks the ANSWER via `intakeMap.ts:236-242`, not the step) ·
-  `ACCOUNT_KINDS` `model.ts:1425-1433` + labels `copy.ts:289-295` · `copy.accountSave` rendered
-  unconditionally at `AccountEntry.tsx:357-364` (`initial` already tells the form it is editing;
-  `FIELD_OP_ALLOWLIST` `copyGuard.ts:260-263` already admits save/edit/add, so a sibling key needs no guard
+  `ACCOUNT_KINDS` `model.ts:1425-1433` + labels `copy.ts:297-303` · `copy.accountSave` rendered
+  unconditionally at `AccountEntry.tsx:373-380` (`initial` already tells the form it is editing;
+  `FIELD_OP_ALLOWLIST` `copyGuard.ts:267-270` already admits save/edit/add, so a sibling key needs no guard
   edit) · `ssClaimLabel` `copy.ts:77` is route-blind — the route-true twin idiom is
-  `stateStep`/`stateStepRetired` (`questions.tsx:570`/`:593`, picked at `:1229`). The mechanics of the
+  `stateStep`/`stateStepRetired` (`questions.tsx:570`/`:593`, picked at `:1242`). The mechanics of the
   edit-label, the SS tense and the missing `helpKey` are one-key/one-prop each; the bank-cash home is a
   SCHEMA call (`ACCOUNT_KINDS` feeds the codec vocabulary `scenarioCodec.ts:363` and `contributionCeilingFor`
   `sanity.ts:111`). Words stay yours as filed.
@@ -1345,7 +1345,7 @@ disclaimer two-mount swap (holds: in-frame mount dark, trailing mount after the 
   so this line's first filing named the wrong keys and the trace refuted it before the sweep). All
   FIVE stale "dormant / no entry is live" comments corrected (`copy.ts`, `recommendationView.ts`,
   `recommendationView.test.ts`, `solve.ts`, `solve.test.ts`). Also noted: the hand-planted
-  `?vault=rec` payload carries `disclosedDirectional: []` (`devSeeds.ts:1444`), so the plants HIDE a
+  `?vault=rec` payload carries `disclosedDirectional: []` (`devSeeds.ts:1448`), so the plants HIDE a
   note every real run shows. **What remains is the WORDING — his words:** "still being finalized"
   promises a later that never comes; types.ts records no dated pin event exists for these entries.
 - **EYE/tone:** the spending step's all-in gloss is ~90 words of carve-outs in one paragraph (the
@@ -1481,7 +1481,7 @@ legend-deviation session, 8/10 — `docs/council-log.md`)
 - ⚑ **NEGATIVE — the gate is NOT the defect; do not "fix" it.** It already reds per record. Judging the roster
   against one shared (latest) date would silently swallow the earlier deadline — the unsafe direction.
   `scripts/verify-state-tax.ts:48-51` states the cadence-vs-deadline distinction at the field itself, and the
-  roster test in `scripts/__tests__/verify-state-tax.test.ts:80-110` now REDS on that refactor (date-agnostic:
+  roster test in `scripts/__tests__/verify-state-tax.test.ts:80-108` now REDS on that refactor (date-agnostic:
   one day past the earliest `nextDue`, exactly the earliest-dated records must be overdue).
 - ⚑ **NEGATIVE — do NOT collapse the dates by bumping `verifiedOn`/`nextDue` on a state nobody re-read.** Every
   record's `howToClear` says "Do NOT just bump the date." Convergence has to fall out of ONE re-verify pass that

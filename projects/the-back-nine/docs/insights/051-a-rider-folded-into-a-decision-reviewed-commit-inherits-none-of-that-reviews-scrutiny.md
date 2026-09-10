@@ -24,7 +24,7 @@ a fresh context; it never read the diff. The a11y rider rode along on that corre
 reviewed by **nobody** — not the council (out of its scope), not a code pass (never run until now). Two
 concrete gaps hid there: **(1)** the `aria-describedby` association had **no regression test**. `colaPct` —
 the field the whole unit exists for — was the ONE field whose error-channel wiring was unasserted, while its
-sibling `accountEntry.test.tsx:128-129` already asserted `aria-invalid` **and** `aria-describedby === alert.id`.
+sibling `accountEntry.test.tsx:134-135` already asserted `aria-invalid` **and** `aria-describedby === alert.id`.
 Two mutations shipped green: deleting the `errIncomeColaRange` map entry (reverts to the dangling
 `err-income-save`) and dropping the range arm from the field's `invalid=` prop (strips `aria-invalid`,
 breaking the color-blind three-channel law). **(2)** the new `ERROR_OWNER_FIELD` map newly exposed an

@@ -11,7 +11,7 @@
  *
  * THE TREND CLAUSE (§S5 (2), closed by the trend sourcing unit 2026-07-19). The candidate roster
  * carries the conversion grid (ranking stability's perturbation law REQUIRES a conversion candidate
- * to perturb — rankingStability.ts:143), and the run fingerprint covers that whole roster. The
+ * to perturb — rankingStability.ts:166), and the run fingerprint covers that whole roster. The
  * token's trend clause is evaluated on the TRUE amounts of the roster `solve()` ranks — the whole
  * roster, conversions included, now that the trend is sourced AND the Part-B pricing consumes it
  * (the clause reads both halves and is CLEAR). The clause stays load-bearing in the blocking

@@ -37,7 +37,7 @@ below is a corollary.
 1. No U16 code re-derives a decision from displayed seed-B figures (render-the-flag + planted-fail guards, burned/070).
 2. The interactive tier reduces SEARCH precision only — grades + every displayed figure ALWAYS at `solverMinBPaths`; never down-sampled.
 3. The A↔B residual is NEVER a rendered number. Name the baseline, never the residual.
-4. The solve channel NEVER emits `data-answer-tier` (`SolveComputeTier` stays on the payload; the fit gate's `final` wait must be unsatisfiable by a solve — `memoryModel` already shipped this and U16 added no tier mirror; `Result.tsx:613` stamps the attribute from the DATE-search tier alone).
+4. The solve channel NEVER emits `data-answer-tier` (`SolveComputeTier` stays on the payload; the fit gate's `final` wait must be unsatisfiable by a solve — `memoryModel` already shipped this and U16 added no tier mirror; `Result.tsx:637` stamps the attribute from the DATE-search tier alone).
 5. No inert lying affordance: the save gesture was **ABSENT in U16** — a reserved layout slot only (§S4). U17 §S5 landed the gesture and the v3 write together (2026-07-26/27) into that same reservation, so the slot is live today and the wall did its job: no inert Save ever rendered.
 6. A withheld reason renders TRUE and humane, never laundered, never color/opacity-only; unclassified **fails CLOSED**.
 
@@ -203,7 +203,7 @@ standing valve; the §7 triggers in `docs/decisions/market-model.md` stay live a
   `base.css` (never a second working tell), the `--dur-breathe` 2100ms opacity breath, a
   plain-language what's-happening label through copy.ts — "Working out your strategy — this can
   take a few minutes…", the Caddie chair's naming of the real cost rather than a silent wait (the
-  duration phrase is TRUE for the measured 90s–6min full-precision wait, `copy.ts:1555`) —
+  duration phrase is TRUE for the measured 90s–6min full-precision wait, `copy.ts:1569`) —
   `aria-busy` on the panel (the `PendingPanel` grammar) with the label spoken through the surface's
   own persistent `role="status"` / `aria-live="polite"` announcer rather than the panel line, so a
   pending frame that mounts already-pending still announces — clear-after-announce (burned/045),
@@ -271,7 +271,7 @@ to a single commit.
   the 2026-08-02 pin**, because it promised a month tied to NC's own certification that no longer
   gates anything, and a withhold that names a date it cannot keep is exactly the promise this
   product must not make. A future state's pin event may have any timing, so the shipped slot commits
-  to none (`copy.ts:2650`).
+  to none (`copy.ts:2662`).
 - **No live household fires the withheld render today, and that is a CLEARED clause, not a
   regression.** Both blocking clauses cleared after U16 shipped: S.L. 2026-41 § 44.1(a) pinned
   `ncRateSchedule` to an enacted statutory schedule on 2026-08-02, retiring the last directional
@@ -294,7 +294,7 @@ to a single commit.
   `recHoldAcaUnverified`, `rec-relevant-primary-directional` → `recHoldPrimaryDirectional`,
   `epsilon-uncalibrated` → `recHoldEpsilon`, `state-certification-pending` → the
   `recHoldStateCert` SLOT; `recHoldGeneric` is the fail-CLOSED humane string an unclassified reason
-  lands on (`recommendationView.ts:349`, `:377`). Two further hold strings ship BESIDE the enum, not
+  lands on (`recommendationView.ts:351`, `:379`). Two further hold strings ship BESIDE the enum, not
   from it: `recHoldCoupling` (the Q5 coupling caveat) and `recHoldDemotionAxis` — the latter added
   2026-08-03 as the Tier-0 crash fix, since a well-funded household whose winner converts used to hit
   `gradeCalibration`'s plain throw and land on the generic compute-error card. It names the shape
@@ -324,7 +324,7 @@ to a single commit.
 
 - "Name the active baseline" shipped as a short STATIC label on the no-action figure —
   `copy.recommendBaselineNameplate`, "Compared with your plan today", carried on the view as
-  `baselineNameplate` (`recommendationView.ts:243`, `:653`). NO number. The A↔B residual is never
+  `baselineNameplate` (`recommendationView.ts:243`, `:655`). NO number. The A↔B residual is never
   rendered, quantified, or narrated.
 
 ### The rest of S3, and its nets
@@ -378,7 +378,7 @@ to a single commit.
 - **Dev seeds for the walk**: `?seed=surplus` is the engine-proven over-funded (surplus-regime)
   witness. `?seed=nc` DROVE the withheld render organically until 2026-08-02 and was the face the
   live smoke and the Caddie walk read; with the certification clause cleared it is now
-  `ncAffirmation` — the NC-priced household commits a REAL recommendation (`devSeeds.ts:965`,
+  `ncAffirmation` — the NC-priced household commits a REAL recommendation (`devSeeds.ts:968`,
   end-to-end in `solveDispatch.test.ts`). **No registered seed reaches the withheld render today**,
   so that face has no live walk route: it is exercised through the mint's `_pinningOverride` /
   `_trendOverride` seams and in `RecommendationSurface.test.tsx`, and a state whose rates go

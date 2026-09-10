@@ -36,7 +36,7 @@ recommendation is validated" while proving only that SOME household passed —
 `mintedOver` bound no household and `RankingStabilityReport` carried counts/seeds only.
 U14's single in-line call site made that harmless; U15's solve entry was the second consumer
 being born (insight 020's shape). Both shapes carry a `fingerprint` field today
-(oracleToken.ts:258-269, rankingStability.ts:66) precisely because the veto fired.
+(oracleToken.ts:258-269, rankingStability.ts:80) precisely because the veto fired.
 
 1. **The COMPLETE run-derived fingerprint.** The pure `solverRunFingerprint(params,
    candidates, ranking, { seedA, tieTolerance })` lives in

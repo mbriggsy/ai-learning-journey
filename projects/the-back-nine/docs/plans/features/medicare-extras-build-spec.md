@@ -31,14 +31,14 @@ status: shipped
 
 ## F1 — intake shape
 
-The `medicare-extras` step (`src/intake/questions.tsx:878-898`) renders a **per-person PAIRED
+The `medicare-extras` step (`src/intake/questions.tsx:879-899`) renders a **per-person PAIRED
 fieldset on ONE screen** (the two-person law) through the shared `Paired` wrapper — never
 household-combined-then-split (that fabricates a split the domain doesn't support, forfeits the
 survivor-precision win, and the ACA combined-then-split precedent is a FALSE analogy here).
 
 - Each person's own combined monthly Part D / Medigap / Medicare-Advantage premium is asked as
   **one dollar figure** behind a **legible three-arm PAYMENT FORK** — `MedicareExtrasFork`
-  (`src/intake/questions.tsx:790`), a vertical `SegmentedControl` over
+  (`src/intake/questions.tsx:791`), a vertical `SegmentedControl` over
   `'none' | 'entered' | 'typical'` — never a plan-type/MA-vs-Medigap taxonomy the user can't
   self-sort. The shipped arm labels (`src/ui/copy.ts`) are "About nothing beyond Part B (common
   on Medicare Advantage)", "A monthly premium — entered below", and the slot-templated "Not
@@ -50,9 +50,9 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   survivor and blocks the calm first pass — U12 doctrine; R5 never-gate). Nothing on the step
   blocks advance except the self-contradictory entered-with-no-dollar half-answer, which the R19
   sanity rule `medicare-extras-entered-blank` (`src/intake/sanity.ts:291-306`) names at the field.
-- **WHO:** the step is gated on `anyNearMedicare` (`src/intake/questions.tsx:1185-1186`) — any
+- **WHO:** the step is gated on `anyNearMedicare` (`src/intake/questions.tsx:1230-1231`) — any
   member aged 64 or older, the same cohort gate as the IRMAA seed
-  (`src/intake/questions.tsx:1204` pushes both under the one predicate). That covers the all-65+
+  (`src/intake/questions.tsx:1249` pushes both under the one predicate). That covers the all-65+
   household and the NEAR-65 date route, but it is narrower than the ratified intent of "everyone
   whose run route-prices Medicare": a household with nobody yet 64 is never asked, while its date
   route still prices Medicare from each member's 65-crossing. Two things keep that gap honest and
@@ -246,7 +246,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   `src/engine/taxOverlay.ts:1258-1259`.
 - **Dev-seed drift recorded before any re-tune.** The flagship `retiredOnTrack` seed carries the
   mixed-provenance showcase — one entered dollar, one affirmed MA-$0
-  (`src/ui/devSeeds.ts:107-108`) — and the `borderline` / `?seed=dip` seeds were re-probed under
+  (`src/ui/devSeeds.ts:110-111`) — and the `borderline` / `?seed=dip` seeds were re-probed under
   the extras engine on 2026-07-11 and again through the U14 S0 typical refresh.
 - The unit landed as ONE feature commit (`503213f4`, the ACA-sheet real-flat gap kept to its own
   touch, never a rider), then the integration fix `e921f2bb`, the ultramode fold `019f5334`, and

@@ -141,7 +141,7 @@ describe('curveMarks — the honest odds-ladder seam', () => {
   })
 
   it('a NO-DATE track crowns NOTHING — no above-bar dot is pickable as "the date"', () => {
-    // On no-date, the engine flags ALL clearing offsets non-monotone (dateSearch.ts:308): every
+    // On no-date, the engine flags ALL clearing offsets non-monotone (dateSearch.ts:316): every
     // above-bar dot wears the "doesn't hold" tell, and none is crowned.
     const marks = curveMarks(
       noDate([reading(2, 0.86), reading(4, 0.88), reading(6, 0.7), reading(8, 0.6)], [2, 4]),

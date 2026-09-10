@@ -72,7 +72,7 @@ status: shipped
      `medicareExtrasTypicalMonthly()`, never re-typed. The entry's `vintage` bump
      deliberately fires the U13 staleness clock on vaults that adopted the old figure, and
      the `?seed=dip` knife-edge was re-tuned to restore its `nm=[0,1,2]` shape.
-   - **`survivorSpendingRatio`** (`methodology.ts:85`) — methodology-substrate KIND
+   - **`survivorSpendingRatio`** (`methodology.ts:91`) — methodology-substrate KIND
      (ships-disclosed, `directionalKind: 'methodology-substrate'`); if ever pinned it needs a
      **sourced equivalence-scale anchor** (the U12 advisory's ≈⅔ note), never a guessed one.
    - **The 16 state-tax entries** — 15 pinned in this pass on the annual `verify:state-tax`

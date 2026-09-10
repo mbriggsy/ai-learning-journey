@@ -16,7 +16,7 @@ The plan step predated the decision that obsoleted it. The roadmap's ID scheme �
 
 ## Fix
 
-Read the live authoritative doc (the roadmap) BEFORE executing the rote-looking step. That exposed the rename as wrong and surfaced step 4's REAL residue: the content-stale **dead-premise comments** insight/018 had explicitly predicted as "code-side siblings" of the 2026-06-08 accumulation fold — comments asserting "the P2 first-answer runs overlay-OFF / first written to disk by Phase 3," which the doc-only reconciliation sweep never touched. Four (`model.ts:200/408/551/553`, `db.ts:12`) had sat wrong for 8 days. Fixed those (comment-only, 942/942 byte-identical); abandoned the rename.
+Read the live authoritative doc (the roadmap) BEFORE executing the rote-looking step. That exposed the rename as wrong and surfaced step 4's REAL residue: the content-stale **dead-premise comments** insight/018 had explicitly predicted as "code-side siblings" of the 2026-06-08 accumulation fold — comments asserting "the P2 first-answer runs overlay-OFF / first written to disk by Phase 3," which the doc-only reconciliation sweep never touched. Four (`model.ts:283/676/1133/1139`, `db.ts:12`) had sat wrong for 8 days. Fixed those (comment-only, 942/942 byte-identical); abandoned the rename.
 
 ## Key Insight
 

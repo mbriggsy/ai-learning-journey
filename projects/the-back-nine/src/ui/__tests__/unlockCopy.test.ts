@@ -19,7 +19,7 @@ describe('describeSaveFailure — the edit-and-re-save refusal mapping', () => {
     const key = describeSaveFailure({ ok: false, reason: 'not-writable' })
     expect(key).toBe('saveErrorReadOnly')
     // The trap arm pinned: saveErrorBusy's "Close it there, then try again" is a retry that can
-    // never succeed in a read-only session (secondTab is captured once at unlock, session.ts:295).
+    // never succeed in a read-only session (secondTab is captured once at unlock, session.ts:305).
     expect(key).not.toBe('saveErrorBusy')
     expect(copy.saveErrorReadOnly).toMatch(/reload/i)
     expect(copy.saveErrorReadOnly).not.toMatch(/close/i)

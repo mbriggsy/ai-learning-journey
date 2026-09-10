@@ -202,10 +202,10 @@ atomic change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` +
   `?vault=stale` plant at 1536×791/2.5 DPR) — the gate's decision pair in-frame, its fired-clock lines
   asserted by name so the frame is not vacuous, then the echoed result frame under the one-frame law
   (frame-mutant proven). The survivor door is proven at the composition level (`App.test.tsx:139`), not as
-  an e2e walk — but the read-only second tab IS one: `e2e/vault.spec.ts:113` drives two genuinely separate
+  an e2e walk — but the read-only second tab IS one: `e2e/vault.spec.ts:121` drives two genuinely separate
   Playwright tabs over real cross-tab BroadcastChannel and shared-origin IndexedDB, asserting `readOnly`
-  and `saveRefused` (`e2e/vault.spec.ts:127-128`). The RECOVERY credential is walked too, inside the trust
-  loop at `e2e/vault.spec.ts:70` (`e2e/vaultHarness.ts:116-118`, asserted at `e2e/vault.spec.ts:87`); what is
+  and `saveRefused` (`e2e/vault.spec.ts:135-136`). The RECOVERY credential is walked too, inside the trust
+  loop at `e2e/vault.spec.ts:70` (`e2e/vaultHarness.ts:120-123`, asserted at `e2e/vault.spec.ts:87`); what is
   genuinely un-walked in `e2e/` is the RecoveryFlow **UI** surface, not the mechanism. The gate's live arm
   count is the roadmap's, never re-typed here.
 

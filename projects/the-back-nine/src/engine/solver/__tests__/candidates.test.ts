@@ -88,18 +88,18 @@ describe('anchoredConversionAmounts — the cliff-anchored grid', () => {
     const anchor = anchorWith({ committed: coupled, acaCliffMagi: 120_000, irmaaSchedule: irmaa.value })
     // RAIL CENSUS BEFORE THE LOOP (the c5e27180 shape, aimed at this arm's real hazard) — both
     // assertions below live INSIDE the loop. The list cannot go EMPTY in THIS world (the
-    // bracket-edge branch, candidates.ts:263, is unguarded AND this household's 8,900 taxable
+    // bracket-edge branch, candidates.ts:310, is unguarded AND this household's 8,900 taxable
     // baseline sits under every finite edge — a baseline in the open top band would yield none,
     // and a sub-$1 amount is dropped), so the danger is not zero iterations: it is an anchor set
     // that silently LOSES A WHOLE RAIL, keeps iterating over the rails it still has, and reports
     // GREEN with this arm's titular subject — the SS-COUPLED IRMAA ramp — never touched. Nothing
     // else in the suite can catch that: this file is the only TEST that ENUMERATES a non-null
-    // `irmaaSchedule`. The SHIPPED caller sets it for real — `solveAnchor.ts:176-180` assigns
+    // `irmaaSchedule`. The SHIPPED caller sets it for real — `solveAnchor.ts:177-181` assigns
     // `irmaa.value` for any healthcare-priced household with someone Medicare-enrolled at the bill
-    // year, driven live by `solveDispatch.ts:73` — so this loss reaches the PRODUCT, not just the
-    // suite; `solveAnchor.test.ts:122-128` asserts the anchor FIELD and never enumerates, and the
+    // year, driven live by `solveDispatch.ts:77` — so this loss reaches the PRODUCT, not just the
+    // suite; `solveAnchor.test.ts:123-129` asserts the anchor FIELD and never enumerates, and the
     // sibling arms are strictly weaker predicates (ascending / deduped / integer, lines 117-119)
-    // which all survive a missing rail. So census the three INDEPENDENT branches (candidates.ts:235
+    // which all survive a missing rail. So census the three INDEPENDENT branches (candidates.ts:282
     // ACA, :247 IRMAA, :263 bracket) by KIND, with counts read from the canonical year-keyed tables
     // rather than from the enumerator under test.
     const anchors = anchoredConversionAmounts(anchor)

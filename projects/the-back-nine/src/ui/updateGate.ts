@@ -6,7 +6,7 @@
  *
  * THE DECISION HAS TWO CLAUSES, both read at the moment of truth:
  *
- * 1. THE WRITE FLOOR (session.ts:149-152): `whenNoWriteInFlight()` resolves the write tail
+ * 1. THE WRITE FLOOR (session.ts:150-155): `whenNoWriteInFlight()` resolves the write tail
  *    that existed AT CALL TIME only — a write enqueued DURING the await is not covered. So a
  *    single await is not enough: we MUST re-check `isWriteInFlight()` afterward.
  * 2. THE SAVE-CEREMONY HOLD (Fork B, council 2026-06-30): the ceremony's commit→export window

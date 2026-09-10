@@ -267,7 +267,7 @@ export interface SavedRecordCardView {
  * whoever would compute a boolean here: a flag minted upstream of the wiring decision either ships
  * a dead button or an unreachable arm. The surface renders the control IFF the caller wired the
  * handler — the shipped `onRepick === undefined ⇒ no dead door` law
- * (`RecommendationSurface.tsx:126`, pinned at `RecommendationSurface.test.tsx:207-209`) — which
+ * (`RecommendationSurface.tsx:126`, pinned at `RecommendationSurface.test.tsx:331-333`) — which
  * makes the label, the cost line and the onClick structurally inseparable.
  *
  * `todayEpochDay` is INJECTED (this module reads no clock).
@@ -279,7 +279,7 @@ export function savedRecordCardView(
   text: SavedRecordCopy,
 ): SavedRecordCardView {
   // THE AGE CLAUSE SUPPRESSES RATHER THAN FABRICATES, on the same rule and the same arithmetic as
-  // the aged-balances caveat next door (`agedBalancesYearFor`, resultSave.ts:145-155): a record
+  // the aged-balances caveat next door (`agedBalancesYearFor`, resultSave.ts:169-179): a record
   // minted in the CURRENT calendar year has no age to report, and "saved in 2026" read in 2026 is
   // noise dressed as provenance. `record.mintedAt` — never the scenario's `savedAt`, which re-mints
   // on every re-save and would reset the memory's age each time the household edited a budget line.
@@ -294,7 +294,7 @@ export function savedRecordCardView(
 
   // THE SPLIT NEEDS BOTH HALVES TO AGREE — fail-CLOSED, and the conjunction is not redundancy.
   // Under the producer's own contract the two are equivalent (`causes` is empty IFF `current`,
-  // savedRecommendation.ts:54-61), so this reads as belt-and-braces. It is not: it is the ONLY
+  // savedRecommendation.ts:53-61), so this reads as belt-and-braces. It is not: it is the ONLY
   // thing that decides what a BROKEN contract renders, and the two halves fail in opposite
   // directions. A bare `status.current` would speak a memory in the present tense while its own
   // demotion causes sat populated beside it — the cardinal calm-but-wrong sin. A bare

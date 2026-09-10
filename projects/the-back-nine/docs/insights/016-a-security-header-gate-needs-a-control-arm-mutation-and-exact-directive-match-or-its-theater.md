@@ -2,7 +2,7 @@
 title: Proving a security header (CSP) is ENFORCED needs a header-applying harness, a no-policy control arm + mutation, and EXACT-directive assertions — a string check is theater
 date: 2026-06-08
 phase: P1·U0 (CSP enforcement harden)
-modules: [scripts/serve-dist-with-headers.ts, e2e/csp.spec.ts, playwright.config.ts, scripts/__tests__/csp-headers.test.ts, vite.config.ts]
+modules: [scripts/serve-dist-with-headers.ts, e2e/csp.spec.ts, playwright.config.ts, scripts/__tests__/csp-headers.test.ts, scripts/__tests__/playwright-projects.test.ts, vite.config.ts]
 tags: [csp, security, playwright, vitest, testing, false-pass, theater]
 ---
 
@@ -17,7 +17,7 @@ tags: [csp, security, playwright, vitest, testing, false-pass, theater]
 - **Tooling false-fail.** Vitest's default include glob (`**/*.{test,spec}.?(c|m)[jt]s?(x)`) runs a Playwright `*.spec.ts` under Vitest and fails it (no `page` fixture). Exclude `e2e/**` in the Vitest config; let Playwright own that dir.
 
 ## Fix
-A dependency-free two-port harness (4180 = all `vercel.json` headers incl. CSP; 4181 = all except CSP), the CSP selected by the `/(.*)` source predicate + fail-loud (not `headers[0]`). Playwright asserts the EFFECT (an inline script's flag stays false; a cross-origin `fetch` fires a `securitypolicyviolation` with `violatedDirective` `startsWith('connect-src')`), each with a no-CSP control arm, plus a mutation run proving both enforced tests go RED with the CSP removed. The Vitest guard parses the policy into a directive→value map and matches EXACT values. CI: `pnpm exec playwright install --with-deps chromium` → `pnpm verify:csp`.
+A dependency-free two-port harness (4180 = all `vercel.json` headers incl. CSP; 4181 = all except CSP), the CSP selected by the `/(.*)` source predicate + fail-loud (not `headers[0]`). Playwright asserts the EFFECT (an inline script's flag stays false; a cross-origin `fetch` fires a `securitypolicyviolation` with `violatedDirective` `startsWith('connect-src')`), each with a no-CSP control arm, plus a mutation run proving both enforced tests go RED with the CSP removed. The Vitest guard parses the policy into a directive→value map and matches EXACT values. CI: `pnpm exec playwright install --with-deps chromium webkit` → `pnpm verify:csp` — webkit joined the install when `playwright.config.ts` gained a second project grepping `/@cross-browser/`, which selects only `e2e/vault.spec.ts`’s two vault arms. A chromium-only install leaves that project with no browser to launch, so the recorded repro no longer runs the gate it documents. CSP enforcement itself is still proven in Chromium alone; `scripts/__tests__/playwright-projects.test.ts` pins the project against the spec’s tag so it can never collect zero tests and stay green.
 
 ## Key Insight
 A security test must be **falsifiable**: prove it goes RED when the protection is removed (mutation), prove the probe itself works when the policy is absent (control), and assert the policy's EXACT values (a substring/`contains` is defeated by an appended token). And test the THREAT, not the easiest directive. "The header string is correct" is categorically not "the browser enforces it."

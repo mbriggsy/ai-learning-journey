@@ -10,10 +10,13 @@ import {
 } from '../copyGuard'
 
 /*
- * copyGuard enumerates the catalog and asserts every entry passes its applicable gates. Three
- * gates are UNIVERSAL (a sure outcome / an advice imperative / a superlative is a sin in EVERY
- * voice); `free-numeral` is scoped to the verdict surface (isVerdictKey — intake carries factual
- * numerals); `catastrophe` is survivor-scoped. The ADVERSARIAL CORPUS below tests the threat CLASS,
+ * copyGuard enumerates the catalog and asserts every entry passes its applicable gates. TWO
+ * gates are UNIVERSAL (a sure outcome / an advice imperative — sins in EVERY voice): they are the only
+ * two the unfiltered `entries` loops below sweep. `superlative` AND `free-numeral` are both scoped to
+ * the verdict surface (isVerdictKey — "best" is the product's own framing question, and intake carries
+ * factual numerals); `catastrophe` is survivor-scoped. That split is copyGuard.ts's law (its SCOPE
+ * docblock, copyGuard.ts:19-23), and it is WHY the rec* canary at the foot of this file has to pin the
+ * unscoped keys BY NAME — an unscoped flat key rides those two gates and nothing else. The ADVERSARIAL CORPUS below tests the threat CLASS,
  * not the lexicon tokens — it is the regression net that fails loud when the lexicon rots (the gate
  * is a tripwire + net, NOT a proof; the N=1 cold-read is the human oracle). staticDisclosures is
  * OUT by design (proven meaningful below). See copyGuard.ts for the full rationale.
@@ -577,9 +580,14 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     // Act-4 · U16 §S3b — the heir-bracket disclosure AND the viz aria sentence, both control-scoped
     // (recDisc* / recDelta* ⇒ require-hedge-swept). The aria sentence was renamed onto recDelta* on
     // 2026-09-08: an AT reader hears the same figures the chart shows, so the same modal law binds it.
+    // Its labels are the SHIPPED copy keys, never re-typed literals (2026-09-08): a sample only gates
+    // what ships if it composes the slot the way `recommendedView` does — literals cannot see a label
+    // reword, and those labels are themselves unscoped exceptions whose only other pin is the canary at
+    // the foot of this file. This is the PRIMARY composition (winner vs the household's own plan);
+    // `runnerUpVizFor`'s second composition has its own sample under the control sweep below.
     recDiscHeirBracket: slots.recDiscHeirBracket('24'),
     assumptionHeirBracketOption: slots.assumptionHeirBracketOption('24'),
-    recDeltaVizAria: slots.recDeltaVizAria('Your plan today', '740,000', 'The recommended strategy', '788,000', '48,000'),
+    recDeltaVizAria: slots.recDeltaVizAria(copy.recVizWithoutLabel, '740,000', copy.recVizWithLabel, '788,000', '48,000'),
     recommendRecordSavedIn: slots.recommendRecordSavedIn(2026),
   }
 
@@ -932,6 +940,17 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     }
   })
 
+  it('the viz-aria RUNNER-UP composition is swept too (SLOT_RENDER holds one sample per slot — and it is the PRIMARY one)', () => {
+    // 2026-09-08. `recDeltaVizAria` is composed TWICE in recommendationView.ts: by `recommendedView`
+    // (winner vs the household's own plan — the SLOT_RENDER sample above) and by `runnerUpVizFor`, which
+    // seats `recVizRunnerUpLabel` in the without-arm. One-sample-per-slot can never reach the second, so
+    // it is swept here — again off the SHIPPED keys, so a label reword lands in this gate too.
+    const runnerUpAria = slots.recDeltaVizAria(
+      copy.recVizRunnerUpLabel, '740,000', copy.recVizWithLabel, '788,000', '48,000',
+    )
+    expect(lintCopy(runnerUpAria, controlGates), runnerUpAria).toEqual([])
+  })
+
   it('the require-hedge machinery works end-to-end (predicate scope + gate polarity — non-vacuity canary)', () => {
     // predicate: control readouts IN, chart chrome + terse verdicts OUT
     expect(isControlKey('rothDeltaReadout'), 'a roth readout is control-scoped').toBe(true)
@@ -964,16 +983,19 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:693-702, 775-791), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:705-714, 787-803), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the two universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the three voice gates + catastrophe (the SLOT_RENDER loop
-  // above) and NEVER the flat loops. Allowlisting is legal only for FIGURE-FREE chrome — pinned below.
+  // above) and NEVER the flat loops. So a FLAT exception is legal only for chrome that speaks no figure
+  // AND crowns nothing (both pinned below), and a SLOT exception only where the figure is R3's sanctioned
+  // calendar year and no modal belongs — BY NAME, never by prefix.
   const REC_SCOPED = /^rec(?!over)/
   const UNSCOPED_FLAT_REC: readonly string[] = [
     'recVizWithLabel', 'recVizWithoutLabel', 'recVizRunnerUpLabel',
     'recGradeAriaUngraded', 'recSeeRunnerUp',
   ]
+  const VERDICT_ONLY_REC_SLOTS: readonly string[] = ['recommendRecordSavedIn']
 
   it('every rec* key is verdict-scoped, control-scoped, or a NAMED figure-free exception', () => {
     const flat = Object.keys(copy).filter((k) => REC_SCOPED.test(k))
@@ -988,14 +1010,29 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     const unscopedFlat = flat.filter((k) => !isVerdictKey(k) && !isControlKey(k))
     expect(unscopedFlat.slice().sort()).toEqual([...UNSCOPED_FLAT_REC].sort())
     // Every exception is figure-free chrome: a numeral or a dollar sign makes it a plan-moving claim,
-    // which belongs in a scope, not on this list.
+    // which belongs in a scope, not on this list. AND every one must crown nothing: `superlative` is
+    // VERDICT-scoped (copyGuard.ts:19-23), so these five ride only false-certainty + advice-verb — and
+    // without the second arm `recVizWithLabel: 'The best strategy'` (R12's crowning sin) would ship green
+    // as the recommended arm's on-chart label AND inside the spoken aria sentence.
     for (const k of UNSCOPED_FLAT_REC) {
       expect(copy[k as CopyKey], `${k} is allowlisted, so it must speak no figure`).not.toMatch(/[\d$]/)
+      expect(lintCopy(copy[k as CopyKey], ['superlative']), `${k} is unscoped, so it must crown nothing`).toEqual([])
     }
-    // No SLOT may sit outside both scopes: a slot exists to carry a FIGURE, so an unscoped one is the
-    // pre-rename `recVizAria` shape by construction.
-    const unscopedSlots = slotNames.filter((k) => !isVerdictKey(k) && !isControlKey(k))
-    expect(unscopedSlots, 'a rec* slot carries a figure — it must be scoped').toEqual([])
+    // No SLOT may sit outside CONTROL scope: a slot exists to carry a FIGURE, so an unscoped one is the
+    // pre-rename `recVizAria` shape by construction. VERDICT scope is deliberately NOT counted as
+    // protection here (2026-09-08) — it buys a SLOT nothing: the SLOT_RENDER sweep above runs
+    // false-certainty/advice-verb/superlative (+catastrophe) over EVERY slot whatever its scope,
+    // `require-hedge` runs over isControlKey slots ALONE, and free-numeral never runs over slots at all.
+    // So naming the next AT sentence `recommendVizAria` rather than `recDeltaVizAria` would have kept
+    // this canary green while require-hedge went silent — the pre-rename hole, re-opened under a
+    // verdict-shaped name.
+    const unscopedSlots = slotNames.filter((k) => !isControlKey(k) && !VERDICT_ONLY_REC_SLOTS.includes(k))
+    expect(unscopedSlots, 'a rec* slot carries a figure — it must be control-scoped').toEqual([])
+    // The one allowlisted verdict-only slot is real, and genuinely outside control scope: a calendar year
+    // is R3's sanctioned numeric channel on the saved-record card, and "Saved in 2026." wears no modal by
+    // design. Both arms keep the allowlist from going stale into a silent free pass.
+    expect(slotNames, 'the named verdict-only slot still exists').toContain(VERDICT_ONLY_REC_SLOTS[0])
+    expect(isControlKey(VERDICT_ONLY_REC_SLOTS[0]!), 'and it is genuinely unscoped by control').toBe(false)
   })
 
   it('require-hedge catches bald deterministic control claims (≥8) — the calm-but-wrong family', () => {

@@ -945,15 +945,22 @@ function AccountsStep({ api }: { api: StepApi }) {
   // focus fell to the body. Both hooks sit ABOVE the editor branch below — it returns early, and a
   // hook after it would not run on the editor render (rules of hooks).
   const listHeadingRef = useRef<HTMLHeadingElement | null>(null)
-  const firstRender = useRef(true)
+  // THE LATCH IS THE PREVIOUS `editing`, NEVER A SPENT BOOLEAN. src/main.tsx:42 wraps the app in
+  // <StrictMode>, so React's dev build double-invokes a NEWLY-PLACED fiber's effects — setup,
+  // cleanup, setup — and this step body is exactly that on every advance (flow.tsx keys its
+  // <section> by step id). A `useRef(true)` flag is spent by pass 1, so pass 2 saw
+  // `editing === null` and focused the LIST heading on ARRIVAL, taking the focus IntakeFlow had
+  // just put on the step h2 — and the parent's own effect does not re-run inside that double-invoke
+  // (IntakeFlow is not the newly-placed fiber), so nothing put it back. Comparing against the
+  // PREVIOUS value is idempotent under the pair: both passes read the same `was`, and only a real
+  // editor→list transition claims focus.
+  const prevEditing = useRef<number | 'new' | null>(editing)
   useEffect(() => {
+    const was = prevEditing.current
+    prevEditing.current = editing
     // Arriving ON the step must not steal the focus the flow just gave the step heading — only a
-    // return FROM the editor claims it.
-    if (firstRender.current) {
-      firstRender.current = false
-      return
-    }
-    if (editing === null) focusHeading(listHeadingRef.current)
+    // return FROM the editor (`was !== null`) claims it.
+    if (was !== null && editing === null) focusHeading(listHeadingRef.current)
   }, [editing])
 
   if (editing !== null) {
@@ -1017,6 +1024,13 @@ function AccountsStep({ api }: { api: StepApi }) {
                       enteredAccounts: d.enteredAccounts.filter((_, j) => j !== i),
                     }))
                     setConfirmRemove(null)
+                    // LAND THE FOCUS DELIBERATELY. Rows are index-keyed (`key={i}` below), so a
+                    // confirmed Remove either unmounts the focused button — the last row, and focus
+                    // falls to <body> — or leaves it on a node that now belongs to a DIFFERENT
+                    // account's destructive Remove. Neither effect above fires (both key on
+                    // `editing`, unchanged here), so the list heading is claimed here: the same
+                    // target the editor's return leg lands on, re-read with one fewer row.
+                    focusHeading(listHeadingRef.current)
                   } else {
                     setConfirmRemove(i) // arm the confirm — no undo once removed
                   }
@@ -1080,13 +1094,11 @@ function OtherIncomeStep({ api }: { api: StepApi }) {
   const [confirmRemove, setConfirmRemove] = useState<number | null>(null)
   // AccountsStep's return leg, verbatim — same swap, same early return, same hooks-above-it rule.
   const listHeadingRef = useRef<HTMLHeadingElement | null>(null)
-  const firstRender = useRef(true)
+  const prevEditing = useRef<number | 'new' | null>(editing)
   useEffect(() => {
-    if (firstRender.current) {
-      firstRender.current = false
-      return
-    }
-    if (editing === null) focusHeading(listHeadingRef.current)
+    const was = prevEditing.current
+    prevEditing.current = editing
+    if (was !== null && editing === null) focusHeading(listHeadingRef.current)
   }, [editing])
 
   if (editing !== null) {
@@ -1154,6 +1166,7 @@ function OtherIncomeStep({ api }: { api: StepApi }) {
                       incomeStreams: d.incomeStreams.filter((_, j) => j !== i),
                     }))
                     setConfirmRemove(null)
+                    focusHeading(listHeadingRef.current) // AccountsStep's landing, verbatim
                   } else {
                     setConfirmRemove(i)
                   }

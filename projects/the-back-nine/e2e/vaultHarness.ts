@@ -8,7 +8,7 @@
  * Each exported function returns plain JSON-able data (the spec asserts node-side).
  */
 import { checkPassphraseFloor, derivePassphraseKey } from '../src/crypto/kdf'
-import { clearVault, loadVault, openVaultDb } from '../src/store/db'
+import { clearVault, hasWebLocks, loadVault, openVaultDb } from '../src/store/db'
 import { exportVault, restoreVault } from '../src/store/backup'
 import { createSession, type VaultSession } from '../src/store/session'
 import { profileDateSearch } from '../src/engine/dateSearchProfile'
@@ -81,10 +81,14 @@ export interface PlatformCaps {
   readonly hasBroadcastChannel: boolean
 }
 
-/** Read in the page, at the end of the loop the report describes. */
+/** Read in the page, at the end of the loop the report describes.
+ *  `hasWebLocks` is IMPORTED from src/store/db.ts, never re-typed here: it is the very predicate
+ *  `underWebLock` branches on, so `vault.spec.ts`'s "REAL Web Lock" assertion observes the
+ *  production branch. A hand copy would survive a drift in that branch and keep the assertion green
+ *  on the bare-`fn()` fallback — which is exactly the claim the assertion exists to refute. */
 function platformCaps(): PlatformCaps {
   return {
-    hasWebLocks: typeof navigator.locks?.request === 'function',
+    hasWebLocks: hasWebLocks(),
     hasPersist: typeof navigator.storage?.persist === 'function',
     hasBroadcastChannel: typeof BroadcastChannel === 'function',
   }

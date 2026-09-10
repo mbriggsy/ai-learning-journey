@@ -656,3 +656,35 @@ describe('OtherIncomeEntry — the open-buffer hold (the unsaved-work guard’s 
     expect(unsavedBuffersHeld()).toBe(0)
   })
 })
+
+describe('OtherIncomeEntry — the EDIT name (the half of the swap no walk reaches)', () => {
+  // The editor opens two ways and its own h3 is the ONLY thing that names which — the step's h2 does
+  // not change across the swap. The ADD half is walked in a real browser by e2e/intake-fold.spec.ts;
+  // the EDIT half is reachable only from a COMMITTED row, and the seed that spec drives
+  // (`?seed=datesolo`) carries `incomeStreams: []`, so no e2e arm can render it. This is the gate on
+  // that branch and on its copy key.
+  const committed: IncomeStream = {
+    ownerIndex: 0,
+    type: 'pension',
+    annualRealToday: 30_000,
+    startAge: 62, // ≤ the owner's current age (66) ⇒ already-receiving (KTD-8b)
+    colaMode: 'real-flat',
+    survivorPct: 0.5,
+  }
+
+  it('a committed stream opens under the EDIT heading, and focus lands on it', () => {
+    renderEntry(modelWithPeople(), vi.fn(), committed)
+    const h = screen.getByRole('heading', { level: 3 })
+    expect(h.textContent).toBe(copy.otherIncomeEntryEditHeading)
+    // The editor names itself on mount (its own `focusHeading`) — the swap is announced to a screen
+    // reader by the heading taking focus, never by the unchanged step h2.
+    expect(document.activeElement).toBe(h)
+  })
+
+  it('the SAME editor with no stream is the ADD heading — the branch really branches', () => {
+    renderEntry(modelWithPeople())
+    expect(screen.getByRole('heading', { level: 3 }).textContent).toBe(
+      copy.otherIncomeEntryAddHeading,
+    )
+  })
+})

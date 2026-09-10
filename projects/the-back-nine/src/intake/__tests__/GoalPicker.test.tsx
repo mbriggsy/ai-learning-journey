@@ -152,6 +152,16 @@ describe('GoalPicker — the lead is verdict-gated', () => {
       <GoalPicker open basicsCovered={false} current={undefined} onPick={noop} onClose={noop} />,
     )
     expect(screen.queryByText(copy.goalPickerIntro)).not.toBeInTheDocument()
+    // …and NOTHING stands in its place. The absence of that ONE key is not the contract —
+    // "OMITTED, never swapped" is: silence is the only wording true on every cohort until the
+    // failing-cohort lead is authored, and those words are Briggsy's (GoalPicker.tsx's
+    // `basicsCovered` docblock). So the oracle is SILENCE, measured structurally rather than by
+    // naming the one key a swap would replace: GoalPicker.tsx:89 is the picker's ONLY `<p>` AND
+    // its ONLY `.field-help`, and the ControlSheet scaffold contributes neither — so a substituted
+    // lead in either shape reds HERE while the `queryByText` above stays green.
+    const failingDialog = screen.getByRole('dialog')
+    expect(failingDialog.querySelectorAll('p'), 'no prose lead at all').toHaveLength(0)
+    expect(failingDialog.querySelectorAll('.field-help'), 'nothing wearing the lead class').toHaveLength(0)
     expect(screen.getByRole('heading', { name: copy.goalPickerTitle })).toBeInTheDocument()
     expect(screen.getAllByRole('radio')).toHaveLength(RECOMMENDATION_GOALS.length)
     expect(confirmBtn()).toBeInTheDocument()

@@ -32,8 +32,11 @@
     THIS FILE IS THE SOURCE OF TRUTH. Every raster (icon-192, icon-512, icon-512-maskable at 86%,
     apple-touch-icon at 180, and the 16 / 32 / 48 frames inside favicon.ico at 106%) is this SVG
     drawn centred at that scale on an opaque #0b3d2e ground and screenshot at deviceScaleFactor 1.
-    Nothing else is needed to reproduce them. scripts/__tests__/pwa-icons.test.ts is the standing
-    gate that the rasters, the manifest and index.html still agree with each other.
+    scripts/icons/render-icons.mjs cuts them and nothing else is needed to reproduce them; it is
+    committed, beside this file, so a clean clone can. scripts/__tests__/pwa-icons.test.ts is the
+    standing gate that the rasters, the manifest and index.html still agree with each other, and it
+    pins the sha256 of THIS file next to theirs: change a byte here and it reds until every raster
+    is recut and every hash bumped in the same pass.
 
     (No double hyphen may appear in this comment. XML forbids it inside a comment, and an SVG that
     fails to parse renders as a broken-image glyph with no error anywhere — it screenshots as a

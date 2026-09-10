@@ -77,7 +77,7 @@ The MVP is four acts. Each is a real milestone with its own plan, gates, and ver
 
 Act 1's engine is pinned against primary sources: every dated tax and healthcare figure carries an IRS / CMS / HHS / SSA / eCFR citation (and a directional-until-pinned flag where one isn't yet locked), and cohort mortality re-derived from the SSA Trustees-Report survival tables for the household's actual birth cohorts. The guided intake delivers a **live, provisional Monte Carlo reading that sharpens as you answer each question**, proven end-to-end in real Chromium under the enforced CSP.
 
-The engine and intake carry **3474 tests across 172 files**, all green, alongside lint, bundle-budget, ACA-freshness, state-tax-freshness, browser-CSP, and real-browser vertical-fit gates. Per-unit feature detail lives once in [the roadmap's You-Are-Here table](docs/roadmap.md#the-you-are-here-table) — this file never enumerates it.
+The engine and intake carry **3490 tests across 174 files**, all green, alongside lint, bundle-budget, ACA-freshness, state-tax-freshness, browser-CSP, and real-browser vertical-fit gates. Per-unit feature detail lives once in [the roadmap's You-Are-Here table](docs/roadmap.md#the-you-are-here-table) — this file never enumerates it.
 
 ---
 
@@ -112,7 +112,7 @@ pnpm build          # typecheck + production build
 pnpm verify:bundle  # initial-JS byte-budget sentinel (≤ 300 KiB entry)
 pnpm verify:aca     # fails if the ACA enhanced-subsidy status is stale/unconfirmed
 pnpm verify:state-tax  # fails if a priced state's {NC, PA, FL} tax record is stale/unconfirmed
-pnpm verify:csp     # real-Chromium CSP enforcement walk (Playwright)
+pnpm verify:csp     # real-browser CSP enforcement walk in Chromium + the two @cross-browser vault arms again under WebKit (Playwright)
 pnpm verify:fit     # real-Chromium vertical-fit + chart-text gates — the one-frame fit law + every band / ladder / TwoFutures word legible, on the dev server
 pnpm verify:fit:rv  # real-Chromium RecommendationViz chart-text gate — the fourth chart on its own serialized solve harness (~6–8 min per arm)
 pnpm verify:doc-stats  # the doc numbers with a single home (test count, register count, insights index) + every code citation resolves + every insight carries its four sections

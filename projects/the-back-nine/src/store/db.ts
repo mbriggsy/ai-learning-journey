@@ -80,8 +80,18 @@ export async function openVaultDb(): Promise<VaultDb> {
 
 const WEB_LOCK_NAME = 'the-back-nine-vault-write'
 
+/** The Web-Locks branch predicate, EXPORTED so a test can observe the branch the shipped code
+ *  actually takes instead of re-deriving it. `e2e/vaultHarness.ts`'s `platformCaps()` imports this:
+ *  a hand copy of the condition there would keep reporting `hasWebLocks: true` after a drift in THIS
+ *  line, and `e2e/vault.spec.ts`'s "must run under a REAL Web Lock" assertion would go on passing
+ *  while the loop actually ran on the bare-`fn()` fallback below. Narrowed from the former truthy
+ *  test to `=== 'function'`: the only value that differs is a truthy NON-callable
+ *  `navigator.locks.request`, which the truthy branch would have called and thrown on. */
+export const hasWebLocks = (): boolean =>
+  typeof navigator !== 'undefined' && typeof navigator.locks?.request === 'function'
+
 const underWebLock = <T>(fn: () => Promise<T>): Promise<T> => {
-  if (typeof navigator !== 'undefined' && navigator.locks?.request) {
+  if (hasWebLocks()) {
     return navigator.locks.request(WEB_LOCK_NAME, fn) as Promise<T>
   }
   return fn()

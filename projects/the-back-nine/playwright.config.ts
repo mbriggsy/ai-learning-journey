@@ -46,12 +46,20 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium', use: { browserName: 'chromium' } },
-    // WebKit runs ONLY the @cross-browser-tagged vault arms — NEVER the whole directory. All three
-    // collected specs carry Chromium-specific arms by construction: csp.spec.ts corroborates on Chromium's
-    // granular `violatedDirective` (`script-src-elem` for an inline element), design-tokens.spec.ts
-    // measures font advance widths, and vault.spec.ts's KDF-location spike records a verdict about
-    // Chromium's WebCrypto thread pool. Handing those to WebKit would red the gate for the wrong
-    // reason — and the fix for that red would be to weaken an assertion. Scope here instead.
+    // WebKit runs ONLY the @cross-browser-tagged vault arms — NEVER the whole directory; the tag and
+    // this grep are pinned against each other by scripts/__tests__/playwright-projects.test.ts (rename
+    // the tag on one side and this project collects ZERO tests, which Playwright does NOT treat as an
+    // error). Each collected spec is held back for its OWN reason, and only two are about the ENGINE:
+    // design-tokens.spec.ts measures Chromium font advance widths, and vault.spec.ts's KDF-location
+    // spike records a verdict about Chromium's WebCrypto thread pool — each would red under WebKit for
+    // the wrong reason. csp.spec.ts is NOT one of them: its corroborations are already engine-tolerant
+    // by construction (`violatedDirective.startsWith('script-src')` at e2e/csp.spec.ts:72, and the same
+    // prefix match at :104 / :118 / :136 / :152 — written so Chromium's granular `script-src-elem` and a
+    // bare `script-src` both pass). What holds IT back is COST: its worker/intake walk is a full intake
+    // plus two engine round trips on a Chromium-tuned budget (`test.setTimeout(180_000)`, csp.spec.ts:162,
+    // sized for a 4-vCPU runner), so tagging the spec would drive that whole walk a second time on an
+    // engine whose wall clock nobody has measured. Its fast enforced/control arms (six today) COULD be
+    // tagged later if cross-browser CSP proof is ever wanted — never the walk.
     { name: 'webkit', use: { browserName: 'webkit' }, grep: /@cross-browser/ },
   ],
   webServer: {

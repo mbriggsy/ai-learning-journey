@@ -99,6 +99,14 @@ test('the full trust loop holds on real IndexedDB: save → lock → unlock → 
   testInfo.annotations.push({ type: 'vault-caps', description: capsLine })
   console.log(capsLine)
 
+  // The RECORD must actually be a record: all three caps READ, none silently dropped. e2e/ is outside
+  // tsconfig.json's `include`, so `tsc --noEmit` never sees vaultHarness.ts — delete a field from its
+  // `platformCaps()` and the line above prints `persist=undefined` and stays GREEN while the backlog
+  // cites those values as measured fact. TYPE pins, deliberately NOT capability assertions: they red on
+  // a harness that stopped reading a cap, never on an engine that lacks one (the rule below).
+  expect(typeof report.caps.hasPersist).toBe('boolean')
+  expect(typeof report.caps.hasBroadcastChannel).toBe('boolean')
+
   // Assert the ONE capability the loop's claim depends on. `storage.persist()` is deliberately
   // ADVISORY in this product — `requestPersist` in src/store/db.ts returns null when it is
   // missing and swallows a throw, on the rule that a throwing persist() must never turn a

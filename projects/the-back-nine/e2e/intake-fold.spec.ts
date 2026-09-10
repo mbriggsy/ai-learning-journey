@@ -34,6 +34,21 @@ import { copy } from '../src/ui/copy'
  *    left on a button that had just unmounted. Both new headings are h3 under the step's h2 — a
  *    second h2 would break every singular level-2 query in the intake suite.
  *
+ * 3. THE NAV YIELD. While an editor is open the step's own Continue/Back must be GONE, not merely
+ *    styled: the other-income step is the LAST step and its `fields` are empty, so one tap on a live
+ *    Continue fires the flow's terminal `onComplete()`, unmounts the editor and takes a fully typed
+ *    pension with it. The rule is a single CSS selector (src/intake/intake.css:496), and it named only
+ *    the ACCOUNT editor's root until 2026-09-08 — so this arm opens BOTH editors, never just one.
+ *
+ * NOT AN ARM: the editor's own scroll-into-view (`focusHeading`'s `preventScroll: false` default,
+ * src/intake/a11y.ts) — it is not observable on this route, MEASURED 2026-09-08 rather than assumed.
+ * An arm was built and it disqualified itself on its own non-vacuity read: the accounts LIST at this
+ * viewport has a scrollable range of only 281 px, so that is the deepest offset a reader can carry
+ * into the swap, while the editor's heading lands 383.3 px down the document — above the fold at
+ * every reachable scroll position, so the browser has nothing to scroll and the assertion would have
+ * passed with the default flipped. Only a longer list (more committed accounts than `?seed=datesolo`
+ * carries) could make it bite; nothing here pretends otherwise.
+ *
  * NOT AN ARM: a height budget for `.answer-strip`. The two-block missing list (an ABSENT block
  * beside an UNREPRESENTABLE one) measured 278 px at this width on 2026-09-08 — 17.4 rem against a
  * 7.5 rem reserve — and Continue's bottom edge is already below the fold at scroll 0 on half this
@@ -62,23 +77,23 @@ interface Arrival {
   readonly scrollTop: number
   readonly innerHeight: number
   readonly stripTop: number | null
+  /** The incoming heading's own top at scroll 0 — the live half of CARRY_PX's precondition. */
+  readonly headingTop: number | null
   readonly headingBottom: number | null
-  readonly continueTop: number | null
 }
 
 const arrival = (page: Page): Promise<Arrival> =>
   page.evaluate(() => {
     const strip = document.querySelector('.answer-strip')
     const heading = document.querySelector('.step-heading')
-    const cont = document.querySelector('.intake-nav .btn-primary')
     const scroller = document.scrollingElement ?? undefined
     return {
       heading: heading === null ? null : heading.textContent,
       scrollTop: scroller === undefined ? -1 : scroller.scrollTop,
       innerHeight: window.innerHeight,
       stripTop: strip === null ? null : strip.getBoundingClientRect().top,
+      headingTop: heading === null ? null : heading.getBoundingClientRect().top,
       headingBottom: heading === null ? null : heading.getBoundingClientRect().bottom,
-      continueTop: cont === null ? null : cont.getBoundingClientRect().top,
     }
   })
 
@@ -197,6 +212,15 @@ test.describe('the phone intake fold', () => {
 
       // (a) the reset itself.
       expect(now.scrollTop, `${where}: the document scroll carried into the new step`).toBe(0)
+      // (a2) CARRY_PX's OWN PRECONDITION, read live rather than decreed. Assertion (a) can be
+      // satisfied by the browser's focus scroll instead of the reset whenever the carry is LARGER
+      // than the incoming heading's own top — and (a) has just proved the page is at 0, so this
+      // rect top IS that document offset. A future shorter answer strip would void the guard in
+      // silence; here it reds instead.
+      expect(
+        now.headingTop ?? 0,
+        `${where}: CARRY_PX (${CARRY_PX}) is no longer below the step heading's own top — the browser's focus scroll would erase the carry by itself and this arm would pass with the reset deleted`,
+      ).toBeGreaterThan(CARRY_PX)
       // (b) the answer strip — the whole answer-during-entry surface — is on screen.
       expect(now.stripTop, `${where}: no answer strip rendered`).not.toBeNull()
       expect(now.stripTop ?? -1, `${where}: the answer strip is above the top of the window`).toBeGreaterThanOrEqual(0)
@@ -258,5 +282,32 @@ test.describe('the phone intake fold', () => {
     expect(onList.tag, 'the return from the editor left focus nowhere').toBe('H3')
     expect(onList.className).toContain('list-heading')
     expect(onList.text).toBe(copy.otherIncomeListHeading)
+  })
+
+  test('an open editor takes the step nav away — on BOTH list steps', async ({ page }) => {
+    await rewalkFromDateSolo(page)
+    const nav = page.locator('.intake-nav')
+
+    // Walked in sequence: accounts comes before other income, so one re-walk covers both. The
+    // other-income half is the one that matters most — that step is LAST and its `fields` are
+    // empty, so a live Continue there is a silent discard, not merely a broken-looking screen.
+    for (const step of [
+      { heading: copy.qAccountsHeading, add: copy.addAccount, cancel: copy.accountCancel },
+      { heading: copy.qOtherIncomeHeading, add: copy.addOtherIncome, cancel: copy.otherIncomeCancel },
+    ]) {
+      await advanceTo(page, step.heading)
+      await expect(nav, `${step.heading}: no step nav to yield — the arm would be vacuous`).toBeVisible()
+
+      await page.getByRole('button', { name: step.add }).click()
+      await page.waitForTimeout(300)
+      await expect(
+        nav,
+        `${step.heading}: Continue stayed live over the open editor — one tap abandons the form`,
+      ).toBeHidden()
+
+      await page.getByRole('button', { name: step.cancel }).click()
+      await page.waitForTimeout(300)
+      await expect(nav, `${step.heading}: the nav did not come back with the list`).toBeVisible()
+    }
   })
 })

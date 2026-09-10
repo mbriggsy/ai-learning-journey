@@ -31,7 +31,12 @@ export default defineConfig({
   testMatch: ['**/vertical-fit.spec.ts', '**/chart-text.spec.ts', '**/intake-fold.spec.ts'],
   fullyParallel: true,
   // The date seeds are CPU-BOUND: a 16k-path final across two arms takes ~60 s alone, and the two
-  // specs render ~26 of them. Playwright's default (50% of logical cores) is 10 workers on a 20-thread
+  // MEASURING specs load one 28 times (re-counted 2026-09-08 against the current specs: chart-text 25
+  // — datemixed + datesplit + atceiling on each of its six arms, four standalone date renders, the two
+  // ?vault=datestale arms and the reduced-motion reload — plus vertical-fit's dip · date65 · datenc).
+  // The THIRD spec on this harness adds NONE: intake-fold drives `?seed=datesolo`, the refusal witness
+  // whose `buildDateInput` returns null, so it renders the date ROUTE without ever running a solve.
+  // Playwright's default (50% of logical cores) is 10 workers on a 20-thread
   // laptop — ten concurrent solves saturate the cores and stretch a 60 s final past the tier wait
   // (measured 2026-09-05: the datesplit arms timed out only once the chart-text spec grew to 18 date
   // renders). Locally, cap to the solve's real cost; CI (ubuntu-latest, 4 vCPU → 2 workers) is left
@@ -41,8 +46,9 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   // Each spec waits for the FINAL engine tier (provisional tags gone) before measuring — the
-  // 16k-path final across two-arm seeds is slow on CI hardware, and two tests here render a date
-  // seed TWICE (the reduced-motion and reader's-font comparisons), so the per-test budget holds two
+  // 16k-path final across two-arm seeds is slow on CI hardware, and one test here renders a date
+  // seed TWICE (the reduced-motion reload of `datemixed`; the two reader's-font comparisons also reload,
+  // but the cheaper `retired` spine seed — re-counted 2026-09-08), so the per-test budget holds two
   // finals (reviewSurface FINAL_TIER_MS) plus the measurement.
   timeout: 180_000,
   use: {

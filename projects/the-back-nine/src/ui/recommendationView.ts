@@ -243,8 +243,9 @@ export interface RecommendedView {
   readonly baselineNameplate: string
   /** The retained runner-up, one tap down (R23 — retained + reachable; stripping it fails the suite).
    *  `why` is the hedged "why this beat it" TEXT (always); `viz` is the S4 comparative-depth two-arm
-   *  richness (winner vs runner-up) — present iff active mode AND the winner DISPLAYS ahead at seed-B
-   *  (an A-decides/B-displays inversion drops the picture, never a chart contradicting the ranking).
+   *  richness (winner vs runner-up) — present iff the goal is LEAVE-MORE (the grammar is wealth-shaped;
+   *  see `runnerUpVizFor`) AND active mode AND the winner DISPLAYS ahead at seed-B (an A-decides/B-displays
+   *  inversion drops the picture, never a chart contradicting the ranking).
    *  `undefined` only for a one-arm rankable set (never in a live solve). */
   readonly runnerUp: { readonly why: string; readonly viz: RecommendationVizProps | undefined } | undefined
   /** The §S2 leave-more skew disclosure (QUOTES the median as the typical bequest) — present iff the
@@ -261,7 +262,8 @@ export interface RecommendedView {
   /** The two-arm comparison viz props (winner vs no-action baseline terminal magnitudes + resolved,
    *  pre-formatted string-free labels). `undefined` in NO-CHANGE mode (which now includes a seed-B
    *  display inversion) — the compose reassurance stands alone, never a fabricated two-bar delta of
-   *  ~$0 and never a winner-ahead bar the ranking would contradict. */
+   *  ~$0 and never a winner-ahead bar the ranking would contradict — AND `undefined` on any goal but
+   *  LEAVE-MORE (the grammar is wealth-shaped; the reason is at the viz site in `recommendedView`). */
   readonly viz: RecommendationVizProps | undefined
 }
 
@@ -663,7 +665,21 @@ function recommendedView(payload: SolveRecommendation, opts: RecommendationViewO
     // ranking). The winner/baseline seed-B headline magnitudes + pre-formatted string-free labels; the
     // aria sentence carries BOTH magnitudes AND the delta (A2 AT-parity). The ceiling is source-bound to
     // TwoFutures' humane ladder, so the bar geometry and the axis-max label can never disagree.
-    viz: noDollar
+    //
+    // AND LEAVE-MORE ONLY (2026-09-08). THE GRAMMAR IS WEALTH-SHAPED, so it cannot carry a lower-is-better
+    // statistic: the chart puts direction on which bar is LONGER (`RecommendationVizLabels.deltaLabel`,
+    // RecommendationViz.tsx:48-49) and the aria sentence says an arm "lands near about $X" (recDeltaVizAria).
+    // On `pay-less-tax` the plotted headline is mean lifetime TAX PAID — LOWER is better
+    // (src/engine/solver/objective.ts:62) — and `winnerDisplaysAhead` above orients the winner to the
+    // SMALLER figure, so the recommended arm would draw the SHORTER bar and be narrated as landing near the
+    // smaller number: the reader reads "recommended = less", which is the truth, off a picture whose whole
+    // grammar says longer = better. Calm-but-wrong wearing the chart's face, so it is suppressed exactly the
+    // way the inversion is — a picture that contradicts its own grammar is worse than no picture.
+    // ⚑ THE FIX IS AN OMISSION, NEVER A SWAP: a goal-named caption + aria variant for pay-less-tax are
+    // Briggsy's words to author (filed in the register). Do not re-point these slots at the tax figures.
+    // The delta HERO is untouched and still ships on both goals — `recDeltaPayLessTax` is goal-WORDED,
+    // so the sentence carries its own direction where the bars cannot.
+    viz: noDollar || goal !== 'leave-more'
       ? undefined
       : (() => {
           const winM = payload.winner.headlineStatisticB
@@ -802,14 +818,24 @@ function skewQuote(payload: SolveRecommendation): { readonly medianQuote: string
  * one — calm-but-wrong wearing the product's most differentiated face. So the picture ships ONLY when
  * the winner displays at-least-tied-ahead (goal-oriented); on an inversion the runner-up keeps its
  * honest hedged TEXT ("came out ahead more often") with NO chart contradicting the ranking. Suppressed
- * in NO-CHANGE mode too (the primary viz is, and there is no meaningful winner-ahead delta to draw).
+ * in NO-CHANGE mode too (the primary viz is, and there is no meaningful winner-ahead delta to draw), and
+ * on any goal but LEAVE-MORE (the primary viz's wealth-shaped-grammar gate, mirrored — the full reason is
+ * at the viz site in `recommendedView`; this chart reuses the same grammar AND the same aria slot, so a
+ * pay-less-tax picture would be wrong here in exactly the same way, one tap down where it is even less
+ * likely to be re-read).
  * Pure; figures pre-formatted, ceiling source-bound to TwoFutures' humane ladder.
  */
 function runnerUpVizFor(payload: SolveRecommendation, isNoChange: boolean): RecommendationVizProps | undefined {
   const runnerUp = payload.runnerUp
   if (isNoChange || runnerUp === undefined) return undefined
+  if (payload.goal !== 'leave-more') return undefined
   const winM = payload.winner.headlineStatisticB
   const runM = runnerUp.headlineStatisticB
+  // The orientation stays GOAL-GENERAL though only the leave-more arm can run under the gate above:
+  // lifting that gate (the day the goal-named caption is authored) must not silently ship a chart
+  // oriented the wrong way — this is the fail-correct shape, not dead code. Its live twin is
+  // `winnerDisplaysAhead` in `recommendedView`, which DOES run on both goals (there it gates the
+  // no-dollar register and the delta hero, which ship on pay-less-tax; only the picture is withheld).
   const winnerDisplaysAhead = payload.goal === 'leave-more' ? winM >= runM : winM <= runM
   if (!winnerDisplaysAhead) return undefined
   const gap = formatDeltaDollar(winM - runM)

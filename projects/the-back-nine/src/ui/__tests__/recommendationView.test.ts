@@ -559,18 +559,37 @@ describe('recommendationView — the §S4 runner-up comparison viz', () => {
     expect(v.runnerUp!.why, 'the runner-up is still retained as hedged text').toBe(copy.recRunnerUpWhy)
   })
 
-  it('pay-less-tax orients the gate by LOWER lifetime tax: winner-pays-less ships the picture, winner-pays-more drops it', () => {
+  it('pay-less-tax draws NEITHER picture — the wealth-shaped grammar cannot carry a lower-is-better statistic; the leave-more control still ships both', () => {
+    // C1 (2026-09-08): the bars put direction on which one is LONGER and the aria says an arm "lands near
+    // about $X", but pay-less-tax plots mean lifetime TAX PAID, where LOWER is better — so the recommended
+    // arm draws the SHORTER bar under a longer-is-better grammar. Both pictures are withheld until a
+    // goal-named caption + aria variant are authored (an OMISSION, never a swap of the tax figures into
+    // the wealth sentence); the goal-WORDED dollar hero carries its own direction and still ships.
+    // This REPLACES the runner-up ORIENTATION arm that stood here: under the goal gate that arm is
+    // unreachable (`runnerUpVizFor` keeps the goal-general orientation anyway, as the fail-correct shape
+    // for the day the gate lifts), and the live orientation proof is the leave-more inversion test above.
     const goal: RecommendationGoal = 'pay-less-tax'
     const winner = armFor(goal, undefined, 'bracket-fill', 'bracket-fill', { lifetimeTaxPaidReal: [40_000, 40_000] })
     const baseline = armFor(goal, undefined, 'proportional', 'proportional', { lifetimeTaxPaidReal: [55_000, 55_000] })
     const runnerUp = armFor(goal, undefined, 'taxable-first', 'taxable-first', { lifetimeTaxPaidReal: [50_000, 50_000] })
     const payload = { ...leaveMoreRec(), goal, heirBracket: undefined, winner, noActionBaseline: baseline, runnerUp, gradeStatistic: 'pay-less-tax' as const, skewDisclosure: undefined }
-    const ahead = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
-    expect(ahead.runnerUp!.viz, 'the winner pays LESS tax → ahead → the picture ships').toBeDefined()
-    // a pay-less-tax winner whose tax displays HIGHER than the runner-up's inverts → picture dropped.
-    const invWinner = armFor(goal, undefined, 'bracket-fill', 'bracket-fill', { lifetimeTaxPaidReal: [60_000, 60_000] })
-    const inverted = { ...payload, winner: invWinner }
-    expect(asRec(recommendationView(committed(inverted), { spineConfidence: spine })).runnerUp!.viz, 'winner pays MORE → dropped').toBeUndefined()
+    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
+    // NON-VACUITY: this is the payload that WOULD have drawn — active mode, a real hero dollar, and the
+    // winner displaying ahead of BOTH other arms (paying less). Without these, the two undefined arms
+    // below would pass on a no-dollar payload for the wrong reason.
+    expect(v.mode, 'an ACTIVE pay-less-tax delta (not the no-dollar register)').toBe('active')
+    expect(v.grade.deltaFigure, 'the goal-worded dollar hero still ships').toBeDefined()
+    expect(winner.headlineStatisticB, 'the winner pays less than the baseline').toBeLessThan(baseline.headlineStatisticB)
+    expect(winner.headlineStatisticB, 'and less than the runner-up').toBeLessThan(runnerUp.headlineStatisticB)
+    expect(v.viz, 'no primary picture on pay-less-tax').toBeUndefined()
+    expect(v.runnerUp!.viz, 'no runner-up picture on pay-less-tax').toBeUndefined()
+    expect(v.runnerUp!.why, 'the hedged runner-up TEXT is still retained (R23)').toBe(copy.recRunnerUpWhy)
+    // CONTROL: the gate is GOAL-scoped, not a blanket suppression — the same shape on leave-more still
+    // draws both. (Mutant: drop `goal !== 'leave-more'` at the viz site, or the mirrored early return in
+    // `runnerUpVizFor`, and the matching undefined arm above goes red while this control stays green.)
+    const control = asRec(recommendationView(committed(leaveMoreRec()), { spineConfidence: spine }))
+    expect(control.viz, 'leave-more still draws the primary picture').toBeDefined()
+    expect(control.runnerUp!.viz, 'and the runner-up picture').toBeDefined()
   })
 
   it('NO-CHANGE mode carries NO runner-up viz (the primary viz is suppressed too — never a fabricated compare)', () => {
@@ -636,6 +655,9 @@ describe('recommendationView — the A-decides / B-displays inversion suppresses
     expect(v.mode).toBe('no-change')
     expect(v.grade.deltaFigure).toBeUndefined()
     expect(v.grade.heroLine).toBe(copy.recComposeAlready)
+    // OVER-DETERMINED since the C1 goal gate (2026-09-08): the picture is now withheld on EVERY
+    // pay-less-tax payload, inverted or not. The three assertions above are this test's live inversion
+    // proof (mode + hero); this one stays as the no-fabricated-bars belt.
     expect(v.viz).toBeUndefined()
   })
 

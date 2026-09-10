@@ -28,27 +28,33 @@ typecheck · lint · 3474 tests / 172 files · doc-stats · build · bundle 263.
 (a) **The adversarial review of the item-4 integration is OWED.** Items 1–3 each got a 4-lens × 3-refuter review before
 commit and each found 10–21 defects in the first draft; item 4 shipped on the builders' own gates with NO independent
 review. First thing: the same review shape over `git diff 2d671144..HEAD -- projects/the-back-nine .github`; fix; commit.
-(b) **~97 line-numbered citations drifted and are wrong-but-green.** The phone arm added +12 lines to `copy.ts` (after
-`addAccount`) and +32 to `questions.tsx`; item 10 added ~8 more to `copy.ts` near `recDeltaVizAria`. doc-stats only reds a
-citation that lands on a BLANK line (five were fixed), so ~94 stale cites remain across TODO.md, `docs/council-log.md`,
-`docs/caddie/cold-read-log.md` and eight plan docs. The builder's old→new map is
-`temp/phone-walk/phone-walk-2-4-citation-drift.txt` (arm C's shift ONLY — item 10's is not in it) and its generator is
-NOT idempotent (a "skip if already correct" guard is vacuous against a pure insertion). Do NOT run it blind: re-anchor with
-a verify→skeptic fleet that OPENS each line (the 2026-09-06 shape), the map as a hint.
+(b) **Line-numbered citations drifted and are wrong-but-green — WIDER than first filed.** The item-4 integration shifted
+FOUR source files, not two: `copy.ts` (+12 after `addAccount`, +8 near `recDeltaVizAria`), `questions.tsx` (+32),
+`Result.tsx` (+25 at `:377`) and `AccountEntry.tsx` (+14 at `:115`). The 2026-09-08 evening review found stale cites in
+the REGISTER (`docs/backlog.md` — six: `Result.tsx:485/522/398/407/489`, `AccountEntry.tsx:357-364`), in SOURCE comments
+(`copy.ts`'s `recDeltaVizAria` docblock and `copyGuard.test.ts`'s canary comment — neither scanned by doc-stats), and in
+`act4-u17-s5-execution-plan.md` + the u16/u17 specs (eleven `Result.tsx` cites ≥ `:377`) — on top of the first-filed
+TODO.md / `docs/council-log.md` / `docs/caddie/cold-read-log.md` / plan-doc set. doc-stats reds only a citation on a BLANK
+line, so every one is green. Re-anchor with a verify→skeptic fleet that OPENS each line (the 2026-09-06 shape) over EVERY
+tracked `.md` AND every `file:NN` inside `src/**`, `e2e/**`, `scripts/**` comments; the builder's old→new map
+(`temp/phone-walk/phone-walk-2-4-citation-drift.txt`, arm C's shift only, generator NOT idempotent) is a hint at most — never
+run it blind.
 (c) **The 24 px fit-law council is OWED.** Its first sitting lost all eleven elders to the session limit
 (`wf_05173c0f-4b7`; the limit resets 02:20). Re-dispatch `Workflow({ name: 'council', weight: 'full' })` with the issue
-+ context from `temp/fit-24px/measurements.md` and the register's *The app on someone else's device* third bullet; the
-held-out block is `temp/fit-24px/arm-c-enlarged-text-fit.patch` (KEEP — it reds `verify:fit` as delivered). Framing:
++ context from `e2e/held/fit-24px-measurements.md` and the register's *The app on someone else's device* third bullet; the
+held-out block is `e2e/held/fit-24px-enlarged-text-arm.patch` (both TRACKED since 2026-09-08 evening — squeaky clears
+`temp/` unconditionally; the patch is an INSTRUMENT that reds `verify:fit` as delivered, never land it unchanged). Framing:
 a documented scroll asserted as ORDER (the date route's contract) vs a large-text regime (a design unit).
 (d) ✅ DONE at hand-off — the six builder worktrees (`wf_b55ea9cc-c0c-1..6`) are deregistered and their directories
 deleted (git's own remove left them "not empty" — pnpm junctions; PowerShell `Remove-Item -Recurse -Force` did it); every
-patch and artefact was harvested first (`temp/icons/`, `temp/phone-walk/`, `temp/fit-24px/`, all KEEP).
+patch and artefact was harvested first; the IRREPLACEABLE pieces are now tracked (`e2e/held/` for the 24 px instrument +
+measurements, `scripts/icons/` for the icon generator + sheets — 2026-09-08 evening), the screenshots stay in `temp/`.
 (e) **The phone strip-reserve fork** (register *The phone intake walk* item 3): the two-block strip measured 278 px =
 17.4 rem, Continue lands at y 1,378 on the Social Security step at scroll 0 — a reserve sized for a rare state taxes
 every step; his eye or a council, not a pilot number.
 (f) **Ranked (6)**, the Caddie walk of the four chart faces at REAL + PHONE — now also carrying the legend swatch redraw's
 shape + the outer edge (council 2026-09-08), the pre-registered "point to the middle half" + faded-column read, the aged
-date band's three-row block at 390 / 1088, the icon silhouette (`temp/icons/preview.png`), the RV above-bar-labels fork.
+date band's three-row block at 390 / 1088, the icon silhouette (`scripts/icons/preview.png`), the RV above-bar-labels fork.
 **HIS EYE, post-hoc (the batched-oracle law):** the icon silhouette · the three-row aged date block · the legend
 swatches (deliberately unchanged until the walk) · the goal picker with its lead OMITTED on `?seed=failing`.
 
@@ -178,9 +184,9 @@ goal picker's lead is verdict-gated (`basicsCovered`, REQUIRED, from the sticky 
 `borderline`; FOUR controls open the picker, one predicate; the lead is OMITTED on the failing cohort — the WORDS stay his;
 `goalLeadGate.test.tsx` pins the wiring). Phone P2s 2 + 4: a step change resets the document scroll (the DOCUMENT is the
 scroller; jsdom lacks `scrollingElement` — nullish guard) and the account / other-income editors + lists got focusable h3s;
-`e2e/intake-fold.spec.ts` (3 tests, on the fit harness + the CSP denylist) gates it. Icons: six assets rasterized from
+`e2e/intake-fold.spec.ts` (4 tests since the 2026-09-08 evening review — the fourth is the NAV-YIELD arm; on the fit harness + the CSP denylist) gates it. Icons: six assets rasterized from
 `public/icon.svg`, the manifest `icons` array, the favicon links, the workbox glob — installable, precached, `pwa-icons.test.ts`;
-⚑ HIS EYE post-hoc: `temp/icons/preview.png`. WebKit: a second Playwright project greps `@cross-browser` for the two vault arms;
+⚑ HIS EYE post-hoc: `scripts/icons/preview.png`. WebKit: a second Playwright project greps `@cross-browser` for the two vault arms;
 WebKit exposes NO `navigator.storage.persist()` (recorded, never asserted — `db.ts` calls it advisory). STOPPED, honestly:
 phone P2 3 (the strip reserve — the two-block strip measured 278 px = 17.4 rem, Continue lands at y 1,378 on the Social
 Security step at scroll 0; a viewport-tax fork, register *The phone intake walk* item 3) and the ENLARGED-TEXT fit arm (all
@@ -209,7 +215,9 @@ instrument tests measure first, assert last, and load ONCE (`setRootFont20` BEFO
 fit workers are capped at 30% (insight 121); `FINAL_TIER_MS` (150 s, `e2e/reviewSurface.ts`) is the one anchor
 wait — `vertical-fit.spec.ts` still re-types `90_000` in eight places (harmless at 6 workers; hoist when
 touched). `atceiling` is a DATE seed (~45 s/arm) and rides EVERY arm in the loop (six since PHONE_LS). `temp/probe/` is spent;
-`temp/chart-text/`, `temp/cold-read-320/` and `temp/phone-walk/` are KEPT — no squeaky clears them.
+`temp/chart-text/`, `temp/cold-read-320/` and `temp/phone-walk/` hold HIS-EYE evidence — but the squeaky skill clears
+`temp/` UNCONDITIONALLY (its §4 overrides any KEEP note here), so nothing irreplaceable may live there: the 24 px instrument +
+measurements moved to `e2e/held/` and the icon generator + sheets to `scripts/icons/` on 2026-09-08; screenshots are regenerable.
 
 > **Superseded hand-offs deleted 2026-09-06 (the doc audit):** b9-2 (2026-09-05 midday — `8a6fc6b7` · `add8dea8`) and b9-3
 > (2026-09-05 evening — `32c1231d` · `b4b27a60` · `8748e4f5` · `abf1ab38`). `git log` and the kept digest
@@ -616,9 +624,10 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     (c) THE LEAVES-OUT SECTION is pilot (register `:277`, `:283`); anchors + the four traps are under
     Tier-0 entry 5 below.
 
-13. **Also:** no icons at all, so the "local-first PWA" is not installable · Chromium-only verification
-    while the durability story is explicitly about Safari eviction · the fit law is never checked at
-    enlarged text · no single-person household (a solo friend is withheld forever or must invent a spouse)
+13. **Also:** ✅ icons + an installable PWA shipped 2026-09-08 · WebKit reaches only the VAULT seam (2026-09-08 — the two
+    `@cross-browser` vault arms; every UI surface is still verified in Chromium alone, and nothing anywhere executes a
+    real Safari eviction) · the fit law at enlarged text is MEASURED and FAILS (2026-09-08 — eight protected reds at a
+    24 px root, the council is owed: START HERE (c)) · no single-person household (a solo friend is withheld forever or must invent a spouse)
     · **no document a friend reads** — the in-app honest-limits total is two sentences, and the app tells
     them to "validate with a professional" while handing that professional nothing readable · ✅ the solve
     lane's EDIT-TIME cancel shipped 2026-09-03 (`engineClient.ts:177 createResettableEngine` +
@@ -627,22 +636,23 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     (`engineClient.ts:45-57`; the old `:50` anchor named nothing about freezing).
 
 ### Tier 3 — Briggsy's call
-    ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 8 — icons · WebKit arm · enlarged-text arm) — its 2026-09-04 re-verify clause, still live:** PWA icons (S, silhouette-first, his eye audits) · WebKit e2e arm (M) · enlarged-text fit arm (S,
-    CDP `Page.setFontSizes` — council only on a protected red).
+    ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 8 — icons · WebKit arm · enlarged-text arm) — its 2026-09-04 re-verify clause, still live:** ✅ PWA icons DONE 2026-09-08 (his eye audits the silhouette sheet — path in the register's device entry) · ✅ WebKit e2e
+    arm DONE 2026-09-08 (the two vault arms only) · enlarged-text fit arm (S, CDP `Page.setFontSizes`) MEASURED 2026-09-08 —
+    eight PROTECTED reds, so the council fires (START HERE (c)); the clauses below were the build recipe, kept for that arm's CDP notes.
     ⚑ **2026-09-04:** INDEPENDENT, not a chain — the text arm rides CDP (Chromium-only) so it can never share
     the WebKit project; all three are pilot (register `M` · **pilot**; "his eye audits" is the post-hoc
     batched-oracle read, not a gate). ICONS: `manifest: false` (`vite.config.ts:36`) disables the plugin's
     icon precache, so ship `includeAssets` (or image globs) WITH the files or the installed PWA has no
-    offline icon (proven against `dist/sw.js`); the favicon 404 is a SECOND sub-task (`public/favicon.ico`
-    + `<link rel="icon">` — `index.html` has none); no brand mark exists to quarry — the color-blind-safe
+    offline icon (proven against `dist/sw.js`); the favicon 404 is GONE since 2026-09-08 (`public/favicon.ico`
+    + the three link tags in `index.html`); no brand mark existed to quarry — the color-blind-safe
     SVG glyph vocabulary (GradeSignal / verdictSignal / BandLegend) is the silhouette source; CSP already
     allows `img-src 'self'`. WEBKIT: `playwright install webkit` IS required (the on-disk `webkit-2272` is a
     stale revision — `@playwright/test` 1.60.0 needs 2287, launch fails today) + `webkit` on
     `verify-the-back-nine.yml:72` (the `verify` job's install — NOT the `:109` twin in the `verify-rv-chart-text`
     job); scope at TEST level — `vault.spec.ts:70` (trust loop) + `:113`
     (second-tab read-only), never the whole file: the KDF spike `:137-168` asserts a Chromium-only
-    thread-pool fact; the arm proves the IndexedDB / Web Locks / BroadcastChannel / `storage.persist()`
-    paths RUN in WebKit — it does NOT verify Safari eviction (nothing in the repo executes a real eviction;
+    thread-pool fact; the arm RECORDS the storage capability triple and asserts only Web Locks — WebKit exposes NO
+    `navigator.storage.persist()` (measured 2026-09-08; `db.ts` calls it advisory) — it does NOT verify Safari eviction (nothing in the repo executes a real eviction;
     both harnesses model it with a wipe). ENLARGED TEXT: `Page.setFontSizes` re-probed 2026-09-04 against
     the repo's chromium-1223 — the param shape is `{ fontSizes: { standard: 24, fixed: 24 } }` (the flat
     form is rejected); it propagates because the type scale is rem/clamp with ZERO literal-px `font-size`

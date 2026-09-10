@@ -27,10 +27,16 @@ import { useCallback, useEffect, useMemo, useRef } from 'react'
  *  `preventScroll` DEFAULTS TO FALSE and must stay that way: every other caller
  *  (the vault ceremonies, the two result heroes, the two intake sheets, the two
  *  list-step editors and their lists) relies on the browser scrolling the freshly-
- *  focused heading into view, and several of them have no e2e coverage at all —
- *  flipping the default would regress them invisibly. The opt-in is used by exactly
- *  ONE of the call sites, `useFocusHeadingOnStep` below, which owns the scroll
- *  position itself. */
+ *  focused heading into view, and NO test anywhere asserts that scroll — flipping the
+ *  default would regress every one of them in silence. That gap is measured, not
+ *  assumed: an arm was built for the account editor (the one call site an e2e harness
+ *  can drive) and it disqualified itself on its own non-vacuity read — the accounts
+ *  list at PHONE (390×844) has a scrollable range of only 281 px, while the editor's
+ *  heading lands 383.3 px down the document, so at every scroll a reader can reach it is
+ *  ALREADY on screen and the browser has nothing to scroll (e2e/intake-fold.spec.ts's
+ *  docblock carries the numbers). Treat this default as load-bearing and unguarded.
+ *  The opt-in is used by exactly ONE of the call sites, `useFocusHeadingOnStep` below,
+ *  which owns the scroll position itself. */
 export function focusHeading(
   el: HTMLElement | null,
   opts?: { readonly preventScroll?: boolean },
@@ -60,7 +66,15 @@ export function focusHeading(
  *  exactly where it was (both measured in the same session). So the offsets a phone
  *  reader actually produces are the ones the browser leaves alone. Focusing WITHOUT
  *  scroll and resetting afterwards makes the landing frame the same one every time,
- *  instead of one that depends on how far the reader had scrolled. */
+ *  instead of one that depends on how far the reader had scrolled.
+ *
+ *  WHAT THIS OPT-IN IS AND IS NOT GATED BY (measured 2026-09-08). The RESET is gated:
+ *  deleting the two lines below reds e2e/intake-fold.spec.ts's arrival arm. The
+ *  `{ preventScroll: true }` argument is NOT, and cannot be — the `scrollTop = 0` two
+ *  lines down lands in the SAME task, so dropping it changes no frame any oracle can
+ *  observe. It is belt-and-braces (it spares `focus()` scroll work this effect is about
+ *  to undo), never a load-bearing behaviour: do not write a test that pretends otherwise.
+ *  The DEFAULT above is the opposite case — load-bearing and unguarded. */
 export function useFocusHeadingOnStep(stepId: string) {
   const ref = useRef<HTMLHeadingElement | null>(null)
   useEffect(() => {

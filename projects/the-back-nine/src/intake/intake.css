@@ -482,11 +482,18 @@
   font-size: var(--text-lg);
 }
 
-/* While an account entry form is open, ITS actions are the only actions — the
+/* While EITHER list step's entry form is open, ITS actions are the only actions — the
  * step's Continue/Back yield (two stacked primary CTAs read as a broken
  * screen, and advancing mid-entry would abandon the form). Commit or cancel
- * first; the nav returns with the list. */
-.step-body:has(.account-entry) + .intake-nav {
+ * first; the nav returns with the list.
+ *
+ * BOTH editor roots, never just the account one. `.income-entry` is a DISTINCT class token
+ * (src/intake/OtherIncomeEntry.tsx:304) — the shared `.account-entry-actions` inside it does not
+ * make the selector match — and the other-income step is the LAST step with `fields: []`
+ * (src/intake/questions.tsx:1219), so a live Continue over an open income editor fires the flow's
+ * terminal `onComplete()`, unmounts the editor and silently discards a typed pension. Gated by
+ * e2e/intake-fold.spec.ts's nav-yield arm, which opens each editor in turn. */
+.step-body:has(.account-entry, .income-entry) + .intake-nav {
   display: none;
 }
 

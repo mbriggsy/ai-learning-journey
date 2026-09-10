@@ -4,6 +4,8 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent, within } from '@testing-library/react'
 import type { MemoryModelSnapshot, StickyDisplay } from '@store/memoryModel'
 import { OUTCOME_STATES, RECOMMENDATION_GOALS, type OutcomeState } from '@shared/model'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 /**
  * Act-4 · U16 §S2 — THE WIRING half of the goal picker's verdict-gated lead.
@@ -125,7 +127,18 @@ describe('the goal picker’s lead is verdict-gated at the wiring', () => {
       planted.displayed = displayFor(outcomeState)
       const dialog = openPicker()
       if (leads) expect(dialog.getByText(copy.goalPickerIntro)).toBeInTheDocument()
-      else expect(dialog.queryByText(copy.goalPickerIntro)).not.toBeInTheDocument()
+      else {
+        expect(dialog.queryByText(copy.goalPickerIntro)).not.toBeInTheDocument()
+        // SILENCE, not a substitution — the absence of that ONE key would still pass a Result
+        // that swapped in a cheerier lead for this cohort, and "omitted, never swapped" is the
+        // whole contract (the failing-cohort words are unauthored, and they are Briggsy's).
+        // Measured structurally: GoalPicker.tsx:89 is the picker's ONLY `<p>` AND its ONLY
+        // `.field-help`, and the ControlSheet scaffold contributes neither — so zero of each IS
+        // the silence. Re-queried (not `within`'s handle) because the count needs the element.
+        const el = screen.getByRole('dialog')
+        expect(el.querySelectorAll('p'), 'no prose lead at all').toHaveLength(0)
+        expect(el.querySelectorAll('.field-help'), 'nothing wearing the lead class').toHaveLength(0)
+      }
     })
   }
 
@@ -138,6 +151,34 @@ describe('the goal picker’s lead is verdict-gated at the wiring', () => {
     expect(dialog.getByRole('heading', { name: copy.goalPickerTitle })).toBeInTheDocument()
     expect(dialog.getAllByRole('radio')).toHaveLength(RECOMMENDATION_GOALS.length)
     expect(dialog.getByRole('button', { name: copy.goalPickerConfirmCta })).toBeInTheDocument()
+  })
+
+  /** THE FOUR DOORS, pinned by the construction that makes them ONE. `openPicker()` above drives
+   *  a single door — the quiet-row invite (Result.tsx:578). The other three (the record card's
+   *  `onReopen`, Result.tsx:422, and the stale + committed beats' `onRepick`, Result.tsx:517) are
+   *  covered by the arms above ONLY because every door does nothing but flip the same `goalOpen`
+   *  state (Result.tsx:202) into the same single <GoalPicker> element (Result.tsx:803), whose lead
+   *  rides `basicsCovered={goalLeadPremiseHolds}` (Result.tsx:808). Nothing gated that argument: a
+   *  refactor minting a SECOND picker (moving the re-pick's into RecommendationSurface, say) would
+   *  re-ship the false lead on the committed/stale beat with every arm above still green — the
+   *  hardcoded-prop hole this file exists to close, one call site over. So the construction itself
+   *  is the oracle, in the repo's grep-a-source shape-test idiom (resultControlDoors.test.tsx). */
+  it('routes ALL FOUR doors through ONE <GoalPicker> element — the by-construction argument, pinned', () => {
+    const src = readFileSync(resolve(__dirname, '../Result.tsx'), 'utf8')
+    // Count the ELEMENT, not the prose: Result.tsx states this same argument in WORDS, in a line
+    // comment that spells "<GoalPicker>" — so comment lines are dropped before the count (a bare
+    // grep over the raw source reads 2 on the shipped file, and would keep counting the prose).
+    const code = src
+      .split('\n')
+      .filter((line) => {
+        const t = line.trimStart()
+        return !t.startsWith('//') && !t.startsWith('*') && !t.startsWith('/*')
+      })
+      .join('\n')
+    expect(
+      code.split('<GoalPicker').length - 1,
+      'exactly ONE <GoalPicker> element — a second one would carry its own, ungated, lead',
+    ).toBe(1)
   })
 
   it('decides EVERY non-indeterminate outcome state (a new state can never inherit the claim)', () => {

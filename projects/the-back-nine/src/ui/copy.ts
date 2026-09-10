@@ -2684,12 +2684,24 @@ export const slots = {
     `Assumes your heirs are in roughly the ${percentFormatted}% tax bracket when they inherit — adjust it in your assumptions if that’s off.`,
   /** The RecommendationViz accessible sentence (the role="img" name): both arms' magnitudes AND the
    *  delta, so the whole comparison is reachable in the a11y tree (A2 AT-parity). "about" carries the
-   *  hedge; every figure arrives pre-formatted (the axis dialect), so the sentence carries no bare numeral.
+   *  hedge; every figure arrives pre-formatted, so the sentence carries no bare numeral — the ENDPOINTS in
+   *  the humane "$X.XM" prose dialect (`formatAbsoluteDollar`, money.ts:59), the DELTA in grouped digits
+   *  (`formatDeltaDollar`, money.ts:40). NOT formatAxisDollar's exact-when-round RULER precision (money.ts:171):
+   *  that dialect never touches this sentence, and naming it here would point a reader at the wrong rounding law.
+   *
+   *  ⚠️ WEALTH-SHAPED ⇒ LEAVE-MORE ONLY (2026-09-08). "lands near about $X" describes a level the reader
+   *  wants HIGHER. On `pay-less-tax` the same slots would carry mean lifetime TAX PAID (lower is better,
+   *  src/engine/solver/objective.ts:62) and the sentence would read backwards — so recommendationView.ts
+   *  suppresses BOTH vizzes off leave-more (`recommendedView` + `runnerUpVizFor` — named, not line-cited:
+   *  a cross-file line number is the drift class this docblock was just re-anchored for) and this slot
+   *  renders on no other goal. A goal-named caption + aria variant for pay-less-tax are ⚑ Briggsy's
+   *  words to author (filed in the register) — an OMISSION, never a swap of the other goal's figures
+   *  into this template.
    *  NAMED onto the `recDelta*` control prefix (`CONTROL_KEY_PREFIXES`, copyGuard.ts:119) so `require-hedge`
    *  BITES it the way it bites its visual twin `recDeltaTypical`: the AT reader hears the same figures the
    *  sighted reader sees, so the same modal law must hold. A `recViz` prefix was rejected — it would red the
    *  three correctly hedge-free arm labels (`recVizWithLabel`/`recVizWithoutLabel`/`recVizRunnerUpLabel`,
-   *  :1749-1756 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
+   *  :1761-1768 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
    *  `isControlKey` was rejected — it breaks that predicate's "by prefix ALONE" law (copyGuard.ts:125). */
   recDeltaVizAria: (withoutLabel: string, withoutFig: string, withLabel: string, withFig: string, deltaFig: string): string =>
     `${withoutLabel} lands near about $${withoutFig}; ${withLabel} about $${withFig} — a difference of about $${deltaFig}.`,

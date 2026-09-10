@@ -79,8 +79,8 @@ swatches (deliberately unchanged until the walk) · the goal picker with its lea
 **LANDMINES (2026-09-10):** a content-only read of a cited range misses drift whenever today's lines still "read
 plausibly" — six wrong-"correct" verdicts survived that way in one batch; the skeptic that caught them DIFFED the cited
 range against the tree at the last re-anchor commit (`61c57ff5`), and a range that was a clean syntactic unit THEN and a
-ragged one NOW is drift regardless of how it reads · the citation regex captures only the FIRST number of `foo.ts:72,95,120`
-and nothing of a bare `:232` — both forms are citations and both drift; inventory them separately · a bare token's
+ragged one NOW is drift regardless of how it reads · the citation regex captures only the FIRST number of a comma list (a file name, a colon, then
+72,95,120) and nothing of a bare `:232` — both forms are citations and both drift; inventory them separately · a bare token's
 nearest preceding named citation is the WRONG file 70 times in 287 (the sentence names another file in prose) — attribution
 is a guess a verifier must check, never a fact · a machine crash mid-session leaves the commit and loses the hand-off:
 read `git log` before the START HERE, and treat any "OWED" line older than the newest commit as suspect · the Dell's crash

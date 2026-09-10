@@ -29,18 +29,21 @@ corrupted the monorepo's `.git/index` — rebuilt from HEAD with `git reset`, fs
 **THE DEBT THIS SESSION LEAVES, in order:**
 (a) ✅ **DONE 2026-09-10 — the adversarial review of the item-4 integration** shipped as `780409f7`: 23 reviewers over six
 coupling arms, 50 deduplicated findings, 36 confirmed and fixed with mutant proofs, 11 "escalated", 2 advisory, 1 rejected
-(the commit message's counts). Its own hand-off was never written (the crash), so this block is the record. ⚠️ OPEN — **the
-11 "escalated" findings have NO recorded disposition.** The digest survived (the 2026-09-08 session's scratchpad,
-`1ba8895c-…/tasks/waxbzjvs9.output`, read 2026-09-10): "escalated" = unanimous-real, split on material/new, all P3, routed
-to the pilot to HAND-VERIFY — and the commit never says which were fixed. Checked against the tree 2026-09-10: FOUR are
-visibly addressed (the fit config's worker-sizing comment re-counted · the SVG source hashed against its rasters ·
-the icon generator tracked in `scripts/icons/` · intake-fold asserts the strip's top, `continueTop` is gone); TWO are
-confirmed STILL LIVE and fold into (b) (`copy.ts:2683` in the u17 saved-rec build spec and `copy.ts:2682` in this file's
-item-10 entry both cite `recDeltaVizAria`, which sits at `copy.ts:2706`); FIVE are UNVERIFIED and need the pilot's read:
-GoalPicker.test's "omitted, never swapped" asserted as one key's absence · goalLeadGate's four-doors claim tested through one
-door · `a11y.ts`'s new `preventScroll` parameter unit-ungated in both directions (only e2e touches it) · insight 016's CI
-repro command vs the two `playwright install` lines in the workflow · vaultHarness's Web-Locks assertion hand-copying
-`db.ts`'s guard. Disposition pass FIRST, before (b): open each, fix or file in the register, then record it here.
+(the commit message's counts). Its own hand-off was never written (the crash), so this block is the record. **The 11
+"escalated" findings — DISPOSITIONED 2026-09-10** (the digest survived in the 2026-09-08 session's scratchpad,
+`1ba8895c-…/tasks/waxbzjvs9.output`; "escalated" = unanimous-real, split on material/new, all P3, routed to the pilot to
+hand-verify — the commit fixed them and never said so). Opened each against the tree: NINE were fixed inside `780409f7`
+— the goal-picker "omitted, never swapped" oracle now asserts zero `<p>` and zero `.field-help` in the failing dialog in
+BOTH test files (mutant re-run 2026-09-10: a substituted lead reds 3 tests across both) · the four-doors claim is pinned
+by a source canary counting exactly ONE `<GoalPicker` element in `Result.tsx` (comments stripped) · `a11y.ts`'s
+`preventScroll` default is RECORDED as load-bearing-and-unguarded with the measured reason an arm cannot exist (the phone
+list's 281 px scroll range vs a heading 383 px down — every reachable scroll already shows it) and the opt-in as
+belt-and-braces, never to be gated · insight 016's repro installs `chromium webkit` and README's `verify:csp` line names
+the WebKit vault arms · `hasWebLocks` is EXPORTED from `db.ts` and imported by the harness, never re-typed · the fit
+config's worker-sizing comment re-counted · the SVG source hashed against its rasters · the icon generator tracked in
+`scripts/icons/` · intake-fold asserts the strip's top. TWO were stale citations, fixed in this hand-off's commit:
+`copy.ts:2683` → `:2706` + `recommendationView.ts:681-687` → `:697-703` (u17 saved-rec build spec) and `copy.ts:2682` →
+`:2706` (this file's item-10 entry). Nothing from the review is open.
 (b) **Line-numbered citations drifted and are wrong-but-green — WIDER than first filed.** The item-4 integration shifted
 FOUR source files, not two: `copy.ts` (+12 after `addAccount`, +8 near `recDeltaVizAria`), `questions.tsx` (+32),
 `Result.tsx` (+25 at `:377`) and `AccountEntry.tsx` (+14 at `:115`). The 2026-09-08 evening review found stale cites in
@@ -733,7 +736,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     screen reader outside require-hedge — the AT twin of the gated `recDeltaTypical` — and its exclusion was
     a RECORDED decision in the SLOT_RENDER fixture's own comment, so the fix reversed a stated call, not an
     accident. **DONE 2026-09-08:** RENAMED onto the existing `recDelta` control prefix (`recDeltaVizAria`,
-    `copy.ts:2682`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
+    `copy.ts:2706`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
     `require-hedge` on its own) + a catalog canary over `/^rec(?!over)/` (a bare `/^rec/` reds the 16
     innocent `recovery*`/`recover*` intake keys) with a NAMED allowlist that SPLITS flat keys from slots
     (unscoped flat keys get 2 gates, unscoped slots get 3 + catastrophe). Scope is decided ONLY in the test

@@ -19,15 +19,28 @@
 **Where we are:** all four acts are built; Act 4 closed at U17·S6 (S7 deferred, Briggsy's ruling). What is
 left is not units. It is the gap between *the build is done* and *a friend can bet real money on this*.
 
-▶ **START HERE (b9-7) — hand-off 2026-09-08 morning.** The b9-4 ranked plan below is DISCHARGED through (5): (1) the RV
-gate `c135a99c` · (2) the critic's arms `96e87e0f` · (3) the unmeasured trio `da881de5` · (5) the legend council `2d671144`
-— each CI-green by run id — and (4) five of six arms integrated and committed as `31cba0fe` (2026-09-08; its local gates:
-typecheck · lint · 3474 tests / 172 files · doc-stats · build · bundle 263.0 KiB · csp with WebKit 15/1 · fit 119; CI run
-**34228947445** was in progress at hand-off — read its conclusion BY ID first: `gh run view 34228947445 --json status,conclusion`).
+▶ **START HERE (b9-7) — hand-off 2026-09-08 morning, re-verified 2026-09-10 afternoon.** The b9-4 ranked plan below is
+DISCHARGED through (5): (1) the RV gate `c135a99c` · (2) the critic's arms `96e87e0f` · (3) the unmeasured trio `da881de5` ·
+(5) the legend council `2d671144` — each CI-green by run id — and (4) five of six arms integrated and committed as `31cba0fe`
+(CI run 34228947445 GREEN), then adversarially reviewed and fixed as `780409f7` (2026-09-10; CI run **34496025172** GREEN).
+Local gates re-run on `780409f7` 2026-09-10: typecheck · lint · 3490 tests / 174 files · doc-stats (794 citations) — all green.
+(The 2026-09-10 session that committed `780409f7` died to a machine crash before writing this hand-off; the crash also
+corrupted the monorepo's `.git/index` — rebuilt from HEAD with `git reset`, fsck clean, nothing lost.)
 **THE DEBT THIS SESSION LEAVES, in order:**
-(a) **The adversarial review of the item-4 integration is OWED.** Items 1–3 each got a 4-lens × 3-refuter review before
-commit and each found 10–21 defects in the first draft; item 4 shipped on the builders' own gates with NO independent
-review. First thing: the same review shape over `git diff 2d671144..HEAD -- projects/the-back-nine .github`; fix; commit.
+(a) ✅ **DONE 2026-09-10 — the adversarial review of the item-4 integration** shipped as `780409f7`: 23 reviewers over six
+coupling arms, 50 deduplicated findings, 36 confirmed and fixed with mutant proofs, 11 "escalated", 2 advisory, 1 rejected
+(the commit message's counts). Its own hand-off was never written (the crash), so this block is the record. ⚠️ OPEN — **the
+11 "escalated" findings have NO recorded disposition.** The digest survived (the 2026-09-08 session's scratchpad,
+`1ba8895c-…/tasks/waxbzjvs9.output`, read 2026-09-10): "escalated" = unanimous-real, split on material/new, all P3, routed
+to the pilot to HAND-VERIFY — and the commit never says which were fixed. Checked against the tree 2026-09-10: FOUR are
+visibly addressed (the fit config's worker-sizing comment re-counted · the SVG source hashed against its rasters ·
+the icon generator tracked in `scripts/icons/` · intake-fold asserts the strip's top, `continueTop` is gone); TWO are
+confirmed STILL LIVE and fold into (b) (`copy.ts:2683` in the u17 saved-rec build spec and `copy.ts:2682` in this file's
+item-10 entry both cite `recDeltaVizAria`, which sits at `copy.ts:2706`); FIVE are UNVERIFIED and need the pilot's read:
+GoalPicker.test's "omitted, never swapped" asserted as one key's absence · goalLeadGate's four-doors claim tested through one
+door · `a11y.ts`'s new `preventScroll` parameter unit-ungated in both directions (only e2e touches it) · insight 016's CI
+repro command vs the two `playwright install` lines in the workflow · vaultHarness's Web-Locks assertion hand-copying
+`db.ts`'s guard. Disposition pass FIRST, before (b): open each, fix or file in the register, then record it here.
 (b) **Line-numbered citations drifted and are wrong-but-green — WIDER than first filed.** The item-4 integration shifted
 FOUR source files, not two: `copy.ts` (+12 after `addAccount`, +8 near `recDeltaVizAria`), `questions.tsx` (+32),
 `Result.tsx` (+25 at `:377`) and `AccountEntry.tsx` (+14 at `:115`). The 2026-09-08 evening review found stale cites in
@@ -178,7 +191,7 @@ Gap 5's two false source comments (`band.css`, `BandLegend.tsx`: "never the sole
 state — the legend is the only SIGHTED tier channel, the AT reader has the sr-only range sentence — and the
 register's residual (e) is filed as the COUNCIL fork it is (ranked (5) below).
 (4) ✅ FIVE OF SIX ARMS SHIPPED 2026-09-08 (six isolated-worktree builders, each mutant-proven, integrated by the pilot; the
-integration's adversarial review is OWED — see the START HERE). Item 10: `recVizAria` → `recDeltaVizAria` on the control prefix
+integration's adversarial review SHIPPED 2026-09-10 as `780409f7` — see the START HERE). Item 10: `recVizAria` → `recDeltaVizAria` on the control prefix
 + the `/^rec(?!over)/` scope canary (the measured unscoped set: five figure-free flat keys, zero slots; four mutants). Item 11: the
 goal picker's lead is verdict-gated (`basicsCovered`, REQUIRED, from the sticky `displayed` triple as a POSITIVE list incl.
 `borderline`; FOUR controls open the picker, one predicate; the lead is OMITTED on the failing cohort — the WORDS stay his;

@@ -127,8 +127,9 @@ are (g) above, the fixes (h). The harness increments + corpus fold-in are `7aaa8
 
 **SESSION CLOSE 2026-09-11 (remote; the window hit 66 % after the 182-agent panel — no builds started; every routed fix is a
 prescription in the register's 2026-09-11 entries):** gates at close — typecheck · lint · 3511 tests / 176 files · doc-stats (69 open / 77
-entries) · verify:csp 16 / 15 passed · CI green through `9fbea080` (run 34609846895); `7aaa84b9` (harness + corpus) and `2d34fcab` + the
-close-out commit are docs/e2e only — confirm each by run id, never "in flight". HIS EYE next session: START HERE (g). Regenerable
+entries) · verify:csp 16 / 15 passed · CI green through `9fbea080` (run 34609846895); `7aaa84b9` (harness + corpus, run green by the 9fbea080 chain? NO — unproven: read it), `2d34fcab` (run **34632953559**) and
+`9c426b14` (run **34633303262**) were IN PROGRESS at close — docs/e2e only, but a run is proof and "in flight" is not (insight 128):
+read all three conclusions FIRST next session. HIS EYE next session: START HERE (g). Regenerable
 evidence in `temp/` (squeaky clears it): `temp/caddie/2026-09-11-walk/` (re-walk: `CADDIE_TARGETS="seed:retired,seed:date,vault:datestale,solve:surplus,solve:failing" CADDIE_RUN=<name> pnpm caddie:walk`, ~17 m) and
 `temp/council-24px/` (`pnpm exec playwright test --config e2e/held/shots.config.ts`, ~2 m; `INDEX.md` there names the 12 frames).
 

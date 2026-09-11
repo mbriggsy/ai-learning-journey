@@ -19,7 +19,8 @@
 **Where we are:** all four acts are built; Act 4 closed at U17·S6 (S7 deferred, Briggsy's ruling). What is
 left is not units. It is the gap between *the build is done* and *a friend can bet real money on this*.
 
-▶ **START HERE (b9-7) — hand-off 2026-09-08 morning; 2026-09-10 session closed at squeaky with (a) (b) (c) DONE below.
+▶ **START HERE (b9-7) — hand-off 2026-09-08 morning; 2026-09-10 session closed at squeaky with (a) (b) (c) DONE below; 2026-09-11
+evening (b9-fri-1) BUILT (h)'s Cards 4 + 5 (`c43eb879`) — enter at (g) his eye, then the rest of (h).
 2026-09-11: CI was RED on the last three commits and was fixed FIRST (`cba26770`, the harness-partition gate — insight 128); then
 (f) the ranked (6) Caddie walk RAN and is CHAIRED — the card is the TOP entry of `docs/caddie/cold-read-log.md` (15 cards: 3 HARD-FLAGS
 routed to the pilot, 5 forks PARKED for his eye with the pilot's lean on each; the A/B diff NOT clean — Sonnet false-passed the top
@@ -131,13 +132,21 @@ every step; his eye or a council, not a pilot number.
 dual-panel A/B panel read it (182 agents, 0 crashes, 46 m), and the card is chaired and filed** — the log's top entry; the forks
 are (g) above, the fixes (h). The harness increments + corpus fold-in are `7aaa84b9`.
 
-**SESSION CLOSE 2026-09-11 (remote; the window hit 66 % after the 182-agent panel — no builds started; every routed fix is a
-prescription in the register's 2026-09-11 entries):** gates at close — typecheck · lint · 3511 tests / 176 files · doc-stats (69 open / 77
-entries) · verify:csp 16 / 15 passed · CI green through `9fbea080` (run 34609846895); `7aaa84b9` (run **34627175089**), `2d34fcab` (run **34632953559**), `9c426b14` (run **34633303262**) and the squeaky close
-`01f4a7b6` (run **34633627631**) — ALL FOUR GREEN, read 2026-09-11 evening (b9-fri-1); the "in flight is not proof" clause is
-discharged. HIS EYE next session: START HERE (g). Regenerable
-evidence in `temp/` (squeaky clears it): `temp/caddie/2026-09-11-walk/` (re-walk: `CADDIE_TARGETS="seed:retired,seed:date,vault:datestale,solve:surplus,solve:failing" CADDIE_RUN=<name> pnpm caddie:walk`, ~17 m) and
-`temp/council-24px/` (`pnpm exec playwright test --config e2e/held/shots.config.ts`, ~2 m; `INDEX.md` there names the 12 frames).
+**SESSION CLOSE 2026-09-11 (evening, b9-fri-1; the window at ~60 %):** Cards 4 + 5 BUILT, adversarially reviewed and pushed as
+`c43eb879`. Gates at close — typecheck · lint · 3536 tests / 176 files · doc-stats (68 open / 77 entries; 824 named citations + every
+bare continuation) · verify:fit 139 on an idle rerun + the 15 review-touched arms re-run · verify:csp 15 passed / 1 skipped · CI green
+through `01f4a7b6` (run 34633627631; the four runs in flight at the midday close all read GREEN) · **CI for `c43eb879` = run
+34643267501, IN PROGRESS at close (started 20:15Z) — a run is proof and "in flight" is not (insight 128): read it FIRST next session.**
+HIS EYE next session: START HERE (g), pictures already in his panel. **`temp/` was KEPT at this close on his instruction — it holds
+the eye items for the fresh session; clear it at the NEXT squeaky:** `temp/caddie/2026-09-11-eye/{seed-retired,seed-date,vault-datestale,solve-surplus,solve-failing,seed-healthnc}/{real,phone}/`
+— the forks' frames: `seed-retired/real/landing/crop-band.png` (Card 1) · `seed-retired/phone/landing/viewport.png` +
+`vault-datestale/phone/verdict/crop-band.png` (Card 2) · `solve-failing/real/goalpicker/crop-panel.png` (Card 9) ·
+`solve-surplus/phone/committed/crop-recviz.png` (Card 11) · `seed-date/real/landing/{viewport,fullpage}.png` (Card 13; the fullpage
+is post-fix and shows the unpriced state note) · `seed-healthnc/real/landing/viewport.png` (the draft sentence, live) — and
+`temp/council-24px/` (12 frames, no INDEX.md this time — the shots harness writes none: `phone-16px-retired-first-frame.png` the caveat
+above the doors · `laptop-24px-retired-first-frame.png` the stacked tier · `laptop-20px-budget-first-frame.png` the overrun).
+Re-make: `CADDIE_TARGETS="seed:retired,seed:date,vault:datestale,solve:surplus,solve:failing,seed:healthnc" CADDIE_RUN=<name> pnpm caddie:walk`
+(~19 m) · `pnpm exec playwright test --config e2e/held/shots.config.ts` (~2 m) — never beside vitest / doc-stats (the load landmine).
 
 **LANDMINES (2026-09-11, evening):** `verify:fit` under self-inflicted LOAD reds arms that are green — running `verify:doc-stats` (its
 `vitest list` collects the whole suite) twice DURING the fit run redded the two raised-root chart-text arms ("no figure matches

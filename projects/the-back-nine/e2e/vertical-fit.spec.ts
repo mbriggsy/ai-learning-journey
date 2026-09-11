@@ -20,7 +20,23 @@ import { copy, slots, staticDisclosures } from '../src/ui/copy'
  *    scrolled out of sight is the calm-but-wrong sin).
  *  - The DATE route scrolls BY DESIGN (both graphs stacked — content-necessary, Briggsy-accepted
  *    2026-07-08); its honesty contract is ORDER: graphs → in-frame disclaimer → doors, doors last.
- *  - TWO disclaimer mounts, exactly ONE visible per tier (laptop = in-frame, <68rem = trailing).
+ *  - TWO disclaimer mounts, exactly ONE visible — and the swap is keyed to the VERDICT, never to
+ *    the tier (council 2026-09-10, wf_d2b1d05a-001). Wherever a committed verdict renders the
+ *    in-frame mount, at EVERY width, `main.result[data-inframe-disclaimer]` hides the trailing
+ *    one; while COMPUTING the in-frame mount is withheld with the actions row and the trailing
+ *    mount stands. A zero-disclaimer frame and a doubled frame are both unrepresentable.
+ *    (Until 2026-09-10 both CSS rules lived inside the 68rem query, so below the breakpoint the
+ *    in-frame mount was display:none and the trailing footer — the page's LAST element, after the
+ *    doors — was the phone's only caveat: the reader met the exits before "this can be wrong".)
+ *  - THE SCROLLING TIERS' LAW, which replaces the one-frame promise wherever it cannot be kept —
+ *    the phone, any width the reader's browser default makes sub-68rem (in a media query `rem`
+ *    reads the BROWSER default, so a 24 px root makes 68rem 1632 px and a 1536 laptop a stacked
+ *    device), and the DATE route at every width. It is ORDER + REACHABILITY: the caveat sits
+ *    ABOVE the quiet doors in RENDERED GEOMETRY, the doors are LAST, the caveat can be brought
+ *    fully into view by a DOCUMENT scroll (never scrollIntoView — a reader's wheel cannot scroll
+ *    an overflow:hidden ancestor), and the route's hero verdict NAMES the caveat in
+ *    `aria-describedby`. No fit claim is made on any scrolling tier; the one-frame law binds the
+ *    ≥68rem two-pane tier only.
  *  - The short-laptop DENSITY tier (≥68rem ∧ ≤840px) steps `.result` padding-block one token
  *    (40px → 32px, whitespace only); the 917 showcase keeps the generous rhythm.
  *  - The two-pane honesty floor (absorbed from the parked D2d e2e): at 1088px (68rem exactly) the
@@ -79,6 +95,21 @@ async function assertResolvedSpine(page: Page): Promise<void> {
   await expect(page.locator('.cs-band .band-drawer')).toBeVisible()
   expect(await page.locator('.result-quiet-row button').count()).toBeGreaterThanOrEqual(2)
 }
+
+/** The DATE route's presence companions — the same law as assertResolvedSpine for the other hero:
+ *  the date reveal stamped, BOTH graphs drawn (the fan band + the odds ladder), the doors offered. */
+async function assertResolvedDate(page: Page): Promise<void> {
+  await expect(page.locator('.fod-reveal[data-twopane]')).toBeVisible()
+  await expect(page.locator('.fod-band')).toBeVisible()
+  await expect(page.locator('.fod-ladder')).toBeVisible()
+  expect(await page.locator('.result-quiet-row button').count()).toBeGreaterThanOrEqual(2)
+}
+
+/** The two routes' hero headings — the elements that must NAME the R13 caveat in
+ *  `aria-describedby` (council 2026-09-10 clause 3). Named once so an arm can never be added
+ *  with the link half silently switched off. */
+const SPINE_VERDICT = 'h2.cs-word'
+const DATE_VERDICT = 'h2.fod-headline'
 
 type FrameReport = {
   readonly counted: number
@@ -185,11 +216,47 @@ async function assertFrameFits(
  *  default makes `68rem` 1632 px and a 1536-wide laptop a sub-68rem device (council 2026-09-10).
  *  The literal mirrors tokens.css's --bp-laptop (a source-bind test pins every mirror). */
 async function assertTier(page: Page, tier: 'laptop' | 'narrow'): Promise<void> {
-  const twoPane = await page.evaluate(() => window.matchMedia('(min-width: 68rem)').matches)
+  const observed = await page.evaluate(() => {
+    // (1) the QUERY the CSS is written against.
+    const query = window.matchMedia('(min-width: 68rem)').matches
+    // (2) what the page ACTUALLY LAID OUT. `[data-twopane]` is stamped whenever a band resolved —
+    // at EVERY width (ConfidenceStatement.tsx / FuckOffDate.tsx), so its mere presence is NOT the
+    // tier. The two-pane grid is what the 68rem query turns on: confidence.css :215 /
+    // fuckOffDate.css :220 give the stamped reveal `display: grid` with TWO columns inside the
+    // query and nothing outside it, so the reveal's RESOLVED column count is the rendered tier.
+    // A media-query answer that disagreed with the pixels (a breakpoint mirror drifting, a
+    // `display` override) would go unseen if the arm only re-computed the query.
+    const reveal = document.querySelector('.confidence-reveal[data-twopane], .fod-reveal[data-twopane]')
+    const columns =
+      reveal === null
+        ? null
+        : getComputedStyle(reveal)
+            .gridTemplateColumns.split(/\s+/)
+            .filter((t) => t !== '' && t !== 'none').length
+    return { query, columns, stamped: reveal !== null }
+  })
   expect(
-    twoPane,
-    `the page rendered the ${twoPane ? 'two-pane' : 'stacked'} tier, the arm expected ${tier}`,
+    observed.stamped,
+    'no resolved reveal is stamped [data-twopane] — the tier read would be over a page that never rendered an answer (insight 029)',
+  ).toBe(true)
+  expect(
+    observed.query,
+    `the 68rem query says ${observed.query ? 'two-pane' : 'stacked'}, the arm expected ${tier}`,
   ).toBe(tier === 'laptop')
+  // Laptop: EXACTLY the two panes. Narrow: fewer than two — the single column can be `display:
+  // grid` with one track or no grid at all (`grid-template-columns: none` ⇒ 0 tracks), and which
+  // one is chrome, not law; "not two panes" is the tier fact.
+  if (tier === 'laptop') {
+    expect(
+      observed.columns,
+      `the RENDERED tier disagrees with the query: the stamped reveal resolved ${String(observed.columns)} grid column(s), the arm expected two panes`,
+    ).toBe(2)
+  } else {
+    expect(
+      observed.columns,
+      `the RENDERED tier disagrees with the query: the stamped reveal resolved ${String(observed.columns)} grid column(s) — the arm expected the stacked single column`,
+    ).toBeLessThan(2)
+  }
 }
 
 /** BOTH R13 mounts must exist (the two-mount contract), and exactly ONE is visible — the in-frame
@@ -207,83 +274,153 @@ async function assertOneVisibleDisclaimer(page: Page, tier: 'laptop' | 'narrow')
   await expect(trailing, 'the trailing mount must hide behind data-inframe-disclaimer').toBeHidden()
 }
 
+/** THE ONE "doors last" WALK, shared by every arm that claims it (the date route's two ORDER
+ *  blocks and the scrolling tiers' law below). Until 2026-09-10 two walks carrying the same name
+ *  applied different filters: the date blocks skipped `display:none` / `visibility:hidden` /
+ *  `position:fixed` chrome and hairlines, the new scrolling walk skipped none of them — so "the
+ *  doors are last" meant two different things in one file. It means this:
+ *
+ *  Every element in `scope` that RENDERS A BOX A READER CAN SEE — excluding the doors row itself,
+ *  every ancestor that encloses it (a wrapper legitimately ends where its last child, the doors,
+ *  ends), sr-only clips, viewport-anchored chrome (the update toast: not a flow fact) and
+ *  hairlines — reports its bottom; the tallest wins. `counted` guards the walk against vacuity
+ *  (insight 029): a blank or error page yields near-zero boxes and must never read as "nothing
+ *  trails the doors".
+ */
+async function doorsLastWalk(
+  page: Page,
+  scope: 'body' | 'main.result' = 'body',
+): Promise<{ readonly maxOtherBottom: number; readonly desc: string; readonly counted: number }> {
+  return page.evaluate((sel) => {
+    const doorsEl = document.querySelector('.result-quiet-row')
+    let max = -Infinity
+    let desc = 'nothing'
+    let counted = 0
+    for (const el of Array.from(document.querySelectorAll<HTMLElement>(`${sel} *`))) {
+      if (doorsEl !== null && (doorsEl.contains(el) || el.contains(doorsEl))) continue
+      if (el.closest('.sr-only') !== null) continue
+      const style = window.getComputedStyle(el)
+      if (style.display === 'none' || style.visibility === 'hidden' || style.position === 'fixed')
+        continue
+      if (el.getClientRects().length === 0) continue // display:contents wrappers render no box
+      const r = el.getBoundingClientRect()
+      if (r.width <= 1 || r.height <= 1) continue // sr-only 1px clips, hairlines
+      counted++
+      if (r.bottom > max) {
+        max = r.bottom
+        const cls = el.getAttribute('class')
+        desc = `${el.tagName.toLowerCase()}${cls !== null && cls !== '' ? `.${cls.split(/\s+/)[0]}` : ''}`
+      }
+    }
+    return { maxOtherBottom: max, desc, counted }
+  }, scope)
+}
+
+/** A scrolling-tier answer renders dozens of boxes outside the doors row; a walk that counted
+ *  fewer than this measured a broken page, not the order. */
+const DOORS_WALK_FLOOR = 20
+
 /** THE SCROLLING TIERS' HONESTY LAW — ORDER + REACHABILITY (council 2026-09-10, wf_d2b1d05a-001;
  *  the Hawk's scoped veto). A tier that scrolls by design (the phone; any width the reader's font
- *  makes sub-68rem) cannot promise one frame, so it promises: (1) ORDER — the caveat sits ABOVE the
- *  quiet doors in rendered geometry (not merely DOM order — a grid seat or a CSS reorder could
- *  invert the pixels), and the doors are the LAST thing in the answer: no element of main.result
- *  outside the doors row ends below the doors row's top; (2) REACHABILITY — the caveat can be
- *  brought fully into the viewport by scrolling (order alone would pass a caveat trapped inside an
- *  overflow:hidden ancestor). No proximity ratio: the Hawk withdrew his own 1.0 × innerHeight bound
- *  as a chosen number (insight 065) — the distance is RECORDED by the caller, never asserted.
- *  (3) the verdict names the caveat: h2.cs-word[aria-describedby] resolves to the in-frame mount. */
-async function assertCaveatOrderAndReach(page: Page, expectVerdictLink: boolean): Promise<void> {
+ *  makes sub-68rem; the DATE route at EVERY width — both graphs stacked) cannot promise one frame,
+ *  so it promises: (1) ORDER — the caveat sits ABOVE the quiet doors in rendered geometry (not
+ *  merely DOM order — a grid seat or a CSS reorder could invert the pixels), and the doors are the
+ *  LAST thing in the answer: no visible box outside the doors row ends below the doors row's top;
+ *  (2) REACHABILITY — the caveat can be brought fully into the viewport by scrolling (order alone
+ *  would pass a caveat trapped inside an overflow:hidden ancestor). No proximity ratio: the Hawk
+ *  withdrew his own 1.0 × innerHeight bound as a chosen number (insight 065) — the distance is
+ *  RECORDED by the caller, never asserted. (3) THE VERDICT NAMES THE CAVEAT: the route's hero
+ *  heading — `h2.cs-word` on the spine, `h2.fod-headline` on the date route — carries an
+ *  `aria-describedby` that RESOLVES to the in-frame mount's id.
+ *
+ *  `verdictSelector` is the hero heading itself, never a boolean: `assertCaveatOrderAndReach(page,
+ *  false)` was a pre-built silencer (a route with no link could be added by passing `false`, and
+ *  the review found exactly that hole waiting on the date route). A caller that genuinely has no
+ *  hero heading passes `null` and has to justify it at the call site.
+ */
+async function assertCaveatOrderAndReach(page: Page, verdictSelector: string | null): Promise<void> {
   const caveat = page.locator('footer.disclaimer.disclaimer--in-frame')
   const doors = page.locator('.result-quiet-row')
   await expect(caveat).toBeVisible()
   await expect(doors).toHaveCount(1)
+  // VACUITY (insight 029): the ORDER half compares against the doors row's top, and the row is
+  // `display: contents` in single column — its own rect is all zeros, so its geometry is the union
+  // of its rendered children. A row that offered NO door would leave that top at Infinity and both
+  // ORDER expectations would pass no matter where the caveat sat. Pin the doors here, inside the
+  // helper, so no future caller can reach the ORDER law over a row with nothing in it.
+  expect(
+    await page.locator('.result-quiet-row button').count(),
+    'the quiet-door row offers fewer than two doors — the ORDER law would be vacuous',
+  ).toBeGreaterThanOrEqual(2)
   const geometry = await page.evaluate(() => {
     const c = document.querySelector('footer.disclaimer.disclaimer--in-frame')!.getBoundingClientRect()
     const doorsEl = document.querySelector('.result-quiet-row')!
     // The doors row is `display: contents` in single column (its own rect is all zeros), so its
     // geometry is the union of its RENDERED descendants — the doors themselves.
     let dTop = Infinity
+    let boxed = 0
     for (const el of doorsEl.querySelectorAll<HTMLElement>('*')) {
       const r = el.getBoundingClientRect()
+      if (r.height > 0) boxed++
       if (r.height > 0 && r.top < dTop) dTop = r.top
     }
-    const d = { y: dTop }
     const scrollY = window.scrollY
-    // everything in the answer that is NOT inside the doors row, and renders (has a box)
-    let lastNonDoorBottom = -Infinity
-    let lastNonDoorDesc = ''
-    for (const el of document.querySelectorAll<HTMLElement>('main.result *')) {
-      // skip the doors themselves AND every ancestor that encloses them (a wrapper legitimately
-      // ends where its last child, the doors, ends) — only SIBLING content may not trail the doors
-      if (doorsEl.contains(el) || el.contains(doorsEl) || el.closest('.sr-only')) continue
-      const r = el.getBoundingClientRect()
-      if (r.height === 0) continue
-      if (r.bottom > lastNonDoorBottom) {
-        lastNonDoorBottom = r.bottom
-        lastNonDoorDesc = `${el.tagName.toLowerCase()}${el.className ? '.' + String(el.className).split(' ')[0] : ''}`
-      }
-    }
     return {
+      boxed,
       caveatBottom: c.bottom + scrollY,
-      doorsTop: d.y + scrollY,
-      lastNonDoorBottom: lastNonDoorBottom + scrollY,
-      lastNonDoorDesc,
+      doorsTop: dTop + scrollY,
       caveatHeight: c.height,
       innerHeight: window.innerHeight,
+      scrollY,
     }
   })
+  if (geometry.boxed === 0) {
+    throw new Error(
+      'the quiet-door row rendered no boxed child — the doors row has no top, so both ORDER ' +
+        'assertions would be vacuous (insight 029). Fix the arm or the surface, not this check.',
+    )
+  }
   expect(
     geometry.caveatBottom,
     `ORDER: the caveat (bottom ${geometry.caveatBottom.toFixed(1)}) must sit above the quiet doors (top ${geometry.doorsTop.toFixed(1)})`,
   ).toBeLessThanOrEqual(geometry.doorsTop + 1)
+  // Doors LAST — the ONE shared walk (the same filters the date route's two ORDER blocks apply).
+  const trailing = await doorsLastWalk(page, 'body')
   expect(
-    geometry.lastNonDoorBottom,
-    `ORDER: the doors must be LAST — ${geometry.lastNonDoorDesc} ends below the doors row's top`,
+    trailing.counted,
+    'the doors-last walk counted too few boxes — the page did not render (insight 029)',
+  ).toBeGreaterThan(DOORS_WALK_FLOOR)
+  expect(
+    trailing.maxOtherBottom + geometry.scrollY,
+    `ORDER: the doors must be LAST — ${trailing.desc} ends below the doors row's top`,
   ).toBeLessThanOrEqual(geometry.doorsTop + 1)
   expect(geometry.caveatHeight, 'REACH: the caveat is taller than the viewport').toBeLessThanOrEqual(
     geometry.innerHeight,
   )
   // REACH: scroll the DOCUMENT (never scrollIntoView — that scrolls an overflow:hidden ancestor
   // programmatically, which a reader's wheel cannot; the M4 mutant proved it passes a clipped
-  // caveat) to the caveat's own top, re-measure, and HIT-TEST its centre: the element the browser
-  // finds at that point must be the caveat or something inside it, so no ancestor clips it.
+  // caveat) to the caveat's own top, re-measure, and HIT-TEST TWO points: the upper half AND a
+  // point 4 px above its BOTTOM edge. One centre point passes an ancestor clip that eats only the
+  // caveat's last lines — and the last line is the "validate this with a professional" directive,
+  // the half of R13 that tells the reader what to do.
   const reached = await page.evaluate(() => {
     const el = document.querySelector<HTMLElement>('footer.disclaimer.disclaimer--in-frame')!
     const docTop = el.getBoundingClientRect().top + window.scrollY
     window.scrollTo({ top: Math.max(0, docTop - 4), behavior: 'instant' as ScrollBehavior })
     const r = el.getBoundingClientRect()
-    const hit = document.elementFromPoint(r.left + r.width / 2, r.top + Math.min(r.height / 2, window.innerHeight / 2))
+    const describe = (n: Element | null): string =>
+      n === null ? 'nothing' : `${n.tagName.toLowerCase()}.${String((n as HTMLElement).className).split(' ')[0]}`
+    const x = r.left + r.width / 2
+    const upper = document.elementFromPoint(x, r.top + Math.min(r.height / 2, window.innerHeight / 2))
+    const nearBottom = document.elementFromPoint(x, r.bottom - 4)
     return {
       top: r.top,
       bottom: r.bottom,
       innerHeight: window.innerHeight,
-      hitIsCaveat: hit !== null && (hit === el || el.contains(hit)),
-      hitDesc: hit ? `${hit.tagName.toLowerCase()}.${String((hit as HTMLElement).className).split(' ')[0]}` : 'nothing',
+      upperIsCaveat: upper !== null && (upper === el || el.contains(upper)),
+      upperDesc: describe(upper),
+      bottomIsCaveat: nearBottom !== null && (nearBottom === el || el.contains(nearBottom)),
+      bottomDesc: describe(nearBottom),
       scrolledTo: window.scrollY,
     }
   })
@@ -292,13 +429,26 @@ async function assertCaveatOrderAndReach(page: Page, expectVerdictLink: boolean)
     reached.innerHeight + 1,
   )
   expect(
-    reached.hitIsCaveat,
-    `REACH: the point at the caveat's centre hits ${reached.hitDesc}, not the caveat — an ancestor clips it (document scrolled to ${reached.scrolledTo})`,
+    reached.upperIsCaveat,
+    `REACH: the point in the caveat's upper half hits ${reached.upperDesc}, not the caveat — an ancestor clips it (document scrolled to ${reached.scrolledTo})`,
   ).toBe(true)
-  if (expectVerdictLink) {
-    const link = await page.locator('h2.cs-word').getAttribute('aria-describedby')
+  expect(
+    reached.bottomIsCaveat,
+    `REACH: the point 4px above the caveat's BOTTOM edge hits ${reached.bottomDesc}, not the caveat — an ancestor clips its last lines, the validate directive among them (document scrolled to ${reached.scrolledTo})`,
+  ).toBe(true)
+  if (verdictSelector !== null) {
+    const link = await page.locator(verdictSelector).getAttribute('aria-describedby')
     const caveatId = await caveat.getAttribute('id')
-    expect(link, 'the verdict must name the caveat in aria-describedby').toBe(caveatId)
+    // NON-NULL FIRST (insight 029): `null === null` would certify a hero that names nothing
+    // against a mount that has no id — an equality over a structurally-absent surface.
+    expect(link, `the verdict (${verdictSelector}) carries no aria-describedby at all`).not.toBeNull()
+    expect(caveatId, 'the in-frame caveat mount carries no id to be named').not.toBeNull()
+    expect(link, `the verdict (${verdictSelector}) must name the caveat in aria-describedby`).toBe(caveatId)
+    // …and the reference RESOLVES: an id that names no element is a dangling description.
+    await expect(
+      page.locator(`#${String(caveatId)}`),
+      'the aria-describedby target resolves to no element',
+    ).toHaveCount(1)
   }
   await page.evaluate(() => window.scrollTo(0, 0))
 }
@@ -312,14 +462,32 @@ async function raiseDefaultFont(
   page: Page,
   context: BrowserContext,
   px: number,
-): Promise<{ at16: number; raised: number; cdp: CDPSession }> {
-  const rootPx = (): Promise<number> =>
-    page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize))
+): Promise<{ at16: number; cdp: CDPSession }> {
   await page.goto('/')
-  const at16 = await rootPx()
+  const at16 = await rootFontPx(page)
   const cdp = await context.newCDPSession(page)
   await cdp.send('Page.setFontSizes', { fontSizes: { standard: px, fixed: px } })
-  return { at16, raised: await rootPx(), cdp }
+  // The root measured HERE, on the bare `/`, is not the pin: the emulation is per-target and the
+  // seed route is navigated after it, so the only measurement that proves the arm read a raised
+  // page is one taken on the page the arm measures — assertRootRose, at the call site.
+  return { at16, cdp }
+}
+
+/** The CURRENT page's root font size in px. */
+function rootFontPx(page: Page): Promise<number> {
+  return page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize))
+}
+
+/** Falsifiability for the CDP emulation (insight 016), measured on the page the arm is about to
+ *  read: the root must have RISEN above the browser default, so a silently-ignored, renamed or
+ *  reshaped `Page.setFontSizes` reds instead of quietly measuring the 16 px frame. Returns the
+ *  raised value so the caller can log or annotate the exact root it measured — the 20 px arm's
+ *  annotation is the artifact the owed fork gets decided from, and a bare "> 16" in the log
+ *  names no regime. (Every caller used to re-type these three lines; one home now.) */
+async function assertRootRose(page: Page, at16: number): Promise<number> {
+  const raised = await rootFontPx(page)
+  expect(raised, `Page.setFontSizes never took (root ${at16}px → ${raised}px)`).toBeGreaterThan(at16)
+  return raised
 }
 
 /** The density tier is WHITESPACE-ONLY and boundary-exact: `.result` padding-block steps
@@ -1076,24 +1244,16 @@ test.describe(`?seed=dip — the date route's order contract (${REAL.width}×${R
     )
 
     // Doors LAST: no rendered content element may end below the doors row.
-    const maxOtherBottom = await page.evaluate(() => {
-      const doorsEl = document.querySelector('.result-quiet-row')
-      let max = 0
-      for (const el of Array.from(document.querySelectorAll('body *'))) {
-        if (doorsEl !== null && (doorsEl.contains(el) || el.contains(doorsEl))) continue
-        const style = window.getComputedStyle(el)
-        if (style.display === 'none' || style.visibility === 'hidden' || style.position === 'fixed')
-          continue
-        if (el.getClientRects().length === 0) continue
-        const r = el.getBoundingClientRect()
-        if (r.width <= 1 || r.height <= 1) continue
-        max = Math.max(max, r.bottom)
-      }
-      return max
-    })
-    expect(maxOtherBottom, 'content renders BELOW the quiet doors — doors must be last').toBeLessThanOrEqual(
-      doors.y + doors.height + 0.5,
-    )
+    // THE ONE shared walk (doorsLastWalk) — the same law the scrolling tiers' helper applies.
+    const trailing = await doorsLastWalk(page, 'body')
+    expect(
+      trailing.counted,
+      'the doors-last walk counted too few boxes — the page did not render (insight 029)',
+    ).toBeGreaterThan(DOORS_WALK_FLOOR)
+    expect(
+      trailing.maxOtherBottom,
+      `content renders BELOW the quiet doors — doors must be last (${trailing.desc})`,
+    ).toBeLessThanOrEqual(doors.y + doors.height + 0.5)
   })
 })
 
@@ -1187,24 +1347,16 @@ test.describe(`?seed=datenc — the NC clause on the date residual + the order c
     )
 
     // Doors LAST (the dip block's stronger check): no content element ends below the doors row.
-    const maxOtherBottom = await page.evaluate(() => {
-      const doorsEl = document.querySelector('.result-quiet-row')
-      let max = 0
-      for (const el of Array.from(document.querySelectorAll('body *'))) {
-        if (doorsEl !== null && (doorsEl.contains(el) || el.contains(doorsEl))) continue
-        const style = window.getComputedStyle(el)
-        if (style.display === 'none' || style.visibility === 'hidden' || style.position === 'fixed')
-          continue
-        if (el.getClientRects().length === 0) continue
-        const r = el.getBoundingClientRect()
-        if (r.width <= 1 || r.height <= 1) continue
-        max = Math.max(max, r.bottom)
-      }
-      return max
-    })
-    expect(maxOtherBottom, 'content renders BELOW the quiet doors — doors must be last').toBeLessThanOrEqual(
-      doors.y + doors.height + 0.5,
-    )
+    // THE ONE shared walk (doorsLastWalk) — the same law the scrolling tiers' helper applies.
+    const trailing = await doorsLastWalk(page, 'body')
+    expect(
+      trailing.counted,
+      'the doors-last walk counted too few boxes — the page did not render (insight 029)',
+    ).toBeGreaterThan(DOORS_WALK_FLOOR)
+    expect(
+      trailing.maxOtherBottom,
+      `content renders BELOW the quiet doors — doors must be last (${trailing.desc})`,
+    ).toBeLessThanOrEqual(doors.y + doors.height + 0.5)
   })
 })
 
@@ -1255,7 +1407,18 @@ test.describe(`the phone tier (${PHONE.width}×${PHONE.height}) — ORDER + REAC
     await gotoSeedFinal(page, 'retired')
     await assertResolvedSpine(page)
     await assertOneVisibleDisclaimer(page, 'narrow')
-    await assertCaveatOrderAndReach(page, true)
+    await assertCaveatOrderAndReach(page, SPINE_VERDICT)
+  })
+
+  // THE DATE ROUTE ON THE PHONE. The spine arm above proves the law for `h2.cs-word`; this route
+  // has its OWN hero (`h2.fod-headline`), its own two-graph column, and its own render block —
+  // and it is the route that scrolls at EVERY width, so a caveat that fell below the doors here
+  // would be the inversion the council killed, live on the one surface guaranteed to scroll.
+  test('dip (the date route): one visible caveat, above the doors, doors last, reachable', async ({ page }) => {
+    await gotoSeedFinal(page, 'dip')
+    await assertResolvedDate(page)
+    await assertOneVisibleDisclaimer(page, 'narrow')
+    await assertCaveatOrderAndReach(page, DATE_VERDICT)
   })
 })
 
@@ -1282,8 +1445,7 @@ for (const { seed } of SPINE_SEEDS) {
     test(`${seed}: everything but the doors fits one frame at a 20 px root`, async ({ page, context }) => {
       const { at16, cdp } = await raiseDefaultFont(page, context, 20)
       await gotoSeedFinal(page, seed)
-      const at20 = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize))
-      expect(at20, `Page.setFontSizes never took (root ${at16}px → ${at20}px)`).toBeGreaterThan(at16)
+      const at20 = await assertRootRose(page, at16)
       await assertResolvedSpine(page)
       await assertOneVisibleDisclaimer(page, 'laptop')
       const report = await frameReport(page, true)
@@ -1298,8 +1460,11 @@ for (const { seed } of SPINE_SEEDS) {
         WALK_FLOOR,
       )
       test.info().annotations.push({
+        // The ROOT is named in the annotation, not only in the log: this artifact is what the
+        // owed fork gets decided from, and "the 20 px arm" is a label — the measured root is the
+        // regime. (A `> 16` pin alone would let a 17 px emulation file itself as "20 px".)
         type: '20px-root one-frame law (RECORDED — fork owed)',
-        description: `${report.offenders.length} element(s) past the ${REAL.height}px fold: ${
+        description: `root ${at16}px → ${at20}px at ${REAL.width}×${REAL.height}: ${report.offenders.length} element(s) past the ${REAL.height}px fold: ${
           report.offenders.map((o) => `${o.desc}@${o.bottom}`).join(', ') || 'none'
         }`,
       })
@@ -1314,8 +1479,7 @@ for (const { seed } of SPINE_SEEDS) {
       test(`${seed}: the caveat above the doors, doors last, reachable — no fit claim`, async ({ page, context }) => {
         const { at16, cdp } = await raiseDefaultFont(page, context, 24)
         await gotoSeedFinal(page, seed)
-        const at24 = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize))
-        expect(at24, `Page.setFontSizes never took (root ${at16}px → ${at24}px)`).toBeGreaterThan(at16)
+        const at24 = await assertRootRose(page, at16)
         await assertResolvedSpine(page)
         await assertOneVisibleDisclaimer(page, 'narrow')
         // INSTRUMENT, not oracle: the one-frame magnitude on the stacked tier, recorded for the log.
@@ -1325,11 +1489,36 @@ for (const { seed } of SPINE_SEEDS) {
             report.offenders.find((o) => o.desc.includes('disclaimer'))?.bottom ?? 'in-frame'
           }`,
         )
-        await assertCaveatOrderAndReach(page, true)
+        await assertCaveatOrderAndReach(page, SPINE_VERDICT)
         await cdp.detach()
       })
     })
   }
+}
+
+// THE DATE ROUTE AT A 24 px DEFAULT — the same two widths as the spine family. The spine arms
+// above prove the law on the confidence hero; this route reaches the stacked tier by TWO
+// independent paths (its own single-column chrome, and the 68rem query the raised root moves),
+// carries its own grid (fuckOffDate.css) and its own hero heading. A regression that re-seated
+// the caveat below the doors in fuckOffDate.css alone would pass every spine arm in this file.
+for (const vp of [REAL, TIER] as const) {
+  const scale = vp === REAL ? { deviceScaleFactor: REAL_DPR } : {}
+  test.describe(`?seed=dip — ORDER + REACHABILITY at a 24 px default (${vp.width}×${vp.height}, stacked)`, () => {
+    test.use({ viewport: vp, ...scale })
+    test('dip: the caveat above the doors, doors last, reachable — no fit claim', async ({ page, context }) => {
+      const { at16, cdp } = await raiseDefaultFont(page, context, 24)
+      await gotoSeedFinal(page, 'dip')
+      const at24 = await assertRootRose(page, at16)
+      await assertResolvedDate(page)
+      await assertOneVisibleDisclaimer(page, 'narrow')
+      const report = await frameReport(page, true)
+      console.log(
+        `[24px-root instrument] seed=dip ${vp.width}x${vp.height} root=${at16}→${at24}px: counted=${report.counted} belowFold=${report.offenders.length}`,
+      )
+      await assertCaveatOrderAndReach(page, DATE_VERDICT)
+      await cdp.detach()
+    })
+  })
 }
 
 test.describe(`reduced motion — the 24 px scrolling law holds without the entrance choreography (${REAL.width}×${REAL.height})`, () => {
@@ -1337,14 +1526,99 @@ test.describe(`reduced motion — the 24 px scrolling law holds without the entr
   test('retired: the caveat above the doors, doors last, reachable', async ({ page, context }) => {
     const { at16, cdp } = await raiseDefaultFont(page, context, 24)
     await gotoSeedFinal(page, 'retired')
-    const at24 = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize))
-    expect(at24, `Page.setFontSizes never took (root ${at16}px → ${at24}px)`).toBeGreaterThan(at16)
+    await assertRootRose(page, at16)
     await assertResolvedSpine(page)
     await assertOneVisibleDisclaimer(page, 'narrow')
-    await assertCaveatOrderAndReach(page, true)
+    await assertCaveatOrderAndReach(page, SPINE_VERDICT)
     await cdp.detach()
   })
 })
+
+// ── THE COMPUTING FRAME: exactly ONE caveat while the answer is still being worked out ────────
+// app.css's swap rule is `main.result[data-inframe-disclaimer] ~ .disclaimer { display: none }`.
+// The ATTRIBUTE QUALIFIER is the whole safety property: Result.tsx withholds the in-frame mount
+// with the entire actions row while computing and stamps the attribute in the same breath, so a
+// computing frame carries NO attribute and the page-trailing mount must stand. Drop the qualifier
+// to a bare `main.result ~ .disclaimer` and the crunch window renders ZERO caveats — "Working it
+// out…" with nothing on the page saying the answer can be wrong — and every arm in this file
+// still passes, because every other arm measures a COMMITTED verdict where both spellings agree.
+// Nothing in any browser test saw this until now (the review's one P1).
+//
+// The probe is installed BEFORE navigation and fires on the first frame `main.result` exists, so
+// the window is caught deterministically instead of raced: a date seed's crunch is long (~60 s to
+// final) but the provisional lands much sooner, and a `waitFor` would be a coin flip.
+type ComputingProbe = {
+  readonly stamped: boolean
+  readonly inFrameCount: number
+  readonly trailingCount: number
+  readonly trailingVisible: number
+  readonly inFrameVisible: number
+}
+
+async function probeComputingFrame(page: Page, seed: string): Promise<ComputingProbe> {
+  await page.addInitScript(() => {
+    const store = window as unknown as { __r13Probe?: unknown }
+    const shown = (el: Element): boolean => {
+      const s = getComputedStyle(el)
+      return s.display !== 'none' && s.visibility !== 'hidden'
+    }
+    const capture = (): boolean => {
+      const main = document.querySelector('main.result')
+      if (main === null) return false
+      const inFrame = Array.from(document.querySelectorAll('footer.disclaimer.disclaimer--in-frame'))
+      const trailing = Array.from(
+        document.querySelectorAll('footer.disclaimer:not(.disclaimer--in-frame)'),
+      )
+      store.__r13Probe = {
+        stamped: main.hasAttribute('data-inframe-disclaimer'),
+        inFrameCount: inFrame.length,
+        trailingCount: trailing.length,
+        trailingVisible: trailing.filter(shown).length,
+        inFrameVisible: inFrame.filter(shown).length,
+      }
+      return true
+    }
+    const obs = new MutationObserver(() => {
+      if (capture()) obs.disconnect()
+    })
+    const start = (): void => {
+      if (!capture()) obs.observe(document.documentElement, { subtree: true, childList: true })
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start)
+    else start()
+  })
+  await page.goto(`/?seed=${seed}`)
+  const handle = await page.waitForFunction(
+    () => (window as unknown as { __r13Probe?: ComputingProbe }).__r13Probe ?? null,
+    undefined,
+    { timeout: 30_000 },
+  )
+  return (await handle.jsonValue()) as ComputingProbe
+}
+
+function assertComputingFrameHasExactlyOneCaveat(probe: ComputingProbe): void {
+  // The frame we caught IS the crunch: no attribute, no in-frame mount. (If a future change
+  // stamped the attribute at first paint this reds here rather than certifying the wrong frame.)
+  expect(probe.stamped, 'the first main.result frame already carried data-inframe-disclaimer — this is not the computing window').toBe(false)
+  expect(probe.inFrameCount, 'the in-frame mount must be WITHHELD with the actions row while computing').toBe(0)
+  // …and the caveat the reader can actually see is the page-trailing one, standing alone.
+  expect(probe.trailingCount, 'the page-trailing R13 mount (App.tsx) is missing').toBe(1)
+  expect(
+    probe.trailingVisible,
+    'ZERO caveats while computing — the trailing mount is hidden and no in-frame mount exists. app.css’s swap must be qualified by data-inframe-disclaimer.',
+  ).toBe(1)
+  expect(probe.inFrameVisible + probe.trailingVisible, 'exactly ONE caveat is visible while computing').toBe(1)
+}
+
+for (const vp of [PHONE, REAL] as const) {
+  const scale = vp === REAL ? { deviceScaleFactor: REAL_DPR } : {}
+  test.describe(`the COMPUTING frame at ${vp.width}×${vp.height} — one caveat stands during the crunch`, () => {
+    test.use({ viewport: vp, ...scale })
+    test('dip: no data-inframe-disclaimer, no in-frame mount, the trailing caveat visible', async ({ page }) => {
+      assertComputingFrameHasExactlyOneCaveat(await probeComputingFrame(page, 'dip'))
+    })
+  })
+}
 
 // ── U12: the AssumptionPanel's OWN vertical extent (the F4 council mandate) ───────────────────
 // "Door count stays 5" proves the RESULT frame fits; it says nothing about the panel. The full

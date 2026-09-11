@@ -27,7 +27,11 @@ export const SHOWCASE = { width: 1871, height: 917 }
 export const BP_LAPTOP_REM = 68
 /** The browser's DEFAULT root font size in px — what one rem resolves to when the user has not
  *  raised it. Named, not inlined (council 2026-09-10): a raised default changes what 68rem resolves
- *  to, so a reader of FLOOR sees exactly which assumption the pixel width rests on. */
+ *  to, so a reader of FLOOR sees exactly which assumption the pixel width rests on. This is the CSS
+ *  initial `font-size` (the spec's value, not a project knob) — the 20px/24px fit arms raise it via
+ *  CDP Page.setFontSizes and are deltas FROM it, so it must NEVER be edited to match one of those
+ *  regimes: that would slide FLOOR off the two-pane seam it exists to sit on.
+ *  scripts/__tests__/breakpoint-mirrors.test.ts pins it against a literal 16 for exactly that. */
 export const BROWSER_DEFAULT_PX = 16
 /** 68rem exactly — the two-pane breakpoint's tightest in-range width (the honesty floor). */
 export const FLOOR = { width: BP_LAPTOP_REM * BROWSER_DEFAULT_PX, height: 800 }

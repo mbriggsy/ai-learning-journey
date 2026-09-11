@@ -59,6 +59,7 @@ import { dateOddsText } from './dateOdds'
 import { dateTradeoffPoint } from './dateTradeoff'
 import { composeDateSplit, type DateSplitView } from './dateSplit'
 import { composeVerdictMedicareResidual } from './stateTaxDisclosure'
+import { IN_FRAME_DISCLAIMER_ID } from './Disclaimer'
 import type { PricedState } from '@engine/constants/stateTax'
 import { focusHeading, useLiveAnnouncer } from '@intake/a11y'
 import { ConfidenceBandPanel } from '@viz/ConfidenceBandPanel'
@@ -370,10 +371,16 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
       >
         <div className="reveal__lead">
           {view.provisional && <p className="fod-provisional">{copy.answerProvisionalTag}</p>}
+          {/* The hero verdict NAMES the caveat (council 2026-09-10, clause 3 — the same link
+              ConfidenceStatement's h2.cs-word carries): the screen reader reads R13 as this
+              headline's own description, so the date reader meets "this can be wrong" with the
+              date, not only if they scroll past the doors. The date route scrolls at EVERY
+              width (both graphs stacked), so it is the route the link matters most on. */}
           <h2
             className={heroDated ? 'fod-headline' : 'fod-headline fod-headline--quiet'}
             tabIndex={-1}
             ref={headingRef}
+            aria-describedby={IN_FRAME_DISCLAIMER_ID}
           >
             {heroLead(heroTrack, view.windowTopYears, dateAnchor)}
           </h2>

@@ -66,13 +66,29 @@ since July — FIXED first: the two-mount swap is keyed to the verdict at every 
 verdict→caveat (`Disclaimer.tsx` exports the id), the scrolling tiers' law is ORDER + REACHABILITY. The gate
 (`e2e/vertical-fit.spec.ts`: `assertTier` · `assertOneVisibleDisclaimer` re-cut · `assertCaveatOrderAndReach` ·
 `raiseDefaultFont`): the 16 px phone arm, 24 px at 1536 + 1280 for the four spine seeds (the one-frame magnitude recorded
-as an instrument), a reduced-motion companion — 14 arms green; FOUR planted mutants proven and reverted (the tier-keyed
-swap back → 14 red; the CDP send dropped → 13 red, the phone arm alone green; the mount moved below the doors → 10 red;
-`main.result` clipped `overflow:hidden` → 10 red on REACH — the FIRST reach check used `scrollIntoView`, which scrolls a
-clipped ancestor programmatically and passed that mutant; the shipped check scrolls the DOCUMENT and hit-tests the caveat's
-centre). Records: council-log row, architecture §12, the register entry rewritten + the phone-walk entry's false "cleared"
+as an instrument), a reduced-motion companion, and — after the adversarial review (178 agents, 56 findings, 32 confirmed)
+— the DATE route (the phone + 24 px at 1536 / 1280; its hero `h2.fod-headline` now names the caveat too) and two
+COMPUTING-state arms (390 and 1536: the trailing mount stands, the in-frame one absent, one caveat) — 19 scrolling-law arms
+green, full `verify:fit` 138. Planted mutants proven and reverted: the TRUE tier-keyed swap restored (in-frame dark below
+68rem only) → 13 red, the four 20 px two-pane arms and the computing arms green (the commit message's "14 red" was a
+DIFFERENT plant — in-frame dark at every width — the review caught the mislabel); the CDP send dropped → 13 red, the phone
+arm alone green; the mount moved below the doors → 10 red; `main.result` clipped `overflow:hidden` → 10 red on REACH —
+the FIRST reach check used `scrollIntoView`, which scrolls a clipped ancestor programmatically and passed that mutant; the
+shipped check scrolls the DOCUMENT and hit-tests two points of the caveat; the attribute qualifier dropped from the
+trailing-hide (`main.result ~ .disclaimer`) → both computing arms red ("ZERO caveats while computing"). Review fixes also:
+the doors-geometry vacuity guard (throws when the doors row rendered no boxed child; ≥ 2 doors asserted in the helper),
+one shared `doorsLastWalk` predicate for all three ORDER walks, `assertTier` observes the rendered grid as well as the query,
+`assertRootRose` replaces the copy-pasted pin, the spec docblock states the verdict-keyed law, the unit test's vacuous
+trailing-id equality replaced by direct renders (insight 029) + both verdict surfaces greped, the source-bind test widened
+(max-width complements, px/em breakpoints under src, decimals/spacing) with its law stated honestly and `BROWSER_DEFAULT_PX`
+pinned as the CSS initial value. Advisory, not fixed: `U7Preview.tsx` / `DatePreview.tsx` (DEV previews) render a verdict
+without a Disclaimer mount, so `aria-describedby` dangles there; a unit test importing `e2e/reviewSurface.ts` pulls
+`@playwright/test` into the tsc program (a shared constants module is the clean home). The eye's screenshots are taken by
+the tracked instrument `e2e/held/council-24px-shots.spec.ts` (first frame BEFORE the full page — a full-page capture drops
+the CDP font emulation, which made the first 24 px frame a byte-identical copy of the 16 px control). Records: council-log row, architecture §12, the register entry rewritten + the phone-walk entry's false "cleared"
 line withdrawn, the held patch DELETED (its arm landed re-cut), the measurements file kept as the instrument record;
-`scripts/__tests__/breakpoint-mirrors.test.ts` binds all 16 `68rem` mirrors (9 files) to `--bp-laptop`, `FLOOR` derived.
+`scripts/__tests__/breakpoint-mirrors.test.ts` binds all 16 `68rem` mirrors (10 files — nine stylesheets incl. two
+comment-only, plus the spec's `matchMedia`) to `--bp-laptop`, `FLOOR` derived.
 **NEW FORK, filed in the register (his or a council's, never a pilot number):** at Chrome's one-click Large (20 px) the
 1536 laptop STAYS two-pane and budget / retired / nc RED the one-frame law — the save slot ends 806–871 px and the
 PROTECTED caveat 877–936 px against 791 (health fits); the 20 px arm RECORDS (root pin + tier + one caveat + the walk as a
@@ -236,8 +252,9 @@ scroller; jsdom lacks `scrollingElement` — nullish guard) and the account / ot
 WebKit exposes NO `navigator.storage.persist()` (recorded, never asserted — `db.ts` calls it advisory). STOPPED, honestly:
 phone P2 3 (the strip reserve — the two-block strip measured 278 px = 17.4 rem, Continue lands at y 1,378 on the Social
 Security step at scroll 0; a viewport-tax fork, register *The phone intake walk* item 3) and the ENLARGED-TEXT fit arm (all
-eight 24 px arms red inside the PROTECTED set; the block is held out at `temp/fit-24px/`, the council is OWED — register
-*The app on someone else's device*, third bullet).
+eight 24 px arms red inside the PROTECTED set — ✅ RESOLVED 2026-09-10: the council sat and ruled the reds measured the
+sub-68rem stacked tier; the ruling is built and gated, see START HERE (c) and the register *The app on someone else's
+device*, third bullet; the held block is deleted, its arm landed re-cut).
 (5) ✅ COUNCIL-DECIDED 2026-09-08 (8/10, executed — `docs/council-log.md`): the §2 tier-callout deviation is ACCEPTED — A rejected
 on un-oracled wrong-region risk, the `isThinCohort` bypass and the morph teleport, NOT on room (the pilot's "vertical ink budget"
 reason was FALSE — the Honesty Hawk's veto, honored: the text layer is absolutely positioned, zero flow cost). The register's

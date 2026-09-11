@@ -285,6 +285,15 @@ export function strayCountSurfaces(cwd: string): string[] {
 /** `file.ts:NNN` / `path/file.tsx:NNN-MMM` (en-dash ranges too), inside or outside backticks. */
 export const CITATION = /((?:[\w.-]+\/)*[\w.-]+\.(?:ts|tsx|css|json|yml|html|mjs|cjs)):(\d+)(?:[-–](\d+))?/g
 
+/** A BARE continuation — a backticked `:NNN`, `:NNN-MMM`, or comma list (`:928, :933`) — continues
+ *  the nearest NAMED citation before it on the same line, and is checked against that file. The
+ *  2026-09-11 evening re-anchor pass proved the class: every named citation moved with the diff and
+ *  every bare sibling stayed at its old number, pointing at comments (the 2026-09-10 fleet had
+ *  re-anchored 287 of them by hand). A token preceded by "not `" or "-at-filing`" is a RECORDED
+ *  refuted anchor — frozen on purpose, never checked. A bare token with no named citation before it
+ *  on its line is unattributable here (the queue's own rule: name the file in prose first). */
+export const BARE_CONTINUATION = /`:\d+(?:[-–]\d+)?(?:,\s*:\d+(?:[-–]\d+)?)*`/g
+
 /** Blank out the INSIDE of every `<details>…</details>` block (archived reasoning, kept for the record —
  *  its citations describe the code as it was) while preserving line count, so line numbers in the
  *  report stay true. */
@@ -310,15 +319,31 @@ export function checkCitations(
   for (const { surface, content } of docs) {
     const lines = stripArchived(content).replace(/\r\n/g, '\n').split('\n')
     lines.forEach((l, i) => {
-      for (const m of l.matchAll(CITATION)) {
-        const cited = m[1]!
-        const from = Number(m[2])
-        const to = m[3] ? Number(m[3]) : from
-        if (to < from) { problems.push({ surface, line: i + 1, citation: m[0], reason: 'malformed range (end before start — write the full end line, e.g. 1812-1813)' }); continue }
+      const check = (cited: string, from: number, to: number, citation: string): void => {
+        if (to < from) { problems.push({ surface, line: i + 1, citation, reason: 'malformed range (end before start — write the full end line, e.g. 1812-1813)' }); return }
         const src = resolve(cited, from, to)
-        if (!src) { problems.push({ surface, line: i + 1, citation: m[0], reason: 'file not found' }); continue }
-        if (from > src.length || to > src.length) { problems.push({ surface, line: i + 1, citation: m[0], reason: `out of range (file has ${src.length} lines)` }); continue }
-        if (src.slice(from - 1, to).every((s) => s.trim() === '')) problems.push({ surface, line: i + 1, citation: m[0], reason: 'cites only blank line(s)' })
+        if (!src) { problems.push({ surface, line: i + 1, citation, reason: 'file not found' }); return }
+        if (from > src.length || to > src.length) { problems.push({ surface, line: i + 1, citation, reason: `out of range (file has ${src.length} lines)` }); return }
+        if (src.slice(from - 1, to).every((s) => s.trim() === '')) problems.push({ surface, line: i + 1, citation, reason: 'cites only blank line(s)' })
+      }
+      const named: { idx: number; cited: string }[] = []
+      for (const m of l.matchAll(CITATION)) {
+        named.push({ idx: m.index!, cited: m[1]! })
+        check(m[1]!, Number(m[2]), m[3] ? Number(m[3]) : Number(m[2]), m[0])
+      }
+      // The bare continuations — checked against the nearest NAMED citation before them on the line.
+      if (named.length === 0) return
+      for (const m of l.matchAll(BARE_CONTINUATION)) {
+        const idx = m.index!
+        const prev = named.filter((n) => n.idx < idx).pop()
+        if (!prev) continue
+        const before = l.slice(0, idx)
+        if (/not\s*`?$/.test(before) || /-at-filing`?$/.test(before)) continue // a recorded refuted anchor, frozen on purpose
+        for (const t of m[0].slice(1, -1).split(',')) {
+          const r = /:(\d+)(?:[-–](\d+))?/.exec(t.trim())
+          if (!r) continue
+          check(prev.cited, Number(r[1]), r[2] ? Number(r[2]) : Number(r[1]), `${prev.cited} (bare \`${t.trim()}\`)`)
+        }
       }
     })
   }

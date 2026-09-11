@@ -44,7 +44,7 @@ import { IN_FRAME_DISCLAIMER_ID } from './Disclaimer'
 import { floorRelief } from './twoTier'
 import { axisDollarFormatterFor, formatAxisDollar } from './money'
 import { composeVerdictReading } from './verdictSentence'
-import { composeVerdictMedicareResidual } from './stateTaxDisclosure'
+import { composeVerdictMedicareResidual, composeVerdictStateNote } from './stateTaxDisclosure'
 import type { PricedState } from '@engine/constants/stateTax'
 import { focusHeading, useLiveAnnouncer } from '@intake/a11y'
 import { ConfidenceBandPanel } from '@viz/ConfidenceBandPanel'
@@ -129,7 +129,10 @@ export interface ConfidenceStatementProps {
    *  naming its state; undefined (not priced / 'elsewhere' / unbuilt / degenerate overlay) reads
    *  today's "isn't priced yet" monolith verbatim. Result owns the ONE route-aware decision
    *  (`pricedStateForRun` off the built params, never geography/ages — insight 080/081); this stays
-   *  a dumb prop renderer (insight 048). Rendered inside the SAME residual paragraph — no new row. */
+   *  a dumb prop renderer (insight 048). Rendered inside the SAME residual paragraph — no new row —
+   *  while `medicarePricedNote` rides. Without it (a pre-65 member ⇒ the Healthcare door) there is no
+   *  residual, and the clause renders as the STANDALONE `.cs-state-note` row instead (Card 4,
+   *  `composeVerdictStateNote`) — a real subordinate row the two-pane density step-down pays for. */
   readonly statePricedNote?: PricedState
   /** P3·U13 — TRUE when any staleness clock fired at unlock (IntakeApp's re-entry gate):
    *  the verdict wears the standing "figured fresh under today's rules" line in its
@@ -262,6 +265,9 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
   // line + the RENDERED re-confirm control, else it withdraws entirely.
   const bandElapsedYears = savedAnchor?.yearsSincePlanBuilt ?? 0
   const agedFanBlocked = bandElapsedYears > 0 && onReconfirm === undefined
+  // Card 4 — the standalone state clause, composed in the pure seam (insight 048) off the two props
+  // Result already threads: null whenever the residual renders (it carries the clause itself).
+  const stateNote = composeVerdictStateNote(statePricedNote, medicarePricedNote)
   const resolved = useMemo(() => {
     // Align the resolve guard with the RENDER guard: only a WORDED reading with a fan draws a band.
     // An indeterminate reading renders the placeholder (never `resolved`), so resolving — and possibly
@@ -333,8 +339,10 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
     // worded-reading condition computed it).
     const s = shown!
     // The two-tier gate (pure, insight 048): null = no budget rode, or the value-equal
-    // degenerate — the single-metric statement renders verbatim, no subordinate wrapper. Reads the
-    // RAW headline (a drill-down must agree with the engine record, never the sticky display).
+    // degenerate — the single-metric statement renders verbatim, no relief LINE (the subordinates
+    // wrapper itself always mounts since Card 4: the state clause is unconditional, inside the
+    // residual or standalone). Reads the RAW headline (a drill-down must agree with the engine
+    // record, never the sticky display).
     const relief = floorRelief(view.headline, view.floorReading)
     // The folded survivor's CLOSED face (2026-07-02 rework — the raw disclosure row read as a
     // form control, not a statement): the summary speaks the eyebrow AND the verdict lockup
@@ -402,15 +410,19 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
             stays pinned rows 1/-1 whatever mounts here (U9b build-gate 4; two direct grid children
             would mint an implicit third row). Inside, in order:
             (1) the U9b essentials-relief line (present iff the floorRelief gate earns it — the
-                value-equal degenerate renders the single-metric statement VERBATIM, wrapper absent
-                when nothing earns it);
+                value-equal degenerate renders the single-metric statement VERBATIM);
             (2) the "as the survivor" statement — INLINE exactly as shipped when it is the only
                 subordinate face, FOLDED behind a calm <details> when the floor relief already
                 holds the one inline X-of-10 slot (build-gate 7: at most ONE subordinate count on
                 the first frame; R4 — the fold is the seam the cold-read can flip). Both render
                 below the band so the scrub tap-targets never move (insight 035); absence renders
-                nothing (insight 044). */}
-        {(relief || view.survivorReading || medicarePricedNote || stalenessNote) && (
+                nothing (insight 044);
+            (3) the priced-Medicare pair, or — where the residual is withheld — the STANDALONE state
+                clause (Card 4, 2026-09-11): one of the two ALWAYS renders (composeVerdictStateNote
+                is null exactly when the residual carries the clause), so the wrapper mounts on
+                every worded verdict — unconditionally, which is why it is no longer gated;
+            (4) the staleness echo. */}
+        {
           <div className="reveal__subordinates">
             {relief && <TwoTierHeadline relief={relief} />}
             {view.survivorReading &&
@@ -457,13 +469,21 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
                 </p>
               </>
             )}
+            {/* Card 4 (the four-faces Caddie walk, 2026-09-11) — the STANDALONE state clause for the
+                household whose residual is withheld (a pre-65 member ⇒ the Healthcare door carries the
+                Medicare residual). The residual above carried the verdict's ONLY state clause, so this
+                household's verdict said nothing about state tax. The composer returns null whenever the
+                residual renders — exactly ONE state clause on every verdict, never two (the matrix in
+                ConfidenceStatement.test). Its OWN class: the fit gate pins it per-seed (health: present;
+                budget / retired / nc: absent) and it must never alias the medicare pair. */}
+            {stateNote !== null && <p className="cs-state-note">{stateNote}</p>}
             {/* P3·U13 — the standing staleness echo (Q1): the full per-clock disclosure
                 already rendered at the re-entry gate; this line keeps the fact visible WITH
                 the verdict. Plain text in the a11y tree; its OWN class — the fit gate pins
                 .cs-medicare-note per-seed, so this note must never alias it. */}
             {stalenessNote && <p className="cs-staleness-note">{copy.stalenessHeroNote}</p>}
           </div>
-        )}
+        }
         {/* The completion actions, seated in the left reading column on two-pane (display:contents in
             single column keeps them flat below — see confidence.css). Absent in the preview harness. */}
         {actionsSlot != null && <div className="reveal__actions">{actionsSlot}</div>}

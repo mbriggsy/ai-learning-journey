@@ -590,6 +590,15 @@ export const copy = {
   bandReadoutRangeJoiner: ' – ',
   bandReadoutMedianLabel: 'Most likely',
   bandReadoutThinNote: 'Too few couples to show a range.',
+  // Card 5 (the four-faces Caddie walk, 2026-09-11) — the GONE variant's two fixed shapes. The
+  // screen-reader ruin sentence used to speak the AT ANCHOR column's distance ("about 17 years out")
+  // on a plan whose drawn median hits $0 inside its first years — the AT channel rosier than the
+  // ink. The gone family now speaks the median's FIRST $0 year (bandPanelChrome.composeBandAtRange):
+  // inside a year ⇒ this fixed sentence (no numeral that could read as runway); N ≥ 2 ⇒ the slot
+  // `bandAtRangeGone(N)`; a depletion the plan's elapsed years have already passed (an AGED vault,
+  // wall-time re-based) ⇒ `…Already`. Hedged ("most likely") — the median is a path, not a record.
+  bandAtRangeGoneWithinYear: 'The savings most likely run out within about a year.',
+  bandAtRangeGoneAlready: 'The savings have most likely already run out.',
   // Household-clock x-axis MARKER labels (the moment's name; the ages + a11y sentence ride through
   // slots — numerals never inline). Band-scoped chrome, not a verdict claim. The plan-horizon marker
   // sits at the fan's ACTUAL last year, never a nominal max. "Work stops" rides the DATE route only —
@@ -1013,7 +1022,7 @@ export const copy = {
   //
   // STRUCK, NOT REPLACED WITH AN AFFIRMATION, and that is deliberate. The O16 house pattern is
   // affirm-with-residual, but these two strings are gated on `statePriced` ALONE
-  // (`stateTaxDisclosure.ts:100`) — they carry no ACA-priced axis, so the identical sentence also
+  // (`stateTaxDisclosure.ts:144`) — they carry no ACA-priced axis, so the identical sentence also
   // ships to a Medicare-only household (`intakeMap.ts:587-590`) that has no benchmark at all.
   // "The benchmark is already in these numbers" would be a NEW false claim for that population.
   // Affirming here needs the three-state gate the Roth strings have; until then, silence is true.
@@ -1102,6 +1111,24 @@ export const copy = {
   verdictResidualStatePA:
     'Your Pennsylvania state income tax is reflected in these numbers, usually a small piece since Pennsylvania leaves most retirement income untaxed',
   verdictResidualStateFL: 'Florida has no state income tax, so there’s no state bill on your withdrawals',
+  // Card 4 (the four-faces Caddie walk, 2026-09-11) — the STANDALONE state clause for the household
+  // whose residual is WITHHELD (a pre-65 member ⇒ the Healthcare door carries the Medicare residual;
+  // `showMedicarePricedNote`). Until this key the verdict's ONLY state clause was the pair embedded in
+  // the monolith above, so a pre-65 household's verdict said nothing about state tax, priced or
+  // unpriced — on BOTH routes (the walk's seed-date landing + vault-datestale verdict: zero clauses).
+  // The UNPRICED words are the monolith's own two sentences VERBATIM (stateTaxDisclosure.test pins the
+  // substring); `composeVerdictStateNote` returns null whenever the residual renders, so no household
+  // reads the clause twice. `verdict` prefix ⇒ free-numeral-gated: NAME the state, never a rate — and
+  // never a bare "65" (the cohort is spoken by structure, not by a numeral).
+  verdictStateUnpricedNote: 'State income tax isn’t priced yet. In a taxing state, that’s a real yearly bill.',
+  // The PRICED pre-65 arm's narrowing tail — the composer's law: an affirmation NEVER renders alone
+  // (affirm-alone would read as "everything is priced"). The all-65+ residual narrows with the
+  // Medicare-extras Tail, which is not this household's residual: its own unpriced list lives on the
+  // Healthcare sheet (`controlHealthOmissionsNoteStatePriced` — one honest home per fact), so this
+  // tail POINTS there, by the sheet's rendered name (`leverHealthTitle`). Period-grafted like
+  // `verdictResidualTail` (every affirmation ends mid-clause). ⚑ PILOT'S DRAFT, 2026-09-11 — the
+  // register routes this ONE sentence to Briggsy's words (Card 4); swap the string, keep the composition.
+  verdictStatePricedDoorTail: '. What still isn’t counted is listed in your health-cost picture.',
   rothMedicareResidualNote:
     // Swapped 2026-07-19, twice (the trend unit, then its Part D sourcing pass): the original
     // blamed "premiums held flat" for a crossing looking "a shade easier" — true pre-flip,
@@ -1997,8 +2024,8 @@ export const slots = {
    *
    *  ⚠️ DO NOT "FIX" THIS BY DROPPING THE TODAY TICK. That inverts the contradiction into the
    *  defect U13/§S0 already fixed — `bandAnnotations.ts:51-56` records it live from the first
-   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:1603-1604` forbids a band that loses
-   *  its wall clock BY NAME. The tick is right; the sentence was wrong. */
+   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2163-2166` (the `?vault=datearrived` arm — "must still
+   *  mark WALL-TIME today") forbids a band that loses its wall clock BY NAME. The tick is right; the sentence was wrong. */
   bandAgedPremiseFresh: (buildYear: number): string =>
     `This range runs from ${buildYear}, when the plan was built — the years since are modeled, not records. What you actually hold today is undetermined until you re-confirm.`,
   /** An intermediate decade-age tick's accessible sentence (the reference marks between Today and
@@ -2022,12 +2049,17 @@ export const slots = {
    *  in the one channel with no $0 picture). Median-led, the depletion as the honest caveat. */
   bandAtRangeRuin: (years: number, median: string): string =>
     `Looking about ${years} years out, your savings most likely sit around ${median} in today’s dollars, but in the hardest futures they can run out.`,
-  /** The TOTAL-depletion variant: when even the MEDIAN reads $0 (an already-failing plan — the savings
-   *  are most likely gone by here), the "$0 but the hardest futures run out" framing is self-contradictory
-   *  (a median of $0 IS the floor). Speak the depletion plainly — most-likely-gone, not a soft range
-   *  around $0. (Council 2026-06-29 + the ?seed=failing live cold-read.) */
-  bandAtRangeGone: (years: number): string =>
-    `Looking about ${years} years out, the savings have most likely run out.`,
+  /** The TOTAL-depletion variant: when even the MEDIAN reads $0 at the anchor (an already-failing plan),
+   *  the "$0 but the hardest futures run out" framing is self-contradictory (a median of $0 IS the
+   *  floor). Speak the depletion plainly — most-likely-gone, not a soft range around $0. (Council
+   *  2026-06-29 + the ?seed=failing live cold-read.)
+   *  Card 5 (2026-09-11): `yearsUntilGone` is the median's FIRST $0 year (wall-time on an aged vault),
+   *  NEVER the anchor column's distance — the old "Looking about ${anchor} years out, … have run out"
+   *  spoke ~17 years of runway on ?seed=failing, whose median is gone inside its first years. This slot
+   *  is the N ≥ 2 shape; ≤ 1 rides `copy.bandAtRangeGoneWithinYear`, < 0 `copy.bandAtRangeGoneAlready`
+   *  (the chooser is bandPanelChrome.composeBandAtRange, tested in bandAtRange.test). */
+  bandAtRangeGone: (yearsUntilGone: number): string =>
+    `The savings most likely run out in about ${yearsUntilGone} years.`,
   /** The pinned natural-frequency frame. A count below the ceiling renders "N of 10"; the over-funded
    *  near-ceiling is the PROPORTION {@link slots.xOfTenAtCeiling} ("better than 9 in 10"). The `n >= 10`
    *  branch keeps the honesty clamp as a DEFENSIVE backstop so a stray xOfTen(10) anywhere can never
@@ -2701,7 +2733,7 @@ export const slots = {
    *  BITES it the way it bites its visual twin `recDeltaTypical`: the AT reader hears the same figures the
    *  sighted reader sees, so the same modal law must hold. A `recViz` prefix was rejected — it would red the
    *  three correctly hedge-free arm labels (`recVizWithLabel`/`recVizWithoutLabel`/`recVizRunnerUpLabel`,
-   *  copy.ts:1761-1768 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
+   *  copy.ts:1788-1795 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
    *  `isControlKey` was rejected — it breaks that predicate's "by prefix ALONE" law (copyGuard.ts:125). */
   recDeltaVizAria: (withoutLabel: string, withoutFig: string, withLabel: string, withFig: string, deltaFig: string): string =>
     `${withoutLabel} lands near about $${withoutFig}; ${withLabel} about $${withFig} — a difference of about $${deltaFig}.`,

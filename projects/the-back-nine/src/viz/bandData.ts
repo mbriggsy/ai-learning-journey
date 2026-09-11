@@ -181,6 +181,16 @@ export interface ResolvedBandData {
    *  bandGeometry) — retained, never clipped (the honored hawk veto). Domain-gated at the
    *  producer seam by {@link elapsedYearsWithin}. */
   readonly elapsedYears: number
+  /** Card 5 (the four-faces Caddie walk, 2026-09-11) — the FIRST integer plan-year at which the
+   *  median path formats to the $0 floor (through the SAME injected `formatDollar` the readout rows
+   *  use, so lerp-dust and a true $0 read alike), or `null` when the median never touches the floor.
+   *  Derived from the engine's integer-year GRID at the producer seam, never from the resampled
+   *  lattice: the lattice is `horizonYears / (LATTICE_POINTS − 1)` wide per column (0.85 y on the
+   *  failing seed, more on a longer horizon), so its first $0 column overstates the depletion year
+   *  by up to one column — in the OPTIMISTIC direction, on the one channel with no $0 picture. The
+   *  screen-reader ruin sentence (`bandPanelChrome.composeBandAtRange`) speaks this year; the drawn
+   *  polyline still rides the lattice (a picture tolerates a column of slack; a spoken number does not). */
+  readonly medianGoneYear: number | null
 }
 
 /**
@@ -428,6 +438,13 @@ export function resolveBandData(
   // The tick formatter rides the O8 factory when supplied (one dialect per lattice, rule 36).
   const yTicks = buildYTicks(dollarMax, opts.tickFormatterFor?.(dollarMax) ?? opts.formatDollar)
 
+  // Card 5 — the median's first $0 plan-year, read off the integer GRID through the readout's own
+  // formatter (the displayed-figure test the AT chooser applies to its rows — never a raw `=== 0`, so
+  // lerp-dust and a true floor read alike). Grid-exact on purpose: see the field's docblock.
+  const zeroStr = opts.formatDollar(0)
+  const gone = grid.find((y) => opts.formatDollar(y.p50) === zeroStr)
+  const medianGoneYear = gone === undefined ? null : gone.yearsFromNow
+
   return {
     kind: 'resolved',
     outcomeState,
@@ -439,6 +456,7 @@ export function resolveBandData(
     callouts: opts.callouts ?? [],
     tooltipRows,
     elapsedYears: elapsedYearsWithin(opts.elapsedYears ?? 0, horizonYears),
+    medianGoneYear,
   }
 }
 

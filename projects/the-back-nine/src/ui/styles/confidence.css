@@ -289,15 +289,18 @@
      in the fit — which the ?seed showcase arm measures. The ?vault=stale frame matched already
      (staleness) and is unchanged. */
   .confidence-reveal[data-twopane]:has(.cs-staleness-note),
-  .confidence-reveal[data-twopane]:has(.cs-medicare-note) {
+  .confidence-reveal[data-twopane]:has(.cs-medicare-note),
+  .confidence-reveal[data-twopane]:has(.cs-state-note) {
     row-gap: var(--space-1); /* round 3 — see the reservoir note below (was --space-2) */
   }
   .confidence-reveal[data-twopane]:has(.cs-staleness-note) > .reveal__lead,
-  .confidence-reveal[data-twopane]:has(.cs-medicare-note) > .reveal__lead {
+  .confidence-reveal[data-twopane]:has(.cs-medicare-note) > .reveal__lead,
+  .confidence-reveal[data-twopane]:has(.cs-state-note) > .reveal__lead {
     gap: var(--space-2);
   }
   .confidence-reveal[data-twopane]:has(.cs-staleness-note) > .reveal__subordinates,
-  .confidence-reveal[data-twopane]:has(.cs-medicare-note) > .reveal__subordinates {
+  .confidence-reveal[data-twopane]:has(.cs-medicare-note) > .reveal__subordinates,
+  .confidence-reveal[data-twopane]:has(.cs-state-note) > .reveal__subordinates {
     gap: var(--space-1);
   }
   /* The Linux wrap-drift reservoir, round 2 (CI 2026-07-11, run 29170580301): the
@@ -318,7 +321,8 @@
      the two upper-stack gaps tightening 4px each. The ?vault=stale arm's computed pin moves
      with it (8px → 4px). */
   .confidence-reveal[data-twopane] .cs-medicare-note,
-  .confidence-reveal[data-twopane] .cs-medicare-residual {
+  .confidence-reveal[data-twopane] .cs-medicare-residual,
+  .confidence-reveal[data-twopane] .cs-state-note {
     line-height: var(--leading-snug);
     /* ROUND 4 (the ask-for-Medicare-extras unit, 2026-07-11): the pair grew again — the
        affirmation now names extra coverage and the on-typical frames append the per-person
@@ -562,6 +566,7 @@
 
 .cs-medicare-note,
 .cs-medicare-residual,
+.cs-state-note,
 .cs-staleness-note {
   margin: 0;
   font-family: var(--font-body);
@@ -582,6 +587,20 @@
    REAL window + the CI arm. The staleness echo deliberately does NOT join (its own class, its own
    solved budget — never aliased); any interior rework of this block rides O12's density pass. */
 .cs-medicare-note {
+  border-top: 1px solid var(--line-soft);
+  padding-top: var(--space-1);
+}
+
+/* Card 4 (the four-faces Caddie walk, 2026-09-11): the STANDALONE state clause — the household whose
+   Medicare residual is withheld (a pre-65 member). By construction it never co-renders with the
+   medicare pair (composeVerdictStateNote returns null whenever the residual renders), so it always
+   OPENS its own block under the survivor statement and wears O13's hairline for the same
+   mis-attribution reason. It joins the medicare pair's two-pane register above (snug leading,
+   --text-sm, the note-bearing :has() step-down) — the same words read at the same density whether
+   they sit inside the residual (retired / nc) or stand alone (health / healthnc): the register's
+   NEGATIVE holds — if the one-frame law reds on the health frame, spend whitespace, never the
+   sentence. The fit gate pins .cs-state-note per-seed (health: present; budget / retired / nc: absent). */
+.cs-state-note {
   border-top: 1px solid var(--line-soft);
   padding-top: var(--space-1);
 }

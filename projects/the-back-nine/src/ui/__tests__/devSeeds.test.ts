@@ -28,7 +28,9 @@ import {
   isDateRoute,
   missingRequiredFacts,
   pricedStateForRun,
+  spineMedicarePriced,
 } from '@intake/intakeMap'
+import { showMedicarePricedNote } from '../healthSheetChrome'
 import { validateParams } from '@engine/simulate'
 import { runEngine, engineApi } from '@engine/engineProtocol'
 import { solveFromWire } from '@engine/engineWire'
@@ -505,6 +507,32 @@ describe('the state-tax seed faces (the state-carrying seed increment)', () => {
       'on-track',
     )
     expect(twin.headline.outcomeState, 'the twin (state-absent) is on-track too — NC no longer moves the band').toBe('on-track')
+  })
+
+  // healthnc — THE PRICED PRE-65 WITNESS (Card 4, the four-faces Caddie walk 2026-09-11). The
+  // register's prescription named `datenc` as the "priced, pre-65" red-first target; `datenc`
+  // spreads `stillWorkingAllMedicare` (66/65) — ALL-65+, so its clause already rode the residual.
+  // No seed was both pre-65 AND priced, so the matrix's fourth cell had no live plant. `healthnc`
+  // = the `health` household (61/59, ACA-priced, reaches the Healthcare door) in North Carolina:
+  // the run prices NC (the producer's output), the door predicate holds, so the residual is
+  // structurally WITHHELD — and the verdict's state clause must arrive by the standalone note.
+  // Pinned at the seams the surfaces read (pricing facts, never ages): `pricedStateForRun` and
+  // both inputs of `showMedicarePricedNote`. The twin is `health` itself (one field changed).
+  it("'healthnc' prices NC on a household whose residual is WITHHELD (pre-65, the Healthcare door) — the standalone-note cell's live plant", () => {
+    const d = DEV_SEEDS.healthnc
+    expect(pricedStateForRun(d), 'the spine producer prices NC').toBe('NC')
+    expect(healthcarePriced(d), 'a pre-65 member ⇒ the Healthcare door').toBe(true)
+    expect(
+      showMedicarePricedNote({ medicarePriced: spineMedicarePriced(d), reachesHealthDoor: healthcarePriced(d) }),
+      'the residual (and its embedded state clause) is withheld on this household',
+    ).toBe(false)
+    const twin = runEngine(buildSpineParams(DEV_SEEDS.health)!, DEV_SEEDS.health.seed!)
+    const nc = runEngine(buildSpineParams(d)!, d.seed!)
+    if (twin.kind !== 'resolved' || nc.kind !== 'resolved') throw new Error('healthnc: expected resolved wires')
+    expect(
+      sumF64(nc.taxAware!.lifetimeTaxPaidReal),
+      'NC prices a strictly HIGHER lifetime tax than the state-absent `health` twin (the flat rate on the pretax draw + the brokerage gains)',
+    ).toBeGreaterThan(sumF64(twin.taxAware!.lifetimeTaxPaidReal))
   })
 
   // pa — the DERIVED "usually a small piece". Working memory GUESSED byte-identity; the engine refutes
@@ -1332,7 +1360,7 @@ describe('the arrived aged plant (the first live route to the hero\'s dateInYear
     ).toBeLessThan(depth)
     // NOT an incidental observation: the floor crowning at 0 is exactly why this plant lights ONE
     // arrived arm and not two. `floorLineText` short-circuits offset 0 BEFORE the three-way split
-    // (FuckOffDate.tsx:226, mirroring heroLead's free-today precedence), so `dateFloorCoveredPast`
+    // (FuckOffDate.tsx:228, mirroring heroLead's free-today precedence), so `dateFloorCoveredPast`
     // cannot fire here — its live route is and remains `?vault=datestale`. Arm 3 proves the
     // consequence on the renderer rather than leaving it as a comment.
     expect(out.floor.offsetYears, 'the floor crowns at 0 — the plain covered line, never the Past arm').toBe(0)

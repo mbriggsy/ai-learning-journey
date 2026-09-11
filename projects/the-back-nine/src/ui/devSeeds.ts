@@ -1011,6 +1011,23 @@ const elsewhereAnswered: ScenarioDraft = { ...retiredOnTrack, retirementState: '
 const dateNcSeed: ScenarioDraft = { ...stillWorkingAllMedicare, retirementState: 'NC' }
 
 /**
+ * THE PRICED PRE-65 WITNESS — `?seed=healthnc` (Card 4, the four-faces Caddie walk 2026-09-11).
+ * `retiredHealth` (61/59, ACA-priced, reaches the Healthcare door) in North Carolina, ONE field
+ * changed. Every other priced-state seed is all-65+ (`nc`/`pa`/`fl` spread the 66/65 couple;
+ * `datenc` spreads the 66/65 still-working couple), so their state clause rides the Medicare
+ * residual — and the verdict surfaces render that residual ONLY when no member is pre-65
+ * (`showMedicarePricedNote`). This is the one household whose residual is structurally WITHHELD
+ * while its run PRICES a state: the verdict's clause must arrive by the standalone note
+ * (`composeVerdictStateNote`), the fourth cell of the route × cohort × pricing matrix, and it had
+ * no live plant until this seed. The register's prescription named `datenc` for this cell — that
+ * was wrong (all-65+), corrected the same day. Engine-proven in devSeeds.test.ts: `pricedStateForRun`
+ * reads 'NC', the door predicate holds, the residual predicate reads false, and NC prices strictly
+ * more lifetime tax than the state-absent `health` twin (the flat rate on the pretax draw + the
+ * brokerage gains). Stateless-base rule N/A: this seed is never doctored into an aged vault.
+ */
+const healthNcSeed: ScenarioDraft = { ...retiredHealth, retirementState: 'NC' }
+
+/**
  * THE REFUSAL WITNESS for the employer-coverage premise — `?seed=datesolo`.
  *
  * `stillWorking` (Alex 58 working / Sam 60 retired at 58, pre-65) with the ONE field flipped:
@@ -1074,6 +1091,7 @@ export const DEV_SEEDS = {
   fl: flAffirmation,
   elsewhere: elsewhereAnswered,
   datenc: dateNcSeed,
+  healthnc: healthNcSeed,
   datesolo: dateSoloCoverage,
   atceiling: atCeilingSeed,
 } satisfies Record<string, ScenarioDraft>
@@ -1320,7 +1338,7 @@ const ARRIVED_SAVED_DAYS_AGO = 30
  * arrived household: born 1963, planned at 57 to stop at offset 5, and that year is now behind them.
  *
  * ⚠️ THIS PLANT LIGHTS **ONE** ARRIVED ARM, NOT TWO. The floor crowns at 0, and `floorLineText`
- * (`FuckOffDate.tsx:226`) SHORT-CIRCUITS offset 0 to the plain `dateFloorCovered` line BEFORE the
+ * (`FuckOffDate.tsx:228`) SHORT-CIRCUITS offset 0 to the plain `dateFloorCovered` line BEFORE the
  * three-way split — mirroring `heroLead`'s free-today precedence, deliberately ("covered from the
  * plan's own start ⇒ still covered now"). So `dateFloorCoveredPast` does NOT fire here; its live
  * route is and remains `?vault=datestale`, whose floor crown sits strictly inside its window. (An
@@ -1558,7 +1576,7 @@ export function doctorRecordSuperseded(s: ScenarioV3, todayEpochDay: number): Sc
  *  the two corrections this note's first draft got wrong (it ages `birthYear` alongside
  *  `startCalendarYear` to hold the `currentAge === startCalendarYear − birthYear` model invariant,
  *  and it lights ONE arrived arm rather than two, because a floor crown of 0 short-circuits past
- *  the three-way split at `FuckOffDate.tsx:226`). The base must be STATELESS: `datenc` rejects at
+ *  the three-way split at `FuckOffDate.tsx:228`). The base must be STATELESS: `datenc` rejects at
  *  any depth ≥1 with "startCalendarYear precedes the priced state rate schedule"
  *  (`simulate.ts:640-643`), which is the real bound the S6 spec's `earliestPricedRateYear` probe
  *  was reaching for — and that probe is VACUOUS on a stateless base (the gate is `isPricedState`-

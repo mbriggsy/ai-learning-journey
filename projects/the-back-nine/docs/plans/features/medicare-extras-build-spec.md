@@ -233,7 +233,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
 - **DND-012 externally-derived fixtures**, including the F3 asymmetric survivor golden (F3 above).
 - **verify:fit arms re-pinned WITHOUT assuming monotone shrink** — the omission axis shrank but
   the real-flat clause broadened. The fit spec now pins non-typical extras arms explicitly
-  (`e2e/vertical-fit.spec.ts:1111-1112` — the priced-state faces, all non-typical; `:1895-1897` — the statestale non-typical echo frame; re-anchored 2026-09-10, both prior numbers had landed on unrelated lines), and the CSP intake walk learned the fork step
+  (`e2e/vertical-fit.spec.ts:1129-1130` — the priced-state faces, all non-typical; `:1952-1954` — the statestale non-typical echo frame; re-anchored 2026-09-10, both prior numbers had landed on unrelated lines), and the CSP intake walk learned the fork step
   (`e2e/csp.spec.ts:238`, the one integration gap `503213f4` left, fixed in `e921f2bb`).
 - **Color-blind-safe encoding** on adopted-vs-entered / typical-vs-your-bill / priced-vs-residual:
   every distinction is carried in words, never a hue. Each door fact line states its provenance in

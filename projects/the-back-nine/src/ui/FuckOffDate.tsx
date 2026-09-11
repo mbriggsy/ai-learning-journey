@@ -58,7 +58,7 @@ import { copy, slots } from './copy'
 import { dateOddsText } from './dateOdds'
 import { dateTradeoffPoint } from './dateTradeoff'
 import { composeDateSplit, type DateSplitView } from './dateSplit'
-import { composeVerdictMedicareResidual } from './stateTaxDisclosure'
+import { composeVerdictMedicareResidual, composeVerdictStateNote } from './stateTaxDisclosure'
 import { IN_FRAME_DISCLAIMER_ID } from './Disclaimer'
 import type { PricedState } from '@engine/constants/stateTax'
 import { focusHeading, useLiveAnnouncer } from '@intake/a11y'
@@ -139,7 +139,9 @@ export interface FuckOffDateProps {
   /** The state-tax unit (S5): the PRICED state THIS run priced, or undefined. Swaps the residual's
    *  embedded state clause IN PLACE — a priced household reads the outcome-scoped affirmation
    *  naming its state; undefined reads today's "isn't priced yet" monolith verbatim (mirrors
-   *  ConfidenceStatement; route-aware off the built params in Result — insight 080/081). */
+   *  ConfidenceStatement; route-aware off the built params in Result — insight 080/081). Where the
+   *  residual is withheld (a pre-65 member ⇒ the Healthcare door) the clause renders as its own
+   *  `.fod-note.cs-state-note` instead (Card 4, `composeVerdictStateNote`). */
   readonly statePricedNote?: PricedState
   /** P3·U13 — TRUE when any staleness clock fired at unlock: the date claim wears the
    *  standing "figured fresh under today's rules" line among its notes (the Q1 disclosure
@@ -292,6 +294,9 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
   // projection with an unstated premise). Fresh sessions (plan clock 0) are byte-identical.
   const bandElapsedYears = dateAnchor?.yearsSincePlanBuilt ?? 0
   const agedFanBlocked = bandElapsedYears > 0 && onReconfirm === undefined
+  // Card 4 — the standalone state clause, composed in the pure seam (insight 048) off the two props
+  // Result already threads: null whenever the residual renders (it carries the clause itself).
+  const stateNote = composeVerdictStateNote(statePricedNote, medicarePricedNote)
   const resolved = useMemo(() => {
     if (view.kind !== 'dates' || !view.band || agedFanBlocked) return null
     return resolveBandData(view.band.fan, view.band.outcomeState, {
@@ -424,6 +429,16 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
               )}
             </>
           )}
+          {/* Card 4 (the four-faces Caddie walk, 2026-09-11) — the STANDALONE state clause for the
+              household whose residual is withheld. A date household with ANY pre-65 member reaches the
+              Healthcare door, which withholds the residual above (the date claim's ONLY state clause)
+              — so the walk's seed-date landing and vault-datestale verdict carried zero state clauses.
+              (The all-65+ still-working households — ?seed=date65, ?seed=datenc — keep the residual and
+              read their clause inside it; the datenc fit arm pins that no standalone note renders.)
+              The composer returns null whenever the residual renders — exactly ONE state clause on
+              every date verdict (the matrix in FuckOffDate.test). The date route scrolls by design, so
+              this is its own note in the .fod-note register (mirrors the staleness echo). */}
+          {stateNote !== null && <p className="fod-note cs-state-note">{stateNote}</p>}
           {/* P3·U13 — the standing staleness echo (Q1): the per-clock disclosure rendered at
               the re-entry gate; this line keeps the fact visible WITH the date claim. */}
           {stalenessNote && <p className="fod-note cs-staleness-note">{copy.stalenessHeroNote}</p>}

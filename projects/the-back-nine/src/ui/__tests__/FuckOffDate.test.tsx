@@ -521,3 +521,46 @@ describe('P3-U11 follow-up — the priced-Medicare disclosure on the date claim'
     expect(notes[residualIdx], 'the residual does not swallow the appendix').not.toContain(note)
   })
 })
+
+// Card 4 (the four-faces Caddie walk, 2026-09-11) — the route × cohort × pricing MATRIX, date half.
+// The walk's seed-date landing and vault-datestale verdict rendered ZERO state clauses: the date
+// claim's only state clause rode the Medicare residual, which renders only for the all-65+ no-door
+// household — and the working date households are pre-65 by construction. The law now: EXACTLY ONE
+// state clause on every date verdict — inside the residual where it renders, a standalone
+// `.fod-note.cs-state-note` where it does not. ConfidenceStatement.test.tsx pins the spine's cells.
+describe('Card 4 — exactly ONE state clause on every date verdict ({all-65+, pre-65} × {unpriced, priced})', () => {
+  const STATE_CLAUSE = /isn’t priced yet|is reflected in these numbers|no state income tax/g
+  const cells = [
+    { cohort: 'all-65+', medicarePricedNote: true, statePricedNote: undefined },
+    { cohort: 'all-65+', medicarePricedNote: true, statePricedNote: 'NC' },
+    { cohort: 'pre-65', medicarePricedNote: false, statePricedNote: undefined },
+    { cohort: 'pre-65', medicarePricedNote: false, statePricedNote: 'NC' },
+  ] as const
+  for (const cell of cells) {
+    it(`${cell.cohort} × ${cell.statePricedNote ?? 'unpriced'}: one clause — in the residual iff the residual renders`, () => {
+      const { container } = render(
+        <FuckOffDate
+          view={dates(DATE_FIXTURES.confirmed)}
+          medicarePricedNote={cell.medicarePricedNote}
+          statePricedNote={cell.statePricedNote}
+        />,
+      )
+      const text = container.textContent ?? ''
+      expect(text.match(STATE_CLAUSE)?.length ?? 0, 'exactly one state clause on the date verdict').toBe(1)
+      const standalone = container.querySelectorAll('.cs-state-note')
+      if (cell.medicarePricedNote) {
+        expect(standalone, 'the residual carries the clause — no standalone note (never twice)').toHaveLength(0)
+      } else {
+        expect(standalone, 'no residual ⇒ the standalone note carries the clause').toHaveLength(1)
+        expect(standalone[0], 'rendered as a date-claim note (the .fod-note register)').toHaveClass('fod-note')
+        expect(standalone[0], 'plain text in the a11y tree, never decoration').not.toHaveAttribute('aria-hidden')
+        if (cell.statePricedNote === 'NC') {
+          expect(standalone[0]!.textContent).toContain('North Carolina')
+          expect(standalone[0]!.textContent).not.toContain('isn’t priced yet')
+        } else {
+          expect(standalone[0]!.textContent).toBe(copy.verdictStateUnpricedNote)
+        }
+      }
+    })
+  }
+})

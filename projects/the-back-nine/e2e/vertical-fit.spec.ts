@@ -74,10 +74,14 @@ import { copy, slots, staticDisclosures } from '../src/ui/copy'
  *  keyed off the run's pricing facts never ages — insight 080) — `retired` (66/65) and `budget`
  *  (68/70) carry them; `health` (61/59, the ACA-priced household) must NOT (it reaches the
  *  Healthcare door, whose sheet carries the residual — one honest home per fact). */
+// `stateNote` (Card 4, the four-faces Caddie walk 2026-09-11): the STANDALONE state clause
+// (`.cs-state-note`) renders exactly where the residual does NOT — the household whose residual is
+// withheld (health) reads its state clause standalone; the residual-bearing frames (budget / retired /
+// nc) read it INSIDE the residual and must render no standalone note (never twice).
 const SPINE_SEEDS = [
-  { seed: 'budget', medicareNote: true },
-  { seed: 'retired', medicareNote: true },
-  { seed: 'health', medicareNote: false },
+  { seed: 'budget', medicareNote: true, stateNote: false },
+  { seed: 'retired', medicareNote: true, stateNote: false },
+  { seed: 'health', medicareNote: false, stateNote: true },
   // The NC priced face (the state-carrying seed increment): a `retired` (retiredOnTrack) clone in
   // North Carolina. The NC flat-tax drag pushed the state-absent twin's on-track DOWN across the band
   // edge to BORDERLINE until S.L. 2026-41's rate cut was pinned (2026-08-02): NC lands ON-TRACK beside
@@ -85,7 +89,7 @@ const SPINE_SEEDS = [
   // the one-frame law on a PRICED-STATE household. Its state clause is OUTCOME-independent
   // (statePricedNote = pricedStateForRun off the built params, never the verdict), so the affirmation
   // shape is unchanged by the pin; the clause TEXT is pinned by the `?seed=nc` arm below, never here.
-  { seed: 'nc', medicareNote: true },
+  { seed: 'nc', medicareNote: true, stateNote: false },
 ] as const
 
 /** The spine presence companions (insight 029 — geometry over an unresolved/blank page passes
@@ -513,6 +517,19 @@ async function assertMedicareNote(page: Page, expected: boolean): Promise<void> 
   }
 }
 
+/** Card 4 — the STANDALONE state clause renders exactly where the residual does not (never twice).
+ *  Presence is the whole pin: the words are the composer's, unit-pinned in stateTaxDisclosure.test;
+ *  the matrix (route × cohort × pricing) is pinned in ConfidenceStatement.test + FuckOffDate.test. */
+async function assertStateNote(page: Page, expected: boolean): Promise<void> {
+  const note = page.locator('.cs-state-note')
+  if (expected) {
+    await expect(note, 'a household whose residual is withheld reads its state clause standalone').toHaveCount(1)
+    await expect(note).toBeVisible()
+  } else {
+    await expect(note, 'a residual-bearing frame carries its state clause INSIDE the residual — no standalone note').toHaveCount(0)
+  }
+}
+
 async function assertMedicareSnugLeading(page: Page): Promise<void> {
   // The Linux wrap-drift reservoir (CI 2026-07-11, run 29170580301): the pair pays for the
   // magnitude-honest residual in LEADING (body 1.55 → snug 1.4) — a platform-independent
@@ -539,7 +556,7 @@ async function assertMedicareSnugLeading(page: Page): Promise<void> {
 
 // ── the spine frame matrix: {budget, retired, health, nc} × {REAL, TIER, SHOWCASE} ────────────
 
-for (const { seed, medicareNote } of SPINE_SEEDS) {
+for (const { seed, medicareNote, stateNote } of SPINE_SEEDS) {
   test.describe(`?seed=${seed} — the one-frame fit law`, () => {
     test.describe(`at Briggsy's real window (${REAL.width}×${REAL.height} @ 2.5dpr)`, () => {
       test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
@@ -547,6 +564,7 @@ for (const { seed, medicareNote } of SPINE_SEEDS) {
         await gotoSeedFinal(page, seed)
         await assertResolvedSpine(page)
         await assertMedicareNote(page, medicareNote)
+        await assertStateNote(page, stateNote)
         if (medicareNote) await assertMedicareSnugLeading(page)
         await assertOneVisibleDisclaimer(page, 'laptop')
         await assertResultPadding(page, '32px') // 791 ≤ 840 — the density tier serves his window
@@ -1211,6 +1229,37 @@ test.describe(`?seed=elsewhere — the answered-but-unpriced monolith, no state 
   })
 })
 
+// healthnc: THE PRICED PRE-65 WITNESS (Card 4, the four-faces Caddie walk 2026-09-11) — the `health`
+// household (61/59, the ACA door) in North Carolina. The residual is structurally WITHHELD here
+// (showMedicarePricedNote: a pre-65 member reaches the Healthcare door), and the residual carried the
+// verdict's ONLY state clause — so until Card 4 this household's verdict said nothing about state tax
+// while its run priced NC. The clause now arrives by the standalone note: NAMES the state, ships with
+// its narrowing tail (never affirm-alone), exactly ONE clause on the page, and the frame still fits.
+test.describe(`?seed=healthnc — the priced pre-65 household's standalone state clause (${REAL.width}×${REAL.height} @ 2.5dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test('no residual, ONE standalone clause naming North Carolina, and the frame fits', async ({ page }) => {
+    await gotoSeedFinal(page, 'healthnc')
+    await assertResolvedSpine(page)
+    await assertMedicareNote(page, false)
+    await assertStateNote(page, true)
+    const note = page.locator('.cs-state-note')
+    await expect(note, 'the priced arm names the state').toContainText('North Carolina')
+    // The tail is pinned by its CATALOG constant, not a lexeme: the string is the pilot's draft
+    // routed to Briggsy's words, and his swap must not red a gate whose law (never affirm-alone)
+    // still holds. An emptied constant would make the pin vacuous, so its non-emptiness is asserted.
+    expect(copy.verdictStatePricedDoorTail.trim().length, 'an empty tail IS affirm-alone').toBeGreaterThan(0)
+    await expect(note, 'the priced arm ships WITH its narrowing tail — never affirm-alone').toContainText(copy.verdictStatePricedDoorTail)
+    await expect(note, 'the unpriced words die for a priced household').not.toContainText('isn’t priced yet')
+    // Exactly ONE state clause on the whole rendered verdict (the matrix law, in the real DOM).
+    const clauses = await page
+      .locator('main.result')
+      .evaluate((el) => (el.textContent ?? '').match(/isn’t priced yet|is reflected in these numbers|no state income tax/g)?.length ?? 0)
+    expect(clauses, 'one state clause on the verdict — never zero, never two').toBe(1)
+    await assertOneVisibleDisclaimer(page, 'laptop')
+    await assertFrameFits(page, true)
+  })
+})
+
 // ── the date route (?seed=dip): scrolls BY DESIGN — its contract is ORDER ─────────────────────
 
 test.describe(`?seed=dip — the date route's order contract (${REAL.width}×${REAL.height})`, () => {
@@ -1220,6 +1269,12 @@ test.describe(`?seed=dip — the date route's order contract (${REAL.width}×${R
     // Presence companions: the two-pane stamped, BOTH graphs drawn (the fan band + the odds
     // ladder — the U10 hard-gate surface), the doors offered.
     await expect(page.locator('.fod-reveal[data-twopane]')).toBeVisible()
+    // Card 4: a pre-65 (stateless) date household's residual is withheld, so its state clause
+    // arrives by the STANDALONE note in the .fod-note register — the walk's seed-date landing
+    // rendered zero state clauses before this fix.
+    const stateNote = page.locator('.fod-note.cs-state-note')
+    await expect(stateNote, 'the unpriced state clause renders standalone on the date claim').toHaveCount(1)
+    await expect(stateNote).toContainText('isn’t priced yet')
     await expect(page.locator('.fod-band')).toBeVisible()
     await expect(page.locator('.fod-ladder')).toBeVisible()
     expect(await page.locator('.result-quiet-row button').count()).toBeGreaterThanOrEqual(2)
@@ -1329,6 +1384,8 @@ test.describe(`?seed=datenc — the NC clause on the date residual + the order c
       page.getByText('Your North Carolina state income tax is reflected in these numbers'),
       'the NC state clause must render on the date residual',
     ).toBeVisible()
+    // Card 4: the residual carries the clause on this all-65+ household — no standalone note (never twice).
+    await expect(page.locator('.cs-state-note'), 'the residual-bearing date frame renders no standalone note').toHaveCount(0)
 
     // ORDER (the date route's honesty contract): graphs → in-frame disclaimer → doors, doors last.
     const box = async (selector: string) => {
@@ -2407,7 +2464,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
       //
       // The bound is TIGHT BY CONSTRUCTION (~10px at 1536×791), so this is a live constraint on the
-      // copy rather than a formality: it is what makes the length note in copy.ts:1483-1487 enforceable
+      // copy rather than a formality: it is what makes the length note in copy.ts:1510-1514 enforceable
       // instead of advisory. Text is captured so a red names the sentence that outgrew the slack.
       expect(
         geometry.standingBottom,

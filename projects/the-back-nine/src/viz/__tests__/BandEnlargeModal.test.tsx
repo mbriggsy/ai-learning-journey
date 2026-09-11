@@ -51,6 +51,7 @@ function resolved(): ResolvedBandData {
   return {
     kind: 'resolved',
     elapsedYears: 0,
+    medianGoneYear: null,
     outcomeState: 'borderline',
     dollarMax: 1_500_000,
     horizonYears: 30,

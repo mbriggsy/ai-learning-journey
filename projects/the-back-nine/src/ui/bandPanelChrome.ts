@@ -83,7 +83,29 @@ export function composeBandAtRange(
   //  - low reads $0, median positive ⇒ the median holds but the low futures deplete: speak it AS ruin.
   //  - otherwise ⇒ the normal range-first sentence.
   const zeroStr = formatAxisDollar(0)
-  if (row.median === zeroStr) return slots.bandAtRangeGone(years)
+  if (row.median === zeroStr) {
+    // Card 5 (the four-faces Caddie walk, 2026-09-11): the GONE sentence speaks the median's FIRST
+    // $0 year, never the anchor. The anchor is the deepest cohort-clean column (~15–20y out on any
+    // real household), so "Looking about ${years} years out, … have run out" read as ~17 years of
+    // runway on ?seed=failing — a plan whose median is gone in its first year (the AT channel rosier
+    // than the ink, in the one channel with no $0 picture). The year is the producer's GRID-exact
+    // `medianGoneYear` (resolveBandData, the same formatter as this row test) — NOT a search of the
+    // lattice rows: on the failing seed the lattice's first $0 column sits at 1.7 y (41-year horizon
+    // ÷ 48 columns) and rounds to 2 over a grid that reads $0 at year 1 — one column of slack, in the
+    // optimistic direction. The spoken distance re-bases to wall time exactly as `years` does; a
+    // depletion the elapsed years have already passed speaks ALREADY (modeled years, never a record).
+    // An anchor row reading $0 with no grid $0 year is a producer contradiction (a lerp of two
+    // grid years formats to $0 only if both do) — fail loud, never a fabricated year.
+    if (resolved.medianGoneYear === null) {
+      throw new RangeError(
+        'composeBandAtRange: the anchor row reads $0 but the grid carries no median $0 year — a producer contradiction (resolveBandData.medianGoneYear)',
+      )
+    }
+    const yearsUntilGone = resolved.medianGoneYear - yearsSinceBuilt
+    if (yearsUntilGone < 0) return copy.bandAtRangeGoneAlready
+    if (yearsUntilGone <= 1) return copy.bandAtRangeGoneWithinYear
+    return slots.bandAtRangeGone(yearsUntilGone)
+  }
   if (row.low === zeroStr) return slots.bandAtRangeRuin(years, row.median)
   return slots.bandAtRange(years, row.low, row.high, row.median)
 }

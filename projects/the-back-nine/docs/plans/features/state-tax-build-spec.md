@@ -213,9 +213,9 @@ status: shipped
    construction — no catch-all arm, so widening `PricedState` fails `tsc` until the new state's
    own affirmation ships, rather than silently dressing a future SC household in Florida's
    "no state income tax" words.
-3. **FIVE disclosure homes, not the four this plan first named** — `verdictMedicareResidual`
-   (copy.ts:1072), `rothOmissionsNote` (copy.ts:927), `controlHealthOmissionsNote`
-   (copy.ts:1024), the spendHelp branch (`spendHelpKeyFor`, intakeMap:981), and the
+3. **FIVE disclosure homes, not the four this plan first named** (SIX since 2026-09-11 — the standalone verdict note, see the S5 note below) — `verdictMedicareResidual`
+   (copy.ts:1081), `rothOmissionsNote` (copy.ts:936), `controlHealthOmissionsNote`
+   (copy.ts:1033), the spendHelp branch (`spendHelpKeyFor`, intakeMap:981), and the
    RECOMMENDATION surface's disclosure rail (`recDiscStateTax`). The fifth was born unguarded:
    it shipped as the only household-DEPENDENT builder with no condition, so an NC household
    would read "this compares federal tax only" three inches under a spine that had just named
@@ -230,7 +230,7 @@ status: shipped
    `pricedStateForRun` (intakeMap:808) reads the state-pricing answer off the route's own BUILT
    params (the `spineMedicarePriced` shape — buildSpineParams' overlay output; the date route
    reads its own builder's output), never geography and never ages. It returns a `PricedState`
-   or `undefined`, so every one of the five homes swaps its clause by the SAME rule. **The bare `isDateRoute` disjunct is STRIPPED for state** —
+   or `undefined`, so every one of the five homes swaps its clause by the SAME rule (six since 2026-09-11 — the verdict's STANDALONE state note, `composeVerdictStateNote`, is the sixth: home #1 renders only for the all-65+ no-door household, so a pre-65 household's verdict carried no clause on either route until the four-faces walk's Card 4 caught it; same predicate, own gate). **The bare `isDateRoute` disjunct is STRIPPED for state** —
    Medicare's version works only because dateSearch forces healthcare for every household;
    state pricing is roster-gated, so `isDateRoute ||` would falsely affirm "counted" for an
    'elsewhere' date-route household (insight 080's exact recurrence). The out-of-roster

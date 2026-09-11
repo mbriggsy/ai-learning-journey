@@ -306,7 +306,7 @@ describe('U17 §S6 — the aged premise and the Today tick must not contradict e
    * against it.
    *
    * WHY THIS ARM HAD TO BE WRITTEN RATHER THAN ASSUMED: every existing consumer renders THROUGH the
-   * slot — `FuckOffDate.test.tsx:328,335`, `ConfidenceStatement.test.tsx:601,614`,
+   * slot — `FuckOffDate.test.tsx:328,335`, `ConfidenceStatement.test.tsx:605,618`,
    * `copyGuard.test.ts:450-451` all call `slots.bandAgedPremise*(...)` and compare to its own
    * output. They follow ANY reword silently, in both directions. Without the arm below, the §S6 fix
    * passes green and so does a future revert of it — the wording would be pinned by nothing at all.

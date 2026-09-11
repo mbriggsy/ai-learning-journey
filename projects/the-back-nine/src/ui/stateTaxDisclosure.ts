@@ -9,9 +9,12 @@
  * rule (insight 078 — a defect-class sweep by meaning, not by string), each gated independently at
  * its own home.
  *
- * FIVE HOMES. The build spec's S5 section (state-tax-build-spec.md, rewritten 2026-09-06 to name all five;
- * it pinned "×4 homes" until then) — the three composed
- * below plus the spend-help branch (`spendHelpKeyFor`, intakeMap:981). The RECOMMENDATION surface's
+ * SIX HOMES. The build spec's S5 section (state-tax-build-spec.md, rewritten 2026-09-06 to name the first
+ * five; it pinned "×4 homes" until then) — the four composed
+ * below plus the spend-help branch (`spendHelpKeyFor`, intakeMap:981). The SIXTH is the verdict's
+ * STANDALONE state note ({@link composeVerdictStateNote}, Card 4 of the 2026-09-11 four-faces Caddie
+ * walk): home #1 renders only for the all-65+ no-door household, so every pre-65 household's verdict
+ * carried NO state clause on either route until it. The RECOMMENDATION surface's
  * disclosure rail is the FIFTH, and it was born unguarded: `recDiscStateTax` shipped as the only
  * household-DEPENDENT builder with no condition, so an NC household read "this compares federal tax
  * only" three inches under a spine that had just named their state. Before the 2026-08-02 NC lift no
@@ -60,6 +63,47 @@ export function composeVerdictMedicareResidual(pricedState: PricedState | undefi
     }
   })()
   return `${copy.verdictResidualLead} ${affirm}${copy.verdictResidualTail}`
+}
+
+/** The verdict's STANDALONE state clause (Card 4, the four-faces Caddie walk 2026-09-11) — the
+ *  household whose Medicare residual is WITHHELD. Home #1 above is rendered by both verdict surfaces
+ *  ONLY under `medicarePricedNote` (the all-65+ no-door household — `showMedicarePricedNote`), and
+ *  it carried the verdict's ONLY state clause. So every household with a pre-65 member (the working
+ *  date households, the spine's ACA-priced `health` seed) met NO state clause on its verdict, priced
+ *  or unpriced — on both routes. This composer decouples the clause from the residual:
+ *
+ *    - `residualCarriesClause` (the residual renders) ⇒ `null`: the clause is already inside the
+ *      residual — nothing renders twice (the all-65+ frames the fit law is tuned to are untouched).
+ *    - unpriced ⇒ the monolith's own two state sentences VERBATIM (`verdictStateUnpricedNote`; the
+ *      test pins it as a substring of the residual, so the two homes cannot drift apart).
+ *    - priced ⇒ the SAME affirmation home #1 uses + a narrowing tail (the composer's law: never
+ *      affirm-alone). The all-65+ Tail narrows Medicare extras, which is not this household's
+ *      residual — its unpriced list lives on the Healthcare sheet — so the tail points there.
+ *
+ *  THE LAW this encodes (the route × cohort × pricing matrix, pinned in ConfidenceStatement.test +
+ *  FuckOffDate.test): exactly ONE state clause on every verdict, never zero, never two. EXHAUSTIVE by
+ *  construction, for the reason {@link composeVerdictMedicareResidual} is. */
+export function composeVerdictStateNote(
+  pricedState: PricedState | undefined,
+  residualCarriesClause: boolean,
+): string | null {
+  if (residualCarriesClause) return null
+  if (pricedState === undefined) return copy.verdictStateUnpricedNote
+  const affirm = ((): string => {
+    switch (pricedState) {
+      case 'NC':
+        return copy.verdictResidualStateNC
+      case 'PA':
+        return copy.verdictResidualStatePA
+      case 'FL':
+        return copy.verdictResidualStateFL
+      default: {
+        const never: never = pricedState
+        throw new Error(`unhandled priced state ${String(never)}`)
+      }
+    }
+  })()
+  return `${affirm}${copy.verdictStatePricedDoorTail}`
 }
 
 /** The Roth lever's omissions note (home #2): the state-tax item drops for a priced household,

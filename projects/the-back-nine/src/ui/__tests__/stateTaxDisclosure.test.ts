@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   composeVerdictMedicareResidual,
+  composeVerdictStateNote,
   composeRothOmissionsNote,
   composeControlHealthOmissionsNote,
 } from '../stateTaxDisclosure'
@@ -9,7 +10,8 @@ import { lintCopy } from '../copyGuard'
 
 /*
  * The S5 disclosure composition — the honesty decision (which state clause each home shows) lives
- * in the pure chrome seam and is tested HERE (insight 048), never in a render path. Four homes,
+ * in the pure chrome seam and is tested HERE (insight 048), never in a render path. Six homes (the
+ * sixth — the verdict's standalone note for the no-residual household — since Card 4, 2026-09-11),
  * each gated INDEPENDENTLY on the producer's-output predicate (insight 078). The predicate itself
  * (which run is priced) is tested in intakeMap.test (spineStatePriced/dateStatePriced/
  * pricedStateForRun). The HARD LAWS: keep the unpriced words verbatim; the affirmation ships as an
@@ -146,5 +148,58 @@ describe('S5 — the omission-list homes (state-tax item drops when priced, gate
     }
     // 'control' prefix ⇒ require-hedge-swept: keeps "could move this picture".
     expect(lintCopy(priced, ['require-hedge'])).toEqual([])
+  })
+})
+
+// ===========================================================================
+// Card 4 (the four-faces Caddie walk, 2026-09-11) — the verdict's STANDALONE state note. The
+// verdict's only state clause lived inside `verdictMedicareResidual`, which both routes render only
+// for the all-65+ no-door household (showMedicarePricedNote) — so every household with a pre-65
+// member (the working date households, the spine's `health` seed) met NO state clause on its
+// verdict, priced or unpriced. The composer decouples the clause: exactly ONE state clause on
+// every verdict — inside the residual where the residual renders, standalone where it does not.
+// ===========================================================================
+describe('Card 4 — composeVerdictStateNote (the standalone state clause for the no-residual household)', () => {
+  it('WITHHELD (null) when the residual renders — the all-65+ household reads its clause INSIDE the residual, never twice', () => {
+    expect(composeVerdictStateNote(undefined, true)).toBeNull()
+    expect(composeVerdictStateNote('NC', true)).toBeNull()
+    expect(composeVerdictStateNote('PA', true)).toBeNull()
+    expect(composeVerdictStateNote('FL', true)).toBeNull()
+  })
+
+  it('UNPRICED + no residual: the monolith’s own two state sentences, VERBATIM (drift-pin: the standalone words are a substring of the shipped residual)', () => {
+    const note = composeVerdictStateNote(undefined, false)
+    expect(note).toBe(copy.verdictStateUnpricedNote)
+    expect(
+      copy.verdictMedicareResidual,
+      'the standalone words are lifted from the residual, never re-typed',
+    ).toContain(copy.verdictStateUnpricedNote)
+    expect(note).toContain('isn’t priced yet')
+    expect(note).toContain('a real yearly bill')
+  })
+
+  it('PRICED + no residual: NAMES the state with the SAME affirmation the residual uses, and ships WITH the door-pointing residual — never affirm-alone', () => {
+    const nc = composeVerdictStateNote('NC', false)!
+    expect(nc).toContain(copy.verdictResidualStateNC)
+    expect(nc.endsWith(copy.verdictStatePricedDoorTail), 'the affirmation never renders alone').toBe(true)
+    expect(nc).not.toContain('isn’t priced yet')
+    const pa = composeVerdictStateNote('PA', false)!
+    expect(pa).toContain(copy.verdictResidualStatePA)
+    expect(pa.endsWith(copy.verdictStatePricedDoorTail)).toBe(true)
+    const fl = composeVerdictStateNote('FL', false)!
+    expect(fl).toContain(copy.verdictResidualStateFL)
+    expect(fl.endsWith(copy.verdictStatePricedDoorTail)).toBe(true)
+  })
+
+  it('every composition is a SINGLE state clause (the matrix law: one, never zero, never two), holds the verdict voice, and quotes no rate', () => {
+    const STATE_CLAUSE = /isn’t priced yet|is reflected in these numbers|no state income tax/g
+    for (const pricedState of [undefined, 'NC', 'PA', 'FL'] as const) {
+      const note = composeVerdictStateNote(pricedState, false)!
+      expect(note.match(STATE_CLAUSE)?.length, `${String(pricedState)}: one clause`).toBe(1)
+      expect(
+        lintCopy(note, ['false-certainty', 'advice-verb', 'superlative', 'free-numeral']),
+        `${String(pricedState)}: the verdict voice (no numeral — never a rate)`,
+      ).toEqual([])
+    }
   })
 })

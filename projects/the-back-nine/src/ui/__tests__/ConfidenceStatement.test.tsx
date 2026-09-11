@@ -100,14 +100,17 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
     expect(relief.textContent).toContain(copy.floorReadoutTrimNote)
   })
 
-  it('the DEGENERATE (value-equal floor) renders the single-metric statement VERBATIM — no relief line, no subordinates wrapper', () => {
+  it('the DEGENERATE (value-equal floor) renders the single-metric statement VERBATIM — no relief line', () => {
     const base = READING_FIXTURES['on-track']
     const floorReading = { ...base.headline } // equal rendered fields, distinct object
     const { container } = render(
       <ConfidenceStatement view={{ kind: 'reading', ...base, floorReading }} />,
     )
     expect(screen.queryByText(copy.floorReadoutEyebrow)).not.toBeInTheDocument()
-    expect(container.querySelector('.reveal__subordinates')).toBeNull()
+    // The relief LINE is the pin (its own class). The subordinates wrapper is no longer a proxy
+    // for it: since Card 4 (2026-09-11) it also hosts the standalone state clause on every
+    // residual-less verdict, so "no wrapper" would assert the wrong thing.
+    expect(container.querySelector('.floor-readout')).toBeNull()
   })
 
   it('a floor that is itself NOT holding renders the honest word + count WITHOUT the trim rider (the rider is a claim)', () => {
@@ -380,8 +383,9 @@ describe('U12 C2 — the sticky sentence + the verdict crossfade', () => {
     expect(lead.textContent).not.toContain(slots.verdictRoomClause('410'))
     // the band still mounts from the RAW fan (one honest raw record under the sticky sentence)
     expect(screen.getByRole('button', { name: copy.bandStudyRange })).toBeInTheDocument()
-    // the two-tier drill-down read the RAW headline: floor ≡ raw ⇒ degenerate ⇒ no relief wrapper
-    expect(container.querySelector('.reveal__subordinates')).toBeNull()
+    // the two-tier drill-down read the RAW headline: floor ≡ raw ⇒ degenerate ⇒ no relief LINE
+    // (its own class — the subordinates wrapper also hosts Card 4's state clause, so it is no proxy)
+    expect(container.querySelector('.floor-readout')).toBeNull()
   })
 
   it('without a displayed triple (the preview harness) the sentence reads the raw result — unchanged shipped behavior', () => {
@@ -635,4 +639,47 @@ describe('ConfidenceStatement — the aged band premise + the structural fan wit
     expect(queryByRole('button', { name: copy.bandPremiseReconfirmCta })).toBeNull()
     expect(queryByText(/undetermined/)).toBeNull()
   })
+})
+
+// Card 4 (the four-faces Caddie walk, 2026-09-11) — the route × cohort × pricing MATRIX, spine half.
+// The verdict's only state clause lived inside the Medicare residual, which renders only for the
+// all-65+ no-door household — so a pre-65 household's verdict said NOTHING about state tax, priced
+// or unpriced (grep-verified on the walk's bundle: zero clauses on seed-date and vault-datestale).
+// The law now: EXACTLY ONE state clause on every verdict — inside the residual where it renders
+// (all-65+), a standalone `.cs-state-note` where it does not (pre-65 / the door household).
+// FuckOffDate.test.tsx pins the date route's four cells; these are the spine's four.
+describe('Card 4 — exactly ONE state clause on every spine verdict ({all-65+, pre-65} × {unpriced, priced})', () => {
+  const STATE_CLAUSE = /isn’t priced yet|is reflected in these numbers|no state income tax/g
+  const cells = [
+    { cohort: 'all-65+', medicarePricedNote: true, statePricedNote: undefined },
+    { cohort: 'all-65+', medicarePricedNote: true, statePricedNote: 'NC' },
+    { cohort: 'pre-65', medicarePricedNote: false, statePricedNote: undefined },
+    { cohort: 'pre-65', medicarePricedNote: false, statePricedNote: 'NC' },
+  ] as const
+  for (const cell of cells) {
+    it(`${cell.cohort} × ${cell.statePricedNote ?? 'unpriced'}: one clause — in the residual iff the residual renders`, () => {
+      const { container } = render(
+        <ConfidenceStatement
+          view={{ kind: 'reading', ...READING_FIXTURES['on-track'] }}
+          medicarePricedNote={cell.medicarePricedNote}
+          statePricedNote={cell.statePricedNote}
+        />,
+      )
+      const text = container.textContent ?? ''
+      expect(text.match(STATE_CLAUSE)?.length ?? 0, 'exactly one state clause on the verdict').toBe(1)
+      const standalone = container.querySelectorAll('.cs-state-note')
+      if (cell.medicarePricedNote) {
+        expect(standalone, 'the residual carries the clause — no standalone note (never twice)').toHaveLength(0)
+      } else {
+        expect(standalone, 'no residual ⇒ the standalone note carries the clause').toHaveLength(1)
+        expect(standalone[0], 'plain text in the a11y tree, never decoration').not.toHaveAttribute('aria-hidden')
+        if (cell.statePricedNote === 'NC') {
+          expect(standalone[0]!.textContent).toContain('North Carolina')
+          expect(standalone[0]!.textContent).not.toContain('isn’t priced yet')
+        } else {
+          expect(standalone[0]!.textContent).toBe(copy.verdictStateUnpricedNote)
+        }
+      }
+    })
+  }
 })

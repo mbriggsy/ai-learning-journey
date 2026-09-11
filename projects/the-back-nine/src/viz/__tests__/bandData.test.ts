@@ -161,6 +161,25 @@ describe('resolveBandData — the producer seam (resample + dollarMax guard + fa
     expect(r.samples[24]!.p50).toBeCloseTo(800, 8) // x = 2
   })
 
+  // Card 5 (the four-faces Caddie walk, 2026-09-11) — the median's GRID-exact first-$0 plan-year,
+  // the screen-reader ruin sentence's anchor (bandPanelChrome.composeBandAtRange). Read off the
+  // integer grid through the injected formatter, never the resampled lattice (whose first $0
+  // column can sit up to one column LATER than the grid year — the optimistic direction).
+  it('medianGoneYear is null when the median never touches the $0 floor (the linear fan ends at 600)', () => {
+    expect(resolveBandData(linearFan(), 'on-track', { formatDollar: fmt }).medianGoneYear).toBeNull()
+  })
+
+  it('medianGoneYear is the FIRST integer grid year whose median FORMATS to $0 — lerp-dust reads as the floor through the injected formatter', () => {
+    const p = (p50: number, y: number) => ({ yearsFromNow: y, p10: 0, p25: 0, p50, p75: p50 + 10, p90: p50 + 20, cohortFraction: 1 })
+    const fan: BandFan = { byYear: [p(1000, 0), p(600, 1), p(0.3, 2), p(0, 3), p(0, 4)] }
+    expect(
+      resolveBandData(fan, 'already-failing', { formatDollar: fmt }).medianGoneYear,
+      'year 2 formats to "$0" (0.3 rounds down) — the grid year, never a lattice column',
+    ).toBe(2)
+    // The field is the DISPLAYED figure's year: a formatter that keeps the dust visible moves it to the true zero.
+    expect(resolveBandData(fan, 'already-failing', { formatDollar: (d) => `$${d}` }).medianGoneYear).toBe(3)
+  })
+
   it('dollarMax is a humane ceiling ≥ max(p90) (the asymmetric scale guard) with sane headroom', () => {
     const r = resolveBandData(linearFan(), 'on-track', { formatDollar: fmt })
     const maxP90 = Math.max(...r.samples.map((s) => s.p90)) // 1050 (at the anchor)

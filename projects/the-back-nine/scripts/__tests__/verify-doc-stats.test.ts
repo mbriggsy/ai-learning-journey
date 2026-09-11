@@ -319,6 +319,23 @@ describe('the register + insights arms (2026-09-06 — the numbers the doc audit
         '2:staleness.ts:1812-13:malformed range',
       ])
     })
+    it('a BARE `:NNN` continuation after a named citation on the same line is checked against THAT file; a "(not `:NNN`)" record and an unattributable bare token are not', () => {
+      const docs = [
+        {
+          surface: 'd.md',
+          content:
+            'see `staleness.ts:1` and its sibling `:4` (not `:9`), the list `:2, :3` and the pair `src/ui/copy.ts:1` / `:2`\n' +
+            'a bare `:4` with no named citation on its line is not attributable here',
+        },
+      ]
+      const p = checkCitations(docs, resolve)
+      expect(p.map((x) => `${x.line}:${x.citation}:${x.reason.split(' (')[0]}`)).toEqual([
+        '1:staleness.ts (bare `:4`):cites only blank line(s)',
+      ])
+      // the comma list resolves each item; an out-of-range item inside it is named by its token
+      const q = checkCitations([{ surface: 'd.md', content: '`staleness.ts:1` then `:2, :9`' }], resolve)
+      expect(q.map((x) => `${x.citation}:${x.reason.split(' (')[0]}`)).toEqual(['staleness.ts (bare `:9`):out of range'])
+    })
     it('ignores citations inside <details> blocks (archived reasoning) without shifting line numbers', () => {
       const content = 'live `staleness.ts:1`\n<details><summary>old</summary>\n`gone.ts:1`\n</details>\n`gone.ts:2`'
       expect(stripArchived(content).split('\n')).toHaveLength(5)

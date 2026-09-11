@@ -25,7 +25,10 @@ the log looked right while the picture lied.
 ## Fix
 
 The throwaway harness was replaced by a tracked instrument, `e2e/held/council-24px-shots.spec.ts`
-(never a gate; vitest's include excludes `e2e/`): the first-frame shot is taken BEFORE the
+(never a gate — vitest excludes `e2e/`, `verify:fit` allowlists its specs, and since 2026-09-11 the CSP
+harness's denylist names `held/` under the partition gate of insight 128; this first cut lacked that
+entry, so `verify:csp` collected it against `dist/` and CI ran red for three commits): the
+first-frame shot is taken BEFORE the
 full-page shot, and the root px is re-asserted immediately before EVERY capture, so a dropped
 emulation reds the instrument instead of producing a plausible file. The 24 px first frame now
 hashes differently from the control and shows enlarged type in the stacked single column.

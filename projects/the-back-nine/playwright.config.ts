@@ -26,12 +26,19 @@ export default defineConfig({
   // those specs would fail confusingly (no seeds) — keep each harness to its own specs. Run them via
   // `pnpm verify:fit` / `pnpm verify:fit:rv` / `pnpm caddie:walk`. This is a DENYLIST: a new
   // e2e/*.spec.ts is collected here by default, so a new dev-server spec must be added to it.
+  // Since 2026-09-11 the PARTITION is gated (scripts/__tests__/playwright-harness-partition.test.ts
+  // runs every config's real collector): a spec claimed by TWO harnesses (wired to its own dev
+  // harness but not denied here) or by none reds, and anything under e2e/held/ claimed by a CI
+  // gate reds. A dev-server spec wired to NO harness still lands here and fails loudly in CI —
+  // that is this denylist doing its job. (c61dea7e shipped the held instrument without the entry
+  // below; this harness collected its six arms against dist/, and CI ran red for three commits.)
   testIgnore: [
     '**/vertical-fit.spec.ts',
     '**/chart-text.spec.ts',
     '**/chart-text-rv.spec.ts',
     '**/intake-fold.spec.ts',
     '**/caddie-walk.spec.ts',
+    '**/held/**', // INSTRUMENTS, never gates — e2e/held/shots.config.ts owns them, on demand
   ],
   fullyParallel: true,
   forbidOnly: !!process.env.CI, // a stray test.only fails CI rather than silently narrowing the gate

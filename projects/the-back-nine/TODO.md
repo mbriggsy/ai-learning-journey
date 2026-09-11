@@ -23,8 +23,11 @@ left is not units. It is the gap between *the build is done* and *a friend can b
 NEXT SESSION, in order: (f) the ranked (6) Caddie walk (it now carries every eye item — the phone's caveat above the
 doors, the legend swatch redraw, the icon silhouette, the aged date block, the goal picker's omitted lead) · the 20 px
 two-pane fork (register *The app on someone else's device*; his call or a council's — never a pilot number) · (e) the phone
-strip-reserve fork. Gates at close: typecheck · lint · 3508 tests / 175 files · doc-stats (insights 124–127 indexed) ·
-verify:fit 138 · CI green through `8f66dcfe`, `c61dea7e` + `12d12ede` in flight.** The b9-4 ranked plan below is
+strip-reserve fork. Gates at close: typecheck · lint · 3511 tests / 176 files · doc-stats (insights 124–128 indexed) ·
+verify:fit 138 · verify:csp 16 collected / 15 passed / 1 skipped (a change under `e2e/` must run it — the CI workflow is the gate list) · CI green through `8f66dcfe` — and RED on `c61dea7e` · `12d12ede` · `73242ac8` (the held 24 px instrument
+collected by `verify:csp` — the CSP harness is a DENYLIST; fixed 2026-09-11 by `scripts/__tests__/playwright-harness-partition.test.ts`,
+insight 128). Because `verify:csp` failed first, CI never reached `verify:fit` for `c61dea7e`'s 462-line spec change —
+the fix commit's run is the first Linux proof of those 138 arms; confirm it by run id before trusting "verify:fit 138" on CI.** The b9-4 ranked plan below is
 DISCHARGED through (5): (1) the RV gate `c135a99c` · (2) the critic's arms `96e87e0f` · (3) the unmeasured trio `da881de5` ·
 (5) the legend council `2d671144` — each CI-green by run id — and (4) five of six arms integrated and committed as `31cba0fe`
 (CI run 34228947445 GREEN), then adversarially reviewed and fixed as `780409f7` (2026-09-10; CI run **34496025172** GREEN).
@@ -116,7 +119,10 @@ swatches (deliberately unchanged until the walk) · the goal picker with its lea
 
 **LANDMINES (2026-09-10, late):** vitest's default include picks up ANY `*.spec.ts` under `temp/` — a throwaway
 Playwright spec there breaks `vitest list` and therefore `verify:doc-stats` ("could not collect the live suite"); park
-instruments in `e2e/held/` (excluded) · a Playwright `fullPage` capture DROPS CDP `Page.setFontSizes` emulation — shoot the
+instruments in `e2e/held/` — excluded from vitest AND (since 2026-09-11) named in the CSP harness's `testIgnore`; before that
+entry `verify:csp` collected `e2e/**` by default and ran the instrument against `dist/`, CI red on three commits while every local
+gate was green — a change under `e2e/` must run `verify:csp` too, and `playwright-harness-partition.test.ts` now gates
+one-owner-per-spec (insight 128) · a Playwright `fullPage` capture DROPS CDP `Page.setFontSizes` emulation — shoot the
 first frame first and re-assert the root before every capture (insight 127) · `scrollIntoView` reaches through
 `overflow:hidden` — a reach oracle scrolls the DOCUMENT and hit-tests (insight 124) · a mutant's label must be what was
 planted; predict the arms that CANNOT red (insight 126) · `rem` in a media query reads the browser default — assert the

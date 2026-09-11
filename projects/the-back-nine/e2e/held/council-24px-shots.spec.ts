@@ -6,9 +6,15 @@ import { mkdirSync } from 'node:fs'
  * AN INSTRUMENT, NOT A GATE — the frames Briggsy's eye audits the 2026-09-10 council ruling from.
  *
  * It asserts NOTHING about the product: it navigates, pins the root font it actually rendered at,
- * and writes PNGs to `temp/council-24px/`. It is deliberately OUTSIDE `pnpm verify:fit`'s
- * `testMatch` (playwright.fit.config.ts names its three gate specs), and outside Vitest's reach
- * (vite.config.ts excludes `e2e/**`), so it can never red CI. Run it by hand:
+ * and writes PNGs to `temp/council-24px/`. It is held out of EVERY CI gate — and that is gated,
+ * not claimed: `pnpm verify:fit` allowlists its three specs by name, Vitest excludes `e2e/**`,
+ * the CSP harness's `testIgnore` denylist names the `held` directory at any depth (the glob is
+ * spelled in the config — it cannot be spelled inside a block comment), and
+ * scripts/__tests__/playwright-harness-partition.test.ts runs each config's real collector to
+ * prove nothing under e2e/held/ is claimed by a CI gate. (The first cut of this file claimed it
+ * "can never red CI" on the strength of the first two alone; the CSP harness collects e2e/**
+ * by default, so `pnpm verify:csp` ran these six arms against dist/ — no `?seed=` routes there —
+ * and CI was red for three commits, c61dea7e through 73242ac8.) Run it by hand:
  *
  *     pnpm exec playwright test --config e2e/held/shots.config.ts
  *

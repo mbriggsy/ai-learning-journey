@@ -19,7 +19,12 @@
 **Where we are:** all four acts are built; Act 4 closed at U17·S6 (S7 deferred, Briggsy's ruling). What is
 left is not units. It is the gap between *the build is done* and *a friend can bet real money on this*.
 
-▶ **START HERE (b9-7) — hand-off 2026-09-08 morning, re-verified 2026-09-10 afternoon.** The b9-4 ranked plan below is
+▶ **START HERE (b9-7) — hand-off 2026-09-08 morning; 2026-09-10 session closed at squeaky with (a) (b) (c) DONE below.
+NEXT SESSION, in order: (f) the ranked (6) Caddie walk (it now carries every eye item — the phone's caveat above the
+doors, the legend swatch redraw, the icon silhouette, the aged date block, the goal picker's omitted lead) · the 20 px
+two-pane fork (register *The app on someone else's device*; his call or a council's — never a pilot number) · (e) the phone
+strip-reserve fork. Gates at close: typecheck · lint · 3508 tests / 175 files · doc-stats (insights 124–127 indexed) ·
+verify:fit 138 · CI green through `8f66dcfe`, `c61dea7e` + `12d12ede` in flight.** The b9-4 ranked plan below is
 DISCHARGED through (5): (1) the RV gate `c135a99c` · (2) the critic's arms `96e87e0f` · (3) the unmeasured trio `da881de5` ·
 (5) the legend council `2d671144` — each CI-green by run id — and (4) five of six arms integrated and committed as `31cba0fe`
 (CI run 34228947445 GREEN), then adversarially reviewed and fixed as `780409f7` (2026-09-10; CI run **34496025172** GREEN).
@@ -108,6 +113,16 @@ shape + the outer edge (council 2026-09-08), the pre-registered "point to the mi
 date band's three-row block at 390 / 1088, the icon silhouette (`scripts/icons/preview.png`), the RV above-bar-labels fork.
 **HIS EYE, post-hoc (the batched-oracle law):** the icon silhouette · the three-row aged date block · the legend
 swatches (deliberately unchanged until the walk) · the goal picker with its lead OMITTED on `?seed=failing`.
+
+**LANDMINES (2026-09-10, late):** vitest's default include picks up ANY `*.spec.ts` under `temp/` — a throwaway
+Playwright spec there breaks `vitest list` and therefore `verify:doc-stats` ("could not collect the live suite"); park
+instruments in `e2e/held/` (excluded) · a Playwright `fullPage` capture DROPS CDP `Page.setFontSizes` emulation — shoot the
+first frame first and re-assert the root before every capture (insight 127) · `scrollIntoView` reaches through
+`overflow:hidden` — a reach oracle scrolls the DOCUMENT and hit-tests (insight 124) · a mutant's label must be what was
+planted; predict the arms that CANNOT red (insight 126) · `rem` in a media query reads the browser default — assert the
+tier before the law (insight 125) · a `| grep` after a gate returns the grep's exit code — one commit shipped doc-stats red
+that way; gate by exit code · never `git checkout -- <file>` to revert a mutant while the tree carries uncommitted work —
+`cp` a backup and restore it.
 
 **LANDMINES (2026-09-10):** a content-only read of a cited range misses drift whenever today's lines still "read
 plausibly" — six wrong-"correct" verdicts survived that way in one batch; the skeptic that caught them DIFFED the cited

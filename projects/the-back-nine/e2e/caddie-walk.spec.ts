@@ -129,7 +129,17 @@ const OUT_ROOT =
 
 /** Text-critical / meaning-critical regions cropped at device scale when present. */
 const CROP_TARGETS = [
-  { name: 'band', selector: '.cs-band' },
+  // Both band hosts: the spine's `.cs-band` and the DATE route's `.fod-band` (the aged date band's
+  // three-row annotation block had no plain crop until 2026-09-11 — only `.cs-band` was named).
+  { name: 'band', selector: '.cs-band, .fod-band' },
+  // The four-faces walk (2026-09-11): plain DEVICE-scale crops of the three charts whose every word
+  // lives in the HTML text layer OVER the svg (architecture §12). The per-chart CVD crops below
+  // select the bare svg under an emulation — a chart-TEXT read (the registers, a hidden interim
+  // tick, the crown's seat, the end labels) needs the HOST with its text layer and the rows it
+  // seats above / below the svg, un-emulated. `.cs-band` above already covers the band.
+  { name: 'ladder', selector: 'section.fod-ladder' },
+  { name: 'twofutures', selector: '.tf-reveal' },
+  { name: 'recviz', selector: '.rv-reveal' },
   { name: 'disclaimer', selector: 'footer.disclaimer.disclaimer--in-frame' },
   { name: 'echo', selector: '.ap-echo' },
   { name: 'panel', selector: '[role="dialog"]' },
@@ -251,8 +261,23 @@ async function captureState(page: Page, dir: string): Promise<void> {
     const region = (sel: string) => {
       const el = document.querySelector(sel)
       if (el === null) return null
-      const r = el.getBoundingClientRect()
-      return { top: Math.round(r.top), bottom: Math.round(r.bottom), left: Math.round(r.left), right: Math.round(r.right) }
+      // A display:contents group (the quiet doors row) generates no box of its own — its rect reads
+      // all-zero, and a reader would place the doors at the top of the page (the 2026-09-11 walk's
+      // phone fold.json did exactly that). Report the union of its children's boxes instead — the
+      // same rule the fit gate applies to the doors row (e2e/vertical-fit.spec.ts).
+      const boxes =
+        getComputedStyle(el).display === 'contents'
+          ? Array.from(el.children)
+              .map((c) => c.getBoundingClientRect())
+              .filter((b) => b.width > 0 || b.height > 0)
+          : [el.getBoundingClientRect()]
+      if (boxes.length === 0) return null
+      return {
+        top: Math.round(Math.min(...boxes.map((b) => b.top))),
+        bottom: Math.round(Math.max(...boxes.map((b) => b.bottom))),
+        left: Math.round(Math.min(...boxes.map((b) => b.left))),
+        right: Math.round(Math.max(...boxes.map((b) => b.right))),
+      }
     }
     return {
       viewport: { width: window.innerWidth, height: window.innerHeight, dpr: window.devicePixelRatio },
@@ -672,9 +697,15 @@ async function walkWorsening(page: Page, outDir: string): Promise<void> {
  * whether this seed additionally walks the post-commit STALE demotion. nc: pay-less-tax → the NC
  * state-certification HOLD; surplus: leave-more → the over-funded delta-as-hero RECOMMENDED lockup.
  */
-const SOLVE_GOAL: Record<string, { readonly label: RegExp; readonly stale: boolean; readonly terminal?: 'steer' }> = {
+const SOLVE_GOAL: Record<string, { readonly label: RegExp; readonly stale: boolean; readonly terminal?: 'steer' | 'goalpicker' }> = {
   nc: { label: /Pay less tax/, stale: true },
   surplus: { label: /Leave more behind/, stale: false },
+  // The failing-cohort increment (2026-09-11, the ranked Caddie walk's eye item): the already-short
+  // household's GoalPicker renders with its "With the basics covered" lead OMITTED (`basicsCovered`
+  // false — the 2026-09-08 gate). The walk captures the landing and the open picker and STOPS there:
+  // the terminal is the picker itself, never a pick (its confirmed pick is the typed mint-fails
+  // refusal whose sentence stays Briggsy's — not this walk's surface). `label` is unused.
+  failing: { label: /Pay less tax/, stale: false, terminal: 'goalpicker' },
   // The steer-seed increment (2026-07-23): the no-pretax household's confirmed pick REFUSES at the
   // builder (typed reason) — no dispatch, no pending; the calm named-reason note is the terminal.
   steer: { label: /Leave more behind/, stale: false, terminal: 'steer' },
@@ -704,6 +735,15 @@ async function walkSolve(page: Page, key: string, outDir: string): Promise<void>
     `solve:${key}: the GoalPicker did not open`,
   ).toBeVisible()
   await captureState(page, path.join(outDir, 'goalpicker'))
+
+  // The GOALPICKER terminal: the open picker IS the surface under read (the failing cohort's omitted
+  // lead). Pin the omission non-vacuously — a lead that came back would put the calm-but-wrong sentence
+  // one tap after "Already short" — then end the walk on the picker frame.
+  if (plan!.terminal === 'goalpicker') {
+    const picker = page.getByRole('dialog')
+    await expect(picker.locator('p'), `solve:${key}: the picker rendered a lead paragraph on a cohort that must get none`).toHaveCount(0)
+    return
+  }
 
   // Pick the goal by its rendered LABEL. NATIVE click (the sr-only radio trap the intake walk documents —
   // layout-independent, still bubbles to React's root), asserted checked so a missed click fails RED here.

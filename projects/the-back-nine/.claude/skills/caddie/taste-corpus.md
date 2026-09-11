@@ -155,6 +155,16 @@ supersedes anything derived from this file.
     2026-07-08 station-2 read: "x and y axis with the same hover treatment we give the fan
     out." Consistency across charts is a STANDING expectation — check it on every chart-bearing
     surface.)*
+41. **Chart text that covers the plot or prints across marks is "crowded"; touching is "ok"; a box
+    that fits inside the plot is "great".** `[briggsy-general]` Grade chart annotations (a scrub readout, a
+    crown callout, a column label) by what they OCCLUDE, not by whether they are legible: a dollar
+    line past its box, a box over most of the plot, or a callout printing across the year dots is
+    crowded — the same text seated in a reserved row beside or below the plot is fine; a label that
+    merely touches a neighbouring mark is ok; the in-plot box that fits is the shape he calls great.
+    The room is never the fix (architecture §12, "the room is not the ink") — reseat the ink.
+    *(His 2026-09-06 read of the eight 320-arm pictures, E15: "01 / 02 / 03 crowded, 08 great,
+    04 / 05 ok, 06 / 07 crowded" — every "crowded" was an occlusion, every "ok" a touch, the one
+    "great" the box that fit in-plot.)*
 
 ### Motion
 
@@ -344,3 +354,28 @@ supersedes anything derived from this file.
   exactly what QUALIFIES him.** He is not judging whether the palette is pretty; he is the failure
   mode, reporting that it does not fire. A simulated deuteranopia PNG is a model of him; he is the
   ground truth. **Reach for the human before building the simulator.**
+- **E15 — the council-held 320 shape, his eye on eight pictures (2026-09-06).** Trigger: the
+  2026-09-05 council held ONE taste call for his read — what yields when the room runs out on the
+  320 px arm (the scrub readout, the ladder's "on track" column, the ceiling crown). He read the
+  eight captures in `temp/cold-read-320/`: **"01 / 02 / 03 crowded"** (the readout at 320 root-16,
+  320 root-20 and the 390 phone root-20 — the dollar line past its box, the box over most of the
+  plot); **"08 great"** (the 390 phone at root-16, the readout in-plot and fitting); **"04 / 05 ok"**
+  (the ladder's "on track" column at 320, touching the rung-7 anchor at root-20); **"06 / 07
+  crowded"** (the ceiling crown BESIDE its dot, printing across the year dots — at 320 AND at 1536).
+  Resolution, built the same day: the readout takes a MEASURED seat per width (in the plot only where
+  its ink fits, else a reserved flow row under the chart), the crown's beside branch was DELETED
+  (above its dot while the headroom holds, else a flow row above the plot), and the ladder column he
+  called ok was ACCEPTED as rendered and pinned. Two lessons: (a) rule 41 — his density verdict is
+  about OCCLUSION, not legibility, and "ok" tolerates a touch; (b) his read matched the pilot's lean
+  on both forks, so a held taste call with a pilot lean can be batched to his eye with the lean
+  stated — he rules fast when the pictures are side by side and named (`INDEX.md`).
+- **E16 — the annuity "tax-free part" help, read with no annuity knowledge (2026-09-06).** Trigger:
+  the AS-BUILT rewrite's one user-facing copy change — the old help called holding the entered
+  tax-free share steady for life *"a conservative simplification"*; the decision record rules that
+  direction OPTIMISTIC, so the shipped sentence ends *"— the tool holds that share steady for life,
+  which reads a little better than reality once the paid-in amount would have been recovered."*
+  Flagged for his eye; he read it as the civilian the calm law is written for. His verbatim:
+  **"feels calm."** Resolution: nothing owed; the pilot predicted calm, the eye agreed (a HIT).
+  Lesson: a direction-honest hedge that names WHICH way the tool errs ("reads a little better than
+  reality") and WHEN ("once the paid-in amount would have been recovered") reads calm to him — the
+  honesty is the calm; softening it to "a simplification" was the thing he never asked for.

@@ -20,10 +20,19 @@
 left is not units. It is the gap between *the build is done* and *a friend can bet real money on this*.
 
 ▶ **START HERE (b9-7) — hand-off 2026-09-08 morning; 2026-09-10 session closed at squeaky with (a) (b) (c) DONE below.
-NEXT SESSION, in order: (f) the ranked (6) Caddie walk (it now carries every eye item — the phone's caveat above the
-doors, the legend swatch redraw, the icon silhouette, the aged date block, the goal picker's omitted lead) · the 20 px
-two-pane fork (register *The app on someone else's device*; his call or a council's — never a pilot number) · (e) the phone
-strip-reserve fork. Gates at close: typecheck · lint · 3511 tests / 176 files · doc-stats (insights 124–128 indexed) ·
+2026-09-11: CI was RED on the last three commits and was fixed FIRST (`cba26770`, the harness-partition gate — insight 128); then
+(f) the ranked (6) Caddie walk RAN and is CHAIRED — the card is the TOP entry of `docs/caddie/cold-read-log.md` (15 cards: 3 HARD-FLAGS
+routed to the pilot, 5 forks PARKED for his eye with the pilot's lean on each; the A/B diff NOT clean — Sonnet false-passed the top
+finding, perception seats stay Opus). NEXT, in order: **(g) HIS EYE on the walk's five forks** — Card 1 the legend outlines (lean:
+delete them) · Card 2 the phone's empty readout row (lean: the composition lever (ii) now, the at-rest words (iii) his) · Card 9 the
+already-short picker (lean: don't show it) · Card 11 the phone's above-bar labels · Card 13 the date route's empty left column + the
+crown sliced by the fold — plus the 24 px frames (`temp/council-24px/INDEX.md`, 12 frames named) and the icon silhouette
+(`scripts/icons/preview.png`) · **(h) the routed fixes, calm-but-wrong first, each red-first**: Card 4 the date route's missing
+state-tax disclosure (a route-parity test) · Card 5 the AT ruin sentence's anchor (`copy.ts:2030`) · Card 3's plumbing once he rules
+the words · Card 6's three chart-text arms (tail-vs-box, named-over-unnamed row, the age row) · Card 10 nice-step ticks in
+`buildYTicks` · Card 14's disabled-primary pattern · Card 2's lever (ii) in `composeReadoutLines` — the register carries each
+prescription (the 2026-09-11 entries) · the 20 px two-pane fork (register *The app on someone else's device*; his call or a
+council's — never a pilot number) · (e) the phone strip-reserve fork · a FADING-seed walk (Q4b had no referent on any fresh seed). Gates at close: typecheck · lint · 3511 tests / 176 files · doc-stats (insights 124–128 indexed) ·
 verify:fit 138 · verify:csp 16 collected / 15 passed / 1 skipped (a change under `e2e/` must run it — the CI workflow is the gate list) · CI green through `cba26770` (run **34607039597**, 2026-09-11) — `c61dea7e` · `12d12ede` · `73242ac8` ran RED (the held 24 px instrument
 collected by `verify:csp` — the CSP harness is a DENYLIST; fixed 2026-09-11 by `scripts/__tests__/playwright-harness-partition.test.ts`,
 insight 128). Because `verify:csp` failed first, CI never reached `verify:fit` for `c61dea7e`'s 462-line spec change —
@@ -111,11 +120,9 @@ measurements, `scripts/icons/` for the icon generator + sheets — 2026-09-08 ev
 (e) **The phone strip-reserve fork** (register *The phone intake walk* item 3): the two-block strip measured 278 px =
 17.4 rem, Continue lands at y 1,378 on the Social Security step at scroll 0 — a reserve sized for a rare state taxes
 every step; his eye or a council, not a pilot number.
-(f) **Ranked (6)**, the Caddie walk of the four chart faces at REAL + PHONE — now also carrying the legend swatch redraw's
-shape + the outer edge (council 2026-09-08), the pre-registered "point to the middle half" + faded-column read, the aged
-date band's three-row block at 390 / 1088, the icon silhouette (`scripts/icons/preview.png`), the RV above-bar-labels fork.
-**HIS EYE, post-hoc (the batched-oracle law):** the icon silhouette · the three-row aged date block · the legend
-swatches (deliberately unchanged until the walk) · the goal picker with its lead OMITTED on `?seed=failing`.
+(f) ✅ **DONE 2026-09-11 — the walk ran (10/10 in 16.6 m; the three fast targets re-walked on the improved harness, 6/6), the
+dual-panel A/B panel read it (182 agents, 0 crashes, 46 m), and the card is chaired and filed** — the log's top entry; the forks
+are (g) above, the fixes (h). The harness increments + corpus fold-in are `7aaa84b9`.
 
 **LANDMINES (2026-09-10, late):** vitest's default include picks up ANY `*.spec.ts` under `temp/` — a throwaway
 Playwright spec there breaks `vitest list` and therefore `verify:doc-stats` ("could not collect the live suite"); park
@@ -284,7 +291,8 @@ pre-registered reopen trigger; four source comments say it. NEW FINDING filed Ti
 band's areas are fill-only; the dash is the indeterminate placeholder's silhouette) — fix the key (bind to fills + nesting) THEN
 gate, ranked ahead of any callout. ⚑ HIS EYE on the Caddie walk (ranked (6)): the redraw's shape (nested chip vs deleting the two
 outlines) and the outer band's grayscale edge strength; the walk also asks "point to the middle half" and a faded-column read.
-(6) The Caddie walk of the four chart faces at REAL + PHONE (the three-register collapse, the HTML-over-svg
+(6) ✅ WALKED + CHAIRED 2026-09-11 — the card is `docs/caddie/cold-read-log.md`'s top entry; the forks are HIS (START HERE (g)),
+the fixes ranked (START HERE (h)). As filed: The Caddie walk of the four chart faces at REAL + PHONE (the three-register collapse, the HTML-over-svg
 look, the hidden interim ticks, the RV above-bar-labels fork) — plus, from the 2026-09-08 council: the legend swatch redraw's
 shape (nested chip vs deleting the two phantom outlines), the outer band's grayscale edge strength, and the pre-registered
 at-rest question "point to the middle half" + a faded-column read (a fail re-opens the callout decision); and the aged date

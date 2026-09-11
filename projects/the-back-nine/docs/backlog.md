@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **59 open items** (67 entries, 8 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open — re-counted 2026-09-06, when two Tier-3 entries moved in from the queue, six entries were filed from the as-built doc rewrite, and two more from its skeptic passes: plan 4's three unbuilt U17 action-warning branches, and the `appDefaults.ts` re-save that reclassifies a took-the-default household as an overrider; two hygiene entries from the morning's completion check — the state-tax roster's two re-verify dates, and the solver profile's `rankableCount`) consolidated
+> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **69 open items** (77 entries, 8 closed and kept as records; ten entries filed 2026-09-11 from the four-faces Caddie walk — three Tier 0, three Tier 2, four Tier 3; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open — re-counted 2026-09-06, when two Tier-3 entries moved in from the queue, six entries were filed from the as-built doc rewrite, and two more from its skeptic passes: plan 4's three unbuilt U17 action-warning branches, and the `appDefaults.ts` re-save that reclassifies a took-the-default household as an overrider; two hygiene entries from the morning's completion check — the state-tax roster's two re-verify dates, and the solver profile's `rankableCount`) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -424,6 +424,7 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
 
 - Long-term care — the largest un-modeled retirement risk — is neither in the model nor in the OUT-but-disclosed list the product otherwise keeps religiously
 - ⚑ **Negatives (the register's half — the live prescription is the ranked entry in `TODO.md`):** the R13 disclaimer is the WRONG home (vertical-fit pinned); the recommended home is a third *"What this leaves out"* section of the assumptions panel (`src/intake/AssumptionPanel.tsx`) — **not** data-only (`METHODOLOGY_DISCLOSURES` rows render inside section a's "On your behalf"). **Scope is the HSA forfeit + LTC only** — NIIT is NOT homeless (`recommendationView.ts` emits it on every committed rec; the Healthcare sheet carries it) and a silent third home breaks the one-honest-home law. A heading literally "What this leaves out" that names two items is itself a completeness claim the constants falsify (`health.ts` declares four more OUT-but-disclosed facts) — scope the heading or name them. `Row` requires a `seat` from the CLOSED `AssumptionSeat` union, so a leaves-out row is a hand-rolled `<li className="ap-row">` or a registry extension. The TODO entry's anchors drifted twice in a month (+14, then +62/+101) — open every cited line.
+- **Evidence (2026-09-11, the four-faces walk, the hunter, survived):** the committed recommendation's "Medicare's costs for the two of you are already in these numbers … Those are the pieces this tool adds by itself" plus its three-item residual reads CLOSED, and the date route's health sheet names a lifetime total ("around ~$295,500") over a five-item "Not counted here" that reads exhaustive — long-term care appears zero times in the bundle. The grade stays uncapped on both.
 
 ### The staleness clocks — a false alarm today, and the state-tax arm parked
 
@@ -611,6 +612,29 @@ Briggsy's eye, and should not be re-filed as a copy defect without a read.
 - The revisit trigger the copy's own comment named ("when D2 wires real households") fired 2026-06-28 and never ran; the comment now points here.
 - Fix shape: attribute by the dominant component (the engine already carries each stream's survivor variant), keep the median scope; the sentence is his words if it changes.
 
+### The off-track nudge quotes neither endpoint — a 75 % cut reads as a trim
+
+`S` · **pilot (the plumbing) · briggsy (the words)** · filed 2026-09-11 by the four-faces Caddie walk (Card 3, the walk's top calm-but-wrong; the log's top entry)
+
+- `copy.ts` `verdictOffTrackNudge` (the sentence at `:2216`): *"About $7,500 a month less would move it toward steadier ground."* renders as hero line 3 on every off-track verdict, above the fold, both viewports. The household's spending ($10,000 a month, "Each month") is visible ONLY inside the assumptions dialog, ~1,800 px down a sheet behind a door — so a reader is asked to live on ~$2,500 a month, a 75 % cut, in a sentence with no "from … to …" and no noun ("$7,500 less of what?"). Four independent seats + the false-pass hunter filed it (two at BLOCKER); every refuter survived it. "Toward" (never "onto") is deliberate and stays (the comment at `:2211`): the sentence must not claim arrival either.
+- **Prescription (the words his; the numbers pilot):** quote both endpoints in-sentence (rule 2) — the pilot's proposal: *"Spending about $2,500 a month instead of $10,000 — about $7,500 less — would move it toward steadier ground."* The plumbing: the nudge already has the per-month delta; thread the entered spend (the same figure the assumptions echo renders) into the slot, a unit test on the worsened seed pinning both numbers present and the delta equal to their difference.
+- ⚑ NEGATIVE: never soften the number (a 75 % cut is the honest magnitude — rule 11); never move the sentence below the fold to hide it.
+
+### The DATE route renders no unpriced-state disclosure where the spine does
+
+`S` · **pilot** · filed 2026-09-11 by the four-faces Caddie walk (Card 4 — HARD-FLAG, lane both)
+
+- Chair-verified by grep of the verbatim rendered copy: `seed-date` (landing) and `vault-datestale` (verdict) carry ZERO occurrences of "State income tax isn't priced yet" or any state clause; `seed-retired`'s landing carries it inside the Medicare residual (`verdictMedicareResidual`). Both date households have no state set (door 5: "Not set yet — the plan prices no state income tax until you pick one … a real yearly bill"), and the date verdict — "about 9 of 10 odds", "Figured under today's rules" — says nothing. The Tier-0 *Unpriced states* entry above never named the route gap; the disclosure family lives on `ConfidenceStatement` and `FuckOffDate` has no seat for it.
+- **Prescription:** render the unpriced-state clause on the date route's verdict (the same family — the priced-state affirmation and the unpriced residual — in the date hero's disclosure slot, under the band caption's "This range prices your full budget" line, which is where a reader looks for what the range prices); pin it with a ROUTE-PARITY test: the same unpriced household rendered on both routes carries the same clause, and the same priced (NC) household carries the same affirmation on both. Red-first on `?seed=date` (unpriced) and `?seed=datenc` (priced).
+- ⚑ NEGATIVE: not a copy fork — the words already exist and were his; this is wiring.
+
+### The accessibility sentence on an already-short household speaks a runway the drawing denies
+
+`S` · **pilot** · filed 2026-09-11 by the four-faces Caddie walk (Card 5 — HARD-FLAG, lane correctness: the AT channel rosier than the ink)
+
+- `copy.ts:2030`, the $0-RUIN variant of the band's screen-reader sentence: *"Looking about ${years} years out, the savings have most likely run out."* `${years}` is the AT anchor column (the last cohort-clean year — the O3 council's ruled exclusion, 2026-07-10), so on `?seed=failing` it renders *"Looking about 17 years out…"* while the drawn median falls $60k → $0 inside the first year and the hero says "runs short from the start". A screen-reader user hears ~17 years; the sighted couple sees one. Three seats survived refutation (one killed on tense — "have run out" = gone BY then, true and not a rescue: 17 is still the only number the sentence gives).
+- **Prescription:** the ruin variant speaks the median's FIRST $0 year, not the anchor — "The savings most likely run out within about a year" / "in about N years" — derived in `bandData` from the median series (the first index at or under the $0 floor), with a unit test on the failing seed (N ≈ 1) and on a late-depleting seed (N = the true year). The O3 parity law is untouched: the sighted channel says the same thing in ink; only the anchor of the ruin sentence changes. Never touch the non-ruin variants.
+
 ## Tier 1 — the differentiator does not land
 
 ### ✅ CLOSED 2026-08-14 (`2816d036`) — The assumed heir tax bracket: the shipped copy sent the reader to a control that did not exist
@@ -694,6 +718,7 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 - U17 S7 — DEFERRED by Briggsy's ruling
 - Q7a must be re-filed as its own unit with a CORRECTED gate (S7 deferred)
 - ⚑ **2026-09-08 (the evening review, confirmed 3/3): the two-arm viz is OMITTED on the `pay-less-tax` goal — HIS WORDS are owed before it can return.** The chart's grammar is wealth-shaped ("which bar is longer" carries direction; the aria slot says *lands near*) while that goal's headline statistic is lifetime TAX PAID (lower is better), so on `pay-less-tax` the recommended arm always drew the SHORTER bar with no metric noun anywhere, and the AT sentence described a tax figure as a landing balance — calm-but-wrong on both channels. `recommendationView.ts` now gates BOTH the primary and the runner-up viz on `goal === 'leave-more'` (the item-11 shape: an omission, never a swap; the delta HERO copy is goal-worded and still renders); `recommendationView.test.ts` pins it on a pay-less-tax fixture. To bring the chart back on that goal: a goal-named axis caption + an aria variant that says *lifetime tax paid* — Briggsy's words — then lift the gate and add the positive case. (The `nc` caddie seed solves `pay-less-tax` and ends on a HOLD card, so no walk lost a chart.)
+- **Receipt (2026-09-11, the four-faces walk, Card 11a):** with $4.9M / $5.2M only in the img alt and "~$6M" sitting 31 px past the blue bar's tip (touching on the phone), the spouse walker read the picture as "we leave the kids nearly $6M" — over a million rosier than the words beside it. Q7a is now a measured calm-but-wrong receipt, not a rider.
 
 ### Modest pre-tax household refused a withdrawal-order answer the engine could compute
 
@@ -1131,6 +1156,29 @@ re-clear it from this list.
 - ⚑ **The fork is named in source and deliberately not ruled** — "Resolving that (re-seat vs re-ask) is a U17-era question" (`src/shared/appDefaults.ts:23-26`) — and its named owner passed without answering: U17 closed at S6, S7 deferred by ruling (`docs/roadmap.md:99`). Do not implement re-seat or re-ask without the ruling, and do not edit an existing era entry to work around it: the map is add-only by ratified contract. Whoever adds era #2 owes the decision in the same change.
 - Distinct from Tier 4's "`appDefaultVersion` era arm has no BEHAVIOURAL witness until a second era ships", which is a missing test rather than this reclassification.
 
+### The aged date band's annotation block — a tail through a neighbour's words, an unnamed tick on the premium row, ages on the name baseline
+
+`M` · **pilot** · filed 2026-09-11 by the four-faces Caddie walk (Card 6 — SOFT-FLAG, lane both; the stack itself reads, most seats)
+
+- Verified on `vault:datestale`'s verdict, both viewports: **(a)** the Today label's dashed tail (`chartText.css .ct-block__tail`, a plain vertical at the label's own x) rises through the words of the row above it — "Pla|n built" and "58 /|59" — because `useCollisionLayout`'s stagger measures words against words and never a tail against a box; **(b)** on the phone the UNNAMED interim tick "70 / 71" holds row 0 while the named "Today" and "Work stops" (the headline's own date) drop to rows 1 and 2 — the stagger is first-come, not priority-ordered, so a scale tick outranks both human landmarks; **(c)** the unnamed tick prints its ages on the NAME baseline ("80 / 81" laptop, "70 / 71" phone) while every named tick's ages sit a row lower — a two-line item and a one-line item share a row's top edge.
+- **Prescription:** in `useCollisionLayout`'s `stagger` mode, `priority` items (the named moments already carry `data-ct-priority`) claim row 0 before unnamed items are placed; an unnamed one-line item aligns to the row's AGE baseline; a tail whose column crosses a higher row's measured box is shortened to that box's bottom edge (or masked behind the words) — three arms in `e2e/chart-text.spec.ts` on the `?vault=datestale` PHONE + FLOOR states: tail-vs-box (hit-test the tail's x inside every higher row's box → red), row-0 membership (every named moment on row 0 when ≥ 1 unnamed item is staggered), the age baseline. Each red-first against today's render.
+- ⚑ NEGATIVE: never widen the block or the figure to buy the rows room ("the room is not the ink"); never drop a named moment to make the stack fit.
+
+### Two dollar ladders on one product — quarter-of-a-nice-ceiling ticks print $0.375M / $1.125M
+
+`S` · **pilot** · filed 2026-09-11 by the four-faces Caddie walk (Card 10 — SOFT-FLAG, rule 36; ten filings, every refuter survived)
+
+- `bandData.buildYTicks` over `niceCeil` (1 / 1.5 / 2 / 3 / 4 / 5 / 6 / 8 / 10 × 10^k) draws quarters of the ceiling, so any ceiling on {1.5, 3, 6} × 10^k prints three-decimal millions. Verified in ink: every driven TwoFutures preview ($0 / $0.375M / $0.75M / $1.125M / $1.5M) beside a fan riding $0.5M steps — and the FAN itself on `landing-worsened` / `panel-worsened` (a $1.5M ceiling) prints $0.375M / $1.125M on THE RANGE, the worst-news surface. The 2026-07-10 SOFT-FLAG 5 ("quarter-tick labels round dirty") chose EXACT labels; the walk read the exact labels as machine ticks and false precision ("a dashboard tell").
+- **Prescription:** derive the lattice from a nice STEP — step ∈ {1, 2, 2.5, 5} × 10^k chosen so 4–5 ticks span the max; ceiling = step × ⌈max / step⌉ — in the ONE shared builder both charts read (`buildYTicks`; TwoFutures already imports `niceCeil` from the same module), so the dialect stays one; then re-derive the chart-text gate's widest-tick fixture (`borderline`'s `$0.375M` is the non-vacuity guard's current worst case — insight 118; pick the new widest figure by measurement, floor its ink with the cross-platform margin) and the `ConfidenceBand` / `TwoFutures` unit goldens that pin tick strings.
+- ⚑ NEGATIVE: never hand-format a tick (rounding "$1.125M" to "$1.1M" is the dirty-ladder the first flag rejected); never give TwoFutures its own builder.
+
+### A disabled primary told apart by tint alone, and an order option naming an account the household does not have
+
+`S` · **pilot** · filed 2026-09-11 by the four-faces Caddie walk (Card 14 — three seats + the hunter, survived)
+
+- **"See the strategy"** in the goal picker is `aria-disabled` until a goal is picked, but renders as a full filled primary in white type, separated from the live "Keep this answer" by fill lightness within the same hue (sage vs dark green) — no word, no icon, no reason; on the phone a dead tap beside a live "Close". The 2026-08-02 Card 9 pattern is the prescription: `aria-disabled` + an announced, RENDERED reason ("Pick a goal first") and the disabled look carrying more than tint (reduced fill + ink, the button's own text stating the precondition), pinned by the same test shape `BudgetBuilder` got.
+- **"Brokerage first — Spends the brokerage account down before touching pre-tax or Roth."** is offered on `vault:datestale`'s withdrawal-order sheet to a household whose saved balances are pre-tax $900,000 + Roth $158,000 and nothing else (the gate's own rows). The sheet-side sibling of the record-card finding under *The saved-record card does not name the strategy* ("'SWITCH to Brokerage first' names an account that does not exist"). Prescription: the order sheet renders only the policies whose named accounts the household holds (or renders the absent one disabled with the reason "You entered no brokerage account"), pinned by a test on the two-bucket household.
+
 ## Tier 3 — Briggsy’s call (taste, scope, one-way doors)
 
 ### No priced-state seed crosses the confidence band any more — the fit matrix lost its PRICED-STATE borderline two-pane coverage when NC's rate cut was pinned
@@ -1241,6 +1289,7 @@ re-clear it from this list.
 - Card 12's residuals — the survivor label orphan and door 4's phone fold — were PILOT-CLEARED "with fixes filed" and the fixes did not ship
 - Parked pre-grant tone cold-reads: the survivor fold + the design-council CF items (CF3/CF4/CF5/CF2) + two cosmetic design advisories
 - HIS EYE — on-surface re-audit of the two Card 9 / GoalPicker fixes that shipped without it
+- **Evidence (2026-09-11, the four-faces walk, Card 13c):** the survivor block read as a DUPLICATE render on 4 of 10 cold first-looks ("the verdict appears twice, identically, which reads for a beat like a bug"); "And if you're on your own" is the quietest element on the page.
 
 ### Caddie walk-and-chair debt on four changed or never-capturable faces
 
@@ -1386,6 +1435,44 @@ legend-deviation session, 8/10 — `docs/council-log.md`)
   together with the standing unconfirmed flag that the outer band's grayscale edge is the page's faintest boundary (`docs/caddie/cold-read-log.md`).
 - ⚑ NEGATIVE: do not "fix" the key by adding outlines to the DRAWN areas — that widens the chart's ink to meet a legend, the inverse of the
   seat law ("contain the ink; never widen the room").
+- **THE WALK'S ANSWER (2026-09-11, the four-faces Caddie walk, Card 1 — the log's top entry):** 10 of 10 readers across five targets located "the middle half" from the legend alone, every one by fill darkness + nesting; NOT ONE used the outlines — six said unnoticed, two said MISLED ("the only dashed ink on the plot is the gridlines"). Four seats' pixel sweeps: no stroke on either plotted boundary. Measured in grayscale: card 255 → outer 177 (2.14:1) → inner 130 (1.79:1) — the INNER seam is the faintest meaning-bearing boundary, both under 3:1; the standing "outer edge faintest" flag is REFUTED by measurement (the outer edge is faint but holds). The pre-registered faded-column read had NO REFERENT: the fan's fills are byte-flat on every fresh seed (the cohort-fade mask never reaches onset there; the only pale column is `vault:datestale`'s elapsed wedge) — a walk on a household whose cohort actually thins is OWED before the reopen trigger can fire either way. **Pilot's lean for his call: delete the two outlines.**
+
+### The reserved readout row at rest — ten fresh readers called the phone's row a hole
+
+`M` · **briggsy (the framing) · pilot (lever (ii))** · filed 2026-09-11 by the four-faces Caddie walk (Card 2 — the walk's strongest convergence)
+
+- Inside the band card, between the age axis and the legend, ~120–150 CSS px of blank on the phone (~24–37 on the laptop) on every target — the scrub readout's FLOW seat, reserved at its tallest so the readout never shifts the tap targets (rule 22, honoured). At rest it carries no ink and nothing on the surface says the chart is touchable, so it read as "a failed render", "a hole in the middle of the one chart the couple is asked to read" — every seat that answered Q9, both panels, five targets. This is the 2026-09-06 fork (1) the pilot leaned ACCEPT on (`temp/cold-read-320-after/` was cleared before his second read); ten fresh readers overturn that lean.
+- **The levers, in the pilot's order:** **(ii)** collapse a degenerate today-range ("$1.055M – $1.055M") to one figure in `composeReadoutLines` (`src/viz/bandData.ts`) so column 0 no longer forces the widest box past the cap and the 390 phone at 16 px earns the PLOT seat again (picture 08's "great") — pilot-buildable under the seat law, red-first against `e2e/chart-text.spec.ts`'s readout-seat oracle on the phone arm, one visual change; **(iii)** give the row its words at rest — the range sentence the O3 council ratified as the AT channel's parity ("between $101k and $1.7M … most likely about $649k") is what that seat exists to hold, and six seats asked for those dollars on the sighted surface (O3 ruled parity with the SCRUB, not that the sighted surface stays wordless at rest — a framing fork, HIS); **(iv)** a quiet touch hint at rest (E12 — never engagement bait).
+- ⚑ NEGATIVE: never un-reserve the row (rule 22 — the readout would shift the tap targets mid-gesture); never widen the box cap to seat the degenerate range ("the room is not the ink").
+
+### The already-short household's goal picker — the omitted lead holds; the options presuppose a surplus
+
+`S` · **briggsy** · filed 2026-09-11 by the four-faces Caddie walk (Card 9 — a framing fork, PARKED)
+
+- On `?seed=failing` the picker now opens with NO lead (the 2026-09-08 gate; the walk harness pins zero `<p>` in the dialog) and the verdict "Already short / 0 of 10 / runs short from the start" stays visible above the sheet on both viewports — the false sentence is gone. Seven seats + the hunter then read the two goals themselves — *"Leave more behind — More left for your heirs, after taxes"* / *"Pay less tax"* — as presupposing money left over, one tap after the page said there is none, with nothing in the sheet about the gap a strategy cannot close (five survived; two killed for claiming the verdict was hidden — it is not). Its confirmed pick lands on the typed mint-fails refusal whose sentence stays his (the entry above).
+- **The fork (his):** should the already-short cohort be offered the picker at all? Pilot's lean: no — on a `0 of 10` verdict the invite door opens the typed refusal note directly, with a one-line reason in his words; the picker is for households with a plan to lean. Alternative: keep the picker and give it an honest lead for this cohort ("Your plan is already short — a strategy can't close that gap; these two goals would only steer what is left"). Either way the words are his.
+
+### Copy forks in his words from the four-faces walk — the on-track threshold, "the line", the over-funded room, the strategy's price, era-naked dollars, the coincident futures, the small gaps
+
+`M` · **briggsy** · filed 2026-09-11 by the four-faces Caddie walk (Cards 7, 8, 11(b–d), 12, 14 — each verified, each survived refutation)
+
+- **The ladder's "on track" line has no number** (Card 7): the y-axis reads 3 / 5 / 7 of 10 then the WORD "on track"; the bar draws at rung 8.5 (`oddsLadderGeometry.ts` `BAR_RUNG`, the engine's on-track band) and that value is printed nowhere, not even in the alt text. Four seats read it as 9 or 10 of 10; the hero's "a year sooner, nearer 8 of 10" sits above a chart whose dot for that year is BELOW the line. Lean: label the rule *"on track — 8½ of 10 or better"*.
+- **"It sits close to the line — small changes tip it either way."** (Card 8, `copy.ts:2225` `verdictHoldClause`) names a line the SPINE route never draws (no ladder, no threshold mark; the band names only "The most likely path" and $0). Lean: *"It sits close to the on-track mark — about 8½ of 10 — and small changes tip it either way."* — the same number as the ladder's, two homes.
+- **"There looks to be room for about $7,480 more a month."** (Card 11d, the over-funded hero) names no endpoint, no era, no odds — "room for WHAT, on top of WHAT?"; three seats + the hunter read it as spare cash or extra income. Lean: *"You could spend about $7,480 more a month — on top of the $X you entered — and still hold these odds."*
+- **The strategy's price is never quoted** (Card 11b): "Converting ~$148,000 a year for 9 years, starting in 2026" carries no tax bill, no bracket dollar, no payment source. Lean: one line under the action — *"That conversion is taxed as income in each of those years — about $X a year at your bracket."* (the engine has the figure).
+- **Era-naked lockup dollars** (Card 11c): no "in today's dollars" renders anywhere on the committed surface; $260,000 / $170,000 / $4.2M and both bars read as nominal. Lean: the era tag once, on the lead.
+- **Two futures that coincide** (Card 12): when the two paths are identical the end labels are pushed ~90 px apart over merged markers and the binding reads arbitrary. Lean: one combined label when the end values coincide within a threshold — *"Both orders: about the same"*.
+- **Small gaps** (Card 14): "the net-investment-income tax" is named in two "Not counted here" lists and glossed nowhere, with no details home (rule 38); door-2's withdrawal-order preview lacks the "Not counted here: state income tax…" note doors 3 and 4 carry; the "Health-subsidy rules — Current law" assumptions row has no gloss where its siblings do.
+
+### Layout forks for his eye from the four-faces walk — the date route's empty left column and the sliced crown, the committed frame's empty right column, the phone's above-bar labels, the duplicate-looking survivor block
+
+`M` · **briggsy** · filed 2026-09-11 by the four-faces Caddie walk (Cards 11's labels fork + 13 — framing, no fixes filed)
+
+- **The date route at 1536×791:** the left column ends at the save slot (~y 300–408) and stays empty to the in-frame caveat (~y 1095–1273) — ~576 × 800–865 px of paper beside the graphs column — and the first frame ENDS on the ladder's clipped "9 of 10 / Your date" crown, the ringed dot sliced by the fold (both cold first-looks: "the page stops mid-thought", "looks like a render failure"). The SCROLL is ruled (the date route is a scrolling tier — vertical-fit's order contract; the stacked-graph scroll was his July clearance); the dead column and the sliced crown are new. Candidates, none chosen: seat the ladder in the left column under the hero (two graphs side by side, the caveat under both); or keep the stack and let the left column carry the ladder's caption block.
+- **The committed recommendation frame at 1536:** the right column ends at the comparison chart (~y 805) and sits empty ~875 px to the footer while the left column stays dense.
+- **The recommendation chart's labels on the phone** (Card 11): readable as shipped (six seats); the label column takes ~35–40 % of the plot width, leaving the $260,000 gap ~8 px of bar — two seats lean YES on above-bar labels for the PHONE only (the plot widens again; the register's chart-text residual (c) named this fork).
+- **The survivor block reads as a DUPLICATE render on 4 of 10 cold first-looks** ("And if you're on your own" is the quietest element on the page) — evidence for the parked *survivor label* residual below.
+- Nits for the same eye: the ⤓ verdict glyph beside "Already short" reads as a DOWNLOAD icon on a page whose CTA saves (two seats); the band card's green accent bar reads as a rendering artifact to two cold first-looks; five cold readers could not tell "66 / 65" were two people's ages.
 
 ## Tier 4 — hygiene (no user-visible wrong answer)
 

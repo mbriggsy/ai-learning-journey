@@ -24,10 +24,10 @@ NEXT SESSION, in order: (f) the ranked (6) Caddie walk (it now carries every eye
 doors, the legend swatch redraw, the icon silhouette, the aged date block, the goal picker's omitted lead) · the 20 px
 two-pane fork (register *The app on someone else's device*; his call or a council's — never a pilot number) · (e) the phone
 strip-reserve fork. Gates at close: typecheck · lint · 3511 tests / 176 files · doc-stats (insights 124–128 indexed) ·
-verify:fit 138 · verify:csp 16 collected / 15 passed / 1 skipped (a change under `e2e/` must run it — the CI workflow is the gate list) · CI green through `8f66dcfe` — and RED on `c61dea7e` · `12d12ede` · `73242ac8` (the held 24 px instrument
+verify:fit 138 · verify:csp 16 collected / 15 passed / 1 skipped (a change under `e2e/` must run it — the CI workflow is the gate list) · CI green through `cba26770` (run **34607039597**, 2026-09-11) — `c61dea7e` · `12d12ede` · `73242ac8` ran RED (the held 24 px instrument
 collected by `verify:csp` — the CSP harness is a DENYLIST; fixed 2026-09-11 by `scripts/__tests__/playwright-harness-partition.test.ts`,
 insight 128). Because `verify:csp` failed first, CI never reached `verify:fit` for `c61dea7e`'s 462-line spec change —
-the fix commit's run is the first Linux proof of those 138 arms; confirm it by run id before trusting "verify:fit 138" on CI.** The b9-4 ranked plan below is
+`cba26770`'s run is the first Linux proof of those 138 arms, and it is GREEN: 3511 tests · csp 15 passed / 1 skipped of 16 · fit 138 passed in 17.3 m · the RV job green.** The b9-4 ranked plan below is
 DISCHARGED through (5): (1) the RV gate `c135a99c` · (2) the critic's arms `96e87e0f` · (3) the unmeasured trio `da881de5` ·
 (5) the legend council `2d671144` — each CI-green by run id — and (4) five of six arms integrated and committed as `31cba0fe`
 (CI run 34228947445 GREEN), then adversarially reviewed and fixed as `780409f7` (2026-09-10; CI run **34496025172** GREEN).

@@ -27,8 +27,9 @@ finding, perception seats stay Opus). NEXT, in order: **(g) HIS EYE on the walk'
 delete them) · Card 2 the phone's empty readout row (lean: the composition lever (ii) now, the at-rest words (iii) his) · Card 9 the
 already-short picker (lean: don't show it) · Card 11 the phone's above-bar labels · Card 13 the date route's empty left column + the
 crown sliced by the fold — plus the 24 px frames (`temp/council-24px/INDEX.md`, 12 frames named) and the icon silhouette
-(`scripts/icons/preview.png`) · **(h) the routed fixes, calm-but-wrong first, each red-first**: Card 4 the date route's missing
-state-tax disclosure (a route-parity test) · Card 5 the AT ruin sentence's anchor (`copy.ts:2030`) · Card 3's plumbing once he rules
+(`scripts/icons/preview.png`) · **(h) the routed fixes, calm-but-wrong first, each red-first**: Card 4 the pre-65 household's missing
+state-tax disclosure on BOTH routes (the clause is coupled to the Medicare residual — a route × cohort × pricing matrix test; the priced
+pre-65 sentence is his) · Card 5 the AT gone-sentence's anchor (`bandAtRangeGone`, `copy.ts:2029-2030`, the first $0 year) · Card 3's plumbing once he rules
 the words · Card 6's three chart-text arms (tail-vs-box, named-over-unnamed row, the age row) · Card 10 nice-step ticks in
 `buildYTicks` · Card 14's disabled-primary pattern · Card 2's lever (ii) in `composeReadoutLines` — the register carries each
 prescription (the 2026-09-11 entries) · the 20 px two-pane fork (register *The app on someone else's device*; his call or a
@@ -123,6 +124,23 @@ every step; his eye or a council, not a pilot number.
 (f) ✅ **DONE 2026-09-11 — the walk ran (10/10 in 16.6 m; the three fast targets re-walked on the improved harness, 6/6), the
 dual-panel A/B panel read it (182 agents, 0 crashes, 46 m), and the card is chaired and filed** — the log's top entry; the forks
 are (g) above, the fixes (h). The harness increments + corpus fold-in are `7aaa84b9`.
+
+**SESSION CLOSE 2026-09-11 (remote; the window hit 66 % after the 182-agent panel — no builds started; every routed fix is a
+prescription in the register's 2026-09-11 entries):** gates at close — typecheck · lint · 3511 tests / 176 files · doc-stats (69 open / 77
+entries) · verify:csp 16 / 15 passed · CI green through `9fbea080` (run 34609846895); `7aaa84b9` (harness + corpus) and `2d34fcab` + the
+close-out commit are docs/e2e only — confirm each by run id, never "in flight". HIS EYE next session: START HERE (g). Regenerable
+evidence in `temp/` (squeaky clears it): `temp/caddie/2026-09-11-walk/` (re-walk: `CADDIE_TARGETS="seed:retired,seed:date,vault:datestale,solve:surplus,solve:failing" CADDIE_RUN=<name> pnpm caddie:walk`, ~17 m) and
+`temp/council-24px/` (`pnpm exec playwright test --config e2e/held/shots.config.ts`, ~2 m; `INDEX.md` there names the 12 frames).
+
+**LANDMINES (2026-09-11):** the Bash tool TRUNCATES a long quoted heredoc (≳100 lines: "unexpected EOF while looking for matching
+`''`" mid-file) — write big files with the Write tool, never a heredoc · a glob spelled `**/held/**` inside a `/** … */` block comment
+CLOSES the comment ("held is not defined") — describe it in words · an inline `node -e "…"` is shell-interpolated (a backtick runs a
+command, `
+` collapses) — put scripts in files · `grep -c $''` in this tool counts the letter r, not CR (the repo is LF; the
+"CRLF" probe was wrong) · the CVD per-chart crops select the bare `svg` — a crown row seated ABOVE the svg is outside them (the plain
+`crop-ladder` / `crop-twofutures` / `crop-recviz` crops select the HOST and include it) · a `display:contents` group reports an all-zero
+rect — `fold.json` now unions the children (harness fixed) · a 182-agent panel costs ~19 M subagent tokens and ~250 KB of digest to
+chair; chair from a digest script, never the raw result, and expect the window to jump ~25 % — start the walk EARLY in a session.
 
 **LANDMINES (2026-09-10, late):** vitest's default include picks up ANY `*.spec.ts` under `temp/` — a throwaway
 Playwright spec there breaks `vitest list` and therefore `verify:doc-stats` ("could not collect the live suite"); park

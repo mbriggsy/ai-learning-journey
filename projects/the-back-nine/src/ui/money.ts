@@ -159,13 +159,15 @@ export function formatBracketPercent(bracketFraction: number): string {
  *  occur (a fan percentile is ≥ 0), but |x| is taken defensively so a stray sign never prints "$-".
  *
  *  EXACT-WHEN-ROUND (Caddie O5, 2026-07-10): a value that IS a round number of thousands (M range)
- *  or hundreds (k range) renders exactly — "$2.25M", "$1.125M", "$37.5k" — instead of being rounded
- *  into a lying gridline label. niceCeil's {1.5, 3, 5}×10^k ceilings put quarter ticks at values
- *  like 2,250,000, which the old 1-decimal path labeled "$2.3M": an evenly-spaced ladder reading
- *  unevenly (against buildYTicks' own "clean figures" contract). Exactness here is the RULER naming
- *  its own gridline — not spurious precision (back-nine-design §3 bans false precision; a tick
- *  label that misstates its line's value is the opposite failure). Arbitrary values — the scrub
- *  readout's raw percentiles — miss the round-ness gate and keep the humane rounding unchanged.
+ *  or hundreds (k range) renders exactly — "$0.25M", "$12.5M", "$37.5k" — instead of being rounded
+ *  into a lying gridline label. The quartered-ceiling era put ticks at values like 2,250,000, which
+ *  the old 1-decimal path labeled "$2.3M": an evenly-spaced ladder reading unevenly. The lattice no
+ *  longer PRODUCES those values (Card 10, 2026-09-11 — niceLattice picks the nice STEP first, so
+ *  every gridline is a whole multiple of {1, 2, 2.5, 5} × 10^e), but the law stays: exactness here
+ *  is the RULER naming its own gridline — not spurious precision (back-nine-design §3 bans false
+ *  precision; a tick label that misstates its line's value is the opposite failure), and the scrub /
+ *  AT-sentence path still rides this same formatter on ARBITRARY values, where the round-ness gate
+ *  misses and the humane rounding is what prints.
  *  The gate is INTEGER arithmetic (`v % 1_000`), never a float round-trip ("1.1" × 1e6 misses
  *  1,100,000 in binary); Number→template prints the shortest exact decimal ("2.25", "1.125"). */
 export function formatAxisDollar(dollars: number): string {
@@ -183,14 +185,14 @@ export function formatAxisDollar(dollars: number): string {
 }
 
 /** ONE dialect per axis lattice (O8, 2026-07-17 — corpus rule 36, the fcc35556 axis family):
- *  `formatAxisDollar` picks its unit per-VALUE, so any $M-class ceiling whose quarters dip under
+ *  `formatAxisDollar` picks its unit per-VALUE, so any $M-class ceiling whose gridlines dip under
  *  $1M rendered a mixed ladder — "$750k" between "$1.5M" gridlines, an evenly-spaced ruler
  *  reading unevenly. This factory locks a lattice to its TOP tick's unit: an $≥1M ceiling
- *  formats every non-zero tick in M ("$0.75M, $1.5M, $2.25M, $3M" — quarters of the niceCeil
- *  ladder are exact dyadics, so Number→template prints the shortest exact decimal, the O5
- *  exact-when-round law), $0 stays "$0" (never "$0M" — the ruin-floor anchor reads plain).
- *  A sub-$1M ceiling keeps the per-value formatter (its quarters never cross a unit boundary
- *  in the band's reachable domain — the $0-portfolio household is screened upstream).
+ *  formats every non-zero tick in M (a $1.25M lattice reads "$0.25M, $0.5M, $0.75M, $1M, $1.25M" —
+ *  a nice step's multiples are exact in M units, so Number→template prints the shortest exact
+ *  decimal, the O5 exact-when-round law), $0 stays "$0" (never "$0M" — the ruin-floor anchor reads
+ *  plain). A sub-$1M ceiling keeps the per-value formatter (its gridlines never cross a unit
+ *  boundary in the band's reachable domain — the $0-portfolio household is screened upstream).
  *  DELIBERATE SCOPE: tick lattices only. The scrub/tooltip readout keeps per-value units
  *  ("$623k" in a sentence, never "$0.623M") — the axis is the ruler, the readout is prose. */
 export function axisDollarFormatterFor(ceiling: number): (dollars: number) => string {

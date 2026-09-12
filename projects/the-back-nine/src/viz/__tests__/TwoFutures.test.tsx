@@ -9,6 +9,7 @@ import {
   composeTfReadoutLines,
   tfNearestYear,
   twoFuturesCeiling,
+  twoFuturesLattice,
   type TwoFuturesLabels,
   type TwoFuturesPoint,
   type TwoFuturesReadoutRow,
@@ -19,9 +20,10 @@ import { buildYTicks } from '../bandData'
  * The U10 two-futures comparison SVG (src/viz/TwoFutures.tsx).
  *
  * The honesty contracts this battery pins (back-nine-design §3, the component header):
- *  - twoFuturesCeiling is a 2-significant-digit ceiling ≥ max, $0-anchored and never
- *    truncating (the ruin floor must stay drawable). Its cases are HAND-DERIVED from the
- *    formula (Math.ceil(max / 10^(⌊log10 max⌋−1)) · 10^…), never read off the function.
+ *  - twoFuturesLattice / twoFuturesCeiling ride the FAN's own nice-step rule (bandData.niceLattice)
+ *    — a ceiling ≥ max, $0-anchored and never truncating (the ruin floor must stay drawable), on a
+ *    step the axis can draw in humane rungs. Its cases are HAND-DERIVED from that rule, never read
+ *    off the function.
  *  - NON-COLOR IDENTITY (the reader is color blind): the two series must differ by
  *    line-STYLE (one path dashed, one not) and marker SHAPE (one circle, one polygon) —
  *    color is the least-trusted channel, so the redundant channels are the real test.
@@ -75,33 +77,52 @@ const withArm: TwoFuturesPoint[] = [
   { yearsFromNow: 30, medianReal: 508_000 },
 ]
 
-describe('twoFuturesCeiling — hand-derived ceilings on the fan-shared humane ladder', () => {
-  // The ceiling rides bandData.niceCeil (fan parity, station-2 cold-read 2026-07-08): the next
-  // value ≥ max on the ladder (1 / 1.5 / 2 / 3 / 4 / 5 / 6 / 8 / 10) × 10^⌊log10 max⌋ — so the
-  // axis quarters (buildYTicks) are clean figures by construction. Each expected value is
-  // computed BY HAND from that ladder, never by running the function:
+describe('twoFuturesCeiling — hand-derived ceilings on the fan-shared nice-step lattice', () => {
+  // The ceiling rides bandData.niceLattice (fan parity, station-2 cold-read 2026-07-08; Card 10,
+  // 2026-09-11): the nice STEP is chosen first — m × 10^e for m ∈ {1, 2, 2.5, 5} and e within a
+  // decade of ⌊log10(max/4)⌋ — and the ceiling is the fewest whole steps that cover max, picking
+  // the step whose count is closest to 4, then the smaller headroom. Each expected value is
+  // computed BY HAND from that rule, never by running the function:
   it.each([
-    // 1_234_567: mag=1e6, norm=1.234… → next ladder stop 1.5 → 1_500_000
-    [1_234_567, 1_500_000],
-    // 87_000: mag=1e4, norm=8.7 → next stop 10 → 100_000
+    // 1_234_567: k = ⌊log10 308,641⌋ = 5. 250k → 5 steps, ceiling 1_250_000, headroom 15,433;
+    // 500k → 3 steps, ceiling 1_500_000, headroom 265,433. Both 1 from TARGET → headroom decides.
+    [1_234_567, 1_250_000],
+    // 87_000: k = ⌊log10 21,750⌋ = 4. 25k → ⌈3.48⌉ = 4 steps, an exact TARGET hit → 100_000.
     [87_000, 100_000],
-    // 951_000: mag=1e5, norm=9.51 → next stop 10 → 1_000_000
+    // 951_000: k = ⌊log10 237,750⌋ = 5. 250k → ⌈3.804⌉ = 4 steps, exact hit → 1_000_000.
     [951_000, 1_000_000],
-    // 123: mag=1e2, norm=1.23 → next stop 1.5 → 150
-    [123, 150],
-    // 590_000: mag=1e5, norm=5.9 → next stop 6 → 600_000 (quarters: 150k/300k/450k — clean)
+    // 123: k = ⌊log10 30.75⌋ = 1. 25 → 5 steps, ceiling 125, headroom 2; 50 → 3 steps, ceiling 150,
+    // headroom 27. Tie on distance → headroom → 125.
+    [123, 125],
+    // 590_000: k = ⌊log10 147,500⌋ = 5. 200k → 3 steps, ceiling 600_000, headroom 10,000, against
+    // 250k's equally-distant 3 steps at a $750k ceiling → 600_000 (gridlines 200k/400k — clean).
     [590_000, 600_000],
-    // 1_000_000: a clean power of ten sits ON the ladder → 1_000_000 (⌊log10⌋ boundary robust)
+    // 1_000_000: k = ⌊log10 250,000⌋ = 5. 250k → 4 steps, ceiling 1_000_000, headroom 0 — a clean
+    // power of ten still lands on itself (the ⌊log10⌋ boundary stays robust).
     [1_000_000, 1_000_000],
   ])('twoFuturesCeiling(%d) = %d', (input, expected) => {
     expect(twoFuturesCeiling(input)).toBe(expected)
   })
 
-  it('degenerate inputs (0 / NaN / negative) floor to 1 — never a $0 or undrawable axis', () => {
+  it('degenerate inputs (0 / NaN / negative / ∞) floor to 1 — never a $0 or undrawable axis', () => {
     expect(twoFuturesCeiling(0)).toBe(1)
     expect(twoFuturesCeiling(Number.NaN)).toBe(1)
     expect(twoFuturesCeiling(-100)).toBe(1)
     expect(twoFuturesCeiling(Number.POSITIVE_INFINITY)).toBe(1)
+  })
+
+  it('the LATTICE, not just its ceiling: a degenerate input yields the drawable $1 lattice', () => {
+    // Hand-derived: niceLattice(1) → k = ⌊log10 0.25⌋ = −1; the 2.5 × 10^−1 = 0.25 candidate covers
+    // 1 in exactly 4 steps (an exact TARGET hit, headroom 0). So the fallback axis is four 25¢
+    // gridlines to $1 — never a $0-tall axis, and never a lattice buildYTicks would throw on.
+    for (const bad of [0, Number.NaN, -100, Number.POSITIVE_INFINITY]) {
+      expect(twoFuturesLattice(bad), `${bad}`).toEqual({ ceiling: 1, step: 0.25, intervals: 4 })
+    }
+  })
+
+  it('the lattice a real max produces carries the STEP the axis draws, not only the ceiling', () => {
+    // 1_234_567 → the 1.25M lattice: 5 steps of 250,000 (derived above).
+    expect(twoFuturesLattice(1_234_567)).toEqual({ ceiling: 1_250_000, step: 250_000, intervals: 5 })
   })
 })
 
@@ -167,7 +188,11 @@ describe('TwoFutures — the a11y text alternative', () => {
 /* ── the fan-parity axis + scrub chrome (station-2 cold-read 2026-07-08) ─────────────────────── */
 
 describe('TwoFutures — the y dollar lattice frame (chrome-supplied yTicks)', () => {
-  const yTicks = buildYTicks(800_000, (d) => `$${Math.round(d / 1000)}k`)
+  // The $800k lattice, hand-derived from the rule above: k = ⌊log10 200,000⌋ = 5; 200k covers
+  // 800,000 in exactly 4 steps (|n − 4| = 0, headroom 0), beating 250k's equally-distant 4 steps to
+  // a $1M ceiling on headroom → 5 tick lines including the $0 floor, hence the 4 interior
+  // gridlines pinned below.
+  const yTicks = buildYTicks(twoFuturesLattice(800_000), (d) => `$${Math.round(d / 1000)}k`)
 
   it('renders every tick label in the left gutter + dashed interior gridlines (never one at the $0 floor)', () => {
     const { container, getByText, queryByText } = render(

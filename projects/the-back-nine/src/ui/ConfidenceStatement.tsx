@@ -51,6 +51,7 @@ import { ConfidenceBandPanel } from '@viz/ConfidenceBandPanel'
 import {
   resolveBandData,
   buildYTicks,
+  niceLattice,
   type IndeterminateBandData,
   type XAnnotation,
 } from '@viz/bandData'
@@ -170,12 +171,16 @@ export interface ConfidenceStatementProps {
  *  (the range is genuinely undetermined); the note names the state. */
 const PLACEHOLDER_HORIZON_YEARS = 30
 const PLACEHOLDER_DOLLAR_MAX = 2_000_000
+/** The placeholder's axis rides the SAME lattice rule a resolved card's does (bandData.niceLattice —
+ *  Card 10): its ceiling is DERIVED from the representative max, never a second re-typed figure, so
+ *  the indeterminate card cannot drift onto a ladder the product never draws. */
+const PLACEHOLDER_LATTICE = niceLattice(PLACEHOLDER_DOLLAR_MAX)
 function buildPlaceholderBand(annotations: readonly XAnnotation[]): IndeterminateBandData {
   return {
     kind: 'indeterminate',
     horizonYears: PLACEHOLDER_HORIZON_YEARS,
-    dollarMax: PLACEHOLDER_DOLLAR_MAX,
-    yTicks: buildYTicks(PLACEHOLDER_DOLLAR_MAX, axisDollarFormatterFor(PLACEHOLDER_DOLLAR_MAX)),
+    dollarMax: PLACEHOLDER_LATTICE.ceiling,
+    yTicks: buildYTicks(PLACEHOLDER_LATTICE, axisDollarFormatterFor(PLACEHOLDER_LATTICE.ceiling)),
     annotations,
     placeholderNote: copy.bandPlaceholderNote,
   }

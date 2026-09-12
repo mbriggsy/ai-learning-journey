@@ -21,7 +21,7 @@
  */
 import type { OutcomeState, TwoArmOutcome, TwoArmReading } from '@shared/model'
 import {
-  twoFuturesCeiling,
+  twoFuturesLattice,
   type TwoFuturesLabels,
   type TwoFuturesPoint,
   type TwoFuturesReadoutRow,
@@ -48,7 +48,7 @@ export interface TwoFuturesView {
     readonly withoutArm: readonly TwoFuturesPoint[]
     readonly labels: TwoFuturesLabels
     /** Fan-parity axis + hover chrome (station-2 cold-read 2026-07-08): the y dollar lattice
-     *  (the fan's OWN buildYTicks over the shared humane ceiling), intermediate x year ticks,
+     *  (the fan's OWN buildYTicks over the shared nice-step lattice), intermediate x year ticks,
      *  and per-integer-year readout rows — every figure pre-formatted HERE (string-free viz). */
     readonly yTicks: readonly YTick[]
     readonly xTicks: readonly TwoFuturesXTick[]
@@ -158,12 +158,20 @@ export function composeTwoFutures(
       withPts[withPts.length - 1]!.yearsFromNow,
       withoutPts[withoutPts.length - 1]!.yearsFromNow,
     )
-    const ceiling = twoFuturesCeiling(maxDollar)
+    const lattice = twoFuturesLattice(maxDollar)
+    const ceiling = lattice.ceiling
     const agesAt = ages !== undefined ? deriveBandAgesAt(ages[0], ages[1]) : undefined
     // Per-integer-year readout rows (0..maxYears), keyed off each arm's OWN filtered series — a
     // truncated arm's value is simply ABSENT past its last year (the readout goes quiet exactly
-    // where the drawn line ends; never a median quoted past the cohort). Same formatter as the
-    // axis ticks, so a scrubbed figure and a gridline figure always share one dialect.
+    // where the drawn line ends; never a median quoted past the cohort).
+    // TWO REGIMES, BY DESIGN (O8's own DELIBERATE SCOPE — money.ts: "tick lattices only … the axis
+    // is the ruler, the readout is prose"): these rows ride the PER-VALUE `formatAxisDollar`, while
+    // the ticks below ride the unit-LOCKED `axisDollarFormatterFor(ceiling)`. Below a $1M ceiling
+    // the factory IS formatAxisDollar, so the two coincide; above one a scrubbed "$750k" sits
+    // beside a "$0.75M" gridline deliberately. What the rows and the ticks always share is the
+    // exact-when-round law (O5) — never one unit. ⚑ Never re-point these rows at
+    // `axisDollarFormatterFor`: it drags "$0.623M" into prose, and the row assertions in
+    // twoFuturesChrome.test.ts (`withValue: formatAxisDollar(741_000)`) pin this wiring on purpose.
     const withByYear = new Map(withPts.map((p) => [p.yearsFromNow, p.medianReal]))
     const withoutByYear = new Map(withoutPts.map((p) => [p.yearsFromNow, p.medianReal]))
     const rows: TwoFuturesReadoutRow[] = []
@@ -207,11 +215,14 @@ export function composeTwoFutures(
         readoutAgesLabel: copy.bandReadoutAgesLabel,
         ariaSummary: `${copy.twoFuturesCaption} ${deltaLine}`,
       },
-      // The fan's OWN tick builder over the shared humane ceiling — quarters are clean figures
-      // by construction, and the two charts can never grow separate dollar-axis dialects.
-      // O8 (2026-07-17): the lattice is unit-LOCKED to its top tick (rule 36) — a $3M ceiling
-      // reads "$0.75M…$3M", never "$750k" among "$M" gridlines.
-      yTicks: buildYTicks(ceiling, axisDollarFormatterFor(ceiling)),
+      // The fan's OWN tick builder over the shared nice-step lattice — every gridline is a whole
+      // multiple of one humane step by construction (Card 10), and the two charts can never grow
+      // separate dollar-axis dialects. O8 (2026-07-17): the lattice is unit-LOCKED to its top tick
+      // (rule 36) — a $1.25M ceiling's sub-$1M lines read "$0.25M / $0.5M / $0.75M", never "$250k"
+      // among "$1M / $1.25M". The witness must CARRY a sub-$1M gridline, or the lock exhibits
+      // nothing: a $3M ceiling is three whole $1M steps (the only 3M lattice there is), so its
+      // locked labels are byte-identical to the per-value ones.
+      yTicks: buildYTicks(lattice, axisDollarFormatterFor(ceiling)),
       // Known ages ⇒ the fan's OWN decade-age tick rule (one canonical home, bandAnnotations) —
       // the two charts can never grow separate clock dialects; ages-less ⇒ year-count fallback.
       xTicks:

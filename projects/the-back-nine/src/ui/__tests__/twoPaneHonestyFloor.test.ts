@@ -18,14 +18,16 @@ import { PLOT, VIEWBOX } from '@viz/bandGeometry'
  * (chartText.css): the ticks are HTML at --text-xs, they never scale and are never dropped, and the
  * question becomes GEOMETRIC — does the y-tick column (PLOT.left − 8 units, rendered at
  * figure/560) hold the widest CATALOG dollar at the type scale on the narrowest two-pane pane?
- * The widest shipping tick measured 45 CSS px of ink at --text-xs — the seven-glyph "$0.375M" /
- * "$1.125M" (the $1.5M-ceiling household: niceCeil's 1.5×10^k rung, quartered by buildYTicks);
- * "$2.25M" and the other six-glyph ticks measure only 38.5 (real Chromium, 2026-09-05). The
- * real-browser gate (e2e/chart-text.spec.ts) re-measures that same dollar live on all four viewport
- * arms, on ?seed=borderline — the household whose $1.5M ceiling quarters into it — and bounds the
- * borrow it takes of the drawer's padding on the 320 arm (assertTickColumn). This is the arithmetic tripwire that
- * fires at edit time: a future change to the breakpoint, the gap, the measure, the drawer chrome or
- * PLOT.left that would starve the column fails HERE, loudly, before a browser is opened.
+ * The widest shipping tick measures 38.5 CSS px of ink at --text-xs — the six-glyph "$0.25M" /
+ * "$0.75M" / "$1.25M" of the $1.25M lattice, which `borderline` rides (real Chromium, re-measured
+ * 2026-09-12 for Caddie Card 10). Card 10 retired the SEVEN-glyph class this gate was first sized
+ * against ("$0.375M" / "$1.125M", 45 px — quarters of a 1.5-rung ceiling): niceLattice picks the
+ * nice STEP first, so no lattice can produce a three-decimal million. The real-browser gate
+ * (e2e/chart-text.spec.ts) re-measures the widest dollar live on every viewport arm, on
+ * ?seed=borderline, and bounds the borrow it takes of the drawer's padding on the 320 arm
+ * (assertTickColumn). This is the arithmetic tripwire that fires at edit time: a future change to
+ * the breakpoint, the gap, the measure, the drawer chrome or PLOT.left that would starve the column
+ * fails HERE, loudly, before a browser is opened.
  *
  * Worst case is the breakpoint itself (V = --bp-laptop): just above it the grid activates at the
  * narrowest reveal; wider viewports only grow the band pane (1fr), up to --content-wide.
@@ -43,9 +45,11 @@ const bandCss = stripComments(readFileSync(join(here, '..', '..', 'viz', 'band.c
 const ladderCss = stripComments(readFileSync(join(here, '..', '..', 'viz', 'oddsLadder.css'), 'utf8'))
 
 const REM_PX = 16
-/** The widest catalog tick's ink at --text-xs (13px), measured in real Chromium 2026-09-05 — the
- *  e2e gate re-measures it live on ?seed=borderline; this constant only sizes the edit-time tripwire. */
-const WIDEST_TICK_INK_PX = 45
+/** The widest catalog tick's ink at --text-xs (13px), measured in real Chromium 2026-09-12 — the
+ *  e2e gate re-measures it live on ?seed=borderline; this constant only sizes the edit-time
+ *  tripwire. 38.5 is the six-glyph "$0.25M" / "$0.75M" / "$1.25M"; it was 45 for the seven-glyph
+ *  "$0.375M" / "$1.125M" until Card 10 made a three-decimal million unproducible. */
+const WIDEST_TICK_INK_PX = 38.5
 /** The tick is end-anchored 8 viewBox units left of the axis (ConfidenceBand TICK_FX). */
 const TICK_INSET_UNITS = 8
 
@@ -103,8 +107,14 @@ describe('two-pane honesty floor — the band keeps a legible y-tick column at t
         `bp=${bpLaptop} gutters=${2 * gutter} measure=${measure} gap=${gap} chrome=${chrome} → pane=${bandPane}`,
     ).toBeGreaterThan(WIDEST_TICK_INK_PX)
 
-    // Real margin, so a near-miss edit (a narrower PLOT.left, a 60–64rem breakpoint) is caught here,
-    // not in a cold-read: at the pinned values the column is ~53.7px against 45px of ink.
+    // Real margin, so a near-miss edit is caught here, not in a cold-read: at the pinned values the
+    // column is ~53.7px against 38.5px of ink, and the two assertions together red below a ~42.5px
+    // column — a breakpoint at or under 63rem (41.7px, 3.2px slack) or PLOT.left at or under 74
+    // units (42.2px). Card 10's honest 6.5px narrowing of the widest dollar shrank that reach:
+    // 64rem (44.1px) and the svg era's PLOT.left 78 (44.75px) now clear BOTH lines — because the
+    // column genuinely still holds the narrower dollar, not because the gate went blind. The 4px is
+    // the cross-platform ink cushion (38.5 Windows vs ≈35.9 Linux, insight 118), not a knob for
+    // choosing which breakpoints red.
     expect(tickColumnPx - WIDEST_TICK_INK_PX, 'two-pane tick-column slack shrank below 4px — re-check PLOT.left / the breakpoint').toBeGreaterThan(4)
   })
 

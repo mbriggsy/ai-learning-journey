@@ -111,9 +111,26 @@
     minus ~56px .result gutters, the band pane = 1088 − 56 − 576 (--measure left pane) − 48 (--space-9
     gap) = 408px; minus ~50px .band-drawer chrome (band.css `.band-drawer`: 24+24 padding, 1px border
     per side) = a 358px band-figure — CONFIRMED in real Chromium 2026-09-05 (358.0 at 1088×800). Its
-    y-tick column renders 84 × 358/560 ≈ 54px against 45px of ink for the widest dollar at --text-xs;
-    60rem would yield a ~230px figure and a ~35px column that cannot hold one, so 68rem is the floor,
-    never 60–64rem. (The svg-text era's derivation compared the same 358 to a 260px label-DROP floor —
+    y-tick column renders 84 × 358/560 ≈ 54px, and it holds the widest catalog dollar at --text-xs:
+    the SIX-glyph "$0.25M" / "$0.75M" / "$1.25M" of the $1.25M lattice. That ink has ONE home —
+    WIDEST_TICK_INK_PX in src/ui/__tests__/twoPaneHonestyFloor.test.ts (38.5px Windows/DirectWrite,
+    re-measured 2026-09-12 for Card 10; ≈35.9px EXPECTED on Linux CI, DERIVED not measured — insight
+    118) — and ONE live re-measurement (assertTickColumn in e2e/chart-text.spec.ts). The SEVEN-glyph
+    "$0.375M" / "$1.125M" class this paragraph was first sized against (45px) is now UNPRODUCIBLE:
+    niceLattice picks the nice STEP first, so no ceiling quarters into a three-decimal million.
+    WHAT RULES OUT A NARROWER BREAKPOINT, at the re-measured ink: the GRID, no longer the tick column.
+    Both two-pane grids are `minmax(0, var(--measure)) minmax(var(--pane-band-min), 1fr)`
+    (confidence.css / fuckOffDate.css), so seating the FULL measure beside a floored band pane needs
+    576 + 48 + 368 = 992px of content, i.e. ≥ 1048px = 65.5rem of viewport; below that col 1 squeezes
+    the verdict words under --measure (552px at 64rem). So the honest range is never 60–65rem, BY THE
+    GRID. The column arithmetic can no longer carry that conclusion — it now excludes only 60–63rem
+    (60rem's ~230px figure gives a ~34.5px column: short by 4.0px on Windows, and by only ~1.4px on
+    the Linux estimate) — and below the breakpoint the honesty gate's `reveal − measure − gap` is a
+    PESSIMISTIC proxy anyway, since col 1's min is 0 and the real grid would floor col 2 at
+    --pane-band-min. ⚑ A NARROWER INK IS NOT HEADROOM TO TRIM THE ROOM: 68rem is a council
+    2026-06-29 decision, and the room is not the ink (bandGeometry's PLOT comment). Do not reach for
+    --laptop-fit-height as the thing holding 68rem either — that is a HEIGHT assertion and constrains
+    no width. (The svg-text era's derivation compared the same 358 to a 260px label-DROP floor —
     retired 2026-09-05 with the chart text layer; the labels no longer scale or drop.) */
   --laptop-fit-height: 800px; /* THE ONE-FRAME FIT LAW (council 2026-07-08, wf_a2d93977-960): a
     resolved two-pane answer + the R13 disclaimer land inside a viewport THIS tall with no scroll.

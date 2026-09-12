@@ -27,3 +27,7 @@ A rendered-px threshold in an e2e assertion is a claim about a rasterizer, not a
 - Every ink-width, clearance and borrow number in the chart-text docblocks — quote the platform.
 - Any future oracle on line-wrap counts (a 3 px difference flips a wrap on a tight column).
 - Screenshot-diff gates, which fail on the same rounding unless generated on the CI platform.
+
+## Refinement (2026-09-12, Card 10 — the nice-step lattice)
+
+⚑ SUPERSEDED AS BUILT: the seven-glyph quarter dollar (`$0.375M` / `$1.125M`) is **unproducible** since `niceLattice` replaced `niceCeil` + quartering — the widest tick the band can draw is the six-glyph `$0.25M` / `$0.75M` / `$1.25M` class (38.5 px on Windows/DirectWrite, re-measured in the gate; ≈35.9 px EXPECTED on Linux, derived from this insight's one cross-platform datum, 45.0 / 42.0 → ~0.43 px per glyph, unconfirmed until the first Linux `verify:fit` on the change). The guard now pins `/^\$\d\.\d{2}M$/` and floors the ink at **34** — and the floor's rationale is INVERTED, not merely re-numbered: the old 40 was chosen to sit ABOVE every six-glyph dollar (so only the seven-glyph class could pass); the live 34 exists to PASS one, sitting between the five-glyph Windows ink it must exclude (32.1) and the six-glyph Linux ink it must pass. The 45.0 / 42.0 pair above stays as written — it is the datum every live docblock derives the Linux estimate from.

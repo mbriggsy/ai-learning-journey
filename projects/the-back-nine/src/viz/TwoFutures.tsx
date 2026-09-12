@@ -30,8 +30,9 @@
  *
  * THE FAN-PARITY CHROME (Briggsy's station-2 cold-read, 2026-07-08 — "x and y axis with the same
  * hover treatment we give the fan out"):
- *   - y-axis dollar gridlines via the SAME humane ladder + tick builder the fan uses (bandData's
- *     niceCeil / buildYTicks — quarters of the ceiling are clean figures by construction);
+ *   - y-axis dollar gridlines via the SAME humane lattice + tick builder the fan uses (bandData's
+ *     niceLattice / buildYTicks — ONE nice step sets both the ceiling and the gridlines, so the two
+ *     charts can never ride two different dollar ladders);
  *   - intermediate x-axis year ticks between the today/horizon endpoints;
  *   - a snap-to-year hover scrub (mouse/pen only — the sheets scroll under touch; the figure's
  *     aria summary already carries the whole story, so the scrub is aria-hidden pointer sugar,
@@ -48,7 +49,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { SERIES } from './palette'
-import { niceCeil, type YTick } from './bandData'
+import { niceLattice, type DollarLattice, type YTick } from './bandData'
 import {
   ChartReadoutRow,
   ChartText,
@@ -113,14 +114,21 @@ export const TF_PLOT = { left: 92, right: 148, top: 18, bottom: 252 } as const
  *  label boxes and pushes a lower one further down if two wrapped labels would still touch. */
 const LABEL_MIN_SEPARATION = 26
 
-/** A calm axis ceiling ≥ max — the SAME humane ladder the fan's axis rides (bandData.niceCeil:
- *  1 / 1.5 / 2 / 3 / 4 / 5 / 6 / 8 / 10 × 10^k), so quarter-ticks are clean figures by
- *  construction (fan parity, Briggsy's station-2 cold-read 2026-07-08 — was a 2-significant-digit
- *  ceiling whose quarters landed on half-thousands). Floors to 1 on a degenerate input so the
+/** A calm dollar lattice for this chart — the SAME rule the fan's axis rides (bandData.niceLattice:
+ *  one nice STEP of {1, 2, 2.5, 5} × 10^e, the ceiling being that step times the covering count), so
+ *  the two charts can never grow two dollar ladders (fan parity, Briggsy's station-2 cold-read
+ *  2026-07-08; Card 10, 2026-09-11 — the quartered-ceiling era printed "$1.125M" here beside a fan
+ *  riding $0.5M steps). A degenerate input (non-finite, ≤ 0) falls back to the lattice for $1, so the
  *  axis is never $0-tall/undrawable. Pure + exported for the planted-fail test. */
+export function twoFuturesLattice(maxDollar: number): DollarLattice {
+  const l = niceLattice(Number.isFinite(maxDollar) ? maxDollar : 0)
+  return l.ceiling > 0 ? l : niceLattice(1)
+}
+
+/** The drawn ceiling of {@link twoFuturesLattice} — the bar-magnitude scale RecommendationViz and
+ *  recommendationView share with this chart's axis (one ceiling, two charts). */
 export function twoFuturesCeiling(maxDollar: number): number {
-  const c = niceCeil(Number.isFinite(maxDollar) ? maxDollar : 0)
-  return c > 0 ? c : 1
+  return twoFuturesLattice(maxDollar).ceiling
 }
 
 /** Snap a viewBox x to the nearest integer lattice year (the fan's nearestLatticeIndex, on the TF
@@ -192,8 +200,9 @@ export function TwoFutures({
   readonly withArm: readonly TwoFuturesPoint[]
   readonly withoutArm: readonly TwoFuturesPoint[]
   readonly labels: TwoFuturesLabels
-  /** The y-axis dollar lattice (bandData.buildYTicks over twoFuturesCeiling — chrome-supplied,
-   *  pre-formatted). Absent ⇒ the legacy two-gridline frame (ceiling + $0 floor) renders. */
+  /** The y-axis dollar gridlines (bandData.buildYTicks over twoFuturesLattice — chrome-supplied,
+   *  pre-formatted; 4–6 lines including the $0 floor, whatever the lattice's step count is).
+   *  Absent ⇒ the legacy two-gridline frame (ceiling + $0 floor) renders. */
   readonly yTicks?: readonly YTick[]
   /** Intermediate x-axis year ticks (chrome-supplied). Absent ⇒ endpoints only. */
   readonly xTicks?: readonly TwoFuturesXTick[]
@@ -292,7 +301,7 @@ export function TwoFutures({
             <g aria-hidden="true">
               {yTicks.map((t) =>
                 t.dollars === 0 ? null : (
-                  <line key={t.label} className="tf__grid tf__grid--tick" x1={TF_PLOT.left} y1={py(t.dollars)} x2={plotRight} y2={py(t.dollars)} />
+                  <line key={t.dollars} className="tf__grid tf__grid--tick" x1={TF_PLOT.left} y1={py(t.dollars)} x2={plotRight} y2={py(t.dollars)} />
                 ),
               )}
             </g>
@@ -328,10 +337,15 @@ export function TwoFutures({
           )}
         </svg>
         <ChartTextLayer className="tf-text">
-          {/* the y-axis dollar labels (or the legacy ceiling label) */}
+          {/* the y-axis dollar labels (or the legacy ceiling label). Keyed by `dollars` here and on
+              the gridlines above: a tick's dollars are unique by construction (strictly-rising whole
+              multiples of the lattice step), a tick's LABEL is not — the formatter rounds, and the
+              degenerate $1 fallback lattice's five 25¢ ticks label "$0 $0 $1 $1 $1" through the
+              formatter's whole-dollar branch. A duplicate key lets reconciliation drop a gridline
+              on update. */}
           {yTicks !== undefined ? (
             yTicks.map((t) => (
-              <ChartText key={t.label} className="tf__axis tf__axis--ytick" fx={TICK_FX} fy={fy(py(t.dollars))} anchor="end" valign="middle">
+              <ChartText key={t.dollars} className="tf__axis tf__axis--ytick" fx={TICK_FX} fy={fy(py(t.dollars))} anchor="end" valign="middle">
                 {t.label}
               </ChartText>
             ))

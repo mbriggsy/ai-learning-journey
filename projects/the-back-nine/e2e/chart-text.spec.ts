@@ -23,7 +23,7 @@ import { LATTICE_POINTS } from '../src/viz/bandData'
  * WHAT IT PINS, on every VIEWPORT arm the product ships to (PHONE 390 @3 touch · PHONE_LS, the
  * landscape phone 844×390 @3 touch · a 320 reflow arm · FLOOR 1088 · REAL 1536 @2.5), over FIVE
  * households — the two dense date routes, the one-frame spine, `borderline`, the widest-y-tick
- * household (45 CSS px of ink), and `atceiling`, the ceiling crown — never all of them; plus the
+ * household (38.5 CSS px of ink), and `atceiling`, the ceiling crown — never all of them; plus the
  * AGED spine return (`?vault=stale`) on every arm INSIDE that loop, and — off it — `?vault=datestale`,
  * the max-cardinality band, on PHONE + FLOOR, and the enlarge modal's TRANSFORMED frame (REAL, the
  * fine-pointer-only affordance):
@@ -71,9 +71,11 @@ import { LATTICE_POINTS } from '../src/viz/bandData'
  * exists only after a full-precision solve, which beside these arms would starve them of cores.
  */
 
-/** The clearance a borrowed dollar must keep from the card's edge — the same 4 px the two-pane
- *  edit-time tripwire keeps as tick-column slack (twoPaneHonestyFloor.test.ts) and bandGeometry's
- *  PLOT comment names as "the 4 px gap". */
+/** The clearance a borrowed dollar must keep from the card's edge — a fixed 4 CSS px, the same slack
+ *  the two-pane edit-time tripwire keeps in the tick column (twoPaneHonestyFloor.test.ts, its
+ *  `tickColumnPx - WIDEST_TICK_INK_PX … toBeGreaterThan(4)` assertion). NOT bandGeometry's 8-unit
+ *  end-anchor inset, which scales with the figure (4.4 px at the 308 phone, 3.4 px on the 320 arm)
+ *  and is folded into that comment's slack term — do not re-add the quotation. */
 const TICK_CLEARANCE_PX = 4
 
 /** THE Y-TICK COLUMN — the one place the containment bound above is deliberately loose. The dollars
@@ -83,32 +85,46 @@ const TICK_CLEARANCE_PX = 4
  *  clear of the CARD edge, where a clip (the plausible-WRONG-dollar attack) would start. The
  *  allowance is READ from the live card at each arm, exactly as `floorPx` reads --text-xs: a typed
  *  25 would go quietly wrong the day the drawer is re-spaced.
- *  MEASURED (the `borderline` arm, this gate, 2026-09-05, Windows/DirectWrite — `room` is 25.0 px on
- *  every arm: the drawer's 24 px padding + 1 px border): the 45.0 px "$0.375M" / "$1.125M" sit 21.9 px
- *  INSIDE the figure at REAL (446 px figure), 8.7 px inside at FLOOR (358), 1.2 px inside at PHONE
- *  (308), and hang 9.3 px LEFT of it on the 320 arm (238 px figure, a 35.7 px column) — 15.7 px clear
- *  of the card edge. Every other catalog dollar is narrower (38.5, 32.1, 12.9 px). Linux CI renders
- *  the same glyphs ~3 px narrower (FreeType's whole-pixel advances): 42.0 px, a 6.3 px borrow at 320. */
+ *  RE-MEASURED for Card 10 (the `borderline` arm, this gate, 2026-09-12, Windows/DirectWrite — `room`
+ *  is 25.0 px on every arm: the drawer's 24 px padding + 1 px border). The widest dollar the product
+ *  can now draw is SIX glyphs, 38.5 px of ink — "$0.25M" / "$0.75M" / "$1.25M", the 1.25M lattice
+ *  (niceLattice's nice-STEP rule retired the seven-glyph "$0.375M" / "$1.125M" quarters, which
+ *  measured 45.0 here). It sits 28.3 px INSIDE the figure at REAL (446 px figure), 15.1 px inside at
+ *  FLOOR (358), 7.6 px inside at PHONE (308), 40.3 px inside at PHONE_LS, and hangs 2.9 px LEFT of it
+ *  on both 320 arms (238 px figure, a 35.7 px column) — 22.1 px clear of the card edge, where it used
+ *  to be 15.7. Every narrower catalog dollar: "$0.5M" 32.1, "$1M" 22.4, "$0" 12.9 px. Linux CI renders
+ *  the same glyphs ~2.5 px narrower (FreeType rounds each advance to a whole pixel — insight 118;
+ *  the one real datum is the seven-glyph 45.0 Windows / 42.0 Linux pair, i.e. ~0.43 px per glyph, so
+ *  six glyphs ⇒ ≈ 35.9 px there, a ~0.4 px borrow at 320). */
 function assertTickColumn(a: Audit, label: string): void {
   const ticks = a.nodes.filter((n) => !n.hidden && /band-tick/.test(n.cls))
   expect(ticks.length, `${label}: fewer than two y-ticks — the tick oracle has nothing to measure`).toBeGreaterThan(1)
   const widest = Math.max(...ticks.map((n) => n.right - n.left))
-  // Non-vacuity, two halves: this arm exists to render the WIDEST catalog dollar — the seven-glyph
-  // quarters of a 1.5-rung ceiling ("$0.375M" / "$1.125M", bandData buildYTicks) — so (1) such a
-  // dollar must be ON the axis (the household's ceiling still lands on the 1.5 rung), and (2) its ink
-  // must be the widest thing the catalog renders (a MAX, never a min — `$0` is a .band-tick too). The
-  // ink floor is PLATFORM-AWARE: the same Source Sans 3 glyphs measure 45.0 px on Windows (DirectWrite,
-  // fractional advances) and 42.0 px on Linux CI (FreeType rounds each advance to a whole pixel —
-  // seven glyphs lose ~3 px; measured 2026-09-05 when a Windows-pinned 44 reddened CI). 40 clears both
-  // and still excludes every six-glyph dollar (38.5 / ~36).
+  report(
+    `${label} tick column: [${ticks.map((n) => `${n.text} ${(n.right - n.left).toFixed(1)}px`).join(' · ')}] — widest ${widest.toFixed(1)}px of ink; ` +
+      `${(a.chartBox.left - a.bound.left).toFixed(1)}px of card padding to borrow, worst borrow ${Math.max(...ticks.map((n) => a.chartBox.left - n.left)).toFixed(1)}px`,
+  )
+  // Non-vacuity, two halves: this arm exists to render the WIDEST catalog dollar — the six-glyph
+  // two-decimal millions of the 1.25M lattice ("$0.25M" / "$0.75M" / "$1.25M", bandData
+  // niceLattice + buildYTicks) — so (1) such a dollar must be ON the axis (the household's fan max
+  // still lands on that lattice), and (2) its ink must be the widest thing the catalog renders (a
+  // MAX, never a min — `$0` is a .band-tick too).
+  // THE INK FLOOR IS PLATFORM-AWARE, and the arithmetic is: the same Source Sans 3 glyphs render
+  // fractionally on Windows (DirectWrite) and on whole-pixel advances on Linux CI (FreeType —
+  // insight 118; measured 2026-09-05, when a Windows-pinned 44 reddened CI on a 42.0 px Linux
+  // render of the then-widest seven-glyph dollar, i.e. ~0.43 px lost per glyph). So the floor must
+  // sit strictly between the FIVE-glyph Windows ink it has to exclude — "$0.5M", 32.1 px — and the
+  // SIX-glyph LINUX ink it has to pass — 38.5 Windows − 6 × 0.43 ≈ 35.9 px. 34 is centred: 1.9 px
+  // above the five-glyph dollar, 1.9 px below the Linux six-glyph estimate (the same 2 px of margin
+  // the retired 40-against-42.0 pin carried).
   expect(
-    ticks.some((n) => /^\$\d\.\d{3}M$/.test(n.text)),
-    `${label}: no seven-glyph quarter dollar on the axis (${ticks.map((n) => n.text).join(' ')}) — this seed no longer quarters a 1.5-rung ceiling; the arm proves nothing, re-pick the seed`,
+    ticks.some((n) => /^\$\d\.\d{2}M$/.test(n.text)),
+    `${label}: no six-glyph two-decimal dollar on the axis (${ticks.map((n) => n.text).join(' ')}) — this seed's fan max no longer lands on the 1.25M lattice; the arm proves nothing, re-pick the seed`,
   ).toBe(true)
   expect(
     widest,
-    `${label}: the widest y-tick is ${widest.toFixed(1)}px of ink — narrower than the widest catalog dollar renders on any platform (45.0 Windows / 42.0 Linux at --text-xs); the arm proves nothing, re-pick the seed`,
-  ).toBeGreaterThanOrEqual(40)
+    `${label}: the widest y-tick is ${widest.toFixed(1)}px of ink — narrower than the widest catalog dollar renders on any platform (38.5 Windows measured / ≈35.9 Linux expected, at --text-xs); the arm proves nothing, re-pick the seed`,
+  ).toBeGreaterThanOrEqual(34)
   const room = a.chartBox.left - a.bound.left // the card padding a tick is permitted to borrow
   for (const n of ticks) {
     const borrow = a.chartBox.left - n.left
@@ -813,11 +829,18 @@ for (const arm of ARMS) {
       expect(rows, `${arm.name}: the aged spine band's row count moved (recorded ${AGED_SPINE_ROWS}) — re-measure and update AGED_SPINE_ROWS`).toBe(AGED_SPINE_ROWS)
     })
 
-    test('the widest-tick household (a $1.5M ceiling quartered into seven-glyph dollars): the dollar column holds', async ({ page }) => {
-      // `borderline` is the only spine seed in the measured catalog whose y-ticks reach the 45 CSS px
-      // worst case ($0.375M / $1.125M — buildYTicks quarters a niceCeil 1.5 rung, an ordinary Back
-      // Nine couple); every seed the tests above drive tops out at 22.4–32.1 px, so without this arm
-      // the widest dollar the product renders never renders in CI. A spine seed costs ~2–3 s per arm.
+    test('the widest-tick household (the $1.25M lattice, six-glyph dollars): the dollar column holds', async ({ page }) => {
+      // `borderline` is the only spine seed in the measured catalog whose y-ticks reach the 38.5 CSS
+      // px worst case ($0.25M / $0.75M / $1.25M — niceLattice puts its 1,002,260 fan max on the
+      // 1.25M lattice, five steps of $250k; an ordinary Back Nine couple); every seed the tests
+      // above drive tops out at 22.4–32.1 px, so without this arm the widest dollar the product
+      // renders never renders in CI. A spine seed costs ~2–3 s per arm.
+      // Card 10 (2026-09-11) retired the seven-glyph 45.0 px class entirely: the nice-STEP rule
+      // cannot produce a three-decimal million, so THIS is now the widest dollar the band's tick
+      // column can draw. It is no longer the widest chart-text ink in the product: that is the
+      // ladder's end-anchored "on track" label, a fixed 44.3 px at --text-xs (oddsLadderGeometry.ts's
+      // PLOT comment), ACCEPTED as rendered under ACCEPTED_ONTRACK_OVERPRINT_PX /
+      // ACCEPTED_LABEL_GUTTER_PX — do not tighten either against this 38.5.
       await gotoSeedFinal(page, 'borderline')
       const floor = await floorPx(page)
       const a = await audit(page, ...BAND)

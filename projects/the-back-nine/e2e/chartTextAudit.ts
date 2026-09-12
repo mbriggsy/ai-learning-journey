@@ -58,14 +58,19 @@ export async function floorPx(page: Page): Promise<number> {
  *  CARD, NAMED per chart, never a fallback chain (a chart whose bound is missing fails loudly).
  *  A node may legitimately sit a few px outside the <svg> box and inside the card's padding — on
  *  screen, unclipped (nothing on the drawer path sets `overflow: hidden`; band.css's only one is the
- *  `.band-modal-open` body lock). The per-chart reasons, measured 2026-09-05:
+ *  `.band-modal-open` body lock). The per-chart reasons, measured 2026-09-05 (the band's dollar
+ *  re-measured 2026-09-12 for Card 10) — every Windows figure below is a real render, every Linux
+ *  one is DERIVED from insight 118's single cross-platform datum:
  *   · band → `.band-drawer` (ConfidenceBandPanel.tsx) or the enlarge `[role="dialog"]`: the dollars
- *     end-anchor at TICK_FX = 84/560 = 0.15 of the figure, and the widest catalog dollar is 45 px of
- *     ink at --text-xs on Windows, 42 on Linux CI (`borderline`'s seven-glyph "$0.375M" / "$1.125M";
- *     FreeType rounds glyph advances to whole pixels). On the 320 arm that column
- *     renders narrower than the dollar, so it hangs LEFT of `figure.band-figure` into the drawer's
- *     own padding — `assertTickColumn` carries the tighter, live-measured bound for that borrow,
- *     with the arm-by-arm numbers in its own docblock.
+ *     end-anchor at TICK_FX = 84/560 = 0.15 of the figure, and the widest catalog dollar measures
+ *     38.5 px of ink at --text-xs on Windows, with ≈35.9 EXPECTED on Linux CI (derived, not
+ *     measured: 38.5 − 6 × 0.43, the 0.43 px/glyph loss coming from insight 118's seven-glyph
+ *     45.0 Windows / 42.0 Linux pair — FreeType rounds glyph advances to whole pixels).
+ *     `borderline`'s six-glyph "$0.25M" / "$0.75M" / "$1.25M" is that dollar — the 1.25M lattice,
+ *     which retired the seven-glyph "$0.375M" / "$1.125M" class at 45 / 42 px.
+ *     On the 320 arm that column still renders narrower than the dollar, so it hangs LEFT of
+ *     `figure.band-figure` into the drawer's own padding — `assertTickColumn` carries the tighter,
+ *     live-measured bound for that borrow, with the arm-by-arm numbers in its own docblock.
  *   · TwoFutures → the lever sheet `[role="dialog"]`: the x-axis row is centred at XAXIS_FY = 267/280
  *     of the host with a fixed ~17 px box, so it rides (8.45 − 0.0464 × hostH) px BELOW the host —
  *     0.25 px at PHONE (a 175 px host), ~2 px on the 320 arm. The dialog is its true card; a bare

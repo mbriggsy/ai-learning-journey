@@ -75,7 +75,7 @@ refusal (`RothLever.tsx:53`).
 
 `Result.tsx` derives the anchor from `startCalendarYear`, which is the plan's **BUILD** year (written once
 at `memoryModel.ts:565`, never re-anchored, survives every re-save). Four separate comments already forbade
-attributing that quantity to the save (`staleness.ts:26`, `resultSave.ts:172`, `copy.ts:2588`,
+attributing that quantity to the save (`staleness.ts:26`, `resultSave.ts:172`, `copy.ts:2593`,
 `FuckOffDate.tsx:150`) — and the band's `'saved'` label did exactly that.
 
 - **Renamed** `elapsedPlanYears` → **`yearsSincePlanBuilt`**, with zero orphans left behind, and every
@@ -105,7 +105,7 @@ attributing that quantity to the save (`staleness.ts:26`, `resultSave.ts:172`, `
   contradicts the fresh "Saved to this device" badge on the same screen. The key is now
   `bandClockBuiltLabel` — **`'Plan built'`** (`copy.ts:633`, rendered at `bandAnnotations.ts:169`) — with
   `bandClockBuiltDesc` naming the BUILD year and the ages at that year. **Both renderers moved in the same
-  change** (insight 086): the annotation arm and `twoFuturesChrome.ts:202-204`'s today-label, which picks
+  change** (insight 086): the annotation arm and `twoFuturesChrome.ts:210-212`'s today-label, which picks
   the built label over `bandClockTodayLabel` exactly when the plan clock is positive.
 
 ### S0.3 The test gap this closed (verified, not assumed)
@@ -154,7 +154,7 @@ Shipped 2026-07-25, commit `e4754134`, CI green by explicit run id 30136387827.
   `offsetHasPassed(year − startCalendarYear, yearsSincePlanBuilt)` (`RothLever.tsx:51-53`) — one strict
   compare covers both "before the build year" and "already passed", and no second comparator was
   authored. It renders through the R19 `FieldError` grammar with the earliest startable year QUOTED
-  (`errRothStartPast`, `RothLever.tsx:221`, joined `SlottedErrorKey` at `copy.ts:1814`). The fresh default
+  (`errRothStartPast`, `RothLever.tsx:221`, joined `SlottedErrorKey` at `copy.ts:1819`). The fresh default
   start seeds the WALL year (build + clock), so an aged vault never pre-fills the exact start the write
   side refuses.
 - **"Suppress when unanchored" was satisfied STRUCTURALLY, not by a dead arm.** `savedAnchor` is REQUIRED
@@ -190,11 +190,11 @@ literal tense regexes pin it now. Three mutants red → reverted.
    Today's own column — wall-Today already marks it, and two named markers would stack. The fresh
    derivation is byte-identical to pre-U17.
 2. **The elapsed fan segment is de-emphasised by a STATIC mask** — `ElapsedDimGroup`, a second static
-   luminance mask NESTED inside the cohort-fade group (`ConfidenceBand.tsx:399`, `:437`), composing
+   luminance mask NESTED inside the cohort-fade group (`ConfidenceBand.tsx:404`, `:442`), composing
    multiplicatively. **Never a re-trimmed `d`**, which would break the morph and the vertex-snapped scrub;
    the fresh DOM renders NO wrapper at all. **Non-colour channel PLUS a11y text** (colour is never the
    only signal). The pure stops live beside their cohort sibling — `elapsedFadeStops` and
-   `ELAPSED_DIM = 0.45` in `bandGeometry.ts:271-285` — deliberately cold-read-tunable, because the
+   `ELAPSED_DIM = 0.45` in `bandGeometry.ts:278-292` — deliberately cold-read-tunable, because the
    tint-vs-hatch-vs-rule strength was Briggsy's to close at the arrived walk.
 3. **Clipping is REJECTED** and the reason is load-bearing: a fan clipped to Today reads as a projection
    from a **KNOWN current balance** — which is precisely the optimistic misread. Retain-and-demote keeps
@@ -202,10 +202,10 @@ literal tense regexes pin it now. Three mutants red → reverted.
 4. **The aged fan ships ONLY with** (a) an adjacent **premise line** naming the balance vintage and (b) a
    **RENDERED re-confirm control** (insight 100 — a copy promise is a UI contract). The residual is
    disclosed as **UNDETERMINED, never "conservative."** Both ship as `.band-premise` (`result.css:229`,
-   one family home) under BOTH routes' band panes — `ConfidenceStatement.tsx:394-401` and
+   one family home) under BOTH routes' band panes — `ConfidenceStatement.tsx:399-406` and
    `FuckOffDate.tsx:486-496`; the OLD-SAVE arm names the `agedBalancesYearFor` vintage and the re-saver
    reads the build-anchor arm. **No premise line ⇒ no aged fan, and that law is STRUCTURAL:** the resolved
-   memo withdraws the aged fan when no `onReconfirm` route exists (`ConfidenceStatement.tsx:266`, and its
+   memo withdraws the aged fan when no `onReconfirm` route exists (`ConfidenceStatement.tsx:271`, and its
    twin in `FuckOffDate`), so an aged projection with an unstated premise is unrepresentable. `onReconfirm`
    routes to the guided re-walk (`onReview`).
 5. **On a split, the crown names WHICH date** at the marker — `bandClockWorkStopsSplitLabel`,
@@ -366,7 +366,7 @@ backstop rather than a gate. The two non-writable states are detected separately
   `deriveResultSave(persist, ready, readOnly)` (`resultSave.ts:101`).
 
 `RecommendationSaveRefusal` is therefore the three-arm enum `'record-invalid' | 'write' | 'recovery-locked'`,
-each with its own heading and body (`copy.ts:1436-1445`). The recovery arm's name is deliberately **not**
+each with its own heading and body (`copy.ts:1441-1450`). The recovery arm's name is deliberately **not**
 `…Survivor…`: `copyGuard.ts`'s `isSurvivorKey` is a `/survivor/i` SUBSTRING net feeding `isMortalityKey`, so
 that spelling would have silently enrolled a plumbing key in the mortality-lexicon gate and made its guard
 arm pass for the wrong reason.
@@ -377,7 +377,7 @@ S3 built the whole substrate and S4 deliberately declined the copy; both created
 original thirteen lines could not name.
 
 **The copy register landed here, not in S4** (see S4 for why). It shipped as two families — the save
-GESTURE (`recommendSave*`) and the saved-record CARD (`recommendRecord*`), `copy.ts:1407-1532` — modelled on
+GESTURE (`recommendSave*`) and the saved-record CARD (`recommendRecord*`), `copy.ts:1412-1537` — modelled on
 `recommendStale{Heading,Body,ReopenCta}` and on `RecommendationSurface.tsx:372-379`'s render shape, the
 `role="status"` card with heading, body and re-open button. `recommendRecordReopenCost` names the re-open's
 cost the way the pending label does: *"This can take a few minutes."* Exactly one key in either family may
@@ -500,9 +500,9 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   fixed 2026-07-30/31 (the Roth door calling an executed conversion a typo, `d8f35d8c`; the lever refusal
   denying a date the same screen plots, `72d638d9`; the premise line contradicting its own axis,
   `d5e7b466`; and the band flip onto the lifestyle crown, `8d4d4e58`). A fifth followed: **Cards 6–7's
-  record-card verb is closed too** — the showing-verb was replaced 2026-07-31 (`532cad82`; `copy.ts:1521`
+  record-card verb is closed too** — the showing-verb was replaced 2026-07-31 (`532cad82`; `copy.ts:1526`
   now reads "It may no longer fit the two of you.", with a standing prohibition on ever restoring it at
-  `copy.ts:1492-1499`), and the false "still matches" holds line 2026-08-03 (`bd851f24`; `copy.ts:1484`).
+  `copy.ts:1497-1504`), and the false "still matches" holds line 2026-08-03 (`bd851f24`; `copy.ts:1489`).
   Card 1's two-odds collision remains open, as does the OTHER half of Cards 6–7 — naming the strategy on
   the holds face, Briggsy's own ruling, carried in the register as "The saved-record card does not name
   the strategy".
@@ -528,7 +528,7 @@ as the council admitted it, and the reasons are the material the re-filed unit s
 
 Verified at council time: the bars carry arm **names** at their ends plus the delta hero and the
 `$0`/ceiling axis frame; each bar's own dollar value renders **only** in `ariaSummary`
-(`recommendationView.ts:697-703`, `copy.ts:2738` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
+(`recommendationView.ts:697-703`, `copy.ts:2743` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
 AT-over-sighted inversion is real and nobody disputed it.
 
 The admission was gated on a **deliberate dialect split** in `recommendationView.ts` — endpoints humane

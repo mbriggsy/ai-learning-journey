@@ -230,10 +230,15 @@ function BandTextLayer({
     <ChartTextLayer className="band-text">
       {/* the y-axis dollar ladder — the sighted position→dollar decoder (O3, 2026-07-10; no SR
           tick-ladder is added: the sr-only range sentence is the AT channel). The $0 anchor is
-          design-law §3's honesty proof and is never dropped. */}
+          design-law §3's honesty proof and is never dropped.
+          KEYED BY `dollars`, never by `label`: the ticks' dollars rise strictly (whole multiples of
+          the lattice step, the last one the ceiling), so they are unique by construction, while two
+          gridlines CAN share a label string — the axis formatter rounds, so a $1,250 ceiling labels
+          both its $1,000 and $1,250 lines "$1k". A duplicate React key there lets reconciliation
+          drop a gridline on update; the visible duplicate word is a formatter matter, not this. */}
       {data.yTicks.map((t: YTick) => (
         <ChartText
-          key={t.label}
+          key={t.dollars}
           className={`band-tick${t.dollars === 0 ? ' band-tick--floor' : ''}`}
           fx={TICK_FX}
           fy={fy(yForDollars(t.dollars, data.dollarMax))}
@@ -310,7 +315,7 @@ function Frame({ data, labels }: { data: BandViewData; labels: BandLabels }) {
       {data.yTicks.map((t: YTick) =>
         t.dollars === 0 ? null : (
           <line
-            key={t.label}
+            key={t.dollars}
             className="band-grid"
             x1={PLOT.left}
             y1={yForDollars(t.dollars, data.dollarMax)}

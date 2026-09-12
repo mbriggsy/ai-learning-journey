@@ -1,39 +1,50 @@
 import { describe, expect, it } from 'vitest'
 import { axisDollarFormatterFor, formatAbsoluteDollar, formatActionableDollar, formatAxisDollar, formatDeltaDollar, formatEnteredDollar, formatPerMonth } from '../money'
-import { buildYTicks } from '@viz/bandData'
+import { buildYTicks, niceLattice } from '@viz/bandData'
 
 /**
  * formatAxisDollar — the ONE dollar-axis dialect (fan gridlines, TwoFutures gridlines, the
  * scrub readout, the C2 AT sentence all ride it). Every expectation below is HAND-DERIVED
  * from the formatting rules, never computed by running the function (DND 012 discipline).
  *
- * EXACT-WHEN-ROUND (Caddie O5, 2026-07-10): niceCeil's {1.5, 3, 5}×10^k ceilings put quarter
- * gridlines at values like 2,250,000 and 1,125,000; the old 1-decimal path labeled them
- * "$2.3M" / "$1.1M" — an evenly-spaced ladder reading UNEVEN, a gridline label misstating its
- * own line. Round values (exact thousands in the M range, exact hundreds in the k range) now
- * render exactly; arbitrary values keep the humane rounding.
+ * EXACT-WHEN-ROUND (Caddie O5, 2026-07-10): the quartered-ceiling era put gridlines at values like
+ * 2,250,000 and 1,125,000; the old 1-decimal path labeled them "$2.3M" / "$1.1M" — an evenly-spaced
+ * ladder reading UNEVEN, a gridline label misstating its own line. Round values (exact thousands in
+ * the M range, exact hundreds in the k range) render exactly; arbitrary values keep the humane
+ * rounding.
+ *
+ * THE VALUES BELOW OUTLIVED THEIR LADDER (Card 10, 2026-09-11): niceLattice no longer PRODUCES
+ * 1,125,000 or 2,250,000 — it picks the nice step first, so every gridline is a whole multiple of
+ * {1, 2, 2.5, 5} × 10^e. This describe stays whole anyway, because the exactness law is the
+ * FORMATTER's, not the lattice's: the scrub readout and the C2 AT sentence feed it arbitrary and
+ * round values alike, and a ruler that misstates its own line is the failure it exists to prevent.
+ * The lattice's own labels are pinned in the axisDollarFormatterFor describe below.
  */
 describe('formatAxisDollar — exact-when-round gridline labels', () => {
-  it('the filed witnesses: dirty-quarter ceilings label their gridlines EXACTLY', () => {
-    // ceiling 3M → quarter 3 sits at 2,250,000: exactly 2.25M, never "2.3M"
+  it('the filed witnesses: the old dirty-quarter values label EXACTLY (the formatter law, now unreachable from the lattice)', () => {
+    // The filed O5 witnesses, kept as formatter law: any of these can still reach the formatter
+    // through the scrub readout / the AT sentence, which format raw percentiles, not gridlines.
+    // 2,250,000 was quarter 3 of a 3M ceiling: exactly 2.25M, never "2.3M"
     expect(formatAxisDollar(2_250_000)).toBe('$2.25M')
-    // ceiling 1.5M → quarter 3 sits at 1,125,000: exactly 1.125M, never "1.1M"
+    // 1,125,000 was quarter 3 of a 1.5M ceiling: exactly 1.125M, never "1.1M"
     expect(formatAxisDollar(1_125_000)).toBe('$1.125M')
-    // ceiling 5M → quarters at 1.25M / 3.75M: exact, never "1.3M" / "3.8M"
+    // 1.25M / 3.75M were quarters of a 5M ceiling; 1.25M is a LIVE gridline now (the 1.25M lattice's
+    // own ceiling), so this line is both the old witness and the new one: exact, never "1.3M".
     expect(formatAxisDollar(1_250_000)).toBe('$1.25M')
     expect(formatAxisDollar(3_750_000)).toBe('$3.75M')
-    // ceiling 150k → quarter at 37,500: exactly 37.5k, never "38k"
+    // 37,500 was quarter 1 of a 150k ceiling: exactly 37.5k, never "38k"
     expect(formatAxisDollar(37_500)).toBe('$37.5k')
   })
 
-  it('clean quarters are byte-identical to the old dialect (no churn where the ladder was already clean)', () => {
+  it('the round gridline values are byte-identical to the old dialect (no churn where the ladder was already clean)', () => {
     expect(formatAxisDollar(0)).toBe('$0')
     expect(formatAxisDollar(250_000)).toBe('$250k')
     expect(formatAxisDollar(500_000)).toBe('$500k')
     // Composed, not literal: 750,000 collides with a DISTINCTIVE constants-gate figure (the
-    // IRMAA MFJ frozen top tier) — the arithmetic states the intent (quarter 3 of the LIVE
-    // retired seed's $3M ceiling) and keeps the gate's single-source sweep clean.
-    expect(formatAxisDollar(3_000_000 / 4)).toBe('$750k')
+    // IRMAA MFJ frozen top tier) — the arithmetic states the intent (gridline 3 of the $1M
+    // lattice, where it renders "$0.75M" in the locked dialect and "$750k" through this per-value
+    // formatter on the scrub path) and keeps the gate's single-source sweep clean.
+    expect(formatAxisDollar(1_000_000 * 0.75)).toBe('$750k')
     expect(formatAxisDollar(1_000_000)).toBe('$1M')
     expect(formatAxisDollar(1_500_000)).toBe('$1.5M')
     expect(formatAxisDollar(2_000_000)).toBe('$2M')
@@ -64,41 +75,67 @@ describe('formatAxisDollar — exact-when-round gridline labels', () => {
 /**
  * axisDollarFormatterFor — O8 (2026-07-17): ONE dialect per tick lattice (corpus rule 36, the
  * fcc35556 axis family). The per-value formatter mixed units on any $M-class ceiling whose
- * quarters dip under $1M ("$750k" between "$1.5M" gridlines). The factory locks the lattice to
+ * gridlines dip under $1M ("$750k" between "$1.5M" gridlines). The factory locks the lattice to
  * the TOP tick's unit; the scrub/tooltip path deliberately keeps per-value units (the readout
  * is prose, the axis is the ruler). Expectations hand-derived (DND 012).
+ *
+ * DRIVEN FROM A REAL LATTICE (Card 10, 2026-09-11): each arm passes the MAX a household's fan
+ * reaches through niceLattice, so the label array is the ladder the product actually draws — the
+ * old arms typed a ceiling straight into buildYTicks and could outlive the rule that produced it.
+ * The witnesses are re-pointed to lattices that STILL carry a sub-$1M gridline written in M (the
+ * 1.25M lattice's $0.25M / $0.5M / $0.75M, the 2.5M lattice's $0.5M) — the mixed-unit case O8
+ * exists for. Each expected array is derived BY HAND from the lattice rule (see bandData.test.ts
+ * for the arithmetic), never read off the function.
  */
 describe('axisDollarFormatterFor — the unit-locked tick lattice (O8)', () => {
-  it('the filed witness: a $3M ceiling reads one dialect — "$0.75M", never "$750k" among "$M" gridlines', () => {
-    const labels = buildYTicks(3_000_000, axisDollarFormatterFor(3_000_000)).map((t) => t.label)
-    expect(labels).toEqual(['$0', '$0.75M', '$1.5M', '$2.25M', '$3M'])
+  it('the re-pointed witness: a $1.25M lattice reads one dialect — "$0.25M", never "$250k" among "$M" gridlines', () => {
+    // max 1,200,000 → step 250,000 × 5 intervals, ceiling 1,250,000 (the borderline/budget class).
+    const labels = buildYTicks(niceLattice(1_200_000), axisDollarFormatterFor(1_250_000)).map((t) => t.label)
+    expect(labels).toEqual(['$0', '$0.25M', '$0.5M', '$0.75M', '$1M', '$1.25M'])
   })
 
-  it('the retired-seed shape: a $2M ceiling locks its half-million quarters to M', () => {
-    const labels = buildYTicks(2_000_000, axisDollarFormatterFor(2_000_000)).map((t) => t.label)
+  it('the second mixed-unit witness: a $2.5M lattice writes its $500k gridline in M', () => {
+    // max 2,400,000 → step 500,000 × 5, ceiling 2,500,000.
+    const labels = buildYTicks(niceLattice(2_400_000), axisDollarFormatterFor(2_500_000)).map((t) => t.label)
+    expect(labels).toEqual(['$0', '$0.5M', '$1M', '$1.5M', '$2M', '$2.5M'])
+  })
+
+  it('the retired-seed shape: a $2M ceiling locks its half-million gridlines to M', () => {
+    // max 2,000,000 → step 500,000 × 4, ceiling 2,000,000 — byte-identical to the pre-Card-10 arm.
+    const labels = buildYTicks(niceLattice(2_000_000), axisDollarFormatterFor(2_000_000)).map((t) => t.label)
     expect(labels).toEqual(['$0', '$0.5M', '$1M', '$1.5M', '$2M'])
   })
 
-  it('the budget-seed shape: a $1.5M ceiling keeps the exact-when-round law in the locked dialect', () => {
-    const labels = buildYTicks(1_500_000, axisDollarFormatterFor(1_500_000)).map((t) => t.label)
-    expect(labels).toEqual(['$0', '$0.375M', '$0.75M', '$1.125M', '$1.5M'])
+  it('a $1.5M lattice is now THREE steps of $0.5M — the "$0.375M / $1.125M" ladder is gone', () => {
+    // max 1,500,000 → step 500,000 × 3, ceiling 1,500,000. This exact array is the Card 10 fix:
+    // the same ceiling used to print ['$0','$0.375M','$0.75M','$1.125M','$1.5M'].
+    const labels = buildYTicks(niceLattice(1_500_000), axisDollarFormatterFor(1_500_000)).map((t) => t.label)
+    expect(labels).toEqual(['$0', '$0.5M', '$1M', '$1.5M'])
   })
 
   it('the $0 ruin-floor anchor stays plain "$0" — never "$0M"', () => {
     expect(axisDollarFormatterFor(3_000_000)(0)).toBe('$0')
   })
 
-  it('a sub-$1M ceiling keeps the per-value dialect verbatim (its quarters never cross a unit boundary)', () => {
-    const labels = buildYTicks(800_000, axisDollarFormatterFor(800_000)).map((t) => t.label)
+  it('a sub-$1M ceiling keeps the per-value dialect verbatim (its gridlines never cross a unit boundary)', () => {
+    // max 800,000 → step 200,000 × 4, ceiling 800,000 — unchanged by Card 10.
+    const labels = buildYTicks(niceLattice(800_000), axisDollarFormatterFor(800_000)).map((t) => t.label)
     expect(labels).toEqual(['$0', '$200k', '$400k', '$600k', '$800k'])
     expect(axisDollarFormatterFor(800_000)).toBe(formatAxisDollar)
   })
 
   it('the one-dialect property: no $≥1M lattice ever mixes a "k" label among its "M" gridlines', () => {
-    for (const ceiling of [1_000_000, 1_500_000, 2_000_000, 3_000_000, 4_000_000, 5_000_000, 6_000_000, 8_000_000]) {
-      const labels = buildYTicks(ceiling, axisDollarFormatterFor(ceiling)).map((t) => t.label)
+    // Driven by MAXIMA now, not typed ceilings — every $M-class lattice the rule can produce
+    // between $1M and $9M. The load-bearing members are the ones the O8 lock actually changes:
+    // every lattice whose STEP is under $1M, which therefore carries a sub-$1M gridline the lock
+    // has to write in M. From a $1M step up every gridline is already ≥ $1M and the lock is inert.
+    // Stated as that property on purpose — a census of WHICH maxima those are rots the moment the
+    // rule or the sweep moves (it already did once).
+    for (const max of [1e6, 1.2e6, 1.5e6, 2e6, 2.4e6, 3e6, 4e6, 5e6, 6e6, 8e6, 9e6]) {
+      const lattice = niceLattice(max)
+      const labels = buildYTicks(lattice, axisDollarFormatterFor(lattice.ceiling)).map((t) => t.label)
       for (const label of labels.slice(1)) {
-        expect(label, `${ceiling} lattice: ${labels.join(' ')}`).toMatch(/M$/)
+        expect(label, `max ${max} (ceiling ${lattice.ceiling}): ${labels.join(' ')}`).toMatch(/M$/)
       }
     }
   })

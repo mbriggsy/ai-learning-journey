@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
   LATTICE_POINTS,
+  buildYTicks,
   composeReadoutLines,
   elapsedYearsWithin,
   isFixedLattice,
+  niceLattice,
   resolveBandData,
   type BandLabels,
   type BandSample,
@@ -68,6 +70,209 @@ describe('isFixedLattice — the fail-loud fixed-lattice guard (the U7 producer 
     const nan = goodLattice()
     nan[5] = { ...nan[5]!, p50: Number.NaN }
     expect(isFixedLattice(nan)).toBe(false)
+  })
+})
+
+/**
+ * niceLattice — ONE dollar lattice (ceiling AND step from one nice STEP), Caddie Card 10 (the
+ * four-faces walk 2026-09-11). The old two-step derivation (niceCeil's {1, 1.5, 2, 3, 4, 5, 6, 8,
+ * 10} rung, then QUARTERS of it) quartered the {1.5, 3, 6} family into a non-nice 0.75-family step,
+ * and at the 1.5M rung into THREE-decimal millions — "$0.375M / $1.125M" on an ordinary couple,
+ * read as "a machine tick, not a humane rung".
+ *
+ * EVERY expectation below is HAND-DERIVED from the rule (DND 012), never read off the function.
+ * The derivation, once, for the whole block:
+ *   k = ⌊log10(max / 4)⌋; candidate steps are m × 10^e for m ∈ {1, 2, 2.5, 5}, e ∈ {k−1, k, k+1};
+ *   each candidate's n is the fewest whole steps covering max (n = ⌈max/step⌉ in exact arithmetic);
+ *   keep the smallest |n − 4|, then the smaller headroom (ceiling − max). A third key (the larger
+ *   step) sits below those two but is MEASURED-UNREACHABLE — determinism insurance, not an
+ *   operative rung; the arithmetic for that is in bandData.ts at the line itself.
+ * Each case's own comment does that arithmetic for its own max.
+ */
+describe('niceLattice — the nice-STEP dollar lattice (Card 10)', () => {
+  it.each([
+    // 1,002,260 (the LIVE borderline seed's fan max p90 — the filed defect's own household):
+    // max/4 = 250,565 → k = 5. 250k → n = ⌈4.009⌉ = 5, ceiling 1.25M, headroom 247,740;
+    // 500k → n = 3, ceiling 1.5M, headroom 497,740. Both |n−4| = 1 → the smaller headroom wins.
+    [1_002_260, 1_250_000, 250_000, 5],
+    // 1,500,000: k = ⌊log10 375,000⌋ = 5. 500k → n = 3 (|1|), ceiling 1.5M, headroom 0; 250k → n = 6
+    // (|2|); 1M → n = 2 (|2|). No nice step gives 4 or 5 here (that would need 375k or 300k).
+    [1_500_000, 1_500_000, 500_000, 3],
+    // 2,000,000 (the retired/order/state seeds' class): k = ⌊log10 500,000⌋ = 5. 500k → n = 4, |0| —
+    // an exact hit, no tie-break needed.
+    [2_000_000, 2_000_000, 500_000, 4],
+    // 2,900,000 (the steer seed's class): k = ⌊log10 725,000⌋ = 5. 1M → n = 3 (|1|), ceiling 3M;
+    // 500k → n = 6 (|2|); 2.5M → n = 2 (|2|). Nothing lands on 4 or 5 (725k is not nice).
+    [2_900_000, 3_000_000, 1_000_000, 3],
+    // 590,000: k = ⌊log10 147,500⌋ = 5. 200k → n = 3, ceiling 600k, headroom 10,000; 250k → n = 3,
+    // ceiling 750k, headroom 160,000; 100k → n = 6 (|2|). Tie on |n−4| = 1 → smaller headroom.
+    [590_000, 600_000, 200_000, 3],
+    // 11,763,143 (the LIVE health seed): k = ⌊log10 2,940,786⌋ = 6. 2.5M → n = ⌈4.705⌉ = 5, ceiling
+    // 12.5M, headroom 736,857; 5M → n = 3, ceiling 15M, headroom 3,236,857. Tie |1| → headroom.
+    [11_763_143, 12_500_000, 2_500_000, 5],
+    // 13,898,842 (the LIVE surplus seed): k = ⌊log10 3,474,710⌋ = 6. 5M → n = 3 (|1|), ceiling 15M;
+    // 2.5M → n = ⌈5.56⌉ = 6 (|2|); 10M → n = 2 (|2|). Nothing gives 4 or 5 (3.5M is not nice).
+    [13_898_842, 15_000_000, 5_000_000, 3],
+    // 87,000: k = ⌊log10 21,750⌋ = 4. 25k → n = ⌈3.48⌉ = 4, |0| — an exact hit.
+    [87_000, 100_000, 25_000, 4],
+    // 123 (the sub-$1k floor case — below anything the product plots, kept as a decade-robustness
+    // pin): k = ⌊log10 30.75⌋ = 1. 25 → n = ⌈4.92⌉ = 5, ceiling 125, headroom 2; 50 → n = 3,
+    // ceiling 150, headroom 27. Tie |1| → headroom.
+    [123, 125, 25, 5],
+    // 60,000 (the LIVE failing seed): k = ⌊log10 15,000⌋ = 4. 20k → n = 3, ceiling 60,000, headroom 0
+    // (|1|); 25k → n = 3, ceiling 75,000 (|1|, headroom 15,000); 10k → n = 6 (|2|). Headroom breaks it.
+    [60_000, 60_000, 20_000, 3],
+  ])('niceLattice(%d) = { ceiling: %d, step: %d, intervals: %d }', (max, ceiling, step, intervals) => {
+    expect(niceLattice(max)).toEqual({ ceiling, step, intervals })
+  })
+
+  it('TIE-BREAK 1 — equal distance from 4 intervals goes to the SMALLER headroom (less dead sky above the data)', () => {
+    // 1,200,000: k = ⌊log10 300,000⌋ = 5. 250k → n = ⌈4.8⌉ = 5, ceiling 1.25M, headroom 50,000;
+    // 500k → n = 3, ceiling 1.5M, headroom 300,000. Both are 1 away from TARGET; 1.25M is tighter.
+    expect(niceLattice(1_200_000)).toEqual({ ceiling: 1_250_000, step: 250_000, intervals: 5 })
+  })
+
+  it('TIE-BREAK 0 — DISTANCE from 4 outranks headroom: a tighter ceiling loses to a 4-interval one', () => {
+    // 7,000,000: k = ⌊log10 1,750,000⌋ = 6. 2M → n = ⌈3.5⌉ = 4, |0|, ceiling 8M (headroom 1M);
+    // 2.5M → n = 3, |1|, ceiling 7.5M (headroom 500,000 — TIGHTER, and still loses on distance).
+    expect(niceLattice(7_000_000)).toEqual({ ceiling: 8_000_000, step: 2_000_000, intervals: 4 })
+  })
+
+  it('TIE-BREAK 2 is unreachable — a ZERO-headroom candidate at the target interval count wins outright, the headroom key deciding before the step key can run', () => {
+    // 800,000 (the TwoFutures witness household): k = ⌊log10 200,000⌋ = 5. 200k → n = 4, |0|,
+    // ceiling 800,000, headroom 0; 250k → n = ⌈3.2⌉ = 4, |0|, ceiling 1M, headroom 200,000. The
+    // HEADROOM decides this pair, so what is pinned here is the reachable END of the chain, not
+    // the third key: a zero-headroom candidate at the target interval count always wins outright.
+    // The third key (the larger step) is measured-unreachable determinism insurance — the ratio
+    // argument for why no two distinct candidates can reach it lives at its own line in
+    // bandData.ts (and it is NOT "equal headroom at equal n ⇒ equal step": the |n − 4| tier admits
+    // n and 8 − n, so a tie can hold two DIFFERENT counts).
+    expect(niceLattice(800_000)).toEqual({ ceiling: 800_000, step: 200_000, intervals: 4 })
+  })
+
+  it('DEGENERATE input → { 0, 0, 0 } (the all-$0 fan: a $0-portfolio household has no dollar scale)', () => {
+    for (const bad of [0, Number.NaN, -1, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+      expect(niceLattice(bad), `${bad}`).toEqual({ ceiling: 0, step: 0, intervals: 0 })
+    }
+  })
+
+  // The two DOUBLE CORNERS the PROPERTIES docblock names (insight 044: a "can never happen" clause
+  // is a claim about a gate, not a fact). Both are unreachable from a portfolio fan and both fail
+  // LOUD — pinned here so the docblock's sentences are gated rather than merely asserted.
+  it('THE UNDERFLOW CORNER: a max in the first subnormal ulps returns { 0, 0, 0 } — a ceiling BELOW a positive max', () => {
+    // Derived from the code path, not read off a run: Number.MIN_VALUE (5e-324) is the smallest
+    // positive double, so `max / TARGET` has no representable result and underflows to 0.
+    // Math.log10(0) is −Infinity ⇒ k is −Infinity ⇒ every candidate exponent is, so every
+    // `m × 10 ** e` is exactly 0 and the `step > 0` filter skips all twelve candidates. `best` is
+    // never assigned, and the `best ??` fallback returns the degenerate lattice — the one case the
+    // retired caller-side `Math.max` backstop would have caught. It fails loud instead.
+    const dollars = (d: number): string => `$${d}`
+    expect(niceLattice(Number.MIN_VALUE)).toEqual({ ceiling: 0, step: 0, intervals: 0 })
+    expect(() => buildYTicks(niceLattice(Number.MIN_VALUE), dollars)).toThrow(/no drawable gridlines/)
+  })
+
+  it('THE OVERFLOW CORNER: Number.MAX_VALUE yields a NON-FINITE ceiling from a finite max — a drawability failure, not a broken property', () => {
+    // Derived from the code path: max/4 ≈ 4.49e307 ⇒ k = 307, so the candidate exponents are
+    // {306, 307, 308}. At e = 307 the m = 5 candidate (step 5e307) covers MAX_VALUE (≈1.798e308)
+    // in n = 4 whole steps — an exact TARGET hit, so it wins on distance outright: every finer
+    // candidate needs 8 or more steps (2.5e307 → 8, 2e307 → 9, 1e307 → 18, e = 306 → 36+), and at
+    // e = 308 only m = 1 survives the finite-STEP filter, at n = 2. But the winner's `n × step` is
+    // 2e308, past the double range, so a FINITE max produces an INFINITE ceiling (finite inputs,
+    // an infinite intermediate). Neither repair loop fires (Infinity is not < max; 3 × 5e307 is
+    // not ≥ max), and all three PROPERTIES survive — which is exactly why the drawability guard
+    // lives in buildYTicks instead of resting on them.
+    const dollars = (d: number): string => `$${d}`
+    const l = niceLattice(Number.MAX_VALUE)
+    expect(Number.isFinite(l.ceiling)).toBe(false)
+    expect(l.intervals).toBe(4)
+    expect(l.ceiling).toBeGreaterThanOrEqual(Number.MAX_VALUE) // the ≥ law holds; the axis is still undrawable
+    expect(l.ceiling).toBe(l.intervals * l.step)
+    expect(() => buildYTicks(l, dollars)).toThrow(/no drawable gridlines/)
+  })
+
+  it('the CEILING is the product the repair loops checked — ceiling === intervals × step, and ≥ max', () => {
+    // The old derivation inferred the ceiling from `(x/mag)*mag`, which need not round-trip, so
+    // resolveBandData carried a Math.max backstop. The rule now CHECKS the product, so both hold
+    // by construction — pinned across three decades (each expected pair hand-derived as above).
+    for (const [max, ceiling, step, intervals] of [
+      [1_002_260, 1_250_000, 250_000, 5],
+      [11_763_143, 12_500_000, 2_500_000, 5],
+      [60_000, 60_000, 20_000, 3],
+    ] as const) {
+      const l = niceLattice(max)
+      expect(l.ceiling).toBe(ceiling)
+      expect(l.ceiling).toBe(l.intervals * l.step) // strict: no float dust between the two
+      expect(l.ceiling).toBeGreaterThanOrEqual(max)
+      expect(l.step).toBe(step)
+      expect(l.intervals).toBe(intervals)
+    }
+  })
+
+  it('never leaves a WHOLE interval of headroom above the data: (intervals − 1) × step < max', () => {
+    // Hand-derived pairs again: the last gridline BELOW the ceiling must sit under the data's top.
+    // 1,002,260 → 4 × 250,000 = 1,000,000 < 1,002,260 (2,260 to spare — the tightest of the set).
+    for (const [max, below] of [
+      [1_002_260, 1_000_000],
+      [11_763_143, 10_000_000],
+      [590_000, 400_000],
+      [2_900_000, 2_000_000],
+    ] as const) {
+      const l = niceLattice(max)
+      expect((l.intervals - 1) * l.step).toBe(below)
+      expect(below).toBeLessThan(max)
+    }
+  })
+
+  it('THE DEFECT, KILLED: no three-decimal million label anywhere the product plots', () => {
+    // The old ladder quartered the {1.5, 3, 6} rung family into a 0.75-family step ($1.5M →
+    // $0.375M, $3M → $0.75M, $6M → $1.5M) — the "two ladders on one product" tell. Only the
+    // 1.5 × 10^6 rung crossed into a THREE-decimal million ("$0.375M" / "$1.125M"); under the OLD
+    // rule that ceiling covered maxima 1,001,000–1,500,000, which is inside this $1k-step sweep, so
+    // the arm is NOT vacuous. The 3M, 6M and 15M ceilings quartered to two decimals or fewer.
+    const fmt = (d: number): string => (d === 0 ? '$0' : `$${d / 1_000_000}M`)
+    for (let max = 1_000_000; max <= 12_000_000; max += 1_000) {
+      for (const t of buildYTicks(niceLattice(max), fmt)) {
+        expect(t.label, `max ${max}: ${t.label}`).not.toMatch(/\$\d\.\d{3}M/)
+      }
+    }
+  })
+})
+
+describe('buildYTicks — the gridline ladder over one lattice', () => {
+  const fmt = (d: number): string => `$${d}`
+
+  it('draws intervals + 1 lines from $0, each a whole multiple of the step, the last one the ceiling ITSELF', () => {
+    // Hand-derived: the 2.5M lattice (step 500,000, 5 intervals) → 6 lines. (Deliberately NOT the
+    // 1.25M lattice: its third gridline is the IRMAA MFJ top-tier figure, which the constants gate
+    // forbids inlining anywhere outside @engine/constants — the 1.25M ladder is pinned by its
+    // LABELS in money.test.ts instead, where no raw dollar literal is needed.)
+    const ticks = buildYTicks({ ceiling: 2_500_000, step: 500_000, intervals: 5 }, fmt)
+    expect(ticks.map((t) => t.dollars)).toEqual([0, 500_000, 1_000_000, 1_500_000, 2_000_000, 2_500_000])
+    expect(ticks.map((t) => t.label)).toEqual(['$0', '$500000', '$1000000', '$1500000', '$2000000', '$2500000'])
+  })
+
+  it('the TICK COUNT follows the lattice — 4, 5 or 6 lines, never always five', () => {
+    // Hand-derived from the rule: 590,000 → 3 intervals (4 lines); 2,000,000 → 4 (5 lines);
+    // 1,002,260 → 5 (6 lines). Nothing in the renderers may assume a fixed count.
+    expect(buildYTicks(niceLattice(590_000), fmt)).toHaveLength(4)
+    expect(buildYTicks(niceLattice(2_000_000), fmt)).toHaveLength(5)
+    expect(buildYTicks(niceLattice(1_002_260), fmt)).toHaveLength(6)
+  })
+
+  it('the top line is BYTE-EQUAL to the lattice ceiling (never intervals × step recomputed)', () => {
+    // 0.25 × 4 is exact, but a lattice whose step is not a dyadic multiple would drift — the top
+    // tick reads the ceiling FIELD, so the drawn top line and the y-scale can never disagree.
+    const l = niceLattice(11_763_143)
+    expect(buildYTicks(l, fmt).at(-1)!.dollars).toBe(l.ceiling)
+  })
+
+  it('THROWS on a degenerate lattice — a lone "$0" line on a zero-height axis, or a NaN/infinity ladder, is a calm lie about an unscalable household', () => {
+    expect(() => buildYTicks({ ceiling: 0, step: 0, intervals: 0 }, fmt)).toThrow(/no drawable gridlines/)
+    expect(() => buildYTicks(niceLattice(0), fmt)).toThrow(/no drawable gridlines/)
+    expect(() => buildYTicks({ ceiling: Number.NaN, step: 1, intervals: 4 }, fmt)).toThrow(/no drawable gridlines/)
+    expect(() => buildYTicks({ ceiling: 1, step: Number.POSITIVE_INFINITY, intervals: 4 }, fmt)).toThrow(/no drawable gridlines/)
+    // The planted PASS control — a well-formed lattice still builds (the throws above are not vacuous).
+    expect(buildYTicks({ ceiling: 4, step: 1, intervals: 4 }, fmt)).toHaveLength(5)
   })
 })
 

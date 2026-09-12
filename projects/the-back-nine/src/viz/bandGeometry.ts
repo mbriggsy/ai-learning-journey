@@ -35,14 +35,21 @@ export const VIEWBOX = { width: 560, height: 380 } as const
 
 /** The plot rectangle inside the viewBox. `left` is the y-tick column: the HTML tick labels are
  *  end-anchored 8 units left of the axis, and 92 units holds the widest catalog dollar — the
- *  seven-glyph "$0.375M" / "$1.125M" quarters of a $1.5M ceiling, at --text-xs — INSIDE the
- *  figure on a 390 phone (a 308px figure — measured 2026-09-05,
- *  temp/chart-text/precondition.json: 45 CSS px of ink + the 4 px gap against the 50.6 px the
- *  column renders at; Linux CI renders the same glyphs at 42 px — FreeType rounds advances to whole
- *  pixels, DirectWrite keeps them fractional). On the 320 reflow arm the gate also walks (chart-text.spec.ts ARMS) the
- *  figure is 238px and that dollar borrows 9.3px of the drawer's padding instead — bounded live
- *  there by the gate's assertTickColumn, never by this comment. Was 78 in the svg-text era.
- *  `right` leaves the horizon rule's label room to end-anchor. */
+ *  six-glyph "$0.25M" / "$0.75M" / "$1.25M" of the $1.25M lattice, at --text-xs — INSIDE the
+ *  figure on a 390 phone: a 308px figure, where the 8-unit end-anchor inset leaves the dollars a
+ *  46.2 px ink column — the 50.6 px gutter less 4.4 px — so 38.5 CSS px of ink, re-measured in the
+ *  browser gate 2026-09-12 for Card 10, derives ~7.7 px of slack, and the gate MEASURES the ink
+ *  7.6 px inside the figure at PHONE. Linux CI is EXPECTED near 35.9 px — DERIVED, not measured:
+ *  38.5 − 6 × 0.43, the one cross-platform datum being the seven-glyph 45.0 Windows / 42.0 Linux
+ *  pair (insight 118; FreeType rounds advances to whole pixels, DirectWrite keeps them fractional)
+ *  — unconfirmed until this change's first Linux verify:fit run.
+ *  Until Card 10 the widest was the SEVEN-glyph "$0.375M" / "$1.125M" quarter of a $1.5M ceiling
+ *  at 45 / 42 px, which the nice-step lattice can no longer
+ *  produce; 92 was sized for THAT, and stays (the room is not the ink — widening or narrowing the
+ *  gutter is not a remedy for a copy change). On the 320 reflow arm the gate also walks
+ *  (chart-text.spec.ts ARMS) the figure is 238px and that dollar borrows 2.9px of the drawer's
+ *  padding instead — bounded live there by the gate's assertTickColumn, never by this comment.
+ *  Was 78 in the svg-text era. `right` leaves the horizon rule's label room to end-anchor. */
 export const PLOT = {
   left: 92,
   right: 540,

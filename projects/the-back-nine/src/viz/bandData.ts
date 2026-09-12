@@ -270,35 +270,160 @@ export function isFixedLattice(samples: readonly BandSample[]): boolean {
   return true
 }
 
-/** Round a positive value UP to a humane axis ceiling (1 / 1.5 / 2 / 3 / 4 / 5 / 6 / 8 / 10 × 10^k)
- *  so the band's top gridline is a clean figure ≥ the value. Returns 0 for a non-positive input
- *  (NaN-safe via `!(x > 0)`). NOTE: the input is NOT guaranteed positive — `initialPortfolio === 0`
- *  is a VALID decumulation run (validateParams' `finiteNonNeg` accepts 0; only the accumulation
- *  construct rejects it, simulate.ts §683), so an all-$0 fan (a $0-portfolio, income-funded
- *  household) yields maxP90 = 0 ⇒ this returns 0. resolveBandData fails loud on that AT THE SEAM
- *  (below) — the `dollarMax > 0` yForDollars requires is enforced there, never left to the renderer.
- *  EXPORTED for TwoFutures' axis ceiling (fan parity, Briggsy's station-2 cold-read 2026-07-08):
- *  ONE humane ladder across both charts, so their quarter-ticks are clean figures by the same
- *  construction — never a second re-typed scale. */
-export function niceCeil(x: number): number {
-  if (!(x > 0)) return 0
-  const mag = 10 ** Math.floor(Math.log10(x))
-  const norm = x / mag // [1, 10)
-  const niceNorm = [1, 1.5, 2, 3, 4, 5, 6, 8, 10].find((s) => s >= norm) ?? 10
-  return niceNorm * mag
+/** ONE dollar lattice: the ceiling AND the gridline step, derived TOGETHER (never a ceiling first).
+ *  `intervals` is the gridline count ABOVE $0, so the drawn ladder is `intervals + 1` lines and
+ *  `ceiling === intervals × step` byte-exactly (the product IS the ceiling — see {@link niceLattice}). */
+export interface DollarLattice {
+  readonly ceiling: number
+  readonly step: number
+  readonly intervals: number
 }
 
-/** The y-axis gridlines: `TICK_INTERVALS + 1` evenly-spaced lines INCLUDING $0 (the ruin-floor anchor
- *  — back-nine-design §3, the linear $0-anchored axis whose whole point is drawing the depletion-to-$0
- *  case). SINGLE-SOURCED so the indeterminate PLACEHOLDER band (which must sit at the same size as a
+/** A humane dollar lattice for a plot whose data tops out at `max`: the smallest number of NICE
+ *  steps that covers it, the ceiling being that step times that count.
+ *
+ *  WHY THIS SHAPE, AND NOT A CEILING (Caddie Card 10, the four-faces walk 2026-09-11). The axis used
+ *  to be derived in two steps that did not know about each other: `niceCeil` rounded max UP to a rung
+ *  of {1, 1.5, 2, 3, 4, 5, 6, 8, 10} × 10^k and the tick builder then drew QUARTERS of that ceiling.
+ *  Whenever the ceiling landed on the {1.5, 3, 6} family the quarters were a non-nice 0.75-family
+ *  step — $1.5M → $0.375M, $3M → $0.75M, $6M → $1.5M — and at the 1.5 × 10^6 rung that step crossed
+ *  into a THREE-decimal million: a $1.5M ceiling printed "$0 / $0.375M / $0.75M / $1.125M / $1.5M".
+ *  (Measured 2026-09-12 over all 41 old ceilings from $10k to $1B through the real formatter, 1.5 ×
+ *  10^6 is the ONLY rung that reached three decimals — 15M quartered to $3.75M / $11.25M.) The
+ *  2026-07-10 read ("quarter-tick
+ *  labels round dirty") had been fixed by making the FORMATTER exact (O5, money.ts) — which cured the
+ *  LIE and exposed the PRECISION: ten filings on 2026-09-11 read the exact three-decimal labels as
+ *  "a machine tick, not a humane rung", and saw TWO ladders on one product (every TwoFutures preview
+ *  printed 1.5M quarters beside a fan riding $0.5M steps). A ceiling chosen first can never be
+ *  guaranteed to divide into humane parts; a nice STEP chosen first always can.
+ *
+ *  THE RULE. Aim for TARGET = 4 intervals with a step from NICE = {1, 2, 2.5, 5} × 10^e, e within one
+ *  decade of the natural one. For each candidate step take the fewest whole steps that cover `max`;
+ *  keep the candidate whose interval count is CLOSEST to 4, breaking ties on the smaller headroom
+ *  (`ceiling − max`; `max` is fixed within a call, so absolute and relative headroom order the
+ *  candidates identically) and then on the larger step (fewer ticks) — a third key that is
+ *  MEASURED-UNREACHABLE determinism insurance, never a live rung (see the comment at its line).
+ *
+ *  PROPERTIES (pinned by `bandData.test.ts` + `niceLattice.pbt.test.ts`) — measured to hold from the
+ *  5th subnormal ulp, max ≥ 2.5e-323, upward; the two double corners outside that are named under
+ *  DEGENERATE INPUT below:
+ *   - `ceiling ≥ max` — the two float-repair loops check the PRODUCT that becomes the ceiling, so on
+ *     this domain it is a CHECKED fact rather than an inference about `ceil`, and there is nothing
+ *     left for a caller-side `Math.max` backstop to catch;
+ *   - `(intervals − 1) × step < max` — never a whole interval of pure headroom above the data;
+ *   - `intervals ∈ {3, 4, 5}` (4–6 drawn lines including $0): the widest ratio between neighbouring
+ *     NICE steps is 2, and the candidate steps span from `max/40`-ish up past `max`, so some
+ *     candidate always lands with `max/step ∈ (2, 5]`, i.e. within 1 of TARGET. That reasoning rests
+ *     on the nice set's 2:1 gap RATIO, which the SUBNORMAL grid collapses: the 3rd and 4th ulps
+ *     (1.5e-323 and 2e-323) measure `intervals = 2` — the only points outside {3, 4, 5} in a scan of
+ *     the first 4,096 ulps and a 4,420-point sweep over 631 decades (measured 2026-09-12);
+ *   - every label the axis formatter then prints carries at most TWO decimals in M or k — a step is
+ *     `{1, 2, 2.5, 5} × 10^e` and `intervals ≤ 5`, so an M-dialect lattice (ceiling ≥ $1M) has
+ *     `step ≥ $200k`: "$0.25M" is reachable, "$0.375M" is not.
+ *
+ *  DEGENERATE INPUT: `{0, 0, 0}` for a non-positive or non-finite max (NaN-safe by construction).
+ *  The input is NOT guaranteed positive — `initialPortfolio === 0` is a VALID decumulation run
+ *  (validateParams' `finiteNonNeg` accepts 0; only the accumulation construct rejects it,
+ *  simulate.ts §683), so an all-$0 fan (a $0-portfolio, income-funded household) yields maxP90 = 0.
+ *  `resolveBandData` fails loud on that AT THE SEAM (below) and `buildYTicks` THROWS on it — the
+ *  `dollarMax > 0` yForDollars requires is enforced at the producer, never left to the renderer.
+ *
+ *  TWO DOUBLE CORNERS reach that same loud failure by other paths — insight 044's own class, in the
+ *  file insight 044 was written about (a "can never happen" comment is a CLAIM about a gate, not a
+ *  fact), so they are named rather than assumed away:
+ *   - `max ≤ 1e-323` (the first two subnormal ulps): `max / TARGET` underflows to 0, `Math.log10(0)`
+ *     is −Infinity, every candidate step is 0 and is skipped by the `step > 0` filter, so the
+ *     `best ??` fallback returns `{0, 0, 0}` — a ceiling BELOW a finite POSITIVE max, the one case a
+ *     caller-side `Math.max` would have caught. It fails loud instead, at the same two gates;
+ *   - `max > 1.5e308` (the boundary bisected 2026-09-12 — 1.5e308 itself still yields the finite
+ *     ceiling 1.5e308): `n × step` overflows, so a FINITE max yields a NON-FINITE ceiling (insight
+ *     028's shape — finite inputs, an infinite intermediate), and `buildYTicks`' non-finite guard
+ *     fires. This corner does NOT falsify the PROPERTIES above: `Infinity ≥ max` holds, `intervals`
+ *     is 4, and `ceiling === intervals × step` holds byte-exactly. It is a DRAWABILITY failure, not
+ *     a property violation.
+ *
+ *  EXPORTED for TwoFutures' axis (fan parity, Briggsy's station-2 cold-read 2026-07-08): ONE humane
+ *  ladder across both charts, from ONE module — never a second re-typed scale. */
+export function niceLattice(max: number): DollarLattice {
+  if (!(Number.isFinite(max) && max > 0)) return { ceiling: 0, step: 0, intervals: 0 }
+  const TARGET = 4
+  const NICE = [1, 2, 2.5, 5]
+  const k = Math.floor(Math.log10(max / TARGET))
+  let best: DollarLattice | undefined
+  for (const e of [k - 1, k, k + 1]) {
+    for (const m of NICE) {
+      const step = m * 10 ** e
+      if (!(Number.isFinite(step) && step > 0)) continue
+      // The fewest whole steps that COVER max. Both repairs test the product that becomes the
+      // ceiling, so `ceiling ≥ max` is a checked fact rather than an inference about `ceil`:
+      let n = Math.ceil(max / step)
+      while (n * step < max) n++ // float dust under the ceiling — raise until it truly covers
+      while (n > 1 && (n - 1) * step >= max) n-- // float dust above — never a whole spare interval
+      const cand: DollarLattice = { ceiling: n * step, step, intervals: n }
+      if (best === undefined) {
+        best = cand
+        continue
+      }
+      const dNew = Math.abs(cand.intervals - TARGET)
+      const dBest = Math.abs(best.intervals - TARGET)
+      if (dNew !== dBest) {
+        if (dNew < dBest) best = cand
+        continue
+      }
+      // Same distance from TARGET → the calmer axis: less dead headroom above the data, then the
+      // larger step (fewer gridlines) when even the headroom ties.
+      const hNew = cand.ceiling - max
+      const hBest = best.ceiling - max
+      if (hNew !== hBest) {
+        if (hNew < hBest) best = cand
+        continue
+      }
+      // THE THIRD KEY IS MEASURED-UNREACHABLE (2026-09-12): instrumented replays of this loop,
+      // cross-validated against niceLattice over 520k–2.5M maxima (integers, log grids across the
+      // whole positive double range, exact nice multiples ±2 ULP over twenty decades, the
+      // near-overflow zone, 400k pseudorandom doubles), fired it ZERO times, and deleting it
+      // changed ZERO results. WHY it cannot fire, by RATIO (not by "equal headroom at equal n
+      // means an equal step" — `dNew !== dBest` compares |n − 4|, so one tier can hold n and 8−n:
+      // 3 with 5, 2 with 6, 1 with 7): equal headroom at a fixed max means an equal CEILING, so
+      // n_A × s_A = n_B × s_B; for distinct tied counts that demands a step ratio of exactly 5/3,
+      // 3 or 7, and no ratio inside {1, 2, 2.5, 5} × 10^e has that form (its finest is 1.25) —
+      // while equal counts force s_A = s_B outright. The one corner that argument misses: two
+      // candidates whose `n × step` both saturate to Infinity tie on an INFINITE headroom with
+      // unequal steps — but overflowing candidates can never share a distance tier here (for
+      // max ∈ (1.5e308, MAX_VALUE] the only overflowing WINNER is step 5e307 at n = 4, a unique
+      // distance-0 hit; the pairs the argument would need require max > 2e308), and the (2, 2.5)
+      // pair at e ≥ 308 is skipped by the finite-STEP guard above. It STAYS: without it the
+      // decided rule (§2: tie → the LARGER step) would be silently delegated to candidate
+      // enumeration order, which is determinism by accident rather than by rule.
+      if (cand.step > best.step) best = cand
+    }
+  }
+  return best ?? { ceiling: 0, step: 0, intervals: 0 }
+}
+
+/** The y-axis gridlines: `lattice.intervals + 1` evenly-spaced lines INCLUDING $0 (the ruin-floor
+ *  anchor — back-nine-design §3, the linear $0-anchored axis whose whole point is drawing the
+ *  depletion-to-$0 case). Every line sits at a whole multiple of the lattice's nice STEP, and the top
+ *  one is the lattice's own `ceiling` VALUE (not `intervals × step` recomputed) so the drawn top
+ *  gridline and the scale's ceiling are byte-equal — a label can never misstate the line it sits on.
+ *  SINGLE-SOURCED so the indeterminate PLACEHOLDER band (which must sit at the same size as a
  *  resolved card) and a resolved band cannot drift apart — the match is a guarantee, not a coincidence
  *  of two copies of the loop. `formatDollar` is the caller's currency formatter (the string-free layer
- *  — Intl lives in ui, never here). */
-export function buildYTicks(dollarMax: number, formatDollar: (dollars: number) => string): YTick[] {
-  const TICK_INTERVALS = 4
+ *  — Intl lives in ui, never here).
+ *
+ *  THROWS on a degenerate lattice, per arm: the all-$0 fan's `{0,0,0}` would draw a SINGLE "$0" line
+ *  on a zero-height axis (the loop runs k = 0 only — the quartered era's five "$0" lines went with
+ *  TICK_INTERVALS), and a non-finite step/ceiling would draw a NaN/infinity ladder. Either is a calm
+ *  lie about a household the chart cannot scale, so this fails loud at the producer instead. */
+export function buildYTicks(lattice: DollarLattice, formatDollar: (dollars: number) => string): YTick[] {
+  if (lattice.intervals < 1 || !Number.isFinite(lattice.step) || !Number.isFinite(lattice.ceiling)) {
+    throw new RangeError(
+      'buildYTicks: a degenerate dollar lattice has no drawable gridlines — the producer seam screens the all-$0 fan',
+    )
+  }
   const yTicks: YTick[] = []
-  for (let k = 0; k <= TICK_INTERVALS; k++) {
-    const dollars = (k / TICK_INTERVALS) * dollarMax
+  for (let k = 0; k <= lattice.intervals; k++) {
+    const dollars = k === lattice.intervals ? lattice.ceiling : k * lattice.step
     yTicks.push({ dollars, label: formatDollar(dollars) })
   }
   return yTicks
@@ -408,9 +533,16 @@ export function resolveBandData(
     })
   }
 
-  // dollarMax ≥ max(p90) — the asymmetric scale guard. niceCeil already returns ≥ its input; the
-  // Math.max is a float-dust backstop so the `≥` is unconditional (the top edge never escapes).
-  const dollarMax = Math.max(niceCeil(maxP90), maxP90)
+  // dollarMax ≥ max(p90) — the asymmetric scale guard. ONE lattice carries both the ceiling and the
+  // gridline step (Card 10): the ceiling is the very product niceLattice's repair loops CHECKED
+  // against maxP90, so `≥` holds for every max a fan can produce and needs no caller-side Math.max
+  // backstop (the old one existed because `(x/mag)*mag` need not round-trip — the ceiling was
+  // inferred, not verified). NOT a universal over the whole double range: a max in the first two
+  // subnormal ulps (≤ 1e-323) underflows every candidate step and returns `{0,0,0}`, a ceiling
+  // below a positive max — see niceLattice's DEGENERATE INPUT. The seam throw below is what catches
+  // it, which is why that guard is not redundant with the ≥ guarantee.
+  const lattice = niceLattice(maxP90)
+  const dollarMax = lattice.ceiling
 
   // FAIL LOUD AT THE SEAM on a non-positive ceiling (the `dollarMax > 0` yForDollars requires). An
   // all-$0 fan is VALID — a $0-portfolio, income-funded decumulation household (validateParams accepts
@@ -436,7 +568,7 @@ export function resolveBandData(
   // y-ticks INCLUDING the $0 ruin-floor anchor — single-sourced via buildYTicks so the indeterminate
   // placeholder band matches a resolved card's gridlines by construction, not by a duplicated loop.
   // The tick formatter rides the O8 factory when supplied (one dialect per lattice, rule 36).
-  const yTicks = buildYTicks(dollarMax, opts.tickFormatterFor?.(dollarMax) ?? opts.formatDollar)
+  const yTicks = buildYTicks(lattice, opts.tickFormatterFor?.(dollarMax) ?? opts.formatDollar)
 
   // Card 5 — the median's first $0 plan-year, read off the integer GRID through the readout's own
   // formatter (the displayed-figure test the AT chooser applies to its rows — never a raw `=== 0`, so

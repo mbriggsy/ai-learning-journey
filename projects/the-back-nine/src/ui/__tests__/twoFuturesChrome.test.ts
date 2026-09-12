@@ -303,8 +303,9 @@ describe('composeTwoFutures — the dead-cohort truncation (the series ends wher
 
 describe('composeTwoFutures — the y-ceiling label annotates the DRAWN gridline, not the raw max', () => {
   it('formats twoFuturesCeiling(max), a value distinct from the raw data max', () => {
-    // 1_234_567 raw → $1.2M; its humane-ladder ceiling 1_500_000 → $1.5M. The label sits on the
-    // DRAWN ceiling line, so it must read the ceiling (understating its own gridline is the bug).
+    // 1_234_567 raw → $1.2M; its nice-step lattice ceiling 1_250_000 → $1.25M (step 250,000 × 5 —
+    // Card 10; it was 1_500_000 under the quartered-ceiling rule). The label sits on the DRAWN
+    // ceiling line, so it must read the ceiling (understating its own gridline is the bug).
     const withFan = fan([
       [0, 1_234_567, 1],
       [30, 900_000, 1],
@@ -344,13 +345,14 @@ describe('composeTwoFutures — the y-axis dollar lattice (the fan’s OWN tick 
       without: reading({ headline: headline(7), bandFan: fan([[0, top - 10_000], [30, 480_000]]), survivalFraction: 0.8 }),
     })
 
-  it('emits 5 ticks (quarters + the $0 ruin floor) over the humane ceiling, formatAxisDollar-worded', () => {
-    // max 590_000 → ladder ceiling 600_000 → quarters 0 / 150k / 300k / 450k / 600k — every label
-    // a clean figure BY CONSTRUCTION (the whole point of sharing the fan's ladder).
+  it('emits one line per lattice step plus the $0 ruin floor, formatAxisDollar-worded', () => {
+    // HAND-DERIVED (Card 10): max 590_000 → k = ⌊log10 147,500⌋ = 5; the 200k candidate covers it
+    // in 3 steps (ceiling 600_000, headroom 10,000) and beats the 250k candidate's equally-distant
+    // 3 steps (a $750k ceiling) on headroom. FOUR lines, not five — the count follows the lattice.
     const view = composeTwoFutures(outcomeWithFans(590_000), 'With', 'Without', slots.rothDeltaSurvivor)
     const ticks = view!.series!.yTicks
-    expect(ticks.map((t) => t.dollars)).toEqual([0, 150_000, 300_000, 450_000, 600_000])
-    expect(ticks.map((t) => t.label)).toEqual(['$0', '$150k', '$300k', '$450k', '$600k'])
+    expect(ticks.map((t) => t.dollars)).toEqual([0, 200_000, 400_000, 600_000])
+    expect(ticks.map((t) => t.label)).toEqual(['$0', '$200k', '$400k', '$600k'])
   })
 
   it('the lattice top IS the drawn ceiling (the dollarMaxLabel’s own value — one scale, two words)', () => {
@@ -360,14 +362,16 @@ describe('composeTwoFutures — the y-axis dollar lattice (the fan’s OWN tick 
     expect(view!.series!.labels.dollarMaxLabel).toBe(`~${top.label}`)
   })
 
-  // O8 (2026-07-17) — the unit-locked lattice, wired: a $3M-class ceiling's sub-$1M quarter
-  // reads "$0.75M", never "$750k" among "$M" gridlines (one dialect per axis, rule 36). This
-  // is the CALL-SITE pin — reverting twoFuturesChrome's tick builder to the per-value
-  // formatter goes red here (the factory's own arms live in money.test).
-  it('a mixed-magnitude ceiling emits ONE dialect (the filed "$750k among $M" witness, killed)', () => {
-    const view = composeTwoFutures(outcomeWithFans(2_900_000), 'With', 'Without', slots.rothDeltaSurvivor)
+  // O8 (2026-07-17) — the unit-locked lattice, wired: a $M-class ceiling's sub-$1M gridlines read
+  // "$0.25M", never "$250k" among "$M" gridlines (one dialect per axis, rule 36). This is the
+  // CALL-SITE pin — reverting twoFuturesChrome's tick builder to the per-value formatter goes red
+  // here (the factory's own arms live in money.test). RE-POINTED for Card 10: 2,900,000's lattice
+  // is now three whole $1M steps (no sub-$1M gridline left to mix), so the witness moves to
+  // 1,200,000 — step 250,000 × 5, ceiling 1,250,000, three gridlines under $1M.
+  it('a mixed-magnitude ceiling emits ONE dialect (the filed "$250k among $M" witness, killed)', () => {
+    const view = composeTwoFutures(outcomeWithFans(1_200_000), 'With', 'Without', slots.rothDeltaSurvivor)
     const labels = view!.series!.yTicks.map((t) => t.label)
-    expect(labels).toEqual(['$0', '$0.75M', '$1.5M', '$2.25M', '$3M'])
+    expect(labels).toEqual(['$0', '$0.25M', '$0.5M', '$0.75M', '$1M', '$1.25M'])
   })
 })
 

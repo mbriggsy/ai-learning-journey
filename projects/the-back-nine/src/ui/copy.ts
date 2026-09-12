@@ -1126,9 +1126,14 @@ export const copy = {
   // Medicare-extras Tail, which is not this household's residual: its own unpriced list lives on the
   // Healthcare sheet (`controlHealthOmissionsNoteStatePriced` — one honest home per fact), so this
   // tail POINTS there, by the sheet's rendered name (`leverHealthTitle`). Period-grafted like
-  // `verdictResidualTail` (every affirmation ends mid-clause). ⚑ PILOT'S DRAFT, 2026-09-11 — the
-  // register routes this ONE sentence to Briggsy's words (Card 4); swap the string, keep the composition.
-  verdictStatePricedDoorTail: '. What still isn’t counted is listed in your health-cost picture.',
+  // `verdictResidualTail` (every affirmation ends mid-clause). RULED 2026-09-12 (Card 4's one
+  // sentence): the pilot's 2026-09-11 draft — ". What still isn’t counted is listed in your
+  // health-cost picture." — was read cold by Briggsy as "I still need to enter healthcare costs",
+  // the reader owning an omission that is the TOOL's. The shipped words put it on the tool ("this
+  // tool leaves out") and say where the list is; his ruling on the pilot's re-word. Swap the string,
+  // keep the composition (the healthnc fit arm and stateTaxDisclosure.test pin the CONSTANT, never
+  // the lexeme).
+  verdictStatePricedDoorTail: '. The few costs this tool leaves out are listed in your health-cost picture.',
   rothMedicareResidualNote:
     // Swapped 2026-07-19, twice (the trend unit, then its Part D sourcing pass): the original
     // blamed "premiums held flat" for a crossing looking "a shade easier" — true pre-flip,

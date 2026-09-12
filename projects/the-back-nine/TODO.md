@@ -136,7 +136,7 @@ are (g) above, the fixes (h). The harness increments + corpus fold-in are `7aaa8
 `c43eb879`. Gates at close — typecheck · lint · 3536 tests / 176 files · doc-stats (68 open / 77 entries; 824 named citations + every
 bare continuation) · verify:fit 139 on an idle rerun + the 15 review-touched arms re-run · verify:csp 15 passed / 1 skipped · CI green
 through `01f4a7b6` (run 34633627631; the four runs in flight at the midday close all read GREEN) · **CI for `c43eb879` = run
-34643267501, IN PROGRESS at close (started 20:15Z) — a run is proof and "in flight" is not (insight 128): read it FIRST next session.**
+34643267501 — READ 2026-09-12 morning: GREEN (verify + verify-rv-chart-text both success, 28 m); the squeaky commit `f8e4519e` = run 34645658368, GREEN.** CI is green through HEAD.
 HIS EYE next session: START HERE (g), pictures already in his panel. **`temp/` was KEPT at this close on his instruction — it holds
 the eye items for the fresh session; clear it at the NEXT squeaky:** `temp/caddie/2026-09-11-eye/{seed-retired,seed-date,vault-datestale,solve-surplus,solve-failing,seed-healthnc}/{real,phone}/`
 — the forks' frames: `seed-retired/real/landing/crop-band.png` (Card 1) · `seed-retired/phone/landing/viewport.png` +

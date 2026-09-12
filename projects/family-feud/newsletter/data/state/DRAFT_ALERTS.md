@@ -182,3 +182,37 @@ _cargo was 6 min old when this ran_
 'pre_draft' -> 'drafting'
 
 _cargo was 6 min old when this ran_
+
+---
+
+## STATUS CHANGED — 2026-09-06 22:35:01
+
+'drafting' -> 'complete'
+
+_cargo was 6 min old when this ran_
+
+---
+
+## CARGO IS STALE — THIS WATCHER IS BLIND — 2026-09-08 23:33:58
+
+- last mule run was 185 minutes ago.
+- sleeper_draft.json on disk was last written 185 minutes ago.
+- sleeper_users.json on disk was last written 185 minutes ago.
+The mule runs hourly; anything past 150 minutes means it missed at least two runs.
+Until it is fixed, 'no change' below means 'no new data', NOT 'nothing happened'.
+Re-run scripts/install-mule.ps1 — it re-derives every path from its own location.
+
+_cargo was 185 min old when this ran_
+
+---
+
+## CARGO IS STALE — THIS WATCHER IS BLIND — 2026-09-10 11:31:48
+
+- last mule run was 2158 minutes ago.
+- sleeper_draft.json on disk was last written 2158 minutes ago.
+- sleeper_users.json on disk was last written 2158 minutes ago.
+The mule runs hourly; anything past 150 minutes means it missed at least two runs.
+Until it is fixed, 'no change' below means 'no new data', NOT 'nothing happened'.
+Re-run scripts/install-mule.ps1 — it re-derives every path from its own location.
+
+_cargo was 2158 min old when this ran_

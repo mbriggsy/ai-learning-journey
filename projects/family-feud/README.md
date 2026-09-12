@@ -46,9 +46,14 @@ newsletter/      The Nightly Feud machinery + the mule
                  data/inbox/   mule cargo (gitignored — a cache, not source)
                  data/state/   last_seen.json + ladder.json are gitignored runtime scratch;
                                DRAFT_ALERTS.md is TRACKED — it is the only channel the
-                               STARTING GUN has, and it writes only on a real transition
+                               STARTING GUN has, and it writes only on a real transition;
+                               GAMEDAY.md is TRACKED — the Sunday lineup check's report
 scripts/         install-mule.ps1     — registers and verifies the hourly mule
                  install-watcher.ps1  — same, for the draft-state watcher
+                 install-gameday.ps1  — same, for the Sat/Sun lineup check
+                 gameday_check.py     — LIVE pull; tagged starters + the bench sub, empty
+                                        slots, bench-beats-starter by 2+, expected totals.
+                                        Names the move, never touches the lineup.
                  merge_picks.py       — fetches /picks and merges into picks.json;
                                         refuses picks from a different draft, and reports a
                                         pick that VANISHED upstream (--rebuild to accept it)
@@ -114,7 +119,7 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         section [2], who the consensus ranks that the board does
                                         not carry — the half a rank-gap metric cannot see.
                                         → docs/insights/018
-tests/           1179 tests: python -m unittest discover -s tests  (run from the root)
+tests/           1206 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```

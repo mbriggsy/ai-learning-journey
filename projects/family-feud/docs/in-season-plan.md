@@ -84,7 +84,15 @@ observation. A closed plan's decisions bind; its facts expire ([insight 012](ins
 
 **Do not build FAAB tooling.** `waiver_budget: 100` is inert while `waiver_type` is `0`.
 
-### 2. The Thursday / Sunday lineup check
+### 2. The Thursday / Sunday lineup check — ✅ BUILT 2026-09-12 (`scripts/gameday_check.py`)
+
+**Built the first Saturday of the season, after week 1 proved the need:** Stevenson banked 14.5 on
+the bench while Swift started at 13.5 projected, and nobody was in the room. The check runs on a
+clock (`install-gameday.ps1`: Sat 20:00, Sun 08:00, Sun 11:30) and appends to
+`newsletter/data/state/GAMEDAY.md`. **The projection trap below is resolved:** Sleeper's own
+`/projections/nfl/<season>/<week>` is hauled live and scored with the league's `scoring_settings`;
+`vorp_curve.json` is not touched. The check names the move and never sets a slot. What is still
+open from the original shape is below, unchanged.
 
 **Answers:** is anyone in my starting ten out, doubtful or on bye, and is a bench player the better
 start this week.

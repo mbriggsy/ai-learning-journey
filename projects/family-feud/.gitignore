@@ -117,3 +117,4 @@ draft-kit/.last_good/
 
 # Playwright MCP scratch output (snapshots, console logs, screenshots) from browser verification.
 .playwright-mcp/
+!newsletter/data/state/GAMEDAY.md

@@ -17,6 +17,7 @@ Draft ~Aug 29, 2026. Mission: beat Hunter. [`README.md`](README.md) is the map.
 | [`docs/in-season-plan.md`](docs/in-season-plan.md) | What happens after the draft. A STUB on purpose — read its un-stub trigger before building anything in-season |
 | [`docs/insights/`](docs/insights/) | Hard-won lessons, one per file. Read before debugging something that smells familiar. |
 | [`newsletter/data/state/DRAFT_ALERTS.md`](newsletter/data/state/DRAFT_ALERTS.md) | Everything `scripts/watch_draft_state.py` has ever fired — the draft date appearing or MOVING, your slot appearing/moving/vanishing, a re-created draft, dead cargo, and the T-7/T-48/T-6 countdown. Append-only, newest last. Push and email are dead account-wide, so this file IS the delivery — **open it at the start of a session, not when you go looking** |
+| [`newsletter/data/state/GAMEDAY.md`](newsletter/data/state/GAMEDAY.md) | Every run of `scripts/gameday_check.py` — Sat 20:00, Sun 08:00, Sun 11:30. A LIVE pull (never cargo): tagged starters with the best untagged bench sub, empty slots, bench bodies out-projecting a starter by 2+, the opponent's tags, and both sides' expected total. It names the move; a session fires it. Append-only, newest last. **Open it Sunday morning before touching the lineup** |
 | `TODO.md` | What's next, ranked |
 
 **Precedence:** the runbook's instruction sections are current doctrine; its changelog is history

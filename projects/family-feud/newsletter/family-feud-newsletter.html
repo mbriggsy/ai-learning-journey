@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Nightly Feud — Sep 6, 2026 (Edition #27)</title>
+<title>The Nightly Feud — Sep 11, 2026 (Edition #31)</title>
 <style>
   :root {
     --bg: #10141b; --panel: #181e28; --panel2: #1e2634;
@@ -108,9 +108,9 @@
     <div class="tagline">All the news that's fit to draft. — Family Feud League, est. 2026</div>
   </div>
   <div class="dateline">
-    <span>Edition #27</span>
-    <span>Sunday, September 6, 2026</span>
-    <span>Press time: 1:19 PM</span>
+    <span>Edition #31</span>
+    <span>Friday, September 11, 2026</span>
+    <span>Press time: 9:45 PM</span>
   </div>
 
   <div class="tiles">
@@ -138,144 +138,198 @@
 
     <p class="lede">3 watcher alerts on the wire. It checks hourly and only speaks when something actually moves, so every line below is a real change — not a heartbeat.</p>
     <div class="item watch">
-      <div class="hd">T-48 HOURS TO THE DRAFT <span class="tag ">2026-09-04</span></div>
-      <div class="bd">The draft is 1 day, 23 hours away -- Sun 06 Sep 2026, 06:45 PM. Two days out the room stops changing and the prep has to be real. From the REPO ROOT: python scripts/validate_board.py    # the board is not trusted until this passes python scripts/run_engine.py        # re-derives your seat and REFUSES rather than guessing while draft_order is null Read docs/draft-day-runbook.md end to end now, not </div>
+      <div class="hd">STATUS CHANGED <span class="tag ">2026-09-06</span></div>
+      <div class="bd">'drafting' -> 'complete'</div>
     </div>
     <div class="item watch">
-      <div class="hd">YOUR SLOT EXISTS <span class="tag ">2026-09-03</span></div>
-      <div class="bd">draft_order["1390750540631150592"] = 6. Read it from that and nothing else -- slot_to_roster_id is an identity map and will hand you a plausible wrong answer. Run the engine from the REPO ROOT: python scripts/run_engine.py 6 Naming the seat is deliberate -- run_engine re-derives it from draft_order and REFUSES on a disagreement, so this is two independent readings having to agree rather than one b</div>
+      <div class="hd">STATUS CHANGED <span class="tag ">2026-09-06</span></div>
+      <div class="bd">'pre_draft' -> 'drafting'</div>
     </div>
-    <div class="item watch">
-      <div class="hd">T-7 DAYS TO THE DRAFT <span class="tag ">2026-08-31</span></div>
-      <div class="bd">The draft is 6 days, 8 hours away -- Sun 06 Sep 2026, 06:45 PM. The board's ORDERING expires; check meta.rankings.synthesized (NOT meta.updated, which is input freshness and does not move when the consensus does). A week out is the last unhurried moment to rebuild it. From the REPO ROOT: python scripts/rerank.py            # dry run; then --write python scripts/build_board.py --rankings-synthesize</div>
+    <div class="item bad">
+      <div class="hd">DRAFT DATE MOVED <span class="tag hot">2026-09-06</span></div>
+      <div class="bd">was  Sun 06 Sep 2026, 08:30 PM now  Sun 06 Sep 2026, 08:33 PM Re-check every assumption keyed to the old date.</div>
     </div>
   </section>
 
   <section>
     <h2><span class="sec-icon">🚑</span>The Wire</h2>
-    <p class="lede">15 headlines tonight named someone on our 176-player board. Everything else the feeds carried is somebody else's problem.</p>
+    <p class="lede">20 headlines tonight named someone on our 176-player board. Everything else the feeds carried is somebody else's problem.</p>
     <div class="item bad">
       <div class="hd">
-<a href="https://www.cbssports.com/nfl/news/puka-nacua-suspension-watch-will-nfl-discipline-rams-star/" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Puka Nacua suspension watch: Will NFL discipline Rams star WR? How might a suspension impact L.A.?</a><span class="tag down">BOARD HIT</span>
+<a href="https://www.cbssports.com/nfl/news/malik-nabers-injury-update-giants-cowboys/" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Malik Nabers injury status: Giants WR plays coy about Week 1 vs. Cowboys: 'I can't put my career at risk'</a><span class="tag down">BOARD HIT</span>
       </div>
       <div class="bd">
-        <strong>Puka Nacua</strong> — WR, LAR, board #3, tier 2
-        <span style="opacity:.7"> (cbs, rotowire · Sep 3, 8:43 PM, and 1 more headline on the same story)</span>
+        <strong>Malik Nabers</strong> — WR, NYG, board #23, tier 5
+        <span style="opacity:.7"> (cbs, pft, rotowire, yahoo · Sep 10, 5:41 PM, and 5 more headlines on the same story)</span>
       </div>
     </div>
     <div class="item bad">
       <div class="hd">
-<a href="https://www.rotowire.com//football/player/treveyon-henderson-18517" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">TreVeyon Henderson: Sitting out Saturday's practice</a><span class="tag down">BOARD HIT</span>
+<a href="https://www.rotowire.com//football/player/jeremiyah-love-19235" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Jeremiyah Love: Questionable for Week 1</a><span class="tag down">BOARD HIT</span>
       </div>
       <div class="bd">
-        <strong>TreVeyon Henderson</strong> — RB, NE, board #68, tier 6
-        <span style="opacity:.7"> (pft, rotowire · Sep 5, 11:02 AM, and 2 more headlines on the same story)</span>
+        <strong>Jeremiyah Love</strong> — RB, ARI, board #40, tier 5
+        <span style="opacity:.7"> (cbs, rotowire, yahoo · Sep 11, 1:33 AM, and 2 more headlines on the same story)</span>
       </div>
     </div>
     <div class="item bad">
       <div class="hd">
-<a href="https://www.cbssports.com/nfl/news/giants-cam-skattebo-says-he-considered-retirement/" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Giants' Cam Skattebo considered retirement after gruesome injury; explains relationship with John Harbaugh</a><span class="tag down">BOARD HIT</span>
+<a href="https://sports.yahoo.com/fantasy/live/nfl-injury-tracker-week-1-latest-news-fantasy-implications-as-tua-tagovailoa-oblique-ruled-out-brock-bowers-knee-expected-to-miss-time-154233236.html" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">NFL injury tracker Week 1: Latest news, fantasy implications as Tua Tagovailoa (oblique) ruled out, Brock Bowers (knee) expected to miss time</a><span class="tag down">BOARD HIT</span>
       </div>
       <div class="bd">
-        <strong>Cam Skattebo</strong> — RB, NYG, board #56, tier 6
-        <span style="opacity:.7"> (cbs · Sep 3, 6:56 PM)</span>
+        <strong>Brock Bowers</strong> — TE, LV, board #19, tier 2
+        <span style="opacity:.7"> (pft, yahoo · Sep 8, 11:42 AM, and 1 more headline on the same story)</span>
+      </div>
+    </div>
+    <div class="item bad">
+      <div class="hd">
+<a href="https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/shemar-stewart-doubtful-jamarr-chase-and-tee-higgins-set-to-play-week-1" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Shemar Stewart doubtful, Ja'Marr Chase and Tee Higgins set to play Week 1</a><span class="tag down">BOARD HIT</span>
+      </div>
+      <div class="bd">
+        <strong>Ja'Marr Chase</strong> — WR, CIN, board #1, tier 1 · 
+        <strong>Tee Higgins</strong> — WR, CIN, board #36, tier 6
+        <span style="opacity:.7"> (pft · Sep 11, 3:26 PM)</span>
+      </div>
+    </div>
+    <div class="item bad">
+      <div class="hd">
+<a href="https://www.cbssports.com/nfl/news/patriots-a-j-brown-injures-ankle-ruled-out/" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Patriots' A.J. Brown believed to have suffered high ankle sprain, expected to miss four weeks</a><span class="tag down">BOARD HIT</span>
+      </div>
+      <div class="bd">
+        <strong>A.J. Brown</strong> — WR, NE, board #12, tier 4
+        <span style="opacity:.7"> (cbs · Sep 10, 7:58 PM, and 1 more headline on the same story)</span>
+      </div>
+    </div>
+    <div class="item bad">
+      <div class="hd">
+<a href="https://www.cbssports.com/nfl/news/nfl-week-1-injuries-tracker-rome-odunze-alvin-kamara/" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">NFL Week 1 injuries: Giants' Malik Nabers, Bears' Rome Odunze listed as questionable</a><span class="tag down">BOARD HIT</span>
+      </div>
+      <div class="bd">
+        <strong>Malik Nabers</strong> — WR, NYG, board #23, tier 5 · 
+        <strong>Rome Odunze</strong> — WR, CHI, board #59, tier 6
+        <span style="opacity:.7"> (cbs · Sep 11, 7:50 PM)</span>
+      </div>
+    </div>
+    <div class="item bad">
+      <div class="hd">
+<a href="https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/ashton-jeanty-off-injury-report-set-to-play-week-1-vs-dolphins" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Ashton Jeanty off injury report, set to play Week 1 vs. Dolphins</a><span class="tag down">BOARD HIT</span>
+      </div>
+      <div class="bd">
+        <strong>Ashton Jeanty</strong> — RB, LV, board #28, tier 4
+        <span style="opacity:.7"> (pft · Sep 11, 5:00 PM)</span>
+      </div>
+    </div>
+    <div class="item bad">
+      <div class="hd">
+<a href="https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/rome-odunze-xavier-woods-questionable-for-bears-vs-panthers" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Rome Odunze, Xavier Woods questionable for Bears vs. Panthers</a><span class="tag down">BOARD HIT</span>
+      </div>
+      <div class="bd">
+        <strong>Rome Odunze</strong> — WR, CHI, board #59, tier 6
+        <span style="opacity:.7"> (pft · Sep 11, 3:12 PM, and 1 more headline on the same story)</span>
+      </div>
+    </div>
+    <div class="item bad">
+      <div class="hd">
+<a href="https://www.espn.com/nfl/story/_/id/49905618/seattle-seahawks-qb-drew-lock-sam-darnold-injury" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Can Drew Lock keep the Seahawks' offense afloat if Sam Darnold remains out?</a><span class="tag down">BOARD HIT</span>
+      </div>
+      <div class="bd">
+        <strong>Sam Darnold</strong> — QB, SEA, board #126, tier 6
+        <span style="opacity:.7"> (espn · Sep 11, 8:49 PM)</span>
+      </div>
+    </div>
+    <div class="item bad">
+      <div class="hd">
+<a href="https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/jalen-mcmillan-doubtful-for-bucs-but-emeka-egbuka-is-set-to-play" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Jalen McMillan doubtful for Bucs, but Emeka Egbuka is set to play</a><span class="tag down">BOARD HIT</span>
+      </div>
+      <div class="bd">
+        <strong>Jalen McMillan</strong> — WR, TB, board #138, tier 8 · 
+        <strong>Emeka Egbuka</strong> — WR, TB, board #41, tier 6
+        <span style="opacity:.7"> (pft · Sep 11, 2:43 PM)</span>
       </div>
     </div>
     <div class="item good">
       <div class="hd">
-<a href="https://www.cbssports.com/nfl/news/cardinals-sign-michael-wilson-to-massive-extension/" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Michael Wilson to sign massive extension: Why Cards made him one of NFL's top-paid No. 2 WRs</a><span class="tag up">RISER</span>
+<a href="https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/bears-dandre-swift-agree-to-three-year-contract-extension" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Bears, D'Andre Swift agree to three-year contract extension</a><span class="tag up">RISER</span>
       </div>
       <div class="bd">
-        <strong>Michael Wilson</strong> — WR, ARI, board #87, tier 7
-        <span style="opacity:.7"> (cbs, pft · Sep 3, 3:41 PM, and 1 more headline on the same story)</span>
+        <strong>D'Andre Swift</strong> — RB, CHI, board #50, tier 5
+        <span style="opacity:.7"> (cbs, pft · Sep 11, 3:45 PM, and 1 more headline on the same story)</span>
+      </div>
+    </div>
+    <div class="item good">
+      <div class="hd">
+<a href="https://www.cbssports.com/nfl/news/nfl-week-1-best-bets-patrick-mahomes-saquon-barkley/" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">NFL Week 1 best bets: Big days for star running backs, plus what to expect in Patrick Mahomes' return</a><span class="tag up">RISER</span>
+      </div>
+      <div class="bd">
+        <strong>Patrick Mahomes</strong> — QB, KC, board #100, tier 4
+        <span style="opacity:.7"> (cbs, yahoo · Sep 11, 8:09 AM, and 1 more headline on the same story)</span>
+      </div>
+    </div>
+    <div class="item good">
+      <div class="hd">
+<a href="https://www.rotowire.com//football/player/jakobi-meyers-13517" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Jakobi Meyers: Cleared to play Sunday</a><span class="tag up">RISER</span>
+      </div>
+      <div class="bd">
+        <strong>Jakobi Meyers</strong> — WR, JAX, board #104, tier 7
+        <span style="opacity:.7"> (rotowire · Sep 11, 1:22 AM)</span>
       </div>
     </div>
     <div class="item watch">
       <div class="hd">
-<a href="https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/malik-nabers-says-odell-beckham-was-the-person-who-made-him-start-watching-football" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Malik Nabers says Odell Beckham was the person who made him start watching football</a><span class="tag hot">WATCH</span>      </div>
+<a href="https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/josh-allen-hopes-to-improve-1-4-career-record-vs-texans" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Josh Allen hopes to improve 1-4 career record vs. Texans</a><span class="tag hot">WATCH</span>      </div>
       <div class="bd">
-        <strong>Malik Nabers</strong> — WR, NYG, board #23, tier 5
-        <span style="opacity:.7"> (pft · Sep 5, 1:31 PM)</span>
+        <strong>Josh Allen</strong> — QB, BUF, board #26, tier 1
+        <span style="opacity:.7"> (cbs, pft · Sep 11, 4:55 PM, and 2 more headlines on the same story)</span>
       </div>
     </div>
     <div class="item watch">
       <div class="hd">
-<a href="https://www.cbssports.com/nfl/news/one-reason-each-afc-team-could-disappoint/" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">One reason each AFC team could disappoint their fan base: Will offensive line let down Lamar Jackson?</a><span class="tag hot">WATCH</span>      </div>
+<a href="https://www.espn.com/nfl/story/_/id/49893820/can-philadelphia-eagles-saquon-barkley-recapture-2024-dominance" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Eagles' Saquon Barkley is 'going back to a little kid again' to recapture his 2024 dominance</a><span class="tag hot">WATCH</span>      </div>
       <div class="bd">
-        <strong>Lamar Jackson</strong> — QB, BAL, board #31, tier 1
-        <span style="opacity:.7"> (cbs · Sep 3, 11:58 AM)</span>
+        <strong>Saquon Barkley</strong> — RB, PHI, board #22, tier 4
+        <span style="opacity:.7"> (espn · Sep 11, 5:56 PM)</span>
       </div>
     </div>
     <div class="item watch">
       <div class="hd">
-<a href="https://www.cbssports.com/nfl/news/browns-mike-hall-addresses-mishap-quinshon-judkins/" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Browns DT Mike Hall addresses 'mishap on the field' with teammate Quinshon Judkins</a><span class="tag hot">WATCH</span>      </div>
+<a href="https://www.cbssports.com/nfl/news/jayden-daniels-c-j-stroud-quarterbacks-at-crossroads-2026-nfl-season/" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Agent's Take: Jayden Daniels, C.J. Stroud and other quarterbacks who are at a crossroads entering 2026 season</a><span class="tag hot">WATCH</span>      </div>
       <div class="bd">
-        <strong>Quinshon Judkins</strong> — RB, CLE, board #62, tier 6
-        <span style="opacity:.7"> (cbs · Sep 3, 12:26 PM)</span>
+        <strong>Jayden Daniels</strong> — QB, WAS, board #55, tier 3
+        <span style="opacity:.7"> (cbs · Sep 11, 2:04 PM)</span>
       </div>
     </div>
     <div class="item watch">
       <div class="hd">
-<a href="https://www.cbssports.com/nfl/news/cowboys-super-bowl-contention-dreams-quinnen-williams/" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Why Quinnen Williams -- not Dak Prescott -- holds the key to the Cowboys' Super Bowl hopes</a><span class="tag hot">WATCH</span>      </div>
+<a href="https://www.espn.com/nfl/story/_/id/49886081/jonas-brothers-blessing-cam-skattebo-patrick-mahomes-nfl-melbourne-half" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Is Cam Skattebo the next athlete to receive the Jonas Brothers blessing?</a><span class="tag hot">WATCH</span>      </div>
       <div class="bd">
-        <strong>Dak Prescott</strong> — QB, DAL, board #75, tier 4
-        <span style="opacity:.7"> (cbs · Sep 4, 8:39 AM)</span>
+        <strong>Cam Skattebo</strong> — RB, NYG, board #56, tier 6
+        <span style="opacity:.7"> (espn · Sep 11, 8:49 PM)</span>
       </div>
     </div>
     <div class="item watch">
       <div class="hd">
-<a href="https://www.cbssports.com/nfl/news/agents-take-rams-2026-salary-cap-super-bowl-window/" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Agent's Take: How the Rams built a salary-cap super team around Matthew Stafford</a><span class="tag hot">WATCH</span>      </div>
+<a href="https://sports.yahoo.com/articles/myles-garrett-rebound-going-hell-210251615.html" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Myles Garrett’s rebound is going to be hell for Jaxson Dart and Giants</a><span class="tag hot">WATCH</span>      </div>
       <div class="bd">
-        <strong>Matthew Stafford</strong> — QB, LAR, board #102, tier 5
-        <span style="opacity:.7"> (cbs · Sep 5, 11:18 AM)</span>
+        <strong>Jaxson Dart</strong> — QB, NYG, board #95, tier 4
+        <span style="opacity:.7"> (yahoo · Sep 11, 5:02 PM)</span>
       </div>
     </div>
     <div class="item watch">
       <div class="hd">
-<a href="https://sports.yahoo.com/articles/rb-rachaad-white-bet-himself-123000538.html" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">RB Rachaad White bet on himself; will it pay off for the Commanders? - Daily Slop</a><span class="tag hot">WATCH</span>      </div>
+<a href="https://sports.yahoo.com/articles/bo-nix-reacts-courtland-sutton-232134763.html" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Bo Nix reacts to Courtland Sutton comparing him to a mountain lion</a><span class="tag hot">WATCH</span>      </div>
       <div class="bd">
-        <strong>Rachaad White</strong> — RB, WAS, board #110, tier 8
-        <span style="opacity:.7"> (yahoo · Sep 6, 8:30 AM)</span>
+        <strong>Bo Nix</strong> — QB, DEN, board #96, tier 4 · 
+        <strong>Courtland Sutton</strong> — WR, DEN, board #84, tier 7
+        <span style="opacity:.7"> (yahoo · Sep 11, 7:21 PM)</span>
       </div>
     </div>
     <div class="item watch">
       <div class="hd">
-<a href="https://www.espn.com/nfl/story/_/id/49815317/nfl-minnesota-vikings-kyler-murray-jj-mccarthy-kevin-oconnell" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Will Kyler Murray end the Vikings' tragicomic QB history?</a><span class="tag hot">WATCH</span>      </div>
+<a href="https://www.cbssports.com/nfl/news/nfl-week-1-picks-odds-best-bets-steelers-broncos/" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">NFL Week 1 picks, odds, best bets: Aaron Rodgers beats Falcons, Broncos upset Patrick Mahomes and the Chiefs</a><span class="tag hot">WATCH</span>      </div>
       <div class="bd">
-        <strong>Kyler Murray</strong> — QB, MIN, board #111, tier 5
-        <span style="opacity:.7"> (espn · Sep 5, 4:56 PM)</span>
-      </div>
-    </div>
-    <div class="item watch">
-      <div class="hd">
-<a href="https://www.espn.com/nfl/story/_/id/49815432/tampa-bay-buccaneers-qb-baker-mayfield-motivated-contract-dispute" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Baker Mayfield betting on himself in 2026? Why his high school coach says that could be a good thing</a><span class="tag hot">WATCH</span>      </div>
-      <div class="bd">
-        <strong>Baker Mayfield</strong> — QB, TB, board #115, tier 5
-        <span style="opacity:.7"> (espn · Sep 4, 6:12 PM)</span>
-      </div>
-    </div>
-    <div class="item watch">
-      <div class="hd">
-<a href="https://sports.yahoo.com/articles/why-seahawks-national-disrespect-really-150000497.html" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Why Seahawks national ‘disrespect’ is really Sam Darnold disrespect</a><span class="tag hot">WATCH</span>      </div>
-      <div class="bd">
-        <strong>Sam Darnold</strong> — QB, SEA, board #126, tier 6
-        <span style="opacity:.7"> (yahoo · Sep 6, 11:00 AM)</span>
-      </div>
-    </div>
-    <div class="item watch">
-      <div class="hd">
-<a href="https://www.rotowire.com//football/player/josh-jacobs-13582" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">Josh Jacobs: Court date moved up</a><span class="tag hot">WATCH</span>      </div>
-      <div class="bd">
-        <strong>Josh Jacobs</strong> — RB, GB, board #130, tier 8
-        <span style="opacity:.7"> (rotowire · Sep 4, 11:34 AM)</span>
-      </div>
-    </div>
-    <div class="item watch">
-      <div class="hd">
-<a href="https://www.nbcsports.com/nfl/profootballtalk/rumor-mill/news/as-aaron-rodgers-plans-to-retire-the-next-step-is-fatherhood" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">As Aaron Rodgers plans to retire, the next step is fatherhood</a><span class="tag hot">WATCH</span>      </div>
-      <div class="bd">
-        <strong>Aaron Rodgers</strong> — QB, PIT, board #142, tier 6
-        <span style="opacity:.7"> (pft · Sep 4, 6:03 PM)</span>
+        <strong>Aaron Rodgers</strong> — QB, PIT, board #142, tier 6 · 
+        <strong>Patrick Mahomes</strong> — QB, KC, board #100, tier 4
+        <span style="opacity:.7"> (cbs · Sep 11, 9:49 AM)</span>
       </div>
     </div>
   </section>
@@ -284,64 +338,48 @@
     <h2><span class="sec-icon">📈</span>Market Watch</h2>
     <p class="lede">Sleeper's last 24 hours of adds and drops, filtered to the 176 players we actually rank. Your board is the benchmark; the market is gossip until it isn't.</p>
     <div class="item good">
+      <div class="hd">Kyler Murray <span class="tag up">ADDED</span></div>
+      <div class="bd">QB, MIN · board #111, tier 5 · 21568 adds in 24h</div>
+    </div>
+    <div class="item good">
       <div class="hd">Tank Dell <span class="tag up">ADDED</span></div>
-      <div class="bd">WR, HOU · board #146, tier 8 · 62720 adds in 24h</div>
+      <div class="bd">WR, HOU · board #146, tier 8 · 18408 adds in 24h</div>
     </div>
     <div class="item good">
-      <div class="hd">MarShawn Lloyd <span class="tag up">ADDED</span></div>
-      <div class="bd">RB, GB · board #103, tier 7 · 41400 adds in 24h</div>
+      <div class="hd">Mark Andrews <span class="tag up">ADDED</span></div>
+      <div class="bd">TE, BAL · board #125, tier 5 · 16803 adds in 24h</div>
     </div>
     <div class="item good">
-      <div class="hd">Jacksonville Jaguars <span class="tag up">ADDED</span></div>
-      <div class="bd">DEF, JAX · board #162, tier 3 · 34890 adds in 24h</div>
-    </div>
-    <div class="item good">
-      <div class="hd">Tyler Loop <span class="tag up">ADDED</span></div>
-      <div class="bd">K, BAL · board #176, tier 3 · 28128 adds in 24h</div>
-    </div>
-    <div class="item good">
-      <div class="hd">Detroit Lions <span class="tag up">ADDED</span></div>
-      <div class="bd">DEF, DET · board #174, tier 3 · 15687 adds in 24h</div>
-    </div>
-    <div class="item good">
-      <div class="hd">Tyler Shough <span class="tag up">ADDED</span></div>
-      <div class="bd">QB, NO · board #123, tier 6 · 14808 adds in 24h</div>
+      <div class="hd">Brock Purdy <span class="tag up">ADDED</span></div>
+      <div class="bd">QB, SF · board #91, tier 4 · 16284 adds in 24h</div>
     </div>
     <div class="item bad">
-      <div class="hd">Jaydon Blue <span class="tag down">DROPPED</span></div>
-      <div class="bd">RB, DAL · board #148, tier 8 · 24672 drops in 24h</div>
+      <div class="hd">De'Zhaun Stribling <span class="tag down">DROPPED</span></div>
+      <div class="bd">WR, SF · board #120, tier 8 · 26166 drops in 24h</div>
     </div>
     <div class="item bad">
-      <div class="hd">New England Patriots <span class="tag down">DROPPED</span></div>
-      <div class="bd">DEF, NE · board #161, tier 3 · 21749 drops in 24h</div>
+      <div class="hd">Matthew Stafford <span class="tag down">DROPPED</span></div>
+      <div class="bd">QB, LAR · board #102, tier 5 · 21330 drops in 24h</div>
     </div>
     <div class="item bad">
       <div class="hd">Brenton Strange <span class="tag down">DROPPED</span></div>
-      <div class="bd">TE, JAX · board #134, tier 5 · 20457 drops in 24h</div>
-    </div>
-    <div class="item bad">
-      <div class="hd">Oronde Gadsden II <span class="tag down">DROPPED</span></div>
-      <div class="bd">TE, LAC · board #145, tier 5 · 19660 drops in 24h</div>
+      <div class="bd">TE, JAX · board #134, tier 5 · 20250 drops in 24h</div>
     </div>
     <div class="item bad">
       <div class="hd">Kenyon Sadiq <span class="tag down">DROPPED</span></div>
-      <div class="bd">TE, NYJ · board #144, tier 5 · 17262 drops in 24h</div>
+      <div class="bd">TE, NYJ · board #144, tier 5 · 18603 drops in 24h</div>
     </div>
     <div class="item bad">
-      <div class="hd">Josh Jacobs <span class="tag down">DROPPED</span></div>
-      <div class="bd">RB, GB · board #130, tier 8 · 13085 drops in 24h</div>
+      <div class="hd">KC Concepcion <span class="tag down">DROPPED</span></div>
+      <div class="bd">WR, CLE · board #107, tier 8 · 17388 drops in 24h</div>
     </div>
     <div class="item bad">
-      <div class="hd">Detroit Lions <span class="tag down">DROPPED</span></div>
-      <div class="bd">DEF, DET · board #174, tier 3 · 12645 drops in 24h</div>
+      <div class="hd">Oronde Gadsden II <span class="tag down">DROPPED</span></div>
+      <div class="bd">TE, LAC · board #145, tier 5 · 16925 drops in 24h</div>
     </div>
     <div class="item bad">
-      <div class="hd">Jordyn Tyson <span class="tag down">DROPPED</span></div>
-      <div class="bd">WR, NO · board #127, tier 8 · 12392 drops in 24h</div>
-    </div>
-    <div class="item bad">
-      <div class="hd">Omar Cooper Jr. <span class="tag down">DROPPED</span></div>
-      <div class="bd">WR, NYJ · board #140, tier 8 · 12376 drops in 24h</div>
+      <div class="hd">Xavier Worthy <span class="tag down">DROPPED</span></div>
+      <div class="bd">WR, KC · board #124, tier 8 · 15651 drops in 24h</div>
     </div>
   </section>
 
@@ -349,14 +387,14 @@
     <h2><span class="sec-icon">📋</span>Owner's Action Items</h2>
     <ul class="actions">
       <li>Rebuild the board — the draft has a date now and yours is dated Sep 4: <code>python scripts/build_board.py</code></li>
-      <li>Read the 15 wire items above. They are the only ones that touched your board.</li>
+      <li>Read the 20 wire items above. They are the only ones that touched your board.</li>
       <li>Beat Hunter. He is the commissioner, which means he sets the clock and will not be waiting on you.</li>
     </ul>
   </section>
 
   <div class="colophon">
     THE NIGHTLY FEUD · compiled nightly by Claude · league data &amp; wire copy via the Feud Mule (local scheduler)<br>
-Cargo stamped 2026-09-06 12:29:01 · Back issues in <span style="color:var(--ink-dim);">newsletter/archive/</span> · debug trail in <span style="color:var(--ink-dim);">newsletter/data/archive/</span> · Beat Hunter. 🏈
+Cargo stamped 2026-09-11 21:29:01 · Back issues in <span style="color:var(--ink-dim);">newsletter/archive/</span> · debug trail in <span style="color:var(--ink-dim);">newsletter/data/archive/</span> · Beat Hunter. 🏈
   </div>
 
 </div>

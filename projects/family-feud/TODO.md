@@ -20,8 +20,11 @@
    `Add Player` button. Worth folding into the skill alongside the lineup control.
    Charbonnet (PUP) is NOT an IR option here: `reserve_allow_na: 0`, `reserve_allow_dnr: 0`; the
    IR slot accepts IR, Out, Suspended, COVID only.
-3. **Watch before Sunday:** Sleeper tags **Zay Flowers `Questionable`** (undisclosed). If he is
-   Out on Sunday morning, Odunze or Godwin into the flex.
+3. ~~Watch before Sunday: Zay Flowers Questionable~~ **Tag cleared by 2026-09-12.** The watch is
+   now automated: `scripts/gameday_check.py` (Sat 20:00 / Sun 08:00 / Sun 11:30, registered by
+   `install-gameday.ps1`) appends to `newsletter/data/state/GAMEDAY.md`. **Week 1 vs HUNTER**;
+   expected 133.7 to his 137.6 after the early games (Maye 12.8 vs his McCaffrey + Myers 20.8).
+   Stevenson's 14.5 is on the bench — the Swift/Stevenson read the outlook asked for never happened.
 
 **IR STASH DONE 2026-09-07 09:50 ET, API-verified:** Christian Kirk (WR SF, IR designated to return, calf; eligible
 Week 5 vs SEA, 2026-10-11; Pearsall out for the year so the target vacuum is real) in the second IR slot alongside Dell.
@@ -63,6 +66,22 @@ margin (insight 023). Briggsy overrode twice: Flowers over Maye at #38, Pittman 
   server-side, the bridge did not. Re-paste took 10s. Keep the paste file in `temp/`.
 - The runbook's post-draft rule stands: **do NOT build in-season cadence** until `/state/nfl`
   reads `season_type: "regular"` (`docs/in-season-plan.md`).
+
+## 🚨 SUITE IS RED — 4 tests, one root cause, since the mule's in-season cache refresh (found 2026-09-12)
+
+`tests.test_consensus.TestAgainstTheRealCachedSources` (2 errors), `TestItNeverWritesTheBoard` (1 fail)
+and `tests.test_rerank.TestItRefusesToWriteOverAStaleNote` (1 fail). Reproduce: `python -m unittest
+tests.test_consensus tests.test_rerank`. Root: `scripts/consensus.py` now refuses with
+`page_type='redraft-overall' now covers ['/nfl/rankings/ros-ppr-overall.php'], not just
+'/nfl/rankings/ppr-cheatsheets.php'` — FantasyPros swapped its PPR cheatsheet for a rest-of-season
+page once the season started, the nightly cache (`draft-kit/cache/`) picked it up, and the
+PPR-slice gate did its job. The rerank test fails downstream of the same refusal (it expects
+`REFUSED TO WRITE` and gets that message). **Not a code regression; a source that moved.** Decide
+first, then fix: (a) the board is a DRAFT artifact and is done — pin the gate to the last pre-season
+cache and mark the four tests as draft-era; or (b) the in-season board should follow ROS — extend
+`consensus.py`'s page_type map to accept `ros-ppr-overall.php` as the Full-PPR slice and re-run the
+gate. (a) is cheaper and nothing in-season reads the board's consensus today. Cargo files that
+carried the change: `draft-kit/cache/player_ids.csv.gz` (mule, 2026-09-12).
 
 ## ▶ WHERE WE ARE — read this first, update it when it changes
 

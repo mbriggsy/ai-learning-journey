@@ -59,15 +59,15 @@ export async function floorPx(page: Page): Promise<number> {
  *  A node may legitimately sit a few px outside the <svg> box and inside the card's padding — on
  *  screen, unclipped (nothing on the drawer path sets `overflow: hidden`; band.css's only one is the
  *  `.band-modal-open` body lock). The per-chart reasons, measured 2026-09-05 (the band's dollar
- *  re-measured 2026-09-12 for Card 10) — every Windows figure below is a real render, every Linux
- *  one is DERIVED from insight 118's single cross-platform datum:
+ *  re-measured 2026-09-12 for Card 10) — every INK figure below is a real render: Windows for all of
+ *  them, Linux for the band's dollar (CI run 34707283988) and for insight 118's seven-glyph pair:
  *   · band → `.band-drawer` (ConfidenceBandPanel.tsx) or the enlarge `[role="dialog"]`: the dollars
  *     end-anchor at TICK_FX = 84/560 = 0.15 of the figure, and the widest catalog dollar measures
- *     38.5 px of ink at --text-xs on Windows, with ≈35.9 EXPECTED on Linux CI (derived, not
- *     measured: 38.5 − 6 × 0.43, the 0.43 px/glyph loss coming from insight 118's seven-glyph
- *     45.0 Windows / 42.0 Linux pair — FreeType rounds glyph advances to whole pixels).
+ *     38.5 px of ink at --text-xs on Windows and 36.0 px on Linux CI (MEASURED, run 34707283988,
+ *     every arm — 2.5 px narrower, ~0.42 px/glyph; insight 118's seven-glyph 45.0 Windows /
+ *     42.0 Linux pair had predicted ≈35.9 — FreeType rounds glyph advances to whole pixels).
  *     `borderline`'s six-glyph "$0.25M" / "$0.75M" / "$1.25M" is that dollar — the 1.25M lattice,
- *     which retired the seven-glyph "$0.375M" / "$1.125M" class at 45 / 42 px.
+ *     which retired the seven-glyph "$0.375M" / "$1.125M" class at 45.0 px Windows / 42.0 px Linux.
  *     On the 320 arm that column still renders narrower than the dollar, so it hangs LEFT of
  *     `figure.band-figure` into the drawer's own padding — `assertTickColumn` carries the tighter,
  *     live-measured bound for that borrow, with the arm-by-arm numbers in its own docblock.

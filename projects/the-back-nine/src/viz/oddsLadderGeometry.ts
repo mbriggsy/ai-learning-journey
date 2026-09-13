@@ -33,12 +33,12 @@ export const VIEWBOX = { width: 560, height: 284 } as const
 
 /** The plot rectangle inside the viewBox: room left for the rung axis + the bar's "on track" label
  *  (HTML at --text-xs, end-anchored 8 units left of the axis. 84 units = 0.15 of the figure, and
- *  "on track" is a FIXED 44.3px of ink at --text-xs, so the column holds it only above a ~365px
+ *  "on track" is a FIXED 44.3px of Windows ink at --text-xs (NEVER measured on Linux, where FreeType's whole-pixel advances move it either way — insight 118), so the column holds it only above a ~365px
  *  figure: measured inside at 358/408/496 (2026-09-05); on the chart-text gate's 320 arm the 288px
- *  figure gives a 43.2px column and the label sits ~1px into the page gutter — rendered by that arm,
+ *  figure gives a 43.2px column and the label sits ~1px (Windows) into the page gutter — rendered by that arm,
  *  bounded there by `main.result` (the page column, the ladder's only padded ancestor), never by the
  *  figure. ACCEPTED AS RENDERED by his eye 2026-09-06 (temp/cold-read-320, pictures 04 + 05: the
- *  root-20 arm puts 55.3px of ink 13.3px into the gutter and touches the rung-7 anchor by 4.6px —
+ *  root-20 arm puts 55.3px of Windows ink 13.3px into the gutter and touches the rung-7 anchor by 4.6px —
  *  "look ok"), and PINNED there under two named bounds in e2e/chart-text.spec.ts
  *  (ACCEPTED_ONTRACK_OVERPRINT_PX / ACCEPTED_LABEL_GUTTER_PX) that RED beyond it. So: do NOT tighten
  *  the bound, do NOT add a hide-on-collision layout, and do NOT move `left` off the 92 it shares

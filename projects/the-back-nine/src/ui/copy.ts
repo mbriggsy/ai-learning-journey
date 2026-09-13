@@ -866,6 +866,16 @@ export const copy = {
   leverPolicyCustom: 'My own order',
   leverPolicyCustomHelp: 'Put the three accounts in exactly the order you want them spent.',
   leverPolicyCurrentTag: '— your current order',
+  // Card 14(b) — the em-dash tag grammar (`.control-policy__tag` / `.control-order__tag`) on a row whose
+  // named account the household has not entered. Two sites, one key: the committed-but-unheld policy row
+  // (the only absent-account policy still offered) and the custom-order editor's unheld bucket row; in
+  // both the adjacent label supplies the noun ("Brokerage first — your current order — no account
+  // entered", "Brokerage — no account entered"). It states what the PLAN holds, never what the bucket
+  // will hold: "nothing to spend down" / "this does nothing for you" would be calm-but-wrong past the
+  // first RMD forced-excess year, which rebuilds a taxable bucket the household started without.
+  // `lever*` is NOT in CONTROL_KEY_PREFIXES (which carries `sequencing`, not `lever`), so require-hedge
+  // does not bite and the line needs no modal.
+  leverNoAccountTag: '— no account entered',
   leverOrderMoveUp: 'Move up',
   leverOrderMoveDown: 'Move down',
   leverOrderUpGlyph: '↑',
@@ -1605,6 +1615,15 @@ export const copy = {
   goalPickerTitle: 'What should your plan aim for?',
   goalPickerIntro: 'With the basics covered, pick the one thing your plan should lean toward.',
   goalPickerConfirmCta: 'See the strategy',
+  // Card 14(a) — the blocked confirm's REASON, rendered at rest above the actions row AND announced on
+  // a blocked press through the same key, so the seen word and the spoken word cannot drift. It states
+  // the DIALOG'S precondition ("no radio is selected"), never the household's situation — which is why
+  // it is the one sentence that may render on the cohort whose LEAD is omitted. Shape borrowed from its
+  // Card 9 sibling `budgetApplyEmpty` (state → the way forward), at half the length so it stays one line
+  // on a 390 px phone. `goalPicker*` is neither verdict- nor control-scoped (copyGuard's isVerdictKey /
+  // isControlKey), so it rides the two universal gates only; 'pick' is on FIELD_OP_ALLOWLIST and absent
+  // from DIRECTIVE_VERBS, so the clause-initial imperative after the em dash is legal.
+  goalPickerConfirmBlocked: 'No goal is picked yet — pick one above.',
   // The goal options — a plain label + a one-line noun-phrase gloss each (no imperative verb, no jargon).
   // `leave-more` = the after-tax-to-heirs bequest (first-order §1014/IRD at the disclosed heir bracket —
   // never the gross figure); the gloss names the after-tax frame honestly.
@@ -2738,7 +2757,7 @@ export const slots = {
    *  BITES it the way it bites its visual twin `recDeltaTypical`: the AT reader hears the same figures the
    *  sighted reader sees, so the same modal law must hold. A `recViz` prefix was rejected — it would red the
    *  three correctly hedge-free arm labels (`recVizWithLabel`/`recVizWithoutLabel`/`recVizRunnerUpLabel`,
-   *  copy.ts:1793-1800 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
+   *  copy.ts:1812-1819 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
    *  `isControlKey` was rejected — it breaks that predicate's "by prefix ALONE" law (copyGuard.ts:125). */
   recDeltaVizAria: (withoutLabel: string, withoutFig: string, withLabel: string, withFig: string, deltaFig: string): string =>
     `${withoutLabel} lands near about $${withoutFig}; ${withLabel} about $${withFig} — a difference of about $${deltaFig}.`,

@@ -130,4 +130,29 @@ describe('canonical-source rule — no raw hex outside tokens.css', () => {
       .filter((p) => /#[0-9a-fA-F]{3,8}\b/.test(readFileSync(p, 'utf8')))
     expect(offenders).toEqual([])
   })
+
+  it('a blocked button never darkens on hover: every .btn-primary / .btn-quiet :hover rule that sets a fill excludes [aria-disabled="true"]', () => {
+    // Card 14a moved the goal picker's confirm from native `disabled` to `aria-disabled` (the BudgetBuilder
+    // law). The hover press-darken was written as `.btn-primary:not(:disabled):hover`, which stops
+    // excluding the button the instant the native attribute is gone — the blocked CTA would darken on
+    // hover and begin to feel pressable. No gate can see it: jsdom loads no stylesheet, ESLint reads no
+    // CSS, and no browser gate hovers a button (insight 131, face #2). So the SELECTOR is pinned here, by
+    // the same source-bind idiom as the hex arm: every hover rule on either button class that touches
+    // the fill must carry `:not([aria-disabled='true'])`. Non-vacuity: at least one such rule must exist.
+    const srcRoot = join(here, '..', '..')
+    const rules: { file: string; selector: string }[] = []
+    for (const p of cssFilesUnder(srcRoot)) {
+      const css = readFileSync(p, 'utf8')
+      for (const m of css.matchAll(/([^{}]*?)\s*\{([^{}]*)\}/g)) {
+        const selector = m[1]!.trim()
+        const body = m[2]!
+        if (!/:hover/.test(selector) || !/\.btn-(?:primary|quiet)\b/.test(selector)) continue
+        if (!/\bbackground(?:-color)?\s*:/.test(body)) continue
+        rules.push({ file: p.slice(srcRoot.length + 1), selector })
+      }
+    }
+    expect(rules.length, 'the hover press-darken rule exists (the arm is not vacuous)').toBeGreaterThan(0)
+    const leaking = rules.filter((r) => !/:not\(\[aria-disabled=['"]true['"]\]\)/.test(r.selector))
+    expect(leaking, 'a hover fill rule on a button class that does not exclude aria-disabled').toEqual([])
+  })
 })

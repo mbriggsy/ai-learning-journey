@@ -191,18 +191,21 @@
   font-size: var(--text-base);
   font-weight: var(--weight-semibold);
   cursor: pointer;
-  transition:
-    transform var(--dur-press) var(--ease-out),
-    background-color var(--dur-fast) ease;
+  /* The fill does NOT transition at rest (Card 14a, the 2026-09-13 review): `--on-brand` and `--paper`
+     are the same hex, and only the fill used to ease — so when a blocked primary's block cleared, the
+     ink SNAPPED to on-brand while the plate was still fading in from transparent, and for ~180 ms the
+     label was paper-on-paper (1.00:1). Easing `color` too only moves the crossing to mid-fade (~1.2:1).
+     A state flip snaps in both directions; the hover press-darken carries its own transition below. */
+  transition: transform var(--dur-press) var(--ease-out);
 }
 
-/* The disabled state — an unmet-precondition CTA (GoalPicker's "See the strategy" stays disabled
-   until a goal is picked, the unset sentinel). Reuses the shipped muted idiom (save.css's
-   .btn-primary[aria-disabled='true'] { opacity: 0.55 }) for the native-disabled sibling: the button
-   reads visibly MUTED via opacity — a LIGHTNESS cue, never hue (the color-blind law) — and drops its
-   press-cursor, so a spouse never reads a full-saturation button as ready to act. Picking a goal flips
-   the state, restoring full saturation and the press/hover affordances below — the enabled transition
-   is carried by weight + affordance, not color alone. */
+/* The native-disabled state. As of Card 14a NOTHING in the app ships a natively-disabled
+   `.btn-primary`: GoalPicker's "See the strategy" was the last one, and an unmet PRECONDITION now uses
+   `aria-disabled` (the BudgetBuilder law) so the control stays operable and can say WHY it is blocked —
+   see `.control-sheet__actions .btn-primary[aria-disabled='true']` in controls.css for the treatment
+   that carries more than tint. This rule is kept as the safety net for a TRANSIENT in-flight button
+   (`disabled={busy}`) that must not be pressable at all; opacity alone is acceptable there precisely
+   because such a state says nothing the reader must distinguish. */
 .btn-primary:disabled {
   opacity: 0.55;
   cursor: default;
@@ -213,9 +216,17 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  /* No press-darken on a disabled CTA — an inert button must never feel pressable. */
-  .btn-primary:not(:disabled):hover {
+  /* No press-darken on a CTA that cannot commit — native OR aria. Card 14a moved the GoalPicker to
+     `aria-disabled`, and `:not(:disabled)` alone would start MATCHING it: the blocked button would
+     darken on hover, i.e. begin to feel pressable, which is what this rule exists to prevent. The
+     widening also reaches every OTHER `aria-disabled` primary in the app — RothLever's and
+     HealthcareSheet's blocked Apply, and the save / unlock / backup / export screens' — which used to
+     darken on hover while blocked; none should, so that is a repair, not a side effect. Pinned by a
+     shape arm in src/ui/__tests__/tokens.test.ts (no browser gate hovers a button, and jsdom loads no
+     stylesheet — insight 131's face #2). The darken eases IN here and snaps OUT with the base rule. */
+  .btn-primary:not(:disabled):not([aria-disabled='true']):hover {
     background: var(--brand-press);
+    transition: background-color var(--dur-fast) ease;
   }
 }
 

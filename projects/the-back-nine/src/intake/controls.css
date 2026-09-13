@@ -121,7 +121,8 @@
   color: var(--ink);
 }
 
-.control-policy__tag {
+.control-policy__tag,
+.control-order__tag {
   font-weight: 400;
   color: var(--ink-muted);
   /* The tag leads with an em-dash — breathe off the label (caught live on the U11 sheet;
@@ -224,6 +225,51 @@
   display: flex;
   align-items: center;
   gap: var(--space-4);
+}
+
+/* A control-sheet primary that cannot commit YET. `aria-disabled`, never native `disabled` (the
+   BudgetBuilder law) — so it keeps its place in the tab order and its press, and the press can answer.
+   The blocked signal is FILL PRESENCE, not tint: save.css's global mute is `opacity: 0.55` on a solid
+   brand plate, i.e. the same hue lightened ("sage vs dark green" — Card 14a's finding), which is no
+   signal at all for a colour-blind reader. Here the plate is dropped for paper, a dashed hairline stands
+   where a primary has no border at all, and the ink drops to muted. Fill, border and ink are three
+   non-hue channels and the rendered reason above the row is the fourth; `opacity` returns to 1 so the
+   muted ink keeps its full 7.1:1 on paper and the border keeps `--line-control`'s 3.6:1 (WCAG 1.4.11 —
+   `--line-soft` is decorative-grade and must NOT be used for a boundary that carries state).
+   THE LOOK IS EARNED BY THE WORDS — the selector requires `aria-describedby`: a blocked primary wears
+   this loud "cannot commit" shape only when it POINTS AT a rendered reason. Today that is the goal
+   picker alone. RothLever's Apply (blocked while no candidate is complete) and HealthcareSheet's (blocked
+   while the pick equals the applied regime — i.e. on ARRIVAL, before the reader has done anything) carry
+   the same opacity-only defect but render no reason at rest, and HealthcareSheet's blocked press speaks
+   `leverPreviewPending` while nothing is running (the 2026-09-13 review's catch) — so they keep save.css's
+   mute until each renders a true reason, and then this rule reaches them for free (the register entry
+   "The two sibling sheets' blocked Apply" carries the prescription). Reaching them by look alone would
+   have shouted "unavailable" on two unwalked sheets with no sentence to explain it.
+   BudgetBuilder is NOT reached — it rides `.budget-sheet__actions` — so Card 9's shipped emphasis flip
+   is untouched; the save / unlock / backup screens are untouched for the same reason: SCOPE, not
+   specificity — the `.control-sheet__actions` prefix never matches them. Specificity (0,4,0) beats
+   save.css's (0,2,0) in either import order only where BOTH rules match, i.e. inside a control sheet.
+   `.btn-primary:active`'s scale is deliberately LEFT matching, and so is `cursor: pointer` (inherited
+   from `.btn-primary`, exactly as save.css's blocked idiom keeps it): the press is not a no-op — it
+   speaks the reason — so the interface should acknowledge it. Do not "fix" either. */
+.control-sheet__actions .btn-primary[aria-disabled='true'][aria-describedby] {
+  opacity: 1;
+  background: transparent;
+  color: var(--ink-muted);
+  border: 1px dashed var(--line-control);
+}
+
+/* The blocked primary's RENDERED reason, above the actions row. A <span>, never a <p> and never
+   `.field-help`: zero of each inside this dialog is the omitted-lead contract's structural oracle
+   (see GoalPicker.tsx's actions comment). `box-sizing: border-box` is global (base.css), so the
+   sibling button's 1 px border costs no height against `min-height: var(--field-h)`. */
+.control-sheet__blocked {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--ink-muted);
+  max-width: var(--measure);
 }
 
 .control-sheet__escape {

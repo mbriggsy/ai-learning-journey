@@ -10,13 +10,14 @@
  * REUSES the ControlSheet scaffold's focus contract VERBATIM (capture on open, focus the heading,
  * restore on close incl. sheet→sheet, scroll lock, reduced-motion slide→fade) and the proven
  * `control-policy` radio grammar (real labelled radios; the picked row thickens its border — WEIGHT,
- * never hue alone, the color-blind law). It adds NO sheet-shell selectors and copies no grammar.
+ * never hue alone, the color-blind law). It adds NO sheet-shell selectors; its one added selector is a
+ * control-sheet CONTENT class (`control-sheet__blocked`, the blocked CTA's rendered reason — Card 14a).
  *
  * THE GOAL VOCABULARY IS THE ONE CANONICAL ARRAY (RECOMMENDATION_GOALS, model.ts) — the options are
  * derived from it, and the copy maps are `Record<RecommendationGoal, …>` so a goal added to the union
  * cannot silently skip a label/gloss (a compile error until both are authored).
  */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { RECOMMENDATION_GOALS, type RecommendationGoal } from '@shared/model'
 import { copy, type CopyKey } from '@ui/copy'
 import type { Announcer } from './a11y'
@@ -74,8 +75,21 @@ export function GoalPicker({
     if (open) setSelected(current)
   }, [open, current])
 
+  // Card 14(a) — ONE derived predicate, read by the rendered reason, by `aria-disabled` and by this
+  // handler's first arm (the Card 9 single-source law, BudgetBuilder.tsx: "the visible state and the
+  // behaviour cannot drift apart"). `aria-disabled` is ADVISORY, so the button stays focusable and
+  // pressable — which is the whole point: a blocked press OWES a true reason (the same law RothLever
+  // states at its own blocked Apply). The reason is rendered at rest as well as spoken, so the tap is
+  // never dead in the first place.
+  const reasonId = useId()
+  const blocked = selected === undefined
+
   const confirm = () => {
-    if (selected !== undefined) onPick(selected)
+    if (blocked) {
+      announcerRef.current?.announce(copy.goalPickerConfirmBlocked)
+      return
+    }
+    onPick(selected)
   }
 
   return (
@@ -107,8 +121,25 @@ export function GoalPicker({
           </label>
         ))}
       </fieldset>
-      {/* Disabled until a goal is chosen — the unset sentinel made visible (never a silent default).
-          A confirmed pick (not an arrow-key move through the radios) is what dispatches the solve.
+      {/* THE BLOCKED CONFIRM (Card 14a, 2026-09-13). Until a goal is picked the primary cannot commit
+          — the unset sentinel made visible (never a silent default); a confirmed pick (not an arrow-key
+          move through the radios) is what dispatches the solve. Until this card it said so in TINT
+          ALONE (`.btn-primary:disabled`'s opacity 0.55: the same hue lightened, "sage vs dark green",
+          which is not a signal for a colour-blind reader). Three things changed together:
+            1. `aria-disabled`, never native `disabled` (the BudgetBuilder law) — the button stays in
+               the tab order and stays pressable, so the press can ANSWER instead of swallowing;
+            2. the reason is RENDERED AT REST, one line above the actions row (never on hover, never
+               only on press), so the tap is never dead in the first place. It is a <span>, and that is
+               deliberate: zero `<p>` AND zero `.field-help` inside this dialog is the structural oracle
+               for the omitted lead (GoalPicker.test.tsx + goalLeadGate.test.tsx on `basicsCovered={false}`,
+               e2e/caddie-walk.spec.ts on the `solve:failing` terminal). This sentence is about the
+               DIALOG'S OWN CONTROL and asserts nothing about the household, so it is true on all five
+               OutcomeStates and renders on every cohort — including the one whose lead is omitted. Both
+               vitest pins now also assert this span is PRESENT there, so the element choice is a pinned
+               decision, not a loophole that can rot;
+            3. the blocked LOOK drops the fill (controls.css) — fill PRESENCE is a shape cue, not a tint
+               one; the accessible NAME is untouched, because it is what four Playwright sites and six
+               vitest sites key on.
           THE QUIET CLOSE beside it (2026-08-02, found while repairing the Caddie door walk): this
           sheet rendered NO visible dismiss affordance at all. `ControlSheet` does dismiss it on
           Escape and on a backdrop tap, so nobody was ever trapped — but every OTHER sheet in the
@@ -117,8 +148,19 @@ export function GoalPicker({
           only exit was an undiscoverable tap on the backdrop. "Mobile must SHINE, not survive."
           The walk found it the honest way — its family-wide `/^(Close|Cancel)$/` close could not
           match here, and hung. */}
+      {blocked && (
+        <span id={reasonId} className="control-sheet__blocked">
+          {copy.goalPickerConfirmBlocked}
+        </span>
+      )}
       <div className="control-sheet__actions">
-        <button type="button" className="btn-primary" disabled={selected === undefined} onClick={confirm}>
+        <button
+          type="button"
+          className="btn-primary"
+          aria-disabled={blocked}
+          aria-describedby={blocked ? reasonId : undefined}
+          onClick={confirm}
+        >
           {copy.goalPickerConfirmCta}
         </button>
         <button type="button" className="btn-quiet" onClick={onClose}>

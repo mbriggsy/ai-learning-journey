@@ -31,6 +31,7 @@ import type { BandPlanClockAnchor } from '@ui/bandAnnotations'
 import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
 import { ControlPreviewReadout, useControlPreview } from './controlPreview'
+import { KIND_TO_BUCKET } from './intakeMap'
 
 /** The pickable set: every named household-level policy + the user's own order (see header —
  *  bracket-fill joined at U11 with the engine-derived cliff-aware ceiling). */
@@ -55,6 +56,23 @@ const BUCKET_LABEL: Record<DrawdownOrderKey, CopyKey> = {
   taxable: 'leverOrderBucketTaxable',
   pretax: 'leverOrderBucketPretax',
   roth: 'leverOrderBucketRoth',
+}
+
+/** The BUCKET a policy's own LABEL promises to spend from — `null` = the policy names a RULE, not a
+ *  holding ("A little from each", "Low-tax room first", "My own order"), so it is always offered.
+ *  Card 14(b): "Brokerage first — Spends the brokerage account down before touching pre-tax or Roth."
+ *  sat on the sheet of a household holding pre-tax + Roth and nothing else. Keyed on the BUCKET rather
+ *  than the AccountKind because the POLICY is defined on buckets (sequencing.ts's ORDER map), so a
+ *  second taxable-mapped kind added later inherits this for free. `Record<Pickable, …>` is EXHAUSTIVE:
+ *  a policy added to PICKABLE cannot skip the decision. `bracket-fill` is deliberately `null` — "Low-tax
+ *  room first" names tax ROOM, not a holding, and its engine form is well-defined on an empty pre-tax
+ *  bucket (it falls through to taxable then Roth), so it is a behaviour, not a mislabel. */
+const POLICY_NAMES_BUCKET: Record<Pickable, DrawdownOrderKey | null> = {
+  proportional: null,
+  'taxable-first': 'taxable',
+  'pre-tax-first': 'pretax',
+  'bracket-fill': null,
+  custom: null,
 }
 
 export interface SequencingControlProps {
@@ -84,6 +102,26 @@ export function SequencingControl({ open, draft, preview, previewBlocking = fals
   const current: Pickable = (PICKABLE as readonly string[]).includes(draft.drawdownPolicy)
     ? (draft.drawdownPolicy as Pickable)
     : 'proportional'
+  // Card 14(b) — never OFFER a shortcut whose own words name an account the household does not hold.
+  // PRESENCE, never a balance: a $0 brokerage is enterable (AccountEntry requires only that valueToday
+  // be DEFINED) and a $0 brokerage with contributions still funds the taxable channel in accumulation,
+  // and the shipped re-entry read-back (reentryChrome.ts) is presence-based for exactly that reason.
+  const held = new Set(draft.enteredAccounts.map((a) => KIND_TO_BUCKET[a.kind]))
+  /** The bucket this policy names and the household does not hold — `undefined` = nothing to disclose. */
+  const absentBucket = (p: Pickable): DrawdownOrderKey | undefined => {
+    const named = POLICY_NAMES_BUCKET[p]
+    return named !== null && !held.has(named) ? named : undefined
+  }
+  // The household's OWN committed policy is ALWAYS offered, even when the account it names is gone (a
+  // restored vault; an account removed since). Hiding it would leave the sheet with NO radio checked
+  // while the plan actually runs on that policy — the sheet silently disagreeing with the plan it
+  // fronts, which is worse than the finding this filter closes, and `walkSolveStale` reads that checked
+  // radio by name. It carries the absent-account tag instead, so it explains itself rather than lying
+  // quietly. FLOOR, by construction: proportional / bracket-fill / custom are never gated, so the list
+  // can never fall below three, nor below two non-current options. HIDDEN, never disabled-in-place:
+  // Playwright folds `aria-disabled` into actionability (getAriaDisabled — coreBundle.js, 1.60), so a
+  // blocked radio in a list the harness walks by "first unchecked" would hang `.check()`.
+  const offered = PICKABLE.filter((p) => absentBucket(p) === undefined || p === current)
   const [picked, setPicked] = useState<Pickable>(current)
   const [order, setOrder] = useState<readonly DrawdownOrderKey[]>(
     draft.drawdownOrder ?? ['taxable', 'pretax', 'roth'],
@@ -158,7 +196,7 @@ export function SequencingControl({ open, draft, preview, previewBlocking = fals
 
       <fieldset className="control-policies">
         <legend className="sr-only">{copy.leverSequencingTitle}</legend>
-        {PICKABLE.map((p) => (
+        {offered.map((p) => (
           <label key={p} className="control-policy" data-picked={picked === p || undefined}>
             <input
               type="radio"
@@ -170,6 +208,16 @@ export function SequencingControl({ open, draft, preview, previewBlocking = fals
             <span className="control-policy__body">
               <span className="control-policy__label">
                 {copy[POLICY_LABEL[p]]}
+                {/* Reachable ONLY for the committed-policy exception above (every other absent-account
+                    policy is filtered out): the plan is RUNNING an order that names an account this
+                    household no longer holds, so the row says so rather than standing there bare. It
+                    renders FIRST, against the label whose noun it qualifies — "Brokerage first — no
+                    account entered — your current order" — never as a third fragment after the current
+                    tag, where "no account entered" would read as a claim about the ORDER (the
+                    2026-09-13 review's catch). */}
+                {absentBucket(p) !== undefined && (
+                  <span className="control-policy__tag">{copy.leverNoAccountTag}</span>
+                )}
                 {p === current && <span className="control-policy__tag">{copy.leverPolicyCurrentTag}</span>}
               </span>
               <span className="control-policy__help">{copy[POLICY_HELP[p]]}</span>
@@ -182,7 +230,16 @@ export function SequencingControl({ open, draft, preview, previewBlocking = fals
         <ol className="control-order">
           {order.map((key, i) => (
             <li key={key} className="control-order__row">
-              <span className="control-order__name">{copy[BUCKET_LABEL[key]]}</span>
+              {/* All three general buckets stay, always: simulate.ts REFUSES a `drawdownOrder` that does
+                  not name each general bucket exactly once, so a pruned editor would emit an order the
+                  engine rejects — and the order genuinely matters later even on an empty bucket, because
+                  RMD forced excess rebuilds a taxable bucket the household started without. The bucket
+                  the household holds no account in is TAGGED, not removed: this editor is also the
+                  escape hatch that keeps a taxable-first ORDER reachable after (b) hid the shortcut. */}
+              <span className="control-order__name">
+                {copy[BUCKET_LABEL[key]]}
+                {!held.has(key) && <span className="control-order__tag">{copy.leverNoAccountTag}</span>}
+              </span>
               <span className="control-order__moves">
                 <button
                   type="button"

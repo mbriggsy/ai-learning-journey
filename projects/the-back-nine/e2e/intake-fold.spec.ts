@@ -37,7 +37,7 @@ import { copy } from '../src/ui/copy'
  * 3. THE NAV YIELD. While an editor is open the step's own Continue/Back must be GONE, not merely
  *    styled: the other-income step is the LAST step and its `fields` are empty, so one tap on a live
  *    Continue fires the flow's terminal `onComplete()`, unmounts the editor and takes a fully typed
- *    pension with it. The rule is a single CSS selector (src/intake/intake.css:496), and it named only
+ *    pension with it. The rule is a single CSS selector (src/intake/intake.css:507), and it named only
  *    the ACCOUNT editor's root until 2026-09-08 — so this arm opens BOTH editors, never just one.
  *
  * NOT AN ARM: the editor's own scroll-into-view (`focusHeading`'s `preventScroll: false` default,

@@ -132,12 +132,18 @@ describe('the goal picker’s lead is verdict-gated at the wiring', () => {
         // SILENCE, not a substitution — the absence of that ONE key would still pass a Result
         // that swapped in a cheerier lead for this cohort, and "omitted, never swapped" is the
         // whole contract (the failing-cohort words are unauthored, and they are Briggsy's).
-        // Measured structurally: GoalPicker.tsx:89 is the picker's ONLY `<p>` AND its ONLY
+        // Measured structurally: GoalPicker.tsx:103 is the picker's ONLY `<p>` AND its ONLY
         // `.field-help`, and the ControlSheet scaffold contributes neither — so zero of each IS
         // the silence. Re-queried (not `within`'s handle) because the count needs the element.
+        // Card 14a (2026-09-13): the blocked confirm's reason is a <span class="control-sheet__blocked">
+        // and renders on every cohort — it names the dialog's own control, never this household's
+        // verdict — so the two zero-counts stay true and the positive arm below pins the element choice.
         const el = screen.getByRole('dialog')
         expect(el.querySelectorAll('p'), 'no prose lead at all').toHaveLength(0)
         expect(el.querySelectorAll('.field-help'), 'nothing wearing the lead class').toHaveLength(0)
+        const reason = el.querySelectorAll('.control-sheet__blocked')
+        expect(reason, 'the blocked CTA still says WHY on the silent cohorts').toHaveLength(1)
+        expect(reason[0]!.textContent).toBe(copy.goalPickerConfirmBlocked)
       }
     })
   }

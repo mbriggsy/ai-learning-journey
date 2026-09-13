@@ -7,16 +7,19 @@ import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/
 import type { EngineClient } from '@store/engineClient'
 import type { ControlPreview } from '@store/controlPreview'
 import { copy, slots } from '@ui/copy'
-import type { OutcomeState, TwoArmControl } from '@shared/model'
+import type { AccountKind, EnteredAccount, OutcomeState, TwoArmControl } from '@shared/model'
 
 /**
  * The U10 withdrawal-sequencing control (src/intake/SequencingControl.tsx).
  *
  * Presentational over props (the BudgetBuilder discipline): local selection state, the two-arm
  * preview injected, Apply routed out. This battery pins the seams:
- *  - The pickable set is EXACTLY {proportional, taxable-first, pre-tax-first, bracket-fill, custom} —
- *    bracket-fill JOINED at U11 (the engine derives its cliff-aware ceiling; the old silent
- *    pre-tax-first degrade is structurally impossible, so the withheld-policy law is retired).
+ *  - The pickable set is EXACTLY {proportional, taxable-first, pre-tax-first, bracket-fill, custom} on a
+ *    household holding all three general buckets — bracket-fill JOINED at U11 (the engine derives its
+ *    cliff-aware ceiling; the old silent pre-tax-first degrade is structurally impossible, so the
+ *    withheld-policy law is retired) — and since Card 14b (2026-09-13) a named policy whose label
+ *    names a bucket the household holds NO account in is not offered (the committed one excepted,
+ *    tagged); presence, never a balance. The Card 14b describe at the end pins the filtered shapes.
  *  - A named pick previews with {kind:'sequencing', policy} and NO order key; custom carries the
  *    live order; the order editor's Up/Down reorders and re-previews the CURRENT order.
  *  - Apply commits (policy, order?) — custom carries the order, a named policy carries undefined.
@@ -67,8 +70,25 @@ function freshModel(): MemoryModel {
   })
 }
 
+/** The sheet reads only `kind`, so the fixture accounts carry the minimum the type requires. */
+const account = (kind: AccountKind, ownerIndex = 0, valueToday = 500_000): EnteredAccount => ({
+  ownerIndex,
+  kind,
+  valueToday,
+})
+const holding =
+  (...kinds: readonly AccountKind[]) =>
+  (d: ScenarioDraft): ScenarioDraft => ({ ...d, enteredAccounts: kinds.map((k) => account(k)) })
+
+/** The sheet's own precondition, made real: the withdrawal-order door exists only for a household that
+ *  has entered accounts (Result gates it on `enteredAccounts.length > 0`), and since Card 14(b) the
+ *  pickable list is filtered by what the household HOLDS — so the default fixture holds all three general
+ *  buckets. Every arm that does not pass a `mutate` keeps exercising the full five-policy sheet. */
+const ALL_BUCKETS: readonly AccountKind[] = ['traditional-ira', 'brokerage', 'roth-ira']
+
 function draftWith(mutate?: (d: ScenarioDraft) => ScenarioDraft): ScenarioDraft {
   const m = freshModel()
+  m.update(holding(...ALL_BUCKETS))
   if (mutate) m.update(mutate)
   return m.getSnapshot().draft
 }
@@ -109,6 +129,9 @@ const radio = (value: string): HTMLInputElement =>
   document.querySelector<HTMLInputElement>(`input[name="drawdown-policy"][value="${value}"]`)!
 const orderNames = (): string[] =>
   Array.from(document.querySelectorAll('.control-order__name')).map((n) => n.textContent ?? '')
+/** Card 14(b) helpers — the offered policy values in DOM order, and a policy's whole row. */
+const policyValues = (): string[] => screen.getAllByRole('radio').map((r) => (r as HTMLInputElement).value)
+const policyRow = (value: string): HTMLElement => radio(value).closest('.control-policy') as HTMLElement
 const sheetLive = () => document.querySelector('.control-sheet .sr-only[role="status"]')
 
 const noop = () => {}
@@ -125,6 +148,8 @@ function renderSeq(mutate?: (d: ScenarioDraft) => ScenarioDraft) {
 
 describe('SequencingControl — the pickable set', () => {
   it('renders exactly the five policy radios INCLUDING bracket-fill (joined at U11 with the engine-derived ceiling)', () => {
+    // The ALL-THREE-BUCKETS case (the default fixture since Card 14b): every named policy's account is held,
+    // so nothing is filtered — the full five. The filtered shapes are the Card 14b describe below.
     renderSeq()
     const radios = screen.getAllByRole('radio')
     expect(radios).toHaveLength(5)
@@ -303,5 +328,77 @@ describe('SequencingControl — the sheet locks body scroll while open (controlS
     expect(has()).toBe(true)
     rerender(<SequencingControl open={false} draft={draft} preview={preview.fn} onApply={noop} onClose={noop} />)
     await waitFor(() => expect(has()).toBe(false))
+  })
+})
+
+describe('SequencingControl — an option that names an account the household does not hold (Card 14b)', () => {
+  it('the two-bucket household (pre-tax + Roth — the ?vault=datestale shape) is never offered “Brokerage first”', () => {
+    renderSeq(holding('traditional-ira', 'roth-ira'))
+    expect(policyValues()).toEqual(['proportional', 'pre-tax-first', 'bracket-fill', 'custom'])
+    expect(screen.queryByText(copy.leverPolicyTaxableFirstHelp)).toBeNull()
+  })
+
+  it('and the mirror: a household with no pre-tax account (the ?seed=steer shape) is never offered “Pre-tax first”', () => {
+    // The rule is symmetric — a bucket-presence filter, not a brokerage special case.
+    renderSeq(holding('roth-ira', 'brokerage'))
+    expect(policyValues()).toEqual(['proportional', 'taxable-first', 'bracket-fill', 'custom'])
+    expect(screen.queryByText(copy.leverPolicyPreTaxFirstHelp)).toBeNull()
+  })
+
+  it('an order the plan is ALREADY RUNNING stays offered, and says which account it names is missing', () => {
+    // A restored vault, or an account removed since: hiding the committed policy would leave the sheet
+    // with NO radio checked while the plan runs on it (and the Caddie walk reads that checked radio by
+    // name). It stays, tagged — this arm is also what reds against the obvious mutant, a bare holdings
+    // filter.
+    renderSeq((d) => ({ ...holding('traditional-ira', 'roth-ira')(d), drawdownPolicy: 'taxable-first' }))
+    expect(radio('taxable-first')).not.toBeNull()
+    expect(radio('taxable-first').checked).toBe(true)
+    expect(policyRow('taxable-first').textContent).toContain(copy.leverPolicyCurrentTag)
+    expect(policyRow('taxable-first').textContent).toContain(copy.leverNoAccountTag)
+  })
+
+  it('the custom order still names all three buckets — the engine requires each exactly once — and marks the one the household has no account in', () => {
+    const { onApply } = renderSeq(holding('traditional-ira', 'roth-ira'))
+    fireEvent.click(radio('custom'))
+    const rows = Array.from(document.querySelectorAll('.control-order__row'))
+    expect(rows).toHaveLength(3)
+    const rowFor = (label: string) => rows.find((r) => (r.textContent ?? '').includes(label))!
+    expect(rowFor(copy.leverOrderBucketTaxable).textContent).toContain(copy.leverNoAccountTag)
+    expect(rowFor(copy.leverOrderBucketPretax).textContent).not.toContain(copy.leverNoAccountTag)
+    expect(rowFor(copy.leverOrderBucketRoth).textContent).not.toContain(copy.leverNoAccountTag)
+    // The order the engine receives is still the full three-bucket order (simulate.ts refuses anything less).
+    fireEvent.click(screen.getByRole('button', { name: copy.leverSequencingApply }))
+    expect(onApply).toHaveBeenCalledWith('custom', ['taxable', 'pretax', 'roth'])
+  })
+
+  it('the pickable list never falls below the three account-blind policies — the harness can always find an unchecked radio', () => {
+    // Unreachable in the app (the door is gated on `enteredAccounts.length > 0`) but it IS the shipped
+    // fixture shape, so the answer goes on the record instead of collapsing silently.
+    renderSeq(holding())
+    expect(policyValues()).toEqual(['proportional', 'bracket-fill', 'custom'])
+    expect(screen.getAllByRole('radio').some((r) => !(r as HTMLInputElement).checked)).toBe(true)
+  })
+
+  it('a household holding all three general buckets is offered all five, with no absent-account tag', () => {
+    // Green before and after — the non-vacuity arm that kills a filter which hides everything.
+    renderSeq()
+    expect(policyValues()).toHaveLength(5)
+    expect(screen.queryByText(copy.leverNoAccountTag)).toBeNull()
+  })
+
+  it('PRESENCE, never a balance: a brokerage entered at $0 still HOLDS the taxable bucket — every policy offered, no tag', () => {
+    // Reachable, not hypothetical: the money field parses "0" to 0 and AccountEntry's only value guard is
+    // `valueToday === undefined`, so a $0 brokerage saves — and in accumulation its contributions still
+    // fund the taxable channel. This is the arm that reds against a balance-gated filter
+    // (`valueToday > 0`), which every other arm in this file would pass (the fixture's default is
+    // $500,000 everywhere) — the 2026-09-13 review's catch.
+    renderSeq((d) => ({
+      ...d,
+      enteredAccounts: [account('traditional-ira'), account('roth-ira'), account('brokerage', 0, 0)],
+    }))
+    expect(policyValues()).toEqual(['proportional', 'taxable-first', 'pre-tax-first', 'bracket-fill', 'custom'])
+    expect(screen.queryByText(copy.leverNoAccountTag)).toBeNull()
+    fireEvent.click(radio('custom'))
+    expect(screen.queryByText(copy.leverNoAccountTag)).toBeNull()
   })
 })

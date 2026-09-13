@@ -530,7 +530,7 @@ async function walkDoors(page: Page, outDir: string): Promise<void> {
     const isAssumptions = (await door.getAttribute('data-door')) === 'assumptions'
     // ⚑ THE RECOMMEND-INVITE DOOR IS NOT A LEVER SHEET, and treating it as one broke this walk on
     // its own DEFAULT target. `driveLeverPreview` classifies a sheet STRUCTURALLY — "does it carry
-    // `.control-policies` radios" — and `GoalPicker.tsx:92` renders its goal radiogroup with that
+    // `.control-policies` radios" — and `GoalPicker.tsx:106` renders its goal radiogroup with that
     // exact class, the same one `SequencingControl`/`HealthcareSheet` use. So on every target where
     // `solveInvitable` holds, the walk opened this door, CHECKED A GOAL RADIO as a side effect, then
     // waited 120s for a TwoFutures `svg.tf` that the GoalPicker never renders — and this door is
@@ -741,7 +741,7 @@ async function walkSolve(page: Page, key: string, outDir: string): Promise<void>
   // one tap after "Already short" — then end the walk on the picker frame.
   if (plan!.terminal === 'goalpicker') {
     const picker = page.getByRole('dialog')
-    await expect(picker.locator('p'), `solve:${key}: the picker rendered a lead paragraph on a cohort that must get none`).toHaveCount(0)
+    await expect(picker.locator('p'), `solve:${key}: the picker rendered a lead paragraph on a cohort that must get none (Card 14a's blocked-CTA reason is a <span class="control-sheet__blocked">, deliberately outside this count)`).toHaveCount(0)
     return
   }
 

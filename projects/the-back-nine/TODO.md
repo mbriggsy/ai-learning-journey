@@ -260,7 +260,7 @@ backslash inside a regex — write big edit payloads and scripts with the Write 
 column: a per-width seat is governed by the WIDEST column, so "looks great" at the mid column hid the column-0 overflow on the
 390 phone — measure the whole catalog before reading a frame as proof (insight 123).
 
-▶ **(b9-4, the ranked plan — DISCHARGED through (5) on 2026-09-07/08, (6) remains; enter at the b9-7 START HERE above) hand-off 2026-09-05 late evening. The b9-3 plan's steps 1–3 SHIPPED: `32c1231d`
+▶ **(b9-4, the ranked plan — DISCHARGED in full: (1)–(5) on 2026-09-07/08, (6) walked + chaired 2026-09-11 (the START HERE's (f)); this header said "(6) remains" until 2026-09-13's verify pass — enter at the b9-7 START HERE above) hand-off 2026-09-05 late evening. The b9-3 plan's steps 1–3 SHIPPED: `32c1231d`
 (the gate hardened in one pass + the council's ship-now list) · `b4b27a60` (the hygiene sweep) · `8748e4f5`
 (the CI fix — a Windows-pinned ink threshold) · `abf1ab38` (insights 117–121). CI run 34005602885 is GREEN on
 Linux (97 fit tests, 11.8 m). Enter here. (The b9-2 / b9-3 hand-offs that used to follow were deleted 2026-09-06 with the doc audit — git log + the kept digest are the record; their still-open re-verify clauses are folded into the ranked entries below as ⚑ blocks.)**

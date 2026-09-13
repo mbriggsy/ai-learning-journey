@@ -902,6 +902,20 @@ export const copy = {
   leverRothYearsLabel: 'For how many years',
   leverRothApply: 'Add this to my plan',
   leverRothRemove: 'Take the conversion back out',
+  // THE BLOCKED APPLY SAYS WHY (2026-09-13 — the register entry "The two sibling sheets' blocked Apply",
+  // filed by the Card 14 review). RothLever's primary is blocked on ARRIVAL (no amount yet) and whenever a
+  // field is cleared; until this card it wore save.css's opacity mute — tint alone, no signal for a
+  // colour-blind reader — rendered no reason at rest, and its blocked press spoke `leverPreviewPending`
+  // while the preview effect had WITHDRAWN to idle: an AT user told a computation was in flight that was
+  // not. One sentence per empty field, naming the FIRST one in field order (`rothPlanMissingField`), rendered
+  // at rest as the `.control-sheet__blocked` span and spoken on the press through the SAME key (the Card 14a
+  // shape — the seen word and the spoken word cannot drift). Each states the DIALOG's precondition, never the
+  // household's finances. "Set" leads every one: on FIELD_OP_ALLOWLIST, so the clause-initial imperative is
+  // legal; `lever*` rides the two universal gates only (no false certainty, no advice verb). The typed-past
+  // face re-speaks its own FieldError and the applied-passed face its own note — neither needs a key here.
+  leverRothApplyNeedsAmount: 'Set a yearly amount to add this to your plan.',
+  leverRothApplyNeedsStart: 'Set the starting year to add this to your plan.',
+  leverRothApplyNeedsYears: 'Set how many years to add this to your plan.',
   leverRothClosedNothing:
     'There’s nothing in a pre-tax account to convert, so this what-if doesn’t apply to you.',
   leverPreviewPending: 'Working out both futures…',
@@ -1013,6 +1027,12 @@ export const copy = {
   leverHealthRegimeApply: 'Figure my plan this way',
   leverHealthRegimeRemove: 'Back to current law',
   leverHealthRegimeCurrentTag: '— how it’s figured now',
+  // The blocked Apply's reason (2026-09-13, the sibling of `leverRothApplyNeeds*` above): the sheet opens
+  // with the APPLIED regime picked — a baseline-vs-baseline non-comparison the preview effect withdraws to
+  // idle — so the primary cannot commit on arrival, and its press used to announce `leverPreviewPending`
+  // over nothing running. Rendered at rest as the `.control-sheet__blocked` span, spoken on the press through
+  // this key. "pick" is on FIELD_OP_ALLOWLIST (the goalPickerConfirmBlocked precedent).
+  leverHealthApplySameRegime: 'Your plan is already figured this way — pick the other rule to compare.',
   // Two-futures CHART CHROME for the regime compare (identity labels, hedge-exempt).
   tfChartRegimeReverted: 'Under current law',
   tfChartRegimeEnhanced: 'If the discount returns',
@@ -2757,7 +2777,7 @@ export const slots = {
    *  BITES it the way it bites its visual twin `recDeltaTypical`: the AT reader hears the same figures the
    *  sighted reader sees, so the same modal law must hold. A `recViz` prefix was rejected — it would red the
    *  three correctly hedge-free arm labels (`recVizWithLabel`/`recVizWithoutLabel`/`recVizRunnerUpLabel`,
-   *  copy.ts:1812-1819 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
+   *  copy.ts:1832-1839 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
    *  `isControlKey` was rejected — it breaks that predicate's "by prefix ALONE" law (copyGuard.ts:125). */
   recDeltaVizAria: (withoutLabel: string, withoutFig: string, withLabel: string, withFig: string, deltaFig: string): string =>
     `${withoutLabel} lands near about $${withoutFig}; ${withLabel} about $${withFig} — a difference of about $${deltaFig}.`,

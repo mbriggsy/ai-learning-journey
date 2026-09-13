@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { RothLever } from '../RothLever'
+import { RothLever, rothPlanMissingField } from '../RothLever'
 import { unsavedBuffersHeld } from '../unsavedBuffer'
 import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
@@ -142,6 +142,9 @@ const commitField = (input: HTMLElement, value: string) => {
 }
 
 const sheetLive = () => document.querySelector('.control-sheet .sr-only[role="status"]')
+/** The blocked Apply's rendered reason (2026-09-13) — a <span class="control-sheet__blocked">, the
+ *  control-sheet family's element (the GoalPicker.test pin records why a <p> is never used). */
+const blockedReasons = () => Array.from(document.querySelectorAll('.control-sheet__blocked'))
 const noop = () => {}
 
 describe('RothLever — the $0-pre-tax closed face', () => {
@@ -173,7 +176,7 @@ describe('RothLever — previewing a committed plan', () => {
     })
   })
 
-  it('an INCOMPLETE plan (no amount) previews nothing; Apply is aria-disabled, announces, never commits', () => {
+  it('an INCOMPLETE plan (no amount) previews nothing; Apply is aria-disabled, RENDERS its reason, speaks it on a press, and never commits', () => {
     const preview = deferredPreview()
     const onApply = vi.fn()
     render(
@@ -181,10 +184,73 @@ describe('RothLever — previewing a committed plan', () => {
     )
     expect(preview.fn).not.toHaveBeenCalled() // seeded start/years but no amount ⇒ no candidate
     const apply = screen.getByRole('button', { name: copy.leverRothApply })
+    // aria-disabled AND operable — insight 131: never `toBeEnabled()` on an aria-disabled control.
     expect(apply).toHaveAttribute('aria-disabled', 'true')
+    expect(apply).not.toBeDisabled()
+    // The reason at rest — the arrival face's ONE empty field, named — a <span> the CTA points at.
+    const reasons = blockedReasons()
+    expect(reasons).toHaveLength(1)
+    expect(reasons[0]!.tagName).toBe('SPAN')
+    expect(reasons[0]!.textContent).toBe(copy.leverRothApplyNeedsAmount)
+    expect(reasons[0]!.id).not.toBe('')
+    expect(apply).toHaveAttribute('aria-describedby', reasons[0]!.id)
     fireEvent.click(apply)
     expect(onApply).not.toHaveBeenCalled()
-    expect(sheetLive()?.textContent).toBe(copy.leverPreviewPending)
+    // The press speaks the SAME sentence — never "Working out both futures…": the preview effect
+    // withdrew to idle, so nothing is being worked out (the 2026-09-13 review's catch; until that
+    // day this arm pinned the pending line here).
+    expect(sheetLive()?.textContent).toBe(copy.leverRothApplyNeedsAmount)
+    expect(sheetLive()).not.toHaveTextContent(copy.leverPreviewPending)
+  })
+
+  it('the reason names the FIRST empty field in field order — amount, then start, then years — and a complete plan clears it AND commits', () => {
+    const onApply = vi.fn()
+    render(
+      <RothLever open savedAnchor={ANCHOR} draft={draftWith(withPretax)} preview={vi.fn(() => null)} onApply={onApply} onRemove={noop} onClose={noop} />,
+    )
+    const apply = screen.getByRole('button', { name: copy.leverRothApply })
+    // Clear the seeded years first: the amount is still the first hole, so the sentence does not move.
+    commitField(screen.getByLabelText(copy.leverRothYearsLabel), '')
+    expect(blockedReasons()[0]!.textContent).toBe(copy.leverRothApplyNeedsAmount)
+    commitField(screen.getByLabelText(copy.leverRothAmountLabel), '40,000')
+    expect(blockedReasons()[0]!.textContent).toBe(copy.leverRothApplyNeedsYears)
+    // Clear the start too: start outranks years in field order.
+    commitField(screen.getByLabelText(copy.leverRothStartLabel), '')
+    expect(blockedReasons()[0]!.textContent).toBe(copy.leverRothApplyNeedsStart)
+    commitField(screen.getByLabelText(copy.leverRothStartLabel), '2027')
+    expect(blockedReasons()[0]!.textContent).toBe(copy.leverRothApplyNeedsYears)
+    // A zero is not a number of years (`complete()` wants ≥ 1) — the same sentence, never a silent accept.
+    commitField(screen.getByLabelText(copy.leverRothYearsLabel), '0')
+    expect(apply).toHaveAttribute('aria-disabled', 'true')
+    expect(apply).not.toBeDisabled()
+    expect(blockedReasons()[0]!.textContent).toBe(copy.leverRothApplyNeedsYears)
+    commitField(screen.getByLabelText(copy.leverRothYearsLabel), '10')
+    // Complete: the block lifts, the span is gone, the pointer is gone.
+    expect(apply).toHaveAttribute('aria-disabled', 'false')
+    expect(blockedReasons()).toHaveLength(0)
+    expect(apply).not.toHaveAttribute('aria-describedby')
+    // …and the HAPPY PATH commits the candidate — the branch the reason chain rewrote (the 2026-09-13
+    // review: no arm pinned it, so deleting the commit call left every test green). 2027 against the
+    // 2026 anchor is offset 1 (the GoalPicker.test shape).
+    expect(onApply).not.toHaveBeenCalled()
+    fireEvent.click(apply)
+    expect(onApply).toHaveBeenCalledTimes(1)
+    expect(onApply).toHaveBeenCalledWith({ annualAmountReal: 40_000, startYearOffset: 1, years: 10 })
+  })
+
+  it('rothPlanMissingField — the ONE field-order decision the reason and complete() share', () => {
+    expect(rothPlanMissingField({})).toBe('amount')
+    expect(rothPlanMissingField({ startYear: 2027, years: 5 })).toBe('amount')
+    expect(rothPlanMissingField({ amount: 0, startYear: 2027, years: 5 })).toBe('amount') // $0 is not an amount
+    expect(rothPlanMissingField({ amount: Number.NaN, startYear: 2027, years: 5 })).toBe('amount')
+    expect(rothPlanMissingField({ amount: 40_000, years: 5 })).toBe('start')
+    expect(rothPlanMissingField({ amount: 40_000, startYear: 2027.5, years: 5 })).toBe('start')
+    expect(rothPlanMissingField({ amount: 40_000, startYear: 2027 })).toBe('years')
+    expect(rothPlanMissingField({ amount: 40_000, startYear: 2027, years: 0 })).toBe('years')
+    expect(rothPlanMissingField({ amount: 40_000, startYear: 2027, years: 5 })).toBeNull()
+    // A PASSED start is not a missing field — that face renders its own refusal / note, so the
+    // field-order decision stays silent on it (the priority chain in RothLever decides).
+    expect(rothPlanMissingField({ amount: 40_000, startYear: 1999, years: 5 })).toBeNull()
   })
 
   it('the no-anchor face (preview returns null) shows the calm no-date line', () => {
@@ -419,6 +485,52 @@ describe('RothLever — the start speaks the CALENDAR YEAR on read and write (U1
     expect(screen.getByLabelText(copy.leverRothStartLabel)).toHaveValue('2026')
   })
 
+  /* THE REASON CHAIN'S PRIORITY (RothLever.tsx: 3 → 2 → 1), pinned in the TWO-FACE states the other
+   * arms never reach (the 2026-09-13 review: every arm observed exactly one live face, so a reorder
+   * that tested the missing-field face first survived the battery — and that mutant renders two
+   * sentences at once and points Apply at the wrong one on the most ordinary aged first use). */
+  it('AGED, two faces live: a TYPED past year with the amount still empty — the alert is the one reason (face 2 outranks face 1)', () => {
+    render(
+      <RothLever open savedAnchor={AGED_ANCHOR} draft={draftWith(withPretax)} preview={vi.fn(() => null)} onApply={noop} onRemove={noop} onClose={noop} />,
+    )
+    // The past year lands with NO amount committed: faces 2 (typed past) and 1 (incomplete) both hold.
+    commitField(screen.getByLabelText(copy.leverRothStartLabel), '2025')
+    const alert = screen.getByRole('alert')
+    const apply = screen.getByRole('button', { name: copy.leverRothApply })
+    expect(apply).toHaveAttribute('aria-disabled', 'true')
+    expect(apply).not.toBeDisabled()
+    // ONE reason: the alert. No span — a "set an amount" sentence here would be a false promise,
+    // because filling the amount does not unblock a passed start.
+    expect(document.querySelectorAll('.control-sheet__blocked')).toHaveLength(0)
+    expect(alert.id).not.toBe('')
+    expect(apply).toHaveAttribute('aria-describedby', alert.id)
+    fireEvent.click(apply)
+    expect(sheetLive()).toHaveTextContent(fieldErrorText({ messageKey: 'errRothStartPast', params: { limitFormatted: '2026' } }))
+    expect(sheetLive()).not.toHaveTextContent(copy.leverRothApplyNeedsAmount)
+  })
+
+  it('AGED, two faces live: the applied plan’s PASSED start with the amount cleared — the note is the one reason (face 3 outranks face 1)', () => {
+    const draft = draftWith((d) => ({
+      ...withPretax(d),
+      rothConversion: { annualAmountReal: 40_000, startYearOffset: 1, years: 10 },
+    }))
+    render(
+      <RothLever open savedAnchor={AGED_ANCHOR} draft={draft} preview={vi.fn(() => null)} onApply={noop} onRemove={noop} onClose={noop} />,
+    )
+    // Clear the seeded amount: faces 3 (applied-passed) and 1 (incomplete) both hold.
+    commitField(screen.getByLabelText(copy.leverRothAmountLabel), '')
+    const note = screen.getByText(slots.leverRothAlreadyApplied(2025))
+    const apply = screen.getByRole('button', { name: copy.leverRothApply })
+    expect(apply).toHaveAttribute('aria-disabled', 'true')
+    expect(apply).not.toBeDisabled()
+    expect(document.querySelectorAll('.control-sheet__blocked')).toHaveLength(0)
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(apply).toHaveAttribute('aria-describedby', note.id)
+    fireEvent.click(apply)
+    expect(sheetLive()).toHaveTextContent(slots.leverRothAlreadyApplied(2025))
+    expect(sheetLive()).not.toHaveTextContent(copy.leverRothApplyNeedsAmount)
+  })
+
   it('AGED: a PAST year refuses ALOUD — R19 error naming the earliest startable year; no preview, no Apply', () => {
     const preview = deferredPreview()
     const onApply = vi.fn()
@@ -437,8 +549,17 @@ describe('RothLever — the start speaks the CALENDAR YEAR on read and write (U1
     expect(preview.fn).not.toHaveBeenCalled()
     const apply = screen.getByRole('button', { name: copy.leverRothApply })
     expect(apply).toHaveAttribute('aria-disabled', 'true')
+    expect(apply).not.toBeDisabled()
+    // The blocked Apply POINTS at the refusal itself (the earned-look pointer, 2026-09-13) — the
+    // typed-past face renders no second sentence: exactly one reason at a time.
+    expect(alert.id).not.toBe('')
+    expect(apply).toHaveAttribute('aria-describedby', alert.id)
+    expect(document.querySelectorAll('.control-sheet__blocked')).toHaveLength(0)
     fireEvent.click(apply)
     expect(onApply).not.toHaveBeenCalled()
+    // …and the press RE-SPEAKS the refusal, never the pending line (nothing is running).
+    expect(sheetLive()).toHaveTextContent(fieldErrorText({ messageKey: 'errRothStartPast', params: { limitFormatted: '2026' } }))
+    expect(sheetLive()).not.toHaveTextContent(copy.leverPreviewPending)
     // A valid year clears the refusal and the candidate goes through with the TRUE offset.
     commitField(screen.getByLabelText(copy.leverRothStartLabel), '2027')
     expect(screen.queryByRole('alert')).toBeNull()
@@ -503,7 +624,14 @@ describe('RothLever — the start speaks the CALENDAR YEAR on read and write (U1
     // Apply is genuinely unreachable (`complete()` returns null on a passed start), so the note's
     // promise must be the control that DOES exist — and it is on screen beside it.
     expect(screen.getByRole('button', { name: copy.leverRothApply })).toHaveAttribute('aria-disabled', 'true')
+    expect(screen.getByRole('button', { name: copy.leverRothApply })).not.toBeDisabled()
     expect(screen.getByRole('button', { name: copy.leverRothRemove })).toBeInTheDocument()
+    // …and Apply POINTS at the note (the earned-look pointer, 2026-09-13): the note IS the reason,
+    // so no second sentence renders on this face.
+    const note = screen.getByText(slots.leverRothAlreadyApplied(2025))
+    expect(note.id).not.toBe('')
+    expect(screen.getByRole('button', { name: copy.leverRothApply })).toHaveAttribute('aria-describedby', note.id)
+    expect(document.querySelectorAll('.control-sheet__blocked')).toHaveLength(0)
   })
 
   it('AGED: a past year the READER TYPED still refuses aloud — the suppression is scoped to the applied start, not to past-ness', () => {

@@ -17,12 +17,12 @@
  * modeled omissions are DISCLOSED adjacent to the delta (a disclosed omission can invert a
  * ranking — the reader hears it here, not in a footnote).
  */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { bufferMoved, useUnsavedBufferHold } from './unsavedBuffer'
 import type { RothConversionPlan, TwoArmControl } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { ControlPreview } from '@store/controlPreview'
-import { copy, slots } from '@ui/copy'
+import { copy, slots, type CatalogMessage } from '@ui/copy'
 import { composeTwoFutures } from '@ui/twoFuturesChrome'
 import { composeRothOmissionsNote } from '@ui/stateTaxDisclosure'
 import type { PricedState } from '@engine/constants/stateTax'
@@ -32,7 +32,7 @@ import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
 import { ControlPreviewReadout, useControlPreview } from './controlPreview'
 import { CurrencyField, IntegerField, formatMoney } from './fields'
-import { FieldError } from './FieldError'
+import { FieldError, fieldErrorId, fieldErrorText } from './FieldError'
 import { draftPretaxTotal, medicareOnlyPriced } from './intakeMap'
 /** The draft plan mid-entry: fields optional until committed (the intake hole-tolerance rule).
  *  `startYear` is the CALENDAR year as typed (U17 §S1) — the commit converts it to the
@@ -57,13 +57,34 @@ const seedPlan = (applied: RothConversionPlan | undefined, anchor: BandPlanClock
   applied === undefined
     ? { startYear: anchor.startCalendarYear + anchor.yearsSincePlanBuilt, years: 5 }
     : { amount: applied.annualAmountReal, startYear: rothPlanStartFor(anchor, applied.startYearOffset).year, years: applied.years }
-const complete = (p: PlanDraft, anchor: BandPlanClockAnchor): RothConversionPlan | null =>
-  p.amount !== undefined && Number.isFinite(p.amount) && p.amount > 0 &&
-  p.startYear !== undefined && Number.isInteger(p.startYear) &&
-  !startYearPassed(p, anchor) &&
-  p.years !== undefined && Number.isInteger(p.years) && p.years >= 1
-    ? { annualAmountReal: p.amount, startYearOffset: p.startYear - anchor.startCalendarYear, years: p.years }
-    : null
+/** The three field arms of a complete plan, ONE predicate each — `complete()` and the blocked
+ *  Apply's reason (`rothPlanMissingField`) read the same three, so the sentence that names an
+ *  empty field can never disagree with the candidate that refuses it. */
+const amountSet = (p: PlanDraft): boolean => p.amount !== undefined && Number.isFinite(p.amount) && p.amount > 0
+const startSet = (p: PlanDraft): boolean => p.startYear !== undefined && Number.isInteger(p.startYear)
+const yearsSet = (p: PlanDraft): boolean => p.years !== undefined && Number.isInteger(p.years) && p.years >= 1
+/** The FIRST field, in field order, that keeps the plan from completing — the one the blocked
+ *  Apply's reason names (2026-09-13). `null` when every field arm holds; a PASSED start is not a
+ *  missing field (it has its own two faces — the typed refusal and the applied note). Exported
+ *  for the unit battery. */
+export const rothPlanMissingField = (p: PlanDraft): 'amount' | 'start' | 'years' | null =>
+  !amountSet(p) ? 'amount' : !startSet(p) ? 'start' : !yearsSet(p) ? 'years' : null
+/** The blocked Apply's sentence per missing field — catalog keys, read through `copy[...]`. */
+const ROTH_MISSING_REASON = {
+  amount: 'leverRothApplyNeedsAmount',
+  start: 'leverRothApplyNeedsStart',
+  years: 'leverRothApplyNeedsYears',
+} as const
+const complete = (p: PlanDraft, anchor: BandPlanClockAnchor): RothConversionPlan | null => {
+  if (rothPlanMissingField(p) !== null || startYearPassed(p, anchor)) return null
+  const { amount, startYear, years } = p
+  // Narrowed by the three arms above; restated for the type system. A fabricated field is never
+  // an option, so a disagreement between the two throws instead of pricing a plan with a hole.
+  if (amount === undefined || startYear === undefined || years === undefined) {
+    throw new Error('RothLever.complete: rothPlanMissingField accepted a plan with an undefined field')
+  }
+  return { annualAmountReal: amount, startYearOffset: startYear - anchor.startCalendarYear, years }
+}
 export interface RothLeverProps {
   readonly open: boolean
   readonly draft: ScenarioDraft
@@ -145,10 +166,13 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
   // panel stated that same plan as live fact one door over (S6 cold read, Card 3). The applied
   // plan's own start year is the discriminator, derived through the ONE producer — never re-typed.
   //
-  // ⚠️ The open-edge re-seed above keeps its OWN `rothPlanStartFor(savedAnchor, applied.startYearOffset).year`
-  // call on purpose: `planClockSeam.test.ts:268-270` source-binds that exact text. Folding the two
-  // call sites into one const deletes the pinned substring and reds the seam arm with a failure that
-  // reads as a source-bind violation and says nothing about this fix. Do not "simplify" them.
+  // ⚠️ `planClockSeam.test.ts:268-270` source-binds THIS line's exact text —
+  // `rothPlanStartFor(savedAnchor, applied.startYearOffset).year`. The open-edge re-seed does NOT
+  // carry the pin: `seedPlan` (above) spells it `rothPlanStartFor(anchor, …)` against its own
+  // parameter name, which the `savedAnchor` regex cannot match (the 2026-09-13 review caught this
+  // comment crediting the re-seed). So deleting this const, or folding it into `seedPlan`'s output,
+  // deletes the pinned substring and reds the seam arm with a failure that reads as a source-bind
+  // violation and says nothing about the fix that caused it. Keep both call sites.
   const appliedStartYear = applied === undefined ? undefined : rothPlanStartFor(savedAnchor, applied.startYearOffset).year
   // The refusal is for a year the READER TYPED. (When nothing is applied, `appliedStartYear` is
   // undefined and `plan.startYear` is necessarily a number wherever `startPast` holds — see
@@ -156,6 +180,44 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
   const typedPastYear = startPast && plan.startYear !== appliedStartYear
   // …and its exhaustive complement: a passed start that IS the applied plan's own. Stated, never refused.
   const appliedStartHasPassed = startPast && !typedPastYear
+  // THE BLOCKED APPLY SAYS WHY (2026-09-13, the register entry "The two sibling sheets' blocked
+  // Apply" — the Card 14a shape one sheet over). `candidate === null` has three faces, and until
+  // now only two of them had words anywhere on the surface:
+  //   1. an INCOMPLETE plan — on arrival (no amount) and whenever a field is cleared. No sentence
+  //      at rest, and the blocked press spoke `leverPreviewPending` while the preview effect below
+  //      had WITHDRAWN to idle: an AT user told a computation was in flight that was not. The reason
+  //      names the FIRST empty field in field order (`rothPlanMissingField`), rendered at rest as the
+  //      `.control-sheet__blocked` span above the actions row and spoken on the press via the same key;
+  //   2. a TYPED past year — the R19 FieldError (role="alert") already renders and announces; Apply
+  //      now POINTS at it and a blocked press re-speaks it (ONE message-text decision: `pastStartError`
+  //      feeds both the rendered error and the spoken line);
+  //   3. the applied plan's own passed start — `leverRothAlreadyApplied` already renders as the note
+  //      beside the field and is spoken on the press (U17 §S6); Apply now points at the note.
+  // ONE reason at a time, in the priority 3 → 2 → 1: a statement of the household's own history
+  // outranks an error, and an error the reader can see outranks a field they have not filled. The
+  // pointer is what EARNS the "cannot commit" look (controls.css: `[aria-disabled='true'][aria-describedby]`);
+  // before this the button wore save.css's opacity mute — the same hue lightened, which is no signal
+  // for a colour-blind reader (Card 14a's finding). `aria-disabled` stays ADVISORY (the BudgetBuilder
+  // law): the tab stop and the press survive, and the press answers instead of swallowing.
+  const reasonId = useId()
+  const appliedNoteId = useId()
+  const pastStartError = { messageKey: 'errRothStartPast', params: { limitFormatted: String(earliestStartYear) } } as const satisfies CatalogMessage
+  const missingField = rothPlanMissingField(plan)
+  const blockedReason: { readonly id: string; readonly text: string; readonly rendersSpan: boolean } | null =
+    candidate !== null
+      ? null
+      : appliedStartHasPassed && appliedStartYear !== undefined
+        ? { id: appliedNoteId, text: slots.leverRothAlreadyApplied(appliedStartYear), rendersSpan: false }
+        : typedPastYear
+          ? { id: fieldErrorId('rothConversion.start'), text: fieldErrorText(pastStartError), rendersSpan: false }
+          : missingField !== null
+            ? { id: reasonId, text: copy[ROTH_MISSING_REASON[missingField]], rendersSpan: true }
+            : null
+  if (candidate === null && blockedReason === null) {
+    // `complete()` refuses on exactly {a missing field, a passed start}, and a passed start is
+    // exhaustively one of faces 2/3 — a null here is a producer contradiction, never a mute button.
+    throw new Error('RothLever: the candidate is null but no blocked reason matched — the reason chain is not exhaustive')
+  }
   // The chart's household ages — the chrome derives the fan-dialect axis ticks AND the scrub
   // closure from this ONE pair (composeTwoFutures → deriveDecadeAgeTicks/deriveBandAgesAt), so a
   // scrubbed age can never disagree with a tick. Ages are stable while a sheet is open (the draft
@@ -215,13 +277,7 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
               invalid={typedPastYear}
               onCommit={(v) => setPlan((p) => ({ ...p, startYear: v }))}
             />
-            {typedPastYear && (
-              <FieldError
-                field="rothConversion.start"
-                messageKey="errRothStartPast"
-                params={{ limitFormatted: String(earliestStartYear) }}
-              />
-            )}
+            {typedPastYear && <FieldError field="rothConversion.start" {...pastStartError} />}
             {/* The applied plan's own passed start: the TRUE slot that renders where the refusal
                 used to. `invalid` above is gated on the same predicate deliberately — leaving it on
                 `startPast` would keep `aria-invalid="true"` on the field AND point `aria-describedby`
@@ -229,7 +285,7 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
                 reader would still be told the household's own executed year is invalid, over a
                 dangling reference. The defect must not survive in the AT channel. */}
             {appliedStartHasPassed && appliedStartYear !== undefined && (
-              <p className="field-help">{slots.leverRothAlreadyApplied(appliedStartYear)}</p>
+              <p className="field-help" id={appliedNoteId}>{slots.leverRothAlreadyApplied(appliedStartYear)}</p>
             )}
             <IntegerField
               labelKey="leverRothYearsLabel"
@@ -262,29 +318,38 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
               </>
             }
           />
+          {/* The incomplete face's reason at rest (faces 2 and 3 already render theirs beside the
+              start field — see the reason chain above). A <span>, never a <p>: the family's
+              blocked-reason element (controls.css `.control-sheet__blocked`) — one grammar and one
+              look across the three sheets. The picker's own reason for the element is its
+              dialog-scoped omitted-lead paragraph count, which does not run on this sheet (the
+              `.field-help` paragraphs above render freely). */}
+          {blockedReason?.rendersSpan === true && (
+            <span id={reasonId} className="control-sheet__blocked">
+              {blockedReason.text}
+            </span>
+          )}
           <div className="control-sheet__actions">
             <button
               type="button"
               className="btn-primary"
-              aria-disabled={candidate === null}
+              aria-disabled={blockedReason !== null}
+              aria-describedby={blockedReason?.id}
               onClick={() => {
-                if (candidate === null) {
-                  // U17 §S6 — `aria-disabled` is ADVISORY: this button stays clickable by design
-                  // (the disabled-attribute alternative removes it from the tab order and takes its
-                  // reason with it). So the tap owes a TRUE reason. On the applied-passed-start face
-                  // nothing will ever be worked out — `complete()` returns null and the preview is
-                  // withdrawn — and announcing "Working out both futures…" there is the rendered
-                  // sentence's own contradiction one tap away. Speak the same true fact the surface
-                  // shows; the pending line survives for every other incomplete plan, where a
-                  // committed field genuinely does start a run.
-                  announcerRef.current?.announce(
-                    appliedStartHasPassed && appliedStartYear !== undefined
-                      ? slots.leverRothAlreadyApplied(appliedStartYear)
-                      : copy.leverPreviewPending,
-                  )
+                if (candidate !== null) {
+                  onApply(candidate)
                   return
                 }
-                onApply(candidate)
+                // `aria-disabled` is ADVISORY: this button stays clickable by design (the
+                // disabled-attribute alternative removes it from the tab order and takes its reason
+                // with it), so the tap owes a TRUE reason — the one the surface renders, never
+                // `leverPreviewPending`: on every blocked face the preview is WITHDRAWN and nothing is
+                // being worked out (U17 §S6 first caught this on the applied-passed face; 2026-09-13
+                // closed the other two).
+                if (blockedReason === null) {
+                  throw new Error('RothLever: a blocked press with no reason to speak — the reason chain is not exhaustive')
+                }
+                announcerRef.current?.announce(blockedReason.text)
               }}
             >
               {copy.leverRothApply}

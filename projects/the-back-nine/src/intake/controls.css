@@ -237,14 +237,18 @@
    muted ink keeps its full 7.1:1 on paper and the border keeps `--line-control`'s 3.6:1 (WCAG 1.4.11 —
    `--line-soft` is decorative-grade and must NOT be used for a boundary that carries state).
    THE LOOK IS EARNED BY THE WORDS — the selector requires `aria-describedby`: a blocked primary wears
-   this loud "cannot commit" shape only when it POINTS AT a rendered reason. Today that is the goal
-   picker alone. RothLever's Apply (blocked while no candidate is complete) and HealthcareSheet's (blocked
-   while the pick equals the applied regime — i.e. on ARRIVAL, before the reader has done anything) carry
-   the same opacity-only defect but render no reason at rest, and HealthcareSheet's blocked press speaks
-   `leverPreviewPending` while nothing is running (the 2026-09-13 review's catch) — so they keep save.css's
-   mute until each renders a true reason, and then this rule reaches them for free (the register entry
-   "The two sibling sheets' blocked Apply" carries the prescription). Reaching them by look alone would
-   have shouted "unavailable" on two unwalked sheets with no sentence to explain it.
+   this loud "cannot commit" shape only when it POINTS AT a rendered reason. Since 2026-09-13 every
+   control-sheet primary does: the goal picker's confirm (Card 14a), RothLever's Apply (its three blocked
+   faces each point at their own sentence — the missing-field span, the typed-past FieldError, the
+   applied-passed note) and HealthcareSheet's Apply (the same-regime span, on arrival). SequencingControl's
+   Apply is the fourth primary under this class and carries no `aria-disabled` at all (a pick is always
+   committable) — it can never block, so it never reaches this rule; if it ever gains a precondition it
+   owes a pointed-at sentence first. The first cut of Card 14a reached the two sheets by LOOK alone and
+   shouted "unavailable" on two unwalked sheets with no sentence to explain it, while HealthcareSheet's
+   blocked press spoke `leverPreviewPending` over nothing running (the review's catch) — the register
+   entry "The two sibling sheets' blocked Apply" records why the words came first and the look followed
+   three commits later (8f2943b4 → ffadbf03 → 709834a6 → the sheets' own commit); the declarations
+   below never moved — only the pointer that earns them did.
    BudgetBuilder is NOT reached — it rides `.budget-sheet__actions` — so Card 9's shipped emphasis flip
    is untouched; the save / unlock / backup screens are untouched for the same reason: SCOPE, not
    specificity — the `.control-sheet__actions` prefix never matches them. Specificity (0,4,0) beats
@@ -259,10 +263,14 @@
   border: 1px dashed var(--line-control);
 }
 
-/* The blocked primary's RENDERED reason, above the actions row. A <span>, never a <p> and never
-   `.field-help`: zero of each inside this dialog is the omitted-lead contract's structural oracle
-   (see GoalPicker.tsx's actions comment). `box-sizing: border-box` is global (base.css), so the
-   sibling button's 1 px border costs no height against `min-height: var(--field-h)`. */
+/* The blocked primary's RENDERED reason, above the actions row — the family's blocked-reason element,
+   a <span>, never a <p> and never `.field-help`. On the GOAL PICKER that choice is load-bearing: zero
+   `<p>` and zero `.field-help` inside THAT dialog is the omitted-lead contract's structural oracle
+   (GoalPicker.tsx's actions comment; e2e/caddie-walk.spec.ts counts only the picker's paragraphs).
+   RothLever and HealthcareSheet render `.field-help` paragraphs freely and no such count runs on them —
+   they take the span for one grammar and one look, not to satisfy an oracle. `box-sizing: border-box`
+   is global (base.css), so the sibling button's 1 px border costs no height against
+   `min-height: var(--field-h)`. */
 .control-sheet__blocked {
   margin: 0;
   font-family: var(--font-body);

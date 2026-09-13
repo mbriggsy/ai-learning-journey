@@ -20,7 +20,7 @@
  * predicate, single-sourced with buildOverlay's own gate). A post-65-only household gets NO
  * hollow door; its honesty surface is the verdict-level unpriced-Medicare disclosure.
  */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import type { HealthReadout, TwoArmControl } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { ControlPreview } from '@store/controlPreview'
@@ -103,6 +103,17 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
   const applied: Regime = draft.enhancedSubsidies === true ? 'enhanced' : 'reverted'
   const [picked, setPicked] = useState<Regime>(applied)
   const { previewState, resetForOpen, run } = useControlPreview({ preview, announcerRef })
+  // THE BLOCKED APPLY SAYS WHY (2026-09-13, the register entry "The two sibling sheets' blocked
+  // Apply"): the sheet opens with the APPLIED regime picked — and picking it again withdraws the
+  // comparison (the preview effect below) — so the primary cannot commit on ARRIVAL, before the
+  // reader has done anything. Until now it wore save.css's opacity mute (tint alone — no signal for
+  // a colour-blind reader), rendered no reason at rest, and its press announced `leverPreviewPending`
+  // while NOTHING was running: an AT user told a computation was in flight that was not. ONE derived
+  // predicate feeds the rendered reason, `aria-disabled` and the press (the Card 14a single-source
+  // law); the `aria-describedby` pointer is what EARNS the "cannot commit" look (controls.css).
+  // `aria-disabled` stays ADVISORY — the BudgetBuilder law: the tab stop and the press survive.
+  const reasonId = useId()
+  const applyBlocked = picked === applied
 
   // The composed readout lines — PURE, decided in healthSheetChrome (regime-aware: an applied
   // enhanced regime swaps the dated status note to the what-if variant and drops the cliff lines).
@@ -211,14 +222,26 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
       <p className="field-help">{copy.controlHealthSurvivorNote}</p>
       <p className="field-help">{composeControlHealthOmissionsNote(statePricedNote !== undefined)}</p>
 
+      {/* The blocked Apply's reason at rest — a <span>, never a <p>: the family's blocked-reason
+          element (controls.css `.control-sheet__blocked`), one grammar and one look across the three
+          sheets. The picker's own reason for the element is its dialog-scoped omitted-lead paragraph
+          count, which does not run on this sheet (the `.field-help` paragraphs above render freely). */}
+      {applyBlocked && (
+        <span id={reasonId} className="control-sheet__blocked">
+          {copy.leverHealthApplySameRegime}
+        </span>
+      )}
       <div className="control-sheet__actions">
         <button
           type="button"
           className="btn-primary"
-          aria-disabled={picked === applied}
+          aria-disabled={applyBlocked}
+          aria-describedby={applyBlocked ? reasonId : undefined}
           onClick={() => {
-            if (picked === applied) {
-              announcerRef.current?.announce(copy.leverPreviewPending)
+            if (applyBlocked) {
+              // The press speaks the rendered reason — never `leverPreviewPending`, which is a status
+              // line for a run that is actually pending (there is none: the applied pick withdrew it).
+              announcerRef.current?.announce(copy.leverHealthApplySameRegime)
               return
             }
             onApply(picked === 'enhanced')

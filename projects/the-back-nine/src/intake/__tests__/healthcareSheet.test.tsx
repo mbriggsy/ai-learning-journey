@@ -83,6 +83,11 @@ function deferredPreview() {
 
 const radio = (value: string): HTMLInputElement =>
   document.querySelector<HTMLInputElement>(`input[name="subsidy-regime"][value="${value}"]`)!
+/** The control-sheet family's live region (rothLever / GoalPicker read the same node). */
+const sheetLive = () => document.querySelector('.control-sheet .sr-only[role="status"]')
+/** The blocked Apply's rendered reason (2026-09-13) — a <span class="control-sheet__blocked">, the
+ *  control-sheet family's element (the GoalPicker.test pin records why a <p> is never used). */
+const blockedReasons = () => Array.from(document.querySelectorAll('.control-sheet__blocked'))
 
 const READOUT: HealthReadout = {
   byYear: [
@@ -163,16 +168,37 @@ describe('HealthcareSheet — the regime lever', () => {
     expect(preview.calls.length).toBe(runs)
   })
 
-  it('Apply commits the picked regime through onApply; a no-op pick is aria-disabled and announces instead', () => {
+  it('Apply commits the picked regime through onApply; the no-op pick is aria-disabled, RENDERS its reason, speaks it on a press, and never commits', () => {
     const { onApply } = renderSheet()
     const apply = screen.getByRole('button', { name: copy.leverHealthRegimeApply })
+    // ARRIVAL: the applied regime is picked, so the primary cannot commit — aria-disabled AND
+    // operable (insight 131: never `toBeEnabled()` here), its reason rendered at rest and pointed at.
     expect(apply).toHaveAttribute('aria-disabled', 'true')
+    expect(apply).not.toBeDisabled()
+    const reasons = blockedReasons()
+    expect(reasons).toHaveLength(1)
+    expect(reasons[0]!.tagName).toBe('SPAN')
+    expect(reasons[0]!.textContent).toBe(copy.leverHealthApplySameRegime)
+    expect(reasons[0]!.id).not.toBe('')
+    expect(apply).toHaveAttribute('aria-describedby', reasons[0]!.id)
     fireEvent.click(apply)
     expect(onApply).not.toHaveBeenCalled() // the no-op pick never commits
+    // The press speaks the SAME sentence — never "Working out both futures…": nothing is running
+    // (the applied pick withdrew the preview to idle — the 2026-09-13 review's catch).
+    expect(sheetLive()?.textContent).toBe(copy.leverHealthApplySameRegime)
+    expect(sheetLive()).not.toHaveTextContent(copy.leverPreviewPending)
     fireEvent.click(radio('enhanced'))
     expect(apply).toHaveAttribute('aria-disabled', 'false')
+    expect(blockedReasons()).toHaveLength(0)
+    expect(apply).not.toHaveAttribute('aria-describedby')
     fireEvent.click(apply)
     expect(onApply).toHaveBeenCalledWith(true)
+    // Back to the applied pick: the block AND its sentence return (the withdraw rule, rendered).
+    fireEvent.click(radio('reverted'))
+    expect(apply).toHaveAttribute('aria-disabled', 'true')
+    expect(apply).not.toBeDisabled()
+    expect(blockedReasons()).toHaveLength(1)
+    expect(blockedReasons()[0]!.textContent).toBe(copy.leverHealthApplySameRegime)
   })
 
   it('the escape ("back to current law") exists ONLY when enhanced is applied — and commits enhanced=false', () => {
@@ -180,6 +206,14 @@ describe('HealthcareSheet — the regime lever', () => {
     expect(screen.queryByRole('button', { name: copy.leverHealthRegimeRemove })).toBeNull()
     cleanup()
     const { onApply } = renderSheet({ enhanced: true })
+    // The ENHANCED-applied arrival is the same `picked === applied` face as the reverted one — pinned
+    // here too (the 2026-09-13 review: a regime-scoped mutant survived the reverted-only pin).
+    const applyEnhanced = screen.getByRole('button', { name: copy.leverHealthRegimeApply })
+    expect(applyEnhanced).toHaveAttribute('aria-disabled', 'true')
+    expect(applyEnhanced).not.toBeDisabled()
+    expect(blockedReasons()).toHaveLength(1)
+    expect(blockedReasons()[0]!.textContent).toBe(copy.leverHealthApplySameRegime)
+    expect(applyEnhanced).toHaveAttribute('aria-describedby', blockedReasons()[0]!.id)
     const escape = screen.getByRole('button', { name: copy.leverHealthRegimeRemove })
     fireEvent.click(escape)
     expect(onApply).toHaveBeenCalledWith(false)

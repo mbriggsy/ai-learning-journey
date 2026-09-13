@@ -8,7 +8,9 @@
  *
  * TEXT: this file styles NO chart text. Since 2026-09-05 (council wf_ecbe0ab2-7bb) the axis labels,
  * both end-of-bar labels and the delta hero are HTML in the shared chart text layer — chartText.css
- * owns the registers (xs axis / sm labels / lg display-face hero). The class names below that end in
+ * owns the registers (xs axis / xs STRONG bar labels — the sm register wrapped a 24-character label to
+ * three lines at a 358 px box and overprinted its neighbour, measured 2026-09-05; "sm labels" stood
+ * here until the 2026-09-13 council caught it / lg display-face hero). The class names below that end in
  * a text role (.rv__axis, .rv__bar-label, .rv__delta) are the HTML nodes' hooks, carrying color only.
  */
 

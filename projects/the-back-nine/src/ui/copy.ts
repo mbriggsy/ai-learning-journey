@@ -1015,7 +1015,15 @@ export const copy = {
   healthFactCoverage: 'Coverage before Medicare',
   healthFactDiscount: 'The income-based discount',
   healthFactConversion: 'Roth conversions in those years',
-  healthFactMedicare: 'Medicare premiums',
+  // RE-SCOPED 2026-09-14 on Briggsy's ruling ("eyebrow") after the Medicare-cards Caddie read: four cold
+  // readers bound "Medicare premiums" to their whole Medicare bill while the hero is Part B + any income
+  // surcharge and the drug/supplement plans (~$5,900 a year for two) live in line 5. The label now names
+  // exactly what the figure holds — the same noun as line 2 ("Part B premiums and any income
+  // surcharge"; the surcharge is the COMBINED Part B + Part D IRMAA, so "Part B premiums" alone would
+  // mis-scope a surcharged path — the review's 2026-09-13 negative). The fold (extras into the hero)
+  // was declined: on both seeds the extras are the door-6 placeholder the sheet calls "not an actual
+  // bill". "Part B" is glossed ONCE, in `irmaaStepStory`, which every arm renders first.
+  healthFactMedicare: 'Part B premiums and any surcharge',
   // The era-loud card's per-arm eyebrows (council wf_9921d7e3-55b, 2026-09-13 late, 8/10 — "frame the
   // hero"): the eyebrow is BOTH the visible caption above the aria-hidden figure AND the fact's
   // accessible name (`<section aria-label={f.eyebrow}>`), so it is the one element that frames the loud
@@ -1023,8 +1031,8 @@ export const copy = {
   // enrolled; the NO-ERA arm's prices the years ONE is. The frame word must AGREE with the sentences
   // beneath ("while … both on it" / "while only one of you is") — never a third frame. The degenerate
   // arm (`retired`) keeps `healthFactMedicare` byte-identical.
-  healthFactMedicareBoth: 'Medicare premiums while you’re both on it',
-  healthFactMedicareOne: 'Medicare premiums while only one of you is on it',
+  healthFactMedicareBoth: 'Part B premiums and any surcharge while you’re both on it',
+  healthFactMedicareOne: 'Part B premiums and any surcharge while only one of you is on it',
   healthFactStep: 'The next premium step',
   leverHealthRegimeLegend: 'Which subsidy rules should the plan figure under?',
   leverHealthRegimeReverted: 'Current law',
@@ -1049,8 +1057,10 @@ export const copy = {
   // Plan-moving READOUTS (require-hedge-swept by prefix).
   // Vocabulary law (Sonnet-5 audit 2026-07-03): 'line'/'cliff' belong to the ACA discount;
   // 'step' belongs to Medicare — one word per mechanism, everywhere on the sheet.
+  // The gloss leads (2026-09-14, his eyebrow ruling): the naive-spouse seat met "Part B" in the hero
+  // sentence with no home for it — this is the one line every Medicare arm renders first.
   irmaaStepStory:
-    'Medicare premiums look back two years at your income — money converted at 63 can show up in the premium bill at 65. Each step is sharp: one dollar over it and the higher charge applies for that whole year.',
+    'Part B is Medicare’s monthly premium for doctor and outpatient care. Medicare premiums look back two years at your income — money converted at 63 can show up in the premium bill at 65. Each step is sharp: one dollar over it and the higher charge applies for that whole year.',
   // --- The two-figure premium card (council 2026-09-13, 8/10 — the era-loud frame): the surcharge
   //     clause binds PER QUOTED YEAR, never one predicate spanning two years. These are the
   //     digit-free arms; the figure-carrying arms are `slots.irmaaStep*` below. ---
@@ -2921,7 +2931,7 @@ export const slots = {
    *  BITES it the way it bites its visual twin `recDeltaTypical`: the AT reader hears the same figures the
    *  sighted reader sees, so the same modal law must hold. A `recViz` prefix was rejected — it would red the
    *  three correctly hedge-free arm labels (`recVizWithLabel`/`recVizWithoutLabel`/`recVizRunnerUpLabel`,
-   *  copy.ts:1871-1878 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
+   *  copy.ts:1881-1888 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
    *  `isControlKey` was rejected — it breaks that predicate's "by prefix ALONE" law (copyGuard.ts:129). */
   recDeltaVizAria: (withoutLabel: string, withoutFig: string, withLabel: string, withFig: string, deltaFig: string): string =>
     `${withoutLabel} lands near about $${withoutFig}; ${withLabel} about $${withFig} — a difference of about $${deltaFig}.`,

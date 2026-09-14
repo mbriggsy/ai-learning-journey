@@ -539,11 +539,13 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     shadowRateHeadroom: slots.shadowRateHeadroom('66,600', '84,600', '18,000'),
     irmaaStepNowBase: slots.irmaaStepNowBase('4,900'),
     irmaaStepNowSurcharged: slots.irmaaStepNowSurcharged('7,300', '2,400'),
-    irmaaStepNext: slots.irmaaStepNext('218,000', '150,000', '68,000', '2,300', true),
+    // Sampled on the EACH-OF-YOU arm (2026-09-14): two figures, both under "about ~$" — the two-of-you
+    // arm is the older, shorter sentence and shares every hedge word.
+    irmaaStepNext: slots.irmaaStepNext('218,000', '150,000', '68,000', '1,100', '2,300', false),
     // The two-figure premium card (council 2026-09-13) — every figure-carrying arm rendered, so the
     // require-hedge sweep reaches each surcharge state, the on-ramp span, and the extras carve-out.
-    irmaaStepEraStart: slots.irmaaStepEraStart('5,800'),
-    irmaaStepOnRampSpan: slots.irmaaStepOnRampSpan(2, '2,700'),
+    irmaaStepEraStart: slots.irmaaStepEraStart('5,800', 7),
+    irmaaStepOnRampSpan: slots.irmaaStepOnRampSpan(2, '2,700', 5),
     irmaaStepOnRampOpen: slots.irmaaStepOnRampOpen('2,700'),
     irmaaStepSurchargeOnRampOnly: slots.irmaaStepSurchargeOnRampOnly('3,500', '800', '5,800'),
     irmaaStepSurchargeEraOnly: slots.irmaaStepSurchargeEraOnly('7,400', '1,600', '2,700'),
@@ -557,6 +559,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     healthFigRoom: slots.healthFigRoom('19,500'),
     healthFigCents: slots.healthFigCents(22),
     healthFigStepAdd: slots.healthFigStepAdd('1,100'),
+    healthFigStepAddEach: slots.healthFigStepAddEach('1,100'),
     subsidyRegimeCostDelta: slots.subsidyRegimeCostDelta('96,000', '128,000'),
     subsidyRegimeCostEven: slots.subsidyRegimeCostEven('99,800'),
     // F10 — the R19 ceiling errors quote the statutory limit (pre-formatted by intake).

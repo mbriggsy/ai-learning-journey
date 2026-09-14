@@ -1948,6 +1948,13 @@ function countWord(n: number): string {
   return Number.isInteger(n) && n >= 0 && n < words.length ? words[n]! : String(n)
 }
 
+/** A distance in years in the product's own dialect ("Looking about 42 years out" — the band's
+ *  screen-reader sentence): small counts as words, one year as "a year out" (never "one years
+ *  out"). The Medicare premium card dates its two eras with it (2026-09-14). */
+function yearsOut(n: number): string {
+  return n === 1 ? 'a year out' : `${countWord(n)} years out`
+}
+
 /** The over-funded near-ceiling reading, SINGLE-SOURCED (the verdict surface calls it by name via
  *  {@link slots.xOfTenAtCeiling}, and {@link slots.xOfTen}'s defensive clamp falls back to it). A
  *  PROPORTION ("9 in 10") — never a count ("9 of 10", which snaps to "10 of 10"), never a bald
@@ -2519,7 +2526,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the two
    *  universal gates (no false certainty, no advice verb), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:907` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:910` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -2613,18 +2620,30 @@ export const slots = {
   //     calm-but-wrong. An all-65+ household (the era IS the anchor) keeps `irmaaStepNowBase` /
   //     `irmaaStepNowSurcharged` byte-identical. "Start at" carries the sourced real trend: the era
   //     year is the era's CHEAPEST. ---
-  irmaaStepEraStart: (totalFormatted: string): string =>
-    `While you’re both on Medicare, Part B premiums and any income surcharge start at about ~$${totalFormatted} a year for your household.`,
-  /** The on-ramp years with their SPAN. The span is the on-ramp's LENGTH (the era year minus the
-   *  anchor year) and tells the reader WHEN the era starts; it does NOT bound the loud figure,
-   *  which is the era year's own total and grows with the era year's distance — a 61/40 household
-   *  reads "the first 21 years" under an era figure near ~$8,100 (measured 2026-09-13 late; the
-   *  wide-gap shape's rule is a council question, see the register's Medicare-era entry). A
-   *  one-year on-ramp reads "run", not "start at". */
-  irmaaStepOnRampSpan: (spanYears: number, totalFormatted: string): string =>
-    spanYears === 1
-      ? `For about the first year, while only one of you is on Medicare, they run about ~$${totalFormatted}.`
-      : `For about the first ${countWord(spanYears)} years, while only one of you is on Medicare, they start at about ~$${totalFormatted}.`,
+  //     DATED (the Caddie read of both cards, 2026-09-14 — five seats across both panels on the
+  //     wide-gap seed, one at BLOCKER, every refuter survived it): neither era named WHEN it starts,
+  //     so "the first 21 years" read from TODAY put the ~$2,700 on-ramp figure over the household's
+  //     first four years — the years the ACA card prices at ~$9,000 — rosier by ~$6,300 a year.
+  //     Each line now opens with its distance ("From about 26 years out" / "from about five years
+  //     out"), the wire's own `yearsFromNow` — never an age (the no-age-proxy law). The on-ramp
+  //     line says "Before that" because the loud era figure is quoted FIRST and the on-ramp comes
+  //     earlier in time; "the premiums" replaces a "they" whose antecedent sat a sentence away. ---
+  irmaaStepEraStart: (totalFormatted: string, eraYearsFromNow: number): string =>
+    `From about ${yearsOut(eraYearsFromNow)}, while you’re both on Medicare, Part B premiums and any income surcharge start at about ~$${totalFormatted} a year for your household.`,
+  /** The on-ramp years with their ORIGIN and their SPAN. The span is the on-ramp's LENGTH (the era
+   *  year minus the anchor year); the origin is the anchor year's own distance (`medicareAnchor`'s
+   *  `yearsFromNow` — "starting now" when someone is already enrolled today). Neither bounds the
+   *  loud figure, which is the era year's own total and grows with the era year's distance — a
+   *  61/40 household reads "for about 21 years" under an era figure near ~$8,100 (measured
+   *  2026-09-13 late; the wide-gap shape's rule is a council question, see the register's
+   *  Medicare-era entry). A one-year on-ramp reads "run", not "start at". The unit "a year" rides
+   *  every figure (a 2026-09-14 seat read the bare "~$2,700." as a two-year total). */
+  irmaaStepOnRampSpan: (spanYears: number, totalFormatted: string, anchorYearsFromNow: number): string => {
+    const origin = anchorYearsFromNow === 0 ? 'starting now' : `from about ${yearsOut(anchorYearsFromNow)}`
+    return spanYears === 1
+      ? `Before that, ${origin} and for about a year, only one of you is on Medicare and the premiums run about ~$${totalFormatted} a year.`
+      : `Before that, ${origin} and for about ${countWord(spanYears)} years, only one of you is on Medicare and the premiums start at about ~$${totalFormatted} a year.`
+  },
   /** The no-era arm's on-ramp figure: the frame stated, the era NOT invented
    *  (`copy.irmaaStepNoEraYear` follows it). */
   irmaaStepOnRampOpen: (totalFormatted: string): string =>
@@ -2662,19 +2681,26 @@ export const slots = {
   /** The next IRMAA line NAMED in dollars (cold-read 2026-07-03: "What is the line?") with the
    *  anchor income QUOTED in the same breath and the step cost spoken as the household's own
    *  number ("don't force the user to think — just tell them", Briggsy's law, same day):
-   *  `bothEnrolled` picks the two-of-you total vs the each-of-you per-person figure (the
-   *  engine's real enrolled count at the anchor — never a flat ×2). */
+   *  `bothEnrolled` picks the two-of-you total vs the each-of-you arm (the engine's real enrolled
+   *  count at the anchor — never a flat ×2). The each-of-you arm carries BOTH counts (the Caddie
+   *  read of both Medicare cards, 2026-09-14 — six seats across both panels and both seeds, the
+   *  hunter surviving on each): the premium card one card up has just established the era "while
+   *  you're both on it", and a reader who binds the step to that era under-reads it by 2× when
+   *  the anchor year has one enrollee. The ×2 is exact at one tier (the per-person delta × 2,
+   *  formatted ONCE from the unrounded product — never 2 × the rounded figure, which lands $100
+   *  low); the second sentence re-quotes the era in the eyebrow's own words. */
   irmaaStepNext: (
     thresholdFormatted: string,
     magiFormatted: string,
     headroomFormatted: string,
-    addFormatted: string,
+    addEachFormatted: string,
+    addBothFormatted: string,
     bothEnrolled: boolean,
   ): string =>
     `The next step sits at about ~$${thresholdFormatted} of yearly income. By those Medicare years the plan expects about ~$${magiFormatted} a year of income, roughly ~$${headroomFormatted} under it. ` +
     (bothEnrolled
-      ? `Crossing it could add about ~$${addFormatted} a year for the two of you.`
-      : `Crossing it could add about ~$${addFormatted} a year for each of you once on Medicare.`),
+      ? `Crossing it could add about ~$${addBothFormatted} a year for the two of you.`
+      : `Crossing it could add about ~$${addEachFormatted} a year for each of you on Medicare. While you’re both on it, that’s about ~$${addBothFormatted} a year.`),
   /** The regime compare's HEADLINE — the lifetime health-cost delta (the regime's effect
    *  concentrates pre-65 and may barely move the portfolio median; council 2026-07-03). */
   subsidyRegimeCostDelta: (withFormatted: string, withoutFormatted: string): string =>
@@ -2717,6 +2743,13 @@ export const slots = {
     `${who} — a typical figure of about $${monthlyFormatted} a month, not an actual bill; real costs sit higher or lower, including next to nothing on Medicare Advantage.`,
   healthFigCents: (cents: number): string => `${cents}¢ on each dollar converted`,
   healthFigStepAdd: (amountFormatted: string): string => `+~$${amountFormatted} a year`,
+  /** The step card's hero on the EACH-OF-YOU arm wears its unit (the Caddie read of both
+   *  Medicare cards, 2026-09-14): every other hero on the sheet is a household figure and none
+   *  carries a scope word — the sheet's own convention is that the one non-household hero declares
+   *  its unit IN the hero ("22¢ on each dollar converted"). A bare "+~$1,100 a year" under a
+   *  household ~$5,800 was read as the household's step by four seats; "each" closes the hero
+   *  scan, and the body's second sentence quotes the two-of-you figure. */
+  healthFigStepAddEach: (amountFormatted: string): string => `+~$${amountFormatted} a year each`,
   // --- P3·U12 — the AssumptionPanel's market disclosure figures. The values are READ from
   //     `productionMarket.value` at render (never re-typed — the constants-discipline rule)
   //     and arrive pre-formatted WITH their % glyph; the templates carry no numeral. ---

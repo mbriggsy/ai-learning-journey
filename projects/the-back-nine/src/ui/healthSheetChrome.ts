@@ -305,10 +305,13 @@ export function composeHealthSheet(
         // caption AND the section's accessible name, so the frame reaches both channels at zero height.
         eyebrow: copy.healthFactMedicareBoth,
         figure: slots.healthFigPerYear(eraF),
+        // Both eras are DATED with the wire's own `yearsFromNow` (the Caddie read 2026-09-14: an
+        // undated "first 21 years" was read from today, putting the on-ramp figure over the ACA
+        // years) — the era's distance on its line, the anchor's distance as the on-ramp's origin.
         lines: [
           copy.irmaaStepStory,
-          slots.irmaaStepEraStart(eraF),
-          slots.irmaaStepOnRampSpan(era.yearsFromNow - medicare.yearsFromNow, nowF),
+          slots.irmaaStepEraStart(eraF, era.yearsFromNow),
+          slots.irmaaStepOnRampSpan(era.yearsFromNow - medicare.yearsFromNow, nowF, medicare.yearsFromNow),
           surchargeLine,
           extrasLine,
         ],
@@ -338,20 +341,27 @@ export function composeHealthSheet(
       // The household's OWN number for the step ("just tell them"): the enrolled count at the
       // anchor read OFF THE WIRE (`medicareEnrolledP50` — living ∩ enrolled, onset-aware; the
       // age proxy that lived here re-derived the engine's predicate and drifted from it, council
-      // 2026-09-13), never a flat ×2 — one enrolled quotes the per-person figure on the
-      // each-of-you arm. Both Medicare cards now read the same enrollment source.
+      // 2026-09-13), never a flat ×2 — one enrolled leads with the per-person figure on the
+      // each-of-you arm, whose hero wears its unit and whose sentence ALSO quotes the two-of-you
+      // figure under the era the premium card just established (the Caddie read 2026-09-14: a
+      // reader binding the step to "while you're both on it" halved it). Both figures are
+      // formatted ONCE from the unrounded product — 2 × the rounded '1,100' would read $2,200,
+      // $100 under the tier's real ×2. Both Medicare cards read the same enrollment source.
       const bothEnrolled = medicare.medicareEnrolledP50 >= 2
-      const add = formatDollar(step.surchargeDeltaMonthlyPerPerson * 12 * (bothEnrolled ? 2 : 1))
+      const perPersonYear = step.surchargeDeltaMonthlyPerPerson * 12
+      const addEach = formatDollar(perPersonYear)
+      const addBoth = formatDollar(perPersonYear * 2)
       facts.push({
         id: 'step',
         eyebrow: copy.healthFactStep,
-        figure: slots.healthFigStepAdd(add),
+        figure: bothEnrolled ? slots.healthFigStepAdd(addBoth) : slots.healthFigStepAddEach(addEach),
         lines: [
           slots.irmaaStepNext(
             formatDollar(step.threshold),
             formatDollar(medicare.irmaaMagiP50),
             formatDollar(step.threshold - medicare.irmaaMagiP50),
-            add,
+            addEach,
+            addBoth,
             bothEnrolled,
           ),
         ],

@@ -75,7 +75,7 @@ refusal (`RothLever.tsx:53`).
 
 `Result.tsx` derives the anchor from `startCalendarYear`, which is the plan's **BUILD** year (written once
 at `memoryModel.ts:565`, never re-anchored, survives every re-save). Four separate comments already forbade
-attributing that quantity to the save (`staleness.ts:26`, `resultSave.ts:172`, `copy.ts:2743`,
+attributing that quantity to the save (`staleness.ts:26`, `resultSave.ts:172`, `copy.ts:2776`,
 `FuckOffDate.tsx:150`) — and the band's `'saved'` label did exactly that.
 
 - **Renamed** `elapsedPlanYears` → **`yearsSincePlanBuilt`**, with zero orphans left behind, and every
@@ -528,7 +528,7 @@ as the council admitted it, and the reasons are the material the re-filed unit s
 
 Verified at council time: the bars carry arm **names** at their ends plus the delta hero and the
 `$0`/ceiling axis frame; each bar's own dollar value renders **only** in `ariaSummary`
-(`recommendationView.ts:697-703`, `copy.ts:2893` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
+(`recommendationView.ts:697-703`, `copy.ts:2926` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
 AT-over-sighted inversion is real and nobody disputed it.
 
 The admission was gated on a **deliberate dialect split** in `recommendationView.ts` — endpoints humane

@@ -53,7 +53,7 @@ describe('the Medicare premium card on the shipped seeds, through the real engin
       id: 'step',
       eyebrow: copy.healthFactStep,
       figure: slots.healthFigStepAdd('2,300'),
-      lines: [slots.irmaaStepNext('218,000', '90,100', '127,900', '2,300', true)],
+      lines: [slots.irmaaStepNext('218,000', '90,100', '127,900', '1,100', '2,300', true)],
     })
   })
 
@@ -72,8 +72,8 @@ describe('the Medicare premium card on the shipped seeds, through the real engin
       figure: slots.healthFigPerYear('5,800'),
       lines: [
         copy.irmaaStepStory,
-        slots.irmaaStepEraStart('5,800'),
-        slots.irmaaStepOnRampSpan(2, '2,700'),
+        slots.irmaaStepEraStart('5,800', 7),
+        slots.irmaaStepOnRampSpan(2, '2,700', 5),
         copy.irmaaStepBothBase,
         slots.irmaaStepExtrasAddBoth('5,900', '2,900'),
       ],
@@ -81,8 +81,8 @@ describe('the Medicare premium card on the shipped seeds, through the real engin
     expect(factOf(view, 'step')).toEqual({
       id: 'step',
       eyebrow: copy.healthFactStep,
-      figure: slots.healthFigStepAdd('1,100'),
-      lines: [slots.irmaaStepNext('218,000', '46,000', '172,000', '1,100', false)],
+      figure: slots.healthFigStepAddEach('1,100'),
+      lines: [slots.irmaaStepNext('218,000', '46,000', '172,000', '1,100', '2,300', false)],
     })
   })
 
@@ -101,8 +101,8 @@ describe('the Medicare premium card on the shipped seeds, through the real engin
     const fact = factOf(view, 'medicare')!
     expect(fact.eyebrow).toBe(copy.healthFactMedicareBoth)
     expect(fact.figure).toBe(slots.healthFigPerYear('8,100'))
-    expect(fact.lines[1]).toBe(slots.irmaaStepEraStart('8,100'))
-    expect(fact.lines[2]).toBe(slots.irmaaStepOnRampSpan(21, '2,700'))
+    expect(fact.lines[1]).toBe(slots.irmaaStepEraStart('8,100', 26))
+    expect(fact.lines[2]).toBe(slots.irmaaStepOnRampSpan(21, '2,700', 5))
     expect(fact.lines[3]).toBe(copy.irmaaStepBothBase)
     expect(fact.lines[4]).toBe(slots.irmaaStepExtrasAddBoth('5,900', '2,900'))
   }, 120_000)

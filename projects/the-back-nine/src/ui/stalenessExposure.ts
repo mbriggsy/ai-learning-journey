@@ -10,7 +10,7 @@
  *
  * THE LAW THIS FILE OBEYS (insights 080/081/088): every read below comes from a BUILT PARAMS
  * OUTPUT. Never an age, never a geography, never a re-derivation of a builder's inputs.
- *   · Insight 080's scar (`healthSheetChrome.ts:316-321`): a predicate keyed on "every member
+ *   · Insight 080's scar (`healthSheetChrome.ts:413-418`): a predicate keyed on "every member
  *     65+" equalled the pricing complement only until `dateSearch` became a SECOND producer of
  *     `healthcareEnabled` — then it silently lied.
  *   · Insight 081: a re-derivation forks from its producer at the producer's first early
@@ -110,7 +110,7 @@ const read = (priced: boolean): ExposureRead => (priced ? 'priced' : 'unpriced')
  * silent stale on the more consequential clock. That is precisely the trade the paragraph above
  * says was rejected, and precisely insight 103's shape (a rule written to kill an over-alarm must
  * be checked in the SILENCING direction). `acaPricedForRun` already exists and is exported
- * (`intakeMap.ts:970`) — the predicate was never the missing piece.
+ * (`intakeMap.ts:972`) — the predicate was never the missing piece.
  *
  * THE ACTUAL FIX — AND ONE OF ITS TWO ARMS IS ALSO A TRAP (corrected 2026-08-02, the second time
  * this comment's own prescription has had to be withdrawn).

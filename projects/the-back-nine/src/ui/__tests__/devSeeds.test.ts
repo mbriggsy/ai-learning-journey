@@ -1127,7 +1127,7 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
     // ⚑ PINNED AS FOUND, NOT AS EXPECTED — and the difference is the point. Fresh `retired` is
     // ON-TRACK (0.8555, the documented knife-edge sitting on the 0.85 band edge); this plant reads
     // BORDERLINE. The cause is MEASURED: `doctorStaleVault` ages `startCalendarYear` alone, so the
-    // overlay's DERIVED birth year (`startCalendarYear − currentAge`, simulate.ts:1346) forks from
+    // overlay's DERIVED birth year (`startCalendarYear − currentAge`, simulate.ts:1351) forks from
     // each person's STATED `birthYear` — here 1958/1959 derived against 1960/1961 stated, which
     // straddles the SECURE-2.0 RMD band edge (`bornThrough: 1959 → 73` vs `null → 75`) for BOTH
     // people. The doctored household is therefore forced into RMDs two years earlier than the
@@ -1308,7 +1308,7 @@ describe('the arrived aged plant (the first live route to the hero\'s dateInYear
   // Arm 1 — THE MODEL INVARIANT THIS DOCTOR EXISTS TO HOLD. `PersonInputs` (model.ts:98) documents
   // `currentAge === startCalendarYear − birthYear`, and the engine reads a birth year through TWO
   // paths that must agree: the SS sub-engine's stated `p.birthYear` (FRA / DRC / deemed-filing) and
-  // the tax overlay's DERIVED `startCalendarYear − currentAge` (simulate.ts:1346). Aging the build
+  // the tax overlay's DERIVED `startCalendarYear − currentAge` (simulate.ts:1351). Aging the build
   // clock ALONE forks them by the full depth — silently, because nothing in the codec, the hydrator
   // or the sanity layer enforces the invariant. The arm pins all three halves: currentAge frozen
   // (so the engine sees the same household), birthYear moved by the SAME depth, invariant intact.

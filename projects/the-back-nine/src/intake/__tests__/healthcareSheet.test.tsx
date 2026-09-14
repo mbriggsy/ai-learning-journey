@@ -97,6 +97,7 @@ const READOUT: HealthReadout = {
       medicareBaseP50: 0,
       irmaaSurchargeP50: 0,
       medicareExtrasP50: 0,
+      medicareEnrolledP50: 0,
       acaMagiP50: 66_600,
       irmaaMagiP50: 60_000,
       overCliffFraction: 0.31,

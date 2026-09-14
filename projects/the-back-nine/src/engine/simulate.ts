@@ -1028,6 +1028,7 @@ interface HealthAgg {
   readonly medicareBase: number[][]
   readonly irmaaSurcharge: number[][]
   readonly medicareExtras: number[][]
+  readonly medicareEnrolled: number[][]
   readonly acaMagi: number[][]
   readonly irmaaMagi: number[][]
   readonly overCliff: number[]
@@ -1053,13 +1054,17 @@ export function buildHealthReadout(agg: HealthAgg, paths: number): HealthReadout
       acaNetPremiumP50: median(agg.acaNetPremium[t] ?? []),
       medicareBaseP50: median(agg.medicareBase[t] ?? []),
       irmaaSurchargeP50: median(agg.irmaaSurcharge[t] ?? []),
-      // No UI consumer yet — DELIBERATELY reserved (extras ultramode 2026-07-12, conscious
-      // call): the per-year extras median completes the base/surcharge/extras split for the
-      // filed Medicare-only detail door (medicare-pricing-build-spec.md — the rule-38 dollars
-      // home). The user-facing extras disclosure travels the draft-side per-person channel
-      // (medicareExtrasDisclosureView), which survives the date route where this readout
-      // is absent — this field is the future readout's, not the disclosure's.
+      // CONSUMED since 2026-09-13 by the health sheet's Medicare premium card: the extras
+      // carve-out speaks this median per quoted year (healthSheetChrome.ts → the
+      // `irmaaStepExtrasAdd*` / `irmaaStepExtrasNone*` lines) — spoken beside the base +
+      // surcharge figure, never folded into it (provenance-mixed extras: a typical placeholder is
+      // "not an actual bill"). The draft-side per-person disclosure (medicareExtrasDisclosureView)
+      // stays the separate channel that survives the date route, where this readout is absent.
       medicareExtrasP50: median(agg.medicareExtras[t] ?? []),
+      // The enrolled COUNT the base line was billed on (living ∩ enrolled, onset-aware) — the
+      // health sheet's enrollment frame reads this off the wire (council 2026-09-13), never a
+      // UI-side age proxy.
+      medicareEnrolledP50: median(agg.medicareEnrolled[t] ?? []),
       acaMagiP50: median(agg.acaMagi[t] ?? []),
       irmaaMagiP50: median(agg.irmaaMagi[t] ?? []),
       overCliffFraction: priced > 0 ? (agg.overCliff[t] ?? 0) / priced : 0,
@@ -1413,6 +1418,7 @@ export function simulate(
         medicareBase: Array.from({ length: maxHorizon }, (): number[] => []),
         irmaaSurcharge: Array.from({ length: maxHorizon }, (): number[] => []),
         medicareExtras: Array.from({ length: maxHorizon }, (): number[] => []),
+        medicareEnrolled: Array.from({ length: maxHorizon }, (): number[] => []),
         acaMagi: Array.from({ length: maxHorizon }, (): number[] => []),
         irmaaMagi: Array.from({ length: maxHorizon }, (): number[] => []),
         overCliff: new Array<number>(maxHorizon).fill(0),
@@ -1573,7 +1579,7 @@ export function simulate(
     const floorSink = fanTrack === 'floor' ? pathBalances : undefined
     // P3·U11 — this path's healthcare observation sink (FULL track only; fresh per path).
     const healthSink: HealthYearSink | undefined = wantHealth
-      ? { acaNetPremium: [], medicareBase: [], irmaaSurcharge: [], medicareExtras: [], acaMagi: [], irmaaMagi: [], acaCliffState: [] }
+      ? { acaNetPremium: [], medicareBase: [], irmaaSurcharge: [], medicareExtras: [], medicareEnrolled: [], acaMagi: [], irmaaMagi: [], acaCliffState: [] }
       : undefined
     let res: DecumulationResult
     let floorRes: DecumulationResult | undefined
@@ -1799,6 +1805,7 @@ export function simulate(
           healthAgg.medicareBase[t]!.push(healthSink.medicareBase[t]!)
           healthAgg.irmaaSurcharge[t]!.push(healthSink.irmaaSurcharge[t]!)
           healthAgg.medicareExtras[t]!.push(healthSink.medicareExtras[t]!)
+          healthAgg.medicareEnrolled[t]!.push(healthSink.medicareEnrolled[t]!)
           healthAgg.acaMagi[t]!.push(healthSink.acaMagi[t]!)
           healthAgg.irmaaMagi[t]!.push(healthSink.irmaaMagi[t]!)
           const cliffState = healthSink.acaCliffState[t]!

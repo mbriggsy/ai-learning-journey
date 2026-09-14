@@ -120,7 +120,7 @@ describe('solveWithMint — the named bins (insight 092)', () => {
   // THE UNWITNESSABLE HOUSEHOLD (2026-09-04). Ranking stability's perturbation law needs the +1,000
   // conversion variant to MOVE the varied candidate's own decision surface. THIS world reaches the
   // class by the CLAMP route: with pretax 0, both arms clamp to the same post-RMD headroom (the engine
-  // caps a conversion at `min(planned, pretax − rmd)`, taxOverlay.ts:1444), so nothing moves BY
+  // caps a conversion at `min(planned, pretax − rmd)`, taxOverlay.ts:1450), so nothing moves BY
   // CONSTRUCTION on a comfortably-funded household — which is also the proof the bin is verdict-blind.
   // The live witness `?seed=failing` (devSeeds.test.ts) reaches the SAME class by the OTHER route:
   // its arms run unclamped and tie because every path is exhausted in year 0. Either way it is the

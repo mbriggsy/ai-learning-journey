@@ -74,9 +74,23 @@ export function acaAnchor(readout: HealthReadout): HealthReadoutYear | null {
   return quotableYears(readout).find((y) => y.acaPricedFraction >= 0.5) ?? null
 }
 
-/** The Medicare anchor: the first quotable year where a base Part B bill actually landed. */
+/** The Medicare anchor: the first quotable year where a base Part B bill actually landed. Shared by
+ *  the premium card's on-ramp figure AND the step card (its MAGI, headroom and two-of-you fork all
+ *  ride this year — the two-year look-back hazard lands here) — it never moves. */
 export function medicareAnchor(readout: HealthReadout): HealthReadoutYear | null {
   return quotableYears(readout).find((y) => y.medicareBaseP50 > 0) ?? null
+}
+
+/** The Medicare ERA anchor (council 2026-09-13): the first quotable year in which EVERYONE the
+ *  household entered is enrolled on the middle path — read off the wire's `medicareEnrolledP50`
+ *  (living ∩ enrolled, per-person onset-aware), never a biological age proxy (a still-working 65+
+ *  spouse is not enrolled; the proxy reproduced the one-enrollee-as-era defect on the not-yet-retired
+ *  half). Equal to {@link medicareAnchor} when everyone is enrolled from the first billed year (an
+ *  all-65+ household); null when the plan never reaches such a year inside the quotable window. */
+export function medicareEraYear(readout: HealthReadout, peopleCount: number): HealthReadoutYear | null {
+  return (
+    quotableYears(readout).find((y) => y.medicareBaseP50 > 0 && y.medicareEnrolledP50 >= peopleCount) ?? null
+  )
 }
 
 /** One FACT of the stepped readout (cold-read 2026-07-03: the content is the first-class
@@ -116,6 +130,10 @@ export interface HealthSheetView {
 export function composeHealthSheet(
   readout: HealthReadout | undefined,
   draft: Pick<ScenarioV3, 'filing' | 'enhancedSubsidies' | 'startCalendarYear'> & {
+    /** Ages feed ONLY the ACA anchor's biological `count65` for the deduction stack (the engine's
+     *  own split: `count65` stays biological for §63(f), the pricing count is onset-aware). Medicare
+     *  ENROLLMENT is read off the wire (`medicareEnrolledP50`), never re-derived here from ages
+     *  (council 2026-09-13); the era year needs only the household's COUNT. */
     readonly people: ReadonlyArray<{ readonly currentAge?: number }>
     readonly health: { readonly slcspMonthlyToday?: number }
   },
@@ -223,27 +241,106 @@ export function composeHealthSheet(
     // The "before the next step" anchor (cold-read 2026-07-03): base + any surcharge the
     // middle path already pays — the wire's split (council Q3) rendered at last.
     const totalNow = medicare.medicareBaseP50 + medicare.irmaaSurchargeP50
-    facts.push({
-      id: 'medicare',
-      eyebrow: copy.healthFactMedicare,
-      figure: slots.healthFigPerYear(formatDollar(totalNow)),
-      lines: [
-        copy.irmaaStepStory,
-        roundDollar(medicare.irmaaSurchargeP50) > 0
-          ? slots.irmaaStepNowSurcharged(formatDollar(totalNow), formatDollar(medicare.irmaaSurchargeP50))
-          : slots.irmaaStepNowBase(formatDollar(totalNow)),
-      ],
-    })
+    const nowF = formatDollar(totalNow)
+    // The ERA year (council 2026-09-13, 8/10): the first quotable year EVERYONE is enrolled. Three
+    // arms, the anchor above UNMOVED in all of them —
+    //  · DEGENERATE (the era IS the anchor — every all-65+ household, every one-person household):
+    //    the one-figure composition, byte-identical — `retired` reads exactly as before. That is
+    //    the ONLY degenerate case: the council's "equal rounded totals" collapse was a confirmed
+    //    BLOCKER (review 2026-09-13 late) — one enrollee + a look-back surcharge (2,700 + 3,100)
+    //    collides at the $100 grain with two at base (5,800), and the collapse then spoke the
+    //    ANCHOR's surcharge under the multi-year frame — a surcharge the era years never pay. Two
+    //    frames that share one figure are still two frames; the era arm binds them by frame.
+    //  · ERA (a later year): the LOUD figure is the era's total; the one-enrollee on-ramp years are
+    //    quoted SECOND with their span; the surcharge AND the extras each bound per QUOTED year —
+    //    by FRAME, with the figure re-quoted — never one predicate spanning both years;
+    //  · NO ERA (never reached inside the quotable window): the on-ramp figure with its frame
+    //    stated and the era NOT invented — ONE figure, so its extras line is the singular form.
+    // The extras carve-out is spoken, never folded (provenance-mixed — a typical placeholder is
+    // "not an actual bill"). The figure is base + the wire's `irmaaSurchargeP50` — the COMBINED
+    // Part B + Part D IRMAA — so the noun is "Part B premiums and any income surcharge" and the
+    // carve-out names the drug and supplement PLANS themselves (what the figure leaves out).
+    const era = medicareEraYear(readout, draft.people.length)
+    if (era === medicare) {
+      facts.push({
+        id: 'medicare',
+        eyebrow: copy.healthFactMedicare,
+        figure: slots.healthFigPerYear(nowF),
+        lines: [
+          copy.irmaaStepStory,
+          roundDollar(medicare.irmaaSurchargeP50) > 0
+            ? slots.irmaaStepNowSurcharged(nowF, formatDollar(medicare.irmaaSurchargeP50))
+            : slots.irmaaStepNowBase(nowF),
+        ],
+      })
+    } else if (era !== null) {
+      const eraF = formatDollar(era.medicareBaseP50 + era.irmaaSurchargeP50)
+      const nowSurcharged = roundDollar(medicare.irmaaSurchargeP50) > 0
+      const eraSurcharged = roundDollar(era.irmaaSurchargeP50) > 0
+      const surchargeLine =
+        nowSurcharged && eraSurcharged
+          ? slots.irmaaStepSurchargeBoth(nowF, formatDollar(medicare.irmaaSurchargeP50), eraF, formatDollar(era.irmaaSurchargeP50))
+          : nowSurcharged
+            ? slots.irmaaStepSurchargeOnRampOnly(nowF, formatDollar(medicare.irmaaSurchargeP50), eraF)
+            : eraSurcharged
+              ? slots.irmaaStepSurchargeEraOnly(eraF, formatDollar(era.irmaaSurchargeP50), nowF)
+              : copy.irmaaStepBothBase
+      // The extras per QUOTED year (the engine charges them per enrolled person, so the on-ramp's
+      // median is about half the era's): one figure when the years agree at the $100 grain, two
+      // when they differ, the "nothing while only one of you is" arm when the on-ramp prices none.
+      const eraExtras = roundDollar(era.medicareExtrasP50)
+      const nowExtras = roundDollar(medicare.medicareExtrasP50)
+      const extrasLine =
+        eraExtras === 0 && nowExtras === 0
+          ? copy.irmaaStepExtrasNone
+          : eraExtras === nowExtras
+            ? slots.irmaaStepExtrasAdd(formatDollar(era.medicareExtrasP50))
+            : nowExtras === 0
+              ? slots.irmaaStepExtrasAddEraOnly(formatDollar(era.medicareExtrasP50))
+              : slots.irmaaStepExtrasAddBoth(formatDollar(era.medicareExtrasP50), formatDollar(medicare.medicareExtrasP50))
+      facts.push({
+        id: 'medicare',
+        // The hero's frame (council wf_9921d7e3-55b): the eyebrow names the enrollment state the loud
+        // figure prices — the era arm's figure is the years BOTH are on it. The eyebrow is the visible
+        // caption AND the section's accessible name, so the frame reaches both channels at zero height.
+        eyebrow: copy.healthFactMedicareBoth,
+        figure: slots.healthFigPerYear(eraF),
+        lines: [
+          copy.irmaaStepStory,
+          slots.irmaaStepEraStart(eraF),
+          slots.irmaaStepOnRampSpan(era.yearsFromNow - medicare.yearsFromNow, nowF),
+          surchargeLine,
+          extrasLine,
+        ],
+      })
+    } else {
+      facts.push({
+        id: 'medicare',
+        // The no-era arm's figure prices the years ONE of you is on it — its eyebrow says so.
+        eyebrow: copy.healthFactMedicareOne,
+        figure: slots.healthFigPerYear(nowF),
+        lines: [
+          copy.irmaaStepStory,
+          slots.irmaaStepOnRampOpen(nowF),
+          roundDollar(medicare.irmaaSurchargeP50) > 0
+            ? slots.irmaaStepSurchargeOf(nowF, formatDollar(medicare.irmaaSurchargeP50))
+            : copy.irmaaStepOnRampBase,
+          // ONE figure on this card — the singular carve-out (review 2026-09-13 late).
+          roundDollar(medicare.medicareExtrasP50) > 0
+            ? slots.irmaaStepExtrasAddOne(formatDollar(medicare.medicareExtrasP50))
+            : copy.irmaaStepExtrasNoneOne,
+          copy.irmaaStepNoEraYear,
+        ],
+      })
+    }
     const step = nextIrmaaStep(medicare.irmaaMagiP50, draft.filing, irmaa.value)
     if (step !== null) {
       // The household's OWN number for the step ("just tell them"): the enrolled count at the
-      // anchor from the household's ages (the modal both-alive frame the sheet already speaks),
-      // never a flat ×2 — one enrolled quotes the per-person figure on the each-of-you arm.
-      const yearsInAtAnchor = medicare.yearsFromNow - 1
-      const enrolled = draft.people.filter(
-        (p) => p.currentAge !== undefined && p.currentAge + yearsInAtAnchor >= 65,
-      ).length
-      const bothEnrolled = enrolled >= 2
+      // anchor read OFF THE WIRE (`medicareEnrolledP50` — living ∩ enrolled, onset-aware; the
+      // age proxy that lived here re-derived the engine's predicate and drifted from it, council
+      // 2026-09-13), never a flat ×2 — one enrolled quotes the per-person figure on the
+      // each-of-you arm. Both Medicare cards now read the same enrollment source.
+      const bothEnrolled = medicare.medicareEnrolledP50 >= 2
       const add = formatDollar(step.surchargeDeltaMonthlyPerPerson * 12 * (bothEnrolled ? 2 : 1))
       facts.push({
         id: 'step',

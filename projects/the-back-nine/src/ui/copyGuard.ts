@@ -94,7 +94,11 @@ export function isMortalityKey(key: string): boolean {
     key === 'bandReadoutThinNote' ||
     key === 'verdictRethinkClause' ||
     key === 'assumptionTruerPicture' ||
-    key === 'recHoldGeneric'
+    key === 'recHoldGeneric' ||
+    // The health sheet's no-era line (council wf_9921d7e3-55b, 2026-09-13 late): it renders exactly when
+    // the middle path never carries both spouses on Medicare — a spouse gone or never enrolled — the
+    // worst-moment class, so the catastrophe-lexicon sweep reads it BY NAME.
+    key === 'irmaaStepNoEraYear'
   )
 }
 

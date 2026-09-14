@@ -203,7 +203,7 @@ standing valve; the §7 triggers in `docs/decisions/market-model.md` stay live a
   `base.css` (never a second working tell), the `--dur-breathe` 2100ms opacity breath, a
   plain-language what's-happening label through copy.ts — "Working out your strategy — this can
   take a few minutes…", the Caddie chair's naming of the real cost rather than a silent wait (the
-  duration phrase is TRUE for the measured 90s–6min full-precision wait, `copy.ts:1631`) —
+  duration phrase is TRUE for the measured 90s–6min full-precision wait, `copy.ts:1670`) —
   `aria-busy` on the panel (the `PendingPanel` grammar) with the label spoken through the surface's
   own persistent `role="status"` / `aria-live="polite"` announcer rather than the panel line, so a
   pending frame that mounts already-pending still announces — clear-after-announce (burned/045),
@@ -271,7 +271,7 @@ to a single commit.
   the 2026-08-02 pin**, because it promised a month tied to NC's own certification that no longer
   gates anything, and a withhold that names a date it cannot keep is exactly the promise this
   product must not make. A future state's pin event may have any timing, so the shipped slot commits
-  to none (`copy.ts:2738`).
+  to none (`copy.ts:2849`).
 - **No live household fires the withheld render today, and that is a CLEARED clause, not a
   regression.** Both blocking clauses cleared after U16 shipped: S.L. 2026-41 § 44.1(a) pinned
   `ncRateSchedule` to an enacted statutory schedule on 2026-08-02, retiring the last directional
@@ -526,7 +526,7 @@ phrase NEGATIVELY — "no false 'safe either way'" — to describe when the pivo
 Those are correct as written; deleting them would remove the guard.
 
 **The gate is enforced in code, not just here** (2026-08-01): `copyGuard.ts`'s false-certainty list
-carries the contracted arms alongside the uncontracted ones (`copyGuard.ts:185`), and `lintCopy`
+carries the contracted arms alongside the uncontracted ones (`copyGuard.ts:189`), and `lintCopy`
 normalizes the typographic apostrophe before matching, so authoring any of the above reds the build.
 `docs/product.md` §6 + R21 — which used to PRESCRIBE the phrase — now carry the veto.
 

@@ -97,7 +97,7 @@ status: shipped
 ## S2 — engine shape
 
 1. **Placement:** a pure per-state family beside taxCore's primitives, joining the SAME
-   per-year gross-up fixed point as a **second addend at `taxOverlay.ts:867-879`**
+   per-year gross-up fixed point as a **second addend at `taxOverlay.ts:873-885`**
    (`solveGrossWithdrawal`) — never bolted on after convergence. `GrossUpContext` carries the
    state code; the calendar threads as `startCalendarYear + t` (the senior-bonus pattern —
    the rate lookup **CONSUMES the year**, insight 074). That last point stopped being
@@ -121,8 +121,8 @@ status: shipped
    NC/PA exempt SS, so the state term rides WITHOUT the ×1.85 torpedo multiplier — the state's
    flat rate enters additively at the federal-worst corner instead of multiplied. The
    re-derived worst-case contraction factor and the raised `GROSS_UP_MAX_PASSES` have ONE home,
-   [architecture.md §7.1](../../architecture.md) and `taxOverlay.ts:507`; the derivation is
-   justified in the comment at `taxOverlay.ts:445-505` with the new corner. The convergence
+   [architecture.md §7.1](../../architecture.md) and `taxOverlay.ts:513`; the derivation is
+   justified in the comment at `taxOverlay.ts:451-511` with the new corner. The convergence
    stress sweep was **RE-RUN STATE-ON at the federal-worst corner** (small-net × low-basis ×
    large-SS × NC) — a state-OFF or large-net probe samples the benign regime (insight 006's
    exact trap).
@@ -144,10 +144,10 @@ status: shipped
    priced state is flat-or-zero (a constant flat rate cannot move the conversion-size
    optimum; NC engineNotes, five-elder triangulation). **This ruling REOPENS the moment a
    graduated state (SC/GA/DE) joins the roster** — a standing constraint carried in the
-   k-derivation comment (`taxOverlay.ts:475-478`) and re-stated in
+   k-derivation comment (`taxOverlay.ts:481-484`) and re-stated in
    [architecture.md §7.1](../../architecture.md).
 9. **Accounting:** state tax folds into the year's tax-paid surface the way federal does
-   (`taxPaidThisYear`, taxOverlay.ts:1787 family) — one lifetime-tax lens, no parallel ledger
+   (`taxPaidThisYear`, taxOverlay.ts:1793 family) — one lifetime-tax lens, no parallel ledger
    in v1.
 
 ## S3 — intake + the R7 seat
@@ -214,8 +214,8 @@ status: shipped
    own affirmation ships, rather than silently dressing a future SC household in Florida's
    "no state income tax" words.
 3. **FIVE disclosure homes, not the four this plan first named** (SIX since 2026-09-11 — the standalone verdict note, see the S5 note below) — `verdictMedicareResidual`
-   (copy.ts:1111), `rothOmissionsNote` (copy.ts:960), `controlHealthOmissionsNote`
-   (copy.ts:1063), the spendHelp branch (`spendHelpKeyFor`, intakeMap:981), and the
+   (copy.ts:1150), `rothOmissionsNote` (copy.ts:960), `controlHealthOmissionsNote`
+   (copy.ts:1102), the spendHelp branch (`spendHelpKeyFor`, intakeMap:981), and the
    RECOMMENDATION surface's disclosure rail (`recDiscStateTax`). The fifth was born unguarded:
    it shipped as the only household-DEPENDENT builder with no condition, so an NC household
    would read "this compares federal tax only" three inches under a spine that had just named

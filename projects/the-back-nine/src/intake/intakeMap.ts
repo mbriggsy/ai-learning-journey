@@ -728,8 +728,10 @@ export function draftPretaxTotal(d: ScenarioDraft): number {
  *  pair is entered AND a member is pre-65 (the exact gate `buildOverlay` prices on — this IS
  *  that expression, extracted so the Healthcare DOOR can never drift from the engine's own
  *  domain; insight 020/027: one predicate, every consumer). A post-65-only household reads
- *  false — its honesty surface is the verdict-level unpriced-Medicare disclosure, never a
- *  hollow door (the council's categorical-gating condition, 2026-07-03). */
+ *  false — its honesty surface is the verdict-level PRICED-Medicare disclosure
+ *  (`showMedicarePricedNote` → `verdictMedicarePriced` + `verdictMedicareResidual`; the age-keyed
+ *  unpriced note was retired by the Medicare-pricing unit, insight 080), never a hollow door (the
+ *  council's categorical-gating condition, 2026-07-03). */
 export function healthcarePriced(d: ScenarioDraft): boolean {
   const ages = d.people.map((p) => p.currentAge!).filter((a) => Number.isFinite(a))
   return (
@@ -828,7 +830,7 @@ function acaPricedOverlayArm(o: OverlayParams | undefined): boolean {
  *  This is the read that makes the all-65+ household honest: it takes `buildOverlay`'s
  *  Medicare-only branch (`intakeMap.ts:655-658` — "healthcareEnabled with NO ACA quote pair"),
  *  so `enrolledPremium` is absent, the engine's per-year ACA gate
- *  (`taxOverlay.ts:1696-1701`) can never open, and this correctly reads FALSE. `buildSpineParams`
+ *  (`taxOverlay.ts:1702-1707`) can never open, and this correctly reads FALSE. `buildSpineParams`
  *  returns null on the date route ⇒ false there (the caller handles that route separately —
  *  reading false as "unpriced" off-route would be the insight-080 shortcut, not a fact). */
 export function spineAcaPriced(d: ScenarioDraft): boolean {

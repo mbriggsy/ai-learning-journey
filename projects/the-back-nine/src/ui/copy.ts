@@ -1016,6 +1016,15 @@ export const copy = {
   healthFactDiscount: 'The income-based discount',
   healthFactConversion: 'Roth conversions in those years',
   healthFactMedicare: 'Medicare premiums',
+  // The era-loud card's per-arm eyebrows (council wf_9921d7e3-55b, 2026-09-13 late, 8/10 — "frame the
+  // hero"): the eyebrow is BOTH the visible caption above the aria-hidden figure AND the fact's
+  // accessible name (`<section aria-label={f.eyebrow}>`), so it is the one element that frames the loud
+  // figure in both channels at zero added height. The ERA arm's figure prices the years BOTH are
+  // enrolled; the NO-ERA arm's prices the years ONE is. The frame word must AGREE with the sentences
+  // beneath ("while … both on it" / "while only one of you is") — never a third frame. The degenerate
+  // arm (`retired`) keeps `healthFactMedicare` byte-identical.
+  healthFactMedicareBoth: 'Medicare premiums while you’re both on it',
+  healthFactMedicareOne: 'Medicare premiums while only one of you is on it',
   healthFactStep: 'The next premium step',
   leverHealthRegimeLegend: 'Which subsidy rules should the plan figure under?',
   leverHealthRegimeReverted: 'Current law',
@@ -1042,6 +1051,36 @@ export const copy = {
   // 'step' belongs to Medicare — one word per mechanism, everywhere on the sheet.
   irmaaStepStory:
     'Medicare premiums look back two years at your income — money converted at 63 can show up in the premium bill at 65. Each step is sharp: one dollar over it and the higher charge applies for that whole year.',
+  // --- The two-figure premium card (council 2026-09-13, 8/10 — the era-loud frame): the surcharge
+  //     clause binds PER QUOTED YEAR, never one predicate spanning two years. These are the
+  //     digit-free arms; the figure-carrying arms are `slots.irmaaStep*` below. ---
+  /** NEITHER quoted year carries a surcharge on the middle path — the one-line form. */
+  irmaaStepBothBase:
+    'Both figures are the base rate — on the middle-of-the-road path, no income surcharge would apply in either year.',
+  /** The no-era arm's on-ramp figure is the base rate. */
+  irmaaStepOnRampBase:
+    'That would be the base rate, with no income surcharge on the middle-of-the-road path.',
+  /** The no-era arm: the plan never reaches a quotable year with everyone enrolled ON THE MIDDLE
+   *  PATH — say so, invent nothing (never a projected or doubled figure for the years nobody
+   *  observed). Council wf_9921d7e3-55b (2026-09-13 late): the predicate's shared truth, PATH-scoped
+   *  (unscoped is false — both-enrolled paths exist), "no SECOND figure" (this arm renders one),
+   *  never "steady" (the true cause is a spouse gone or never enrolled on the median path, and the
+   *  sentence must neither claim steadiness nor forecast a death). The key joins `isMortalityKey`
+   *  BY NAME (hygiene: the catastrophe-lexicon sweep reads it as the worst-moment class it is). */
+  irmaaStepNoEraYear:
+    'On the middle-of-the-road path, this plan doesn’t reach a year with both of you on Medicare, so there’s no second figure here for what those years could cost.',
+  /** The extras carve-out when the plan prices the drug and supplement PLANS at nothing in both
+   *  quoted years — affirmed none, or no extras vector on the run: both price at 0, and the
+   *  sentence is true in each. "Plans" (what you'd pay for them), never "coverage beyond Part B":
+   *  the figures DO carry the Part D income surcharge (the wire's `irmaaSurchargeP50` is the
+   *  combined Part B + Part D IRMAA), so the carve-out names the plan premiums the figure leaves
+   *  out, not a coverage the figure partly bills (review 2026-09-13 late). */
+  irmaaStepExtrasNone:
+    'Neither figure counts what you’d pay for drug and supplement plans, which this plan prices at about nothing.',
+  /** The no-era arm's singular twin: that card renders ONE figure (review 2026-09-13 late — "neither"
+   *  presupposed a second figure the reader could not find). */
+  irmaaStepExtrasNoneOne:
+    'That figure doesn’t count what you’d pay for drug and supplement plans, which this plan prices at about nothing.',
   // ⚠️ "the benchmark premium itself" WAS IN BOTH LISTS AND WAS FALSE — struck 2026-08-03.
   // The benchmark (SLCSP) is not merely counted, it is the ANCHOR of the whole credit:
   // `intakeMap.ts:650` builds `slcsp` into the overlay params, `taxOverlay.ts:264` calls it "the
@@ -1902,6 +1941,13 @@ export const HEDGE_TOKENS = [
   'estimate', 'estimated', 'estimates', 'we assume', 'assume', 'assumes',
 ] as const
 
+/** A small count as a WORD ("two years") — the calm register for a span of years; ten and up
+ *  stay digits. Hoisted: the `slots` above call it at render, never at module evaluation. */
+function countWord(n: number): string {
+  const words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine']
+  return Number.isInteger(n) && n >= 0 && n < words.length ? words[n]! : String(n)
+}
+
 /** The over-funded near-ceiling reading, SINGLE-SOURCED (the verdict surface calls it by name via
  *  {@link slots.xOfTenAtCeiling}, and {@link slots.xOfTen}'s defensive clamp falls back to it). A
  *  PROPORTION ("9 in 10") — never a count ("9 of 10", which snaps to "10 of 10"), never a bald
@@ -2473,7 +2519,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the two
    *  universal gates (no false certainty, no advice verb), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:894` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:907` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -2548,6 +2594,71 @@ export const slots = {
   /** The surcharged arm — the middle-of-the-road path already sits above at least one line. */
   irmaaStepNowSurcharged: (totalFormatted: string, surchargeFormatted: string): string =>
     `In your plan’s Medicare years, premiums could run about ~$${totalFormatted} a year for your household — about ~$${surchargeFormatted} of that is already income surcharge on the middle-of-the-road path.`,
+  // --- The two-figure premium card (council 2026-09-13, 8/10): a household whose first billed
+  //     Medicare year has ONE enrollee quoted that year as "your household … in your plan's
+  //     Medicare years" (the 2026-09-13 sheets walk's Card 8, BLOCKER). The LOUD figure is now the
+  //     first quotable year EVERYONE is enrolled — base + surcharge at THAT year, the enrolled
+  //     count read off the wire (`medicareEnrolledP50`, living ∩ enrolled, onset-aware) — never
+  //     ×2, never an average, never the extras folded in. The one-enrollee on-ramp years are
+  //     quoted SECOND with their own frame and their SPAN; the enrollee is named by COUNT ("only
+  //     one of you") — a median count carries no identity, so a name would re-derive the age
+  //     proxy the wire replaced. The NOUN: the figure is the base Part B premium PLUS the wire's
+  //     `irmaaSurchargeP50`, which is the COMBINED Part B + Part D IRMAA (`irmaaTierSurchargeMonthly`
+  //     sums both programs) — so it is "Part B premiums and any income surcharge", never "Part B
+  //     premiums" alone (review 2026-09-13 late: the bare noun mis-scoped a surcharged figure while
+  //     the next line claimed it counted no drug coverage). The extras' size is SPOKEN
+  //     (`irmaaStepExtrasAdd*`) and bound PER QUOTED YEAR like the surcharge — six seats held the
+  //     register's negative: extras are provenance-mixed (entered / affirmed-zero / a typical
+  //     placeholder "not an actual bill"), so folding them into a modelled headline is a new
+  //     calm-but-wrong. An all-65+ household (the era IS the anchor) keeps `irmaaStepNowBase` /
+  //     `irmaaStepNowSurcharged` byte-identical. "Start at" carries the sourced real trend: the era
+  //     year is the era's CHEAPEST. ---
+  irmaaStepEraStart: (totalFormatted: string): string =>
+    `While you’re both on Medicare, Part B premiums and any income surcharge start at about ~$${totalFormatted} a year for your household.`,
+  /** The on-ramp years with their SPAN. The span is the on-ramp's LENGTH (the era year minus the
+   *  anchor year) and tells the reader WHEN the era starts; it does NOT bound the loud figure,
+   *  which is the era year's own total and grows with the era year's distance — a 61/40 household
+   *  reads "the first 21 years" under an era figure near ~$8,100 (measured 2026-09-13 late; the
+   *  wide-gap shape's rule is a council question, see the register's Medicare-era entry). A
+   *  one-year on-ramp reads "run", not "start at". */
+  irmaaStepOnRampSpan: (spanYears: number, totalFormatted: string): string =>
+    spanYears === 1
+      ? `For about the first year, while only one of you is on Medicare, they run about ~$${totalFormatted}.`
+      : `For about the first ${countWord(spanYears)} years, while only one of you is on Medicare, they start at about ~$${totalFormatted}.`,
+  /** The no-era arm's on-ramp figure: the frame stated, the era NOT invented
+   *  (`copy.irmaaStepNoEraYear` follows it). */
+  irmaaStepOnRampOpen: (totalFormatted: string): string =>
+    `While only one of you is on Medicare, Part B premiums and any income surcharge start at about ~$${totalFormatted} a year for your household.`,
+  /** Per-QUOTED-year surcharge binding — each line binds by FRAME ("while only one of you is on
+   *  Medicare" / "while you're both on it") AND re-quotes its own figure: two frames can round to
+   *  ONE figure (one enrollee + a look-back surcharge against two at base — review 2026-09-13
+   *  late, the blocker), so a figure alone cannot carry the binding. Three figure-carrying arms;
+   *  the neither case is `copy.irmaaStepBothBase`. */
+  irmaaStepSurchargeOnRampOnly: (onRampTotal: string, onRampSurcharge: string, eraTotal: string): string =>
+    `While only one of you is on Medicare, about ~$${onRampSurcharge} of the ~$${onRampTotal} is already income surcharge on the middle-of-the-road path; while you’re both on it, the ~$${eraTotal} is the base rate.`,
+  irmaaStepSurchargeEraOnly: (eraTotal: string, eraSurcharge: string, onRampTotal: string): string =>
+    `While you’re both on Medicare, about ~$${eraSurcharge} of the ~$${eraTotal} is already income surcharge on the middle-of-the-road path; while only one of you is on it, the ~$${onRampTotal} is the base rate.`,
+  irmaaStepSurchargeBoth: (onRampTotal: string, onRampSurcharge: string, eraTotal: string, eraSurcharge: string): string =>
+    `Income surcharge is already in both on the middle-of-the-road path — about ~$${onRampSurcharge} of the ~$${onRampTotal} while only one of you is on Medicare, and about ~$${eraSurcharge} of the ~$${eraTotal} while you’re both on it.`,
+  /** The single-year surcharge line (the no-era arm's on-ramp figure). */
+  irmaaStepSurchargeOf: (totalFormatted: string, surchargeFormatted: string): string =>
+    `Of the ~$${totalFormatted}, about ~$${surchargeFormatted} is already income surcharge on the middle-of-the-road path.`,
+  /** The extras carve-out, SPOKEN not folded and bound PER QUOTED YEAR (the engine charges extras
+   *  per enrolled person, so the one-enrollee on-ramp carries about half the era's — review
+   *  2026-09-13 late): one figure when the two years agree at the $100 grain, two when they
+   *  differ, the "nothing while only one of you is" arm when the on-ramp prices none. The
+   *  per-person lines they point at are the sheet's own extras block (F5). The noun is the
+   *  PLANS themselves — what you'd pay for them — never "coverage beyond Part B" (the figures
+   *  carry the Part D income surcharge). */
+  irmaaStepExtrasAdd: (extrasFormatted: string): string =>
+    `Neither figure counts what you’d pay for drug and supplement plans, which the lines below add at about ~$${extrasFormatted} a year.`,
+  irmaaStepExtrasAddBoth: (eraExtrasFormatted: string, onRampExtrasFormatted: string): string =>
+    `Neither figure counts what you’d pay for drug and supplement plans — the lines below add about ~$${eraExtrasFormatted} a year while you’re both on Medicare, and about ~$${onRampExtrasFormatted} a year while only one of you is.`,
+  irmaaStepExtrasAddEraOnly: (eraExtrasFormatted: string): string =>
+    `Neither figure counts what you’d pay for drug and supplement plans — the lines below add about ~$${eraExtrasFormatted} a year while you’re both on Medicare, and nothing while only one of you is.`,
+  /** The no-era arm's singular twin — that card renders ONE figure. */
+  irmaaStepExtrasAddOne: (extrasFormatted: string): string =>
+    `That figure doesn’t count what you’d pay for drug and supplement plans, which the lines below add at about ~$${extrasFormatted} a year.`,
   /** The next IRMAA line NAMED in dollars (cold-read 2026-07-03: "What is the line?") with the
    *  anchor income QUOTED in the same breath and the step cost spoken as the household's own
    *  number ("don't force the user to think — just tell them", Briggsy's law, same day):
@@ -2773,12 +2884,12 @@ export const slots = {
    *  renders on no other goal. A goal-named caption + aria variant for pay-less-tax are ⚑ Briggsy's
    *  words to author (filed in the register) — an OMISSION, never a swap of the other goal's figures
    *  into this template.
-   *  NAMED onto the `recDelta*` control prefix (`CONTROL_KEY_PREFIXES`, copyGuard.ts:119) so `require-hedge`
+   *  NAMED onto the `recDelta*` control prefix (`CONTROL_KEY_PREFIXES`, copyGuard.ts:123) so `require-hedge`
    *  BITES it the way it bites its visual twin `recDeltaTypical`: the AT reader hears the same figures the
    *  sighted reader sees, so the same modal law must hold. A `recViz` prefix was rejected — it would red the
    *  three correctly hedge-free arm labels (`recVizWithLabel`/`recVizWithoutLabel`/`recVizRunnerUpLabel`,
-   *  copy.ts:1832-1839 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
-   *  `isControlKey` was rejected — it breaks that predicate's "by prefix ALONE" law (copyGuard.ts:125). */
+   *  copy.ts:1871-1878 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
+   *  `isControlKey` was rejected — it breaks that predicate's "by prefix ALONE" law (copyGuard.ts:129). */
   recDeltaVizAria: (withoutLabel: string, withoutFig: string, withLabel: string, withFig: string, deltaFig: string): string =>
     `${withoutLabel} lands near about $${withoutFig}; ${withLabel} about $${withFig} — a difference of about $${deltaFig}.`,
   // --- Act-4 · U17 §S5 — the saved record's AGE on the card. ---

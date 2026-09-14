@@ -215,7 +215,7 @@ describe('the delta basis + arithmetic', () => {
   it("a SINGLE-person household has NO survivor phase on any path — deltaBasis 'joint', delta on the JOINT fractions", () => {
     // Derivation, not hypothesis (insight 025): a survivor phase needs ≥ 2 death offsets AND
     // firstDeath < lastDeath (simulate.ts isSurvivorPhasePath — `deathOffsets.length < 2 ⇒ false`).
-    // deathOffsets is `people.map(...)` (exactly one entry per person, simulate.ts:1450/1455), so a
+    // deathOffsets is `people.map(...)` (exactly one entry per person, simulate.ts:1456/1455), so a
     // people-of-one household has EXACTLY ONE death per path ⇒ buildSurvivorConditioned returns null ⇒
     // survivorConditioned absent ⇒ BOTH arms' survivorFraction is undefined ⇒ survivorBasis is false ⇒
     // the delta falls to the JOINT basis (roth.ts:211). This drives the 'joint' branch through the REAL

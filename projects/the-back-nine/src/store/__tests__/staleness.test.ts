@@ -356,7 +356,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     ['part-b-trend', { partBTrendVintage: 'part-b-trend-2025x' }],
     // THE F1 CORRECTION, pinned as an equal member of the family. `irmaaTopTierFrozenThrough`
     // has no engine reader of its own; the table it DATES (`irmaa`) is read at simulate.ts:859,
-    // solveAnchor.ts:178-180 and taxOverlay.ts:1104, and consumedConstants.ts:112 consumes the
+    // solveAnchor.ts:178-180 and taxOverlay.ts:1110, and consumedConstants.ts:112 consumes the
     // whole `health.` family on `healthcareEnabled`. Re-bucketing it to the aggregate reds here.
     ['irmaa-freeze', { irmaaTopTierFrozenThrough: hv.irmaaTopTierFrozenThrough + 1 }],
   ] as const)(
@@ -370,7 +370,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
       expect(named.rulesMoved).toBe(true)
       // The SWEPT part-b-trend comment claimed "no exposure gate: the trend prices every
       // Medicare-bearing year both routes reach". FALSE: `partBPricingByT` is built only under
-      // `healthcareEnabled && taxEnabled` (taxOverlay.ts:1110-1111). Reverting it to ungated
+      // `healthcareEnabled && taxEnabled` (taxOverlay.ts:1116-1117). Reverting it to ungated
       // reds this arm.
       const silent = deriveStaleness(moved, TODAY, NO_OVERLAY)
       expect(silent.healthcare.movedClocks).toEqual([])
@@ -398,7 +398,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     })
   })
 
-  it('`coverage-year` dates BOTH tables (model.ts:2227) — it names each family the run PRICED, and only those', () => {
+  it('`coverage-year` dates BOTH tables (model.ts:2234) — it names each family the run PRICED, and only those', () => {
     // It is the ONLY marker for every annually-re-indexed health figure with no stamp of its own
     // (the four interior IRMAA thresholds, the ACA applicable-percentage bands, the age-rating
     // curve), so bucketing it nameless hid the annual re-key from the pre-65 planner it hits
@@ -546,7 +546,7 @@ describe('deriveStaleness — every healthcare clock names exactly the families 
 
   /** WHICH SENTENCE each clock is allowed to speak — the law, restated by hand. */
   const FAMILY: Readonly<Record<HealthcareClock, { readonly aca: boolean; readonly medicare: boolean }>> = {
-    'coverage-year': { aca: true, medicare: true }, // "the ACA/IRMAA tables" (model.ts:2227)
+    'coverage-year': { aca: true, medicare: true }, // "the ACA/IRMAA tables" (model.ts:2234)
     'aca-status': { aca: true, medicare: false },
     'fpl-guideline': { aca: true, medicare: false },
     'irmaa-freeze': { aca: false, medicare: true }, // dates the IRMAA schedule (the F1 ruling)

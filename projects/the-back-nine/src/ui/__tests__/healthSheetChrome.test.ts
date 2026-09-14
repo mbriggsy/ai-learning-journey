@@ -14,6 +14,7 @@ import {
   composeMedicareExtrasTypicalNote,
   composeRegimeFutures,
   medicareAnchor,
+  medicareEraYear,
   showMedicarePricedNote,
   quotableYears,
 } from '../healthSheetChrome'
@@ -66,6 +67,10 @@ const year = (over: Partial<HealthReadoutYear>): HealthReadoutYear => ({
   medicareBaseP50: 0,
   irmaaSurchargeP50: 0,
   medicareExtrasP50: 0,
+  // The wire's enrolled count (council 2026-09-13) — every Medicare arm sets it EXPLICITLY: the
+  // sheet's enrollment frame reads this, never the draft's ages, so a fixture that forgets it
+  // composes a nobody-enrolled year (a base bill with 0 enrolled is impossible on the real wire).
+  medicareEnrolledP50: 0,
   acaMagiP50: 0,
   irmaaMagiP50: 0,
   overCliffFraction: 0,
@@ -304,7 +309,7 @@ describe('composeHealthSheet', () => {
 
   it('the Medicare anchor composes the story + the now-anchor + the next-step fact (tier-1 MFJ at a 150,000 anchor: step ~1,148 [95.7×12], headroom 68,000)', () => {
     const readout: HealthReadout = {
-      byYear: [year({ yearsFromNow: 1, medicareBaseP50: 4_870, irmaaMagiP50: 150_000 })],
+      byYear: [year({ yearsFromNow: 1, medicareBaseP50: 4_870, medicareEnrolledP50: 2, irmaaMagiP50: 150_000 })],
     }
     const view = composeHealthSheet(readout, draft({ ages: [66, 66] }), FRESH)
     // The Medicare fact: story + the before-any-step anchor (base 4,870 + surcharge 0 → '4,900').
@@ -326,10 +331,10 @@ describe('composeHealthSheet', () => {
 
   it('ONE spouse enrolled at the anchor quotes the per-person figure on the each-of-you arm (never a flat ×2)', () => {
     const readout: HealthReadout = {
-      byYear: [year({ yearsFromNow: 1, medicareBaseP50: 2_435, irmaaMagiP50: 150_000 })],
+      byYear: [year({ yearsFromNow: 1, medicareBaseP50: 2_435, medicareEnrolledP50: 1, irmaaMagiP50: 150_000 })],
     }
     const view = composeHealthSheet(readout, draft({ ages: [66, 62] }), FRESH)
-    // 66 is enrolled, 62 is not: per-person 95.7 × 12 = 1,148.4 → '1,100', bothEnrolled=false.
+    // ONE enrolled on the wire: per-person 95.7 × 12 = 1,148.4 → '1,100', bothEnrolled=false.
     expect(factOf(view, 'step')?.lines).toEqual([
       slots.irmaaStepNext('218,000', '150,000', '68,000', '1,100', false),
     ])
@@ -338,12 +343,202 @@ describe('composeHealthSheet', () => {
   it('a middle path already paying surcharge composes the SURCHARGED now-arm (total = base + surcharge, the split quoted)', () => {
     const readout: HealthReadout = {
       byYear: [
-        year({ yearsFromNow: 1, medicareBaseP50: 4_870, irmaaSurchargeP50: 2_400, irmaaMagiP50: 230_000 }),
+        year({ yearsFromNow: 1, medicareBaseP50: 4_870, irmaaSurchargeP50: 2_400, medicareEnrolledP50: 2, irmaaMagiP50: 230_000 }),
       ],
     }
     const view = composeHealthSheet(readout, draft({ ages: [66, 66] }), FRESH)
     // 4,870 + 2,400 = 7,270 → '7,300'; the surcharge itself quoted at '2,400'.
     expect(factOf(view, 'medicare')?.lines[1]).toBe(slots.irmaaStepNowSurcharged('7,300', '2,400'))
+  })
+})
+
+describe('the two-figure premium card — the era-loud frame (council 2026-09-13; the 2026-09-13 sheets walk’s Card 8)', () => {
+  /** `?seed=healthnc` as the app’s own pipeline renders it (measured 2026-09-13 through the real
+   *  engine — the SAME run `healthSheetSeedGate.test.ts` pins; re-run that gate to re-derive, never
+   *  hand-edit): a 61/59 household — the anchor is yearsFromNow 5 with ONE enrolled (base 2,703), the
+   *  first all-enrolled quotable year is 7 (base 5,765 — the base TRENDS up across the on-ramp, so a
+   *  flat ×2 = 5,406 is the WRONG number). The wire’s enrolled count is what the sheet reads; the ages
+   *  are only the household’s count here. */
+  const healthncReadout = (): HealthReadout => ({
+    byYear: [
+      year({ yearsFromNow: 4, irmaaMagiP50: 66_138 }),
+      year({ yearsFromNow: 5, medicareBaseP50: 2_703, medicareEnrolledP50: 1, medicareExtrasP50: 2_928, irmaaMagiP50: 46_020 }),
+      year({ yearsFromNow: 6, medicareBaseP50: 2_789, medicareEnrolledP50: 1, medicareExtrasP50: 2_928, irmaaMagiP50: 46_819 }),
+      year({ yearsFromNow: 7, medicareBaseP50: 5_765, medicareEnrolledP50: 2, medicareExtrasP50: 5_856, irmaaMagiP50: 41_372 }),
+      year({ yearsFromNow: 8, medicareBaseP50: 6_037, medicareEnrolledP50: 2, medicareExtrasP50: 5_856, irmaaMagiP50: 42_442 }),
+    ],
+  })
+
+  it('healthnc: the LOUD figure is the first all-enrolled year’s total (5,765 → 5,800); the one-enrollee on-ramp is quoted SECOND with its two-year span; neither year surcharged; the extras SPOKEN per quoted year (5,900 once both are on it, 2,900 while one is) — and the step card still reads the UNMOVED anchor (one enrolled → the each-of-you arm)', () => {
+    const view = composeHealthSheet(healthncReadout(), draft({ ages: [61, 59] }), FRESH)
+    expect(factOf(view, 'medicare')).toEqual({
+      id: 'medicare',
+      eyebrow: copy.healthFactMedicareBoth, // the hero's frame: this figure prices the years BOTH are on it
+      figure: slots.healthFigPerYear('5,800'),
+      lines: [
+        copy.irmaaStepStory,
+        slots.irmaaStepEraStart('5,800'),
+        slots.irmaaStepOnRampSpan(2, '2,700'),
+        copy.irmaaStepBothBase,
+        slots.irmaaStepExtrasAddBoth('5,900', '2,900'),
+      ],
+    })
+    // The anchor is UNMOVED: tier-1 MFJ 218,000 − 46,020 = 171,980 → '172,000'; ONE enrolled on the
+    // wire at the anchor → the per-person figure (95.7 × 12 = 1,148.4 → '1,100') on the each-of-you arm.
+    expect(factOf(view, 'step')).toEqual({
+      id: 'step',
+      eyebrow: copy.healthFactStep,
+      figure: slots.healthFigStepAdd('1,100'),
+      lines: [slots.irmaaStepNext('218,000', '46,000', '172,000', '1,100', false)],
+    })
+    // The shipped sentence is GONE from this household: no line quotes the one-enrollee year as the era.
+    expect(factOf(view, 'medicare')!.lines).not.toContain(slots.irmaaStepNowBase('2,700'))
+  })
+
+  it('medicareEraYear: the first QUOTABLE year everyone is enrolled — a thin-cohort all-enrolled year is withdrawn, the anchor itself when everyone is enrolled from the first billed year, null when never reached', () => {
+    expect(medicareEraYear(healthncReadout(), 2)?.yearsFromNow).toBe(7)
+    const thin: HealthReadout = {
+      byYear: [
+        year({ yearsFromNow: 5, medicareBaseP50: 2_703, medicareEnrolledP50: 1 }),
+        year({ yearsFromNow: 7, medicareBaseP50: 5_765, medicareEnrolledP50: 2, cohortFraction: 0.4 }),
+      ],
+    }
+    expect(medicareEraYear(thin, 2)).toBeNull()
+    const both: HealthReadout = { byYear: [year({ yearsFromNow: 1, medicareBaseP50: 4_870, medicareEnrolledP50: 2 })] }
+    expect(medicareEraYear(both, 2)).toBe(medicareAnchor(both))
+  })
+
+  it('the on-ramp span reads "the first year" (run) at one year and a count word above it; ten and up stay digits', () => {
+    expect(slots.irmaaStepOnRampSpan(1, '2,700')).toContain('the first year, while only one of you')
+    expect(slots.irmaaStepOnRampSpan(1, '2,700')).toContain('run about ~$2,700')
+    expect(slots.irmaaStepOnRampSpan(3, '2,700')).toContain('the first three years')
+    expect(slots.irmaaStepOnRampSpan(25, '2,700')).toContain('the first 25 years')
+  })
+
+  /** A three-year readout: the anchor at 1 with ONE enrolled, the era at 3 with two (span 2). */
+  const twoFigure = (anchor: Partial<HealthReadoutYear>, era: Partial<HealthReadoutYear>): HealthReadout => ({
+    byYear: [
+      year({ yearsFromNow: 1, medicareBaseP50: 2_700, medicareEnrolledP50: 1, medicareExtrasP50: 2_900, irmaaMagiP50: 150_000, ...anchor }),
+      year({ yearsFromNow: 2, medicareBaseP50: 2_700, medicareEnrolledP50: 1, medicareExtrasP50: 2_900, irmaaMagiP50: 150_000 }),
+      year({ yearsFromNow: 3, medicareBaseP50: 5_800, medicareEnrolledP50: 2, medicareExtrasP50: 5_900, irmaaMagiP50: 150_000, ...era }),
+    ],
+  })
+  const medicareFact = (r: HealthReadout) => factOf(composeHealthSheet(r, draft({ ages: [64, 62] }), FRESH), 'medicare')!
+
+  it('the surcharge binds PER QUOTED YEAR — on-ramp only: the on-ramp figure INCLUDES its surcharge, the line re-quotes it and names the era figure as base', () => {
+    const f = medicareFact(twoFigure({ irmaaSurchargeP50: 800 }, {}))
+    expect(f.figure).toBe(slots.healthFigPerYear('5,800'))
+    expect(f.lines[2]).toBe(slots.irmaaStepOnRampSpan(2, '3,500'))
+    expect(f.lines[3]).toBe(slots.irmaaStepSurchargeOnRampOnly('3,500', '800', '5,800'))
+  })
+  it('… era only: the LOUD figure carries the surcharge and the line says so', () => {
+    const f = medicareFact(twoFigure({}, { irmaaSurchargeP50: 1_600 }))
+    expect(f.figure).toBe(slots.healthFigPerYear('7,400'))
+    expect(f.lines[1]).toBe(slots.irmaaStepEraStart('7,400'))
+    expect(f.lines[3]).toBe(slots.irmaaStepSurchargeEraOnly('7,400', '1,600', '2,700'))
+  })
+  it('… both', () => {
+    const f = medicareFact(twoFigure({ irmaaSurchargeP50: 800 }, { irmaaSurchargeP50: 1_600 }))
+    expect(f.lines[3]).toBe(slots.irmaaStepSurchargeBoth('3,500', '800', '7,400', '1,600'))
+  })
+  it('… neither (the one-line form); and the extras carve-out reads "about nothing" when the plan prices none in EITHER quoted year — five lines, never a sixth', () => {
+    const f = medicareFact(twoFigure({ medicareExtrasP50: 0 }, { medicareExtrasP50: 0 }))
+    expect(f.lines[3]).toBe(copy.irmaaStepBothBase)
+    expect(f.lines[4]).toBe(copy.irmaaStepExtrasNone)
+    expect(f.lines).toHaveLength(5)
+  })
+
+  it('the extras carve-out binds PER QUOTED YEAR (review 2026-09-13 late): two figures when the years differ, one when they agree, the "nothing while only one of you is" arm when the on-ramp prices none — never one year’s extras spoken over both', () => {
+    // The fixture’s default: on-ramp 2,900 (one enrolled), era 5,900 (two) — the engine charges extras per enrolled person.
+    expect(medicareFact(twoFigure({}, {})).lines[4]).toBe(slots.irmaaStepExtrasAddBoth('5,900', '2,900'))
+    // Equal at the $100 grain → the single-figure plural line.
+    expect(medicareFact(twoFigure({ medicareExtrasP50: 5_900 }, {})).lines[4]).toBe(slots.irmaaStepExtrasAdd('5,900'))
+    // The on-ramp prices none (the first-enrolled spouse affirmed zero), the era does.
+    expect(medicareFact(twoFigure({ medicareExtrasP50: 0 }, {})).lines[4]).toBe(slots.irmaaStepExtrasAddEraOnly('5,900'))
+  })
+
+  it('NO era year (never reached inside the quotable window): the on-ramp figure with its frame stated, the extras spoken, the era NOT invented', () => {
+    const readout: HealthReadout = {
+      byYear: [
+        year({ yearsFromNow: 5, medicareBaseP50: 2_703, medicareEnrolledP50: 1, medicareExtrasP50: 2_928, irmaaMagiP50: 46_020 }),
+        year({ yearsFromNow: 6, medicareBaseP50: 2_789, medicareEnrolledP50: 1, medicareExtrasP50: 2_928, irmaaMagiP50: 46_819 }),
+      ],
+    }
+    expect(factOf(composeHealthSheet(readout, draft({ ages: [61, 59] }), FRESH), 'medicare')).toEqual({
+      id: 'medicare',
+      eyebrow: copy.healthFactMedicareOne, // ONE figure, the years one of you is on it — the eyebrow says so
+      figure: slots.healthFigPerYear('2,700'),
+      lines: [
+        copy.irmaaStepStory,
+        slots.irmaaStepOnRampOpen('2,700'),
+        copy.irmaaStepOnRampBase,
+        slots.irmaaStepExtrasAddOne('2,900'),
+        copy.irmaaStepNoEraYear,
+      ],
+    })
+  })
+  it('NO era year, surcharged on-ramp: the single-year surcharge line re-quotes the on-ramp figure', () => {
+    const readout: HealthReadout = {
+      byYear: [year({ yearsFromNow: 5, medicareBaseP50: 2_703, irmaaSurchargeP50: 800, medicareEnrolledP50: 1, irmaaMagiP50: 230_000 })],
+    }
+    const f = factOf(composeHealthSheet(readout, draft({ ages: [61, 59] }), FRESH), 'medicare')!
+    expect(f.lines[1]).toBe(slots.irmaaStepOnRampOpen('3,500'))
+    expect(f.lines[2]).toBe(slots.irmaaStepSurchargeOf('3,500', '800'))
+    expect(f.lines[3]).toBe(copy.irmaaStepExtrasNoneOne) // ONE figure on this card — the singular none form
+    expect(f.lines[4]).toBe(copy.irmaaStepNoEraYear)
+  })
+
+  it('DEGENERATE arms keep today’s one-figure composition BYTE-IDENTICAL: the era IS the anchor (an all-65+ household — `retired`) and a one-person household', () => {
+    const both: HealthReadout = { byYear: [year({ yearsFromNow: 1, medicareBaseP50: 4_870, medicareEnrolledP50: 2, irmaaMagiP50: 90_129 })] }
+    const bothFact = factOf(composeHealthSheet(both, draft({ ages: [66, 65] }), FRESH), 'medicare')!
+    expect(bothFact.eyebrow).toBe(copy.healthFactMedicare) // the pre-build eyebrow — the per-arm frames never reach this arm
+    expect(bothFact.lines).toEqual([
+      copy.irmaaStepStory,
+      slots.irmaaStepNowBase('4,900'),
+    ])
+    // One person entered, one enrolled → the era is the anchor by count.
+    const solo: HealthReadout = { byYear: [year({ yearsFromNow: 1, medicareBaseP50: 2_435, medicareEnrolledP50: 1, irmaaMagiP50: 90_000 })] }
+    expect(factOf(composeHealthSheet(solo, draft({ ages: [66] }), FRESH), 'medicare')!.lines).toEqual([
+      copy.irmaaStepStory,
+      slots.irmaaStepNowBase('2,400'),
+    ])
+  })
+
+  it('equal ROUNDED totals with a DIFFERENT split are NOT degenerate (review 2026-09-13 late — a BLOCKER: the collapse spoke the anchor’s one-enrollee surcharge under the multi-year frame, a surcharge the era years never pay): the era arm composes, the on-ramp’s surcharge bound by FRAME, the era’s base rate named', () => {
+    // One enrollee + a look-back surcharge (2,700 + 3,100) collides at the $100 grain with two at base (5,800).
+    const equal: HealthReadout = {
+      byYear: [
+        year({ yearsFromNow: 1, medicareBaseP50: 2_700, irmaaSurchargeP50: 3_100, medicareEnrolledP50: 1, irmaaMagiP50: 230_000 }),
+        year({ yearsFromNow: 3, medicareBaseP50: 5_800, medicareEnrolledP50: 2, irmaaMagiP50: 90_000 }),
+      ],
+    }
+    const f = factOf(composeHealthSheet(equal, draft({ ages: [64, 62] }), FRESH), 'medicare')!
+    expect(f.figure).toBe(slots.healthFigPerYear('5,800'))
+    expect(f.lines).toEqual([
+      copy.irmaaStepStory,
+      slots.irmaaStepEraStart('5,800'),
+      slots.irmaaStepOnRampSpan(2, '5,800'),
+      slots.irmaaStepSurchargeOnRampOnly('5,800', '3,100', '5,800'),
+      copy.irmaaStepExtrasNone,
+    ])
+    // The two frames share one figure, so the surcharge line must bind by FRAME — it names both.
+    expect(f.lines[3]).toMatch(/only one of you is on Medicare/)
+    expect(f.lines[3]).toMatch(/while you’re both on it/)
+    // The shipped one-figure surcharged sentence never spans the era on this household.
+    expect(f.lines).not.toContain(slots.irmaaStepNowSurcharged('5,800', '3,100'))
+  })
+
+  it('the step card’s two-of-you fork reads the WIRE, never the draft’s ages (a mutant restoring the age proxy reds both halves)', () => {
+    // Ages say one enrolled (66/62); the wire says two → the two-of-you arm at the ×2 figure.
+    const wireTwo: HealthReadout = { byYear: [year({ yearsFromNow: 1, medicareBaseP50: 4_870, medicareEnrolledP50: 2, irmaaMagiP50: 150_000 })] }
+    expect(factOf(composeHealthSheet(wireTwo, draft({ ages: [66, 62] }), FRESH), 'step')!.lines).toEqual([
+      slots.irmaaStepNext('218,000', '150,000', '68,000', '2,300', true),
+    ])
+    // Ages say both enrolled (66/66); the wire says one (a still-working spouse — onset-aware) → each-of-you.
+    const wireOne: HealthReadout = { byYear: [year({ yearsFromNow: 1, medicareBaseP50: 2_435, medicareEnrolledP50: 1, irmaaMagiP50: 150_000 })] }
+    expect(factOf(composeHealthSheet(wireOne, draft({ ages: [66, 66] }), FRESH), 'step')!.lines).toEqual([
+      slots.irmaaStepNext('218,000', '150,000', '68,000', '1,100', false),
+    ])
   })
 })
 

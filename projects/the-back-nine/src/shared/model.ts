@@ -862,6 +862,13 @@ export interface HealthReadoutYear {
    *  SPLIT from the base line so "base Part B" never silently inflates). 0 when the run
    *  carries no extras vector. */
   readonly medicareExtrasP50: number
+  /** Median Medicare-ENROLLED count (people) — the living ∩ enrolled set the PRICING count bills
+   *  `medicareBaseP50` on (per-person onset-aware: a still-working 65+ spouse is not enrolled, a
+   *  dead spouse is never billed). The health sheet's enrollment frame reads THIS, never a UI-side
+   *  biological age-65 proxy (council 2026-09-13 — the proxy reproduced the one-enrollee-as-era
+   *  defect on the not-yet-retired half). 0 in a year nobody is enrolled. A median over integer
+   *  counts is itself an integer except at an exact 50/50 tie between paths. */
+  readonly medicareEnrolledP50: number
   /** Median ACA-MAGI (real $) — the shadow-rate readout's EMPIRICAL anchor (the council's
    *  unbiased-best-estimate contract: the simulation's own median, never a modeled skeleton). */
   readonly acaMagiP50: number

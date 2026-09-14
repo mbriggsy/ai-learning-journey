@@ -145,6 +145,41 @@ describe('healthReadout — the simulate-level emission (opt-in, observe-only)',
     expect(medicareYear.acaNetPremiumP50).toBe(0)
     expect(medicareYear.medicareBaseP50).toBeCloseTo(2 * 12 * baseRealAt(2031), 6)
     expect(medicareYear.irmaaSurchargeP50).toBe(0) // spending-driven MAGI sits far under the first MFJ tier
+    // WHO the base covers rides the wire (council 2026-09-13): nobody at 60, both at 65.
+    expect(acaYear.medicareEnrolledP50).toBe(0)
+    expect(medicareYear.medicareEnrolledP50).toBe(2)
+  })
+
+  it('medicareEnrolledP50 is the count the base line was billed on — a 66/60 household reads 1 while the base is one person’s bill and 2 once the younger turns 65 (externally derived: count × 12 × the trended base; the on-ramp base is not half the era base)', () => {
+    // A member already enrolled needs the two pre-sim look-back MAGIs (sub-tier: the base is surcharge-free).
+    const on = dist(simulate(healthParams({ people: [MALE_66, FEMALE_60] }, { irmaaMagiSeed: [60_000, 60_000] }), 777, { healthReadout: true }))
+    const byYear = on.healthReadout!.byYear
+    const oneEnrolled = byYear[0]! // 66 enrolled, 60 not — calendar 2026
+    expect(oneEnrolled.medicareEnrolledP50).toBe(1)
+    expect(oneEnrolled.medicareBaseP50).toBeCloseTo(1 * 12 * baseRealAt(2026), 6)
+    const bothEnrolled = byYear[5]! // the younger turns 65 — calendar 2031
+    expect(bothEnrolled.medicareEnrolledP50).toBe(2)
+    expect(bothEnrolled.medicareBaseP50).toBeCloseTo(2 * 12 * baseRealAt(2031), 6)
+    // The on-ramp base is NOT half the era base: the trend moves between the two calendar years.
+    expect(bothEnrolled.medicareBaseP50).not.toBeCloseTo(2 * oneEnrolled.medicareBaseP50, 6)
+  })
+
+  it('medicareEnrolledP50 is the PRICING count, never the biological count65: a 66/66 household with one spouse enrolling at sim-year 3 (still working) reads 1 enrolled — one base bill — until that onset lands, then 2; an age proxy would read 2 from the first year (review 2026-09-13 late: the split the wire exists to carry)', () => {
+    // Person 0’s onset is sim-year 3 (unenrolled, unbilled until then); person 1 enrolled before the sim (needs the look-back seeds).
+    const on = dist(
+      simulate(
+        healthParams({ people: [MALE_66, FEMALE_66] }, { medicareOnsetSimYear: [3, 0], irmaaMagiSeed: [60_000, 60_000] }),
+        777,
+        { healthReadout: true },
+      ),
+    )
+    const byYear = on.healthReadout!.byYear
+    // count65 is 2 in every year (both are 66+); the pricing count is 1 until the onset — the wire must say 1.
+    expect(byYear[0]!.medicareEnrolledP50).toBe(1)
+    expect(byYear[0]!.medicareBaseP50).toBeCloseTo(1 * 12 * baseRealAt(2026), 6)
+    expect(byYear[2]!.medicareEnrolledP50).toBe(1) // sim-year 2 — the year before the onset
+    expect(byYear[3]!.medicareEnrolledP50).toBe(2) // sim-year 3 — the onset lands (calendar 2029)
+    expect(byYear[3]!.medicareBaseP50).toBeCloseTo(2 * 12 * baseRealAt(2029), 6)
   })
 
   it('the domain gate: a healthcare-OFF overlay run emits NO series even when opted in (the categorical-door contract), and its lifetime Σs are zero', () => {
@@ -222,7 +257,7 @@ describe('healthReadout — the simulate-level emission (opt-in, observe-only)',
 // ---------------------------------------------------------------------------
 
 const freshSink = (): HealthYearSink => ({
-  acaNetPremium: [], medicareBase: [], irmaaSurcharge: [], medicareExtras: [], acaMagi: [], irmaaMagi: [], acaCliffState: [],
+  acaNetPremium: [], medicareBase: [], irmaaSurcharge: [], medicareExtras: [], medicareEnrolled: [], acaMagi: [], irmaaMagi: [], acaCliffState: [],
 })
 const zeros = (n: number) => Array.from({ length: n }, () => 0)
 const STOCK_W = 0.5

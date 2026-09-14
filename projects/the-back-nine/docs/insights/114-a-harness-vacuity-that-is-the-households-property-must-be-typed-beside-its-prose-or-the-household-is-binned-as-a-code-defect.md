@@ -23,7 +23,7 @@ byte-identical — nothing moved"*. The harness had called the household a code 
    the perturbed candidate's own decision surface; if nothing moves, sibling-identity proves no
    decoupling. On a pretax-0 world in the test file that is the harness catching a vacuous pass. On a
    household exhausted inside the window it is a **property of the household** — every path depletes
-   in year 0 before the year's tax accrues (`taxOverlay.ts:1831` breaks before `:1853` accrues), so
+   in year 0 before the year's tax accrues (`taxOverlay.ts:1837` breaks before `:1859` accrues), so
    every recorded vector is zero whatever is converted: $50,268 and its $51,268 variant both run
    UNCLAMPED inside the $60k pool and tie, and $200k ties too. The harness cannot witness it. `RankingStabilityFailure`
    carried `violations: string[]`: prose only, so `solveEntry` had one exit for every failure and it was

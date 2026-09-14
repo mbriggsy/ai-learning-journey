@@ -64,7 +64,7 @@ const baseRealMonthly = (calendarYear: number): number => {
 const baseAnnualAt = (count: number, calendarYear: number) => count * baseRealMonthly(calendarYear) * 12
 
 const freshSink = (): HealthYearSink => ({
-  acaNetPremium: [], medicareBase: [], irmaaSurcharge: [], medicareExtras: [],
+  acaNetPremium: [], medicareBase: [], irmaaSurcharge: [], medicareExtras: [], medicareEnrolled: [],
   acaMagi: [], irmaaMagi: [], acaCliffState: [],
 })
 

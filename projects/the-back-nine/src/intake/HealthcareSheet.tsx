@@ -18,7 +18,9 @@
  * DOOR DOMAIN (the council's categorical-gating condition, 2026-07-03): the caller mounts the
  * DOOR only where the engine actually prices healthcare (`healthcarePriced` — the intakeMap
  * predicate, single-sourced with buildOverlay's own gate). A post-65-only household gets NO
- * hollow door; its honesty surface is the verdict-level unpriced-Medicare disclosure.
+ * hollow door; its honesty surface is the verdict-level PRICED-Medicare disclosure
+ * (`showMedicarePricedNote` → `verdictMedicarePriced` + `verdictMedicareResidual`) — the
+ * age-keyed unpriced note was retired by the Medicare-pricing unit (insight 080).
  */
 import { useEffect, useId, useRef, useState } from 'react'
 import type { HealthReadout, TwoArmControl } from '@shared/model'

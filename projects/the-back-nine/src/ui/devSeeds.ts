@@ -1028,6 +1028,27 @@ const dateNcSeed: ScenarioDraft = { ...stillWorkingAllMedicare, retirementState:
 const healthNcSeed: ScenarioDraft = { ...retiredHealth, retirementState: 'NC' }
 
 /**
+ * THE WIDE-GAP MEDICARE WITNESS — `?seed=healthgap` (council wf_9921d7e3-55b, 2026-09-13 late).
+ * `healthnc` with ONE field changed: Sam is 40, not 59 (birthYear + retirementAge follow). The
+ * enrolled median on the wire is NON-MONOTONIC — it rises when the younger spouse enrolls and falls
+ * back when the elder's death crosses the path median — so on this gap the both-enrolled median
+ * window is a ONE-year blip (measured: yearsFromNow 25 one enrolled · 26 two · 27 one) and the
+ * premium card's era arm fires on it. The council kept the bare first-crossing rule (a persistence
+ * floor was vetoed as the rosy direction: the engine PRICED that year) and framed the hero instead —
+ * the per-arm eyebrow + the "while you're both on it" frame — so this seed exists to give the
+ * residual an eye: the Caddie's rendered read of both Medicare cards on a shape no shipped seed
+ * reached. Pinned through the real engine in healthSheetSeedGate.test.ts. Never doctored into a
+ * vault; a 40-year-old "retired at 40" is a witness shape, not a plan.
+ */
+const healthGapSeed: ScenarioDraft = {
+  ...healthNcSeed,
+  people: [
+    healthNcSeed.people[0]!,
+    { ...healthNcSeed.people[1]!, birthYear: 1986, currentAge: 40, retirementAge: 40 },
+  ],
+}
+
+/**
  * THE REFUSAL WITNESS for the employer-coverage premise — `?seed=datesolo`.
  *
  * `stillWorking` (Alex 58 working / Sam 60 retired at 58, pre-65) with the ONE field flipped:
@@ -1092,6 +1113,7 @@ export const DEV_SEEDS = {
   elsewhere: elsewhereAnswered,
   datenc: dateNcSeed,
   healthnc: healthNcSeed,
+  healthgap: healthGapSeed,
   datesolo: dateSoloCoverage,
   atceiling: atCeilingSeed,
 } satisfies Record<string, ScenarioDraft>
@@ -1330,7 +1352,7 @@ const ARRIVED_SAVED_DAYS_AGO = 30
  * (`model.ts:98`) documents `currentAge === startCalendarYear − birthYear` as a model invariant, and
  * the engine reads a birth year through TWO paths that must agree: the SS sub-engine's stated
  * `p.birthYear` (FRA / DRC / deemed-filing lookups) and the tax overlay's DERIVED
- * `startCalendarYear − currentAge` (`simulate.ts:1346`). Aging the build clock ALONE forks them by
+ * `startCalendarYear − currentAge` (`simulate.ts:1351`). Aging the build clock ALONE forks them by
  * the full depth and fabricates a household that is organically impossible — in 2020 this couple
  * would have been 51, not 57. Aging `birthYear` by the same depth restores the invariant exactly,
  * keeps `currentAge` (so the engine sees the SAME household and the crown does not move — MEASURED:
@@ -1366,7 +1388,7 @@ export function doctorArrivedVault(s: ScenarioV3, todayEpochDay: number): Scenar
           `− birthYear (${p.currentAge} !== ${s.startCalendarYear} − ${p.birthYear}) BEFORE aging. ` +
           `This doctor shifts both clocks to KEEP that invariant; over a base that already violates ` +
           `it, the engine's two birth-year reads (p.birthYear for the SS FRA lookup vs ` +
-          `simulate.ts:1346's derived startCalendarYear − currentAge) stay forked and nothing says so.`,
+          `simulate.ts:1351's derived startCalendarYear − currentAge) stay forked and nothing says so.`,
       )
     }
   }

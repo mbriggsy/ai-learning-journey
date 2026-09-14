@@ -400,6 +400,12 @@ export interface HealthYearSink {
    *  — its OWN line, SPLIT from `medicareBase` so the base-Part-B readout never silently
    *  inflates (and the base − surcharge subtraction stays exact). */
   readonly medicareExtras: number[]
+  /** The Medicare-ENROLLED count the base line was billed on that year (`resolveYear`'s
+   *  living ∩ enrolled, per-person onset-aware) — index-aligned with `medicareBase`, so the
+   *  readout can say WHO the base figure covers (council 2026-09-13: the health sheet's
+   *  enrollment frame reads this, never a UI-side biological age-65 proxy). 0 when nobody is
+   *  enrolled (a pre-65 year, or a year the regime is absent). */
+  readonly medicareEnrolled: number[]
   /** The year's converged ACA-MAGI (full-SS calculator) — the readout's empirical anchor. */
   readonly acaMagi: number[]
   /** The year's IRMAA-MAGI (taxable-SS calculator) — the distinct second anchor. */
@@ -1860,6 +1866,9 @@ export function runTaxAwareDecumulation(
       healthOut.medicareBase.push(medicareCostThisYear - irmaaSurchargeThisYear)
       healthOut.irmaaSurcharge.push(irmaaSurchargeThisYear)
       healthOut.medicareExtras.push(medicareExtrasThisYear)
+      // WHO the base line covers: the pricing count (living ∩ enrolled, onset-aware) — 0 when the
+      // year has no regime (tax + RMD both off) or nobody is enrolled. Observed, never consumed.
+      healthOut.medicareEnrolled.push(regime?.medicareEnrolledCount ?? 0)
       healthOut.acaMagi.push(acaMagiThisYear)
       healthOut.irmaaMagi.push(irmaaMagiThisYear)
       healthOut.acaCliffState.push(acaCliffStateThisYear)

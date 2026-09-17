@@ -401,7 +401,16 @@ class TestTheMulesFetchContract(unittest.TestCase):
     The mule keys on that prefix, so a fetcher that succeeded while printing something else would
     be recorded as a failure -- and one that failed while printing `ok` would be recorded as fine,
     which is the "Last Result: 0" shape that fooled this project for hours (insight 007).
+
+    Pinned to PRE-SEASON. Since 2026-09-17 both fetchers read the mule's real inbox and stand down
+    in-season, so on a machine whose mule has run during the season this class would exercise the
+    stood-down `ok` line instead of the refusal it is here to prove -- it did, the first time.
     """
+
+    def setUp(self):
+        real = CO.season_stand_down
+        CO.season_stand_down = lambda path=None: None
+        self.addCleanup(setattr, CO, "season_stand_down", real)
 
     def run_fetch_only(self, module, boom=None):
         real = module.fetch if module is M else module.refresh
@@ -442,6 +451,86 @@ class TestTheMulesFetchContract(unittest.TestCase):
         self.assertEqual(rc, 0)
         self.assertTrue(out.startswith("ok ("), out)
         self.assertEqual(len([x for x in out.splitlines() if x.strip()]), 1)
+
+
+class TestTheDraftEraFetchersStandDownInSeason(unittest.TestCase):
+    """2026-09-17. Both draft-era fetchers refused every hour once their sources moved to
+    in-season pages -- correctly, and uselessly: a gate that cries wolf gets switched off
+    (insight 009). They now read the mule's /state/nfl cargo and stand down with an `ok` line,
+    because a stood-down draft-era source IS healthy and every consumer keys on that prefix.
+    Unknown (no cargo, unreadable cargo, no season_type) means pre-season: run as before."""
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mkdtemp()
+        self.state = os.path.join(self.tmp, "sleeper_state.json")
+        self.real = CO.STATE_CARGO
+        CO.STATE_CARGO = self.state
+        # season_stand_down's default argument was bound at import; point the callers at the file
+        self.real_fn = CO.season_stand_down
+        CO.season_stand_down = lambda path=None: self.real_fn(path or self.state)
+        self.addCleanup(setattr, CO, "STATE_CARGO", self.real)
+        self.addCleanup(setattr, CO, "season_stand_down", self.real_fn)
+
+    def write(self, obj):
+        with open(self.state, "w", encoding="utf-8") as f:
+            f.write(obj if isinstance(obj, str) else json.dumps(obj))
+
+    def boom(self, module):
+        attr = "fetch" if module is M else "refresh"
+        real = getattr(module, attr)
+        setattr(module, attr, lambda *a, **k: (_ for _ in ()).throw(AssertionError("fetched in-season")))
+        self.addCleanup(setattr, module, attr, real)
+
+    def run_it(self, module):
+        buf, stdout = io.StringIO(), sys.stdout
+        sys.stdout = buf
+        try:
+            rc = module.fetch_only()
+        finally:
+            sys.stdout = stdout
+        return rc, buf.getvalue()
+
+    def test_regular_season_stands_both_down_with_one_ok_line_and_no_fetch(self):
+        self.write({"week": 2, "season_type": "regular", "season": "2026"})
+        for mod in (M, CO):
+            self.boom(mod)
+            rc, out = self.run_it(mod)
+            self.assertEqual(rc, 0, mod.__name__)
+            self.assertTrue(out.startswith("ok (stood down: season_type=regular, week 2"), out)
+            self.assertEqual(len([x for x in out.splitlines() if x.strip()]), 1, mod.__name__)
+
+    def test_post_season_stands_down_too(self):
+        self.write({"week": 16, "season_type": "post"})
+        self.assertIn("season_type=post", CO.season_stand_down())
+
+    def test_pre_season_runs_the_fetcher(self):
+        self.write({"week": 1, "season_type": "pre"})
+        self.assertIsNone(CO.season_stand_down())
+        for mod in (M, CO):
+            self.boom(mod)
+            with self.assertRaises(AssertionError):
+                self.run_it(mod)
+
+    def test_unknown_means_pre_season(self):
+        for payload in (None, "not json", json.dumps([1, 2]), json.dumps({"week": 3})):
+            if payload is None:
+                if os.path.exists(self.state):
+                    os.remove(self.state)
+            else:
+                self.write(payload)
+            self.assertIsNone(CO.season_stand_down(), repr(payload))
+
+    def test_the_mule_hauls_state_first_and_the_week_keyed_endpoints_from_it(self):
+        with open(os.path.join(ROOT, "newsletter", "feud_mule.ps1"), encoding="utf-8") as f:
+            s = f.read()
+        i_state = s.index('Fetch-Source "sleeper_state"')
+        self.assertLess(i_state, s.index('Fetch-Source "sleeper_league"'), "state must be hauled first")
+        self.assertLess(i_state, s.index('Run-Fetcher "consensus"'), "the fetchers read the state cargo")
+        self.assertIn("/v1/state/nfl", s)
+        self.assertIn("/matchups/$week", s)
+        self.assertIn("/transactions/$week", s)
+        self.assertIn('$results["sleeper_matchups"]', s, "an unaddressable week must be recorded, not skipped")
 
 
 class TestTheMuleRunsBothFetchers(unittest.TestCase):

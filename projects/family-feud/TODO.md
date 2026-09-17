@@ -101,27 +101,32 @@ slice is not the cheat sheet) and `tests.test_market.draft_era_pool_or_skip` (sk
 window opens on/after Labor Day of the board's season — no per-season constant, no network). The
 gates themselves stay under fixture test in every season.
 
-**Still open from it — the mule cries wolf every hour all season:** `mule_status.json` reads
-`market_adp: FAIL: the ADP pool has 78 players, expected at least 100` (correctly refused, cache
-kept at 116), and it will every run until August. Insight 009: a gate that cries wolf gets switched
-off. The fix is the in-season plan's first step anyway — haul `/state/nfl` (the keystone) and have
-`feud_mule.ps1` skip `Run-Fetcher "consensus"` and `Run-Fetcher "market_adp"` while
-`season_type == "regular"`, recording `standing down: in-season` instead of FAIL. Do it when the
-in-season build starts, not as a one-off.
+**And the mule no longer cries wolf** (same session, later): both draft-era fetchers read the
+mule's new `/state/nfl` cargo through `consensus.season_stand_down` and answer `ok (stood down:
+season_type=regular, week 2; …)` without fetching. Unknown/missing/pre → they run as before.
+Pinned by `tests.test_market.TestTheDraftEraFetchersStandDownInSeason` (5 tests); the older
+fetch-contract tests are pinned to pre-season so a machine whose mule has run in-season cannot
+flip them (it did, once). Suite: 1212 tests.
 
 ## ▶ NEXT BUILD — THE IN-SEASON CADENCE IS UNLOCKED (trigger fired; measured 2026-09-17)
 
 `/state/nfl` reads `{"week": 2, "season_type": "regular", "season_start_date": "2026-09-09",
 "season_has_scores": true}` — the un-stub trigger in `docs/in-season-plan.md`. Week 1 is complete
 with 24 transactions behind it, so the first deliverable that was waiting on data (the waiver
-report) has its data. Build order, from the plan: (1) haul `/state/nfl`, `/matchups/<week>`,
-`/transactions/<week>` in the mule (three `Fetch-Source` lines; `validate_cargo.py` already takes
-`json`), and stand the two draft-era fetchers down on `season_type` (the mule alarm above);
-(2) the Wednesday waiver read — Hunter's transaction log first, per the outlook; (3) the week-11
-QB2/TE2 patch the outlook owed before 09-09 and nobody made — Purdy/Dart/Lawrence/Goff and
-Schultz/Goedert/Okonkwo — check who is still a free agent before proposing. Read the plan's
-"empty payload is VALID" section before touching the cargo gates. **Not started; Briggsy decides
-whether today is the day.**
+report) has its data. Build order, from the plan: ✅ **(1) DONE 2026-09-17 15:46, proven on a real run** — the mule
+hauls `/state/nfl` FIRST and `/matchups/$week` + `/transactions/$week` from it (17/17 ok: state
+10 keys, matchups 8 entries, transactions 6 entries, week 2), and both draft-era fetchers stand
+down on `season_type` (`consensus.season_stand_down`). Cargo files: `sleeper_state.json`,
+`sleeper_matchups.json`, `sleeper_transactions.json` in the inbox, current week only.
+(2) **NEXT: the Wednesday waiver read** — Hunter's transaction log first, per the outlook; inputs
+are all on disk now (`sleeper_transactions.json`, `sleeper_rosters.json`, `sleeper_state.json`,
+trending add/drop, the wire). The plan says the DAY is open: `waiver_day_of_week: 2`,
+`waiver_clear_days: 1`, and the first live cycle has now happened — read `/transactions/1` and
+`/2` timestamps (`status_updated`) to cite when claims actually cleared before hardcoding anything.
+(3) the week-11 QB2/TE2 patch the outlook owed before 09-09 and nobody made — Purdy/Dart/Lawrence/
+Goff and Schultz/Goedert/Okonkwo — Dart went to Cltchiefs on waivers in week 1, Goedert to RMonk9
+as a free agent; check the rest against `/players` availability before proposing. Read the plan's
+"empty payload is VALID" section before touching the cargo gates.
 
 ## ▶ WHERE WE ARE — read this first, update it when it changes
 

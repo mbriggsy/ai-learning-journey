@@ -300,7 +300,12 @@ def report(findings, notes, top, board_meta):
 
 def fetch_only():
     """The mule's contract, identical to validate_cargo.py's: exit 0 or 1, ONE line on stdout,
-    `ok` as the success prefix."""
+    `ok` as the success prefix. In-season it stands down with an `ok (stood down: ...)` line and
+    fetches nothing -- see CO.season_stand_down for why the prefix is `ok`."""
+    reason = CO.season_stand_down()
+    if reason:
+        print(f"ok (stood down: {reason}; draft-era source, resumes in the pre-season; cache untouched)")
+        return 0
     try:
         doc = fetch()
     except CO.Refuse as e:

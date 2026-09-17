@@ -91,6 +91,15 @@ CURVE = os.path.join(KIT, "vorp_curve.json")
 ECR_CACHE = os.path.join(CACHE, "fp_ecr.csv.gz")
 XWALK_CACHE = os.path.join(CACHE, "player_ids.csv.gz")
 
+# The mule's copy of /state/nfl, hauled first every hour since 2026-09-17. This is a DRAFT-ERA
+# instrument: the board is frozen at the draft and both sources it reads moved to in-season pages
+# the week the season started (FantasyPros to a rest-of-season sheet, the FFC pool to a
+# season-in-progress window). Refreshing them in-season is not wrong, it is meaningless -- and the
+# gate below refuses every hour, which insight 009 says is how a gate gets switched off.
+INBOX = os.path.join(ROOT, "newsletter", "data", "inbox")
+STATE_CARGO = os.path.join(INBOX, "sleeper_state.json")
+IN_SEASON = ("regular", "post")
+
 ECR_URL = "https://github.com/dynastyprocess/data/raw/master/files/db_fpecr_latest.csv"
 XWALK_URL = "https://github.com/dynastyprocess/data/raw/master/files/db_playerids.csv"
 
@@ -579,10 +588,41 @@ def report(board_meta, page, disagreements, missing, notes, top):
     return "\n".join(out)
 
 
+def season_stand_down(path=STATE_CARGO):
+    """The reason a draft-era fetcher should NOT refresh right now, or None.
+
+    Reads the mule's /state/nfl cargo -- never the network; this runs inside the mule. In-season
+    (`regular` or `post`) the answer is a one-line reason for the status file. Pre-season, or when
+    the cargo is missing or unreadable, the answer is None and the fetcher runs exactly as it did
+    before 2026-09-17: unknown is treated as pre-season because that is the fetcher's native
+    behaviour and it self-validates and refuses on its own -- standing down on a guess would hide
+    a real pre-season source failure behind a calm line.
+    """
+    try:
+        with open(path, encoding="utf-8") as f:
+            state = json.load(f)
+    except (OSError, ValueError):
+        return None
+    if not isinstance(state, dict):
+        return None
+    season_type = state.get("season_type")
+    if season_type in IN_SEASON:
+        return f"season_type={season_type}, week {state.get('week')}"
+    return None
+
+
 def fetch_only():
     """The mule's contract, identical to validate_cargo.py's: exit 0 or 1, ONE line on stdout,
     `ok` as the success prefix. Anything chattier and the hourly log stops being readable; a
-    different prefix and a consumer keying on `ok` silently reads a failure as a pass."""
+    different prefix and a consumer keying on `ok` silently reads a failure as a pass.
+
+    In-season the line is `ok (stood down: ...)` and nothing is fetched. It starts with `ok`
+    because every consumer keys on that prefix and a stood-down draft-era source IS healthy --
+    the cache is intact and the refusal it would otherwise print hourly is not information."""
+    reason = season_stand_down()
+    if reason:
+        print(f"ok (stood down: {reason}; draft-era source, resumes in the pre-season; cache untouched)")
+        return 0
     try:
         n_x, n_e = refresh()
     except Refuse as e:

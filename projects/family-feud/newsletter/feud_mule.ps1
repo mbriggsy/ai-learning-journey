@@ -1,10 +1,17 @@
 # ============================================================
-#  FEUD MULE v2.1  —  Family Feud data fetcher (Aug 2026)
+#  FEUD MULE v2.2  —  Family Feud data fetcher (Aug 2026, in-season Sep 2026)
 #  Runs hourly via Windows Task Scheduler. Fetches Sleeper league
 #  data + fantasy news feeds into data\inbox for The Nightly Feud,
 #  and runs the two draft-kit market fetchers (v2.1) so the expert
 #  consensus and the ADP pool are never older than the last hour.
 #  Every source fails independently; status lands in mule_status.json.
+#
+#  v2.2 (2026-09-17, the in-season un-stub): /state/nfl is hauled FIRST -- it is the keystone,
+#  because /matchups and /transactions are keyed by week and nothing on disk knew what week it
+#  was. The week is read from that cargo (this run's, or the kept previous copy if this run's
+#  fetch failed) and the two week-keyed endpoints are addressed from it. The two draft-kit
+#  fetchers read the same cargo in Python and stand down in-season with an `ok (stood down ...)`
+#  line -- the judgment lives in consensus.season_stand_down, tested, not here.
 #
 #  v2 (U10): VALIDATE BEFORE WRITING, AND VALIDATE CONTENT, NOT SIZE.
 #
@@ -164,6 +171,9 @@ function Run-Fetcher {
 }
 
 # ---- Sleeper (public JSON, no auth) ----
+# /state/nfl FIRST. Everything week-keyed below is addressed from it, and the two draft-kit
+# fetchers at the bottom read it to decide whether the season has started.
+Fetch-Source "sleeper_state"    "https://api.sleeper.app/v1/state/nfl"                          "sleeper_state.json"         "json"
 Fetch-Source "sleeper_league"   "https://api.sleeper.app/v1/league/1390509993844809728"       "sleeper_league.json"        "json"
 Fetch-Source "sleeper_users"    "https://api.sleeper.app/v1/league/1390509993844809728/users" "sleeper_users.json"         "json"
 Fetch-Source "sleeper_draft"    "https://api.sleeper.app/v1/draft/1390509994847240192"        "sleeper_draft.json"         "json"
@@ -178,6 +188,30 @@ Fetch-Source "sleeper_traded"   "https://api.sleeper.app/v1/draft/13905099948472
 Fetch-Source "sleeper_rosters"  "https://api.sleeper.app/v1/league/1390509993844809728/rosters"  "sleeper_rosters.json"      "json"
 Fetch-Source "trending_add"     "https://api.sleeper.app/v1/players/nfl/trending/add?lookback_hours=24&limit=25"  "sleeper_trending_add.json"  "json"
 Fetch-Source "trending_drop"    "https://api.sleeper.app/v1/players/nfl/trending/drop?lookback_hours=24&limit=25" "sleeper_trending_drop.json" "json"
+
+# ---- The week-keyed endpoints (in-season, added 2026-09-17) ----
+# The week comes from the state cargo on disk -- this hour's if the fetch above passed, the kept
+# previous copy if it failed (its own status line already says so). No cargo at all means the
+# week cannot be addressed, and that is recorded as a failure per endpoint rather than guessed.
+# An EMPTY array from either endpoint is VALID and passes the validator on purpose: it is the
+# truthful answer before the season and on a quiet week (docs/in-season-plan.md). Do not add an
+# `entries > 0` gate here; that is the false red insight 009 warns about.
+$statePath = Join-Path $inbox "sleeper_state.json"
+$week = $null
+if (Test-Path $statePath) {
+    try {
+        $state = Get-Content $statePath -Raw -Encoding UTF8 | ConvertFrom-Json
+        $week = [int]$state.week
+    } catch { $week = $null }
+}
+if ($week -ge 1 -and $week -le 18) {
+    Fetch-Source "sleeper_matchups"     "https://api.sleeper.app/v1/league/1390509993844809728/matchups/$week"     "sleeper_matchups.json"     "json"
+    Fetch-Source "sleeper_transactions" "https://api.sleeper.app/v1/league/1390509993844809728/transactions/$week" "sleeper_transactions.json" "json"
+} else {
+    $why = "FAIL: no usable week in sleeper_state.json (read '$week'), so the week-keyed endpoint could not be addressed"
+    $results["sleeper_matchups"]     = $why + (Get-KeptNote (Join-Path $inbox "sleeper_matchups.json"))
+    $results["sleeper_transactions"] = $why + (Get-KeptNote (Join-Path $inbox "sleeper_transactions.json"))
+}
 
 # ---- News feeds ----
 # rss_nbc_edge was REMOVED 2026-08-08. Its URL returns HTTP 200 with Content-Type text/html and a
@@ -202,6 +236,11 @@ Fetch-Source "rss_pft"          "https://profootballtalk.nbcsports.com/feed/"   
 # They matter on a schedule because both caches are gitignored on purpose (their value is being
 # newer than the board), so a clean clone has neither -- and draft morning is the worst possible
 # moment to find that out.
+#
+# IN-SEASON THEY STAND DOWN. Both read sleeper_state.json (hauled first, above) and answer
+# `ok (stood down: season_type=regular, ...)` without touching the network or the cache -- the
+# board is a draft artifact and both sources moved to in-season pages the week the season began.
+# The judgment is consensus.season_stand_down, in Python, under test; this script only runs them.
 Run-Fetcher "consensus"  "scripts\consensus.py"
 Run-Fetcher "market_adp" "scripts\market.py"
 

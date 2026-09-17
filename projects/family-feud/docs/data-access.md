@@ -44,7 +44,7 @@ nflverse GitHub releases carry stats, injuries and depth charts; both hosts are 
 `sleeper_users`, `sleeper_draft`, `sleeper_traded`, `sleeper_rosters`, `trending_add`,
 `trending_drop`) plus five fantasy RSS feeds — and since v2.1 also runs two draft-kit fetchers
 (`consensus.py`, `market.py`) that write to `draft-kit/cache/` instead.
-**14 entries in `mule_status.json`; 12 of them land in the inbox.**
+**17 entries in `mule_status.json`; 15 of them land in the inbox** *(2026-09-17: `sleeper_state` — hauled FIRST — `sleeper_matchups` and `sleeper_transactions` joined, the last two addressed by the week read from the state cargo; `consensus` and `market_adp` now answer `ok (stood down: season_type=regular …)` all season and fetch nothing — `consensus.season_stand_down`).*
 ⚠️ **Counts move — `mule_status.json` is the answer, not this line.** *(Corrected 2026-08-18: this
 sentence said "12 entries … only 10 land" and the paragraph said "five Sleeper endpoints", both
 written before `sleeper_traded` and `sleeper_rosters` joined on 08-17. It is the one line the repo

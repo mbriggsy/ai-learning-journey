@@ -30,22 +30,27 @@ instruments against the real caches are draft-era and skip with a printed reason
 
 ## What the mule must haul first
 
-**Three** of these four are not hauled today — ✅ **`/league/<id>/rosters` joined the mule on
-2026-08-17**, for a draft-day reason rather than an in-season one: it is how `shape.our_roster_id()`
-derives our `roster_id`, which is the currency `/traded_picks` is denominated in.
-`newsletter/feud_mule.ps1` carries **14** sources (12 into the inbox, 2 into `draft-kit/cache/`);
-the remaining three would make it **17**, and `scripts/validate_cargo.py` already handles the `json`
-kind, so the extension is three `Fetch-Source` lines and nothing else.
+✅ **ALL FOUR HAULED as of 2026-09-17.** `/rosters` joined on 2026-08-17 for a draft-day reason
+(it is how `shape.our_roster_id()` derives our `roster_id`); the other three joined on 2026-09-17
+when the trigger fired. `newsletter/feud_mule.ps1` carries **17** sources (15 into the inbox, 2 into
+`draft-kit/cache/`). It was exactly the three `Fetch-Source` lines this paragraph predicted, plus
+eleven lines of PowerShell to read the week out of the state cargo — `/state/nfl` is fetched FIRST
+and `/matchups/$week` and `/transactions/$week` are addressed from whatever state file is on disk
+(this hour's, or the kept copy if the fetch failed; no state at all is recorded as a failure per
+endpoint, never guessed). Measured on the first run: state 211 bytes / 10 keys, matchups 8 entries,
+transactions 6 entries, week 2. The two draft-era fetchers read the same cargo through
+`consensus.season_stand_down` and answer `ok (stood down: season_type=regular, week 2; …)` without
+touching the network or their caches.
 *(Corrected 2026-08-17: the source count was bumped 12→14 without its two dependent clauses, which
 left this paragraph saying rosters was unhauled while the same night's commit hauled it, and
 "carries 14 … would make it 14".)*
 
 | Endpoint | Measured 2026-08-08 | Why it is needed |
 |---|---|---|
-| `/state/nfl` | 200, 207 bytes, `season_type: "pre"`, `week: 1` | **The keystone.** Every other endpoint below is keyed by week, and nothing on disk knows what week it is. Haul this first or the rest cannot be addressed. |
+| ✅ `/state/nfl` | 200, 207 bytes, `season_type: "pre"`, `week: 1` — hauled hourly since 2026-09-17, FIRST | **The keystone.** Every other endpoint below is keyed by week, and nothing on disk knows what week it is. Haul this first or the rest cannot be addressed. |
 | ✅ `/league/<id>/rosters` | 200, **8 rosters** — hauled hourly since 2026-08-17 | Who owns whom. Already meaningful pre-draft — see the shape note below. **Already live**: `shape.our_roster_id()` reads it to attribute a traded pick. |
-| `/league/<id>/matchups/<week>` | 200, **`[]`** | Weekly opponent + what each roster actually started. |
-| `/league/<id>/transactions/<week>` | 200, **`[]`** | Waiver claims, free-agent adds, trades. |
+| ✅ `/league/<id>/matchups/<week>` | 200, **`[]`** — hauled hourly since 2026-09-17 (`sleeper_matchups.json`, the current week) | Weekly opponent + what each roster actually started. |
+| ✅ `/league/<id>/transactions/<week>` | 200, **`[]`** — hauled hourly since 2026-09-17 (`sleeper_transactions.json`, the current week) | Waiver claims, free-agent adds, trades. |
 
 **The roster payload's shape, measured rather than assumed** (roster 1, today):
 `players: []`, `reserve: []`, `taxi: []`, `keepers: []`, `starters: ["0","0","0","0","0","0","0","0","0","0"]`,
@@ -147,7 +152,9 @@ quotes it without saying so is quoting a pre-season opinion as a mid-season fact
 
 ## Cost when it un-stubs
 
-Four `Fetch-Source` lines in the mule, a validator that already handles them, and a build half that
+*(The mule half was paid 2026-09-17 — three `Fetch-Source` lines and a week read, exactly as
+estimated. What remains is the build half below.)* Four `Fetch-Source` lines in the mule, a validator
+that already handles them, and a build half that
 inherits `build_newsletter.py`'s template extraction, wire matching and `sleeperId` join. The
 expensive part is not the code — it is deciding what the report should say, which is why this
 document stops here.

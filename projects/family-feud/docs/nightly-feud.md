@@ -7,7 +7,7 @@ cross-referenced against our board — written to a local HTML page Briggsy keep
 
 | Half | State |
 |---|---|
-| **The Mule** — hauls data in, hourly | ✅ **Green, and the green is now earned.** Re-verified 2026-08-17: **14 sources, 0 failed**, every payload parsed and counted rather than weighed. **5 working feeds.** *(Was 12 on 2026-08-08; `sleeper_traded` + `sleeper_rosters` joined 08-17 so the traded-pick guard needs no fetch on the clock.)* Item counts move hourly — read `mule_status.json`, never this cell. |
+| **The Mule** — hauls data in, hourly | ✅ **Green, and the green is now earned.** Re-verified 2026-09-17, in-season: **17 sources, 0 failed**, every payload parsed and counted rather than weighed. **5 working feeds.** *(Was 12 on 2026-08-08, 14 on 08-17; `sleeper_state` + `sleeper_matchups` + `sleeper_transactions` joined 09-17 for the in-season cadence, and the two draft-era fetchers stand down on `season_type` with an `ok` line rather than refusing hourly.)* Item counts move hourly — read `mule_status.json`, never this cell. |
 | **The build** — turns data into a newsletter | ✅ **Edition #1 published 2026-08-08** (U11). `scripts/build_newsletter.py`. |
 | **The schedule** — publishes it nightly, unattended | ✅ **Registered 2026-08-08** (U12). Task *Family Feud Newsletter*, **daily at 21:45**, sixteen minutes behind the mule's `:29` haul. Re-register after any folder move: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-newsletter.ps1` |
 

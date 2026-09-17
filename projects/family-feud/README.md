@@ -12,7 +12,7 @@ Snake draft, 16 rounds, ~Aug 29. Full PPR, 6 of 8 make the playoffs.
 | **A 176-player draft board** | 48 RB · 61 WR · 20 TE · 23 QB · 14 DEF · 10 K — every entry tiered, badged, and carrying empirical VORP |
 | **A live draft engine** | reads the cumulative Sleeper picks feed and prints board state, every roster's open needs, run watch, tier cliffs, best-available, VBD leans — and LINEUP DELTAS, the roster-aware queue that replayed +391.8 startable VORP over board order (2026-08-19) |
 | **A proven executor mode** | Claude drives Briggsy's logged-in Chrome and clicks the picks. Live-proven 2026-08-15: an API-confirmed fire at pick #1, then seven picks on a live 120s clock, worst case 61s, zero missed. Never yet run on the real league draft |
-| **An hourly data mule** | a Windows scheduled task hauling 7 Sleeper endpoints + 5 fantasy RSS feeds + the expert consensus and the market ADP pool to disk — **14 sources, 12 of them landing in `newsletter/data/inbox/`** — so nothing depends on a network call at draft time. It **validates what it caught** — status, content-type, that it parses, that a feed has items — and **never overwrites good cargo with bad**: a failed source keeps the last payload and records how old it now is |
+| **An hourly data mule** | a Windows scheduled task hauling 10 Sleeper endpoints (`/state/nfl` first, and the week-keyed `/matchups` and `/transactions` addressed from it since 2026-09-17) + 5 fantasy RSS feeds + the expert consensus and the market ADP pool to disk — **17 sources, 15 of them landing in `newsletter/data/inbox/`**; the two draft-era fetchers stand down in-season with an `ok (stood down …)` line — so nothing depends on a network call at draft time. It **validates what it caught** — status, content-type, that it parses, that a feed has items — and **never overwrites good cargo with bad**: a failed source keeps the last payload and records how old it now is |
 | **A draft-state watcher** | the mule's first consumer. Hourly, it notices the moment `start_time` stops being null — or moves — and writes it down, because the date is a handshake that can shift **earlier**. It also refuses to go quiet: stale cargo, a lost baseline, a moved seat, or a re-created draft each raise their own alert |
 
 ## Where things are
@@ -119,7 +119,7 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         section [2], who the consensus ranks that the board does
                                         not carry — the half a rank-gap metric cannot see.
                                         → docs/insights/018
-tests/           1207 tests: python -m unittest discover -s tests  (run from the root)
+tests/           1212 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```
@@ -247,7 +247,7 @@ the draft, exit 0), the board polling a live feed in a browser, curl to Sleeper,
 **14 sources, 0 failed, and this time the "ok" means something** *(12 on 2026-08-08; `sleeper_traded`
 and `sleeper_rosters` were added 2026-08-17. **12 of the 14 land in the inbox**; the other two are
 the draft-kit fetchers writing to `draft-kit/cache/`)*: every payload was parsed and
-counted, not weighed. The wire carries **5 working feeds and 142 items** (yahoo 50 · cbs 36 ·
+counted, not weighed. **Re-verified 2026-09-17 in-season: 17/17 ok** (`sleeper_state`, `sleeper_matchups`, `sleeper_transactions` joined; `consensus` and `market_adp` stood down on `season_type=regular`). The wire carries **5 working feeds and 142 items** (yahoo 50 · cbs 36 ·
 pft 30 · espn 21 · rotowire 5). Item counts move daily; re-read `mule_status.json` rather than
 quoting these.
 

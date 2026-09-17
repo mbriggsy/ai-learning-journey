@@ -42,6 +42,31 @@ def board_row(r, name, pos, team, pr, sid):
             "sleeperId": sid, "vorpMethod": "curve:2021-2024"}
 
 
+def draft_era_cache_or_skip(tc):
+    """Skip -- loudly -- when the cached ECR is not the draft-season cheat sheet.
+
+    The board is a DRAFT artifact and `consensus.py` is its instrument. FantasyPros swaps the
+    PPR cheat sheet (`/nfl/rankings/ppr-cheatsheets.php`) for a rest-of-season page once the
+    season starts; the mule's nightly refresh picked that up on 2026-09-12 and the PPR-slice gate
+    refused, exactly as designed. That refusal is not a regression, and four tests that run the
+    real instrument against the real cache went red for it. Briggsy's call (2026-09-17): the board
+    is done, so these tests are DRAFT-ERA -- they stand down while the slice is the in-season
+    page and re-arm on their own the next time the cheat sheet is back in the cache. The gate
+    itself stays under test above, on fixtures, in every season.
+
+    A skip here is the honest state, not a switched-off gate (insight 009 is about false reds):
+    the reason names the pages seen, so a skip that persists into next August is visible.
+    """
+    if not os.path.exists(C.ECR_CACHE) or not os.path.exists(C.XWALK_CACHE):
+        tc.skipTest("no cached consensus on this machine -- run --refresh")
+    try:
+        C.consensus_rows(C._read_csv(C.ECR_CACHE, "consensus"))
+    except C.Refuse as e:
+        if "now covers" in str(e):
+            tc.skipTest(f"DRAFT-ERA test, cache is in-season: {e}")
+        raise
+
+
 class TestIdCleaning(unittest.TestCase):
     def test_a_float_formatted_id_is_recovered(self):
         """CSV round-trips integer ids through floats, so '4046' arrives as '4046.0' and every
@@ -460,8 +485,7 @@ class TestItNeverWritesTheBoard(unittest.TestCase):
                                 f"consensus.py opens the board for writing: open(BOARD, {args})")
 
     def test_running_the_real_report_leaves_the_board_byte_identical(self):
-        if not os.path.exists(C.ECR_CACHE) or not os.path.exists(C.XWALK_CACHE):
-            self.skipTest("no cached consensus on this machine -- run --refresh")
+        draft_era_cache_or_skip(self)
         with open(C.BOARD, "rb") as f:
             before = f.read()
         buf, real = io.StringIO(), sys.stdout
@@ -477,8 +501,7 @@ class TestItNeverWritesTheBoard(unittest.TestCase):
 
 class TestAgainstTheRealCachedSources(unittest.TestCase):
     def setUp(self):
-        if not os.path.exists(C.ECR_CACHE) or not os.path.exists(C.XWALK_CACHE):
-            self.skipTest("no cached consensus on this machine -- run --refresh")
+        draft_era_cache_or_skip(self)
 
     def test_the_live_board_resolves_almost_entirely_by_ID(self):
         """A name join is forbidden here (insight 004), so coverage IS the feasibility number.

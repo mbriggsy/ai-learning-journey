@@ -36,6 +36,25 @@ so every search reads "no match" and screenshots fail with "0 width"; `resize_wi
 the tab so the extension opens a fresh window. **Watch:** the week SF activates Kirk (or HOU activates Dell) Sleeper
 pulls the tag and FREEZES the roster until a spot is cleared.
 
+**WEEK 1 — WON vs HUNTER, 165.92 to 140.56** (1-0, 2nd in points behind RMonk9's 218.36). Flowers
+29.0, Swift 32.4, Taylor 25.1; Stevenson's 14.5 on the bench is the reason `gameday_check.py` exists.
+**Roster moves made by a prior session and never written down until 2026-09-17** (all API-verified
+on `/transactions/1` and `/2`): Kirk dropped off IR · Vele claimed on waivers (won at waiver #4 over
+Kaeperni and Cltchiefs; the Coker claim FAILED — MattiICE23 got him, so Hunter did NOT, and the
+week-8 block holds) · Gainwell dropped · Vikings DEF out, **Buccaneers DEF in**. Roster: 16 active
++ Dell on IR, one IR slot open. **The outlook's before-Wednesday QB2/TE2 adds never happened** and
+the week-11 bye hole is still open — see the in-season item below.
+
+**WEEK 2 — vs kblizzy23 (1-0, 154.66), set 2026-09-17 15:25 ET from a plane, API-verified:**
+Flowers (14.0 proj, Q hamstring) IN at FLEX, Swift (11.6, Q knee) to the bench. Expected 136.5 to
+his 140.9. Collins is Q (hamstring, 17.5) — hold; Pittman is Q (foot) and is the named fallback for
+both. Bates kicks tonight (DET–BUF); everyone else is Sunday. The Sat 20:00 / Sun 08:00 / Sun 11:30
+checks re-read the tags; **read `GAMEDAY.md` Sunday morning.**
+**`gameday_check.py` fixed the same day:** it had filtered Questionable bench bodies out of the ↑
+bench-beats-starter line while naming the same Questionable body as the ⚠ fallback — Flowers 14.0
+over Swift 11.6 went unreported. One rule now: Out/Doubtful/IR/Sus removes a body from every
+comparison, Questionable removes nobody and is printed on the name. 20 tests.
+
 **SEASON OUTLOOK (2026-09-07): [`docs/season-outlook-2026.md`](docs/season-outlook-2026.md)** -- the 93-agent
 draft-night analysis, pilot-verified; phone page https://claude.ai/code/artifact/8ece5a57-5e63-4f3b-9340-5686e517fc06.
 Its calendar, owed by us:
@@ -67,21 +86,42 @@ margin (insight 023). Briggsy overrode twice: Flowers over Maye at #38, Pittman 
 - The runbook's post-draft rule stands: **do NOT build in-season cadence** until `/state/nfl`
   reads `season_type: "regular"` (`docs/in-season-plan.md`).
 
-## 🚨 SUITE IS RED — 4 tests, one root cause, since the mule's in-season cache refresh (found 2026-09-12)
+## ✅ SUITE GREEN AGAIN 2026-09-17 — 1207 tests, 6 skipped, FIVE of them DRAFT-ERA by design
 
-`tests.test_consensus.TestAgainstTheRealCachedSources` (2 errors), `TestItNeverWritesTheBoard` (1 fail)
-and `tests.test_rerank.TestItRefusesToWriteOverAStaleNote` (1 fail). Reproduce: `python -m unittest
-tests.test_consensus tests.test_rerank`. Root: `scripts/consensus.py` now refuses with
-`page_type='redraft-overall' now covers ['/nfl/rankings/ros-ppr-overall.php'], not just
-'/nfl/rankings/ppr-cheatsheets.php'` — FantasyPros swapped its PPR cheatsheet for a rest-of-season
-page once the season started, the nightly cache (`draft-kit/cache/`) picked it up, and the
-PPR-slice gate did its job. The rerank test fails downstream of the same refusal (it expects
-`REFUSED TO WRITE` and gets that message). **Not a code regression; a source that moved.** Decide
-first, then fix: (a) the board is a DRAFT artifact and is done — pin the gate to the last pre-season
-cache and mark the four tests as draft-era; or (b) the in-season board should follow ROS — extend
-`consensus.py`'s page_type map to accept `ros-ppr-overall.php` as the Full-PPR slice and re-run the
-gate. (a) is cheaper and nothing in-season reads the board's consensus today. Cargo files that
-carried the change: `draft-kit/cache/player_ids.csv.gz` (mule, 2026-09-12).
+The 2026-09-12 red (4 tests, one cause) was FIVE once the whole suite ran, not four: the same
+disease in a second organ. FantasyPros swapped the PPR cheat sheet for a rest-of-season page, AND
+the FFC mock-draft pool became a season-in-progress window (2026-09-09..09-16, 214 drafts, 116
+players; the join reached 103 of the board's 176 with zero ambiguity — the join is fine, the
+market is gone). Briggsy's call, option (a): **the board is a DRAFT artifact and both instruments
+are draft-era.** The literal "pin to the last pre-season cache" was impossible — the caches are
+gitignored and the nightly refresh had already overwritten them — so the five tests that run the
+real instruments against the real caches now STAND DOWN with a loud reason and re-arm on their own
+next August: `tests.test_consensus.draft_era_cache_or_skip` (skips when the `redraft-overall`
+slice is not the cheat sheet) and `tests.test_market.draft_era_pool_or_skip` (skips when the pool
+window opens on/after Labor Day of the board's season — no per-season constant, no network). The
+gates themselves stay under fixture test in every season.
+
+**Still open from it — the mule cries wolf every hour all season:** `mule_status.json` reads
+`market_adp: FAIL: the ADP pool has 78 players, expected at least 100` (correctly refused, cache
+kept at 116), and it will every run until August. Insight 009: a gate that cries wolf gets switched
+off. The fix is the in-season plan's first step anyway — haul `/state/nfl` (the keystone) and have
+`feud_mule.ps1` skip `Run-Fetcher "consensus"` and `Run-Fetcher "market_adp"` while
+`season_type == "regular"`, recording `standing down: in-season` instead of FAIL. Do it when the
+in-season build starts, not as a one-off.
+
+## ▶ NEXT BUILD — THE IN-SEASON CADENCE IS UNLOCKED (trigger fired; measured 2026-09-17)
+
+`/state/nfl` reads `{"week": 2, "season_type": "regular", "season_start_date": "2026-09-09",
+"season_has_scores": true}` — the un-stub trigger in `docs/in-season-plan.md`. Week 1 is complete
+with 24 transactions behind it, so the first deliverable that was waiting on data (the waiver
+report) has its data. Build order, from the plan: (1) haul `/state/nfl`, `/matchups/<week>`,
+`/transactions/<week>` in the mule (three `Fetch-Source` lines; `validate_cargo.py` already takes
+`json`), and stand the two draft-era fetchers down on `season_type` (the mule alarm above);
+(2) the Wednesday waiver read — Hunter's transaction log first, per the outlook; (3) the week-11
+QB2/TE2 patch the outlook owed before 09-09 and nobody made — Purdy/Dart/Lawrence/Goff and
+Schultz/Goedert/Okonkwo — check who is still a free agent before proposing. Read the plan's
+"empty payload is VALID" section before touching the cargo gates. **Not started; Briggsy decides
+whether today is the day.**
 
 ## ▶ WHERE WE ARE — read this first, update it when it changes
 

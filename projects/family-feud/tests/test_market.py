@@ -325,17 +325,52 @@ class TestItNeverWritesTheBoard(unittest.TestCase):
             self.assertEqual(f.read(), before)
 
 
+def labor_day(year):
+    """First Monday of September -- the NFL regular season kicks off the same week."""
+    import datetime
+    d = datetime.date(year, 9, 1)
+    return d + datetime.timedelta(days=(7 - d.weekday()) % 7)
+
+
+def draft_era_pool_or_skip(tc, doc, board_meta):
+    """Skip -- loudly -- when the cached ADP pool is a season-in-progress window.
+
+    The pool is a rolling window of recent mock drafts (`meta.start_date`..`meta.end_date`).
+    Once the real season starts, mocks thin out and the board's 176 names include bodies
+    nobody mocks any more (IR stashes, benched veterans, the dropped), so the exact-key join
+    reaching most of the board stops being a health signal for the JOIN and becomes a fact
+    about the CALENDAR. Measured 2026-09-17: window 2026-09-09..09-16, 214 drafts, 116 players,
+    103 of 176 matched, no ambiguity -- the join is fine, the market is gone. Same disease as
+    tests.test_consensus.draft_era_cache_or_skip, second organ; Briggsy's call the same day:
+    the board is a DRAFT artifact, so this is a DRAFT-ERA test. It stands down when the window
+    opens on or after Labor Day of the board's season and re-arms on its own next August.
+    """
+    import datetime
+    start = (doc.get("meta") or {}).get("start_date")
+    updated = (board_meta or {}).get("updated")
+    if not start or not updated:
+        return                                  # nothing to judge by; let the assertion speak
+    season = datetime.date.fromisoformat(updated).year
+    window_opens = datetime.date.fromisoformat(start)
+    if window_opens >= labor_day(season):
+        tc.skipTest(f"DRAFT-ERA test, pool is in-season: window opens {start}, on/after Labor Day "
+                    f"{labor_day(season)} of the {season} board; {len(doc.get('players') or [])} "
+                    f"players from {(doc.get('meta') or {}).get('total_drafts')} drafts")
+
+
 class TestAgainstTheRealCachedPool(unittest.TestCase):
     def setUp(self):
         if not os.path.exists(M.ADP_CACHE):
             self.skipTest("no cached ADP pool on this machine")
         self.doc = M.load()
         with open(CO.BOARD, encoding="utf-8") as f:
-            self.board = json.load(f)["players"]
+            board = json.load(f)
+        self.board, self.board_meta = board["players"], board["meta"]
 
     def test_the_exact_key_join_still_reaches_most_of_the_board(self):
         """Coverage IS the health signal: a name join is forbidden here, so if a team code moves
         this collapses and the report would quietly compare almost nothing."""
+        draft_era_pool_or_skip(self, self.doc, self.board_meta)
         _, notes = M.compare(self.board, self.doc)
         self.assertGreater(notes["matched"], len(self.board) * 0.8,
                            f"join coverage collapsed: {notes['matched']}/{len(self.board)}")

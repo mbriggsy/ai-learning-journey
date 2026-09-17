@@ -64,10 +64,23 @@ class TestSilenceIsEarned(unittest.TestCase):
         f.proj["bn_wr"] = projection(11.9)          # +1.9 over a 10.0 starter: under SWAP_MARGIN
         self.assertEqual(f.rows(), [])
 
-    def test_questionable_on_the_bench_is_nobodys_business(self):
+    def test_questionable_on_the_bench_under_the_margin_is_still_silence(self):
+        f = Fixture()
+        f.players["bn_wr"]["injury_status"] = "Questionable"       # 8.0 vs a 10.0 starter: no edge to report
+        self.assertEqual(f.rows(), [])
+
+    def test_questionable_on_the_bench_over_the_margin_fires_with_the_tag_on_his_name(self):
+        """Week 2, 2026: Flowers (Questionable, 14.0) behind Swift (Questionable, 11.6) and the ↑
+        line said nothing, while the ⚠ line was naming Flowers as the fallback. Questionable is
+        printed, never filtered -- the same rule on every line."""
         f = Fixture()
         f.players["bn_wr"]["injury_status"] = "Questionable"
-        self.assertEqual(f.rows(), [])
+        f.players["bn_wr"]["injury_body_part"] = "Hamstring"
+        f.proj["bn_wr"] = projection(13.0)
+        rows = f.rows()
+        self.assertEqual([r[0] for r in rows], ["↑"])
+        self.assertIn("BN_WR over", rows[0][1])
+        self.assertIn("[Questionable: Hamstring]", rows[0][2])
 
     def test_a_starter_who_already_played_is_left_alone(self):
         f = Fixture()
@@ -94,7 +107,7 @@ class TestTheSirenFires(unittest.TestCase):
         f.players.pop("bn_rb"); f.our["players"].remove("bn_rb")
         rows = f.rows()
         self.assertEqual(len(rows), 1)
-        self.assertIn("No untagged bench body is eligible for RB", rows[0][2])
+        self.assertIn("No bench body who is playing is eligible for RB", rows[0][2])
 
     def test_flex_sub_may_be_any_of_rb_wr_te(self):
         f = Fixture()
@@ -118,7 +131,7 @@ class TestTheSirenFires(unittest.TestCase):
         f.players["wr1"]["injury_status"] = "Out"
         f.players["bn_wr"]["injury_status"] = "Out"
         rows = f.rows()
-        self.assertIn("No untagged bench body", rows[0][2])
+        self.assertIn("No bench body who is playing", rows[0][2])
 
     def test_empty_slot_is_a_siren(self):
         f = Fixture()

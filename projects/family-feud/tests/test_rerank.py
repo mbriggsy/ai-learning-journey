@@ -258,8 +258,8 @@ class TestItRefusesToWriteOverAStaleNote(unittest.TestCase):
         """THE CALL SITE. Every test above calls rank_claim_notes directly; cutting the
         `if claims: return 1` out of main() would leave all of them green while the script wrote
         a board whose prose contradicted its own ordering."""
-        if not os.path.exists(CO.ECR_CACHE) or not os.path.exists(CO.XWALK_CACHE):
-            self.skipTest("no cached consensus on this machine")
+        from tests.test_consensus import draft_era_cache_or_skip
+        draft_era_cache_or_skip(self)           # draft-era: stands down while the ECR cache is the in-season page
         with open(CO.BOARD, "rb") as f:
             before = f.read()
 

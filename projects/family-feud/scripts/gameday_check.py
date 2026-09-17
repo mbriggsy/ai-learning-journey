@@ -20,11 +20,19 @@ draft date; an Out tag that lands at 11:35 before a 13:00 kickoff is not an hour
 
 WHAT IT SAYS, most urgent first:
   🚨 a starter tagged Out / Doubtful / IR / Suspended, or an empty slot -- with the best eligible
-     untagged bench body by projection, so the fix is one click, not a research task
+     bench body by projection, so the fix is one click, not a research task
   ⚠  a starter tagged Questionable -- named, with the fallback, NOT auto-recommended: Questionable
      in September is mostly "played through it" and swapping a WR1 for a bench body on that tag
      loses more weeks than it saves
   ↑  a bench player out-projecting a starter he could replace by more than SWAP_MARGIN points
+
+ONE RULE FOR TAGS, applied the same way on every line above: Out / Doubtful / IR / Suspended / PUP
+means "not playing" and removes a body from every comparison; Questionable removes nobody and is
+printed on the name wherever it appears. Week 2, 2026: Flowers (Questionable, 14.0) sat behind
+Swift (Questionable, 11.6) and the ↑ line stayed silent because it filtered Questionable bench
+bodies while the ⚠ fallback line was naming the very same Flowers -- the same tag was a wall on
+one line and a footnote on the next. A tag the docstring itself calls "mostly played through it"
+cannot be a reason to hide a 2-point edge; it is a reason to print the tag next to the number.
   ℹ  the opponent's tagged starters, because a late scratch on his side changes nothing we do but
      is the first thing Briggsy will ask
 
@@ -190,7 +198,7 @@ def assess(our, opp, players, proj, scoring, roster_positions, today):
                 claimed.add(sub)
                 body += f"\nStart instead: {describe(sub)}"
             else:
-                body += f"\nNo untagged bench body is eligible for {slot}. An add is needed."
+                body += f"\nNo bench body who is playing is eligible for {slot}. An add is needed."
             rows.append(("🚨", f"STARTER NOT PLAYING — {name(pid)} ({slot})", body))
 
     # --- ⚠ Questionable starters: named, with the fallback, not recommended -----------------
@@ -206,7 +214,7 @@ def assess(our, opp, players, proj, scoring, roster_positions, today):
 
     # --- ↑ a bench body out-projecting a starter he could replace -------------------------
     for b in bench:
-        if b in claimed or tag(b) in NOT_PLAYING or tag(b) in MAYBE or not has_game(b) or played(b):
+        if b in claimed or tag(b) in NOT_PLAYING or not has_game(b) or played(b):
             continue
         bpos = pdata(b).get("position")
         best_gain, best_slot, best_pid = 0.0, None, None

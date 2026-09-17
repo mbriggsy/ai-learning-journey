@@ -18,6 +18,16 @@ The draft is the event this repo was built for. This is what it does afterwards.
 Nothing here is worth building before that flip, and the first deliverable that becomes real is the
 waiver report, which needs one completed week of transactions behind it.
 
+**✅ FIRED. Measured 2026-09-17 15:19 ET:** `{"week": 2, "season_type": "regular", "season": "2026",
+"leg": 2, "season_start_date": "2026-09-09", "display_week": 2, "season_has_scores": true}`. Week 1
+is complete (24 transactions on `/transactions/1`, 6 on `/2`), so the waiver report has its data.
+The two draft-era fetchers the mule still runs hourly (`consensus`, `market_adp`) now refuse on
+every run because their sources moved to in-season pages — correctly, but insight 009 says a gate
+that cries wolf gets switched off; hauling `/state/nfl` first and standing them down on
+`season_type` is step one of the build, not a separate chore. The five suite tests that ran those
+instruments against the real caches are draft-era and skip with a printed reason (`TODO.md`,
+"SUITE GREEN AGAIN 2026-09-17").
+
 ## What the mule must haul first
 
 **Three** of these four are not hauled today — ✅ **`/league/<id>/rosters` joined the mule on

@@ -120,13 +120,17 @@ down on `season_type` (`consensus.season_stand_down`). Cargo files: `sleeper_sta
 `sleeper_matchups.json`, `sleeper_transactions.json` in the inbox, current week only.
 (2) **NEXT: the Wednesday waiver read** — Hunter's transaction log first, per the outlook; inputs
 are all on disk now (`sleeper_transactions.json`, `sleeper_rosters.json`, `sleeper_state.json`,
-trending add/drop, the wire). The plan says the DAY is open: `waiver_day_of_week: 2`,
-`waiver_clear_days: 1`, and the first live cycle has now happened — read `/transactions/1` and
-`/2` timestamps (`status_updated`) to cite when claims actually cleared before hardcoding anything.
-(3) the week-11 QB2/TE2 patch the outlook owed before 09-09 and nobody made — Purdy/Dart/Lawrence/
-Goff and Schultz/Goedert/Okonkwo — Dart went to Cltchiefs on waivers in week 1, Goedert to RMonk9
-as a free agent; check the rest against `/players` availability before proposing. Read the plan's
-"empty payload is VALID" section before touching the cargo gates.
+trending add/drop, the wire). **The clearing instant is now MEASURED, not cited:** all 16 week-1
+claims cleared at Wed 2026-09-16 03:15:40 ET in one instant (`docs/in-season-plan.md`, "OBSERVED").
+Deadline = Tuesday night; the read = Wednesday morning. Re-check on the week-2 cycle (Wed 09-23)
+before scheduling anything against it.
+(3) the week-11 QB2/TE2 patch the outlook owed before 09-09 and nobody made. **Availability
+re-pulled 2026-09-17 15:55 ET:** QB — Purdy FREE, Goff FREE, Dart and Lawrence OWNED by Cltchiefs;
+TE — Schultz FREE, Hockenson FREE, Strange FREE, Okonkwo FREE (Questionable), Goedert OWNED by
+RMonk9. Both patches are still makeable for free next Wednesday, or as free agents today after
+waivers. The drop candidates are the outlook's: Gainwell is already gone, so it is Pollard/Pittman/
+Odunze/Vele/Godwin for two slots — Briggsy's call, not the pilot's. Read the plan's "empty payload
+is VALID" section before touching the cargo gates.
 
 ## ▶ WHERE WE ARE — read this first, update it when it changes
 

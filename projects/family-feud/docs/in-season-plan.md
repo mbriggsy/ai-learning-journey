@@ -97,6 +97,15 @@ in history still does not tell you how Sleeper *labels* the integer `2`.
 **Do not hardcode a day.** Watch the first live cycle, write down what you saw, and cite the
 observation. A closed plan's decisions bind; its facts expire ([insight 012](insights/012-the-closed-plans-remedy-would-have-reintroduced-the-plans-own-disease.md)).
 
+✅ **OBSERVED — the first live cycle, read off `/transactions/1` on 2026-09-17:** all sixteen
+week-1 waiver claims, created between Mon 2026-09-14 06:43 and Tue 2026-09-15 21:10 ET, carry the
+same `status_updated` of **Wed 2026-09-16 03:15:40 ET** — one clearing instant, not a rolling
+window. That matches the 2025-history citation in `league.md` (~03:10) to within five minutes and
+is now a measurement. Six claims completed, ten failed; ours: Vele completed (`seq` 1), the Coker
+claim failed to MattiICE23. `daily_waivers: 0`. So the report's deadline is **Tuesday night**, and
+the read that matters is **Wednesday morning** after 03:15 — still cite this paragraph, not a
+hardcoded hour, and re-check the instant on the next cycle before scheduling anything against it.
+
 **Do not build FAAB tooling.** `waiver_budget: 100` is inert while `waiver_type` is `0`.
 
 ### 2. The Thursday / Sunday lineup check — ✅ BUILT 2026-09-12 (`scripts/gameday_check.py`)

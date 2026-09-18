@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { axisDollarFormatterFor, formatAbsoluteDollar, formatActionableDollar, formatAxisDollar, formatDeltaDollar, formatEnteredDollar, formatPerMonth } from '../money'
+import { axisDollarFormatterFor, formatAbsoluteDollar, formatActionableDollar, formatAxisDollar, formatDeltaDollar, formatEnteredDollar, formatPerMonth, formatTrimEndpoints } from '../money'
 import { buildYTicks, niceLattice } from '@viz/bandData'
 
 /**
@@ -302,5 +302,43 @@ describe('formatEnteredDollar — the household’s own figure, quoted back exac
 
   it('is BARE of the "$" glyph, like the rest of the family — the copy SLOT supplies it', () => {
     expect(formatEnteredDollar(43_617).startsWith('$')).toBe(false)
+  })
+})
+
+/* ---------------------------------------------------------------------------------------------
+ * formatTrimEndpoints — the trim clause's three figures as ONE grid-consistent triple (Card 3 of
+ * the 2026-09-11 Caddie walk: the delta-only sentence read a 75 % cut as a tune-up). Every
+ * expectation is HAND-DERIVED from the $10 display step, never computed by the function (DND 012).
+ * ------------------------------------------------------------------------------------------- */
+describe('formatTrimEndpoints — spend, delta and the target the reader would live on', () => {
+  it("the walk's own frame: $10,000 entered, a $7,500 trim ⇒ \"2,500 instead of 10,000 — 7,500 less\"", () => {
+    expect(formatTrimEndpoints(10_000, -7_500)).toEqual({ spend: '10,000', delta: '7,500', target: '2,500' })
+  })
+
+  it('is sign-agnostic on the delta (the clause WORD carries direction) and steps both inputs to $10', () => {
+    expect(formatTrimEndpoints(6_504, 1_184)).toEqual({ spend: '6,500', delta: '1,180', target: '5,320' })
+    expect(formatTrimEndpoints(6_504, -1_184)).toEqual({ spend: '6,500', delta: '1,180', target: '5,320' })
+  })
+
+  it('the target is the difference ON THE GRID, never the rounded raw difference — the $10 flake the register named', () => {
+    // 6,505 steps UP to 6,510 (Math.round half-up) and 1,184 steps DOWN to 1,180: their grid difference
+    // is 5,330. The RAW difference 5,321 rounds to 5,320 — one step off the shown pair, so a reader
+    // subtracting "6,510 − 1,180" would not land on the sentence's own target.
+    const t = formatTrimEndpoints(6_505, -1_184)
+    expect(t).toEqual({ spend: '6,510', delta: '1,180', target: '5,330' })
+    expect(formatPerMonth(6_505 - 1_184)).toBe('5,320') // the independent rounding, for contrast
+  })
+
+  it('the three figures always subtract exactly (spend − delta = target), across a sweep of raw inputs', () => {
+    const parse = (s: string) => Number(s.replace(/,/g, ''))
+    for (let spend = 1_000; spend <= 12_000; spend += 37) {
+      // Fractions of spend up to the engine's own ceiling (gap ≤ onTrack 0.85): |delta| < spend, so the
+      // target stays positive here exactly as it does on every trim the engine can emit.
+      for (const frac of [0.0001, 0.005, 0.1237, 0.55, 0.85]) {
+        const t = formatTrimEndpoints(spend, -spend * frac)
+        expect(parse(t.spend) - parse(t.delta)).toBe(parse(t.target))
+        expect(parse(t.target)).toBeGreaterThan(0)
+      }
+    }
   })
 })

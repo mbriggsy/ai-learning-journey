@@ -742,6 +742,13 @@ export interface DollarAdjustment {
    *  `rethink` the value is still negative (the same gap-scaled proxy) but the verdict DROPS it —
    *  no single figure is a solve for an unfundable-from-the-start plan, so the clause is figure-less. */
   readonly perMonthReal: WithMargin<number>
+  /** The household's entered spending per month (`annualSpendingReal / 12`) — the base the `trim`
+   *  magnitude was scaled FROM, carried on the reading so the verdict sentence can quote both
+   *  endpoints ("about $2,500 a month instead of $10,000") from the SAME run that produced the
+   *  delta. Never re-derived UI-side from the draft: the store holds the last answer visible while
+   *  a re-run is in flight, so a draft-read spend could sit beside a delta computed from a different
+   *  spend for that window (the mixed-pair sin). Real dollars, unrounded — presentation rounds. */
+  readonly spendPerMonthReal: number
   /** `rethink` = already-failing (0 of 10, unfundable from the start): a figure-less, lever-agnostic
    *  verdict, never the sufficiency-implying `trim`. The fork lives in the PURE engine (`buildDollar`),
    *  so the UI clause is a key-lookup that can't re-derive it (Council 2026-06-29). */
@@ -1908,7 +1915,7 @@ export interface SavedRecommendationV3 {
    *  2026-09-03 edit-time kill the pending arm does too; produced by the private `fingerprintOf` at
    *  `:658`) — the identity of the run this record actually describes — and NEVER from a fresh
    *  recompute taken at save time. The trichotomy's `freshFingerprint` is the OTHER operand,
-   *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:668`): what the draft WOULD solve
+   *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:674`): what the draft WOULD solve
    *  now. The two are equal at the mint and diverge afterwards, and that divergence IS the mechanism
    *  — so minting from the fresh side instead would stamp the record with inputs the recommendation
    *  was never computed against, which on a stale draft is a calm-but-wrong memory rather than a

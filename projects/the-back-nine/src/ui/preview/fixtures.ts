@@ -60,8 +60,12 @@ const headline = (value: number, outcomeState: OutcomeState): Headline => ({
   outcomeState,
   stateMarginToEdge: 0,
 })
+/** One representative household spend for every fixture — $6,500 a month (the retired dev seed's
+ *  $78,000 a year), the base the trim clause quotes beside its delta. */
+const FIXTURE_SPEND_PER_MONTH = 6_500
 const dollar = (value: number, direction: DollarAdjustment['direction']): DollarAdjustment => ({
   perMonthReal: { value, marginToEdge: 0 },
+  spendPerMonthReal: FIXTURE_SPEND_PER_MONTH,
   direction,
 })
 

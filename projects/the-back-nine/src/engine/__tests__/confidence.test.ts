@@ -204,6 +204,21 @@ describe('the displayed $/month MAGNITUDE is pinned, not just its direction', ()
     expect(hold.perMonthReal.value).toBe(0)
   })
 
+  it("the reading carries the spend it was scaled from, and a trim is STRICTLY under it (the sentence's target stays positive)", () => {
+    // The trim clause quotes both endpoints from ONE run (Card 3, 2026-09-11): the spend rides the
+    // reading so the UI never pairs a draft-read spend with a held delta. monthlySpend = 48 / 12 = 4.
+    const trim = summarize(out(0.3, [10, 12, 14]), params, 1).dollar
+    expect(trim.spendPerMonthReal).toBe(4)
+    expect(Math.abs(trim.perMonthReal.value)).toBeLessThan(trim.spendPerMonthReal)
+    // The bound is the rule itself: gap ≤ BANDS.onTrack, so |trim| ≤ onTrack × spend even at zero survival.
+    const floor = summarize(out(0, [10, 12, 14]), params, 1).dollar
+    expect(Math.abs(floor.perMonthReal.value)).toBeLessThanOrEqual(BANDS.onTrack * floor.spendPerMonthReal + 1e-12)
+    expect(Math.abs(floor.perMonthReal.value)).toBeLessThan(floor.spendPerMonthReal)
+    // Every direction carries it — a fact of the params, not of the reading.
+    expect(summarize(out(0.99, [], [120_000]), params, 1).dollar.spendPerMonthReal).toBe(4)
+    expect(summarize(out(0.75), params, 1).dollar.spendPerMonthReal).toBe(4)
+  })
+
   it('an on-track plan with a DEPLETED bad decile (p10 ≤ 0) HOLDS — it never emits a contradictory "trim"', () => {
     // survival 0.88 = on-track, but terminals include zeros ⇒ percentile(·, 0.1) = 0 ⇒ p10 ≤ 0. The prior
     // code fell this through to 'trim' (an on-track headline paired with a trim dollar — contradictory).

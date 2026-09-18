@@ -200,7 +200,8 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
     expect(screen.getByRole('heading', { name: copy.outcomeAlreadyFailing })).toBeInTheDocument()
     expect(container.textContent).toContain('0 of 10')
     expect(container.textContent).toContain(slots.verdictRethinkClause()) // the figure-less rethink direction
-    expect(container.textContent).not.toContain(slots.verdictTrimClause('1,180')) // never a sufficient-sounding trim figure
+    expect(container.textContent).not.toContain(slots.verdictTrimClause('5,320', '6,500', '1,180')) // never a sufficient-sounding trim figure
+    expect(container.textContent).not.toContain('1,180') // ...in ANY clause shape
     expect(container.textContent).not.toContain(slots.verdictRoomClause('1,180')) // never "room"
   })
 
@@ -214,13 +215,59 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
     const trim = render(
       <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['off-track'] }} />,
     )
-    expect(trim.container.textContent).toContain(slots.verdictTrimClause('360'))
+    // both endpoints + the delta, one grid-consistent triple: 6,500 entered − 360 = 6,140 to live on
+    expect(trim.container.textContent).toContain(slots.verdictTrimClause('6,140', '6,500', '360'))
     trim.unmount()
 
     const hold = render(
       <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['borderline'] }} />,
     )
     expect(hold.container.textContent).toContain(slots.verdictHoldClause())
+  })
+
+  it('the trim clause quotes BOTH endpoints beside the delta, and the three figures subtract exactly (Card 3, 2026-09-11)', () => {
+    // The delta-only form ("About $360 a month less") named no base: the reader could not see that a
+    // trim was a 75 % cut without opening the assumptions sheet. Now the target they would live on and
+    // the spend they entered sit in the same sentence, and the sentence's own arithmetic holds.
+    const { container } = render(
+      <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['off-track'] }} />,
+    )
+    const clause = container.querySelector('.cs-magnitude')!.textContent!
+    const figures = [...clause.matchAll(/\$([\d,]+)/g)].map((m) => Number(m[1]!.replace(/,/g, '')))
+    expect(figures).toEqual([6_140, 6_500, 360]) // target · spend · delta, in reading order
+    expect(figures[1]! - figures[0]!).toBe(figures[2])
+    expect(clause).toContain('instead of')
+    expect(clause).toContain('less')
+  })
+
+  it("the trim clause reads the DISPLAYED spend, never the raw fixture's, when a sticky triple rides the view (one commit, one base)", () => {
+    // The raw fixture's spend is 6,500; the displayed triple carries 10,000 (the walk's worsened edit).
+    // The sentence must quote 10,000 beside its held 380 — a raw-read spend beside a displayed delta
+    // would be the mixed-pair sin the sticky seam exists to kill.
+    const displayed: StickyDisplay = {
+      xOfTen: 4,
+      outcomeState: 'off-track',
+      perMonthDollar: 380,
+      spendPerMonthReal: 10_000,
+      direction: 'trim',
+    }
+    const { container } = render(
+      <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['off-track'], displayed }} />,
+    )
+    const clause = container.querySelector('.cs-magnitude')!.textContent!
+    expect(clause).toBe(slots.verdictTrimClause('9,620', '10,000', '380'))
+    expect(clause).not.toContain('6,500')
+  })
+
+  it("without a displayed triple the trim clause reads the RAW dollar's own spend — never a fixture-shaped constant (the preview-harness path)", () => {
+    // Every READING_FIXTURE carries 6,500, so a fallback that hard-wired 6,500 would pass the arms
+    // above; a raw dollar at 10,000 is the oracle (mutant M2, 2026-09-17: the fallback read a constant).
+    const base = READING_FIXTURES['off-track']
+    const dollar = { ...base.dollar, spendPerMonthReal: 10_000 }
+    const { container } = render(<ConfidenceStatement view={{ kind: 'reading', ...base, dollar }} />)
+    const clause = container.querySelector('.cs-magnitude')!.textContent!
+    expect(clause).toBe(slots.verdictTrimClause('9,640', '10,000', '360'))
+    expect(clause).not.toContain('6,500')
   })
 
   it('indeterminate is range-framed: the incompleteness line + the placeholder band, no outcome word', () => {
@@ -352,14 +399,18 @@ describe('U12 C2 — the sticky sentence + the verdict crossfade', () => {
     xOfTen: 8,
     outcomeState: 'on-track',
     perMonthDollar: 410,
+    spendPerMonthReal: 6_500,
     direction: 'room',
   }
   const HELD: StickyDisplay = {
     xOfTen: 7,
     outcomeState: 'borderline',
     perMonthDollar: 380,
+    spendPerMonthReal: 6_500,
     direction: 'trim',
   }
+  /** HELD's rendered trim clause: 6,500 entered − 380 = 6,120 to live on. */
+  const HELD_TRIM = slots.verdictTrimClause('6,120', '6,500', '380')
   const liveRegion = (container: HTMLElement) =>
     container.querySelector('.confidence > .sr-only[role="status"]')!
 
@@ -375,7 +426,7 @@ describe('U12 C2 — the sticky sentence + the verdict crossfade', () => {
     expect(screen.getByRole('heading', { name: copy.outcomeBorderline })).toBeInTheDocument()
     const lead = container.querySelector('.reveal__lead')!
     expect(lead.textContent).toContain(slots.xOfTen(7))
-    expect(lead.textContent).toContain(slots.verdictTrimClause('380'))
+    expect(lead.textContent).toContain(HELD_TRIM)
     expect(container.querySelector('.confidence-reveal')).toHaveAttribute('data-framing', 'action-first')
     // ...and NEVER the raw sentence (calm-but-two-sentences would be the mixed-pair sin)
     expect(lead.textContent).not.toContain(copy.outcomeOnTrack)
@@ -459,7 +510,7 @@ describe('U12 C2 — the sticky sentence + the verdict crossfade', () => {
     rerender(<ConfidenceStatement view={stickyView(HELD)} focusSignal={1} />)
     // spoken = exactly the shown sentence (word + count line + clause), never a second wording
     expect(live.textContent).toBe(
-      `${copy.outcomeBorderline}. ${slots.xOfTen(7)} ${copy.confidenceCoverageCaption}. ${slots.verdictTrimClause('380')}`,
+      `${copy.outcomeBorderline}. ${slots.xOfTen(7)} ${copy.confidenceCoverageCaption}. ${HELD_TRIM}`,
     )
     // the announcedRef focus latch is untouched — the swap must never re-steal focus
     expect(document.activeElement).not.toBe(screen.getByRole('heading', { name: copy.outcomeBorderline }))
@@ -470,6 +521,7 @@ describe('U12 C2 — the sticky sentence + the verdict crossfade', () => {
       xOfTen: 7,
       outcomeState: 'borderline',
       perMonthDollar: 0,
+      spendPerMonthReal: 6_500,
       direction: 'on-the-line', // the clause carries NO figure — the dollar is invisible here
     }
     const { container, rerender } = render(
@@ -513,7 +565,7 @@ describe('U12 C2 — the sticky sentence + the verdict crossfade', () => {
       expect(screen.getByRole('heading', { name: copy.outcomeBorderline })).toBeInTheDocument()
       const lead = container.querySelector('.reveal__lead')!
       expect(lead.textContent).toContain(slots.xOfTen(7))
-      expect(lead.textContent).toContain(slots.verdictTrimClause('380'))
+      expect(lead.textContent).toContain(HELD_TRIM)
     } finally {
       stub(false) // restore the file-default stub shape for the tests after this one
     }

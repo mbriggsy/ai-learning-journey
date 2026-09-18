@@ -362,6 +362,7 @@ describe('U12 C2 — the sticky display threads into the spine view (the raw/sti
     xOfTen: 7,
     outcomeState: 'borderline',
     perMonthDollar: 380,
+    spendPerMonthReal: 6_500,
     direction: 'trim',
   }
 

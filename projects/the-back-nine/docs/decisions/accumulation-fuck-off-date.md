@@ -55,7 +55,7 @@ Every requirement maps to a track/unit. Numbers are R26–R39 (the accumulation 
 | **R36** account **values user-entered; no live price lookup** | D1 + Scope Boundaries |
 | **R37** per-ticker holdings **collapse to one household stock/bond/cash blend**; bundled ticker→asset-class table + manual classification | C1 (`tickerBlend.ts`) + D1 (entry + manual fallback) |
 | **R38** HSA **contributions → accumulation**; HSA **spend → decumulation** (U3·M5, resumed and shipped as B1) | C2 (contributions) + B1 (U3·M5 spend) |
-| **R39** new PII inherits encryption + the schema ladder (additive `schemaVersion` bump) | C2/D1 schema fields; consumed by P1·U4's decode ladder (which BRANCHES on v1/v2/v3 and refuses newer — there is no migrate step; the v2→v3 up-convert is prescribed at `model.ts:1393-1395` and unbuilt) |
+| **R39** new PII inherits encryption + the schema ladder (additive `schemaVersion` bump) | C2/D1 schema fields; consumed by P1·U4's decode ladder (which BRANCHES on v1/v2/v3 and refuses newer — there is no migrate step; the v2→v3 up-convert is prescribed at `model.ts:1400-1402` and unbuilt) |
 
 ---
 

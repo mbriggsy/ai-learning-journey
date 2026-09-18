@@ -480,7 +480,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     oopHint: slots.oopHint('3,000', '3,400'),
     factsMore: slots.factsMore(3),
     verdictRoomClause: slots.verdictRoomClause('430'),
-    verdictTrimClause: slots.verdictTrimClause('280'),
+    verdictTrimClause: slots.verdictTrimClause('2,220', '2,500', '280'),
     verdictRethinkClause: slots.verdictRethinkClause(),
     verdictHoldClause: slots.verdictHoldClause(),
     verdictSurvivorStepDown: slots.verdictSurvivorStepDown('1,200'),
@@ -643,7 +643,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     const S = '§§§' // a non-numeric sentinel — any digit left is a hardcoded one in the template
     for (const rendered of [
       slots.verdictRoomClause(S),
-      slots.verdictTrimClause(S),
+      slots.verdictTrimClause(S, S, S),
       slots.verdictSurvivorStepDown(S),
     ]) {
       expect(lintCopy(rendered, ['free-numeral']), rendered).toEqual([])
@@ -1106,7 +1106,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     expect(lintCopy(copy.ladderPlanCaveat, ['require-hedge']), copy.ladderPlanCaveat).toEqual([])
     // the verdict magnitude clauses wear theirs too ("looks to be" / "toward").
     expect(lintCopy(slots.verdictRoomClause('430'), ['require-hedge'])).toEqual([])
-    expect(lintCopy(slots.verdictTrimClause('280'), ['require-hedge'])).toEqual([])
+    expect(lintCopy(slots.verdictTrimClause('2,220', '2,500', '280'), ['require-hedge'])).toEqual([])
   })
 
   // --- THE UNIT-INERTNESS BAN (Tier-0, fixed 2026-08-03; until now the string had NO pin at all).

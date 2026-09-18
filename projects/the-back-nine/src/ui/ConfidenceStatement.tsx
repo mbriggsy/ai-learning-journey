@@ -214,6 +214,7 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
           xOfTen: view.headline.xOfTen.value,
           outcomeState: view.headline.outcomeState,
           perMonthDollar: view.dollar.perMonthReal.value,
+          spendPerMonthReal: view.dollar.spendPerMonthReal,
           direction: view.dollar.direction,
         })
       : null

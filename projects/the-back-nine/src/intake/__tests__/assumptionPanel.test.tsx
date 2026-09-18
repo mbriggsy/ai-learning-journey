@@ -150,6 +150,7 @@ const shown = (xOfTen: number, over: Partial<StickyDisplay> = {}): StickyDisplay
   xOfTen,
   outcomeState: 'on-track',
   perMonthDollar: 430,
+  spendPerMonthReal: 6_500,
   direction: 'room',
   ...over,
 })

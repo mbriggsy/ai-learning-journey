@@ -2350,9 +2350,14 @@ export const slots = {
    *  claim: "would move it TOWARD steadier ground" — even a low off-track plan's trim is a large
    *  fraction of spend, not an asserted arrival (the old "onto steadier ground" read as a single $X
    *  solving it: calm-but-wrong, R25). The unfundable-from-the-start case forks to
-   *  `verdictRethinkClause` (Council 2026-06-29). */
-  verdictTrimClause: (perMonthFormatted: string): string =>
-    `About $${perMonthFormatted} a month less would move it toward steadier ground.`,
+   *  `verdictRethinkClause` (Council 2026-06-29). BOTH ENDPOINTS IN-SENTENCE (Card 3 of the 2026-09-11
+   *  Caddie walk, the walk's top calm-but-wrong): the delta-only form ("About $7,500 a month less")
+   *  named no noun and no base, so a 75 % cut read as a trim — the household's $10,000 was visible only
+   *  ~1,800 px down the assumptions sheet. The three slots are ONE grid-consistent triple from
+   *  `formatTrimEndpoints` (target = spend − delta on the display grid), so the sentence's own
+   *  arithmetic holds to the dollar shown. The magnitude is never softened (rule 11). */
+  verdictTrimClause: (targetFormatted: string, spendFormatted: string, deltaFormatted: string): string =>
+    `Spending about $${targetFormatted} a month instead of $${spendFormatted} — about $${deltaFormatted} less — would move it toward steadier ground.`,
   /** direction 'rethink' — already-failing (0 of 10, unfundable from the start). FIGURE-LESS and
    *  LEVER-AGNOSTIC (it also renders for an already-RETIRED household, so it names no accumulation
    *  lever): the shortfall is structural, not a trim away — a single sufficient-sounding figure here
@@ -2915,8 +2920,8 @@ export const slots = {
   /** The RecommendationViz accessible sentence (the role="img" name): both arms' magnitudes AND the
    *  delta, so the whole comparison is reachable in the a11y tree (A2 AT-parity). "about" carries the
    *  hedge; every figure arrives pre-formatted, so the sentence carries no bare numeral — the ENDPOINTS in
-   *  the humane "$X.XM" prose dialect (`formatAbsoluteDollar`, money.ts:59), the DELTA in grouped digits
-   *  (`formatDeltaDollar`, money.ts:40). NOT formatAxisDollar's exact-when-round RULER precision (money.ts:173):
+   *  the humane "$X.XM" prose dialect (`formatAbsoluteDollar`, money.ts:81), the DELTA in grouped digits
+   *  (`formatDeltaDollar`, money.ts:62). NOT formatAxisDollar's exact-when-round RULER precision (money.ts:195):
    *  that dialect never touches this sentence, and naming it here would point a reader at the wrong rounding law.
    *
    *  ⚠️ WEALTH-SHAPED ⇒ LEAVE-MORE ONLY (2026-09-08). "lands near about $X" describes a level the reader

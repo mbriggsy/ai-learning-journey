@@ -33,7 +33,7 @@ retired by the U10/U11 supersession precedent; the next real bump is U17's). Eve
 atomic change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` + the draft shape +
 `DRAFT_DISPOSITIONS` entry (R7 compile gate) + codec tolerant-reader + planted-fail codec arms (burned/063).
 
-1. **`savedAt?: number`** (model.ts:1766) — finite integer **epoch-day**, encrypted in the model. The unit is
+1. **`savedAt?: number`** (model.ts:1773) — finite integer **epoch-day**, encrypted in the model. The unit is
    the household's **LOCAL** calendar day, not UTC: `currentEpochDay()` (scenarioFromDraft.ts:62) mints it
    local because the persisted `startCalendarYear` is local-minted, and a UTC day expired budget windows a
    few hours early every Dec 31 for any household behind UTC (the ultramode review's basis-mismatch catch,
@@ -46,9 +46,9 @@ atomic change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` +
    - Stamped by `scenarioFromDraft` at the **atomic save-commit**, from the ui layer's clock.
    - **THE NORMALIZER (the clerk's determinism catch):** `scenarioFromDraft`'s output is BOTH the disk
      payload AND the dirty/clean compare operand — a fresh `savedAt` per call would make every session
-     permanently dirty. ONE shared normalizer, `scenarioIdentity` (model.ts:2155), strips ONLY `savedAt`;
+     permanently dirty. ONE shared normalizer, `scenarioIdentity` (model.ts:2162), strips ONLY `savedAt`;
      the dirty compare goes through its key-order-insensitive serialization `scenarioIdentityKey`
-     (model.ts:2192) so key order and absent-vs-undefined cannot read as a change. Both consumers — the
+     (model.ts:2199) so key order and absent-vs-undefined cannot read as a change. Both consumers — the
      unsaved-buffer dirty compare and the draft↔scenario round-trip guard — import it; neither
      re-implements it.
    - **Absent `savedAt`** (every vault saved before U13): the "~N years since your save" claim is

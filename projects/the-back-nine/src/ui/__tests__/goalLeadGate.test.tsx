@@ -99,6 +99,7 @@ const displayFor = (outcomeState: OutcomeState): StickyDisplay => ({
   xOfTen: 7,
   outcomeState,
   perMonthDollar: 0,
+  spendPerMonthReal: 6_500,
   direction: 'on-the-line',
 })
 

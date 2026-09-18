@@ -237,16 +237,21 @@ function buildDollar(distribution: Distribution, params: SimulationParams, state
   }
 
   const marginToEdge = Math.abs(perMonth - (Math.round(perMonth / DOLLAR_STEP) * DOLLAR_STEP))
-  return { perMonthReal: { value: perMonth, marginToEdge }, direction }
+  // The base the trim was scaled from rides the reading (the sentence quotes both endpoints from
+  // ONE run — never a draft-read spend beside a held delta). For `trim` the magnitude is strictly
+  // under it: gap ≤ BANDS.onTrack < 1, so spend − |trim| > 0 always (pinned in confidence.test).
+  return { perMonthReal: { value: perMonth, marginToEdge }, spendPerMonthReal: monthlySpend, direction }
 }
 
 /** The defined indeterminate reading — minimal/incoherent input yields the honest
  *  "not enough to answer" first answer, never a falsely confident number. */
-function indeterminateResult(seed: number): SimulationResult {
+function indeterminateResult(seed: number, params: SimulationParams): SimulationResult {
   return {
     distribution: { terminalValuesReal: [], depletionYears: [], survivalFraction: 0 },
     headline: { xOfTen: { value: 0, marginToEdge: 0 }, outcomeState: 'indeterminate', stateMarginToEdge: 0 },
-    dollar: { perMonthReal: { value: 0, marginToEdge: 0 }, direction: 'on-the-line' },
+    // The spend still rides (it is a FACT of the params, not a reading) — no clause renders on
+    // indeterminate, and a 0 here would be a plausible-default stand-in (burned/062).
+    dollar: { perMonthReal: { value: 0, marginToEdge: 0 }, spendPerMonthReal: params.annualSpendingReal / 12, direction: 'on-the-line' },
     seed,
   }
 }
@@ -260,7 +265,7 @@ export function summarize(
   params: SimulationParams,
   seed: number,
 ): SimulationResult {
-  if (output.indeterminate) return indeterminateResult(seed)
+  if (output.indeterminate) return indeterminateResult(seed, params)
   const distribution = output.distribution
   const headline = buildHeadline(distribution)
   const dollar = buildDollar(distribution, params, headline.outcomeState)

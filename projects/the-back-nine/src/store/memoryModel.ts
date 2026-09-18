@@ -458,6 +458,10 @@ export interface StickyDisplay {
   readonly outcomeState: OutcomeState
   /** The ROUNDED $/month display figure (a DOLLAR_STEP multiple). */
   readonly perMonthDollar: number
+  /** The entered spend per month the run scaled its trim from — adopted wholesale on every
+   *  resolve like `direction` (never held: it is a fact of the run, not a reading that can
+   *  flicker). Carried so the trim clause quotes both endpoints from ONE commit. */
+  readonly spendPerMonthReal: number
   readonly direction: DollarAdjustment['direction']
 }
 
@@ -476,8 +480,9 @@ export function resolveStickyDisplay(
   const rawState = headline.outcomeState
   const rawDollar = Math.round(dollar.perMonthReal.value / DOLLAR_STEP) * DOLLAR_STEP
   const direction = dollar.direction
+  const spendPerMonthReal = dollar.spendPerMonthReal
   if (prev === null) {
-    return { xOfTen: rawX, outcomeState: rawState, perMonthDollar: rawDollar, direction }
+    return { xOfTen: rawX, outcomeState: rawState, perMonthDollar: rawDollar, spendPerMonthReal, direction }
   }
 
   // Verdict state: hold only an edge-hugging flip whose count moved at most one
@@ -524,6 +529,7 @@ export function resolveStickyDisplay(
     xOfTen: holdX ? prev.xOfTen : rawX,
     outcomeState: holdState ? prev.outcomeState : rawState,
     perMonthDollar: holdDollar ? prev.perMonthDollar : rawDollar,
+    spendPerMonthReal,
     direction,
   }
 }

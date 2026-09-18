@@ -24,9 +24,31 @@ const PER_MONTH_DISPLAY_STEP = 10
  *  direction: "room" / "less"), rounded so "$430", never "$427.13". Pre-formats the slot input,
  *  so the rendered clause stays free of a hardcoded numeral. */
 export function formatPerMonth(perMonthReal: number): string {
-  const stepped =
-    Math.round(Math.abs(perMonthReal) / PER_MONTH_DISPLAY_STEP) * PER_MONTH_DISPLAY_STEP
-  return grouped.format(stepped)
+  return grouped.format(stepPerMonth(perMonthReal))
+}
+
+/** |x| onto the $/month display grid (a PER_MONTH_DISPLAY_STEP multiple), unformatted. */
+function stepPerMonth(perMonthReal: number): number {
+  return Math.round(Math.abs(perMonthReal) / PER_MONTH_DISPLAY_STEP) * PER_MONTH_DISPLAY_STEP
+}
+
+/** The three figures of the trim clause — the entered spend, the delta, and the TARGET the reader is
+ *  being asked to live on — formatted so the sentence's own arithmetic holds to the dollar shown:
+ *  spend and delta each step onto the display grid FIRST, and the target is their difference on that
+ *  grid, formatted ONCE. Rounding the target independently from the raw difference can land one step
+ *  off the shown pair (6,505 → "6,510" and 1,184 → "1,180" give 5,330 on the grid, while the raw
+ *  5,321 rounds to "5,320") — a sentence whose "instead of" pair does not subtract to its own "less"
+ *  figure is a spurious-precision lie in three numbers (back-nine-design §3; Card 3, 2026-09-11).
+ *  Every figure sign-agnostic: the copy WORDS carry direction ("instead of" / "less"). The target is
+ *  positive by the engine's rule (|trim| < spend — confidence.ts), so no clamp lives here: a
+ *  non-positive target would be a broken invariant to see, never to paper over. */
+export function formatTrimEndpoints(
+  spendPerMonthReal: number,
+  perMonthReal: number,
+): { readonly spend: string; readonly delta: string; readonly target: string } {
+  const spend = stepPerMonth(spendPerMonthReal)
+  const delta = stepPerMonth(perMonthReal)
+  return { spend: grouped.format(spend), delta: grouped.format(delta), target: grouped.format(spend - delta) }
 }
 
 /** The Q1 recommendation DELTA hero magnitude — grouped with thousands separators and rounded to a

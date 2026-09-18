@@ -18,7 +18,7 @@
  */
 import type { DollarAdjustment, OutcomeState } from '@shared/model'
 import { copy, slots } from './copy'
-import { formatPerMonth } from './money'
+import { formatPerMonth, formatTrimEndpoints } from './money'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
 
 /** The displayed verdict tuple — structurally satisfied by the store's `StickyDisplay` and
@@ -28,6 +28,9 @@ export interface VerdictDisplay {
   readonly outcomeState: OutcomeState
   readonly xOfTen: number
   readonly perMonthDollar: number
+  /** The entered spend per month the run scaled its trim from (the clause's other endpoint) —
+   *  carried on the tuple so hero and echo quote the SAME base as the delta, from one commit. */
+  readonly spendPerMonthReal: number
   readonly direction: DollarAdjustment['direction']
 }
 
@@ -43,13 +46,21 @@ export interface VerdictReading {
 
 /** The verdict's second line — the dollar grammar. The $/month enters through the slot
  *  pre-formatted, so the rendered clause carries no hardcoded numeral (copyGuard
- *  slot-discipline). */
-function magnitudeClause(direction: DollarAdjustment['direction'], perMonth: number): string {
+ *  slot-discipline). The trim quotes BOTH endpoints — the target the reader would live on and the
+ *  spend they entered — beside the delta, as one grid-consistent triple (`formatTrimEndpoints`):
+ *  the delta-only form read a 75 % cut as a tune-up (Card 3, 2026-09-11). */
+function magnitudeClause(
+  direction: DollarAdjustment['direction'],
+  perMonth: number,
+  spendPerMonthReal: number,
+): string {
   switch (direction) {
     case 'room':
       return slots.verdictRoomClause(formatPerMonth(perMonth))
-    case 'trim':
-      return slots.verdictTrimClause(formatPerMonth(perMonth))
+    case 'trim': {
+      const { target, spend, delta } = formatTrimEndpoints(spendPerMonthReal, perMonth)
+      return slots.verdictTrimClause(target, spend, delta)
+    }
     case 'on-the-line':
       return slots.verdictHoldClause()
     case 'rethink':
@@ -78,6 +89,6 @@ export function composeVerdictReading(shown: VerdictDisplay): VerdictReading | n
   return {
     word: copy[wordKey],
     reading: verdictReadingText(shown.outcomeState, shown.xOfTen),
-    clause: magnitudeClause(shown.direction, shown.perMonthDollar),
+    clause: magnitudeClause(shown.direction, shown.perMonthDollar, shown.spendPerMonthReal),
   }
 }

@@ -106,7 +106,7 @@ const committed = (payload: SolvePayload): SolveAnswer => ({ kind: 'committed', 
 const spine: ConfidenceStatementView = {
   kind: 'reading',
   headline: { xOfTen: { value: 9, marginToEdge: 0.03 }, outcomeState: 'over-funded', stateMarginToEdge: 0.02 },
-  dollar: { perMonthReal: { value: 500, marginToEdge: 0 }, direction: 'room' },
+  dollar: { perMonthReal: { value: 500, marginToEdge: 0 }, spendPerMonthReal: 6_500, direction: 'room' },
 }
 
 const asRec = (v: ReturnType<typeof recommendationView>): RecommendedView => {

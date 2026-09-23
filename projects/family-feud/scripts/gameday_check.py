@@ -158,7 +158,15 @@ def assess(our, opp, players, proj, scoring, roster_positions, today):
     def describe(pid):
         p = pdata(pid)
         game = proj.get(pid) or {}
-        vs = f" vs {game['opponent']}" if game.get("opponent") else " (no game this week)"
+        # Sleeper DELETES the projection row for a player tagged Out, so "no projection" and "bye"
+        # look identical here. Week 2, 2026: three Out WRs printed "(no game this week)" as if on
+        # bye. The tag decides which it is; say the true one.
+        if game.get("opponent"):
+            vs = f" vs {game['opponent']}"
+        elif tag(pid) in NOT_PLAYING:
+            vs = " (no projection -- Sleeper pulls it for a player who is out)"
+        else:
+            vs = " (no game this week)"
         t = f" [{tag(pid)}" + (f": {p['injury_body_part']}" if p.get("injury_body_part") else "") + "]" if tag(pid) else ""
         return f"{name(pid)} ({p.get('position') or '?'}, {p.get('team') or 'FA'}){vs} proj {pts(pid):.1f}{t}"
 

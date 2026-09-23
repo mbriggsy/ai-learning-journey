@@ -50,6 +50,23 @@ Flowers (14.0 proj, Q hamstring) IN at FLEX, Swift (11.6, Q knee) to the bench. 
 his 140.9. Collins is Q (hamstring, 17.5) — hold; Pittman is Q (foot) and is the named fallback for
 both. Bates kicks tonight (DET–BUF); everyone else is Sunday. The Sat 20:00 / Sun 08:00 / Sun 11:30
 checks re-read the tags; **read `GAMEDAY.md` Sunday morning.**
+**Sat 2026-09-19 17:52, from the live check:** Collins, Flowers AND Pittman all tagged **Out**
+(hamstring / hamstring / ankle) — two of them starting. Set Godwin at WR and Swift at FLEX, API-verified.
+**WEEK 2 — LOST to kblizzy23, 103.02 to 151.72** (his Allen banked 41.8 on Thursday). 1-1, 5th in
+points. Vele's 11.4 on the bench beat Godwin's 8.8; Stevenson 3.6 at FLEX.
+
+**WEEK 3 — vs Kaeperni (1-1, 235.18, the league's lowest-scoring 1-1), projected 122.6 to 127.5.**
+The three WRs are back to **Questionable**; Flowers (16.9 vs DAL) and Collins (14.9 vs IND) both
+out-project Godwin (9.8) and the ↑ line fired for both. **Decision: hold until Friday's practice
+report; Sunday 08:00 re-reads the tags; if either clears he starts over Godwin.** Kaeperni's Nabers
+is Q (shoulder).
+**THE WEEK-11 BYE PATCH IS DONE — 2026-09-23 13:37 ET, both `free_agent` complete on
+`/transactions/3`:** **Goff (QB DET, bye 6) in, Pittman out** · **Hockenson (TE MIN, bye 6) in,
+Pollard out.** Purdy had gone to MattiICE23 at 04:58 that morning and Schultz to Cltchiefs on
+waivers, so the market was drying by the day. Roster: 16 active + Dell IR. **Note week 6:** Goff,
+Hockenson, Bates AND Chase Brown all sit — that week's plan is now a four-body problem, not two.
+Waivers cleared Wed 09-23 03:15 again — the instant is confirmed twice.
+
 **`gameday_check.py` fixed the same day:** it had filtered Questionable bench bodies out of the ↑
 bench-beats-starter line while naming the same Questionable body as the ⚠ fallback — Flowers 14.0
 over Swift 11.6 went unreported. One rule now: Out/Doubtful/IR/Sus removes a body from every

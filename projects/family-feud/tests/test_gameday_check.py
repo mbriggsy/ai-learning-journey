@@ -133,6 +133,19 @@ class TestTheSirenFires(unittest.TestCase):
         rows = f.rows()
         self.assertIn("No bench body who is playing", rows[0][2])
 
+    def test_an_out_starter_with_no_projection_is_not_called_a_bye(self):
+        """Week 2, 2026: Sleeper deleted the projection rows for three Out WRs and the check
+        printed "(no game this week)" for each, as if on bye. The action was right, the reason
+        was wrong -- and a wrong reason teaches the reader to distrust the right action."""
+        f = Fixture()
+        f.players["wr1"]["injury_status"] = "Out"
+        del f.proj["wr1"]
+        rows = f.rows()
+        self.assertEqual(rows[0][0], "🚨")
+        self.assertIn("tagged Out", rows[0][2])
+        self.assertIn("no projection", rows[0][2])
+        self.assertNotIn("no game this week", rows[0][2])
+
     def test_empty_slot_is_a_siren(self):
         f = Fixture()
         f.our["starters"][8] = "0"

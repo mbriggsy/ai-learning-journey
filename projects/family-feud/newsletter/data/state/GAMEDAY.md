@@ -34,3 +34,27 @@ Nothing to do. Every starter is untagged, every slot filled, no bench body proje
 vs **briggsy007** (roster 1). Expected: us 133.6, them 137.9 (banked 12.8 / 20.8, projections for the rest).
 
 Nothing to do. Every starter is untagged, every slot filled, no bench body projects 2+ over a starter he could replace.
+
+---
+
+## WEEK 2 GAME DAY — 2026-09-19 20:00:02
+
+vs **kblizzy23** (roster 7). Expected: us 127.5, them 160.9 (banked 7.0 / 41.8, projections for the rest).
+
+Nothing to do. Every starter is untagged, every slot filled, no bench body projects 2+ over a starter he could replace.
+
+---
+
+## WEEK 2 GAME DAY — 2026-09-20 08:00:03
+
+vs **kblizzy23** (roster 7). Expected: us 127.4, them 160.9 (banked 7.0 / 41.8, projections for the rest).
+
+Nothing to do. Every starter is untagged, every slot filled, no bench body projects 2+ over a starter he could replace.
+
+---
+
+## WEEK 2 GAME DAY — 2026-09-20 11:30:02
+
+vs **kblizzy23** (roster 7). Expected: us 127.5, them 160.9 (banked 7.0 / 41.8, projections for the rest).
+
+Nothing to do. Every starter is untagged, every slot filled, no bench body projects 2+ over a starter he could replace.

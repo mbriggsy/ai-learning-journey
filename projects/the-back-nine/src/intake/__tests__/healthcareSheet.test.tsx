@@ -9,7 +9,8 @@ import type { ControlPreview } from '@store/controlPreview'
 import { copy, slots } from '@ui/copy'
 import { epochDayFromIsoDate } from '@engine/validation/oracleToken'
 import { acaEnhancedSubsidyStatus } from '@engine/constants/health'
-import type { HealthReadout, TwoArmControl } from '@shared/model'
+import type { HealthReadout, HealthReadoutYear, TwoArmControl } from '@shared/model'
+import type { BandPlanClockAnchor } from '@ui/bandAnnotations'
 import { medicareExtrasView } from '../intakeMap'
 import { medicareExtrasTypicalMonthly } from '@engine/constants/health'
 
@@ -123,7 +124,7 @@ const VERIFIED_ON_LONG = ((): string => {
 })()
 
 function renderSheet(
-  opts: { enhanced?: boolean; readout?: HealthReadout; statePricedNote?: import('@engine/constants/stateTax').PricedState } = {},
+  opts: { enhanced?: boolean; readout?: HealthReadout; statePricedNote?: import('@engine/constants/stateTax').PricedState; savedAnchor?: BandPlanClockAnchor } = {},
 ) {
   const preview = deferredPreview()
   const onApply = vi.fn()
@@ -141,6 +142,7 @@ function renderSheet(
       readout={opts.readout}
       preview={preview.fn}
       statePricedNote={opts.statePricedNote}
+      savedAnchor={opts.savedAnchor}
       onApply={onApply}
       onClose={onClose}
       todayEpochDay={FRESH_CLOCK}
@@ -328,5 +330,35 @@ describe('HealthcareSheet — the Medicare-extras door home (F5)', () => {
   it('an INCOMPLETE draft (no priced run) makes NO extras claim — the lead line is absent', () => {
     renderSheet() // the incomplete fresh-model draft — buildParams null ⇒ view null
     expect(screen.queryByText(copy.medicareExtrasSheetLead)).toBeNull()
+  })
+})
+
+// ─── the plan clock reaches the era lines THROUGH the sheet (2026-09-24 — Briggsy's eye: "years out from what?") ──
+
+describe('the era lines count from TODAY through the sheet (the savedAnchor prop → composeHealthSheet)', () => {
+  const row = (over: Partial<HealthReadoutYear>): HealthReadoutYear => ({
+    yearsFromNow: 1, acaNetPremiumP50: 0, medicareBaseP50: 0, irmaaSurchargeP50: 0, medicareExtrasP50: 0,
+    medicareEnrolledP50: 0, acaMagiP50: 60_000, irmaaMagiP50: 60_000, overCliffFraction: 0, acaPricedFraction: 0,
+    cohortFraction: 1, ...over,
+  })
+  /** The healthnc shape (the chrome test's fixture): the anchor is row 5 with ONE enrolled, the era row 7 with two. */
+  const ERA: HealthReadout = {
+    byYear: [
+      row({ yearsFromNow: 4 }),
+      row({ yearsFromNow: 5, medicareBaseP50: 2_703, medicareEnrolledP50: 1, medicareExtrasP50: 2_928, irmaaMagiP50: 46_020 }),
+      row({ yearsFromNow: 6, medicareBaseP50: 2_789, medicareEnrolledP50: 1, medicareExtrasP50: 2_928, irmaaMagiP50: 46_819 }),
+      row({ yearsFromNow: 7, medicareBaseP50: 5_765, medicareEnrolledP50: 2, medicareExtrasP50: 5_856, irmaaMagiP50: 41_372 }),
+    ],
+  }
+  it('a fresh session reads the build-year distance; an aged vault reads the distance from TODAY with the SAME calendar year', () => {
+    const fresh = renderSheet({ readout: ERA })
+    expect(screen.getByText(slots.irmaaStepEraStart('5,800', 6, 2032))).toBeInTheDocument()
+    expect(screen.getByText(slots.irmaaStepOnRampSpan(2, '2,700', 4, 2030))).toBeInTheDocument()
+    fresh.unmount()
+    // Two calendar years into the plan: the rows are two years nearer, the years do not move — the
+    // ONLY witness that the sheet hands the plan clock to the composer (a dropped prop reads "six").
+    renderSheet({ readout: ERA, savedAnchor: { startCalendarYear: 2026, yearsSincePlanBuilt: 2 } })
+    expect(screen.getByText(slots.irmaaStepEraStart('5,800', 4, 2032))).toBeInTheDocument()
+    expect(screen.getByText(slots.irmaaStepOnRampSpan(2, '2,700', 2, 2030))).toBeInTheDocument()
   })
 })

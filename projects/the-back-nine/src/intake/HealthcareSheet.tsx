@@ -119,7 +119,7 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
 
   // The composed readout lines — PURE, decided in healthSheetChrome (regime-aware: an applied
   // enhanced regime swaps the dated status note to the what-if variant and drops the cliff lines).
-  const view = composeHealthSheet(readout, draft, todayEpochDay)
+  const view = composeHealthSheet(readout, draft, todayEpochDay, savedAnchor?.yearsSincePlanBuilt ?? 0)
   // The extras door-home lines (F5): BUILT dollars + draft provenance + the name fallback
   // (medicareExtrasDisclosureView — the ONE assembly both F5 homes consume, insight 081).
   const extrasLines = composeMedicareExtrasLines(medicareExtrasDisclosureView(draft))

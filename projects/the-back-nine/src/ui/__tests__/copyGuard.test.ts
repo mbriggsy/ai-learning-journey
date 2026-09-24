@@ -544,8 +544,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     irmaaStepNext: slots.irmaaStepNext('218,000', '150,000', '68,000', '1,100', '2,300', false),
     // The two-figure premium card (council 2026-09-13) — every figure-carrying arm rendered, so the
     // require-hedge sweep reaches each surcharge state, the on-ramp span, and the extras carve-out.
-    irmaaStepEraStart: slots.irmaaStepEraStart('5,800', 7),
-    irmaaStepOnRampSpan: slots.irmaaStepOnRampSpan(2, '2,700', 5),
+    irmaaStepEraStart: slots.irmaaStepEraStart('5,800', 6, 2032),
+    irmaaStepOnRampSpan: slots.irmaaStepOnRampSpan(2, '2,700', 4, 2030),
     irmaaStepOnRampOpen: slots.irmaaStepOnRampOpen('2,700'),
     irmaaStepSurchargeOnRampOnly: slots.irmaaStepSurchargeOnRampOnly('3,500', '800', '5,800'),
     irmaaStepSurchargeEraOnly: slots.irmaaStepSurchargeEraOnly('7,400', '1,600', '2,700'),

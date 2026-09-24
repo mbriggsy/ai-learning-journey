@@ -138,6 +138,9 @@ export function composeHealthSheet(
     readonly health: { readonly slcspMonthlyToday?: number }
   },
   todayEpochDay: number,
+  /** Calendar years since the plan was built (the plan clock's `yearsSincePlanBuilt`) — the era
+   *  lines count their distance from TODAY; 0 on every fresh session (the byte-identity). */
+  sincePlanBuilt = 0,
 ): HealthSheetView {
   const enhancedApplied = draft.enhancedSubsidies === true
   const checkedOn = verifiedOnFormatted()
@@ -310,8 +313,16 @@ export function composeHealthSheet(
         // years) — the era's distance on its line, the anchor's distance as the on-ramp's origin.
         lines: [
           copy.irmaaStepStory,
-          slots.irmaaStepEraStart(eraF, era.yearsFromNow),
-          slots.irmaaStepOnRampSpan(era.yearsFromNow - medicare.yearsFromNow, nowF, medicare.yearsFromNow),
+          // Each distance pairs with the CALENDAR year under the C4 single-producer clock (row k = the END of
+          // sim-year k−1 ⇒ calendar start + k − 1 — the same `yearsIn` the step card dates its anchor by) and
+          // counts from TODAY via the plan clock (Briggsy's 2026-09-24 eye: "seven years out — from what?").
+          slots.irmaaStepEraStart(eraF, era.yearsFromNow - 1 - sincePlanBuilt, draft.startCalendarYear + era.yearsFromNow - 1),
+          slots.irmaaStepOnRampSpan(
+            era.yearsFromNow - medicare.yearsFromNow,
+            nowF,
+            medicare.yearsFromNow - 1 - sincePlanBuilt,
+            draft.startCalendarYear + medicare.yearsFromNow - 1,
+          ),
           surchargeLine,
           extrasLine,
         ],

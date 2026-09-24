@@ -1992,11 +1992,10 @@ function countWord(n: number): string {
   return Number.isInteger(n) && n >= 0 && n < words.length ? words[n]! : String(n)
 }
 
-/** A distance in years in the product's own dialect ("Looking about 42 years out" — the band's
- *  screen-reader sentence): small counts as words, one year as "a year out" (never "one years
- *  out"). The Medicare premium card dates its two eras with it (2026-09-14). */
-function yearsOut(n: number): string {
-  return n === 1 ? 'a year out' : `${countWord(n)} years out`
+/** A distance as the reader counts it — "seven years from now" — for a line that ALSO names the
+ *  calendar year (Briggsy's 2026-09-24 eye on the Medicare card: "years out" from WHAT?). */
+function yearsFromNowPhrase(n: number): string {
+  return n === 1 ? 'a year from now' : `${countWord(n)} years from now`
 }
 
 /** The over-funded near-ceiling reading, SINGLE-SOURCED (the verdict surface calls it by name via
@@ -2677,8 +2676,16 @@ export const slots = {
   //     out"), the wire's own `yearsFromNow` — never an age (the no-age-proxy law). The on-ramp
   //     line says "Before that" because the loud era figure is quoted FIRST and the on-ramp comes
   //     earlier in time; "the premiums" replaces a "they" whose antecedent sat a sentence away. ---
-  irmaaStepEraStart: (totalFormatted: string, eraYearsFromNow: number): string =>
-    `From about ${yearsOut(eraYearsFromNow)}, while you’re both on Medicare, Part B premiums and any income surcharge start at about ~$${totalFormatted} a year for your household.`,
+  //     RE-DATED 2026-09-24 (Briggsy's eye on the healthnc card: "seven years out — from WHAT?"; his
+  //     ruled form, the combo: "about N years from now, around YYYY"): each distance now pairs with the
+  //     CALENDAR year those premiums are paid. The composer feeds both from the wire's row under the C4
+  //     single-producer clock (row k = the END of sim-year k−1 ⇒ calendar start + k − 1, distance
+  //     k − 1 − yearsSincePlanBuilt) — the healthnc era row 7 reads "About six years from now, around
+  //     2032", the year the step card on the same sheet already dates that row to (2026 + 7 lands at
+  //     the END of 2032 — "about"/"around" carry the half-year). A distance ≤ 0 (an aged vault whose
+  //     era has arrived) keeps the year alone.
+  irmaaStepEraStart: (totalFormatted: string, yearsFromNow: number, calendarYear: number): string =>
+    `${yearsFromNow <= 0 ? `Around ${calendarYear}` : `About ${yearsFromNowPhrase(yearsFromNow)}, around ${calendarYear}`}, while you’re both on Medicare, Part B premiums and any income surcharge start at about ~$${totalFormatted} a year for your household.`,
   /** The on-ramp years with their ORIGIN and their SPAN. The span is the on-ramp's LENGTH (the era
    *  year minus the anchor year); the origin is the anchor year's own distance (`medicareAnchor`'s
    *  `yearsFromNow` — "starting now" when someone is already enrolled today). Neither bounds the
@@ -2687,8 +2694,9 @@ export const slots = {
    *  2026-09-13 late; the wide-gap shape's rule is a council question, see the register's
    *  Medicare-era entry). A one-year on-ramp reads "run", not "start at". The unit "a year" rides
    *  every figure (a 2026-09-14 seat read the bare "~$2,700." as a two-year total). */
-  irmaaStepOnRampSpan: (spanYears: number, totalFormatted: string, anchorYearsFromNow: number): string => {
-    const origin = anchorYearsFromNow === 0 ? 'starting now' : `from about ${yearsOut(anchorYearsFromNow)}`
+  irmaaStepOnRampSpan: (spanYears: number, totalFormatted: string, anchorYearsFromNow: number, anchorCalendarYear: number): string => {
+    // The origin pairs its distance with the calendar year too (2026-09-24); "starting now" at ≤ 0.
+    const origin = anchorYearsFromNow <= 0 ? 'starting now' : `starting about ${yearsFromNowPhrase(anchorYearsFromNow)}, around ${anchorCalendarYear},`
     return spanYears === 1
       ? `Before that, ${origin} and for about a year, only one of you is on Medicare and the premiums run about ~$${totalFormatted} a year.`
       : `Before that, ${origin} and for about ${countWord(spanYears)} years, only one of you is on Medicare and the premiums start at about ~$${totalFormatted} a year.`

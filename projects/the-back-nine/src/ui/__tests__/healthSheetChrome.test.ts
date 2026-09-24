@@ -377,8 +377,8 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
       figure: slots.healthFigPerYear('5,800'),
       lines: [
         copy.irmaaStepStory,
-        slots.irmaaStepEraStart('5,800', 7),
-        slots.irmaaStepOnRampSpan(2, '2,700', 5),
+        slots.irmaaStepEraStart('5,800', 6, 2032),
+        slots.irmaaStepOnRampSpan(2, '2,700', 4, 2030),
         copy.irmaaStepBothBase,
         slots.irmaaStepExtrasAddBoth('5,900', '2,900'),
       ],
@@ -409,24 +409,26 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
   })
 
   it('the on-ramp span reads "for about a year" (run) at one year and a count word above it; ten and up stay digits; the unit "a year" rides every figure', () => {
-    expect(slots.irmaaStepOnRampSpan(1, '2,700', 5)).toContain('and for about a year, only one of you')
-    expect(slots.irmaaStepOnRampSpan(1, '2,700', 5)).toContain('run about ~$2,700 a year')
-    expect(slots.irmaaStepOnRampSpan(3, '2,700', 5)).toContain('for about three years')
-    expect(slots.irmaaStepOnRampSpan(25, '2,700', 5)).toContain('for about 25 years')
-    expect(slots.irmaaStepOnRampSpan(25, '2,700', 5)).toContain('start at about ~$2,700 a year')
+    expect(slots.irmaaStepOnRampSpan(1, '2,700', 4, 2030)).toContain('and for about a year, only one of you')
+    expect(slots.irmaaStepOnRampSpan(1, '2,700', 4, 2030)).toContain('run about ~$2,700 a year')
+    expect(slots.irmaaStepOnRampSpan(3, '2,700', 4, 2030)).toContain('for about three years')
+    expect(slots.irmaaStepOnRampSpan(25, '2,700', 4, 2030)).toContain('for about 25 years')
+    expect(slots.irmaaStepOnRampSpan(25, '2,700', 4, 2030)).toContain('start at about ~$2,700 a year')
   })
 
-  it('both eras are DATED from the wire (the Caddie read 2026-09-14): the era line opens with its distance, the on-ramp with its origin — "starting now" at an anchor of zero, "a year out" at one, never "one years out"', () => {
-    expect(slots.irmaaStepEraStart('8,100', 26)).toMatch(/^From about 26 years out, while you’re both on Medicare/)
-    expect(slots.irmaaStepEraStart('5,800', 7)).toMatch(/^From about seven years out, /)
-    expect(slots.irmaaStepEraStart('5,800', 1)).toMatch(/^From about a year out, /)
-    expect(slots.irmaaStepOnRampSpan(21, '2,700', 5)).toMatch(/^Before that, from about five years out and for about 21 years, only one of you is on Medicare/)
-    expect(slots.irmaaStepOnRampSpan(6, '2,700', 0)).toMatch(/^Before that, starting now and for about six years, /)
-    expect(slots.irmaaStepOnRampSpan(2, '2,700', 1)).toMatch(/^Before that, from about a year out and for about two years, /)
-    // The composer feeds the wire's own distances: on the healthnc fixture the era is year 7, the anchor year 5.
+  it('both eras are DATED from the wire (the Caddie read 2026-09-14) AND paired with their CALENDAR year (Briggsy’s eye 2026-09-24, "years out — from what?"): "about N years from now, around YYYY"; "starting now" at an anchor of zero; "a year from now" at one, never "one years"; a distance ≤ 0 keeps the year alone', () => {
+    expect(slots.irmaaStepEraStart('8,100', 25, 2051)).toMatch(/^About 25 years from now, around 2051, while you’re both on Medicare/)
+    expect(slots.irmaaStepEraStart('5,800', 6, 2032)).toMatch(/^About six years from now, around 2032, /)
+    expect(slots.irmaaStepEraStart('5,800', 1, 2027)).toMatch(/^About a year from now, around 2027, /)
+    expect(slots.irmaaStepEraStart('5,800', 0, 2026), 'an aged vault whose era has arrived keeps the year alone').toMatch(/^Around 2026, while you’re both on Medicare/)
+    expect(slots.irmaaStepOnRampSpan(21, '2,700', 4, 2030)).toMatch(/^Before that, starting about four years from now, around 2030, and for about 21 years, only one of you is on Medicare/)
+    expect(slots.irmaaStepOnRampSpan(6, '2,700', 0, 2026)).toMatch(/^Before that, starting now and for about six years, /)
+    expect(slots.irmaaStepOnRampSpan(2, '2,700', 1, 2027)).toMatch(/^Before that, starting about a year from now, around 2027, and for about two years, /)
+    // The composer feeds the wire's own rows: on the healthnc fixture the era is row 7, the anchor row 5 — spoken as
+    // sim-years 6 / 4 (row k = the END of sim-year k−1, the C4 clock the step card dates by) with 2032 / 2030.
     const f = factOf(composeHealthSheet(healthncReadout(), draft({ ages: [61, 59] }), FRESH), 'medicare')!
-    expect(f.lines[1]).toMatch(/^From about seven years out, /)
-    expect(f.lines[2]).toMatch(/^Before that, from about five years out and for about two years, /)
+    expect(f.lines[1]).toMatch(/^About six years from now, around 2032, /)
+    expect(f.lines[2]).toMatch(/^Before that, starting about four years from now, around 2030, and for about two years, /)
   })
 
   it('the each-of-you arm carries BOTH counts and its hero wears its unit (the Caddie read 2026-09-14): one enrolled at the anchor → "+~$1,100 a year each" over a sentence that ALSO quotes the two-of-you figure under the era; the two-of-you arm is byte-untouched', () => {
@@ -455,13 +457,13 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
   it('the surcharge binds PER QUOTED YEAR — on-ramp only: the on-ramp figure INCLUDES its surcharge, the line re-quotes it and names the era figure as base', () => {
     const f = medicareFact(twoFigure({ irmaaSurchargeP50: 800 }, {}))
     expect(f.figure).toBe(slots.healthFigPerYear('5,800'))
-    expect(f.lines[2]).toBe(slots.irmaaStepOnRampSpan(2, '3,500', 1))
+    expect(f.lines[2]).toBe(slots.irmaaStepOnRampSpan(2, '3,500', 0, 2026))
     expect(f.lines[3]).toBe(slots.irmaaStepSurchargeOnRampOnly('3,500', '800', '5,800'))
   })
   it('… era only: the LOUD figure carries the surcharge and the line says so', () => {
     const f = medicareFact(twoFigure({}, { irmaaSurchargeP50: 1_600 }))
     expect(f.figure).toBe(slots.healthFigPerYear('7,400'))
-    expect(f.lines[1]).toBe(slots.irmaaStepEraStart('7,400', 3))
+    expect(f.lines[1]).toBe(slots.irmaaStepEraStart('7,400', 2, 2028))
     expect(f.lines[3]).toBe(slots.irmaaStepSurchargeEraOnly('7,400', '1,600', '2,700'))
   })
   it('… both', () => {
@@ -543,8 +545,8 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
     expect(f.figure).toBe(slots.healthFigPerYear('5,800'))
     expect(f.lines).toEqual([
       copy.irmaaStepStory,
-      slots.irmaaStepEraStart('5,800', 3),
-      slots.irmaaStepOnRampSpan(2, '5,800', 1),
+      slots.irmaaStepEraStart('5,800', 2, 2028),
+      slots.irmaaStepOnRampSpan(2, '5,800', 0, 2026),
       slots.irmaaStepSurchargeOnRampOnly('5,800', '3,100', '5,800'),
       copy.irmaaStepExtrasNone,
     ])
@@ -566,6 +568,23 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
     expect(factOf(composeHealthSheet(wireOne, draft({ ages: [66, 66] }), FRESH), 'step')!.lines).toEqual([
       slots.irmaaStepNext('218,000', '150,000', '68,000', '1,100', '2,300', false),
     ])
+  })
+
+  it('the era lines count from TODAY on an aged vault (the plan clock, 2026-09-24): `sincePlanBuilt` shrinks the distance and keeps the calendar year; once the era has arrived the year stands alone', () => {
+    // The fresh session is the byte-identity (sincePlanBuilt 0 — every arm above). Two calendar years
+    // into the plan the same rows are two years nearer; six years in, the era (2032) has arrived and
+    // the on-ramp (2030) is behind us — the composer says "Around 2032" / "starting now", never a
+    // negative distance and never a moved year.
+    const two = factOf(composeHealthSheet(healthncReadout(), draft({ ages: [61, 59] }), FRESH, 2), 'medicare')!
+    expect(two.lines[1]).toBe(slots.irmaaStepEraStart('5,800', 4, 2032))
+    expect(two.lines[1]).toMatch(/^About four years from now, around 2032, /)
+    expect(two.lines[2]).toBe(slots.irmaaStepOnRampSpan(2, '2,700', 2, 2030))
+    expect(two.lines[2]).toMatch(/^Before that, starting about two years from now, around 2030, and for about two years, /)
+    const six = factOf(composeHealthSheet(healthncReadout(), draft({ ages: [61, 59] }), FRESH, 6), 'medicare')!
+    expect(six.lines[1]).toBe(slots.irmaaStepEraStart('5,800', 0, 2032))
+    expect(six.lines[1]).toMatch(/^Around 2032, while you’re both on Medicare/)
+    expect(six.lines[2]).toBe(slots.irmaaStepOnRampSpan(2, '2,700', -2, 2030))
+    expect(six.lines[2]).toMatch(/^Before that, starting now and for about two years, /)
   })
 })
 

@@ -271,7 +271,7 @@ to a single commit.
   the 2026-08-02 pin**, because it promised a month tied to NC's own certification that no longer
   gates anything, and a withhold that names a date it cannot keep is exactly the promise this
   product must not make. A future state's pin event may have any timing, so the shipped slot commits
-  to none (`copy.ts:2931`).
+  to none (`copy.ts:2939`).
 - **No live household fires the withheld render today, and that is a CLEARED clause, not a
   regression.** Both blocking clauses cleared after U16 shipped: S.L. 2026-41 § 44.1(a) pinned
   `ncRateSchedule` to an enacted statutory schedule on 2026-08-02, retiring the last directional

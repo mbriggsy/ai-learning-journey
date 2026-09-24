@@ -72,8 +72,8 @@ describe('the Medicare premium card on the shipped seeds, through the real engin
       figure: slots.healthFigPerYear('5,800'),
       lines: [
         copy.irmaaStepStory,
-        slots.irmaaStepEraStart('5,800', 7),
-        slots.irmaaStepOnRampSpan(2, '2,700', 5),
+        slots.irmaaStepEraStart('5,800', 6, 2032),
+        slots.irmaaStepOnRampSpan(2, '2,700', 4, 2030),
         copy.irmaaStepBothBase,
         slots.irmaaStepExtrasAddBoth('5,900', '2,900'),
       ],
@@ -101,8 +101,8 @@ describe('the Medicare premium card on the shipped seeds, through the real engin
     const fact = factOf(view, 'medicare')!
     expect(fact.eyebrow).toBe(copy.healthFactMedicareBoth)
     expect(fact.figure).toBe(slots.healthFigPerYear('8,100'))
-    expect(fact.lines[1]).toBe(slots.irmaaStepEraStart('8,100', 26))
-    expect(fact.lines[2]).toBe(slots.irmaaStepOnRampSpan(21, '2,700', 5))
+    expect(fact.lines[1]).toBe(slots.irmaaStepEraStart('8,100', 25, 2051))
+    expect(fact.lines[2]).toBe(slots.irmaaStepOnRampSpan(21, '2,700', 4, 2030))
     expect(fact.lines[3]).toBe(copy.irmaaStepBothBase)
     expect(fact.lines[4]).toBe(slots.irmaaStepExtrasAddBoth('5,900', '2,900'))
   }, 120_000)

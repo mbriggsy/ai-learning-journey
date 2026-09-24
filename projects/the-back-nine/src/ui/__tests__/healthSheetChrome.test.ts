@@ -379,6 +379,7 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
         copy.irmaaStepStory,
         slots.irmaaStepEraStart('5,800', 6, 2032),
         slots.irmaaStepOnRampSpan(2, '2,700', 4, 2030),
+        copy.irmaaStepEraTrendNote,
         copy.irmaaStepBothBase,
         slots.irmaaStepExtrasAddBoth('5,900', '2,900'),
       ],
@@ -458,32 +459,35 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
     const f = medicareFact(twoFigure({ irmaaSurchargeP50: 800 }, {}))
     expect(f.figure).toBe(slots.healthFigPerYear('5,800'))
     expect(f.lines[2]).toBe(slots.irmaaStepOnRampSpan(2, '3,500', 0, 2026))
-    expect(f.lines[3]).toBe(slots.irmaaStepSurchargeOnRampOnly('3,500', '800', '5,800'))
+    expect(f.lines[3]).toBe(copy.irmaaStepEraTrendNote)
+    expect(f.lines[4]).toBe(slots.irmaaStepSurchargeOnRampOnly('3,500', '800', '5,800'))
   })
   it('… era only: the LOUD figure carries the surcharge and the line says so', () => {
     const f = medicareFact(twoFigure({}, { irmaaSurchargeP50: 1_600 }))
     expect(f.figure).toBe(slots.healthFigPerYear('7,400'))
     expect(f.lines[1]).toBe(slots.irmaaStepEraStart('7,400', 2, 2028))
-    expect(f.lines[3]).toBe(slots.irmaaStepSurchargeEraOnly('7,400', '1,600', '2,700'))
+    expect(f.lines[4]).toBe(slots.irmaaStepSurchargeEraOnly('7,400', '1,600', '2,700'))
   })
   it('… both', () => {
     const f = medicareFact(twoFigure({ irmaaSurchargeP50: 800 }, { irmaaSurchargeP50: 1_600 }))
-    expect(f.lines[3]).toBe(slots.irmaaStepSurchargeBoth('3,500', '800', '7,400', '1,600'))
+    expect(f.lines[4]).toBe(slots.irmaaStepSurchargeBoth('3,500', '800', '7,400', '1,600'))
   })
   it('… neither (the one-line form); and the extras carve-out reads "about nothing" when the plan prices none in EITHER quoted year — five lines, never a sixth', () => {
     const f = medicareFact(twoFigure({ medicareExtrasP50: 0 }, { medicareExtrasP50: 0 }))
-    expect(f.lines[3]).toBe(copy.irmaaStepBothBase)
-    expect(f.lines[4]).toBe(copy.irmaaStepExtrasNone)
-    expect(f.lines).toHaveLength(5)
+    expect(f.lines[4]).toBe(copy.irmaaStepBothBase)
+    expect(f.lines[5]).toBe(copy.irmaaStepExtrasNone)
+    // Six since 2026-09-24 (the ONE basis clause after the on-ramp line); the LAW this pins is the extras
+    // carve-out being ONE line, never a second — the count is the as-built shape, not the rule.
+    expect(f.lines).toHaveLength(6)
   })
 
   it('the extras carve-out binds PER QUOTED YEAR (review 2026-09-13 late): two figures when the years differ, one when they agree, the "nothing while only one of you is" arm when the on-ramp prices none — never one year’s extras spoken over both', () => {
     // The fixture’s default: on-ramp 2,900 (one enrolled), era 5,900 (two) — the engine charges extras per enrolled person.
-    expect(medicareFact(twoFigure({}, {})).lines[4]).toBe(slots.irmaaStepExtrasAddBoth('5,900', '2,900'))
+    expect(medicareFact(twoFigure({}, {})).lines[5]).toBe(slots.irmaaStepExtrasAddBoth('5,900', '2,900'))
     // Equal at the $100 grain → the single-figure plural line.
-    expect(medicareFact(twoFigure({ medicareExtrasP50: 5_900 }, {})).lines[4]).toBe(slots.irmaaStepExtrasAdd('5,900'))
+    expect(medicareFact(twoFigure({ medicareExtrasP50: 5_900 }, {})).lines[5]).toBe(slots.irmaaStepExtrasAdd('5,900'))
     // The on-ramp prices none (the first-enrolled spouse affirmed zero), the era does.
-    expect(medicareFact(twoFigure({ medicareExtrasP50: 0 }, {})).lines[4]).toBe(slots.irmaaStepExtrasAddEraOnly('5,900'))
+    expect(medicareFact(twoFigure({ medicareExtrasP50: 0 }, {})).lines[5]).toBe(slots.irmaaStepExtrasAddEraOnly('5,900'))
   })
 
   it('NO era year (never reached inside the quotable window): the on-ramp figure with its frame stated, the extras spoken, the era NOT invented', () => {
@@ -547,12 +551,13 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
       copy.irmaaStepStory,
       slots.irmaaStepEraStart('5,800', 2, 2028),
       slots.irmaaStepOnRampSpan(2, '5,800', 0, 2026),
+      copy.irmaaStepEraTrendNote,
       slots.irmaaStepSurchargeOnRampOnly('5,800', '3,100', '5,800'),
       copy.irmaaStepExtrasNone,
     ])
     // The two frames share one figure, so the surcharge line must bind by FRAME — it names both.
-    expect(f.lines[3]).toMatch(/only one of you is on Medicare/)
-    expect(f.lines[3]).toMatch(/while you’re both on it/)
+    expect(f.lines[4]).toMatch(/only one of you is on Medicare/)
+    expect(f.lines[4]).toMatch(/while you’re both on it/)
     // The shipped one-figure surcharged sentence never spans the era on this household.
     expect(f.lines).not.toContain(slots.irmaaStepNowSurcharged('5,800', '3,100'))
   })
@@ -585,6 +590,17 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
     expect(six.lines[1]).toMatch(/^Around 2032, while you’re both on Medicare/)
     expect(six.lines[2]).toBe(slots.irmaaStepOnRampSpan(2, '2,700', -2, 2030))
     expect(six.lines[2]).toMatch(/^Before that, starting now and for about two years, /)
+  })
+
+  it('the basis clause carries no figure, no percentage, no arrow (the register’s negatives — a rate is the casino tell the calm lane hunts) and wears a catalog hedge', () => {
+    // The irmaaStep* family is hedge-swept, not numeral-swept, so "about 3% a year" would pass every
+    // universal gate — this arm is the only thing that reds it (a 2026-09-24 mutant survived without it).
+    expect(copy.irmaaStepEraTrendNote).not.toMatch(/[\d%→↑↓]/)
+    expect(copy.irmaaStepEraTrendNote).toMatch(/\b(likely|tends?|often|usually|could|may|might)\b/)
+    // It renders on the era-loud arm only, after the on-ramp line (both figures in view).
+    const f = medicareFact(twoFigure({}, {}))
+    expect(f.lines[3]).toBe(copy.irmaaStepEraTrendNote)
+    expect(f.lines[2]).toMatch(/^Before that, /)
   })
 })
 

@@ -187,7 +187,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   "premiums" line traces literally true post-flip, the sole latent nit being the rare purchased
   Part A, which is consistently carved out.
 
-## F5 — disclosure routing (HARD LOCK — red-team Attack 1; healthSheetChrome.ts:443 + Result.tsx:217-221)
+## F5 — disclosure routing (HARD LOCK — red-team Attack 1; healthSheetChrome.ts:447 + Result.tsx:217-221)
 
 - The extras affirmative + per-person adopted-typical provenance + the bi-directional disclosure
   needed a **RENDERED HOME for BOTH populations**, because `showMedicarePricedNote`
@@ -197,12 +197,12 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   - **Population A (non-door / all-65+):** the widened `verdictMedicarePriced` affirmation now
     names extra coverage alongside Part B and its surcharge, and an on-typical household gets a
     per-person bi-directional sentence appended INSIDE the residual paragraph via
-    `composeMedicareExtrasTypicalNote` (`src/ui/healthSheetChrome.ts:477`), wired at
+    `composeMedicareExtrasTypicalNote` (`src/ui/healthSheetChrome.ts:481`), wired at
     `src/ui/Result.tsx:222-229`. Appended, not a new frame row — the one-frame fit law's tallest
     composite.
   - **Population B (near-65 date route / the Healthcare door):** the door sheet carries its OWN
     legible extras block — never buried in the six-item run-on — from
-    `composeMedicareExtrasLines` (`src/ui/healthSheetChrome.ts:495`) under the
+    `composeMedicareExtrasLines` (`src/ui/healthSheetChrome.ts:499`) under the
     `medicareExtrasSheetLead` heading, rendered at `src/intake/HealthcareSheet.tsx:205-219`. The
     per-person fact line carries the provenance as its load-bearing content: whose number, and
     whether it was entered, affirmed, or typical.

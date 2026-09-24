@@ -323,6 +323,10 @@ export function composeHealthSheet(
             medicare.yearsFromNow - 1 - sincePlanBuilt,
             draft.startCalendarYear + medicare.yearsFromNow - 1,
           ),
+          // The ONE basis clause (his 2026-09-24 ruling): why this pair scales by the trend while the extras
+          // pair below doubles — after the on-ramp line so both figures are in view; the no-era arm has one
+          // figure and no ratio to explain.
+          copy.irmaaStepEraTrendNote,
           surchargeLine,
           extrasLine,
         ],

@@ -74,6 +74,7 @@ describe('the Medicare premium card on the shipped seeds, through the real engin
         copy.irmaaStepStory,
         slots.irmaaStepEraStart('5,800', 6, 2032),
         slots.irmaaStepOnRampSpan(2, '2,700', 4, 2030),
+        copy.irmaaStepEraTrendNote,
         copy.irmaaStepBothBase,
         slots.irmaaStepExtrasAddBoth('5,900', '2,900'),
       ],
@@ -103,7 +104,8 @@ describe('the Medicare premium card on the shipped seeds, through the real engin
     expect(fact.figure).toBe(slots.healthFigPerYear('8,100'))
     expect(fact.lines[1]).toBe(slots.irmaaStepEraStart('8,100', 25, 2051))
     expect(fact.lines[2]).toBe(slots.irmaaStepOnRampSpan(21, '2,700', 4, 2030))
-    expect(fact.lines[3]).toBe(copy.irmaaStepBothBase)
-    expect(fact.lines[4]).toBe(slots.irmaaStepExtrasAddBoth('5,900', '2,900'))
+    expect(fact.lines[3], 'the ONE basis clause — why this pair is 3× while the extras pair is 2× (Briggsy 2026-09-24)').toBe(copy.irmaaStepEraTrendNote)
+    expect(fact.lines[4]).toBe(copy.irmaaStepBothBase)
+    expect(fact.lines[5]).toBe(slots.irmaaStepExtrasAddBoth('5,900', '2,900'))
   }, 120_000)
 })

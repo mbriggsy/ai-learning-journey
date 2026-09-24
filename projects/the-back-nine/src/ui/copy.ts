@@ -1083,6 +1083,18 @@ export const copy = {
   //     clause binds PER QUOTED YEAR, never one predicate spanning two years. These are the
   //     digit-free arms; the figure-carrying arms are `slots.irmaaStep*` below. ---
   /** NEITHER quoted year carries a surcharge on the middle path — the one-line form. */
+  /** The ONE basis clause on the two-figure card (Briggsy 2026-09-24, reading the 61/40 card's 3× beside the
+   *  extras pair's 2×: "spouses with later entries into Medicare are higher due to annual increases in
+   *  premiums"): the era figure grows with the era year's distance because Part B is priced TRENDED
+   *  (`buildPartBPricingSchedule` — V.E2 deflated, then the ultimate real escalator) while the extras are a
+   *  flat per-person placeholder. Renders on the era-loud arm only, right after the on-ramp line, so both
+   *  figures are in view; never a third figure, never a percentage, never an arrow (the register's negatives).
+   *  RE-WORDED the same sitting after three refuters (wf_43515c52-18c): PER PERSON (the whole more-than-double is each
+   *  premium rising — the era years come later), TIME-based never enrollment-based ("the later one of you joins …
+   *  the more it costs" is how people describe the Part B late-enrollment PENALTY, which the app does not model),
+   *  "even in today’s dollars … keep rising" = faster than prices in plain words, no "each year" (the deflated V.E2
+   *  path is flat 2026→2027), "likely" the catalog hedge ("expected" is not one). */
+  irmaaStepEraTrendNote: 'Even in today’s dollars, each person’s Part B premium is likely to keep rising, so the later years when you’re both on Medicare cost more per person than the earlier years when only one of you is.',
   irmaaStepBothBase:
     'Both figures are the base rate — on the middle-of-the-road path, no income surcharge would apply in either year.',
   /** The no-era arm's on-ramp figure is the base rate. */

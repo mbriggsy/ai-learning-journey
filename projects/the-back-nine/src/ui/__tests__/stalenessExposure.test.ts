@@ -9,7 +9,7 @@
  *
  * THE ARM THAT MATTERS MOST is the AGE/OVERLAY DIVERGENCE: a household whose AGES say "all 65+,
  * Medicare priced" while its BUILT OVERLAY says "no healthcare at all". Insight 080's scar
- * (`healthSheetChrome.ts:434-448`) is that an age-keyed predicate equalled the pricing
+ * (`healthSheetChrome.ts:438-452`) is that an age-keyed predicate equalled the pricing
  * complement right up until a second producer of `healthcareEnabled` shipped, then silently
  * lied. A fixture where the two answers COINCIDE cannot tell an age gate from an overlay gate —
  * so this one is built to make them disagree.

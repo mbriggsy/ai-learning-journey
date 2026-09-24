@@ -17,6 +17,24 @@
  * scans against.
  */
 
+/**
+ * The ONE optimistic lean the conversion channel discloses — spoken by BOTH surfaces that
+ * disclose it, from this ONE constant: the assumptions row's `assumptionConversionTaxValue`
+ * and the Roth sheet's `rothMedicareResidualNote` (`conversionTaxDisclosure.test.ts` pins the
+ * pair to it and to the engine rule it describes). The referent is `buildPartBPricingSchedule`
+ * (healthOverlay): past the 2035 edge of the Trustees' printed tables the Part D surcharge scales
+ * HOLD their edge-year real level (an unsourced tail is never extrapolated as sourced), so a
+ * conversion that trips the surcharge far out is priced a shade under what it will likely cost.
+ * Filed 2026-09-13 by the sibling-sheets Caddie walk (Card 7): the row said "never oversold"
+ * while the sheet one door over disclosed this lean — and the sheet renders ONLY when the run priced
+ * Medicare with no Healthcare door (`showMedicarePricedNote`; in practice all-65+), so for a pre-65 couple the row is the ONLY disclosure
+ * they ever see; it must be self-contained. When the hold is ever lifted (a sourced tail), retire
+ * the lean HERE and both surfaces follow. "a shade easier" + "could" keep the sheet's ratified
+ * hedge vocabulary (rule 36).
+ */
+export const MEDICARE_PART_D_HOLD_CONSEQUENCE =
+  'so a conversion that trips it far in the future could look a shade easier here than in real life.'
+
 /** The product voice catalog — copyGuard's enumeration surface (U7). */
 export const copy = {
   appTitle: 'The Back Nine',
@@ -1141,7 +1159,7 @@ export const copy = {
   // day) NARROWED the still-flat clause TWICE: Part B + its surcharge piece trend off V.E2,
   // then the drug-plan surcharge piece trends off V.E4 per tier — so the residual's referent
   // shrank to the genuinely-still-flat set (the extra-coverage premiums alone; the >2035
-  // Part D real-hold lives in the constant note + the detail-door era), a SWAP never an ADD.
+  // Part D real-hold is disclosed on the Roth sheet + the assumptions row, both from MEDICARE_PART_D_HOLD_CONSEQUENCE), a SWAP never an ADD.
   // The on-typical household additionally gets a per-person
   // bi-directional sentence (slots.medicareExtrasTypical*) appended INSIDE the residual
   // paragraph — same block, no new frame row (the one-frame fit law's tallest composite).
@@ -1178,8 +1196,8 @@ export const copy = {
   // "Premiums are held flat" covered EVERY tool-added premium — false once Part B + its
   // surcharge piece trended; the interim "…and the drug-plan piece of the income surcharge"
   // died the same day when Table V.E4 sourced the Part D path (both surcharge pieces now
-  // priced through 2035; the >2035 Part D real-hold is the constant note's + detail-door
-  // era's residual). The referent is now ONLY the extra-coverage premiums — the genuinely
+  // priced through 2035; the >2035 Part D real-hold is disclosed on the Roth sheet + the
+  // assumptions row, both from MEDICARE_PART_D_HOLD_CONSEQUENCE). The referent is now ONLY the extra-coverage premiums — the genuinely
   // still-flat set; the not-rosier direction clause is unchanged. The interim sentence also
   // wrapped an extra Linux-metrics line on the budget composite and pushed the R13 disclaimer
   // 1px past the fold on CI ALONE (the burned/055 class) — this shorter truth restores the
@@ -1229,7 +1247,7 @@ export const copy = {
     // surcharge's drug-plan piece" now binds the decomposition possessively, killing the
     // cross-surface polysemy with the landing's "a drug plan" (an extra-coverage PREMIUM —
     // the O14 one-lexeme-two-referents class). ONE verb, one owner, same hedges.
-    'The income surcharge a conversion can trip two years later is now part of these numbers, priced to climb the way Medicare’s own projections read — its drug-plan piece included. A modeling choice: past those projections’ 2035 edge the surcharge’s drug-plan piece holds at its last level, so a conversion that trips it far in the future could look a shade easier here than in real life.',
+    `The income surcharge a conversion can trip two years later is now part of these numbers, priced to climb the way Medicare’s own projections read — its drug-plan piece included. A modeling choice: past those projections’ 2035 edge the surcharge’s drug-plan piece holds at its last level, ${MEDICARE_PART_D_HOLD_CONSEQUENCE}`,
 
   // --- P3·U12 — the AssumptionPanel (the R7 escape hatch; council wf_dff75c2f-9e3). PREFIX
   // LAW: `assumption*` is the panel's CHROME prefix — labels, values, provenance lines,
@@ -1365,9 +1383,25 @@ export const copy = {
     'Never one fixed guess: every simulated future draws each person’s span from the same survival tables, so both orderings are weighed at their real odds.',
   assumptionConversionTaxName: 'How a conversion’s tax is paid',
   // The v1 per-policy funding rule + its CONSERVATIVE direction, disclosed (roth.ts:33-41;
-  // the taxable-first slice is the filed R7-editable upgrade).
+  // the taxable-first slice is the filed R7-editable upgrade). SWAPPED 2026-09-23 (the register's
+  // "never oversold" entry — Card 7 of the 2026-09-13 sibling-sheets walk; the words RULED by
+  // Briggsy cold, "that reads clean"): the old tail — "…so the lever's benefit reads understated,
+  // never oversold." — asserted the channel's direction from the PRICED rules alone, while the
+  // Roth sheet one door over disclosed one lean the other way (the post-2035 Part D hold) — and
+  // that sheet renders only for an all-65+ household, so a pre-65 couple read "never oversold"
+  // with no counter-disclosure anywhere. The row now names BOTH directions in plain words and is
+  // SELF-CONTAINED (the hold, its year, its consequence — never "see the Roth sheet", which
+  // dangles for the pre-65 household); the year is the engine's own table edge and the
+  // consequence clause is the ONE constant the sheet also reads
+  // (`MEDICARE_PART_D_HOLD_CONSEQUENCE`) — `conversionTaxDisclosure.test.ts` pins both to the
+  // shipped hold (`buildPartBPricingSchedule`). RE-RULED the same sitting after the 153-agent
+  // review (Briggsy: "looks good"): the hold's lean is CONDITIONAL ("can lean the other way" — it
+  // under-prices post-edge surcharges in BOTH arms, so only the conversion's own far-out bill is
+  // the proven direction); "year-by-year figures" (the Trustees PROJECT 75 years — the printed
+  // table ends at 2035); "Medicare's income surcharge" named in-row (no antecedent otherwise);
+  // "the tool makes" (whose choice). The direction words are pinned in order by that test.
   assumptionConversionTaxValue:
-    'Tax on a Roth conversion comes out of the year’s withdrawals in the same order as everything else. That choice errs against converting, so the lever’s benefit reads understated, never oversold.',
+    `Tax on a Roth conversion comes out of the year’s withdrawals in the same order as everything else. Paying it that way makes converting look a little less worthwhile than it might really be, so this part of the answer leans against converting, not for it. One other choice the tool makes can lean the other way: Medicare’s own year-by-year figures stop at 2035, and past that the drug-plan piece of Medicare’s income surcharge is held at its last level, ${MEDICARE_PART_D_HOLD_CONSEQUENCE}`,
   assumptionSsClaimAgeLabel: 'The age Social Security starts',
   errBirthYearBlank: 'The plan needs a birth year to run — mind putting one back?',
   // --- P3·U13 — the re-entry gate + the staleness notes ---------------------------------

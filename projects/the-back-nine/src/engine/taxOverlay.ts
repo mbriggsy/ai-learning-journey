@@ -907,8 +907,8 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
  * bound once per run inside {@link runTaxAwareDecumulation} (the ONE consumer), V.E2's nominal
  * premiums deflated horizon-matched with the ultimate real escalator beyond the table. The IRMAA
  * Part B surcharges scale with the trended base (the statutory cost-share identity); Part D
- * surcharges are held at anchor scale, DISCLOSED (the hawk-honored disaggregation — never Part
- * B's ratio). Real-flat under-penalized late-year IRMAA cliff-crossing — the exact payoff channel
+ * surcharges are trended PER TIER from Table V.E4 through the 2035 edge and HOLD their edge-year
+ * real level beyond it, DISCLOSED (never Part B's ratio). Real-flat under-penalized late-year IRMAA cliff-crossing — the exact payoff channel
  * of Roth-conversion candidates (architecture §7.2; the Act-4 reconciliation supersession item 4).
  *
  * The U14 oracle token reads THIS value as the consumption half of its Medicare-trend block:

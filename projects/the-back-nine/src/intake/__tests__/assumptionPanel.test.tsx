@@ -797,3 +797,21 @@ describe('the spend-row help — draft-keyed, mirroring the intake', () => {
     expect(screen.queryByText(copy.spendHelpStatePriced)).toBeNull()
   })
 })
+
+// ─── the conversion-tax disclosure row (the register's "never oversold" entry, 2026-09-23) ────
+
+describe('the conversion-tax disclosure row — rendered, on the household that never sees the Roth sheet’s note', () => {
+  it('a pre-65 household reads the self-contained two-direction line, never "never oversold"', () => {
+    // mixedDraft is 55 + 63: pre-65, so the Roth sheet's residual note (gated on
+    // showMedicarePricedNote — all-65+, no Healthcare door) NEVER renders for it; this row is the
+    // only place the post-2035 Part D hold is disclosed to that reader. The catalog pin lives in
+    // src/ui/__tests__/conversionTaxDisclosure.test.ts; this arm proves the row REACHES the panel.
+    renderPanel({ snapshot: snap(mixedDraft) })
+    const row = document.querySelector('[data-assumption-seat="conversion-tax"]')
+    expect(row, 'the conversion-tax seat renders unconditionally').not.toBeNull()
+    const text = row!.textContent ?? ''
+    expect(text).toContain(copy.assumptionConversionTaxName)
+    expect(text, 'the WHOLE ruled row reaches the pre-65 reader (it carries the ONE constant)').toContain(copy.assumptionConversionTaxValue)
+    expect(text).not.toMatch(/never oversold/i)
+  })
+})

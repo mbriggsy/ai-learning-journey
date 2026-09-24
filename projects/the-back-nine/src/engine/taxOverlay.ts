@@ -857,7 +857,7 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
     // Surface the taxable-SS local (M3): the identical value + call as before, so `nextGross` stays
     // byte-identical — now also fed to the returned MagiComponents so acaMagi reads the FLOORED
     // converged locals (never recomputed off a raw-gain ledger; the named sign-inversion).
-    const ssBenefitTaxable = taxableSocialSecurity(nonSSordinary + realizedGain, ssBenefit, filing)
+    const ssBenefitTaxable = taxableSocialSecurity(nonSSordinary + realizedGain, ssBenefit, filing, calendarYear)
     const ordinaryIncome = nonSSordinary + ssBenefitTaxable
     // The state income tax (the state-tax unit) folds in as a SECOND ADDEND beside the federal tax —
     // INSIDE the fixed point, so the gross is solved to net `net` AFTER both taxes jointly, never

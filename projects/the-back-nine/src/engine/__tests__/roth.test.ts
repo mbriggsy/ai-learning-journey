@@ -221,8 +221,14 @@ describe('the delta basis + arithmetic', () => {
     // the delta falls to the JOINT basis (roth.ts:211). This drives the 'joint' branch through the REAL
     // engine (runTwoArm → simulate); it was previously exercised only over synthetic readings.
     const solo = base({ people: [OWNER], overlay: { ...OVERLAY, pretaxByPerson: [500_000] } })
+    // A 100k × 5 plan, not the 60k × 3 the sibling arms use: after the SS-thresholds deflation
+    // (2026-09-24) the smaller plan's two arms landed on the SAME joint fraction (0.974 on 2,000
+    // paths — a survivor-count coincidence, not a bug), which made the subtraction-ORDER pin below
+    // vacuous and tripped its own premise guard. The heavier plan separates the arms by construction
+    // (more conversion tax on the with-arm); the arm's PURPOSE — the 'joint' branch through the real
+    // engine — is unchanged.
     const out = twoArm(
-      runTwoArm(solo, SEED, { kind: 'conversion', plan: { annualAmountReal: 60_000, startYearOffset: 0, years: 3 } }),
+      runTwoArm(solo, SEED, { kind: 'conversion', plan: { annualAmountReal: 100_000, startYearOffset: 0, years: 5 } }),
     )
     expect(out.deltaBasis).toBe('joint')
     expect(out.with.survivorFraction).toBeUndefined()

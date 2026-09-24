@@ -68,6 +68,16 @@ const DEV_CRN_SEED = 0xbada55
  * ENDED when S.L. 2026-41's 2027+ rate cut was pinned into `ncRateSchedule` (2026-08-02): NC now lands
  * ON-TRACK beside its twin, so no priced-state seed crosses the band today. A purpose-built
  * band-crossing seed + its state-off twin is Briggsy's call (register Tier 3).
+ *
+ * SS-THRESHOLDS RE-TUNE (2026-09-24, the Social Security-thresholds Tier 0): deflating the frozen
+ * NOMINAL §86 thresholds per sim year (they were held flat in real dollars — indexed, rosy) taxed
+ * more of this couple's $54k benefit in every later year and moved the household 0.8585 → 0.8425
+ * (9/10 on-track → 8/10 BORDERLINE; the NC face 0.8485 → 0.826) — RECORDED before any re-tune, the
+ * same precedent. The IRA moved 1.055M → 1.120M: probed +45k / +65k / +85k — +65k restores the twin
+ * at 0.8805 (margin 0.03 over the 0.85 edge) and NC at 0.8695 (0.02), healthier than the 0.01 / 0.00
+ * margins the pre-fix seeds sat on; the PA and FL faces ride the same IRA and land byte-equal to the
+ * twin's survival (0.8805), as their arms require. The health-sheet figures (MAGI, headroom) do not
+ * move with the IRA — income is spending − benefit, not portfolio — so the premium-card pins hold.
  */
 const retiredOnTrack: ScenarioDraft = {
   people: [
@@ -98,7 +108,7 @@ const retiredOnTrack: ScenarioDraft = {
     {
       ownerIndex: 0,
       kind: 'traditional-ira',
-      valueToday: 1_055_000,
+      valueToday: 1_120_000,
       // A no-ticker account requires the per-account manual blend (burned/062 —
       // never a silent default). 60/30/10 stocks/bonds/cash.
       manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
@@ -203,7 +213,10 @@ const stillWorking: ScenarioDraft = {
  * band's lower percentiles honestly descend toward $0. Older than `retired` on purpose: the shorter
  * horizon keeps the p90 plume from squashing the ruin tail. SURVIVED the U14 S0 extras refresh
  * ($203→~$244/mo/person, 2026-07-18) with the named state intact — no re-tune needed (the
- * devSeeds outcome pin is the witness).
+ * devSeeds outcome pin is the witness). SS-THRESHOLDS RE-TUNE (2026-09-24): deflating the frozen
+ * nominal §86 lines per year moved this couple 0.647 → 0.6275 (borderline-7 → OFF-TRACK-6 with a
+ * $1,310/mo trim — RECORDED at the shipped inputs first); the IRA moved 760k → 800k, which lands
+ * 0.6815 borderline-7 with a 0.03 margin over the 0.65 edge (the pre-fix seed sat at 0.00).
  */
 const retiredBorderline: ScenarioDraft = {
   people: [
@@ -234,7 +247,7 @@ const retiredBorderline: ScenarioDraft = {
     {
       ownerIndex: 0,
       kind: 'traditional-ira',
-      valueToday: 760_000,
+      valueToday: 800_000,
       manualBlend: { kind: 'exact', stockPct: 55, bondPct: 35, cashPct: 10 },
     },
     {
@@ -403,14 +416,18 @@ const bline = (
  * OVERRIDDEN independently of `borderline` (one knob cannot serve both seeds); the extras
  * typical sank the full track to off-track-6, so the override moved 600k→720k to restore the
  * 7-vs-9 spread with the widest joint margin (full 0.02 from the 8-flip, floor a full grid
- * step over the 0.98 over-funded edge). The reconciliation invariant holds by construction:
+ * step over the 0.98 over-funded edge). SS-THRESHOLDS RE-TUNE (2026-09-24): the per-year deflation
+ * of the frozen nominal §86 lines sank the essentials FLOOR from over-funded to on-track (the full
+ * track held borderline-7, margin 0.01 → 0.02) — RECORDED first; the override moved 720k → 760k,
+ * which lands full 0.701 borderline-7 (margin 0.05) over an over-funded-9 floor (margin 0.03), the
+ * widest joint margin of the three IRA values probed. The reconciliation invariant holds by construction:
  * annualSpendingReal = Σlines@0 (59,600) + injected M (6,000) = 65,600. All lines
  * lifelong-at-0 (as probed — a window would change the engine evaluation the proof pinned).
  */
 const retiredBudget: ScenarioDraft = {
   ...retiredBorderline,
   enteredAccounts: retiredBorderline.enteredAccounts.map((a, i) =>
-    i === 0 ? { ...a, valueToday: 720_000 } : a,
+    i === 0 ? { ...a, valueToday: 760_000 } : a,
   ),
   budget: [
     bline('housing', 'Mortgage & taxes', 18_000, 'essentials'),
@@ -453,11 +470,18 @@ const retiredBudget: ScenarioDraft = {
  * ELAPSED_PLAN_YEARS is 2. The plant therefore sits EXACTLY ON the boundary, not inside it — any
  * re-tune that pushes the floor to 3 reds that arm and kills `dateFloorCoveredPast`'s only live
  * route.** The override's PURPOSE still holds; only its numbers were wrong.
+ * SS-THRESHOLDS RE-TUNE (2026-09-24): deflating the frozen nominal §86 lines per year pushed the
+ * provisional floor crown 2 → 3 (exactly the boundary case the warning above names) and the FINAL
+ * lifestyle crown from confirmed to `window-edge-unconfirmed` — RECORDED at 900k first. The trad
+ * account moved 900k → 925k (probed 915 / 925 / 935 / 950 / 1,000k at provisional; 935k+ crowns the
+ * provisional lifestyle at 9 CONFIRMED, killing the hedge-that-withdraws transient this seed also
+ * exists to render): at 925k provisional reads floor 2 confirmed / lifestyle 10 unconfirmed and final
+ * reads floor 2 / lifestyle 9 confirmed — the pinned shape at both tiers.
  */
 const dateSplitSeed: ScenarioDraft = {
   ...stillWorkingBorderline,
   enteredAccounts: [
-    { ...stillWorkingBorderline.enteredAccounts[0]!, valueToday: 900_000 },
+    { ...stillWorkingBorderline.enteredAccounts[0]!, valueToday: 925_000 },
     { ...stillWorkingBorderline.enteredAccounts[1]!, valueToday: 158_000 },
   ],
   budget: [

@@ -35,13 +35,13 @@ status: shipped
 
 ## S0 — the sentinel reconciliation (landed first; contradictions mean STOP)
 
-- `src/engine/constants/tax.ts:342-359` `stateIncomeTax` had been `OUT-but-disclosed` with the
+- `src/engine/constants/tax.ts:347-364` `stateIncomeTax` had been `OUT-but-disclosed` with the
   note *"Configurable context; neither sequencing nor conversion moves it"* — **FALSE** for the
   roster (NC taxes conversions at the flat rate; the D6 falsifiable rule "IN iff sequencing or
   a conversion can move it" **reclassifies state IN** for priced states). The sentinel was
   reconciled BEFORE any pricing code and now carries
   `{ status: 'IN-for-roster; OUT-but-disclosed-elsewhere', pricedRoster: 'NC, PA, FL' }`; the
-  `inOutRule` sibling (tax.ts:361-369) and the module banner (tax.ts:1-15) moved with it, and
+  `inOutRule` sibling (tax.ts:366-374) and the module banner (tax.ts:1-15) moved with it, and
   every consumer of the old "state isn't priced" wording was swept (the S5 disclosure map is
   the render-side half of that sweep).
 

@@ -274,6 +274,11 @@ export const jointLifeLastSurvivorTable = sourced<JointLifeLastSurvivorTable>(jo
 /**
  * Social Security provisional-income taxation thresholds. FROZEN since 1983/1993 —
  * NOT inflation-indexed, so NO staleness clock (a frozen constant cannot go stale).
+ * These are the statute's NOMINAL dollars, and the engine's income is REAL: the ONE
+ * consumer (`taxableSocialSecurity`, taxCore.ts) divides them by the engine's cumulative
+ * price index for the sim year's calendar (priceIndex.ts) — a frozen nominal line falls in
+ * real terms every year, which is exactly why the law catches more retirees each year.
+ * Holding the real line flat (the pre-2026-09-24 engine) had indexed what Congress froze.
  * Provisional income = AGI excluding SS + tax-exempt interest + 50% of SS benefits.
  * Resolve taxable-SS as a per-year bounded FIXED-POINT (provisional → taxable-SS →
  * tax → gross-up → re-converge); reads zero random draws (CRN-safe).
@@ -286,7 +291,7 @@ export const ssProvisionalThresholds = sourced(
   {
     citation: 'findings §Strand 5; IRS Pub 915',
     directionalUntilPinned: false,
-    note: 'Thresholds firm-frozen. Exact inclusion follows the Pub 915 worksheet (not a flat bracket multiply) — that worksheet is directional until pinned.',
+    note: 'Thresholds firm-frozen in NOMINAL dollars — the constant stays the statute’s figure; the consumer deflates it per calendar year by the engine’s one price index (priceIndex.ts), never here. Exact inclusion follows the Pub 915 worksheet (not a flat bracket multiply) — that worksheet is directional until pinned.',
   },
 )
 

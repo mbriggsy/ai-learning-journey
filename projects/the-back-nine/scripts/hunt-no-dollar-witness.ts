@@ -91,7 +91,7 @@ interface Probe {
 }
 
 const probes: Probe[] = []
-const total = 1_055_000 // the shipped retired household's portfolio scale (post trend re-tune)
+const total = 1_120_000 // the shipped retired household's portfolio scale (post the 2026-09-24 SS-thresholds re-tune; 1_055_000 before it)
 const FAMILY = process.env.HUNT_FAMILY === 'b' ? 'b' : 'a'
 if (FAMILY === 'a') {
   // FAMILY A — the broad split × spend sweep (borderline/on-track worlds; survival-crowned regime).

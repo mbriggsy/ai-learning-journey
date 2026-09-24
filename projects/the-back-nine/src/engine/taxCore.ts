@@ -25,6 +25,7 @@ import {
   type OrdinaryBracket,
   type CapitalGainsRateBreakpoints,
 } from '@engine/constants'
+import { cumulativePriceIndex } from '@engine/priceIndex'
 import type { FilingStatus } from '@shared/model'
 
 // =========================================================================
@@ -127,7 +128,12 @@ export function ordinaryIncomeTax(
 // A CONTINUOUS, non-decreasing, piecewise-linear function of provisional income;
 // that smoothness is what keeps the gross-up fixed point (taxOverlay.ts) well-behaved
 // when the SS layer is folded in. Reads the FROZEN, un-indexed thresholds from the
-// canonical constants (MFJ 32k/44k, single 25k/34k) — never inlined here.
+// canonical constants (MFJ 32k/44k, single 25k/34k) — never inlined here — and DEFLATES
+// them to the sim year's real dollars (priceIndex.ts): the statute froze the NOMINAL
+// line, and the engine's income is REAL, so the line the engine compares against must fall
+// every year exactly as the law's does. Holding it flat in real dollars had indexed what
+// Congress froze — fewer benefit dollars taxed in every later year than the law taxes
+// (the Tier 0 filed 2026-09-24; rosy, growing with the horizon).
 // =========================================================================
 
 /**
@@ -139,7 +145,14 @@ export function ordinaryIncomeTax(
  * of the excess over the second) and the hard 85%-of-benefit ceiling. It is monotone
  * non-decreasing AND continuous in `otherIncomeExclSS` (the band kinks at the two
  * thresholds and the two `Math.min` caps are continuous joins) — the property the
- * gross-up contraction rests on.
+ * gross-up contraction rests on; deflating both thresholds by one positive factor keeps
+ * every kink a continuous join, so the property survives the deflation (pinned).
+ *
+ * `calendarYear` is the sim year's calendar (`startCalendarYear + t`). The two nominal
+ * thresholds are divided by `cumulativePriceIndex(calendarYear)` — the identity at and
+ * before the trend table's anchor year, so year 0 of every plan built in the anchor year
+ * prices the statute's own figures; each later year prices a lower REAL line. Above the
+ * 85 %-of-benefit ceiling the deflation changes nothing (the cap, not the line, binds).
  *
  * SCOPE (M4): "other income" is the pre-tax distribution only; capital-gains / taxable-
  * basis realizations enter provisional in M5. The MFS-lived-with-spouse flat-85% rule is
@@ -152,12 +165,21 @@ export function taxableSocialSecurity(
   otherIncomeExclSS: number,
   ssBenefit: number,
   filing: FilingStatus,
+  calendarYear: number,
 ): number {
+  if (!Number.isInteger(calendarYear)) {
+    // NaN would make the index lookup throw only AFTER the ssBenefit early-return let a
+    // zero-benefit year through — check first, so a desynced caller fails on its first call.
+    throw new Error(`[taxCore] calendarYear must be an integer calendar year (got ${calendarYear})`)
+  }
   if (ssBenefit <= 0) return 0
   const half = ssBenefit * 0.5
   const provisional = otherIncomeExclSS + half
-  const { fiftyPctOver: base1, eightyFivePctOver: base2 } =
-    filing === 'mfj' ? ssProvisionalThresholds.value.mfj : ssProvisionalThresholds.value.single
+  const nominal = filing === 'mfj' ? ssProvisionalThresholds.value.mfj : ssProvisionalThresholds.value.single
+  // The statute's NOMINAL lines in the sim year's REAL dollars (one index, one home).
+  const priceLevel = cumulativePriceIndex(calendarYear)
+  const base1 = nominal.fiftyPctOver / priceLevel
+  const base2 = nominal.eightyFivePctOver / priceLevel
   if (provisional <= base1) return 0
   if (provisional <= base2) return Math.min(half, 0.5 * (provisional - base1))
   // 85% tier: the 50%-band contribution is capped at 50% of the band width (base2 − base1),

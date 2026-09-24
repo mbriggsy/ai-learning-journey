@@ -37,7 +37,7 @@ export interface FixturePreconditions {
   readonly deterministic: true
   /** Survivor machinery exercised? (fixed-horizon mode never samples a death.) */
   readonly survivorTransition: boolean
-  /** Social Security priced? (pia 0 ⇒ every SS term provably 0 — taxCore.ts:156 gate.) */
+  /** Social Security priced? (pia 0 ⇒ every SS term provably 0 — taxCore.ts:175 gate.) */
   readonly socialSecurity: boolean
   /** Capital-gains realization possible? (basis === value ⇒ realizedGain provably 0.) */
   readonly capitalGains: boolean

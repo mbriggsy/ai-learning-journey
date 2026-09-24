@@ -52,15 +52,18 @@ describe('the trim clause on the walk’s worsened `retired` frame, through the 
     expect(wire.dollar.direction).toBe('trim')
     expect(wire.headline.outcomeState).toBe('off-track')
     expect(wire.dollar.spendPerMonthReal).toBe(10_000)
-    // The engine's own number, read off the first run at the $10 grain (see the header) — SIGNED on
-    // the sticky triple (negative = trim); the clause speaks its magnitude, the word carries direction.
-    expect(displayed.perMonthDollar).toBe(-7_500)
+    // The engine's own number, read off the run at the $10 grain (see the header) — SIGNED on the
+    // sticky triple (negative = trim); the clause speaks its magnitude, the word carries direction.
+    // RE-PINNED 2026-09-24 exactly as the header prescribes: the SS-thresholds re-tune moved the
+    // `retired` IRA 1.055M → 1.120M (devSeeds.ts), so the same $10,000 edit now needs $7,200 of trim,
+    // not the walk's $7,500 (the 2026-09-17 Caddie card quotes the old seed's sentence — a record).
+    expect(displayed.perMonthDollar).toBe(-7_200)
     const figures = figuresIn(reading.clause)
     expect(figures).toHaveLength(3) // target · spend · delta — nothing else wears a dollar sign
     const [target, spend, delta] = figures as [number, number, number]
     expect(spend).toBe(10_000)
     expect(delta).toBe(Math.abs(displayed.perMonthDollar))
     expect(spend - target).toBe(delta)
-    expect(reading.clause).toBe(slots.verdictTrimClause('2,500', '10,000', '7,500'))
+    expect(reading.clause).toBe(slots.verdictTrimClause('2,800', '10,000', '7,200'))
   }, 120_000)
 })

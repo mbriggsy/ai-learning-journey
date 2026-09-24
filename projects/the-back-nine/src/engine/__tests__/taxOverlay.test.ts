@@ -642,39 +642,39 @@ describe('taxOverlay — M4 Social Security provisional-income fixed point', () 
   describe('taxableSocialSecurity matches independently hand-derived Pub 915 fixtures (DND/012)', () => {
     it('below the first threshold → none taxable (MFJ provisional 25k ≤ 32k)', () => {
       // SS 20k (½ = 10k) + other 15k → provisional 25k ≤ 32k → 0
-      expect(taxableSocialSecurity(15_000, 20_000, 'mfj')).toBe(0)
+      expect(taxableSocialSecurity(15_000, 20_000, 'mfj', 2026)).toBe(0)
     })
 
     it('exactly ON the first threshold owes nothing (the boundary is ≤, MFJ)', () => {
       // other 22k + ½ 10k = provisional EXACTLY 32k → 0 (proves the ≤ break, not <)
-      expect(taxableSocialSecurity(22_000, 20_000, 'mfj')).toBe(0)
+      expect(taxableSocialSecurity(22_000, 20_000, 'mfj', 2026)).toBe(0)
     })
 
     it('50% band, the 0.5×(excess) arm binds (MFJ): min(½SS, 50% of the excess over 32k)', () => {
       // SS 20k (½ = 10k) + other 30k → provisional 40k ∈ (32k, 44k]
       // min(10k, 0.5×(40k−32k = 8k) = 4k) = 4,000 (the excess arm binds, ½SS is the larger)
-      expect(taxableSocialSecurity(30_000, 20_000, 'mfj')).toBeCloseTo(4_000, 6)
+      expect(taxableSocialSecurity(30_000, 20_000, 'mfj', 2026)).toBeCloseTo(4_000, 6)
     })
 
     it('50% band, the ½SS arm binds (MFJ, small benefit): min(½SS, …) returns ½ the benefit', () => {
       // SS 8k (½ = 4k) + other 38k → provisional 42k ∈ (32k, 44k]
       // min(4k, 0.5×(42k−32k = 10k) = 5k) = 4,000 = ½SS (the ½SS arm binds — the OTHER 50%-band
       // sub-regime; a bug dropping `min(half, …)` here returns 5,000 and over-taxes the benefit).
-      expect(taxableSocialSecurity(38_000, 8_000, 'mfj')).toBeCloseTo(4_000, 6)
+      expect(taxableSocialSecurity(38_000, 8_000, 'mfj', 2026)).toBeCloseTo(4_000, 6)
     })
 
     it('85% band, the 50%-range capped at 0.5×(44k−32k) = 6k (MFJ, large benefit)', () => {
       // SS 30k (½ = 15k) + other 40k → provisional 55k > 44k
       // 50%-range = min(15k, 6k) = 6k; 0.85×(55k−44k = 11k) = 9,350; sum 15,350;
       // overall cap 0.85×30k = 25,500 → taxable 15,350 (interior; the 6k cap binds)
-      expect(taxableSocialSecurity(40_000, 30_000, 'mfj')).toBeCloseTo(15_350, 6)
+      expect(taxableSocialSecurity(40_000, 30_000, 'mfj', 2026)).toBeCloseTo(15_350, 6)
     })
 
     it('85% band, the 50%-range = ½SS when the benefit is small (MFJ)', () => {
       // SS 8k (½ = 4k) + other 42k → provisional 46k > 44k
       // 50%-range = min(4k, 6k) = 4k (½SS binds, NOT the 6k cap); 0.85×(46k−44k = 2k) = 1,700;
       // sum 5,700; overall cap 0.85×8k = 6,800 → taxable 5,700 (a DISTINCT regime from above)
-      expect(taxableSocialSecurity(42_000, 8_000, 'mfj')).toBeCloseTo(5_700, 6)
+      expect(taxableSocialSecurity(42_000, 8_000, 'mfj', 2026)).toBeCloseTo(5_700, 6)
     })
 
     it('85% OVERALL cap binds — reproduces the published IRS Pub 915 Worksheet 1 example (John & Mary, MFJ) → $34,000', () => {
@@ -682,19 +682,19 @@ describe('taxOverlay — M4 Social Security provisional-income fixed point', () 
       // otherIncomeExclSS = 65k + 2k = 67k; provisional = 67k + 20k = 87k.
       // 50%-range min(20k, 6k) = 6k; 0.85×(87k−44k = 43k) = 36,550; sum 42,550;
       // overall cap 0.85×40k = 34,000 → taxable 34,000 (the cap binds; matches IRS line 19).
-      expect(taxableSocialSecurity(67_000, 40_000, 'mfj')).toBeCloseTo(34_000, 6)
+      expect(taxableSocialSecurity(67_000, 40_000, 'mfj', 2026)).toBeCloseTo(34_000, 6)
     })
 
     it('single thresholds (25k/34k) + the 0.5×(34k−25k) = 4.5k 50%-range cap', () => {
       // SS 24k (½ = 12k) + other 30k → provisional 42k > 34k (single)
       // 50%-range = min(12k, 4.5k) = 4,500; 0.85×(42k−34k = 8k) = 6,800; sum 11,300;
       // overall cap 0.85×24k = 20,400 → taxable 11,300 (exercises the single 4.5k cap)
-      expect(taxableSocialSecurity(30_000, 24_000, 'single')).toBeCloseTo(11_300, 6)
+      expect(taxableSocialSecurity(30_000, 24_000, 'single', 2026)).toBeCloseTo(11_300, 6)
     })
 
     it('a zero or negative benefit is never taxable (no spurious inclusion at high other-income)', () => {
-      expect(taxableSocialSecurity(200_000, 0, 'mfj')).toBe(0)
-      expect(taxableSocialSecurity(200_000, -5_000, 'mfj')).toBe(0)
+      expect(taxableSocialSecurity(200_000, 0, 'mfj', 2026)).toBe(0)
+      expect(taxableSocialSecurity(200_000, -5_000, 'mfj', 2026)).toBe(0)
     })
   })
 
@@ -714,18 +714,22 @@ describe('taxOverlay — M4 Social Security provisional-income fixed point', () 
   /** Re-solve the per-year gross with SS folded in, using ONLY the golden pure fns.
    *  `nonSSfromGross` maps a candidate gross to the ordinary income before SS (the pre-tax
    *  distribution = max(alloc.pretax, rmd)). The senior-bonus MAGI coupling is automatic:
-   *  ordinaryIncomeTax reads (nonSS + taxableSS) as both the taxable base AND the MAGI. */
+   *  ordinaryIncomeTax reads (nonSS + taxableSS) as both the taxable base AND the MAGI.
+   *  `calendarYear` is the sim year's calendar (the fixture anchor 2026 + t): the SS thresholds
+   *  deflate by it (the frozen-nominal law) and the senior bonus windows on it — a multi-year
+   *  arm must re-solve each year at ITS calendar, never year 0's. */
   const solveGrossWithSS = (
     net: number,
     nonSSfromGross: (g: number) => number,
     ss: number,
     filing: 'mfj' | 'single',
     count65: number,
+    calendarYear: number,
   ): number => {
     let gross = net
     for (let i = 0; i < 300; i++) {
       const nonSS = nonSSfromGross(gross)
-      gross = net + ordinaryIncomeTax(nonSS + taxableSocialSecurity(nonSS, ss, filing), filing, count65, 2026)
+      gross = net + ordinaryIncomeTax(nonSS + taxableSocialSecurity(nonSS, ss, filing, calendarYear), filing, count65, calendarYear)
     }
     return gross
   }
@@ -769,7 +773,7 @@ describe('taxOverlay — M4 Social Security provisional-income fixed point', () 
       expect(noSS.terminalReal).toBeLessThan(sp.terminalReal)
       // magnitude: pre-tax-first on a pre-tax-only pool → nonSS = max(gross, rmd); re-solve the gross.
       const rmd0 = pool / ultDivisor(78)
-      const expectedGross = solveGrossWithSS(40_000, (g) => Math.max(g, rmd0), 60_000, 'mfj', 2)
+      const expectedGross = solveGrossWithSS(40_000, (g) => Math.max(g, rmd0), 60_000, 'mfj', 2, 2026)
       expect(withSS.terminalReal / sp.terminalReal).toBeCloseTo((pool - expectedGross) / (pool - 40_000), 8)
     })
   })
@@ -785,9 +789,9 @@ describe('taxOverlay — M4 Social Security provisional-income fixed point', () 
       const net = 200_000
       const on = runTaxAwareDecumulation({ taxable: 0, pretax: pool, roth: 0 }, realStock, realBond, [net], STOCK_W, 'pre-tax-first', bothBorn1959MFJ, { ssBenefits: [50_000] })
       const sp = spine(pool, [net])
-      const gross = solveGrossWithSS(net, (g) => g, 50_000, 'mfj', 2)
-      expect(gross + taxableSocialSecurity(gross, 50_000, 'mfj')).toBeGreaterThan(150_000) // genuinely in the phase-out band
-      expect(gross + taxableSocialSecurity(gross, 50_000, 'mfj')).toBeLessThan(350_000)
+      const gross = solveGrossWithSS(net, (g) => g, 50_000, 'mfj', 2, 2026)
+      expect(gross + taxableSocialSecurity(gross, 50_000, 'mfj', 2026)).toBeGreaterThan(150_000) // genuinely in the phase-out band
+      expect(gross + taxableSocialSecurity(gross, 50_000, 'mfj', 2026)).toBeLessThan(350_000)
       expect(on.terminalReal / sp.terminalReal).toBeCloseTo((pool - gross) / (pool - net), 8)
     })
   })
@@ -843,7 +847,7 @@ describe('taxOverlay — M4 Social Security provisional-income fixed point', () 
       const rothPool = runTaxAwareDecumulation({ taxable: 0, pretax: 0, roth: total }, realStock, realBond, oneSpend, STOCK_W, 'pre-tax-first', bothBorn1959MFJ, { ssBenefits: ss })
       const sp = spine(total, oneSpend)
       // Roth-funded: nonSS ordinary income = 0, provisional = ½×50k = 25k ≤ 32k → 0 taxable SS → no tax → spine.
-      expect(taxableSocialSecurity(0, 50_000, 'mfj')).toBe(0) // the premise: at 0 other income this SS is untaxed
+      expect(taxableSocialSecurity(0, 50_000, 'mfj', 2026)).toBe(0) // the premise: at 0 other income this SS is untaxed
       expect(rothPool.terminalReal).toBe(sp.terminalReal)
       // Pre-tax-funded: the draw is ordinary income, lifts provisional past 32k → SS taxed + ordinary tax → below the Roth run.
       expect(preTaxPool.terminalReal).toBeLessThan(rothPool.terminalReal)
@@ -861,17 +865,19 @@ describe('taxOverlay — M4 Social Security provisional-income fixed point', () 
     const pool = 2_000_000
     const buckets: AccountBuckets = { taxable: 0, pretax: pool, roth: 0 }
     const threeYears = [net, net, net]
-    const grossFor = (ss: number) => solveGrossWithSS(net, (g) => g, ss, 'mfj', 2)
+    // Year t re-solves at ITS calendar (2026 + t): the frozen-nominal SS thresholds deflate a year
+    // at a time, so year 2's 50k benefit is taxed against lower REAL lines than year 0's would be.
+    const grossFor = (ss: number, t: number) => solveGrossWithSS(net, (g) => g, ss, 'mfj', 2, 2026 + t)
 
     it('a delayed-claiming stream [0, 0, 50k] taxes SS in YEAR 2 ONLY — matches the spine on the per-year-resolved grosses', () => {
       const ssStream = [0, 0, 50_000]
       const on = runTaxAwareDecumulation(buckets, realStock, realBond, threeYears, STOCK_W, 'pre-tax-first', bothBorn1959MFJ, { ssBenefits: ssStream })
       // non-vacuous: year-2 SS genuinely raises that year's gross (else the test can't discriminate the year).
-      expect(grossFor(50_000)).toBeGreaterThan(grossFor(0))
+      expect(grossFor(50_000, 2)).toBeGreaterThan(grossFor(0, 2))
       // correct per-year alignment ⇒ overlay total === spine on [solve(0), solve(0), solve(50k)]. An always-[0]
       // read uses solve(0) in year 2; an off-by-one taxes year 1 — both diverge by ~$thousands (≫ the 1e-7
       // fixed-point epsilon the closeTo tolerates).
-      const ref = spine(pool, ssStream.map(grossFor))
+      const ref = spine(pool, ssStream.map((ss, t) => grossFor(ss, t)))
       expect(on.terminalReal).toBeCloseTo(ref.terminalReal, 2)
       expect(on.depletionYear).toBe(ref.depletionYear)
     })
@@ -880,7 +886,7 @@ describe('taxOverlay — M4 Social Security provisional-income fixed point', () 
       // length-1 stream [50k] on a 3-year horizon → year 0 taxed on SS, years 1–2 default to 0 SS (no SS that
       // year), NOT an end-of-data break (returns/withdrawals govern the horizon, not the SS stream).
       const on = runTaxAwareDecumulation(buckets, realStock, realBond, threeYears, STOCK_W, 'pre-tax-first', bothBorn1959MFJ, { ssBenefits: [50_000] })
-      const ref = spine(pool, [grossFor(50_000), grossFor(0), grossFor(0)])
+      const ref = spine(pool, [grossFor(50_000, 0), grossFor(0, 1), grossFor(0, 2)])
       expect(on.terminalReal).toBeCloseTo(ref.terminalReal, 2)
     })
   })
@@ -900,7 +906,7 @@ describe('taxOverlay — M4 Social Security provisional-income fixed point', () 
       const net = 50_000
       const on = runTaxAwareDecumulation({ taxable: 0, pretax: pool, roth: 0 }, realStock, realBond, [net], STOCK_W, 'pre-tax-first', single, { ssBenefits: [40_000] })
       const sp = spine(pool, [net])
-      const gross = solveGrossWithSS(net, (g) => g, 40_000, 'single', 1)
+      const gross = solveGrossWithSS(net, (g) => g, 40_000, 'single', 1, 2026)
       expect(gross).toBeGreaterThan(net) // the draw + the single-threshold taxable SS are taxed
       expect(on.terminalReal / sp.terminalReal).toBeCloseTo((pool - gross) / (pool - net), 8)
     })
@@ -1000,13 +1006,14 @@ describe('taxOverlay — M5 Roth conversion + cap-gains/QD stacking', () => {
     ss: number,
     filing: 'mfj' | 'single',
     count65: number,
+    calendarYear: number,
   ): number => {
     let gross = net
     for (let i = 0; i < 400; i++) {
       const nonSS = nonSSfromGross(gross)
       const rg = gainFromGross(gross)
-      const ordInc = nonSS + taxableSocialSecurity(nonSS + rg, ss, filing)
-      gross = net + ordinaryPlusCapitalGainsTax(ordInc, rg, filing, count65, 2026)
+      const ordInc = nonSS + taxableSocialSecurity(nonSS + rg, ss, filing, calendarYear)
+      gross = net + ordinaryPlusCapitalGainsTax(ordInc, rg, filing, count65, calendarYear)
     }
     return gross
   }
@@ -1053,7 +1060,7 @@ describe('taxOverlay — M5 Roth conversion + cap-gains/QD stacking', () => {
       expect(gain.terminalReal).toBeLessThan(allBasis.terminalReal)
       // magnitude: taxable-first on a taxable-only pool → no pretax/ordinary; the realized gain is
       // the gross × the gain fraction; re-solve the fixed point with the golden fns.
-      const gross = solveGrossM5(net, () => 0, (g) => g * (1 - basis / value), 0, 'mfj', 2)
+      const gross = solveGrossM5(net, () => 0, (g) => g * (1 - basis / value), 0, 'mfj', 2, 2026)
       expect(gross).toBeGreaterThan(net) // cap-gains tax was genuinely owed
       expect(gain.terminalReal / sp.terminalReal).toBeCloseTo((value - gross) / (value - net), 8)
     })
@@ -1085,7 +1092,7 @@ describe('taxOverlay — M5 Roth conversion + cap-gains/QD stacking', () => {
       expect(withConv.finalBuckets.roth).toBeGreaterThan(0)
       expect(noConv.finalBuckets.roth).toBe(0)
       // magnitude: pre-tax-first pre-tax-only → ordinary income = gross (the draw) + C; re-solve.
-      const gross = solveGrossM5(net, (g) => g + C, () => 0, 0, 'mfj', 2)
+      const gross = solveGrossM5(net, (g) => g + C, () => 0, 0, 'mfj', 2, 2026)
       expect(gross).toBeGreaterThan(net)
       expect(withConv.terminalReal / sp.terminalReal).toBeCloseTo((P - gross) / (P - net), 8)
     })
@@ -1107,7 +1114,7 @@ describe('taxOverlay — M5 Roth conversion + cap-gains/QD stacking', () => {
       expect(withConv.finalBuckets.taxable).toBeGreaterThan(0)
       expect(withConv.finalBuckets.roth).toBeGreaterThan(0)
       // magnitude: ordinary income = max(draw, rmd) + C; re-solve and match the terminal ratio.
-      const gross = solveGrossM5(net, (g) => Math.max(g, rmd) + C, () => 0, 0, 'mfj', 2)
+      const gross = solveGrossM5(net, (g) => Math.max(g, rmd) + C, () => 0, 0, 'mfj', 2, 2026)
       expect(withConv.terminalReal / sp.terminalReal).toBeCloseTo((pool - gross) / (pool - net), 8)
     })
 
@@ -1130,13 +1137,13 @@ describe('taxOverlay — M5 Roth conversion + cap-gains/QD stacking', () => {
       const pool = 2_000_000
       const buckets: AccountBuckets = { taxable: 0, pretax: pool, roth: 0 }
       const threeYears = [net, net, net]
-      const grossFor = (c: number) => solveGrossM5(net, (g) => g + c, () => 0, 0, 'mfj', 2)
+      const grossFor = (c: number, t: number) => solveGrossM5(net, (g) => g + c, () => 0, 0, 'mfj', 2, 2026 + t)
       const on = runTaxAwareDecumulation(buckets, realStock, realBond, threeYears, STOCK_W, 'pre-tax-first', TAX_ON_NO_RMD, { conversions: [0, 0, 100_000] })
       // non-vacuous: a year-2 conversion genuinely raises that year's gross.
-      expect(grossFor(100_000)).toBeGreaterThan(grossFor(0))
+      expect(grossFor(100_000, 2)).toBeGreaterThan(grossFor(0, 2))
       // correct [t] alignment ⇒ overlay total === spine on [solve(0), solve(0), solve(100k)]; an
       // always-[0] read or an off-by-one diverges by ~$thousands (≫ the 1e-7 fixed-point epsilon).
-      const ref = spine(pool, [grossFor(0), grossFor(0), grossFor(100_000)])
+      const ref = spine(pool, [grossFor(0, 0), grossFor(0, 1), grossFor(100_000, 2)])
       expect(on.terminalReal).toBeCloseTo(ref.terminalReal, 2)
       expect(on.depletionYear).toBe(ref.depletionYear)
     })
@@ -1290,6 +1297,7 @@ describe('taxOverlay — M5 Roth conversion + cap-gains/QD stacking', () => {
         ss,
         'mfj',
         2,
+        2026,
       )
       expect(gross).toBeGreaterThan(net) // ordinary + cap-gains + SS torpedo all genuinely owed
       expect(on.terminalReal / sp.terminalReal).toBeCloseTo((total - gross) / (total - net), 8)
@@ -1305,11 +1313,11 @@ describe('taxOverlay — M5 Roth conversion + cap-gains/QD stacking', () => {
       const buckets: AccountBuckets = { taxable: V, pretax: 0, roth: 0 }
       const on = runTaxAwareDecumulation(buckets, realStock, realBond, [net, net], STOCK_W, 'taxable-first', TAX_ON_NO_RMD, { initialTaxableBasis: B })
       // Reconstruct the 2-year trajectory independently (taxable-first taxable-only → alloc.taxable = gross).
-      const g0 = solveGrossM5(net, () => 0, (g) => g * (1 - B / V), 0, 'mfj', 2)
+      const g0 = solveGrossM5(net, () => 0, (g) => g * (1 - B / V), 0, 'mfj', 2, 2026)
       const scale0 = spine(V, [0]).terminalReal / V // the year-0 blended growth factor (zero-withdrawal probe)
       const value1 = (V - g0) * scale0 // taxable value at the start of year 1 (grown)
       const basis1 = B * (1 - g0 / V) // basis depleted pro-rata, UNSCALED — the load-bearing recurrence
-      const g1 = solveGrossM5(net, () => 0, (g) => g * (1 - basis1 / value1), 0, 'mfj', 2)
+      const g1 = solveGrossM5(net, () => 0, (g) => g * (1 - basis1 / value1), 0, 'mfj', 2, 2027) // year 1 at ITS calendar
       // the year-1 gain fraction rose because growth raised value, not basis (proves basis-no-scale across years).
       expect(1 - basis1 / value1).toBeGreaterThan(1 - B / V)
       const ref = spine(V, [g0, g1])
@@ -1326,7 +1334,7 @@ describe('taxOverlay — M5 Roth conversion + cap-gains/QD stacking', () => {
       const single: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: { startCalendarYear: 2026, filing: 'single', owner: { birthYear: 1959 } } }
       const on = runTaxAwareDecumulation({ taxable: value, pretax: 0, roth: 0 }, realStock, realBond, [net], STOCK_W, 'taxable-first', single, { initialTaxableBasis: basis })
       const sp = spine(value, [net])
-      const gross = solveGrossM5(net, () => 0, (g) => g * (1 - basis / value), 0, 'single', 1)
+      const gross = solveGrossM5(net, () => 0, (g) => g * (1 - basis / value), 0, 'single', 1, 2026)
       expect(gross).toBeGreaterThan(net) // the single breakpoints push the gain past the 0% band → tax owed
       expect(on.terminalReal / sp.terminalReal).toBeCloseTo((value - gross) / (value - net), 8)
     })
@@ -1347,13 +1355,14 @@ describe('taxOverlay — M6a MFJ→single survivor filing switch (per-year House
   const survivor1959: HouseholdYear = { living: [{ birthYear: 1959 }] }
 
   /** SS-folded per-year gross re-solve using ONLY the golden pure fns (mirrors the M4 helper),
-   *  parameterised by filing + count65 so the survivor (single) year is re-solved correctly. */
-  const solveGrossWithSS = (net: number, ss: number, filing: 'mfj' | 'single', count65: number): number => {
+   *  parameterised by filing + count65 so the survivor (single) year is re-solved correctly, and by
+   *  the sim year's CALENDAR (the fixture anchor 2026 + t): the senior bonus's stack is year-flat
+   *  across 2026..2027, but the frozen-nominal SS thresholds deflate every year, so year 1 must be
+   *  re-solved at 2027 or the oracle taxes LESS of the survivor's benefit than the engine does. */
+  const solveGrossWithSS = (net: number, ss: number, filing: 'mfj' | 'single', count65: number, calendarYear: number): number => {
     let gross = net
     for (let i = 0; i < 300; i++) {
-      // 2026 = the fixture anchor's year-0 calendar; every year these M6a arms re-solve
-      // (0..1 ⇒ 2026..2027) sits inside the senior bonus's window, where the stack is year-flat.
-      gross = net + ordinaryIncomeTax(gross + taxableSocialSecurity(gross, ss, filing), filing, count65, 2026)
+      gross = net + ordinaryIncomeTax(gross + taxableSocialSecurity(gross, ss, filing, calendarYear), filing, count65, calendarYear)
     }
     return gross
   }
@@ -1395,8 +1404,8 @@ describe('taxOverlay — M6a MFJ→single survivor filing switch (per-year House
         ssBenefits: [ss, ss],
         householdYears: stream,
       })
-      const g0 = solveGrossWithSS(net, ss, 'mfj', 2) // both alive
-      const g1 = solveGrossWithSS(net, ss, 'single', 1) // survivor
+      const g0 = solveGrossWithSS(net, ss, 'mfj', 2, 2026) // both alive, year 0
+      const g1 = solveGrossWithSS(net, ss, 'single', 1, 2027) // survivor, year 1 at ITS calendar
       // non-vacuous: the single year genuinely taxes the same income MORE (else the flip proves nothing).
       expect(g1).toBeGreaterThan(g0)
       // correct per-year filing ⇒ overlay total === spine on [g0(mfj), g1(single)]. A model that stayed MFJ
@@ -4101,11 +4110,12 @@ describe('taxOverlay — R40 seam 2: the ongoing-income taxable enters ordinary 
     ss: number,
     ongoingTaxable: number,
     count65: number,
+    calendarYear: number,
   ): number => {
     let gross = net
     for (let i = 0; i < 300; i++) {
       const nonSS = nonSSfromGross(gross) + ongoingTaxable
-      gross = net + ordinaryIncomeTax(nonSS + taxableSocialSecurity(nonSS, ss, 'mfj'), 'mfj', count65, 2026)
+      gross = net + ordinaryIncomeTax(nonSS + taxableSocialSecurity(nonSS, ss, 'mfj', calendarYear), 'mfj', count65, calendarYear)
     }
     return gross
   }
@@ -4122,7 +4132,7 @@ describe('taxOverlay — R40 seam 2: the ongoing-income taxable enters ordinary 
       ongoingTaxableGrossUp: [ongoing],
     })
     const sp = spine(P, [net])
-    const expectedGross = solveGross(net, (g) => g, ss, ongoing, 2)
+    const expectedGross = solveGross(net, (g) => g, ss, ongoing, 2, 2026)
     // year-0 gross = P − terminalReal/(spine growth ratio): match the gross via the terminal ratio.
     expect(r.terminalReal / sp.terminalReal).toBeCloseTo((P - expectedGross) / (P - net), 7)
   })
@@ -4135,12 +4145,12 @@ describe('taxOverlay — R40 seam 2: the ongoing-income taxable enters ordinary 
     // ⇒ taxable = 0.5 × (36k − 32k) = 2,000. The §86 helper IS the oracle; this asserts the ongoing
     // taxable enters its base exactly once (a double-count would give 0.5 × (42k − 32k) = 5,000).
     const ss = 20_000
-    const without = taxableSocialSecurity(20_000, ss, 'mfj')
-    const withOngoing = taxableSocialSecurity(20_000 + 6_000, ss, 'mfj')
+    const without = taxableSocialSecurity(20_000, ss, 'mfj', 2026)
+    const withOngoing = taxableSocialSecurity(20_000 + 6_000, ss, 'mfj', 2026)
     expect(without).toBe(0)
     expect(withOngoing).toBeCloseTo(2_000, 6) // single application of the ongoing 6k into the §86 base
     // The double-count shape (ongoing added to nonSS AND separately to the §86 other-income term):
-    const doubled = taxableSocialSecurity(20_000 + 6_000 + 6_000, ss, 'mfj')
+    const doubled = taxableSocialSecurity(20_000 + 6_000 + 6_000, ss, 'mfj', 2026)
     expect(doubled).toBeCloseTo(5_000, 6) // what a seam-3 double-edit would have produced — refuted
     expect(withOngoing).not.toBeCloseTo(doubled, 1)
   })

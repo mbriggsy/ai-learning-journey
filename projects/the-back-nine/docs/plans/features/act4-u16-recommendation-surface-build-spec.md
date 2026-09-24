@@ -378,7 +378,7 @@ to a single commit.
 - **Dev seeds for the walk**: `?seed=surplus` is the engine-proven over-funded (surplus-regime)
   witness. `?seed=nc` DROVE the withheld render organically until 2026-08-02 and was the face the
   live smoke and the Caddie walk read; with the certification clause cleared it is now
-  `ncAffirmation` — the NC-priced household commits a REAL recommendation (`devSeeds.ts:968`,
+  `ncAffirmation` — the NC-priced household commits a REAL recommendation (`devSeeds.ts:992`,
   end-to-end in `solveDispatch.test.ts`). **No registered seed reaches the withheld render today**,
   so that face has no live walk route: it is exercised through the mint's `_pinningOverride` /
   `_trendOverride` seams and in `RecommendationSurface.test.tsx`, and a state whose rates go

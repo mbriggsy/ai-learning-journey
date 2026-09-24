@@ -53,7 +53,7 @@ atomic change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` +
      re-implements it.
    - **Absent `savedAt`** (every vault saved before U13): the "~N years since your save" claim is
      SUPPRESSED — never fabricated from `startCalendarYear`, never defaulted to "today".
-2. **`taxVintageDetail?: TaxVintageV3`** — atomic object minted by **`taxVintageStamp()`** (tax.ts:379),
+2. **`taxVintageDetail?: TaxVintageV3`** — atomic object minted by **`taxVintageStamp()`** (tax.ts:384),
    the `healthcareVintageStamp` mirror. Keyed on `TAX_YEAR` + the legal basis string. The legacy opaque
    `taxVintage: string` stayed untouched (add-only).
    - Neither the RMD-age rule nor the senior-bonus sunset is stamped, and **neither got a clock** — the
@@ -237,7 +237,7 @@ future builder would otherwise re-derive.*
    in either world. **Do not re-file it.** The engine gap was filed REQUIRED, build-tripwired, and
    **CLOSED the same day** — council-ratified 8/10 (wf_a5ccd576-048, no veto; the honesty hawk's opening
    seat crashed on a schema mismatch and its rebuttal-round seat voted RATIFY explicitly — recorded,
-   insight-019 handling). `seniorBonusFor` (taxCore.ts:81) now prices the bonus ONLY in calendar years
+   insight-019 handling). `seniorBonusFor` (taxCore.ts:82) now prices the bonus ONLY in calendar years
    [effectiveFrom .. sunsetAfter] = [2025 .. 2028], read from the constant's own metadata behind a
    fail-loud non-integer guard, symmetric shape pins on both ends; the calendar (`startCalendarYear + t`)
    threads `deductionStack`/`ordinaryIncomeTax`/`ordinaryPlusCapitalGainsTax`/`CommittedYearIncome`/

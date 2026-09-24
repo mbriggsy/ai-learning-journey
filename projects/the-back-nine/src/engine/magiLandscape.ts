@@ -84,7 +84,7 @@ export function acaMagiAtFill(c: CommittedYearIncome, f: number): number {
  *  smoothness the gross-up contraction rests on). */
 export function irmaaMagiAtFill(c: CommittedYearIncome, f: number): number {
   const ord = ordinaryAtFill(c, f)
-  return ord + taxableSocialSecurity(ord, c.ssBenefit, c.filing)
+  return ord + taxableSocialSecurity(ord, c.ssBenefit, c.filing, c.calendarYear)
 }
 
 /** Federal TAXABLE income at fill `f`: AGI (= IRMAA-MAGI at gain 0) less the full deduction

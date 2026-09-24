@@ -1058,7 +1058,7 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
 
     // The EXPOSURE comes from the hydrated draft's own built params — the shipped path.
     const exposure = exposureForDraft(rehydrated.draft)
-    // The all-65+ household: the overlay IS built (one $1.055M IRA ⇒ tax priced), Medicare priced
+    // The all-65+ household: the overlay IS built (one $1.12M IRA ⇒ tax priced), Medicare priced
     // through buildOverlay's Medicare-only branch, ACA structurally unpriced (no quote pair ⇒ the
     // engine's ACA gate can never open), no contributions (both retired), and NO blend-table read
     // (its single account carries a per-account manual blend, never a ticker). The aging does NOT

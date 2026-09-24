@@ -18,7 +18,7 @@
  * decumulation), never a stand-in primitive alone.
  *
  * Scope vs the shipped U11 battery (CITED, deliberately NOT duplicated):
- *   - taxOverlay M4 (taxOverlay.test.ts:2372-2555) already pins, on the SAME streamless shape:
+ *   - taxOverlay M4 (taxOverlay.test.ts:2381-2564) already pins, on the SAME streamless shape:
  *     the +2yr lag, the per-index seed read (seed[0]@t0, seed[1]@t1), the cross-65 history
  *     handoff, taxable-SS vs full-SS, THE SURVIVOR MFJ→SINGLE FILING FLIP (2378-2410, born 1955,
  *     no ACA streams, single-thresholded surcharge lands at death+2), and depletion non-accrual.
@@ -298,7 +298,7 @@ describe('post-65 Medicare pricing — the HSA qualified cap includes the now-no
     // OOP = 10,000 (qualified at any age). HSA = 100,000 (covers the whole qualified set); net spend
     // 40,000 > OOP (so the fundingNeed term never binds below the qualified set).
     //   cap = min( 100,000 , 10,000 + 2×BASE×12 , 40,000 + 2×BASE×12 ) = 10,000 + 2×BASE×12
-    // The existing owner-65+ fixture (taxOverlay.test.ts:2874) pins cap = medicareCost with OOP = 0;
+    // The existing owner-65+ fixture (taxOverlay.test.ts:2883) pins cap = medicareCost with OOP = 0;
     // this pins the SUM (both terms live) — the arithmetic identity oopMedical + medicareCost.
     const OOP = 10_000
     const POST67: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(1959, 1959) }

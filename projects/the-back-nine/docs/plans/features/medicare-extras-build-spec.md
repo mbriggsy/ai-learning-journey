@@ -122,7 +122,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   person's own premium × 12, **ending at each death** — **NEVER `enrolledCount × average`**
   (count×avg reproduces the exact optimistic survivor under-charge per-person was chosen to
   kill; it passes symmetric couples and hides in aggregate). The Σ lives in the tax overlay's
-  year loop (`src/engine/taxOverlay.ts:1609-1613`), indexing
+  year loop (`src/engine/taxOverlay.ts:1612-1616`), indexing
   `OverlayParams.medicareExtrasMonthly` by `regime.medicareEnrolledIndices` — the canonical
   living∩enrolled index set minted for exactly this purpose
   (`src/engine/taxOverlay.ts:554-565`), which holds only IDENTITY-MATCHED members so a stranger
@@ -145,7 +145,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
 - The vector is validated like its per-person siblings: `validateParams` rejects a negative
   entry (the insight-046 netted-away optimistic class), a NaN entry, and a length mismatch
   (`src/engine/simulate.ts:721-724`), and the overlay's direct callers get their own up-front
-  length backstop (`src/engine/taxOverlay.ts:1266-1270`) so a short vector on a two-person
+  length backstop (`src/engine/taxOverlay.ts:1269-1273`) so a short vector on a two-person
   household throws rather than under-charging.
 - Extras are **real-flat**, and deliberately NOT ridden on the Part B trend: Medigap/Part D plan
   premiums are user-entered market figures with no sourced trend. The 2026-07-19 trend sourcing
@@ -243,7 +243,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   optional-with-average by design, so there is no red-asterisk state to encode.
 - **Insight-076 re-audit of `validateParams`.** The overlay length backstop that was added is
   purely downstream of the existing gate, so it narrows no contract — noted in place at
-  `src/engine/taxOverlay.ts:1264-1265`.
+  `src/engine/taxOverlay.ts:1267-1268`.
 - **Dev-seed drift recorded before any re-tune.** The flagship `retiredOnTrack` seed carries the
   mixed-provenance showcase — one entered dollar, one affirmed MA-$0
   (`src/ui/devSeeds.ts:120-121`) — and the `borderline` / `?seed=dip` seeds were re-probed under

@@ -56,8 +56,10 @@ export interface CommittedYearIncome {
   readonly filing: FilingStatus
   readonly count65: number
   /** The sim year's CALENDAR year (`startCalendarYear + t`) — windows the senior bonus
-   *  inside the deduction stack (the sunset unit, council 2026-07-09). Gross-independent
-   *  like every other term, so the headroom stays a constant inside the fixed point. */
+   *  inside the deduction stack (the sunset unit, council 2026-07-09) AND deflates the frozen
+   *  §86 provisional-income thresholds via `cumulativePriceIndex` (`taxCore.taxableSocialSecurity`,
+   *  2026-09-24) in EVERY year, not only 2025–2028 — never clamp it or pass the anchor year.
+   *  Gross-independent like every other term, so the headroom stays a constant inside the fixed point. */
   readonly calendarYear: number
 }
 

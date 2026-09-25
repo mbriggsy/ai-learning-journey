@@ -814,8 +814,11 @@ interface GrossUpContext {
   readonly filing: FilingStatus
   readonly count65: number
   /** The sim year's CALENDAR year (`household.startCalendarYear + t`) — windows the OBBBA
-   *  senior bonus inside the deduction stack (the sunset unit, council 2026-07-09). Year-
-   *  constant like everything else here, so the fixed point stays 1-D. */
+   *  senior bonus inside the deduction stack (the sunset unit, council 2026-07-09) AND deflates
+   *  the frozen §86 provisional-income thresholds via `cumulativePriceIndex`
+   *  (`taxCore.taxableSocialSecurity`, 2026-09-24) in EVERY year, not only 2025–2028 — never
+   *  clamp it or pass the anchor year. Year-constant like everything else here, so the fixed
+   *  point stays 1-D. */
   readonly calendarYear: number
   readonly ssBenefit: number
   readonly bracketFillCeiling: number

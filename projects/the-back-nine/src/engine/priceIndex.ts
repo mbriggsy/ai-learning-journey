@@ -18,8 +18,9 @@
  *
  * The anchor is the TABLE's year, not the household's `startCalendarYear` — the engine's real
  * dollars are the anchor year's by the Part B convention (its 2026 nominal IS its 2026 real), and a
- * plan first run later still prices against that base. Every seed today starts in the anchor year,
- * where the two coincide.
+ * plan first run later still prices against that base. Every FRESH dev seed starts in the anchor
+ * year, where the two coincide; the aged vault plants (`stale` / `datestale` / `rec` / `recold` start
+ * 2024, `datearrived` 2020) read index 1 through 2026 — the pre-anchor clamp, harsh, never rosy.
  *
  * Pure: a function of the calendar year and the canonical constants; reads no clock, no draw.
  * The memo is a cache of that pure function (the gross-up fixed point asks per pass, per year,

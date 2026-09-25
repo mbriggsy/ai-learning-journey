@@ -419,8 +419,11 @@ const bline = (
  * step over the 0.98 over-funded edge). SS-THRESHOLDS RE-TUNE (2026-09-24): the per-year deflation
  * of the frozen nominal §86 lines sank the essentials FLOOR from over-funded to on-track (the full
  * track held borderline-7, margin 0.01 → 0.02) — RECORDED first; the override moved 720k → 760k,
- * which lands full 0.701 borderline-7 (margin 0.05) over an over-funded-9 floor (margin 0.03), the
- * widest joint margin of the three IRA values probed. The reconciliation invariant holds by construction:
+ * which lands full 0.701 borderline-7 (margin 0.05) over an over-funded-9 floor whose xOfTen margin
+ * is 0.03 but whose STATE margin is 0.00 — quantized exactly ON the 0.98 over-funded edge (the
+ * review's catch; the pre-fix floor sat a full grid step over it). The IRA cannot lift the floor
+ * without lifting the full track past 7 (800k → 8/10); a floor-only knob (the essentials lines) is
+ * owed if a later change nudges the floor under — recorded, not hidden. The reconciliation invariant holds by construction:
  * annualSpendingReal = Σlines@0 (59,600) + injected M (6,000) = 65,600. All lines
  * lifelong-at-0 (as probed — a window would change the engine evaluation the proof pinned).
  */

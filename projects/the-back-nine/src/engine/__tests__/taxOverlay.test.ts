@@ -911,6 +911,28 @@ describe('taxOverlay — M4 Social Security provisional-income fixed point', () 
       expect(on.terminalReal / sp.terminalReal).toBeCloseTo((pool - gross) / (pool - net), 8)
     })
   })
+
+  describe('the §86 deflation rides the household’s START year, not the table anchor (the wiring no fresh-seed pin can see — every dev seed starts 2026)', () => {
+    it('a plan first run in 2030 prices year 0 at 2030’s real thresholds — the overlay matches the 2030 re-solve and NOT the undeflated 2026 one', () => {
+      // Both 60 in 2030 (born 1970): count65 = 0, no senior bonus in either re-solve and no RMD, so
+      // the ONLY difference between the 2030 and 2026 closed forms is the §86 deflation (the
+      // brackets and the standard deduction are flat-real by law). A `2026 + t` in
+      // GrossUpContext.calendarYear (taxOverlay.ts) would price year 0 at 2026 and miss the 2030
+      // re-solve by hundreds of dollars — the 2026-09-24 review's surviving mutant, pinned here.
+      const cfg2030: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2030, 1970, 1970) }
+      const pool = 1_000_000
+      const net = 40_000
+      const ss = 50_000
+      const on = runTaxAwareDecumulation({ taxable: 0, pretax: pool, roth: 0 }, realStock, realBond, [net], STOCK_W, 'pre-tax-first', cfg2030, { ssBenefits: [ss] })
+      const sp = spine(pool, [net])
+      const at2030 = solveGrossWithSS(net, (g) => g, ss, 'mfj', 0, 2030)
+      const at2026 = solveGrossWithSS(net, (g) => g, ss, 'mfj', 0, 2026)
+      // non-vacuous: four years of deflation genuinely tax more of the same benefit (≫ the 1e-7 epsilon)
+      expect(at2030).toBeGreaterThan(at2026 + 100)
+      expect(on.terminalReal / sp.terminalReal).toBeCloseTo((pool - at2030) / (pool - net), 8)
+      expect(on.terminalReal / sp.terminalReal).not.toBeCloseTo((pool - at2026) / (pool - net), 6)
+    })
+  })
 })
 
 describe('taxOverlay — M5 Roth conversion + cap-gains/QD stacking', () => {

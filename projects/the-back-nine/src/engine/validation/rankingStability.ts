@@ -92,12 +92,12 @@ export interface RankingStabilityReport {
  *  (`decisionSurfaceIdentical`). The criterion is whether the varied candidate's OWN surface moves —
  *  never whether the pool has room for the dollars — and two disjoint routes are known, so any
  *  sentence about the class must cover both: (i) CLAMP-inert — both arms clamp to the same post-RMD
- *  pre-tax headroom, `min(planned, pretax − rmd)` (`taxOverlay.ts:1450`): a pretax-0 world, or a rail
+ *  pre-tax headroom, `min(planned, pretax − rmd)` (`taxOverlay.ts:1453`): a pretax-0 world, or a rail
  *  amount sitting exactly on the headroom; (ii) EXHAUSTED-in-window — the household depletes inside
  *  the conversion window, so every recorded vector is identically zero whatever is converted:
  *  `?seed=failing` (a $60k IRA under a ~$72k year-one draw) converts $50,268 and its $51,268 variant
  *  UNCLAMPED inside the pool and still moves nothing, because every path depletes in year 0 and the
- *  depletion break (`taxOverlay.ts:1837`) precedes the year's tax accrual (`:1859`) — terminals,
+ *  depletion break (`taxOverlay.ts:1840`) precedes the year's tax accrual (`:1862`) — terminals,
  *  depletion years, lifetime tax and Medicare cost are all 0 for every amount from $0 to $200k
  *  (probed 2026-09-04). The bin is verdict-blind: a $900k household with pretax 0 reaches it by
  *  route (i) (solveEntry.test.ts) and a failing household whose surface still responds never does.

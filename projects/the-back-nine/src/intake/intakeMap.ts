@@ -830,7 +830,7 @@ function acaPricedOverlayArm(o: OverlayParams | undefined): boolean {
  *  This is the read that makes the all-65+ household honest: it takes `buildOverlay`'s
  *  Medicare-only branch (`intakeMap.ts:655-658` — "healthcareEnabled with NO ACA quote pair"),
  *  so `enrolledPremium` is absent, the engine's per-year ACA gate
- *  (`taxOverlay.ts:1702-1707`) can never open, and this correctly reads FALSE. `buildSpineParams`
+ *  (`taxOverlay.ts:1705-1710`) can never open, and this correctly reads FALSE. `buildSpineParams`
  *  returns null on the date route ⇒ false there (the caller handles that route separately —
  *  reading false as "unpriced" off-route would be the insight-080 shortcut, not a fact). */
 export function spineAcaPriced(d: ScenarioDraft): boolean {

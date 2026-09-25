@@ -57,9 +57,15 @@ prediction's judge; write the prediction down so the measurement can refute it i
 
 ## Also Applies To
 
-The IRMAA top tier (frozen through 2027, re-indexes 2028 — filed Tier 4: it should divide by the same index for
-2027 and hold there). NOT the ordinary brackets, the standard deduction or IRMAA tiers 1–4 — those index by law, so
-flat-real is right; the test is "does the statute index it?", not "is it a dollar figure?". Any future
+Filed as ONE Tier 0 register entry after this build's 17-agent review found the sweep short (the build's own
+insight named one sibling; the review found three more — the sweep is the deliverable, again): the NC standard
+deduction (fixed, not indexed — subtracted flat every year, ~$320/yr of NC tax rosy by year 20, the largest),
+the OBBBA senior bonus ($6k / $75k / $150k, nominal for 2025–28), the IRMAA top tier (frozen through 2027 and
+re-indexed from that base — the real line holds ~3 % under $750k from 2027 on, EVERY year, not the "one year"
+first written), the HSA catch-up ceiling. NOT the ordinary brackets, the standard deduction or IRMAA tiers 1–4 —
+those index by law, so flat-real is right; the test is "does the statute index it?", not "is it a dollar figure?".
+The review also caught the pilot's own refuted prediction left standing in architecture §7.1 and a test title
+after the measurement had disproved it — a wrong sentence written BEFORE the data must be hunted down AFTER. Any future
 frozen-nominal figure (a net-investment-income-tax threshold — $250k MFJ, frozen since 2013 — if NIIT ever lands;
 the Medicare surtax lines) must be born dividing by `cumulativePriceIndex`. The seed-retune law generalises: a
 dev seed named for a band is a fixture with a purpose; when the engine's truth moves it out of that band, RECORD

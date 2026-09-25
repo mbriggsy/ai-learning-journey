@@ -152,9 +152,10 @@ describe('taxableSocialSecurity — the frozen nominal thresholds fall in real t
     }
   })
 
-  it('above the 85 % ceiling the deflation changes NOTHING — the shipped high-income seeds sit here, which is why their headline holds', () => {
+  it('above the 85 % ceiling the deflation changes NOTHING — the cap, not the line, binds there (the shipped seeds do NOT sit here: their tier arm binds, and their headlines moved)', () => {
     // $200k other + ½ × $40k: the cap binds in every year — the deflated lines only move the
-    // point where the cap STARTS binding, never the cap itself.
+    // point where the cap STARTS binding, never the cap itself. A $54k benefit's cap is ~$46k of
+    // inclusion while a ~$50k provisional's tier arm is ~$12k — that is why `retired` MOVED.
     expect(taxableSocialSecurity(200_000, 40_000, 'mfj', ANCHOR)).toBeCloseTo(34_000, 9)
     expect(taxableSocialSecurity(200_000, 40_000, 'mfj', ANCHOR + 40)).toBeCloseTo(34_000, 9)
   })

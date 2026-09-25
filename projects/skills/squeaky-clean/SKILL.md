@@ -17,6 +17,7 @@ If TODO.md exists in the project root, update it to reflect reality:
 
 Rules:
 - TODO is for actionable items ONLY. No session history, no "What We Did" logs. Git log has the history.
+- PRUNE before you write the new close block: cut every earlier session block whose NEXT list the new one supersedes — AFTER migrating its landmines and still-live items (an OWED, an unfinished fix, a "read run X first", a ⚑ negative) into the standing sections (the landmines section, the ranked list, or the project's register). Keep only the newest close block. Nothing in this checklist ever deleted anything before 2026-09-25, so TODO grew a 390-line chronicle that the rule above forbade — the doc audit that day found it and cut it once; this step keeps it cut.
 - Unfinished fixes must be prescriptions, not diagnoses. Write the exact file, line, and change needed.
 - Run real commands to get real numbers. Never copy stats from another doc.
 

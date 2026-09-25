@@ -7,10 +7,15 @@
   Mirrors install-watcher.ps1 -- every path derived from $PSScriptRoot, proven by output
   freshness rather than by the task's exit code (docs/insights/002 and 007).
 
-  WHEN IT RUNS. Two Sunday triggers, local time:
+  WHEN IT RUNS. Three Sunday triggers, local time (Eastern):
       08:00  the morning read -- overnight news, Saturday's practice-report tags
       11:30  the inactives read -- 1 p.m. ET inactives post ~11:30, and this is the last moment a
              swap for the early window is worth anything
+      15:00  the late-window inactives read -- 4:05 / 4:25 p.m. ET inactives post ~2:35 / ~2:55.
+             Added 2026-09-25: week 3 started Zay Flowers (Questionable, 4:25 kickoff) and the
+             11:30 run is blind to a late-window scratch. Early-window players are banked or locked
+             by 15:00; the check leaves played starters alone, so this run only speaks to 4 p.m.
+             and night games.
   Plus Saturday 20:00, so a Friday designation is in the file a night early. Thursday and Monday
   starters are covered by the Sunday runs only if their game has not yet been played; a Thursday
   scratch is an on-demand `python scripts\gameday_check.py --stdout` from a session.
@@ -42,7 +47,8 @@ $action = New-ScheduledTaskAction -Execute $python -Argument "`"$script`"" -Work
 $triggers = @(
     (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Saturday -At 20:00),
     (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday   -At 08:00),
-    (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday   -At 11:30)
+    (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday   -At 11:30),
+    (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday   -At 15:00)
 )
 
 # StartWhenAvailable: a laptop asleep at 08:00 fires the run on wake. The players dump is ~14 MB,

@@ -58,3 +58,14 @@ Nothing to do. Every starter is untagged, every slot filled, no bench body proje
 vs **kblizzy23** (roster 7). Expected: us 127.5, them 160.9 (banked 7.0 / 41.8, projections for the rest).
 
 Nothing to do. Every starter is untagged, every slot filled, no bench body projects 2+ over a starter he could replace.
+
+---
+
+## WEEK 3 GAME DAY — 2026-09-25 14:51:40
+
+vs **Kaeperni** (roster 5). Expected: us 149.2, them 127.8 (banked 28.4 / 39.9, projections for the rest).
+
+### ⚠ QUESTIONABLE — Zay Flowers (WR)
+
+Zay Flowers (WR, BAL) vs DAL proj 17.1 [Questionable: Hamstring] is Questionable in the WR slot. Read as playing unless the morning inactives say otherwise; inactives post ~90 minutes before kickoff.
+If he is scratched: Devaughn Vele (WR, NO) vs LV proj 10.0

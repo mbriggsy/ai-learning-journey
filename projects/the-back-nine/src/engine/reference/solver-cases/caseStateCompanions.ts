@@ -7,7 +7,7 @@
  * set — so every figure below is the case-(ii) figure PLUS exactly the state's own term.
  *
  * NC — THE KNOWN-BEST FLIP (why the state refusal gate is load-bearing, not ceremonial):
- * NC taxes the FULL conversion at its flat rate (≈4%, held under the hawk's veto) above the
+ * NC taxes the FULL conversion at its flat rate (3.99% in the fixture's 2026 conversion year — `ncRateSchedule`, pinned 2026-08-02) above the
  * NC standard deduction, with NO band structure — so the conversion's TOTAL marginal price
  * in the 22% federal band is 22% + ≈4% ≈ 26%, ABOVE hb 0.23, while the 12% band prices at
  * 12% + ≈4% ≈ 16%, still below. The optimum DROPS from the federal 22%-top anchor to the

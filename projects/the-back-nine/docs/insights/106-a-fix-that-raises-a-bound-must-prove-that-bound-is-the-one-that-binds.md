@@ -72,25 +72,35 @@ a no-op against this failure — while reading, to every future reader, like a c
 > A budget that keeps expiring on work that should take milliseconds is evidence the wait is
 > impossible, not slow.
 
-~~The diagnosis underneath it had been **right**: CPU contention starving a wait in a parallel run.~~
+~~The diagnosis underneath it had been **right**: CPU contention starving a wait in a parallel run.
 Only the prescription was wrong, and it was wrong in the most expensive way — it named a real
-mechanism, changed real code, and left the defect untouched.
+mechanism, changed real code, and left the defect untouched.~~
 
-The mechanism the inner budget actually governs: `RecoveryFlow` is reached through `React.lazy`, so
+~~The mechanism the inner budget actually governs: `RecoveryFlow` is reached through `React.lazy`, so
 the click starts a **dynamic import**, and the wait races module resolution plus a Suspense flush
 against a wall clock. Under a contended parallel run the **event loop is starved** — the import is
 not slow. That same budget had already been raised once for exactly this reason (1s → 5s,
 2026-07-18) and blew through the raise, which is precisely what [insight 104](104-a-starved-timing-budget-fails-only-the-control-arm-so-the-sweep-it-validates-goes-silently-vacuous.md)
 predicts about raising a racy constant: *a bigger number relocates the failure to the next unlucky
-runner.*
+runner.*~~ *(refuted 2026-07-31: the wait was impossible, not starved — the real `RecoveryFlow` had
+been mounted; see the box)*
 
 ## Fix
 
-**Determinism, not a third number.** `await import('../RecoveryFlow')` before the click. The module
+> ⚠️ SUPERSEDED 2026-07-31 (`707b75ae`; see the UPDATE box above) — this section is the 2026-07-27
+> prescription, kept as the record. The pre-import below changed nothing and was REMOVED: `App.tsx`
+> already warms this chunk the moment `entry.kind === 'unlock'`, and `driveToUnlockScreen()` awaits
+> that screen. The contention the not-re-closed paragraph relies on was refuted (the update box
+> above). The fix that holds is one memoized single-flight loader per lazy chunk in `src/ui/App.tsx`;
+> the comment on the survivor-door arm in `src/ui/__tests__/App.test.tsx` carries the chain.
+> `testTimeout` 20s stays, and the inner `findByTestId` budget stays a hang guard at 5 s, strictly
+> below it, so a red prints its DOM.
+
+~~**Determinism, not a third number.** `await import('../RecoveryFlow')` before the click. The module
 is `vi.mock`'d already, so resolving it up front removes module resolution from the timed path
 entirely; what remains is a render flush, and the surviving budget is an explicit **hang guard** —
 the same philosophy the `testTimeout` bump was reaching for, applied to the clock that actually
-governs. The `testTimeout` change stays: it is correct, it simply governs a different clock.
+governs.~~ The `testTimeout` change stays: it is correct, it simply governs a different clock.
 
 The `TODO.md` header was rewritten from **CLOSED** to a recurrence record carrying the wrong-clock
 analysis, and — deliberately — is **not** marked closed again: the contention is not reproducible

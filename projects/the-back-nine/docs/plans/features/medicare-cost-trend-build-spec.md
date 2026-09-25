@@ -9,7 +9,7 @@ status: shipped
 > **Provenance:** research packet [`docs/research/medicare-cost-trend.md`](../../research/medicare-cost-trend.md)
 > (wf_933cef3b-16b, 2026-07-19, cross-checker-verified byte-for-byte against the 2026 Trustees
 > Report PDF) → pre-build council **wf_c673339e-257** (2026-07-19, full weight, 23 agents, 8/10
-> RATIFY — `docs/council-log.md` top row; ONE crash = the craftsman's opening, a named 019
+> RATIFY — `docs/council-log.md`'s 2026-07-19 "THE MEDICARE-COST-TREND SOURCING UNIT (pre-build)" row; ONE crash = the craftsman's opening, a named 019
 > abstention; **HAWK VETO on base-only scope fired + HONORED**). This is the as-built record —
 > the shape the council ratified and what shipped against it, all on 2026-07-19 (commits
 > ca41256f · 45a69496 · 02e2796a · db63b20e). Where it conflicts with older filings, this spec +
@@ -197,7 +197,8 @@ status: shipped
   literal re-points (FuckOffDate / stateTaxDisclosure), and copyGuard + drift-pins green; it swapped
   TWICE the same day — the interim wording narrowed the still-flat referent to the extra-coverage
   premiums *plus* the drug-plan surcharge piece, and the Part D sourcing pass below narrowed it to
-  the extra-coverage premiums ALONE (the shipped string in `src/ui/copy.ts:1178`), with the roth
+  the extra-coverage premiums ALONE (the shipped string is `verdictResidualTail`,
+  `src/ui/copy.ts:1217-1218`, mirrored in the monolith `verdictMedicareResidual` at `:1190`), with the roth
   note pricing the drug-plan piece's climb and naming the >2035 hold as its modeling choice.
   Architecture §7.2 was re-written to the trended contract; roadmap, TODO and the council-log
   action cell synced.

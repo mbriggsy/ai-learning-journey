@@ -154,8 +154,8 @@ survivor fraction, and the presence/absence keying and the joint-vs-survivor div
 ## 7 · e2 — the `SurvivorReadout` UI (cold-read cleared 2026-06-27)
 
 `src/ui/SurvivorReadout.tsx` + `src/ui/styles/survivor.css` (+ `__tests__/SurvivorReadout.test.tsx`). The
-quieter SECOND statement — same verdict grammar as the joint surface (glyph + word + "X of 10"
-+ magnitude) at one step down in scale (`--text-xl` vs the joint `--text-2xl`), set off by a `--line-soft`
+quieter SECOND statement — same verdict grammar as the joint surface (glyph + word + "X of 10" +
+magnitude) at one step down in scale (`--text-xl` vs the joint `--text-2xl`), set off by a `--line-soft`
 hairline, so it reads as "and here's the survivor's view," never a competing headline. Consumes
 `SurvivorReading` directly. Two new copy keys (`survivorReadoutEyebrow`, `survivorReadoutCoverage`), both
 survivor- AND verdict-scoped through copyGuard (`isSurvivorKey` matches on `survivor`, `isVerdictKey` on
@@ -190,8 +190,9 @@ first frame). Both render below the band so the scrub tap-targets never move (in
 2. **The SS-only attribution → KEPT median-scoped for v1.** "one Social Security benefit ends" stays (the
    representative retired household; $X also covers any lost pension/earned income, the minority case).
    D2 wired real households on 2026-06-28 and the string is unchanged, but the revisit is still OWED, not
-   settled: `copy.ts`'s own comment above `verdictSurvivorStepDown` still reads "revisit when D2 wires
-   real households", and no re-read is recorded anywhere. A future reader inherits that obligation.
+   settled: it is the OPEN register entry *The survivor step-down attribution — "as one Social Security
+   benefit ends" reads wrong for a pension-heavy household* (`docs/backlog.md`, filed 2026-09-06), and
+   `copy.ts`'s comment above `verdictSurvivorStepDown` points there.
 3. **The eyebrow echo → DE-ECHOED.** The eyebrow was a near-verbatim prefix of the income clause; it now
    reads "And if you're on your own" (frames the survivor statement as the follow-on to the joint answer;
    the "on your own" motif recurs intentionally, the verbatim repeat is gone). The glyphs + the whole

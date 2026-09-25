@@ -171,8 +171,12 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
 - The **insight-058 writer enumeration** ran as a ship gate, not an assertion (every
   `annualSpendingReal` writer plus `budgetYearZeroFullTotal` under the flipped semantics) and
   came back clean: extras is funding-side and is NOT a writer of `annualSpendingReal`.
-- Installed-base double-count is pessimistic-safe, and **no migration shipped** — by design, but
-  no separate follow-up was filed either. A vault saved before the flip keeps a spending figure
+- Installed-base double-count is pessimistic-safe, and **no migration shipped** — by design; the
+  residual double-count was filed 2026-09-06 as the register entry *A vault saved before either
+  spend-help boundary flip double-counts its Medicare premiums — Part B and IRMAA as well as Part D /
+  Medigap, no migration, no clock*, which carries this flip (`503213f4`) beside the pricing unit's
+  (`3454c224`) and the fix shape `src/store/staleness.ts` sanctions (a Q7 saved-era entry, not a new
+  clock). A vault saved before the flip keeps a spending figure
   that still contains its Part D/Medigap premiums and now has extras added on top; the reworded
   `spendHelp` is re-entry-visible, so the correction surfaces the next time the household walks
   the spend step rather than through a silent rewrite of their number.

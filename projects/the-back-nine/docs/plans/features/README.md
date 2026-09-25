@@ -5,10 +5,20 @@ status: living
 created: 2026-09-06
 ---
 
-# Build specs — the executable shape of each shipped unit
+# Build specs — the executable shape of U7's readout and the later shipped units
 
-Every unit past Act 1 that fired a pre-build council carries its ratified build spec here. A spec is the
-*executable* shape the act plan's prose was refined into — its precedence declaration at the top names what
+A unit carries a build spec here when its executable shape outgrew its act plan's prose, or when it is a
+later follow-up unit that never had an act-plan section: U13–U17, the Medicare pricing / extras /
+cost-trend units, the state-tax unit and its seed increment, and U7's survivor readout. The folder is not a
+council index. Several council-decided units have no spec here — among them
+U8, D2's odds drawer, U9 (both halves), U11, U12 and the senior-bonus sunset unit. Their rulings are dated
+in the [council digest](../../council-log.md), and their shipped shapes were folded into
+[2-first-answer.md](../2-first-answer.md) (U8, D2), [3-controls.md](../3-controls.md) (U9, U11, U12 — the
+*Files (as built)* and dated correction blocks) and [architecture.md §7.1](../../architecture.md) (the
+sunset, whose reasoning is kept in [u13-build-spec.md](u13-build-spec.md)'s review outcome 1). U9a's spec
+lived only in a session scratchpad. Three docs here were not council-ratified: the state-seed brief was
+pilot-decided, and the U7 readout and the U17 S5 plan are as-built records. A spec is the
+*executable* shape the act plan's prose (where one existed) was refined into — its precedence declaration at the top names what
 it supersedes and dates each supersession. All of them are **shipped** (the roadmap's You-Are-Here table is
 the authority on per-unit status; a spec never re-types it). Line anchors inside a spec predate its build
 and have drifted — open every cited line before acting on it.

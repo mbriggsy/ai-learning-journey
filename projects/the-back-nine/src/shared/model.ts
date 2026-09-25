@@ -10,8 +10,8 @@
  * SCOPE (P1·U1): the spine runs tax-free / healthcare-free, so this defines the
  * engine's core contract + a minimal plaintext `Scenario`. U2/U3 extend `Scenario`
  * with per-person account buckets + birth years (the schemaVersion-2 field shape);
- * U4 wraps it in the persisted record types + owns the `schemaVersion` migration
- * ladder. Those extensions are additive — the fields here are written from v1.
+ * U4 wraps it in the persisted record types + owns the `schemaVersion` DECODE ladder
+ * (branch per version, refuse newer, no migrate step). Those extensions are additive — the fields here are written from v1.
  */
 
 // ---------------------------------------------------------------------------
@@ -1117,8 +1117,8 @@ export type TwoArmOutcome =
 
 // ---------------------------------------------------------------------------
 // Persisted scenario skeleton (P1·U1 minimal; U2/U3 add buckets + birth years;
-// U4 wraps it in the encrypted record types). `schemaVersion` exists from v1 so the
-// migration ladder is possible at all (U4 contract).
+// U4 wraps it in the encrypted record types). `schemaVersion` exists from v1 so a
+// version-branching decode ladder is possible at all (U4 contract).
 // ---------------------------------------------------------------------------
 
 /** The plaintext scenario the user builds. v1 carries the spine inputs + the seed;
@@ -1144,11 +1144,11 @@ export interface Scenario {
 // ---------------------------------------------------------------------------
 // schemaVersion-2 scenario shape (U2 · M6a). The v1 spine inputs + the tax-overlay
 // fields: PER-PERSON account buckets + birth year, the household filing status, and
-// provenance stamps. DEFINED HERE for the contract + the decode/migration ladder — it
+// provenance stamps. DEFINED HERE for the contract + the decode ladder — it
 // is NOT the forward-written persist shape: the guided intake first-writes ScenarioV3
 // at P2·U8 (see the schemaVersion-3 block below), and v2 survives only as a decode-
-// ladder member (`AnyScenario`) for migrating any legacy save. The schemaVersion 1→2
-// migration ladder is owned by U4. CONSUMED VIA `OverlayParams`: P2 intake maps these
+// ladder member (`AnyScenario`), decoded as-is with no up-convert. The decode ladder
+// is owned by U4. CONSUMED VIA `OverlayParams`: P2 intake maps these
 // per-person fields down to the engine's `OverlayParams` — the aggregated `buckets`
 // PLUS the optional per-person pre-tax split (`pretaxByPerson`, U2·M6b·B — shipped:
 // present ⇒ each spouse forces its own RMD; absent ⇒ the byte-identical aggregate pool).
@@ -1386,7 +1386,7 @@ export interface ScenarioV2 {
 // holds the same to-be-persisted MODEL shape, so an intake field can never be
 // captured on screen yet silently dropped at Save). First WRITTEN to disk by
 // P2·U8, which owns — IN the same change (the as-we-go rule) — the codec's
-// `checkV3Fields` + `version === 3` branch and the v2→v3 migration. Until then
+// `checkV3Fields` + `version === 3` branch and the v2→v3 up-convert (never built — see below). Until then
 // `AnyScenario` stays v1|v2 and the codec's newer-version refuse keeps any
 // stray v3 blob calm (never a mis-parse, never healthcare silently OFF).
 //
@@ -1397,9 +1397,9 @@ export interface ScenarioV2 {
 // (portfolio = Σ valueToday; stockWeight = the household blend collapse, §5
 // cash→bond; PersonAccounts = the per-person bucket fold). A stored copy beside
 // its own inputs is a stale-value hazard inside an encrypted vault — the
-// calm-but-wrong class. The U8 v2→v3 migration mints synthetic entered accounts
-// from the old aggregates (one per nonzero bucket per person, no ticker), so the
-// ladder stays total.
+// calm-but-wrong class. The prescribed v2→v3 up-convert (UNBUILT — U8 shipped without it;
+// register: "The couple's own data") would mint synthetic entered accounts from the old
+// aggregates (one per nonzero bucket per person, no ticker), so the ladder stays total.
 // ---------------------------------------------------------------------------
 
 /** Work status is ASKED, never inferred (a salary-$0 still-working person must
@@ -2314,7 +2314,7 @@ void _v3FieldsExhaustive
 
 /** The union of persistable plaintext scenario shapes (every version the decode
  *  ladder accepts today). ScenarioV3 JOINED at P2·U8 (its codec arm + first writer);
- *  v1/v2 remain only as legacy decode-ladder members for migrating any older save.
+ *  v1/v2 remain only as legacy decode-ladder members, decoded as-is (no up-convert).
  *  The codec's unknown-version branch (now `> 3`) keeps a still-newer blob surfacing
  *  the calm "saved by a newer version" state, never a mis-parse. */
 export type AnyScenario = Scenario | ScenarioV2 | ScenarioV3

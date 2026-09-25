@@ -14,8 +14,9 @@ supersedes: "docs/plans/4-recommendation.md §Unit 16 where they conflict (each 
 > its REBUTTAL seat completed and affirmatively found no crypto concern in scope. The hawk sat
 > both rounds; its veto **fired + was HONORED into the shape** — see §Q1). Verdict: RATIFY 8/10,
 > tier council-decided, action execute. The red team landed exactly ONE structural hit, absorbed
-> as the §S0 near-tie gate. `docs/council-log.md` top row carries the digest. This spec is the
-> executable shape; **it supersedes the plan's §Unit 16 body where they conflict.**
+> as the §S0 near-tie gate. `docs/council-log.md`'s 2026-07-22
+> "U16 PRE-BUILD — the recommendation surface" row carries the digest. This spec is the executable
+> shape; **it supersedes the plan's §Unit 16 body where they conflict.**
 >
 > **U16 SHIPPED 2026-07-22** — `6f927862` (S1–S4 + the §S5 deferral), `263b1053` (the live dispatch
 > seam, the arc breathing end-to-end) and `30b5ae85` (the ultramode fold: the seed-B inversion guard,
@@ -37,7 +38,7 @@ below is a corollary.
 1. No U16 code re-derives a decision from displayed seed-B figures (render-the-flag + planted-fail guards, burned/070).
 2. The interactive tier reduces SEARCH precision only — grades + every displayed figure ALWAYS at `solverMinBPaths`; never down-sampled.
 3. The A↔B residual is NEVER a rendered number. Name the baseline, never the residual.
-4. The solve channel NEVER emits `data-answer-tier` (`SolveComputeTier` stays on the payload; the fit gate's `final` wait must be unsatisfiable by a solve — `memoryModel` already shipped this and U16 added no tier mirror; `Result.tsx:637` stamps the attribute from the DATE-search tier alone).
+4. The solve channel NEVER emits `data-answer-tier` (`SolveComputeTier` stays on the payload; the fit gate's `final` wait must be unsatisfiable by a solve — `memoryModel` already shipped this and U16 added no tier mirror; `Result.tsx:641` stamps the attribute from the DATE-search tier alone — `answerTier` at `:631-634`, the `DateSearchTier` the committed headline or date answer carries).
 5. No inert lying affordance: the save gesture was **ABSENT in U16** — a reserved layout slot only (§S4). U17 §S5 landed the gesture and the v3 write together (2026-07-26/27) into that same reservation, so the slot is live today and the wall did its job: no inert Save ever rendered.
 6. A withheld reason renders TRUE and humane, never laundered, never color/opacity-only; unclassified **fails CLOSED**.
 
@@ -192,13 +193,19 @@ standing valve; the §7 triggers in `docs/decisions/market-model.md` stay live a
   `solveInvitable` guards `!isDateRoute(snapshot.draft)` (`Result.tsx:371`), because the
   working/date-route base is the crowned date offset — a follow-up increment. Both fit-gate
   affordance seeds are all-retired, so the measured posture is unregressed.
-- **GoalPicker** (`src/intake/GoalPicker.tsx`) joins `sheetShell.css` by ADDING selectors (never
-  copying — the named budget-sidecar drift) and REUSES the ControlSheet scaffold's focus contract
+- **GoalPicker** (`src/intake/GoalPicker.tsx`) renders INSIDE the `ControlSheet` scaffold
+  (`controlSheet.tsx` imports `sheetShell.css`), so it rides the existing `.control-sheet` shell
+  selectors and adds NONE (never copying — the named budget-sidecar drift; the one class added
+  later, the blocked-reason `.control-sheet__blocked` from the 2026-09-13 Card 14 fix, lives in
+  `controls.css`), and REUSES the ControlSheet scaffold's focus contract
   verbatim (capture on open, focus heading, restore on close incl. sheet→sheet, scroll lock,
-  reduced-motion slide→fade). `role="dialog"`, real labelled radios, three goals each with a
-  one-line gloss. Activating the affordance opens GoalPicker FIRST (the goal precedes the solve);
-  unset sentinel, never a silent default; a re-pick VISIBLY re-solves (request-epoch), both futures
-  update.
+  reduced-motion slide→fade). `role="dialog"`, real labelled radios, one radio per
+  `RECOMMENDATION_GOALS` member, each with a one-line gloss: two shipped (`leave-more`,
+  `pay-less-tax`); the plan's third R21 goal, `live-bigger-now`, did not ship
+  (`src/shared/model.ts:264-270`, deferred past U15 — plan 4 contract #4; open in the register as
+  *The third goal — "live bigger now" doesn't exist*). Activating the affordance opens GoalPicker
+  FIRST (the goal precedes the solve); unset sentinel, never a silent default; a re-pick VISIBLY
+  re-solves (request-epoch), both futures update.
 - **Pending** = the shipped thinking-breathe family: `.solve-pending` joined the ONE family list in
   `base.css` (never a second working tell), the `--dur-breathe` 2100ms opacity breath, a
   plain-language what's-happening label through copy.ts — "Working out your strategy — this can
@@ -238,8 +245,8 @@ to a single commit.
 - **Compose state** (surplus + no-change): a NO-dollar reassurance — "you're already running the
   strongest path we tested" register, the word *already* carrying the relief, the inherited frame
   carrying the honesty. Never a fabricated dollar hero, never "safe either way".
-- **ONE `RecommendationGrade` lockup** (`.rec-grade`, `RecommendationSurface.tsx:437`): grade word
-  + glyph + delta figure (tabular-nums via money.ts) + the ShapeDisclosure note as a subordinate
+- **ONE `RecommendationGrade` lockup** (`.rec-grade`, `RecommendationSurface.tsx:437`): grade word +
+  glyph + delta figure (tabular-nums via money.ts) + the ShapeDisclosure note as a subordinate
   line — one component, one semantic group (`role="group"` + `aria-describedby`), **one crossfade
   key** (the `.cs-swap` / `@starting-style` CSS-only idiom — a separate fade paints a fresh grade
   beside a stale hedge). The shape note renders the pre-composed `composeShapeDisclosure()` output
@@ -348,14 +355,25 @@ to a single commit.
   viewBox in a fixed-dimension container (no CLS). The delta magnitude — the gap between the bar
   tips — is the non-color hero channel. The 2026-09-05 council `wf_ecbe0ab2-7bb` split the layers:
   the svg draws bars, markers, floor, guides and bracket, while the axis labels, both end-of-bar
-  labels and the delta hero are HTML in the chart-text layer, on the type scale.
+  labels and the delta hero are HTML in the chart-text layer, on the type scale. Since `780409f7`
+  (2026-09-10, the 2026-09-08 evening review) the chart, primary and runner-up alike, renders on
+  the `leave-more` goal ONLY. On `pay-less-tax` the plotted headline is lifetime tax paid, where
+  lower is better, and the longer-bar-is-better grammar would contradict it, so the picture is
+  OMITTED, never swapped. The goal-worded delta hero still ships (`recommendationView.ts:669-682`,
+  `recommendationView.ts:831`). The goal-named caption and aria variant that would bring it back
+  are Briggsy's words, owed in the register entry
+  "U17 S7 riders — the comparison chart's missing dollar endpoints (Q7a) and the unspecified reorder (Q7b)".
 - **Disclosures adjacent to the delta**: NIIT + (outside the roster) state tax; the SS claim-age
   held-fixed note; the heir bracket on leave-more (plain language); SLCSP/CSR caveats by reference
   when the delta leans on ACA. The compile gate shipped as the surface's OWN closed vocabulary,
   `RecommendationDisclosureId = 'ss-claim-fixed' | 'niit' | 'state-tax' | 'heir-bracket' |
   'aca-slcsp'` (`recommendationView.ts:58`), NOT as seats on the draft-keyed `DRAFT_DISPOSITIONS`
-  registry: `heirBracket` and the SS-claim-fixed note are DERIVED solve parameters, not persisted
-  `ScenarioDraft` fields, so they cannot ride a gate that keys on `keyof ScenarioDraft`. A new id
+  registry: every disclosure is a property of the RUN, not of a draft field — the SS-claim-fixed
+  and NIIT notes render unconditionally, state-tax reads the run's own priced state
+  (`pricedStateForRun`), aca-slcsp the payload's `namedDriver`, and heir-bracket the payload's
+  `p.heirBracket` (which `solveDispatch` fills from the draft's optional `heirBracket?`, persisted
+  since 2026-08-14, or the `solverAssumedHeirBracket` default) — so four of the five ids have no
+  `ScenarioDraft` key to ride, and the vocabulary cannot key on `keyof ScenarioDraft`. A new id
   fails `tsc` until its builder and its humane string are authored. Both dispositions render here
   as read-only notes — no inert editing affordance ships on this surface (wall #5). `heirBracket`
   also holds a `row-editable` seat in `assumptionRegistry.ts:127`, and its editor is **NOT inline**:
@@ -390,7 +408,8 @@ to a single commit.
 
 ## S4 — Comparative depth + the reserved slot
 
-- RunnerUp's two-series viz richness (the winner-vs-runner-up arms of `RecommendationViz`, rendered
+- RunnerUp's two-series viz richness (the winner-vs-runner-up arms of `RecommendationViz`, on the
+  `leave-more` goal only since 2026-09-10 (see S3's RecommendationViz bullet), rendered
   inside the same `<details>` as the "why this beat it" text); goal-repick polish; the honest-limits
   note (R13, calm, invited).
 - **The save slot**: RESERVED layout space only (which killed the U17 CLS relayout) — **no live Save
@@ -491,10 +510,12 @@ without down-sampling any displayed figure (the thing wall #2 forbids of the cur
 These phrasings are SUPERSEDED and must never be authored. The list was minted as a
 reconcile-before-code condition (the hawk's) against `docs/plans/4-recommendation.md`, which carried
 every one of them verbatim in its body — the standing risk being a builder implementing them from a
-grep. **That body no longer carries them:** the 2026-09-06 as-built rewrite struck all seven, and
-what survives there is the veto record plus the two NEGATIVE uses below. The list stays binding
-anyway, because it is a ban on the PHRASINGS, not on one file: the plan is not their only possible
-source, and a re-authored line is exactly what it exists to catch.
+grep. **That body no longer carries them:** the 2026-09-06 as-built rewrite struck all seven (the
+two test scenarios entries 5 and 7 name survive by TITLE, rewritten so the phrase now appears only
+as a negative), and what survives there is the veto record, the plan's own dead-copy note, and the
+NEGATIVE uses listed below. The list stays binding anyway, because it is a ban on the PHRASINGS,
+not on one file: the plan is not their only possible source, and a re-authored line is exactly what
+it exists to catch.
 
 **⚠️ THE QUOTED PHRASE IS THE ONLY KEY. This list carries no line numbers on purpose.** It was
 line-keyed twice and rotted twice — every anchor was stale by exactly +10 until 2026-08-01, and by
@@ -508,7 +529,7 @@ address.
 2. **"you're safe either way; this keeps ~$X more from the IRS"** — in the objective≡headline bullet
    → superseded by the delta-as-hero comparative.
 3. The ENTIRE tax-blind→tax-aware reframe paragraph, opening **"Tax-blind→tax-aware reframe,
-   inherited from Act 3"** (premise dead, supersession item 2).
+   inherited from Act 3"** (premise dead, reconciliation ruling 2).
 4. The test scenario **"Edge case (tax-aware baseline, not the tax-blind spine)"** (same dead
    premise).
 5. The test scenario **"Edge case (surplus + no-change compose)"** and its "safe either way" wording.
@@ -520,10 +541,16 @@ address.
    whose `("safe either way; keeps ~$X more from the IRS")` is the same absolute. Both prior copies
    of this list stopped one entry short of it.
 
-**NOT dead copy — do not "sweep" these:** the runway's council record that *states* the veto, and
-the two bullets (the 10/10-clamp surplus-regime bullet and its surplus-regime edge case) that use the
-phrase NEGATIVELY — "no false 'safe either way'" — to describe when the pivot must **not** trip.
-Those are correct as written; deleting them would remove the guard.
+**NOT dead copy — do not "sweep" these:** the runway's council record that *states* the veto; the
+plan's own dead-copy note recording these absolutes as gone; the objective≡headline bullet's note
+that the framing "was vetoed and is now a `copyGuard` ban"; and every place that uses the phrase
+NEGATIVELY to say when the copy must **not** say it — contract #6's "The pivot never says 'you're
+safe either way'", the 10/10-clamp surplus-regime bullet and its surplus-regime edge case ("no false
+'safe either way'"), the no-change-recommendation-state bullet ("never a 'safe either way'
+absolute"), and the two REWRITTEN test scenarios that entries 5 and 7 above still key on by title —
+"Edge case (surplus + no-change compose)" ("not a 'safe either way' absolute") and
+"Edge case (surplus pivot)" ("never a 'safe either way' absolute"). Those are correct as written;
+deleting them would remove the guard.
 
 **The gate is enforced in code, not just here** (2026-08-01): `copyGuard.ts`'s false-certainty list
 carries the contracted arms alongside the uncontracted ones (`copyGuard.ts:189`), and `lintCopy`

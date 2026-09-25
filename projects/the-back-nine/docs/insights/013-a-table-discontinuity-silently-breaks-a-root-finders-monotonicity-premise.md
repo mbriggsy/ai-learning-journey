@@ -68,4 +68,7 @@ CSR thresholds at 150/200/250% FPL, the SS-torpedo inclusion kinks). Before trus
 grep the table the residual reads for adjacent-band value mismatches. And the process lesson behind the
 catch: a FRESH whole-layer review found this where per-milestone, stream-scoped adversarial reviews could
 not — cross-cutting invariants (the residual's global shape) are invisible to a review aimed at one new
-stream. (See `TODO.md` for the pilot's per-persona effectiveness verdict + the adopted review cadence.)
+stream. (The pilot's per-persona effectiveness verdict was recorded in `TODO.md` the day this was written
+and now survives only in git: `git show 59de94af:projects/the-back-nine/TODO.md`, the "Code-review pilot —
+DONE (2026-06-07)" block. The cadence it adopted was refined by a second pilot the same day (`f469a1a1`) and
+lives in the ultramode-code-review skill, `projects/skills/ultramode-code-review/SKILL.md`.)

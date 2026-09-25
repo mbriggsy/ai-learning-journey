@@ -47,7 +47,9 @@ outcome — alongside its purpose pins. And age a fixture only within the domain
 prices: a "coherently aged" household that predates the feature it carries is a contradiction
 the engine will (correctly) refuse. When a deep fail-loud guard ships (insight 076's shape),
 sweep the DEV FIXTURE producers too, not just the app's gates — the guard's own comment naming
-"an aged dev plant" was written five days before an aged dev plant hit it.
+"an aged dev plant" was written the day before an aged dev plant hit it (the guard: the
+state-tax ultramode fold, 388b8821, 2026-07-15; the hit: the seed increment's live drive,
+2026-07-16).
 
 ## Also Applies To
 

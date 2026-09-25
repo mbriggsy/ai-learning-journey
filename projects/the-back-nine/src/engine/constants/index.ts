@@ -2,13 +2,13 @@
  * The canonical year-keyed tax/health constants module (cross-cutting contract #6).
  *
  * ONE source of truth. The tax overlay (U2), the healthcare overlay (U3), every
- * test fixture, and the copyGuard allowlist (P2) all read from HERE — a dated
+ * test fixture, and the U14 consumed-constants audit all read from HERE — a dated
  * figure is never re-typed elsewhere (burned/057,061,063). The validated MC spine
  * reads NOTHING from this module (it is tax-free), so a constants change can never
  * perturb a Trinity/Bengen golden case.
  *
- * `ALL_CONSTANTS` is the flattened registry the shape test and the copyGuard
- * allowlist iterate — derived from the structured tables, never hand-listed, so it
+ * `ALL_CONSTANTS` is the flattened registry the shape test and `consumedConstants.ts`
+ * iterate — derived from the structured tables, never hand-listed, so it
  * cannot drift from them (burned/061: derive at execution, never transcribe).
  */
 import { taxConstants, TAX_YEAR } from './tax'

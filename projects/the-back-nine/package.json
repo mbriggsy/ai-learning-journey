@@ -22,6 +22,7 @@
     "verify:fit": "playwright test --config playwright.fit.config.ts",
     "verify:fit:rv": "playwright test --config playwright.fit-rv.config.ts",
     "verify:doc-stats": "tsx scripts/verify-doc-stats.ts",
+    "doc:reanchor": "node scripts/reanchor-citations.mjs",
     "caddie:walk": "playwright test --config playwright.caddie.config.ts"
   },
   "dependencies": {

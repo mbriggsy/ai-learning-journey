@@ -35,6 +35,12 @@ freshness into the gate itself — either `"verify:bundle": "vite build && tsx �
 fail-loud staleness assert in the script (newest `src/**` mtime > `dist/index.html`
 mtime ⇒ refuse with "stale dist — run pnpm build").
 
+*Status, 2026-09-24: this prescription was never applied. `verify:bundle` is still
+`tsx scripts/verify-prod-bundle.ts`, and the script checks only that `dist/index.html`
+exists, never that it is fresh. CI is safe because `.github/workflows/verify-the-back-nine.yml`
+runs `pnpm build` immediately before `pnpm verify:bundle` in the same job. Locally, the only
+guard is the standing rule above: a fresh `pnpm build` in the same breath, every time.*
+
 ## Key Insight
 
 A gate that reads a **generated artifact** verifies the artifact, not the source — its

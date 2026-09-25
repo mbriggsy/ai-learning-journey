@@ -2,7 +2,7 @@
 title: A Monte-Carlo confidence fan is structurally blind to a deterministic seedless input, so it cannot backstop an over-optimistic one — a grounded range gate is the sole defense
 date: 2026-07-01
 phase: P2 (U8 review follow-up — the colaPct ceiling, Council of Elders 2026-07-01)
-modules: [src/shared/incomeBounds.ts, src/shared/scenarioCodec.ts, src/intake/sanity.ts, src/intake/OtherIncomeEntry.tsx, src/engine/reference/otherIncome.ts]
+modules: [src/shared/incomeBounds.ts, src/shared/scenarioCodec.ts, src/intake/sanity.ts, src/intake/OtherIncomeEntry.tsx, src/intake/otherIncome.ts]
 tags: [monte-carlo, confidence-fan, deterministic-overlay, sole-defense, cola, grounded-bound, calm-but-wrong, council-decided, range-gate, rate-vs-fraction]
 ---
 

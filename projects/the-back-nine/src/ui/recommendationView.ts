@@ -51,10 +51,10 @@ import { composeRecStateTaxDisclosure } from './stateTaxDisclosure'
 // ---- the disclosures adjacent to the delta (§S3 "its nets" — R7 on the recommendation surface) ----
 
 /** The closed vocabulary of disclosures the delta rides beside. A DEDICATED registry (not the
- *  draft-keyed `DRAFT_DISPOSITIONS`): `heirBracket` / `ssClaimAgeHeldFixed` are DERIVED solve
- *  parameters, not persisted `ScenarioDraft` fields, so they cannot ride the compile gate that keys on
- *  `keyof ScenarioDraft` — this union is the recommendation surface's OWN compile-enforced completeness
- *  seat set (a new id fails tsc in the builder Record below until its humane string is authored). */
+ *  draft-keyed `DRAFT_DISPOSITIONS`): each disclosure is a property of the RUN — ss-claim-fixed/niit
+ *  unconditional, state-tax the run's priced state, aca-slcsp the named driver, heir-bracket the payload's
+ *  `heirBracket` — so the ids are keyed by disclosure, not by draft field, and cannot ride `keyof ScenarioDraft`;
+ *  this union is the surface's OWN compile-enforced completeness seat set (a new id fails tsc below). */
 export type RecommendationDisclosureId = 'ss-claim-fixed' | 'niit' | 'state-tax' | 'heir-bracket' | 'aca-slcsp'
 
 export interface RecommendationDisclosure {

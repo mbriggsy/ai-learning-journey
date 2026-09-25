@@ -31,8 +31,9 @@ structural cousin — same-MEANING siblings that share no words and no imports.
 
 ## Fix
 
-The ladder re-base is filed REQUIRED (TODO item 0) with its design fork named (plan-offsets
-0..elapsed are PAST stop-years on an aged vault — drop vs relabel needs a ruling). The
+The ladder re-base was filed REQUIRED with its design fork named (plan-offsets 0..elapsed
+are PAST stop-years on an aged vault — drop vs relabel needs a ruling), and shipped the same
+day as `6a0128bb` (council wf_99415094-417 ruled DROP + RE-BASE; the review fold is insight 079). The
 sweep discipline changed: after fixing a meaning-class defect, enumerate every surface that
 RENDERS the same meaning — walk the live screen and list each element speaking that
 dimension (here: hero, floor line, band axis, TwoFutures endpoints, C2 sentence, ladder

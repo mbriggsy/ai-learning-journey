@@ -705,7 +705,7 @@ for (const vp of [REAL, TIER] as const) {
 // DEV server runs FULL PRECISION (16k paths through the mint's oracle gate + search + grade) — MEASURED
 // on this reference machine at 80s (nc → held, which short-circuited at the mint until the 2026-08-02
 // rate pin — that floor is GONE, nc COMMITS now) to 200s+ (surplus → recommended), FAR past this
-// harness's 120s per-test budget. The fit gate is built for the fast SPINE tier
+// harness's per-test budget (120 s then, 180 s now). The fit gate is built for the fast SPINE tier
 // (`data-answer-tier="final"`, seconds), NOT the solve channel (no live path-count seam — S5 deferred,
 // wall #2 fixes every displayed figure at `solverMinBPaths`). So the committed / held OUTCOMES are engine-proven where
 // tractable — solveDispatch.test.ts drives the REAL builder → REAL engine at the fast test counts

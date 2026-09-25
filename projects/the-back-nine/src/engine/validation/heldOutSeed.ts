@@ -10,8 +10,8 @@
  *     nothing else: `isCanonicalSeedB` rejects EVERY non-canonical value, including the
  *     planted `seedA + 1` sibling the plan names (whose mulberry32 stream offers no
  *     provable separation guarantee). seedB is DERIVED, never independently persisted —
- *     re-derivable forever from the one persisted seedA (the U17 record stores it for
- *     byte-reproducibility, but the derivation function is the truth — supersession item 3).
+ *     re-derivable forever from the one persisted seedA (the U17 saved-recommendation record
+ *     has no seed field; the derivation function is the truth — reconciliation ruling 3).
  *  2. EMPIRICALLY — `decorrelationReport` measures the Pearson correlation between the two
  *     seeds' actual normals streams and refuses a derivation whose streams correlate (the
  *     arm that catches a DEGENERATE derivation — an identity or near-copy — which the
@@ -53,8 +53,8 @@ export function deriveSeedB(seedA: number): number {
 }
 
 /** The deterministic B-FAMILY member i (i ∈ [0, m)): re-derivable forever from the one
- *  seedB, so the grade is stability-checked AND byte-reproducible on re-entry (U17 re-solves
- *  on the saved record and regenerates the identical family → the identical grade). */
+ *  seedB, so the grade is stability-checked AND byte-reproducible on any re-solve (an invited
+ *  re-solve re-derives seedB from seedA and regenerates the identical family → the identical grade). */
 export function deriveBFamilyMember(seedB: number, index: number): number {
   if (!Number.isInteger(seedB) || !Number.isInteger(index) || index < 0) {
     throw new Error('[heldOutSeed] deriveBFamilyMember needs integer seedB and index ≥ 0')

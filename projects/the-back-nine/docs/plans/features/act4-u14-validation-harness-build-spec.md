@@ -19,13 +19,13 @@ status: shipped
 > contradiction, gate-list-means-BLOCK, type-gate-proves-order-not-predicate, the clockless
 > engine-domain inversion). **The honesty-hawk's surgical veto fired + was honored** (§V).
 > **Precedence:** this spec supersedes `docs/plans/4-recommendation.md`'s Unit-14 section
-> where they conflict; the plan's dated **RECONCILIATION SUPERSESSION (2026-07-18)** block
+> where they conflict; the plan's **2026-07-18 RECONCILIATION RULINGS** block
 > supersedes the plan body everywhere else. One reviewable commit, no riders (insight 051).
 > **U14 ships NO user-facing surface** — no Caddie walk; the oracle IS the reviewer.
 
 ## S0 — the pinning pass + the mint predicate (contradictions mean STOP; landed FIRST)
 
-1. **The token's pinning semantics are RULED (supersession item 5):** the oracle-cleared
+1. **The token's pinning semantics are RULED (reconciliation ruling 5):** the oracle-cleared
    token evaluates over **the constants the graded run actually consumes** (per-run-consumed
    — the producer's-output shape, insights 080/081/088), split by **directional KIND**:
    - **certification-pinnable** (a dated pin event exists): any state-rate / healthcare /
@@ -84,7 +84,7 @@ status: shipped
    - **`OOP_MEDICAL_TYPICAL_HOUSEHOLD`** (`src/intake/referenceData.ts`) — engine-INERT
      (intake hint only, traced); not in the gate. `validationMarket` — validation-only; not
      in the gate.
-4. **The Medicare-cost-trend constant is HARD solver-BLOCKING (supersession item 4):** the
+4. **The Medicare-cost-trend constant is HARD solver-BLOCKING (reconciliation ruling 4):** the
    token **withholds the conversion ranking** until a **sourced** trend constant lands AND
    is **genuinely consumed** by the Part-B pricing (insight 074 — a stamp nothing reads
    prices nothing). **Disclose-and-ship is FORBIDDEN** (a disclosure fixes a number, never
@@ -96,7 +96,8 @@ status: shipped
    `PART_B_PRICING_MODE` is `'trended'`, so **both halves clear and live conversion-bearing
    candidate sets no longer withhold**. Both halves stay armed: the planted lying-mirror arm
    (sourced trend, unmoved real-flat pricing) is still refused. The withheld reason is
-   **enumerated** (S6.3) so U17's gate-red branch can name it honestly.
+   **enumerated** (S6.3) so a hold can name it honestly. U16's withheld hold does; U17's
+   gate-red branch never shipped (S6.3).
 
 ## S1 — `src/engine/solver/candidates.ts` (the SHARED enumerator, authored here)
 
@@ -109,7 +110,7 @@ status: shipped
   bracket-fill}`: `SEARCHED_POLICIES` filters the shipped **5-wide** `DRAWDOWN_POLICIES`
   (`model.ts:191`) down by excluding `custom`, which stays the injection point for the
   user's own `drawdownOrder` as an **out-of-grid labeled baseline** — never searched, always
-  scored beside the grid (supersession item 8). The conventional-order / conversion-0
+  scored beside the grid (reconciliation ruling 8). The conventional-order / conversion-0
   baseline is **always present**, exported as `CONVENTIONAL_POLICY = 'taxable-first'` (the
   no-change oracle case + the shrinkage prior both require it). `applyCandidate` is the ONE
   apply seam, its dimension-invariance test-pinned.
@@ -134,7 +135,7 @@ status: shipped
 - The five cases as planned — (i) constant-rate conventional-order, (ii) stripped
   bracket-fill optimum, (iii) cliff-aware healthcare inversion, (iv) after-tax leave-more
   §1014/IRD inversion, (v) the no-change case — **plus the state precondition dimension**
-  (supersession item 1): every fixture declares `state: absent | NC | PA | FL` alongside its
+  (reconciliation ruling 1): every fixture declares `state: absent | NC | PA | FL` alongside its
   on/off preconditions, and the harness **REFUSES to apply a fixture's known-best outside
   its declared preconditions** — a federal-only known-best never grades a priced-state run.
   The NC/PA priced fixtures whose hand-derived dollars **include** state shipped alongside
@@ -211,7 +212,7 @@ status: shipped
    optional INJECTED crown function so the probe can reflect the SHIPPED selection path
    (shrinkage + the withhold arm) rather than the raw argmax, which would otherwise let it
    name a driver the user never sees.
-3. **THE COUNCIL'S Q3 AMENDMENT (supersession item 7a):** the difference-keyed grade's
+3. **THE COUNCIL'S Q3 AMENDMENT (reconciliation ruling 7(a)):** the difference-keyed grade's
    shape-bias cancellation is **asymmetric** — conversion front-loads balance reduction, so
    the non-cancelling residual **flatters conversion in the near-tie regime**. The grade
    **DEMOTES "just do it" on conversion near-ties** (a conversion-lever winner inside the
@@ -251,9 +252,11 @@ status: shipped
   (including the planted near-integer sibling), while `decorrelationReport` measures the two
   seeds' actual normals streams EMPIRICALLY and refuses a degenerate derivation — an identity
   or near-copy that the structural check alone would bless if the derivation function itself
-  rotted. seedB is **derived, not top-level-persisted**: it is written into the `savedRecommendation?`
-  record at U17's explicit save (the record never exists without seedB+goal — supersession
-  item 3); the solver-code version stamp (U17) covers derivation-function drift.
+  rotted. seedB is **derived, never persisted**: not top-level and not in the `savedRecommendation?`
+  record, which carries no seed field (`SavedRecommendationV3`, `src/shared/model.ts` — reconciliation
+  ruling 3). Every solve, an invited U17 re-solve included, re-derives it with `deriveSeedB` from the
+  scenario's persisted `seed` (read as `seedA`); the solver-code version stamp (U17) covers
+  derivation-function drift.
 - **The ε SPLIT (plan, unchanged + sentinel law):** the **selection tie-tolerance** is
   CRN-difference-keyed (pre-specified / A-side; deciding survival-equivalence on a
   B-measured level band re-contaminates the held-out — planted-fail arm) and the **display
@@ -266,8 +269,10 @@ status: shipped
 1. **Opaque nominal token** — `OracleClearedToken`, branded by a `unique symbol` and
    constructable only by `mintOracleToken` on a clean pass, so external construction needs a
    deliberate double-cast. U15's `solve`-as-recommendation entry takes it as a required
-   parameter (compile-level order — the plan's design, unchanged), and carries `mintedOver`
-   for U17's staleness re-derivation.
+   parameter (compile-level order — the plan's design, unchanged), and carries `mintedOver`,
+   whose only non-test readers are `solve()`'s fingerprint identity gate and the
+   `disclosedDirectional` copy onto the recommendation. U17's re-entry gate never reads the
+   token: it compares the record's committed `SolveAnswer.fingerprint` with the draft's fresh one.
 2. **Withheld until:** the oracle cases pass on their declared preconditions and
    K-candidate ranking stability holds — each a BRANDED report that is itself a required
    mint parameter, so a failing battery yields no report and therefore no token · grade
@@ -286,8 +291,11 @@ status: shipped
    IDENTITY.
 3. **The withheld-reason is a first-class enum** (aca-unverified · rec-relevant-primary-
    directional(name) · epsilon-uncalibrated · medicare-trend-unsourced · state-
-   certification-pending(state)) — U17's gate-red branch names the TRUE reason, never
-   blames the law when a primary is merely un-pinned (the plan's branch, now enumerable).
+   certification-pending(state)) — so a hold names the TRUE reason, never blaming the law
+   when a primary is merely un-pinned. U16's live withheld hold consumes it today
+   (`withheldReasonText`, `src/ui/recommendationView.ts`). The U17 gate-red branch at re-entry
+   that plan 4 specified to branch on it was NOT built; it is open in the register as
+   "The three U17 action-warning branches plan 4 specified and the build never shipped".
 4. **Planted-mutant battery:** the token refused on a planted directional rec-relevant
    constant · refused on the ε sentinel (and on a planted NaN or Infinity — finiteness
    first) · refused on a planted wrong-best · refused fail-CLOSED on an UNCLASSIFIED
@@ -357,7 +365,7 @@ UNQUANTIFIED, and a later fire re-derives the demotion multiple rather than bump
 ## Explicitly OUT of U14 — the scope fence, and where each item landed
 
 - U15's `search.ts`/`objective.ts`/`select.ts`/`cancel.ts`/`profile.ts`, the K-candidate
-  wire shape, the solve `ModelAnswer` arm (tier-less — supersession item 8): fenced out to
+  wire shape, the solve `ModelAnswer` arm (tier-less — reconciliation ruling 8): fenced out to
   U15's own pre-build council, which ratified them (wf_45d9d56b-d1c) and shipped them the
   same day as this unit.
 - The richer market draw: still not in the shipped engine, and the dissent's flip condition

@@ -217,7 +217,7 @@ the pilot predicted calm; the eye agreed.
 
 **disposition — Card 9: HARD-FLAG (blocks until fixed; it is pre-existing and universal, not shipped by this session). Cards 10, 12: PILOT-CLEARED with fixes filed. Card 11: routed to the oracle.** No framing forks and no one-way doors, so nothing here parks — except the record-card verb, which was already Briggsy's.
 
-**✓ CLOSED 2026-08-02 — all three actionable cards shipped.** **Card 9** in two halves: the MECHANISM (`eb63a9bd` — the CTA no longer silently does what Cancel does; `aria-disabled` + an announced reason, Chromium-verified at opacity 0.55, still operable) and then the SHAPE on **Briggsy's live ruling "flip it"** (`cddcdb25` — "Add a line" takes the primary on the empty frame, "Use this budget" drops to quiet and they trade back the instant a line exists). **Card 10(b)** (`c27e7951`) — fixed at the ASK, not the verdict: softening the verdict alone would have left the premium landing nowhere. **Card 11** (`ed348492`) — the crops land, and running the walk to verify them exposed that `walkDoors` had been RED on its own default target for an unknown number of sessions. ⚠️ **Two corrections to this card's own text, from opening source:** the `BudgetBuilder.tsx:267-282` anchor below EXCLUDES the `onClose()` at `:259` that was the entire defect (deleted by `eb63a9bd`; `apply()` carries no `onClose()` today), and the reserved-box fence points at the wrong file — the reservation is `min-block-size: 7.5rem` in `budget.css`, and it is a FLOOR (≈120px empty → ≈198px full), not the fixed height insight 035 describes. **Still open from this card:** door 4's month/year sentence (`copy.ts:1255` then — FIXED 2026-08-03: `assumptionPeriodHelp` at `copy.ts:1372-1373`, post-mortem at `copy.ts:1350-1361`), and the prediction below is UNSCORED — it now reads against a surface that has changed, so re-walk before scoring it.
+**✓ CLOSED 2026-08-02 — all three actionable cards shipped.** **Card 9** in two halves: the MECHANISM (`eb63a9bd` — the CTA no longer silently does what Cancel does; `aria-disabled` + an announced reason, Chromium-verified at opacity 0.55, still operable) and then the SHAPE on **Briggsy's live ruling "flip it"** (`cddcdb25` — "Add a line" takes the primary on the empty frame, "Use this budget" drops to quiet and they trade back the instant a line exists). **Card 10(b)** (`c27e7951`) — fixed at the ASK, not the verdict: softening the verdict alone would have left the premium landing nowhere. **Card 11** (`ed348492`) — the crops land, and running the walk to verify them exposed that `walkDoors` had been RED on its own default target for an unknown number of sessions. ⚠️ **Two corrections to this card's own text, from opening source:** the `BudgetBuilder.tsx:267-282` anchor below EXCLUDES the `onClose()` at `:259` that was the entire defect (deleted by `eb63a9bd`; `apply()` carries no `onClose()` today), and the reserved-box fence points at the wrong file — the reservation is `min-block-size: 7.5rem` in `budget.css`, and it is a FLOOR (≈120px empty → ≈198px full), not the fixed height insight 035 describes. **Since closed:** door 4's month/year sentence (`copy.ts:1255` then; FIXED 2026-08-03 as `assumptionPeriodHelp`). **The prediction above is PARTLY SCORED on the tape (2026-09-06):** door 1 a HIT on his 2026-08-02 "flip it" ruling; door 4 (its tone and the month/year sentence) stays awaiting his read, and the month/year sentence was replaced 2026-08-03, so re-walk before scoring it.
 
 **evidence** — bundle `temp/caddie/2026-08-01-21-22-00/{vault-rec,vault-recold}/{real,phone}/`; source verified by the chair at `BudgetBuilder.tsx:267-282` + `:345-347`, `budgetModel.ts:50-54`, `copy.ts:1237` (then — since replaced, see the ✓ CLOSED note above) + `:2403`.
 
@@ -271,7 +271,7 @@ the pilot predicted calm; the eye agreed.
 
 **evidence:** bundle `temp/caddie/2026-07-27-22-37-39` (six targets × real+phone; `datearrived` re-walked into the same run stamp after joining the vault door allowlist in `ed6432cd` — without it the stage's own deliverable would have been chaired on its landing alone, the 2026-07-10 coverage lesson one door down) · panel journal wf_efc3968f-cf5 · source binds `RothLever.tsx:45-66,121-141` · commits `7e113b6e` `58076ba6` `c55913b0` `65b306e7` `ed6432cd` `9249e4d4`. **Corpus fold-in: no NEW rule minted — every blocker here is an existing rule firing (rule 38 detail-hunger, insight 100's promise/affordance pair, insight 101's predicate-extension law, the cardinal calm-but-wrong bar). The corpus was already current (last real Briggsy read 2026-07-11, folded 2026-07-12; every row since is unscored).**
 
-**Panel-raw, NOT carded (chair did not independently verify; listed so nothing is silently dropped):** the `datestale` essentials/ladder odds collision (same shape as Card 1, likely the same root); both aged faces' door-preview charts drawing the elapsed years at full weight with no Today tick; the re-entry gate never printing the vault's vintage before asking for attestation; the phone-tier clipping of the `datemixed` refusal mid-sentence at the sheet edge; the aria figure name describing the arrived chart as "the years ahead". **These are real-looking and cheap to verify — verify before acting, per insight 105.**
+**Panel-raw, NOT carded (chair did not independently verify; listed so nothing is silently dropped):** the `datestale` essentials/ladder odds collision (same shape as Card 1, likely the same root); both aged faces' door-preview charts drawing the elapsed years at full weight with no Today tick; the re-entry gate never printing the vault's vintage before asking for attestation; the phone-tier clipping of the `datemixed` refusal mid-sentence at the sheet edge; the aria figure name describing the arrived chart as "the years ahead". **These are real-looking and cheap to verify — verify before acting, per insight 105.** (Registered 2026-09-25 in `docs/backlog.md` under *Caddie walk-and-chair debt on four changed or never-capturable faces*.)
 
 ## 2026-07-23 (later) — THE MEDIAN-ADVANTAGE + STEER increment's first cold read, AND THE FIRST SONNET-5 DUAL-PANEL A/B — `solve:steer` (the no-pretax refusal, first ever) · `solve:surplus` (the delta qualifier's first live read) at both viewports (commits 8b9cab61 + 0b75740f; panel wf_91a3fa9a-b2e — 47 agents ZERO crashes: 5 perception seats × 2 models per target + one Opus hunter each, Opus refuters; bundles `temp/caddie/2026-07-23-19-44-31` (before) + `…20-19-22` (chair-fix re-walk); the walk's fold.json arbitrated the one confirmed layout observation)
 
@@ -309,7 +309,9 @@ the pilot predicted calm; the eye agreed.
 
 **Card 3 — the state compositions (`seed-nc` · `seed-fl`): PILOT-CLEARED, zero fixes.** The NC affirmation + new Tail and the FL constitutional-$0 + new Tail compose cleanly (the drift-pin held: monolith ≡ Lead…Tail on every face); the stale-number sweep across the re-tuned dollars (IRA 1.055M) found no contradicting sentence pair.
 
-**FILED (O-lane):** the assumptions door (door-4, "Everything the answer leans on, in one place") carries NO Medicare cost-trend line — the trend's existence, the 2035 table edge, and the drug-plan hold have no home in the assumptions registry (one lens, refuter-narrowed to the registry-gap residue after the rosier-chain claim died). The detail-door era owns it (the O10/O14(d) family) — a registry line + its own walk, never a rider. **STAPLED:** the pre-existing first-look texture (9-of-10 vs eight-in-ten adjacency = the ratified two-facts; the declining most-likely-path beside "On track" = +1 corroboration to the U17-parked band-geometry family; the covers-verb / survivor-echo / ages-slash = standing cleared texture).: the de-stacked ceiling voice's first cold read — `?seed=dip` · `?seed=datesplit` · `?seed=health` (commits a2360148 pass · 0e2667c6 seam fold; council wf_67c72e89-e77 8/10 + grounding wf_f63a7407-36a; panel wf_81b4f14a-5b5, 23 agents, zero crashes; bundle `temp/caddie/2026-07-18-16-32-26/`)
+**FILED (O-lane):** the assumptions door (door-4, "Everything the answer leans on, in one place") carries NO Medicare cost-trend line — the trend's existence, the 2035 table edge, and the drug-plan hold have no home in the assumptions registry (one lens, refuter-narrowed to the registry-gap residue after the rosier-chain claim died). The detail-door era owns it (the O10/O14(d) family) — a registry line + its own walk, never a rider. **STAPLED:** the pre-existing first-look texture (9-of-10 vs eight-in-ten adjacency = the ratified two-facts; the declining most-likely-path beside "On track" = +1 corroboration to the U17-parked band-geometry family; the covers-verb / survivor-echo / ages-slash = standing cleared texture).
+
+## 2026-07-18 — THE OF/IN DIALECT SWEEP pre-walk: the de-stacked ceiling voice's first cold read — `?seed=dip` · `?seed=datesplit` · `?seed=health` (commits a2360148 pass · 0e2667c6 seam fold; council wf_67c72e89-e77 8/10 + grounding wf_f63a7407-36a; panel wf_81b4f14a-5b5, 23 agents, zero crashes; bundle `temp/caddie/2026-07-18-16-32-26/`)
 
 **What this batch judges (the sweep council's shape):** the CEILING VOICE after the Q2 de-stack — the bare "better than 9 in 10 odds" standing without its "about" on the dip face's floor line + four ladder ceiling rungs (the only live renders of the changed words); the below-ceiling contrast face (datesplit — unchanged by design); and the council-mandated ACA face (health — the Q3 valence-neutral ceiling is NOT reachable on any live seed, so the walk proves the below-ceiling arm unchanged).
 
@@ -331,7 +333,9 @@ the pilot predicted calm; the eye agreed.
 
 **Chair-kills by precedent + against the bundle:** the seed-retired hunter's two HIGHs (the cross-surface sufficiency-poisoning + the "understated, never oversold" absolute) both died on scoped-deixis grounds — door-4's promise scopes to the BASELINE plan, door-3's "Not counted here" to the conversion's MARGINAL taxes, the sourcing-note absolute to the sourcing axis (each true at its own scope, commit-adjacent warnings intact); the landing "bare unhandled bill" nit died on the same-paragraph frame + input-time-help register; the roth dialog's unglossed "income surcharge" died on the co-rendered landing Medicare paragraph (anaphoric definite article); the budget OOP mixed-agency finding died on all-three-statements-true-and-agreeing; the "spending you gave us"-vs-"your budget" mismatch died on non-co-visibility + the door's own bridge line.
 
-**Corroborations STAPLED to standing families (no new filings):** the 9-of-10 vs eight-in-ten dialect double-take hit ALL THREE first-looks (the rule-36 of/in odds sweep — now corroborated on every walk since filing); NIIT unglossed with no details home (refuter-CONFIRMED real, immaterial at footnote register — the detail-door era, with O10/O14(d)); the E13 "the spending you gave us" Lead referent (two lenses + a refuter confirmed the header instance unanchored — the council's D-2 FREEZE + standing tape-watch holds; the a11y monolith-rider dissent's flip condition has NOT fired: no reader read the frozen monolith as invite-to-double-count); the declining-median-vs-On-track dissonance + the duplicate survivor verdict blocks + the unlabeled verdict glyphs + "Keep this answer" (all parked/cleared families, fresh-reader texture); the budget face's "the two of you" Medicare paragraph rendering under the survivor label (staple to the residual-density family). The statestale contrast staple was CLOSED by measurement pre-walk (7.1:1, AAA). — `?seed=retired|nc|pa|fl|elsewhere|date65|datenc` · `?vault=statestale` · `intake:fork` (commits f97dc2f9 sweep · a3253eed fold, CI green by id 29552895806; panel wf_af247a24-aa9, 87 agents, zero crashes; bundle `temp/caddie/2026-07-17-03-55-00/`)
+**Corroborations STAPLED to standing families (no new filings):** the 9-of-10 vs eight-in-ten dialect double-take hit ALL THREE first-looks (the rule-36 of/in odds sweep — now corroborated on every walk since filing); NIIT unglossed with no details home (refuter-CONFIRMED real, immaterial at footnote register — the detail-door era, with O10/O14(d)); the E13 "the spending you gave us" Lead referent (two lenses + a refuter confirmed the header instance unanchored — the council's D-2 FREEZE + standing tape-watch holds; the a11y monolith-rider dissent's flip condition has NOT fired: no reader read the frozen monolith as invite-to-double-count); the declining-median-vs-On-track dissonance + the duplicate survivor verdict blocks + the unlabeled verdict glyphs + "Keep this answer" (all parked/cleared families, fresh-reader texture); the budget face's "the two of you" Medicare paragraph rendering under the survivor label (staple to the residual-density family). The statestale contrast staple was CLOSED by measurement pre-walk (7.1:1, AAA).
+
+## 2026-07-17 — THE O14+O12+O9 COPY SWEEP pre-walk: the reworded residual family's FIRST cold read — `?seed=retired|nc|pa|fl|elsewhere|date65|datenc` · `?vault=statestale` · `intake:fork` (commits f97dc2f9 sweep · a3253eed fold, CI green by id 29552895806; panel wf_af247a24-aa9, 87 agents, zero crashes; bundle `temp/caddie/2026-07-17-03-55-00/`)
 
 The sweep's six focus questions, answered by fresh readers: (1) the F4 hedge "so their true cost could run higher than shown" read ONE-WAY honest — the spouse lens: *"I could not find a rosier way to read it"* (the old "sit tighter" ambiguity is dead); (2) the one-fact-sentence rhythm read CALM, not choppy (one faint read-aloud-staccato nit, minority); (3) the F6(ii) date-route appendix split passed SILENTLY — zero orphan-fragment findings, the best outcome for a density fix; (4) "Your retirement state" read *"honest and plain, not cold — no stumble"* (the F3 dissent's flat-read fear did not fire in-panel; his eye still owns the route-swap dissent); (5) the FL spend twin read clean at nit level (vacuous-no-op texture noted, the council's tri-state-truth trade accepted); (6) **the compliant-household tension SURVIVES the polysemy fix — the panel's real catch, filed O16.**
 
@@ -414,7 +418,7 @@ green incl. fit 17/17):**
    to strip a bill the tool then priced NOWHERE — the optimistic direction, rule 39's exact
    shape. Now: federal leaves (the tool prices it); *"State income tax isn't priced yet — if
    your state taxes retirement income, keep that bill inside this figure so it still counts."*
-   Conservative until the filed state-tax engine unit (TODO item 11) prices it for real.
+   Conservative until the filed state-tax engine unit (shipped 2026-07-15) prices it for real.
 
 ### Card 1 — `intake:fork` (the payment fork + the spend step, first-ever walk). **toneVerdict: SOFT-FLAG → fixes shipped.**
 The spouse walker reached for the *"Not sure — use a typical figure"* lifeline exactly as
@@ -518,8 +522,8 @@ shown')."* Readback matched `copy.txt` — capture clean.
 > Medicare-only door filing now carries his demand signal). **Cards 3+4:** *"3 & 4 are
 > cleared"* — including BOTH parked stale looks (the door-below-disclaimer reorder + the
 > update-route landing). **Ride-alongs out of the walk:** the state-tax council
-> (wf_cc065e3b-bc1) + the filed state-tax engine unit (TODO item 11, roster {NC,PA → SC,GA,FL,DE})
-> + the OPEN ask-for-Medicare-extras question (his GO/no-GO owed — **GO given later the same
+> (wf_cc065e3b-bc1) + the filed state-tax engine unit (roster {NC,PA → SC,GA,FL,DE}; shipped 2026-07-15 as {NC, PA, FL}) +
+> the OPEN ask-for-Medicare-extras question (his GO/no-GO owed — **GO given later the same
 > evening; pre-build council wf_efc6ece2-675**). **THE SPENDHELP WALK LANDED (same evening,
 > via the stale vault's update route):** the fence line itself drew no comment (seen live
 > without objection — not formally cleared), and the walk caught a REAL defect: one
@@ -599,6 +603,10 @@ copy variant — age IS that clause's display domain).
 note's density); the reorder he either doesn't notice or likes ("caveat before the door" was his
 own filed instinct); the aged-anchor stays his U17 call. **evidence:** bundles above; corpus rules
 1/36 + the seven hole shapes pinned; exemplars E11/E12 current.
+
+---
+
+## 2026-07-10 (evening) — `?vault=datestale` + `?seed=datesplit`: the floor's arrived/anchored arms, live at last (the card-#4 unblock)
 
 **States walked:** datestale unlock → gate → verdict (post-fix bundles: run `2026-07-10-19-08-08`);
 datesplit landing + all 5 doors + the 3 driven lever previews (increment 3's first real outing).
@@ -775,7 +783,7 @@ fit ledger: 10 planted mutants red→reverted (5 unit + 2 live fit-arm + 3 revie
 the datestale fit arm catching the persist-seed savedAt defect live (red → spliced → green);
 corpus pinned: rules 1, 6-10, 18-19, 36; exemplars E3, E11-E12. The 3-lens diff review's two
 confirmed correctness findings (the "0 of 10" fabrication + the caveat's year source) are
-recorded oracle-lane in `docs/council-log.md` + TODO item 0 — folded same session.
+recorded oracle-lane in `docs/council-log.md` + the aged odds-ladder re-base — folded same session.
 
 ---
 
@@ -842,8 +850,8 @@ question rather than flags; the affirm-default he rules as-designed without brea
 **disposition: PILOT-CLEARED (2026-07-10, the clearance grant — fix-then-clear).**
 - Finding 1 FIXED: `composeReentry` now emits a route-true `introKey` (the pure seam decides
   off the same all-retired predicate as the note lines) — the retired gate reads "Markets and
-  benefit checks move…" (`reentryIntroRetired`); the date gate keeps "paychecks". Live-verified
-  + test-pinned both arms.
+  benefit checks move…" (`reentryIntroRetired`); the date gate keeps "paychecks". Live-verified +
+  test-pinned both arms.
 - Finding 2 FIXED: the SS legend wears the frame gloss — "…at full retirement age — the
   statement figure your plan models from" (`reentryBenefitsLegend`). Live-verified.
 - Finding 3 CLEARED AS-DESIGNED: the affirm-default is the council-ratified prompt-never-
@@ -966,6 +974,12 @@ The backup-door row order he rules in one breath, either way.
 - Finding 5 CLEARED AS-DESIGNED: delta-vs-remembered-verdict is a feature (store the old
   answer — the U17-class filing), not a copy fix.
 - The tape row stays UNSCORED — his any-time read still supersedes and scores it.
+- ✓ RESOLVED BY HIS READ 2026-07-11 (night) — the Medicare-unit batch's Card 4 on `?vault=stale`
+  (that batch's entry, higher in this log): *"3 & 4 are cleared"* covers BOTH parked looks —
+  Finding 3 (the update-route landing, which he walked the same evening on the spendHelp walk)
+  and Finding 4 (the backup-door/disclaimer order, executed 2026-07-10 night in `3454c224` when
+  the priced composite pushed the R13 disclaimer past the fold). The tape row is scored on that
+  read.
 
 **evidence:** bundles `temp/caddie/2026-07-10-15-24-11/vault-stale/` (panel-read) +
 `temp/caddie/2026-07-10-15-32-17/vault-stale/` (canonical, post-fixture-fix); corpus pinned:

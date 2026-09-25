@@ -17,7 +17,7 @@ lenses converging, that the arm ONE LINE ABOVE it — Add with no kind or no bal
 `return`: a live-looking primary button that did nothing and said nothing. The file's new header
 advertised "Add blocks honestly" while that arm still lied. The sibling form (`OtherIncomeEntry`) had
 codified the exact law in a comment, nine copy keys and a pinned test — "a blocked Save always names
-WHAT is missing (WCAG 3.3.1), never a silent dead button" — a year of commits earlier.
+WHAT is missing (WCAG 3.3.1), never a silent dead button" — on 2026-06-20 (`8d0c3c1a`), seventy-five days earlier.
 
 ## Root Cause
 

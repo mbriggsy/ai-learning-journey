@@ -37,8 +37,8 @@ import type { OracleReport } from './optimalityOracle'
 import type { RankingStabilityReport } from './rankingStability'
 import type { SolverRunFingerprint } from './solverRunFingerprint'
 
-// ---- The withheld-reason enum (S6.3 — first-class, so U17's gate-red branch names the TRUE
-//      reason, never blaming the law when a primary is merely un-pinned) ----------------------
+// ---- The withheld-reason enum (S6.3 — first-class, so a hold names the TRUE reason, never
+//      blaming the law when a primary is merely un-pinned; U16's hold reads it, U17's gate-red never shipped)
 
 export type WithheldReason =
   | { readonly kind: 'aca-unverified'; readonly ageDays: number }
@@ -254,7 +254,7 @@ declare const ORACLE_CLEARED: unique symbol
  */
 export interface OracleClearedToken {
   readonly [ORACLE_CLEARED]: true
-  /** What this token was minted over — carried for U17's staleness re-derivation. */
+  /** What this token was minted over — read only by `solve()` (the identity gate + the disclosedDirectional copy). */
   readonly mintedOver: {
     readonly oracleCaseIds: readonly string[]
     readonly stabilityCandidateCount: number

@@ -1,5 +1,5 @@
 ---
-title: Parallel agents in ONE working tree couple through the tree itself — vitest collects a teammate's scratch probe, a whole-file rewrite flips the repo's EOL, and sibling tests pin an edit that hasn't landed
+title: Parallel agents in ONE working tree couple through the tree itself — vitest collects a teammate's scratch probe, a whole-file rewrite flips a file's EOL, and sibling tests pin an edit that hasn't landed
 date: 2026-07-12
 phase: Act 3 follow-up (the ask-for-Medicare-extras unit — the parallel seed-tuner, session 2026-07-11; reconstructed from the tuner transcript at the closeout review)
 modules: [e2e, ui, process]
@@ -19,9 +19,11 @@ transcript records three coupling surfaces:
    shared tree would collect a throwaway fixture that must never ship — and its mid-window
    deletion makes a teammate's two runs silently non-comparable.
 2. **The EOL flip.** The tuner's python rewrite of `devSeeds.ts` silently converted CRLF→LF —
-   a 914/873-line whole-file diff hiding six real edits. The repo convention is CRLF with
-   `core.autocrlf=false` (nothing auto-restores it); the tuner burned a round-trip diagnosing
-   its own diff before converting back in binary mode.
+   a 914/873-line whole-file diff hiding six real edits. This repo has no single
+   line-ending convention — endings are per file, mostly LF, and `devSeeds.ts` is one of the few
+   CRLF files (`git ls-files --eol <path>` shows which) — and with `core.autocrlf=false` nothing
+   auto-restores either ending; the tuner burned a round-trip diagnosing its own diff before
+   converting back in binary mode.
 3. **Fixture pins on a pending edit.** The tuner found `staleness.test.ts` already referencing
    `medicareExtrasByPerson: [...]` on the retired seed — *"confirming the parallel team coded
    the sibling tests expecting exactly my retired edit."* The coordination HELD, but only by
@@ -35,13 +37,22 @@ see any of it.
 
 ## Fix
 
-- Scratch probes live OUTSIDE the collected globs — the session scratchpad, `temp/`, or a
-  Workflow `isolation: 'worktree'` — never a path vitest/eslint collect in the shared tree. If
+- Scratch probes live OUTSIDE the collected globs — the session scratchpad (outside the project
+  tree) or a Workflow `isolation: 'worktree'` — never a path vitest/eslint collect in the shared
+  tree. `temp/` is NOT outside them for a test-named file: ESLint ignores `temp/`
+  (`eslint.config.js`), but Vitest does not — `vite.config.ts` excludes only
+  `[...configDefaults.exclude, 'e2e/**']`, so Vitest's default include collects any
+  `*.test.*` / `*.spec.*` under `temp/` (the 2026-09-10 landmine: a throwaway Playwright spec
+  there broke `vitest list` and with it `verify:doc-stats`). A non-test-named scratch script in
+  `temp/` is safe; a held Playwright instrument that must stay in the tree goes in `e2e/held/`
+  (vitest-excluded, and in the CSP harness's `testIgnore` — insight 128). If
   a probe MUST be collected to run, the agent's charter includes delete-before-handoff AND the
   join point re-runs the pinned suites (the tuner's own caveat, institutionalized: re-run
   `devSeeds.test.ts` once at the merge before the single commit).
-- Whole-file writers preserve EOL byte-for-byte (python `newline=''` / binary mode) — on this
-  repo, anything else turns a six-line edit into an unreviewable whole-file diff.
+- Whole-file writers detect and preserve each file's own EOL byte-for-byte
+  (`raw.includes('\r\n') ? '\r\n' : '\n'`; python `newline=''` / binary mode) — never assume
+  either ending; on this repo, anything else turns a six-line edit into an unreviewable
+  whole-file diff.
 - A fixture surface two agents both touch is a DECIDE-BEFORE-DISPATCH fact (the delegated-build
   laws): the dispatch names who owns the seed values and what the sibling tests may pin, so
   the coordination is carried by the charter, not by luck.

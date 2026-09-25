@@ -29,7 +29,7 @@
  *      let a down-market NEGATIVE gain flow in and UNDERSTATE both MAGIs — the project's named
  *      calm-but-wrong sign-inversion (an understated MAGI makes a conversion look cheaper than it is).
  *   2. The 400%-FPL cliff is a RELATIONAL branch on float MAGI: CEIL-quantize before the compare
- *      (insight 010 — a value within rounding noise of 4.00×FPL must never flip eligible↔ineligible).
+ *      (conservative whole-dollar rounding toward over-the-cliff; insight 012 — against the integer cliff it equals a raw `>`, so it absorbs NO float noise; finiteness is checked first, insight 010).
  *   FORWARD LANDMINE (not yet built): if a muni bucket is ever added, its tax-exempt interest must
  *   enter BOTH MAGIs AND §86 provisional income (`taxableSocialSecurity`) in the SAME change (see the
  *   MagiComponents note below) — touching the MAGIs alone still understates IRMAA-MAGI.

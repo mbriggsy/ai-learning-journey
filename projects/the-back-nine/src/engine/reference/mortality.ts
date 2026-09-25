@@ -19,7 +19,7 @@
  * survival; this swap moves every headline the honest (conservative) direction.
  * For households born in other years the baked curve errs: older cohorts →
  * longevity slightly overstated (conservative); younger → slightly understated.
- * Per-person birth-year keying is the P2-intake forward item; the committed
+ * Per-person birth-year keying is open in docs/backlog.md ("Mortality is keyed to the primary household's 1969/1972 cohorts …"); the committed
  * snapshot holds every cohort 1900–2100, so it re-derives with no re-fetch.
  *
  * NAMING CORRECTION (was wrong here + in three plan docs): there is NO

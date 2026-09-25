@@ -24,6 +24,8 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **already-failing / over-funded / on-track / borderline / off-track / indeterminate** — the closed set of **outcome states** the engine owns; the headline reading and copy are selected from these, never from a 7th ad-hoc state. → [plans/1-engine.md](plans/1-engine.md) (U1)
 
+**Batched-oracle law** — Briggsy's 2026-07-11 grant for the Caddie: a chaired verdict card SHIPS by default (**PILOT-CLEARED**), with no per-surface park; his eye audits at product cadence and always supersedes. One-way doors, framing-level forks and genuine pilot doubt still park (**PARKED-FOR-BRIGGSY**). → [caddie/cold-read-log.md](caddie/cold-read-log.md), [.claude/skills/caddie/SKILL.md](../.claude/skills/caddie/SKILL.md)
+
 **Bengen / SAFEMAX** — the safe-withdrawal-rate validation anchor (the "4% rule" lineage). The engine validates a duration-conservative SAFEMAX-analogue (~3.67%) against a committed Damodaran Treasury proxy arm, not against a bit-exact dataset. → [plans/1-engine.md](plans/1-engine.md) (U1), [research/engine-validation-and-tax.md](research/engine-validation-and-tax.md)
 
 **Box-Muller** — the transform that turns uniforms into normal market draws. Kept **stateless** (no cached spare across calls) so two CRN candidates that draw in different interleavings never silently desync. → [architecture.md §2](architecture.md)
@@ -32,11 +34,15 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **byte-identity** — see **reduce-to-spine**.
 
+**Caddie** — the Briggsy-proxy cold reader: walks the real rendered UI at his 1536×791 laptop viewport and on phone, fans out fresh-context readers calibrated on his taste corpus, hunts the calm-but-wrong reading, and files a chaired verdict card. A subordinate stand-in, never his N=1 read — every prediction is scored against his eye on [the tape](caddie/tape.md). → [caddie/cold-read-log.md](caddie/cold-read-log.md)
+
 **Cardinal rule** — *"calm-but-wrong is the sin."* The governing constraint on every engine decision, disclosure, and the voice itself; the bar **rises** for a recommender. → [product.md §2](product.md)
 
 **Cohort tables** — the SSA TR2024/Alt2 per-birth-year survival tables; the household's **1969 / 1972** cohorts drive joint-and-survivor longevity (not a period table, not a Gompertz fit). → [plans/1-engine.md](plans/1-engine.md) (U1)
 
 **copyGuard** — the lint enforcing calm, honest language: a **ban-list** (certainty verbs, catastrophe lexicon) plus the **require-the-hedge** positive lint, both reading one single-sourced token catalog. → [product.md §6](product.md), [plans/3-controls.md](plans/3-controls.md) (U10)
+
+**Council of Elders** — the `/council` mechanism: diverse expert agents debate a non-trivial judgment call in fresh context windows, are adversarially verified, and a chair returns a confidence-graded, tier-classified recommendation — convened instead of parking the call on Briggsy. The **Honesty Hawk** seat (calm-but-wrong is the sin) sits on every council and holds a **veto**. → [council-log.md](council-log.md), [.claude/skills/council/SKILL.md](../.claude/skills/council/SKILL.md)
 
 **CRN (Common Random Numbers)** — every candidate strategy, date-offset, and arm sees **identical** market draws, so a difference between them is signal, not RNG luck. The load-bearing determinism contract that lets the solver rank candidates honestly. → [architecture.md §2–§3](architecture.md)
 
@@ -45,6 +51,8 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 **Date-search** — the bounded, **exhaustive, non-monotone-robust** sweep over the household work-stop offset `Y` that produces the fuck-off date; reads off a quantized conservative lower confidence bound, never a bisection. Each track yields one of **three first-class outcomes**: a **confirmed** date (a candidate below the window top with later-offset evidence), a **window-edge** date (the window top, reported with the unconfirmed-tail disclosure, never silently crowned), or **no-date-in-window** (a first-class result, never "never free," never a crash); `Y == 0` reads *"work-optional at today."* → [plans/1-engine.md](plans/1-engine.md) (C3), [decisions/accumulation-fuck-off-date.md](decisions/accumulation-fuck-off-date.md) §3
 
 **Decumulation** — the retirement draw-down phase; the engine's center of gravity (accumulation exists to solve for the date that hands off to it). → [plans/1-engine.md](plans/1-engine.md)
+
+**Delta-as-hero** — the rule for comparing two futures: the *difference* leads as the hero figure (*"in 8 of 10 futures instead of 6"*) and the baseline is shown honestly but secondary — Act 3's `TwoFutures` controls, and Act 4's **surplus pivot**. → [plans/3-controls.md](plans/3-controls.md) (U10)
 
 **directional-until-pinned** — a constants-table marker: a figure is provisional until confirmed against its named government/issuer primary at a pin pass (`directionalUntilPinned: false`). → [architecture.md §8](architecture.md)
 
@@ -64,9 +72,13 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **Hedge (the hedge on the headline)** — every recommendation/control readout must carry its probabilistic qualifier **on the primary surface**, never buried in tapped-away math. Enforced by the require-the-hedge lint. → [product.md §6](product.md)
 
+**Held-out seed (seed-set A / B)** — the optimizer's-curse defense: the solver **selects** on seed-set **A** (the scenario's persisted seed) and **grades and displays** on an independent seed-set **B**, derived from A by `deriveSeedB` (a SplitMix expansion, never `seedA + 1`) and never independently persisted — the derivation from A is the truth (a saved recommendation stores it only for byte-reproducibility). The survival-equivalence tie-tolerance is decided A-side, never on a B-measured band. → [plans/4-recommendation.md → contract #2](plans/4-recommendation.md#the-eight-cross-cutting-contracts)
+
+**Honesty Hawk** — see **Council of Elders**.
+
 **HSA** — the triple-advantaged, **medical-earmarked** fourth account bucket. Covers out-of-pocket + (owner 65+) Medicare premiums tax-free — **not** ACA marketplace premiums. Never a general drawdown source. → [architecture.md §7.2](architecture.md)
 
-**ID scheme (R / U / C / D / M / §)** — the compact, stable internal join-keys (Requirement / Unit / unit-tracks / Milestone / Section) the docs and code share; defined once, never shown to the user, never renumbered. Canonical legend: [roadmap.md → The ID scheme](roadmap.md#the-id-scheme).
+**ID scheme (R / U / C / D / M / §)** — the compact, stable internal join-keys (Requirement / Unit / unit-tracks / Milestone / Section) the docs and code share; defined once, never shown to the user, never renumbered. Canonical legend: [roadmap.md → The ID scheme](roadmap.md#the-id-scheme). (product.md §4's D1–D6 are locked product decisions, not unit tracks — same letter, unrelated.)
 
 **INCOME_TYPES / COLA_MODES** — the R40 other-income vocabulary, single-sourced as `const` arrays (in `src/shared/model.ts`) that the intake and the restore codec both import: `INCOME_TYPES` = pension / rental / alimony / annuity / other; `COLA_MODES` = real-flat / nominal-flat / fixed-pct. → [product.md](product.md) (R40.1–R40.2)
 
@@ -78,7 +90,7 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **KTD (Known Technical Decision)** — a load-bearing build decision, numbered so the implementation can cite it (e.g. R40's nine KTDs), recorded in its decision record ([docs/decisions/other-income-r40.md](decisions/other-income-r40.md)).
 
-**Lexicographic objective** — the definition of "best": **Tier 1** never drop below the survival floor (essentials), then **Tier 2** a user-chosen surplus goal (*leave more · pay less tax · live bigger now*). The objective metric **equals** the headline metric, so a recommendation can never contradict the magic moment. → [product.md](product.md) (D1 / R21)
+**Lexicographic objective** — the definition of "best": **Tier 1** never drop below the survival floor (essentials), then **Tier 2** a user-chosen surplus goal (*leave more · pay less tax · live bigger now*). The objective metric **equals** the headline metric, so a recommendation can never contradict the magic moment. → [product.md](product.md) (decision D1 / R21)
 
 **MAGI** — modified adjusted gross income. The Back Nine computes **two distinct** MAGIs — see **ACA-MAGI** and **IRMAA-MAGI** — never one shared number.
 
@@ -86,17 +98,31 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **MFJ→single** — the surviving spouse's filing-status switch the year after the first death: the same real dollars fall into ~half-width single brackets — the "tax cliff" that is the recommendation's emotional headline. → [architecture.md §7.1](architecture.md)
 
+**No-change state** — the recommendation's honest arm (R25) when the crowned winner is the strategy the household already runs, compared by plan (`noChange` in `src/engine/solver/select.ts`, decided A-side at selection, never on a seed-B band): the second beat says *"You're already on one of the strongest paths we tested"* instead of manufacturing an active move; U14's oracle case (v) pins it. → [plans/4-recommendation.md → Unit 16](plans/4-recommendation.md#unit-16--recommendation-surface)
+
+**Odds ladder** — the date route's discrete per-offset chart, always on display beside the band for a dated hero (it withdraws only when an aged plan's crowned date has already passed): one dot per evaluated work-stop offset on whole "X of 10" rungs, showing how the hero date's work-optional odds shift by *when* you stop (`src/viz/OddsLadder.tsx`). The 2026-07-03 N=1 cold-read superseded the council's original one-pull-down drawer. → [plans/2-first-answer.md](plans/2-first-answer.md) (unit D2)
+
+**Oracle-cleared token** — the branded `OracleClearedToken` (`src/engine/validation/oracleToken.ts`) that only the U14 validation harness can mint. It is withheld while any of its clauses fails, among them the optimality oracle, ranking stability, a calibrated ε, and no certification-pinnable figure the run consumes still directional (methodology-substrate figures ship disclosed and never block). `solve()` takes it as a **required parameter** — recommending without validation is a compile error — and refuses a token minted over a different **solver-run fingerprint**. → [plans/4-recommendation.md → contract #1](plans/4-recommendation.md#the-eight-cross-cutting-contracts), [architecture.md §8](architecture.md)
+
 **Outcome states** — see **already-failing / over-funded / …**.
 
-**Overlay** — a **zero-draw** deterministic transform of the cash-flow term (tax, healthcare, accumulation inflow) fed into the same per-year update function as the spine; each reduces to the spine when off. → [architecture.md §4–§5](architecture.md)
+**Overlay** — a **zero-draw** deterministic transform of the cash-flow term (the earned-income bridge, tax, healthcare, accumulation inflow) fed into the same per-year update function as the spine; each reduces to the spine when off. → [architecture.md §4–§5](architecture.md)
 
 **PIA (Primary Insurance Amount)** — the Social Security benefit at FRA; the per-person SS input (entered monthly, stored annually). → [architecture.md §7.7](architecture.md)
+
+**PILOT-CLEARED** — see **Batched-oracle law**.
 
 **Presence-keyed** — byte-identity keyed on a construct's **absence** from params, not its zero value: a zero-valued-but-constructed accumulation run is deliberately *not* byte-identical (its working-year clamp is live). → [architecture.md §5](architecture.md), [decisions/accumulation-fuck-off-date.md](decisions/accumulation-fuck-off-date.md) §1
 
 **reduce-to-spine** — the core correctness invariant: every overlay, when **off**, reproduces the Trinity/Bengen-validated decumulation distribution **byte-identically** (same seed). The golden cases are never perturbed. → [architecture.md §5](architecture.md)
 
-**Recovery passphrase** — a **second user-chosen memorable passphrase** (PBKDF2-600k, same strength floor as the daily one; `firstSave` rejects recovery == daily) that wraps the DK independently of the daily passphrase; the surviving spouse's primary door back into the vault. Mandatory export at first save. Superseded the v1 system-minted BIP-39 12-word phrase (U8 rework, council 2026-06-30 — the phrase was DOA for a non-technical audience). → [architecture.md §7.3](architecture.md)
+**Recovery passphrase** — a **second user-chosen memorable passphrase** (PBKDF2-600k, same strength floor as the daily one; `firstSave` rejects recovery == daily) that wraps the DK independently of the daily passphrase; the surviving spouse's primary door back into the vault. Mandatory export at first save. Superseded the v1 system-minted BIP-39 12-word phrase (U8 rework, council 2026-06-30 — the phrase was DOA for a non-technical audience). The UI calls it the **recovery word** (`copy.ts` `recoveryHeading` / `recoveryLabel`); product.md R17 calls it the recovery credential. → [architecture.md §7.3](architecture.md)
+
+**Recovery word** — the UI's name for the **Recovery passphrase** (see it).
+
+**Register tiers (Tier 0–4)** — the open register's severity scale, by worst consequence: **Tier 0** calm-but-wrong (shipped code can answer wrong) · **Tier 1** the differentiator does not land · **Tier 2** what breaks on someone else's device · **Tier 3** Briggsy's call (taste, scope, one-way doors) · **Tier 4** hygiene (no user-visible wrong answer). → [backlog.md](backlog.md)
+
+**reVerifyEveryBuild** — a constants-entry flag for live, possibly-retroactive policy that CI re-verifies at every build: the ACA enhanced-subsidy entries (`pnpm verify:aca`), NC's state-tax record (`pnpm verify:state-tax`), and the Social Security spousal rate (a dated tripwire test). → [architecture.md §8](architecture.md)
 
 **RIB-LIM** — the Retirement-Insurance-Benefit limit that caps a Social Security survivor benefit. → [architecture.md §7.7](architecture.md)
 
@@ -110,7 +136,13 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **SLCSP** — the Second-Lowest-Cost Silver Plan benchmark premium; a **required user input** (ZIP/age-specific) that drives the ACA credit — never synthesized. → [architecture.md §7.2](architecture.md)
 
+**Solver-run fingerprint** — one pure identity string over every ranking-affecting input of a solve run: the whole built params (balances, budget, dates, people, overlay flags and every stream value), the ordered candidate roster, the ranking objective (goal + heir bracket), `seedA` and the selection tie-tolerance — `solverRunFingerprint` in `src/engine/validation/solverRunFingerprint.ts`. It binds the oracle-cleared token to the run it blessed, and a matching fingerprint is the first conjunct of the saved-recommendation re-entry gate. → [plans/4-recommendation.md → Unit 15](plans/4-recommendation.md#unit-15--solver-core)
+
 **Spine** — the Trinity/Bengen-validated deterministic decumulation core that every overlay reduces to. → [architecture.md §5](architecture.md)
+
+**Sticky rounding** — the session-only display hysteresis (`resolveStickyDisplay`, `src/store/memoryModel.ts`) that holds the shown x-of-10, outcome state and rounded $/month steady across small edits of an already-complete answer — only ever in the conservative direction (a reading falling onto an edge adopts the worse truth at once); the headline and state gate on the band-edge margin, the dollar on its own display-rounding-step margin. → [plans/3-controls.md](plans/3-controls.md) (U12)
+
+**Surplus pivot (the 10/10 clamp pivot)** — when survival is a given, the headline honestly switches to the chosen Tier-2 goal's metric, spoken as a **delta against today's plan** (*"keeps about $X more…"*), so the survival clamp never eats the solver's signal; see **Delta-as-hero**. The bald *"you're safe either way"* is vetoed and `copyGuard` bans it. → [product.md §6](product.md), [plans/4-recommendation.md → contract #6](plans/4-recommendation.md#the-eight-cross-cutting-contracts)
 
 **Survivor-spending ratio** — the factor scaling a survivor's spending after the first death (~75%, grounded to the Blanchett literature, directional-until-pinned). Rides the Tier-1 survival floor, so its dangerous direction (too low) is documented. → [plans/1-engine.md](plans/1-engine.md) (U1)
 
@@ -118,7 +150,9 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **Trinity study** — the safe-withdrawal validation anchor; the engine reproduces 37/39 cohorts (≈94.9% vs the published 95.1%, same failing cohorts). → [plans/1-engine.md](plans/1-engine.md) (U1), [research/engine-validation-and-tax.md](research/engine-validation-and-tax.md)
 
-**Two-pane** — the laptop composition that promotes the live answer to a persistent panel beside the questions (stacks on phone); the home for the U6 band / D2 surface. → [plans/2-first-answer.md](plans/2-first-answer.md) (D2)
+**Two-pane** — the laptop composition that promotes the live answer to a persistent panel beside the questions (stacks on phone); the home for the U6 band / D2 surface. → [plans/2-first-answer.md](plans/2-first-answer.md) (unit D2)
+
+**Unsourced sentinel** — the constants-table value for a figure the research names but has not valued: `unsourced()` (`src/engine/constants/types.ts`) builds an `Unsourced` whose `.value` **throws** — never a plausible in-range default (burned/062). → [architecture.md §8](architecture.md)
 
 **Vault** — the encrypted-at-rest local store (IndexedDB + AES-GCM under a PBKDF2-600k passphrase key); the trust layer that makes the at-rest promise provable. → [architecture.md §7.3](architecture.md)
 

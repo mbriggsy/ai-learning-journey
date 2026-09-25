@@ -19,10 +19,10 @@ refuted the premise: the note described a re-pricing that never happens.
 ## Root Cause
 
 `seniorBonus` (constants/tax.ts) carries `sunsetAfter: 2028` in its sourced metadata — but
-`seniorBonusFor(filing, count65, magi)` (taxCore.ts) has **no year parameter**, and a grep shows
-`sunsetAfter` is read by NOTHING in the tax math. The engine credits the 2025–2028-only bonus in
-every sim year, so the "crossed" recompute is byte-identical to the saved answer while the note
-claims the expired deduction was priced out — calm-but-wrong in the OPTIMISTIC direction. The
+`seniorBonusFor(filing, count65, magi)` (taxCore.ts) had **no year parameter**, and a grep showed
+`sunsetAfter` was read by NOTHING in the tax math. The engine credited the 2025–2028-only bonus in
+every sim year, so the "crossed" recompute was byte-identical to the saved answer while the note
+claimed the expired deduction was priced out — calm-but-wrong in the OPTIMISTIC direction. The
 premise survived every stage because each stage inherited it from the metadata's existence: the
 marker in the constants file *looks like* engine behavior. Insight-044's shape ("a comment is a
 claim about the gate, not a fact") at the constants layer: **a metadata field nothing consumes
@@ -34,9 +34,13 @@ The clock + copy were REMOVED (dated supersession in the U13 build spec) — und
 engine the crossing is still not drift (the save already priced the calendar-deterministic
 sunset), so the note has no honest content in either world. The engine sunset unit was filed
 REQUIRED (thread the sim-year calendar through `deductionStack`/`seniorBonusFor` + the
-magiLandscape rails, DND-012 external fixtures), and `seniorBonusSunset.tripwire.test.ts` fails
-every build from 2028-01-01 until it ships — the `reVerifyEveryBuild` pattern applied to a dated
-provision, so the sunset's final priced year cannot build with the gap open.
+magiLandscape rails, DND-012 external fixtures), and `seniorBonusSunset.tripwire.test.ts` was
+armed to fail every build from 2028-01-01 until it shipped — the `reVerifyEveryBuild` pattern
+applied to a dated provision, so the sunset's final priced year cannot build with the gap open.
+
+**Closed the same day (2026-07-09, `9c9eb6ad` — the sunset unit; insight 076 is its review fold):**
+`seniorBonusFor` now takes `calendarYear` and returns 0 outside [`effectiveFrom` .. `sunsetAfter`] =
+[2025 .. 2028], so `sunsetAfter` IS consumed; the tripwire was deleted in that commit.
 
 ## Key Insight
 
@@ -56,7 +60,7 @@ the flag fires, not that the claim is true).
 - The healthcare vintage clocks: each names a rulebook the overlay genuinely reads — the review
   held them up as the correct contrast (the tax stamp got a content-digest pin for the same
   reason).
-- Any Act-4 recommendation-staleness copy (4-recommendation.md §229): every "what changed" claim
+- Any Act-4 recommendation-staleness copy ([4-recommendation.md, Unit 17](../plans/4-recommendation.md#unit-17--stale-saved-recommendation-handling)): every "what changed" claim
   must trace to a consumer, not a marker.
 - The class of "documented proxy" clocks (Q4 acaVerifiedOn): the proxy's documentation names what
   it does NOT detect — the honest inverse of this failure.

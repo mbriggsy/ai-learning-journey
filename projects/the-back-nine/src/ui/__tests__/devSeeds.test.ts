@@ -1360,7 +1360,7 @@ describe('the arrived aged plant (the first live route to the hero\'s dateInYear
     ).toBeLessThan(depth)
     // NOT an incidental observation: the floor crowning at 0 is exactly why this plant lights ONE
     // arrived arm and not two. `floorLineText` short-circuits offset 0 BEFORE the three-way split
-    // (FuckOffDate.tsx:228, mirroring heroLead's free-today precedence), so `dateFloorCoveredPast`
+    // (FuckOffDate.tsx:229, mirroring heroLead's free-today precedence), so `dateFloorCoveredPast`
     // cannot fire here — its live route is and remains `?vault=datestale`. Arm 3 proves the
     // consequence on the renderer rather than leaving it as a comment.
     expect(out.floor.offsetYears, 'the floor crowns at 0 — the plain covered line, never the Past arm').toBe(0)

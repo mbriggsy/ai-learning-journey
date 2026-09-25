@@ -4,7 +4,7 @@
  * Every dated tax/health figure lives in ONE year-keyed module (this directory) as
  * a `Sourced<T>` — carrying its citation and whether it is still `directional`
  * (not yet pinned to its IRS/CMS/HHS primary). Plan, engine overlays, tests, and
- * the copyGuard allowlist all READ this module; a constant is never re-typed
+ * the U14 consumed-constants audit all READ this module; a constant is never re-typed
  * elsewhere (the single-source grep test enforces it).
  *
  * Every tax figure is now SOURCED (the Joint Life & Last Survivor grid — the last gap —

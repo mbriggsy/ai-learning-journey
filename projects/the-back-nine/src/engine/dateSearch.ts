@@ -502,7 +502,7 @@ export async function runDateSearch(
   // the crowned offset is the decided cost (2026-06-28), not fattening every candidate.
   //
   // P3·U9 (council 2026-07-02) ruled the band crowns off the FLOOR track. ⚑ OVERTURNED by the
-  // council of 2026-07-30 (docs/council-log.md top row) on field evidence Q3 could not have had:
+  // council of 2026-07-30 (docs/council-log.md, its 2026-07-30 row) on field evidence Q3 could not have had:
   // Q3 justified the floor-crowned band on the grounds that a track-naming note would keep the
   // range and the hero claim from silently disagreeing. The note could not do that job (it named a
   // DATE, never a SPENDING LEVEL), and the U17 §S6 cold read caught the result as a calm-but-wrong

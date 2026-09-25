@@ -8,7 +8,7 @@ status: shipped
 
 > The as-built record of U13. It supersedes the U13 plan section (`3-controls.md`, *Unit 13 —
 > Returning-user re-entry + per-surface staleness*) wherever they conflict — each supersession is dated
-> and grounded in the council verdict (`docs/council-log.md` top row).
+> and grounded in the council verdict (`docs/council-log.md`'s 2026-07-09 "U13 pre-build ratification (re-entry + per-surface staleness)" row).
 > The re-derive spine was not built here (it shipped in U8 — `IntakeApp.tsx` hydrate → recompute); U13 is the
 > staleness layer + the ReEntry confirm + the stamps substrate. Per-unit status lives in the roadmap's
 > You-Are-Here table (`docs/roadmap.md`), never here.
@@ -29,7 +29,9 @@ status: shipped
 ## Phase A — the persisted substrate (stamps + producers)
 
 All additive-within-v3 (NO schemaVersion bump — the plan's original "single schemaVersion bump" language was
-retired by the U10/U11 supersession precedent; the next real bump is U17's). Every new field landed in ONE
+retired by the U10/U11 supersession precedent; the later Act-4 fields — U15's `chosenGoal?` and U17's
+`savedRecommendation?` — landed additive-within-v3 too, so no bump has shipped and `schemaVersion` is
+still 3; see the U17 build spec's ruling 2). Every new field landed in ONE
 atomic change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` + the draft shape +
 `DRAFT_DISPOSITIONS` entry (R7 compile gate) + codec tolerant-reader + planted-fail codec arms (burned/063).
 

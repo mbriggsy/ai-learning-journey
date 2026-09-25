@@ -31,7 +31,7 @@ A user can hand the engine a flat, already-claim-adjusted annual benefit. A **de
 
 The sub-engine is **not a new engine**. It is a pure function that populates the existing per-person benefit slot; the cash seam, the §86 provisional-income overlay, and the fuck-off-date sweep are all downstream and structurally unchanged.
 
-The survivor **computation** is in scope; the survivor **claim optimizer** is not — that is a P4 lever (Scope boundaries). We compute the right survivor number and hand the *timing* optimization to the recommend-second engine.
+The survivor **computation** is in scope; the survivor **claim optimizer** is not — SS-claiming-age is a chapter-two lever ([product.md §5](../product.md#5-the-lever-set); Scope boundaries), and Act 4 closed 2026-07-27 without it. We compute the right survivor number and leave the *timing* optimization to that chapter-two claim-age optimizer.
 
 ---
 
@@ -41,7 +41,7 @@ The survivor **computation** is in scope; the survivor **claim optimizer** is no
 |---|---|
 | Compute spousal **automatically**; the input is **PIA + claim age** per person | §1, §4, §9 |
 | Spousal is the **Method C excess** (own + reduced-excess), never `max()` | §4 |
-| Survivor §202 **computation** folded in; survivor **optimizer** deferred to P4 | §6, Scope boundaries |
+| Survivor §202 **computation** folded in; survivor **optimizer** deferred to chapter two | §6, Scope boundaries |
 | Intake asks the **at-FRA monthly figure** in plain language (never the word "PIA") and echoes the derived FRA | §9 |
 | The sub-engine is **pure, pre-loop**; PIA=0 ⇒ byte-identical to the prior spine | §7, §12 |
 | One **statutory** `Sourced` constants module; every golden hand-derived from POMS, never engine-derived | §2, §11 |
@@ -82,7 +82,7 @@ Every value is read from this module; no factor is re-typed in the sub-engine, a
 
 **How the flag is enforced (installed 2026-08-01).** `src/engine/constants/__tests__/spousalRate.reverify.tripwire.test.ts` is a dated wall-clock arm that reds one year after its recorded re-verify date, riding `pnpm test` (already in CI) rather than a bespoke `verify:ss` script. Its premise is the flag itself, so removing the flag reds the tripwire and forces a conscious retirement. The census that installed it found `spousalRate` was the **only** `reVerifyEveryBuild` entry in `src/engine/constants/` with no last-verified record, no CI gate and no runtime clause — the flag was inert prose.
 
-⚠️ **What the arm does: forces a HUMAN re-verify at least annually. What it cannot do: detect an enactment at build time** — nothing available to us can. That wording was once written into this record as if it were a shipped mechanism; do not reintroduce it. (The `spousalRate` entry's own `note` in `socialSecurity.ts` still carries the stale *"a `verify:ss` CI gate to catch enactment at build time is a future hardening (TODO)"* line — that TODO is settled against, twice over: the tripwire is the enforcement, and no gate can detect an enactment.)
+⚠️ **What the arm does: forces a HUMAN re-verify at least annually. What it cannot do: detect an enactment at build time** — nothing available to us can. That wording was once written into this record as if it were a shipped mechanism; do not reintroduce it. (The `spousalRate` entry's `note` in `socialSecurity.ts` once carried the line *"a `verify:ss` CI gate to catch enactment at build time is a future hardening (TODO)"*; the 2026-09-06 as-built rewrite replaced it, and the note now points at this tripwire and records the `verify:ss` script as considered and rejected. Do not restore that TODO: it is settled against twice over. The tripwire is the enforcement, and no gate can detect an enactment.)
 
 **The gate is deliberately CI-only, not CI + a runtime withhold** (the shape `acaEnhancedSubsidyStatus` uses). `consumedConstants.ts` pulls the whole `socialSecurity.*` family whenever any person has `pia > 0` — essentially every household — where ACA's clause fires only for pre-65 Marketplace runs and NC's for one state. A stale-stamp withhold would refuse the recommendation to *everyone* over a statute nobody had touched, which is alarm-when-fine at maximum scale and its own breach of the cardinal rule. A runtime clause remains fully additive if that judgement ever changes.
 
@@ -118,7 +118,7 @@ When the first death occurs, the survivor's SS each year = **`max(ownStream, sur
 - **RIB-LIM:** if the deceased had claimed reduced RIB before death, that base is capped at the **larger of** the `ribLim` floor percentage of the death PIA or the deceased's actual reduced benefit — a larger-of, so the percentage is a **floor within the cap, never a flat haircut** (the arithmetic and the percentage live in [docs/architecture.md §7.7](../architecture.md) and `ribLim`).
 - **Age reduction — LOCK-FLAT (cardinal-rule-load-bearing):** the survivor stream starts at `max(survivor age 60, first-death year)`; its reduction factor is **locked at the survivor's age at that start offset and held FLAT for the rest of the horizon.** It does **not** ramp upward toward 100% as the survivor ages. The graded schedule — the maximum reduction at 60 rising to 100% at survivor-FRA — is over the *claim age* (a survivor who *claims later* gets a higher factor), **not** a post-claim age-ramp. A per-year ramp would optimistically overstate guaranteed income on exactly the early-widowhood paths this unit exists to fix.
 
-**The claim-timing default:** the survivor claims the survivor benefit **as soon as eligible** (`max(60, death)`), locks the reduced factor, and receives `max(own, survivor)` each year. This is one-signed conservative **only under the lock-flat reading above**: it closes the early-widowhood gap while leaving the survivor's *optimal two-stage upside* (survivor-first → own-at-70, the deemed-filing-exempt lever) on the table for **P4's optimizer** — never an optimistic assumption baked in here. Reduce-to-spine still holds (no death ⇒ this code never runs ⇒ byte-identical — §7/§12).
+**The claim-timing default:** the survivor claims the survivor benefit **as soon as eligible** (`max(60, death)`), locks the reduced factor, and receives `max(own, survivor)` each year. This is one-signed conservative **only under the lock-flat reading above**: it closes the early-widowhood gap while leaving the survivor's *optimal two-stage upside* (survivor-first → own-at-70, the deemed-filing-exempt lever) on the table for **the chapter-two claim-age optimizer** ([product.md §5](../product.md#5-the-lever-set)) — never an optimistic assumption baked in here. Reduce-to-spine still holds (no death ⇒ this code never runs ⇒ byte-identical — §7/§12).
 
 #### §6a — The household survivor-spending ratio (~75%, Blanchett)
 
@@ -209,8 +209,8 @@ Restated as the two things that must never regress: the survivor reduction facto
 
 **In scope (the correct *computation*):** own early-reduction / delayed-credit; the Method C spousal excess (two reduction schedules, the worker-must-be-entitled gate, the excess floor); deemed-filing collapse to one claim-age per person; survivor §202 (the age-reduced lock-flat benefit, the deceased's DRC flow-through, the RIB-LIM cap).
 
-**Deferred to P4 (the recommend-second engine), explicitly NOT here:**
-- **The survivor two-stage claim *optimizer*.** Survivors are exempt from deemed filing, so an optimal widow(er) chooses *when* to switch between survivor-first→own-at-70 and own-first→survivor-later. That is an **active claim-age optimizer**, and the shipped solver still optimizes only sequencing and conversion — it reads each claim age verbatim and never varies one, so the lever would have nothing to pull it. This record ships a defensible fixed claim-timing default (§6) and hands the optimization to P4.
+**Deferred, explicitly NOT here** (the claim optimizer is chapter two — [product.md §5](../product.md#5-the-lever-set); Act 4 closed 2026-07-27 without it; the other three are named simplifications with no scheduled home):
+- **The survivor two-stage claim *optimizer*.** Survivors are exempt from deemed filing, so an optimal widow(er) chooses *when* to switch between survivor-first→own-at-70 and own-first→survivor-later. That is an **active claim-age optimizer**, and the shipped solver still optimizes only sequencing and conversion — it reads each claim age verbatim and never varies one, so the lever would have nothing to pull it. This record ships a defensible fixed claim-timing default (§6) and hands the optimization to chapter two.
 - **The accumulation-state PIA recompute / year-of-death AIME recomputation** (RS 00615.320 "fictitious life PIA") — a second-order effect; the entered PIA is carried as the real figure (a named, bounded simplification).
 - **Divorced-spouse / child-in-care / DIB branches** — out of the married-couple front door (the worker-must-have-filed prerequisite must **not** be generalized to a divorced spouse if ever added — POMS GN 00204.035).
 - **The family-maximum (150–188% of PIA)** — rarely binds for a childless 2-person couple; named, not modeled.

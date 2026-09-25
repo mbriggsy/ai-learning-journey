@@ -534,7 +534,7 @@ export const copy = {
   // The Kitces action-first rider — GATED (twoTier.ts) on the floor's own state holding: a claim
   // that trimming suffices is only honest when the essentials actually clear.
   floorReadoutTrimNote: 'If trimming were ever needed, it would start with the extras — not the basics.',
-  // --- U7 confidence band chrome (the on-demand "show me the range" drawer — BandLabels +
+  // --- U7 confidence band chrome (the inline "show me the range" drawer card — BandLabels +
   //     BandPanelChrome for ConfidenceBandPanel). BAND-SCOPED keys: chart chrome describing the
   //     fan's geometry, not a verdict claim, so the universal gates apply (as for factual intake
   //     copy). Percentile counts are spelled out, never digits. ---

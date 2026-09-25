@@ -18,7 +18,7 @@ status: shipped
 > came back INTRACTABLE, so the council's Intractable exit shipped instead (the mean ranks;
 > the skew is disclosed).
 > **Precedence:** this spec supersedes `docs/plans/4-recommendation.md`'s Unit-15 section
-> where they conflict; elsewhere the plan body + its dated supersession block stand.
+> where they conflict; elsewhere the plan body + its dated reconciliation-rulings block stand.
 > One reviewable commit, no riders (insight 051). **U15 shipped NO user-facing surface**
 > (the GoalPicker + every rendered beat are U16's) — no Caddie walk; the harness was the
 > reviewer. The Q6 store/worker touches are wiring, not chrome: every user-READ state they
@@ -231,9 +231,11 @@ being born (insight 020's shape). Both shapes carry a `fingerprint` field today
   silently-shrunken space. That pre-sourcing posture is exercised by test through the pure
   `_evaluateMedicareTrendClause` seam, and a re-wire tripwire proves the partition still reads
   the clause end-to-end. What remains outstanding for a conversion recommendation is the
-  dollar-axis demotion margin (§S4), not the trend.
+  dollar-axis demotion margin (§S4), not the trend — Briggsy's open hold-vs-calibrate call,
+  tracked in the register (Tier 3) as
+  *The well-funded leave-more hold — ship the hold (~1 in 8 well-funded leave-more couples get a hold, not an answer) or calibrate the conversion-near-tie demotion width on the dollar axes*.
 - **The goal precondition:** `chosenGoal` rides the scenario model —
-  **additive-optional within schemaVersion 3, NO bump** (the runway supersession already ruled
+  **additive-optional within schemaVersion 3, NO bump** (the plan's reconciliation ruling 3 already ruled
   the bump narrative counterfactual) — and the explicit **unset sentinel is ABSENCE**
   (burned/062): an unchosen goal is the field undefined, never a plausible default. The solve
   is never dispatched while unset (`memoryModel`'s `goal-unset` blocked arm), and no
@@ -343,7 +345,7 @@ being born (insight 020's shape). Both shapes carry a `fingerprint` field today
 
 **profile.ts (`src/engine/solver/profile.ts`, NEW) — PURE, injected `now: () => number`** (the seed-injection idiom; `performance`/`Date` stay lint-banned in `src/engine/**`). `profileSolve(request, now)` times one full `solveWithMint` against a single-`simulate` baseline; refuses a non-finite/backwards clock (a lying clock is a measurement fault, never a datapoint) and an indeterminate/infeasible baseline (validation cost is not compute cost); surfaces `payloadKind` so a short-circuited solve (token-withheld / mint-failed / aborted) can NEVER masquerade as a measured full solve (the `outcomeKind` discipline). The caller-side runner **`scripts/profile-solver.ts`** (OUTSIDE `src/engine`, supplies `() => performance.now()`, NOT a CI gate) records the first datapoint.
 
-**THE FIRST PROFILE DATAPOINT (dev-laptop, NOT the reference device — the reference-device measurement is the WASM trigger + the knob-pin event):** worst-case shape = 16,000 paths × 45 yr, an 8-candidate roster (3 sequencing + a 5-amount cliff-anchored conversion grid), tax overlay (IRMAA regime), the m=5 held-out B-family, both seed-sets — a `recommended` (full-solve) measurement. **This world was healthcare-BLIND and the review fold re-measured it a day later (2026-07-19): single simulate 1.57 s, full solve 72.4 s, ratio 45.9× — those are the numbers to carry.** The under-measured originals, kept for the shape they proved:
+**THE FIRST PROFILE DATAPOINT (dev-laptop, NOT the reference device — the reference-device measurement is the WASM trigger + the knob-pin event):** ⚑ 2026-07-22: U16 §S0.1 fixed the reference device as this same laptop, so the re-measured 72.4 s below IS the reference-device reading (the WASM trigger); the knob pin was U16's separate rank-stability calibration. worst-case shape = 16,000 paths × 45 yr, an 8-candidate roster (3 sequencing + a 5-amount cliff-anchored conversion grid), tax overlay (IRMAA regime), the m=5 held-out B-family, both seed-sets — a `recommended` (full-solve) measurement. **This world was healthcare-BLIND and the review fold re-measured it a day later (2026-07-19): single simulate 1.57 s, full solve 72.4 s, ratio 45.9× — those are the numbers to carry.** The under-measured originals, kept for the shape they proved:
 - single `simulate` (16k × 45, overlay) ≈ **1.29 s**
 - full `solveWithMint` ≈ **48.1 s**
 - ratio ≈ **37.4×** a single simulate — **LINEAR in the candidate count**, matching the stated budget shape (≈ 2·|roster| + 2·|rankable| + 2·m + O(1) = 16 + 6 + 10 + probe ≈ 37). No super-linear regression.
@@ -435,9 +437,13 @@ committed recommendation survives an input edit un-invalidated) + the single-wor
 (a 72 s solve starves the first-beat lane) = U16's router/invalidation charter, named landmines
 there. **The staleness half was BUILT** — U16's stale card plus U17's `savedRecommendation`
 supersession causes (`inputs-changed` / `inputs-unavailable` / `solver-changed` / `rules-changed`),
-and a ranking-affecting edit during a pending solve demotes it to `stale`. The lane still runs on
-ONE worker (`engineClient.ts`). The
-unknown-`chosenGoal` vault-wide decode refusal = the 3rd-goal unit's forward-compat decision; the
+and a ranking-affecting edit during a pending solve demotes it to `stale`. The monopolization half
+was answered 2026-09-03 (`2eb0eebd`) by the SEQUENTIAL worker reset — `createResettableEngine`
+(`engineClient.ts`) terminates and respawns the one worker on a fingerprint-moving edit during a
+pending solve (U16 spec §S1) — so the lane still runs on ONE worker, never two, and a second worker
+stays deferred-with-trigger. The
+unknown-`chosenGoal` vault-wide decode refusal = the 3rd-goal unit's forward-compat decision
+(carried on the register's *The third goal — "live bigger now" doesn't exist*); the
 skew-disclosure percentile convention single-sources against `confidence.ts` when U16 renders both.
 
 **Gates (all green, coordinator-verified):** 2696 tests / 143 files; typecheck + lint clean;

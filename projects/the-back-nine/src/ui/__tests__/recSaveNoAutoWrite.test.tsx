@@ -20,7 +20,7 @@ import { resolve } from 'node:path'
  * `@ui/IntakeApp` mount there would force a rename plus a docblock that silently changes the runtime of
  * that file's TWO existing arms — including its `indexedDB.databases()` probe and its macrotask flush,
  * both load-bearing. *(Corrected 2026-07-31: this said "nine existing arms". `solveNoAutoSave.test.ts`
- * has two `it(`s — a planted control and one sweep. The nine counted FILES in `src/store/__tests__/`,
+ * had two `it(`s then — a planted control and one sweep; a measured timing control landed later the same day (edd4cf91), making three. The nine counted FILES in `src/store/__tests__/`,
  * via `act4-u17-s5-execution-plan.md:128`, and the miscount made that file's coverage look ~4× deeper
  * than it is. Its macrotask flush is ONE turn, which is its own filed defect — see TODO.md.)*
  *

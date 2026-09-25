@@ -33,6 +33,18 @@ gating only the in-memory installs on the generation. Same rule in `setNewPassph
 a wrap re-mint that committed reports ok (the passphrase DID change on disk) even if a
 lock cancelled the in-memory credential swap.
 
+⚑ SUPERSEDED AS BUILT (U8 recovery-model rework, `e58cd6d0`, 2026-06-30): the system-minted
+12-word phrase is gone. Both credentials are USER-CHOSEN (`firstSave(scenario, passphrase,
+recoveryPassphrase)`). The op still mints the data key, but no CREDENTIAL is minted inside it:
+both wraps of that key are keyed by secrets the caller already holds, so nothing can be
+stranded. `firstSave` now returns `{ ok: true }` once the write commits (`FirstSaveResult`,
+`src/store/session.ts`). The point-of-no-return rule still governs both ops: post-commit,
+`firstSave` and `setNewPassphrase` report ok and gate only the in-memory install on the
+generation. The phrase-display step under Also Applies To no longer exists. The rule's live
+application is the U8 council's KEEP BOTH WRAPS ON-DEVICE ruling, which rejected an
+export-only recovery wrap because it would resurrect this hazard (`docs/council-log.md`, the
+2026-06-30 "U8 recovery-model rework" row).
+
 ## Key Insight
 
 Place the point-of-no-return consciously: every cancellable async op that performs a
@@ -46,7 +58,8 @@ reporting obligation, never to the cancellable remainder.
 
 - The P2 first-save UI flow: the mandatory phrase-display/export step must consume the
   result even if the session locked mid-save (the phrase rides the result, not the
-  session state).
+  session state). ⚑ Gone as built since U8 (`e58cd6d0`): no phrase is minted; see the ⚑
+  line under Fix.
 - Any future server-ish allocation (e.g., a cloud-backup upload token): cancellation
   after the allocation must still surface the allocated handle.
 - Restore: the new-passphrase wrap commits atomically WITH the vault, so restore has no

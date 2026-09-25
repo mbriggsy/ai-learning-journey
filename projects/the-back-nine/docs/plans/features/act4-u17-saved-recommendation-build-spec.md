@@ -3,16 +3,16 @@ title: U17 — Stale-saved-recommendation handling + the aged-surface coupling (
 doc-type: build-spec
 date: 2026-07-24
 status: shipped
-note: RATIFIED — council wf_f4ced3c8-2f6, 8/10 high, hawk veto fired + HONORED into the shape; U17 closed at S6 2026-08-02 (S7 deferred by ruling)
+note: RATIFIED — council wf_f4ced3c8-2f6, 8/10 high, hawk veto fired + HONORED into the shape; U17 closed at S6 2026-07-27 (S7 deferred by ruling)
 supersedes: plan 4's §U17 prose wherever they conflict
 ---
 
 # U17 — The Saved Recommendation + The Aged Surface (build spec)
 
 **This document is the shape U17 was built to**, and it records what shipped. It supersedes
-`docs/plans/4-recommendation.md` §U17 where they conflict. The verdict it executes is the top row of
-`docs/council-log.md` (2026-07-24, wf_f4ced3c8-2f6, 23 agents, zero crashes, confidence 8/10 high,
-`action: execute`). Stages S0–S6 shipped; U17 closed at S6 on 2026-08-02 and **S7 was deferred by
+`docs/plans/4-recommendation.md` §U17 where they conflict. The verdict it executes is the 2026-07-24 "U17 PRE-BUILD — stale-saved-recommendation handling" row of
+`docs/council-log.md` (wf_f4ced3c8-2f6, 23 agents, zero crashes, confidence 8/10 high,
+`action: execute`). Stages S0–S6 shipped; U17 closed at S6 on 2026-07-27 and **S7 was deferred by
 Briggsy's ruling** (see §S7). Per-unit build status is the roadmap's You-Are-Here table, which is the
 authority — it is never re-typed here.
 
@@ -57,7 +57,7 @@ Before this stage the "has this offset already passed?" test was **re-typed** in
 `heroTrack.offsetYears < elapsedYears` in `FuckOffDate.tsx`. Neither compare exists any more. S0.1 exported
 **one** predicate, strict `planOffset < elapsed` — `offsetHasPassed`, defined once at `curveMarks.ts:107` —
 and every arrived question in the codebase now calls it: the ladder filter (`curveMarks.ts:143`), the hero
-crown-arrived withdraw and the floor arm (`FuckOffDate.tsx:199`, `:234`, `:369`), the band's Roth row
+crown-arrived withdraw and the floor arm (`FuckOffDate.tsx:200`, `:235`, `:370`), the band's Roth row
 (`bandAnnotations.ts:133`), the work-stops withdraw (`bandAnnotations.ts:341`), `dateTradeoff.ts:53`'s
 offer filter — **a third re-typing this spec had not enumerated**, found at build — and §S1's write-side
 refusal (`RothLever.tsx:53`).
@@ -203,9 +203,9 @@ literal tense regexes pin it now. Three mutants red → reverted.
    **RENDERED re-confirm control** (insight 100 — a copy promise is a UI contract). The residual is
    disclosed as **UNDETERMINED, never "conservative."** Both ship as `.band-premise` (`result.css:229`,
    one family home) under BOTH routes' band panes — `ConfidenceStatement.tsx:400-407` and
-   `FuckOffDate.tsx:486-496`; the OLD-SAVE arm names the `agedBalancesYearFor` vintage and the re-saver
+   `FuckOffDate.tsx:492-507`; the OLD-SAVE arm names the `agedBalancesYearFor` vintage and the re-saver
    reads the build-anchor arm. **No premise line ⇒ no aged fan, and that law is STRUCTURAL:** the resolved
-   memo withdraws the aged fan when no `onReconfirm` route exists (`ConfidenceStatement.tsx:272`, and its
+   memo withdraws the aged fan when no `onReconfirm` route exists (`ConfidenceStatement.tsx:273`, and its
    twin in `FuckOffDate`), so an aged projection with an unstated premise is unrepresentable. `onReconfirm`
    routes to the guided re-walk (`onReview`).
 5. **On a split, the crown names WHICH date** at the marker — `bandClockWorkStopsSplitLabel`,
@@ -215,7 +215,7 @@ literal tense regexes pin it now. Three mutants red → reverted.
    exactly-this-year speaks "about now" (`dateInYearsNow` / `dateFloorCoveredNow` — the old text kept at
    its one true boundary, agreeing with the ladder's "stopping today" crown); future speaks the anchored
    count. The old non-strict `<= 0` had collapsed "this year" and "three years gone" into one sentence.
-   The three-way branch reads at `FuckOffDate.tsx:199-202` (hero) and `:234-238` (floor).
+   The three-way branch reads at `FuckOffDate.tsx:200-203` (hero) and `:235-239` (floor).
 
 **One clause of arm 5 was superseded after U17 closed, and the reason is worth keeping.** Split-ness was
 originally derived from
@@ -263,7 +263,7 @@ multi-minute — U16 measured 45.9× a single simulate). **Never auto-re-solve.*
 
 ### Q5 — what the record carries
 
-Identifying triple (goal + candidate + fingerprint) **+ `SOLVER_CODE_VERSION` + `savedAt` + an ENUMERATED
+Identifying triple (goal + candidate + fingerprint) **+ `SOLVER_CODE_VERSION` + `mintedAt` (the ruling named `savedAt`; the build stamps the record's own epoch-day instead, because `scenario.savedAt` re-mints on every re-save and would reset the recommendation's age — `SavedRecommendationV3`, `src/shared/model.ts`) + an ENUMERATED
 era-stamped remembered verdict**, rendered **only inside the record card** (never hoisted into the live
 headline, where it would read as current).
 
@@ -355,7 +355,7 @@ before any code was written (v1 five P0s, v2 two P0s, four lenses all `holds=fal
 
 **The survivor case was a hard constraint**, and it is what shaped the refusal set: the recovery-unlocked
 session cannot persist, and a gesture whose commit cannot persist is a lie. **`writable()` is not the seam**
-— it is a module-PRIVATE closure (`session.ts:304`) absent from the `VaultSession` interface, so the UI
+— it is a module-PRIVATE closure (`session.ts:305`) absent from the `VaultSession` interface, so the UI
 cannot call it, and `save()`'s `{ ok:false, reason:'not-writable' }` (`session.ts:597`) is a last-resort
 backstop rather than a gate. The two non-writable states are detected separately:
 
@@ -386,11 +386,11 @@ claim a completed save, and it is `recommendSaveSavedBadge`.
 **Key PREFIX picks the copyGuard gates, and that is why these two families exist as they do.**
 `staleness*` and `reentry*` are hedge-, verdict- AND control-EXEMPT by documented law — the weakest net in
 the catalog — so a new warning register needs its own explicit guard arm. The arms live in the TEST file
-(`copyGuard.test.ts`: the `staleness*` register at `:226-298`, the S5 families at `:318-362`), **not** in
+(`copyGuard.test.ts`: the `staleness*` register at `:229-301`, the S5 families at `:321-430`), **not** in
 `copyGuard.ts`: there is nothing named `staleness`, `reentry` or `recommendRecord` in the gate SOURCE at
 all, so grepping `copyGuard.ts` for those returns zero hits and must never be read as "already handled." The
 lists a key is measured against are `VERDICT_KEY_PREFIXES` (`copyGuard.ts:63-65`) and
-`CONTROL_KEY_PREFIXES` (`:109-123`) — and `recommendSave*`/`recommendRecord*` fall under the `recommend`
+`CONTROL_KEY_PREFIXES` (`:113-127`) — and `recommendSave*`/`recommendRecord*` fall under the `recommend`
 verdict prefix, unlike `staleness*`, so they clear the scoped gates rather than being exempt from them.
 
 **The four mint obligations**, all discharged in `src/store/savedRecommendationMint.ts`:
@@ -416,7 +416,7 @@ load-bearing.**
   trichotomy wants, and explicitly bans a re-typed subset. But that did not mean "no seam work here": both
   were private closures inside `createMemoryModel` and **neither was on the returned surface**, so the
   stage's seam work was **EXPOSING `currentDraftFingerprint()` on `MemoryModel`** (`memoryModel.ts:402`,
-  returned at `:942`, derived at `:668`) — not re-deriving it. The committed `SolveAnswer.fingerprint` is
+  returned at `:948`, derived at `:674`) — not re-deriving it. The committed `SolveAnswer.fingerprint` is
   the MINT basis, *not* the trichotomy's fresh fingerprint.
 - **The mint is NOT independent of the plan-save machine.** The record participates in the dirty/clean
   compare (`resultSave.test.ts` pins it by name), so it had to be sequenced against it. But **"a mint
@@ -465,13 +465,13 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   a new producer of persisted state, and the engine's fail-loud gates are part of its consumer chain. Age
   only inside the domain the engine prices. The probe settled the plant as `base: 'dip'`, aging depth 6
   (`ARRIVED_PLAN_YEARS` at `devSeeds.ts:1352`, registry entry `:1688`, doctor `doctorArrivedVault`
-  at `:1332`).
+  at `:1399`).
 - **The engine-acceptance pin ships:** hydrate → `buildSpineParams` → `validateParams` accepts → the run
   resolves to a **real** `outcomeState`, never the R19 indeterminate. It was modelled on the `statestale`
   arm at `devSeeds.test.ts:664-688`, whose rationale comment is `:615-625`.
 - **Two corrections to the probe that specced this plant**, both caught by opening source rather than
   trusting the filing. (1) It lights **ONE** arrived arm, not two: the floor crowns at 0 and `floorLineText`
-  short-circuits offset 0 before the three-way split (`FuckOffDate.tsx:228`), so `dateFloorCoveredPast`
+  short-circuits offset 0 before the three-way split (`FuckOffDate.tsx:229`), so `dateFloorCoveredPast`
   never fires here and keeps `?vault=datestale` as its only live route. (2) Aging `startCalendarYear` alone
   breaks the documented `currentAge === startCalendarYear − birthYear` model invariant (`model.ts:98`) and
   forks the engine's two birth-year reads, so `doctorArrivedVault` ages `birthYear` in step (the
@@ -491,7 +491,7 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   defect**: the doctored build year forks the derived birth year across the RMD band edge, forcing the
   household into RMDs two years early. It is pinned as found and filed.
 - **Both seeds were walked** (`datearrived` plus the existing aged plant) in the Caddie walk, and
-  `datearrived` joined the door walk (`e2e/caddie-walk.spec.ts:972-997`) — without that allowlist entry the
+  `datearrived` joined the door walk (`e2e/caddie-walk.spec.ts:1012-1037`) — without that allowlist entry the
   one plant this stage exists to cold-read would have been chaired on its landing alone.
 - **The walk hard-flagged all six faces and NOTHING shipped from it** (`docs/caddie/cold-read-log.md`,
   2026-07-27) — three carrying **calm-but-wrong BLOCKERS**, the class the batched-oracle grant has never
@@ -506,12 +506,12 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   Card 1's two-odds collision remains open, as does the OTHER half of Cards 6–7 — naming the strategy on
   the holds face, Briggsy's own ruling, carried in the register as "The saved-record card does not name
   the strategy".
-- **Filed from the walk:** the arrived-walk's state-tax blindness.
+- **Owed from the walk, and not filed until 2026-09-25 (from the 2026-09-24 doc audit):** the arrived-walk's state-tax blindness. `?vault=datearrived` is stateless by construction (`doctorArrivedVault` refuses a priced-state base, `devSeeds.ts:1400-1407`), so no walk has read the arrived face on a priced state. It is carried in `docs/backlog.md` under "The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed".
 - **The aged band's x-axis has its first real-browser arm.** Before S6 no fit arm asserted it — the aged
   axis appeared nowhere in `e2e/`, so §S0's rename had shipped on unit arms alone. `?vault=datearrived` is
-  now driven at `e2e/vertical-fit.spec.ts:1600-1704`, asserting that the year-0 endpoint names the BUILD
-  year (`'Plan built'`, `:1607-1612`) and that no named marker renders left of Today — neither the plain
-  label nor the split one, since the array picks between them (`:1616-1626`). Both are mutation-proven, and
+  now driven at `e2e/vertical-fit.spec.ts:2094-2198`, asserting that the year-0 endpoint names the BUILD
+  year (`'Plan built'`, `:2159-2162`) and that no named marker renders left of Today — neither the plain
+  label nor the split one, since the array picks between them (`:2171-2178`). Both are mutation-proven, and
   the withdrawal mutant draws
   "Essentials date" to the LEFT of "Today" — the exact stumble §S2's hawk veto killed.
 - **The saved recommendation took its first trip through real WebCrypto and IndexedDB** here.
@@ -596,7 +596,7 @@ review those as their own unit.
 
 **Who:** red team, conceded by honesty-hawk, architect, craftsman and fiduciary-advisor; **opposed** by the
 security engineer on survivor-stranding grounds — `writable()` is false for the recovery-unlocked session
-(`session.ts:304`), so withholding her answer until she re-confirms strands the reader R17/R18 exist to
+(`session.ts:305`), so withholding her answer until she re-confirms strands the reader R17/R18 exist to
 protect.
 
 **What would flip it:** the `?vault=datearrived` walk showing a reader treat the aged fan as priced on
@@ -616,7 +616,7 @@ labels it. The panel also flagged, without carding it as a verdict, that the ela
 **opacity alone**: the legend names three encodings while the plot draws five, the ghosted elapsed band and
 median have no key, and in grayscale the elapsed wedge reads as a fourth unexplained band. The one genuinely
 new signal this unit introduced — *"these years already happened"* — is the one with no text channel. That
-is a live colour-is-the-only-signal breach against the project's own law, and it is open.
+is a live colour-is-the-only-signal breach against the project's own law, and it is open. It is carried in `docs/backlog.md` as "The aged band's elapsed segment is carried by opacity alone — no legend key, no text channel".
 
 ---
 

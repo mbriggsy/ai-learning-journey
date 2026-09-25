@@ -17,7 +17,7 @@ sources: [docs/research/pre65-healthcare.md]
 > what is cited here). **Consumer:** the `medicareCostTrend` table (the first live `Unsourced` sentinel, now sourced)
 > (`src/engine/constants/health.ts:204`) + the Part-B pricing flip (`PART_B_PRICING_MODE`,
 > taxOverlay) + the U15 fold's trend-unblock tripwire (solve.ts's conversion partition) + the
-> post-flip demotion-margin calibration (U15 council Q4d).
+> post-flip demotion-margin calibration (U15 council Q4d) + the TAX path (since 2026-09-24, `be0e1e76`): `cumulativePriceIndex` (`src/engine/priceIndex.ts`) reads `cpiNearTermAvg` / `cpiUltimate` to deflate the frozen §86 Social Security thresholds, so a new Trustees edition moves those thresholds for every tax-on household with a Social Security benefit, healthcare on or off (the staleness-clock gap is the register's Tier 4 entry *`medicareCostTrend` now feeds the TAX path (the §86 price index)…*).
 
 ## The confirmed primary figures (2026 Medicare Trustees Report, released 2026-06-09 — ONE edition, no mixing)
 
@@ -27,8 +27,12 @@ All verified byte-for-byte against `https://www.cms.gov/files/document/2026-medi
    2026 **$202.90** (finalized — the runtime home is `partB2026` in `src/engine/constants/health.ts`; the CMS-sourced pin and its provenance live in [pre65-healthcare.md](pre65-healthcare.md), this row is the Trustees' own V.E2 transcription and must agree with it) · 2027 $209.50 · 2028 $224.50 · 2029 $238.50 · 2030 $255.50 ·
    2031 $272.10 · 2032 $290.20 · 2033 **$313.60** · 2034 $338.50 · 2035 $360.60.
    (Anchors: 2024 $174.70 · 2025 $185.00. Secondary press prints 2033 as $313.65 — the primary
-   PDF prints **$313.60**; primary wins.) Table V.E3 (p.208) holds the IRMAA add-ons 2007–2035
-   if bracket surcharges ever need projection.
+   PDF prints **$313.60**; primary wins.) Table V.E3 (p.208) holds the Part B IRMAA add-ons 2007–2035.
+   The engine derives the Part B surcharges from the trended base (the statutory cost-share
+   identity), so V.E3 is only their DND-009 cross-check (`src/engine/__tests__/partBTrend.test.ts`),
+   never a stored vector. The Part D add-ons the engine consumes per tier come from Table V.E4
+   (p.211–212), transcribed verbatim into `medicareCostTrend.partDIrmaa` by the same-day Part D
+   sourcing pass.
 2. **CPI deflator (intermediate): ultimate 2.4%/yr** (CPI-W — the COLA index; §III.B, Table
    III.B12); **near-term 2026–2035 average 3.2%** (Table II.D1), declining to the ultimate.
 3. **Ultimate per-beneficiary Part B cost growth: 3.8%/yr NOMINAL** (excl. demographics —
@@ -89,3 +93,5 @@ clause's both-halves check, and the U15-council-ruled post-flip demotion-margin 
 gaps: the post-2035 tail rests on ultimate assumptions (sourced, coarser); 2027's low +3.25%
 is a policy artifact (never anchor one year); the Part-B-only near-term per-capita rate
 (~6.8% nominal) is derived, not printed.
+
+**Outcome (2026-07-19, council wf_c673339e-257):** shape (c) shipped as `medicareCostTrend` in `src/engine/constants/health.ts`, and conversions rank on it. The annual re-verify hook landed as a dated tripwire test (`src/engine/constants/__tests__/medicareTrend.reverify.tripwire.test.ts`), not a `verify:` script. The build record is [medicare-cost-trend-build-spec.md](../plans/features/medicare-cost-trend-build-spec.md); the as-built mechanics live once in [architecture.md §7.2](../architecture.md#72-healthcare-overlay-healthoverlayts).

@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { REAL, REAL_DPR, PHONE, PHONE_DPR, gotoSeedFinal, settleLayout } from './reviewSurface'
+import { REAL, REAL_DPR, PHONE, PHONE_DPR, FINAL_TIER_MS, gotoSeedFinal, settleLayout } from './reviewSurface'
 /* The no-anchor arm's handle reads the CATALOG, never a re-typed sentence (this import is the
  * precedent the fit specs cite). A hardcoded literal here is a second copy of the product's words: U17 §S6
  * reworded this exact string, and a literal would have re-broken the only walk that reaches the
@@ -254,6 +254,10 @@ const FOLD_TARGETS = [
 
 async function captureState(page: Page, dir: string): Promise<void> {
   fs.mkdirSync(dir, { recursive: true })
+  // The spend lane (2026-09-26): the verdict clause's real figure lands a beat AFTER the final
+  // stamp. A reader reads the SETTLED sentence, so every capture waits the pending clause out — the
+  // pending frame's own law (it reserves the sized box) is the fit gate's job, not the walk's.
+  await expect(page.locator('.cs-magnitude[data-spend="pending"]')).toHaveCount(0, { timeout: FINAL_TIER_MS })
   await settleLayout(page)
 
   // 1) The non-visual channels first (no scroll side effects).

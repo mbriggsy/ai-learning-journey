@@ -128,7 +128,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   (`src/engine/taxOverlay.ts:559-570`), which holds only IDENTITY-MATCHED members so a stranger
   ref throws at the year loop's identity guard rather than silently dropping a member's premium
   from the Σ (the cost-understating direction). base+surcharge stays the existing count×uniform
-  line in `medicareAnnualCost` (`src/engine/healthOverlay.ts:689-702`), untouched.
+  line in `medicareAnnualCost` (`src/engine/healthOverlay.ts:698-711`), untouched.
 - **Ship gate, met:** the DND-012 externally-derived **ASYMMETRIC survivor golden** ships as
   `src/engine/__tests__/medicareExtras.test.ts:86-159` — extras `[0, 200]` with the $0 owner
   dying first, hand-derived per year, so the survivor is still charged their full $200×12; the

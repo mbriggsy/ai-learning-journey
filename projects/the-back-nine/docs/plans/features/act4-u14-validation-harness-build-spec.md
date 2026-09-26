@@ -63,7 +63,7 @@ status: shipped
      1944→1962. Both entries carry `directionalUntilPinned: false`, so no reachable-band
      argument is load-bearing. The consumed-set derivation still reads the *reachable*
      value's pin status.
-   - **`medicareExtrasTypical`** (`health.ts:265`) — PINNED to a 2026 Medigap-G / Part-D
+   - **`medicareExtrasTypical`** (`health.ts:267`) — PINNED to a 2026 Medigap-G / Part-D
      refresh, because the inherited KFF-2023 anchor lagged the 2026 carrier filings by
      +12–26% in the **optimistic** direction (a real pin task, not paperwork). Both
      components now carry their own primary — the Part-D base is CMS-primary-pinned; the

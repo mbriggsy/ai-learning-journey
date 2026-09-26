@@ -17,14 +17,14 @@ import {
   irmaaStepFillHeadroom,
   bracketEdgeFillHeadroom,
   cliffMagiFor,
-  nextIrmaaThresholdAbove,
+  nextIrmaaStepLine,
   nextIrmaaStep,
   marginalOrdinaryRate,
   nextBracketEdgeAbove,
   subsidyLossPerDollar,
   type CommittedYearIncome,
 } from '../magiLandscape'
-import { fplForHousehold } from '../healthOverlay'
+import { fplForHousehold, irmaaTierSurchargeMonthly, IRMAA_ANCHOR_SCALES } from '../healthOverlay'
 import { acaApplicablePercentage, acaApplicablePercentageEnhanced, irmaa } from '@engine/constants'
 
 const MFJ = 'mfj' as const
@@ -116,6 +116,20 @@ describe('irmaaStepFillHeadroom (bisection over the Pub-915-coupled metric)', ()
     expect(irmaaStepFillHeadroom(c, irmaa.value)).toBe(Number.POSITIVE_INFINITY)
   })
 
+  it('the TOP tier’s line is INCLUSIVE ("at least" — §1395r(i)(3)(C)(i)(III)): the rail stops one whole dollar UNDER it, and the landed MAGI bills tier 4, not the 85 % tier', () => {
+    // The joint top line typed from the statute (150 % of $500,000 — DND-012), never read from the table.
+    const topLine = 1.5 * 500_000
+    // SS-free, no RMD: IRMAA-MAGI = conversion + fill, a slope-1 line — baseline 600,000 sits in tier 4.
+    const c = ctx({ conversion: 600_000 })
+    const h = irmaaStepFillHeadroom(c, irmaa.value)
+    expect(h).toBeCloseTo(topLine - 1 - 600_000, 3)
+    expect(irmaaMagiAtFill(c, h)).toBeLessThanOrEqual(topLine - 1)
+    // The bill at the landed MAGI is still tier 4 — the rail's promise ("still under the step") is true.
+    expect(irmaaTierSurchargeMonthly(irmaaMagiAtFill(c, h), MFJ, irmaa.value, IRMAA_ANCHOR_SCALES)).toBe(
+      irmaaTierSurchargeMonthly(irmaaMagiAtFill(c, 0), MFJ, irmaa.value, IRMAA_ANCHOR_SCALES),
+    )
+  })
+
   it('baseline exactly AT a threshold ⇒ only the free below-RMD zone remains (crossing fires strictly above)', () => {
     // ord(0) = tier-1 exactly, with no SS: baseline sits exactly on the first MFJ threshold.
     const c = ctx({ rmd: 18_000, conversion: TIER1_MFJ - 18_000 })
@@ -154,12 +168,27 @@ describe('bracketEdgeFillHeadroom (bisection through the deduction stack)', () =
 })
 
 describe('the readout geometry', () => {
-  it('nextIrmaaThresholdAbove: at-threshold returns the threshold (exclusive crossing); above it, the next tier; above the top, null', () => {
-    expect(nextIrmaaThresholdAbove(TIER1_MFJ - 1, MFJ, irmaa.value)).toBe(TIER1_MFJ)
-    expect(nextIrmaaThresholdAbove(TIER1_MFJ, MFJ, irmaa.value)).toBe(TIER1_MFJ)
-    expect(nextIrmaaThresholdAbove(TIER1_MFJ + 1, MFJ, irmaa.value)).toBe(TIER2_MFJ)
-    expect(nextIrmaaThresholdAbove(800_000, MFJ, irmaa.value)).toBeNull()
-    expect(nextIrmaaThresholdAbove(TIER1_SINGLE - 1, SINGLE, irmaa.value)).toBe(TIER1_SINGLE)
+  it('nextIrmaaStepLine: an EXCLUSIVE line — at-line returns it (the next dollar crosses), lastSafeMagi IS the line; above it, the next tier; above the top, null', () => {
+    expect(nextIrmaaStepLine(TIER1_MFJ - 1, MFJ, irmaa.value)).toEqual({ threshold: TIER1_MFJ, lastSafeMagi: TIER1_MFJ })
+    expect(nextIrmaaStepLine(TIER1_MFJ, MFJ, irmaa.value)).toEqual({ threshold: TIER1_MFJ, lastSafeMagi: TIER1_MFJ })
+    expect(nextIrmaaStepLine(TIER1_MFJ + 1, MFJ, irmaa.value)?.threshold).toBe(TIER2_MFJ)
+    expect(nextIrmaaStepLine(800_000, MFJ, irmaa.value)).toBeNull()
+    expect(nextIrmaaStepLine(TIER1_SINGLE - 1, SINGLE, irmaa.value)?.threshold).toBe(TIER1_SINGLE)
+  })
+
+  it('nextIrmaaStepLine: the INCLUSIVE top line — the threshold stays the statute’s line (the words quote it), lastSafeMagi is one whole dollar under it, and ON the line the step has already fired (null)', () => {
+    const topLine = 1.5 * 500_000 // §1395r(i)(3)(C)(ii): 150 % of $500,000 for a joint return (DND-012)
+    expect(nextIrmaaStepLine(600_000, MFJ, irmaa.value)).toEqual({ threshold: topLine, lastSafeMagi: topLine - 1 })
+    expect(nextIrmaaStepLine(topLine - 1, MFJ, irmaa.value)).toEqual({ threshold: topLine, lastSafeMagi: topLine - 1 })
+    expect(nextIrmaaStepLine(topLine, MFJ, irmaa.value)).toBeNull()
+    expect(nextIrmaaStepLine(500_000, SINGLE, irmaa.value)).toBeNull()
+  })
+
+  it('nextIrmaaStep toward the inclusive top line: the readout names the statute’s line and prices the crossing ON it (tier 4 → 5: 578.0 − 529.6 = 48.4/mo)', () => {
+    const topLine = 1.5 * 500_000
+    const step = nextIrmaaStep(600_000, MFJ, irmaa.value)
+    expect(step?.threshold).toBe(topLine)
+    expect(step?.surchargeDeltaMonthlyPerPerson).toBeCloseTo(48.4, 6) // hand-differenced from the CMS 2026 releases
   })
 
   it('nextIrmaaStep prices the crossing through the ONE canonical tier lookup (tier-1 entry 95.7/mo; tier-1→2 delta 144.7/mo)', () => {

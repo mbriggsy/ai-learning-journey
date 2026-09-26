@@ -321,15 +321,21 @@ export interface IraLimits {
 }
 
 /** One IRMAA SURCHARGE tier (Medicare Part B + Part D income-related adjustment). A
- *  tier applies when MAGI STRICTLY EXCEEDS its threshold (lower-bound-exclusive: $1
- *  over → the full tier); the consumer selects the highest tier whose threshold is
- *  exceeded, else no surcharge. Surcharges are PER ENROLLED PERSON and ADD to the
+ *  tier applies when MAGI EXCEEDS its threshold — or REACHES it, when the tier declares
+ *  `lowerBoundInclusive` (the statute's "at least" row); $1 over → the full tier. The
+ *  consumer selects the highest tier that applies (`healthOverlay.irmaaTierApplies`, the
+ *  ONE predicate), else no surcharge. Surcharges are PER ENROLLED PERSON and ADD to the
  *  standard Part B premium (Part D has no modeled base — only the surcharge). */
 export interface IrmaaTier {
-  /** MAGI threshold for SINGLE filers; the tier applies when MAGI > this. */
+  /** MAGI threshold for SINGLE filers (the tier's lower line). */
   readonly singleMagiThreshold: number
-  /** MAGI threshold for MARRIED-FILING-JOINTLY; the tier applies when MAGI > this. */
+  /** MAGI threshold for MARRIED-FILING-JOINTLY (the tier's lower line). */
   readonly mfjMagiThreshold: number
+  /** Whether a MAGI exactly ON the line already owes this tier. 42 U.S.C. §1395r(i)(3)(C)(i)(III):
+   *  tiers 1–4 read "More than $X" (false — the line itself is the tier below's last dollar); the
+   *  top reads "At least $500,000" (true — the line dollar owes the top tier). Declared per tier,
+   *  never inferred from a tier's index. */
+  readonly lowerBoundInclusive: boolean
   /** Monthly Part B IRMAA surcharge (on top of the standard premium), per person. */
   readonly partBSurchargeMonthly: number
   /** Monthly Part D IRMAA surcharge, per person. */
@@ -344,7 +350,7 @@ export interface IrmaaTier {
 export interface IrmaaSchedule {
   /** Years of MAGI lookback (2 — 2026 IRMAA keys off 2024 MAGI). */
   readonly magiLookbackYears: number
-  /** Surcharge tiers, ascending; selection = the highest tier whose threshold MAGI exceeds. */
+  /** Surcharge tiers, ascending; selection = the highest tier that applies (`lowerBoundInclusive`). */
   readonly tiers: readonly IrmaaTier[]
   /** Surcharge is charged per enrolled person (a couple both enrolled pays it twice). */
   readonly perPerson: boolean

@@ -343,7 +343,7 @@ describe('irmaaTierSurchargeMonthly — the disaggregated trend scales (hawk-hon
     tiers.forEach((tier, k) => {
       const combined = tier.partBSurchargeMonthly + tier.partDSurchargeMonthly
       // Single: MAGI $1 over tier k's single threshold selects exactly tier k (thresholds ascending,
-      // gaps >> 1) — the highest tier strictly exceeded.
+      // gaps >> 1) — the highest tier that applies.
       expect(irmaaTierSurchargeMonthly(tier.singleMagiThreshold + 1, 'single', SCHED, IRMAA_ANCHOR_SCALES), `single tier ${k}`).toBe(combined)
       // MFJ: the same, on the MFJ threshold column.
       expect(irmaaTierSurchargeMonthly(tier.mfjMagiThreshold + 1, 'mfj', SCHED, IRMAA_ANCHOR_SCALES), `mfj tier ${k}`).toBe(combined)

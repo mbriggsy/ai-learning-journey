@@ -981,7 +981,7 @@ describe('the no-pretax steer witness seed (engine-proven refusal regime)', () =
   // (probed 2026-07-23 before pinning — recorded, not assumed):
   it("the SMALL-IRA sub-arm: entered pre-tax dollars BELOW every rail still land 'no-pretax' (the reword's justification, test-proven)", () => {
     // The steer household + one $25k traditional IRA: overlay PRESENT with pretax 25,000, yet every
-    // rail-anchored conversion amount exceeds the post-RMD headroom (candidates.ts:386), so the
+    // rail-anchored conversion amount exceeds the post-RMD headroom (candidates.ts:389), so the
     // roster is conversion-free and the builder refuses 'no-pretax'. This is the household the
     // note's "doesn't have enough of them entered" was reworded FOR — the claim is now bitten.
     const blend = { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 } as const

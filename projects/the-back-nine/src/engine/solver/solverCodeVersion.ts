@@ -63,5 +63,12 @@
  * year, the OBBBA senior bonus deflates AND phases out per person (IRS Schedule 1-A), and the HSA
  * catch-up erodes on the runway. Every one moves the tax the ranked arms pay, so a v3 record's
  * ranking was scored under pricing this build no longer runs. Bumped on the SCORED-overlay clause.
+ *
+ * VERSION 5 (2026-09-26) — the top IRMAA tier's line is INCLUSIVE by statute ("at least $500,000",
+ * 42 U.S.C. §1395r(i)(3)(C)(i)(III); 150 % joint): a MAGI exactly ON $750,000 MFJ / $500,000 single
+ * now bills the 85 % tier (the SCORED-overlay clause — healthOverlay.irmaaTierApplies), and the
+ * candidate grid's top IRMAA anchor moved one whole dollar under that line (the enumerator clause —
+ * candidates.ts via magiLandscape.nextIrmaaStepLine). A v4 record's top-step arm was scored at a
+ * bill the law does not charge.
  */
-export const SOLVER_CODE_VERSION = 4
+export const SOLVER_CODE_VERSION = 5

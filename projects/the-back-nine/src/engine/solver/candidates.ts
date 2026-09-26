@@ -52,7 +52,7 @@ import {
   irmaaMagiAtFill,
   taxableIncomeAtFill,
   nextBracketEdgeAbove,
-  nextIrmaaThresholdAbove,
+  nextIrmaaStepLine,
   type CommittedYearIncome,
 } from '@engine/magiLandscape'
 import { deductionStack } from '@engine/taxCore'
@@ -288,18 +288,21 @@ export function anchoredConversionAmounts(
   }
 
   // IRMAA steps — walk EVERY threshold above the baseline (each is a real anchor; the grid
-  // wants a candidate just under each step, not only the next one). IRMAA-MAGI is monotone
-  // piecewise-linear CONTINUOUS in the amount (the Pub-915 inclusion ramps) — bisect it;
-  // amount = threshold + 1 provably crosses (magi(a) ≥ ordinary(a) ≥ a + committed ≥ a).
+  // wants a candidate just under each step, not only the next one). Each anchor targets the
+  // step's LAST SAFE MAGI (magiLandscape.nextIrmaaStepLine — one whole dollar under the inclusive
+  // top line, whose line dollar already owes the top tier); the rail still NAMES the line.
+  // IRMAA-MAGI is monotone piecewise-linear CONTINUOUS in the amount (the Pub-915 inclusion
+  // ramps) — bisect it; amount = lastSafe + 1 provably crosses (magi(a) ≥ ordinary(a) ≥ a + committed ≥ a).
   if (anchor.irmaaSchedule !== null) {
     let probe = irmaaMagiAtFill(c, 0)
     for (;;) {
-      const threshold = nextIrmaaThresholdAbove(probe, c.filing, anchor.irmaaSchedule)
-      if (threshold === null) break
+      const step = nextIrmaaStepLine(probe, c.filing, anchor.irmaaSchedule)
+      if (step === null) break
+      const safe = step.lastSafeMagi
       const metric = (a: number): number => irmaaMagiAtFill(withAmount(c, a), 0)
-      const amount = largestWholeDollarWithin(metric, threshold, largestAmountWithin(metric, threshold, threshold + 1))
-      if (amount !== null) out.push({ amountReal: amount, rail: { kind: 'irmaa-step', threshold } })
-      probe = threshold + 1 // strictly past this tier — the walk visits each remaining step once
+      const amount = largestWholeDollarWithin(metric, safe, largestAmountWithin(metric, safe, safe + 1))
+      if (amount !== null) out.push({ amountReal: amount, rail: { kind: 'irmaa-step', threshold: step.threshold } })
+      probe = safe + 1 // the first dollar past this step — the walk visits each remaining step once
     }
   }
 

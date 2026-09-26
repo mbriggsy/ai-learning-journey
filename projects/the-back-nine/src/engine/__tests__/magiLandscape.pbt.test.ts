@@ -13,11 +13,12 @@ import {
   acaCliffFillHeadroom,
   irmaaStepFillHeadroom,
   bracketEdgeFillHeadroom,
-  nextIrmaaThresholdAbove,
+  nextIrmaaStepLine,
   nextBracketEdgeAbove,
   type CommittedYearIncome,
 } from '../magiLandscape'
 import { irmaa } from '@engine/constants'
+import { irmaaTierSurchargeMonthly, IRMAA_ANCHOR_SCALES } from '../healthOverlay'
 
 const ctxArb: fc.Arbitrary<CommittedYearIncome> = fc.record({
   rmd: fc.integer({ min: 0, max: 300_000 }),
@@ -61,17 +62,20 @@ describe('magiLandscape — properties', () => {
     )
   })
 
-  it('IRMAA headroom soundness: never crosses the next threshold, and one more dollar always would (tight, not merely safe)', () => {
+  it('IRMAA headroom soundness: the landed MAGI BILLS the baseline’s tier (judged by the billing walk itself, never the rail helper), and one more dollar always crosses (tight, not merely safe)', () => {
+    const bill = (m: number, c: CommittedYearIncome) => irmaaTierSurchargeMonthly(m, c.filing, irmaa.value, IRMAA_ANCHOR_SCALES)
     fc.assert(
       fc.property(ctxArb, (c) => {
         const baseline = irmaaMagiAtFill(c, 0)
-        const rail = nextIrmaaThresholdAbove(baseline, c.filing, irmaa.value)
+        const step = nextIrmaaStepLine(baseline, c.filing, irmaa.value)
         const h = irmaaStepFillHeadroom(c, irmaa.value)
-        if (rail === null) return h === Number.POSITIVE_INFINITY
-        // Sound: the fill holds the rail (strictly-over fires the tier, at-rail is safe)…
-        if (!(irmaaMagiAtFill(c, h) <= rail + 1e-3)) return false
+        if (step === null) return h === Number.POSITIVE_INFINITY
+        // Sound: the fill holds the step — the BILL at the landed MAGI is the baseline's bill (an inclusive
+        // line landed ON would bill the next tier: the 2026-09-26 top-tier defect)…
+        if (bill(irmaaMagiAtFill(c, h), c) !== bill(baseline, c)) return false
+        if (!(irmaaMagiAtFill(c, h) <= step.lastSafeMagi + 1e-3)) return false
         // …and tight: the metric's slope is ≥ 1 above the free below-RMD zone, so +$1 crosses.
-        return irmaaMagiAtFill(c, h + 1) > rail - 1e-3
+        return irmaaMagiAtFill(c, h + 1) > step.lastSafeMagi - 1e-3
       }),
       { numRuns: 200 },
     )

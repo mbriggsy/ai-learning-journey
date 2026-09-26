@@ -68,17 +68,27 @@ describe('anchoredConversionAmounts — the cliff-anchored grid', () => {
     expect(amounts.some((a) => a.rail.kind === 'aca-cliff')).toBe(false)
   })
 
-  it('IRMAA steps (linear world): one anchor per threshold above baseline, each = threshold − ongoing EXACTLY', () => {
+  it('IRMAA steps (linear world): one anchor per threshold above baseline, each = the last safe MAGI − ongoing EXACTLY', () => {
     // ssBenefit 0 ⇒ IRMAA-MAGI = ordinary = ongoing 50,000 + amount (no inclusion ramp), so
-    // each anchor is threshold − 50,000 — hand-composed from the canonical tier table.
+    // each anchor is (the line, or one whole dollar under an INCLUSIVE line) − 50,000 — hand-composed
+    // from the canonical tier table and its declared inclusivity.
     const schedule = irmaa.value
     const amounts = anchoredConversionAmounts(anchorWith({ irmaaSchedule: schedule }))
     const steps = amounts.filter((a) => a.rail.kind === 'irmaa-step')
     const expected = schedule.tiers
-      .map((t) => t.mfjMagiThreshold)
-      .map((thr) => thr - 50_000)
+      .map((t) => t.mfjMagiThreshold - (t.lowerBoundInclusive ? 1 : 0))
+      .map((lastSafe) => lastSafe - 50_000)
       .filter((a) => a >= 1)
     expect(steps.map((s) => s.amountReal)).toEqual(expected)
+  })
+
+  it('the TOP IRMAA anchor lands one whole dollar UNDER the statute’s inclusive line — never ON it (§1395r(i)(3)(C): "at least $500,000", 150 % joint)', () => {
+    // Typed from the statute (DND-012), not the table: the joint top line is 1.5 × $500,000.
+    const topLine = 1.5 * 500_000
+    const amounts = anchoredConversionAmounts(anchorWith({ irmaaSchedule: irmaa.value }))
+    const top = amounts.filter((a) => a.rail.kind === 'irmaa-step').at(-1)!
+    expect(top.rail).toEqual({ kind: 'irmaa-step', threshold: topLine }) // the rail still NAMES the line
+    expect(top.amountReal).toBe(topLine - 1 - 50_000) // linear world: IRMAA-MAGI = 50,000 + amount
   })
 
   it('the JUST-UNDER LAW holds on every anchor, including the SS-coupled IRMAA ramp (the grid’s defining property)', () => {
@@ -88,7 +98,7 @@ describe('anchoredConversionAmounts — the cliff-anchored grid', () => {
     const anchor = anchorWith({ committed: coupled, acaCliffMagi: 120_000, irmaaSchedule: irmaa.value })
     // RAIL CENSUS BEFORE THE LOOP (the c5e27180 shape, aimed at this arm's real hazard) — both
     // assertions below live INSIDE the loop. The list cannot go EMPTY in THIS world (the
-    // bracket-edge branch, candidates.ts:310, is unguarded AND this household's 8,900 taxable
+    // bracket-edge branch, candidates.ts:313, is unguarded AND this household's 8,900 taxable
     // baseline sits under every finite edge — a baseline in the open top band would yield none,
     // and a sub-$1 amount is dropped), so the danger is not zero iterations: it is an anchor set
     // that silently LOSES A WHOLE RAIL, keeps iterating over the rails it still has, and reports
@@ -98,9 +108,9 @@ describe('anchoredConversionAmounts — the cliff-anchored grid', () => {
     // `irmaa.value` for any healthcare-priced household with someone Medicare-enrolled at the bill
     // year, driven live by `solveDispatch.ts:77` — so this loss reaches the PRODUCT, not just the
     // suite; `solveAnchor.test.ts:123-129` asserts the anchor FIELD and never enumerates, and the
-    // sibling arms are strictly weaker predicates (ascending / deduped / integer, lines 117-119)
+    // sibling arms are strictly weaker predicates (ascending / deduped / integer — the arm at lines 170-176)
     // which all survive a missing rail. So census the three INDEPENDENT branches (candidates.ts:282
-    // ACA, :294 IRMAA, :310 bracket) by KIND, with counts read from the canonical year-keyed tables
+    // ACA, :296 IRMAA, :313 bracket) by KIND, with counts read from the canonical year-keyed tables
     // rather than from the enumerator under test.
     const anchors = anchoredConversionAmounts(anchor)
     const kinds = anchors.map((a) => a.rail.kind)

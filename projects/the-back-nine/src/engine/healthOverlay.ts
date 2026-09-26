@@ -38,6 +38,7 @@ import {
   federalPovertyGuidelines,
   type AcaApplicablePercentageTable,
   type IrmaaSchedule,
+  type IrmaaTier,
   type MedicareCostTrendTable,
 } from '@engine/constants'
 import type { FilingStatus } from '@shared/model'
@@ -624,14 +625,23 @@ export function buildPartBPricingSchedule(
 // =========================================================================
 
 /**
+ * THE ONE tier predicate — does `tier` apply at this IRMAA-MAGI? `magi > line` for a
+ * lower-bound-EXCLUSIVE tier (the statute's "more than" rows, tiers 1–4); `magi >= line` for an
+ * INCLUSIVE one (the top tier's "at least"). The billing walk below and every rail that stops
+ * "under the step" (magiLandscape.nextIrmaaStepLine) read this, so the bill and the rail can never
+ * disagree about which dollar crosses. The lines are INTEGER dollars, so the raw compare is used
+ * directly — NO ceil/round "for noise" (insight 012: `ceil(x) > N ⟺ x > N` for integer N).
+ */
+export function irmaaTierApplies(magi: number, tier: IrmaaTier, filing: FilingStatus): boolean {
+  const line = filing === 'mfj' ? tier.mfjMagiThreshold : tier.singleMagiThreshold
+  return tier.lowerBoundInclusive ? magi >= line : magi > line
+}
+
+/**
  * The per-person MONTHLY IRMAA surcharge (Part B + Part D combined) for an IRMAA-MAGI + filing
- * status: the highest tier whose threshold IRMAA-MAGI STRICTLY EXCEEDS, else 0 (the implicit base
- * tier — no surcharge). A PURE STEP function: $1 over a threshold owes the FULL tier (research §4c).
- *
- * The thresholds are lower-bound-EXCLUSIVE INTEGER dollars, so the raw `magi > threshold` compare is
- * used directly — NO ceil/round "for noise" (insight 012: `ceil(x) > N ⟺ x > N` for integer N, a
- * provable no-op on the branch; an exact-threshold MAGI is measure-zero and the conservative
- * cost-overstating direction is inherent in the step's lower-exclusivity).
+ * status: the highest tier that APPLIES ({@link irmaaTierApplies} — over an exclusive line, at-or-over
+ * the inclusive top line), else 0 (the implicit base tier — no surcharge). A PURE STEP function: $1
+ * over a line owes the FULL tier (research §4c).
  *
  * Finiteness FIRST (insight 010): a NaN MAGI sails through every `>` comparison as false and would
  * silently return 0 — a phantom no-surcharge → understated cost → overstated survival, the cardinal
@@ -654,12 +664,11 @@ export function irmaaTierSurchargeMonthly(
     )
   }
   assertSurchargeScales(scales, schedule.tiers.length)
-  // tiers are ascending (constants.shape pins it); the LAST one strictly exceeded is the highest.
+  // tiers are ascending (constants.shape pins it); the LAST one that applies is the highest.
   let surchargeMonthly = 0
   for (let k = 0; k < schedule.tiers.length; k++) {
     const tier = schedule.tiers[k]!
-    const threshold = filing === 'mfj' ? tier.mfjMagiThreshold : tier.singleMagiThreshold
-    if (magi > threshold)
+    if (irmaaTierApplies(magi, tier, filing))
       surchargeMonthly = tier.partBSurchargeMonthly * scales.partB + tier.partDSurchargeMonthly * scales.partDByTier[k]!
   }
   return surchargeMonthly

@@ -263,8 +263,9 @@ describe('healthOverlay — M3 Slice 2: solveAcaFundedGross (bisection + cliff b
 // dated figure — CLAUDE.md), and the boundary is probed at threshold and threshold+1; the expected
 // SURCHARGES (95.7 = 81.2+14.5 etc.) are hand-summed literals, an independent check.
 //
-// IRMAA is a PURE STEP function: a tier applies when IRMAA-MAGI STRICTLY EXCEEDS its threshold
-// (lower-bound-EXCLUSIVE; $1 over → the FULL tier — research §4c, insight 013). The combined
+// IRMAA is a PURE STEP function: tiers 1–4 apply when IRMAA-MAGI STRICTLY EXCEEDS their line
+// (lower-bound-EXCLUSIVE, the statute's "more than"; $1 over → the FULL tier — research §4c, insight
+// 013); the TOP tier applies AT its line ("at least" — the inclusive arm below). The combined
 // per-person monthly surcharge is Part B + Part D; the full annual cost adds the income-INVARIANT
 // base Part B premium and scales by the Medicare-enrolled (65+) count × 12. The thresholds are
 // INTEGER dollars, so NO ceil/round "for noise" is applied (insight 012 — a provable no-op on a
@@ -292,14 +293,14 @@ describe('healthOverlay — M4: irmaaTierSurchargeMonthly (the pure per-person s
     expect(irmaaTierSurchargeMonthly(mfjThresh(0) - 1, 'mfj', IRMAA, IRMAA_ANCHOR_SCALES)).toBe(0)
   })
 
-  it('the threshold is lower-bound-EXCLUSIVE: AT the threshold = no surcharge, $1 OVER = the full tier (insight 013)', () => {
+  it('a tier-1–4 line is lower-bound-EXCLUSIVE: AT the line = no surcharge, $1 OVER = the full tier (insight 013)', () => {
     expect(irmaaTierSurchargeMonthly(singleThresh(0), 'single', IRMAA, IRMAA_ANCHOR_SCALES)).toBe(0) // exactly at → not exceeded
     expect(irmaaTierSurchargeMonthly(singleThresh(0) + 1, 'single', IRMAA, IRMAA_ANCHOR_SCALES)).toBeCloseTo(95.7, 6) // $1 over → tier 1
     expect(irmaaTierSurchargeMonthly(mfjThresh(0), 'mfj', IRMAA, IRMAA_ANCHOR_SCALES)).toBe(0)
     expect(irmaaTierSurchargeMonthly(mfjThresh(0) + 1, 'mfj', IRMAA, IRMAA_ANCHOR_SCALES)).toBeCloseTo(95.7, 6)
   })
 
-  it('selects the HIGHEST tier strictly exceeded (single schedule)', () => {
+  it('selects the HIGHEST tier that applies (single schedule)', () => {
     expect(irmaaTierSurchargeMonthly(singleThresh(1), 'single', IRMAA, IRMAA_ANCHOR_SCALES)).toBeCloseTo(95.7, 6) // AT tier-2 edge ⇒ still tier 1
     expect(irmaaTierSurchargeMonthly(singleThresh(1) + 1, 'single', IRMAA, IRMAA_ANCHOR_SCALES)).toBeCloseTo(240.4, 6) // tier 2
     expect(irmaaTierSurchargeMonthly(singleThresh(2) + 1, 'single', IRMAA, IRMAA_ANCHOR_SCALES)).toBeCloseTo(385.0, 6) // tier 3
@@ -320,6 +321,31 @@ describe('healthOverlay — M4: irmaaTierSurchargeMonthly (the pure per-person s
     expect(irmaaTierSurchargeMonthly(mfjThresh(3) + 10_000, 'mfj', IRMAA, IRMAA_ANCHOR_SCALES)).toBeCloseTo(529.6, 6) // tier 4 (not yet top)
     // The structural fact the freeze creates: the top MFJ edge is strictly below 2× the top single edge.
     expect(mfjThresh(4)).toBeLessThan(2 * singleThresh(4))
+  })
+
+  it('the TOP tier is lower-bound-INCLUSIVE by statute: a MAGI exactly ON the line bills the 85 % tier (42 U.S.C. §1395r(i)(3)(C)(i)(III) + (ii))', () => {
+    // The statute's own words, read at the primary source 2026-09-26 (law.cornell.edu): "More than $160,000
+    // but less than $500,000 — 80 percent · At least $500,000 — 85 percent", and for a joint return the
+    // second-to-last row's dollar amount is 150 % (not 2×) — $750,000. The lines are typed HERE from the
+    // statute (DND-012), never read from the schedule under test. Tiers 1–4 read "more than", so they keep
+    // their exclusive lower bound (the arm above).
+    const TOP_SINGLE_LINE = 500_000
+    const TOP_MFJ_LINE = 1.5 * 500_000
+    expect(singleThresh(4)).toBe(TOP_SINGLE_LINE) // the constant IS the statute's line (frozen through 2027)
+    expect(mfjThresh(4)).toBe(TOP_MFJ_LINE)
+    // ON the line → the top tier (487.0 Part B + 91.0 Part D, hand-summed from the CMS 2026 releases).
+    expect(irmaaTierSurchargeMonthly(TOP_MFJ_LINE, 'mfj', IRMAA, IRMAA_ANCHOR_SCALES)).toBeCloseTo(578.0, 6)
+    expect(irmaaTierSurchargeMonthly(TOP_SINGLE_LINE, 'single', IRMAA, IRMAA_ANCHOR_SCALES)).toBeCloseTo(578.0, 6)
+    // One whole dollar under → still tier 4 (446.3 + 83.3).
+    expect(irmaaTierSurchargeMonthly(TOP_MFJ_LINE - 1, 'mfj', IRMAA, IRMAA_ANCHOR_SCALES)).toBeCloseTo(529.6, 6)
+    expect(irmaaTierSurchargeMonthly(TOP_SINGLE_LINE - 1, 'single', IRMAA, IRMAA_ANCHOR_SCALES)).toBeCloseTo(529.6, 6)
+  })
+
+  it('the inclusivity is DECLARED per tier on the schedule — only the top tier, never an index hard-coded in the walk', () => {
+    expect(T.map((t) => t.lowerBoundInclusive)).toEqual([false, false, false, false, true])
+    // A schedule that declared tier 1 inclusive would bill ON tier 1's line — the walk reads the flag.
+    const tier1Inclusive = { ...IRMAA, tiers: T.map((t, i) => (i === 0 ? { ...t, lowerBoundInclusive: true } : t)) }
+    expect(irmaaTierSurchargeMonthly(mfjThresh(0), 'mfj', tier1Inclusive, IRMAA_ANCHOR_SCALES)).toBeCloseTo(95.7, 6)
   })
 
   it('R19: a non-finite MAGI fails LOUD before any tier comparison (insight 010 — every compare with NaN is false)', () => {

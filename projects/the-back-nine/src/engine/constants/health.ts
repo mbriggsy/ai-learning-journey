@@ -138,7 +138,9 @@ export const acaPtc = sourced(
 
 /** IRMAA — the income surcharge on Medicare Part B & D. 2026 surcharges are set by
  *  2024 MAGI (a 2-year lookback). A HARD step-function (per person): $1 over a tier
- *  threshold → that tier's FULL surcharge. The standard Part B premium lives in
+ *  threshold → that tier's FULL surcharge; the TOP tier's line is INCLUSIVE ("At least $500,000",
+ *  42 U.S.C. §1395r(i)(3)(C)(i)(III) — read at the primary source 2026-09-26), so a MAGI exactly
+ *  ON it already owes the top tier; tiers 1–4 read "More than" and exclude their line. The standard Part B premium lives in
  *  `partB2026` (single-sourced); per-tier TOTALS are derived (base + surcharge),
  *  never re-typed. Cross-verified vs CMS + The Finance Buff + an internal cost-share
  *  identity (Part B total = {25/35/50/65/80/85}% × full cost). MFJ thresholds = 2×
@@ -147,11 +149,11 @@ export const irmaa = sourced<IrmaaSchedule>(
   {
     magiLookbackYears: 2,
     tiers: [
-      { singleMagiThreshold: 109_000, mfjMagiThreshold: 218_000, partBSurchargeMonthly: 81.2, partDSurchargeMonthly: 14.5 },
-      { singleMagiThreshold: 137_000, mfjMagiThreshold: 274_000, partBSurchargeMonthly: 202.9, partDSurchargeMonthly: 37.5 },
-      { singleMagiThreshold: 171_000, mfjMagiThreshold: 342_000, partBSurchargeMonthly: 324.6, partDSurchargeMonthly: 60.4 },
-      { singleMagiThreshold: 205_000, mfjMagiThreshold: 410_000, partBSurchargeMonthly: 446.3, partDSurchargeMonthly: 83.3 },
-      { singleMagiThreshold: 500_000, mfjMagiThreshold: 750_000, partBSurchargeMonthly: 487.0, partDSurchargeMonthly: 91.0 },
+      { singleMagiThreshold: 109_000, mfjMagiThreshold: 218_000, lowerBoundInclusive: false, partBSurchargeMonthly: 81.2, partDSurchargeMonthly: 14.5 },
+      { singleMagiThreshold: 137_000, mfjMagiThreshold: 274_000, lowerBoundInclusive: false, partBSurchargeMonthly: 202.9, partDSurchargeMonthly: 37.5 },
+      { singleMagiThreshold: 171_000, mfjMagiThreshold: 342_000, lowerBoundInclusive: false, partBSurchargeMonthly: 324.6, partDSurchargeMonthly: 60.4 },
+      { singleMagiThreshold: 205_000, mfjMagiThreshold: 410_000, lowerBoundInclusive: false, partBSurchargeMonthly: 446.3, partDSurchargeMonthly: 83.3 },
+      { singleMagiThreshold: 500_000, mfjMagiThreshold: 750_000, lowerBoundInclusive: true, partBSurchargeMonthly: 487.0, partDSurchargeMonthly: 91.0 },
     ],
     perPerson: true,
     topTierFrozenThrough: 2027,
@@ -162,7 +164,7 @@ export const irmaa = sourced<IrmaaSchedule>(
       'CMS "2026 Medicare Parts A & B Premiums and Deductibles" fact sheet + the 2026 Part D IRMAA release (Nov 2025), cross-verified vs The Finance Buff (computing from CMS) + an internal cost-share identity — zero disagreement',
     directionalUntilPinned: false,
     pinTo: 'CMS 2026 IRMAA fact sheet / Federal Register notice; IRMAA-MAGI per SSA / 1040',
-    note: '2026 IRMAA set by 2024 MAGI (2-yr lookback). Per person (a couple both enrolled pays ×2). Lower-bound-EXCLUSIVE thresholds ($1 over → full tier). First four thresholds inflation-index annually; the top tier (≥$500k single / ≥$750k MFJ) is frozen through 2027, re-indexes 2028. A voluntary Roth conversion is NOT an SSA-44 life-changing event. MFS uses single thresholds then one step at $391k (OUT — couple model only).',
+    note: '2026 IRMAA set by 2024 MAGI (2-yr lookback). Per person (a couple both enrolled pays ×2). Tiers 1–4 are lower-bound-EXCLUSIVE ("more than" — $1 over → full tier); the top tier is lower-bound-INCLUSIVE ("at least", §1395r(i)(3)(C)(i)(III) — the line dollar itself owes it). First four thresholds inflation-index annually; the top tier (≥$500k single / ≥$750k MFJ) is frozen through 2027, re-indexes 2028. A voluntary Roth conversion is NOT an SSA-44 life-changing event. MFS uses single thresholds then one step at $391k (OUT — couple model only).',
   },
 )
 

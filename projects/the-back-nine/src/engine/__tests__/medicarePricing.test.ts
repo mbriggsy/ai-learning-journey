@@ -24,7 +24,8 @@
  *     no ACA streams, single-thresholded surcharge lands at death+2), and depletion non-accrual.
  *   - healthReadout.test.ts:312-357 pins the survivor crossing in the per-year sink (base halves
  *     immediately, surcharge bites at death+lookback) on the same streamless domain.
- *   - The primitive tier-edge step is pinned at healthOverlay.test.ts:295-300.
+ *   - The primitive tier-edge step is pinned at healthOverlay.test.ts:296-301 (tiers 1–4, exclusive)
+ *     and :326-342 (the top tier, inclusive).
  *   This file adds what those do NOT: the seed→history crossing observed in the SIMULATE per-year
  *   `healthReadout` series on the all-65+ shape; the tier-edge < / <= boundary on the RUNTIME path
  *   (not the primitive alone); and the HSA qualified cap growing to `oopMedical` + the (now nonzero)
@@ -252,11 +253,12 @@ describe('post-65 Medicare pricing — the seed→history handoff crossing (simu
 
 // ===========================================================================
 // DELIVERABLE 2 — the tier-edge < / <= WITNESS on the RUNTIME path. The surcharge
-// contract is STRICT lower-exclusive (`magi > threshold`, healthOverlay.ts:662): AT
-// the threshold pays NOTHING, AT+1 dollar pays the tier. Drive the MAGI through the
+// contract is the ONE predicate `irmaaTierApplies` (healthOverlay.ts:637): STRICT lower-exclusive
+// on tiers 1–4 (AT the line pays NOTHING, AT+1 dollar pays the tier) and INCLUSIVE on the top
+// tier ("at least" — AT the line already pays it; the second arm below). Drive the MAGI through the
 // SEED (t < lookback ⇒ the bill reads the integer seed directly, no gross-up float
 // intervenes — insight 012's integer-threshold domain). This complements the pure
-// step-function test (healthOverlay.test.ts:295-300) by proving the boundary end to
+// step-function tests (healthOverlay.test.ts:296-301, :326-342) by proving the boundary end to
 // end through medicareAnnualCost's billed total.
 // ===========================================================================
 describe('post-65 Medicare pricing — the tier-edge < / <= witness on the runtime path (seed-driven, integer, no float)', () => {
@@ -284,12 +286,23 @@ describe('post-65 Medicare pricing — the tier-edge < / <= witness on the runti
       4,
     )
   })
+
+  it('AT the integer MFJ TOP line ($750,000 — 150 % of the statute’s "at least $500,000") the bill already carries the TOP tier; one dollar under, tier 4 (the inclusive contract, billed)', () => {
+    // The line typed from 42 U.S.C. §1395r(i)(3)(C)(i)(III) + (ii) (DND-012), never read from the table:
+    //   AT   (seed[0] = line):     2 × (BASE + tier4.combinedSurcharge) × 12   ("at least" — the line owes it)
+    //   AT−1 (seed[0] = line − 1): 2 × (BASE + tier3.combinedSurcharge) × 12
+    const line = 1.5 * 500_000
+    const at = run([line, 60_000])
+    const atMinus1 = run([line - 1, 60_000])
+    expect(at.totalMedicareCostReal, 'AT the top line ⇒ the top tier').toBeCloseTo(medicareAnnual(2, 4), 4)
+    expect(atMinus1.totalMedicareCostReal, 'one dollar under ⇒ tier 4').toBeCloseTo(medicareAnnual(2, 3), 4)
+  })
 })
 
 // ===========================================================================
 // DELIVERABLE 4 — the HSA qualified cap now that medicareCost is NONZERO for the
 // all-65+ household. Cap = min(hsaBalance, oopMedical + (owner-65+ ? medicareCost : 0),
-// fundingNeed) (healthOverlay.ts:775-776, taxOverlay.ts:1639-1649). Pub 969 exception (4)
+// fundingNeed) (healthOverlay.ts:784-785, taxOverlay.ts:1639-1649). Pub 969 exception (4)
 // — a 65+ HSA owner may pay Medicare premiums (base Part B + the surcharge) tax-free.
 // ===========================================================================
 describe('post-65 Medicare pricing — the HSA qualified cap includes the now-nonzero Medicare cost (Pub 969 exception 4)', () => {

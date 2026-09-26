@@ -33,7 +33,7 @@
  * `@engine/constants` — never re-typed here (architecture §8; burned/063).
  */
 import { bracketsFor, deductionStack, taxableSocialSecurity } from '@engine/taxCore'
-import { IRMAA_ANCHOR_SCALES, irmaaTierSurchargeMonthly, slidingScalePtc } from '@engine/healthOverlay'
+import { IRMAA_ANCHOR_SCALES, irmaaTierApplies, irmaaTierSurchargeMonthly, slidingScalePtc } from '@engine/healthOverlay'
 import type { AcaApplicablePercentageTable, IrmaaSchedule } from '@engine/constants'
 import type { FilingStatus } from '@shared/model'
 
@@ -152,16 +152,16 @@ export function acaCliffFillHeadroom(c: CommittedYearIncome, cliffMagi: number):
  * step threshold above the committed baseline (the bill lands at `t + magiLookbackYears`;
  * the caller owns the will-anyone-be-enrolled-then predicate and the filing column — this is
  * the current-tier-holding math only). Baseline already above every threshold (the frozen
- * top tier) ⇒ no next step ⇒ +Infinity (the rail does not bind). Landing exactly AT a
- * threshold is safe: the tier fires on `magi > threshold` (lower-bound-EXCLUSIVE, integer
- * dollars — insight 012's raw-compare contract).
+ * top tier) ⇒ no next step ⇒ +Infinity (the rail does not bind). The fill lands on the step's
+ * `lastSafeMagi` ({@link nextIrmaaStepLine}): ON an exclusive line (the tier fires only above it),
+ * one whole dollar UNDER the inclusive top line (its line dollar already owes the top tier).
  */
 export function irmaaStepFillHeadroom(c: CommittedYearIncome, schedule: IrmaaSchedule): number {
   const baseline = irmaaMagiAtFill(c, 0)
-  const next = nextIrmaaThresholdAbove(baseline, c.filing, schedule)
-  if (next === null) return Number.POSITIVE_INFINITY
-  // Crossing bound: irmaaMagi(f) ≥ ordinary(f) ≥ f, so f = next + 1 provably crosses.
-  return largestFillWithin((f) => irmaaMagiAtFill(c, f), next, next + 1)
+  const step = nextIrmaaStepLine(baseline, c.filing, schedule)
+  if (step === null) return Number.POSITIVE_INFINITY
+  // Crossing bound: irmaaMagi(f) ≥ ordinary(f) ≥ f, so f = lastSafe + 1 provably crosses.
+  return largestFillWithin((f) => irmaaMagiAtFill(c, f), step.lastSafeMagi, step.lastSafeMagi + 1)
 }
 
 /**
@@ -197,23 +197,34 @@ export function cliffMagiFor(table: AcaApplicablePercentageTable, fplDollar: num
   return table.cliffFplFraction !== null ? table.cliffFplFraction * fplDollar : null
 }
 
-/** The next IRMAA step threshold at-or-above `magi` for the filing column, or `null` when
- *  `magi` already sits above every tier (the frozen top tier). `magi` exactly AT a threshold
- *  returns THAT threshold (the tier fires only strictly above it — the next dollar crosses). */
-export function nextIrmaaThresholdAbove(magi: number, filing: FilingStatus, schedule: IrmaaSchedule): number | null {
+/** The next IRMAA step `magi` has NOT yet crossed, for the filing column — the lowest tier that
+ *  does not apply at `magi` (the ONE predicate, `healthOverlay.irmaaTierApplies`) — or `null` when
+ *  every tier already applies. Two figures, never conflated:
+ *   - `threshold` — the statute's line, what the words quote ("the $750,000 step");
+ *   - `lastSafeMagi` — the highest MAGI still billed below it, what every rail targets: the line
+ *     itself when it is lower-bound-EXCLUSIVE (the tier fires only above it), one whole dollar under
+ *     it when INCLUSIVE (the top tier's "at least" — the line dollar owes the tier).
+ *  An exclusive line exactly AT `magi` is returned (the next dollar crosses); an inclusive one is
+ *  already crossed there. */
+export function nextIrmaaStepLine(
+  magi: number,
+  filing: FilingStatus,
+  schedule: IrmaaSchedule,
+): { readonly threshold: number; readonly lastSafeMagi: number } | null {
   if (!Number.isFinite(magi)) {
-    throw new Error(`[magiLandscape] nextIrmaaThresholdAbove: magi must be finite (got ${magi}) — insight 010`)
+    throw new Error(`[magiLandscape] nextIrmaaStepLine: magi must be finite (got ${magi}) — insight 010`)
   }
   for (const tier of schedule.tiers) {
+    if (irmaaTierApplies(magi, tier, filing)) continue
     const threshold = filing === 'mfj' ? tier.mfjMagiThreshold : tier.singleMagiThreshold
-    if (magi <= threshold) return threshold
+    return { threshold, lastSafeMagi: tier.lowerBoundInclusive ? threshold - 1 : threshold }
   }
   return null
 }
 
 /** The next IRMAA step above `magi`: its threshold + the PER-PERSON MONTHLY surcharge jump
- *  crossing it costs (the delta between the tier just over the threshold and the tier at
- *  `magi` — read through the ONE canonical tier lookup, never a re-typed table). `null` when
+ *  crossing it costs (the delta between the tier at the first crossing dollar — `lastSafeMagi + 1`,
+ *  which is the line itself on the inclusive top tier — and the tier at `magi` — read through the ONE canonical tier lookup, never a re-typed table). `null` when
  *  no step remains. The caller multiplies by the enrolled count × 12 (never a flat ×2).
  *  ANCHOR-SCALE by design (the trend unit): this is readout geometry — the healthcare sheet
  *  speaks the household's landscape in TODAY's (2026-real) terms, and it prices nothing (the
@@ -224,12 +235,12 @@ export function nextIrmaaStep(
   filing: FilingStatus,
   schedule: IrmaaSchedule,
 ): { readonly threshold: number; readonly surchargeDeltaMonthlyPerPerson: number } | null {
-  const threshold = nextIrmaaThresholdAbove(magi, filing, schedule)
-  if (threshold === null) return null
+  const step = nextIrmaaStepLine(magi, filing, schedule)
+  if (step === null) return null
   return {
-    threshold,
+    threshold: step.threshold,
     surchargeDeltaMonthlyPerPerson:
-      irmaaTierSurchargeMonthly(threshold + 1, filing, schedule, IRMAA_ANCHOR_SCALES) -
+      irmaaTierSurchargeMonthly(step.lastSafeMagi + 1, filing, schedule, IRMAA_ANCHOR_SCALES) -
       irmaaTierSurchargeMonthly(magi, filing, schedule, IRMAA_ANCHOR_SCALES),
   }
 }

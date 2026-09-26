@@ -79,7 +79,7 @@ The MVP is four acts. Each is a real milestone with its own plan, gates, and ver
 
 Act 1's engine is pinned against primary sources: every dated tax and healthcare figure carries an IRS / CMS / HHS / SSA / eCFR citation (and a directional-until-pinned flag where one isn't yet locked), and cohort mortality is re-derived 1:1 from the SSA 2024 Trustees-Report cohort life tables (Alternative 2) for the primary household's birth cohorts (male 1969, female 1972). Every household reads that one pair of curves today. Per-person birth-year keying is not built, so an older household's longevity is slightly overstated (conservative) and a younger one's slightly understated (optimistic). The guided intake delivers a **live, provisional Monte Carlo reading that sharpens as you answer each question**, proven end-to-end in real Chromium under the enforced CSP.
 
-The engine and intake carry **3669 tests across 186 files**, all green, alongside lint, bundle-budget, ACA-freshness, state-tax-freshness, browser-CSP, and real-browser vertical-fit gates. Per-unit feature detail lives once in [the roadmap's You-Are-Here table](docs/roadmap.md#the-you-are-here-table) — this file never enumerates it.
+The engine and intake carry **3676 tests across 186 files**, all green, alongside lint, bundle-budget, ACA-freshness, state-tax-freshness, browser-CSP, and real-browser vertical-fit gates. Per-unit feature detail lives once in [the roadmap's You-Are-Here table](docs/roadmap.md#the-you-are-here-table) — this file never enumerates it.
 
 ---
 

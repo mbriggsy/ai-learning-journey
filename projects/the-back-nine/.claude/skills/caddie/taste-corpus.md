@@ -100,7 +100,10 @@ supersedes anything derived from this file.
 14. **Never fabricate authorship.** `[briggsy-general]` No knob/allocation/line the user didn't author. Modeled
     facts are disclosure rows ("on your behalf"), never editable knobs presented as their choice.
 15. **No falsely-actionable verdicts.** `[product]` A plan short from year 0 gets a figure-less "rethink"
-    verdict — never a "trim the budget" clause implying a small fix suffices.
+    verdict — never a "trim the budget" clause implying a small fix suffices. **Widened 2026-09-25 (E17):**
+    ANY move quoted to the dollar with its payoff left unpriced reads to him as SUFFICIENT — "toward"
+    does not survive a cold read as direction-only. A precise ask beside a vague payoff is a sufficiency
+    claim; rank that survivor Tier 0, never residual polish.
 16. **Honest limits, plainly.** `[product]` Self-custody/failure copy states the real limit ("without both,
     no one can recover this — not even us") and steers to the real remedy. Never "you're
     covered"; never "it's gone" when a file+word could still restore.
@@ -379,3 +382,12 @@ supersedes anything derived from this file.
   Lesson: a direction-honest hedge that names WHICH way the tool errs ("reads a little better than
   reality") and WHEN ("once the paid-in amount would have been recovered") reads calm to him — the
   honesty is the calm; softening it to "a simplification" was the thing he never asked for.
+- **E17 — Card 3's trim clause, read cold (2026-09-25).** Trigger: the off-track hero's line 3,
+  *"Spending about $2,800 a month instead of $10,000 — about $7,200 less — would move it toward
+  steadier ground"* — a coarse proxy (−spend × the gap), never a solve. Eight machine seats read
+  "toward" as direction; the chair filed the sufficiency survivor Tier 2. His verbatim: **"spend 2800
+  a month instead of 10k and they'd be ok"** → asked how ok / how long: **"that's what the tool tells
+  us, no?"** Resolution: the entry moved to Tier 0 + a council on the frame (rule 15 widened). Lesson:
+  the reader fills an unpriced payoff with "ok"; a hedge WORD cannot carry what the layout implies —
+  a dollar-precise ask IS a promise unless the surface says otherwise. **Direction of error feared:
+  the chair discounting a survivor because machine seats read the hedge correctly.**

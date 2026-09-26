@@ -278,7 +278,7 @@ to a single commit.
   the 2026-08-02 pin**, because it promised a month tied to NC's own certification that no longer
   gates anything, and a withhold that names a date it cannot keep is exactly the promise this
   product must not make. A future state's pin event may have any timing, so the shipped slot commits
-  to none (`copy.ts:2973`).
+  to none (`copy.ts:2977`).
 - **No live household fires the withheld render today, and that is a CLEARED clause, not a
   regression.** Both blocking clauses cleared after U16 shipped: S.L. 2026-41 § 44.1(a) pinned
   `ncRateSchedule` to an enacted statutory schedule on 2026-08-02, retiring the last directional
@@ -321,7 +321,7 @@ to a single commit.
   lockup rather than folded into that label; scrub stays pointer-only sugar.
 - The surface renders no percentile of its own: the survival context is source-bound BY REFERENCE
   to the spine's rendered confidence object (Q1), which is where the `displayTenth`/`xOfTenClamp`
-  convention lives (`confidence.ts:66`, `gradeCalibration.ts:93`). Nothing is re-typed.
+  convention lives (`confidence.ts:71`, `gradeCalibration.ts:93`). Nothing is re-typed.
 - **`assertObjectiveMatchesHeadline(payload)`** (`src/engine/solver/objectiveHeadline.ts:132`): a
   PURE exported guard the render path AND a unit test both call — the statistic that RANKED
   (seed-A tier2) ≡ the statistic DISPLAYED (seed-B headline) — with PLANTED-MISMATCH arms proving

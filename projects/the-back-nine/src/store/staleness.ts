@@ -19,6 +19,8 @@
  * recompute, never a re-presentation of a number the current constants can no longer
  * reproduce. When NO clock fires, the persisted seed makes the recompute byte-identical to
  * the saved answer (CRN determinism) — the no-drift case IS the plan's byte-identity claim.
+ * The exception no clock here sees is an ENGINE-DOMAIN pricing change (`1c97f55d` re-priced
+ * IRMAA ROSIER with every stamp equal — OPEN; the last quiet clock below).
  *
  * ABSENT-STAMP = NOT-APPLICABLE (plan §298): a pre-U13 vault lacks savedAt/taxVintageDetail/
  * dateVintage — those clocks stay quiet (no false stale on legacy vaults), and every
@@ -60,6 +62,12 @@
  *   sanctioned mechanism WHEN a real installed base exists is a Q7 saved-era entry
  *   (`appDefaults.ts` — the add-only era map exists for exactly this class); any future
  *   engine-domain unit shipping against real vaults must mint one, not a new clock here.
+ *   [SUPERSEDED 2026-09-26 — the ultramode review wf_d11fd151-d48, G1.1–G1.3: `1c97f55d`
+ *   re-priced IRMAA for every saved Medicare-priced vault, ROSIER wherever a tier bites from
+ *   bill 2028 (`42b078cf` re-priced it too), with every stamp equal; and a Q7 era entry
+ *   cannot express an engine-domain change (it keys on the one survivor-ratio knob, exempts
+ *   overriders, reads no exposure). The remedy is OPEN, council first: the register's Tier 2
+ *   *An engine-domain pricing change re-prices every saved vault with no clock…*.]
  * TWO PREDICATES, NOT ONE (the review's hero-echo catch): `rulesMoved` = a clock whose
  * firing means the CURRENT recompute genuinely differs from the saved answer (the hero's
  * "Some rules changed — this answer uses today's" echo may only ride THAT); `anyStale` =
@@ -74,7 +82,7 @@
  * line off the OR-collapse of all seven healthcare clocks, so an all-65+ household — which
  * takes `buildOverlay`'s Medicare-only branch (`intakeMap.ts:681-684`), ships NO
  * `enrolledPremium`, and can therefore NEVER open the engine's ACA gate
- * (`taxOverlay.ts:1714-1719`: `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0`) —
+ * (`taxOverlay.ts:1716-1721`: `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0`) —
  * was told "Health-coverage rules have been updated" on a moved `acaStatus` stamp. They price
  * ZERO ACA. That is insight 101 inverted: the warning described its poster child, not the
  * predicate's extension. And it was never only a copy bug — `healthcare.moved` fed `rulesMoved`,
@@ -100,10 +108,10 @@
  * WHAT THE WITHDRAWN HEURISTIC WOULD HAVE SHIPPED — a SILENT STALE, built while fixing an
  * over-alarm. It bucketed `irmaa-freeze` to the aggregate because `irmaaTopTierFrozenThrough`
  * has no engine reader. But `irmaa.value` IS engine-read (simulate.ts:859; solveAnchor.ts:179,181;
- * taxOverlay.ts:1118 — where the whole tier ladder feeds `buildPartBPricingSchedule`), and
+ * taxOverlay.ts:1120 — where the whole tier ladder feeds `buildPartBPricingSchedule`), and
  * `consumedConstants.ts:112` puts the ENTIRE `health.` family in the consumed set on
  * `healthcareEnabled === true`. This repo's own tripwire
- * (`irmaaTopTierReindex.tripwire.test.ts:30-41`) prescribes that the 2028 re-index "bump the
+ * (`irmaaTopTierReindex.tripwire.test.ts:32-43`) prescribes that the 2028 re-index "bump the
  * `irmaa` constant + its constants.shape pins, then move `topTierFrozenThrough` forward" — the
  * priced table and its marker move TOGETHER, by construction. Under the heuristic a returning
  * `?seed=retired` vault would then read `unattributed:['irmaa-freeze']`, `rulesMoved:false`, the
@@ -121,7 +129,7 @@
  * `irmaa-freeze` names the Medicare line for EVERY healthcare-priced household, including one
  * whose MAGI never reaches the first IRMAA tier and who therefore pays no surcharge either way.
  * That is deliberate and it is NOT the withdrawn heuristic returning. The run reads the IRMAA
- * schedule (`taxOverlay.ts:1118`) whenever Medicare is priced — that is the exposure fact, and it
+ * schedule (`taxOverlay.ts:1120`) whenever Medicare is priced — that is the exposure fact, and it
  * is decidable at this seam. Whether the tiers bite depends on where a stochastic MAGI path
  * lands across the whole horizon (RMDs grow, a conversion spikes it), which is not a property of
  * the household's inputs at all and cannot be read from any builder's output. Gating on it would
@@ -183,7 +191,7 @@ export type HealthcareFamily = 'aca' | 'medicare'
  *     invisible to exactly the pre-65 marketplace planner it hits hardest.
  *   · `aca-status` / `fpl-guideline` — the marketplace rulebook (`acaEnhancedSubsidyStatus`,
  *     `federalPovertyGuidelines`), priced only where the engine's per-year ACA gate can open
- *     (`taxOverlay.ts:1714-1719`).
+ *     (`taxOverlay.ts:1716-1721`).
  *   · `irmaa-freeze` — dates the IRMAA schedule, which IS engine-read on every healthcare-priced
  *     run (see the header's ruling). Medicare, exactly like `part-b`.
  *   · `part-b` / `part-b-trend` / `extras-typical` — the Medicare cost figures.
@@ -484,7 +492,7 @@ export function deriveStaleness(
   // it and no field of this stamp can describe a change to its answer. WHICH family a clock
   // answers to is {@link HEALTHCARE_CLOCK_FAMILIES}'s job — there is no second opinion here.
   //   · ACA family → `exposure.aca`. The engine's per-year ACA gate is
-  //     `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0` (`taxOverlay.ts:1714-1719`);
+  //     `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0` (`taxOverlay.ts:1716-1721`);
   //     the Medicare-only branch ships NO quote pair, so it can never open — an all-65+
   //     household prices ZERO ACA and must stay SILENT on it.
   //   · Medicare family → `exposure.medicare`.
@@ -511,7 +519,8 @@ export function deriveStaleness(
       placeHealth('fpl-guideline')
     }
     // THE IRMAA FREEZE HORIZON is a Medicare cost clock like any other (the F1 correction).
-    // `topTierFrozenThrough` has no engine reader of its own — and that is irrelevant: it DATES
+    // `topTierFrozenThrough` is itself engine-read since `1c97f55d` (`irmaaScheduleAsCompared`
+    // holds the top line at its pinned figure through it) — and either way it DATES
     // the `irmaa` schedule, which every healthcare-priced run consumes, and this repo's own
     // tripwire prescribes moving the marker in the SAME commit that re-pins the brackets. See
     // the header's ruling for what the withdrawn heuristic would have silently swallowed.
@@ -549,7 +558,7 @@ export function deriveStaleness(
     //
     // ITS "no exposure gate" COMMENT WAS FALSE and is swept here (U17 §S4, insight 087): the
     // trend schedule `partBPricingByT` is constructed ONLY under
-    // `healthcareEnabled && config.taxEnabled` (`taxOverlay.ts:1124-1125`), so a run that built
+    // `healthcareEnabled && config.taxEnabled` (`taxOverlay.ts:1126-1127`), so a run that built
     // no healthcare overlay never constructs it and re-prices nothing under the new edition.
     if (
       savedHealth.partBTrendVintage !== undefined &&

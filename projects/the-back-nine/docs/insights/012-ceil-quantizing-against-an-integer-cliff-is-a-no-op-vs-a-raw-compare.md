@@ -48,3 +48,9 @@ expecting it to stabilize an exact-threshold MAGI (it won't). Any step-function 
 integer (or grid-aligned) threshold. Cross-check against [[010-nan-passes-a-relational-guard-because-every-comparison-with-nan-is-false]]
 (finiteness-first still applies — a NaN MAGI is rejected before this branch) and the `confidence.ts`
 headline quantization (which DOES help, because its grid is deliberately coarser than the band edge).
+- **Refinement, 2026-09-26 (the IRMAA price frame, `1c97f55d`):** IRMAA's lines are whole NOMINAL
+  dollars, but the engine now compares them in the MAGI year's REAL dollars (`irmaaScheduleAsCompared`:
+  the nominal line ÷ that year's `cumulativePriceIndex`), so once the MAGI year passes the index anchor
+  a compared line generally sits OFF the whole-dollar grid. The no-`ceil` rule above holds and matters
+  more: a `ceil`/`round` on real MAGI would MOVE the compare off the nominal test, not merely fail to
+  stabilize it (`irmaaTierApplies` compares raw).

@@ -1356,7 +1356,7 @@ export const copy = {
   // It read "switching this never changes the amount" — but the SHOWN figure jumps exactly 12×
   // (`spendDisplayed`, AssumptionPanel.tsx:344-349), so the reader watches the number move while
   // being told nothing moved. The natural repair is to retype the old digits, and the panel's own
-  // commit (AssumptionPanel.tsx:607-617, the `entered * 12` arm at :608) then multiplies by 12
+  // commit (AssumptionPanel.tsx:607-617, the `entered * 12` arm at :614) then multiplies by 12
   // under 'month' — so a household "correcting" 78,000 back to 6,500 under 'Each year' commits a
   // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:258) hard-disarms
   // `spend-period-unconfirmed` (sanity.ts:348-371, the disarm read at :359) on this surface, and
@@ -2382,8 +2382,9 @@ export const slots = {
     `That year has already passed — this plan can start the conversions in ${yearFormatted} or later.`,
   // --- U7 verdict grammar (the confidence statement's magnitude clause) -----------------
   // The second line of the verdict, keyed off the engine's dollar DIRECTION
-  // (DollarAdjustment.direction — NEVER re-derived UI-side) + the humane-rounded $/month figure
-  // (pre-formatted by the caller; the ui layer can't import the money formatter). Voice is
+  // (DollarAdjustment.direction — NEVER re-derived UI-side) + its $/month figures, each pre-formatted
+  // by the caller (`verdictSentence.ts`): the entered spend humane-rounded (`formatPerMonth`), the
+  // spend solve's F exact, never re-rounded (`formatSolvedSpend`). Voice is
   // permissive/probabilistic (R12) — a possibility, never an imperative ("there looks to be
   // room" / "would …", never "trim" / "you should"). The amount enters through the slot, so the
   // copyGuard's free-numeral scan never sees a hardcoded quantitative claim. First-draft strings
@@ -2394,7 +2395,9 @@ export const slots = {
    *  measured through the real pipeline it OVERSOLD: the shipped `surplus` seed (over-funded, $5,000 a
    *  month) was quoted "room for about $7,470 more", and at $12,470 the engine rates it BORDERLINE 8/10
    *  (`retired` at $5,000 / $5,500 the same). So only the entered spend rides, and the sentence names
-   *  the size as unworked — until the register's Tier 1 real solve lands (its 'room' half). */
+   *  the size as unworked. Since the spend solve shipped (`spendSolve.ts`, 2026-09-26) this is the
+   *  UNSIZED fallback: `verdictSentence.ts` renders it whenever `spendClauseFor` yields no clause (the
+   *  lane idle, an unsized outcome, a held word, a mismatched direction). */
   verdictRoomClause: (spendFormatted: string): string =>
     `There looks to be room to spend more than $${spendFormatted} a month. This answer doesn’t work out how much more.`,
   /** 'room' while the spend solve is IN FLIGHT — the first sentence alone (council wf_faa1af2d-052:
@@ -2415,9 +2418,10 @@ export const slots = {
    *  floor sits near $6,500. Briggsy's cold read took the old sentence as "they'd be ok" (cold-read log
    *  2026-09-25; taste-corpus rule 15 + E17: a dollar-precise ask beside an unpriced payoff reads as
    *  sufficiency). So the clause quotes ONLY the spend they entered (a fact of the run, never a reading)
-   *  and names what it has NOT worked out. No target, no delta, no odds after, no duration — until a
-   *  real, round-trip-verified solve lands (register Tier 1, *The spending floor — a real solve*). The
-   *  already-failing case keeps its own `verdictRethinkClause` (Council 2026-06-29). */
+   *  and names what it has NOT worked out. No target, no delta, no odds after, no duration. Since the
+   *  spend solve shipped (`spendSolve.ts`, 2026-09-26) this is the UNSIZED fallback; the solved form is
+   *  `verdictTrimSized`, the in-flight one `verdictTrimLead`. The already-failing case keeps its own
+   *  `verdictRethinkClause` (Council 2026-06-29). */
   verdictTrimClause: (spendFormatted: string): string =>
     `Spending less than $${spendFormatted} a month would let your plan cover more futures. This answer doesn’t work out how much less.`,
   /** 'trim' while the spend solve is IN FLIGHT — the first sentence alone (see verdictRoomLead). */
@@ -2996,8 +3000,8 @@ export const slots = {
   /** The RecommendationViz accessible sentence (the role="img" name): both arms' magnitudes AND the
    *  delta, so the whole comparison is reachable in the a11y tree (A2 AT-parity). "about" carries the
    *  hedge; every figure arrives pre-formatted, so the sentence carries no bare numeral — the ENDPOINTS in
-   *  the humane "$X.XM" prose dialect (`formatAbsoluteDollar`, money.ts:72), the DELTA in grouped digits
-   *  (`formatDeltaDollar`, money.ts:53). NOT formatAxisDollar's exact-when-round RULER precision (money.ts:186):
+   *  the humane "$X.XM" prose dialect (`formatAbsoluteDollar`, money.ts:74), the DELTA in grouped digits
+   *  (`formatDeltaDollar`, money.ts:55). NOT formatAxisDollar's exact-when-round RULER precision (money.ts:188):
    *  that dialect never touches this sentence, and naming it here would point a reader at the wrong rounding law.
    *
    *  ⚠️ WEALTH-SHAPED ⇒ LEAVE-MORE ONLY (2026-09-08). "lands near about $X" describes a level the reader
@@ -3012,7 +3016,7 @@ export const slots = {
    *  BITES it the way it bites its visual twin `recDeltaTypical`: the AT reader hears the same figures the
    *  sighted reader sees, so the same modal law must hold. A `recViz` prefix was rejected — it would red the
    *  three correctly hedge-free arm labels (`recVizWithLabel`/`recVizWithoutLabel`/`recVizRunnerUpLabel`,
-   *  copy.ts:1881-1888 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
+   *  copy.ts:1927-1934 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
    *  `isControlKey` was rejected — it breaks that predicate's "by prefix ALONE" law (copyGuard.ts:129). */
   recDeltaVizAria: (withoutLabel: string, withoutFig: string, withLabel: string, withFig: string, deltaFig: string): string =>
     `${withoutLabel} lands near about $${withoutFig}; ${withLabel} about $${withFig} — a difference of about $${deltaFig}.`,

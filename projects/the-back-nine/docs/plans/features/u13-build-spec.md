@@ -81,7 +81,7 @@ atomic change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` +
 
 ## Phase B — the staleness reader (`src/store/staleness.ts`, pure)
 
-- **Input** (`deriveStaleness`, staleness.ts:399-403): the RAW-decoded `ScenarioV3` captured **ONCE at
+- **Input** (`deriveStaleness`, staleness.ts:407-411): the RAW-decoded `ScenarioV3` captured **ONCE at
   unlock** (red-team constraint (a) — BEFORE `draftFromScenario`/`scenarioFromDraft` normalize or re-stamp;
   reading the post-resave draft cries wolf, reading the normalized persist never fires), an injected
   `todayEpochDay`, and — added by the U17 §S4 exposure gate below — a `StalenessExposure` read of what the
@@ -146,7 +146,11 @@ atomic change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` +
   whether the app itself started pricing something it previously didn't (the Medicare pricing unit's
   ultramode review, 2026-07-10, voted real-but-immaterial: the installed base is ~zero and the drift
   direction is conservative). The sanctioned mechanism once a real installed base exists is a new
-  `appDefaults.ts` era entry, not a new clock.
+  `appDefaults.ts` era entry, not a new clock. *Superseded 2026-09-26:* `1c97f55d` moves a saved Medicare
+  household's recompute ROSIER with every stamp equal (`42b078cf` changes it too), and a Q7 era entry
+  cannot express an engine-domain change — it keys on one knob (`survivorSpendingRatio`), exempts
+  overriders and is not exposure-gated. The remedy is the register's open Tier 2 *An engine-domain
+  pricing change re-prices every saved vault with no clock…*, council first.
 - Battery (`src/store/__tests__/staleness.test.ts`): hand-derived fixtures per clock + planted-fail arms
   both directions (fires-when-moved, silent-when-identical) + the absent-stamp/legacy-vault arms + a
   property sweep over the map — a freshly-stamped save fires NO clock on any route, because every

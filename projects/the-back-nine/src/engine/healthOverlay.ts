@@ -445,8 +445,10 @@ export interface IrmaaSurchargeScales {
   readonly partDByTier: readonly number[]
 }
 
-/** The anchor-year (2026-real) scales — the identity element. For readout geometry that
- *  speaks in today's terms (`nextIrmaaStep`) and for tests of the step function itself.
+/** The anchor-year (2026-real) scales — the identity element, for tests of the step function
+ *  itself. `nextIrmaaStep` still prices its crossing at these scales beside a LINE framed in the
+ *  caller's MAGI year — OPEN, never a pattern to copy (the register's *The Medicare step card
+ *  prices crossing the next surcharge step at 2026 prices…*).
  *  Length 5 = the IRMAA tier count (shape-test-pinned); the length assert in the consumer
  *  makes a 6th-tier drift loud here too. */
 export const IRMAA_ANCHOR_SCALES: IrmaaSurchargeScales = { partB: 1, partDByTier: [1, 1, 1, 1, 1] }
@@ -739,8 +741,10 @@ export function irmaaTierSurchargeMonthly(
   /** The per-program trend scales for the billed year (the trend unit's DISAGGREGATION —
    *  council wf_c673339e-257, hawk-honored). REQUIRED, never defaulted: a caller that forgot
    *  the scale would silently price the 2026 surcharge into a 2035 bill (insight 020 — the
-   *  second consumer is not protected by the first one remembering). Anchor-scale callers
-   *  (readout geometry, tests of the step function itself) pass {@link IRMAA_ANCHOR_SCALES}. */
+   *  second consumer is not protected by the first one remembering). Tests of the step function
+   *  itself pass {@link IRMAA_ANCHOR_SCALES}; a readout of a LATER bill owes that bill year's
+   *  scales (`magiLandscape.nextIrmaaStep` still passes the anchor's — OPEN, see
+   *  {@link IRMAA_ANCHOR_SCALES}). */
   scales: IrmaaSurchargeScales,
 ): number {
   if (!Number.isFinite(magi)) {

@@ -72,8 +72,9 @@
    a class-scoped ring would out-specify the exemption and box the verdict at landing. */
 
 /* ── U12 C2: the verdict-lockup crossfade (the sharpen loop's state→state morph) ─────────────────
-   Fires ONLY on a sticky displayed-triple change on an already-mounted hero: ConfidenceStatement
-   re-keys the lockup's TEXT containers (glyph + word span + count line + clause line — one unit)
+   Fires ONLY on a displayed-sentence change on an already-mounted hero: ConfidenceStatement
+   re-keys the lockup's TEXT containers (glyph + word span + count line on `verdictKey`, the clause
+   line on `lockupKey` — one unit on a verdict change, the clause line alone on a clause-only change)
    and this @starting-style entrance fades the fresh nodes in. CSS-ONLY by hard CSP condition
    (3-controls.md U12 supersession #4): no framer-motion layout animation anywhere in this path —
    its injected inline <style> dies under style-src 'self' in PROD headers only (the green-local/
@@ -85,8 +86,12 @@
    LAYOUT (insight 035): all five verdict words hold ONE line at the laptop tiers (--text-2xl caps
    at 44px; the longest, "More than covered", ≈ 420px with glyph+gap inside the 576px --measure),
    so a swap cannot grow the heading's box. The magnitude clause can change line count only on a
-   genuine regime change (a direction flip always adopts — sticky holds edge-hugging jitter), never
-   on a display wobble. Verified in real Chromium by the integrator's pass, not assumed. */
+   genuine regime change (a direction flip adopts unless the word is held — the direction holds
+   exactly when the word does, insight 072's pair law in memoryModel `resolveStickyDisplay` — and
+   sticky holds edge-hugging jitter), never on a display wobble. Verified in real Chromium by the
+   integrator's pass, not assumed. The spend lane is an exception: it moves the clause between its
+   figure-less, pending and sized forms, and the pending one reserves the sized sentence's height
+   (below). */
 .cs-swap {
   opacity: 1;
   transition: opacity var(--dur-fast) var(--ease-out);
@@ -125,9 +130,6 @@
   max-width: var(--measure);
 }
 
-/* For the action-first states (borderline / off-track / already-failing) the magnitude line IS the
-   constructive lead — what would steady the plan — so it reads a touch stronger (full ink), never
-   alarmed. The verdict word stays calm; this is emphasis, not alarm (R11). */
 /* The pending clause RESERVES the sized sentence's height (insight 035; the .ladder-readout precedent):
    the live lead and an invisible widest-form sized sentence share ONE grid cell, so the box is the
    taller of the two and the band below never jumps when the solved figure lands. */
@@ -141,6 +143,9 @@
   visibility: hidden;
 }
 
+/* For the action-first states (borderline / off-track / already-failing) the magnitude line IS the
+   constructive lead — what would steady the plan — so it reads a touch stronger (full ink), never
+   alarmed. The verdict word stays calm; this is emphasis, not alarm (R11). */
 .confidence-reveal[data-framing='action-first'] .cs-magnitude {
   color: var(--ink);
   font-weight: var(--weight-medium);

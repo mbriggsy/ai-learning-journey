@@ -75,7 +75,7 @@ refusal (`RothLever.tsx:53`).
 
 `Result.tsx` derives the anchor from `startCalendarYear`, which is the plan's **BUILD** year (written once
 at `memoryModel.ts:569`, never re-anchored, survives every re-save). Four separate comments already forbade
-attributing that quantity to the save (`staleness.ts:26`, `resultSave.ts:172`, `copy.ts:2867`,
+attributing that quantity to the save (`staleness.ts:28`, `resultSave.ts:172`, `copy.ts:2871`,
 `FuckOffDate.tsx:150`) — and the band's `'saved'` label did exactly that.
 
 - **Renamed** `elapsedPlanYears` → **`yearsSincePlanBuilt`**, with zero orphans left behind, and every
@@ -202,7 +202,7 @@ literal tense regexes pin it now. Three mutants red → reverted.
 4. **The aged fan ships ONLY with** (a) an adjacent **premise line** naming the balance vintage and (b) a
    **RENDERED re-confirm control** (insight 100 — a copy promise is a UI contract). The residual is
    disclosed as **UNDETERMINED, never "conservative."** Both ship as `.band-premise` (`result.css:229`,
-   one family home) under BOTH routes' band panes — `ConfidenceStatement.tsx:426-433` and
+   one family home) under BOTH routes' band panes — `ConfidenceStatement.tsx:428-435` and
    `FuckOffDate.tsx:492-507`; the OLD-SAVE arm names the `agedBalancesYearFor` vintage and the re-saver
    reads the build-anchor arm. **No premise line ⇒ no aged fan, and that law is STRUCTURAL:** the resolved
    memo withdraws the aged fan when no `onReconfirm` route exists (`ConfidenceStatement.tsx:290`, and its
@@ -416,7 +416,7 @@ load-bearing.**
   trichotomy wants, and explicitly bans a re-typed subset. But that did not mean "no seam work here": both
   were private closures inside `createMemoryModel` and **neither was on the returned surface**, so the
   stage's seam work was **EXPOSING `currentDraftFingerprint()` on `MemoryModel`** (`memoryModel.ts:418`,
-  returned at `:948`, derived at `:674`) — not re-deriving it. The committed `SolveAnswer.fingerprint` is
+  returned at `:997`, derived at `:708`) — not re-deriving it. The committed `SolveAnswer.fingerprint` is
   the MINT basis, *not* the trichotomy's fresh fingerprint.
 - **The mint is NOT independent of the plan-save machine.** The record participates in the dirty/clean
   compare (`resultSave.test.ts` pins it by name), so it had to be sequenced against it. But **"a mint
@@ -491,7 +491,7 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   defect**: the doctored build year forks the derived birth year across the RMD band edge, forcing the
   household into RMDs two years early. It is pinned as found and filed.
 - **Both seeds were walked** (`datearrived` plus the existing aged plant) in the Caddie walk, and
-  `datearrived` joined the door walk (`e2e/caddie-walk.spec.ts:1012-1037`) — without that allowlist entry the
+  `datearrived` joined the door walk (`e2e/caddie-walk.spec.ts:1016-1041`) — without that allowlist entry the
   one plant this stage exists to cold-read would have been chaired on its landing alone.
 - **The walk hard-flagged all six faces and NOTHING shipped from it** (`docs/caddie/cold-read-log.md`,
   2026-07-27) — three carrying **calm-but-wrong BLOCKERS**, the class the batched-oracle grant has never
@@ -510,8 +510,8 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
 - **The aged band's x-axis has its first real-browser arm.** Before S6 no fit arm asserted it — the aged
   axis appeared nowhere in `e2e/`, so §S0's rename had shipped on unit arms alone. `?vault=datearrived` is
   now driven at `e2e/vertical-fit.spec.ts:2099-2203`, asserting that the year-0 endpoint names the BUILD
-  year (`'Plan built'`, `:2159-2162`) and that no named marker renders left of Today — neither the plain
-  label nor the split one, since the array picks between them (`:2171-2178`). Both are mutation-proven, and
+  year (`'Plan built'`, `:2164-2167`) and that no named marker renders left of Today — neither the plain
+  label nor the split one, since the array picks between them (`:2176-2183`). Both are mutation-proven, and
   the withdrawal mutant draws
   "Essentials date" to the LEFT of "Today" — the exact stumble §S2's hawk veto killed.
 - **The saved recommendation took its first trip through real WebCrypto and IndexedDB** here.
@@ -528,7 +528,7 @@ as the council admitted it, and the reasons are the material the re-filed unit s
 
 Verified at council time: the bars carry arm **names** at their ends plus the delta hero and the
 `$0`/ceiling axis frame; each bar's own dollar value renders **only** in `ariaSummary`
-(`recommendationView.ts:697-703`, `copy.ts:3017` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
+(`recommendationView.ts:697-703`, `copy.ts:3021` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
 AT-over-sighted inversion is real and nobody disputed it.
 
 The admission was gated on a **deliberate dialect split** in `recommendationView.ts` — endpoints humane

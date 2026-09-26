@@ -97,7 +97,7 @@ status: shipped
 ## S2 — engine shape
 
 1. **Placement:** a pure per-state family beside taxCore's primitives, joining the SAME
-   per-year gross-up fixed point as a **second addend at `taxOverlay.ts:881-893`**
+   per-year gross-up fixed point as a **second addend at `taxOverlay.ts:883-895`**
    (`solveGrossWithdrawal`) — never bolted on after convergence. `GrossUpContext` carries the
    state code; the calendar threads as `startCalendarYear + t` (the senior-bonus pattern —
    the rate lookup **CONSUMES the year**, insight 074). That last point stopped being
@@ -105,8 +105,9 @@ status: shipped
    overlay that had frozen the rate at t=0 would misprice every year after 2026.
 2. **Per-state bases from converged channels:**
    - **NC:** `nonSSordinary + realizedGain` (SS component NEVER enters; gains ordinary),
-     minus the NC standard deduction for the year's `resolveYear` filing status, floored at 0,
-     × the year's rate.
+     minus the NC standard deduction for the year's `resolveYear` filing status — statute-frozen,
+     so DEFLATED to the year's real dollars by `cumulativePriceIndex` since 2026-09-25
+     (`e04823a4`) — floored at 0, × the year's rate.
    - **PA:** qualified-age (≥59.5) arm = `(ongoingTaxable-class income + realizedGain)` ×
      3.07% — withdrawals/conversions/SS contribute **zero**. Under-59.5 arm: conversions and
      pre-tax withdrawals **TAXED** (the conservative arm — the primary sentence for the
@@ -147,7 +148,7 @@ status: shipped
    k-derivation comment (`taxOverlay.ts:481-484`) and re-stated in
    [architecture.md §7.1](../../architecture.md).
 9. **Accounting:** state tax folds into the year's tax-paid surface the way federal does
-   (`taxPaidThisYear`, taxOverlay.ts:1805 family) — one lifetime-tax lens, no parallel ledger
+   (`taxPaidThisYear`, taxOverlay.ts:1809 family) — one lifetime-tax lens, no parallel ledger
    in v1.
 
 ## S3 — intake + the R7 seat

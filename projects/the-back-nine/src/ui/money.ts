@@ -8,8 +8,10 @@
  * coupling exists, and the rounding below is a PRESENTATION choice, not the engine's grid). Pure
  * Intl — no React, no state.
  *
- * Both are HUMANE by design (back-nine-design §3 "no spurious precision"): the dollar grammar is a
- * coarse first-answer hint, not a solve, so it rounds to a calm figure and never shows cents.
+ * The humane formatters round by design (back-nine-design §3 "no spurious precision") to a calm
+ * figure, never cents. Two are EXACT by provenance instead: `formatSolvedSpend` (the spend solve's
+ * verified grid figure — the verdict clause's sized F IS a solve, so it is never re-rounded) and
+ * `formatEnteredDollar` (a dollar the household typed).
  */
 
 const grouped = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })

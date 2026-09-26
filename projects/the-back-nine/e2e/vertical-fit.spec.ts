@@ -225,7 +225,7 @@ async function assertTier(page: Page, tier: 'laptop' | 'narrow'): Promise<void> 
     const query = window.matchMedia('(min-width: 68rem)').matches
     // (2) what the page ACTUALLY LAID OUT. `[data-twopane]` is stamped whenever a band resolved —
     // at EVERY width (ConfidenceStatement.tsx / FuckOffDate.tsx), so its mere presence is NOT the
-    // tier. The two-pane grid is what the 68rem query turns on: confidence.css :228 /
+    // tier. The two-pane grid is what the 68rem query turns on: confidence.css :233 /
     // fuckOffDate.css :220 give the stamped reveal `display: grid` with TWO columns inside the
     // query and nothing outside it, so the reveal's RESOLVED column count is the rendered tier.
     // A media-query answer that disagreed with the pixels (a breakpoint mirror drifting, a

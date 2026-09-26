@@ -8,17 +8,19 @@
  * THE GAP IT GUARDS: the IRMAA schedule's first four MFJ/single thresholds inflation-index every
  * year, but the TOP tier (≥ the highest single / MFJ thresholds) is statutorily FROZEN through
  * `irmaa.topTierFrozenThrough` (= 2027) and then RE-INDEXES for 2028 (health.ts:168; CMS 2026 IRMAA
- * fact sheet). The engine prices IRMAA off the constant table verbatim — so once wall-clock 2028
- * arrives, a build still carrying the 2027-frozen top-tier thresholds is pricing a stale top tier
+ * fact sheet). The engine MODELS every line past the table's pinned `billYear` on the one price
+ * index (`healthOverlay.irmaaScheduleAsCompared`) — so once wall-clock 2028 arrives, a build still
+ * carrying the 2026 table prices a MODELED top tier where CMS has published the real one
  * (the interior tiers also re-index annually, but the frozen top tier is the one with a HARD dated
  * re-index the constant explicitly promises). The direction is not one-signed here, so the honest
  * move is a re-verify gate, not a silent constant.
  *
  * THE TRIPWIRE: this arm goes red on 2028-01-01 so a build in the re-index year cannot go green with
- * a stale top tier still shipping — RE-VERIFY the top-tier (and the annually-indexed interior)
+ * a modeled top tier still shipping — RE-VERIFY the top-tier (and the annually-indexed interior)
  * thresholds against the CMS 2028 IRMAA release / Federal Register notice, bump the `irmaa` constant
- * + its shape pins, then move `topTierFrozenThrough` forward (or delete this tripwire if the whole
- * table has been re-pinned to a live-verify regime). A deliberate wall-clock read: tests are exempt
+ * WITH its `billYear` (the model indexes from it, so new lines on the old one index twice) + its
+ * shape pins, then move `topTierFrozenThrough` forward (or delete this tripwire if the whole table
+ * has been re-pinned to a live-verify regime). A deliberate wall-clock read: tests are exempt
  * from the engine-purity clock ban (CLAUDE.md); this is a build-time re-verify gate, not engine code.
  */
 import { describe, expect, it } from 'vitest'
@@ -33,11 +35,11 @@ describe('the IRMAA top-tier re-index tripwire (a re-verify gate, not a unit tes
     expect(
       wallYear,
       'TRIPWIRE: the IRMAA top tier is frozen through ' +
-        `${frozenThrough} and re-indexes in ${reindexYear}; the engine prices IRMAA off the ` +
-        'constant table verbatim, so a build in the re-index year ships stale top-tier thresholds. ' +
+        `${frozenThrough} and re-indexes in ${reindexYear}; the engine MODELS every line past the pinned ` +
+        'billYear (irmaaScheduleAsCompared), so a build in the re-index year ships a modeled top tier. ' +
         'Re-verify the top-tier (and interior) MAGI thresholds against the CMS 2028 IRMAA fact sheet / ' +
-        'Federal Register notice, bump the `irmaa` constant + its constants.shape pins, then move ' +
-        '`topTierFrozenThrough` forward (or retire this tripwire in that commit).',
+        'Federal Register notice, bump the `irmaa` constant WITH its billYear + its constants.shape pins, ' +
+        'then move `topTierFrozenThrough` forward (or retire this tripwire in that commit).',
     ).toBeLessThan(reindexYear)
   })
 })

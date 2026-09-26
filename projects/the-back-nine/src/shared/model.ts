@@ -1777,7 +1777,7 @@ export interface ScenarioV3 {
    *  by U13's staleness comparator at unlock. The legacy string stays untouched (add-only).
    *  RMD-age rule + senior-bonus sunset are deliberately NOT stamped and neither got a CLOCK —
    *  the plan's "derived read-time note" for both was withdrawn in the U13 build. Neither has
-   *  derivable drift; a change to either RULE fires the tax clock (`staleness.ts:33-47`). */
+   *  derivable drift; a change to either RULE fires the tax clock (`staleness.ts:35-49`). */
   readonly taxVintageDetail?: TaxVintageV3
   /** P3·U13 — the date-surface vintage (the two fixture clocks the fuck-off-date answer
    *  decays on): the contribution-limit table year (the catch-up step-down shapes the
@@ -1912,7 +1912,7 @@ export interface SavedRecommendationV3 {
    *  WHAT S5 MUST DO ABOUT IT, since the type cannot: mint this from the COMMITTED
    *  `SolveAnswer.fingerprint` (`memoryModel.ts` — the committed arm carries it, and since the
    *  2026-09-03 edit-time kill the pending arm does too; produced by the private `fingerprintOf` at
-   *  `:693`) — the identity of the run this record actually describes — and NEVER from a fresh
+   *  `:698`) — the identity of the run this record actually describes — and NEVER from a fresh
    *  recompute taken at save time. The trichotomy's `freshFingerprint` is the OTHER operand,
    *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:708`): what the draft WOULD solve
    *  now. The two are equal at the mint and diverge afterwards, and that divergence IS the mechanism

@@ -75,8 +75,11 @@ CADDIE_SEED=budget pnpm caddie:walk                           # back-compat: one
 The harness (`e2e/caddie-walk.spec.ts`, own config `playwright.caddie.config.ts`, dev server on
 port 4195 — the `?seed`/`?vault` routes are DEV-only and DCE'd from dist) drives the surface to
 its settled final frame using the fit gate's proven recipe (`e2e/reviewSurface.ts`:
-`data-answer-tier="final"` → fonts.ready → finite animations done → 2×rAF → scrollTo(0,0)) and
-writes a per-state bundle to `temp/caddie/<run-stamp>/<target>/<viewport>/<state>/` — the
+`data-answer-tier="final"` → fonts.ready → finite animations done → 2×rAF → scrollTo(0,0)), plus
+one wait that recipe lacks: every capture first waits out a pending spend clause
+(`.cs-magnitude[data-spend="pending"]` gone within `FINAL_TIER_MS` — the solved figure lands a beat
+after the final stamp) and re-settles. It writes a per-state bundle to
+`temp/caddie/<run-stamp>/<target>/<viewport>/<state>/` — the
 run stamp (minted per invocation; `CADDIE_RUN=name` overrides) means a re-walk NEVER
 overwrites a bundle a reader panel is mid-read on (the first live run's filed defect).
 

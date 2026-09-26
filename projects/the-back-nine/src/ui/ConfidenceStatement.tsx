@@ -378,9 +378,11 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
       : null
     const survivorWord = survivorPres?.verdictWordKey ? copy[survivorPres.verdictWordKey] : null
     // THE VERDICT CROSSFADE (U12 C2 — CSS-only, the council's hard F7 CSP condition): the lockup's
-    // TEXT containers below carry `key={…lockupKey}` so a displayed-change remounts them and the
-    // .cs-swap @starting-style fade enters the fresh nodes (confidence.css) — word + shape +
-    // magnitude AS ONE UNIT, never a hue transition, no framer-motion anywhere in this path.
+    // TEXT containers below carry the SPLIT keys (THE SWAP KEY above) — glyph, word and count line on
+    // `verdictKey`, the magnitude line on `lockupKey` — so a displayed-change remounts the nodes it
+    // touches and the .cs-swap @starting-style fade enters them (confidence.css): word + shape +
+    // magnitude AS ONE UNIT on a verdict change, the magnitude line alone on a clause-only change —
+    // never a hue transition, no framer-motion anywhere in this path.
     // THE KEY SCOPING LAW (insight 047): the key rides the text containers ONLY — the h2 (the
     // focus latch), the band panel, the drawers, and the actions row all survive the swap unmoved.
     body = (

@@ -244,9 +244,9 @@ export function AssumptionPanel({
   // ⚠️ CORRECTED 2026-08-03 — this used to end "…the panel's own period toggle RE-LABELS, never
   // re-bases, so the 12× misentry the rule guards is structurally impossible on this surface."
   // THAT WAS FALSE, and it was the load-bearing half of the justification. The toggle does only
-  // re-label (it writes `spendEntryPeriod` alone), but the spend commit below (:601-611, the
-  // `entered * 12` arm at :608) multiplies by 12 under 'month' — so a 12× misentry is entirely
-  // possible here, and the re-label is what INVITES it: `spendDisplayed` (:338-343) jumps 12× on a
+  // re-label (it writes `spendEntryPeriod` alone), but the spend commit below (:607-617, the
+  // `entered * 12` arm at :614) multiplies by 12 under 'month' — so a 12× misentry is entirely
+  // possible here, and the re-label is what INVITES it: `spendDisplayed` (:344-349) jumps 12× on a
   // flip, and the reader's natural repair is to retype the digits they remember under the new
   // unit. `assumptionPeriodHelp` was rewritten the same day to name both halves, and pinned.
   //
@@ -358,8 +358,8 @@ export function AssumptionPanel({
     >
       <p className="control-sheet__intro">{copy.assumptionIntro}</p>
 
-      {/* The live answer echo — a RESERVED box (insight 035: sized to its tallest arm in
-          assumptions.css, so a landing edit / the transition line never resizes it). The panel
+      {/* The live answer echo — a RESERVED box (insight 035: meant to fit its tallest arm, but
+          the spend lane's sized clause still outgrows it — OPEN, see assumptions.css). The panel
           is aria-modal (the hero behind it is out of the AT tree), so this region is the AT
           user's answer feedback: role=status announces the moved reading, atomically. */}
       <div className="ap-echo" role="status" aria-atomic="true">

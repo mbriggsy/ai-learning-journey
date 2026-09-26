@@ -17,7 +17,7 @@ status: shipped
 >
 > **What this unit did:** lifted THE STANDING BLOCKER on every conversion-bearing ranking. It
 > sourced `medicareCostTrend`, flipped `PART_B_PRICING_MODE` `'real-flat'→'trended'`
-> (`taxOverlay.ts:930`) with genuine per-year consumption (074: a stamp nothing reads prices
+> (`taxOverlay.ts:932`) with genuine per-year consumption (074: a stamp nothing reads prices
 > nothing; 081: the label flip and the pricing change are ONE commit or the mirror lies),
 > re-wired the two solver seams the U15 tripwire named (`solve.test.ts:220`), re-calibrated the
 > conversion-near-tie demotion margin on a Medicare-bearing post-flip world (U15 council Q4d),
@@ -56,6 +56,9 @@ status: shipped
      the Part D *base* premium) was falsified by that primary across the 2030 boundary, the one
      dated mechanism correction in this unit (insight 098).
    - IRMAA **MAGI thresholds** stay real-flat under the standing 2028 top-tier tripwire, disclosed.
+     *(Superseded 2026-09-26 by `1c97f55d`: every line is now compared in its MAGI year's price
+     frame — `healthOverlay.irmaaScheduleAsCompared`,
+     [`docs/architecture.md §7.2`](../../architecture.md).)*
    - The COMBINED per-tier surcharge **ties out at 2026** against the pinned constants, the
      tie-out test planted RED first.
 4. **DEFLATION (under (c)):** store the nominal V.E2 vector verbatim + the sourced CPI path
@@ -101,7 +104,7 @@ status: shipped
   the consumer, never stored; the report's own "1.7% real" is GDP-deflated and would overstate
   CPI-real by ~0.35pp, the packet's named trap), `vintage`, `directionalUntilPinned: false`,
   `reportEdition`, and `pinTo` the 2026 Trustees Report Tables V.E2/V.E4/II.D1/III.B12/§III.D.
-  The pure resolver is `buildPartBPricingSchedule` (`healthOverlay.ts:508`), returning one
+  The pure resolver is `buildPartBPricingSchedule` (`healthOverlay.ts:510`), returning one
   `PartBYearPricing {baseMonthlyReal, scales}` per sim year: table years deflate nominal→real
   horizon-matched, pre-anchor years clamp to the anchor, post-edge rides the ultimate escalator
   off the edge's own real value (C0 by construction). It walks iteratively (cumulative multiplies,
@@ -109,11 +112,11 @@ status: shipped
   table contract fail-loud — ascending contiguous from anchor+1, the Part D rows on the SAME year
   lattice, every figure finite > 0 (burned/062). The (b)-content twin table existed only in the
   working tree for the S3 probe and died with the ruling — it never shipped as dead code.
-- **S1 — consumption (taxOverlay).** The once-bound `partBBaseMonthly` (`taxOverlay.ts:1124-1133`)
+- **S1 — consumption (taxOverlay).** The once-bound `partBBaseMonthly` (`taxOverlay.ts:1126-1135`)
   became the per-year resolved pair at `startCalendarYear + t`, gated on the healthcare-priced arm;
   `medicareAnnualCost` + the readout split's `irmaaTierSurchargeMonthly` BOTH read the same
   resolved pair (the base-vs-surcharge split stays single-producer by construction — the scales are
-  a REQUIRED param on both). `PART_B_PRICING_MODE` is `'trended'` (`taxOverlay.ts:930`), flipped in
+  a REQUIRED param on both). `PART_B_PRICING_MODE` is `'trended'` (`taxOverlay.ts:932`), flipped in
   the same commit as the pricing (081). Gross-up/bracket-fill rails: thresholds untouched;
   convergence re-verified under year-varying premiums (013 watch) — see S3 for the measurement.
 - **S2 — the solver seams (the tripwire's named pair).** `solve.ts`'s rankable partition derives

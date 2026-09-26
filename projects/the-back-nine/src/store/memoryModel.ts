@@ -420,7 +420,7 @@ export interface MemoryModel {
 
 // ---------------------------------------------------------------------------
 // U12 — the sticky-rounding seam (contract (d), the P3 seat filled; plan
-// 3-controls.md:241 + architecture §9). The DISPLAYED spine triple holds steady
+// 3-controls.md:239 + architecture §9). The DISPLAYED spine triple holds steady
 // across a tiny edit whose new reading lands a hair past a display flip, so the
 // sentence never flickers between two honest roundings of one household.
 // Hysteresis on the DISPLAY only — the raw result is never altered.
@@ -993,7 +993,7 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
     },
 
     // Surfaced, never re-defined: the ONE fresh-fingerprint derivation lives at the closure above
-    // (`:654-657` bans a re-typed subset). S5's trichotomy consumes it through this member.
+    // (`:694-697` bans a re-typed subset). S5's trichotomy consumes it through this member.
     currentDraftFingerprint,
   }
 }

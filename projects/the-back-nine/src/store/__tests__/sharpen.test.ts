@@ -18,7 +18,7 @@ import type { DollarAdjustment, Headline, SimulationParams } from '@shared/model
  * U12 Phase B — the sharpen loop's store core (council wf_dff75c2f-9e3):
  *
  *  1. `resolveStickyDisplay` — the pure hysteresis rule (contract (d) filled; plan
- *     3-controls.md:241). Every hold arm carries its release sibling as the
+ *     3-controls.md:239). Every hold arm carries its release sibling as the
  *     planted-fail control. (The seam's second unit — the proxy $/month figure
  *     and its independence arms — was deleted with the figure in the spend
  *     solve's phase C, council wf_faa1af2d-052: no surface renders it.)
@@ -61,7 +61,7 @@ const dollar = (
 ): DollarAdjustment => ({
   perMonthReal: {
     value: perMonth,
-    // The emission's own rule (confidence.ts:242): distance to the ROUNDED display value.
+    // The emission's own rule (confidence.ts:248): distance to the ROUNDED display value.
     marginToEdge: Math.abs(perMonth - Math.round(perMonth / DOLLAR_STEP) * DOLLAR_STEP),
   },
   spendPerMonthReal: SPEND,
@@ -125,7 +125,7 @@ describe('resolveStickyDisplay — the pure hysteresis rule', () => {
     expect(out.outcomeState).toBe('over-funded')
   })
 
-  it('the SPEND and the DIRECTION adopt wholesale while only the COUNT holds (the word unchanged) — facts of the run, never readings that can be held stale', () => {
+  it('the SPEND and the DIRECTION adopt while only the COUNT holds (the word unchanged) — the spend is a fact of the run; the direction holds only WITH the word (F25, the next arm)', () => {
     // The count edge-holds (margin 0, the first hold arm's reading) under an UNCHANGED word, but the run's spend moved
     // 6,500 → 10,000 and its direction flipped trim → room. Both must be the NEW run's: a held
     // spend would quote a stale base beside the figure (mutant M5, 2026-09-17: the triple carried

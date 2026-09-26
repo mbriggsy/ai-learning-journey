@@ -9,10 +9,12 @@
  * beside moved numbers, never a hue change (the reader is color blind).
  */
 
-/* ── the live answer echo — a RESERVED box (insight 035): min-height covers its tallest
-   arm (verdict lead + dollar clause + the truer-picture line), so a landing edit or the
-   transition line appearing never resizes it and the rows below never shuffle under a
-   pointer. ── */
+/* ── the live answer echo — a RESERVED box (insight 035): min-height is meant to cover its
+   tallest arm (verdict lead + dollar clause + the truer-picture line), so a landing edit or
+   the transition line appearing never resizes it and the rows below never shuffle under a
+   pointer. OPEN: 7.25rem is shorter than the spend lane's three-sentence SIZED clause, so a
+   sized landing still grows the box — register Tier 2, *The spend lane's test + polish debt
+   from its first review…* (its UI F22). ── */
 .ap-echo {
   min-height: 7.25rem;
   display: flex;

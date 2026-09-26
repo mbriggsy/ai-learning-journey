@@ -76,3 +76,8 @@ figures other pins quote (the IRA moves the verdict; spending would move the hea
   NC deduction, the senior bonus and the HSA catch-up meet same-year income, so the sim year's index is right
   (built). The IRMAA top tier meets MAGI two years older, so its frozen $750k was already exact through 2027;
   deflating it by the bill year was built, then refuted by the review before commit.
+- **Refinement, 2026-09-26 (the IRMAA price frame, `1c97f55d`, register CLOSED):** "does the statute index it?" is
+  not the whole test — flat-real is right for an indexed figure only when it meets SAME-year income. IRMAA tiers 1–4
+  index by law, yet each line meets MAGI two years OLDER, so it runs one to two years of CPI ahead of that MAGI and
+  the flat real line sat ~3–6.5 % low. Every tier is now compared in the MAGI year's frame (architecture §7.2);
+  tiers 1–4 still run one CPI year low (insight 138, register open).

@@ -819,11 +819,13 @@ interface GrossUpContext {
   readonly filing: FilingStatus
   readonly count65: number
   /** The sim year's CALENDAR year (`household.startCalendarYear + t`) — windows the OBBBA
-   *  senior bonus inside the deduction stack (the sunset unit, council 2026-07-09) AND deflates
-   *  the frozen §86 provisional-income thresholds via `cumulativePriceIndex`
-   *  (`taxCore.taxableSocialSecurity`, 2026-09-24) in EVERY year, not only 2025–2028 — never
-   *  clamp it or pass the anchor year. Year-constant like everything else here, so the fixed
-   *  point stays 1-D. */
+   *  senior bonus inside the deduction stack (the sunset unit, council 2026-07-09), deflating its
+   *  frozen per-person amount and phase-out start inside that window (`taxCore.seniorBonusFor`,
+   *  2026-09-25), AND deflates the frozen §86 provisional-income thresholds
+   *  (`taxCore.taxableSocialSecurity`, 2026-09-24) and a priced state's frozen standard deduction
+   *  (`stateIncomeTax`, 2026-09-25 — the same year keys the state's dated rate) via
+   *  `cumulativePriceIndex` in EVERY year, not only 2025–2028 — never clamp it or pass the anchor
+   *  year. Year-constant like everything else here, so the fixed point stays 1-D. */
   readonly calendarYear: number
   readonly ssBenefit: number
   readonly bracketFillCeiling: number
@@ -1780,8 +1782,10 @@ export function runTaxAwareDecumulation(
       // understate the sum; additive errs only conservative/later, and equals replacement in the
       // common clamped working year whose computed MAGI is exactly 0). Override absent ⇒ `0 + x`,
       // an exact IEEE no-op (byte-identical). The one-pass components lag (< 1e-7) is far below
-      // the $1 INTEGER IRMAA grid (insight 012 — no ceil helps on a `> N` branch), so a
-      // lag-induced tier flip is measure-zero (the same residual the ACA cliff already accepts).
+      // one NOMINAL dollar of the MAGI year (`oneNominalDollarReal` — a compared IRMAA line is a
+      // real-dollar integer only through the anchor year; the raw `>` / `>=` compare, never a ceil:
+      // insight 012, `healthOverlay.irmaaTierApplies`), so a lag-induced tier flip is measure-zero
+      // (the same residual the ACA cliff already accepts).
       if (acaTable !== undefined) {
         // R40 · KTD-9 — the IRMAA decouple. Three feeds, each counted EXACTLY ONCE:
         //  (1) `irmaaMagiOverride[t]` — the wages / non-modeled-MAGI working-year component;

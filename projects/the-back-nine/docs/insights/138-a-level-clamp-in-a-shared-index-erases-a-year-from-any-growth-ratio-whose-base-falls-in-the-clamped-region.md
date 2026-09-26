@@ -52,3 +52,7 @@ the branch lives") was the defect's fingerprint.
   tax table's held-flat future years).
 - Any mutant recorded as "equivalent" — re-derive WHY before filing it; if the reason is "the input is flat there", test
   the input.
+- **Correction, 2026-09-26:** the first bullet's parenthetical over-named the sites. The only index ratios in non-test
+  source are `compareIrmaaSchedule`'s two line-growth factors (the 'cpi-lagged' one IS this insight's defect); the
+  Part B / Part D trend scales never read `cumulativePriceIndex` — `buildPartBPricingSchedule` runs its own deflator
+  over a base AT the anchor, so no clamped year sits under their ratio.

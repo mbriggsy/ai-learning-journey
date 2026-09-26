@@ -91,10 +91,12 @@ export interface EngineClient {
 }
 
 /** A call the caller's own reset killed. The handle only makes it DISTINGUISHABLE — each consumer
- *  owns its hold: memoryModel's two lanes hold (`recompute()` returns on it; `dispatchSolve` is held
- *  by the epoch the kill advanced first); `controlPreview` deliberately does NOT — a reset-killed
- *  preview takes its calm error arm, because mapping it to 'stale' would strand an open sheet on
- *  pending, and the sheet re-idles on its next open. A new consumer must decide, never assume. */
+ *  owns its hold: memoryModel's three lanes never render it as an error (`recompute()` returns on
+ *  it; `dispatchSpend` catches it into the figure-less idle, committed only while its epoch guard
+ *  stands; `dispatchSolve` is held by the epoch the kill advanced first); `controlPreview`
+ *  deliberately does — a reset-killed preview takes its calm error arm, because mapping it to
+ *  'stale' would strand an open sheet on pending, and the sheet re-idles on its next open. A new
+ *  consumer must decide, never assume. */
 export class EngineResetError extends Error {
   constructor() {
     super('engine reset: the in-flight call was superseded by a draft edit')

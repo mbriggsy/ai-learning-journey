@@ -63,7 +63,8 @@ export interface CommittedYearIncome {
   readonly filing: FilingStatus
   readonly count65: number
   /** The sim year's CALENDAR year (`startCalendarYear + t`) — windows the senior bonus
-   *  inside the deduction stack (the sunset unit, council 2026-07-09) AND deflates the frozen
+   *  inside the deduction stack (the sunset unit, council 2026-07-09), deflating its frozen dollar
+   *  figures inside that window (`taxCore.seniorBonusFor`, 2026-09-25), AND deflates the frozen
    *  §86 provisional-income thresholds via `cumulativePriceIndex` (`taxCore.taxableSocialSecurity`,
    *  2026-09-24) in EVERY year, not only 2025–2028 — never clamp it or pass the anchor year.
    *  Gross-independent like every other term, so the headroom stays a constant inside the fixed point. */
@@ -158,8 +159,8 @@ export function acaCliffFillHeadroom(c: CommittedYearIncome, cliffMagi: number):
  * The IRMAA-step rail: the largest fill keeping THIS year's IRMAA-MAGI at-or-under the next
  * step threshold above the committed baseline (the bill lands at `t + magiLookbackYears`;
  * the caller owns the will-anyone-be-enrolled-then predicate and the filing column — this is
- * the current-tier-holding math only). Baseline already above every threshold (the frozen
- * top tier) ⇒ no next step ⇒ +Infinity (the rail does not bind). The fill lands on the step's
+ * the current-tier-holding math only). Baseline at or over the inclusive top line (every tier
+ * applies) ⇒ no next step ⇒ +Infinity (the rail does not bind). The fill lands on the step's
  * `lastSafeMagi` ({@link nextIrmaaStepLine}): ON an exclusive line (the tier fires only above it),
  * one NOMINAL dollar UNDER the inclusive top line (its line dollar already owes the top tier). The
  * schedule must be the one compared for `c.calendarYear` — this year's MAGI meets the lines of the

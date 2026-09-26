@@ -16,7 +16,10 @@
  * `healthOverlay` / the constants) — single producer, so the readout can never disagree with
  * the engine about where a cliff sits. The one disclosed approximation: the subsidy-drag
  * probe uses TODAY'S benchmark quote (the per-year escalated stream lives engine-side); the
- * `~`/`about` hedge carries that honestly.
+ * `~`/`about` hedge carries that honestly. One more is an OPEN defect, not a disclosed one:
+ * the step card's crossing PRICE reads the 2026 anchor surcharge scales (`nextIrmaaStep` →
+ * `IRMAA_ANCHOR_SCALES`) while the engine bills at the bill year's — the register's Tier 0
+ * *The Medicare step card prices crossing the next surcharge step at 2026 prices…*.
  *
  * REGIME AWARENESS: the cliff lines exist only under the reverted/cliff table; an APPLIED
  * enhanced regime removes them (no cliff exists to warn about) and swaps the dated status

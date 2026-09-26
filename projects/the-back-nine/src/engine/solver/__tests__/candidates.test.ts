@@ -120,9 +120,9 @@ describe('anchoredConversionAmounts — the cliff-anchored grid', () => {
     // `irmaa.value` for any healthcare-priced household with someone Medicare-enrolled at the bill
     // year, driven live by `solveDispatch.ts:77` — so this loss reaches the PRODUCT, not just the
     // suite; `solveAnchor.test.ts:123-129` asserts the anchor FIELD and never enumerates, and the
-    // sibling arms are strictly weaker predicates (ascending / deduped / integer — the arm at lines 170-176)
+    // sibling arms are strictly weaker predicates (ascending / deduped / integer — the arm at lines 182-188)
     // which all survive a missing rail. So census the three INDEPENDENT branches (candidates.ts:283
-    // ACA, :296 IRMAA, :313 bracket) by KIND, with counts read from the canonical year-keyed tables
+    // ACA, :299 IRMAA, :317 bracket) by KIND, with counts read from the canonical year-keyed tables
     // rather than from the enumerator under test.
     const anchors = anchoredConversionAmounts(anchor)
     const kinds = anchors.map((a) => a.rail.kind)

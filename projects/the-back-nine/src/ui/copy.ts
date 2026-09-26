@@ -2401,11 +2401,12 @@ export const slots = {
    *  the shipped "doesn't work out" tail would read falsely final while the figure is coming). */
   verdictRoomLead: (spendFormatted: string): string => `There looks to be room to spend more than $${spendFormatted} a month.`,
   /** 'room' SIZED by the spend solve (spendSolve.ts): F is the highest $100 spend the engine still
-   *  reads as on track with room — a run AT F passed and a run a step above FAILED (both run). "Held
-   *  every year in today's dollars" is the engine's own model (simulate.ts), never a promise beyond it;
-   *  the edge is NAMED (the Hawk's veto: never an on-track claim at the edge without it). */
+   *  reads as on track with room — a run AT F passed and a run a step above FAILED (both run). The edge
+   *  is NAMED (the Hawk's veto: never an on-track claim at the edge without it). The council's duration
+   *  phrase ("held every year in today's dollars") was CUT on Briggsy's ruling, 2026-09-26 ("too
+   *  wordy"; he also declined the two-word "every year") — never re-add it without his read. */
   verdictRoomSized: (spendFormatted: string, solvedFormatted: string): string =>
-    `There looks to be room to spend more than $${spendFormatted} a month. At about $${solvedFormatted} a month, held every year in today’s dollars, this plan would still read on track. Above that, it starts to sit close to the line.`,
+    `There looks to be room to spend more than $${spendFormatted} a month. At about $${solvedFormatted} a month, this plan would still read on track. Above that, it starts to sit close to the line.`,
   /** direction 'trim' — off-track. FIGURE-LESS since 2026-09-25 (council wf_8c2ece49-79a, Tier 0): the
    *  engine's trim magnitude is a coarse proxy (`confidence.ts` `buildDollar`: −spend × the gap below
    *  on-track), never a solve — and on the `retired` worsened frame it was WRONG by ~2×: it quoted
@@ -2422,7 +2423,7 @@ export const slots = {
   verdictTrimLead: (spendFormatted: string): string => `Spending less than $${spendFormatted} a month would let your plan cover more futures.`,
   /** 'trim' SIZED by the spend solve — the same verified F and the same named edge as verdictRoomSized. */
   verdictTrimSized: (spendFormatted: string, solvedFormatted: string): string =>
-    `Spending less than $${spendFormatted} a month would let your plan cover more futures. At about $${solvedFormatted} a month, held every year in today’s dollars, it would read on track. Above that, it starts to sit close to the line.`,
+    `Spending less than $${spendFormatted} a month would let your plan cover more futures. At about $${solvedFormatted} a month, it would read on track. Above that, it starts to sit close to the line.`,
   /** direction 'rethink' — already-failing (0 of 10, unfundable from the start). FIGURE-LESS and
    *  LEVER-AGNOSTIC (it also renders for an already-RETIRED household, so it names no accumulation
    *  lever): the shortfall is structural, not a trim away — a single sufficient-sounding figure here

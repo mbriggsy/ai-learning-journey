@@ -61,3 +61,18 @@ describe('the trim clause on the walk’s worsened `retired` frame, through the 
     expect(reading.clause).toBe(slots.verdictTrimClause('10,000'))
   }, 120_000)
 })
+
+describe('the room clause on the shipped `surplus` seed, through the real engine (figure-less, 2026-09-26)', () => {
+  it('over-funded ⇒ room; the clause quotes ONLY the entered 5,000 — the heuristic figure rides nowhere', () => {
+    // The engine's room heuristic (4 % of the bad-decile terminal ÷ 12) quoted "room for about $7,470
+    // more" here; at $12,470 through this same pipeline the engine rates the plan BORDERLINE 8/10 — the
+    // figure oversold the household off the verdict it was quoted from. Same law as the trim clause.
+    const { wire, displayed, reading } = readingOf(DEV_SEEDS.surplus)
+    expect(wire.dollar.direction).toBe('room')
+    expect(wire.headline.outcomeState).toBe('over-funded')
+    expect(displayed.perMonthDollar).toBeGreaterThan(0) // the heuristic is live on the tuple — its absence is not vacuous
+    expect(figuresIn(reading.clause)).toEqual([5_000])
+    expect(reading.clause).not.toContain(displayed.perMonthDollar.toLocaleString('en-US'))
+    expect(reading.clause).toBe(slots.verdictRoomClause('5,000'))
+  }, 120_000)
+})

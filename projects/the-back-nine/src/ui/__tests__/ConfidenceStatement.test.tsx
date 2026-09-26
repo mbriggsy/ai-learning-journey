@@ -202,14 +202,19 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
     expect(container.textContent).toContain(slots.verdictRethinkClause()) // the figure-less rethink direction
     expect(container.textContent).not.toContain(slots.verdictTrimClause('6,500')) // never the trim clause
     expect(container.textContent).not.toContain('1,180') // ...in ANY clause shape
-    expect(container.textContent).not.toContain(slots.verdictRoomClause('1,180')) // never "room"
+    expect(container.textContent).not.toContain(slots.verdictRoomClause('6,500')) // never "room"
   })
 
   it('the dollar-grammar clause is keyed off the engine direction (room / trim / hold)', () => {
     const room = render(
       <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['on-track'] }} />,
     )
-    expect(room.container.textContent).toContain(slots.verdictRoomClause('410'))
+    // figure-less (2026-09-26): only the 6,500 they entered rides; the engine's 410 of "room" renders
+    // nowhere — the heuristic oversold `surplus` onto borderline through the real pipeline
+    expect(room.container.textContent).toContain(slots.verdictRoomClause('6,500'))
+    const roomClause = room.container.querySelector('.cs-magnitude')!.textContent!
+    expect([...roomClause.matchAll(/\$([\d,]+)/g)].map((m) => m[1])).toEqual(['6,500'])
+    expect(room.container.textContent).not.toContain('410')
     room.unmount()
 
     const trim = render(
@@ -433,7 +438,7 @@ describe('U12 C2 — the sticky sentence + the verdict crossfade', () => {
     // ...and NEVER the raw sentence (calm-but-two-sentences would be the mixed-pair sin)
     expect(lead.textContent).not.toContain(copy.outcomeOnTrack)
     expect(lead.textContent).not.toContain(slots.xOfTen(8))
-    expect(lead.textContent).not.toContain(slots.verdictRoomClause('410'))
+    expect(lead.textContent).not.toContain(slots.verdictRoomClause('6,500'))
     // the band still mounts from the RAW fan (one honest raw record under the sticky sentence)
     expect(screen.getByRole('button', { name: copy.bandStudyRange })).toBeInTheDocument()
     // the two-tier drill-down read the RAW headline: floor ≡ raw ⇒ degenerate ⇒ no relief LINE
@@ -444,7 +449,7 @@ describe('U12 C2 — the sticky sentence + the verdict crossfade', () => {
   it('without a displayed triple (the preview harness) the sentence reads the raw result — unchanged shipped behavior', () => {
     const { container } = render(<ConfidenceStatement view={{ kind: 'reading', ...RAW }} />)
     expect(screen.getByRole('heading', { name: copy.outcomeOnTrack })).toBeInTheDocument()
-    expect(container.textContent).toContain(slots.verdictRoomClause('410'))
+    expect(container.textContent).toContain(slots.verdictRoomClause('6,500'))
   })
 
   it('the swap key changes exactly on a displayed-change: a byte-identical recompute keeps the DOM nodes; a change remounts the text containers ONLY', () => {

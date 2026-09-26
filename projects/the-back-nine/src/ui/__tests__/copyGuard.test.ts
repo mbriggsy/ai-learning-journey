@@ -479,7 +479,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     stepDownNote: slots.stepDownNote(2030),
     oopHint: slots.oopHint('3,000', '3,400'),
     factsMore: slots.factsMore(3),
-    verdictRoomClause: slots.verdictRoomClause('430'),
+    verdictRoomClause: slots.verdictRoomClause('6,500'),
     verdictTrimClause: slots.verdictTrimClause('2,500'),
     verdictRethinkClause: slots.verdictRethinkClause(),
     verdictHoldClause: slots.verdictHoldClause(),
@@ -1105,7 +1105,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     // so the gate never pressures an author to reword honest copy.
     expect(lintCopy(copy.ladderPlanCaveat, ['require-hedge']), copy.ladderPlanCaveat).toEqual([])
     // the verdict magnitude clauses wear theirs too ("looks to be" / "would").
-    expect(lintCopy(slots.verdictRoomClause('430'), ['require-hedge'])).toEqual([])
+    expect(lintCopy(slots.verdictRoomClause('6,500'), ['require-hedge'])).toEqual([])
     expect(lintCopy(slots.verdictTrimClause('2,500'), ['require-hedge'])).toEqual([])
   })
 

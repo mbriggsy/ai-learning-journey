@@ -46,17 +46,20 @@ export interface VerdictReading {
 
 /** The verdict's second line — the dollar grammar. The $/month enters through the slot
  *  pre-formatted, so the rendered clause carries no hardcoded numeral (copyGuard
- *  slot-discipline). The trim quotes ONLY the spend they entered and names the size as unworked
- *  (council 2026-09-25): the engine's trim figure is an unsolved proxy that over-cut ~2× on the
- *  `retired` frame, and a quoted target read as sufficiency (Briggsy's cold read, E17). */
+ *  slot-discipline). Room AND trim quote ONLY the spend they entered and name the size as unworked
+ *  (council 2026-09-25; room 2026-09-26): the engine's magnitudes are unsolved heuristics — the trim
+ *  over-cut ~2× on the `retired` frame and read as sufficiency (Briggsy's cold read, E17); the room
+ *  oversold `surplus` onto borderline. The engine's `perMonthReal` renders nowhere until a real solve
+ *  lands (register Tier 1). */
 function magnitudeClause(
   direction: DollarAdjustment['direction'],
-  perMonth: number,
   spendPerMonthReal: number,
 ): string {
   switch (direction) {
     case 'room':
-      return slots.verdictRoomClause(formatPerMonth(perMonth))
+      // FIGURE-LESS (2026-09-26, the trim clause's law): the room figure is an unsolved heuristic that
+      // oversold over-funded households onto borderline — only the entered spend rides.
+      return slots.verdictRoomClause(formatPerMonth(spendPerMonthReal))
     case 'trim':
       // FIGURE-LESS (council 2026-09-25): the engine's trim magnitude is an unsolved proxy, so only the
       // entered spend rides — the base the reader typed, from the same run as the verdict.
@@ -89,6 +92,6 @@ export function composeVerdictReading(shown: VerdictDisplay): VerdictReading | n
   return {
     word: copy[wordKey],
     reading: verdictReadingText(shown.outcomeState, shown.xOfTen),
-    clause: magnitudeClause(shown.direction, shown.perMonthDollar, shown.spendPerMonthReal),
+    clause: magnitudeClause(shown.direction, shown.spendPerMonthReal),
   }
 }

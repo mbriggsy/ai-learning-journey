@@ -2388,9 +2388,15 @@ export const slots = {
   // room" / "would …", never "trim" / "you should"). The amount enters through the slot, so the
   // copyGuard's free-numeral scan never sees a hardcoded quantitative claim. First-draft strings
   // — exact wording is the N=1 cold-read's call (the surface that consumes these is U7 item d).
-  /** direction 'room' — even the conservative future leaves a surplus (over-funded / on-track). */
-  verdictRoomClause: (perMonthFormatted: string): string =>
-    `There looks to be room for about $${perMonthFormatted} more a month.`,
+  /** direction 'room' — even the conservative future leaves a surplus (over-funded / on-track). FIGURE-LESS
+   *  since 2026-09-26 (the trim clause's law, council wf_8c2ece49-79a): the engine's room figure is a
+   *  heuristic (`confidence.ts` `buildDollar`: 4 % of the bad-decile terminal ÷ 12), never a solve — and
+   *  measured through the real pipeline it OVERSOLD: the shipped `surplus` seed (over-funded, $5,000 a
+   *  month) was quoted "room for about $7,470 more", and at $12,470 the engine rates it BORDERLINE 8/10
+   *  (`retired` at $5,000 / $5,500 the same). So only the entered spend rides, and the sentence names
+   *  the size as unworked — until the register's Tier 1 real solve lands (its 'room' half). */
+  verdictRoomClause: (spendFormatted: string): string =>
+    `There looks to be room to spend more than $${spendFormatted} a month. This answer doesn’t work out how much more.`,
   /** direction 'trim' — off-track. FIGURE-LESS since 2026-09-25 (council wf_8c2ece49-79a, Tier 0): the
    *  engine's trim magnitude is a coarse proxy (`confidence.ts` `buildDollar`: −spend × the gap below
    *  on-track), never a solve — and on the `retired` worsened frame it was WRONG by ~2×: it quoted

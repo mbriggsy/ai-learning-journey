@@ -15,7 +15,7 @@ import { runDecumulation, type PortfolioState } from '@engine/decumulation'
 import { DRAWDOWN_POLICIES, NEVER_DEPLETED, type RetirementState } from '@shared/model'
 import { totalAcrossBuckets, type AccountBuckets } from '@engine/sequencing'
 import { uniformLifetimeTableDivisors, capitalGainsBreakpoints, irmaa, partB2026, medicareCostTrend, stateRateForYear, stateStandardDeductionFor } from '@engine/constants'
-import { fplForHousehold } from '@engine/healthOverlay'
+import { fplForHousehold, irmaaScheduleAsCompared } from '@engine/healthOverlay'
 
 // ---------------------------------------------------------------------------
 // The FROZEN-NOMINAL hand oracle (the frozen-nominal Tier 0, 2026-09-25). A figure the statute freezes in
@@ -3816,7 +3816,8 @@ describe('taxOverlay — C3 §3b: per-person Medicare onset + additive override 
     })
 
     it('the override prices the surcharge implied by working-year income (above tier-1 — below it a $0 surcharge proves nothing)', () => {
-      // override 230k > MFJ tier-1 218k ⇒ year 2 → 2028 bills tier 1.
+      // override 230k > the MFJ tier-1 line MAGI 2026 meets on the 2028 bill (2 × round1000(109,000 ×
+      // 1.032) = 224,000 — the price frame, 2026-09-26) and < tier 2's (282,000) ⇒ year 2 → 2028 bills tier 1.
       const r = run(net3, { ...onset2, irmaaMagiOverride: [230_000, 230_000] }, W66)
       expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnualReal(1, 0, 2028), 4)
     })
@@ -4375,8 +4376,11 @@ describe('taxOverlay — R40 · KTD-9: the IRMAA decouple (clamped working-year 
     // tier-1 threshold; the pension's IRMAA-only taxable pushes the sum over. The year-2 surcharge
     // must be tier-1 (sum > threshold), proving wages + pension are counted once each — not the
     // pension dropped (sum below ⇒ no surcharge) nor double-counted (sum over a higher tier).
-    const T1 = IRMAA_SCHED.tiers[0]!.mfjMagiThreshold
-    const T2 = IRMAA_SCHED.tiers[1]!.mfjMagiThreshold
+    // T1/T2 are the lines the year-2 bill (→ 2028) compares IRMAA-MAGI[0] (MAGI year 2026) against —
+    // the schedule AS COMPARED (the price frame), never the raw pinned 2026 figures.
+    const compared = irmaaScheduleAsCompared(IRMAA_SCHED, POST65.household.startCalendarYear)
+    const T1 = compared.tiers[0]!.mfjMagiThreshold
+    const T2 = compared.tiers[1]!.mfjMagiThreshold
     const wages = T1 - 10_000 // just under tier 1 alone
     // STRADDLE the tier boundary so the exact tier-1 total kills BOTH mutants at once (literals stay
     // SYMBOLIC — T1/T2 are read from the constant, never re-typed; the copyGuard greps src for inlined
@@ -4443,8 +4447,10 @@ describe('taxOverlay — R40 · KTD-9: the IRMAA decouple (clamped working-year 
   // Constants discipline: T1/T2 are read symbolically off the `irmaa` constant — NO dated dollar
   //   threshold is inlined here or in this comment (the copyGuard/constants-shape gate greps for it).
   it('KTD-9 tripwire (copy half LANDED in U4): the wages-only override counts an already-receiving pension ONCE in IRMAA-MAGI (and the old whole-income override would double-count)', () => {
-    const T1 = IRMAA_SCHED.tiers[0]!.mfjMagiThreshold
-    const T2 = IRMAA_SCHED.tiers[1]!.mfjMagiThreshold
+    // The lines the year-2 bill (→ 2028) compares MAGI year 2026 against — AS COMPARED (the price frame).
+    const compared = irmaaScheduleAsCompared(IRMAA_SCHED, POST65.household.startCalendarYear)
+    const T1 = compared.tiers[0]!.mfjMagiThreshold
+    const T2 = compared.tiers[1]!.mfjMagiThreshold
     const wages = T1 - 10_000
     const pension = 40_000
     // The straddle: wages + pension ∈ (T1, T2) ⇒ tier 1 (counted once);

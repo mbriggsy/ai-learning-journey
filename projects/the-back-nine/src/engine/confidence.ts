@@ -1,7 +1,7 @@
 /**
  * Distribution → the first-answer reading (PURE: one run → one reading).
  *
- * Owns the raw→display rounding target for the headline + dollar, the outcome-state
+ * Owns the raw→display rounding target for the headline (the dollar magnitude renders nowhere), the outcome-state
  * selection, and every band edge. Cross-engine robustness (contract #1, findings
  * §Strand 2) — stated precisely: the survival statistic is `survivors / paths`, an
  * EXACT integer ratio given the count, so it does NOT drift bit-to-bit across engines.
@@ -46,8 +46,8 @@ export const BANDS = {
   borderline: 0.65, // ≥ → borderline; below → off-track
 } as const
 
-/** Display step for the monthly dollar figure ($/month) — the rounding the margin
- *  metadata measures distance to. */
+/** The $/month lattice `perMonthReal.marginToEdge` measures to — kept by ruling, though since phase C
+ *  (council wf_faa1af2d-052) the magnitude renders nowhere and no production code reads its margin. */
 export const DOLLAR_STEP = 10
 
 /** The spend solve's grid ($/month, real) — `spendSolve.ts` searches ONLY grid spends, so the
@@ -212,10 +212,10 @@ function buildDollar(distribution: Distribution, params: SimulationParams, state
   const p10 = percentile(sortedTerminal, 0.1) // conservative (bad-futures) terminal
   const monthlySpend = params.annualSpendingReal / 12
 
-  // Direction from the verdict; magnitude is a COARSE single-run estimate — NOTHING in the engine
-  // solves for spending (the recommendation solver searches sequencing + conversions, never spend).
-  // The UI renders the 'trim' magnitude NOWHERE (council 2026-09-25: on the `retired` worsened frame
-  // it over-cut ~2× — its $2,800 target runs over-funded); a real spend solve is register Tier 1.
+  // Direction from the verdict; magnitude is a COARSE single-run heuristic, UNRENDERED — kept beside the
+  // direction as its evidence, never quoted, never held (council 2026-09-25: the trim over-cut ~2× on the
+  // `retired` worsened frame — its $2,800 target runs over-funded). The real answer is `spendSolve.ts` (the
+  // spend lane); the sentence's only solved figure is its F, gated by `verdictSentence.spendClauseFor`.
   let direction: DollarAdjustment['direction']
   let perMonth: number
   if (state === 'over-funded' || (state === 'on-track' && p10 > 0)) {
@@ -236,17 +236,19 @@ function buildDollar(distribution: Distribution, params: SimulationParams, state
     // above). already-failing is unfundable from the start (survival ≈ 0):
     // no single trim is a solve, and the figure SATURATES to ≈ −spend × the gap, carrying ~zero
     // state-specific signal — so it forks to a figure-LESS, lever-agnostic 'rethink' verdict, never
-    // the sufficiency-implying 'trim' clause. off-track keeps 'trim', whose clause is figure-less since
-    // 2026-09-25 (the entered spend + "doesn't work out how much less"). (Councils 2026-06-29, 2026-09-25.)
+    // the sufficiency-implying 'trim' clause. off-track keeps 'trim', whose clause quotes the entered
+    // spend and — only when the spend lane sizes it — spendSolve's F, never this magnitude.
+    // (Councils 2026-06-29, 2026-09-25, wf_faa1af2d-052.)
     const gap = Math.max(0, BANDS.onTrack - quantizeSurvival(distribution.survivalFraction))
     perMonth = -monthlySpend * gap
     direction = state === 'already-failing' ? 'rethink' : 'trim'
   }
 
+  // Emitted to keep the WithMargin shape whole; no production reader since phase C (see DOLLAR_STEP).
   const marginToEdge = Math.abs(perMonth - (Math.round(perMonth / DOLLAR_STEP) * DOLLAR_STEP))
-  // The base the trim was scaled from rides the reading (the sentence quotes both endpoints from
-  // ONE run — never a draft-read spend beside a held delta). For `trim` the magnitude is strictly
-  // under it: gap ≤ BANDS.onTrack < 1, so spend − |trim| > 0 always (pinned in confidence.test).
+  // The entered spend rides the reading (the clause quotes it from the SAME run as the verdict —
+  // never a draft-read spend). For `trim` the heuristic is strictly under it: gap ≤ BANDS.onTrack < 1,
+  // so spend − |trim| > 0 always (pinned in confidence.test).
   return { perMonthReal: { value: perMonth, marginToEdge }, spendPerMonthReal: monthlySpend, direction }
 }
 

@@ -6,18 +6,21 @@
  * which the engine rates over-funded) and the room figure oversold (`surplus`: "+$7,470" lands on
  * borderline).
  *
- * THE TARGET (one predicate, both directions): the HIGHEST spend on the {@link SPEND_SOLVE_STEP}
- * grid at which the engine's OWN reading is `room` — `buildDollar`'s direction, i.e. over-funded, or
- * on-track with a bad-decile future that still ends above $0 — AND, when the run carries a survivor
- * reading, that reading is on-track or better. Never the bare `BANDS.onTrack` edge: between 0.85 and
- * the room predicate the engine itself says "close to the line" (the Honesty Hawk's veto, twice). The
- * objective IS the headline's reading at that spend — no second metric (the dateSearch precedent).
+ * THE PREDICATE (one, both directions): a spend PASSES when the engine's OWN reading at it is `room`
+ * — `buildDollar`'s direction, i.e. over-funded, or on-track with a bad-decile future that still ends
+ * above $0 — AND, when the run carries a survivor reading, that reading is on-track or better. Never
+ * the bare `BANDS.onTrack` edge: between 0.85 and the room predicate the engine itself says "close to
+ * the line" (the Honesty Hawk's veto, twice). The objective IS the headline's reading at that spend —
+ * no second metric (the dateSearch precedent).
  *
- * TWO-SIDED, BY CONSTRUCTION: a sized answer F is returned only when a run AT F passed and a run AT
- * F + one step FAILED — both actually run, never inferred (a re-run at F alone proves determinism, not
- * an interval — insight 013). The coarse pre-scan on the answer's side must read pass…pass fail…fail
- * in spend order; any other shape is `non-monotone` and the caller keeps the figure-less clause (the
- * ACA cliff is a real discontinuity — "less spend = safer" is guarded, never assumed).
+ * THE ANSWER is the pass/fail EDGE the halving lands on, on the {@link SPEND_SOLVE_STEP} grid: F passes
+ * and F + one step FAILS — both actually run, never inferred (a re-run at F alone proves determinism,
+ * not an interval — insight 013). That is the HIGHEST passing grid spend only under the pre-scan's
+ * monotonicity CHECK: the scanned readings on the answer's side (the ladder + the entered spend) must
+ * read pass…pass fail…fail in spend order, and any other shape — there, at an off-grid entered spend's
+ * grid floor, or at F + one step — is refused as `non-monotone` (the caller keeps the figure-less
+ * clause; the ACA cliff is a real discontinuity). Monotonicity is CHECKED at every probed spend, never
+ * assumed and never proven between them: a pocket the ladder and the halving both step over is unseen.
  *
  * CRN: every candidate differs from the headline's params ONLY in `annualSpendingReal`; the draw
  * schedule is a pure function of (seed, paths, horizon, people), so every probe sees byte-identical
@@ -55,15 +58,21 @@ export type SpendSolveUnsizedReason =
   | 'unbracketed'
   /** the scanned readings were not pass…pass fail…fail in spend order. */
   | 'non-monotone'
-  /** ROOM only: the highest passing grid spend is not above the entered spend (the headroom is
-   *  under one step) — "more than $X … at about $X" would be a non-answer. */
+  /** ROOM only: the solved edge F is not above the entered spend (the headroom is under one
+   *  step) — "more than $X … at about $X" would be a non-answer. */
   | 'within-a-step'
+  /** EITHER direction: the solved edge F is under one grid step ($0 — a trim ladder
+   *  floors 0.25 × an entered spend under $400/mo to $0, and $0 can read `room`). A $0 figure is
+   *  not a spend anyone plans on, and the sentence's formatter refuses it (the ultramode review's
+   *  F1, 2026-09-26: it reached render and the error boundary took the whole app). */
+  | 'below-grid'
 
 export type SpendSolveOutcome =
   | {
       readonly kind: 'sized'
       readonly direction: 'room' | 'trim'
-      /** F — a multiple of SPEND_SOLVE_STEP, real dollars per month; a run AT F passed. */
+      /** F — a POSITIVE multiple of SPEND_SOLVE_STEP (≥ one step — `below-grid` otherwise), real
+       *  dollars per month; a run AT F passed. */
       readonly monthlyReal: number
       /** F + SPEND_SOLVE_STEP — a run AT this spend FAILED (the other side of the pin). */
       readonly failedAtMonthlyReal: number
@@ -91,7 +100,8 @@ interface Probe {
 
 const floorToGrid = (monthly: number): number => Math.floor(monthly / SPEND_SOLVE_STEP) * SPEND_SOLVE_STEP
 
-/** Solve for the highest grid spend the engine reads as `room` (+ survivor on track). */
+/** Solve for the grid edge the engine reads as `room` (+ survivor on track) at F and not at F + one
+ *  step, both run — the highest such spend under the pre-scan's monotonicity check (see the header). */
 export async function solveSpend(
   params: SimulationParams,
   seed: number,
@@ -171,6 +181,7 @@ export async function solveSpend(
   const above = await probe(lo + SPEND_SOLVE_STEP)
   if (above === 'cancelled') return { kind: 'cancelled' }
   if (above.pass) return { kind: 'unsized', reason: 'non-monotone', probes }
+  if (lo < SPEND_SOLVE_STEP) return { kind: 'unsized', reason: 'below-grid', probes }
   if (direction === 'room' && lo <= entered) return { kind: 'unsized', reason: 'within-a-step', probes }
   return {
     kind: 'sized',

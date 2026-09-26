@@ -462,14 +462,17 @@ export interface MemoryModel {
 // makes a draft field a compile error).
 // ---------------------------------------------------------------------------
 
-/** The sticky-resolved spine DISPLAY triple: the count + verdict word it may hold, and two facts
- *  of the run that ride it unheld — the spend and the dollar's direction, adopted wholesale on every resolve. */
+/** The sticky-resolved spine DISPLAY triple: the count + verdict word it may hold, the dollar's
+ *  direction COUPLED to the word (held exactly when the word is held — the direction is a function of
+ *  the state, so the displayed (word, direction) pair is always PREV's or RAW's, both engine-emittable:
+ *  insight 072's pair law; the ultramode review's F25, 2026-09-26), and the spend, a fact of the run
+ *  adopted wholesale on every resolve. */
 export interface StickyDisplay {
   readonly xOfTen: number
   readonly outcomeState: OutcomeState
   /** The entered spend per month the run scaled its trim from — adopted wholesale on every
-   *  resolve like `direction` (never held: it is a fact of the run, not a reading that can
-   *  flicker). Carried so the trim clause quotes both endpoints from ONE commit. */
+   *  resolve (never held: it is a fact of the run, not a reading that can flicker). The spend
+   *  clause quotes it; the gate (`spendClauseFor`) refuses any FIGURE while the word is held. */
   readonly spendPerMonthReal: number
   readonly direction: DollarAdjustment['direction']
 }
@@ -523,7 +526,9 @@ export function resolveStickyDisplay(
     xOfTen: holdX ? prev.xOfTen : rawX,
     outcomeState: holdState ? prev.outcomeState : rawState,
     spendPerMonthReal,
-    direction,
+    // Coupled to the WORD, never adopted beside a held one: a held off-track word over a raw
+    // `on-the-line` direction composed "off-track … close to the line", a pair the engine never emits.
+    direction: holdState ? prev.direction : direction,
   }
 }
 

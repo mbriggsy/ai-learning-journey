@@ -39,6 +39,19 @@ describe('spendClauseFor — the gate between the spend lane and the sentence', 
     const hold: VerdictDisplay = { ...ROOM_SHOWN, outcomeState: 'borderline', direction: 'on-the-line' }
     expect(spendClauseFor({ kind: 'pending' }, hold, 'borderline')).toBeUndefined()
   })
+
+  it('a sized outcome the formatter would refuse ($0, or off its own step) is UNSIZED at the gate — render never throws (the ultramode review’s F1)', () => {
+    const TRIM_SHOWN: VerdictDisplay = { xOfTen: 1, outcomeState: 'off-track', spendPerMonthReal: 390, direction: 'trim' }
+    const at = (monthlyReal: number, failedAtMonthlyReal: number): SpendAnswer => ({
+      kind: 'resolved',
+      outcome: { kind: 'sized', direction: 'trim', monthlyReal, failedAtMonthlyReal, enteredMonthlyReal: 390, probes: 5 },
+    })
+    expect(spendClauseFor(at(0, 100), TRIM_SHOWN, 'off-track')).toBeUndefined()
+    expect(spendClauseFor(at(150, 250), TRIM_SHOWN, 'off-track')).toBeUndefined()
+    expect(() => composeVerdictReading(TRIM_SHOWN, spendClauseFor(at(0, 100), TRIM_SHOWN, 'off-track'))).not.toThrow()
+    // …and a well-formed one still rides (the gate is not vacuous).
+    expect(spendClauseFor(at(200, 300), TRIM_SHOWN, 'off-track')).toEqual({ kind: 'sized', monthlyReal: 200, failedAtMonthlyReal: 300 })
+  })
 })
 
 describe('the three clause forms', () => {

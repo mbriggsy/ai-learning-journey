@@ -96,6 +96,24 @@ describe('the spend solve vs an exhaustive oracle, on the real seeds', () => {
     expect(await solveSpend(bud.params, bud.seed)).toEqual({ kind: 'unsized', reason: 'budget-governed', probes: 0 })
   }, 300_000)
 
+  it('BELOW THE GRID (the ultramode review’s F1): a tiny off-track household whose trim bottoms out at $0 is `below-grid`, never sized at $0 (the formatter would throw in render and the error boundary take the app)', async () => {
+    // The refuters’ reproduction: `retired` with no Social Security, one $240,000 IRA, $390 a month.
+    // The trim ladder floors 390 × 0.25 to $0 on the $100 grid; $0 reads room, $100 does not.
+    const tiny: ScenarioDraft = {
+      ...atMonthly(DEV_SEEDS.retired, 390),
+      people: [
+        { ...DEV_SEEDS.retired.people[0], pia: 0 },
+        { ...DEV_SEEDS.retired.people[1], pia: 0 },
+      ],
+      enteredAccounts: [{ ...DEV_SEEDS.retired.enteredAccounts![0]!, valueToday: 240_000 }],
+    }
+    const t = paramsOf(tiny)
+    expect(passes(t.params, t.seed, 390), 'the entered spend is off-track (the trim side) — not vacuous').toBe(false)
+    expect(passes(t.params, t.seed, 0), '$0 reads room — the degenerate pass the guard exists for').toBe(true)
+    expect(passes(t.params, t.seed, SPEND_SOLVE_STEP), 'one grid step already fails — so lo would be $0').toBe(false)
+    expect(await solveSpend(t.params, t.seed)).toMatchObject({ kind: 'unsized', reason: 'below-grid' })
+  }, 300_000)
+
   it('cancels cooperatively: shouldContinue is awaited before every run', async () => {
     const { params, seed } = paramsOf(atMonthly(DEV_SEEDS.retired, 10_000))
     let calls = 0

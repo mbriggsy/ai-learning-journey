@@ -241,13 +241,16 @@ export function nextIrmaaStepLine(
 }
 
 /** The next IRMAA step above `magi`: its threshold + the PER-PERSON MONTHLY surcharge jump
- *  crossing it costs (the delta between the tier at the first crossing dollar — `lastSafeMagi + 1`,
- *  which is the line itself on the inclusive top tier — and the tier at `magi` — read through the ONE canonical tier lookup, never a re-typed table). `null` when
- *  no step remains. The caller multiplies by the enrolled count × 12 (never a flat ×2).
- *  ANCHOR-SCALE by design (the trend unit): this is readout geometry — the healthcare sheet
- *  speaks the household's landscape in TODAY's (2026-real) terms, and it prices nothing (the
- *  per-year pricing itself trends in taxOverlay). A future year-contextual readout would
- *  thread the year's scales here explicitly. */
+ *  crossing it costs (the delta between the tier at `lastSafeMagi + 1` — the first REAL dollar past
+ *  the last safe MAGI, which crosses the step in every frame: on an exclusive line it lands one dollar
+ *  over, on the inclusive top line at or past it, since 1 ≥ `oneNominalDollarReal` — and the tier at
+ *  `magi`, both read through the ONE canonical tier lookup, never a re-typed table). `null` when no
+ *  step remains. The caller multiplies by the enrolled count × 12 (never a flat ×2). The LINE is
+ *  framed in the caller's MAGI year (the step card: the anchor row's, `irmaaScheduleAsCompared`);
+ *  the crossing PRICE is still ANCHOR-SCALE (`IRMAA_ANCHOR_SCALES` — the 2026 surcharges; OPEN, the
+ *  register's *The Medicare step card prices crossing the next surcharge step at 2026 prices…*):
+ *  readout geometry that prices nothing (the per-year pricing itself trends in taxOverlay).
+ *  Threading the bill year's trend scales here is that open item. */
 export function nextIrmaaStep(
   magi: number,
   filing: FilingStatus,

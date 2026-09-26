@@ -2400,8 +2400,9 @@ export const slots = {
   /** 'room' while the spend solve is IN FLIGHT — the first sentence alone (council wf_faa1af2d-052:
    *  the shipped "doesn't work out" tail would read falsely final while the figure is coming). */
   verdictRoomLead: (spendFormatted: string): string => `There looks to be room to spend more than $${spendFormatted} a month.`,
-  /** 'room' SIZED by the spend solve (spendSolve.ts): F is the highest $100 spend the engine still
-   *  reads as on track with room — a run AT F passed and a run a step above FAILED (both run). The edge
+  /** 'room' SIZED by the spend solve (spendSolve.ts): F is the $100-grid EDGE the engine still reads as
+   *  on track with room — a run AT F passed and a run a step above FAILED (both run; the highest passing
+   *  spend under the pre-scan's monotonicity check, which refuses a non-monotone scan). The edge
    *  is NAMED (the Hawk's veto: never an on-track claim at the edge without it). The council's duration
    *  phrase ("held every year in today's dollars") was CUT on Briggsy's ruling, 2026-09-26 ("too
    *  wordy"; he also declined the two-word "every year") — never re-add it without his read. */

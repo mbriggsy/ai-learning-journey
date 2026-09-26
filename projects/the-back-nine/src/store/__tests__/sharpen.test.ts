@@ -61,7 +61,7 @@ const dollar = (
 ): DollarAdjustment => ({
   perMonthReal: {
     value: perMonth,
-    // The emission's own rule (confidence.ts:241): distance to the ROUNDED display value.
+    // The emission's own rule (confidence.ts:242): distance to the ROUNDED display value.
     marginToEdge: Math.abs(perMonth - Math.round(perMonth / DOLLAR_STEP) * DOLLAR_STEP),
   },
   spendPerMonthReal: SPEND,
@@ -125,8 +125,8 @@ describe('resolveStickyDisplay — the pure hysteresis rule', () => {
     expect(out.outcomeState).toBe('over-funded')
   })
 
-  it('the SPEND and the DIRECTION adopt wholesale even while the count HOLDS — facts of the run, never readings that can be held stale', () => {
-    // The count edge-holds (margin 0, the first hold arm's reading), but the run's spend moved
+  it('the SPEND and the DIRECTION adopt wholesale while only the COUNT holds (the word unchanged) — facts of the run, never readings that can be held stale', () => {
+    // The count edge-holds (margin 0, the first hold arm's reading) under an UNCHANGED word, but the run's spend moved
     // 6,500 → 10,000 and its direction flipped trim → room. Both must be the NEW run's: a held
     // spend would quote a stale base beside the figure (mutant M5, 2026-09-17: the triple carried
     // prev's spend), and a held direction would compose the wrong clause for the shown word.
@@ -140,6 +140,17 @@ describe('resolveStickyDisplay — the pure hysteresis rule', () => {
     expect(adopted.xOfTen).toBe(7)
     expect(adopted.spendPerMonthReal).toBe(10_000)
     expect(adopted.direction).toBe('room')
+  })
+
+  it('the DIRECTION holds exactly when the WORD holds — never an off-track word over a raw "close to the line" clause (the ultramode review’s F25)', () => {
+    // prev {6, off-track, trim}; the raw reading rises to quantized 0.65 → {7, borderline, on-the-line}
+    // with BOTH margins 0 (the 0.65 state edge; the 6.5 lattice point) — holdX and holdState both fire.
+    // Adopting the raw direction beside the held word composed {off-track, on-the-line}: a pair
+    // buildDollar never emits (off-track always reads trim or rethink).
+    const settled: StickyDisplay = { xOfTen: 6, outcomeState: 'off-track', spendPerMonthReal: SPEND, direction: 'trim' }
+    const out = resolveStickyDisplay(settled, headline(7, 0, 'borderline', 0), dollar(0, 'on-the-line'))
+    expect(out.outcomeState).toBe('off-track') // held — so the arm is not vacuous
+    expect(out.direction).toBe('trim') // held WITH it
   })
 })
 
@@ -207,6 +218,9 @@ describe('resolveStickyDisplay — a hold may never be rosier than the raw readi
       readings.push(mkReading(i / 100, true))
     }
     const emittable = new Set(readings.map((r) => `${r.headline.outcomeState}:${r.headline.xOfTen.value}`))
+    // …and the (word, direction) pairs the ENGINE emits (the F25 law: a clause must be one buildDollar
+    // could have composed for the word shown beside it).
+    const emittableDir = new Set(readings.map((r) => `${r.headline.outcomeState}:${r.dollar.direction}`))
     const violations: string[] = []
     for (const prevR of readings) {
       const prevDisplay = resolveStickyDisplay(null, prevR.headline, prevR.dollar)
@@ -218,6 +232,8 @@ describe('resolveStickyDisplay — a hold may never be rosier than the raw readi
           violations.push(`rosier count: ${out.xOfTen} shown over raw ${rawR.headline.xOfTen.value}`)
         if (!emittable.has(`${out.outcomeState}:${out.xOfTen}`))
           violations.push(`impossible pairing: {${out.outcomeState}, ${out.xOfTen}}`)
+        if (!emittableDir.has(`${out.outcomeState}:${out.direction}`))
+          violations.push(`impossible clause: {${out.outcomeState}, ${out.direction}}`)
       }
     }
     expect(violations.slice(0, 12)).toEqual([])

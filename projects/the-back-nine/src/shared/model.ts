@@ -687,11 +687,10 @@ export interface SimulationParams {
 // Engine result (the contract the worker boundary, confidence.ts, and viz read).
 // ---------------------------------------------------------------------------
 
-/** A rounded display figure paired with the raw distance to its next rounding edge,
- *  so a stateful caller (P2/P3) can layer sticky hysteresis on BOTH the headline and
- *  the dollar figure (the failure mode is one being sticky while the other flickers,
- *  since they render in one sentence). confidence.ts emits the margins; it does not
- *  itself implement cross-edit hysteresis. */
+/** A reading's value + the raw distance to its next rounding edge. The HEADLINE's margins (`xOfTen`'s,
+ *  beside {@link Headline.stateMarginToEdge}) are the sticky seam's input — memoryModel holds the count and
+ *  the word on them; confidence.ts only emits them. The dollar's `perMonthReal` wears the shape too, but its
+ *  margin has NO production reader: phase C deleted the sticky dollar, and the magnitude renders nowhere. */
 export interface WithMargin<T> {
   readonly value: T
   /** Raw distance to the nearest band/step edge (in the underlying continuous unit). */
@@ -736,17 +735,18 @@ export interface SurvivorReading {
   readonly incomeStepDownMonthlyReal: number
 }
 
-/** The dollar-grammar adjustment ("trim ~$Y/month" / "you have ~$Y/month of room"). */
+/** The verdict's dollar reading: the DIRECTION its clause is keyed on + the entered spend it quotes. The
+ *  magnitude is never quoted — the only solved figure is the spend lane's (`spendSolve.ts`, `spendClauseFor`). */
 export interface DollarAdjustment {
-  /** Signed real dollars per month: negative = trim, positive = room, 0 = on the line. For
-   *  `rethink` the value is still negative (the same gap-scaled proxy) but the verdict DROPS it —
-   *  no single figure is a solve for an unfundable-from-the-start plan, so the clause is figure-less. */
+  /** An UNRENDERED heuristic kept beside `direction` as its evidence (and a field tests anchor non-vacuity
+   *  on) — never quoted, never held; measured WRONG (the trim over-cut ~2× on `retired`, the room oversold
+   *  `surplus` onto borderline). Signed $/month: − trim (−spend × the survival gap), + room (the p10 draw),
+   *  0 on the line; `rethink` keeps the − proxy. Its `marginToEdge` has had no reader since phase C. */
   readonly perMonthReal: WithMargin<number>
-  /** The household's entered spending per month (`annualSpendingReal / 12`) — the base the `trim`
-   *  magnitude was scaled FROM, carried on the reading so the figure-less trim clause ("Spending less
-   *  than $10,000 a month …") quotes the spend from the SAME run that produced the verdict. Never re-derived UI-side from the draft: the store holds the last answer visible while
-   *  a re-run is in flight, so a draft-read spend could sit beside a delta computed from a different
-   *  spend for that window (the mixed-pair sin). Real dollars, unrounded — presentation rounds. */
+  /** The entered spending per month (`annualSpendingReal / 12`; the `trim` heuristic's base), carried on the
+   *  reading so every magnitude clause (room or trim, sized or not) quotes the spend of the SAME run as the
+   *  verdict — never re-derived UI-side from the draft: the store keeps the last answer up while a re-run is
+   *  in flight, and a draft-read spend beside it is the mixed-pair sin. Real dollars, unrounded. */
   readonly spendPerMonthReal: number
   /** `rethink` = already-failing (0 of 10, unfundable from the start): a figure-less, lever-agnostic
    *  verdict, never the sufficiency-implying `trim`. The fork lives in the PURE engine (`buildDollar`),
@@ -1914,7 +1914,7 @@ export interface SavedRecommendationV3 {
    *  2026-09-03 edit-time kill the pending arm does too; produced by the private `fingerprintOf` at
    *  `:693`) — the identity of the run this record actually describes — and NEVER from a fresh
    *  recompute taken at save time. The trichotomy's `freshFingerprint` is the OTHER operand,
-   *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:703`): what the draft WOULD solve
+   *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:708`): what the draft WOULD solve
    *  now. The two are equal at the mint and diverge afterwards, and that divergence IS the mechanism
    *  — so minting from the fresh side instead would stamp the record with inputs the recommendation
    *  was never computed against, which on a stale draft is a calm-but-wrong memory rather than a

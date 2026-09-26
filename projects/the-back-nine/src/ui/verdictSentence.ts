@@ -12,9 +12,9 @@
  * hero. One composer makes that desync unrepresentable — BOTH surfaces call it.
  *
  * Takes the display TUPLE rather than a DollarAdjustment so the sticky DISPLAY triple and the
- * raw reading compose through ONE clause path (U12 C2). The tuple carries no dollar figure:
- * the only figure the clause quotes is the spend lane's REAL one, gated in by `spendClauseFor`
- * (the proxy `perMonthDollar` it once carried was deleted in the spend solve's phase C).
+ * raw reading compose through ONE clause path (U12 C2). The tuple carries no solved figure:
+ * beside the entered spend, the only figure the clause quotes is the spend lane's REAL one, gated
+ * in by `spendClauseFor` (the proxy `perMonthDollar` it once carried was deleted in phase C).
  */
 import type { DollarAdjustment, OutcomeState } from '@shared/model'
 import { copy, slots } from './copy'
@@ -28,8 +28,10 @@ import { OUTCOME_PRESENTATION } from './outcomeStates'
 export interface VerdictDisplay {
   readonly outcomeState: OutcomeState
   readonly xOfTen: number
-  /** The entered spend per month the run scaled its trim from (the clause's other endpoint) —
-   *  carried on the tuple so hero and echo quote the SAME base as the delta, from one commit. */
+  /** The entered spend per month the clause quotes — a fact of the run, adopted unheld on every
+   *  resolve, so hero and echo quote the spend of the run whose verdict they show. Unsized ⇒ it is
+   *  the clause's ONLY figure; pending ⇒ the lead sentence alone quotes it; sized ⇒ it stands beside
+   *  spendSolve's verified F (`spendClauseFor`). Never a delta's base — no delta is rendered. */
   readonly spendPerMonthReal: number
   readonly direction: DollarAdjustment['direction']
 }
@@ -65,7 +67,14 @@ export function spendClauseFor(
   if (shown.direction !== 'room' && shown.direction !== 'trim') return undefined
   if (spend.kind === 'pending') return { kind: 'pending' }
   if (spend.kind === 'resolved' && spend.outcome.kind === 'sized' && spend.outcome.direction === shown.direction) {
-    return { kind: 'sized', monthlyReal: spend.outcome.monthlyReal, failedAtMonthlyReal: spend.outcome.failedAtMonthlyReal }
+    const o = spend.outcome
+    const step = o.failedAtMonthlyReal - o.monthlyReal
+    // The formatter's contract (money.ts formatSolvedSpend — a POSITIVE multiple of the step) checked
+    // HERE, in the gate, so render can never throw: the solve guarantees it (`below-grid`), and an
+    // outcome that breaks it anyway is unsized, never a crash (the ultramode review's F1, 2026-09-26 —
+    // a $0 trim reached render and the error boundary replaced the whole app).
+    if (!(o.monthlyReal > 0 && step > 0 && Number.isInteger(o.monthlyReal / step))) return undefined
+    return { kind: 'sized', monthlyReal: o.monthlyReal, failedAtMonthlyReal: o.failedAtMonthlyReal }
   }
   return undefined
 }
@@ -83,14 +92,15 @@ export function reserveClauseFor(shown: VerdictDisplay): string | null {
   return null
 }
 
-/** The verdict's second line — the dollar grammar. The $/month enters through the slot
- *  pre-formatted, so the rendered clause carries no hardcoded numeral (copyGuard
- *  slot-discipline). Room AND trim quote ONLY the spend they entered and name the size as unworked
- *  (council 2026-09-25; room 2026-09-26): the engine's magnitudes are unsolved heuristics — the trim
- *  over-cut ~2× on the `retired` frame and read as sufficiency (Briggsy's cold read, E17); the room
- *  oversold `surplus` onto borderline. The engine's `perMonthReal` renders nowhere and rides no display
- *  tuple (phase C deleted the sticky copy). The REAL figure arrives through `spend` (the spend lane, spendSolve.ts):
- *  sized ⇒ the verified F with its edge named; pending ⇒ the first sentence alone; else figure-less. */
+/** The verdict's second line — the dollar grammar. Every $/month enters through a slot
+ *  pre-formatted, so the rendered clause carries no hardcoded numeral (copyGuard slot-discipline).
+ *  Room AND trim always quote the ENTERED spend (the run's own); what follows depends on `spend`
+ *  (the spend lane, spendSolve.ts — the only figure the clause ever sizes): unsized ⇒ the entered
+ *  spend ONLY, the size named as unworked (council 2026-09-25; room 2026-09-26); pending ⇒ the lead
+ *  sentence alone (the unworked tail would read falsely final); sized ⇒ the entered spend + the
+ *  verified F, its edge named. The engine's `perMonthReal` renders nowhere and rides no display tuple
+ *  (phase C deleted the sticky copy): an unsolved heuristic — the trim over-cut ~2× on the `retired`
+ *  frame and read as sufficiency (Briggsy's cold read, E17); the room oversold `surplus` onto borderline. */
 function magnitudeClause(
   direction: DollarAdjustment['direction'],
   spendPerMonthReal: number,

@@ -18,7 +18,8 @@
  */
 import type { DollarAdjustment, OutcomeState } from '@shared/model'
 import { copy, slots } from './copy'
-import { formatPerMonth } from './money'
+import { formatPerMonth, formatSolvedSpend } from './money'
+import type { SpendAnswer } from '@store/memoryModel'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
 
 /** The displayed verdict tuple — structurally satisfied by the store's `StickyDisplay` and
@@ -44,26 +45,67 @@ export interface VerdictReading {
   readonly clause: string
 }
 
+/** What the magnitude clause knows about the REAL spend figure (the spend lane):
+ *  - `undefined` — unsized: the shipped figure-less sentence ("… doesn't work out how much …");
+ *  - `pending`   — the solve is in flight: the first sentence ALONE (the tail would read falsely final);
+ *  - `sized`     — the verified figure F, a run AT F passed and a run at F + one step failed. */
+export type SpendClause =
+  | { readonly kind: 'pending' }
+  | { readonly kind: 'sized'; readonly monthlyReal: number; readonly failedAtMonthlyReal: number }
+
+/** THE GATE between the spend lane and the sentence (council wf_faa1af2d-052). A figure rides ONLY
+ *  when the SHOWN verdict is the RAW verdict (the sticky seam may hold a previous state for a frame of
+ *  hysteresis — a figure solved for the raw state beside a held word would be the mixed-pair sin) and
+ *  the solve's direction is the shown direction. Anything else is unsized. */
+export function spendClauseFor(
+  spend: SpendAnswer | undefined,
+  shown: VerdictDisplay,
+  rawOutcomeState: OutcomeState,
+): SpendClause | undefined {
+  if (spend === undefined || shown.outcomeState !== rawOutcomeState) return undefined
+  if (shown.direction !== 'room' && shown.direction !== 'trim') return undefined
+  if (spend.kind === 'pending') return { kind: 'pending' }
+  if (spend.kind === 'resolved' && spend.outcome.kind === 'sized' && spend.outcome.direction === shown.direction) {
+    return { kind: 'sized', monthlyReal: spend.outcome.monthlyReal, failedAtMonthlyReal: spend.outcome.failedAtMonthlyReal }
+  }
+  return undefined
+}
+
+/** The SIZED sentence's widest plausible form, for the pending clause to RESERVE its height (insight
+ *  035 — the `.ladder-readout` precedent: a line that grows under the reader must hold its box so the
+ *  band below never jumps when the figure lands). The figure is the widest the solve can return on
+ *  this side: the room cap (3× the entered spend) for room, the entered spend itself for trim. Null
+ *  for a direction that is never sized. Presentation only — never rendered visibly, never announced. */
+export function reserveClauseFor(shown: VerdictDisplay): string | null {
+  const entered = formatPerMonth(shown.spendPerMonthReal)
+  const grid = (m: number) => formatPerMonth(Math.floor(m / 100) * 100)
+  if (shown.direction === 'room') return slots.verdictRoomSized(entered, grid(shown.spendPerMonthReal * 3))
+  if (shown.direction === 'trim') return slots.verdictTrimSized(entered, grid(shown.spendPerMonthReal))
+  return null
+}
+
 /** The verdict's second line — the dollar grammar. The $/month enters through the slot
  *  pre-formatted, so the rendered clause carries no hardcoded numeral (copyGuard
  *  slot-discipline). Room AND trim quote ONLY the spend they entered and name the size as unworked
  *  (council 2026-09-25; room 2026-09-26): the engine's magnitudes are unsolved heuristics — the trim
  *  over-cut ~2× on the `retired` frame and read as sufficiency (Briggsy's cold read, E17); the room
  *  oversold `surplus` onto borderline. The engine's `perMonthReal` renders nowhere until a real solve
- *  lands (register Tier 1). */
+ *  lands (register Tier 1). The REAL figure arrives through `spend` (the spend lane, spendSolve.ts):
+ *  sized ⇒ the verified F with its edge named; pending ⇒ the first sentence alone; else figure-less. */
 function magnitudeClause(
   direction: DollarAdjustment['direction'],
   spendPerMonthReal: number,
+  spend: SpendClause | undefined,
 ): string {
+  const entered = formatPerMonth(spendPerMonthReal)
+  const solved = spend?.kind === 'sized' ? formatSolvedSpend(spend.monthlyReal, spend.failedAtMonthlyReal - spend.monthlyReal) : null
   switch (direction) {
     case 'room':
-      // FIGURE-LESS (2026-09-26, the trim clause's law): the room figure is an unsolved heuristic that
-      // oversold over-funded households onto borderline — only the entered spend rides.
-      return slots.verdictRoomClause(formatPerMonth(spendPerMonthReal))
+      if (solved !== null) return slots.verdictRoomSized(entered, solved)
+      return spend?.kind === 'pending' ? slots.verdictRoomLead(entered) : slots.verdictRoomClause(entered)
     case 'trim':
-      // FIGURE-LESS (council 2026-09-25): the engine's trim magnitude is an unsolved proxy, so only the
-      // entered spend rides — the base the reader typed, from the same run as the verdict.
-      return slots.verdictTrimClause(formatPerMonth(spendPerMonthReal))
+      if (solved !== null) return slots.verdictTrimSized(entered, solved)
+      return spend?.kind === 'pending' ? slots.verdictTrimLead(entered) : slots.verdictTrimClause(entered)
     case 'on-the-line':
       return slots.verdictHoldClause()
     case 'rethink':
@@ -86,12 +128,12 @@ export function verdictReadingText(outcomeState: OutcomeState, xOfTen: number): 
 /** Compose the rendered verdict sentence pieces for a displayed triple. Returns `null` only
  *  for `indeterminate` (not a verdict — the surface shows its own incompleteness copy; the
  *  sixth-state asymmetry, outcomeStates.ts). */
-export function composeVerdictReading(shown: VerdictDisplay): VerdictReading | null {
+export function composeVerdictReading(shown: VerdictDisplay, spend?: SpendClause): VerdictReading | null {
   const wordKey = OUTCOME_PRESENTATION[shown.outcomeState].verdictWordKey
   if (wordKey === null) return null
   return {
     word: copy[wordKey],
     reading: verdictReadingText(shown.outcomeState, shown.xOfTen),
-    clause: magnitudeClause(shown.direction, shown.spendPerMonthReal),
+    clause: magnitudeClause(shown.direction, shown.spendPerMonthReal, spend),
   }
 }

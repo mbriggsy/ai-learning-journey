@@ -37,6 +37,7 @@ const snap = (answer: ModelAnswer, over: Partial<ScenarioDraft> = {}): MemoryMod
   answer,
   displayed: null, // U12 sticky triple — the strip never reads it
   solve: { kind: 'idle' }, // U15 solve channel — the strip never reads it
+  spend: { kind: 'idle' }, // the spend lane — the strip never reads it
   runningInWorker: true,
 })
 

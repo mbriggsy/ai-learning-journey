@@ -251,6 +251,8 @@ export function selectElevatedAnswer(
           // — trusted here, never re-derived); presence-keyed like its siblings so the preview
           // harness's displayed-less fixtures stay legal (the surface then reads raw).
           ...(snapshot.displayed ? { displayed: snapshot.displayed } : {}),
+          // The spend lane rides beside the sticky triple (its gate lives in verdictSentence.spendClauseFor).
+          spend: snapshot.spend,
           ...spineBand(answer.result, draft, savedAnchor),
           ...(answer.result.survivorReading ? { survivorReading: answer.result.survivorReading } : {}),
           ...(answer.result.floorReading ? { floorReading: answer.result.floorReading } : {}),

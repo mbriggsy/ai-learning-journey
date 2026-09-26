@@ -192,7 +192,7 @@ const realEngine = {
 const realClient: EngineClient = {
   runningInWorker: false,
   reset: () => {},
-  engine: { ...realEngine, runSolve: async (r) => engineApi.runSolve(r) },
+  engine: { ...realEngine, runSpendSolve: async () => ({ kind: 'calm-error', reason: 'unused' }) as const, setLatestSpendEpoch: async () => {}, runSolve: async (r) => engineApi.runSolve(r) },
 }
 
 /** Real spine/date + a CONTROLLABLE, recorded runSolve (arms c/d — the store orchestration is driven
@@ -205,6 +205,8 @@ function controllableClient(): { client: EngineClient; solvePending: Array<(w: S
     reset: () => {},
     engine: {
       ...realEngine,
+      runSpendSolve: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+      setLatestSpendEpoch: async () => {},
       runSolve: () => {
         solveCalls += 1
         return new Promise<SolveWire>((resolve) => solvePending.push(resolve))

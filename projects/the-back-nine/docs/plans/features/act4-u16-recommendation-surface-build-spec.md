@@ -160,7 +160,7 @@ standing valve; the §7 triggers in `docs/decisions/market-model.md` stay live a
 - The pre-dispatch `blocked` arm stays DISTINCT from the committed withheld payload — two calm
   renders, both naming the true reason (§Q5). The gap vocabulary shipped as
   `SolvePreconditionGap = 'goal-unset' | SolveBlockReason` over `SolveBlockReason = 'no-pretax' |
-  'spine-unready'` (`memoryModel.ts:277`, `:282`):
+  'spine-unready'` (`memoryModel.ts:278`, `:283`):
   `goal-unset` steers to the GoalPicker, and the single `buckets-defaulted` gap this spec first
   prescribed became the builder's TYPED refusal `no-pretax` | `spine-unready` landing verbatim as
   the gap, each with its own true note (the steer-seed increment, 2026-07-23, commits `8b9cab61` +
@@ -278,7 +278,7 @@ to a single commit.
   the 2026-08-02 pin**, because it promised a month tied to NC's own certification that no longer
   gates anything, and a withhold that names a date it cannot keep is exactly the promise this
   product must not make. A future state's pin event may have any timing, so the shipped slot commits
-  to none (`copy.ts:2957`).
+  to none (`copy.ts:2971`).
 - **No live household fires the withheld render today, and that is a CLEARED clause, not a
   regression.** Both blocking clauses cleared after U16 shipped: S.L. 2026-41 § 44.1(a) pinned
   `ncRateSchedule` to an enacted statutory schedule on 2026-08-02, retiring the last directional

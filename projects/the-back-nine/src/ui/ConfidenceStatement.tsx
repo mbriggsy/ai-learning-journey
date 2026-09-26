@@ -43,7 +43,7 @@ import { TwoTierHeadline } from './TwoTierHeadline'
 import { IN_FRAME_DISCLAIMER_ID } from './Disclaimer'
 import { floorRelief } from './twoTier'
 import { axisDollarFormatterFor, formatAxisDollar } from './money'
-import { composeVerdictReading } from './verdictSentence'
+import { composeVerdictReading, reserveClauseFor, spendClauseFor } from './verdictSentence'
 import { composeVerdictMedicareResidual, composeVerdictStateNote } from './stateTaxDisclosure'
 import type { PricedState } from '@engine/constants/stateTax'
 import { focusHeading, useLiveAnnouncer } from '@intake/a11y'
@@ -58,7 +58,7 @@ import {
 import { BAND_LABELS, BAND_CHROME, composeBandAtRange } from './bandPanelChrome'
 import type { BandPlanClockAnchor } from './bandAnnotations'
 import type { BandFan, DollarAdjustment, Headline, SurvivorReading } from '@shared/model'
-import type { StickyDisplay } from '@store/memoryModel'
+import type { SpendAnswer, StickyDisplay } from '@store/memoryModel'
 import './styles/confidence.css'
 
 /** What the surface shows. `reading` covers all six engine states (it reads `outcomeState`);
@@ -75,6 +75,10 @@ export type ConfidenceStatementView =
        *  `headline`/`dollar` above (one honest raw record, one sticky sentence). Absent (the
        *  preview harness, displayed-less fixtures) ⇒ the sentence reads the raw result directly. */
       readonly displayed?: StickyDisplay
+      /** The spend lane (memoryModel `SpendAnswer`) — the REAL figure for the magnitude clause. It
+       *  rides the sentence only through `spendClauseFor`'s gate (shown state ≡ raw state, same
+       *  direction); absent ⇒ the figure-less clause. */
+      readonly spend?: SpendAnswer
       /** The engine's per-year fan, opt-in. When present (and the state is a real verdict), the
        *  "show me the range" drawer mounts. Absent ⇒ no drawer (the verdict still stands). */
       readonly band?: BandFan
@@ -223,7 +227,12 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
   // ultramode). `shown` excludes indeterminate above, so the composer never returns null here.
   // The FRAMING (outcome-first vs action-first) stays a presentation lookup — it shapes the
   // lockup's layout, not its words, so it lives outside the sentence composer.
-  const shownVerdict = shown ? composeVerdictReading(shown) : null
+  const shownSpend = shown && view.kind === 'reading' ? spendClauseFor(view.spend, shown, view.headline.outcomeState) : undefined
+  const shownVerdict = shown && view.kind === 'reading' ? composeVerdictReading(shown, shownSpend) : null
+  // While the figure is in flight the clause RESERVES the sized sentence's height (see reserveClauseFor).
+  const reserveClause = shown && shownSpend?.kind === 'pending' ? reserveClauseFor(shown) : null
+  // The lane's state on the DOM — the e2e seam (a gate waits for 'sized' / measures the reserve).
+  const spendState = shownSpend === undefined ? 'unsized' : shownSpend.kind
   const shownPres = shown ? OUTCOME_PRESENTATION[shown.outcomeState] : null
   const shownWord = shownVerdict?.word ?? ''
   const shownReading = shownVerdict?.reading ?? ''
@@ -234,13 +243,18 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
   // and NEVER otherwise. Deliberately not the bare `${state}:${xOfTen}:${dollar}` tuple: a $-step
   // move under a figure-less clause (on-the-line / rethink) leaves the sentence byte-identical, and
   // re-keying then would blink unchanged words — the exact flicker the sticky seam exists to kill.
-  const lockupKey = shown ? `${shown.outcomeState}:${shownReading}:${shownClause}` : undefined
+  // SPLIT (council wf_faa1af2d-052): the VERDICT key (state + count) re-keys the glyph, word and count
+  // line; the LOCKUP key adds the clause and re-keys the magnitude line ONLY. When the spend lane's
+  // figure lands under an unchanged verdict, only the clause fades — and only the clause is announced.
+  const verdictKey = shown ? `${shown.outcomeState}:${shownReading}` : undefined
+  const lockupKey = shown ? `${verdictKey}:${shownClause}` : undefined
 
   // THE CROSSFADE LATCH (the firstDraw pattern): the fade fires only on a lockupKey CHANGE while
   // mounted — first mount / fresh landing carries no swap class (the .confidence-reveal reveal owns
   // the entrance). `everSwapped` keeps the class stable across later same-key re-renders (a stale
   // .cs-swap on a settled element is inert — @starting-style only fires at element creation).
   const prevLockupKey = useRef(lockupKey)
+  const prevVerdictKey = useRef(verdictKey)
   const everSwapped = useRef(false)
   const isSwap =
     lockupKey !== undefined && prevLockupKey.current !== undefined && prevLockupKey.current !== lockupKey
@@ -254,14 +268,18 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
   const sentence = shown ? `${shownWord}. ${shownReading} ${copy.confidenceCoverageCaption}. ${shownClause}` : ''
   useEffect(() => {
     const prev = prevLockupKey.current
+    const prevVerdict = prevVerdictKey.current
     prevLockupKey.current = lockupKey
+    prevVerdictKey.current = verdictKey
     if (lockupKey === undefined || prev === undefined || prev === lockupKey) return
     everSwapped.current = true
     // Behind an open sheet the panel echo (role=status) IS the AT feedback for the edit —
     // aria-modal does not silence background live regions, so speaking here too would read
     // the same verdict twice (U12 ultramode). The crossfade bookkeeping above still runs.
-    if (!sheetOpen) announcer.announce(sentence)
-  }, [lockupKey, sentence, announcer, sheetOpen])
+    // A clause-only change (the spend figure landing) announces the CLAUSE alone — never the whole
+    // verdict re-read for a figure arriving under it.
+    if (!sheetOpen) announcer.announce(prevVerdict === verdictKey ? shownClause : sentence)
+  }, [lockupKey, verdictKey, sentence, shownClause, announcer, sheetOpen])
 
   // The producer seam: resolve the per-year fan into drawable geometry ONCE per view. resolveBandData
   // owns the fail-loud honesty guards (malformed fan ⇒ throw — never a silently-wrong band). Only a
@@ -371,19 +389,28 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
         <div className="reveal__lead">
           {view.provisional && <p className="cs-provisional">{copy.answerProvisionalTag}</p>}
           <div className="cs-verdict">
-            <VerdictIcon key={`glyph:${lockupKey}`} state={s.outcomeState} className={swapCls('cs-glyph')} />
+            <VerdictIcon key={`glyph:${verdictKey}`} state={s.outcomeState} className={swapCls('cs-glyph')} />
             <h2 className="cs-word" tabIndex={-1} ref={headingRef} aria-describedby={IN_FRAME_DISCLAIMER_ID}>
-              <span key={`word:${lockupKey}`} className={swapCls('cs-word__text')}>
+              <span key={`word:${verdictKey}`} className={swapCls('cs-word__text')}>
                 {shownWord}
               </span>
             </h2>
           </div>
-          <p key={`reading:${lockupKey}`} className={swapCls('cs-reading')}>
+          <p key={`reading:${verdictKey}`} className={swapCls('cs-reading')}>
             <span className="cs-reading__count">{shownReading}</span>{' '}
             <span className="cs-reading__frame">{copy.confidenceCoverageCaption}</span>
           </p>
-          <p key={`magnitude:${lockupKey}`} className={swapCls('cs-magnitude')}>
-            {shownClause}
+          <p key={`magnitude:${lockupKey}`} className={swapCls('cs-magnitude')} data-spend={spendState}>
+            {reserveClause === null ? (
+              shownClause
+            ) : (
+              <>
+                <span className="cs-magnitude__line">{shownClause}</span>
+                <span className="cs-magnitude__line cs-magnitude__reserve" aria-hidden="true">
+                  {reserveClause}
+                </span>
+              </>
+            )}
           </p>
         </div>
         {resolved && (

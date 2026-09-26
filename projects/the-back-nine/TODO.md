@@ -194,7 +194,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`copy.ts:979`, `:984, :998, :1000, :1008, :1010` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
    affirmation, not append to it) + the two health-control siblings (`copy.ts:1143`, `:1149`), which CANNOT take it
-   (gated on `statePriced` alone — `copy.ts:1135-1137`). Unfiled: `shadowRateHeadroom` (`copy.ts:2659`)
+   (gated on `statePriced` alone — `copy.ts:1135-1137`). Unfiled: `shadowRateHeadroom` (`copy.ts:2673`)
    quotes cliff headroom against an SLCSP that never trends — the headroom figure inherits the held-price
    optimism; and there is NO ACA cost-trend constant at all (`health.ts` carries only `medicareCostTrend`)
    — ACA premiums are the one health channel with no trend, no clause AND no disclosure, in the
@@ -214,7 +214,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`oracleToken.ts:48`), its humane string (`recommendationView.ts:338-339`) and the whole *held* card
    still ship and are tested; only the **live trigger** is gone, so a new arm is an addition, not a build.
    Correction (b) is **confirmed exact**: `mintOracleToken` has one live call site (`solveEntry.ts:214`),
-   reached only via `engineApi.runSolve`; `engineApi.run` (`engineProtocol.ts:277` — headline/confidence)
+   reached only via `engineApi.runSolve`; `engineApi.run` (`engineProtocol.ts:309` — headline/confidence)
    and `runDateSearch` (`:314` — the date) mint **no token**.
    ⚑ **The no-income-tax premise is FALSE for 5 of the 8, and it adds 7, not 8** — the register entry
    *Unpriced states — a confident winner computed with zero state income tax* carries the state-by-state negative.
@@ -231,7 +231,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    because `scenarioCodec.ts:793-794` gates `retirementState` via `needVocab(STATE_ROSTER)`, so no
    pre-widening vault can *be* a household in a newly-priced state. The prescribed remedy — loosening
    `stateTax.ts:429-433` — would **re-open the exact hole that tie was minted to close** (`:422-426`).
-   ⚑ **His call, sharpened:** does the refusal reach the **headline + date** (`engineProtocol.ts:277`/`:314`)
+   ⚑ **His call, sharpened:** does the refusal reach the **headline + date** (`engineProtocol.ts:309`/`:346`)
    or stop at the strategy? Gating only `solve()` leaves a state-blind first answer for everyone off the
    roster; gating all three blanks the product's magic moment for **~86% of US households**. Widening to the
    no-tax seven moves coverage ~14% → ~27%, of which **Texas alone is two-thirds** — so *which of your
@@ -241,14 +241,14 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    every household that skipped it.
    ⚑ **2026-09-04:** "no token on the headline/date" is TRUE; "no honesty gate at all" would be FALSE — a
    state-tax disclosure already renders on both first-answer surfaces (`composeVerdictMedicareResidual`,
-   `stateTaxDisclosure.ts:45` → `ConfidenceStatement.tsx:472` + `FuckOffDate.tsx:414`; off-roster arm
+   `stateTaxDisclosure.ts:45` → `ConfidenceStatement.tsx:499` + `FuckOffDate.tsx:414`; off-roster arm
    `copy.ts:1191` "State income tax isn't priced yet…"). ✅ **The GATE gap this block named is CLOSED
    2026-09-11 (Card 4):** the residual still rides `medicarePricedNote` (`healthSheetChrome.ts:458-463` —
    Medicare-priced AND no health door), but the clause no longer depends on it — `composeVerdictStateNote`
    (`stateTaxDisclosure.ts:86`, home #6) renders it STANDALONE (`.cs-state-note`) on both routes wherever the
    residual is withheld, so EVERY verdict — pre-65 and health-door included, the fuck-off-date audience —
    reads exactly one state clause, priced or unpriced; scope the roster fork against disclosure-everywhere,
-   never against a silent pre-65 cohort. A THIRD token-less lane exists: `runTwoArm` (`engineProtocol.ts:321`, the U10 control
+   never against a silent pre-65 cohort. A THIRD token-less lane exists: `runTwoArm` (`engineProtocol.ts:362`, the U10 control
    preview), gated by copy only. Anchors: `stateStep` `questions.tsx:570`, `fields: []` at `:577`, the
    retired twin `:593`.
 
@@ -278,12 +278,12 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      ⚑ **2026-08-03 double-blind — both defects HOLD; the filed shape and the drafted tone were both wrong.**
      Anchors drifted +14: the two `<section className="ap-section">` opens are **`:331` and `:463`**, close
      `:742`, footer `:748`. **It is NOT data-only** — `METHODOLOGY_DISCLOSURES` rows render *inside* section
-     a's single `<ul>` (`AssumptionPanel.tsx:527-559`), so an entry there lands in "On your behalf". A third
+     a's single `<ul>` (`AssumptionPanel.tsx:533-565`), so an entry there lands in "On your behalf". A third
      section is **~18 lines of new JSX** mirroring `:564-568`, + 1 heading and 2 line keys in `copy.ts`'s
      `assumption*` block (hedge/verdict-EXEMPT at `:1123-1134`; avoid `copyGuard.ts:254`'s
      `/(tap|draw|pull) … hsa/`), + **no CSS change** (`.ap-section*`/`.ap-row*` are generic). **Fit is safe
      and gets safer:** the panel scrolls (`sheetShell.css` `.control-sheet` 88dvh/94dvh, `overflow-y:auto`)
-     and the fit gate's panel arm (`vertical-fit.spec.ts:1687-1716`) asserts only that the dialog box fits
+     and the fit gate's panel arm (`vertical-fit.spec.ts:1692-1721`) asserts only that the dialog box fits
      **and** `scrollHeight > clientHeight` — content growth makes the second assertion *more* true.
      ⚑ **The drafted HSA sentence would have DENIED the very forfeit it discloses — do not ship "stays
      put" / "simply sits."** The balance is not parked, it is **destroyed**: `taxOverlay.ts:1826-1827` sets
@@ -303,7 +303,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      ⚑ **2026-09-04 re-anchor (drifted AGAIN, +62/+101 in a month) + four traps the build must clear.** The
      panel is `src/intake/AssumptionPanel.tsx` — section a opens `:393` / closes `:561`, section b `:564` /
      `:843`, footer `:849`, the disclosures map `:527-559`; the `assumption*` prefix law is
-     `copy.ts:1264-1275` (keys `:1276-1417`); the panel fit arm is `vertical-fit.spec.ts:1687-1716`;
+     `copy.ts:1264-1275` (keys `:1276-1417`); the panel fit arm is `vertical-fit.spec.ts:1692-1721`;
      `sheetShell.css:34-35`/`:94`; the overlays are `src/engine/healthOverlay.ts:746-750` and
      `src/engine/taxOverlay.ts:1816-1819` (there is no `overlays/` dir). NIIT's two homes confirmed
      (`recommendationView.ts:90` unconditional; `copy.ts:1142-1143`) — the scope fork is self-resolving:
@@ -376,7 +376,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    `FuckOffDate.tsx:185-204`; the split household's floor line has its own six arms, `:211-240`). Seat =
    the else-arm of the `Result.tsx:509` gate, gated ALSO on `focusKey !== undefined` (else it prints beside
    the non-answer strip on an inputs-incomplete date frame); CSS in `fuckOffDate.css` — NOT
-   `confidence.css`, the date grid is its own (`:220-236`) and its first free cell is r3c1 above the
+   `confidence.css`, the date grid is its own (`:233-249`) and its first free cell is r3c1 above the
    protected disclaimer; the key lands in verdict scope through the `fuckoff` substring net
    (`copyGuard.ts:72`) so free-numeral bites — no bare digit. The date arms of `verify:fit` assert ORDER
    only (only `dip` + `datenc` carry the exhaustive doors-last sweep) — add a presence pin to the `?seed=dip`
@@ -445,7 +445,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     copy" and both nearest register entries — *The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed* and *Unscored Caddie tape rows plus the four aged-surface tone calls due before 2027-01-01* — are owned **briggsy**; neither is a copy fix; the "three arms with
     corrected costs" existed NOWHERE — they are now written, with sizes, under the register's "The aged
     surface" entry. A shipped copy defect on the SAME cohort WAS pilot and is FIXED (2026-09-04: the singular arm ships at
-    `copy.ts:2563-2565` under the NUMBER AGREEMENT post-mortem at `copy.ts:2549`, covered by `copyGuard.test.ts:637`):
+    `copy.ts:2577-2579` under the NUMBER AGREEMENT post-mortem at `copy.ts:2563`, covered by `copyGuard.test.ts:641`):
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:206-207`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
@@ -472,7 +472,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     · **no document a friend reads** — the in-app honest-limits total is two sentences, and the app tells
     them to "validate with a professional" while handing that professional nothing readable · ✅ the solve
     lane's EDIT-TIME cancel shipped 2026-09-03 (`engineClient.ts:177 createResettableEngine` +
-    `memoryModel.ts:732-735`); what remains is the interactive tier and the MAIN-THREAD FALLBACK, which still
+    `memoryModel.ts:784-787`); what remains is the interactive tier and the MAIN-THREAD FALLBACK, which still
     freezes the tab for the whole solve and says nothing — its `reset` is a documented no-op
     (`engineClient.ts:45-57`; the old `:50` anchor named nothing about freezing).
     ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 8 — icons · WebKit arm · enlarged-text arm) — its 2026-09-04 re-verify clause, still live:** ✅ PWA icons DONE 2026-09-08 (his eye audits the silhouette sheet — path in the register's device entry) · ✅ WebKit e2e
@@ -545,7 +545,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     page and the codified G.S. page both still show the struck "after 2025 — 3.99%", so they read as
     CONTRADICTING the pinned record until they recompile — **session law wins, do not "correct" the
     engine table back to a flat 3.99%.** Comment-only; typecheck · lint · 3289 tests · state-tax gate
-    all green. (`copy.ts:2954` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
+    all green. (`copy.ts:2968` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think
@@ -561,7 +561,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     screen reader outside require-hedge — the AT twin of the gated `recDeltaTypical` — and its exclusion was
     a RECORDED decision in the SLOT_RENDER fixture's own comment, so the fix reversed a stated call, not an
     accident. **DONE 2026-09-08:** RENAMED onto the existing `recDelta` control prefix (`recDeltaVizAria`,
-    `copy.ts:3001`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
+    `copy.ts:3015`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
     `require-hedge` on its own) + a catalog canary over `/^rec(?!over)/` (a bare `/^rec/` reds the 16
     innocent `recovery*`/`recover*` intake keys) with a NAMED allowlist that SPLITS flat keys from slots
     (unscoped flat keys get 2 gates, unscoped slots get 3 + catastrophe). Scope is decided ONLY in the test
@@ -621,7 +621,7 @@ These are the mechanical ones that keep costing hours.*
 - **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:704-714`
   excludes the committed + held renders — a live solve blows the fit harness's 180 s per-test budget, `playwright.fit.config.ts:53`). So *"seat it and re-measure
   under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
-  1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:2361-2363`), a once-measured
+  1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:2366-2368`), a once-measured
   prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's
   arms assert ORDER + REACHABILITY only (spec header `:21-22`) — no date frame has ever been fit-measured either.
 - **A live solve is minutes, not seconds — budget for it.** A dev-build `?seed=nc` solve measured **~11

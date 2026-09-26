@@ -78,6 +78,8 @@ function fakeClient(opts?: { runWire?: EngineWire; runningInWorker?: boolean; re
       // P3·U10 — unused by these mechanics tests (the two-arm surface has its own battery).
       runTwoArm: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
       // U15 — the solve dispatch. Controllable: the test releases each resolve deterministically.
+      runSpendSolve: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+      setLatestSpendEpoch: async () => {},
       runSolve: (request) => {
         calls.push({ method: 'runSolve', args: [request] })
         return new Promise<SolveWire>((resolve, reject) => {
@@ -459,6 +461,8 @@ describe('memoryModel — real-engine spine dispatch', () => {
         setLatestEpoch: async (e) => engineApi.setLatestEpoch(e),
         runDateSearch: async (i, s, t, e) => engineApi.runDateSearch(i, s, t, e),
         runTwoArm: async (b, s, c) => engineApi.runTwoArm(b, s, c),
+        runSpendSolve: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+        setLatestSpendEpoch: async () => {},
         runSolve: async (r) => engineApi.runSolve(r),
       },
     }
@@ -732,6 +736,8 @@ describe('memoryModel — the solve lifecycle (§S5 (5))', () => {
         // An input-failure date wire commits a 'date' answer → everResolved (the recommend-second gate).
         runDateSearch: async () => ({ kind: 'date-search', outcome: { kind: 'input-failure', reason: 'x' } }) as const,
         runTwoArm: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+        runSpendSolve: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+        setLatestSpendEpoch: async () => {},
         runSolve: async () => {
           throw new Error('worker died')
         },
@@ -1144,6 +1150,8 @@ describe('memoryModel — THE EDIT-TIME KILL (§S6, 2026-09-03 — the solve-lan
           return { kind: 'date-search', outcome: { kind: 'input-failure', reason: 'x' } } as const
         },
         runTwoArm: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+        runSpendSolve: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+        setLatestSpendEpoch: async () => {},
         runSolve: async () => refusedWire,
       },
     }
@@ -1170,6 +1178,8 @@ describe('memoryModel — THE EDIT-TIME KILL (§S6, 2026-09-03 — the solve-lan
         },
         runDateSearch: async () => ({ kind: 'date-search', outcome: { kind: 'input-failure', reason: 'x' } }) as const,
         runTwoArm: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+        runSpendSolve: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+        setLatestSpendEpoch: async () => {},
         runSolve: async () => refusedWire,
       },
     }

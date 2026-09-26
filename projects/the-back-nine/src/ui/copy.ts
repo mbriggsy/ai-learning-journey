@@ -1354,9 +1354,9 @@ export const copy = {
   //
   // ⚠️ THE TOGGLE SETS THE ENTRY UNIT TOO, AND THE OLD SENTENCE HID IT (fixed 2026-08-03).
   // It read "switching this never changes the amount" — but the SHOWN figure jumps exactly 12×
-  // (`spendDisplayed`, AssumptionPanel.tsx:338-343), so the reader watches the number move while
+  // (`spendDisplayed`, AssumptionPanel.tsx:344-349), so the reader watches the number move while
   // being told nothing moved. The natural repair is to retype the old digits, and the panel's own
-  // commit (AssumptionPanel.tsx:601-611, the `entered * 12` arm at :608) then multiplies by 12
+  // commit (AssumptionPanel.tsx:607-617, the `entered * 12` arm at :608) then multiplies by 12
   // under 'month' — so a household "correcting" 78,000 back to 6,500 under 'Each year' commits a
   // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:258) hard-disarms
   // `spend-period-unconfirmed` (sanity.ts:348-371, the disarm read at :359) on this surface, and
@@ -2176,7 +2176,7 @@ export const slots = {
    *
    *  ⚠️ DO NOT "FIX" THIS BY DROPPING THE TODAY TICK. That inverts the contradiction into the
    *  defect U13/§S0 already fixed — `bandAnnotations.ts:51-56` records it live from the first
-   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2163-2166` (the `?vault=datearrived` arm — "must still
+   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2168-2171` (the `?vault=datearrived` arm — "must still
    *  mark WALL-TIME today") forbids a band that loses its wall clock BY NAME. The tick is right; the sentence was wrong. */
   bandAgedPremiseFresh: (buildYear: number): string =>
     `This range runs from ${buildYear}, when the plan was built — the years since are modeled, not records. What you actually hold today is undetermined until you re-confirm.`,
@@ -2397,6 +2397,15 @@ export const slots = {
    *  the size as unworked — until the register's Tier 1 real solve lands (its 'room' half). */
   verdictRoomClause: (spendFormatted: string): string =>
     `There looks to be room to spend more than $${spendFormatted} a month. This answer doesn’t work out how much more.`,
+  /** 'room' while the spend solve is IN FLIGHT — the first sentence alone (council wf_faa1af2d-052:
+   *  the shipped "doesn't work out" tail would read falsely final while the figure is coming). */
+  verdictRoomLead: (spendFormatted: string): string => `There looks to be room to spend more than $${spendFormatted} a month.`,
+  /** 'room' SIZED by the spend solve (spendSolve.ts): F is the highest $100 spend the engine still
+   *  reads as on track with room — a run AT F passed and a run a step above FAILED (both run). "Held
+   *  every year in today's dollars" is the engine's own model (simulate.ts), never a promise beyond it;
+   *  the edge is NAMED (the Hawk's veto: never an on-track claim at the edge without it). */
+  verdictRoomSized: (spendFormatted: string, solvedFormatted: string): string =>
+    `There looks to be room to spend more than $${spendFormatted} a month. At about $${solvedFormatted} a month, held every year in today’s dollars, this plan would still read on track. Above that, it starts to sit close to the line.`,
   /** direction 'trim' — off-track. FIGURE-LESS since 2026-09-25 (council wf_8c2ece49-79a, Tier 0): the
    *  engine's trim magnitude is a coarse proxy (`confidence.ts` `buildDollar`: −spend × the gap below
    *  on-track), never a solve — and on the `retired` worsened frame it was WRONG by ~2×: it quoted
@@ -2409,6 +2418,11 @@ export const slots = {
    *  already-failing case keeps its own `verdictRethinkClause` (Council 2026-06-29). */
   verdictTrimClause: (spendFormatted: string): string =>
     `Spending less than $${spendFormatted} a month would let your plan cover more futures. This answer doesn’t work out how much less.`,
+  /** 'trim' while the spend solve is IN FLIGHT — the first sentence alone (see verdictRoomLead). */
+  verdictTrimLead: (spendFormatted: string): string => `Spending less than $${spendFormatted} a month would let your plan cover more futures.`,
+  /** 'trim' SIZED by the spend solve — the same verified F and the same named edge as verdictRoomSized. */
+  verdictTrimSized: (spendFormatted: string, solvedFormatted: string): string =>
+    `Spending less than $${spendFormatted} a month would let your plan cover more futures. At about $${solvedFormatted} a month, held every year in today’s dollars, it would read on track. Above that, it starts to sit close to the line.`,
   /** direction 'rethink' — already-failing (0 of 10, unfundable from the start). FIGURE-LESS and
    *  LEVER-AGNOSTIC (it also renders for an already-RETIRED household, so it names no accumulation
    *  lever): the shortfall is structural, not a trim away — a single sufficient-sounding figure here
@@ -2592,7 +2606,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the two
    *  universal gates (no false certainty, no advice verb), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:910` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:918` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -2980,8 +2994,8 @@ export const slots = {
   /** The RecommendationViz accessible sentence (the role="img" name): both arms' magnitudes AND the
    *  delta, so the whole comparison is reachable in the a11y tree (A2 AT-parity). "about" carries the
    *  hedge; every figure arrives pre-formatted, so the sentence carries no bare numeral — the ENDPOINTS in
-   *  the humane "$X.XM" prose dialect (`formatAbsoluteDollar`, money.ts:62), the DELTA in grouped digits
-   *  (`formatDeltaDollar`, money.ts:43). NOT formatAxisDollar's exact-when-round RULER precision (money.ts:176):
+   *  the humane "$X.XM" prose dialect (`formatAbsoluteDollar`, money.ts:72), the DELTA in grouped digits
+   *  (`formatDeltaDollar`, money.ts:53). NOT formatAxisDollar's exact-when-round RULER precision (money.ts:186):
    *  that dialect never touches this sentence, and naming it here would point a reader at the wrong rounding law.
    *
    *  ⚠️ WEALTH-SHAPED ⇒ LEAVE-MORE ONLY (2026-09-08). "lands near about $X" describes a level the reader

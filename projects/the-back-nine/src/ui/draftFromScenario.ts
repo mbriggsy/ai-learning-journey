@@ -7,7 +7,7 @@
  * the reload path can `appModel.update(() => hydrated.draft)` and recompute — exactly mirroring the
  * `?seed` hydration (IntakeApp), never a field-mapping layer that could drift from the codec.
  *
- * WHY IT'S ALMOST A CLEAN STRIP, PROVEN BY THE COMPILE. `memoryModel.ts:221-225` asserts, at
+ * WHY IT'S ALMOST A CLEAN STRIP, PROVEN BY THE COMPILE. `memoryModel.ts:222-226` asserts, at
  * type-check time, that `keyof ScenarioDraft ⊆ keyof ScenarioV3` AND `keyof ScenarioV3 ⊆ keyof
  * ScenarioDraft ∪ {schemaVersion}` — i.e. a `ScenarioV3` IS a `ScenarioDraft` plus the
  * `schemaVersion` discriminant. So the field SET is a shallow strip of that one key; every other
@@ -42,7 +42,7 @@ export type HydratedDraft =
 
 /** The decoded persisted scenario → the in-memory draft the result screen recomputes from. A strip of
  *  the `schemaVersion` discriminant (the ONLY key a `ScenarioV3` carries that the draft does not —
- *  memoryModel.ts:217-225) plus the two-person arity narrowing the codec's `>= 1` array can't prove. */
+ *  memoryModel.ts:218-226) plus the two-person arity narrowing the codec's `>= 1` array can't prove. */
 export function draftFromScenario(scenario: ScenarioV3): HydratedDraft {
   if (scenario.people.length !== 2) {
     return {

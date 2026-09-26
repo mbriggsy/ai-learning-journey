@@ -94,6 +94,8 @@ function fakeClient() {
       setLatestEpoch: async () => {},
       runDateSearch: () => new Promise<DateSearchWire>((resolve) => datePending.push(resolve)),
       runTwoArm: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+      runSpendSolve: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+      setLatestSpendEpoch: async () => {},
       runSolve: () => new Promise<SolveWire>((resolve) => solvePending.push(resolve)),
     },
   }

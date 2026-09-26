@@ -39,7 +39,7 @@ import { useRef, useState, type ReactNode } from 'react'
 import type { MemoryModelSnapshot, ScenarioDraft, StickyDisplay } from '@store/memoryModel'
 import { copy, slots, type CopyKey } from '@ui/copy'
 import { rothPlanStartFor, type BandPlanClockAnchor } from '@ui/bandAnnotations'
-import { composeVerdictReading } from '@ui/verdictSentence'
+import { composeVerdictReading, spendClauseFor } from '@ui/verdictSentence'
 import { METHODOLOGY_DISCLOSURES, type AssumptionSeat } from '@ui/assumptionRegistry'
 import { productionMarket } from '@engine/reference/methodology'
 import { ordinaryBracketsMFJ } from '@engine/constants/tax'
@@ -169,7 +169,7 @@ export function AssumptionPanel({
   restoreFallback,
 }: AssumptionPanelProps) {
   const announcerRef = useRef<Announcer | null>(null)
-  const { draft, answer, displayed } = snapshot
+  const { draft, answer, displayed, spend } = snapshot
   const governs = budgetGoverns(draft.budget)
   const dateRoute = isDateRoute(draft)
   // U17 §S1 — the Roth row's start in CALENDAR terms, derived ONCE through the shared producer
@@ -309,7 +309,13 @@ export function AssumptionPanel({
   // copy here had already diverged on the over-funded ceiling reading).
   // Worse = xOfTen strictly below the panel-open baseline, compared NUMERICALLY (lower =
   // worse; band ORDER is never re-derived UI-side). Improved or unchanged ⇒ nothing (calm).
-  const echoVerdict = displayed !== null ? composeVerdictReading(displayed) : null
+  // The spend lane rides through the SAME gate as the hero (shown ≡ raw state), so echo and hero
+  // quote the same figure or none — never one sized and the other not.
+  const rawState = answer.kind === 'headline' ? answer.result.headline.outcomeState : null
+  const echoVerdict =
+    displayed !== null
+      ? composeVerdictReading(displayed, rawState === null ? undefined : spendClauseFor(spend, displayed, rawState))
+      : null
   const worsened = displayed !== null && baseline !== null && displayed.xOfTen < baseline.xOfTen
   // THE INCOMPLETE ECHO READS THE KIND OF EACH FACT, exactly as the strip does (2026-09-03, the
   // dead-end fix's review): `missingRequiredFacts` emits ABSENT facts (the reader's to enter) and

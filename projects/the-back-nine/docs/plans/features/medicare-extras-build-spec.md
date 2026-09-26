@@ -106,7 +106,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   `ScenarioDraft` by deliberate design (`src/ui/assumptionRegistry.ts:87`) — a nested `health.*`
   sub-field would dodge the compile gate (the assumptionRegistry.ts:84 landmine) — and is
   registered `{ kind: 'row-editable', seats: ['medicare-extras'] }` at
-  `src/ui/assumptionRegistry.ts:153`. The panel seat (`src/intake/AssumptionPanel.tsx:814-830`)
+  `src/ui/assumptionRegistry.ts:153`. The panel seat (`src/intake/AssumptionPanel.tsx:820-836`)
   re-hosts the SAME `MedicareExtrasFork` face over the same write shape, `onWrite` adapting to
   the host's commit seam — and passes `standingNote`, which the intake step does not: when the
   fork is UNANSWERED the panel shows the read-only line naming the typical the plan is funding
@@ -237,7 +237,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
 - **DND-012 externally-derived fixtures**, including the F3 asymmetric survivor golden (F3 above).
 - **verify:fit arms re-pinned WITHOUT assuming monotone shrink** — the omission axis shrank but
   the real-flat clause broadened. The fit spec now pins non-typical extras arms explicitly
-  (`e2e/vertical-fit.spec.ts:1129-1130` — the priced-state faces, all non-typical; `:1952-1954` — the statestale non-typical echo frame; re-anchored 2026-09-10, both prior numbers had landed on unrelated lines), and the CSP intake walk learned the fork step
+  (`e2e/vertical-fit.spec.ts:1129-1130` — the priced-state faces, all non-typical; `:1957-1959` — the statestale non-typical echo frame; re-anchored 2026-09-10, both prior numbers had landed on unrelated lines), and the CSP intake walk learned the fork step
   (`e2e/csp.spec.ts:238`, the one integration gap `503213f4` left, fixed in `e921f2bb`).
 - **Color-blind-safe encoding** on adopted-vs-entered / typical-vs-your-bill / priced-vs-residual:
   every distinction is carried in words, never a hue. Each door fact line states its provenance in

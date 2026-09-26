@@ -26,7 +26,7 @@
  *      any resolved result older than the latest committed epoch, so racing
  *      in-flight runs never render a stale intermediate.
  *
- * THE DATE-ROUTE EPOCH ORDER (C3 forward item (b), engineProtocol.ts:100-108):
+ * THE DATE-ROUTE EPOCH ORDER (C3 forward item (b), engineProtocol.ts:101-109):
  * result-discard alone cannot stop a sweep already running worker-side — the
  * dispatcher calls `engine.setLatestEpoch(epoch)` BEFORE
  * `engine.runDateSearch(..., epoch)` (same MessagePort ⇒ FIFO ⇒ the commit
@@ -81,6 +81,7 @@ import { fromWire, dateSearchFromWire, solveFromWire } from '@engine/engineWire'
 // never crosses the wire). The solve DISPATCH is store orchestration; the request is built by the
 // injected builder (U16's real builder; tests drive a fake), the payload reconstructed by solveFromWire.
 import type { SolvePayload, SolveRequest } from '@engine/solver/solveEntry'
+import type { SpendSolveOutcome } from '@engine/spendSolve'
 // The PURE commit-epoch guard for the solve lane (§S6, cancel.ts) — a runtime import of one leaf
 // predicate (it drags no MC compute; cancel.ts imports only the version constant). The UNCONDITIONAL
 // discard rule lives in ONE tested home, wired here (insight 048 — the decision is never inlined).
@@ -311,6 +312,19 @@ export type SolveAnswer =
   // uncaught rejection into the UI (the recompute() precedent).
   | { readonly kind: 'compute-error'; readonly reason: string }
 
+/** The spend solve's lane (register Tier 1 *The spending floor — a real solve*; council
+ *  wf_faa1af2d-052). Separate from `answer` and `solve`: it sizes the verdict clause of the answer
+ *  CURRENTLY committed, and every new commit resets it to `idle` — so a `resolved` spend in a
+ *  snapshot always belongs to that snapshot's answer (no epoch needs to cross into the UI).
+ *   - `idle`     — nothing sized (not dispatched: provisional tier, no magnitude, a budget, the
+ *                   main-thread fallback — or cancelled / failed): the clause stays figure-less.
+ *   - `pending`  — a solve is in flight for the committed answer.
+ *   - `resolved` — the solve's outcome (sized or a named unsized reason). */
+export type SpendAnswer =
+  | { readonly kind: 'idle' }
+  | { readonly kind: 'pending' }
+  | { readonly kind: 'resolved'; readonly outcome: Exclude<SpendSolveOutcome, { readonly kind: 'cancelled' }> }
+
 export interface MemoryModelSnapshot {
   readonly draft: ScenarioDraft
   readonly answer: ModelAnswer
@@ -324,6 +338,8 @@ export interface MemoryModelSnapshot {
   /** U15 §S5 (5) — the recommend-second solve lifecycle (tier-less; a SEPARATE channel from
    *  `answer`, which stays the spine/date first beat). `idle` until the second beat is invited. */
   readonly solve: SolveAnswer
+  /** The spend solve for the committed spine answer's clause — see {@link SpendAnswer}. */
+  readonly spend: SpendAnswer
   readonly runningInWorker: boolean
 }
 
@@ -576,6 +592,10 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
   let answer: ModelAnswer = { kind: 'idle' }
   // U15 §S5 (5) — the solve lifecycle state (a SEPARATE channel from `answer`).
   let solveAnswer: SolveAnswer = { kind: 'idle' }
+  // The spend lane: its state + its OWN cancel epoch (worker-side `latestSpendEpoch`). Minted on
+  // every dispatch and on every cancel, so a superseded resolve is recognised by `my !== spendEpoch`.
+  let spendAnswer: SpendAnswer = { kind: 'idle' }
+  let spendEpoch = 0
 
   // (f) — the epoch pair: `dispatched` mints (monotonic), `committed` gates
   // rendering. A resolve whose epoch ≤ committed is DISCARDED unrendered.
@@ -603,11 +623,12 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
     answer,
     displayed: lastDisplayed,
     solve: solveAnswer,
+    spend: spendAnswer,
     runningInWorker: deps.client.runningInWorker,
   }
 
   const notify = () => {
-    snapshot = { draft, answer, displayed: lastDisplayed, solve: solveAnswer, runningInWorker: deps.client.runningInWorker }
+    snapshot = { draft, answer, displayed: lastDisplayed, solve: solveAnswer, spend: spendAnswer, runningInWorker: deps.client.runningInWorker }
     for (const l of listeners) l()
   }
 
@@ -633,7 +654,38 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
       next.kind === 'headline' && next.result.headline.outcomeState !== 'indeterminate'
         ? resolveStickyDisplay(lastDisplayed, next.result.headline, next.result.dollar)
         : null
+    // A new answer's clause is unsized until ITS spend solve lands — the previous answer's figure
+    // must never ride the new sentence (a resolve for an older commit is dropped by the epoch guard).
+    spendAnswer = { kind: 'idle' }
     answer = next
+    notify()
+  }
+
+  /** Cancel an in-flight spend solve (worker-side, between probes) — the recommendation beat must
+   *  never queue behind it. The clause falls back to figure-less (never wrong, just unsized). */
+  const cancelSpend = (): void => {
+    if (spendAnswer.kind !== 'pending') return
+    void deps.client.engine.setLatestSpendEpoch(++spendEpoch).catch(() => {})
+    spendAnswer = { kind: 'idle' }
+  }
+
+  /** Size the committed spine answer's clause with the REAL spend solve (spendSolve.ts). Dispatched
+   *  only after a FINAL spine commit, only in a worker (a 13–27 s solve would freeze the main-thread
+   *  fallback), only when the engine reads a magnitude (room / trim) and no budget governs spending.
+   *  Every resolve is dropped unless it still belongs to the committed answer AND the newest dispatch. */
+  const dispatchSpend = async (forEpoch: number, params: SimulationParams, seed: number): Promise<void> => {
+    const my = ++spendEpoch
+    spendAnswer = { kind: 'pending' }
+    notify()
+    let next: SpendAnswer = { kind: 'idle' }
+    try {
+      const wire = await deps.client.engine.runSpendSolve(params, seed, forEpoch, my)
+      if (wire.kind === 'spend-solve' && wire.outcome.kind !== 'cancelled') next = { kind: 'resolved', outcome: wire.outcome }
+    } catch {
+      // a reset / dead worker: the clause stays figure-less (held below like every other resolve)
+    }
+    if (my !== spendEpoch || forEpoch !== committedEpoch) return
+    spendAnswer = next
     notify()
   }
 
@@ -834,6 +886,18 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
               ? { kind: 'headline', result: res.result, tier }
               : { kind: 'compute-error', reason: res.reason },
           )
+          // The clause's REAL figure (the spend lane) — after the FINAL commit only, and only when
+          // this commit is the one standing (a stale resolve was discarded by `commit` above).
+          const d = res.ok ? res.result.dollar.direction : null
+          if (
+            tier === 'final' &&
+            committedEpoch === epoch &&
+            deps.client.runningInWorker &&
+            (d === 'room' || d === 'trim') &&
+            params!.budget === undefined
+          ) {
+            void dispatchSpend(epoch, params!, seed)
+          }
         }
       } catch (e) {
         // A RESET — this run was killed by the household's own edit (`update()` → `client.reset()`)
@@ -896,6 +960,9 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
       // every payload arm is a NAMED bin (insight 092).
       const dispatchedFingerprint = fingerprintOf(request)
       const epoch = ++solveDispatchedEpoch
+      // The recommendation shares the ONE worker: an in-flight spend solve yields to it (council
+      // wf_faa1af2d-052) — the clause falls back to figure-less rather than delay the second beat.
+      cancelSpend()
       solveAnswer = { kind: 'pending', label: 'solving', fingerprint: dispatchedFingerprint }
       notify()
       try {

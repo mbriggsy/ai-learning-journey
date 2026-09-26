@@ -481,6 +481,10 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     factsMore: slots.factsMore(3),
     verdictRoomClause: slots.verdictRoomClause('6,500'),
     verdictTrimClause: slots.verdictTrimClause('2,500'),
+    verdictRoomLead: slots.verdictRoomLead('6,500'),
+    verdictRoomSized: slots.verdictRoomSized('6,500', '7,100'),
+    verdictTrimLead: slots.verdictTrimLead('10,000'),
+    verdictTrimSized: slots.verdictTrimSized('10,000', '6,400'),
     verdictRethinkClause: slots.verdictRethinkClause(),
     verdictHoldClause: slots.verdictHoldClause(),
     verdictSurvivorStepDown: slots.verdictSurvivorStepDown('1,200'),
@@ -644,6 +648,10 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     for (const rendered of [
       slots.verdictRoomClause(S),
       slots.verdictTrimClause(S),
+      slots.verdictRoomLead(S),
+      slots.verdictRoomSized(S, S),
+      slots.verdictTrimLead(S),
+      slots.verdictTrimSized(S, S),
       slots.verdictSurvivorStepDown(S),
     ]) {
       expect(lintCopy(rendered, ['free-numeral']), rendered).toEqual([])
@@ -1112,7 +1120,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // --- THE UNIT-INERTNESS BAN (Tier-0, fixed 2026-08-03; until now the string had NO pin at all).
   //     The killed line was "…switching this never changes the amount." The panel toggle really
   //     does leave `annualSpendingReal` alone — but the SHOWN figure jumps exactly 12×
-  //     (`spendDisplayed`, AssumptionPanel.tsx:338-343) while the sentence says nothing moved, and
+  //     (`spendDisplayed`, AssumptionPanel.tsx:344-349) while the sentence says nothing moved, and
   //     the panel's own commit (:601-611) multiplies by 12 under 'month'. So the reader's natural
   //     repair — retype the digits they remember — commits a plan off by 12× in the UNSAFE
   //     direction, and nothing downstream catches it (PANEL_PROVENANCE disarms the force-confirm;

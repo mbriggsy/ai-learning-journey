@@ -27,6 +27,16 @@ export function formatPerMonth(perMonthReal: number): string {
   return grouped.format(stepPerMonth(perMonthReal))
 }
 
+/** The spend solve's verified figure, grouped. NEVER re-rounds: the solve searched only the
+ *  SPEND_SOLVE_STEP grid, so the figure IS the spend a run verified — an off-grid value is a broken
+ *  invariant to see, never to paper over (a rounded figure would quote a spend nobody ran). */
+export function formatSolvedSpend(monthlyReal: number, step: number): string {
+  if (!Number.isInteger(monthlyReal / step) || monthlyReal <= 0) {
+    throw new Error(`solved spend ${monthlyReal} is not a positive multiple of the ${step} grid`)
+  }
+  return grouped.format(monthlyReal)
+}
+
 /** |x| onto the $/month display grid (a PER_MONTH_DISPLAY_STEP multiple), unformatted. */
 function stepPerMonth(perMonthReal: number): number {
   return Math.round(Math.abs(perMonthReal) / PER_MONTH_DISPLAY_STEP) * PER_MONTH_DISPLAY_STEP

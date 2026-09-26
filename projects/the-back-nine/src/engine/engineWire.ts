@@ -6,6 +6,7 @@
  * chunk). Keeping the boundary structural — not reliant on bundler tree-shaking — means
  * a future main-thread import can never silently drag the engine across the worker line.
  */
+import type { SpendSolveOutcome } from '@engine/spendSolve'
 import type { BandFan, DateSearchOutcome, Distribution, DollarAdjustment, Headline, HealthReadout, SimulationResult, SurvivorConditioned, SurvivorReading, TwoArmOutcome } from '@shared/model'
 // TYPE-ONLY (erased at compile — no runtime edge, so the MC engine + the solver stay OUT of the main
 // bundle; `verify:bundle` guards the real import graph). The solve payload's value model lives with the
@@ -164,6 +165,12 @@ export function fromWire(wire: EngineWire): EngineResult {
 /** The worker's date-search return contract — a defined outcome or a calm error. */
 export type DateSearchWire =
   | { readonly kind: 'date-search'; readonly outcome: DateSearchOutcome }
+  | { readonly kind: 'calm-error'; readonly reason: string }
+
+/** The spend solve's wire (register Tier 1 *The spending floor — a real solve*). The outcome is a
+ *  few scalars — structured clone, never a transfer list. */
+export type SpendSolveWire =
+  | { readonly kind: 'spend-solve'; readonly outcome: SpendSolveOutcome }
   | { readonly kind: 'calm-error'; readonly reason: string }
 
 /** Reconstructed main-thread date-search result, or a calm error to render. */

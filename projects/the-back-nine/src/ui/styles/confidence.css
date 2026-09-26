@@ -128,6 +128,19 @@
 /* For the action-first states (borderline / off-track / already-failing) the magnitude line IS the
    constructive lead — what would steady the plan — so it reads a touch stronger (full ink), never
    alarmed. The verdict word stays calm; this is emphasis, not alarm (R11). */
+/* The pending clause RESERVES the sized sentence's height (insight 035; the .ladder-readout precedent):
+   the live lead and an invisible widest-form sized sentence share ONE grid cell, so the box is the
+   taller of the two and the band below never jumps when the solved figure lands. */
+.cs-magnitude[data-spend='pending'] {
+  display: grid;
+}
+.cs-magnitude__line {
+  grid-area: 1 / 1;
+}
+.cs-magnitude__reserve {
+  visibility: hidden;
+}
+
 .confidence-reveal[data-framing='action-first'] .cs-magnitude {
   color: var(--ink);
   font-weight: var(--weight-medium);

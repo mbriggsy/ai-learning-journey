@@ -15,13 +15,14 @@ import { simulate } from '@engine/simulate'
 import { summarize } from '@engine/confidence'
 import { runDateSearch as sweepDateSearch, type DateSearchInput } from '@engine/dateSearch'
 import { runTwoArm } from '@engine/roth'
+import { solveSpend } from '@engine/spendSolve'
 import type { DateSearchTier, SimulationParams, TwoArmControl } from '@shared/model'
-import type { DateSearchWire, EngineWire, SolveArmWire, SolveWire, TwoArmWire } from '@engine/engineWire'
+import type { DateSearchWire, EngineWire, SolveArmWire, SolveWire, SpendSolveWire, TwoArmWire } from '@engine/engineWire'
 import { solveWithMint, type SolvePayload, type SolveRequest } from '@engine/solver/solveEntry'
 import type { SolveArm } from '@engine/solver/solve'
 
 // Re-export the wire contract so worker-side code has one import surface.
-export type { ResolvedWire, EngineWire, EngineResult, DateSearchWire, DateSearchResult, TwoArmWire, TwoArmResult, SolveWire, SolveResultView } from '@engine/engineWire'
+export type { ResolvedWire, EngineWire, EngineResult, DateSearchWire, DateSearchResult, TwoArmWire, TwoArmResult, SolveWire, SolveResultView, SpendSolveWire } from '@engine/engineWire'
 export { fromWire, dateSearchFromWire, twoArmFromWire, solveFromWire } from '@engine/engineWire'
 
 /**
@@ -108,6 +109,37 @@ export function runEngine(
 // security-posture change out of scope).
 // ---------------------------------------------------------------------------
 let latestEpoch = Number.NEGATIVE_INFINITY
+
+/** The spend solve's OWN cancel epoch (council wf_faa1af2d-052): the recommend-second solve shares
+ *  this one worker, and a 13–27 s spend solve must never sit in front of it — the store bumps this
+ *  epoch when it dispatches the recommendation, and the spend solve yields between probes. The
+ *  spine epoch ALSO cancels it (a newer spine answer supersedes the clause it was sizing).
+ *  MONOTONIC, non-finite ignored (the setLatestEpoch discipline, insight 010). */
+let latestSpendEpoch = Number.NEGATIVE_INFINITY
+
+/** Run the spend solve and PACK it. Cancels cooperatively when a newer SPINE epoch or a newer
+ *  SPEND epoch is committed worker-side. Total: a throw is a calm-error (the worker never dies). */
+export async function runSpendSolveEngine(
+  params: SimulationParams,
+  seed: number,
+  spineEpoch: number,
+  spendEpoch: number,
+): Promise<SpendSolveWire> {
+  if (!Number.isFinite(spineEpoch) || !Number.isFinite(spendEpoch)) {
+    return { kind: 'calm-error', reason: `epochs must be finite (got ${spineEpoch}, ${spendEpoch})` }
+  }
+  try {
+    const outcome = await solveSpend(params, seed, {
+      shouldContinue: async () => {
+        await macrotaskYield()
+        return spineEpoch >= latestEpoch && spendEpoch >= latestSpendEpoch
+      },
+    })
+    return { kind: 'spend-solve', outcome }
+  } catch (e) {
+    return { kind: 'calm-error', reason: e instanceof Error ? e.message : 'engine error' }
+  }
+}
 
 /** A REAL macrotask yield (setTimeout 0 — message events are tasks). LOAD-BEARING, not
  *  style: a synchronous candidate loop starves the worker's message queue, so no
@@ -313,6 +345,15 @@ export const engineApi = {
    *  request's epoch: the sweep cooperatively cancels when a newer epoch is committed. */
   runDateSearch(input: DateSearchInput, seed: number, tier: DateSearchTier, requestEpoch: number): Promise<DateSearchWire> {
     return runDateSearchEngine(input, seed, tier, requestEpoch)
+  },
+  /** The spend solve (the verdict clause's real figure) — see {@link runSpendSolveEngine}. */
+  runSpendSolve(params: SimulationParams, seed: number, spineEpoch: number, spendEpoch: number): Promise<SpendSolveWire> {
+    return runSpendSolveEngine(params, seed, spineEpoch, spendEpoch)
+  },
+  /** Record the latest spend epoch (MONOTONIC; non-finite ignored) — cancels an in-flight spend
+   *  solve between probes. */
+  setLatestSpendEpoch(epoch: number): void {
+    if (Number.isFinite(epoch) && epoch > latestSpendEpoch) latestSpendEpoch = epoch
   },
   /** Run the U10 two-arm control comparison (the sequencing / Roth-conversion levers).
    *  ONE worker call computes BOTH arms on the shared seed (the two can never diverge on

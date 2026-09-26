@@ -50,6 +50,7 @@ const snap = (
   answer,
   displayed,
   solve: { kind: 'idle' }, // U15 solve channel — answerView reads the first beat only
+  spend: { kind: 'idle' }, // the spend lane
   runningInWorker: true,
 })
 

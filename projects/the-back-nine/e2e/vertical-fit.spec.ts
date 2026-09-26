@@ -225,7 +225,7 @@ async function assertTier(page: Page, tier: 'laptop' | 'narrow'): Promise<void> 
     const query = window.matchMedia('(min-width: 68rem)').matches
     // (2) what the page ACTUALLY LAID OUT. `[data-twopane]` is stamped whenever a band resolved —
     // at EVERY width (ConfidenceStatement.tsx / FuckOffDate.tsx), so its mere presence is NOT the
-    // tier. The two-pane grid is what the 68rem query turns on: confidence.css :215 /
+    // tier. The two-pane grid is what the 68rem query turns on: confidence.css :228 /
     // fuckOffDate.css :220 give the stamped reveal `display: grid` with TWO columns inside the
     // query and nothing outside it, so the reveal's RESOLVED column count is the rendered tier.
     // A media-query answer that disagreed with the pixels (a breakpoint mirror drifting, a
@@ -1579,10 +1579,15 @@ for (const vp of [REAL, TIER] as const) {
 }
 
 test.describe(`reduced motion — the 24 px scrolling law holds without the entrance choreography (${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR, reducedMotion: 'reduce' })
+  // `page.emulateMedia`, NOT `test.use({ reducedMotion })`: under this harness the context option
+  // measured `matchMedia('(prefers-reduced-motion: reduce)')` FALSE (2026-09-26, the spend-lane arm's
+  // diagnostic) — this arm's premise was silently unmet. The premise is now ASSERTED, never assumed.
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
   test('retired: the caveat above the doors, doors last, reachable', async ({ page, context }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
     const { at16, cdp } = await raiseDefaultFont(page, context, 24)
     await gotoSeedFinal(page, 'retired')
+    expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches), 'the reduced-motion premise').toBe(true)
     await assertRootRose(page, at16)
     await assertResolvedSpine(page)
     await assertOneVisibleDisclaimer(page, 'narrow')
@@ -2720,5 +2725,58 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     }))
     expect(rows.surface, 'the superseded card must keep the r4 idle seat as well').toBe('4')
     expect(rows.card, 'the superseded card seats on the row below the caveat, like the holds face').toBe('6')
+  })
+})
+
+// ── THE SPEND LANE (council wf_faa1af2d-052, 2026-09-26) ───────────────────────────────────────────
+// The verdict clause's REAL figure lands a beat after the final answer (spendSolve.ts on its own
+// worker lane). While it is in flight the clause RESERVES the widest sized sentence's height (insight
+// 035), so the band never jumps when the figure lands; both the pending and the sized frames must hold
+// the one-frame law at the laptop; the swap honours reduced motion. `surplus` is the room seed (~5 s).
+async function spendLaneBandDelta(page: Page): Promise<{ pendingTop: number; sizedTop: number }> {
+  await gotoSeedFinal(page, 'surplus')
+  await assertResolvedSpine(page)
+  const clause = page.locator('.cs-magnitude')
+  // the PENDING frame must be OBSERVED — a solve that landed before this read would make the delta vacuous
+  await expect(clause, 'the clause must be caught pending (else the band-delta arm proves nothing)').toHaveAttribute('data-spend', 'pending')
+  const pendingTop = (await page.locator('.cs-band').boundingBox())!.y
+  await expect(clause).toHaveAttribute('data-spend', 'sized', { timeout: 90_000 })
+  await settleLayout(page)
+  const sizedTop = (await page.locator('.cs-band').boundingBox())!.y
+  await expect(clause).toContainText('Above that, it starts to sit close to the line.')
+  return { pendingTop, sizedTop }
+}
+
+test.describe('the spend lane — the solved figure lands without moving anything', () => {
+  test.describe(`at Briggsy's real window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+    test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+    test('surplus: the pending frame fits, the band holds still as the figure lands, the sized frame fits', async ({ page }) => {
+      await gotoSeedFinal(page, 'surplus')
+      await assertResolvedSpine(page)
+      await expect(page.locator('.cs-magnitude')).toHaveAttribute('data-spend', 'pending')
+      await assertFrameFits(page, true) // the RESERVED (pending) frame
+      await expect(page.locator('.cs-magnitude')).toHaveAttribute('data-spend', 'sized', { timeout: 90_000 })
+      await settleLayout(page)
+      await assertFrameFits(page, true) // the sized frame
+    })
+  })
+  test.describe(`on the phone (${PHONE.width}×${PHONE.height})`, () => {
+    test.use({ viewport: PHONE })
+    test('surplus: the band below the clause does not move when the figure lands (reserve ≥ the sized clause)', async ({ page }) => {
+      const { pendingTop, sizedTop } = await spendLaneBandDelta(page)
+      expect(Math.abs(sizedTop - pendingTop), `band moved ${sizedTop - pendingTop}px as the figure landed`).toBeLessThanOrEqual(0.5)
+    })
+  })
+  test.describe('under prefers-reduced-motion', () => {
+    test.use({ viewport: PHONE })
+    test('surplus: the figure lands with NO transition on the swapped clause', async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: 'reduce' }) // test.use({ reducedMotion }) did not apply here — see the 24 px arm
+      await spendLaneBandDelta(page)
+      const diag = await page.locator('.cs-magnitude').evaluate((el) => ({ swapped: el.classList.contains('cs-swap'), reduce: matchMedia('(prefers-reduced-motion: reduce)').matches, td: getComputedStyle(el).transitionDuration }))
+      expect(diag.reduce, 'the reduced-motion premise').toBe(true)
+      expect(diag.swapped, 'the clause must have SWAPPED (else no transition is vacuous)').toBe(true)
+      const transition = diag.td
+      expect(transition.split(',').every((d) => parseFloat(d) === 0), `transition-duration ${transition}`).toBe(true)
+    })
   })
 })

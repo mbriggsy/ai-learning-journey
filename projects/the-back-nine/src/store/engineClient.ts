@@ -207,6 +207,9 @@ export function createResettableEngine(spawn: SpawnEngine): {
     setLatestEpoch: (epoch) => forward(current, () => current.spawned.remote.setLatestEpoch(epoch)),
     runDateSearch: (input, seed, tier, requestEpoch) =>
       forward(current, () => current.spawned.remote.runDateSearch(input, seed, tier, requestEpoch)),
+    runSpendSolve: (params, seed, spineEpoch, spendEpoch) =>
+      forward(current, () => current.spawned.remote.runSpendSolve(params, seed, spineEpoch, spendEpoch)),
+    setLatestSpendEpoch: (epoch) => forward(current, () => current.spawned.remote.setLatestSpendEpoch(epoch)),
     runTwoArm: (base, seed, control) => forward(current, () => current.spawned.remote.runTwoArm(base, seed, control)),
     runSolve: (request) => forward(current, () => current.spawned.remote.runSolve(request)),
   }
@@ -243,6 +246,11 @@ function mainThreadHandle(): EngineHandle {
     setLatestEpoch: async (epoch) => (await api()).setLatestEpoch(epoch),
     runDateSearch: async (input, seed, tier, requestEpoch) =>
       (await api()).runDateSearch(input, seed, tier, requestEpoch),
+    // The spend solve is NEVER dispatched on the fallback (memoryModel gates on runningInWorker —
+    // a 13–27 s solve would freeze the page); forwarded only so the handle stays total.
+    runSpendSolve: async (params, seed, spineEpoch, spendEpoch) =>
+      (await api()).runSpendSolve(params, seed, spineEpoch, spendEpoch),
+    setLatestSpendEpoch: async (epoch) => (await api()).setLatestSpendEpoch(epoch),
     // P3·U10 — the two-arm control comparison. On the fallback this BLOCKS the main
     // thread for two full runs — exactly why the controls disable LIVE per-drag
     // recompute when `runningInWorker` is false (recompute on release only).

@@ -24,7 +24,7 @@ The increment's own discipline caught TWO real defects before exposure, each of 
 ## Settled forks (as shipped; a later deviation needs a dated supersession block in this file)
 
 **F1 — five new seeds; ZERO edits to existing seeds.**
-- `nc` / `pa` / `fl` / `elsewhere` = clones of `retiredOnTrack` (66/65 both retired — the state clause renders ONLY inside the `medicarePricedNote` block, `ConfidenceStatement.tsx:490-503`, so the household must be all-65+) with `retirementState: 'NC' | 'PA' | 'FL' | 'elsewhere'` respectively.
+- `nc` / `pa` / `fl` / `elsewhere` = clones of `retiredOnTrack` (66/65 both retired — the state clause renders ONLY inside the `medicarePricedNote` block, `ConfidenceStatement.tsx:489-502`, so the household must be all-65+) with `retirementState: 'NC' | 'PA' | 'FL' | 'elsewhere'` respectively.
 - `datenc` = clone of `stillWorkingAllMedicare` (the `date65` seed) + `retirementState: 'NC'` — the date route's affirmation mount (`FuckOffDate.tsx:411-424`) rides its OWN producer (`dateStatePriced`, `intakeMap.ts:826`); insight 080's lesson: the second producer gets its own live witness.
 - Existing seeds stay **byte-identical**: `?seed=retired`'s UNANSWERED panel-row face is a walked, regression-live surface (Card 2, chair fix #1 — `assumptionStateUnsetNote`). `date65`'s purpose (the insight-080 no-false-unpriced witness) is pinned; never repurpose it.
 - Registration: draft const + `DEV_SEEDS` entry (`devSeeds.ts` — the only dispatch table); the registry auto-iterates into the validator-acceptance test.

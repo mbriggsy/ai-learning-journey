@@ -94,11 +94,10 @@ afterEach(() => {
 })
 
 /** A committed spine verdict in DISPLAY form — only `outcomeState` is read by the gate; the rest is
- *  the triple's real shape (the sentence's count + $/mo clause), never a partial cast. */
+ *  the triple's real shape (the sentence's count + the clause's spend and direction), never a partial cast. */
 const displayFor = (outcomeState: OutcomeState): StickyDisplay => ({
   xOfTen: 7,
   outcomeState,
-  perMonthDollar: 0,
   spendPerMonthReal: 6_500,
   direction: 'on-the-line',
 })

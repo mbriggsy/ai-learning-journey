@@ -249,11 +249,11 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
   it("the trim clause reads the DISPLAYED spend, never the raw fixture's, when a sticky triple rides the view (one commit, one base)", () => {
     // The raw fixture's spend is 6,500; the displayed triple carries 10,000 (the walk's worsened edit).
     // The sentence must quote the DISPLAYED 10,000 — a raw-read spend under a displayed verdict would be
-    // the mixed-pair sin the sticky seam exists to kill. The held 380 is never rendered (figure-less).
+    // the mixed-pair sin the sticky seam exists to kill. The raw fixture's engine magnitude (380) is
+    // never rendered (figure-less).
     const displayed: StickyDisplay = {
       xOfTen: 4,
       outcomeState: 'off-track',
-      perMonthDollar: 380,
       spendPerMonthReal: 10_000,
       direction: 'trim',
     }
@@ -405,14 +405,12 @@ describe('U12 C2 — the sticky sentence + the verdict crossfade', () => {
   const SAME_AS_RAW: StickyDisplay = {
     xOfTen: 8,
     outcomeState: 'on-track',
-    perMonthDollar: 410,
     spendPerMonthReal: 6_500,
     direction: 'room',
   }
   const HELD: StickyDisplay = {
     xOfTen: 7,
     outcomeState: 'borderline',
-    perMonthDollar: 380,
     spendPerMonthReal: 6_500,
     direction: 'trim',
   }
@@ -523,13 +521,12 @@ describe('U12 C2 — the sticky sentence + the verdict crossfade', () => {
     expect(document.activeElement).not.toBe(screen.getByRole('heading', { name: copy.outcomeBorderline }))
   })
 
-  it('a displayed-change that leaves the RENDERED sentence identical (a $-step move under a figure-less clause) neither remounts nor announces — the anti-flicker law', () => {
+  it('a displayed-change that leaves the RENDERED sentence identical (a spend move under the figure-less hold clause) neither remounts nor announces — the anti-flicker law', () => {
     const line: StickyDisplay = {
       xOfTen: 7,
       outcomeState: 'borderline',
-      perMonthDollar: 0,
       spendPerMonthReal: 6_500,
-      direction: 'on-the-line', // the clause carries NO figure — the dollar is invisible here
+      direction: 'on-the-line', // the hold clause quotes NO figure — the spend is invisible here
     }
     const { container, rerender } = render(
       <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES.borderline, displayed: line }} />,
@@ -537,7 +534,7 @@ describe('U12 C2 — the sticky sentence + the verdict crossfade', () => {
     const reading1 = container.querySelector('.cs-reading')!
     rerender(
       <ConfidenceStatement
-        view={{ kind: 'reading', ...READING_FIXTURES.borderline, displayed: { ...line, perMonthDollar: 10 } }}
+        view={{ kind: 'reading', ...READING_FIXTURES.borderline, displayed: { ...line, spendPerMonthReal: 7_000 } }}
       />,
     )
     // identical words must never blink out and fade back in, and AT hears nothing new

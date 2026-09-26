@@ -3,7 +3,6 @@ import {
   createMemoryModel,
   resolveStickyDisplay,
   HEADLINE_STICKY_EPS,
-  DOLLAR_STICKY_EPS,
   type ParamsBuilders,
   type ScenarioDraft,
   type StickyDisplay,
@@ -20,9 +19,9 @@ import type { DollarAdjustment, Headline, SimulationParams } from '@shared/model
  *
  *  1. `resolveStickyDisplay` — the pure hysteresis rule (contract (d) filled; plan
  *     3-controls.md:241). Every hold arm carries its release sibling as the
- *     planted-fail control, and the two margin units are pinned INDEPENDENT
- *     (the model.ts WithMargin failure mode: one figure sticky while the other
- *     flickers in one sentence — here proven each can move without the other).
+ *     planted-fail control. (The seam's second unit — the proxy $/month figure
+ *     and its independence arms — was deleted with the figure in the spend
+ *     solve's phase C, council wf_faa1af2d-052: no surface renders it.)
  *
  *  2. The F9 demotion — THE HAWK'S VETO ARMS: after a verdict has resolved, a
  *     required fact going not-validly-present (cleared to undefined OR zeroed —
@@ -73,7 +72,6 @@ const dollar = (
 const prev: StickyDisplay = {
   xOfTen: 8,
   outcomeState: 'on-track',
-  perMonthDollar: 100,
   spendPerMonthReal: SPEND,
   direction: 'trim',
 }
@@ -84,7 +82,6 @@ describe('resolveStickyDisplay — the pure hysteresis rule', () => {
     expect(out).toEqual({
       xOfTen: 9,
       outcomeState: 'on-track',
-      perMonthDollar: Math.round(105.5 / DOLLAR_STEP) * DOLLAR_STEP,
       spendPerMonthReal: SPEND,
       direction: 'room',
     })
@@ -128,53 +125,21 @@ describe('resolveStickyDisplay — the pure hysteresis rule', () => {
     expect(out.outcomeState).toBe('over-funded')
   })
 
-  it('HOLDS a one-step dollar flip that lands inside the edge band, same direction', () => {
-    // 105.5 rounds to 110 (one step up from the displayed 100); its distance to the flip
-    // edge (105) is 0.5 — inside the $1 EPS.
-    expect(DOLLAR_STICKY_EPS).toBe(DOLLAR_STEP / 10)
-    const out = resolveStickyDisplay(prev, headline(8, 0.05, 'on-track', 0.05), dollar(105.5, 'trim'))
-    expect(out.perMonthDollar).toBe(100) // held
-  })
-
-  it('RELEASES the dollar past the edge band (the planted-fail sibling)', () => {
-    // 106.5 rounds to 110; edge distance 1.5 ≥ $1 EPS — a confident flip.
-    const out = resolveStickyDisplay(prev, headline(8, 0.05, 'on-track', 0.05), dollar(106.5, 'trim'))
-    expect(out.perMonthDollar).toBe(110)
-  })
-
-  it('a dollar DIRECTION change adopts wholesale — never held across a regime flip', () => {
-    // Same edge-hugging value as the hold case, but the direction flipped trim→room.
-    const out = resolveStickyDisplay(prev, headline(8, 0.05, 'on-track', 0.05), dollar(105.5, 'room'))
-    expect(out.perMonthDollar).toBe(110)
-    expect(out.direction).toBe('room')
-  })
-
-  it('INDEPENDENCE: the dollar updates while the count + state hold (plan :249, one direction)', () => {
-    // Count edge-held (margin 0), state unchanged, dollar moved two confident steps.
-    const out = resolveStickyDisplay(prev, headline(9, 0, 'on-track', 0.05), dollar(120, 'trim'))
-    expect(out.xOfTen).toBe(8) // held
-    expect(out.perMonthDollar).toBe(120) // adopted
-  })
-
-  it('INDEPENDENCE: the count updates while the dollar holds (plan :249, the mirror)', () => {
-    // Count moved confidently (margin far from any edge), dollar edge-hugging one step.
-    const out = resolveStickyDisplay(prev, headline(7, 0.04, 'on-track', 0.05), dollar(105.5, 'trim'))
-    expect(out.xOfTen).toBe(7) // adopted
-    expect(out.perMonthDollar).toBe(100) // held
-  })
-
-  it('the SPEND adopts wholesale even while the dollar figure HOLDS — a fact of the run, never a reading that can be held stale', () => {
-    // The same edge-hugging dollar hold as the mirror arm, but the run's spend moved 6,500 → 10,000
-    // (the worsening edit). The held $ figure stays; the spend beside it must be the NEW run's —
-    // holding it would quote a stale base next to the delta the trim clause subtracts from it
-    // (mutant M5, 2026-09-17: the triple carried prev's spend).
-    const moved: DollarAdjustment = { ...dollar(105.5, 'trim'), spendPerMonthReal: 10_000 }
-    const out = resolveStickyDisplay(prev, headline(7, 0.04, 'on-track', 0.05), moved)
-    expect(out.perMonthDollar).toBe(100) // still held
+  it('the SPEND and the DIRECTION adopt wholesale even while the count HOLDS — facts of the run, never readings that can be held stale', () => {
+    // The count edge-holds (margin 0, the first hold arm's reading), but the run's spend moved
+    // 6,500 → 10,000 and its direction flipped trim → room. Both must be the NEW run's: a held
+    // spend would quote a stale base beside the figure (mutant M5, 2026-09-17: the triple carried
+    // prev's spend), and a held direction would compose the wrong clause for the shown word.
+    const moved: DollarAdjustment = { ...dollar(120, 'room'), spendPerMonthReal: 10_000 }
+    const out = resolveStickyDisplay(prev, headline(9, 0, 'on-track', 0.05), moved)
+    expect(out.xOfTen).toBe(8) // held — so the arm proves the facts ride PAST a hold
     expect(out.spendPerMonthReal).toBe(10_000) // adopted
-    // …and on a wholesale adopt the spend rides too (no path keeps prev's).
-    const adopted = resolveStickyDisplay(prev, headline(9, 0, 'on-track', 0.05), { ...dollar(120, 'trim'), spendPerMonthReal: 10_000 })
+    expect(out.direction).toBe('room') // adopted
+    // …and on a wholesale adopt they ride too (no path keeps prev's).
+    const adopted = resolveStickyDisplay(prev, headline(7, 0.04, 'on-track', 0.05), moved)
+    expect(adopted.xOfTen).toBe(7)
     expect(adopted.spendPerMonthReal).toBe(10_000)
+    expect(adopted.direction).toBe('room')
   })
 })
 
@@ -192,7 +157,7 @@ describe('resolveStickyDisplay — a hold may never be rosier than the raw readi
     // is blind to the fall (the 9-cap: both bands display 9) — only the rank gate refuses
     // the hold. Direction-blind rule: held 'over-funded' ("more than enough… better than
     // 9 in 10") over a true 85% reading.
-    const settled: StickyDisplay = { xOfTen: 9, outcomeState: 'over-funded', perMonthDollar: 100, spendPerMonthReal: SPEND, direction: 'room' }
+    const settled: StickyDisplay = { xOfTen: 9, outcomeState: 'over-funded', spendPerMonthReal: SPEND, direction: 'room' }
     const out = resolveStickyDisplay(settled, headline(9, 0, 'on-track', 0), dollar(100, 'room'))
     expect(out.outcomeState).toBe('on-track') // adopted — the worse truth shows immediately
   })
@@ -202,7 +167,7 @@ describe('resolveStickyDisplay — a hold may never be rosier than the raw readi
     // 7/8-vs-8/9 lattice puts a flip point at 0.75), stateMargin 0.10 (borderline's center).
     // Direction-blind rule: holdX kept 9 while the state adopted borderline → {9, borderline},
     // a pairing buildHeadline can never emit (borderline caps at 8).
-    const settled: StickyDisplay = { xOfTen: 9, outcomeState: 'on-track', perMonthDollar: 100, spendPerMonthReal: SPEND, direction: 'trim' }
+    const settled: StickyDisplay = { xOfTen: 9, outcomeState: 'on-track', spendPerMonthReal: SPEND, direction: 'trim' }
     const out = resolveStickyDisplay(settled, headline(8, 0, 'borderline', 0.1), dollar(100, 'trim'))
     expect(out.xOfTen).toBe(8)
     expect(out.outcomeState).toBe('borderline')
@@ -214,19 +179,10 @@ describe('resolveStickyDisplay — a hold may never be rosier than the raw readi
     // so the STATE adopts while the count's own gate would hold. Holding the count under an
     // adopted word composes {8, on-track}, which the engine never emits (on-track always
     // displays 9). The coupling makes the count adopt with the word.
-    const settled: StickyDisplay = { xOfTen: 8, outcomeState: 'borderline', perMonthDollar: 100, spendPerMonthReal: SPEND, direction: 'trim' }
+    const settled: StickyDisplay = { xOfTen: 8, outcomeState: 'borderline', spendPerMonthReal: SPEND, direction: 'trim' }
     const out = resolveStickyDisplay(settled, headline(9, 0, 'on-track', 0.03), dollar(100, 'trim'))
     expect(out.xOfTen).toBe(9)
     expect(out.outcomeState).toBe('on-track')
-  })
-
-  it('a dollar FALLING one step onto the edge band ADOPTS the lower figure — never holds the rosier one', () => {
-    // prev displayed $110 of 'room'; the raw fell to $104.9 (rounds to $100, edge distance
-    // 0.1 < the $1 EPS). Direction-blind rule: held the rosier $110. Lower = conservative in
-    // BOTH worded directions (less room; the bigger trim — perMonth is negative under trim).
-    const settled: StickyDisplay = { xOfTen: 9, outcomeState: 'on-track', perMonthDollar: 110, spendPerMonthReal: SPEND, direction: 'room' }
-    const out = resolveStickyDisplay(settled, headline(9, 0.05, 'on-track', 0.05), dollar(104.9, 'room'))
-    expect(out.perMonthDollar).toBe(100)
   })
 
   it('PROPERTY: across every real quantized (prev, raw) pair the display is never rosier than raw and always an engine-emittable pairing', () => {
@@ -256,13 +212,10 @@ describe('resolveStickyDisplay — a hold may never be rosier than the raw readi
       const prevDisplay = resolveStickyDisplay(null, prevR.headline, prevR.dollar)
       for (const rawR of readings) {
         const out = resolveStickyDisplay(prevDisplay, rawR.headline, rawR.dollar)
-        const rawRounded = Math.round(rawR.dollar.perMonthReal.value / DOLLAR_STEP) * DOLLAR_STEP
         if (STATE_OPTIMISM_RANK[out.outcomeState] > STATE_OPTIMISM_RANK[rawR.headline.outcomeState])
           violations.push(`rosier word: ${out.outcomeState} shown over raw ${rawR.headline.outcomeState}`)
         if (out.xOfTen > rawR.headline.xOfTen.value)
           violations.push(`rosier count: ${out.xOfTen} shown over raw ${rawR.headline.xOfTen.value}`)
-        if (out.perMonthDollar > rawRounded)
-          violations.push(`rosier dollar: ${out.perMonthDollar} shown over raw ${rawRounded}`)
         if (!emittable.has(`${out.outcomeState}:${out.xOfTen}`))
           violations.push(`impossible pairing: {${out.outcomeState}, ${out.xOfTen}}`)
       }
@@ -387,14 +340,13 @@ describe('the F9 demotion — the hawk veto arms (planted-fail against the pre-U
     const snap = model.getSnapshot()
     expect(snap.answer.kind).toBe('headline')
     if (snap.answer.kind !== 'headline') throw new Error('unreachable')
-    // Fresh capture: the displayed triple IS the raw rounding of the new reading
+    // Fresh capture: the displayed triple IS the new reading's own
     // (a null baseline adopts wholesale — nothing is held against the pre-gap number).
     const h = snap.answer.result.headline
     const d = snap.answer.result.dollar
     expect(snap.displayed).toEqual({
       xOfTen: h.xOfTen.value,
       outcomeState: h.outcomeState,
-      perMonthDollar: Math.round(d.perMonthReal.value / DOLLAR_STEP) * DOLLAR_STEP,
       spendPerMonthReal: d.spendPerMonthReal,
       direction: d.direction,
     })

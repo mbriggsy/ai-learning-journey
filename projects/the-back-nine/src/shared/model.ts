@@ -1914,7 +1914,7 @@ export interface SavedRecommendationV3 {
    *  2026-09-03 edit-time kill the pending arm does too; produced by the private `fingerprintOf` at
    *  `:658`) — the identity of the run this record actually describes — and NEVER from a fresh
    *  recompute taken at save time. The trichotomy's `freshFingerprint` is the OTHER operand,
-   *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:726`): what the draft WOULD solve
+   *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:703`): what the draft WOULD solve
    *  now. The two are equal at the mint and diverge afterwards, and that divergence IS the mechanism
    *  — so minting from the fresh side instead would stamp the record with inputs the recommendation
    *  was never computed against, which on a stale draft is a calm-but-wrong memory rather than a

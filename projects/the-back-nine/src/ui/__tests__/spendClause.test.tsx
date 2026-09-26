@@ -17,7 +17,7 @@ import type { SpendAnswer } from '@store/memoryModel'
 
 afterEach(cleanup)
 
-const ROOM_SHOWN: VerdictDisplay = { xOfTen: 8, outcomeState: 'on-track', perMonthDollar: 410, spendPerMonthReal: 6_500, direction: 'room' }
+const ROOM_SHOWN: VerdictDisplay = { xOfTen: 8, outcomeState: 'on-track', spendPerMonthReal: 6_500, direction: 'room' }
 const sized = (direction: 'room' | 'trim', monthlyReal: number): SpendAnswer => ({
   kind: 'resolved',
   outcome: { kind: 'sized', direction, monthlyReal, failedAtMonthlyReal: monthlyReal + 100, enteredMonthlyReal: 6_500, probes: 9 },
@@ -49,7 +49,7 @@ describe('the three clause forms', () => {
     expect(composeVerdictReading(ROOM_SHOWN)!.clause).toBe(slots.verdictRoomClause('6,500'))
   })
   it('trim mirrors it', () => {
-    const trim: VerdictDisplay = { xOfTen: 1, outcomeState: 'off-track', perMonthDollar: -7_200, spendPerMonthReal: 10_000, direction: 'trim' }
+    const trim: VerdictDisplay = { xOfTen: 1, outcomeState: 'off-track', spendPerMonthReal: 10_000, direction: 'trim' }
     expect(composeVerdictReading(trim, { kind: 'sized', monthlyReal: 6_400, failedAtMonthlyReal: 6_500 })!.clause).toBe(slots.verdictTrimSized('10,000', '6,400'))
     expect(composeVerdictReading(trim, { kind: 'pending' })!.clause).toBe(slots.verdictTrimLead('10,000'))
     expect(composeVerdictReading(trim)!.clause).toBe(slots.verdictTrimClause('10,000'))

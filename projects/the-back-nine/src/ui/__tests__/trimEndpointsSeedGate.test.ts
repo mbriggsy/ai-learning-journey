@@ -8,8 +8,9 @@
  * wf_8c2ece49-79a, Tier 0) the trim clause is figure-less: the engine's trim magnitude is an unsolved
  * proxy, and on this very frame its old "$2,800 instead of $10,000 — about $7,200 less" target ran
  * over-funded through this pipeline (a ~2× over-cut; Briggsy's cold read took it as "they'd be ok").
- * A real, round-trip-verified spend solve is the register's Tier 1 entry; until it lands, no target
- * or delta may render. (2026-09-17 → 2026-09-25 this gate pinned the three-figure form.)
+ * The REAL figure arrives only through the spend lane (`spendSolve.ts`, gated in by `spendClauseFor`,
+ * 2026-09-26); this gate pins the path without it — the engine's proxy target/delta ride nowhere.
+ * (2026-09-17 → 2026-09-25 this gate pinned the three-figure form.)
  *
  * Lives beside the unit arms (not inside them) so the fast file stays fast: two 2,000-path runs.
  */
@@ -17,6 +18,7 @@ import { describe, it, expect } from 'vitest'
 import { DEV_SEEDS } from '@ui/devSeeds'
 import { buildSpineParams } from '@intake/intakeMap'
 import { runEngine } from '@engine/engineProtocol'
+import { DOLLAR_STEP } from '@engine/confidence'
 import { resolveStickyDisplay } from '@store/memoryModel'
 import { composeVerdictReading } from '@ui/verdictSentence'
 import { slots } from '@ui/copy'
@@ -46,7 +48,7 @@ describe('the trim clause on the walk’s worsened `retired` frame, through the 
   it('$10,000 a month entered ⇒ off-track trim; the clause quotes ONLY the 10,000 — the unsolved proxy target/delta ride nowhere (council 2026-09-25)', () => {
     // The walk's edit: 10,000 typed into "Household spending, all in" on an "Each month" household.
     const worsened: ScenarioDraft = { ...DEV_SEEDS.retired, annualSpendingReal: 120_000, spendEntryPeriod: 'month' }
-    const { wire, displayed, reading } = readingOf(worsened)
+    const { wire, reading } = readingOf(worsened)
     expect(wire.dollar.direction).toBe('trim')
     expect(wire.headline.outcomeState).toBe('off-track')
     expect(wire.dollar.spendPerMonthReal).toBe(10_000)
@@ -56,8 +58,9 @@ describe('the trim clause on the walk’s worsened `retired` frame, through the 
     // took it as "they'd be ok". So the clause is figure-less: exactly one dollar figure, the spend.
     const figures = figuresIn(reading.clause)
     expect(figures).toEqual([10_000])
-    expect(displayed.perMonthDollar).toBeLessThan(0) // the proxy is live on the tuple — so its absence below is not vacuous
-    expect(reading.clause).not.toContain(Math.abs(displayed.perMonthDollar).toLocaleString('en-US'))
+    const proxy = Math.round(wire.dollar.perMonthReal.value / DOLLAR_STEP) * DOLLAR_STEP
+    expect(proxy).toBeLessThan(0) // the proxy is live on the run — so its absence below is not vacuous
+    expect(reading.clause).not.toContain(Math.abs(proxy).toLocaleString('en-US'))
     expect(reading.clause).toBe(slots.verdictTrimClause('10,000'))
   }, 120_000)
 })
@@ -67,12 +70,13 @@ describe('the room clause on the shipped `surplus` seed, through the real engine
     // The engine's room heuristic (4 % of the bad-decile terminal ÷ 12) quoted "room for about $7,470
     // more" here; at $12,470 through this same pipeline the engine rates the plan BORDERLINE 8/10 — the
     // figure oversold the household off the verdict it was quoted from. Same law as the trim clause.
-    const { wire, displayed, reading } = readingOf(DEV_SEEDS.surplus)
+    const { wire, reading } = readingOf(DEV_SEEDS.surplus)
     expect(wire.dollar.direction).toBe('room')
     expect(wire.headline.outcomeState).toBe('over-funded')
-    expect(displayed.perMonthDollar).toBeGreaterThan(0) // the heuristic is live on the tuple — its absence is not vacuous
+    const heuristic = Math.round(wire.dollar.perMonthReal.value / DOLLAR_STEP) * DOLLAR_STEP
+    expect(heuristic).toBeGreaterThan(0) // the heuristic is live on the run — its absence is not vacuous
     expect(figuresIn(reading.clause)).toEqual([5_000])
-    expect(reading.clause).not.toContain(displayed.perMonthDollar.toLocaleString('en-US'))
+    expect(reading.clause).not.toContain(heuristic.toLocaleString('en-US'))
     expect(reading.clause).toBe(slots.verdictRoomClause('5,000'))
   }, 120_000)
 })

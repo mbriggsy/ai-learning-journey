@@ -95,7 +95,7 @@ import { shouldCommitSolve } from '@engine/solver/cancel'
 import { solverRunFingerprint, type SolverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 // The display-geometry constants the sticky gates read — the engine's OWN exported values
 // (never re-typed; the same objects confidence.ts computes the emitted margins against).
-import { DOLLAR_STEP, STATE_OPTIMISM_RANK, SURVIVAL_GRID } from '@engine/confidence'
+import { STATE_OPTIMISM_RANK, SURVIVAL_GRID } from '@engine/confidence'
 import { isEngineReset, type EngineClient } from './engineClient'
 
 // ---------------------------------------------------------------------------
@@ -425,31 +425,26 @@ export interface MemoryModel {
 // sentence never flickers between two honest roundings of one household.
 // Hysteresis on the DISPLAY only — the raw result is never altered.
 //
-// TWO INDEPENDENT GATES IN TWO UNITS (model.ts `WithMargin` names the failure
-// mode — one figure sticky while the other flickers in one sentence):
-//  - the headline count + verdict state gate on the survival-fraction margins
-//    (`xOfTen.marginToEdge` + `stateMarginToEdge` — both are distances to their
-//    FLIP EDGES, computed on the same quantized value the band compare reads);
-//  - the dollar gates on the $/month margin — NOTE THE INVERTED SENSE:
-//    `perMonthReal.marginToEdge` is the distance to the ROUNDED DISPLAY VALUE
-//    (confidence.ts:241), so the flip edge sits at DOLLAR_STEP/2 − margin. This
-//    seam is that emission's FIRST consumer (insight 047: audit a contract its
-//    first consumer never stressed) — the sense difference is deliberate there
-//    and compensated HERE, in one place.
+// The headline count + verdict state gate on the survival-fraction margins
+// (`xOfTen.marginToEdge` + `stateMarginToEdge` — both are distances to their
+// FLIP EDGES, computed on the same quantized value the band compare reads).
+// The seam once held a third unit — the `buildDollar` proxy's $/month figure —
+// and was DELETED with it (the spend solve's phase C, council wf_faa1af2d-052):
+// the sentence quotes the spend lane's REAL figure now, which `spendClauseFor`
+// gates on the shown verdict being the raw one, so no surface renders a proxy
+// dollar a hold could steady.
 //
-// EPS POSTURE (a project-owned heuristic, one rule for both units): hold a
-// ONE-step display flip only while the new reading sits within 20% of the
-// half-flip distance of the edge it crossed — SURVIVAL_GRID (0.01 of the 0.05
-// half-flip; on the 0.01 quantize grid this means "exactly on the edge") and
-// DOLLAR_STEP/10 ($1 of the $5 half-flip). Anything past that, a ≥2-step move,
-// or a dollar-DIRECTION change always adopts (a direction flip is a regime
-// change; holding across it would compose an incoherent sentence).
+// EPS POSTURE (a project-owned heuristic): hold a ONE-step display flip only
+// while the new reading sits within 20% of the half-flip distance of the edge
+// it crossed — SURVIVAL_GRID (0.01 of the 0.05 half-flip; on the 0.01 quantize
+// grid this means "exactly on the edge"). Anything past that, or a ≥2-step
+// move, always adopts.
 //
 // THE CONSERVATIVE-DIRECTION LAW (U12 ultramode, 8-lens convergence): every hold
 // is DIRECTION-GATED — a hold may only ever keep a display LESS optimistic than
 // the raw reading (the lower count, the lower-ranked verdict word per the
-// engine's STATE_OPTIMISM_RANK, the lower dollar). A reading RISING onto an
-// edge holds the prior (calm, conservative); a reading FALLING onto an edge
+// engine's STATE_OPTIMISM_RANK). A reading RISING onto an edge holds the
+// prior (calm, conservative); a reading FALLING onto an edge
 // always adopts the worse truth immediately (holding the rosier prior is the
 // calm-but-wrong cardinal sin — the prior comment claimed "conservative by
 // construction", which was only true for the rising direction). And the COUNT
@@ -467,13 +462,11 @@ export interface MemoryModel {
 // makes a draft field a compile error).
 // ---------------------------------------------------------------------------
 
-/** The sticky-resolved spine DISPLAY triple (+ the dollar's direction, which is
- *  never held across — a direction flip always adopts wholesale). */
+/** The sticky-resolved spine DISPLAY triple: the count + verdict word it may hold, and two facts
+ *  of the run that ride it unheld — the spend and the dollar's direction, adopted wholesale on every resolve. */
 export interface StickyDisplay {
   readonly xOfTen: number
   readonly outcomeState: OutcomeState
-  /** The ROUNDED $/month display figure (a DOLLAR_STEP multiple). */
-  readonly perMonthDollar: number
   /** The entered spend per month the run scaled its trim from — adopted wholesale on every
    *  resolve like `direction` (never held: it is a fact of the run, not a reading that can
    *  flicker). Carried so the trim clause quotes both endpoints from ONE commit. */
@@ -482,7 +475,6 @@ export interface StickyDisplay {
 }
 
 export const HEADLINE_STICKY_EPS = SURVIVAL_GRID
-export const DOLLAR_STICKY_EPS = DOLLAR_STEP / 10
 
 /** The pure hysteresis rule (insight 048 — the decision is an exported, planted-fail-
  *  tested seam; commit() keeps only the wiring). Given the previous displayed triple and
@@ -494,11 +486,10 @@ export function resolveStickyDisplay(
 ): StickyDisplay {
   const rawX = headline.xOfTen.value
   const rawState = headline.outcomeState
-  const rawDollar = Math.round(dollar.perMonthReal.value / DOLLAR_STEP) * DOLLAR_STEP
   const direction = dollar.direction
   const spendPerMonthReal = dollar.spendPerMonthReal
   if (prev === null) {
-    return { xOfTen: rawX, outcomeState: rawState, perMonthDollar: rawDollar, spendPerMonthReal, direction }
+    return { xOfTen: rawX, outcomeState: rawState, spendPerMonthReal, direction }
   }
 
   // Verdict state: hold only an edge-hugging flip whose count moved at most one
@@ -528,23 +519,9 @@ export function resolveStickyDisplay(
   const holdX = xHoldEligible && (rawState === prev.outcomeState || stateHoldEligible)
   const holdState = stateHoldEligible && (rawX === prev.xOfTen || xHoldEligible)
 
-  // Dollar: the emitted margin is distance to the ROUNDED value — flip-edge
-  // distance is the half-step complement (the inverted-sense compensation).
-  // Conservative direction only: hold the LOWER figure (less room / the bigger
-  // trim — perMonth is negative under 'trim', so lower = more conservative in
-  // both worded directions).
-  const dollarEdgeDistance = DOLLAR_STEP / 2 - dollar.perMonthReal.marginToEdge
-  const holdDollar =
-    direction === prev.direction &&
-    rawDollar !== prev.perMonthDollar &&
-    Math.abs(rawDollar - prev.perMonthDollar) === DOLLAR_STEP &&
-    prev.perMonthDollar < rawDollar &&
-    dollarEdgeDistance < DOLLAR_STICKY_EPS
-
   return {
     xOfTen: holdX ? prev.xOfTen : rawX,
     outcomeState: holdState ? prev.outcomeState : rawState,
-    perMonthDollar: holdDollar ? prev.perMonthDollar : rawDollar,
     spendPerMonthReal,
     direction,
   }

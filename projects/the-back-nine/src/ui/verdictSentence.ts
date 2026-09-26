@@ -11,10 +11,10 @@
  * landing in only one copy would show a rosier clause inside the escape hatch than on the
  * hero. One composer makes that desync unrepresentable — BOTH surfaces call it.
  *
- * Takes the display TUPLE rather than a DollarAdjustment so the sticky DISPLAY figure and
- * the raw figure compose through ONE clause path (U12 C2) — the sticky `perMonthDollar` is
- * already a $10 multiple, so `formatPerMonth`'s humane rounding is a no-op on it (both
- * steps are $10; see money.ts).
+ * Takes the display TUPLE rather than a DollarAdjustment so the sticky DISPLAY triple and the
+ * raw reading compose through ONE clause path (U12 C2). The tuple carries no dollar figure:
+ * the only figure the clause quotes is the spend lane's REAL one, gated in by `spendClauseFor`
+ * (the proxy `perMonthDollar` it once carried was deleted in the spend solve's phase C).
  */
 import type { DollarAdjustment, OutcomeState } from '@shared/model'
 import { copy, slots } from './copy'
@@ -28,7 +28,6 @@ import { OUTCOME_PRESENTATION } from './outcomeStates'
 export interface VerdictDisplay {
   readonly outcomeState: OutcomeState
   readonly xOfTen: number
-  readonly perMonthDollar: number
   /** The entered spend per month the run scaled its trim from (the clause's other endpoint) —
    *  carried on the tuple so hero and echo quote the SAME base as the delta, from one commit. */
   readonly spendPerMonthReal: number
@@ -89,8 +88,8 @@ export function reserveClauseFor(shown: VerdictDisplay): string | null {
  *  slot-discipline). Room AND trim quote ONLY the spend they entered and name the size as unworked
  *  (council 2026-09-25; room 2026-09-26): the engine's magnitudes are unsolved heuristics — the trim
  *  over-cut ~2× on the `retired` frame and read as sufficiency (Briggsy's cold read, E17); the room
- *  oversold `surplus` onto borderline. The engine's `perMonthReal` renders nowhere until a real solve
- *  lands (register Tier 1). The REAL figure arrives through `spend` (the spend lane, spendSolve.ts):
+ *  oversold `surplus` onto borderline. The engine's `perMonthReal` renders nowhere and rides no display
+ *  tuple (phase C deleted the sticky copy). The REAL figure arrives through `spend` (the spend lane, spendSolve.ts):
  *  sized ⇒ the verified F with its edge named; pending ⇒ the first sentence alone; else figure-less. */
 function magnitudeClause(
   direction: DollarAdjustment['direction'],

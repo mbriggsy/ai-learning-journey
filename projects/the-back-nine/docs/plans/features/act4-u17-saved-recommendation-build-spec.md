@@ -74,7 +74,7 @@ refusal (`RothLever.tsx:53`).
 ### S0.2 The plan clock is years-since-BUILT — renamed and prosed
 
 `Result.tsx` derives the anchor from `startCalendarYear`, which is the plan's **BUILD** year (written once
-at `memoryModel.ts:587`, never re-anchored, survives every re-save). Four separate comments already forbade
+at `memoryModel.ts:564`, never re-anchored, survives every re-save). Four separate comments already forbade
 attributing that quantity to the save (`staleness.ts:26`, `resultSave.ts:172`, `copy.ts:2866`,
 `FuckOffDate.tsx:150`) — and the band's `'saved'` label did exactly that.
 
@@ -202,10 +202,10 @@ literal tense regexes pin it now. Three mutants red → reverted.
 4. **The aged fan ships ONLY with** (a) an adjacent **premise line** naming the balance vintage and (b) a
    **RENDERED re-confirm control** (insight 100 — a copy promise is a UI contract). The residual is
    disclosed as **UNDETERMINED, never "conservative."** Both ship as `.band-premise` (`result.css:229`,
-   one family home) under BOTH routes' band panes — `ConfidenceStatement.tsx:427-434` and
+   one family home) under BOTH routes' band panes — `ConfidenceStatement.tsx:426-433` and
    `FuckOffDate.tsx:492-507`; the OLD-SAVE arm names the `agedBalancesYearFor` vintage and the re-saver
    reads the build-anchor arm. **No premise line ⇒ no aged fan, and that law is STRUCTURAL:** the resolved
-   memo withdraws the aged fan when no `onReconfirm` route exists (`ConfidenceStatement.tsx:291`, and its
+   memo withdraws the aged fan when no `onReconfirm` route exists (`ConfidenceStatement.tsx:290`, and its
    twin in `FuckOffDate`), so an aged projection with an unstated premise is unrepresentable. `onReconfirm`
    routes to the guided re-walk (`onReview`).
 5. **On a split, the crown names WHICH date** at the marker — `bandClockWorkStopsSplitLabel`,

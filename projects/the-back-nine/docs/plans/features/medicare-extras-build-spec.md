@@ -122,13 +122,13 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   person's own premium × 12, **ending at each death** — **NEVER `enrolledCount × average`**
   (count×avg reproduces the exact optimistic survivor under-charge per-person was chosen to
   kill; it passes symmetric couples and hides in aggregate). The Σ lives in the tax overlay's
-  year loop (`src/engine/taxOverlay.ts:1617-1621`), indexing
+  year loop (`src/engine/taxOverlay.ts:1621-1625`), indexing
   `OverlayParams.medicareExtrasMonthly` by `regime.medicareEnrolledIndices` — the canonical
   living∩enrolled index set minted for exactly this purpose
   (`src/engine/taxOverlay.ts:559-570`), which holds only IDENTITY-MATCHED members so a stranger
   ref throws at the year loop's identity guard rather than silently dropping a member's premium
   from the Σ (the cost-understating direction). base+surcharge stays the existing count×uniform
-  line in `medicareAnnualCost` (`src/engine/healthOverlay.ts:698-711`), untouched.
+  line in `medicareAnnualCost` (`src/engine/healthOverlay.ts:784-798`), untouched.
 - **Ship gate, met:** the DND-012 externally-derived **ASYMMETRIC survivor golden** ships as
   `src/engine/__tests__/medicareExtras.test.ts:86-159` — extras `[0, 200]` with the $0 owner
   dying first, hand-derived per year, so the survivor is still charged their full $200×12; the
@@ -191,7 +191,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   "premiums" line traces literally true post-flip, the sole latent nit being the rare purchased
   Part A, which is consistently carved out.
 
-## F5 — disclosure routing (HARD LOCK — red-team Attack 1; healthSheetChrome.ts:447 + Result.tsx:217-221)
+## F5 — disclosure routing (HARD LOCK — red-team Attack 1; healthSheetChrome.ts:454 + Result.tsx:217-221)
 
 - The extras affirmative + per-person adopted-typical provenance + the bi-directional disclosure
   needed a **RENDERED HOME for BOTH populations**, because `showMedicarePricedNote`
@@ -201,12 +201,12 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   - **Population A (non-door / all-65+):** the widened `verdictMedicarePriced` affirmation now
     names extra coverage alongside Part B and its surcharge, and an on-typical household gets a
     per-person bi-directional sentence appended INSIDE the residual paragraph via
-    `composeMedicareExtrasTypicalNote` (`src/ui/healthSheetChrome.ts:481`), wired at
+    `composeMedicareExtrasTypicalNote` (`src/ui/healthSheetChrome.ts:488`), wired at
     `src/ui/Result.tsx:222-229`. Appended, not a new frame row — the one-frame fit law's tallest
     composite.
   - **Population B (near-65 date route / the Healthcare door):** the door sheet carries its OWN
     legible extras block — never buried in the six-item run-on — from
-    `composeMedicareExtrasLines` (`src/ui/healthSheetChrome.ts:499`) under the
+    `composeMedicareExtrasLines` (`src/ui/healthSheetChrome.ts:506`) under the
     `medicareExtrasSheetLead` heading, rendered at `src/intake/HealthcareSheet.tsx:205-219`. The
     per-person fact line carries the provenance as its load-bearing content: whose number, and
     whether it was entered, affirmed, or typical.

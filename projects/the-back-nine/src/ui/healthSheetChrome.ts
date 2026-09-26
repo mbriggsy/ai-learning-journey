@@ -31,7 +31,7 @@ import {
   subsidyLossPerDollar,
 } from '@engine/magiLandscape'
 import { deductionStack } from '@engine/taxCore'
-import { fplForHousehold } from '@engine/healthOverlay'
+import { fplForHousehold, irmaaScheduleAsCompared } from '@engine/healthOverlay'
 import { acaCheckOverdue } from '@engine/validation/oracleToken'
 import {
   acaApplicablePercentage,
@@ -351,7 +351,14 @@ export function composeHealthSheet(
         ],
       })
     }
-    const step = nextIrmaaStep(medicare.irmaaMagiP50, draft.filing, irmaa.value)
+    // THE PRICE FRAME (2026-09-26): the anchor row's MAGI is a FLOW earned during sim-year k − 1
+    // (insight 134 — the era lines above use the same clock), so it meets the lines compared for
+    // calendar start + k − 1: the step it quotes is the real-dollar line THAT year's income will meet.
+    const step = nextIrmaaStep(
+      medicare.irmaaMagiP50,
+      draft.filing,
+      irmaaScheduleAsCompared(irmaa.value, draft.startCalendarYear + medicare.yearsFromNow - 1),
+    )
     if (step !== null) {
       // The household's OWN number for the step ("just tell them"): the enrolled count at the
       // anchor read OFF THE WIRE (`medicareEnrolledP50` — living ∩ enrolled, onset-aware; the

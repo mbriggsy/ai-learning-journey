@@ -33,8 +33,15 @@
  * `@engine/constants` — never re-typed here (architecture §8; burned/063).
  */
 import { bracketsFor, deductionStack, taxableSocialSecurity } from '@engine/taxCore'
-import { IRMAA_ANCHOR_SCALES, irmaaTierApplies, irmaaTierSurchargeMonthly, slidingScalePtc } from '@engine/healthOverlay'
-import type { AcaApplicablePercentageTable, IrmaaSchedule } from '@engine/constants'
+import {
+  IRMAA_ANCHOR_SCALES,
+  assertComparedIrmaaSchedule,
+  irmaaTierApplies,
+  irmaaTierSurchargeMonthly,
+  slidingScalePtc,
+  type ComparedIrmaaSchedule,
+} from '@engine/healthOverlay'
+import type { AcaApplicablePercentageTable } from '@engine/constants'
 import type { FilingStatus } from '@shared/model'
 
 /**
@@ -154,9 +161,18 @@ export function acaCliffFillHeadroom(c: CommittedYearIncome, cliffMagi: number):
  * the current-tier-holding math only). Baseline already above every threshold (the frozen
  * top tier) ⇒ no next step ⇒ +Infinity (the rail does not bind). The fill lands on the step's
  * `lastSafeMagi` ({@link nextIrmaaStepLine}): ON an exclusive line (the tier fires only above it),
- * one whole dollar UNDER the inclusive top line (its line dollar already owes the top tier).
+ * one NOMINAL dollar UNDER the inclusive top line (its line dollar already owes the top tier). The
+ * schedule must be the one compared for `c.calendarYear` — this year's MAGI meets the lines of the
+ * bill two years on, in this year's price frame (`healthOverlay.irmaaScheduleAsCompared`).
  */
-export function irmaaStepFillHeadroom(c: CommittedYearIncome, schedule: IrmaaSchedule): number {
+export function irmaaStepFillHeadroom(c: CommittedYearIncome, schedule: ComparedIrmaaSchedule): number {
+  // THIS year's MAGI meets the lines compared for THIS year (the bill lands `magiLookbackYears` later) —
+  // a schedule compared for any other year is a desynced clock: fail loud, never a silent frame.
+  if (schedule.comparedAtMagiYear !== c.calendarYear) {
+    throw new Error(
+      `[magiLandscape] irmaaStepFillHeadroom: the schedule is compared for MAGI year ${schedule.comparedAtMagiYear}, the committed income is ${c.calendarYear}'s`,
+    )
+  }
   const baseline = irmaaMagiAtFill(c, 0)
   const step = nextIrmaaStepLine(baseline, c.filing, schedule)
   if (step === null) return Number.POSITIVE_INFINITY
@@ -200,24 +216,26 @@ export function cliffMagiFor(table: AcaApplicablePercentageTable, fplDollar: num
 /** The next IRMAA step `magi` has NOT yet crossed, for the filing column — the lowest tier that
  *  does not apply at `magi` (the ONE predicate, `healthOverlay.irmaaTierApplies`) — or `null` when
  *  every tier already applies. Two figures, never conflated:
- *   - `threshold` — the statute's line, what the words quote ("the $750,000 step");
+ *   - `threshold` — the line AS COMPARED, in real dollars — what the words quote (the pinned
+ *     statute figure in the identity frame; the price-moved line in a later one);
  *   - `lastSafeMagi` — the highest MAGI still billed below it, what every rail targets: the line
- *     itself when it is lower-bound-EXCLUSIVE (the tier fires only above it), one whole dollar under
- *     it when INCLUSIVE (the top tier's "at least" — the line dollar owes the tier).
+ *     itself when it is lower-bound-EXCLUSIVE (the tier fires only above it), one NOMINAL dollar
+ *     under it when INCLUSIVE (the top tier's "at least" — the line dollar owes the tier).
  *  An exclusive line exactly AT `magi` is returned (the next dollar crosses); an inclusive one is
  *  already crossed there. */
 export function nextIrmaaStepLine(
   magi: number,
   filing: FilingStatus,
-  schedule: IrmaaSchedule,
+  schedule: ComparedIrmaaSchedule,
 ): { readonly threshold: number; readonly lastSafeMagi: number } | null {
   if (!Number.isFinite(magi)) {
     throw new Error(`[magiLandscape] nextIrmaaStepLine: magi must be finite (got ${magi}) — insight 010`)
   }
+  assertComparedIrmaaSchedule(schedule, 'nextIrmaaStepLine')
   for (const tier of schedule.tiers) {
     if (irmaaTierApplies(magi, tier, filing)) continue
     const threshold = filing === 'mfj' ? tier.mfjMagiThreshold : tier.singleMagiThreshold
-    return { threshold, lastSafeMagi: tier.lowerBoundInclusive ? threshold - 1 : threshold }
+    return { threshold, lastSafeMagi: tier.lowerBoundInclusive ? threshold - schedule.oneNominalDollarReal : threshold }
   }
   return null
 }
@@ -233,7 +251,7 @@ export function nextIrmaaStepLine(
 export function nextIrmaaStep(
   magi: number,
   filing: FilingStatus,
-  schedule: IrmaaSchedule,
+  schedule: ComparedIrmaaSchedule,
 ): { readonly threshold: number; readonly surchargeDeltaMonthlyPerPerson: number } | null {
   const step = nextIrmaaStepLine(magi, filing, schedule)
   if (step === null) return null

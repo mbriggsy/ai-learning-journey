@@ -70,5 +70,11 @@
  * candidate grid's top IRMAA anchor moved one whole dollar under that line (the enumerator clause —
  * candidates.ts via magiLandscape.nextIrmaaStepLine). A v4 record's top-step arm was scored at a
  * bill the law does not charge.
+ *
+ * VERSION 6 (2026-09-26) — the IRMAA PRICE FRAME: every line is compared AS the law compares it,
+ * nominal MAGI(Y − 2) against nominal line(Y), in the MAGI year's real dollars
+ * (healthOverlay.irmaaScheduleAsCompared — §1395r(i)(4)(B)(i) + (i)(5)). From bill year 2028 every line
+ * sits about one year of CPI above the pinned 2026 figure, so a SCORED overlay's pricing moved (fewer
+ * surcharges billed) and the enumerator's IRMAA anchors moved up (the bracket-fill and solver rails).
  */
-export const SOLVER_CODE_VERSION = 5
+export const SOLVER_CODE_VERSION = 6

@@ -1124,7 +1124,7 @@ export const copy = {
   // ⚠️ "the benchmark premium itself" WAS IN BOTH LISTS AND WAS FALSE — struck 2026-08-03.
   // The benchmark (SLCSP) is not merely counted, it is the ANCHOR of the whole credit:
   // `intakeMap.ts:676` builds `slcsp` into the overlay params, `taxOverlay.ts:264` calls it "the
-  // §36B PTC basis", and `slidingScalePtc` (healthOverlay.ts:214-224) computes
+  // §36B PTC basis", and `slidingScalePtc` (healthOverlay.ts:215-225) computes
   // `max(0, slcsp − applicable% × MAGI)` FROM it. Telling the reader the tool ignores the one
   // figure the discount is calculated from is the same false-negation shape O16 fixed on the Roth
   // strings (`rothOmissionsNoteAcaPriced` above) — a "not counted" claim about something that is.
@@ -1693,7 +1693,7 @@ export const copy = {
   // ("401(k)" is deliberately absent — the verdict scope's free-numeral gate; "a pre-tax workplace
   // plan" is the numeral-free equivalent, and the re-entry read-back teaches the full roster.)
   // REWORDED same-day (review wf_6f89fe6f-35a P1, refuters 2-0): the first draft claimed "this plan
-  // has none entered" — FALSE on the small-IRA arm (candidates.ts:389 rejects every rail-anchored
+  // has none entered" — FALSE on the small-IRA arm (candidates.ts:393 rejects every rail-anchored
   // conversion amount above the post-RMD headroom, so a household with a $25k IRA below every rail
   // ALSO lands no-pretax). "needs more … than this plan has entered" is true on BOTH sub-arms (zero
   // entered, and entered-but-under-every-rail — extension-monotone, insight 101), and the steer's

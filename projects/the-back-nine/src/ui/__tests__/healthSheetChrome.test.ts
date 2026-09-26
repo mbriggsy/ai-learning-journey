@@ -307,7 +307,7 @@ describe('composeHealthSheet', () => {
     expect(discount?.lines[0]).toBe(slots.shadowRateHeadroom('50,000', '84,600', '34,600'))
   })
 
-  it('the Medicare anchor composes the story + the now-anchor + the next-step fact (tier-1 MFJ at a 150,000 anchor: step ~1,148 [95.7×12], headroom 68,000)', () => {
+  it('the Medicare anchor composes the story + the now-anchor + the next-step fact (tier-1 MFJ at a 150,000 anchor: step ~1,148 [95.7×12], headroom 74,000 under the line THAT year’s income meets)', () => {
     const readout: HealthReadout = {
       byYear: [year({ yearsFromNow: 1, medicareBaseP50: 4_870, medicareEnrolledP50: 2, irmaaMagiP50: 150_000 })],
     }
@@ -319,13 +319,16 @@ describe('composeHealthSheet', () => {
       figure: slots.healthFigPerYear('4,900'),
       lines: [copy.irmaaStepStory, slots.irmaaStepNowBase('4,900')],
     })
-    // Threshold NAMED (218,000); the anchor income QUOTED (150,000); 218,000 − 150,000 = 68,000;
-    // both 66 → the two-of-you arm at the ×2 household figure: 95.7 × 12 × 2 = 2,296.8 → '2,300'.
+    // THE PRICE FRAME (insight 134's clock): row 1's MAGI is sim-year 0's, calendar 2026, so it meets the
+    // 2028 bill's lines in 2026 dollars — tier-1 MFJ = 2 × round1000(109,000 × 1.032) = 224,000 (the
+    // Trustees' 3.2 %, index(2026) = 1; the 2026-pinned 218,000 is one year of CPI LOW). The anchor
+    // income QUOTED (150,000); 224,000 − 150,000 = 74,000; both 66 → the two-of-you arm at the ×2
+    // household figure: 95.7 × 12 × 2 = 2,296.8 → '2,300'.
     expect(factOf(view, 'step')).toEqual({
       id: 'step',
       eyebrow: copy.healthFactStep,
       figure: slots.healthFigStepAdd('2,300'),
-      lines: [slots.irmaaStepNext('218,000', '150,000', '68,000', '1,100', '2,300', true)],
+      lines: [slots.irmaaStepNext('224,000', '150,000', '74,000', '1,100', '2,300', true)],
     })
   })
 
@@ -334,9 +337,9 @@ describe('composeHealthSheet', () => {
       byYear: [year({ yearsFromNow: 1, medicareBaseP50: 2_435, medicareEnrolledP50: 1, irmaaMagiP50: 150_000 })],
     }
     const view = composeHealthSheet(readout, draft({ ages: [66, 62] }), FRESH)
-    // ONE enrolled on the wire: per-person 95.7 × 12 = 1,148.4 → '1,100', bothEnrolled=false.
+    // ONE enrolled on the wire: per-person 95.7 × 12 = 1,148.4 → '1,100', bothEnrolled=false (the 2026-MAGI line 224,000).
     expect(factOf(view, 'step')?.lines).toEqual([
-      slots.irmaaStepNext('218,000', '150,000', '68,000', '1,100', '2,300', false),
+      slots.irmaaStepNext('224,000', '150,000', '74,000', '1,100', '2,300', false),
     ])
   })
 
@@ -384,13 +387,16 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
         slots.irmaaStepExtrasAddBoth('5,900', '2,900'),
       ],
     })
-    // The anchor is UNMOVED: tier-1 MFJ 218,000 − 46,020 = 171,980 → '172,000'; ONE enrolled on the
-    // wire at the anchor → the per-person figure (95.7 × 12 = 1,148.4 → '1,100') on the each-of-you arm.
+    // The anchor is UNMOVED (row 5 → MAGI calendar 2030, insight 134's clock — the on-ramp line's own
+    // 2030). Its line: bill 2032 = 2 × round1000(109,000 × 1.032⁵ = 127,605) = 256,000 nominal, over
+    // index(2030) = 1.032⁴ = 1.134276 → 225,697 → '225,700'; 225,697 − 46,020 = 179,677 → '179,700'.
+    // (A one-year-late clock — MAGI 2031 — reads 225,508 → '225,500': this arm reds it.) ONE enrolled on
+    // the wire at the anchor → the per-person figure (95.7 × 12 = 1,148.4 → '1,100') on the each-of-you arm.
     expect(factOf(view, 'step')).toEqual({
       id: 'step',
       eyebrow: copy.healthFactStep,
       figure: slots.healthFigStepAddEach('1,100'),
-      lines: [slots.irmaaStepNext('218,000', '46,000', '172,000', '1,100', '2,300', false)],
+      lines: [slots.irmaaStepNext('225,700', '46,000', '179,700', '1,100', '2,300', false)],
     })
     // The shipped sentence is GONE from this household: no line quotes the one-enrollee year as the era.
     expect(factOf(view, 'medicare')!.lines).not.toContain(slots.irmaaStepNowBase('2,700'))
@@ -563,15 +569,15 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
   })
 
   it('the step card’s two-of-you fork reads the WIRE, never the draft’s ages (a mutant restoring the age proxy reds both halves)', () => {
-    // Ages say one enrolled (66/62); the wire says two → the two-of-you arm at the ×2 figure.
+    // Ages say one enrolled (66/62); the wire says two → the two-of-you arm at the ×2 figure (the 2026-MAGI line 224,000).
     const wireTwo: HealthReadout = { byYear: [year({ yearsFromNow: 1, medicareBaseP50: 4_870, medicareEnrolledP50: 2, irmaaMagiP50: 150_000 })] }
     expect(factOf(composeHealthSheet(wireTwo, draft({ ages: [66, 62] }), FRESH), 'step')!.lines).toEqual([
-      slots.irmaaStepNext('218,000', '150,000', '68,000', '1,100', '2,300', true),
+      slots.irmaaStepNext('224,000', '150,000', '74,000', '1,100', '2,300', true),
     ])
     // Ages say both enrolled (66/66); the wire says one (a still-working spouse — onset-aware) → each-of-you.
     const wireOne: HealthReadout = { byYear: [year({ yearsFromNow: 1, medicareBaseP50: 2_435, medicareEnrolledP50: 1, irmaaMagiP50: 150_000 })] }
     expect(factOf(composeHealthSheet(wireOne, draft({ ages: [66, 66] }), FRESH), 'step')!.lines).toEqual([
-      slots.irmaaStepNext('218,000', '150,000', '68,000', '1,100', '2,300', false),
+      slots.irmaaStepNext('224,000', '150,000', '74,000', '1,100', '2,300', false),
     ])
   })
 

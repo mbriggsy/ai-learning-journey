@@ -56,6 +56,7 @@ import {
   type CommittedYearIncome,
 } from '@engine/magiLandscape'
 import { deductionStack } from '@engine/taxCore'
+import { irmaaScheduleAsCompared } from '@engine/healthOverlay'
 import type { IrmaaSchedule } from '@engine/constants'
 
 /** The FOUR searched policies — the 5-wide shipped enum minus the user's `custom` (the
@@ -289,14 +290,17 @@ export function anchoredConversionAmounts(
 
   // IRMAA steps — walk EVERY threshold above the baseline (each is a real anchor; the grid
   // wants a candidate just under each step, not only the next one). Each anchor targets the
-  // step's LAST SAFE MAGI (magiLandscape.nextIrmaaStepLine — one whole dollar under the inclusive
-  // top line, whose line dollar already owes the top tier); the rail still NAMES the line.
+  // step's LAST SAFE MAGI (magiLandscape.nextIrmaaStepLine — one nominal dollar under the inclusive
+  // top line, whose line dollar already owes the top tier); the rail still NAMES the line. The lines
+  // are the ones THIS year's MAGI meets — compared for `c.calendarYear` (the bill lands two years on;
+  // healthOverlay.irmaaScheduleAsCompared, the price frame).
   // IRMAA-MAGI is monotone piecewise-linear CONTINUOUS in the amount (the Pub-915 inclusion
   // ramps) — bisect it; amount = lastSafe + 1 provably crosses (magi(a) ≥ ordinary(a) ≥ a + committed ≥ a).
   if (anchor.irmaaSchedule !== null) {
+    const compared = irmaaScheduleAsCompared(anchor.irmaaSchedule, c.calendarYear)
     let probe = irmaaMagiAtFill(c, 0)
     for (;;) {
-      const step = nextIrmaaStepLine(probe, c.filing, anchor.irmaaSchedule)
+      const step = nextIrmaaStepLine(probe, c.filing, compared)
       if (step === null) break
       const safe = step.lastSafeMagi
       const metric = (a: number): number => irmaaMagiAtFill(withAmount(c, a), 0)

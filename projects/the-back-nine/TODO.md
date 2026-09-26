@@ -25,7 +25,7 @@ block directly below and its "NEXT, in order", which ends "then the b9-9 list as
 eye frame is re-made before a sitting — the commands are in the NEXT list and the HIS EYE batch's "Frames:" line (`temp/` is
 emptied at every squeaky).**
 
-**SESSION 2026-09-26 (b9-7 — opened as a hangout, "ya wanna do some b9 shit?", closed "let's call it here and we'll pick it w/ a freshy"):** **STATE on the final tree, by exit code:** typecheck · lint · the full suite (README + the roadmap carry the count under `verify:doc-stats`) · `verify:doc-stats` five arms · `verify:fit` 142/142 (run on `6e4c065d`'s tree; the wording commit re-ran the three spend-lane arms). **CI:** GREEN by run id through `2f43761f` (36221295068) — `b2b77b69` 36217707952 · `9ebc0af3` 36218710085 · `9aa9f8b7` 36219899041 · `6e4c065d` 36221231758; the wording commit `80f7efd2` and this close: read THEIR runs first next session. **What changed that the next session must know:** Card 3's cold read found the off-track trim figure WRONG by ~2× (the `buildDollar` proxy quoted $2,800 where the engine rates $2,800 over-funded and reaches on track near $6,400) and the room figure OVERSOLD (`surplus` "+$7,470" lands borderline) — both are now the REAL spend solve: `src/engine/spendSolve.ts` (the highest $100-grid spend the engine reads as `room` + the survivor on track; both sides of the pin RUN) on its own worker lane after the final commit (`memoryModel.ts` `SpendAnswer`), gated into the sentence by `verdictSentence.ts` `spendClauseFor`; the pending clause reserves the sized box (band delta 0 on the phone); the landing figure announces the clause alone. His rulings: the Tier 0 trim frame CLOSED ("looks good" ×2), the room entry CLOSED on his read, the sized wording's duration phrase CUT ("too wordy" — a `copy.ts` docblock guard). The engine's `DollarAdjustment.perMonthReal` renders NOWHERE now. **UNFINISHED:** the register's Tier 1 *The spending floor — a real solve* stays OPEN on the phone profile alone (below, (2)); phase C shipped 2026-09-26 (b9-8). **NEXT, in order:** (1) ✅ **the spend solve's phase C — BUILT 2026-09-26 (b9-8)**; the record is the register entry *The spending floor — a real solve* (now OPEN on the phone profile alone) and `git log` · (2) **the spend lane's phone profile** (the register entry's last close condition): node measured 13 s / 27 s to sized on `health` / `healthnc` (~1.3 / 2.7 s per probe); run `pnpm dev:phone` on HIS phone (`https://<LAN-IP>:5174/?seed=healthnc`) and time pending → sized (`.cs-magnitude[data-spend]`); if it is over ~8 s the council's dissent wins — a short honest pending line ("Working out how much more…", text never a spinner, announced once; the WORDS are his) · (3) ✅ **FILED 2026-09-26 (b9-8)** as the register's Tier 1 *A budgeted household gets no spending figure at all…* — `M`, council first on four undecided questions (multiplicative vs additive, what "a month" quotes, the essentials-bound trim, the survivor ratio) · (4) ✅ **the top IRMAA tier's inclusive line — BUILT 2026-09-26 (b9-8)**, the register entry CLOSED with its record (`nextIrmaaThresholdAbove` is gone — rails read `magiLandscape.nextIrmaaStepLine`'s `lastSafeMagi`; `SOLVER_CODE_VERSION` is 5) · (5) **the IRMAA price frame** (Tier 1, M, pilot — *Every IRMAA threshold is compared with two-year-old MAGI…*; RULE the tiers-1–4 lag convention against the CMS indexing text at build; the step card's MAGI-year clock is start + yearsFromNow − 1, insight 134; the same room math as (6) and (7) — build it with or before them; `SOLVER_CODE_VERSION` bump) · (6) the headroom look-back entry (Tier 1) · (7) the Roth sheet's blank amount box (Tier 1 — behind (5) and (6) for the room math; the words his) · (8) the echo-ink entry (Tier 2, pilot, S) · (9) the Part D hold-direction research leg (Tier 2) · (10) the latent staleness gate (Tier 4, S — WIDENED 2026-09-25: the price index has FOUR readers now, the register entry lists them) · then the b9-9 list as ranked. **ON THE CLOCK:** the ACA rolling window reds CI ~2026-10-14 — schedule the re-verify pass the week of 2026-10-05 (the Dated table's row carries the order); `ubuntu-latest` becomes Ubuntu 26 from 2026-10-19 (Dated). (The b9-7 LANDMINES are in *Operational landmines* below.) **SQUEAKY CLOSE 2026-09-26 (b9-7; the fresh session is b9-8):** typecheck by exit code · doc-stats' five arms on the final tree · the tree clean · `temp/` EMPTY (the eye frames cleared — re-make before a sitting) · no orphan servers, every background shell exited · CI green through `2f43761f` by run id (above). The fresh session enters at the NEXT list above.
+**SESSION 2026-09-26 (b9-7 — opened as a hangout, "ya wanna do some b9 shit?", closed "let's call it here and we'll pick it w/ a freshy"):** **STATE on the final tree, by exit code:** typecheck · lint · the full suite (README + the roadmap carry the count under `verify:doc-stats`) · `verify:doc-stats` five arms · `verify:fit` 142/142 (run on `6e4c065d`'s tree; the wording commit re-ran the three spend-lane arms). **CI:** GREEN by run id through `2f43761f` (36221295068) — `b2b77b69` 36217707952 · `9ebc0af3` 36218710085 · `9aa9f8b7` 36219899041 · `6e4c065d` 36221231758; the wording commit `80f7efd2` and this close: read THEIR runs first next session. **What changed that the next session must know:** Card 3's cold read found the off-track trim figure WRONG by ~2× (the `buildDollar` proxy quoted $2,800 where the engine rates $2,800 over-funded and reaches on track near $6,400) and the room figure OVERSOLD (`surplus` "+$7,470" lands borderline) — both are now the REAL spend solve: `src/engine/spendSolve.ts` (the highest $100-grid spend the engine reads as `room` + the survivor on track; both sides of the pin RUN) on its own worker lane after the final commit (`memoryModel.ts` `SpendAnswer`), gated into the sentence by `verdictSentence.ts` `spendClauseFor`; the pending clause reserves the sized box (band delta 0 on the phone); the landing figure announces the clause alone. His rulings: the Tier 0 trim frame CLOSED ("looks good" ×2), the room entry CLOSED on his read, the sized wording's duration phrase CUT ("too wordy" — a `copy.ts` docblock guard). The engine's `DollarAdjustment.perMonthReal` renders NOWHERE now. **UNFINISHED:** the register's Tier 1 *The spending floor — a real solve* stays OPEN on the phone profile alone (below, (2)); phase C shipped 2026-09-26 (b9-8). **NEXT, in order:** (1) ✅ **the spend solve's phase C — BUILT 2026-09-26 (b9-8)**; the record is the register entry *The spending floor — a real solve* (now OPEN on the phone profile alone) and `git log` · (2) **the spend lane's phone profile** (the register entry's last close condition): node measured 13 s / 27 s to sized on `health` / `healthnc` (~1.3 / 2.7 s per probe); run `pnpm dev:phone` on HIS phone (`https://<LAN-IP>:5174/?seed=healthnc`) and time pending → sized (`.cs-magnitude[data-spend]`); if it is over ~8 s the council's dissent wins — a short honest pending line ("Working out how much more…", text never a spinner, announced once; the WORDS are his) · (3) ✅ **FILED 2026-09-26 (b9-8)** as the register's Tier 1 *A budgeted household gets no spending figure at all…* — `M`, council first on four undecided questions (multiplicative vs additive, what "a month" quotes, the essentials-bound trim, the survivor ratio) · (4) ✅ **the top IRMAA tier's inclusive line — BUILT 2026-09-26 (b9-8)**, the register entry CLOSED with its record (`nextIrmaaThresholdAbove` is gone — rails read `magiLandscape.nextIrmaaStepLine`'s `lastSafeMagi`; `SOLVER_CODE_VERSION` is 5) · (5) ✅ **the IRMAA price frame — BUILT 2026-09-26 (b9-8)**, the register entry CLOSED with its record (every tier reader takes `healthOverlay.irmaaScheduleAsCompared`'s branded schedule; the room math (6) and (7) share is now the compared lines; `SOLVER_CODE_VERSION` is 6) · (6) the headroom look-back entry (Tier 1) · (7) the Roth sheet's blank amount box (Tier 1 — behind (5) and (6) for the room math; the words his) · (8) the echo-ink entry (Tier 2, pilot, S) · (9) the Part D hold-direction research leg (Tier 2) · (10) the latent staleness gate (Tier 4, S — WIDENED 2026-09-25: the price index has FOUR readers now, the register entry lists them) · then the b9-9 list as ranked. **ON THE CLOCK:** the ACA rolling window reds CI ~2026-10-14 — schedule the re-verify pass the week of 2026-10-05 (the Dated table's row carries the order); `ubuntu-latest` becomes Ubuntu 26 from 2026-10-19 (Dated). (The b9-7 LANDMINES are in *Operational landmines* below.) **SQUEAKY CLOSE 2026-09-26 (b9-7; the fresh session is b9-8):** typecheck by exit code · doc-stats' five arms on the final tree · the tree clean · `temp/` EMPTY (the eye frames cleared — re-make before a sitting) · no orphan servers, every background shell exited · CI green through `2f43761f` by run id (above). The fresh session enters at the NEXT list above.
 
 **NEXT, in order — RE-RANKED 2026-09-13 late (b9-9) by the verify pass (13 seats + 12 refuters over the b9-8 list; all 13 items OPEN at `084f94f0`, none stale, every refuter agreed; what the pass CORRECTED in the prescriptions is inline below, each re-opened at source; every item is `execute` EXCEPT Card 9, which the register and the batched-oracle law keep PARKED as a framing fork — it moves to HIS EYE). Its ✅ items 1–4 — the two Tier 0s that led it (the Medicare-era premium sentence, the step card's per-person figure), Card 3 and the "never oversold" row — are BUILT and were cut from this list 2026-09-25: their records are their register entries (the Medicare-era entry stays OPEN there on its own closure rule; the other three are CLOSED, each with its ⚑ NEGATIVEs) and `git log`. The rest by tier, then by cost:**
 5. **Card 13's (iv)** — the ladder readout shows the CROWN's line at rest (`readoutIdx = scrubIdx ?? crown index`; `data-active` on it; the scrub rule + `scrubbed` stay gated on `scrubIdx`; no CSS; the readout stays `aria-hidden`; amend `OddsLadder.test.tsx`) + fuckOffDate.css's D2d comment — stale on TWO counts (it describes candidate (i) as shipped AND calls the ladder a `<details>` disclosure; the as-built is `<section className="fod-ladder">` inside `.fod-graphs`, no disclosure element) + the design skill's "on-demand, not on the first frame" clause (architecture §12 wins) + the `h2.fod-headline` aria-describedby GATE ARM on the three REAL date arms (the attribute already SHIPS, `FuckOffDate.tsx:388` — only the arm is owed); the register's "a newly visible node joins the audit" was false (the readout line carries neither `.ct-text` nor `.ct-block__item`) — corrected; THEN the REAL catalog capture (date65 / datenc / datesplit + one live-Chrome scrollbar look) before the column half files durably. The a11y gain is for a SIGHTED keyboard-only reader — AT already reaches the crown via the dot's `role="img"` label; do not overstate it in the commit.
@@ -129,8 +129,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    eats the full premium. The token has an ACA **legislative freshness** clause and **no ACA pricing-mode
    clause**.
    ⚑ **Audit corrections 2026-08-02 — three anchors were wrong and the fix shape is NOT Part B's:**
-   (a) `healthOverlay.ts:297` is a **closing brace**, not a consumer; the real seam is `taxOverlay.ts:1703` plus `taxOverlay.ts:1745-1752`
-   → `healthOverlay.ts:271`. (b) `copy.ts:1171` is a Medicare eyebrow; the strings that claim
+   (a) `healthOverlay.ts:298` is a **closing brace**, not a consumer; the real seam is `taxOverlay.ts:1707` plus `taxOverlay.ts:1749-1756`
+   → `healthOverlay.ts:272`. (b) `copy.ts:1171` is a Medicare eyebrow; the strings that claim
    the coupling is priced are **`copy.ts:1007-1010`**. (c) the excess-APTC field moved to
    `aca-last-verified.json:43` (was `:21`) and `scripts/verify-aca-status.ts:40-103` declares and REQUIRES the key
    (`adjacentButSharp` at `:90`, `needProse` at `:169`, since 2026-08-03) — **the gate is presence-only**: nothing checks that the prose models the uncapped clawback.
@@ -143,7 +143,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    block would hold for months over the whole pre-65 population.
    ⚑ **2026-08-03 double-blind — the pricing defect is REAL and confirmed; the near-term copy move as filed
    was WRONG THREE WAYS.** (a) *"stop claiming the coupling is fully priced"* — **the coupling IS fully
-   priced.** A conversion enters `nonSSordinary` → `acaMagi` (`healthOverlay.ts:100-102`) → `slidingScalePtc`
+   priced.** A conversion enters `nonSSordinary` → `acaMagi` (`healthOverlay.ts:101-103`) → `slidingScalePtc`
    → net premium, in both preview arms. The fault is the **closed "Not counted here:" list** omitting the
    held-price modeling choice, while the sibling health-sheet list ONCE named the benchmark — struck 2026-08-03 as FALSE in
    both lists (`copy.ts:1124-1137`); what is genuinely unmodelled about it is the COST TREND (`copy.ts:1139-1141`). (b) *"priced real-flat"* **understates what IS modelled** — `escalateQuote` climbs with the
@@ -151,11 +151,11 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    **do NOT borrow `verdictResidualTail`'s "held flat in today's dollars"** — verbatim it is a NEW false
    claim on this surface. (c) the editable strings are **`copy.ts:1008` and `:1010`** (`983`/`985` are key
    names), and both must move together.
-   ⚑ **The direction claim must be CLIFF-SCOPED, never blanket.** `healthOverlay.ts:223`+`:294` give
+   ⚑ **The direction claim must be CLIFF-SCOPED, never blanket.** `healthOverlay.ts:224`+`:295` give
    under-cliff net = `enrolled − slcsp + contribution`, and `intakeMap.ts:675-676` scale **both** streams by
    the same `escalateQuote` factor — so under the cliff a missing trend is **zero** when E=S
    (`devSeeds.ts:614-615` = 4200/4200) and **reversed (pessimistic)** when E<S, which `copy.ts:227` invites.
-   It bites one-way optimistic **only over the cliff** (`healthOverlay.ts:300-304`, full enrolled premium).
+   It bites one-way optimistic **only over the cliff** (`healthOverlay.ts:301-305`, full enrolled premium).
    The shipped sibling `recDiscAcaSlcsp` (`copy.ts:1924-1925`) hedges bidirectionally on this exact fact and
    `medicare-pricing-build-spec.md:43` bans the false unidirectional. Draft to append to BOTH strings:
    *"One modeling choice: these prices step up with your ages, not with the way plan prices themselves climb
@@ -180,7 +180,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `ai-learning-journey`. See the CI note under "Standing cadences".
    - **A false negation on the health sheet (XS).** `copy.ts:996/960` list *"the benchmark premium itself"*
      under "Not counted here" while the entered benchmark **is** priced (`intakeMap.ts:676` →
-     `healthOverlay.ts:214-224`) — the same false-negation shape O16 fixed on the Roth strings.
+     `healthOverlay.ts:215-225`) — the same false-negation shape O16 fixed on the Roth strings.
    </details>
 
    ⚑ **The open fork is his, and it is not the copy.** The Medicare council's standing law
@@ -243,7 +243,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    state-tax disclosure already renders on both first-answer surfaces (`composeVerdictMedicareResidual`,
    `stateTaxDisclosure.ts:45` → `ConfidenceStatement.tsx:499` + `FuckOffDate.tsx:414`; off-roster arm
    `copy.ts:1191` "State income tax isn't priced yet…"). ✅ **The GATE gap this block named is CLOSED
-   2026-09-11 (Card 4):** the residual still rides `medicarePricedNote` (`healthSheetChrome.ts:458-463` —
+   2026-09-11 (Card 4):** the residual still rides `medicarePricedNote` (`healthSheetChrome.ts:465-470` —
    Medicare-priced AND no health door), but the clause no longer depends on it — `composeVerdictStateNote`
    (`stateTaxDisclosure.ts:86`, home #6) renders it STANDALONE (`.cs-state-note`) on both routes wherever the
    residual is withheld, so EVERY verdict — pre-65 and health-door included, the fuck-off-date audience —
@@ -257,7 +257,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 5. **Smaller, each self-contained** *(all four re-anchored by the 2026-08-02 audit)*:
 
    - **Post-65 non-qualified HSA money is silently forfeited.** ✅ The false *"(conservative, disclosed)"*
-     claim at `healthOverlay.ts:756` is **corrected 2026-08-02** — it now says the direction is safe but
+     claim at `healthOverlay.ts:843` is **corrected 2026-08-02** — it now says the direction is safe but
      the disclosure does **not** exist, and asks whoever adds it to fix the comment in the same change.
      **The disclosure itself is still OWED** (candidate home: the new "What this leaves out" section below).
    - **Account balances have no magnitude sanity rule** while spend and PIA each got one (real range
@@ -286,12 +286,12 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      and the fit gate's panel arm (`vertical-fit.spec.ts:1692-1721`) asserts only that the dialog box fits
      **and** `scrollHeight > clientHeight` — content growth makes the second assertion *more* true.
      ⚑ **The drafted HSA sentence would have DENIED the very forfeit it discloses — do not ship "stays
-     put" / "simply sits."** The balance is not parked, it is **destroyed**: `taxOverlay.ts:1826-1827` sets
+     put" / "simply sits."** The balance is not parked, it is **destroyed**: `taxOverlay.ts:1830-1831` sets
      `buckets = EMPTY_BUCKETS` (hsa: 0) → `simulate.ts:1736` `terminalHsaReal = 0` →
      `objectiveHeadline.ts:58` bequest contribution **$0**. On the exact path the sentence names, the HSA
      adds nothing to the leave-more dollar the reader sees. **The sentence must say the balance is DROPPED.**
-     ⚑ **Sweep BOTH stale comments in the same commit** — `healthOverlay.ts:756-759` (which says
-     fix-or-it-re-rots) **and** `taxOverlay.ts:1817-1819`, which still calls post-65 HSA-as-ordinary-income
+     ⚑ **Sweep BOTH stale comments in the same commit** — `healthOverlay.ts:843-846` (which says
+     fix-or-it-re-rots) **and** `taxOverlay.ts:1821-1823`, which still calls post-65 HSA-as-ordinary-income
      *"a DISCLOSED non-feature, the survivor-SS class"* — the same false claim, in the file that **owns** the
      mechanism.
      ⚑ **The genuine ruling here is scope, not wording** (tone is Caddie-chair under the batched-oracle law):
@@ -299,13 +299,13 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      (rendered `RecommendationSurface.tsx:535-543`) and `controlHealthOmissionsNote` carries it on the
      Healthcare sheet. So: ship the section with only the two genuinely-homeless items (HSA forfeit + LTC),
      or make the panel section NIIT's canonical home and prune the other two — the repo's own
-     one-honest-home-per-fact law (`healthSheetChrome.ts:455`) forbids a silent third.
+     one-honest-home-per-fact law (`healthSheetChrome.ts:462`) forbids a silent third.
      ⚑ **2026-09-04 re-anchor (drifted AGAIN, +62/+101 in a month) + four traps the build must clear.** The
      panel is `src/intake/AssumptionPanel.tsx` — section a opens `:393` / closes `:561`, section b `:564` /
      `:843`, footer `:849`, the disclosures map `:527-559`; the `assumption*` prefix law is
      `copy.ts:1264-1275` (keys `:1276-1417`); the panel fit arm is `vertical-fit.spec.ts:1692-1721`;
-     `sheetShell.css:34-35`/`:94`; the overlays are `src/engine/healthOverlay.ts:755-759` and
-     `src/engine/taxOverlay.ts:1816-1819` (there is no `overlays/` dir). NIIT's two homes confirmed
+     `sheetShell.css:34-35`/`:94`; the overlays are `src/engine/healthOverlay.ts:842-846` and
+     `src/engine/taxOverlay.ts:1820-1823` (there is no `overlays/` dir). NIIT's two homes confirmed
      (`recommendationView.ts:90` unconditional; `copy.ts:1142-1143`) — the scope fork is self-resolving:
      HSA + LTC only. TRAP 1 — `Row` REQUIRES a `seat` from the CLOSED 22-member `AssumptionSeat` union
      (`AssumptionPanel.tsx:108`, `assumptionRegistry.ts:39-61`): a leaves-out row is a hand-rolled
@@ -313,7 +313,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      TRAP 2 — a heading literally "What this leaves out" that names two items is ITSELF a completeness claim
      the constants falsify (`health.ts:72/:112/:120/:135/:316` declare four more OUT-but-disclosed facts) —
      scope the heading or name them. TRAP 3 — the HSA sentence must be true across ALL THREE zeroing
-     branches (`taxOverlay.ts:1825-1831`, `:1845-1850`, `:1973-1976`): on each, EVERY bucket is zeroed
+     branches (`taxOverlay.ts:1829-1835`, `:1849-1854`, `:1977-1980`): on each, EVERY bucket is zeroed
      because the path DEPLETED, so a bequest-framed sentence ("dropped from what's left to your heirs")
      names a state the engine cannot reach; the honest harm is that the plan is COUNTED AS HAVING RUN OUT
      while HSA dollars remain unspent (understated survival), because HSA outflow is qualified-medical-only
@@ -321,7 +321,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `copyGuard.ts:254`; `FALSE_CERTAINTY_INTERNAL` (`copyGuard.ts:147-156`) is universal and
      non-suppressible — "can't run out while the HSA lasts" reds. TRAP 4 — `verify:doc-stats` reds on ANY
      added test until README `:80` + roadmap `:165` move in the same commit. Sweep THREE comment spans (the
-     `healthOverlay.ts:756-758` "a sweep found NO user-facing disclosure" clause becomes false the moment the
+     `healthOverlay.ts:843-845` "a sweep found NO user-facing disclosure" clause becomes false the moment the
      section ships — rewrite the whole `:746-750`). Caddie walk before "shipped".
 
    ⚑ **CLOSED AS PHANTOM — the date-route ACA clock does NOT over-alarm.** The date route simulates all 11
@@ -387,7 +387,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 
 9. **A modest-pre-tax household is refused a withdrawal-order answer the engine could compute.**
     `solveDispatch.ts:91` returns `'no-pretax'` when no *conversion* candidate survives — but a
-    conversion-free candidate survives for **every entry in `SEARCHED_POLICIES`** (`candidates.ts:397-403`),
+    conversion-free candidate survives for **every entry in `SEARCHED_POLICIES`** (`candidates.ts:401-407`),
     and `solve.ts:459-464` already implements that exact partition for the trend-blocked case.
     ⚑ **DOWN-RANKED — the filed fix is UNSHIPPABLE as written.** `solveEntry.ts:167-174` mint-fails the
     roster *before* `solve()` runs, and `rankingStability.ts:224-238` knows only a conversion-**amount**

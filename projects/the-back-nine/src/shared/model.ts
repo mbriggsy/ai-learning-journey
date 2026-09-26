@@ -1912,7 +1912,7 @@ export interface SavedRecommendationV3 {
    *  WHAT S5 MUST DO ABOUT IT, since the type cannot: mint this from the COMMITTED
    *  `SolveAnswer.fingerprint` (`memoryModel.ts` — the committed arm carries it, and since the
    *  2026-09-03 edit-time kill the pending arm does too; produced by the private `fingerprintOf` at
-   *  `:658`) — the identity of the run this record actually describes — and NEVER from a fresh
+   *  `:693`) — the identity of the run this record actually describes — and NEVER from a fresh
    *  recompute taken at save time. The trichotomy's `freshFingerprint` is the OTHER operand,
    *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:703`): what the draft WOULD solve
    *  now. The two are equal at the mint and diverge afterwards, and that divergence IS the mechanism

@@ -147,13 +147,14 @@ export const acaPtc = sourced(
  *  single for tiers 1–4; the frozen top tier deliberately breaks it (750k ≠ 2×500k). */
 export const irmaa = sourced<IrmaaSchedule>(
   {
+    billYear: COVERAGE_YEAR,
     magiLookbackYears: 2,
     tiers: [
-      { singleMagiThreshold: 109_000, mfjMagiThreshold: 218_000, lowerBoundInclusive: false, partBSurchargeMonthly: 81.2, partDSurchargeMonthly: 14.5 },
-      { singleMagiThreshold: 137_000, mfjMagiThreshold: 274_000, lowerBoundInclusive: false, partBSurchargeMonthly: 202.9, partDSurchargeMonthly: 37.5 },
-      { singleMagiThreshold: 171_000, mfjMagiThreshold: 342_000, lowerBoundInclusive: false, partBSurchargeMonthly: 324.6, partDSurchargeMonthly: 60.4 },
-      { singleMagiThreshold: 205_000, mfjMagiThreshold: 410_000, lowerBoundInclusive: false, partBSurchargeMonthly: 446.3, partDSurchargeMonthly: 83.3 },
-      { singleMagiThreshold: 500_000, mfjMagiThreshold: 750_000, lowerBoundInclusive: true, partBSurchargeMonthly: 487.0, partDSurchargeMonthly: 91.0 },
+      { singleMagiThreshold: 109_000, mfjMagiThreshold: 218_000, lowerBoundInclusive: false, lineIndexing: 'cpi-lagged', partBSurchargeMonthly: 81.2, partDSurchargeMonthly: 14.5 },
+      { singleMagiThreshold: 137_000, mfjMagiThreshold: 274_000, lowerBoundInclusive: false, lineIndexing: 'cpi-lagged', partBSurchargeMonthly: 202.9, partDSurchargeMonthly: 37.5 },
+      { singleMagiThreshold: 171_000, mfjMagiThreshold: 342_000, lowerBoundInclusive: false, lineIndexing: 'cpi-lagged', partBSurchargeMonthly: 324.6, partDSurchargeMonthly: 60.4 },
+      { singleMagiThreshold: 205_000, mfjMagiThreshold: 410_000, lowerBoundInclusive: false, lineIndexing: 'cpi-lagged', partBSurchargeMonthly: 446.3, partDSurchargeMonthly: 83.3 },
+      { singleMagiThreshold: 500_000, mfjMagiThreshold: 750_000, lowerBoundInclusive: true, lineIndexing: 'frozen-then-cpi', partBSurchargeMonthly: 487.0, partDSurchargeMonthly: 91.0 },
     ],
     perPerson: true,
     topTierFrozenThrough: 2027,

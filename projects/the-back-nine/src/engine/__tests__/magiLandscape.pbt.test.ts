@@ -18,7 +18,7 @@ import {
   type CommittedYearIncome,
 } from '../magiLandscape'
 import { irmaa } from '@engine/constants'
-import { irmaaTierSurchargeMonthly, IRMAA_ANCHOR_SCALES } from '../healthOverlay'
+import { irmaaScheduleAsCompared, irmaaTierSurchargeMonthly, IRMAA_ANCHOR_SCALES } from '../healthOverlay'
 
 const ctxArb: fc.Arbitrary<CommittedYearIncome> = fc.record({
   rmd: fc.integer({ min: 0, max: 300_000 }),
@@ -63,12 +63,15 @@ describe('magiLandscape — properties', () => {
   })
 
   it('IRMAA headroom soundness: the landed MAGI BILLS the baseline’s tier (judged by the billing walk itself, never the rail helper), and one more dollar always crosses (tight, not merely safe)', () => {
-    const bill = (m: number, c: CommittedYearIncome) => irmaaTierSurchargeMonthly(m, c.filing, irmaa.value, IRMAA_ANCHOR_SCALES)
+    // Each draw's lines are the ones ITS MAGI year meets (ctxArb spans 2023–2036 — the identity frame
+    // and a dozen price-moved ones).
+    const cmp = (c: CommittedYearIncome) => irmaaScheduleAsCompared(irmaa.value, c.calendarYear)
+    const bill = (m: number, c: CommittedYearIncome) => irmaaTierSurchargeMonthly(m, c.filing, cmp(c), IRMAA_ANCHOR_SCALES)
     fc.assert(
       fc.property(ctxArb, (c) => {
         const baseline = irmaaMagiAtFill(c, 0)
-        const step = nextIrmaaStepLine(baseline, c.filing, irmaa.value)
-        const h = irmaaStepFillHeadroom(c, irmaa.value)
+        const step = nextIrmaaStepLine(baseline, c.filing, cmp(c))
+        const h = irmaaStepFillHeadroom(c, cmp(c))
         if (step === null) return h === Number.POSITIVE_INFINITY
         // Sound: the fill holds the step — the BILL at the landed MAGI is the baseline's bill (an inclusive
         // line landed ON would bill the next tier: the 2026-09-26 top-tier defect)…

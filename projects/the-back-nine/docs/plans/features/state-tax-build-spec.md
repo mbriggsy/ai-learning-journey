@@ -147,7 +147,7 @@ status: shipped
    k-derivation comment (`taxOverlay.ts:481-484`) and re-stated in
    [architecture.md §7.1](../../architecture.md).
 9. **Accounting:** state tax folds into the year's tax-paid surface the way federal does
-   (`taxPaidThisYear`, taxOverlay.ts:1801 family) — one lifetime-tax lens, no parallel ledger
+   (`taxPaidThisYear`, taxOverlay.ts:1805 family) — one lifetime-tax lens, no parallel ledger
    in v1.
 
 ## S3 — intake + the R7 seat

@@ -42,6 +42,7 @@ import {
   type MedicareCostTrendTable,
 } from '@engine/constants'
 import type { FilingStatus } from '@shared/model'
+import { cumulativePriceIndex } from '@engine/priceIndex'
 
 /**
  * The per-year ingredients BOTH MAGIs are built from — the tax overlay's converged-gross
@@ -625,12 +626,94 @@ export function buildPartBPricingSchedule(
 // =========================================================================
 
 /**
+ * The IRMAA schedule AS COMPARED against one MAGI year's REAL dollars — the only schedule a tier
+ * reader accepts (the brand: a raw `IrmaaSchedule` does not type-check, and a cast that smuggles one
+ * in fails loud at {@link assertComparedIrmaaSchedule}). Lines are REAL (anchor-year) dollars.
+ */
+export interface ComparedIrmaaSchedule extends IrmaaSchedule {
+  /** The calendar year whose MAGI these lines meet (the bill lands `magiLookbackYears` later). */
+  readonly comparedAtMagiYear: number
+  /** One NOMINAL dollar of that MAGI year, in real dollars — the step between an inclusive line and
+   *  its last safe dollar (a return's MAGI is whole nominal dollars). */
+  readonly oneNominalDollarReal: number
+}
+
+/**
+ * THE PRICE FRAME (the Tier 1 entry, 2026-09-26): the lines a MAGI of `magiCalendarYear` is compared
+ * against, in the engine's REAL dollars. The legal test is nominal MAGI(Y − lookback) against the
+ * nominal line of bill year Y (42 U.S.C. §1395r(i)(4)(B)(i)); in real dollars the matching line is
+ * nominal(Y) ÷ index(Y − lookback) — the MAGI year's price level, NEVER the bill year's (built and
+ * refuted 2026-09-25: that frame lands every line below its anchor).
+ *
+ * nominal(Y), per §1395r(i)(5) (read at the primary source 2026-09-26), from the schedule's pinned
+ * `billYear` lines: × CPI for the 12 months ending August of Y − 1 over the base's (A) — the base
+ * is August of `billYear − 1` for a 'cpi-lagged' tier, August of `topTierFrozenThrough − 1` for the
+ * 'frozen-then-cpi' top tier, which holds its pinned figure through `topTierFrozenThrough` (C) —
+ * rounded to the nearest $1,000 (B) on the SINGLE line; the joint line keeps the pinned ratio (2× for
+ * tiers 1–4, 150 % for the top — (i)(3)(C)(ii)), derived, never re-typed. "The 12 months ending
+ * August of X" is read as the ONE index's `cumulativePriceIndex(X)` (the Trustees' CPI-W path standing
+ * in for CPI-U — never a second index). At and before the index anchor every line is its pinned figure
+ * (the index is 1 there — the pre-anchor clamp).
+ *
+ * Pure: a function of the schedule, the year and the canonical index; reads no clock, no draw.
+ */
+export function irmaaScheduleAsCompared(schedule: IrmaaSchedule, magiCalendarYear: number): ComparedIrmaaSchedule {
+  if (!Number.isInteger(magiCalendarYear)) {
+    throw new Error(
+      `[healthOverlay] irmaaScheduleAsCompared: the MAGI year must be an integer calendar year (got ${magiCalendarYear}) — insight 010`,
+    )
+  }
+  // A cache of this pure function (the bill site asks per path, per year) — never state the answer
+  // depends on; keyed on the schedule OBJECT, so a test's hand-built schedule never reads another's.
+  let byYear = comparedMemo.get(schedule)
+  if (byYear === undefined) comparedMemo.set(schedule, (byYear = new Map()))
+  const cached = byYear.get(magiCalendarYear)
+  if (cached !== undefined) return cached
+  const compared = compareIrmaaSchedule(schedule, magiCalendarYear)
+  byYear.set(magiCalendarYear, compared)
+  return compared
+}
+
+const comparedMemo = new WeakMap<IrmaaSchedule, Map<number, ComparedIrmaaSchedule>>()
+
+function compareIrmaaSchedule(schedule: IrmaaSchedule, magiCalendarYear: number): ComparedIrmaaSchedule {
+  const billYear = magiCalendarYear + schedule.magiLookbackYears
+  const magiLevel = cumulativePriceIndex(magiCalendarYear)
+  const tiers = schedule.tiers.map((tier) => {
+    let factor: number
+    if (tier.lineIndexing === 'frozen-then-cpi') {
+      factor =
+        billYear <= schedule.topTierFrozenThrough
+          ? 1
+          : cumulativePriceIndex(billYear - 1) / cumulativePriceIndex(schedule.topTierFrozenThrough - 1)
+    } else {
+      factor = cumulativePriceIndex(billYear - 1) / cumulativePriceIndex(schedule.billYear - 1)
+    }
+    const nominalSingle = Math.round((tier.singleMagiThreshold * factor) / 1_000) * 1_000
+    const nominalMfj = nominalSingle * (tier.mfjMagiThreshold / tier.singleMagiThreshold)
+    return { ...tier, singleMagiThreshold: nominalSingle / magiLevel, mfjMagiThreshold: nominalMfj / magiLevel }
+  })
+  return { ...schedule, tiers, comparedAtMagiYear: magiCalendarYear, oneNominalDollarReal: 1 / magiLevel }
+}
+
+/** Fail loud on a schedule that was never put through {@link irmaaScheduleAsCompared} — the runtime
+ *  half of the brand (a cast, or a JS caller, would otherwise compare REAL MAGI with un-priced lines). */
+export function assertComparedIrmaaSchedule(schedule: ComparedIrmaaSchedule, where: string): void {
+  if (!Number.isInteger(schedule.comparedAtMagiYear) || !(schedule.oneNominalDollarReal > 0)) {
+    throw new Error(
+      `[healthOverlay] ${where}: the IRMAA schedule must be the one AS COMPARED for a MAGI year (irmaaScheduleAsCompared) — a raw schedule would compare real MAGI with un-priced lines`,
+    )
+  }
+}
+
+/**
  * THE ONE tier predicate — does `tier` apply at this IRMAA-MAGI? `magi > line` for a
  * lower-bound-EXCLUSIVE tier (the statute's "more than" rows, tiers 1–4); `magi >= line` for an
  * INCLUSIVE one (the top tier's "at least"). The billing walk below and every rail that stops
  * "under the step" (magiLandscape.nextIrmaaStepLine) read this, so the bill and the rail can never
- * disagree about which dollar crosses. The lines are INTEGER dollars, so the raw compare is used
- * directly — NO ceil/round "for noise" (insight 012: `ceil(x) > N ⟺ x > N` for integer N).
+ * disagree about which dollar crosses. The raw compare is used directly — NO ceil/round "for noise"
+ * (insight 012): on the compared schedule a line is a nominal whole-dollar line over the MAGI year's
+ * price level, and real MAGI over that same level, so `>` / `>=` in real dollars IS the nominal test.
  */
 export function irmaaTierApplies(magi: number, tier: IrmaaTier, filing: FilingStatus): boolean {
   const line = filing === 'mfj' ? tier.mfjMagiThreshold : tier.singleMagiThreshold
@@ -650,7 +733,9 @@ export function irmaaTierApplies(magi: number, tier: IrmaaTier, filing: FilingSt
 export function irmaaTierSurchargeMonthly(
   magi: number,
   filing: FilingStatus,
-  schedule: IrmaaSchedule,
+  /** The lines AS COMPARED for the MAGI's year ({@link irmaaScheduleAsCompared}) — REQUIRED in that
+   *  form, like `scales`: a raw schedule would compare real MAGI with un-priced lines. */
+  schedule: ComparedIrmaaSchedule,
   /** The per-program trend scales for the billed year (the trend unit's DISAGGREGATION —
    *  council wf_c673339e-257, hawk-honored). REQUIRED, never defaulted: a caller that forgot
    *  the scale would silently price the 2026 surcharge into a 2035 bill (insight 020 — the
@@ -663,6 +748,7 @@ export function irmaaTierSurchargeMonthly(
       `[healthOverlay] irmaaTierSurchargeMonthly: IRMAA-MAGI must be finite (got ${magi}) — a NaN passes every > compare (insight 010)`,
     )
   }
+  assertComparedIrmaaSchedule(schedule, 'irmaaTierSurchargeMonthly')
   assertSurchargeScales(scales, schedule.tiers.length)
   // tiers are ascending (constants.shape pins it); the LAST one that applies is the highest.
   let surchargeMonthly = 0
@@ -699,12 +785,13 @@ export function medicareAnnualCost(
   irmaaMagiForBill: number,
   filing: FilingStatus,
   enrolledCount: number,
-  schedule: IrmaaSchedule,
+  schedule: ComparedIrmaaSchedule,
   partBBaseMonthly: number,
   /** The billed year's surcharge trend scales — the SAME object the caller's readout split
    *  reads (single-producer: base = cost − surcharge stays exact by construction). */
   scales: IrmaaSurchargeScales,
 ): number {
+  assertComparedIrmaaSchedule(schedule, 'medicareAnnualCost')
   if (enrolledCount <= 0) return 0
   const surchargeMonthly = irmaaTierSurchargeMonthly(irmaaMagiForBill, filing, schedule, scales)
   return enrolledCount * (partBBaseMonthly + surchargeMonthly) * 12

@@ -97,7 +97,7 @@ import {
   irmaaStepFillHeadroom,
   type CommittedYearIncome,
 } from '@engine/magiLandscape'
-import { solveAcaFundedGross, fplForHousehold, medicareAnnualCost, acaMagi, irmaaMagi, irmaaTierSurchargeMonthly, buildPartBPricingSchedule, hsaQualifiedSpend, type GrossUpSolution, type MagiComponents } from '@engine/healthOverlay'
+import { solveAcaFundedGross, fplForHousehold, medicareAnnualCost, acaMagi, irmaaMagi, irmaaTierSurchargeMonthly, irmaaScheduleAsCompared, buildPartBPricingSchedule, hsaQualifiedSpend, type GrossUpSolution, type MagiComponents } from '@engine/healthOverlay'
 import { NEVER_DEPLETED, isRetirementState, type DepletionYear, type DrawdownPolicy, type FilingStatus, type RetirementState } from '@shared/model'
 
 // Filing status is shared model vocabulary (the persisted scenario speaks it too). Re-exported
@@ -1510,7 +1510,8 @@ export function runTaxAwareDecumulation(
       if (acaTable !== undefined && t + irmaaLookback < horizon) {
         const billRegime = resolveYear(config.household, householdYears, t + irmaaLookback, medicareOnsetSimYear)
         if (billRegime.medicareEnrolledCount > 0) {
-          ceiling = Math.min(ceiling, irmaaStepFillHeadroom(committed, irmaaSchedule))
+          // THIS year's MAGI meets the lines of the bill two years on, in THIS year's price frame.
+          ceiling = Math.min(ceiling, irmaaStepFillHeadroom(committed, irmaaScheduleAsCompared(irmaaSchedule, committed.calendarYear)))
         }
       }
       bracketFillCeiling = ceiling
@@ -1585,6 +1586,9 @@ export function runTaxAwareDecumulation(
           lag >= 0
             ? resolveYear(config.household, householdYears, lag, medicareOnsetSimYear).filing
             : config.household.filing
+        // THE PRICE FRAME: the bill of calendar year start + t compares the MAGI of start + lag (a seed
+        // year when lag < 0) against that bill year's lines, in the MAGI year's real dollars.
+        const billSchedule = irmaaScheduleAsCompared(irmaaSchedule, config.household.startCalendarYear + lag)
         // Non-null by construction: this block runs under the healthcare gate, and healthcare-on
         // without tax-on threw at entry — exactly the arm the schedule was bound for.
         const partBYear = partBPricingByT![t]!
@@ -1592,7 +1596,7 @@ export function runTaxAwareDecumulation(
           magiForBill,
           filingForBill,
           regime.medicareEnrolledCount,
-          irmaaSchedule,
+          billSchedule,
           partBYear.baseMonthlyReal,
           partBYear.scales,
         )
@@ -1603,7 +1607,7 @@ export function runTaxAwareDecumulation(
         if (healthOut) {
           irmaaSurchargeThisYear =
             regime.medicareEnrolledCount *
-            irmaaTierSurchargeMonthly(magiForBill, filingForBill, irmaaSchedule, partBYear.scales) *
+            irmaaTierSurchargeMonthly(magiForBill, filingForBill, billSchedule, partBYear.scales) *
             12
         }
         // The ask-for-Medicare-extras Σ — the per-person HETEROGENEOUS vector: each living∩

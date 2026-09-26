@@ -15,7 +15,7 @@ sources: [docs/research/pre65-healthcare.md]
 > NAMED abstention per insight 092; its territory is partially covered by the cross-checker's
 > independent KFF/CRFB corroborations, and the build should not lean on secondary color beyond
 > what is cited here). **Consumer:** the `medicareCostTrend` table (the first live `Unsourced` sentinel, now sourced)
-> (`src/engine/constants/health.ts:206`) + the Part-B pricing flip (`PART_B_PRICING_MODE`,
+> (`src/engine/constants/health.ts:207`) + the Part-B pricing flip (`PART_B_PRICING_MODE`,
 > taxOverlay) + the U15 fold's trend-unblock tripwire (solve.ts's conversion partition) + the
 > post-flip demotion-margin calibration (U15 council Q4d) + the TAX path (since 2026-09-24, `be0e1e76`): `cumulativePriceIndex` (`src/engine/priceIndex.ts`) reads `cpiNearTermAvg` / `cpiUltimate` to deflate the frozen §86 Social Security thresholds — and, since 2026-09-25, the NC standard deduction, the OBBBA senior bonus and the HSA catch-up ceiling on the runway — so a new Trustees edition moves those figures for every tax-on household they touch, healthcare on or off (the staleness-clock gap is the register's Tier 4 entry *`medicareCostTrend` now feeds the TAX path (the §86 price index)…*).
 

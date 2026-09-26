@@ -30,6 +30,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   buildPartBPricingSchedule,
+  irmaaScheduleAsCompared,
   irmaaTierSurchargeMonthly,
   IRMAA_ANCHOR_SCALES,
   type IrmaaSurchargeScales,
@@ -222,7 +223,7 @@ describe('buildPartBPricingSchedule — shape (c): deflated V.E2, pre-anchor cla
       expect(() => buildPartBPricingSchedule(negD, anchor, partDAnchor, 2026, 10)).toThrow(/malformed Part D trend row/)
       // The mis-LENGTH scales guard at the consumer (a 4-scale vector against 5 tiers):
       expect(() =>
-        irmaaTierSurchargeMonthly(irmaa.value.tiers[0]!.singleMagiThreshold + 1, 'single', irmaa.value, {
+        irmaaTierSurchargeMonthly(irmaa.value.tiers[0]!.singleMagiThreshold + 1, 'single', irmaaScheduleAsCompared(irmaa.value, 2024), {
           partB: 1,
           partDByTier: [1, 1, 1, 1],
         }),
@@ -296,7 +297,8 @@ describe('buildPartBPricingSchedule — shape (c): deflated V.E2, pre-anchor cla
 })
 
 describe('irmaaTierSurchargeMonthly — the disaggregated trend scales (hawk-honored; DND-012)', () => {
-  const SCHED = irmaa.value
+  // The identity frame (MAGI 2024 → bill 2026: the pinned lines) — this block tests the SCALES, not the price frame.
+  const SCHED = irmaaScheduleAsCompared(irmaa.value, 2024)
   const tiers = SCHED.tiers
   const t0 = tiers[0]! // the first surcharge tier
 

@@ -1691,10 +1691,12 @@ describe('taxOverlay — M6a bracket-fill (the injected tax-aware ceiling)', () 
 
     it('the IRMAA-step rail holds BILLED years at the tier line and releases past the horizon (the t+lookback gate)', () => {
       // Both 66 (Medicare-enrolled), healthcare on, $200k/yr conversions, horizon 4. Years 0–1
-      // record MAGI billed in years 2–3 (inside the horizon) ⇒ the rail caps the fill at the
-      // tier-1 headroom (218,000 − 200,000 = 18,000 — IRMAA-MAGI never touches the deduction,
-      // so this headroom is YEAR-INVARIANT) ⇒ the recorded MAGI sits EXACTLY on the threshold ⇒
-      // the billed years stay tier-0 (strictly-over fires). Years 2–3 bill at 4–5 — OUTSIDE the
+      // record MAGI billed in years 2–3 (inside the horizon) ⇒ the rail caps the fill at the tier-1
+      // line THAT year's MAGI meets (the price frame, 2026-09-26 — §1395r(i)(4)(B)(i) + (i)(5)): MAGI
+      // 2026 meets bill 2028's line 2 × round1000(109,000 × idx(2027)) ÷ idx(2026) = 224,000; MAGI 2027
+      // meets bill 2029's 2 × round1000(109,000 × idx(2028)) ÷ idx(2027) = 232,000 ÷ 1.032 ≈ 224,806.20
+      // (the pinned 218,000 held both at 18,000 — one to two years of CPI short) ⇒ the recorded MAGI sits
+      // EXACTLY on each line ⇒ the billed years stay tier-0 (strictly-over fires). Years 2–3 bill at 4–5 — OUTSIDE the
       // horizon — so only the bracket rail caps them, and THAT rail is year-aware (the sunset
       // unit): year 2 (2028, in-window) — the bonus is live, but at the 211,400 edge it is GONE: each
       // spouse's $6,000 phases separately (Schedule 1-A), and on the deflated figures (the frozen-nominal
@@ -1715,8 +1717,14 @@ describe('taxOverlay — M6a bracket-fill (the injected tax-aware ceiling)', () 
       expect(line35Mfj(246_900, 2028), '2028: the per-person bonus is fully phased out at the edge').toBe(0)
       const bracketOnlyHeadroom2028 = 246_900 - 200_000 // 46,900 (the bonus gone at this AGI)
       const bracketOnlyHeadroom2029 = 246_900 - 200_000 // 46,900 (flat post-sunset stack)
+      const tier1Single = irmaa.value.tiers[0]!.singleMagiThreshold // READ (a gated figure); the algebra is typed here
+      const tier1LineAt = (magiYear: number) =>
+        (2 * Math.round((tier1Single * closedFormIndex(magiYear + 1)) / 1_000) * 1_000) / closedFormIndex(magiYear)
+      expect(tier1LineAt(2026)).toBe(224_000)
+      const irmaaHeadroom2026 = tier1LineAt(2026) - 200_000 // 24,000
+      const irmaaHeadroom2027 = tier1LineAt(2027) - 200_000 // ≈ 24,806.20
       expect(derived.finalBuckets.pretax).toBeCloseTo(
-        1_500_000 - 4 * 200_000 - 2 * 18_000 - bracketOnlyHeadroom2028 - bracketOnlyHeadroom2029,
+        1_500_000 - 4 * 200_000 - irmaaHeadroom2026 - irmaaHeadroom2027 - bracketOnlyHeadroom2028 - bracketOnlyHeadroom2029,
         1,
       )
       // Every billed year stayed at the tier-0 base premium — but the base now TRENDS per calendar
@@ -3814,9 +3822,11 @@ describe('taxOverlay — C3 §3b: per-person Medicare onset + additive override 
     })
 
     it('ADDITIVITY: a working-year Roth conversion lands ON TOP of the override (a planted replacement-write fails)', () => {
-      // history[0] = 230k (override) + 50k (the conversion is computed nonSSordinary) = 280k >
-      // MFJ tier-2 274k ⇒ tier 2. A replacement write reads 230k ⇒ tier 1; max() likewise.
-      const r = run(net3, { ...onset2, irmaaMagiOverride: [230_000, 230_000], conversions: [50_000, 0, 0] }, W66)
+      // history[0] = 230k (override) + 60k (the conversion is computed nonSSordinary) = 290k > the MFJ
+      // tier-2 line MAGI 2026 meets (bill 2028: 2 × round1000(137,000 × 1.032) = 282,000 — the price
+      // frame, 2026-09-26; the fixture's old 50k landed 280k, under it) ⇒ tier 2. A replacement write
+      // reads 230k ⇒ tier 1 (224,000 < 230k < 282,000); max() likewise.
+      const r = run(net3, { ...onset2, irmaaMagiOverride: [230_000, 230_000], conversions: [60_000, 0, 0] }, W66)
       expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnualReal(1, 1, 2028), 4) // year 2 → 2028, ×1, tier 2
     })
   })

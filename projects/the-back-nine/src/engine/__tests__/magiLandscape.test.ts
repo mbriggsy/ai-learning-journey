@@ -24,8 +24,8 @@ import {
   subsidyLossPerDollar,
   type CommittedYearIncome,
 } from '../magiLandscape'
-import { fplForHousehold, irmaaTierSurchargeMonthly, IRMAA_ANCHOR_SCALES } from '../healthOverlay'
-import { acaApplicablePercentage, acaApplicablePercentageEnhanced, irmaa } from '@engine/constants'
+import { fplForHousehold, irmaaScheduleAsCompared, irmaaTierSurchargeMonthly, IRMAA_ANCHOR_SCALES } from '../healthOverlay'
+import { acaApplicablePercentage, acaApplicablePercentageEnhanced, irmaa, medicareCostTrend } from '@engine/constants'
 
 const MFJ = 'mfj' as const
 const SINGLE = 'single' as const
@@ -36,6 +36,17 @@ const SINGLE = 'single' as const
 const TIER1_MFJ = irmaa.value.tiers[0]!.mfjMagiThreshold // 218,000 (2026 CMS)
 const TIER2_MFJ = irmaa.value.tiers[1]!.mfjMagiThreshold // 274,000
 const TIER1_SINGLE = irmaa.value.tiers[0]!.singleMagiThreshold // 109,000
+
+// THE PRICE FRAME (2026-09-26): every tier reader takes the schedule AS COMPARED for its MAGI year.
+// `ID` is the identity frame (MAGI 2024 → bill 2026, the pinned lines) for the readout-geometry arms;
+// a rail fixture passes its OWN year (`cmp(c)`). The ctx default MAGI year 2026 bills in 2028, whose
+// lines sit one year of CPI above the pinned ones — hand-derived here from the READ Trustees rate:
+// tier 1 MFJ = 2 × round1000(109,000 × (1 + r)) = 224,000 at r = 3.2 % (§1395r(i)(5)(A)+(B)).
+const ID = irmaaScheduleAsCompared(irmaa.value, 2024)
+const cmp = (c: CommittedYearIncome) => irmaaScheduleAsCompared(irmaa.value, c.calendarYear)
+const CPI = medicareCostTrend.value.cpiNearTermAvg
+const round1000 = (x: number) => Math.round(x / 1_000) * 1_000
+const TIER1_MFJ_BILL2028 = 2 * round1000(TIER1_SINGLE * (1 + CPI))
 
 const ctx = (over: Partial<CommittedYearIncome>): CommittedYearIncome => ({
   rmd: 0,
@@ -104,39 +115,63 @@ describe('acaCliffFillHeadroom (closed form — the linear full-SS metric)', () 
 })
 
 describe('irmaaStepFillHeadroom (bisection over the Pub-915-coupled metric)', () => {
-  it('hand fixture (85% cap bound): baseline 174,000 → next MFJ threshold (tier 1) → headroom = 40,000 (rmd) + 44,000 = 84,000', () => {
+  it('hand fixture (85% cap bound), MAGI year 2026 → bill 2028: baseline 174,000 → the 2028 tier-1 MFJ line (224,000) → headroom = 40,000 (rmd) + 50,000 = 90,000 (the anchor frame gave 84,000 — the price gap)', () => {
+    expect(TIER1_MFJ_BILL2028).toBe(224_000)
     const c = ctx({ rmd: 40_000, conversion: 100_000, ssBenefit: 40_000 })
-    const h = irmaaStepFillHeadroom(c, irmaa.value)
-    expect(h).toBeCloseTo(84_000, 3)
-    expect(irmaaMagiAtFill(c, h)).toBeCloseTo(TIER1_MFJ, 3) // landing AT the threshold is safe (strictly-over fires)
+    const h = irmaaStepFillHeadroom(c, cmp(c))
+    expect(h).toBeCloseTo(40_000 + (TIER1_MFJ_BILL2028 - 174_000), 3)
+    expect(irmaaMagiAtFill(c, h)).toBeCloseTo(TIER1_MFJ_BILL2028, 3) // landing AT an exclusive line is safe
+  })
+
+  it('a far MAGI year (2030 → bill 2032): the rail stops at round1000(line × index(2031)) ÷ index(2030) — about one year of CPI above the pinned line', () => {
+    const idx = (y: number) => (1 + CPI) ** (y - 2026)
+    const line = (2 * round1000(TIER1_SINGLE * idx(2031))) / idx(2030)
+    const c = ctx({ conversion: 150_000, calendarYear: 2030 })
+    const h = irmaaStepFillHeadroom(c, cmp(c))
+    expect(irmaaMagiAtFill(c, h)).toBeCloseTo(line, 3)
+    expect(line).toBeGreaterThan(TIER1_MFJ)
+  })
+
+  it('the rail REFUSES a schedule compared for another MAGI year (a desynced clock fails loud, never a silent frame)', () => {
+    const c = ctx({ conversion: 150_000, calendarYear: 2030 })
+    expect(() => irmaaStepFillHeadroom(c, ID)).toThrow(/MAGI year/)
   })
 
   it('baseline above the frozen top tier ⇒ +Infinity (no next step — the rail does not bind)', () => {
     const c = ctx({ conversion: 800_000 })
-    expect(irmaaStepFillHeadroom(c, irmaa.value)).toBe(Number.POSITIVE_INFINITY)
+    expect(irmaaStepFillHeadroom(c, cmp(c))).toBe(Number.POSITIVE_INFINITY)
   })
 
   it('the TOP tier’s line is INCLUSIVE ("at least" — §1395r(i)(3)(C)(i)(III)): the rail stops one whole dollar UNDER it, and the landed MAGI bills tier 4, not the 85 % tier', () => {
     // The joint top line typed from the statute (150 % of $500,000 — DND-012), never read from the table.
     const topLine = 1.5 * 500_000
     // SS-free, no RMD: IRMAA-MAGI = conversion + fill, a slope-1 line — baseline 600,000 sits in tier 4.
-    const c = ctx({ conversion: 600_000 })
-    const h = irmaaStepFillHeadroom(c, irmaa.value)
+    // MAGI year 2024 → bill 2026: the identity frame, so the line IS the statute's $750,000.
+    const c = ctx({ conversion: 600_000, calendarYear: 2024 })
+    const h = irmaaStepFillHeadroom(c, cmp(c))
     expect(h).toBeCloseTo(topLine - 1 - 600_000, 3)
     expect(irmaaMagiAtFill(c, h)).toBeLessThanOrEqual(topLine - 1)
     // The bill at the landed MAGI is still tier 4 — the rail's promise ("still under the step") is true.
-    expect(irmaaTierSurchargeMonthly(irmaaMagiAtFill(c, h), MFJ, irmaa.value, IRMAA_ANCHOR_SCALES)).toBe(
-      irmaaTierSurchargeMonthly(irmaaMagiAtFill(c, 0), MFJ, irmaa.value, IRMAA_ANCHOR_SCALES),
+    expect(irmaaTierSurchargeMonthly(irmaaMagiAtFill(c, h), MFJ, cmp(c), IRMAA_ANCHOR_SCALES)).toBe(
+      irmaaTierSurchargeMonthly(irmaaMagiAtFill(c, 0), MFJ, cmp(c), IRMAA_ANCHOR_SCALES),
     )
   })
 
+  it('the RE-INDEXED top line (MAGI 2026 → bill 2028: 1.5 × round1000(500,000 × (1 + r)) = $774,000): the rail stops one NOMINAL dollar under it', () => {
+    const topLine = 1.5 * round1000(500_000 * (1 + CPI))
+    expect(topLine).toBe(774_000)
+    const c = ctx({ conversion: 600_000 })
+    const h = irmaaStepFillHeadroom(c, cmp(c))
+    expect(irmaaMagiAtFill(c, h)).toBeCloseTo(topLine - 1, 3) // index(2026) = 1: one nominal dollar is one real dollar
+  })
+
   it('baseline exactly AT a threshold ⇒ only the free below-RMD zone remains (crossing fires strictly above)', () => {
-    // ord(0) = tier-1 exactly, with no SS: baseline sits exactly on the first MFJ threshold.
-    const c = ctx({ rmd: 18_000, conversion: TIER1_MFJ - 18_000 })
-    const h = irmaaStepFillHeadroom(c, irmaa.value)
+    // ord(0) = the 2028 tier-1 line exactly, with no SS: baseline sits exactly on the first MFJ line.
+    const c = ctx({ rmd: 18_000, conversion: TIER1_MFJ_BILL2028 - 18_000 })
+    const h = irmaaStepFillHeadroom(c, cmp(c))
     // fill below the forced RMD adds no MAGI — the headroom is exactly that free zone.
     expect(h).toBeCloseTo(18_000, 3)
-    expect(irmaaMagiAtFill(c, h)).toBeCloseTo(TIER1_MFJ, 3)
+    expect(irmaaMagiAtFill(c, h)).toBeCloseTo(TIER1_MFJ_BILL2028, 3)
   })
 })
 
@@ -169,37 +204,37 @@ describe('bracketEdgeFillHeadroom (bisection through the deduction stack)', () =
 
 describe('the readout geometry', () => {
   it('nextIrmaaStepLine: an EXCLUSIVE line — at-line returns it (the next dollar crosses), lastSafeMagi IS the line; above it, the next tier; above the top, null', () => {
-    expect(nextIrmaaStepLine(TIER1_MFJ - 1, MFJ, irmaa.value)).toEqual({ threshold: TIER1_MFJ, lastSafeMagi: TIER1_MFJ })
-    expect(nextIrmaaStepLine(TIER1_MFJ, MFJ, irmaa.value)).toEqual({ threshold: TIER1_MFJ, lastSafeMagi: TIER1_MFJ })
-    expect(nextIrmaaStepLine(TIER1_MFJ + 1, MFJ, irmaa.value)?.threshold).toBe(TIER2_MFJ)
-    expect(nextIrmaaStepLine(800_000, MFJ, irmaa.value)).toBeNull()
-    expect(nextIrmaaStepLine(TIER1_SINGLE - 1, SINGLE, irmaa.value)?.threshold).toBe(TIER1_SINGLE)
+    expect(nextIrmaaStepLine(TIER1_MFJ - 1, MFJ, ID)).toEqual({ threshold: TIER1_MFJ, lastSafeMagi: TIER1_MFJ })
+    expect(nextIrmaaStepLine(TIER1_MFJ, MFJ, ID)).toEqual({ threshold: TIER1_MFJ, lastSafeMagi: TIER1_MFJ })
+    expect(nextIrmaaStepLine(TIER1_MFJ + 1, MFJ, ID)?.threshold).toBe(TIER2_MFJ)
+    expect(nextIrmaaStepLine(800_000, MFJ, ID)).toBeNull()
+    expect(nextIrmaaStepLine(TIER1_SINGLE - 1, SINGLE, ID)?.threshold).toBe(TIER1_SINGLE)
   })
 
   it('nextIrmaaStepLine: the INCLUSIVE top line — the threshold stays the statute’s line (the words quote it), lastSafeMagi is one whole dollar under it, and ON the line the step has already fired (null)', () => {
     const topLine = 1.5 * 500_000 // §1395r(i)(3)(C)(ii): 150 % of $500,000 for a joint return (DND-012)
-    expect(nextIrmaaStepLine(600_000, MFJ, irmaa.value)).toEqual({ threshold: topLine, lastSafeMagi: topLine - 1 })
-    expect(nextIrmaaStepLine(topLine - 1, MFJ, irmaa.value)).toEqual({ threshold: topLine, lastSafeMagi: topLine - 1 })
-    expect(nextIrmaaStepLine(topLine, MFJ, irmaa.value)).toBeNull()
-    expect(nextIrmaaStepLine(500_000, SINGLE, irmaa.value)).toBeNull()
+    expect(nextIrmaaStepLine(600_000, MFJ, ID)).toEqual({ threshold: topLine, lastSafeMagi: topLine - 1 })
+    expect(nextIrmaaStepLine(topLine - 1, MFJ, ID)).toEqual({ threshold: topLine, lastSafeMagi: topLine - 1 })
+    expect(nextIrmaaStepLine(topLine, MFJ, ID)).toBeNull()
+    expect(nextIrmaaStepLine(500_000, SINGLE, ID)).toBeNull()
   })
 
   it('nextIrmaaStep toward the inclusive top line: the readout names the statute’s line and prices the crossing ON it (tier 4 → 5: 578.0 − 529.6 = 48.4/mo)', () => {
     const topLine = 1.5 * 500_000
-    const step = nextIrmaaStep(600_000, MFJ, irmaa.value)
+    const step = nextIrmaaStep(600_000, MFJ, ID)
     expect(step?.threshold).toBe(topLine)
     expect(step?.surchargeDeltaMonthlyPerPerson).toBeCloseTo(48.4, 6) // hand-differenced from the CMS 2026 releases
   })
 
   it('nextIrmaaStep prices the crossing through the ONE canonical tier lookup (tier-1 entry 95.7/mo; tier-1→2 delta 144.7/mo)', () => {
-    expect(nextIrmaaStep(100_000, MFJ, irmaa.value)).toEqual({
+    expect(nextIrmaaStep(100_000, MFJ, ID)).toEqual({
       threshold: TIER1_MFJ,
       surchargeDeltaMonthlyPerPerson: 95.7, // tier-1 Part B + Part D surcharges, hand-summed from the CMS releases
     })
-    const step2 = nextIrmaaStep(TIER1_MFJ + 1, MFJ, irmaa.value)
+    const step2 = nextIrmaaStep(TIER1_MFJ + 1, MFJ, ID)
     expect(step2?.threshold).toBe(TIER2_MFJ)
     expect(step2?.surchargeDeltaMonthlyPerPerson).toBeCloseTo(144.7, 6) // tier-2 minus tier-1 combined surcharges, hand-differenced from the CMS releases
-    expect(nextIrmaaStep(800_000, MFJ, irmaa.value)).toBeNull()
+    expect(nextIrmaaStep(800_000, MFJ, ID)).toBeNull()
   })
 
   it('marginalOrdinaryRate reads the band the NEXT dollar lands in (exactly-at-edge → the next band)', () => {

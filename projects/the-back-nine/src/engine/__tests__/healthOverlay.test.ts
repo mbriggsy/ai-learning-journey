@@ -7,13 +7,14 @@ import {
   applicableContributionFraction,
   fplForHousehold,
   irmaaTierSurchargeMonthly,
+  irmaaScheduleAsCompared,
   medicareAnnualCost,
   hsaQualifiedSpend,
   IRMAA_ANCHOR_SCALES,
   type MagiComponents,
   type FundNet,
 } from '@engine/healthOverlay'
-import { acaApplicablePercentage, acaApplicablePercentageEnhanced, irmaa, partB2026 } from '@engine/constants'
+import { acaApplicablePercentage, acaApplicablePercentageEnhanced, irmaa, medicareCostTrend, partB2026 } from '@engine/constants'
 
 // ---------------------------------------------------------------------------
 // P1·U3 · M2 — the two MAGI calculators are PROVABLY DISTINCT.
@@ -279,7 +280,9 @@ describe('healthOverlay — M3 Slice 2: solveAcaFundedGross (bisection + cliff b
 //   5       487.0 + 91.0  = 578.0   (the frozen top tier breaks MFJ = 2×single)
 // ---------------------------------------------------------------------------
 
-const IRMAA = irmaa.value
+// The identity frame (MAGI 2024 → bill 2026: the pinned lines) — these are anchor-year fixtures; the
+// price frame has its own block below (irmaaScheduleAsCompared).
+const IRMAA = irmaaScheduleAsCompared(irmaa.value, 2024)
 const PARTB_BASE = partB2026.value.standardPremiumMonthly // read, never re-typed (copyGuard)
 // Threshold inputs read from the constant (single-source); +1 probes the exclusive boundary.
 const T = IRMAA.tiers
@@ -351,6 +354,79 @@ describe('healthOverlay — M4: irmaaTierSurchargeMonthly (the pure per-person s
   it('R19: a non-finite MAGI fails LOUD before any tier comparison (insight 010 — every compare with NaN is false)', () => {
     expect(() => irmaaTierSurchargeMonthly(NaN, 'single', IRMAA, IRMAA_ANCHOR_SCALES)).toThrow(/finite/)
     expect(() => irmaaTierSurchargeMonthly(Infinity, 'mfj', IRMAA, IRMAA_ANCHOR_SCALES)).toThrow(/finite/)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The IRMAA lines AS COMPARED (the price-frame Tier 1, 2026-09-26). The legal test is nominal MAGI(Y−2)
+// against nominal line(Y) (§1395r(i)(4)(B)(i)); the engine's MAGI is REAL, so the matching real line is
+// nominal(Y) ÷ index(Y − 2). nominal(Y) per §1395r(i)(5), read at the primary source 2026-09-26:
+//   tiers 1–4 (A): × CPI for the 12 months ending August of Y−1 (the 2026 lines carry Aug 2025), (B)
+//     rounded to the nearest $1,000, joint = 2× (i)(3)(C)(ii);
+//   top (C): frozen through 2027, then × CPI for August of Y−1 over August 2026, rounded, joint 150 %.
+// Hand oracle: the engine's ONE index is the Trustees' near-term CPI compounded from the 2026 anchor
+// (1 at and before it — priceIndex.ts), so index(2026 + n) = (1 + r)^n inside the printed table; the
+// rate is READ (never re-typed), the line algebra is typed here.
+// ---------------------------------------------------------------------------
+describe('the IRMAA lines AS COMPARED for a bill year (irmaaScheduleAsCompared)', () => {
+  const r = medicareCostTrend.value.cpiNearTermAvg
+  const idx = (y: number) => (y <= 2026 ? 1 : (1 + r) ** (y - 2026))
+  const round1000 = (x: number) => Math.round(x / 1_000) * 1_000
+  const RAW = irmaa.value
+
+  it('bill years 2026 and 2027 (MAGI 2024 / 2025): every line is the pinned 2026 line — the identity frame', () => {
+    for (const magiYear of [2024, 2025]) {
+      const c = irmaaScheduleAsCompared(RAW, magiYear)
+      expect(c.tiers.map((t) => t.singleMagiThreshold)).toEqual(RAW.tiers.map((t) => t.singleMagiThreshold))
+      expect(c.tiers.map((t) => t.mfjMagiThreshold)).toEqual(RAW.tiers.map((t) => t.mfjMagiThreshold))
+    }
+  })
+
+  it('bill year 2028 (MAGI 2026): tier 1 → round1000(109,000 × index(2027)) = $112,000 single, $224,000 MFJ; the top re-indexes from its August-2026 base → $516,000 single, $774,000 MFJ (150 %)', () => {
+    const c = irmaaScheduleAsCompared(RAW, 2026)
+    const tier1Single = round1000(singleThresh(0) * idx(2027)) / idx(2026)
+    expect(tier1Single).toBe(112_000) // the hand figure at the Trustees' 3.2 % (index(2026) = 1)
+    expect(c.tiers[0]!.singleMagiThreshold).toBeCloseTo(tier1Single, 6)
+    expect(c.tiers[0]!.mfjMagiThreshold).toBeCloseTo(2 * tier1Single, 6)
+    const topSingle = round1000(500_000 * idx(2027)) / idx(2026)
+    expect(topSingle).toBe(516_000)
+    expect(c.tiers[4]!.singleMagiThreshold).toBeCloseTo(topSingle, 6)
+    expect(c.tiers[4]!.mfjMagiThreshold).toBeCloseTo(1.5 * topSingle, 6)
+    expect(c.tiers[4]!.mfjMagiThreshold).toBeCloseTo(774_000, 6) // the review's "~$774k real from 2028"
+  })
+
+  it('a far bill year (2034, MAGI 2032): each line is round1000(anchor × index(2033)) ÷ index(2032) — about ONE year of CPI above the anchor, never the bill year’s frame', () => {
+    const c = irmaaScheduleAsCompared(RAW, 2032)
+    RAW.tiers.forEach((t, k) => {
+      const nominalSingle = round1000(t.singleMagiThreshold * idx(2033))
+      expect(c.tiers[k]!.singleMagiThreshold, `tier ${k} single`).toBeCloseTo(nominalSingle / idx(2032), 6)
+      // ⚑ NEGATIVE (the refuted 2026-09-25 build): deflating by the BILL year's index lands BELOW the anchor.
+      expect(c.tiers[k]!.singleMagiThreshold).toBeGreaterThan(nominalSingle / idx(2034))
+    })
+  })
+
+  it('the top tier stays FROZEN nominal through 2027: bill 2027 (MAGI 2025) still compares $750,000 MFJ', () => {
+    expect(irmaaScheduleAsCompared(RAW, 2025).tiers[4]!.mfjMagiThreshold).toBe(1.5 * 500_000)
+  })
+
+  it('the compared schedule carries its MAGI year and ONE nominal dollar in real terms (the inclusive line’s last safe dollar is one NOMINAL dollar under it)', () => {
+    const c = irmaaScheduleAsCompared(RAW, 2030)
+    expect(c.comparedAtMagiYear).toBe(2030)
+    expect(c.oneNominalDollarReal).toBeCloseTo(1 / idx(2030), 12)
+  })
+
+  it('the bill through the compared schedule: $220,000 MFJ of 2026 MAGI owes NOTHING in 2028 (the real line is $224,000), where the anchor lines billed tier 1', () => {
+    expect(irmaaTierSurchargeMonthly(220_000, 'mfj', irmaaScheduleAsCompared(RAW, 2026), IRMAA_ANCHOR_SCALES)).toBe(0)
+    expect(irmaaTierSurchargeMonthly(220_000, 'mfj', irmaaScheduleAsCompared(RAW, 2024), IRMAA_ANCHOR_SCALES)).toBeCloseTo(95.7, 6)
+  })
+
+  it('a non-integer MAGI year fails LOUD (never a silent identity)', () => {
+    expect(() => irmaaScheduleAsCompared(RAW, 2026.5)).toThrow(/integer/)
+  })
+
+  it('the RAW schedule is not a compared one — the type refuses it, and a cast that smuggles it in fails LOUD at runtime', () => {
+    // @ts-expect-error — IrmaaSchedule lacks the compared brand (a reader that forgot the price frame does not compile)
+    expect(() => irmaaTierSurchargeMonthly(1, 'mfj', RAW, IRMAA_ANCHOR_SCALES)).toThrow(/AS COMPARED/)
   })
 })
 

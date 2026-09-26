@@ -336,6 +336,12 @@ export interface IrmaaTier {
    *  top reads "At least $500,000" (true — the line dollar owes the top tier). Declared per tier,
    *  never inferred from a tier's index. */
   readonly lowerBoundInclusive: boolean
+  /** How the line moves with prices after the schedule's bill year (§1395r(i)(5)): 'cpi-lagged' —
+   *  × CPI-U for the 12 months ending August of the year BEFORE the bill year (subparagraph (A);
+   *  tiers 1–4); 'frozen-then-cpi' — held nominal through `topTierFrozenThrough`, then the same
+   *  lagged CPI over its August-of-(frozenThrough − 1) base (subparagraph (C); the top tier). Both
+   *  round to the nearest $1,000 (B). Read ONLY by `healthOverlay.irmaaScheduleAsCompared`. */
+  readonly lineIndexing: 'cpi-lagged' | 'frozen-then-cpi'
   /** Monthly Part B IRMAA surcharge (on top of the standard premium), per person. */
   readonly partBSurchargeMonthly: number
   /** Monthly Part D IRMAA surcharge, per person. */
@@ -348,6 +354,9 @@ export interface IrmaaTier {
  *  The standard Part B premium lives in `partB2026` (single-sourced); per-tier TOTALS
  *  are derived (base + surcharge), never re-typed here. */
 export interface IrmaaSchedule {
+  /** The BILL year these lines are published for (the nominal anchor every later year's line is
+   *  indexed from — `healthOverlay.irmaaScheduleAsCompared`). */
+  readonly billYear: number
   /** Years of MAGI lookback (2 — 2026 IRMAA keys off 2024 MAGI). */
   readonly magiLookbackYears: number
   /** Surcharge tiers, ascending; selection = the highest tier that applies (`lowerBoundInclusive`). */

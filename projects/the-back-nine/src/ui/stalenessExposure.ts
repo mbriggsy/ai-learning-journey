@@ -10,7 +10,7 @@
  *
  * THE LAW THIS FILE OBEYS (insights 080/081/088): every read below comes from a BUILT PARAMS
  * OUTPUT. Never an age, never a geography, never a re-derivation of a builder's inputs.
- *   · Insight 080's scar (`healthSheetChrome.ts:438-443`): a predicate keyed on "every member
+ *   · Insight 080's scar (`healthSheetChrome.ts:445-450`): a predicate keyed on "every member
  *     65+" equalled the pricing complement only until `dateSearch` became a SECOND producer of
  *     `healthcareEnabled` — then it silently lied.
  *   · Insight 081: a re-derivation forks from its producer at the producer's first early

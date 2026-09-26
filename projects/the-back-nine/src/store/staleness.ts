@@ -74,7 +74,7 @@
  * line off the OR-collapse of all seven healthcare clocks, so an all-65+ household — which
  * takes `buildOverlay`'s Medicare-only branch (`intakeMap.ts:681-684`), ships NO
  * `enrolledPremium`, and can therefore NEVER open the engine's ACA gate
- * (`taxOverlay.ts:1710-1715`: `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0`) —
+ * (`taxOverlay.ts:1714-1719`: `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0`) —
  * was told "Health-coverage rules have been updated" on a moved `acaStatus` stamp. They price
  * ZERO ACA. That is insight 101 inverted: the warning described its poster child, not the
  * predicate's extension. And it was never only a copy bug — `healthcare.moved` fed `rulesMoved`,
@@ -183,7 +183,7 @@ export type HealthcareFamily = 'aca' | 'medicare'
  *     invisible to exactly the pre-65 marketplace planner it hits hardest.
  *   · `aca-status` / `fpl-guideline` — the marketplace rulebook (`acaEnhancedSubsidyStatus`,
  *     `federalPovertyGuidelines`), priced only where the engine's per-year ACA gate can open
- *     (`taxOverlay.ts:1710-1715`).
+ *     (`taxOverlay.ts:1714-1719`).
  *   · `irmaa-freeze` — dates the IRMAA schedule, which IS engine-read on every healthcare-priced
  *     run (see the header's ruling). Medicare, exactly like `part-b`.
  *   · `part-b` / `part-b-trend` / `extras-typical` — the Medicare cost figures.
@@ -484,7 +484,7 @@ export function deriveStaleness(
   // it and no field of this stamp can describe a change to its answer. WHICH family a clock
   // answers to is {@link HEALTHCARE_CLOCK_FAMILIES}'s job — there is no second opinion here.
   //   · ACA family → `exposure.aca`. The engine's per-year ACA gate is
-  //     `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0` (`taxOverlay.ts:1710-1715`);
+  //     `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0` (`taxOverlay.ts:1714-1719`);
   //     the Medicare-only branch ships NO quote pair, so it can never open — an all-65+
   //     household prices ZERO ACA and must stay SILENT on it.
   //   · Medicare family → `exposure.medicare`.

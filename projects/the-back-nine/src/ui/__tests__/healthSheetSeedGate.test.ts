@@ -39,7 +39,7 @@ const readoutOf = (name: 'retired' | 'healthnc' | 'healthgap'): HealthReadout =>
 const factOf = (view: ReturnType<typeof composeHealthSheet>, id: string) => view.facts.find((f) => f.id === id)
 
 describe('the Medicare premium card on the shipped seeds, through the real engine', () => {
-  it('`retired` (66/65): everyone enrolled from the first billed year → the era IS the anchor → the pre-build sentence, byte-identical (base 4,870 → 4,900; MAGI 90,129 → 90,100; headroom 127,871 → 127,900; the two-of-you step)', () => {
+  it('`retired` (66/65): everyone enrolled from the first billed year → the era IS the anchor → the pre-build sentence (base 4,870 → 4,900; MAGI 90,129 → 90,100; the 2026-MAGI line 224,000 [2 × round1000(109,000 × 1.032) — the 2028 bill’s, in 2026 dollars]; headroom 133,871 → 133,900; the two-of-you step)', () => {
     const readout = readoutOf('retired')
     expect(medicareEraYear(readout, 2)).toBe(medicareAnchor(readout))
     const view = composeHealthSheet(readout, DEV_SEEDS.retired, FRESH)
@@ -53,11 +53,11 @@ describe('the Medicare premium card on the shipped seeds, through the real engin
       id: 'step',
       eyebrow: copy.healthFactStep,
       figure: slots.healthFigStepAdd('2,300'),
-      lines: [slots.irmaaStepNext('218,000', '90,100', '127,900', '1,100', '2,300', true)],
+      lines: [slots.irmaaStepNext('224,000', '90,100', '133,900', '1,100', '2,300', true)],
     })
   })
 
-  it('`healthnc` (61/59): the anchor is year 5 with ONE enrolled (2,703), the era is year 7 with two (5,765) → the loud figure 5,800, the on-ramp 2,700 over two years, neither surcharged, the extras spoken per quoted year (5,856 → 5,900 once both are on it; 2,928 → 2,900 while one is) — and the step card keeps the anchor (MAGI 46,078 → the each-of-you arm; 46,020 before the NC standard deduction was deflated per sim year, 2026-09-25)', () => {
+  it('`healthnc` (61/59): the anchor is year 5 with ONE enrolled (2,703), the era is year 7 with two (5,765) → the loud figure 5,800, the on-ramp 2,700 over two years, neither surcharged, the extras spoken per quoted year (5,856 → 5,900 once both are on it; 2,928 → 2,900 while one is) — and the step card keeps the anchor (MAGI 46,078 → the each-of-you arm; 46,020 before the NC standard deduction was deflated per sim year, 2026-09-25) against the line its MAGI year (2030) meets: 2 × round1000(109,000 × 1.032⁵) ÷ 1.032⁴ = 225,697 → 225,700; headroom 179,619 → 179,600', () => {
     const readout = readoutOf('healthnc')
     const anchor = medicareAnchor(readout)
     const era = medicareEraYear(readout, 2)
@@ -83,7 +83,7 @@ describe('the Medicare premium card on the shipped seeds, through the real engin
       id: 'step',
       eyebrow: copy.healthFactStep,
       figure: slots.healthFigStepAddEach('1,100'),
-      lines: [slots.irmaaStepNext('218,000', '46,100', '171,900', '1,100', '2,300', false)],
+      lines: [slots.irmaaStepNext('225,700', '46,100', '179,600', '1,100', '2,300', false)],
     })
   })
 

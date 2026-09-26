@@ -101,7 +101,7 @@ status: shipped
   the consumer, never stored; the report's own "1.7% real" is GDP-deflated and would overstate
   CPI-real by ~0.35pp, the packet's named trap), `vintage`, `directionalUntilPinned: false`,
   `reportEdition`, and `pinTo` the 2026 Trustees Report Tables V.E2/V.E4/II.D1/III.B12/§III.D.
-  The pure resolver is `buildPartBPricingSchedule` (`healthOverlay.ts:507`), returning one
+  The pure resolver is `buildPartBPricingSchedule` (`healthOverlay.ts:508`), returning one
   `PartBYearPricing {baseMonthlyReal, scales}` per sim year: table years deflate nominal→real
   horizon-matched, pre-anchor years clamp to the anchor, post-edge rides the ultimate escalator
   off the edge's own real value (C0 by construction). It walks iteratively (cumulative multiplies,
@@ -215,7 +215,7 @@ that across the 2030 boundary** (the tiers jump by DIFFERENT ratios — tier 1 �
 2.46× — while the base jumps 1.77×; V.E4 footnote 3 names the new base-premium percentage). So the
 engine consumes **V.E4 verbatim per tier**: `partDIrmaa` joins `medicareCostTrend` (2027–2035 rows;
 the 2026 anchor stays in `irmaa.tiers`, one home, identity-pinned), `IrmaaSurchargeScales.partD`
-became `partDByTier` (`healthOverlay.ts:440-445` — a scalar is FORBIDDEN, it cannot represent the
+became `partDByTier` (`healthOverlay.ts:441-446` — a scalar is FORBIDDEN, it cannot represent the
 2030 divergence), the resolver deflates V.E4 by the same horizon-matched deflator and HOLDS the
 2035 real level beyond the printed edge (an unsourced tail is never extrapolated as sourced; the
 hold's optimistic direction is disclosed in the constant note and the residual copy), and the

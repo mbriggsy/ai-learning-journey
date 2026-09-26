@@ -50,6 +50,11 @@ export const BANDS = {
  *  metadata measures distance to. */
 export const DOLLAR_STEP = 10
 
+/** The spend solve's grid ($/month, real) — `spendSolve.ts` searches ONLY grid spends, so the
+ *  figure the sentence quotes is exactly the spend a run verified (the formatter asserts it is on
+ *  the grid and never re-rounds). Council wf_faa1af2d-052 (2026-09-26). */
+export const SPEND_SOLVE_STEP = 100
+
 /** Quantize a survival-type statistic to the coarse grid BEFORE any band-edge decision —
  *  the cross-engine screenshot-reproduction idiom. EXPORTED for the date-search (C3 §3c):
  *  the date is DEFINED as "the earliest offset at which the headline reads on-track-or-

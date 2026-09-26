@@ -72,10 +72,11 @@ function seniorBonusWindow(): { readonly from: number; readonly through: number 
 }
 
 /** The OBBBA senior bonus for a filing status, count of 65+ filers, MAGI, and CALENDAR
- *  YEAR: the base (`perPerson65Plus` × count) reduced linearly at `phaseOutRatePerDollar`
- *  above the filing-status phase-out start, floored at 0. The linear form is authoritative;
- *  the count-specific `fullyGoneAbove` ceilings are consistent with it (and 0 below the
- *  start). THE SUNSET (the U13-filed engine unit, council-ratified 2026-07-09): the bonus
+ *  YEAR: EACH qualifying person's `perPerson65Plus` reduced linearly at `phaseOutRatePerDollar`
+ *  above the filing-status phase-out start, floored at 0, then × the count (Schedule 1-A lines
+ *  32–37 — a both-65+ couple's slope is 0.12 per MAGI dollar, not 0.06). The dollar figures are
+ *  statute-frozen, so both deflate by the sim year's price index. The linear form is authoritative;
+ *  the derived `fullyGoneAbove` ceilings are consistent with it (and 0 below the start). THE SUNSET (the U13-filed engine unit, council-ratified 2026-07-09): the bonus
  *  prices ONLY in calendar tax years [effectiveFrom .. sunsetAfter] = [2025 .. 2028] —
  *  outside the window it is 0, so a 2029+ sim year stops crediting the expired deduction
  *  (the pre-unit engine credited it in EVERY year — calm-but-wrong optimistic, insight 074). */
@@ -89,9 +90,19 @@ function seniorBonusFor(filing: FilingStatus, count65: number, magi: number, cal
   const { from, through } = seniorBonusWindow()
   if (calendarYear < from || calendarYear > through) return 0
   const sb = seniorBonus.value
-  const base = sb.perPerson65Plus * count65
-  const start = filing === 'mfj' ? sb.phaseOutStart.mfj : sb.phaseOutStart.single
-  return Math.max(0, base - sb.phaseOutRatePerDollar * Math.max(0, magi - start))
+  // Both DOLLAR figures are nominal and the statute carries no cost-of-living clause (P.L. 119-21),
+  // so in real dollars each shrinks by the price level inside the window — the amount AND the
+  // phase-out start, by the ONE index (identity at the anchor year; 2025 is pre-anchor, also 1).
+  // The 6 % phase-out RATE is a rate, never deflated (the frozen-nominal Tier 0, 2026-09-25).
+  const index = cumulativePriceIndex(calendarYear)
+  const start = (filing === 'mfj' ? sb.phaseOutStart.mfj : sb.phaseOutStart.single) / index
+  // PER PERSON, then counted (IRS Schedule 1-A Part V, lines 32–37; IRC §151(d)(5)(C)(iii) reduces
+  // "the $6,000 amount", the per-individual figure): ONE reduced amount — $6,000 less 6 % of MAGI over
+  // the start, floored at 0 — entered once for EACH qualifying spouse. A both-65+ couple therefore
+  // loses the bonus at $250k like a one-65+ couple, never $350k: reducing a pooled $12,000 once (the
+  // pre-2026-09-25 engine) over-granted up to $6,000 of deduction across the band — the rosy direction.
+  const perPerson = Math.max(0, sb.perPerson65Plus / index - sb.phaseOutRatePerDollar * Math.max(0, magi - start))
+  return perPerson * count65
 }
 
 /** The full M3 deduction stack: standard deduction + age-65 addition × (65+ filers) +

@@ -130,7 +130,7 @@ export interface SelectionSelected {
 /** The refusal shape (§S4.5): a fail-closed structured withheld state the solve path routes the
  *  demotion-axis refusal into — never an uncaught worker throw.
  *  ⚠️ The "UNREACHABLE live (conversions stay trend-blocked)" premise this comment used to assert
- *  EXPIRED 2026-07-19: `PART_B_PRICING_MODE` is `'trended'` (`taxOverlay.ts:925`) and the trend
+ *  EXPIRED 2026-07-19: `PART_B_PRICING_MODE` is `'trended'` (`taxOverlay.ts:930`) and the trend
  *  constant is sourced, so conversion candidates rank live. BOTH goals route here as of 2026-08-03 —
  *  `leave-more` used to fall through to `gradeCalibration`'s plain throw (the Tier-0 crash) and no
  *  longer does. `detail` names the refused axis, so it is never a shared literal. */

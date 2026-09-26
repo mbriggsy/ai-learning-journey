@@ -64,7 +64,7 @@ export interface SolveMintFailed {
 /** THE HARNESS CANNOT WITNESS THIS HOUSEHOLD (2026-09-04). Ranking stability's perturbation law needs
  *  its ONE +$1,000 step on the first anchored conversion candidate to MOVE that candidate's own
  *  recorded decision surface (insight 029's presence companion), and on this household it does not:
- *  both arms clamp to the same post-RMD headroom (`min(planned, pretax − rmd)`, `taxOverlay.ts:1453`
+ *  both arms clamp to the same post-RMD headroom (`min(planned, pretax − rmd)`, `taxOverlay.ts:1458`
  *  — a pretax-0 world), or the household is exhausted inside the conversion window so every recorded
  *  vector is zero whatever is converted (`?seed=failing`: a $60k IRA under a ~$72k year-one draw
  *  converts $50,268 and its $51,268 variant UNCLAMPED and still moves nothing — every path depletes

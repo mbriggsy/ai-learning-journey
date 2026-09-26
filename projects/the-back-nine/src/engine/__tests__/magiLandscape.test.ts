@@ -134,12 +134,17 @@ describe('bracketEdgeFillHeadroom (bisection through the deduction stack)', () =
     expect(taxableIncomeAtFill(c, h)).toBeCloseTo(12_400, 3)
   })
 
-  it('phase-out-band MFJ hand fixture: taxable = 1.06·AGI − 56,500 in the senior-bonus band ⇒ AGI* = 267,900/1.06, headroom = AGI* − 160,000', () => {
+  it('phase-out-band MFJ hand fixture: taxable = 1.12·AGI − 65,500 in the senior-bonus band (EACH spouse’s $6,000 phases separately — Schedule 1-A) ⇒ AGI* = 276,900/1.12, headroom = AGI* − 160,000', () => {
     const c = ctx({ ongoingTaxable: 160_000, count65: 2 })
-    // baseline: D(160,000) = 35,500 + (12,000 − 0.06×10,000) = 46,900 → taxable 113,100 → next edge 211,400.
-    expect(taxableIncomeAtFill(c, 0)).toBe(113_100)
+    // IRS Schedule 1-A lines 32–37: line 35 = 6,000 − 0.06 × (MAGI − 150,000), entered once PER spouse.
+    // baseline: D(160,000) = 35,500 + 2 × (6,000 − 0.06×10,000) = 46,300 → taxable 113,700 → next edge 211,400.
+    // In the band: taxable = AGI − 35,500 − 2(6,000 − 0.06(AGI − 150,000)) = 1.12·AGI − 65,500.
+    // (Until 2026-09-25 the pooled one-$12,000 reading: 1.06·AGI − 56,500, AGI* = 267,900/1.06 — rosy.)
+    expect(taxableIncomeAtFill(c, 0)).toBe(113_700)
+    const agiStar = 276_900 / 1.12 // ≈ 247,232.14
+    expect(6_000 - 0.06 * (agiStar - 150_000), 'each spouse’s bonus is still live at the edge (the band algebra holds)').toBeGreaterThan(0)
     const h = bracketEdgeFillHeadroom(c)
-    expect(h).toBeCloseTo(267_900 / 1.06 - 160_000, 2)
+    expect(h).toBeCloseTo(agiStar - 160_000, 2)
     expect(taxableIncomeAtFill(c, h)).toBeCloseTo(211_400, 2)
   })
 

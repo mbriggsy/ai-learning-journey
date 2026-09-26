@@ -72,9 +72,9 @@
  * A bare vintage compare answers "did the TABLE move?", never "did THIS household's answer
  * move?". Shipped defect (pilot-verified 2026-07-25): `reentryChrome.ts` pushed one healthcare
  * line off the OR-collapse of all seven healthcare clocks, so an all-65+ household — which
- * takes `buildOverlay`'s Medicare-only branch (`intakeMap.ts:655-658`), ships NO
+ * takes `buildOverlay`'s Medicare-only branch (`intakeMap.ts:681-684`), ships NO
  * `enrolledPremium`, and can therefore NEVER open the engine's ACA gate
- * (`taxOverlay.ts:1705-1710`: `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0`) —
+ * (`taxOverlay.ts:1710-1715`: `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0`) —
  * was told "Health-coverage rules have been updated" on a moved `acaStatus` stamp. They price
  * ZERO ACA. That is insight 101 inverted: the warning described its poster child, not the
  * predicate's extension. And it was never only a copy bug — `healthcare.moved` fed `rulesMoved`,
@@ -100,7 +100,7 @@
  * WHAT THE WITHDRAWN HEURISTIC WOULD HAVE SHIPPED — a SILENT STALE, built while fixing an
  * over-alarm. It bucketed `irmaa-freeze` to the aggregate because `irmaaTopTierFrozenThrough`
  * has no engine reader. But `irmaa.value` IS engine-read (simulate.ts:859; solveAnchor.ts:179,181;
- * taxOverlay.ts:1113 — where the whole tier ladder feeds `buildPartBPricingSchedule`), and
+ * taxOverlay.ts:1118 — where the whole tier ladder feeds `buildPartBPricingSchedule`), and
  * `consumedConstants.ts:112` puts the ENTIRE `health.` family in the consumed set on
  * `healthcareEnabled === true`. This repo's own tripwire
  * (`irmaaTopTierReindex.tripwire.test.ts:30-41`) prescribes that the 2028 re-index "bump the
@@ -121,7 +121,7 @@
  * `irmaa-freeze` names the Medicare line for EVERY healthcare-priced household, including one
  * whose MAGI never reaches the first IRMAA tier and who therefore pays no surcharge either way.
  * That is deliberate and it is NOT the withdrawn heuristic returning. The run reads the IRMAA
- * schedule (`taxOverlay.ts:1113`) whenever Medicare is priced — that is the exposure fact, and it
+ * schedule (`taxOverlay.ts:1118`) whenever Medicare is priced — that is the exposure fact, and it
  * is decidable at this seam. Whether the tiers bite depends on where a stochastic MAGI path
  * lands across the whole horizon (RMDs grow, a conversion spikes it), which is not a property of
  * the household's inputs at all and cannot be read from any builder's output. Gating on it would
@@ -183,7 +183,7 @@ export type HealthcareFamily = 'aca' | 'medicare'
  *     invisible to exactly the pre-65 marketplace planner it hits hardest.
  *   · `aca-status` / `fpl-guideline` — the marketplace rulebook (`acaEnhancedSubsidyStatus`,
  *     `federalPovertyGuidelines`), priced only where the engine's per-year ACA gate can open
- *     (`taxOverlay.ts:1705-1710`).
+ *     (`taxOverlay.ts:1710-1715`).
  *   · `irmaa-freeze` — dates the IRMAA schedule, which IS engine-read on every healthcare-priced
  *     run (see the header's ruling). Medicare, exactly like `part-b`.
  *   · `part-b` / `part-b-trend` / `extras-typical` — the Medicare cost figures.
@@ -224,9 +224,9 @@ export type ExposureRead = 'priced' | 'unpriced' | 'unknown'
 export interface StalenessExposure {
   /** Did the run BUILD a tax overlay at all (`overlayBuiltForRun` — the route's own builder's
    *  `params.overlay !== undefined`)? This is the FEDERAL tax family's gate: `taxEnabled: true`
-   *  is hardcoded on every built overlay (`intakeMap.ts:625`) and `consumedConstants.ts:104`
+   *  is hardcoded on every built overlay (`intakeMap.ts:651`) and `consumedConstants.ts:104`
    *  gates the whole `tax.` family on exactly that flag — so a run that took `buildOverlay`'s
-   *  degenerate early return (`intakeMap.ts:550-555`: no accounts, no premium, no income —
+   *  degenerate early return (`intakeMap.ts:576-581`: no accounts, no premium, no income —
    *  reachable today by a save-ready Social-Security-only household) re-prices NO tax constant
    *  and is byte-identical under any tax vintage.
    *
@@ -255,7 +255,7 @@ export interface StalenessExposure {
    *  owner actually contribute (`contributionsPricedForRun`)? The date route is NOT sufficient
    *  on its own: `dateSearch.ts:230` forces `accumulation` onto EVERY candidate, but it
    *  truncates the BASE overlay's streams, and `contributionStreamsFor` returns `{}` for a
-   *  non-working owner (`intakeMap.ts:439-442`) — so a date-route household whose accounts all
+   *  non-working owner (`intakeMap.ts:465-468`) — so a date-route household whose accounts all
    *  belong to the retired spouse carries EMPTY streams on every candidate and reads no
    *  contribution limit (`consumedConstants.ts:124` gates the `contributions.` family on the
    *  construct's presence; the limits' only pricing read is `annualAdditionsCeilingFor`'s
@@ -440,7 +440,7 @@ export function deriveStaleness(
   // `taxEnabled: true` is hardcoded on every built overlay. The first half is true; the
   // conclusion was not — a household that builds NO overlay reaches a verdict all the same
   // (`buildParams` returns params with `initialPortfolio: 0` and the inert `stockWeight ?? 0`,
-  // `intakeMap.ts:679-688`), so "no overlay ⇒ nothing to be stale about" was false.
+  // `intakeMap.ts:705-714`), so "no overlay ⇒ nothing to be stale about" was false.
   const currentTax = taxVintageStamp()
   const savedTax = scenario.taxVintageDetail
   const taxStampMoved =
@@ -484,7 +484,7 @@ export function deriveStaleness(
   // it and no field of this stamp can describe a change to its answer. WHICH family a clock
   // answers to is {@link HEALTHCARE_CLOCK_FAMILIES}'s job — there is no second opinion here.
   //   · ACA family → `exposure.aca`. The engine's per-year ACA gate is
-  //     `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0` (`taxOverlay.ts:1705-1710`);
+  //     `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0` (`taxOverlay.ts:1710-1715`);
   //     the Medicare-only branch ships NO quote pair, so it can never open — an all-65+
   //     household prices ZERO ACA and must stay SILENT on it.
   //   · Medicare family → `exposure.medicare`.
@@ -549,7 +549,7 @@ export function deriveStaleness(
     //
     // ITS "no exposure gate" COMMENT WAS FALSE and is swept here (U17 §S4, insight 087): the
     // trend schedule `partBPricingByT` is constructed ONLY under
-    // `healthcareEnabled && config.taxEnabled` (`taxOverlay.ts:1119-1120`), so a run that built
+    // `healthcareEnabled && config.taxEnabled` (`taxOverlay.ts:1124-1125`), so a run that built
     // no healthcare overlay never constructs it and re-prices nothing under the new edition.
     if (
       savedHealth.partBTrendVintage !== undefined &&
@@ -578,9 +578,9 @@ export function deriveStaleness(
   // gate keeps the CLAIM honest: "every date candidate carries the accumulation construct
   // (`dateSearch.ts:230`) ⇒ structurally exposed" is necessary but NOT sufficient, because the
   // forced construct is filled from the BASE overlay's streams and `contributionStreamsFor`
-  // returns `{}` for a non-working owner (`intakeMap.ts:439-442`). A 66/retired + 62/working couple
+  // returns `{}` for a non-working owner (`intakeMap.ts:465-468`). A 66/retired + 62/working couple
   // whose accounts all belong to the retired spouse is on the date route with EMPTY streams:
-  // `anyContributions` is false (`intakeMap.ts:592-598`), no `accumulation` reaches the base
+  // `anyContributions` is false (`intakeMap.ts:618-624`), no `accumulation` reaches the base
   // overlay, and the limit tables' only pricing read (the §415(c) match trim) never runs.
   //
   // The blend clock never NAMES itself on either route (see `date.blendMoved`'s own note): the

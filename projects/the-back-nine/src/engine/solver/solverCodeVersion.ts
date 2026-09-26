@@ -56,4 +56,12 @@
  * unconditionally absent. Every saved record therefore re-runs. Bumped on the enumerator clause of
  * the discipline above, not the when-in-doubt clause.
  */
-export const SOLVER_CODE_VERSION = 3
+/*
+ * VERSION 4 (2026-09-25) — a SCORED overlay's pricing moved, twice in two days: the §86 Social
+ * Security thresholds deflate per sim year (`be0e1e76`, 2026-09-24 — which should have bumped this
+ * and did not; this bump covers it), and on 2026-09-25 the NC standard deduction deflates per sim
+ * year, the OBBBA senior bonus deflates AND phases out per person (IRS Schedule 1-A), and the HSA
+ * catch-up erodes on the runway. Every one moves the tax the ranked arms pay, so a v3 record's
+ * ranking was scored under pricing this build no longer runs. Bumped on the SCORED-overlay clause.
+ */
+export const SOLVER_CODE_VERSION = 4

@@ -486,7 +486,12 @@ const AGE_65_THRESHOLD = 65
 // The other corners are all LOWER and mutually DISJOINT by income region: the 37% bracket sits
 // ABOVE both cap-gains breakpoints (j = 0 → k = 0.685); the 0→15% straddle needs the 12% bracket
 // (k ≈ 0.50); the senior-bonus phase-out band sits at ≤ 24% with the torpedo often capped
-// (k ≲ 0.61). So k_sup ≈ 0.74. IMPORTANT: the contraction is NOT automatic — the UNCONSTRAINED
+// (k ≲ 0.61 — re-derived 2026-09-25 for the PER-PERSON phase-out, Schedule 1-A: a both-65+ couple's
+// deduction falls 0.12 per MAGI dollar, not 0.06, so the band's worst reachable corner — the 0→15 %
+// straddle in the 12 % bracket, torpedo uncapped — is (0.12 + 0.15) × 1.85 × 1.12 + 0.04 ≈ 0.60. The
+// band closes at $250k of MAGI; it reaches the 24 % bracket only in its last ~$2.8k (AGI ≈ $247.2k–
+// $250k at 2026 figures), where even an uncapped torpedo gives 0.24 × 1.85 × 1.12 + 0.04 ≈ 0.54.
+// Both under 0.78.) So k_sup ≈ 0.74. IMPORTANT: the contraction is NOT automatic — the UNCONSTRAINED
 // sum of marginal channels (ordinary + torpedo + senior-bonus + cap-gains straddle) exceeds 1, so
 // slope < 1 rests entirely on these regimes being unreachable simultaneously. A future constants
 // change (a breakpoint shift) could open a k ≥ 1 corner and silently break convergence — re-derive

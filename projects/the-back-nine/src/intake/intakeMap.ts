@@ -50,7 +50,7 @@ import { acaAgeRatingCurve, medicareExtrasTypicalMonthly } from '@engine/constan
 import { isPricedState, type PricedState } from '@engine/constants/stateTax'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { compileBudget } from '@budget/budgetToSpending'
-import { annualAdditionsCeilingFor, contributionCeilingFor, isEmployerPlanKind } from './sanity'
+import { annualAdditionsCeilingFor, contributionCeilingFor, contributionCeilingInYear, isEmployerPlanKind } from './sanity'
 import { compileIncomeStreams } from './otherIncome'
 import { copy, type CopyKey } from '@ui/copy'
 
@@ -385,8 +385,20 @@ const isWorkingOwner = (d: ScenarioDraft, ownerIndex: number): boolean =>
 
 /** Per-year scale for one (owner, family): 1 today (the R19 rule blocked
  *  over-ceiling entry), shrinking when an age band expires mid-runway (the
- *  60–63 super catch-up stepping down at 64). */
-function familyScaleAt(d: ScenarioDraft, ownerIndex: number, family: OwnerFamilyKey['family'], t: number): number {
+ *  60–63 super catch-up stepping down at 64). `frame` is REQUIRED, never defaulted:
+ *  - `'runway'` — the ceiling the contribution STREAM obeys, in the engine's real dollars
+ *    for runway year t (`contributionCeilingInYear`): the HSA family's statute-FIXED $1,000
+ *    age-55 catch-up also erodes year by year (the frozen-nominal Tier 0).
+ *  - `'band'` — the age-band ceiling in today's dollars (`contributionCeilingFor`): moves
+ *    ONLY when a catch-up window opens or closes. `firstStepDownYear` reads this frame, so
+ *    its disclosure ("a catch-up window closes") never fires on the continuous erosion. */
+function familyScaleAt(
+  d: ScenarioDraft,
+  ownerIndex: number,
+  family: OwnerFamilyKey['family'],
+  t: number,
+  frame: 'runway' | 'band',
+): number {
   const owner = d.people[ownerIndex]
   // A non-working owner contributes nothing, so no scale (and no step-down) —
   // mirrors the engine's t<retire truncation and keeps firstStepDownYear honest.
@@ -410,18 +422,32 @@ function familyScaleAt(d: ScenarioDraft, ownerIndex: number, family: OwnerFamily
   if (combined <= 0) return 1
   const sampleKind: AccountKind =
     family === 'employerPlan' ? '401k' : family === 'hsa' ? 'hsa' : 'traditional-ira'
-  const ceiling = contributionCeilingFor(sampleKind, ageAtT)
+  let ceiling: number | null
+  if (frame === 'band') {
+    ceiling = contributionCeilingFor(sampleKind, ageAtT)
+  } else {
+    // The ceiling of runway year t in real dollars (the calendar the engine prices it in) — never the
+    // today-only figure, or a statute-frozen catch-up would ride flat-real (indexed) through the runway.
+    const startYear = d.startCalendarYear
+    if (startYear === undefined) {
+      throw new Error(
+        '[intakeMap] familyScaleAt: the draft carries no startCalendarYear — a runway ceiling is priced in its calendar year’s real dollars (no silent flat default, burned/062)',
+      )
+    }
+    ceiling = contributionCeilingInYear(sampleKind, ageAtT, startYear + t)
+  }
   return ceiling === null ? 1 : Math.min(1, ceiling / combined)
 }
 
-/** The first sim-year (≥1) any of the owner's streams steps down — the calm
- *  disclosure names this year (D1). Null when no step-down occurs in horizon. */
+/** The first sim-year (≥1) a catch-up WINDOW closes on any of the owner's streams — the calm
+ *  disclosure names this year (D1). Null when no step-down occurs in horizon. Reads the `'band'`
+ *  frame: the HSA catch-up's continuous real erosion is not a window closing. */
 export function firstStepDownYear(d: ScenarioDraft, horizonYears: number): number | null {
   for (let t = 1; t < horizonYears; t += 1) {
     for (const ownerIndex of [0, 1]) {
       for (const family of ['employerPlan', 'ira', 'hsa'] as const) {
         if (
-          familyScaleAt(d, ownerIndex, family, t) < familyScaleAt(d, ownerIndex, family, t - 1)
+          familyScaleAt(d, ownerIndex, family, t, 'band') < familyScaleAt(d, ownerIndex, family, t - 1, 'band')
         ) {
           return t
         }
@@ -452,7 +478,7 @@ function contributionStreamsFor(
     for (const a of d.enteredAccounts) {
       if (a.ownerIndex !== ownerIndex) continue
       const family = familyOf(a.kind)
-      const scale = family === null ? 1 : familyScaleAt(d, ownerIndex, family, t)
+      const scale = family === null ? 1 : familyScaleAt(d, ownerIndex, family, t, 'runway')
       sums[KIND_TO_BUCKET[a.kind]] += (a.annualContribution ?? 0) * scale
       if (a.kind === 'hsa' && a.hsaEmployerAnnual !== undefined) {
         // Employer HSA money joins the owner's OWN hsa inflow (same bucket, same
@@ -830,7 +856,7 @@ function acaPricedOverlayArm(o: OverlayParams | undefined): boolean {
  *  This is the read that makes the all-65+ household honest: it takes `buildOverlay`'s
  *  Medicare-only branch (`intakeMap.ts:655-658` — "healthcareEnabled with NO ACA quote pair"),
  *  so `enrolledPremium` is absent, the engine's per-year ACA gate
- *  (`taxOverlay.ts:1705-1710`) can never open, and this correctly reads FALSE. `buildSpineParams`
+ *  (`taxOverlay.ts:1710-1715`) can never open, and this correctly reads FALSE. `buildSpineParams`
  *  returns null on the date route ⇒ false there (the caller handles that route separately —
  *  reading false as "unpriced" off-route would be the insight-080 shortcut, not a fact). */
 export function spineAcaPriced(d: ScenarioDraft): boolean {

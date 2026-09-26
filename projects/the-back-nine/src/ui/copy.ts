@@ -1123,7 +1123,7 @@ export const copy = {
     'That figure doesn’t count what you’d pay for drug and supplement plans, which this plan prices at about nothing.',
   // ⚠️ "the benchmark premium itself" WAS IN BOTH LISTS AND WAS FALSE — struck 2026-08-03.
   // The benchmark (SLCSP) is not merely counted, it is the ANCHOR of the whole credit:
-  // `intakeMap.ts:650` builds `slcsp` into the overlay params, `taxOverlay.ts:264` calls it "the
+  // `intakeMap.ts:676` builds `slcsp` into the overlay params, `taxOverlay.ts:264` calls it "the
   // §36B PTC basis", and `slidingScalePtc` (healthOverlay.ts:213-223) computes
   // `max(0, slcsp − applicable% × MAGI)` FROM it. Telling the reader the tool ignores the one
   // figure the discount is calculated from is the same false-negation shape O16 fixed on the Roth
@@ -1132,7 +1132,7 @@ export const copy = {
   // STRUCK, NOT REPLACED WITH AN AFFIRMATION, and that is deliberate. The O16 house pattern is
   // affirm-with-residual, but these two strings are gated on `statePriced` ALONE
   // (`stateTaxDisclosure.ts:144`) — they carry no ACA-priced axis, so the identical sentence also
-  // ships to a Medicare-only household (`intakeMap.ts:587-590`) that has no benchmark at all.
+  // ships to a Medicare-only household (`intakeMap.ts:613-616`) that has no benchmark at all.
   // "The benchmark is already in these numbers" would be a NEW false claim for that population.
   // Affirming here needs the three-state gate the Roth strings have; until then, silence is true.
   //
@@ -1359,8 +1359,8 @@ export const copy = {
   // commit (AssumptionPanel.tsx:601-611, the `entered * 12` arm at :608) then multiplies by 12
   // under 'month' — so a household "correcting" 78,000 back to 6,500 under 'Each year' commits a
   // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:258) hard-disarms
-  // `spend-period-unconfirmed` (sanity.ts:329-352, the disarm read at :340) on this surface, and
-  // 6,500 is under SPEND_AMBIGUOUS_MIN (sanity.ts:74) regardless — so the rule could not have
+  // `spend-period-unconfirmed` (sanity.ts:348-371, the disarm read at :359) on this surface, and
+  // 6,500 is under SPEND_AMBIGUOUS_MIN (sanity.ts:75) regardless — so the rule could not have
   // caught it even armed. The replacement must therefore say BOTH halves — the money is
   // unchanged AND the next figure you enter is read in the unit you just picked. A draft that said
   // only "the same money either way" was REJECTED for exactly that omission.

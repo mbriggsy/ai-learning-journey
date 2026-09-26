@@ -14,7 +14,8 @@
  * federal taxable figure. Each state assembles its OWN base from the converged channels, per its
  * per-figure treatment flags:
  *   - NC (`federal-agi-derived`): (pre-tax distribution + conversion + ongoing other-income + realized
- *     gain) − the NC standard deduction for the year's filing status, floored at 0, × the flat rate.
+ *     gain) − the NC standard deduction for the year's filing status (statute-frozen, so DEFLATED to the
+ *     year's real dollars by `cumulativePriceIndex`), floored at 0, × the flat rate.
  *     SS never enters (the (b)(3) subtraction ⇒ `ssTreatment: 'exempt'`), so the NC state term rides
  *     WITHOUT the ×1.85 federal SS-torpedo (the k-invariant, insights 006/007).
  *   - PA (`class-based`): NEVER a rate on the federal AGI. At/above the qualified age (59½) the
@@ -38,6 +39,7 @@ import {
   type StateIncomeTreatment,
 } from '@engine/constants'
 import type { FilingStatus, RetirementState } from '@shared/model'
+import { cumulativePriceIndex } from '@engine/priceIndex'
 
 // Compile-time guard: every PRICED state is a member of the shared persistable roster vocabulary
 // (model.ts owns the vocab; the engine owns the priced subset — they must not drift). A future
@@ -143,7 +145,13 @@ export function stateIncomeTax(ctx: StateTaxYearContext): number {
     // regardless of age. It sits INSIDE the base the standard deduction reduces (matters only for NC;
     // PA's deduction is $0).
     ctx.ongoingTaxable
-  const standardDeduction = stateStandardDeductionFor(ctx.state, ctx.filing)
+  // The statute's deduction is a FROZEN NOMINAL figure (NC: no COLA; PA: none at all), so in the
+  // engine's real dollars it shrinks every year — deflated by the ONE price index for this CALENDAR
+  // year (identity at the anchor, so year 0 is the statute figure). Subtracting it flat would index
+  // what the law froze: the rosy direction, growing with the horizon (the frozen-nominal Tier 0).
+  // A future state whose deduction the law INDEXES must not be deflated — flag it on the profile then.
   const rate = stateRateForYear(ctx.state, ctx.calendarYear)
+  const standardDeduction =
+    stateStandardDeductionFor(ctx.state, ctx.filing) / cumulativePriceIndex(ctx.calendarYear)
   return Math.max(0, base - standardDeduction) * rate
 }

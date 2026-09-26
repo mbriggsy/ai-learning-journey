@@ -71,3 +71,8 @@ the Medicare surtax lines) must be born dividing by `cumulativePriceIndex`. The 
 dev seed named for a band is a fixture with a purpose; when the engine's truth moves it out of that band, RECORD
 the move at the old inputs in the seed's docblock, then re-tune the smallest knob that does not disturb the
 figures other pins quote (the IRA moves the verdict; spending would move the health-sheet MAGI too).
+- **Refinement, 2026-09-25 (the frozen-nominal siblings, register CLOSED):** "deflate by the index" means the
+  index of the year whose income the figure is COMPARED with — not the year the figure is published for. The
+  NC deduction, the senior bonus and the HSA catch-up meet same-year income, so the sim year's index is right
+  (built). The IRMAA top tier meets MAGI two years older, so its frozen $750k was already exact through 2027;
+  deflating it by the bill year was built, then refuted by the review before commit.

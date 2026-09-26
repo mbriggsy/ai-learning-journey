@@ -16,11 +16,11 @@ import {
   dateStatePriced,
   pricedStateForRun,
 } from '../intakeMap'
-import { contributionCeilingFor } from '../sanity'
+import { contributionCeilingFor, contributionCeilingInYear } from '../sanity'
 import { validateParams } from '@engine/simulate'
 import { buildCandidateParams, DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS } from '@engine/dateSearch'
-import { acaAgeRatingCurve, medicareExtrasTypicalMonthly } from '@engine/constants/health'
-import { employerPlan2026, catchUpForAge } from '@engine/constants/contributions'
+import { acaAgeRatingCurve, medicareCostTrend, medicareExtrasTypicalMonthly } from '@engine/constants/health'
+import { employerPlan2026, catchUpForAge, hsa2026 } from '@engine/constants/contributions'
 import type { ScenarioDraft, PersonDraft } from '@store/memoryModel'
 import { copy } from '@ui/copy'
 
@@ -913,6 +913,55 @@ describe('contribution streams (R31 + the step-down)', () => {
     expect(stream[3]).toBeCloseTo(ceiling64, 6)
     expect(stream[3]).toBeLessThan(stream[2]!) // the planted flat arm fails
     expect(firstStepDownYear(d, 10)).toBe(3)
+  })
+
+  it('the HSA age-55 catch-up is statute-FIXED ($1,000, IRC §223(b)(3)(B), outside §223(g)’s COLA): a max-contributing 56-yo’s stream trims by exactly the catch-up’s real erosion each runway year (the frozen-nominal Tier 0)', () => {
+    // Today's ceiling (the R19 entry gate, "this year's legal limit") is the statute figure; a FUTURE
+    // runway year's is the indexed family limit (flat-real — indexed by law) + $1,000 ÷ the price index
+    // of that CALENDAR year (the closed form, DND 012). Nothing else in any family deflates.
+    const trend = medicareCostTrend.value
+    const idx = (y: number): number =>
+      y <= trend.anchorYear
+        ? 1
+        : (1 + trend.cpiNearTermAvg) ** (Math.min(y, trend.anchorYear + trend.premiums.length) - trend.anchorYear) *
+          (1 + trend.cpiUltimate) ** Math.max(0, y - trend.anchorYear - trend.premiums.length)
+    const today = contributionCeilingFor('hsa', 56)!
+    expect(today).toBe(hsa2026.value.contributionFamily + hsa2026.value.catchUp55Plus)
+    expect(contributionCeilingInYear('hsa', 56, 2026)).toBe(today)
+    expect(contributionCeilingInYear('hsa', 60, 2034)).toBeCloseTo(hsa2026.value.contributionFamily + hsa2026.value.catchUp55Plus / idx(2034), 9)
+    expect(contributionCeilingInYear('hsa', 50, 2034)).toBe(hsa2026.value.contributionFamily) // no catch-up below 55
+    // The indexed families never deflate — flat-real is right for them.
+    expect(contributionCeilingInYear('401k', 60, 2034)).toBe(contributionCeilingFor('401k', 60))
+    expect(contributionCeilingInYear('roth-ira', 60, 2034)).toBe(contributionCeilingFor('roth-ira', 60))
+    const d = {
+      ...completeDateDraft(),
+      people: [
+        workingPerson({ birthYear: 1970, currentAge: 56 }),
+        retiredPerson({ name: 'S', birthYear: 1966, currentAge: 60, retirementAge: 58 }),
+      ] as ScenarioDraft['people'],
+      enteredAccounts: [
+        {
+          ownerIndex: 0,
+          kind: 'hsa',
+          valueToday: 30_000,
+          annualContribution: today,
+          manualBlend: { kind: 'exact', stockPct: 80, bondPct: 20, cashPct: 0 },
+        },
+      ] as ScenarioDraft['enteredAccounts'],
+    }
+    const stream = buildDateInput(d)!.params.overlay!.accumulation!.contributionsByPerson[0]!.hsa!
+    const start = d.startCalendarYear!
+    expect(stream[0]).toBeCloseTo(today, 6) // year 0: the statute figure, untrimmed
+    for (const t of [1, 5]) {
+      const ceilingT = hsa2026.value.contributionFamily + hsa2026.value.catchUp55Plus / idx(start + t)
+      expect(stream[t], `runway year ${t}`).toBeCloseTo(ceilingT, 6)
+    }
+    expect(today - stream[5]!).toBeGreaterThan(100) // non-vacuous: the erosion is real dollars by year 5
+    // The erosion is NOT a catch-up window closing: the D1 step-down disclosure reads the age-band frame,
+    // and the 55+ HSA band is open-ended, so no step-down year exists for this owner.
+    expect(firstStepDownYear(d, 8)).toBeNull()
+    // Every kind refuses a non-integer year — the fail-loud is the function's, never the HSA branch's.
+    expect(() => contributionCeilingInYear('401k', 60, Number.NaN)).toThrow(/integer/)
   })
 
   it('an HSA employer contribution joins the OWNER’s hsa channel — never the pretax/match channels', () => {

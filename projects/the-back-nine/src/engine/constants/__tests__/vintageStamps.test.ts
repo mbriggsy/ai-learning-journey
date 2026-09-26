@@ -61,7 +61,14 @@ describe('taxVintageStamp — the controls-surface clock producer', () => {
       // vintage bump — the state's DATED figures live in the separate `stateTaxConstants` table
       // (its own StateTaxVintageV3 clock), so no saved vault recomputes a federal figure from
       // this edit; the sentinel is documentation. A conscious re-pin, not a silent value drift.
-      contentDigest: 947_260_549,
+      // Re-pinned 2026-09-25 (the per-person senior-bonus phase-out): `seniorBonus.fullyGoneAbove`
+      // lost its count-keyed `mfjBothSpouses65: 350_000` (Schedule 1-A: MFJ is gone at $250k with one
+      // OR both spouses 65+). NO vintage bump — that field is DERIVED and consumed by nothing that
+      // prices (a shape test pins the identity); the pricing change lives in ENGINE code
+      // (`taxCore.seniorBonusFor`), the engine-domain class `src/store/staleness.ts` names as having
+      // no clock (installed base ~zero; the drift is conservative — answers only drop). The statute's
+      // figures ($6,000 / $75k / $150k / 6 %) are unchanged. A conscious re-pin, not silent drift.
+      contentDigest: 1_996_572_722,
     })
   })
 })

@@ -35,13 +35,13 @@ status: shipped
 
 ## S0 — the sentinel reconciliation (landed first; contradictions mean STOP)
 
-- `src/engine/constants/tax.ts:347-364` `stateIncomeTax` had been `OUT-but-disclosed` with the
+- `src/engine/constants/tax.ts:357-374` `stateIncomeTax` had been `OUT-but-disclosed` with the
   note *"Configurable context; neither sequencing nor conversion moves it"* — **FALSE** for the
   roster (NC taxes conversions at the flat rate; the D6 falsifiable rule "IN iff sequencing or
   a conversion can move it" **reclassifies state IN** for priced states). The sentinel was
   reconciled BEFORE any pricing code and now carries
   `{ status: 'IN-for-roster; OUT-but-disclosed-elsewhere', pricedRoster: 'NC, PA, FL' }`; the
-  `inOutRule` sibling (tax.ts:366-374) and the module banner (tax.ts:1-15) moved with it, and
+  `inOutRule` sibling (tax.ts:376-384) and the module banner (tax.ts:1-15) moved with it, and
   every consumer of the old "state isn't priced" wording was swept (the S5 disclosure map is
   the render-side half of that sweep).
 
@@ -97,7 +97,7 @@ status: shipped
 ## S2 — engine shape
 
 1. **Placement:** a pure per-state family beside taxCore's primitives, joining the SAME
-   per-year gross-up fixed point as a **second addend at `taxOverlay.ts:876-888`**
+   per-year gross-up fixed point as a **second addend at `taxOverlay.ts:881-893`**
    (`solveGrossWithdrawal`) — never bolted on after convergence. `GrossUpContext` carries the
    state code; the calendar threads as `startCalendarYear + t` (the senior-bonus pattern —
    the rate lookup **CONSUMES the year**, insight 074). That last point stopped being
@@ -121,8 +121,8 @@ status: shipped
    NC/PA exempt SS, so the state term rides WITHOUT the ×1.85 torpedo multiplier — the state's
    flat rate enters additively at the federal-worst corner instead of multiplied. The
    re-derived worst-case contraction factor and the raised `GROSS_UP_MAX_PASSES` have ONE home,
-   [architecture.md §7.1](../../architecture.md) and `taxOverlay.ts:513`; the derivation is
-   justified in the comment at `taxOverlay.ts:451-511` with the new corner. The convergence
+   [architecture.md §7.1](../../architecture.md) and `taxOverlay.ts:518`; the derivation is
+   justified in the comment at `taxOverlay.ts:451-516` with the new corner. The convergence
    stress sweep was **RE-RUN STATE-ON at the federal-worst corner** (small-net × low-basis ×
    large-SS × NC) — a state-OFF or large-net probe samples the benign regime (insight 006's
    exact trap).
@@ -147,7 +147,7 @@ status: shipped
    k-derivation comment (`taxOverlay.ts:481-484`) and re-stated in
    [architecture.md §7.1](../../architecture.md).
 9. **Accounting:** state tax folds into the year's tax-paid surface the way federal does
-   (`taxPaidThisYear`, taxOverlay.ts:1796 family) — one lifetime-tax lens, no parallel ledger
+   (`taxPaidThisYear`, taxOverlay.ts:1801 family) — one lifetime-tax lens, no parallel ledger
    in v1.
 
 ## S3 — intake + the R7 seat

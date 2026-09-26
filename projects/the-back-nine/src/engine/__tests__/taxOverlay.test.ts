@@ -18,6 +18,29 @@ import { uniformLifetimeTableDivisors, capitalGainsBreakpoints, irmaa, partB2026
 import { fplForHousehold } from '@engine/healthOverlay'
 
 // ---------------------------------------------------------------------------
+// The FROZEN-NOMINAL hand oracle (the frozen-nominal Tier 0, 2026-09-25). A figure the statute freezes in
+// nominal dollars (the OBBBA senior bonus's $6,000 and its phase-out start, the NC standard deduction)
+// shrinks in the engine's real dollars by the price level — the CLOSED FORM (1 + cpi)^n by `**`
+// (the Trustees' near-term average through the printed table's edge, the ultimate rate beyond; 1 at and
+// before the anchor), an independent path to the engine's running-product `cumulativePriceIndex`.
+const closedFormIndex = (calendarYear: number): number => {
+  const trend = medicareCostTrend.value
+  if (calendarYear <= trend.anchorYear) return 1
+  const edge = trend.anchorYear + trend.premiums.length
+  return (
+    (1 + trend.cpiNearTermAvg) ** (Math.min(calendarYear, edge) - trend.anchorYear) *
+    (1 + trend.cpiUltimate) ** Math.max(0, calendarYear - edge)
+  )
+}
+/** ONE qualifying person's senior bonus, MFJ, in `year`'s real dollars — IRS Schedule 1-A line 35
+ *  ($6,000 − 6 % × (MAGI − $150,000), floored at 0) with both dollar figures ÷ the index; a couple
+ *  enters it once per qualifying spouse (lines 36a/36b). Typed from the FORM, never the engine. */
+const line35Mfj = (magi: number, year: number): number => {
+  const idx = closedFormIndex(year)
+  return Math.max(0, 6_000 / idx - 0.06 * Math.max(0, magi - 150_000 / idx))
+}
+
+// ---------------------------------------------------------------------------
 // The Medicare-cost-trend hand oracle (DND/012 — the trend sourcing unit, 2026-07-19). ONE canonical
 // home for the trended per-year Medicare bill (the four M4/C3/M6/KTD-9 batteries all read it). Sim year
 // t bills calendar `startCalendarYear + t` (the fixtures start 2026, so t=0 → the 2026 anchor). NEITHER
@@ -392,9 +415,23 @@ describe('taxOverlay — M3 ordinary-income tax', () => {
       // deduction 47,500 → taxable 102,500 → 2,480 + 9,120 + 374
       expect(ordinaryIncomeTax(150_000, 'mfj', 2, 2026)).toBeCloseTo(11_974, 6)
     })
-    it('MFJ, both 67, $250k ordinary income (senior bonus PHASING OUT) → $35,294', () => {
-      // bonus 12,000 − 0.06×(250k−150k) = 6,000 → deduction 41,500 → taxable 208,500
-      expect(ordinaryIncomeTax(250_000, 'mfj', 2, 2026)).toBeCloseTo(35_294, 6)
+    it('MFJ, both 67, $250k ordinary income → $36,676: EACH spouse’s $6,000 phases out separately, so the bonus is GONE at $250k', () => {
+      // IRS Schedule 1-A Part V (read 2026-09-25): line 35 = $6,000 − 6% × (MAGI − $150,000), floored
+      // at 0, entered ONCE PER qualifying spouse (36a, 36b), summed on 37 — the statute reduces "the
+      // $6,000 amount", the per-person figure (IRC §151(d)(5)(C)(iii)). 6,000 − 0.06×100,000 = 0 each
+      // → bonus 0 → deduction 35,500 → taxable 214,500 → 2,480 + 9,120 + 0.22×110,600 + 0.24×3,100
+      //   = 2,480 + 9,120 + 24,332 + 744 = 36,676.
+      // (Until 2026-09-25 this fixture read 35,294 — ONE $12,000 pool reduced once, gone only at $350k:
+      // the research strand's misreading, which over-granted up to $6,000 of deduction in the band.)
+      expect(ordinaryIncomeTax(250_000, 'mfj', 2, 2026)).toBeCloseTo(36_676, 6)
+    })
+    it('MFJ, both 67, $200k → $24,294: the per-spouse phase-out halves EACH $6,000 (Schedule 1-A lines 32–37)', () => {
+      // line 35 = 6,000 − 0.06×50,000 = 3,000; ×2 spouses = 6,000 → deduction 41,500 → taxable 158,500
+      //   → 2,480 + 9,120 + 0.22×57,700 = 24,294. (The one-pool reading gave 9,000 → 23,634 — rosy.)
+      expect(ordinaryIncomeTax(200_000, 'mfj', 2, 2026)).toBeCloseTo(24_294, 6)
+      // ONE qualifying spouse: the same line 35, entered once — 3,000 → deduction 32,200 + 1,650 + 3,000.
+      // 150k+ MAGI: taxable 200,000 − 36,850 = 163,150 → 2,480 + 9,120 + 0.22×62,350 = 25,317.
+      expect(ordinaryIncomeTax(200_000, 'mfj', 1, 2026)).toBeCloseTo(25_317, 6)
     })
     it('single survivor, 67, $80k ordinary income → $7,065 (the half-width brackets + smaller stack)', () => {
       // bonus 6,000 − 0.06×(80k−75k) = 5,700 → deduction 23,850 → taxable 56,150
@@ -434,10 +471,21 @@ describe('taxOverlay — M3 ordinary-income tax', () => {
       // A `<` vs `<=` off-by-one on either window compare flips one of these four (the red
       // team's condition 1 edge arm).
       const inWindow = ordinaryIncomeTax(150_000, 'mfj', 2, 2026)
-      expect(ordinaryIncomeTax(150_000, 'mfj', 2, 2028)).toBeCloseTo(inWindow, 6)
+      // 2025 is pre-anchor (index 1) — the same statute figure as 2026.
       expect(ordinaryIncomeTax(150_000, 'mfj', 2, 2025)).toBeCloseTo(inWindow, 6)
+      // 2028 STILL prices the bonus — in 2028's real dollars (the frozen-nominal Tier 0, 2026-09-25: no
+      // COLA in the statute, so the $6,000 AND the $150k start each ÷ idx(2028)). $150k of real MAGI now
+      // sits inside the deflated phase-out band, per person: line 35 ≈ 5,633.68 − 549.49 ≈ 5,084.19, ×2
+      // spouses ≈ 10,168.38 → deduction ≈ 45,668.38 → taxable ≈ 104,331.62 (22 % band) → tax ≈ 12,376.96.
+      const bonus28 = 2 * line35Mfj(150_000, 2028)
+      expect(bonus28).toBeGreaterThan(0)
+      const taxable28 = 150_000 - (35_500 + bonus28)
+      expect(taxable28).toBeGreaterThan(100_800)
+      expect(ordinaryIncomeTax(150_000, 'mfj', 2, 2028)).toBeCloseTo(2_480 + 9_120 + 0.22 * (taxable28 - 100_800), 6)
       const outWindow = ordinaryIncomeTax(150_000, 'mfj', 2, 2029)
       expect(ordinaryIncomeTax(150_000, 'mfj', 2, 2024)).toBeCloseTo(outWindow, 6)
+      // 2028 < 2029: the bonus is priced on the 2028 side of the edge, gone on the 2029 side.
+      expect(outWindow).toBeGreaterThan(ordinaryIncomeTax(150_000, 'mfj', 2, 2028))
       expect(outWindow).toBeGreaterThan(inWindow)
     })
     it('single survivor, 67, $80k in 2030 → $8,319 (no bonus; the 2026 fixture owed $7,065 WITH its phased bonus of 5,700)', () => {
@@ -578,16 +626,19 @@ describe('taxOverlay — M3 ordinary-income tax', () => {
     })
 
     it('the senior-bonus phase-out is driven THROUGH the gross-up loop (the inflated-marginal regime)', () => {
-      // a large net pushes the grossed-up MAGI into the MFJ 150k–350k phase-out band, where each extra
-      // income dollar ALSO shrinks the bonus — the ×1.06 effective marginal rate the contraction rests
-      // on. pre-tax-only, pre-tax-first → ordinary income == gross.
+      // a large net pushes the grossed-up MAGI into the MFJ phase-out band ($150k–$250k — each spouse's
+      // $6,000 phases separately, IRS Schedule 1-A), where each extra income dollar ALSO shrinks the
+      // bonus — the ×1.12 effective marginal rate (both 65+) the contraction rests on. pre-tax-only,
+      // pre-tax-first → ordinary income == gross.
       const pool = 2_000_000
       const net = 160_000
       const on = runTaxAwareDecumulation({ taxable: 0, pretax: pool, roth: 0 }, realStock, realBond, [net], STOCK_W, 'pre-tax-first', TAX_ON)
       const sp = spine(pool, [net])
       const gross = solveGross(net, 1, 'mfj', 2)
       expect(gross).toBeGreaterThan(150_000) // genuinely in the phase-out band (else this proves nothing)
-      expect(gross).toBeLessThan(350_000)
+      // …and each spouse's bonus is still LIVE there (Schedule 1-A line 35 > 0), so the loop really
+      // iterates through a shrinking deduction — never a fixture that silently left the band.
+      expect(6_000 - 0.06 * (gross - 150_000)).toBeGreaterThan(0)
       expect(on.terminalReal / sp.terminalReal).toBeCloseTo((pool - gross) / (pool - net), 8)
     })
 
@@ -779,19 +830,25 @@ describe('taxOverlay — M4 Social Security provisional-income fixed point', () 
   })
 
   describe('the MAGI coupling — taxable-SS feeds the senior-bonus phase-out, not just the bracket base', () => {
-    it('SS pushes grossed-up MAGI into the MFJ 150k–350k phase-out band; the engine matches the SS-aware re-solve', () => {
-      // pre-tax-only, pre-tax-first → nonSS = gross. A $200k net + a $50k SS benefit lands MAGI
-      // (= gross + taxableSS) inside the phase-out band, where each SS-included dollar ALSO shrinks
-      // the bonus (the ×1.06 effective-rate inflation). Re-solving with the SS-inclusive MAGI is the
-      // only way to match — a model that phased the bonus on gross ALONE (ignoring taxable-SS) would
-      // diverge here.
+    it('SS pushes grossed-up MAGI into the MFJ phase-out band; the engine matches the SS-aware re-solve', () => {
+      // pre-tax-only, pre-tax-first → nonSS = gross. A $140k net + a $50k SS benefit lands MAGI
+      // (= gross + taxableSS) inside the phase-out band ($150k–$250k — each spouse's $6,000 phases
+      // separately, IRS Schedule 1-A), where each SS-included dollar ALSO shrinks the bonus (the ×1.12
+      // effective-rate inflation, both 65+). Re-solving with the SS-inclusive MAGI is the only way to
+      // match — a model that phased the bonus on gross ALONE (ignoring taxable-SS) would diverge here.
+      // (Re-seated 2026-09-25 from a $200k net, whose ~$288k MAGI left the per-person band entirely —
+      // the bonus was 0 at the SS-inclusive MAGI, so the coupling it names went unwitnessed.)
       const pool = 3_000_000
-      const net = 200_000
+      const net = 140_000
       const on = runTaxAwareDecumulation({ taxable: 0, pretax: pool, roth: 0 }, realStock, realBond, [net], STOCK_W, 'pre-tax-first', bothBorn1959MFJ, { ssBenefits: [50_000] })
       const sp = spine(pool, [net])
       const gross = solveGrossWithSS(net, (g) => g, 50_000, 'mfj', 2, 2026)
-      expect(gross + taxableSocialSecurity(gross, 50_000, 'mfj', 2026)).toBeGreaterThan(150_000) // genuinely in the phase-out band
-      expect(gross + taxableSocialSecurity(gross, 50_000, 'mfj', 2026)).toBeLessThan(350_000)
+      const magi = gross + taxableSocialSecurity(gross, 50_000, 'mfj', 2026)
+      const line35 = (m: number): number => Math.max(0, 6_000 - 0.06 * Math.max(0, m - 150_000))
+      expect(magi).toBeGreaterThan(150_000) // genuinely in the phase-out band
+      expect(line35(magi), 'each spouse’s bonus is LIVE at the SS-inclusive MAGI').toBeGreaterThan(0)
+      // Non-vacuous: phasing on gross ALONE would credit a visibly different bonus (thousands, not cents).
+      expect(2 * line35(gross) - 2 * line35(magi)).toBeGreaterThan(1_000)
       expect(on.terminalReal / sp.terminalReal).toBeCloseTo((pool - gross) / (pool - net), 8)
     })
   })
@@ -1000,11 +1057,12 @@ describe('taxOverlay — M5 Roth conversion + cap-gains/QD stacking', () => {
       expect(capitalGainsTax(120_000, 0, 'mfj')).toBeCloseTo(3_165, 6) // the phantom tax the shelter avoids
     })
     it('the senior bonus phases on the GAIN-inclusive MAGI, not ordinary income alone', () => {
-      // O = 120k, gain 100k → MAGI 220k (NOT 120k). Bonus = 12,000 − 0.06×(220k−150k) = 7,800 →
-      // deduction 43,300 → ordinary taxable 76,700 → ordinary tax 2,480 + 6,228 = 8,708. Gain fully
-      // above the deduction → gainTaxable 100k stacked on 76,700: 22,200 at 0%, 77,800 at 15% = 11,670.
-      // Total 20,378. A magi=ordinary-income bug keeps the full bonus and under-taxes (~19,244).
-      expect(ordinaryPlusCapitalGainsTax(120_000, 100_000, 'mfj', 2, 2026)).toBeCloseTo(20_378, 6)
+      // O = 120k, gain 100k → MAGI 220k (NOT 120k). Bonus PER SPOUSE (Schedule 1-A line 35) = 6,000 −
+      // 0.06×(220k−150k) = 1,800, ×2 = 3,600 → deduction 39,100 → ordinary taxable 80,900 → ordinary tax
+      // 2,480 + 0.12×56,100 = 9,212. Gain fully above the deduction → gainTaxable 100k stacked on 80,900:
+      // 18,000 at 0%, 82,000 at 15% = 12,300. Total 21,512. A magi=ordinary-income bug keeps the full
+      // bonus and under-taxes (~19,244). (The pooled one-$12,000 reading gave 20,378 until 2026-09-25.)
+      expect(ordinaryPlusCapitalGainsTax(120_000, 100_000, 'mfj', 2, 2026)).toBeCloseTo(21_512, 6)
     })
     it('with zero realized gain it is byte-identical to ordinaryIncomeTax (reduce-to-M3/M4 at the fn level)', () => {
       // Both in-window AND post-sunset years — the identity is year-invariant.
@@ -1521,15 +1579,20 @@ describe('taxOverlay — M6a bracket-fill (the injected tax-aware ceiling)', () 
     it('the bracket-edge rail caps the fill where the old +Infinity fallback silently over-drew (couple 67: D = 47,500 in-window / 35,500 post-sunset, edge 24,800)', () => {
       // 5 × $100k spend from {pretax 1M, roth 1M}, 2026 anchor. The derived fill lands taxable
       // income EXACTLY on the 24,800 edge every year ⇒ tax = 2,480/yr (all 10% band) — but the
-      // fill itself is YEAR-AWARE (the sunset unit): 24,800 + D = 72,300 while the senior bonus
-      // prices (t 0–2 ⇒ 2026–28), then 24,800 + 35,500 = 60,300 post-sunset (t 3–4 ⇒ 2029–30).
-      // Roth carries the rest: 30,180/yr in-window, 42,180/yr after.
+      // fill itself is YEAR-AWARE (the sunset unit): 24,800 + D while the senior bonus prices
+      // (t 0–2 ⇒ 2026–28), then 24,800 + 35,500 = 60,300 post-sunset (t 3–4 ⇒ 2029–30). In-window
+      // D = 35,500 + 2 × 6,000 ÷ idx(year) (the frozen-nominal Tier 0: the bonus is statute-frozen, so
+      // it deflates; MAGI ≈ 72k sits far under the deflated 150k/idx start ⇒ full bonus): 72,300 in
+      // 2026, ≈ 71,927.91 in 2027, ≈ 71,567.35 in 2028. Roth carries 102,480 − fill.
       const buckets: AccountBuckets = { taxable: 0, pretax: 1_000_000, roth: 1_000_000 }
       const spend = Array.from({ length: 5 }, () => 100_000)
       const bf = runTaxAwareDecumulation(buckets, zeros(5), zeros(5), spend, STOCK_W, 'bracket-fill', TAX_ON_NO_RMD)
+      const fills = [2026, 2027, 2028].map((y) => 24_800 + 35_500 + 2 * line35Mfj(0, y))
+      fills.forEach((fill, i) => expect(fill, 'MAGI under the deflated start ⇒ full bonus').toBeLessThan(150_000 / closedFormIndex(2026 + i)))
+      const inWindowFill = fills.reduce((a, b) => a + b, 0)
       // millidollar precision: the derived headroom is bisection-exact (ε = 1e-6/yr), not algebraic.
-      expect(bf.finalBuckets.pretax).toBeCloseTo(1_000_000 - 3 * 72_300 - 2 * 60_300, 3) // 662,500
-      expect(bf.finalBuckets.roth).toBeCloseTo(1_000_000 - 3 * 30_180 - 2 * 42_180, 3) // 825,100
+      expect(bf.finalBuckets.pretax).toBeCloseTo(1_000_000 - inWindowFill - 2 * 60_300, 3) // ≈ 663,604.74
+      expect(bf.finalBuckets.roth).toBeCloseTo(1_000_000 - (3 * 102_480 - inWindowFill) - 2 * 42_180, 3) // ≈ 824,004.74
       expect(bf.totalTaxPaidReal).toBeCloseTo(5 * 2_480, 3) // the edge holds in EVERY year — only the fill moved
       // presence companion: pre-tax-first would have drawn the whole gross from pre-tax.
       const pf = runTaxAwareDecumulation(buckets, zeros(5), zeros(5), spend, STOCK_W, 'pre-tax-first', TAX_ON_NO_RMD)
@@ -1579,8 +1642,12 @@ describe('taxOverlay — M6a bracket-fill (the injected tax-aware ceiling)', () 
       // readout fixtures prove reachable). The household's committed ACA-MAGI (120k conversion)
       // sits far over the 84,600 cliff — if the rail ignored the pre-65 conjunct it would cap the
       // fill at ZERO. The honest ceiling is the bracket rail alone, YEAR-AWARE (the sunset unit):
-      // in-window (t 0–2 ⇒ 2026–28) D = 47,500 flat (agi stays under the 150k phase-out through
-      // the fill: 28,300 + 120,000 = 148,300), edge 100,800 ⇒ f = 148,300 − 120,000 = 28,300;
+      // 2026 (t 0) D = 47,500 flat (agi stays under the 150k phase-out through the fill: 28,300 +
+      // 120,000 = 148,300), edge 100,800 ⇒ f = 148,300 − 120,000 = 28,300; 2027–28 (t 1–2) the bonus
+      // and its start are DEFLATED (the frozen-nominal Tier 0) — 150,000 ÷ idx falls under the fill's
+      // AGI, so the edge lands INSIDE the phase-out band, where each spouse's $6,000 phases separately
+      // (Schedule 1-A — slope 0.12 for the couple): taxable = 1.12·AGI − 35,500 − (12,000 + 18,000) ÷ idx
+      // = 100,800 ⇒ AGI* = (136,300 + 30,000 ÷ idx)/1.12 (≈ 147,651.58 in 2027, ≈ 146,846.77 in 2028);
       // post-sunset (t 3 ⇒ 2029) D = 35,500 ⇒ AGI* = 136,300 ⇒ f = 16,300.
       const both66: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1960, 1960) }
       const buckets: AccountBuckets = { taxable: 1_000_000, pretax: 1_500_000, roth: 0 }
@@ -1592,9 +1659,16 @@ describe('taxOverlay — M6a bracket-fill (the injected tax-aware ceiling)', () 
         conversions: Array.from({ length: 4 }, () => 120_000),
         initialTaxableBasis: 1_000_000,
       })
-      // 1.5M − 4×120k conversions − (3×28,300 + 16,300) fills = 918,800 EXACT. A dropped pre-65
-      // conjunct (ceiling 0 — no discretionary fill at all) would land 1,020,000 instead.
-      expect(derived.finalBuckets.pretax).toBeCloseTo(1_500_000 - 4 * 120_000 - (3 * 28_300 + 16_300), 1)
+      // 1.5M − 4×120k conversions − the four fills, EXACT to the algebra. A dropped pre-65 conjunct
+      // (ceiling 0 — no discretionary fill at all) would land 1,020,000 instead.
+      const bandFill = (y: number): number => {
+        const idx = closedFormIndex(y)
+        const agi = (136_300 + 30_000 / idx) / 1.12
+        expect(agi, `${y}: the edge lands inside the deflated phase-out band`).toBeGreaterThan(150_000 / idx)
+        expect(line35Mfj(agi, y), `${y}: each spouse's bonus is still live there`).toBeGreaterThan(0)
+        return agi - 120_000
+      }
+      expect(derived.finalBuckets.pretax).toBeCloseTo(1_500_000 - 4 * 120_000 - (28_300 + bandFill(2027) + bandFill(2028) + 16_300), 1)
     })
 
     it('the IRMAA rail’s enrolled-at-the-bill conjunct is LOAD-BEARING: a young household near a tier line gets NO phantom step cap (insight 027 — the rail mirrors the billing gate)', () => {
@@ -1622,9 +1696,12 @@ describe('taxOverlay — M6a bracket-fill (the injected tax-aware ceiling)', () 
       // so this headroom is YEAR-INVARIANT) ⇒ the recorded MAGI sits EXACTLY on the threshold ⇒
       // the billed years stay tier-0 (strictly-over fires). Years 2–3 bill at 4–5 — OUTSIDE the
       // horizon — so only the bracket rail caps them, and THAT rail is year-aware (the sunset
-      // unit): year 2 (2028, in-window) fills the senior-bonus phase-out band — taxable =
-      // 1.06·AGI − 56,500 = 211,400 ⇒ AGI* = 267,900/1.06 ⇒ f₂ = AGI* − 200,000 ≈ 52,735.85;
-      // year 3 (2029, post-sunset) has the flat 35,500 stack — AGI* = 246,900 ⇒ f₃ = 46,900.
+      // unit): year 2 (2028, in-window) — the bonus is live, but at the 211,400 edge it is GONE: each
+      // spouse's $6,000 phases separately (Schedule 1-A), and on the deflated figures (the frozen-nominal
+      // Tier 0) line 35 reaches zero at (150,000 + 100,000) ÷ idx ≈ 234,736 of MAGI, below the edge's AGI
+      // — so the stack is the flat 35,500 there too ⇒ AGI* = 246,900 ⇒ f₂ = 46,900; year 3 (2029,
+      // post-sunset) has the same flat stack ⇒ f₃ = 46,900. (Until 2026-09-25 the pooled one-$12,000
+      // reading kept a bonus alive to $350k and put f₂ in the band at ≈ 52,735.85 — rosy by ~5.8k of fill.)
       const both66: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1960, 1960) }
       const buckets: AccountBuckets = { taxable: 1_000_000, pretax: 1_500_000, roth: 0 }
       const spend = zeros(4).map(() => 60_000)
@@ -1635,7 +1712,8 @@ describe('taxOverlay — M6a bracket-fill (the injected tax-aware ceiling)', () 
         initialTaxableBasis: 1_000_000,
       }
       const derived = runTaxAwareDecumulation(buckets, zeros(4), zeros(4), spend, STOCK_W, 'bracket-fill', both66, extra)
-      const bracketOnlyHeadroom2028 = 267_900 / 1.06 - 200_000 // ≈ 52,735.849 (phase-out band)
+      expect(line35Mfj(246_900, 2028), '2028: the per-person bonus is fully phased out at the edge').toBe(0)
+      const bracketOnlyHeadroom2028 = 246_900 - 200_000 // 46,900 (the bonus gone at this AGI)
       const bracketOnlyHeadroom2029 = 246_900 - 200_000 // 46,900 (flat post-sunset stack)
       expect(derived.finalBuckets.pretax).toBeCloseTo(
         1_500_000 - 4 * 200_000 - 2 * 18_000 - bracketOnlyHeadroom2028 - bracketOnlyHeadroom2029,
@@ -2429,6 +2507,23 @@ describe('taxOverlay — M4: the post-65 IRMAA feed-forward (externally derived,
     const seedHi = [IRMAA_SCHED.tiers[0]!.mfjMagiThreshold + 1, 60_000]
     const r = run([40_000], { healthcareEnabled: true, irmaaMagiSeed: seedHi })
     expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnualReal(2, 0, 2026), 4) // year 0 → 2026 anchor (scale 1)
+  })
+
+  it('the frozen IRMAA top line is compared with MAGI from TWO years earlier, so a 2025 MAGI of $740k billed in 2027 stays in the 80 % tier — never deflate the line by the BILL year (refuted 2026-09-25)', () => {
+    // 42 U.S.C. §1395r(i)(4)(B)(i): a bill year's premium uses MAGI "for the individual's last taxable year
+    // beginning in the second calendar year preceding the year involved"; (i)(5)(C)(i) freezes the top
+    // line ($500k single, 150 % = $750k MFJ) through 2027. So the 2027 bill compares 2025 MAGI with a
+    // nominal $750,000 — and the engine's MAGI for a pre-anchor year sits at price index 1, so the
+    // matching real line is exactly $750,000. A $740k 2025 MAGI is UNDER it: the 80 % tier (index 3),
+    // never the top. (The frozen-nominal build first deflated this line by the bill year's index,
+    // ≈ $726.7k, and pinned the top tier here — the review's statute lens refuted it the same day.)
+    const top = IRMAA_SCHED.tiers.length - 1
+    expect(740_000).toBeLessThan(IRMAA_SCHED.tiers[top]!.mfjMagiThreshold)
+    expect(740_000).toBeGreaterThan(IRMAA_SCHED.tiers[top - 1]!.mfjMagiThreshold)
+    const seed = [60_000, 740_000] // seed[1] = the 2025 MAGI that sets the 2027 bill (sim year 1)
+    const one = run([40_000], { healthcareEnabled: true, irmaaMagiSeed: seed })
+    const two = run([40_000, 40_000], { healthcareEnabled: true, irmaaMagiSeed: seed })
+    expect(two.totalMedicareCostReal - one.totalMedicareCostReal).toBeCloseTo(medicareAnnualReal(2, top - 1, 2027), 4)
   })
 
   it('the lag is EXACTLY 2 years: a year-0 conversion moves the surcharge at year 2, NEVER years 0 or 1 (insight 014)', () => {
@@ -3960,12 +4055,13 @@ describe('taxOverlay — M6: the cross-overlay integration battery (ACA × IRMAA
     //   t=0 (2026: MFJ, count65=1, full bonus, 12% band): over-cliff gross funds fundingNet + 16,000
     //     = 95,000 + 2,434.80 + 16,000 ⇒ g = (113,434.80 − 5,278)/0.88 = 122,905.4545
     //     (taxable 83,055.45 ∈ (24,800, 100,800) ✓; MAGI < 150,000 ⇒ bonus full ✓).
-    //   t=1 (2027: same regime, trended base): g = (95,000 + 2,436.05 + 16,000 − 5,278)/0.88
-    //     = 122,906.8710 (taxable 83,056.87 interior ✓).
-    //   t=2 (2028: single survivor, count65=1, bonus PHASED, 22% band): D(g) = 16,100 + 2,050 +
-    //     (6,000 − 0.06(g − 75,000)) = 28,650 − 0.06g ⇒ tax = 0.2332·g − 11,591 ⇒
-    //     g = (100,000 + 2,529.52 − 11,591)/0.7668 = 118,594.8363 (bonus 3,384.31 ∈ (0, 6,000) ✓;
-    //     taxable 97,060.53 ∈ (50,400, 105,700) ✓).
+    //   t=1 (2027: same regime, trended base, the bonus DEFLATED — the frozen-nominal Tier 0: D =
+    //     33,850 + 6,000 ÷ idx(2027), MAGI under the deflated start ⇒ full): tax = 0.12·g − (0.12·D + 496)
+    //     ⇒ g = (95,000 + 2,436.05 + 16,000 − (0.12·D + 496))/0.88 ≈ 122,932.24 (taxable interior ✓).
+    //   t=2 (2028: single survivor, count65=1, bonus PHASED on the deflated figures, 22% band):
+    //     D(g) = 18,150 + 6,000/idx − 0.06(g − 75,000/idx) = 18,150 + 10,500/idx − 0.06g ⇒
+    //     tax = 0.2332·g + K, K = 5,800 − 0.22·(68,550 + 10,500/idx) ⇒ g = (100,000 + 2,529.52 + K)/0.7668
+    //     (bonus ∈ (0, 6,000/idx) ✓; taxable ∈ (50,400, 105,700) ✓).
     //   t=3 (2029: single survivor, POST-SUNSET — D = 16,100 + 2,050 = 18,150 FLAT, 22% band):
     //     tax = 5,800 + 0.22·(g − 18,150 − 50,400) = 0.22·g − 9,281 ⇒
     //     g = (100,000 + 2,603.94 − 9,281)/0.78 = 119,644.7915 (taxable 101,494.79 ∈
@@ -3973,8 +4069,8 @@ describe('taxOverlay — M6: the cross-overlay integration battery (ACA × IRMAA
     //   t=4 (2030: single, post-sunset, tier-1 surcharge now in the bill — Part B + trended Part D):
     //     g = (100,000 + 4,331.75 − 9,281)/0.78 = 121,859.9402 (taxable 103,709.94 ✓ interior).
     // TOTALS: medicare = 2,434.80 + 2,436.05 + 2,529.52 + 2,603.94 + 4,331.75 = 14,336.06; premium =
-    // 2 × 16,000 = 32,000; terminal = 2,000,000 − (122,905.4545 + 122,906.8710 + 118,594.8363 +
-    //          119,644.7915 + 121,859.9402) = 1,394,088.1064.
+    // 2 × 16,000 = 32,000; terminal = 2,000,000 − (g₀ + … + g₄) ≈ 1,393,878.81 (before the 2027–28 bonus
+    // was deflated it was 1,394,088.1064 — the two in-window years each draw a little more).
     const owner = { birthYear: 1959 }
     const spouse = { birthYear: 1965 }
     const cfg: TaxOverlayConfig = {
@@ -4046,7 +4142,26 @@ describe('taxOverlay — M6: the cross-overlay integration battery (ACA × IRMAA
         8,
       )
       expect(r.totalNetPremiumReal).toBe(32_000)
-      expect(r.terminalReal).toBeCloseTo(1_394_088.1064, 2)
+      // The chain by hand (the header's worksheet), each year at its own calendar and Medicare bill.
+      const m = [2026, 2027, 2028, 2029].map((y) => medicareAnnualReal(1, null, y))
+      const m4 = medicareAnnualReal(1, 0, 2030)
+      const mfjG = (fundingNet: number, y: number): number => {
+        const d = 33_850 + line35Mfj(0, y) // ONE 65+ spouse (the 1965 spouse is 61–62)
+        const g = (fundingNet + 16_000 - (0.12 * d + 496)) / 0.88
+        expect(g - d, `${y}: taxable interior to the 12 % band`).toBeGreaterThan(24_800)
+        expect(g, `${y}: MAGI under the deflated phase-out start`).toBeLessThan(150_000 / closedFormIndex(y))
+        return g
+      }
+      const idx28 = closedFormIndex(2028)
+      const K = 5_800 - 0.22 * (68_550 + 10_500 / idx28)
+      const g2 = (100_000 + m[2]! + K) / 0.7668
+      const bonus2 = 6_000 / idx28 - 0.06 * (g2 - 75_000 / idx28)
+      expect(bonus2).toBeGreaterThan(0)
+      expect(bonus2).toBeLessThan(6_000 / idx28)
+      const g3 = (100_000 + m[3]! - 9_281) / 0.78
+      const g4 = (100_000 + m4 - 9_281) / 0.78
+      const gross = mfjG(95_000 + m[0]!, 2026) + mfjG(95_000 + m[1]!, 2027) + g2 + g3 + g4
+      expect(r.terminalReal).toBeCloseTo(2_000_000 - gross, 2)
     })
   })
 
@@ -4373,14 +4488,18 @@ describe('taxOverlay — the sunset CROSSES the full solver (externally derived,
     // no SS, $160k/yr net for 5 years (calendars 2026–2030). Ordinary income is 0 every year,
     // so the ENTIRE sunset effect flows through deduction→gain-shelter→cap-gains — the exact
     // coupling the no-gain primitive anchors cannot see.
-    //   In-window (t 0–2): D(g) = 35,500 + (12,000 − 0.06(g − 150,000)) = 56,500 − 0.06g
-    //     (MAGI = the realized gain = g, interior to the (150k, 350k) phase-out band);
-    //     gainTaxable = 1.06g − 56,500; tax = 0.15(1.06g − 56,500 − 98,900) = 0.159g − 23,310
-    //     (interior to the 15% band: 98,900 < 115,784.66 < 613,700);
-    //     g = (160,000 − 23,310)/0.841 = 162,532.699168.
+    //   In-window (t 0–2): each spouse's $6,000 phases out SEPARATELY (Schedule 1-A lines 32–37) and
+    //     both dollar figures are statute-frozen, so ÷ idx(year) (the frozen-nominal Tier 0):
+    //     D(g) = 35,500 + 2(6,000/idx − 0.06(g − 150,000/idx)) = 35,500 + 30,000/idx − 0.12g
+    //     (MAGI = the realized gain = g, interior to the (150k/idx, 250k/idx) band);
+    //     tax = 0.15(1.12g − 35,500 − 30,000/idx − 98,900) = 0.168g − 0.15(134,400 + 30,000/idx)
+    //     (interior to the 15% band); g = (160,000 − 0.15(134,400 + 30,000/idx))/0.832 —
+    //     ≈ 162,668.27 at the 2026 anchor (idx 1), a little more in 2027 and 2028.
+    //     (Until 2026-09-25: the pooled one-$12,000 reading, slope 0.06, g = 162,532.699168.)
     //   Post-sunset (t 3–4): D = 35,500 flat; tax = 0.15(g − 35,500 − 98,900) = 0.15g − 20,160;
     //     g = (160,000 − 20,160)/0.85 = 164,517.647059.
-    // The step at t=3 is +1,984.947891 — the sunset's price through the SHELTER channel.
+    // The step at t=3 is gOut − gIn(2028) ≈ +1,519.16 — the sunset's price through the SHELTER channel
+    // (it was +1,984.947891 under the pooled, undeflated rule).
     const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1959, 1959) }
     const balancesOut: number[] = []
     const r = runTaxAwareDecumulation(
@@ -4393,30 +4512,41 @@ describe('taxOverlay — the sunset CROSSES the full solver (externally derived,
       cfg,
       { initialTaxableBasis: 0, balancesOut },
     )
-    const gIn = (160_000 - 23_310) / 0.841 // 162,532.699168
+    const gIn = (y: number): number => {
+      const idx = closedFormIndex(y)
+      const g = (160_000 - 0.15 * (134_400 + 30_000 / idx)) / 0.832
+      expect(g, `${y}: inside the deflated phase-out band`).toBeGreaterThan(150_000 / idx)
+      expect(line35Mfj(g, y), `${y}: each spouse's bonus still live`).toBeGreaterThan(0)
+      return g
+    }
+    const gIns = [gIn(2026), gIn(2027), gIn(2028)] // ≈ 162,668.27 at the anchor
     const gOut = (160_000 - 20_160) / 0.85 // 164,517.647059
     expect(r.depletionYear).toBe(NEVER_DEPLETED)
     // Per-year drawn gross via the balances sink (zero growth ⇒ pure subtraction):
     const drawn = balancesOut.map((v, i) => (i === 0 ? 2_000_000 - v : balancesOut[i - 1]! - v))
-    expect(drawn[0]).toBeCloseTo(gIn, 4)
-    expect(drawn[1]).toBeCloseTo(gIn, 4)
-    expect(drawn[2]).toBeCloseTo(gIn, 4) // 2028 — the sunset's LAST priced year holds the in-window gross
+    expect(drawn[0]).toBeCloseTo(gIns[0]!, 4)
+    expect(drawn[1]).toBeCloseTo(gIns[1]!, 4)
+    expect(drawn[2]).toBeCloseTo(gIns[2]!, 4) // 2028 — the sunset's LAST priced year still prices the (deflated) bonus
     expect(drawn[3]).toBeCloseTo(gOut, 4) // 2029 — the step lands EXACTLY here
     expect(drawn[4]).toBeCloseTo(gOut, 4)
-    expect(r.terminalReal).toBeCloseTo(2_000_000 - 3 * gIn - 2 * gOut, 3)
-    expect(r.totalTaxPaidReal).toBeCloseTo(3 * (gIn - 160_000) + 2 * (gOut - 160_000), 3)
+    expect(gOut - gIns[2]!, 'the sunset step is still a strictly positive jump').toBeGreaterThan(1_000)
+    const inSum = gIns.reduce((a, b) => a + b, 0)
+    expect(r.terminalReal).toBeCloseTo(2_000_000 - inSum - 2 * gOut, 3)
+    expect(r.totalTaxPaidReal).toBeCloseTo(inSum - 3 * 160_000 + 2 * (gOut - 160_000), 3)
   })
 
   it('the bracket-fill ceiling→ledger-allocation feedback crosses the boundary: same total drawn, the SPLIT shifts by exactly the bonus (2028 vs 2029 anchors)', () => {
     // Two ONE-YEAR bracket-fill runs differing ONLY in the calendar anchor (2028 in-window vs
     // 2029 post-sunset). MFJ both 69 (born 1959 — RMD band 73, none due), {taxable 1M basis 1M
     // (zero gain — the taxable spill is tax-free), pretax 1M}, $200k net, engine-DERIVED ceiling.
-    //   2028: fill f with taxable(f) = f − 47,500 at the 24,800 edge ⇒ f = 72,300 (MAGI 72,300
-    //     < 150k ⇒ full bonus, consistent); tax = 2,480 (the whole 10% band); gross = 202,480.
+    //   2028: fill f with taxable(f) = f − D at the 24,800 edge, D = 35,500 + 2 × 6,000 ÷ idx(2028)
+    //     (the statute-frozen bonus in 2028's real dollars — the frozen-nominal Tier 0) ⇒ f ≈ 71,567.35
+    //     (MAGI under the deflated 150k start ⇒ full bonus, consistent); tax = 2,480 (the whole 10%
+    //     band); gross = 202,480.
     //   2029: f = 24,800 + 35,500 = 60,300; taxable income is the SAME 24,800 ⇒ tax = 2,480 ⇒
     //     gross = 202,480 — the TOTAL is identical; only WHERE the money comes from moves.
-    // The year shifts $12,000 of the draw from cheap pre-tax onto the taxable bucket — the
-    // ceiling derivation and the allocation provably coupled across the boundary.
+    // The year shifts the (deflated) bonus's worth of draw from cheap pre-tax onto the taxable
+    // bucket — the ceiling derivation and the allocation provably coupled across the boundary.
     const run = (anchor: number) =>
       runTaxAwareDecumulation(
         { taxable: 1_000_000, pretax: 1_000_000, roth: 0 },
@@ -4430,8 +4560,10 @@ describe('taxOverlay — the sunset CROSSES the full solver (externally derived,
       )
     const inWindow = run(2028)
     const postSunset = run(2029)
-    expect(inWindow.finalBuckets.pretax).toBeCloseTo(1_000_000 - 72_300, 3)
-    expect(inWindow.finalBuckets.taxable).toBeCloseTo(1_000_000 - (202_480 - 72_300), 3)
+    const fill2028 = 24_800 + 35_500 + 2 * line35Mfj(0, 2028)
+    expect(fill2028).toBeLessThan(150_000 / closedFormIndex(2028))
+    expect(inWindow.finalBuckets.pretax).toBeCloseTo(1_000_000 - fill2028, 3)
+    expect(inWindow.finalBuckets.taxable).toBeCloseTo(1_000_000 - (202_480 - fill2028), 3)
     expect(postSunset.finalBuckets.pretax).toBeCloseTo(1_000_000 - 60_300, 3)
     expect(postSunset.finalBuckets.taxable).toBeCloseTo(1_000_000 - (202_480 - 60_300), 3)
     // Identical lifetime tax + terminal — the crossing moved the LEDGER, not the bill:
@@ -4611,11 +4743,21 @@ describe('taxOverlay — state income tax (the state-tax unit)', () => {
       // catch, in its rate dimension rather than its deduction dimension), these now go red.
       const ncRateConvYear = stateRateForYear('NC', 2027)
       expect(ncRateConvYear, 'non-vacuity: 2027 must really differ from the t=0 rate').not.toBe(ncRate)
+      // AND THE DEDUCTION IS 2027's. NC's standard deduction is statute-frozen (no COLA), so in real
+      // dollars it shrinks by the price level: the 2027 real deduction is the statute figure ÷ one
+      // year of the Trustees' near-term CPI (the closed form, independent of the engine's running
+      // product; 2027 sits inside the printed table, so the near-term rate is the whole story).
+      const trend = medicareCostTrend.value
+      expect(2027, 'the closed form below assumes 2027 is a printed-table year').toBeLessThanOrEqual(trend.anchorYear + trend.premiums.length)
+      const idx2027 = Math.pow(1 + trend.cpiNearTermAvg, 2027 - trend.anchorYear)
+      expect(idx2027, 'non-vacuity: the conversion year is past the anchor, so the deduction really deflates').toBeGreaterThan(1.01)
+      const sdSingle2027 = ncSdSingle / idx2027
+      const sdMfj2027 = ncSdMfj / idx2027
       // The survivor year taxes the conversion on the SINGLE SD; the control (no death) on the MFJ SD.
-      expect(crossState).toBeCloseTo((C - ncSdSingle) * ncRateConvYear, 3)
-      expect(ctrlState).toBeCloseTo((C - ncSdMfj) * ncRateConvYear, 3)
+      expect(crossState).toBeCloseTo((C - sdSingle2027) * ncRateConvYear, 3)
+      expect(ctrlState).toBeCloseTo((C - sdMfj2027) * ncRateConvYear, 3)
       // The widow's state cliff: the SAME conversion costs (SD_mfj − SD_single) × rate MORE as a survivor.
-      expect(crossState - ctrlState).toBeCloseTo((ncSdMfj - ncSdSingle) * ncRateConvYear, 3)
+      expect(crossState - ctrlState).toBeCloseTo((sdMfj2027 - sdSingle2027) * ncRateConvYear, 3)
     })
   })
 

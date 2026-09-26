@@ -340,10 +340,14 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
     if (top) expect(top.mfjMagiThreshold, 'frozen top tier breaks 2×').toBeLessThan(2 * top.singleMagiThreshold)
   })
 
-  it('the senior-bonus phase-out encodes the both-65 ceiling, not just the one-spouse $250k landmine', () => {
+  it('the senior-bonus phase-out is PER PERSON — the fully-gone ceilings are start + $6,000 ÷ 6 %, one per filing status, never a both-65 $350k (Schedule 1-A lines 32–37)', () => {
     const sb = taxConstants.seniorBonus.value
-    expect(sb.fullyGoneAbove.mfjOneSpouse65).toBe(250_000)
-    expect(sb.fullyGoneAbove.mfjBothSpouses65).toBe(350_000)
+    expect(sb.fullyGoneAbove.mfj).toBe(250_000)
+    expect(sb.fullyGoneAbove.single).toBe(175_000)
+    // The derived identity: each ceiling is where ONE person's line 35 reaches zero.
+    expect(sb.phaseOutStart.mfj + sb.perPerson65Plus / sb.phaseOutRatePerDollar).toBeCloseTo(sb.fullyGoneAbove.mfj, 6)
+    expect(sb.phaseOutStart.single + sb.perPerson65Plus / sb.phaseOutRatePerDollar).toBeCloseTo(sb.fullyGoneAbove.single, 6)
+    expect(Object.keys(sb.fullyGoneAbove).sort(), 'no count-keyed ceiling survives').toEqual(['mfj', 'single'])
   })
 
   it('the senior-bonus availability window is SYMMETRICALLY pinned — the engine consumes BOTH ends (the sunset unit, council 2026-07-09)', () => {

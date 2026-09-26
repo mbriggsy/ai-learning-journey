@@ -121,19 +121,29 @@ export const age65AdditionSingle = sourced(2_050, {
 /**
  * Temporary Senior Bonus Deduction (OBBBA): $6,000 per person age 65+ ($12,000
  * MFJ), on top of the standard deduction, with a MAGI phase-out and a 2028 sunset.
- * LANDMINE: the "fully gone" ceiling depends on HOW MANY spouses are 65+ — a flat
- * "$250k" is the one-spouse case only and overstates tax / understates conversion
- * + IRMAA headroom in the $250k–$350k band.
+ * THE PHASE-OUT IS PER PERSON (IRS Schedule 1-A Part V, lines 32–37, read 2026-09-25; IRC
+ * §151(d)(5)(C)(iii) reduces "the $6,000 amount" — the per-individual figure): ONE reduced
+ * amount, $6,000 less 6 % of MAGI over the start, entered once for EACH qualifying spouse. So
+ * the "fully gone" ceiling does NOT depend on how many spouses are 65+ — MFJ is gone at $250k
+ * with one OR both. LANDMINE (the inverted one this replaces): the research strand read a
+ * pooled $12,000 reduced once, gone at $350k for a both-65+ couple — that over-granted up to
+ * $6,000 of deduction in the $150k–$350k band (rosy), and the engine priced it until 2026-09-25.
+ * NOT inflation-indexed (P.L. 119-21 carries no COLA clause; §151(d)(4) excludes paragraph (5);
+ * Rev. Proc. 2025-32 lists no §151 figure): the $6,000 AND both starts are frozen nominal, so the
+ * consumer (`taxCore.seniorBonusFor`) deflates them by the one price index inside the window.
  */
 export const seniorBonus = sourced(
   {
     perPerson65Plus: 6_000,
     phaseOutStart: { single: 75_000, mfj: 150_000 },
     phaseOutRatePerDollar: 0.06,
-    fullyGoneAbove: { single: 175_000, mfjOneSpouse65: 250_000, mfjBothSpouses65: 350_000 },
+    // DERIVED from the three figures above (start + perPerson / rate), never consumed by the
+    // engine (the linear per-person form is authoritative) — a shape test pins the identity.
+    fullyGoneAbove: { single: 175_000, mfj: 250_000 },
   },
   {
-    citation: 'findings §Strand 5; IRS FS-2025-03',
+    citation:
+      'IRC §151(d)(5)(C) as added by P.L. 119-21 §70103 (enrolled text, read 2026-09-25) · IRS Schedule 1-A (Form 1040) Part V lines 32–37 (the per-person phase-out) · IRS FS-2025-03 · findings §Strand 5 (whose "$350k when both are 65+" is REFUTED by the form)',
     directionalUntilPinned: false,
     pinTo: 'IRS FS-2025-03 / OBBBA H.R.1',
     legalBasis: 'OBBBA P.L. 119-21 / H.R.1',
@@ -143,7 +153,7 @@ export const seniorBonus = sourced(
     // pinned in constants.shape.test.ts; never re-typed at the consumer.
     effectiveFrom: 2025,
     sunsetAfter: 2028,
-    note: 'Available tax years 2025–2028 only. Use mfjBothSpouses65=$350k when both are 65+; the flat $250k is the one-spouse case.',
+    note: 'Available tax years 2025–2028 only. The phase-out is PER qualifying individual (Schedule 1-A: line 35 entered on 36a AND 36b), so MFJ is fully gone at $250k whether one or both spouses are 65+; single at $175k. Frozen nominal (no COLA) — the consumer deflates the $6,000 and the starts per sim year; the 6 % rate is a rate.',
   },
 )
 

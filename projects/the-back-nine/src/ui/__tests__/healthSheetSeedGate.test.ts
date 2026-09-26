@@ -57,7 +57,7 @@ describe('the Medicare premium card on the shipped seeds, through the real engin
     })
   })
 
-  it('`healthnc` (61/59): the anchor is year 5 with ONE enrolled (2,703), the era is year 7 with two (5,765) → the loud figure 5,800, the on-ramp 2,700 over two years, neither surcharged, the extras spoken per quoted year (5,856 → 5,900 once both are on it; 2,928 → 2,900 while one is) — and the step card keeps the anchor (MAGI 46,020 → the each-of-you arm)', () => {
+  it('`healthnc` (61/59): the anchor is year 5 with ONE enrolled (2,703), the era is year 7 with two (5,765) → the loud figure 5,800, the on-ramp 2,700 over two years, neither surcharged, the extras spoken per quoted year (5,856 → 5,900 once both are on it; 2,928 → 2,900 while one is) — and the step card keeps the anchor (MAGI 46,078 → the each-of-you arm; 46,020 before the NC standard deduction was deflated per sim year, 2026-09-25)', () => {
     const readout = readoutOf('healthnc')
     const anchor = medicareAnchor(readout)
     const era = medicareEraYear(readout, 2)
@@ -83,7 +83,7 @@ describe('the Medicare premium card on the shipped seeds, through the real engin
       id: 'step',
       eyebrow: copy.healthFactStep,
       figure: slots.healthFigStepAddEach('1,100'),
-      lines: [slots.irmaaStepNext('218,000', '46,000', '172,000', '1,100', '2,300', false)],
+      lines: [slots.irmaaStepNext('218,000', '46,100', '171,900', '1,100', '2,300', false)],
     })
   })
 

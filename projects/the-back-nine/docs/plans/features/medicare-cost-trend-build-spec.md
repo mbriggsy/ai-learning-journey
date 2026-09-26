@@ -17,7 +17,7 @@ status: shipped
 >
 > **What this unit did:** lifted THE STANDING BLOCKER on every conversion-bearing ranking. It
 > sourced `medicareCostTrend`, flipped `PART_B_PRICING_MODE` `'real-flat'→'trended'`
-> (`taxOverlay.ts:925`) with genuine per-year consumption (074: a stamp nothing reads prices
+> (`taxOverlay.ts:930`) with genuine per-year consumption (074: a stamp nothing reads prices
 > nothing; 081: the label flip and the pricing change are ONE commit or the mirror lies),
 > re-wired the two solver seams the U15 tripwire named (`solve.test.ts:220`), re-calibrated the
 > conversion-near-tie demotion margin on a Medicare-bearing post-flip world (U15 council Q4d),
@@ -109,11 +109,11 @@ status: shipped
   table contract fail-loud — ascending contiguous from anchor+1, the Part D rows on the SAME year
   lattice, every figure finite > 0 (burned/062). The (b)-content twin table existed only in the
   working tree for the S3 probe and died with the ruling — it never shipped as dead code.
-- **S1 — consumption (taxOverlay).** The once-bound `partBBaseMonthly` (`taxOverlay.ts:1119-1128`)
+- **S1 — consumption (taxOverlay).** The once-bound `partBBaseMonthly` (`taxOverlay.ts:1124-1133`)
   became the per-year resolved pair at `startCalendarYear + t`, gated on the healthcare-priced arm;
   `medicareAnnualCost` + the readout split's `irmaaTierSurchargeMonthly` BOTH read the same
   resolved pair (the base-vs-surcharge split stays single-producer by construction — the scales are
-  a REQUIRED param on both). `PART_B_PRICING_MODE` is `'trended'` (`taxOverlay.ts:925`), flipped in
+  a REQUIRED param on both). `PART_B_PRICING_MODE` is `'trended'` (`taxOverlay.ts:930`), flipped in
   the same commit as the pricing (081). Gross-up/bracket-fill rails: thresholds untouched;
   convergence re-verified under year-varying premiums (013 watch) — see S3 for the measurement.
 - **S2 — the solver seams (the tripwire's named pair).** `solve.ts`'s rankable partition derives

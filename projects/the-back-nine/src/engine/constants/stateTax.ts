@@ -125,7 +125,7 @@ export const ncStandardDeduction = sourced<StateStandardDeduction>(
     directionalUntilPinned: false,
     pinTo: 'ncleg.gov codified G.S. 105-153.5(a)(1)',
     note:
-      'Fixed, NOT inflation-indexed — no COLA. NO age-65+/blindness add-on (contrast the federal §63(f) addition + OBBBA senior bonus, which do NOT flow through because NC starts from AGI and applies its own SD). Survivor transition: on the first death the SD steps $25,500 (MFJ) → $12,750 (single), rate unchanged (insight 014). NOT modeled (lead only, do NOT price): SB 437 "Middle Class Momentum Act" ($26,000/$13,000) sits in Senate Rules committee, not enacted 2026-07-15.',
+      'Fixed, NOT inflation-indexed — no COLA, so the consumer (stateIncomeTax) deflates it by the one cumulative price index per sim year (in real dollars a frozen figure shrinks; subtracting it flat would index what the statute froze). NO age-65+/blindness add-on (contrast the federal §63(f) addition + OBBBA senior bonus, which do NOT flow through because NC starts from AGI and applies its own SD). Survivor transition: on the first death the SD steps $25,500 (MFJ) → $12,750 (single), rate unchanged (insight 014). NOT modeled (lead only, do NOT price): SB 437 "Middle Class Momentum Act" ($26,000/$13,000) sits in Senate Rules committee, not enacted 2026-07-15.',
   },
 )
 
@@ -389,9 +389,11 @@ export function stateRateForYear(state: PricedState, taxYear: number): number {
   return flatStateRateForYear(STATE_TAX_PROFILES[state].rateSchedule, taxYear)
 }
 
-/** The state standard deduction for a priced state + filing status. PA → $0 (No provision);
- *  FL → $0 (no income tax). NC/PA are fixed (not indexed), so no year is consumed here — a
- *  future indexed state (SC/GA) will need the year threaded. */
+/** The state standard deduction for a priced state + filing status, as the STATUTE writes it — a
+ *  NOMINAL figure. PA → $0 (No provision); FL → $0 (no income tax). NC's is fixed by statute (no
+ *  COLA), so the consumer (`stateIncomeTax`) deflates it by `cumulativePriceIndex` for the sim year —
+ *  never re-typed as a real figure here. A future state whose deduction the law INDEXES must NOT be
+ *  deflated: flag it on the profile and gate the consumer's division on the flag. */
 export function stateStandardDeductionFor(state: PricedState, filing: 'mfj' | 'single'): number {
   const sd = STATE_TAX_PROFILES[state].standardDeduction
   if (sd === null) return 0

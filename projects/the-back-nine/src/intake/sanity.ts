@@ -42,6 +42,7 @@ import {
   ira2026,
   type CatchUpAccountKind,
 } from '@engine/constants/contributions'
+import { cumulativePriceIndex } from '@engine/priceIndex'
 
 /** Engine longevity-table ceiling (SSA snapshot support, P1-exit pin pass). */
 const MAX_MODEL_AGE = 119
@@ -115,6 +116,24 @@ export function contributionCeilingFor(kind: AccountKind, age: number): number |
   if (catchUpKind === 'employerPlan') return employerPlan2026.value.electiveDeferral + catchUp
   if (catchUpKind === 'ira') return ira2026.value.contributionLimit + catchUp
   return hsa2026.value.contributionFamily + catchUp
+}
+
+/** The same per-person ceiling for a FUTURE runway year (`calendarYear`), in the engine's REAL
+ *  dollars — the accumulation stream's per-year trim reads this, never the today-only figure above.
+ *  Every figure in the three families is CPI-indexed by law (flat-real is right for it) EXCEPT the
+ *  HSA age-55 catch-up: statute-FIXED at $1,000 (IRC §223(b)(3)(B); §223(g)(1)'s COLA list names
+ *  (b)(2), never (b)(3)), so in real dollars it shrinks by the price level — `÷ cumulativePriceIndex`
+ *  of that calendar year (the frozen-nominal Tier 0, 2026-09-25; identity at the anchor year, so the
+ *  R19 entry gate's today figure is unchanged). Required year, never defaulted: a NaN / absent year
+ *  throws inside the index (a silent flat catch-up is the rosy default this exists to remove). */
+export function contributionCeilingInYear(kind: AccountKind, age: number, calendarYear: number): number | null {
+  // Every kind validates the year, not only the one that reads it — the fail-loud promise above is
+  // the function's, never a branch's (a NaN year from a desynced caller must surface on a 401(k) too).
+  if (!Number.isInteger(calendarYear)) {
+    throw new Error(`[sanity] contributionCeilingInYear: calendarYear must be an integer calendar year (got ${calendarYear})`)
+  }
+  if (KIND_TO_CATCHUP[kind] !== 'hsa') return contributionCeilingFor(kind, age)
+  return hsa2026.value.contributionFamily + catchUpForAge(age, 'hsa') / cumulativePriceIndex(calendarYear)
 }
 
 /** The per-PLAN employee+employer annual-additions ceiling (§415(c)). Catch-up

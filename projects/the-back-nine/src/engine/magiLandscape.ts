@@ -91,7 +91,7 @@ export function irmaaMagiAtFill(c: CommittedYearIncome, f: number): number {
 
 /** Federal TAXABLE income at fill `f`: AGI (= IRMAA-MAGI at gain 0) less the full deduction
  *  stack evaluated at that AGI (INSIDE the senior bonus's 2025–2028 window its phase-out
- *  makes the deduction shrink as the fill grows — slope ≈ 1.06 in the phase-out band, and 0
+ *  makes the deduction shrink as the fill grows — slope ≈ 1.06 (one 65+ filer) or 1.12 (a both-65+ couple — each $6,000 phases separately) in the phase-out band, and 0
  *  while the deduction still shelters everything; OUTSIDE the window the stack is flat —
  *  std + age-65 only). Monotone non-decreasing in `f` in every year. */
 export function taxableIncomeAtFill(c: CommittedYearIncome, f: number): number {

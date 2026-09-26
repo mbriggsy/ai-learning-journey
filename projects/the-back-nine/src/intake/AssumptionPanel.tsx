@@ -252,7 +252,7 @@ export function AssumptionPanel({
   //
   // The disarm still HOLDS, but on the first clause alone (completing intake IS the receipt that
   // the period was answered). Re-arming would not have caught the case above anyway: the rule
-  // needs `entered >= SPEND_AMBIGUOUS_MIN` (sanity.ts:74, 8,000), and the misentry that matters is
+  // needs `entered >= SPEND_AMBIGUOUS_MIN` (sanity.ts:75, 8,000), and the misentry that matters is
   // a household typing a MONTHLY figure under 'year' — below that floor by construction. The
   // defense here is the copy, not the rule.
   const PANEL_PROVENANCE = { periodConfirmed: true } as const

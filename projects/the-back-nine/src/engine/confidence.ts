@@ -207,8 +207,10 @@ function buildDollar(distribution: Distribution, params: SimulationParams, state
   const p10 = percentile(sortedTerminal, 0.1) // conservative (bad-futures) terminal
   const monthlySpend = params.annualSpendingReal / 12
 
-  // Direction from the verdict; magnitude is a COARSE single-run estimate (the precise
-  // optimal-spending solve is the P4 solver — this is a first-answer hint, not a solve).
+  // Direction from the verdict; magnitude is a COARSE single-run estimate — NOTHING in the engine
+  // solves for spending (the recommendation solver searches sequencing + conversions, never spend).
+  // The UI renders the 'trim' magnitude NOWHERE (council 2026-09-25: on the `retired` worsened frame
+  // it over-cut ~2× — its $2,800 target runs over-funded); a real spend solve is register Tier 1.
   let direction: DollarAdjustment['direction']
   let perMonth: number
   if (state === 'over-funded' || (state === 'on-track' && p10 > 0)) {
@@ -225,12 +227,12 @@ function buildDollar(distribution: Distribution, params: SimulationParams, state
     perMonth = 0
   } else {
     // off-track / already-failing → a shortfall. Coarse proxy: a fraction of current spend scaled
-    // by the shortfall in survival below the on-track floor (NOT a solve — the precise optimal-
-    // spending answer is the P4 solver). already-failing is unfundable from the start (survival ≈ 0):
+    // by the shortfall in survival below the on-track floor (NOT a solve, and not rendered — see
+    // above). already-failing is unfundable from the start (survival ≈ 0):
     // no single trim is a solve, and the figure SATURATES to ≈ −spend × the gap, carrying ~zero
     // state-specific signal — so it forks to a figure-LESS, lever-agnostic 'rethink' verdict, never
-    // the sufficiency-implying 'trim' clause. off-track keeps 'trim' (its reworded clause speaks
-    // DIRECTION — "toward steadier ground" — not arrival). (Council 2026-06-29.)
+    // the sufficiency-implying 'trim' clause. off-track keeps 'trim', whose clause is figure-less since
+    // 2026-09-25 (the entered spend + "doesn't work out how much less"). (Councils 2026-06-29, 2026-09-25.)
     const gap = Math.max(0, BANDS.onTrack - quantizeSurvival(distribution.survivalFraction))
     perMonth = -monthlySpend * gap
     direction = state === 'already-failing' ? 'rethink' : 'trim'

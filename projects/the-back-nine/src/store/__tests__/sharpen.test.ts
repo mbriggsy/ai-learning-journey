@@ -62,7 +62,7 @@ const dollar = (
 ): DollarAdjustment => ({
   perMonthReal: {
     value: perMonth,
-    // The emission's own rule (confidence.ts:239): distance to the ROUNDED display value.
+    // The emission's own rule (confidence.ts:241): distance to the ROUNDED display value.
     marginToEdge: Math.abs(perMonth - Math.round(perMonth / DOLLAR_STEP) * DOLLAR_STEP),
   },
   spendPerMonthReal: SPEND,

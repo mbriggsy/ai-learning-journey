@@ -18,7 +18,7 @@
  */
 import type { DollarAdjustment, OutcomeState } from '@shared/model'
 import { copy, slots } from './copy'
-import { formatPerMonth, formatTrimEndpoints } from './money'
+import { formatPerMonth } from './money'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
 
 /** The displayed verdict tuple — structurally satisfied by the store's `StickyDisplay` and
@@ -46,9 +46,9 @@ export interface VerdictReading {
 
 /** The verdict's second line — the dollar grammar. The $/month enters through the slot
  *  pre-formatted, so the rendered clause carries no hardcoded numeral (copyGuard
- *  slot-discipline). The trim quotes BOTH endpoints — the target the reader would live on and the
- *  spend they entered — beside the delta, as one grid-consistent triple (`formatTrimEndpoints`):
- *  the delta-only form read a 75 % cut as a tune-up (Card 3, 2026-09-11). */
+ *  slot-discipline). The trim quotes ONLY the spend they entered and names the size as unworked
+ *  (council 2026-09-25): the engine's trim figure is an unsolved proxy that over-cut ~2× on the
+ *  `retired` frame, and a quoted target read as sufficiency (Briggsy's cold read, E17). */
 function magnitudeClause(
   direction: DollarAdjustment['direction'],
   perMonth: number,
@@ -57,10 +57,10 @@ function magnitudeClause(
   switch (direction) {
     case 'room':
       return slots.verdictRoomClause(formatPerMonth(perMonth))
-    case 'trim': {
-      const { target, spend, delta } = formatTrimEndpoints(spendPerMonthReal, perMonth)
-      return slots.verdictTrimClause(target, spend, delta)
-    }
+    case 'trim':
+      // FIGURE-LESS (council 2026-09-25): the engine's trim magnitude is an unsolved proxy, so only the
+      // entered spend rides — the base the reader typed, from the same run as the verdict.
+      return slots.verdictTrimClause(formatPerMonth(spendPerMonthReal))
     case 'on-the-line':
       return slots.verdictHoldClause()
     case 'rethink':

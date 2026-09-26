@@ -86,7 +86,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   adopted the old figure. No official national Medigap average exists to pin to; the constant's
   `pinTo` says so explicitly rather than naming a source that isn't published.
 - **Per-person explicit persisted provenance stamp.** `MedicareExtrasEntryV3`
-  (`src/shared/model.ts:2078`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
+  (`src/shared/model.ts:2077`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
   'unanswered'` — with `adoptionVintage` recording the era adopted, keyed to the SAVED era and
   never re-derived from `value == current-typical` (the `src/shared/appDefaults.ts:8-15`
   saved-era inversion trap). `'unanswered'` is the honest persisted hole: it funds the typical

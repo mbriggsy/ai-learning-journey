@@ -26,6 +26,8 @@ one-way doors, framing-level forks, or genuine pilot doubt — reason logged) ·
 
 **What it means.** The headline reads exactly as designed (honest, not doom). The trim clause does NOT: the target reader converts "toward steadier ground" into ARRIVAL ("they'd be ok") and believes the tool has told him both the odds and the duration. It has told him neither — and cannot: the figure is `confidence.ts` `buildDollar`'s coarse proxy (−spend × the gap below on-track, "NOT a solve"); the engine never ran the plan at $2,800. That is the implied-sufficiency reading the 2026-09-17 card's survivor (1) named and the chair filed at Tier 2 / PILOT-CLEARED. The survivor was right; **the chair's severity was wrong** — "toward" as direction held on eight machine seats and failed on the one human who matters. **Disposition:** the register entry *The trim clause's frame — a gauge, not a solve* moves to **Tier 0** (Briggsy's ruling, 2026-09-25: "fuck yeah, go"), the fix goes to a council, and any new words are Caddie-read on this frame before they ship. Taste corpus: rule 15 widened + exemplar E17.
 
+**The fix, re-read at his seat the same night (2026-09-26 early; frames `temp/caddie/trim-figureless`, walk 2/2 in 23.3 s):** the council's figure-less line (`wf_8c2ece49-79a`) — *"Spending less than $10,000 a month would let your plan cover more futures. This answer doesn't work out how much less."* — shown cold at REAL + PHONE with the same three questions. His verbatim: **"looks good"** — a sign-off of the WORDS; the comprehension questions (line 3 in his words · how ok / how long · honest vs dodging) went unanswered, so the entry's close condition (read as neither "they'd be ok" nor a shrug) is not yet witnessed.
+
 ## 2026-09-17 — CARD 3's SENTENCE, read on the frame that filed it — `seed:retired` `landing-worsened` + `panel-worsened`, REAL+PHONE (the fourth Sonnet-5 dual-panel A/B walk: `wf_825c66dc-58e`, 28 agents, 0 crashes, 5.9 m; bundle `temp/caddie/2026-09-17-card3`, walk 2/2 in 23 s)
 
 **Why it existed.** The 2026-09-11 walk's top calm-but-wrong (its Card 3, BLOCKER): *"About $7,500 a month less would move it toward steadier ground."* on a household whose $10,000 sat 1,800 px down the assumptions sheet. Briggsy's 2026-09-13 grant discharged the words to the pilot with "Caddie-read before ship"; the register's Tier 0 entry closes only on this read. Built 2026-09-17 (b9-1, the register entry carries the plumbing): *"Spending about $2,500 a month instead of $10,000 — about $7,500 less — would move it toward steadier ground."* The focus: does a cold reader now see the size of the ask without opening anything; do the three figures read as one statement; does "toward" still read as direction; is the aside legible at both wraps; and the hunt — any reading of it as a tune-up, a promise, or the tool's own recommendation.
@@ -241,7 +243,7 @@ the pilot predicted calm; the eye agreed.
 
 **This is the exact MIRROR of the verb fixed in `532cad82`.** There, a claim about SHOWING (*"We can no longer show this as current"*) read as *the advice still stands*. Here, a claim about RE-PRESENTABILITY reads as *already executed*. Same family, opposite arm — and **`recold` is CLEAN on this axis**, which is why one fix could not have caught both.
 
-**disposition: HARD-FLAG — does not ship.** It sharpens the case for the record card's **half (2)** (naming the saved strategy in frame), which is a **BRIGGSY RULING, not a pilot fix**, because it amends his own written ruling 3 (`act4-u17-s5-execution-plan.md:38-48`). Filed in `TODO.md` under the record-card prescription. **⚠️ Note for whoever builds it: the chaired "names no conversion" complaint is NOT buildable and NOT a gap** — `SavedRecommendationActionV3` carries no conversion field by design (`model.ts:1947-1952`) and the live ranking is sequencing-only.
+**disposition: HARD-FLAG — does not ship.** It sharpens the case for the record card's **half (2)** (naming the saved strategy in frame), which is a **BRIGGSY RULING, not a pilot fix**, because it amends his own written ruling 3 (`act4-u17-s5-execution-plan.md:38-48`). Filed in `TODO.md` under the record-card prescription. **⚠️ Note for whoever builds it: the chaired "names no conversion" complaint is NOT buildable and NOT a gap** — `SavedRecommendationActionV3` carries no conversion field by design (`model.ts:1946-1951`) and the live ranking is sequencing-only.
 
 **evidence:** commit `292cf9bd` (CI 30681007801 green) carries the walk's own report; bundle cleared at the 2026-08-01 squeaky, **deliberately transcribed here first** — the 2026-07-27 batch lost its rendered verbatims to exactly that deletion and the lesson is now paid twice.
 
@@ -1157,7 +1159,7 @@ two findings would stop his eye.
    Hero + echo at 1-of-10: *"About $7,300 a month less would move it toward steadier ground."*
    The couple just watched 6,500/mo read 9-of-10; the line prescribes ~2,700/mo — two on-surface
    numbers an attentive reader cannot reconcile ("this thing is broken"). **Chair-verified
-   mechanism** (`src/engine/confidence.ts:234-235`): the figure is the linear heuristic
+   mechanism** (`src/engine/confidence.ts:236-237`): the figure is the linear heuristic
    `monthlySpend × (onTrack − survival)`, near-saturated at deep gap — the engine's own comment
    concedes the saturation ("~zero state-specific signal"), which is why 0-of-10 forks to the
    figure-less rethink; 1-of-10 still gets the trim clause. The 2026-06-29 fork didn't
@@ -1231,7 +1233,7 @@ get my partner, talk to a real person" — the disclaimer landed). Trust verdict
 aggressively honest, which I actually trust"* — the against-interest lines ("never up",
 "reads easier than they may prove", "understated, never oversold") are what earned it.
 
-**routedToOracle (filed check/fix tasks):** O1 the trim-figure saturation (`confidence.ts:234`
+**routedToOracle (filed check/fix tasks):** O1 the trim-figure saturation (`confidence.ts:236`
 — #1's engine side) · O2 `verdictRoomClause` × `medicareUnpriced` interaction (#2's mechanism
 side) · O3 legend text vs the a11y tree (as-designed or lift out) · O4 ControlSheet
 Escape-close with real in-dialog focus (WAI-ARIA dialog pattern; found via the walk, synthetic

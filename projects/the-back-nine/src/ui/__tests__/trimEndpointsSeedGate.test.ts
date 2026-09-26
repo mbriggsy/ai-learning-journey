@@ -4,14 +4,12 @@
  * composer — the gate for Card 3 of the 2026-09-11 walk (the walk's top calm-but-wrong): the
  * `retired` seed's household enters $10,000 a month over its $78,000-a-year baseline
  * (`e2e/caddie-walk.spec.ts` `walkWorsening`), the verdict steps down to a trim, and the hero's
- * clause must quote the target they would live on AND the $10,000 they entered beside the delta —
- * never the delta alone.
- *
- * The delta below is the engine's own output through this file's pipeline (first measured
- * 2026-09-17) at the $10 grain the sentence speaks; the arithmetic pin (spend − target = delta) is
- * the law, the dollar pin the instrument. A market/constants re-verify that moves survival moves
- * the delta — re-run THIS gate, read the engine's number off the failure, and re-pin; never
- * hand-edit a number into agreement (DND 012: derived by the engine's run, never the composer).
+ * clause quotes the $10,000 they entered and NOTHING else — since 2026-09-25 (council
+ * wf_8c2ece49-79a, Tier 0) the trim clause is figure-less: the engine's trim magnitude is an unsolved
+ * proxy, and on this very frame its old "$2,800 instead of $10,000 — about $7,200 less" target ran
+ * over-funded through this pipeline (a ~2× over-cut; Briggsy's cold read took it as "they'd be ok").
+ * A real, round-trip-verified spend solve is the register's Tier 1 entry; until it lands, no target
+ * or delta may render. (2026-09-17 → 2026-09-25 this gate pinned the three-figure form.)
  *
  * Lives beside the unit arms (not inside them) so the fast file stays fast: two 2,000-path runs.
  */
@@ -45,25 +43,21 @@ describe('the trim clause on the walk’s worsened `retired` frame, through the 
     expect(wire.dollar.spendPerMonthReal).toBe(78_000 / 12)
   }, 120_000)
 
-  it('$10,000 a month entered ⇒ off-track trim; the clause quotes 10,000 and the target, and spend − target = delta to the dollar shown', () => {
+  it('$10,000 a month entered ⇒ off-track trim; the clause quotes ONLY the 10,000 — the unsolved proxy target/delta ride nowhere (council 2026-09-25)', () => {
     // The walk's edit: 10,000 typed into "Household spending, all in" on an "Each month" household.
     const worsened: ScenarioDraft = { ...DEV_SEEDS.retired, annualSpendingReal: 120_000, spendEntryPeriod: 'month' }
     const { wire, displayed, reading } = readingOf(worsened)
     expect(wire.dollar.direction).toBe('trim')
     expect(wire.headline.outcomeState).toBe('off-track')
     expect(wire.dollar.spendPerMonthReal).toBe(10_000)
-    // The engine's own number, read off the run at the $10 grain (see the header) — SIGNED on the
-    // sticky triple (negative = trim); the clause speaks its magnitude, the word carries direction.
-    // RE-PINNED 2026-09-24 exactly as the header prescribes: the SS-thresholds re-tune moved the
-    // `retired` IRA 1.055M → 1.120M (devSeeds.ts), so the same $10,000 edit now needs $7,200 of trim,
-    // not the walk's $7,500 (the 2026-09-17 Caddie card quotes the old seed's sentence — a record).
-    expect(displayed.perMonthDollar).toBe(-7_200)
+    // The engine still computes its proxy (−$7,200 here — the "$2,800 instead of $10,000" sentence this
+    // gate pinned until 2026-09-25). That target runs OVER-FUNDED through this same pipeline ("room for
+    // about $2,820 more"); the on-track floor sits near $6,500 — a ~2× over-cut, and Briggsy's cold read
+    // took it as "they'd be ok". So the clause is figure-less: exactly one dollar figure, the spend.
     const figures = figuresIn(reading.clause)
-    expect(figures).toHaveLength(3) // target · spend · delta — nothing else wears a dollar sign
-    const [target, spend, delta] = figures as [number, number, number]
-    expect(spend).toBe(10_000)
-    expect(delta).toBe(Math.abs(displayed.perMonthDollar))
-    expect(spend - target).toBe(delta)
-    expect(reading.clause).toBe(slots.verdictTrimClause('2,800', '10,000', '7,200'))
+    expect(figures).toEqual([10_000])
+    expect(displayed.perMonthDollar).toBeLessThan(0) // the proxy is live on the tuple — so its absence below is not vacuous
+    expect(reading.clause).not.toContain(Math.abs(displayed.perMonthDollar).toLocaleString('en-US'))
+    expect(reading.clause).toBe(slots.verdictTrimClause('10,000'))
   }, 120_000)
 })

@@ -743,9 +743,8 @@ export interface DollarAdjustment {
    *  no single figure is a solve for an unfundable-from-the-start plan, so the clause is figure-less. */
   readonly perMonthReal: WithMargin<number>
   /** The household's entered spending per month (`annualSpendingReal / 12`) — the base the `trim`
-   *  magnitude was scaled FROM, carried on the reading so the verdict sentence can quote both
-   *  endpoints ("about $2,500 a month instead of $10,000") from the SAME run that produced the
-   *  delta. Never re-derived UI-side from the draft: the store holds the last answer visible while
+   *  magnitude was scaled FROM, carried on the reading so the figure-less trim clause ("Spending less
+   *  than $10,000 a month …") quotes the spend from the SAME run that produced the verdict. Never re-derived UI-side from the draft: the store holds the last answer visible while
    *  a re-run is in flight, so a draft-read spend could sit beside a delta computed from a different
    *  spend for that window (the mixed-pair sin). Real dollars, unrounded — presentation rounds. */
   readonly spendPerMonthReal: number

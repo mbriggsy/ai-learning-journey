@@ -416,7 +416,7 @@ export interface MemoryModel {
 //    FLIP EDGES, computed on the same quantized value the band compare reads);
 //  - the dollar gates on the $/month margin — NOTE THE INVERTED SENSE:
 //    `perMonthReal.marginToEdge` is the distance to the ROUNDED DISPLAY VALUE
-//    (confidence.ts:239), so the flip edge sits at DOLLAR_STEP/2 − margin. This
+//    (confidence.ts:241), so the flip edge sits at DOLLAR_STEP/2 − margin. This
 //    seam is that emission's FIRST consumer (insight 047: audit a contract its
 //    first consumer never stressed) — the sense difference is deliberate there
 //    and compensated HERE, in one place.

@@ -20,6 +20,7 @@ import type { DollarAdjustment, OutcomeState } from '@shared/model'
 import { copy, slots } from './copy'
 import { formatPerMonth, formatSolvedSpend } from './money'
 import type { SpendAnswer } from '@store/memoryModel'
+import type { SpendSolveUnsizedReason } from '@engine/spendSolve'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
 
 /** The displayed verdict tuple — structurally satisfied by the store's `StickyDisplay` and
@@ -47,11 +48,16 @@ export interface VerdictReading {
 }
 
 /** What the magnitude clause knows about the REAL spend figure (the spend lane):
- *  - `undefined` — unsized: the shipped figure-less sentence ("… doesn't work out how much …");
+ *  - `undefined` — the lane never answered this verdict (idle, a held word, a mismatched direction):
+ *                  the shipped figure-less sentence ("… doesn't work out how much …");
  *  - `pending`   — the solve is in flight: the first sentence ALONE (the tail would read falsely final);
+ *  - `unsized`   — the lane RAN and could not size, and says WHY: two reasons deny the room the
+ *                  shipped sentence claims (`within-a-step`, `survivor-short` — the register's Tier 0
+ *                  room sentence) and get their own forms; every other reason keeps the shipped tail;
  *  - `sized`     — the verified figure F, a run AT F passed and a run at F + one step failed. */
 export type SpendClause =
   | { readonly kind: 'pending' }
+  | { readonly kind: 'unsized'; readonly reason: SpendSolveUnsizedReason }
   | { readonly kind: 'sized'; readonly monthlyReal: number; readonly failedAtMonthlyReal: number }
 
 /** THE GATE between the spend lane and the sentence (council wf_faa1af2d-052). A figure rides ONLY
@@ -76,6 +82,9 @@ export function spendClauseFor(
     if (!(o.monthlyReal > 0 && step > 0 && Number.isInteger(o.monthlyReal / step))) return undefined
     return { kind: 'sized', monthlyReal: o.monthlyReal, failedAtMonthlyReal: o.failedAtMonthlyReal }
   }
+  // An unsized outcome for THIS verdict carries its reason (it has no direction of its own: the
+  // lane's direction is the entered spend's reading, which the shown ≡ raw check above pins).
+  if (spend.kind === 'resolved' && spend.outcome.kind === 'unsized') return { kind: 'unsized', reason: spend.outcome.reason }
   return undefined
 }
 
@@ -96,7 +105,8 @@ export function reserveClauseFor(shown: VerdictDisplay): string | null {
  *  pre-formatted, so the rendered clause carries no hardcoded numeral (copyGuard slot-discipline).
  *  Room AND trim always quote the ENTERED spend (the run's own); what follows depends on `spend`
  *  (the spend lane, spendSolve.ts — the only figure the clause ever sizes): unsized ⇒ the entered
- *  spend ONLY, the size named as unworked (council 2026-09-25; room 2026-09-26); pending ⇒ the lead
+ *  spend ONLY, the size named as unworked (council 2026-09-25; room 2026-09-26) — except the two
+ *  room reasons that DENY room (`within-a-step`, `survivor-short`), whose forms claim none; pending ⇒ the lead
  *  sentence alone (the unworked tail would read falsely final); sized ⇒ the entered spend + the
  *  verified F, its edge named. The engine's `perMonthReal` renders nowhere and rides no display tuple
  *  (phase C deleted the sticky copy): an unsolved heuristic — the trim over-cut ~2× on the `retired`
@@ -111,7 +121,11 @@ function magnitudeClause(
   switch (direction) {
     case 'room':
       if (solved !== null) return slots.verdictRoomSized(entered, solved)
-      return spend?.kind === 'pending' ? slots.verdictRoomLead(entered) : slots.verdictRoomClause(entered)
+      if (spend?.kind === 'pending') return slots.verdictRoomLead(entered)
+      // The lane ran both sides and found no room to quote: never "room to spend more" (the Tier 0).
+      if (spend?.kind === 'unsized' && spend.reason === 'within-a-step') return slots.verdictRoomWithinStep(entered)
+      if (spend?.kind === 'unsized' && spend.reason === 'survivor-short') return slots.verdictRoomSurvivorShort(entered)
+      return slots.verdictRoomClause(entered)
     case 'trim':
       if (solved !== null) return slots.verdictTrimSized(entered, solved)
       return spend?.kind === 'pending' ? slots.verdictTrimLead(entered) : slots.verdictTrimClause(entered)

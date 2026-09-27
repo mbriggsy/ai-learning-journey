@@ -2397,12 +2397,27 @@ export const slots = {
    *  (`retired` at $5,000 / $5,500 the same). So only the entered spend rides, and the sentence names
    *  the size as unworked. Since the spend solve shipped (`spendSolve.ts`, 2026-09-26) this is the
    *  UNSIZED fallback: `verdictSentence.ts` renders it whenever `spendClauseFor` yields no clause (the
-   *  lane idle, an unsized outcome, a held word, a mismatched direction). */
+   *  lane idle, a held word, a mismatched direction) or an unsized reason that does not deny room
+   *  (`non-monotone`, `unbracketed`, `below-grid` — the lane could not bracket a figure, not that there
+   *  is none); `within-a-step` and `survivor-short` get their own room-denying forms below. */
   verdictRoomClause: (spendFormatted: string): string =>
     `There looks to be room to spend more than $${spendFormatted} a month. This answer doesn’t work out how much more.`,
   /** 'room' while the spend solve is IN FLIGHT — the first sentence alone (council wf_faa1af2d-052:
    *  the shipped "doesn't work out" tail would read falsely final while the figure is coming). */
   verdictRoomLead: (spendFormatted: string): string => `There looks to be room to spend more than $${spendFormatted} a month.`,
+  /** 'room', UNSIZED because the headroom is under one $100 step (`spendSolve` `within-a-step`: the
+   *  entered spend passes, a run one step above it FAILED — both run). The shipped fallback's "room to
+   *  spend more" oversold a sub-$100 margin (the register's Tier 0 room sentence), so this form claims
+   *  NO room and quotes no step: the edge is a reading, never a figure. PILOT DRAFT — the words are
+   *  Briggsy's (a Caddie read, then his cold read). */
+  verdictRoomWithinStep: (spendFormatted: string): string =>
+    `Spending more than $${spendFormatted} a month would start to sit close to the line.`,
+  /** 'room', UNSIZED because the survivor reading at the entered spend is not on track
+   *  (`spendSolve` `survivor-short`): the joint reading has room, the one-of-you reading does not, so
+   *  the lane quotes no more — and the shipped fallback invited more spending to exactly the household
+   *  the survivor law protects. Claims no room. PILOT DRAFT — the words are Briggsy's. */
+  verdictRoomSurvivorShort: (spendFormatted: string): string =>
+    `At $${spendFormatted} a month, this plan would not read on track for one of you on your own. So this answer doesn’t suggest spending more.`,
   /** 'room' SIZED by the spend solve (spendSolve.ts): F is the $100-grid EDGE the engine still reads as
    *  on track with room — a run AT F passed and a run a step above FAILED (both run; the highest passing
    *  spend under the pre-scan's monotonicity check, which refuses a non-monotone scan). The edge
@@ -2612,7 +2627,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the two
    *  universal gates (no false certainty, no advice verb), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:918` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:922` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,

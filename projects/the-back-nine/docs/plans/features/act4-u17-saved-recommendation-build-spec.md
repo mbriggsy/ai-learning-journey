@@ -75,7 +75,7 @@ refusal (`RothLever.tsx:53`).
 
 `Result.tsx` derives the anchor from `startCalendarYear`, which is the plan's **BUILD** year (written once
 at `memoryModel.ts:569`, never re-anchored, survives every re-save). Four separate comments already forbade
-attributing that quantity to the save (`staleness.ts:28`, `resultSave.ts:172`, `copy.ts:2871`,
+attributing that quantity to the save (`staleness.ts:28`, `resultSave.ts:172`, `copy.ts:2886`,
 `FuckOffDate.tsx:150`) — and the band's `'saved'` label did exactly that.
 
 - **Renamed** `elapsedPlanYears` → **`yearsSincePlanBuilt`**, with zero orphans left behind, and every
@@ -170,7 +170,7 @@ Shipped 2026-07-25, commit `e4754134`, CI green by explicit run id 30136387827.
 
 **The coverage hole this closed.** `rothPlanEcho` had **zero** aged coverage: both its tests ran at
 elapsed 0, one comparing the slot against its own output — pinning routing, not the sentence — and the
-other a bare string in the copy guard (`copyGuard.test.ts:509`). **The `RothLever` sheet echo had no assertions of any kind**, and
+other a bare string in the copy guard (`copyGuard.test.ts:511`). **The `RothLever` sheet echo had no assertions of any kind**, and
 while `RothLever` did receive a `savedAnchor`, it routed it only to `composeTwoFutures`; the echo sentence
 three lines above never saw it. The same verifier lesson landed on this stage's own first cut: the
 sheet-echo test's `toBe(slots.…)` was the insight-081 tautology and a tense-arm swap sailed through it, so
@@ -528,7 +528,7 @@ as the council admitted it, and the reasons are the material the re-filed unit s
 
 Verified at council time: the bars carry arm **names** at their ends plus the delta hero and the
 `$0`/ceiling axis frame; each bar's own dollar value renders **only** in `ariaSummary`
-(`recommendationView.ts:697-703`, `copy.ts:3021` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
+(`recommendationView.ts:697-703`, `copy.ts:3036` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
 AT-over-sighted inversion is real and nobody disputed it.
 
 The admission was gated on a **deliberate dialect split** in `recommendationView.ts` — endpoints humane

@@ -14,10 +14,12 @@ import { READING_FIXTURES } from '../preview/fixtures'
 import { composeVerdictReading, spendClauseFor, type VerdictDisplay } from '../verdictSentence'
 import { formatSolvedSpend } from '../money'
 import type { SpendAnswer } from '@store/memoryModel'
+import type { SpendSolveUnsizedReason } from '@engine/spendSolve'
 
 afterEach(cleanup)
 
 const ROOM_SHOWN: VerdictDisplay = { xOfTen: 8, outcomeState: 'on-track', spendPerMonthReal: 6_500, direction: 'room' }
+const unsized = (reason: SpendSolveUnsizedReason): SpendAnswer => ({ kind: 'resolved', outcome: { kind: 'unsized', reason, probes: 6 } })
 const sized = (direction: 'room' | 'trim', monthlyReal: number): SpendAnswer => ({
   kind: 'resolved',
   outcome: { kind: 'sized', direction, monthlyReal, failedAtMonthlyReal: monthlyReal + 100, enteredMonthlyReal: 6_500, probes: 9 },
@@ -31,10 +33,14 @@ describe('spendClauseFor — the gate between the spend lane and the sentence', 
     // a solve for the other direction never sizes this sentence
     expect(spendClauseFor(sized('trim', 5_000), ROOM_SHOWN, 'on-track')).toBeUndefined()
   })
-  it('pending rides as pending; idle / unsized / absent are figure-less; a no-magnitude direction is never sized', () => {
+  it('pending rides as pending; an unsized outcome carries its REASON; idle / absent are figure-less; a no-magnitude direction is never sized', () => {
     expect(spendClauseFor({ kind: 'pending' }, ROOM_SHOWN, 'on-track')).toEqual({ kind: 'pending' })
     expect(spendClauseFor({ kind: 'idle' }, ROOM_SHOWN, 'on-track')).toBeUndefined()
-    expect(spendClauseFor({ kind: 'resolved', outcome: { kind: 'unsized', reason: 'non-monotone', probes: 7 } }, ROOM_SHOWN, 'on-track')).toBeUndefined()
+    // the register's Tier 0 room sentence: the lane RAN, and why it did not size is the clause's to know
+    expect(spendClauseFor({ kind: 'resolved', outcome: { kind: 'unsized', reason: 'non-monotone', probes: 7 } }, ROOM_SHOWN, 'on-track')).toEqual({ kind: 'unsized', reason: 'non-monotone' })
+    expect(spendClauseFor(unsized('within-a-step'), ROOM_SHOWN, 'on-track')).toEqual({ kind: 'unsized', reason: 'within-a-step' })
+    // …but only for the verdict it was solved for (the held-word seam is unsized with no reason)
+    expect(spendClauseFor(unsized('survivor-short'), ROOM_SHOWN, 'over-funded')).toBeUndefined()
     expect(spendClauseFor(undefined, ROOM_SHOWN, 'on-track')).toBeUndefined()
     const hold: VerdictDisplay = { ...ROOM_SHOWN, outcomeState: 'borderline', direction: 'on-the-line' }
     expect(spendClauseFor({ kind: 'pending' }, hold, 'borderline')).toBeUndefined()
@@ -61,6 +67,19 @@ describe('the three clause forms', () => {
     expect(composeVerdictReading(ROOM_SHOWN, { kind: 'pending' })!.clause).toBe(slots.verdictRoomLead('6,500'))
     expect(composeVerdictReading(ROOM_SHOWN)!.clause).toBe(slots.verdictRoomClause('6,500'))
   })
+  it('room, UNSIZED FOR A REASON THAT DENIES ROOM (the register’s Tier 0 room sentence): `within-a-step` and `survivor-short` never claim room; every other reason keeps the shipped tail', () => {
+    const at = (reason: SpendSolveUnsizedReason) => composeVerdictReading(ROOM_SHOWN, spendClauseFor(unsized(reason), ROOM_SHOWN, 'on-track'))!.clause
+    expect(at('within-a-step')).toBe(slots.verdictRoomWithinStep('6,500'))
+    expect(at('survivor-short')).toBe(slots.verdictRoomSurvivorShort('6,500'))
+    for (const reason of ['within-a-step', 'survivor-short'] as const) {
+      expect(at(reason), reason).not.toMatch(/room/i) // the lane RAN and found none to quote — no "room" claim of any size
+      expect(at(reason), reason).not.toContain('doesn’t work out how much more') // the lane did work it out
+    }
+    for (const reason of ['non-monotone', 'unbracketed', 'below-grid'] as const) {
+      expect(at(reason), reason).toBe(slots.verdictRoomClause('6,500'))
+    }
+  })
+
   it('trim mirrors it', () => {
     const trim: VerdictDisplay = { xOfTen: 1, outcomeState: 'off-track', spendPerMonthReal: 10_000, direction: 'trim' }
     expect(composeVerdictReading(trim, { kind: 'sized', monthlyReal: 6_400, failedAtMonthlyReal: 6_500 })!.clause).toBe(slots.verdictTrimSized('10,000', '6,400'))

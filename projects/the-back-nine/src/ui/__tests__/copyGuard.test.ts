@@ -483,6 +483,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     verdictTrimClause: slots.verdictTrimClause('2,500'),
     verdictRoomLead: slots.verdictRoomLead('6,500'),
     verdictRoomSized: slots.verdictRoomSized('6,500', '7,100'),
+    verdictRoomWithinStep: slots.verdictRoomWithinStep('6,500'),
+    verdictRoomSurvivorShort: slots.verdictRoomSurvivorShort('6,500'),
     verdictTrimLead: slots.verdictTrimLead('10,000'),
     verdictTrimSized: slots.verdictTrimSized('10,000', '6,400'),
     verdictRethinkClause: slots.verdictRethinkClause(),
@@ -650,6 +652,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       slots.verdictTrimClause(S),
       slots.verdictRoomLead(S),
       slots.verdictRoomSized(S, S),
+      slots.verdictRoomWithinStep(S),
+      slots.verdictRoomSurvivorShort(S),
       slots.verdictTrimLead(S),
       slots.verdictTrimSized(S, S),
       slots.verdictSurvivorStepDown(S),
@@ -1115,6 +1119,9 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     // the verdict magnitude clauses wear theirs too ("looks to be" / "would").
     expect(lintCopy(slots.verdictRoomClause('6,500'), ['require-hedge'])).toEqual([])
     expect(lintCopy(slots.verdictTrimClause('2,500'), ['require-hedge'])).toEqual([])
+    // the two room-denying unsized forms (the register's Tier 0 room sentence) — "would" carries both
+    expect(lintCopy(slots.verdictRoomWithinStep('6,500'), ['require-hedge'])).toEqual([])
+    expect(lintCopy(slots.verdictRoomSurvivorShort('6,500'), ['require-hedge'])).toEqual([])
   })
 
   // --- THE UNIT-INERTNESS BAN (Tier-0, fixed 2026-08-03; until now the string had NO pin at all).

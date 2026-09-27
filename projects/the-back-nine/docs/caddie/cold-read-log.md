@@ -20,6 +20,26 @@ one-way doors, framing-level forks, or genuine pilot doubt — reason logged) ·
 
 ---
 
+## 2026-09-27 — THE MEDICARE STEP CARD'S MOVED FIGURES (the crossing priced at the bill year's scales, `2a0f6d80`) — `seed:healthnc` door 5 (health sheet), REAL+PHONE; `seed:retired` walked but offers no health door (bundles `temp/caddie/2026-09-27-stepcard`, `-scope`, `-scope2`; walks 4/4 + 2/2 + 2/2, ~30 s each)
+
+**Scope, and why the panel was words-only.** The figures moved $1,100 → $1,700 each ($2,300 → $3,400 for two; `retired`'s unrendered card $2,300 → $2,400); the copy did not. The step figure wears tabular numerals (`base.css`'s figure law, re-declared on `.hs-fact__figure`) at equal glyph counts, so the pixels are layout-identical by construction — and no walk pixel reaches the card anyway (the sheet scrolls inside its dialog; the register's Tier 4 door-walk gap). Seated: the spouse walker, the copy-law finder → a refuter, the calm/honesty reader, the false-pass hunter (Opus, fresh, de-authored; corpus with E17 + the newly folded E18 and E17's re-read). NOT seated, reason logged: the first-look reader and the CVD screener (no pixel of the card; no color or layout moved).
+
+**toneVerdict: SOFT-FLAG → the moved figures PILOT-CLEARED; one comprehension survivor's WORDS PARKED-FOR-BRIGGSY.**
+
+**Card A — the surcharge's scope is unnamed, and the TRUE price exposes it (lane both, high; newly visible).** Two seats independently read "+~$1,700 each" against the ~$2,900-a-person premium as too big (~59 % vs their ~45 % from 2026-sized Part D) and suspected a bug; the chair verified the figure against the engine (2032: Part B ~$1,154 + Part D ~$533 — the IRA §11201 2030 reset roughly triples tier-1 Part D, Trustees V.E4) — correct, and the premium card is on the SAME 2032 clock. The label is what's missing: the premium card says drug PLANS are not counted, the step card never says its surcharge covers the drug-plan surcharge. Two scope clauses built red-first and re-read cold: *"in Part B and drug-plan surcharges"* collided with the plans-not-counted line (high); *"in income surcharges on Part B and on your drug plan"* dropped the collision to medium but drew a NEW rosy survivor from the hunter (a $0 drug plan reads as escaping the Part D share). Rosy outranks confusing, so the chair REVERTED to the shipped wording and PARKED the words (the thrash limit: one refinement) — register *The step card never says what its surcharge covers…*, the three drafts and their misreads as the brief.
+
+**Card D — the step card's room covers the one-enrollee years, where the Marketplace cliff binds (lane correctness, high; pre-existing; rosy).** *"By those Medicare years … roughly ~$179,600 under it"* reads for 2030–31, when the younger spouse is still on the discounted plan with ~$18,600 of room. Filed Tier 1 beside the look-back headroom entry (same sentence).
+
+**Filed, tone, medium (pre-existing):** "a year" reads as a standing cost (scary direction; the refuter trimmed); the survivor sentence quotes no dollar line (three seats). **Killed by the refuter:** the hypothetical-as-charge headline, "conversion room reads tax-free", "The next step" implying a current step. **Nits noted, not filed:** the sheet-wide "about ~$" doubled hedge (a standing grammar choice), three "it"s.
+
+- **falsePassHunt:** attempted twice on the shipped copy (Survivor 1 = Card D; Survivor 2 killed by the refuter) and once on each draft (draft 2's $0-plan survivor is why it did not ship).
+- **colorBlindCheck:** not seated — no color or layout moved (flags only; this lane never passes anything).
+- **comprehension:** the spouse walker got the step, the room and the per-person/household pair right; stumbled on the figure's size (Card A) and on which years "those Medicare years" means (Card D / the look-back entry).
+- **routedToOracle:** none — the figure's correctness was verified by the chair and is pinned red-first (`healthSheetSeedGate`'s Trustees-row derivation).
+- **prediction:** his eye reads "+~$1,700 a year each" as right but asks "why is it so much more than the Part B figure?" (Card A in his words — rule 1); he rules the scope words himself; he does not flag the moved figure's size as wrong once told it includes the drug surcharge.
+- **disposition:** PILOT-CLEARED (the moved figures) · PARKED-FOR-BRIGGSY (Card A's words — pilot doubt after three drafts).
+- **evidence:** the three bundles above (cleared at squeaky); corpus rules 1, 2, 5, 6, 8, 15; exemplars E1, E13, E17, E18.
+
 ## 2026-09-25 — BRIGGSY's N=1 COLD READ of Card 3's sentence — `seed:retired` `landing-worsened` + `panel-worsened`, REAL+PHONE (walk `temp/caddie/card3-cold`, 2/2 in 23.5 s; frames shown cold, no ★ named)
 
 **Supersedes the 2026-09-17 card's disposition on one point: severity.** The sentence on the frame: *"Spending about $2,800 a month instead of $10,000 — about $7,200 less — would move it toward steadier ground."* Asked open ("what is the screen telling this couple?"): **"This couple is fucked — but that's ok (from the software's perspective — it's giving them honesty)."** Asked to put the line under "1 of 10" in his own words: **"spend 2800 a month instead of 10k and they'd be ok."** Asked how ok, and for how long: **"that's what the tool tells us, no?"**

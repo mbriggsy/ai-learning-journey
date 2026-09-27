@@ -390,4 +390,16 @@ supersedes anything derived from this file.
   us, no?"** Resolution: the entry moved to Tier 0 + a council on the frame (rule 15 widened). Lesson:
   the reader fills an unpriced payoff with "ok"; a hedge WORD cannot carry what the layout implies —
   a dollar-precise ask IS a promise unless the surface says otherwise. **Direction of error feared:
-  the chair discounting a survivor because machine seats read the hedge correctly.**
+  the chair discounting a survivor because machine seats read the hedge correctly.** Re-read
+  2026-09-26 at his seat, the figure-less line (*"Spending less than $10,000 a month would let your
+  plan cover more futures. This answer doesn't work out how much less."*): **"looks good"**, then
+  **"yeah that looks good"** — two sign-offs, no restatement in his own words.
+- **E18 — the room clause, figure-less, read on `surplus` (2026-09-26).** Trigger: *"There looks to
+  be room to spend more than $5,000 a month. This answer doesn't work out how much more."* His
+  verbatim: **"they have room to spend more, amount not worked out — but why aren't we saying how
+  much more? Or if we're not going to say how much more they can spend, let them know how much
+  they'll die with at this spending level."** Resolution: "convene it and build" — the spend solve
+  sizes the figure where it can. Lesson: an honest "doesn't work out" is not the end of his read —
+  he asks WHY NOT, and wants the next-best quantity the tool CAN stand behind. A figure-less
+  sentence reads as a gap to fill, not a finish. **Direction of error feared: the chair clearing
+  an honest-but-empty sentence as calm when he reads it as withholding.**

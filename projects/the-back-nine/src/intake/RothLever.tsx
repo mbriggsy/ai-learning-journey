@@ -252,7 +252,16 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
   return (
     <ControlSheet open={open} title={copy.leverRothTitle} onClose={onClose} announcerRef={announcerRef} restoreFallback={restoreFallback}>
       {nothingToConvert ? (
-        <p className="control-sheet__intro">{copy.leverRothClosedNothing}</p>
+        <>
+          <p className="control-sheet__intro">{copy.leverRothClosedNothing}</p>
+          {/* The family's visible Close stays on the closed face (the 2026-09-27 `steer` walk: one
+              sentence and no way out — the GoalPicker precedent, fixed in the product). */}
+          <div className="control-sheet__actions">
+            <button type="button" className="btn-quiet" onClick={onClose}>
+              {copy.leverCancel}
+            </button>
+          </div>
+        </>
       ) : (
         <>
           <p className="control-sheet__eyebrow">{copy.rothTeaserLead}</p>

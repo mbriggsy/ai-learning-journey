@@ -158,6 +158,16 @@ describe('RothLever — the $0-pre-tax closed face', () => {
     expect(screen.queryByRole('textbox')).toBeNull()
     expect(screen.queryByRole('button', { name: copy.leverRothApply })).toBeNull()
   })
+
+  it('the closed face still carries the family’s visible Close (the 2026-09-27 `steer` walk: a sheet with one sentence and NO way out hung the harness — the GoalPicker precedent, a product fix, never a harness exemption)', () => {
+    const onClose = vi.fn()
+    render(
+      <RothLever open savedAnchor={ANCHOR} draft={draftWith()} preview={vi.fn()} onApply={noop} onRemove={noop} onClose={onClose} />,
+    )
+    const close = screen.getByRole('button', { name: copy.leverCancel })
+    fireEvent.click(close)
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('RothLever — previewing a committed plan', () => {

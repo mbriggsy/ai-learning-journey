@@ -19,8 +19,9 @@
  * recompute, never a re-presentation of a number the current constants can no longer
  * reproduce. When NO clock fires, the persisted seed makes the recompute byte-identical to
  * the saved answer (CRN determinism) — the no-drift case IS the plan's byte-identity claim.
- * The exception no clock here sees is an ENGINE-DOMAIN pricing change (`1c97f55d` re-priced
- * IRMAA ROSIER with every stamp equal — OPEN; the last quiet clock below).
+ * The exception no VINTAGE clock sees is an ENGINE-DOMAIN pricing change (`1c97f55d` re-priced
+ * IRMAA ROSIER with every stamp equal) — the ENGINE-PRICING LEDGER (`src/engine/pricingVersion.ts`,
+ * the `pricing` block below) is its disclosure, keyed on `savedAt` against each change's ship day.
  *
  * ABSENT-STAMP = NOT-APPLICABLE (plan §298): a pre-U13 vault lacks savedAt/taxVintageDetail/
  * dateVintage — those clocks stay quiet (no false stale on legacy vaults), and every
@@ -66,8 +67,13 @@
  *   re-priced IRMAA for every saved Medicare-priced vault, ROSIER wherever a tier bites from
  *   bill 2028 (`42b078cf` re-priced it too), with every stamp equal; and a Q7 era entry
  *   cannot express an engine-domain change (it keys on the one survivor-ratio knob, exempts
- *   overriders, reads no exposure). The remedy is OPEN, council first: the register's Tier 2
- *   *An engine-domain pricing change re-prices every saved vault with no clock…*.]
+ *   overriders, reads no exposure) — so the "mint a Q7 era entry" remedy above is WITHDRAWN.
+ *   CLOSED 2026-09-27 by the engine-domain council (wf_bc99b1b1-f34, 8/10): the ENGINE-PRICING
+ *   LEDGER — one code-side row per engine-code change, its families mapped onto the exposure
+ *   reads below, a row crossed when `savedAt` predates its ship day (absent `savedAt` crosses
+ *   every row; the ship day itself speaks namelessly). It feeds `anyStale` ONLY — a method
+ *   change is never "the rules changed". Its parked residuals (a save by an OLD build after a
+ *   ship day; a re-saved pre-flip vault's spending) are stated in `pricingVersion.ts`.]
  * TWO PREDICATES, NOT ONE (the review's hero-echo catch): `rulesMoved` = a clock whose
  * firing means the CURRENT recompute genuinely differs from the saved answer (the hero's
  * "Some rules changed — this answer uses today's" echo may only ride THAT); `anyStale` =
@@ -155,6 +161,7 @@ import { healthcareVintageStamp } from '@engine/constants/health'
 import { taxVintageStamp } from '@engine/constants/tax'
 import { stateTaxVintageStamp, stateProfileKey, type PricedState } from '@engine/constants/stateTax'
 import { dateVintageStamp } from '@engine/constants'
+import { ENGINE_PRICING_LEDGER, type PricingFamily, type PricingLedgerRow } from '@engine/pricingVersion'
 
 /** Which healthcare clock moved. U17 §S4 split the v1 single line into FAMILY-specific lines:
  *  the ACA family and the Medicare family name themselves separately, each behind its OWN
@@ -282,6 +289,37 @@ export interface StalenessExposure {
   readonly pricedState: PricedState | undefined
 }
 
+/**
+ * THE ENGINE'S OWN PRICING — each ledger family's ONE exposure read (the engine-domain council,
+ * 2026-09-27). Exhaustive by type: a new `PricingFamily` with no read is a COMPILE error, never a
+ * silently unmapped family. Every read is a producer's-output read already on
+ * {@link StalenessExposure} — never an age or geography re-derivation (insights 080/081/088; the
+ * register's age-keyed "Medicare-enrolled in a bill year ≥ 2028" gate was STRUCK by the council).
+ *  - `stateTax` answers per ROW: a change to NC's profile reaches only a run that priced NC. A run
+ *    that priced no state is `'unpriced'`, unless the whole draft was unbuildable (`overlayBuilt`
+ *    `'unknown'`), where no read can say which profile it would have priced.
+ */
+const PRICING_FAMILY_READS: Readonly<
+  Record<PricingFamily, (e: StalenessExposure, row: PricingLedgerRow) => ExposureRead>
+> = {
+  tax: (e) => e.overlayBuilt,
+  stateTax: (e, row) =>
+    e.pricedState !== undefined
+      ? row.states?.includes(e.pricedState) === true
+        ? 'priced'
+        : 'unpriced'
+      : e.overlayBuilt === 'unknown'
+        ? 'unknown'
+        : 'unpriced',
+  medicare: (e) => e.medicare,
+  aca: (e) => e.aca,
+  contributions: (e) => e.contributions,
+}
+
+/** The ONE order the named families are spoken in — Medicare LAST (its phrase carries its own
+ *  trailing clause). Exhaustive: every family appears exactly once (a shape test pins it). */
+export const PRICING_FAMILY_ORDER: readonly PricingFamily[] = ['tax', 'stateTax', 'contributions', 'aca', 'medicare']
+
 export interface ExpiredBudgetLine {
   /** Index into the persisted `budget` array (the re-confirm names the line). */
   readonly index: number
@@ -378,6 +416,27 @@ export interface StalenessReport {
    *  window can be "past" before work actually stops (Q6 — documented-inert, a dated
    *  supersession of the plan's route-agnostic wording). */
   readonly budget: { readonly expiredLines: readonly ExpiredBudgetLine[] }
+  /**
+   * THE ENGINE'S OWN PRICING (`ENGINE_PRICING_LEDGER`) — a change to how the ENGINE CODE works a
+   * figure out, with every constants stamp equal. Keyed on the vault's `savedAt` against each row's
+   * SHIP day: no new persisted field. Feeds `anyStale` ONLY — never `rulesMoved` (no law moved: the
+   * hero's "today's rules" echo and the record card's "rules have moved" would be false — insights
+   * 074 / 101), never the saved-recommendation era (`SOLVER_CODE_VERSION` owns that).
+   */
+  readonly pricing: {
+    /** Families a CROSSED `reprice` row reached AND the run priced (bucket 1), in
+     *  {@link PRICING_FAMILY_ORDER}. The named method line speaks exactly these. */
+    readonly namedFamilies: readonly PricingFamily[]
+    /** A `reprice` row whose reach this household cannot be told about by name — saved ON the
+     *  row's ship day (either build could have figured the save), or crossed with an undecidable
+     *  (`'unknown'`) exposure — for a family not already named ⇒ the ONE nameless method line. */
+    readonly hedged: boolean
+    /** A `reconfirm-input` row (a premium that moved OUT of typed spending) reached a household
+     *  whose run prices Medicare (or cannot be decided) ⇒ the conditional spending re-confirm. */
+    readonly reconfirmMedicareSpending: boolean
+    /** Any of the three — the at-least-one-line invariant's premise. */
+    readonly moved: boolean
+  }
   /** A RULEBOOK the household was PROVEN exposed to moved — the recompute genuinely differs
    *  from the saved answer. The ONLY predicate the hero's standing "Some rules changed since
    *  your save — this answer uses today's" echo may ride, and the ONLY one
@@ -385,7 +444,7 @@ export interface StalenessReport {
    *  (unattributed) are EXCLUDED: neither supports the claim that their answer moved. */
   readonly rulesMoved: boolean
   /** Anything worth a line at the re-entry gate — `rulesMoved` OR an unattributed re-base OR a
-   *  budget re-confirm. */
+   *  budget re-confirm OR an engine-pricing line (`pricing.moved`). */
   readonly anyStale: boolean
 }
 
@@ -626,6 +685,44 @@ export function deriveStaleness(
     })
   }
 
+  // ── the engine's own pricing (the ledger — the engine-domain council, 2026-09-27) ────────
+  // A row is CROSSED when the save predates its ship day, or the vault carries no `savedAt` at all
+  // (persisted since 2026-07-09 — before every row, so an absent stamp PROVES a pre-ledger save:
+  // insight 102). A save ON the ship day is AMBIGUOUS (the day's saves may be figured under either
+  // build) ⇒ the nameless line, never a named "since your save" claim it cannot support (the
+  // header's suppress-never-fabricate law). A save AFTER it stays quiet — with the stale-build
+  // residual named in the header (a save by an old PWA after the ship day was figured by old code).
+  const savedAt = scenario.savedAt
+  const namedPricing = new Set<PricingFamily>()
+  const hedgedPricing = new Set<PricingFamily>()
+  let reconfirmMedicareSpending = false
+  for (const r of ENGINE_PRICING_LEDGER) {
+    const crossed = savedAt === undefined || savedAt < r.sinceEpochDay
+    const sameDay = savedAt === r.sinceEpochDay
+    if (r.kind === 'reconfirm-input') {
+      // The re-confirm is CONDITIONAL ("if your spending still includes…"), so an ambiguous ship
+      // day asks it too, and so does a stamp that lacks the extras marker (a healthcare stamp
+      // minted before 2026-07-11 — or carried forward by an older build). Silent only where the
+      // run provably prices no Medicare: a premium the plan does not price cannot be double-counted.
+      const markerAbsent =
+        scenario.healthcareVintage !== undefined && scenario.healthcareVintage.medicareExtrasTypicalVintage === undefined
+      if ((crossed || sameDay || markerAbsent) && exposure.medicare !== 'unpriced') reconfirmMedicareSpending = true
+      continue
+    }
+    if (!crossed && !sameDay) continue
+    for (const f of r.families) {
+      const read = PRICING_FAMILY_READS[f](exposure, r)
+      if (read === 'unpriced') continue
+      if (crossed && read === 'priced') namedPricing.add(f)
+      else hedgedPricing.add(f)
+    }
+  }
+  const pricingNamedFamilies = PRICING_FAMILY_ORDER.filter((f) => namedPricing.has(f))
+  // A family already NAMED needs no nameless twin: a crossed row proves the method changed under
+  // it, so an ambiguous earlier row adds nothing a reader could act on.
+  const pricingHedged = [...hedgedPricing].some((f) => !namedPricing.has(f))
+  const pricingMoved = pricingNamedFamilies.length > 0 || pricingHedged || reconfirmMedicareSpending
+
   // The two predicates, now fed by the three-way (header). `rulesMoved` takes bucket 1 ONLY —
   // every disjunct here is a NAMED clock: `taxMoved`/`contributionMoved` already carry their
   // exposure gate, `movedClocks` excludes the silenced and the aggregated, and `blendMoved` is
@@ -636,7 +733,9 @@ export function deriveStaleness(
   const rulesMoved =
     appDefaultMoved || taxMoved || stateTaxMoved || movedClocks.length > 0 || contributionMoved
   const unattributedMoved = unattributedClocks.length > 0
-  const anyStale = rulesMoved || unattributedMoved || expiredLines.length > 0
+  // `pricingMoved` joins `anyStale` ONLY (the council's placement): a method change is worth a
+  // line at the gate, but it never licenses the "rules changed" register.
+  const anyStale = rulesMoved || unattributedMoved || expiredLines.length > 0 || pricingMoved
 
   return {
     elapsed,
@@ -653,6 +752,12 @@ export function deriveStaleness(
     unattributed: { moved: unattributedMoved, clocks: unattributedClocks },
     date: { contributionMoved, blendMoved },
     budget: { expiredLines },
+    pricing: {
+      namedFamilies: pricingNamedFamilies,
+      hedged: pricingHedged,
+      reconfirmMedicareSpending,
+      moved: pricingMoved,
+    },
     rulesMoved,
     anyStale,
   }

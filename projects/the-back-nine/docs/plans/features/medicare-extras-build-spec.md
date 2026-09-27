@@ -128,7 +128,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   (`src/engine/taxOverlay.ts:557-568`), which holds only IDENTITY-MATCHED members so a stranger
   ref throws at the year loop's identity guard rather than silently dropping a member's premium
   from the Σ (the cost-understating direction). base+surcharge stays the existing count×uniform
-  line in `medicareAnnualCost` (`src/engine/healthOverlay.ts:813-827`), untouched.
+  line in `medicareAnnualCost` (`src/engine/healthOverlay.ts:816-830`), untouched.
 - **Ship gate, met:** the DND-012 externally-derived **ASYMMETRIC survivor golden** ships as
   `src/engine/__tests__/medicareExtras.test.ts:86-159` — extras `[0, 200]` with the $0 owner
   dying first, hand-derived per year, so the survivor is still charged their full $200×12; the
@@ -240,7 +240,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
 - **DND-012 externally-derived fixtures**, including the F3 asymmetric survivor golden (F3 above).
 - **verify:fit arms re-pinned WITHOUT assuming monotone shrink** — the omission axis shrank but
   the real-flat clause broadened. The fit spec now pins non-typical extras arms explicitly
-  (`e2e/vertical-fit.spec.ts:1129-1130` — the priced-state faces, all non-typical; `:1957-1959` — the statestale non-typical echo frame; re-anchored 2026-09-10, both prior numbers had landed on unrelated lines), and the CSP intake walk learned the fork step
+  (`e2e/vertical-fit.spec.ts:1130-1131` — the priced-state faces, all non-typical; `:1971-1973` — the statestale non-typical echo frame; re-anchored 2026-09-10, both prior numbers had landed on unrelated lines), and the CSP intake walk learned the fork step
   (`e2e/csp.spec.ts:238`, the one integration gap `503213f4` left, fixed in `e921f2bb`).
 - **Color-blind-safe encoding** on adopted-vs-entered / typical-vs-your-bill / priced-vs-residual:
   every distinction is carried in words, never a hue. Each door fact line states its provenance in
@@ -253,14 +253,14 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   `src/engine/taxOverlay.ts:1270-1271`.
 - **Dev-seed drift recorded before any re-tune.** The flagship `retiredOnTrack` seed carries the
   mixed-provenance showcase — one entered dollar, one affirmed MA-$0
-  (`src/ui/devSeeds.ts:120-121`) — and the `borderline` / `?seed=dip` seeds were re-probed under
+  (`src/ui/devSeeds.ts:121-122`) — and the `borderline` / `?seed=dip` seeds were re-probed under
   the extras engine on 2026-07-11 and again through the U14 S0 typical refresh.
 - The unit landed as ONE feature commit (`503213f4`, the ACA-sheet real-flat gap kept to its own
   touch, never a rider), then the integration fix `e921f2bb`, the ultramode fold `019f5334`, and
   the Caddie close `cad2529e`. Sequence as ratified: ultramode review → Caddie pre-walk →
   pilot-clear + ship (the 2026-07-11 batched-oracle grant — his eye audits any-time + at the
   gauntlet).
-- **Staleness.** The `extras-typical` clock (`src/store/staleness.ts:533-552`) fires only when the
+- **Staleness.** The `extras-typical` clock (`src/store/staleness.ts:592-611`) fires only when the
   saved stamp carries an extras vintage, that vintage differs from the current one, AND the
   household is actually exposed (an absent or `typical`/`unanswered` fork answer). It is mapped
   to the `medicare` family in the exhaustive `HEALTHCARE_CLOCK_FAMILIES` record, so a clock with

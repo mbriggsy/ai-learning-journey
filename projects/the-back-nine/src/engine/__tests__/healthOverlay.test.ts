@@ -364,44 +364,67 @@ describe('healthOverlay — M4: irmaaTierSurchargeMonthly (the pure per-person s
 //   tiers 1–4 (A): × CPI for the 12 months ending August of Y−1 (the 2026 lines carry Aug 2025), (B)
 //     rounded to the nearest $1,000, joint = 2× (i)(3)(C)(ii);
 //   top (C): frozen through 2027, then × CPI for August of Y−1 over August 2026, rounded, joint 150 %.
-// Hand oracle: the engine's ONE index is the Trustees' near-term CPI compounded from the 2026 anchor
-// (1 at and before it — priceIndex.ts), so index(2026 + n) = (1 + r)^n inside the printed table; the
-// rate is READ (never re-typed), the line algebra is typed here.
+// Hand oracle — the GROWTH is COUNTED from the statute's own dates, never read off the engine's index
+// (insight 138: the 1c97f55d witnesses shared the index's pre-anchor clamp and re-derived the defect).
+// The pinned 2026 lines carry CPI through August 2025, so a tiers-1–4 line of bill year Y carries
+// (Y − 1) − 2025 more Augusts; the top re-indexes from August 2026, so (Y − 1) − 2026 after its freeze.
+// Each August inside the printed table is one year of the Trustees' near-term rate (READ, never
+// re-typed). Only the MAGI year's price LEVEL is the index's convention: 1 at and before the 2026
+// anchor, (1 + r)^n after — a level read, where the clamp is honest.
 // ---------------------------------------------------------------------------
 describe('the IRMAA lines AS COMPARED for a bill year (irmaaScheduleAsCompared)', () => {
   const r = medicareCostTrend.value.cpiNearTermAvg
-  const idx = (y: number) => (y <= 2026 ? 1 : (1 + r) ** (y - 2026))
+  const level = (y: number) => (y <= 2026 ? 1 : (1 + r) ** (y - 2026))
   const round1000 = (x: number) => Math.round(x / 1_000) * 1_000
+  /** Augusts of CPI a bill year's line carries past its base (tiers 1–4: August 2025; top: August 2026). */
+  const augustsPast = (billYear: number, baseAugust: number) => billYear - 1 - baseAugust
   const RAW = irmaa.value
 
-  it('bill years 2026 and 2027 (MAGI 2024 / 2025): every line is the pinned 2026 line — the identity frame', () => {
-    for (const magiYear of [2024, 2025]) {
-      const c = irmaaScheduleAsCompared(RAW, magiYear)
-      expect(c.tiers.map((t) => t.singleMagiThreshold)).toEqual(RAW.tiers.map((t) => t.singleMagiThreshold))
-      expect(c.tiers.map((t) => t.mfjMagiThreshold)).toEqual(RAW.tiers.map((t) => t.mfjMagiThreshold))
-    }
+  it('bill year 2026 (MAGI 2024): every line is the pinned 2026 line — the lines’ own year, the identity frame', () => {
+    const c = irmaaScheduleAsCompared(RAW, 2024)
+    expect(c.tiers.map((t) => t.singleMagiThreshold)).toEqual(RAW.tiers.map((t) => t.singleMagiThreshold))
+    expect(c.tiers.map((t) => t.mfjMagiThreshold)).toEqual(RAW.tiers.map((t) => t.mfjMagiThreshold))
   })
 
-  it('bill year 2028 (MAGI 2026): tier 1 → round1000(109,000 × index(2027)) = $112,000 single, $224,000 MFJ; the top re-indexes from its August-2026 base → $516,000 single, $774,000 MFJ (150 %)', () => {
-    const c = irmaaScheduleAsCompared(RAW, 2026)
-    const tier1Single = round1000(singleThresh(0) * idx(2027)) / idx(2026)
-    expect(tier1Single).toBe(112_000) // the hand figure at the Trustees' 3.2 % (index(2026) = 1)
+  it('bill year 2027 (MAGI 2025): tiers 1–4 carry ONE August of CPI (Aug 2025 → Aug 2026) — tier 1 round1000(109,000 × (1 + r)) = $112,000 single, $224,000 MFJ; the top is still frozen at $500,000 / $750,000', () => {
+    const c = irmaaScheduleAsCompared(RAW, 2025)
+    expect(augustsPast(2027, 2025)).toBe(1)
+    const tier1Single = round1000(singleThresh(0) * (1 + r)) / level(2025)
+    expect(tier1Single).toBe(112_000) // the hand figure at the Trustees' 3.2 % (MAGI 2025's level is 1)
     expect(c.tiers[0]!.singleMagiThreshold).toBeCloseTo(tier1Single, 6)
-    expect(c.tiers[0]!.mfjMagiThreshold).toBeCloseTo(2 * tier1Single, 6)
-    const topSingle = round1000(500_000 * idx(2027)) / idx(2026)
+    expect(c.tiers[0]!.mfjMagiThreshold).toBeCloseTo(224_000, 6)
+    RAW.tiers.slice(0, 4).forEach((t, k) => {
+      // ⚑ NEGATIVE (insight 138 — the defect this pins): bill 2027 is NEVER the pinned 2026 line for tiers 1–4.
+      expect(c.tiers[k]!.singleMagiThreshold, `tier ${k + 1} single`).toBeGreaterThan(t.singleMagiThreshold)
+    })
+    expect(c.tiers[4]!.singleMagiThreshold).toBe(RAW.tiers[4]!.singleMagiThreshold) // still frozen through 2027
+    expect(c.tiers[4]!.mfjMagiThreshold).toBe(RAW.tiers[4]!.mfjMagiThreshold)
+  })
+
+  it('bill year 2028 (MAGI 2026): tiers 1–4 carry TWO Augusts — tier 1 round1000(109,000 × (1 + r)²) = $116,000 single, $232,000 MFJ; the top ONE from its August-2026 base → $516,000 single, $774,000 MFJ (150 %)', () => {
+    const c = irmaaScheduleAsCompared(RAW, 2026)
+    expect(augustsPast(2028, 2025)).toBe(2)
+    const tier1Single = round1000(singleThresh(0) * (1 + r) ** 2) / level(2026)
+    expect(tier1Single).toBe(116_000)
+    expect(c.tiers[0]!.singleMagiThreshold).toBeCloseTo(tier1Single, 6)
+    expect(c.tiers[0]!.mfjMagiThreshold).toBeCloseTo(232_000, 6)
+    expect(augustsPast(2028, 2026)).toBe(1)
+    const topSingle = round1000(500_000 * (1 + r)) / level(2026)
     expect(topSingle).toBe(516_000)
     expect(c.tiers[4]!.singleMagiThreshold).toBeCloseTo(topSingle, 6)
     expect(c.tiers[4]!.mfjMagiThreshold).toBeCloseTo(1.5 * topSingle, 6)
     expect(c.tiers[4]!.mfjMagiThreshold).toBeCloseTo(774_000, 6) // the review's "~$774k real from 2028"
   })
 
-  it('a far bill year (2034, MAGI 2032): each line is round1000(anchor × index(2033)) ÷ index(2032) — about ONE year of CPI above the anchor, never the bill year’s frame', () => {
+  it('a far bill year (2034, MAGI 2032): tiers 1–4 carry EIGHT Augusts, the top SEVEN, each over index(2032) — about two years of CPI above the anchor for tiers 1–4, one for the top; never the bill year’s frame', () => {
     const c = irmaaScheduleAsCompared(RAW, 2032)
     RAW.tiers.forEach((t, k) => {
-      const nominalSingle = round1000(t.singleMagiThreshold * idx(2033))
-      expect(c.tiers[k]!.singleMagiThreshold, `tier ${k} single`).toBeCloseTo(nominalSingle / idx(2032), 6)
+      const augusts = augustsPast(2034, t.lineIndexing === 'frozen-then-cpi' ? 2026 : 2025)
+      expect(augusts).toBe(t.lineIndexing === 'frozen-then-cpi' ? 7 : 8)
+      const nominalSingle = round1000(t.singleMagiThreshold * (1 + r) ** augusts)
+      expect(c.tiers[k]!.singleMagiThreshold, `tier ${k} single`).toBeCloseTo(nominalSingle / level(2032), 6)
       // ⚑ NEGATIVE (the refuted 2026-09-25 build): deflating by the BILL year's index lands BELOW the anchor.
-      expect(c.tiers[k]!.singleMagiThreshold).toBeGreaterThan(nominalSingle / idx(2034))
+      expect(c.tiers[k]!.singleMagiThreshold).toBeGreaterThan(nominalSingle / level(2034))
     })
   })
 
@@ -412,11 +435,12 @@ describe('the IRMAA lines AS COMPARED for a bill year (irmaaScheduleAsCompared)'
   it('the compared schedule carries its MAGI year and ONE nominal dollar in real terms (the inclusive line’s last safe dollar is one NOMINAL dollar under it)', () => {
     const c = irmaaScheduleAsCompared(RAW, 2030)
     expect(c.comparedAtMagiYear).toBe(2030)
-    expect(c.oneNominalDollarReal).toBeCloseTo(1 / idx(2030), 12)
+    expect(c.oneNominalDollarReal).toBeCloseTo(1 / level(2030), 12)
   })
 
-  it('the bill through the compared schedule: $220,000 MFJ of 2026 MAGI owes NOTHING in 2028 (the real line is $224,000), where the anchor lines billed tier 1', () => {
-    expect(irmaaTierSurchargeMonthly(220_000, 'mfj', irmaaScheduleAsCompared(RAW, 2026), IRMAA_ANCHOR_SCALES)).toBe(0)
+  it('the bill through the compared schedule: $220,000 MFJ of 2025 MAGI and $228,000 of 2026 MAGI owe NOTHING (the real lines are $224,000 / $232,000) — where the anchor lines, and the one-CPI-year-low frame, billed tier 1', () => {
+    expect(irmaaTierSurchargeMonthly(220_000, 'mfj', irmaaScheduleAsCompared(RAW, 2025), IRMAA_ANCHOR_SCALES)).toBe(0)
+    expect(irmaaTierSurchargeMonthly(228_000, 'mfj', irmaaScheduleAsCompared(RAW, 2026), IRMAA_ANCHOR_SCALES)).toBe(0)
     expect(irmaaTierSurchargeMonthly(220_000, 'mfj', irmaaScheduleAsCompared(RAW, 2024), IRMAA_ANCHOR_SCALES)).toBeCloseTo(95.7, 6)
   })
 

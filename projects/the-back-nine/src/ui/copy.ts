@@ -1510,6 +1510,34 @@ export const copy = {
   // stays honest as the set changes rather than needing a re-count each time.
   stalenessReferenceTables:
     'Reference data this tool reads has been updated since your save. We can’t tell from here whether it touches your own numbers.',
+  // THE ENGINE'S OWN METHOD (the engine-domain council, 2026-09-27, wf_bc99b1b1-f34 — `report.pricing`,
+  // off `src/engine/pricingVersion.ts`'s ledger). A change to how the ENGINE CODE works a figure out,
+  // with no reference table re-dated — so these lines never say "rules" (no law moved — insight 074
+  // inverted), never "reference data" (nothing was re-dated), never "improved" / "refined" /
+  // "corrected" (each reads as "your number got better"), and never a direction: a rosier and a
+  // harsher move read the same, the recompute itself carries the verdict. They feed `anyStale` only —
+  // never the hero's "today's rules" echo, never the record card's "rules have moved". ⚑ PILOT-DRAFTED
+  // WORDS (the council's yours-to-close tier) — Briggsy's cold read supersedes them.
+  //
+  // The named line composes the EXPOSED families' phrases (`slots.stalenessPricing`); Medicare's
+  // phrase names the income levels where the surcharge starts, because the method change moved those
+  // lines themselves (the conversion room a household may have planned against), not only a cost.
+  stalenessPricingTax: 'your taxes',
+  stalenessPricingStateTax: 'your state tax',
+  stalenessPricingContributions: 'your retirement-account contribution limits',
+  stalenessPricingAca: 'your Marketplace health-plan costs',
+  stalenessPricingMedicare: 'your Medicare costs, including the income levels where the Medicare surcharge starts',
+  // The nameless twin — a method change the household may or may not have crossed (saved ON its ship
+  // day), or crossed with exposure no producer read can decide. Code-true: it never claims reference
+  // data moved (the aggregate's sentence would be false here) and never names a figure.
+  stalenessPricingHedged:
+    'We changed how this tool works out some figures around the time of your save. We can’t tell from here whether that touches your own numbers.',
+  // The INPUT re-confirm (the ledger's `reconfirm-input` rows — the 2026-07-10 / -11 Medicare flips):
+  // a vault saved before the plan priced these premiums itself may still carry them inside its typed
+  // spending, a double count (conservative). Conditional, never a directive; it mirrors the intake's
+  // own boundary sentence (`spendHelp`'s "Leave out the Medicare premiums the tool prices itself").
+  stalenessReconfirmMedicareSpending:
+    'If the spending you entered still includes the Medicare premiums the plan now prices itself — Part B, its income surcharge, or any Part D, Medigap or Medicare Advantage premium — they’re counted twice. Worth a look.',
   // Act-4 · U16 §S1 — the SOLVE channel's invalidation card (the `SolveAnswer` stale/re-solve arm,
   // machine label 'inputs-changed'). A draft edit changed a ranking-affecting input since the last
   // strategy read (source-bound to solverRunFingerprint), so that read no longer describes the current
@@ -2176,7 +2204,7 @@ export const slots = {
    *
    *  ⚠️ DO NOT "FIX" THIS BY DROPPING THE TODAY TICK. That inverts the contradiction into the
    *  defect U13/§S0 already fixed — `bandAnnotations.ts:51-56` records it live from the first
-   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2168-2171` (the `?vault=datearrived` arm — "must still
+   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2182-2185` (the `?vault=datearrived` arm — "must still
    *  mark WALL-TIME today") forbids a band that loses its wall clock BY NAME. The tick is right; the sentence was wrong. */
   bandAgedPremiseFresh: (buildYear: number): string =>
     `This range runs from ${buildYear}, when the plan was built — the years since are modeled, not records. What you actually hold today is undetermined until you re-confirm.`,
@@ -2627,7 +2655,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the two
    *  universal gates (no false certainty, no advice verb), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:922` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:985` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -2880,6 +2908,10 @@ export const slots = {
    *  the user's frame, never a bare offset). */
   stalenessBudgetLine: (endCalendarYear: number): string =>
     `Part of your budget was set to end in ${endCalendarYear} — worth a look if that’s changed.`,
+  /** The engine-method line (see `copy.stalenessPricing*`): ONE sentence naming only the families
+   *  the household's run priced, Medicare last (its phrase carries its own trailing clause). */
+  stalenessPricing: (families: string): string =>
+    `Since your save, we’ve changed how this tool works out ${families}. This reading uses the current method.`,
   /** The date hero's ANCHORED framing (U13): the relative years re-derived against wall
    *  time + the wall-time-stable calendar label — the calendar year never decays, the "~N
    *  years" is always from TODAY (a re-opened old plan must not replay the count it carried on
@@ -3031,7 +3063,7 @@ export const slots = {
    *  BITES it the way it bites its visual twin `recDeltaTypical`: the AT reader hears the same figures the
    *  sighted reader sees, so the same modal law must hold. A `recViz` prefix was rejected — it would red the
    *  three correctly hedge-free arm labels (`recVizWithLabel`/`recVizWithoutLabel`/`recVizRunnerUpLabel`,
-   *  copy.ts:1927-1934 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
+   *  copy.ts:1955-1962 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
    *  `isControlKey` was rejected — it breaks that predicate's "by prefix ALONE" law (copyGuard.ts:129). */
   recDeltaVizAria: (withoutLabel: string, withoutFig: string, withLabel: string, withFig: string, deltaFig: string): string =>
     `${withoutLabel} lands near about $${withoutFig}; ${withLabel} about $${withFig} — a difference of about $${deltaFig}.`,

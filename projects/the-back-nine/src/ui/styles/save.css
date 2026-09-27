@@ -306,6 +306,53 @@
 }
 
 /* ----- P3-U13: the re-entry balance confirm ----- */
+/* The gate's two halves: the story of what changed since the save, and the read-back it asks about
+   with the decision pair under it. Each half stacks at the step's own rhythm. */
+.reentry-story,
+.reentry-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* Each note is its own sentence about its own change — a small gap keeps four of them from reading as
+   one wall (they are separate facts, never one paragraph). */
+.reentry-notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* A WIDE WINDOW sets the halves side by side (the engine-pricing ledger, 2026-09-27): an old vault can
+   earn four or five calm notes — the vintage lines, the method line, the spending re-confirm — and in
+   one 36rem column they pushed "Still about right" below the first frame at 1536×791 (46–107px, measured).
+   Content outranks layout, so the notes stay whole and the column splits instead. The decision pair keeps
+   its place directly under the figures it confirms; the reading order (story → read-back → decision) is
+   unchanged for every reader. Narrower windows keep the single column. The seam is the ONE laptop seam —
+   a mirror of --bp-laptop (68rem, tokens.css), never a tier of its own. */
+@media (min-width: 68rem) {
+  .save--reentry {
+    max-width: calc(2 * var(--measure) + var(--space-8));
+  }
+
+  .reentry {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: var(--space-8);
+    row-gap: var(--space-5);
+    align-items: start;
+  }
+
+  .reentry > .save-step__heading {
+    grid-column: 1 / -1;
+  }
+
+  /* The halves start on one line: the read-back's first group drops its lead-in margin here. */
+  .reentry-confirm > .reentry-group:first-child {
+    margin-block-start: 0;
+  }
+}
+
 .reentry-group {
   margin-block-start: var(--space-4);
 }

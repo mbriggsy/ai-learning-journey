@@ -34,6 +34,7 @@ import { describe, expect, it } from 'vitest'
 import {
   deriveStaleness,
   epochDayToCalendarYear,
+  PRICING_FAMILY_ORDER,
   type HealthcareClock,
   type StalenessExposure,
 } from '../staleness'
@@ -43,8 +44,21 @@ import { DEV_SEEDS } from '@ui/devSeeds'
 import { CURRENT_APP_DEFAULT_VERSION, appDefaultEraFor } from '@shared/appDefaults'
 import type { PricedState } from '@engine/constants/stateTax'
 import type { HealthcareVintageV3, ScenarioV3, StateTaxVintageV3 } from '@shared/model'
+import {
+  ENGINE_PRICING_LEDGER,
+  FIRST_UNAMBIGUOUS_SAVE_DAY,
+  type PricingFamily,
+  type PricingLedgerRow,
+} from '@engine/pricingVersion'
 
-const TODAY = currentEpochDay()
+/** The injected clock — never earlier than the first day a save is unambiguously THIS build's (the
+ *  engine-pricing ledger's newest ship day + 1). A fixture saved on a ship day is the ledger's
+ *  deliberately AMBIGUOUS day (the nameless line), so a wall-clock TODAY would red this file on
+ *  exactly the day a row ships and green it the next (`FIRST_UNAMBIGUOUS_SAVE_DAY`'s docblock). */
+const TODAY = Math.max(currentEpochDay(), FIRST_UNAMBIGUOUS_SAVE_DAY)
+/** `scenarioFromDraft` stamps `savedAt` off the WALL clock; a "fresh save by this build" fixture
+ *  re-stamps it at {@link TODAY} (see above). */
+const stampedToday = (s: ScenarioV3): ScenarioV3 => ({ ...s, savedAt: TODAY })
 
 // --- the exposure fixtures (the populations the three-way distinguishes) ----------------------
 /** A household whose run prices EVERYTHING — the pre-65 marketplace-quoted, still-contributing,
@@ -118,14 +132,14 @@ const withRead = (e: StalenessExposure, over: Partial<StalenessExposure>): Stale
 function freshSave(): ScenarioV3 {
   const r = scenarioFromDraft(DEV_SEEDS.retired)
   if (!r.ready) throw new Error('DEV_SEEDS.retired should be save-ready')
-  return r.scenario
+  return stampedToday(r.scenario)
 }
 
 /** A still-working household (the date route) for the route-gate arms. */
 function freshDateSave(): ScenarioV3 {
   const r = scenarioFromDraft(DEV_SEEDS.date)
   if (!r.ready) throw new Error('DEV_SEEDS.date should be save-ready')
-  return r.scenario
+  return stampedToday(r.scenario)
 }
 
 describe('deriveStaleness — the property arm (a fresh save is never stale)', () => {
@@ -136,8 +150,9 @@ describe('deriveStaleness — the property arm (a fresh save is never stale)', (
       if (!r.ready) return // non-save-ready seeds are covered by the registry arms elsewhere
       // The REAL exposure for this REAL seed — the one arm in this file that joins the
       // bucketing law to its actual producer (insight 095: probe the shipped decision path).
-      const report = deriveStaleness(r.scenario, TODAY, exposureForDraft(DEV_SEEDS[key]))
+      const report = deriveStaleness(stampedToday(r.scenario), TODAY, exposureForDraft(DEV_SEEDS[key]))
       expect(report.anyStale).toBe(false)
+      expect(report.pricing).toEqual({ namedFamilies: [], hedged: false, reconfirmMedicareSpending: false, moved: false })
       expect(report.rulesMoved).toBe(false)
       expect(report.spine.appDefaultMoved).toBe(false)
       expect(report.controls.taxMoved).toBe(false)
@@ -154,7 +169,7 @@ describe('deriveStaleness — the property arm (a fresh save is never stale)', (
 })
 
 describe('deriveStaleness — the legacy vault (absent stamps = not-applicable, plan §298)', () => {
-  it('a pre-U13 vault (no savedAt / taxVintageDetail / dateVintage / healthcareVintage) fires NOTHING and suppresses every wall-time claim', () => {
+  it('a pre-U13 vault (no savedAt / taxVintageDetail / dateVintage / healthcareVintage) fires NO vintage clock and suppresses every wall-time claim — but crosses EVERY engine-pricing row (an absent savedAt proves a save before 2026-07-09, insight 102)', () => {
     const s = freshSave()
     const legacy = { ...s } as Record<string, unknown>
     delete legacy.savedAt
@@ -162,10 +177,19 @@ describe('deriveStaleness — the legacy vault (absent stamps = not-applicable, 
     delete legacy.dateVintage
     delete legacy.healthcareVintage
     const report = deriveStaleness(legacy as unknown as ScenarioV3, TODAY, ACA_PRICED)
-    expect(report.anyStale).toBe(false)
     expect(report.rulesMoved).toBe(false)
     expect(report.unattributed.moved).toBe(false)
     expect(report.elapsed).toBeNull() // NEVER fabricated from startCalendarYear
+    // The ledger's one exception to "absent = not-applicable": `savedAt` has been persisted since
+    // 2026-07-09, before every row, so its ABSENCE is positive evidence of a pre-ledger save — every
+    // row crossed, named by the families this run priced (no state priced ⇒ no state line).
+    expect(report.pricing).toEqual({
+      namedFamilies: ['tax', 'contributions', 'medicare'],
+      hedged: false,
+      reconfirmMedicareSpending: true,
+      moved: true,
+    })
+    expect(report.anyStale, 'worth a line — through the ledger alone').toBe(true)
   })
 })
 
@@ -738,7 +762,10 @@ describe('deriveStaleness — the senior-bonus sunset has NO clock (a dated supe
   it('crossing the sunset year fires NOTHING — the crossing changes nothing about a saved answer (see the staleness.ts header + the tripwire test forcing the filed engine unit)', () => {
     const s = freshSave() // retired 68/70 → both 65+ inside the bonus window at save
     const dayIn2029 = Math.floor(Date.UTC(2029, 5, 1) / 86_400_000)
-    const savedIn2026 = { ...s, savedAt: Math.floor(Date.UTC(2026, 6, 1) / 86_400_000) }
+    // A 2026 save made by THIS build (the ledger’s first unambiguous day — a July-2026 save would cross
+    // the engine-pricing rows, a different clock this arm is not about).
+    const savedIn2026 = { ...s, savedAt: FIRST_UNAMBIGUOUS_SAVE_DAY }
+    expect(epochDayToCalendarYear(FIRST_UNAMBIGUOUS_SAVE_DAY), 'the save sits inside the bonus window (it sunsets after 2028) — a later ledger row past it needs a new fixture here').toBeLessThan(2029)
     const report = deriveStaleness(savedIn2026, dayIn2029, MEDICARE_ONLY)
     expect(report.rulesMoved).toBe(false)
     expect(report.anyStale).toBe(false)
@@ -790,5 +817,256 @@ describe('deriveStaleness — the wall-time anchor', () => {
   it('elapsed days clamp at 0 for a future savedAt (clock skew never yields a negative claim)', () => {
     const s = { ...freshSave(), savedAt: TODAY + 30 }
     expect(deriveStaleness(s, TODAY, MEDICARE_ONLY).elapsed?.days).toBe(0)
+  })
+})
+
+// =============================================================================================
+// THE ENGINE-PRICING LEDGER (the engine-domain council, 2026-09-27 — `report.pricing`).
+//
+// Every stamp in these fixtures is FRESH (this build's), so no vintage clock fires: whatever `pricing`
+// reports is the ledger's alone. EVERY EXPECTED FAMILY SET IS DERIVED FROM `ENGINE_PRICING_LEDGER`'s
+// rows by the filter below — an independent restatement of the law, never a read of the reader — and
+// each fixture's priced families are stated BY HAND beside it. So an appended row moves these
+// expectations with it, and a reader that drifted from the law reds.
+//
+// The law: a `reprice` row is CROSSED when the save predates its ship day (or carries no `savedAt`);
+// crossed + priced ⇒ NAMED; saved ON the ship day, or crossed with an undecidable read ⇒ the nameless
+// HEDGED line — unless the same family is already named; later saves quiet; unpriced ⇒ silent. A
+// `reconfirm-input` row asks the Medicare spending re-confirm when crossed, on its ship day, or when the
+// healthcare stamp lacks the extras marker — never where the run provably prices no Medicare.
+// `pricing` feeds `anyStale` ONLY: no law moved, so `rulesMoved` never hears it.
+// =============================================================================================
+describe('deriveStaleness — the engine-pricing ledger', () => {
+  const REPRICE = ENGINE_PRICING_LEDGER.filter((r) => r.kind === 'reprice')
+  const RECONFIRM = ENGINE_PRICING_LEDGER.filter((r) => r.kind === 'reconfirm-input')
+  const rowV = (version: number): PricingLedgerRow => ENGINE_PRICING_LEDGER.find((r) => r.version === version)!
+  const NEWEST = ENGINE_PRICING_LEDGER[ENGINE_PRICING_LEDGER.length - 1]!
+  const PRE_LEDGER_DAY = ENGINE_PRICING_LEDGER[0]!.sinceEpochDay - 1
+  const SHIP_DAYS = [...new Set(ENGINE_PRICING_LEDGER.map((r) => r.sinceEpochDay))]
+
+  /** Each fixture's PRICED families, stated by hand (the exposure literals above, read as the law reads
+   *  them; `stateTax` is decided per row by the household's state, below). */
+  const ACA_PRICED_FAMILIES: ReadonlySet<PricingFamily> = new Set(['tax', 'contributions', 'aca', 'medicare'])
+  const MEDICARE_ONLY_FAMILIES: ReadonlySet<PricingFamily> = new Set(['tax', 'medicare'])
+  const OVERLAY_NO_HEALTH_FAMILIES: ReadonlySet<PricingFamily> = new Set(['tax'])
+
+  const crosses = (savedAt: number | undefined, r: PricingLedgerRow): boolean => savedAt === undefined || savedAt < r.sinceEpochDay
+  /** Does row `r` reach family `f` for a household pricing `priced` in `state`? */
+  const reaches = (r: PricingLedgerRow, f: PricingFamily, priced: ReadonlySet<PricingFamily>, state: PricedState | undefined) =>
+    r.families.includes(f) &&
+    (f === 'stateTax' ? state !== undefined && (r.states ?? []).includes(state) : priced.has(f))
+  const expectedNamed = (savedAt: number | undefined, priced: ReadonlySet<PricingFamily>, state?: PricedState) =>
+    PRICING_FAMILY_ORDER.filter((f) => REPRICE.some((r) => crosses(savedAt, r) && reaches(r, f, priced, state)))
+  const expectedHedged = (savedAt: number | undefined, priced: ReadonlySet<PricingFamily>, state?: PricedState) => {
+    const named = new Set(expectedNamed(savedAt, priced, state))
+    return REPRICE.some(
+      (r) => r.sinceEpochDay === savedAt && r.families.some((f) => reaches(r, f, priced, state) && !named.has(f)),
+    )
+  }
+  const savedOn = (savedAt: number | undefined): ScenarioV3 => {
+    const s = { ...freshSave() } as Record<string, unknown>
+    if (savedAt === undefined) delete s.savedAt
+    else s.savedAt = savedAt
+    return s as unknown as ScenarioV3
+  }
+  /** A save WITHOUT the healthcare stamp's extras marker (minted before 2026-07-11, or carried forward). */
+  const withoutExtrasMarker = (s: ScenarioV3): ScenarioV3 => {
+    const hv = { ...s.healthcareVintage! } as Record<string, unknown>
+    delete hv.medicareExtrasTypicalVintage
+    return { ...s, healthcareVintage: hv as unknown as HealthcareVintageV3 }
+  }
+  const QUIET = { namedFamilies: [], hedged: false, reconfirmMedicareSpending: false, moved: false }
+
+  it('a save that CROSSED reprice rows names exactly the crossed families its run priced, in PRICING_FAMILY_ORDER — anyStale rises, rulesMoved does NOT', () => {
+    // The day before v5 (2026-09-24): v5 … the newest are crossed; the Medicare re-confirm rows are long past.
+    const savedAt = rowV(5).sinceEpochDay - 1
+    const report = deriveStaleness(savedOn(savedAt), TODAY, ACA_PRICED)
+    const expected = expectedNamed(savedAt, ACA_PRICED_FAMILIES)
+    expect(expected.length, 'non-vacuity: the ledger names more than one family for this save').toBeGreaterThan(1)
+    expect(report.pricing).toEqual({ namedFamilies: expected, hedged: false, reconfirmMedicareSpending: false, moved: true })
+    expect(report.anyStale, 'worth a line at the gate').toBe(true)
+    expect(report.rulesMoved, 'no law moved — the hero echo and the record card stay dark').toBe(false)
+    // The order is the spoken order, not the ledger's row order (v5/v6 are tax-first, Medicare lands last).
+    expect(report.pricing.namedFamilies).toEqual(PRICING_FAMILY_ORDER.filter((f) => report.pricing.namedFamilies.includes(f)))
+    expect(report.pricing.namedFamilies[report.pricing.namedFamilies.length - 1]).toBe('medicare')
+  })
+
+  it('an ABSENT savedAt crosses every row (it has been persisted since before the first one) — the full crossed set, per fixture', () => {
+    for (const [name, exposure, priced] of [
+      ['ACA_PRICED', ACA_PRICED, ACA_PRICED_FAMILIES],
+      ['MEDICARE_ONLY', MEDICARE_ONLY, MEDICARE_ONLY_FAMILIES],
+      ['OVERLAY_NO_HEALTH', OVERLAY_NO_HEALTH, OVERLAY_NO_HEALTH_FAMILIES],
+    ] as const) {
+      const report = deriveStaleness(savedOn(undefined), TODAY, exposure)
+      expect(report.pricing.namedFamilies, name).toEqual(expectedNamed(undefined, priced))
+      expect(report.pricing.namedFamilies, `${name}: identical to a save the day before the ledger began`).toEqual(
+        deriveStaleness(savedOn(PRE_LEDGER_DAY), TODAY, exposure).pricing.namedFamilies,
+      )
+      expect(report.pricing.hedged, name).toBe(false)
+    }
+  })
+
+  it('a save AFTER the newest ship day is QUIET on every fixture — undecidable, unpriced and state-priced alike', () => {
+    for (const savedAt of [FIRST_UNAMBIGUOUS_SAVE_DAY, TODAY]) {
+      for (const exposure of [ACA_PRICED, MEDICARE_ONLY, NO_OVERLAY, OVERLAY_NO_HEALTH, UNDECIDABLE, pricing(ACA_PRICED, 'NC')]) {
+        const report = deriveStaleness(savedOn(savedAt), TODAY, exposure)
+        expect(report.pricing).toEqual(QUIET)
+        expect(report.anyStale).toBe(false)
+      }
+    }
+  })
+
+  it('THE BOUNDARY on the newest ship day: the day before is NAMED, the day itself is the nameless HEDGE, the day after is quiet', () => {
+    // Every family priced: the newest row's own state when it declares one (so a future state-only row
+    // still names something here), NC otherwise.
+    const exposure = pricing(ACA_PRICED, (NEWEST.states?.[0] ?? 'NC') as PricedState)
+    const priced = ACA_PRICED_FAMILIES
+    const day = NEWEST.sinceEpochDay
+    const before = deriveStaleness(savedOn(day - 1), TODAY, exposure).pricing
+    expect(before.namedFamilies, 'crossed: named').toEqual(expectedNamed(day - 1, priced, exposure.pricedState))
+    expect(before.namedFamilies.length).toBeGreaterThan(0)
+    // ON the ship day — either build could have figured the save: no family may be named, the hedge speaks.
+    const on = deriveStaleness(savedOn(day), TODAY, exposure)
+    expect(on.pricing.namedFamilies, 'ambiguous: nothing named').toEqual([])
+    expect(on.pricing.hedged, 'ambiguous: the nameless line').toBe(true)
+    expect(on.pricing.hedged).toBe(expectedHedged(day, priced, exposure.pricedState))
+    expect(on.pricing.moved).toBe(true)
+    expect(on.anyStale).toBe(true)
+    expect(on.rulesMoved).toBe(false)
+    expect(deriveStaleness(savedOn(day + 1), TODAY, exposure).pricing, 'unambiguously this build: quiet').toEqual(QUIET)
+  })
+
+  it('an ambiguous day is silent where the family is UNPRICED — the hedge never speaks for a figure the run does not price', () => {
+    // The newest rows are Medicare's: a run with no healthcare overlay hears nothing on that day.
+    expect(NEWEST.families.every((f) => !OVERLAY_NO_HEALTH_FAMILIES.has(f)), 'premise: the newest row reaches no family this fixture prices').toBe(true)
+    expect(deriveStaleness(savedOn(NEWEST.sinceEpochDay), TODAY, OVERLAY_NO_HEALTH).pricing).toEqual(QUIET)
+  })
+
+  it('SUPPRESSION: saved ON an earlier ship day that a LATER row crosses for the same family ⇒ that family is named and its hedge is suppressed', () => {
+    // v7 (2026-09-26) is a Medicare row; v9/v10 (2026-09-27) cross Medicare again for a v7-day save.
+    const day = rowV(7).sinceEpochDay
+    expect(REPRICE.some((r) => r.sinceEpochDay === day && r.families.includes('medicare')), 'premise: a Medicare row ships that day').toBe(true)
+    expect(REPRICE.some((r) => r.sinceEpochDay > day && r.families.includes('medicare')), 'premise: a later Medicare row crosses it').toBe(true)
+    const report = deriveStaleness(savedOn(day), TODAY, MEDICARE_ONLY)
+    expect(report.pricing.namedFamilies).toEqual(expectedNamed(day, MEDICARE_ONLY_FAMILIES))
+    expect(report.pricing.namedFamilies).toContain('medicare')
+    expect(report.pricing.hedged, 'a crossed row already proves the method changed under Medicare — no nameless twin').toBe(false)
+    expect(report.pricing.hedged).toBe(expectedHedged(day, MEDICARE_ONLY_FAMILIES))
+  })
+
+  it('…and the suppression is PER FAMILY: an ambiguous tax day still hedges while Medicare, crossed later, is named', () => {
+    // v6 (2026-09-25) is the newest TAX row; later rows cross only Medicare.
+    const day = rowV(6).sinceEpochDay
+    expect(REPRICE.some((r) => r.sinceEpochDay > day && r.families.includes('tax')), 'premise: no later tax row').toBe(false)
+    const report = deriveStaleness(savedOn(day), TODAY, MEDICARE_ONLY)
+    expect(report.pricing.namedFamilies).toEqual(expectedNamed(day, MEDICARE_ONLY_FAMILIES))
+    expect(report.pricing.namedFamilies).not.toContain('tax')
+    expect(report.pricing.namedFamilies).toContain('medicare')
+    expect(report.pricing.hedged, 'tax is ambiguous and not named elsewhere').toBe(true)
+    expect(report.pricing.hedged).toBe(expectedHedged(day, MEDICARE_ONLY_FAMILIES))
+  })
+
+  it('every ship day and every day-before, for every hand-stated fixture: named and hedged match the ledger filter exactly', () => {
+    const fixtures = [
+      ['ACA_PRICED', ACA_PRICED, ACA_PRICED_FAMILIES],
+      ['MEDICARE_ONLY', MEDICARE_ONLY, MEDICARE_ONLY_FAMILIES],
+      ['OVERLAY_NO_HEALTH', OVERLAY_NO_HEALTH, OVERLAY_NO_HEALTH_FAMILIES],
+      ['ACA_PRICED+NC', pricing(ACA_PRICED, 'NC'), ACA_PRICED_FAMILIES],
+      ['MEDICARE_ONLY+PA', pricing(MEDICARE_ONLY, 'PA'), MEDICARE_ONLY_FAMILIES],
+    ] as const
+    let hedgedSeen = 0
+    let namedSeen = 0
+    for (const day of SHIP_DAYS.flatMap((d) => [d - 1, d, d + 1])) {
+      for (const [name, exposure, priced] of fixtures) {
+        const report = deriveStaleness(savedOn(day), TODAY, exposure)
+        const at = `${name} saved ${day}`
+        expect(report.pricing.namedFamilies, at).toEqual(expectedNamed(day, priced, exposure.pricedState))
+        expect(report.pricing.hedged, at).toBe(expectedHedged(day, priced, exposure.pricedState))
+        expect(report.rulesMoved, `${at}: never the rules register`).toBe(false)
+        if (report.pricing.hedged) hedgedSeen += 1
+        if (report.pricing.namedFamilies.length > 0) namedSeen += 1
+      }
+    }
+    expect(hedgedSeen, 'non-vacuity: the sweep exercises the hedge').toBeGreaterThan(0)
+    expect(namedSeen, 'non-vacuity: the sweep exercises naming').toBeGreaterThan(0)
+  })
+
+  it('an UNDECIDABLE exposure + crossed rows ⇒ the hedge AND the re-confirm, nothing named (no read can say which family reached them)', () => {
+    for (const savedAt of [undefined, PRE_LEDGER_DAY]) {
+      const report = deriveStaleness(savedOn(savedAt), TODAY, UNDECIDABLE)
+      expect(report.pricing).toEqual({ namedFamilies: [], hedged: true, reconfirmMedicareSpending: true, moved: true })
+      expect(report.anyStale).toBe(true)
+      expect(report.rulesMoved).toBe(false)
+    }
+  })
+
+  it('NO_OVERLAY ⇒ SILENT everywhere — named, hedged AND the re-confirm (a premium the plan does not price cannot be double-counted)', () => {
+    for (const savedAt of [undefined, PRE_LEDGER_DAY, ...SHIP_DAYS, ...SHIP_DAYS.map((d) => d - 1)]) {
+      const report = deriveStaleness(savedOn(savedAt), TODAY, NO_OVERLAY)
+      expect(report.pricing, `saved ${String(savedAt)}`).toEqual(QUIET)
+      expect(report.anyStale, `saved ${String(savedAt)}`).toBe(false)
+    }
+    // …even with the extras marker missing.
+    expect(deriveStaleness(withoutExtrasMarker(savedOn(TODAY)), TODAY, NO_OVERLAY).pricing).toEqual(QUIET)
+  })
+
+  it('OVERLAY_NO_HEALTH (tax overlay, no healthcare) ⇒ tax named, never Medicare, never the re-confirm', () => {
+    const report = deriveStaleness(savedOn(undefined), TODAY, OVERLAY_NO_HEALTH)
+    expect(report.pricing.namedFamilies).toEqual(expectedNamed(undefined, OVERLAY_NO_HEALTH_FAMILIES))
+    expect(report.pricing.namedFamilies).toEqual(['tax'])
+    expect(report.pricing.reconfirmMedicareSpending).toBe(false)
+    expect(report.pricing.hedged).toBe(false)
+  })
+
+  it('stateTax is PER STATE: an NC-priced run saved before 2026-09-25 hears the state line; PA and FL (and no state) never do', () => {
+    const savedAt = rowV(6).sinceEpochDay - 1
+    expect(rowV(6).families, 'premise: v6 reaches the NC standard deduction').toContain('stateTax')
+    expect(rowV(6).states).toEqual(['NC'])
+    const nc = deriveStaleness(savedOn(savedAt), TODAY, pricing(MEDICARE_ONLY, 'NC'))
+    expect(nc.pricing.namedFamilies).toEqual(expectedNamed(savedAt, MEDICARE_ONLY_FAMILIES, 'NC'))
+    expect(nc.pricing.namedFamilies).toContain('stateTax')
+    for (const state of ['PA', 'FL', undefined] as const) {
+      const other = deriveStaleness(savedOn(savedAt), TODAY, pricing(MEDICARE_ONLY, state))
+      expect(other.pricing.namedFamilies, String(state)).not.toContain('stateTax')
+      expect(other.pricing.namedFamilies, String(state)).toEqual(expectedNamed(savedAt, MEDICARE_ONLY_FAMILIES, state))
+    }
+  })
+
+  it('the RE-CONFIRM: crossed, or saved ON a reconfirm row’s ship day ⇒ asked; the day after the last reconfirm row ⇒ not asked', () => {
+    const lastReconfirm = RECONFIRM[RECONFIRM.length - 1]!
+    expect(deriveStaleness(savedOn(lastReconfirm.sinceEpochDay - 1), TODAY, MEDICARE_ONLY).pricing.reconfirmMedicareSpending, 'crossed').toBe(true)
+    expect(deriveStaleness(savedOn(lastReconfirm.sinceEpochDay), TODAY, MEDICARE_ONLY).pricing.reconfirmMedicareSpending, 'the ambiguous day asks the conditional too').toBe(true)
+    expect(deriveStaleness(savedOn(lastReconfirm.sinceEpochDay + 1), TODAY, MEDICARE_ONLY).pricing.reconfirmMedicareSpending, 'after the flip, with the marker').toBe(false)
+  })
+
+  it('the RE-CONFIRM on a POST-LEDGER save whose healthcare stamp LACKS the extras marker ⇒ asked; the same save on a run that prices no Medicare ⇒ not', () => {
+    const noMarker = withoutExtrasMarker(savedOn(TODAY))
+    const asked = deriveStaleness(noMarker, TODAY, MEDICARE_ONLY)
+    expect(asked.pricing).toEqual({ namedFamilies: [], hedged: false, reconfirmMedicareSpending: true, moved: true })
+    expect(asked.anyStale).toBe(true)
+    expect(asked.rulesMoved).toBe(false)
+    expect(deriveStaleness(noMarker, TODAY, UNDECIDABLE).pricing.reconfirmMedicareSpending, 'undecidable is not unpriced').toBe(true)
+    expect(deriveStaleness(noMarker, TODAY, withRead(MEDICARE_ONLY, { medicare: 'unpriced' })).pricing.reconfirmMedicareSpending).toBe(false)
+    // Non-vacuity: the marker is what asked — the same post-ledger save WITH it is quiet.
+    expect(deriveStaleness(savedOn(TODAY), TODAY, MEDICARE_ONLY).pricing).toEqual(QUIET)
+  })
+
+  it('the ledger NEVER moves rulesMoved — in either direction, with or without a real rulebook move beside it', () => {
+    const base = freshSave()
+    const taxMovedToo: ScenarioV3 = { ...base, taxVintageDetail: { ...base.taxVintageDetail!, legalBasis: 'TCJA (pre-OBBBA)' } }
+    for (const scenario of [base, taxMovedToo]) {
+      for (const exposure of [ACA_PRICED, MEDICARE_ONLY, OVERLAY_NO_HEALTH, UNDECIDABLE]) {
+        const fresh = deriveStaleness(scenario, TODAY, exposure).rulesMoved
+        for (const savedAt of [undefined, PRE_LEDGER_DAY, NEWEST.sinceEpochDay]) {
+          const s = { ...scenario } as Record<string, unknown>
+          if (savedAt === undefined) delete s.savedAt
+          else s.savedAt = savedAt
+          expect(deriveStaleness(s as unknown as ScenarioV3, TODAY, exposure).rulesMoved, `saved ${String(savedAt)}`).toBe(fresh)
+        }
+      }
+    }
+    // Non-vacuity: both values of rulesMoved are in the sweep.
+    expect(deriveStaleness(taxMovedToo, TODAY, ACA_PRICED).rulesMoved).toBe(true)
+    expect(deriveStaleness(base, TODAY, ACA_PRICED).rulesMoved).toBe(false)
   })
 })

@@ -35,6 +35,8 @@ base's one home: an unclamped growth-ratio helper on the same Trustees path, or 
 step — never un-clamping the level index itself (every level reader depends on it). Every price-frame witness is to be
 re-derived by COUNTING the statute's CPI years between the two August bases, not by reading the engine's index.
 
+**Fix landed 2026-09-27 (b9-11):** the base's one home was ruled onto an UNCLAMPED growth helper, `priceIndex.cpiGrowth(from, to)` — one rate function shared with the level index, fail-loud on a base before `anchor − 1` or a backward read — over a sourced CPI step, because the base-to-anchor gap recurs at every annual roll and a realized August is not yet published at a January roll. Every witness was re-derived by counting Augusts; the "equivalent" freeze mutant now reds LOUD for bill years ≤ 2026 (the helper refuses the backward read) and stays equivalent only at bill 2027, where the statute's freeze and its August-2026 re-index base genuinely coincide. `SOLVER_CODE_VERSION` 7.
+
 ## Key Insight
 
 **A clamp belongs to LEVEL reads. Any ratio of two index reads must ask, for EACH end, whether it sits in the clamped

@@ -5,6 +5,7 @@ import { REAL, REAL_DPR, TIER, SHOWCASE, FLOOR, PHONE, gotoSeedFinal, settleLayo
 // reservation, a clause list or a heading against a fiction, and a re-word that overflowed the real
 // box would escape the gate silently (U17 §S5 step 14).
 import { copy, slots, staticDisclosures } from '../src/ui/copy'
+import { ENGINE_PRICING_LEDGER } from '../src/engine/pricingVersion'
 
 /**
  * The real-browser VERTICAL-FIT gate (council 2026-07-08, wf_a2d93977-960 — run via
@@ -1769,9 +1770,22 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
     // The blend re-date reaches NO line at all: `resolveBlend` never consults the dated table for
     // a manual-blend account, so "we can't tell whether it touches your numbers" would be false —
     // we can. The old "fund data we read your accounts against" line is likewise gone.
+    // PLUS the engine-pricing ledger's lines (the engine-domain council, 2026-09-27): the plant saves
+    // ~760 days back (the LOCAL epoch-day, the plant's own basis), so every `reprice` row shipped
+    // after that save speaks ONE method line (tax + Medicare here), and the full doctor strips the
+    // extras marker, so the Medicare-spending re-confirm always asks — never "rules", never on the echo.
     // The count is derived in a unit arm — `devSeeds.test.ts` "'stale' composes EXACTLY the two
-    // lines…" — so a re-bucketing fails there first, in a second, not here in ninety.
-    await expect(page.locator('.reentry-notes p')).toHaveCount(2)
+    // lines…" — so a re-bucketing fails there first, in a second, not here in ninety; the ledger term
+    // below is that arm's own oracle, so neither pin drifts with the calendar.
+    const now = new Date()
+    const plantSavedAt = Math.floor((now.getTime() - now.getTimezoneOffset() * 60_000) / 86_400_000) - 760
+    const methodLine = ENGINE_PRICING_LEDGER.some(
+      (r) => r.kind === 'reprice' && r.sinceEpochDay > plantSavedAt && r.families.some((fam) => fam === 'tax' || fam === 'medicare'),
+    )
+      ? 1
+      : 0
+    await expect(page.locator('.reentry-notes p')).toHaveCount(2 + methodLine + 1)
+    await expect(page.getByText(copy.stalenessReconfirmMedicareSpending)).toBeVisible()
     await expect(page.getByText('Medicare cost figures have been updated')).toBeVisible()
     await expect(
       page.getByText('Marketplace health-plan rules have been updated'),
@@ -2469,7 +2483,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
       //
       // The bound is TIGHT BY CONSTRUCTION (~10px at 1536×791), so this is a live constraint on the
-      // copy rather than a formality: it is what makes the length note in copy.ts:1640-1644 enforceable
+      // copy rather than a formality: it is what makes the length note in copy.ts:1668-1672 enforceable
       // instead of advisory. Text is captured so a red names the sentence that outgrew the slack.
       expect(
         geometry.standingBottom,

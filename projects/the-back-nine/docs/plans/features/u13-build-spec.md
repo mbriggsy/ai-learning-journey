@@ -81,7 +81,7 @@ atomic change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` +
 
 ## Phase B — the staleness reader (`src/store/staleness.ts`, pure)
 
-- **Input** (`deriveStaleness`, staleness.ts:407-411): the RAW-decoded `ScenarioV3` captured **ONCE at
+- **Input** (`deriveStaleness`, staleness.ts:466-470): the RAW-decoded `ScenarioV3` captured **ONCE at
   unlock** (red-team constraint (a) — BEFORE `draftFromScenario`/`scenarioFromDraft` normalize or re-stamp;
   reading the post-resave draft cries wolf, reading the normalized persist never fires), an injected
   `todayEpochDay`, and — added by the U17 §S4 exposure gate below — a `StalenessExposure` read of what the

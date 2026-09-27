@@ -16,7 +16,24 @@
 import type { ScenarioV3 } from '@shared/model'
 import { KIND_TO_BUCKET } from '@intake/intakeMap'
 import type { StalenessReport } from '@store/staleness'
+import type { PricingFamily } from '@engine/pricingVersion'
 import { copy, slots, type CopyKey } from './copy'
+
+/** Each engine-pricing family's phrase in the ONE method line — exhaustive by type, so a family the
+ *  ledger can declare can never be named with no words. */
+const PRICING_FAMILY_PHRASE: Readonly<Record<PricingFamily, CopyKey>> = {
+  tax: 'stalenessPricingTax',
+  stateTax: 'stalenessPricingStateTax',
+  contributions: 'stalenessPricingContributions',
+  aca: 'stalenessPricingAca',
+  medicare: 'stalenessPricingMedicare',
+}
+
+/** "a" · "a and b" · "a, b and c" — the families arrive in `PRICING_FAMILY_ORDER` (Medicare last). */
+function joinFamilies(families: readonly PricingFamily[]): string {
+  const phrases = families.map((f) => copy[PRICING_FAMILY_PHRASE[f]])
+  return phrases.length <= 1 ? (phrases[0] ?? '') : `${phrases.slice(0, -1).join(', ')} and ${phrases[phrases.length - 1]}`
+}
 
 const formatDollar = (v: number): string => Math.round(v).toLocaleString('en-US')
 
@@ -101,11 +118,21 @@ export function composeReentry(scenario: ScenarioV3, report: StalenessReport): R
   // ALWAYS has a line here — `rulesMoved` can never fire an alarm nothing is allowed to explain.
   if (report.healthcare.acaMoved) noteLines.push(copy.stalenessAca)
   if (report.healthcare.medicareMoved) noteLines.push(copy.stalenessMedicare)
+  // THE ENGINE'S OWN METHOD (the ledger — `report.pricing`, already exposure-gated upstream): ONE
+  // named line over every exposed family (the calm-not-dashboard fold: a line per family would stack
+  // up to five sentences on the gate), then at most one nameless twin, then the conditional spending
+  // re-confirm. Each is pushed at most once and each text is distinct, so the text-keyed notes
+  // (`ReEntry.tsx`) never collide. None of them rides `rulesMoved`.
+  if (report.pricing.namedFamilies.length > 0) {
+    noteLines.push(slots.stalenessPricing(joinFamilies(report.pricing.namedFamilies)))
+  }
+  if (report.pricing.hedged) noteLines.push(copy.stalenessPricingHedged)
+  if (report.pricing.reconfirmMedicareSpending) noteLines.push(copy.stalenessReconfirmMedicareSpending)
   // The contribution clock only, twice-gated upstream: route (this household HAS a date, so the
   // "behind your date" wording is true) and exposure (their run actually prices a contribution
   // stream). (The blend clause left this line — it aggregates or goes silent now.)
   if (report.date.contributionMoved) noteLines.push(copy.stalenessDate)
-  // THE AGGREGATE, pushed AT MOST ONCE — `ReEntry.tsx:75` keys each note <p> by its own TEXT,
+  // THE AGGREGATE, pushed AT MOST ONCE — `ReEntry.tsx:80` keys each note <p> by its own TEXT,
   // so a second push of the same sentence would collide on the React key. One `if` over the
   // whole bucket is the structural guarantee (never a per-clock loop over `.clocks`).
   if (report.unattributed.moved) noteLines.push(copy.stalenessReferenceTables)

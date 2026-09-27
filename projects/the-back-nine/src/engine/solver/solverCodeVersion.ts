@@ -76,5 +76,14 @@
  * (healthOverlay.irmaaScheduleAsCompared — §1395r(i)(4)(B)(i) + (i)(5)). From bill year 2028 every line
  * sits about one year of CPI above the pinned 2026 figure, so a SCORED overlay's pricing moved (fewer
  * surcharges billed) and the enumerator's IRMAA anchors moved up (the bracket-fill and solver rails).
+ *
+ * VERSION 7 (2026-09-27) — the price frame's GROWTH base: tiers 1–4's lines carry CPI from their
+ * August-2025 base, one year BEFORE the index anchor, and v6 read that growth as a quotient of two
+ * clamped index LEVELS — index(2025) = index(2026) = 1 — so the August-2025 → August-2026 step was lost
+ * and every tiers-1–4 line from bill 2027 sat one CPI year low (insight 138). The growth now rides
+ * `priceIndex.cpiGrowth` (unclamped, the same Trustees path). A SCORED overlay's pricing moved (fewer
+ * surcharges billed — e.g. the 2028 tier-1 MFJ line $224,000 → $232,000) and the enumerator's
+ * tiers-1–4 IRMAA anchors moved up with their lines; the top tier's anchors did not move (its base,
+ * August 2026, IS the anchor).
  */
-export const SOLVER_CODE_VERSION = 6
+export const SOLVER_CODE_VERSION = 7

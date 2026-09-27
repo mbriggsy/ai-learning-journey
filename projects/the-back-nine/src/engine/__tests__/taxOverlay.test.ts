@@ -1692,10 +1692,11 @@ describe('taxOverlay — M6a bracket-fill (the injected tax-aware ceiling)', () 
     it('the IRMAA-step rail holds BILLED years at the tier line and releases past the horizon (the t+lookback gate)', () => {
       // Both 66 (Medicare-enrolled), healthcare on, $200k/yr conversions, horizon 4. Years 0–1
       // record MAGI billed in years 2–3 (inside the horizon) ⇒ the rail caps the fill at the tier-1
-      // line THAT year's MAGI meets (the price frame, 2026-09-26 — §1395r(i)(4)(B)(i) + (i)(5)): MAGI
-      // 2026 meets bill 2028's line 2 × round1000(109,000 × idx(2027)) ÷ idx(2026) = 224,000; MAGI 2027
-      // meets bill 2029's 2 × round1000(109,000 × idx(2028)) ÷ idx(2027) = 232,000 ÷ 1.032 ≈ 224,806.20
-      // (the pinned 218,000 held both at 18,000 — one to two years of CPI short) ⇒ the recorded MAGI sits
+      // line THAT year's MAGI meets (the price frame, 2026-09-26 — §1395r(i)(4)(B)(i) + (i)(5); the Augusts
+      // COUNTED from the lines' August-2025 base, insight 138): MAGI 2026 meets bill 2028's line, TWO
+      // Augusts, 2 × round1000(109,000 × 1.032²) ÷ idx(2026) = 232,000; MAGI 2027 meets bill 2029's, THREE,
+      // 2 × round1000(109,000 × 1.032³) ÷ idx(2027) = 240,000 ÷ 1.032 ≈ 232,558.14 (the pinned 218,000
+      // held both at 18,000; the one-CPI-year-low frame, 1c97f55d, at 24,000 / ≈ 24,806.20) ⇒ the recorded MAGI sits
       // EXACTLY on each line ⇒ the billed years stay tier-0 (strictly-over fires). Years 2–3 bill at 4–5 — OUTSIDE the
       // horizon — so only the bracket rail caps them, and THAT rail is year-aware (the sunset
       // unit): year 2 (2028, in-window) — the bonus is live, but at the 211,400 edge it is GONE: each
@@ -1718,11 +1719,15 @@ describe('taxOverlay — M6a bracket-fill (the injected tax-aware ceiling)', () 
       const bracketOnlyHeadroom2028 = 246_900 - 200_000 // 46,900 (the bonus gone at this AGI)
       const bracketOnlyHeadroom2029 = 246_900 - 200_000 // 46,900 (flat post-sunset stack)
       const tier1Single = irmaa.value.tiers[0]!.singleMagiThreshold // READ (a gated figure); the algebra is typed here
+      // Augusts past the August-2025 base for the bill a MAGI year meets: (magiYear + 2 − 1) − 2025.
+      const augustsFor = (magiYear: number) => magiYear + 2 - 1 - 2025
       const tier1LineAt = (magiYear: number) =>
-        (2 * Math.round((tier1Single * closedFormIndex(magiYear + 1)) / 1_000) * 1_000) / closedFormIndex(magiYear)
-      expect(tier1LineAt(2026)).toBe(224_000)
-      const irmaaHeadroom2026 = tier1LineAt(2026) - 200_000 // 24,000
-      const irmaaHeadroom2027 = tier1LineAt(2027) - 200_000 // ≈ 24,806.20
+        (2 * Math.round((tier1Single * (1 + medicareCostTrend.value.cpiNearTermAvg) ** augustsFor(magiYear)) / 1_000) * 1_000) /
+        closedFormIndex(magiYear)
+      expect(tier1LineAt(2026)).toBe(232_000)
+      const irmaaHeadroom2026 = tier1LineAt(2026) - 200_000 // 32,000
+      const irmaaHeadroom2027 = tier1LineAt(2027) - 200_000 // ≈ 32,558.14
+      expect(irmaaHeadroom2027).toBeLessThan(bracketOnlyHeadroom2028) // the IRMAA rail still binds the billed years
       expect(derived.finalBuckets.pretax).toBeCloseTo(
         1_500_000 - 4 * 200_000 - irmaaHeadroom2026 - irmaaHeadroom2027 - bracketOnlyHeadroom2028 - bracketOnlyHeadroom2029,
         1,
@@ -3816,18 +3821,21 @@ describe('taxOverlay — C3 §3b: per-person Medicare onset + additive override 
     })
 
     it('the override prices the surcharge implied by working-year income (above tier-1 — below it a $0 surcharge proves nothing)', () => {
-      // override 230k > the MFJ tier-1 line MAGI 2026 meets on the 2028 bill (2 × round1000(109,000 ×
-      // 1.032) = 224,000 — the price frame, 2026-09-26) and < tier 2's (282,000) ⇒ year 2 → 2028 bills tier 1.
-      const r = run(net3, { ...onset2, irmaaMagiOverride: [230_000, 230_000] }, W66)
+      // override 240k > the MFJ tier-1 line MAGI 2026 meets on the 2028 bill (2 × round1000(109,000 ×
+      // 1.032²) = 232,000 — the price frame, two Augusts past the lines' August-2025 base) and < tier 2's
+      // (2 × round1000(137,000 × 1.032²) = 292,000) ⇒ year 2 → 2028 bills tier 1.
+      const r = run(net3, { ...onset2, irmaaMagiOverride: [240_000, 240_000] }, W66)
       expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnualReal(1, 0, 2028), 4)
     })
 
     it('ADDITIVITY: a working-year Roth conversion lands ON TOP of the override (a planted replacement-write fails)', () => {
-      // history[0] = 230k (override) + 60k (the conversion is computed nonSSordinary) = 290k > the MFJ
-      // tier-2 line MAGI 2026 meets (bill 2028: 2 × round1000(137,000 × 1.032) = 282,000 — the price
-      // frame, 2026-09-26; the fixture's old 50k landed 280k, under it) ⇒ tier 2. A replacement write
-      // reads 230k ⇒ tier 1 (224,000 < 230k < 282,000); max() likewise.
-      const r = run(net3, { ...onset2, irmaaMagiOverride: [230_000, 230_000], conversions: [60_000, 0, 0] }, W66)
+      // history[0] = 240k (override) + the computed IRMAA-MAGI ≈ 62,238.89 (the 60k conversion is
+      // computed nonSSordinary, plus the pre-tax draw that pays its tax — measured, 2026-09-27) ≈ 302,239 >
+      // the MFJ tier-2 line MAGI 2026 meets (bill 2028: 2 × round1000(137,000 × 1.032²) = 292,000 — the
+      // price frame, two Augusts past the lines' August-2025 base) ⇒ tier 2. A replacement write reads
+      // 240k ⇒ tier 1 (232,000 < 240k < 292,000); max() likewise. (At the old 230k override the sum sat
+      // only ≈ $239 over this line — the margin is ~$10k now.)
+      const r = run(net3, { ...onset2, irmaaMagiOverride: [240_000, 240_000], conversions: [60_000, 0, 0] }, W66)
       expect(r.totalMedicareCostReal).toBeCloseTo(medicareAnnualReal(1, 1, 2028), 4) // year 2 → 2028, ×1, tier 2
     })
   })
@@ -3840,7 +3848,7 @@ describe('taxOverlay — C3 §3b: per-person Medicare onset + additive override 
       // Override coverage of the masked lagged index satisfies the arm (no throw).
       const ok = run(
         [0, 0, 0],
-        { healthcareEnabled: true, medicareOnsetSimYear: [2], bridgeYearMask: [true, true, false], irmaaMagiOverride: [230_000, 230_000] },
+        { healthcareEnabled: true, medicareOnsetSimYear: [2], bridgeYearMask: [true, true, false], irmaaMagiOverride: [240_000, 240_000] },
         W66,
       )
       expect(ok.totalMedicareCostReal).toBeCloseTo(medicareAnnualReal(1, 0, 2028), 4) // year 2 → 2028, ×1, tier 1

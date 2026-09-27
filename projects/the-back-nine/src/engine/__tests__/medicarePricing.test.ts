@@ -18,7 +18,7 @@
  * decumulation), never a stand-in primitive alone.
  *
  * Scope vs the shipped U11 battery (CITED, deliberately NOT duplicated):
- *   - taxOverlay M4 (taxOverlay.test.ts:2489-2689) already pins, on the SAME streamless shape:
+ *   - taxOverlay M4 (taxOverlay.test.ts:2494-2694) already pins, on the SAME streamless shape:
  *     the +2yr lag, the per-index seed read (seed[0]@t0, seed[1]@t1), the cross-65 history
  *     handoff, taxable-SS vs full-SS, THE SURVIVOR MFJ→SINGLE FILING FLIP (2378-2410, born 1955,
  *     no ACA streams, single-thresholded surcharge lands at death+2), and depletion non-accrual.
@@ -253,7 +253,7 @@ describe('post-65 Medicare pricing — the seed→history handoff crossing (simu
 
 // ===========================================================================
 // DELIVERABLE 2 — the tier-edge < / <= WITNESS on the RUNTIME path. The surcharge
-// contract is the ONE predicate `irmaaTierApplies` (healthOverlay.ts:748): STRICT lower-exclusive
+// contract is the ONE predicate `irmaaTierApplies` (healthOverlay.ts:751): STRICT lower-exclusive
 // on tiers 1–4 (AT the line pays NOTHING, AT+1 dollar pays the tier) and INCLUSIVE on the top
 // tier ("at least" — AT the line already pays it; the second arm below). Drive the MAGI through the
 // SEED (t < lookback ⇒ the bill reads the integer seed directly, no gross-up float
@@ -299,11 +299,13 @@ describe('post-65 Medicare pricing — the tier-edge < / <= witness on the runti
   })
 
   // THE PRICE FRAME, billed (2026-09-26): a plan starting 2028 bills year 0 on 2026 MAGI, compared against
-  // the 2028 lines in real dollars — tier 1 MFJ = 2 × round1000(109,000 × 1.032) = $224,000, the top
-  // = 1.5 × round1000(500,000 × 1.032) = $774,000 (index(2026) = 1; hand arithmetic, the rate READ).
+  // the 2028 lines in real dollars — the Augusts COUNTED from the statute (insight 138): tier 1 carries
+  // August 2025 → August 2027, TWO years, MFJ = 2 × round1000(109,000 × 1.032²) = $232,000; the top
+  // re-indexes from August 2026, ONE year, = 1.5 × round1000(500,000 × 1.032) = $774,000 (index(2026) = 1;
+  // hand arithmetic, the rate READ).
   const r = medicareCostTrend.value.cpiNearTermAvg
   const round1000 = (x: number) => Math.round(x / 1_000) * 1_000
-  const TIER1_MFJ_2028 = 2 * round1000(SCHED.tiers[0]!.singleMagiThreshold * (1 + r)) // the anchor READ (a gated figure)
+  const TIER1_MFJ_2028 = 2 * round1000(SCHED.tiers[0]!.singleMagiThreshold * (1 + r) ** 2) // the anchor READ (a gated figure)
   const TOP_MFJ_2028 = 1.5 * round1000(500_000 * (1 + r))
   const START_2028: TaxOverlayConfig = {
     taxEnabled: true,
@@ -316,10 +318,12 @@ describe('post-65 Medicare pricing — the tier-edge < / <= witness on the runti
       irmaaMagiSeed: seed,
     })
 
-  it('bill year 2028: 2026 MAGI between the 2026 line ($218,000) and the 2028 line ($224,000) owes NOTHING — the law’s line has moved with prices', () => {
-    expect(TIER1_MFJ_2028).toBe(224_000)
+  it('bill year 2028: 2026 MAGI between the 2026 line ($218,000) and the 2028 line ($232,000) owes NOTHING — the law’s line has moved with prices, two Augusts of them', () => {
+    expect(TIER1_MFJ_2028).toBe(232_000)
     // Both 67 in 2028 ⇒ count 2. The oracle prices the 2028 bill on its own trend year.
     expect(run2028([220_000, 60_000]).totalMedicareCostReal, 'under the 2028 line ⇒ base only').toBeCloseTo(medicareAnnual(2, null, 2028), 4)
+    // ⚑ The one-CPI-year-low frame (1c97f55d) billed tier 1 here — its line was $224,000.
+    expect(run2028([228_000, 60_000]).totalMedicareCostReal, 'over the one-year-low line, under the law’s ⇒ base only').toBeCloseTo(medicareAnnual(2, null, 2028), 4)
     expect(run2028([TIER1_MFJ_2028, 60_000]).totalMedicareCostReal, 'AT the (exclusive) line ⇒ base only').toBeCloseTo(medicareAnnual(2, null, 2028), 4)
     expect(run2028([TIER1_MFJ_2028 + 1, 60_000]).totalMedicareCostReal, 'one dollar over ⇒ tier 1').toBeCloseTo(medicareAnnual(2, 0, 2028), 4)
   })
@@ -334,7 +338,7 @@ describe('post-65 Medicare pricing — the tier-edge < / <= witness on the runti
 // ===========================================================================
 // DELIVERABLE 4 — the HSA qualified cap now that medicareCost is NONZERO for the
 // all-65+ household. Cap = min(hsaBalance, oopMedical + (owner-65+ ? medicareCost : 0),
-// fundingNeed) (healthOverlay.ts:900-901, taxOverlay.ts:1641-1651). Pub 969 exception (4)
+// fundingNeed) (healthOverlay.ts:903-904, taxOverlay.ts:1641-1651). Pub 969 exception (4)
 // — a 65+ HSA owner may pay Medicare premiums (base Part B + the surcharge) tax-free.
 // ===========================================================================
 describe('post-65 Medicare pricing — the HSA qualified cap includes the now-nonzero Medicare cost (Pub 969 exception 4)', () => {
@@ -343,7 +347,7 @@ describe('post-65 Medicare pricing — the HSA qualified cap includes the now-no
     // OOP = 10,000 (qualified at any age). HSA = 100,000 (covers the whole qualified set); net spend
     // 40,000 > OOP (so the fundingNeed term never binds below the qualified set).
     //   cap = min( 100,000 , 10,000 + 2×BASE×12 , 40,000 + 2×BASE×12 ) = 10,000 + 2×BASE×12
-    // The existing owner-65+ fixture (taxOverlay.test.ts:3008) pins cap = medicareCost with OOP = 0;
+    // The existing owner-65+ fixture (taxOverlay.test.ts:3013) pins cap = medicareCost with OOP = 0;
     // this pins the SUM (both terms live) — the arithmetic identity oopMedical + medicareCost.
     const OOP = 10_000
     const POST67: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(1959, 1959) }

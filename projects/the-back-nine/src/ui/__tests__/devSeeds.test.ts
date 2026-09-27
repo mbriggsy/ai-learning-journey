@@ -39,6 +39,7 @@ import { epochDayFromIsoDate } from '@engine/validation/oracleToken'
 import { acaEnhancedSubsidyStatus } from '@engine/constants'
 import { stateTaxVintageStamp } from '@engine/constants/stateTax'
 import { deriveStaleness } from '@store/staleness'
+import { ENGINE_PRICING_LEDGER } from '@engine/pricingVersion'
 import { exposureForDraft } from '../stalenessExposure'
 import { composeReentry } from '../reentryChrome'
 import { copy, slots } from '../copy'
@@ -1091,9 +1092,31 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
     expect(report.rulesMoved, 'the hero echo may ride — tax + the Medicare figures genuinely moved').toBe(true)
 
     const view = composeReentry(aged, report)
+    // THE ENGINE-PRICING LINES (the ledger — the engine-domain council, 2026-09-27), from an
+    // INDEPENDENT oracle over the ledger rows, never the reader's code: the plant saves ~760 days
+    // back, so every `reprice` row shipped after that save and reaching a family this household
+    // prices (tax, Medicare — no state, no contributions, no marketplace) is spoken in ONE method
+    // line; the full doctor STRIPS the extras marker, so the Medicare-spending re-confirm always
+    // asks. Derived against the plant's own savedAt, so the pin can never drift with the calendar.
+    const crossed = new Set(
+      ENGINE_PRICING_LEDGER.filter((r) => r.kind === 'reprice' && r.sinceEpochDay > aged.savedAt!).flatMap((r) => [...r.families]),
+    )
+    const phrases = [
+      ...(crossed.has('tax') ? [copy.stalenessPricingTax] : []),
+      ...(crossed.has('medicare') ? [copy.stalenessPricingMedicare] : []),
+    ]
+    const methodLine = phrases.length === 0 ? [] : [slots.stalenessPricing(phrases.join(' and '))]
+    expect(report.pricing.namedFamilies).toEqual([...(crossed.has('tax') ? ['tax'] : []), ...(crossed.has('medicare') ? ['medicare'] : [])])
+    expect(report.pricing.reconfirmMedicareSpending, 'the stripped extras marker always asks').toBe(true)
+    expect(report.rulesMoved, 'the ledger never feeds the rules register — the echo rides the TWO vintage clocks only').toBe(true)
     // THE FIT ARM'S NUMBER, derived rather than decreed. `e2e/vertical-fit.spec.ts` pins
-    // `.reentry-notes p` at exactly this length for `?vault=stale`.
-    expect(view.noteLines).toEqual([copy.stalenessTax, copy.stalenessMedicare])
+    // `.reentry-notes p` at exactly this length for `?vault=stale` (off the same ledger oracle).
+    expect(view.noteLines).toEqual([
+      copy.stalenessTax,
+      copy.stalenessMedicare,
+      ...methodLine,
+      copy.stalenessReconfirmMedicareSpending,
+    ])
     expect(view.elapsedLine, 'the ~760-day save reads "about 2 years ago"').toBe(slots.reentryElapsedYears(2))
   })
 

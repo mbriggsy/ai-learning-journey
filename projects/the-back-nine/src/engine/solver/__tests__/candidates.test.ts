@@ -10,7 +10,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { DRAWDOWN_POLICIES } from '@shared/model'
-import { irmaa, standardDeductionMFJ, ordinaryBracketsMFJ } from '@engine/constants'
+import { irmaa, medicareCostTrend, standardDeductionMFJ, ordinaryBracketsMFJ } from '@engine/constants'
 import { acaMagiAtFill, irmaaMagiAtFill, taxableIncomeAtFill, type CommittedYearIncome } from '@engine/magiLandscape'
 import {
   anchoredConversionAmounts,
@@ -71,17 +71,20 @@ describe('anchoredConversionAmounts — the cliff-anchored grid', () => {
 
   it('IRMAA steps (linear world, MAGI year 2030 → bill 2032): one anchor per line above baseline, each = the largest whole dollar with 50,000 + amount ≤ the last safe MAGI AS COMPARED', () => {
     // ssBenefit 0 ⇒ IRMAA-MAGI = ordinary = ongoing 50,000 + amount (no inclusion ramp). The lines are
-    // hand-composed per §1395r(i)(5): nominal(2032) = round1000(single × index(2031)) [every tier — the
-    // top re-indexes from its August-2026 base, index(2026) = 1], joint by the pinned ratio, over the
-    // MAGI year's price level index(2030); an INCLUSIVE line's last safe MAGI is one NOMINAL dollar
-    // under it. The index is READ (its own tests pin it); the line algebra is typed here.
+    // hand-composed per §1395r(i)(5), the Augusts COUNTED from each base (insight 138 — never a quotient
+    // of the index's clamped levels): nominal(2032) = round1000(single × (1 + r)ⁿ), n = August 2031 minus
+    // the base — SIX for tiers 1–4 (base August 2025), FIVE for the top (re-indexed from August 2026) —
+    // joint by the pinned ratio, over the MAGI year's price level index(2030); an INCLUSIVE line's last
+    // safe MAGI is one NOMINAL dollar under it. The rate and the level are READ; the algebra is typed here.
     const schedule = irmaa.value
+    const r = medicareCostTrend.value.cpiNearTermAvg
     const level = cumulativePriceIndex(2030)
     const amounts = anchoredConversionAmounts(anchorWith({ irmaaSchedule: schedule }))
     const steps = amounts.filter((a) => a.rail.kind === 'irmaa-step')
     const expected = schedule.tiers
       .map((t) => {
-        const nominalSingle = Math.round((t.singleMagiThreshold * cumulativePriceIndex(2031)) / 1_000) * 1_000
+        const augusts = 2031 - (t.lineIndexing === 'frozen-then-cpi' ? 2026 : 2025)
+        const nominalSingle = Math.round((t.singleMagiThreshold * (1 + r) ** augusts) / 1_000) * 1_000
         const line = (nominalSingle * (t.mfjMagiThreshold / t.singleMagiThreshold)) / level
         return t.lowerBoundInclusive ? line - 1 / level : line
       })

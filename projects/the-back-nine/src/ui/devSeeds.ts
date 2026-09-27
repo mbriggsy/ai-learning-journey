@@ -33,6 +33,7 @@ import {
 import { solverAssumedHeirBracket } from '@engine/constants'
 import type { SolveArm, SolveRecommendation } from '@engine/solver/solve'
 import { SOLVER_CODE_VERSION } from '@engine/solver/solverCodeVersion'
+import { FIRST_UNAMBIGUOUS_SAVE_DAY } from '@engine/pricingVersion'
 import { solverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 import { buildSolveRequest } from '@intake/solveDispatch'
 import { mintSavedRecommendation } from '@store/savedRecommendationMint'
@@ -1339,7 +1340,11 @@ export function doctorStateStaleVault(s: ScenarioV3, todayEpochDay: number): Sce
   }
   return {
     ...s,
-    savedAt: todayEpochDay - 150,
+    // Never before the engine-pricing ledger's first unambiguous save day: this plant exists to fire the
+    // state-tax clock IN ISOLATION, and a save that predates an engine-pricing row would ALSO speak the
+    // ledger's method line — a calendar-dependent second note (the ledger's rows ship every few days, so
+    // −150 days crosses a moving set of them).
+    savedAt: Math.max(todayEpochDay - 150, FIRST_UNAMBIGUOUS_SAVE_DAY),
     stateTaxVintage: { ...s.stateTaxVintage, [stateProfileKey(hhState)]: agedStateProfile(hhState) },
   }
 }
@@ -1694,11 +1699,19 @@ async function runPlantDevVault(key: string): Promise<PlantResult> {
   if (draft === null) return 'unknown-seed'
   const built = scenarioFromDraft(draft)
   if (!built.ready) return 'not-ready'
+  // A plant is a save by THIS build: `scenarioFromDraft` stamps `savedAt` off the wall clock, which on an
+  // engine-pricing ship day IS the ledger's deliberately ambiguous day — the plant would speak the
+  // nameless method line on exactly the day a row ships (CI runs that day) and not the next. Stamp it
+  // at the first unambiguous day instead; a doctor that AGES the save overrides it (and owns what its
+  // older save crosses — `src/engine/pricingVersion.ts`).
+  const thisBuildSave: ScenarioV3 = {
+    ...built.scenario,
+    savedAt: Math.max(built.scenario.savedAt ?? FIRST_UNAMBIGUOUS_SAVE_DAY, FIRST_UNAMBIGUOUS_SAVE_DAY),
+  }
   // The LOCAL-calendar chain, never a raw UTC epoch-day (the U13 basis catch — a second
   // ad-hoc clock read is exactly the class the 2026-07-09 ultramode unified away; DEV-only
   // here, but the plant feeds cold-reads and its elapsed line must agree with the app's).
-  const scenario =
-    aged !== undefined ? aged.doctor(built.scenario, currentEpochDay()) : built.scenario
+  const scenario = aged !== undefined ? aged.doctor(thisBuildSave, currentEpochDay()) : thisBuildSave
   // U17 §S5 — A DOCTORED ATOM MUST FAIL AT THE PLANT, NEVER AT THE SCREEN. `scenarioFromDraft` ran
   // ABOVE, BEFORE the doctor, so anything a doctor ADDS has never met the codec. That matters for
   // exactly one field: the saved recommendation is the codec's ONE tolerated non-fatal drop, so an

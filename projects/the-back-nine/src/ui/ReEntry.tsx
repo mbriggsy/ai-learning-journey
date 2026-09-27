@@ -62,39 +62,47 @@ export function ReEntry({ view, readOnly, onAffirm, onUpdate }: ReEntryProps) {
   }, [])
 
   return (
-    <main className="save">
+    <main className="save save--reentry">
       <section className="save-step reentry">
         <h2 className="save-step__heading" tabIndex={-1} ref={headingRef}>
           {copy.reentryHeading}
         </h2>
-        <p className="save-step__note">{copy[view.introKey]}</p>
-        {view.elapsedLine !== null && <p className="save-step__note">{view.elapsedLine}</p>}
-        {view.noteLines.length > 0 && (
-          <div className="reentry-notes">
-            {view.noteLines.map((line) => (
-              <p key={line} className="save-step__note save-field__note--block">
-                {line}
-              </p>
-            ))}
-          </div>
-        )}
-        <ReadbackGroup legend={copy.reentryBalancesLegend} rows={view.balanceRows} />
-        <ReadbackGroup legend={copy.reentryBenefitsLegend} rows={view.benefitRows} />
-        <div className="save-actions">
-          {readOnly ? (
-            <button type="button" className="btn-primary" onClick={onAffirm}>
-              {copy.reentryContinueCta}
-            </button>
-          ) : (
-            <>
-              <button type="button" className="btn-primary" onClick={onAffirm}>
-                {copy.reentryAffirmCta}
-              </button>
-              <button type="button" className="btn-quiet" onClick={onUpdate}>
-                {copy.reentryUpdateCta}
-              </button>
-            </>
+        {/* Two halves in reading order — what changed since the save, then the read-back it asks
+            about with the decision under it. At a wide window they sit side by side (save.css) so
+            the decision pair stays in the first frame however many notes an old vault earns; the
+            notes are never trimmed to fit (content outranks layout). */}
+        <div className="reentry-story">
+          <p className="save-step__note">{copy[view.introKey]}</p>
+          {view.elapsedLine !== null && <p className="save-step__note">{view.elapsedLine}</p>}
+          {view.noteLines.length > 0 && (
+            <div className="reentry-notes">
+              {view.noteLines.map((line) => (
+                <p key={line} className="save-step__note save-field__note--block">
+                  {line}
+                </p>
+              ))}
+            </div>
           )}
+        </div>
+        <div className="reentry-confirm">
+          <ReadbackGroup legend={copy.reentryBalancesLegend} rows={view.balanceRows} />
+          <ReadbackGroup legend={copy.reentryBenefitsLegend} rows={view.benefitRows} />
+          <div className="save-actions">
+            {readOnly ? (
+              <button type="button" className="btn-primary" onClick={onAffirm}>
+                {copy.reentryContinueCta}
+              </button>
+            ) : (
+              <>
+                <button type="button" className="btn-primary" onClick={onAffirm}>
+                  {copy.reentryAffirmCta}
+                </button>
+                <button type="button" className="btn-quiet" onClick={onUpdate}>
+                  {copy.reentryUpdateCta}
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </section>
     </main>

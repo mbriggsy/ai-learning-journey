@@ -45,7 +45,7 @@ import {
   type MedicareCostTrendTable,
 } from '@engine/constants'
 import type { FilingStatus } from '@shared/model'
-import { cumulativePriceIndex } from '@engine/priceIndex'
+import { cpiGrowth, cumulativePriceIndex } from '@engine/priceIndex'
 
 /**
  * The per-year ingredients BOTH MAGIs are built from — the tax overlay's converged-gross
@@ -678,10 +678,14 @@ export interface ComparedIrmaaSchedule extends IrmaaSchedule {
  * is August of `billYear − 1` for a 'cpi-lagged' tier, August of `topTierFrozenThrough − 1` for the
  * 'frozen-then-cpi' top tier, which holds its pinned figure through `topTierFrozenThrough` (C) —
  * rounded to the nearest $1,000 (B) on the SINGLE line; the joint line keeps the pinned ratio (2× for
- * tiers 1–4, 150 % for the top — (i)(3)(C)(ii)), derived, never re-typed. "The 12 months ending
- * August of X" is read as the ONE index's `cumulativePriceIndex(X)` (the Trustees' CPI-W path standing
- * in for CPI-U — never a second index). At and before the index anchor every line is its pinned figure
- * (the index is 1 there — the pre-anchor clamp).
+ * tiers 1–4, 150 % for the top — (i)(3)(C)(ii)), derived, never re-typed. The growth from a base's
+ * August to August of Y − 1 is the ONE path's `cpiGrowth(base, Y − 1)` (the Trustees' CPI-W path
+ * standing in for CPI-U — never a second index) — NEVER a quotient of two `cumulativePriceIndex` LEVELS:
+ * the tiers-1–4 base (August 2025) sits one year before the index anchor, where the level clamps to 1,
+ * and the quotient erased that year from every later line (1c97f55d — one CPI year low from bill 2027;
+ * insight 138). A bill year at or before the schedule's own holds its pinned lines (only the aged
+ * pre-anchor dev plants bill that early; the Trustees path prices no realized year before its anchor,
+ * so nothing is re-derived backward).
  *
  * Pure: a function of the schedule, the year and the canonical index; reads no clock, no draw.
  */
@@ -708,15 +712,14 @@ function compareIrmaaSchedule(schedule: IrmaaSchedule, magiCalendarYear: number)
   const billYear = magiCalendarYear + schedule.magiLookbackYears
   const magiLevel = cumulativePriceIndex(magiCalendarYear)
   const tiers = schedule.tiers.map((tier) => {
-    let factor: number
-    if (tier.lineIndexing === 'frozen-then-cpi') {
-      factor =
-        billYear <= schedule.topTierFrozenThrough
-          ? 1
-          : cumulativePriceIndex(billYear - 1) / cumulativePriceIndex(schedule.topTierFrozenThrough - 1)
-    } else {
-      factor = cumulativePriceIndex(billYear - 1) / cumulativePriceIndex(schedule.billYear - 1)
-    }
+    // The growth from the tier's base August (the pinned lines' own, or the top tier's re-index base)
+    // to August of billYear − 1 — a GROWTH read, so `cpiGrowth`, never a quotient of clamped levels.
+    const growthFromBase = (frozenThroughBillYear: number): number =>
+      billYear <= frozenThroughBillYear ? 1 : cpiGrowth(frozenThroughBillYear - 1, billYear - 1)
+    const factor =
+      tier.lineIndexing === 'frozen-then-cpi'
+        ? growthFromBase(schedule.topTierFrozenThrough)
+        : growthFromBase(schedule.billYear)
     const nominalSingle = Math.round((tier.singleMagiThreshold * factor) / 1_000) * 1_000
     const nominalMfj = nominalSingle * (tier.mfjMagiThreshold / tier.singleMagiThreshold)
     return { ...tier, singleMagiThreshold: nominalSingle / magiLevel, mfjMagiThreshold: nominalMfj / magiLevel }

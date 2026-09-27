@@ -18,7 +18,7 @@
 import { describe, it, expect } from 'vitest'
 import { taxableSocialSecurity } from '@engine/taxCore'
 import { irmaaMagiAtFill } from '@engine/magiLandscape'
-import { cumulativePriceIndex } from '@engine/priceIndex'
+import { cpiGrowth, cumulativePriceIndex } from '@engine/priceIndex'
 import { buildPartBPricingSchedule } from '@engine/healthOverlay'
 import { medicareCostTrend, ssProvisionalThresholds, irmaa, partB2026 } from '@engine/constants'
 
@@ -92,6 +92,42 @@ describe('cumulativePriceIndex — the engine’s one deterministic CPI path, by
   it('refuses a non-integer calendar year (fail-loud — a NaN year would silently price the identity)', () => {
     expect(() => cumulativePriceIndex(Number.NaN)).toThrow(/integer calendar year/)
     expect(() => cumulativePriceIndex(2030.5)).toThrow(/integer calendar year/)
+  })
+})
+
+// The GROWTH read (insight 138): the level above clamps at and before the anchor; a growth ratio whose
+// base sits one year before it must NOT — the step into the anchor year is inside the Trustees' averaged
+// window. Oracle: the closed form by Math.pow over COUNTED years, never the engine's index map.
+describe('cpiGrowth — prices’ growth between two years on the same path, unclamped', () => {
+  it('from the year before the anchor INTO the anchor: one year of the near-term rate — the step the clamped quotient erases', () => {
+    expect(cpiGrowth(ANCHOR - 1, ANCHOR)).toBeCloseTo(1 + TREND.cpiNearTermAvg, 12)
+    // The defect's own shape, pinned so a helper that falls back to the level quotient reds here.
+    expect(cumulativePriceIndex(ANCHOR) / cumulativePriceIndex(ANCHOR - 1)).toBe(1)
+  })
+
+  it('counts every year in (from, to]: (1 + near)^n through the table edge, (1 + ultimate)^m beyond', () => {
+    for (let to = ANCHOR - 1; to <= ANCHOR + 40; to++) {
+      const years = to - (ANCHOR - 1)
+      const nearYears = Math.min(years, TABLE_EDGE - (ANCHOR - 1))
+      const ultimateYears = years - nearYears
+      const oracle = Math.pow(1 + TREND.cpiNearTermAvg, nearYears) * Math.pow(1 + TREND.cpiUltimate, ultimateYears)
+      expect(cpiGrowth(ANCHOR - 1, to), `${ANCHOR - 1} → ${to}`).toBeCloseTo(oracle, 9)
+    }
+  })
+
+  it('equals the level quotient wherever BOTH years sit at or after the anchor — one path, not two', () => {
+    for (let from = ANCHOR; from <= ANCHOR + 15; from++) {
+      for (let to = from; to <= ANCHOR + 25; to++) {
+        expect(cpiGrowth(from, to), `${from} → ${to}`).toBeCloseTo(oracleIndex(to) / oracleIndex(from), 9)
+      }
+    }
+  })
+
+  it('refuses a base before the sourced path, a backward read and a non-integer year (fail-loud, never a quiet 1)', () => {
+    expect(() => cpiGrowth(ANCHOR - 2, ANCHOR)).toThrow(/no sourced rate/)
+    expect(() => cpiGrowth(ANCHOR + 3, ANCHOR + 2)).toThrow(/backward/)
+    expect(() => cpiGrowth(ANCHOR, Number.NaN)).toThrow(/integer calendar years/)
+    expect(cpiGrowth(ANCHOR + 4, ANCHOR + 4)).toBe(1)
   })
 })
 

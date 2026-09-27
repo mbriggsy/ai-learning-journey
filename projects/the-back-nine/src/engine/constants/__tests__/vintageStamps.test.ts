@@ -15,6 +15,7 @@ import {
   partB2026,
   medicareExtrasTypical,
   medicareCostTrend,
+  healthConstants,
 } from '../health'
 import { stateTaxVintageStamp, STATE_TAX_PROFILES, ncRateSchedule } from '../stateTax'
 import { BLEND_SNAPSHOT_AS_OF, TICKER_BLEND_ROWS } from '../../reference/tickerBlend'
@@ -136,6 +137,51 @@ describe('healthcareVintageStamp — the healthcare clock producer (the trend un
 
   it('is deterministic within a build (two calls, one stamp — the dirty-compare / staleness reader depend on it)', () => {
     expect(healthcareVintageStamp()).toEqual(healthcareVintageStamp())
+  })
+
+  /**
+   * THE STAMP↔CONTENT BINDING for the HEALTH table (the engine-domain council, 2026-09-27 — the
+   * register's G1.2: the IRMAA commits changed pricing FIELDS — `billYear`, `lowerBoundInclusive`,
+   * `lineIndexing` — with nothing red and no vintage move, because the health stamp keys on eight
+   * fields and `constants.shape`'s `toMatchObject` admits extra ones). The tax table's twin above.
+   * EXCLUDED on purpose: the ACA record's `verifiedOn` / `pendingExtension` — provenance that moves on
+   * every monthly re-verify while the regime holds (its clock is deliberately quiet — staleness.ts).
+   * A CONSTANTS-side tripwire only: an engine-CODE pricing change moves nothing here — that is the
+   * engine-pricing ledger's gate (`src/engine/__tests__/pricingWitness.test.ts`).
+   */
+  it('the table CONTENT is bound to the stamp — a value edit must move a stamp field (or append an engine-pricing row, or consciously re-pin here)', () => {
+    const fingerprint = JSON.stringify(
+      Object.fromEntries(
+        Object.entries(healthConstants).map(([k, entry]) => {
+          const value = (entry as { value?: unknown }).value ?? null
+          if (k !== 'acaEnhancedSubsidyStatus') return [k, value]
+          const { verifiedOn: _v, pendingExtension: _p, ...rest } = value as Record<string, unknown>
+          return [k, rest]
+        }),
+      ),
+    )
+    let h = 5381
+    for (let i = 0; i < fingerprint.length; i++) h = ((h * 33) ^ fingerprint.charCodeAt(i)) >>> 0
+    const { acaVerifiedOn: _provenance, ...stamp } = healthcareVintageStamp()
+    expect(
+      { stamp, contentDigest: h },
+      'The health-table CONTENT changed under an unchanged vintage stamp. If a real figure moved, move the ' +
+        'stamp field that dates it (COVERAGE_YEAR, a vintage string, the IRMAA freeze marker…) so every saved ' +
+        'vault’s staleness clock fires — THEN update this pin. If the change is how the ENGINE prices a figure ' +
+        '(a new field its code reads), append an ENGINE_PRICING_LEDGER row. Only re-pin alone for a non-value edit.',
+    ).toEqual({
+      stamp: {
+        coverageYear: 2026,
+        acaStatus: 'reverted to pre-ARPA (400% FPL cliff back; higher contribution %s)',
+        fplGuidelineYear: 2025,
+        irmaaTopTierFrozenThrough: 2027,
+        partBStandardMonthly: 202.9,
+        medicareExtrasTypicalVintage: 'extras-2026b',
+        partBTrendVintage: 'medicare-trend-2026a',
+      },
+      // Pinned 2026-09-27 (the baseline, at ENGINE_PRICING_VERSION 10).
+      contentDigest: 3_813_216_724,
+    })
   })
 })
 

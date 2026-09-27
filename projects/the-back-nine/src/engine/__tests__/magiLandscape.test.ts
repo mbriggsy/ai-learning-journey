@@ -40,13 +40,15 @@ const TIER1_SINGLE = irmaa.value.tiers[0]!.singleMagiThreshold // 109,000
 // THE PRICE FRAME (2026-09-26): every tier reader takes the schedule AS COMPARED for its MAGI year.
 // `ID` is the identity frame (MAGI 2024 → bill 2026, the pinned lines) for the readout-geometry arms;
 // a rail fixture passes its OWN year (`cmp(c)`). The ctx default MAGI year 2026 bills in 2028, whose
-// lines sit one year of CPI above the pinned ones — hand-derived here from the READ Trustees rate:
-// tier 1 MFJ = 2 × round1000(109,000 × (1 + r)) = 224,000 at r = 3.2 % (§1395r(i)(5)(A)+(B)).
+// tiers-1–4 lines carry TWO Augusts of CPI past the pinned ones (their base is August 2025; bill 2028's
+// line carries August 2027 — COUNTED from the statute, never read off the index, insight 138) — hand-
+// derived here from the READ Trustees rate: tier 1 MFJ = 2 × round1000(109,000 × (1 + r)²) = 232,000 at
+// r = 3.2 % (§1395r(i)(5)(A)+(B)).
 const ID = irmaaScheduleAsCompared(irmaa.value, 2024)
 const cmp = (c: CommittedYearIncome) => irmaaScheduleAsCompared(irmaa.value, c.calendarYear)
 const CPI = medicareCostTrend.value.cpiNearTermAvg
 const round1000 = (x: number) => Math.round(x / 1_000) * 1_000
-const TIER1_MFJ_BILL2028 = 2 * round1000(TIER1_SINGLE * (1 + CPI))
+const TIER1_MFJ_BILL2028 = 2 * round1000(TIER1_SINGLE * (1 + CPI) ** 2)
 
 const ctx = (over: Partial<CommittedYearIncome>): CommittedYearIncome => ({
   rmd: 0,
@@ -115,17 +117,19 @@ describe('acaCliffFillHeadroom (closed form — the linear full-SS metric)', () 
 })
 
 describe('irmaaStepFillHeadroom (bisection over the Pub-915-coupled metric)', () => {
-  it('hand fixture (85% cap bound), MAGI year 2026 → bill 2028: baseline 174,000 → the 2028 tier-1 MFJ line (224,000) → headroom = 40,000 (rmd) + 50,000 = 90,000 (the anchor frame gave 84,000 — the price gap)', () => {
-    expect(TIER1_MFJ_BILL2028).toBe(224_000)
+  it('hand fixture (85% cap bound), MAGI year 2026 → bill 2028: baseline 174,000 → the 2028 tier-1 MFJ line (232,000) → headroom = 40,000 (rmd) + 58,000 = 98,000 (the anchor frame gave 84,000, the one-CPI-year-low frame 90,000 — the price gap)', () => {
+    expect(TIER1_MFJ_BILL2028).toBe(232_000)
     const c = ctx({ rmd: 40_000, conversion: 100_000, ssBenefit: 40_000 })
     const h = irmaaStepFillHeadroom(c, cmp(c))
     expect(h).toBeCloseTo(40_000 + (TIER1_MFJ_BILL2028 - 174_000), 3)
     expect(irmaaMagiAtFill(c, h)).toBeCloseTo(TIER1_MFJ_BILL2028, 3) // landing AT an exclusive line is safe
   })
 
-  it('a far MAGI year (2030 → bill 2032): the rail stops at round1000(line × index(2031)) ÷ index(2030) — about one year of CPI above the pinned line', () => {
-    const idx = (y: number) => (1 + CPI) ** (y - 2026)
-    const line = (2 * round1000(TIER1_SINGLE * idx(2031))) / idx(2030)
+  it('a far MAGI year (2030 → bill 2032): the rail stops at round1000(line × (1 + r)⁶) ÷ index(2030) — six Augusts past the August-2025 base over four years of price level: about two years of CPI above the pinned line', () => {
+    const level = (y: number) => (1 + CPI) ** (y - 2026)
+    const augusts = 2032 - 1 - 2025
+    const line = (2 * round1000(TIER1_SINGLE * (1 + CPI) ** augusts)) / level(2030)
+    expect(line).toBeCloseTo(232_747.56, 1) // 2 × 132,000 ÷ 1.032⁴
     const c = ctx({ conversion: 150_000, calendarYear: 2030 })
     const h = irmaaStepFillHeadroom(c, cmp(c))
     expect(irmaaMagiAtFill(c, h)).toBeCloseTo(line, 3)

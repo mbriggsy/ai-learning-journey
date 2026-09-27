@@ -20,8 +20,9 @@ import { heroLead, floorLineText } from '../FuckOffDate'
 import { dateOddsText } from '../dateOdds'
 import type { DateSplitView } from '../dateSplit'
 import { scenarioFromDraft, currentEpochDay } from '../scenarioFromDraft'
+import { ENGINE_PRICING_LEDGER, FIRST_UNAMBIGUOUS_SAVE_DAY, type PricingFamily } from '@engine/pricingVersion'
 import { DEV_SEEDS } from '../devSeeds'
-import { deriveStaleness, type StalenessExposure } from '@store/staleness'
+import { deriveStaleness, PRICING_FAMILY_ORDER, type StalenessExposure, type StalenessReport } from '@store/staleness'
 import { exposureForDraft } from '../stalenessExposure'
 import { copy, slots } from '../copy'
 import type { PricedState } from '@engine/constants/stateTax'
@@ -30,17 +31,25 @@ import type { DateTrackOutcome } from '@shared/model'
 
 afterEach(cleanup)
 
+/** Never earlier than the ledger's first unambiguous save day — a fixture saved ON an engine-pricing
+ *  ship day is deliberately ambiguous (the nameless line), so a wall-clock TODAY reds this file on
+ *  exactly the day a row ships (`FIRST_UNAMBIGUOUS_SAVE_DAY`'s docblock). */
+const TODAY = Math.max(currentEpochDay(), FIRST_UNAMBIGUOUS_SAVE_DAY)
+/** A save by THIS build: `scenarioFromDraft` stamps `savedAt` off the wall clock; re-stamp it at TODAY. */
+const readySave = (key: keyof typeof DEV_SEEDS) => {
+  const r = scenarioFromDraft(DEV_SEEDS[key])
+  return r.ready ? { ...r, scenario: { ...r.scenario, savedAt: TODAY } } : r
+}
 const freshSave = (): ScenarioV3 => {
-  const r = scenarioFromDraft(DEV_SEEDS.retired)
+  const r = readySave('retired')
   if (!r.ready) throw new Error('retired seed must be save-ready')
   return r.scenario
 }
 const scenarioFor = (key: keyof typeof DEV_SEEDS): ScenarioV3 => {
-  const r = scenarioFromDraft(DEV_SEEDS[key])
+  const r = readySave(key)
   if (!r.ready) throw new Error(`${key} seed must be save-ready`)
   return r.scenario
 }
-const TODAY = currentEpochDay()
 // U17 §S4 — the REAL exposure records, derived from the same seeds these scenarios come from.
 // Never hand-written literals here: this file's job is the end-to-end read (seed → built params
 // → exposure → report → rendered sentence), and a literal would cut the chain at its middle.
@@ -75,7 +84,7 @@ describe('composeReentry — the read-back', () => {
       .reduce((t, a) => t + a.valueToday, 0)
     expect(view.balanceRows[0]!.value).toBe(`$${Math.round(pretaxTotal).toLocaleString('en-US')}`)
     // The date seed carries a 401k + a roth-ira — two rows, grouped by the engine's own map.
-    const d = scenarioFromDraft(DEV_SEEDS.date)
+    const d = readySave('date')
     if (!d.ready) throw new Error('date seed must be save-ready')
     const dView = composeReentry(d.scenario, reportFor(d.scenario, DATE_EXPOSURE))
     expect(dView.balanceRows.map((r) => r.label)).toEqual([
@@ -341,7 +350,7 @@ describe('composeReentry — the read-back', () => {
     expect(RETIRED_EXPOSURE.blend, 'and the silence is the REAL seed’s own read').toBe('unpriced')
     // The date household holds VTI + VFIFX — its stockWeight DOES read the dated table, so the
     // stamp genuinely could have moved its answer and no per-row compare can say. Nameless.
-    const d = scenarioFromDraft(DEV_SEEDS.date)
+    const d = readySave('date')
     if (!d.ready) throw new Error('date seed must be save-ready')
     const dMoved = { ...d.scenario, dateVintage: { ...d.scenario.dateVintage!, blendSnapshotAsOf: '2019-01-01' } }
     const dView = composeReentry(dMoved, reportFor(dMoved, DATE_EXPOSURE))
@@ -382,7 +391,7 @@ describe('composeReentry — the read-back', () => {
     const s = freshSave()
     expect(composeReentry(s, reportFor(s)).introKey).toBe('reentryIntroRetired')
     // The still-working date household keeps the original register.
-    const d = scenarioFromDraft(DEV_SEEDS.date)
+    const d = readySave('date')
     if (!d.ready) throw new Error('date seed must be save-ready')
     expect(composeReentry(d.scenario, reportFor(d.scenario, DATE_EXPOSURE)).introKey).toBe('reentryIntro')
   })
@@ -406,6 +415,185 @@ describe('composeReentry — the read-back', () => {
     // The ?vault=stale plant's own witness (savedAt −760d): reads "about 2 years ago"
     // under BOTH roundings — the fit gate's pinned gate text does not move.
     expect(at(760)).toBe(slots.reentryElapsedYears(2))
+  })
+})
+
+// =============================================================================================
+// THE ENGINE'S OWN METHOD — `report.pricing` rendered (the engine-domain council, 2026-09-27). Three
+// lines at most: ONE named method line over every named family (Medicare last), ONE nameless hedge,
+// ONE conditional spending re-confirm. The pricing lines ride `anyStale` only — never `rulesMoved`,
+// so the hero's standing "rules changed" echo stays dark on a pricing-only re-entry.
+// =============================================================================================
+describe('composeReentry — the engine-pricing lines', () => {
+  /** Each family's phrase, restated by hand (the renderer's own table is module-private). */
+  const PHRASE: Readonly<Record<PricingFamily, string>> = {
+    tax: copy.stalenessPricingTax,
+    stateTax: copy.stalenessPricingStateTax,
+    contributions: copy.stalenessPricingContributions,
+    aca: copy.stalenessPricingAca,
+    medicare: copy.stalenessPricingMedicare,
+  }
+  const PRICING_LINES = new Set<string>([copy.stalenessPricingHedged, copy.stalenessReconfirmMedicareSpending])
+  /** The method line's fixed lead-in, read off the shipped slot (render it around a sentinel, keep the
+   *  text before it) — never a re-typed literal. */
+  const METHOD_LEAD = slots.stalenessPricing('\u0000').split('\u0000')[0]!
+  const isMethodLine = (l: string) => l.startsWith(METHOD_LEAD)
+  /** A real, fully-quiet report (a fresh save by this build) with `pricing` overridden — every other clock
+   *  is silent, so every rendered line is a pricing line. */
+  const quietScenario = () => freshSave()
+  const withPricing = (
+    pricing: Omit<StalenessReport['pricing'], 'moved'>,
+  ): { scenario: ScenarioV3; report: StalenessReport } => {
+    const scenario = quietScenario()
+    const base = reportFor(scenario)
+    const moved = pricing.namedFamilies.length > 0 || pricing.hedged || pricing.reconfirmMedicareSpending
+    return { scenario, report: { ...base, pricing: { ...pricing, moved }, anyStale: base.anyStale || moved } }
+  }
+  const savedOn = (s: ScenarioV3, savedAt: number | undefined): ScenarioV3 => {
+    const out = { ...s } as Record<string, unknown>
+    if (savedAt === undefined) delete out.savedAt
+    else out.savedAt = savedAt
+    return out as unknown as ScenarioV3
+  }
+  const SHIP_DAYS = [...new Set(ENGINE_PRICING_LEDGER.map((r) => r.sinceEpochDay))]
+
+  it('INVARIANT: pricing.moved ⟹ at least one line, and every line unique — swept over REAL reports (seeds × save days × exposures)', () => {
+    const noMarker = (s: ScenarioV3): ScenarioV3 => {
+      const hv = { ...s.healthcareVintage! } as Record<string, unknown>
+      delete hv.medicareExtrasTypicalVintage
+      return { ...s, healthcareVintage: hv as unknown as ScenarioV3['healthcareVintage'] }
+    }
+    const households: ReadonlyArray<readonly [string, ScenarioV3, StalenessExposure]> = [
+      ['retired', freshSave(), RETIRED_EXPOSURE],
+      ['retired+NC', { ...freshSave(), retirementState: 'NC' }, pricing(RETIRED_EXPOSURE, 'NC')],
+      ['retired, no extras marker', noMarker(freshSave()), RETIRED_EXPOSURE],
+      ['health (pre-65 marketplace)', scenarioFor('health'), ACA_PRICED_EXPOSURE],
+      ['date', scenarioFor('date'), DATE_EXPOSURE],
+      ['unbuildable residual', freshSave(), UNBUILDABLE_RESIDUAL],
+    ]
+    const days = [undefined, ...SHIP_DAYS.flatMap((d) => [d - 1, d, d + 1])]
+    let moved = 0
+    let named = 0
+    let hedged = 0
+    let reconfirm = 0
+    for (const [name, scenario, exposure] of households) {
+      for (const day of days) {
+        const s = savedOn(scenario, day)
+        const report = deriveStaleness(s, TODAY, exposure)
+        const view = composeReentry(s, report)
+        const at = `${name} saved ${String(day)}`
+        if (report.pricing.moved) {
+          moved += 1
+          expect(view.noteLines.length, `${at}: pricing moved with NO line`).toBeGreaterThan(0)
+          // Exactly the pricing lines the flags call for, no more, no fewer (every other clock is fresh).
+          const expectedCount =
+            (report.pricing.namedFamilies.length > 0 ? 1 : 0) + (report.pricing.hedged ? 1 : 0) + (report.pricing.reconfirmMedicareSpending ? 1 : 0)
+          expect(view.noteLines.filter((l) => isMethodLine(l) || PRICING_LINES.has(l)).length, at).toBe(expectedCount)
+        }
+        expect(new Set(view.noteLines).size, `${at}: a duplicated line collides on the React key`).toBe(view.noteLines.length)
+        if (view.noteLines.length > 0) expect(report.anyStale, `${at}: a line with no staleness`).toBe(true)
+        if (report.pricing.namedFamilies.length > 0) named += 1
+        if (report.pricing.hedged) hedged += 1
+        if (report.pricing.reconfirmMedicareSpending) reconfirm += 1
+      }
+    }
+    // NON-VACUITY: the sweep reaches every one of the three lines, many times.
+    expect(moved).toBeGreaterThan(10)
+    expect(named, 'the named line is exercised').toBeGreaterThan(0)
+    expect(hedged, 'the hedge is exercised').toBeGreaterThan(0)
+    expect(reconfirm, 'the re-confirm is exercised').toBeGreaterThan(0)
+  })
+
+  it('ONE family ⇒ the bare phrase; TWO ⇒ "a and b"; THREE ⇒ "a, b and c" — Medicare last', () => {
+    const lineFor = (namedFamilies: readonly PricingFamily[]) => {
+      const { scenario, report } = withPricing({ namedFamilies, hedged: false, reconfirmMedicareSpending: false })
+      return composeReentry(scenario, report).noteLines
+    }
+    expect(lineFor(['tax'])).toEqual([slots.stalenessPricing(copy.stalenessPricingTax)])
+    expect(lineFor(['medicare'])).toEqual([slots.stalenessPricing(copy.stalenessPricingMedicare)])
+    expect(lineFor(['tax', 'medicare'])).toEqual([
+      slots.stalenessPricing(`${copy.stalenessPricingTax} and ${copy.stalenessPricingMedicare}`),
+    ])
+    expect(lineFor(['tax', 'contributions', 'medicare'])).toEqual([
+      slots.stalenessPricing(`${copy.stalenessPricingTax}, ${copy.stalenessPricingContributions} and ${copy.stalenessPricingMedicare}`),
+    ])
+    expect(lineFor(['tax', 'stateTax', 'contributions', 'aca', 'medicare'])).toEqual([
+      slots.stalenessPricing(
+        `${copy.stalenessPricingTax}, ${copy.stalenessPricingStateTax}, ${copy.stalenessPricingContributions}, ${copy.stalenessPricingAca} and ${copy.stalenessPricingMedicare}`,
+      ),
+    ])
+  })
+
+  it('the method line names ONLY the named families — every non-empty subset, each phrase once, no stranger’s phrase, Medicare’s clause at the end', () => {
+    const families = PRICING_FAMILY_ORDER
+    for (let mask = 1; mask < 1 << families.length; mask++) {
+      const namedFamilies = families.filter((_, i) => (mask & (1 << i)) !== 0)
+      const { scenario, report } = withPricing({ namedFamilies, hedged: false, reconfirmMedicareSpending: false })
+      const lines = composeReentry(scenario, report).noteLines
+      expect(lines, `${namedFamilies.join('+')}: one line`).toHaveLength(1)
+      const line = lines[0]!
+      for (const f of families) {
+        const count = line.split(PHRASE[f]).length - 1
+        expect(count, `${namedFamilies.join('+')}: "${PHRASE[f]}"`).toBe(namedFamilies.includes(f) ? 1 : 0)
+      }
+      if (namedFamilies.includes('medicare')) {
+        const at = line.indexOf(PHRASE.medicare)
+        for (const f of namedFamilies) expect(line.indexOf(PHRASE[f]), `${f} before Medicare`).toBeLessThanOrEqual(at)
+      }
+      // The joiner: "and" exactly once before the last phrase, commas only between earlier ones.
+      const joined = line.slice(line.indexOf(PHRASE[namedFamilies[0]!]), line.indexOf(PHRASE[namedFamilies[namedFamilies.length - 1]!]))
+      expect((joined.match(/ and $/g) ?? []).length, `${namedFamilies.join('+')}: the final "and"`).toBe(namedFamilies.length > 1 ? 1 : 0)
+    }
+  })
+
+  it('the HEDGE and the RE-CONFIRM render exactly when their flags are set — in order: method line, hedge, re-confirm', () => {
+    const method = slots.stalenessPricing(copy.stalenessPricingTax)
+    for (const named of [false, true]) {
+      for (const hedged of [false, true]) {
+        for (const reconfirmMedicareSpending of [false, true]) {
+          const { scenario, report } = withPricing({ namedFamilies: named ? ['tax'] : [], hedged, reconfirmMedicareSpending })
+          const expected = [
+            ...(named ? [method] : []),
+            ...(hedged ? [copy.stalenessPricingHedged] : []),
+            ...(reconfirmMedicareSpending ? [copy.stalenessReconfirmMedicareSpending] : []),
+          ]
+          expect(composeReentry(scenario, report).noteLines, `named=${named} hedged=${hedged} reconfirm=${reconfirmMedicareSpending}`).toEqual(expected)
+        }
+      }
+    }
+  })
+
+  it('a PRICING-ONLY re-entry leaves the hero echo register dark: rulesMoved false, no rules-register line — yet the gate still speaks', () => {
+    // A real report: a save before the ledger began (every row crossed) by this build's stamps. The hero's
+    // standing "Some rules changed since your save" echo rides `rulesMoved` alone (IntakeApp's
+    // `stalenessNote={reentry?.rulesMoved === true}`).
+    const s = savedOn(freshSave(), ENGINE_PRICING_LEDGER[0]!.sinceEpochDay - 1)
+    const report = reportFor(s)
+    expect(report.pricing.moved, 'premise: the ledger speaks').toBe(true)
+    expect(report.rulesMoved, 'the hero echo stays dark — no law moved').toBe(false)
+    expect(report.anyStale, 'the gate still has something to say').toBe(true)
+    const lines = composeReentry(s, report).noteLines
+    expect(lines.length).toBeGreaterThan(0)
+    for (const rulesLine of [
+      copy.stalenessAppDefault,
+      copy.stalenessTax,
+      copy.stalenessStateTax,
+      copy.stalenessAca,
+      copy.stalenessMedicare,
+      copy.stalenessDate,
+      copy.stalenessReferenceTables,
+      copy.stalenessHeroNote,
+    ]) {
+      expect(lines, 'no rules-register (or reference-data) sentence rides a method change').not.toContain(rulesLine)
+    }
+    expect(lines.every((l) => isMethodLine(l) || PRICING_LINES.has(l)), 'every line is a pricing line').toBe(true)
+    // …and the same holds on every ship day (the ambiguous day's nameless hedge included).
+    for (const day of SHIP_DAYS) {
+      const onDay = savedOn(freshSave(), day)
+      const onDayReport = reportFor(onDay)
+      expect(onDayReport.rulesMoved, `saved ${day}`).toBe(false)
+      expect(composeReentry(onDay, onDayReport).noteLines.every((l) => isMethodLine(l) || PRICING_LINES.has(l)), `saved ${day}`).toBe(true)
+    }
   })
 })
 

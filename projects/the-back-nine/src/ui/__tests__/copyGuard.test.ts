@@ -300,6 +300,68 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     expect(all.some((v) => /fund snapshots?/i.test(v)), 'the purged jargon stays purged').toBe(false)
   })
 
+  // --- THE ENGINE'S OWN METHOD (the engine-domain council, 2026-09-27 — `report.pricing`, off
+  //     `src/engine/pricingVersion.ts`). A change to how the ENGINE CODE works a figure out, with no law
+  //     moved and no reference table re-dated. So its three lines never speak the rules register (the
+  //     hero's "Figured under today’s rules" echo is for law — insight 074 inverted), never "reference
+  //     data" (that is the aggregate's sentence, and nothing was re-dated), never "improved / refined /
+  //     corrected" (each reads as "your number got better"), and never a DIRECTION: a rosier and a
+  //     harsher move read the same; the recompute itself carries the verdict. Checked against the shipped
+  //     strings: none carries "more" or "less", so the direction net needs no narrowing. ---
+  const PRICING_PHRASES = [
+    copy.stalenessPricingTax,
+    copy.stalenessPricingStateTax,
+    copy.stalenessPricingContributions,
+    copy.stalenessPricingAca,
+    copy.stalenessPricingMedicare,
+  ] as const
+  /** The named method line as it can render: each family alone, and all five joined ("a, b … and e"). */
+  const METHOD_LINES = [
+    ...PRICING_PHRASES.map((p) => slots.stalenessPricing(p)),
+    slots.stalenessPricing(`${PRICING_PHRASES.slice(0, -1).join(', ')} and ${PRICING_PHRASES[PRICING_PHRASES.length - 1]}`),
+  ]
+  const ENGINE_METHOD_LINES = [...METHOD_LINES, copy.stalenessPricingHedged, copy.stalenessReconfirmMedicareSpending]
+  const RULES_REGISTER = /\brules?\b/i
+  const REFERENCE_DATA = /reference data/i
+  const IMPROVEMENT = /\b(improv|refin|correct)/i
+  const DIRECTION = /\b(better|worse|rosier|harsher|higher|lower|more|less)\b/i
+
+  it('the engine-method lines never speak the rules register, "reference data", an improvement, or a direction', () => {
+    for (const line of ENGINE_METHOD_LINES) {
+      expect(line, 'no law moved — never the rules register').not.toMatch(RULES_REGISTER)
+      expect(line, 'nothing was re-dated — never the aggregate’s sentence').not.toMatch(REFERENCE_DATA)
+      expect(line, 'never "your number got better"').not.toMatch(IMPROVEMENT)
+      expect(line, 'never a direction — the recompute carries the verdict').not.toMatch(DIRECTION)
+      expect(lintCopy(line, ['false-certainty', 'advice-verb', 'superlative', 'free-numeral']), line).toEqual([])
+    }
+    // CONTROLS (burned/070): every net bites a real sentence, or the sweep above is theatre.
+    expect(copy.stalenessHeroNote, 'the rules register is real and this regex finds it').toMatch(RULES_REGISTER)
+    expect(copy.stalenessReferenceTables, 'the aggregate’s sentence trips the reference-data net').toMatch(REFERENCE_DATA)
+    expect('We refined how this tool works out your taxes.').toMatch(IMPROVEMENT)
+    expect('We corrected how this tool works out your taxes.').toMatch(IMPROVEMENT)
+    expect(Object.values(copy).some((v) => DIRECTION.test(v)), 'the direction net bites somewhere in the catalog').toBe(true)
+  })
+
+  it('the HEDGE says plainly it cannot tell; the RE-CONFIRM is conditional and names every premium the plan now prices itself', () => {
+    expect(copy.stalenessPricingHedged).toMatch(/can’t tell/)
+    const reconfirm = copy.stalenessReconfirmMedicareSpending
+    expect(reconfirm, 'conditional, never a directive').toMatch(/^If /)
+    for (const premium of ['Part B', 'Part D', 'Medigap', 'Medicare Advantage']) expect(reconfirm, premium).toContain(premium)
+  })
+
+  it('the Medicare phrase names the surcharge’s income LEVELS (the lines themselves moved, not only a cost) — and each engine-method line is distinct from every other staleness line', () => {
+    expect(copy.stalenessPricingMedicare).toMatch(/income levels where the Medicare surcharge starts/)
+    // Text-keyed notes (ReEntry.tsx keys each <p> by its text): no engine-method line may equal any other
+    // staleness line, or two would collide on the React key.
+    const others = entries
+      .filter(([k]) => k.startsWith('staleness') && !k.startsWith('stalenessPricing') && k !== 'stalenessReconfirmMedicareSpending')
+      .map(([, v]) => v)
+    expect(others.length, 'there ARE other staleness lines to collide with').toBeGreaterThan(4)
+    const own = [copy.stalenessPricingHedged, copy.stalenessReconfirmMedicareSpending, ...METHOD_LINES]
+    expect(new Set(own).size, 'the engine-method lines are mutually distinct').toBe(own.length)
+    for (const line of own) expect(others.filter((o) => o === line), line).toEqual([])
+  })
+
   // --- F-B (U16 chair fix, cold-read panel): the STALE card's body drift-pin. Two falsehoods the
   //     cold read killed must stay dead: (1) "since we found this" — FALSE when the predecessor was the
   //     HELD card (nothing is "found" on a hold), so the body must never claim a find; (2) the body must
@@ -582,6 +644,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     reentryBenefitMonthly: slots.reentryBenefitMonthly('2,000'),
     reentryElapsedYears: slots.reentryElapsedYears(3),
     stalenessBudgetLine: slots.stalenessBudgetLine(2028),
+    stalenessPricing: slots.stalenessPricing(`${copy.stalenessPricingTax} and ${copy.stalenessPricingMedicare}`),
     dateInYearsAnchored: slots.dateInYearsAnchored(7, 2033),
     dateInYearsPast: slots.dateInYearsPast(2031),
     dateInYearsNow: slots.dateInYearsNow(2026),

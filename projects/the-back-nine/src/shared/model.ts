@@ -1777,7 +1777,7 @@ export interface ScenarioV3 {
    *  by U13's staleness comparator at unlock. The legacy string stays untouched (add-only).
    *  RMD-age rule + senior-bonus sunset are deliberately NOT stamped and neither got a CLOCK —
    *  the plan's "derived read-time note" for both was withdrawn in the U13 build. Neither has
-   *  derivable drift; a change to either RULE fires the tax clock (`staleness.ts:35-49`). */
+   *  derivable drift; a change to either RULE fires the tax clock (`staleness.ts:36-50`). */
   readonly taxVintageDetail?: TaxVintageV3
   /** P3·U13 — the date-surface vintage (the two fixture clocks the fuck-off-date answer
    *  decays on): the contribution-limit table year (the catch-up step-down shapes the

@@ -403,3 +403,12 @@ supersedes anything derived from this file.
   he asks WHY NOT, and wants the next-best quantity the tool CAN stand behind. A figure-less
   sentence reads as a gap to fill, not a finish. **Direction of error feared: the chair clearing
   an honest-but-empty sentence as calm when he reads it as withholding.**
+- **E19 — the room sentence's within-a-step form, read cold on `steer` (2026-09-27).** Trigger: under
+  "On track · 9 of 10", *"Spending more than $6,500 a month would start to sit close to the line."*
+  (the lane found under $100 of headroom). His verbatim: **"it's telling the couple at 6500 you're
+  good, anything above that and outcomes could get a lil dicey"** — the intended reading. Two machine
+  seats feared he'd miss that $6,500 is the current spend and that the stacked softeners ("start to
+  sit close to") would read as mild drift; he inferred the first and sized the second honestly.
+  Lesson: an entered figure beside a verdict reads as "where you are" without saying so, and
+  "close to the line" is vocabulary he reads at its true weight. **Direction of error feared: the
+  chair over-weighting softener-stacking flags when the sentence's direction is plain.**

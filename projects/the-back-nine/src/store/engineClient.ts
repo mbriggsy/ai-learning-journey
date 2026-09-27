@@ -249,7 +249,7 @@ function mainThreadHandle(): EngineHandle {
     runDateSearch: async (input, seed, tier, requestEpoch) =>
       (await api()).runDateSearch(input, seed, tier, requestEpoch),
     // The spend solve is NEVER dispatched on the fallback (memoryModel gates on runningInWorker —
-    // a 13–27 s solve would freeze the page); forwarded only so the handle stays total.
+    // a seconds-long solve would freeze the page); forwarded only so the handle stays total.
     runSpendSolve: async (params, seed, spineEpoch, spendEpoch) =>
       (await api()).runSpendSolve(params, seed, spineEpoch, spendEpoch),
     setLatestSpendEpoch: async (epoch) => (await api()).setLatestSpendEpoch(epoch),

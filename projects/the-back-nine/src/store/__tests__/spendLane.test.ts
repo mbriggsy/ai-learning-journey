@@ -112,7 +112,7 @@ describe('the spend lane', () => {
     expect(model.getSnapshot().spend).toEqual({ kind: 'idle' })
   })
 
-  it('the main-thread fallback never dispatches (a 13–27 s solve would freeze the page)', async () => {
+  it('the main-thread fallback never dispatches (a seconds-long solve would freeze the page)', async () => {
     const k = client({ runningInWorker: false })
     const model = createMemoryModel({ client: k.client, builders: builders(), mintSeed: () => 7 })
     model.update(retire)

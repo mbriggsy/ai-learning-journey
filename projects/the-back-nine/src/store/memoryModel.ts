@@ -652,7 +652,7 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
   }
 
   /** Size the committed spine answer's clause with the REAL spend solve (spendSolve.ts). Dispatched
-   *  only after a FINAL spine commit, only in a worker (a 13–27 s solve would freeze the main-thread
+   *  only after a FINAL spine commit, only in a worker (a seconds-long solve would freeze the main-thread
    *  fallback), only when the engine reads a magnitude (room / trim) and no budget governs spending.
    *  Every resolve is dropped unless it still belongs to the committed answer AND the newest dispatch. */
   const dispatchSpend = async (forEpoch: number, params: SimulationParams, seed: number): Promise<void> => {

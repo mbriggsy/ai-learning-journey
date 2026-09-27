@@ -124,6 +124,9 @@ Stevenson (1:00) -- a bet of the slot on a tag not resolved until ~2:55, after S
 Questionable bench body whose inactives (kickoff − 90 min) post after the starter's kickoff now prints
 ⏸ HOLD instead of ↑; any fair slot still fires ↑. Kickoff times come from ESPN's scoreboard (Sleeper
 has dates, never hours). If ESPN fails the report says so on its header and ↑ runs as before.
+Same day, same root cause: every MOVE line now asks "locked?" (kickoff passed), not "played?" (dated
+before today) -- the 15:00 run had been offering 1:00 players mid-game as subs and swap-outs -- and a
+⚠ fallback must still be unlocked at the Questionable starter's inactives, not merely now.
 
 **Answers:** is anyone in my starting ten out, doubtful or on bye, and is a bench player the better
 start this week.

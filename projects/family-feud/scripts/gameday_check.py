@@ -51,9 +51,14 @@ What it does NOT do: touch the lineup. Sleeper has no write API, the browser ski
 and a scheduled task with nobody watching should not be clicking in a fantasy roster. It names the
 move; a session fires it.
 
-"Played" is decided by the projection's `date` being before today. A game dated today has not
-kicked off when this runs at 08:00; a starter whose game is already banked is left alone even if
-the score was ugly, because nothing can be done about him.
+"Locked" is what every MOVE line asks, because Sleeper freezes a player at his kickoff: a game
+dated before today, or -- when ESPN's kickoff times are in hand -- one whose kickoff has passed.
+Until 2026-09-27 only the date counted, so the 15:00 run treated a 1:00 player mid-game as
+movable, on the bench (offered as a sub) and in the lineup (offered as the man to swap out). A
+locked starter is left alone even if the score is ugly, because nothing can be done about him.
+A ⚠ fallback must still be unlocked when it is NEEDED -- at the Questionable starter's inactives,
+not at the time this runs -- so an 08:00 run no longer offers a 1:00 body as the fallback for a
+4:25 starter. The banked-points total and the opponent's ℹ line still read the date alone.
 
 Exit codes mirror the draft watcher: 0 = ran, nothing urgent. 1 = something worth reading was
 written (🚨 / ⚠ / ↑). 2 = could not reach Sleeper or the payload was not what we asked for.
@@ -178,7 +183,7 @@ def eligible(pos, slot):
     return pos == slot
 
 
-def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=None):
+def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=None, now_utc=None):
     """Pure. Everything the report says, as (icon, title, body) rows, most urgent first.
 
     our / opp: roster dicts from /rosters (starters, players, reserve, roster_id).
@@ -189,6 +194,7 @@ def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=N
     today:     a datetime.date; a projection dated before it is a game already played.
     kickoffs:  Sleeper team abbr -> aware kickoff datetime, or None when unknown (ESPN down). With
                None, or for a team missing from it, the ⏸ rule cannot apply and ↑ fires as before.
+    now_utc:   an aware datetime; a kickoff at or before it is a locked player. None = date rule only.
     """
     slots = [s for s in roster_positions if s != "BN"]
 
@@ -219,6 +225,13 @@ def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=N
     def kickoff(pid):
         return (kickoffs or {}).get(pdata(pid).get("team"))
 
+    def locked(pid, at=None):
+        """Sleeper freezes a player at kickoff. `at` defaults to now; a date-only past game is locked."""
+        if played(pid):
+            return True
+        k, t = kickoff(pid), at or now_utc
+        return k is not None and t is not None and k <= t
+
     def locks_before_status(starter, b):
         """True when `starter` kicks off before Questionable `b`'s inactives are posted."""
         ks, kb = kickoff(starter), kickoff(b)
@@ -245,11 +258,13 @@ def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=N
     bench = [p for p in (our.get("players") or []) if p not in starters and p not in reserve]
     claimed = set()
 
-    def best_bench_for(slot):
+    def best_bench_for(slot, needed_at=None):
+        """The best eligible body still movable now AND at `needed_at` (a ⚠ starter's inactives)."""
         cands = [
             b for b in bench
             if b not in claimed and eligible(pdata(b).get("position"), slot)
-            and tag(b) not in NOT_PLAYING and has_game(b) and not played(b)
+            and tag(b) not in NOT_PLAYING and has_game(b) and not locked(b)
+            and not (needed_at and locked(b, needed_at))
         ]
         if not cands:
             return None
@@ -265,7 +280,7 @@ def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=N
                 body += f"\nStart: {describe(sub)}"
             rows.append(("🚨", f"EMPTY SLOT — {slot}", body))
             continue
-        if played(pid):
+        if locked(pid):
             continue
         if tag(pid) in NOT_PLAYING or not has_game(pid):
             why = f"tagged {tag(pid)}" if tag(pid) in NOT_PLAYING else "has NO GAME this week (bye)"
@@ -280,26 +295,30 @@ def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=N
 
     # --- ⚠ Questionable starters: named, with the fallback, not recommended -----------------
     for slot, pid in zip(slots, starters):
-        if pid in ("0", "", None) or played(pid) or tag(pid) not in MAYBE:
+        if pid in ("0", "", None) or locked(pid) or tag(pid) not in MAYBE:
             continue
-        sub = best_bench_for(slot)
+        verdict = kickoff(pid) - INACTIVES_LEAD if kickoff(pid) else None
+        sub = best_bench_for(slot, verdict)
         body = (f"{describe(pid)} is Questionable in the {slot} slot. Read as playing unless the "
                 f"morning inactives say otherwise; inactives post ~90 minutes before kickoff.")
         if sub:
             body += f"\nIf he is scratched: {describe(sub)}"
+        elif verdict:
+            body += (f"\nIf he is scratched: no eligible bench body is still unlocked at his inactives "
+                     f"(~{clock(verdict)}) — only an add can fill the slot.")
         rows.append(("⚠", f"QUESTIONABLE — {name(pid)} ({slot})", body))
 
     # --- ↑ a bench body out-projecting a starter he could replace -------------------------
     # --- ⏸ ...unless he is Questionable and that starter locks before his status is known --
     holds = []
     for b in bench:
-        if b in claimed or tag(b) in NOT_PLAYING or not has_game(b) or played(b):
+        if b in claimed or tag(b) in NOT_PLAYING or not has_game(b) or locked(b):
             continue
         bpos = pdata(b).get("position")
         best_gain, best_slot, best_pid = 0.0, None, None
         held_gain, held_slot, held_pid = 0.0, None, None
         for slot, pid in zip(slots, starters):
-            if pid in ("0", "", None) or played(pid) or not eligible(bpos, slot):
+            if pid in ("0", "", None) or locked(pid) or not eligible(bpos, slot):
                 continue
             gain = pts(b) - pts(pid)
             if locks_before_status(pid, b):
@@ -436,7 +455,8 @@ def main(argv=None):
         kickoffs, blind = None, str(e)
     today = now().date()
     rows = assess(ours, opp, players, proj, league.get("scoring_settings") or {},
-                  league.get("roster_positions") or [], today, kickoffs)
+                  league.get("roster_positions") or [], today, kickoffs,
+                  datetime.datetime.now(datetime.timezone.utc))
     text = render(state["week"], ours, mine, opp, opp_m, names, rows, proj,
                   league.get("scoring_settings") or {}, today, now().strftime("%Y-%m-%d %H:%M:%S"), blind)
     print(text)

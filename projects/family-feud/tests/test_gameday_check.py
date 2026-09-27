@@ -261,6 +261,70 @@ class TestKickoffOrder(unittest.TestCase):
         self.assertEqual([r[0] for r in self.rows()], ["↑", "⏸", "ℹ"])
 
 
+class TestLockedAtKickoff(unittest.TestCase):
+    """Sleeper freezes a player at kickoff. Until 2026-09-27 'played' meant 'dated before today',
+    so the 15:00 run treated a 1:00 player mid-game as movable -- offered as a sub, or offered
+    as the man to swap out -- and an 08:00 run offered a 1:00 body as the fallback for a 4:25
+    Questionable starter who would not be ruled on until 2:55."""
+
+    def setUp(self):
+        self.f = Fixture()
+        for p in self.f.players.values():
+            p["team"] = "EARLY"
+        self.k = {"EARLY": kick(13), "LATE": kick(16, 25), "MID": kick(16, 5), "OPP": kick(13)}
+
+    def rows(self, at):
+        return g.assess(self.f.our, self.f.opp, self.f.players, self.f.proj, SCORING, SLOTS, TODAY, self.k, at)
+
+    def test_out_starter_is_not_handed_a_sub_whose_game_is_under_way(self):
+        self.f.players["wr1"].update(team="LATE", injury_status="Out")
+        rows = self.rows(kick(15))                       # 3:00 run; BN_WR (1:00) is mid-game
+        self.assertEqual(rows[0][0], "🚨")
+        self.assertIn("No bench body who is playing is eligible for WR", rows[0][2])
+        self.assertNotIn("Start instead", rows[0][2])
+
+    def test_the_same_sub_is_offered_before_his_kickoff(self):
+        self.f.players["wr1"].update(team="LATE", injury_status="Out")
+        self.assertIn("Start instead: BN_WR", self.rows(kick(8))[0][2])
+
+    def test_a_starter_whose_game_is_under_way_is_left_alone(self):
+        self.f.players["wr1"]["injury_status"] = "Out"   # tagged mid-game: nothing to be done
+        self.assertEqual(self.rows(kick(15)), [])
+
+    def test_no_swap_in_from_a_bench_body_mid_game(self):
+        self.f.proj["bn_rb"] = projection(14.0)
+        self.assertEqual(self.rows(kick(15)), [])
+        self.assertEqual([r[0] for r in self.rows(kick(8))], ["↑"])
+
+    def test_no_swap_out_of_a_starter_mid_game(self):
+        self.f.players["bn_rb"]["team"] = "LATE"
+        self.f.proj["bn_rb"] = projection(14.0)          # every eligible starter is EARLY and locked
+        self.assertEqual(self.rows(kick(15)), [])
+
+    def test_questionable_fallback_must_be_unlocked_at_his_inactives_not_now(self):
+        self.f.players["wr2"].update(team="LATE", injury_status="Questionable")
+        rows = self.rows(kick(8))                        # 08:00: BN_WR (1:00) is unlocked NOW, locked at 2:55
+        self.assertEqual([r[0] for r in rows], ["⚠"])
+        self.assertIn("no eligible bench body is still unlocked at his inactives (~2:55 PM ET)", rows[0][2])
+        self.assertNotIn("If he is scratched: BN_WR", rows[0][2])
+
+    def test_questionable_fallback_in_a_later_window_is_offered(self):
+        self.f.players["wr2"].update(team="LATE", injury_status="Questionable")
+        self.f.players["bn_wr"]["team"] = "MID"          # 4:05 kickoff, still open at 2:55
+        self.assertIn("If he is scratched: BN_WR", self.rows(kick(8))[0][2])
+
+    def test_questionable_starter_already_kicked_off_is_not_a_warning(self):
+        self.f.players["wr2"]["injury_status"] = "Questionable"
+        self.assertEqual(self.rows(kick(15)), [])
+
+    def test_without_kickoffs_or_a_clock_the_date_rule_stands(self):
+        self.f.players["wr1"]["injury_status"] = "Out"
+        self.k = None
+        self.assertIn("Start instead: BN_WR", self.rows(kick(15))[0][2])
+        self.k = {"EARLY": kick(13)}
+        self.assertIn("Start instead: BN_WR", self.rows(None)[0][2])
+
+
 class TestEspnKickoffs(unittest.TestCase):
     def board(self, *games):
         return {"events": [{"date": d, "competitions": [{"competitors": [{"team": {"abbreviation": t}} for t in teams]}]}

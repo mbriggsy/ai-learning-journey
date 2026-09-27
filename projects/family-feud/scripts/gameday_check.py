@@ -17,6 +17,10 @@ draft date; an Out tag that lands at 11:35 before a 13:00 kickoff is not an hour
   * /players/nfl            -> injury tags, positions, names (the ~14 MB dump; once per run is fine)
   * /projections/nfl/<season>/<week> -> Sleeper's per-player projections, scored with OUR league's
     scoring_settings so "bench beats starter" is measured in the points this league actually pays
+  * ESPN's scoreboard       -> kickoff TIMES. Sleeper carries a game's date and never its hour, and
+    the hour is what decides whether a swap is safe (see ⏸ below). A secondary source: if ESPN
+    fails, the report says so on its header line and the ↑ line runs blind to kickoff order, as it
+    did before 2026-09-27. It never refuses the run.
 
 WHAT IT SAYS, most urgent first:
   🚨 a starter tagged Out / Doubtful / IR / Suspended, or an empty slot -- with the best eligible
@@ -33,6 +37,13 @@ Swift (Questionable, 11.6) and the ↑ line stayed silent because it filtered Qu
 bodies while the ⚠ fallback line was naming the very same Flowers -- the same tag was a wall on
 one line and a footnote on the next. A tag the docstring itself calls "mostly played through it"
 cannot be a reason to hide a 2-point edge; it is a reason to print the tag next to the number.
+  ⏸  a Questionable bench body who WOULD fire ↑, but whose status is not known until after the
+     starter he'd replace has kicked off. Week 3, 2026: Flowers (Questionable, 4:25 in Rio, 14.0)
+     over Stevenson (1:00, 10.7) fired ↑ -- and taking it bets the slot on the tag, because by the
+     time the Ravens post inactives (~2:55) Stevenson is locked and a scratch scores 0. Week 2's
+     Flowers-over-Swift was a fair swap because both carried the same uncertainty into the same
+     window; this one is not. "Status known" = INACTIVES_LEAD before his kickoff, so a 4:25 player
+     over a 4:05 starter still fires ↑ -- inactives land before either locks.
   ℹ  the opponent's tagged starters, because a late scratch on his side changes nothing we do but
      is the first thing Briggsy will ask
 
@@ -55,6 +66,7 @@ import sys
 import urllib.error
 import urllib.request
 import random
+import zoneinfo
 
 try:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -71,7 +83,15 @@ LEAGUE_ID = "1390509993844809728"
 BRIGGSY_USER_ID = "1390750540631150592"
 
 API = "https://api.sleeper.app"
+ESPN = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
 TIMEOUT = 60
+
+#: ESPN spells exactly one team differently from Sleeper. All 32 checked against both feeds, 2026-09-27.
+ESPN_TO_SLEEPER = {"WSH": "WAS"}
+ESPN_SEASON_TYPE = {"pre": 1, "regular": 2, "post": 3}
+#: NFL inactives post ~90 minutes before kickoff; that is when a Questionable tag becomes a fact.
+INACTIVES_LEAD = datetime.timedelta(minutes=90)
+EASTERN = zoneinfo.ZoneInfo("America/New_York")
 
 #: Tags that mean "he is not playing". IR here is the roster tag on a player who is still in a
 #: starting slot, which Sleeper permits and which scores zero.
@@ -92,18 +112,57 @@ def now():
     return datetime.datetime.now()
 
 
-def fetch(path, timeout=TIMEOUT):
-    """GET with a per-call nonce -- the Sleeper CDN caches by URL (docs/insights/020)."""
-    sep = "&" if "?" in path else "?"
-    url = f"{API}{path}{sep}nc={random.randrange(1 << 30)}"
-    req = urllib.request.Request(url, headers={"User-Agent": "family-feud-gameday/1.0"})
+def get_json(url, label, timeout=TIMEOUT, headers=None):
+    req = urllib.request.Request(url, headers={"User-Agent": "family-feud-gameday/1.0"} if headers is None else headers)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             if r.status != 200:
-                raise Refuse(f"{path}: HTTP {r.status}")
+                raise Refuse(f"{label}: HTTP {r.status}")
             return json.loads(r.read().decode("utf-8"))
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
-        raise Refuse(f"{path}: {e}") from e
+        raise Refuse(f"{label}: {e}") from e
+
+
+def fetch(path, timeout=TIMEOUT):
+    """GET with a per-call nonce -- the Sleeper CDN caches by URL (docs/insights/020)."""
+    sep = "&" if "?" in path else "?"
+    return get_json(f"{API}{path}{sep}nc={random.randrange(1 << 30)}", path, timeout)
+
+
+def kickoffs_from_espn(board):
+    """Pure. ESPN scoreboard payload -> {Sleeper team abbr: aware kickoff}. Refuses a payload it
+    cannot read whole: a half-parsed board would silently leave some games "unknown"."""
+    events = board.get("events") if isinstance(board, dict) else None
+    if not events:
+        raise Refuse("ESPN scoreboard carried no events")
+    out = {}
+    for e in events:
+        try:
+            when = datetime.datetime.fromisoformat(e["date"].replace("Z", "+00:00"))
+            teams = [c["team"]["abbreviation"] for c in e["competitions"][0]["competitors"]]
+        except (KeyError, IndexError, TypeError, ValueError, AttributeError) as err:
+            raise Refuse(f"ESPN event unreadable: {err!r}") from err
+        if when.tzinfo is None:
+            raise Refuse(f"ESPN kickoff {e['date']!r} carries no timezone")
+        for t in teams:
+            out[ESPN_TO_SLEEPER.get(t, t)] = when
+    return out
+
+
+def pull_kickoffs(season, week, season_type):
+    st = ESPN_SEASON_TYPE.get(season_type)
+    if st is None:
+        raise Refuse(f"no ESPN season type for {season_type!r}")
+    return kickoffs_from_espn(get_json(f"{ESPN}?seasontype={st}&week={week}&dates={season}", "ESPN scoreboard",
+                                       # ESPN 403s our named User-Agent (and only it: urllib's default,
+                                       # curl's and a browser's all 200 -- measured 2026-09-27)
+                                       headers={}))
+
+
+def clock(dt):
+    """'1:00 PM ET' -- the reader lives in Charlotte and the NFL publishes in Eastern."""
+    e = dt.astimezone(EASTERN)
+    return f"{e.hour % 12 or 12}:{e:%M} {'PM' if e.hour >= 12 else 'AM'} ET"
 
 
 def score(stats, scoring):
@@ -119,7 +178,7 @@ def eligible(pos, slot):
     return pos == slot
 
 
-def assess(our, opp, players, proj, scoring, roster_positions, today):
+def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=None):
     """Pure. Everything the report says, as (icon, title, body) rows, most urgent first.
 
     our / opp: roster dicts from /rosters (starters, players, reserve, roster_id).
@@ -128,6 +187,8 @@ def assess(our, opp, players, proj, scoring, roster_positions, today):
     scoring:   the league's scoring_settings.
     roster_positions: the league's slot list; starters are positional against its non-BN prefix.
     today:     a datetime.date; a projection dated before it is a game already played.
+    kickoffs:  Sleeper team abbr -> aware kickoff datetime, or None when unknown (ESPN down). With
+               None, or for a team missing from it, the ⏸ rule cannot apply and ↑ fires as before.
     """
     slots = [s for s in roster_positions if s != "BN"]
 
@@ -154,6 +215,14 @@ def assess(our, opp, players, proj, scoring, roster_positions, today):
 
     def has_game(pid):
         return bool((proj.get(pid) or {}).get("date"))
+
+    def kickoff(pid):
+        return (kickoffs or {}).get(pdata(pid).get("team"))
+
+    def locks_before_status(starter, b):
+        """True when `starter` kicks off before Questionable `b`'s inactives are posted."""
+        ks, kb = kickoff(starter), kickoff(b)
+        return tag(b) in MAYBE and ks is not None and kb is not None and ks < kb - INACTIVES_LEAD
 
     def describe(pid):
         p = pdata(pid)
@@ -221,21 +290,36 @@ def assess(our, opp, players, proj, scoring, roster_positions, today):
         rows.append(("⚠", f"QUESTIONABLE — {name(pid)} ({slot})", body))
 
     # --- ↑ a bench body out-projecting a starter he could replace -------------------------
+    # --- ⏸ ...unless he is Questionable and that starter locks before his status is known --
+    holds = []
     for b in bench:
         if b in claimed or tag(b) in NOT_PLAYING or not has_game(b) or played(b):
             continue
         bpos = pdata(b).get("position")
         best_gain, best_slot, best_pid = 0.0, None, None
+        held_gain, held_slot, held_pid = 0.0, None, None
         for slot, pid in zip(slots, starters):
             if pid in ("0", "", None) or played(pid) or not eligible(bpos, slot):
                 continue
             gain = pts(b) - pts(pid)
-            if gain > best_gain:
+            if locks_before_status(pid, b):
+                if gain > held_gain:
+                    held_gain, held_slot, held_pid = gain, slot, pid
+            elif gain > best_gain:
                 best_gain, best_slot, best_pid = gain, slot, pid
         if best_slot and best_gain >= SWAP_MARGIN:
             rows.append(("↑", f"BENCH BEATS STARTER — {name(b)} over {name(best_pid)} ({best_slot})",
                          f"{describe(b)} projects {best_gain:.1f} more than {describe(best_pid)}.\n"
                          f"Projection only — a {SWAP_MARGIN:.0f}+ point gap is worth a look, not an order."))
+        elif held_slot and held_gain >= SWAP_MARGIN:
+            kb = kickoff(b)
+            holds.append(("⏸", f"HOLD — {name(b)} stays benched over {name(held_pid)} ({held_slot})",
+                          f"{describe(b)} projects {held_gain:.1f} more than {describe(held_pid)} — but "
+                          f"{name(held_pid)} kicks off at {clock(kickoff(held_pid))}, and {name(b)}'s status "
+                          f"is not known until inactives at ~{clock(kb - INACTIVES_LEAD)} ({clock(kb)} kickoff).\n"
+                          f"Swapping bets the slot on the tag: if he is scratched, it scores 0 and "
+                          f"{name(held_pid)} is already locked. Leave it."))
+    rows += holds
 
     # --- ℹ the opponent's side --------------------------------------------------------------
     if opp:
@@ -303,7 +387,7 @@ def sides(rosters, users, matchups):
     return ours, mine, opp, opp_m, names
 
 
-def render(week, ours, mine, opp, opp_m, names, rows, proj, scoring, today, stamp):
+def render(week, ours, mine, opp, opp_m, names, rows, proj, scoring, today, stamp, blind=None):
     us_total = projected_total(ours, proj, scoring, (mine or {}).get("players_points"), today)
     head = [f"## WEEK {week} GAME DAY — {stamp}", ""]
     if opp:
@@ -314,6 +398,8 @@ def render(week, ours, mine, opp, opp_m, names, rows, proj, scoring, today, stam
                     f"projections for the rest).")
     else:
         head.append(f"No matchup found for week {week}. Expected {us_total:.1f}.")
+    if blind:
+        head += ["", f"_Kickoff times unavailable ({blind}) — ↑ lines do not know which game locks first._"]
     head.append("")
     if not rows:
         head.append("Nothing to do. Every starter is untagged, every slot filled, no bench body projects "
@@ -344,11 +430,15 @@ def main(argv=None):
     except Refuse as e:
         print(f"REFUSED: {e}", file=sys.stderr)
         return 2
+    try:
+        kickoffs, blind = pull_kickoffs(state["season"], state["week"], state.get("season_type", "regular")), None
+    except Refuse as e:                 # secondary source: say so on the report, never refuse the run
+        kickoffs, blind = None, str(e)
     today = now().date()
     rows = assess(ours, opp, players, proj, league.get("scoring_settings") or {},
-                  league.get("roster_positions") or [], today)
+                  league.get("roster_positions") or [], today, kickoffs)
     text = render(state["week"], ours, mine, opp, opp_m, names, rows, proj,
-                  league.get("scoring_settings") or {}, today, now().strftime("%Y-%m-%d %H:%M:%S"))
+                  league.get("scoring_settings") or {}, today, now().strftime("%Y-%m-%d %H:%M:%S"), blind)
     print(text)
     if not args.stdout:
         write(text)

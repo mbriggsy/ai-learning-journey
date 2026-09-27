@@ -119,6 +119,12 @@ the 4:05/4:25 inactives) and appends to
 `vorp_curve.json` is not touched. The check names the move and never sets a slot. What is still
 open from the original shape is below, unchanged.
 
+**Kickoff order (2026-09-27, week 3).** ↑ told us to swap Flowers (Questionable, 4:25 in Rio) in over
+Stevenson (1:00) -- a bet of the slot on a tag not resolved until ~2:55, after Stevenson locked. A
+Questionable bench body whose inactives (kickoff − 90 min) post after the starter's kickoff now prints
+⏸ HOLD instead of ↑; any fair slot still fires ↑. Kickoff times come from ESPN's scoreboard (Sleeper
+has dates, never hours). If ESPN fails the report says so on its header and ↑ runs as before.
+
 **Answers:** is anyone in my starting ten out, doubtful or on bye, and is a bench player the better
 start this week.
 

@@ -193,6 +193,95 @@ class TestTheSirenFires(unittest.TestCase):
         self.assertEqual(f.icons(), ["🚨", "⚠", "↑", "ℹ"])
 
 
+def kick(h, m=0):
+    """A Sunday kickoff at h:m Eastern (EDT, UTC-4), as an aware UTC datetime like ESPN's."""
+    return datetime.datetime(2026, 9, 13, h + 4, m, tzinfo=datetime.timezone.utc)
+
+
+class TestKickoffOrder(unittest.TestCase):
+    """Week 3, 2026: Flowers (Questionable, BAL in Rio at 4:25, 14.0) on the bench, Stevenson (NE at
+    1:00, 10.7) at FLEX. ↑ fired 'Flowers over Stevenson' -- a swap that bets the slot on a tag the
+    Ravens would not resolve until ~2:55, 115 minutes after Stevenson locked."""
+
+    def setUp(self):
+        self.f = Fixture()
+        for pid, p in self.f.players.items():
+            p["team"] = "EARLY"
+        self.f.players["bn_wr"].update(team="LATE", injury_status="Questionable", injury_body_part="Hamstring")
+        self.f.proj["bn_wr"] = projection(13.0)
+        self.k = {"EARLY": kick(13), "LATE": kick(16, 25), "OPP": kick(13)}
+
+    def rows(self):
+        return g.assess(self.f.our, self.f.opp, self.f.players, self.f.proj, SCORING, SLOTS, TODAY, self.k)
+
+    def test_questionable_late_game_over_early_starters_is_a_hold_not_a_swap(self):
+        rows = self.rows()
+        self.assertEqual([r[0] for r in rows], ["⏸"])
+        self.assertIn("HOLD — BN_WR stays benched", rows[0][1])
+        self.assertIn("kicks off at 1:00 PM ET", rows[0][2])
+        self.assertIn("inactives at ~2:55 PM ET (4:25 PM ET kickoff)", rows[0][2])
+        self.assertIn("[Questionable: Hamstring]", rows[0][2])
+
+    def test_week2_same_window_still_fires_the_swap(self):
+        """Flowers over Swift, Week 2: both Questionable, both in the same window -- a fair swap.
+        The ⏸ rule must not bring back the silence insight-worthy enough to be in the docstring."""
+        self.k["LATE"] = kick(13)
+        self.assertEqual([r[0] for r in self.rows()], ["↑"])
+
+    def test_inactives_before_the_starter_locks_still_fires_the_swap(self):
+        """A 4:25 Questionable over a 4:05 starter: inactives (~2:55) land before either locks."""
+        self.k["EARLY"] = kick(16, 5)
+        self.assertEqual([r[0] for r in self.rows()], ["↑"])
+
+    def test_a_healthy_late_player_is_never_held(self):
+        self.f.players["bn_wr"]["injury_status"] = None
+        self.assertEqual([r[0] for r in self.rows()], ["↑"])
+
+    def test_a_safe_slot_wins_over_a_held_one(self):
+        """wr2 plays in the late window too; swapping BN_WR in for him is fair, so ↑ names that
+        slot and no ⏸ is printed for the unsafe ones."""
+        self.f.players["wr2"]["team"] = "LATE"
+        rows = self.rows()
+        self.assertEqual([r[0] for r in rows], ["↑"])
+        self.assertIn("BN_WR over WR2 (WR)", rows[0][1])
+
+    def test_unknown_kickoffs_fall_back_to_the_swap(self):
+        del self.k["LATE"]
+        self.assertEqual([r[0] for r in self.rows()], ["↑"])
+        self.k = None
+        self.assertEqual([r[0] for r in self.rows()], ["↑"])
+
+    def test_hold_is_under_the_margin_silent(self):
+        self.f.proj["bn_wr"] = projection(11.9)
+        self.assertEqual(self.rows(), [])
+
+    def test_hold_orders_after_swaps_and_before_info(self):
+        self.f.proj["bn_rb"] = projection(14.0)          # healthy RB: a real ↑
+        self.f.players["oqb"]["injury_status"] = "Doubtful"
+        self.assertEqual([r[0] for r in self.rows()], ["↑", "⏸", "ℹ"])
+
+
+class TestEspnKickoffs(unittest.TestCase):
+    def board(self, *games):
+        return {"events": [{"date": d, "competitions": [{"competitors": [{"team": {"abbreviation": t}} for t in teams]}]}
+                           for d, teams in games]}
+
+    def test_parses_utc_and_maps_washington(self):
+        k = g.kickoffs_from_espn(self.board(("2026-09-27T17:00Z", ["WSH", "SEA"]), ("2026-09-27T20:25Z", ["DAL", "BAL"])))
+        self.assertEqual(set(k), {"WAS", "SEA", "DAL", "BAL"})
+        self.assertEqual(g.clock(k["WAS"]), "1:00 PM ET")
+        self.assertEqual(g.clock(k["BAL"]), "4:25 PM ET")
+
+    def test_empty_or_malformed_board_refuses(self):
+        for bad in ({}, {"events": []}, [], {"events": [{"date": "2026-09-27T17:00Z"}]},
+                    {"events": [{"date": "not a date", "competitions": []}]}):
+            with self.assertRaises(g.Refuse, msg=repr(bad)):
+                g.kickoffs_from_espn(bad)
+
+    def test_clock_handles_midnight_utc_as_the_evening_before(self):
+        self.assertEqual(g.clock(datetime.datetime(2026, 9, 28, 0, 20, tzinfo=datetime.timezone.utc)), "8:20 PM ET")
+
+
 class TestProjectedTotal(unittest.TestCase):
     def test_banked_actuals_replace_projections_for_played_games(self):
         f = Fixture()
@@ -220,6 +309,13 @@ class TestRender(unittest.TestCase):
         text = g.render(1, f.our, {"points": 0.0}, f.opp, {"points": 0.0}, names, [], f.proj, SCORING, TODAY, "stamp")
         self.assertIn("vs **briggsy007**", text)
         self.assertIn("Nothing to do", text)
+        self.assertNotIn("Kickoff times unavailable", text)
+
+    def test_blind_report_says_so_on_the_header(self):
+        f = Fixture()
+        text = g.render(1, f.our, {"points": 0.0}, f.opp, {"points": 0.0}, {}, [], f.proj, SCORING, TODAY,
+                        "stamp", blind="ESPN scoreboard: HTTP 503")
+        self.assertIn("Kickoff times unavailable (ESPN scoreboard: HTTP 503)", text)
 
 
 if __name__ == "__main__":

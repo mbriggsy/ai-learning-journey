@@ -52,8 +52,10 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                  install-watcher.ps1  — same, for the draft-state watcher
                  install-gameday.ps1  — same, for the Sat/Sun lineup check
                  gameday_check.py     — LIVE pull; tagged starters + the bench sub, empty
-                                        slots, bench-beats-starter by 2+, expected totals.
-                                        Names the move, never touches the lineup.
+                                        slots, bench-beats-starter by 2+ (held when a
+                                        Questionable sub's inactives post after the
+                                        starter locks -- ESPN kickoff times), expected
+                                        totals. Names the move, never touches the lineup.
                  merge_picks.py       — fetches /picks and merges into picks.json;
                                         refuses picks from a different draft, and reports a
                                         pick that VANISHED upstream (--rebuild to accept it)
@@ -119,7 +121,7 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         section [2], who the consensus ranks that the board does
                                         not carry — the half a rank-gap metric cannot see.
                                         → docs/insights/018
-tests/           1212 tests: python -m unittest discover -s tests  (run from the root)
+tests/           1225 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```

@@ -69,3 +69,36 @@ vs **Kaeperni** (roster 5). Expected: us 149.2, them 127.8 (banked 28.4 / 39.9, 
 
 Zay Flowers (WR, BAL) vs DAL proj 17.1 [Questionable: Hamstring] is Questionable in the WR slot. Read as playing unless the morning inactives say otherwise; inactives post ~90 minutes before kickoff.
 If he is scratched: Devaughn Vele (WR, NO) vs LV proj 10.0
+
+---
+
+## WEEK 3 GAME DAY — 2026-09-26 20:00:02
+
+vs **Kaeperni** (roster 5). Expected: us 148.4, them 125.7 (banked 28.4 / 39.9, projections for the rest).
+
+### ⚠ QUESTIONABLE — Zay Flowers (WR)
+
+Zay Flowers (WR, BAL) vs DAL proj 17.1 [Questionable: Hamstring] is Questionable in the WR slot. Read as playing unless the morning inactives say otherwise; inactives post ~90 minutes before kickoff.
+If he is scratched: Michael Wilson (WR, ARI) vs SF proj 11.8
+
+---
+
+## WEEK 3 GAME DAY — 2026-09-27 08:00:02
+
+vs **Kaeperni** (roster 5). Expected: us 148.3, them 127.4 (banked 28.4 / 39.9, projections for the rest).
+
+### ⚠ QUESTIONABLE — Zay Flowers (WR)
+
+Zay Flowers (WR, BAL) vs DAL proj 17.1 [Questionable: Hamstring] is Questionable in the WR slot. Read as playing unless the morning inactives say otherwise; inactives post ~90 minutes before kickoff.
+If he is scratched: Michael Wilson (WR, ARI) vs SF proj 11.9
+
+---
+
+## WEEK 3 GAME DAY — 2026-09-27 11:30:02
+
+vs **Kaeperni** (roster 5). Expected: us 145.3, them 127.6 (banked 28.4 / 39.9, projections for the rest).
+
+### ⚠ QUESTIONABLE — Zay Flowers (WR)
+
+Zay Flowers (WR, BAL) vs DAL proj 14.1 [Questionable: Hamstring] is Questionable in the WR slot. Read as playing unless the morning inactives say otherwise; inactives post ~90 minutes before kickoff.
+If he is scratched: Michael Wilson (WR, ARI) vs SF proj 12.0

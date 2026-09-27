@@ -241,3 +241,16 @@ Until it is fixed, 'no change' below means 'no new data', NOT 'nothing happened'
 Re-run scripts/install-mule.ps1 — it re-derives every path from its own location.
 
 _cargo was 6 min old when this ran_
+
+---
+
+## CARGO IS STALE — THIS WATCHER IS BLIND — 2026-09-26 09:09:51
+
+- last mule run was 401 minutes ago.
+- sleeper_draft.json on disk was last written 401 minutes ago.
+- sleeper_users.json on disk was last written 401 minutes ago.
+The mule runs hourly; anything past 150 minutes means it missed at least two runs.
+Until it is fixed, 'no change' below means 'no new data', NOT 'nothing happened'.
+Re-run scripts/install-mule.ps1 — it re-derives every path from its own location.
+
+_cargo was 401 min old when this ran_

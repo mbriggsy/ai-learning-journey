@@ -370,7 +370,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
       expect(named.rulesMoved).toBe(true)
       // The SWEPT part-b-trend comment claimed "no exposure gate: the trend prices every
       // Medicare-bearing year both routes reach". FALSE: `partBPricingByT` is built only under
-      // `healthcareEnabled && taxEnabled` (taxOverlay.ts:1126-1127). Reverting it to ungated
+      // `healthcareEnabled && taxEnabled` (taxOverlay.ts:1128-1129). Reverting it to ungated
       // reds this arm.
       const silent = deriveStaleness(moved, TODAY, NO_OVERLAY)
       expect(silent.healthcare.movedClocks).toEqual([])

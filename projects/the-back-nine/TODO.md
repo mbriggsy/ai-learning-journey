@@ -76,7 +76,7 @@ review `be99027e` · 2026-09-25 — the frozen-nominal siblings + the per-person
 | Fires | What | What breaks |
 |---|---|---|
 | ~~NOW~~ | ~~NC FY2025-26 revenue certification~~ | ✅ **CLOSED 2026-08-02** — S.L. 2026-41 § 44.1(a) enacted the rate schedule *and* struck the trigger rows the certification fed. Withhold lifted, checkpoint retired. |
-| **CI: ~2026-10-14 00:00 UTC** · **runtime: 2026-10-15** | ACA rolling window (`verifiedOn: 2026-09-14` + `maxAgeDays: 30`) — ✅ the 2026-09-14 pass CLEARED it (8 legs + 16 refuters + a synthesis + a critic, `wf_fa72168d-8cb`): regime UNCHANGED; the forecast Sept 14–30 endgame closed EMPTY and early — H.R. 6500 became Pub. L. 119-103 on 2026-09-02 with ZERO §36B text, the ceiling is 119-108 (six new laws swept clean at enrolled text), the one must-pass cliff left is §106(3)'s **December 11, 2026**. The next pass probes the SENATE CALENDAR first (H.R. 1834 GO 319 · S. 3385 GO 284 · S.J. Res. 197 GO 456), then the FY2027 track, then the still-unpublished PLAW-119publ103…108 slip laws; the record's `forwardClock` carries the nine-item order and the chair's residuals (what was carried from 08-20, not re-opened) | **TWO dates, and the split is DELIBERATE — one date here was wrong (corrected 2026-08-14).** `verify:aca` compares float-ms so it reds ~a day EARLIER than the runtime clause's integer-epoch-day compare; `oracleToken.ts:176-178` records that ordering as the safe one. **And it is not only CI:** `evaluateAcaFreshnessClause` (`oracleToken.ts:191-201`) is a RUNTIME clause on the user's own browser clock — once overdue the shipped app WITHHOLDS the recommendation for any household carrying an ACA enrolled premium, and `healthSheetChrome.ts:150` flips the health-sheet status line. No deploy required. Clearing it is the 8-step `howToClear` (~1h, primary sources, both attest tables hand-RE-TYPED from the PDFs — never from `health.ts`, that bind goes circular) |
+| **CI: ~2026-10-14 00:00 UTC** · **runtime: 2026-10-15** | ACA rolling window (`verifiedOn: 2026-09-14` + `maxAgeDays: 30`) — ✅ the 2026-09-14 pass CLEARED it (8 legs + 16 refuters + a synthesis + a critic, `wf_fa72168d-8cb`): regime UNCHANGED; the forecast Sept 14–30 endgame closed EMPTY and early — H.R. 6500 became Pub. L. 119-103 on 2026-09-02 with ZERO §36B text, the ceiling is 119-108 (six new laws swept clean at enrolled text), the one must-pass cliff left is §106(3)'s **December 11, 2026**. The next pass probes the SENATE CALENDAR first (H.R. 1834 GO 319 · S. 3385 GO 284 · S.J. Res. 197 GO 456), then the FY2027 track, then the still-unpublished PLAW-119publ103…108 slip laws; the record's `forwardClock` carries the nine-item order and the chair's residuals (what was carried from 08-20, not re-opened) | **TWO dates, and the split is DELIBERATE — one date here was wrong (corrected 2026-08-14).** `verify:aca` compares float-ms so it reds ~a day EARLIER than the runtime clause's integer-epoch-day compare; `oracleToken.ts:176-178` records that ordering as the safe one. **And it is not only CI:** `evaluateAcaFreshnessClause` (`oracleToken.ts:191-201`) is a RUNTIME clause on the user's own browser clock — once overdue the shipped app WITHHOLDS the recommendation for any household carrying an ACA enrolled premium, and `healthSheetChrome.ts:149` flips the health-sheet status line. No deploy required. Clearing it is the 8-step `howToClear` (~1h, primary sources, both attest tables hand-RE-TYPED from the PDFs — never from `health.ts`, that bind goes circular) |
 | **2026-10-19** | GitHub's `ubuntu-latest` runner label migrates to **Ubuntu 26** (the annotation on every CI run since 2026-09-25; actions/runner-images#14748) | Every CI job moves image; the Playwright browser installs behind `verify:fit` / `verify:fit:rv` / `verify:csp` (Chromium + the WebKit `@cross-browser` project) are the likeliest to break (system-deps changes). Before it lands: pin the jobs to `ubuntu-24.04` in `.github/workflows/`, OR run the full CI once on `ubuntu-26.04` early (a branch-free `workflow_dispatch` input) and fix what reds — never discover it on a red main |
 | **2027-07-15** | PA + FL `nextDue`, `state-tax-pa-last-verified.json` / `state-tax-fl-last-verified.json` (annual drift cadence) — **the roster's real deadline: it fires 18 days BEFORE NC's** | `pnpm verify:state-tax` reds → CI red |
 | **2027-08-02** | NC `nextDue`, `state-tax-nc-last-verified.json` (annual drift cadence now, not a pending event) | `pnpm verify:state-tax` reds → CI red |
@@ -133,8 +133,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    eats the full premium. The token has an ACA **legislative freshness** clause and **no ACA pricing-mode
    clause**.
    ⚑ **Audit corrections 2026-08-02 — three anchors were wrong and the fix shape is NOT Part B's:**
-   (a) `healthOverlay.ts:298` is a **closing brace**, not a consumer; the real seam is `taxOverlay.ts:1709` plus `taxOverlay.ts:1751-1758`
-   → `healthOverlay.ts:272`. (b) `copy.ts:1171` is a Medicare eyebrow; the strings that claim
+   (a) `healthOverlay.ts:301` is a **closing brace**, not a consumer; the real seam is `taxOverlay.ts:1705` plus `taxOverlay.ts:1747-1754`
+   → `healthOverlay.ts:275`. (b) `copy.ts:1171` is a Medicare eyebrow; the strings that claim
    the coupling is priced are **`copy.ts:1007-1010`**. (c) the excess-APTC field moved to
    `aca-last-verified.json:43` (was `:21`) and `scripts/verify-aca-status.ts:40-103` declares and REQUIRES the key
    (`adjacentButSharp` at `:90`, `needProse` at `:169`, since 2026-08-03) — **the gate is presence-only**: nothing checks that the prose models the uncapped clawback.
@@ -142,12 +142,12 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    engine, which is why the oracle token can witness it. The ACA escalator lives in **intake**
    (`intakeMap.ts:339-359`), which the engine cannot import — so an `ACA_PRICING_MODE` flag bolted onto
    intakeMap would be the exact lying-mirror `oracleToken.ts:113-119` warns about. The honest fix moves the
-   schedule build to an engine-owned `buildAcaPricingSchedule` beside `partBPricingByT` (`taxOverlay.ts:1126`).
+   schedule build to an engine-owned `buildAcaPricingSchedule` beside `partBPricingByT` (`taxOverlay.ts:1128`).
    ⚑ **Re-tag: BLOCKED ON RESEARCH.** No sourced ACA cost-trend primary exists in the repo, so a solver
    block would hold for months over the whole pre-65 population.
    ⚑ **2026-08-03 double-blind — the pricing defect is REAL and confirmed; the near-term copy move as filed
    was WRONG THREE WAYS.** (a) *"stop claiming the coupling is fully priced"* — **the coupling IS fully
-   priced.** A conversion enters `nonSSordinary` → `acaMagi` (`healthOverlay.ts:101-103`) → `slidingScalePtc`
+   priced.** A conversion enters `nonSSordinary` → `acaMagi` (`healthOverlay.ts:104-106`) → `slidingScalePtc`
    → net premium, in both preview arms. The fault is the **closed "Not counted here:" list** omitting the
    held-price modeling choice, while the sibling health-sheet list ONCE named the benchmark — struck 2026-08-03 as FALSE in
    both lists (`copy.ts:1124-1137`); what is genuinely unmodelled about it is the COST TREND (`copy.ts:1139-1141`). (b) *"priced real-flat"* **understates what IS modelled** — `escalateQuote` climbs with the
@@ -155,11 +155,11 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    **do NOT borrow `verdictResidualTail`'s "held flat in today's dollars"** — verbatim it is a NEW false
    claim on this surface. (c) the editable strings are **`copy.ts:1008` and `:1010`** (`983`/`985` are key
    names), and both must move together.
-   ⚑ **The direction claim must be CLIFF-SCOPED, never blanket.** `healthOverlay.ts:224`+`:296` give
+   ⚑ **The direction claim must be CLIFF-SCOPED, never blanket.** `healthOverlay.ts:227`+`:299` give
    under-cliff net = `enrolled − slcsp + contribution`, and `intakeMap.ts:675-676` scale **both** streams by
    the same `escalateQuote` factor — so under the cliff a missing trend is **zero** when E=S
    (`devSeeds.ts:614-615` = 4200/4200) and **reversed (pessimistic)** when E<S, which `copy.ts:227` invites.
-   It bites one-way optimistic **only over the cliff** (`healthOverlay.ts:301-305`, full enrolled premium).
+   It bites one-way optimistic **only over the cliff** (`healthOverlay.ts:304-308`, full enrolled premium).
    The shipped sibling `recDiscAcaSlcsp` (`copy.ts:1924-1925`) hedges bidirectionally on this exact fact and
    `medicare-pricing-build-spec.md:43` bans the false unidirectional. Draft to append to BOTH strings:
    *"One modeling choice: these prices step up with your ages, not with the way plan prices themselves climb
@@ -184,7 +184,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `ai-learning-journey`. See the CI note under "Standing cadences".
    - **A false negation on the health sheet (XS).** `copy.ts:996/960` list *"the benchmark premium itself"*
      under "Not counted here" while the entered benchmark **is** priced (`intakeMap.ts:676` →
-     `healthOverlay.ts:215-225`) — the same false-negation shape O16 fixed on the Roth strings.
+     `healthOverlay.ts:218-228`) — the same false-negation shape O16 fixed on the Roth strings.
    </details>
 
    ⚑ **The open fork is his, and it is not the copy.** The Medicare council's standing law
@@ -212,7 +212,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    used to cite — the NC certification block — **is retired**; (b) the withhold machinery gates `solve()`
    ONLY, so a withhold-only fix still ships a **state-blind headline / fuck-off date**.
    ⚑ **2026-08-03 double-blind — diagnosis CONFIRMED, and the "cheap partial" is not cheap and not sound.**
-   Pricing is membership-keyed at `taxOverlay.ts:883`; `PRICED_STATES` is `constants/stateTax.ts:50`; the
+   Pricing is membership-keyed at `taxOverlay.ts:881`; `PRICED_STATES` is `constants/stateTax.ts:50`; the
    flip is pinned live at `optimalityOracle.test.ts:194-205` (NC crowns the 12%-top anchor, the state-absent
    twin the 22%-top). Correction (a) is **half-stale** — the `state-certification-pending` WithheldReason
    (`oracleToken.ts:48`), its humane string (`recommendationView.ts:338-339`) and the whole *held* card
@@ -247,7 +247,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    state-tax disclosure already renders on both first-answer surfaces (`composeVerdictMedicareResidual`,
    `stateTaxDisclosure.ts:45` → `ConfidenceStatement.tsx:501` + `FuckOffDate.tsx:421`; off-roster arm
    `copy.ts:1191` "State income tax isn't priced yet…"). ✅ **The GATE gap this block named is CLOSED
-   2026-09-11 (Card 4):** the residual still rides `medicarePricedNote` (`healthSheetChrome.ts:468-473` —
+   2026-09-11 (Card 4):** the residual still rides `medicarePricedNote` (`healthSheetChrome.ts:466-471` —
    Medicare-priced AND no health door), but the clause no longer depends on it — `composeVerdictStateNote`
    (`stateTaxDisclosure.ts:86`, home #6) renders it STANDALONE (`.cs-state-note`) on both routes wherever the
    residual is withheld, so EVERY verdict — pre-65 and health-door included, the fuck-off-date audience —
@@ -261,7 +261,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 5. **Smaller, each self-contained** *(all four re-anchored by the 2026-08-02 audit)*:
 
    - **Post-65 non-qualified HSA money is silently forfeited.** ✅ The false *"(conservative, disclosed)"*
-     claim at `healthOverlay.ts:847` is **corrected 2026-08-02** — it now says the direction is safe but
+     claim at `healthOverlay.ts:872` is **corrected 2026-08-02** — it now says the direction is safe but
      the disclosure does **not** exist, and asks whoever adds it to fix the comment in the same change.
      **The disclosure itself is still OWED** (candidate home: the new "What this leaves out" section below).
    - **Account balances have no magnitude sanity rule** while spend and PIA each got one (real range
@@ -290,12 +290,12 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      and the fit gate's panel arm (`vertical-fit.spec.ts:1692-1721`) asserts only that the dialog box fits
      **and** `scrollHeight > clientHeight` — content growth makes the second assertion *more* true.
      ⚑ **The drafted HSA sentence would have DENIED the very forfeit it discloses — do not ship "stays
-     put" / "simply sits."** The balance is not parked, it is **destroyed**: `taxOverlay.ts:1834-1835` sets
+     put" / "simply sits."** The balance is not parked, it is **destroyed**: `taxOverlay.ts:1830-1831` sets
      `buckets = EMPTY_BUCKETS` (hsa: 0) → `simulate.ts:1736` `terminalHsaReal = 0` →
      `objectiveHeadline.ts:58` bequest contribution **$0**. On the exact path the sentence names, the HSA
      adds nothing to the leave-more dollar the reader sees. **The sentence must say the balance is DROPPED.**
-     ⚑ **Sweep BOTH stale comments in the same commit** — `healthOverlay.ts:847-850` (which says
-     fix-or-it-re-rots) **and** `taxOverlay.ts:1825-1827`, which still calls post-65 HSA-as-ordinary-income
+     ⚑ **Sweep BOTH stale comments in the same commit** — `healthOverlay.ts:872-875` (which says
+     fix-or-it-re-rots) **and** `taxOverlay.ts:1821-1823`, which still calls post-65 HSA-as-ordinary-income
      *"a DISCLOSED non-feature, the survivor-SS class"* — the same false claim, in the file that **owns** the
      mechanism.
      ⚑ **The genuine ruling here is scope, not wording** (tone is Caddie-chair under the batched-oracle law):
@@ -303,13 +303,13 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      (rendered `RecommendationSurface.tsx:535-543`) and `controlHealthOmissionsNote` carries it on the
      Healthcare sheet. So: ship the section with only the two genuinely-homeless items (HSA forfeit + LTC),
      or make the panel section NIIT's canonical home and prune the other two — the repo's own
-     one-honest-home-per-fact law (`healthSheetChrome.ts:465`) forbids a silent third.
+     one-honest-home-per-fact law (`healthSheetChrome.ts:463`) forbids a silent third.
      ⚑ **2026-09-04 re-anchor (drifted AGAIN, +62/+101 in a month) + four traps the build must clear.** The
      panel is `src/intake/AssumptionPanel.tsx` — section a opens `:399` / closes `:567`, section b `:570` /
      `:849`, footer `:855`, the disclosures map `:533-565`; the `assumption*` prefix law is
      `copy.ts:1264-1275` (keys `:1276-1417`); the panel fit arm is `vertical-fit.spec.ts:1692-1721`;
-     `sheetShell.css:34-35`/`:94`; the overlays are `src/engine/healthOverlay.ts:846-850` and
-     `src/engine/taxOverlay.ts:1824-1827` (there is no `overlays/` dir). NIIT's two homes confirmed
+     `sheetShell.css:34-35`/`:94`; the overlays are `src/engine/healthOverlay.ts:871-875` and
+     `src/engine/taxOverlay.ts:1820-1823` (there is no `overlays/` dir). NIIT's two homes confirmed
      (`recommendationView.ts:90` unconditional; `copy.ts:1142-1143`) — the scope fork is self-resolving:
      HSA + LTC only. TRAP 1 — `Row` REQUIRES a `seat` from the CLOSED 22-member `AssumptionSeat` union
      (`AssumptionPanel.tsx:108`, `assumptionRegistry.ts:39-61`): a leaves-out row is a hand-rolled
@@ -317,7 +317,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      TRAP 2 — a heading literally "What this leaves out" that names two items is ITSELF a completeness claim
      the constants falsify (`health.ts:72/:112/:120/:135/:319` declare four more OUT-but-disclosed facts) —
      scope the heading or name them. TRAP 3 — the HSA sentence must be true across ALL THREE zeroing
-     branches (`taxOverlay.ts:1833-1839`, `:1853-1858`, `:1981-1984`): on each, EVERY bucket is zeroed
+     branches (`taxOverlay.ts:1829-1835`, `:1849-1854`, `:1977-1980`): on each, EVERY bucket is zeroed
      because the path DEPLETED, so a bequest-framed sentence ("dropped from what's left to your heirs")
      names a state the engine cannot reach; the honest harm is that the plan is COUNTED AS HAVING RUN OUT
      while HSA dollars remain unspent (understated survival), because HSA outflow is qualified-medical-only
@@ -325,7 +325,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `copyGuard.ts:254`; `FALSE_CERTAINTY_INTERNAL` (`copyGuard.ts:147-156`) is universal and
      non-suppressible — "can't run out while the HSA lasts" reds. TRAP 4 — `verify:doc-stats` reds on ANY
      added test until README `:82` + roadmap `:165` move in the same commit. Sweep THREE comment spans (the
-     `healthOverlay.ts:847-849` "a sweep found NO user-facing disclosure" clause becomes false the moment the
+     `healthOverlay.ts:872-874` "a sweep found NO user-facing disclosure" clause becomes false the moment the
      section ships — rewrite the whole `:842-846`). Caddie walk before "shipped".
 
    ⚑ **CLOSED AS PHANTOM — the date-route ACA clock does NOT over-alarm.** The date route simulates all 11

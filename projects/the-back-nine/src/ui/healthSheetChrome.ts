@@ -16,10 +16,9 @@
  * `healthOverlay` / the constants) — single producer, so the readout can never disagree with
  * the engine about where a cliff sits. The one disclosed approximation: the subsidy-drag
  * probe uses TODAY'S benchmark quote (the per-year escalated stream lives engine-side); the
- * `~`/`about` hedge carries that honestly. One more is an OPEN defect, not a disclosed one:
- * the step card's crossing PRICE reads the 2026 anchor surcharge scales (`nextIrmaaStep` →
- * `IRMAA_ANCHOR_SCALES`) while the engine bills at the bill year's — the register's Tier 0
- * *The Medicare step card prices crossing the next surcharge step at 2026 prices…*.
+ * `~`/`about` hedge carries that honestly. The step card's crossing PRICE is NOT an approximation:
+ * it reads the bill year's surcharge scales through the engine's own binding
+ * (`healthOverlay.irmaaBillScalesFor`), so the card quotes what the engine bills.
  *
  * REGIME AWARENESS: the cliff lines exist only under the reverted/cliff table; an APPLIED
  * enhanced regime removes them (no cliff exists to warn about) and swaps the dated status
@@ -34,7 +33,7 @@ import {
   subsidyLossPerDollar,
 } from '@engine/magiLandscape'
 import { deductionStack } from '@engine/taxCore'
-import { fplForHousehold, irmaaScheduleAsCompared } from '@engine/healthOverlay'
+import { fplForHousehold, irmaaBillScalesFor, irmaaScheduleAsCompared } from '@engine/healthOverlay'
 import { acaCheckOverdue } from '@engine/validation/oracleToken'
 import {
   acaApplicablePercentage,
@@ -357,11 +356,10 @@ export function composeHealthSheet(
     // THE PRICE FRAME (2026-09-26): the anchor row's MAGI is a FLOW earned during sim-year k − 1
     // (insight 134 — the era lines above use the same clock), so it meets the lines compared for
     // calendar start + k − 1: the step it quotes is the real-dollar line THAT year's income will meet.
-    const step = nextIrmaaStep(
-      medicare.irmaaMagiP50,
-      draft.filing,
-      irmaaScheduleAsCompared(irmaa.value, draft.startCalendarYear + medicare.yearsFromNow - 1),
-    )
+    // The crossing is PRICED in the same frame: the bill that MAGI meets (MAGI year + the look-back),
+    // at the scales the engine bills it at — never the 2026 anchor's beside a later year's line.
+    const stepSchedule = irmaaScheduleAsCompared(irmaa.value, draft.startCalendarYear + medicare.yearsFromNow - 1)
+    const step = nextIrmaaStep(medicare.irmaaMagiP50, draft.filing, stepSchedule, irmaaBillScalesFor(stepSchedule))
     if (step !== null) {
       // The household's OWN number for the step ("just tell them"): the enrolled count at the
       // anchor read OFF THE WIRE (`medicareEnrolledP50` — living ∩ enrolled, onset-aware; the

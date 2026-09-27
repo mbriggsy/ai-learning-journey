@@ -20,7 +20,7 @@ import { runEngine } from '@engine/engineProtocol'
 import { composeHealthSheet, medicareAnchor, medicareEraYear } from '@ui/healthSheetChrome'
 import { copy, slots } from '@ui/copy'
 import { epochDayFromIsoDate } from '@engine/validation/oracleToken'
-import { acaEnhancedSubsidyStatus } from '@engine/constants/health'
+import { acaEnhancedSubsidyStatus, irmaa, medicareCostTrend, partB2026 } from '@engine/constants/health'
 import type { HealthReadout } from '@shared/model'
 
 /** A clock inside the ACA re-verify window, RELATIVE to the live record (the status line is not
@@ -38,8 +38,25 @@ const readoutOf = (name: 'retired' | 'healthnc' | 'healthgap'): HealthReadout =>
 }
 const factOf = (view: ReturnType<typeof composeHealthSheet>, id: string) => view.facts.find((f) => f.id === id)
 
+/** THE CROSSING PRICE (the register's Tier 0 *The Medicare step card prices crossing the next surcharge
+ *  step at 2026 prices…*): both seeds sit under tier 1, so the card's per-person delta is the WHOLE tier-1
+ *  surcharge the engine bills in the bill year (the anchor row's MAGI year + the look-back) — derived here
+ *  from the READ Trustees rows by `Math.pow`, outside the engine (DND 012): Part B = the pinned 2026 tier-1
+ *  surcharge × V.E2(bill) ÷ the 2026 standard premium (the cost-share identity), Part D = V.E4(bill)[tier 1];
+ *  both deflated to 2026 dollars by the near-term CPI. Returns the card's two strings at its $100 grain. */
+const tier1CrossingAt = (billYear: number): { each: string; both: string } => {
+  const t = medicareCostTrend.value
+  const deflator = Math.pow(1 + t.cpiNearTermAvg, billYear - t.anchorYear)
+  const partB = (irmaa.value.tiers[0]!.partBSurchargeMonthly * t.premiums.find((r) => r.calendarYear === billYear)!.nominalMonthly) /
+    partB2026.value.standardPremiumMonthly
+  const partD = t.partDIrmaa.find((r) => r.calendarYear === billYear)!.addOnsMonthly[0]!
+  const perPersonYear = ((partB + partD) / deflator) * 12
+  const fmt = (v: number) => (Math.round(v / 100) * 100).toLocaleString('en-US')
+  return { each: fmt(perPersonYear), both: fmt(perPersonYear * 2) }
+}
+
 describe('the Medicare premium card on the shipped seeds, through the real engine', () => {
-  it('`retired` (66/65): everyone enrolled from the first billed year → the era IS the anchor → the pre-build sentence (base 4,870 → 4,900; MAGI 90,129 → 90,100; the 2026-MAGI line 224,000 [2 × round1000(109,000 × 1.032) — the 2028 bill’s, in 2026 dollars]; headroom 133,871 → 133,900; the two-of-you step)', () => {
+  it('`retired` (66/65): everyone enrolled from the first billed year → the era IS the anchor → the pre-build sentence (base 4,870 → 4,900; MAGI 90,129 → 90,100; the 2026-MAGI line 224,000 [2 × round1000(109,000 × 1.032) — the 2028 bill’s, in 2026 dollars]; headroom 133,871 → 133,900; the two-of-you step, priced at the 2028 BILL’s scales: 99.66/mo per person → 1,196 → 1,200 each, 2,392 → 2,400 for two — the 2026 anchor’s 95.7 read 1,100 / 2,300)', () => {
     const readout = readoutOf('retired')
     expect(medicareEraYear(readout, 2)).toBe(medicareAnchor(readout))
     const view = composeHealthSheet(readout, DEV_SEEDS.retired, FRESH)
@@ -52,12 +69,13 @@ describe('the Medicare premium card on the shipped seeds, through the real engin
     expect(factOf(view, 'step')).toEqual({
       id: 'step',
       eyebrow: copy.healthFactStep,
-      figure: slots.healthFigStepAdd('2,300'),
-      lines: [slots.irmaaStepNext('224,000', '90,100', '133,900', '1,100', '2,300', true)],
+      figure: slots.healthFigStepAdd('2,400'),
+      lines: [slots.irmaaStepNext('224,000', '90,100', '133,900', '1,200', '2,400', true)],
     })
+    expect(tier1CrossingAt(2028), 'the literals above ARE the Trustees-row derivation for the 2028 bill').toEqual({ each: '1,200', both: '2,400' })
   })
 
-  it('`healthnc` (61/59): the anchor is year 5 with ONE enrolled (2,703), the era is year 7 with two (5,765) → the loud figure 5,800, the on-ramp 2,700 over two years, neither surcharged, the extras spoken per quoted year (5,856 → 5,900 once both are on it; 2,928 → 2,900 while one is) — and the step card keeps the anchor (MAGI 46,078 → the each-of-you arm; 46,020 before the NC standard deduction was deflated per sim year, 2026-09-25) against the line its MAGI year (2030) meets: 2 × round1000(109,000 × 1.032⁵) ÷ 1.032⁴ = 225,697 → 225,700; headroom 179,619 → 179,600', () => {
+  it('`healthnc` (61/59): the anchor is year 5 with ONE enrolled (2,703), the era is year 7 with two (5,765) → the loud figure 5,800, the on-ramp 2,700 over two years, neither surcharged, the extras spoken per quoted year (5,856 → 5,900 once both are on it; 2,928 → 2,900 while one is) — and the step card keeps the anchor (MAGI 46,078 → the each-of-you arm; 46,020 before the NC standard deduction was deflated per sim year, 2026-09-25) against the line its MAGI year (2030) meets: 2 × round1000(109,000 × 1.032⁵) ÷ 1.032⁴ = 225,697 → 225,700; headroom 179,619 → 179,600; the crossing priced at the 2032 BILL’s scales (past the IRA §11201 Part D reset): 140.59/mo per person → 1,687 → 1,700 each, 3,374 → 3,400 for two — the 2026 anchor’s 95.7 read 1,100 / 2,300, ~35 % low', () => {
     const readout = readoutOf('healthnc')
     const anchor = medicareAnchor(readout)
     const era = medicareEraYear(readout, 2)
@@ -82,9 +100,10 @@ describe('the Medicare premium card on the shipped seeds, through the real engin
     expect(factOf(view, 'step')).toEqual({
       id: 'step',
       eyebrow: copy.healthFactStep,
-      figure: slots.healthFigStepAddEach('1,100'),
-      lines: [slots.irmaaStepNext('225,700', '46,100', '179,600', '1,100', '2,300', false)],
+      figure: slots.healthFigStepAddEach('1,700'),
+      lines: [slots.irmaaStepNext('225,700', '46,100', '179,600', '1,700', '3,400', false)],
     })
+    expect(tier1CrossingAt(2032), 'the literals above ARE the Trustees-row derivation for the 2032 bill').toEqual({ each: '1,700', both: '3,400' })
   })
 
   it('`healthgap` (61/40 — the wide-gap witness, council wf_9921d7e3-55b): the enrolled median is NON-MONOTONIC (one at 25, two at 26, one at 27 — the elder gone on the median path), the era arm fires on that one-year window by the bare first-crossing rule the council KEPT, the hero is framed by its eyebrow, the on-ramp span reads 21 years', () => {

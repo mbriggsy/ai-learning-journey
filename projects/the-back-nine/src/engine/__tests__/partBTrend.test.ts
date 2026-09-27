@@ -29,7 +29,9 @@
  */
 import { describe, it, expect } from 'vitest'
 import {
+  boundPartBPricingSchedule,
   buildPartBPricingSchedule,
+  irmaaBillScalesFor,
   irmaaScheduleAsCompared,
   irmaaTierSurchargeMonthly,
   IRMAA_ANCHOR_SCALES,
@@ -375,5 +377,58 @@ describe('irmaaTierSurchargeMonthly — the disaggregated trend scales (hawk-hon
       const identitySurcharge = anchor * (share / BASE_SHARE - 1)
       expect(Math.abs(tier.partBSurchargeMonthly - identitySurcharge), `tier ${k} cost-share Δ ≤ $0.10`).toBeLessThanOrEqual(0.1)
     })
+  })
+})
+
+describe('irmaaBillScalesFor — the bill year’s scales for a compared schedule (the step card’s crossing price; DND-012)', () => {
+  // The register's Tier 0 *The Medicare step card prices crossing the next surcharge step at 2026
+  // prices…*: a MAGI of year M meets the lines of the bill of year M + lookback, and the engine bills
+  // that crossing at THAT calendar year's scales (`partBPricingByT[t]`, t = bill − start). The helper
+  // must return exactly those — re-derived here from the READ V.E2 / V.E4 rows by `Math.pow`, never
+  // through the resolver's iterated product.
+  const lookback = irmaa.value.magiLookbackYears
+  const handScalesForBillYear = (billYear: number): IrmaaSurchargeScales => {
+    const n = billYear - trend.anchorYear
+    const partDRow = trend.partDIrmaa.find((r) => r.calendarYear === billYear)
+    if (!partDRow) throw new Error(`[test setup] no V.E4 row for ${billYear}`)
+    return {
+      partB: nominalFor(billYear) / Math.pow(NEAR, n) / anchor,
+      partDByTier: partDRow.addOnsMonthly.map((nom, k) => nom / Math.pow(NEAR, n) / partDAnchor[k]!),
+    }
+  }
+
+  it('MAGI 2026 (the `retired` step card) bills in 2028 — the 2028 V.E2 / V.E4 rows over 1.032², never the anchor’s identity', () => {
+    const got = irmaaBillScalesFor(irmaaScheduleAsCompared(irmaa.value, 2026))
+    const want = handScalesForBillYear(2026 + lookback)
+    expect(got.partB).toBeCloseTo(want.partB, 10)
+    want.partDByTier.forEach((s, k) => expect(got.partDByTier[k]!, `partD tier ${k}`).toBeCloseTo(s, 10))
+    expect(got.partB).toBeGreaterThan(1) // the anchor's identity is exactly the defect this closes
+  })
+
+  it('MAGI 2030 (the `healthnc` step card) bills in 2032 — past the IRA §11201 Part D reset, so tier 1’s Part D scale is ~3×', () => {
+    const got = irmaaBillScalesFor(irmaaScheduleAsCompared(irmaa.value, 2030))
+    const want = handScalesForBillYear(2030 + lookback)
+    expect(got.partB).toBeCloseTo(want.partB, 10)
+    want.partDByTier.forEach((s, k) => expect(got.partDByTier[k]!, `partD tier ${k}`).toBeCloseTo(s, 10))
+    expect(got.partDByTier[0]!).toBeGreaterThan(3)
+  })
+
+  it('is the ENGINE’s own bill: equal to the bound schedule’s slot for that calendar year from any sim start (the scales key on the calendar year alone)', () => {
+    for (const start of [2024, 2026, 2029]) {
+      const sched = boundPartBPricingSchedule(start, 20)
+      for (const magiYear of [2024, 2026, 2030, 2036]) {
+        const t = magiYear + lookback - start
+        if (t < 0 || t >= sched.length) continue
+        expect(irmaaBillScalesFor(irmaaScheduleAsCompared(irmaa.value, magiYear)), `start ${start}, MAGI ${magiYear}`).toEqual(sched[t]!.scales)
+      }
+    }
+  })
+
+  it('the bound schedule IS buildPartBPricingSchedule over the canonical constants (one binding — the engine’s bill site and the card read the same)', () => {
+    expect(boundPartBPricingSchedule(2026, 12)).toEqual(buildPartBPricingSchedule(trend, anchor, partDAnchor, 2026, 12))
+  })
+
+  it('a pre-anchor MAGI year (an aged vault’s 2024) bills in the anchor year — the identity scales, by the clamp', () => {
+    expect(irmaaBillScalesFor(irmaaScheduleAsCompared(irmaa.value, 2024))).toEqual(IRMAA_ANCHOR_SCALES)
   })
 })

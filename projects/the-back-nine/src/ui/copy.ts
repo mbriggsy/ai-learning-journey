@@ -1123,8 +1123,8 @@ export const copy = {
     'That figure doesn’t count what you’d pay for drug and supplement plans, which this plan prices at about nothing.',
   // ⚠️ "the benchmark premium itself" WAS IN BOTH LISTS AND WAS FALSE — struck 2026-08-03.
   // The benchmark (SLCSP) is not merely counted, it is the ANCHOR of the whole credit:
-  // `intakeMap.ts:676` builds `slcsp` into the overlay params, `taxOverlay.ts:264` calls it "the
-  // §36B PTC basis", and `slidingScalePtc` (healthOverlay.ts:215-225) computes
+  // `intakeMap.ts:676` builds `slcsp` into the overlay params, `taxOverlay.ts:262` calls it "the
+  // §36B PTC basis", and `slidingScalePtc` (healthOverlay.ts:218-228) computes
   // `max(0, slcsp − applicable% × MAGI)` FROM it. Telling the reader the tool ignores the one
   // figure the discount is calculated from is the same false-negation shape O16 fixed on the Roth
   // strings (`rothOmissionsNoteAcaPriced` above) — a "not counted" claim about something that is.

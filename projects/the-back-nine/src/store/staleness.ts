@@ -82,7 +82,7 @@
  * line off the OR-collapse of all seven healthcare clocks, so an all-65+ household — which
  * takes `buildOverlay`'s Medicare-only branch (`intakeMap.ts:681-684`), ships NO
  * `enrolledPremium`, and can therefore NEVER open the engine's ACA gate
- * (`taxOverlay.ts:1716-1721`: `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0`) —
+ * (`taxOverlay.ts:1712-1717`: `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0`) —
  * was told "Health-coverage rules have been updated" on a moved `acaStatus` stamp. They price
  * ZERO ACA. That is insight 101 inverted: the warning described its poster child, not the
  * predicate's extension. And it was never only a copy bug — `healthcare.moved` fed `rulesMoved`,
@@ -191,7 +191,7 @@ export type HealthcareFamily = 'aca' | 'medicare'
  *     invisible to exactly the pre-65 marketplace planner it hits hardest.
  *   · `aca-status` / `fpl-guideline` — the marketplace rulebook (`acaEnhancedSubsidyStatus`,
  *     `federalPovertyGuidelines`), priced only where the engine's per-year ACA gate can open
- *     (`taxOverlay.ts:1716-1721`).
+ *     (`taxOverlay.ts:1712-1717`).
  *   · `irmaa-freeze` — dates the IRMAA schedule, which IS engine-read on every healthcare-priced
  *     run (see the header's ruling). Medicare, exactly like `part-b`.
  *   · `part-b` / `part-b-trend` / `extras-typical` — the Medicare cost figures.
@@ -492,7 +492,7 @@ export function deriveStaleness(
   // it and no field of this stamp can describe a change to its answer. WHICH family a clock
   // answers to is {@link HEALTHCARE_CLOCK_FAMILIES}'s job — there is no second opinion here.
   //   · ACA family → `exposure.aca`. The engine's per-year ACA gate is
-  //     `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0` (`taxOverlay.ts:1716-1721`);
+  //     `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0` (`taxOverlay.ts:1712-1717`);
   //     the Medicare-only branch ships NO quote pair, so it can never open — an all-65+
   //     household prices ZERO ACA and must stay SILENT on it.
   //   · Medicare family → `exposure.medicare`.
@@ -558,7 +558,7 @@ export function deriveStaleness(
     //
     // ITS "no exposure gate" COMMENT WAS FALSE and is swept here (U17 §S4, insight 087): the
     // trend schedule `partBPricingByT` is constructed ONLY under
-    // `healthcareEnabled && config.taxEnabled` (`taxOverlay.ts:1126-1127`), so a run that built
+    // `healthcareEnabled && config.taxEnabled` (`taxOverlay.ts:1128-1129`), so a run that built
     // no healthcare overlay never constructs it and re-prices nothing under the new edition.
     if (
       savedHealth.partBTrendVintage !== undefined &&

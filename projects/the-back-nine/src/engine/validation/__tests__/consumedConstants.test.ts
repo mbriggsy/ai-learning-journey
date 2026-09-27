@@ -133,7 +133,7 @@ describe('consumedConstantEntries — the derivation is the run, not the registr
       expect(keys, `${doc} must not join the pinning walk`).not.toContain(doc)
     }
     // The trend sourcing unit: `medicareCostTrend` is SOURCED and the per-year Part-B pricing
-    // consumes it (buildPartBPricingSchedule in runTaxAwareDecumulation), so a healthcare-ON run
+    // consumes it (`boundPartBPricingSchedule` in runTaxAwareDecumulation), so a healthcare-ON run
     // genuinely consumes the entry — it JOINS the pinning walk (pinned, so it neither blocks nor
     // discloses; presence here is the consumption record, insight 074).
     expect(keys).toContain('health.medicareCostTrend')
@@ -186,8 +186,10 @@ const WITNESSES: ReadonlyArray<readonly [key: string, file: string, symbol: stri
   ['health.acaApplicablePercentageEnhanced', 'src/engine/taxOverlay.ts', 'acaApplicablePercentageEnhanced'],
   ['health.federalPovertyGuidelines', 'src/engine/healthOverlay.ts', 'federalPovertyGuidelines'],
   ['health.irmaa', 'src/engine/taxOverlay.ts', 'irmaa'],
-  ['health.partB2026', 'src/engine/taxOverlay.ts', 'partB2026'],
-  ['health.medicareCostTrend', 'src/engine/taxOverlay.ts', 'medicareCostTrend'], // the trend unit's consumption half (074)
+  // The Part B pricing's binding re-homed to healthOverlay's `boundPartBPricingSchedule` (2026-09-27 — the
+  // ONE binding the bill site and the step card's crossing price both read); the witness moves with it.
+  ['health.partB2026', 'src/engine/healthOverlay.ts', 'partB2026'],
+  ['health.medicareCostTrend', 'src/engine/healthOverlay.ts', 'medicareCostTrend'], // the trend unit's consumption half (074)
   ['health.acaAgeRatingCurve', 'src/intake/intakeMap.ts', 'acaAgeRatingCurve'],
   ['health.medicareExtrasTypical', 'src/intake/intakeMap.ts', 'medicareExtrasTypicalMonthly'],
   ['socialSecurity.fullRetirementAge', 'src/engine/socialSecurityBenefit.ts', 'fraMonthsForBirthYear'],

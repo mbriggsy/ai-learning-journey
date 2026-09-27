@@ -80,8 +80,6 @@ import {
   acaApplicablePercentage,
   acaApplicablePercentageEnhanced,
   irmaa,
-  partB2026,
-  medicareCostTrend,
   isPricedState,
   type AcaApplicablePercentageTable,
 } from '@engine/constants'
@@ -97,7 +95,7 @@ import {
   irmaaStepFillHeadroom,
   type CommittedYearIncome,
 } from '@engine/magiLandscape'
-import { solveAcaFundedGross, fplForHousehold, medicareAnnualCost, acaMagi, irmaaMagi, irmaaTierSurchargeMonthly, irmaaScheduleAsCompared, buildPartBPricingSchedule, hsaQualifiedSpend, type GrossUpSolution, type MagiComponents } from '@engine/healthOverlay'
+import { solveAcaFundedGross, fplForHousehold, medicareAnnualCost, acaMagi, irmaaMagi, irmaaTierSurchargeMonthly, irmaaScheduleAsCompared, boundPartBPricingSchedule, hsaQualifiedSpend, type GrossUpSolution, type MagiComponents } from '@engine/healthOverlay'
 import { NEVER_DEPLETED, isRetirementState, type DepletionYear, type DrawdownPolicy, type FilingStatus, type RetirementState } from '@shared/model'
 
 // Filing status is shared model vocabulary (the persisted scenario speaks it too). Re-exported
@@ -914,7 +912,9 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
  *
  * `'trended'` (the trend sourcing unit, 2026-07-19 — council wf_c673339e-257): the base Part B
  * premium is a PER-YEAR real dollar — `buildPartBPricingSchedule(medicareCostTrend.value, …)`
- * bound once per run inside {@link runTaxAwareDecumulation} (the ONE consumer), V.E2's nominal
+ * through healthOverlay's ONE binding (`boundPartBPricingSchedule`), built once per run inside
+ * {@link runTaxAwareDecumulation} (the bill; the step card reads a later bill's scales through the
+ * same binding — `irmaaBillScalesFor`), V.E2's nominal
  * premiums deflated horizon-matched with the ultimate real escalator beyond the table. The IRMAA
  * Part B surcharges scale with the trended base (the statutory cost-share identity); Part D
  * surcharges are trended PER TIER from Table V.E4 through the 2035 edge and HOLD their edge-year
@@ -1123,15 +1123,11 @@ export function runTaxAwareDecumulation(
   // trend (reduce-to-spine byte-identity untouched), and `config.household` only exists on the
   // tax-on config member. Reachability of the `!` at the use site is guaranteed by the
   // `healthcareEnabled requires taxEnabled` throw above (taxOverlay's own M3-Slice-4 gate).
+  // The ONE binding (`boundPartBPricingSchedule`) — the step card prices a later bill's crossing
+  // through the same one (`irmaaBillScalesFor`), so the readout and this bill never disagree.
   const partBPricingByT =
     healthcareEnabled && config.taxEnabled
-      ? buildPartBPricingSchedule(
-          medicareCostTrend.value,
-          partB2026.value.standardPremiumMonthly,
-          irmaaSchedule.tiers.map((t) => t.partDSurchargeMonthly),
-          config.household.startCalendarYear,
-          netWithdrawals.length,
-        )
+      ? boundPartBPricingSchedule(config.household.startCalendarYear, netWithdrawals.length)
       : undefined
   const irmaaMagiHistory: number[] = []
   let totalMedicareCostReal = 0

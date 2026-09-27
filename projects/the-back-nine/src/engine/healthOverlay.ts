@@ -36,6 +36,9 @@
  */
 import {
   federalPovertyGuidelines,
+  irmaa,
+  medicareCostTrend,
+  partB2026,
   type AcaApplicablePercentageTable,
   type IrmaaSchedule,
   type IrmaaTier,
@@ -445,10 +448,9 @@ export interface IrmaaSurchargeScales {
   readonly partDByTier: readonly number[]
 }
 
-/** The anchor-year (2026-real) scales — the identity element, for tests of the step function
- *  itself. `nextIrmaaStep` still prices its crossing at these scales beside a LINE framed in the
- *  caller's MAGI year — OPEN, never a pattern to copy (the register's *The Medicare step card
- *  prices crossing the next surcharge step at 2026 prices…*).
+/** The anchor-year (2026) scales — the identity element: the scales of a 2026 bill (and, by the
+ *  pre-anchor clamp, of any earlier one), for tests of the step function itself. Never the price of
+ *  a later bill — that is {@link irmaaBillScalesFor}.
  *  Length 5 = the IRMAA tier count (shape-test-pinned); the length assert in the consumer
  *  makes a 6th-tier drift loud here too. */
 export const IRMAA_ANCHOR_SCALES: IrmaaSurchargeScales = { partB: 1, partDByTier: [1, 1, 1, 1, 1] }
@@ -619,6 +621,30 @@ export function buildPartBPricingSchedule(
   return schedule
 }
 
+/** The engine's ONE binding of {@link buildPartBPricingSchedule} to the sourced constants — the
+ *  V.E2 / V.E4 trend, the 2026 Part B anchor, the IRMAA table's Part D anchor add-ons. The bill site
+ *  (`taxOverlay`) and every readout of a later bill ({@link irmaaBillScalesFor}) read it, so a readout
+ *  can never price a crossing on a binding the engine does not bill with. */
+export function boundPartBPricingSchedule(startCalendarYear: number, horizon: number): readonly PartBYearPricing[] {
+  return buildPartBPricingSchedule(
+    medicareCostTrend.value,
+    partB2026.value.standardPremiumMonthly,
+    irmaa.value.tiers.map((t) => t.partDSurchargeMonthly),
+    startCalendarYear,
+    horizon,
+  )
+}
+
+/** The IRMAA surcharge scales of the bill a compared schedule's MAGI meets — calendar year
+ *  `comparedAtMagiYear + magiLookbackYears`, the year the engine bills that MAGI in (its
+ *  `partBPricingByT[t]`). Keyed on the compared schedule itself, so a crossing's LINE and its PRICE
+ *  can never sit in two frames. Every value the schedule's walk derives is keyed on the calendar year
+ *  alone, so a one-year slice starting at the bill year IS the engine's slot for it (test-pinned). */
+export function irmaaBillScalesFor(schedule: ComparedIrmaaSchedule): IrmaaSurchargeScales {
+  assertComparedIrmaaSchedule(schedule, 'irmaaBillScalesFor')
+  return boundPartBPricingSchedule(schedule.comparedAtMagiYear + schedule.magiLookbackYears, 1)[0]!.scales
+}
+
 // =========================================================================
 // These two functions are the pure pieces; the per-year IRMAA-MAGI history, the 2yr lag, the seed for
 // a sim starting near 65, and the survivor MFJ→single threshold flip (lagged +2yr, since year t's
@@ -742,9 +768,8 @@ export function irmaaTierSurchargeMonthly(
    *  council wf_c673339e-257, hawk-honored). REQUIRED, never defaulted: a caller that forgot
    *  the scale would silently price the 2026 surcharge into a 2035 bill (insight 020 — the
    *  second consumer is not protected by the first one remembering). Tests of the step function
-   *  itself pass {@link IRMAA_ANCHOR_SCALES}; a readout of a LATER bill owes that bill year's
-   *  scales (`magiLandscape.nextIrmaaStep` still passes the anchor's — OPEN, see
-   *  {@link IRMAA_ANCHOR_SCALES}). */
+   *  itself pass {@link IRMAA_ANCHOR_SCALES}; a readout of a LATER bill passes that bill year's
+   *  ({@link irmaaBillScalesFor} — the step card's `magiLandscape.nextIrmaaStep`). */
   scales: IrmaaSurchargeScales,
 ): number {
   if (!Number.isFinite(magi)) {

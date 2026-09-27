@@ -221,20 +221,37 @@ describe('the readout geometry', () => {
 
   it('nextIrmaaStep toward the inclusive top line: the readout names the statute’s line and prices the crossing ON it (tier 4 → 5: 578.0 − 529.6 = 48.4/mo)', () => {
     const topLine = 1.5 * 500_000
-    const step = nextIrmaaStep(600_000, MFJ, ID)
+    const step = nextIrmaaStep(600_000, MFJ, ID, IRMAA_ANCHOR_SCALES)
     expect(step?.threshold).toBe(topLine)
     expect(step?.surchargeDeltaMonthlyPerPerson).toBeCloseTo(48.4, 6) // hand-differenced from the CMS 2026 releases
   })
 
   it('nextIrmaaStep prices the crossing through the ONE canonical tier lookup (tier-1 entry 95.7/mo; tier-1→2 delta 144.7/mo)', () => {
-    expect(nextIrmaaStep(100_000, MFJ, ID)).toEqual({
+    expect(nextIrmaaStep(100_000, MFJ, ID, IRMAA_ANCHOR_SCALES)).toEqual({
       threshold: TIER1_MFJ,
       surchargeDeltaMonthlyPerPerson: 95.7, // tier-1 Part B + Part D surcharges, hand-summed from the CMS releases
     })
-    const step2 = nextIrmaaStep(TIER1_MFJ + 1, MFJ, ID)
+    const step2 = nextIrmaaStep(TIER1_MFJ + 1, MFJ, ID, IRMAA_ANCHOR_SCALES)
     expect(step2?.threshold).toBe(TIER2_MFJ)
     expect(step2?.surchargeDeltaMonthlyPerPerson).toBeCloseTo(144.7, 6) // tier-2 minus tier-1 combined surcharges, hand-differenced from the CMS releases
-    expect(nextIrmaaStep(800_000, MFJ, ID)).toBeNull()
+    expect(nextIrmaaStep(800_000, MFJ, ID, IRMAA_ANCHOR_SCALES)).toBeNull()
+  })
+
+  it('nextIrmaaStep prices the crossing at the scales it is GIVEN — the bill year’s, never the anchor’s by default (the register’s Tier 0 step-card crossing price)', () => {
+    // A hand-built scale set (Part B ×2, Part D tier k ×(k + 3)) so each program’s share is visible.
+    const scales = { partB: 2, partDByTier: [3, 4, 5, 6, 7] }
+    const [t1, t2] = irmaa.value.tiers
+    // tier 0 → 1: the whole tier-1 surcharge at the given scales (read, never re-typed — DND-012).
+    expect(nextIrmaaStep(100_000, MFJ, ID, scales)?.surchargeDeltaMonthlyPerPerson).toBeCloseTo(
+      t1!.partBSurchargeMonthly * 2 + t1!.partDSurchargeMonthly * 3,
+      9,
+    )
+    // tier 1 → 2: tier 2 at its OWN Part D scale minus tier 1 at its own — the per-tier Part D reset
+    // the scalar design could not represent.
+    expect(nextIrmaaStep(TIER1_MFJ + 1, MFJ, ID, scales)?.surchargeDeltaMonthlyPerPerson).toBeCloseTo(
+      (t2!.partBSurchargeMonthly * 2 + t2!.partDSurchargeMonthly * 4) - (t1!.partBSurchargeMonthly * 2 + t1!.partDSurchargeMonthly * 3),
+      9,
+    )
   })
 
   it('marginalOrdinaryRate reads the band the NEXT dollar lands in (exactly-at-edge → the next band)', () => {

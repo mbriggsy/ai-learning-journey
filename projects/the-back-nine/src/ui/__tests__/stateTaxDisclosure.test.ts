@@ -140,7 +140,7 @@ describe('S5 — the omission-list homes (state-tax item drops when priced, gate
     expect(priced).toContain('state-level subsidy top-ups')
     expect(priced).toContain('rechecked sooner')
     // NEITHER list may claim the benchmark premium is uncounted — it is the §36B PTC basis
-    // (`taxOverlay.ts:264`) and `slidingScalePtc` computes the credit FROM it. This arm pinned the
+    // (`taxOverlay.ts:262`) and `slidingScalePtc` computes the credit FROM it. This arm pinned the
     // FALSE claim until 2026-08-03, which is how it survived; it now pins the correction on both
     // arms so a re-add goes red rather than green.
     for (const v of [composeControlHealthOmissionsNote(false), priced]) {

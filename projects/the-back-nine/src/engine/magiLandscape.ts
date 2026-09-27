@@ -34,12 +34,12 @@
  */
 import { bracketsFor, deductionStack, taxableSocialSecurity } from '@engine/taxCore'
 import {
-  IRMAA_ANCHOR_SCALES,
   assertComparedIrmaaSchedule,
   irmaaTierApplies,
   irmaaTierSurchargeMonthly,
   slidingScalePtc,
   type ComparedIrmaaSchedule,
+  type IrmaaSurchargeScales,
 } from '@engine/healthOverlay'
 import type { AcaApplicablePercentageTable } from '@engine/constants'
 import type { FilingStatus } from '@shared/model'
@@ -248,22 +248,24 @@ export function nextIrmaaStepLine(
  *  `magi`, both read through the ONE canonical tier lookup, never a re-typed table). `null` when no
  *  step remains. The caller multiplies by the enrolled count × 12 (never a flat ×2). The LINE is
  *  framed in the caller's MAGI year (the step card: the anchor row's, `irmaaScheduleAsCompared`);
- *  the crossing PRICE is still ANCHOR-SCALE (`IRMAA_ANCHOR_SCALES` — the 2026 surcharges; OPEN, the
- *  register's *The Medicare step card prices crossing the next surcharge step at 2026 prices…*):
- *  readout geometry that prices nothing (the per-year pricing itself trends in taxOverlay).
- *  Threading the bill year's trend scales here is that open item. */
+ *  the crossing PRICE is at `scales` — REQUIRED, never defaulted (the `irmaaTierSurchargeMonthly`
+ *  rule): the scales of the bill that MAGI meets, `healthOverlay.irmaaBillScalesFor(schedule)`, the
+ *  same ones the engine bills that crossing at. The 2026 anchor's scales beside a later year's line
+ *  priced the crossing up to ~38 % low (the register's Tier 0 *The Medicare step card prices
+ *  crossing the next surcharge step at 2026 prices…*). */
 export function nextIrmaaStep(
   magi: number,
   filing: FilingStatus,
   schedule: ComparedIrmaaSchedule,
+  scales: IrmaaSurchargeScales,
 ): { readonly threshold: number; readonly surchargeDeltaMonthlyPerPerson: number } | null {
   const step = nextIrmaaStepLine(magi, filing, schedule)
   if (step === null) return null
   return {
     threshold: step.threshold,
     surchargeDeltaMonthlyPerPerson:
-      irmaaTierSurchargeMonthly(step.lastSafeMagi + 1, filing, schedule, IRMAA_ANCHOR_SCALES) -
-      irmaaTierSurchargeMonthly(magi, filing, schedule, IRMAA_ANCHOR_SCALES),
+      irmaaTierSurchargeMonthly(step.lastSafeMagi + 1, filing, schedule, scales) -
+      irmaaTierSurchargeMonthly(magi, filing, schedule, scales),
   }
 }
 

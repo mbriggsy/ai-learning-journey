@@ -1721,7 +1721,7 @@ export const copy = {
   // ("401(k)" is deliberately absent — the verdict scope's free-numeral gate; "a pre-tax workplace
   // plan" is the numeral-free equivalent, and the re-entry read-back teaches the full roster.)
   // REWORDED same-day (review wf_6f89fe6f-35a P1, refuters 2-0): the first draft claimed "this plan
-  // has none entered" — FALSE on the small-IRA arm (candidates.ts:393 rejects every rail-anchored
+  // has none entered" — FALSE on the small-IRA arm (candidates.ts:540 rejects every rail-anchored
   // conversion amount above the post-RMD headroom, so a household with a $25k IRA below every rail
   // ALSO lands no-pretax). "needs more … than this plan has entered" is true on BOTH sub-arms (zero
   // entered, and entered-but-under-every-rail — extension-monotone, insight 101), and the steer's

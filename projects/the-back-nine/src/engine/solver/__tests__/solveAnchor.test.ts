@@ -11,11 +11,11 @@
  */
 import { describe, expect, it } from 'vitest'
 import { expandRothConversion, type SimulationParams } from '@shared/model'
-import { deriveConversionAnchor, conversionWindowFor, enumerateSolveCandidates } from '../solveAnchor'
+import { committedIncomeForYear, deriveConversionAnchor, conversionWindowFor, enumerateSolveCandidates } from '../solveAnchor'
 import { applyCandidate, sameDecumulationPlan, solverCandidateId } from '../candidates'
 import { cliffMagiFor } from '@engine/magiLandscape'
 import { fplForHousehold } from '@engine/healthOverlay'
-import { acaApplicablePercentage, irmaa } from '@engine/constants'
+import { acaApplicablePercentage, irmaa, medicareCostTrend } from '@engine/constants'
 import { selectRmdDivisor } from '@engine/rmd'
 
 const MARKET = {
@@ -120,18 +120,145 @@ describe('deriveConversionAnchor — the income rails (the exact engine pricing 
     expect(anchor.acaCliffMagi).toBe(cliffMagiFor(acaApplicablePercentage.value, fplForHousehold(2)))
   })
 
-  it('IRMAA rail: active (the shipped schedule) when someone is Medicare-enrolled at t + lookback', () => {
-    // All-65+ Medicare household (healthcareEnabled, no ACA quote) ⇒ the IRMAA rail binds, no cliff rail.
+  it('IRMAA rail: active (the shipped schedule) for EVERY window MAGI year whose bill lands inside the horizon with someone enrolled', () => {
+    // Alex 67 is enrolled at every bill; the window is the pre-RMD runway (8 years, 2027–2034), and every
+    // bill (k + 2 ≤ 9) sits inside the 40-year horizon ⇒ all eight MAGI years are billed.
     const base = baseRetired({ overlay: { healthcareEnabled: true } })
     const anchor = deriveConversionAnchor(base)!
-    expect(anchor.irmaaSchedule).toBe(irmaa.value)
+    expect(anchor.irmaa?.schedule).toBe(irmaa.value)
+    const frames = anchor.irmaa!.billedYears
+    expect(frames.map((f) => f.calendarYear)).toEqual([2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034])
+    // EACH billed year carries ITS OWN committed income (the council's frame hit, wf_71f675da-8cf): Alex
+    // (67, FRA 67 ⇒ factor 1) draws his $30,000 PIA from year 0 ($2,500.00 a month); Sam (62) claims at 67
+    // ⇒ from 2032 her own $20,000 PIA — $1,666.66… a month, dime-floored by SSA to $1,666.60 (POMS RS
+    // 00615.101) ⇒ $19,999.20 a year (her spousal half of Alex's, $15,000, is under it ⇒ no excess).
+    // Hand-derived from the claim ages and the dime rule, never from the SS sub-engine.
+    const both = 30_000 + 19_999.2 // the engine's person order: Alex, then Sam
+    expect(frames.map((f) => f.ssBenefit)).toEqual([30_000, 30_000, 30_000, 30_000, 30_000, both, both, both])
+    expect(frames.map((f) => f.count65)).toEqual([1, 1, 1, 2, 2, 2, 2, 2]) // Sam turns 65 in 2030
+    expect(frames.every((f) => f.rmd === 0 && f.ongoingTaxable === 0 && f.conversion === 0 && f.filing === 'mfj')).toBe(true)
+    expect(frames[0]).toEqual(anchor.committed) // the anchor's own year IS the anchor skeleton
     expect(anchor.acaCliffMagi).toBeNull() // no enrolled premium / no pre-65 member
+  })
+
+  it('THE RETIRED WITNESS (the council’s frame hit, DND 012): Social Security from 2027 moves the tier-1 window point ~$46k under the first-year point', () => {
+    // `retired`’s household (devSeeds): Alex 66 (born 1960, PIA $30,000) and Sam 65 (born 1961, PIA
+    // $24,000), both claiming at 67 — FRA for both, so factor 1: $0 in 2026, $30,000 in 2027 (Alex), $54,000
+    // from 2028 (Sam's spousal half, $15,000, is under her own). The window: the first RMD age is 75
+    // (SECURE 2.0, born 1960+) ⇒ 75 − 66 = 9 years, 2026–2034.
+    const base = baseRetired({
+      people: [
+        { sex: 'male', currentAge: 66, birthYear: 1960, retirementAge: 65, earnedIncomeReal: 0, pia: 30_000, socialSecurityClaimAge: 67 },
+        { sex: 'female', currentAge: 65, birthYear: 1961, retirementAge: 63, earnedIncomeReal: 0, pia: 24_000, socialSecurityClaimAge: 67 },
+      ],
+      overlay: {
+        startCalendarYear: 2026,
+        healthcareEnabled: true,
+        buckets: { taxable: 0, pretax: 1_120_000, roth: 0 },
+        pretaxByPerson: [1_120_000, 0],
+      },
+    })
+    expect(conversionWindowFor(base)).toEqual({ startYearOffset: 0, years: 9 })
+    const ss = (y: number): number => (y === 2026 ? 0 : y === 2027 ? 30_000 : 54_000)
+    expect(deriveConversionAnchor(base)!.irmaa!.billedYears.map((f) => f.ssBenefit)).toEqual(
+      [2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034].map(ss),
+    )
+    // Tier 1's MFJ line per the statute's algebra (§1395r(i)(3)(C): 2× the single line; (i)(5): × CPI from
+    // August 2025 to August of bill − 1, rounded to $1,000 on the single line) over the MAGI year's level.
+    // The pinned 2026 single figure and the Trustees near-term rate are READ (the constants gate); the
+    // algebra is typed here (every year here sits inside the rate's table).
+    const r = medicareCostTrend.value.cpiNearTermAvg
+    const single2026 = irmaa.value.tiers[0]!.singleMagiThreshold
+    const line1 = (y: number): number =>
+      (2 * Math.round((single2026 * (1 + r) ** (y + 1 - 2025)) / 1_000) * 1_000) / (1 + r) ** (y - 2026)
+    // Above the §86 base the inclusion is capped at 85 % (§86(a)(2)) — IRMAA-MAGI = conversion + 0.85 × SS.
+    const room = (y: number): number => line1(y) - 0.85 * ss(y)
+    let tight = 2026
+    for (let y = 2027; y <= 2034; y++) {
+      // Sufficient for the cap: provisional income − the $44,000 MFJ adjusted base (§86(c)(2)) ≥ the benefit.
+      expect(room(y) + 0.5 * ss(y) - 44_000, `§86 premise (${y})`).toBeGreaterThanOrEqual(ss(y))
+      if (room(y) < room(tight)) tight = y
+    }
+    expect(tight).toBe(2034) // the window's lowest tier-1 line, with both benefits riding
+    expect(Math.floor(room(tight))).toBeGreaterThan(185_000) // the council's ~185.7k
+    expect(Math.floor(room(tight))).toBeLessThan(186_000)
+    const rails = enumerateSolveCandidates(base)!.candidates.flatMap((c) =>
+      c.anchoredRail?.kind === 'irmaa-step' && c.anchoredRail.threshold < 250_000 && c.policy === 'proportional'
+        ? [{ amount: c.conversion!.annualAmountReal, rail: c.anchoredRail }]
+        : [],
+    )
+    expect(rails).toHaveLength(2)
+    const firstYear = rails.find((x) => x.rail.magiYear === 2026)!
+    const windowPt = rails.find((x) => x.rail.magiYear === tight)!
+    expect(firstYear.amount).toBe(Math.floor(line1(2026))) // $232,000: no benefit in 2026…
+    expect(firstYear.rail.firstCrossingMagiYear).toBe(2027) // …and Alex's claim puts it over the next year
+    expect(windowPt.amount).toBe(Math.floor(room(tight)))
+    expect(windowPt.rail.firstCrossingMagiYear).toBeNull()
+  })
+
+  it('committedIncomeForYear refuses an RMD year and a year off the horizon — the window never reaches one', () => {
+    const base = baseRetired() // Alex 67 (born 1960) reaches 75 in sim year 8
+    expect(() => committedIncomeForYear(base, 8)).toThrow(/RMD start age/)
+    expect(() => committedIncomeForYear(base, 7)).not.toThrow()
+    expect(() => committedIncomeForYear(base, 40)).toThrow(/horizon/)
+    expect(() => committedIncomeForYear(base, -1)).toThrow(/horizon/)
+  })
+
+  it('IRMAA rail, MID-WINDOW ENROLLMENT (the verify pass’s missed scope): both 60 at start ⇒ billed from the year a bill first meets someone at 65', () => {
+    // Both born 1967, start 2027: the window runs to the first RMD age (75 ⇒ 15 years, 2027–2041); a MAGI
+    // year y bills in y + 2, and someone is 65 at that bill from y = 2030 (1967 + 65 − 2). The old gate
+    // read year 0's bill alone (nobody 65 in 2029) and dropped the whole IRMAA walk — for the 12 years
+    // that DO bill.
+    const base = baseRetired({
+      people: [
+        { sex: 'female', currentAge: 60, birthYear: 1967, retirementAge: 58, earnedIncomeReal: 0, pia: 20_000, socialSecurityClaimAge: 67 },
+        { sex: 'male', currentAge: 60, birthYear: 1967, retirementAge: 58, earnedIncomeReal: 0, pia: 24_000, socialSecurityClaimAge: 67 },
+      ],
+      overlay: { healthcareEnabled: true, pretaxByPerson: [300_000, 300_000] },
+    })
+    expect(conversionWindowFor(base)).toEqual({ startYearOffset: 0, years: 15 })
+    const anchor = deriveConversionAnchor(base)!
+    const frames = anchor.irmaa!.billedYears
+    expect(frames.map((f) => f.calendarYear)).toEqual([2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041])
+    // Both claim at 67 (2034): her own $20,000 PIA, dime-floored monthly to $1,666.60 ⇒ $19,999.20 (POMS
+    // RS 00615.101; her spousal half, $12,000, is under it), + the higher earner's $24,000 ($2,000.00 a
+    // month, exact) — nothing before 2034.
+    const both = 19_999.2 + 24_000 // the engine's person order: her, then him
+    expect(frames.map((f) => f.ssBenefit)).toEqual([0, 0, 0, 0, both, both, both, both, both, both, both, both])
+    // …and the live roster now carries IRMAA-anchored conversions, every one binding in a billed year, and
+    // at least one per roster that adds no crossing in any billed year.
+    const set = enumerateSolveCandidates(base)!
+    const irmaaRails = set.candidates.flatMap((c) => (c.anchoredRail?.kind === 'irmaa-step' ? [c.anchoredRail] : []))
+    expect(irmaaRails.length).toBeGreaterThan(0)
+    expect(irmaaRails.every((r) => r.magiYear >= 2030)).toBe(true)
+    expect(irmaaRails.some((r) => r.firstCrossingMagiYear === null)).toBe(true)
+  })
+
+  it('IRMAA rail: a bill past the horizon is NOT billed — the window is clamped to the horizon and so is the list', () => {
+    // A 5-year horizon clamps the 8-year runway to 5 (2027–2031); a bill k + 2 must sit under 5 ⇒ k ≤ 2.
+    const base = { ...baseRetired({ overlay: { healthcareEnabled: true } }), maxHorizonYears: 5 }
+    const anchor = deriveConversionAnchor(base)!
+    expect(anchor.irmaa?.billedYears.map((f) => f.calendarYear)).toEqual([2027, 2028, 2029])
+  })
+
+  it('IRMAA rail: null when no window year is billed (nobody reaches 65 at a bill inside the horizon)', () => {
+    const base = {
+      ...baseRetired({
+        people: [
+          { sex: 'female', currentAge: 50, birthYear: 1977, retirementAge: 50, earnedIncomeReal: 0, pia: 20_000, socialSecurityClaimAge: 67 },
+          { sex: 'male', currentAge: 50, birthYear: 1977, retirementAge: 50, earnedIncomeReal: 0, pia: 24_000, socialSecurityClaimAge: 67 },
+        ],
+        overlay: { healthcareEnabled: true, pretaxByPerson: [300_000, 300_000] },
+      }),
+      maxHorizonYears: 10,
+    }
+    expect(deriveConversionAnchor(base)!.irmaa).toBeNull()
   })
 
   it('both rails null when healthcare is not priced (bracket-edge is still always enumerated)', () => {
     const anchor = deriveConversionAnchor(baseRetired())!
     expect(anchor.acaCliffMagi).toBeNull()
-    expect(anchor.irmaaSchedule).toBeNull()
+    expect(anchor.irmaa).toBeNull()
   })
 })
 

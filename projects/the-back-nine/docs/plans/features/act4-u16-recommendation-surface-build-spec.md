@@ -331,7 +331,7 @@ to a single commit.
 
 - "Name the active baseline" shipped as a short STATIC label on the no-action figure —
   `copy.recommendBaselineNameplate`, "Compared with your plan today", carried on the view as
-  `baselineNameplate` (`recommendationView.ts:243`, `:655`). NO number. The A↔B residual is never
+  `baselineNameplate` (`recommendationView.ts:243`, `:659`). NO number. The A↔B residual is never
   rendered, quantified, or narrated.
 
 ### The rest of S3, and its nets
@@ -359,8 +359,8 @@ to a single commit.
   (2026-09-10, the 2026-09-08 evening review) the chart, primary and runner-up alike, renders on
   the `leave-more` goal ONLY. On `pay-less-tax` the plotted headline is lifetime tax paid, where
   lower is better, and the longer-bar-is-better grammar would contradict it, so the picture is
-  OMITTED, never swapped. The goal-worded delta hero still ships (`recommendationView.ts:669-682`,
-  `recommendationView.ts:831`). The goal-named caption and aria variant that would bring it back
+  OMITTED, never swapped. The goal-worded delta hero still ships (`recommendationView.ts:673-686`,
+  `recommendationView.ts:835`). The goal-named caption and aria variant that would bring it back
   are Briggsy's words, owed in the register entry
   "U17 S7 riders — the comparison chart's missing dollar endpoints (Q7a) and the unspecified reorder (Q7b)".
 - **Disclosures adjacent to the delta**: NIIT + (outside the roster) state tax; the SS claim-age

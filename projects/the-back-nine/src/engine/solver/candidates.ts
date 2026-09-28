@@ -50,13 +50,13 @@ import {
 import {
   acaMagiAtFill,
   irmaaMagiAtFill,
+  irmaaTierStepLine,
   taxableIncomeAtFill,
   nextBracketEdgeAbove,
-  nextIrmaaStepLine,
   type CommittedYearIncome,
 } from '@engine/magiLandscape'
 import { deductionStack } from '@engine/taxCore'
-import { irmaaScheduleAsCompared } from '@engine/healthOverlay'
+import { irmaaScheduleAsCompared, irmaaTierApplies } from '@engine/healthOverlay'
 import type { IrmaaSchedule } from '@engine/constants'
 
 /** The FOUR searched policies — the 5-wide shipped enum minus the user's `custom` (the
@@ -74,7 +74,9 @@ export const CONVENTIONAL_POLICY: DrawdownPolicy = 'taxable-first'
 /**
  * The deterministic anchor context the grid is derived from — the conversion WINDOW's first
  * active year, in committed-income terms (the same gross-independent skeleton the
- * bracket-fill ceiling derivation prices; every term known before any path runs).
+ * bracket-fill ceiling derivation prices; every term known before any path runs) — plus, for the
+ * IRMAA rail, every billed window year's own frame ({@link IrmaaAnchorContext}). The ACA-cliff and
+ * bracket-edge rails still read the first year's frame alone (the register's sibling entry).
  */
 export interface ConversionAnchorContext {
   /** The committed-income skeleton at the window's first year, WITHOUT any candidate
@@ -84,9 +86,9 @@ export interface ConversionAnchorContext {
    *  (`cliffMagiFor(activeTable, fplDollar)`), else `null` — the rail does not exist. The
    *  ACTIVATION predicate lives with the caller/hazard creator (insight 027). */
   readonly acaCliffMagi: number | null
-  /** The IRMAA schedule when anyone will be Medicare-enrolled at `t + magiLookbackYears`
-   *  (the caller owns that predicate), else `null`. */
-  readonly irmaaSchedule: IrmaaSchedule | null
+  /** The IRMAA rail's context when ANY MAGI year of the conversion window is actually billed (the
+   *  caller owns that predicate — insight 027), else `null`. */
+  readonly irmaa: IrmaaAnchorContext | null
   /** Deterministic pre-tax balance available at the window's first year (the legality
    *  screen's base — year-0 balance for a year-0 window; the fixture's derived figure in
    *  the zero-vol oracle worlds). */
@@ -94,6 +96,28 @@ export interface ConversionAnchorContext {
   /** The forced RMD at the window's first year (0 before RMD age — derived from the
    *  household's own birth years × the canonical RMD table, never a guessed flat age). */
   readonly rmdAtStart: number
+}
+
+/**
+ * The IRMAA rail across the conversion WINDOW. A candidate repeats ONE real amount every window year
+ * (`applyCandidate` expands it flat), and each year's MAGI meets its OWN bill's lines in its own price
+ * frame (`healthOverlay.irmaaScheduleAsCompared`) — lines that move year to year with the $1,000
+ * rounding and the Trustees path's near-term → ultimate edge — ON TOP OF that year's own committed
+ * income: Social Security arrives at each person's claim age, ongoing income moves by year. So the
+ * anchors read every billed year in its OWN committed frame, never year 0's income against a later
+ * year's line (the register's Tier 1 *The solver's IRMAA conversion anchors sit one dollar under the
+ * line only in YEAR 0…*; council wf_71f675da-8cf, b9-1 — on `retired` both spouses claim at 67, so a
+ * year-0 frame left $25.5k–$45.9k of MAGI outside the check).
+ */
+export interface IrmaaAnchorContext {
+  readonly schedule: IrmaaSchedule
+  /** The committed-income frame of every window MAGI year whose bill (`y + magiLookbackYears`) lands
+   *  inside the horizon with someone Medicare-enrolled, each keyed by its `calendarYear` — non-empty,
+   *  strictly ascending, never before the anchor skeleton's year, the anchor's filing, conversion 0
+   *  (checked loud at enumeration). A year outside it bills nothing, so no anchor reads its lines: a
+   *  household first enrolled mid-window anchors on the years that bill. The caller derives each frame
+   *  from the SAME seams the engine's year-t iteration reads (`solveAnchor.committedIncomeForYear`). */
+  readonly billedYears: readonly [CommittedYearIncome, ...CommittedYearIncome[]]
 }
 
 /** One enumerated candidate strategy. */
@@ -112,7 +136,24 @@ export interface CandidateStrategy {
 
 export type AnchoredRail =
   | { readonly kind: 'aca-cliff'; readonly magi: number }
-  | { readonly kind: 'irmaa-step'; readonly threshold: number }
+  | {
+      readonly kind: 'irmaa-step'
+      /** The line the amount sits under, AS COMPARED in `magiYear` (what the words quote). */
+      readonly threshold: number
+      /** The MAGI calendar year whose line binds the amount: the first billed year for the
+       *  first-billed-year point, the window's tightest year (least room, in its own frame) for the
+       *  window point. */
+      readonly magiYear: number
+      /** The first billed MAGI year in which this amount crosses the tier where that year's committed
+       *  income alone does not — `null` when it adds no such crossing in any billed window year.
+       *  THE FRAME IS COMMITTED INCOME ONLY (Social Security by claim age, ongoing income; fill 0 —
+       *  the policy's own discretionary draw EXCLUDED, insight 133), so `null` is a claim about that
+       *  frame, never "keeps you under" a line (the Roth-sheet entry's ⚑ NEGATIVE). A non-null year
+       *  names a first-billed-year point kept beside the window point: its first-year room is real
+       *  (on `retired`, $25k–$46k a year over the window point), and this field is what says it is
+       *  not the holding one. Never narrow it to a boolean. */
+      readonly firstCrossingMagiYear: number | null
+    }
   | { readonly kind: 'bracket-edge'; readonly edge: number }
 
 /**
@@ -258,6 +299,38 @@ function largestAmountWithin(metric: (a: number) => number, rail: number, hi: nu
   throw new Error(`[candidates] largestAmountWithin did not converge (rail=${rail}) — burned/062`)
 }
 
+/** The IRMAA window's billed-year contract ({@link IrmaaAnchorContext}), checked loud: a frame list the
+ *  anchors cannot trust is a caller bug surfaced, never a quietly narrower walk (burned/062). A frame
+ *  for the anchor's own year must BE the anchor's skeleton (one year-0 truth for every rail). */
+function assertBilledYears(frames: readonly CommittedYearIncome[], skeleton: CommittedYearIncome): void {
+  if (frames.length === 0) {
+    throw new Error('[candidates] irmaa.billedYears is empty — a window with no billed year carries no IRMAA context (null)')
+  }
+  frames.forEach((f, k) => {
+    const y = f.calendarYear
+    if (!Number.isInteger(y)) throw new Error(`[candidates] irmaa.billedYears[${k}].calendarYear must be an integer calendar year (got ${y})`)
+    if (k === 0 && y < skeleton.calendarYear) {
+      throw new Error(`[candidates] irmaa.billedYears starts at ${y}, before the anchor skeleton's year ${skeleton.calendarYear}`)
+    }
+    if (k > 0 && y <= frames[k - 1]!.calendarYear) {
+      throw new Error(`[candidates] irmaa.billedYears must be strictly ascending (${frames[k - 1]!.calendarYear} then ${y})`)
+    }
+    if (f.filing !== skeleton.filing) {
+      throw new Error(`[candidates] irmaa.billedYears[${k}] files ${f.filing}, the anchor skeleton ${skeleton.filing} — both alive is one filing`)
+    }
+    if (f.conversion !== 0) throw new Error(`[candidates] irmaa.billedYears[${k}] must carry conversion 0 (the enumerator adds each trial amount)`)
+    for (const [name, v] of [['rmd', f.rmd], ['ongoingTaxable', f.ongoingTaxable], ['ssBenefit', f.ssBenefit]] as const) {
+      if (!Number.isFinite(v) || v < 0) throw new Error(`[candidates] irmaa.billedYears[${k}].${name} must be finite ≥ 0 (got ${v}) — insight 010`)
+    }
+    if (
+      y === skeleton.calendarYear &&
+      (f.rmd !== skeleton.rmd || f.ongoingTaxable !== skeleton.ongoingTaxable || f.ssBenefit !== skeleton.ssBenefit || f.count65 !== skeleton.count65)
+    ) {
+      throw new Error(`[candidates] irmaa.billedYears' ${y} frame is not the anchor skeleton — one year-0 truth for every rail`)
+    }
+  })
+}
+
 /** The committed skeleton with a trial conversion amount added (fill held at 0 — the grid
  *  anchors the CONVERSION dollar; the policy's own discretionary fill is the engine's per-year
  *  business through the shipped ceiling derivation). */
@@ -288,25 +361,99 @@ export function anchoredConversionAmounts(
     }
   }
 
-  // IRMAA steps — walk EVERY threshold above the baseline (each is a real anchor; the grid
-  // wants a candidate just under each step, not only the next one). Each anchor targets the
-  // step's LAST SAFE MAGI (magiLandscape.nextIrmaaStepLine — one nominal dollar under the inclusive
-  // top line, whose line dollar already owes the top tier); the rail still NAMES the line. The lines
-  // are the ones THIS year's MAGI meets — compared for `c.calendarYear` (the bill lands two years on;
-  // healthOverlay.irmaaScheduleAsCompared, the price frame).
-  // IRMAA-MAGI is monotone piecewise-linear CONTINUOUS in the amount (the Pub-915 inclusion
-  // ramps) — bisect it; amount = lastSafe + 1 provably crosses (magi(a) ≥ ordinary(a) ≥ a + committed ≥ a).
-  if (anchor.irmaaSchedule !== null) {
-    const compared = irmaaScheduleAsCompared(anchor.irmaaSchedule, c.calendarYear)
-    let probe = irmaaMagiAtFill(c, 0)
-    for (;;) {
-      const step = nextIrmaaStepLine(probe, c.filing, compared)
-      if (step === null) break
-      const safe = step.lastSafeMagi
-      const metric = (a: number): number => irmaaMagiAtFill(withAmount(c, a), 0)
-      const amount = largestWholeDollarWithin(metric, safe, largestAmountWithin(metric, safe, safe + 1))
-      if (amount !== null) out.push({ amountReal: amount, rail: { kind: 'irmaa-step', threshold: step.threshold } })
-      probe = safe + 1 // the first dollar past this step — the walk visits each remaining step once
+  // IRMAA steps — EVERY tier is a real anchor wherever committed income has not already crossed it (the
+  // grid wants a candidate just under each step, not only the next one). Each anchor targets the step's
+  // LAST SAFE MAGI (magiLandscape.irmaaTierStepLine — one nominal dollar under the inclusive top line,
+  // whose line dollar already owes the top tier); the rail still NAMES the line. A MAGI year's lines are
+  // the ones its bill two years on compares it against, in that year's price frame
+  // (healthOverlay.irmaaScheduleAsCompared), and they sit ON TOP OF that year's own committed income —
+  // so the ONE amount a candidate repeats is judged year by year in each billed year's own frame
+  // (IrmaaAnchorContext.billedYears; council wf_71f675da-8cf):
+  //   - the FIRST-BILLED-YEAR point: just under that year's line, in that year's frame (year 0 wherever
+  //     year 0 bills) — its first-year room is real, so it is never dropped (the register's ⚑
+  //     NEGATIVE); `firstCrossingMagiYear` names the first billed year it crosses the tier;
+  //   - the WINDOW point: the largest amount that stays under the tier in EVERY billed year its
+  //     committed income has not already crossed — the minimum, over those years, of each year's own
+  //     room — bound at the tightest such year (the earliest on a tie). Emitted only when the first-year
+  //     point does not already hold, so a window that never binds tighter adds no candidate. The years
+  //     committed income ALREADY crosses are excluded, never the tier: a tier the baseline crosses in
+  //     one billed year still anchors on the others (no silent vanish, burned/062).
+  // Never per-year amounts inside one candidate (the ⚑ NEGATIVE — the grid stays one amount per
+  // candidate). The frame is COMMITTED income only: fill 0, so the policy's own discretionary draw is
+  // outside it (insight 133) — the entry stays open on that gap. IRMAA-MAGI is monotone piecewise-linear
+  // CONTINUOUS in the amount (the Pub-915 inclusion ramps) — bisect it; amount = lastSafe + 1 provably
+  // crosses (magi(a) ≥ ordinary(a) ≥ a + committed ≥ a).
+  if (anchor.irmaa !== null) {
+    const { schedule, billedYears } = anchor.irmaa
+    assertBilledYears(billedYears, c)
+    const compared = billedYears.map((f) => irmaaScheduleAsCompared(schedule, f.calendarYear))
+    const metricAt = (k: number, a: number): number => irmaaMagiAtFill(withAmount(billedYears[k]!, a), 0)
+    for (let i = 0; i < schedule.tiers.length; i++) {
+      // Read through the BILL's own predicate in every billed year (irmaaTierApplies) — the enumerator
+      // and the bill can never disagree about which dollar crosses.
+      const crossesAt = (k: number, a: number): boolean =>
+        irmaaTierApplies(metricAt(k, a), compared[k]!.tiers[i]!, billedYears[k]!.filing)
+      const open = billedYears.flatMap((_, k) => (crossesAt(k, 0) ? [] : [k]))
+      if (open.length === 0) continue // committed income alone crosses tier i in every billed year
+      const roomAt = (k: number): number | null => {
+        const safe = irmaaTierStepLine(compared[k]!, i, billedYears[k]!.filing).lastSafeMagi
+        const metric = (a: number): number => metricAt(k, a)
+        return largestWholeDollarWithin(metric, safe, largestAmountWithin(metric, safe, safe + 1))
+      }
+      const firstCrossing = (a: number): number | null => {
+        const k = open.find((j) => crossesAt(j, a))
+        return k === undefined ? null : billedYears[k]!.calendarYear
+      }
+      let firstHolds = false
+      if (open[0] === 0) {
+        const amount = roomAt(0)
+        if (amount !== null) {
+          const crossing = firstCrossing(amount)
+          firstHolds = crossing === null
+          out.push({
+            amountReal: amount,
+            rail: {
+              kind: 'irmaa-step',
+              threshold: irmaaTierStepLine(compared[0]!, i, billedYears[0]!.filing).threshold,
+              magiYear: billedYears[0]!.calendarYear,
+              firstCrossingMagiYear: crossing,
+            },
+          })
+        }
+      }
+      if (firstHolds) continue
+      // The tightest open year: the least room in its own frame. A year with no whole dollar of room
+      // means any conversion crosses there — no window point (the conversion-0 arm is that point).
+      let tight = -1
+      let tightRoom = Number.POSITIVE_INFINITY
+      for (const k of open) {
+        const room = roomAt(k)
+        if (room === null) {
+          tight = -1
+          break
+        }
+        if (room < tightRoom) {
+          tightRoom = room
+          tight = k
+        }
+      }
+      if (tight < 0) continue
+      // Under every open year's room ⇒ adds no crossing anywhere — by construction; a violation is an
+      // enumerator bug, never a label to ship (burned/062).
+      if (firstCrossing(tightRoom) !== null) {
+        throw new Error(
+          `[candidates] the IRMAA window anchor ${tightRoom} (tier ${i + 1}, MAGI year ${billedYears[tight]!.calendarYear}) adds a crossing in a billed year — the window minimum is wrong`,
+        )
+      }
+      out.push({
+        amountReal: tightRoom,
+        rail: {
+          kind: 'irmaa-step',
+          threshold: irmaaTierStepLine(compared[tight]!, i, billedYears[tight]!.filing).threshold,
+          magiYear: billedYears[tight]!.calendarYear,
+          firstCrossingMagiYear: null,
+        },
+      })
     }
   }
 

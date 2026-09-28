@@ -270,7 +270,7 @@ function reproCandidates(): readonly CandidateStrategy[] {
     anchor: {
       committed: { rmd: 0, conversion: 0, ongoingTaxable: 0, ssBenefit: 0, filing: 'mfj', count65: 0, calendarYear: 2026 },
       acaCliffMagi: null,
-      irmaaSchedule: null,
+      irmaa: null,
       pretaxAvailableAtStart: 600_000,
       rmdAtStart: 0,
     },

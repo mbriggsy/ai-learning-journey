@@ -85,5 +85,18 @@
  * surcharges billed — e.g. the 2028 tier-1 MFJ line $224,000 → $232,000) and the enumerator's
  * tiers-1–4 IRMAA anchors moved up with their lines; the top tier's anchors did not move (its base,
  * August 2026, IS the anchor).
+ *
+ * VERSION 8 (2026-09-28) — the enumerator's IRMAA anchors read EVERY billed year of the conversion
+ * window, each in its OWN committed frame, not year 0's lines and income alone (candidates.ts
+ * `IrmaaAnchorContext`; solveAnchor.ts `committedIncomeForYear`; council wf_71f675da-8cf; the register's
+ * Tier 1 *The solver's IRMAA conversion anchors sit one dollar under the line only in YEAR 0…*). A
+ * candidate repeats one amount every window year while each year's lines move AND its committed income
+ * moves — Social Security arrives at each claim age — so a year-0 anchor crossed its own tier in later
+ * billed years (on `retired`, every tier from 2027, when the first claim adds 85 % of $30,000 to MAGI).
+ * The grid gains, per tier, a window point that adds no crossing in any billed year beside the kept
+ * first-billed-year point (whose rail now names its `firstCrossingMagiYear`), and a household first
+ * enrolled mid-window — whose year-0 bill met no one at 65 — now gets IRMAA anchors at all. The
+ * enumerator clause: new candidates can be crowned. Ranking logic only — no pricer moved, so no
+ * `ENGINE_PRICING_LEDGER` row (pricingVersion.test pins the split).
  */
-export const SOLVER_CODE_VERSION = 7
+export const SOLVER_CODE_VERSION = 8

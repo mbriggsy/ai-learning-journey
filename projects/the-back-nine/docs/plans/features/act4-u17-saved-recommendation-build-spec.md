@@ -402,7 +402,7 @@ verdict prefix, unlike `staleness*`, so they clear the scoped gates rather than 
    (insight 100 — the gesture promised an affordance, so it owes a rendered outcome).
 3. `noDollarRegister` is **COPIED from the composed view, never re-derived record-side**
    (`savedRecommendationMint.ts:89`, `:100`, `:133`). The reachable register is
-   `RecommendedView.mode === 'no-change'` (`recommendationView.ts:223`, assigned `:648`), NOT the
+   `RecommendedView.mode === 'no-change'` (`recommendationView.ts:223`, assigned `:652`), NOT the
    module-local `noDollar` const at `:618`.
 4. The `fingerprint` has no type bind and cannot get one — `solverRunFingerprint.ts:61` is a bare
    `export type … = string` — so the bind is a TEST: mint from a REAL `solverRunFingerprint(...)` call,
@@ -528,7 +528,7 @@ as the council admitted it, and the reasons are the material the re-filed unit s
 
 Verified at council time: the bars carry arm **names** at their ends plus the delta hero and the
 `$0`/ceiling axis frame; each bar's own dollar value renders **only** in `ariaSummary`
-(`recommendationView.ts:697-703`, `copy.ts:3068` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
+(`recommendationView.ts:701-707`, `copy.ts:3068` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
 AT-over-sighted inversion is real and nobody disputed it.
 
 The admission was gated on a **deliberate dialect split** in `recommendationView.ts` — endpoints humane

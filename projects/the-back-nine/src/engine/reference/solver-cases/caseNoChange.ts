@@ -33,7 +33,7 @@ function buildCandidates(): readonly CandidateStrategy[] {
     anchor: {
       committed: { rmd: 0, conversion: 0, ongoingTaxable: STREAM_TAXABLE, ssBenefit: 0, filing: 'mfj', count65: 0, calendarYear: 2026 },
       acaCliffMagi: null,
-      irmaaSchedule: null,
+      irmaa: null,
       pretaxAvailableAtStart: 4_000_000,
       rmdAtStart: 0,
     },

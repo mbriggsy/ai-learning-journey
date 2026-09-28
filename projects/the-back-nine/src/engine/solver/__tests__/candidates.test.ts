@@ -24,6 +24,7 @@ import {
 } from '../candidates'
 import type { SimulationParams } from '@shared/model'
 import { cumulativePriceIndex } from '@engine/priceIndex'
+import { irmaaScheduleAsCompared, irmaaTierApplies } from '@engine/healthOverlay'
 
 /** A post-sunset (2030), under-65, SS-free MFJ skeleton — every rail map is LINEAR here:
  *  no senior bonus (count65 0 AND calendar past 2028), no Pub-915 coupling (ssBenefit 0). */
@@ -40,7 +41,7 @@ const linearWorld: CommittedYearIncome = {
 const anchorWith = (over: Partial<ConversionAnchorContext>): ConversionAnchorContext => ({
   committed: linearWorld,
   acaCliffMagi: null,
-  irmaaSchedule: null,
+  irmaa: null,
   pretaxAvailableAtStart: 10_000_000,
   rmdAtStart: 0,
   ...over,
@@ -79,7 +80,7 @@ describe('anchoredConversionAmounts — the cliff-anchored grid', () => {
     const schedule = irmaa.value
     const r = medicareCostTrend.value.cpiNearTermAvg
     const level = cumulativePriceIndex(2030)
-    const amounts = anchoredConversionAmounts(anchorWith({ irmaaSchedule: schedule }))
+    const amounts = anchoredConversionAmounts(anchorWith({ irmaa: { schedule, billedYears: [linearWorld] } }))
     const steps = amounts.filter((a) => a.rail.kind === 'irmaa-step')
     const expected = schedule.tiers
       .map((t) => {
@@ -100,9 +101,10 @@ describe('anchoredConversionAmounts — the cliff-anchored grid', () => {
     // 2024 → bill 2026: the identity frame (the IRMAA metric here reads no calendar-year figure).
     const topLine = 1.5 * 500_000
     const identityWorld: CommittedYearIncome = { ...linearWorld, calendarYear: 2024 }
-    const amounts = anchoredConversionAmounts(anchorWith({ committed: identityWorld, irmaaSchedule: irmaa.value }))
+    const amounts = anchoredConversionAmounts(anchorWith({ committed: identityWorld, irmaa: { schedule: irmaa.value, billedYears: [identityWorld] } }))
     const top = amounts.filter((a) => a.rail.kind === 'irmaa-step').at(-1)!
-    expect(top.rail).toEqual({ kind: 'irmaa-step', threshold: topLine }) // the rail still NAMES the line
+    // The rail still NAMES the line; a one-year billed window binds in its own year, so the amount holds across it.
+    expect(top.rail).toEqual({ kind: 'irmaa-step', threshold: topLine, magiYear: 2024, firstCrossingMagiYear: null })
     expect(top.amountReal).toBe(topLine - 1 - 50_000) // linear world: IRMAA-MAGI = 50,000 + amount
   })
 
@@ -110,23 +112,20 @@ describe('anchoredConversionAmounts — the cliff-anchored grid', () => {
     // A COUPLED world: ssBenefit 40k drives the Pub-915 inclusion, so the exact dollar is the
     // engine's own piecewise ramp — the property, not a re-derived dollar, is the pin.
     const coupled: CommittedYearIncome = { ...linearWorld, ssBenefit: 40_000, ongoingTaxable: 30_000 }
-    const anchor = anchorWith({ committed: coupled, acaCliffMagi: 120_000, irmaaSchedule: irmaa.value })
+    const anchor = anchorWith({ committed: coupled, acaCliffMagi: 120_000, irmaa: { schedule: irmaa.value, billedYears: [coupled] } })
     // RAIL CENSUS BEFORE THE LOOP (the c5e27180 shape, aimed at this arm's real hazard) — both
     // assertions below live INSIDE the loop. The list cannot go EMPTY in THIS world (the
-    // bracket-edge branch, candidates.ts:317, is unguarded AND this household's 8,900 taxable
-    // baseline sits under every finite edge — a baseline in the open top band would yield none,
-    // and a sub-$1 amount is dropped), so the danger is not zero iterations: it is an anchor set
-    // that silently LOSES A WHOLE RAIL, keeps iterating over the rails it still has, and reports
-    // GREEN with this arm's titular subject — the SS-COUPLED IRMAA ramp — never touched. Nothing
-    // else in the suite can catch that: this file is the only TEST that ENUMERATES a non-null
-    // `irmaaSchedule`. The SHIPPED caller sets it for real — `solveAnchor.ts:177-181` assigns
-    // `irmaa.value` for any healthcare-priced household with someone Medicare-enrolled at the bill
-    // year, driven live by `solveDispatch.ts:77` — so this loss reaches the PRODUCT, not just the
-    // suite; `solveAnchor.test.ts:123-129` asserts the anchor FIELD and never enumerates, and the
-    // sibling arms are strictly weaker predicates (ascending / deduped / integer — the arm at lines 182-188)
-    // which all survive a missing rail. So census the three INDEPENDENT branches (candidates.ts:283
-    // ACA, :299 IRMAA, :317 bracket) by KIND, with counts read from the canonical year-keyed tables
-    // rather than from the enumerator under test.
+    // bracket-edge branch of `anchoredConversionAmounts` is unguarded AND this household's 8,900
+    // taxable baseline sits under every finite edge — a baseline in the open top band would yield
+    // none, and a sub-$1 amount is dropped), so the danger is not zero iterations: it is an anchor
+    // set that silently LOSES A WHOLE RAIL, keeps iterating over the rails it still has, and reports
+    // GREEN with this arm's titular subject — the SS-COUPLED IRMAA ramp — never touched. The SHIPPED
+    // caller sets the IRMAA context for real — `solveAnchor.deriveConversionAnchor` builds it for any
+    // healthcare-priced household with someone Medicare-enrolled at a billed window year, driven live
+    // by `solveDispatch` — so this loss reaches the PRODUCT, not just the suite; the sibling arms are
+    // strictly weaker predicates (ascending / deduped / integer) which all survive a missing rail. So
+    // census the three INDEPENDENT branches (ACA, IRMAA, bracket) by KIND, with counts read from the
+    // canonical year-keyed tables rather than from the enumerator under test.
     const anchors = anchoredConversionAmounts(anchor)
     const kinds = anchors.map((a) => a.rail.kind)
     const edgeCount = (ordinaryBracketsMFJ.value as ReadonlyArray<{ upTo: number | null }>).filter(
@@ -183,11 +182,208 @@ describe('anchoredConversionAmounts — the cliff-anchored grid', () => {
   })
 
   it('amounts are ascending, whole-dollar, and deduplicated', () => {
-    const anchor = anchorWith({ acaCliffMagi: 100_000, irmaaSchedule: irmaa.value })
+    const anchor = anchorWith({ acaCliffMagi: 100_000, irmaa: { schedule: irmaa.value, billedYears: [linearWorld] } })
     const amounts = anchoredConversionAmounts(anchor).map((a) => a.amountReal)
     expect(amounts).toEqual([...amounts].sort((x, y) => x - y))
     expect(new Set(amounts).size).toBe(amounts.length)
     expect(amounts.every((a) => Number.isInteger(a) && a >= 1)).toBe(true)
+  })
+})
+
+describe('the IRMAA window — one flat amount repeats across years whose lines AND income MOVE (the Tier 1 year-0 anchors entry)', () => {
+  // A candidate converts ONE real amount every year of the pre-RMD window (`applyCandidate` expands it
+  // flat), but each year's MAGI meets its OWN bill's lines in its own price frame — lines that move with
+  // the $1,000 rounding and the Trustees path's near-term → ultimate edge — ON TOP OF that year's own
+  // committed income (Social Security arrives at a claim age). An anchor judged on year 0's lines and
+  // income alone crosses its own tier in any year whose line sits lower or whose income sits higher —
+  // the label lies there (council wf_71f675da-8cf).
+  const world2026: CommittedYearIncome = { ...linearWorld, calendarYear: 2026 } // ss 0 ⇒ IRMAA-MAGI = 50,000 + amount
+  /** Every year from..to at `frame`'s committed income — only the calendar (the lines) moves. */
+  const framesOf = (frame: CommittedYearIncome, from: number, to: number): [CommittedYearIncome, ...CommittedYearIncome[]] => {
+    const frames: CommittedYearIncome[] = []
+    for (let y = from; y <= to; y++) frames.push({ ...frame, calendarYear: y })
+    return frames as [CommittedYearIncome, ...CommittedYearIncome[]]
+  }
+  const irmaaPoints = (anchor: ConversionAnchorContext) =>
+    anchoredConversionAmounts(anchor).flatMap((a) => (a.rail.kind === 'irmaa-step' ? [{ amountReal: a.amountReal, rail: a.rail }] : []))
+  /** Hand-composed MFJ lines from the statute + the READ Trustees rate (DND 012 — never the enumerator's
+   *  output): tiers 1–4 index by CPI from August 2025, the top ("at least $500,000", 150 % joint,
+   *  §1395r(i)(3)(C)) from August 2026 after its freeze through bill 2027 (§1395r(i)(5)(C)); each rounded
+   *  to $1,000 on the SINGLE line; a MAGI year y bills in y + 2, so its line carries CPI to August of
+   *  y + 1; in real dollars it sits over the MAGI year's level (1 + r)^(y − 2026); an INCLUSIVE line's
+   *  last safe MAGI is one NOMINAL dollar under it. The premise: every rate read here is the near-term
+   *  average (asserted in the first arm). */
+  const r = medicareCostTrend.value.cpiNearTermAvg
+  const lineOf = (tierIdx: number, y: number): { line: number; lastSafe: number } => {
+    const t = irmaa.value.tiers[tierIdx]!
+    const base = t.lineIndexing === 'frozen-then-cpi' ? 2026 : 2025
+    const nominalSingle = Math.round((t.singleMagiThreshold * (1 + r) ** (y + 1 - base)) / 1_000) * 1_000
+    const level = (1 + r) ** (y - 2026)
+    const line = ((t.mfjMagiThreshold / t.singleMagiThreshold) * nominalSingle) / level
+    return { line, lastSafe: t.lowerBoundInclusive ? line - 1 / level : line }
+  }
+  const TOP = irmaa.value.tiers.length - 1
+
+  it('THE WITNESS (the top tier — F12-invariant): a 2026 start billed 2026–2030 keeps the first-year point AND gains one that stays under the top line in EVERY billed year', () => {
+    const trend = medicareCostTrend.value
+    expect(trend.anchorYear).toBe(2026)
+    expect(trend.anchorYear + trend.premiums.length).toBeGreaterThanOrEqual(2031)
+    expect(irmaa.value.tiers[TOP]!.singleMagiThreshold).toBe(500_000) // typed from the statute
+    let minYear = 2026
+    for (let y = 2027; y <= 2030; y++) if (lineOf(TOP, y).lastSafe < lineOf(TOP, minYear).lastSafe) minYear = y
+    // NON-VACUITY (the b9-10 landmine — a price fix can make a witness vacuous): the window's lowest top
+    // line is NOT year 0's, so the year-0 amount genuinely crosses the top tier inside this window.
+    expect(minYear).not.toBe(2026)
+    const yearZeroAmount = Math.floor(lineOf(TOP, 2026).lastSafe - 50_000)
+    let firstCross: number | null = null
+    for (let y = 2027; y <= 2030 && firstCross === null; y++) if (50_000 + yearZeroAmount >= lineOf(TOP, y).line) firstCross = y
+    expect(firstCross).not.toBeNull()
+
+    const points = irmaaPoints(anchorWith({ committed: world2026, irmaa: { schedule: irmaa.value, billedYears: framesOf(world2026, 2026, 2030) } }))
+    const topPoints = points.filter((p) => p.rail.threshold > 700_000) // MFJ tier 4 sits near 436k, the top near 774k
+    expect(topPoints).toHaveLength(2)
+    const [windowPoint, firstYear] = topPoints // ascending: the window's lower line is the smaller amount
+    // The first-year point is KEPT (the register's ⚑ NEGATIVE) and says where it stops holding.
+    expect(firstYear!.amountReal).toBe(yearZeroAmount)
+    expect(firstYear!.rail.magiYear).toBe(2026)
+    expect(firstYear!.rail.firstCrossingMagiYear).toBe(firstCross)
+    expect(firstYear!.rail.threshold).toBeCloseTo(lineOf(TOP, 2026).line, 6)
+    // The window point binds in the window's lowest-line year and adds no crossing in any billed year.
+    expect(windowPoint!.amountReal).toBe(Math.floor(lineOf(TOP, minYear).lastSafe - 50_000))
+    expect(windowPoint!.rail.magiYear).toBe(minYear)
+    expect(windowPoint!.rail.firstCrossingMagiYear).toBeNull()
+    expect(windowPoint!.rail.threshold).toBeCloseTo(lineOf(TOP, minYear).line, 6)
+  })
+
+  it('THE INCOME WITNESS (the council’s frame hit): Social Security arriving mid-window moves the window point by 85 % of the benefit — never judged on year 0’s income', () => {
+    // `retired`’s shape in the linear world: no other income, Social Security 0 in 2026, $30,000 from
+    // 2027 (one spouse claims), $54,000 from 2028 (both). Above the §86 thresholds the inclusion is capped
+    // at 85 % of the benefit (26 U.S.C. §86(a)(2)) — the premise, checked by hand: provisional income
+    // (the conversion + half the benefit) sits far over the $44,000 base amount wherever an IRMAA line
+    // binds, so the taxable part is 0.85 × SS in every such year (a deflating threshold only lowers it).
+    const ss = (y: number): number => (y === 2026 ? 0 : y === 2027 ? 30_000 : 54_000)
+    const noIncome: CommittedYearIncome = { ...world2026, ongoingTaxable: 0 }
+    const frames = [2026, 2027, 2028, 2029, 2030].map((y) => ({ ...noIncome, calendarYear: y, ssBenefit: ss(y) })) as [
+      CommittedYearIncome,
+      ...CommittedYearIncome[],
+    ]
+    const TIER1 = 0
+    let tight = 2026
+    const roomOf = (y: number): number => lineOf(TIER1, y).lastSafe - 0.85 * ss(y)
+    for (let y = 2027; y <= 2030; y++) {
+      // Sufficient for the cap: provisional income − the $44,000 MFJ adjusted base (§86(c)(2)) ≥ the
+      // benefit ⇒ 0.85 × (PI − base) ≥ 0.85 × SS, so the 85 % term is the smaller one.
+      expect(roomOf(y) + 0.5 * ss(y) - 44_000, `§86 premise (${y})`).toBeGreaterThanOrEqual(ss(y))
+      if (roomOf(y) < roomOf(tight)) tight = y
+    }
+    expect(tight).toBeGreaterThanOrEqual(2028) // a year both benefits ride — never year 0's frame
+    const points = irmaaPoints(anchorWith({ committed: frames[0], irmaa: { schedule: irmaa.value, billedYears: frames } }))
+    const tier1 = points.filter((p) => p.rail.threshold < 250_000)
+    expect(tier1).toHaveLength(2)
+    const [windowPoint, firstYear] = tier1
+    // Year 0 (no benefit yet) sits right at the line; one spouse's claim puts it over in 2027.
+    expect(firstYear!.amountReal).toBe(Math.floor(lineOf(TIER1, 2026).lastSafe))
+    expect(firstYear!.rail.firstCrossingMagiYear).toBe(2027)
+    // The window point is the tightest year's room: its line less 85 % of both benefits.
+    expect(windowPoint!.amountReal).toBe(Math.floor(roomOf(tight)))
+    expect(windowPoint!.rail.magiYear).toBe(tight)
+    expect(windowPoint!.rail.firstCrossingMagiYear).toBeNull()
+    expect(firstYear!.amountReal - windowPoint!.amountReal).toBeGreaterThan(45_000)
+  })
+
+  it('firstCrossingMagiYear is exactly the first billed year the amount adds a crossing — read through the BILL’s own predicate, on the SS-coupled ramp', () => {
+    // 2026–2033: tiers 1, 2, 3 and the top each dip inside the window (tier 4 not until 2035), so both
+    // kinds of point exist. The bill's predicate (`irmaaTierApplies` on the schedule AS COMPARED for each
+    // year, at that year's IRMAA-MAGI) is the judge — the enumerator and the bill must agree about which
+    // dollar crosses.
+    const coupled: CommittedYearIncome = { ...world2026, ssBenefit: 40_000, ongoingTaxable: 30_000 }
+    const frames = framesOf(coupled, 2026, 2033)
+    const points = irmaaPoints(anchorWith({ committed: coupled, irmaa: { schedule: irmaa.value, billedYears: frames } }))
+    const magiAt = (f: CommittedYearIncome, a: number): number => irmaaMagiAtFill({ ...f, conversion: a }, 0)
+    let held = 0
+    let crossed = 0
+    for (const { amountReal, rail } of points) {
+      const binding = irmaaScheduleAsCompared(irmaa.value, rail.magiYear)
+      const tierIdx = binding.tiers.findIndex((t) => t.mfjMagiThreshold === rail.threshold)
+      expect(tierIdx, `the rail names a line of its binding year (${rail.magiYear})`).toBeGreaterThanOrEqual(0)
+      const tierAt = (f: CommittedYearIncome) => irmaaScheduleAsCompared(irmaa.value, f.calendarYear).tiers[tierIdx]!
+      const firstCross = frames.find((f) => !irmaaTierApplies(magiAt(f, 0), tierAt(f), 'mfj') && irmaaTierApplies(magiAt(f, amountReal), tierAt(f), 'mfj'))
+      expect(rail.firstCrossingMagiYear, `amount ${amountReal} (tier ${tierIdx + 1})`).toBe(firstCross?.calendarYear ?? null)
+      // Just-under in its binding year: two more dollars cross that year's line.
+      const bindingFrame = frames.find((f) => f.calendarYear === rail.magiYear)!
+      expect(irmaaTierApplies(magiAt(bindingFrame, amountReal + 2), binding.tiers[tierIdx]!, 'mfj')).toBe(true)
+      if (rail.firstCrossingMagiYear === null) held++
+      else crossed++
+    }
+    expect(crossed, 'a first-year point that crosses exists (non-vacuous)').toBeGreaterThan(0)
+    expect(held, 'every tier keeps a point that holds across the window').toBe(irmaa.value.tiers.length)
+  })
+
+  it('NO SILENT VANISH: a tier committed income already crosses in one billed year still anchors on the years it does not', () => {
+    // 2026's committed income ($240,000) is over tier 1's line; 2027–2028's ($50,000) is far under it. A
+    // walk keyed on the first year's baseline would drop tier 1 for the whole window — a quietly narrower
+    // grid (burned/062). The crossing the baseline already makes is excluded, never the tier.
+    const frames: [CommittedYearIncome, ...CommittedYearIncome[]] = [
+      { ...world2026, ongoingTaxable: 240_000 },
+      { ...world2026, calendarYear: 2027 },
+      { ...world2026, calendarYear: 2028 },
+    ]
+    const points = irmaaPoints(anchorWith({ committed: frames[0], irmaa: { schedule: irmaa.value, billedYears: frames } }))
+    const tier1 = points.filter((p) => p.rail.threshold < 250_000)
+    expect(tier1).toHaveLength(1) // no first-year point (its year is already over); the window point stands
+    const tight = lineOf(0, 2027).lastSafe < lineOf(0, 2028).lastSafe ? 2027 : 2028
+    expect(tier1[0]!.rail.magiYear).toBe(tight)
+    expect(tier1[0]!.amountReal).toBe(Math.floor(lineOf(0, tight).lastSafe - 50_000))
+    expect(tier1[0]!.rail.firstCrossingMagiYear).toBeNull()
+  })
+
+  it('a window whose lines never bind tighter than year 0 adds NOTHING — the grid is the first-year walk exactly', () => {
+    // MAGI 2026–2027 at constant income: every tier's 2027 line sits at or above 2026's (the measured
+    // table), so each tier's first-year point already holds.
+    const one = irmaaPoints(anchorWith({ committed: world2026, irmaa: { schedule: irmaa.value, billedYears: [world2026] } }))
+    const two = irmaaPoints(anchorWith({ committed: world2026, irmaa: { schedule: irmaa.value, billedYears: framesOf(world2026, 2026, 2027) } }))
+    expect(two).toEqual(one)
+    expect(two).toHaveLength(irmaa.value.tiers.length)
+    expect(two.every((p) => p.rail.firstCrossingMagiYear === null && p.rail.magiYear === 2026)).toBe(true)
+  })
+
+  it('MID-WINDOW ENROLLMENT: year 0 is not billed ⇒ every point binds in a billed year, and the first BILLED year keeps its own point', () => {
+    // A household first enrolled mid-window (the verify pass's missed scope): only 2029–2031's MAGI is
+    // billed. Year 0's lines are not a surcharge this household pays, so nothing anchors to them.
+    const frames = framesOf(world2026, 2029, 2031)
+    const points = irmaaPoints(anchorWith({ committed: world2026, irmaa: { schedule: irmaa.value, billedYears: frames } }))
+    const years = frames.map((f) => f.calendarYear)
+    for (const { rail } of points) expect(years).toContain(rail.magiYear)
+    // Per tier: the first BILLED year's point (2029), plus a holding window point exactly when it crosses.
+    for (let i = 0; i < irmaa.value.tiers.length; i++) {
+      const ofTier = points.filter((p) => Math.abs(p.rail.threshold - lineOf(i, p.rail.magiYear).line) < 1e-6)
+      const first = ofTier.find((p) => p.rail.magiYear === 2029)
+      expect(first, `tier ${i + 1} keeps its first-billed-year point`).toBeDefined()
+      expect(first!.amountReal).toBe(Math.floor(lineOf(i, 2029).lastSafe - 50_000))
+      if (first!.rail.firstCrossingMagiYear === null) expect(ofTier, `tier ${i + 1}`).toHaveLength(1)
+      else {
+        expect(ofTier, `tier ${i + 1}`).toHaveLength(2)
+        expect(ofTier.find((p) => p !== first)!.rail.firstCrossingMagiYear).toBeNull()
+      }
+    }
+  })
+
+  it('the billed-year frames are a contract, checked loud: non-empty, ascending, never before the anchor, one filing, conversion 0, the anchor’s own year IS the anchor', () => {
+    const at = (frames: CommittedYearIncome[]) => () =>
+      anchoredConversionAmounts(
+        anchorWith({ committed: world2026, irmaa: { schedule: irmaa.value, billedYears: frames as [CommittedYearIncome, ...CommittedYearIncome[]] } }),
+      )
+    const y = (calendarYear: number, over: Partial<CommittedYearIncome> = {}): CommittedYearIncome => ({ ...world2026, calendarYear, ...over })
+    expect(at([])).toThrow(/billedYears/)
+    expect(at([y(2026.5)])).toThrow(/billedYears/)
+    expect(at([y(2027), y(2026)])).toThrow(/ascending/)
+    expect(at([y(2026), y(2026)])).toThrow(/ascending/)
+    expect(at([y(2025), y(2026)])).toThrow(/before the anchor/)
+    expect(at([y(2026), y(2027, { filing: 'single' })])).toThrow(/filing/)
+    expect(at([y(2026), y(2027, { conversion: 1 })])).toThrow(/conversion 0/)
+    expect(at([y(2026), y(2027, { ssBenefit: Number.NaN })])).toThrow(/finite/)
+    expect(at([y(2026, { ssBenefit: 1 }), y(2027)])).toThrow(/anchor skeleton/)
+    expect(at([y(2026), y(2027)])).not.toThrow()
   })
 })
 
@@ -375,7 +571,7 @@ describe('solverCandidateId — provenance-widened + injective (U15 §S0.4)', ()
       anchor: {
         committed: { rmd: 0, conversion: 0, ongoingTaxable: 0, ssBenefit: 0, filing: 'mfj', count65: 0, calendarYear: 2026 },
         acaCliffMagi: null,
-        irmaaSchedule: null,
+        irmaa: null,
         pretaxAvailableAtStart: 400_000,
         rmdAtStart: 0,
       },

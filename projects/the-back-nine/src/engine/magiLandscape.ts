@@ -233,12 +233,29 @@ export function nextIrmaaStepLine(
     throw new Error(`[magiLandscape] nextIrmaaStepLine: magi must be finite (got ${magi}) — insight 010`)
   }
   assertComparedIrmaaSchedule(schedule, 'nextIrmaaStepLine')
-  for (const tier of schedule.tiers) {
-    if (irmaaTierApplies(magi, tier, filing)) continue
-    const threshold = filing === 'mfj' ? tier.mfjMagiThreshold : tier.singleMagiThreshold
-    return { threshold, lastSafeMagi: tier.lowerBoundInclusive ? threshold - schedule.oneNominalDollarReal : threshold }
+  for (let i = 0; i < schedule.tiers.length; i++) {
+    if (irmaaTierApplies(magi, schedule.tiers[i]!, filing)) continue
+    return irmaaTierStepLine(schedule, i, filing)
   }
   return null
+}
+
+/** ONE tier's step line on a compared schedule — the `threshold` / `lastSafeMagi` pair
+ *  {@link nextIrmaaStepLine} returns, for a tier named by its index rather than found by a walk (the
+ *  solver's window anchors read the SAME tier across several MAGI years' schedules). The one home of
+ *  the last-safe rule: ON an exclusive line, one NOMINAL dollar under an inclusive one. */
+export function irmaaTierStepLine(
+  schedule: ComparedIrmaaSchedule,
+  tierIndex: number,
+  filing: FilingStatus,
+): { readonly threshold: number; readonly lastSafeMagi: number } {
+  assertComparedIrmaaSchedule(schedule, 'irmaaTierStepLine')
+  const tier = schedule.tiers[tierIndex]
+  if (tier === undefined) {
+    throw new Error(`[magiLandscape] irmaaTierStepLine: no tier ${tierIndex} (the schedule has ${schedule.tiers.length})`)
+  }
+  const threshold = filing === 'mfj' ? tier.mfjMagiThreshold : tier.singleMagiThreshold
+  return { threshold, lastSafeMagi: tier.lowerBoundInclusive ? threshold - schedule.oneNominalDollarReal : threshold }
 }
 
 /** The next IRMAA step above `magi`: its threshold + the PER-PERSON MONTHLY surcharge jump

@@ -1516,8 +1516,8 @@ export const copy = {
   // inverted), never "reference data" (nothing was re-dated), never "improved" / "refined" /
   // "corrected" (each reads as "your number got better"), and never a direction: a rosier and a
   // harsher move read the same, the recompute itself carries the verdict. They feed `anyStale` only —
-  // never the hero's "today's rules" echo, never the record card's "rules have moved". ⚑ PILOT-DRAFTED
-  // WORDS (the council's yours-to-close tier) — Briggsy's cold read supersedes them.
+  // never the hero's "today's rules" echo, never the record card's "rules have moved". PILOT-DRAFTED
+  // WORDS (the council's yours-to-close tier), RULED by Briggsy's cold read 2026-09-28 — they stand.
   //
   // The named line composes the EXPOSED families' phrases (`slots.stalenessPricing`); Medicare's
   // phrase names the income levels where the surcharge starts, because the method change moved those

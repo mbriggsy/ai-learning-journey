@@ -864,7 +864,12 @@ describe('the recommend-second witness seed (engine-proven solve regime)', () =>
     expect(DEV_SEEDS.health.drawdownPolicy, 'the seed still runs a non-conventional order').toBe('proportional')
     // …and the arm really is the household's plan, not a re-anchored grid amount that happens to match.
     expect(p.noActionBaseline.conversion).toEqual(DEV_SEEDS.health.rothConversion)
-  }, 60_000)
+    // THE BUDGET IS MEASURED, NOT GUESSED (the 120s-timeout idiom): the whole solve scores every
+    // candidate, and SOLVER_CODE_VERSION 8 (the IRMAA window anchors) grew this mid-window household's
+    // roster 33 → 73 — CI read 21.4 s at v7, 43.1 s at v8, and 60.1 s (timed out at 60) on a runner
+    // ~1.4× slower across the board, 2026-09-28. A cheaper witness would need a smaller roster, which is
+    // not the claim under test.
+  }, 120_000)
 
   it("'surplus' lands an OVER-FUNDED active recommendation (surplusRegime true, noChange false) through the real solve", () => {
     const p = solveWitness('surplus', 'leave-more')
@@ -877,7 +882,9 @@ describe('the recommend-second witness seed (engine-proven solve regime)', () =>
       p.noChange,
       'the crown is an ACTIVE move (a beneficial conversion beats the conventional) — never no-change',
     ).toBe(false)
-  }, 60_000)
+    // The 120s-timeout idiom, measured: v8's IRMAA window anchors grew this roster 49 → 69 — CI read
+    // 23.3 s at v7, 28.6 s / 34.3 s at v8 (the second on a ~1.4× slower runner), 2026-09-28.
+  }, 120_000)
 
   /**
    * THE UNWITNESSABLE WITNESS (2026-09-04) — `?seed=failing` through the REAL builder + engine on BOTH

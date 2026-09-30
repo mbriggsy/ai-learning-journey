@@ -68,7 +68,7 @@ const DEV_CRN_SEED = 0xbada55
  * restored twin 0.8585 on-track / NC 0.8425 borderline with balanced margins both sides — a state that
  * ENDED when S.L. 2026-41's 2027+ rate cut was pinned into `ncRateSchedule` (2026-08-02): NC now lands
  * ON-TRACK beside its twin, so no priced-state seed crosses the band today. A purpose-built
- * band-crossing seed + its state-off twin is Briggsy's call (register Tier 3).
+ * band-crossing seed + its state-off twin is a pilot fixture mint (register Tier 4, 2026-09-30).
  *
  * SS-THRESHOLDS RE-TUNE (2026-09-24, the Social Security-thresholds Tier 0): deflating the frozen
  * NOMINAL §86 thresholds per sim year (they were held flat in real dollars — indexed, rosy) taxed
@@ -991,7 +991,7 @@ const noPretaxSteer: ScenarioDraft = {
  * `retiredOnTrack` with one field changed, and devSeeds.test.ts uses `DEV_SEEDS.retired` as its
  * twin. Giving it its own accounts to force a crossing would break the same-household-one-
  * difference invariant that makes the comparison honest. A band-crossing state face needs a NEW
- * seed carrying its own state-off twin — Briggsy's call, not a silent fixture edit.
+ * seed carrying its own state-off twin — a pilot fixture mint (register Tier 4), not a silent edit.
  */
 const ncAffirmation: ScenarioDraft = { ...retiredOnTrack, retirementState: 'NC' }
 

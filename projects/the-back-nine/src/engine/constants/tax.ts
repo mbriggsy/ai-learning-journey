@@ -31,7 +31,7 @@ export const TAX_YEAR = 2026
  *  NOT a sunset reversion. Stamped so a future statutory change reads as a vintage
  *  bump, not silent inflation drift. */
 export const legalBasis = sourced('OBBBA — One Big Beautiful Bill Act, signed 2025-07-04', {
-  citation: 'findings §Strand 5',
+  citation: 'IRS Rev. Proc. 2025-32 §1 (Public Law 119-21, 139 Stat. 72 (July 4, 2025), "commonly known as the One, Big, Beautiful Bill Act") + §2.01 (§70101 makes the seven §1(j) rates permanent) + §2.08 (§70102 makes the §63(c)(7) standard deduction permanent), rp-25-32.pdf read 2026-09-30',
   directionalUntilPinned: false,
   legalBasis: 'OBBBA P.L. 119-21 / H.R.1',
   note: 'Made TCJA brackets (10/12/22/24/32/35/37) + the elevated standard deduction permanent.',
@@ -49,7 +49,7 @@ export const ordinaryBracketsMFJ = sourced<readonly OrdinaryBracket[]>(
     { rate: 0.37, upTo: null },
   ],
   {
-    citation: 'findings §Strand 5 (Tax Foundation 2026 tables)',
+    citation: 'IRS Rev. Proc. 2025-32 §4.01 Table 1 (§1(j)(2)(A), MFJ + surviving spouses), rp-25-32.pdf read 2026-09-30 — all six edges match, and every "The Tax Is" base re-derives from them ($2,480 / $11,600 / $35,932 / $82,048 / $116,896 / $206,583.50), ruling out a column-misaligned parse',
     directionalUntilPinned: false,
     pinTo: 'IRS Revenue Procedure (2026 inflation adjustments)',
   },
@@ -84,22 +84,22 @@ export const ordinaryBracketsSingle = sourced<readonly OrdinaryBracket[]>(
 
 /** Standard deduction (2026). */
 export const standardDeductionMFJ = sourced(32_200, {
-  citation: 'findings §Strand 5 (2025 was $31,500, exactly 2× single)',
+  citation: 'IRS Rev. Proc. 2025-32 §4.14(1) (§63(c)(2), MFJ + surviving spouses), rp-25-32.pdf read 2026-09-30; §2.08 of the same Rev. Proc. confirms the 2025 base was $31,500 (exactly 2× single)',
   directionalUntilPinned: false,
   pinTo: 'IRS Revenue Procedure (2026)',
 })
 
 export const standardDeductionSingle = sourced(16_100, {
   citation:
-    'IRS Rev. Proc. 2025-32 §.16(1), grounded + adversarially verified against the parsed rp-25-32.pdf + Tax Foundation 2026',
+    'IRS Rev. Proc. 2025-32 §4.14(1) (§63(c)(2)), grounded + adversarially verified against the parsed rp-25-32.pdf + Tax Foundation 2026; re-read 2026-09-30, which corrected the section number (the earlier "§.16(1)" named §4.16, the transportation-fringe section)',
   directionalUntilPinned: false,
-  pinTo: 'IRS Revenue Procedure 2025-32 (2026) — §.16(1)',
+  pinTo: 'IRS Revenue Procedure 2025-32 (2026) — §4.14(1)',
   note: 'Confirmed exact $16,100 (= ½ MFJ $32,200; 2025 was $15,750). Basic deduction only — the age-65 addition and the senior bonus stack separately.',
 })
 
 /** Age-65+ additional standard deduction, per spouse, MFJ (2026). */
 export const age65AdditionMFJ = sourced(1_650, {
-  citation: 'findings §Strand 5 ("≈ $1,650/spouse MFJ, pin exact")',
+  citation: 'IRS Rev. Proc. 2025-32 §4.14(3) (§63(f): "the additional standard deduction amount ... for the aged or the blind is $1,650", increased to $2,050 only if unmarried and not a surviving spouse), rp-25-32.pdf read 2026-09-30',
   directionalUntilPinned: false,
   pinTo: 'IRS Revenue Procedure (2026)',
 })
@@ -112,9 +112,9 @@ export const age65AdditionMFJ = sourced(1_650, {
  *  both literally. Per-box: a single filer who is 65+ AND blind claims 2 × $2,050. */
 export const age65AdditionSingle = sourced(2_050, {
   citation:
-    'IRS Rev. Proc. 2025-32 §.16(3) (IRC §63(f)), grounded + adversarially verified against the parsed rp-25-32.pdf + Tax Foundation 2026',
+    'IRS Rev. Proc. 2025-32 §4.14(3) (IRC §63(f)), grounded + adversarially verified against the parsed rp-25-32.pdf + Tax Foundation 2026; re-read 2026-09-30, which corrected the section number (the earlier "§.16(3)" named §4.16, the transportation-fringe section)',
   directionalUntilPinned: false,
-  pinTo: 'IRS Revenue Procedure 2025-32 (2026) — §.16(3) / IRC §63(f)',
+  pinTo: 'IRS Revenue Procedure 2025-32 (2026) — §4.14(3) / IRC §63(f)',
   note: 'Distinct from the OBBBA $6,000 senior bonus (they stack). Single $2,050 > MFJ per-spouse $1,650. Inflation-indexed (2025 was $2,000).',
 })
 
@@ -270,8 +270,8 @@ export const uniformLifetimeTableDivisors = sourced<readonly UniformLifetimeDivi
  *  JLLS(age,age-10)==Uniform-Lifetime(age) identity + the documented anchors
  *  (75/64=25.3, 76/60=28.2) all asserted as a golden in `taxOverlay.test.ts`. The
  *  reachable owner-72..120 × younger-spouse rectangle only; ages ≥ 120 clamp (DND/009).
- *  Stays `directionalUntilPinned` with the other tax figures until the P1-exit pin pass
- *  (don't flip piecemeal) — though sourced directly from the legal primary. */
+ *  PINNED (`directionalUntilPinned: false`) at the 2026-06-11 P1-exit pin pass with the other
+ *  formerly-unsourced tax gaps — a blind double-read against the eCFR/IRS primaries. */
 export const jointLifeLastSurvivorTable = sourced<JointLifeLastSurvivorTable>(jointLifeLastSurvivorData, {
   citation:
     'eCFR 26 CFR 1.401(a)(9)-9(d) (authoritative reg, machine-readable GPO XML), cross-verified verbatim vs IRS Pub 590-B Table II',
@@ -299,7 +299,7 @@ export const ssProvisionalThresholds = sourced(
     single: { fiftyPctOver: 25_000, eightyFivePctOver: 34_000 },
   },
   {
-    citation: 'findings §Strand 5; IRS Pub 915',
+    citation: 'IRC §86(c)(1) base amount $25,000 / $32,000 joint + §86(c)(2) adjusted base amount $34,000 / $44,000 joint, no indexing clause (uscode.house.gov granule currentthrough 119-111, read 2026-09-30); the inclusion worksheet is IRS Pub 915',
     directionalUntilPinned: false,
     note: 'Thresholds firm-frozen in NOMINAL dollars — the constant stays the statute’s figure; the consumer deflates it per calendar year by the engine’s one price index (priceIndex.ts), never here. Exact inclusion follows the Pub 915 worksheet (not a flat bracket multiply) — that worksheet is directional until pinned.',
   },
@@ -337,7 +337,7 @@ export const capitalGainsBreakpoints = sourced<CapitalGainsBreakpoints>(
 export const mfjToSingleTransition = sourced(
   { deathYearFilesMFJ: true, yearAfterFilesSingle: true, qssGraceWithoutDependentChild: false },
   {
-    citation: 'findings §Strand 5; IRS Pub 501',
+    citation: 'IRC §6013(a)(2)-(3) + (d)(1)(B) (a joint return for the death year; marital status fixed at the death) · IRC §2(a)(1)(B) + §2(b)(1) (surviving-spouse rates need a dependent child in the home; head of household needs a qualifying person in the home or a dependent parent’s household — the empty-nest survivor modeled here has neither, so single) — uscode.house.gov granules currentthrough 119-111, read 2026-09-30; IRS Pub 501',
     directionalUntilPinned: false,
     note: "QSS MFJ-equivalent rates need a dependent child in the home — the empty-nest couple almost never has one. Survivor's same real dollars fall into ~half-width single brackets with ~half the standard deduction.",
   },
@@ -348,7 +348,7 @@ export const mfjToSingleTransition = sourced(
 export const niit = sourced(
   { rate: 0.038, status: 'OUT-but-disclosed' as const },
   {
-    citation: 'findings §Strand 5',
+    citation: 'IRC §1411(a)(1) ("a tax equal to 3.8 percent of the lesser of" net investment income or MAGI over the threshold; uscode.house.gov granule currentthrough 119-111, read 2026-09-30) · the OUT-but-disclosed status is the findings §Strand 5 scope ruling (supersession item 1), not an external figure',
     directionalUntilPinned: false,
     note: 'Disclosed adjacent to the delta as a candidate future lever; never silently dropped.',
   },

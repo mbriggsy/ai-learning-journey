@@ -13,8 +13,8 @@ user-invocable: true
 
 !`node "$HOME/.claude/skills/window/window.mjs"`
 
-The line above is the answer. Relay it as your reply — on the phone, that one line is the whole point.
+The line above is the answer. Relay it as your reply — on the phone, that one line is the whole point. If it starts `Context (TEST`, it is NOT this session's number: say so, and say `WINDOW_TEST_TOKENS` is set and must be unset for a live read.
 
 - **Never fire `/context`.** It blasts an unscrollable table to his phone; this parser one-liner is the deliberate substitute. The script reads the active session's transcript directly and sums input + cache tokens against the 1M window.
-- **Add at most one sentence** of interpretation, and only if it's warranted (e.g. past the 70% wrap line → suggest a fresh terminal). No padding, no marketing voice. Match his energy.
+- **Add at most one sentence** of interpretation, and only if the tier warrants it. The line's tail already names the tier and its action: warn line → steer toward a clean milestone; no-fan-out line → start no fan-out that can't finish in the remaining room; wrap line → wrap up and suggest a fresh terminal. The three thresholds live ONLY in `window.mjs` (`WARN` / `NO_FANOUT` / `WRAP`) — quote the line's own numbers, never numbers from memory. No padding, no marketing voice. Match his energy.
 - **Category breakdown is the one exception.** If he asks "what's eating it?" or wants the per-tool/per-category split, that's the single case where `/context` earns its dump — tell him to type it himself, since the parser is total-only.

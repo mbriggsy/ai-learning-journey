@@ -14,7 +14,7 @@ description: Review UI code against Vercel's Web Interface Guidelines (accessibi
   1. Reframed from a Claude Code slash-COMMAND into a project-scoped Claude Code SKILL:
        - Added required `name:` frontmatter field (`web-design-guidelines`).
        - Removed the command-only `argument-hint: <file-or-pattern>` frontmatter line.
-       - Rewrote the upstream `$ARGUMENTS` placeholder (a slash-command variable a skill does not receive)
+       - Rewrote the upstream `\$ARGUMENTS` placeholder (escaped here: Claude Code substitutes it anywhere in a skill body)
          into plain-language file selection. This mirrors the exact transform vercel-labs/install.sh applies
          when it emits a SKILL.md for the Antigravity agent (inject name:, strip argument-hint:).
   2. Tailored the `description` to auto-trigger on THIS project's UI work (U5 intake / U6 viz / U7 statement)

@@ -19,7 +19,7 @@ import {
   medicareCostTrend,
   partB2026,
 } from '../index'
-import { isUnsourced } from '../types'
+import { isUnsourced, sourced } from '../types'
 
 const SRC = join(process.cwd(), 'src')
 
@@ -130,7 +130,7 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
     expect(medicareCostTrend.citation).toMatch(/Table V\.E2/)
   })
 
-  it('the formerly-unsourced tax gaps are now ALL SOURCED + still directional (U2 closed; pin gate still pending)', () => {
+  it('the formerly-unsourced tax gaps are now ALL SOURCED + pinned (U2 closed; the 2026-06-11 P1-exit pin pass)', () => {
     for (const key of [
       'ordinaryBracketsSingle',
       'age65AdditionSingle',
@@ -867,5 +867,99 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
       }
       expect(offenders, 'inlined blend values found (read them from the tickerBlend module instead)').toEqual([])
     })
+  })
+})
+
+/**
+ * GATE HONESTY (2026-09-30 — the method-plumbing audit's mirror #2). `oracleToken.ts`'s pinning
+ * walk SKIPS every consumed entry whose `directionalUntilPinned` is false: a false flag is trusted
+ * as "confirmed against the named primary" (types.ts). So a citation that describes ITSELF as not
+ * primary can never sit on a false flag — the 2026 MFJ brackets did exactly that on a Tax
+ * Foundation strand read, where they could never have withheld the token. This is a
+ * self-description CONSISTENCY tripwire, not proof that a read happened: it reds the mislabel
+ * class the audit found, and it makes the next one a conscious, named act.
+ */
+describe('constants — a flag-false entry never self-describes as non-primary (gate honesty)', () => {
+  /** Outright disclaimers: the citation says no primary was read. No attestation rescues these. */
+  const DISCLAIMS_PRIMARY = /not primary|not read verbatim|statute not read|advisory sources|grounded summary|pin exact|≈/i
+  /** Research-strand / secondary-publisher forms — allowed on a flag-false entry ONLY beside a
+   *  primary-read attestation in the same citation. */
+  const RESEARCH_OR_SECONDARY = /findings §|\bStrand \d|pre65-healthcare doc|Tax Foundation|gemini-grounding|\bgrounded\b/i
+  /** The registry's primary-read attestation forms: a dated or verbatim read of a named primary. */
+  const PRIMARY_READ =
+    /\bread (?:verbatim|\d{4}-\d{2}-\d{2})|verbatim-verified|verified (?:verbatim |byte-for-byte )?against the (?:parsed|primary)|byte-pulled|BYTE-PINNED/i
+  const trips = (e: { readonly citation: string }): boolean =>
+    DISCLAIMS_PRIMARY.test(e.citation) ||
+    (RESEARCH_OR_SECONDARY.test(e.citation) && !PRIMARY_READ.test(e.citation))
+
+  /**
+   * NAMED exemptions, each with its reason — never a bucket to park a red in:
+   *  - `design ruling` — the value IS the product's own scope ruling; no external primary exists,
+   *    so the entry names no `pinTo` (asserted below: a ruling that gains a pinTo reds here).
+   *  - `unverified — pending register entry` — a RUN-CONSUMED figure the primary read did NOT
+   *    clear. Flipping it would withhold every tax-on household's token (the walk is family-level),
+   *    so the pilot files it and decides; it is never re-cited to pass.
+   * Every exemption must still be flag-false AND still trip the rule, so the list can only shrink.
+   */
+  const EXEMPT: Readonly<Record<string, string>> = {
+    'tax.inOutRule': "design ruling — the product's own IN/OUT scope rule (the findings §Strand 5 banner)",
+    'tax.stateIncomeTax':
+      'design ruling — the priced-roster scope sentinel (council wf_d04148cb-1e5); the priced figures pin in state.*',
+    'tax.rmdStartAge':
+      'unverified — pending register entry: the 2026-09-30 read of IRC §401(a)(9)(C)(v) + 26 CFR 1.401(a)(9)-2(b)(2) (eCFR current 2026-09-28) confirms 1951–1958 → 73 and 1960+ → 75, but births before 1949-07-01 are 70½ where the value says 72, and 1959 is [Reserved] in the final reg (73 only in the 2024 proposed rule, 89 FR 58644)',
+  }
+
+  /** The pinning walk's whole universe: the registry plus the methodology substrate it also walks. */
+  const walkUniverse = async (): Promise<Record<string, { readonly citation: string; readonly directionalUntilPinned: boolean }>> => {
+    const { productionMarket, survivorSpendingRatio } = await import('../../reference/methodology')
+    return {
+      ...ALL_CONSTANTS,
+      'methodology.productionMarket': productionMarket,
+      'methodology.survivorSpendingRatio': survivorSpendingRatio,
+    }
+  }
+
+  it('no flag-false entry carries a non-primary self-description — re-cite against the primary, or flip WITH its kind', async () => {
+    const universe = await walkUniverse()
+    // Non-vacuity: the sweep must actually walk the entry whose mislabel founded this rule.
+    expect(Object.keys(universe)).toContain('tax.ordinaryBracketsMFJ')
+    const offenders = Object.entries(universe)
+      .filter(([key, e]) => !e.directionalUntilPinned && !(key in EXEMPT) && trips(e))
+      .map(([key, e]) => `${key}: "${e.citation}"`)
+    expect(
+      offenders,
+      'flag-false yet self-described non-primary — never flip false to clear a gate (types.ts: laundering)',
+    ).toEqual([])
+  })
+
+  it('every exemption is live — still flag-false AND still tripping — so the list can only shrink', () => {
+    for (const [key, reason] of Object.entries(EXEMPT)) {
+      const e = ALL_CONSTANTS[key]
+      expect(e, `${key} is a registry entry`).toBeDefined()
+      if (e === undefined) continue
+      expect(e.directionalUntilPinned, `${key} is directional now — delete its exemption`).toBe(false)
+      expect(trips(e), `${key} no longer trips (re-cited to a primary?) — delete its exemption`).toBe(true)
+      if (reason.startsWith('design ruling')) {
+        expect(e.pinTo, `${key}: a design ruling names no external primary`).toBeUndefined()
+      } else {
+        expect(reason, `${key}: the only other reason is the unverified-pending one`).toMatch(/^unverified — pending register entry/)
+      }
+    }
+  })
+
+  it('the rule is not vacuous — it reds every self-description class it exists for, and passes a primary read', () => {
+    const entry = (citation: string) => sourced(1, { citation, directionalUntilPinned: false })
+    // The four mislabels the audit found, verbatim (MFJ brackets, age-65 MFJ, partA2026, magiDefinitions).
+    expect(trips(entry('findings §Strand 5 (Tax Foundation 2026 tables)'))).toBe(true)
+    expect(trips(entry('findings §Strand 5 ("≈ $1,650/spouse MFJ, pin exact")'))).toBe(true)
+    expect(trips(entry('pre65-healthcare doc (grounded summary, not primary)'))).toBe(true)
+    expect(trips(entry('pre65-healthcare doc'))).toBe(true)
+    // A disclaimer is never rescued by an attestation elsewhere in the same citation.
+    expect(trips(entry('CMS fact sheet, read 2026-09-30 (advisory sources; statute not read)'))).toBe(true)
+    // A primary read passes — alone, or beside a secondary cross-check.
+    expect(trips(entry('IRS Rev. Proc. 2025-32 §4.01 Table 1, rp-25-32.pdf read 2026-09-30'))).toBe(false)
+    expect(
+      trips(entry('IRS Rev. Proc. 2025-32 Table 3, grounded + adversarially verified against the parsed rp-25-32.pdf + Tax Foundation 2026')),
+    ).toBe(false)
   })
 })

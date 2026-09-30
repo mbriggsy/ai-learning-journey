@@ -17,13 +17,23 @@ One line. Nothing else:
 Context: 114,599 / 1M = 11.5% — plenty of room
 ```
 
-The tail is a headroom read against the 70% wrap line (the point where it's worth starting a fresh terminal):
+The tail is a tiered read against the standing window law — a 40% warn line, a 50% no-new-fan-outs line, and the 60% wrap line (the point where it's time to wrap up and start a fresh terminal):
 
 | Usage | Read |
 |---|---|
-| under 50% | `plenty of room` |
-| 50–70% | `getting up there — N% to your 70% wrap line` |
-| 70%+ | `past your 70% wrap line — worth starting a fresh terminal` |
+| under 40% | `plenty of room` |
+| 40–50% | `past the 40% warn line — steer toward a clean milestone; N% to the 60% wrap line` |
+| 50–60% | `past 50% — no new fan-outs; N% to the 60% wrap line` |
+| 60%+ | `past the 60% wrap line — wrap up and start a fresh terminal` |
+
+`window.mjs` is the **single source** of the three numbers — the `WARN` / `NO_FANOUT` / `WRAP` constants at its top. Change the law there, then update this table. The tier is judged on the percentage as printed (rounded to 0.1), so the number and the words never disagree: 39.96% prints as `40.0%` and reads as past the warn line.
+
+To see every tier without a session that big, set `WINDOW_TEST_TOKENS` to a token count — it skips the transcript read and runs the same formatting path (anything but a non-negative integer fails loudly, exit 1). A test line is always labeled `Context (TEST — …)`, so a variable left set in a `settings.json` env block or a shell profile can never pass a made-up number off as a live read; a live read starts with a bare `Context:`.
+
+```bash
+WINDOW_TEST_TOKENS=550000 node ~/.claude/skills/window/window.mjs
+# Context (TEST — WINDOW_TEST_TOKENS is set, not a live read): 550,000 / 1M = 55.0% — past 50% — no new fan-outs; 5.0% to the 60% wrap line
+```
 
 ## Why Not Just `/context`
 

@@ -35,7 +35,7 @@ export const acaEnhancedSubsidyStatus = sourced(
     verifiedOn: '2026-09-14',
   },
   {
-    citation: 'pre65-healthcare doc',
+    citation: 'aca-last-verified.json — the verify:aca primary-read record (26 U.S.C. §36B granule at uscode.house.gov, the enacted-public-law sweep, the pending bills’ text on govinfo), CI-red past maxAgeDays 30; its as-of date is value.verifiedOn',
     directionalUntilPinned: false,
     pinTo: 'enacted statute / IRS notice — re-verify at EVERY build',
     reVerifyEveryBuild: true,
@@ -130,7 +130,7 @@ export const acaPtc = sourced(
   },
   {
     citation: 'pre65-healthcare doc; IRC §36B',
-    directionalUntilPinned: false,
+    directionalUntilPinned: true, directionalKind: 'certification-pinnable', // grounded synthesis; its pinTo (Pub 974 / Form 8962) is uncited
     pinTo: 'IRS Pub 974 / Form 8962 instructions (+ IRC §36B)',
     note: 'SLCSP = second-lowest-cost Silver plan in the rating area; taken in advance as APTC, reconciled on Form 8962. Do NOT synthesize SLCSP — it is OUT-but-disclosed as a level; the engine optimizes around it.',
   },
@@ -173,7 +173,7 @@ export const irmaa = sourced<IrmaaSchedule>(
 export const partB2026 = sourced(
   { standardPremiumMonthly: 202.9, annualDeductible: 283 },
   {
-    citation: 'pre65-healthcare doc; CMS fact sheet 2025-11-14',
+    citation: 'CMS fact sheet "2026 Medicare Parts A & B Premiums and Deductibles" (released 2025-11-14; cms.gov, read 2026-09-30): standard Part B premium $202.90, annual Part B deductible $283; $202.90 is also the 2026 row of Trustees Table V.E2 (medicareCostTrend)',
     directionalUntilPinned: false,
     pinTo: 'CMS fact sheet (Nov 2025) / Federal Register',
     note: 'Per person — a couple both enrolled pays ~$405.80/mo at the standard rate (before IRMAA).',
@@ -246,15 +246,15 @@ export const medicareCostTrend = sourced<MedicareCostTrendTable>(
   },
 )
 
-/** 2026 Medicare Part A purchased premiums + deductible (pin only if the tool
- *  models post-65 Part A spend). */
+/** 2026 Medicare Part A purchased premiums + deductible (read against CMS 2026-09-30;
+ *  parked — consumed only if the tool models post-65 Part A spend). */
 export const partA2026 = sourced(
   { purchasedPremiumsMonthly: [311, 565] as const, annualDeductible: 1_736 },
   {
-    citation: 'pre65-healthcare doc (grounded summary, not primary)',
+    citation: 'CMS fact sheet "2026 Medicare Parts A & B Premiums and Deductibles" (released 2025-11-14; cms.gov, read 2026-09-30): Part A buy-in $311/mo with 30+ quarters of coverage, $565/mo full, inpatient hospital deductible $1,736 — this primary read retired the old MEDIUM grade',
     directionalUntilPinned: false,
     pinTo: 'CMS 2026 Part A fact sheet',
-    note: 'MEDIUM confidence; pin only if modeling post-65 Part A spend.',
+    note: 'Parked (not run-consumed): consume only if the tool models post-65 Part A spend.',
   },
 )
 
@@ -298,7 +298,7 @@ export const magiDefinitions = sourced(
     citation: 'pre65-healthcare doc',
     // Directional until pinned: a grounded synthesis (not read verbatim) with a live
     // pinTo and a healthcare exit-gate item — matches acaPtc's provenance grade.
-    directionalUntilPinned: false,
+    directionalUntilPinned: true, directionalKind: 'certification-pinnable',
     pinTo: 'IRS Pub 974 / Form 8962 (ACA); SSA / 1040 (IRMAA)',
     note: 'The engine needs two separate MAGI calculators; the full SS benefit effectively counts for ACA but not IRMAA. Confirm the non-taxable-SS add-back wording on Form 8962 (exit gate).',
   },
@@ -410,7 +410,7 @@ export const obbbaHsa2026 = sourced(
   },
   {
     citation: 'pre65-healthcare doc (advisory sources; statute not read)',
-    directionalUntilPinned: false,
+    directionalUntilPinned: true, directionalKind: 'certification-pinnable',
     pinTo: 'enacted H.R.1 text / IRS implementing notice',
     legalBasis: 'OBBBA H.R.1',
     note: 'Bronze/Catastrophic HSA-compatibility expands WHO can contribute; it does NOT make ACA premiums HSA-payable.',

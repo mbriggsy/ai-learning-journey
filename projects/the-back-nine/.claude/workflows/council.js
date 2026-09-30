@@ -44,7 +44,7 @@ const CHARTERS = {
     '',
     'YOU OPTIMIZE FOR: every omission named with its DIRECTION (does it err conservative or optimistic, and is that disclosed?); the hedge on every headline; no false precision; conservative-or-disclose. You would rather the product say LESS and be RIGHT than say MORE and be calm-but-wrong.',
     '',
-    'GROUND IN (cite the dossier): docs/product.md section 2 (the cardinal rule), the calm-but-wrong insights (008, 014, 039, 043, 044, 048), docs/architecture.md (the honesty gates, copyGuard "require the hedge").',
+    'GROUND IN (cite the dossier): docs/product.md section 2 (the cardinal rule); EVERY calm-but-wrong insight, never a remembered few (the catalog grows every unit) — list them with one Grep over docs/insights/*.md, pattern ^(tags|title):.*calm-but-wrong in content mode (a frontmatter-only match), plus 039 and 044 (in the original grounding set but not yet tagged), then read in full the ones whose title bears on this issue; docs/architecture.md (the honesty gates, copyGuard "require the hedge").',
     '',
     'HOW YOU DEBATE: Attack any position that buys calm, simplicity, or polish at the cost of truth. Your two questions: (1) "What will the user wrongly believe if we do this?" (2) "Which direction does this err — and is that error disclosed?" Simplicity and craft are real values, but they SERVE honesty, never override it.',
     '',
@@ -209,6 +209,7 @@ const CHARTERS = {
     '- Preserve the dissent. Record the STRONGEST opposing view (close to verbatim) plus "what would have to be true for the dissent to win." Never erase the minority view — it is how Briggsy sanity-checks you.',
     '- Grade confidence with a reason. high/medium/low AND 1-10, plus what specifically makes you (un)sure. "8/10 — three independent lenses agreed and the red team could not break it" beats a bare number.',
     '- Honor the red team. If it landed a real hit the elders did not answer, your confidence drops and you say why.',
+    '- An abstention is not a concurrence. A seat listed under ABSTENTIONS crashed and was not retried: never count its silence toward a consensus, name every abstaining seat in your rationale, and lower your confidence when an abstaining lens bears on this issue. A crashed red team means the consensus went UNATTACKED, which is not the same as surviving an attack.',
     '',
     'CLASSIFY THE TIER:',
     '- oracle-settled — a test/lint/locked decision/insight already answered it (the clerk should have caught this; if you see it late, say so).',
@@ -396,11 +397,33 @@ const J = (o) => JSON.stringify(o, null, 2)
 
 // ---- Phase 1: Dossier (grounding + triage) -----------------------------------
 phase('Dossier')
-const dossier = await agent(
+const dossier = (await agent(
   CHARTERS.clerk + '\n\n## THE ISSUE\n' + issue + '\n\n## CONTEXT FROM THE CALLER\n' + context +
   '\n\nRead the real artifacts and produce the dossier now.',
   { label: 'clerk', phase: 'Dossier', schema: DOSSIER_SCHEMA, model: 'opus' },
-)
+)) || { crashed: true, grounding: { grounded: false, note: 'the clerk seat crashed, so no dossier exists' } } // a crashed clerk judged NOTHING: it gets its own refusal below, never a debate over a null dossier
+
+// THE CLERK-CRASH REFUSAL (2026-09-30): a crashed clerk is an ABSTENTION, not an attestation.
+// Routed through the attestation gate below, it told the caller the clerk had JUDGED the issue
+// ungrounded and to rewrite it; a crash judged nothing, so the issue goes back UNCHANGED. The
+// fallback object is never returned as a dossier (it would read as a real grounded:false).
+if (dossier.crashed) {
+  log('The clerk seat crashed before any dossier existed — refusing to convene (re-dispatch unchanged).')
+  return {
+    issue,
+    recommendation: 'BLOCKER: the clerk seat crashed before any dossier existed. Re-dispatch the council UNCHANGED — the issue itself was never judged, so do not rewrite it.',
+    rationale: 'Clerk-crash refusal: the seat that reads the real artifacts crashed, so no grounded dossier exists to debate over. This is a crashed seat, not an attestation that the issue is ungrounded.',
+    confidence: { level: 'high', score: 9, reason: 'Structural refusal: no dossier exists, so no verdict is derivable.' },
+    tier: 'yours-to-close',
+    dissent: { position: 'none', who: 'none', whatWouldFlipIt: 'a re-dispatched council whose clerk seat completes' },
+    honestyHawkVeto: { fired: true, falseBelief: 'That the council deliberated a grounded decision when no dossier was ever built.' },
+    hardStop: { is: false },
+    action: 'surface',
+    digestLine: '[blocked: clerk seat crashed] ' + issue + ' -> re-dispatch unchanged',
+    dossier: null,
+    abstentions: [{ elder: 'clerk', phase: 'dossier', status: 'SEAT CRASHED — abstention, not a concurrence' }],
+  }
+}
 
 // Triage short-circuit: if an oracle/locked-decision already settles it, stop — no debate.
 if (dossier && dossier.oracleSettled && dossier.oracleSettled.settled) {
@@ -448,10 +471,22 @@ const openingPrompt = (o) =>
   o.charter + '\n\n## THE ISSUE\n' + issue + '\n\n## CONTEXT\n' + context +
   '\n\n## SHARED DOSSIER — cite this, not memory\n' + J(dossier) +
   '\n\nTake your position now. Ground every claim in the dossier.'
-const positions = (await parallel(openers.map(o => () =>
+const openingRuns = await parallel(openers.map(o => () =>
   agent(openingPrompt(o), { label: o.id, phase: 'Opening', schema: POSITION_SCHEMA, model: 'opus' })
     .then(p => (p ? { ...p, elder: o.id } : null)),
-))).filter(Boolean)
+))
+const positions = openingRuns.filter(Boolean)
+
+// THE ABSTENTION LAW (every seat but the hawk; filed 2026-09-30): a crashed seat is a NAMED
+// abstention, never a silent absence. .filter(Boolean) alone used to drop it, and the chair
+// weighed the survivors as if the roster were whole (insight 019: a missing vote abstains, it
+// is not discarded). Not retried (only the veto organ is); logged, named to the red team and
+// the chair, and returned. A crashed hawk is not listed: the hawk-seat guard below owns it.
+// parallel() keeps input order and resolves a crashed thunk to null, so runs[i] is openers[i].
+const abstain = (seats, phaseName) => seats.map(elder => ({ elder, phase: phaseName, status: 'SEAT CRASHED — abstention, not a concurrence' }))
+const crashedSeats = (runs) => openers.filter((o, i) => !runs[i] && o.id !== 'honesty-hawk').map(o => o.id)
+const abstentions = abstain(crashedSeats(openingRuns), 'opening')
+if (abstentions.length) log('Opening seat(s) crashed, recorded as abstentions (not retried): ' + abstentions.map(a => a.elder).join(', '))
 
 // THE HAWK-SEAT GUARD (filed 2026-07-09: the sunset council's hawk OPENING died at the
 // StructuredOutput retry cap and .filter(Boolean) silently discarded it — the chair would
@@ -469,7 +504,7 @@ const hawkRefusal = (phaseName) => ({
   hardStop: { is: false },
   action: 'surface',
   digestLine: '[blocked: hawk seat crashed] ' + issue + ' -> re-dispatch',
-  dossier,
+  dossier, abstentions,
 })
 if (!positions.some(p => p.elder === 'honesty-hawk')) {
   log('The honesty-hawk opening seat crashed — retrying once (the veto organ is never silently absent).')
@@ -484,9 +519,15 @@ phase('Red Team')
 const attack = await agent(
   CHARTERS.redTeam + '\n\n## THE ISSUE\n' + issue + '\n\n## SHARED DOSSIER\n' + J(dossier) +
   '\n\n## THE ELDERS POSITIONS\n' + J(positions) +
+  '\n\n## ABSTENTIONS (crashed seats: their lens is MISSING from the positions above)\n' + J(abstentions) +
   '\n\nRefute the emerging consensus. Attack the most confident claim hardest. Ground every attack in the dossier.',
   { label: 'red-team', phase: 'Red Team', schema: REDTEAM_SCHEMA, model: 'opus' },
 )
+if (!attack) {
+  abstentions.push(...abstain(['red-team'], 'red team'))
+  log('The red-team seat crashed, recorded as an abstention (not retried): the consensus went unattacked.')
+}
+const attackView = attack || { abstained: 'SEAT CRASHED — the red team never attacked. An unattacked consensus has NOT survived an attack.' }
 
 // ---- Phase 4: Rebuttal — the actual debate (full councils only) --------------
 let rebuttals = []
@@ -494,16 +535,23 @@ if (weight === 'full') {
   phase('Rebuttal')
   const rebuttalPrompt = (o) => {
     const mine = positions.find(p => p.elder === o.id)
-    return o.charter + '\n\n## THE ISSUE\n' + issue + '\n\n## YOUR OPENING POSITION\n' + J(mine) +
+    return o.charter + '\n\n## THE ISSUE\n' + issue + '\n\n## YOUR OPENING POSITION\n' + J(mine || { abstained: 'your opening seat crashed and is recorded as an abstention; take your position now, in light of the others and the red team' }) +
       '\n\n## THE OTHER ELDERS POSITIONS\n' + J(positions.filter(p => p.elder !== o.id)) +
-      '\n\n## THE RED TEAM ATTACK\n' + J(attack) +
+      '\n\n## THE RED TEAM ATTACK\n' + J(attackView) +
       '\n\nNow debate. Concede what is genuinely right, hold what you still believe (and say why), and sharpen your recommendation. Be willing to change your mind — or explain exactly why you do not.' +
       '\n\nSTRUCTURED-OUTPUT SIZE LAW (2026-07-15): an oversized StructuredOutput call is TRUNCATED after its first property and dies schema validation at the retry cap. Keep concede and hold <= 120 words each and sharpenedRecommendation <= 150 words.'
   }
-  rebuttals = (await parallel(openers.map(o => () =>
+  const rebuttalRuns = await parallel(openers.map(o => () =>
     agent(rebuttalPrompt(o), { label: 'rebut:' + o.id, phase: 'Rebuttal', schema: REBUTTAL_SCHEMA, model: 'opus' })
       .then(r => (r ? { ...r, elder: o.id } : null)),
-  ))).filter(Boolean)
+  ))
+  rebuttals = rebuttalRuns.filter(Boolean)
+  // The abstention law, rebuttal arm: same rule, same record (the hawk stays with its guard).
+  const rebuttalAbstentions = abstain(crashedSeats(rebuttalRuns), 'rebuttal')
+  if (rebuttalAbstentions.length) {
+    abstentions.push(...rebuttalAbstentions)
+    log('Rebuttal seat(s) crashed, recorded as abstentions (not retried): ' + rebuttalAbstentions.map(a => a.elder).join(', '))
+  }
   // The hawk-seat guard, rebuttal arm: the rebuttal round is where a late veto can fire
   // (or an opening veto be withdrawn) after the red-team evidence — an empty hawk rebuttal
   // silently forfeits that. Same law: retry once, else refuse-to-conclude.
@@ -522,10 +570,39 @@ const verdict = await agent(
   CHARTERS.chair + '\n\n## THE ISSUE\n' + issue + '\n\n## CONTEXT\n' + context +
   '\n\n## SHARED DOSSIER\n' + J(dossier) +
   '\n\n## OPENING POSITIONS\n' + J(positions) +
-  '\n\n## RED TEAM ATTACK\n' + J(attack) +
+  '\n\n## RED TEAM ATTACK\n' + J(attackView) +
   '\n\n## REBUTTAL ROUND\n' + J(rebuttals) +
-  '\n\nWeigh the whole debate and produce THE verdict now. Remember: the Honesty Hawk veto outranks any majority; preserve the strongest dissent; grade confidence with a reason; classify the tier (split it if needed); flag hard-stops.',
+  '\n\n## ABSTENTIONS (crashed seats, not retried)\n' + J(abstentions) +
+  '\n\nWeigh the whole debate and produce THE verdict now. Remember: the Honesty Hawk veto outranks any majority; an abstention is not a concurrence; preserve the strongest dissent; grade confidence with a reason; classify the tier (split it if needed); flag hard-stops.',
   { label: 'chair', phase: 'Synthesis', schema: VERDICT_SCHEMA, model: 'opus' },
 )
 
-return { ...verdict, issue, dossier, positions, attack, rebuttals }
+// ---- Structural clamps on the verdict (insight 084: the CODE, not the prompt, is the enforcement
+// layer — the /council skill executes any >= 7/10 verdict that is not a hard stop).
+// A crashed chair synthesized nothing: refuse, never return a verdict-shaped hole with no action.
+if (!verdict) {
+  log('The chair seat crashed — no verdict synthesized; refusing to conclude (re-dispatch unchanged).')
+  return {
+    issue,
+    recommendation: 'BLOCKER: the chair seat crashed, so no verdict was synthesized. Re-dispatch the council unchanged; the debate returned here is evidence, not a verdict.',
+    rationale: 'Chair-crash refusal: the positions, the red-team attack and the rebuttals exist, but no seat weighed them into a verdict.',
+    confidence: { level: 'high', score: 9, reason: 'Structural refusal: the synthesizing seat never returned.' },
+    tier: 'yours-to-close',
+    dissent: { position: 'none', who: 'none', whatWouldFlipIt: 'a re-dispatched council whose chair seat completes' },
+    honestyHawkVeto: { fired: true, falseBelief: 'That the council reached a verdict when its chair never synthesized one.' },
+    hardStop: { is: false },
+    action: 'surface',
+    digestLine: '[blocked: chair seat crashed] ' + issue + ' -> re-dispatch unchanged',
+    dossier, positions, attack, rebuttals,
+    abstentions: [...abstentions, ...abstain(['chair'], 'synthesis')],
+  }
+}
+// An UNATTACKED consensus never auto-executes: the red team crashed, so nothing tested what the
+// chair weighed (not the same as surviving an attack). Force surface; the digest line says why.
+if (abstentions.some(a => a.elder === 'red-team')) {
+  verdict.action = 'surface'
+  verdict.digestLine = '[unattacked: red team crashed] ' + (verdict.digestLine || '')
+  log('Red team crashed — verdict clamped to action=surface (an unattacked consensus never auto-executes).')
+}
+
+return { ...verdict, issue, dossier, positions, attack, rebuttals, abstentions }

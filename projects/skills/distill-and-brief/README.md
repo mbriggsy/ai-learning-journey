@@ -70,7 +70,7 @@ flowchart LR
 ### The Flow
 
 1. **Agent starts a work session** with `/ce:work` — PreToolUse hook blocks it: *"Run `/brief` first."*
-2. **`/brief`** reads every insight doc in `docs/insights/` and surfaces the full context. Marker created.
+2. **`/brief`** greps the insights' frontmatter for the work's topic (steered by a corpus card capped under 4 KB), reads the top 5 in full, and checks each against today's code. Marker created.
 3. **Agent re-runs `/ce:work`** — hook sees the marker, consumes it, allows through. The agent works with full awareness of past root causes and gotchas.
 4. **`/ce:work` loads** — PostToolUse silently drops a `.distill-needed` marker. No output, no interruption.
 5. **Work happens.** The agent follows ce:work's instructions.
@@ -101,7 +101,7 @@ flowchart TB
 
     WORK["/ce:work"] --> H1
     H1 -->|"BLOCK → /brief"| SK2
-    SK2 -->|"reads all"| FS
+    SK2 -->|"greps, reads top 5"| FS
     SK2 -->|"marker"| H1
     H1 -->|"allow"| WORK2["/ce:work ✓"]
 
@@ -145,8 +145,8 @@ Only blocking hooks work reliably on the current platform. Three hooks enforce t
 
 **Skills:**
 
-- **`/distill`** uses dynamic context injection to show existing insights before the agent writes, preventing duplicates.
-- **`/brief`** reads the full insight docs on demand, for any session, at any time.
+- **`/distill`** uses dynamic context injection to list the existing insight filenames and compute the next number before the agent writes; its quality bar greps the corpus's `title:` / `tags:` lines to prevent duplicates.
+- **`/brief`** injects a size-capped corpus card (counts, frontmatter coverage, tag vocabulary; never an insight body), then greps the frontmatter for ONE topic and reads at most the top 5 insights in full — on demand, in any session.
 
 ---
 

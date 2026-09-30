@@ -495,7 +495,7 @@ describe('the state-tax seed faces (the state-carrying seed increment)', () => {
   // `DEV_SEEDS.retired`. Giving `nc` its own accounts to force a crossing would destroy the
   // same-household-one-difference invariant that makes the twin comparison honest — a worse trade
   // than losing the crossing. Restoring a band-crossing state face needs a NEW purpose-built seed
-  // with its own state-off twin; filed for Briggsy's call, not silently invented here.
+  // with its own state-off twin; filed as a pilot fixture mint (register Tier 4), not silently invented here.
   it("'nc' prices NC and NC tax moves lifetime tax up — the drag no longer crosses the band (post S.L. 2026-41)", () => {
     expect(pricedStateForRun(DEV_SEEDS.nc)).toBe('NC')
     const twin = twinWire()

@@ -98,7 +98,7 @@ the re-derived anchored hero); `vault:statestale` (increment 5) is the aged-STAT
 ISOLATION, then the borderline NC-clause hero; its Assumptions door is the priced/ANSWERED
 picker-row face). The state seeds (`seed:nc|pa|fl|elsewhere|datenc`, increment 5) ride the
 plain `seed:<key>` shape — each landing carries its state's verdict clause (NC bites to
-borderline / PA "usually a small piece" / FL's $0 affirmation / the elsewhere monolith / the
+borderline / PA "usually a small piece" / FL's \$0 affirmation / the elsewhere monolith / the
 date-route NC witness). An
 `intake:fork` target (increment 4) drives the GUIDED INTAKE to the Medicare-extras payment
 fork — blank-start → the half-answer R19 block → mixed provenance (one entered dollar, one
@@ -180,6 +180,16 @@ aria node, or a named screenshot region, tagged `lane: tone|correctness|both` an
    honesty defect) → BOTH, and the card can never read clean. A genuine tone JUDGMENT CALL
    (not a defect — a fork of taste) → convene the existing council (`/council`) with the bundle
    in context; the council's verdict rides the card.
+
+   **⚑ THE HOLDS RULE.** A surviving finding that questions whether a RENDERED figure, a
+   date or duration, a sufficiency claim, or the state of the household's plan actually HOLDS is
+   lane `both` BY DEFINITION, whatever lane its seat tagged. It files as a **Tier 0/1 candidate,
+   never a Tier 2 frame item**, and the card **cannot be PILOT-CLEARED while it is open** — it
+   holds at `HARD-FLAG — HELD FOR THE ORACLE` until the oracle closes it (the figure measured
+   through the engine, never re-argued from the copy). Why: on 2026-09-17 the panel surfaced the
+   trim clause's implied sufficiency (tape ★2); the chair filed it as a Tier 2 frame item and
+   PILOT-CLEARED the card over it, though this step already said `both`. His 2026-09-25 read
+   took "\$2,800" as "they'd be ok", and measurement found the figure ~2× wrong (`b2b77b69`).
 3. **Assemble the verdict card** and append it to `docs/caddie/cold-read-log.md`:
 
 ```
@@ -193,8 +203,9 @@ comprehension     — the spouse walker's answers + stumbles (hole shapes named)
 routedToOracle[]  — correctness findings filed, with where
 prediction        — "would Briggsy flag it?" — the tape's scoring hook, in his vocabulary
 disposition       — PILOT-CLEARED (the default for a readable surface — ships; the row stays
-                    open for his audit) | PARKED-FOR-BRIGGSY (one-way door · framing fork ·
-                    pilot doubt — reason logged) | BLOCKED-UNREACHABLE
+                    open for his audit) | HARD-FLAG — HELD FOR THE ORACLE (an open ⚑ holds finding,
+                    chair step 2; PILOT-CLEARED when the oracle closes it) | PARKED-FOR-BRIGGSY
+                    (one-way door · framing fork · pilot doubt — reason logged) | BLOCKED-UNREACHABLE
 evidence          — bundle path + which exemplars/rules were pinned for this run
 ```
 

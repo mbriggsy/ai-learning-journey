@@ -57,7 +57,7 @@ When in doubt, let the **clerk's triage** decide — it short-circuits to "oracl
    ```
    (Or `scriptPath: ".claude/workflows/council.js"` while iterating on the engine.)
 
-5. **Read the verdict** the workflow returns (the chair's structured output: `recommendation`, `rationale`, `confidence`, `tier`, `dissent`, `honestyHawkVeto`, `hardStop`, `action`, `digestLine`).
+5. **Read the verdict** the workflow returns (the chair's structured output: `recommendation`, `rationale`, `confidence`, `tier`, `dissent`, `honestyHawkVeto`, `hardStop`, `action`, `digestLine`) **plus `abstentions`** — every seat that crashed and was not retried (`{elder, phase, status}`). **Surface abstentions, never swallow them:** name every abstaining seat in the digest line you relay AND in its `docs/council-log.md` row — an abstention is not a concurrence. **`action: "surface"` is binding and outranks the confidence gate below:** the workflow forces it when the red team crashed (the digest line then opens `[unattacked: red team crashed]` — an unattacked consensus never auto-executes, whatever its score), and every refusal (a crashed clerk, hawk or chair; an ungrounded dossier) returns it.
 
 ---
 
@@ -69,9 +69,9 @@ Briggsy granted **maximum autonomy** (2026-06-28): execute everything reversible
 
 2. **Confirm-first action** — the *only* things I stop for, because they can't be clawed back: **(a) spending real money** (paid image/voice/API), **(b) publishing something outward/public** beyond the repo, **(c)** a force-push to main or destructive data-loss. Surface as a 5-second framed confirm *regardless of confidence* — **UNLESS Briggsy gave up-front all-clear for this work** (e.g. "we're doing voice today"), in which case prior clearance counts and I proceed. Everything else — code, copy, layout, scale, scope-within-the-app, even taste/direction calls — is **not** confirm-first and executes per step 3.
 
-3. **Confidence HIGH (≥7/10), not a hard-stop** → **execute now.** Any tier — including `yours-to-close` taste/direction calls — gets acted on. **Ship the council's lead pick; do NOT re-surface a confident, reversible verdict as a confirmation question (no "A or B, your call").** Shipping it + the ⚑ digest entry IS the review — Briggsy overrides after the fact if he wants. Pre-confirming what the council already resolved is the over-deferral he rejected (2026-06-28). Log it.
+3. **Confidence HIGH (≥7/10), not a hard-stop, and the verdict's `action` is not `"surface"`** → **execute now.** Any tier — including `yours-to-close` taste/direction calls — gets acted on. **Ship the council's lead pick; do NOT re-surface a confident, reversible verdict as a confirmation question (no "A or B, your call").** Shipping it + the ⚑ digest entry IS the review — Briggsy overrides after the fact if he wants. Pre-confirming what the council already resolved is the over-deferral he rejected (2026-06-28). Log it.
 
-4. **Confidence MEDIUM/LOW (<7/10)** → surface to Briggsy with the framed rec + the recorded dissent + "what would flip it." Never a naked "A or B?".
+4. **Confidence MEDIUM/LOW (<7/10), or `action: "surface"` (e.g. the red-team seat crashed, so the consensus went unattacked)** → surface to Briggsy with the framed rec + the recorded dissent + "what would flip it." Never a naked "A or B?".
 
 **Every verdict — executed or surfaced — gets one line appended to the digest** (`docs/council-log.md`): date, issue, tier, recommendation, confidence, action taken, and (if executed at `yours-to-close`) a ⚑ so Briggsy can find the taste/direction calls he might want to revisit.
 

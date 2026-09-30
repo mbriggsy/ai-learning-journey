@@ -8,11 +8,13 @@ argument-hint: "[optional: brief description of what was solved]"
 
 ## Existing Insights
 
-!`ls docs/insights/*.md 2>/dev/null && echo "---" && for f in docs/insights/*.md; do title=$(sed -n '/^---$/,/^---$/{ /^title:/{ s/^title: *//; p; q; } }' "$f"); echo "- $(basename "$f"): ${title:-untitled}"; done || echo "No existing insights."`
+<!-- Keep this output under Claude Code's 30,000-char inline cap: past it the harness shows only a 2 KB preview (at 139 insights the old path-list-plus-titles output was 49.7 KB, so /distill saw 23 filenames and no titles). Filenames only, numeric order, newest 250 at most, each cut to 100 chars: a hard bound of about 25 KB at any corpus size. The dedup check in the Quality Bar greps the corpus itself. -->
+!`n=$(ls docs/insights 2>/dev/null | grep -c -E '^[0-9]+-.*\.md$'); if [ "$n" -gt 0 ]; then echo "$n insights (filenames cut to 100 chars, numeric order, newest 250 at most):"; ls docs/insights | sed -n 's/^\([0-9][0-9]*-.*\)\.md$/\1/p' | sort -n | tail -n 250 | cut -c1-100; else echo "No existing insights."; fi`
 
 ## Next Number
 
-!`ls docs/insights/*.md 2>/dev/null | sort -V | tail -1 | grep -oP '^\d+' | awk '{printf "%03d", $1+1}' || echo "001"`
+<!-- Never put a dollar sign followed by a digit anywhere in a SKILL.md body (a !-command, prose, or a code fence alike): Claude Code substitutes it throughout the file with that /distill argument before the shell or the model sees it, and only when that argument exists, so a bare run looks fine (it once turned awk's first-field reference into the user's words). Where a literal dollar-digit is meant, put a backslash before the dollar sign; Claude Code turns that pair back into a lone dollar sign. The line below reads basenames, counts only digit-prefixed .md files (README.md and friends are skipped), takes the numeric max (no sort, no grep -P), and awk's END prints 001 when nothing matched. -->
+!`ls docs/insights 2>/dev/null | sed -n 's/^\([0-9][0-9]*\)-.*\.md$/\1/p' | awk '{ n = $NF + 0; if (n > max) max = n } END { printf "%03d\n", max + 1 }'`
 
 ## Instructions
 
@@ -41,6 +43,6 @@ tags: [<searchable keywords>]
 - If the root cause is obvious from the fix, it doesn't need a solution doc
 - The "Key Insight" is the most important section — it's what prevents the next person from hitting the same wall
 - Keep it under 60 lines. These are reference docs, not novels.
-- Check the existing solutions list above — don't duplicate
+- Don't duplicate: the list above is filenames only — before writing, grep the insight files' `title:` and `tags:` lines for your problem's key terms and read any hit before deciding the insight is new
 
 $ARGUMENTS

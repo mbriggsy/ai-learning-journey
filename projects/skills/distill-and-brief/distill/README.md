@@ -32,11 +32,11 @@ Docs are kept under 60 lines. Reference material, not novels.
 
 When invoked, the skill dynamically:
 
-1. **Lists existing insight docs** — prevents duplicates by showing the agent what's already captured
-2. **Auto-numbers the next file** — scans `docs/insights/` and increments
+1. **Lists existing insight filenames** — numeric order, the newest 250, each cut to 100 chars (bounded at about 25 KB at any corpus size); the quality bar then greps the corpus's `title:` / `tags:` lines, so duplicates are caught without injecting any insight body
+2. **Auto-numbers the next file** — takes the highest number among the digit-prefixed `docs/insights/*.md` names and adds 1 (`001` when there are none)
 3. **Provides the template** — frontmatter format, required sections, quality bar
 
-The `!` backtick syntax in SKILL.md runs shell commands at skill-load time, injecting live context before the agent sees the prompt.
+The `!` backtick syntax in SKILL.md marks those two shell commands. Current Claude Code hands each one back to the model to run exactly as written (an `[output of command N, …]` placeholder) instead of running it at skill load; the output is the same either way. Never put a dollar sign followed by a digit anywhere in SKILL.md: Claude Code replaces it with a /distill argument before the shell or the model sees it (the comment above the Next Number command says how to escape one).
 
 ## Enforcement Hooks
 

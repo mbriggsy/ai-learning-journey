@@ -33,6 +33,12 @@ const ARGS = typeof args === 'string' ? JSON.parse(args) : args
 if (!ARGS || !ARGS.runDir || !Array.isArray(ARGS.targets) || ARGS.targets.length === 0) {
   throw new Error('caddie-ab panel needs args { runDir, targets: [{ dir, firstState?, note? }], focus? }')
 }
+// Fail loud BEFORE any agent runs: a target with no string dir would otherwise crash the whole run
+// after the panel spent its seats (`t.dir` on null), or send every seat to a path ending "undefined".
+const badTargets = ARGS.targets.flatMap((t, i) => (t && typeof t.dir === 'string' && t.dir.trim() !== '' ? [] : [i]))
+if (badTargets.length > 0) {
+  throw new Error(`caddie-ab panel: targets[${badTargets.join(', ')}] need a non-empty string dir; got ${JSON.stringify(badTargets.map((i) => ARGS.targets[i]))}`)
+}
 const RUN = PROJECT + '/' + ARGS.runDir
 const FOCUS = ARGS.focus ? 'WHAT THIS RUN JUDGES (scope note from the harness, not authorship): ' + ARGS.focus : ''
 
@@ -145,28 +151,39 @@ const panels = await parallel(ARGS.targets.map((t) => () => (async () => {
   }
 })()))
 
+// ABSTENTIONS ARE NAMED, NEVER DROPPED — mirrored from caddie.js (2026-09-30): `parallel` resolves a
+// crashed thunk to null, and a bare .filter(Boolean) would erase a whole target (or a refuter's
+// verdict) from the chair's view — a hole that reads as a clean read. Every null is labelled.
+const TARGET_CRASHED = 'TARGET CRASHED — abstention, not a clean read'
+const REFUTER_CRASHED = 'REFUTER CRASHED — unrefuted, not cleared'
+const crashedTargets = ARGS.targets.filter((t, i) => !panels[i]).map((t) => ({ dir: t.dir, status: TARGET_CRASHED }))
+for (const c of crashedTargets) log(`${c.status}: ${c.dir}`)
 const panelsOk = panels.filter(Boolean)
 
 phase('Refute')
 // Refuters are OPUS for both panels (comparable verdicts). Candidates: every copy-law finding +
 // every blocker/high from any seat (both panels) + the hunter's. Tagged by panel for the tape.
-const refuted = await parallel(panelsOk.map((p) => () => (async () => {
+// candidatesOf must never throw: the crashed-refute-stage fallback below calls it again at top level.
+const findingsOf = (r) => (r && Array.isArray(r.findings) ? r.findings : [])
+const candidatesOf = (p) => {
   const candidates = []
   for (const [panelName, panel] of Object.entries(p.panels)) {
     for (const [lensName, r] of Object.entries(panel.lenses)) {
-      if (!r) continue
-      for (const f of r.findings) {
-        if (lensName === 'copyFinder' || f.severity === 'blocker' || f.severity === 'high') {
+      for (const f of findingsOf(r)) {
+        if (f && (lensName === 'copyFinder' || f.severity === 'blocker' || f.severity === 'high')) {
           candidates.push({ panel: panelName, lens: lensName, ...f })
         }
       }
     }
   }
-  if (p.hunter) {
-    for (const f of p.hunter.findings) {
-      if (f.severity === 'blocker' || f.severity === 'high') candidates.push({ panel: 'hunter', lens: 'false-pass', ...f })
-    }
+  for (const f of findingsOf(p.hunter)) {
+    if (f && (f.severity === 'blocker' || f.severity === 'high')) candidates.push({ panel: 'hunter', lens: 'false-pass', ...f })
   }
+  return candidates
+}
+const unrefuted = (f) => ({ finding: f, verdict: null, refuterStatus: REFUTER_CRASHED })
+const refuted = await parallel(panelsOk.map((p) => () => (async () => {
+  const candidates = candidatesOf(p)
   const verdicts = await parallel(candidates.map((f) => () => agent(
 `You are an independent REFUTER on a cold-read panel. A finder flagged this on a rendered surface; your default posture is to KILL it against the full rendered context (an adjacent line legitimately supplying the referent, an sr-only channel artifact, a crop showing what the fold hides, a help line one tap away).
 
@@ -174,23 +191,28 @@ FINDING (${f.panel}/${f.lens}, ${f.severity}, lane ${f.lane}): ${f.statement}
 ANCHOR: ${f.anchor}
 
 Check it against the FULL bundle for this target: ${RUN}/${p.dir} (all states, both viewports — copy.txt, sr-only.txt, dialog.txt, aria.yaml, fold.json, the pngs). Rules: a referent supplied by an ADJACENT RENDERED line kills an unnamed-referent finding; an apparent duplication that appears in sr-only.txt is a channel artifact, not a rendered defect; something below the fold still RENDERS (fold position is a severity input, not a kill). If the finding survives, say what makes it survive. READ-ONLY.${SIZE_LAW}`,
-    { label: `refute:${p.dir}:${f.panel}:${f.lens}`, phase: 'Refute', model: 'opus', schema: VERDICT_SCHEMA })
-    .then((v) => ({ finding: f, verdict: v }))))
-  return { dir: p.dir, refuted: verdicts.filter(Boolean) }
+    { label: `refute:${p.dir}:${f.panel}:${f.lens}`, phase: 'Refute', model: 'opus', schema: VERDICT_SCHEMA })))
+  // Index-aligned with `candidates`: a refuter that died (agent → null) or threw (parallel → null)
+  // keeps its finding, LABELLED — an unlabelled `verdict: null` reads as refuted or cleared.
+  return { dir: p.dir, refuted: candidates.map((f, i) => (verdicts[i] ? { finding: f, verdict: verdicts[i] } : unrefuted(f))) }
 })()))
 
-const refutedOk = refuted.filter(Boolean)
-log(`A/B panel complete: ${panelsOk.length} targets × 2 panels read, ${refutedOk.reduce((n, r) => n + r.refuted.length, 0)} findings refuter-checked`)
+// Index-aligned with panelsOk: a whole refute stage that crashed hands back every candidate labelled.
+const refutedByTarget = panelsOk.map((p, i) => refuted[i] ?? { dir: p.dir, refuted: candidatesOf(p).map(unrefuted) })
+const refuterCrashes = refutedByTarget.reduce((n, r) => n + r.refuted.filter((x) => x.refuterStatus).length, 0)
+if (refuterCrashes > 0) log(`${REFUTER_CRASHED}: ${refuterCrashes} finding(s)`)
+log(`A/B panel complete: ${panelsOk.length} targets × 2 panels read, ${crashedTargets.length} crashed, ${refutedByTarget.reduce((n, r) => n + r.refuted.length - r.refuted.filter((x) => x.refuterStatus).length, 0)} findings refuter-checked`)
 
 return {
-  targets: panelsOk.map((p) => ({
+  targets: panelsOk.map((p, i) => ({
     dir: p.dir,
     panels: Object.fromEntries(Object.entries(p.panels).map(([name, panel]) => [name, {
-      firstLook: panel.firstLook ?? { firstImpression: 'SEAT CRASHED — abstention', headlineDollarReadback: '', oddsLineReadback: '', confusions: [], findings: [] },
+      firstLook: panel.firstLook ?? { firstImpression: 'SEAT CRASHED — abstention, not a clean read', headlineDollarReadback: '', oddsLineReadback: '', findings: [], confusions: [] },
       lenses: Object.fromEntries(Object.entries(panel.lenses).map(([k, v]) => [k, v ?? { observations: ['LENS CRASHED — abstention, not a clean read'], findings: [] }])),
     }])),
     hunter: p.hunter ?? { observations: ['HUNTER CRASHED — abstention, not a clean verdict'], findings: [] },
-    refuted: (refutedOk.find((r) => r.dir === p.dir) ?? { refuted: [] }).refuted,
+    refuted: refutedByTarget[i].refuted,
   })),
-  chairReminder: 'A/B edition: diff the two panels SEAT-BY-SEAT (findings each caught/missed/false-flagged), score BOTH on the tape, and verify every surviving finding against the bundle yourself. The flip decision (perception seats → Sonnet) needs a clean diff on the tape, not one walk\'s vibe. Assemble the card per SKILL.md; dispose per the batched-oracle law.',
+  crashedTargets,
+  chairReminder: 'A/B edition: diff the two panels SEAT-BY-SEAT (findings each caught/missed/false-flagged), score BOTH on the tape, and verify every surviving finding against the bundle yourself. The flip decision (perception seats → Sonnet) needs a clean diff on the tape, not one walk\'s vibe. Assemble the card per SKILL.md; dispose per the batched-oracle law. A crashedTargets entry is an ABSTENTION, never a clean read (re-run that target). A refuterStatus finding is UNREFUTED — neither killed nor cleared; verify it yourself. A crashed seat on either panel is an abstention, never a miss the diff can score. A finding that questions whether a rendered figure, date, sufficiency claim or plan state HOLDS is lane both and holds the card at HARD-FLAG — HELD FOR THE ORACLE, never PILOT-CLEARED, until the oracle closes it (SKILL.md chair step 2).',
 }

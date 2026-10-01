@@ -310,15 +310,19 @@ def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=N
 
     # --- ↑ a bench body out-projecting a starter he could replace -------------------------
     # --- ⏸ ...unless he is Questionable and that starter locks before his status is known --
-    holds = []
-    for b in bench:
+    # Each starter is offered up once. Week 4, 2026: Collins (18.6) and Flowers (17.5) were both
+    # told to replace Stevenson (12.4) at FLEX, and Wilson (14.6, WR) -- the second-weakest
+    # eligible starter, the slot the second of them actually belonged in -- was never named.
+    # The strongest bench body picks first; the next takes his best REMAINING slot.
+    holds, replaced = [], set()
+    for b in sorted(bench, key=pts, reverse=True):
         if b in claimed or tag(b) in NOT_PLAYING or not has_game(b) or locked(b):
             continue
         bpos = pdata(b).get("position")
         best_gain, best_slot, best_pid = 0.0, None, None
         held_gain, held_slot, held_pid = 0.0, None, None
         for slot, pid in zip(slots, starters):
-            if pid in ("0", "", None) or locked(pid) or not eligible(bpos, slot):
+            if pid in ("0", "", None) or pid in replaced or locked(pid) or not eligible(bpos, slot):
                 continue
             gain = pts(b) - pts(pid)
             if locks_before_status(pid, b):
@@ -327,6 +331,7 @@ def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=N
             elif gain > best_gain:
                 best_gain, best_slot, best_pid = gain, slot, pid
         if best_slot and best_gain >= SWAP_MARGIN:
+            replaced.add(best_pid)
             rows.append(("↑", f"BENCH BEATS STARTER — {name(b)} over {name(best_pid)} ({best_slot})",
                          f"{describe(b)} projects {best_gain:.1f} more than {describe(best_pid)}.\n"
                          f"Projection only — a {SWAP_MARGIN:.0f}+ point gap is worth a look, not an order."))

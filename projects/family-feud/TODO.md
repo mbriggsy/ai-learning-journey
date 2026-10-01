@@ -21,7 +21,7 @@
 - **Clocks running, all proven by output freshness:** mule hourly (last cargo 09-27 11:29) ·
   `gameday_check.py` **Sat 20:00 · Sun 08:00 · 11:30 · 15:00** (15:00 added 09-25 for the 4:05/4:25
   inactives) · draft watcher · nightly newsletter 21:45.
-- **Suite: 1234 tests, OK (skipped=6)** — five draft-era stand-downs by design + the standing one.
+- **Suite: 1236 tests, OK (skipped=6)** — five draft-era stand-downs by design + the standing one.
   Ran 2026-09-27. 29 test files · 27 scripts · 33 insights.
 
 ## Ranked next

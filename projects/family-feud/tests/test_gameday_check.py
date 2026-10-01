@@ -177,6 +177,34 @@ class TestTheSirenFires(unittest.TestCase):
         self.assertIn("BN_RB over FX2 (FLEX)", rows[0][1])
         self.assertIn("4.0 more", rows[0][2])
 
+    def test_two_bench_bodies_never_name_the_same_starter(self):
+        """Week 4, 2026: Collins (18.6) and Flowers (17.5) were both sent to Stevenson's FLEX
+        (12.4); Wilson (14.6, WR) -- where the second one belonged -- was never named."""
+        f = Fixture()
+        f.players["bn_rb"]["position"] = "WR"
+        f.proj["bn_wr"] = projection(17.5)              # listed FIRST on the roster, but weaker
+        f.proj["bn_rb"] = projection(18.6)
+        for pid in ("wr1", "fx1"):
+            f.proj[pid] = projection(20.0)              # out of reach for both bench bodies
+        f.proj["fx2"] = projection(12.4)                # weakest eligible starter, at FLEX
+        f.proj["wr2"] = projection(14.6)                # next weakest, at WR
+        rows = f.rows()
+        self.assertEqual([r[0] for r in rows], ["↑", "↑"])
+        self.assertIn("BN_RB over FX2 (FLEX)", rows[0][1], "the stronger body picks first, not the first listed")
+        self.assertIn("BN_WR over WR2 (WR)", rows[1][1])
+
+    def test_second_body_stays_silent_when_no_remaining_slot_clears_the_margin(self):
+        f = Fixture()
+        f.players["bn_rb"]["position"] = "WR"
+        f.proj["bn_wr"] = projection(14.0)
+        f.proj["bn_rb"] = projection(13.0)
+        for pid in ("wr1", "wr2", "fx2"):
+            f.proj[pid] = projection(20.0)
+        f.proj["fx1"] = projection(9.0)                 # only one starter is beatable by 2+
+        rows = f.rows()
+        self.assertEqual([r[0] for r in rows], ["↑"])
+        self.assertIn("BN_WR over FX1", rows[0][1])
+
     def test_opponent_tags_are_information_only(self):
         f = Fixture()
         f.players["orb1"]["injury_status"] = "Out"

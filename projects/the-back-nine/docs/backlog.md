@@ -1655,11 +1655,31 @@ re-clear it from this list.
 
 ### The recommendation's pending line promises "a few minutes" — never re-timed on a production build, and the v8 roster grew it 41–121 %
 
-`S` (the measurement) · **pilot**, then **briggsy** (the words, if the number changes them) · filed 2026-09-28 (b9-1) by the year-0 IRMAA anchors council (`wf_71f675da-8cf`, item 8)
+`S` (the measurement — its LAPTOP half DONE 2026-10-01, the phone half open) · `L` (the solve-time build the measurement found) · **pilot**, then **briggsy** (the words, only if the solve cannot be made to keep them) · filed 2026-09-28 (b9-1) by the year-0 IRMAA anchors council (`wf_71f675da-8cf`, item 8)
 
 - While the solve runs, the page shows "Working out your strategy — this can take a few minutes…" (`copy.ts`, the thinking line) under the one ambient `thinking-breathe` loop. The only recorded timings are DEV-build: `?seed=nc` ~11 minutes and `?seed=buckets` ~25 minutes (2026-08-03, TODO's *A live solve is minutes, not seconds*). Solve time is ~linear in the candidate roster (`rankingStability` and `runSearch` score every candidate on both seed-sets), and v8 grew it: `retired`-type 49 → 69, the mid-window `health` seeds 33 → 73.
 - **Prescription:** time a PRODUCTION build (`pnpm build`, served through `scripts/serve-dist-with-headers.ts`) end to end — invite → committed recommendation — on `retired` / `nc`, `buckets` and `healthnc`, at his laptop seat and on his phone (`pnpm dev:phone` is a dev build; the phone needs the built bundle over the LAN), the timeline taken by an instrument, never a stopwatch. If "a few minutes" is false on any of them, the words move (his) or the solve does (the deferred U16 §S5 interactive tier — `fallback.ts`'s pinned knobs, whose RE-MEASURE trigger names "a roster-shape change": v8 is one).
 - ⚑ NEGATIVE: never a node timing as the app's cost (node read the spend solve 5× slower than laptop Chromium — TODO's b9-sotd landmine); never a spinner or a percent-complete the engine cannot compute.
+- ⚑ **MEASURED 2026-10-01 (b9-3) — the LAPTOP half: the line is FALSE on every household.** The instrument is `e2e/held/solve-timing.spec.ts` on its own harness (`e2e/held/solve-timing.config.ts`). It times `pnpm build` served by `serve-dist-with-headers.ts`. The household is the dev seed PLANTED into the built app's own IndexedDB by the dev `plantDevVault` (the seed routes are DCE'd from dist/; the shipped bundle is untouched). The browser is the installed Chrome 153, in new headless mode. Every mark is `performance.now()` in the page: a click mark is stamped in the click's own task, a render mark by a read-only 250 ms poll. His laptop: i7-12700H, 20 threads, on AC, the High-performance plan, nothing else running, `27e1d456`. "See the strategy" → the lockup; every one landed a COMMITTED recommendation:
+
+  | Household | Goal | Solve |
+  |---|---|---|
+  | `buckets` | Pay less tax | 8.9 min (534 s) |
+  | `retired` | Leave more behind | 10.5 min (630 s) |
+  | `retired` | Pay less tax | 10.7 min (639 s) |
+  | `nc` | Pay less tax | 12.1 min (725 s) |
+  | `healthnc` | Pay less tax | 26.0 min (1,560 s) |
+
+  The goal moves nothing (`retired`: 630 vs 639 s). One sample per row; the two `retired` rows agree within 1.5 %. Unlock → the final verdict took ≤ 1.2 s on all five, so the wait is the solve alone. `copy.ts`'s comment that called the line "TRUE for the measured 90s–6min" (the older dev-harness band) is corrected in the same commit, and so is its sibling `recommendRecordReopenCost` ("This can take a few minutes."), which makes the same promise.
+- **WHY, read from the code — STRUCTURE, not a measured phase split (measure the split before any build):** (a) **ONE thread.** `engineClient.ts` spawns one `engine.worker.ts`; five CPU samples during the batch's first solve read 3–11 % (median 4 %) of 20 threads, i.e. about one busy thread. Yet every candidate is an independent `simulate` over a draw schedule fixed by dimensions + seed (CRN), so the roster is embarrassingly parallel in principle. (b) **The roster is simulated TWICE on the same seeds.** The mint's `runRankingStability` runs `evaluateCandidates(base, candidates, seedA | seedB, { survivorConditioned: true })`; the solve's `runSearch` runs `evaluateCandidates(base, rankable, seedA | seedB, …)`; and `rankable` is the whole roster since 2026-07-19. Same params, same two seeds; only the survivor bookkeeping and the heir scoring differ. (c) **`healthnc` is ~2.4× the rest.** The named-driver probe re-runs a full `runSearch` in the ACA-flipped world (`ACA_ENHANCED_PROBE`, healthcare households only), on the 73-candidate health roster, under the healthcare overlay.
+- **The route (pilot, 2026-10-01): the SOLVE moves before the words do — the words are the symptom.** The U16 §S5 interactive tier is NOT the lever: its own build spec says the seed-B display and the grade dominate and stay at 16,000 paths, and the provisional it would add is what wall #2 forbids. The order:
+  1. Measure the phase split in Chrome (`profile.ts`'s `SolveProfile` shape, the clock injected by the caller).
+  2. Design the share-the-pass build (b) and the worker-pool build (a) against the CRN + byte-identity contract. Every displayed figure, the grade and the token must come out byte-identical, proven by a gate, never believed.
+  3. Re-time with this instrument.
+  4. Only then: if the measured wait is still not "a few minutes", the words move (his).
+
+  Ranked AHEAD of the Tier 1 bracket-edge / ACA-cliff anchors build, which grows the roster again.
+- **The PHONE half is still owed** (him on the home LAN). The plant is injected script, which a phone cannot take. The route: export a backup file from a planted laptop vault (`exportVault`), serve a production build over HTTPS (a phone on plain HTTP has no WebCrypto, so no unlock), and restore the file there through RestoreFlow. Re-time the phone after the solve build, not before; the laptop table above is the baseline.
 
 ## Tier 3 — Briggsy’s call (taste, scope, one-way doors)
 

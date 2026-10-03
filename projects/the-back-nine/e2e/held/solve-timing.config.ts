@@ -17,7 +17,8 @@ import { defineConfig } from '@playwright/test'
  */
 export default defineConfig({
   testDir: '.',
-  testMatch: ['**/solve-timing.spec.ts'],
+  // Both instruments of the BUILT app: the wall-clock timing and the phase-split profile.
+  testMatch: ['**/solve-timing.spec.ts', '**/solve-phase-profile.spec.ts'],
   fullyParallel: false,
   workers: 1, // ONE solve at a time — a second one beside it halves the cores it sees
   retries: 0, // a retried timing is a different measurement; a failure is read, never re-rolled

@@ -4,7 +4,6 @@ import {
   EngineDeadError,
   EngineResetError,
   isEngineReset,
-  type EngineHandle,
   type SpawnedEngine,
   type SpawnEngine,
 } from '../engineClient'
@@ -44,7 +43,7 @@ function fakeSpawn(opts?: { throwOnSpawn?: (n: number) => boolean; syncThrow?: b
           throw new Error('boom')
         }
       : never
-    const remote = { ping, run: never, setLatestEpoch: never, runDateSearch: never, runTwoArm: never, runSolve: never } as unknown as EngineHandle
+    const remote = { ping, run: never, setLatestEpoch: never, runDateSearch: never, runTwoArm: never, runSolve: never } as unknown as SpawnedEngine['remote']
     const rec: Rec = { terminate: vi.fn<() => void>(), release: vi.fn<() => void>(), onDeath, settle }
     spawns.push(rec)
     const spawned: SpawnedEngine = { remote, terminate: rec.terminate, release: rec.release }
@@ -205,7 +204,7 @@ describe('createResettableEngine — every forwarded method, generations, orderi
   it('reset terminates the old worker BEFORE releasing its proxy (a RELEASE posted to a live worker would be answered)', () => {
     const order: string[] = []
     const spawn: SpawnEngine = () => ({
-      remote: { ping: () => new Promise<never>(() => {}) } as unknown as EngineHandle,
+      remote: { ping: () => new Promise<never>(() => {}) } as unknown as SpawnedEngine['remote'],
       terminate: () => {
         order.push('terminate')
       },

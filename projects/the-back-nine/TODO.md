@@ -163,7 +163,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    the same `escalateQuote` factor — so under the cliff a missing trend is **zero** when E=S
    (`devSeeds.ts:615-616` = 4200/4200) and **reversed (pessimistic)** when E<S, which `copy.ts:227` invites.
    It bites one-way optimistic **only over the cliff** (`healthOverlay.ts:304-308`, full enrolled premium).
-   The shipped sibling `recDiscAcaSlcsp` (`copy.ts:1952-1953`) hedges bidirectionally on this exact fact and
+   The shipped sibling `recDiscAcaSlcsp` (`copy.ts:1955-1956`) hedges bidirectionally on this exact fact and
    `medicare-pricing-build-spec.md:43` bans the false unidirectional. Draft to append to BOTH strings:
    *"One modeling choice: these prices step up with your ages, not with the way plan prices themselves climb
    — so a conversion that crosses the income line could cost more than shown."*
@@ -201,7 +201,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`copy.ts:979`, `:984, :998, :1000, :1008, :1010` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
    affirmation, not append to it) + the two health-control siblings (`copy.ts:1143`, `:1149`), which CANNOT take it
-   (gated on `statePriced` alone — `copy.ts:1135-1137`). Unfiled: `shadowRateHeadroom` (`copy.ts:2722`)
+   (gated on `statePriced` alone — `copy.ts:1135-1137`). Unfiled: `shadowRateHeadroom` (`copy.ts:2725`)
    quotes cliff headroom against an SLCSP that never trends — the headroom figure inherits the held-price
    optimism; and there is NO ACA cost-trend constant at all (`health.ts` carries only `medicareCostTrend`)
    — ACA premiums are the one health channel with no trend, no clause AND no disclosure, in the
@@ -221,7 +221,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`oracleToken.ts:48`), its humane string (`recommendationView.ts:338-339`) and the whole *held* card
    still ship and are tested; only the **live trigger** is gone, so a new arm is an addition, not a build.
    Correction (b) is **confirmed exact**: `mintOracleToken` has one live call site (`solveEntry.ts:232`),
-   reached only via `engineApi.runSolve`; `engineApi.run` (`engineProtocol.ts:309` — headline/confidence)
+   reached only via `engineApi.runSolve`; `engineApi.run` (`engineProtocol.ts:421` — headline/confidence)
    and `runDateSearch` (`:346` — the date) mint **no token**.
    ⚑ **The no-income-tax premise is FALSE for 5 of the 8, and it adds 7, not 8** — the register entry
    *Unpriced states — a confident winner computed with zero state income tax* carries the state-by-state negative.
@@ -238,7 +238,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    because `scenarioCodec.ts:793-794` gates `retirementState` via `needVocab(STATE_ROSTER)`, so no
    pre-widening vault can *be* a household in a newly-priced state. The prescribed remedy — loosening
    `stateTax.ts:429-433` — would **re-open the exact hole that tie was minted to close** (`:424-428`).
-   ⚑ **His call, sharpened:** does the refusal reach the **headline + date** (`engineProtocol.ts:309`/`:346`)
+   ⚑ **His call, sharpened:** does the refusal reach the **headline + date** (`engineProtocol.ts:421`/`:458`)
    or stop at the strategy? Gating only `solve()` leaves a state-blind first answer for everyone off the
    roster; gating all three blanks the product's magic moment for **~86% of US households**. Widening to the
    no-tax seven moves coverage ~14% → ~27%, of which **Texas alone is two-thirds** — so *which of your
@@ -255,7 +255,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`stateTaxDisclosure.ts:86`, home #6) renders it STANDALONE (`.cs-state-note`) on both routes wherever the
    residual is withheld, so EVERY verdict — pre-65 and health-door included, the fuck-off-date audience —
    reads exactly one state clause, priced or unpriced; scope the roster fork against disclosure-everywhere,
-   never against a silent pre-65 cohort. A THIRD token-less lane exists: `runTwoArm` (`engineProtocol.ts:362`, the U10 control
+   never against a silent pre-65 cohort. A THIRD token-less lane exists: `runTwoArm` (`engineProtocol.ts:474`, the U10 control
    preview), gated by copy only. Anchors: `stateStep` `questions.tsx:570`, `fields: []` at `:577`, the
    retired twin `:593`.
 
@@ -271,7 +271,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `sanity.ts:52-75`). ⚑ **Size is M, not S, and a ceiling is the wrong instrument:** a 10× slip on
      $500k is $5M — a perfectly coherent household, so no threshold catches it. The shape that works is
      **one confirm on the household TOTAL** at the accounts step (the figure the engine actually consumes),
-     reusing the running total already rendered at `copy.ts:2098` / `questions.tsx:1052-1054`.
+     reusing the running total already rendered at `copy.ts:2101` / `questions.tsx:1052-1054`.
      ⚑ **"Briggsy sets the number" is the WRONG ask — there IS no honest number** (every total is
      coherent, so any threshold is the guessed plausibility band burned/062 bans). The only rule that
      invents nothing is an **unconditional** one-tap confirm for any household with ≥1 account. That is a
@@ -452,7 +452,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     copy" and both nearest register entries — *The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed* and *Unscored Caddie tape rows plus the four aged-surface tone calls due before 2027-01-01* — are owned **briggsy**; neither is a copy fix; the "three arms with
     corrected costs" existed NOWHERE — they are now written, with sizes, under the register's "The aged
     surface" entry. A shipped copy defect on the SAME cohort WAS pilot and is FIXED (2026-09-04: the singular arm ships at
-    `copy.ts:2626-2628` under the NUMBER AGREEMENT post-mortem at `copy.ts:2612`, covered by `copyGuard.test.ts:706`):
+    `copy.ts:2629-2631` under the NUMBER AGREEMENT post-mortem at `copy.ts:2615`, covered by `copyGuard.test.ts:706`):
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:246-247`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
@@ -478,10 +478,10 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     fork (register *The app on someone else's device*) · no single-person household (a solo friend is withheld forever or must invent a spouse)
     · **no document a friend reads** — the in-app honest-limits total is two sentences, and the app tells
     them to "validate with a professional" while handing that professional nothing readable · ✅ the solve
-    lane's EDIT-TIME cancel shipped 2026-09-03 (`engineClient.ts:179 createResettableEngine` +
+    lane's EDIT-TIME cancel shipped 2026-09-03 (`engineClient.ts:276 createResettableEngine` +
     `memoryModel.ts:766-769`); what remains is the interactive tier and the MAIN-THREAD FALLBACK, which still
     freezes the tab for the whole solve and says nothing — its `reset` is a documented no-op
-    (`engineClient.ts:45-57`; the old `:50` anchor named nothing about freezing).
+    (`engineClient.ts:50-62`; the old `:55` anchor named nothing about freezing).
     ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 8 — icons · WebKit arm · enlarged-text arm) — its 2026-09-04 re-verify clause, still live:** ✅ PWA icons DONE 2026-09-08 (his eye audits the silhouette sheet — path in the register's device entry) · ✅ WebKit e2e
     arm DONE 2026-09-08 (the two vault arms only) · enlarged-text fit arm (S, CDP `Page.setFontSizes`) MEASURED 2026-09-08 —
     eight PROTECTED reds, so the council fired: ✅ RULED + BUILT 2026-09-10 (the reds measured the stacked tier — register *The app on someone else's device*); the clauses below were the build recipe, kept for that arm's CDP notes.
@@ -552,7 +552,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     page and the codified G.S. page both still show the struck "after 2025 — 3.99%", so they read as
     CONTRADICTING the pinned record until they recompile — **session law wins, do not "correct" the
     engine table back to a flat 3.99%.** Comment-only; typecheck · lint · 3289 tests · state-tax gate
-    all green. (`copy.ts:3021` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
+    all green. (`copy.ts:3024` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think
@@ -568,7 +568,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     screen reader outside require-hedge — the AT twin of the gated `recDeltaTypical` — and its exclusion was
     a RECORDED decision in the SLOT_RENDER fixture's own comment, so the fix reversed a stated call, not an
     accident. **DONE 2026-09-08:** RENAMED onto the existing `recDelta` control prefix (`recDeltaVizAria`,
-    `copy.ts:3068`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
+    `copy.ts:3071`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
     `require-hedge` on its own) + a catalog canary over `/^rec(?!over)/` (a bare `/^rec/` reds the 16
     innocent `recovery*`/`recover*` intake keys) with a NAMED allowlist that SPLITS flat keys from slots
     (unscoped flat keys get 2 gates, unscoped slots get 3 + catastrophe). Scope is decided ONLY in the test

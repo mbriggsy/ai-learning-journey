@@ -21,8 +21,8 @@ export default {
   // held specs sit beside this config, and the dev server must still boot from the repo root.
   testDir: '.',
   testMatch: ['**/*.spec.ts'],
-  // The solve-timing and solve-phase-profile instruments measure the BUILT app on their own harness
+  // The solve-timing, solve-phase-profile and solve-pool instruments measure the BUILT app on their own harness
   // (solve-timing.config.ts) — against this dev server they would time the build they exist not to time.
-  testIgnore: ['**/solve-timing.spec.ts', '**/solve-phase-profile.spec.ts'],
+  testIgnore: ['**/solve-timing.spec.ts', '**/solve-phase-profile.spec.ts', '**/solve-pool.spec.ts'],
   webServer: { ...fitConfig.webServer, cwd: '../..' },
 }

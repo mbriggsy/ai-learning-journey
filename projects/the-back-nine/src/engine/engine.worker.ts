@@ -8,8 +8,10 @@
  * injected by the caller.
  */
 import * as Comlink from 'comlink'
-import { engineApi } from '@engine/engineProtocol'
+import { engineApi, poolApi } from '@engine/engineProtocol'
 
-export type { EngineApi } from '@engine/engineProtocol'
+export type { EngineApi, PoolApi } from '@engine/engineProtocol'
 
-Comlink.expose(engineApi)
+// ONE worker script plays every role: the spine (engineApi), and — on a pooled solve — an eval worker
+// or the coordinator (poolApi). Same chunk, same `new URL` literal, so the pool adds no CSP surface.
+Comlink.expose({ ...engineApi, ...poolApi })

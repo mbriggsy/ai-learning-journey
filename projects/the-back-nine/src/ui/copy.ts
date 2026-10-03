@@ -1685,8 +1685,8 @@ export const copy = {
   recommendRecordSupersededSolver: 'The way strategies are worked out has changed since then.',
   recommendRecordSupersededRules: 'The tax and health-cost rules have moved since then.',
   recommendRecordReopenCta: 'Work out the current strategy',
-  // The cost, worded the way `recommendPendingLabel` does (and FALSE the same way today — see it): a real
-  // duration in plain words, never a spinner, a percentage, or a fabricated progress clock.
+  // The cost, worded the way `recommendPendingLabel` does (true and untrue in the same places — see it): a
+  // real duration in plain words, never a spinner, a percentage, or a fabricated progress clock.
   recommendRecordReopenCost: 'This can take a few minutes.',
   // The standing hero note (renders WITH the first verdict when any clock fired — never
   // after it; the answer is already recomputed under today's rules, this line says so).
@@ -1747,8 +1747,11 @@ export const copy = {
   recommendRepickCta: 'Aim at a different goal',
   // The solve's pending tell — the shipped thinking-breathe family's plain-language label (burned/045
   // clear-after-announce owns the a11y side). Its duration phrase exists so the reader never wonders if it
-  // stalled, so it must be TRUE — and "a few minutes" is NOT: 8.9–26.0 min on a production build at the
-  // laptop, 2026-10-01 (register *The recommendation's pending line…*). Ends with the ellipsis glyph; NO
+  // stalled, so it must be TRUE. It was not (8.9–26.0 min on the 2026-10-01 production build); since the
+  // worker pool it is, at his laptop: `retired` 25.3 s, `nc` 30.7 s, `healthnc` 110.2 s invite → lockup
+  // on the 2026-10-03 production build (12 eval workers), and inside "a few minutes" even in the ~2× slow
+  // laptop state. Still UNTRUE where the pool cannot run (≤ 3 logical cores ⇒ the single worker, `healthnc`
+  // ~9 min) and UNMEASURED on his phone (register *The recommendation's pending line…*). Ends with the ellipsis glyph; NO
   // spinner / % / count / ETA / countdown (a real duration in plain words reassures; a fabricated
   // progress clock would lie).
   recommendPendingLabel: 'Working out your strategy — this can take a few minutes…',

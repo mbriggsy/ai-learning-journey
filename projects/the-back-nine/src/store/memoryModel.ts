@@ -26,7 +26,7 @@
  *      any resolved result older than the latest committed epoch, so racing
  *      in-flight runs never render a stale intermediate.
  *
- * THE DATE-ROUTE EPOCH ORDER (C3 forward item (b), engineProtocol.ts:101-109):
+ * THE DATE-ROUTE EPOCH ORDER (C3 forward item (b), engineProtocol.ts:103-111):
  * result-discard alone cannot stop a sweep already running worker-side — the
  * dispatcher calls `engine.setLatestEpoch(epoch)` BEFORE
  * `engine.runDateSearch(..., epoch)` (same MessagePort ⇒ FIFO ⇒ the commit

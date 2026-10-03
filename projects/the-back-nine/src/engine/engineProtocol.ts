@@ -18,8 +18,10 @@ import { runTwoArm } from '@engine/roth'
 import { solveSpend } from '@engine/spendSolve'
 import type { DateSearchTier, SimulationParams, TwoArmControl } from '@shared/model'
 import type { DateSearchWire, EngineWire, SolveArmWire, SolveWire, SpendSolveWire, TwoArmWire } from '@engine/engineWire'
-import { solveWithMint, type SolvePayload, type SolveRequest } from '@engine/solver/solveEntry'
+import { solveWithMint, solveWithMintSteps, type SolvePayload, type SolveRequest } from '@engine/solver/solveEntry'
 import type { SolveArm } from '@engine/solver/solve'
+import { evaluateCall, runEvalAsync, type EvalCall } from '@engine/validation/evalSteps'
+import { poolEvaluator, PoolTransportError, type PoolLane, type TaskReply } from '@engine/validation/evalPool'
 
 // Re-export the wire contract so worker-side code has one import surface.
 export type { ResolvedWire, EngineWire, EngineResult, DateSearchWire, DateSearchResult, TwoArmWire, TwoArmResult, SolveWire, SolveResultView, SpendSolveWire } from '@engine/engineWire'
@@ -297,6 +299,116 @@ export function runSolveEngine(request: SolveRequest): SolveWire {
   }
 }
 
+/** Tag a packed solve wire for transfer: only the recommended arm's three seed-B distributions'
+ *  buffers (the enumerated-list discipline) — the ONE list both solve paths return through. */
+function transferSolveWire(wire: SolveWire): SolveWire {
+  if (wire.kind !== 'recommended') return wire
+  const buffers = [
+    ...armBuffers(wire.winner),
+    ...(wire.runnerUp !== undefined ? armBuffers(wire.runnerUp) : []),
+    ...armBuffers(wire.noActionBaseline),
+  ]
+  return Comlink.transfer(wire, buffers)
+}
+
+// ---------------------------------------------------------------------------
+// THE WORKER POOL (commit 2 of the pool; design wf_c61881ba-752; Briggsy's 2026-10-03 ruling). The
+// solve's evaluations are data (`validation/evalSteps.ts`); here they cross real MessagePorts. An EVAL
+// worker serves `{ id, call }` → `{ id, ok, outcomes | message }` on a port it was handed
+// (`serveEval`); the COORDINATOR worker drives the whole solve generator with `runEvalAsync` over one
+// port per eval worker (`runSolvePooled`) through `validation/evalPool.ts`'s scheduler. Every message
+// is a plain structured clone — NO typed-array codec (a hand-kept field list is the floor-track
+// silent-drop class; one is added only if a measurement puts clone cost over ~3 % of wall time).
+// ---------------------------------------------------------------------------
+
+/** One task request on an eval port. */
+export interface EvalTaskMessage {
+  readonly id: number
+  readonly call: EvalCall
+}
+/** One task reply on an eval port (the {@link TaskReply} plus its request id). */
+export type EvalReplyMessage = TaskReply & { readonly id: number }
+
+/**
+ * The eval worker's side: answer every task on `port` with the real evaluation path. An ENGINE error
+ * rides in the reply (`ok: false`); the reply's own `postMessage` stays OUTSIDE that catch, so a reply
+ * that cannot be cloned is an uncaught throw in this worker — its `error` event kills the lane, and the
+ * lane retries the solve single-thread (a transport failure must never read as an engine answer).
+ */
+export function serveEvalPort(port: MessagePort): void {
+  port.onmessage = (event: MessageEvent<EvalTaskMessage>) => {
+    const { id, call } = event.data
+    let reply: EvalReplyMessage
+    try {
+      reply = { id, ok: true, outcomes: evaluateCall(call) }
+    } catch (e) {
+      reply = { id, ok: false, message: e instanceof Error ? e.message : null }
+    }
+    port.postMessage(reply)
+  }
+}
+
+/** The coordinator's side of one eval port, as a {@link PoolLane}. A `messageerror` (a reply that
+ *  could not be deserialized) or a request that cannot be cloned REJECTS — a transport failure. */
+export function portLane(port: MessagePort): PoolLane & { readonly close: () => void } {
+  let nextId = 0
+  let broken: Error | null = null
+  const pending = new Map<number, { readonly resolve: (r: TaskReply) => void; readonly reject: (e: Error) => void }>()
+  const breakAll = (error: Error): void => {
+    broken ??= error
+    for (const p of pending.values()) p.reject(broken)
+    pending.clear()
+  }
+  port.onmessage = (event: MessageEvent<EvalReplyMessage>) => {
+    const { id, ...reply } = event.data
+    const p = pending.get(id)
+    if (p === undefined) {
+      breakAll(new Error(`a reply for unknown task ${id}`))
+      return
+    }
+    pending.delete(id)
+    p.resolve(reply)
+  }
+  port.onmessageerror = () => breakAll(new Error('messageerror on an eval port'))
+  return {
+    evaluate: (call) =>
+      new Promise<TaskReply>((resolve, reject) => {
+        if (broken !== null) {
+          reject(broken)
+          return
+        }
+        const id = nextId++
+        pending.set(id, { resolve, reject })
+        try {
+          port.postMessage({ id, call } satisfies EvalTaskMessage)
+        } catch (e) {
+          pending.delete(id)
+          reject(e instanceof Error ? e : new Error(String(e)))
+        }
+      }),
+    close: () => {
+      breakAll(new Error('the eval port was closed'))
+      port.onmessage = null
+      port.onmessageerror = null
+      port.close()
+    },
+  }
+}
+
+/**
+ * The pooled solve over injected lanes — `runSolveEngine`'s exact contract (an engine throw is a
+ * `calm-error` carrying the same reason) EXCEPT a {@link PoolTransportError}, which propagates: a pool
+ * that failed has no answer, and the lane retries the solve single-thread.
+ */
+export async function runSolvePooledEngine(request: SolveRequest, lanes: readonly PoolLane[]): Promise<SolveWire> {
+  try {
+    return packSolveWire(await runEvalAsync(solveWithMintSteps(request), poolEvaluator(lanes)))
+  } catch (e) {
+    if (e instanceof PoolTransportError) throw e
+    return { kind: 'calm-error', reason: e instanceof Error ? e.message : 'engine error' }
+  }
+}
+
 /** The object the worker exposes over Comlink. */
 export const engineApi = {
   /** Liveness probe (a cheap worker round-trip). */
@@ -367,18 +479,29 @@ export const engineApi = {
    *  distributions are transferred (detached, fresh per run — the Act-1 discipline at K-candidate
    *  scale); every scalar / grade / withheld-lever field rides by structured clone. */
   runSolve(request: SolveRequest): SolveWire {
-    const wire = runSolveEngine(request)
-    if (wire.kind === 'recommended') {
-      const buffers = [
-        ...armBuffers(wire.winner),
-        ...(wire.runnerUp !== undefined ? armBuffers(wire.runnerUp) : []),
-        ...armBuffers(wire.noActionBaseline),
-      ]
-      return Comlink.transfer(wire, buffers)
-    }
-    return wire
+    return transferSolveWire(runSolveEngine(request))
   },
 }
 
 /** The shape the main-thread handle (src/store/engineClient.ts) wraps. */
 export type EngineApi = typeof engineApi
+
+/** The pool's two worker methods — exposed beside {@link engineApi} by the worker entry, and kept OFF
+ *  the spine handle's type (the resettable spine never forwards them; only the solve lane calls them). */
+export const poolApi = {
+  /** Make THIS worker an eval worker on `port` (handed over by transfer). */
+  serveEval(port: MessagePort): void {
+    serveEvalPort(port)
+  },
+  /** Make THIS worker the solve's coordinator over one port per eval worker; the packed wire returns
+   *  through the same transfer list as `runSolve`. A transport failure REJECTS (the lane retries). */
+  async runSolvePooled(request: SolveRequest, ports: readonly MessagePort[]): Promise<SolveWire> {
+    const lanes = ports.map(portLane)
+    try {
+      return transferSolveWire(await runSolvePooledEngine(request, lanes))
+    } finally {
+      for (const lane of lanes) lane.close()
+    }
+  },
+}
+export type PoolApi = typeof poolApi

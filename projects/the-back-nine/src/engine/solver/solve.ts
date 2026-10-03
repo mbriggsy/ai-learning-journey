@@ -43,6 +43,7 @@ import {
   type SelectionScore,
 } from '../validation/heldOutSeed'
 import {
+  ACA_ENHANCED_PROBE_HEALTHCARE_GUARD,
   GradeFloorRefusal,
   gradeOnFamily,
   namedDriverProbe,
@@ -95,6 +96,10 @@ export interface SolveInput {
    *  fingerprint is the run this token blesses; never reaches the probe's search (another world) or
    *  the grade (other seeds). Absent ⇒ the search re-simulates, as before. */
   readonly sharedPass?: EvaluatedRosterPass
+  /** TEST-SEAM ONLY — the identity gate's legacy probe arm: run the named-driver probe with its
+   *  pre-2026-10-03 guard (`ACA_ENHANCED_PROBE_HEALTHCARE_GUARD` — every healthcare-on world flips,
+   *  priced ACA or not). The live solve never sets it. */
+  readonly _probeEveryHealthcareWorld?: true
 }
 
 // ---- the value-model payload (the wire serializes this) --------------------------------------
@@ -618,6 +623,7 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
     ...(heirBracket !== undefined ? { heirBracket } : {}),
     baselineCrown: selection.winnerId,
     crownFor: shippedCrown,
+    ...(input._probeEveryHealthcareWorld === true ? { probes: [ACA_ENHANCED_PROBE_HEALTHCARE_GUARD] } : {}),
   })
 
   // The §S2 leave-more skew disclosure (the mean's skew beside the typical bequest) on the WINNER's

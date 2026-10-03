@@ -47,6 +47,7 @@ import { buildCandidateParams, DATE_SEARCH_PATHS, type DateSearchInput } from '@
 import { productionMarket } from '@engine/reference/methodology'
 import { findBlendRow, stockWeightForBlend } from '@engine/reference/tickerBlend'
 import { acaAgeRatingCurve, medicareExtrasTypicalMonthly } from '@engine/constants/health'
+import { acaRegimeReachable } from '@engine/acaRegime'
 import { isPricedState, type PricedState } from '@engine/constants/stateTax'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { compileBudget } from '@budget/budgetToSpending'
@@ -843,9 +844,11 @@ export function pricedStateForRun(d: ScenarioDraft): PricedState | undefined {
  *  built stream — the escalator sums only members pre-65 at t, and the Medicare-only branch ships
  *  NO quote stream at all). Reading the OUTPUT keeps every conservative arm free (insight 081):
  *  the degenerate early-return builds no overlay ⇒ false, and an unknown-age household never
- *  reaches `healthcareOn` ⇒ no stream ⇒ false — both KEEP the pre-65 omissions clause. */
+ *  reaches `healthcareOn` ⇒ no stream ⇒ false — both KEEP the pre-65 omissions clause. The rule
+ *  itself lives ONCE in `@engine/acaRegime` (the named-driver probe's inertness gate asks the same
+ *  question, 2026-10-03) — never re-typed here. */
 function acaPricedOverlayArm(o: OverlayParams | undefined): boolean {
-  return o?.healthcareEnabled === true && (o.enrolledPremium ?? []).some((p) => Number.isFinite(p) && p > 0)
+  return acaRegimeReachable(o)
 }
 
 /** The SPINE route's "did THIS run price the ACA discount?" — {@link acaPricedOverlayArm} over

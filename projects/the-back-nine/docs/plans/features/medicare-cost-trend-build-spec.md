@@ -121,7 +121,7 @@ status: shipped
   convergence re-verified under year-varying premiums (013 watch) — see S3 for the measurement.
 - **S2 — the solver seams (the tripwire's named pair).** `solve.ts`'s rankable partition derives
   from the token's trend clause, not the old hardcoded `conversion === null` filter;
-  `enumerateWithheldConversionLevers` (`solve.ts:257`) self-empties as the clause clears; the U15
+  `enumerateWithheldConversionLevers` (`solve.ts:262`) self-empties as the clause clears; the U15
   tripwire test flipped to its post-sourcing form (the clause CLEARS and conversions RANK); the
   token's NC-blocks/FL-mints and remaining clauses were re-verified live, and the mint now
   evaluates the TRUE roster amounts. Because the live clause is clear, the mint gained a

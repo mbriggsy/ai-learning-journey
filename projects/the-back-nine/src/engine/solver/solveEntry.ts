@@ -109,6 +109,9 @@ export interface SolveRequest {
    *  withhold the stability pass so `solve()`'s crown search re-simulates the roster, as it did before
    *  share-the-pass. The live builder never sets it; the gate proves both arms bit-identical. */
   readonly _resimulateSearch?: true
+  /** TEST-SEAM ONLY — the identity gate's legacy PROBE arm: the named-driver probe flips every
+   *  healthcare-on world, as it did before the inertness guard (threaded to `solve`). Never live. */
+  readonly _probeEveryHealthcareWorld?: true
 }
 
 const mintFailed = (stage: SolveMintFailed['stage'], detail: string): SolveMintFailed => ({
@@ -244,6 +247,7 @@ export function solveWithMint(request: SolveRequest, shouldAbort?: ShouldAbort):
     tieTolerance,
     ...(request._gradeMinPaths !== undefined ? { _gradeMinPaths: request._gradeMinPaths } : {}),
     ...(request._resimulateSearch === true ? {} : { sharedPass: stabilityOut.pass }),
+    ...(request._probeEveryHealthcareWorld === true ? { _probeEveryHealthcareWorld: true as const } : {}),
   }
   return solve(mint.token, input, shouldAbort)
 }

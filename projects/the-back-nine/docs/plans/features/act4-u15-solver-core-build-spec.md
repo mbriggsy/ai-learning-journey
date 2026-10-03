@@ -52,7 +52,7 @@ being born (insight 020's shape). Both shapes carry a `fingerprint` field today
    The schema is `solver-run-fp/v2` — the 2026-07-19 review fold added `seedA` and
    `tieTolerance` (both ranking-affecting siblings that had lived beside the serialized
    triple). `tieTolerance`'s finiteness refusal lives one layer up, in `solve()`'s input
-   validation AHEAD of the fingerprint gate (`tie-tolerance-invalid`, solve.ts:418-424) — a
+   validation AHEAD of the fingerprint gate (`tie-tolerance-invalid`, solve.ts:423-429) — a
    NaN tolerance admits every candidate to the survival-top set, so it is refused before any
    identity is computed.
    **NOT `consumedConstantEntries`** — red-team-falsified as HOUSEHOLD-BLIND

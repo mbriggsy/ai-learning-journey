@@ -45,8 +45,11 @@ export function identityRequest(
  * lever, against the shipped path. Each lever adds its seam to `legacySolve` and leaves `variantSolve`
  * the live default — so every lever is proven against the code it replaced, in one process.
  *  - share-the-pass (2026-10-03): `_resimulateSearch` — the crown search re-simulates the roster.
+ *  - probe inertness (2026-10-03): `_probeEveryHealthcareWorld` — the probe flips every healthcare-on
+ *    world, priced ACA or not.
  */
-export const legacySolve = (r: SolveRequest): SolvePayload => solveWithMint({ ...r, _resimulateSearch: true })
+export const legacySolve = (r: SolveRequest): SolvePayload =>
+  solveWithMint({ ...r, _resimulateSearch: true, _probeEveryHealthcareWorld: true })
 export const variantSolve = (r: SolveRequest): SolvePayload => solveWithMint(r)
 
 /** Run both sides; assert the legacy KIND (an arm must exercise what it exists for), then the

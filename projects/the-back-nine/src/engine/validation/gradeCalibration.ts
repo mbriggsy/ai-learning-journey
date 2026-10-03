@@ -40,6 +40,7 @@ import {
   solverSelectionTieZ,
 } from '@engine/constants'
 import { quantizeSurvival, xOfTenClamp } from '@engine/confidence'
+import { acaRegimeReachable } from '@engine/acaRegime'
 import { solverCandidateId, type CandidateStrategy } from '../solver/candidates'
 import { afterTaxBequestPerPath, evaluateCandidates, rankCandidates, type CandidateOutcome, type OracleGoal } from './evaluate'
 import { deriveBFamilyMember, deriveSeedB, survivalIndicators } from './heldOutSeed'
@@ -322,16 +323,30 @@ export interface NamedDriverProbe {
   readonly transform: (base: SimulationParams) => SimulationParams
 }
 
-/** The built-in ACA-regime probe: flip the enhanced-subsidies toggle (only meaningful when
- *  healthcare is priced — the caller's candidate near-tie may hinge on the regime). */
+/** Flip the enhanced-subsidies toggle (absent ⇔ the statutory regime — never an explicit `false`). */
+const flipEnhancedSubsidies = (base: SimulationParams): SimulationParams => {
+  const { enhancedSubsidies: prior, ...rest } = base.overlay!
+  return { ...base, overlay: { ...rest, ...(prior === true ? {} : { enhancedSubsidies: true }) } }
+}
+
+/** The built-in ACA-regime probe: flip the enhanced-subsidies toggle — only where the regime can
+ *  reach the run (`acaRegimeReachable`: healthcare on AND a positive ACA enrolled premium in some
+ *  year). Everywhere else the flipped world is byte-identical to the base, so the probe declares
+ *  itself inapplicable (returns `base`, the `probed === base` arm below) instead of re-searching the
+ *  whole roster to re-crown the same winner — a third of a Medicare-only solve (2026-10-03). ⚠️ If
+ *  the probe ever RE-ENUMERATES the roster per world, `solveAnchor.ts` reads the regime (the ACA
+ *  cliff anchor) and this inertness proof no longer covers it. */
 export const ACA_ENHANCED_PROBE: NamedDriverProbe = {
   name: 'aca-enhanced-subsidies',
-  transform: (base) => {
-    const o = base.overlay
-    if (o?.healthcareEnabled !== true) return base
-    const { enhancedSubsidies: prior, ...rest } = o
-    return { ...base, overlay: { ...rest, ...(prior === true ? {} : { enhancedSubsidies: true }) } }
-  },
+  transform: (base) => (acaRegimeReachable(base.overlay) ? flipEnhancedSubsidies(base) : base),
+}
+
+/** TEST-SEAM ONLY — the probe's guard before 2026-10-03 (healthcare on ⇒ flip, priced ACA or not):
+ *  the solve-payload identity gate's legacy arm (`SolveRequest._probeEveryHealthcareWorld`), kept
+ *  executable so the shipped guard stays proven against it. Never in a live probe list. */
+export const ACA_ENHANCED_PROBE_HEALTHCARE_GUARD: NamedDriverProbe = {
+  name: 'aca-enhanced-subsidies',
+  transform: (base) => (base.overlay?.healthcareEnabled === true ? flipEnhancedSubsidies(base) : base),
 }
 
 /**

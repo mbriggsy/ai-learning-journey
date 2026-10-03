@@ -127,7 +127,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    to the Caddie or Briggsy's eye; do not re-file it as a copy defect without a read.
 
 2. **Pre-65 ACA premiums are priced real-flat — the sin the Medicare council ruled solver-BLOCKING.**
-   `intakeMap.ts:339-359` (`escalateQuote`) builds both the enrolled premium and the SLCSP benchmark from
+   `intakeMap.ts:340-360` (`escalateQuote`) builds both the enrolled premium and the SLCSP benchmark from
    `acaAgeRatingCurve` factors alone — **no cost-trend term**. Part B was fixed for exactly this reason;
    `oracleToken.ts:112-133` writes the argument out (*"disclose-and-ship is FORBIDDEN — a disclosure fixes
    a number, never a mis-ranking"*). The same argument holds at the 400%-FPL cliff, where the household
@@ -141,7 +141,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`adjacentButSharp` at `:90`, `needProse` at `:169`, since 2026-08-03) — **the gate is presence-only**: nothing checks that the prose models the uncapped clawback.
    ⚑ **STRUCTURAL — this is why it isn't a Part B copy-paste:** Part B's schedule is built INSIDE the
    engine, which is why the oracle token can witness it. The ACA escalator lives in **intake**
-   (`intakeMap.ts:339-359`), which the engine cannot import — so an `ACA_PRICING_MODE` flag bolted onto
+   (`intakeMap.ts:340-360`), which the engine cannot import — so an `ACA_PRICING_MODE` flag bolted onto
    intakeMap would be the exact lying-mirror `oracleToken.ts:113-119` warns about. The honest fix moves the
    schedule build to an engine-owned `buildAcaPricingSchedule` beside `partBPricingByT` (`taxOverlay.ts:1128`).
    ⚑ **Re-tag: BLOCKED ON RESEARCH.** No sourced ACA cost-trend primary exists in the repo, so a solver
@@ -157,7 +157,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    claim on this surface. (c) the editable strings are **`copy.ts:1008` and `:1010`** (`983`/`985` are key
    names), and both must move together.
    ⚑ **The direction claim must be CLIFF-SCOPED, never blanket.** `healthOverlay.ts:227`+`:299` give
-   under-cliff net = `enrolled − slcsp + contribution`, and `intakeMap.ts:675-676` scale **both** streams by
+   under-cliff net = `enrolled − slcsp + contribution`, and `intakeMap.ts:676-677` scale **both** streams by
    the same `escalateQuote` factor — so under the cliff a missing trend is **zero** when E=S
    (`devSeeds.ts:615-616` = 4200/4200) and **reversed (pessimistic)** when E<S, which `copy.ts:227` invites.
    It bites one-way optimistic **only over the cliff** (`healthOverlay.ts:304-308`, full enrolled premium).
@@ -184,7 +184,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      gate; the scoping error was looking inside `projects/the-back-nine/` when the git root is
      `ai-learning-journey`. See the CI note under "Standing cadences".
    - **A false negation on the health sheet (XS).** `copy.ts:996/960` list *"the benchmark premium itself"*
-     under "Not counted here" while the entered benchmark **is** priced (`intakeMap.ts:676` →
+     under "Not counted here" while the entered benchmark **is** priced (`intakeMap.ts:677` →
      `healthOverlay.ts:218-228`) — the same false-negation shape O16 fixed on the Roth strings.
    </details>
 
@@ -194,7 +194,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    conversion ranking **with** the new disclosure (what the BLOCKED-ON-RESEARCH tag silently assumes), or
    does the token gain an **ACA pricing-mode clause** that withholds the ranking — as Medicare's did — until
    a sourced trend lands?
-   ⚑ **2026-09-04 anchors + two unfiled facts:** `escalateQuote` is `intakeMap.ts:339-359` (not `:271-291`);
+   ⚑ **2026-09-04 anchors + two unfiled facts:** `escalateQuote` is `intakeMap.ts:340-360` (not `:271-291`);
    the "Not counted here" pair is `copy.ts:979` / `:984` (not `:895/:897`) and the surface is SIX strings
    (`copy.ts:979`, `:984, :998, :1000, :1008, :1010` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
@@ -218,7 +218,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    twin the 22%-top). Correction (a) is **half-stale** — the `state-certification-pending` WithheldReason
    (`oracleToken.ts:48`), its humane string (`recommendationView.ts:338-339`) and the whole *held* card
    still ship and are tested; only the **live trigger** is gone, so a new arm is an addition, not a build.
-   Correction (b) is **confirmed exact**: `mintOracleToken` has one live call site (`solveEntry.ts:218`),
+   Correction (b) is **confirmed exact**: `mintOracleToken` has one live call site (`solveEntry.ts:221`),
    reached only via `engineApi.runSolve`; `engineApi.run` (`engineProtocol.ts:309` — headline/confidence)
    and `runDateSearch` (`:346` — the date) mint **no token**.
    ⚑ **The no-income-tax premise is FALSE for 5 of the 8, and it adds 7, not 8** — the register entry
@@ -373,7 +373,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    "~89px headroom" — that is the SPINE idle frame's figure; the date arms of `verify:fit` assert ORDER + REACHABILITY only — never fit
    (spec header `vertical-fit.spec.ts:22-23`). `Result.tsx:345-347`'s "covers the date route honestly" comment was FALSE (never
    minted there; a route-flip render is dropped) — swept 2026-09-04. A crowned-offset params builder ALREADY
-   exists (`buildControlPreviewParams`, `intakeMap.ts:1099-1108`), so parity's base shape is not from zero.
+   exists (`buildControlPreviewParams`, `intakeMap.ts:1102-1111`), so parity's base shape is not from zero.
    Build shape: the ⚑ Folded 2026-09-06 block directly below.
    ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 6, the date-route one-liner) — its 2026-09-04 re-verify clause, still live:** Date-route one-liner (S) via a Caddie card — words must be true on all FOUR date-hero framings
    (anchor on WORK STATUS, never "a date ahead of you"); the one token yours: does it promise parity.
@@ -393,8 +393,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 9. **A modest-pre-tax household is refused a withdrawal-order answer the engine could compute.**
     `solveDispatch.ts:91` returns `'no-pretax'` when no *conversion* candidate survives — but a
     conversion-free candidate survives for **every entry in `SEARCHED_POLICIES`** (`candidates.ts:548-554`),
-    and `solve.ts:471-476` already implements that exact partition for the trend-blocked case.
-    ⚑ **DOWN-RANKED — the filed fix is UNSHIPPABLE as written.** `solveEntry.ts:171-178` mint-fails the
+    and `solve.ts:476-481` already implements that exact partition for the trend-blocked case.
+    ⚑ **DOWN-RANKED — the filed fix is UNSHIPPABLE as written.** `solveEntry.ts:174-181` mint-fails the
     roster *before* `solve()` runs, and `rankingStability.ts:251-265` knows only a conversion-**amount**
     perturbation. So dispatching the sequencing-only field would surface `mint-failed{roster}` **live** —
     the exact state `solveDispatch.ts:80` forbids in its own comment. Making it real needs a second

@@ -250,7 +250,7 @@ to a single commit.
   line — one component, one semantic group (`role="group"` + `aria-describedby`), **one crossfade
   key** (the `.cs-swap` / `@starting-style` CSS-only idiom — a separate fade paints a fresh grade
   beside a stale hedge). The shape note renders the pre-composed `composeShapeDisclosure()` output
-  (`gradeCalibration.ts:392`) translated to HUMANE language ("these two are so close, treat it as a
+  (`gradeCalibration.ts:407`) translated to HUMANE language ("these two are so close, treat it as a
   lean, not a lock" register) — never machine phrasing. Not a fold, not a footnote, not one tap
   down.
 - **The delta hero's MEDIAN qualification** (the median-advantage increment, 2026-07-23, `8b9cab61`
@@ -321,7 +321,7 @@ to a single commit.
   lockup rather than folded into that label; scrub stays pointer-only sugar.
 - The surface renders no percentile of its own: the survival context is source-bound BY REFERENCE
   to the spine's rendered confidence object (Q1), which is where the `displayTenth`/`xOfTenClamp`
-  convention lives (`confidence.ts:71`, `gradeCalibration.ts:93`). Nothing is re-typed.
+  convention lives (`confidence.ts:71`, `gradeCalibration.ts:94`). Nothing is re-typed.
 - **`assertObjectiveMatchesHeadline(payload)`** (`src/engine/solver/objectiveHeadline.ts:132`): a
   PURE exported guard the render path AND a unit test both call — the statistic that RANKED
   (seed-A tier2) ≡ the statistic DISPLAYED (seed-B headline) — with PLANTED-MISMATCH arms proving

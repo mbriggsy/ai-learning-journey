@@ -112,13 +112,15 @@ export function bitEqual(a: unknown, b: unknown, path = '$'): BitDiff {
 
 /** The same walk folded into a 64-bit FNV-1a digest (two 32-bit lanes) — a same-machine anchor. */
 export function bitDigest(v: unknown): string {
+  // Two INDEPENDENT 32-bit lanes. Each multiplier must be ODD: an even one shifts low bits out on
+  // every byte, and a long walk flushes that lane to a constant (the first cut did exactly that).
   let h1 = 0x811c9dc5
-  let h2 = 0x01000193 ^ 0x5bd1e995
+  let h2 = 0x9747b28c
   const feed = (s: string): void => {
     for (let i = 0; i < s.length; i++) {
       const c = s.charCodeAt(i)
       h1 = Math.imul(h1 ^ c, 0x01000193) >>> 0
-      h2 = Math.imul(h2 ^ c, 0x01000193 ^ 0x2545f491) >>> 0
+      h2 = Math.imul(h2 ^ c, 0x5bd1e995) >>> 0
     }
   }
   const walk = (x: unknown, path: string): void => {

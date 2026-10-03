@@ -54,6 +54,12 @@ describe('bitEqual — stricter than toEqual on every axis a refactor can move',
     expect(bitEqual([1, , 3], [1, undefined, 3]).ok).toBe(false)
   })
 
+  it('bitDigest carries 64 live bits — BOTH lanes vary across inputs (an even multiplier flushed one lane to a constant)', () => {
+    const digests = Array.from({ length: 16 }, (_, i) => bitDigest({ v: i, long: 'x'.repeat(200) }))
+    expect(new Set(digests.map((d) => d.slice(0, 8))).size).toBe(16)
+    expect(new Set(digests.map((d) => d.slice(8))).size).toBe(16)
+  })
+
   it('THROWS on a shape it cannot vouch for — never a silent "equal"', () => {
     expect(() => bitEqual(new Map(), new Map())).toThrow(/unsupported/)
     expect(() => bitEqual({ f: () => 1 }, { f: () => 1 })).toThrow(/unsupported/)

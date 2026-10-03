@@ -77,10 +77,12 @@ import { copy } from '../src/ui/copy'
  *  - `solve:<seed>` — the U16 recommend-second walk: the settled landing → the invited affordance
  *    (`.result-recommend-invite`) → the GoalPicker (goal chosen by its rendered LABEL, never an index —
  *    SOLVE_GOAL below) → the PENDING breathe (captured immediately; the working tell is the only thing
- *    changing on screen) → the COMMITTED frame, at FULL worker precision (16k paths, multi-minute — the
- *    committed body is POLLED, never slept on; `test.setTimeout(720_000)` for solve targets). Two shipped
- *    worlds: `solve:nc` commits the state-certification HOLD card (~90s), `solve:surplus` the over-funded
- *    RECOMMENDED lockup (~4-7min: delta hero + the RecommendationViz two-arm chart, its own `svg.rv`).
+ *    changing on screen) → the COMMITTED frame, at FULL worker precision (16k paths on the worker pool —
+ *    the committed body is POLLED, never slept on; `test.setTimeout(SOLVE_TEST_MS)` for solve targets). Two
+ *    shipped worlds: `solve:nc` commits a pay-less-tax RECOMMENDED lockup with the chart OMITTED by ruling
+ *    (it was the state-certification HOLD until 2026-08-02), `solve:surplus` the over-funded RECOMMENDED
+ *    lockup (delta hero + the RecommendationViz two-arm chart, its own `svg.rv`) — each whole walk ~40 s
+ *    per viewport since the pool (measured 2026-10-03, dev server, his laptop).
  *  - The STALE demotion (`solve:nc` only): a fingerprint-changing control-door edit (the withdrawal-order
  *    sheet, applied off the committed `proportional`) demotes the committed rec → the stale CARD — a calm
  *    heading + body + its IN-CARD re-open control, in one frame (`stale`, F-B: the promise and its action
@@ -696,14 +698,32 @@ async function walkWorsening(page: Page, outDir: string): Promise<void> {
 }
 
 /**
+ * The solve arc's budgets — MEASURED 2026-10-03 on the worker pool (commit 225d8da4; the dev server, his
+ * laptop, 12 eval workers): a whole `solve:nc` or `solve:surplus` walk is ~40 s per viewport, the solve
+ * itself ~30 s of it. The lockup wait is 300 s — ~4× even the ~2× slow laptop state, and SHORT of a
+ * single-thread solve on purpose (`nc` measured 725 s before the pool): a pool that silently fell back
+ * to one worker reds the walk instead of passing slow, so the walk witnesses the pool too. The test
+ * budget adds the landing, the picker, the captures and the stale leg.
+ */
+const SOLVE_LOCKUP_MS = 300_000
+const SOLVE_TEST_MS = 480_000
+
+/**
  * The SOLVE arc's per-seed plan (increment 6): the goal each seed's WORLD solves under, read by its
  * rendered RADIO LABEL (never an nth-index — RECOMMENDATION_GOALS order is not a walk contract), plus
- * whether this seed additionally walks the post-commit STALE demotion. nc: pay-less-tax → the NC
- * state-certification HOLD; surplus: leave-more → the over-funded delta-as-hero RECOMMENDED lockup.
+ * whether this seed additionally walks the post-commit STALE demotion, plus `viz` — whether its committed
+ * lockup carries the two-arm RecommendationViz. nc: pay-less-tax → a RECOMMENDED lockup (since the NC
+ * certification checkpoint retired, 2026-08-02 — it once committed a HOLD) with NO chart: the bars are
+ * OMITTED on pay-less-tax by ruling (`recommendationView.ts`'s `viz`, 780409f7 — the recommended arm would
+ * draw the SHORTER bar under a longer-is-better grammar); surplus: leave-more → the over-funded
+ * delta-as-hero RECOMMENDED lockup, chart and all.
  */
-const SOLVE_GOAL: Record<string, { readonly label: RegExp; readonly stale: boolean; readonly terminal?: 'steer' | 'goalpicker' }> = {
-  nc: { label: /Pay less tax/, stale: true },
-  surplus: { label: /Leave more behind/, stale: false },
+const SOLVE_GOAL: Record<
+  string,
+  { readonly label: RegExp; readonly stale: boolean; readonly viz?: boolean; readonly terminal?: 'steer' | 'goalpicker' }
+> = {
+  nc: { label: /Pay less tax/, stale: true, viz: false },
+  surplus: { label: /Leave more behind/, stale: false, viz: true },
   // The failing-cohort increment (2026-09-11, the ranked Caddie walk's eye item): the already-short
   // household's GoalPicker renders with its "With the basics covered" lead OMITTED (`basicsCovered`
   // false — the 2026-09-08 gate). The walk captures the landing and the open picker and STOPS there:
@@ -717,8 +737,8 @@ const SOLVE_GOAL: Record<string, { readonly label: RegExp; readonly stale: boole
 
 /**
  * A `solve:<seed>` target (increment 6): the recommend-second walk from the settled landing through the
- * committed frame, at FULL worker precision. Every stage synchronizes on a real selector — the multi-
- * minute committed body is POLLED (720s budget), never slept on; the pending breathe is the only thing
+ * committed frame, at FULL worker precision. Every stage synchronizes on a real selector — the
+ * committed body is POLLED (SOLVE_LOCKUP_MS), never slept on; the pending breathe is the only thing
  * changing on screen meanwhile. `solve:nc` additionally walks the STALE demotion (walkSolveStale).
  */
 async function walkSolve(page: Page, key: string, outDir: string): Promise<void> {
@@ -783,21 +803,33 @@ async function walkSolve(page: Page, key: string, outDir: string): Promise<void>
   ).toBeVisible()
   await captureState(page, path.join(outDir, 'pending'))
 
-  // The COMMITTED frame — the terminal lockup (a HELD card OR the RECOMMENDED lockup). Poll patiently:
-  // the full-precision (16k-path) worker solve is ~90s (nc) to ~4-7min (surplus). A never-arriving
-  // lockup FAILS the walk red (insight-029) rather than bundling a frozen pending frame.
+  // The COMMITTED frame — the terminal lockup (a HELD card OR the RECOMMENDED lockup). Poll patiently
+  // (SOLVE_LOCKUP_MS): a never-arriving lockup FAILS the walk red (insight-029) rather than bundling a
+  // frozen pending frame.
   await expect(
     page.locator('.rec-held, .rec-committed'),
     `solve:${key}: no committed lockup after the full-precision solve (expected held / recommended)`,
-  ).toBeVisible({ timeout: 720_000 })
-  // A RECOMMENDED lockup carries the lazy-chunked RecommendationViz — wait for the real chart (never the
-  // Suspense placeholder) so the recviz crop + its CVD arms are non-vacuous (insight-029). The primary
-  // viz is DOM-first (the runner-up's is inside a collapsed <details>), so `.first()` is the primary.
+  ).toBeVisible({ timeout: SOLVE_LOCKUP_MS })
+  // A RECOMMENDED lockup on a `viz` seed carries the lazy-chunked RecommendationViz — wait for the real
+  // chart (never the Suspense placeholder) so the recviz crop + its CVD arms are non-vacuous (insight-029).
+  // The primary viz is DOM-first (the runner-up's is inside a collapsed <details>), so `.first()` is the
+  // primary. A seed whose goal OMITS the chart (pay-less-tax — the ruled omission, the primary AND the
+  // runner-up's) pins its ABSENCE: a chart there would be the inverted picture the ruling removed. The
+  // witness is the BOX, never `svg.rv`: the box renders synchronously iff the view carries a chart,
+  // while the svg waits on a lazy chunk — a count-zero read on the svg passed VACUOUSLY on PHONE with
+  // the omission planted away (2026-10-03), because the chunk had not mounted yet.
   if ((await page.locator('.rec-committed').count()) > 0) {
-    await expect(
-      page.locator('svg.rv').first(),
-      `solve:${key}: the recommended lockup never rendered its RecommendationViz chart`,
-    ).toBeVisible({ timeout: 60_000 })
+    if (plan!.viz === true) {
+      await expect(
+        page.locator('svg.rv').first(),
+        `solve:${key}: the recommended lockup never rendered its RecommendationViz chart`,
+      ).toBeVisible({ timeout: 60_000 })
+    } else {
+      await expect(
+        page.locator('.rec-viz-box'),
+        `solve:${key}: a RecommendationViz box rendered on a goal whose chart is OMITTED by ruling (recommendationView.ts viz)`,
+      ).toHaveCount(0)
+    }
   }
   await captureState(page, path.join(outDir, 'committed'))
 
@@ -999,7 +1031,7 @@ for (const target of TARGETS) {
     test.describe(`caddie walk — ${target.kind}:${target.key} at ${v.name.toUpperCase()} (${v.viewport.width}×${v.viewport.height} @ ${v.dpr}dpr)`, () => {
       test.use({ viewport: v.viewport, deviceScaleFactor: v.dpr, hasTouch: v.touch, isMobile: v.touch })
       test('walk', async ({ page }) => {
-        if (target.kind === 'solve') test.setTimeout(720_000) // the full-precision worker solve is multi-minute
+        if (target.kind === 'solve') test.setTimeout(SOLVE_TEST_MS) // the full-precision pooled solve + the walk around it
         const consoleLog = hookConsole(page)
         const outDir = path.join(OUT_ROOT, targetSlug, v.name)
         if (target.kind === 'vault') {

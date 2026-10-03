@@ -54,7 +54,7 @@ The increment's own discipline caught TWO real defects before exposure, each of 
 
 **F5 — caddie walk targets (`e2e/caddie-walk.spec.ts`; "increment 5" in the walk's own header and in the caddie SKILL's target list).**
 - `seed:nc|pa|fl|elsewhere|datenc` ride the existing `walkSeed` grammar (landing + door walk — the Assumptions-door capture IS the priced/answered panel-row face).
-- `vault:statestale` rides `walkVaultReturn` and joined the doors condition (`caddie-walk.spec.ts:1036-1044` — the gate note is the target); it also captures the update arc.
+- `vault:statestale` rides `walkVaultReturn` and joined the doors condition (`caddie-walk.spec.ts:1068-1076` — the gate note is the target); it also captures the update arc.
 - The CVD selected-picker face: `walkIntakeFork` picks NC and captures the PICKED picker as a device-scale crop AND under each CVD arm via `captureCvdRegion`. The read law held: the selected segment stays distinguishable in EVERY arm without hue (the weight+fill+ring redundancy, `intake.css:378-383`). The fold re-pointed the fork's NC pick onto the pick helper — the raw `check({force})` was the sr-only 1px phone-flake idiom that helper exists to avoid.
 - The walk never runs concurrently with the full suite.
 

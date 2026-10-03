@@ -6,10 +6,11 @@ import { defineConfig } from '@playwright/test'
 // every test in one invocation shares one stamp. `CADDIE_RUN=name` overrides for a named run.
 process.env.CADDIE_RUN ??= new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')
 
-// Increment 6 (the solve arc): a `solve:` target runs a full-precision (16k-path) WORKER solve per
-// viewport — CPU-bound and multi-minute (~90s the NC hold, ~4-7min the surplus lockup). Several in
-// parallel thrash the cores and can push a single solve past even its generous 720s per-test budget,
-// so a solve run SERIALIZES (workers 1); the fast seed/vault/intake targets keep the default parallelism.
+// Increment 6 (the solve arc): a `solve:` target runs a full-precision (16k-path) solve per viewport on
+// the WORKER POOL — one solve already fills 12 eval workers (~30 s a solve, ~40 s a whole walk, measured
+// 2026-10-03). Two in parallel would split the same cores and can push a solve past its 300 s lockup wait
+// (e2e/caddie-walk.spec.ts SOLVE_LOCKUP_MS), so a solve run SERIALIZES (workers 1); the fast
+// seed/vault/intake targets keep the default parallelism.
 const hasSolveTarget = (process.env.CADDIE_TARGETS ?? '').includes('solve:')
 
 /**

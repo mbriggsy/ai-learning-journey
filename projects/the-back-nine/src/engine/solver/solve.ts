@@ -46,12 +46,12 @@ import {
   ACA_ENHANCED_PROBE_HEALTHCARE_GUARD,
   GradeFloorRefusal,
   gradeOnFamily,
-  namedDriverProbe,
+  namedDriverProbeSteps,
   pairedDecisionDiffs,
   type GradeResult,
   type GradeStatistic,
 } from '../validation/gradeCalibration'
-import { evaluateCandidates } from '../validation/evaluate'
+import { runEvalSync, type EvalSteps } from '../validation/evalSteps'
 import type { EvaluatedRosterPass } from '../validation/rankingStability'
 import {
   goalHeadlineStatistic,
@@ -61,7 +61,7 @@ import {
   type LeaveMoreSkewDisclosure,
   type SkewDisclosure,
 } from './objective'
-import { runSearch, type CandidateEvaluation, type SolverSearchResult } from './search'
+import { searchSteps, type CandidateEvaluation, type SolverSearchResult } from './search'
 import { selectRecommendation } from './select'
 import { solverCandidateId, type AnchoredRail, type CandidateStrategy } from './candidates'
 import { SOLVER_CODE_VERSION } from './solverCodeVersion'
@@ -313,7 +313,7 @@ export function gradeAxisFor(goal: OracleGoal, surplusRegime: boolean): GradeSta
  * Returns `undefined` (never a throw) when the B-floor cannot be met at the base's path count OR an
  * arm is infeasible on a family member — a structured `gradeUnavailable` the caller carries honestly.
  */
-export function gradeSolveRecommendation(opts: {
+export interface GradeSolveOpts {
   readonly base: SimulationParams
   readonly winner: CandidateStrategy
   readonly runnerUp: CandidateStrategy
@@ -321,7 +321,18 @@ export function gradeSolveRecommendation(opts: {
   readonly statistic: GradeStatistic
   readonly heirBracket: number | undefined
   readonly minPathsOverride?: number
-}): { readonly grade: GradeResult } | { readonly unavailable: string } {
+}
+export type GradeSolveOutcome = { readonly grade: GradeResult } | { readonly unavailable: string }
+
+export function gradeSolveRecommendation(opts: GradeSolveOpts): GradeSolveOutcome {
+  return runEvalSync(gradeSolveRecommendationSteps(opts))
+}
+
+/** The grade as an evaluation STAGE (`evalSteps.ts`): ONE batch — the winner + runner-up pair on every
+ *  B-family member — read back member by member in seed order, with the SAME early "unavailable" at the
+ *  first infeasible member: a later member's result (or error) is never read, exactly as the straight-
+ *  line loop never evaluated it. */
+export function* gradeSolveRecommendationSteps(opts: GradeSolveOpts): EvalSteps<GradeSolveOutcome> {
   const { base, winner, runnerUp, seedA, statistic, heirBracket, minPathsOverride } = opts
   if (statistic === 'leave-more' && heirBracket === undefined) {
     return { unavailable: 'leave-more grade requires a declared heir bracket' }
@@ -332,8 +343,9 @@ export function gradeSolveRecommendation(opts: {
   const family: Array<readonly number[]> = []
   const displayReads: Array<{ winnerSurvival: number; runnerUpSurvival: number }> = []
   const evalOpts = heirBracket !== undefined ? { heirBracket } : {}
-  for (const seed of familySeeds) {
-    const [w, r] = evaluateCandidates(base, [winner, runnerUp], seed, evalOpts)
+  const results = yield familySeeds.map((seed) => ({ base, candidates: [winner, runnerUp], seed, opts: evalOpts }))
+  for (const result of results) {
+    const [w, r] = result()
     if (w!.kind !== 'scored' || r!.kind !== 'scored') {
       return { unavailable: 'a B-family member is infeasible — the grade cannot be read on it' }
     }
@@ -412,6 +424,13 @@ const refused = (reason: SolveRefused['reason'], detail: string): SolveRefused =
  * (per-candidate) granularity + the live worker-epoch transport WAIT on the profile's numbers (§S6).
  */
 export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?: ShouldAbort): SolveResult {
+  return runEvalSync(solveSteps(token, input, shouldAbort))
+}
+
+/** `solve()` as an evaluation STAGE (`evalSteps.ts`): the same body, with the crown search, the grade
+ *  and the probe's search delegated as stages (`yield*`) — the worker pool's driver runs them in
+ *  parallel; the sync wrapper above runs them call for call as before. */
+export function* solveSteps(token: OracleClearedToken, input: SolveInput, shouldAbort?: ShouldAbort): EvalSteps<SolveResult> {
   const { base, candidates, seedA, ranking, tieTolerance } = input
   const goal = ranking.goal
   const heirBracket = ranking.heirBracket
@@ -490,7 +509,7 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
   // roster ranks (the live case since 2026-07-19) and the mint handed on its stability pass, the
   // search ADOPTS that pass's outcomes — the same simulations, run once (share-the-pass). A ranked
   // SUBSET is a different roster than the pass evaluated, so it re-simulates.
-  const search: SolverSearchResult = runSearch({
+  const search: SolverSearchResult = yield* searchSteps({
     base,
     candidates: rankable,
     seedA,
@@ -581,7 +600,7 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
   let grade: GradeResult | undefined
   let gradeUnavailable: { readonly reason: string } | undefined
   if (runnerUpEval !== undefined) {
-    const graded = gradeSolveRecommendation({
+    const graded = yield* gradeSolveRecommendationSteps({
       base,
       winner: winnerEval.candidate,
       runnerUp: runnerUpEval.candidate,
@@ -602,8 +621,8 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
   // by construction (the string arm is deliberate). Never fabricates a cause. NOT cheap: each probed
   // world is a full two-seed search of the rankable roster (no shared pass — a different world) —
   // measured 105.7 s of 339 s on `retired`, 281.5 s of 799 s on `healthnc` (2026-10-03).
-  const shippedCrown = (probedParams: SimulationParams): string => {
-    const s = runSearch({
+  const shippedCrown = function* (probedParams: SimulationParams): EvalSteps<string> {
+    const s = yield* searchSteps({
       base: probedParams,
       candidates: rankable,
       seedA,
@@ -614,7 +633,7 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
     const sel = selectRecommendation(s)
     return sel.kind === 'withheld' ? `withheld:${sel.reason}` : s.evaluations[sel.winnerIndex]!.id
   }
-  const { driver: namedDriver } = namedDriverProbe({
+  const { driver: namedDriver } = yield* namedDriverProbeSteps({
     base,
     candidates: rankable,
     goal,
@@ -622,7 +641,7 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
     seed: seedA,
     ...(heirBracket !== undefined ? { heirBracket } : {}),
     baselineCrown: selection.winnerId,
-    crownFor: shippedCrown,
+    crownForSteps: shippedCrown,
     ...(input._probeEveryHealthcareWorld === true ? { probes: [ACA_ENHANCED_PROBE_HEALTHCARE_GUARD] } : {}),
   })
 

@@ -159,12 +159,19 @@ export function adoptObservedOutcome(
   return { kind: 'scored', candidate, score: scoreFromDistribution(distribution, heirBracket), distribution }
 }
 
+/** `evaluateCandidates`' options: the heir bracket reaches only the score; the survivor stamp only
+ *  `simulate`'s observe-only surface. */
+export interface EvaluateOpts {
+  readonly heirBracket?: number
+  readonly survivorConditioned?: boolean
+}
+
 /** Evaluate every candidate on ONE seed through the shared apply seam + the real engine. */
 export function evaluateCandidates(
   base: SimulationParams,
   candidates: readonly CandidateStrategy[],
   seed: number,
-  opts?: { readonly heirBracket?: number; readonly survivorConditioned?: boolean },
+  opts?: EvaluateOpts,
 ): readonly CandidateOutcome[] {
   return candidates.map((candidate) =>
     collectCandidateOutcome(

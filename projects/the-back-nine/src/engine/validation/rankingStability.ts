@@ -29,7 +29,8 @@
  *     aborts the batch; an INDETERMINATE output still throws (enumerator bug — evaluate.ts).
  */
 import type { Distribution, SimulationParams } from '@shared/model'
-import { evaluateCandidates, type CandidateOutcome } from './evaluate'
+import type { CandidateOutcome } from './evaluate'
+import { runEvalSync, type EvalSteps } from './evalSteps'
 import { applyCandidate, type CandidateStrategy } from '../solver/candidates'
 import { solverRunFingerprint, type SolverRunFingerprint, type SolverRunRanking } from './solverRunFingerprint'
 
@@ -185,7 +186,7 @@ export function householdVacuity(failure: RankingStabilityFailure): HouseholdVac
   return first.class as HouseholdVacuity
 }
 
-export function runRankingStability(opts: {
+export interface RankingStabilityOpts {
   readonly base: SimulationParams
   readonly candidates: readonly CandidateStrategy[]
   readonly seedA: number
@@ -204,7 +205,26 @@ export function runRankingStability(opts: {
    *  because the report is the run-fingerprint authority and tieTolerance is a ranking-affecting input
    *  (it decides survival-equivalence ⇒ the winner) absent from the engine params. */
   readonly tieTolerance: number
-}): { readonly report: RankingStabilityReport; readonly pass: EvaluatedRosterPass } | RankingStabilityFailure {
+}
+
+export type RankingStabilityOutcome =
+  | { readonly report: RankingStabilityReport; readonly pass: EvaluatedRosterPass }
+  | RankingStabilityFailure
+
+/** Ranking stability, run synchronously — {@link rankingStabilitySteps} through the lazy sync driver,
+ *  call for call the straight-line evaluation it was before the worker pool. */
+export function runRankingStability(opts: RankingStabilityOpts): RankingStabilityOutcome {
+  return runEvalSync(rankingStabilitySteps(opts))
+}
+
+/**
+ * Ranking stability as an evaluation STAGE (`evalSteps.ts`): ONE batch — the roster on seedA, the
+ * roster on seedB, and the perturbation pair — read back in exactly the order the straight-line code
+ * evaluated them (seedA, seedB, then the pair, after the crossings walk). The pair is ATOMIC: the
+ * variant and its sibling run consecutively in ONE evaluation path, because the law it carries is
+ * about what one path does across consecutive candidates (a pool must never split it).
+ */
+export function* rankingStabilitySteps(opts: RankingStabilityOpts): EvalSteps<RankingStabilityOutcome> {
   const { base, candidates, seedA, seedB, perturbIndex, siblingIndex, ranking, tieTolerance } = opts
   const violations: StabilityViolation[] = []
 
@@ -222,10 +242,26 @@ export function runRankingStability(opts: {
     }
   }
 
+  // The perturbation pair is known before anything is evaluated (it reads only the roster), so it
+  // rides the same batch; it is READ only after the crossings walk, where the straight-line code ran it.
+  const perturbed = candidates[perturbIndex]
+  const sibling = candidates[siblingIndex]
+  const pairWellFormed = !(perturbed?.conversion == null || sibling === undefined || perturbIndex === siblingIndex)
+  const variant: CandidateStrategy | undefined = pairWellFormed
+    ? {
+        ...perturbed!,
+        conversion: { ...perturbed!.conversion!, annualAmountReal: perturbed!.conversion!.annualAmountReal + 1_000 },
+      }
+    : undefined
+  const stamped = { survivorConditioned: true } as const
+  const results = yield [
+    { base, candidates, seed: seedA, opts: stamped },
+    { base, candidates, seed: seedB, opts: stamped },
+    ...(variant !== undefined ? [{ base, candidates: [variant, sibling!], seed: seedA, opts: stamped, atomic: true as const }] : []),
+  ]
+
   // 2 + 3. Evaluate the full set on BOTH seeds with the survivor-crossing stamp requested.
-  const outcomesBySeed: ReadonlyArray<readonly CandidateOutcome[]> = [seedA, seedB].map((seed) =>
-    evaluateCandidates(base, candidates, seed, { survivorConditioned: true }),
-  )
+  const outcomesBySeed: ReadonlyArray<readonly CandidateOutcome[]> = [results[0]!(), results[1]!()]
   let minCrossings = Number.POSITIVE_INFINITY
   let infeasibleCount = 0
   for (const [s, outcomes] of outcomesBySeed.entries()) {
@@ -249,9 +285,7 @@ export function runRankingStability(opts: {
   }
 
   // 4. The perturbation law: vary ONE candidate's amount; a sibling must be byte-identical.
-  const perturbed = candidates[perturbIndex]
-  const sibling = candidates[siblingIndex]
-  if (perturbed?.conversion == null || sibling === undefined || perturbIndex === siblingIndex) {
+  if (!pairWellFormed) {
     violations.push(
       harnessViolation(
         'perturbation-misconfigured',
@@ -259,13 +293,7 @@ export function runRankingStability(opts: {
       ),
     )
   } else {
-    const variant: CandidateStrategy = {
-      ...perturbed,
-      conversion: { ...perturbed.conversion, annualAmountReal: perturbed.conversion.annualAmountReal + 1_000 },
-    }
-    const [rerunVariant, rerunSibling] = evaluateCandidates(base, [variant, sibling], seedA, {
-      survivorConditioned: true,
-    })
+    const [rerunVariant, rerunSibling] = results[2]!()
     const original = outcomesBySeed[0]![siblingIndex]!
     const rerunS = rerunSibling!
     if (original.kind !== 'scored' || rerunS.kind !== 'scored') {

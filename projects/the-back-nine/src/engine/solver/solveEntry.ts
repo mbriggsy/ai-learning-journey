@@ -11,7 +11,7 @@
  *
  * THE TREND CLAUSE (§S5 (2), closed by the trend sourcing unit 2026-07-19). The candidate roster
  * carries the conversion grid (ranking stability's perturbation law REQUIRES a conversion candidate
- * to perturb — rankingStability.ts:193), and the run fingerprint covers that whole roster. The
+ * to perturb — rankingStability.ts:194), and the run fingerprint covers that whole roster. The
  * token's trend clause is evaluated on the TRUE amounts of the roster `solve()` ranks — the whole
  * roster, conversions included, now that the trend is sourced AND the Part-B pricing consumes it
  * (the clause reads both halves and is CLEAR). The clause stays load-bearing in the blocking
@@ -31,13 +31,14 @@
 import type { SimulationParams } from '@shared/model'
 import type { SolverRunRanking } from '../validation/solverRunFingerprint'
 import { runOptimalityOracle } from '../validation/optimalityOracle'
-import { householdVacuity, runRankingStability, type HouseholdVacuity } from '../validation/rankingStability'
+import { householdVacuity, rankingStabilitySteps, type HouseholdVacuity } from '../validation/rankingStability'
+import { runEvalSync, type EvalSteps } from '../validation/evalSteps'
 import { mintOracleToken, type WithheldReason } from '../validation/oracleToken'
 import { deriveSeedB } from '../validation/heldOutSeed'
 import { SOLVER_CASES } from '../reference/solver-cases'
 import type { CandidateStrategy } from './candidates'
 import { SOLVER_CODE_VERSION } from './solverCodeVersion'
-import { solve, type SolveInput, type SolveResult } from './solve'
+import { solveSteps, type SolveInput, type SolveResult } from './solve'
 import { abortRequested, solveAborted, type ShouldAbort } from './cancel'
 
 /** The oracle-cleared token was WITHHELD by an honesty gate — no recommendation ships (§S6.3). The
@@ -151,6 +152,16 @@ export function perturbationPair(
  * granularity WAIT on the profile's numbers (§S6) — U15 ships the seam + these coarse checkpoints.
  */
 export function solveWithMint(request: SolveRequest, shouldAbort?: ShouldAbort): SolvePayload {
+  return runEvalSync(solveWithMintSteps(request, shouldAbort))
+}
+
+/**
+ * {@link solveWithMint} as an evaluation STAGE (`validation/evalSteps.ts`, the worker-pool build): the
+ * same body, its ranking stability and `solve()` delegated as stages. The token is a local of THIS
+ * generator — minted and consumed in one frame on whichever side drives it (the pool's coordinator
+ * worker, or the single worker's sync wrapper above); it never crosses a wire.
+ */
+export function* solveWithMintSteps(request: SolveRequest, shouldAbort?: ShouldAbort): EvalSteps<SolvePayload> {
   const { base, candidates, seedA, ranking, tieTolerance, todayEpochDay } = request
 
   // COOPERATIVE ABORT (§S6) — before ANY compute: a solve superseded before it even started bails here.
@@ -180,7 +191,7 @@ export function solveWithMint(request: SolveRequest, shouldAbort?: ShouldAbort):
     )
   }
   const seedB = deriveSeedB(seedA)
-  const stabilityOut = runRankingStability({
+  const stabilityOut = yield* rankingStabilitySteps({
     base,
     candidates,
     seedA,
@@ -249,5 +260,5 @@ export function solveWithMint(request: SolveRequest, shouldAbort?: ShouldAbort):
     ...(request._resimulateSearch === true ? {} : { sharedPass: stabilityOut.pass }),
     ...(request._probeEveryHealthcareWorld === true ? { _probeEveryHealthcareWorld: true as const } : {}),
   }
-  return solve(mint.token, input, shouldAbort)
+  return yield* solveSteps(mint.token, input, shouldAbort)
 }

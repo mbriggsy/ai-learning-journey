@@ -45,7 +45,8 @@
  */
 import type { SimulationParams } from '@shared/model'
 import { deriveSeedB } from '../validation/heldOutSeed'
-import { adoptObservedOutcome, evaluateCandidates, type CandidateOutcome, type OracleGoal } from '../validation/evaluate'
+import { adoptObservedOutcome, type CandidateOutcome, type OracleGoal } from '../validation/evaluate'
+import { runEvalSync, type EvalSteps } from '../validation/evalSteps'
 import type { EvaluatedRosterPass } from '../validation/rankingStability'
 import { rankForGoal } from './objective'
 import { solverCandidateId, type CandidateStrategy } from './candidates'
@@ -114,6 +115,12 @@ export interface SolverSearchInput {
  * authored here.
  */
 export function runSearch(input: SolverSearchInput): SolverSearchResult {
+  return runEvalSync(searchSteps(input))
+}
+
+/** The search as an evaluation STAGE (`evalSteps.ts`): ONE batch — the roster on seedA, then on
+ *  seedB — read back in that order; NO batch at all when a shared pass is adopted. */
+export function* searchSteps(input: SolverSearchInput): EvalSteps<SolverSearchResult> {
   const { base, candidates, seedA, goal, tieTolerance, heirBracket, survivorConditioned, sharedPass } = input
 
   if (candidates.length === 0) {
@@ -166,8 +173,12 @@ export function runSearch(input: SolverSearchInput): SolverSearchResult {
   let outcomesA: readonly CandidateOutcome[]
   let outcomesB: readonly CandidateOutcome[]
   if (sharedPass === undefined) {
-    outcomesA = evaluateCandidates(base, candidates, seedA, evalOpts)
-    outcomesB = evaluateCandidates(base, candidates, seedB, evalOpts)
+    const results = yield [
+      { base, candidates, seed: seedA, opts: evalOpts },
+      { base, candidates, seed: seedB, opts: evalOpts },
+    ]
+    outcomesA = results[0]!()
+    outcomesB = results[1]!()
   } else {
     if (survivorConditioned === true) {
       throw new Error('[search] a shared pass cannot serve a survivor-stamped search — the adopted outcomes are stripped of the stamp')

@@ -44,6 +44,7 @@ import { acaRegimeReachable } from '@engine/acaRegime'
 import { solverCandidateId, type CandidateStrategy } from '../solver/candidates'
 import { afterTaxBequestPerPath, evaluateCandidates, rankCandidates, type CandidateOutcome, type OracleGoal } from './evaluate'
 import { deriveBFamilyMember, deriveSeedB, survivalIndicators } from './heldOutSeed'
+import { onlyResult, runEvalSync, type EvalSteps } from './evalSteps'
 
 export type Grade = 'just-do-it' | 'coin-flip'
 
@@ -349,12 +350,7 @@ export const ACA_ENHANCED_PROBE_HEALTHCARE_GUARD: NamedDriverProbe = {
   transform: (base) => (base.overlay?.healthcareEnabled === true ? flipEnhancedSubsidies(base) : base),
 }
 
-/**
- * Re-rank the candidates under each probe; the FIRST probe whose world flips the crown is
- * the named driver ("depends on whether enhanced ACA subsidies return"). A near-tie no
- * probe can flip carries the `sampling-noise-near-tie` sentinel — never a fabricated cause.
- */
-export function namedDriverProbe(opts: {
+export interface NamedDriverProbeOpts {
   readonly base: SimulationParams
   readonly candidates: readonly CandidateStrategy[]
   readonly goal: OracleGoal
@@ -372,24 +368,58 @@ export function namedDriverProbe(opts: {
    *  caller already knows the shipped crown — the selection winner's id — so a full base re-evaluation
    *  is redundant). Must be produced by the SAME crown authority as `crownFor` to compare meaningfully. */
   readonly baselineCrown?: string
-}): { readonly driver: string } {
+}
+
+/**
+ * Re-rank the candidates under each probe; the FIRST probe whose world flips the crown is
+ * the named driver ("depends on whether enhanced ACA subsidies return"). A near-tie no
+ * probe can flip carries the `sampling-noise-near-tie` sentinel — never a fabricated cause.
+ * Synchronous: {@link namedDriverProbeSteps} through the lazy sync driver.
+ */
+export function namedDriverProbe(opts: NamedDriverProbeOpts): { readonly driver: string } {
+  const { crownFor } = opts
+  return runEvalSync(
+    namedDriverProbeSteps({
+      ...opts,
+      ...(crownFor !== undefined
+        ? {
+            // eslint-disable-next-line require-yield -- an injected SYNC crown evaluates on its own
+            crownForSteps: function* (params: SimulationParams): EvalSteps<string> {
+              return crownFor(params)
+            },
+          }
+        : {}),
+    }),
+  )
+}
+
+/**
+ * The probe as an evaluation STAGE (`evalSteps.ts`): each probed world's crown is itself a stage
+ * (`crownForSteps` — the solve injects its shipped search + selection), run LAZILY, one probe at a
+ * time and in order, so the first flipping probe still returns before a later one is evaluated.
+ * `crownFor` (sync) is ignored here — {@link namedDriverProbe} adapts it into `crownForSteps`.
+ */
+export function* namedDriverProbeSteps(
+  opts: NamedDriverProbeOpts & { readonly crownForSteps?: (params: SimulationParams) => EvalSteps<string> },
+): EvalSteps<{ readonly driver: string }> {
   const { base, candidates, goal, tieTolerance, seed, heirBracket } = opts
   const probes = opts.probes ?? [ACA_ENHANCED_PROBE]
   const crownOf =
-    opts.crownFor ??
-    ((params: SimulationParams): string => {
-      const ranked = rankCandidates(evaluateCandidates(params, candidates, seed, { heirBracket }), goal, tieTolerance)
+    opts.crownForSteps ??
+    function* (params: SimulationParams): EvalSteps<string> {
+      const outcomes = onlyResult(yield [{ base: params, candidates, seed, opts: { heirBracket } }])
+      const ranked = rankCandidates(outcomes, goal, tieTolerance)
       const top = ranked[0]
       if (top === undefined) throw new Error('[gradeCalibration] namedDriverProbe: empty candidate set')
       // The §S0.4 provenance-injective id (never the lossy pre-provenance `policy:amount` — two
       // custom orders would collide, and it drifts from the shipped arm ids the payload writes).
       return solverCandidateId(top.candidate)
-    })
-  const baseline = opts.baselineCrown ?? crownOf(base)
+    }
+  const baseline = opts.baselineCrown ?? (yield* crownOf(base))
   for (const probe of probes) {
     const probed = probe.transform(base)
     if (probed === base) continue // the probe declared itself inapplicable to this world
-    if (crownOf(probed) !== baseline) return { driver: probe.name }
+    if ((yield* crownOf(probed)) !== baseline) return { driver: probe.name }
   }
   return { driver: 'sampling-noise-near-tie' }
 }

@@ -36,7 +36,7 @@ recommendation is validated" while proving only that SOME household passed —
 `mintedOver` bound no household and `RankingStabilityReport` carried counts/seeds only.
 U14's single in-line call site made that harmless; U15's solve entry was the second consumer
 being born (insight 020's shape). Both shapes carry a `fingerprint` field today
-(oracleToken.ts:258-269, rankingStability.ts:107) precisely because the veto fired.
+(oracleToken.ts:258-269, rankingStability.ts:108) precisely because the veto fired.
 
 1. **The COMPLETE run-derived fingerprint.** The pure `solverRunFingerprint(params,
    candidates, ranking, { seedA, tieTolerance })` lives in
@@ -52,7 +52,7 @@ being born (insight 020's shape). Both shapes carry a `fingerprint` field today
    The schema is `solver-run-fp/v2` — the 2026-07-19 review fold added `seedA` and
    `tieTolerance` (both ranking-affecting siblings that had lived beside the serialized
    triple). `tieTolerance`'s finiteness refusal lives one layer up, in `solve()`'s input
-   validation AHEAD of the fingerprint gate (`tie-tolerance-invalid`, solve.ts:423-429) — a
+   validation AHEAD of the fingerprint gate (`tie-tolerance-invalid`, solve.ts:442-448) — a
    NaN tolerance admits every candidate to the survival-top set, so it is refused before any
    identity is computed.
    **NOT `consumedConstantEntries`** — red-team-falsified as HOUSEHOLD-BLIND
@@ -99,7 +99,7 @@ being born (insight 020's shape). Both shapes carry a `fingerprint` field today
   scorer** (a solver-native scorer pins finitely many fixtures and drifts between them —
   the seam contract evaluate.ts:5-13 names for exactly this council). The adapter is
   `rankForGoal`, test-pinned identical to `rankCandidates`.
-- **`tier2` was un-privated and exported** (evaluate.ts:205) so `select.ts` composes shrinkage
+- **`tier2` was un-privated and exported** (evaluate.ts:212) so `select.ts` composes shrinkage
   and tie-break on the one orientation — no re-derived sign conventions.
 - The lexicographic contract is unchanged from the plan: Tier-1 survival floor in the
   spine's `X of 10`; survival-equivalence decided by the **A-side CRN-difference selection

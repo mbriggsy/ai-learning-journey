@@ -11,7 +11,7 @@
  *
  * THE TREND CLAUSE (§S5 (2), closed by the trend sourcing unit 2026-07-19). The candidate roster
  * carries the conversion grid (ranking stability's perturbation law REQUIRES a conversion candidate
- * to perturb — rankingStability.ts:166), and the run fingerprint covers that whole roster. The
+ * to perturb — rankingStability.ts:193), and the run fingerprint covers that whole roster. The
  * token's trend clause is evaluated on the TRUE amounts of the roster `solve()` ranks — the whole
  * roster, conversions included, now that the trend is sourced AND the Part-B pricing consumes it
  * (the clause reads both halves and is CLEAR). The clause stays load-bearing in the blocking
@@ -105,6 +105,10 @@ export interface SolveRequest {
   readonly todayEpochDay: number
   /** TEST-SEAM ONLY: overrides the grade's live 16,000-path B-floor (threaded to `solve`). */
   readonly _gradeMinPaths?: number
+  /** TEST-SEAM ONLY — the identity gate's LEGACY arm (`src/ui/__tests__/solvePayloadIdentity.test.ts`):
+   *  withhold the stability pass so `solve()`'s crown search re-simulates the roster, as it did before
+   *  share-the-pass. The live builder never sets it; the gate proves both arms bit-identical. */
+  readonly _resimulateSearch?: true
 }
 
 const mintFailed = (stage: SolveMintFailed['stage'], detail: string): SolveMintFailed => ({
@@ -229,6 +233,9 @@ export function solveWithMint(request: SolveRequest, shouldAbort?: ShouldAbort):
 
   // (d) Solve — the fingerprint re-check inside `solve()` binds the token to THIS exact run. The abort
   // seam threads through so `solve()`'s own pre-search / pre-grade checkpoints fire too (§S6).
+  // SHARE-THE-PASS: the stability pass just simulated this exact roster on seedA and seedB — hand it
+  // on so the crown search adopts it instead of running it again (`solve()` re-checks its
+  // fingerprint against the token's). `_resimulateSearch` is the identity gate's legacy arm.
   const input: SolveInput = {
     base,
     candidates,
@@ -236,6 +243,7 @@ export function solveWithMint(request: SolveRequest, shouldAbort?: ShouldAbort):
     ranking,
     tieTolerance,
     ...(request._gradeMinPaths !== undefined ? { _gradeMinPaths: request._gradeMinPaths } : {}),
+    ...(request._resimulateSearch === true ? {} : { sharedPass: stabilityOut.pass }),
   }
   return solve(mint.token, input, shouldAbort)
 }

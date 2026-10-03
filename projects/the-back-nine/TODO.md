@@ -218,7 +218,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    twin the 22%-top). Correction (a) is **half-stale** — the `state-certification-pending` WithheldReason
    (`oracleToken.ts:48`), its humane string (`recommendationView.ts:338-339`) and the whole *held* card
    still ship and are tested; only the **live trigger** is gone, so a new arm is an addition, not a build.
-   Correction (b) is **confirmed exact**: `mintOracleToken` has one live call site (`solveEntry.ts:214`),
+   Correction (b) is **confirmed exact**: `mintOracleToken` has one live call site (`solveEntry.ts:218`),
    reached only via `engineApi.runSolve`; `engineApi.run` (`engineProtocol.ts:309` — headline/confidence)
    and `runDateSearch` (`:346` — the date) mint **no token**.
    ⚑ **The no-income-tax premise is FALSE for 5 of the 8, and it adds 7, not 8** — the register entry
@@ -393,9 +393,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 9. **A modest-pre-tax household is refused a withdrawal-order answer the engine could compute.**
     `solveDispatch.ts:91` returns `'no-pretax'` when no *conversion* candidate survives — but a
     conversion-free candidate survives for **every entry in `SEARCHED_POLICIES`** (`candidates.ts:548-554`),
-    and `solve.ts:459-464` already implements that exact partition for the trend-blocked case.
-    ⚑ **DOWN-RANKED — the filed fix is UNSHIPPABLE as written.** `solveEntry.ts:167-174` mint-fails the
-    roster *before* `solve()` runs, and `rankingStability.ts:224-238` knows only a conversion-**amount**
+    and `solve.ts:471-476` already implements that exact partition for the trend-blocked case.
+    ⚑ **DOWN-RANKED — the filed fix is UNSHIPPABLE as written.** `solveEntry.ts:171-178` mint-fails the
+    roster *before* `solve()` runs, and `rankingStability.ts:251-265` knows only a conversion-**amount**
     perturbation. So dispatching the sequencing-only field would surface `mint-failed{roster}` **live** —
     the exact state `solveDispatch.ts:80` forbids in its own comment. Making it real needs a second
     validation law (a sequencing perturbation) under every shipped recommendation, which is a one-way door

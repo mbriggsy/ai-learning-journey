@@ -45,7 +45,8 @@
  */
 import type { SimulationParams } from '@shared/model'
 import { deriveSeedB } from '../validation/heldOutSeed'
-import { evaluateCandidates, type CandidateOutcome, type OracleGoal } from '../validation/evaluate'
+import { adoptObservedOutcome, evaluateCandidates, type CandidateOutcome, type OracleGoal } from '../validation/evaluate'
+import type { EvaluatedRosterPass } from '../validation/rankingStability'
 import { rankForGoal } from './objective'
 import { solverCandidateId, type CandidateStrategy } from './candidates'
 
@@ -99,6 +100,12 @@ export interface SolverSearchInput {
   /** Opt in to the survivor-crossing stamp (the K-candidate CRN stability harness requests it).
    *  Observe-only in `simulate` — byte-identical to an opt-out run on every scored field. */
   readonly survivorConditioned?: boolean
+  /** SHARE-THE-PASS: ranking stability's evaluation of THIS `(base, candidates)` on THIS seed pair —
+   *  adopted (`adoptObservedOutcome`) instead of re-simulated. It must be the very run: the SAME
+   *  `base` and `candidates` references, `seedA`, and `deriveSeedB(seedA)` (the fingerprint does not
+   *  pin seedB, so it is checked here). Any mismatch THROWS — the only producer is the mint, so a
+   *  mismatch is a caller bug, and a silent re-simulate would hide it behind a green identity gate. */
+  readonly sharedPass?: EvaluatedRosterPass
 }
 
 /**
@@ -107,7 +114,7 @@ export interface SolverSearchInput {
  * authored here.
  */
 export function runSearch(input: SolverSearchInput): SolverSearchResult {
-  const { base, candidates, seedA, goal, tieTolerance, heirBracket, survivorConditioned } = input
+  const { base, candidates, seedA, goal, tieTolerance, heirBracket, survivorConditioned, sharedPass } = input
 
   if (candidates.length === 0) {
     throw new Error(
@@ -153,8 +160,34 @@ export function runSearch(input: SolverSearchInput): SolverSearchResult {
   // BOTH seed-sets, per candidate, through the ONE shared apply-seam + real engine. Using the SAME
   // `evaluateCandidates` the stability + grade harnesses drive is what makes the CRN identity
   // ("identical draws across all K", contract #5) hold by construction — not a second scorer to drift.
-  const outcomesA = evaluateCandidates(base, candidates, seedA, evalOpts)
-  const outcomesB = evaluateCandidates(base, candidates, seedB, evalOpts)
+  // With a SHARED PASS the stability harness already ran exactly these simulations: adopt them, A in
+  // order then B in order (so the first scoring throw, if any, is the one the re-simulation would
+  // have raised first).
+  let outcomesA: readonly CandidateOutcome[]
+  let outcomesB: readonly CandidateOutcome[]
+  if (sharedPass === undefined) {
+    outcomesA = evaluateCandidates(base, candidates, seedA, evalOpts)
+    outcomesB = evaluateCandidates(base, candidates, seedB, evalOpts)
+  } else {
+    if (survivorConditioned === true) {
+      throw new Error('[search] a shared pass cannot serve a survivor-stamped search — the adopted outcomes are stripped of the stamp')
+    }
+    if (
+      sharedPass.base !== base ||
+      sharedPass.candidates !== candidates ||
+      sharedPass.seedA !== seedA ||
+      sharedPass.seedB !== seedB ||
+      sharedPass.outcomesA.length !== candidates.length ||
+      sharedPass.outcomesB.length !== candidates.length
+    ) {
+      throw new Error(
+        '[search] the shared pass is not THIS run (base / candidates / seedA / deriveSeedB(seedA) / roster length) — ' +
+          'refusing rather than adopting another run’s outcomes',
+      )
+    }
+    outcomesA = sharedPass.outcomesA.map((o, i) => adoptObservedOutcome(o, candidates[i]!, heirBracket))
+    outcomesB = sharedPass.outcomesB.map((o, i) => adoptObservedOutcome(o, candidates[i]!, heirBracket))
+  }
 
   const evaluations: readonly CandidateEvaluation[] = candidates.map((candidate, i) => ({
     candidate,

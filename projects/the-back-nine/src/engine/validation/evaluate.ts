@@ -122,6 +122,43 @@ export function collectCandidateOutcome(
   return { kind: 'scored', candidate, score: scoreFromDistribution(out.distribution, heirBracket), distribution: out.distribution }
 }
 
+/**
+ * SHARE-THE-PASS (the solve-time build, 2026-10-03): the outcome `evaluateCandidates(base, [candidate],
+ * seed, { heirBracket })` WOULD produce, rebuilt from the outcome ranking stability already evaluated
+ * for the same `(base, candidate, seed)` with the survivor-crossing stamp — no second `simulate`.
+ *
+ * WHY THIS IS THE SAME OUTCOME, NOT A CLOSE ONE. `evaluateCandidates` forwards ONLY the stamp to
+ * `simulate`; `heirBracket` reaches nothing but `scoreFromDistribution` (above). And the stamp is
+ * observe-only: `simulate` reduces the survivor surface from death offsets every path computes anyway
+ * (no draw consumed, no accumulator touched), and emits it as ONE presence-keyed key between
+ * `healthReadout` and `floor` — so dropping that key with an object rest leaves exactly a plain run's
+ * keys, in a plain run's order. The score is then re-derived here with THIS run's heir bracket (the
+ * stability pass scored without one), so the outcome's key order is `collectCandidateOutcome`'s.
+ * The identity gate (`src/ui/__tests__/solvePayloadIdentity.test.ts`) proves it bit for bit, payload
+ * and wire, against the re-simulating path.
+ *
+ * REFUSED, loud: a candidate that is not the one the pass evaluated (a caller misaligned the arrays),
+ * or a distribution carrying an opt-in surface the search never requests (`bandFan` /
+ * `healthReadout` — a pass from some other caller, whose extra key would ride into the payload).
+ */
+export function adoptObservedOutcome(
+  observed: CandidateOutcome,
+  candidate: CandidateStrategy,
+  heirBracket?: number,
+): CandidateOutcome {
+  if (observed.candidate !== candidate) {
+    throw new Error('[evaluate] adoptObservedOutcome: the observed outcome is for a different candidate (the shared pass is misaligned)')
+  }
+  if (observed.kind === 'infeasible') {
+    return { kind: 'infeasible', candidate, reason: observed.reason, pathIndex: observed.pathIndex }
+  }
+  const { survivorConditioned: _observedOnly, ...distribution } = observed.distribution
+  if (distribution.bandFan !== undefined || distribution.healthReadout !== undefined) {
+    throw new Error('[evaluate] adoptObservedOutcome: the observed distribution carries a surface the search never requests (bandFan / healthReadout)')
+  }
+  return { kind: 'scored', candidate, score: scoreFromDistribution(distribution, heirBracket), distribution }
+}
+
 /** Evaluate every candidate on ONE seed through the shared apply seam + the real engine. */
 export function evaluateCandidates(
   base: SimulationParams,

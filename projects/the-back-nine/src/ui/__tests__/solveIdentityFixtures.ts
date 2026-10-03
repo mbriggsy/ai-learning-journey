@@ -41,11 +41,12 @@ export function identityRequest(
 }
 
 /**
- * The two sides of the differential. Commit G (the gate alone) runs today's code on BOTH sides —
- * legacy vs legacy: it proves the harness runs, is deterministic, and fits its budget. Each lever's
- * commit re-points `variantSolve` at the new path and keeps `legacySolve` executable in the tree.
+ * The two sides of the differential: the LEGACY path, kept executable in the tree by a test seam per
+ * lever, against the shipped path. Each lever adds its seam to `legacySolve` and leaves `variantSolve`
+ * the live default — so every lever is proven against the code it replaced, in one process.
+ *  - share-the-pass (2026-10-03): `_resimulateSearch` — the crown search re-simulates the roster.
  */
-export const legacySolve = (r: SolveRequest): SolvePayload => solveWithMint(r)
+export const legacySolve = (r: SolveRequest): SolvePayload => solveWithMint({ ...r, _resimulateSearch: true })
 export const variantSolve = (r: SolveRequest): SolvePayload => solveWithMint(r)
 
 /** Run both sides; assert the legacy KIND (an arm must exercise what it exists for), then the

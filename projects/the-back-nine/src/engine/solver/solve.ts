@@ -51,6 +51,7 @@ import {
   type GradeStatistic,
 } from '../validation/gradeCalibration'
 import { evaluateCandidates } from '../validation/evaluate'
+import type { EvaluatedRosterPass } from '../validation/rankingStability'
 import {
   goalHeadlineStatistic,
   leaveMoreSkewDisclosure,
@@ -88,6 +89,12 @@ export interface SolveInput {
    *  path is drivable at a small path count. The live binding NEVER passes this — the calibrated
    *  floor governs, and a base below it yields a structured `gradeUnavailable` (never a throw). */
   readonly _gradeMinPaths?: number
+  /** SHARE-THE-PASS (the solve-time build, 2026-10-03): ranking stability's evaluation of this exact
+   *  run, handed on by the mint (`solveEntry.ts`) so the crown search ADOPTS the roster's two-seed
+   *  outcomes instead of re-simulating them. Refused (a throw → the calm compute-error) unless its
+   *  fingerprint is the run this token blesses; never reaches the probe's search (another world) or
+   *  the grade (other seeds). Absent ⇒ the search re-simulates, as before. */
+  readonly sharedPass?: EvaluatedRosterPass
 }
 
 // ---- the value-model payload (the wire serializes this) --------------------------------------
@@ -427,6 +434,11 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
         'than the one solve() was asked to bless — refusing rather than shipping another run’s validation',
     )
   }
+  // A shared pass must be THIS blessed run too (the same fingerprint the token carries). A mismatch is
+  // a caller bug, never a household state — a throw (→ the calm compute-error), not a refusal reason.
+  if (input.sharedPass !== undefined && input.sharedPass.fingerprint !== runFingerprint) {
+    throw new Error('[solve] the shared pass was evaluated over a DIFFERENT run than the token blesses — refusing to adopt it')
+  }
 
   // (2) The bucket precondition (§S5 (3)): the solver searches sequencing × conversion, which
   // require per-person tax buckets — a tax-blind spine has no split to sequence. Refuse structurally.
@@ -469,7 +481,10 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
     return solveAborted('solve aborted before the K-candidate search (a newer dispatch superseded it)')
   }
 
-  // (4) Search the sequencing-only field on BOTH seed-sets (A selects; B displays + grades).
+  // (4) Search the rankable field on BOTH seed-sets (A selects; B displays + grades). When the whole
+  // roster ranks (the live case since 2026-07-19) and the mint handed on its stability pass, the
+  // search ADOPTS that pass's outcomes — the same simulations, run once (share-the-pass). A ranked
+  // SUBSET is a different roster than the pass evaluated, so it re-simulates.
   const search: SolverSearchResult = runSearch({
     base,
     candidates: rankable,
@@ -477,6 +492,7 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
     goal,
     tieTolerance,
     ...(heirBracket !== undefined ? { heirBracket } : {}),
+    ...(input.sharedPass !== undefined && rankable === candidates ? { sharedPass: input.sharedPass } : {}),
   })
 
   // (5) Select: shrinkage + deterministic crown. A demotion-axis refusal routes to a structured
@@ -578,7 +594,9 @@ export function solve(token: OracleClearedToken, input: SolveInput, shouldAbort?
   // arm), not the raw argmax: a probe that flips the argmax but not the shrunk crown (or the reverse)
   // would name a driver the user never sees. `baselineCrown` is the selection winner we already
   // computed (reused, not re-evaluated). A probed world whose selection WITHHOLDS is a DIFFERENT crown
-  // by construction (the string arm is deliberate). Cheap re-ranks; never fabricates a cause.
+  // by construction (the string arm is deliberate). Never fabricates a cause. NOT cheap: each probed
+  // world is a full two-seed search of the rankable roster (no shared pass — a different world) —
+  // measured 105.7 s of 339 s on `retired`, 281.5 s of 799 s on `healthnc` (2026-10-03).
   const shippedCrown = (probedParams: SimulationParams): string => {
     const s = runSearch({
       base: probedParams,

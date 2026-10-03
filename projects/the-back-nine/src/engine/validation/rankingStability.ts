@@ -62,6 +62,33 @@ export function decisionSurfaceIdentical(a: Distribution, b: Distribution): bool
 }
 
 declare const STABILITY_REPORT: unique symbol
+declare const EVALUATED_ROSTER_PASS: unique symbol
+
+/**
+ * SHARE-THE-PASS (the solve-time build, 2026-10-03): the whole roster this report evaluated, on BOTH
+ * seeds, handed on so `solve()`'s crown search ADOPTS it instead of re-simulating the same
+ * `(base, candidates, seedA | seedB)` a second time — measured as a third of the production solve
+ * (`e2e/held/solve-phase-profile.spec.ts`: 105.5 s of 339 s on `retired`, 228.6 s of 799 s on `healthnc`).
+ *
+ * Branded — mintable only by {@link runRankingStability} on a clean pass, so no caller can hand the
+ * search outcomes for a run they did not evaluate. It deliberately rides BESIDE the report, never on
+ * it or on the token: the report and the token are IDENTITY (the token is serialized and spread by
+ * its tests and the mint), the pass is bulk data. `base` / `candidates` are the SAME references the
+ * stability pass ran; `runSearch` refuses any other (`search.ts`), and `solve()` refuses a pass whose
+ * fingerprint is not the run it blesses. The outcomes carry the survivor-crossing stamp the stability
+ * check requested — `adoptObservedOutcome` (`evaluate.ts`) strips it. The arrays are FROZEN and shared
+ * by reference: never mutate an outcome, a distribution or a vector reached from here.
+ */
+export interface EvaluatedRosterPass {
+  readonly [EVALUATED_ROSTER_PASS]: true
+  readonly base: SimulationParams
+  readonly candidates: readonly CandidateStrategy[]
+  readonly seedA: number
+  readonly seedB: number
+  readonly fingerprint: SolverRunFingerprint
+  readonly outcomesA: readonly CandidateOutcome[]
+  readonly outcomesB: readonly CandidateOutcome[]
+}
 
 /** Branded — mintable only by {@link runRankingStability} on a clean pass. */
 export interface RankingStabilityReport {
@@ -177,7 +204,7 @@ export function runRankingStability(opts: {
    *  because the report is the run-fingerprint authority and tieTolerance is a ranking-affecting input
    *  (it decides survival-equivalence ⇒ the winner) absent from the engine params. */
   readonly tieTolerance: number
-}): { readonly report: RankingStabilityReport } | RankingStabilityFailure {
+}): { readonly report: RankingStabilityReport; readonly pass: EvaluatedRosterPass } | RankingStabilityFailure {
   const { base, candidates, seedA, seedB, perturbIndex, siblingIndex, ranking, tieTolerance } = opts
   const violations: StabilityViolation[] = []
 
@@ -286,15 +313,26 @@ export function runRankingStability(opts: {
   }
 
   if (violations.length > 0) return { ok: false, violations }
+  // Bound to the EXACT roster this report proved stable (§S0.2) — the token copies it verbatim.
+  // The run pair (seedA, tieTolerance) joins the identity (§S0.2 v2) — both ranking-affecting.
+  // Computed ONCE: the report and the shared pass carry the same value, never two derivations.
+  const fingerprint = solverRunFingerprint(base, candidates, ranking, { seedA, tieTolerance })
   const report = {
     ok: true,
     candidateCount: candidates.length,
     seeds: [seedA, seedB],
     minSurvivorCrossings: minCrossings,
     infeasibleCount,
-    // Bound to the EXACT roster this report proved stable (§S0.2) — the token copies it verbatim.
-    // The run pair (seedA, tieTolerance) joins the identity (§S0.2 v2) — both ranking-affecting.
-    fingerprint: solverRunFingerprint(base, candidates, ranking, { seedA, tieTolerance }),
+    fingerprint,
   } as unknown as RankingStabilityReport
-  return { report }
+  const pass = {
+    base,
+    candidates,
+    seedA,
+    seedB,
+    fingerprint,
+    outcomesA: Object.freeze(outcomesBySeed[0]!),
+    outcomesB: Object.freeze(outcomesBySeed[1]!),
+  } as unknown as EvaluatedRosterPass
+  return { report, pass }
 }

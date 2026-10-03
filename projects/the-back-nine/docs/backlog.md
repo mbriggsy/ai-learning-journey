@@ -401,14 +401,14 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
   runner-up whenever only one conversion's advantage survives shrinkage — so
   winner-converts/runner-up-doesn't is the **natural** shape for a well-funded leave-more household, not
   a rare one. Real guard is `select.ts:334-337`; the throw is `gradeCalibration.ts:172-177` via
-  `gradeOnFamily:200`; the catch narrow is `solve.ts:349`, rethrow `:350`.
+  `gradeOnFamily:200`; the catch narrow is `solve.ts:356`, rethrow `:357`.
 - ⚑ **The engine one-liner was HALF the fix (pre-fix record, DISCHARGED 2026-08-03).** The withheld arm
   (today `recommendationView.ts:439-448`) MAPPED `withheld` to the SAME generic `copy.recommendUnavailable`
   as `compute-error`, so widening the guard alone would have converted a crash into an **identical generic
   card**. It was routed through the held shape (`case 'withheld'` returns `{ kind: 'held', … }`; `heldView` is
   `recommendationView.ts:469`) with a new `recHoldDemotionAxis` key — `copyGuard.ts:123` makes `recHold*` require-hedge, so it must wear a modal.
 - ⚑ **Four comments would become NEW false claims** and must be swept in the same commit —
-  `select.ts:134-135`, `select.ts:322-329`, `solve.ts:151-152`, `solve.ts:484-487` each asserted, before the 2026-08-03 sweep,
+  `select.ts:134-135`, `select.ts:322-329`, `solve.ts:158-159`, `solve.ts:500-503` each asserted, before the 2026-08-03 sweep,
   that the `leave-more` arm *"falls through to a THROW"* (all four read past-tense today). This is the exact class `30e5bc31` just cleaned up.
 - ⚑ **RED-GATE RISK:** `select.test.ts:293` asserts `kind === 'selected'` on a live-shaped leave-more
   world, and its comment at `:295-297` now records the opposite outright (*"NOT 'leave-more never routes to withheld' — since 2026-08-03 it can"*).
@@ -960,7 +960,7 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 `L` · **pilot** (the engine half) · **briggsy** (the interim words) · filed 1× — `A13`
 
 - Modest-pre-tax household: refused a SEQUENCING recommendation the engine could actually compute
-- ⚠️ **DOWN-RANKED — the filed fix is UNSHIPPABLE as written.** `solveEntry.ts:167-174` mint-fails the roster *before* `solve()` runs, and `rankingStability.ts:224-237` knows only a conversion-**amount** perturbation — so dispatching the sequencing-only field would surface `mint-failed{roster}` **live**, the exact state `solveDispatch.ts:80` forbids in its own comment. Doing it properly needs a second validation law under every shipped recommendation, a one-way door on what "validated" means.
+- ⚠️ **DOWN-RANKED — the filed fix is UNSHIPPABLE as written.** `solveEntry.ts:171-178` mint-fails the roster *before* `solve()` runs, and `rankingStability.ts:251-264` knows only a conversion-**amount** perturbation — so dispatching the sequencing-only field would surface `mint-failed{roster}` **live**, the exact state `solveDispatch.ts:80` forbids in its own comment. Doing it properly needs a second validation law under every shipped recommendation, a one-way door on what "validated" means.
 - ⚑ **DO-NOT-EXECUTE — the "cheap copy fix" is a TRAP (found 2026-08-02 while attempting it):** do NOT reword `recommendNoPretaxNote` (`copy.ts:1734-1735`) to blame only the conversion half. `solveDispatch.ts:91` returns `'no-pretax'` and runs NO solve, so a conversion-only sentence would promise a withdrawal-order answer the code never delivers — trading a false CAUSE for a false PROMISE. Any honest rewording must ALSO say no order is ranked here (the current "a withdrawal strategy" wording was chosen deliberately, per `copy.ts:1728-1733`). Briggsy's words, or ship the engine half first. (The diagnosis stands: sequencing across taxable and Roth is real and rankable — the refusal is the dispatcher's, not the engine's.)
 
 ### ~~The recommendation never names the winning strategy, the runner-up, or what to do~~ — **the STRATEGY half CLOSED 2026-08-05 (`db371655`); the RUNNER-UP half stays open**
@@ -2234,7 +2234,7 @@ legend-deviation session, 8/10 — `docs/council-log.md`)
 
 - `src/engine/solver/profile.ts:109` computes `rankableCount` as `request.candidates.filter((c) => c.conversion
   === null).length` — the sequencing-only subset the solve ranked BEFORE the Medicare-cost-trend unit — while
-  `src/engine/solver/solve.ts:459-464` derives the live `rankable` from `enumerateWithheldConversionLevers`,
+  `src/engine/solver/solve.ts:471-476` derives the live `rankable` from `enumerateWithheldConversionLevers`,
   which is the WHOLE roster whenever the trend clause is clear (conversions rank since 2026-07-19). The module's
   own budget shape (`profile.ts:12-17`) says search ≈ 2·|rankable| and now names the whole roster; the field it
   is judged against does not.
@@ -2243,7 +2243,7 @@ legend-deviation session, 8/10 — `docs/council-log.md`)
   regression signal the module exists to raise. Instrument only: `profile.ts` REPORTS, never judges, and no
   shipped path consumes it — no user-visible wrong answer. But it is the WASM-trigger measurement the roadmap's
   U15 row names, so a false super-linear reading would mis-fire that decision.
-- Fix shape: derive the field from `enumerateWithheldConversionLevers`'s output exactly as `solve.ts:459-464`
+- Fix shape: derive the field from `enumerateWithheldConversionLevers`'s output exactly as `solve.ts:471-476`
   does (one shared helper, never a second `conversion === null` filter), and re-pin `profile.test.ts:86-87`,
   which today asserts the `conversion === null` subset BY NAME. ⚑ NEGATIVE — the comments at `profile.ts:44-52`
   and `profile.test.ts:86-87` state the divergence deliberately; do not re-label the field "what solve ranks"

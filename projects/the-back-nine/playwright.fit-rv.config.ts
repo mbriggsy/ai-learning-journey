@@ -38,12 +38,12 @@ export default defineConfig({
   // COMMITTED_LOCKUP_MS from (the spec's `[rv-lockup]` line + list's per-test durations are it).
   reporter: process.env.CI ? [['github'], ['list'], ['html', { open: 'never' }]] : 'list',
   // One arm per test: the seed's FINAL tier (reviewSurface FINAL_TIER_MS, 150 s) + the committed
-  // lockup (COMMITTED_LOCKUP_MS in the spec, 720 s — set when the caddie walk shared it; the walk
-  // re-budgeted to 300 s on the pool (e2e/caddie-walk.spec.ts SOLVE_LOCKUP_MS), and this one waits
-  // for its re-budget from CI's per-test time on the pooled build)
-  // + two audits and the planted control. 900 s holds a full-budget lockup with the seed's final tier
-  // and the audits inside it — the lockup is the part that actually varies. Measured 2026-09-07 on a
-  // 20-thread laptop: 8.0 / 7.7 / 6.0 min per arm (PHONE / FLOOR / REAL), 21.8 min for the gate.
+  // lockup (COMMITTED_LOCKUP_MS in the spec, 360 s — re-budgeted 2026-10-04 from CI's `[rv-lockup]`
+  // lines on the pooled build: worst arm 175.2 s across four green runs; it was 720 s on the single
+  // worker) + two audits and the planted control. 900 s holds a full-budget lockup with the seed's
+  // final tier and the audits inside it with room to spare — the lockup is the part that actually
+  // varies. Measured 2026-09-07 on the single worker (20-thread laptop): 8.0 / 7.7 / 6.0 min per arm
+  // (PHONE / FLOOR / REAL), 21.8 min for the gate; on the pool, CI runs all three in 5.4–8.8 min.
   timeout: 900_000,
   use: {
     baseURL: 'http://127.0.0.1:4192', // 127.0.0.1, NOT localhost (dodges the IPv4/IPv6 readiness flake)

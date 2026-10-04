@@ -45,12 +45,14 @@ import { type Audit, floorPx, audit, assertChartText } from './chartTextAudit'
  * `svg.rv` (never the Suspense placeholder) and a settled layout (settleLayout).
  */
 
-/** The committed lockup's own wait — sized 2026-09-07 for the single-worker full-precision (16k-path)
- *  solve of the `surplus` household (~4–7 min). The Caddie walk re-budgeted to its own 300 s on the
- *  worker pool (e2e/caddie-walk.spec.ts SOLVE_LOCKUP_MS); this one's re-budget from CI is still owed,
- *  from the `[rv-lockup]` lines below (≤ ~50 % of the budget) — CI printed no per-test time before
- *  2026-10-04 (the job's whole-file totals on the pooled v9 build: 5.4–8.9 min for all three arms). */
-const COMMITTED_LOCKUP_MS = 720_000
+/** The committed lockup's own wait — re-budgeted 2026-10-04 from CI's `[rv-lockup]` lines (below) on
+ *  the pooled v9 build (a 4-vCPU runner pools at P = 2): four green runs, worst arm 175.2 s (run
+ *  37209533038 PHONE; 37210195129 / 37216600023 171–175 s, the ~8.8-min runner state; 37214920867
+ *  130.8–131.9 s, the faster state). 360 s is ≥ 2× the worst arm, so the worst sits at ≤ ~50 % of the
+ *  budget. It was 720 s, sized 2026-09-07 for the single-worker solve (~4–7 min); a ≤ 3-core machine
+ *  gets no pool and would need that again. The Caddie walk's own pooled budget is 300 s
+ *  (e2e/caddie-walk.spec.ts SOLVE_LOCKUP_MS). Re-read the `[rv-lockup]` lines after any roster growth. */
+const COMMITTED_LOCKUP_MS = 360_000
 
 /** figure → the card it must stay inside. Both charts sit in a `.rec-viz-box` (the CLS reservation,
  *  src/ui/styles/recommendation.css); the runner-up's is the one wearing `.rec-runnerup__viz`. */

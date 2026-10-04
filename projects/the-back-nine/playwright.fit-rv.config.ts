@@ -33,7 +33,10 @@ export default defineConfig({
   workers: 1,
   forbidOnly: !!process.env.CI, // a stray test.only fails CI rather than silently narrowing the gate
   retries: process.env.CI ? 1 : 0,
-  reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
+  // `list` on CI too: the `github` reporter prints no per-test time and no test stdout, and the html
+  // report uploads on failure only, so a green run left no measurement to re-budget
+  // COMMITTED_LOCKUP_MS from (the spec's `[rv-lockup]` line + list's per-test durations are it).
+  reporter: process.env.CI ? [['github'], ['list'], ['html', { open: 'never' }]] : 'list',
   // One arm per test: the seed's FINAL tier (reviewSurface FINAL_TIER_MS, 150 s) + the committed
   // lockup (COMMITTED_LOCKUP_MS in the spec, 720 s — set when the caddie walk shared it; the walk
   // re-budgeted to 300 s on the pool (e2e/caddie-walk.spec.ts SOLVE_LOCKUP_MS), and this one waits

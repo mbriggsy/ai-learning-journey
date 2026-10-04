@@ -47,7 +47,9 @@ import { type Audit, floorPx, audit, assertChartText } from './chartTextAudit'
 
 /** The committed lockup's own wait — sized 2026-09-07 for the single-worker full-precision (16k-path)
  *  solve of the `surplus` household (~4–7 min). The Caddie walk re-budgeted to its own 300 s on the
- *  worker pool (e2e/caddie-walk.spec.ts SOLVE_LOCKUP_MS); this one's re-budget from CI is still owed. */
+ *  worker pool (e2e/caddie-walk.spec.ts SOLVE_LOCKUP_MS); this one's re-budget from CI is still owed,
+ *  from the `[rv-lockup]` lines below (≤ ~50 % of the budget) — CI printed no per-test time before
+ *  2026-10-04 (the job's whole-file totals on the pooled v9 build: 5.4–8.9 min for all three arms). */
 const COMMITTED_LOCKUP_MS = 720_000
 
 /** figure → the card it must stay inside. Both charts sit in a `.rec-viz-box` (the CLS reservation,
@@ -82,9 +84,17 @@ async function gotoCommittedLockup(page: Page): Promise<void> {
   await dialog.getByRole('button', { name: 'See the strategy', exact: true }).click()
   await expect(dialog, 'the GoalPicker did not close on confirm').toBeHidden()
   await expect(page.locator('.solve-pending'), 'the pending breathe never mounted (a refusal would render instantly here)').toBeVisible()
+  const pendingAt = Date.now()
   await expect(page.locator('.rec-held, .rec-committed'), 'no lockup after the full-precision solve (expected the RECOMMENDED card)').toBeVisible({
     timeout: COMMITTED_LOCKUP_MS,
   })
+  // THE RE-BUDGET INSTRUMENT: CI's reporters print no per-test time on a green run (the html report
+  // uploads on failure only), so COMMITTED_LOCKUP_MS could never be re-budgeted from CI. This line is
+  // the measurement it needs — the lockup wait itself, per arm; the CI `list` reporter prints it.
+  const lockupS = (Date.now() - pendingAt) / 1000
+  // The arm is the describe block (the three arms share one test title).
+  const arm = test.info().titlePath.at(-2) ?? test.info().title
+  console.log(`[rv-lockup] ${arm}: ${lockupS.toFixed(1)} s of the ${COMMITTED_LOCKUP_MS / 1000} s budget`)
   // NON-VACUITY, the seed guard: a HELD card renders no chart. Red, never skip — re-pick the seed.
   await expect(page.locator('.rec-committed'), '?seed=surplus produced a HELD card, not a RECOMMENDED lockup — this gate has no chart to measure; re-pick the seed').toHaveCount(1)
   // The real chart, never the Suspense placeholder (the lazy chunk): the primary viz is DOM-first.

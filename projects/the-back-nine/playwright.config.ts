@@ -38,7 +38,9 @@ export default defineConfig({
     '**/chart-text-rv.spec.ts',
     '**/intake-fold.spec.ts',
     '**/caddie-walk.spec.ts',
-    '**/held/**', // INSTRUMENTS, never gates — e2e/held/shots.config.ts owns them, on demand
+    // INSTRUMENTS, never gates — e2e/held/shots.config.ts (dev server) and e2e/held/solve-timing.config.ts
+    // (the built app: solve-timing / solve-phase-profile / solve-pool) own them, on demand
+    '**/held/**',
   ],
   fullyParallel: true,
   forbidOnly: !!process.env.CI, // a stray test.only fails CI rather than silently narrowing the gate

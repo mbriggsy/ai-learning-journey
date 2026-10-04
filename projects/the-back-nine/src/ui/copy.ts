@@ -1751,7 +1751,7 @@ export const copy = {
   // worker pool it is, at his laptop: `retired` 36.5 s, `nc` 39.8 s, `healthnc` 150.9 s invite → lockup
   // on the 2026-10-03 production build (12 eval workers, SOLVER_CODE_VERSION 9's rosters) — `healthnc` in
   // the ~2× slow laptop state (~5 min) is the phrase's edge, so the next roster growth re-times it first. Still UNTRUE where the pool cannot run (≤ 3 logical cores ⇒ the single worker, `healthnc`
-  // ~9 min) and UNMEASURED on his phone (register *The recommendation's pending line…*). Ends with the ellipsis glyph; NO
+  // ~9 min at v8; unmeasured at v9) and UNMEASURED on his phone (register *The recommendation's pending line…*). Ends with the ellipsis glyph; NO
   // spinner / % / count / ETA / countdown (a real duration in plain words reassures; a fabricated
   // progress clock would lie).
   recommendPendingLabel: 'Working out your strategy — this can take a few minutes…',
@@ -2207,7 +2207,7 @@ export const slots = {
    *
    *  ⚠️ DO NOT "FIX" THIS BY DROPPING THE TODAY TICK. That inverts the contradiction into the
    *  defect U13/§S0 already fixed — `bandAnnotations.ts:51-56` records it live from the first
-   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2182-2185` (the `?vault=datearrived` arm — "must still
+   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2189-2192` (the `?vault=datearrived` arm — "must still
    *  mark WALL-TIME today") forbids a band that loses its wall clock BY NAME. The tick is right; the sentence was wrong. */
   bandAgedPremiseFresh: (buildYear: number): string =>
     `This range runs from ${buildYear}, when the plan was built — the years since are modeled, not records. What you actually hold today is undetermined until you re-confirm.`,
@@ -2429,8 +2429,8 @@ export const slots = {
    *  the size as unworked. Since the spend solve shipped (`spendSolve.ts`, 2026-09-26) this is the
    *  UNSIZED fallback: `verdictSentence.ts` renders it whenever `spendClauseFor` yields no clause (the
    *  lane idle, a held word, a mismatched direction) or an unsized reason that does not deny room
-   *  (`non-monotone`, `unbracketed`, `below-grid` — the lane could not bracket a figure, not that there
-   *  is none); `within-a-step` and `survivor-short` get their own room-denying forms below. */
+   *  (`budget-governed`, `non-monotone`, `unbracketed`, `below-grid` — the lane sized no figure, not
+   *  that there is none); `within-a-step` and `survivor-short` get their own room-denying forms below. */
   verdictRoomClause: (spendFormatted: string): string =>
     `There looks to be room to spend more than $${spendFormatted} a month. This answer doesn’t work out how much more.`,
   /** 'room' while the spend solve is IN FLIGHT — the first sentence alone (council wf_faa1af2d-052:
@@ -2439,8 +2439,8 @@ export const slots = {
   /** 'room', UNSIZED because the headroom is under one $100 step (`spendSolve` `within-a-step`: the
    *  entered spend passes, a run one step above it FAILED — both run). The shipped fallback's "room to
    *  spend more" oversold a sub-$100 margin (the register's Tier 0 room sentence), so this form claims
-   *  NO room and quotes no step: the edge is a reading, never a figure. PILOT DRAFT — the words are
-   *  Briggsy's (a Caddie read, then his cold read). */
+   *  NO room and quotes no step: the edge is a reading, never a figure. PILOT-DRAFTED, RULED by
+   *  Briggsy's cold read of `seed:steer` 2026-09-27 (taste-corpus E19) — they stand. */
   verdictRoomWithinStep: (spendFormatted: string): string =>
     `Spending more than $${spendFormatted} a month would start to sit close to the line.`,
   /** 'room', UNSIZED because the survivor reading at the entered spend is not on track
@@ -2641,7 +2641,7 @@ export const slots = {
    *  WHY IT CANNOT SAY "under way": `startYearPassed` proves only that the START is behind the wall
    *  clock — a 4-year schedule begun in 2024 is FINISHED by 2029, and "already under way" would be
    *  false there. Every clause here is true whether the schedule is running or complete; deciding
-   *  what a mid-flight start MEANS to the engine is the re-anchoring fork FILED at RothLever.tsx:49-50,
+   *  what a mid-flight start MEANS to the engine is the re-anchoring fork FILED at RothLever.tsx:50-51,
    *  and this copy deliberately does not pre-empt it.
    *
    *  IT PROMISES ONLY WHAT EXISTS (insight 100). Apply is genuinely unreachable here — `complete()`
@@ -3066,7 +3066,7 @@ export const slots = {
    *  BITES it the way it bites its visual twin `recDeltaTypical`: the AT reader hears the same figures the
    *  sighted reader sees, so the same modal law must hold. A `recViz` prefix was rejected — it would red the
    *  three correctly hedge-free arm labels (`recVizWithLabel`/`recVizWithoutLabel`/`recVizRunnerUpLabel`,
-   *  copy.ts:1955-1962 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
+   *  copy.ts:1958-1965 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
    *  `isControlKey` was rejected — it breaks that predicate's "by prefix ALONE" law (copyGuard.ts:129). */
   recDeltaVizAria: (withoutLabel: string, withoutFig: string, withLabel: string, withFig: string, deltaFig: string): string =>
     `${withoutLabel} lands near about $${withoutFig}; ${withLabel} about $${withFig} — a difference of about $${deltaFig}.`,

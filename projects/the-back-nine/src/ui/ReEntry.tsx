@@ -18,7 +18,9 @@
  * disclosure; the one button here continues to the verdict.
  *
  * The staleness note lines render HERE — at the gate, before the verdict — naming every
- * clock that fired (the Q1 disclosure). The hero carries only the standing one-line echo.
+ * clock that fired, then the engine-pricing ledger's method line / nameless twin /
+ * Medicare-spending re-confirm when they apply (the Q1 disclosure; reentryChrome.ts
+ * composes them). The hero carries only the standing one-line echo.
  */
 import { useEffect, useRef } from 'react'
 import { focusHeading } from '@intake/a11y'

@@ -869,6 +869,8 @@ describe('the recommend-second witness seed (engine-proven solve regime)', () =>
     // roster 33 → 73 — CI read 21.4 s at v7, 43.1 s at v8, and 60.1 s (timed out at 60) on a runner
     // ~1.4× slower across the board, 2026-09-28. A cheaper witness would need a smaller roster, which is
     // not the claim under test.
+    // v9 (53f1ae71, the window-frame anchors) grew it again 73 → 97 — CI read 39.6 s (run 37166135388,
+    // 2026-10-04), still inside 120 s.
   }, 120_000)
 
   it("'surplus' lands an OVER-FUNDED active recommendation (surplusRegime true, noChange false) through the real solve", () => {
@@ -884,6 +886,7 @@ describe('the recommend-second witness seed (engine-proven solve regime)', () =>
     ).toBe(false)
     // The 120s-timeout idiom, measured: v8's IRMAA window anchors grew this roster 49 → 69 — CI read
     // 23.3 s at v7, 28.6 s / 34.3 s at v8 (the second on a ~1.4× slower runner), 2026-09-28.
+    // v9 (53f1ae71) grew it again 69 → 93 — CI read 14.7 s (run 37166135388, 2026-10-04).
   }, 120_000)
 
   /**
@@ -1055,7 +1058,7 @@ describe('the no-pretax steer witness seed (engine-proven refusal regime)', () =
 describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () => {
   const TODAY = currentEpochDay()
 
-  it("'stale' composes EXACTLY the two lines its doctored stamps can honestly support — tax NAMED, the Medicare family NAMED, the blend re-date SILENT", () => {
+  it("'stale' composes EXACTLY the lines its doctored stamps and the engine-pricing ledger can honestly support — tax NAMED, the Medicare family NAMED, the blend re-date SILENT, the ledger's method line when a reprice crossed the save, and the Medicare-spending re-confirm", () => {
     const built = scenarioFromDraft(DEV_SEEDS.retired)
     expect(built.ready, 'retired must be save-ready').toBe(true)
     if (!built.ready) return

@@ -12,8 +12,9 @@
  *                     full-precision `solverMinBPaths` floor so the live solve runs the SEARCH and the
  *                     grade B-family at 16,000 paths (S5 deferred — no interactive down-sampling; a
  *                     below-floor base would yield a calm "couldn't grade it");
- *   - `candidates`  ← `enumerateSolveCandidates` (the shipped enumerator over the source-bound year-0
- *                     anchor — `solver/solveAnchor.ts`);
+ *   - `candidates`  ← `enumerateSolveCandidates` (the shipped enumerator over the source-bound anchor
+ *                     context — year 0's committed-income skeleton + every conversion-window year's own
+ *                     committed frame, each rail judged in its year's frame — `solver/solveAnchor.ts`);
  *   - `ranking`     ← `draft.chosenGoal` (the OracleGoal is the RecommendationGoal 1:1) + the R7
  *                     `solverAssumedHeirBracket` default for a leave-more solve (undefined for
  *                     pay-less-tax);

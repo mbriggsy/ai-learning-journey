@@ -1,7 +1,8 @@
 /**
  * `solve.ts` — the SOLVER's recommendation ENTRY (U15 §S5): the gate, the trend-block-by-design,
- * the wire payload's value model. RANKS the sequencing-only field, ENUMERATES the withheld
- * conversion levers, and assembles the one structured payload U16 renders.
+ * the wire payload's value model. RANKS the whole roster while the trend clause is clear (the
+ * sequencing-only field, ENUMERATING the withheld conversion levers, only if it re-blocks — below),
+ * and assembles the one structured payload U16 renders.
  *
  * THE GATE IS TWO-CLAUSE (§S5 (1)): `solve()` takes an {@link OracleClearedToken} as a REQUIRED
  * parameter — a recommendation path without a token is a TypeScript COMPILE error (the Act-1
@@ -74,9 +75,11 @@ export interface SolveInput {
    *  fingerprint binds them). Carries the tax overlay (the bucket precondition — §S5 (3)). */
   readonly base: SimulationParams
   /** The FULL enumerated candidate roster the token's fingerprint covers (sequencing arms +
-   *  the conversion grid). `solve()` ranks the sequencing-only subset and enumerates the
-   *  conversion subset as withheld — it never RE-enumerates (the shared `candidates.ts` is the
-   *  one enumerator; a caller passes `enumerateCandidates(...).candidates` straight through). */
+   *  the conversion grid). `solve()` ranks the WHOLE roster while the token's trend clause is
+   *  clear (since 2026-07-19); only if the clause re-blocks does it rank the sequencing-only
+   *  subset and enumerate the conversion subset as withheld — it never RE-enumerates (the shared
+   *  `candidates.ts` is the one enumerator; a caller passes `enumerateCandidates(...).candidates`
+   *  straight through). */
   readonly candidates: readonly CandidateStrategy[]
   /** The Act-2 selection seed (integer). seed-set B is `deriveSeedB(seedA)` — never re-derived here. */
   readonly seedA: number
@@ -414,8 +417,10 @@ const refused = (reason: SolveRefused['reason'], detail: string): SolveRefused =
 /**
  * Solve for the recommendation over a household + its enumerated roster, gated by the
  * oracle-cleared token (§S5). The token is REQUIRED (the compile gate) and its fingerprint is
- * re-checked (the identity gate). Conversions stay trend-blocked (ranked sequencing-only + the
- * withheld levers enumerated). Deterministic in `(token, input)`.
+ * re-checked (the identity gate). Conversions rank with the whole roster while the Medicare-trend
+ * clause is clear (the live case since 2026-07-19); only if it re-blocks does the field fall back to
+ * the sequencing-only subset with the withheld levers enumerated (step (3)). Deterministic in
+ * `(token, input)`.
  *
  * `shouldAbort` is the OPTIONAL injected cooperative-abort seam (§S6, `cancel.ts`): checked at the
  * COARSE stage boundaries that bracket the two dominant cost centers — before the K-candidate search

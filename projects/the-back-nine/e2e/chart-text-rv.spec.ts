@@ -36,18 +36,18 @@ import { type Audit, floorPx, audit, assertChartText } from './chartTextAudit'
  * temp/chart-text/verify-rv.json, REAL's primary 496). FLOOR is the narrowest DESKTOP box: the
  * primary drops 576 → 408 px across the 1088 two-pane cliff while the runner-up's holds 576
  * (temp/chart-text/raw-1b-sweep-rv.json — a sweep that starts at 632, so it says nothing about the
- * phone). No 320 arm yet: every arm is a ~6–8 min test (a ~4–7 min solve plus the seed's final tier
- * and the audits — measured 2026-09-07: 8.0 / 7.7 / 6.0 min on a 20-thread laptop, 21.8 min for
- * the gate), and the RV has never been rendered at 320 by anyone (register: "The gates that don't
- * bite").
+ * phone). No 320 arm yet: on the single worker every arm was a ~6–8 min test (a ~4–7 min solve plus
+ * the seed's final tier and the audits — measured 2026-09-07: 8.0 / 7.7 / 6.0 min on a 20-thread
+ * laptop, 21.8 min for the gate; on the worker pool CI runs all three in 5.4 min, run 37166135388),
+ * and the RV has never been rendered at 320 by anyone (register: "The gates that don't bite").
  *
  * Every measurement waits for the FINAL engine tier (gotoSeedFinal), the committed lockup, the real
  * `svg.rv` (never the Suspense placeholder) and a settled layout (settleLayout).
  */
 
-/** The committed lockup's own wait — the full-precision (16k-path) solve of the `surplus` household
- *  is ~4–7 min with the whole machine (playwright.caddie.config.ts, measured); the Caddie walk polls
- *  the same lockup with this budget (e2e/caddie-walk.spec.ts walkSolve). One number, two harnesses. */
+/** The committed lockup's own wait — sized 2026-09-07 for the single-worker full-precision (16k-path)
+ *  solve of the `surplus` household (~4–7 min). The Caddie walk re-budgeted to its own 300 s on the
+ *  worker pool (e2e/caddie-walk.spec.ts SOLVE_LOCKUP_MS); this one's re-budget from CI is still owed. */
 const COMMITTED_LOCKUP_MS = 720_000
 
 /** figure → the card it must stay inside. Both charts sit in a `.rec-viz-box` (the CLS reservation,

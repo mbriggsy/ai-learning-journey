@@ -23,6 +23,8 @@
  * (8d4d4e58, 2026-07-30) and the verdict's spending-room figure moving from a proxy to the spend solve
  * (6e4c065d, 2026-09-26): the register's *The engine-pricing ledger cannot name a date-route or
  * spending-figure change…* carries them.
+ * Row 10 (the IRMAA growth base) shipped in `252b88da` — its own commit, so its `commits` field could
+ * only carry a placeholder.
  *
  * THE PARKED RESIDUALS (one-way doors the council parked, stated so no one reads the ledger as
  * total): (1) a save made AFTER a ship day by an OLD build (a stale PWA) reads as covered but was

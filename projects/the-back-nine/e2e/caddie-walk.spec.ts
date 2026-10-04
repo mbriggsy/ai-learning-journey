@@ -600,8 +600,11 @@ async function walkDoors(page: Page, outDir: string): Promise<void> {
  * The U13 decrypt-on-return arc: `?vault=<key>` plants the vault + lands on the unlock screen
  * with the dev passphrase PRE-FILLED (App) → the re-entry gate (the read-back + every fired
  * staleness clock, BEFORE any verdict — the reveal is gated) → affirm → the echoed verdict.
- * `?vault=stale` is the aged plant: the elapsed line + the tax/healthcare/blend notes at the
- * gate, the one-line standing echo + the un-noted backup door on the verdict frame.
+ * `?vault=stale` is the aged plant: the elapsed line + the tax and Medicare notes, the
+ * engine-pricing ledger's method line (when a reprice postdates the plant) and the
+ * Medicare-spending re-confirm at the gate (the blend re-date is silent for a manual-blend
+ * household — the line list is pinned in `devSeeds.test.ts`), the one-line standing echo + the
+ * un-noted backup door on the verdict frame.
  */
 async function walkVaultReturn(
   page: Page,

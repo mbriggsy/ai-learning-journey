@@ -54,7 +54,11 @@ export interface ReentryView {
   readonly balanceRows: readonly ReentryRow[]
   /** The Social Security fold-in rows (one per person with a benefit entered). */
   readonly benefitRows: readonly ReentryRow[]
-  /** The calm staleness note lines — every clock that fired, NAMED (empty = no drift). */
+  /** The calm note lines, in push order — the named fired clocks (app default, tax, state tax,
+   *  ACA, Medicare), then the engine-pricing ledger (`report.pricing`: the ONE named method line,
+   *  its nameless twin, the Medicare-spending re-confirm), then the contribution clock
+   *  (`stalenessDate`), the ONE nameless reference-tables line, and one budget line per boundary
+   *  year (empty = nothing to flag). */
   readonly noteLines: readonly string[]
   /** The "~N years since your save" line, or null (absent savedAt / under a year —
    *  SUPPRESSED, never fabricated). */
@@ -132,7 +136,7 @@ export function composeReentry(scenario: ScenarioV3, report: StalenessReport): R
   // "behind your date" wording is true) and exposure (their run actually prices a contribution
   // stream). (The blend clause left this line — it aggregates or goes silent now.)
   if (report.date.contributionMoved) noteLines.push(copy.stalenessDate)
-  // THE AGGREGATE, pushed AT MOST ONCE — `ReEntry.tsx:80` keys each note <p> by its own TEXT,
+  // THE AGGREGATE, pushed AT MOST ONCE — `ReEntry.tsx:84` keys each note <p> by its own TEXT,
   // so a second push of the same sentence would collide on the React key. One `if` over the
   // whole bucket is the structural guarantee (never a per-clock loop over `.clocks`).
   if (report.unattributed.moved) noteLines.push(copy.stalenessReferenceTables)

@@ -267,7 +267,7 @@ export interface SavedRecordCardView {
  * whoever would compute a boolean here: a flag minted upstream of the wiring decision either ships
  * a dead button or an unreachable arm. The surface renders the control IFF the caller wired the
  * handler — the shipped `onRepick === undefined ⇒ no dead door` law
- * (`RecommendationSurface.tsx:126`, pinned at `RecommendationSurface.test.tsx:331-333`) — which
+ * (`RecommendationSurface.tsx:126`, pinned at `RecommendationSurface.test.tsx:332-334`) — which
  * makes the label, the cost line and the onClick structurally inseparable.
  *
  * `todayEpochDay` is INJECTED (this module reads no clock).

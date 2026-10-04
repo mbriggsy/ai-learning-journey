@@ -578,7 +578,7 @@ const verdict = await agent(
 )
 
 // ---- Structural clamps on the verdict (insight 084: the CODE, not the prompt, is the enforcement
-// layer — the /council skill executes any >= 7/10 verdict that is not a hard stop).
+// layer — the /council skill executes any >= 7/10 verdict that is not a hard stop and whose action is not 'surface').
 // A crashed chair synthesized nothing: refuse, never return a verdict-shaped hole with no action.
 if (!verdict) {
   log('The chair seat crashed — no verdict synthesized; refusing to conclude (re-dispatch unchanged).')

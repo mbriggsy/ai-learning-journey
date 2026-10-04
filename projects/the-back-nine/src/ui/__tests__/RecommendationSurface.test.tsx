@@ -69,9 +69,10 @@ describe('RecommendationSurface — the pending tell', () => {
     const line = document.querySelector('.solve-pending')
     expect(line).not.toBeNull()
     expect(line?.textContent).toBe(copy.recommendPendingLabel)
-    // F-C: the label sets an HONEST duration expectation ("a few minutes" — TRUE for the measured
-    // 90s–6min wait) so the reader is never left wondering if it stalled. The planted mutant (reverting
-    // to the no-duration label) reds here.
+    // F-C: the label sets an HONEST duration expectation ("a few minutes" — TRUE on the worker pool at his
+    // laptop: 36.5–150.9 s on the 2026-10-03 production build; still UNTRUE on ≤ 3 logical cores, see
+    // copy.ts `recommendPendingLabel`) so the reader is never left wondering if it stalled. The planted
+    // mutant (reverting to the no-duration label) reds here.
     expect(line?.textContent, 'the pending label carries an honest duration phrase').toMatch(/a few minutes/)
     // Never a fake clock: NO digit ⇒ no countdown / % / ETA — calm reassurance, not a fabricated progress bar.
     expect(copy.recommendPendingLabel, 'no fake ETA / countdown / % — no digit at all').not.toMatch(/\d/)

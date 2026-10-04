@@ -4,10 +4,12 @@ import { defineConfig } from '@playwright/test'
  * The RecommendationViz chart-text gate (`verify:fit:rv`) — the fourth chart's arm of the §12
  * contract (docs/architecture.md, "SVG draws, HTML writes"), on its OWN harness because it is the
  * one chart that exists only AFTER a full-precision (16k-path) worker solve: ~4–7 min for the
- * solve alone with the whole machine (playwright.caddie.config.ts's measured band for the
- * `surplus` lockup), a ~6–8 min test per arm once the seed's final tier and the audits ride on it
- * (measured at `timeout` below). Beside the fit harness's concurrent date-seed finals (counted in
- * playwright.fit.config.ts) it would starve them of cores and they would starve it —
+ * solve alone on the single worker and a ~6–8 min test per arm once the seed's final tier and the
+ * audits rode on it (measured 2026-09-07, at `timeout` below). The 2026-10-03 worker pool cut the
+ * solve to ~30 s at 12 eval workers on his laptop (playwright.caddie.config.ts); on a 4-vCPU CI
+ * runner it pools at P = 2, and the whole three-arm gate ran in 5.4 min (run 37166135388). Beside
+ * the fit harness's concurrent date-seed finals (counted in playwright.fit.config.ts) it would
+ * starve them of cores and they would starve it —
  * the datesplit arms already timed out once at ten concurrent solves, after the chart-text spec grew
  * to 18 date renders (playwright.fit.config.ts).
  *
@@ -33,7 +35,9 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   // One arm per test: the seed's FINAL tier (reviewSurface FINAL_TIER_MS, 150 s) + the committed
-  // lockup (COMMITTED_LOCKUP_MS in the spec, 720 s — the caddie walk's budget for the same solve)
+  // lockup (COMMITTED_LOCKUP_MS in the spec, 720 s — set when the caddie walk shared it; the walk
+  // re-budgeted to 300 s on the pool (e2e/caddie-walk.spec.ts SOLVE_LOCKUP_MS), and this one waits
+  // for its re-budget from CI's per-test time on the pooled build)
   // + two audits and the planted control. 900 s holds a full-budget lockup with the seed's final tier
   // and the audits inside it — the lockup is the part that actually varies. Measured 2026-09-07 on a
   // 20-thread laptop: 8.0 / 7.7 / 6.0 min per arm (PHONE / FLOOR / REAL), 21.8 min for the gate.

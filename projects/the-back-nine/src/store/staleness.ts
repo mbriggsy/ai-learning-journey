@@ -113,8 +113,9 @@
  *
  * WHAT THE WITHDRAWN HEURISTIC WOULD HAVE SHIPPED — a SILENT STALE, built while fixing an
  * over-alarm. It bucketed `irmaa-freeze` to the aggregate because `irmaaTopTierFrozenThrough`
- * has no engine reader. But `irmaa.value` IS engine-read (simulate.ts:859; solveAnchor.ts:222,217;
- * taxOverlay.ts:1120 — where the whole tier ladder feeds `buildPartBPricingSchedule`), and
+ * has no engine reader. But `irmaa.value` IS engine-read (simulate.ts:859; solveAnchor.ts:222,231;
+ * taxOverlay.ts:1120; healthOverlay.ts:632 — `boundPartBPricingSchedule`, where the tier ladder's Part D
+ * add-ons feed `buildPartBPricingSchedule`), and
  * `consumedConstants.ts:112` puts the ENTIRE `health.` family in the consumed set on
  * `healthcareEnabled === true`. This repo's own tripwire
  * (`irmaaTopTierReindex.tripwire.test.ts:32-43`) prescribes that the 2028 re-index "bump the
@@ -190,7 +191,7 @@ export type HealthcareFamily = 'aca' | 'medicare'
  *     make the "every read is unpriced" silence arm vacuously true and quietly kill a clock.
  *
  * THE SOURCE FOR EACH ROW:
- *   · `coverage-year` — `COVERAGE_YEAR` is documented at `model.ts:2240` as "the coverage year
+ *   · `coverage-year` — `COVERAGE_YEAR` is documented at `model.ts:2244` as "the coverage year
  *     the ACA/IRMAA tables are keyed to", so it dates BOTH families and names each one the run
  *     priced. It is the ONLY marker for every annually-re-indexed health figure that carries no
  *     stamp of its own (the four interior IRMAA thresholds, the ACA applicable-percentage bands,

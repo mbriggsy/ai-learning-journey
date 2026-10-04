@@ -112,8 +112,10 @@ export function runEngine(
 // ---------------------------------------------------------------------------
 let latestEpoch = Number.NEGATIVE_INFINITY
 
-/** The spend solve's OWN cancel epoch (council wf_faa1af2d-052): the recommend-second solve shares
- *  this one worker, and a seconds-long spend solve must never sit in front of it — the store bumps this
+/** The spend solve's OWN cancel epoch (council wf_faa1af2d-052): on the single-worker path (`poolSize`
+ *  < 2, or the pooled lane's one single-worker retry — src/store/engineClient.ts `runPooledSolve`) the
+ *  recommend-second solve shares this spine worker, and a seconds-long spend solve must never sit in
+ *  front of it (a pooled solve runs on its own lane beside the spine) — the store bumps this
  *  epoch when it dispatches the recommendation, and the spend solve yields between probes. The
  *  spine epoch ALSO cancels it (a newer spine answer supersedes the clause it was sizing).
  *  MONOTONIC, non-finite ignored (the setLatestEpoch discipline, insight 010). */

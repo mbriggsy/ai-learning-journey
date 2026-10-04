@@ -148,6 +148,15 @@ standing valve; the §7 triggers in `docs/decisions/market-model.md` stay live a
   has still destroyed the run — the household re-invites), judged the lesser sin against minutes of
   a frozen headline. A second worker and per-candidate abort remain deferred-with-trigger, revived
   only if a profile proves the (already-committed-first) spine lane still starves.
+  **⚑ AMENDED 2026-10-03 (`225d8da4`, Briggsy's ruling — the SOLVE lane alone):** when
+  `poolSizeFor(navigator.hardwareConcurrency)` ≥ 2 (every logical core but two, capped at
+  `POOL_CAP` 12; 0 at ≤ 3 cores, which keeps the single worker), each solve spawns its OWN lane —
+  one coordinator + that many eval workers, bit-identical to the single worker — and tears it down
+  when the solve settles. The SPINE keeps one long-lived worker, and the sequential reset above
+  still governs it. A reset also kills a pending pooled lane (`EngineResetError`, no retry), and any
+  pool member's death retries the solve ONCE on the spine's single worker. The second-worker
+  deferral is discharged for the solve lane; per-candidate abort stays deferred. Canonical:
+  [architecture.md §11](../../architecture.md#11-the-worker-boundary), the pooled-solve bullet.
 - **Invalidation source-binds to `solverRunFingerprint`** — never a bespoke epoch mirror (the
   forked-seam trap). The committed solve arm carries what it solved on; a draft mutation that
   changes the fingerprint demotes the committed rec to a structured **stale/re-solve state**
@@ -210,7 +219,11 @@ standing valve; the §7 triggers in `docs/decisions/market-model.md` stay live a
   `base.css` (never a second working tell), the `--dur-breathe` 2100ms opacity breath, a
   plain-language what's-happening label through copy.ts — "Working out your strategy — this can
   take a few minutes…", the Caddie chair's naming of the real cost rather than a silent wait (the
-  duration phrase is TRUE for the measured 90s–6min full-precision wait, `copy.ts:1757`) —
+  duration phrase must be TRUE: the 2026-10-01 production build measured it FALSE at 8.9–26.0 min,
+  and since the worker pool (`225d8da4`) it holds at his laptop — `retired` 36.5 s · `nc` 39.8 s ·
+  `healthnc` 150.9 s on the 2026-10-03 build; still untrue on a ≤ 3-core device and unmeasured on
+  his phone — the string is `copy.ts:1757`, its timings `copy.ts:1749-1754`, the open half the
+  register's *The recommendation's pending line promises "a few minutes"…*) —
   `aria-busy` on the panel (the `PendingPanel` grammar) with the label spoken through the surface's
   own persistent `role="status"` / `aria-live="polite"` announcer rather than the panel line, so a
   pending frame that mounts already-pending still announces — clear-after-announce (burned/045),
@@ -576,7 +589,7 @@ market model's §7 triggers move.
 
 Two questions were routed to the tape rather than a pre-confirm: the pending-state CHARACTER (the
 breathe + label feel over a multi-minute full-precision solve — the §S0.1 profile's 72.4s worst case
-was the pre-build estimate; the shipped wait measures 90s–6min), and the reframe's exact TONE (delta-as-hero
+was the pre-build estimate; the shipped wait measures 90s–6min [2026-10-03 note: the 2026-10-01 production build measured 8.9–26.0 min; the worker pool brought it to 36.5–150.9 s at his laptop — see the §S1 pending bullet]), and the reframe's exact TONE (delta-as-hero
 wording; the compose state's "already" relief). Both were read on the 2026-07-23 Caddie pre-walk of
 the full solve arc — invite → GoalPicker → pending → committed/held → stale, on `solve:nc` and
 `solve:surplus` at both viewports — which returned five chair fixes, among them the pending line that

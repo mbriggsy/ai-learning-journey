@@ -3,10 +3,10 @@
  * F1: the missing `SimulationParams → CandidateSet` path).
  *
  * WHY THIS EXISTS. `enumerateCandidates` (the ONE shared enumerator) takes a
- * {@link ConversionAnchorContext} — the year-0 committed-income skeleton + the active income rails —
- * that every U14 fixture hand-builds from fixture-derived figures. No shipped path derived it from a
- * LIVE household's params, so a real GoalPicker pick dead-ended (the recorded blocker). This module
- * is that path.
+ * {@link ConversionAnchorContext} — the year-0 committed-income skeleton + every window year's
+ * committed frame + the active income rails — that every U14 fixture hand-builds from fixture-derived
+ * figures. No shipped path derived it from a LIVE household's params, so a real GoalPicker pick
+ * dead-ended (the recorded blocker). This module is that path.
  *
  * THE ONE LAW (source-bind, never re-derive). Every anchor figure is READ from the SAME shipped seam
  * the engine's own year-t iteration reads, both members alive (a both-alive year's committed income is
@@ -164,9 +164,9 @@ function activeAcaTable(base: SimulationParams) {
 }
 
 /**
- * Derive the year-0 {@link ConversionAnchorContext} from built params, or `null` when the run carries
- * no tax overlay (a tax-blind spine has no per-person buckets to sequence/convert). Every term is
- * source-bound (see the module header).
+ * Derive the {@link ConversionAnchorContext} (year 0's skeleton + every conversion-window year's
+ * committed frame) from built params, or `null` when the run carries no tax overlay (a tax-blind spine
+ * has no per-person buckets to sequence/convert). Every term is source-bound (see the module header).
  */
 export function deriveConversionAnchor(base: SimulationParams): ConversionAnchorContext | null {
   const overlay = base.overlay
@@ -180,7 +180,7 @@ export function deriveConversionAnchor(base: SimulationParams): ConversionAnchor
   // reads; the ACA-cliff, bracket-edge and IRMAA rails each judge the ONE repeated amount in each year's
   // own frame (Social Security by claim age, that year's ongoing income, its 65+ count and calendar — so
   // its deduction stack: the OBBBA senior bonus ends after 2028). The register's Tier 1 year-0 anchors
-  // entries — IRMAA (council wf_71f675da-8cf, b9-1), then the ACA cliff and the bracket edges (b9-4).
+  // entries — IRMAA (council wf_71f675da-8cf, b9-1), then the ACA cliff and the bracket edges (b9-5).
   const committed = committedIncomeForYear(base, 0)
   const rmd = committed.rmd
   const window = conversionWindowFor(base)
@@ -266,9 +266,10 @@ export function conversionWindowFor(base: SimulationParams): { readonly startYea
 }
 
 /**
- * Enumerate the full live candidate roster for a built household — the anchor (year-0 committed income
- * + rails) + the pre-RMD window + the user's CURRENT strategy as the out-of-grid labeled baseline (so
- * their standing choice is always scored beside the grid). `null` when the run carries no tax overlay
+ * Enumerate the full live candidate roster for a built household — the anchor (the year-0
+ * committed-income skeleton + the rails, each judged in every window year's own committed frame) + the
+ * pre-RMD window + the user's CURRENT strategy as the out-of-grid labeled baseline (so their standing
+ * choice is always scored beside the grid). `null` when the run carries no tax overlay
  * (no split to sequence). The caller separately refuses a roster with no conversion candidate (no
  * pre-tax headroom) — the solver cannot validate ranking stability without one.
  *

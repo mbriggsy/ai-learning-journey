@@ -1,14 +1,15 @@
 import { defineConfig } from '@playwright/test'
 
 /**
- * The HELD harness for the solve-timing instrument (`solve-timing.spec.ts`, beside this file) — an
- * INSTRUMENT, never a gate. Its own config because it is the one held spec that measures the BUILT
- * app: `shots.config.ts` reuses the fit harness's dev server, and a dev build is exactly what this
- * instrument exists not to time (`shots.config.ts` ignores the spec, so each harness claims it once —
+ * The HELD harness for the three built-app solve instruments (`solve-timing.spec.ts`,
+ * `solve-phase-profile.spec.ts`, `solve-pool.spec.ts`, beside this file) — INSTRUMENTS, never gates.
+ * Their own config because they are the held specs that measure the BUILT app: `shots.config.ts`
+ * reuses the fit harness's dev server, and a dev build is exactly what these instruments exist not to
+ * time (`shots.config.ts` ignores all three, so each harness claims each spec once —
  * scripts/__tests__/playwright-harness-partition.test.ts).
  *
  * The server is `scripts/serve-dist-with-headers.ts` (`vercel.json`'s exact headers on :4180, the same
- * minus CSP on :4181); the spec drives the CONTROL origin (see its header). It serves the EXISTING
+ * minus CSP on :4181); each spec drives the CONTROL origin (see its header). It serves the EXISTING
  * `dist/` — run `pnpm build` first. `reuseExistingServer: false`: a server already on those ports may
  * be serving an older `dist/`, and a timing of the wrong build is worse than a loud port collision.
  *

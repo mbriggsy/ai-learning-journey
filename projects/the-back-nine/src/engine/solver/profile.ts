@@ -9,15 +9,20 @@
  *
  * THE BUDGET SHAPE (what the ratio should be). `solveWithMint` runs, in single-`simulate` units at the
  * base's path count:
- *   ranking stability ≈ 2·|roster|  (the roster on seed-A + seed-B)
- * + search            ≈ 2·|rankable| (the ranked subset on both seed-sets — the whole roster since 2026-07-19)
+ *   ranking stability ≈ 2·|roster|  (the roster on seed-A + seed-B, plus the perturbation pair)
+ * + search            ≈ 0 when the whole roster ranks (the live case since 2026-07-19: share-the-pass,
+ *                       2026-10-03, ADOPTS the stability pass); 2·|rankable| only for a ranked subset
  * + the grade         ≈ 2·`solverBFamilySize` (winner + runner-up across the m-draw held-out family)
- * + named-driver + the cheap 2-path optimality oracle over the committed fixtures.
- * So the honest expectation is LINEAR in the candidate count — `ratioVsSingle ≈ 2(|roster| + |rankable|)
- * + 2·m + O(1)`. A ratio that grows SUPER-linearly in the roster is a regression (an accidental
- * re-evaluation or re-draw per candidate — the same class `dateSearchProfile` watches). The ABSOLUTE
- * interactive-window threshold was DEFERRED TO MEASUREMENT on a mid-tier reference device, which landed
- * 2026-07-22 and PINNED the `fallback.ts` knobs (U16 §S0.1) — this module REPORTS, it does not JUDGE.
+ * + the named-driver probe ≈ 2·|rankable| per applicable probed world. NOT cheap: the ACA-regime
+ *                       world is a full two-seed search, run only where `acaRegimeReachable` holds
+ *                       (2026-10-03); 0 on a household the regime cannot reach
+ * + the cheap 2-path optimality oracle over the committed fixtures.
+ * So the honest expectation is LINEAR in the candidate count — `ratioVsSingle ≈ 2|roster|
+ * + 2|rankable|·([a ranked subset] + [ACA regime reachable]) + 2·m + O(1)`. A ratio that grows
+ * SUPER-linearly in the roster is a regression (an accidental re-evaluation or re-draw per candidate —
+ * the same class `dateSearchProfile` watches). The ABSOLUTE interactive-window threshold was DEFERRED
+ * TO MEASUREMENT on a mid-tier reference device, which landed 2026-07-22 and PINNED the `fallback.ts`
+ * knobs (U16 §S0.1) — this module REPORTS, it does not JUDGE.
  *
  * PURE (engine-purity lint): the clock is INJECTED (`now`) — the engine reads no `performance`/`Date`
  * of its own; the caller (the worker shell / a script, OUTSIDE src/engine) passes
@@ -35,7 +40,8 @@ export interface SolveProfile {
   /** One `simulate` at the request's own base params + seed — the baseline unit the ratio divides by. */
   readonly singleSimulateMs: number
   /** The full `solveWithMint`: the optimality oracle + K-candidate ranking stability + the search on
-   *  both seed-sets + the grade's m-draw B-family + the named-driver probe. */
+   *  both seed-sets (adopting the stability pass when the whole roster ranks — share-the-pass) + the
+   *  grade's m-draw B-family + the named-driver probe. */
   readonly solveMs: number
   /** `solveMs / singleSimulateMs` — expected LINEAR in the candidate count (see the budget shape). */
   readonly ratioVsSingle: number

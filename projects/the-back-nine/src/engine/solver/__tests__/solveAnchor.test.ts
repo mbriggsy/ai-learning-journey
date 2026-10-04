@@ -205,7 +205,7 @@ describe('deriveConversionAnchor — the income rails (the exact engine pricing 
     expect(windowPt.rail.firstCrossingMagiYear).toBeNull()
   })
 
-  it('THE RETIRED BRACKET WITNESS (b9-4, DND 012): the senior bonus ends after 2028 and Social Security arrives in 2027 — the 24,800 and 100,800 edges keep their first-year points and gain the points that hold', () => {
+  it('THE RETIRED BRACKET WITNESS (b9-5, DND 012): the senior bonus ends after 2028 and Social Security arrives in 2027 — the 24,800 and 100,800 edges keep their first-year points and gain the points that hold', () => {
     // The same `retired` household as above (start 2026, both 65+ ⇒ two 65+ additions and, through 2028,
     // two OBBBA bonuses; SS $0 / $30,000 / $54,000; no other income). Taxable = a + taxable SS − the stack:
     // SD + 2 × the 65+ addition + 2 × the per-person bonus (the statute's nominal $6,000 deflated by the

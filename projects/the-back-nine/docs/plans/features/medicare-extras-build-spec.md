@@ -86,7 +86,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   adopted the old figure. No official national Medigap average exists to pin to; the constant's
   `pinTo` says so explicitly rather than naming a source that isn't published.
 - **Per-person explicit persisted provenance stamp.** `MedicareExtrasEntryV3`
-  (`src/shared/model.ts:2077`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
+  (`src/shared/model.ts:2081`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
   'unanswered'` — with `adoptionVintage` recording the era adopted, keyed to the SAVED era and
   never re-derived from `value == current-typical` (the `src/shared/appDefaults.ts:8-15`
   saved-era inversion trap). `'unanswered'` is the honest persisted hole: it funds the typical
@@ -174,15 +174,17 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
 - Installed-base double-count is pessimistic-safe, and **no migration shipped** — by design; the
   residual double-count was filed 2026-09-06 as the register entry *A vault saved before either
   spend-help boundary flip double-counts its Medicare premiums — Part B and IRMAA as well as Part D /
-  Medigap, no migration, no clock*, which carries this flip (`503213f4`) beside the pricing unit's
-  (`3454c224`) and the fix shape `src/store/staleness.ts` sanctions (a Q7 saved-era entry, not a new
-  clock) — a shape the 2026-09-26 ultramode review found cannot express an engine-domain change
-  (the era arm keys on one app-default knob, exempts overriders and is not exposure-gated); the
-  remedy is the open council question of the register's Tier 2 *An engine-domain pricing change
-  re-prices every saved vault with no clock…*. A vault saved before the flip keeps a spending figure
-  that still contains its Part D/Medigap premiums and now has extras added on top; the reworded
-  `spendHelp` is re-entry-visible, so the correction surfaces the next time the household walks
-  the spend step rather than through a silent rewrite of their number.
+  Medigap, no migration, no clock*. ✅ *CLOSED 2026-09-27 (`252b88da`, council `wf_bc99b1b1-f34`):*
+  the Q7 saved-era entry `src/store/staleness.ts` once sanctioned was WITHDRAWN — the 2026-09-26
+  ultramode review found the era map cannot express an engine-domain change (it keys on one
+  app-default knob, exempts overriders and is not exposure-gated). Instead this flip is the
+  engine-pricing ledger's `reconfirm-input` row v3 (`503213f4`), beside the pricing unit's v2
+  (`3454c224`), in `src/engine/pricingVersion.ts`. A household whose run prices Medicare (or cannot be
+  decided), and whose save predates the flip, falls on its day, or carries a healthcare stamp without
+  the extras marker, is asked at the re-entry gate (`copy.stalenessReconfirmMedicareSpending` —
+  conditional, never a directive). It is still never a silent rewrite of their number, and the
+  reworded `spendHelp` stays re-entry-visible on the spend step too. ⚑ Parked residual (register
+  Tier 3): a pre-flip vault re-saved after the flip without its spending re-entered stops being asked.
 - The residual pair moved **as a set**: the Part D/Medigap "inside your spending" clause DIED ·
   the state-tax clause STAYED (endogenous — wf_cc065e3b-bc1) · the real-flat clause EXPANDED to
   cover the new base. Two later units moved these again and are worth knowing before re-reading
@@ -194,7 +196,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   "premiums" line traces literally true post-flip, the sole latent nit being the rare purchased
   Part A, which is consistently carved out.
 
-## F5 — disclosure routing (HARD LOCK — red-team Attack 1; healthSheetChrome.ts:455 + Result.tsx:217-221)
+## F5 — disclosure routing (HARD LOCK — red-team Attack 1; healthSheetChrome.ts:462-471 + Result.tsx:217-221)
 
 - The extras affirmative + per-person adopted-typical provenance + the bi-directional disclosure
   needed a **RENDERED HOME for BOTH populations**, because `showMedicarePricedNote`
@@ -240,7 +242,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
 - **DND-012 externally-derived fixtures**, including the F3 asymmetric survivor golden (F3 above).
 - **verify:fit arms re-pinned WITHOUT assuming monotone shrink** — the omission axis shrank but
   the real-flat clause broadened. The fit spec now pins non-typical extras arms explicitly
-  (`e2e/vertical-fit.spec.ts:1130-1131` — the priced-state faces, all non-typical; `:1971-1973` — the statestale non-typical echo frame; re-anchored 2026-09-10, both prior numbers had landed on unrelated lines), and the CSP intake walk learned the fork step
+  (`e2e/vertical-fit.spec.ts:1137-1138` — the priced-state faces, all non-typical; `:1978-1980` — the statestale non-typical echo frame; re-anchored 2026-09-10, both prior numbers had landed on unrelated lines), and the CSP intake walk learned the fork step
   (`e2e/csp.spec.ts:134`, the one integration gap `503213f4` left, fixed in `e921f2bb`).
 - **Color-blind-safe encoding** on adopted-vs-entered / typical-vs-your-bill / priced-vs-residual:
   every distinction is carried in words, never a hue. Each door fact line states its provenance in
@@ -260,7 +262,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   the Caddie close `cad2529e`. Sequence as ratified: ultramode review → Caddie pre-walk →
   pilot-clear + ship (the 2026-07-11 batched-oracle grant — his eye audits any-time + at the
   gauntlet).
-- **Staleness.** The `extras-typical` clock (`src/store/staleness.ts:592-611`) fires only when the
+- **Staleness.** The `extras-typical` clock (`src/store/staleness.ts:593-612`) fires only when the
   saved stamp carries an extras vintage, that vintage differs from the current one, AND the
   household is actually exposed (an absent or `typical`/`unanswered` fork answer). It is mapped
   to the `medicare` family in the exhaustive `HEALTHCARE_CLOCK_FAMILIES` record, so a clock with

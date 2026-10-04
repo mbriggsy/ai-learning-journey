@@ -128,7 +128,7 @@ export interface IrmaaAnchorContext {
 
 /**
  * The ACA-cliff and bracket-edge rails across the conversion WINDOW (the register's Tier 1 *The solver's
- * ACA-cliff and bracket-edge anchors sit under their rail only in YEAR 0's committed frame…*, b9-4 — the
+ * ACA-cliff and bracket-edge anchors sit under their rail only in YEAR 0's committed frame…*, b9-5 — the
  * IRMAA window's sibling). The ONE amount a candidate repeats meets a different committed frame each
  * year: the OBBBA senior bonus ends after 2028 (the deduction stack shrinks, so the same conversion lands
  * deeper in taxable income) and Social Security arrives at each claim age (up to 85 % of it into taxable
@@ -398,7 +398,7 @@ const withAmount = (c: CommittedYearIncome, a: number): CommittedYearIncome => (
 
 /**
  * ONE RAIL ACROSS THE WINDOW — the shape every rail shares (the IRMAA build's, council wf_71f675da-8cf;
- * the ACA-cliff and bracket-edge rails since b9-4). A candidate repeats ONE amount every window year, and
+ * the ACA-cliff and bracket-edge rails since b9-5). A candidate repeats ONE amount every window year, and
  * each year meets the rail in its OWN committed frame, so over the rail's years (`frames`, ascending):
  *  - the FIRST-YEAR point: the largest amount under the rail in the FIRST year the rail exists (`frames[0]`
  *    — the skeleton's year for the bracket edges, the first priced year for the ACA cliff, the first billed

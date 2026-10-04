@@ -60,7 +60,7 @@ and every arrived question in the codebase now calls it: the ladder filter (`cur
 crown-arrived withdraw and the floor arm (`FuckOffDate.tsx:200`, `:235`, `:370`), the band's Roth row
 (`bandAnnotations.ts:133`), the work-stops withdraw (`bandAnnotations.ts:341`), `dateTradeoff.ts:53`'s
 offer filter — **a third re-typing this spec had not enumerated**, found at build — and §S1's write-side
-refusal (`RothLever.tsx:53`).
+refusal (`RothLever.tsx:54`).
 
 - **Source-bind test (mutation-proven):** `planClockSeam.test.ts:135` asserts exactly ONE export, and a
   regex per consumer pins each call site by its literal shape (`:137`, `:196-199`, `:213-216`, `:245`,
@@ -146,15 +146,15 @@ Shipped 2026-07-25, commit `e4754134`, CI green by explicit run id 30136387827.
 
 - **READ:** `rothPlanEcho` no longer says *"starting in about N years"*; it names the year, and carries a
   `passed` flag so the sentence's tense matches. Both render sites re-pointed in the SAME commit
-  (`AssumptionPanel.tsx:508`, `RothLever.tsx:310`) — insight 086: splitting a copy key orphans every
+  (`AssumptionPanel.tsx:508`, `RothLever.tsx:311`) — insight 086: splitting a copy key orphans every
   renderer not re-pointed with it.
 - **WRITE:** the `RothLever` input, once labelled *"Starting how many years from now"* — wall-time words
   over a plan-time value — takes the calendar year, and **refuses a past start** aloud. **The refusal IS
   the §S0.1 predicate:** a typed calendar year refuses through
-  `offsetHasPassed(year − startCalendarYear, yearsSincePlanBuilt)` (`RothLever.tsx:51-53`) — one strict
+  `offsetHasPassed(year − startCalendarYear, yearsSincePlanBuilt)` (`RothLever.tsx:52-54`) — one strict
   compare covers both "before the build year" and "already passed", and no second comparator was
   authored. It renders through the R19 `FieldError` grammar with the earliest startable year QUOTED
-  (`errRothStartPast`, `RothLever.tsx:289`, joined `SlottedErrorKey` at `copy.ts:1984`). The fresh default
+  (`errRothStartPast`, `RothLever.tsx:290`, joined `SlottedErrorKey` at `copy.ts:1984`). The fresh default
   start seeds the WALL year (build + clock), so an aged vault never pre-fills the exact start the write
   side refuses.
 - **"Suppress when unanchored" was satisfied STRUCTURALLY, not by a dead arm.** `savedAnchor` is REQUIRED
@@ -278,7 +278,7 @@ headline, where it would read as current).
   *"decodeScenario builds every object."* It does **not** — `scenarioCodec.ts:938-940` is a validated
   pass-through cast, and the behavior was safe only because `JSON.parse` preserves `encodeScenario`'s
   insertion order, so a future field reorder would have broken dirty-detection silently. The fix is
-  `scenarioIdentityKey` (`model.ts:2198`), which rebuilds plain objects with SORTED keys and throws on a
+  `scenarioIdentityKey` (`model.ts:2202`), which rebuilds plain objects with SORTED keys and throws on a
   non-serializable value, so key order and absent-vs-undefined can never read as a change.
 
 **Shipped 2026-07-25, commit `374299c9`, CI green by explicit run id 30163571502**, carrying one ruling
@@ -386,7 +386,7 @@ claim a completed save, and it is `recommendSaveSavedBadge`.
 **Key PREFIX picks the copyGuard gates, and that is why these two families exist as they do.**
 `staleness*` and `reentry*` are hedge-, verdict- AND control-EXEMPT by documented law — the weakest net in
 the catalog — so a new warning register needs its own explicit guard arm. The arms live in the TEST file
-(`copyGuard.test.ts`: the `staleness*` register at `:229-301`, the S5 families at `:321-430`), **not** in
+(`copyGuard.test.ts`: the `staleness*` register at `:229-301`, the S5 families at `:383-492`), **not** in
 `copyGuard.ts`: there is nothing named `staleness`, `reentry` or `recommendRecord` in the gate SOURCE at
 all, so grepping `copyGuard.ts` for those returns zero hits and must never be read as "already handled." The
 lists a key is measured against are `VERDICT_KEY_PREFIXES` (`copyGuard.ts:63-65`) and
@@ -403,7 +403,7 @@ verdict prefix, unlike `staleness*`, so they clear the scoped gates rather than 
 3. `noDollarRegister` is **COPIED from the composed view, never re-derived record-side**
    (`savedRecommendationMint.ts:89`, `:100`, `:133`). The reachable register is
    `RecommendedView.mode === 'no-change'` (`recommendationView.ts:223`, assigned `:652`), NOT the
-   module-local `noDollar` const at `:618`.
+   module-local `noDollar` const at `:622`.
 4. The `fingerprint` has no type bind and cannot get one — `solverRunFingerprint.ts:61` is a bare
    `export type … = string` — so the bind is a TEST: mint from a REAL `solverRunFingerprint(...)` call,
    encode, decode, and assert the trichotomy reads `current`.
@@ -465,7 +465,7 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   a new producer of persisted state, and the engine's fail-loud gates are part of its consumer chain. Age
   only inside the domain the engine prices. The probe settled the plant as `base: 'dip'`, aging depth 6
   (`ARRIVED_PLAN_YEARS` at `devSeeds.ts:1357`, registry entry `:1693`, doctor `doctorArrivedVault`
-  at `:1399`).
+  at `:1404`).
 - **The engine-acceptance pin ships:** hydrate → `buildSpineParams` → `validateParams` accepts → the run
   resolves to a **real** `outcomeState`, never the R19 indeterminate. It was modelled on the `statestale`
   arm at `devSeeds.test.ts:665-689`, whose rationale comment is `:616-626`.
@@ -486,12 +486,12 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   `devSeeds.test.ts:306-323` running the SAME doctor's output through `runDateSearch`, which calls
   `validateParams` internally, on the `datestale` base. The real gap was the missing FAST
   `buildSpineParams → validateParams → runEngine → outcomeState` unit arm on the spine path — what
-  `devSeeds.test.ts:1046-1054`'s own header asked for, failing "HERE (fast) instead of only in the 90-second
-  Chromium run." That arm now exists at `devSeeds.test.ts:1138-1178`, and writing it **surfaced a live
+  `devSeeds.test.ts:1049-1057`'s own header asked for, failing "HERE (fast) instead of only in the 90-second
+  Chromium run." That arm now exists at `devSeeds.test.ts:1141-1181`, and writing it **surfaced a live
   defect**: the doctored build year forks the derived birth year across the RMD band edge, forcing the
   household into RMDs two years early. It is pinned as found and filed.
 - **Both seeds were walked** (`datearrived` plus the existing aged plant) in the Caddie walk, and
-  `datearrived` joined the door walk (`e2e/caddie-walk.spec.ts:1048-1073`) — without that allowlist entry the
+  `datearrived` joined the door walk (`e2e/caddie-walk.spec.ts:1051-1076`) — without that allowlist entry the
   one plant this stage exists to cold-read would have been chaired on its landing alone.
 - **The walk hard-flagged all six faces and NOTHING shipped from it** (`docs/caddie/cold-read-log.md`,
   2026-07-27) — three carrying **calm-but-wrong BLOCKERS**, the class the batched-oracle grant has never
@@ -509,9 +509,9 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
 - **Owed from the walk, and not filed until 2026-09-25 (from the 2026-09-24 doc audit):** the arrived-walk's state-tax blindness. `?vault=datearrived` is stateless by construction (`doctorArrivedVault` refuses a priced-state base, `devSeeds.ts:1405-1412`), so no walk has read the arrived face on a priced state. It is carried in `docs/backlog.md` under "The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed".
 - **The aged band's x-axis has its first real-browser arm.** Before S6 no fit arm asserted it — the aged
   axis appeared nowhere in `e2e/`, so §S0's rename had shipped on unit arms alone. `?vault=datearrived` is
-  now driven at `e2e/vertical-fit.spec.ts:2113-2217`, asserting that the year-0 endpoint names the BUILD
-  year (`'Plan built'`, `:2164-2167`) and that no named marker renders left of Today — neither the plain
-  label nor the split one, since the array picks between them (`:2176-2183`). Both are mutation-proven, and
+  now driven at `e2e/vertical-fit.spec.ts:2120-2224`, asserting that the year-0 endpoint names the BUILD
+  year (`'Plan built'`, `:2177-2181`) and that no named marker renders left of Today — neither the plain
+  label nor the split one, since the array picks between them (`:2187-2197`). Both are mutation-proven, and
   the withdrawal mutant draws
   "Essentials date" to the LEFT of "Today" — the exact stumble §S2's hawk veto killed.
 - **The saved recommendation took its first trip through real WebCrypto and IndexedDB** here.

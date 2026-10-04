@@ -36,7 +36,9 @@ status: shipped
      **that blockade is history** — S.L. 2026-41 § 44.1(a) struck the trigger rows and pinned
      the schedule outright on 2026-08-02 (`directionalUntilPinned: false`,
      `state-tax-nc-last-verified.json`, `nextDue` now the annual `2027-08-02` drift cadence),
-     so **no live entry is certification-pinnable today** and this leg of the mint is
+     so **no run-consumed entry is certification-pinnable today** (three parked health refs — `acaPtc`,
+     `magiDefinitions`, `obbbaHsa2026` — carry the kind since 2026-09-30, inert in `NOT_RUN_CONSUMED`)
+     and this leg of the mint is
      seam-driven rather than live-fired.
    - **methodology substrate** (no dated pin event exists): `productionMarket`, ε's
      calibration context, `survivorSpendingRatio` → does **NOT** block; the grade ships
@@ -205,7 +207,9 @@ status: shipped
 2. **The named-driver sensitivity probe:** re-rank under each probe world and name the FIRST
    one whose crown flips. The probe list is caller-supplied and defaults to the single
    built-in `ACA_ENHANCED_PROBE` (the enhanced-subsidies toggle, self-declaring inapplicable
-   on a healthcare-blind world); the planned fixture-vintage perturbation was never a second
+   wherever the ACA regime cannot reach the run — `acaRegimeReachable`: healthcare on AND a
+   finite positive enrolled premium in some year — since 2026-10-03 (`55cd7382`); before that,
+   on a healthcare-blind world only); the planned fixture-vintage perturbation was never a second
    built-in, and the ACA probe alone genuinely flips the cliff fixture's crown, so the
    mechanism is exercised rather than asserted. A near-tie no probe can flip carries the
    `sampling-noise-near-tie` sentinel — never a fabricated input cause. U15's fold added an
@@ -287,7 +291,7 @@ status: shipped
    fail OPEN, which is the optimistic direction. U15's honored hawk veto added a conjunct at the
    OTHER end — not in the mint at all: `solve()` re-computes the run fingerprint and refuses,
    structurally, a token whose `mintedOver.fingerprint` differs from the run it is asked to
-   bless (`solve.ts:8-11,419-425`), so the mint proves ORDER and the fingerprint proves
+   bless (`solve.ts:9-12,450-460`), so the mint proves ORDER and the fingerprint proves
    IDENTITY.
 3. **The withheld-reason is a first-class enum** (aca-unverified · rec-relevant-primary-
    directional(name) · epsilon-uncalibrated · medicare-trend-unsourced · state-

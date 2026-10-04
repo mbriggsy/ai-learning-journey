@@ -9,8 +9,9 @@
  * sheet persists NOTHING (the what-if law: the only route to disk is an explicit user Save).
  *
  * THE $0-PRE-TAX CLOSED STATE (plan §U10): with nothing in a pre-tax account the lever renders
- * its one calm sentence and no fields — no fabricated arms, no slider. The engine mirrors the
- * same closure as a typed indeterminate; this face just spares the round-trip.
+ * its one calm sentence and the family's visible Close (the 2026-09-27 `steer` walk: one
+ * sentence and no way out), and no fields — no fabricated arms, no slider, no Apply. The engine
+ * mirrors the same closure as a typed indeterminate; this face just spares the round-trip.
  *
  * DELTA HONESTY (R12): frequency-first (the survivor's number when observed), the "~N years" a
  * hedged secondary, N ≤ 0 an in-frame calm reading; the conversion-tax funding rule and the

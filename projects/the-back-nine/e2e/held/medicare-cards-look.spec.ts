@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { gotoSeedFinal, REAL, REAL_DPR, PHONE, PHONE_DPR } from '../reviewSurface'
 
-// Run (the ONE held harness, port 4190, filtered to this file):
+// Run (the dev-server held harness, shots.config.ts, port 4190, filtered to this file):
 //   LOOK_OUT=temp/look/<name> pnpm exec playwright test --config e2e/held/shots.config.ts medicare-cards-look
 // (LOOK_SEEDS=healthnc,healthgap by default). Held, not gated: vitest excludes e2e/held, the CSP harness
 // denylists it, and the partition test records this spec as owned by shots.config.ts alone.

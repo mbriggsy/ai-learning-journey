@@ -48,9 +48,9 @@ atomic change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` +
    - Stamped by `scenarioFromDraft` at the **atomic save-commit**, from the ui layer's clock.
    - **THE NORMALIZER (the clerk's determinism catch):** `scenarioFromDraft`'s output is BOTH the disk
      payload AND the dirty/clean compare operand — a fresh `savedAt` per call would make every session
-     permanently dirty. ONE shared normalizer, `scenarioIdentity` (model.ts:2161), strips ONLY `savedAt`;
+     permanently dirty. ONE shared normalizer, `scenarioIdentity` (model.ts:2165), strips ONLY `savedAt`;
      the dirty compare goes through its key-order-insensitive serialization `scenarioIdentityKey`
-     (model.ts:2198) so key order and absent-vs-undefined cannot read as a change. Both consumers — the
+     (model.ts:2202) so key order and absent-vs-undefined cannot read as a change. Both consumers — the
      unsaved-buffer dirty compare and the draft↔scenario round-trip guard — import it; neither
      re-implements it.
    - **Absent `savedAt`** (every vault saved before U13): the "~N years since your save" claim is
@@ -81,7 +81,7 @@ atomic change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` +
 
 ## Phase B — the staleness reader (`src/store/staleness.ts`, pure)
 
-- **Input** (`deriveStaleness`, staleness.ts:466-470): the RAW-decoded `ScenarioV3` captured **ONCE at
+- **Input** (`deriveStaleness`, staleness.ts:467-471): the RAW-decoded `ScenarioV3` captured **ONCE at
   unlock** (red-team constraint (a) — BEFORE `draftFromScenario`/`scenarioFromDraft` normalize or re-stamp;
   reading the post-resave draft cries wolf, reading the normalized persist never fires), an injected
   `todayEpochDay`, and — added by the U17 §S4 exposure gate below — a `StalenessExposure` read of what the
@@ -128,8 +128,8 @@ atomic change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` +
     predicate the hero's standing echo may ride and the only one `savedRecommendation.ts`'s conjunct 3 may
     demote on. `anyStale` is anything worth a line at the gate, and ALSO includes the budget window
     re-confirms — calendar-passage prompts over a byte-identical recompute ("worth a look", never "rules
-    changed"). Collapsing them made a lapsed travel budget fire a false "rules changed" claim on the
-    magic-moment surface.
+    changed") — and, since 2026-09-27 (`252b88da`), the engine-pricing ledger's lines. Collapsing them
+    made a lapsed travel budget fire a false "rules changed" claim on the magic-moment surface.
 - **The EXPOSURE GATE (U17 §S4, 2026-07-25 — the later correction that reshaped this map).** A bare vintage
   compare answers "did the TABLE move?", never "did THIS household's answer move?". The shipped defect: one
   healthcare line rode the OR-collapse of all seven healthcare clocks, so an all-65+ household — which takes
@@ -150,7 +150,12 @@ atomic change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` +
   household's recompute ROSIER with every stamp equal (`42b078cf` changes it too), and a Q7 era entry
   cannot express an engine-domain change — it keys on one knob (`survivorSpendingRatio`), exempts
   overriders and is not exposure-gated. The remedy is the register's open Tier 2 *An engine-domain
-  pricing change re-prices every saved vault with no clock…*, council first.
+  pricing change re-prices every saved vault with no clock…*, council first. *Closed 2026-09-27*
+  (`252b88da`, council `wf_bc99b1b1-f34`): the engine-pricing ledger (`ENGINE_PRICING_LEDGER`,
+  `src/engine/pricingVersion.ts`). A row is crossed when `savedAt` predates its ship day (or the vault
+  carries no `savedAt`), and a save made on the ship day itself gets one nameless line. It feeds `anyStale`
+  only, never `rulesMoved`. At the gate it speaks at most one method line, a nameless twin and the
+  conditional Medicare-spending re-confirm.
 - Battery (`src/store/__tests__/staleness.test.ts`): hand-derived fixtures per clock + planted-fail arms
   both directions (fires-when-moved, silent-when-identical) + the absent-stamp/legacy-vault arms + a
   property sweep over the map — a freshly-stamped save fires NO clock on any route, because every
@@ -178,7 +183,15 @@ atomic change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` +
   - Read-only second-tab unlock (`session.writable()===false`, resultSave.ts forces `kind:'none'`):
     view-only presentation, NO write affordance; the ViewOnlyBanner stays the authority.
 - **The staleness notes:** the per-clock disclosure renders at the GATE, not on the verdict — one
-  `noteLines` paragraph per fired clock, composed by `reentryChrome.ts` off the report. The hero carries
+  `noteLines` paragraph per fired clock, composed by `reentryChrome.ts` off the report. Since 2026-09-27
+  (`252b88da`) the engine-pricing ledger adds at most three more lines that are not clocks: ONE method line
+  over every exposed family (`slots.stalenessPricing`), a nameless twin where the change cannot be pinned
+  on this save (a save made on a ship day, or a family whose exposure the run cannot decide —
+  `stalenessPricingHedged`), and the conditional Medicare-spending re-confirm
+  (`stalenessReconfirmMedicareSpending`). At ≥ 68rem (the `--bp-laptop` mirror, `save.css`) the gate splits
+  into two columns: `.reentry-story` (the intro, the elapsed line and the notes) and `.reentry-confirm` (the
+  read-back and the decision pair), so an old vault's notes no longer push "Still about right" below the
+  1536×791 frame (46–107px, measured in one column). Briggsy's cold read ruled this 2026-09-28 (`b344f591`, "Good!"). The hero carries
   only the one-line standing echo (`stalenessHeroNote`). Copy in `copy.ts` (copyGuard), calm-not-alarming —
   the Act-3 exit-condition cold-read (Briggsy's N=1). The echo was reworded 2026-07-10 by the Caddie
   false-PASS hunter: its old "this answer uses today's" tail was the reassuring half alone, reading in-frame

@@ -69,6 +69,10 @@ describe('taxVintageStamp — the controls-surface clock producer', () => {
       // (`taxCore.seniorBonusFor`), the engine-domain class `src/store/staleness.ts` names as having
       // no clock (installed base ~zero; the drift is conservative — answers only drop). The statute's
       // figures ($6,000 / $75k / $150k / 6 %) are unchanged. A conscious re-pin, not silent drift.
+      // [⚑ 2026-09-27: no longer clockless — the ENGINE-PRICING LEDGER
+      // (`src/engine/pricingVersion.ts`, row version 6, commit `e04823a4`) now discloses this
+      // re-pricing, via `anyStale` only (a method change is never "the rules changed"), to every vault
+      // saved before its 2026-09-25 ship day; see `src/store/staleness.ts:66-76`.]
       contentDigest: 1_996_572_722,
     })
   })

@@ -388,7 +388,7 @@ describe('the IRMAA window — one flat amount repeats across years whose lines 
   })
 })
 
-describe('the ACA-cliff and bracket-edge window — one flat amount meets a different frame each year (the b9-4 sibling of the IRMAA window)', () => {
+describe('the ACA-cliff and bracket-edge window — one flat amount meets a different frame each year (the b9-5 sibling of the IRMAA window)', () => {
   // The register's Tier 1 *The solver's ACA-cliff and bracket-edge anchors sit under their rail only in
   // YEAR 0's committed frame…*: a candidate converts ONE amount every window year, but the deduction stack
   // shrinks when the OBBBA senior bonus ends after 2028, and Social Security arrives at a claim age (85 %

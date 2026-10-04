@@ -9,9 +9,11 @@ import { join, relative, resolve } from 'node:path'
  *
  * Four harnesses share `testDir: './e2e'` and split the directory by hand: `playwright.config.ts`
  * (the CSP gate) collects by a `testIgnore` DENYLIST — anything not named is collected — while
- * the fit / fit-rv / caddie configs collect by `testMatch` allowlists, and `e2e/held/shots.config.ts`
- * owns the instruments beside it. Nothing enforced that split before 2026-09-11. The failure it
- * lets through is not hypothetical: `c61dea7e` added `e2e/held/council-24px-shots.spec.ts` with a
+ * the fit / fit-rv / caddie configs collect by `testMatch` allowlists, and two held configs own the
+ * instruments under `e2e/held/` — `shots.config.ts` on the fit dev server, `solve-timing.config.ts`
+ * (the solve-timing / solve-phase-profile / solve-pool instruments) on the built `dist/`.
+ * Nothing enforced that split before 2026-09-11. The failure it lets through is not hypothetical:
+ * `c61dea7e` added `e2e/held/council-24px-shots.spec.ts` with a
  * docblock saying it "can never red CI" (it was outside `verify:fit`'s allowlist, and vitest's
  * `exclude: ['e2e/**']` — a denylist entry, not an include — kept vitest off it) — but the CSP
  * harness's denylist did not name `held/`, so `pnpm verify:csp` collected the six instrument arms

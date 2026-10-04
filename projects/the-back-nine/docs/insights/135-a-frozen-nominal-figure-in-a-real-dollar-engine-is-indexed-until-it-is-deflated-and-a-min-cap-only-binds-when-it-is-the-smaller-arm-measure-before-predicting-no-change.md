@@ -80,4 +80,6 @@ figures other pins quote (the IRA moves the verdict; spending would move the hea
   not the whole test — flat-real is right for an indexed figure only when it meets SAME-year income. IRMAA tiers 1–4
   index by law, yet each line meets MAGI two years OLDER, so it runs one to two years of CPI ahead of that MAGI and
   the flat real line sat ~3–6.5 % low. Every tier is now compared in the MAGI year's frame (architecture §7.2);
-  tiers 1–4 still run one CPI year low (insight 138, register open).
+  tiers 1–4 still run one CPI year low (insight 138, register open). *(Fixed 2026-09-27, `252b88da`: tiers 1–4 now
+  carry the growth from their base August (August of the pinned schedule's bill year − 1, `schedule.billYear − 1`)
+  through the unclamped `priceIndex.cpiGrowth`, so they no longer run a CPI year low — insight 138; register CLOSED.)*

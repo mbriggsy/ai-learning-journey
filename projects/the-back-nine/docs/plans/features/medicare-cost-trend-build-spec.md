@@ -80,7 +80,11 @@ status: shipped
    splice is C0-continuous by construction, PINNED by test (value at 2035 == table's last real value;
    2036 == 2035 × 1.014-class factor; no jump).
 7. **STALENESS:** a trend vintage joins `healthcareVintageStamp()` (the extras-2026b idiom —
-   aged vaults' clocks fire BY DESIGN); the Trustees re-verify hook fires annually (a new report
+   aged vaults' clocks fire BY DESIGN) *(Corrected 2026-09-27, the engine-pricing ledger's history
+   audit: only a vault STAMPED with an older trend vintage fires; a vault saved before this unit
+   carries no `partBTrendVintage` and stays quiet (absent = not-comparable, as S6 below says) — the
+   ledger's `version: 4` row (shipped 2026-07-19) in `src/engine/pricingVersion.ts` is what discloses
+   the trend to it.)*; the Trustees re-verify hook fires annually (a new report
    every ~June). The council framed the hook on the verify:aca pattern; it shipped instead as a
    dated wall-clock TRIPWIRE TEST (S6 below) — a Trustees release is a known calendar event, not
    the per-build legislative volatility a `verify:*` script guards.
@@ -121,7 +125,7 @@ status: shipped
   convergence re-verified under year-varying premiums (013 watch) — see S3 for the measurement.
 - **S2 — the solver seams (the tripwire's named pair).** `solve.ts`'s rankable partition derives
   from the token's trend clause, not the old hardcoded `conversion === null` filter;
-  `enumerateWithheldConversionLevers` (`solve.ts:262`) self-empties as the clause clears; the U15
+  `enumerateWithheldConversionLevers` (`solve.ts:265`) self-empties as the clause clears; the U15
   tripwire test flipped to its post-sourcing form (the clause CLEARS and conversions RANK); the
   token's NC-blocks/FL-mints and remaining clauses were re-verified live, and the mint now
   evaluates the TRUE roster amounts. Because the live clause is clear, the mint gained a

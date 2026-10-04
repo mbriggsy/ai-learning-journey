@@ -778,9 +778,11 @@ for (const seed of PENDING_SEEDS) {
           ).toBe(true)
         }
 
-        // THE S2→S3 CLS ALIGNMENT: inject the real committed grade lockup (no solve — a live solve is
-        // 80–200s+, past this harness's budget), measure it under the real CSS at this tier, and pin
-        // that the pending well ALIGNS to it and the grade word holds ONE line.
+        // THE S2→S3 CLS ALIGNMENT: inject the real committed grade lockup (no solve — a live solve was
+        // 80–200s+ single-worker, recorded 2026-07-22 above; the pool cut it to ~30 s on his laptop's
+        // dev server (caddie-walk.spec.ts, 2026-10-03), but a 4-core runner pools at P = 2 and is
+        // unmeasured), measure it under the real CSS at this tier, and pin that the pending well ALIGNS
+        // to it and the grade word holds ONE line.
         const cls = await page.locator('.recommendation-surface').evaluate((surface) => {
           const panelEl = document.querySelector('.solve-pending-panel') as HTMLElement | null
           const panelWell = panelEl ? panelEl.getBoundingClientRect().height : 0
@@ -814,7 +816,7 @@ for (const seed of PENDING_SEEDS) {
           cls.panelWell,
           `the pending well (${cls.panelWell}px) collapsed below the committed grade lockup (${cls.lockup}px) — the committed beat would jump on land (CLS)`,
         ).toBeGreaterThanOrEqual(cls.lockup - 8)
-        // …and not grossly OVER-reserved (a large empty well breathing over the ~72s solve).
+        // …and not grossly OVER-reserved (a large empty well breathing over the whole solve).
         expect(
           cls.panelWell,
           `the pending well (${cls.panelWell}px) over-reserves vs the committed lockup (${cls.lockup}px)`,
@@ -842,7 +844,9 @@ for (const seed of PENDING_SEEDS) {
 // IDLE frame stays byte-identical — the matrix arms above prove that), and the committed viz
 // continues the band down into that rail at the SAME x + width.
 //
-// Like the CLS arm above, a LIVE committed solve is 80–200s+ (past this harness's budget), so this
+// Like the CLS arm above, a LIVE committed solve measured 80–200s+ on the single worker (2026-07-22,
+// past this harness's budget; ~30 s on his laptop on the 2026-10-03 worker pool at v8, unmeasured under
+// this parallel harness and on CI's P = 2), so this
 // INJECTS the real committed DOM (grade lockup + the fixed-dimension viz box + the text rest) into
 // the live `.recommendation-surface` — the viz box's PRESENCE is exactly what the shipped CSS keys
 // the inner two-pane on (`.rec-committed:has(> .rec-viz-box)`) — and measures where the real CSS
@@ -866,8 +870,9 @@ for (const seed of DEAD_RAIL_SEEDS) {
         const geom = await page.locator('.recommendation-surface').evaluate((surface) => {
           // The real committed DOM (RecommendationSurface.tsx → RecommendedBeat): the grade lockup,
           // the fixed-dimension viz box (its placeholder holds the RV_VIEW aspect), and the text
-          // rest wrapper. Injected (no live solve — 80–200s+) exactly as the CLS arm injects its
-          // grade lockup; the viz box's presence triggers the inner two-pane.
+          // rest wrapper. Injected (no live solve — 80–200s+ single-worker per the 2026-07-22 record,
+          // ~30 s pooled at v8 on his laptop, unmeasured at a runner's P = 2) exactly as the CLS arm
+          // injects its grade lockup; the viz box's presence triggers the inner two-pane.
           //
           // ⚠️ IT MODELS THE COLUMN STRUCTURE, NOT THE COPY. This arm asserts where the two columns
           // START AND END — the inner text is a stand-in and has drifted from the catalog (the shipped
@@ -951,8 +956,10 @@ for (const seed of DEAD_RAIL_SEEDS) {
 // gate would stay green while the real control overflowed. `e2e/caddie-walk.spec.ts:9` is the
 // precedent for importing src into an e2e spec.
 //
-// INJECTED, not solved: a live committed solve is 80–200s (recorded above), past this harness's
-// budget. The injected DOM is the verbatim `RecommendationSurface.tsx` render for each arm.
+// INJECTED, not solved: a live committed solve was 80–200s single-worker (recorded 2026-07-22
+// above); the pool measured ~30 s at v8 on his laptop's dev server (caddie-walk.spec.ts, 2026-10-03)
+// and is unmeasured at a 4-core runner's P = 2, so it stays out of this harness's budget. The
+// injected DOM is the verbatim `RecommendationSurface.tsx` render for each arm.
 //
 // WHAT THE MEASUREMENT FOUND, AND WHY THE PHONE IS NOT IN THE LOOP (recorded 2026-07-26, first real
 // browser run of this arm — the reservation had never been observed, only derived):
@@ -1774,7 +1781,7 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
     // ~760 days back (the LOCAL epoch-day, the plant's own basis), so every `reprice` row shipped
     // after that save speaks ONE method line (tax + Medicare here), and the full doctor strips the
     // extras marker, so the Medicare-spending re-confirm always asks — never "rules", never on the echo.
-    // The count is derived in a unit arm — `devSeeds.test.ts` "'stale' composes EXACTLY the two
+    // The count is derived in a unit arm — `devSeeds.test.ts` "'stale' composes EXACTLY the
     // lines…" — so a re-bucketing fails there first, in a second, not here in ninety; the ledger term
     // below is that arm's own oracle, so neither pin drifts with the calendar.
     const now = new Date()
@@ -2538,10 +2545,11 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
 
   /**
    * THE CARD'S SEAT WHEN A BEAT IS ALSO ON SCREEN — the state the household reaches by tapping the
-   * card's OWN re-open control, and the one this harness cannot drive: a live solve is 80–200s, past
-   * any fit budget. So the beat is INJECTED, exactly as the recold arm injects its third cause clause
-   * onto the real card — confidence.css's switch keys on the surface having any direct child that is
-   * neither `.sr-only` nor `.rec-aside`, so one appended child reaches the real rule.
+   * card's OWN re-open control, and the one this harness cannot drive: a live solve was 80–200s
+   * single-worker (recorded 2026-07-22 above) and, pooled, is still unmeasured at a runner's P = 2;
+   * no fit budget carries it. So the beat is INJECTED, exactly as the recold arm injects its third
+   * cause clause onto the real card — confidence.css's switch keys on the surface having any direct
+   * child that is neither `.sr-only` nor `.rec-aside`, so one appended child reaches the real rule.
    *
    * WHY THIS ARM EXISTS: the beat switch and the record seat each step the degradable tail down one
    * row, and CSS cannot add — the combination needs its own `:has():has()` rules at a specificity

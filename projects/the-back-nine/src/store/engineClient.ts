@@ -17,8 +17,9 @@
  * one, and nothing below about resets of the spine is changed by the pool.
  *
  * THE RESETTABLE HANDLE (2026-09-03, ranked item 5 — the solve-lane cancel). The worker's
- * `runSolve` is ONE synchronous call: there is no yield point anywhere in src/engine/solver, and
- * the cooperative seam's `ShouldAbort` predicate cannot even cross the structured clone — so a
+ * `runSolve` is ONE synchronous call: it drives src/engine/solver's generator stages through
+ * `runEvalSync` (no event-loop yield between batches), and the cooperative seam's `ShouldAbort`
+ * predicate cannot even cross the structured clone — so a
  * minutes-long solve starves the message port, and a draft edit made while it runs leaves its own
  * headline recompute queued BEHIND a solve that now describes a superseded household. The only
  * cancel that exists for a synchronous worker script is `worker.terminate()`. So the handle the
@@ -92,10 +93,11 @@ export interface EngineClient {
    *  so per-commit recomputes must defer past the step-transition paint
    *  (phase-2 cross-cutting #6). */
   readonly runningInWorker: boolean
-  /** Kill the current worker and spawn the next (sequential — one worker at a time). Every call in
-   *  flight rejects with {@link EngineResetError} (memoryModel's lanes hold on it; controlPreview
-   *  renders its calm error arm — each consumer decides). A no-op on the main-thread fallback. NEVER
-   *  throws (it runs inside the store's `update()`). */
+  /** Kill every pooled solve lane in flight, then kill the current SPINE worker and spawn the next
+   *  (sequential — one spine worker at a time; a failed spawn keeps the old spine, but the lanes are
+   *  already killed). Every call in flight rejects with {@link EngineResetError} (memoryModel's lanes
+   *  hold on it; controlPreview renders its calm error arm — each consumer decides). A no-op on the
+   *  main-thread fallback. NEVER throws (it runs inside the store's `update()`). */
   readonly reset: () => void
 }
 

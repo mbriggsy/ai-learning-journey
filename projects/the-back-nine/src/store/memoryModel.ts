@@ -643,8 +643,12 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
     notify()
   }
 
-  /** Cancel an in-flight spend solve (worker-side, between probes) — the recommendation beat must
-   *  never queue behind it. The clause falls back to figure-less (never wrong, just unsized). */
+  /** Cancel an in-flight spend solve (worker-side, between probes). The spend solve always runs on the
+   *  spine worker; on the single-worker path (`poolSizeFor` 0 — ≤ 3 logical cores — or a pooled solve's
+   *  one retry after a pool death) the recommendation beat would queue behind it there (council
+   *  wf_faa1af2d-052: the second beat never queues behind it). A pooled solve runs on its own lane
+   *  (engineClient.ts `runPooledSolve`) and would not, but the store cannot see which path a solve takes,
+   *  so the cancel stays unconditional. The clause falls back to figure-less (never wrong, just unsized). */
   const cancelSpend = (): void => {
     if (spendAnswer.kind !== 'pending') return
     void deps.client.engine.setLatestSpendEpoch(++spendEpoch).catch(() => {})
@@ -745,21 +749,28 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
     update(mutate) {
       draft = mutate(draft)
       // §S6 — THE EDIT-TIME KILL (2026-09-03, ranked item 5). A fingerprint-moving edit while a solve
-      // is PENDING supersedes the run. The worker's runSolve is ONE synchronous call (no yield point
-      // in src/engine/solver; the cooperative seam's predicate cannot even cross the wire), so the
-      // superseded solve would keep the ONE worker for its remaining minutes while THIS edit's own
-      // recompute queued behind it — and would resolve into `stale` anyway (the pending-during-edit
-      // guard). Demote NOW through commitSolve, minting through `++solveDispatchedEpoch`: the killed
-      // dispatch's rejection (and, on the main-thread fallback, its late resolve) is then held by BOTH
+      // is PENDING supersedes the run. The worker's runSolve is ONE synchronous call (the solver's
+      // generator steps, 7e0365c1, are driven to completion inside it with no event-loop yield; the
+      // cooperative seam's predicate cannot even cross the wire), so the superseded solve would keep
+      // the ONE worker for its remaining minutes while THIS edit's own recompute queued behind it —
+      // and would resolve into `stale` anyway (the pending-during-edit guard). Demote NOW through
+      // commitSolve, minting through `++solveDispatchedEpoch`: the killed dispatch's rejection (and,
+      // on the main-thread fallback, its late resolve) is then held by BOTH
       // guards — dispatchSolve's `epoch !== solveDispatchedEpoch` and commitSolve's committed-epoch
       // compare — and, the part that is LOAD-BEARING, the dispatched epoch stays monotonic PAST the
       // stale commit, so the household's next re-invite mints strictly above it (a `+ 1` commit
       // without the advance would collide the next dispatch with the committed epoch and discard
       // that solve forever — pinned). Then reset the worker so the recompute that follows this edit
-      // lands in seconds, not minutes. The reset is SEQUENTIAL (one worker at a
-      // time — U16 §S1's ruling in letter and rationale; its premise "the spine lane never starves"
-      // was scoped to the FIRST beat, and the U15 profile's 72 s solve is the measured starvation the
-      // ruling named as its trigger). THE TRADE, decided: the kill is one-way — an edit that is then
+      // lands in seconds, not minutes. (That starvation is the SINGLE-WORKER case: `poolSizeFor` → 0
+      // under 4 logical cores, or the pooled lane's one single-thread retry after a pool death. On the
+      // default pooled lane — 225d8da4, engineClient.ts `runPooledSolve` — the solve never occupies
+      // the spine worker and the recompute never queued behind it; there the reset's job is to kill
+      // the superseded lane: `reset()` kills every pooled run first with `EngineResetError` and no
+      // retry, so a stale run neither commits nor keeps burning cores.) The spine reset is SEQUENTIAL
+      // (one spine worker at a time — U16 §S1's ruling in letter and rationale, amended for the solve
+      // lane alone by the pool, 225d8da4; its premise "the spine lane never starves" was scoped to the
+      // FIRST beat, and the U15 profile's 72 s solve is the measured starvation the ruling named as its
+      // trigger). THE TRADE, decided: the kill is one-way — an edit that is then
       // reverted has still destroyed the run (the resolve-time compare would have kept it), and the
       // household re-invites through the stale card's own door; minutes of a frozen headline were the
       // worse sin. A non-fingerprint edit leaves the solve running. Never an auto-re-solve.
@@ -927,7 +938,8 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
       }
 
       // RECOMMEND-SECOND ORDERING (§S1): the solve DISPATCHES only after the spine beat has
-      // committed — the spine lane never starves the one shared worker. Source-binds to
+      // committed — the spine lane never starves behind the solve (on the single-worker path they
+      // share one worker; the pooled lane, 225d8da4, runs beside the spine). Source-binds to
       // `everResolved` (the same flag the U12 demotion gates on), never a bespoke ordering mirror.
       // Belt-and-suspenders behind the UI (the affordance lives in the doors region, shown only
       // post-spine-commit): a no-op keeps the solve channel dormant until the first beat lands. NOT
@@ -942,8 +954,10 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
       // every payload arm is a NAMED bin (insight 092).
       const dispatchedFingerprint = fingerprintOf(request)
       const epoch = ++solveDispatchedEpoch
-      // The recommendation shares the ONE worker: an in-flight spend solve yields to it (council
-      // wf_faa1af2d-052) — the clause falls back to figure-less rather than delay the second beat.
+      // On the single-worker path (poolSize < 2, or the pool's one single-thread retry) the
+      // recommendation shares the spine worker with the spend solve; on the pooled lane (225d8da4) it
+      // runs beside it. Either way an in-flight spend solve yields to it (council wf_faa1af2d-052) —
+      // the clause falls back to figure-less rather than delay the second beat.
       cancelSpend()
       solveAnswer = { kind: 'pending', label: 'solving', fingerprint: dispatchedFingerprint }
       notify()

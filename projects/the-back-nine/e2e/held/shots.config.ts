@@ -1,7 +1,9 @@
 import fitConfig from '../../playwright.fit.config'
 
 /**
- * The HELD harness for `e2e/held/*.spec.ts` — INSTRUMENTS, never gates.
+ * The dev-server HELD harness for `e2e/held/*.spec.ts` — INSTRUMENTS, never gates — except the three
+ * instruments of the BUILT app (solve-timing, solve-phase-profile, solve-pool), which
+ * `solve-timing.config.ts` owns (`testIgnore` below).
  *
  * `playwright.fit.config.ts` lists its three gate specs by name in `testMatch`, so nothing under
  * `e2e/held/` is collected by `pnpm verify:fit`; the CSP harness (`playwright.config.ts`) collects

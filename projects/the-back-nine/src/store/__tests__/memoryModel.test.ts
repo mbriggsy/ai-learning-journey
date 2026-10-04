@@ -1072,9 +1072,12 @@ describe('memoryModel — the saved-recommendation record is a USER FACT on the 
 })
 
 describe('memoryModel — THE EDIT-TIME KILL (§S6, 2026-09-03 — the solve-lane cancel)', () => {
-  // The worker's runSolve is one synchronous call, so a superseded solve would hold the ONE worker for
-  // its remaining minutes with the edit's own recompute queued behind it. A fingerprint-moving edit
-  // during pending now demotes at the edit and resets the worker; the killed dispatch is HELD through
+  // The worker's runSolve is one synchronous call, so a superseded solve would keep burning its lane
+  // for its remaining minutes: on the spine worker (poolSize < 2, or the single-thread retry after a
+  // pool death) with the edit's own recompute queued behind it; else its own coordinator + eval
+  // workers (engineClient's runPooledSolve — the spine keeps flowing). A fingerprint-moving edit
+  // during pending now demotes at the edit and resets the worker — the reset kills every pooled lane
+  // first; the killed dispatch is HELD through
   // the epoch advance that precedes the reset. Each arm plants the mutant it kills.
 
   it('the pending arm CARRIES the fingerprint it is solving on (one home — never a closure-side mirror)', async () => {

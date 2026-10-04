@@ -52,7 +52,7 @@ being born (insight 020's shape). Both shapes carry a `fingerprint` field today
    The schema is `solver-run-fp/v2` — the 2026-07-19 review fold added `seedA` and
    `tieTolerance` (both ranking-affecting siblings that had lived beside the serialized
    triple). `tieTolerance`'s finiteness refusal lives one layer up, in `solve()`'s input
-   validation AHEAD of the fingerprint gate (`tie-tolerance-invalid`, solve.ts:442-448) — a
+   validation AHEAD of the fingerprint gate (`tie-tolerance-invalid`, solve.ts:447-453) — a
    NaN tolerance admits every candidate to the survival-top set, so it is refused before any
    identity is computed.
    **NOT `consumedConstantEntries`** — red-team-falsified as HOUSEHOLD-BLIND
@@ -440,8 +440,13 @@ supersession causes (`inputs-changed` / `inputs-unavailable` / `solver-changed` 
 and a ranking-affecting edit during a pending solve demotes it to `stale`. The monopolization half
 was answered 2026-09-03 (`2eb0eebd`) by the SEQUENTIAL worker reset — `createResettableEngine`
 (`engineClient.ts`) terminates and respawns the one worker on a fingerprint-moving edit during a
-pending solve (U16 spec §S1) — so the lane still runs on ONE worker, never two, and a second worker
-stays deferred-with-trigger. The
+pending solve (U16 spec §S1) — so the lane ran on ONE worker, never two, and a second worker
+stayed deferred-with-trigger. *(2026-10-03 note, `225d8da4`: Briggsy's ruling amended U16 §S1 for
+the SOLVE lane alone. A solve now runs on its own per-solve pool, made of one coordinator plus up to
+`POOL_CAP` 12 eval workers (`poolSizeFor`: every logical core but two, and 0 at ≤ 3 cores, which
+falls back to the single worker). The pool runs beside the one spine worker. The spine stays one
+worker under the sequential reset, and a reset kills the whole pool lane. See
+`docs/architecture.md` §11, the pooled-solve bullet.)* The
 unknown-`chosenGoal` vault-wide decode refusal = the 3rd-goal unit's forward-compat decision
 (carried on the register's *The third goal — "live bigger now" doesn't exist*); the
 skew-disclosure percentile convention single-sources against `confidence.ts` when U16 renders both.

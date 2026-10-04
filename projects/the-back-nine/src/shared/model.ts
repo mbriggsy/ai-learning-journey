@@ -1914,7 +1914,7 @@ export interface SavedRecommendationV3 {
    *  2026-09-03 edit-time kill the pending arm does too; produced by the private `fingerprintOf` at
    *  `:698`) — the identity of the run this record actually describes — and NEVER from a fresh
    *  recompute taken at save time. The trichotomy's `freshFingerprint` is the OTHER operand,
-   *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:708`): what the draft WOULD solve
+   *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:712`): what the draft WOULD solve
    *  now. The two are equal at the mint and diverge afterwards, and that divergence IS the mechanism
    *  — so minting from the fresh side instead would stamp the record with inputs the recommendation
    *  was never computed against, which on a stale draft is a calm-but-wrong memory rather than a
@@ -1943,11 +1943,15 @@ export interface SavedRecommendationV3 {
 
 /** WHAT WAS RECOMMENDED — the crowned arm, flattened.
  *
- *  NO `conversion` FIELD, deliberately. `SolveArm.conversion` is documented ALWAYS NULL in the
- *  live sequencing-only ranking (solve.ts — conversions are WITHHELD and carried as
- *  `withheldConversionLevers`), so a persisted conversion slot would be dead weight and an
- *  untestable branch. `candidateId` already embeds the amount, and this record extends
- *  additively the day conversions actually rank. */
+ *  NO `conversion` FIELD. ⚠️ The original rationale — "`SolveArm.conversion` is ALWAYS NULL in
+ *  the live sequencing-only ranking, conversions WITHHELD as `withheldConversionLevers`" — EXPIRED
+ *  2026-07-19, when Part B went `'trended'` and the trend clause cleared: conversion candidates rank
+ *  live now (solve.ts:14-16, :116-118), so a crowned arm CAN carry a real `RothConversionPlan`. This
+ *  record keeps only what `candidateId` embeds — the conversion's `annualAmountReal`, inside an id
+ *  that is OPAQUE and never parsed (below) — and does NOT persist the plan's `startYearOffset` /
+ *  `years` window. Nothing re-enacts a conversion from this record today — its one reader,
+ *  `recommendationSaveView.ts`, only compares `candidateId` to the live winner's id — so the
+ *  window need not persist; a reader that re-enacts from the record extends it additively. */
 export interface SavedRecommendationActionV3 {
   /** The `solverCandidateId` of the winning arm — OPAQUE, never parsed into its parts (the
    *  engine owns that grammar; a shared-side parser would be a second producer to drift). */

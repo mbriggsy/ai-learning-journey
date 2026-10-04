@@ -857,7 +857,7 @@ function acaPricedOverlayArm(o: OverlayParams | undefined): boolean {
  *  claiming it matches is not a pin (insights 032/081) — the consumer source-binds to THIS.
  *
  *  This is the read that makes the all-65+ household honest: it takes `buildOverlay`'s
- *  Medicare-only branch (`intakeMap.ts:681-684` — "healthcareEnabled with NO ACA quote pair"),
+ *  Medicare-only branch (`intakeMap.ts:682-685` — "healthcareEnabled with NO ACA quote pair"),
  *  so `enrolledPremium` is absent, the engine's per-year ACA gate
  *  (`taxOverlay.ts:1712-1717`) can never open, and this correctly reads FALSE. `buildSpineParams`
  *  returns null on the date route ⇒ false there (the caller handles that route separately —
@@ -922,7 +922,7 @@ function builtRunParams(d: ScenarioDraft): SimulationParams | null {
 
 /** "Did THIS run build a tax overlay at all?" — the FEDERAL tax family's exposure read for U17
  *  §S4's staleness gate. `taxEnabled: true` is hardcoded on every built overlay
- *  (`intakeMap.ts:651`) and `consumedConstants.ts:104` gates the whole `tax.` family on exactly
+ *  (`intakeMap.ts:652`) and `consumedConstants.ts:104` gates the whole `tax.` family on exactly
  *  that flag, so overlay-absent ⟺ no tax constant was consumed ⟺ the recompute is byte-identical
  *  under any tax vintage. The population that reads FALSE is real and save-ready: `buildOverlay`'s
  *  degenerate early return (no accounts, no marketplace premium, no ongoing income) — a
@@ -930,7 +930,7 @@ function builtRunParams(d: ScenarioDraft): SimulationParams | null {
  *
  *  ITS OWN READ, never `!spineMedicarePriced` (insight 081). The two agree on every household the
  *  app can build TODAY — but by coincidence, not by law: `missingRequiredFacts` requires the
- *  marketplace quote pair whenever a member is pre-65 (lines 211-217) and an all-65+ household
+ *  marketplace quote pair whenever a member is pre-65 (lines 212-218) and an all-65+ household
  *  takes the Medicare-only branch, so a save-ready overlay always carries `healthcareEnabled`.
  *  Two unrelated rules, one accidental equality — precisely the shape insight 080 records
  *  breaking. This reads the flag it is actually about. */
@@ -947,12 +947,12 @@ export function overlayBuiltForRun(d: ScenarioDraft): boolean {
  *  and discriminates nothing. What it actually carries is this base overlay's streams,
  *  TRUNCATED (`truncateStreams(enteredContributions?.[i] ?? {}, Y)`) — and `buildOverlay` spreads
  *  `accumulation` only when `anyContributions` holds: some WORKING owner's account carries a
- *  positive contribution, match, or employer-HSA dollar (`intakeMap.ts:618-624`). A 66/retired +
+ *  positive contribution, match, or employer-HSA dollar (`intakeMap.ts:619-625`). A 66/retired +
  *  62/working couple whose accounts all belong to the retired spouse therefore sweeps candidates
  *  with `{}` streams and reads no limit: `consumedConstants.ts:124` gates the `contributions.`
  *  family on the construct, and the limits' only pricing read is `annualAdditionsCeilingFor`'s
  *  §415(c) match trim INSIDE `contributionStreamsFor`, which returns early for a non-working
- *  owner (`intakeMap.ts:465-468`) and never runs for an owner with no accounts. */
+ *  owner (`intakeMap.ts:466-469`) and never runs for an owner with no accounts. */
 export function contributionsPricedForRun(d: ScenarioDraft): boolean {
   return builtRunParams(d)?.overlay?.accumulation !== undefined
 }
@@ -964,8 +964,8 @@ export function contributionsPricedForRun(d: ScenarioDraft): boolean {
  *  THREE CONJUNCTS, each a proof of consumption:
  *    1. A run exists at all (`builtRunParams`) — an unbuildable draft proves nothing either way.
  *    2. `householdStockWeight` is non-null. It returns null at zero accounts, at any unresolved
- *       blend, AND at a $0 total (line 316) — in which case `buildParams` takes the documented
- *       inert `stockWeight ?? 0` (line 714) and NO table row can move the answer.
+ *       blend, AND at a $0 total (line 317) — in which case `buildParams` takes the documented
+ *       inert `stockWeight ?? 0` (line 715) and NO table row can move the answer.
  *    3. Some account with real dollars resolves through the table — {@link resolveBlend}'s
  *       `findBlendRow` branch, called HERE with the SAME function, never a re-typed ticker list.
  *       A household of manual blends (every `?vault` plant's base seed today) is provably inert:

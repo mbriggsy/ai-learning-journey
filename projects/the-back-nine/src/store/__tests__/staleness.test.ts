@@ -380,7 +380,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     ['part-b-trend', { partBTrendVintage: 'part-b-trend-2025x' }],
     // THE F1 CORRECTION, pinned as an equal member of the family. `irmaaTopTierFrozenThrough`
     // has no engine reader of its own; the table it DATES (`irmaa`) is read at simulate.ts:859,
-    // solveAnchor.ts:206-217 and taxOverlay.ts:1120, and consumedConstants.ts:112 consumes the
+    // solveAnchor.ts:221-231 and taxOverlay.ts:1120, and consumedConstants.ts:112 consumes the
     // whole `health.` family on `healthcareEnabled`. Re-bucketing it to the aggregate reds here.
     ['irmaa-freeze', { irmaaTopTierFrozenThrough: hv.irmaaTopTierFrozenThrough + 1 }],
   ] as const)(

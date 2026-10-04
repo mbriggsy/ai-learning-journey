@@ -10,7 +10,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { DRAWDOWN_POLICIES } from '@shared/model'
-import { irmaa, medicareCostTrend, standardDeductionMFJ, ordinaryBracketsMFJ } from '@engine/constants'
+import { age65AdditionMFJ, irmaa, medicareCostTrend, ordinaryBracketsMFJ, seniorBonus, standardDeductionMFJ } from '@engine/constants'
 import { acaMagiAtFill, irmaaMagiAtFill, taxableIncomeAtFill, type CommittedYearIncome } from '@engine/magiLandscape'
 import {
   anchoredConversionAmounts,
@@ -61,7 +61,8 @@ describe('anchoredConversionAmounts — the cliff-anchored grid', () => {
     // ACA-MAGI baseline = rmd 0 + conversion 0 + ongoing 50,000 + ss 0 = 50,000.
     const amounts = anchoredConversionAmounts(anchorWith({ acaCliffMagi: 100_000 }))
     const aca = amounts.filter((a) => a.rail.kind === 'aca-cliff')
-    expect(aca).toEqual([{ amountReal: 50_000, rail: { kind: 'aca-cliff', magi: 100_000 } }])
+    // No window rides ⇒ the skeleton's year alone binds, and a one-year rail adds no crossing.
+    expect(aca).toEqual([{ amountReal: 50_000, rail: { kind: 'aca-cliff', magi: 100_000, calendarYear: 2030, firstCrossingYear: null } }])
   })
 
   it('a committed-over household yields NO ACA anchor (nothing discretionary fits under the cliff)', () => {
@@ -387,6 +388,149 @@ describe('the IRMAA window — one flat amount repeats across years whose lines 
   })
 })
 
+describe('the ACA-cliff and bracket-edge window — one flat amount meets a different frame each year (the b9-4 sibling of the IRMAA window)', () => {
+  // The register's Tier 1 *The solver's ACA-cliff and bracket-edge anchors sit under their rail only in
+  // YEAR 0's committed frame…*: a candidate converts ONE amount every window year, but the deduction stack
+  // shrinks when the OBBBA senior bonus ends after 2028, and Social Security arrives at a claim age (85 %
+  // of it into taxable income above the §86 thresholds, ALL of it into ACA-MAGI). Every expected dollar
+  // below is typed from the statute + the READ constants (DND 012 — never the enumerator's output).
+  const sd = standardDeductionMFJ.value as number
+  const add65 = age65AdditionMFJ.value as number
+  const sb = seniorBonus.value
+  const edges = (ordinaryBracketsMFJ.value as ReadonlyArray<{ upTo: number | null }>)
+    .map((b) => b.upTo)
+    .filter((u): u is number => u !== null)
+  /** Every year from..to at `frame`'s committed income, `over(y)` patching a year. */
+  const yearsOf = (
+    frame: CommittedYearIncome,
+    from: number,
+    to: number,
+    over: (y: number) => Partial<CommittedYearIncome> = () => ({}),
+  ): [CommittedYearIncome, ...CommittedYearIncome[]] => {
+    const out: CommittedYearIncome[] = []
+    for (let y = from; y <= to; y++) out.push({ ...frame, calendarYear: y, ...over(y) })
+    return out as [CommittedYearIncome, ...CommittedYearIncome[]]
+  }
+  const withWindow = (years: [CommittedYearIncome, ...CommittedYearIncome[]], acaPricedYears: number[] = [], acaCliffMagi: number | null = null) =>
+    anchorWith({ committed: years[0], acaCliffMagi, window: { years, acaPricedYears } })
+  const edgePoints = (anchor: ConversionAnchorContext, edge: number) =>
+    anchoredConversionAmounts(anchor).flatMap((a) => (a.rail.kind === 'bracket-edge' && a.rail.edge === edge ? [{ amountReal: a.amountReal, rail: a.rail }] : []))
+
+  it('THE BONUS WITNESS: a both-65+ couple 2026–2030 keeps the first-year point (the bonus’s room, crossing in 2027) AND gains the point that holds once the bonus is gone (2029)', () => {
+    // Taxable = ongoing + a − (SD + 2 × the 65+ addition + 2 × the per-person bonus), the bonus being the
+    // statute's NOMINAL $6,000 deflated by the year's price level inside 2025–2028 and 0 from 2029. At the
+    // first edge the MAGI sits far under the phase-out start (checked), so the bonus is whole.
+    const E = edges[0]!
+    const through = seniorBonus.sunsetAfter!
+    expect(through).toBe(2028) // P.L. 119-21: the bonus ends after tax year 2028
+    const bonus = (y: number): number => (y <= through ? (2 * sb.perPerson65Plus) / cumulativePriceIndex(y) : 0)
+    const room = (y: number): number => E + sd + 2 * add65 + bonus(y) - 50_000
+    expect(50_000 + room(2026), 'premise: MAGI under the phase-out start — the bonus is whole').toBeLessThan(sb.phaseOutStart.mfj / cumulativePriceIndex(2026))
+    expect(cumulativePriceIndex(2027), 'premise: the price level rises in 2027, so the nominal bonus shrinks in real dollars').toBeGreaterThan(1)
+    const both65: CommittedYearIncome = { ...linearWorld, count65: 2, calendarYear: 2026 }
+    const points = edgePoints(withWindow(yearsOf(both65, 2026, 2030)), E)
+    expect(points).toHaveLength(2)
+    const [windowPoint, firstYear] = points // ascending: the bonus-free years leave less room
+    expect(firstYear!.amountReal).toBe(Math.floor(room(2026)))
+    expect(firstYear!.rail).toEqual({ kind: 'bracket-edge', edge: E, calendarYear: 2026, firstCrossingYear: 2027 })
+    expect(windowPoint!.amountReal).toBe(Math.floor(room(2029)))
+    expect(windowPoint!.rail).toEqual({ kind: 'bracket-edge', edge: E, calendarYear: 2029, firstCrossingYear: null })
+    expect(firstYear!.amountReal - windowPoint!.amountReal, 'the two points sit the whole bonus apart').toBe(Math.floor(room(2026)) - Math.floor(room(2029)))
+  })
+
+  it('THE INCOME WITNESS: Social Security arriving mid-window moves the window point by 85 % of the benefit — never judged on year 0’s income', () => {
+    // Post-sunset, under 65 (no bonus, no 65+ addition): taxable = a + taxableSS − SD. At the SECOND edge
+    // the provisional income sits far over the §86 MFJ adjusted base (checked), so the taxable part is the
+    // 85 % cap, 0.85 × SS (26 U.S.C. §86(a)(2); a deflating threshold only lowers it).
+    const E = edges[1]!
+    const ss = (y: number): number => (y === 2030 ? 0 : y === 2031 ? 30_000 : 54_000)
+    const room = (y: number): number => E + sd - 0.85 * ss(y)
+    for (const y of [2031, 2032, 2033]) {
+      expect(room(y) + 0.5 * ss(y) - 44_000, `§86 premise (${y}): PI − the adjusted base ≥ the benefit`).toBeGreaterThanOrEqual(ss(y))
+    }
+    const noIncome: CommittedYearIncome = { ...linearWorld, ongoingTaxable: 0 }
+    const points = edgePoints(withWindow(yearsOf(noIncome, 2030, 2033, (y) => ({ ssBenefit: ss(y) }))), E)
+    expect(points).toHaveLength(2)
+    const [windowPoint, firstYear] = points
+    expect(firstYear!.amountReal).toBe(Math.floor(room(2030)))
+    expect(firstYear!.rail).toMatchObject({ calendarYear: 2030, firstCrossingYear: 2031 })
+    expect(windowPoint!.amountReal).toBe(Math.floor(room(2032))) // both benefits ride from 2032; the earliest on a tie
+    expect(windowPoint!.rail).toMatchObject({ calendarYear: 2032, firstCrossingYear: null })
+  })
+
+  it('THE ACA WITNESS: the cliff binds only in the years the engine PRICES under it — Social Security moves it by the WHOLE benefit, an unpriced year never binds', () => {
+    // ACA-MAGI = ongoing + a + the whole benefit (no Pub-915 coupling), against ONE cliff dollar.
+    const cliff = 100_000
+    const ss = (y: number): number => [0, 10_000, 20_000, 60_000][y - 2030]!
+    const frames = yearsOf({ ...linearWorld, ssBenefit: 0 }, 2030, 2033, (y) => ({ ssBenefit: ss(y) }))
+    // 2033 is NOT priced (say, both on Medicare): its $60,000 of benefit must not bind the cliff anywhere.
+    const aca = anchoredConversionAmounts(withWindow(frames, [2030, 2031, 2032], cliff)).filter((a) => a.rail.kind === 'aca-cliff')
+    expect(aca).toEqual([
+      { amountReal: cliff - 50_000 - 20_000, rail: { kind: 'aca-cliff', magi: cliff, calendarYear: 2032, firstCrossingYear: null } },
+      { amountReal: cliff - 50_000, rail: { kind: 'aca-cliff', magi: cliff, calendarYear: 2030, firstCrossingYear: 2031 } },
+    ])
+    // Year 0 UNPRICED, a later year priced: no first-year point (year 0 owes no premium), the priced year's own.
+    const later = anchoredConversionAmounts(withWindow(frames, [2032], cliff)).filter((a) => a.rail.kind === 'aca-cliff')
+    expect(later).toEqual([{ amountReal: cliff - 50_000 - 20_000, rail: { kind: 'aca-cliff', magi: cliff, calendarYear: 2032, firstCrossingYear: null } }])
+  })
+
+  it('NO SILENT VANISH: an edge year 0’s income already passes still anchors on the years it does not — including edges BELOW year 0’s baseline', () => {
+    // 2030's committed income ($200,000) is over the first two edges; 2031–2032's ($50,000) is under both.
+    const frames = yearsOf(linearWorld, 2030, 2032, (y) => (y === 2030 ? { ongoingTaxable: 200_000 } : {}))
+    for (const E of [edges[0]!, edges[1]!]) {
+      expect(200_000 - sd, `premise: year 0 is already over ${E}`).toBeGreaterThan(E)
+      const points = edgePoints(withWindow(frames), E)
+      expect(points, `edge ${E}`).toEqual([
+        { amountReal: E + sd - 50_000, rail: { kind: 'bracket-edge', edge: E, calendarYear: 2031, firstCrossingYear: null } },
+      ])
+    }
+  })
+
+  it('a window whose frames never bind tighter than year 0 adds NOTHING — the grid is the first-year walk exactly', () => {
+    const one = anchoredConversionAmounts(withWindow([linearWorld]))
+    const three = anchoredConversionAmounts(withWindow(yearsOf(linearWorld, 2030, 2032)))
+    expect(three).toEqual(one)
+    // …and an ABSENT window (the U14 oracle fixtures) is that same walk.
+    expect(anchoredConversionAmounts(anchorWith({}))).toEqual(one)
+  })
+
+  it('firstCrossingYear is exactly the first window year the amount adds a crossing, and every point is just-under in its binding year — on the SS-coupled ramp, every edge', () => {
+    const coupled: CommittedYearIncome = { ...linearWorld, count65: 2, calendarYear: 2026, ssBenefit: 0, ongoingTaxable: 30_000 }
+    const frames = yearsOf(coupled, 2026, 2031, (y) => ({ ssBenefit: y < 2028 ? 0 : 40_000 }))
+    const taxableAt = (f: CommittedYearIncome, a: number): number => taxableIncomeAtFill({ ...f, conversion: a }, 0)
+    let held = 0
+    let crossed = 0
+    for (const { amountReal, rail } of anchoredConversionAmounts(withWindow(frames))) {
+      if (rail.kind !== 'bracket-edge') continue
+      const firstCross = frames.find((f) => taxableAt(f, 0) <= rail.edge && taxableAt(f, amountReal) > rail.edge)
+      expect(rail.firstCrossingYear, `amount ${amountReal} (edge ${rail.edge})`).toBe(firstCross?.calendarYear ?? null)
+      const binding = frames.find((f) => f.calendarYear === rail.calendarYear)!
+      expect(taxableAt(binding, amountReal), 'at-or-under in its binding year').toBeLessThanOrEqual(rail.edge)
+      expect(taxableAt(binding, amountReal + 2), 'just-under: two more dollars cross').toBeGreaterThan(rail.edge)
+      if (rail.firstCrossingYear === null) held++
+      else crossed++
+    }
+    expect(crossed, 'a first-year point that crosses exists (non-vacuous)').toBeGreaterThan(0)
+    expect(held, 'every edge keeps a point that holds across the window').toBe(edges.length)
+  })
+
+  it('the window is a contract, checked loud: starts AT the skeleton, ascending, priced years a subset, a cliff dollar iff a priced year', () => {
+    const y = (calendarYear: number, over: Partial<CommittedYearIncome> = {}): CommittedYearIncome => ({ ...linearWorld, calendarYear, ...over })
+    const at = (years: CommittedYearIncome[], priced: number[] = [], cliff: number | null = null) => () =>
+      anchoredConversionAmounts(anchorWith({ acaCliffMagi: cliff, window: { years: years as [CommittedYearIncome, ...CommittedYearIncome[]], acaPricedYears: priced } }))
+    expect(at([])).toThrow(/window\.years is empty/)
+    expect(at([y(2031)])).toThrow(/not at the anchor skeleton/)
+    expect(at([y(2030), y(2030)])).toThrow(/ascending/)
+    expect(at([y(2030, { ongoingTaxable: 1 })])).toThrow(/anchor skeleton/)
+    expect(at([y(2030), y(2031, { conversion: 1 })])).toThrow(/conversion 0/)
+    expect(at([y(2030), y(2031)], [2032], 100_000)).toThrow(/not a window year/)
+    expect(at([y(2030), y(2031)], [2031, 2030], 100_000)).toThrow(/ascending/)
+    expect(at([y(2030), y(2031)], [2031], null)).toThrow(/present iff/)
+    expect(at([y(2030), y(2031)], [], 100_000)).toThrow(/present iff/)
+    expect(at([y(2030), y(2031)], [2031], 100_000)).not.toThrow()
+  })
+})
+
 describe('enumerateCandidates — the full set + the RMD-first legality filter', () => {
   const window = { startYearOffset: 4, years: 4 }
 
@@ -418,7 +562,7 @@ describe('enumerateCandidates — the full set + the RMD-first legality filter',
     const { candidates, rejected } = enumerateCandidates({ anchor, window })
     expect(rejected).toContainEqual({
       amountReal: 50_000,
-      rail: { kind: 'aca-cliff', magi: 100_000 },
+      rail: { kind: 'aca-cliff', magi: 100_000, calendarYear: 2030, firstCrossingYear: null },
       reason: 'exceeds-post-rmd-headroom',
       headroomReal: 20_000,
     })

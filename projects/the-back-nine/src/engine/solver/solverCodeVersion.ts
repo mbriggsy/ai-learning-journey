@@ -98,5 +98,17 @@
  * enrolled mid-window — whose year-0 bill met no one at 65 — now gets IRMAA anchors at all. The
  * enumerator clause: new candidates can be crowned. Ranking logic only — no pricer moved, so no
  * `ENGINE_PRICING_LEDGER` row (pricingVersion.test pins the split).
+ *
+ * VERSION 9 (2026-10-03) — the enumerator's ACA-cliff and bracket-edge anchors read EVERY conversion-window
+ * year in its OWN committed frame too (candidates.ts `WindowAnchorContext` + the one window walk all three
+ * rails share, `railAcrossWindow`; solveAnchor.ts; the register's Tier 1 *The solver's ACA-cliff and
+ * bracket-edge anchors sit under their rail only in YEAR 0's committed frame…*). The OBBBA senior bonus
+ * ends after 2028 (the deduction stack shrinks) and Social Security arrives at each claim age, so a year-0
+ * anchor crossed its own edge in later window years — on `retired`, every edge's first-year point from
+ * 2027 (the 100,800 edge: $148,300 first-year, $90,400 holding). Per edge the grid keeps the first-year
+ * point (its rail naming its `firstCrossingYear`) and gains the window point; the ACA cliff is judged only
+ * in the years the engine prices ACA under it (that year's premium + a living pre-65 member). Rosters
+ * grew 858 → 1,142 over the 15 solvable dev seeds (`retired` 69 → 93, `healthnc` 73 → 97). Ranking
+ * logic only — no pricer moved, so no `ENGINE_PRICING_LEDGER` row (pricingVersion.test pins the split).
  */
-export const SOLVER_CODE_VERSION = 8
+export const SOLVER_CODE_VERSION = 9

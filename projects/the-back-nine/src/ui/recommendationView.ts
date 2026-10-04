@@ -497,9 +497,9 @@ function heldView(payload: SolveTokenWithheld): RecommendationView {
  *      grid amount already sits at or under its ACA-cliff / IRMAA-step / bracket-edge rail IN THE RAIL'S
  *      OWN YEAR (its anchor frame: that year's committed income — for an IRMAA point, `magiYear`), and
  *      flooring a monotone metric can only move further under it there. It is NOT a claim about every
- *      window year: an IRMAA point carrying a `firstCrossingMagiYear` crosses its step from that year on
- *      (candidates.ts, the council wf_71f675da-8cf), and the ACA-cliff / bracket-edge anchors are year-0
- *      frames (the register's sibling entry). On the household's OWN unscreened
+ *      window year: a point carrying a `firstCrossingMagiYear` (IRMAA) or a `firstCrossingYear` (ACA cliff,
+ *      bracket edge) crosses its rail from that year on (candidates.ts `railAcrossWindow` — the council
+ *      wf_71f675da-8cf, then SOLVER_CODE_VERSION 9). On the household's OWN unscreened
  *      figure that same floor would be a misquote, which is why the two lines quoting THEIR amount use
  *      `formatEnteredDollar` instead (money.ts states the provenance split in full).
  *  (2) THE WINDOW IS HORIZON-CLAMPED and starts at offset 0 (`conversionWindowFor`), so the card can

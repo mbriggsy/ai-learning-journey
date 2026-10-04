@@ -107,7 +107,7 @@ const recFixture = (over: Partial<SolveRecommendation> = {}): SolveRecommendatio
       startYearOffset: 0,
       years: 3,
       reason: { kind: 'medicare-trend-unsourced' },
-      anchoredRail: { kind: 'bracket-edge', edge: 120_000 },
+      anchoredRail: { kind: 'bracket-edge', edge: 120_000, calendarYear: 2026, firstCrossingYear: null },
     },
   ],
   disclosedDirectional: [],

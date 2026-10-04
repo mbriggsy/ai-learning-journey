@@ -49,8 +49,9 @@ dime-floor (POMS RS 00615.101) — a $20,000 PIA is $19,999.20 a year; the engin
 
 ## Also Applies To
 
-- The sibling ACA-cliff and bracket-edge anchors (register Tier 1) — still year-0 frames against a repeating amount; the
-  senior-bonus sunset and mid-window claims move taxable income under them (the crowned anchors on `order` / `borderline`).
+- The sibling ACA-cliff and bracket-edge anchors (register Tier 1) — year-0 frames against a repeating amount when this was
+  written; the senior-bonus sunset and mid-window claims move taxable income under them (the crowned anchors on `order` /
+  `borderline`). BUILT 2026-10-03 (`SOLVER_CODE_VERSION` 9) on this insight's law: one window walk for all three rails.
 - The Roth sheet's planned fact lines ("in 2026, about $X fits under…") — each figure must be its own year's room.
 - Insight 014 (a threshold dragged by an evolving state — test the crossing year) and insight 133 (the draw-frame lean the
   anchors still carry): a frame that omits a term is honest only when the claim names the frame.

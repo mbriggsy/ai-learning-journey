@@ -176,24 +176,39 @@ export function deriveConversionAnchor(base: SimulationParams): ConversionAnchor
   const people = base.people
   const livingCount = people.length // both alive at year 0
 
-  // The year-0 skeleton — the ACA-cliff and bracket-edge rails read it (their own year-0 frame gap is
-  // the register's sibling entry); the IRMAA rail reads every billed year's frame below.
+  // Every conversion-window year's committed frame (both alive) — year 0's IS the skeleton every rail
+  // reads; the ACA-cliff, bracket-edge and IRMAA rails each judge the ONE repeated amount in each year's
+  // own frame (Social Security by claim age, that year's ongoing income, its 65+ count and calendar — so
+  // its deduction stack: the OBBBA senior bonus ends after 2028). The register's Tier 1 year-0 anchors
+  // entries — IRMAA (council wf_71f675da-8cf, b9-1), then the ACA cliff and the bracket edges (b9-4).
   const committed = committedIncomeForYear(base, 0)
-  const count65 = committed.count65
   const rmd = committed.rmd
-
-  // The ACA-cliff rail — active iff THIS year prices ACA under a cliff regime, the engine's exact
-  // predicate (taxOverlay bracket-fill site): table present + a cliff exists (not the enhanced
-  // regime) + a positive enrolled premium at year 0 + a living pre-65 member.
-  const acaTable = activeAcaTable(base)
-  let acaCliffMagi: number | null = null
-  if (acaTable !== undefined && acaTable.cliffFplFraction !== null) {
-    const enrolled0 = overlay.enrolledPremium?.[0]
-    const pre65Living = livingCount - count65
-    if (enrolled0 !== undefined && Number.isFinite(enrolled0) && enrolled0 > 0 && pre65Living > 0) {
-      acaCliffMagi = cliffMagiFor(acaTable, fplForHousehold(livingCount))
-    }
+  const window = conversionWindowFor(base)
+  const windowYears: CommittedYearIncome[] = []
+  for (let k = window.startYearOffset; k < window.startYearOffset + window.years; k++) {
+    windowYears.push(k === 0 ? committed : committedIncomeForYear(base, k))
   }
+  const [firstWindowYear, ...laterWindowYears] = windowYears
+  if (firstWindowYear !== committed) {
+    throw new Error('[solveAnchor] the conversion window must start at year 0 — the anchor skeleton is its first frame')
+  }
+
+  // The ACA-cliff rail — active in each window year that prices ACA under a cliff regime, the engine's
+  // exact per-year predicate (taxOverlay bracket-fill site): table present + a cliff exists (not the
+  // enhanced regime) + a positive enrolled premium THAT year + a living pre-65 member THAT year. One cliff
+  // dollar: the FPL is the both-alive household's, whatever the year.
+  const acaTable = activeAcaTable(base)
+  const cliff = acaTable !== undefined && acaTable.cliffFplFraction !== null ? cliffMagiFor(acaTable, fplForHousehold(livingCount)) : null
+  const acaPricedYears: number[] = []
+  if (cliff !== null) {
+    windowYears.forEach((f, i) => {
+      const enrolled = overlay.enrolledPremium?.[window.startYearOffset + i]
+      if (enrolled !== undefined && Number.isFinite(enrolled) && enrolled > 0 && livingCount - f.count65 > 0) {
+        acaPricedYears.push(f.calendarYear)
+      }
+    })
+  }
+  const acaCliffMagi = acaPricedYears.length > 0 ? cliff : null
 
   // The IRMAA-step rail — over EVERY window MAGI year the engine actually bills: healthcare on, the
   // bill (sim year k + lookback) inside the horizon, and someone Medicare-enrolled THEN (biological 65 —
@@ -205,12 +220,11 @@ export function deriveConversionAnchor(base: SimulationParams): ConversionAnchor
   let irmaaContext: IrmaaAnchorContext | null = null
   if (acaTable !== undefined) {
     const lookback = irmaa.value.magiLookbackYears
-    const window = conversionWindowFor(base)
     const billedYears: CommittedYearIncome[] = []
     for (let k = window.startYearOffset; k < window.startYearOffset + window.years; k++) {
       if (k + lookback >= base.maxHorizonYears) break // ascending: every later bill is past the horizon too
       if (people.some((p) => startYear + k + lookback - p.birthYear >= 65)) {
-        billedYears.push(k === 0 ? committed : committedIncomeForYear(base, k))
+        billedYears.push(windowYears[k - window.startYearOffset]!)
       }
     }
     const [first, ...rest] = billedYears
@@ -220,6 +234,7 @@ export function deriveConversionAnchor(base: SimulationParams): ConversionAnchor
   return {
     committed,
     acaCliffMagi,
+    window: { years: [firstWindowYear, ...laterWindowYears], acaPricedYears },
     irmaa: irmaaContext,
     pretaxAvailableAtStart: overlay.buckets.pretax,
     rmdAtStart: rmd,
@@ -232,11 +247,13 @@ export function deriveConversionAnchor(base: SimulationParams): ConversionAnchor
  * the classic low-income Roth-conversion window before forced distributions lift ordinary income.
  * Bounded to `[1, maxHorizonYears]` (a household already at/past RMD age gets a 1-year window — still
  * a legal, headroom-filtered conversion). The window length never multiplies the roster size / solve
- * cost: each candidate repeats ONE anchored annual amount, and the window adds at most one IRMAA point
- * per tier (the window point, `candidates.ts` — emitted only where a later billed year leaves less room
- * than the first, in its own committed frame), whatever the window's length. That point still grows
- * the roster: +20 candidates on `retired` (49 → 69), +40 on the mid-window `health` seeds (33 → 73),
- * measured 2026-09-28 — solve time is ~linear in it.
+ * cost: each candidate repeats ONE anchored annual amount, and the window adds at most one point per
+ * rail — per IRMAA tier, per bracket edge, for the ACA cliff (the window point, `candidates.ts`
+ * `railAcrossWindow` — emitted only where a later year leaves less room than the first, in its own
+ * committed frame), whatever the window's length. Those points still grow the roster: the IRMAA window
+ * +20 candidates on `retired` (49 → 69) and +40 on the mid-window `health` seeds (33 → 73), measured
+ * 2026-09-28; the ACA-cliff and bracket-edge windows (SOLVER_CODE_VERSION 9) `retired` 69 → 93, the
+ * `health` seeds 73 → 97, measured 2026-10-03 — solve time is ~linear in it.
  */
 export function conversionWindowFor(base: SimulationParams): { readonly startYearOffset: number; readonly years: number } {
   const startYear = base.overlay?.startCalendarYear ?? base.people[0]?.birthYear ?? 0

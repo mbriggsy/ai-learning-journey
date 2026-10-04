@@ -394,7 +394,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 
 9. **A modest-pre-tax household is refused a withdrawal-order answer the engine could compute.**
     `solveDispatch.ts:91` returns `'no-pretax'` when no *conversion* candidate survives — but a
-    conversion-free candidate survives for **every entry in `SEARCHED_POLICIES`** (`candidates.ts:548-554`),
+    conversion-free candidate survives for **every entry in `SEARCHED_POLICIES`** (`candidates.ts:651-657`),
     and `solve.ts:495-500` already implements that exact partition for the trend-blocked case.
     ⚑ **DOWN-RANKED — the filed fix is UNSHIPPABLE as written.** `solveEntry.ts:185-192` mint-fails the
     roster *before* `solve()` runs, and `rankingStability.ts:247-255` knows only a conversion-**amount**
@@ -454,7 +454,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     surface" entry. A shipped copy defect on the SAME cohort WAS pilot and is FIXED (2026-09-04: the singular arm ships at
     `copy.ts:2629-2631` under the NUMBER AGREEMENT post-mortem at `copy.ts:2615`, covered by `copyGuard.test.ts:706`):
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
-    live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:246-247`) — and no test
+    live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:263-264`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
     PRESCRIBED: `model.ts:1399-1401` mints synthetic entered accounts from the old aggregates "so the ladder
     stays total"; the write primitive exists (`db.ts:231 rewriteModel`, pinned `db.test.ts:180`); today's

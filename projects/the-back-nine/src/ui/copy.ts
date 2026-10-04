@@ -1721,7 +1721,7 @@ export const copy = {
   // ("401(k)" is deliberately absent — the verdict scope's free-numeral gate; "a pre-tax workplace
   // plan" is the numeral-free equivalent, and the re-entry read-back teaches the full roster.)
   // REWORDED same-day (review wf_6f89fe6f-35a P1, refuters 2-0): the first draft claimed "this plan
-  // has none entered" — FALSE on the small-IRA arm (candidates.ts:540 rejects every rail-anchored
+  // has none entered" — FALSE on the small-IRA arm (candidates.ts:643 rejects every rail-anchored
   // conversion amount above the post-RMD headroom, so a household with a $25k IRA below every rail
   // ALSO lands no-pretax). "needs more … than this plan has entered" is true on BOTH sub-arms (zero
   // entered, and entered-but-under-every-rail — extension-monotone, insight 101), and the steer's
@@ -1748,9 +1748,9 @@ export const copy = {
   // The solve's pending tell — the shipped thinking-breathe family's plain-language label (burned/045
   // clear-after-announce owns the a11y side). Its duration phrase exists so the reader never wonders if it
   // stalled, so it must be TRUE. It was not (8.9–26.0 min on the 2026-10-01 production build); since the
-  // worker pool it is, at his laptop: `retired` 25.3 s, `nc` 30.7 s, `healthnc` 110.2 s invite → lockup
-  // on the 2026-10-03 production build (12 eval workers), and inside "a few minutes" even in the ~2× slow
-  // laptop state. Still UNTRUE where the pool cannot run (≤ 3 logical cores ⇒ the single worker, `healthnc`
+  // worker pool it is, at his laptop: `retired` 36.5 s, `nc` 39.8 s, `healthnc` 150.9 s invite → lockup
+  // on the 2026-10-03 production build (12 eval workers, SOLVER_CODE_VERSION 9's rosters) — `healthnc` in
+  // the ~2× slow laptop state (~5 min) is the phrase's edge, so the next roster growth re-times it first. Still UNTRUE where the pool cannot run (≤ 3 logical cores ⇒ the single worker, `healthnc`
   // ~9 min) and UNMEASURED on his phone (register *The recommendation's pending line…*). Ends with the ellipsis glyph; NO
   // spinner / % / count / ETA / countdown (a real duration in plain words reassures; a fabricated
   // progress clock would lie).

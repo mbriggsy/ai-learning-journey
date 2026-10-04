@@ -13,9 +13,18 @@ import { describe, expect, it } from 'vitest'
 import { expandRothConversion, type SimulationParams } from '@shared/model'
 import { committedIncomeForYear, deriveConversionAnchor, conversionWindowFor, enumerateSolveCandidates } from '../solveAnchor'
 import { applyCandidate, sameDecumulationPlan, solverCandidateId } from '../candidates'
-import { cliffMagiFor } from '@engine/magiLandscape'
+import { cliffMagiFor, taxableIncomeAtFill } from '@engine/magiLandscape'
 import { fplForHousehold } from '@engine/healthOverlay'
-import { acaApplicablePercentage, irmaa, medicareCostTrend } from '@engine/constants'
+import {
+  acaApplicablePercentage,
+  age65AdditionMFJ,
+  irmaa,
+  medicareCostTrend,
+  ordinaryBracketsMFJ,
+  seniorBonus,
+  standardDeductionMFJ,
+} from '@engine/constants'
+import { cumulativePriceIndex } from '@engine/priceIndex'
 import { selectRmdDivisor } from '@engine/rmd'
 
 const MARKET = {
@@ -196,6 +205,109 @@ describe('deriveConversionAnchor — the income rails (the exact engine pricing 
     expect(windowPt.rail.firstCrossingMagiYear).toBeNull()
   })
 
+  it('THE RETIRED BRACKET WITNESS (b9-4, DND 012): the senior bonus ends after 2028 and Social Security arrives in 2027 — the 24,800 and 100,800 edges keep their first-year points and gain the points that hold', () => {
+    // The same `retired` household as above (start 2026, both 65+ ⇒ two 65+ additions and, through 2028,
+    // two OBBBA bonuses; SS $0 / $30,000 / $54,000; no other income). Taxable = a + taxable SS − the stack:
+    // SD + 2 × the 65+ addition + 2 × the per-person bonus (the statute's nominal $6,000 deflated by the
+    // year's level, 2025–2028 only). Every figure READ from the constants; the algebra typed here.
+    const base = baseRetired({
+      people: [
+        { sex: 'male', currentAge: 66, birthYear: 1960, retirementAge: 65, earnedIncomeReal: 0, pia: 30_000, socialSecurityClaimAge: 67 },
+        { sex: 'female', currentAge: 65, birthYear: 1961, retirementAge: 63, earnedIncomeReal: 0, pia: 24_000, socialSecurityClaimAge: 67 },
+      ],
+      overlay: { startCalendarYear: 2026, buckets: { taxable: 0, pretax: 1_120_000, roth: 0 }, pretaxByPerson: [1_120_000, 0] },
+    })
+    const anchor = deriveConversionAnchor(base)!
+    expect(anchor.window!.years.map((f) => f.calendarYear)).toEqual([2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034])
+    expect(anchor.window!.years[0]).toBe(anchor.committed) // the skeleton IS the window's first frame
+    const ss = (y: number): number => (y === 2026 ? 0 : y === 2027 ? 30_000 : 54_000)
+    expect(anchor.window!.years.map((f) => f.ssBenefit)).toEqual(anchor.window!.years.map((f) => ss(f.calendarYear)))
+    expect(cumulativePriceIndex(2026)).toBe(1) // the anchor year: the bonus is its nominal figure
+    const stack = (y: number): number =>
+      (standardDeductionMFJ.value as number) +
+      2 * (age65AdditionMFJ.value as number) +
+      (y <= seniorBonus.sunsetAfter! ? (2 * seniorBonus.value.perPerson65Plus) / cumulativePriceIndex(y) : 0)
+    const [e1, e2] = (ordinaryBracketsMFJ.value as ReadonlyArray<{ upTo: number | null }>).map((b) => b.upTo)
+    const points = (edge: number) =>
+      enumerateSolveCandidates(base)!.candidates.flatMap((c) =>
+        c.anchoredRail?.kind === 'bracket-edge' && c.anchoredRail.edge === edge && c.policy === 'proportional'
+          ? [{ amount: c.conversion!.annualAmountReal, rail: c.anchoredRail }]
+          : [],
+      )
+    // THE FIRST-YEAR POINTS (no benefit in 2026): edge + the 2026 stack — the register's 72,300 / 148,300 —
+    // MAGI under the bonus's phase-out start, so the bonus is whole; Alex's claim puts both over in 2027.
+    for (const e of [e1!, e2!]) {
+      const first = points(e).find((p) => p.rail.calendarYear === 2026)!
+      expect(first.amount, `edge ${e}`).toBe(Math.floor(e + stack(2026)))
+      expect(first.amount, 'premise: under the phase-out start').toBeLessThan(seniorBonus.value.phaseOutStart.mfj)
+      expect(first.rail.firstCrossingYear, `edge ${e}`).toBe(2027)
+    }
+    expect(points(e1!).find((p) => p.rail.calendarYear === 2026)!.amount).toBe(72_300)
+    expect(points(e2!).find((p) => p.rail.calendarYear === 2026)!.amount).toBe(148_300)
+    // THE 100,800 WINDOW POINT: above the §86 base the inclusion is the 85 % cap (premise checked), so each
+    // year's room is edge + stack(y) − 0.85 × SS(y); the least is from 2029 (no bonus, both benefits) — the
+    // earliest on a tie.
+    const room = (y: number): number => e2! + stack(y) - 0.85 * ss(y)
+    let tight = 2026
+    for (let y = 2027; y <= 2034; y++) {
+      expect(room(y) + 0.5 * ss(y) - 44_000, `§86 premise (${y})`).toBeGreaterThanOrEqual(ss(y))
+      if (room(y) < room(tight)) tight = y
+    }
+    expect(tight).toBe(2029)
+    const windowPt = points(e2!).find((p) => p.rail.firstCrossingYear === null)!
+    expect(windowPt.amount).toBe(Math.floor(room(tight))) // $90,400 — $57,900 under the first-year point
+    expect(windowPt.rail.calendarYear).toBe(tight)
+    // THE 24,800 WINDOW POINT rides the Pub-915 RAMP (its provisional income is under the 85 % cap), so its
+    // exact dollar is the engine's: pinned by the JUST-UNDER LAW in its binding year and HOLDING in every
+    // window year, through the shipped metric.
+    const low = points(e1!).find((p) => p.rail.firstCrossingYear === null)!
+    const taxableAt = (y: number, a: number): number =>
+      taxableIncomeAtFill({ ...anchor.window!.years.find((f) => f.calendarYear === y)!, conversion: a }, 0)
+    for (const f of anchor.window!.years) expect(taxableAt(f.calendarYear, low.amount), `holds in ${f.calendarYear}`).toBeLessThanOrEqual(e1!)
+    expect(taxableAt(low.rail.calendarYear, low.amount + 2)).toBeGreaterThan(e1!)
+    expect(low.amount).toBeLessThan(72_300 - 30_000) // the senior bonus AND the benefits, both off the table
+  })
+
+  it('ACA-cliff rail across the window: priced in each year by the engine’s own predicate — a living pre-65 member + a premium THAT year — and Social Security inside the priced years binds a window point', () => {
+    // Born 1967 / 1965, start 2027: the elder turns 65 in 2030, the younger in 2032 ⇒ a pre-65 member
+    // lives 2027–2031. The window runs to the first RMD age (the elder's 75 ⇒ 13 years, 2027–2039).
+    const base = baseRetired({
+      people: [
+        { sex: 'female', currentAge: 60, birthYear: 1967, retirementAge: 58, earnedIncomeReal: 0, pia: 20_000, socialSecurityClaimAge: 67 },
+        // The elder claims at 63 (2028) — a benefit arriving INSIDE the priced years.
+        { sex: 'male', currentAge: 62, birthYear: 1965, retirementAge: 60, earnedIncomeReal: 0, pia: 24_000, socialSecurityClaimAge: 63 },
+      ],
+      overlay: {
+        healthcareEnabled: true,
+        enrolledPremium: new Array<number>(40).fill(14_400),
+        slcsp: new Array<number>(40).fill(13_200),
+        pretaxByPerson: [300_000, 300_000],
+      },
+    })
+    const anchor = deriveConversionAnchor(base)!
+    const cliff = cliffMagiFor(acaApplicablePercentage.value, fplForHousehold(2))
+    expect(anchor.acaCliffMagi).toBe(cliff)
+    expect(anchor.window!.years).toHaveLength(13)
+    expect(anchor.window!.acaPricedYears).toEqual([2027, 2028, 2029, 2030, 2031])
+    // ACA-MAGI is linear (the whole benefit, no Pub-915 coupling): each priced year's room is the cliff less
+    // that year's committed ACA-MAGI — here the benefit alone. WIRING: the frames are the engine's seam.
+    const priced = anchor.window!.years.filter((f) => anchor.window!.acaPricedYears.includes(f.calendarYear))
+    expect(priced[0]!.ssBenefit).toBe(0)
+    expect(priced[1]!.ssBenefit).toBeGreaterThan(0) // the elder's claim lands in 2028
+    const aca = enumerateSolveCandidates(base)!.candidates.flatMap((c) =>
+      c.anchoredRail?.kind === 'aca-cliff' && c.policy === 'proportional' ? [{ amount: c.conversion!.annualAmountReal, rail: c.anchoredRail }] : [],
+    )
+    expect(aca).toHaveLength(2)
+    const first = aca.find((p) => p.rail.calendarYear === 2027)!
+    expect(first.amount).toBe(Math.floor(cliff!))
+    expect(first.rail.firstCrossingYear).toBe(2028)
+    const maxBenefit = Math.max(...priced.map((f) => f.ssBenefit))
+    const windowPt = aca.find((p) => p.rail.firstCrossingYear === null)!
+    expect(windowPt.amount).toBe(Math.floor(cliff! - maxBenefit))
+    // No year after 2031 binds it: the 2032+ benefits are the younger's own claim — unpriced years.
+    expect(windowPt.rail.calendarYear).toBeLessThanOrEqual(2031)
+  })
+
   it('committedIncomeForYear refuses an RMD year and a year off the horizon — the window never reaches one', () => {
     const base = baseRetired() // Alex 67 (born 1960) reaches 75 in sim year 8
     expect(() => committedIncomeForYear(base, 8)).toThrow(/RMD start age/)
@@ -259,6 +371,9 @@ describe('deriveConversionAnchor — the income rails (the exact engine pricing 
     const anchor = deriveConversionAnchor(baseRetired())!
     expect(anchor.acaCliffMagi).toBeNull()
     expect(anchor.irmaa).toBeNull()
+    // The window still rides (the bracket edges read it); no year prices ACA.
+    expect(anchor.window!.acaPricedYears).toEqual([])
+    expect(anchor.window!.years[0]).toBe(anchor.committed)
   })
 })
 

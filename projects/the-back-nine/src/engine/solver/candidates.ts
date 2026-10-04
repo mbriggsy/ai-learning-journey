@@ -74,18 +74,24 @@ export const CONVENTIONAL_POLICY: DrawdownPolicy = 'taxable-first'
 /**
  * The deterministic anchor context the grid is derived from — the conversion WINDOW's first
  * active year, in committed-income terms (the same gross-independent skeleton the
- * bracket-fill ceiling derivation prices; every term known before any path runs) — plus, for the
- * IRMAA rail, every billed window year's own frame ({@link IrmaaAnchorContext}). The ACA-cliff and
- * bracket-edge rails still read the first year's frame alone (the register's sibling entry).
+ * bracket-fill ceiling derivation prices; every term known before any path runs) — plus every
+ * window year's own frame: for the ACA-cliff and bracket-edge rails ({@link WindowAnchorContext}) and
+ * for the IRMAA rail ({@link IrmaaAnchorContext}).
  */
 export interface ConversionAnchorContext {
   /** The committed-income skeleton at the window's first year, WITHOUT any candidate
    *  conversion (the enumerator adds each trial amount to `conversion`). */
   readonly committed: CommittedYearIncome
-  /** The 400%-FPL cliff dollar when ACA is priced under the cliff regime in that year
-   *  (`cliffMagiFor(activeTable, fplDollar)`), else `null` — the rail does not exist. The
-   *  ACTIVATION predicate lives with the caller/hazard creator (insight 027). */
+  /** The 400%-FPL cliff dollar (`cliffMagiFor(activeTable, fplDollar)` — one dollar for the both-alive
+   *  household, whatever the year) when ACA is priced under the cliff regime in a year the rail reads —
+   *  year 0 when `window` is absent, a year of `window.acaPricedYears` when it is present — else `null`:
+   *  the rail does not exist. The ACTIVATION predicate lives with the caller/hazard creator (insight 027). */
   readonly acaCliffMagi: number | null
+  /** The ACA-cliff and bracket-edge rails across the conversion window. PRESENCE-KEYED: absent ⇒ both
+   *  rails read the skeleton's year alone (the U14 oracle fixtures' single-year worlds — the golden
+   *  cases are never perturbed); the shipped caller (`solveAnchor.deriveConversionAnchor`) always
+   *  supplies it. */
+  readonly window?: WindowAnchorContext
   /** The IRMAA rail's context when ANY MAGI year of the conversion window is actually billed (the
    *  caller owns that predicate — insight 027), else `null`. */
   readonly irmaa: IrmaaAnchorContext | null
@@ -120,6 +126,26 @@ export interface IrmaaAnchorContext {
   readonly billedYears: readonly [CommittedYearIncome, ...CommittedYearIncome[]]
 }
 
+/**
+ * The ACA-cliff and bracket-edge rails across the conversion WINDOW (the register's Tier 1 *The solver's
+ * ACA-cliff and bracket-edge anchors sit under their rail only in YEAR 0's committed frame…*, b9-4 — the
+ * IRMAA window's sibling). The ONE amount a candidate repeats meets a different committed frame each
+ * year: the OBBBA senior bonus ends after 2028 (the deduction stack shrinks, so the same conversion lands
+ * deeper in taxable income) and Social Security arrives at each claim age (up to 85 % of it into taxable
+ * income, ALL of it into ACA-MAGI). So each rail is judged year by year in each year's own frame.
+ */
+export interface WindowAnchorContext {
+  /** Every conversion-window year's committed frame, keyed by `calendarYear` — strictly ascending, the
+   *  FIRST is the anchor skeleton itself (one year-0 truth for every rail), one filing, conversion 0
+   *  (checked loud at enumeration). The caller derives each from the SAME seams the engine's year-t
+   *  iteration reads (`solveAnchor.committedIncomeForYear`). */
+  readonly years: readonly [CommittedYearIncome, ...CommittedYearIncome[]]
+  /** The calendar years of `years` in which the engine prices ACA under the cliff (table + cliff + a
+   *  positive enrolled premium THAT year + a living pre-65 member THAT year — the engine's own per-year
+   *  predicate, never year 0's) — strictly ascending; empty ⇒ no ACA-cliff rail anywhere. */
+  readonly acaPricedYears: readonly number[]
+}
+
 /** One enumerated candidate strategy. */
 export interface CandidateStrategy {
   readonly policy: DrawdownPolicy
@@ -135,7 +161,17 @@ export interface CandidateStrategy {
 }
 
 export type AnchoredRail =
-  | { readonly kind: 'aca-cliff'; readonly magi: number }
+  | {
+      readonly kind: 'aca-cliff'
+      readonly magi: number
+      /** The calendar year whose frame binds the amount: the window's first year for the first-year
+       *  point, the tightest priced year (least room in its own frame) for the window point. */
+      readonly calendarYear: number
+      /** The first priced window year in which this amount crosses the cliff where that year's committed
+       *  income alone does not — `null` when it adds no such crossing (in the committed-income frame:
+       *  fill 0, insight 133 — never "keeps you under"). The `firstCrossingMagiYear` sibling. */
+      readonly firstCrossingYear: number | null
+    }
   | {
       readonly kind: 'irmaa-step'
       /** The line the amount sits under, AS COMPARED in `magiYear` (what the words quote). */
@@ -154,7 +190,17 @@ export type AnchoredRail =
        *  not the holding one. Never narrow it to a boolean. */
       readonly firstCrossingMagiYear: number | null
     }
-  | { readonly kind: 'bracket-edge'; readonly edge: number }
+  | {
+      readonly kind: 'bracket-edge'
+      readonly edge: number
+      /** The calendar year whose frame (its deduction stack, its committed income) binds the amount —
+       *  as `aca-cliff`'s. */
+      readonly calendarYear: number
+      /** The first window year in which this amount crosses the edge where that year's committed income
+       *  alone does not — `null` when it adds no such crossing (the committed-income frame) — as
+       *  `aca-cliff`'s. */
+      readonly firstCrossingYear: number | null
+    }
 
 /**
  * THE CANDIDATE IDENTITY the expected rankings + the run fingerprint are written in (U15 §S0.4).
@@ -299,34 +345,45 @@ function largestAmountWithin(metric: (a: number) => number, rail: number, hi: nu
   throw new Error(`[candidates] largestAmountWithin did not converge (rail=${rail}) — burned/062`)
 }
 
-/** The IRMAA window's billed-year contract ({@link IrmaaAnchorContext}), checked loud: a frame list the
- *  anchors cannot trust is a caller bug surfaced, never a quietly narrower walk (burned/062). A frame
- *  for the anchor's own year must BE the anchor's skeleton (one year-0 truth for every rail). */
-function assertBilledYears(frames: readonly CommittedYearIncome[], skeleton: CommittedYearIncome): void {
+/** A rail's per-year frame list, checked loud: a list the anchors cannot trust is a caller bug surfaced,
+ *  never a quietly narrower walk (burned/062). Non-empty, integer calendar years, strictly ascending,
+ *  never before the anchor skeleton's year (and, with `startsAtSkeleton`, starting AT it), the skeleton's
+ *  filing (both alive is one filing), conversion 0 (the enumerator adds each trial amount), finite ≥ 0
+ *  income terms; a frame for the skeleton's own year must BE the skeleton (one year-0 truth for every
+ *  rail). `label` names the field in every message. */
+function assertFrames(
+  frames: readonly CommittedYearIncome[],
+  skeleton: CommittedYearIncome,
+  label: string,
+  startsAtSkeleton: boolean,
+): void {
   if (frames.length === 0) {
-    throw new Error('[candidates] irmaa.billedYears is empty — a window with no billed year carries no IRMAA context (null)')
+    throw new Error(`[candidates] ${label} is empty — a rail with no year carries no context`)
   }
   frames.forEach((f, k) => {
     const y = f.calendarYear
-    if (!Number.isInteger(y)) throw new Error(`[candidates] irmaa.billedYears[${k}].calendarYear must be an integer calendar year (got ${y})`)
+    if (!Number.isInteger(y)) throw new Error(`[candidates] ${label}[${k}].calendarYear must be an integer calendar year (got ${y})`)
     if (k === 0 && y < skeleton.calendarYear) {
-      throw new Error(`[candidates] irmaa.billedYears starts at ${y}, before the anchor skeleton's year ${skeleton.calendarYear}`)
+      throw new Error(`[candidates] ${label} starts at ${y}, before the anchor skeleton's year ${skeleton.calendarYear}`)
+    }
+    if (k === 0 && startsAtSkeleton && y !== skeleton.calendarYear) {
+      throw new Error(`[candidates] ${label} starts at ${y}, not at the anchor skeleton's year ${skeleton.calendarYear}`)
     }
     if (k > 0 && y <= frames[k - 1]!.calendarYear) {
-      throw new Error(`[candidates] irmaa.billedYears must be strictly ascending (${frames[k - 1]!.calendarYear} then ${y})`)
+      throw new Error(`[candidates] ${label} must be strictly ascending (${frames[k - 1]!.calendarYear} then ${y})`)
     }
     if (f.filing !== skeleton.filing) {
-      throw new Error(`[candidates] irmaa.billedYears[${k}] files ${f.filing}, the anchor skeleton ${skeleton.filing} — both alive is one filing`)
+      throw new Error(`[candidates] ${label}[${k}] files ${f.filing}, the anchor skeleton ${skeleton.filing} — both alive is one filing`)
     }
-    if (f.conversion !== 0) throw new Error(`[candidates] irmaa.billedYears[${k}] must carry conversion 0 (the enumerator adds each trial amount)`)
+    if (f.conversion !== 0) throw new Error(`[candidates] ${label}[${k}] must carry conversion 0 (the enumerator adds each trial amount)`)
     for (const [name, v] of [['rmd', f.rmd], ['ongoingTaxable', f.ongoingTaxable], ['ssBenefit', f.ssBenefit]] as const) {
-      if (!Number.isFinite(v) || v < 0) throw new Error(`[candidates] irmaa.billedYears[${k}].${name} must be finite ≥ 0 (got ${v}) — insight 010`)
+      if (!Number.isFinite(v) || v < 0) throw new Error(`[candidates] ${label}[${k}].${name} must be finite ≥ 0 (got ${v}) — insight 010`)
     }
     if (
       y === skeleton.calendarYear &&
       (f.rmd !== skeleton.rmd || f.ongoingTaxable !== skeleton.ongoingTaxable || f.ssBenefit !== skeleton.ssBenefit || f.count65 !== skeleton.count65)
     ) {
-      throw new Error(`[candidates] irmaa.billedYears' ${y} frame is not the anchor skeleton — one year-0 truth for every rail`)
+      throw new Error(`[candidates] ${label}' ${y} frame is not the anchor skeleton — one year-0 truth for every rail`)
     }
   })
 }
@@ -340,10 +397,74 @@ const withAmount = (c: CommittedYearIncome, a: number): CommittedYearIncome => (
 })
 
 /**
- * The cliff-anchored conversion amounts for one anchor context: for each ACTIVE rail whose
- * threshold sits above the committed baseline, the largest whole-dollar amount keeping the
- * rail's own metric at-or-under it. Deduplicated, ascending, zero-free (0 is the baseline
- * arm, always present separately).
+ * ONE RAIL ACROSS THE WINDOW — the shape every rail shares (the IRMAA build's, council wf_71f675da-8cf;
+ * the ACA-cliff and bracket-edge rails since b9-4). A candidate repeats ONE amount every window year, and
+ * each year meets the rail in its OWN committed frame, so over the rail's years (`frames`, ascending):
+ *  - the FIRST-YEAR point: the largest amount under the rail in the FIRST year the rail exists (`frames[0]`
+ *    — the skeleton's year for the bracket edges, the first priced year for the ACA cliff, the first billed
+ *    year for IRMAA — when its committed income has not already crossed it) — its first-year room is real,
+ *    so it is NEVER dropped (the ⚑ NEGATIVE); `firstCrossingYear` names the first year it crosses where
+ *    that year's committed income alone does not;
+ *  - the WINDOW point: the largest amount that stays under the rail in EVERY year committed income has not
+ *    already crossed — the minimum, over those years, of each year's own room — bound at the tightest such
+ *    year (the earliest on a tie). Emitted only when the first-year point does not already hold, so a
+ *    window that never binds tighter adds no candidate. Years committed income ALREADY crosses are
+ *    excluded, never the rail (no silent vanish, burned/062); a year with no whole dollar of room means
+ *    any conversion crosses there — no window point (the conversion-0 arm is that point).
+ * Never per-year amounts inside one candidate (the ⚑ NEGATIVE). The frame is COMMITTED income only (fill
+ * 0, insight 133).
+ */
+function railAcrossWindow(
+  frames: readonly CommittedYearIncome[],
+  crossesAt: (k: number, a: number) => boolean,
+  roomAt: (k: number) => number | null,
+  railFor: (k: number, firstCrossingYear: number | null) => AnchoredRail,
+  what: string,
+): Array<{ amountReal: number; rail: AnchoredRail }> {
+  const out: Array<{ amountReal: number; rail: AnchoredRail }> = []
+  const open = frames.flatMap((_, k) => (crossesAt(k, 0) ? [] : [k]))
+  if (open.length === 0) return out // committed income alone crosses the rail in every year it exists
+  const firstCrossing = (a: number): number | null => {
+    const k = open.find((j) => crossesAt(j, a))
+    return k === undefined ? null : frames[k]!.calendarYear
+  }
+  let firstHolds = false
+  if (open[0] === 0) {
+    const amount = roomAt(0)
+    if (amount !== null) {
+      const crossing = firstCrossing(amount)
+      firstHolds = crossing === null
+      out.push({ amountReal: amount, rail: railFor(0, crossing) })
+    }
+  }
+  if (firstHolds) return out
+  let tight = -1
+  let tightRoom = Number.POSITIVE_INFINITY
+  for (const k of open) {
+    const room = roomAt(k)
+    if (room === null) return out
+    if (room < tightRoom) {
+      tightRoom = room
+      tight = k
+    }
+  }
+  if (tight < 0) return out
+  // Under every open year's room ⇒ adds no crossing anywhere — by construction; a violation is an
+  // enumerator bug, never a label to ship (burned/062).
+  if (firstCrossing(tightRoom) !== null) {
+    throw new Error(
+      `[candidates] the ${what} window anchor ${tightRoom} (year ${frames[tight]!.calendarYear}) adds a crossing in a window year — the window minimum is wrong`,
+    )
+  }
+  out.push({ amountReal: tightRoom, rail: railFor(tight, null) })
+  return out
+}
+
+/**
+ * The cliff-anchored conversion amounts for one anchor context: for each ACTIVE rail, the window
+ * walk above ({@link railAcrossWindow}) — the largest whole-dollar amount keeping the rail's own metric
+ * at-or-under it in the first year, plus the amount that holds in every window year where that is
+ * tighter. Deduplicated, ascending, zero-free (0 is the baseline arm, always present separately).
  */
 export function anchoredConversionAmounts(
   anchor: ConversionAnchorContext,
@@ -351,14 +472,39 @@ export function anchoredConversionAmounts(
   const c = anchor.committed
   const out: Array<{ amountReal: number; rail: AnchoredRail }> = []
 
-  // ACA cliff — ACA-MAGI is LINEAR in the amount (the full-benefit add-back has no Pub-915
-  // coupling), so the inversion is closed-form: the same K-derivation as acaCliffFillHeadroom.
-  if (anchor.acaCliffMagi !== null) {
-    const baseline = acaMagiAtFill(c, 0)
-    if (baseline <= anchor.acaCliffMagi) {
-      const amount = flooredOrNull(anchor.acaCliffMagi - baseline)
-      if (amount !== null) out.push({ amountReal: amount, rail: { kind: 'aca-cliff', magi: anchor.acaCliffMagi } })
+  // The window frames the ACA-cliff and bracket-edge rails read — the skeleton alone when no window rides.
+  const window = anchor.window
+  if (window !== undefined) {
+    assertFrames(window.years, c, 'window.years', true)
+    const yearsOf = new Set(window.years.map((f) => f.calendarYear))
+    window.acaPricedYears.forEach((y, k) => {
+      if (!yearsOf.has(y)) throw new Error(`[candidates] window.acaPricedYears names ${y}, which is not a window year`)
+      if (k > 0 && y <= window.acaPricedYears[k - 1]!) {
+        throw new Error(`[candidates] window.acaPricedYears must be strictly ascending (${window.acaPricedYears[k - 1]} then ${y})`)
+      }
+    })
+    if ((anchor.acaCliffMagi !== null) !== (window.acaPricedYears.length > 0)) {
+      throw new Error('[candidates] acaCliffMagi is present iff some window year prices ACA under the cliff (window.acaPricedYears)')
     }
+  }
+  const taxYears: readonly CommittedYearIncome[] = window?.years ?? [c]
+
+  // ACA cliff — ACA-MAGI is LINEAR in the amount (the full-benefit add-back has no Pub-915 coupling), so
+  // each year's room is closed-form: the same K-derivation as acaCliffFillHeadroom. ONE cliff dollar (the
+  // both-alive household's FPL); the years it binds are the years the engine prices ACA under it.
+  const cliff = anchor.acaCliffMagi
+  if (cliff !== null) {
+    const priced = window === undefined ? [c] : window.years.filter((f) => window.acaPricedYears.includes(f.calendarYear))
+    const baselineAt = (k: number): number => acaMagiAtFill(priced[k]!, 0)
+    out.push(
+      ...railAcrossWindow(
+        priced,
+        (k, a) => acaMagiAtFill(withAmount(priced[k]!, a), 0) > cliff,
+        (k) => flooredOrNull(cliff - baselineAt(k)),
+        (k, firstCrossingYear) => ({ kind: 'aca-cliff', magi: cliff, calendarYear: priced[k]!.calendarYear, firstCrossingYear }),
+        'ACA-cliff',
+      ),
+    )
   }
 
   // IRMAA steps — EVERY tier is a real anchor wherever committed income has not already crossed it (the
@@ -367,109 +513,66 @@ export function anchoredConversionAmounts(
   // whose line dollar already owes the top tier); the rail still NAMES the line. A MAGI year's lines are
   // the ones its bill two years on compares it against, in that year's price frame
   // (healthOverlay.irmaaScheduleAsCompared), and they sit ON TOP OF that year's own committed income —
-  // so the ONE amount a candidate repeats is judged year by year in each billed year's own frame
-  // (IrmaaAnchorContext.billedYears; council wf_71f675da-8cf):
-  //   - the FIRST-BILLED-YEAR point: just under that year's line, in that year's frame (year 0 wherever
-  //     year 0 bills) — its first-year room is real, so it is never dropped (the register's ⚑
-  //     NEGATIVE); `firstCrossingMagiYear` names the first billed year it crosses the tier;
-  //   - the WINDOW point: the largest amount that stays under the tier in EVERY billed year its
-  //     committed income has not already crossed — the minimum, over those years, of each year's own
-  //     room — bound at the tightest such year (the earliest on a tie). Emitted only when the first-year
-  //     point does not already hold, so a window that never binds tighter adds no candidate. The years
-  //     committed income ALREADY crosses are excluded, never the tier: a tier the baseline crosses in
-  //     one billed year still anchors on the others (no silent vanish, burned/062).
-  // Never per-year amounts inside one candidate (the ⚑ NEGATIVE — the grid stays one amount per
-  // candidate). The frame is COMMITTED income only: fill 0, so the policy's own discretionary draw is
-  // outside it (insight 133) — the entry stays open on that gap. IRMAA-MAGI is monotone piecewise-linear
-  // CONTINUOUS in the amount (the Pub-915 inclusion ramps) — bisect it; amount = lastSafe + 1 provably
-  // crosses (magi(a) ≥ ordinary(a) ≥ a + committed ≥ a).
+  // so the ONE amount a candidate repeats is judged year by year in each BILLED year's own frame
+  // (IrmaaAnchorContext.billedYears; council wf_71f675da-8cf) through the window walk. Read through the
+  // BILL's own predicate in every billed year (irmaaTierApplies) — the enumerator and the bill can never
+  // disagree about which dollar crosses. IRMAA-MAGI is monotone piecewise-linear CONTINUOUS in the amount
+  // (the Pub-915 inclusion ramps) — bisect it; amount = lastSafe + 1 provably crosses
+  // (magi(a) ≥ ordinary(a) ≥ a + committed ≥ a).
   if (anchor.irmaa !== null) {
     const { schedule, billedYears } = anchor.irmaa
-    assertBilledYears(billedYears, c)
+    assertFrames(billedYears, c, 'irmaa.billedYears', false)
     const compared = billedYears.map((f) => irmaaScheduleAsCompared(schedule, f.calendarYear))
     const metricAt = (k: number, a: number): number => irmaaMagiAtFill(withAmount(billedYears[k]!, a), 0)
     for (let i = 0; i < schedule.tiers.length; i++) {
-      // Read through the BILL's own predicate in every billed year (irmaaTierApplies) — the enumerator
-      // and the bill can never disagree about which dollar crosses.
-      const crossesAt = (k: number, a: number): boolean =>
-        irmaaTierApplies(metricAt(k, a), compared[k]!.tiers[i]!, billedYears[k]!.filing)
-      const open = billedYears.flatMap((_, k) => (crossesAt(k, 0) ? [] : [k]))
-      if (open.length === 0) continue // committed income alone crosses tier i in every billed year
-      const roomAt = (k: number): number | null => {
-        const safe = irmaaTierStepLine(compared[k]!, i, billedYears[k]!.filing).lastSafeMagi
-        const metric = (a: number): number => metricAt(k, a)
-        return largestWholeDollarWithin(metric, safe, largestAmountWithin(metric, safe, safe + 1))
-      }
-      const firstCrossing = (a: number): number | null => {
-        const k = open.find((j) => crossesAt(j, a))
-        return k === undefined ? null : billedYears[k]!.calendarYear
-      }
-      let firstHolds = false
-      if (open[0] === 0) {
-        const amount = roomAt(0)
-        if (amount !== null) {
-          const crossing = firstCrossing(amount)
-          firstHolds = crossing === null
-          out.push({
-            amountReal: amount,
-            rail: {
-              kind: 'irmaa-step',
-              threshold: irmaaTierStepLine(compared[0]!, i, billedYears[0]!.filing).threshold,
-              magiYear: billedYears[0]!.calendarYear,
-              firstCrossingMagiYear: crossing,
-            },
-          })
-        }
-      }
-      if (firstHolds) continue
-      // The tightest open year: the least room in its own frame. A year with no whole dollar of room
-      // means any conversion crosses there — no window point (the conversion-0 arm is that point).
-      let tight = -1
-      let tightRoom = Number.POSITIVE_INFINITY
-      for (const k of open) {
-        const room = roomAt(k)
-        if (room === null) {
-          tight = -1
-          break
-        }
-        if (room < tightRoom) {
-          tightRoom = room
-          tight = k
-        }
-      }
-      if (tight < 0) continue
-      // Under every open year's room ⇒ adds no crossing anywhere — by construction; a violation is an
-      // enumerator bug, never a label to ship (burned/062).
-      if (firstCrossing(tightRoom) !== null) {
-        throw new Error(
-          `[candidates] the IRMAA window anchor ${tightRoom} (tier ${i + 1}, MAGI year ${billedYears[tight]!.calendarYear}) adds a crossing in a billed year — the window minimum is wrong`,
-        )
-      }
-      out.push({
-        amountReal: tightRoom,
-        rail: {
-          kind: 'irmaa-step',
-          threshold: irmaaTierStepLine(compared[tight]!, i, billedYears[tight]!.filing).threshold,
-          magiYear: billedYears[tight]!.calendarYear,
-          firstCrossingMagiYear: null,
-        },
-      })
+      out.push(
+        ...railAcrossWindow(
+          billedYears,
+            (k, a) => irmaaTierApplies(metricAt(k, a), compared[k]!.tiers[i]!, billedYears[k]!.filing),
+          (k) => {
+            const safe = irmaaTierStepLine(compared[k]!, i, billedYears[k]!.filing).lastSafeMagi
+            const metric = (a: number): number => metricAt(k, a)
+            return largestWholeDollarWithin(metric, safe, largestAmountWithin(metric, safe, safe + 1))
+          },
+          (k, firstCrossingMagiYear) => ({
+            kind: 'irmaa-step',
+            threshold: irmaaTierStepLine(compared[k]!, i, billedYears[k]!.filing).threshold,
+            magiYear: billedYears[k]!.calendarYear,
+            firstCrossingMagiYear,
+          }),
+          `IRMAA (tier ${i + 1})`,
+        ),
+      )
     }
   }
 
-  // Federal bracket edges — taxable income is monotone continuous in the amount (the
-  // deduction stack's phase-out only steepens it); d0 (the stack at MAGI 0, THIS year) is the
-  // deduction's MAXIMUM, so `edge + d0 + 1` provably crosses — the exact crossing-bound idiom
-  // the shipped bracket-edge rail derivation uses (magiLandscape.bracketEdgeFillHeadroom).
+  // Federal bracket edges — taxable income is monotone continuous in the amount (the deduction stack's
+  // phase-out only steepens it); each year's d0 (the stack at MAGI 0, THAT year — the OBBBA senior bonus
+  // rides 2025–2028 only) is that year's deduction MAXIMUM, so `edge + d0 + 1` provably crosses — the
+  // exact crossing-bound idiom the shipped bracket-edge rail derivation uses
+  // (magiLandscape.bracketEdgeFillHeadroom). The edges walked are every finite edge above the LOWEST
+  // window year's committed taxable income — an edge one year's income already passes still anchors on
+  // the years it does not (no silent vanish). The brackets themselves are real-constant; the frame moves.
   {
-    const d0 = deductionStack(c.filing, c.count65, 0, c.calendarYear)
-    let probe = taxableIncomeAtFill(c, 0)
+    const metricAt = (k: number, a: number): number => taxableIncomeAtFill(withAmount(taxYears[k]!, a), 0)
+    let probe = Math.min(...taxYears.map((_, k) => metricAt(k, 0)))
     for (;;) {
       const edge = nextBracketEdgeAbove(probe, c.filing)
       if (edge === null) break
-      const metric = (a: number): number => taxableIncomeAtFill(withAmount(c, a), 0)
-      const amount = largestWholeDollarWithin(metric, edge, largestAmountWithin(metric, edge, edge + d0 + 1))
-      if (amount !== null) out.push({ amountReal: amount, rail: { kind: 'bracket-edge', edge } })
+      out.push(
+        ...railAcrossWindow(
+          taxYears,
+            (k, a) => metricAt(k, a) > edge,
+          (k) => {
+            const f = taxYears[k]!
+            const d0 = deductionStack(f.filing, f.count65, 0, f.calendarYear)
+            const metric = (a: number): number => metricAt(k, a)
+            return largestWholeDollarWithin(metric, edge, largestAmountWithin(metric, edge, edge + d0 + 1))
+          },
+          (k, firstCrossingYear) => ({ kind: 'bracket-edge', edge, calendarYear: taxYears[k]!.calendarYear, firstCrossingYear }),
+          `bracket-edge ${edge}`,
+        ),
+      )
       probe = edge + 1
     }
   }

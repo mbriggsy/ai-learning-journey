@@ -63,7 +63,7 @@ const conv = (amount: number): CandidateStrategy => ({
   policy: 'taxable-first',
   conversion: { annualAmountReal: amount, startYearOffset: 0, years: 3 },
   provenance: 'grid',
-  anchoredRail: { kind: 'bracket-edge', edge: 100_000 + amount },
+  anchoredRail: { kind: 'bracket-edge', edge: 100_000 + amount, calendarYear: 2026, firstCrossingYear: null },
 })
 
 // The FULL roster the fingerprint covers: 3 sequencing arms (the conventional baseline + two grid

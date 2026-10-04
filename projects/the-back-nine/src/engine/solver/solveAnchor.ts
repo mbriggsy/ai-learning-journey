@@ -41,7 +41,7 @@ import { householdBenefits } from '@engine/socialSecurityBenefit'
 import { rmdStartAgeForBirthYear, selectRmdDivisor } from '@engine/rmd'
 import { cliffMagiFor, type CommittedYearIncome } from '@engine/magiLandscape'
 import { fplForHousehold } from '@engine/healthOverlay'
-import { acaApplicablePercentage, acaApplicablePercentageEnhanced, irmaa } from '@engine/constants'
+import { acaApplicablePercentage, acaApplicablePercentageEnhanced, irmaa, solverGapFillSpacing } from '@engine/constants'
 import {
   enumerateCandidates,
   type CandidateSet,
@@ -300,6 +300,7 @@ export function enumerateSolveCandidates(
   return enumerateCandidates({
     anchor,
     window: conversionWindowFor(base),
+    gapFill: { spacing: solverGapFillSpacing.value },
     userBaseline: {
       policy: base.drawdownPolicy,
       ...(base.drawdownOrder !== undefined ? { drawdownOrder: base.drawdownOrder } : {}),

@@ -12,7 +12,12 @@
  * figure, never cents. Two are EXACT by provenance instead: `formatSolvedSpend` (the spend solve's
  * verified grid figure — the verdict clause's sized F IS a solve, so it is never re-rounded) and
  * `formatEnteredDollar` (a dollar the household typed).
+ *
+ * ONE exception to "ui owns its own rounding": the ACTIONABLE floor's step rule lives in
+ * `@shared/actionableDollar` (the leaf both layers may import, never @engine), because the engine's
+ * gap-fill mints conversion amounts on that exact lattice (SOLVER_CODE_VERSION 10).
  */
+import { actionableFloor } from '@shared/actionableDollar'
 
 const grouped = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
 
@@ -128,10 +133,9 @@ export function formatAbsoluteDollar(dollars: number): string {
  * be a rendered falsehood rather than a rounding.
  */
 export function formatActionableDollar(dollars: number): string {
-  const v = Math.max(0, dollars)
-  const step = v < 10_000 ? 100 : 1_000
-  const stepped = Math.floor(v / step) * step
-  return grouped.format(stepped >= 1 ? stepped : Math.floor(v))
+  // The step rule + floor live in `@shared/actionableDollar` — the engine's gap-fill mints its points on
+  // the same lattice (SOLVER_CODE_VERSION 10), so the two can never disagree about what a figure reads as.
+  return grouped.format(actionableFloor(dollars))
 }
 
 /**

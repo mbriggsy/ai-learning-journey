@@ -58,6 +58,7 @@ import {
 import { deductionStack } from '@engine/taxCore'
 import { irmaaScheduleAsCompared, irmaaTierApplies } from '@engine/healthOverlay'
 import type { IrmaaSchedule } from '@engine/constants'
+import { actionableDisplayStep, actionableFloor } from '@shared/actionableDollar'
 
 /** The FOUR searched policies — the 5-wide shipped enum minus the user's `custom` (the
  *  out-of-grid labeled baseline, injected via {@link enumerateCandidates}'s `userBaseline`).
@@ -156,8 +157,19 @@ export interface CandidateStrategy {
   readonly provenance: 'grid' | 'conventional-baseline' | 'user-baseline'
   /** Present iff `policy === 'custom'` (the shipped biconditional). */
   readonly drawdownOrder?: readonly DrawdownOrderKey[]
-  /** The rail this amount was anchored just under (grid conversions only). */
+  /** The rail this amount was anchored just under (rail-anchored grid conversions only — never a fill). */
   readonly anchoredRail?: AnchoredRail
+  /** Present iff this grid conversion is a GAP-FILL point ({@link gapFillAmounts}), never beside
+   *  `anchoredRail`: an on-lattice amount inside the open gap `(gapLo, gapHi)` between two adjacent
+   *  roster amounts. It names no rail and makes no rail claim. */
+  readonly filled?: GapFill
+}
+
+/** Where a gap-fill point sits: the open gap between two ADJACENT members of {0} ∪ the feasible
+ *  rail-anchored amounts (SOLVER_CODE_VERSION 10, council wf_a51047f0-f4b). */
+export interface GapFill {
+  readonly gapLo: number
+  readonly gapHi: number
 }
 
 export type AnchoredRail =
@@ -585,6 +597,56 @@ export function anchoredConversionAmounts(
 }
 
 /**
+ * THE GAP-FILL (SOLVER_CODE_VERSION 10 — the register's Tier 1 *The solver's rail anchors stand under
+ * their line on COMMITTED income only…*, its ⚑ RULED + ⚑ PRE-REGISTERED blocks; council wf_a51047f0-f4b).
+ * The rail anchors are the roster's only conversion amounts, and the best amount can sit BETWEEN two of
+ * them — the probe measured $6–9.5k of lifetime tax left on the table that way (`retired`: $33,381 →
+ * $49,000) — so every gap wider than `spacing` between ADJACENT members of {0} ∪ `feasible` gets
+ * `⌈gap / spacing⌉ − 1` evenly spaced points, each FLOORED to the actionable display lattice
+ * (`@shared/actionableDollar` — the card's floor is then the identity on it) and kept only when it is
+ * strictly inside its open gap and its display figure is not already shown by an anchor or a kept fill
+ * (two plans the card would quote identically are one plan to the reader — the $33,381-vs-$33,000
+ * collision). Nothing above the largest feasible amount: the gaps are between roster amounts, never
+ * past them, so every fill is under the RMD-first headroom the anchors already passed. Pure in its
+ * inputs; ascending.
+ *
+ * Roster-wide and per policy by construction (the caller pairs every point with every searched
+ * policy). ⚑ NEVER a crown-local / top-k refinement, a second stage, an iterative search, the probe's
+ * dense grid, a median re-anchor, per-year amounts or a draw-aware rail kind (the ruling's NEVER list).
+ */
+export function gapFillAmounts(
+  feasible: readonly number[],
+  spacing: number,
+): ReadonlyArray<{ readonly amountReal: number; readonly gap: GapFill }> {
+  if (!Number.isFinite(spacing) || spacing < 1_000) {
+    throw new Error(`[candidates] gap-fill spacing must be finite ≥ $1,000 (got ${spacing}) — below the display step, fills collide`)
+  }
+  const points = [0, ...feasible]
+  points.forEach((a, k) => {
+    if (!Number.isInteger(a) || a < 0) throw new Error(`[candidates] gap-fill amount ${a} must be a whole dollar ≥ 0`)
+    if (k > 0 && a <= points[k - 1]!) throw new Error('[candidates] gap-fill amounts must be strictly ascending (the enumerator dedupes + sorts them)')
+  })
+  const shown = new Set(feasible.map(actionableFloor))
+  const out: Array<{ amountReal: number; gap: GapFill }> = []
+  for (let k = 1; k < points.length; k++) {
+    const lo = points[k - 1]!
+    const hi = points[k]!
+    const gap = hi - lo
+    if (gap <= spacing) continue
+    const n = Math.ceil(gap / spacing) - 1
+    for (let j = 1; j <= n; j++) {
+      const raw = lo + (j * gap) / (n + 1)
+      const step = actionableDisplayStep(raw)
+      const amount = Math.floor(raw / step) * step
+      if (!(amount > lo && amount < hi) || shown.has(amount)) continue
+      shown.add(amount)
+      out.push({ amountReal: amount, gap: { gapLo: lo, gapHi: hi } })
+    }
+  }
+  return out
+}
+
+/**
  * Enumerate the full candidate set for one household anchor + conversion window.
  *
  * Guarantees (each pinned by the S1 battery):
@@ -599,6 +661,10 @@ export function anchoredConversionAmounts(
 export function enumerateCandidates(opts: {
   readonly anchor: ConversionAnchorContext
   readonly window: { readonly startYearOffset: number; readonly years: number }
+  /** The gap-fill ({@link gapFillAmounts}). PRESENCE-KEYED: absent ⇒ the rail-anchored grid alone, so
+   *  the U14 oracle fixtures (`reference/solver-cases`) are never perturbed; the shipped caller
+   *  (`solveAnchor.enumerateSolveCandidates`) always supplies it. */
+  readonly gapFill?: { readonly spacing: number }
   readonly userBaseline?: {
     readonly policy: DrawdownPolicy
     readonly drawdownOrder?: readonly DrawdownOrderKey[]
@@ -620,7 +686,7 @@ export function enumerateCandidates(opts: {
     readonly conversion?: RothConversionPlan
   }
 }): CandidateSet {
-  const { anchor, window, userBaseline } = opts
+  const { anchor, window, gapFill, userBaseline } = opts
   if (!Number.isInteger(window.startYearOffset) || window.startYearOffset < 0) {
     throw new Error('[candidates] window.startYearOffset must be an integer ≥ 0')
   }
@@ -647,6 +713,13 @@ export function enumerateCandidates(opts: {
     }
   }
 
+  const fills = gapFill === undefined ? [] : gapFillAmounts(feasible.map((f) => f.amountReal), gapFill.spacing)
+  const plan = (amountReal: number): RothConversionPlan => ({
+    annualAmountReal: amountReal,
+    startYearOffset: window.startYearOffset,
+    years: window.years,
+  })
+
   const candidates: CandidateStrategy[] = []
   for (const policy of SEARCHED_POLICIES) {
     // The conversion-0 arm — for the conventional policy this IS the no-change baseline.
@@ -656,16 +729,13 @@ export function enumerateCandidates(opts: {
       provenance: policy === CONVENTIONAL_POLICY ? 'conventional-baseline' : 'grid',
     })
     for (const { amountReal, rail } of feasible) {
-      candidates.push({
-        policy,
-        conversion: {
-          annualAmountReal: amountReal,
-          startYearOffset: window.startYearOffset,
-          years: window.years,
-        },
-        provenance: 'grid',
-        anchoredRail: rail,
-      })
+      candidates.push({ policy, conversion: plan(amountReal), provenance: 'grid', anchoredRail: rail })
+    }
+    // Fills AFTER the policy's anchors, so the roster's first conversion candidate is still the first
+    // rail anchor (ranking stability's perturbation target, `solveEntry.perturbationPair`). Order moves
+    // no ranking: `candidateTieBreak` keys on policy, then amount.
+    for (const { amountReal, gap } of fills) {
+      candidates.push({ policy, conversion: plan(amountReal), provenance: 'grid', filled: gap })
     }
   }
 

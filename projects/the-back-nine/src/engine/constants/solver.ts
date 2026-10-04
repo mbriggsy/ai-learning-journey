@@ -141,6 +141,24 @@ export const solverAssumedHeirBracket = sourced(0.24, {
   note: 'The DEFAULT heir marginal rate the live leave-more solve ranks the after-tax bequest at; the household overrides it at the AssumptionPanel heir-bracket seat (persisted as ScenarioV3.heirBracket, additive-optional — ABSENT means they took this default). Deliberately outside solverConstants/ALL_CONSTANTS — a ranking default, not a harness-read calibration threshold.',
 })
 
+/**
+ * THE GAP-FILL SPACING `G` (SOLVER_CODE_VERSION 10 — `candidates.gapFillAmounts`; council
+ * wf_a51047f0-f4b): every gap wider than this between adjacent roster conversion amounts is filled with
+ * on-lattice points no further apart than it. PRE-REGISTERED 2026-10-04 before any measurement, with ONE
+ * fallback `G'` = $25,000 for a solve-time breach (the register's ⚑ PRE-REGISTERED block; a breach at
+ * both re-councils — never a third value fitted to a measurement). $10,000 puts any interior optimum
+ * within $5,000 of a scored amount; the probe's curve was flat within a few hundred dollars across
+ * ±$2,000 of its optimum.
+ */
+export const solverGapFillSpacing = sourced(10_000, {
+  citation:
+    'Council wf_a51047f0-f4b (2026-10-04, the roster-recall adoption ruling): G a named solver constant pre-registered before any measurement, G\' = $25,000 the one cost fallback (docs/backlog.md, the rail-anchors entry\'s ⚑ PRE-REGISTERED block)',
+  directionalUntilPinned: true,
+  // A methodology choice (no dated event certifies a grid spacing); never blocks the mint.
+  directionalKind: 'methodology-substrate',
+  note: 'Roster growth is ~linear in it and solve time ~linear in the roster: the ruling caps the production solve at +33 % over v9 (breach at G ⇒ G\'; breach at both ⇒ re-council). Outside solverConstants/ALL_CONSTANTS like the heir bracket: an enumerator parameter, not a harness-read calibration threshold.',
+})
+
 /** Finiteness-FIRST calibration check (insights 008/010/039): a NaN/Infinity/sentinel is
  *  detectably uncalibrated — it must never reach a `> ε` compare. */
 export const isCalibrated = (x: number): boolean => Number.isFinite(x) && x > 0

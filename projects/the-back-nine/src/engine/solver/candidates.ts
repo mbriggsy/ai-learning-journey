@@ -169,7 +169,7 @@ export type AnchoredRail =
       readonly calendarYear: number
       /** The first priced window year in which this amount crosses the cliff where that year's committed
        *  income alone does not — `null` when it adds no such crossing (in the committed-income frame:
-       *  fill 0, insight 133 — never "keeps you under"). The `firstCrossingMagiYear` sibling. */
+       *  fill 0, insight 139 — never "keeps you under"). The `firstCrossingMagiYear` sibling. */
       readonly firstCrossingYear: number | null
     }
   | {
@@ -183,7 +183,7 @@ export type AnchoredRail =
       /** The first billed MAGI year in which this amount crosses the tier where that year's committed
        *  income alone does not — `null` when it adds no such crossing in any billed window year.
        *  THE FRAME IS COMMITTED INCOME ONLY (Social Security by claim age, ongoing income; fill 0 —
-       *  the policy's own discretionary draw EXCLUDED, insight 133), so `null` is a claim about that
+       *  the policy's own discretionary draw EXCLUDED, insight 139), so `null` is a claim about that
        *  frame, never "keeps you under" a line (the Roth-sheet entry's ⚑ NEGATIVE). A non-null year
        *  names a first-billed-year point kept beside the window point: its first-year room is real
        *  (on `retired`, $25k–$46k a year over the window point), and this field is what says it is
@@ -412,7 +412,7 @@ const withAmount = (c: CommittedYearIncome, a: number): CommittedYearIncome => (
  *    excluded, never the rail (no silent vanish, burned/062); a year with no whole dollar of room means
  *    any conversion crosses there — no window point (the conversion-0 arm is that point).
  * Never per-year amounts inside one candidate (the ⚑ NEGATIVE). The frame is COMMITTED income only (fill
- * 0, insight 133).
+ * 0, insight 139) — a claim about that frame, never about billed MAGI (council wf_919f377d-274).
  */
 function railAcrossWindow(
   frames: readonly CommittedYearIncome[],

@@ -53,7 +53,9 @@ dime-floor (POMS RS 00615.101) — a $20,000 PIA is $19,999.20 a year; the engin
   written; the senior-bonus sunset and mid-window claims move taxable income under them (the crowned anchors on `order` /
   `borderline`). BUILT 2026-10-03 (`SOLVER_CODE_VERSION` 9) on this insight's law: one window walk for all three rails.
 - The Roth sheet's planned fact lines ("in 2026, about $X fits under…") — each figure must be its own year's room.
-- Insight 014 (a threshold dragged by an evolving state — test the crossing year) and insight 133 (the draw-frame lean the
-  anchors still carry): a frame that omits a term is honest only when the claim names the frame.
+- Insight 014 (a threshold dragged by an evolving state — test the crossing year) and the anchors' own draw
+  frame (committed income, the policy's discretionary draw excluded — ruled 2026-10-04, council `wf_919f377d-274`):
+  a frame that omits a term is honest only when the claim names the frame. (Earlier docs cited insight 133 for this;
+  133 is the two-arm lean.)
 - Any cross-year aggregate built from a year-0 "skeleton" (headroom, room sentences, step cards): re-read which year each
   term belongs to whenever the claim widens from one year to many.

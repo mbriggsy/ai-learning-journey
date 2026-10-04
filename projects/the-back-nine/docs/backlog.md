@@ -857,11 +857,74 @@ In the committed frame, taxable income is $0 in every window year at $0–$5k of
 - **What it does (measured on `health`, pay-less-tax — the CLOSED entry above has the tables).** Survival falls a few paths at a time as the conversion grows (seed A, 4k: 3,816 → 3,815 → 3,810 → 3,784 surviving paths at $0 / $5k / $10k / $35k), with single-path flips both ways on top; the crown lands just before the first lost path, so it is seed noise — six seeds at 16k crowned $2,000–$3,750 on a dense grid, while mean lifetime income tax keeps falling past $35,000. On fixed outcomes through the shipped `rankCandidates`, a 1-path tolerance crowns $5,000, 5 paths $7,500, 20 paths $20,000. A 1-path survival difference is ~1 paired SE (one discordant path) — not CRN-resolvable — yet it outranks thousands of dollars of the goal.
 - **Not the `selectionTieTolerance` already built.** That one (`heldOutSeed.ts`, 1.96·SE of the CRN-paired per-path GOAL difference) feeds `survivingAdvantage`'s Tier-2 shrinkage (`select.ts:260`); a Tier-1 survival tolerance needs its own CRN-paired per-path survival-indicator SE. Which statistic, and how R21's absolute floor reads a survival gap no CRN pair can resolve, are the council's.
 - **Prescription — measure, then council:** an OFFLINE probe (a scratch script, never the shipped solve) over every solvable dev seed at 16,000 paths, both goals: the crown and runner-up at tolerance 0 vs a CRN-paired survival tolerance (1.96·SE of the per-path survival-indicator difference against the max-survival candidate), recording each crown change, its survival cost in paths and its goal gain in dollars. Then `/council` against R21 + contract #2 + §S0.1 before any change. A change is ranking-affecting: `SOLVER_CODE_VERSION` bump (the run fingerprint already carries `tieTolerance`); the oracle cases' zero-vol worlds keep their exact 0.
+- ⚑ **COUPLED to the pay-less-tax entry below (measured 2026-10-04, `wf_56acb5a4-27c`):** at tolerance 0 the survival top set is ONE candidate on 11 of the 14 healthcare-priced solvable seeds, which is what keeps the income-tax-only objective from biting today — and the masked candidates include premium traps: on `health` the income-tax argmin (proportional $84,600) is $33,785 WORSE all-in ($101,395 of ACA premium) at 323 paths below the best, on `healthnc` $35,838 worse at 256 paths; on the $50k-spend `health` variant a $45,339-worse argmin sits ONE path below. Loosening the tolerance under today's objective would crown them. Run every tolerance arm on BOTH statistics (income tax, and income tax + ACA net premium + Medicare cost), and never change the tolerance before the objective ruling.
 - ⚑ NEGATIVE: build nothing before the ruling; never reuse the goal-difference `selectionTieTolerance` as the survival tolerance; never a level-keyed band (contract #2's ε split — a band read off the B display fails loud); never treat any dense-grid crown as a household constant.
 
 ### Pay-less-tax ranks on income tax alone — the ACA net premium and the Medicare cost a conversion moves sit outside its objective, against plan 4's premise that healthcare is in the model so no omission can invert a ranking
 
 `S`–`M` · **pilot (measure) → briggsy (what "tax" means for this goal)** · filed 2026-10-04 (b9-2) by the `health` $2,500 measurement (`wf_35465945-b22`, the CLOSED entry above)
+
+- ⚑ **MEASURED 2026-10-04 (b9-2) (`wf_56acb5a4-27c` — probe + an independent cross-check + a disclosure read, two adversarial refuters, a final chair) — ⚑ TIER 0 CANDIDATE, PARKED on Briggsy's framing ruling (all-in objective, or income-tax objective + disclosure; the entry moves tiers on his answer)**: the all-in inversion is LIVE at tieTolerance 0 on a plausible ACA household. The dev roster cannot see it.
+  - **Question measured:** does ranking pay-less-tax on all-in cost change the crown, the runner-up or the hero? All-in = lifetimeTaxPaidReal + lifetimeNetPremiumReal + lifetimeMedicareCostReal (base Part B + IRMAA + extras); real $, lifetime, mean of 16k paths. Neither addend sits inside tax: taxOverlay.ts:1805 and :1659 keep them out, and all three accrue after the depletion check (:1860–1871).
+  - **Method.** Two independent paths at HEAD 01dbc53f, live seed pair 12245589 / −1438857764, shipped rosters (1,142 candidates):
+    - (a) shipped evaluateCandidates → searchSteps + selectRecommendation, once as shipped and once with the all-in vector substituted before adoptObservedOutcome (it reaches evaluate.ts:99, select.ts:192 and objectiveHeadline.ts:81 together);
+    - (b) direct simulate(applyCandidate) with my own tier-1/tier-2 ranker. On income tax it reproduced the shipped FULL ranked order on all 14 seeds.
+    - The real solveWithMint matched to the cent on health, healthnc and healthgap.
+  - **Dev seeds: NO CHANGE on any of the 14 healthcare-priced solvable seeds.** steer is no-pretax; the 9 date seeds and atceiling are spine-unready. The survival top set at tol 0 is 1 candidate on 11 of 14 seeds, so Tier 2 never reaches the crown.
+
+    | seed | crown (both stats) | runner-up | hero B tax → all-in (measured) | rendered (derived) |
+    |---|---|---|---|---|
+    | retired / fl / elsewhere | prop:33381 | bf:33381 | 10,011 → 12,490 | $10,000 → $12,000 |
+    | pa | prop:33381 | bf:33381 | 10,185 → 12,665 | $10,000 → $13,000 |
+    | nc | bf:33381 | prop:33381 (Tier 2 decided, agrees) | 3,034 → 3,652 | $3,000 → $3,700 |
+    | surplus (93-way tie) | bf:185721 | bf:148300 | 108,810 → 158,934 | $110,000 → $160,000 |
+    | order | prop:49070 | bf:34597 | 47,461 → 45,326 | $47,000 → $45,000 |
+    | borderline | bf:46522 | bf:111578 | 8,064 → 7,502 | $8,100 → $7,500 |
+    | budget | bf:0 | bf:45089 | 1,242 → 1,220 | $1,200 → $1,200 |
+    | health / healthnc / healthgap | prop:0 | own plan prop:20000×4 | −12,167 / −12,999 / −19,674 → −2,178 / −3,019 / −17,703 | no dollar (inversion guard) under both |
+    | buckets / failing | tie-break / degenerate | — | noChange / $0 | — |
+
+    - The rendered column is derived and assumes grade.subTenthCollapse = false (recommendationView.ts:587). subTenthCollapse was measured only on the 3 ACA seeds, and the retired and nc dollars are read at backlog.md:875.
+    - Health hero, all-in minus tax-only: ACA −11,608, Medicare +1,619.
+    - Latent split on the dev roster, masked at tol 0:
+      - health: proportional:84600 is the income-tax argmin. It is $16,184 cheaper on tax, pays $101,395 of premium and is $33,785 worse all-in than bf:0. It sits 323 paths below the best.
+      - healthnc: the same pattern, $35,838 worse all-in, 256 paths below the best.
+  - **Survived refutation: the live inversion.** retiredHealth was rerun unchanged except for spending.
+    - hl50 ($50k spend): top set 6; both slots flip.
+      - Shipped crown pre-tax-first:0; all-in crown bracket-fill:0.
+      - CRN-paired: pre-tax-first:0 is −$3,252 ± 59 on tax and +$1,299 ± 67 all-in on seed A (z 19.3); +$1,344 ± 66 on seed B (z 20.4); equal survival.
+    - hl40 ($40k): top set 8; both slots flip.
+      - Crown flip marginal: +$459 ± 287 A / +$649 ± 285 B.
+      - Runner-up flip strong: proportional:32734 is +$5,284 ± 186 all-in against bf:0 while −$1,959 on tax.
+    - hl50c ($50k + own $60k×4 conversion) has the same roster outcomes as hl50, so it is not an independent witness.
+    - The one-path mask:
+      - hl50's whole-roster income-tax argmin, pre-tax-first:32734 (tax $94,742, premium $101,395, all-in $482,443), is $45,339 worse all-in (derived) than bf:0 and sits ONE seed-A path below the top.
+      - hl40: pre-tax-first:57000, $43,776 worse all-in, also one path below.
+      - The seed is minted per household (solveDispatch.ts:21,65), so a different household seed can crown it.
+    - Hero (seed B, measured):
+
+      | household | tax-only | all-in | gap |
+      |---|---|---|---|
+      | hl50 | $46,564 | $32,069 | overstated $14.5k |
+      | hl40 | $50,962 | $35,413 | overstated $15.5k |
+      | hl50c | $23,258 | $57,881 | understated $34.6k |
+
+      The sign never flips in any arm measured.
+  - **Refuter corrections applied:**
+    - health Medicare component −1,619, not −1,621;
+    - the all-in-minus-tax-only signs are as in the table above;
+    - borderline's "raises IRMAA" cause is unmeasured (on order the crown's IRMAA is LOWER, and the gap comes from base + extras over more funded years).
+  - **Disclosure (read):** no rendered string on the pay-less-tax surface says the hero leaves out the ACA premium or Medicare/IRMAA.
+    - recDiscNiit (copy.ts:1950) names only the NIIT as left out.
+    - recDiscAcaSlcsp (copy.ts:1956) renders only when namedDriver is aca-enhanced-subsidies, and it is a sensitivity caveat, not an omission.
+    - The Roth sheet's rothOmissionsNoteAcaPriced and rothMedicareResidualNote (copy.ts:1008, 1262) say health effects ARE "in these numbers", which invites the wrong reading of the hero.
+    - No surface shows the crown's premium delta: the viz is leave-more only (recommendationView.ts:686), and the Healthcare sheet reads the own-plan run (Result.tsx:240-241).
+    - Plan 4 contract #7 (4-recommendation.md:247) and R24 (product.md:134) are unmet on this goal.
+  - **Consequence.** Proposed: re-tier to Tier 0, pending Briggsy's framing ruling (all-in objective vs income-tax objective plus disclosure). Either branch needs a seed-free witness: a ~$50k-spend health-household fixture whose pay-less-tax crown is checked against all-in cost.
+    - ⚑ NEGATIVE: never cite "no inversion on the dev seeds" as clearance. The dev roster lacks the low-spend ACA shape.
+    - ⚑ Re-run the tieTolerance entry's tolerance arms on the all-in statistic too: the $34–45k argmins appear at a tolerance of 1 path (hl50) to 256 paths (healthnc).
+    - Side note, read: recDiscNiit's "your federal income tax" is also inaccurate on NC/PA/FL priced runs, where state tax is included.
+  - **Unmeasured:** subTenthCollapse on the hl variants and on pa, surplus, order, borderline and budget; other CRN seeds for hl50/hl40.
 
 - **The gap (read at source).** `goalHeadlineStatistic` (`objective.ts:62-77`) ranks pay-less-tax on `lifetimeTaxMeanReal` (`evaluate.ts:99`), accrued from `taxPaidThisYear = grossWithdrawal − fundingNet − acaNetPremiumThisYear` (`taxOverlay.ts:1805`, summed at `taxOverlay.ts:1871`) — federal + priced-state income tax, the ACA net premium subtracted OUT; Medicare and IRMAA accrue on their own surface (`totalMedicareCostReal`). Plan 4 contract #7 (`docs/plans/4-recommendation.md:247`) says ACA-PTC + IRMAA are IN the model "precisely because a disclosed omission can invert a ranking", and `docs/research/pre65-healthcare.md:74` names the conversion's healthcare cost as what "couples healthcare into the solver objective". Under leave-more the premium IS felt (it shrinks the bequest); under pay-less-tax it is not, and the hero reads "Keeps about $X more out of your lifetime tax" (`copy.ts:2976`).
 - **Measured on `health` (seed A, 16k, proportional $2,500 vs $0; net derived):** income tax −$3,321 (+$4,128 in the window, −$7,449 from 2040), ACA net premium +$2,277 (2026–2031), Medicare/IRMAA −$610 → all-in ≈ −$1,654. Same sign here; an INVERSION (a crowned conversion whose premium cost exceeds its tax saving, or a runner-up that wins all-in) is unmeasured on every seed.

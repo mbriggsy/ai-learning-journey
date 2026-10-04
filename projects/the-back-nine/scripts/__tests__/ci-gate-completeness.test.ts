@@ -22,7 +22,7 @@ import { join, resolve } from 'node:path'
  *   - A step is credited only when it runs the script EXACTLY: no arguments (a `-- --shard` or a
  *     `&& …` can narrow the gate), no `if:` or `continue-on-error:` in any quoting (`"if": false`
  *     is the same skip; a skipped or soft-failing step is not a pass), no job- or workflow-level
- *     condition, and no working directory other than this project. A `run: |` block, a run step
+ *     condition, and no working directory other than this project (in any key quoting). A `run: |` block, a run step
  *     outside any `steps:` list, any OTHER quoted key inside a step (a `"run":` would hide the
  *     step from this walk), a non-pnpm command, or a pnpm flag before the script name THROWS:
  *     the credited set must never grow through a spelling this file does not understand.
@@ -73,6 +73,9 @@ const unquote = (v: string): string => v.trim().replace(/^(["'])(.*)\1$/, (_m, _
 
 /** A step's skip / soft-fail key, in ANY quoting: `if:`, `"if":`, `'continue-on-error' :`. */
 const GUARD_KEY = /^\s*(?:-\s*)?["']?(if|continue-on-error)["']?\s*:/
+/** The working-directory key, in ANY quoting: a quoted `"working-directory":` under `defaults.run`
+ *  sits outside every step, so the quoted-key throw below never sees it. Its value is unquoted too. */
+const WORKING_DIR_KEY = /^\s*(?:-\s*)?["']?working-directory["']?\s*:\s*(.*)$/
 /** Any quoted mapping key. Inside a step, every one but a guard key is a spelling this file does not read. */
 const QUOTED_KEY = /^\s*(?:-\s*)?["'][^"']+["']\s*:/
 
@@ -134,8 +137,8 @@ function readRunSteps(yml: string): RunStep[] {
   let prev = ''
   lines.forEach((l, i) => {
     if (isNeutral(l)) return
-    const wd = /^\s*(?:-\s*)?working-directory:\s*(.*)$/.exec(l)
-    if (wd !== null && stripComment(wd[1]!) !== PROJECT_DIR) {
+    const wd = WORKING_DIR_KEY.exec(l)
+    if (wd !== null && unquote(stripComment(wd[1]!)) !== PROJECT_DIR) {
       throw new Error(`[ci gates] line ${i + 1} sets working-directory to "${stripComment(wd[1]!)}", not ${PROJECT_DIR}`)
     }
     const step = stepOf.get(i)
@@ -373,6 +376,14 @@ describe('CI gate completeness: package.json gates vs the workflow that runs the
     expect(() => audit(mutate(lf, /- run: pnpm typecheck$/m, () => '- run: |\n          pnpm typecheck'), scripts)).toThrow(/block-scalar/)
     expect(() => audit(mutate(lf, /- run: pnpm build$/m, () => '- run: npm run build'), scripts)).toThrow(/not a pnpm command/)
     expect(() => audit(mutate(lf, /^ {2}verify:\n/m, () => '  verify:\n    if: false\n'), scripts)).toThrow(/job- or workflow-level/)
+    // A job's `defaults.run` moved off this project, in ANY key quoting: the quoted spelling sits outside
+    // every step, so only the working-directory read itself can catch it. A quoted CORRECT value stays green.
+    const verifyDefaults = /^( {2}verify:\n {4}runs-on: .*\n {4}defaults:\n {6}run:\n {8})working-directory: projects\/the-back-nine$/m
+    for (const key of ['working-directory', '"working-directory"', "'working-directory'"]) {
+      const moved = mutate(lf, verifyDefaults, (_m, head) => `${head}${key}: projects/elsewhere`)
+      expect(() => audit(moved, scripts), key).toThrow(/sets working-directory to "projects\/elsewhere"/)
+    }
+    expect(unwired(scripts, audit(mutate(lf, verifyDefaults, (_m, head) => `${head}"working-directory": "projects/the-back-nine"`), scripts))).toEqual([])
 
     // Triggers: every step arm above stays green on each of these, so each needs its own red.
     expect(triggerHoles(lf), 'the trigger baseline must be green before the mutants mean anything').toEqual([])

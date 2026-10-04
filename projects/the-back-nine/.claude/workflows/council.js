@@ -440,6 +440,7 @@ if (dossier && dossier.oracleSettled && dossier.oracleSettled.settled) {
     action: 'execute',
     digestLine: '[oracle-settled] ' + issue + ' -> ' + (dossier.oracleSettled.answer || 'follow existing gate/decision'),
     dossier,
+    abstentions: [],
   }
 }
 
@@ -462,6 +463,7 @@ if (dossier && dossier.grounding && dossier.grounding.grounded === false) {
     action: 'surface',
     digestLine: '[blocked: ungrounded] ' + issue + ' -> ' + (dossier.grounding.note || 'clerk could not ground'),
     dossier,
+    abstentions: [],
   }
 }
 

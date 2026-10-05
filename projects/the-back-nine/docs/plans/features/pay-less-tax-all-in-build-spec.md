@@ -310,6 +310,17 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 
 ## 6. Copy: the WORD PACKET for Briggsy. Every line is HIS; nothing ships unread
 
+**⚑ HIS WORDS — RULED 2026-10-05 by Briggsy (the word packet, every pilot lean taken):**
+- **Hero, priced arm** (`overlay.healthcareEnabled` on) — option A: "Keeps about $X more out of your lifetime tax and health-insurance premiums than today’s plan."
+- **Hero, unpriced arm** (healthcare off) — today's string, unchanged: "Keeps about $X more out of your lifetime tax than today’s plan."
+- **Goal gloss** (`goalPayLessTaxGloss`, ONE line on both arms): "Less paid over your lifetime in tax, and in the health-insurance premiums the plan prices."
+- **Scope disclosure — ADD** (a new `recDisc*` id after `'niit'`, gated `goal === 'pay-less-tax'` AND the priced arm): "This counts your income tax plus the health-insurance premiums a strategy can move; differences in plan cost-sharing aren’t counted and could move this."
+- **`recDiscNiit`** (both goals): "A federal surtax on higher investment income isn’t counted here, and it could apply."
+- **`recDiscStateTax`** (both goals): "Where we can’t yet price a state’s income tax, it’s left out of this comparison — the state piece could move it either way."
+- The label "Pay less tax" and the id `'pay-less-tax'` stay. A Caddie read of these words on the rendered card runs before the Phase B land (§8 item 10); a framing-level hit parks for him.
+
+*The packet as sent (the options he chose among):*
+
 **Constraints the drafts meet.** This was a hand-lint against `copyGuard.ts:147-308` + `HEDGE_TOKENS` (`copy.ts:2020-2029`); the suite runs on whatever he picks.
 - A hedge ("about" / "could"); `recDelta*` and `recDisc*` are require-hedge swept (`copyGuard.ts:123-127`).
 - No superlative, no clause-leading directive verb (`:261`), no "pays off" or "better off" (`:250-251`), no em-dash apposition on the figure.

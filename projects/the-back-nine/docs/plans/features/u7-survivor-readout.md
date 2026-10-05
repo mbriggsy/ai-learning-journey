@@ -17,7 +17,7 @@ fixture discipline; §5 where the code lives; §6–§7 what shipped and the cal
 ## 1 · The gap this unit closed (confirmed 2026-06-24, re-confirmed first-hand 2026-06-27)
 
 Before e1 the engine emitted no survivor-specific distribution. `Distribution` carried only the JOINT
-`survivalFraction = survivors / paths` (`simulate.ts:1851`) — a path "survives" iff its portfolio
+`survivalFraction = survivors / paths` (`simulate.ts:1859`) — a path "survives" iff its portfolio
 never depleted (`depletionYear === NEVER_DEPLETED`). That single number cannot separate "the plan held
 while both were alive" from "the plan carried the SURVIVOR through widowhood." `bandFan.cohortFraction`
 is household *existence* (≥1 alive), not survivor *survival* — it cannot substitute.

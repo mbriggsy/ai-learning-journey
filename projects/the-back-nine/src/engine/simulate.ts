@@ -1708,9 +1708,17 @@ export function simulate(
       // input is outside the engine's computable float domain for this seed).
       // P3·U9: the FLOOR pass is checked too — lower withdrawals mean HIGHER balances, so
       // the floor arm is strictly MORE overflow-prone than the full arm, not less.
+      // The pay-less-tax ALL-IN addends (build spec D6): the net premium and the Medicare cost
+      // join the full-arm check, so a non-finite one takes this typed route instead of throwing
+      // in the all-in `mean` and aborting the batch. Full arm ONLY — no ranked statistic reads
+      // the floor arm's healthcare accruals (the floor clause checks terminal + tax for the same
+      // reason). Unreachable in practice: the premium sits inside `grossWithdrawal`, so an
+      // overflow reaches `terminalReal` first.
       if (
         !Number.isFinite(taxRes.terminalReal) ||
         !Number.isFinite(taxRes.totalTaxPaidReal) ||
+        !Number.isFinite(taxRes.totalNetPremiumReal) ||
+        !Number.isFinite(taxRes.totalMedicareCostReal) ||
         !Number.isFinite(taxRes.finalTaxableBasis) ||
         !Number.isFinite(taxRes.finalBuckets.taxable) ||
         !Number.isFinite(taxRes.finalBuckets.pretax) ||

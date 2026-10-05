@@ -41,7 +41,8 @@ function taxOutcome(candidate: CandidateStrategy, taxPerPath: readonly number[],
   return {
     kind: 'scored',
     candidate,
-    score: { survival, lifetimeTaxMeanReal: mean(taxPerPath), terminalGrossMeanReal: 0, afterTaxBequestMeanReal: undefined },
+    // premium + Medicare are zero below, so the all-in mean IS the tax mean (the healthcare-off identity).
+    score: { survival, lifetimeTaxMeanReal: mean(taxPerPath), lifetimeAllInCostMeanReal: mean(taxPerPath), terminalGrossMeanReal: 0, afterTaxBequestMeanReal: undefined },
     distribution: {
       terminalValuesReal: zeros,
       depletionYears,
@@ -423,6 +424,7 @@ describe('§S4.5 the demotion refusal covers LEAVE-MORE too (the arm that used t
       score: {
         survival,
         lifetimeTaxMeanReal: 0,
+        lifetimeAllInCostMeanReal: 0,
         terminalGrossMeanReal: mean(rothPerPath),
         afterTaxBequestMeanReal: mean(rothPerPath),
       },

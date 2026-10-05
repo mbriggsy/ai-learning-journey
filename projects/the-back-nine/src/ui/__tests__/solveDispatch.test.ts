@@ -24,7 +24,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { buildSolveRequest } from '@intake/solveDispatch'
-import { buildSpineParams, buildDateInput } from '@intake/intakeMap'
+import { buildSpineParams, buildDateInput, missingRequiredFacts } from '@intake/intakeMap'
 import { createMemoryModel, type ParamsBuilders, type ScenarioDraft } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
 import type { SolveWire } from '@engine/engineWire'
@@ -162,6 +162,36 @@ describe('buildSolveRequest — the typed-refusal convention', () => {
     if (typeof req === 'string') throw new Error('unreachable')
     expect(req.ranking.goal).toBe('pay-less-tax')
     expect(req.ranking.heirBracket).toBeUndefined()
+  })
+})
+
+// The pay-less-tax ALL-IN hero's scope predicate (build spec D7): the hero and the scope disclosure key
+// on the solve's BUILT `base.overlay.healthcareEnabled` — on a healthcare-OFF base all-in ≡ income tax,
+// and a hero claiming premiums were counted would be calm-but-wrong. The hero-arm half lands in Phase B
+// with Briggsy's words.
+//
+// MEASURED, AGAINST THE SPEC'S PREMISE: D7 says the quote pair is not a required fact, so a pre-65
+// household that skipped it would solve with healthcare OFF. It IS required (`missingRequiredFacts`,
+// the ACA quote-pair clause — any pre-65 or unknown-age member), so that household never reaches the
+// solve. The second arm pins the REFUSAL; if the quotes ever become optional it reds, and the unpriced
+// hero arm becomes live and must be re-checked.
+describe('buildSolveRequest — the built healthcare-priced predicate the all-in hero keys on (D7)', () => {
+  it('a pre-65 household WITH the quote pair builds a healthcare-priced base (the priced arm)', () => {
+    const draft = withGoalSeed('health', 'pay-less-tax')
+    expect(draft.people.every((p) => p.currentAge! < 65), 'the premise: every member is pre-65').toBe(true)
+    const req = buildSolveRequest(draft, TODAY)
+    if (typeof req === 'string') throw new Error(`the priced household must build a request (got ${req})`)
+    expect(req.base.overlay?.healthcareEnabled).toBe(true)
+  })
+
+  it('the SAME pre-65 household with the quotes SKIPPED never reaches the solve — the quote pair is a required fact (no unpriced pre-65 base)', () => {
+    const priced = withGoalSeed('health', 'pay-less-tax')
+    const { enrolledPremiumMonthlyToday: _e, slcspMonthlyToday: _s, ...healthNoQuotes } = priced.health
+    void _e
+    void _s
+    const draft: ScenarioDraft = { ...priced, health: healthNoQuotes }
+    expect(missingRequiredFacts(draft).map((m) => m.labelKey)).toEqual(['enrolledPremiumLabel', 'slcspLabel'])
+    expect(buildSolveRequest(draft, TODAY)).toBe('spine-unready')
   })
 })
 

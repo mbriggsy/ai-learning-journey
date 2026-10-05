@@ -6,11 +6,14 @@
  * OWN implementation of the lexicographic objective (plan contract #4 — objective ≡ headline
  * metric): Tier 1 = the survival fraction; Tier 2 = the goal's concrete distributional
  * statistic (pay-less-tax = mean lifetime tax; leave-more = mean AFTER-TAX-to-heirs bequest,
- * first-order §1014/IRD at a CALLER-declared heir bracket). U15's `objective.ts`/`select.ts`
- * must either CONSUME these functions or be validated against these exact fixtures — two
- * implementations that drift is the oracle validating nothing, and U15's pre-build council
- * owns that wiring decision. Until then, THIS is the ranking the oracle's known-best cases
- * gate.
+ * first-order §1014/IRD at a CALLER-declared heir bracket). The pay-less-tax ALL-IN statistic
+ * (tax + net ACA premium + Medicare, Briggsy's 2026-10-05 ruling) is SCORED here as
+ * `lifetimeAllInCostMeanReal` but not yet RANKED: `tier2` still reads income tax until the
+ * all-in switch moves every pay-less-tax read site together (build spec Phase B). U15's
+ * `objective.ts`/`select.ts` must either CONSUME these functions or be validated against these
+ * exact fixtures — two implementations that drift is the oracle validating nothing, and U15's
+ * pre-build council owns that wiring decision. Until then, THIS is the ranking the oracle's
+ * known-best cases gate.
  *
  * Candidate evaluation runs each candidate through `applyCandidate` (the shared apply seam)
  * + the REAL `simulate` on ONE seed — CRN by construction (the draw schedule is a pure
@@ -25,14 +28,15 @@ import { simulate, type SimOutput } from '@engine/simulate'
 import type { Distribution, RecommendationGoal, SimulationParams } from '@shared/model'
 import { DRAWDOWN_POLICIES } from '@shared/model'
 import { applyCandidate, type CandidateStrategy } from '../solver/candidates'
-import { afterTaxBequestPerPath } from '../solver/objectiveHeadline'
+import { afterTaxBequestPerPath, lifetimeAllInCostPerPath, mean as headlineMean } from '../solver/objectiveHeadline'
 
 // The §1014/IRD per-path bequest formula is RE-HOMED to the simulate-free `objectiveHeadline.ts`
 // (U16 §Q6 — so the render-path objective≡headline guard can recompute it without dragging `simulate`
 // into the entry bundle) and RE-EXPORTED verbatim here: every existing importer (`objective.ts`,
 // `gradeCalibration.ts`, the oracle tests) keeps `from './evaluate'` unchanged, and the formula
-// (the M3 sign-inversion class) still lives in exactly ONE place.
-export { afterTaxBequestPerPath }
+// (the M3 sign-inversion class) still lives in exactly ONE place. The pay-less-tax all-in per-path
+// composition rides the same re-home + re-export, for the same reason (one sum, every reader).
+export { afterTaxBequestPerPath, lifetimeAllInCostPerPath }
 
 /** The Tier-2 goal axis. ALIASED to the SHARED canonical vocabulary ({@link RecommendationGoal},
  *  model.ts) so the engine's ranking objective, the codec's enum gate, and the intake GoalPicker
@@ -48,6 +52,12 @@ export interface CandidateScore {
   /** Pay-less-tax: mean lifetime tax paid (real $) across paths. `undefined` when the run
    *  carried no tax overlay — a tax-goal compare against it fails loud downstream. */
   readonly lifetimeTaxMeanReal: number | undefined
+  /** Pay-less-tax ALL-IN: the mean over paths of the per-path all-in cost (real $) — income tax +
+   *  net ACA premium + Medicare, composed by `lifetimeAllInCostPerPath` and meaned through
+   *  `objectiveHeadline.ts`'s ONE `mean` (the mean of the per-path SUM, never a sum of means).
+   *  Equals `lifetimeTaxMeanReal` bit for bit when healthcare is off. `undefined` without a tax
+   *  overlay. Scored, not yet ranked — `lifetimeTaxMeanReal` keeps meaning income tax alone. */
+  readonly lifetimeAllInCostMeanReal: number | undefined
   /** The GROSS estate (mean terminal real $) — deliberately exposed so the case-(iv) guard
    *  can prove a gross-argmax crowns the WRONG winner (contract #7's inversion witness). */
   readonly terminalGrossMeanReal: number
@@ -94,9 +104,13 @@ export function scoreFromDistribution(dist: Distribution, heirBracket?: number):
   // The mean of the SINGLE-SOURCED per-path bequest vector — byte-identical to the prior inline map.
   const afterTaxVec = heirBracket !== undefined ? afterTaxBequestPerPath(dist, heirBracket) : undefined
   const afterTax = afterTaxVec !== undefined ? mean(afterTaxVec) : undefined
+  // The all-in mean goes through objectiveHeadline's exported `mean` — the SAME function the render
+  // guard recomputes with, so the stored figure and the recompute are one loop (build spec D3).
+  const allInVec = lifetimeAllInCostPerPath(dist)
   return {
     survival: dist.survivalFraction,
     lifetimeTaxMeanReal: ta !== undefined ? mean(ta.lifetimeTaxPaidReal) : undefined,
+    lifetimeAllInCostMeanReal: allInVec !== undefined ? headlineMean(allInVec) : undefined,
     terminalGrossMeanReal: mean(dist.terminalValuesReal),
     afterTaxBequestMeanReal: afterTax,
   }

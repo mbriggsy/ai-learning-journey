@@ -2,13 +2,21 @@ import { describe, it, expect } from 'vitest'
 import { NEVER_DEPLETED, type Distribution, type TaxAwareDistribution } from '@shared/model'
 import {
   afterTaxBequestPerPath,
+  lifetimeAllInCostPerPath,
+  mean as headlineMean,
   headlineStatisticFromDistribution,
   assertObjectiveMatchesHeadline,
   type ObjectiveHeadlinePayload,
   type HeadlineArm,
 } from '../objectiveHeadline'
 import { goalHeadlineStatistic, distributionSkew } from '../objective'
-import { scoreFromDistribution, afterTaxBequestPerPath as afterTaxViaEvaluate } from '../../validation/evaluate'
+import {
+  evaluateCandidates,
+  scoreFromDistribution,
+  afterTaxBequestPerPath as afterTaxViaEvaluate,
+  lifetimeAllInCostPerPath as allInViaEvaluate,
+} from '../../validation/evaluate'
+import { caseConstantRate } from '../../reference/solver-cases'
 import { median, percentile } from '@engine/confidence'
 
 /*
@@ -102,6 +110,80 @@ describe('objectiveHeadline — the pure §1014 formula + the objective≡headli
     // The BASELINE (feeds the delta) is guarded too — a wrong baseline figure bites.
     const badBaseline: ObjectiveHeadlinePayload = { ...bad, winner: arm(distOf({ lifetimeTaxPaidReal: [100, 200, 300] }), 200), noActionBaseline: arm(distOf({ lifetimeTaxPaidReal: [300, 400, 500] }), 111) }
     expect(() => assertObjectiveMatchesHeadline(badBaseline)).toThrow(/no-action baseline/)
+  })
+
+  // --- pay-less-tax ALL-IN (the build spec §3 step 1): the guard's recompute must be the all-in mean ---
+  // A healthcare-PRICED distribution: per-path all-in = tax + net premium + Medicare = [17k, 21k, 25k],
+  // mean 21,000 (hand arithmetic); the income-tax-only mean is 12,000. Both arms are RED on today's
+  // tax-only recompute and stay SKIPPED until Phase B moves `headlineStatisticFromDistribution` onto
+  // `lifetimeAllInCostPerPath` (un-skipped in the switch commit, spec §3 step 12).
+  const pricedAllIn = distOf({
+    lifetimeTaxPaidReal: [10_000, 12_000, 14_000],
+    lifetimeNetPremiumReal: [5_000, 7_000, 9_000],
+    lifetimeMedicareCostReal: [2_000, 2_000, 2_000],
+  })
+  const pricedPayload = (stored: number): ObjectiveHeadlinePayload => ({
+    goal: 'pay-less-tax',
+    heirBracket: undefined,
+    winner: arm(pricedAllIn, stored),
+    runnerUp: undefined,
+    noActionBaseline: arm(pricedAllIn, stored),
+  })
+
+  it('lifetimeAllInCostPerPath sums tax + net premium + Medicare per path (hand arithmetic), and evaluate re-exports the identical function', () => {
+    expect(lifetimeAllInCostPerPath(pricedAllIn)).toEqual([17_000, 21_000, 25_000])
+    expect(lifetimeAllInCostPerPath).toBe(allInViaEvaluate)
+  })
+
+  it('lifetimeAllInCostPerPath is undefined without a tax overlay (no lens — the callers fail loud, burned/062)', () => {
+    const noTax: Distribution = { terminalValuesReal: [1], depletionYears: [NEVER_DEPLETED], survivalFraction: 1 }
+    expect(lifetimeAllInCostPerPath(noTax)).toBeUndefined()
+  })
+
+  it('lifetimeAllInCostPerPath THROWS on parallel arrays of different lengths (insight 010 — never a silent ?? 0)', () => {
+    const shortPremium = distOf({ lifetimeTaxPaidReal: [1, 2, 3], lifetimeNetPremiumReal: [1, 2], lifetimeMedicareCostReal: [0, 0, 0] })
+    expect(() => lifetimeAllInCostPerPath(shortPremium)).toThrow(/length/)
+    const longMedicare = distOf({ lifetimeTaxPaidReal: [1, 2, 3], lifetimeNetPremiumReal: [0, 0, 0], lifetimeMedicareCostReal: [0, 0, 0, 0] })
+    expect(() => lifetimeAllInCostPerPath(longMedicare)).toThrow(/length/)
+  })
+
+  it('scoreFromDistribution stores the mean of the per-path all-in SUM, never a sum of three means (D3)', () => {
+    // Non-dyadic values on purpose: integer fixtures make both orders agree exactly, so they cannot
+    // tell the right composition from the sum-of-means mutant. Here the two orders differ in the last
+    // bits (333748.47666666674 vs 333748.4766666666, hand-checked) — the premise assert proves it.
+    const d = distOf({
+      lifetimeTaxPaidReal: [0.1, 0.7, 1_000_000.3],
+      lifetimeNetPremiumReal: [0.2, 0.4, 1234.56],
+      lifetimeMedicareCostReal: [0.3, 1.1, 7.77],
+    })
+    const ta = d.taxAware!
+    const sumOfMeans =
+      headlineMean(ta.lifetimeTaxPaidReal) + headlineMean(ta.lifetimeNetPremiumReal) + headlineMean(ta.lifetimeMedicareCostReal)
+    const meanOfSum = headlineMean(lifetimeAllInCostPerPath(d)!)
+    expect(Object.is(meanOfSum, sumOfMeans)).toBe(false) // premise: the fixture separates the two orders
+    expect(Object.is(scoreFromDistribution(d).lifetimeAllInCostMeanReal, meanOfSum)).toBe(true)
+  })
+
+  it('healthcare OFF: on a real engine run of case (i) the all-in vector IS the income-tax vector, bit for bit (D5 reduce-to-spine)', () => {
+    const outcomes = evaluateCandidates(caseConstantRate.buildBase(), caseConstantRate.buildCandidates(), caseConstantRate.seed)
+    expect(outcomes.length).toBeGreaterThan(0)
+    for (const o of outcomes) {
+      if (o.kind !== 'scored') throw new Error('case (i) candidates are all feasible')
+      const tax = o.distribution.taxAware!.lifetimeTaxPaidReal
+      const allIn = lifetimeAllInCostPerPath(o.distribution)!
+      expect(allIn.length).toBe(tax.length)
+      tax.forEach((t, p) => expect(allIn[p]).toBe(t))
+      expect(tax.some((t) => t > 0)).toBe(true) // insight 029 — not vacuously tax-free
+      expect(Object.is(headlineMean(allIn), headlineMean(tax))).toBe(true)
+    }
+  })
+
+  it.skip('PHASE B (all-in switch): the guard PASSES a priced payload whose stored figure is mean(per-path all-in)', () => {
+    expect(() => assertObjectiveMatchesHeadline(pricedPayload(21_000))).not.toThrow()
+  })
+
+  it.skip('PHASE B (all-in switch): the guard REFUSES a priced payload whose stored figure is the income-tax-only mean', () => {
+    expect(() => assertObjectiveMatchesHeadline(pricedPayload(12_000))).toThrow(/diverged|ranked/)
   })
 
   it('leave-more: the skew mean IS the winner headline (insight 093) — a desync bites', () => {

@@ -30,7 +30,7 @@ The words are HIS. The build drafts options (§6) and ships none that Briggsy ha
 
 ## 1. Decisions (chair's pick, and why, on each point the specs or readers split)
 
-**D1 One per-path home.** Add `lifetimeAllInCostPerPath(dist): readonly number[] | undefined` to `src/engine/solver/objectiveHeadline.ts`, beside `afterTaxBequestPerPath` (`:39-60`, map).
+**D1 One per-path home.** Add `lifetimeAllInCostPerPath(dist): readonly number[] | undefined` to `src/engine/solver/objectiveHeadline.ts`, beside `afterTaxBequestPerPath` (`:43-64`, map).
 - It returns `undefined` when there is no `taxAware`.
 - It THROWS if the three arrays differ in length (insight 010; no `?? 0`, which is stricter than the bequest helper).
 - It sums `tax[i] + premium[i] + medicare[i]` left to right, in that fixed order.
@@ -38,26 +38,26 @@ The words are HIS. The build drafts options (§6) and ships none that Briggsy ha
 - Re-export it from `evaluate.ts` the way `:35` re-exports the bequest helper.
 - *Why here:* all readers agree. The module imports only `@shared/model` types, so it is safe on the render path.
 
-**D2 New score field; keep the old one.** Add `CandidateScore.lifetimeAllInCostMeanReal: number | undefined = mean(lifetimeAllInCostPerPath(dist))`, computed with `evaluate.ts`'s own `mean` (`:80`, map).
+**D2 New score field; keep the old one.** Add `CandidateScore.lifetimeAllInCostMeanReal: number | undefined = mean(lifetimeAllInCostPerPath(dist))`, computed with `evaluate.ts`'s own `mean` (`:90`, map).
 - KEEP `lifetimeTaxMeanReal` (`:99`) as income tax. These read it as income tax:
-  - the oracle's hand-derived pins (`optimalityOracle.test.ts:64-98, :186-221`, map: case ii is "the world's ONLY tax", and NC is fed+state exact);
+  - the oracle's hand-derived pins (`optimalityOracle.test.ts:67-101, :217-276`, map: case ii is "the world's ONLY tax", and NC is fed+state exact);
   - `nearTieInversion.ts:183-184`;
   - `blockBootstrap.test.ts:217-218`.
 - *Why:* every reader converged on this. Redefining the field in place would make its name lie, and the oracle's income-tax pins would then pass only because the premium is 0. That proves typing, not correctness (DND 012).
 
 **D3 The mean is the mean of the per-path sum, NEVER `mean(tax)+mean(prem)+mean(med)`.**
-- `assertObjectiveMatchesHeadline` compares with strict `!==` (`objectiveHeadline.ts:136`, map).
+- `assertObjectiveMatchesHeadline` compares with strict `!==` (`objectiveHeadline.ts:176`, map).
 - The two orders differ by float dust on every healthcare-priced run. Every live pay-less-tax solve would then route to calm-unavailable, and healthcare-off fixtures would hide it.
 - Both homes therefore import the ONE function.
-- ⚑ SKEPTIC: strict equality ALSO rests on the two private `mean` copies (`evaluate.ts:~75-85`, `objectiveHeadline.ts:29-37`) staying byte-identical loops. Have `scoreFromDistribution`'s all-in mean import ONE shared `mean` from `objectiveHeadline.ts`, and keep the cross-home `Object.is` arm (§5.2) as the pin.
+- ⚑ SKEPTIC: strict equality ALSO rests on the two private `mean` copies (`evaluate.ts:~75-85`, `objectiveHeadline.ts:29-41`) staying byte-identical loops. Have `scoreFromDistribution`'s all-in mean import ONE shared `mean` from `objectiveHeadline.ts`, and keep the cross-home `Object.is` arm (§5.2) as the pin.
 
 **D4 Five read sites move in one commit.**
 
 | # | Site | Today | After |
 |---|---|---|---|
-| 1 | `evaluate.ts:99` + `tier2` `:217-221` (map) | `mean(ta.lifetimeTaxPaidReal)` / `lifetimeTaxMeanReal` | fill D2; tier2 reads `lifetimeAllInCostMeanReal`; keep the burned/062 throw |
+| 1 | `evaluate.ts:112` + `tier2` `:231-235` (map) | `mean(ta.lifetimeTaxPaidReal)` / `lifetimeTaxMeanReal` | fill D2; tier2 reads `lifetimeAllInCostMeanReal`; keep the burned/062 throw |
 | 2 | `objective.ts:72-77` goalHeadlineStatistic (read) | `score.lifetimeTaxMeanReal` | the D2 field, same throw; re-word the docblock `:59-67` and the error text; `goalHigherIsBetter` stays false |
-| 3 | `objectiveHeadline.ts:74-82` headlineStatisticFromDistribution (map) | `mean(ta.lifetimeTaxPaidReal)` | `mean(lifetimeAllInCostPerPath(dist))`; re-word `:62-69` |
+| 3 | `objectiveHeadline.ts:114-122` headlineStatisticFromDistribution (map) | `mean(ta.lifetimeTaxPaidReal)` | `mean(lifetimeAllInCostPerPath(dist))`; re-word `:62-69` |
 | 4 | `select.ts:190-195` goalPerPathA (read) | `taxAware?.lifetimeTaxPaidReal` (if-chain) | `lifetimeAllInCostPerPath(outcome.distribution)`; convert to the exhaustive switch + never-guard idiom; docblock `:187-189` |
 | 5 | `gradeCalibration.ts:260-268` pairedDecisionDiffs (read) | runner − winner over `lifetimeTaxPaidReal` (if-chain) | runner − winner over D1, refusing undefined; exhaustive switch; docblock `:240` |
 
@@ -86,12 +86,12 @@ The MEASURED probe substituted its vector before `adoptObservedOutcome`. The gra
 Result: the all-in vector equals the tax vector element by element, and its mean, SE, grade diffs and headline are bit-identical. The goldens and the two healthcare-OFF pay-less-tax oracle cases cannot move: `caseConstantRate.ts:149` and `caseNoChange.ts:56`, and `healthcareEnabled` appears only in caseAcaCliff (map).
 
 **D6 Finiteness seam.**
-- Add `!Number.isFinite(taxRes.totalNetPremiumReal) || !Number.isFinite(taxRes.totalMedicareCostReal)` to `simulate.ts:1711-1723` (read: today it checks terminal, tax, basis and buckets only).
+- Add `!Number.isFinite(taxRes.totalNetPremiumReal) || !Number.isFinite(taxRes.totalMedicareCostReal)` to `simulate.ts:1717-1731` (read: today it checks terminal, tax, basis and buckets only).
 - *Chair's pick:* the full arm ONLY. `floorTaxRes` has the same type (`:1648`, read), but no ranked statistic reads the floor arm's premium. The existing floor clause checks terminal + tax for the same reason.
 - It is throw-or-nothing, so no value moves. A non-finite value then takes the typed infeasible route instead of throwing in `mean` and aborting the batch.
 - ⚑ SKEPTIC: D6 lands in the SAME Phase A commit as the D2 field (the new `mean` throw path must never exist without its seam). In principle it can mark a previously scored candidate infeasible (`solverCodeVersion.ts:12-21`: bump on anything that can move a ranking); in practice it is measure-zero (the premium sits inside `grossWithdrawal`, so an overflow hits `terminalReal` first). The Phase A commit and the VERSION 10 block both say so: unreachable in practice, landed before the bump.
 
-**D7 The hero's scope follows the run's BUILT pricing state.** ⚑ SKEPTIC (wrong premise, corrected): live runs do NOT always price healthcare. `intakeMap.ts:673-686` sets `healthcareEnabled` only when `healthcareOn` (both ACA quotes entered + someone under 65, `:607`, `:762-768`) or `medicareOnly` (EVERY member 65+, `:784-790`); `missingRequiredFacts` (`:159-175`) does not require the quotes. Two live cohorts therefore solve with healthcare OFF: (a) a pre-65 household that skipped the quotes; (b) a mixed-age household with no quotes (the 65+ member's Medicare unpriced too). On them all-in ≡ income tax (D5), so the engine is right, and a hero claiming premiums were counted would be calm-but-wrong copy. So the hero and the scope disclosure key on `base.overlay.healthcareEnabled` (the predicate the spine route, `intakeMap.ts:792-801`, and the Medicare / ACA disclosure seams already read), with a PRICED arm and an UNPRICED arm (§6). The test: the hero arm follows `overlay.healthcareEnabled` on both values, with a planted unpriced pre-65 household. The cohort is named in the word packet so Briggsy rules on its words.
+**D7 The hero's scope follows the run's BUILT pricing state.** ⚑ RESOLVED 2026-10-05 at source (Phase A's implementer + both reviewers, re-read by the pilot): the skeptic's correction below was ITSELF wrong — `missingRequiredFacts` REQUIRES both ACA quotes for any household with a pre-65 or not-yet-known age (`intakeMap.ts:212-219`, `anyPre65OrUnknown`), an all-65+ household takes the Medicare-only branch (`medicareOnlyPriced`, `:784-790`), and the one healthcare-off overlay left (the degenerate $0-accounts early return) is refused as `no-pretax` before any solve. So every live solve today prices healthcare, and cohorts (a) / (b) below cannot reach one. The UNPRICED arm is kept as DEFENCE-IN-DEPTH, keyed on the built predicate (the `spineMedicarePriced` idiom), so a future intake change that drops a quote can never make the hero claim premiums it did not count; its Phase B test builds a base directly with `overlay.healthcareEnabled` false. Phase A's `solveDispatch.test.ts` arm pins the refusal (a pre-65 household without quotes is `spine-unready`) — if the quotes ever become optional it reds and the unpriced arm is re-checked. Briggsy's words for that arm (today's string) stand; only the reason changed. *The original skeptic text, kept so the drift stays visible:* live runs do NOT always price healthcare. `intakeMap.ts:673-686` sets `healthcareEnabled` only when `healthcareOn` (both ACA quotes entered + someone under 65, `:607`, `:762-768`) or `medicareOnly` (EVERY member 65+, `:784-790`); `missingRequiredFacts` (`:159-175`) does not require the quotes. Two live cohorts therefore solve with healthcare OFF: (a) a pre-65 household that skipped the quotes; (b) a mixed-age household with no quotes (the 65+ member's Medicare unpriced too). On them all-in ≡ income tax (D5), so the engine is right, and a hero claiming premiums were counted would be calm-but-wrong copy. So the hero and the scope disclosure key on `base.overlay.healthcareEnabled` (the predicate the spine route, `intakeMap.ts:792-801`, and the Medicare / ACA disclosure seams already read), with a PRICED arm and an UNPRICED arm (§6). The test: the hero arm follows `overlay.healthcareEnabled` on both values, with a planted unpriced pre-65 household. The cohort is named in the word packet so Briggsy rules on its words.
 
 **D8 Versioning.**
 - `SOLVER_CODE_VERSION` 9 → 10 (`solverCodeVersion.ts:114`, read), in the SWITCH commit only. Add a VERSION 10 block saying:
@@ -100,8 +100,8 @@ Result: the all-in vector equals the tax vector element by element, and its mean
   - the stamp is global, so leave-more records re-stale too. That over-re-run is accepted under the file's when-in-doubt rule.
 - Re-pin `pricingVersion.test.ts:141-152` to `{ solverCodeVersion: 10, newestRepriceRow: 7 }`, and retitle it "v8, v9 and v10 were ranking logic only".
 - **No ledger row** (`pricingVersion.ts:38-45`): no figure from a saved household's spine recompute moves. `FIRST_UNAMBIGUOUS_SAVE_DAY` stays put.
-- **No `FINGERPRINT_SCHEMA` bump and no objective tag** (`solverRunFingerprint.ts:62-64`). Either would add a false 'inputs-changed' cause, which renders "Your numbers have changed since then." (`copy.ts:1682`). Saved records must report ONE cause, 'solver-changed', which renders "The way strategies are worked out has changed since then." (the string is at `copy.ts:1685`, mapped from the cause at `Result.tsx:85`). That sentence is true. Records persist no dollar figure (`model.ts:1891-1953`).
-- **Persisted id `'pay-less-tax'` stays.** It lives in `model.ts:270` RECOMMENDATION_GOALS, the codec needVocab gate (`:1809`) and the fingerprint canon (`:121`). Renaming it is a one-way door: memories dropped, plus a false 'inputs-changed'.
+- **No `FINGERPRINT_SCHEMA` bump and no objective tag** (`solverRunFingerprint.ts:62-64`). Either would add a false 'inputs-changed' cause, which renders "Your numbers have changed since then." (`copy.ts:1682`). Saved records must report ONE cause, 'solver-changed', which renders "The way strategies are worked out has changed since then." (the string is at `copy.ts:1685`, mapped from the cause at `Result.tsx:85`). That sentence is true. Records persist no dollar figure (`model.ts:1896-1958`).
+- **Persisted id `'pay-less-tax'` stays.** It lives in `model.ts:270` RECOMMENDATION_GOALS, the codec needVocab gate (`:1814`) and the fingerprint canon (`:121`). Renaming it is a one-way door: memories dropped, plus a false 'inputs-changed'.
 - **v10 collision:** `council-log.md:14` and `backlog.md:864-873` earmark v10 for the unmerged gap-fill (`b9-v10-gapfill-wip`). Note in the register's recall entry: "v10 = the all-in objective; a revived gap-fill re-measures on all-in and takes a later version." The council rows stay as records.
 
 ## 2. Every site
@@ -112,12 +112,12 @@ Result: the all-in vector equals the tax vector element by element, and its mean
 - `objective.ts`: site 2.
 - `select.ts`: site 4.
 - `gradeCalibration.ts`: site 5.
-- `simulate.ts:1711-1723`: D6.
+- `simulate.ts:1717-1731`: D6.
 - `solverCodeVersion.ts`: D8.
 - NEW `reference/solver-cases/caseAllInAcaTrap.ts` plus its `index.ts` entry (§5.1).
 
 **Docblock only:**
-- ⚑ SKEPTIC (missing site): `src/shared/model.ts:797-799` documents `lifetimeMedicareCostReal` as "base Part B + the IRMAA surcharge", but `taxOverlay.ts:1867` accrues `medicareCostThisYear + medicareExtrasThisYear` (the Part D / Medigap / MA extras). Re-word it to "base Part B + IRMAA + the Part D / Medigap / MA extras (`taxOverlay.ts:1867`), an addend of the pay-less-tax all-in objective", and note at `model.ts:770-773` ("the P4 objective reads THESE") that pay-less-tax now ranks on tax + premium + Medicare. No type change; Phase A.
+- ⚑ SKEPTIC (missing site): `src/shared/model.ts:797-799` (pre-Phase-A lines; as built the field is at `model.ts:804`) documents `lifetimeMedicareCostReal` as "base Part B + the IRMAA surcharge", but `taxOverlay.ts:1867` accrues `medicareCostThisYear + medicareExtrasThisYear` (the Part D / Medigap / MA extras). Re-word it to "base Part B + IRMAA + the Part D / Medigap / MA extras (`taxOverlay.ts:1867`), an addend of the pay-less-tax all-in objective", and note at `model.ts:770-773` ("the P4 objective reads THESE") that pay-less-tax now ranks on tax + premium + Medicare. No type change; Phase A.
 - `solve.ts:211-221, :381-386` (deltaSkew wording).
 - `stateTaxDisclosure.ts:150-153`: the priced-state layer reaches the hero through the tax addend; the logic is unchanged.
 - `recommendationView.ts:89` and `:676`.
@@ -162,7 +162,7 @@ The viz suppression off leave-more stays correct, because all-in is still lower-
    - the length-mismatch throw;
    - undefined without taxAware;
    - a healthcare-off identity on a real engine run of caseConstantRate: `toBe` per element plus `Object.is` on the mean against `lifetimeTaxPaidReal`.
-3. Add `lifetimeAllInCostMeanReal` to CandidateScore. It is required, so the typecheck reds in `select.test.ts:44, :425` and `gradeCalibration.test.ts:56` (map). That is the intended failure; fix them.
+3. Add `lifetimeAllInCostMeanReal` to CandidateScore. It is required, so the typecheck reds in `select.test.ts:44, :426` and `gradeCalibration.test.ts:56` (map). That is the intended failure; fix them.
 4. Add the D6 finiteness seam, with a mutant arm: a NaN premium routes the candidate infeasible.
 5. Add reduction arms OVER caseConstantRate and caseNoChange. ⚑ SKEPTIC: the arms live in the TEST files (`optimalityOracle.test.ts` or a new reduction test) and read the cases' outcomes; the case modules stay BYTE-UNCHANGED (they are `SOLVER_CASES` members run inside every live mint, `solveEntry.ts:173`, and goldens are never perturbed). They are green now and act as mutant guards:
    - every outcome's premium and Medicare vectors are exactly 0;
@@ -265,7 +265,7 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 - the all-in ranking = `expectedRankingIds`;
 - the income-tax ranking is the reverse (case iii's blind-counterfactual idiom, via `lifetimeTaxMeanReal`);
 - the hand dollars for tax, premium and all-in, `toBeCloseTo(…,2)`;
-- draw invariance at a second seed (`optimalityOracle.test.ts:108` idiom).
+- draw invariance at a second seed (`optimalityOracle.test.ts:111` idiom).
 
 ⚑ SKEPTIC: **the cliff margin.** $84k at ~3.97 FPL sits only ~$600 under the 400 % line, so a routine FPL re-pin could push it over, and every live solve would mint-fail. Choose A with ≥ ~5 % of FPL of margin under the 400 % line, inside the flat applicable-percentage band at both edges. Better still, have `expected()` CHOOSE A from the table (e.g. 3.8 × FPL, rounded) so a re-pin moves the fixture instead of breaking it, and re-derive the gap there.
 
@@ -336,13 +336,13 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
   - ACA-priced: "Keeps about $X more out of your lifetime tax, marketplace premiums and Medicare costs than today’s plan."
   - All-65+: "Keeps about $X more out of your lifetime tax and Medicare costs than today’s plan."
 
-**UNPRICED arm (⚑ SKEPTIC, D7 — HIS).** A run with `overlay.healthcareEnabled` off (a pre-65 household that skipped the quotes, or a mixed-age one with none) ranks on income tax alone, because there all-in ≡ income tax (D5). Its hero must not claim premiums were counted. Lean: keep today's string unchanged for that arm ("Keeps about $X more out of your lifetime tax than today’s plan."), which is true there; options C and D need their own third arm.
+**UNPRICED arm (D7 — HIS; unreachable from intake today, kept as defence-in-depth — see D7).** A run with `overlay.healthcareEnabled` off ranks on income tax alone, because there all-in ≡ income tax (D5). Its hero must not claim premiums were counted. Lean: keep today's string unchanged for that arm ("Keeps about $X more out of your lifetime tax than today’s plan."), which is true there; options C and D need their own third arm.
 
 **Gloss `goalPayLessTaxGloss`.** Today: "Less total tax over your lifetime." It is FALSE after the switch, so it MUST change.
 - **G1 (lean, HIS):** "Less total tax over your lifetime, with health-insurance premiums counted too."
 - **G2 (HIS):** "Less paid over your lifetime in tax and health-insurance premiums."
 - Check the 390 px wrap (vertical-fit GoalPicker arm, `:669`).
-- ⚑ (pilot, folding D7) The gloss renders in the GoalPicker on the unpriced cohort too, where no premium is counted. So G1 / G2 either gate on the same built predicate, or use a wording true on both arms (e.g. "Less paid over your lifetime in tax, and in the health-insurance premiums the plan prices"). His call, made with the hero.
+- ⚑ (pilot, folding D7) The gloss would render on an unpriced run too (unreachable from intake today — D7), where no premium is counted. So G1 / G2 either gate on the same built predicate, or use a wording true on both arms (e.g. "Less paid over your lifetime in tax, and in the health-insurance premiums the plan prices"). His call, made with the hero.
 
 **Label "Pay less tax": lean KEEP (HIS call).**
 - His ruling covered the objective and the hero, not the D1/R21 vocabulary.
@@ -381,7 +381,7 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 - **`docs/architecture.md` §7.5 `:225`:** the three addends, the one composing function, and the invariants: shared footing (with the funded-years bias named), reduce-to-spine, no double count, HSA not an addend.
 - **`docs/plans/1-engine.md:121`:** a one-clause annotation.
 - **`act4-u16-recommendation-surface-build-spec.md:373, :378-385`:** "all-in lifetime cost, lower is better", plus the re-scoped disclosure list.
-- **`docs/glossary.md`:** a new entry "All-in cost (pay-less-tax objective)". ⚑ Disambiguate it from "all-in" as the Medicare base + Part D/Medigap figure (`council-log.md:21`, the `taxOverlay.ts:1865` comment), from the premiums-only median sum the U11 regime-toggle preview reads (`roth.ts:144`, documented at `model.ts:792-795`), and from "Household spending, all in" (`council-log.md:40`): three referents (⚑ SKEPTIC). Re-check `:145` against the final verb.
+- **`docs/glossary.md`:** a new entry "All-in cost (pay-less-tax objective)". ⚑ Disambiguate it from "all-in" as the Medicare base + Part D/Medigap figure (`council-log.md:21`, the `taxOverlay.ts:1865` comment), from the premiums-only median sum the U11 regime-toggle preview reads (`roth.ts:144`, documented at `model.ts:796-799`), and from "Household spending, all in" (`council-log.md:40`): three referents (⚑ SKEPTIC). Re-check `:145` against the final verb.
 - **`docs/roadmap.md:95`:** the fixture count.
 - **`backlog.md`:** Phase C step 19.
 
@@ -423,7 +423,7 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 
 ## 10. NEGATIVEs
 
-- ⚑ Never change `tieTolerance` (`solveDispatch.ts:106`) or the `select.test.ts:524-548` arms.
+- ⚑ Never change `tieTolerance` (`solveDispatch.ts:106`) or the `select.test.ts:526-550` arms.
 - ⚑ Never redefine `lifetimeTaxMeanReal`, `taxAware.lifetimeTaxPaidReal` or `totalTaxPaidReal`.
 - ⚑ Never add a Distribution, wire, accumulator or persisted field, or touch the accrual math.
 - ⚑ Never compute all-in as a sum of means.

@@ -770,7 +770,11 @@ export interface DollarAdjustment {
  *
  *  These are parallel ACCOUNTING surfaces (the `totalNetPremiumReal` pattern): they never
  *  perturb the headline trajectory, and `objective ≡ headline` means the P4 objective
- *  reads THESE — never recomputes them in objective.ts (the M3 sign-inversion class). */
+ *  reads THESE — never recomputes them in objective.ts (the M3 sign-inversion class). The
+ *  pay-less-tax ALL-IN cost (Briggsy's 2026-10-05 ruling) is income tax + net premium +
+ *  Medicare, summed per path from `lifetimeTaxPaidReal`, `lifetimeNetPremiumReal` and
+ *  `lifetimeMedicareCostReal` in ONE home (`objectiveHeadline.ts`'s
+ *  `lifetimeAllInCostPerPath`). */
 export interface TaxAwareDistribution {
   /** Σ income tax actually paid across the path's funded years (real $; federal ordinary +
    *  preferential cap-gains PLUS the priced-state flat layer for a PRICED_STATES household —
@@ -794,8 +798,9 @@ export interface TaxAwareDistribution {
    *  `lifetimeNetPremiumReal + lifetimeMedicareCostReal` per arm — the regime's effect
    *  concentrates in the pre-65 ACA years and may barely move the portfolio median. */
   readonly lifetimeNetPremiumReal: readonly number[]
-  /** Σ Medicare cost actually paid across the path's funded years (real $; base Part B + the
-   *  IRMAA surcharge, per enrolled person — P3·U11). Same accrual rule as its siblings. */
+  /** Σ Medicare cost actually paid across the path's funded years (real $; base Part B + IRMAA +
+   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:1867`; P3·U11), an
+   *  addend of the pay-less-tax all-in cost. Same accrual rule as its siblings. */
   readonly lifetimeMedicareCostReal: readonly number[]
 }
 

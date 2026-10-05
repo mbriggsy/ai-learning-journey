@@ -9,7 +9,8 @@
  * §1014/IRD bequest formula (`afterTaxBequestPerPath`, the M3 sign-inversion class the architecture
  * guards) was re-homed HERE, out of `evaluate.ts`, and `evaluate.ts` re-exports it verbatim: one
  * source of the formula, importable by the render path WITHOUT dragging `simulate` into the entry
- * bundle. This module imports ONLY `@shared/model` types — nothing runtime-heavy.
+ * bundle. This module imports ONLY `@shared/model` types — nothing runtime-heavy. The pay-less-tax
+ * ALL-IN per-path sum (`lifetimeAllInCostPerPath`) is homed here for the same reason.
  *
  * THE GUARD (§Q6, burned/070). `assertObjectiveMatchesHeadline` RE-COMPUTES each displayed arm's goal
  * headline statistic from that arm's OWN seed-B distribution and refuses a payload whose stored
@@ -25,8 +26,11 @@ import type { Distribution, RecommendationGoal } from '@shared/model'
 
 /** Left-to-right sum ÷ length, with the insight-010 non-finite refusal (a NaN makes every downstream
  *  compare arbitrary). BYTE-IDENTICAL summation order to `evaluate.ts`'s `mean`, so a figure this
- *  recomputes `===` the figure `scoreFromDistribution` stored — the guard's strict-equality relies on it. */
-function mean(xs: readonly number[]): number {
+ *  recomputes `===` the figure `scoreFromDistribution` stored — the guard's strict-equality relies on it.
+ *  EXPORTED for the pay-less-tax all-in mean: `scoreFromDistribution` means `lifetimeAllInCostPerPath`
+ *  through THIS function (not its own copy), so the stored all-in figure and this module's recompute
+ *  share one loop by construction rather than by two copies staying identical (build spec D3). */
+export function mean(xs: readonly number[]): number {
   if (xs.length === 0) throw new Error('[objectiveHeadline] mean of an empty array (insight 010 — refuse, never NaN)')
   let s = 0
   for (const x of xs) {
@@ -57,6 +61,42 @@ export function afterTaxBequestPerPath(dist: Distribution, heirBracket: number):
       (ta.terminalRothReal[p] ?? 0) + // tax-free
       (ta.terminalHsaReal[p] ?? 0) * (1 - heirBracket), // taxable to a non-spouse heir (first-order)
   )
+}
+
+/**
+ * The per-path ALL-IN COST VECTOR (real $) — the pay-less-tax objective's per-path quantity under
+ * Briggsy's 2026-10-05 "All-in cost" ruling: lifetime income tax (federal + any priced state layer)
+ * + lifetime net ACA premium (after the PTC) + lifetime Medicare cost (base Part B + IRMAA + the
+ * Part D / Medigap / MA extras). SINGLE-SOURCED HERE: every pay-less-tax read site composes the sum
+ * through this ONE function, so the ranked mean, the paired SE vector, the grade diffs and the
+ * displayed headline can never describe two different "all-in"s — and the mean is always the mean of
+ * the per-path SUM, never a sum of three means (which differs by float dust and would trip the guard's
+ * strict `!==` on every priced run).
+ *
+ * THE ADDENDS ARE DISJOINT (no double count), per `taxOverlay.ts`:
+ *  - the premium is taken OUT of the year's tax (`:1805`, `taxPaid = gross − fundingNet − premium`);
+ *  - Medicare is funded outside the tax identity (`:1659`, it rides `fundingNet`, not the tax);
+ *  - all three accrue together on the same after-depletion footing (`:1860-1871`).
+ * `totalQualifiedHsaSpendReal` (`:1869`) is a FUNDING SOURCE for those costs, NOT an addend.
+ *
+ * Healthcare OFF, the premium and Medicare vectors are exact +0 and `(t + 0) + 0 === t`, so this vector
+ * IS `lifetimeTaxPaidReal` element by element (reduce-to-spine). `undefined` when the run carried no tax
+ * overlay. THROWS when the three parallel arrays differ in length (insight 010 — a silent `?? 0` would
+ * fabricate a free path). Sum order is fixed: tax, then premium, then Medicare. Pure.
+ */
+export function lifetimeAllInCostPerPath(dist: Distribution): readonly number[] | undefined {
+  const ta = dist.taxAware
+  if (ta === undefined) return undefined
+  const tax = ta.lifetimeTaxPaidReal
+  const premium = ta.lifetimeNetPremiumReal
+  const medicare = ta.lifetimeMedicareCostReal
+  if (premium.length !== tax.length || medicare.length !== tax.length) {
+    throw new Error(
+      `[objectiveHeadline] all-in cost: the parallel per-path arrays differ in length (tax ${tax.length}, ` +
+        `premium ${premium.length}, Medicare ${medicare.length}) — insight 010, refuse, never a silent ?? 0`,
+    )
+  }
+  return tax.map((t, p) => t + premium[p]! + medicare[p]!)
 }
 
 /**

@@ -53,7 +53,7 @@ describe('pairedDecisionDiffs — the winner-positive orientation, numerically p
     return {
       kind: 'scored',
       candidate: dummy,
-      score: { survival: 1, lifetimeTaxMeanReal: undefined, terminalGrossMeanReal: 0, afterTaxBequestMeanReal: undefined },
+      score: { survival: 1, lifetimeTaxMeanReal: undefined, lifetimeAllInCostMeanReal: undefined, terminalGrossMeanReal: 0, afterTaxBequestMeanReal: undefined },
       distribution: {
         terminalValuesReal: zeros,
         depletionYears: over.depletionYears ?? new Array(n).fill(NEVER_DEPLETED),

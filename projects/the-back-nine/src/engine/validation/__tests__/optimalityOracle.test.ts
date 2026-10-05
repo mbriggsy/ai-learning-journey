@@ -20,6 +20,8 @@ import {
   caseNoChange,
   caseStateNc,
   caseStatePa,
+  handBandTop,
+  handStandardDeduction,
   solverCandidateId,
   CASE_III_OVER_AMOUNT,
   CASE_III_UNDER_AMOUNT,
@@ -32,6 +34,7 @@ import {
 import {
   collectCandidateOutcome,
   evaluateCandidates,
+  lifetimeAllInCostPerPath,
   rankCandidates,
   scoreFromDistribution,
   type CandidateOutcome,
@@ -149,6 +152,34 @@ describe('case (iii) — the ACA cliff: the true ranking, the hand-exact premium
   it('survival is 1.0 for every candidate — the inversion is priced, never a fabricated depletion', () => {
     for (const o of scoredOf(verdict.outcomes)) expect(o.score.survival).toBe(1)
   })
+
+  it('the pay-less-tax ALL-IN dollars re-derive by hand (tax + premium, Medicare 0) — the ACA addend proven before any switch (build spec §3 step 7)', () => {
+    // Goal-neutral: this world still RANKS leave-more; the arm only proves the all-in composition's
+    // dollars on a healthcare-PRICED engine run, independently. In the 12% band T(m) = 0.12·m − c,
+    // c = 0.12·(SD + e10) − 0.10·e10, re-derived HERE from the hand tables (never read off the fixture);
+    // the equilibrium MAGIs and the premiums are the case's own closed forms (caseAcaCliff.ts:19-36).
+    const sd = handStandardDeduction('mfj')
+    const e10 = handBandTop(0.1, 'mfj')
+    const c = 0.12 * (sd + e10) - 0.1 * e10
+    const T = (m: number): number => 0.12 * m - c
+    const taxConv0 = 5 * T(exp.mBase!)
+    const taxUnder = 3 * T(exp.mUnder!) + 2 * T(exp.mBase!)
+    const taxOver = 3 * T(exp.mOver!) + 2 * T(exp.mBase!)
+    const rows = [
+      { id: 'grid:pre-tax-first:0', tax: taxConv0, premiums: exp.premiumsConv0! },
+      { id: `grid:pre-tax-first:${CASE_III_UNDER_AMOUNT}`, tax: taxUnder, premiums: exp.premiumsUnder! },
+      { id: `grid:pre-tax-first:${CASE_III_OVER_AMOUNT}`, tax: taxOver, premiums: exp.premiumsOver! },
+    ]
+    for (const { id, tax, premiums } of rows) {
+      const o = byId(verdict.outcomes, id)
+      // Medicare is EXACTLY 0 (ages 60–64, no enrollment) — the all-in is tax + premium alone here.
+      expect(o.distribution.taxAware!.lifetimeMedicareCostReal.every((x) => Object.is(x, 0))).toBe(true)
+      expect(o.score.lifetimeTaxMeanReal).toBeCloseTo(tax, 2)
+      expect(meanOf(lifetimeAllInCostPerPath(o.distribution)!)).toBeCloseTo(tax + premiums, 2)
+      expect(o.score.lifetimeAllInCostMeanReal).toBeCloseTo(tax + premiums, 2)
+      expect(premiums).toBeGreaterThan(0) // insight 029 — the addend is live, not vacuously zero
+    }
+  })
 })
 
 describe('case (iv) — the §1014/IRD inversion: the gross argmax is the after-tax loser (the fails-loud control)', () => {
@@ -188,6 +219,30 @@ describe('case (v) — the no-change routing: the LABELED conventional baseline 
     expect(byId(verdict.outcomes, 'conventional:taxable-first:0').score.lifetimeTaxMeanReal).toBeCloseTo(exp.lifetimeTaxTaxableFirst!, 2)
     expect(byId(verdict.outcomes, 'grid:pre-tax-first:0').score.lifetimeTaxMeanReal).toBeCloseTo(exp.lifetimeTaxPretaxFirst!, 2)
   })
+})
+
+describe('the pay-less-tax ALL-IN reduction (build spec D5) — healthcare OFF, the all-in statistic IS the income-tax statistic, bit for bit', () => {
+  // Read off the two healthcare-OFF pay-less-tax cases' OWN outcomes; the case modules stay byte-unchanged
+  // (they run inside every live mint). Green before the switch, and mutant guards after it: a constant
+  // added to the composition reds these (a sum-of-means does NOT — it is exact on zero premiums; the
+  // Phase B cross-home Object.is pin on a PRICED distribution is that mutant's guard).
+  for (const fixture of [caseConstantRate, caseNoChange]) {
+    it(`${fixture.id}: premium + Medicare are exactly 0; the all-in vector and mean are the tax vector and mean (toBe)`, () => {
+      expect(fixture.goal).toBe('pay-less-tax')
+      expect(fixture.buildBase().overlay?.healthcareEnabled).not.toBe(true)
+      const scored = scoredOf(checkOracleCase(fixture).outcomes)
+      expect(scored.length).toBeGreaterThan(0)
+      for (const o of scored) {
+        const ta = o.distribution.taxAware!
+        expect(ta.lifetimeNetPremiumReal.every((x) => Object.is(x, 0))).toBe(true)
+        expect(ta.lifetimeMedicareCostReal.every((x) => Object.is(x, 0))).toBe(true)
+        expect(o.score.lifetimeAllInCostMeanReal).toBe(o.score.lifetimeTaxMeanReal)
+        const allIn = lifetimeAllInCostPerPath(o.distribution)!
+        expect(allIn.length).toBe(ta.lifetimeTaxPaidReal.length)
+        ta.lifetimeTaxPaidReal.forEach((t, p) => expect(allIn[p]).toBe(t))
+      }
+    })
+  }
 })
 
 describe('the state companions — the NC flip, the NC dollars, and the PA byte-identity', () => {

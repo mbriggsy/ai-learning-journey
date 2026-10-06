@@ -37,6 +37,7 @@ import { sourced, isCalibrated, type Sourced } from '@engine/constants'
  */
 export const solverInteractivePaths: Sourced<number> = sourced(4_000, {
   citation:
+    'RE-MEASURED 2026-10-06 after the pay-less-tax ALL-IN switch (SOLVER_CODE_VERSION 10; the objective-statistic trigger): scripts/calibrate-fallback.ts on the reference laptop again — rung 1000 diverged on W2 only, rungs 2000/4000/8000 matched the 16k truth on every cell (W2 now crowns grid:taxable-first:30000 on the all-in statistic), W1 3.82s per candidate → all three knobs UNCHANGED (4000 / 5 / 2). ' +
     'PINNED 2026-07-22 — the §S0.1 reference-device calibration (scripts/calibrate-fallback.ts on the reference laptop, U16 council wf_8d4c6f65-415 Q3: RANK-STABILITY, never latency): through the SHIPPED runSearch→selectRecommendation at tieTolerance 0 (the STRICTEST regime — a looser live tolerance only makes flips rarer), rung 1000 DIVERGED on both hard cells (the worst-case 8-roster world AND the Q4d near-tie grid — the requirement is real), rungs 2000/4000/8000 matched the 16k-truth crown on every cell, monotone. Smallest all-match rung 2000 + one rung headroom → 4000 (the class-plus-headroom idiom).',
   directionalUntilPinned: false,
   directionalKind: 'methodology-substrate',

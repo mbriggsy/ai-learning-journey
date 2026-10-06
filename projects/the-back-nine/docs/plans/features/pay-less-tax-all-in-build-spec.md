@@ -129,7 +129,7 @@ The viz suppression off leave-more stays correct, because all-in is still lower-
 **Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:2995-2996`, read), `goalPayLessTaxGloss` (`:1785`), `recDiscNiit` (`:1956-1957`), `recDiscStateTax` (`:1961-1962`), the optional new `recDisc*`, and `recDeltaTypical*` (`:3023-3042`) only under a "$X less" hero.
 
 **Calibration:**
-- Add "an objective-statistic change" to the RE-MEASURE triggers at `fallback.ts:41, :55, :69` (map).
+- Add "an objective-statistic change" to the RE-MEASURE triggers at `fallback.ts:42, :56, :70` (map).
 - Re-run `scripts/calibrate-fallback.ts` (W2, `:146-157`) on the built tree (Phase C).
 - No live consumer today (`fallback.ts:9-10`).
 

@@ -51,18 +51,12 @@
    check is §2 and done). Inputs are all in the inbox (`sleeper_transactions.json`,
    `sleeper_rosters.json`, `sleeper_state.json`, trending add/drop). Waivers clear **Wed ~03:15 ET**,
    measured twice (09-16, 09-23). Read Hunter's transaction log first, every Wednesday.
-5. **Fold the in-season browser mechanics into the `sleeper-draft-room` skill** (its self-test is
-   draft-room-only, so every roster move re-derives these). Measured and working 2026-09-25:
-   - Lineup: `/leagues/<id>/team`; each row's `a.link-button.cell-position` owns `onClick`. Click the
-     starter's `<a>`, then the bench player's `<a>`. Scope a row to the smallest ancestor holding
-     exactly ONE `.cell-position` — walking up a fixed 4 levels matches the whole list.
-   - Add/drop: `/leagues/<id>/players`; the row's `a.player-action-button.add` owns `onClick`
-     (`.waiver` instead = a claim, not an instant add); the modal's rows are
-     `a.link-button.team-roster-item` (click → `.selected`); then the `<button>` reading `ADD PLAYER`.
-     Row text carries newlines — normalise `\s+` before any regex.
-   - 🚨 **An added DEF lands on the BENCH and leaves the DEF slot `"0"` (empty).** Always re-read
-     `starters` on `/rosters` after an add and move the body in.
-   - The league nav tabs are icon-only (no text); navigate by URL (`/team`, `/players`).
+5. ~~**Fold the in-season browser mechanics into the `sleeper-draft-room` skill**~~ — **DONE 2026-10-06.**
+   The skill now has an *In season* section (lineup swap, FA add/drop, the DEF-lands-on-bench landmine)
+   and its own read-only `/team` self-test (PASSED live, 18 rows). 🚨 **The website cannot place a
+   waiver claim**: it offers ADD and the server refuses. Claims go through the phone app's "Wednesday"
+   button (`docs/insights/034`). The old `.waiver`-class note here did not reproduce (4 of 4 waiver rows
+   read `.add`).
 6. **Byes — plan the week before** (derived 2026-09-27 from zero-point weeks in Sleeper's wk4-14
    projections; a bye shows as a 0.0 entry, not a missing one):
    - **Week 6:** C. Brown, Bates, Goff, Hockenson — stream a K; RB depth is zero on the bench.

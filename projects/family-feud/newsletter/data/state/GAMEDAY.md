@@ -102,3 +102,64 @@ vs **Kaeperni** (roster 5). Expected: us 145.3, them 127.6 (banked 28.4 / 39.9, 
 
 Zay Flowers (WR, BAL) vs DAL proj 14.1 [Questionable: Hamstring] is Questionable in the WR slot. Read as playing unless the morning inactives say otherwise; inactives post ~90 minutes before kickoff.
 If he is scratched: Michael Wilson (WR, ARI) vs SF proj 12.0
+
+---
+
+## WEEK 3 GAME DAY — 2026-09-27 15:00:04
+
+vs **Kaeperni** (roster 5). Expected: us 143.8, them 127.5 (banked 68.1 / 48.8, projections for the rest).
+
+### ↑ BENCH BEATS STARTER — Zay Flowers over Michael Wilson (WR)
+
+Zay Flowers (WR, BAL) vs DAL proj 14.0 [Questionable: Hamstring] projects 2.1 more than Michael Wilson (WR, ARI) vs SF proj 12.0.
+Projection only — a 2+ point gap is worth a look, not an order.
+
+---
+
+## WEEK 4 GAME DAY — 2026-10-03 20:00:03
+
+vs **RMonk9** (roster 2). Expected: us 143.0, them 158.6 (banked 11.7 / 0.0, projections for the rest).
+
+### ⚠ QUESTIONABLE — Zay Flowers (FLEX)
+
+Zay Flowers (WR, BAL) vs TEN proj 15.0 [Questionable: Hamstring] is Questionable in the FLEX slot. Read as playing unless the morning inactives say otherwise; inactives post ~90 minutes before kickoff.
+If he is scratched: Nico Collins (WR, HOU) vs DAL proj 18.7
+
+### ↑ BENCH BEATS STARTER — Nico Collins over Michael Wilson (WR)
+
+Nico Collins (WR, HOU) vs DAL proj 18.7 projects 4.1 more than Michael Wilson (WR, ARI) vs NYG proj 14.5.
+Projection only — a 2+ point gap is worth a look, not an order.
+
+---
+
+## WEEK 4 GAME DAY — 2026-10-04 08:00:02
+
+vs **RMonk9** (roster 2). Expected: us 143.3, them 158.4 (banked 11.7 / 0.0, projections for the rest).
+
+### ⚠ QUESTIONABLE — Zay Flowers (FLEX)
+
+Zay Flowers (WR, BAL) vs TEN proj 14.9 [Questionable: Hamstring] is Questionable in the FLEX slot. Read as playing unless the morning inactives say otherwise; inactives post ~90 minutes before kickoff.
+If he is scratched: Nico Collins (WR, HOU) vs DAL proj 18.7
+
+### ↑ BENCH BEATS STARTER — Nico Collins over Michael Wilson (WR)
+
+Nico Collins (WR, HOU) vs DAL proj 18.7 projects 4.2 more than Michael Wilson (WR, ARI) vs NYG proj 14.5.
+Projection only — a 2+ point gap is worth a look, not an order.
+
+---
+
+## WEEK 4 GAME DAY — 2026-10-04 11:30:03
+
+vs **RMonk9** (roster 2). Expected: us 147.4, them 158.8 (banked 29.0 / 4.6, projections for the rest).
+
+Nothing to do. Every starter is untagged, every slot filled, no bench body projects 2+ over a starter he could replace.
+
+---
+
+## WEEK 4 GAME DAY — 2026-10-04 15:00:04
+
+vs **RMonk9** (roster 2). Expected: us 149.0, them 159.1 (banked 106.7 / 38.8, projections for the rest).
+
+### ℹ OPPONENT'S TAGGED STARTERS
+
+QB: Lamar Jackson (QB, BAL) vs TEN proj 21.7 [Questionable: Ankle]

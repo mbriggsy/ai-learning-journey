@@ -4,9 +4,12 @@ description: "Drive Sleeper's draft room from code — find, draft, queue, unque
   AUTO-PICK, start a mock, set the pick clock. Use whenever a task touches a Sleeper draft
   room in a browser: running a mock draft, rehearsing the draft-day loop, firing a real
   pick, debugging why a click 'worked' but nothing happened, or mapping a control whose
-  behaviour is unknown. Also use before ANY browser work on sleeper.com so the self-test
-  runs first. Do NOT use for Sleeper's HTTP API alone (no browser involved) — that is
-  docs/data-access.md and scripts/merge_picks.py."
+  behaviour is unknown. ALSO the in-season roster pages: setting a lineup (bench/start
+  swaps), adding or dropping a free agent, streaming a DEF/K, or placing a waiver claim —
+  which the WEBSITE cannot do (it offers ADD; the server refuses), so read the in-season
+  section before promising one. Use before ANY browser work on sleeper.com so the matching
+  self-test runs first. Do NOT use for Sleeper's HTTP API alone (no browser involved) —
+  that is docs/data-access.md and scripts/merge_picks.py."
 ---
 
 # Sleeper draft room — measured, not remembered
@@ -32,9 +35,93 @@ Sleeper wraps its controls in handler-less layout `div`s. **Aim at the node that
 handler.** `isTrusted` appears **zero** times in Sleeper's 12.1 MB bundle (React 16, root-delegated),
 so synthetic clicks are indistinguishable from human ones. **Synthetic is never the problem. Aim is.**
 
+**Which half of this file you need:** a draft room (mock or real) → STEP 0 onward. The league's
+`/team` or `/players` page during the season → *In season* directly below, then stop; the
+draft-room self-test cannot run there (no search box, no AUTO-PICK) and will print a false FAIL.
+
 ---
 
-## ▶ STEP 0 — RUN THE SELF-TEST. ALWAYS. ~20 seconds.
+## In season — lineup, add/drop, waiver claims
+
+Measured live: lineup swaps 2026-09-25 and 2026-10-04 (three swaps, each confirmed on `/rosters`);
+add/drop 2026-09-25; the waiver-claim refusal 2026-10-06 (`docs/insights/034`). The league nav
+tabs are icon-only, so **navigate by URL**: `https://sleeper.com/leagues/<league_id>/team` and
+`…/players`.
+
+### In-season self-test — read-only, ~2 seconds, run on `/team`
+
+```js
+function hp(e){var k=Object.keys(e).find(x=>x.indexOf('__reactEventHandlers$')===0);
+  return k?Object.keys(e[k]).filter(n=>/^on[A-Z]/.test(n)):[];}
+for (var i=0;i<40 && !document.querySelector('.team-roster-item');i++) await new Promise(r=>setTimeout(r,250));
+var rows=[...document.querySelectorAll('.team-roster-item')];
+var pos=rows.map(r=>r.querySelector('a.link-button.cell-position')).filter(Boolean);
+var wv=[...document.querySelectorAll('.btn-container')].find(e=>/WAIVER/.test(e.innerText));
+var R={ rowsPresent: rows.length>=10,
+        everyRowHasOnePosButton: rows.every(r=>r.querySelectorAll('a.link-button.cell-position').length===1),
+        posButtonsOwnOnClick: pos.length>=10 && pos.every(a=>hp(a).includes('onClick')),
+        waiverBtnOwnsOnClick: !!wv && hp(wv.querySelector('.btn')).includes('onClick'),
+        teamIsOurs: /Saquon Deez Nuts/.test(document.body.innerText) };
+({R, VERDICT: Object.values(R).every(Boolean) ? 'PASS' : 'FAIL -- re-map before clicking'})
+```
+`teamIsOurs` checks the **team name**, never the account handle. `briggsy007` is Hunter (see
+CLAUDE.md). If the team ever gets renamed, re-read it from `/rosters` + `/users`. Don't guess.
+
+### Lineup swap — `/team`
+
+| step | click THIS node | oracle |
+|---|---|---|
+| select the player leaving | his row's `a.link-button.cell-position` (the slot square: `QB`, `WR`, `WRT`…) | rows gain `selected` / `valid` / `invalid` on `.team-roster-item` |
+| select the player arriving | **his** row's `a.link-button.cell-position`, only if that row reads `valid` | slot labels swap in the page |
+| confirm | — | **`/v1/league/<id>/rosters?cb=<nonce>` → our `starters`**. The page is not the oracle. |
+
+- **Row = `.team-roster-item`**, matched on its `.cell-player-meta` text. Names display
+  abbreviated (`N Collins`, `M Wilson`), so match `"N Collins"`, not `"Nico Collins"`. Throw
+  unless exactly one row matches.
+- Never walk up a fixed number of levels from a leaf. Four levels up is the whole list
+  (measured 09-25).
+- A player whose game has started shows `disabled` on his position square (`rb disabled`).
+  He's locked. Leave him alone.
+- FLEX shows as `WRT`. An empty slot or IR row reads `Empty`.
+
+### Add / drop a FREE AGENT — `/players`
+
+1. Search: `input[placeholder*="Find player"]`. Set it with the native value setter plus an
+   `input` event, or click it and type.
+2. Row `.player-list-item` → `a.player-action-button.add` (owns `onClick`) → modal `.modal-item`
+   titled *Add Player*.
+3. Drop: the modal's `a.link-button.team-roster-item` for that player (click → class `selected`;
+   confirm **exactly one** is selected) → the `<button>` whose text is `ADD PLAYER`.
+4. Close any modal with `.modal-item-underlay`.
+5. Oracle: `/rosters` (cache-busted) `players` changed. 🚨 **An added DEF lands on the BENCH and
+   leaves the DEF slot `"0"` (empty)** (09-25). Re-read `starters` after every add and move the
+   body in with a lineup swap.
+
+- A full-viewport `.alert-modal` (`Cancel` / `Ok`) sits in the DOM at **opacity 0** at all times.
+  It is not a live dialog. Don't click it and don't wait on it.
+- Modal and row text carry newlines. Normalise `\s+` before any regex.
+
+### 🚨 WAIVER CLAIMS — the website cannot place one. Briggsy does it in the app.
+
+For a player on waivers (anyone whose game has been played, until the run **Wed ~03:15 ET**):
+- the website's row `+` **and** its player card both offer **ADD**. Submitting gets refused
+  server-side: *"At least one of the players being added in is on waivers."* Nothing is
+  submitted. The web client's `waiverStatus.status` reads `"free_agent"` for these players
+  (4 of 4 on 10-06). That's stale. Don't trust it.
+- **The Sleeper phone app claims correctly:** search the player, select him, tap the
+  clear-day button beside **Watch** (it reads **"Wednesday"**), then tap the drop.
+- This is a real blocker for automation, so flag it to Briggsy. Don't call it a manual
+  step. Don't hand-craft the claim against Sleeper's private API without his explicit OK.
+- **Oracle for a pending claim:** `/team` → WAIVER `.btn` → *My Waivers* modal (claim, drop,
+  timestamp). The public `/transactions/<week>` returns `[]` while a claim is pending. The modal
+  has a **Cancel** under each claim, so close it with the underlay.
+- An earlier note (TODO, 09-25) said waiver rows carry `.waiver` instead of `.add`. On 10-06,
+  4 of 4 waiver players carried `.add`. If you ever see `.waiver`, map it before trusting either
+  account.
+
+---
+
+## ▶ STEP 0 (DRAFT ROOM ONLY) — RUN THE SELF-TEST. ALWAYS. ~20 seconds.
 
 Paste `scripts/sleeper_draft_console.js` into the room's console first (see *Pasting the console*),
 then run this. It is **read-only except one AUTO-PICK toggle, which it restores.**

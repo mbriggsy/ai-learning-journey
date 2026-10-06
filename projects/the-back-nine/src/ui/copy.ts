@@ -929,7 +929,7 @@ export const copy = {
   // at rest as the `.control-sheet__blocked` span and spoken on the press through the SAME key (the Card 14a
   // shape — the seen word and the spoken word cannot drift). Each states the DIALOG's precondition, never the
   // household's finances. "Set" leads every one: on FIELD_OP_ALLOWLIST, so the clause-initial imperative is
-  // legal; `lever*` rides the two universal gates only (no false certainty, no advice verb). The typed-past
+  // legal; `lever*` rides the three universal gates only (no false certainty, no advice verb, no survival claim). The typed-past
   // face re-speaks its own FieldError and the applied-passed face its own note — neither needs a key here.
   leverRothApplyNeedsAmount: 'Set a yearly amount to add this to your plan.',
   leverRothApplyNeedsStart: 'Set the starting year to add this to your plan.',
@@ -954,9 +954,9 @@ export const copy = {
    * The replacement names the product's own date, and states the true absence rather than an empty
    * board. It is also SHORTER than what it replaces (131 vs 137 chars) — deliberate: the same
    * batch's panel-raw list flagged this string clipping mid-sentence at the phone sheet edge.
-   * THE KEY NAME MUST NOT CHANGE. `leverPreviewNoDate` leads with `lever`, so it rides the two
+   * THE KEY NAME MUST NOT CHANGE. `leverPreviewNoDate` leads with `lever`, so it rides the three
    * universal gates only. The instinctive rename once the fix is "say fuck-off date" — anything
-   * carrying `fuckoff`/`workoptional` — trips isVerdictKey's SUBSTRING net (copyGuard.ts:72) and
+   * carrying `fuckoff`/`workoptional` — trips isVerdictKey's SUBSTRING net (copyGuard.ts:73) and
    * silently promotes this line into free-numeral/superlative scope. */
   leverPreviewNoDate:
     'This comparison anchors to your fuck-off date, and this plan doesn’t have one yet. Applying a change still updates the answer above.',
@@ -1565,7 +1565,7 @@ export const copy = {
   // --- Act-4 · U17 §S5 — the save GESTURE (`recommendSave*`) + the saved-record CARD
   //     (`recommendRecord*`) ---
   // SCOPE: both families inherit VERDICT scope from `VERDICT_KEY_PREFIXES`' existing 'recommend'
-  // entry (copyGuard.ts:63-65) — no gate-source edit — and correctly stay OUTSIDE control scope
+  // entry (copyGuard.ts:64-66) — no gate-source edit — and correctly stay OUTSIDE control scope
   // (the record carries enums, never a figure). Every line here is DIGIT-FREE: the free-numeral
   // gate is /\d/, so "two passphrases" is spelled out and the mint year rides
   // `slots.recommendRecordSavedIn`.
@@ -1767,7 +1767,7 @@ export const copy = {
   // it is the one sentence that may render on the cohort whose LEAD is omitted. Shape borrowed from its
   // Card 9 sibling `budgetApplyEmpty` (state → the way forward), at half the length so it stays one line
   // on a 390 px phone. `goalPicker*` is neither verdict- nor control-scoped (copyGuard's isVerdictKey /
-  // isControlKey), so it rides the two universal gates only; 'pick' is on FIELD_OP_ALLOWLIST and absent
+  // isControlKey), so it rides the three universal gates only; 'pick' is on FIELD_OP_ALLOWLIST and absent
   // from DIRECTIVE_VERBS, so the clause-initial imperative after the em dash is legal.
   goalPickerConfirmBlocked: 'No goal is picked yet — pick one above.',
   // The goal options — a plain label + a one-line noun-phrase gloss each (no imperative verb, no jargon).
@@ -2671,9 +2671,9 @@ export const slots = {
    *  LEAD-prefix `startsWith` over CONTROL_KEY_PREFIXES, which carries `'roth'` — so a `roth*` name
    *  would be control-scoped and require-hedge would FIRE. That would be actively wrong here: the
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
-   *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the two
-   *  universal gates (no false certainty, no advice verb), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:988` pins this same prefix trap for
+   *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
+   *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
+   *  statement of the reader's own history. `copyGuard.test.ts:1059` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -3091,12 +3091,12 @@ export const slots = {
    *  renders on no other goal. A goal-named caption + aria variant for pay-less-tax are ⚑ Briggsy's
    *  words to author (filed in the register) — an OMISSION, never a swap of the other goal's figures
    *  into this template.
-   *  NAMED onto the `recDelta*` control prefix (`CONTROL_KEY_PREFIXES`, copyGuard.ts:123) so `require-hedge`
+   *  NAMED onto the `recDelta*` control prefix (`CONTROL_KEY_PREFIXES`, copyGuard.ts:124) so `require-hedge`
    *  BITES it the way it bites its visual twin `recDeltaTypical`: the AT reader hears the same figures the
    *  sighted reader sees, so the same modal law must hold. A `recViz` prefix was rejected — it would red the
    *  three correctly hedge-free arm labels (`recVizWithLabel`/`recVizWithoutLabel`/`recVizRunnerUpLabel`,
    *  copy.ts:1958-1965 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
-   *  `isControlKey` was rejected — it breaks that predicate's "by prefix ALONE" law (copyGuard.ts:129). */
+   *  `isControlKey` was rejected — it breaks that predicate's "by prefix ALONE" law (copyGuard.ts:130). */
   recDeltaVizAria: (withoutLabel: string, withoutFig: string, withLabel: string, withFig: string, deltaFig: string): string =>
     `${withoutLabel} lands near about $${withoutFig}; ${withLabel} about $${withFig} — a difference of about $${deltaFig}.`,
   // --- Act-4 · U17 §S5 — the saved record's AGE on the card. ---

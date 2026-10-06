@@ -170,7 +170,7 @@ Shipped 2026-07-25, commit `e4754134`, CI green by explicit run id 30136387827.
 
 **The coverage hole this closed.** `rothPlanEcho` had **zero** aged coverage: both its tests ran at
 elapsed 0, one comparing the slot against its own output — pinning routing, not the sentence — and the
-other a bare string in the copy guard (`copyGuard.test.ts:573`). **The `RothLever` sheet echo had no assertions of any kind**, and
+other a bare string in the copy guard (`copyGuard.test.ts:607`). **The `RothLever` sheet echo had no assertions of any kind**, and
 while `RothLever` did receive a `savedAnchor`, it routed it only to `composeTwoFutures`; the echo sentence
 three lines above never saw it. The same verifier lesson landed on this stage's own first cut: the
 sheet-echo test's `toBe(slots.…)` was the insight-081 tautology and a tense-arm swap sailed through it, so
@@ -386,11 +386,11 @@ claim a completed save, and it is `recommendSaveSavedBadge`.
 **Key PREFIX picks the copyGuard gates, and that is why these two families exist as they do.**
 `staleness*` and `reentry*` are hedge-, verdict- AND control-EXEMPT by documented law — the weakest net in
 the catalog — so a new warning register needs its own explicit guard arm. The arms live in the TEST file
-(`copyGuard.test.ts`: the `staleness*` register at `:229-301`, the S5 families at `:383-492`), **not** in
+(`copyGuard.test.ts`: the `staleness*` register at `:263-335`, the S5 families at `:417-526`), **not** in
 `copyGuard.ts`: there is nothing named `staleness`, `reentry` or `recommendRecord` in the gate SOURCE at
 all, so grepping `copyGuard.ts` for those returns zero hits and must never be read as "already handled." The
-lists a key is measured against are `VERDICT_KEY_PREFIXES` (`copyGuard.ts:63-65`) and
-`CONTROL_KEY_PREFIXES` (`:113-127`) — and `recommendSave*`/`recommendRecord*` fall under the `recommend`
+lists a key is measured against are `VERDICT_KEY_PREFIXES` (`copyGuard.ts:64-66`) and
+`CONTROL_KEY_PREFIXES` (`:114-128`) — and `recommendSave*`/`recommendRecord*` fall under the `recommend`
 verdict prefix, unlike `staleness*`, so they clear the scoped gates rather than being exempt from them.
 
 **The four mint obligations**, all discharged in `src/store/savedRecommendationMint.ts`:

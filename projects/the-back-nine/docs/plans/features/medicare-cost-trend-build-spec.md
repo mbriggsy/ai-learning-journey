@@ -152,7 +152,7 @@ status: shipped
   deleted after the ruling; the world's shape is reused by the S4 calibration.
 - **S4 — Q4d re-calibrated (the measurement recorded).** The conversion-near-tie demotion is now
   the scale-free SE-MULTIPLE `solverConversionNearTieDemotionSeMultiple = 10`
-  (`src/engine/constants/solver.ts:103`), replacing the pre-flip Medicare-blind absolute 0.02. It
+  (`src/engine/constants/solver.ts:110`), replacing the pre-flip Medicare-blind absolute 0.02. It
   was measured on TWO Medicare-bearing post-flip worlds (all-65+ MFJ, $1.9M pretax, spend
   124k/112k, a 30k×3yr conversion winner over conversion-0, 16k × 5 members, CRN-resolved): member
   margins 0.0021–0.0041 at margin/SE ratios ≤ 8.1, every member beyondBand. 10 = the class max +

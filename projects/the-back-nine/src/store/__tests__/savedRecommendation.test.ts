@@ -76,7 +76,7 @@ function recordFor(scenario: ScenarioV3, over: Partial<SavedRecommendationV3> = 
 }
 
 // U17 §S4 — the REAL exposure records for the two households this file drives. A saved
-// recommendation is ALWAYS a spine-route household (`solveDispatch.ts:68-69` refuses
+// recommendation is ALWAYS a spine-route household (`solveDispatch.ts:75-76` refuses
 // 'spine-unready' whenever `buildSpineParams` is null, which is exactly the date route), so both
 // of these take `exposureForDraft`'s spine arm, where every read is exact.
 const EXPOSURE = exposureForDraft(DEV_SEEDS.retired)

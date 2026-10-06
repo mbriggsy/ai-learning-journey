@@ -167,7 +167,7 @@ describe('ACA enhanced-subsidy re-verify gate logic', () => {
  *   `aca-last-verified.json`            → read by `verify:aca` (scripts/verify-aca-status.ts) = CI
  *   `acaEnhancedSubsidyStatus` (health) → read by `oracleToken.ts:180-200` = the RUNTIME WITHHOLD
  *
- * `solver.ts:67` already states the contract in prose — *"one calendar, two enforcement layers"* —
+ * `solver.ts:74` already states the contract in prose — *"one calendar, two enforcement layers"* —
  * and prose is not enforcement. The failure mode is asymmetric and quiet in the dangerous
  * direction: a re-verifier who updates ONLY the JSON ships a green CI, and then the product keeps
  * computing freshness off the STALE constant and silently withholds the recommendation from every
@@ -199,7 +199,7 @@ describe('the shipped ACA record binds to the engine constants (the unguarded dr
   it('the freshness WINDOW is identical in the record and in the solver constant', () => {
     expect(
       solverAcaFreshnessWindowDays.value,
-      'solver.ts:67 promises "one calendar, two enforcement layers" — the engine-side ' +
+      'solver.ts:74 promises "one calendar, two enforcement layers" — the engine-side ' +
         '`aca-unverified` refusal and the CI-side red must fire on the same day.',
     ).toBe(record.maxAgeDays)
   })

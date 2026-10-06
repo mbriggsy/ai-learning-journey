@@ -253,8 +253,9 @@ export function tier2(score: CandidateScore, goal: OracleGoal): number {
 
 /**
  * The REFERENCE ranking (plan contract #4): survival-equivalence is decided against the BEST
- * candidate's survival (within `tieTolerance` of the top — the CRN-difference-keyed tolerance
- * the caller supplies; the zero-vol oracle worlds pass an exact 0); WITHIN the top set the
+ * candidate's survival (within `tieTolerance` of the top — the caller supplies it; every shipped
+ * caller passes an exact 0, the live solve by ruling, `docs/decisions/survival-tie-tolerance.md`;
+ * a future loosening must stay CRN-difference-keyed); WITHIN the top set the
  * goal statistic ranks; outside it, survival descending then the goal; typed-infeasible
  * candidates rank WORST as whole candidates. Ties break deterministically.
  */

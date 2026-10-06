@@ -16,8 +16,8 @@
  *   3. The N=1 cold-read — the human honesty oracle on first-draft verdict copy before ship.
  * Treat a green gate as "no KNOWN-class sin slipped", never "proven honest".
  *
- * SCOPE. Two gates are UNIVERSAL (sins in EVERY voice, zero false-flag on the intake catalog): a
- * sure outcome and an advice imperative. `superlative` and `free-numeral` are VERDICT-scoped — both
+ * SCOPE. Three gates are UNIVERSAL (sins in EVERY voice, zero false-flag on the intake catalog): a
+ * sure outcome, an advice imperative, and a survival claim ({@link SURVIVAL_CLAIMS}). `superlative` and `free-numeral` are VERDICT-scoped — both
  * have legitimate non-verdict uses ("best" is the product's framing question; factual numerals are
  * everywhere in intake). The verdict surface is {@link isVerdictKey} (owned HERE, imported by the
  * test). `catastrophe` is survivor-scoped.
@@ -51,6 +51,7 @@ import { HEDGE_TOKENS } from './copy'
 
 export type CopyGate =
   | 'false-certainty' | 'advice-verb' | 'superlative' | 'free-numeral' | 'catastrophe' | 'require-hedge'
+  | 'survival-claim'
 
 export interface CopyViolation {
   readonly gate: CopyGate
@@ -307,6 +308,33 @@ export const CATASTROPHE_LEXICON: readonly RegExp[] = [
   /\bwiped out\b/i,
 ]
 
+/** Survival-claim lexicon — UNIVERSAL. No string may call or imply that a plan is safer, just as safe,
+ *  or "survival-equivalent", or that it won on survival. The live solve's Tier-1 survival top set is
+ *  tolerance 0 (`solveDispatch.ts` `tieTolerance`), so its crown is a max over ~60–100 noisy A-side
+ *  survival counts: it can hold LOWER true survival than a rival (the winner's curse — measured on
+ *  `nc`, a 4-path edge that reverses across seed sets), and the loosenings that move `borderline` /
+ *  `budget` (T_crn, P20) would crown a REPEATED small survival loss (27–28 of 28 seed sets). Neither
+ *  may ever be worded as a survival win or a survival tie. Each pattern below owns a corpus sample no
+ *  other pattern catches (`copyGuard.test.ts`'s ownership arm), so deleting any one reds the suite. Universal, never A-keyed: seed A decides the crown,
+ *  but seed B is what the reader sees (insight 099). Council `wf_6e72eca9-c20`, 2026-10-06 (the
+ *  register's *The live solve ranks survival at `tieTolerance` 0…*). The displayed-count readouts
+ *  ("about 7 of 10 either way") stay legal — they quote the B display, not a crown's survival. */
+export const SURVIVAL_CLAIMS: readonly RegExp[] = [
+  /\bsafer\b/i,
+  /\bsafest\b/i,
+  /\bas safe\b/i,
+  /\b(equally|no less|every bit|just) safe\b/i,
+  /\bsurvival[- ]equivalent\b/i,
+  /\b(same|identical|equal|equivalent|matching|unchanged)\s+(survival\s+)?(odds|chances?|safety)\b/i,
+  /\b(odds|chances?|safety|survival)\s+(stays?|remains?|holds?|is|are)\s+(the\s+)?(same|unchanged|equal)\b/i,
+  /\b(equally|just as|every bit as|no less|at least as|as)\s+likely to (last|hold|work)\b/i,
+  /\bwithout (giving up|losing|costing|trading|sacrificing)\s+(any\s+)?(of\s+)?(your\s+)?(safety|odds|survival|chances?)\b/i,
+  /\bno (loss|drop|cost|change|hit) (in|to|of) (your\s+)?(safety|odds|survival|chances?)\b/i,
+  /\bcosts?\s+(you\s+)?(any|no|nothing in)\s+(odds|safety|survival|chances?)\b/i,
+  /\b(wins?|won|winning|ahead|better) on (survival|safety|odds)\b/i,
+  /\b(less risky|riskier)\b/i,
+]
+
 /** Compile one {@link HEDGE_TOKENS} entry into a case-insensitive matcher (mirrors the ban
  *  lexicons). Word-boundary-guard each edge that is a letter/digit — so "can" doesn't match inside
  *  "cannot", and "of 10" doesn't match inside "of 100" — but leave a glyph edge (the "~" precision
@@ -393,6 +421,11 @@ export function lintCopy(text: string, gates: readonly CopyGate[]): CopyViolatio
     } else if (gate === 'free-numeral') {
       const m = /\d/.exec(t)
       if (m) out.push({ gate, match: m[0] })
+    } else if (gate === 'survival-claim') {
+      for (const re of SURVIVAL_CLAIMS) {
+        const m = re.exec(t)
+        if (m) out.push({ gate, match: m[0] })
+      }
     } else if (gate === 'require-hedge') {
       // INVERSE polarity: a violation when NO hedge token is present (the plan-moving readout wears
       // no modal). Control-scoped by the caller (isControlKey), never run over the whole catalog.

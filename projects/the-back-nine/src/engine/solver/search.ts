@@ -93,8 +93,10 @@ export interface SolverSearchInput {
    *  fractional seed would make `deriveSeedB` and `simulate` refuse downstream anyway). */
   readonly seedA: number
   readonly goal: OracleGoal
-  /** The A-side CRN-difference selection tie-tolerance the ranking runs at (the zero-vol oracle
-   *  worlds pass an exact 0; a live solve passes the `selectionTieTolerance` read). */
+  /** The A-side Tier-1 survival tie-tolerance the ranking runs at. Every shipped caller passes an exact 0:
+   *  the zero-vol oracle worlds, and the live solve by ruling (`docs/decisions/
+   *  survival-tie-tolerance.md`). Never the goal-difference `selectionTieTolerance` — that SE feeds
+   *  the Tier-2 shrinkage only. */
   readonly tieTolerance: number
   /** Required for leave-more (the bequest's IRD discount); omitted for pay-less-tax. */
   readonly heirBracket?: number

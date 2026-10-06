@@ -116,7 +116,9 @@ export function decorrelationReportFor(seedA: number, seedB: number, paths = 200
 // ---- The ε split ----------------------------------------------------------------------------
 
 /** Per-path survival indicators (1 survived / 0 depleted) from a distribution — the paired
- *  raw material of the CRN-difference tolerance. */
+ *  raw material of the CRN-difference tolerance. Live consumer: the grade (`gradeCalibration.ts`);
+ *  the live Tier-1 survival tolerance is an exact 0 by ruling (`docs/decisions/
+ *  survival-tie-tolerance.md`), so no selection reads them today. */
 export function survivalIndicators(dist: Distribution): readonly number[] {
   return dist.depletionYears.map((d) => (d === NEVER_DEPLETED ? 1 : 0))
 }
@@ -125,6 +127,8 @@ export function survivalIndicators(dist: Distribution): readonly number[] {
  * The SELECTION tie-tolerance for one candidate pair, A-SIDE: z · SE(mean paired difference).
  * The inputs are the two candidates' per-path indicators (or per-path goal statistics) on
  * SEED-SET A — CRN-paired by construction (same seed, same draws). NaN anywhere fails loud.
+ * Live consumer: `select.ts`'s Tier-2 shrinkage, fed the per-path GOAL vector. It is never the
+ * Tier-1 survival tolerance, which is an exact 0 by ruling (`docs/decisions/survival-tie-tolerance.md`).
  */
 export function selectionTieTolerance(
   aCandidate: readonly number[],

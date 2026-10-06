@@ -6,13 +6,41 @@ import {
   isMortalityKey,
   isControlKey,
   DIRECTIVE_VERBS,
+  SURVIVAL_CLAIMS,
   type CopyGate,
 } from '../copyGuard'
 
+/** The survival-claim corpus (council wf_6e72eca9-c20) — every phrasing a card could use to sell the
+ *  crown as a survival win or a survival tie. Each SURVIVAL_CLAIMS pattern owns at least one sample
+ *  here that no other pattern catches (the ownership arm below pins it). */
+const SURVIVAL_MUST_CATCH: readonly string[] = [
+  'This plan is safer than the one you have.',
+  'The safest of the paths we tried.',
+  'It’s just as safe.',
+  'It is at least as safe as your current order.',
+  'It’s as safe, and cheaper.',
+  'Both orders are equally safe.',
+  'It is no less safe than your plan.',
+  'The two plans are survival-equivalent.',
+  'The two are survival equivalent in these runs.',
+  'Same odds, less tax.',
+  'It keeps the same odds as your plan, for less tax.',
+  'Equal chances to your current plan.',
+  'Your odds stay the same, and you pay less tax.',
+  'Equally likely to last, for less tax.',
+  'No less likely to last than your plan.',
+  'You keep the savings without giving up any of your odds.',
+  'Lower tax with no loss in safety.',
+  'It doesn’t cost you any odds.',
+  'This plan wins on survival.',
+  'A less risky way to draw the accounts down.',
+  'Your current order is riskier.',
+]
+
 /*
- * copyGuard enumerates the catalog and asserts every entry passes its applicable gates. TWO
- * gates are UNIVERSAL (a sure outcome / an advice imperative — sins in EVERY voice): they are the only
- * two the unfiltered `entries` loops below sweep. `superlative` AND `free-numeral` are both scoped to
+ * copyGuard enumerates the catalog and asserts every entry passes its applicable gates. THREE
+ * gates are UNIVERSAL (a sure outcome / an advice imperative / a survival claim — sins in EVERY voice): they are the only
+ * three the unfiltered `entries` loops below sweep. `superlative` AND `free-numeral` are both scoped to
  * the verdict surface (isVerdictKey — "best" is the product's own framing question, and intake carries
  * factual numerals); `catastrophe` is survivor-scoped. That split is copyGuard.ts's law (its SCOPE
  * docblock, copyGuard.ts:19-23), and it is WHY the rec* canary at the foot of this file has to pin the
@@ -35,6 +63,12 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   it('no catalog string carries an advice imperative (advice-verb — UNIVERSAL)', () => {
     for (const [k, v] of entries) {
       expect(lintCopy(v, ['advice-verb']), `${k}: "${v}"`).toEqual([])
+    }
+  })
+
+  it('no catalog string claims a plan is safer, just as safe, or won on survival (survival-claim — UNIVERSAL)', () => {
+    for (const [k, v] of entries) {
+      expect(lintCopy(v, ['survival-claim']), `${k}: "${v}"`).toEqual([])
     }
   })
 
@@ -233,7 +267,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   //     SCOPED gates the prefix exempts them from (superlative + free-numeral) on top of the two
   //     universal gates the catalog enumeration already applies, and then pins the aggregate
   //     line's specific promises. ---
-  it('U17 §S4: every staleness* warning string clears the SCOPED gates too, not just the universal pair', () => {
+  it('U17 §S4: every staleness* warning string clears the SCOPED gates too, not just the universal gates', () => {
     const staleness = entries.filter(([k]) => k.startsWith('staleness'))
     expect(staleness.length, 'there IS staleness copy to guard').toBeGreaterThan(4)
     // Control arm (burned/070 — the exemption must be REAL, or this sweep is theatre): these keys
@@ -588,7 +622,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     // U17 §S6 — the applied conversion's own passed start, STATED where §S1's refusal used to fire.
     // Named `leverRoth*` on purpose: a `roth*` spelling would be control-scoped and require-hedge
     // would demand a modal on a year read straight from the reader's saved plan (see the slot's
-    // own note). It rides the two universal gates, which is the right scope for a plain fact.
+    // own note). It rides the three universal gates, which is the right scope for a plain fact.
     leverRothAlreadyApplied: slots.leverRothAlreadyApplied(2025),
     // P3·U11 — the Healthcare sheet's readout slots (require-hedge-swept by their prefixes).
     acaCostStatus: slots.acaCostStatus('July 3, 2026'),
@@ -695,7 +729,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
 
   it('slot outputs hold the verdict voice (no advice / superlative / false-certainty; catastrophe on survivor)', () => {
     for (const [name, rendered] of Object.entries(SLOT_RENDER)) {
-      const gates: CopyGate[] = ['false-certainty', 'advice-verb', 'superlative']
+      const gates: CopyGate[] = ['false-certainty', 'advice-verb', 'superlative', 'survival-claim']
       // mortality net (not just survivor): the already-failing rethink clause is catastrophe-gated too.
       if (isMortalityKey(name)) gates.push('catastrophe')
       expect(lintCopy(rendered, gates), `${name}: "${rendered}"`).toEqual([])
@@ -843,6 +877,43 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     ]
     for (const s of mustCatch) {
       expect(lintCopy(s, ['false-certainty']).length, `MUST catch: "${s}"`).toBeGreaterThan(0)
+    }
+  })
+
+  // --- the survival-claim corpus (council wf_6e72eca9-c20, 2026-10-06): the live crown is a max over
+  //     noisy A-side survival counts at tolerance 0, so it can hold LOWER true survival than a rival —
+  //     no wording may sell it as a survival win or a survival tie. The honest arms are the shipped
+  //     strings that sit nearest the lexicon (the displayed-count readouts, the survival TABLES). ---
+  it('the survival-claim gate catches the survival-win and survival-tie families, and passes the honest neighbours', () => {
+    for (const s of SURVIVAL_MUST_CATCH) {
+      expect(lintCopy(s, ['survival-claim']).length, `MUST catch: "${s}"`).toBeGreaterThan(0)
+    }
+    const MUST_PASS = [
+      copy.assumptionOutliveValue, // "…from the same survival tables…" — a model fact, not a plan claim
+      slots.rothDeltaEven('about 7 of 10'),
+      slots.rothDeltaCountEven('9 of 10'),
+      'The tool treats this as a safe guess, so it asks.',
+    ]
+    for (const s of MUST_PASS) {
+      expect(lintCopy(s, ['survival-claim']), `MUST pass: "${s}"`).toEqual([])
+    }
+  })
+
+  it('every survival-claim pattern owns a corpus sample no other pattern catches (deleting any one reds the corpus)', () => {
+    const norm = (s: string) => s.replace(/[’‘]/g, "'")
+    SURVIVAL_CLAIMS.forEach((re, i) => {
+      const owned = SURVIVAL_MUST_CATCH.filter((s) =>
+        SURVIVAL_CLAIMS.every((other, j) => (j === i) === other.test(norm(s))),
+      )
+      expect(owned.length, `SURVIVAL_CLAIMS[${i}] ${re} has no sample only it catches`).toBeGreaterThan(0)
+    })
+  })
+
+  it('the static disclosures make no survival claim either (they render on the recommendation card; only the advice gate excludes them)', () => {
+    const disclosures = Object.entries(staticDisclosures)
+    expect(disclosures.length, 'there are static disclosures to sweep').toBeGreaterThan(0)
+    for (const [k, v] of disclosures) {
+      expect(lintCopy(v, ['survival-claim']), `${k}: "${v}"`).toEqual([])
     }
   })
 
@@ -1083,8 +1154,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
   // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:732-742, 814-831), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
-  // the two universal gates (the `entries` loops at the top of this file — superlative and free-numeral
-  // are verdict-scoped); an unscoped SLOT rides the three voice gates + catastrophe (the SLOT_RENDER loop
+  // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
+  // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop
   // above) and NEVER the flat loops. So a FLAT exception is legal only for chrome that speaks no figure
   // AND crowns nothing (both pinned below), and a SLOT exception only where the figure is R3's sanctioned
   // calendar year and no modal belongs — BY NAME, never by prefix.

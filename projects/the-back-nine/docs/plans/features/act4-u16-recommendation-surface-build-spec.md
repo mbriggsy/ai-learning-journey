@@ -574,7 +574,7 @@ absolute"), and the two REWRITTEN test scenarios that entries 5 and 7 above stil
 deleting them would remove the guard.
 
 **The gate is enforced in code, not just here** (2026-08-01): `copyGuard.ts`'s false-certainty list
-carries the contracted arms alongside the uncontracted ones (`copyGuard.ts:189`), and `lintCopy`
+carries the contracted arms alongside the uncontracted ones (`copyGuard.ts:190`), and `lintCopy`
 normalizes the typographic apostrophe before matching, so authoring any of the above reds the build.
 `docs/product.md` §6 + R21 — which used to PRESCRIBE the phrase — now carry the veto.
 

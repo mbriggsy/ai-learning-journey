@@ -104,7 +104,7 @@ being born (insight 020's shape). Both shapes carry a `fingerprint` field today
 - The lexicographic contract is unchanged from the plan: Tier-1 survival floor in the
   spine's `X of 10`; survival-equivalence decided by the **A-side CRN-difference selection
   tie-tolerance**, never the B display band; Tier-2 = the goal's statistic in the exact
-  units the headline renders (objective ≡ headline, contract #4 — locked).
+  units the headline renders (objective ≡ headline, contract #4 — locked). ⚑ **AMENDED 2026-10-06** ([`docs/decisions/survival-tie-tolerance.md`](../../decisions/survival-tie-tolerance.md)): the live tolerance is an exact **0** by ruling (council `wf_6e72eca9-c20`) — every measured loosening that moves `borderline` / `budget` (T_crn, gap-closed, P20) crowned a repeated small survival loss, and P5 (it moves only `nc`) is not CRN-keyed or pre-registered; CRN-difference keying stays the law for any FUTURE loosening, which must clear that record's reopen gates first.
 
 ## S2 — the Q2 resolution rule + the dispersed-world fixture verdict (INTRACTABLE)
 

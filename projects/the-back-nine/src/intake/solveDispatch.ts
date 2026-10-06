@@ -19,9 +19,16 @@
  *                     `solverAssumedHeirBracket` default for a leave-more solve (undefined for
  *                     pay-less-tax);
  *   - `seedA`       ← `draft.seed` (the ONE minted shared-draw CRN seed the spine beat already set);
- *   - `tieTolerance`← 0 (the conservative-safe live value: every shipped consumer passes 0, and §S0.1
- *                     pinned the fallback knobs at 0 — the STRICTEST regime — so it is safe under any
- *                     looser live tolerance);
+ *   - `tieTolerance`← 0 — a SELECTION RULING, not only a calibration pin (`docs/decisions/
+ *                     survival-tie-tolerance.md`, council `wf_6e72eca9-c20`, 2026-10-06): every
+ *                     loosening measured on v10 that moves `borderline` / `budget` (the pre-specified
+ *                     CRN-paired `solverSelectionTieZ` test, gap-closed membership, a 20-path count)
+ *                     crowns a REPEATED small survival loss there, which R21's absolute floor forbids;
+ *                     a 5-path count moves only `nc` but is not CRN-keyed or pre-registered. The known cost is
+ *                     the winner's curse — at 0 the crown can sit on a CRN-unresolvable edge (`nc`, a
+ *                     true tie, ~$10k all-in left on the table), so no copy may call the crown safer or
+ *                     survival-equivalent (`copyGuard.ts` `SURVIVAL_CLAIMS`). §S0.1 also pinned the
+ *                     fallback knobs at 0, the strictest regime;
  *   - `todayEpochDay` ← INJECTED by the ui composition layer (`appModel` reads `currentEpochDay()`), so
  *                     this builder stays a deterministic function of `(draft, todayEpochDay)` and the
  *                     engine stays clock-free.

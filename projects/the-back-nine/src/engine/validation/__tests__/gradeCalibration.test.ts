@@ -272,7 +272,7 @@ describe('gradeRecommendation — the real engine at the calibrated floor (16k �
     // caution, never sampling noise).
     //
     // ⚠️ THE UNIT IS THE WHOLE CLAIM — this line said "margin/SE ratios ≤ 3.2" from its
-    // authoring (ca41256f, 2026-07-19) until 2026-08-01, which contradicted solver.ts:95's
+    // authoring (ca41256f, 2026-07-19) until 2026-08-01, which contradicted solver.ts:102's
     // class-wide "max margin/SE ratio ≈ 8.1" written the SAME DAY. Both numbers were right;
     // one named the wrong denominator. `band = solverSelectionTieZ · se` (gradeCalibration.ts
     // :113), so the two ratios differ by exactly z = 1.96 and either reads as plausible in
@@ -292,7 +292,7 @@ describe('gradeRecommendation — the real engine at the calibrated floor (16k �
     // world only (nearTieInversion.ts:61) and 112k HAS NO FIXTURE anywhere in the repo, so
     // it can never be re-measured here. Its low SE 0.00037 is this world's measured minimum
     // (0.00037459), and its 8.1 closes on the 112k end (0.0041 / 0.00051 = 8.04; 4.15 × 1.96
-    // = 8.13) — so "the multiple = 10 = the measured class + ~23% headroom" (solver.ts:96)
+    // = 8.13) — so "the multiple = 10 = the measured class + ~23% headroom" (solver.ts:103)
     // holds. Rewriting solver.ts to the five rows above would DELETE the class-wide record.
     //
     // The pre-flip Medicare-BLIND proving world (62yo, no healthcare, margins ~0.011 at
@@ -310,7 +310,7 @@ describe('gradeRecommendation — the real engine at the calibrated floor (16k �
     const maxOverSe = Math.max(...out.memberMargins.map((m) => m.margin / m.se))
     expect(maxOverBand, 'margin/BAND — the ≤ 3.2 the comment above names (measured 3.05)').toBeLessThanOrEqual(3.2)
     expect(maxOverSe, 'margin/SE is z=1.96× larger — 3.2 was NEVER an SE ratio (measured 6.01)').toBeGreaterThan(3.2)
-    expect(maxOverSe, "and it stays under solver.ts:95's class-wide max margin/SE ≈ 8.1").toBeLessThanOrEqual(8.1)
+    expect(maxOverSe, "and it stays under solver.ts:102's class-wide max margin/SE ≈ 8.1").toBeLessThanOrEqual(8.1)
     const k = solverConversionNearTieDemotionSeMultiple.value
     expect(
       out.memberMargins.some((m) => m.margin < k * m.se),

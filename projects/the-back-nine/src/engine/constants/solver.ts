@@ -26,6 +26,13 @@ import { sourced } from './types'
  * and can drop a survival-relevant gap into Tier-2). Two-sided 95% ⇒ z = 1.96 (a TIE decision
  * is two-sided; the date-search's 1.645 is a one-sided lower-bound decision — a different
  * question, deliberately not reused). PRE-SPECIFIED 2026-07-18, before any B draw.
+ *
+ * LIVE STATUS (2026-10-06): the live solve's Tier-1 survival top set does NOT consume this z — it is
+ * an exact `tieTolerance` 0 by ruling (`docs/decisions/survival-tie-tolerance.md`, council
+ * `wf_6e72eca9-c20`: the T_crn construction above crowned a repeated small survival loss on two dev
+ * seeds). Today it is read by the Tier-2 shrinkage (`heldOutSeed.ts` `selectionTieTolerance`, fed the
+ * goal vector by `select.ts`), the grade (`gradeCalibration.ts`) and the oracle token. A Tier-1
+ * consumer must clear that record's reopen gates first; the value itself is unchanged.
  */
 export const solverSelectionTieZ = sourced(1.96, {
   citation:

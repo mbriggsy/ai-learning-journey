@@ -52,10 +52,17 @@ import { composeRecStateTaxDisclosure } from './stateTaxDisclosure'
 
 /** The closed vocabulary of disclosures the delta rides beside. A DEDICATED registry (not the
  *  draft-keyed `DRAFT_DISPOSITIONS`): each disclosure is a property of the RUN — ss-claim-fixed/niit
- *  unconditional, state-tax the run's priced state, aca-slcsp the named driver, heir-bracket the payload's
+ *  unconditional, all-in-scope the goal + the run's BUILT healthcare pricing, state-tax the run's priced
+ *  state, aca-slcsp the named driver, heir-bracket the payload's
  *  `heirBracket` — so the ids are keyed by disclosure, not by draft field, and cannot ride `keyof ScenarioDraft`;
  *  this union is the surface's OWN compile-enforced completeness seat set (a new id fails tsc below). */
-export type RecommendationDisclosureId = 'ss-claim-fixed' | 'niit' | 'state-tax' | 'heir-bracket' | 'aca-slcsp'
+export type RecommendationDisclosureId =
+  | 'ss-claim-fixed'
+  | 'niit'
+  | 'all-in-scope'
+  | 'state-tax'
+  | 'heir-bracket'
+  | 'aca-slcsp'
 
 export interface RecommendationDisclosure {
   readonly id: RecommendationDisclosureId
@@ -79,18 +86,31 @@ export interface RecommendationDisclosure {
  *
  *  `pricedState` is the run's OWN priced-state read (`pricedStateForRun`, threaded from Result — never
  *  `draft.retirementState`, insight 081). It rides beside the payload because the solve payload does
- *  not carry retirement state; the state-tax builder is the only consumer today. */
+ *  not carry retirement state; the state-tax builder is the only consumer today.
+ *
+ *  `healthcarePriced` is the run's BUILT `overlay.healthcareEnabled` (build spec D7 — threaded from
+ *  Result, the same producer-output read as `pricedState`); the all-in scope builder is its only
+ *  consumer here, and the pay-less-tax hero arm in `recommendedView` reads the same value. */
 const DISCLOSURE_BUILDERS: Record<
   RecommendationDisclosureId,
-  (p: SolveRecommendation, pricedState: PricedState | undefined) => RecommendationDisclosure | null
+  (p: SolveRecommendation, pricedState: PricedState | undefined, healthcarePriced: boolean) => RecommendationDisclosure | null
 > = {
   // Always: the Social Security claim ages are held FIXED (not optimized in the comparison).
   'ss-claim-fixed': () => ({ id: 'ss-claim-fixed', text: copy.recDiscSsClaimFixed, disposition: 'disclosure' }),
-  // Always: the delta's federal-tax scope (the 3.8% NIIT surtax caveat).
+  // Always: the one lever-inert omission on BOTH goals (the 3.8% NIIT surtax caveat).
   niit: () => ({ id: 'niit', text: copy.recDiscNiit, disposition: 'disclosure' }),
+  // pay-less-tax on a healthcare-PRICED run ONLY (2026-10-05, HIS words): the objective counts income
+  // tax + the premiums a strategy can move, and the hero names "health-insurance premiums" — this note
+  // names the residual the hero cannot (plan cost-sharing is not counted), so "premiums" is never read
+  // as out-of-pocket costs. Off on an unpriced run (no premium was counted — the hero's unpriced arm
+  // says "tax" only) and off on leave-more (its objective is the bequest, not a cost).
+  'all-in-scope': (p, _pricedState, healthcarePriced) =>
+    p.goal === 'pay-less-tax' && healthcarePriced
+      ? { id: 'all-in-scope', text: copy.recDiscAllInScope, disposition: 'disclosure' }
+      : null,
   // Priced-state households DROP it (home #5 — `composeRecStateTaxDisclosure` owns the decision and its
-  // exhaustive roster gate): the note says the delta "compares federal tax only", which is FALSE once the
-  // run priced their state, and it co-rendered with a spine that had just named that state.
+  // exhaustive roster gate): the note says an unpriced state's tax is "left out of this comparison", which
+  // is FALSE once the run priced their state, and it co-rendered with a spine that had just named that state.
   'state-tax': (_p, pricedState) => {
     const text = composeRecStateTaxDisclosure(pricedState)
     return text === null ? null : { id: 'state-tax', text, disposition: 'disclosure' }
@@ -112,6 +132,10 @@ const DISCLOSURE_BUILDERS: Record<
  *  test (a new id must be ordered too). */
 export const DISCLOSURE_ORDER: readonly RecommendationDisclosureId[] = [
   'ss-claim-fixed',
+  // The scope note BEFORE the NIIT note: it states what the figure counts, and the surtax line is
+  // then read as the exception to it (the 2026-10-06 pre-land Caddie read — the reverse order put an
+  // exclusion before the counted set it carves from).
+  'all-in-scope',
   'niit',
   'state-tax',
   'heir-bracket',
@@ -123,12 +147,14 @@ export const DISCLOSURE_ORDER: readonly RecommendationDisclosureId[] = [
  *  `pricedState` is REQUIRED (explicitly `undefined` for not-priced / 'elsewhere' / unbuilt) — not
  *  optional. This whole defect existed because a value that WAS computed (`Result.tsx`'s
  *  `statePricedNote`) was simply never handed down; an optional parameter would rebuild that exact
- *  trapdoor, where forgetting to pass it silently restores the false sentence. */
+ *  trapdoor, where forgetting to pass it silently restores the false sentence. `healthcarePriced`
+ *  is REQUIRED for the same reason (the run's BUILT `overlay.healthcareEnabled`, build spec D7). */
 export function disclosuresFor(
   payload: SolveRecommendation,
   pricedState: PricedState | undefined,
+  healthcarePriced: boolean,
 ): readonly RecommendationDisclosure[] {
-  return DISCLOSURE_ORDER.map((id) => DISCLOSURE_BUILDERS[id](payload, pricedState)).filter(
+  return DISCLOSURE_ORDER.map((id) => DISCLOSURE_BUILDERS[id](payload, pricedState, healthcarePriced)).filter(
     (d): d is RecommendationDisclosure => d !== null,
   )
 }
@@ -392,6 +418,17 @@ export interface RecommendationViewOpts {
    *  Optional HERE (many in-isolation arms drive the view with no draft in hand) but REQUIRED at the
    *  pure composer `disclosuresFor`, which is where the honesty decision actually lands. */
   readonly pricedState?: PricedState
+  /** Did THIS run's BUILT overlay price healthcare (`base.overlay.healthcareEnabled` — build spec D7)?
+   *  Threaded from Result as `spineMedicarePriced(draft)`, which reads `buildSpineParams`' own overlay —
+   *  the exact builder the solve's base is (`solveDispatch.ts` `buildSolveRequest`), so it IS the
+   *  solve's built predicate, never a re-derivation from ages or quotes (insight 080/081). It picks the
+   *  pay-less-tax hero's arm and gates the all-in scope disclosure: on an unpriced run all-in ≡ income
+   *  tax (D5), so naming premiums would claim a count that never ran. UNREACHABLE false from intake
+   *  today (the quote pair is a required fact — D7 ⚑ RESOLVED); kept as defence-in-depth.
+   *  ABSENT ⇒ the UNPRICED arm (today's shipped words, no scope note) — the `pricedState` precedent:
+   *  omitting it keeps the shipped words and claims nothing more. `RecommendationSurface.test.tsx`
+   *  pins that Result passes it, so the absent arm cannot become the shipped state by omission. */
+  readonly healthcarePriced?: boolean
   /** The household's plan clock (`planClockAnchor(draft.startCalendarYear, wallCalendarYear)`) — the
    *  ONE derivation, minted by the caller and passed by reference, never re-derived here (this layer
    *  reads no clock). Feeds the winning-plan card's conversion start, which must speak the CALENDAR
@@ -623,11 +660,18 @@ function recommendedView(payload: SolveRecommendation, opts: RecommendationViewO
 
   const deltaFigure = noDollar ? undefined : formatDeltaDollar(deltaReal)
 
+  // The run's BUILT healthcare pricing (D7). pay-less-tax ranks on lifetime ALL-IN cost (Briggsy's
+  // 2026-10-05 ruling), so on a priced run the delta counts premiums and the hero must say so; on an
+  // unpriced run all-in ≡ income tax and the hero keeps today's tax-only words (HIS, both arms).
+  const healthcarePriced = opts?.healthcarePriced === true
+
   const heroLine = noDollar
     ? copy.recComposeAlready
     : goal === 'leave-more'
       ? slots.recDeltaLeaveMore(deltaFigure!)
-      : slots.recDeltaPayLessTax(deltaFigure!)
+      : healthcarePriced
+        ? slots.recDeltaPayLessTax(deltaFigure!)
+        : slots.recDeltaPayLessTaxUnpriced(deltaFigure!)
 
   // The ShapeDisclosure note — the grade's LEVEL rides still-directional methodology substrate.
   // `directionalLevel` IS composeShapeDisclosure's own predicate (non-empty), inlined to keep the render
@@ -663,7 +707,7 @@ function recommendedView(payload: SolveRecommendation, opts: RecommendationViewO
         : undefined,
     skew: skewQuote(payload),
     withheldConversion: withheldConversionView(payload),
-    disclosures: disclosuresFor(payload, opts?.pricedState),
+    disclosures: disclosuresFor(payload, opts?.pricedState, healthcarePriced),
     // The two-arm comparison viz — ACTIVE mode only (no-change AND the seed-B display inversion show no
     // fabricated delta bars; the inversion would otherwise paint the winner AHEAD, contradicting the
     // ranking). The winner/baseline seed-B headline magnitudes + pre-formatted string-free labels; the
@@ -673,14 +717,14 @@ function recommendedView(payload: SolveRecommendation, opts: RecommendationViewO
     // AND LEAVE-MORE ONLY (2026-09-08). THE GRAMMAR IS WEALTH-SHAPED, so it cannot carry a lower-is-better
     // statistic: the chart puts direction on which bar is LONGER (`RecommendationVizLabels.deltaLabel`,
     // RecommendationViz.tsx:48-49) and the aria sentence says an arm "lands near about $X" (recDeltaVizAria).
-    // On `pay-less-tax` the plotted headline is mean lifetime TAX PAID — LOWER is better
-    // (src/engine/solver/objective.ts:62) — and `winnerDisplaysAhead` above orients the winner to the
-    // SMALLER figure, so the recommended arm would draw the SHORTER bar and be narrated as landing near the
-    // smaller number: the reader reads "recommended = less", which is the truth, off a picture whose whole
+    // On `pay-less-tax` the plotted headline is mean lifetime ALL-IN cost (income tax + health-insurance
+    // premiums, Briggsy's 2026-10-05 ruling) — LOWER is better (`goalHeadlineStatistic`, objective.ts) —
+    // and `winnerDisplaysAhead` above orients the winner to the SMALLER figure, so the recommended arm
+    // would draw the SHORTER bar and be narrated as landing near the smaller number: the reader reads "recommended = less", which is the truth, off a picture whose whole
     // grammar says longer = better. Calm-but-wrong wearing the chart's face, so it is suppressed exactly the
     // way the inversion is — a picture that contradicts its own grammar is worse than no picture.
     // ⚑ THE FIX IS AN OMISSION, NEVER A SWAP: a goal-named caption + aria variant for pay-less-tax are
-    // Briggsy's words to author (filed in the register). Do not re-point these slots at the tax figures.
+    // Briggsy's words to author (filed in the register). Do not re-point these slots at the pay-less-tax (all-in) figures.
     // The delta HERO is untouched and still ships on both goals — `recDeltaPayLessTax` is goal-WORDED,
     // so the sentence carries its own direction where the bars cannot.
     viz: noDollar || goal !== 'leave-more'

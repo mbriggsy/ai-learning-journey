@@ -138,17 +138,18 @@ describe('ENGINE_PRICING_LEDGER — the append-only shape the staleness reader l
     }
   })
 
-  it('PIN (moves with the next solver bump): the solver is at 9, the newest reprice row shipped with 7 — v8 and v9 were ranking logic only, so no row', () => {
+  it('PIN (moves with the next solver bump): the solver is at 10, the newest reprice row shipped with 7 — v8, v9 and v10 were ranking logic only, so no row', () => {
     const newestReprice = [...rows].reverse().find((r) => r.kind === 'reprice')!
     expect(
       { solverCodeVersion: SOLVER_CODE_VERSION, newestRepriceRow: newestReprice.solverCodeVersion },
       'The IRMAA growth base (the newest reprice row) shipped with SOLVER_CODE_VERSION 7; v8 (2026-09-28) and v9 (2026-10-03) ' +
-        'moved only the candidate enumerator (the IRMAA, then the ACA-cliff and bracket-edge window anchors) — a recommendation’s ranking, never a figure a saved ' +
+        'moved only the candidate enumerator (the IRMAA, then the ACA-cliff and bracket-edge window anchors) and v10 (2026-10-05) only the ' +
+        'pay-less-tax objective statistic (income tax → all-in cost) — a recommendation’s ranking, never a figure a saved ' +
         'household’s recompute shows — so it appended no row. This pin MOVES with the next solver bump: a SCORED ' +
         'pricing change bumps the solver AND appends a ledger row recording that same version (re-pin both numbers ' +
         'together); a solver bump that is not a pricing change (ranking logic only) appends no row — re-pin only ' +
         '`solverCodeVersion` and say why in the commit.',
-    ).toEqual({ solverCodeVersion: 9, newestRepriceRow: 7 })
+    ).toEqual({ solverCodeVersion: 10, newestRepriceRow: 7 })
   })
 
   it('FIRST_UNAMBIGUOUS_SAVE_DAY is the day AFTER the newest ship day (a save ON a ship day is the ambiguous day)', () => {

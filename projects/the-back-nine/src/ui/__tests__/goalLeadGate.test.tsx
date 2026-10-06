@@ -160,11 +160,11 @@ describe('the goal picker’s lead is verdict-gated at the wiring', () => {
   })
 
   /** THE FOUR DOORS, pinned by the construction that makes them ONE. `openPicker()` above drives
-   *  a single door — the quiet-row invite (Result.tsx:578). The other three (the record card's
-   *  `onReopen`, Result.tsx:422, and the stale + committed beats' `onRepick`, Result.tsx:517) are
+   *  a single door — the quiet-row invite (Result.tsx:587). The other three (the record card's
+   *  `onReopen`, Result.tsx:427, and the stale + committed beats' `onRepick`, Result.tsx:526) are
    *  covered by the arms above ONLY because every door does nothing but flip the same `goalOpen`
-   *  state (Result.tsx:202) into the same single <GoalPicker> element (Result.tsx:803), whose lead
-   *  rides `basicsCovered={goalLeadPremiseHolds}` (Result.tsx:808). Nothing gated that argument: a
+   *  state (Result.tsx:202) into the same single <GoalPicker> element (Result.tsx:812), whose lead
+   *  rides `basicsCovered={goalLeadPremiseHolds}` (Result.tsx:817). Nothing gated that argument: a
    *  refactor minting a SECOND picker (moving the re-pick's into RecommendationSurface, say) would
    *  re-ship the false lead on the committed/stale beat with every arm above still green — the
    *  hardcoded-prop hole this file exists to close, one call site over. So the construction itself

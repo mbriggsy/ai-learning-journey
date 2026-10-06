@@ -97,9 +97,9 @@ being born (insight 020's shape). Both shapes carry a `fingerprint` field today
   fixture-validated). `objective.ts` is a **thin adapter** — it maps the chosen Tier-2
   goal to the statistic the harness already computes and forwards; it hosts **no parallel
   scorer** (a solver-native scorer pins finitely many fixtures and drifts between them —
-  the seam contract evaluate.ts:5-16 names for exactly this council). The adapter is
+  the seam contract evaluate.ts:5-18 names for exactly this council). The adapter is
   `rankForGoal`, test-pinned identical to `rankCandidates`.
-- **`tier2` was un-privated and exported** (evaluate.ts:226) so `select.ts` composes shrinkage
+- **`tier2` was un-privated and exported** (evaluate.ts:231) so `select.ts` composes shrinkage
   and tie-break on the one orientation — no re-derived sign conventions.
 - The lexicographic contract is unchanged from the plan: Tier-1 survival floor in the
   spine's `X of 10`; survival-equivalence decided by the **A-side CRN-difference selection

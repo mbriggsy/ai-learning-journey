@@ -5,11 +5,13 @@
  * THE SEAM CONTRACT (named loudly for U15's council): this module is the validation harness's
  * OWN implementation of the lexicographic objective (plan contract #4 — objective ≡ headline
  * metric): Tier 1 = the survival fraction; Tier 2 = the goal's concrete distributional
- * statistic (pay-less-tax = mean lifetime tax; leave-more = mean AFTER-TAX-to-heirs bequest,
- * first-order §1014/IRD at a CALLER-declared heir bracket). The pay-less-tax ALL-IN statistic
- * (tax + net ACA premium + Medicare, Briggsy's 2026-10-05 ruling) is SCORED here as
- * `lifetimeAllInCostMeanReal` but not yet RANKED: `tier2` still reads income tax until the
- * all-in switch moves every pay-less-tax read site together (build spec Phase B). U15's
+ * statistic (pay-less-tax = mean lifetime ALL-IN cost — income tax + net ACA premium + Medicare,
+ * Briggsy's 2026-10-05 "All-in cost" ruling, `lifetimeAllInCostMeanReal`; leave-more = mean
+ * AFTER-TAX-to-heirs bequest, first-order §1014/IRD at a CALLER-declared heir bracket). The
+ * pay-less-tax statistic is ONE field across its five read sites (this module's `tier2`,
+ * `objective.goalHeadlineStatistic`, `objectiveHeadline.headlineStatisticFromDistribution`,
+ * `select.goalPerPathA`, `gradeCalibration.pairedDecisionDiffs`), each composing the per-path sum
+ * through `lifetimeAllInCostPerPath` (build spec D4). U15's
  * `objective.ts`/`select.ts` must either CONSUME these functions or be validated against these
  * exact fixtures — two implementations that drift is the oracle validating nothing, and U15's
  * pre-build council owns that wiring decision. Until then, THIS is the ranking the oracle's
@@ -49,14 +51,17 @@ export type OracleGoal = RecommendationGoal
 export interface CandidateScore {
   /** Tier-1: the raw survival fraction (quantization happens at DECISION surfaces, not here). */
   readonly survival: number
-  /** Pay-less-tax: mean lifetime tax paid (real $) across paths. `undefined` when the run
-   *  carried no tax overlay — a tax-goal compare against it fails loud downstream. */
+  /** Mean lifetime INCOME tax paid (real $, federal + any priced state) across paths — NOT the
+   *  pay-less-tax ranking statistic since the all-in switch (that is `lifetimeAllInCostMeanReal`);
+   *  kept as income tax for the oracle's hand-derived tax pins, the near-tie fixture and the
+   *  counterfactual "income-tax order" arms. `undefined` when the run carried no tax overlay. */
   readonly lifetimeTaxMeanReal: number | undefined
   /** Pay-less-tax ALL-IN: the mean over paths of the per-path all-in cost (real $) — income tax +
    *  net ACA premium + Medicare, composed by `lifetimeAllInCostPerPath` and meaned through
    *  `objectiveHeadline.ts`'s ONE `mean` (the mean of the per-path SUM, never a sum of means).
    *  Equals `lifetimeTaxMeanReal` bit for bit when healthcare is off. `undefined` without a tax
-   *  overlay. Scored, not yet ranked — `lifetimeTaxMeanReal` keeps meaning income tax alone. */
+   *  overlay — a pay-less-tax compare against it fails loud downstream. THE pay-less-tax Tier-2
+   *  statistic (`tier2`), the displayed headline, and the mean of the shrinkage / grade vectors. */
   readonly lifetimeAllInCostMeanReal: number | undefined
   /** The GROSS estate (mean terminal real $) — deliberately exposed so the case-(iv) guard
    *  can prove a gross-argmax crowns the WRONG winner (contract #7's inversion witness). */
@@ -214,7 +219,7 @@ export function candidateTieBreak(a: CandidateStrategy, b: CandidateStrategy): n
 }
 
 /**
- * The goal's Tier-2 read on a score — smaller-is-better normalized (tax ascending; bequest
+ * The goal's Tier-2 read on a score — smaller-is-better normalized (all-in cost ascending; bequest
  * DESCENDING, so it negates). An undefined statistic under an active goal fails LOUD.
  *
  * EXPORTED (U15 §S1) as the ONE ranking ORIENTATION. `select.ts` (S4) composes its deterministic
@@ -229,10 +234,11 @@ export function tier2(score: CandidateScore, goal: OracleGoal): number {
   // the sign-inversion the whole architecture guards. This is the ONE ranking orientation home.
   switch (goal) {
     case 'pay-less-tax':
-      if (score.lifetimeTaxMeanReal === undefined) {
+      // The ALL-IN mean (income tax + net ACA premium + Medicare), never the income-tax field.
+      if (score.lifetimeAllInCostMeanReal === undefined) {
         throw new Error('[evaluate] pay-less-tax ranking requires taxAware runs (burned/062 — no silent default)')
       }
-      return score.lifetimeTaxMeanReal
+      return score.lifetimeAllInCostMeanReal
     case 'leave-more':
       if (score.afterTaxBequestMeanReal === undefined) {
         throw new Error('[evaluate] leave-more ranking requires taxAware runs + a declared heirBracket (burned/062)')

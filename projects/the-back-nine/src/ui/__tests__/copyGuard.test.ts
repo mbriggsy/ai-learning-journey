@@ -655,7 +655,10 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     // Act-4 · U16 §S3 — the delta-as-hero + skew + state-cert slots (control-swept by their prefixes;
     // the require-hedge control sweep below reaches these rendered samples). Figures pre-formatted.
     recDeltaLeaveMore: slots.recDeltaLeaveMore('48,000'),
+    // The pay-less-tax hero's TWO arms (build spec D7, HIS words 2026-10-05): the PRICED arm (all-in —
+    // tax + health-insurance premiums) and the UNPRICED arm (today's tax-only words, defence-in-depth).
     recDeltaPayLessTax: slots.recDeltaPayLessTax('12,000'),
+    recDeltaPayLessTaxUnpriced: slots.recDeltaPayLessTaxUnpriced('12,000'),
     recSkewMedian: slots.recSkewMedian('230,000'),
     // The median-advantage increment (2026-07-23): the hero's typical-future qualification arms.
     recDeltaTypical: slots.recDeltaTypical('48,000', '9,000'),
@@ -1064,6 +1067,10 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     expect(isControlKey('recHoldTrend'), 'the withheld reasons are control-scoped').toBe(true)
     expect(isControlKey('recRunnerUpWhy'), 'the runner-up "why this beat it" is control-scoped').toBe(true)
     expect(isControlKey('recDiscNiit'), 'the delta disclosures are control-scoped').toBe(true)
+    // The pay-less-tax ALL-IN copy (build spec D7, HIS words 2026-10-05): the unpriced hero arm and the
+    // all-in scope note are plan-moving claims, so their PREFIXES must put them under require-hedge.
+    expect(isControlKey('recDeltaPayLessTaxUnpriced'), 'the unpriced hero arm is control-scoped').toBe(true)
+    expect(isControlKey('recDiscAllInScope'), 'the all-in scope note is control-scoped').toBe(true)
     expect(isControlKey('recommendGradeConfident'), 'the terse GRADE WORD stays verdict-scoped (no forced hedge)').toBe(false)
     expect(isControlKey('recommendBaselineNameplate'), 'the baseline nameplate stays verdict-scoped').toBe(false)
     // gate polarity: a bald deterministic claim FAILS, a hedged one PASSES

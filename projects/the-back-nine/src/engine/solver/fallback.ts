@@ -40,7 +40,7 @@ export const solverInteractivePaths: Sourced<number> = sourced(4_000, {
     'PINNED 2026-07-22 — the §S0.1 reference-device calibration (scripts/calibrate-fallback.ts on the reference laptop, U16 council wf_8d4c6f65-415 Q3: RANK-STABILITY, never latency): through the SHIPPED runSearch→selectRecommendation at tieTolerance 0 (the STRICTEST regime — a looser live tolerance only makes flips rarer), rung 1000 DIVERGED on both hard cells (the worst-case 8-roster world AND the Q4d near-tie grid — the requirement is real), rungs 2000/4000/8000 matched the 16k-truth crown on every cell, monotone. Smallest all-match rung 2000 + one rung headroom → 4000 (the class-plus-headroom idiom).',
   directionalUntilPinned: false,
   directionalKind: 'methodology-substrate',
-  note: 'Governs the interactive SEARCH/ranking paths ONLY — the grade + every displayed figure always run at solverMinBPaths (the held-out floor is never down-sampled; the honest-degrade trades search precision for latency, never honesty). Compute-routing, NOT a ranking-affecting input — the oracle token never reads it. RE-MEASURE trigger: a hardware-class change, a roster-shape change, or the S5 interactive tier build (its gate re-proves winner-cannot-flip on its own algorithm).',
+  note: 'Governs the interactive SEARCH/ranking paths ONLY — the grade + every displayed figure always run at solverMinBPaths (the held-out floor is never down-sampled; the honest-degrade trades search precision for latency, never honesty). Compute-routing, NOT a ranking-affecting input — the oracle token never reads it. RE-MEASURE trigger: a hardware-class change, a roster-shape change, the S5 interactive tier build (its gate re-proves winner-cannot-flip on its own algorithm), or an objective-statistic change (e.g. the 2026-10-05 pay-less-tax all-in switch — W2 measured rank-stability on the retired income-tax statistic).',
 })
 
 /**
@@ -54,7 +54,7 @@ export const solverCandidateCeiling: Sourced<number> = sourced(5, {
     'PINNED 2026-07-22 — the §S0.1 reference-device calibration (scripts/calibrate-fallback.ts): the worst-case cell (both-regime healthcare, 45y, 8-roster) measured 27.7s full-precision search at 16k across both seed-sets = 3.47s per candidate; the interactive-window anchor is the shipped ~20s working-route precedent (the FuckOffDate sweep breathe, base.css) → floor(20s / 3.47s) = 5.',
   directionalUntilPinned: false,
   directionalKind: 'methodology-substrate',
-  note: 'Above this the coarse-then-refine rung engages (full-precision-within-the-window only fits a 5-candidate roster on the reference device — the measured reality that makes the ladder load-bearing). Compute-routing only — never read by the oracle token nor by any ranking. RE-MEASURE with solverInteractivePaths.',
+  note: 'Above this the coarse-then-refine rung engages (full-precision-within-the-window only fits a 5-candidate roster on the reference device — the measured reality that makes the ladder load-bearing). Compute-routing only — never read by the oracle token nor by any ranking. RE-MEASURE with solverInteractivePaths (its triggers, an objective-statistic change among them — e.g. the 2026-10-05 pay-less-tax all-in switch).',
 })
 
 /**
@@ -68,7 +68,7 @@ export const solverCoarseSurvivors: Sourced<number> = sourced(2, {
     'PINNED 2026-07-22 — the §S0.1 reference-device calibration (scripts/calibrate-fallback.ts): at the pinned 4000-path rung the 16k-truth crown sat at rung-position 0 in EVERY battery cell (worst position 0 → +1 position→count, +1 headroom = 2). A lower bound from THIS battery — the S5 interactive-tier build must re-verify pruning safety against its actual coarse-grid design before consuming it.',
   directionalUntilPinned: false,
   directionalKind: 'methodology-substrate',
-  note: 'The refine grid is dense only near these survivors. Compute-routing only — never a ranking input. The S5 gate re-proves the-true-optimum-is-never-pruned on the real coarse algorithm (this pin is the measured floor, not that proof).',
+  note: 'The refine grid is dense only near these survivors. Compute-routing only — never a ranking input. The S5 gate re-proves the-true-optimum-is-never-pruned on the real coarse algorithm (this pin is the measured floor, not that proof). RE-MEASURE with solverInteractivePaths (its triggers, an objective-statistic change among them — e.g. the 2026-10-05 pay-less-tax all-in switch).',
 })
 
 /** The honest-degrade compute tier (rung 3) — a STRUCTURED flag, no copy (U16 authors the words). The

@@ -49,7 +49,7 @@ import {
 } from '../objective'
 import { evaluateCandidates, rankCandidates, scoreFromDistribution, type CandidateOutcome } from '../../validation/evaluate'
 import { solverCandidateId, type CandidateStrategy } from '../candidates'
-import { caseBracketFill, caseNoChange } from '../../reference/solver-cases'
+import { caseAllInAcaTrap, caseBracketFill, caseNoChange } from '../../reference/solver-cases'
 
 const isScored = (o: CandidateOutcome): o is Extract<CandidateOutcome, { kind: 'scored' }> => o.kind === 'scored'
 
@@ -60,6 +60,10 @@ function distFromBuckets(opts: {
   readonly pretax?: readonly number[]
   readonly taxable?: readonly number[]
   readonly hsa?: readonly number[]
+  /** Pay-less-tax all-in addends (default all-zero — the healthcare-off shape). */
+  readonly tax?: readonly number[]
+  readonly premium?: readonly number[]
+  readonly medicare?: readonly number[]
 }): Distribution {
   const n = opts.roth.length
   const zeros: readonly number[] = new Array(n).fill(0)
@@ -72,14 +76,14 @@ function distFromBuckets(opts: {
     depletionYears,
     survivalFraction: 1,
     taxAware: {
-      lifetimeTaxPaidReal: zeros,
+      lifetimeTaxPaidReal: opts.tax ?? zeros,
       terminalTaxableReal: taxable,
       terminalPretaxReal: pretax,
       terminalRothReal: opts.roth,
       terminalHsaReal: hsa,
       terminalTaxableBasisReal: taxable,
-      lifetimeNetPremiumReal: zeros,
-      lifetimeMedicareCostReal: zeros,
+      lifetimeNetPremiumReal: opts.premium ?? zeros,
+      lifetimeMedicareCostReal: opts.medicare ?? zeros,
     },
   }
 }
@@ -150,17 +154,67 @@ describe('objective ≡ headline — the ranked order agrees with the displayed 
   })
 
   it('goalHeadlineStatistic reads the harness score field verbatim (never recomputes)', () => {
-    const dist = distFromBuckets({ roth: [100, 300], pretax: [1000, 500], taxable: [200, 200] })
+    // A priced shape (tax + premium differ) so the all-in field is NOT the income-tax field here.
+    const dist = distFromBuckets({ roth: [100, 300], pretax: [1000, 500], taxable: [200, 200], tax: [10, 30], premium: [5, 7] })
     const hb = 0.25
     const score = scoreFromDistribution(dist, hb)
     expect(goalHeadlineStatistic(score, 'leave-more')).toBe(score.afterTaxBequestMeanReal)
-    expect(goalHeadlineStatistic(score, 'pay-less-tax')).toBe(score.lifetimeTaxMeanReal)
+    expect(goalHeadlineStatistic(score, 'pay-less-tax')).toBe(score.lifetimeAllInCostMeanReal)
   })
 
   it('an undefined statistic under an active goal fails LOUD (burned/062)', () => {
     const noTax: Distribution = { terminalValuesReal: [1, 2], depletionYears: [NEVER_DEPLETED, NEVER_DEPLETED], survivalFraction: 1 }
     const score = scoreFromDistribution(noTax) // no heirBracket, no taxAware ⇒ both goal statistics undefined
     expect(() => goalHeadlineStatistic(score, 'leave-more')).toThrow(/leave-more headline requires/)
+    expect(() => goalHeadlineStatistic(score, 'pay-less-tax')).toThrow(/pay-less-tax headline requires/)
+  })
+})
+
+describe('pay-less-tax ranks on ALL-IN cost (build spec §5.2, Briggsy 2026-10-05 "All-in cost")', () => {
+  const conv = (annualAmountReal: number): CandidateStrategy => ({
+    policy: 'taxable-first',
+    conversion: { annualAmountReal, startYearOffset: 0, years: 1 },
+    provenance: 'grid',
+  })
+  const HB = 0.25
+
+  it('tax and all-in DISAGREE: goalHeadlineStatistic and rankForGoal both follow all-in (a premium flip)', () => {
+    // A: tax 100, no premium ⇒ all-in 100.  B: tax 60, premium 80 ⇒ all-in 140. Income tax crowns B; all-in crowns A.
+    const a = scoredOutcome(conv(1000), distFromBuckets({ roth: [1, 1], tax: [100, 100] }), HB)
+    const b = scoredOutcome(conv(2000), distFromBuckets({ roth: [1, 1], tax: [60, 60], premium: [80, 80] }), HB)
+    if (!isScored(a) || !isScored(b)) throw new Error('fixture outcomes are scored')
+    expect(a.score.lifetimeTaxMeanReal! > b.score.lifetimeTaxMeanReal!).toBe(true) // premise: B pays less income tax
+    expect(goalHeadlineStatistic(a.score, 'pay-less-tax')).toBe(100)
+    expect(goalHeadlineStatistic(b.score, 'pay-less-tax')).toBe(140)
+    expect(rankForGoal([b, a], 'pay-less-tax', 0).map((o) => solverCandidateId(o.candidate))).toEqual([
+      solverCandidateId(a.candidate),
+      solverCandidateId(b.candidate),
+    ])
+  })
+
+  it('a MEDICARE-only flip: the Medicare addend alone reverses the income-tax order', () => {
+    // A: tax 100 ⇒ all-in 100.  B: tax 90, Medicare 30 ⇒ all-in 120.
+    const a = scoredOutcome(conv(1000), distFromBuckets({ roth: [1, 1], tax: [100, 100] }), HB)
+    const b = scoredOutcome(conv(2000), distFromBuckets({ roth: [1, 1], tax: [90, 90], medicare: [30, 30] }), HB)
+    if (!isScored(b)) throw new Error('fixture outcome is scored')
+    expect(goalHeadlineStatistic(b.score, 'pay-less-tax')).toBe(120)
+    expect(rankForGoal([b, a], 'pay-less-tax', 0)[0]).toBe(a)
+  })
+
+  it('pay-less-tax: the headline all-in is non-decreasing down the ranking on case (vi) — the engine-run monotonicity arm', () => {
+    const outcomes = evaluateCandidates(caseAllInAcaTrap.buildBase(), caseAllInAcaTrap.buildCandidates(), caseAllInAcaTrap.seed)
+    const ranked = rankForGoal(outcomes, 'pay-less-tax', caseAllInAcaTrap.tieTolerance).filter(isScored)
+    expect(ranked.length).toBe(2)
+    const stats = ranked.map((o) => goalHeadlineStatistic(o.score, 'pay-less-tax'))
+    expect(stats).toEqual([...stats].sort((x, y) => x - y))
+    // …and it is NOT the income-tax order here (the case's whole point — else this arm is vacuous).
+    const taxes = ranked.map((o) => o.score.lifetimeTaxMeanReal!)
+    expect(taxes).toEqual([...taxes].sort((x, y) => y - x))
+  })
+
+  it('reads the ALL-IN field: a score carrying income tax but no all-in figure fails LOUD (burned/062)', () => {
+    const score = { ...scoreFromDistribution(distFromBuckets({ roth: [1], tax: [5] }), HB), lifetimeAllInCostMeanReal: undefined }
+    expect(score.lifetimeTaxMeanReal).toBe(5)
     expect(() => goalHeadlineStatistic(score, 'pay-less-tax')).toThrow(/pay-less-tax headline requires/)
   })
 })

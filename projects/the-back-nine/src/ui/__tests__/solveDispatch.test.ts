@@ -24,7 +24,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { buildSolveRequest } from '@intake/solveDispatch'
-import { buildSpineParams, buildDateInput, missingRequiredFacts } from '@intake/intakeMap'
+import { buildSpineParams, buildDateInput, missingRequiredFacts, spineMedicarePriced } from '@intake/intakeMap'
 import { createMemoryModel, type ParamsBuilders, type ScenarioDraft } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
 import type { SolveWire } from '@engine/engineWire'
@@ -32,7 +32,7 @@ import { engineApi } from '@engine/engineProtocol'
 import { solverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 import { solverAssumedHeirBracket, solverMinBPaths, acaEnhancedSubsidyStatus } from '@engine/constants'
 import { epochDayFromIsoDate } from '@engine/validation/oracleToken'
-import { doctorRecordHolds, resolveDevSeed } from '../devSeeds'
+import { DEV_SEEDS, doctorRecordHolds, resolveDevSeed } from '../devSeeds'
 import { scenarioFromDraft } from '../scenarioFromDraft'
 
 // Within the ACA freshness window so a clean household MINTS (the solveEntry.test convention).
@@ -192,6 +192,21 @@ describe('buildSolveRequest — the built healthcare-priced predicate the all-in
     const draft: ScenarioDraft = { ...priced, health: healthNoQuotes }
     expect(missingRequiredFacts(draft).map((m) => m.labelKey)).toEqual(['enrolledPremiumLabel', 'slcspLabel'])
     expect(buildSolveRequest(draft, TODAY)).toBe('spine-unready')
+  })
+
+  // Result threads `spineMedicarePriced(draft)` to the hero as the solve's built predicate (Phase B). That
+  // is honest only while the solve's base IS `buildSpineParams`' output — pin the identity on the real
+  // builder over EVERY dev seed that builds a request, so the two reads can never silently diverge (a
+  // future base that re-shapes the overlay reds here).
+  it('Result’s predicate (`spineMedicarePriced`) IS the solve base’s `overlay.healthcareEnabled`, on every dev seed that builds a request', () => {
+    let built = 0
+    for (const [id, draft] of Object.entries(DEV_SEEDS)) {
+      const req = buildSolveRequest({ ...draft, chosenGoal: 'pay-less-tax' }, TODAY)
+      if (typeof req === 'string') continue
+      built++
+      expect(spineMedicarePriced(draft), id).toBe(req.base.overlay?.healthcareEnabled === true)
+    }
+    expect(built, 'the identity ran over real requests').toBeGreaterThanOrEqual(3)
   })
 })
 

@@ -114,9 +114,9 @@ describe('objectiveHeadline — the pure §1014 formula + the objective≡headli
 
   // --- pay-less-tax ALL-IN (the build spec §3 step 1): the guard's recompute must be the all-in mean ---
   // A healthcare-PRICED distribution: per-path all-in = tax + net premium + Medicare = [17k, 21k, 25k],
-  // mean 21,000 (hand arithmetic); the income-tax-only mean is 12,000. Both arms are RED on today's
-  // tax-only recompute and stay SKIPPED until Phase B moves `headlineStatisticFromDistribution` onto
-  // `lifetimeAllInCostPerPath` (un-skipped in the switch commit, spec §3 step 12).
+  // mean 21,000 (hand arithmetic); the income-tax-only mean is 12,000. The two guard arms below were RED
+  // on the tax-only recompute (recorded at Phase A) and went green when the switch moved
+  // `headlineStatisticFromDistribution` onto `lifetimeAllInCostPerPath` (spec §3 step 12).
   const pricedAllIn = distOf({
     lifetimeTaxPaidReal: [10_000, 12_000, 14_000],
     lifetimeNetPremiumReal: [5_000, 7_000, 9_000],
@@ -178,11 +178,11 @@ describe('objectiveHeadline — the pure §1014 formula + the objective≡headli
     }
   })
 
-  it.skip('PHASE B (all-in switch): the guard PASSES a priced payload whose stored figure is mean(per-path all-in)', () => {
+  it('the guard PASSES a priced payload whose stored figure is mean(per-path all-in)', () => {
     expect(() => assertObjectiveMatchesHeadline(pricedPayload(21_000))).not.toThrow()
   })
 
-  it.skip('PHASE B (all-in switch): the guard REFUSES a priced payload whose stored figure is the income-tax-only mean', () => {
+  it('the guard REFUSES a priced payload whose stored figure is the income-tax-only mean', () => {
     expect(() => assertObjectiveMatchesHeadline(pricedPayload(12_000))).toThrow(/diverged|ranked/)
   })
 

@@ -59,7 +59,9 @@ export function rankForGoal(
 /**
  * The goal's Tier-2 statistic in the EXACT units the headline renders (objective ≡ headline, plan
  * contract #4): leave-more = the mean after-tax-to-heirs bequest (real $, higher is better);
- * pay-less-tax = the mean lifetime tax paid (real $, lower is better). READS the harness's already-
+ * pay-less-tax = the mean lifetime ALL-IN cost (real $, lower is better — income tax + net ACA premium +
+ * Medicare, Briggsy's 2026-10-05 "All-in cost" ruling; `lifetimeAllInCostMeanReal`, never the income-tax
+ * field). READS the harness's already-
  * computed score field verbatim — it never recomputes a statistic (the sign lives once, in `tier2`'s
  * orientation, which `rankForGoal` ranks on). An undefined statistic under an active goal fails LOUD
  * (burned/062 — no silent default). This is the figure the solve payload displays; `rankForGoal`
@@ -71,10 +73,10 @@ export function goalHeadlineStatistic(score: CandidateScore, goal: OracleGoal): 
   // an if-chain would hide). Copied to every goal-dispatch surface (tier2, goalHigherIsBetter, gradeAxisFor).
   switch (goal) {
     case 'pay-less-tax':
-      if (score.lifetimeTaxMeanReal === undefined) {
-        throw new Error('[objective] pay-less-tax headline requires taxAware runs (burned/062 — no silent default)')
+      if (score.lifetimeAllInCostMeanReal === undefined) {
+        throw new Error('[objective] pay-less-tax headline requires taxAware runs — the all-in cost needs the tax overlay (burned/062 — no silent default)')
       }
-      return score.lifetimeTaxMeanReal
+      return score.lifetimeAllInCostMeanReal
     case 'leave-more':
       if (score.afterTaxBequestMeanReal === undefined) {
         throw new Error('[objective] leave-more headline requires taxAware runs + a declared heirBracket (burned/062)')

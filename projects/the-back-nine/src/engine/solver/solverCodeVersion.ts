@@ -110,5 +110,20 @@
  * in the years the engine prices ACA under it (that year's premium + a living pre-65 member). Rosters
  * grew 858 → 1,142 over the 15 solvable dev seeds (`retired` 69 → 93, `healthnc` 73 → 97). Ranking
  * logic only — no pricer moved, so no `ENGINE_PRICING_LEDGER` row (pricingVersion.test pins the split).
+ *
+ * VERSION 10 (2026-10-05) — the pay-less-tax Tier-2 statistic moved from mean lifetime INCOME tax to mean
+ * lifetime ALL-IN cost (income tax + the net ACA premium + Medicare: base Part B + IRMAA + the Part D /
+ * Medigap / MA extras), per Briggsy's 2026-10-05 "All-in cost" ruling — the objective-statistic clause
+ * above. One field across all five read sites (`evaluate.tier2`, `objective.goalHeadlineStatistic`,
+ * `objectiveHeadline.headlineStatisticFromDistribution`, `select.goalPerPathA`,
+ * `gradeCalibration.pairedDecisionDiffs`), each composing the per-path sum through
+ * `objectiveHeadline.lifetimeAllInCostPerPath` (the register's Tier 0 *Pay-less-tax ranks on income tax
+ * alone…*; build spec `pay-less-tax-all-in-build-spec.md`). Ranking logic only — no pricer moved, so no
+ * `ENGINE_PRICING_LEDGER` row (pricingVersion.test pins the split). The stamp is global, so leave-more
+ * records re-stale too: an over-re-run, accepted under the when-in-doubt rule. Also covered here: Phase A's
+ * finiteness seam (`simulate.ts`, a non-finite premium or Medicare total routes the candidate infeasible)
+ * could in principle mark a previously scored candidate infeasible; it is unreachable in practice (the
+ * premium sits inside the gross withdrawal, so an overflow trips the terminal check first) and landed one
+ * commit before this bump.
  */
-export const SOLVER_CODE_VERSION = 9
+export const SOLVER_CODE_VERSION = 10

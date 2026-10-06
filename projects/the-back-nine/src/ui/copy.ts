@@ -1590,7 +1590,7 @@ export const copy = {
   recommendSaveSavedBadge: 'Saved to this device — your plan and this strategy read',
   // THE REFUSALS. None carries a retry control: the mint is deterministic, so a retry re-fails
   // identically, and an affordance that cannot succeed is the lying-remedy shape
-  // (Result.tsx:468-476). Each says what did NOT happen, in the reader's frame.
+  // (Result.tsx:473-481). Each says what did NOT happen, in the reader's frame.
   recommendSaveRefusalRecordInvalidHeading: 'This strategy read couldn’t be kept',
   recommendSaveRefusalRecordInvalidBody:
     'We couldn’t build a record of it, so nothing reached this device — your plan here is exactly as you left it. The answer above is still current.',
@@ -1775,9 +1775,14 @@ export const copy = {
   // never the gross figure); the gloss names the after-tax frame honestly.
   goalLeaveMoreLabel: 'Leave more behind',
   goalLeaveMoreGloss: 'More left for your heirs, after taxes.',
-  // `pay-less-tax` = minimize lifetime tax paid.
+  // `pay-less-tax` = minimize lifetime ALL-IN cost: income tax + the ACA premium after the credit +
+  // Medicare (base Part B + IRMAA + the extras) — RULED 2026-10-05 by Briggsy, "All-in cost" (register
+  // Tier 0, "Pay-less-tax ranks on income tax alone…"). The label and the id stay (his call); the gloss
+  // is HIS words, ONE line on BOTH arms of the built pricing state — "the premiums this tool counts" is
+  // true on a healthcare-priced run AND on an unpriced one (where no premium is counted), so it needs no
+  // gate where the hero does (`recDeltaPayLessTax` / `recDeltaPayLessTaxUnpriced`).
   goalPayLessTaxLabel: 'Pay less tax',
-  goalPayLessTaxGloss: 'Less total tax over your lifetime.',
+  goalPayLessTaxGloss: 'Less paid over your lifetime in tax, and in the health-insurance premiums this tool counts.',
 
   // --- Act-4 · U16 §S3 — the COMMITTED beat (the honesty arc). PREFIX LAW (copyGuard):
   //   · GRADE WORDS + nameplate + the calm-unavailable + the withheld HEADINGS ride the `recommend*`
@@ -1812,12 +1817,12 @@ export const copy = {
   // the baseline arm, and `solveAnchor.test.ts` pins the identity as a REDUCE-TO-SPINE assertion
   // (`applyCandidate(base, userBaseline)` deep-equals the household's own params).
   //
-  // FOUR STRINGS RIDE THAT ONE SEAM: this nameplate, `recVizWithoutLabel` ("Your plan today"), and
-  // BOTH hero slots (`recDeltaLeaveMore` / `recDeltaPayLessTax`, "than today's plan"). They are worded
-  // as claims about the READER'S OWN plan and are only true while the displayed baseline is the user
+  // FIVE STRINGS RIDE THAT ONE SEAM: this nameplate, `recVizWithoutLabel` ("Your plan today"), and
+  // ALL THREE hero slots (`recDeltaLeaveMore` / `recDeltaPayLessTax` / `recDeltaPayLessTaxUnpriced`,
+  // "than today's plan"). They are worded as claims about the READER'S OWN plan and are only true while the displayed baseline is the user
   // baseline AND that baseline carries BOTH of the household's controls. ⛔ IF YOU EVER RE-ANCHOR
   // `solve.ts`'s displayed baseline back to the conventional arm — OR DROP EITHER CONTROL FROM THE
-  // INJECTED BASELINE — ALL FOUR BECOME LIES IN THE SAME COMMIT: rename them in that commit or do not
+  // INJECTED BASELINE — ALL FIVE BECOME LIES IN THE SAME COMMIT: rename them in that commit or do not
   // make the change. `solve.test.ts` pins the display seam and `solveAnchor.test.ts` pins the
   // baseline's contents, so neither half can drift silently.
   recommendBaselineNameplate: 'Compared with your plan today',
@@ -1944,20 +1949,30 @@ export const copy = {
   // The SS claim-age held-fixed note (a disclosure seat — NOT optimized in the comparison). "assume" hedges.
   recDiscSsClaimFixed:
     'We assume you each claim Social Security at the ages you entered, and hold those steady while we compare.',
-  // The NIIT scope note — the federal surtax on higher investment income the delta doesn’t split out.
-  // "could" hedges; no bare numeral (the surtax rate is named in plain language, never a free figure).
+  // The NIIT scope note — the federal surtax on higher investment income, the one lever-inert omission
+  // on BOTH goals. HIS words (2026-10-05): the old "This weighs your federal income tax" was already
+  // false on a priced NC/PA/FL run and is false on every pay-less-tax run once premiums are in the
+  // objective. "could" hedges; no bare numeral (the surtax rate is named in plain language).
   recDiscNiit:
-    'This weighs your federal income tax; a federal surtax on higher investment income could also apply and isn’t broken out here.',
-  // The state-tax scope note — priced only for the roster states; elsewhere the delta is federal-only.
+    'A federal surtax on higher investment income isn’t counted here, and it could apply.',
+  // The state-tax scope note — priced only for the roster states; elsewhere the state piece is left
+  // out. HIS words (2026-10-05): "compares federal tax only" became false on pay-less-tax once premiums
+  // are in the comparison, and renders on BOTH goals. Drops for a priced state (stateTaxDisclosure.ts).
   recDiscStateTax:
-    'Where we can’t yet price a state’s income tax, this compares federal tax only — the state piece could move it either way.',
+    'Where we can’t yet price a state’s income tax, it’s left out of this comparison — the state piece could move it either way.',
+  // The pay-less-tax ALL-IN scope note (HIS words 2026-10-05; its tail refined 2026-10-06 on the pre-land Caddie read, from "differences in plan cost-sharing" to the plain "changes to your copays and deductibles") — rendered ONLY on a pay-less-tax run
+  // whose BUILT overlay priced healthcare (`healthcarePriced`, recommendationView.ts). It names the
+  // residual the hero cannot: "premiums" must never read as out-of-pocket costs, and plan cost-sharing
+  // (deductibles, copays) is not in the objective. "could" hedges.
+  recDiscAllInScope:
+    'This counts your income tax plus the health-insurance premiums a strategy can move; changes to your copays and deductibles aren’t counted and could move this.',
   // The ACA SLCSP/CSR caveat, by reference — shown only when the delta LEANS ON ACA. "could" hedges.
   recDiscAcaSlcsp:
     'This leans on your marketplace benchmark and cost-sharing figures; if those shift, the edge here could move.',
   // The viz arm labels (string-free viz; DIRECT end-of-line labels, never a color legend). Plain nouns.
   recVizWithLabel: 'The recommended strategy',
   // Names the household's OWN plan — true only while `solve.ts` displays `search.userBaseline`.
-  // See the coupling warning on `recommendBaselineNameplate`; all four strings move together.
+  // See the coupling warning on `recommendBaselineNameplate`; all five strings move together.
   recVizWithoutLabel: 'Your plan today',
   // Act-4 · U16 §S4 — the RUNNER-UP comparison viz arm label (winner vs runner-up, one tap down). A
   // plain noun (not a plan-moving claim — the hedged claim is `recRunnerUpWhy`); the recommended arm
@@ -2658,7 +2673,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the two
    *  universal gates (no false certainty, no advice verb), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:985` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:988` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -2970,9 +2985,22 @@ export const slots = {
    *  `search.userBaseline`. See the coupling warning on `recommendBaselineNameplate`. */
   recDeltaLeaveMore: (deltaFormatted: string): string =>
     `Leaves about $${deltaFormatted} more to your heirs than today’s plan, after taxes.`,
-  /** The delta-as-hero for `pay-less-tax` (the surviving pivot: "keeps ~$X more" — the DEAD "safe
-   *  either way" absolute stripped). "about" is the require-hedge modal. */
+  /** The delta-as-hero for `pay-less-tax`, PRICED arm (the run's BUILT overlay priced healthcare) — HIS
+   *  words, RULED 2026-10-05: the objective is lifetime ALL-IN cost (income tax + the ACA premium after
+   *  the credit + Medicare base/IRMAA/extras), so the hero names both halves of what the figure counts.
+   *  "Health-insurance premiums" literally covers the after-credit marketplace premium, Part B, the
+   *  Part D / Medigap extras and IRMAA (a premium surcharge); the cost-sharing residual rides
+   *  `recDiscAllInScope`. Keeps "$X more", so the `recDeltaTypical*` quotes stay valid. "about" is the
+   *  require-hedge modal. ⚠️ "today's plan" — see the coupling warning on `recommendBaselineNameplate`. */
   recDeltaPayLessTax: (deltaFormatted: string): string =>
+    `Keeps about $${deltaFormatted} more out of your lifetime tax and health-insurance premiums than today’s plan.`,
+  /** The delta-as-hero for `pay-less-tax`, UNPRICED arm (build spec D7 — HIS words: today's string,
+   *  unchanged). A run whose built overlay did NOT price healthcare ranks on income tax alone (all-in ≡
+   *  income tax there, byte for byte), so a hero naming premiums would claim a count that never ran.
+   *  UNREACHABLE from intake today (`missingRequiredFacts` requires the quote pair for any pre-65
+   *  member) — kept as defence-in-depth so a future intake change can never make the hero overclaim.
+   *  "about" is the require-hedge modal. */
+  recDeltaPayLessTaxUnpriced: (deltaFormatted: string): string =>
     `Keeps about $${deltaFormatted} more out of your lifetime tax than today’s plan.`,
   /** The §S2 skew disclosure (leave-more): the MEAN ranks + displays, but a few lucky futures pull it
    *  up, so the disclosure QUOTES THE MEDIAN as the typical bequest. "about" is the require-hedge modal;
@@ -3055,8 +3083,9 @@ export const slots = {
    *  that dialect never touches this sentence, and naming it here would point a reader at the wrong rounding law.
    *
    *  ⚠️ WEALTH-SHAPED ⇒ LEAVE-MORE ONLY (2026-09-08). "lands near about $X" describes a level the reader
-   *  wants HIGHER. On `pay-less-tax` the same slots would carry mean lifetime TAX PAID (lower is better,
-   *  src/engine/solver/objective.ts:62) and the sentence would read backwards — so recommendationView.ts
+   *  wants HIGHER. On `pay-less-tax` the same slots would carry mean lifetime ALL-IN cost (income tax +
+   *  health-insurance premiums since 2026-10-05; lower is better, `goalHeadlineStatistic` in
+   *  src/engine/solver/objective.ts) and the sentence would read backwards — so recommendationView.ts
    *  suppresses BOTH vizzes off leave-more (`recommendedView` + `runnerUpVizFor` — named, not line-cited:
    *  a cross-file line number is the drift class this docblock was just re-anchored for) and this slot
    *  renders on no other goal. A goal-named caption + aria variant for pay-less-tax are ⚑ Briggsy's

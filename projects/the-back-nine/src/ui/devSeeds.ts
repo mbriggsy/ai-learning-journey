@@ -454,7 +454,7 @@ const retiredBudget: ScenarioDraft = {
  * lifestyle at 8", labelled Engine-proven, and both figures were wrong):**
  *   provisional (2,000 paths) — floor **2** `confirmed-date` · lifestyle **10** `window-edge-unconfirmed`
  *   final       (16,000 paths) — floor **2** `confirmed-date` · lifestyle **9** `confirmed-date`
- * The LIVE surface runs `final` (`IntakeApp.tsx:318`, `Result.tsx:275`/`:289`), so the shipped hero is
+ * The LIVE surface runs `final` (`IntakeApp.tsx:318`, `Result.tsx:280`/`:294`), so the shipped hero is
  * the 9 — and it is a CONFIRMED date, i.e. the band owes no edge hedge there. The 10 is real but is a
  * provisional-tier reading, and it is `window-edge-unconfirmed`: during entry the hedge RENDERS and
  * then WITHDRAWS when final lands. That transient has never been cold-read.

@@ -101,7 +101,9 @@ export function lifetimeAllInCostPerPath(dist: Distribution): readonly number[] 
 
 /**
  * The goal's DISPLAYED headline statistic RE-DERIVED from a seed-B distribution (real $, the exact units
- * the arm carries): pay-less-tax = mean lifetime tax paid; leave-more = mean after-tax-to-heirs bequest at
+ * the arm carries): pay-less-tax = mean lifetime ALL-IN cost (the mean of `lifetimeAllInCostPerPath`,
+ * through this module's ONE `mean` — the same loop `scoreFromDistribution` stored it with, so the guard's
+ * strict `!==` holds by construction); leave-more = mean after-tax-to-heirs bequest at
  * the declared bracket. This is the objective≡headline recompute the guard checks the STORED figure
  * against. An absent lens fails LOUD (burned/062 — no silent default). The exhaustive switch + never-guard
  * mirrors `objective.ts`'s `goalHeadlineStatistic`; `objectiveHeadline.test.ts` pins the two identical on a
@@ -114,11 +116,11 @@ export function headlineStatisticFromDistribution(
 ): number {
   switch (goal) {
     case 'pay-less-tax': {
-      const ta = dist.taxAware
-      if (ta === undefined) {
+      const vec = lifetimeAllInCostPerPath(dist)
+      if (vec === undefined) {
         throw new Error('[objectiveHeadline] pay-less-tax headline requires taxAware runs (burned/062 — no silent default)')
       }
-      return mean(ta.lifetimeTaxPaidReal)
+      return mean(vec)
     }
     case 'leave-more': {
       if (heirBracket === undefined) {

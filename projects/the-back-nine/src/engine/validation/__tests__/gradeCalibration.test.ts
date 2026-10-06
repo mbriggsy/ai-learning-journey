@@ -46,6 +46,8 @@ describe('pairedDecisionDiffs — the winner-positive orientation, numerically p
   const scored = (over: {
     depletionYears?: readonly number[]
     tax?: readonly number[]
+    premium?: readonly number[]
+    medicare?: readonly number[]
     taxable?: readonly number[]
   }): CandidateOutcome => {
     const n = (over.tax ?? over.taxable ?? over.depletionYears ?? [0, 0]).length
@@ -65,8 +67,8 @@ describe('pairedDecisionDiffs — the winner-positive orientation, numerically p
           terminalRothReal: zeros,
           terminalHsaReal: zeros,
           terminalTaxableBasisReal: zeros,
-          lifetimeNetPremiumReal: zeros,
-          lifetimeMedicareCostReal: zeros,
+          lifetimeNetPremiumReal: over.premium ?? zeros,
+          lifetimeMedicareCostReal: over.medicare ?? zeros,
         },
       },
     }
@@ -79,6 +81,19 @@ describe('pairedDecisionDiffs — the winner-positive orientation, numerically p
   it('pay-less-tax: winner pays 100 LESS every path ⇒ diffs all +100 (winner-positive = runner − winner)', () => {
     // The killer for a sign flip in the pay-less-tax arm: reverse the subtraction and this reads −100.
     expect(pairedDecisionDiffs(scored({ tax: [200, 200, 200] }), scored({ tax: [300, 300, 300] }), 'pay-less-tax')).toEqual([100, 100, 100])
+  })
+
+  it('pay-less-tax ranks ALL-IN: winner 200 tax / 50 premium / 10 Medicare vs runner 300 / 0 / 0 ⇒ +40 per path, NOT the income-tax +100', () => {
+    // All-in: runner 300 − winner 260 = +40 (build spec §5.2). A diff over lifetimeTaxPaidReal alone reads +100.
+    const winner = scored({ tax: [200, 200, 200], premium: [50, 50, 50], medicare: [10, 10, 10] })
+    const runner = scored({ tax: [300, 300, 300] })
+    expect(pairedDecisionDiffs(winner, runner, 'pay-less-tax')).toEqual([40, 40, 40])
+  })
+
+  it('pay-less-tax ALL-IN, a MEDICARE-only variant: winner 200 tax + 120 Medicare vs runner 300 ⇒ −20 per path (the Medicare addend alone flips the sign)', () => {
+    const winner = scored({ tax: [200, 200], medicare: [120, 120] })
+    const runner = scored({ tax: [300, 300] })
+    expect(pairedDecisionDiffs(winner, runner, 'pay-less-tax')).toEqual([-20, -20])
   })
 
   it('leave-more: winner leaves 200 MORE to heirs every path ⇒ diffs all +200 (winner-positive = winner − runner)', () => {

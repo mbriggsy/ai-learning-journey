@@ -235,6 +235,11 @@ export function Result({
   // affirmation names the state; the Roth lever + Healthcare sheet drop the state-tax omission; the
   // RECOMMENDATION surface drops its federal-only scope note), each gating on `!== undefined`.
   const statePricedNote = useMemo(() => pricedStateForRun(snapshot.draft), [snapshot.draft])
+  // The pay-less-tax ALL-IN hero's scope (build spec D7): did the SOLVE's built overlay price
+  // healthcare? Deliberately NOT `medicarePriced` above — that one ORs the date route in (structurally
+  // priced there), while the solve never runs on the date route (`spine-unready`) and its base is
+  // exactly `buildSpineParams`' output, so the spine read alone is the solve's own predicate.
+  const solveHealthcarePriced = useMemo(() => spineMedicarePriced(snapshot.draft), [snapshot.draft])
   const enhancedApplied = snapshot.draft.enhancedSubsidies === true
   // The wire's per-year healthcare series (spine headline runs only — presence-keyed).
   const healthReadout =
@@ -510,6 +515,10 @@ export function Result({
         <RecommendationSurface
           solve={snapshot.solve}
           pricedState={statePricedNote}
+          // The solve's BUILT healthcare pricing (build spec D7): the solve's base IS `buildSpineParams`
+          // (solveDispatch.ts), and this surface mounts only off the date route, so the spine read IS
+          // `base.overlay.healthcareEnabled`. Picks the pay-less-tax hero's all-in vs tax-only arm.
+          healthcarePriced={solveHealthcarePriced}
           // The SAME anchor the band annotations and the record card read — minted once above, passed
           // by reference. The winning-plan card's conversion start speaks `startCalendarYear + offset`
           // off it; drop this prop and the card silently stops rendering (never a wrong year).

@@ -162,7 +162,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    the same `escalateQuote` factor — so under the cliff a missing trend is **zero** when E=S
    (`devSeeds.ts:615-616` = 4200/4200) and **reversed (pessimistic)** when E<S, which `copy.ts:227` invites.
    It bites one-way optimistic **only over the cliff** (`healthOverlay.ts:304-308`, full enrolled premium).
-   The shipped sibling `recDiscAcaSlcsp` (`copy.ts:1955-1956`) hedges bidirectionally on this exact fact and
+   The shipped sibling `recDiscAcaSlcsp` (`copy.ts:1970-1971`) hedges bidirectionally on this exact fact and
    `medicare-pricing-build-spec.md:43` bans the false unidirectional. Draft to append to BOTH strings:
    *"One modeling choice: these prices step up with your ages, not with the way plan prices themselves climb
    — so a conversion that crosses the income line could cost more than shown."*
@@ -200,7 +200,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`copy.ts:979`, `:984, :998, :1000, :1008, :1010` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
    affirmation, not append to it) + the two health-control siblings (`copy.ts:1143`, `:1149`), which CANNOT take it
-   (gated on `statePriced` alone — `copy.ts:1135-1137`). Unfiled: `shadowRateHeadroom` (`copy.ts:2725`)
+   (gated on `statePriced` alone — `copy.ts:1135-1137`). Unfiled: `shadowRateHeadroom` (`copy.ts:2740`)
    quotes cliff headroom against an SLCSP that never trends — the headroom figure inherits the held-price
    optimism; and there is NO ACA cost-trend constant at all (`health.ts` carries only `medicareCostTrend`)
    — ACA premiums are the one health channel with no trend, no clause AND no disclosure, in the
@@ -215,9 +215,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    ONLY, so a withhold-only fix still ships a **state-blind headline / fuck-off date**.
    ⚑ **2026-08-03 double-blind — diagnosis CONFIRMED, and the "cheap partial" is not cheap and not sound.**
    Pricing is membership-keyed at `taxOverlay.ts:881`; `PRICED_STATES` is `constants/stateTax.ts:50`; the
-   flip is pinned live at `optimalityOracle.test.ts:249-260` (NC crowns the 12%-top anchor, the state-absent
+   flip is pinned live at `optimalityOracle.test.ts:295-306` (NC crowns the 12%-top anchor, the state-absent
    twin the 22%-top). Correction (a) is **half-stale** — the `state-certification-pending` WithheldReason
-   (`oracleToken.ts:48`), its humane string (`recommendationView.ts:338-339`) and the whole *held* card
+   (`oracleToken.ts:48`), its humane string (`recommendationView.ts:364-365`) and the whole *held* card
    still ship and are tested; only the **live trigger** is gone, so a new arm is an addition, not a build.
    Correction (b) is **confirmed exact**: `mintOracleToken` has one live call site (`solveEntry.ts:232`),
    reached only via `engineApi.runSolve`; `engineApi.run` (`engineProtocol.ts:423` — headline/confidence)
@@ -228,11 +228,11 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    added is a new annual red-build gate with its own `nextDue`** (FL already carries one). Per state:
    `model.ts:317` STATE_ROSTER · a sourced(0) constants entry + profile · `copy.ts` `stateOption<X>` +
    `verdictResidualState<X>` (the THREE exhaustive switches at `stateTaxDisclosure.ts:52-63`,
-   `stateTaxDisclosure.ts:93-104` (the standalone note, Card 4) and `stateTaxDisclosure.ts:169-178` fail
-   `tsc` until written) · `recommendationView.ts:318-322` · the intake picker **4 → 11 vertical arms**
+   `stateTaxDisclosure.ts:93-104` (the standalone note, Card 4) and `stateTaxDisclosure.ts:172-181` fail
+   `tsc` until written) · `recommendationView.ts:344-348` · the intake picker **4 → 11 vertical arms**
    against `verify:fit`. Engine cost is genuinely near-zero (`stateTax.ts:134` structural early return).
    ⚑ **The filed "every saved vault decodes Corrupt" blocker is FALSE — do not act on it, and do NOT loosen
-   the compile tie.** `_V3FieldsCover` (`model.ts:2318-2320`) covers only `keyof ScenarioV3`;
+   the compile tie.** `_V3FieldsCover` (`model.ts:2321-2323`) covers only `keyof ScenarioV3`;
    `checkStateTaxVintageV3` (`scenarioCodec.ts:552-557`) is hand-written and compels no `needString`. Safe
    because `scenarioCodec.ts:793-794` gates `retirementState` via `needVocab(STATE_ROSTER)`, so no
    pre-widening vault can *be* a household in a newly-priced state. The prescribed remedy — loosening
@@ -270,7 +270,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `sanity.ts:52-75`). ⚑ **Size is M, not S, and a ceiling is the wrong instrument:** a 10× slip on
      $500k is $5M — a perfectly coherent household, so no threshold catches it. The shape that works is
      **one confirm on the household TOTAL** at the accounts step (the figure the engine actually consumes),
-     reusing the running total already rendered at `copy.ts:2101` / `questions.tsx:1052-1054`.
+     reusing the running total already rendered at `copy.ts:2116` / `questions.tsx:1052-1054`.
      ⚑ **"Briggsy sets the number" is the WRONG ask — there IS no honest number** (every total is
      coherent, so any threshold is the guessed plausibility band burned/062 bans). The only rule that
      invents nothing is an **unconditional** one-tap confirm for any household with ≥1 account. That is a
@@ -301,8 +301,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      *"a DISCLOSED non-feature, the survivor-SS class"* — the same false claim, in the file that **owns** the
      mechanism.
      ⚑ **The genuine ruling here is scope, not wording** (tone is Caddie-chair under the batched-oracle law):
-     **NIIT is not homeless** — `recommendationView.ts:90` emits it on *every* committed recommendation
-     (rendered `RecommendationSurface.tsx:535-543`) and `controlHealthOmissionsNote` carries it on the
+     **NIIT is not homeless** — `recommendationView.ts:101` emits it on *every* committed recommendation
+     (rendered `RecommendationSurface.tsx:541-549`) and `controlHealthOmissionsNote` carries it on the
      Healthcare sheet. So: ship the section with only the two genuinely-homeless items (HSA forfeit + LTC),
      or make the panel section NIIT's canonical home and prune the other two — the repo's own
      one-honest-home-per-fact law (`healthSheetChrome.ts:463`) forbids a silent third.
@@ -312,7 +312,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `copy.ts:1264-1275` (keys `:1276-1417`); the panel fit arm is `vertical-fit.spec.ts:1700-1729`;
      `sheetShell.css:34-35`/`:94`; the overlays are `src/engine/healthOverlay.ts:874-878` and
      `src/engine/taxOverlay.ts:1820-1823` (there is no `overlays/` dir). NIIT's two homes confirmed
-     (`recommendationView.ts:90` unconditional; `copy.ts:1142-1143`) — the scope fork is self-resolving:
+     (`recommendationView.ts:101` unconditional; `copy.ts:1142-1143`) — the scope fork is self-resolving:
      HSA + LTC only. TRAP 1 — `Row` REQUIRES a `seat` from the CLOSED 22-member `AssumptionSeat` union
      (`AssumptionPanel.tsx:108`, `assumptionRegistry.ts:39-61`): a leaves-out row is a hand-rolled
      `<li className="ap-row">` or a registry extension — "mirror the section" yields only the shell.
@@ -356,10 +356,10 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    inversion and a $0 collapse). **No seed produces a `custom` winner**, so that branch would ship
    unwitnessable — mint the seed first or leave it.
 
-8. **The whole still-working audience gets no strategy — silently.** `Result.tsx:509` gates
+8. **The whole still-working audience gets no strategy — silently.** `Result.tsx:514` gates
    `RecommendationSurface` off for the date route entirely and `:372` gates the invite door. The
    `blocked{spine-unready}` note that would explain it lives *inside* the gated-off component, so a working
-   couple sees the date answer and **zero words** about strategy. `Result.tsx:345-347`'s comment now records the
+   couple sees the date answer and **zero words** about strategy. `Result.tsx:350-352`'s comment now records the
    opposite (corrected 2026-09-04): the builder's `spine-unready` refusal does NOT cover the date route, so no note is minted there at all.
    ⚑ **THE FILED "CHEAP INTERIM" IS WRONG — do not execute it.** Dropping the `!isDateRoute` gate at
    `:509` alone renders an **empty `<div>`**, not the refusal: the note is not reachable on that path. And
@@ -369,10 +369,10 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    **Briggsy blesses the words.** Full parity stays council-sized — the crowned offset lives in the
    committed answer, not the draft, and anchoring candidates at a future retirement year is a real ranking
    question.
-   ⚑ **2026-09-04 anchors:** the gates are `Result.tsx:509` (surface) and `:372` (the invite conjunct; door
+   ⚑ **2026-09-04 anchors:** the gates are `Result.tsx:514` (surface) and `:377` (the invite conjunct; door
    `:574-582`); a THIRD exclusion kills the record card at its producer (`IntakeApp.tsx:284`). Strike
    "~89px headroom" — that is the SPINE idle frame's figure; the date arms of `verify:fit` assert ORDER + REACHABILITY only — never fit
-   (spec header `vertical-fit.spec.ts:22-23`). `Result.tsx:345-347`'s "covers the date route honestly" comment was FALSE (never
+   (spec header `vertical-fit.spec.ts:22-23`). `Result.tsx:350-352`'s "covers the date route honestly" comment was FALSE (never
    minted there; a route-flip render is dropped) — swept 2026-09-04. A crowned-offset params builder ALREADY
    exists (`buildControlPreviewParams`, `intakeMap.ts:1102-1111`), so parity's base shape is not from zero.
    Build shape: the ⚑ Folded 2026-09-06 block directly below.
@@ -380,7 +380,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (anchor on WORK STATUS, never "a date ahead of you"); the one token yours: does it promise parity.
    ⚑ **2026-09-04:** the framings are no-date · now (today/arrived) · past · future (`heroLead`,
    `FuckOffDate.tsx:185-204`; the split household's floor line has its own six arms, `:211-240`). Seat =
-   the else-arm of the `Result.tsx:509` gate, gated ALSO on `focusKey !== undefined` (else it prints beside
+   the else-arm of the `Result.tsx:514` gate, gated ALSO on `focusKey !== undefined` (else it prints beside
    the non-answer strip on an inputs-incomplete date frame); CSS in `fuckOffDate.css` — NOT
    `confidence.css`, the date grid is its own (`:238-254`) and its first free cell is r3c1 above the
    protected disclaimer; the key lands in verdict scope through the `fuckoff` substring net
@@ -388,7 +388,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    only (only `dip` + `datenc` carry the exhaustive doors-last sweep) — add a presence pin to the `?seed=dip`
    describe and measure the vertical cost by hand. The line must also be true on the route-FLIP frame: a
    committed rec whose spouse un-retires lands `stale` (not `blocked`) and the gate drops the stale card's
-   own re-open door with it. `Result.tsx:345-347`'s "covers the date route honestly" comment was FALSE —
+   own re-open door with it. `Result.tsx:350-352`'s "covers the date route honestly" comment was FALSE —
    swept 2026-09-04.
 
 9. **A modest-pre-tax household is refused a withdrawal-order answer the engine could compute.**
@@ -451,11 +451,11 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     copy" and both nearest register entries — *The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed* and *Unscored Caddie tape rows plus the four aged-surface tone calls due before 2027-01-01* — are owned **briggsy**; neither is a copy fix; the "three arms with
     corrected costs" existed NOWHERE — they are now written, with sizes, under the register's "The aged
     surface" entry. A shipped copy defect on the SAME cohort WAS pilot and is FIXED (2026-09-04: the singular arm ships at
-    `copy.ts:2629-2631` under the NUMBER AGREEMENT post-mortem at `copy.ts:2615`, covered by `copyGuard.test.ts:706`):
+    `copy.ts:2644-2646` under the NUMBER AGREEMENT post-mortem at `copy.ts:2630`, covered by `copyGuard.test.ts:709`):
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:263-264`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
-    PRESCRIBED: `model.ts:1404-1406` mints synthetic entered accounts from the old aggregates "so the ladder
+    PRESCRIBED: `model.ts:1407-1409` mints synthetic entered accounts from the old aggregates "so the ladder
     stays total"; the write primitive exists (`db.ts:231 rewriteModel`, pinned `db.test.ts:180`); today's
     ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:930-947`), and a v1 vault survives
     every store seam on real IndexedDB (`e2e/vaultHarness.ts:19-20`) to die only at `IntakeApp.tsx:578`.
@@ -533,9 +533,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     riders, the open copy obligations, the deferred richer market draw, and the `dateinvert` (c) mint —
     its own session, a size-L parameter hunt.
     ⚑ **2026-09-04:** two bullets were half-dead and are closed — the `partBTrendVintage` "no exposure gate"
-    clause was swept in `staleness.ts:619-622` but still lived verbatim at `model.ts:2275` (swept), and
-    Plan 4's "the record carries `seedA`/`seedB`" (`plans/4-recommendation.md:282`) had outlived its own
-    "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:1896-1918`) has no seed
+    clause was swept in `staleness.ts:619-622` but still lived verbatim at `model.ts:2278` (swept), and
+    Plan 4's "the record carries `seedA`/`seedB`" (`plans/4-recommendation.md:283`) had outlived its own
+    "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:1899-1921`) has no seed
     field (struck in the plan). ⚑ (b)'s SOURCE twin outlived that close — `heldOutSeed.ts:13-14` still said
     the U17 record stores the seed — and was swept 2026-09-25 (the register bullet is closed with it).
     ✅ **NC's RETIRED CERTIFICATION CHECKPOINT — SWEPT 2026-08-14.** Six shipped surfaces (not the
@@ -551,7 +551,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     page and the codified G.S. page both still show the struck "after 2025 — 3.99%", so they read as
     CONTRADICTING the pinned record until they recompile — **session law wins, do not "correct" the
     engine table back to a flat 3.99%.** Comment-only; typecheck · lint · 3289 tests · state-tax gate
-    all green. (`copy.ts:3024` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
+    all green. (`copy.ts:3052` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think
@@ -567,7 +567,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     screen reader outside require-hedge — the AT twin of the gated `recDeltaTypical` — and its exclusion was
     a RECORDED decision in the SLOT_RENDER fixture's own comment, so the fix reversed a stated call, not an
     accident. **DONE 2026-09-08:** RENAMED onto the existing `recDelta` control prefix (`recDeltaVizAria`,
-    `copy.ts:3071`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
+    `copy.ts:3100`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
     `require-hedge` on its own) + a catalog canary over `/^rec(?!over)/` (a bare `/^rec/` reds the 16
     innocent `recovery*`/`recover*` intake keys) with a NAMED allowlist that SPLITS flat keys from slots
     (unscoped flat keys get 2 gates, unscoped slots get 3 + catastrophe). Scope is decided ONLY in the test
@@ -578,8 +578,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     flag) and BOTH candidate fixes cost something — "mint through `update()`" turns a deferred false-arm
     into an immediate one; an eager mint in `createMemoryModel` breaks the WRITTEN contract #1b (mint at the
     FIRST ENGINE RUN, `plans/2-first-answer.md:57`) with no test that would catch it. His ruling, framed as
-    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:2275` and
-    `plans/4-recommendation.md:282`.
+    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:2278` and
+    `plans/4-recommendation.md:283`.
 
 ---
 
@@ -684,7 +684,7 @@ aged vault its recommendation had *"started in 2026"* — needed a 20-agent revi
 had been written PINNING it. **Read the frame as a user, not as the author of the assertions.**
 
 ⚠️ **`mode: 'no-change'` HAS FOUR DISJUNCTS, NOT ONE — this cost a real diagnosis 2026-08-03 and will
-cost the next one.** `recommendationView.ts:218-223`: `noChange` **OR** the grade's `subTenthCollapse`
+cost the next one.** `recommendationView.ts:244-249`: `noChange` **OR** the grade's `subTenthCollapse`
 **OR** a seed-B display inversion **OR** a delta that formats to $0. So *"the surface says **You're
 already on one of the strongest paths**"* is **NOT** evidence that `noChange` is true, and a browser
 frame can be byte-identical before and after a change that genuinely flipped the flag. Read the payload,

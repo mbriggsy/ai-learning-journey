@@ -38,7 +38,7 @@ below is a corollary.
 1. No U16 code re-derives a decision from displayed seed-B figures (render-the-flag + planted-fail guards, burned/070).
 2. The interactive tier reduces SEARCH precision only — grades + every displayed figure ALWAYS at `solverMinBPaths`; never down-sampled.
 3. The A↔B residual is NEVER a rendered number. Name the baseline, never the residual.
-4. The solve channel NEVER emits `data-answer-tier` (`SolveComputeTier` stays on the payload; the fit gate's `final` wait must be unsatisfiable by a solve — `memoryModel` already shipped this and U16 added no tier mirror; `Result.tsx:641` stamps the attribute from the DATE-search tier alone — `answerTier` at `:631-634`, the `DateSearchTier` the committed headline or date answer carries).
+4. The solve channel NEVER emits `data-answer-tier` (`SolveComputeTier` stays on the payload; the fit gate's `final` wait must be unsatisfiable by a solve — `memoryModel` already shipped this and U16 added no tier mirror; `Result.tsx:650` stamps the attribute from the DATE-search tier alone — `answerTier` at `:640-643`, the `DateSearchTier` the committed headline or date answer carries).
 5. No inert lying affordance: the save gesture was **ABSENT in U16** — a reserved layout slot only (§S4). U17 §S5 landed the gesture and the v3 write together (2026-07-26/27) into that same reservation, so the slot is live today and the wall did its job: no inert Save ever rendered.
 6. A withheld reason renders TRUE and humane, never laundered, never color/opacity-only; unclassified **fails CLOSED**.
 
@@ -199,7 +199,7 @@ standing valve; the §7 triggers in `docs/decisions/market-model.md` stay live a
   affordance's own posture. Both walk seeds measured IN-FRAME. Spine content is never pushed below
   the fold to keep the invitation.
 - **The affordance is offered on the all-retired route only** (a recorded v1 deviation):
-  `solveInvitable` guards `!isDateRoute(snapshot.draft)` (`Result.tsx:371`), because the
+  `solveInvitable` guards `!isDateRoute(snapshot.draft)` (`Result.tsx:376`), because the
   working/date-route base is the crowned date offset — a follow-up increment. Both fit-gate
   affordance seeds are all-retired, so the measured posture is unregressed.
 - **GoalPicker** (`src/intake/GoalPicker.tsx`) renders INSIDE the `ControlSheet` scaffold
@@ -258,12 +258,12 @@ to a single commit.
 - **Compose state** (surplus + no-change): a NO-dollar reassurance — "you're already running the
   strongest path we tested" register, the word *already* carrying the relief, the inherited frame
   carrying the honesty. Never a fabricated dollar hero, never "safe either way".
-- **ONE `RecommendationGrade` lockup** (`.rec-grade`, `RecommendationSurface.tsx:437`): grade word +
+- **ONE `RecommendationGrade` lockup** (`.rec-grade`, `RecommendationSurface.tsx:443`): grade word +
   glyph + delta figure (tabular-nums via money.ts) + the ShapeDisclosure note as a subordinate
   line — one component, one semantic group (`role="group"` + `aria-describedby`), **one crossfade
   key** (the `.cs-swap` / `@starting-style` CSS-only idiom — a separate fade paints a fresh grade
   beside a stale hedge). The shape note renders the pre-composed `composeShapeDisclosure()` output
-  (`gradeCalibration.ts:437`) translated to HUMANE language ("these two are so close, treat it as a
+  (`gradeCalibration.ts:457`) translated to HUMANE language ("these two are so close, treat it as a
   lean, not a lock" register) — never machine phrasing. Not a fold, not a footnote, not one tap
   down.
 - **The delta hero's MEDIAN qualification** (the median-advantage increment, 2026-07-23, `8b9cab61`
@@ -291,7 +291,7 @@ to a single commit.
   the 2026-08-02 pin**, because it promised a month tied to NC's own certification that no longer
   gates anything, and a withhold that names a date it cannot keep is exactly the promise this
   product must not make. A future state's pin event may have any timing, so the shipped slot commits
-  to none (`copy.ts:3027`).
+  to none (`copy.ts:3055`).
 - **No live household fires the withheld render today, and that is a CLEARED clause, not a
   regression.** Both blocking clauses cleared after U16 shipped: S.L. 2026-41 § 44.1(a) pinned
   `ncRateSchedule` to an enacted statutory schedule on 2026-08-02, retiring the last directional
@@ -314,7 +314,7 @@ to a single commit.
   `recHoldAcaUnverified`, `rec-relevant-primary-directional` → `recHoldPrimaryDirectional`,
   `epsilon-uncalibrated` → `recHoldEpsilon`, `state-certification-pending` → the
   `recHoldStateCert` SLOT; `recHoldGeneric` is the fail-CLOSED humane string an unclassified reason
-  lands on (`recommendationView.ts:351`, `:379`). Two further hold strings ship BESIDE the enum, not
+  lands on (`recommendationView.ts:377`, `:405`). Two further hold strings ship BESIDE the enum, not
   from it: `recHoldCoupling` (the Q5 coupling caveat) and `recHoldDemotionAxis` — the latter added
   2026-08-03 as the Tier-0 crash fix, since a well-funded household whose winner converts used to hit
   `gradeCalibration`'s plain throw and land on the generic compute-error card. It names the shape
@@ -334,8 +334,8 @@ to a single commit.
   lockup rather than folded into that label; scrub stays pointer-only sugar.
 - The surface renders no percentile of its own: the survival context is source-bound BY REFERENCE
   to the spine's rendered confidence object (Q1), which is where the `displayTenth`/`xOfTenClamp`
-  convention lives (`confidence.ts:71`, `gradeCalibration.ts:95`). Nothing is re-typed.
-- **`assertObjectiveMatchesHeadline(payload)`** (`src/engine/solver/objectiveHeadline.ts:172`): a
+  convention lives (`confidence.ts:71`, `gradeCalibration.ts:102`). Nothing is re-typed.
+- **`assertObjectiveMatchesHeadline(payload)`** (`src/engine/solver/objectiveHeadline.ts:174`): a
   PURE exported guard the render path AND a unit test both call — the statistic that RANKED
   (seed-A tier2) ≡ the statistic DISPLAYED (seed-B headline) — with PLANTED-MISMATCH arms proving
   it bites (burned/070). The seed-A selection score NEVER renders, for winner or runner-up.
@@ -344,7 +344,7 @@ to a single commit.
 
 - "Name the active baseline" shipped as a short STATIC label on the no-action figure —
   `copy.recommendBaselineNameplate`, "Compared with your plan today", carried on the view as
-  `baselineNameplate` (`recommendationView.ts:243`, `:659`). NO number. The A↔B residual is never
+  `baselineNameplate` (`recommendationView.ts:269`, `:703`). NO number. The A↔B residual is never
   rendered, quantified, or narrated.
 
 ### The rest of S3, and its nets
@@ -353,7 +353,7 @@ to a single commit.
   grade, runner-up still one tap down. Decided upstream on the A-side selection tolerance —
   U16 renders the flag (wall #1).
 - **RunnerUp (R23 floor)**: retained + reachable one tap down as TEXT ("why this beat it") in a
-  `<details className="rec-runnerup">` (`RecommendationSurface.tsx:552`); the two-series viz
+  `<details className="rec-runnerup">` (`RecommendationSurface.tsx:558`); the two-series viz
   richness rides beside it from S4. Stripping the runner-up fails the suite.
 - **RecommendationViz** (`src/viz/RecommendationViz.tsx`, lazy-chunked behind `React.lazy`) EXTENDS
   the shipped TwoFutures two-arm grammar, but mapped to what the solve payload actually carries:
@@ -370,22 +370,30 @@ to a single commit.
   the svg draws bars, markers, floor, guides and bracket, while the axis labels, both end-of-bar
   labels and the delta hero are HTML in the chart-text layer, on the type scale. Since `780409f7`
   (2026-09-10, the 2026-09-08 evening review) the chart, primary and runner-up alike, renders on
-  the `leave-more` goal ONLY. On `pay-less-tax` the plotted headline is lifetime tax paid, where
-  lower is better, and the longer-bar-is-better grammar would contradict it, so the picture is
-  OMITTED, never swapped. The goal-worded delta hero still ships (`recommendationView.ts:673-686`,
-  `recommendationView.ts:835`). The goal-named caption and aria variant that would bring it back
+  the `leave-more` goal ONLY. On `pay-less-tax` the plotted headline is lifetime all-in cost
+  (income tax + the net ACA premium + Medicare since Briggsy's 2026-10-05 "All-in cost" ruling,
+  plan 4 contract #4), where lower is better, and the longer-bar-is-better grammar would
+  contradict it, so the picture is OMITTED, never swapped. The goal-worded delta hero still ships (`recommendationView.ts:717-730`,
+  `recommendationView.ts:879`). The goal-named caption and aria variant that would bring it back
   are Briggsy's words, owed in the register entry
   "U17 S7 riders — the comparison chart's missing dollar endpoints (Q7a) and the unspecified reorder (Q7b)".
 - **Disclosures adjacent to the delta**: NIIT + (outside the roster) state tax; the SS claim-age
   held-fixed note; the heir bracket on leave-more (plain language); SLCSP/CSR caveats by reference
-  when the delta leans on ACA. The compile gate shipped as the surface's OWN closed vocabulary,
-  `RecommendationDisclosureId = 'ss-claim-fixed' | 'niit' | 'state-tax' | 'heir-bracket' |
-  'aca-slcsp'` (`recommendationView.ts:58`), NOT as seats on the draft-keyed `DRAFT_DISPOSITIONS`
+  when the delta leans on ACA; and, since the 2026-10-05 all-in switch, the pay-less-tax scope note
+  (`recDiscAllInScope` — what the all-in figure counts and that plan cost-sharing is not counted),
+  rendered only on a pay-less-tax run whose BUILT overlay priced healthcare (the `healthcarePriced`
+  option Result threads beside `pricedState`), ordered directly after NIIT. The NIIT and state-tax
+  notes were re-worded the same day (both render on both goals; their old "federal income tax" /
+  "federal tax only" scopes were false once premiums joined the comparison). The compile gate
+  shipped as the surface's OWN closed vocabulary,
+  `RecommendationDisclosureId = 'ss-claim-fixed' | 'niit' | 'all-in-scope' | 'state-tax' |
+  'heir-bracket' | 'aca-slcsp'` (`recommendationView.ts:58`), NOT as seats on the draft-keyed `DRAFT_DISPOSITIONS`
   registry: every disclosure is a property of the RUN, not of a draft field — the SS-claim-fixed
-  and NIIT notes render unconditionally, state-tax reads the run's own priced state
+  and NIIT notes render unconditionally, all-in-scope reads the goal and the run's built
+  healthcare pricing, state-tax reads the run's own priced state
   (`pricedStateForRun`), aca-slcsp the payload's `namedDriver`, and heir-bracket the payload's
   `p.heirBracket` (which `solveDispatch` fills from the draft's optional `heirBracket?`, persisted
-  since 2026-08-14, or the `solverAssumedHeirBracket` default) — so four of the five ids have no
+  since 2026-08-14, or the `solverAssumedHeirBracket` default) — so five of the six ids have no
   `ScenarioDraft` key to ride, and the vocabulary cannot key on `keyof ScenarioDraft`. A new id
   fails `tsc` until its builder and its humane string are authored. Both dispositions render here
   as read-only notes — no inert editing affordance ships on this surface (wall #5). `heirBracket`
@@ -430,7 +438,7 @@ to a single commit.
   seat's finding is decisive: `writable()` refuses in the recovery-unlocked/no-vault survivor state,
   so an inert "saved" is data loss at the widow-cliff. The gesture and the v3 write landed TOGETHER
   in **U17 §S5 (2026-07-26/27)** and now mount into that reservation as `RecommendationSaveProp`
-  (`RecommendationSurface.tsx:130`); a surface mounted WITHOUT it — the P2/P3 shells, the
+  (`RecommendationSurface.tsx:136`); a surface mounted WITHOUT it — the P2/P3 shells, the
   in-isolation unit tests — still renders U16's empty reservation, never a dead Save control. No
   auto-save on solve/close/re-pick, ever (test-pinned, `src/store/__tests__/solveNoAutoSave.test.ts`).
 - The un-saved hypothetical lives in memoryModel, freely tunable/abandonable — honest

@@ -47,6 +47,7 @@ import { demotionAxisCalibrated } from '../validation/gradeCalibration'
 import {
   afterTaxBequestPerPath,
   candidateTieBreak,
+  lifetimeAllInCostPerPath,
   tier2,
   type CandidateOutcome,
   type OracleGoal,
@@ -186,12 +187,25 @@ type ScoredOutcome = Extract<CandidateOutcome, { kind: 'scored' }>
 
 /** The goal's per-path A-side statistic vector — the CRN-paired raw material of the shrinkage SE
  *  (`selectionTieTolerance`). `undefined` when the run has no bequest/tax lens for the goal (no
- *  shrinkage possible → the candidate is not shrunk). Reuses the SINGLE-SOURCED §1014/IRD form. */
-function goalPerPathA(outcome: CandidateOutcome, goal: OracleGoal, heirBracket: number | undefined): readonly number[] | undefined {
+ *  shrinkage possible → the candidate is not shrunk). Reuses the SINGLE-SOURCED forms: the §1014/IRD
+ *  bequest and the pay-less-tax ALL-IN per-path sum (`lifetimeAllInCostPerPath` — the SE must be over
+ *  the very vector whose mean `tier2` ranks, or the shrinkage judges a different statistic than the
+ *  crown). EXPORTED for the cross-home pin (`allInObjective.test.ts`); no live caller outside this module. */
+export function goalPerPathA(outcome: CandidateOutcome, goal: OracleGoal, heirBracket: number | undefined): readonly number[] | undefined {
   if (outcome.kind !== 'scored') return undefined
-  if (goal === 'pay-less-tax') return outcome.distribution.taxAware?.lifetimeTaxPaidReal
-  if (heirBracket === undefined) return undefined
-  return afterTaxBequestPerPath(outcome.distribution, heirBracket)
+  // EXHAUSTIVE switch + never-guard (the tier2 idiom): a future third goal fails tsc HERE, never
+  // silently shrinking on another goal's vector.
+  switch (goal) {
+    case 'pay-less-tax':
+      return lifetimeAllInCostPerPath(outcome.distribution)
+    case 'leave-more':
+      if (heirBracket === undefined) return undefined
+      return afterTaxBequestPerPath(outcome.distribution, heirBracket)
+    default: {
+      const _exhaustive: never = goal
+      throw new Error(`[select] goalPerPathA: unknown goal ${String(_exhaustive)} — declare its per-path vector`)
+    }
+  }
 }
 
 /** Raw pre-clamp Tier-1 over-funded read (§S4.4): the QUANTIZED survival (the cross-engine grid the

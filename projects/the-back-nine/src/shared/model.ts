@@ -774,7 +774,10 @@ export interface DollarAdjustment {
  *  pay-less-tax ALL-IN cost (Briggsy's 2026-10-05 ruling) is income tax + net premium +
  *  Medicare, summed per path from `lifetimeTaxPaidReal`, `lifetimeNetPremiumReal` and
  *  `lifetimeMedicareCostReal` in ONE home (`objectiveHeadline.ts`'s
- *  `lifetimeAllInCostPerPath`). */
+ *  `lifetimeAllInCostPerPath`), and pay-less-tax RANKS on it (SOLVER_CODE_VERSION 10): its Tier-2
+ *  statistic, its SE vector, its surplus grade axis and its displayed hero are that ONE per-path sum
+ *  (mean: `lifetimeAllInCostMeanReal`), never income tax alone. `lifetimeTaxPaidReal` itself keeps
+ *  meaning income tax — the state-tax disclosure and the oracle's income-tax pins read it as such. */
 export interface TaxAwareDistribution {
   /** Σ income tax actually paid across the path's funded years (real $; federal ordinary +
    *  preferential cap-gains PLUS the priced-state flat layer for a PRICED_STATES household —

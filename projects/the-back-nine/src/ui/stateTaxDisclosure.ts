@@ -148,9 +148,12 @@ export function composeControlHealthOmissionsNote(statePriced: boolean): string 
 /** The recommendation surface's state-tax disclosure (home #5): the shipped scope note, or `null`
  *  when THIS run priced the household's state. A DROP, not a swap — matching homes #2/#3 (both
  *  omission LISTS, as the R7 disclosure rail is) rather than home #1's affirm+narrow, so it needs no
- *  new copy and no new require-hedge sweep. `recDiscStateTax` says the delta "compares federal tax
- *  only"; for a priced household `lifetimeTaxPaidReal` carries the state layer, so the sentence is
- *  simply false there and the honest move is to stop saying it.
+ *  new copy and no new require-hedge sweep. `recDiscStateTax` says an unpriced state's income tax is
+ *  "left out of this comparison" (HIS words, 2026-10-05 — it said "compares federal tax only" until
+ *  pay-less-tax ranked on all-in cost); for a priced household `lifetimeTaxPaidReal` carries the state
+ *  layer — and on pay-less-tax reaches the hero through the all-in cost's income-tax addend
+ *  (`lifetimeAllInCostPerPath`; the logic here is unchanged) — so the sentence is simply false there
+ *  and the honest move is to stop saying it.
  *
  *  EXHAUSTIVE by construction, for the reason {@link composeVerdictMedicareResidual} is: the drop is
  *  honest only because the v1 roster is FLAT-or-zero, which makes the federal-only bracket-fill rails

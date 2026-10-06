@@ -42,7 +42,14 @@ import {
 import { quantizeSurvival, xOfTenClamp } from '@engine/confidence'
 import { acaRegimeReachable } from '@engine/acaRegime'
 import { solverCandidateId, type CandidateStrategy } from '../solver/candidates'
-import { afterTaxBequestPerPath, evaluateCandidates, rankCandidates, type CandidateOutcome, type OracleGoal } from './evaluate'
+import {
+  afterTaxBequestPerPath,
+  evaluateCandidates,
+  lifetimeAllInCostPerPath,
+  rankCandidates,
+  type CandidateOutcome,
+  type OracleGoal,
+} from './evaluate'
 import { deriveBFamilyMember, deriveSeedB, survivalIndicators } from './heldOutSeed'
 import { onlyResult, runEvalSync, type EvalSteps } from './evalSteps'
 
@@ -237,7 +244,10 @@ export interface GradeRecommendationResult extends GradeResult {
  * ONE home (U15 §S5 fold: solve.ts's private twin was DELETED and imports THIS; the winner-positive
  * sign convention now lives in exactly one place — the M3 sign-inversion class the architecture guards).
  *  - survival:       winner − runner survival indicators;
- *  - pay-less-tax:   runner − winner lifetime tax (winner-positive ⇒ the winner PAYS LESS);
+ *  - pay-less-tax:   runner − winner lifetime ALL-IN cost (`lifetimeAllInCostPerPath` — income tax + net
+ *                    ACA premium + Medicare; winner-positive ⇒ the winner COSTS LESS all-in). Its mean is
+ *                    the displayed delta (`deltaSkewFor`'s linearity contract), so it must be the ranked
+ *                    statistic's own vector, never income tax alone;
  *  - leave-more:     winner − runner after-tax-to-heirs bequest at the per-solve heir bracket (the
  *                    IRD discount the harness deferred — winner-positive ⇒ the winner LEAVES MORE).
  * The two leave-more throws are the burned/062 named refusals (no silent default): an absent heir
@@ -252,31 +262,41 @@ export function pairedDecisionDiffs(
   if (winner.kind !== 'scored' || runner.kind !== 'scored') {
     throw new Error('[gradeCalibration] grading requires two SCORED candidates (an infeasible candidate never grades)')
   }
-  if (statistic === 'survival') {
-    const w = survivalIndicators(winner.distribution)
-    const r = survivalIndicators(runner.distribution)
-    return w.map((x, i) => x - r[i]!)
-  }
-  if (statistic === 'pay-less-tax') {
-    const wTa = winner.distribution.taxAware
-    const rTa = runner.distribution.taxAware
-    if (wTa === undefined || rTa === undefined) {
-      throw new Error('[gradeCalibration] a pay-less-tax grade requires tax-aware runs (burned/062)')
+  // EXHAUSTIVE switch + never-guard (the tier2 idiom): a future GradeStatistic member fails tsc HERE,
+  // never falling through to the leave-more arm (the sign-inversion class).
+  switch (statistic) {
+    case 'survival': {
+      const w = survivalIndicators(winner.distribution)
+      const r = survivalIndicators(runner.distribution)
+      return w.map((x, i) => x - r[i]!)
     }
-    // Winner-positive: the winner PAYS LESS, so runner − winner.
-    return wTa.lifetimeTaxPaidReal.map((w, i) => rTa.lifetimeTaxPaidReal[i]! - w)
+    case 'pay-less-tax': {
+      const wVec = lifetimeAllInCostPerPath(winner.distribution)
+      const rVec = lifetimeAllInCostPerPath(runner.distribution)
+      if (wVec === undefined || rVec === undefined) {
+        throw new Error('[gradeCalibration] a pay-less-tax grade requires tax-aware runs (burned/062)')
+      }
+      // Winner-positive: the winner COSTS LESS all-in, so runner − winner.
+      return wVec.map((w, i) => rVec[i]! - w)
+    }
+    case 'leave-more': {
+      // Winner-positive = winner LEAVES MORE, so winner − runner. The heir bracket is the per-solve
+      // IRD discount (the reason the harness deferred this to U15's objective wiring).
+      if (heirBracket === undefined) {
+        throw new Error('[gradeCalibration] a leave-more grade requires a declared heir bracket (burned/062)')
+      }
+      const wVec = afterTaxBequestPerPath(winner.distribution, heirBracket)
+      const rVec = afterTaxBequestPerPath(runner.distribution, heirBracket)
+      if (wVec === undefined || rVec === undefined) {
+        throw new Error('[gradeCalibration] a leave-more grade requires tax-aware runs (burned/062)')
+      }
+      return wVec.map((w, i) => w - rVec[i]!)
+    }
+    default: {
+      const _exhaustive: never = statistic
+      throw new Error(`[gradeCalibration] pairedDecisionDiffs: unknown statistic ${String(_exhaustive)} — declare its decision vector`)
+    }
   }
-  // leave-more: winner-positive = winner LEAVES MORE, so winner − runner. The heir bracket is the
-  // per-solve IRD discount (the reason the harness deferred this to U15's objective wiring).
-  if (heirBracket === undefined) {
-    throw new Error('[gradeCalibration] a leave-more grade requires a declared heir bracket (burned/062)')
-  }
-  const wVec = afterTaxBequestPerPath(winner.distribution, heirBracket)
-  const rVec = afterTaxBequestPerPath(runner.distribution, heirBracket)
-  if (wVec === undefined || rVec === undefined) {
-    throw new Error('[gradeCalibration] a leave-more grade requires tax-aware runs (burned/062)')
-  }
-  return wVec.map((w, i) => w - rVec[i]!)
 }
 
 /**

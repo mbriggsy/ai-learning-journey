@@ -526,6 +526,54 @@ describe('solve() — the DELTA skew disclosure (the median-advantage increment)
     expect(plt!.meanReal).toBe(4_000)
   })
 
+  it('pay-less-tax ranks ALL-IN: the skew reads the all-in diffs (winner 200/50/10 vs baseline 300/0/0 ⇒ +40, not the income-tax +100)', () => {
+    const allInScored = (tax: readonly number[], premium: readonly number[], medicare: readonly number[]) =>
+      ({
+        kind: 'scored',
+        candidate: { policy: 'taxable-first', conversion: null, provenance: 'grid' },
+        distribution: {
+          terminalValuesReal: tax.map(() => 0),
+          depletionYears: tax.map(() => NEVER_DEPLETED),
+          survivalFraction: 1,
+          taxAware: {
+            lifetimeTaxPaidReal: tax, terminalTaxableReal: tax.map(() => 0), terminalPretaxReal: tax.map(() => 0),
+            terminalRothReal: tax.map(() => 0), terminalHsaReal: tax.map(() => 0), terminalTaxableBasisReal: tax.map(() => 0),
+            lifetimeNetPremiumReal: premium, lifetimeMedicareCostReal: medicare,
+          },
+        },
+        score: { survival: 1 },
+      }) as unknown as Parameters<typeof deltaSkewFor>[0]
+    const flat = deltaSkewFor(allInScored([200, 200], [50, 50], [10, 10]), allInScored([300, 300], [0, 0], [0, 0]), 'pay-less-tax', undefined)
+    expect(flat!.meanReal).toBe(40)
+    // A PRICED multi-path world (non-dyadic, every addend varying): the linearity identity mean(diffs) ≡ the
+    // all-in headline delta holds to float dust (toBeCloseTo — solve.ts: exact only on zero-vol).
+    const wTax = [200.1, 250.7, 230.3]
+    const wPrem = [50.2, 30.9, 70.4]
+    const wMed = [10.3, 15.1, 5.7]
+    const bTax = [300.9, 310.2, 290.6]
+    const bPrem = [0.4, 20.8, 10.1]
+    const bMed = [0, 0, 0]
+    const priced = deltaSkewFor(allInScored(wTax, wPrem, wMed), allInScored(bTax, bPrem, bMed), 'pay-less-tax', undefined)
+    const meanOfSum = (t: readonly number[], p: readonly number[], m: readonly number[]) => t.reduce((s, x, i) => s + x + p[i]! + m[i]!, 0) / t.length
+    expect(priced!.meanReal).toBeCloseTo(meanOfSum(bTax, bPrem, bMed) - meanOfSum(wTax, wPrem, wMed), 9)
+  })
+
+  it('COMMITTED zero-vol fixture (case vi, pay-less-tax ALL-IN): deltaSkew reproduces the all-in hero delta BYTE-EXACTLY (Object.is)', () => {
+    const fixture = SOLVER_CASES.find((c) => c.id === 'case-vi-all-in-aca-trap')
+    if (fixture === undefined) throw new Error('the case-(vi) all-in fixture is committed')
+    const [best, other] = fixture.buildCandidates().slice().sort((x, y) =>
+      solverCandidateId(x) === fixture.expectedRankingIds[0] ? -1 : solverCandidateId(y) === fixture.expectedRankingIds[0] ? 1 : 0,
+    )
+    const [w, b] = evaluateCandidates(fixture.buildBase(), [best!, other!], fixture.seed)
+    if (w!.kind !== 'scored' || b!.kind !== 'scored') throw new Error('unreachable')
+    const s = deltaSkewFor(w!, b!, 'pay-less-tax', undefined)
+    const heroDelta = b!.score.lifetimeAllInCostMeanReal! - w!.score.lifetimeAllInCostMeanReal!
+    expect(Object.is(s!.meanReal, heroDelta)).toBe(true)
+    expect(heroDelta, 'case (vi): the all-in winner costs LESS all-in').toBeGreaterThan(0)
+    // …while it pays MORE income tax — so an income-tax skew would carry the wrong SIGN.
+    expect(b!.score.lifetimeTaxMeanReal! - w!.score.lifetimeTaxMeanReal!).toBeLessThan(0)
+  })
+
   it('honest-undefined: no tax lens or a leave-more goal without a declared heir bracket carries undefined, never a throw', () => {
     const candidate = { policy: 'taxable-first', conversion: null, provenance: 'grid' }
     const bareDistribution = { terminalValuesReal: [1, 2], depletionYears: [NEVER_DEPLETED, NEVER_DEPLETED], survivalFraction: 1 }

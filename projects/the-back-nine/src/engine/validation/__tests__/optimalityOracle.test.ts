@@ -14,6 +14,7 @@ import type { SimulationParams } from '@shared/model'
 import {
   SOLVER_CASES,
   caseAcaCliff,
+  caseAllInAcaTrap,
   caseBracketFill,
   caseConstantRate,
   caseLeaveMore,
@@ -25,6 +26,8 @@ import {
   solverCandidateId,
   CASE_III_OVER_AMOUNT,
   CASE_III_UNDER_AMOUNT,
+  CASE_VI_OVER_AMOUNT,
+  CASE_VI_UNDER_AMOUNT,
 } from '../../reference/solver-cases'
 import {
   assertFixtureApplies,
@@ -218,6 +221,49 @@ describe('case (v) — the no-change routing: the LABELED conventional baseline 
     const exp = caseNoChange.expected()
     expect(byId(verdict.outcomes, 'conventional:taxable-first:0').score.lifetimeTaxMeanReal).toBeCloseTo(exp.lifetimeTaxTaxableFirst!, 2)
     expect(byId(verdict.outcomes, 'grid:pre-tax-first:0').score.lifetimeTaxMeanReal).toBeCloseTo(exp.lifetimeTaxPretaxFirst!, 2)
+  })
+})
+
+describe('case (vi) — the pay-less-tax ALL-IN trap: the income-tax-cheaper conversion crosses the cliff and loses all-in', () => {
+  const verdict = checkOracleCase(caseAllInAcaTrap)
+  const exp = caseAllInAcaTrap.expected()
+  const underId = `grid:taxable-first:${CASE_VI_UNDER_AMOUNT}`
+  const overId = `grid:taxable-first:${CASE_VI_OVER_AMOUNT}`
+
+  it('the hand dollars re-derive: income tax, net premium and all-in per candidate (Medicare exactly 0)', () => {
+    const rows = [
+      { id: underId, tax: exp.taxUnder!, premiums: exp.premiumsUnder!, allIn: exp.allInUnder! },
+      { id: overId, tax: exp.taxOver!, premiums: exp.premiumsOver!, allIn: exp.allInOver! },
+    ]
+    for (const { id, tax, premiums, allIn } of rows) {
+      const o = byId(verdict.outcomes, id)
+      const ta = o.distribution.taxAware!
+      expect(ta.lifetimeMedicareCostReal.every((x) => Object.is(x, 0))).toBe(true)
+      expect(o.score.lifetimeTaxMeanReal).toBeCloseTo(tax, 2)
+      expect(meanOf(ta.lifetimeNetPremiumReal)).toBeCloseTo(premiums, 2)
+      expect(o.score.lifetimeAllInCostMeanReal).toBeCloseTo(allIn, 2)
+      expect(o.score.survival).toBe(1)
+    }
+  })
+
+  it('the all-in ranking crowns the UNDER-cliff conversion; the income-tax-only ranking is the exact REVERSE (the blind counterfactual)', () => {
+    expect(verdict.actualRankingIds).toEqual([underId, overId])
+    const byIncomeTax = [...scoredOf(verdict.outcomes)]
+      .sort((a, b) => a.score.lifetimeTaxMeanReal! - b.score.lifetimeTaxMeanReal!)
+      .map((o) => solverCandidateId(o.candidate))
+    expect(byIncomeTax).toEqual([...caseAllInAcaTrap.expectedRankingIds].reverse())
+  })
+
+  it('the zero-vol world is DRAW-INVARIANT: a second seed reproduces the ranking and the all-in dollars byte-for-byte', () => {
+    const again = evaluateCandidates(caseAllInAcaTrap.buildBase(), caseAllInAcaTrap.buildCandidates(), 0xd1f5eed)
+    const ranked = rankCandidates(again, caseAllInAcaTrap.goal, 0).map((o) => solverCandidateId(o.candidate))
+    expect(ranked).toEqual([...caseAllInAcaTrap.expectedRankingIds])
+    expect(byId(again, underId).score.lifetimeAllInCostMeanReal).toBe(byId(verdict.outcomes, underId).score.lifetimeAllInCostMeanReal)
+  })
+
+  it('the amounts are CHOSEN from the FPL table with ≥ 5%-of-FPL cliff margins (⚑ SKEPTIC — a re-pin moves the fixture, never breaks it)', () => {
+    expect(CASE_VI_UNDER_AMOUNT / exp.fplHousehold2!).toBeLessThanOrEqual(3.95)
+    expect(CASE_VI_OVER_AMOUNT / exp.fplHousehold2!).toBeGreaterThanOrEqual(4.05)
   })
 })
 

@@ -129,7 +129,7 @@ describe('composeReentry — the read-back', () => {
     } as ScenarioV3
     const view = composeReentry(doctored, reportFor(doctored))
     expect(view.noteLines).toContain(copy.stalenessTax)
-    // U17 §S4 — `coverageYear` dates the ACA/IRMAA tables (model.ts:2249), so for THIS all-65+
+    // U17 §S4 — `coverageYear` dates the ACA/IRMAA tables (model.ts:2252), so for THIS all-65+
     // household it names the Medicare half and only that: they price the IRMAA ladder every
     // year and zero marketplace years. Not the old collapsed "Health-coverage rules" line, and
     // not the nameless aggregate the first cut mis-bucketed it to.

@@ -29,7 +29,7 @@ here exists because the aged surface that record lands on was not honest before 
    via the persisted seed when no clock fired is what keeps the screenshot promise. U17's real content is
    the **action-warning copy register**, not a re-presentation mechanism.
 2. **The "Act-4 `schemaVersion` 3 bump" is counterfactual.** v3 is the shipped forward-written shape
-   (`model.ts:1661-1666`; codec `> 3` = newer-version). `savedRecommendation?` landed **additive-optional
+   (`model.ts:1664-1669`; codec `> 3` = newer-version). `savedRecommendation?` landed **additive-optional
    within v3**, presence-keyed, following the `rothConversion` / `savedAt` / `retirementState` precedents
    (`scenarioCodec.ts:731-734` was the pattern copied).
 
@@ -75,7 +75,7 @@ refusal (`RothLever.tsx:54`).
 
 `Result.tsx` derives the anchor from `startCalendarYear`, which is the plan's **BUILD** year (written once
 at `memoryModel.ts:569`, never re-anchored, survives every re-save). Four separate comments already forbade
-attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:2921`,
+attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:2936`,
 `FuckOffDate.tsx:150`) — and the band's `'saved'` label did exactly that.
 
 - **Renamed** `elapsedPlanYears` → **`yearsSincePlanBuilt`**, with zero orphans left behind, and every
@@ -154,7 +154,7 @@ Shipped 2026-07-25, commit `e4754134`, CI green by explicit run id 30136387827.
   `offsetHasPassed(year − startCalendarYear, yearsSincePlanBuilt)` (`RothLever.tsx:52-54`) — one strict
   compare covers both "before the build year" and "already passed", and no second comparator was
   authored. It renders through the R19 `FieldError` grammar with the earliest startable year QUOTED
-  (`errRothStartPast`, `RothLever.tsx:290`, joined `SlottedErrorKey` at `copy.ts:1984`). The fresh default
+  (`errRothStartPast`, `RothLever.tsx:290`, joined `SlottedErrorKey` at `copy.ts:1999`). The fresh default
   start seeds the WALL year (build + clock), so an aged vault never pre-fills the exact start the write
   side refuses.
 - **"Suppress when unanchored" was satisfied STRUCTURALLY, not by a dead arm.** `savedAnchor` is REQUIRED
@@ -278,7 +278,7 @@ headline, where it would read as current).
   *"decodeScenario builds every object."* It does **not** — `scenarioCodec.ts:938-940` is a validated
   pass-through cast, and the behavior was safe only because `JSON.parse` preserves `encodeScenario`'s
   insertion order, so a future field reorder would have broken dirty-detection silently. The fix is
-  `scenarioIdentityKey` (`model.ts:2207`), which rebuilds plain objects with SORTED keys and throws on a
+  `scenarioIdentityKey` (`model.ts:2210`), which rebuilds plain objects with SORTED keys and throws on a
   non-serializable value, so key order and absent-vs-undefined can never read as a change.
 
 **Shipped 2026-07-25, commit `374299c9`, CI green by explicit run id 30163571502**, carrying one ruling
@@ -344,7 +344,7 @@ CI-green by explicit run id, against the fourteen steps of
 before any code was written (v1 five P0s, v2 two P0s, four lenses all `holds=false`).
 
 - The reserved slot became the real control — the five save arms in ONE reserved box
-  (`RecommendationSurface.tsx:598-613`); the U16 "layout space only" test was **replaced**, not deleted.
+  (`RecommendationSurface.tsx:604-619`); the U16 "layout space only" test was **replaced**, not deleted.
 - **The no-auto-save law survived:** saving stays an explicit gesture, and the existing pin was re-pointed
   rather than dropped (`solveNoAutoSave.test.ts` plus the new `recSaveNoAutoWrite.test.tsx`).
 - **Every save arm is a claim the disk can back.** `RecommendationSaveView` is a closed union —
@@ -378,7 +378,7 @@ original thirteen lines could not name.
 
 **The copy register landed here, not in S4** (see S4 for why). It shipped as two families — the save
 GESTURE (`recommendSave*`) and the saved-record CARD (`recommendRecord*`), `copy.ts:1565-1690` — modelled on
-`recommendStale{Heading,Body,ReopenCta}` and on `RecommendationSurface.tsx:372-379`'s render shape, the
+`recommendStale{Heading,Body,ReopenCta}` and on `RecommendationSurface.tsx:378-385`'s render shape, the
 `role="status"` card with heading, body and re-open button. `recommendRecordReopenCost` names the re-open's
 cost the way the pending label does: *"This can take a few minutes."* Exactly one key in either family may
 claim a completed save, and it is `recommendSaveSavedBadge`.
@@ -402,7 +402,7 @@ verdict prefix, unlike `staleness*`, so they clear the scoped gates rather than 
    (insight 100 — the gesture promised an affordance, so it owes a rendered outcome).
 3. `noDollarRegister` is **COPIED from the composed view, never re-derived record-side**
    (`savedRecommendationMint.ts:89`, `:100`, `:133`). The reachable register is
-   `RecommendedView.mode === 'no-change'` (`recommendationView.ts:223`, assigned `:652`), NOT the
+   `RecommendedView.mode === 'no-change'` (`recommendationView.ts:249`, assigned `:696`), NOT the
    module-local `noDollar` const at `:622`.
 4. The `fingerprint` has no type bind and cannot get one — `solverRunFingerprint.ts:61` is a bare
    `export type … = string` — so the bind is a TEST: mint from a REAL `solverRunFingerprint(...)` call,
@@ -528,7 +528,7 @@ as the council admitted it, and the reasons are the material the re-filed unit s
 
 Verified at council time: the bars carry arm **names** at their ends plus the delta hero and the
 `$0`/ceiling axis frame; each bar's own dollar value renders **only** in `ariaSummary`
-(`recommendationView.ts:701-707`, `copy.ts:3071` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
+(`recommendationView.ts:745-751`, `copy.ts:3100` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
 AT-over-sighted inversion is real and nobody disputed it.
 
 The admission was gated on a **deliberate dialect split** in `recommendationView.ts` — endpoints humane

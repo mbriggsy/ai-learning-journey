@@ -9,6 +9,12 @@ import {
   type RothConversionPlan,
 } from '@shared/model'
 import { headlineStatisticFromDistribution } from '@engine/solver/objectiveHeadline'
+import { applyCandidate, solverCandidateId } from '@engine/solver/candidates'
+import { simulate } from '@engine/simulate'
+import { acaEnhancedSubsidyStatus } from '@engine/constants'
+import { epochDayFromIsoDate } from '@engine/validation/oracleToken'
+import { buildSolveRequest } from '@intake/solveDispatch'
+import { resolveDevSeed } from '../devSeeds'
 import type { SolveArm, SolveRecommendation } from '@engine/solver/solve'
 import type { SolvePayload, SolveTokenWithheld } from '@engine/solver/solveEntry'
 import type { GradeResult } from '@engine/validation/gradeCalibration'
@@ -79,6 +85,10 @@ function grade(g: 'just-do-it' | 'coin-flip', subTenthCollapse = false): GradeRe
 }
 
 const HB = 0.24
+
+/** A solve "today" inside the ACA re-verify window (the solveDispatch.test idiom) — the D7 arm builds a
+ *  real request from the `health` seed. */
+const D7_TODAY = epochDayFromIsoDate(acaEnhancedSubsidyStatus.value.verifiedOn) + 5
 
 /** A leave-more active recommendation whose winner leaves more than the baseline (positive delta). */
 function leaveMoreRec(o: Partial<SolveRecommendation> = {}): SolveRecommendation {
@@ -292,7 +302,8 @@ describe('recommendationView — the committed beat (Q1 delta-as-hero + source-b
     const winner = armFor(goal, undefined, 'bracket-fill', 'bracket-fill', { lifetimeTaxPaidReal: [40_000, 40_000] })
     const baseline = armFor(goal, undefined, 'proportional', 'proportional', { lifetimeTaxPaidReal: [55_000, 55_000] })
     const payload = { ...leaveMoreRec(), goal, heirBracket: undefined, winner, noActionBaseline: baseline, runnerUp: undefined, gradeStatistic: 'pay-less-tax' as const, skewDisclosure: undefined }
-    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine }))
+    // The LIVE arm: every reachable solve prices healthcare (build spec D7 ⚑ RESOLVED).
+    const v = asRec(recommendationView(committed(payload), { spineConfidence: spine, healthcarePriced: true }))
     const expectedDelta = formatDeltaDollar(baseline.headlineStatisticB - winner.headlineStatisticB)
     expect(v.grade.heroLine).toBe(slots.recDeltaPayLessTax(expectedDelta))
     // NOT subsumed by the toBe above — that pins the WIRING (both sides call the same slot), so a
@@ -415,14 +426,34 @@ describe('recommendationView — the committed beat (Q1 delta-as-hero + source-b
 
 describe('recommendationView — the disclosures adjacent to the delta', () => {
   it('DISCLOSURE_ORDER is complete over every id the builders declare (a new seat must be ordered too)', () => {
-    // Drive every applicable disclosure ON (leave-more + the ACA hinge) so the union is fully exercised.
-    const all = disclosuresFor(leaveMoreRec({ namedDriver: 'aca-enhanced-subsidies' }), undefined)
-    const ids = all.map((d) => d.id)
-    expect(new Set(ids).size, 'no duplicate ids').toBe(ids.length)
-    for (const id of ids) expect(DISCLOSURE_ORDER).toContain(id)
-    // The render order is respected (a subset of DISCLOSURE_ORDER, in order).
-    const orderIndex = ids.map((id) => DISCLOSURE_ORDER.indexOf(id))
-    expect(orderIndex).toEqual([...orderIndex].sort((a, b) => a - b))
+    // Drive every applicable disclosure ON so the union is fully exercised. No ONE payload lights them
+    // all — heir-bracket is leave-more only and all-in-scope is pay-less-tax-on-a-priced-run only — so
+    // the union runs over a leave-more payload (+ the ACA hinge) AND a healthcare-priced pay-less-tax one.
+    const leaveMore = disclosuresFor(leaveMoreRec({ namedDriver: 'aca-enhanced-subsidies' }), undefined, true)
+    const payLessTax = disclosuresFor(
+      { ...leaveMoreRec({ namedDriver: 'aca-enhanced-subsidies' }), goal: 'pay-less-tax', heirBracket: undefined },
+      undefined,
+      true,
+    )
+    const seen = new Set<string>()
+    for (const all of [leaveMore, payLessTax]) {
+      const ids = all.map((d) => d.id)
+      expect(new Set(ids).size, 'no duplicate ids').toBe(ids.length)
+      for (const id of ids) expect(DISCLOSURE_ORDER).toContain(id)
+      // The render order is respected (a subset of DISCLOSURE_ORDER, in order).
+      const orderIndex = ids.map((id) => DISCLOSURE_ORDER.indexOf(id))
+      expect(orderIndex).toEqual([...orderIndex].sort((a, b) => a - b))
+      for (const id of ids) seen.add(id)
+    }
+    // The two payloads between them light EVERY declared seat — otherwise a seat could sit unordered and
+    // this test would never reach it.
+    expect([...seen].sort()).toEqual([...DISCLOSURE_ORDER].sort())
+  })
+
+  // The pinned position of the all-in scope note (build spec §3 step 15): it rides directly after the NIIT
+  // note — the two scope sentences of the comparison sit together, the methodology caveats after them.
+  it('DISCLOSURE_ORDER pins the all-in scope note directly BEFORE the NIIT note (the rule, then its exception — the 2026-10-06 Caddie read)', () => {
+    expect(DISCLOSURE_ORDER).toEqual(['ss-claim-fixed', 'all-in-scope', 'niit', 'state-tax', 'heir-bracket', 'aca-slcsp'])
   })
 
   it('the ALWAYS disclosures (SS-claim-held-fixed, NIIT) ride EVERY committed recommendation', () => {
@@ -434,23 +465,24 @@ describe('recommendationView — the disclosures adjacent to the delta', () => {
   })
 
   // The state-tax note is the one household-DEPENDENT member of what used to be the "ALWAYS" set. It
-  // says the delta "compares federal tax only" — true off the roster, FALSE for a priced household,
+  // says an unpriced state's tax is "left out of this comparison" (it said "compares federal tax only"
+  // until 2026-10-05) — true off the roster, FALSE for a priced household,
   // where it co-rendered with a spine that had just named their state (found live on `?seed=nc`).
   it('the state-tax scope note rides an UNPRICED household and DROPS for a priced one', () => {
     const payload = leaveMoreRec()
-    const unpriced = disclosuresFor(payload, undefined).find((d) => d.id === 'state-tax')
+    const unpriced = disclosuresFor(payload, undefined, false).find((d) => d.id === 'state-tax')
     expect(unpriced, 'off the roster the federal-only scope note is true and must ride').toBeDefined()
     expect(unpriced!.text).toBe(copy.recDiscStateTax)
     // Every member of the shipped roster drops it — not just the one that surfaced the defect. A new
     // PricedState cannot silently join this list: `composeRecStateTaxDisclosure`'s switch is exhaustive.
     for (const state of ['NC', 'PA', 'FL'] as const) {
       expect(
-        disclosuresFor(payload, state).find((d) => d.id === 'state-tax'),
-        `${state} priced ⇒ "compares federal tax only" is false and must not render`,
+        disclosuresFor(payload, state, false).find((d) => d.id === 'state-tax'),
+        `${state} priced ⇒ "left out of this comparison" is false and must not render`,
       ).toBeUndefined()
     }
     // NON-VACUITY: the drop is surgical — the household still reads its other disclosures.
-    const ncIds = disclosuresFor(payload, 'NC').map((d) => d.id)
+    const ncIds = disclosuresFor(payload, 'NC', false).map((d) => d.id)
     expect(ncIds, 'the drop takes the state note ONLY').toContain('ss-claim-fixed')
     expect(ncIds).toContain('niit')
   })
@@ -475,7 +507,7 @@ describe('recommendationView — the disclosures adjacent to the delta', () => {
     // pay-less-tax has no heir bracket ⇒ no heir-bracket disclosure (the leave-more-only gate). Drive
     // `disclosuresFor` directly (the pure composer) so the check needs no pay-less-tax-consistent arms.
     const payLessTax: SolveRecommendation = { ...payload, goal: 'pay-less-tax', heirBracket: undefined }
-    expect(disclosuresFor(payLessTax, undefined).find((d) => d.id === 'heir-bracket'), 'no heir bracket on pay-less-tax').toBeUndefined()
+    expect(disclosuresFor(payLessTax, undefined, true).find((d) => d.id === 'heir-bracket'), 'no heir bracket on pay-less-tax').toBeUndefined()
   })
 
   it('the ACA SLCSP caveat rides ONLY when the delta leans on ACA (the named-driver signal)', () => {
@@ -561,7 +593,8 @@ describe('recommendationView — the §S4 runner-up comparison viz', () => {
 
   it('pay-less-tax draws NEITHER picture — the wealth-shaped grammar cannot carry a lower-is-better statistic; the leave-more control still ships both', () => {
     // C1 (2026-09-08): the bars put direction on which one is LONGER and the aria says an arm "lands near
-    // about $X", but pay-less-tax plots mean lifetime TAX PAID, where LOWER is better — so the recommended
+    // about $X", but pay-less-tax plots mean lifetime ALL-IN cost (income tax + health-insurance
+    // premiums since 2026-10-05), where LOWER is better — so the recommended
     // arm draws the SHORTER bar under a longer-is-better grammar. Both pictures are withheld until a
     // goal-named caption + aria variant are authored (an OMISSION, never a swap of the tax figures into
     // the wealth sentence); the goal-WORDED dollar hero carries its own direction and still ships.
@@ -670,6 +703,163 @@ describe('recommendationView — the A-decides / B-displays inversion suppresses
     expect(v.grade.deltaFigure).toBe(expectedDelta)
     expect(v.grade.heroLine).toBe(slots.recDeltaLeaveMore(expectedDelta))
     expect(v.viz, 'the active two-arm viz still ships').toBeDefined()
+  })
+})
+
+// ---- the pay-less-tax ALL-IN hero (build spec §5.5 + D7 — Briggsy's words, RULED 2026-10-05) -------
+
+describe('recommendationView — the pay-less-tax ALL-IN hero follows the run’s BUILT healthcare pricing (§5.5, D7)', () => {
+  const goal: RecommendationGoal = 'pay-less-tax'
+  const GATES = ['require-hedge', 'false-certainty', 'advice-verb', 'superlative'] as const
+  const payLessTaxRec = (winner: SolveArm, baseline: SolveArm): SolveRecommendation => ({
+    ...leaveMoreRec(),
+    goal,
+    heirBracket: undefined,
+    winner,
+    noActionBaseline: baseline,
+    runnerUp: undefined,
+    gradeStatistic: 'pay-less-tax',
+    skewDisclosure: undefined,
+  })
+  /** This file's OWN all-in mean — an independent per-path sum, never `lifetimeAllInCostPerPath`. */
+  const ownAllInMean = (tax: readonly number[], prem: readonly number[], med: readonly number[]): number =>
+    tax.reduce((s, t, i) => s + t + prem[i]! + med[i]!, 0) / tax.length
+  const ownMean = (v: readonly number[]): number => v.reduce((s, x) => s + x, 0) / v.length
+
+  it('the five strings are HIS ruled words, verbatim (the word packet, 2026-10-05)', () => {
+    expect(slots.recDeltaPayLessTax('12,000')).toBe(
+      'Keeps about $12,000 more out of your lifetime tax and health-insurance premiums than today’s plan.',
+    )
+    expect(slots.recDeltaPayLessTaxUnpriced('12,000')).toBe('Keeps about $12,000 more out of your lifetime tax than today’s plan.')
+    expect(copy.goalPayLessTaxGloss).toBe('Less paid over your lifetime in tax, and in the health-insurance premiums this tool counts.')
+    expect(copy.recDiscAllInScope).toBe(
+      'This counts your income tax plus the health-insurance premiums a strategy can move; changes to your copays and deductibles aren’t counted and could move this.',
+    )
+    expect(copy.recDiscNiit).toBe('A federal surtax on higher investment income isn’t counted here, and it could apply.')
+    expect(copy.recDiscStateTax).toBe(
+      'Where we can’t yet price a state’s income tax, it’s left out of this comparison — the state piece could move it either way.',
+    )
+    expect(copy.goalPayLessTaxLabel, 'the label stays (his call)').toBe('Pay less tax')
+  })
+
+  it('PRICED: the hero quotes baseline all-in − winner all-in (NOT the income-tax delta), in the all-in words, with the scope note right before NIIT', () => {
+    const wTax = [40_000, 42_000]
+    const wPrem = [6_000, 8_000]
+    const wMed = [20_000, 21_000]
+    const bTax = [44_000, 46_000]
+    const bPrem = [18_000, 20_000]
+    const bMed = [20_000, 21_000]
+    const winner = armFor(goal, undefined, 'bracket-fill', 'bracket-fill', { lifetimeTaxPaidReal: wTax, lifetimeNetPremiumReal: wPrem, lifetimeMedicareCostReal: wMed })
+    const baseline = armFor(goal, undefined, 'proportional', 'proportional', { lifetimeTaxPaidReal: bTax, lifetimeNetPremiumReal: bPrem, lifetimeMedicareCostReal: bMed })
+    const v = asRec(recommendationView(committed(payLessTaxRec(winner, baseline)), { spineConfidence: spine, healthcarePriced: true }))
+    const allInDelta = ownAllInMean(bTax, bPrem, bMed) - ownAllInMean(wTax, wPrem, wMed)
+    const taxDelta = ownMean(bTax) - ownMean(wTax)
+    // NON-VACUITY: the two statistics really DIFFER on this payload, by more than a display step.
+    expect(formatDeltaDollar(allInDelta), 'the fixture separates all-in from income tax').not.toBe(formatDeltaDollar(taxDelta))
+    expect(v.mode).toBe('active')
+    expect(v.grade.deltaFigure, 'the hero quotes the ALL-IN delta').toBe(formatDeltaDollar(allInDelta))
+    expect(v.grade.heroLine).toBe(slots.recDeltaPayLessTax(formatDeltaDollar(allInDelta)))
+    expect(v.grade.heroLine, 'the priced arm names what the figure counts').toMatch(/health-insurance premiums/)
+    const ids = v.disclosures.map((d) => d.id)
+    expect(ids, 'the scope note rides on a priced pay-less-tax run').toContain('all-in-scope')
+    expect(ids.indexOf('niit'), 'the scope note directly BEFORE NIIT (the rule, then its exception)').toBe(ids.indexOf('all-in-scope') + 1)
+    expect(v.disclosures.find((d) => d.id === 'all-in-scope')!.text).toBe(copy.recDiscAllInScope)
+    // copyGuard compliance on what actually renders (the hero + every disclosure beside it).
+    expect(lintCopy(v.grade.heroLine, GATES), v.grade.heroLine).toEqual([])
+    for (const d of v.disclosures) expect(lintCopy(d.text, GATES), `${d.id}: ${d.text}`).toEqual([])
+  })
+
+  it('INVERSION: a winner that pays LESS income tax but MORE all-in displays behind — the dollar is SUPPRESSED (the goal-oriented inversion guard reads all-in)', () => {
+    const winner = armFor(goal, undefined, 'bracket-fill', 'bracket-fill', { lifetimeTaxPaidReal: [40_000, 40_000], lifetimeNetPremiumReal: [30_000, 30_000] })
+    const baseline = armFor(goal, undefined, 'proportional', 'proportional', { lifetimeTaxPaidReal: [50_000, 50_000], lifetimeNetPremiumReal: [10_000, 10_000] })
+    // NON-VACUITY: on income tax alone this winner would have shown a dollar hero.
+    expect(ownMean([40_000, 40_000]), 'the winner pays LESS income tax').toBeLessThan(ownMean([50_000, 50_000]))
+    expect(winner.headlineStatisticB, 'but MORE all-in (displays behind)').toBeGreaterThan(baseline.headlineStatisticB)
+    const v = asRec(recommendationView(committed(payLessTaxRec(winner, baseline)), { spineConfidence: spine, healthcarePriced: true }))
+    expect(v.mode).toBe('no-change')
+    expect(v.grade.deltaFigure, 'no fabricated dollar').toBeUndefined()
+    expect(v.grade.heroLine).toBe(copy.recComposeAlready)
+  })
+
+  it('ABSENT predicate ⇒ the UNPRICED arm (today’s tax-only words, no scope note) — the pricedState precedent; Result always passes it', () => {
+    const winner = armFor(goal, undefined, 'bracket-fill', 'bracket-fill', { lifetimeTaxPaidReal: [40_000, 40_000] })
+    const baseline = armFor(goal, undefined, 'proportional', 'proportional', { lifetimeTaxPaidReal: [55_000, 55_000] })
+    const v = asRec(recommendationView(committed(payLessTaxRec(winner, baseline)), { spineConfidence: spine }))
+    expect(v.mode).toBe('active')
+    expect(v.grade.heroLine).toBe(slots.recDeltaPayLessTaxUnpriced(v.grade.deltaFigure!))
+    expect(v.disclosures.map((d) => d.id)).not.toContain('all-in-scope')
+  })
+
+  it('leave-more NEVER carries the all-in scope note, priced or not (its objective is the bequest)', () => {
+    for (const healthcarePriced of [true, false]) {
+      const v = asRec(recommendationView(committed(leaveMoreRec()), { spineConfidence: spine, healthcarePriced }))
+      expect(v.disclosures.map((d) => d.id), `healthcarePriced=${healthcarePriced}`).not.toContain('all-in-scope')
+      expect(v.grade.heroLine, 'the leave-more hero is untouched').toBe(slots.recDeltaLeaveMore(v.grade.deltaFigure!))
+    }
+  })
+
+  // D7 ⚑ RESOLVED: every live solve prices healthcare today (the quote pair is a required fact), so the
+  // unpriced arm is DEFENCE-IN-DEPTH. This arm builds the base DIRECTLY with `overlay.healthcareEnabled`
+  // false — the one way to reach it — runs the REAL engine on both bases, and feeds the view the BUILT
+  // predicate (the `spineMedicarePriced` idiom: `base.overlay?.healthcareEnabled === true`).
+  it('D7: on a base built with overlay.healthcareEnabled FALSE all-in ≡ income tax, and the hero keeps today’s tax-only words; the SAME household priced takes the all-in words', () => {
+    const draft = resolveDevSeed('health')
+    if (draft === null) throw new Error('no dev seed "health"')
+    const req = buildSolveRequest({ ...draft, chosenGoal: 'pay-less-tax' }, D7_TODAY)
+    if (typeof req === 'string') throw new Error(`the health seed must build a request (got ${req})`)
+    expect(req.base.overlay?.healthcareEnabled, 'the premise: the live base is priced').toBe(true)
+    const keep = new Set(['grid:pre-tax-first:0', 'grid:bracket-fill:0', 'grid:proportional:0'])
+    const roster = req.candidates.filter((c) => c.provenance === 'user-baseline' || keep.has(solverCandidateId(c)))
+    expect(roster.length, 'the user baseline + the three grid arms').toBe(4)
+    const pricedBase = { ...req.base, paths: 64 }
+    const unpricedBase = { ...pricedBase, overlay: { ...pricedBase.overlay!, healthcareEnabled: false } }
+
+    for (const base of [unpricedBase, pricedBase]) {
+      const healthcarePriced = base.overlay?.healthcareEnabled === true
+      const arms = roster.map((c) => {
+        const out = simulate(applyCandidate(base, c), req.seedA)
+        if (out.indeterminate || out.infeasible) throw new Error(`${solverCandidateId(c)} did not score`)
+        const dist = out.distribution
+        const arm: SolveArm = {
+          id: solverCandidateId(c),
+          policy: c.policy,
+          conversion: c.conversion,
+          distributionB: dist,
+          headlineStatisticB: headlineStatisticFromDistribution(dist, goal, undefined),
+          survivalB: dist.survivalFraction,
+        }
+        return { provenance: c.provenance, arm }
+      })
+      const ta = arms.map((a) => a.arm.distributionB.taxAware!)
+      if (!healthcarePriced) {
+        // D5, the arm's premise: nothing priced ⇒ the premium and Medicare addends are exactly 0, so the
+        // all-in statistic IS income tax and a hero naming premiums would claim a count that never ran.
+        for (const t of ta) {
+          expect(t.lifetimeNetPremiumReal.every((x) => x === 0), 'no premium priced').toBe(true)
+          expect(t.lifetimeMedicareCostReal.every((x) => x === 0), 'no Medicare priced').toBe(true)
+        }
+      } else {
+        expect(ta.some((t) => t.lifetimeMedicareCostReal.some((x) => x > 0)), 'the priced twin really prices healthcare').toBe(true)
+      }
+      const baseline = arms.find((a) => a.provenance === 'user-baseline')!.arm
+      const best = arms
+        .filter((a) => a.provenance !== 'user-baseline')
+        .map((a) => a.arm)
+        .sort((x, y) => x.headlineStatisticB - y.headlineStatisticB)[0]!
+      // NON-VACUITY: an ACTIVE dollar hero (the arm under test), not the no-dollar register.
+      expect(best.headlineStatisticB, 'a grid arm costs less than today’s plan').toBeLessThan(baseline.headlineStatisticB)
+      const v = asRec(recommendationView(committed(payLessTaxRec(best, baseline)), { spineConfidence: spine, healthcarePriced }))
+      expect(v.mode).toBe('active')
+      const ids = v.disclosures.map((d) => d.id)
+      if (healthcarePriced) {
+        expect(v.grade.heroLine).toBe(slots.recDeltaPayLessTax(v.grade.deltaFigure!))
+        expect(ids).toContain('all-in-scope')
+      } else {
+        expect(v.grade.heroLine).toBe(slots.recDeltaPayLessTaxUnpriced(v.grade.deltaFigure!))
+        expect(v.grade.heroLine, 'the unpriced hero claims no premium').not.toMatch(/premium/i)
+        expect(ids, 'no all-in scope note on an unpriced run').not.toContain('all-in-scope')
+      }
+    }
   })
 })
 

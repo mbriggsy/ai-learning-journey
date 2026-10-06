@@ -32,17 +32,26 @@ import { SOLVER_CASES } from '../../reference/solver-cases'
 const mean = (xs: readonly number[]): number => xs.reduce((s, x) => s + x, 0) / xs.length
 
 /** A synthetic pay-less-tax scored outcome from an explicit per-path lifetime-tax vector + a survival
- *  fraction. The score's tax mean is derived FROM the vector, so `tier2` (the advantage) and the
- *  CRN-difference SE (`selectionTieTolerance` over the same vector) are consistent by construction. */
-function taxOutcome(candidate: CandidateStrategy, taxPerPath: readonly number[], survival: number): CandidateOutcome {
+ *  fraction, with optional per-path net-premium / Medicare addends (default all-zero — the
+ *  healthcare-off shape, where the all-in mean IS the tax mean). The score's all-in mean is derived
+ *  FROM the per-path SUM, so `tier2` (the advantage) and the CRN-difference SE
+ *  (`selectionTieTolerance` over the same all-in vector) are consistent by construction. */
+function taxOutcome(
+  candidate: CandidateStrategy,
+  taxPerPath: readonly number[],
+  survival: number,
+  addends: { readonly premium?: readonly number[]; readonly medicare?: readonly number[] } = {},
+): CandidateOutcome {
   const n = taxPerPath.length
   const zeros: readonly number[] = new Array(n).fill(0)
   const depletionYears: readonly DepletionYear[] = new Array(n).fill(NEVER_DEPLETED)
+  const premium = addends.premium ?? zeros
+  const medicare = addends.medicare ?? zeros
+  const allIn = taxPerPath.map((t, i) => t + premium[i]! + medicare[i]!)
   return {
     kind: 'scored',
     candidate,
-    // premium + Medicare are zero below, so the all-in mean IS the tax mean (the healthcare-off identity).
-    score: { survival, lifetimeTaxMeanReal: mean(taxPerPath), lifetimeAllInCostMeanReal: mean(taxPerPath), terminalGrossMeanReal: 0, afterTaxBequestMeanReal: undefined },
+    score: { survival, lifetimeTaxMeanReal: mean(taxPerPath), lifetimeAllInCostMeanReal: mean(allIn), terminalGrossMeanReal: 0, afterTaxBequestMeanReal: undefined },
     distribution: {
       terminalValuesReal: zeros,
       depletionYears,
@@ -54,8 +63,8 @@ function taxOutcome(candidate: CandidateStrategy, taxPerPath: readonly number[],
         terminalRothReal: zeros,
         terminalHsaReal: zeros,
         terminalTaxableBasisReal: zeros,
-        lifetimeNetPremiumReal: zeros,
-        lifetimeMedicareCostReal: zeros,
+        lifetimeNetPremiumReal: premium,
+        lifetimeMedicareCostReal: medicare,
       },
     },
   }
@@ -184,6 +193,44 @@ describe('§S4 the shrinkage tolerance is LIVE (keyed to the CRN-difference SE),
     // The discriminating fact: the MEAN advantage is IDENTICAL in both worlds — a constant tolerance
     // (SE-blind) would crown identically; the SE is the only input that moved.
     expect(mean([95, 95, 95, 95])).toBe(mean([95, 105, 85, 95]))
+  })
+})
+
+describe('pay-less-tax ranks on ALL-IN cost — the crown AND the shrinkage SE read the all-in vector (build spec §5.2)', () => {
+  it('(a) the conventional prior wins on income tax, a lever wins ALL-IN (premium): the lever is crowned with shrinkage OFF and ON', () => {
+    // C: tax 90, premium 30 ⇒ all-in 120.  X: tax 100, no premium ⇒ all-in 100. Flat diffs ⇒ SE 0 ⇒ λ 0.
+    const outcomesA = [taxOutcome(C, [90, 90, 90, 90], 1, { premium: [30, 30, 30, 30] }), taxOutcome(X_PROP, [100, 100, 100, 100], 1)]
+    for (const shrinkage of ['off', 'on'] as const) {
+      const r = selectCore({ outcomesA, goal: 'pay-less-tax', tieTolerance: 0, conventionalIndex: 0, shrinkage })
+      if (r.kind !== 'selected') throw new Error('unreachable')
+      expect(r.winnerId, `shrinkage ${shrinkage}`).toBe('grid:proportional:0')
+    }
+  })
+
+  it('(b) the SE decision differs between the income-tax and the all-in vectors — the shrinkage reads the ALL-IN per-path vector', () => {
+    // C: tax [100,100,100,100], premium [0,80,0,80]  ⇒ all-in [100,180,100,180] (mean 140).
+    // X: tax [20,140,20,140],   premium [40,0,40,0]  ⇒ all-in [60,140,60,140]   (mean 100).
+    // All-in diffs C−X = [40,40,40,40]: adv 40, SE 0 ⇒ λ 0 ⇒ SURVIVES ⇒ X crowned.
+    // Income-tax diffs = [80,−40,80,−40]: SE = √(4800/4) ≈ 34.64 ⇒ λ ≈ 67.9 ≥ 40 — so a goalPerPathA that
+    // read lifetimeTaxPaidReal (the pre-switch :192 read) under the all-in mean COLLAPSES X to the prior.
+    const outcomesA = [
+      taxOutcome(C, [100, 100, 100, 100], 1, { premium: [0, 80, 0, 80] }),
+      taxOutcome(X_PROP, [20, 140, 20, 140], 1, { premium: [40, 0, 40, 0] }),
+    ]
+    const on = selectCore({ outcomesA, goal: 'pay-less-tax', tieTolerance: 0, conventionalIndex: 0, shrinkage: 'on' })
+    if (on.kind !== 'selected') throw new Error('unreachable')
+    expect(on.winnerId).toBe('grid:proportional:0')
+    expect(on.noChange).toBe(false)
+  })
+
+  it('(c) a MEDICARE-only flip: the Medicare addend alone reverses the crown (shrinkage OFF and ON)', () => {
+    // C: tax 90, Medicare 30 ⇒ all-in 120.  X: tax 100 ⇒ all-in 100.
+    const outcomesA = [taxOutcome(C, [90, 90, 90, 90], 1, { medicare: [30, 30, 30, 30] }), taxOutcome(X_PROP, [100, 100, 100, 100], 1)]
+    for (const shrinkage of ['off', 'on'] as const) {
+      const r = selectCore({ outcomesA, goal: 'pay-less-tax', tieTolerance: 0, conventionalIndex: 0, shrinkage })
+      if (r.kind !== 'selected') throw new Error('unreachable')
+      expect(r.winnerId, `shrinkage ${shrinkage}`).toBe('grid:proportional:0')
+    }
   })
 })
 

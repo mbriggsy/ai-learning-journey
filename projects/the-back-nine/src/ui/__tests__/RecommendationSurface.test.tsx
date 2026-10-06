@@ -1030,4 +1030,18 @@ describe('RecommendationSurface — the winning-plan card', () => {
     const mount = src.slice(src.indexOf('<RecommendationSurface'), src.indexOf('/>', src.indexOf('<RecommendationSurface')))
     expect(mount, 'the committed-beat mount passes the anchor Result already mints').toContain('planClock={dateAnchor}')
   })
+
+  it('WIRING — Result really passes the solve’s BUILT healthcare pricing (build spec D7), so the pay-less-tax hero can never fall back to the tax-only arm by omission', () => {
+    // Same shape and the same limits as the plan-clock pin above: it proves the PROP IS WIRED at the one
+    // production mount, and that its value is the SPINE read (`spineMedicarePriced` — the solve's base IS
+    // `buildSpineParams`' output; solveDispatch.test.ts pins the identity), never the route-aware
+    // `medicarePriced`. Dropped, every live pay-less-tax hero would say "tax" while its figure counts
+    // premiums — the build's own NEGATIVE — with every render test still green.
+    const src = readFileSync(resolve(__dirname, '../Result.tsx'), 'utf8')
+    const mount = src.slice(src.indexOf('<RecommendationSurface'), src.indexOf('/>', src.indexOf('<RecommendationSurface')))
+    expect(mount, 'the committed-beat mount passes the built predicate').toContain('healthcarePriced={solveHealthcarePriced}')
+    expect(src, 'and the predicate is the spine read of the draft').toMatch(
+      /const solveHealthcarePriced = useMemo\(\(\) => spineMedicarePriced\(snapshot\.draft\), \[snapshot\.draft\]\)/,
+    )
+  })
 })

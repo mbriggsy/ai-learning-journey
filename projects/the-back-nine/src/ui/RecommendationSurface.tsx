@@ -100,6 +100,7 @@ export function RecommendationSurface({
   solve,
   spineConfidence,
   pricedState,
+  healthcarePriced,
   planClock,
   onRepick,
   recSave,
@@ -120,6 +121,11 @@ export function RecommendationSurface({
    *  household. Optional: an in-isolation surface (the unit tests) has no draft, and `undefined`
    *  keeps the shipped not-priced words. */
   readonly pricedState?: PricedState
+  /** Did THIS run's BUILT overlay price healthcare (`spineMedicarePriced`, threaded from Result —
+   *  build spec D7)? Picks the pay-less-tax hero's arm (all-in words vs today's tax-only words) and
+   *  gates the all-in scope note. Optional: an in-isolation surface has no draft, and `undefined`
+   *  keeps the shipped tax-only words; the WIRING test below pins that Result passes it. */
+  readonly healthcarePriced?: boolean
   /** §S4 — the goal RE-PICK affordance: the committed beat's calm "aim at a different goal" door
    *  (the caller owns the GoalPicker + the dispatch; the un-saved hypothetical is freely re-aimable, a
    *  re-pick VISIBLY re-solves and both futures update). Optional — a surface mounted WITHOUT it (the
@@ -149,10 +155,10 @@ export function RecommendationSurface({
     }
   }, [solve, announcer])
 
-  // All three opts are pass-through-optional (`exactOptionalPropertyTypes` is off, so an undefined
-  // member reads identically to an absent one) — the object is always built, so adding a fourth can
+  // All four opts are pass-through-optional (`exactOptionalPropertyTypes` is off, so an undefined
+  // member reads identically to an absent one) — the object is always built, so adding a fifth can
   // never be silently dropped by a stale guard.
-  const view = recommendationView(solve, { spineConfidence, pricedState, planClock })
+  const view = recommendationView(solve, { spineConfidence, pricedState, healthcarePriced, planClock })
 
   // §S5 (a) — the save gesture's START, through the SAME region the solve channel uses, for the same
   // reason: the slot swaps whole nodes per arm, so a `role='status'` that mounts already-populated
@@ -202,7 +208,7 @@ export function RecommendationSurface({
   // edit-time kill, on the pending arm — but this seat reads the committed one only); `view` is a
   // `RecommendationView` and `mode` only on `RecommendedView` — both reads are TS2339 unwrapped, and a
   // cast here would compile, lint, and leave every trichotomy arm green while stamping a record with
-  // the wrong run (model.ts:1907-1915 documents that exact shape). The two values are lifted into
+  // the wrong run (model.ts:1910-1918 documents that exact shape). The two values are lifted into
   // CONSTS so the handler closes over already-narrowed data — parameter narrowing does not survive
   // into a closure.
   const ticket: RecommendationSaveTicket | undefined =

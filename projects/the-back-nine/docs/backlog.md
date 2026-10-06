@@ -1010,6 +1010,88 @@ In the committed frame, taxable income is $0 in every window year at $0–$5k of
     - re-derive the healthnc 256.
 - ⚑ **THE SURVIVAL TOLERANCE WAS PRE-SPECIFIED (read 2026-10-05):** `solverSelectionTieZ` (`src/engine/constants/solver.ts:30-35`, 1.96, "PRE-SPECIFIED 2026-07-18, before any B draw", council `wf_d873be6e-5b2`) carries the note "The selection tolerance is z · SE_diff(pair), SE from paired per-path indicators on seed-set A only" — the T_crn construction measured above, already a sourced constant with a citation, read today only by the Tier-2 shrinkage (`heldOutSeed.ts`) and the grade (`gradeCalibration.ts`). The live `tieTolerance: 0` never consumes it. The council weighs a pre-registered constant, not a new design.
 - ⚑ **UNBLOCKED 2026-10-06 — the all-in objective SHIPPED (`6dab9ec0`, `SOLVER_CODE_VERSION` 10).** The coupling hazard above was the income-tax objective crowning premium traps under any looser tolerance; the shipped Tier-2 statistic is now all-in, on which the 2026-10-04 measurement found no tolerance moving the hl50 crowns. Next: re-run the tolerance arms on the SHIPPED (all-in) statistic only — the income-tax arms are history — then `/council` on adopting `solverSelectionTieZ` for Tier 1 (the ⚑ MEASURED block's design notes are the brief). A change is `SOLVER_CODE_VERSION` 11.
+- ⚑ **RE-MEASURED 2026-10-06 on v10 (all-in shipped), b9-2.** Shipped selection plus an independent re-ranker, three refuters and a chair. Survival tolerance arms, shipped statistics only. **Result: v10 moved no crown at any tolerance, and the off-roster coupling hazard is GONE.** The objective prerequisite is discharged, and the question goes to `/council`.
+  - **Method.**
+    - *Primary leg (measured):* the shipped `evaluateCandidates` outcomes go through the shipped `searchSteps` and `selectRecommendation`. For P_k, only the scalar `tieTolerance` is substituted. For T_crn, only the A-side survival of the members is set to `best`. The solve.ts steps 6–8 payload is mirrored, and heroes are rendered through the shipped `recommendationView`.
+    - *Independent leg (measured):* `simulate ∘ applyCandidate` with its own Tier-1/Tier-2/tie-break ranker. It matches the shipped `selectCore` full order at T0/P1/P5/P20 on both goals for all 16 households.
+    - *Run settings:* 16,000 paths; seed A 12245589 (DEV_CRN_SEED, `src/ui/devSeeds.ts:47`) and seed B −1438857764 (`deriveSeedB`, `src/engine/validation/heldOutSeed.ts:48`); `SOLVER_CODE_VERSION` 10 (`src/engine/solver/solverCodeVersion.ts:129`); today epoch day 20732; heir bracket 0.24 (read).
+    - *Source facts re-read:* `src/intake/solveDispatch.ts:106` still passes `tieTolerance: 0` (rationale at :18-24). `src/engine/solver/select.ts:287-299` sorts top-set membership before the shrunk Tier 2. `selectionTieTolerance` (`heldOutSeed.ts:129-157`, fed by `select.ts:268-276`) is the GOAL-difference SE.
+    - *Tolerances:* T0 (shipped); P1 / P5 / P20, keyed as (k+½)/16000; and T_crn. Under T_crn, c is tied with m = T0's crown iff k ≤ 0 or k²(n−1) ≤ 1.96²·(n(b+c) − k²), with b = m-only, c = c-only, k = b − c. This is d̄ ≤ 1.96·SE in integers, and it agrees with the shipped float form on every row.
+    - *Pay-less-tax* = the shipped all-in statistic. The income-tax arms are history and were not re-run.
+  - **Reproduction (measured).** Real `solveWithMint(buildSolveRequest(…))` matches the constructed T0 payload or the full `rankedIds` bit-for-bit on these cells:
+    - retired PLT
+    - health PLT
+    - nc PLT and LM
+    - order PLT
+    - budget PLT and LM
+    - hl50 PLT and LM
+
+    The budget PLT payload sha256 matched across three agents. Both legs agree on all 160 (household, goal, tolerance) cells: crown, runner-up, top-set size, and per-candidate survA/survB/allIn/bequest. That is 0 disagreements.
+  - **Solvable seeds (measured).** 14 of the 24 `DEV_SEEDS` (`src/ui/devSeeds.ts:1122-1147`) are solvable: retired, borderline, failing, budget, order, health, surplus, buckets, nc, pa, fl, elsewhere, healthnc, healthgap.
+    - Refused as spine-unready: date, dateborder, datesplit, datemixed, dip, date65, datenc, datesolo, atceiling. Refused as no-pretax: steer.
+    - Off-roster: hl50 / hl40, which are `health` with only `annualSpendingReal` changed (78,000 → 50,000 / 40,000).
+    - `failing` is unwitnessable live (perturbation-inert), so it never recommends.
+  - **Unchanged at every tolerance, both goals (measured).** Top set is shown as T0/P1/P5/P20/Tcrn. Hero is seed B; in parentheses, the raw seed-B Δ in real $.
+
+    | seed | crown / runner-up | top set | T0 grade | hero, PLT all-in ; LM |
+    |---|---|---|---|---|
+    | retired / fl / elsewhere | prop:33381 / bf:33381 | 1/1/1/7/2 | coin-flip | $12,000 (12,490) ; $22,000 (22,135) |
+    | pa | same | 1/1/1/7/2 | coin-flip | $13,000 (12,665) ; $22,000 (22,353) |
+    | order | prop:49070 / bf:34597 | 1/1/1/2/1 | just-do-it, subTenthCollapse | no dollar (45,326) ; no dollar (38,022) |
+    | surplus | PLT bf:185721 / bf:148300 ; LM reversed | 93 at every tolerance | just-do-it | $160,000 (158,934) ; $250,000 (247,961) |
+    | health / healthnc / healthgap | prop:0 / baseline prop:20000 | 1 at every tolerance | just-do-it, subTenthCollapse | no dollar (PLT inverted −2,178 / −3,019 / −17,703) |
+    | buckets | prop:0 / baseline prop:0 | 2 at every tolerance | coin-flip | noChange |
+    | hl50 | PLT bf:0 / pre-tax-first:0 ; LM bf:0 / bf:32734 | 6/38/87/97/77 | just-do-it | $33,000 (33,413) ; $52,000 (52,297) |
+    | hl40 | pre-tax-first:0 / bf:0 | 8/37/97/97/97 | coin-flip | $36,000 (36,062) ; $62,000 (61,578) |
+
+    In the health family, the nearest rival sits 24 / 24 / 29 paths below the best (z 4.90 / 4.90 / 4.91). No tolerance reaches it.
+  - **Crown changes: 14 of 128 loosened cells (112 dev roster + 16 off-roster); 0 hazards (measured).** Every change is identical on both goals. Every new crown is better on the goal statistic, better all-in and better on bequest, on both A and B. Every new crown grades coin-flip.
+
+    | seed | tolerances | T0 → new | survival cost, paths A (± SE, discordant, z); B | all-in gain A ± SE / B | bequest gain A ± SE / B | hero PLT ; LM |
+    |---|---|---|---|---|---|---|
+    | nc | P5, P20, Tcrn | bf:33381 → prop:33381 | 4 ± 5.3 (16/12, z 0.76); B 1 (15/14) | +$10,287 ± 344 / +$9,597 | +$10,815 ± 170 / +$10,559 | $3,700 → $13,000 ; $5,200 → $16,000 |
+    | borderline | P20, Tcrn | bf:46522 → bf:111578 | 9 ± 8.5 (41/32, z 1.05); B 10 (36/26, z 1.27) | +$1,901 ± 109 / +$1,725 | +$10,089 ± 106 / +$10,002 | $7,500 → $9,200 ; $14,000 → $24,000 |
+    | budget | P20, Tcrn | bf:0 → bf:46522 | 14 ± 7.2 (33/19, z 1.94); B 18 (39/21, z 2.32) | +$1,633 ± 123 / +$1,497 | +$9,400 ± 103 / +$9,388 | NO DOLLAR (just-do-it, subTenthCollapse) → $2,700 coin-flip ; NO DOLLAR → $13,000 |
+
+  - **Direction robustness (measured).** 28 further seed sets in four disjoint families: `deriveBFamilyMember(seedB, 0..7)`, `1000..1007` and `3000..3007`, plus 4 fresh literal seeds. Each set re-runs only the T0 crown against the new crown.
+    - **nc** is a TRUE TIE / REVERSAL of T0's edge. The new crown is worse on 11, equal on 1 and better on 16. Family means range from −0.019 to +0.012 pp (sign = new crown's survival deficit), and the pooled McNemar z values are −1.54 and −0.90.
+    - **borderline** is a SMALL REPEATED SURVIVAL LOSS. The new crown is worse on 27 of 28 sets, by +0.081 / +0.096 / +0.100 pp per family, pooled z 5.31 / 5.24.
+    - **budget** is a SMALL REPEATED SURVIVAL LOSS. The new crown is worse on 28 of 28 sets, by +0.110 / +0.122 / +0.128 pp, pooled z 7.72 / 6.89.
+    - Neither loss is ever "survival-equivalent". The all-in and bequest gains are positive on every set, for all three pairs.
+  - **T0's own calm-but-wrong (measured):** on `nc`, T0 crowns on a 4-path edge at z 0.76, and that edge reverses on most independent sets. It leaves +$10,287 all-in / +$10,815 bequest on the table. It renders $3,700 / $5,200 where T_crn renders $13,000 / $16,000.
+  - **T_crn hazards found (measured, one refuter each, uncorroborated):**
+    - **budget's admission is knife-edge.** bf:46522 gets in on A at z 1.942, under the 1.96 cutoff. On B it would be out (z 2.32), and on 2 of 4 fresh seeds it is out (z 2.99 / 3.88). In all, 3 of 6 seeds admit it, so whether T_crn moves budget at all depends on the minted seed.
+    - **nc's bf:0 exclusion is fragile too.** It is out on A (z 2.00) and B (z 2.45) but in on 3 of 4 fresh seeds.
+    - **NEW non-monotonicity that decides a crown.** On budget, T_crn admits bf:46522 (A survivors 11,024; 33/19 discordant) and rejects bf:45089 (11,027; 12/1, gap 11). It takes the noisier candidate with worse survival and rejects the consistent near-tie, and the admitted candidate becomes the crown.
+    - P20's top set {bf:0, bf:45089, bf:46522} crowns the same bf:46522, so a gap-closed T_crn would not change budget's crown (derived).
+  - **Diff vs 2026-10-04 (v9), with named drivers.**
+    - *Dev-roster moves.* The same moves, survival costs, discordant counts and all-in/bequest gains as 10-04's hand-substituted all-in arm and its LM arm, to the dollar. 21 of 168 → 14 of 112 dev cells is only the dropped income-tax arm (7 of 56).
+    - *v10 objective: the off-roster hazard is gone.* 10-04 found 12 of 12 hl50/hl40 income-tax cells to be hazards (pre-tax-first 1 path below the best, −$44,041 all-in on hl50 and −$43,316 on hl40). The shipped all-in crowns are the old all-in argmins: hl50 bf:0, which was the v9 shipped pre-tax-first:0 (hero $52,000 tax → $33,000 all-in), and hl40 pre-tax-first:0, hero $36,000 (v9 tax $59,000 / −$8,461 all-in).
+    - *v10 objective: PLT heroes are now all-in.* retired / fl / elsewhere $10,000 → $12,000; pa → $13,000; nc $3,000 → $3,700; surplus $110,000 → $160,000; nc's new crown $11,000 → $13,000; borderline's new crown $9,600 → $9,200; budget's new crown $2,300 → $2,700.
+    - *Rendering, now measured.* Heroes now go through the shipped view rather than assuming `subTenthCollapse` = false. As a result, order and budget T0 render NO dollar on both goals; 10-04's table showed $45,000 / $1,200 / $3,800, which never rendered. budget's move is therefore a no-dollar → active-dollar flip.
+    - *Grades.* The surplus cells now have grades (10-04 could not compute them): surplus just-do-it, hl50 just-do-it, hl40 coin-flip.
+    - *Robustness.* 28 sets instead of 7 (or 5); the classes are unchanged.
+  - **What survived refutation:**
+    - the integer T_crn test (re-derived independently, 30/30 agreement with the shipped float);
+    - the A/B discordant counts (reproduced exactly three times);
+    - the 0-hazard result;
+    - the hl50/hl40 no-move result;
+    - a fifth real-solve reproduction (budget PLT);
+    - all three classifications, on two fresh disjoint families.
+  - **Corrected by the refuters and the chair:**
+    - the re-ranker's "18 of 160" is 14 of 128;
+    - the primary's off-roster "0 of 32" is 0 of 16;
+    - a refuter's pooled nc tally of "7 worse / 13 better" over 20 sets is 8 / 12;
+    - budget's T_crn move is seed-dependent at the margin, not a fixed household property.
+  - **Limits:**
+    - one live CRN seed pair for the crowns; other minted seeds are unmeasured;
+    - the named-driver hinge note was not probed for the loosened crowns;
+    - the loosened-crown heroes come from the shipped view in one leg and a validated replica in the other;
+    - hl50/hl40 sit in the surplus regime (15,996 / 16,000 of 16,000 survive), where Tier 1 carries almost no information.
+  - **Do not:**
+    - call the borderline or budget moves "survival-equivalent";
+    - read the 0-hazard result as clearance for an unmodified T_crn (it is non-monotone and its admission is knife-edge);
+    - re-run the income-tax arms.
 - ⚑ NEGATIVE: build nothing before the ruling; never reuse the goal-difference `selectionTieTolerance` as the survival tolerance; never a level-keyed band (contract #2's ε split — a band read off the B display fails loud); never treat any dense-grid crown as a household constant.
 
 ### ✅ CLOSED 2026-10-03 — The solver's ACA-cliff and bracket-edge anchors sit under their rail only in YEAR 0's committed frame — the OBBBA senior bonus ends after 2028 and Social Security arrives mid-window, so the same amount crosses its edge in later window years

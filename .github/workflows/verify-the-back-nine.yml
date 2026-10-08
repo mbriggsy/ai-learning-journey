@@ -21,21 +21,23 @@ on:
     paths:
       - 'projects/the-back-nine/**'
       - '.github/workflows/verify-the-back-nine.yml'
-  # `runner` exists for the image-migration dry run: GitHub moves `ubuntu-latest` to Ubuntu 26 from
-  # 2026-10-19 (actions/runner-images#14748), so a manual dispatch on the next image proves the full
-  # gate there BEFORE the label flips, instead of discovering it on a red main. Push and PR runs
-  # carry no inputs, so both jobs fall back to ubuntu-latest.
+  # PINNED to ubuntu-24.04, never `ubuntu-latest`: GitHub moves that label to Ubuntu 26 from
+  # 2026-10-19 (actions/runner-images#14748), and the dry run on ubuntu-26.04 (run 37857970818,
+  # 2026-10-08) failed at `playwright install --with-deps` — "Playwright does not support chromium on
+  # ubuntu26.04-x64" under @playwright/test 1.60.0 (support arrived in 1.61.1). Move the pin only
+  # after the Playwright upgrade lands green here. `runner` lets a manual dispatch prove another image
+  # first; push and PR runs carry no inputs, so both jobs fall back to the pin.
   workflow_dispatch:
     inputs:
       runner:
         description: Runner image for both jobs
         type: choice
-        options: [ubuntu-latest, ubuntu-24.04, ubuntu-26.04]
-        default: ubuntu-latest
+        options: [ubuntu-24.04, ubuntu-26.04]
+        default: ubuntu-24.04
 
 jobs:
   verify:
-    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.runner || 'ubuntu-24.04' }}
     defaults:
       run:
         working-directory: projects/the-back-nine
@@ -105,7 +107,7 @@ jobs:
   # harness); appended to the job above it would double its wall-clock. Needs no dist/ — it drives
   # `pnpm dev`'s `?seed=surplus` route on its own port (4192), so it installs and boots on its own.
   verify-rv-chart-text:
-    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.runner || 'ubuntu-24.04' }}
     defaults:
       run:
         working-directory: projects/the-back-nine

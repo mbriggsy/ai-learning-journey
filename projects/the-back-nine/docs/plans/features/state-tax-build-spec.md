@@ -256,7 +256,7 @@ status: shipped
   `state-tax-{nc,pa,fl}-last-verified.json` record at the project root, plus a CI gate that fails
   when any is missing, hollow, unconfirmed, or past its `nextDue`. The gate is REAL, not
   local-only: `pnpm verify:state-tax` runs in the monorepo-root workflow
-  `.github/workflows/verify-the-back-nine.yml` (`verify-the-back-nine.yml:63`, beside `verify:aca`) — note the
+  `.github/workflows/verify-the-back-nine.yml` (`verify-the-back-nine.yml:65`, beside `verify:aca`) — note the
   workflow sits ABOVE this project directory, which is why a search inside `projects/the-back-nine`
   finds no `.github/`. The roster is single-sourced
   from `PRICED_STATES`, so a new priced state cannot ship without a record. RED-proven on both

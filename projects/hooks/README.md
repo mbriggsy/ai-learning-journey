@@ -18,6 +18,7 @@ Discovered through empirical testing. Filed as [anthropics/claude-code#42250](ht
 2. **PostToolUse block delivers without undoing the tool result** — useful for reminders after skill completion.
 3. **PreToolUse hooks don't fire on user slash commands** — only on Claude's programmatic Skill invocations. PostToolUse and Stop hooks fire in both cases.
 4. **A `Skill` hook sees the skill name in `.tool_input.skill`** — exactly the string passed to the Skill tool: a plugin skill as `<plugin>:<skill>` (e.g. `compound-engineering:ce-code-review`), a `~/.claude/skills` or project skill bare (e.g. `ultramode-code-review`). A case-arm name that is not in the installed roster never matches and never says so — `check-config-liveness.mjs` exists to say so.
+5. **`onFailure: "block"` makes a guard fail CLOSED** (Claude Code ≥ 2.1.295, set per hook in `settings.json`). Without it, a hook that can't start, times out, or exits with an unexpected code is a non-blocking error and the tool runs anyway. The two PreToolUse guards (`block-webfetch.sh`, `enforce-brief-before-work.sh`) carry it since 2026-10-08 — proven with a missing-script hook in a headless run: with the flag the call was refused (`failed; blocking because onFailure is "block"`), without it the same call ran. It is **ignored on Stop / SubagentStop / TaskCompleted / TeammateIdle** (the binary logs `onFailure: "block" is ignored on Stop`), so `stop-distill-gate.sh` does not carry it; the advisory SessionStart / PostToolUse / Notification hooks don't either — a broken reminder must not block work.
 
 ---
 

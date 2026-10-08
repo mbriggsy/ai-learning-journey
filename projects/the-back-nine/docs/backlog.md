@@ -562,7 +562,7 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
   the offset becomes 2, understating income vs poverty and OVERSTATING subsidies — the optimistic
   direction; "fix" the apparent staleness by syncing them and the cliff moves against every pre-65
   household). A hardcoded year only pins today; the relationship keeps biting after the roll.
-- Enforced in CI — `pnpm test` runs at `.github/workflows/verify-the-back-nine.yml:61`.
+- Enforced in CI — `pnpm test` runs at `.github/workflows/verify-the-back-nine.yml:72`.
 - ⚠️ Known and unchanged: a red tripwire reds the GitHub check but does **not** block a Vercel deploy.
   True of all three pre-existing tripwires — the house posture, not a gap this introduced.
 

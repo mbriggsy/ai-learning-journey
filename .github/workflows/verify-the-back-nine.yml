@@ -21,11 +21,21 @@ on:
     paths:
       - 'projects/the-back-nine/**'
       - '.github/workflows/verify-the-back-nine.yml'
-  workflow_dispatch: {}
+  # `runner` exists for the image-migration dry run: GitHub moves `ubuntu-latest` to Ubuntu 26 from
+  # 2026-10-19 (actions/runner-images#14748), so a manual dispatch on the next image proves the full
+  # gate there BEFORE the label flips, instead of discovering it on a red main. Push and PR runs
+  # carry no inputs, so both jobs fall back to ubuntu-latest.
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: Runner image for both jobs
+        type: choice
+        options: [ubuntu-latest, ubuntu-24.04, ubuntu-26.04]
+        default: ubuntu-latest
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
     defaults:
       run:
         working-directory: projects/the-back-nine
@@ -95,7 +105,7 @@ jobs:
   # harness); appended to the job above it would double its wall-clock. Needs no dist/ — it drives
   # `pnpm dev`'s `?seed=surplus` route on its own port (4192), so it installs and boots on its own.
   verify-rv-chart-text:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner || 'ubuntu-latest' }}
     defaults:
       run:
         working-directory: projects/the-back-nine

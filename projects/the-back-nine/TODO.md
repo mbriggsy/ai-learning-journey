@@ -493,7 +493,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     SVG glyph vocabulary (GradeSignal / verdictSignal / BandLegend) is the silhouette source; CSP already
     allows `img-src 'self'`. WEBKIT: `playwright install webkit` IS required (the on-disk `webkit-2272` is a
     stale revision — `@playwright/test` 1.60.0 needs 2287, launch fails today) + `webkit` on
-    `verify-the-back-nine.yml:72` (the `verify` job's install — NOT the `:109` twin in the `verify-rv-chart-text`
+    `verify-the-back-nine.yml:85` (the `verify` job's install — NOT the `:123` twin in the `verify-rv-chart-text`
     job); scope at TEST level — `vault.spec.ts:70` (trust loop) + `:121`
     (second-tab read-only), never the whole file: the KDF spike `:145-176` asserts a Chromium-only
     thread-pool fact; the arm RECORDS the storage capability triple and asserts only Web Locks — WebKit exposes NO
@@ -541,7 +541,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     ✅ **NC's RETIRED CERTIFICATION CHECKPOINT — SWEPT 2026-08-14.** Six shipped surfaces (not the
     five filed; `CLAUDE.md:38` turned up in the sweep) still asserted the dead ~Aug-2026 event in
     PRESENT tense after S.L. 2026-41 struck every trigger row FY2025-26 → FY2032-33 on 2026-08-02:
-    `scripts/verify-state-tax.ts` header + its `nextDue` doc comment · `verify-the-back-nine.yml:50-51`
+    `scripts/verify-state-tax.ts` header + its `nextDue` doc comment · `verify-the-back-nine.yml:60-62`
     · project `CLAUDE.md:38` · and two in the engine — `constants/types.ts` and
     `validation/oracleToken.ts`. All now name it as RETIRED, in past tense, and the two engine
     docblocks additionally record that **`certification-pinnable` currently fires for NOBODY** — the

@@ -1252,7 +1252,7 @@ In the committed frame, taxable income is $0 in every window year at $0–$5k of
 
 `M` · **pilot (measure) → council** · filed 2026-10-08 (b9-1) by a refuter of measurement (a) (`wf_327cd074-d06`, the structural-identity lens), after a register read found no entry
 
-**🔨 MEASURED 2026-10-08 (b9-1) — the prescription's first two steps DISCHARGED** (`wf_40e381f2-baf`: two legs, two refuters, a chair; four constructs of the sticky reading agree path for path). At the app's own spine run (2,000 paths, seed 0xbada55) the sticky composition moves `healthgap` from borderline 7/10 to OFF-TRACK 6/10 (headline and survivor card; a new trim clause, $5,200 a month) and `health`'s sized room figure $7,100 → $7,000; the crossing is a knife edge at the dev seed but flips on 12 of 40 alternate seeds, always toward caution. The ⚑ MEASURED block below is the record and the council brief. **⚑ RULED 2026-10-08 — ADOPT the sticky composition** (council `wf_7eb3303c-7f3`, 7/10, the ⚑ RULED block below; `docs/council-log.md` 2026-10-08 row). **Next: ship gate 1 (measure), then the build.**
+**🔨 MEASURED 2026-10-08 (b9-1) — the prescription's first two steps DISCHARGED** (`wf_40e381f2-baf`: two legs, two refuters, a chair; four constructs of the sticky reading agree path for path). At the app's own spine run (2,000 paths, seed 0xbada55) the sticky composition moves `healthgap` from borderline 7/10 to OFF-TRACK 6/10 (headline and survivor card; a new trim clause, $5,200 a month) and `health`'s sized room figure $7,100 → $7,000; the crossing is a knife edge at the dev seed but flips on 12 of 40 alternate seeds, always toward caution. The ⚑ MEASURED block below is the record and the council brief. **⚑ RULED 2026-10-08 — ADOPT the sticky composition** (council `wf_7eb3303c-7f3`, 7/10, the ⚑ RULED block below; `docs/council-log.md` 2026-10-08 row). **Ship gate 1 PASSED 2026-10-08** (`wf_d98e02fb-08c`, 0 reverse paths in ~41M paired path-runs; the ⚑ SHIP GATE 1 block below — its date-route text ruling is ⚑ HIS to overrule). **Next: the build (gates 2–5).**
 
 - **The divergence (read).** Out-of-pocket medical lives INSIDE the household's spend figure (`src/shared/model.ts:1525`). Without a budget, a survivor spends `annualSpendingReal × survivorSpendingRatio` — ratio-on-total, medical included (`src/engine/simulate.ts:277-282`). With a budget, `compileBudget` injects the same medical into the STICKY floor (`src/budget/budgetToSpending.ts:79-80`), which "deliberately does NOT scale at widowhood (council 2026-07-02 — scaling the survivor's fixed costs by the couple ratio understates the survivor floor, the cardinal calm-but-wrong direction)" (`src/engine/simulate.ts:259-262`). Insight 055 composed the two rulings by error direction for budgets only, and `budgetTwoTrack.test.ts:177` (ARM B) pins the divergence as the budget side's conservative one. The flat path was never brought under that rule.
 - **What it moves (measured by one refuter, 2026-10-08, 16,000 paths).** On `health` / `healthnc` / `healthgap` (OOP medical $4,000, ratio 0.75), the household's own one-line itemization survives on 33–39 / 34–45 / 99–110 FEWER paths than the shipped flat reading (0.2–0.7 pp), every difference in one direction; their T0 crowns and CRN-resolved leads hold. On the 10 solvable seeds with no OOP medical the two are identical (0 of 16,000 mismatches on `borderline`, with the tax overlay).
@@ -1462,6 +1462,138 @@ In the committed frame, taxable income is $0 in every window year at $0–$5k of
   - **Gate 5.** `verify:fit` + `verify:fit:rv` + a Caddie walk of `health` and `healthgap` (`healthgap` reads off-track 6/10 at the app's settings after the build).
   - **Filed by the council (directly below):** the TwoFutures even-line harm-swallow (Tier 1) and the sourced non-medical ratio r_N (research).
   - **Dissent (preserved).** Red team: Blanchett's ratio is on TOTAL spending and OOP is the most per-person cost, so (B) double-counts medical stickiness and pushes `healthgap` into a ~20 % trim on a knife edge — ship (C). Craftsman: B3 should be REQUIRED for budgetless couples. **Flips to (C)** on a sourced survivor-OOP fall ≥ (1 − r) net of the age gradient, a sourced r_N, or gate 1 showing a reverse path or a large date move; the craftsman's B3 wins if skippers concentrate where M/S is large.
+- ⚑ **SHIP GATE 1 MEASURED 2026-10-08 (b9-1) — PASS; the build may start** (two legs, two adversarial refuters and a chair; four constructs of the ruling agree path for path; read-only, the repo untouched). Neither stop trigger fired: 0 reverse-direction paths, and every date move is explained by widowhood. The one text conflict is ruled below: the ship gate's "an unexplained large date move" against the dissent's "a large date move".
+  - **Method (read + measured).**
+    - **The four constructs:**
+      1. B1 built in memory: a presence-keyed SimulationParams field emitted by `buildParams` beside `longevityMode: 'sampled'` (`intakeMap.ts:725`), only with no budget, plus the patched flat arm (`simulate.ts:277-282`);
+      2. the compileBudget twin, with no patch: one scalable line of S − M, and M sticky;
+      3. and 4. each refuter's own hook.
+    - **Landing proof.** Every patch proved it landed: 0 hits under flat, more than 0 under sticky. M > S never occurred, so B2's clamp was never exercised.
+    - **The field needs no extra wiring (measured).** It reaches every shipped consumer unaided:
+      - `buildCandidateParams` (`dateSearch.ts:238`);
+      - `buildSolveRequest` (`solveDispatch.ts:93`);
+      - `buildControlPreviewParams` (`intakeMap.ts:1102-1110`).
+    - **The shipped paths ran unmodified:**
+      - `runDateSearch(buildDateInput(draft), seed, {tier})` (`memoryModel.ts:853`); the per-offset re-sim was asserted `===` the shipped curve at every offset;
+      - the spine `runEngine` (`memoryModel.ts:874`) plus `solveSpend`;
+      - `buildSolveRequest` → `solveWithMint` (16k), then `recommendationView`;
+      - `runSearch` + `selectRecommendation` at 4,000 paths (`fallback.ts:38`).
+    - **Seeds.** App seed 12,245,589; seed B −1,438,857,764.
+    - **Households.** Every household is OFF-ROSTER: a roster seed plus `oopMedicalAnnual`, and for (2) an HSA account.
+  - **(1) The date route.** Measured at the final tier (16k), app seed. Budgetless means floor ≡ lifestyle (asserted).
+    - The bar is 13,595 of 16,000 and 1,716 of 2,000 (derived via the shipped `decideTrack`).
+    - Without an HSA, flat is M-invariant (measured).
+
+    | household (S; r 0.75) | flat | sticky M $4k | sticky M $8k | survivors at the deciding offset, flat → $4k / $8k |
+    |---|---|---|---|---|
+    | `date` (58 working / 60 retired; $84k) | 2035 (Y9) confirmed, qLB 0.87 | 2035, 0.86 | 2035, 0.86 | Y9 13,939 → 13,895 / 13,838 |
+    | `date65` (66 working / 65; $78k) | 2026 (Y0), 0.92 | 2026, 0.92 | 2026, 0.91 | Y0 14,767 → 14,726 / 14,669 |
+    | `dateborder` (58 / 59, both working; $74k) | 2036 (Y10) window-edge-unconfirmed, 0.85, margin 0.00 (62 paths over) | 2036, 7 paths over | **no date in the window** (`copy.noDateInWindow`, `copy.ts:2274`), band absent | Y10 13,657 → 13,602 / 13,528 |
+
+    - **Odds wording.** Wherever a date is crowned the words never change: round(0.85 × 10) = 9 (`dateOdds.ts:21-24`).
+    - **The `dateborder` flip is a +1-year move across the window top (measured).**
+      - In a diagnostic that widens the window to Y14, flat crowns Y10 (2036) and sticky Y11 (2037, qLB 0.86).
+      - On the 15 alternate seeds where the date vanished, flat's Y9 fails every time and sticky's Y11–14 clears every time. So all 16 measured vanishings are exactly +1 year.
+      - All 129 lost Y10 paths have a survivor phase. None depletes before the first death. They deplete 0 / 16 / 36 years after it (min / median / max).
+    - **Vanish rate at 16k.** These are three runs on different seed lists and are not pooled:
+      - M $8k: 9/12, 9/10 and 15/20 alternates;
+      - M $4k: 2/12, 1/10 and 3/20.
+      - No run ever gained a date or moved it earlier.
+    - **At the 2,000-path provisional tier:**
+      - flat `dateborder` sits exactly on the bar at the dev seed and is dated on only 16/40 alternates;
+      - sticky at M $4k reads no date at 2k but 2036 at 16k on the dev seed, a provisional-to-final flicker that flat does not show;
+      - `date` moves +1 year on 4/40 and 11/40 seeds in one family, and on 2/40 and 3/40 in another (the first family has more seeds near the bar);
+      - `date65` moves on 0/40.
+    - **Long widowhood (chair-measured).** This is the council's named unmeasured risk ("the move scales with widowhood length"); every leg's household has a 1–2 year gap. Run on `date` with Sam moved and M $8k:
+      - Sam 72 (mean widowhood 16.1 years): both readings crown 2034 (Y8); qLB 0.87 → 0.86; Y8 13,990 → 13,845.
+      - Sam 44, retired (mean widowhood 14.0 years): no date in the window under either reading; both crown Y16 in the widened window.
+      - Paired: b 2,448 / 1,472, c 0, and 0 changes before the first death.
+      - The loss near the crown (145 and 82–86 paths) is no larger than `dateborder`'s 129.
+      - The date-route loss is about 9–16 paths per 16k per $1k of M (derived), below `healthgap`'s spine 25–29.
+    - **Pre-work-stop survivor years.** This compares B1's lifelong M with the window-gated stream (`healthcareStreams.ts:181-185`). No deaths before 65 are sampled (`longevity.ts:59-61`).
+      - `date`: these years appear only at Y ≥ 9, and change no survival.
+      - `dateborder`: 0 drawing years (the §7 clamp).
+      - `date65`: 43,496 drawing path-years; 6–9 extra depletions summed over Y2–10 and 0 at its crown.
+    - **B1's lifelong M ≡ the budget arm** (read): `k = max(0, t − anchor)` at `simulate.ts:271-275` gives the year-0 composition. Against the twin there are 0 per-path-year mismatches (measured). So gate 3's date-route twin test holds only under lifelong M.
+  - **(2) The HSA couple (measured).** `health` / `healthnc` / `healthgap` plus an HSA account ($50k–$400k, owned by Alex or by Sam), at M $4k / $8k, on 2k A and 16k A/B.
+    - **No band crossings.** `health` and `healthnc` hold on-track 9; the spend lane goes $7,500 → $7,400/mo.
+    - **`healthgap` + $150k HSA (Alex), M $4k:**
+      - 2k: 1,492 → 1,477, headline borderline 8 → 7, survivor card 8 → 7 (1,477 → 1,462 of 1,982);
+      - 16k A: 11,800 → 11,677;
+      - 16k B: 11,933 → 11,834 (headline 8 → 7).
+    - **The cap is untouched by B1.**
+      - The overlay is JSON-identical flat vs sticky.
+      - Every one of 25,453,440 `hsaQualifiedSpend` calls passed `oopMedical` equal to `overlay.oopMedical[t]` (`taxOverlay.ts:1643`), with 0 mismatches.
+      - Realized HSA spend still moves through the `fundingNeed` clamp (`:1646-1652`). That is downstream of the higher spend, not a new input.
+    - **Flat is neither M-invariant nor monotone in M.**
+      - `healthgap` + $150k HSA, 16k A: no M 11,413 < sticky 11,677 < flat 11,800.
+      - `healthgap` + $60k HSA, 16k B: flat at M $8k gives 11,078 against 11,083 with no M.
+      - So for an HSA household, leaving M blank is the most pessimistic reading.
+    - **Surfaces neither leg ran (closed by a refuter):**
+      - the Healthcare sheet: identical;
+      - date route × HSA: `date` stays at Y7 in both readings; `dateborder` at M $8k stays at Y8, qLB 0.88 → 0.87;
+      - the solver on an HSA couple: see (3).
+  - **(3) The solver crown (measured).** Coverage: `health` / `healthnc` / `healthgap` × pay-less-tax / leave-more, run as 16k with seed A selecting and seed B grading, seed B as selector, the full solve re-seeded to B, and the 4,000-path tier. Also `healthgap` + $150k HSA at 4k and 16k.
+
+    | | flat | sticky |
+    |---|---|---|
+    | crown / runner-up | `grid:proportional:0` / `baseline:proportional:20000` | identical, every cell |
+    | grade · driver | just-do-it, subTenthCollapse · sampling-noise-near-tie (aca-enhanced-subsidies on `healthgap` re-seeded) | identical |
+    | rendered | no-change view, "A confident lean", "You're already on one of the strongest paths we tested — nothing else we tried looks likely to pull clearly ahead." | identical |
+    | winner seed-B survival | `health` 0.956125 · `healthnc` 0.9533125 · `healthgap` 0.65525 · `healthgap` + HSA 0.746375 | 0.9533125 · 0.9504375 · 0.647375 · 0.7410625 |
+
+    - Rosters are 97 / 97 / 101, identical in both readings.
+    - Only undisplayed pruned positions 3–5 reorder.
+  - **(4) Reverse paths: 0 (measured)**, about 41M paired path-runs in all:
+
+    | construct | paired path-runs |
+    |---|---|
+    | primary leg | about 21.0M unique, including every solver candidate × path at 16k A/B and 4k A/B |
+    | independent leg | about 14.7M |
+    | refuters | 1.86M + 3.43M |
+    | chair | 544,000 |
+
+    - A refuter re-counted the primary's raw solver vectors: 23.6M pairs, b 105,476, c 0.
+    - Also 0 everywhere:
+      - both readings fail but sticky fails later;
+      - a change before the first death;
+      - a changed path with no survivor phase.
+    - **The zero is EMPIRICAL, not structural.**
+      - One both-survive path ends $445 higher under sticky (`dateborder` M $4k, Y10 bracket-fill preview arm): $3,970 less lifetime tax, with the terminal shifted from Roth into pre-tax, which is counted at face value.
+      - In the window → lifelong diagnostic, IRMAA tier cliffs raise 4 terminals by $352–$854.
+      - Below the ACA 100 %-FPL floor, sticky's net premium is lower on about 3 % of probe paths, with no terminal higher.
+  - **The chair's ruling on the text conflict.**
+    - "Large" means magnitude. The council gated the date route because its move "scales with widowhood length" and had not been measured (council verdict, rationale).
+    - Measured: every crown moves 0 or +1 yearly offset (the grid's minimum), toward caution only, and the long-widowhood stress moves nothing.
+    - The `dateborder` class flip is a +1 move off the window's last offset, from an answer already rendered window-edge-unconfirmed at margin 0.00. Under the adopted reading the crown is 2037, so "No fuck-off date within the next 10 years" is literally true.
+    - So the move is neither unexplained nor large, and the dissent's (C) clause does not fire.
+    - ⚑ This is the chair's reading and his to overrule. If "large" means any change of answer class on the hero, (C) fires about 75 % of the time on a `dateborder`-shaped household at M $8k.
+  - **What survived refutation:**
+    - every figure above, on at least two constructs (`dateborder`'s on all four);
+    - c = 0;
+    - the crowns;
+    - the cap identity.
+  - **Corrections the refuters and the chair forced.**
+    1. "Terminals are never higher under sticky" holds only on the legs' own surfaces. The +$445 path refutes it in general.
+    2. "Terminal HSA differs on 0–285 paths" used a 1e-6 tolerance. Strict inequality gives 470 (2k) and 3,841 (16k A). Not load-bearing.
+    3. The `date` sweep rates (11/40 vs 3/40) come from two seed families, not a disagreement: the flat Y9 distributions match, and the families have 9 vs 3 seeds near the bar.
+    4. The legs never ran the TwoFutures previews, the HSA solver or date × HSA. A refuter closed all three with 0 reverse paths.
+    5. **New rendered harm-swallow.** On `healthgap` + $150k HSA at M $4k (off-roster, 2k preview), sticky turns five rendered harm warnings into the even line: all three sequencing policies and both Roth plans. The raw losses stay −3.58 / −3.94 / −2.22 / −0.91 / −0.50 pp, and the regime lever goes from even to "8 of 10 instead of 7". This is the filed even-line defect, reaching the HSA class at 3.94 pp, above its title's "up to 3.2 pp". It is build-caused and points away from caution, but it is not a gate trigger.
+    6. The legs' "PASS on the letter only" is replaced by the ruling above.
+  - **Limits.**
+    - Every household is off-roster, so no roster seed witnesses the date-route or HSA move.
+    - B2's clamp and `validateParams`' budget rejection are unexercised.
+    - Pre-65 deaths are unsampled.
+    - The 16k solver per-path evidence comes from one construct, plus a recount.
+    - The rendered UI was not walked; strings come from the shipped composers.
+    - The machine was contended.
+  - ⚑ **NEGATIVE:**
+    - never cite "zero reverse paths" as structural;
+    - never pin per-path terminal(sticky) ≤ terminal(flat);
+    - never assert flat M-invariance or monotonicity on an HSA household;
+    - never quote the `dateborder` flip without "+1 year (2036 → 2037), across the window top";
+    - never quote a vanish rate without its M and seed list;
+    - never let the new scalar reach the HSA cap.
 - ⚑ NEGATIVE: never change the flat path without the council (it moves every OOP-carrying household's headline); never call the flat reading "wrong" before the ruling (the research ratio is measured on total spending); never fold this into the Tier-1 quantity entry above — it is a spine headline question, not a solver one.
 
 ### The TwoFutures even line swallows a lever's harm — a raw survivor-basis loss of up to 3.2 pp renders "In these runs it doesn't look to change much — about 6 of 10 either way"
@@ -1469,6 +1601,7 @@ In the committed frame, taxable income is $0 in every window year at $0–$5k of
 `M` · **pilot (measure) → council (the grammar) → words his** · filed 2026-10-08 (b9-1) by the survivor-medical council (`wf_7eb3303c-7f3` — filed Tier 1 rather than gated on that build, because the defect sits in the grammar and hits BOTH readings)
 
 - **The defect (measured, the entry above's ⚑ MEASURED block).** `rothDeltaEven` (`src/ui/copy.ts:2539-2540`) fires when the two arms' QUANTIZED readings agree and their verdict states agree (`src/ui/twoFuturesChrome.ts:10-17`). On `healthgap` the raw survivor-basis loss of a sequencing lever stays 1.1–3.2 pp, yet under the sticky reading all three sequencing previews render the even line, and under today's flat reading the regime lever's delta is swallowed the same way. "Doesn't look to change much" is a calm sentence over a real, measured harm whenever the quantize absorbs it.
+- **Wider than the title (measured 2026-10-08, ship gate 1 `wf_d98e02fb-08c`).** On an off-roster `healthgap` + $150,000 HSA couple, the sticky reading turns FIVE rendered harm warnings into the even line, swallowing losses up to 3.94 pp (pre-tax-first) — the medical build moves this surface AWAY from caution on the HSA class. The council chose not to gate the build on it, so its sequencing against that build is his call.
 - **Why it is not the medical build's.** The grammar is pre-existing (the 2026-07-18 Q4d council made the even line calm on purpose, to stop a fabricated difference), and the defect cannot tell flat from sticky — which base sits next to a grid edge decides where it shows.
 - **Prescription.** Measure first: across the dev roster's TwoFutures previews (every lever, both bases where they differ), how often the even line renders over a raw survivor-basis LOSS, and its size. Then `/council` on the grammar — e.g. a harm-direction carve-out (a lever that loses survival never reads "doesn't change much"), a raw-delta threshold keyed to the CRN-paired SE, or a direction word on the even line. The words are his.
 - ⚑ NEGATIVE: never un-quantize the preview readings to fix it (the quantize is the screenshot-reproduction guard, `confidence.ts`); never let the fix fabricate a difference on a true tie (the Q4d council's reason the even line exists).

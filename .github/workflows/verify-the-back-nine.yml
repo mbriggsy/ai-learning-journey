@@ -21,23 +21,23 @@ on:
     paths:
       - 'projects/the-back-nine/**'
       - '.github/workflows/verify-the-back-nine.yml'
-  # PINNED to ubuntu-24.04, never `ubuntu-latest`: GitHub moves that label to Ubuntu 26 from
-  # 2026-10-19 (actions/runner-images#14748), and the dry run on ubuntu-26.04 (run 37857970818,
-  # 2026-10-08) failed at `playwright install --with-deps` — "Playwright does not support chromium on
-  # ubuntu26.04-x64" under @playwright/test 1.60.0 (support arrived in 1.61.1). Move the pin only
-  # after the Playwright upgrade lands green here. `runner` lets a manual dispatch prove another image
-  # first; push and PR runs carry no inputs, so both jobs fall back to the pin.
+  # PINNED to ubuntu-26.04, never `ubuntu-latest` (that label moves under the gate with no commit —
+  # it flips to Ubuntu 26 from 2026-10-19, actions/runner-images#14748). @playwright/test 1.60.0 could
+  # not install Chromium there (run 37857970818); 1.63.0 can, and the full gate ran green on
+  # ubuntu-26.04 at 2545d3e9 (run 37864060784) before this pin moved. To change image: dispatch with
+  # `runner` set to the candidate, and move the pin only after it lands green. Push and PR runs carry
+  # no inputs, so both jobs fall back to the pin.
   workflow_dispatch:
     inputs:
       runner:
         description: Runner image for both jobs
         type: choice
-        options: [ubuntu-24.04, ubuntu-26.04]
-        default: ubuntu-24.04
+        options: [ubuntu-26.04, ubuntu-24.04]
+        default: ubuntu-26.04
 
 jobs:
   verify:
-    runs-on: ${{ inputs.runner || 'ubuntu-24.04' }}
+    runs-on: ${{ inputs.runner || 'ubuntu-26.04' }}
     defaults:
       run:
         working-directory: projects/the-back-nine
@@ -107,7 +107,7 @@ jobs:
   # harness); appended to the job above it would double its wall-clock. Needs no dist/ — it drives
   # `pnpm dev`'s `?seed=surplus` route on its own port (4192), so it installs and boots on its own.
   verify-rv-chart-text:
-    runs-on: ${{ inputs.runner || 'ubuntu-24.04' }}
+    runs-on: ${{ inputs.runner || 'ubuntu-26.04' }}
     defaults:
       run:
         working-directory: projects/the-back-nine

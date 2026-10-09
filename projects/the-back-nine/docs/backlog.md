@@ -1252,10 +1252,203 @@ In the committed frame, taxable income is $0 in every window year at $0–$5k of
 
 `M` · **pilot (measure) → council** · filed 2026-10-08 (b9-1) by a refuter of measurement (a) (`wf_327cd074-d06`, the structural-identity lens), after a register read found no entry
 
+**🔨 MEASURED 2026-10-08 (b9-1) — the prescription's first two steps DISCHARGED** (`wf_40e381f2-baf`: two legs, two refuters, a chair; four constructs of the sticky reading agree path for path). At the app's own spine run (2,000 paths, seed 0xbada55) the sticky composition moves `healthgap` from borderline 7/10 to OFF-TRACK 6/10 (headline and survivor card; a new trim clause, $5,200 a month) and `health`'s sized room figure $7,100 → $7,000; the crossing is a knife edge at the dev seed but flips on 12 of 40 alternate seeds, always toward caution. The ⚑ MEASURED block below is the record and the council brief. **Owed: `/council`.**
+
 - **The divergence (read).** Out-of-pocket medical lives INSIDE the household's spend figure (`src/shared/model.ts:1525`). Without a budget, a survivor spends `annualSpendingReal × survivorSpendingRatio` — ratio-on-total, medical included (`src/engine/simulate.ts:277-282`). With a budget, `compileBudget` injects the same medical into the STICKY floor (`src/budget/budgetToSpending.ts:79-80`), which "deliberately does NOT scale at widowhood (council 2026-07-02 — scaling the survivor's fixed costs by the couple ratio understates the survivor floor, the cardinal calm-but-wrong direction)" (`src/engine/simulate.ts:259-262`). Insight 055 composed the two rulings by error direction for budgets only, and `budgetTwoTrack.test.ts:177` (ARM B) pins the divergence as the budget side's conservative one. The flat path was never brought under that rule.
 - **What it moves (measured by one refuter, 2026-10-08, 16,000 paths).** On `health` / `healthnc` / `healthgap` (OOP medical $4,000, ratio 0.75), the household's own one-line itemization survives on 33–39 / 34–45 / 99–110 FEWER paths than the shipped flat reading (0.2–0.7 pp), every difference in one direction; their T0 crowns and CRN-resolved leads hold. On the 10 solvable seeds with no OOP medical the two are identical (0 of 16,000 mismatches on `borderline`, with the tax overlay).
 - **The case for each side.** For the flat reading: the survivor ratio is grounded on TOTAL household spending (Blanchett, `docs/decisions/ss-computation.md:125`; `src/engine/reference/methodology.ts:85`), medical included. For the sticky reading: the U9a council's rule and insight 055's error-direction law — when honest options differ, err conservative, and survivor medical does not halve.
 - **Prescription.** Confirm with a second harness first (one refuter measured it). Then measure the headline move on every dev seed carrying OOP medical — band crossings, X-of-10 moves — under the sticky composition (survivor spend = M + r·(S − M) when M is known), and prove the reduce-to-spine golden cases untouched (no OOP medical ⇒ byte-identical). Then `/council`. If the sticky composition wins, it is a Tier 0 engine fix: headline-moving, the band-named seeds re-tuned to their named states, an engine-pricing ledger row.
+- ⚑ **MEASURED 2026-10-08 (b9-1) — the second harness + the headline move.** Run by two legs and two adversarial refuters; the chair cross-checked them. Read-only; the repo was untouched.
+  - **Status.**
+    - The prescription's first two steps are DISCHARGED:
+      - the confirmation by a second harness;
+      - the headline move on every dev seed carrying OOP medical, together with the golden proof.
+    - `/council` is owed. The brief is this block.
+  - **Method (read + measured).**
+    - **The app's spine run, reproduced exactly (read).** `memoryModel.recompute` calls:
+      - `buildSpineParams` (`intakeMap.ts:723`, 2,000 paths);
+      - then `engine.run(params, seed, {bandFan, survivorConditioned, healthReadout})` (`src/store/memoryModel.ts:874`), which is `runEngine` = `simulate` + `summarize` (`engineProtocol.ts:36-46`).
+      - The seed is the draft seed: `DEV_CRN_SEED` 0xbada55 = 12,245,589 (`devSeeds.ts:47`).
+      - The spine's two tiers are byte-identical (`memoryModel.ts:244-246`).
+    - **Four constructs of the sticky reading**, each run against the shipped flat run:
+      1. the R27 one-line twin through `compileBudget`: one scalable `food` essentials line of S − M, with M injected sticky (`budgetToSpending.ts:79-81`);
+      2. a hand-built `CompiledBudget` (sticky M, scalable S − M, discretionary 0) passed straight to `simulate`;
+      3. the candidate written into the flat arm itself (`simulate.ts:278-280`, patched in memory), with M a scalar;
+      4. the same patch, with M read from `overlay.oopMedical[t]`. The patch is module-global, so the shipped `solveSpend`, `runTwoArm` and `composeHealthSheet` run it unmodified. A hit counter proves it landed: 24,899 / 24,899 / 49,158 survivor-year hits.
+    - **Construct identity (measured).**
+      - (3) ≡ (1) byte-for-byte on depletion year AND terminal value, on every path, at 2,000 and 16,000 paths, on `health` and `healthgap`.
+      - The chair compared per-path depletion vectors with 0 mismatches:
+        - (1) vs (2) on all three seeds, at 2,000 and at 16,000;
+        - (1) vs (3) on `health` and `healthgap`, at both counts.
+      - So the itemized emulation IS the flat-arm fix on the full track. Its only extra is a floor track equal to the full track (floor == full on every path), which the headline never reads.
+    - **Composition on every `cashTermsForYear` call (measured, construct 3).**
+      - Couple years are exactly $78,000.
+      - Survivor years are exactly $59,500 under sticky and $58,500 under flat.
+      - 0 violations over 68,574 / 100,460 calls (2k) and 549,626 / 805,439 calls (16k).
+    - **Headline grammar.** Recomputed from the typed-array count through the shipped `quantizeSurvival` / `xOfTenClamp` / `BANDS` / `marginToStateEdge`. It equals shipped `summarize` on 74 readings, 0 mismatches.
+  - **Census (measured on all 24 `DEV_SEEDS`; read `devSeeds.ts`).**
+    - **Affected** (budgetless, `oopMedicalAnnual` > 0, a couple, r < 1): exactly three, all spine route, none with an HSA bucket.
+      - `health` (`retiredHealth`, `:780`);
+      - `healthnc` (`:1056`);
+      - `healthgap` (`:1071-1077`: Sam is 40, a Medicare-sheet witness, not a band-named seed).
+      - All three have M $4,000, S $78,000 and r 0.75 (M/S 5.1 %).
+      - Survivor-year spend moves $58,500 → $59,500, i.e. +M(1 − r) = $1,000 (derived).
+      - Flat survival is M-invariant on all three (measured). With no HSA, the overlay `oopMedical` stream is inert; its only engine reader is the HSA cap (`taxOverlay.ts:1643`).
+    - **Already sticky** (budgeted, M injected):
+      - `budget`: M $6,000, S $65,600, spine;
+      - `datesplit` and `datemixed`: M $8,000, S $74,000 / $98,000, date route.
+      - A change to the flat path cannot reach them (the budget arm is `simulate.ts:270-276`).
+      - `dip` is budgeted and carries no OOP.
+    - **OOP-free** (byte-identical by construction):
+      - 11 budgetless spine seeds: `retired`, `borderline`, `failing`, `order`, `surplus`, `buckets`, `steer`, `nc`, `pa`, `fl`, `elsewhere`;
+      - 6 date-route seeds: `date`, `dateborder`, `date65`, `datenc`, `atceiling`, `datesolo` (the last builds no params).
+    - **What follows.**
+      - No date-route seed is affected, so no date answer moves.
+      - No band-named seed carries OOP medical, so nothing needs re-tuning.
+      - No `AGED_PLANTS` base is affected.
+  - **The app's own run (2,000 paths, seed 12,245,589; measured, all four constructs agree).**
+
+    | seed | reading | survivors | q | headline (state margin) | survivor card (`copy.ts:520`, of survivor-phase paths) | direction | spend lane |
+    |---|---|---|---|---|---|---|---|
+    | `health` | flat | 1,912 (0.956) | 0.96 | on-track 9/10 (0.02) | 1,860 / 1,948 → on-track 9 | room | sized room $7,100/mo (fails at $7,200) |
+    | | sticky | 1,909 (0.9545) | 0.95 | on-track 9/10 (0.03) | 1,857 / 1,948 → on-track 9 | room | $7,000/mo (fails at $7,100) |
+    | `healthnc` | flat | 1,910 (0.955) | 0.96 | on-track 9/10 (0.02) | 1,858 / 1,948 → on-track 9 | room | $7,000/mo |
+    | | sticky | 1,906 (0.953) | 0.95 | on-track 9/10 (0.03) | 1,854 / 1,948 → on-track 9 | room | $7,000/mo |
+    | `healthgap` | flat | 1,294 (0.647) | 0.65 | **borderline 7/10** (0.00) | 1,280 / 1,982 → **borderline 7** | **on-the-line** | none dispatched |
+    | | sticky | 1,277 (0.6385) | 0.64 | **off-track 6/10** (0.01) | 1,263 / 1,982 → **off-track 6** | **trim** | **sized trim $5,200/mo** (fails at $5,300; entered $6,500) |
+
+    - The spend figures are from the SHIPPED `solveSpend` under construct 4. Both legs' replicas of `spendSolve.ts` (deep-equal to the shipped solver on the flat path) gave the same figures.
+    - The income step-down is unchanged: $1,833.30 / mo, and $1,928.30 on `healthgap`.
+    - `healthgap` sits on a knife edge (measured through the shipped quantizer):
+      - The headline flips on the 5th lost path: 1,290 / 2,000 is the lowest count that reads 0.65.
+      - The survivor card flips on the 2nd: 1,279 / 1,982 reads 0.65, 1,278 reads 0.64.
+      - The 2,000-path binomial SE is about 1.07 pp (derived), larger than the 0.85 pp move.
+  - **Precision (16,000 paths; measured).**
+    - Seed A is the dev seed, measured on three harnesses.
+    - Seed B = `deriveSeedB(12,245,589)` = −1,438,857,764 (chair-computed), the solver's held-out seed. It was measured on one harness.
+
+    | seed | A: survivors flat → sticky | A: state | B: survivors flat → sticky | B: state |
+    |---|---|---|---|---|
+    | `health` | 15,212 → 15,178 (−34, −0.21 pp) | on-track 9 both | 15,269 → 15,221 (−48) | on-track 9 both |
+    | `healthnc` | 15,172 → 15,138 (−34) | on-track 9 both | 15,220 → 15,184 (−36) | on-track 9 both |
+    | `healthgap` | 10,312 → 10,213 (−99, −0.62 pp) | off-track 6 both (q 0.64) | 10,456 → 10,324 (−132, −0.83 pp) | headline borderline 7 both (5 paths left); **survivor card borderline 7 → off-track 6** (10,369 → 10,237 of 15,889) |
+
+    - Survivor-conditioned on A: 14,775 → 14,741 of 15,551 (`health`), 14,735 → 14,701 (`healthnc`), 10,231 → 10,132 of 15,896 (`healthgap`).
+    - At 16,000 on A, `healthgap`'s flat reading is already off-track 6. So the rendered 2,000-path borderline is itself within noise of the edge, under either reading.
+  - **Paired per path (measured).** b = survives under flat but fails under sticky; c = the reverse.
+
+    | run | b | c | both fail, sticky earlier | later | b: years after first death (min / median / max) | b in the path's final sim year |
+    |---|---|---|---|---|---|---|
+    | `health` 2k | 3 | 0 | 14 (all 1 yr) | 0 | 15 / 17 / 22 | 3 / 3 |
+    | `healthnc` 2k | 4 | 0 | 23 (all 1 yr) | 0 | 4 / 12.5 / 22 | 4 / 4 |
+    | `healthgap` 2k | 17 | 0 | 230 (205 at 1 yr, 22 at 2, 3 at 3–4) | 0 | 10 / 28 / 41 | 16 / 17 |
+    | `health` 16k A | 34 | 0 | 172 | 0 | 5 / 19.5 / 32 | 32 / 34 |
+    | `healthnc` 16k A | 34 | 0 | 211 | 0 | 4 / 21.5 / 40 | 33 / 34 |
+    | `healthgap` 16k A | 99 | 0 | 1,758 | 0 | 4 / 27 / 53 | 82 / 99 |
+    | 16k B (`health` / `healthnc` / `healthgap`) | 48 / 36 / 132 | 0 | — | 0 | 0/16/39 · 2/21/42 · 2/29/55 | 46/48 · 35/36 · 108/132 |
+
+    - On every run:
+      - 0 changes before the first death;
+      - 0 changed paths without a survivor phase (their terminal values are identical);
+      - 0 paths with a higher sticky terminal value where both readings survive.
+    - Every non-final-year loss runs dry 1–4 years before the end.
+    - The lost paths are thin ones: median flat terminal $6k–$21k, and the survivor's median age at depletion is 87–97.
+    - The lost paths are mostly younger-survivor paths: 25 / 34 on `health` and 98 / 99 on `healthgap` (16k A).
+    - Across about 70 runs (both legs, both refuters, the sensitivity sweeps and 40 alternate seeds), 0 reverse paths.
+  - **Class-level rate (measured on `healthgap` at 2,000 paths over 40 alternate CRN seeds; real households mint their own seed once, `memoryModel.ts:617-621`).**
+    - Headline band, X-of-10 and direction flip on 12 / 40 seeds; the survivor card on 13 / 40.
+    - The flips are always borderline → off-track and on-the-line → trim, never the reverse, with 0 paths gained.
+    - Of the 27 seeds that read borderline under flat, 12 flip.
+    - Lost paths per seed: 5 / 15 / 27 (min / median / max). Flat q ranges 0.63–0.67.
+    - Wilson 95 % CI on 12 / 40 is about 18–45 % (derived).
+  - **Other surfaces (measured, 2k unless noted).**
+    - **TwoFutures lever previews:** the shipped `runTwoArm` → `composeTwoFutures` / `composeRegimeFutures`. On the spine the preview params are `buildSpineParams` (`intakeMap.ts:1102-1110`), and the basis is the survivor reading (`roth.ts:191-196`).
+      - `healthgap`, sequencing lever (taxable-first / pre-tax-first / bracket-fill):
+        - Flat renders "With this order, the money could last in about 6 of 10 futures instead of 7 of 10." plus "That would read as moving from 'On the line' to 'Off track.'"
+        - Sticky renders "In these runs it doesn't look to change much — about 6 of 10 either way."
+        - The raw survivor-basis deltas are −2.6 / −3.2 / −1.4 pp under flat and −2.4 / −3.2 / −1.1 pp under sticky.
+      - `healthgap`, regime lever (enhanced subsidies):
+        - Flat renders "about 7 of 10 either way"; sticky renders "…about 7 of 10 futures instead of 6 of 10."
+        - Lifetime health cost moves from ~$407,600 vs ~$456,800 to ~$407,300 vs ~$456,200.
+      - `healthgap`, Roth lever: the even line goes "about 7 of 10" → "about 6 of 10".
+      - `health` / `healthnc`: every lever shows a 9-of-10 even line under both readings. The regime health-cost figure moves by $100–200.
+    - **Composed Healthcare sheet** (`composeHealthSheet`): identical on all three seeds (two harnesses).
+      - `medicareEnrolledP50` is unchanged, so the `healthSheetSeedGate` pins hold.
+      - ACA / IRMAA MAGI medians move by at most $996 / $912 / $1,571 (up to $4,598 on `healthgap` at 16k A).
+      - On `healthgap`, `acaNetPremiumP50` moves at most $24.50 (over 6 years), `overCliffFraction` at most 0.04 pp, and `acaPricedFraction` at most 0.25 pp.
+    - **Band fan:** cells differ only from the first survivor-bearing year (sim years 6–10 on). Max |Δ| is $85k (`health`) and $256k (`healthgap`); `cohortFraction` is unchanged.
+  - **Golden / reduce-to-spine.**
+    - **By source.** The candidate replaces only the budgetless survivor arm, `S * r` (`simulate.ts:278-280`), with `M + r*(S − M)`. With M absent the expression is untouched (presence-keyed). With M = 0 it is bit-identical:
+      - S − 0 = S;
+      - r·S is the same product;
+      - +0 + x = x for x ≥ 0.
+      - Couple years and the budget arm (`:270-276`) never change.
+    - **Measured through the literal flat arm executing** (construct 4):
+      - M = 0 twins of all three seeds are byte-identical to flat on depletion years, terminals, band fan, health readout and `survivorConditioned`.
+      - Fix-on vs fix-off is byte-identical on the 11 OOP-free spine seeds and on `budget`, which takes the budget branch: 0 hits.
+      - Constructs 1 and 2 reproduced the same identity through the itemized branch.
+      - The date-route OOP-free seeds rest on source alone.
+    - **Goldens carry no OOP medical** (read; grep finds no `oopMedical` in `src/engine/reference`, `src/engine/validation` or `src/engine/solver`):
+      - The Trinity / Bengen backtests (`historical.test.ts:36`, `:79`, `:184`, `:231`) import only `@engine/historical` and the reference series. They never reach `cashTermsForYear` (`decumulation.ts:63` names it only in a comment).
+      - The Mode-B MC anchor (`simulate.test.ts` `makeParams`) is one person, fixed horizon, no overlay. Its deaths sit at `maxHorizon` (`simulate.ts:1455-1457`), so the survivor arm never runs.
+      - The solver-case goldens are all fixed-horizon.
+      - The `budgetTwoTrack` degenerate golden (`:96-145`) has M absent.
+      - ARM B (`budgetTwoTrack.test.ts:176-189`) has a scalar arm with no overlay and no M, so it keeps pinning its strict `<` unchanged.
+  - **Sensitivity (derived and off-roster: S $78,000 and r 0.75 held, only M swept; flat is M-invariant, measured).** Survivor-year spend rises by M(1 − r) = $250 per $1,000 of M.
+
+    | survivors lost vs flat | M 2k (2.6 %) | 4k (5.1 %) | 8k (10.3 %) | 12k (15.4 %) | 16k (20.5 %) | 20k (25.6 %) |
+    |---|---|---|---|---|---|---|
+    | `health` 16k A | −19 | −34 | −72 | −114 (q 0.94) | −150 (q 0.94) | −191 (−1.19 pp) |
+    | `health` 2k | 0 | −3 | −6 | −7 | −11 | −18 |
+    | `healthgap` 16k A | −50 | −99 | −234 | −334 | −460 | −573 (−3.58 pp, q 0.61) |
+    | `healthgap` 2k | −9 | −17 | −33 | −45 | −57 | −71 |
+
+    - The two legs agree on every overlapping cell. The 16k column is one harness; the 20k column is the other.
+    - `health` loses about 9.4 paths per 16,000 per $1k of M (about 0.06 pp). It never leaves on-track 9: about 1,650 paths of headroom at 16k, about 220 at 2k.
+    - `healthgap` loses about 25–29 per $1k (0.16–0.18 pp), about 3× `health`: its 21-year age gap means long widowhoods.
+      - At 2k it crosses borderline → off-track at every M ≥ $2,000.
+      - At 16k A it stays off-track 6 throughout.
+    - The move scales with M(1 − r) × the length of widowhood. Whether it changes what renders depends on the household's distance to a band edge, not on M alone.
+  - **What survived refutation.**
+    - Every count, quantized value, state, margin, paired count and timing figure above. They were reproduced:
+      - path for path by four constructs;
+      - at 16k seed A cell for cell against the earlier refuter's `user:proportional:20000` rows.
+    - The census.
+    - The crossings on `healthgap`.
+    - Strict one-way movement on the headline.
+    - Byte-identity with M absent or 0.
+    - The goldens' location.
+  - **Corrections the refuters and the chair forced.**
+    1. **"Flat `healthgap`'s spend lane is unsized (`solveSpend` 'no-direction')"** becomes "no spend lane is dispatched". The lane fires only on room / trim with no budget (`memoryModel.ts:879-888`); 'no-direction' is only what a direct call returns.
+    2. **The sticky spend figures ($7,000 / $7,000 / trim $5,200)** are upgraded from a replica result to the SHIPPED `solveSpend`. Holding M fixed while the solve varies S remains a design assumption of the fix.
+    3. **Byte-identity at M absent or 0** is upgraded from the itemized emulation to the literal flat arm executing.
+    4. **"The sticky composition only moves rendered surfaces toward caution" is WITHDRAWN.**
+       - It holds on the headline, the survivor card, the direction and the spend lane.
+       - It does not hold on the TwoFutures previews: on `healthgap` a rendered harm warning on all three sequencing policies becomes the even line, while the raw survivor-basis loss stays 1.1–3.2 pp.
+       - The even-line grammar is pre-existing. The fix only moves this base off the edge.
+    5. **"Knife-edge artifact" is REFRAMED.**
+       - At the dev seed it is a knife edge: 5-path headroom, SE larger than the move.
+       - For a household of this shape it is about a 30 % event across CRN seeds (12 / 40, Wilson 18–45 %). It is not a one-seed curiosity, nor robust on any one seed.
+    6. **The entry's title range "33–110 of 16,000" is seed A only, and spans four solver candidates** (the earlier refuter's rows: `health` 33–39, `healthnc` 34–45, `healthgap` 99–110). On held-out seed B the user plan moves 48 / 36 / 132.
+    7. **One leg's "the other 15 seeds carry no OOP"** is 18: 11 spine, 6 date-route, and `dip`.
+    8. **A refuter's claim that the other refuter's early 2k log was a silent no-op is not borne out.**
+       - Every surviving log from that refuter prints the patch applied, with 68,574 / 100,460 composition calls and patched ≠ flat (17 / 247 changed paths at 2k).
+       - Its figures stand.
+       - The general instrument warning stands: an in-memory load-hook patch silently no-ops when the driver is a CJS `.ts` script, so a hit count or patched ≠ flat must prove the landing.
+  - **Limits.**
+    - **The solver crown at its own tiers under the fix was not run.** The earlier refuter's 16k seed-A twin run (T0 crowns and CRN-resolved leads hold on all three seeds) transfers by source, because construct (3) ≡ (1) on the full track. Seed B and the 4,000-path tier are unmeasured.
+    - **The rendered UI was not walked.** Surface states come from engine readings and the shipped composers.
+    - **Seed B is a single harness.**
+    - **Budgetless households with an HSA are not on the roster and were not measured.** Their flat reading is not M-invariant.
+    - **No roster seed is a budgetless date-route household with OOP**, so the M-source fork is unmeasured. The date route window-gates the stream to 0 before work-stop (`src/engine/healthcareStreams.ts:181`), while `compileBudget` injects M for life.
+    - **The test blast radius beyond the goldens is unaudited.** `allInWitnessHl50.test.ts:104` pins equal pre-tax-first / bracket-fill survival at seed A on a `health`-derived $50,000 household at 16k.
+    - **One refuter saw an unexplained report-field swap** in two early 16k runs (harness-level). Every figure above is cross-checked against raw counts.
+  - ⚑ **NEGATIVE (added).**
+    - Never cite "the sticky composition only moves surfaces toward caution" (item 4).
+    - Never call `healthgap`'s dev-seed crossing either robust or a pure artifact (item 5).
+    - Never quote the entry's "33–110" range without "seed A, across candidates" (item 6).
+    - Never count a patched-flat-arm figure without proof the patch landed.
+    - Never read this block as a ruling: it measures; the council rules.
 - ⚑ NEGATIVE: never change the flat path without the council (it moves every OOP-carrying household's headline); never call the flat reading "wrong" before the ruling (the research ratio is measured on total spending); never fold this into the Tier-1 quantity entry above — it is a spine headline question, not a solver one.
 
 ### ✅ CLOSED 2026-10-03 — The solver's ACA-cliff and bracket-edge anchors sit under their rail only in YEAR 0's committed frame — the OBBBA senior bonus ends after 2028 and Social Security arrives mid-window, so the same amount crosses its edge in later window years

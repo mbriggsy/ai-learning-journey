@@ -19,23 +19,23 @@
  *     the ACA note below for why the pre-crown base overlay IS that producer at THIS surface,
  *     and why the same read is forbidden beside a crowned one.
  *
- * SIX READS, SIX PRODUCERS — NEVER ONE DERIVED FROM ANOTHER. `overlayBuilt`, `medicare`, `aca`,
- * `contributions`, `blend` and `pricedState` each call their own exported predicate.
+ * SEVEN READS, SEVEN PRODUCERS — NEVER ONE DERIVED FROM ANOTHER. `overlayBuilt`, `medicare`, `aca`,
+ * `contributions`, `blend`, `spending` and `pricedState` each call their own exported predicate.
  *
  * BE PRECISE ABOUT WHY, because the obvious justification is FALSE and was written here once
  * before being caught (two reviewers, 2026-07-25): `overlayBuilt` and `medicare` do NOT currently
  * disagree on any reachable household. There is no "accounts but no marketplace quote pair"
  * witness — the pair is a REQUIRED fact for any household with a pre-65 member
- * (`intakeMap.ts:212-218`), and an all-65+ household takes the Medicare-only branch, which sets
- * `healthcareEnabled: true` with no quote pair at all (`intakeMap.ts:685`). So for every draft this
+ * (`intakeMap.ts:213-219`), and an all-65+ household takes the Medicare-only branch, which sets
+ * `healthcareEnabled: true` with no quote pair at all (`intakeMap.ts:686`). So for every draft this
  * function actually evaluates (the missing-facts arm has already returned), an overlay exists IFF
  * healthcare is on. **The two predicates are perfectly correlated today.**
  *
- * THAT IS THE ARGUMENT FOR SIX CALLS, NOT AGAINST IT. The correlation is a coincidence of two
+ * THAT IS THE ARGUMENT FOR SEVEN CALLS, NOT AGAINST IT. The correlation is a coincidence of two
  * unrelated rules — one about which facts intake demands, one about which overlay branch an
  * all-65+ household takes — and neither rule exists to keep these two predicates equal. A third
  * overlay branch, or a relaxed quote-pair requirement, breaks it with nothing going red. Deriving
- * one from the other would be insight 081's shape one level up: the cost of six calls is six
+ * one from the other would be insight 081's shape one level up: the cost of seven calls is seven
  * builder invocations; the cost of one derivation is a silent lie the day the coincidence lapses.
  *
  * The practical consequence, recorded so nobody deletes the fixture: the `overlayBuilt` gate is
@@ -55,6 +55,7 @@ import {
   pricedStateForRun,
   spineAcaPriced,
   spineMedicarePriced,
+  survivorMedicalLeanForRun,
 } from '@intake/intakeMap'
 import type { ExposureRead, StalenessExposure } from '@store/staleness'
 
@@ -110,7 +111,7 @@ const read = (priced: boolean): ExposureRead => (priced ? 'priced' : 'unpriced')
  * silent stale on the more consequential clock. That is precisely the trade the paragraph above
  * says was rejected, and precisely insight 103's shape (a rule written to kill an over-alarm must
  * be checked in the SILENCING direction). `acaPricedForRun` already exists and is exported
- * (`intakeMap.ts:1001`) — the predicate was never the missing piece.
+ * (`intakeMap.ts:1029`) — the predicate was never the missing piece.
  *
  * THE ACTUAL FIX — AND ONE OF ITS TWO ARMS IS ALSO A TRAP (corrected 2026-08-02, the second time
  * this comment's own prescription has had to be withdrawn).
@@ -151,6 +152,7 @@ export function exposureForDraft(d: ScenarioDraft): StalenessExposure {
       aca: 'unknown',
       contributions: 'unknown',
       blend: 'unknown',
+      spending: 'unknown',
       pricedState: undefined,
     }
   }
@@ -160,6 +162,7 @@ export function exposureForDraft(d: ScenarioDraft): StalenessExposure {
     overlayBuilt: read(overlayBuiltForRun(d)),
     contributions: read(contributionsPricedForRun(d)),
     blend: read(blendTableReadForRun(d)),
+    spending: read(survivorMedicalLeanForRun(d)),
     pricedState: pricedStateForRun(d),
   }
 

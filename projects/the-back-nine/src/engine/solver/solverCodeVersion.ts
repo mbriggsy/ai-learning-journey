@@ -125,5 +125,17 @@
  * could in principle mark a previously scored candidate infeasible; it is unreachable in practice (the
  * premium sits inside the gross withdrawal, so an overflow trips the terminal check first) and landed one
  * commit before this bump.
+ *
+ * VERSION 11 (2026-10-09) — a SCORED pricing change on the spend side: a BUDGETLESS couple's
+ * household-entered out-of-pocket medical M now rides `SimulationParams.survivorOopMedicalReal` and is
+ * held whole in the survivor years (`simulate.budgetlessSurvivorSpending`: m + r·(S − m), m = min(M, S),
+ * where the flat path spent r·S — the 2026-10-08 council's DISCLOSED CONSERVATIVE LEAN, wf_7eb3303c-7f3,
+ * insight 055). Every candidate's survivor-year spend rises by m·(1 − r), so Tier 1 (survival) is
+ * scored on a different spend; ship gate 1 (wf_d98e02fb-08c) measured the crown and runner-up unmoved on
+ * `health` / `healthnc` / `healthgap` at 4k and 16k on both seeds, but a v10 record was still ranked
+ * under spend this build no longer funds. The SCORED-overlay clause; `ENGINE_PRICING_LEDGER` v11 (the new
+ * `spending` family) records the same version. Budgeted, single and OOP-blank (or M = 0) households are
+ * unmoved, and r = 1 ones up to one ulp when M carries cents; the stamp is global, so their records
+ * re-stale too (the when-in-doubt over-re-run).
  */
-export const SOLVER_CODE_VERSION = 10
+export const SOLVER_CODE_VERSION = 11

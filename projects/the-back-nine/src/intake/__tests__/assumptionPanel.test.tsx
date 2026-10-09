@@ -484,6 +484,22 @@ describe('OOP medical', () => {
     expect(next.health.oopMedicalAnnual).toBe(5_000)
     expect(next.annualSpendingReal).toBe(96_000)
   })
+
+  it('the budgetless M > S note (council 2026-10-08, B2) renders in the OOP row exactly when the entered figure exceeds the whole spend — never on the governed face, which has its own F10 line', () => {
+    const over = draftWith(() => ({ ...mixedDraft, health: { ...mixedDraft.health, oopMedicalAnnual: 100_000 } }))
+    const note = slots.oopExceedsSpend(formatMoney(100_000), formatMoney(96_000))
+    renderPanel({ snapshot: snap(over) })
+    const row = document.querySelector('[data-assumption-seat="health-oop"]') as HTMLElement
+    expect(within(row).getByText(note)).toHaveClass('field-help')
+    cleanup()
+    // Presence companions: the shipped fixture (M $4,000 under $96,000) and the governed face (a budget,
+    // M $100,000 over its $44,000 scalar) both stay silent here.
+    renderPanel()
+    expect(screen.queryByText(/is more than your whole spending figure/)).toBeNull()
+    cleanup()
+    renderPanel({ snapshot: snap(draftWith(() => ({ ...governedDraft, health: { ...governedDraft.health, oopMedicalAnnual: 100_000 } }))) })
+    expect(screen.queryByText(/is more than your whole spending figure/)).toBeNull()
+  })
 })
 
 // ─── the echo (displayed-not-raw + the two-class transition line) ────────────────────────

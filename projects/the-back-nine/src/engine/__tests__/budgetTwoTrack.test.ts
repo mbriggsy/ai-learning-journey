@@ -148,7 +148,11 @@ describe('U9b · the MEDICAL-PRESENT identity (build-gate 1 — the red team’s
   // The UI's lines-target must NET the intake OOP medical M: compileBudget re-INJECTS M
   // into sticky on top of typed lines, so a line typed at the raw scalar S commits S+M —
   // a silently-pessimistic answer jump on builder-open. These arms pin the netted seed's
-  // arithmetic END-TO-END through the real engine.
+  // arithmetic END-TO-END through the real engine. Their scalar arm carries NO
+  // `survivorOopMedicalReal`: since the 2026-10-08 survivor-medical lean (council
+  // wf_7eb3303c-7f3) a budgetless run that ENTERS M holds it whole exactly as this budget does,
+  // so ARM B's divergence is from the blank-OOP household, never from an M-entered one (that
+  // twin identity: `survivorMedicalLean.test.ts`).
   const S = 48
   const M = 6.5
   const netted = anchorTarget(S, M) // 41.5
@@ -174,8 +178,13 @@ describe('U9b · the MEDICAL-PRESENT identity (build-gate 1 — the red team’s
     expect(validateParams(params)).toMatch(/does not reconcile/)
   })
 
-  it('ARM B (direction at ratio < 1): the injected M is STICKY, so the survivor years spend MORE than the scalar’s ratio-on-total — survival strictly LOWER, never higher (the conservative divergence)', () => {
+  it('ARM B (direction at ratio < 1): the injected M is STICKY, so the survivor years spend MORE than an M-ABSENT scalar run’s ratio-on-total — survival strictly LOWER, never higher (the conservative divergence from a blank OOP entry)', () => {
     const base = coupleParams({}) // ratio 0.75, sampled longevity — real survivor phases
+    // The scalar arm carries NO `survivorOopMedicalReal` — the budgetless household that left its
+    // out-of-pocket medical BLANK — so it keeps ratio-on-total. It is the M-absent comparison, not a
+    // reference reading: since the 2026-10-08 survivor-medical lean (council wf_7eb3303c-7f3), a
+    // budgetless household that ENTERS M holds it sticky exactly as this budget does (that twin
+    // identity is pinned in `survivorMedicalLean.test.ts`).
     const scalar = resolved(simulate(base, 90210))
     const budget = compileBudget([line({ annualAmountReal: netted })], M, 45)
     const budgeted = resolved(simulate({ ...base, budget }, 90210))

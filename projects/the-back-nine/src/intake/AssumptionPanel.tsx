@@ -54,7 +54,7 @@ import { blockedLeadFor, missingFactNames } from './AnswerStrip'
 import { FieldError } from './FieldError'
 import { validateField, personField, type SanityViolation } from './sanity'
 import { anyPre65OrUnknown, healthcarePriced, isDateRoute, spendHelpKeyFor, type MissingFact } from './intakeMap'
-import { MedicareExtrasFork, StateResidencePicker, writeWorkingYearInvestment } from './questions'
+import { MedicareExtrasFork, OopExceedsSpendNote, StateResidencePicker, writeWorkingYearInvestment } from './questions'
 import './assumptions.css'
 
 /** The heir-bracket rungs — DERIVED from the shipped federal ordinary-bracket schedule, never
@@ -756,6 +756,8 @@ export function AssumptionPanel({
                 })
               }
             />
+            {/* The budgetless M > S note — the oopStep's same face (council 2026-10-08, B2). */}
+            <OopExceedsSpendNote draft={draft} />
           </Row>
 
           {/* The ACA quote pair — pre-65 AND not-yet-known-age households: the SAME predicate

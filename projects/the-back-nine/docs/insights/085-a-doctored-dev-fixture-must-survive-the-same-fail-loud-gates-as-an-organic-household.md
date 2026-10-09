@@ -18,7 +18,7 @@ drive, *before* the arm was pinned.
 ## Root Cause
 
 The full doctor ages `startCalendarYear` −2 (→ 2024) for save-moment coherence. The engine's own
-priced-state lower bound (`simulate.ts:640-643`, added by the state-tax unit's ultramode fold —
+priced-state lower bound (`simulate.ts:724-727`, added by the state-tax unit's ultramode fold —
 its comment literally names "an aged dev plant" as the anticipated caller) REFUSES a priced-NC
 household whose year-0 precedes NC's earliest rate row (2026), demoting the run to the R19 calm
 indeterminate. The engine was right both times: the doctored household was **organically

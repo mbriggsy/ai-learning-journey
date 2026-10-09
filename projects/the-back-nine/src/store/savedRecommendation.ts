@@ -88,7 +88,7 @@ export interface SavedRecommendationStatusInput {
    *  A SAVED RECOMMENDATION IS ALWAYS A SPINE-ROUTE HOUSEHOLD, verified in source:
    *  `solveDispatch.ts:75-76` returns the typed refusal 'spine-unready' whenever
    *  `buildSpineParams(draft)` is null, and it is null exactly on the date route
-   *  (`intakeMap.ts:740-741`) — so no record can exist for a date-route household. That is why no
+   *  (`intakeMap.ts:752-753`) — so no record can exist for a date-route household. That is why no
    *  crowned offset is needed here and insight 088's date trap cannot arise: `exposureForDraft`
    *  takes its spine arm, where both reads come from the SAME `buildSpineParams` the headline
    *  run uses and are therefore EXACT. */

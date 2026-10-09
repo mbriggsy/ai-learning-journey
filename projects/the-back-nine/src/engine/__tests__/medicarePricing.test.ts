@@ -367,7 +367,7 @@ describe('post-65 Medicare pricing — the HSA qualified cap includes the now-no
   })
 
   it('the U9a oopMedical containment gate does NOT falsely fire for a budget-carrying all-65+ Medicare household (premiums ride on top, engine-funded)', () => {
-    // The gate (simulate.ts:957-983) fences oopMedical ONLY — the floor essentials must dominate the
+    // The gate (simulate.ts:1041-1067) fences oopMedical ONLY — the floor essentials must dominate the
     // out-of-pocket medical the HSA cap is sized off. The Medicare PREMIUM (≈ 2×BASE×12) is funded on
     // top via fundingNet (taxOverlay.ts:1659), never checked against the budget floor. So a household
     // whose floor covers its OOP validates even though the floor is far below spend-plus-premium.

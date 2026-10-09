@@ -24,7 +24,8 @@
  * (6e4c065d, 2026-09-26): the register's *The engine-pricing ledger cannot name a date-route or
  * spending-figure change…* carries them.
  * Row 10 (the IRMAA growth base) shipped in `252b88da` — its own commit, so its `commits` field could
- * only carry a placeholder.
+ * only carry a placeholder. Row 11 (the budgetless survivor-medical lean) likewise ships in its own
+ * commit and carries a placeholder; its `shippedOn` must be that commit's local date.
  *
  * THE PARKED RESIDUALS (one-way doors the council parked, stated so no one reads the ledger as
  * total): (1) a save made AFTER a ship day by an OLD build (a stale PWA) reads as covered but was
@@ -59,8 +60,13 @@
 import { epochDayFromIsoDate } from '@engine/validation/oracleToken'
 
 /** The exposure family a pricing change reaches — each maps onto ONE existing producer's-output
- *  exposure read in `src/store/staleness.ts` (`PRICING_FAMILY_READS`, exhaustive by type). */
-export type PricingFamily = 'tax' | 'stateTax' | 'medicare' | 'aca' | 'contributions'
+ *  exposure read in `src/store/staleness.ts` (`PRICING_FAMILY_READS`, exhaustive by type).
+ *  `spending` (row 11, 2026-10-08 council): how a saved household's own spend figure maps into the
+ *  per-year spend the engine funds — today the budgetless survivor-medical lean, read through the
+ *  engine's `survivorMedicalLeanMoves` (budgetless ∧ couple ∧ sampled ∧ M > 0 ∧ S > 0 ∧ r ≠ 1 —
+ *  r = 1 is unmoved up to one ulp when M carries cents; r > 1, refused when committed but still
+ *  priced if a vault carries it, moves the spend the other way). */
+export type PricingFamily = 'tax' | 'stateTax' | 'medicare' | 'aca' | 'contributions' | 'spending'
 
 export interface PricingLedgerRow {
   /** 1, 2, 3 … — strictly increasing, no gaps (shape-tested). */
@@ -181,6 +187,15 @@ export const ENGINE_PRICING_LEDGER: readonly PricingLedgerRow[] = Object.freeze(
     solverCodeVersion: 7,
     commits: ['(the IRMAA growth-base change, b9-11)'],
     what: 'The IRMAA growth base: tiers 1–4 carry CPI from their August-2025 base through `cpiGrowth` — the clamped level quotient had dropped a year (e.g. the 2028 tier-1 MFJ line $224,000 → $232,000; rosier).',
+  }),
+  row({
+    version: 11,
+    kind: 'reprice',
+    families: ['spending'],
+    shippedOn: '2026-10-09',
+    solverCodeVersion: 11,
+    commits: ['(the budgetless survivor-medical lean, b9-1)'],
+    what: 'A budgetless couple’s entered out-of-pocket medical M is held whole in the survivor years: a survivor year spends m + r·(S − m), m = min(M, S), where it spent r·S (council wf_7eb3303c-7f3, 2026-10-08 — a DISCLOSED CONSERVATIVE LEAN under insight 055, the budget arm’s sticky-medical composition brought to the flat path; never a correction). Harsher at r < 1: +m·(1 − r) a survivor year (+$1,000 on `health` / `healthnc` / `healthgap` at M $4,000, r 0.75); `healthgap` borderline 7/10 → off-track 6/10 at the app’s spine run. Budgeted, single, OOP-blank (or M = 0) households are unmoved, and r = 1 ones up to one ulp when M carries cents (the exposure read is `survivorMedicalLeanMoves`); r > 1 is refused when committed, but a vault that carries one is priced, and there the spend falls by m·(r − 1). SCORED: the solver ranks on survival, so v11 re-stales saved recommendations.',
   }),
 ])
 

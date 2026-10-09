@@ -20,8 +20,14 @@
  * THE CONTRIBUTIONS PROBE READS `@intake/sanity`: the per-runway-year contribution ceiling (the HSA
  * catch-up erosion, ledger v6) is intake-layer code the accumulation stream builder calls. ESLint's
  * layer ban exempts every `__tests__/` directory (`eslint.config.js` TEST_IGNORES), so the probe lives
- * here with its four siblings rather than in a second witness file. The ACA probe reads the intake
+ * here with its five siblings rather than in a second witness file. The ACA probe reads the intake
  * quote escalator for the same reason — it is how a saved marketplace quote maps into run params.
+ *
+ * THE SPENDING PROBE (ledger v11, the 2026-10-08 survivor-medical lean) reads `cashTermsForYear` — the
+ * engine's exported, pure per-year cash seam — on an income-free couple, so each output IS the year's
+ * spend: the couple years, and the survivor years with the entered out-of-pocket medical absent, 0,
+ * inside S, and above S (the clamp). Its pin is the family's first; a planted pre-v11 composition (M
+ * ignored) moves it 3,410,359,151 → 2,319,140,495, so the grid sees the change the row records.
  *
  * CROSS-ENGINE GUARD: every pricer here is basic IEEE arithmetic (no transcendental), but a probe value
  * whose fractional part sat within 1e-4 of .5 would still round on a knife edge. One arm asserts no
@@ -51,7 +57,8 @@ import {
 } from '@engine/healthOverlay'
 import { nextIrmaaStep } from '@engine/magiLandscape'
 import { acaApplicablePercentage, acaApplicablePercentageEnhanced, irmaa, PRICED_STATES } from '@engine/constants'
-import { ACCOUNT_KINDS, FILING_STATUSES, type FilingStatus } from '@shared/model'
+import { ACCOUNT_KINDS, FILING_STATUSES, type FilingStatus, type MarketAssumptions, type PersonInputs, type SimulationParams } from '@shared/model'
+import { cashTermsForYear } from '@engine/simulate'
 import { annualAdditionsCeilingFor, contributionCeilingInYear } from '@intake/sanity'
 import { escalateQuote } from '@intake/intakeMap'
 
@@ -67,7 +74,7 @@ interface FamilyProbe<G> {
   /** One probe input moved — the family's digest must move with it (else its probes are blind). */
   readonly perturb: (g: G) => G
 }
-/** Erase the grid type so the five probes share one Record (no `any`). */
+/** Erase the grid type so the six probes share one Record (no `any`). */
 interface ErasedProbe {
   readonly values: () => Probed
   readonly perturbedValues: () => Probed
@@ -360,12 +367,85 @@ const CONTRIBUTIONS: FamilyProbe<ContributionGrid> = {
   perturb: (g) => ({ ...g, ages: g.ages.map((a) => (a === 49 ? 51 : a)) }),
 }
 
+// ── spending: how a household's spend figure maps into the per-year spend the engine funds — the
+//    budgetless survivor composition (ledger v11, the 2026-10-08 survivor-medical lean), probed
+//    through the exported pure `cashTermsForYear` (the wired composition, not only its helper) on an
+//    income-free couple, so `net` IS the year's spend ──────────────────────────────────────────────
+interface SpendingGrid {
+  readonly spends: readonly number[]
+  readonly ratios: readonly number[]
+  /** `undefined` = the field absent (the pre-v11 ratio-on-total path, kept in the grid on purpose). */
+  readonly oops: readonly (number | undefined)[]
+}
+const SPENDING_PERSON: PersonInputs = {
+  sex: 'male',
+  currentAge: 70,
+  birthYear: 1956,
+  retirementAge: 65,
+  earnedIncomeReal: 0,
+  pia: 0,
+  socialSecurityClaimAge: 67,
+}
+const SPENDING_MARKET: MarketAssumptions = {
+  stock: { mean: 0.05, stdDev: 0.17 },
+  bond: { mean: 0.018, stdDev: 0.06 },
+  inflation: { mean: 0, stdDev: 0 },
+  stockBondCorrelation: 0.1,
+  space: 'simple',
+  returnsAreReal: true,
+}
+/** No income of any kind ⇒ `net = max(0, spending − 0 − 0 − 0)` = the year's spend, exactly. */
+const SPENDING_OFFSETS = [0, 1].map(() => ({ retire: -5, claim: -3, earnedIncomeReal: 0, socialSecurityReal: 0, spousalExcessAnnual: 0 }))
+/** [label, deathOffsets] at t = 5: both alive, then either spouse gone (the survivor year). */
+const SPENDING_PHASES: ReadonlyArray<readonly [string, readonly number[]]> = [
+  ['both alive', [50, 50]],
+  ['survivor (first died t3)', [3, 50]],
+  ['survivor (second died t3)', [50, 3]],
+]
+const SPENDING: FamilyProbe<SpendingGrid> = {
+  grid: {
+    spends: [41_003.17, 78_011.29, 120_029.53],
+    ratios: [0.6, 0.75, 0.9, 1],
+    // The last entry exceeds every spend: the m = min(M, S) clamp is inside the grid.
+    oops: [undefined, 0, 2_017.47, 4_003.07, 9_041.23, 150_000.37],
+  },
+  run: (g) => {
+    const out: Array<readonly [string, number]> = []
+    for (const S of g.spends) {
+      for (const r of g.ratios) {
+        for (const M of g.oops) {
+          const params: SimulationParams = {
+            initialPortfolio: 1_000_000,
+            annualSpendingReal: S,
+            stockWeight: 0.5,
+            people: [SPENDING_PERSON, { ...SPENDING_PERSON, sex: 'female' }],
+            survivorSpendingRatio: r,
+            ...(M !== undefined ? { survivorOopMedicalReal: M } : {}),
+            drawdownPolicy: 'proportional',
+            market: SPENDING_MARKET,
+            paths: 1,
+            maxHorizonYears: 50,
+            longevityMode: 'sampled',
+          }
+          for (const [phase, deaths] of SPENDING_PHASES) {
+            out.push([`spend S ${S} r ${r} M ${String(M)} ${phase}`, cashTermsForYear(5, params, SPENDING_OFFSETS, deaths, 0).net])
+          }
+        }
+      }
+    }
+    return out
+  },
+  // An M nudge: a probe grid that never read M (the v11 composition removed) would leave it unmoved.
+  perturb: (g) => ({ ...g, oops: g.oops.map((m) => (m === 4_003.07 ? 4_503.07 : m)) }),
+}
+
 const PROBES: Readonly<Record<PricingFamily, ErasedProbe>> = {
   tax: erase(TAX),
   stateTax: erase(STATE_TAX),
   medicare: erase(MEDICARE),
   aca: erase(ACA),
   contributions: erase(CONTRIBUTIONS),
+  spending: erase(SPENDING),
 }
 const FAMILIES = Object.keys(PROBES) as readonly PricingFamily[]
 
@@ -461,6 +541,8 @@ const PINNED: Readonly<Record<PricingFamily, WitnessPin>> = {
   medicare: { atVersion: 10, digest: 412_678_172 },
   aca: { atVersion: 0, digest: 2_928_507_043 },
   contributions: { atVersion: 6, digest: 2_046_752_883 },
+  // NEW at ledger v11 (the survivor-medical lean) — the family's first pin, so no prior digest.
+  spending: { atVersion: 11, digest: 3_410_359_151 },
 }
 
 // =============================================================================================

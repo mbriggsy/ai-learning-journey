@@ -8,7 +8,7 @@ import { budgetGoverns, isActiveAt, isRampedBudget } from '@budget/budgetModel'
 import { budgetYearZeroFullTotal, commitBudgetPatch } from '@budget/budgetToSpending'
 import { focusHeading } from './a11y'
 import { anyPre65OrUnknown, anyRetiredPre65WhileAnotherWorks, spendHelpKeyFor } from './intakeMap'
-import { BudgetBuilder } from './BudgetBuilder'
+import { BudgetBuilder, medicalExceedsTotal } from './BudgetBuilder'
 import { CurrencyField, IntegerField, NameField, SegmentedControl, formatMoney, type SegmentOption } from './fields'
 import { FieldError } from './FieldError'
 import { accountField, personField, SS_CLAIM_MIN, SS_CLAIM_MAX } from './sanity'
@@ -707,8 +707,36 @@ const oopStep: StepDef = {
           )}
         </p>
       )}
+      <OopExceedsSpendNote draft={api.draft} />
     </>
   ),
+}
+
+/** THE BUDGETLESS M > S FORK (council 2026-10-08, B2 — pure + exported per insight 048): the
+ *  household ENTERED an out-of-pocket figure above its whole spending figure, with NO budget
+ *  governing (a budget has its own F10 line, `BudgetBuilder`'s `medicalExceedsTotal` readout, so
+ *  this never doubles it). STRICTLY M > S through the SAME comparison the builder uses — at M = S
+ *  the figures agree (everything is medical), no contradiction. A blank on either side never fires
+ *  (nothing entered, nothing to contradict). Presentation only: the engine clamps m = min(M, S)
+ *  and never refuses (`simulate.ts` `budgetlessSurvivorSpending`). */
+export function oopExceedsBudgetlessSpend(d: ScenarioDraft): boolean {
+  const S = d.annualSpendingReal
+  const M = d.health.oopMedicalAnnual
+  return !budgetGoverns(d.budget) && S !== undefined && M !== undefined && medicalExceedsTotal(S, M)
+}
+
+/** The calm, non-blocking M > S note — ONE face for the intake's OOP step and the AssumptionPanel's
+ *  OOP row (the two input surfaces over the same fact agree by construction). Renders NOTHING
+ *  otherwise: both hosts are flex columns with a gap, so an always-mounted empty wrapper would move
+ *  every row beneath it on every household — the conditional `field-help` paragraph is this
+ *  codebase's note idiom (the HSA / Roth-lever notes). */
+export function OopExceedsSpendNote({ draft }: { readonly draft: ScenarioDraft }) {
+  if (!oopExceedsBudgetlessSpend(draft)) return null
+  return (
+    <p className="field-help">
+      {slots.oopExceedsSpend(formatMoney(draft.health.oopMedicalAnnual), formatMoney(draft.annualSpendingReal))}
+    </p>
+  )
 }
 
 /** Write person `i`'s working-year investment income, force-zeroing any RETIRED member's slot

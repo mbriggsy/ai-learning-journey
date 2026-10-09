@@ -639,16 +639,35 @@ export interface SimulationParams {
   /** Survivor spending as a fraction of the couple's spending after the first death
    *  (grounded ~0.75; too-low understates the survivor's need — the unsafe direction). */
   readonly survivorSpendingRatio: number
-  /** The compiled itemized budget (P3·U9). ABSENT ⇒ the un-itemized degenerate: the
-   *  engine spends the flat `annualSpendingReal` scalar (ratio-on-total at widowhood)
-   *  and emits NO floor surface — byte-identical to every pre-U9 run by construction.
-   *  PRESENT ⇒ the per-year spend expands from the three component profiles (see
-   *  {@link CompiledBudget}) and the run evaluates BOTH tracks — essentials-only (the
-   *  floor) and full — on the SAME single shared draw set (contract #1: a tier is a
-   *  different SPEND on the SAME paths, never a re-simulation), emitting
-   *  {@link Distribution.floor} + a floor reading. When present, `annualSpendingReal`
-   *  MUST equal the budget's year-0 full-track total (the reconciliation invariant the
-   *  store maintains atomically) so every scalar consumer stays coherent. */
+  /** The household-ENTERED out-of-pocket medical M (real $/yr — intake `oopMedicalAnnual`), held
+   *  WHOLE in a BUDGETLESS couple's survivor years (council 2026-10-08, wf_7eb3303c-7f3). With it
+   *  present, a survivor year spends m + r·(S − m), m = min(M, S), instead of r·S; the couple
+   *  years and the budget arm never read it.
+   *
+   *  A DISCLOSED CONSERVATIVE LEAN (insight 055's error-direction law), not a finding: the survivor
+   *  ratio is grounded on TOTAL household spending (Blanchett — `docs/decisions/ss-computation.md`),
+   *  and holding the entered medical out of that scaling is the cautious reading of a question the
+   *  research does not settle. Only the household's OWN M is held whole — never an imputed sticky
+   *  share of S (the council's no-creep clause).
+   *
+   *  PRESENCE-KEYED: ABSENT ⇒ the literal pre-change r·S (byte-identical to every earlier run);
+   *  M = 0 ⇒ byte-identical too (0 + r·(S − 0) = r·S). Set by `intakeMap.buildParams` ONLY when the
+   *  draft has no budget — `validateParams` refuses it beside a {@link budget}, whose sticky floor
+   *  already carries the same M. LIFELONG: never the window-gated `overlay.oopMedical` stream, and
+   *  never read by the HSA qualified-spend cap (that stays on `overlay.oopMedical[t]`). M > S is
+   *  CLAMPED (m = S), never refused — the spend solve's trim ladder builds such probes itself.
+   *  Finite ≥ 0 within the engine dollar domain (R19, fail-loud — insight 010). */
+  readonly survivorOopMedicalReal?: number
+  /** The compiled itemized budget (P3·U9). ABSENT ⇒ the un-itemized degenerate: the engine spends
+   *  the flat `annualSpendingReal` scalar (ratio-on-total at widowhood, unless
+   *  {@link survivorOopMedicalReal} rides — then m + r·(S − m), the 2026-10-08 lean) and emits NO
+   *  floor surface — byte-identical to every pre-U9 run when that field is absent. PRESENT ⇒ the
+   *  per-year spend expands from the three component profiles (see {@link CompiledBudget}) and the
+   *  run evaluates BOTH tracks — essentials-only (the floor) and full — on the SAME single shared
+   *  draw set (contract #1: a tier is a different SPEND on the SAME paths, never a re-simulation),
+   *  emitting {@link Distribution.floor} + a floor reading. When present, `annualSpendingReal` MUST
+   *  equal the budget's year-0 full-track total (the reconciliation invariant the store maintains
+   *  atomically) so every scalar consumer stays coherent. */
   readonly budget?: CompiledBudget
   /** Which bucket-drawdown policy funds each year's net withdrawal. Inert on a
    *  single pool (the spine), meaningful once U2 splits the portfolio into buckets. */
@@ -1522,9 +1541,16 @@ export interface HealthIntakeV3 {
   readonly enrolledPremiumMonthlyToday?: number
   /** The SLCSP benchmark, today's quote ($/mo). Same requiredness as enrolled. */
   readonly slcspMonthlyToday?: number
-  /** Out-of-pocket medical ($/yr) — OPTIONAL (absent only disables the HSA
-   *  qualified-spend cap, the pessimistic-safe direction). Its question copy must
-   *  carry the containment contrast (OOP already lives INSIDE the spend figure). */
+  /** Out-of-pocket medical ($/yr) — OPTIONAL. It sizes the HSA qualified-spend cap
+   *  (`overlay.oopMedical`), and it is held whole in a couple's survivor years on BOTH
+   *  spend arms: a budget injects it into the sticky floor (`compileBudget`, U9a), and a
+   *  BUDGETLESS run carries it as `SimulationParams.survivorOopMedicalReal` (the 2026-10-08
+   *  disclosed conservative lean). So a blank is NOT one-directional — the former
+   *  "pessimistic-safe" reading held only while the cap was its one job: a blank disables
+   *  the cap (for an HSA household the most pessimistic reading, measured) AND the survivor
+   *  lean (for a budgetless couple without an HSA, the less cautious reading). Its question
+   *  copy must carry the containment contrast (OOP already lives INSIDE the spend figure)
+   *  and say what a blank means (the council's B3 — `copy.ts` `oopHint`). */
   readonly oopMedicalAnnual?: number
   /** The `t < lookback` prior-year ACTUAL MAGIs (Y-invariant — pre-sim tax
    *  returns no candidate can move). Collected only when a member is at/near 65. */
@@ -1733,8 +1759,10 @@ export interface ScenarioV3 {
    *  params builder: 'entered' → the person's own monthly dollar; 'none' → an AFFIRMED $0
    *  (honest — the Medicare-Advantage arm); 'typical' / 'unanswered' / the ABSENT field →
    *  the conservative-HIGH typical FUNDED (never a silent $0 — deleting a real recurring
-   *  bill is the cardinal optimistic sin; absence of the OOP mirror is pessimistic-safe,
-   *  absence HERE is not). 'unanswered' is the honest persisted hole for an asked-but-
+   *  bill is the cardinal optimistic sin; absence of the OOP mirror deletes no bill — OOP
+   *  lives inside the spend figure — though its blank is household-dependent since the
+   *  2026-10-08 survivor lean (see `HealthIntakeV3.oopMedicalAnnual`); absence HERE would
+   *  delete a real bill, hence the typical funded). 'unanswered' is the honest persisted hole for an asked-but-
    *  skipped member — never a fabricated 'typical' adoption. */
   readonly medicareExtrasByPerson?: readonly MedicareExtrasEntryV3[]
   /** The household's retirement state of residence (the state-tax unit; council

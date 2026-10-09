@@ -129,7 +129,7 @@ describe('composeReentry — the read-back', () => {
     } as ScenarioV3
     const view = composeReentry(doctored, reportFor(doctored))
     expect(view.noteLines).toContain(copy.stalenessTax)
-    // U17 §S4 — `coverageYear` dates the ACA/IRMAA tables (model.ts:2252), so for THIS all-65+
+    // U17 §S4 — `coverageYear` dates the ACA/IRMAA tables (model.ts:2280), so for THIS all-65+
     // household it names the Medicare half and only that: they price the IRMAA ladder every
     // year and zero marketplace years. Not the old collapsed "Health-coverage rules" line, and
     // not the nameless aggregate the first cut mis-bucketed it to.
@@ -431,6 +431,7 @@ describe('composeReentry — the engine-pricing lines', () => {
     stateTax: copy.stalenessPricingStateTax,
     contributions: copy.stalenessPricingContributions,
     aca: copy.stalenessPricingAca,
+    spending: copy.stalenessPricingSpending,
     medicare: copy.stalenessPricingMedicare,
   }
   const PRICING_LINES = new Set<string>([copy.stalenessPricingHedged, copy.stalenessReconfirmMedicareSpending])
@@ -517,9 +518,9 @@ describe('composeReentry — the engine-pricing lines', () => {
     expect(lineFor(['tax', 'contributions', 'medicare'])).toEqual([
       slots.stalenessPricing(`${copy.stalenessPricingTax}, ${copy.stalenessPricingContributions} and ${copy.stalenessPricingMedicare}`),
     ])
-    expect(lineFor(['tax', 'stateTax', 'contributions', 'aca', 'medicare'])).toEqual([
+    expect(lineFor(['tax', 'stateTax', 'contributions', 'aca', 'spending', 'medicare'])).toEqual([
       slots.stalenessPricing(
-        `${copy.stalenessPricingTax}, ${copy.stalenessPricingStateTax}, ${copy.stalenessPricingContributions}, ${copy.stalenessPricingAca} and ${copy.stalenessPricingMedicare}`,
+        `${copy.stalenessPricingTax}, ${copy.stalenessPricingStateTax}, ${copy.stalenessPricingContributions}, ${copy.stalenessPricingAca}, ${copy.stalenessPricingSpending} and ${copy.stalenessPricingMedicare}`,
       ),
     ])
   })

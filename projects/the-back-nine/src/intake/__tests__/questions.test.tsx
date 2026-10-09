@@ -3,7 +3,8 @@ import { useMemo, useSyncExternalStore } from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent } from '@testing-library/react'
-import { intakeSteps, writeMedicareExtras, MedicareExtrasFork } from '../questions'
+import { intakeSteps, writeMedicareExtras, MedicareExtrasFork, oopExceedsBudgetlessSpend } from '../questions'
+import type { BudgetLineItem } from '@shared/model'
 import { IntakeFlow } from '../flow'
 import { medicareExtrasTypical, medicareExtrasTypicalMonthly } from '@engine/constants/health'
 import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
@@ -507,6 +508,64 @@ describe('the out-of-pocket step — the optional-field BLS reference hint (cold
     fireEvent.blur(field)
     expect(screen.queryByText(hint)).toBeNull()
     expect(draft(m).health.oopMedicalAnnual).toBe(5_000)
+  })
+})
+
+describe('the out-of-pocket step — the BUDGETLESS M > S note (council 2026-10-08, B2: the engine clamps, the intake says so calmly)', () => {
+  const LINE: BudgetLineItem = { category: 'food', label: 'Groceries', annualAmountReal: 1_000, tier: 'essentials', startYear: 0 }
+  const fork = (S: number | undefined, M: number | undefined, budget?: readonly BudgetLineItem[]): boolean => {
+    const d = draft(freshModel())
+    return oopExceedsBudgetlessSpend({ ...d, annualSpendingReal: S, budget, health: { ...d.health, oopMedicalAnnual: M } })
+  }
+
+  it('the pure fork fires STRICTLY above, only with no budget, never on a blank (insight 048 planted-fail arms)', () => {
+    expect(fork(6_000, 6_500)).toBe(true) // M > S — the contradiction
+    expect(fork(6_500, 6_500)).toBe(false) // M = S — everything is medical, no contradiction
+    expect(fork(78_000, 4_000)).toBe(false) // the ordinary household
+    expect(fork(undefined, 6_500)).toBe(false) // no spend yet — nothing to contradict
+    expect(fork(6_000, undefined)).toBe(false) // a blank OOP
+    expect(fork(6_000, 6_500, [LINE])).toBe(false) // a budget governs — the builder's own F10 line speaks
+  })
+
+  it('renders under the field once the entered figure exceeds the whole spend (both annual dollars quoted), clears at M = S, and never blocks Next', () => {
+    const m = freshModel()
+    m.update((d) => ({
+      ...d,
+      // $6,000 a year = $500 under the month default — below the period force-confirm floor, so the
+      // walk passes the spend step without a unit answer.
+      annualSpendingReal: 6_000,
+      people: [
+        { ...d.people[0], workStatus: 'retired', currentAge: 60, birthYear: 1966 },
+        { ...d.people[1], workStatus: 'retired', currentAge: 60, birthYear: 1966 },
+      ],
+    }))
+    render(<Harness model={m} />)
+    for (let i = 0; i < 10 && heading() !== copy.qOopHeading; i += 1) {
+      fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
+    }
+    expect(heading()).toBe(copy.qOopHeading)
+    const field = screen.getByLabelText(copy.oopLabel)
+    const enter = (v: string) => {
+      fireEvent.focus(field)
+      fireEvent.change(field, { target: { value: v } })
+      fireEvent.blur(field)
+    }
+    const NOTE = /is more than your whole spending figure/
+    expect(screen.queryByText(NOTE)).toBeNull()
+
+    enter('6500')
+    const note = screen.getByText(slots.oopExceedsSpend(formatMoney(6_500), formatMoney(6_000)))
+    expect(note).toHaveClass('field-help') // a calm note — never a FieldError
+    expect(screen.queryByRole('alert')).toBeNull()
+
+    enter('6000')
+    expect(screen.queryByText(NOTE)).toBeNull()
+
+    enter('6500')
+    expect(screen.getByText(NOTE)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
+    expect(heading(), 'non-blocking: Next advances past the note').not.toBe(copy.qOopHeading)
+    expect(draft(m).health.oopMedicalAnnual, 'the entered figure is kept as typed (the engine clamps)').toBe(6_500)
   })
 })
 

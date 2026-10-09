@@ -146,7 +146,7 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **Surplus pivot (the 10/10 clamp pivot)** — when survival is a given, the headline honestly switches to the chosen Tier-2 goal's metric, spoken as a **delta against today's plan** (*"keeps about $X more…"*), so the survival clamp never eats the solver's signal; see **Delta-as-hero**. The bald *"you're safe either way"* is vetoed and `copyGuard` bans it. → [product.md §6](product.md), [plans/4-recommendation.md → contract #6](plans/4-recommendation.md#the-eight-cross-cutting-contracts)
 
-**Survivor-spending ratio** — the factor scaling a survivor's spending after the first death (~75%, grounded to the Blanchett literature, directional-until-pinned). Rides the Tier-1 survival floor, so its dangerous direction (too low) is documented. → [plans/1-engine.md](plans/1-engine.md) (U1)
+**Survivor-spending ratio** — the factor scaling a survivor's spending after the first death (~75%, grounded to the Blanchett literature, directional-until-pinned). Rides the Tier-1 survival floor, so its dangerous direction (too low) is documented. It never scales the household's own entered out-of-pocket medical figure, which is held whole on both spend arms — a disclosed conservative lean (council 2026-10-08), not a research finding. → [plans/1-engine.md](plans/1-engine.md) (U1) · [decisions/ss-computation.md §6a](decisions/ss-computation.md)
 
 **The two dates** — the floor date (earliest offset essentials hold) and the lifestyle date (earliest offset the full budget holds at the same confidence bar); they coincide in the degenerate single-total-spend budget and split when the budget is itemized. → [product.md](product.md) (R27)
 

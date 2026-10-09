@@ -44,6 +44,7 @@ import {
   type TickerClassification,
 } from '@shared/model'
 import { buildCandidateParams, DATE_SEARCH_PATHS, type DateSearchInput } from '@engine/dateSearch'
+import { survivorMedicalLeanMoves } from '@engine/simulate'
 import { productionMarket } from '@engine/reference/methodology'
 import { findBlendRow, stockWeightForBlend } from '@engine/reference/tickerBlend'
 import { acaAgeRatingCurve, medicareExtrasTypicalMonthly } from '@engine/constants/health'
@@ -723,6 +724,17 @@ function buildParams(d: ScenarioDraft): SimulationParams | null {
     paths: 2_000,
     maxHorizonYears: horizonYears,
     longevityMode: 'sampled',
+    // The budgetless survivor-medical lean (council 2026-10-08, B1): the household-ENTERED OOP
+    // medical, carried as its own LIFELONG scalar so a budgetless couple's survivor years hold it
+    // whole (`simulate.ts` `budgetlessSurvivorSpending`). PRESENCE-KEYED and BUDGETLESS ONLY: a
+    // budget already injects the same M into its sticky floor below (validateParams refuses the
+    // pair), and an absent entry writes no key at all (the reduce-to-spine signal). Never the
+    // overlay's window-gated `oopMedical` stream — that one sizes the HSA cap and nothing else.
+    // Every downstream builder spreads these params (`buildCandidateParams`, `buildSolveRequest`,
+    // `applyCandidate`, `buildArmParams`, the spend solve's probes), so it rides each of them.
+    ...(d.budget === undefined && d.health.oopMedicalAnnual !== undefined
+      ? { survivorOopMedicalReal: d.health.oopMedicalAnnual }
+      : {}),
     ...(overlay !== undefined ? { overlay } : {}),
     // P3·U9 — the compiled budget construct, DERIVED here (fidelity-over-duplication: only
     // the line items persist; the three component profiles are re-compiled every build).
@@ -857,7 +869,7 @@ function acaPricedOverlayArm(o: OverlayParams | undefined): boolean {
  *  claiming it matches is not a pin (insights 032/081) — the consumer source-binds to THIS.
  *
  *  This is the read that makes the all-65+ household honest: it takes `buildOverlay`'s
- *  Medicare-only branch (`intakeMap.ts:682-685` — "healthcareEnabled with NO ACA quote pair"),
+ *  Medicare-only branch (`intakeMap.ts:683-686` — "healthcareEnabled with NO ACA quote pair"),
  *  so `enrolledPremium` is absent, the engine's per-year ACA gate
  *  (`taxOverlay.ts:1712-1717`) can never open, and this correctly reads FALSE. `buildSpineParams`
  *  returns null on the date route ⇒ false there (the caller handles that route separately —
@@ -922,7 +934,7 @@ function builtRunParams(d: ScenarioDraft): SimulationParams | null {
 
 /** "Did THIS run build a tax overlay at all?" — the FEDERAL tax family's exposure read for U17
  *  §S4's staleness gate. `taxEnabled: true` is hardcoded on every built overlay
- *  (`intakeMap.ts:652`) and `consumedConstants.ts:104` gates the whole `tax.` family on exactly
+ *  (`intakeMap.ts:653`) and `consumedConstants.ts:104` gates the whole `tax.` family on exactly
  *  that flag, so overlay-absent ⟺ no tax constant was consumed ⟺ the recompute is byte-identical
  *  under any tax vintage. The population that reads FALSE is real and save-ready: `buildOverlay`'s
  *  degenerate early return (no accounts, no marketplace premium, no ongoing income) — a
@@ -930,7 +942,7 @@ function builtRunParams(d: ScenarioDraft): SimulationParams | null {
  *
  *  ITS OWN READ, never `!spineMedicarePriced` (insight 081). The two agree on every household the
  *  app can build TODAY — but by coincidence, not by law: `missingRequiredFacts` requires the
- *  marketplace quote pair whenever a member is pre-65 (lines 212-218) and an all-65+ household
+ *  marketplace quote pair whenever a member is pre-65 (lines 213-219) and an all-65+ household
  *  takes the Medicare-only branch, so a save-ready overlay always carries `healthcareEnabled`.
  *  Two unrelated rules, one accidental equality — precisely the shape insight 080 records
  *  breaking. This reads the flag it is actually about. */
@@ -947,14 +959,30 @@ export function overlayBuiltForRun(d: ScenarioDraft): boolean {
  *  and discriminates nothing. What it actually carries is this base overlay's streams,
  *  TRUNCATED (`truncateStreams(enteredContributions?.[i] ?? {}, Y)`) — and `buildOverlay` spreads
  *  `accumulation` only when `anyContributions` holds: some WORKING owner's account carries a
- *  positive contribution, match, or employer-HSA dollar (`intakeMap.ts:619-625`). A 66/retired +
+ *  positive contribution, match, or employer-HSA dollar (`intakeMap.ts:620-626`). A 66/retired +
  *  62/working couple whose accounts all belong to the retired spouse therefore sweeps candidates
  *  with `{}` streams and reads no limit: `consumedConstants.ts:124` gates the `contributions.`
  *  family on the construct, and the limits' only pricing read is `annualAdditionsCeilingFor`'s
  *  §415(c) match trim INSIDE `contributionStreamsFor`, which returns early for a non-working
- *  owner (`intakeMap.ts:466-469`) and never runs for an owner with no accounts. */
+ *  owner (`intakeMap.ts:467-470`) and never runs for an owner with no accounts. */
 export function contributionsPricedForRun(d: ScenarioDraft): boolean {
   return builtRunParams(d)?.overlay?.accumulation !== undefined
+}
+
+/** "Does the 2026-10-08 survivor-medical lean move THIS run's spend?" — the engine-pricing ledger's
+ *  `spending` family exposure read (ledger v11) for U17 §S4's staleness gate. The BUILT params of the
+ *  run this draft describes (route-unioned — the field is LIFELONG and Y-invariant, so the date
+ *  route's base params carry exactly what every swept candidate inherits through
+ *  `buildCandidateParams`' spread), read through the engine's OWN predicate
+ *  (`survivorMedicalLeanMoves` — budgetless ∧ couple ∧ sampled ∧ M > 0 ∧ S > 0 ∧ r ≠ 1), never a
+ *  re-derivation from the draft's fields (insights 080/081). FALSE means no survivor year moved:
+ *  the field absent or 0, a single person or a budget is byte-identical; r = 1 is unmoved up to one
+ *  ulp when M carries cents (never a displayed figure). TRUE includes r > 1 — refused when
+ *  committed, but a vault can still carry one (the codec checks finiteness only), and there the
+ *  lean moves the spend too. */
+export function survivorMedicalLeanForRun(d: ScenarioDraft): boolean {
+  const params = builtRunParams(d)
+  return params !== null && survivorMedicalLeanMoves(params)
 }
 
 /** "Does THIS run's stock weight READ the dated ticker-blend table?" — U17 §S4's exposure read
@@ -964,8 +992,8 @@ export function contributionsPricedForRun(d: ScenarioDraft): boolean {
  *  THREE CONJUNCTS, each a proof of consumption:
  *    1. A run exists at all (`builtRunParams`) — an unbuildable draft proves nothing either way.
  *    2. `householdStockWeight` is non-null. It returns null at zero accounts, at any unresolved
- *       blend, AND at a $0 total (line 317) — in which case `buildParams` takes the documented
- *       inert `stockWeight ?? 0` (line 715) and NO table row can move the answer.
+ *       blend, AND at a $0 total (line 318) — in which case `buildParams` takes the documented
+ *       inert `stockWeight ?? 0` (line 716) and NO table row can move the answer.
  *    3. Some account with real dollars resolves through the table — {@link resolveBlend}'s
  *       `findBlendRow` branch, called HERE with the SAME function, never a re-typed ticker list.
  *       A household of manual blends (every `?vault` plant's base seed today) is provably inert:
@@ -1020,7 +1048,10 @@ export function spendHelpKeyFor(d: ScenarioDraft): 'spendHelp' | 'spendHelpState
  *  'entered' → the person's own dollar; 'none' → an AFFIRMED $0 (the Medicare-Advantage arm,
  *  honest); 'typical' / 'unanswered' / an ABSENT field → the conservative-HIGH typical
  *  FUNDED — never a silent $0 (forbidden shape (b): absence deletes a real recurring bill,
- *  the cardinal optimistic sin; contrast oopMedical, whose absence is pessimistic-safe).
+ *  the cardinal optimistic sin; contrast oopMedical, whose absence deletes no bill — it lives
+ *  inside the spend figure — though since the 2026-10-08 survivor lean its blank is no longer
+ *  one-directional: the most pessimistic reading for an HSA household, the less cautious for
+ *  a budgetless couple without one).
  *  A mid-entry 'entered' with NO committed dollar also degrades to the TYPICAL (conservative
  *  — an unfinished answer never zeroes a bill; the R19 sanity rule names the half-answered
  *  state at the field before Save can persist it). */

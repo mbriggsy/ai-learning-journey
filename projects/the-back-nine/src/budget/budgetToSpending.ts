@@ -15,8 +15,10 @@
  * to the year-0 full total) includes OOP medical exactly as the un-itemized scalar
  * always has. ABSENT intake OOP ⇒ inject nothing (burned/062 — never a plausible
  * default; the overlay side is equally absent, which only disables the HSA cap —
- * the pessimistic-safe direction). The engine's `validateParams` re-asserts
- * containment fail-loud per year (the belt to this braces).
+ * the pessimistic-safe direction ON THIS BUDGET ARM; on the budgetless arm a blank
+ * also drops the 2026-10-08 survivor-medical lean, the less cautious reading for a
+ * couple without an HSA — `HealthIntakeV3.oopMedicalAnnual`). The engine's
+ * `validateParams` re-asserts containment fail-loud per year (the belt to this braces).
  *
  * PURITY + LAYERING: pure functions of their arguments; imports @shared only. The
  * engine consumes the OUTPUT via `SimulationParams.budget` — the per-path survivor
@@ -107,7 +109,7 @@ export function budgetYearZeroFullTotal(
  *  obvious computation — sum the user's typed lines — is WRONG in two independent ways, and both
  *  fail SILENTLY toward a rosier or a scarier number.
  *    1. It omits the INJECTED out-of-pocket medical. `compileBudget` adds `oopMedicalAnnual` to the
- *       STICKY floor on top of the typed lines (see :79-81), because a survivor's qualified medical
+ *       STICKY floor on top of the typed lines (see :81-83), because a survivor's qualified medical
  *       neither scales by the couple ratio nor ends. A raw line-sum therefore UNDERSTATES essentials
  *       by exactly M — the mirror of the double-count `anchorTarget` exists to prevent.
  *    2. It ignores tiering. Essentials is everything NOT discretionary — `compileBudget` routes a

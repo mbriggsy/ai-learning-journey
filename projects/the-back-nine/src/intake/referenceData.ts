@@ -11,16 +11,27 @@
  */
 
 /**
- * A calm reference for the OPTIONAL out-of-pocket-medical field (the HSA
- * qualified-cap sizing). HOUSEHOLD/year, EXCLUDING premiums (the field's own
- * semantics — premiums are added on top by the tool).
+ * A calm reference for the OPTIONAL out-of-pocket-medical field. HOUSEHOLD/year,
+ * EXCLUDING premiums (the field's own semantics — premiums are added on top by the
+ * tool). The field does two jobs: it sizes the HSA qualified cap, and it is held whole
+ * in a couple's survivor years (a budget's injected sticky floor; for a budgetless
+ * couple, the 2026-10-08 survivor-medical lean — `SimulationParams.survivorOopMedicalReal`).
+ * The hint figure itself stays engine-inert: it is SHOWN, never written into the field.
  *
  * Deliberately set just BELOW the federal average, for two reasons:
  *  1. honesty — the distribution is right-skewed, so the average overstates the
  *     typical household (no median-by-age is separately published);
- *  2. direction — a higher OOP entry sizes a LARGER HSA tax-free cap, which nudges
- *     the survival answer OPTIMISTIC; the cardinal rule is never calm-but-optimistic,
- *     so the hint must not anchor high.
+ *  2. direction — a higher OOP entry sizes a LARGER HSA tax-free cap, which nudges an
+ *     HSA household's survival answer OPTIMISTIC; the cardinal rule is never
+ *     calm-but-optimistic, so the hint must not anchor high.
+ *
+ * ⚑ THE DIRECTION PREMISE IS NO LONGER ONE-SIDED (2026-10-08). For a budgetless couple
+ * WITHOUT an HSA, the same higher entry is now the CAUTIOUS direction — the survivor lean
+ * holds more spend whole (+m·(1 − r) a survivor year, m = min(M, S)) and the cap is inert.
+ * The below-average anchor is kept for reason 1 (honesty about a right-skewed distribution)
+ * and for the HSA class, NOT because a low anchor is safe for everyone: it is not, and no
+ * copy may say so.
+ * Re-anchoring it is a copy decision (his), never a silent figure change here.
  */
 export const OOP_MEDICAL_TYPICAL_HOUSEHOLD = {
   /** Conservative round household anchor ($/yr, real). */

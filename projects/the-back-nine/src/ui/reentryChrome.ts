@@ -26,6 +26,7 @@ const PRICING_FAMILY_PHRASE: Readonly<Record<PricingFamily, CopyKey>> = {
   stateTax: 'stalenessPricingStateTax',
   contributions: 'stalenessPricingContributions',
   aca: 'stalenessPricingAca',
+  spending: 'stalenessPricingSpending',
   medicare: 'stalenessPricingMedicare',
 }
 

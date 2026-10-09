@@ -260,6 +260,57 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     expect(copy.dateFloorInversionNote, 'the control: a real directional claim trips the regex').toMatch(DIRECTIONAL)
   })
 
+  // --- The budgetless survivor-medical lean (council 2026-10-08, wf_7eb3303c-7f3). Its honesty
+  //     condition is in the WORDS: it is a DISCLOSED CONSERVATIVE LEAN (insight 055), so no string
+  //     may sell it as a correction, place it inside the research, or claim medical costs do not
+  //     fall; the Hawk's narrowed veto rides on the hint never again saying a blank is fine; and the
+  //     help line's old "only sizes your HSA" became false the day the figure took a second job. ---
+  it('the survivor-medical strings disclose the lean and never sell it (the 2026-10-08 council’s honesty condition, drift-pin)', () => {
+    const LEAN_STRINGS = [
+      copy.oopHelp,
+      slots.oopHint('3,000', '3,400'),
+      copy.assumptionSurvivorRatioHelp,
+      slots.oopExceedsSpend('6,500', '5,000'),
+      copy.stalenessPricingSpending,
+    ] as const
+    const OVERSELL = /\bcorrect(ion|ed|s)?\b|\bwithin blanchett\b|\b(medical|health( ?care)?|out-of-pocket)( health( ?care)?| medical)?( costs?| spending| bills?| expenses?)? (do|does|don['’]?t|doesn['’]?t|won['’]?t|will not|never) (not )?(fall|drop|shrink|go down|decrease|decline)\b|\bfix(ed|es)?\b/i
+    for (const s of LEAN_STRINGS) expect(s, `"${s}" oversells the lean`).not.toMatch(OVERSELL)
+    // NON-VACUITY: each banned framing trips the net — incl. the shipped strings' OWN vocabulary (out-of-pocket, spending, won't).
+    for (const bad of [
+      'This is a correction to the survivor ratio.', 'The share stays within Blanchett’s range.',
+      'Medical costs do not fall when one of you is on your own.', 'Health costs don’t shrink later.',
+      'Out-of-pocket costs don’t go down when one of you is on your own.', 'Your medical spending will not fall.',
+      'Out-of-pocket health costs won’t drop.', 'Healthcare costs do not decrease.',
+    ]) expect(bad, `"${bad}" must trip the net`).toMatch(OVERSELL)
+    // B3 — the hint says what a blank DOES (both of the figure's jobs), and the killed line stays dead.
+    const hint = slots.oopHint('3,000', '3,400')
+    expect(hint, 'the Hawk’s narrowed veto: no "blank is fine"').not.toMatch(/blank is fine|fine to leave|leaving it blank/i)
+    expect(hint).toMatch(/If you leave it blank/)
+    expect(hint, 'job 1: the HSA draw').toMatch(/HSA tax-free draw/)
+    expect(hint, 'job 2: the survivor years').toMatch(/whole if one of you is on your own/)
+    // …and it names NO direction (for an HSA household a blank is the most pessimistic reading; for a
+    // budgetless couple without one, the less cautious — measured, ship gate 1).
+    expect(hint, 'a blank is not one-directional').not.toMatch(/safer|more cautious|less cautious|pessimis|optimis|rosier|conservative|lower|higher/i)
+    // oopHelp: the containment contrast survives VERBATIM; "only sizes" is gone; the second job is named.
+    expect(copy.oopHelp).toContain('out-of-pocket costs should already be inside your spending figure')
+    expect(copy.oopHelp, 'the figure no longer has one job').not.toMatch(/\bonly\b/i)
+    expect(copy.oopHelp).toMatch(/keeps this amount whole/)
+    // The 2026-10-09 Caddie read: a household with no HSA must not be handed a phantom account, and
+    // the hold is the TOOL's choice, never a research finding (the council's honesty condition — the
+    // first draft's passive "are held whole", right after "Research on surviving spouses…", read as one).
+    expect(copy.oopHelp, 'the HSA job is conditional').toMatch(/If you have an HSA/)
+    expect(copy.oopHelp, 'the hold is named as the tool’s choice').toMatch(/the tool keeps this amount whole[^.]*deliberately cautious/)
+    // The survivor-ratio help names the held-whole medical and claims nothing about "the rest" (a
+    // budget's sticky lines do not take the share either).
+    expect(copy.assumptionSurvivorRatioHelp).toMatch(/The tool deliberately keeps any out-of-pocket health costs you entered whole/)
+    expect(copy.assumptionSurvivorRatioHelp, 'never the passive research-voiced draft').not.toMatch(/are held whole/)
+    expect(copy.assumptionSurvivorRatioHelp).not.toMatch(/\bthe rest\b/i)
+    // The M > S note is a NOTE: no directive, no figure in the template, both quoted figures annual.
+    const note = slots.oopExceedsSpend('§§§', '¤¤¤')
+    expect(lintCopy(note, ['advice-verb', 'false-certainty', 'free-numeral']), note).toEqual([])
+    expect(note.match(/a year/g)?.length, 'both dollars wear their period').toBe(2)
+  })
+
   // --- U17 §S4 — the `staleness*` WARNING REGISTER. The prefix's hedge/verdict EXEMPTION is
   //     documented law (copy.ts: chrome/note prefixes carry no odds and recommend nothing), which
   //     makes it the WEAKEST net in the catalog — and these are the strings that tell a household
@@ -347,9 +398,10 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     copy.stalenessPricingStateTax,
     copy.stalenessPricingContributions,
     copy.stalenessPricingAca,
+    copy.stalenessPricingSpending,
     copy.stalenessPricingMedicare,
   ] as const
-  /** The named method line as it can render: each family alone, and all five joined ("a, b … and e"). */
+  /** The named method line as it can render: each family alone, and all six joined ("a, b … and f"). */
   const METHOD_LINES = [
     ...PRICING_PHRASES.map((p) => slots.stalenessPricing(p)),
     slots.stalenessPricing(`${PRICING_PHRASES.slice(0, -1).join(', ')} and ${PRICING_PHRASES[PRICING_PHRASES.length - 1]}`),
@@ -574,6 +626,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     budgetRemoveLine: slots.budgetRemoveLine('Groceries'),
     stepDownNote: slots.stepDownNote(2030),
     oopHint: slots.oopHint('3,000', '3,400'),
+    oopExceedsSpend: slots.oopExceedsSpend('6,500', '5,000'),
     factsMore: slots.factsMore(3),
     verdictRoomClause: slots.verdictRoomClause('6,500'),
     verdictTrimClause: slots.verdictTrimClause('2,500'),
@@ -771,6 +824,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       slots.errAdditionsCeiling(S),
       slots.errRothStartPast(S),
       slots.budgetMedicalExceedsTotal(S, S),
+      slots.oopExceedsSpend(S, S),
     ]) {
       expect(lintCopy(rendered, ['free-numeral']), rendered).toEqual([])
     }
@@ -1152,7 +1206,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:732-742, 814-831), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:740-750, 822-839), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop

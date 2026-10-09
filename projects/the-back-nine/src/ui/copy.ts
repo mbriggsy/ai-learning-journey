@@ -246,8 +246,16 @@ export const copy = {
     'While one of you is still working, the tool counts no health costs for the one who has already stopped — which only holds if a plan at work covers them both.',
   qOopHeading: 'Out-of-pocket health costs',
   oopLabel: 'A typical year, out of pocket',
+  // The containment contrast stays VERBATIM ("should already be inside your spending figure" — the
+  // dedicated question must never invite double-exclusion). Since the 2026-10-08 survivor-medical
+  // council (wf_7eb3303c-7f3) the figure does TWO jobs, so the old "this only sizes your HSA's
+  // tax-free draw" became false: for every couple it is also held whole in the survivor years — the
+  // budget arm's injected sticky floor, and now the budgetless lean (`simulate.ts`
+  // `budgetlessSurvivorSpending`). The second sentence claims nothing about how the REST of the
+  // spending moves (a budget's sticky lines do not scale either). PILOT-DRAFTED — the council's
+  // ⚑ yours-to-close tier; never "correction", never a claim that medical costs do not fall.
   oopHelp:
-    'A rough yearly figure is plenty. Premiums are added on top by the tool, and out-of-pocket costs should already be inside your spending figure — this only sizes your HSA’s tax-free draw.',
+    'A rough yearly figure is plenty. Premiums are added on top by the tool, and out-of-pocket costs should already be inside your spending figure. If you have an HSA, the tool uses this to size its tax-free draw. And if one of you is on your own later, the tool keeps this amount whole rather than scaling it down — a deliberately cautious choice.',
   qWorkIncomeHeading: 'Income Medicare looks at',
   // C3 → Option B, simplified (2026-06-30, Briggsy's call): the working-year IRMAA-MAGI is the
   // already-entered salary (`earnedIncomeReal`, derived at `intakeMap.buildDateInput`) PLUS the
@@ -1123,7 +1131,7 @@ export const copy = {
     'That figure doesn’t count what you’d pay for drug and supplement plans, which this plan prices at about nothing.',
   // ⚠️ "the benchmark premium itself" WAS IN BOTH LISTS AND WAS FALSE — struck 2026-08-03.
   // The benchmark (SLCSP) is not merely counted, it is the ANCHOR of the whole credit:
-  // `intakeMap.ts:677` builds `slcsp` into the overlay params, `taxOverlay.ts:262` calls it "the
+  // `intakeMap.ts:678` builds `slcsp` into the overlay params, `taxOverlay.ts:262` calls it "the
   // §36B PTC basis", and `slidingScalePtc` (healthOverlay.ts:218-228) computes
   // `max(0, slcsp − applicable% × MAGI)` FROM it. Telling the reader the tool ignores the one
   // figure the discount is calculated from is the same false-negation shape O16 fixed on the Roth
@@ -1132,7 +1140,7 @@ export const copy = {
   // STRUCK, NOT REPLACED WITH AN AFFIRMATION, and that is deliberate. The O16 house pattern is
   // affirm-with-residual, but these two strings are gated on `statePriced` ALONE
   // (`stateTaxDisclosure.ts:144`) — they carry no ACA-priced axis, so the identical sentence also
-  // ships to a Medicare-only household (`intakeMap.ts:614-617`) that has no benchmark at all.
+  // ships to a Medicare-only household (`intakeMap.ts:615-618`) that has no benchmark at all.
   // "The benchmark is already in these numbers" would be a NEW false claim for that population.
   // Affirming here needs the three-state gate the Roth strings have; until then, silence is true.
   //
@@ -1334,8 +1342,13 @@ export const copy = {
   // The ONE real R7-editable methodology knob (the F1/F3 ruling). Its UNSAFE direction is
   // disclosed in the help — too LOW understates the survivor's need (methodology.ts).
   assumptionSurvivorRatioLabel: 'Spending if one of you is on your own, as a share of today’s',
+  // The middle sentence (council 2026-10-08, B3's second surface — saved vaults reach this panel):
+  // an entered out-of-pocket figure is held whole in the survivor years on BOTH arms (the budget's
+  // injected sticky floor; the budgetless lean). It deliberately says nothing about "the rest" — a
+  // budget's sticky lines (housing, utilities, other) do not take the share either, so "the share
+  // applies to the rest" would be untrue for a budgeted reader. PILOT-DRAFTED, yours-to-close.
   assumptionSurvivorRatioHelp:
-    'Research on surviving spouses lands around three-quarters of a couple’s spending. Set it lower and the later years can read easier than they may prove.',
+    'Research on surviving spouses lands around three-quarters of a couple’s spending. The tool deliberately keeps any out-of-pocket health costs you entered whole rather than scaling them by this share — the cautious choice. Set it lower and the later years can read easier than they may prove.',
   errSurvivorRatioBlank:
     'Survivor spending needs a share to run on — three-quarters is the researched default.',
   // The assumed heir bracket — leave-more ONLY (it ranks nothing under pay-less-tax). The help
@@ -1526,6 +1539,11 @@ export const copy = {
   stalenessPricingStateTax: 'your state tax',
   stalenessPricingContributions: 'your retirement-account contribution limits',
   stalenessPricingAca: 'your Marketplace health-plan costs',
+  // The `spending` family (ledger v11 — the 2026-10-08 survivor-medical lean): a budgetless couple's
+  // entered out-of-pocket medical is now held whole in the years one of them is on their own.
+  // PILOT-DRAFTED — the council's ⚑ yours-to-close tier (wf_7eb3303c-7f3: "the staleness phrase");
+  // it borrows the survivor-ratio label's own calm frame ("if one of you is on your own").
+  stalenessPricingSpending: 'your spending if one of you is on your own',
   stalenessPricingMedicare: 'your Medicare costs, including the income levels where the Medicare surcharge starts',
   // The nameless twin — a method change the household may or may not have crossed (saved ON its ship
   // day), or crossed with exposure no producer read can decide. Code-true: it never claims reference
@@ -2365,12 +2383,30 @@ export const slots = {
   /** The catch-up step-down disclosure names its year (D1). */
   stepDownNote: (calendarYear: number): string =>
     `From ${calendarYear}, contribution room narrows as a catch-up window closes — the plan assumes the lower limit from then on.`,
-  /** The optional OOP-medical reference hint (shown only while the field is
-   *  empty). The amount is pre-formatted by the caller (the ui layer can't import
-   *  the intake money formatter); the figure + its BLS provenance live in
-   *  `src/intake/referenceData.ts`. */
+  /** The optional OOP-medical reference hint (shown only while the field is empty). The amount is
+   *  pre-formatted by the caller (the ui layer can't import the intake money formatter); the figure
+   *  + its BLS provenance live in `src/intake/referenceData.ts`.
+   *  THE BLANK SENTENCE (council 2026-10-08, wf_7eb3303c-7f3, B3 — the Hawk's narrowed veto rides
+   *  on it): the old "Not sure? Leaving it blank is fine, too." is GONE and must not return — a
+   *  blank is not neutral. The line says what a blank DOES, mirroring `oopHelp`'s two jobs, and
+   *  claims NO direction: for a household with an HSA a blank is the most pessimistic reading
+   *  (measured — no qualified OOP draw), for a budgetless couple without one the less cautious
+   *  (no survivor lean). "From it": a 65+ owner's Medicare premiums still widen the HSA cap with
+   *  the field blank. "No out-of-pocket FIGURE", not "no health amount": a budgeted reader sees this
+   *  hint too, and a medical cost typed into an `other` essentials line is survivor-sticky, held
+   *  whole (alt. for his read: "…holds nothing whole from it…"). PILOT-DRAFTED, yours-to-close. */
   oopHint: (amountFormatted: string, averageFormatted: string): string =>
-    `Around $${amountFormatted} a year is a reasonable figure for a couple — a bit under the federal average of about $${averageFormatted} (Bureau of Labor Statistics, 2023). Not sure? Leaving it blank is fine, too.`,
+    `Around $${amountFormatted} a year is a reasonable figure for a couple — a bit under the federal average of about $${averageFormatted} (Bureau of Labor Statistics, 2023). If you leave it blank, the tool sizes no HSA tax-free draw from it, and keeps no out-of-pocket figure whole if one of you is on your own later.`,
+  /** The BUDGETLESS M > S note (council 2026-10-08, B2 — the engine clamps m = min(M, S) and never
+   *  refuses; this is the calm, NON-BLOCKING note when the household itself entered an out-of-pocket
+   *  figure above its whole spending figure). Mirrors the budget builder's F10 line
+   *  (`budgetMedicalExceedsTotal`): both dollars quoted in-sentence, annual on both sides (the OOP
+   *  question is yearly; the spend is quoted in its canonical annual form whatever unit it was typed
+   *  in), the containment contrast restated, no directive. Rendered by `questions.tsx`
+   *  `OopExceedsSpendNote` under the OOP field on the intake step and the AssumptionPanel row,
+   *  gated by the pure `oopExceedsBudgetlessSpend` (STRICTLY M > S). PILOT-DRAFTED, yours-to-close. */
+  oopExceedsSpend: (medicalFormatted: string, spendFormatted: string): string =>
+    `Your out-of-pocket figure, about $${medicalFormatted} a year, is more than your whole spending figure of about $${spendFormatted} a year. Out-of-pocket costs belong inside that spending, so one of the two may be worth a second look.`,
   /** The "still needed" strip's overflow counter — a self-describing list item
    *  (its own span), never a bare "(+N)" glyph fused onto the prior fact name. */
   factsMore: (n: number): string => `${n} more`,
@@ -2673,7 +2709,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:1059` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:1107` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -3095,7 +3131,7 @@ export const slots = {
    *  BITES it the way it bites its visual twin `recDeltaTypical`: the AT reader hears the same figures the
    *  sighted reader sees, so the same modal law must hold. A `recViz` prefix was rejected — it would red the
    *  three correctly hedge-free arm labels (`recVizWithLabel`/`recVizWithoutLabel`/`recVizRunnerUpLabel`,
-   *  copy.ts:1958-1965 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
+   *  copy.ts:1991-1998 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
    *  `isControlKey` was rejected — it breaks that predicate's "by prefix ALONE" law (copyGuard.ts:130). */
   recDeltaVizAria: (withoutLabel: string, withoutFig: string, withLabel: string, withFig: string, deltaFig: string): string =>
     `${withoutLabel} lands near about $${withoutFig}; ${withLabel} about $${withFig} — a difference of about $${deltaFig}.`,

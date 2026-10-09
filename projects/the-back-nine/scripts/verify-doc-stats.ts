@@ -372,7 +372,7 @@ export function citationSurfaces(cwd: string): string[] {
 }
 
 /** Index every source-ish file under the project (plus the monorepo-root workflow dir, where CI lives)
- *  by basename, so a bare `staleness.ts:734` resolves. */
+ *  by basename, so a bare `staleness.ts:744` resolves. */
 export function buildSourceResolver(cwd: string): (cited: string, from: number, to: number) => string[] | null {
   const byBase = new Map<string, string[]>()
   const SKIP = new Set(['node_modules', '.git', 'dist', 'temp', '.playwright-mcp', 'coverage'])

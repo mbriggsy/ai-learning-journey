@@ -210,6 +210,71 @@ export function ongoingIncomeForYear(
 }
 
 /**
+ * A BUDGETLESS household's spend in a survivor year (the first death has happened, ≥ 1 spouse
+ * alive) — the ONE home of the flat path's survivor composition, read by `cashTermsForYear` and by
+ * the pricing witness (`pricingWitness.test.ts`, the `spending` family).
+ *
+ *  - `oopMedical` ABSENT ⇒ `spending × ratio` — the LITERAL pre-2026-10-08 expression (ratio-on-
+ *    total), so every run without the field is byte-identical to every earlier run.
+ *  - PRESENT (M, the household-entered out-of-pocket medical) ⇒ m + ratio·(S − m), m = min(M, S):
+ *    the entered medical is held whole and only the rest scales (council 2026-10-08,
+ *    wf_7eb3303c-7f3). The SAME shape as the budget arm's `sticky + r·scalableEssentials` with M
+ *    injected sticky, so a budgetless household and its one-line `compileBudget` twin compose
+ *    byte-identically. A DISCLOSED CONSERVATIVE LEAN (insight 055): the survivor ratio is grounded
+ *    on total spending, medical included, and this holds the household's own figure out of it
+ *    because the research does not settle how survivor medical moves — the cautious side of an
+ *    open question, never a claim that it does not move.
+ *  - M = 0 ⇒ byte-identical to absent (S − 0 = S; 0 + x = x).
+ *  - M > S ⇒ CLAMPED to m = S (the survivor spends S), never refused: the spend solve's trim ladder
+ *    probes spends below an entered M on its own.
+ *
+ * PURE, draw-free (CRN-safe). The caller has already validated the inputs (`validateParams`).
+ */
+export function budgetlessSurvivorSpending(
+  spending: number,
+  ratio: number,
+  oopMedical: number | undefined,
+): number {
+  if (oopMedical === undefined) return spending * ratio
+  const m = Math.min(oopMedical, spending)
+  return m + ratio * (spending - m)
+}
+
+/**
+ * Does the 2026-10-08 survivor-medical lean MOVE this run's spend? — the engine-side exposure
+ * predicate the engine-pricing ledger's `spending` family reads (`ENGINE_PRICING_LEDGER` v11,
+ * through `intakeMap.survivorMedicalLeanForRun` → `stalenessExposure.ts`). Written once, here,
+ * beside the composition it describes (insight 020: one predicate, every consumer).
+ *
+ * True iff the field is present with M > 0 (M = 0 composes byte-identically), the run is
+ * budgetless (the field is refused beside a budget, restated so the predicate never leans on a
+ * second gate), the household is a COUPLE in SAMPLED longevity (a single person, or a fixed-horizon
+ * run, never reaches a survivor year), S > 0 (m = min(M, 0) = 0 composes r·0 either way), and
+ * r ≠ 1. Under exactly these the survivor-year spend moves by m·(1 − r) ≠ 0:
+ *  - r < 1 — the shipped case: the spend rises by m·(1 − r) (the cautious direction).
+ *  - r > 1 — refused when COMMITTED (the AssumptionPanel's `commitRefusing` through `sanity.ts`
+ *    survivor-ratio-ceiling), but neither `src/shared/scenarioCodec.ts` (finiteness only) nor
+ *    `buildParams` gates on sanity, so a vault that carries one reaches this engine. There the
+ *    spend FALLS by m·(r − 1) against v10's r·S, so it is priced too — a move either way is a move.
+ *  - r = 1 — m + (S − m), the couple spend: exact on whole-dollar figures, and one ulp off S on a
+ *    small share of cents-bearing (S, M) pairs (~0.75 %, measured 2026-10-09). Never a figure the
+ *    recompute shows, so FALSE here means "no survivor-year spend moved beyond one ulp" — a strict
+ *    byte-identity proof only where M is whole dollars.
+ */
+export function survivorMedicalLeanMoves(params: SimulationParams): boolean {
+  const m = params.survivorOopMedicalReal
+  return (
+    m !== undefined &&
+    m > 0 &&
+    params.budget === undefined &&
+    params.people.length === 2 &&
+    params.longevityMode === 'sampled' &&
+    params.annualSpendingReal > 0 &&
+    params.survivorSpendingRatio !== 1
+  )
+}
+
+/**
  * The full cash decomposition for one year: the survivor-adjusted spending, the earned-income
  * bridge (alive AND still working), the ongoing other-income gross (R40 · death-gated, NOT
  * retire-truncated — it keeps paying after work stops), the Social-Security benefit (summed while
@@ -255,7 +320,11 @@ export function cashTermsForYear(
   // P3·U9 — the per-year spend, two tracks. r (the survivor step-down selector) is realized
   // HERE, per path-year, off the sampled death timeline (insight 040 — the first death is a
   // stochastic per-path event) — never baked into the compiled profiles. Un-itemized (budget
-  // absent): the flat scalar with ratio-on-total — byte-identical to every pre-U9 run.
+  // absent): the flat scalar; its survivor years are `budgetlessSurvivorSpending` — r·S
+  // (ratio-on-total, byte-identical to every pre-U9 run) unless the household ENTERED its
+  // out-of-pocket medical M, which is then held whole (m + r·(S − m), m = min(M, S) — the
+  // 2026-10-08 council's DISCLOSED CONSERVATIVE LEAN, the budget arm's own sticky-medical
+  // composition brought to the flat path; insight 055).
   // Itemized: the three-component expansion at k = years since the household work-stop
   // anchor; `sticky` (survivor-fixed costs incl. the injected OOP-medical floor) deliberately
   // does NOT scale at widowhood (council 2026-07-02 — scaling the survivor's fixed costs by
@@ -277,7 +346,11 @@ export function cashTermsForYear(
   } else {
     spending = allAlive
       ? params.annualSpendingReal
-      : params.annualSpendingReal * params.survivorSpendingRatio
+      : budgetlessSurvivorSpending(
+          params.annualSpendingReal,
+          params.survivorSpendingRatio,
+          params.survivorOopMedicalReal,
+        )
     essentialsSpending = spending
   }
 
@@ -510,6 +583,17 @@ export function validateParams(params: SimulationParams): string | null {
   if (!Number.isFinite(params.stockWeight) || params.stockWeight < 0 || params.stockWeight > 1)
     return 'stockWeight out of [0,1]'
   if (!finiteNonNeg(params.survivorSpendingRatio)) return 'survivorSpendingRatio invalid'
+  // The budgetless survivor-medical lean (council 2026-10-08): a real dollar cost — finite ≥ 0 and
+  // inside the dollar domain, finiteness FIRST (insight 010: a NaN M would make `Math.min(M, S)`
+  // NaN and poison every survivor year's withdrawal). M > S is NOT refused (the composition clamps
+  // it). It is refused beside a BUDGET: the compiled budget already injects the same M into its
+  // sticky floor, so both riding would compose the medical twice — and the intake builder never
+  // emits the pair, so a run carrying both is a desynced or tampered caller (R19 indeterminate).
+  if (params.survivorOopMedicalReal !== undefined) {
+    if (!finiteNonNeg(params.survivorOopMedicalReal)) return 'survivorOopMedicalReal invalid'
+    if (params.budget !== undefined)
+      return 'survivorOopMedicalReal rides only a budgetless run (a budget already holds its medical sticky)'
+  }
   if (!Number.isInteger(params.paths) || params.paths <= 0) return 'paths must be a positive integer'
   if (!Number.isInteger(params.maxHorizonYears) || params.maxHorizonYears <= 0)
     return 'maxHorizonYears must be a positive integer'

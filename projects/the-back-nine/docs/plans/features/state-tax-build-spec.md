@@ -134,7 +134,7 @@ status: shipped
    arms: absent field, `'elsewhere'`, and each unbuilt roster state, all against the golden
    spine.
 6. **validateParams / R19:** the state code is an ENUM-MEMBERSHIP gate (the `filing` idiom,
-   simulate.ts:622) — an out-of-union value crossing the worker boundary returns the calm
+   simulate.ts:706) — an out-of-union value crossing the worker boundary returns the calm
    indeterminate, never a silently-selected branch; mirrored fail-loud backstop in
    `runTaxAwareDecumulation` for direct callers.
 7. **Survivor transition (insight 014):** the NC standard deduction moves $25,500 → $12,750
@@ -215,8 +215,8 @@ status: shipped
    own affirmation ships, rather than silently dressing a future SC household in Florida's
    "no state income tax" words.
 3. **FIVE disclosure homes, not the four this plan first named** (SIX since 2026-09-11 — the standalone verdict note, see the S5 note below) — `verdictMedicareResidual`
-   (copy.ts:1190), `rothOmissionsNote` (copy.ts:978), `controlHealthOmissionsNote`
-   (copy.ts:1142), the spendHelp branch (`spendHelpKeyFor`, intakeMap:981), and the
+   (copy.ts:1198), `rothOmissionsNote` (copy.ts:986), `controlHealthOmissionsNote`
+   (copy.ts:1150), the spendHelp branch (`spendHelpKeyFor`, intakeMap:981), and the
    RECOMMENDATION surface's disclosure rail (`recDiscStateTax`). The fifth was born unguarded:
    it shipped as the only household-DEPENDENT builder with no condition, so an NC household
    would read "this compares federal tax only" three inches under a spine that had just named

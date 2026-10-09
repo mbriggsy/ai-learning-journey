@@ -47,6 +47,7 @@ describe('exposureForDraft — the SPINE route (both healthcare reads exact: one
       aca: 'unpriced',
       contributions: 'unpriced',
       blend: 'unpriced',
+      spending: 'unpriced',
       pricedState: undefined,
     })
   })
@@ -108,6 +109,7 @@ describe('exposureForDraft — THE AGE/OVERLAY DIVERGENCE (insight 080’s scar,
       aca: 'unpriced',
       contributions: 'unpriced',
       blend: 'unpriced',
+      spending: 'unpriced',
       pricedState: undefined,
     })
   })
@@ -226,6 +228,7 @@ describe('exposureForDraft — no run at all', () => {
       aca: 'unknown',
       contributions: 'unknown',
       blend: 'unknown',
+      spending: 'unknown',
       pricedState: undefined,
     })
   })

@@ -41,6 +41,7 @@ const FAMILY_SET: Readonly<Record<PricingFamily, true>> = {
   medicare: true,
   aca: true,
   contributions: true,
+  spending: true,
 }
 const ALL_FAMILIES = Object.keys(FAMILY_SET) as readonly PricingFamily[]
 
@@ -138,18 +139,18 @@ describe('ENGINE_PRICING_LEDGER — the append-only shape the staleness reader l
     }
   })
 
-  it('PIN (moves with the next solver bump): the solver is at 10, the newest reprice row shipped with 7 — v8, v9 and v10 were ranking logic only, so no row', () => {
+  it('PIN (moves with the next solver bump): the solver is at 11, and the newest reprice row (the survivor-medical lean) shipped WITH 11 — a scored pricing change bumps both together', () => {
     const newestReprice = [...rows].reverse().find((r) => r.kind === 'reprice')!
     expect(
       { solverCodeVersion: SOLVER_CODE_VERSION, newestRepriceRow: newestReprice.solverCodeVersion },
-      'The IRMAA growth base (the newest reprice row) shipped with SOLVER_CODE_VERSION 7; v8 (2026-09-28) and v9 (2026-10-03) ' +
-        'moved only the candidate enumerator (the IRMAA, then the ACA-cliff and bracket-edge window anchors) and v10 (2026-10-05) only the ' +
-        'pay-less-tax objective statistic (income tax → all-in cost) — a recommendation’s ranking, never a figure a saved ' +
-        'household’s recompute shows — so it appended no row. This pin MOVES with the next solver bump: a SCORED ' +
+      'The budgetless survivor-medical lean (ledger v11, the `spending` family, 2026-10-08 council) is a SCORED pricing ' +
+        'change — every candidate’s survivor-year spend moves, and Tier 1 ranks on survival — so it bumped ' +
+        'SOLVER_CODE_VERSION 10 → 11 AND recorded 11 on its row. (Before it: the IRMAA growth base shipped with 7; v8, v9 ' +
+        'and v10 were ranking logic only and appended no row.) This pin MOVES with the next solver bump: a SCORED ' +
         'pricing change bumps the solver AND appends a ledger row recording that same version (re-pin both numbers ' +
         'together); a solver bump that is not a pricing change (ranking logic only) appends no row — re-pin only ' +
         '`solverCodeVersion` and say why in the commit.',
-    ).toEqual({ solverCodeVersion: 10, newestRepriceRow: 7 })
+    ).toEqual({ solverCodeVersion: 11, newestRepriceRow: 11 })
   })
 
   it('FIRST_UNAMBIGUOUS_SAVE_DAY is the day AFTER the newest ship day (a save ON a ship day is the ambiguous day)', () => {

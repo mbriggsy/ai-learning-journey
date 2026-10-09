@@ -65,6 +65,16 @@ A loosening may be reconsidered only after a pre-registration on a **fresh A′ 
 - **(a) The essentials floor, measured first.** Every arm so far keyed joint full-spend `survivalFraction`,
   not R21's essentials floor. Whether a ~0.1 pp full-spend gap touches the floor at all is unmeasured — it
   can reframe the whole Tier-1 quantity, in either direction.
+  ⚑ **MEASURED 2026-10-08** (`wf_327cd074-d06`; the record is the register's CLOSED entry *The tie-tolerance
+  ruling's known cost…*). On the 13 solvable seeds without a budget, the engine's essentials floor IS the
+  full-spend track (no floor pass runs without a budget — `simulate.ts:281`), so `borderline`'s repeated
+  ~0.1 pp loss is an essentials-floor loss and `nc`'s 4-path edge is a floor tie. On `budget`, the only
+  itemized solvable household, no full-spend discordant path between bf:0 and the P20 / T_crn members fails
+  the engine floor (0 of 52 on seed A; 0 of 1,522 across 28 seed sets) and the order reverses on it, though a
+  plan-as-executed essentials reading keeps bf:0 first. The dissent's first conjunct therefore holds on
+  `budget` alone and fails by construction elsewhere: **this ruling stands and the gate stays closed.** The
+  measurement exposed a separate question — on an itemized household D1 / R21's Tier-1 clause / contract #4
+  name the floor while the shipped Tier 1 and the headline read full spend — filed as its own register entry.
 - **(b) A membership rule** where every admitted member passes the integer pairwise CRN test against the
   max-survival candidate, with **no level gap closure**, and a multiplicity-adjusted z.
 - **(c) A per-household crown seed-stability gate**, not only a zero-hazard count (the knife-edge `budget`

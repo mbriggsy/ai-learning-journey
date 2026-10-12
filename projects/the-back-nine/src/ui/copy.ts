@@ -252,8 +252,9 @@ export const copy = {
   // tax-free draw" became false: for every couple it is also held whole in the survivor years — the
   // budget arm's injected sticky floor, and now the budgetless lean (`simulate.ts`
   // `budgetlessSurvivorSpending`). The second sentence claims nothing about how the REST of the
-  // spending moves (a budget's sticky lines do not scale either). PILOT-DRAFTED — the council's
-  // ⚑ yours-to-close tier; never "correction", never a claim that medical costs do not fall.
+  // spending moves (a budget's sticky lines do not scale either).
+  // PILOT-DRAFTED, KEPT as shipped by Briggsy 2026-10-12 (the council’s yours-to-close, closed).
+  // Never "correction", never a claim that medical costs do not fall.
   oopHelp:
     'A rough yearly figure is plenty. Premiums are added on top by the tool, and out-of-pocket costs should already be inside your spending figure. If you have an HSA, the tool uses this to size its tax-free draw. And if one of you is on your own later, the tool keeps this amount whole rather than scaling it down — a deliberately cautious choice.',
   qWorkIncomeHeading: 'Income Medicare looks at',
@@ -1346,7 +1347,8 @@ export const copy = {
   // an entered out-of-pocket figure is held whole in the survivor years on BOTH arms (the budget's
   // injected sticky floor; the budgetless lean). It deliberately says nothing about "the rest" — a
   // budget's sticky lines (housing, utilities, other) do not take the share either, so "the share
-  // applies to the rest" would be untrue for a budgeted reader. PILOT-DRAFTED, yours-to-close.
+  // applies to the rest" would be untrue for a budgeted reader.
+  // PILOT-DRAFTED, KEPT as shipped by Briggsy 2026-10-12 (the council’s yours-to-close, closed).
   assumptionSurvivorRatioHelp:
     'Research on surviving spouses lands around three-quarters of a couple’s spending. The tool deliberately keeps any out-of-pocket health costs you entered whole rather than scaling them by this share — the cautious choice. Set it lower and the later years can read easier than they may prove.',
   errSurvivorRatioBlank:
@@ -1541,7 +1543,8 @@ export const copy = {
   stalenessPricingAca: 'your Marketplace health-plan costs',
   // The `spending` family (ledger v11 — the 2026-10-08 survivor-medical lean): a budgetless couple's
   // entered out-of-pocket medical is now held whole in the years one of them is on their own.
-  // PILOT-DRAFTED — the council's ⚑ yours-to-close tier (wf_7eb3303c-7f3: "the staleness phrase");
+  // PILOT-DRAFTED, KEPT as shipped by Briggsy 2026-10-12 (the council's yours-to-close — wf_7eb3303c-7f3,
+  // "the staleness phrase" — closed);
   // it borrows the survivor-ratio label's own calm frame ("if one of you is on your own").
   stalenessPricingSpending: 'your spending if one of you is on your own',
   stalenessPricingMedicare: 'your Medicare costs, including the income levels where the Medicare surcharge starts',
@@ -2394,7 +2397,8 @@ export const slots = {
    *  (no survivor lean). "From it": a 65+ owner's Medicare premiums still widen the HSA cap with
    *  the field blank. "No out-of-pocket FIGURE", not "no health amount": a budgeted reader sees this
    *  hint too, and a medical cost typed into an `other` essentials line is survivor-sticky, held
-   *  whole (alt. for his read: "…holds nothing whole from it…"). PILOT-DRAFTED, yours-to-close. */
+   *  whole (alt. for his read: "…holds nothing whole from it…").
+   *  PILOT-DRAFTED, KEPT as shipped by Briggsy 2026-10-12 (the council’s yours-to-close, closed). */
   oopHint: (amountFormatted: string, averageFormatted: string): string =>
     `Around $${amountFormatted} a year is a reasonable figure for a couple — a bit under the federal average of about $${averageFormatted} (Bureau of Labor Statistics, 2023). If you leave it blank, the tool sizes no HSA tax-free draw from it, and keeps no out-of-pocket figure whole if one of you is on your own later.`,
   /** The BUDGETLESS M > S note (council 2026-10-08, B2 — the engine clamps m = min(M, S) and never
@@ -2404,7 +2408,8 @@ export const slots = {
    *  question is yearly; the spend is quoted in its canonical annual form whatever unit it was typed
    *  in), the containment contrast restated, no directive. Rendered by `questions.tsx`
    *  `OopExceedsSpendNote` under the OOP field on the intake step and the AssumptionPanel row,
-   *  gated by the pure `oopExceedsBudgetlessSpend` (STRICTLY M > S). PILOT-DRAFTED, yours-to-close. */
+   *  gated by the pure `oopExceedsBudgetlessSpend` (STRICTLY M > S).
+   *  PILOT-DRAFTED, KEPT as shipped by Briggsy 2026-10-12 (the council’s yours-to-close, closed). */
   oopExceedsSpend: (medicalFormatted: string, spendFormatted: string): string =>
     `Your out-of-pocket figure, about $${medicalFormatted} a year, is more than your whole spending figure of about $${spendFormatted} a year. Out-of-pocket costs belong inside that spending, so one of the two may be worth a second look.`,
   /** The "still needed" strip's overflow counter — a self-describing list item

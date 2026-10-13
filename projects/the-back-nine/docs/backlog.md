@@ -1654,6 +1654,33 @@ In the committed frame, taxable income is $0 in every window year at $0–$5k of
 
 - **The reading (rendered, `seed:health` + `seed:healthgap`, both viewports).** "And if you're on your own — On track · 9 of 10 futures your plan still covers you" names only the headwinds (income steps down about $1,830 a month; single-filer brackets) and never the spending the verdict assumes: 75 % of the non-medical spend plus the entered medical held whole (~$59,500 a year, ~$4,960 a month on `health` against $6,500). The only disclosure is door 6's "75 %" with no dollars. The verdict HOLDS for the modelled spend; the reader's implied spend is ~$1,540 a month higher — the sufficiency claim is read on the wrong basis.
 - **Prescription.** Measure first: what the survivor verdict reads if the survivor kept the couple's full spend, on every dev seed with a survivor phase (the size of the misreading's stake). Then the words (his): name the assumed survivor spend in dollars on the card or one tap from it (the details home, rule 38). Pairs with the Tier 2 *The survivor sentence on the health sheet quotes no dollar line…* — one survivor-dollar pass.
+- ⚑ **MEASURED 2026-10-11/12 (b9-2, `wf_cddde314-d13`)** — next: the words (his): the prescription's first step is DISCHARGED. Two legs, a refuter and a chair ran three independent harnesses, which agree path for path, at the app's spine run (2,000 paths, seed 0xbada55; `intakeMap.ts:724`, `devSeeds.ts:47`). Arm (b) sets `survivorSpendingRatio` to 1, so the survivor spends S exactly every year (measured). The same arm with the OOP scalar also removed gives byte-identical readings.
+  - **The card prints the engine's reading unchanged** (read: `SurvivorReadout.tsx:65-66`, `confidence.ts:174-187`). Survivor spend is constant across the horizon on every seed (measured):
+    - $4,875/mo on the retired family (0.75 × $6,500);
+    - $4,958.33 on the three health seeds (the $4,000 OOP held whole);
+    - $4,791.67 on `budget` (sticky $33,200 + 0.75 × $32,400).
+    - The gap to the couple's spend is $675–$2,000/mo (derived).
+  - **Full spend at the dev seed (measured): the band drops on 9 of 15 spine seeds.**
+    - `retired`, `pa`, `fl`, `elsewhere` and `nc`: On track · 9 to On the line · 7.
+    - `steer`: On track · 9 to On the line · 8.
+    - `borderline` and `order`: On the line · 7 to Off track · 5.
+    - `budget`: On the line · 7 to Off track · 6, on a gap of only $675/mo.
+    - `healthgap`: Off track · 6 to 5.
+    - No change on `health`, `healthnc`, `buckets`, `surplus` or `failing`. 0 paths do better.
+    - The two seeds this entry names do NOT change band; `health` is among the least exposed.
+  - **Aged plants (measured, chair).**
+    - `?vault=recold` ($7,000/mo): On the line · 8 to Off track · 6.
+    - `stale`: On the line · 8 to 7.
+    - `rec` reads the same as `retired`, `statestale` the same as `nc`.
+  - **The headline carries the same stake (measured).** 1,933–1,982 of 2,000 paths have a survivor phase, so on all 15 seeds, in both arms, the joint headline reads the same state and count as the survivor card. The ratio assumption sits under "On track", not only under "still covers you".
+  - **Robust.** Every cell is at least 11 paths from a visible change (derived). On the refuter's 30 alternate seeds the band still drops on the retired family (29/30), `steer`, `order` and `budget` (30/30), `nc` (27) and `borderline` (25). It drops on 0 for `health` and `healthnc`.
+  - **Correction.** The "On track · 9 of 10" above is `health`'s card (and `healthnc`'s). `healthgap` renders Off track · 6 of 10 (1263/1982) since v11; it read On the line · 7 (1280/1982) before.
+  - **Excluded:** the 9 date-route seeds. Each has a working member, so no survivor card renders (`answerView.ts:257`, `memoryModel.ts:874`).
+  - ⚑ NEGATIVE:
+    - never quote the survivor dollars as if they include premiums (ACA, Medicare and IRMAA are charged on top of S, unmeasured);
+    - never write "three-quarters of your spend" (false on `budget`: 87.7 %, derived);
+    - never quote a band-change count without its seed and 2,000-path run;
+    - never read arm (b) as a second reading of the shipped household (it moves the headline too).
 - ⚑ NEGATIVE: never present the survivor verdict as covering today's spend; never quote the share without the dollars it produces.
 
 ### The trim sentence ends "Above that, it starts to sit close to the line" under an OFF-TRACK verdict — the room sentence's tail reused, so a household at its own spend can read itself as near the line
@@ -1662,6 +1689,42 @@ In the committed frame, taxable income is $0 in every window year at $0–$5k of
 
 - **The reading (rendered, `seed:healthgap`).** "Spending less than $6,500 a month would let your plan cover more futures. At about $5,200 a month, it would read on track. Above that, it starts to sit close to the line." — under "Off track · 6 of 10". `verdictTrimSized` reuses `verdictRoomSized`'s third sentence, so the range "above $5,200" — which includes the household's own $6,500 — reads as "close to the line", softer than the Off-track heading. The killing refuter's reading: "starts to" marks only where the change begins.
 - **Prescription.** Measure where the band edges sit between the solved figure and the entered spend on every trim seed (does "close to the line" ever cover the entered spend?), then the words (his) — e.g. name the entered spend's own state in the tail. The sized trim sentence's frame was his 2026-09-25/26 read; keep its first two sentences.
+- ⚑ **MEASURED 2026-10-12 (b9-2, `wf_cddde314-d13`) — the prescription's first step DISCHARGED; next: the words (his).** Run by two independent legs, one adversarial refuter and a chair re-run. Leg A ran the store's own pipeline in-process. Leg B re-derived the predicate in its own code over `simulate`. The refuter called the worker entry points directly. Read-only; Node; 2,000 paths; seed 0xbada55.
+  - **Verdict.** "Close to the line" never covers the entered spend, yet "Above that" always spans it.
+    - The sized trim sentence renders only when the entered spend reads off-track (read): `trim` means off-track (`confidence.ts:233-244`), and the sized form needs shown ≡ raw (`verdictSentence.ts:72-75`).
+    - So every render breaches the ⚑ NEGATIVE at the household's own spend.
+  - **Routing (read + measured).**
+    - Of the 24 dev seeds, only `healthgap` renders the sentence; all three harnesses agree.
+    - Date-route seeds never dispatch the lane (`memoryModel.ts:823`, `:886-892`).
+    - `borderline`, `order` and `budget` get `verdictHoldClause` (`copy.ts:2542`).
+    - The plants stale, statestale, rec and recold never reach trim.
+  - **`healthgap`** (entered $6,500; Off track 6/10; 0.6385 rounds to 0.64, 13 paths short of the 0.645 edge):
+    - F is $5,200 after 8 probes, which reproduces the render.
+    - Exhaustive $10 sweep (measured, monotone):
+      - room through $5,250;
+      - on track with p10 $0 (the hold reading) $5,260–5,590;
+      - borderline $5,600–6,480;
+      - off-track from $6,490.
+    - Over ($5,200, $6,500]: room 5, hold 34, borderline 89, off-track 2 of 130 (3.8 / 26.2 / 68.5 / 1.5 %, derived).
+    - On the app's $100 grid: 0 / 3 / 9 / 1. The entered spend is the only off-track point.
+  - **The walk's `retired` @ $10,000 frame** (`e2e/caddie-walk.spec.ts:668-693`; not a dev seed):
+    - F is $6,400.
+    - Edges at $6,410, $6,670 and $7,380.
+    - Over ($6,400, $10,000]: hold 26, borderline 71, off-track 263 of 360 (7.2 / 19.7 / 73.1 %, derived).
+  - **Alternate CRN seeds (measured, shipped solve).**
+    - `healthgap` renders the sentence on 17 of 24: 11 of 12 on 0xbada56–61 and 6 of 12 on a disjoint set. The rest read borderline and get the hold clause.
+    - On all 17, F is $5,100–5,200 and the entered spend is the only off-track $100 point.
+    - `retired@10k` on 6 seeds: about 70–75 % off-track.
+  - **Rounding (read).**
+    - The entered spend rounds to $10 (`money.ts:28-29`, `:43-45`).
+    - F is never re-rounded (`money.ts:35-40`). It is a $100-grid floor, so the true room edge sits $50–59 above $5,200.
+  - **Shape.**
+    - The off-track share of (F, entered] scales with how deep the entered spend sits: 1.5 % on `healthgap`, 73 % on the walk frame.
+    - The shipped solve computes only F, never the off-track edge.
+  - ⚑ NEGATIVE:
+    - never quote an off-track edge the lane did not solve;
+    - never size the fix to `healthgap`'s 1.5 %;
+    - never let a reworded tail drop the sentence's first two sentences (his 2026-09-25/26 frame).
 - ⚑ NEGATIVE: never let the tail's state contradict the heading over the household's own spend.
 
 ### No sourced NON-medical survivor ratio — Blanchett's ⅔–¾ is measured on TOTAL spending, so holding entered medical whole on top of it (both the itemized arm and the ruled budgetless arm) leans conservative by an unmeasured amount

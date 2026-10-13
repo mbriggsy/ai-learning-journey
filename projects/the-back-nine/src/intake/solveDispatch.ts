@@ -23,7 +23,10 @@
  *                     survival-tie-tolerance.md`, council `wf_6e72eca9-c20`, 2026-10-06): every
  *                     loosening measured on v10 that moves `borderline` / `budget` (the pre-specified
  *                     CRN-paired `solverSelectionTieZ` test, gap-closed membership, a 20-path count)
- *                     crowns a REPEATED small survival loss there, which R21's absolute floor forbids;
+ *                     crowns a REPEATED small survival loss there, which R21's survival-first order
+ *                     forbids (Tier 1 — on the retired route the hero's own full-plan survival — is
+ *                     never traded for the goal; ⚑ re-grounded 2026-10-12, council wf_cfa961da-13c,
+ *                     wording only — T0 not reopened; was "R21's absolute floor");
  *                     a 5-path count moves only `nc` but is not CRN-keyed or pre-registered. The known cost is
  *                     the winner's curse — at 0 the crown can sit on a CRN-unresolvable edge (`nc`, a
  *                     true tie, ~$10k all-in left on the table), so no copy may call the crown safer or

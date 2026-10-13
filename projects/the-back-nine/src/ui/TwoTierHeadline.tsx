@@ -1,15 +1,17 @@
 /*
- * src/ui/TwoTierHeadline.tsx — the U9b two-tier essentials-relief statement (R20/R21's
- * lexicographic reading, council 2026-07-02).
+ * src/ui/TwoTierHeadline.tsx — the U9b essentials-relief statement (R20's essentials floor
+ * reading — reported beside the hero, never ranked; council 2026-07-02).
  *
  * WHAT "TWO-TIER" MEANS HERE. The headline composes TWO engine-tagged readings over the
- * same six-state enum — never a 7th state. Tier 1 (the full-lifestyle verdict) stays the
- * HERO exactly as shipped: word + glyph + count + magnitude, all full-track, rendered by
+ * same six-state enum — never a 7th state. The HERO (the full-lifestyle verdict) stays
+ * exactly as shipped: word + glyph + count + magnitude, all full-track, rendered by
  * ConfidenceStatement (the Honesty-Hawk veto on essentials-as-hero is honored by this
  * arrangement — a no-finance spouse must never read the easier floor number as the
- * headline answer). THIS component is Tier 2: the SUBORDINATE essentials-floor relief
+ * headline answer). THIS component is the RELIEF LINE: the SUBORDINATE essentials-floor
  * line, in the SurvivorReadout choreography (eyebrow, smaller word, same vocabulary), so
- * the two tiers read as one voice, never two competing faces.
+ * the two read as one voice, never two competing faces. (Named "the hero" / "the relief
+ * line", never "Tier 1" / "Tier 2" — those are D1's objective tiers, and the solver's
+ * Tier 1 is the hero's full-plan survival, not this line; council wf_cfa961da-13c.)
  *
  * WORD + COUNT ONLY. `floorReading` is a bare Headline — no DollarAdjustment exists for
  * the floor, and there is no "trim to make the floor safe" figure. Borrowing the

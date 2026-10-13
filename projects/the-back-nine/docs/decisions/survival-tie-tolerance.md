@@ -41,7 +41,11 @@ that moves `borderline` / `budget` (T_crn, gap-closed T_crn, P20) carries a *sys
 candidate with more dollars and less survival; the one that does not (P5, which moves only `nc`) is not
 CRN-keyed and not pre-registered, so it cannot satisfy contract #2 either. Under R21's absolute
 floor and the cardinal rule, crowning a repeated survival loss is the sin; missing ~$10k on a true tie is
-the named, lesser defect. The Honesty Hawk's veto covers every loosening (T_crn, gap-closed T_crn and P20 for the repeated loss;
+the named, lesser defect. ⚑ **Re-grounded 2026-10-12** (council `wf_cfa961da-13c`, 8/10 — wording only,
+T0 is NOT reopened; flagged with the D1 amendment, RATIFIED by Briggsy 2026-10-12): "R21's absolute floor"
+now reads **R21's survival-first order** — on the retired route Tier 1 is full-plan survival, the
+hero's own quantity, and it is never traded for the goal. Every arm here was measured on that full key,
+so the ruling's evidence is unchanged; reopening T0 still needs the fresh A′/B′ pre-registration below. The Honesty Hawk's veto covers every loosening (T_crn, gap-closed T_crn and P20 for the repeated loss;
 P5 for its unregistered, non-CRN shape) and does not touch T0.
 
 ## The known cost — the winner's curse
@@ -75,6 +79,11 @@ A loosening may be reconsidered only after a pre-registration on a **fresh A′ 
   `budget` alone and fails by construction elsewhere: **this ruling stands and the gate stays closed.** The
   measurement exposed a separate question — on an itemized household D1 / R21's Tier-1 clause / contract #4
   name the floor while the shipped Tier 1 and the headline read full spend — filed as its own register entry.
+  ⚑ **RULED 2026-10-12** (council `wf_cfa961da-13c`, 8/10; that entry is CLOSED): KEEP the full key —
+  on the retired route Tier 1 is full-plan survival, and the essentials floor is reported, never ranked.
+  So "R21's essentials floor" above is now the reported reading, not R21's quantity, and this gate's
+  premise ("not R21's essentials floor") is superseded; the D1 / R21 amendment is ⚑ RATIFIED by
+  Briggsy 2026-10-12. The date-route key is ruled with the working-route solve.
 - **(b) A membership rule** where every admitted member passes the integer pairwise CRN test against the
   max-survival candidate, with **no level gap closure**, and a multiplicity-adjusted z.
 - **(c) A per-household crown seed-stability gate**, not only a zero-hazard count (the knife-edge `budget`

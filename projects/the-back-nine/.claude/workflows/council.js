@@ -116,7 +116,7 @@ const CHARTERS = {
     '',
     'YOU OPTIMIZE FOR: the recommendation being GENUINELY SOUND retirement planning, not merely well-built. You hold the domain reality the engine is modeling:',
     '- Withdrawal sequencing and Roth conversion as coupled levers — fill brackets now vs. RMDs + IRMAA later.',
-    '- The survival floor vs. lifestyle trade-off (the lexicographic objective made real for a household).',
+    '- The survival-vs-surplus trade-off: on the retired route Tier 1 ranks full-plan survival (the hero\'s own X of 10) and is never traded for the goal; the essentials floor is reported (relief line, floor date), never ranked, and can sit below the full track (R27).',
     '- Social Security claiming and the survivor picture — the widow(er) tax cliff when one spouse dies and brackets halve.',
     '- The cliffs that INVERT winners: the 400% FPL ACA subsidy cliff (pre-65), IRMAA brackets (post-65).',
     '- Sequence-of-returns risk and the optimizer curse — why a single lucky path must never be sold as a plan.',

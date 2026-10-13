@@ -83,7 +83,8 @@ export const productionMarket: Sourced<MarketAssumptions> = sourced(
 /**
  * Survivor spending as a fraction of the couple's spending after the first death.
  * Grounded ~0.75 (planning range 67–80%; Blanchett widowhood literature). It scales
- * the survivor's spending and so rides the Tier-1 survival floor — its DANGEROUS
+ * the survivor's spending on both tracks and so rides Tier 1's full-plan survival (and
+ * the reported essentials floor) — its DANGEROUS
  * direction is documented: too LOW understates the survivor's need (the unsafe
  * direction for a survivor product), so the default is never a silent un-sourced
  * number, and a low user edit warrants a calm note (the UI half, P3).

@@ -1,7 +1,7 @@
 /*
  * src/intake/GoalPicker.tsx — Act-4 · U16 §S2: the Tier-2 GOAL choice that PRECEDES the solve.
  *
- * The recommend-second beat optimizes a surplus goal ABOVE the survival floor (R21); which goal is a
+ * The recommend-second beat optimizes a surplus goal ABOVE Tier 1's full-plan survival (R21); which goal is a
  * USER choice, never a silent default (burned/062 — an unset sentinel, never a plausible stand-in).
  * Activating the invited affordance opens THIS dialog first; a confirmed pick writes `chosenGoal` and
  * dispatches the solve (the caller owns the model write + dispatch, the ControlSheet-family discipline).

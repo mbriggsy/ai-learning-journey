@@ -254,14 +254,14 @@ export function expandRothConversion(
 
 // ---------------------------------------------------------------------------
 // The recommendation Tier-2 goal (Act-4 · U15 — the surplus goal the solver
-// optimizes ABOVE the survival floor; the chosen-goal field the second beat sets).
+// optimizes ABOVE Tier 1, full-plan survival; the chosen-goal field the second beat sets).
 // THE ONE canonical membership surface (the STATE_ROSTER precedent): the engine's
 // ranking objective (`evaluate.ts`'s `OracleGoal` aliases this), the codec's enum
 // gate, and the intake GoalPicker all read THIS array — a goal added to the union
 // cannot silently skip them (the derived type + the codec's needVocab both track it).
 // ---------------------------------------------------------------------------
 
-/** The Tier-2 surplus goals the recommender ranks on above the survival floor (R21):
+/** The Tier-2 surplus goals the recommender ranks on above Tier 1's full-plan survival (R21):
  *  `leave-more` = maximize the after-tax-to-heirs bequest (first-order §1014/IRD at the
  *  disclosed heir bracket — never the gross figure); `pay-less-tax` = minimize lifetime
  *  tax paid. (`live-bigger-now` is a plan-named third goal deferred past U15 — it ranks a
@@ -563,8 +563,10 @@ export const BUDGET_CATEGORIES = [
 ] as const
 export type BudgetCategory = (typeof BUDGET_CATEGORIES)[number]
 
-/** The two lexicographic tiers (R20): essentials = the survival floor the FLOOR track
- *  evaluates; discretionary = the surplus the full track adds. Never a third tier. */
+/** The budget's two line tiers (R20): essentials = the lines the FLOOR track (the
+ *  essentials-only reading — reported, never ranked) evaluates; discretionary = what the full
+ *  track adds. NOT the objective's tiers: the solver's Tier 1 ranks the FULL track's survival
+ *  (D1 / R21, council wf_cfa961da-13c 2026-10-12). Never a third tier. */
 export const BUDGET_TIERS = ['essentials', 'discretionary'] as const
 export type BudgetTier = (typeof BUDGET_TIERS)[number]
 
@@ -979,13 +981,19 @@ export interface SurvivorConditioned {
  *  decumulation + overlay pass per path (the essentials-only spend vector on the SAME shared
  *  draws/deaths/returns), so the bandFan byte-identity-guard pattern proves nothing here; the
  *  floor's correctness guard is the degenerate-identity golden (essentials ≡ full ⇒ the two
- *  tracks agree exactly) plus its presence companions. Every full-track success is an
- *  essentials-track success on the same path (essentials spend ≤ full spend per year on
- *  identical draws), so `floor.survivalFraction ≥ survivalFraction` path-for-path — the
- *  reachable tier-ordering law U9 pins (the cliff-driven inversion needs U10's conversions). */
+ *  tracks agree exactly) plus its presence companions. On the overlay-free spine (every overlay
+ *  OFF, as the U9 pin runs) every full-track success is an essentials-track success on the same
+ *  path (essentials spend ≤ full spend per year on identical draws), so `floor.survivalFraction ≥
+ *  survivalFraction` path-for-path there — the tier-ordering law U9 pins. It is NOT a law under
+ *  the overlays, nor on the retired route as such: R27's 100%-FPL PTC floor can invert it (less
+ *  spend → lower MAGI → no PTC), and U10's conversions — the solver's own candidates — make that
+ *  reachable in principle, so the full track is no lower bound on the floor (council
+ *  wf_cfa961da-13c, 2026-10-12). Unmeasured on a real household — the pre-65 ACA probe. */
 export interface FloorTrack {
   /** Fraction of paths whose portfolio funded the ESSENTIALS-ONLY spend every year.
-   *  Continuous in [0, 1], pre-quantization — the Tier-1 floor statistic. */
+   *  Continuous in [0, 1], pre-quantization — the essentials-floor statistic: reported (the
+   *  relief line, the floor date), never ranked. The solver's Tier 1 reads the FULL
+   *  {@link Distribution.survivalFraction} (D1 / R21, council wf_cfa961da-13c 2026-10-12). */
   readonly survivalFraction: number
   /** Per-path depletion year AGAINST THE ESSENTIALS-ONLY SPEND (or {@link NEVER_DEPLETED}).
    *  Length === paths, paths-aligned with the full track's `depletionYears`. */
@@ -1834,7 +1842,7 @@ export interface ScenarioV3 {
    *  identically and an untouched next-day session still reads clean. */
   readonly stateTaxVintage?: StateTaxVintageV3
   /** Act-4 · U15 — the recommender's chosen Tier-2 goal (the surplus goal the solver ranks
-   *  ABOVE the survival floor; R21). ADDITIVE-OPTIONAL within schemaVersion 3 (the
+   *  ABOVE Tier 1's full-plan survival; R21). ADDITIVE-OPTIONAL within schemaVersion 3 (the
    *  budget/rothConversion/retirementState tolerant-reader precedent — a pre-U15 vault lacks
    *  the field and decodes unchanged; NO schemaVersion bump — the runway supersession ruled the
    *  Act-4 bump narrative counterfactual). THE EXPLICIT UNSET SENTINEL IS ABSENCE (burned/062):
@@ -2036,8 +2044,8 @@ export interface SavedRecommendationVerdictV3 {
    *  because "we looked and your current strategy already wins" is a DIFFERENT remembered
    *  verdict from "switch to this", and the card must not re-tell it as a switch. */
   readonly noChange: boolean
-  /** The 10/10 → surplus pivot signal: the run was decided on the surplus goal rather than the
-   *  survival floor. Persisted for the same reason as `noChange` — it changes what the
+  /** The 10/10 → surplus pivot signal: the run was decided on the surplus goal rather than
+   *  Tier 1's full-plan survival. Persisted for the same reason as `noChange` — it changes what the
    *  remembered sentence MEANS, not merely how it looks. It is ALSO half of the axis derivation
    *  above (`gradeAxisFor(goal, surplusRegime)`), so it must never be re-derived record-side. */
   readonly surplusRegime: boolean

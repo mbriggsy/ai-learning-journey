@@ -16,9 +16,9 @@ The name is the metaphor: the **back nine** is the second half of the round. Eve
 
 Built in order — this is the whole arc, beat by beat:
 
-1. **Tell me where I stand.** *"Your essentials are safe in 10 of 10 futures; your full lifestyle holds in 7 of 10."* A distribution of futures, rendered as a number a human can feel — not a single false-precision dollar amount.
+1. **Tell me where I stand.** *"Your full plan holds in 7 of 10 futures; just the essentials, in 9 of 10."* A distribution of futures, rendered as a number a human can feel — not a single false-precision dollar amount.
 2. **Then: here's what we'd do about it.** A recommended, confidence-graded strategy over two coupled tax controls — withdrawal **sequencing** and Roth **conversion** — that funds your budget the tax-smartest way. The full reasoning is always one tap down, never forced on you.
-3. **You stay the pilot.** Safety is the default floor. Above it, *you* pick the goal — leave more or pay less tax (a third, *live bigger now*, is specified but [not yet built](docs/backlog.md#the-third-goal--live-bigger-now-doesnt-exist)) — and every recommendation wears its own hedge on the headline.
+3. **You stay the pilot.** Safety comes first and is never traded away. Above it, *you* pick the goal — leave more or pay less tax (a third, *live bigger now*, is specified but [not yet built](docs/backlog.md#the-third-goal--live-bigger-now-doesnt-exist)) — and every recommendation wears its own hedge on the headline.
 
 *v1 limits, named rather than hidden: beyond the unbuilt third goal, the recommendation reaches only households where everyone has already retired, so a still-working household gets its date but no strategy yet. Both are open entries in [the register](docs/backlog.md): "The third goal — 'live bigger now' doesn't exist" and "Date-route recommend-second parity — the working household gets no strategy at all".*
 
@@ -79,7 +79,7 @@ The MVP is four acts. Each is a real milestone with its own plan, gates, and ver
 
 Act 1's engine is pinned against primary sources: every dated tax and healthcare figure carries an IRS / CMS / HHS / SSA / eCFR citation (and a directional-until-pinned flag where one isn't yet locked), and cohort mortality is re-derived 1:1 from the SSA 2024 Trustees-Report cohort life tables (Alternative 2) for the primary household's birth cohorts (male 1969, female 1972). Every household reads that one pair of curves today. Per-person birth-year keying is not built, so an older household's longevity is slightly overstated (conservative) and a younger one's slightly understated (optimistic). The guided intake delivers a **live, provisional Monte Carlo reading that sharpens as you answer each question**, proven end-to-end in real Chromium under the enforced CSP.
 
-The engine and intake carry **3959 tests across 207 files**, all green, alongside lint, bundle-budget, ACA-freshness, state-tax-freshness, browser-CSP, and real-browser vertical-fit gates. Per-unit feature detail lives once in [the roadmap's You-Are-Here table](docs/roadmap.md#the-you-are-here-table) — this file never enumerates it.
+The engine and intake carry **3970 tests across 207 files**, all green, alongside lint, bundle-budget, ACA-freshness, state-tax-freshness, browser-CSP, and real-browser vertical-fit gates. Per-unit feature detail lives once in [the roadmap's You-Are-Here table](docs/roadmap.md#the-you-are-here-table) — this file never enumerates it.
 
 ---
 

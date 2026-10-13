@@ -37,6 +37,71 @@ const SURVIVAL_MUST_CATCH: readonly string[] = [
   'Your current order is riskier.',
 ]
 
+/** The essentials-claim lexicon (council wf_cfa961da-13c, 2026-10-12 — the itemized Tier-1 quantity
+ *  ruling, 8/10). On the retired route the solver's Tier 1 ranks FULL-plan survival, the headline's own
+ *  statistic; the essentials-only reading (`FloorTrack`) is reported (the relief line, the floor date)
+ *  and NEVER ranked — and the full-plan count is no lower bound on it (R27's 100%-FPL PTC inversion can
+ *  put the floor below the full track). No tier guarantees coverage. So no string may claim the
+ *  essentials are always / guaranteed covered, covered in every future, protected or ranked first by
+ *  the pick, never short / out / at risk, covered "either way" or "for life", or "10 of 10" (the
+ *  display caps at 9). TEST-LOCAL by design: the ruling carried NO copy change and NO behavior
+ *  change, so this is a tripwire over today's catalog, slots and disclosures, not a new `copyGuard.ts`
+ *  gate — promote it beside `SURVIVAL_CLAIMS` if a surface ever lints live copy against it. It reads
+ *  the same ’/‘-normalized text `lintCopy` reads. Each pattern owns a sample in ESSENTIALS_MUST_CATCH
+ *  that no other pattern catches (the ownership arm), so deleting any one reds the suite. */
+const ESSENTIALS_CLAIMS: readonly RegExp[] = [
+  /\b(essentials|basics|necessities)\b[^.?!;]{0,40}?\b(always|guaranteed|assured|certain)\b/i,
+  /\b(guarantees?|ensures?|promises?|secures?|locks? in)\s+(that\s+)?(all\s+(of\s+)?)?(your|the)\s+(essentials|basics|necessities)\b/i,
+  /\b(protects?|protected|protecting|shields?|safeguards?)\s+(all\s+(of\s+)?)?(your|the)\s+(essentials|basics|necessities)\b/i,
+  /\bkeeps?\s+(all\s+(of\s+)?)?(your|the)\s+(essentials|basics|necessities)\s+(safe|covered|funded|paid|protected|secure)\b/i,
+  /\b(essentials|basics|necessities)\b[^.?!;]{0,40}?\b(in|across|through)\s+(every|all|each)\s+(single\s+)?(futures?|scenarios?|outcomes?|paths?|markets?)\b/i,
+  /\b(in|across)\s+(every|all|each)\s+(single\s+)?(futures?|scenarios?|outcomes?|paths?|markets?)\b[^.?!;]{0,40}?\b(essentials|basics|necessities)\b/i,
+  /\b(never|won't|will not|can't|cannot)\s+(ever\s+)?(run|go|fall|come up|be)\s+short\s+(on|of)\s+(your\s+|the\s+)?(essentials|basics|necessities)\b/i,
+  /\bnever\s+(drops?|falls?|dips?|goes|go|fall|drop|dip)\s+below\s+(the\s+|your\s+)?(survival\s+|essentials\s+|safety\s+)?floor\b/i,
+  /\b(essentials|basics|necessities)\b[^.?!;]{0,40}?\b(no matter what|whatever happens|come what may)\b/i,
+  /\b(essentials|basics|necessities)-first\b/i,
+  /\b(puts?|ranks?|ranked|prioriti[sz]e[sd]?|picked|chose|chosen)\b[^.?!;]{0,30}?\b(essentials|basics|necessities)\s+(first|ahead)\b/i,
+  /\b(essentials|basics|necessities)\b[^.?!;]{0,40}?\b(10|ten) (of|out of) (10|ten)\b|\b(10|ten) (of|out of) (10|ten)\b[^.?!;]{0,40}?\b(essentials|basics|necessities)\b/i,
+  /\b(essentials|basics|necessities)\s+(are|is|stay|stays|remain|remains|will be|will stay)\s+(safe|secure|protected|untouchable)\b/i,
+  /\b(essentials|basics|necessities)\b[^.?!;]{0,30}?\b(never|won't|will not|can't|cannot)\s+(ever\s+)?(run\s+(out|short|dry)|(be\s+)?at\s+risk|go\s+unfunded)\b/i,
+  /\b(essentials|basics|necessities)\b[^.?!;]{0,40}?\b(either way|for life|whatever the markets?\s+(do|does))\b/i,
+]
+
+/** The essentials-claim corpus — every phrasing a card could use to sell the pick as essentials-first or
+ *  the essentials as certain. Each ESSENTIALS_CLAIMS pattern owns at least one sample no other catches. */
+const ESSENTIALS_MUST_CATCH: readonly string[] = [
+  'Your essentials are always covered.',
+  'The basics are guaranteed, whatever the market does.',
+  'This plan ensures your essentials are paid.',
+  'The order we picked locks in the basics.',
+  'The recommended order protects your essentials.',
+  'It keeps your basics covered while you pay less tax.',
+  'Your essentials are covered in every future.',
+  'In every future we ran, your basics hold.',
+  'You won’t run short on the essentials.',
+  'The plan never drops below the survival floor.',
+  'Your essentials are covered no matter what.',
+  'An essentials-first plan.',
+  'We picked this order to put your essentials first.',
+  'Essentials safe in 10 of 10 futures.',
+  'Your basics are safe.',
+  'Your essentials will never run out.',
+  'The essentials never run dry.',
+  'Your essentials are never at risk.',
+  'Your essentials are covered either way.',
+  'Your essentials are covered for life.',
+  'Your basics are taken care of, whatever the markets do.',
+]
+
+/** Every ESSENTIALS_CLAIMS match in one string (empty = clean) — `lintCopy`'s ’/‘ normalization, mirrored. */
+function essentialsClaims(text: string): string[] {
+  const t = text.replace(/[’‘]/g, "'")
+  return ESSENTIALS_CLAIMS.flatMap((re) => {
+    const m = re.exec(t)
+    return m ? [m[0]] : []
+  })
+}
+
 /*
  * copyGuard enumerates the catalog and asserts every entry passes its applicable gates. THREE
  * gates are UNIVERSAL (a sure outcome / an advice imperative / a survival claim — sins in EVERY voice): they are the only
@@ -969,6 +1034,52 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     for (const [k, v] of disclosures) {
       expect(lintCopy(v, ['survival-claim']), `${k}: "${v}"`).toEqual([])
     }
+  })
+
+  // --- the essentials-claim tripwire (council wf_cfa961da-13c, 2026-10-12): Tier 1 ranks FULL-plan
+  //     survival and the essentials floor is reported, never ranked — so no string may sell the pick as
+  //     essentials-first or the essentials as certain. The council's copy audit found NO shipped string
+  //     claiming either; this sweep holds that, over the catalog, every slot render and the disclosures. ---
+  it('no catalog string, slot render or static disclosure claims the essentials are certain or ranked first (essentials-claim — UNIVERSAL)', () => {
+    const surfaces: [string, string][] = [
+      ...entries,
+      ...Object.entries(SLOT_RENDER),
+      ...Object.entries(staticDisclosures),
+    ]
+    expect(surfaces.length, 'the sweep reaches the catalog').toBeGreaterThan(entries.length)
+    for (const [k, v] of surfaces) {
+      expect(essentialsClaims(v), `${k}: "${v}"`).toEqual([])
+    }
+  })
+
+  it('the essentials-claim lexicon catches its corpus and passes the shipped floor readouts (the honest neighbours)', () => {
+    for (const s of ESSENTIALS_MUST_CATCH) {
+      expect(essentialsClaims(s).length, `MUST catch: "${s}"`).toBeGreaterThan(0)
+    }
+    const MUST_PASS = [
+      copy.floorReadoutEyebrow, // "Just the essentials" — the subordinate relief line
+      `${slots.xOfTen(9)} ${copy.floorReadoutCoverage}`, // "9 of 10 futures your essentials are covered"
+      copy.floorReadoutTrimNote, // "…start with the extras — not the basics." (gated on the floor holding)
+      copy.goalPickerIntro, // "With the basics covered…" — gated on the FULL displayed state
+      copy.budgetSheetIntro, // "Essentials are the part that has to hold…"
+      copy.bandPricesEssentialsNote,
+      copy.dateFloorInversionNote, // R27's inversion disclosure — the floor can land LATER
+      slots.dateFloorCovered(0, slots.withOdds(slots.xOfTen(9)), false),
+      slots.dateFloorNotWithin(11),
+    ]
+    for (const s of MUST_PASS) {
+      expect(essentialsClaims(s), `MUST pass: "${s}"`).toEqual([])
+    }
+  })
+
+  it('every essentials-claim pattern owns a corpus sample no other pattern catches (deleting any one reds the corpus)', () => {
+    const norm = (s: string) => s.replace(/[’‘]/g, "'")
+    ESSENTIALS_CLAIMS.forEach((re, i) => {
+      const owned = ESSENTIALS_MUST_CATCH.filter((s) =>
+        ESSENTIALS_CLAIMS.every((other, j) => (j === i) === other.test(norm(s))),
+      )
+      expect(owned.length, `ESSENTIALS_CLAIMS[${i}] ${re} has no sample only it catches`).toBeGreaterThan(0)
+    })
   })
 
   it('the advice gate catches off-list money verbs, assertive recommendations, and hidden clause breaks', () => {

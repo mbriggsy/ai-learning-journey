@@ -187,13 +187,13 @@ function buildSurvivorReading(distribution: Distribution): SurvivorReading | und
 }
 
 /** The essentials-floor verdict (P3·U9) — the joint {@link buildHeadline} grammar applied to
- *  the floor track's fraction, so the Tier-1 sentence speaks the SAME vocabulary ("X of 10",
- *  the outcome word) as the lifestyle one. Returns undefined when the run carried no budget
- *  (presence-keyed). The identical quantize → band → 9-cap pipeline; `already-failing` keys
- *  to the FLOOR's OWN depletion signal — "even essentials-only spending is unfundable from
- *  the start" IS the floor tier's DOA case (unlike the survivor reading, whose DOA
- *  reservation is a whole-plan JOINT property). No UI layer re-derives any of this (the
- *  U7/D2 honesty contract — the second tier's state is engine-tagged here). */
+ *  the floor track's fraction, so the relief line's floor sentence speaks the SAME vocabulary
+ *  ("X of 10", the outcome word) as the hero. Reported, never ranked — the solver's Tier 1 is
+ *  the FULL track (council wf_cfa961da-13c). Undefined with no budget (presence-keyed). The
+ *  identical quantize → band → 9-cap pipeline; `already-failing` keys to the FLOOR's OWN
+ *  depletion signal — "even essentials-only spending is unfundable from the start" IS the floor
+ *  reading's DOA case (unlike the survivor reading, whose DOA reservation is a whole-plan JOINT
+ *  property). No UI layer re-derives any of this (U7/D2 — the floor reading's state is tagged here). */
 function buildFloorReading(distribution: Distribution): Headline | undefined {
   const floor = distribution.floor
   if (!floor) return undefined

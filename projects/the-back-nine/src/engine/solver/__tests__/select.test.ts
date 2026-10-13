@@ -20,11 +20,11 @@
  *    throw); planted-seam-tested, precise (no route when the runner-up also converts / not surplus).
  */
 import { describe, it, expect } from 'vitest'
-import { NEVER_DEPLETED, type DepletionYear, type SimulationParams, type PersonInputs } from '@shared/model'
+import { NEVER_DEPLETED, type DepletionYear, type Distribution, type SimulationParams, type PersonInputs } from '@shared/model'
 import { selectCore, selectRecommendation, survivingAdvantage } from '../select'
 import { runSearch, type CandidateEvaluation, type SolverSearchResult } from '../search'
 import { enumerateCandidates, solverCandidateId, type CandidateStrategy } from '../candidates'
-import { evaluateCandidates, rankCandidates, type CandidateOutcome } from '../../validation/evaluate'
+import { evaluateCandidates, rankCandidates, scoreFromDistribution, type CandidateOutcome } from '../../validation/evaluate'
 import { gradeOnFamily } from '../../validation/gradeCalibration'
 import { deriveSeedB } from '../../validation/heldOutSeed'
 import { SOLVER_CASES } from '../../reference/solver-cases'
@@ -569,10 +569,11 @@ describe('§S4.5 the demotion refusal covers LEAVE-MORE too (the arm that used t
   })
 })
 
-describe('§S4/R21 the lexicographic floor is ABSOLUTE — a worse Tier-1 never wins on a better Tier-2', () => {
+describe('§S4/R21 Tier 1 is ABSOLUTE — a worse Tier-1 never wins on a better Tier-2', () => {
   // pay-less-tax ⇒ a LOWER tax is a BETTER Tier-2. C (conventional) survives 1.0 but pays the MOST
   // tax; X (grid) pays FAR less tax (a strictly better Tier-2) yet survives only 0.90 — a real Tier-1
-  // gap. R21: the survival floor is ABSOLUTE, so a better-Tier-2 candidate OUTSIDE the selection
+  // gap. R21: Tier 1 (full-plan survival, the headline's own statistic — never the essentials floor,
+  // council wf_cfa961da-13c 2026-10-12) is ABSOLUTE, so a better-Tier-2 candidate OUTSIDE the selection
   // tolerance can never win. (The committed oracle fixtures are all survival = 1.0, so none of them
   // exercises this partition — this is the gap the U15 §S7 sweep fills.)
   const outcomes = [taxOutcome(C, [1000, 1000, 1000, 1000], 1.0), taxOutcome(X_PROP, [100, 100, 100, 100], 0.9)]
@@ -583,7 +584,7 @@ describe('§S4/R21 the lexicographic floor is ABSOLUTE — a worse Tier-1 never 
     expect(ranked).toEqual(['conventional:taxable-first:0', 'grid:proportional:0'])
   })
 
-  it('selectCore inherits the ABSOLUTE floor — shrinkage on OR off cannot lift X over the survival gap', () => {
+  it('selectCore inherits the ABSOLUTE Tier 1 — shrinkage on OR off cannot lift X over the survival gap', () => {
     for (const shrinkage of ['off', 'on'] as const) {
       const sel = selectCore({ outcomesA: outcomes, goal: 'pay-less-tax', tieTolerance: 0.05, conventionalIndex: 0, shrinkage })
       expect(sel.kind).toBe('selected')
@@ -592,10 +593,101 @@ describe('§S4/R21 the lexicographic floor is ABSOLUTE — a worse Tier-1 never 
     }
   })
 
-  it('NON-VACUITY: widen the tolerance to admit X and the better-Tier-2 candidate wins (a floor, not a constant crown)', () => {
+  it('NON-VACUITY: widen the tolerance to admit X and the better-Tier-2 candidate wins (a tier, not a constant crown)', () => {
     // tolerance 0.15 ≥ the 0.10 gap ⇒ X joins the survival-top set ⇒ Tier-2 (lower tax) decides ⇒ X wins.
     const ranked = rankCandidates(outcomes, 'pay-less-tax', 0.15).map((o) => solverCandidateId(o.candidate))
     expect(ranked[0]).toBe('grid:proportional:0')
+  })
+})
+
+describe('D1/R21 the crown keys on FULL-plan survival — on a floor ≠ full world a floor key would crown the OTHER candidate (council wf_cfa961da-13c)', () => {
+  // The council (2026-10-12, 8/10) KEPT the shipped key: on the retired route Tier 1 ranks the
+  // headline's own `survivalFraction`, and the essentials-only `FloorTrack` is reported, never ranked
+  // (the Honesty Hawk's veto on a floor key — measured on `budget`, it lowers the full-plan hero on 28
+  // of 28 seed sets). This world is `budget`'s SHAPE in miniature, at the live `tieTolerance` 0 with
+  // surplusRegime OFF under BOTH readings (every fraction sits below the over-funded band): P (the
+  // conventional baseline) holds MORE full-plan survivors and FEWER floor survivors than Q, and pays
+  // MORE tax. The scores come through the REAL `scoreFromDistribution`, so a floor-keyed score
+  // (`evaluate.ts`), a floor-keyed partition (`select.ts`) or a floor-keyed reference ranking
+  // (`rankCandidates` — the oracle's, `search.rankedA`'s and the named-driver fallback's ranker) reds
+  // here — and the non-vacuity arm proves the floor reading WOULD crown Q, so the pin is strict, never a
+  // constant crown.
+  const N = NEVER_DEPLETED
+  const frac = (ds: readonly DepletionYear[]) => ds.filter((d) => d === N).length / ds.length
+  const budgetedEval = (
+    candidate: CandidateStrategy,
+    full: readonly DepletionYear[],
+    floor: readonly DepletionYear[],
+    taxPerPath: number,
+  ): CandidateEvaluation => {
+    const zeros: readonly number[] = full.map(() => 0)
+    const distribution: Distribution = {
+      terminalValuesReal: zeros,
+      depletionYears: full,
+      survivalFraction: frac(full),
+      floor: { survivalFraction: frac(floor), depletionYears: floor },
+      taxAware: {
+        lifetimeTaxPaidReal: full.map(() => taxPerPath),
+        terminalTaxableReal: zeros,
+        terminalPretaxReal: zeros,
+        terminalRothReal: zeros,
+        terminalHsaReal: zeros,
+        terminalTaxableBasisReal: zeros,
+        lifetimeNetPremiumReal: zeros,
+        lifetimeMedicareCostReal: zeros,
+      },
+    }
+    const o: CandidateOutcome = { kind: 'scored', candidate, score: scoreFromDistribution(distribution), distribution }
+    return { candidate, id: solverCandidateId(candidate), a: o, b: o }
+  }
+  // P: full 5/8 = 0.625, floor 6/8 = 0.75, tax 1,000 a path.  Q: full 4/8 = 0.5, floor 7/8 = 0.875, tax 100.
+  const P = budgetedEval(C, [N, N, N, N, N, 30, 25, 20], [N, N, N, N, N, N, 25, 20], 1_000)
+  const Q = budgetedEval(X_PROP, [N, N, N, N, 30, 28, 25, 20], [N, N, N, N, N, N, N, 20], 100)
+  const searchOf = (evaluations: readonly CandidateEvaluation[]): SolverSearchResult => ({
+    seedA: 1,
+    seedB: deriveSeedB(1),
+    goal: 'pay-less-tax',
+    tieTolerance: 0,
+    heirBracket: undefined,
+    evaluations,
+    rankedA: evaluations.map((e) => e.a),
+    conventionalBaseline: evaluations[0]!,
+    userBaseline: undefined,
+  })
+
+  it('the fixture discriminates: P leads on FULL survival, Q leads on the FLOOR (floor ≠ full on both)', () => {
+    const [p, q] = [P.a, Q.a].map((o) => (o.kind === 'scored' ? o.distribution : undefined))
+    expect([p!.survivalFraction, p!.floor!.survivalFraction]).toEqual([0.625, 0.75])
+    expect([q!.survivalFraction, q!.floor!.survivalFraction]).toEqual([0.5, 0.875])
+  })
+
+  it('selectRecommendation crowns P — the full-plan key — despite P’s worse Tier 2, with surplusRegime OFF', () => {
+    const sel = selectRecommendation(searchOf([P, Q]))
+    expect(sel.kind).toBe('selected')
+    if (sel.kind !== 'selected') throw new Error('unreachable')
+    expect(sel.winnerId).toBe('conventional:taxable-first:0')
+    expect(sel.runnerUpId).toBe('grid:proportional:0')
+    expect(sel.surplusRegime).toBe(false)
+  })
+
+  it('rankCandidates — the reference ranker the oracle, search.rankedA and the named-driver fallback share — ranks P first on FULL survival (inputs fed Q-first, so a no-op sort reds too)', () => {
+    // `searchOf` hands selectRecommendation a hand-built rankedA, so the crown arm above never runs this
+    // ranker on a floor ≠ full world; this arm does. Under a floor key Q (floor 0.875) would lead.
+    const ranked = rankCandidates([Q.a, P.a], 'pay-less-tax', 0).map((o) => solverCandidateId(o.candidate))
+    expect(ranked).toEqual(['conventional:taxable-first:0', 'grid:proportional:0'])
+  })
+
+  it('NON-VACUITY: re-key the same world on the floor reading and the crown flips to Q (the pin above is strict)', () => {
+    const floorKeyed = (e: CandidateEvaluation): CandidateEvaluation => {
+      if (e.a.kind !== 'scored') throw new Error('unreachable')
+      const o: CandidateOutcome = { ...e.a, score: { ...e.a.score, survival: e.a.distribution.floor!.survivalFraction } }
+      return { ...e, a: o, b: o }
+    }
+    const sel = selectRecommendation(searchOf([floorKeyed(P), floorKeyed(Q)]))
+    expect(sel.kind).toBe('selected')
+    if (sel.kind !== 'selected') throw new Error('unreachable')
+    expect(sel.winnerId).toBe('grid:proportional:0')
+    expect(sel.surplusRegime).toBe(false)
   })
 })
 

@@ -16,7 +16,7 @@ import {
   selectionTieTolerance,
   survivalIndicators,
 } from '../heldOutSeed'
-import { NEVER_DEPLETED } from '@shared/model'
+import { NEVER_DEPLETED, type Distribution } from '@shared/model'
 
 describe('deriveSeedB — the canonical SplitMix expansion', () => {
   it('is deterministic, integer, signed-32, and far from the near-integer siblings', () => {
@@ -112,5 +112,24 @@ describe('the ε split — A-side CRN-difference tolerance vs B-side display ban
     expect(
       survivalIndicators({ terminalValuesReal: [1, 0, 1], depletionYears: [NEVER_DEPLETED, 12, NEVER_DEPLETED], survivalFraction: 2 / 3 }),
     ).toEqual([1, 0, 1])
+  })
+
+  it('D1/R21: on a budgeted distribution the indicators read the FULL track, never the essentials floor (council wf_cfa961da-13c)', () => {
+    // The grade's survival axis (`gradeCalibration.ts` pairs these for the winner and the runner-up)
+    // keys the same full-plan quantity as Tier 1 and the hero; the FloorTrack is reported, never
+    // graded. The two tracks disagree on paths 2 and 3, so a floor-keyed read reds here.
+    const N = NEVER_DEPLETED
+    const dist: Distribution = {
+      terminalValuesReal: [1, 1, 0, 1],
+      depletionYears: [N, N, 12, N],
+      survivalFraction: 0.75,
+      floor: { survivalFraction: 0.75, depletionYears: [N, N, N, 9] },
+    }
+    const indicators = survivalIndicators(dist)
+    expect(indicators).toEqual([1, 1, 0, 1])
+    // The fixture discriminates: the floor's own indicators, DERIVED from the fixture (never a typed
+    // literal, so an edited fixture cannot silently empty this check), differ from the full track's.
+    const floorIndicators = dist.floor!.depletionYears.map((d) => (d === N ? 1 : 0))
+    expect(floorIndicators).not.toEqual(indicators)
   })
 })

@@ -9,8 +9,8 @@
  * survivor floor — the cardinal calm-but-wrong direction, so `other`-tagged
  * essentials deliberately ERR STICKY). `food`/`transportation`/`travel`/`gifts`
  * essentials scale (one person genuinely eats/drives less). DISCRETIONARY lines
- * always scale, whatever their category — sticky is a property of the survival
- * floor, and the floor is the essentials tier by definition.
+ * always scale, whatever their category — sticky is a property of the essentials
+ * tier (the floor reading's lines, which the full plan carries too).
  *
  * THE DEGENERATE-INERT BOUNDARY (documented, test-pinned): the plan's
  * "single-essentials-line budget reproduces ratio-on-total byte-identically" holds

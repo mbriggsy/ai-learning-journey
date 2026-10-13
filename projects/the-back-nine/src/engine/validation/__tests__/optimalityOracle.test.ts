@@ -10,7 +10,7 @@
  * expectations assert `toBeCloseTo(x, 2)` — tight against real drift, immune to float dust.
  */
 import { describe, it, expect } from 'vitest'
-import type { SimulationParams } from '@shared/model'
+import { NEVER_DEPLETED, type DepletionYear, type Distribution, type SimulationParams } from '@shared/model'
 import {
   SOLVER_CASES,
   caseAcaCliff,
@@ -429,5 +429,46 @@ describe('the evaluation seams (insight 048 — the synthetic arms the live engi
     expect(() => scoreFromDistribution(dist, Number.NaN)).toThrow(/heirBracket/)
     // CONTROL: the declared in-domain bracket scores clean on the same distribution.
     expect(scoreFromDistribution(dist, 0.23).afterTaxBequestMeanReal).toBeDefined()
+  })
+})
+
+/**
+ * D1 / R21 — the Tier-1 SCORE reads FULL-plan survival, never the essentials floor (council
+ * `wf_cfa961da-13c`, 2026-10-12, 8/10; the register's CLOSED *On an itemized household the Tier-1
+ * quantity is two things…*). On the retired route Tier 1 ranks `Distribution.survivalFraction` — the
+ * headline's own statistic — and the essentials-only `FloorTrack` (`distribution.floor`) is reported
+ * (the relief line, the floor date), never ranked. Insight 055: the identity claim is SCOPED to the
+ * budgetless case (no floor ⇒ the two readings coincide), and the divergence is pinned STRICTLY, in
+ * BOTH directions — floor above full (the usual itemized shape, `budget`'s) AND floor below full (R27's
+ * 100%-FPL PTC inversion: full is no lower bound on the floor) — so a floor-keyed score reds either way.
+ */
+describe('D1/R21 the Tier-1 score reads FULL-plan survival — never the essentials floor (council wf_cfa961da-13c)', () => {
+  const N = NEVER_DEPLETED
+  const budgeted = (fullDepletion: readonly DepletionYear[], floorDepletion: readonly DepletionYear[]): Distribution => {
+    const frac = (ds: readonly DepletionYear[]) => ds.filter((d) => d === N).length / ds.length
+    return {
+      terminalValuesReal: fullDepletion.map(() => 0),
+      depletionYears: fullDepletion,
+      survivalFraction: frac(fullDepletion),
+      floor: { survivalFraction: frac(floorDepletion), depletionYears: floorDepletion },
+    }
+  }
+
+  it('floor ABOVE full (the usual itemized shape): the score is the full 0.75, never the floor 1.0', () => {
+    const dist = budgeted([N, N, N, 20], [N, N, N, N])
+    expect(dist.floor!.survivalFraction, 'the fixture discriminates: floor ≠ full').toBe(1)
+    expect(scoreFromDistribution(dist).survival).toBe(0.75)
+  })
+
+  it('floor BELOW full (R27’s 100%-FPL inversion — full is no lower bound on the floor): the score is the full 0.75, never the floor 0.5', () => {
+    const dist = budgeted([N, N, N, 20], [N, N, 18, 15])
+    expect(dist.floor!.survivalFraction, 'the fixture discriminates: floor ≠ full').toBe(0.5)
+    expect(scoreFromDistribution(dist).survival).toBe(0.75)
+  })
+
+  it('BUDGETLESS (the identity scope): no floor rides, and the score IS survivalFraction', () => {
+    const dist: Distribution = { terminalValuesReal: [0, 0, 0, 0], depletionYears: [N, N, N, 20], survivalFraction: 0.75 }
+    expect(dist.floor).toBeUndefined()
+    expect(scoreFromDistribution(dist).survival).toBe(0.75)
   })
 })

@@ -33,7 +33,7 @@ describe('isSurvivorSticky — the sticky rule (council 2026-07-02)', () => {
     }
   })
 
-  it('DISCRETIONARY lines always scale, whatever the category — sticky is a property of the survival floor', () => {
+  it('DISCRETIONARY lines always scale, whatever the category — sticky is a property of the essentials tier', () => {
     for (const category of ['housing', 'utilities', 'other'] as const) {
       expect(isSurvivorSticky(line({ category, tier: 'discretionary' }))).toBe(false)
     }

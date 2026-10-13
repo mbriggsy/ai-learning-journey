@@ -103,6 +103,22 @@ CLAUDE.md). If the team ever gets renamed, re-read it from `/rosters` + `/users`
   It is not a live dialog. Don't click it and don't wait on it.
 - Modal and row text carry newlines. Normalise `\s+` before any regex.
 
+### Move to IR / drop-only — `/team` (measured 2026-10-13)
+
+- **IR:** same mechanic as a lineup swap. Click the player's `a.link-button.cell-position`, and the
+  `IR Empty` row reads `valid` only if his tag allows IR (this league: Out / IR / Sus / COV). Click
+  that row's position square. Oracle: roster `reserve` contains his id.
+- **Drop with no add:** the row's `.cell-player-meta` (owns `onClick`) opens his `.player-card`.
+  Check the card names him **and** `PoppaBriggsy`, then click the card's
+  `a.player-card-action-button` whose text is exactly `DROP`. Oracle: he is gone from `players` /
+  `reserve`.
+- 🚨 **DROP fires a NATIVE `window.confirm`** — *"Please confirm you want to drop this player"* —
+  not the opacity-0 `.alert-modal`. An unhandled native dialog freezes the browser extension. Stub
+  it before the click: record the message, accept only that exact text, return `false` for anything
+  else. Restore the native in a `finally`, then check that `String(window.confirm)` contains
+  `[native code]`. Measured: stubbed to `false`, the drop cancels cleanly and nothing changes.
+  Stubbed to `true`, Dell was dropped and the API confirmed it.
+
 ### 🚨 WAIVER CLAIMS — never type the `/players` URL. Enter through the league.
 
 **A cold load of `…/players` (typed URL or `navigate`) never loads waiver data.** Every waiver

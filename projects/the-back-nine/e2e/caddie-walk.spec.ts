@@ -182,6 +182,11 @@ const CVD_CHART_TARGETS = [
   // runner-up viz is a second in-DOM `svg.rv` skipped by the loop's visibility guard, so the visible
   // primary lands as `cvd-<arm>-recviz` (or `-recviz-1` when the runner-up chart is also mounted).
   { name: 'recviz', selector: 'svg.rv' },
+  // The survivor card (2026-10-14): its verdict glyph + word, the count and the muted context paragraph sit
+  // BELOW the phone's first frame, so no CVD arm ever screened them (the survivor-basis walk's CVD seat).
+  // Inside a CLOSED fold the section is hidden, so the visibility guard skips it there; the open-fold state
+  // crops it. The floor-relief card shares the class (TwoTierHeadline), so `budget` crops both (-1, -2).
+  { name: 'survivor', selector: 'section.survivor' },
 ] as const
 
 /**
@@ -656,6 +661,21 @@ async function walkUpdateRoute(page: Page, key: string, outDir: string): Promise
 async function walkSeed(page: Page, key: string, outDir: string): Promise<void> {
   await gotoSeedFinal(page, key)
   await captureState(page, path.join(outDir, 'landing'))
+  // A FOLDED survivor card (`budget` — the floor relief holds the inline slot) hides its count, its
+  // spending-basis line and its step-down behind the closed fold, so the landing bundle never shows
+  // them (the 2026-10-14 survivor-basis walk asked a question only the open fold can answer). Open
+  // it, capture, and close it again, so every door below captures the household's default frame.
+  const fold = page.locator('.survivor-fold__summary')
+  if ((await fold.count()) > 0) {
+    await fold.click()
+    await expect(page.locator('.survivor-fold')).toHaveAttribute('open', '')
+    // Park the pointer: left on the summary, the fine-pointer hover rule lifts the eyebrow + chevron to full
+    // ink, and the bundle would show a hovered frame no resting reader sees (the walk's CVD seat measured it).
+    await page.mouse.move(0, 0)
+    await captureState(page, path.join(outDir, 'survivor-open'))
+    await fold.click()
+    await expect(page.locator('.survivor-fold')).not.toHaveAttribute('open', '')
+  }
   await walkDoors(page, outDir)
   if (key === 'retired') await walkWorsening(page, outDir)
 }

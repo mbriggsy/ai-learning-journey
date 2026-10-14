@@ -104,7 +104,11 @@ CLAUDE.md). If the team ever gets renamed, re-read it from `/rosters` + `/users`
   Check that **zero** rows are `selected`, then click `ADD PLAYER`. Oracle: `players` grew by one.
   🚨 An empty **starter** slot (`K Empty`, `DEF Empty`) counts as that empty slot, so the modal
   offers a no-drop add even though the bench looks full.
-- **An add+drop through this modal fires NO native dialog** (2 of 2 on 10-14, stubbed and
+- **The modal's drop rows show FULL names** (`BN Devaughn Vele WR - NO …`). `/team` and the
+  `/players` list abbreviate (`D Vele`, `C. Tate`). So match the drop on the full name, and throw
+  unless exactly one row matches. On 10-14 a `/team`-style `D. Vele` pattern matched 0 of 16 rows.
+  It threw before the click, which is the right way to fail.
+- **An add+drop through this modal fires NO native dialog** (3 of 3 on 10-14, stubbed and
   recorded: 0 calls). Only the drop-only `DROP` button on `/team` calls `window.confirm`. Keep the
   stub armed anyway. It costs nothing, and an unhandled native dialog freezes the extension.
 - **Fill an empty starter slot:** on `/team`, click the `Empty` row's `cell-position` first, then the

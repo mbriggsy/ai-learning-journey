@@ -99,6 +99,17 @@ CLAUDE.md). If the team ever gets renamed, re-read it from `/rosters` + `/users`
    leaves the DEF slot `"0"` (empty)** (09-25). Re-read `starters` after every add and move the
    body in with a lineup swap.
 
+- **Add with NO drop** (measured 2026-10-14, Strange): when the roster has room, the modal reads
+  *"You have 1 empty slot on your roster. You can add this player without dropping any players."*
+  Check that **zero** rows are `selected`, then click `ADD PLAYER`. Oracle: `players` grew by one.
+  🚨 An empty **starter** slot (`K Empty`, `DEF Empty`) counts as that empty slot, so the modal
+  offers a no-drop add even though the bench looks full.
+- **An add+drop through this modal fires NO native dialog** (2 of 2 on 10-14, stubbed and
+  recorded: 0 calls). Only the drop-only `DROP` button on `/team` calls `window.confirm`. Keep the
+  stub armed anyway. It costs nothing, and an unhandled native dialog freezes the extension.
+- **Fill an empty starter slot:** on `/team`, click the `Empty` row's `cell-position` first, then the
+  bench player's row once it reads `valid`. Measured 10-14 for K and DEF. A K added in place of a
+  dropped starting K leaves `starters` at `"0"` exactly like a DEF does.
 - A full-viewport `.alert-modal` (`Cancel` / `Ok`) sits in the DOM at **opacity 0** at all times.
   It is not a live dialog. Don't click it and don't wait on it.
 - Modal and row text carry newlines. Normalise `\s+` before any regex.

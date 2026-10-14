@@ -56,7 +56,8 @@ export interface ResolvedWire {
   readonly healthReadout?: HealthReadout
   /** The U7 survivor-conditioned surface — present iff the run opted in (`run`'s `survivorConditioned`
    *  option, the single spine headline run only) AND ≥ 1 path had a survivor phase. Compact (four
-   *  numbers); crosses by structured clone, NOT a transferable buffer (absent from the transfer list). */
+   *  numbers + the spending basis: two numbers and its steady flag); crosses by structured clone, NOT a transferable buffer
+   *  (absent from the transfer list). */
   readonly survivorConditioned?: SurvivorConditioned
   /** The U7 "as the survivor" reading (result-level; what `SurvivorReadout` renders). Present iff
    *  `survivorConditioned` is — the model's stated iff, preserved across the wire. Compact clone. */
@@ -125,7 +126,7 @@ export function fromWire(wire: EngineWire): EngineResult {
         // P3·U11 — the healthcare readout series is compact plain data (years×9 numbers) —
         // clone delivered it; pass through presence-keyed (the bandFan discipline).
         ...(wire.healthReadout ? { healthReadout: wire.healthReadout } : {}),
-        // The survivor-conditioned surface is compact (four numbers) — structured clone delivered it
+        // The survivor-conditioned surface is compact (six numbers and a flag) — structured clone delivered it
         // across; pass it through presence-keyed, preserving the model's survivorReading ⟹
         // survivorConditioned iff on the reconstructed object (mirrors bandFan / taxAware).
         ...(wire.survivorConditioned ? { survivorConditioned: wire.survivorConditioned } : {}),

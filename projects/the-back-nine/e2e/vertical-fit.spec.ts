@@ -79,10 +79,12 @@ import { ENGINE_PRICING_LEDGER } from '../src/engine/pricingVersion'
 // (`.cs-state-note`) renders exactly where the residual does NOT — the household whose residual is
 // withheld (health) reads its state clause standalone; the residual-bearing frames (budget / retired /
 // nc) read it INSIDE the residual and must render no standalone note (never twice).
+// `survivor` (the spending-basis line, ruled 2026-10-14): `budget`'s floor relief holds the inline slot, so
+// its survivor card is FOLDED; every other spine seed carries the card inline.
 const SPINE_SEEDS = [
-  { seed: 'budget', medicareNote: true, stateNote: false },
-  { seed: 'retired', medicareNote: true, stateNote: false },
-  { seed: 'health', medicareNote: false, stateNote: true },
+  { seed: 'budget', medicareNote: true, stateNote: false, survivor: 'folded' },
+  { seed: 'retired', medicareNote: true, stateNote: false, survivor: 'inline' },
+  { seed: 'health', medicareNote: false, stateNote: true, survivor: 'inline' },
   // The NC priced face (the state-carrying seed increment): a `retired` (retiredOnTrack) clone in
   // North Carolina. The NC flat-tax drag pushed the state-absent twin's on-track DOWN across the band
   // edge to BORDERLINE until S.L. 2026-41's rate cut was pinned (2026-08-02): NC lands ON-TRACK beside
@@ -90,7 +92,7 @@ const SPINE_SEEDS = [
   // the one-frame law on a PRICED-STATE household. Its state clause is OUTCOME-independent
   // (statePricedNote = pricedStateForRun off the built params, never the verdict), so the affirmation
   // shape is unchanged by the pin; the clause TEXT is pinned by the `?seed=nc` arm below, never here.
-  { seed: 'nc', medicareNote: true, stateNote: false },
+  { seed: 'nc', medicareNote: true, stateNote: false, survivor: 'inline' },
 ] as const
 
 /** The spine presence companions (insight 029 — geometry over an unresolved/blank page passes
@@ -531,6 +533,34 @@ async function assertStateNote(page: Page, expected: boolean): Promise<void> {
   }
 }
 
+/** The survivor card's spending-basis line (Briggsy's sentence, ruled 2026-10-14) — its presence companion
+ *  (insight 029): jsdom loads no stylesheet and a missing line only makes the fit EASIER, so a CSS rule that
+ *  hid it would pass every other gate. The words are the catalog slot's own (`slots.verdictSurvivorSpendBasis`,
+ *  figures wildcarded — the per-seed figures are pinned once, in survivorSpendingBasisSeedGate.test.tsx).
+ *  'inline': the card is on the frame, so the line is visible. 'folded' (`budget` — the floor relief holds
+ *  the inline slot): the line is in the closed fold, hidden until it opens; this opens the fold, so call it
+ *  AFTER the frame is measured. */
+async function assertSurvivorBasis(page: Page, placement: 'inline' | 'folded'): Promise<void> {
+  const FIGURE = '\u0000'
+  const shape = new RegExp(
+    '^' +
+      slots
+        .verdictSurvivorSpendBasis(FIGURE, FIGURE)
+        .replace(/[.*+?^${}()|[\]\\]/g, (ch) => '\\' + ch)
+        .split(FIGURE)
+        .join('[1-9][0-9,]*') +
+      '$',
+  )
+  const line = page.locator('.survivor__basis')
+  await expect(line, 'the survivor card carries exactly ONE spending-basis line').toHaveCount(1)
+  if (placement === 'folded') {
+    await expect(line, 'the folded card keeps the line inside the closed fold').toBeHidden()
+    await page.locator('.survivor-fold__summary').click()
+  }
+  await expect(line, 'the spending-basis line must be VISIBLE on the card (never hidden by a stylesheet)').toBeVisible()
+  await expect(line, 'the line reads the ruled sentence, with two real figures').toHaveText(shape)
+}
+
 async function assertMedicareSnugLeading(page: Page): Promise<void> {
   // The Linux wrap-drift reservoir (CI 2026-07-11, run 29170580301): the pair pays for the
   // magnitude-honest residual in LEADING (body 1.55 → snug 1.4) — a platform-independent
@@ -557,7 +587,7 @@ async function assertMedicareSnugLeading(page: Page): Promise<void> {
 
 // ── the spine frame matrix: {budget, retired, health, nc} × {REAL, TIER, SHOWCASE} ────────────
 
-for (const { seed, medicareNote, stateNote } of SPINE_SEEDS) {
+for (const { seed, medicareNote, stateNote, survivor } of SPINE_SEEDS) {
   test.describe(`?seed=${seed} — the one-frame fit law`, () => {
     test.describe(`at Briggsy's real window (${REAL.width}×${REAL.height} @ 2.5dpr)`, () => {
       test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
@@ -570,6 +600,7 @@ for (const { seed, medicareNote, stateNote } of SPINE_SEEDS) {
         await assertOneVisibleDisclaimer(page, 'laptop')
         await assertResultPadding(page, '32px') // 791 ≤ 840 — the density tier serves his window
         await assertFrameFits(page, true)
+        await assertSurvivorBasis(page, survivor) // after the frame: the folded arm opens the fold
       })
     })
 
@@ -1158,6 +1189,7 @@ async function assertPricedSpineFrame(
     ).toContainText(pin)
   }
   await assertFrameFits(page, true)
+  await assertSurvivorBasis(page, 'inline')
 }
 
 // nc: the residual-TEXT pin at the REAL tier (the matrix proves the frame; this proves the clause
@@ -1234,6 +1266,7 @@ test.describe(`?seed=elsewhere — the answered-but-unpriced monolith, no state 
     await expect(residual, 'no PA affirmation on an unpriced household').not.toContainText('Pennsylvania')
     await expect(residual, 'no FL affirmation on an unpriced household').not.toContainText('Florida')
     await assertFrameFits(page, true)
+    await assertSurvivorBasis(page, 'inline')
   })
 })
 
@@ -1265,6 +1298,7 @@ test.describe(`?seed=healthnc — the priced pre-65 household's standalone state
     expect(clauses, 'one state clause on the verdict — never zero, never two').toBe(1)
     await assertOneVisibleDisclaimer(page, 'laptop')
     await assertFrameFits(page, true)
+    await assertSurvivorBasis(page, 'inline')
   })
 })
 
@@ -1883,6 +1917,7 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
     // it stays measured on every other arm; here it may degrade past the fold). The disclaimer is a
     // sibling <footer>, so it stays measured — the arm still fails if the caveat itself breaches.
     await assertFrameFits(page, true, { backupDoor: true })
+    await assertSurvivorBasis(page, 'inline')
   })
 })
 
@@ -2011,6 +2046,7 @@ test.describe(`the state-tax staleness return (?vault=statestale) — the isolat
     // The backup door is the sanctioned below-fold casualty on THIS composite frame (the disclaimer
     // is a sibling <footer>, so it stays measured — the arm still fails if the caveat itself breaches).
     await assertFrameFits(page, true, { backupDoor: true })
+    await assertSurvivorBasis(page, 'inline')
   })
 })
 
@@ -2530,6 +2566,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // precedent) and the card joins it; the caveat is a sibling <footer>, never an ancestor of
       // either, so it stays measured — this still fails if the caveat itself breaches.
       await assertFrameFits(page, true, { backupDoor: true, recordCard: true })
+      await assertSurvivorBasis(page, 'inline')
 
       // (4) BELOW THE FOLD IS NOT LOST: the card is one flick away with its re-open control and the
       // cost line that prices it intact. A door the household cannot reach would be a worse answer
@@ -2780,6 +2817,7 @@ test.describe('the spend lane — the solved figure lands without moving anythin
       await expect(page.locator('.cs-magnitude')).toHaveAttribute('data-spend', 'sized', { timeout: 90_000 })
       await settleLayout(page)
       await assertFrameFits(page, true) // the sized frame
+      await assertSurvivorBasis(page, 'inline')
     })
   })
   test.describe(`on the phone (${PHONE.width}×${PHONE.height})`, () => {

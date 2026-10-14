@@ -2243,7 +2243,7 @@ export const slots = {
    *
    *  ⚠️ DO NOT "FIX" THIS BY DROPPING THE TODAY TICK. That inverts the contradiction into the
    *  defect U13/§S0 already fixed — `bandAnnotations.ts:51-56` records it live from the first
-   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2189-2192` (the `?vault=datearrived` arm — "must still
+   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2225-2228` (the `?vault=datearrived` arm — "must still
    *  mark WALL-TIME today") forbids a band that loses its wall clock BY NAME. The tick is right; the sentence was wrong. */
   bandAgedPremiseFresh: (buildYear: number): string =>
     `This range runs from ${buildYear}, when the plan was built — the years since are modeled, not records. What you actually hold today is undetermined until you re-confirm.`,
@@ -2565,6 +2565,20 @@ export const slots = {
    *  mostly a lost pension reads this sentence wrong until it lands. */
   verdictSurvivorStepDown: (perMonthDropFormatted: string): string =>
     `If one of you is on your own later, the household’s monthly income steps down about $${perMonthDropFormatted} — as one Social Security benefit ends. Taxes also move to a single filer’s brackets.`,
+  /** The survivor card's SPENDING BASIS — HIS sentence, RULED by Briggsy 2026-10-14 (b9-toronto1, "All three
+   *  recs") on the register's Tier 1 *The survivor card's "still covers you" never says what spending it
+   *  assumes…* (filed by the 2026-10-09 survivor-medical Caddie walk, wf_c275da70-4d8; measured
+   *  wf_cddde314-d13). "Still covers you" was read on the couple's spend; the engine models the survivor's
+   *  — so the card names it, beside the couple's, in dollars. Both figures are the ENGINE'S year-0 spend
+   *  (`SurvivorReading.spendingBasis`, read off `cashTermsForYear` itself), pre-formatted by
+   *  `formatPerMonth` — NEVER a share: "three-quarters" / "75 %" is false on an itemized household (87.7 %
+   *  on `budget`). NEITHER figure includes health-insurance premiums (ACA, Medicare, IRMAA are priced on
+   *  top — `spendHelp` tells the household to leave them out), so this line must never grow an "all in" /
+   *  "everything" / "including" word. "today" scopes the COUPLE'S figure (year 0); the survivor's is the
+   *  spend the verdict assumes. Consumed by SurvivorReadout, directly after the coverage reading it
+   *  qualifies ("This" binds to it). Never reword without his read. */
+  verdictSurvivorSpendBasis: (survivorPerMonthFormatted: string, couplePerMonthFormatted: string): string =>
+    `This assumes about $${survivorPerMonthFormatted} a month of spending on your own (today: $${couplePerMonthFormatted} together).`,
 
   // --- P3·U10 — the two-futures delta readouts (R10/R12: the survivor's number, natural-frequency
   // FIRST, the "~N years" a hedged secondary, N ≤ 0 a calm in-frame state — never suppressed and
@@ -2722,7 +2736,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:1218` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:1242` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,

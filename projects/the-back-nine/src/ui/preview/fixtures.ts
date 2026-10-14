@@ -16,6 +16,7 @@ import type {
   Headline,
   OutcomeState,
   SurvivorReading,
+  SurvivorSpendingBasis,
 } from '@shared/model'
 import type { XAnnotation } from '@viz/bandData'
 
@@ -142,16 +143,28 @@ const survivorReading = (
   xOfTen: number,
   outcomeState: WordedOutcomeState,
   incomeStepDownMonthlyReal: number,
-): SurvivorReading => ({ xOfTen: { value: xOfTen, marginToEdge: 0 }, outcomeState, incomeStepDownMonthlyReal })
+  spendingBasis?: SurvivorSpendingBasis,
+): SurvivorReading => ({
+  xOfTen: { value: xOfTen, marginToEdge: 0 },
+  outcomeState,
+  incomeStepDownMonthlyReal,
+  ...(spendingBasis !== undefined ? { spendingBasis } : {}),
+})
+
+/** The survivor card's spending basis at the three health seeds' shape — S $78,000 with an entered
+ *  $4,000 OOP held whole: 4,000 + 0.75 × 74,000 = 59,500 a year on your own ($4,958.33 → "$4,960"),
+ *  $6,500 a month together. Illustrative, like the rest of these fixtures. */
+const ILLUSTRATIVE_BASIS: SurvivorSpendingBasis = { survivorMonthlyReal: 59_500 / 12, coupleMonthlyReal: 78_000 / 12, steady: true }
 
 /** One representative survivor reading per worded state — the harness + the test both drive off
- *  this. The X-of-10 and the income cliff are illustrative, not engine-validated. */
+ *  this. The X-of-10, the income cliff and the spending basis are illustrative, not engine-validated
+ *  (the per-seed basis through the real engine is `survivorSpendingBasisSeedGate.test.tsx`). */
 export const SURVIVOR_FIXTURES: Record<WordedOutcomeState, SurvivorReading> = {
-  'over-funded': survivorReading(9, 'over-funded', 880),
-  'on-track': survivorReading(8, 'on-track', 1090),
-  borderline: survivorReading(7, 'borderline', 1280),
-  'off-track': survivorReading(4, 'off-track', 1520),
-  'already-failing': survivorReading(0, 'already-failing', 1840),
+  'over-funded': survivorReading(9, 'over-funded', 880, ILLUSTRATIVE_BASIS),
+  'on-track': survivorReading(8, 'on-track', 1090, ILLUSTRATIVE_BASIS),
+  borderline: survivorReading(7, 'borderline', 1280, ILLUSTRATIVE_BASIS),
+  'off-track': survivorReading(4, 'off-track', 1520, ILLUSTRATIVE_BASIS),
+  'already-failing': survivorReading(0, 'already-failing', 1840, ILLUSTRATIVE_BASIS),
 }
 
 /** The residual where the income cliff rounds to ~$0 — the step-down clause must SUPPRESS (never
@@ -159,7 +172,8 @@ export const SURVIVOR_FIXTURES: Record<WordedOutcomeState, SurvivorReading> = {
  *  "0"), deliberately NOT a literal 0: it sits in the (0, $5) interval where the formatter-based
  *  guard `formatPerMonth(x) !== '0'` and a naive `x !== 0` check DISAGREE. A raw-`!== 0` regression
  *  would render "$0" here, so this fixture's test fails loud (burned/070 — pin the property on a
- *  value that exercises it, never one where both checks happen to agree). */
+ *  value that exercises it, never one where both checks happen to agree). It carries NO spending basis,
+ *  so the preview harness also shows the card without the basis line (the fail-to-absent arm). */
 export const SURVIVOR_NO_STEPDOWN: SurvivorReading = survivorReading(6, 'borderline', 3)
 
 /** The companion just ABOVE the rounding boundary: formatPerMonth(6) = "10", so the clause MUST show

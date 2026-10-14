@@ -745,8 +745,8 @@ export interface Headline {
  *  through the identical quantize→clamp the joint headline uses (incl. the 9-cap honesty clamp); the
  *  `outcomeState` is selected on the survivor fraction but reserves `already-failing` for the
  *  whole-plan-DOA case (the joint early-death signal), since a survivor cannot be a calm survivor of a
- *  plan that was unfundable from year 0. Carries the {@link SurvivorConditioned} income step-down so a
- *  consumer renders the whole survivor statement from one reading. */
+ *  plan that was unfundable from year 0. Carries the {@link SurvivorConditioned} income step-down and the
+ *  spending basis so a consumer renders the whole survivor statement from one reading. */
 export interface SurvivorReading {
   /** Integer 0..9 — the "X of 10 as the survivor" reading (the joint 9-cap honesty clamp applies). */
   readonly xOfTen: WithMargin<number>
@@ -754,6 +754,48 @@ export interface SurvivorReading {
   readonly outcomeState: OutcomeState
   /** Pass-through of {@link SurvivorConditioned.incomeStepDownMonthlyReal} — the $/month income cliff. */
   readonly incomeStepDownMonthlyReal: number
+  /** Pass-through of {@link SurvivorConditioned.spendingBasis} — the spend the survivor verdict assumes,
+   *  beside the couple's (the card's "This assumes about $X a month of spending on your own (today: $Y
+   *  together)." line; ruled 2026-10-14). Carried VERBATIM by `confidence.ts` `buildSurvivorReading`,
+   *  never re-derived UI-side (insight 045).
+   *
+   *  PRESENT on every reading this build's engine emits — the surface always carries it. OPTIONAL in the
+   *  type so a reading from any other producer renders the card WITHOUT the line rather than a $0 one
+   *  (insight 044, fail to absent). No shipping path persists a SurvivorReading (traced 2026-10-14): the
+   *  vault holds the {@link ScenarioV3} inputs and the {@link SavedRecommendationV3} record only — neither
+   *  carries a survivor field — so every card, the aged `?vault=` plants included, renders from a fresh
+   *  run of this build; the only producers without it are the dev preview fixtures that opt out. */
+  readonly spendingBasis?: SurvivorSpendingBasis
+}
+
+/** The spend the survivor verdict ASSUMES, beside the couple's (the register's Tier 1 *The survivor
+ *  card's "still covers you" never says what spending it assumes…*, RULED 2026-10-14, b9-toronto1).
+ *  Both are the engine's OWN spend composition at YEAR 0 (the year the line's "today" names) — read off
+ *  `simulate.ts` `cashTermsForYear` itself through `survivorSpendingBasis`, never a re-typed share (the
+ *  "75 %" is false on an itemized household: 87.7 % on `budget`). Real $/month (annual ÷ 12), finite
+ *  (DND 009 — every input is a validated finite figure).
+ *
+ *  NEITHER figure includes health-insurance premiums: ACA, Medicare (Part B, any Part D / Medigap / MA
+ *  premium) and IRMAA are priced by the overlay ON TOP of the spend (the intake's `spendHelp` tells the
+ *  household to leave them out), so a surface quoting these must never present them as all-in.
+ *
+ *  When a budget window (a later start or a finite end) moves the survivor's spend INSIDE the simulated
+ *  horizon, the year-0 figures are an anchor, not a steady state, so `steady` is false and the card carries
+ *  no line. The gate measures the horizon, never `isRampedBudget`: a ramped line whose change falls past
+ *  the horizon reads steady. No card-bearing dev seed is ramped (`dip` is, on the date route: no card). Ramped
+ *  words: his, never a silent swap (the register's *The survivor card's spending-basis line is withheld on a RAMPED budget…*). */
+export interface SurvivorSpendingBasis {
+  /** The survivor-year spend at year 0 (one spouse gone): budgetless m + r·(S − m), m = min(M, S) (r·S
+   *  with no entered M — `budgetlessSurvivorSpending`); itemized (sticky[0] + r·scalableEssentials[0]) +
+   *  r·discretionary[0] (sticky never scales). Real $/month. */
+  readonly survivorMonthlyReal: number
+  /** The same year-0 composition with everyone alive (r = 1) — `annualSpendingReal / 12` by the budget
+   *  reconciliation invariant (pinned in the tests, never assumed). Real $/month. */
+  readonly coupleMonthlyReal: number
+  /** True when the survivor spends `survivorMonthlyReal` in EVERY year of the horizon (each spouse in turn the
+   *  one gone at year 0); the couple's track is never read (its figure is dated "today"). The card shows the line
+   *  ONLY when steady: a bare year-0 figure as THE spend is the over-claim copy.ts's "to start" law forbids. */
+  readonly steady: boolean
 }
 
 /** The verdict's dollar reading: the DIRECTION its clause is keyed on + the entered spend it quotes. The
@@ -973,6 +1015,12 @@ export interface SurvivorConditioned {
    *  UNAMBIGUOUS pre-tax income cliff and let `verdictSurvivorStepDown` flag the bracket shift as a
    *  SEPARATE qualitative consequence — never an ambiguous tax delta baked into $X. The copy's $X reads this. */
   readonly incomeStepDownMonthlyReal: number
+  /** The spend the survivor fraction above ASSUMES, beside the couple's — see {@link SurvivorSpendingBasis}
+   *  (ruled 2026-10-14). An OBSERVATION like the step-down: `survivorSpendingBasis` re-runs the draw-free
+   *  `cashTermsForYear` at year 0 in the post-loop reduction, so it consumes ZERO draws and moves no other
+   *  byte of the run (every joint field, the four fields above and the floor track stay byte-identical).
+   *  REQUIRED: computed whenever the surface exists (≥ 1 survivor phase ⇒ a couple). */
+  readonly spendingBasis: SurvivorSpendingBasis
 }
 
 /** The essentials-floor track's outcome (P3·U9). PRESENT on a {@link Distribution} iff the run

@@ -96,8 +96,16 @@
   color: var(--ink-muted);
 }
 
-/* The income-cliff clause — context, not a call to act, so it sits in muted ink (never the alarmed
-   full-ink emphasis the joint surface gives its action-first magnitude line). */
+/* The survivor's ONE context paragraph (.survivor__context): the spending basis (ruled 2026-10-14 —
+   "This assumes about $X a month of spending on your own (today: $Y together).") opens it and the
+   income-cliff clause follows, each its own span (.survivor__basis / .survivor__stepdown) so the tests
+   address each sentence. Context, not a call to act, so muted ink (never the alarmed full-ink emphasis
+   the joint surface gives its action-first magnitude line). One paragraph, not two: as siblings the
+   basis cost two lines + a stack gap and broke the one-frame law on six arms at 1536×791 (measured
+   2026-10-14; SurvivorReadout.tsx's header carries the numbers). .survivor__stepdown keeps the block
+   rule for the floor relief's trim note (TwoTierHeadline), which is still its own <p>. No color of its
+   own, no motion of its own (the reveal's one opacity settle carries it). */
+.survivor__context,
 .survivor__stepdown {
   margin: 0;
   font-family: var(--font-body);
@@ -191,6 +199,28 @@
    transition the static inline one never needs. */
 .survivor-fold__summary .survivor__eyebrow {
   transition: color var(--dur-fast) var(--ease-out);
+}
+
+/* ── the SHORT-laptop density tier (council 2026-07-08 — tokens.css --bp-laptop-short; result.css and
+   confidence.css carry the frame + two-pane steps). The subordinate statements (the floor relief and the
+   survivor, which share these classes) step their WHITESPACE: the inline card's top padding takes the
+   folded card's own --space-3 (.survivor-fold, above — the family's existing value, not a new one), and
+   the stack gap steps one token, in the open card and the closed fold's summary alike, so closed and
+   open still read as one statement family. WHITESPACE ONLY — no font-size or line-height moves, ever
+   (content-outranks-aesthetics). Why (2026-10-14, b9-toronto1): the survivor's spending-basis line
+   (Briggsy's ruling) costs one line at his 1536×791 window, and the record-return frames carry ~17px of
+   slack under the record card's standing line (vertical-fit.spec.ts, the ?vault=rec/recold arms).
+   Measured in real Chromium: this step reclaims 24px on a survivor frame, so no one-frame arm grew more
+   than 4px (rec's standing line 774 → 777px); budget's relief frame sits 28px tighter. 840px re-stated as
+   a literal (@media can't read a custom property). */
+@media (min-width: 68rem) and (max-height: 840px) {
+  .confidence-reveal[data-twopane] .survivor {
+    padding-top: var(--space-3);
+  }
+  .confidence-reveal[data-twopane] .survivor-reveal,
+  .confidence-reveal[data-twopane] .survivor-fold__summary {
+    gap: var(--space-2);
+  }
 }
 
 /* Reduced motion: the reveal is already movement-free (opacity only); shorten it to the quick

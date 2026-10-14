@@ -170,7 +170,9 @@ function buildHeadline(distribution: Distribution): Headline {
  *  the identical quantize → 9-cap honesty clamp the joint headline uses; the outcome state is selected
  *  on the SURVIVOR fraction, but `already-failing` still keys to the JOINT early-death signal (a
  *  survivor cannot be a calm survivor of a plan that was unfundable from year 0 — that DOA reservation
- *  is a whole-plan property, never re-derived from the survivor fraction alone). */
+ *  is a whole-plan property, never re-derived from the survivor fraction alone). The two dollar
+ *  observations the card quotes — the income step-down and the spending basis (ruled 2026-10-14) — pass
+ *  through VERBATIM from the surface (insight 045: one producer, `simulate.ts`). */
 function buildSurvivorReading(distribution: Distribution): SurvivorReading | undefined {
   const sc = distribution.survivorConditioned
   if (!sc) return undefined
@@ -183,6 +185,7 @@ function buildSurvivorReading(distribution: Distribution): SurvivorReading | und
     xOfTen: { value: xOfTen, marginToEdge: marginToXOfTenEdge(quantized) },
     outcomeState: state,
     incomeStepDownMonthlyReal: sc.incomeStepDownMonthlyReal,
+    spendingBasis: sc.spendingBasis,
   }
 }
 

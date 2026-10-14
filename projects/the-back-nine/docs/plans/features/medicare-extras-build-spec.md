@@ -86,7 +86,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   adopted the old figure. No official national Medigap average exists to pin to; the constant's
   `pinTo` says so explicitly rather than naming a source that isn't published.
 - **Per-person explicit persisted provenance stamp.** `MedicareExtrasEntryV3`
-  (`src/shared/model.ts:2125`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
+  (`src/shared/model.ts:2173`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
   'unanswered'` — with `adoptionVintage` recording the era adopted, keyed to the SAVED era and
   never re-derived from `value == current-typical` (the `src/shared/appDefaults.ts:8-15`
   saved-era inversion trap). `'unanswered'` is the honest persisted hole: it funds the typical
@@ -144,7 +144,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   edited to accommodate the vector: a superset, not a perturbation.
 - The vector is validated like its per-person siblings: `validateParams` rejects a negative
   entry (the insight-046 netted-away optimistic class), a NaN entry, and a length mismatch
-  (`src/engine/simulate.ts:805-808`), and the overlay's direct callers get their own up-front
+  (`src/engine/simulate.ts:858-861`), and the overlay's direct callers get their own up-front
   length backstop (`src/engine/taxOverlay.ts:1272-1276`) so a short vector on a two-person
   household throws rather than under-charging.
 - Extras are **real-flat**, and deliberately NOT ridden on the Part B trend: Medigap/Part D plan
@@ -242,7 +242,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
 - **DND-012 externally-derived fixtures**, including the F3 asymmetric survivor golden (F3 above).
 - **verify:fit arms re-pinned WITHOUT assuming monotone shrink** — the omission axis shrank but
   the real-flat clause broadened. The fit spec now pins non-typical extras arms explicitly
-  (`e2e/vertical-fit.spec.ts:1137-1138` — the priced-state faces, all non-typical; `:1978-1980` — the statestale non-typical echo frame; re-anchored 2026-09-10, both prior numbers had landed on unrelated lines), and the CSP intake walk learned the fork step
+  (`e2e/vertical-fit.spec.ts:1168-1169` — the priced-state faces, all non-typical; `:2013-2015` — the statestale non-typical echo frame; re-anchored 2026-09-10, both prior numbers had landed on unrelated lines), and the CSP intake walk learned the fork step
   (`e2e/csp.spec.ts:134`, the one integration gap `503213f4` left, fixed in `e921f2bb`).
 - **Color-blind-safe encoding** on adopted-vs-entered / typical-vs-your-bill / priced-vs-residual:
   every distinction is carried in words, never a hue. Each door fact line states its provenance in

@@ -12,12 +12,13 @@ The whole unit shipped on 2026-06-27: the engine surface (e1 · e1b · e1c) and 
 (e2), the latter cold-read-cleared the same day. Per-unit build status lives in the roadmap's
 [You-Are-Here table](../../roadmap.md) — this doc records the decisions, the statistic's definition, and
 the landmines the build caught. §3 is the blessed statistic and why the alternative was rejected; §4 the
-fixture discipline; §5 where the code lives; §6–§7 what shipped and the calls made along the way.
+fixture discipline; §5 where the code lives; §6–§7 what shipped and the calls made along the way; §8 the
+spending-basis line added on Briggsy's 2026-10-14 ruling.
 
 ## 1 · The gap this unit closed (confirmed 2026-06-24, re-confirmed first-hand 2026-06-27)
 
 Before e1 the engine emitted no survivor-specific distribution. `Distribution` carried only the JOINT
-`survivalFraction = survivors / paths` (`simulate.ts:1943`) — a path "survives" iff its portfolio
+`survivalFraction = survivors / paths` (`simulate.ts:2000`) — a path "survives" iff its portfolio
 never depleted (`depletionYear === NEVER_DEPLETED`). That single number cannot separate "the plan held
 while both were alive" from "the plan carried the SURVIVOR through widowhood." `bandFan.cohortFraction`
 is household *existence* (≥1 alive), not survivor *survival* — it cannot substitute.
@@ -38,7 +39,7 @@ exactly as `buildBandFan` does:
 
 - Per path the loop has `deathOffsets` (each spouse's sampled death year) and the resolved `depletionYear`.
   A **survivor phase** exists iff `min(deathOffsets) < max(deathOffsets)` and `min(deathOffsets) < horizon`
-  (one spouse outlives the other within the window) — `isSurvivorPhasePath` (`simulate.ts:1208`).
+  (one spouse outlives the other within the window) — `isSurvivorPhasePath` (`simulate.ts:1261`).
 - The survivor-conditioned statistic rides a presence-keyed, opt-in sink (`options.survivorConditioned`,
   mirroring `wantFan`), reduced after the loop by `buildSurvivorConditioned`. A run WITHOUT the option
   allocates nothing and is **byte-identical** (reduce-to-spine). `fixed-horizon` mode (nobody dies) yields
@@ -96,19 +97,21 @@ arms — a fixed-horizon / no-death run emits nothing, and a survivor-on run is 
 
 ## 5 · Where the code lives
 
-- `src/shared/model.ts` — `SurvivorConditioned` (the fraction, the survivor-phase count, and
-  `incomeStepDownMonthlyReal`) hanging optional off `Distribution`, and `SurvivorReading` hanging optional
-  off `SimulationResult`. Both presence-keyed, the `bandFan`/`taxAware` precedent.
+- `src/shared/model.ts` — `SurvivorConditioned` (the fraction, the survivor-phase count,
+  `incomeStepDownMonthlyReal`, and since 2026-10-14 the `spendingBasis` pair — §8) hanging optional off
+  `Distribution`, and `SurvivorReading` hanging optional off `SimulationResult`. Both presence-keyed, the
+  `bandFan`/`taxAware` precedent.
 - `src/engine/simulate.ts` — `isSurvivorPhasePath`, `buildSurvivorConditioned`,
-  `survivorIncomeStepDownMonthlyReal`, the `options.survivorConditioned` opt-in sink, and
-  `cashTermsForYear`'s additive `nonPortfolioIncomeReal` return field.
+  `survivorIncomeStepDownMonthlyReal`, `survivorSpendingBasis` (§8), the `options.survivorConditioned`
+  opt-in sink, and `cashTermsForYear`'s additive `nonPortfolioIncomeReal` and `spendingReal` return fields.
 - `src/engine/confidence.ts` — `buildSurvivorReading`, emitting `survivorReading` presence-keyed.
 - `src/engine/engineProtocol.ts` · `engineWire.ts` · `roth.ts` — the presence-keyed pass-through that
   carries `survivorConditioned` + `survivorReading` across the worker boundary and the Roth wrapper.
 - `src/ui/SurvivorReadout.tsx` + `src/ui/styles/survivor.css` — the e2 surface, mounted by
   `ConfidenceStatement.tsx` and fed by `answerView.ts`.
-- Tests: `src/engine/__tests__/survivorConditioned.test.ts` and
-  `src/ui/__tests__/SurvivorReadout.test.tsx`; preview fixtures in `src/ui/preview/fixtures.ts`.
+- Tests: `src/engine/__tests__/survivorConditioned.test.ts`, `src/engine/__tests__/survivorSpendingBasis.test.ts`,
+  `src/ui/__tests__/SurvivorReadout.test.tsx` and `src/ui/__tests__/survivorSpendingBasisSeedGate.test.tsx`;
+  preview fixtures in `src/ui/preview/fixtures.ts`.
 
 ## 6 · e1b + e1c — the income step-down + the survivor reading (adversarially verified 2026-06-27)
 
@@ -197,3 +200,38 @@ first frame). Both render below the band so the scrub tap-targets never move (in
    reads "And if you're on your own" (frames the survivor statement as the follow-on to the joint answer;
    the "on your own" motif recurs intentionally, the verbatim repeat is gone). The glyphs + the whole
    sentence read calm-but-honest (the already-failing drop-to-floor glyph is not alarmist).
+
+## 8 · The spending-basis line (ruled 2026-10-14, b9-toronto1)
+
+The 2026-10-09 survivor-medical Caddie walk found that "still covers you" never said what spending it assumed: a
+scared spouse read "covered at our $6,500 a month" where the engine models about $4,960. Briggsy ruled the line
+on 2026-10-14 ("All three recs" — the register's Tier 1 entry of that title, now CLOSED, holds the measured
+record): **"This assumes about $X a month of spending on your own (today: $Y together)."**
+(`verdictSurvivorSpendBasis`).
+
+- **The figures.** `survivorSpendingBasis` in `simulate.ts` reads `cashTermsForYear`'s own `spendingReal` at
+  t = 0, once with one spouse gone at year 0 (X) and once with both alive (Y = `annualSpendingReal / 12` by the
+  budget reconciliation invariant). It is the hot path's own composition, never a re-typed "75 %" (false on
+  `budget`: 87.7 %), and year 0 is the year the line's "today" names.
+- **The wire.** It is an observation on `SurvivorConditioned.spendingBasis`, computed in the post-loop
+  reduction beside the step-down: zero draws, and no existing output byte moves (diffed on all 15 spine seeds
+  and the four aged plants). `buildSurvivorReading` passes it through onto `SurvivorReading.spendingBasis`.
+- **The card.** `SurvivorReadout` renders the line directly after the coverage reading it qualifies, in both
+  variants, in muted ink, as the opening sentence of the card's one context paragraph (`.survivor__context`), which the
+  income step-down closes. As its own paragraph it cost 68px at Briggsy's 1536×791 window and broke the one-frame
+  law on six arms (pa, the stale and statestale echoes, the surplus sized frame, the rec/recold standing line). One
+  paragraph costs one line, and the short-laptop density tier steps the whitespace (`survivor.css`) of both
+  subordinate cards: the survivor card and the floor-relief card, which shares its classes (`TwoTierHeadline`).
+  Measured in real Chromium 2026-10-14, no arm grew more than 4px over its pre-line frame (the largest +3.9px),
+  and `budget`'s frame (the relief card inline, the survivor folded) sits 28px tighter (752.5 → 724.5px). Words,
+  type and order are unchanged. A reading without the basis, or one whose figures are non-finite or round to "$0",
+  renders the card without the line (insight 044).
+- **Only where the figure IS the spend.** `steady` is true when the survivor spends the year-0 figure in every
+  year of the horizon. When a budget window (a later start or a finite end) moves that spend inside the simulated
+  horizon it is false and the card carries no line: a bare year-0 figure there is the over-claim `copy.ts`'s "to
+  start" law forbids. The gate measures the horizon, never `isRampedBudget`, so a change that falls past the
+  horizon reads steady and keeps the line. It reads the survivor's track alone: the couple's figure is dated
+  ("today"), so a couple-only move keeps the line. The ramped wording is the register's Tier 1 entry *The survivor card's
+  spending-basis line is withheld on a RAMPED budget…* (his words).
+- **The negatives.** Neither figure includes health-insurance premiums (ACA, Medicare and IRMAA are priced on
+  top), so the slot never grows an all-in word. The share is never named.

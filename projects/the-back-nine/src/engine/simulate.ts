@@ -46,6 +46,7 @@ import {
   type PersonInputs,
   type SimulationParams,
   type SurvivorConditioned,
+  type SurvivorSpendingBasis,
 } from '@shared/model'
 
 /** The CRN draw matrices — pure in (seed, dimensions). */
@@ -312,6 +313,10 @@ export function cashTermsForYear(
    *  draw clamp (the clamp zeroes the WITHDRAWAL, never the income). Pure observation; consumed by the
    *  survivor income step-down's counterfactual, never by the decumulation. */
   readonly nonPortfolioIncomeReal: number
+  /** The year's FULL-track spend — the survivor-adjusted `spending` `net` is computed from, before any
+   *  income nets against it or the working-year clamp zeroes the draw. Pure observation; consumed by
+   *  {@link survivorSpendingBasis} (the survivor card's basis line), never by the decumulation. */
+  readonly spendingReal: number
 } {
   let aliveCount = 0
   for (let i = 0; i < deathOffsets.length; i++) if (t < (deathOffsets[i] ?? 0)) aliveCount++
@@ -458,7 +463,55 @@ export function cashTermsForYear(
     ongoingTaxableIrmaaOnly: clamped ? sel.taxable : 0,
     // The raw non-portfolio income (U7 e1b) — earned + ongoing + SS, independent of the draw clamp.
     nonPortfolioIncomeReal: earned + sel.gross + ss,
+    // The year's full-track spend itself (the survivor card's basis, ruled 2026-10-14) — the SAME
+    // `spending` the `net` above was computed from, exposed unchanged (an observation: no arithmetic
+    // added to the hot path, so every existing output is byte-identical).
+    spendingReal: spending,
   }
+}
+
+/**
+ * The spend the survivor verdict ASSUMES, beside the couple's — the survivor card's "This assumes about
+ * $X a month of spending on your own (today: $Y together)." (the register's Tier 1 *The survivor card's
+ * "still covers you" never says what spending it assumes…*, RULED 2026-10-14, b9-toronto1). See
+ * {@link SurvivorSpendingBasis} for the contract.
+ *
+ * SINGLE-SOURCED BY CONSTRUCTION: both figures are {@link cashTermsForYear}'s own `spendingReal` at
+ * t = 0 — the survivor's with one spouse gone at year 0 (spend reads only HOW MANY are alive, never
+ * which — the budget arm's k anchor reads the PLANNED retire offsets, and at t = 0 it is k = 0 for
+ * every household), the couple's with everyone alive. So the line can never drift from the hot path's
+ * composition (budgetless `budgetlessSurvivorSpending`; itemized `(sticky + r·scalable) + r·discretionary`,
+ * the hot path's own evaluation order) — no second home of either expression exists to drift. Year 0 is
+ * the year the line's "today" names.
+ *
+ * STEADY (the card's gate): true when the survivor spends that SAME year-0 figure in every year of the
+ * horizon — each spouse in turn the one gone at year 0, the other alive throughout. A budget window (a later
+ * start or a finite end) that moves the spend INSIDE `horizonYears` fails it and the card carries no line (a
+ * bare year-0 anchor is the over-claim copy.ts's "to start" law forbids); a change past the horizon passes.
+ *
+ * PURE, draw-free (CRN-safe): it re-runs the pure cash function in `simulate`'s post-loop reduction (the
+ * {@link survivorIncomeStepDownMonthlyReal} precedent), so a survivor-emitting run stays byte-identical
+ * on every joint field. Called only when the survivor surface exists (≥ 1 survivor phase ⇒ ≥ 2 people).
+ */
+export function survivorSpendingBasis(
+  params: SimulationParams,
+  offsets: readonly PersonOffsets[],
+  higherClaimOffset: number,
+  horizonYears: number,
+): SurvivorSpendingBasis {
+  // `t < death` is "alive at t", so a death offset of 1 is alive at year 0 and 0 is gone at year 0.
+  const everyoneAlive = offsets.map(() => 1)
+  const firstGoneAtYearZero = offsets.map((_, i) => (i === 0 ? 0 : 1))
+  const survivorAnnual = cashTermsForYear(0, params, offsets, firstGoneAtYearZero, higherClaimOffset).spendingReal
+  const coupleAnnual = cashTermsForYear(0, params, offsets, everyoneAlive, higherClaimOffset).spendingReal
+  let steady = true
+  for (let gone = 0; gone < offsets.length && steady; gone++) {
+    const survivorThroughout = offsets.map((_, i) => (i === gone ? 0 : horizonYears + 1))
+    for (let t = 0; t < horizonYears && steady; t++) {
+      steady = Object.is(cashTermsForYear(t, params, offsets, survivorThroughout, higherClaimOffset).spendingReal, survivorAnnual)
+    }
+  }
+  return { survivorMonthlyReal: survivorAnnual / 12, coupleMonthlyReal: coupleAnnual / 12, steady }
 }
 
 /**
@@ -1921,6 +1974,9 @@ export function simulate(
   // surface exists (≥1 survivor phase ⇒ ≥1 counterfactual drop). The helper re-runs the PURE cash
   // function at each path's first-death year (zero draws), so byte-identity to a survivor-off run still
   // holds on every joint field below.
+  // The spending basis (ruled 2026-10-14) rides the same way: the pure cash function at year 0 (and, for
+  // its steady gate, across the horizon) in this post-loop reduction — zero draws, so every field above
+  // and below stays byte-identical.
   const survivorConditioned: SurvivorConditioned | null =
     survivorTrio && survivorDeathOffsets
       ? {
@@ -1932,6 +1988,7 @@ export function simulate(
             offsets,
             higherClaimOffset,
           ),
+          spendingBasis: survivorSpendingBasis(params, offsets, higherClaimOffset, maxHorizon),
         }
       : null
 

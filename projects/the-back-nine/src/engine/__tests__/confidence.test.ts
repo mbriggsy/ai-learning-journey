@@ -44,6 +44,8 @@ function outWithSurvivor(
       survivorSurvivors: Math.round(survivorFraction * 100),
       survivalFraction: survivorFraction,
       incomeStepDownMonthlyReal,
+      // The survivor card's spending basis (ruled 2026-10-14) — a hand value; the reading passes it through.
+      spendingBasis: { survivorMonthlyReal: 4_875, coupleMonthlyReal: 6_500, steady: true },
     },
   }
   return { indeterminate: false, distribution: dist }
@@ -239,6 +241,8 @@ describe('the survivor reading (U7 e1c — the "as the survivor" grammar)', () =
     expect(r.survivorReading!.xOfTen.value).toBe(7) // round(0.72 × 10) = 7
     expect(r.survivorReading!.outcomeState).toBe('borderline') // 0.72 ∈ [0.65, 0.85)
     expect(r.survivorReading!.incomeStepDownMonthlyReal).toBe(1250) // passed straight through
+    // the spending basis (ruled 2026-10-14) passes straight through too — the SAME object, never re-derived
+    expect(r.survivorReading!.spendingBasis).toEqual({ survivorMonthlyReal: 4_875, coupleMonthlyReal: 6_500, steady: true })
   })
 
   it('rounds the SURVIVOR fraction, NOT the joint one — the two readings diverge honestly', () => {

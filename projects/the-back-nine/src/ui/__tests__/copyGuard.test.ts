@@ -704,6 +704,9 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     verdictRethinkClause: slots.verdictRethinkClause(),
     verdictHoldClause: slots.verdictHoldClause(),
     verdictSurvivorStepDown: slots.verdictSurvivorStepDown('1,200'),
+    // The survivor card's spending-basis line (ruled 2026-10-14, b9-toronto1) — sampled at the health seeds'
+    // figures ($4,958.33 → "4,960" on your own, $6,500 together).
+    verdictSurvivorSpendBasis: slots.verdictSurvivorSpendBasis('4,960', '6,500'),
     // The ask-for-Medicare-extras unit — the fork label + the bi-directional disclosures.
     medicareExtrasForkTypical: slots.medicareExtrasForkTypical('203'),
     medicareExtrasPanelStanding: slots.medicareExtrasPanelStanding('203'),
@@ -875,11 +878,32 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       slots.verdictTrimLead(S),
       slots.verdictTrimSized(S, S),
       slots.verdictSurvivorStepDown(S),
+      slots.verdictSurvivorSpendBasis(S, S),
     ]) {
       expect(lintCopy(rendered, ['free-numeral']), rendered).toEqual([])
     }
     expect(lintCopy(slots.verdictHoldClause(), ['free-numeral'])).toEqual([])
     expect(lintCopy(slots.verdictRethinkClause(), ['free-numeral'])).toEqual([]) // figure-less by construction
+  })
+
+  it('the survivor card’s spending-basis line is HIS sentence, survivor-scoped, and never implies premiums are inside it or names a share (ruled 2026-10-14)', () => {
+    // The register's Tier 1 *The survivor card's "still covers you" never says what spending it assumes…*,
+    // RULED by Briggsy 2026-10-14 (b9-toronto1, "All three recs"): exactly these words, both figures slotted.
+    expect(slots.verdictSurvivorSpendBasis('4,960', '6,500')).toBe(
+      'This assumes about $4,960 a month of spending on your own (today: $6,500 together).',
+    )
+    // Scope: the survivor family (catastrophe lexicon) AND the verdict surface (free-numeral + superlative).
+    expect(isMortalityKey('verdictSurvivorSpendBasis')).toBe(true)
+    expect(isVerdictKey('verdictSurvivorSpendBasis')).toBe(true)
+    const rendered = slots.verdictSurvivorSpendBasis('§§§', '§§§')
+    expect(lintCopy(rendered, ['catastrophe', 'free-numeral', 'superlative', 'false-certainty', 'advice-verb', 'survival-claim'])).toEqual([])
+    // The ⚑ NEGATIVES on the entry: premiums (ACA / Medicare / IRMAA) are charged ON TOP of both figures,
+    // so the line never reads as all-in; and the share is never named (75 % is false on `budget`: 87.7 %).
+    expect(rendered).not.toMatch(/premium|insurance|medicare|all[- ]in|everything|includ|covers? (all|every)/i)
+    expect(rendered).not.toMatch(/three[- ]quarters|quarter|percent|%|ratio|share/i)
+    // Never a claim that the survivor verdict covers TODAY's spend (the entry's second NEGATIVE): "today"
+    // scopes the couple's figure, and the survivor figure is the one the verdict assumes.
+    expect(rendered.indexOf('on your own')).toBeLessThan(rendered.indexOf('today'))
   })
 
   it('the F10 slotted messages hardcode no numeral in the template (digit-free — the limit/figures ride the slot args)', () => {

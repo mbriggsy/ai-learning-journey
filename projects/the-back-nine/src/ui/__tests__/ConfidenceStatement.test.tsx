@@ -160,6 +160,36 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
     expect(survivorCount).toBeVisible()
   })
 
+  it('the survivor card’s spending-basis line (ruled 2026-10-14) rides the card in BOTH hosts — inline on the first frame, inside the closed fold beside the count it qualifies', () => {
+    const basisReading = {
+      ...SURVIVOR_FIXTURES['on-track'],
+      spendingBasis: { survivorMonthlyReal: 58_500 / 12, coupleMonthlyReal: 78_000 / 12, steady: true },
+    }
+    const LINE = 'This assumes about $4,880 a month of spending on your own (today: $6,500 together).'
+    // INLINE (no floor relief): the line is on the first frame, once.
+    const inline = render(
+      <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['on-track'], survivorReading: basisReading }} />,
+    )
+    expect(screen.getAllByText(LINE)).toHaveLength(1)
+    expect(screen.getByText(LINE)).toBeVisible()
+    inline.unmount()
+    // FOLDED (the relief holds the inline slot): the line lives in the fold body with the count — hidden
+    // while closed (build-gate 7's first frame is untouched), read on the one pull that reveals the count.
+    const floorReading = { xOfTen: { value: 10, marginToEdge: 0.05 }, outcomeState: 'on-track' as const, stateMarginToEdge: 0.05 }
+    const { container } = render(
+      <ConfidenceStatement
+        view={{ kind: 'reading', ...READING_FIXTURES['borderline'], floorReading, survivorReading: basisReading }}
+      />,
+    )
+    const fold = container.querySelector('details.survivor-fold')!
+    const line = screen.getByText(LINE)
+    expect(fold.contains(line)).toBe(true)
+    expect(fold.querySelector('summary')!.contains(line)).toBe(false)
+    expect(line).not.toBeVisible()
+    fireEvent.click(fold.querySelector('summary')!)
+    expect(line).toBeVisible()
+  })
+
   it('with NO floor relief the survivor renders INLINE exactly as shipped (the fold only exists when the relief holds the inline slot)', () => {
     const { container } = render(
       <ConfidenceStatement

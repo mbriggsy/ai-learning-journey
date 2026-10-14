@@ -16,9 +16,9 @@ Precedence runs through three docs: **this one carries the *why* and the *what*;
 
 The thesis, in three sentences:
 
-1. Tell me where I stand — *"your essentials are safe in 10 of 10 futures; your full lifestyle holds in 7"* (the spine — the first magic moment for an already-retired household; a not-yet-retired one leads with the fuck-off date, R29).
+1. Tell me where I stand — *"Your full plan holds in 7 of 10 futures; just the essentials, in 9 of 10."* (the spine — the first magic moment for an already-retired household; a not-yet-retired one leads with the fuck-off date, R29). ⚑ *Re-worded by Briggsy 2026-10-14 (his D1 read, after the 2026-10-12 amendment): it read "your essentials are safe in 10 of 10 futures; your full lifestyle holds in 7" — above the display's 9-of-10 cap, and essentials-led where the shipped hero leads with the full plan. The same re-word applies to beat 3, §3's second-beat paragraph and §3's diagram.*
 2. Then, *"and here's what we'd do about it"* — a recommended, **confidence-graded** strategy (sequence withdrawals + convert) that funds your budget the tax-smartest way, with the full reasoning **one tap down**.
-3. You stay the pilot: safety is the default floor, but **you pick the goal** above it (leave more · pay less tax · live bigger now), and every recommendation wears its own hedge on the headline.
+3. You stay the pilot: safety comes first and is never traded away; above it, **you pick the goal** (leave more · pay less tax · live bigger now), and every recommendation wears its own hedge on the headline. ⚑ *Re-worded by Briggsy 2026-10-14: it read "safety is the default floor, but you pick the goal above it" — "the floor" now names the essentials reading (D1 / R20).*
 
 **The wedge.** Across the incumbents a financially-literate household actually uses — ProjectionLab, Boldin, Monarch, Empower, Fidelity/Vanguard — the dominant failure is **consumability and data plumbing, not capability.** The tools can compute; they can't *be believed*. Run the same household through several and you get wildly different answers, which breeds distrust of any single number. People don't want another opaque number — they want **permission and confidence.** The Back Nine's answer is to be **manual-first and local-first** (which also sidesteps the hardest incumbent failure, account-aggregation plumbing) and to spend its honesty budget on making the answer *trustworthy and readable* rather than precise-looking. *(The corpus that grounds this is FIRE-skewed, so the consumability pain is likely understated, not overstated — the claim stays falsifiable.)*
 
@@ -30,11 +30,11 @@ This is not a tone preference. It is the governing constraint on every engine de
 
 ## 3. The product model
 
-The spine answers one question, then — **second beat** — proposes what to do about it, with the full reasoning one tap down. Safety is the default floor; above it, **you pick the goal**. Complexity is disclosed progressively; that restraint *is* the experience.
+The spine answers one question, then — **second beat** — proposes what to do about it, with the full reasoning one tap down. Safety comes first and is never traded away; above it, **you pick the goal**. Complexity is disclosed progressively; that restraint *is* the experience.
 
 ```mermaid
 flowchart TD
-    Q["The Question (#1)<br/>'Can we retire, and how do we do it best?'"] --> A["The Answer — a plain-language confidence statement<br/>'Your essentials are safe in 10 of 10 futures;<br/>your full lifestyle holds in 7.'"]
+    Q["The Question (#1)<br/>'Can we retire, and how do we do it best?'"] --> A["The Answer — a plain-language confidence statement<br/>'Your full plan holds in 7 of 10 futures;<br/>just the essentials, in 9 of 10.'"]
 
     A --> R["The Recommendation (#3) — second beat<br/>'…and here's what we'd do about it:'<br/>a confidence-graded strategy"]
 

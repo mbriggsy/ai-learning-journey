@@ -87,6 +87,13 @@ describe('the three clause forms', () => {
     expect(composeVerdictReading(trim, { kind: 'pending' })!.clause).toBe(slots.verdictTrimLead('10,000'))
     expect(composeVerdictReading(trim)!.clause).toBe(slots.verdictTrimClause('10,000'))
   })
+  it('trim, SIZED, is his two sentences — never the room sentence’s tail (Briggsy 2026-10-14: the sized form renders only off-track, so "Above that" always spanned the household’s own off-track spend)', () => {
+    const sized = slots.verdictTrimSized('6,500', '5,200')
+    expect(sized).toBe('Spending less than $6,500 a month would let your plan cover more futures. At about $5,200 a month, it would read on track.')
+    expect(sized).not.toMatch(/close to the line|Above that/)
+    // the room sentence KEEPS its named edge — the cut is trim-only
+    expect(slots.verdictRoomSized('6,500', '7,100')).toContain('Above that, it starts to sit close to the line.')
+  })
   it('the verified figure is quoted EXACTLY — an off-grid figure throws rather than quote a spend nobody ran', () => {
     expect(formatSolvedSpend(11_100, 100)).toBe('11,100')
     expect(() => formatSolvedSpend(11_150, 100)).toThrow()

@@ -2528,9 +2528,17 @@ export const slots = {
     `Spending less than $${spendFormatted} a month would let your plan cover more futures. This answer doesn’t work out how much less.`,
   /** 'trim' while the spend solve is IN FLIGHT — the first sentence alone (see verdictRoomLead). */
   verdictTrimLead: (spendFormatted: string): string => `Spending less than $${spendFormatted} a month would let your plan cover more futures.`,
-  /** 'trim' SIZED by the spend solve — the same verified F and the same named edge as verdictRoomSized. */
+  /** 'trim' SIZED by the spend solve — the same verified F as verdictRoomSized, but TWO sentences, never
+   *  the room sentence's third. Its tail ("Above that, it starts to sit close to the line.") was CUT on
+   *  Briggsy's ruling, 2026-10-14 (b9-toronto1), on the register's *The trim sentence ends "Above that…"*
+   *  entry: the sized form renders only when the ENTERED spend reads off-track (`trim` ≡ off-track, and
+   *  sized needs shown ≡ raw), so "above F" always spans the household's own spend and read softer than
+   *  the Off-track heading (measured `wf_cddde314-d13`: on `healthgap` the entered $6,500 is the only
+   *  off-track point on the $100 grid over ($5,200, $6,500]). The Hawk's veto is untouched — it governs
+   *  the TARGET (F reads `room`, never the bare 0.85 edge; `spendSolve.ts`), and the room sentence keeps
+   *  its named edge. Never re-add a tail here without his read. */
   verdictTrimSized: (spendFormatted: string, solvedFormatted: string): string =>
-    `Spending less than $${spendFormatted} a month would let your plan cover more futures. At about $${solvedFormatted} a month, it would read on track. Above that, it starts to sit close to the line.`,
+    `Spending less than $${spendFormatted} a month would let your plan cover more futures. At about $${solvedFormatted} a month, it would read on track.`,
   /** direction 'rethink' — already-failing (0 of 10, unfundable from the start). FIGURE-LESS and
    *  LEVER-AGNOSTIC (it also renders for an already-RETIRED household, so it names no accumulation
    *  lever): the shortfall is structural, not a trim away — a single sufficient-sounding figure here

@@ -1898,11 +1898,11 @@ export const copy = {
   // The compose state (surplus + no-change): NO-dollar reassurance, the word "already" carrying the
   // relief, the inherited confidence carrying the honesty. Never a fabricated dollar hero, never "safe
   // either way" (DEAD COPY). recCompose* ⇒ require-hedge-swept ("likely" carries it).
-  // ⚠️ GATED ON `noChange`, WHICH CHANGED MEANING 2026-08-03. It used to mean "the winner is the
-  // CONVENTIONAL default", so this line told a `proportional` household they were "already on one of
-  // the strongest paths" while the actual recommendation was to switch off their order. `noChange` now
-  // means "the crowned plan IS the one you already run" (compared by PLAN, not index — see
-  // `select.ts`'s `isNoChange`), which is the only reading under which the word "already" is true.
+  // ⚠️ GATED ON FOUR DISJUNCTS (`recommendationView.ts` `noDollar`): `noChange` OR the grade's
+  // `subTenthCollapse` (plan R25) OR a seed-B display inversion OR a delta that formats to $0. `noChange`
+  // CHANGED MEANING 2026-08-03: it once meant "the winner is the CONVENTIONAL default" (so a household told to
+  // switch off its order read "already"); now "the crowned plan IS yours" (by PLAN, `select.ts`'s `isNoChange`).
+  // On the other three the crown is NOT their plan: "already" rides the two being display-indistinguishable.
   recComposeAlready:
     'You’re already on one of the strongest paths we tested — nothing else we tried looks likely to pull clearly ahead.',
 

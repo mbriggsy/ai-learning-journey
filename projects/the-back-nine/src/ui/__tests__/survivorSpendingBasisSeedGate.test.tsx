@@ -7,7 +7,7 @@
  * exactly "This assumes about $[survivor] a month of spending on your own (today: $[couple] together)."
  *
  * THE CENSUS (read): the card renders only on the SPINE route (`answerView.ts` carries `survivorReading`
- * on the spine view only; the date route's working member means no card), so its universe is the 15
+ * on the spine view only; the date route's working member means no card), so its universe is the 16
  * spine dev seeds plus the four aged vault plants built on them (`?vault=stale` / `statestale` / `rec` /
  * `recold`, doctored exactly as `plantDevVault` doctors them). The census arm below fails if a new spine
  * seed lands without a row here — no silent no-op (burned/070).
@@ -108,6 +108,9 @@ const ROWS: readonly {
     annual: { survivor: 59_500, couple: 78_000 },
     rendered: line('4,960', '6,500'),
   })),
+  // The early-claim witness (2026-10-15) — `health` at S $60,000, M $4,000 held whole: 4,000 + 0.75 × 56,000 =
+  // 46,000 → $3,833.33 → "3,830"; 60,000 / 12 = $5,000.
+  { key: 'healthss', draft: () => DEV_SEEDS.healthss, annual: { survivor: 46_000, couple: 60_000 }, rendered: line('3,830', '5,000') },
   // The aged plants: stale / statestale / rec keep their base's S ($78,000); recold's household edited its
   // spend +$6,000 a year (`RECORD_SPEND_EDIT`) → S $84,000: 0.75 × 84,000 = 63,000 → $5,250; $7,000.
   ...(['stale', 'statestale', 'rec'] as const).map((key) => ({
@@ -142,7 +145,7 @@ describe('the survivor card’s spending-basis line on every household that rend
   it('the census: the rows are exactly the spine dev seeds (+ the four aged plants) — a new spine seed must add its row', () => {
     const spineSeeds = (Object.keys(DEV_SEEDS) as DevSeedKey[]).filter((k) => buildSpineParams(DEV_SEEDS[k]) !== null)
     expect(ROWS.filter((r) => !r.key.startsWith('vault:')).map((r) => r.key).sort()).toEqual([...spineSeeds].sort())
-    expect(spineSeeds).toHaveLength(15)
+    expect(spineSeeds).toHaveLength(16)
   })
 
   it('no CARD-BEARING household is ramped — the ramped dev seeds (`dip`, the Go-go years line) ride the date route, which renders no card, so no dev household drives the withheld line live', () => {

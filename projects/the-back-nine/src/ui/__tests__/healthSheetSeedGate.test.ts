@@ -27,7 +27,7 @@ import type { HealthReadout } from '@shared/model'
  *  under test here; the facts are). */
 const FRESH = epochDayFromIsoDate(acaEnhancedSubsidyStatus.value.verifiedOn) + 1
 
-const readoutOf = (name: 'retired' | 'health' | 'healthnc' | 'healthgap'): HealthReadout => {
+const readoutOf = (name: 'retired' | 'health' | 'healthnc' | 'healthgap' | 'healthss'): HealthReadout => {
   const d = DEV_SEEDS[name]
   const params = buildSpineParams(d)
   if (params === null) throw new Error(`${name}: not a spine seed`)
@@ -161,5 +161,42 @@ describe('the conversion tile on the priced seeds, through the real engine', () 
     expect(pricedStateForRun(DEV_SEEDS.health), 'the twin prices no state').toBeUndefined()
     const twin = composeHealthSheet(readoutOf('health'), DEV_SEEDS.health, FRESH, pricedStateForRun(DEV_SEEDS.health))
     expect(factOf(twin, 'conversion')?.figure).toBe(slots.healthFigCents(22))
+  }, 120_000)
+})
+
+/** THE EARLY-CLAIM WITNESS (the register's Tier 0 "The health sheet's conversion tile prices the federal
+ *  tax at the bare bracket rate — …") — the real pipeline end to end on `healthss`, the one shipped seed
+ *  whose ACA anchor year draws a benefit. Hand-derived (DND 012), never read off the composer: the anchor
+ *  is yearsFromNow 1 (calendar 2026, both 62). The benefit: a $28,000 and a $22,000 PIA claimed 60 months
+ *  before FRA 67, 30 % off (36 × 5/9 % + 24 × 5/12 %), dime-floored monthly (POMS RS 00615.101) —
+ *  1,633.30 + 1,283.30 = 2,916.60 × 12 = 34,999.20. On the engine's median AGI, 54,669: the other income
+ *  O solves O + 6,000 + 0.85 × (O + 17,499.60 − 44,000) = 54,669 → O ≈ 38,483, provisional ≈ 55,983 — the
+ *  85 % phase, under the 85 %-of-benefit cap (16,185 < 29,749). Taxable 54,669 − 32,200 = 22,469, the 10 %
+ *  band → federal 0.10 × 1.85 = 18.5¢. Drag: the ACA MAGI 73,482 ÷ 21,150 = 3.47 × FPL, the flat 9.96 %
+ *  band, the credit live (16,800 − 0.0996 × 73,482 = 9,481 > 0) → 9.96¢. All told 28.46 → 28¢; the bare
+ *  bracket read 10 + 9.96 = 19.96 → 20¢. */
+describe('the conversion tile on the early-claim seed, through the real engine', () => {
+  it('`healthss` (both 62, both claiming at 62) reads 28¢ all told — the benefit a converted dollar pulls into tax, priced (the bare bracket read 20¢)', () => {
+    expect(pricedStateForRun(DEV_SEEDS.healthss), 'no priced state — the move is federal alone').toBeUndefined()
+    const readout = readoutOf('healthss')
+    const anchor = acaAnchor(readout)
+    expect(anchor?.yearsFromNow, 'the anchor is calendar 2026').toBe(1)
+    expect(anchor?.ssBenefitP50, 'the anchor year’s benefit: two dime-floored 62-claims').toBeCloseTo(34_999.2, 6)
+    // The derivation's bands, asserted on the wire, so an engine drift that leaves one reds HERE with its
+    // reason rather than as a bare cents mismatch. AGI inside the 10 % band (32,200 + 24,800 = 57,000) and
+    // past the 85 % line: provisional clears 44,000 exactly when O > 44,000 − 17,499.60 = 26,500.40, i.e.
+    // AGI > 26,500.40 + 6,000 = 32,500.40 — and the cap (0.85 × 34,999.20 = 29,749.32) first binds at
+    // provisional 71,940, an AGI near 84,190, far above 57,000. The ACA MAGI in the flat band, under the cliff.
+    expect(anchor!.irmaaMagiP50).toBeGreaterThan(32_500.4)
+    expect(anchor!.irmaaMagiP50).toBeLessThan(57_000)
+    expect(anchor!.acaMagiP50).toBeGreaterThan(3 * 21_150)
+    expect(anchor!.acaMagiP50).toBeLessThan(84_600)
+    const view = composeHealthSheet(readout, DEV_SEEDS.healthss, FRESH, pricedStateForRun(DEV_SEEDS.healthss))
+    expect(factOf(view, 'conversion')).toEqual({
+      id: 'conversion',
+      eyebrow: copy.healthFactConversion,
+      figure: slots.healthFigCents(28),
+      lines: [slots.shadowRateLine(28)],
+    })
   }, 120_000)
 })

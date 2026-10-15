@@ -14,6 +14,7 @@ import {
   composeMedicareExtrasHeldFlat,
   composeMedicareExtrasTypicalNote,
   composeRegimeFutures,
+  federalConversionMarginal,
   medicareAnchor,
   medicareEraYear,
   showMedicarePricedNote,
@@ -75,6 +76,9 @@ const year = (over: Partial<HealthReadoutYear>): HealthReadoutYear => ({
   medicareEnrolledP50: 0,
   acaMagiP50: 0,
   irmaaMagiP50: 0,
+  // The anchor year's Social Security (0 — nobody has claimed): the conversion tile's federal
+  // term reads the bare bracket until an arm sets it.
+  ssBenefitP50: 0,
   overCliffFraction: 0,
   acaPricedFraction: 0,
   cohortFraction: 1,
@@ -716,6 +720,64 @@ describe('the conversion tile counts the RUN’s priced state (the register’s 
       lines: [slots.shadowRateLine(22)],
     })
     expect(Object.is(stateConversionMarginal({ state: undefined, filing: 'mfj', calendarYear: 2026, agi: 60_000, minLivingAge: 60 }), 0)).toBe(true)
+  })
+})
+
+// ─── the conversion tile prices the Social Security a converted dollar pulls into tax ────────────
+// The register's Tier 0 "The health sheet's conversion tile prices the federal tax at the bare bracket
+// rate — a household drawing Social Security before 65 reads "about 22¢ all told" where the run charges
+// about 32¢". The run taxes the benefit through IRS Pub 915 Worksheet 1, so a converted dollar with
+// provisional income in the 50 % / 85 % phase adds $0.50 / $0.85 of taxable benefit too. Every
+// expectation below is hand-derived (DND 012) from the statute, never read back from `taxCore` or the
+// composer: the §86 MFJ lines $32,000 / $44,000 (frozen — the price index is 1 in 2026); the 2026 MFJ
+// brackets (10 % to $24,800, 12 % to $100,800, 22 % to $211,400) over the $32,200 standard deduction
+// (+ $1,650 per 65+ filer); the OBBBA senior bonus, $6,000 per 65+ filer less 6 % of MAGI over
+// $150,000, 2025–2028 only (Schedule 1-A). `slcsp: 0` isolates the federal term (no benchmark, no drag).
+describe('the conversion tile prices the Social Security a converted dollar pulls into tax (the register’s Tier 0 "the bare bracket rate")', () => {
+  /** One ACA-priced anchor year carrying an AGI, an ACA MAGI and the year's Social Security. */
+  const withBenefit = (agi: number, acaMagi: number, ssBenefit: number): HealthReadout => ({
+    byYear: [
+      year({ yearsFromNow: 1, acaPricedFraction: 1, acaNetPremiumP50: 9_950, acaMagiP50: acaMagi, irmaaMagiP50: agi, ssBenefitP50: ssBenefit, overCliffFraction: 0.31 }),
+    ],
+  })
+  const cents = (view: ReturnType<typeof composeHealthSheet>) => factOf(view, 'conversion')
+
+  it('the 85 % phase (the register’s worked example): $40,000 of benefit over $40,000 of other income — provisional 60,000 → taxable benefit 6,000 + 0.85 × 16,000 = 19,600 → AGI 59,600, 27,400 taxable (12 %); one more dollar adds 1.85 taxable → 22.2¢, + the 9.96¢ drag (MAGI 80,000 = 3.78 × FPL, PTC live: 12,000 − 7,968 > 0) = 32.16 → 32¢, figure AND sentence (the bare bracket said 22)', () => {
+    expect(cents(composeHealthSheet(withBenefit(59_600, 80_000, 40_000), draft({ ages: [62, 62] }), FRESH, undefined))).toEqual({
+      id: 'conversion',
+      eyebrow: copy.healthFactConversion,
+      figure: slots.healthFigCents(32),
+      lines: [slots.shadowRateLine(32)],
+    })
+    expect(federalConversionMarginal({ filing: 'mfj', calendarYear: 2026, count65: 0, agi: 59_600, ssBenefit: 40_000 })).toBeCloseTo(0.222, 9)
+  })
+
+  it('the 50 % phase, $500 under the 85 % line — $20,000 of benefit over $33,500: provisional 43,500 → taxable benefit min(10,000, 0.5 × 11,500) = 5,750 → AGI 39,250, 7,050 taxable (10 %); one more dollar adds 1.5 → 15¢ (the bare bracket said 10; a $1,000 probe would cross into the 85 % phase and say 17)', () => {
+    expect(cents(composeHealthSheet(withBenefit(39_250, 53_500, 20_000), draft({ ages: [62, 62], slcsp: 0 }), FRESH, undefined))?.figure).toBe(slots.healthFigCents(15))
+    expect(federalConversionMarginal({ filing: 'mfj', calendarYear: 2026, count65: 0, agi: 39_250, ssBenefit: 20_000 })).toBeCloseTo(0.15, 9)
+  })
+
+  it('past the 85 %-of-benefit cap the benefit adds nothing — $20,000 over $60,000: provisional 70,000 → min(0.85 × 20,000, 6,000 + 0.85 × 26,000) = 17,000, the cap → AGI 77,000, 44,800 taxable (12 %) → 12¢, the bare bracket (an "85 % phase ⇒ × 1.85" shortcut would say 22)', () => {
+    expect(cents(composeHealthSheet(withBenefit(77_000, 80_000, 20_000), draft({ ages: [62, 62], slcsp: 0 }), FRESH, undefined))?.figure).toBe(slots.healthFigCents(12))
+  })
+
+  it('a SHELTERED anchor keeps the tile’s convention — $30,000 over $20,000: provisional 35,000 → taxable benefit 1,500 → AGI 21,500, under the 32,200 deduction: the run charges no federal tax on the next dollar; the tile reads the first bracket, 10¢, as it always has (multiplying that rate by the live 1.5 slope would say 15)', () => {
+    expect(cents(composeHealthSheet(withBenefit(21_500, 50_000, 30_000), draft({ ages: [62, 62], slcsp: 0 }), FRESH, undefined))?.figure).toBe(slots.healthFigCents(10))
+  })
+
+  it('the senior bonus’s phase-out adds its slope with NO benefit — one 65+ filer at AGI 170,000 in 2026: the deduction 32,200 + 1,650 + (6,000 − 0.06 × 20,000) = 38,650 shrinks 6¢ per dollar → 131,350 taxable (22 %) × 1.06 = 23.32 → 23¢ (over the cliff, no drag); in 2029, past the bonus’s sunset, the bare 22¢', () => {
+    const highAgi = withBenefit(170_000, 170_000, 0)
+    expect(cents(composeHealthSheet(highAgi, draft({ ages: [66, 62] }), FRESH, undefined))?.figure).toBe(slots.healthFigCents(23))
+    expect(cents(composeHealthSheet(highAgi, draft({ ages: [66, 62], startYear: 2029 }), FRESH, undefined))?.figure).toBe(slots.healthFigCents(22))
+  })
+
+  it('incoherent medians never throw or read NaN — a $200,000 benefit whose own taxable floor (provisional 100,000 at zero other income → 6,000 + 0.85 × 56,000 = 53,600) exceeds the 40,000 AGI clamps the other income at 0, where the benefit is in the 85 % phase: 7,800 taxable (10 %) × 1.85 = 0.185', () => {
+    expect(federalConversionMarginal({ filing: 'mfj', calendarYear: 2026, count65: 0, agi: 40_000, ssBenefit: 200_000 })).toBeCloseTo(0.185, 9)
+  })
+
+  it('NO BENEFIT ⇒ the bare bracket, byte-identical: both slopes add an exact 0 (12 % at AGI 60,000 — Object.is, never a near-equal), and the household above every one of these arms still reads 22¢', () => {
+    expect(Object.is(federalConversionMarginal({ filing: 'mfj', calendarYear: 2026, count65: 0, agi: 60_000, ssBenefit: 0 }), 0.12)).toBe(true)
+    expect(cents(composeHealthSheet(withBenefit(60_000, 66_600, 0), draft(), FRESH, undefined))?.figure).toBe(slots.healthFigCents(22))
   })
 })
 

@@ -408,6 +408,10 @@ export interface HealthYearSink {
   readonly acaMagi: number[]
   /** The year's IRMAA-MAGI (taxable-SS calculator) — the distinct second anchor. */
   readonly irmaaMagi: number[]
+  /** The year's FULL Social Security benefit — the converged `ssBenefitFull` component both MAGIs
+   *  read (observed, never consumed): the health sheet prices the benefit taxation a converted
+   *  dollar triggers off it, since the two MAGIs' medians cannot be subtracted back into it. */
+  readonly ssBenefit: number[]
   /** The year's ACA cliff state: 1 = priced and landed strictly over the 400%-FPL cliff
    *  (PTC 0); 0 = priced, under (or at) the cliff; -1 = not an ACA-priced year. */
   readonly acaCliffState: number[]
@@ -1542,6 +1546,7 @@ export function runTaxAwareDecumulation(
     let irmaaSurchargeThisYear = 0
     let acaMagiThisYear = 0
     let irmaaMagiThisYear = 0
+    let ssBenefitThisYear = 0
     let acaCliffStateThisYear = -1
     if (config.taxEnabled && regime) {
       // IRMAA (M4): the year's post-65 Medicare cost is a CONSTANT addend to the spending the gross-up
@@ -1769,6 +1774,7 @@ export function runTaxAwareDecumulation(
       if (healthOut) {
         acaMagiThisYear = acaMagi(magiComponentsThisYear)
         irmaaMagiThisYear = irmaaMagi(magiComponentsThisYear)
+        ssBenefitThisYear = magiComponentsThisYear.ssBenefitFull
       }
       // Record this year's IRMAA-MAGI — ONE post-branch write covering BOTH recording sites (C3
       // §3b), only when healthcare is on (acaTable !== undefined; a healthcare-off tax-only year
@@ -1883,6 +1889,7 @@ export function runTaxAwareDecumulation(
       healthOut.medicareEnrolled.push(regime?.medicareEnrolledCount ?? 0)
       healthOut.acaMagi.push(acaMagiThisYear)
       healthOut.irmaaMagi.push(irmaaMagiThisYear)
+      healthOut.ssBenefit.push(ssBenefitThisYear)
       healthOut.acaCliffState.push(acaCliffStateThisYear)
     }
 

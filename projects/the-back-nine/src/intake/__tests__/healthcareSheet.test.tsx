@@ -103,6 +103,7 @@ const READOUT: HealthReadout = {
       medicareEnrolledP50: 0,
       acaMagiP50: 66_600,
       irmaaMagiP50: 60_000,
+      ssBenefitP50: 0,
       overCliffFraction: 0.31,
       acaPricedFraction: 1,
       cohortFraction: 1,
@@ -411,8 +412,8 @@ describe('HealthcareSheet — the Medicare-extras door home (F5)', () => {
 describe('the era lines count from TODAY through the sheet (the savedAnchor prop → composeHealthSheet)', () => {
   const row = (over: Partial<HealthReadoutYear>): HealthReadoutYear => ({
     yearsFromNow: 1, acaNetPremiumP50: 0, medicareBaseP50: 0, irmaaSurchargeP50: 0, medicareExtrasP50: 0,
-    medicareEnrolledP50: 0, acaMagiP50: 60_000, irmaaMagiP50: 60_000, overCliffFraction: 0, acaPricedFraction: 0,
-    cohortFraction: 1, ...over,
+    medicareEnrolledP50: 0, acaMagiP50: 60_000, irmaaMagiP50: 60_000, ssBenefitP50: 0, overCliffFraction: 0,
+    acaPricedFraction: 0, cohortFraction: 1, ...over,
   })
   /** The healthnc shape (the chrome test's fixture): the anchor is row 5 with ONE enrolled, the era row 7 with two. */
   const ERA: HealthReadout = {

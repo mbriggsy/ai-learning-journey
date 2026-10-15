@@ -29,7 +29,7 @@ here exists because the aged surface that record lands on was not honest before 
    via the persisted seed when no clock fired is what keeps the screenshot promise. U17's real content is
    the **action-warning copy register**, not a re-presentation mechanism.
 2. **The "Act-4 `schemaVersion` 3 bump" is counterfactual.** v3 is the shipped forward-written shape
-   (`model.ts:1746-1751`; codec `> 3` = newer-version). `savedRecommendation?` landed **additive-optional
+   (`model.ts:1752-1757`; codec `> 3` = newer-version). `savedRecommendation?` landed **additive-optional
    within v3**, presence-keyed, following the `rothConversion` / `savedAt` / `retirementState` precedents
    (`scenarioCodec.ts:731-734` was the pattern copied).
 
@@ -278,7 +278,7 @@ headline, where it would read as current).
   *"decodeScenario builds every object."* It does **not** — `scenarioCodec.ts:938-940` is a validated
   pass-through cast, and the behavior was safe only because `JSON.parse` preserves `encodeScenario`'s
   insertion order, so a future field reorder would have broken dirty-detection silently. The fix is
-  `scenarioIdentityKey` (`model.ts:2294`), which rebuilds plain objects with SORTED keys and throws on a
+  `scenarioIdentityKey` (`model.ts:2300`), which rebuilds plain objects with SORTED keys and throws on a
   non-serializable value, so key order and absent-vs-undefined can never read as a change.
 
 **Shipped 2026-07-25, commit `374299c9`, CI green by explicit run id 30163571502**, carrying one ruling
@@ -464,7 +464,7 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   `validateParams` probe, **never a decreed aging depth.** This is insight 085's law: a doctored fixture is
   a new producer of persisted state, and the engine's fail-loud gates are part of its consumer chain. Age
   only inside the domain the engine prices. The probe settled the plant as `base: 'dip'`, aging depth 6
-  (`ARRIVED_PLAN_YEARS` at `devSeeds.ts:1357`, registry entry `:1693`, doctor `doctorArrivedVault`
+  (`ARRIVED_PLAN_YEARS` at `devSeeds.ts:1377`, registry entry `:1713`, doctor `doctorArrivedVault`
   at `:1404`).
 - **The engine-acceptance pin ships:** hydrate → `buildSpineParams` → `validateParams` accepts → the run
   resolves to a **real** `outcomeState`, never the R19 indeterminate. It was modelled on the `statestale`
@@ -475,7 +475,7 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   never fires here and keeps `?vault=datestale` as its only live route. (2) Aging `startCalendarYear` alone
   breaks the documented `currentAge === startCalendarYear − birthYear` model invariant (`model.ts:98`) and
   forks the engine's two birth-year reads, so `doctorArrivedVault` ages `birthYear` in step (the
-  pre-aging invariant guard, `devSeeds.ts:1416-1423`) and refuses a priced-state base aloud (`:1407`).
+  pre-aging invariant guard, `devSeeds.ts:1436-1443`) and refuses a priced-state base aloud (`:1427`).
   The crowns measured byte-identical either way, so
   the coherent household was free.
 - **The pre-existing `stale`-plant gap is closed.** Its `−2y startCalendarYear` aging is the exact mutation
@@ -506,7 +506,7 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   Card 1's two-odds collision remains open, as does the OTHER half of Cards 6–7 — naming the strategy on
   the holds face, Briggsy's own ruling, carried in the register as "The saved-record card does not name
   the strategy".
-- **Owed from the walk, and not filed until 2026-09-25 (from the 2026-09-24 doc audit):** the arrived-walk's state-tax blindness. `?vault=datearrived` is stateless by construction (`doctorArrivedVault` refuses a priced-state base, `devSeeds.ts:1405-1412`), so no walk has read the arrived face on a priced state. It is carried in `docs/backlog.md` under "The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed".
+- **Owed from the walk, and not filed until 2026-09-25 (from the 2026-09-24 doc audit):** the arrived-walk's state-tax blindness. `?vault=datearrived` is stateless by construction (`doctorArrivedVault` refuses a priced-state base, `devSeeds.ts:1425-1432`), so no walk has read the arrived face on a priced state. It is carried in `docs/backlog.md` under "The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed".
 - **The aged band's x-axis has its first real-browser arm.** Before S6 no fit arm asserted it — the aged
   axis appeared nowhere in `e2e/`, so §S0's rename had shipped on unit arms alone. `?vault=datearrived` is
   now driven at `e2e/vertical-fit.spec.ts:2156-2260`, asserting that the year-0 endpoint names the BUILD

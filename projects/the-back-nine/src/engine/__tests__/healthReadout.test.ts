@@ -126,6 +126,21 @@ describe('healthReadout — the simulate-level emission (opt-in, observe-only)',
     expect(on.healthReadout).toBeDefined()
   })
 
+  it('ssBenefitP50 is the household’s FULL Social Security benefit that year — 0 while nobody has claimed, the claimed benefit once someone has (the health sheet’s conversion tile prices the benefit taxation a converted dollar triggers off it)', () => {
+    // Hand-derived (DND 012, the SSA rules — never the engine's benefit function): a $28,000 PIA
+    // claimed at 62 by a 1964 birth (FRA 67) is 60 months early, 36 × 5/9 % + 24 × 5/12 % = 30 % off:
+    // $2,333.33 a month × 0.70 = $1,633.33, dime-floored (POMS RS 00615.101) to $1,633.30 → $19,599.60
+    // a year. The spouse (60, claiming at 70, no PIA) adds nothing in year 0. Fixed horizon: nobody
+    // dies, so every path draws the same benefit and the median is exact.
+    const claimsAt62: PersonInputs = { ...MALE_60, currentAge: 62, birthYear: 1964, retirementAge: 62, pia: 28_000, socialSecurityClaimAge: 62 }
+    const claimed = dist(simulate(healthParams({ people: [claimsAt62, FEMALE_60] }), 777, { healthReadout: true }))
+    // The FULL benefit — never its taxable portion (the piece IRMAA-MAGI carries), which this year's
+    // provisional income keeps well under 19,599.60.
+    expect(claimed.healthReadout!.byYear[0]!.ssBenefitP50).toBeCloseTo(19_599.6, 6)
+    const unclaimed = dist(simulate(healthParams(), 777, { healthReadout: true }))
+    expect(unclaimed.healthReadout!.byYear.every((y) => y.ssBenefitP50 === 0), 'no PIA on either member: no benefit in any year').toBe(true)
+  })
+
   it('presence companions: the ACA window shows a real subsidized premium; the Medicare window shows the real base Part B; the anchors are live (insight 029 — never vacuous)', () => {
     const on = dist(simulate(healthParams(), 777, { healthReadout: true }))
     const byYear = on.healthReadout!.byYear
@@ -257,7 +272,7 @@ describe('healthReadout — the simulate-level emission (opt-in, observe-only)',
 // ---------------------------------------------------------------------------
 
 const freshSink = (): HealthYearSink => ({
-  acaNetPremium: [], medicareBase: [], irmaaSurcharge: [], medicareExtras: [], medicareEnrolled: [], acaMagi: [], irmaaMagi: [], acaCliffState: [],
+  acaNetPremium: [], medicareBase: [], irmaaSurcharge: [], medicareExtras: [], medicareEnrolled: [], acaMagi: [], irmaaMagi: [], ssBenefit: [], acaCliffState: [],
 })
 const zeros = (n: number) => Array.from({ length: n }, () => 0)
 const STOCK_W = 0.5

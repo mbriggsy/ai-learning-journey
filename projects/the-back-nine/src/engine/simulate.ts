@@ -1168,6 +1168,7 @@ interface HealthAgg {
   readonly medicareEnrolled: number[][]
   readonly acaMagi: number[][]
   readonly irmaaMagi: number[][]
+  readonly ssBenefit: number[][]
   readonly overCliff: number[]
   readonly acaPriced: number[]
   readonly cohort: number[]
@@ -1204,6 +1205,9 @@ export function buildHealthReadout(agg: HealthAgg, paths: number): HealthReadout
       medicareEnrolledP50: median(agg.medicareEnrolled[t] ?? []),
       acaMagiP50: median(agg.acaMagi[t] ?? []),
       irmaaMagiP50: median(agg.irmaaMagi[t] ?? []),
+      // The same converged component both MAGIs read — the health sheet's conversion tile prices
+      // the benefit taxation a converted dollar triggers off it (medians do not subtract).
+      ssBenefitP50: median(agg.ssBenefit[t] ?? []),
       overCliffFraction: priced > 0 ? (agg.overCliff[t] ?? 0) / priced : 0,
       acaPricedFraction: paths > 0 ? priced / paths : 0,
       cohortFraction: paths > 0 ? count / paths : 0,
@@ -1558,6 +1562,7 @@ export function simulate(
         medicareEnrolled: Array.from({ length: maxHorizon }, (): number[] => []),
         acaMagi: Array.from({ length: maxHorizon }, (): number[] => []),
         irmaaMagi: Array.from({ length: maxHorizon }, (): number[] => []),
+        ssBenefit: Array.from({ length: maxHorizon }, (): number[] => []),
         overCliff: new Array<number>(maxHorizon).fill(0),
         acaPriced: new Array<number>(maxHorizon).fill(0),
         cohort: new Array<number>(maxHorizon).fill(0),
@@ -1716,7 +1721,7 @@ export function simulate(
     const floorSink = fanTrack === 'floor' ? pathBalances : undefined
     // P3·U11 — this path's healthcare observation sink (FULL track only; fresh per path).
     const healthSink: HealthYearSink | undefined = wantHealth
-      ? { acaNetPremium: [], medicareBase: [], irmaaSurcharge: [], medicareExtras: [], medicareEnrolled: [], acaMagi: [], irmaaMagi: [], acaCliffState: [] }
+      ? { acaNetPremium: [], medicareBase: [], irmaaSurcharge: [], medicareExtras: [], medicareEnrolled: [], acaMagi: [], irmaaMagi: [], ssBenefit: [], acaCliffState: [] }
       : undefined
     let res: DecumulationResult
     let floorRes: DecumulationResult | undefined
@@ -1953,6 +1958,7 @@ export function simulate(
           healthAgg.medicareEnrolled[t]!.push(healthSink.medicareEnrolled[t]!)
           healthAgg.acaMagi[t]!.push(healthSink.acaMagi[t]!)
           healthAgg.irmaaMagi[t]!.push(healthSink.irmaaMagi[t]!)
+          healthAgg.ssBenefit[t]!.push(healthSink.ssBenefit[t]!)
           const cliffState = healthSink.acaCliffState[t]!
           if (cliffState >= 0) {
             healthAgg.acaPriced[t]!++

@@ -16,7 +16,7 @@
 **All-in** = per path:
 - `lifetimeTaxPaidReal`: income tax, federal plus priced state;
 - `+ lifetimeNetPremiumReal`: the ACA premium after the PTC;
-- `+ lifetimeMedicareCostReal`: base Part B + IRMAA + extras (`taxOverlay.ts:1867`, map).
+- `+ lifetimeMedicareCostReal`: base Part B + IRMAA + extras (`taxOverlay.ts:1873`, map).
 
 It is measured in real $, lifetime, as the mean over paths, on the same after-depletion footing as today. Lower is better.
 
@@ -34,7 +34,7 @@ The words are HIS. The build drafts options (§6) and ships none that Briggsy ha
 - It returns `undefined` when there is no `taxAware`.
 - It THROWS if the three arrays differ in length (insight 010; no `?? 0`, which is stricter than the bequest helper).
 - It sums `tax[i] + premium[i] + medicare[i]` left to right, in that fixed order.
-- Its docblock cites `taxOverlay.ts:1805 / :1659 / :1860-1871` as the proof the addends are disjoint, and notes HSA spend is not an addend.
+- Its docblock cites `taxOverlay.ts:1811 / :1664 / :1866-1877` as the proof the addends are disjoint, and notes HSA spend is not an addend.
 - Re-export it from `evaluate.ts` the way `:37` re-exports the bequest helper.
 - *Why here:* all readers agree. The module imports only `@shared/model` types, so it is safe on the render path.
 
@@ -78,7 +78,7 @@ The MEASURED probe substituted its vector before `adoptObservedOutcome`. The gra
 - ⚑ SKEPTIC (missing readers; each follows through sites 1-2, named so nothing is assumed): the hero delta itself (`recommendationView.ts:634-646` `winnerDisplaysAhead` / `deltaReal`, and the zero-collapse guard at `:650`, which decide dollar vs no-dollar); `runnerUpVizFor` (`recommendationView.ts:880-881`, leave-more gated today); `namedDriverProbe` / `namedDriverProbeSteps` (`gradeCalibration.ts:399-436`), which re-rank under `rankCandidates` and drive F2's `aca-enhanced-subsidies` driver and the coin-flip hinge `recGradeNoteHingeAca` (`copy.ts:1934-1935`). That sentence will now fire on PREMIUM-driven flips, so it joins the §8 Caddie read.
 
 **D5 Byte-identity when healthcare is off.**
-- The premium and Medicare yearly values start at 0 (`taxOverlay.ts:1529-1535`, map).
+- The premium and Medicare yearly values start at 0 (`taxOverlay.ts:1533-1539`, map).
 - They are written only under the healthcare gate (`:1098, :1555, :1707-1712`).
 - healthcareEnabled requires taxEnabled (`:1004`; `simulate.ts:969`).
 - `totalTaxPaidReal` starts at +0, so `(t + 0) + 0 === t`, including the sign of zero.
@@ -86,7 +86,7 @@ The MEASURED probe substituted its vector before `adoptObservedOutcome`. The gra
 Result: the all-in vector equals the tax vector element by element, and its mean, SE, grade diffs and headline are bit-identical. The goldens and the two healthcare-OFF pay-less-tax oracle cases cannot move: `caseConstantRate.ts:149` and `caseNoChange.ts:56`, and `healthcareEnabled` appears only in caseAcaCliff (map).
 
 **D6 Finiteness seam.**
-- Add `!Number.isFinite(taxRes.totalNetPremiumReal) || !Number.isFinite(taxRes.totalMedicareCostReal)` to `simulate.ts:1854-1868` (read: today it checks terminal, tax, basis and buckets only).
+- Add `!Number.isFinite(taxRes.totalNetPremiumReal) || !Number.isFinite(taxRes.totalMedicareCostReal)` to `simulate.ts:1859-1873` (read: today it checks terminal, tax, basis and buckets only).
 - *Chair's pick:* the full arm ONLY. `floorTaxRes` has the same type (`:1732`, read), but no ranked statistic reads the floor arm's premium. The existing floor clause checks terminal + tax for the same reason.
 - It is throw-or-nothing, so no value moves. A non-finite value then takes the typed infeasible route instead of throwing in `mean` and aborting the batch.
 - ⚑ SKEPTIC: D6 lands in the SAME Phase A commit as the D2 field (the new `mean` throw path must never exist without its seam). In principle it can mark a previously scored candidate infeasible (`solverCodeVersion.ts:12-21`: bump on anything that can move a ranking); in practice it is measure-zero (the premium sits inside `grossWithdrawal`, so an overflow hits `terminalReal` first). The Phase A commit and the VERSION 10 block both say so: unreachable in practice, landed before the bump.
@@ -100,8 +100,8 @@ Result: the all-in vector equals the tax vector element by element, and its mean
   - the stamp is global, so leave-more records re-stale too. That over-re-run is accepted under the file's when-in-doubt rule.
 - Re-pin `pricingVersion.test.ts:142-153` to `{ solverCodeVersion: 10, newestRepriceRow: 7 }`, and retitle it "v8, v9 and v10 were ranking logic only". (Then; since the 2026-10-09 survivor-medical lean, a scored pricing change, the pin reads `{ solverCodeVersion: 11, newestRepriceRow: 11 }`.)
 - **No ledger row** (`pricingVersion.ts:39-46`): no figure from a saved household's spine recompute moves. `FIRST_UNAMBIGUOUS_SAVE_DAY` stays put.
-- **No `FINGERPRINT_SCHEMA` bump and no objective tag** (`solverRunFingerprint.ts:62-64`). Either would add a false 'inputs-changed' cause, which renders "Your numbers have changed since then." (`copy.ts:1716`). Saved records must report ONE cause, 'solver-changed', which renders "The way strategies are worked out has changed since then." (the string is at `copy.ts:1719`, mapped from the cause at `Result.tsx:85`). That sentence is true. Records persist no dollar figure (`model.ts:1983-2045`).
-- **Persisted id `'pay-less-tax'` stays.** It lives in `model.ts:270` RECOMMENDATION_GOALS, the codec needVocab gate (`:1901`) and the fingerprint canon (`:121`). Renaming it is a one-way door: memories dropped, plus a false 'inputs-changed'.
+- **No `FINGERPRINT_SCHEMA` bump and no objective tag** (`solverRunFingerprint.ts:62-64`). Either would add a false 'inputs-changed' cause, which renders "Your numbers have changed since then." (`copy.ts:1716`). Saved records must report ONE cause, 'solver-changed', which renders "The way strategies are worked out has changed since then." (the string is at `copy.ts:1719`, mapped from the cause at `Result.tsx:85`). That sentence is true. Records persist no dollar figure (`model.ts:1989-2051`).
+- **Persisted id `'pay-less-tax'` stays.** It lives in `model.ts:270` RECOMMENDATION_GOALS, the codec needVocab gate (`:1907`) and the fingerprint canon (`:121`). Renaming it is a one-way door: memories dropped, plus a false 'inputs-changed'.
 - **v10 collision:** `council-log.md:15` and `backlog.md:864-873` earmark v10 for the unmerged gap-fill (`b9-v10-gapfill-wip`). Note in the register's recall entry: "v10 = the all-in objective; a revived gap-fill re-measures on all-in and takes a later version." The council rows stay as records.
 
 ## 2. Every site
@@ -112,12 +112,12 @@ Result: the all-in vector equals the tax vector element by element, and its mean
 - `objective.ts`: site 2.
 - `select.ts`: site 4.
 - `gradeCalibration.ts`: site 5.
-- `simulate.ts:1854-1868`: D6.
+- `simulate.ts:1859-1873`: D6.
 - `solverCodeVersion.ts`: D8.
 - NEW `reference/solver-cases/caseAllInAcaTrap.ts` plus its `index.ts` entry (§5.1).
 
 **Docblock only:**
-- ⚑ SKEPTIC (missing site): `src/shared/model.ts:860-862` (pre-Phase-A lines; as built the field is at `model.ts:870`) documents `lifetimeMedicareCostReal` as "base Part B + the IRMAA surcharge", but `taxOverlay.ts:1867` accrues `medicareCostThisYear + medicareExtrasThisYear` (the Part D / Medigap / MA extras). Re-word it to "base Part B + IRMAA + the Part D / Medigap / MA extras (`taxOverlay.ts:1867`), an addend of the pay-less-tax all-in objective", and note at `model.ts:833-836` ("the P4 objective reads THESE") that pay-less-tax now ranks on tax + premium + Medicare. No type change; Phase A.
+- ⚑ SKEPTIC (missing site): `src/shared/model.ts:860-862` (pre-Phase-A lines; as built the field is at `model.ts:870`) documents `lifetimeMedicareCostReal` as "base Part B + the IRMAA surcharge", but `taxOverlay.ts:1873` accrues `medicareCostThisYear + medicareExtrasThisYear` (the Part D / Medigap / MA extras). Re-word it to "base Part B + IRMAA + the Part D / Medigap / MA extras (`taxOverlay.ts:1873`), an addend of the pay-less-tax all-in objective", and note at `model.ts:833-836` ("the P4 objective reads THESE") that pay-less-tax now ranks on tax + premium + Medicare. No type change; Phase A.
 - `solve.ts:211-221, :381-386` (deltaSkew wording).
 - `stateTaxDisclosure.ts:151-155`: the priced-state layer reaches the hero through the tax addend; the logic is unchanged.
 - `recommendationView.ts:100` and `:720`.
@@ -191,7 +191,7 @@ The viz suppression off leave-more stays correct, because all-in is still lower-
     - **F2** healthnc · pay-less-tax · 160 paths (128 until 2026-10-09; the survivor-medical lean removed the flip at 128, so the arm was re-picked under this step's own rule and the assertion was not loosened) (`solvePayloadIdentity.health.test.ts:20-25`, `solvePoolIdentity.health.test.ts:13-17`, map) pins `namedDriver === 'aca-enhanced-subsidies'`. If the probe no longer flips the crown, RE-PICK the arm (another seed or the leave-more goal) so it still exercises a real flip. ⚑ Never loosen the assertion.
     - **Funded-years footing gate** (*chair's pick: Spec 2*). Base Part B + extras accrue only in funded years, so a candidate whose failing paths deplete earlier looks cheaper. Tie tolerance 0 equalizes the survival COUNT, not depletion years; the register already saw this on `order` (`backlog.md:813`).
       - On `health`, `healthnc`, `order`, `borderline` and hl50, at 16k paths, split each crown/runner-up all-in delta into four parts: income tax, ACA premium, IRMAA at equal funded years, and the funded-years component.
-      - ⚑ SKEPTIC: the funded-years bias is ALREADY inside today's income-tax objective and the premium addend (both accrue after the same depletion `break`, `taxOverlay.ts:1847-1871`), not only base Medicare. So compute the funded-years component across ALL three addends (re-score each at the pair's common funded-year count per path vs as-accrued), and report how much is NEW with all-in against what the tax-only objective already carried.
+      - ⚑ SKEPTIC: the funded-years bias is ALREADY inside today's income-tax objective and the premium addend (both accrue after the same depletion `break`, `taxOverlay.ts:1853-1877`), not only base Medicare. So compute the funded-years component across ALL three addends (re-score each at the pair's common funded-year count per path vs as-accrued), and report how much is NEW with all-in against what the tax-only objective already carried.
       - If any all-in crown or runner-up flip is DECIDED by the all-in funded-years delta (with the pre-existing tax-only share shown beside it), STOP and take the figures to Briggsy. It is new evidence that the ruled footing rewards running out (contradictions mean STOP), not a pilot re-opening.
       - Otherwise append the decomposition to the register's as-built note.
       - *Why over Spec 1's record-only:* Spec 1 records the bias but never checks whether it decides a crown. On this point calm-but-wrong is a live risk.
@@ -381,7 +381,7 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 - **`docs/architecture.md` §7.5 `:227`:** the three addends, the one composing function, and the invariants: shared footing (with the funded-years bias named), reduce-to-spine, no double count, HSA not an addend.
 - **`docs/plans/1-engine.md:121`:** a one-clause annotation.
 - **`act4-u16-recommendation-surface-build-spec.md:373, :380-398`:** "all-in lifetime cost, lower is better", plus the re-scoped disclosure list.
-- **`docs/glossary.md`:** a new entry "All-in cost (pay-less-tax objective)". ⚑ Disambiguate it from "all-in" as the Medicare base + Part D/Medigap figure (`council-log.md:22`, the `taxOverlay.ts:1865` comment), from the premiums-only median sum the U11 regime-toggle preview reads (`roth.ts:144`, documented at `model.ts:862-865`), and from "Household spending, all in" (`council-log.md:41`): three referents (⚑ SKEPTIC). Re-check `:145` against the final verb.
+- **`docs/glossary.md`:** a new entry "All-in cost (pay-less-tax objective)". ⚑ Disambiguate it from "all-in" as the Medicare base + Part D/Medigap figure (`council-log.md:22`, the `taxOverlay.ts:1871` comment), from the premiums-only median sum the U11 regime-toggle preview reads (`roth.ts:144`, documented at `model.ts:862-865`), and from "Household spending, all in" (`council-log.md:41`): three referents (⚑ SKEPTIC). Re-check `:145` against the final verb.
 - **`docs/roadmap.md:95`:** the fixture count.
 - **`backlog.md`:** Phase C step 19.
 
@@ -437,7 +437,7 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 - ⚑ Never pre-type hero words into product, plan or glossary docs.
 - ⚑ Never re-word `recRunnerUpWhy` (it belongs to the blocked tolerance entry).
 - ⚑ Never widen the `recDiscAcaSlcsp` gate in this build.
-- ⚑ Never re-open the ruled scope (base + IRMAA + extras) on a pilot call. An IRMAA-only surface does not exist (`taxOverlay.ts:1877-1880` is sink-only); only step 14's measured evidence may go back to him.
+- ⚑ Never re-open the ruled scope (base + IRMAA + extras) on a pilot call. An IRMAA-only surface does not exist (`taxOverlay.ts:1883-1886` is sink-only); only step 14's measured evidence may go back to him.
 
 ## 11. Chair's ledger: what was cut, moved or picked
 

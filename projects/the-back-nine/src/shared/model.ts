@@ -865,7 +865,7 @@ export interface TaxAwareDistribution {
    *  concentrates in the pre-65 ACA years and may barely move the portfolio median. */
   readonly lifetimeNetPremiumReal: readonly number[]
   /** Σ Medicare cost actually paid across the path's funded years (real $; base Part B + IRMAA +
-   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:1867`; P3·U11), an
+   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:1873`; P3·U11), an
    *  addend of the pay-less-tax all-in cost. Same accrual rule as its siblings. */
   readonly lifetimeMedicareCostReal: readonly number[]
 }
@@ -951,6 +951,12 @@ export interface HealthReadoutYear {
   readonly acaMagiP50: number
   /** Median IRMAA-MAGI (real $) — the IRMAA-side anchor (distinct calculator; never reuse one). */
   readonly irmaaMagiP50: number
+  /** Median Social Security benefit received (real $/yr) — the household's FULL benefit, the same
+   *  converged `ssBenefitFull` component both MAGIs above read (single producer). The health sheet's
+   *  conversion tile reads it to price the benefit taxation a converted dollar triggers (IRS Pub 915:
+   *  in the 85 % phase one more ordinary dollar adds $0.85 of taxable benefit) — the two MAGIs alone
+   *  cannot recover it, because medians do not subtract. 0 in a year nobody has claimed. */
+  readonly ssBenefitP50: number
   /** Fraction of the year's ACA-PRICED paths whose MAGI landed strictly over the 400%-FPL
    *  cliff (PTC = 0). 0 when no path priced — read it only where `acaPricedFraction > 0`. */
   readonly overCliffFraction: number

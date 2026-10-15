@@ -1068,6 +1068,25 @@ const healthNcSeed: ScenarioDraft = { ...retiredHealth, retirementState: 'NC' }
  * reached. Pinned through the real engine in healthSheetSeedGate.test.ts. Never doctored into a
  * vault; a 40-year-old "retired at 40" is a witness shape, not a plan.
  */
+/**
+ * THE EARLY-CLAIM WITNESS — `?seed=healthss` (2026-10-15, the register's Tier 0 "The health sheet's
+ * conversion tile prices the federal tax at the bare bracket rate — …"). `health` with both members 62
+ * (born 1964) and BOTH claiming Social Security at 62, spending $60,000: the only shipped seed whose ACA
+ * anchor year draws a benefit (every other pre-65 seed claims at 67), so its conversion tile is the one
+ * that prices the benefit taxation a converted dollar triggers. Measured through the real engine
+ * (2026-10-15): the anchor's benefit 34,999.20 (two dime-floored 62-claims), AGI 54,669, provisional
+ * income in the 85 % phase, the 10 % band — 10 × 1.85 + 9.96 → 28¢ (the bare bracket read 20¢). Pinned
+ * in healthSheetSeedGate.test.ts. Never doctored into a demo — it exists to be cold-read.
+ */
+const healthSsSeed: ScenarioDraft = {
+  ...retiredHealth,
+  people: [
+    { ...retiredHealth.people[0]!, birthYear: 1964, currentAge: 62, retirementAge: 60, socialSecurityClaimAge: 62 },
+    { ...retiredHealth.people[1]!, birthYear: 1964, currentAge: 62, retirementAge: 58, socialSecurityClaimAge: 62 },
+  ],
+  annualSpendingReal: 60_000,
+}
+
 const healthGapSeed: ScenarioDraft = {
   ...healthNcSeed,
   people: [
@@ -1142,6 +1161,7 @@ export const DEV_SEEDS = {
   datenc: dateNcSeed,
   healthnc: healthNcSeed,
   healthgap: healthGapSeed,
+  healthss: healthSsSeed,
   datesolo: dateSoloCoverage,
   atceiling: atCeilingSeed,
 } satisfies Record<string, ScenarioDraft>
@@ -1384,7 +1404,7 @@ const ARRIVED_SAVED_DAYS_AGO = 30
  * (`model.ts:98`) documents `currentAge === startCalendarYear − birthYear` as a model invariant, and
  * the engine reads a birth year through TWO paths that must agree: the SS sub-engine's stated
  * `p.birthYear` (FRA / DRC / deemed-filing lookups) and the tax overlay's DERIVED
- * `startCalendarYear − currentAge` (`simulate.ts:1488`). Aging the build clock ALONE forks them by
+ * `startCalendarYear − currentAge` (`simulate.ts:1492`). Aging the build clock ALONE forks them by
  * the full depth and fabricates a household that is organically impossible — in 2020 this couple
  * would have been 51, not 57. Aging `birthYear` by the same depth restores the invariant exactly,
  * keeps `currentAge` (so the engine sees the SAME household and the crown does not move — MEASURED:
@@ -1420,7 +1440,7 @@ export function doctorArrivedVault(s: ScenarioV3, todayEpochDay: number): Scenar
           `− birthYear (${p.currentAge} !== ${s.startCalendarYear} − ${p.birthYear}) BEFORE aging. ` +
           `This doctor shifts both clocks to KEEP that invariant; over a base that already violates ` +
           `it, the engine's two birth-year reads (p.birthYear for the SS FRA lookup vs ` +
-          `simulate.ts:1488's derived startCalendarYear − currentAge) stay forked and nothing says so.`,
+          `simulate.ts:1492's derived startCalendarYear − currentAge) stay forked and nothing says so.`,
       )
     }
   }

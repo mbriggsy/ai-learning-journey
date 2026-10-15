@@ -16,7 +16,8 @@
  *     track to its one-line `compileBudget` twin at every swept offset probed — the identity that holds
  *     only under a lifelong M (ship gate 1, read + measured);
  *   · the staleness exposure (`spending`, ledger v11) reads 'priced' on exactly the census ship gate 1
- *     named: `health`, `healthnc`, `healthgap` — and 'unpriced' wherever the run provably cannot move.
+ *     named: `health`, `healthnc`, `healthgap` — plus `healthss`, the early-claim seed added 2026-10-15 on
+ *     the same entered M and r — and 'unpriced' wherever the run provably cannot move.
  */
 import { describe, expect, it } from 'vitest'
 import {
@@ -203,9 +204,9 @@ describe('the DATE-ROUTE twin (gate 3): budgetless `date65` + M ≡ its one-line
 })
 
 describe('the staleness exposure — the ledger v11 `spending` family read', () => {
-  it('reads PRICED on exactly ship gate 1’s census of the 24 dev seeds: health, healthnc, healthgap', () => {
+  it('reads PRICED on exactly ship gate 1’s census of the 24 dev seeds — health, healthnc, healthgap — plus healthss (2026-10-15, `health`’s M $4,000 at r 0.75)', () => {
     const priced = (Object.keys(DEV_SEEDS) as DevSeedKey[]).filter((k) => survivorMedicalLeanForRun(DEV_SEEDS[k]))
-    expect(priced).toEqual(['health', 'healthnc', 'healthgap'])
+    expect(priced).toEqual(['health', 'healthnc', 'healthgap', 'healthss'])
     for (const k of Object.keys(DEV_SEEDS) as DevSeedKey[]) {
       // `datesolo` builds no params (a missing fact by design) — its every read is 'unknown', never 'unpriced'.
       const buildable = missingRequiredFacts(DEV_SEEDS[k]).length === 0

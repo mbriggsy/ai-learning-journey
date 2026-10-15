@@ -25,6 +25,38 @@ one-way doors, framing-level forks, or genuine pilot doubt — reason logged) ·
 
 ---
 
+## 2026-10-15 — THE EARLY-CLAIM CONVERSION CENTS ON THE HEALTHCARE SHEET, pre-land (the uncommitted tree over `82f6aea3`) — `seed:healthss` (new: both 62, both claiming Social Security at 62) · `seed:health` as the control (landing + every door; the Healthcare sheet as figured + its preview), REAL+PHONE (walk `temp/caddie/ss-cents-1015`, 4/4 in 39 s; four seats — the cold first look, the naive spouse, calm/honesty + copy-law, the False-PASS hunter — and one refuter over four findings, fresh Opus agents; the pilot's scrolled captures at both viewports)
+
+**surface:** the conversion tile — "Roth conversions in those years" / "28¢ on each dollar converted" / "…a converted dollar could cost about 28¢ all told — the tax on it, plus the discount lost." The words are unchanged; on the new early-claim seed the numeral carries the Social Security a converted dollar pulls into tax (10 % × 1.85 + 9.96 → 28; the bare bracket read 20); `health` keeps 22.
+
+**firstImpression:** (the cold seat, `healthss` landing, REAL) *"The results page of a retirement projection… We're fine, and more than fine… Calm and reassuring, in plain language. It understates and doesn't sell… Relieved, and a bit pleased. Then a small nag: does 'isn't priced yet' mean my $7,100 is really lower?"* Readback matched `copy.txt` exactly (the room sentence, "better than 9 in 10" twice) — no capture defect.
+
+**toneVerdict:** READS-CLEAN on the change (two seats re-derived the 28.46¢ independently — Pub 915 + §36B by hand, and the engine's own functions; nothing against the change survived); HARD-FLAG on pre-existing scope the surface carries (the holds rule, below).
+
+**findings (verified by the chair against the bundle; one refuter over four):**
+- **CREATED BY THE CHANGE — none.** The figure moved the honest way (20 → 28 on the measured household).
+- **PRE-EXISTING, ⚑ HOLDS, NEW TIER 0 — the Medicare card on a same-age couple** (hunter F1, calm F2, both high; refuter SURVIVED, high on the mechanism). The one-figure arm (`era === medicare`) alone among the Medicare arms carries no drug-and-supplement carve-out; `healthss` is the first door-bearing household to reach it. "premiums could run about ~$5,200 a year for your household" sits two cards under "~$9,700 a year" while the run charges ~$11,100 with the extras. The rosier reading: "At 65 our premiums drop from about $9,700 to about $5,200." Filed Tier 0, pilot (an existing string, `irmaaStepExtrasAddOne`).
+- **PRE-EXISTING, ⚑ HOLDS — the rate's scope, AMENDED** (spouse F1–F3, hunter F2, calm F1; refuter SURVIVED high, measured). The 28¢ holds for only the next ~$1,260 converted (the 10 % band closes at 2,331 taxable ÷ 1.85); the rest of the ~$11,100 room costs 32.16¢ — filling it costs $3,528, not 28¢ × room (~12 % under). The open Tier 0's drafted bound (X = the room) would itself be false here: the bound is the first point the rate changes. Amended on that entry; words his.
+- **PRE-EXISTING, ⚑ HOLDS — the survivor step-down's order of death** (hunter F4, calm F4; refuter SURVIVED high, measured through `sampleCouplePath`). "$990" is the floor: 42 % of this household's survivor futures drop ~$1,283. Added as the third misreading on the step-down entry.
+- **SURVIVED-WEAK, logged (Tier 2 bullet):** "the tax on it" names only the bracket part of 18.5¢ federal (8.5¢ is benefit taxation). Not sent to the refuter, logged: the $73,500's unstated conversion; the two rooms (spend vs discount) never tied; the two incomes counted two ways.
+- **REFUTED / channel artifacts:** the landing's doubled room sentence (sr-only); "no date" on the Medicare card (the refuter: "your plan's Medicare years" needs no origin at 62 / 62). Seen again, already filed: the bare "28¢" hero at the fold; "all told" beside "Not counted here: state income tax"; the doubled "about ~$" hedge; "these lines"; the discount's many names.
+
+**falsePassHunt:** attempted: yes, at depth (41 tool calls; the hunter measured the $9,700, the room, the ACA income definition, the preview's lifetime costs, the door-4 chart, the IRMAA step — all held). Rosier readings FOUND, all pre-existing: the Medicare card ($5,200 vs ~$11,100), the rate across the room (28 vs 32¢), the $990 floor, and the cascade (~33¢ derived on `healthss` — the Tier 1 filed by the build, his frame).
+
+**colorBlindCheck (flags only):** a numeral change; the figure is text in `aria.yaml`. On the phone the tile sits at the dialog's fold, so the walk's CVD arms do not reach its body (the Tier 4 scroll-and-clip entry); the pilot's scrolled captures show it on its siblings' `hs-fact__figure` register (32px / 26.23px, 600, tabular-nums).
+
+**comprehension (the spouse):** "Are we okay?" — "By what it says, yes." On the tile: "every dollar we move into the Roth costs us about 28 cents"; $10,000 more → ~$2,800 (inside the room, but ~$1,100 from the line); $40,000 more → "about $11,000, maybe a bit more" — the scope Tier 0's reading, sharpened by the bracket edge.
+
+**routedToOracle:** the Medicare card's carve-out (new Tier 0, pilot); the scope entry's bound (amended, words his); the step-down's order of death (on its entry, measure → words his).
+
+**prediction:** He reads the 28¢ without stopping (the figure is the run's, and the sheet says why it costs). If he stops on the sheet, it is the Medicare card: "so Medicare's cheaper than the marketplace?" — filed Tier 0, pilot-buildable from an existing string.
+
+**disposition:** **the change PILOT-CLEARED** (READS-CLEAN; 28¢ measured through the engine on `healthss`, seen at both viewports, re-derived by two seats); **the surface HARD-FLAG — HELD FOR THE ORACLE** on three pre-existing ⚑ HOLDS entries this change neither created nor worsened — the Medicare carve-out (new Tier 0), the rate's scope (amended), and the step-down's order of death.
+
+**evidence:** `temp/caddie/ss-cents-1015/` + `pilot-scrolled/` (cleared at squeaky); corpus loaded per the skill (rules 1, 2, 3, 5, 6, 8, 13, 15, 37–39 and exemplars E1, E13, E16, E17, E19 cited by the seats); no new Briggsy read to fold in since the 2026-10-09 card (the calm seat noted the exemplar bank ends at E19, 2026-09-27 — not re-audited this run).
+
+---
+
 ## 2026-10-15 — THE NC CONVERSION CENTS ON THE HEALTHCARE SHEET, pre-land (the uncommitted tree over `bc373b13`) — `seed:healthnc` · `seed:healthgap` · `seed:health` as the control (landing + every door; the Healthcare sheet as figured + its preview), REAL+PHONE (walk `temp/caddie/nc-cents-1015`, 6/6 in 1.2 m; three seats — the False-PASS hunter, calm/honesty + copy-law — and one refuter over seven findings, fresh Opus agents; the pilot's scrolled captures at both viewports)
 
 **surface:** the conversion tile — "Roth conversions in those years" / "26¢ on each dollar converted" / "Roth conversions work against that discount: every converted dollar counts as income, and more income means a smaller discount. Around those years, a converted dollar could cost about 26¢ all told — the tax on it, plus the discount lost." The words are unchanged; the numeral moved 22 → 26 on both NC seeds (the run's own NC tax on a converted dollar, measured through the engine); `health` keeps 22.

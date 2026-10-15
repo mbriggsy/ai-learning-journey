@@ -14,9 +14,11 @@
  * around that anchor (cliff distance, next step, marginal rate, subsidy drag, a priced state's
  * marginal) is read through the SAME canonical modules the engine prices with (`magiLandscape` →
  * `taxCore` / `healthOverlay` / `stateTax` / the constants) — single producer, so the readout can
- * never disagree with the engine about where a cliff sits. Two disclosed approximations, both under
+ * never disagree with the engine about where a cliff sits. Three disclosed approximations, all under
  * the `~`/`about` hedge: the drag probe uses TODAY'S benchmark (the escalated stream is engine-side);
- * the state probe taxes the whole AGI (overstating only). The step card's crossing PRICE is NOT an approximation:
+ * the state probe taxes the whole AGI (overstating only); the federal probe treats the non-benefit
+ * income as ordinary and keeps the first bracket on a sheltered AGI (overstating, save a realized gain
+ * straddling the 0 % band — for a couple only past the subsidy cliff, filed). The step card's crossing PRICE is NOT an approximation:
  * it reads the bill year's surcharge scales through the engine's own binding
  * (`healthOverlay.irmaaBillScalesFor`), so the card quotes what the engine bills.
  *
@@ -32,7 +34,7 @@ import {
   nextIrmaaStep,
   subsidyLossPerDollar,
 } from '@engine/magiLandscape'
-import { deductionStack } from '@engine/taxCore'
+import { deductionStack, taxableSocialSecurity } from '@engine/taxCore'
 import { stateIncomeTax, type StateTaxYearContext } from '@engine/stateTax'
 import type { PricedState } from '@engine/constants/stateTax'
 import { fplForHousehold, irmaaBillScalesFor, irmaaScheduleAsCompared } from '@engine/healthOverlay'
@@ -122,6 +124,74 @@ export interface HealthSheetView {
 
 /** The dollar the state probe adds — "one more converted dollar", the tile's own unit. */
 const STATE_PROBE_DOLLARS = 1
+
+/** The dollar the federal probe adds — the same unit as {@link STATE_PROBE_DOLLARS}. */
+const FEDERAL_PROBE_DOLLARS = 1
+
+/** Bisection halvings for the anchor's other income — 64 shrink any AGI far below a cent. */
+const OTHER_INCOME_PASSES = 64
+
+/**
+ * The run's own FEDERAL tax on one more converted dollar at the conversion tile's anchor (closes the
+ * register's Tier 0 "The health sheet's conversion tile prices the federal tax at the bare bracket
+ * rate — a household drawing Social Security before 65 reads "about 22¢ all told" where the run
+ * charges about 32¢"). The bare bracket the tile read holds only while no benefit is taxed: the run
+ * taxes Social Security through `taxableSocialSecurity` (IRS Pub 915 Worksheet 1), so with
+ * provisional income in the 50 % or 85 % phase one more ordinary dollar also adds $0.50 or $0.85 of
+ * taxable benefit, and the converted dollar is taxed 1.5× or 1.85× the bracket. Inside the senior
+ * bonus's phase-out band the shrinking deduction adds its own slope. SINGLE PRODUCER: both slopes are
+ * finite differences on the engine's own `taxableSocialSecurity` and `deductionStack`, so no
+ * threshold, phase rate or 85 % is re-typed here (the register entry's NEGATIVE):
+ *
+ *   federal = marginalOrdinaryRate(taxable) × (taxable dollars one more converted dollar adds)
+ *
+ * The anchor's other income is recovered from the AGI the bracket term already reads: AGI = other +
+ * taxableSocialSecurity(other, benefit) rises at least a dollar per dollar of `other`, so bisection
+ * finds the one `other` that AGI implies. Where the two medians are incoherent (the benefit's own
+ * taxable floor at zero other income already exceeds the AGI) it clamps at 0. The whole of `other`
+ * is treated as ordinary — the wire carries no gain split, as it never has for the bracket term.
+ *
+ * THE SHELTERED ANCHOR KEEPS ITS CONVENTION. Where the deduction still covers the whole AGI
+ * (taxable 0) the run charges no federal tax on the next dollar; the tile has always read the first
+ * bracket there (the next TAXABLE dollar's rate — the overstating direction), and the probe leaves
+ * that figure as it was rather than multiply a rate the run does not charge. A year with no benefit
+ * adds exactly 0 to both slopes, so every such household reads the bare bracket it always read,
+ * byte-identically.
+ */
+export function federalConversionMarginal(at: {
+  readonly filing: FilingStatus
+  readonly calendarYear: number
+  readonly count65: number
+  readonly agi: number
+  readonly ssBenefit: number
+}): number {
+  const deduction = (agi: number): number => deductionStack(at.filing, at.count65, agi, at.calendarYear)
+  const taxable = Math.max(0, at.agi - deduction(at.agi))
+  const bracket = marginalOrdinaryRate(taxable, at.filing)
+  if (taxable <= 0) return bracket
+  const taxedBenefit = (other: number): number =>
+    taxableSocialSecurity(other, at.ssBenefit, at.filing, at.calendarYear)
+  const other = at.ssBenefit > 0 ? otherIncomeBehind(at.agi, taxedBenefit) : at.agi
+  // AGI dollars the probe adds: the probe itself + the benefit it pulls into tax (Pub 915).
+  const agiStep = FEDERAL_PROBE_DOLLARS + (taxedBenefit(other + FEDERAL_PROBE_DOLLARS) - taxedBenefit(other))
+  // Taxable dollars: that AGI step + whatever the deduction stack shrinks by across it.
+  const deductionShrink = deduction(at.agi) - deduction(at.agi + agiStep)
+  return (bracket * (agiStep + deductionShrink)) / FEDERAL_PROBE_DOLLARS
+}
+
+/** The other income (AGI less taxable benefit) behind `agi` — the root of `other + taxed(other) =
+ *  agi`, strictly increasing in `other`. 0 when the medians are incoherent (see above). */
+function otherIncomeBehind(agi: number, taxed: (other: number) => number): number {
+  if (taxed(0) >= agi) return 0
+  let lo = 0
+  let hi = agi // other + taxed(other) ≥ agi at other = agi: the root sits in [lo, hi]
+  for (let pass = 0; pass < OTHER_INCOME_PASSES; pass++) {
+    const mid = (lo + hi) / 2
+    if (mid + taxed(mid) < agi) lo = mid
+    else hi = mid
+  }
+  return lo
+}
 
 /**
  * The run's own STATE tax on one more converted dollar at the conversion tile's anchor — the third
@@ -244,8 +314,8 @@ export function composeHealthSheet(
     const cliffLine = cliff !== null && worstOfTen >= 1 ? slots.acaCostCliff(worstOfTen) : undefined
 
     // The shadow rate at the empirical anchor: ordinary marginal rate (through the same
-    // deduction stack the tax math uses) + the subsidy drag (through the same sliding scale
-    // the overlay prices with). count65 at the anchor from the household's own ages, and the
+    // deduction stack and benefit taxation the tax math uses) + the subsidy drag (through the
+    // same sliding scale the overlay prices with). count65 at the anchor from the household's own ages, and the
     // anchor's CALENDAR year from the SAME yearsIn clock (council 2026-07-09 C4 — the senior
     // bonus windows out of the stack past 2028, and the readout must age exactly with the
     // engine's own year, single-producer contract).
@@ -255,8 +325,16 @@ export function composeHealthSheet(
     ).length
     const anchorCalendarYear = draft.startCalendarYear + yearsIn
     const agi = anchor.irmaaMagiP50
-    const taxable = Math.max(0, agi - deductionStack(draft.filing, count65, agi, anchorCalendarYear))
-    const marginal = marginalOrdinaryRate(taxable, draft.filing)
+    // The federal tax on the converted dollar — the bracket times the taxable dollars it adds, the
+    // Social Security it pulls into tax included (the register's Tier 0 "The health sheet's
+    // conversion tile prices the federal tax at the bare bracket rate — …").
+    const marginal = federalConversionMarginal({
+      filing: draft.filing,
+      calendarYear: anchorCalendarYear,
+      count65,
+      agi,
+      ssBenefit: anchor.ssBenefitP50,
+    })
     const slcspAnnual = (draft.health.slcspMonthlyToday ?? 0) * 12
     // The drag term exists only while the credit is genuinely alive at the anchor: past the
     // cliff the PTC is already 0, but `slidingScalePtc` is deliberately CLIFF-REMOVED (the

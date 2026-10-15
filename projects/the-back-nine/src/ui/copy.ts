@@ -1126,8 +1126,8 @@ export const copy = {
    *  out, not a coverage the figure partly bills (review 2026-09-13 late). */
   irmaaStepExtrasNone:
     'Neither figure counts what you’d pay for drug and supplement plans, which this plan prices at about nothing.',
-  /** The no-era arm's singular twin: that card renders ONE figure (review 2026-09-13 late — "neither"
-   *  presupposed a second figure the reader could not find). */
+  /** The singular twin for every ONE-figure card — the no-era arm, and the degenerate arm since 2026-10-15
+   *  (review 2026-09-13 late — "neither" presupposed a second figure the reader could not find). */
   irmaaStepExtrasNoneOne:
     'That figure doesn’t count what you’d pay for drug and supplement plans, which this plan prices at about nothing.',
   // ⚠️ "the benchmark premium itself" WAS IN BOTH LISTS AND WAS FALSE — struck 2026-08-03.
@@ -2907,7 +2907,7 @@ export const slots = {
     `Neither figure counts what you’d pay for drug and supplement plans — the lines below add about ~$${eraExtrasFormatted} a year while you’re both on Medicare, and about ~$${onRampExtrasFormatted} a year while only one of you is.`,
   irmaaStepExtrasAddEraOnly: (eraExtrasFormatted: string): string =>
     `Neither figure counts what you’d pay for drug and supplement plans — the lines below add about ~$${eraExtrasFormatted} a year while you’re both on Medicare, and nothing while only one of you is.`,
-  /** The no-era arm's singular twin — that card renders ONE figure. */
+  /** The singular twin for every ONE-figure card — the no-era arm, and the degenerate arm since 2026-10-15. */
   irmaaStepExtrasAddOne: (extrasFormatted: string): string =>
     `That figure doesn’t count what you’d pay for drug and supplement plans, which the lines below add at about ~$${extrasFormatted} a year.`,
   /** The next IRMAA line NAMED in dollars (cold-read 2026-07-03: "What is the line?") with the

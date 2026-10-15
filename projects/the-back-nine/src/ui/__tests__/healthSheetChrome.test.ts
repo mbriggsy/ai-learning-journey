@@ -313,17 +313,18 @@ describe('composeHealthSheet', () => {
     expect(discount?.lines[0]).toBe(slots.shadowRateHeadroom('50,000', '84,600', '34,600'))
   })
 
-  it('the Medicare anchor composes the story + the now-anchor + the next-step fact (tier-1 MFJ at a 150,000 anchor: step ~1,196 [99.66×12 — the 2028 bill’s price], headroom 74,000 under the line THAT year’s income meets)', () => {
+  it('the Medicare anchor composes the story + the now-anchor + the singular extras carve-out (none priced → “about nothing”) + the next-step fact (tier-1 MFJ at a 150,000 anchor: step ~1,196 [99.66×12 — the 2028 bill’s price], headroom 82,000 under the line THAT year’s income meets)', () => {
     const readout: HealthReadout = {
       byYear: [year({ yearsFromNow: 1, medicareBaseP50: 4_870, medicareEnrolledP50: 2, irmaaMagiP50: 150_000 })],
     }
     const view = composeHealthSheet(readout, draft({ ages: [66, 66] }), FRESH, undefined)
-    // The Medicare fact: story + the before-any-step anchor (base 4,870 + surcharge 0 → '4,900').
+    // The Medicare fact: story + the before-any-step anchor (base 4,870 + surcharge 0 → '4,900') + the
+    // singular extras carve-out (this fixture prices none → the "about nothing" form).
     expect(factOf(view, 'medicare')).toEqual({
       id: 'medicare',
       eyebrow: copy.healthFactMedicare,
       figure: slots.healthFigPerYear('4,900'),
-      lines: [copy.irmaaStepStory, slots.irmaaStepNowBase('4,900')],
+      lines: [copy.irmaaStepStory, slots.irmaaStepNowBase('4,900'), copy.irmaaStepExtrasNoneOne],
     })
     // THE PRICE FRAME (insight 134's clock): row 1's MAGI is sim-year 0's, calendar 2026, so it meets the
     // 2028 bill's lines in 2026 dollars — tier-1 MFJ = 2 × round1000(109,000 × 1.032²) = 232,000 (TWO
@@ -544,19 +545,59 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
     expect(f.lines[4]).toBe(copy.irmaaStepNoEraYear)
   })
 
-  it('DEGENERATE arms keep today’s one-figure composition BYTE-IDENTICAL: the era IS the anchor (an all-65+ household — `retired`) and a one-person household', () => {
-    const both: HealthReadout = { byYear: [year({ yearsFromNow: 1, medicareBaseP50: 4_870, medicareEnrolledP50: 2, irmaaMagiP50: 90_129 })] }
-    const bothFact = factOf(composeHealthSheet(both, draft({ ages: [66, 65] }), FRESH, undefined), 'medicare')!
-    expect(bothFact.eyebrow).toBe(copy.healthFactMedicare) // the pre-build eyebrow — the per-arm frames never reach this arm
+  it('DEGENERATE arms (the era IS the anchor — an all-65+ household like `retired`, a pre-65 couple who reach 65 the same year like `healthss`, a one-person household) keep the one-figure hero and SPEAK the extras with the singular carve-out — the no-era arm’s own law, one law for every arm (the register’s Tier 0 *The Medicare premium card on a couple who reach 65 the same year drops the drug-and-supplement line…*)', () => {
+    const bothAt = (medicareExtrasP50: number): HealthReadout => ({
+      byYear: [year({ yearsFromNow: 1, medicareBaseP50: 4_870, medicareEnrolledP50: 2, medicareExtrasP50, irmaaMagiP50: 90_129 })],
+    })
+    const bothFact = factOf(composeHealthSheet(bothAt(5_856), draft({ ages: [66, 65] }), FRESH, undefined), 'medicare')!
+    expect(bothFact.eyebrow).toBe(copy.healthFactMedicare) // the per-arm frames never reach this arm
+    expect(bothFact.figure).toBe(slots.healthFigPerYear('4,900')) // ⚑ the extras are SPOKEN, never folded into the hero
     expect(bothFact.lines).toEqual([
       copy.irmaaStepStory,
       slots.irmaaStepNowBase('4,900'),
+      slots.irmaaStepExtrasAddOne('5,900'), // 5,856 → the $100 grain
     ])
-    // One person entered, one enrolled → the era is the anchor by count.
-    const solo: HealthReadout = { byYear: [year({ yearsFromNow: 1, medicareBaseP50: 2_435, medicareEnrolledP50: 1, irmaaMagiP50: 90_000 })] }
+    // The same card pricing NO extras says so — the singular "about nothing" form, never silence.
+    expect(factOf(composeHealthSheet(bothAt(0), draft({ ages: [66, 65] }), FRESH, undefined), 'medicare')!.lines).toEqual([
+      copy.irmaaStepStory,
+      slots.irmaaStepNowBase('4,900'),
+      copy.irmaaStepExtrasNoneOne,
+    ])
+    // The $100 grain's tie, pinned on BOTH sides (the no-era arm's own `roundDollar` predicate): $49 rounds to
+    // $0 → the none form; $50 rounds to $100 → spoken. A threshold moved either way (raw `> 0`, `>= 100`,
+    // `> 50`) reds one of the two.
+    expect(factOf(composeHealthSheet(bothAt(49), draft({ ages: [66, 65] }), FRESH, undefined), 'medicare')!.lines[2]).toBe(
+      copy.irmaaStepExtrasNoneOne,
+    )
+    expect(factOf(composeHealthSheet(bothAt(50), draft({ ages: [66, 65] }), FRESH, undefined), 'medicare')!.lines[2]).toBe(
+      slots.irmaaStepExtrasAddOne('100'),
+    )
+    // The WORDS, not only the slot: the singular presupposition is why these strings exist ("Neither figure"
+    // presupposed a second figure the reader could not find — review 2026-09-13 late). Both slots are the
+    // composer's own producers, so a slot-built expectation cannot see a reworded string; these can.
+    expect(copy.irmaaStepExtrasNoneOne).toBe(
+      'That figure doesn’t count what you’d pay for drug and supplement plans, which this plan prices at about nothing.',
+    )
+    expect(slots.irmaaStepExtrasAddOne('5,900')).toBe(
+      'That figure doesn’t count what you’d pay for drug and supplement plans, which the lines below add at about ~$5,900 a year.',
+    )
+    // A surcharged anchor keeps its surcharged sentence AND gains the carve-out after it.
+    const surcharged: HealthReadout = {
+      byYear: [year({ yearsFromNow: 1, medicareBaseP50: 4_870, irmaaSurchargeP50: 2_400, medicareEnrolledP50: 2, medicareExtrasP50: 5_856, irmaaMagiP50: 230_000 })],
+    }
+    expect(factOf(composeHealthSheet(surcharged, draft({ ages: [66, 66] }), FRESH, undefined), 'medicare')!.lines).toEqual([
+      copy.irmaaStepStory,
+      slots.irmaaStepNowSurcharged('7,300', '2,400'),
+      slots.irmaaStepExtrasAddOne('5,900'),
+    ])
+    // One person entered, one enrolled → the era is the anchor by count; ONE person's extras.
+    const solo: HealthReadout = {
+      byYear: [year({ yearsFromNow: 1, medicareBaseP50: 2_435, medicareEnrolledP50: 1, medicareExtrasP50: 2_928, irmaaMagiP50: 90_000 })],
+    }
     expect(factOf(composeHealthSheet(solo, draft({ ages: [66] }), FRESH, undefined), 'medicare')!.lines).toEqual([
       copy.irmaaStepStory,
       slots.irmaaStepNowBase('2,400'),
+      slots.irmaaStepExtrasAddOne('2,900'),
     ])
   })
 

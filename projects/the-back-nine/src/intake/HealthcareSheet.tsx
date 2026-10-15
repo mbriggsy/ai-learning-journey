@@ -129,7 +129,7 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
   // (medicareExtrasDisclosureView — the ONE assembly both F5 homes consume, insight 081).
   const extrasView = medicareExtrasDisclosureView(draft)
   const extrasLines = composeMedicareExtrasLines(extrasView)
-  // The held-flat line under those dollars — null when every figure is $0 (decided in the chrome seam).
+  // The held-flat line under those dollars — present whenever the block is, a $0 figure included (the chrome seam).
   const extrasHeldFlat = composeMedicareExtrasHeldFlat(extrasView)
   const hasHsa = draft.enteredAccounts.some((a) => a.kind === 'hsa')
 

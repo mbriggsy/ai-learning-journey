@@ -1,9 +1,9 @@
 /**
- * The two shipped Medicare-era seeds through the REAL pipeline — buildSpineParams → runEngine with
- * the app's own options → composeHealthSheet — the council's gate for the era-loud premium card
- * (2026-09-13, 8/10): the WIRE-read enrollment frame renders `retired` (66/65 — everyone enrolled
- * from the first billed year) BYTE-IDENTICAL to the pre-build sentence, and `healthnc` (61/59 — one
- * enrolled at the anchor, both two years later) era-loud with the step card's anchor UNMOVED.
+ * The shipped Medicare seeds through the REAL pipeline — buildSpineParams → runEngine with the app's
+ * own options → composeHealthSheet — the council's gate for the era-loud premium card (2026-09-13,
+ * 8/10): the WIRE-read enrollment frame renders `retired` (66/65) and `healthss` (62/62) — everyone
+ * enrolled from the first billed year — on the one-figure arm (the pre-build sentence + the singular extras
+ * carve-out, 2026-10-15), `healthnc` (61/59) era-loud with the step card's anchor UNMOVED, `healthgap` (61/40).
  *
  * Every dollar below is the engine's own output through this file's pipeline (first measured
  * 2026-09-13) at the $100 grain the sheet speaks. A constants re-verify that moves Part B or the
@@ -11,7 +11,7 @@
  * re-pin; never hand-edit a number into agreement (DND 012: the expectation is derived OUTSIDE the
  * composer, by the engine's run, never by the composer's formula). This file IS the instrument.
  *
- * Lives beside the unit arms (not inside them) so the fast file stays fast: two 2,000-path runs.
+ * Lives beside the unit arms (not inside them) so the fast file stays fast: every arm is a 2,000-path run.
  */
 import { describe, it, expect } from 'vitest'
 import { DEV_SEEDS } from '@ui/devSeeds'
@@ -20,7 +20,7 @@ import { runEngine } from '@engine/engineProtocol'
 import { acaAnchor, composeHealthSheet, medicareAnchor, medicareEraYear } from '@ui/healthSheetChrome'
 import { copy, slots } from '@ui/copy'
 import { epochDayFromIsoDate } from '@engine/validation/oracleToken'
-import { acaEnhancedSubsidyStatus, irmaa, medicareCostTrend, partB2026 } from '@engine/constants/health'
+import { acaEnhancedSubsidyStatus, irmaa, medicareCostTrend, medicareExtrasTypicalMonthly, partB2026 } from '@engine/constants/health'
 import type { HealthReadout } from '@shared/model'
 
 /** A clock inside the ACA re-verify window, RELATIVE to the live record (the status line is not
@@ -56,15 +56,21 @@ const tier1CrossingAt = (billYear: number): { each: string; both: string } => {
 }
 
 describe('the Medicare premium card on the shipped seeds, through the real engine', () => {
-  it('`retired` (66/65): everyone enrolled from the first billed year → the era IS the anchor → the pre-build sentence (base 4,870 → 4,900; MAGI 90,129 → 90,100; the 2026-MAGI line 232,000 [2 × round1000(109,000 × 1.032²) — the 2028 bill’s, TWO Augusts past the lines’ August-2025 base, in 2026 dollars]; headroom 141,871 → 141,900; the two-of-you step, priced at the 2028 BILL’s scales: 99.66/mo per person → 1,196 → 1,200 each, 2,392 → 2,400 for two — the 2026 anchor’s 95.7 read 1,100 / 2,300)', () => {
+  it('`retired` (66/65): everyone enrolled from the first billed year → the era IS the anchor → the pre-build sentence + the singular extras carve-out (2,640 → 2,600; since 2026-10-15) (base 4,870 → 4,900; MAGI 90,129 → 90,100; the 2026-MAGI line 232,000 [2 × round1000(109,000 × 1.032²) — the 2028 bill’s, TWO Augusts past the lines’ August-2025 base, in 2026 dollars]; headroom 141,871 → 141,900; the two-of-you step, priced at the 2028 BILL’s scales: 99.66/mo per person → 1,196 → 1,200 each, 2,392 → 2,400 for two — the 2026 anchor’s 95.7 read 1,100 / 2,300)', () => {
     const readout = readoutOf('retired')
     expect(medicareEraYear(readout, 2)).toBe(medicareAnchor(readout))
     const view = composeHealthSheet(readout, DEV_SEEDS.retired, FRESH, pricedStateForRun(DEV_SEEDS.retired))
+    // The extras, derived from the seed's OWN fork entries (DND 012 — never the composer's read): Alex's
+    // entered $220/mo + Sam's affirmed none → 220 × 12 = 2,640 a year → '2,600'. One law for every arm
+    // (2026-10-15): this card never renders (`retired` has no pre-65 member, so no Healthcare door), but
+    // its composition speaks the carve-out like the no-era arm's.
+    expect(DEV_SEEDS.retired.medicareExtrasByPerson).toEqual([{ kind: 'entered', monthly: 220 }, { kind: 'none' }])
+    expect(medicareAnchor(readout)?.medicareExtrasP50).toBeCloseTo(220 * 12, 6)
     expect(factOf(view, 'medicare')).toEqual({
       id: 'medicare',
       eyebrow: copy.healthFactMedicare,
       figure: slots.healthFigPerYear('4,900'),
-      lines: [copy.irmaaStepStory, slots.irmaaStepNowBase('4,900')],
+      lines: [copy.irmaaStepStory, slots.irmaaStepNowBase('4,900'), slots.irmaaStepExtrasAddOne('2,600')],
     })
     expect(factOf(view, 'step')).toEqual({
       id: 'step',
@@ -126,6 +132,32 @@ describe('the Medicare premium card on the shipped seeds, through the real engin
     expect(fact.lines[3], 'the ONE basis clause — why this pair is 3× while the extras pair is 2× (Briggsy 2026-09-24)').toBe(copy.irmaaStepEraTrendNote)
     expect(fact.lines[4]).toBe(copy.irmaaStepBothBase)
     expect(fact.lines[5]).toBe(slots.irmaaStepExtrasAddBoth('5,900', '2,900'))
+  }, 120_000)
+
+  it('`healthss` (62/62 — a pre-65 couple who reach 65 the SAME year, the one door-bearing seed on the one-figure arm): both enrolled from the first billed year → the era IS the anchor → the one-figure hero, and the drug-and-supplement carve-out SPOKEN under it (the register’s Tier 0 *The Medicare premium card on a couple who reach 65 the same year drops the drug-and-supplement line…* — filed by the 2026-10-15 early-claim Caddie walk: the card read "about ~$5,200 a year" two cards under the marketplace’s ~$9,700 with nothing saying the run adds about $5,900 on top)', () => {
+    const readout = readoutOf('healthss')
+    const anchor = medicareAnchor(readout)
+    expect(anchor?.medicareEnrolledP50, 'both enrolled in the first billed year — read off the wire, never re-derived from ages').toBe(2)
+    expect(medicareEraYear(readout, 2)).toBe(anchor)
+    // The extras, derived OUTSIDE the composer (DND 012): `healthss` leaves the extras field ABSENT, which the
+    // intake funds at the typical figure per enrolled person (`medicareExtrasTypicalMonthly` — CMS's 2026 Part D
+    // base beneficiary premium + the Medigap Plan G anchor), × 12 × the two enrolled.
+    expect(DEV_SEEDS.healthss.medicareExtrasByPerson).toBeUndefined()
+    const typicalYearForTwo = medicareExtrasTypicalMonthly() * 12 * 2
+    expect(anchor?.medicareExtrasP50).toBeCloseTo(typicalYearForTwo, 6)
+    const extrasF = (Math.round(typicalYearForTwo / 100) * 100).toLocaleString('en-US')
+    expect(extrasF, 'the literal the walk quoted').toBe('5,900')
+    const view = composeHealthSheet(readout, DEV_SEEDS.healthss, FRESH, pricedStateForRun(DEV_SEEDS.healthss))
+    expect(factOf(view, 'medicare')).toEqual({
+      id: 'medicare',
+      eyebrow: copy.healthFactMedicare,
+      figure: slots.healthFigPerYear('5,200'), // ⚑ never the extras folded in (the 2026-09-14 "eyebrow" ruling)
+      lines: [copy.irmaaStepStory, slots.irmaaStepNowBase('5,200'), slots.irmaaStepExtrasAddOne(extrasF)],
+    })
+    // The sentence the walk reads, as a literal — the slot above is the composer's own producer.
+    expect(factOf(view, 'medicare')!.lines[2]).toBe(
+      'That figure doesn’t count what you’d pay for drug and supplement plans, which the lines below add at about ~$5,900 a year.',
+    )
   }, 120_000)
 })
 

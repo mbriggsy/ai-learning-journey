@@ -408,8 +408,10 @@ export function composeHealthSheet(
     const nowF = formatDollar(totalNow)
     // The ERA year (council 2026-09-13, 8/10): the first quotable year EVERYONE is enrolled. Three
     // arms, the anchor above UNMOVED in all of them —
-    //  · DEGENERATE (the era IS the anchor — every all-65+ household, every one-person household):
-    //    the one-figure composition, byte-identical — `retired` reads exactly as before. That is
+    //  · DEGENERATE (the era IS the anchor — every all-65+ household, every one-person household, and
+    //    a pre-65 couple who reach 65 the same calendar year, `healthss`): the one-figure composition,
+    //    its extras spoken by the no-era arm's singular carve-out (2026-10-15 — one law for every arm:
+    //    the healthss walk read the bare "~$5,200" as the couple's whole Medicare bill). That is
     //    the ONLY degenerate case: the council's "equal rounded totals" collapse was a confirmed
     //    BLOCKER (review 2026-09-13 late) — one enrollee + a look-back surcharge (2,700 + 3,100)
     //    collides at the $100 grain with two at base (5,800), and the collapse then spoke the
@@ -435,6 +437,10 @@ export function composeHealthSheet(
           roundDollar(medicare.irmaaSurchargeP50) > 0
             ? slots.irmaaStepNowSurcharged(nowF, formatDollar(medicare.irmaaSurchargeP50))
             : slots.irmaaStepNowBase(nowF),
+          // ONE figure on this card — the singular carve-out, the no-era arm's own law.
+          roundDollar(medicare.medicareExtrasP50) > 0
+            ? slots.irmaaStepExtrasAddOne(formatDollar(medicare.medicareExtrasP50))
+            : copy.irmaaStepExtrasNoneOne,
         ],
       })
     } else if (era !== null) {

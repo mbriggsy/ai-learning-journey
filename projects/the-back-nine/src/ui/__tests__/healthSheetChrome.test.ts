@@ -18,6 +18,7 @@ import {
   medicareEraYear,
   showMedicarePricedNote,
   quotableYears,
+  stateConversionMarginal,
 } from '../healthSheetChrome'
 import { copy, slots } from '../copy'
 import {
@@ -118,7 +119,7 @@ const factOf = (view: ReturnType<typeof composeHealthSheet>, id: string) =>
 
 describe('composeHealthSheet', () => {
   it('with NO series (the date route / pre-resolve) it composes the dated status line alone', () => {
-    const view = composeHealthSheet(undefined, draft(), FRESH)
+    const view = composeHealthSheet(undefined, draft(), FRESH, undefined)
     // NON-VACUITY RECEIPT for the derivation above, and the reason it is not a weaker predicate
     // than the literal it replaced: the expectation must still be a HUMANE LONG date. A `dateStyle`
     // slip renders "Aug 2, 2026" (`medium`) or "8/2/26" (`short`), and a lazy "fix" to this file
@@ -147,7 +148,7 @@ describe('composeHealthSheet', () => {
         }),
       ],
     }
-    const view = composeHealthSheet(readout, draft({ enhanced: true }), FRESH)
+    const view = composeHealthSheet(readout, draft({ enhanced: true }), FRESH, undefined)
     expect(view.statusLine).toBe(slots.acaCostStatusEnhanced(VERIFIED_ON_LONG))
     expect(factOf(view, 'discount')).toBeUndefined() // no cliff exists → no discount fact at all
     expect(factOf(view, 'coverage')).toBeDefined() // the cost fact still quotes — only the cliff vanished
@@ -158,23 +159,23 @@ describe('composeHealthSheet', () => {
   // ("past their re-check date"). This line used to go on speaking as though the check were
   // current — the sheet that EXPLAINS the model was the one surface not repeating the warning.
   it('PAST the re-verify window both status notes swap to their overdue variants (the sheet stops speaking as though the check were current)', () => {
-    expect(composeHealthSheet(undefined, draft(), OVERDUE).statusLine).toBe(
+    expect(composeHealthSheet(undefined, draft(), OVERDUE, undefined).statusLine).toBe(
       slots.acaCostStatusOverdue(VERIFIED_ON_LONG),
     )
-    expect(composeHealthSheet(undefined, draft({ enhanced: true }), OVERDUE).statusLine).toBe(
+    expect(composeHealthSheet(undefined, draft({ enhanced: true }), OVERDUE, undefined).statusLine).toBe(
       slots.acaCostStatusEnhancedOverdue(VERIFIED_ON_LONG),
     )
     // The figures are NOT disowned — the line still names the regime it priced under.
-    expect(composeHealthSheet(undefined, draft(), OVERDUE).statusLine).toContain('stops at the cliff')
+    expect(composeHealthSheet(undefined, draft(), OVERDUE, undefined).statusLine).toContain('stops at the cliff')
   })
 
   it('the boundary is STRICT: exactly at the window still reads fresh, one day later reads overdue', () => {
     // Insight 029's class — the input has to ROUTE DIFFERENTLY, so the arm must straddle the
     // exact edge. `>= WINDOW` would pass every test that only probed CHECKED_ON+WINDOW+1.
-    expect(composeHealthSheet(undefined, draft(), AT_WINDOW).statusLine).toBe(
+    expect(composeHealthSheet(undefined, draft(), AT_WINDOW, undefined).statusLine).toBe(
       slots.acaCostStatus(VERIFIED_ON_LONG),
     )
-    expect(composeHealthSheet(undefined, draft(), AT_WINDOW + 1).statusLine).toBe(
+    expect(composeHealthSheet(undefined, draft(), AT_WINDOW + 1, undefined).statusLine).toBe(
       slots.acaCostStatusOverdue(VERIFIED_ON_LONG),
     )
   })
@@ -191,7 +192,7 @@ describe('composeHealthSheet', () => {
     for (const today of [FRESH, AT_WINDOW - 1, AT_WINDOW, AT_WINDOW + 1, OVERDUE + 400]) {
       const tokenRefuses = evaluateAcaFreshnessClause(acaRun, today) !== null
       const sheetSaysOverdue =
-        composeHealthSheet(undefined, draft(), today).statusLine ===
+        composeHealthSheet(undefined, draft(), today, undefined).statusLine ===
         slots.acaCostStatusOverdue(VERIFIED_ON_LONG)
       expect(sheetSaysOverdue, `today=${today}: sheet and token must agree`).toBe(tokenRefuses)
       expect(acaCheckOverdue(today), `today=${today}: the shared predicate is the one source`).toBe(
@@ -213,7 +214,7 @@ describe('composeHealthSheet', () => {
         }),
       ],
     }
-    const view = composeHealthSheet(readout, draft(), FRESH)
+    const view = composeHealthSheet(readout, draft(), FRESH, undefined)
     // The coverage fact: figure anchor + the source-named sentence (9,950 humane-rounds).
     expect(factOf(view, 'coverage')).toEqual({
       id: 'coverage',
@@ -260,8 +261,8 @@ describe('composeHealthSheet', () => {
         }),
       ],
     }
-    const at2028 = composeHealthSheet(readout, draft({ ages: [61, 63], slcsp: 0, startYear: 2025 }), FRESH)
-    const at2029 = composeHealthSheet(readout, draft({ ages: [61, 63], slcsp: 0, startYear: 2026 }), FRESH)
+    const at2028 = composeHealthSheet(readout, draft({ ages: [61, 63], slcsp: 0, startYear: 2025 }), FRESH, undefined)
+    const at2029 = composeHealthSheet(readout, draft({ ages: [61, 63], slcsp: 0, startYear: 2026 }), FRESH, undefined)
     expect(factOf(at2028, 'conversion')?.figure).toBe(slots.healthFigCents(12))
     expect(factOf(at2029, 'conversion')?.figure).toBe(slots.healthFigCents(22))
   })
@@ -270,7 +271,7 @@ describe('composeHealthSheet', () => {
     const readout: HealthReadout = {
       byYear: [year({ acaPricedFraction: 1, acaNetPremiumP50: 20_000, acaMagiP50: 90_000, irmaaMagiP50: 85_000, overCliffFraction: 0.62 })],
     }
-    const discount = factOf(composeHealthSheet(readout, draft(), FRESH), 'discount')
+    const discount = factOf(composeHealthSheet(readout, draft(), FRESH, undefined), 'discount')
     expect(discount?.figure).toBeUndefined() // no room to quote past the cutoff
     expect(discount?.lines).toEqual([slots.acaCostCliffOverCliff(6, '84,600')])
   })
@@ -280,7 +281,7 @@ describe('composeHealthSheet', () => {
     const headroomReadout: HealthReadout = {
       byYear: [year({ acaPricedFraction: 1, acaNetPremiumP50: 12_000, acaMagiP50: 66_600, irmaaMagiP50: 60_000, overCliffFraction: 0.97 })],
     }
-    const headroomLines = factOf(composeHealthSheet(headroomReadout, draft(), FRESH), 'discount')?.lines ?? []
+    const headroomLines = factOf(composeHealthSheet(headroomReadout, draft(), FRESH, undefined), 'discount')?.lines ?? []
     const cliffLine = headroomLines[headroomLines.length - 1]!
     expect(cliffLine).toBe(slots.acaCostCliff(10))
     expect(cliffLine).toContain('In more than 9 in 10 futures')
@@ -292,7 +293,7 @@ describe('composeHealthSheet', () => {
     const overReadout: HealthReadout = {
       byYear: [year({ acaPricedFraction: 1, acaNetPremiumP50: 20_000, acaMagiP50: 90_000, irmaaMagiP50: 85_000, overCliffFraction: 0.96 })],
     }
-    const overLine = factOf(composeHealthSheet(overReadout, draft(), FRESH), 'discount')?.lines[0]
+    const overLine = factOf(composeHealthSheet(overReadout, draft(), FRESH, undefined), 'discount')?.lines[0]
     expect(overLine).toBe(slots.acaCostCliffOverCliff(10, '84,600'))
     expect(overLine).toContain('In more than 9 in 10 futures')
     expect(overLine).not.toContain('better than')
@@ -303,7 +304,7 @@ describe('composeHealthSheet', () => {
     const readout: HealthReadout = {
       byYear: [year({ acaPricedFraction: 1, acaNetPremiumP50: 9_000, acaMagiP50: 50_000, irmaaMagiP50: 45_000, overCliffFraction: 0.04 })],
     }
-    const discount = factOf(composeHealthSheet(readout, draft(), FRESH), 'discount')
+    const discount = factOf(composeHealthSheet(readout, draft(), FRESH, undefined), 'discount')
     expect(discount?.lines).toHaveLength(1) // the context sentence alone — no odds line
     expect(discount?.lines[0]).toBe(slots.shadowRateHeadroom('50,000', '84,600', '34,600'))
   })
@@ -312,7 +313,7 @@ describe('composeHealthSheet', () => {
     const readout: HealthReadout = {
       byYear: [year({ yearsFromNow: 1, medicareBaseP50: 4_870, medicareEnrolledP50: 2, irmaaMagiP50: 150_000 })],
     }
-    const view = composeHealthSheet(readout, draft({ ages: [66, 66] }), FRESH)
+    const view = composeHealthSheet(readout, draft({ ages: [66, 66] }), FRESH, undefined)
     // The Medicare fact: story + the before-any-step anchor (base 4,870 + surcharge 0 → '4,900').
     expect(factOf(view, 'medicare')).toEqual({
       id: 'medicare',
@@ -339,7 +340,7 @@ describe('composeHealthSheet', () => {
     const readout: HealthReadout = {
       byYear: [year({ yearsFromNow: 1, medicareBaseP50: 2_435, medicareEnrolledP50: 1, irmaaMagiP50: 150_000 })],
     }
-    const view = composeHealthSheet(readout, draft({ ages: [66, 62] }), FRESH)
+    const view = composeHealthSheet(readout, draft({ ages: [66, 62] }), FRESH, undefined)
     // ONE enrolled on the wire: per-person 99.66 × 12 = 1,196 → '1,200' (the 2028 bill), bothEnrolled=false (the 2026-MAGI line 232,000).
     expect(factOf(view, 'step')?.lines).toEqual([
       slots.irmaaStepNext('232,000', '150,000', '82,000', '1,200', '2,400', false),
@@ -352,7 +353,7 @@ describe('composeHealthSheet', () => {
         year({ yearsFromNow: 1, medicareBaseP50: 4_870, irmaaSurchargeP50: 2_400, medicareEnrolledP50: 2, irmaaMagiP50: 230_000 }),
       ],
     }
-    const view = composeHealthSheet(readout, draft({ ages: [66, 66] }), FRESH)
+    const view = composeHealthSheet(readout, draft({ ages: [66, 66] }), FRESH, undefined)
     // 4,870 + 2,400 = 7,270 → '7,300'; the surcharge itself quoted at '2,400'.
     expect(factOf(view, 'medicare')?.lines[1]).toBe(slots.irmaaStepNowSurcharged('7,300', '2,400'))
   })
@@ -376,7 +377,7 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
   })
 
   it('healthnc: the LOUD figure is the first all-enrolled year’s total (5,765 → 5,800); the one-enrollee on-ramp is quoted SECOND with its two-year span; neither year surcharged; the extras SPOKEN per quoted year (5,900 once both are on it, 2,900 while one is) — and the step card still reads the UNMOVED anchor (one enrolled → the each-of-you arm)', () => {
-    const view = composeHealthSheet(healthncReadout(), draft({ ages: [61, 59] }), FRESH)
+    const view = composeHealthSheet(healthncReadout(), draft({ ages: [61, 59] }), FRESH, undefined)
     expect(factOf(view, 'medicare')).toEqual({
       id: 'medicare',
       eyebrow: copy.healthFactMedicareBoth, // the hero's frame: this figure prices the years BOTH are on it
@@ -438,13 +439,13 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
     expect(slots.irmaaStepOnRampSpan(2, '2,700', 1, 2027)).toMatch(/^Before that, starting about a year from now, around 2027, and for about two years, /)
     // The composer feeds the wire's own rows: on the healthnc fixture the era is row 7, the anchor row 5 — spoken as
     // sim-years 6 / 4 (row k = the END of sim-year k−1, the C4 clock the step card dates by) with 2032 / 2030.
-    const f = factOf(composeHealthSheet(healthncReadout(), draft({ ages: [61, 59] }), FRESH), 'medicare')!
+    const f = factOf(composeHealthSheet(healthncReadout(), draft({ ages: [61, 59] }), FRESH, undefined), 'medicare')!
     expect(f.lines[1]).toMatch(/^About six years from now, around 2032, /)
     expect(f.lines[2]).toMatch(/^Before that, starting about four years from now, around 2030, and for about two years, /)
   })
 
   it('the each-of-you arm carries BOTH counts and its hero wears its unit (the Caddie read 2026-09-14): one enrolled at the anchor → "+~$1,700 a year each" over a sentence that ALSO quotes the two-of-you figure under the era; the two-of-you arm is byte-untouched', () => {
-    const one = factOf(composeHealthSheet(healthncReadout(), draft({ ages: [61, 59] }), FRESH), 'step')!
+    const one = factOf(composeHealthSheet(healthncReadout(), draft({ ages: [61, 59] }), FRESH, undefined), 'step')!
     expect(one.figure).toBe('+~$1,700 a year each')
     // The 2032 bill: 140.59 × 12 = 1,687 → '1,700'; ×2 = 3,374 → '3,400'.
     expect(one.lines[0]).toContain('add about ~$1,700 a year for each of you on Medicare.')
@@ -453,11 +454,11 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
     // either way, so the witness rides an aged vault (plan started 2024 → MAGI 2024 → the 2026 bill, the
     // anchor's 95.7): 95.7 × 12 = 1,148.4 → '1,100'; ×2 = 2,296.8 → '2,300', where 2 × '1,100' reads 2,200.
     const aged: HealthReadout = { byYear: [year({ yearsFromNow: 1, medicareBaseP50: 2_435, medicareEnrolledP50: 1, irmaaMagiP50: 150_000 })] }
-    expect(factOf(composeHealthSheet(aged, draft({ ages: [66, 62], startYear: 2024 }), FRESH), 'step')!.lines[0]).toContain(
+    expect(factOf(composeHealthSheet(aged, draft({ ages: [66, 62], startYear: 2024 }), FRESH, undefined), 'step')!.lines[0]).toContain(
       'add about ~$1,100 a year for each of you on Medicare. While you’re both on it, that’s about ~$2,300 a year.',
     )
     const two: HealthReadout = { byYear: [year({ yearsFromNow: 1, medicareBaseP50: 4_870, medicareEnrolledP50: 2, irmaaMagiP50: 150_000 })] }
-    const both = factOf(composeHealthSheet(two, draft({ ages: [66, 66] }), FRESH), 'step')!
+    const both = factOf(composeHealthSheet(two, draft({ ages: [66, 66] }), FRESH, undefined), 'step')!
     expect(both.figure).toBe('+~$2,400 a year')
     expect(both.lines[0]).toMatch(/for the two of you\.$/)
     expect(both.lines[0]).not.toContain('each')
@@ -471,7 +472,7 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
       year({ yearsFromNow: 3, medicareBaseP50: 5_800, medicareEnrolledP50: 2, medicareExtrasP50: 5_900, irmaaMagiP50: 150_000, ...era }),
     ],
   })
-  const medicareFact = (r: HealthReadout) => factOf(composeHealthSheet(r, draft({ ages: [64, 62] }), FRESH), 'medicare')!
+  const medicareFact = (r: HealthReadout) => factOf(composeHealthSheet(r, draft({ ages: [64, 62] }), FRESH, undefined), 'medicare')!
 
   it('the surcharge binds PER QUOTED YEAR — on-ramp only: the on-ramp figure INCLUDES its surcharge, the line re-quotes it and names the era figure as base', () => {
     const f = medicareFact(twoFigure({ irmaaSurchargeP50: 800 }, {}))
@@ -515,7 +516,7 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
         year({ yearsFromNow: 6, medicareBaseP50: 2_789, medicareEnrolledP50: 1, medicareExtrasP50: 2_928, irmaaMagiP50: 46_819 }),
       ],
     }
-    expect(factOf(composeHealthSheet(readout, draft({ ages: [61, 59] }), FRESH), 'medicare')).toEqual({
+    expect(factOf(composeHealthSheet(readout, draft({ ages: [61, 59] }), FRESH, undefined), 'medicare')).toEqual({
       id: 'medicare',
       eyebrow: copy.healthFactMedicareOne, // ONE figure, the years one of you is on it — the eyebrow says so
       figure: slots.healthFigPerYear('2,700'),
@@ -532,7 +533,7 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
     const readout: HealthReadout = {
       byYear: [year({ yearsFromNow: 5, medicareBaseP50: 2_703, irmaaSurchargeP50: 800, medicareEnrolledP50: 1, irmaaMagiP50: 230_000 })],
     }
-    const f = factOf(composeHealthSheet(readout, draft({ ages: [61, 59] }), FRESH), 'medicare')!
+    const f = factOf(composeHealthSheet(readout, draft({ ages: [61, 59] }), FRESH, undefined), 'medicare')!
     expect(f.lines[1]).toBe(slots.irmaaStepOnRampOpen('3,500'))
     expect(f.lines[2]).toBe(slots.irmaaStepSurchargeOf('3,500', '800'))
     expect(f.lines[3]).toBe(copy.irmaaStepExtrasNoneOne) // ONE figure on this card — the singular none form
@@ -541,7 +542,7 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
 
   it('DEGENERATE arms keep today’s one-figure composition BYTE-IDENTICAL: the era IS the anchor (an all-65+ household — `retired`) and a one-person household', () => {
     const both: HealthReadout = { byYear: [year({ yearsFromNow: 1, medicareBaseP50: 4_870, medicareEnrolledP50: 2, irmaaMagiP50: 90_129 })] }
-    const bothFact = factOf(composeHealthSheet(both, draft({ ages: [66, 65] }), FRESH), 'medicare')!
+    const bothFact = factOf(composeHealthSheet(both, draft({ ages: [66, 65] }), FRESH, undefined), 'medicare')!
     expect(bothFact.eyebrow).toBe(copy.healthFactMedicare) // the pre-build eyebrow — the per-arm frames never reach this arm
     expect(bothFact.lines).toEqual([
       copy.irmaaStepStory,
@@ -549,7 +550,7 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
     ])
     // One person entered, one enrolled → the era is the anchor by count.
     const solo: HealthReadout = { byYear: [year({ yearsFromNow: 1, medicareBaseP50: 2_435, medicareEnrolledP50: 1, irmaaMagiP50: 90_000 })] }
-    expect(factOf(composeHealthSheet(solo, draft({ ages: [66] }), FRESH), 'medicare')!.lines).toEqual([
+    expect(factOf(composeHealthSheet(solo, draft({ ages: [66] }), FRESH, undefined), 'medicare')!.lines).toEqual([
       copy.irmaaStepStory,
       slots.irmaaStepNowBase('2,400'),
     ])
@@ -563,7 +564,7 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
         year({ yearsFromNow: 3, medicareBaseP50: 5_800, medicareEnrolledP50: 2, irmaaMagiP50: 90_000 }),
       ],
     }
-    const f = factOf(composeHealthSheet(equal, draft({ ages: [64, 62] }), FRESH), 'medicare')!
+    const f = factOf(composeHealthSheet(equal, draft({ ages: [64, 62] }), FRESH, undefined), 'medicare')!
     expect(f.figure).toBe(slots.healthFigPerYear('5,800'))
     expect(f.lines).toEqual([
       copy.irmaaStepStory,
@@ -583,12 +584,12 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
   it('the step card’s two-of-you fork reads the WIRE, never the draft’s ages (a mutant restoring the age proxy reds both halves)', () => {
     // Ages say one enrolled (66/62); the wire says two → the two-of-you arm at the ×2 figure (the 2026-MAGI line 232,000).
     const wireTwo: HealthReadout = { byYear: [year({ yearsFromNow: 1, medicareBaseP50: 4_870, medicareEnrolledP50: 2, irmaaMagiP50: 150_000 })] }
-    expect(factOf(composeHealthSheet(wireTwo, draft({ ages: [66, 62] }), FRESH), 'step')!.lines).toEqual([
+    expect(factOf(composeHealthSheet(wireTwo, draft({ ages: [66, 62] }), FRESH, undefined), 'step')!.lines).toEqual([
       slots.irmaaStepNext('232,000', '150,000', '82,000', '1,200', '2,400', true),
     ])
     // Ages say both enrolled (66/66); the wire says one (a still-working spouse — onset-aware) → each-of-you.
     const wireOne: HealthReadout = { byYear: [year({ yearsFromNow: 1, medicareBaseP50: 2_435, medicareEnrolledP50: 1, irmaaMagiP50: 150_000 })] }
-    expect(factOf(composeHealthSheet(wireOne, draft({ ages: [66, 66] }), FRESH), 'step')!.lines).toEqual([
+    expect(factOf(composeHealthSheet(wireOne, draft({ ages: [66, 66] }), FRESH, undefined), 'step')!.lines).toEqual([
       slots.irmaaStepNext('232,000', '150,000', '82,000', '1,200', '2,400', false),
     ])
   })
@@ -598,12 +599,12 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
     // into the plan the same rows are two years nearer; six years in, the era (2032) has arrived and
     // the on-ramp (2030) is behind us — the composer says "Around 2032" / "starting now", never a
     // negative distance and never a moved year.
-    const two = factOf(composeHealthSheet(healthncReadout(), draft({ ages: [61, 59] }), FRESH, 2), 'medicare')!
+    const two = factOf(composeHealthSheet(healthncReadout(), draft({ ages: [61, 59] }), FRESH, undefined, 2), 'medicare')!
     expect(two.lines[1]).toBe(slots.irmaaStepEraStart('5,800', 4, 2032))
     expect(two.lines[1]).toMatch(/^About four years from now, around 2032, /)
     expect(two.lines[2]).toBe(slots.irmaaStepOnRampSpan(2, '2,700', 2, 2030))
     expect(two.lines[2]).toMatch(/^Before that, starting about two years from now, around 2030, and for about two years, /)
-    const six = factOf(composeHealthSheet(healthncReadout(), draft({ ages: [61, 59] }), FRESH, 6), 'medicare')!
+    const six = factOf(composeHealthSheet(healthncReadout(), draft({ ages: [61, 59] }), FRESH, undefined, 6), 'medicare')!
     expect(six.lines[1]).toBe(slots.irmaaStepEraStart('5,800', 0, 2032))
     expect(six.lines[1]).toMatch(/^Around 2032, while you’re both on Medicare/)
     expect(six.lines[2]).toBe(slots.irmaaStepOnRampSpan(2, '2,700', -2, 2030))
@@ -619,6 +620,102 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
     const f = medicareFact(twoFigure({}, {}))
     expect(f.lines[3]).toBe(copy.irmaaStepEraTrendNote)
     expect(f.lines[2]).toMatch(/^Before that, /)
+  })
+})
+
+// ─── the conversion tile counts the RUN's priced state ───────────────────────────────────────────
+// The register's Tier 0 "The health sheet's "about 22¢ all told" leaves out the North Carolina tax the
+// run itself charges": "all told — the tax on it, plus the discount lost" was federal + drag only, while
+// the run charged NC on every converted dollar and the sheet's "Not counted here" list had dropped state
+// tax. The figure moves; the words stay. Every expectation below is hand-derived (DND 012) from the
+// statute rows — NC (S.L. 2026-41 § 44.1(a)): 3.99 % in 2026, 3.49 % in 2027–2029, over a $25,500 MFJ
+// standard deduction (G.S. 105-153.5(a)(1); the price index is 1 in 2026); PA: 3.07 % flat, the
+// conversion exempt once every member has reached 59½ (the engine's integer proxy: 60); FL: $0 — never
+// read back from `stateIncomeTax` or the composer's own formula.
+describe('the conversion tile counts the RUN’s priced state (the register’s Tier 0 "about 22¢ all told")', () => {
+  /** The shared ACA fixture (the hand-derived 22¢ arm above): AGI 60,000 − 32,200 = 27,800 taxable
+   *  → the 12 % band; MAGI 66,600 ÷ 21,150 = 3.15 × FPL → the flat 9.96 % band, PTC live on a $12,000
+   *  benchmark (12,000 − 0.0996 × 66,600 = 5,367 > 0) → drag 9.96¢. Federal + drag = 21.96 → 22¢. */
+  const anchorAt = (yearsFromNow: number, irmaaMagiP50 = 60_000): HealthReadout => ({
+    byYear: [
+      year({ yearsFromNow, acaPricedFraction: 1, acaNetPremiumP50: 9_950, acaMagiP50: 66_600, irmaaMagiP50, overCliffFraction: 0.31 }),
+    ],
+  })
+  const cents = (view: ReturnType<typeof composeHealthSheet>) => factOf(view, 'conversion')
+
+  it('NC: the 2026 anchor adds 3.99¢ — 12 + 9.96 + 3.99 = 25.95 → 26¢, figure AND sentence (the words unchanged, only the numeral moves)', () => {
+    expect(cents(composeHealthSheet(anchorAt(1), draft(), FRESH, 'NC'))).toEqual({
+      id: 'conversion',
+      eyebrow: copy.healthFactConversion,
+      figure: slots.healthFigCents(26),
+      lines: [slots.shadowRateLine(26)],
+    })
+  })
+
+  it('NC: the rate is read at the ANCHOR’s calendar year — a 2027 anchor adds the stepped-down 3.49¢: 12 + 9.96 + 3.49 = 25.45 → 25¢ (a 2026-rate read would say 26)', () => {
+    // The year is the isolated variable: identical household and anchor, only startCalendarYear moves.
+    expect(cents(composeHealthSheet(anchorAt(1), draft({ startYear: 2027 }), FRESH, 'NC'))?.figure).toBe(slots.healthFigCents(25))
+    // …and through the yearsIn clock: a 2026 plan whose anchor is year 2 (calendar 2027) reads the same 25¢.
+    expect(cents(composeHealthSheet(anchorAt(2), draft(), FRESH, 'NC'))?.figure).toBe(slots.healthFigCents(25))
+  })
+
+  it('NC: an AGI under NC’s standard deduction pays no NC tax on that dollar — 24,000 < 25,500 → +0: taxable 0 → the 10 % band, 10 + 9.96 = 19.96 → 20¢, priced or not', () => {
+    const low = anchorAt(1, 24_000)
+    expect(cents(composeHealthSheet(low, draft(), FRESH, undefined))?.figure).toBe(slots.healthFigCents(20))
+    expect(cents(composeHealthSheet(low, draft(), FRESH, 'NC'))?.figure).toBe(slots.healthFigCents(20))
+  })
+
+  it('NC: the state base starts from AGI, never the federal TAXABLE figure — a 50,000 AGI is 17,800 federally taxable (the 10 % band, under NC’s $25,500 deduction) yet NC taxes 50,000 − 25,500: 10 + 9.96 + 3.99 = 23.95 → 24¢ (a taxable-figure base would say 20)', () => {
+    expect(cents(composeHealthSheet(anchorAt(1, 50_000), draft(), FRESH, 'NC'))?.figure).toBe(slots.healthFigCents(24))
+    expect(cents(composeHealthSheet(anchorAt(1, 50_000), draft(), FRESH, undefined))?.figure).toBe(slots.healthFigCents(20))
+  })
+
+  it('NC: the deduction EDGE, to the dollar — an AGI $500 under NC’s $25,500 deduction adds nothing on the next dollar (10 + 9.96 = 19.96 → 20¢; a coarse $1,000 probe would cross the edge and say 22), and the first dollar past it is taxed (+3.99: 23.95 → 24¢)', () => {
+    expect(cents(composeHealthSheet(anchorAt(1, 25_000), draft(), FRESH, 'NC'))?.figure).toBe(slots.healthFigCents(20))
+    expect(cents(composeHealthSheet(anchorAt(1, 25_500), draft(), FRESH, 'NC'))?.figure).toBe(slots.healthFigCents(24))
+  })
+
+  it('PA: both sides of the qualified-age gate — a member under 59½ at the anchor is TAXED (+3.07¢: 21.96 + 3.07 = 25.03 → 25¢); every member 60+ is exempt (22¢); the gate rides the anchor’s yearsIn clock; an unknown age is taxed (the conservative arm)', () => {
+    // [61, 59] at a year-0 anchor: min 59 < 59½ → the conversion is PA-taxable.
+    expect(cents(composeHealthSheet(anchorAt(1), draft({ ages: [61, 59] }), FRESH, 'PA'))?.figure).toBe(slots.healthFigCents(25))
+    // [61, 60]: every member at the qualified age → exempt → the federal + drag figure.
+    expect(cents(composeHealthSheet(anchorAt(1), draft({ ages: [61, 60] }), FRESH, 'PA'))?.figure).toBe(slots.healthFigCents(22))
+    // [61, 59] at a year-1 anchor: the younger member is 60 THERE → exempt. Today's age would say taxed.
+    expect(cents(composeHealthSheet(anchorAt(2), draft({ ages: [61, 59] }), FRESH, 'PA'))?.figure).toBe(slots.healthFigCents(22))
+    // An unknown age never earns the exemption (the overstating direction — never the rosy one).
+    const unknownAge = { ...draft(), people: [{ currentAge: 61 }, {}] }
+    expect(cents(composeHealthSheet(anchorAt(1), unknownAge, FRESH, 'PA'))?.figure).toBe(slots.healthFigCents(25))
+  })
+
+  it('FL: a priced $0 state reads byte-identical to an unpriced household (22¢ — the constitutional $0 adds nothing)', () => {
+    const fl = composeHealthSheet(anchorAt(1), draft(), FRESH, 'FL')
+    expect(fl).toEqual(composeHealthSheet(anchorAt(1), draft(), FRESH, undefined))
+    expect(cents(fl)?.figure).toBe(slots.healthFigCents(22))
+  })
+
+  it('the cents round ONCE, over the whole sum — a sliding-band drag makes a split rounding visible: 12 + 16.22 + 3.49 (NC 2027) = 31.71 → 32¢, where rounding federal + drag and the state apart says 28 + 3 = 31', () => {
+    // Hand-derived (DND 012) from the reverted table's 2.5–3.0 × FPL row (8.44 → 9.96 %, linear): at a
+    // MAGI of m the contribution is (0.0084 + 0.0304 × m ÷ 21,150) × m, so across the drag probe's
+    // $1,000 step 53,000 → 54,000 (2.506 → 2.553 × FPL, one band) it rises 4,482.72 → 4,644.92: 16.22¢
+    // a dollar, the PTC live on the $12,000 benchmark and under the 84,600 cliff. The AGI stays 60,000
+    // (the 12 % band), so the unpriced figure is 12 + 16.22 = 28.22 → 28¢.
+    const sliding: HealthReadout = {
+      byYear: [
+        year({ yearsFromNow: 1, acaPricedFraction: 1, acaNetPremiumP50: 9_950, acaMagiP50: 53_000, irmaaMagiP50: 60_000, overCliffFraction: 0.31 }),
+      ],
+    }
+    expect(cents(composeHealthSheet(sliding, draft({ startYear: 2027 }), FRESH, undefined))?.figure).toBe(slots.healthFigCents(28))
+    expect(cents(composeHealthSheet(sliding, draft({ startYear: 2027 }), FRESH, 'NC'))?.figure).toBe(slots.healthFigCents(32))
+  })
+
+  it('UNPRICED: no priced state ⇒ the pre-change federal + drag figure, byte-identical (22¢ — the arm above this block pinned it before the state term existed); the state term is a literal 0, never a computed one', () => {
+    expect(cents(composeHealthSheet(anchorAt(1), draft(), FRESH, undefined))).toEqual({
+      id: 'conversion',
+      eyebrow: copy.healthFactConversion,
+      figure: slots.healthFigCents(22),
+      lines: [slots.shadowRateLine(22)],
+    })
+    expect(Object.is(stateConversionMarginal({ state: undefined, filing: 'mfj', calendarYear: 2026, agi: 60_000, minLivingAge: 60 }), 0)).toBe(true)
   })
 })
 

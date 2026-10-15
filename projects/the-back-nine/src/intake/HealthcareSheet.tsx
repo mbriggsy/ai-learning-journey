@@ -76,11 +76,12 @@ export interface HealthcareSheetProps {
   readonly preview: (control: TwoArmControl) => Promise<ControlPreview> | null
   /** True ⇒ the main-thread fallback is live (the no-worker disclosure rule). */
   readonly previewBlocking?: boolean
-  /** The state-tax unit (S5): TRUE (the PRICED state code is present) ⇒ the state-tax item DROPS
-   *  from this sheet's omissions note — gated INDEPENDENTLY of the verdict + Roth homes (insight
-   *  078: the door population is its own, own chrome). The run's OWN pricing decision
-   *  (`pricedStateForRun`, Result), never geography (insight 080/081); presentational (insight 048). */
-  readonly statePricedNote?: PricedState
+  /** The state-tax unit (S5): the PRICED state code ⇒ the state-tax item DROPS from this sheet's
+   *  omissions note (gated apart from the verdict + Roth homes, insight 078) AND the conversion tile's
+   *  cents add that state's tax on a converted dollar. The run's OWN decision (`pricedStateForRun`,
+   *  Result), never geography (insights 080/081); presentational (048). REQUIRED, explicitly `undefined`
+   *  when unpriced: optional, a mount could drop it, compile clean and restore the federal-only cents. */
+  readonly statePricedNote: PricedState | undefined
   /** Commit the picked regime — the caller writes the ONE key (set `true` / strip) atomically
    *  and recomputes. `enhanced === false` IS the escape ("back to current law"). */
   readonly onApply: (enhanced: boolean) => void
@@ -119,7 +120,11 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
 
   // The composed readout lines — PURE, decided in healthSheetChrome (regime-aware: an applied
   // enhanced regime swaps the dated status note to the what-if variant and drops the cliff lines).
-  const view = composeHealthSheet(readout, draft, todayEpochDay, savedAnchor?.yearsSincePlanBuilt ?? 0)
+  // The run's priced state rides in too: the conversion tile's "all told" adds the state tax the run
+  // charges on a converted dollar (the register's Tier 0 "The health sheet's "about 22¢ all told"
+  // leaves out the North Carolina tax the run itself charges") — the SAME decision that drops state
+  // tax from this sheet's "Not counted here" list below, so the list and the figure never disagree.
+  const view = composeHealthSheet(readout, draft, todayEpochDay, statePricedNote, savedAnchor?.yearsSincePlanBuilt ?? 0)
   // The extras door-home lines (F5): BUILT dollars + draft provenance + the name fallback
   // (medicareExtrasDisclosureView — the ONE assembly both F5 homes consume, insight 081).
   const extrasView = medicareExtrasDisclosureView(draft)

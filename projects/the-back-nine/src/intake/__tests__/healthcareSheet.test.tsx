@@ -256,6 +256,24 @@ describe('HealthcareSheet — the readout lines', () => {
     expect(screen.queryByText(copy.controlHealthOmissionsNoteStatePriced)).toBeNull()
   })
 
+  // The register's Tier 0 "The health sheet's "about 22¢ all told" leaves out the North Carolina tax the
+  // run itself charges": the SAME `statePricedNote` that drops state tax from the list above must reach
+  // the conversion tile's cents — the one witness that the sheet hands the run's priced state to the
+  // composer (a dropped argument reads 22¢ beside a list that says state tax is counted). Hand-derived
+  // on READOUT: AGI 60,000 − 32,200 = 27,800 → the 12 % band; MAGI 66,600 ÷ 21,150 = 3.15 × FPL → the
+  // flat 9.96 % drag on the $12,000 benchmark; NC 2026 (the fresh model's start year) 3.99 % on a base
+  // over the $25,500 deduction → 12 + 9.96 + 3.99 = 25.95 → 26¢. Unpriced: 21.96 → 22¢.
+  it('a priced NC household reads the state tax in the conversion tile’s “all told” (26¢); unpriced keeps 22¢', () => {
+    renderSheet({ readout: READOUT, statePricedNote: 'NC' })
+    expect(screen.getByText(slots.shadowRateLine(26))).toBeInTheDocument()
+    expect(screen.getByText(slots.healthFigCents(26))).toBeInTheDocument()
+    expect(screen.queryByText(slots.shadowRateLine(22))).toBeNull()
+    cleanup()
+    renderSheet({ readout: READOUT })
+    expect(screen.getByText(slots.shadowRateLine(22))).toBeInTheDocument()
+    expect(screen.queryByText(slots.shadowRateLine(26))).toBeNull()
+  })
+
   it('the HSA trap note renders only for a household that entered an HSA', () => {
     renderSheet()
     expect(screen.queryByText(copy.controlHealthHsaNote)).toBeNull()
@@ -266,7 +284,7 @@ describe('HealthcareSheet — the readout lines', () => {
       enteredAccounts: [{ ownerIndex: 0, kind: 'hsa', valueToday: 40_000 }],
     }))
     render(
-      <HealthcareSheet open draft={draft} readout={undefined} preview={preview.fn} onApply={vi.fn()} onClose={vi.fn()} todayEpochDay={FRESH_CLOCK} />,
+      <HealthcareSheet open draft={draft} readout={undefined} preview={preview.fn} onApply={vi.fn()} onClose={vi.fn()} todayEpochDay={FRESH_CLOCK} statePricedNote={undefined} />,
     )
     expect(screen.getByText(copy.controlHealthHsaNote)).toBeInTheDocument()
   })
@@ -304,7 +322,7 @@ describe('HealthcareSheet — the Medicare-extras door home (F5)', () => {
     const draft = doorDraft()
     expect(medicareExtrasView(draft), 'precondition: the run prices a Medicare-bearing overlay').not.toBeNull()
     render(
-      <HealthcareSheet open draft={draft} readout={undefined} preview={deferredPreview().fn} onApply={vi.fn()} onClose={vi.fn()} todayEpochDay={FRESH_CLOCK} />,
+      <HealthcareSheet open draft={draft} readout={undefined} preview={deferredPreview().fn} onApply={vi.fn()} onClose={vi.fn()} todayEpochDay={FRESH_CLOCK} statePricedNote={undefined} />,
     )
     const fig = Math.round(medicareExtrasTypicalMonthly()).toLocaleString('en-US')
     expect(screen.getByText(copy.medicareExtrasSheetLead)).toBeInTheDocument()
@@ -323,7 +341,7 @@ describe('HealthcareSheet — the Medicare-extras door home (F5)', () => {
       ],
     }))
     render(
-      <HealthcareSheet open draft={draft} readout={undefined} preview={deferredPreview().fn} onApply={vi.fn()} onClose={vi.fn()} todayEpochDay={FRESH_CLOCK} />,
+      <HealthcareSheet open draft={draft} readout={undefined} preview={deferredPreview().fn} onApply={vi.fn()} onClose={vi.fn()} todayEpochDay={FRESH_CLOCK} statePricedNote={undefined} />,
     )
     expect(screen.getByText(slots.medicareExtrasFactEntered('A', '185'))).toBeInTheDocument()
     expect(screen.getByText(slots.medicareExtrasFactNone('B'))).toBeInTheDocument()
@@ -365,7 +383,7 @@ describe('HealthcareSheet — the Medicare-extras door home (F5)', () => {
     ]
     for (const [label, draft, lastPersonLine] of cases) {
       const { unmount } = render(
-        <HealthcareSheet open draft={draft} readout={undefined} preview={deferredPreview().fn} onApply={vi.fn()} onClose={vi.fn()} todayEpochDay={FRESH_CLOCK} />,
+        <HealthcareSheet open draft={draft} readout={undefined} preview={deferredPreview().fn} onApply={vi.fn()} onClose={vi.fn()} todayEpochDay={FRESH_CLOCK} statePricedNote={undefined} />,
       )
       const paras = paragraphs()
       expect(paras.filter((t) => t === copy.medicareExtrasSheetHeldFlat), `${label}: exactly once`).toHaveLength(1)

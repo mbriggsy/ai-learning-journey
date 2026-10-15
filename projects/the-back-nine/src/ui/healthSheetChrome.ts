@@ -11,12 +11,12 @@
  * THE ANCHOR CONTRACT (council 2026-07-03, the unbiased-skeleton dissolution): every figure
  * anchors to the simulation's OWN per-year medians (`acaMagiP50` / `irmaaMagiP50` — an
  * unbiased best estimate by construction), never a modeled skeleton; the landscape geometry
- * around that anchor (cliff distance, next step, marginal rate, subsidy drag) is read through
- * the SAME canonical modules the engine prices with (`magiLandscape` → `taxCore` /
- * `healthOverlay` / the constants) — single producer, so the readout can never disagree with
- * the engine about where a cliff sits. The one disclosed approximation: the subsidy-drag
- * probe uses TODAY'S benchmark quote (the per-year escalated stream lives engine-side); the
- * `~`/`about` hedge carries that honestly. The step card's crossing PRICE is NOT an approximation:
+ * around that anchor (cliff distance, next step, marginal rate, subsidy drag, a priced state's
+ * marginal) is read through the SAME canonical modules the engine prices with (`magiLandscape` →
+ * `taxCore` / `healthOverlay` / `stateTax` / the constants) — single producer, so the readout can
+ * never disagree with the engine about where a cliff sits. Two disclosed approximations, both under
+ * the `~`/`about` hedge: the drag probe uses TODAY'S benchmark (the escalated stream is engine-side);
+ * the state probe taxes the whole AGI (overstating only). The step card's crossing PRICE is NOT an approximation:
  * it reads the bill year's surcharge scales through the engine's own binding
  * (`healthOverlay.irmaaBillScalesFor`), so the card quotes what the engine bills.
  *
@@ -25,7 +25,7 @@
  * note to the what-if variant (an applied hypothesis must never read as current law —
  * council condition Q1).
  */
-import type { HealthReadout, HealthReadoutYear, ScenarioV3, TwoArmOutcome } from '@shared/model'
+import type { FilingStatus, HealthReadout, HealthReadoutYear, ScenarioV3, TwoArmOutcome } from '@shared/model'
 import {
   cliffMagiFor,
   marginalOrdinaryRate,
@@ -33,6 +33,8 @@ import {
   subsidyLossPerDollar,
 } from '@engine/magiLandscape'
 import { deductionStack } from '@engine/taxCore'
+import { stateIncomeTax, type StateTaxYearContext } from '@engine/stateTax'
+import type { PricedState } from '@engine/constants/stateTax'
 import { fplForHousehold, irmaaBillScalesFor, irmaaScheduleAsCompared } from '@engine/healthOverlay'
 import { acaCheckOverdue } from '@engine/validation/oracleToken'
 import {
@@ -118,6 +120,60 @@ export interface HealthSheetView {
   readonly facts: readonly HealthFact[]
 }
 
+/** The dollar the state probe adds — "one more converted dollar", the tile's own unit. */
+const STATE_PROBE_DOLLARS = 1
+
+/**
+ * The run's own STATE tax on one more converted dollar at the conversion tile's anchor — the third
+ * term of "all told" beside the federal bracket and the subsidy drag (closes the register's Tier 0
+ * "The health sheet's "about 22¢ all told" leaves out the North Carolina tax the run itself
+ * charges"). SINGLE PRODUCER: a finite difference on the engine's own `stateIncomeTax`, so every
+ * rate, year step, deduction and age gate is the one the run prices with — no rate is re-typed here
+ * (the constants discipline; the register entry's NEGATIVE).
+ *
+ * `state` is the RUN's priced state (`pricedStateForRun` — the producer's output, never the draft's
+ * geography, insights 080/081). `undefined` (unpriced, 'elsewhere', unbuilt) is a literal 0: the
+ * sheet's "Not counted here" list names state tax for that household, and its figure stays
+ * byte-identical. FL is the engine's structural 0, so it reads 0 the same way.
+ *
+ * THE CHANNEL SPLIT THE WIRE LACKS — taken in the CONSERVATIVE direction (an overstated cost, never
+ * an understated one): the wire carries the anchor's AGI (`irmaaMagiP50`), not the engine's per-
+ * channel split, so the WHOLE AGI rides `ongoingTaxable` — the one channel every priced income-tax
+ * state taxes flat at every age. That counts the taxable Social Security NC and PA exempt, and the
+ * retirement draw PA exempts at the qualified age, so the state base is never smaller than the run's
+ * own; for a flat rate over a standard deduction the marginal is non-decreasing in the base, so the
+ * probe can read the full rate where the run reads less (taxable SS lifting the AGI over NC's
+ * deduction while the run's SS-free base sits under it) and never the reverse. The probe dollar
+ * rides `conversion`, the channel the tile is about (NC taxes it; PA only below the qualified age).
+ *
+ * `minLivingAge` is the caller's MIN over EVERY entered member at the anchor (living or not — the
+ * wire carries no living set), so it can only sit at or below the run's own living minimum: PA's
+ * exemption is granted no more often than the engine grants it. An unknown age reads as below every
+ * qualified age (taxed).
+ */
+export function stateConversionMarginal(at: {
+  readonly state: PricedState | undefined
+  readonly filing: FilingStatus
+  readonly calendarYear: number
+  readonly agi: number
+  readonly minLivingAge: number
+}): number {
+  if (at.state === undefined) return 0
+  const without: StateTaxYearContext = {
+    state: at.state,
+    filing: at.filing,
+    calendarYear: at.calendarYear,
+    pretaxDistribution: 0,
+    conversion: 0,
+    ongoingTaxable: at.agi,
+    realizedGain: 0,
+    ssBenefitTaxable: 0,
+    minLivingAge: at.minLivingAge,
+  }
+  const withProbe: StateTaxYearContext = { ...without, conversion: STATE_PROBE_DOLLARS }
+  return (stateIncomeTax(withProbe) - stateIncomeTax(without)) / STATE_PROBE_DOLLARS
+}
+
 /**
  * Compose the sheet's readout lines from the wire series + the draft's categorical facts.
  * `readout` undefined (the date route / a pre-resolve open) composes the status line alone —
@@ -132,14 +188,23 @@ export interface HealthSheetView {
 export function composeHealthSheet(
   readout: HealthReadout | undefined,
   draft: Pick<ScenarioV3, 'filing' | 'enhancedSubsidies' | 'startCalendarYear'> & {
-    /** Ages feed ONLY the ACA anchor's biological `count65` for the deduction stack (the engine's
-     *  own split: `count65` stays biological for §63(f), the pricing count is onset-aware). Medicare
+    /** Ages feed the ACA anchor's biological `count65` for the deduction stack (the engine's own
+     *  split: `count65` stays biological for §63(f), the pricing count is onset-aware) and the state
+     *  probe's `minLivingAge` (PA's qualified-age gate — {@link stateConversionMarginal}). Medicare
      *  ENROLLMENT is read off the wire (`medicareEnrolledP50`), never re-derived here from ages
      *  (council 2026-09-13); the era year needs only the household's COUNT. */
     readonly people: ReadonlyArray<{ readonly currentAge?: number }>
     readonly health: { readonly slcspMonthlyToday?: number }
   },
   todayEpochDay: number,
+  /** The RUN's priced state (`pricedStateForRun`, threaded from the sheet's `statePricedNote`) — the
+   *  conversion tile adds the state tax on a converted dollar only for a state the run prices. A
+   *  POSITIONAL parameter, not a draft field: it is the run's decision, not a categorical fact the
+   *  draft holds (`draft.retirementState` is geography — insight 080). REQUIRED (explicitly
+   *  `undefined` when unpriced), never optional: a computed priced state that a caller forgot to
+   *  hand down would silently restore the federal-only figure — the `disclosuresFor` trapdoor
+   *  (recommendationView.ts), where the omission compiles clean and reads calm. */
+  pricedState: PricedState | undefined,
   /** Calendar years since the plan was built (the plan clock's `yearsSincePlanBuilt`) — the era
    *  lines count their distance from TODAY; 0 on every fresh session (the byte-identity). */
   sincePlanBuilt = 0,
@@ -203,7 +268,23 @@ export function composeHealthSheet(
       slcspAnnual > 0 && creditAlive
         ? subsidyLossPerDollar(anchor.acaMagiP50, slcspAnnual, fplDollar, table)
         : 0
-    const cents = Math.round((marginal + drag) * 100)
+    // The state tax on the converted dollar ("the tax on it" is federal AND state where the run
+    // prices a state — the register's Tier 0 "The health sheet's "about 22¢ all told" leaves out the
+    // North Carolina tax the run itself charges"): the same anchor calendar year, the same yearsIn
+    // age clock, the same AGI the federal term reads. An unpriced household adds a literal 0, so
+    // its figure is byte-identical to the federal-only figure it always read.
+    const anchorAges = draft.people.map((p) => (p.currentAge === undefined ? undefined : p.currentAge + yearsIn))
+    const stateMarginal = stateConversionMarginal({
+      state: pricedState,
+      filing: draft.filing,
+      calendarYear: anchorCalendarYear,
+      agi,
+      minLivingAge:
+        anchorAges.length > 0 && anchorAges.every((a) => a !== undefined)
+          ? Math.min(...anchorAges)
+          : Number.NEGATIVE_INFINITY,
+    })
+    const cents = Math.round((marginal + drag + stateMarginal) * 100)
 
     // The discount fact: the income-vs-cutoff context first (it defines the line the odds
     // sentence leans on), the over-cliff odds folded in as its second sentence when quotable.

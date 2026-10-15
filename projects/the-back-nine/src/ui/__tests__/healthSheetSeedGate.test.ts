@@ -15,9 +15,9 @@
  */
 import { describe, it, expect } from 'vitest'
 import { DEV_SEEDS } from '@ui/devSeeds'
-import { buildSpineParams } from '@intake/intakeMap'
+import { buildSpineParams, pricedStateForRun } from '@intake/intakeMap'
 import { runEngine } from '@engine/engineProtocol'
-import { composeHealthSheet, medicareAnchor, medicareEraYear } from '@ui/healthSheetChrome'
+import { acaAnchor, composeHealthSheet, medicareAnchor, medicareEraYear } from '@ui/healthSheetChrome'
 import { copy, slots } from '@ui/copy'
 import { epochDayFromIsoDate } from '@engine/validation/oracleToken'
 import { acaEnhancedSubsidyStatus, irmaa, medicareCostTrend, partB2026 } from '@engine/constants/health'
@@ -27,7 +27,7 @@ import type { HealthReadout } from '@shared/model'
  *  under test here; the facts are). */
 const FRESH = epochDayFromIsoDate(acaEnhancedSubsidyStatus.value.verifiedOn) + 1
 
-const readoutOf = (name: 'retired' | 'healthnc' | 'healthgap'): HealthReadout => {
+const readoutOf = (name: 'retired' | 'health' | 'healthnc' | 'healthgap'): HealthReadout => {
   const d = DEV_SEEDS[name]
   const params = buildSpineParams(d)
   if (params === null) throw new Error(`${name}: not a spine seed`)
@@ -59,7 +59,7 @@ describe('the Medicare premium card on the shipped seeds, through the real engin
   it('`retired` (66/65): everyone enrolled from the first billed year → the era IS the anchor → the pre-build sentence (base 4,870 → 4,900; MAGI 90,129 → 90,100; the 2026-MAGI line 232,000 [2 × round1000(109,000 × 1.032²) — the 2028 bill’s, TWO Augusts past the lines’ August-2025 base, in 2026 dollars]; headroom 141,871 → 141,900; the two-of-you step, priced at the 2028 BILL’s scales: 99.66/mo per person → 1,196 → 1,200 each, 2,392 → 2,400 for two — the 2026 anchor’s 95.7 read 1,100 / 2,300)', () => {
     const readout = readoutOf('retired')
     expect(medicareEraYear(readout, 2)).toBe(medicareAnchor(readout))
-    const view = composeHealthSheet(readout, DEV_SEEDS.retired, FRESH)
+    const view = composeHealthSheet(readout, DEV_SEEDS.retired, FRESH, pricedStateForRun(DEV_SEEDS.retired))
     expect(factOf(view, 'medicare')).toEqual({
       id: 'medicare',
       eyebrow: copy.healthFactMedicare,
@@ -83,7 +83,7 @@ describe('the Medicare premium card on the shipped seeds, through the real engin
     expect(anchor?.medicareEnrolledP50).toBe(1)
     expect(era?.yearsFromNow).toBe(7)
     expect(era?.medicareEnrolledP50).toBe(2)
-    const view = composeHealthSheet(readout, DEV_SEEDS.healthnc, FRESH)
+    const view = composeHealthSheet(readout, DEV_SEEDS.healthnc, FRESH, pricedStateForRun(DEV_SEEDS.healthnc))
     expect(factOf(view, 'medicare')).toEqual({
       id: 'medicare',
       eyebrow: copy.healthFactMedicareBoth,
@@ -117,7 +117,7 @@ describe('the Medicare premium card on the shipped seeds, through the real engin
     expect(at(27).medicareEnrolledP50).toBe(1)
     const era = medicareEraYear(readout, 2)
     expect(era?.yearsFromNow).toBe(26)
-    const view = composeHealthSheet(readout, DEV_SEEDS.healthgap, FRESH)
+    const view = composeHealthSheet(readout, DEV_SEEDS.healthgap, FRESH, pricedStateForRun(DEV_SEEDS.healthgap))
     const fact = factOf(view, 'medicare')!
     expect(fact.eyebrow).toBe(copy.healthFactMedicareBoth)
     expect(fact.figure).toBe(slots.healthFigPerYear('8,100'))
@@ -126,5 +126,40 @@ describe('the Medicare premium card on the shipped seeds, through the real engin
     expect(fact.lines[3], 'the ONE basis clause — why this pair is 3× while the extras pair is 2× (Briggsy 2026-09-24)').toBe(copy.irmaaStepEraTrendNote)
     expect(fact.lines[4]).toBe(copy.irmaaStepBothBase)
     expect(fact.lines[5]).toBe(slots.irmaaStepExtrasAddBoth('5,900', '2,900'))
+  }, 120_000)
+})
+
+/** THE CONVERSION TILE ON THE PRICED SEEDS (the register's Tier 0 "The health sheet's "about 22¢ all
+ *  told" leaves out the North Carolina tax the run itself charges") — the real pipeline end to end:
+ *  `pricedStateForRun` (the run's own decision, the sheet's `statePricedNote`) → composeHealthSheet.
+ *  `healthnc` and `healthgap` are the only shipped seeds that render this tile AND price a state: `nc`
+ *  / `pa` / `fl` spread the all-65+ `retired` couple (no pre-65 member → no Healthcare door, no ACA
+ *  anchor) and `datenc` rides the date route (no readout on the wire). Both priced seeds anchor at
+ *  yearsFromNow 1 — calendar 2026, ages 61/59 (healthgap 61/40) — on the SAME engine median AGI,
+ *  66,031.95, and `health` (their state-absent twin) at 65,124.64. Hand-derived (DND 012), never read
+ *  off the composer: federal — 66,032 − 32,200 = 33,832 taxable (no 65+ member), inside the MFJ 12 %
+ *  band (24,800–100,800); `health` 65,125 − 32,200 = 32,925, the same band. Drag — 66,032 ÷ 21,150 =
+ *  3.12 × FPL (healthgap identical; `health` 3.08), the flat 9.96 % band (300–400 %), the credit live
+ *  (16,800 − 0.0996 × 66,032 = 10,223 > 0) → 9.96¢. NC — the 2026 step of S.L. 2026-41 § 44.1(a),
+ *  3.99 %, on a base far above the $25,500 MFJ standard deduction (price index 1 in 2026; Social
+ *  Security unclaimed until 67, so the base is the whole AGI) → 3.99¢. All told: 12 + 9.96 + 3.99 =
+ *  25.95 → 26¢ — the sheet shipped 22¢ until this unit; the twin keeps 12 + 9.96 = 21.96 → 22¢. */
+describe('the conversion tile on the priced seeds, through the real engine', () => {
+  it('`healthnc` and `healthgap` (NC-priced) read 26¢ all told; their unpriced twin `health` keeps 22¢', () => {
+    for (const name of ['healthnc', 'healthgap'] as const) {
+      expect(pricedStateForRun(DEV_SEEDS[name]), `${name}: the run prices NC`).toBe('NC')
+      const readout = readoutOf(name)
+      expect(acaAnchor(readout)?.yearsFromNow, `${name}: the anchor is calendar 2026`).toBe(1)
+      const view = composeHealthSheet(readout, DEV_SEEDS[name], FRESH, pricedStateForRun(DEV_SEEDS[name]))
+      expect(factOf(view, 'conversion'), name).toEqual({
+        id: 'conversion',
+        eyebrow: copy.healthFactConversion,
+        figure: slots.healthFigCents(26),
+        lines: [slots.shadowRateLine(26)],
+      })
+    }
+    expect(pricedStateForRun(DEV_SEEDS.health), 'the twin prices no state').toBeUndefined()
+    const twin = composeHealthSheet(readoutOf('health'), DEV_SEEDS.health, FRESH, pricedStateForRun(DEV_SEEDS.health))
+    expect(factOf(twin, 'conversion')?.figure).toBe(slots.healthFigCents(22))
   }, 120_000)
 })

@@ -25,6 +25,37 @@ one-way doors, framing-level forks, or genuine pilot doubt — reason logged) ·
 
 ---
 
+## 2026-10-15 — THE NC CONVERSION CENTS ON THE HEALTHCARE SHEET, pre-land (the uncommitted tree over `bc373b13`) — `seed:healthnc` · `seed:healthgap` · `seed:health` as the control (landing + every door; the Healthcare sheet as figured + its preview), REAL+PHONE (walk `temp/caddie/nc-cents-1015`, 6/6 in 1.2 m; three seats — the False-PASS hunter, calm/honesty + copy-law — and one refuter over seven findings, fresh Opus agents; the pilot's scrolled captures at both viewports)
+
+**surface:** the conversion tile — "Roth conversions in those years" / "26¢ on each dollar converted" / "Roth conversions work against that discount: every converted dollar counts as income, and more income means a smaller discount. Around those years, a converted dollar could cost about 26¢ all told — the tax on it, plus the discount lost." The words are unchanged; the numeral moved 22 → 26 on both NC seeds (the run's own NC tax on a converted dollar, measured through the engine); `health` keeps 22.
+
+**firstImpression:** no first-look seat this run — the change is one numeral on a sheet the held-flat card first-looked the same day, and that locked impression stands. The hunter's opening observation instead: *"The control's 'Not counted here' list starts with 'state income tax'. Both NC sheets leave it out. Both NC landings say 'Your North Carolina state income tax is reflected in these numbers.'"*
+
+**toneVerdict:** READS-CLEAN on the change (the figure now carries the tax the landing says is counted, and the sheet's list and figure agree; nothing against the change survived); HARD-FLAG on a PRE-EXISTING scope the tile has always carried (the holds rule, Tier 0).
+
+**findings (verified by the chair against the bundle; one refuter over seven):**
+- **CREATED BY THE CHANGE — none.** "'The tax on it' never names North Carolina" REFUTED: the NC list omits state tax, as the landing points to, and a misread errs dear.
+- **PRE-EXISTING, ⚑ HOLDS — the rate's scope** (hunter F1, calm A1, copy-law B1; refuter SURVIVED at high). "On each dollar converted" holds only inside the "~$18,600 of room"; the dollar that crosses ~$84,600 costs the year's whole discount, which the sheet never prices in dollars. The rosier reading: "If we convert $40,000, it costs us about $10,400." Filed Tier 0 (*The health sheet's "26¢ on each dollar converted" holds only inside the ~$18,600 of room…*), words his; it absorbs the held-flat walk's Tier 2 bullet on the unpriced discount.
+- **SURVIVED at nit, logged on the Tier 2 entry:** the bare "26¢" headline (the sheet's only unhedged headline; its hedge opens the sentence under it); "all told — the tax on it" on the unpriced control beside a list that names state income tax (disclosed twice).
+- **REFUTED:** the figure read as a yield (the first frame's next line kills it); one rate across futures (past the line the dollar costs only the tax — the cautious direction); "all told" against the Medicare lookback (the next premium step sits ~$148,000 above the room's top, so $0 inside the room); cost priced and benefit never (the lever is one door away).
+- **Dropped or demoted by the chair, not sent to the refuter:** "those years" dangling (the card above opens "In the years before Medicare" — adjacency supplies it); the sum without its parts (nit). Seen again, already filed: "these lines", the discount's many names, "these numbers" under the survivor card, the omissions list read as the whole tool's.
+
+**falsePassHunt:** attempted: yes (both NC sheets, the control, both landings, the scrolled captures); a rosier reading FOUND — the 26¢ multiplied across any amount (pre-existing, Tier 0). The hunter's open question "does 'the tax on it' include any knock-on tax on Social Security benefits?" is the Tier 0 the build's verify pass found the same day, independently (the bare bracket misses the Social Security taxation the run prices; no walked seed claims before 65).
+
+**colorBlindCheck (flags only):** a numeral change; the figure is text in `aria.yaml` on all 12 sheet states. On the phone the tile sits below the dialog's first frame, so no walk CVD arm reaches it (the Tier 4 scroll-and-clip entry); the pilot's scrolled captures show it on its siblings' `hs-fact__figure` register (32px / 26.23px, 600, tabular-nums).
+
+**comprehension:** no spouse seat this run (the held-flat card's spouse read of the same sheet stands); the calm seat: "calm everywhere — no celebration, no hype, no certainty words".
+
+**routedToOracle:** the rate's scope (Tier 0 — measure the discount, then his words); the bare-bracket federal term on an early Social Security claimer (Tier 0, from the verify pass).
+
+**prediction:** He reads the NC sheet without stopping on the 26¢ (the landing says NC is counted, and the list agrees). If he stops on the tile, it is "so converting forty grand costs about ten?" — the scope, filed Tier 0, words his.
+
+**disposition:** **the change PILOT-CLEARED** (READS-CLEAN; 26¢ measured through the engine on both NC seeds, seen at both viewports); **the surface HARD-FLAG — HELD FOR THE ORACLE** on two pre-existing Tier 0 entries this change neither created nor worsens — the rate's scope and the bare-bracket federal term.
+
+**evidence:** `temp/caddie/nc-cents-1015/` + `pilot-scrolled/` (cleared at squeaky); corpus loaded per the skill (rules 1, 2, 3, 7, 8, 13, 15, 23, 37–39 and exemplars E16, E17 cited by the seats); no new Briggsy read to fold in since the 2026-10-09 card.
+
+---
+
 ## 2026-10-15 — THE HELD-FLAT LINE ON THE HEALTHCARE SHEET, pre-land (the uncommitted tree over `0581e783`) — `seed:health` · `seed:healthgap` · `seed:healthnc` · `seed:date` (landing + every door; the Healthcare sheet as figured + its preview), REAL+PHONE (walk `temp/caddie/held-flat-1014`, 8/8 in 1.3 m; six lenses + four refuters, fresh Opus agents; the pilot's own scrolled captures at both viewports)
 
 **surface:** the door sheet's extras block — "Coverage beyond Part B — the tool adds each person’s premium on top of your spending:", the per-person lines ("Alex — a typical figure of about $244 a month, not an actual bill; real costs sit higher or lower, including next to nothing on Medicare Advantage."), then the new line, Briggsy's ruled sentence lifted from the all-65+ verdict: "The extra-coverage premiums are held flat in today’s dollars, so their true cost could run higher than shown." Once on all 16 sheet states; on no landing.

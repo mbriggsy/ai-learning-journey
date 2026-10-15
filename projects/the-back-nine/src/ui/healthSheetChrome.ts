@@ -459,8 +459,8 @@ export function composeRegimeFutures(
  * early-return — the SS-only $0-portfolio household built NO overlay yet read "priced"; the
  * ultramode fold 2026-07-10 closed it. A producer's output is the only non-drifting source.)
  *
- * The residual is WITHHELD when the household reaches the Healthcare door: that sheet already carries
- * its own residual (`controlHealthOmissionsNote`), so one honest home per fact. The two lines SHIP
+ * The residual is WITHHELD at the Healthcare door — one honest home per fact: that sheet carries the
+ * held-flat line ({@link composeMedicareExtrasHeldFlat}) + its omissions list. The two lines SHIP
  * TOGETHER — the affirmative alone would imply ALL of Medicare is priced, a fresh optimistic lie.
  */
 export function showMedicarePricedNote(run: {
@@ -515,4 +515,22 @@ export function composeMedicareExtrasLines(
         ? slots.medicareExtrasFactNone(p.who)
         : slots.medicareExtrasFactTypical(p.who, formatMonthlyDollar(p.monthly)),
   )
+}
+
+/** The DOOR SHEET's held-flat line (closes the register's Tier 0 "A pre-65 household is never told
+ *  its Medicare extra-coverage premiums are held flat"). The engine charges the extras REAL-FLAT —
+ *  the same dollar every year, no sourced trend exists — and the all-65+ verdict says so in
+ *  `verdictResidualTail`; this population's verdict residual is structurally withheld
+ *  ({@link showMedicarePricedNote}), so the sheet's extras block is its one home. Rendered DIRECTLY
+ *  UNDER {@link composeMedicareExtrasLines}' per-person dollars — the figures "than shown" refers to.
+ *
+ *  NULL only when the run prices no Medicare-bearing overlay (no claim is made; the block is absent
+ *  too). Present whenever the block is, a $0 figure included: a $0 held flat can still run higher
+ *  (plans re-price every year; coverage can be added later), and the all-65+ home speaks
+ *  unconditionally, so ONE rule holds for both homes. The build's verify pass reversed a first-cut
+ *  $0 gate here: silence at $0 was the optimistic direction, and it split the two homes' rules. */
+export function composeMedicareExtrasHeldFlat(
+  view: readonly MedicareExtrasDisclosurePerson[] | null,
+): string | null {
+  return view === null ? null : copy.medicareExtrasSheetHeldFlat
 }

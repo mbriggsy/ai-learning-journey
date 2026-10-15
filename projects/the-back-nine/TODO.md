@@ -136,7 +136,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    clause**.
    ⚑ **Audit corrections 2026-08-02 — three anchors were wrong and the fix shape is NOT Part B's:**
    (a) `healthOverlay.ts:301` is a **closing brace**, not a consumer; the real seam is `taxOverlay.ts:1705` plus `taxOverlay.ts:1747-1754`
-   → `healthOverlay.ts:275`. (b) `copy.ts:1180` is a Medicare eyebrow; the strings that claim
+   → `healthOverlay.ts:275`. (b) `copy.ts:1193` is a Medicare eyebrow; the strings that claim
    the coupling is priced are **`copy.ts:1016-1019`**. (c) the excess-APTC field moved to
    `aca-last-verified.json:43` (was `:21`) and `scripts/verify-aca-status.ts:40-103` declares and REQUIRES the key
    (`adjacentButSharp` at `:90`, `needProse` at `:169`, since 2026-08-03) — **the gate is presence-only**: nothing checks that the prose models the uncapped clawback.
@@ -162,7 +162,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    the same `escalateQuote` factor — so under the cliff a missing trend is **zero** when E=S
    (`devSeeds.ts:615-616` = 4200/4200) and **reversed (pessimistic)** when E<S, which `copy.ts:227` invites.
    It bites one-way optimistic **only over the cliff** (`healthOverlay.ts:304-308`, full enrolled premium).
-   The shipped sibling `recDiscAcaSlcsp` (`copy.ts:1991-1992`) hedges bidirectionally on this exact fact and
+   The shipped sibling `recDiscAcaSlcsp` (`copy.ts:2004-2005`) hedges bidirectionally on this exact fact and
    `medicare-pricing-build-spec.md:43` bans the false unidirectional. Draft to append to BOTH strings:
    *"One modeling choice: these prices step up with your ages, not with the way plan prices themselves climb
    — so a conversion that crosses the income line could cost more than shown."*
@@ -200,7 +200,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`copy.ts:988`, `:993, :1007, :1009, :1017, :1019` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
    affirmation, not append to it) + the two health-control siblings (`copy.ts:1152`, `:1158`), which CANNOT take it
-   (gated on `statePriced` alone — `copy.ts:1144-1146`). Unfiled: `shadowRateHeadroom` (`copy.ts:2803`)
+   (gated on `statePriced` alone — `copy.ts:1144-1146`). Unfiled: `shadowRateHeadroom` (`copy.ts:2816`)
    quotes cliff headroom against an SLCSP that never trends — the headroom figure inherits the held-price
    optimism; and there is NO ACA cost-trend constant at all (`health.ts` carries only `medicareCostTrend`)
    — ACA premiums are the one health channel with no trend, no clause AND no disclosure, in the
@@ -248,7 +248,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    ⚑ **2026-09-04:** "no token on the headline/date" is TRUE; "no honesty gate at all" would be FALSE — a
    state-tax disclosure already renders on both first-answer surfaces (`composeVerdictMedicareResidual`,
    `stateTaxDisclosure.ts:45` → `ConfidenceStatement.tsx:501` + `FuckOffDate.tsx:421`; off-roster arm
-   `copy.ts:1200` "State income tax isn't priced yet…"). ✅ **The GATE gap this block named is CLOSED
+   `copy.ts:1213` "State income tax isn't priced yet…"). ✅ **The GATE gap this block named is CLOSED
    2026-09-11 (Card 4):** the residual still rides `medicarePricedNote` (`healthSheetChrome.ts:466-471` —
    Medicare-priced AND no health door), but the clause no longer depends on it — `composeVerdictStateNote`
    (`stateTaxDisclosure.ts:86`, home #6) renders it STANDALONE (`.cs-state-note`) on both routes wherever the
@@ -270,7 +270,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `sanity.ts:52-75`). ⚑ **Size is M, not S, and a ceiling is the wrong instrument:** a 10× slip on
      $500k is $5M — a perfectly coherent household, so no threshold catches it. The shape that works is
      **one confirm on the household TOTAL** at the accounts step (the figure the engine actually consumes),
-     reusing the running total already rendered at `copy.ts:2137` / `questions.tsx:1080-1082`.
+     reusing the running total already rendered at `copy.ts:2150` / `questions.tsx:1080-1082`.
      ⚑ **"Briggsy sets the number" is the WRONG ask — there IS no honest number** (every total is
      coherent, so any threshold is the guessed plausibility band burned/062 bans). The only rule that
      invents nothing is an **unconditional** one-tap confirm for any household with ≥1 account. That is a
@@ -309,7 +309,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      ⚑ **2026-09-04 re-anchor (drifted AGAIN, +62/+101 in a month) + four traps the build must clear.** The
      panel is `src/intake/AssumptionPanel.tsx` — section a opens `:399` / closes `:567`, section b `:570` /
      `:851`, footer `:857`, the disclosures map `:533-565`; the `assumption*` prefix law is
-     `copy.ts:1273-1284` (keys `:1285-1432`); the panel fit arm is `vertical-fit.spec.ts:1734-1763`;
+     `copy.ts:1286-1297` (keys `:1298-1445`); the panel fit arm is `vertical-fit.spec.ts:1734-1763`;
      `sheetShell.css:34-35`/`:94`; the overlays are `src/engine/healthOverlay.ts:874-878` and
      `src/engine/taxOverlay.ts:1820-1823` (there is no `overlays/` dir). NIIT's two homes confirmed
      (`recommendationView.ts:101` unconditional; `copy.ts:1151-1152`) — the scope fork is self-resolving:
@@ -406,7 +406,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     **Briggsy's words, or ship the engine half first.**
     ⚑ **2026-09-04 anchors:** the described arm is `solveDispatch.ts:102` (`:89` is the separate no-tax-overlay
     arm; `~:79` was mis-pointed at filing — the file is untouched since 2026-08-14); the refusal string is
-    `copy.ts:1755-1756` with its three-rewrite comment `:1732-1754` (`:1610-1614` now holds an unrelated
+    `copy.ts:1768-1769` with its three-rewrite comment `:1745-1767` (`:1623-1627` now holds an unrelated
     save-refusal block).
 
 10. ✅ **SHIPPED 2026-08-14 (`2816d036`) — the heir bracket is the household's now.** Register Tier 1 records the closure and the three swept comments.
@@ -451,7 +451,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     copy" and both nearest register entries — *The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed* and *Unscored Caddie tape rows plus the four aged-surface tone calls due before 2027-01-01* — are owned **briggsy**; neither is a copy fix; the "three arms with
     corrected costs" existed NOWHERE — they are now written, with sizes, under the register's "The aged
     surface" entry. A shipped copy defect on the SAME cohort WAS pilot and is FIXED (2026-09-04: the singular arm ships at
-    `copy.ts:2707-2709` under the NUMBER AGREEMENT post-mortem at `copy.ts:2693`, covered by `copyGuard.test.ts:858`):
+    `copy.ts:2720-2722` under the NUMBER AGREEMENT post-mortem at `copy.ts:2706`, covered by `copyGuard.test.ts:858`):
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:263-264`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
@@ -551,7 +551,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     page and the codified G.S. page both still show the struck "after 2025 — 3.99%", so they read as
     CONTRADICTING the pinned record until they recompile — **session law wins, do not "correct" the
     engine table back to a flat 3.99%.** Comment-only; typecheck · lint · 3289 tests · state-tax gate
-    all green. (`copy.ts:3115` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
+    all green. (`copy.ts:3128` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think
@@ -567,7 +567,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     screen reader outside require-hedge — the AT twin of the gated `recDeltaTypical` — and its exclusion was
     a RECORDED decision in the SLOT_RENDER fixture's own comment, so the fix reversed a stated call, not an
     accident. **DONE 2026-09-08:** RENAMED onto the existing `recDelta` control prefix (`recDeltaVizAria`,
-    `copy.ts:3163`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
+    `copy.ts:3176`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
     `require-hedge` on its own) + a catalog canary over `/^rec(?!over)/` (a bare `/^rec/` reds the 16
     innocent `recovery*`/`recover*` intake keys) with a NAMED allowlist that SPLITS flat keys from slots
     (unscoped flat keys get 2 gates, unscoped slots get 3 + catastrophe). Scope is decided ONLY in the test
@@ -607,7 +607,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 *Engineering lessons live in [`docs/insights/`](docs/insights/) (one file per lesson; cite by full path + slug).
 These are the mechanical ones that keep costing hours.*
 
-- **From the b9-2 close (2026-10-11/12, D1's Tier-1 key; the ACA step-1 link; the survivor + trim measurements):** background Workflows STALL when the laptop sleeps or its battery dies (23:15 → 15:07 the first night, again at the battery death) and resume on wake — never promise overnight work without an awake machine · uscode.house.gov relaunched as a static "temporary format" by 2026-10-10: the old `view.xhtml` / `currency.shtml` forms answer HTTP 200 with a 5,792 B "Page Not Found - US Code" body (and for two days a stale 14.6 KB house.gov maintenance body — the pilot called a dead URL an outage on 10-11; Briggsy called it) — fetch the ROOT and follow its links, check the BODY, never the status or `<title>`; the ACA record's `forwardClock` carries the URL forms · `node -e "…"` in Bash runs backticks as commands — it inserted a holed bullet into `backlog.md` this session (caught in the diff, rewritten from a script file); any script text with backticks goes in a FILE · `pnpm doc:reanchor` met three more shapes (the register entry's ⚑ 2026-10-12 bullet) — run it ONCE per base, read every "(bare, after" line AND every line citing a moved file for a second bare token, restore historical citations (insight 136's `copy.ts:1186`) by hand · Git Bash `grep -c $'\r$'` cannot count CRs (it read 0 on a CRLF file) — count line endings with node · a LOCKED-text amendment needs a text refuter: the council's own D1 draft stated the lower-bound relation backwards and five of six elders first drafted the false floor ≥ full lemma — both caught only by the red team / refuter · a commit landing mid-measurement moves the agents' line citations (the trim chair re-pinned `copy.ts` after `b29a550d`) — re-pin at the chair.
+- **From the b9-2 close (2026-10-11/12, D1's Tier-1 key; the ACA step-1 link; the survivor + trim measurements):** background Workflows STALL when the laptop sleeps or its battery dies (23:15 → 15:07 the first night, again at the battery death) and resume on wake — never promise overnight work without an awake machine · uscode.house.gov relaunched as a static "temporary format" by 2026-10-10: the old `view.xhtml` / `currency.shtml` forms answer HTTP 200 with a 5,792 B "Page Not Found - US Code" body (and for two days a stale 14.6 KB house.gov maintenance body — the pilot called a dead URL an outage on 10-11; Briggsy called it) — fetch the ROOT and follow its links, check the BODY, never the status or `<title>`; the ACA record's `forwardClock` carries the URL forms · `node -e "…"` in Bash runs backticks as commands — it inserted a holed bullet into `backlog.md` this session (caught in the diff, rewritten from a script file); any script text with backticks goes in a FILE · `pnpm doc:reanchor` met three more shapes (the register entry's ⚑ 2026-10-12 bullet) — run it ONCE per base, read every "(bare, after" line AND every line citing a moved file for a second bare token, restore historical citations (insight 136's `copy.ts:1199`) by hand · Git Bash `grep -c $'\r$'` cannot count CRs (it read 0 on a CRLF file) — count line endings with node · a LOCKED-text amendment needs a text refuter: the council's own D1 draft stated the lower-bound relation backwards and five of six elders first drafted the false floor ≥ full lemma — both caught only by the red team / refuter · a commit landing mid-measurement moves the agents' line citations (the trim chair re-pinned `copy.ts` after `b29a550d`) — re-pin at the chair.
 - **From the b9-1 close (2026-10-08/11, Playwright 1.63 + the `ubuntu-26.04` pin; the essentials-floor measurement; the survivor-medical lean):** NEVER revert a planted mutant with `git checkout -- <file>` on an uncommitted tree — it restores HEAD and wiped a delegated build's whole `copy.ts` (recovered only from a verifier's scratch `.orig` + the agent transcripts' Edit inputs); snapshot with `cp`, revert with `cp`, prove with `cmp` · `playwright install` GARBAGE-COLLECTS every browser revision no linked Playwright still uses (`%LOCALAPPDATA%/ms-playwright/.links`) — a version rollback must re-run the install · `pnpm doc:reanchor` rewrote the FROZEN `e2e/held/fit-24px-measurements.md` (its header: numbers NOT maintained) — `git checkout` that one file after any reanchor (it carries no other uncommitted work) · the doc-stats citation arm checks a workflow-file line EXISTS, not that it says what the doc claims — four `.github/workflows/verify-the-back-nine.yml:<N>` citations were 1–4 lines stale before any edit; re-point by content after any workflow edit · the council's `uiCouncil` regex auto-seats the three UI specialists on words like "band" / "render" in the CONTEXT — name the six core `openers` explicitly for an engine question · ENGINE_PRICING_LEDGER row `shippedOn` must equal the commit's LOCAL date and no test binds it — re-stamp it in the commit if the land slips a day · a 16k measurement workflow over many off-roster variants ran 6.8 h (ship gate 1, `wf_d98e02fb-08c`) — budget the wall clock, keep the session's other CPU work off it · the window script once reported 3.6 % mid-session (it read another transcript) — distrust a sudden drop, re-run it.
 - **From the b9-2 close (2026-10-04/06, the pay-less-tax all-in build):** NEVER `git commit -a` in this monorepo — the root spans every project and it swept six uncommitted family-feud files into `1dd80ecc` (backed out by `7571d1a5`, working copies restored); stage explicit paths or `git add -A .` from the project dir, and read `git show --stat HEAD` before pushing · `pnpm doc:reanchor HEAD` is NOT idempotent on an uncommitted diff — a second run re-shifts citations the first already moved; for a later edit on an already-re-anchored tree, make a temporary LOCAL commit of the tree minus the new edit, re-anchor against it, then `git reset --soft HEAD~1` · in Git Bash `grep -c $'\r'` counts EVERY line (the pattern collapses to empty) — check line endings with node · uscode.house.gov serves a house.gov "Under Maintenance" fallback to EVERY client (curl, real Chromium, an external proxy) — the URL is right, the site is down; a web-search summary said it was live and was stale crawl data — trust only a fetch · two workflow reviewers each running the full suite in parallel produced an artificial 123 s timeout on a 21 s solve test — never bump a time budget on contention a workflow created; re-run the suite alone · a workflow agent can return a non-report ("Waiting for the full-suite notification") — verify the tree yourself, never trust the chain · a GitHub "runner has received a shutdown signal" red (run 37374864752 on `b3284566`) is infrastructure, not a test failure — confirm by the log, then by the next run · the pay-less-tax Tier-2 statistic is ALL-IN since v10 (`lifetimeAllInCostPerPath`, one home); `lifetimeTaxMeanReal` still means income tax and a source-bind test keeps it out of the five read sites — never re-point one site alone.
 - **From the b9-7/b9-8 close (2026-10-04, the v10 roster-recall + the ACA re-verify):** `EnterWorktree` FAILS on this monorepo — four insight filenames overflow MAX_PATH under `.claude/worktrees/<name>/`, and the failed attempt leaves an orphan `worktree-<name>` branch (delete it): use `git -c core.longpaths=true worktree add -b <branch> C:/wt/<x> HEAD`, then `git -C C:/wt/<x> config core.longpaths true` and `pnpm install --frozen-lockfile` in the project (6 s) · a cost cap and a coverage goal can be STRUCTURALLY incompatible on ~linear cost — count the roster at the candidate spacing BEFORE a ruling (the roster dump: `buildSolveRequest` over `DEV_SEEDS`, distinct grid amounts per seed); the v10 ruling's +33 % cap admitted ~7 amounts beside `retired`'s 22, knowable before the council sat · a solve-cost model fit on two measured roster sizes (F + slope × roster) predicted the third within 1–4 % — validate on the held-out point, then compute any closed form from it · ranking stability scores the WHOLE roster on BOTH seeds and the crown search adopts that pass (`rankingStability.ts`), so a "cheaper seed A" scheme cuts per-candidate cost to 0.625 at best · a council can read shipped copy as unscoped — open `copy.ts` before relaying a disclosure brief (`recComposeAlready` already said "we tested") · uscode.house.gov can serve an HTTP-200 "Under Maintenance" page on EVERY path with no redirect — check `<title>` before trusting a read · ACA retrieval mechanics (control-proven): congress.gov bill pages Cloudflare-403 → govinfo BILLSTATUS bulkdata, parsing the bill's OWN `<actions>` (the first `<latestAction>` can be a related bill's); the Senate calendar package is `CCAL-119scal-YYYY-MM-DD`; the Federal Register API needs `curl -g`; eCFR's versioner needs `--compressed` · two branches touching ADJACENT TODO lines conflict on rebase — take one side (`git checkout --ours`), re-apply the other through its own script, grep both markers · the Playwright MCP writes `.playwright-mcp/` into the project root — delete it after any browser check · a scratch `*.test.ts` anywhere under the project is counted by `verify:doc-stats` (3864 / 203) — rename it `.off` or keep it outside before any gate.

@@ -1162,6 +1162,19 @@ export const copy = {
   // WHO adds WHAT, the reader's entries as supporting context in the per-person lines.
   medicareExtrasSheetLead:
     'Coverage beyond Part B — the tool adds each person’s premium on top of your spending:',
+  // The extras block's held-flat line — Briggsy's ruled sentence, VERBATIM from `verdictResidualTail`
+  // minus its period graft (never reworded; healthSheetChrome.test drift-pins Tail ≡ ". " + this
+  // key, so the two homes cannot diverge). The engine charges the extras REAL-FLAT (no sourced trend
+  // exists) and the all-65+ verdict says so; a door household's verdict residual is WITHHELD
+  // (`showMedicarePricedNote`), so this sheet is its one home, and the line sits in the extras block
+  // DIRECTLY UNDER the per-person dollars "than shown" refers to (`composeMedicareExtrasHeldFlat` —
+  // present whenever the block is, $0 included, as the Tail is). Deliberately NOT in the "Not counted
+  // here" omissions list: the extras ARE priced, only possibly understated — a different category
+  // (the register's NEGATIVE). NOT a control* key (a mechanism disclosure — the lead's reasoning
+  // above). Closes the register's Tier 0 "A pre-65 household is never told its Medicare
+  // extra-coverage premiums are held flat".
+  medicareExtrasSheetHeldFlat:
+    'The extra-coverage premiums are held flat in today’s dollars, so their true cost could run higher than shown.',
   controlHealthSurvivorNote:
     'If one of you is on your own later, the same income can trip these lines sooner — the discount disappears right away, and the Medicare step follows about two years behind.',
   controlHealthHsaNote:
@@ -1171,8 +1184,8 @@ export const copy = {
   // are its ONLY Medicare honesty surface: the AFFIRMATION that base Part B + the income surcharge
   // ARE in the numbers (so a steeper figure has its cause named) SHIPS WITH the narrowed residual
   // (what still isn't) — the affirmative alone would imply ALL of Medicare is priced, a fresh
-  // optimistic lie. A household that reaches the Healthcare door is NOT shown these: its sheet
-  // already carries the residual (controlHealthOmissionsNote) — one honest home per fact.
+  // optimistic lie. A household that reaches the Healthcare door is NOT shown these: its sheet holds
+  // the held-flat line (medicareExtrasSheetHeldFlat) + its omissions list — one honest home per fact.
   // The extras unit widened the affirmation (extra coverage now priced — entered, affirmed-$0,
   // or the typical) and moved the residual pair AS A SET (F4): the Part D/Medigap "inside your
   // spending" clause DIED (now added on top), the state-tax clause STAYS (its own filed engine
@@ -1241,8 +1254,8 @@ export const copy = {
   verdictStateUnpricedNote: 'State income tax isn’t priced yet. In a taxing state, that’s a real yearly bill.',
   // The PRICED pre-65 arm's narrowing tail — the composer's law: an affirmation NEVER renders alone
   // (affirm-alone would read as "everything is priced"). The all-65+ residual narrows with the
-  // Medicare-extras Tail, which is not this household's residual: its own unpriced list lives on the
-  // Healthcare sheet (`controlHealthOmissionsNoteStatePriced` — one honest home per fact), so this
+  // Medicare-extras Tail; this household reads it on the Healthcare sheet (`medicareExtrasSheetHeldFlat`
+  // + its unpriced list `controlHealthOmissionsNoteStatePriced` — one honest home per fact), so this
   // tail POINTS there, by the sheet's rendered name (`leverHealthTitle`). Period-grafted like
   // `verdictResidualTail` (every affirmation ends mid-clause). RULED 2026-09-12 (Card 4's one
   // sentence): the pilot's 2026-09-11 draft — ". What still isn’t counted is listed in your

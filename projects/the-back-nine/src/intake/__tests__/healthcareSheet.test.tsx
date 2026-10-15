@@ -333,6 +333,59 @@ describe('HealthcareSheet — the Medicare-extras door home (F5)', () => {
     renderSheet() // the incomplete fresh-model draft — buildParams null ⇒ view null
     expect(screen.queryByText(copy.medicareExtrasSheetLead)).toBeNull()
   })
+
+  // The held-flat line (closes the register's Tier 0 "A pre-65 household is never told its Medicare
+  // extra-coverage premiums are held flat"): this sheet is the door household's ONE home for it, so
+  // it sits DIRECTLY under the per-person dollars "than shown" refers to — above the survivor note
+  // and the "Not counted here" list (the extras ARE priced, only possibly understated; never an
+  // omission). Planted-mutant record (2026-10-14): deleting the sheet's held-flat <p> reddened the
+  // first arm below; re-gating the composer at $0 (the reversed first cut) reddens its all-$0 case —
+  // each restored from a snapshot and cmp'd. The composer's own gate arms live in healthSheetChrome.test.
+  const paragraphs = (): string[] => Array.from(document.querySelectorAll('p')).map((p) => p.textContent ?? '')
+  const indexOf = (paras: readonly string[], text: string): number => {
+    const i = paras.indexOf(text)
+    expect(i, `renders: "${text}"`).toBeGreaterThanOrEqual(0)
+    return i
+  }
+
+  it('a door household with priced extras reads the held-flat line ONCE — directly under its per-person dollars, above the survivor + omissions notes', () => {
+    const fig = Math.round(medicareExtrasTypicalMonthly()).toLocaleString('en-US')
+    const cases: ReadonlyArray<readonly [string, ScenarioDraft, string]> = [
+      ['both on-typical', doorDraft(), slots.medicareExtrasFactTypical('B', fig)],
+      [
+        'entered $185 beside an affirmed $0',
+        doorDraft((d) => ({ ...d, medicareExtrasByPerson: [{ kind: 'entered', monthly: 185 }, { kind: 'none' }] })),
+        slots.medicareExtrasFactNone('B'),
+      ],
+      [
+        'every figure $0 (both affirmed none) — one rule with the all-65+ Tail',
+        doorDraft((d) => ({ ...d, medicareExtrasByPerson: [{ kind: 'none' }, { kind: 'none' }] })),
+        slots.medicareExtrasFactNone('B'),
+      ],
+    ]
+    for (const [label, draft, lastPersonLine] of cases) {
+      const { unmount } = render(
+        <HealthcareSheet open draft={draft} readout={undefined} preview={deferredPreview().fn} onApply={vi.fn()} onClose={vi.fn()} todayEpochDay={FRESH_CLOCK} />,
+      )
+      const paras = paragraphs()
+      expect(paras.filter((t) => t === copy.medicareExtrasSheetHeldFlat), `${label}: exactly once`).toHaveLength(1)
+      const heldFlat = indexOf(paras, copy.medicareExtrasSheetHeldFlat)
+      expect(heldFlat, `${label}: after the lead`).toBeGreaterThan(indexOf(paras, copy.medicareExtrasSheetLead))
+      expect(heldFlat, `${label}: DIRECTLY under the last per-person line`).toBe(indexOf(paras, lastPersonLine) + 1)
+      expect(heldFlat, `${label}: above the survivor note`).toBeLessThan(indexOf(paras, copy.controlHealthSurvivorNote))
+      expect(heldFlat, `${label}: above the omissions list`).toBeLessThan(indexOf(paras, copy.controlHealthOmissionsNote))
+      unmount()
+    }
+    // Never folded into the "Not counted here" list (priced, only possibly understated — the register's NEGATIVE).
+    expect(copy.controlHealthOmissionsNote).not.toContain('held flat')
+    expect(copy.controlHealthOmissionsNoteStatePriced).not.toContain('held flat')
+  })
+
+  it('an unpriced draft (no Medicare-bearing overlay) reads NO held-flat line — the block and the line are absent together', () => {
+    renderSheet() // the incomplete fresh-model draft — no priced run, no extras block, no line
+    expect(screen.queryByText(copy.medicareExtrasSheetLead)).toBeNull()
+    expect(screen.queryAllByText(copy.medicareExtrasSheetHeldFlat)).toHaveLength(0)
+  })
 })
 
 // ─── the plan clock reaches the era lines THROUGH the sheet (2026-09-24 — Briggsy's eye: "years out from what?") ──

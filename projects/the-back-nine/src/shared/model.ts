@@ -501,8 +501,8 @@ export interface OverlayParams {
    *  death — NEVER `enrolledCount × average` (count×avg reproduces the optimistic survivor
    *  under-charge per-person pricing exists to kill: the surviving high-premium spouse keeps
    *  their FULL premium). Enrollment gates on the same onset machinery as Part B
-   *  ({@link medicareOnsetSimYear} / biological-65 default). Real-flat like Part B (no
-   *  escalation — the disclosed landmine family). EXCLUDED from the HSA qualified-spend cap
+   *  ({@link medicareOnsetSimYear} / biological-65 default). REAL-FLAT, unlike Part B (no
+   *  sourced trend exists — disclosed in both homes). EXCLUDED from the HSA qualified-spend cap
    *  (Pub 969: Medigap is not a qualified premium — extras must never ride the `medicareCost`
    *  arg into `hsaQualifiedSpend`). ABSENT or all-zero ⇒ byte-identical reduce-to-spine
    *  (Σ 0 — the shipped Medicare goldens are a superset, never perturbed). Values are RESOLVED

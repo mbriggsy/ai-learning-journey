@@ -77,8 +77,8 @@ export function composeVerdictMedicareResidual(pricedState: PricedState | undefi
  *    - unpriced ⇒ the monolith's own two state sentences VERBATIM (`verdictStateUnpricedNote`; the
  *      test pins it as a substring of the residual, so the two homes cannot drift apart).
  *    - priced ⇒ the SAME affirmation home #1 uses + a narrowing tail (the composer's law: never
- *      affirm-alone). The all-65+ Tail narrows Medicare extras, which is not this household's
- *      residual — its unpriced list lives on the Healthcare sheet — so the tail points there.
+ *      affirm-alone). The all-65+ Tail narrows Medicare extras; this household reads that on the
+ *      Healthcare sheet (its held-flat line + its unpriced list) — so the tail points there.
  *
  *  THE LAW this encodes (the route × cohort × pricing matrix, pinned in ConfidenceStatement.test +
  *  FuckOffDate.test): exactly ONE state clause on every verdict, never zero, never two. EXHAUSTIVE by

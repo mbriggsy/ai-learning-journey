@@ -298,10 +298,10 @@ export interface TaxYearInputs {
    *  HETEROGENEOUS Σ — each Medicare-priced year adds `Σ over medicareEnrolledIndices of
    *  extras[idx] × 12`, so each person's own premium ends at THEIR death and the surviving
    *  high-premium spouse keeps their FULL premium (count×avg is the forbidden shape — it
-   *  reproduces the optimistic survivor under-charge). Gated by the SAME predicate as base
-   *  Part B (healthcare on + ≥1 living member enrolled); real-flat like Part B; EXCLUDED from
-   *  the HSA qualified-spend `medicareCost` arg (Pub 969 — Medigap is not a qualified premium)
-   *  while still joining the funding need. ABSENT / all-zero ⇒ byte-identical (Σ 0). */
+   *  reproduces the optimistic survivor under-charge). Gated by the SAME predicate as base Part B
+   *  (healthcare on + ≥1 living member enrolled); REAL-FLAT (no sourced trend exists; disclosed);
+   *  EXCLUDED from the HSA qualified-spend `medicareCost` arg (Pub 969 — Medigap is not a qualified
+   *  premium) while still joining the funding need. ABSENT / all-zero ⇒ byte-identical (Σ 0). */
   readonly medicareExtrasMonthly?: readonly number[]
   /** Per-year bridge-year mask (`bridge[t] = ∃i: t < retireOffset_i && t < deathOffset_i &&
    *  earnedIncomeReal_i > 0` — the bridge's own dead-earner predicate shape), assembled PER-PATH

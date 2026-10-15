@@ -27,7 +27,7 @@ import type { HealthReadout, TwoArmControl } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { ControlPreview } from '@store/controlPreview'
 import { copy } from '@ui/copy'
-import { composeHealthSheet, composeMedicareExtrasLines, composeRegimeFutures } from '@ui/healthSheetChrome'
+import { composeHealthSheet, composeMedicareExtrasHeldFlat, composeMedicareExtrasLines, composeRegimeFutures } from '@ui/healthSheetChrome'
 import { composeControlHealthOmissionsNote } from '@ui/stateTaxDisclosure'
 import type { PricedState } from '@engine/constants/stateTax'
 import type { BandPlanClockAnchor } from '@ui/bandAnnotations'
@@ -122,7 +122,10 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
   const view = composeHealthSheet(readout, draft, todayEpochDay, savedAnchor?.yearsSincePlanBuilt ?? 0)
   // The extras door-home lines (F5): BUILT dollars + draft provenance + the name fallback
   // (medicareExtrasDisclosureView — the ONE assembly both F5 homes consume, insight 081).
-  const extrasLines = composeMedicareExtrasLines(medicareExtrasDisclosureView(draft))
+  const extrasView = medicareExtrasDisclosureView(draft)
+  const extrasLines = composeMedicareExtrasLines(extrasView)
+  // The held-flat line under those dollars — null when every figure is $0 (decided in the chrome seam).
+  const extrasHeldFlat = composeMedicareExtrasHeldFlat(extrasView)
   const hasHsa = draft.enteredAccounts.some((a) => a.kind === 'hsa')
 
   // Open-edge re-seed (the BudgetBuilder rule): the applied regime pre-selects.
@@ -215,6 +218,10 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
               {line}
             </p>
           ))}
+          {/* The held-flat line (the extras are charged REAL-FLAT — no sourced trend): DIRECTLY under
+              the per-person dollars "than shown" refers to, never in the omissions list below (the
+              extras ARE priced, only possibly understated — a different category). */}
+          {extrasHeldFlat !== null && <p className="field-help">{extrasHeldFlat}</p>}
         </>
       )}
 

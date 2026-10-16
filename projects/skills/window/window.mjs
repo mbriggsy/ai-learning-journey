@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Context-window check. Self-locates the active session's JSONL transcript
-// from the current working directory, scans backward for the most recent
-// `usage` block, and prints a single phone-friendly line.
+// Context-window check. Locates THIS session's JSONL transcript by its
+// session id, scans backward for the most recent `usage` block, and prints a
+// single phone-friendly line.
 //
 // Why backward-scan-first-hit: the last assistant message's usage reflects
 // what Anthropic's API saw on input for the current turn = the live context
@@ -57,19 +57,51 @@ if (testTokens !== undefined) {
   report(Number(testTokens), TEST_LABEL);
 }
 
+const projects = join(homedir(), ".claude", "projects");
 // cwd -> project slug: Claude Code replaces `:`, `\`, `/` with `-`.
 const slug = process.cwd().replace(/[:\\/]/g, "-");
-const dir = join(homedir(), ".claude", "projects", slug);
-if (!existsSync(dir)) line(`Context: no session logs for this project yet (${slug}).`);
 
-// Newest .jsonl in the project dir = the active session.
-const logs = readdirSync(dir)
-  .filter((f) => f.endsWith(".jsonl"))
-  .map((f) => ({ path: join(dir, f), m: statSync(join(dir, f)).mtimeMs }))
-  .sort((a, b) => b.m - a.m);
-if (logs.length === 0) line("Context: no session log found yet.");
+// WHICH transcript: this session's, by id — never "the newest file". Two
+// sessions in one project each write their own transcript, so mtime names
+// whichever wrote last: on 2026-10-16 a 3-day session at ~55% ran beside a
+// fresh one at ~9%, their logs written 9 s apart — either could have been
+// read for the other, the full one told "plenty of room" off its
+// neighbor's number. Claude Code exports CLAUDE_CODE_SESSION_ID to the Bash
+// environment — the session_id its hooks receive; the transcript is
+// `<id>.jsonl`. SKILL.md also passes the skill-substituted
+// ${CLAUDE_SESSION_ID} as argv[2]. A non-UUID argument (the shell expanding
+// an unfilled placeholder to "") is ignored; two valid ids that DISAGREE are
+// reported, never resolved by guessing which one is live.
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ids = [process.argv[2], process.env.CLAUDE_CODE_SESSION_ID].filter((v) => UUID.test(v ?? ""));
+if (ids.length === 2 && ids[0].toLowerCase() !== ids[1].toLowerCase()) {
+  line(`Context: two session ids disagree (skill ${ids[0]}, env ${ids[1]}) — can't tell which is live.`, 1);
+}
+const sessionId = ids[0];
 
-const lines = readFileSync(logs[0].path, "utf8").split("\n");
+let transcript;
+let label = "Context";
+if (sessionId) {
+  // The cwd's project folder first, then every other one: a `cd` moves the
+  // cwd, never the transcript.
+  const dirs = existsSync(projects) ? [slug, ...readdirSync(projects).filter((d) => d !== slug)] : [];
+  transcript = dirs.map((d) => join(projects, d, `${sessionId}.jsonl`)).find((p) => existsSync(p));
+  if (!transcript) line(`Context: no transcript for this session (${sessionId}) yet.`);
+} else {
+  // No id at all (run by hand, outside Claude Code): fall back to the newest
+  // log in this folder — and LABEL it, since a concurrent session can own it.
+  const dir = join(projects, slug);
+  if (!existsSync(dir)) line(`Context: no session logs for this project yet (${slug}).`);
+  const logs = readdirSync(dir)
+    .filter((f) => f.endsWith(".jsonl"))
+    .map((f) => ({ path: join(dir, f), m: statSync(join(dir, f)).mtimeMs }))
+    .sort((a, b) => b.m - a.m);
+  if (logs.length === 0) line("Context: no session log found yet.");
+  transcript = logs[0].path;
+  label = "Context (GUESS — no session id; newest log here, maybe another session's)";
+}
+
+const lines = readFileSync(transcript, "utf8").split("\n");
 let usage = null;
 for (let i = lines.length - 1; i >= 0; i--) {
   if (!lines[i].trim()) continue;
@@ -89,4 +121,5 @@ report(
   (usage.input_tokens || 0) +
     (usage.cache_read_input_tokens || 0) +
     (usage.cache_creation_input_tokens || 0),
+  label,
 );

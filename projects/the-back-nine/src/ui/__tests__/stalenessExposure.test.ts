@@ -30,6 +30,7 @@ import {
   pricedStateForRun,
   spineAcaPriced,
   spineMedicarePriced,
+  survivorMedicalLeanForRun,
 } from '@intake/intakeMap'
 import type { ScenarioDraft } from '@store/memoryModel'
 
@@ -78,6 +79,7 @@ describe('exposureForDraft — the SPINE route (both healthcare reads exact: one
       expect(e.overlayBuilt === 'priced', `${k}: overlayBuilt`).toBe(overlayBuiltForRun(d))
       expect(e.contributions === 'priced', `${k}: contributions`).toBe(contributionsPricedForRun(d))
       expect(e.blend === 'priced', `${k}: blend`).toBe(blendTableReadForRun(d))
+      expect(e.spending === 'priced', `${k}: spending`).toBe(survivorMedicalLeanForRun(d))
       expect(e.pricedState, `${k}: state`).toBe(pricedStateForRun(d))
       // The structural pair: ACA pricing implies healthcare is on, so 'priced' ACA with an
       // unpriced Medicare read is impossible.
@@ -261,7 +263,7 @@ describe('the SHIPPED consumer binds to this seam (source-bind, not replication)
     // Any of these appearing in the component means someone re-typed a decision that belongs to
     // the seam (the class that made the S0 verifier's `+ 3` survive 1096 green tests).
     expect(src, 'never a hand-written exposure literal in the component').not.toMatch(
-      /(aca|medicare|overlayBuilt|contributions|blend)\s*:\s*'(priced|unpriced|unknown)'/,
+      /(aca|medicare|overlayBuilt|contributions|blend|spending)\s*:\s*'(priced|unpriced|unknown)'/,
     )
   })
 })

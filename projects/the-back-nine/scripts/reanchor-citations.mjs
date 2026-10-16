@@ -55,7 +55,7 @@ for (const f of changed) {
 
 const FROZEN_BEFORE = /(\(not|cites|filed as[^\n]{0,80} at|filed as|was|then) ?`?$/i
 const FROZEN_AFTER = /^`?-at-filing|^`? \(then\b|^`?[ ,]*(at|as) filing/i
-const EXT = '(?:ts|tsx|css|md|mjs|js)'
+const EXT = '(?:tsx|ts|css|md|mjs|js)' // tsx BEFORE ts (2026-10-16): LAST_FILE's tail is optional, so `ts` first took `X.tsx` for a phantom `X.ts`
 const NAMED = new RegExp(`(^|[^\\w/.-])((?:[\\w-]+/)*)([\\w.-]+\\.${EXT}):(\\d+)(?:-(\\d+))?(?![\\d-])`, 'g')
 // A bare continuation: `:N`, `:N-M`, `:N–:M` (en dash, optional second colon), not preceded by a word/ext char.
 const BARE = /(^|[^\w/.:-])(`?)(:)(\d+)(?:([-–]:?)(\d+))?(`?)(?![\d-])/g

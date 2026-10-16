@@ -274,8 +274,8 @@ describe('gradeRecommendation — the real engine at the calibrated floor (16k �
     // ⚠️ THE UNIT IS THE WHOLE CLAIM — this line said "margin/SE ratios ≤ 3.2" from its
     // authoring (ca41256f, 2026-07-19) until 2026-08-01, which contradicted solver.ts:102's
     // class-wide "max margin/SE ratio ≈ 8.1" written the SAME DAY. Both numbers were right;
-    // one named the wrong denominator. `band = solverSelectionTieZ · se` (gradeCalibration.ts
-    // :113), so the two ratios differ by exactly z = 1.96 and either reads as plausible in
+    // one named the wrong denominator. `band = solverSelectionTieZ · se` (gradeCalibration.ts:122),
+    // so the two ratios differ by exactly z = 1.96 and either reads as plausible in
     // prose. RE-MEASURED by running this very arm (2026-08-01, deterministic — seedA 0xca11b,
     // pure engine, ~15s; the 900_000 below is a hang guard, not a runtime):
     //   margin / se / band ⇒ margin/SE, margin/band

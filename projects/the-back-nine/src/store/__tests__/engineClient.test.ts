@@ -9,7 +9,7 @@ import {
 } from '../engineClient'
 
 /**
- * The resettable forwarding handle (the solve-lane cancel, ranked item 5) — pinned on a fake spawn
+ * The resettable forwarding handle (the register's *The solve lane…*) — pinned on a fake spawn
  * whose remote calls NEVER settle on their own, which is exactly the Comlink-after-terminate shape
  * (`requestResponseMessage` has no reject arm). Every guarantee the store's catch arms lean on is a
  * planted-fail arm here: a reset REJECTS every in-flight call (a design that resolved them with

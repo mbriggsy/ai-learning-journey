@@ -48,7 +48,7 @@ function stepPerMonth(perMonthReal: number): number {
  *  humane, magnitude-scaled step so a comparative reads calm and never spuriously precise
  *  (back-nine-design §3): "$48,000", "$6,300", "$230,000" — never "$47,832". SIGN-AGNOSTIC on purpose
  *  (|x|): the copy WORD carries the direction ("more" / "less"), exactly like {@link formatPerMonth}, so
- *  the slot never renders a bare "$-". The delta is a bequest/lifetime-tax figure (tens of thousands to
+ *  the slot never renders a bare "$-". The delta is a bequest/all-in-cost figure (tens of thousands to
  *  low millions), so the step scales: nearest $100 under $10k, nearest $1,000 under $100k, nearest
  *  $10,000 above — two significant figures, the ruler naming a calm gridline, not a solve. Pre-formats
  *  the slot input so the rendered comparative carries no hardcoded numeral (copy.ts SLOT DISCIPLINE). */

@@ -11,7 +11,7 @@
  *
  * SIX HOMES. The build spec's S5 section (state-tax-build-spec.md, rewritten 2026-09-06 to name the first
  * five; it pinned "×4 homes" until then) — the four composed
- * below plus the spend-help branch (`spendHelpKeyFor`, intakeMap:981). The SIXTH is the verdict's
+ * below plus the spend-help branch (`spendHelpKeyFor`, intakeMap.ts:1040). The SIXTH is the verdict's
  * STANDALONE state note ({@link composeVerdictStateNote}, Card 4 of the 2026-09-11 four-faces Caddie
  * walk): home #1 renders only for the all-65+ no-door household, so every pre-65 household's verdict
  * carried NO state clause on either route until it. The RECOMMENDATION surface's

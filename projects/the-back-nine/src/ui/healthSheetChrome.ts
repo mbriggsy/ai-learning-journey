@@ -195,11 +195,11 @@ function otherIncomeBehind(agi: number, taxed: (other: number) => number): numbe
 
 /**
  * The run's own STATE tax on one more converted dollar at the conversion tile's anchor — the third
- * term of "all told" beside the federal bracket and the subsidy drag (closes the register's Tier 0
- * "The health sheet's "about 22¢ all told" leaves out the North Carolina tax the run itself
- * charges"). SINGLE PRODUCER: a finite difference on the engine's own `stateIncomeTax`, so every
- * rate, year step, deduction and age gate is the one the run prices with — no rate is re-typed here
- * (the constants discipline; the register entry's NEGATIVE).
+ * term of "all told" beside the federal term ({@link federalConversionMarginal}) and the subsidy
+ * drag (closes the register's Tier 0 "The health sheet's "about 22¢ all told" leaves out the North
+ * Carolina tax the run itself charges"). SINGLE PRODUCER: a finite difference on the engine's own
+ * `stateIncomeTax`, so every rate, year step, deduction and age gate is the one the run prices
+ * with — no rate is re-typed here (the constants discipline; the register entry's NEGATIVE).
  *
  * `state` is the RUN's priced state (`pricedStateForRun` — the producer's output, never the draft's
  * geography, insights 080/081). `undefined` (unpriced, 'elsewhere', unbuilt) is a literal 0: the

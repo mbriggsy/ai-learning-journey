@@ -697,7 +697,7 @@ const oopStep: StepDef = {
         }
       />
       {/* The optional-field reference hint shows only while the field is empty:
-          a grounded, conservative anchor (referenceData.ts) so a user who doesn't
+          a grounded, below-average anchor (referenceData.ts) so a user who doesn't
           know the figure isn't guessing blind. It vanishes once they answer. */}
       {api.draft.health.oopMedicalAnnual === undefined && (
         <p className="field-help">

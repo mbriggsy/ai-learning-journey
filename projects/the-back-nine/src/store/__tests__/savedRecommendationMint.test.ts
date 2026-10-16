@@ -204,8 +204,10 @@ describe('the mint — every field comes from the producer that decided it', () 
 
   it('the goal is the RUN’s goal, in BOTH directions (a hard-coded goal reds on one of the two)', () => {
     expect(minted(activeRec()).goal).toBe('leave-more')
-    // The pay-less-tax twin: the objective reads lifetime tax, so the arms are rebuilt on that axis
-    // (a leave-more distribution would fail the render guard and mean nothing here).
+    // The pay-less-tax twin: the objective reads lifetime ALL-IN cost (income tax + net ACA premium +
+    // Medicare), and `distOf` zero-fills the premium and Medicare vectors, so here that is the tax
+    // vector; the arms are rebuilt on that axis (a leave-more distribution would fail the render guard
+    // and mean nothing here).
     const goal: RecommendationGoal = 'pay-less-tax'
     const winner = armFor(goal, 'grid:bracket-fill:0', 'bracket-fill', { lifetimeTaxPaidReal: [90_000, 110_000] })
     const noActionBaseline = armFor(goal, 'baseline:proportional:0', 'proportional', { lifetimeTaxPaidReal: [140_000, 160_000] })

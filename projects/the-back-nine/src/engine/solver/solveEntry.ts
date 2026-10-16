@@ -98,9 +98,9 @@ export interface SolveRequest {
   readonly candidates: readonly CandidateStrategy[]
   readonly seedA: number
   readonly ranking: SolverRunRanking
-  /** The A-side CRN-difference survival top-set selection tie-tolerance the ranking runs at (0 on a
-   *  zero-vol world; a live solve supplies `heldOutSeed.selectionTieTolerance` over the survival
-   *  indicators of the equivalence-gating pair — computed by the caller/builder). */
+  /** The A-side Tier-1 survival tie-tolerance the ranking runs at. Every shipped caller passes an exact
+   *  0, the live solve by ruling (`buildSolveRequest`; `docs/decisions/survival-tie-tolerance.md`).
+   *  Never the goal-difference `heldOutSeed.selectionTieTolerance` — it feeds Tier-2 shrinkage only. */
   readonly tieTolerance: number
   /** Injected today (epoch-day) — the ACA freshness clause reads it; the engine reads no clock. */
   readonly todayEpochDay: number

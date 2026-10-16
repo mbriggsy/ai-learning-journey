@@ -108,9 +108,10 @@ export function reserveClauseFor(shown: VerdictDisplay): string | null {
  *  spend ONLY, the size named as unworked (council 2026-09-25; room 2026-09-26) — except the two
  *  room reasons that DENY room (`within-a-step`, `survivor-short`), whose forms claim none; pending ⇒ the lead
  *  sentence alone (the unworked tail would read falsely final); sized ⇒ the entered spend + the
- *  verified F, its edge named. The engine's `perMonthReal` renders nowhere and rides no display tuple
- *  (phase C deleted the sticky copy): an unsolved heuristic — the trim over-cut ~2× on the `retired`
- *  frame and read as sufficiency (Briggsy's cold read, E17); the room oversold `surplus` onto borderline. */
+ *  verified F — room names its edge, trim does not (its tail CUT on Briggsy's ruling 2026-10-14,
+ *  `verdictTrimSized`). The engine's `perMonthReal` renders nowhere and rides no display tuple (phase C
+ *  deleted the sticky copy): an unsolved heuristic — the trim over-cut ~2× on the `retired` frame and
+ *  read as sufficiency (Briggsy's cold read, E17); the room oversold `surplus` onto borderline. */
 function magnitudeClause(
   direction: DollarAdjustment['direction'],
   spendPerMonthReal: number,

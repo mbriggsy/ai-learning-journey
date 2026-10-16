@@ -119,8 +119,9 @@ export function SequencingControl({ open, draft, preview, previewBlocking = fals
   // radio by name. It carries the absent-account tag instead, so it explains itself rather than lying
   // quietly. FLOOR, by construction: proportional / bracket-fill / custom are never gated, so the list
   // can never fall below three, nor below two non-current options. HIDDEN, never disabled-in-place:
-  // Playwright folds `aria-disabled` into actionability (getAriaDisabled — coreBundle.js, 1.60), so a
-  // blocked radio in a list the harness walks by "first unchecked" would hang `.check()`.
+  // Playwright folds `aria-disabled` into actionability (getAriaDisabled — coreBundle.js, read in 1.60,
+  // re-read unchanged in 1.63 on 2026-10-08), so a blocked radio in a list the harness walks by
+  // "first unchecked" would hang `.check()`.
   const offered = PICKABLE.filter((p) => absentBucket(p) === undefined || p === current)
   const [picked, setPicked] = useState<Pickable>(current)
   const [order, setOrder] = useState<readonly DrawdownOrderKey[]>(

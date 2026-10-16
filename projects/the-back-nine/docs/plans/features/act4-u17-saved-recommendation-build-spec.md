@@ -29,7 +29,7 @@ here exists because the aged surface that record lands on was not honest before 
    via the persisted seed when no clock fired is what keeps the screenshot promise. U17's real content is
    the **action-warning copy register**, not a re-presentation mechanism.
 2. **The "Act-4 `schemaVersion` 3 bump" is counterfactual.** v3 is the shipped forward-written shape
-   (`model.ts:1752-1757`; codec `> 3` = newer-version). `savedRecommendation?` landed **additive-optional
+   (`model.ts:1754-1759`; codec `> 3` = newer-version). `savedRecommendation?` landed **additive-optional
    within v3**, presence-keyed, following the `rothConversion` / `savedAt` / `retirementState` precedents
    (`scenarioCodec.ts:731-734` was the pattern copied).
 
@@ -146,7 +146,7 @@ Shipped 2026-07-25, commit `e4754134`, CI green by explicit run id 30136387827.
 
 - **READ:** `rothPlanEcho` no longer says *"starting in about N years"*; it names the year, and carries a
   `passed` flag so the sentence's tense matches. Both render sites re-pointed in the SAME commit
-  (`AssumptionPanel.tsx:508`, `RothLever.tsx:311`) — insight 086: splitting a copy key orphans every
+  (`AssumptionPanel.tsx:508`, `RothLever.tsx:313`) — insight 086: splitting a copy key orphans every
   renderer not re-pointed with it.
 - **WRITE:** the `RothLever` input, once labelled *"Starting how many years from now"* — wall-time words
   over a plan-time value — takes the calendar year, and **refuses a past start** aloud. **The refusal IS
@@ -154,7 +154,7 @@ Shipped 2026-07-25, commit `e4754134`, CI green by explicit run id 30136387827.
   `offsetHasPassed(year − startCalendarYear, yearsSincePlanBuilt)` (`RothLever.tsx:52-54`) — one strict
   compare covers both "before the build year" and "already passed", and no second comparator was
   authored. It renders through the R19 `FieldError` grammar with the earliest startable year QUOTED
-  (`errRothStartPast`, `RothLever.tsx:290`, joined `SlottedErrorKey` at `copy.ts:2048`). The fresh default
+  (`errRothStartPast`, `RothLever.tsx:292`, joined `SlottedErrorKey` at `copy.ts:2048`). The fresh default
   start seeds the WALL year (build + clock), so an aged vault never pre-fills the exact start the write
   side refuses.
 - **"Suppress when unanchored" was satisfied STRUCTURALLY, not by a dead arm.** `savedAnchor` is REQUIRED
@@ -170,7 +170,7 @@ Shipped 2026-07-25, commit `e4754134`, CI green by explicit run id 30136387827.
 
 **The coverage hole this closed.** `rothPlanEcho` had **zero** aged coverage: both its tests ran at
 elapsed 0, one comparing the slot against its own output — pinning routing, not the sentence — and the
-other a bare string in the copy guard (`copyGuard.test.ts:722`). **The `RothLever` sheet echo had no assertions of any kind**, and
+other a bare string in the copy guard (`copyGuard.test.ts:728`). **The `RothLever` sheet echo had no assertions of any kind**, and
 while `RothLever` did receive a `savedAnchor`, it routed it only to `composeTwoFutures`; the echo sentence
 three lines above never saw it. The same verifier lesson landed on this stage's own first cut: the
 sheet-echo test's `toBe(slots.…)` was the insight-081 tautology and a tense-arm swap sailed through it, so
@@ -278,7 +278,7 @@ headline, where it would read as current).
   *"decodeScenario builds every object."* It does **not** — `scenarioCodec.ts:938-940` is a validated
   pass-through cast, and the behavior was safe only because `JSON.parse` preserves `encodeScenario`'s
   insertion order, so a future field reorder would have broken dirty-detection silently. The fix is
-  `scenarioIdentityKey` (`model.ts:2300`), which rebuilds plain objects with SORTED keys and throws on a
+  `scenarioIdentityKey` (`model.ts:2302`), which rebuilds plain objects with SORTED keys and throws on a
   non-serializable value, so key order and absent-vs-undefined can never read as a change.
 
 **Shipped 2026-07-25, commit `374299c9`, CI green by explicit run id 30163571502**, carrying one ruling
@@ -302,9 +302,10 @@ clocks were **bare vintage compares** — so naming `aca-status` at an all-65+ h
 **alarm-when-fine**, insight 101 inverted (a refusal/warning arm must describe the predicate's whole
 extension, and must not claim exposure the household never had). No clock is a bare vintage compare any
 more: exposure is **INJECTED** from the run's own built params through the ui layer's
-`src/ui/stalenessExposure.ts` — six reads,
-six producers, never one derived from another — and the range that region of `staleness.ts` once held is now
-the gate's own type, `ExposureRead` (`'priced' | 'unpriced' | 'unknown'`) and `StalenessExposure`.
+`src/ui/stalenessExposure.ts` — six reads, six producers (seven since the engine-pricing ledger's
+`spending` family joined 2026-10-09, `c1ada867`), never one derived from another — and the range that
+region of `staleness.ts` once held is now the gate's own type, `ExposureRead`
+(`'priced' | 'unpriced' | 'unknown'`) and `StalenessExposure`.
 
 - **`'priced'` names the clock and raises `rulesMoved`; `'unpriced'` is SILENT** (the recompute is
   byte-identical); **`'unknown'` aggregates** under ONE sentence that is **true of every member** — no
@@ -386,7 +387,7 @@ claim a completed save, and it is `recommendSaveSavedBadge`.
 **Key PREFIX picks the copyGuard gates, and that is why these two families exist as they do.**
 `staleness*` and `reentry*` are hedge-, verdict- AND control-EXEMPT by documented law — the weakest net in
 the catalog — so a new warning register needs its own explicit guard arm. The arms live in the TEST file
-(`copyGuard.test.ts`: the `staleness*` register at `:373-445`, the S5 families at `:528-637`), **not** in
+(`copyGuard.test.ts`: the `staleness*` register at `:379-451`, the S5 families at `:534-643`), **not** in
 `copyGuard.ts`: there is nothing named `staleness`, `reentry` or `recommendRecord` in the gate SOURCE at
 all, so grepping `copyGuard.ts` for those returns zero hits and must never be read as "already handled." The
 lists a key is measured against are `VERDICT_KEY_PREFIXES` (`copyGuard.ts:64-66`) and
@@ -403,7 +404,7 @@ verdict prefix, unlike `staleness*`, so they clear the scoped gates rather than 
 3. `noDollarRegister` is **COPIED from the composed view, never re-derived record-side**
    (`savedRecommendationMint.ts:89`, `:100`, `:133`). The reachable register is
    `RecommendedView.mode === 'no-change'` (`recommendationView.ts:249`, assigned `:696`), NOT the
-   module-local `noDollar` const at `:622`.
+   module-local `noDollar` const at `:659`.
 4. The `fingerprint` has no type bind and cannot get one — `solverRunFingerprint.ts:61` is a bare
    `export type … = string` — so the bind is a TEST: mint from a REAL `solverRunFingerprint(...)` call,
    encode, decode, and assert the trichotomy reads `current`.
@@ -465,7 +466,7 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   a new producer of persisted state, and the engine's fail-loud gates are part of its consumer chain. Age
   only inside the domain the engine prices. The probe settled the plant as `base: 'dip'`, aging depth 6
   (`ARRIVED_PLAN_YEARS` at `devSeeds.ts:1377`, registry entry `:1713`, doctor `doctorArrivedVault`
-  at `:1404`).
+  at `:1424`).
 - **The engine-acceptance pin ships:** hydrate → `buildSpineParams` → `validateParams` accepts → the run
   resolves to a **real** `outcomeState`, never the R19 indeterminate. It was modelled on the `statestale`
   arm at `devSeeds.test.ts:665-689`, whose rationale comment is `:616-626`.
@@ -491,7 +492,7 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   defect**: the doctored build year forks the derived birth year across the RMD band edge, forcing the
   household into RMDs two years early. It is pinned as found and filed.
 - **Both seeds were walked** (`datearrived` plus the existing aged plant) in the Caddie walk, and
-  `datearrived` joined the door walk (`e2e/caddie-walk.spec.ts:1051-1076`) — without that allowlist entry the
+  `datearrived` joined the door walk (`e2e/caddie-walk.spec.ts:1071-1096`) — without that allowlist entry the
   one plant this stage exists to cold-read would have been chaired on its landing alone.
 - **The walk hard-flagged all six faces and NOTHING shipped from it** (`docs/caddie/cold-read-log.md`,
   2026-07-27) — three carrying **calm-but-wrong BLOCKERS**, the class the batched-oracle grant has never
@@ -510,8 +511,8 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
 - **The aged band's x-axis has its first real-browser arm.** Before S6 no fit arm asserted it — the aged
   axis appeared nowhere in `e2e/`, so §S0's rename had shipped on unit arms alone. `?vault=datearrived` is
   now driven at `e2e/vertical-fit.spec.ts:2156-2260`, asserting that the year-0 endpoint names the BUILD
-  year (`'Plan built'`, `:2177-2181`) and that no named marker renders left of Today — neither the plain
-  label nor the split one, since the array picks between them (`:2187-2197`). Both are mutation-proven, and
+  year (`'Plan built'`, `:2220-2224`) and that no named marker renders left of Today — neither the plain
+  label nor the split one, since the array picks between them (`:2230-2240`). Both are mutation-proven, and
   the withdrawal mutant draws
   "Essentials date" to the LEFT of "Today" — the exact stumble §S2's hawk veto killed.
 - **The saved recommendation took its first trip through real WebCrypto and IndexedDB** here.

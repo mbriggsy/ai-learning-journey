@@ -23,7 +23,10 @@
  * bracket-fill draws pre-tax FIRST, so the taxable bucket is untouched until the pre-tax
  * room exhausts — the DISCRETIONARY draw this ceiling caps respects the rail by
  * construction, while income the fill does not control (a taxable-bucket realization
- * funding the rest of the year, working-year wages) can still move MAGI. That boundary is
+ * funding the rest of the year, working-year wages) can still move MAGI — and so can the
+ * fill's own fallback: once the taxable and Roth buckets run dry, `bracketFill` draws the
+ * rest of the year's spending from pre-tax ABOVE this ceiling (`sequencing.ts` step 3, the
+ * red team's verified hit at council wf_919f377d-274, 2026-10-04). That boundary is
  * DISCLOSED at the readout, and the empirical per-year over-cliff fraction reports the
  * truth of the whole distribution — the conservatism lives in copy + measurement, never
  * as a bias inside these numbers (the council's unbiased-skeleton contract).

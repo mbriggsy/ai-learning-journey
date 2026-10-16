@@ -16,7 +16,7 @@
  * when the solve settles (see {@link runPooledSolve}). The spine worker stays the only long-lived
  * one, and nothing below about resets of the spine is changed by the pool.
  *
- * THE RESETTABLE HANDLE (2026-09-03, ranked item 5 — the solve-lane cancel). The worker's
+ * THE RESETTABLE HANDLE (2026-09-03, the register's *The solve lane…* — its cancel). The worker's
  * `runSolve` is ONE synchronous call: it drives src/engine/solver's generator stages through
  * `runEvalSync` (no event-loop yield between batches), and the cooperative seam's `ShouldAbort`
  * predicate cannot even cross the structured clone — so a

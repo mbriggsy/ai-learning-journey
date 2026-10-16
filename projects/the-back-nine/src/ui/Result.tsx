@@ -231,9 +231,10 @@ export function Result({
   // The state-tax unit (S5) — "which PRICED state did THIS run price?", read route-aware off the
   // route's OWN built-params overlay decision (never draft.retirementState — insight 081; never a
   // bare isDateRoute disjunct — insight 080). undefined for not-priced / 'elsewhere' / unbuilt /
-  // the degenerate-overlay household. Threaded to every disclosure home (the verdict residual's
-  // affirmation names the state; the Roth lever + Healthcare sheet drop the state-tax omission; the
-  // RECOMMENDATION surface drops its federal-only scope note), each gating on `!== undefined`.
+  // the degenerate-overlay household. Threaded to every disclosure home (the verdict's residual or
+  // standalone state note names the state; the Roth lever + Healthcare sheet drop the state-tax
+  // omission, and the sheet's conversion tile adds the state's tax to its cents; the RECOMMENDATION
+  // surface drops its state-tax scope note, `recDiscStateTax`), each gating on `!== undefined`.
   const statePricedNote = useMemo(() => pricedStateForRun(snapshot.draft), [snapshot.draft])
   // The pay-less-tax ALL-IN hero's scope (build spec D7): did the SOLVE's built overlay price
   // healthcare? Deliberately NOT `medicarePriced` above — that one ORs the date route in (structurally

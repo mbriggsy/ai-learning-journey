@@ -183,8 +183,9 @@ export function checkBacklogCount(content: string): { ok: boolean; reason?: stri
 // Arm 2 — the open count lives in the register's header and nowhere else.
 // ---------------------------------------------------------------------------
 
-/** The two phrasings that have been re-typed (and rotted) outside the register. */
-export const STRAY_COUNT = /\b\d+ open items\b|\b\d+-item open register\b/
+/** The three phrasings that have been re-typed (and rotted) outside the register — the third is TODO's
+ *  close STATE line ("the register 119 open"), found by the 2026-10-16 doc audit. */
+export const STRAY_COUNT = /\b\d+ open items\b|\b\d+-item open register\b|\bregister \d+ open\b/
 
 /** Surfaces (other than the register) that re-type the open count. Fenced code is not
  *  exempt on purpose: a count in a code block rots the same way. */
@@ -296,9 +297,11 @@ export const BARE_CONTINUATION = /`:\d+(?:[-–]\d+)?(?:,\s*:\d+(?:[-–]\d+)?)*
 
 /** Blank out the INSIDE of every `<details>…</details>` block (archived reasoning, kept for the record —
  *  its citations describe the code as it was) while preserving line count, so line numbers in the
- *  report stay true. */
+ *  report stay true. Both tags count only where they open their own line: an inline code mention of the
+ *  tag (TODO's "a `<details>` disclosure") once opened a phantom block that ran to the next real close
+ *  and hid every live citation between them. */
 export function stripArchived(content: string): string {
-  return content.replace(/<details>[\s\S]*?<\/details>/g, (block) => block.replace(/[^\n]/g, ' '))
+  return content.replace(/^[ \t]*<details>[\s\S]*?^[ \t]*<\/details>/gm, (block) => block.replace(/[^\n]/g, ' '))
 }
 
 export interface CitationProblem {

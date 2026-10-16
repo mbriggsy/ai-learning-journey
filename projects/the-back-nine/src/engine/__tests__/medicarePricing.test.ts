@@ -253,7 +253,7 @@ describe('post-65 Medicare pricing — the seed→history handoff crossing (simu
 
 // ===========================================================================
 // DELIVERABLE 2 — the tier-edge < / <= WITNESS on the RUNTIME path. The surcharge
-// contract is the ONE predicate `irmaaTierApplies` (healthOverlay.ts:751): STRICT lower-exclusive
+// contract is the ONE predicate `irmaaTierApplies` (healthOverlay.ts:757): STRICT lower-exclusive
 // on tiers 1–4 (AT the line pays NOTHING, AT+1 dollar pays the tier) and INCLUSIVE on the top
 // tier ("at least" — AT the line already pays it; the second arm below). Drive the MAGI through the
 // SEED (t < lookback ⇒ the bill reads the integer seed directly, no gross-up float
@@ -338,7 +338,7 @@ describe('post-65 Medicare pricing — the tier-edge < / <= witness on the runti
 // ===========================================================================
 // DELIVERABLE 4 — the HSA qualified cap now that medicareCost is NONZERO for the
 // all-65+ household. Cap = min(hsaBalance, oopMedical + (owner-65+ ? medicareCost : 0),
-// fundingNeed) (healthOverlay.ts:903-904, taxOverlay.ts:1646-1656). Pub 969 exception (4)
+// fundingNeed) (healthOverlay.ts:909-910, taxOverlay.ts:1646-1656). Pub 969 exception (4)
 // — a 65+ HSA owner may pay Medicare premiums (base Part B + the surcharge) tax-free.
 // ===========================================================================
 describe('post-65 Medicare pricing — the HSA qualified cap includes the now-nonzero Medicare cost (Pub 969 exception 4)', () => {

@@ -450,8 +450,8 @@ describe('recommendationView — the disclosures adjacent to the delta', () => {
     expect([...seen].sort()).toEqual([...DISCLOSURE_ORDER].sort())
   })
 
-  // The pinned position of the all-in scope note (build spec §3 step 15): it rides directly after the NIIT
-  // note — the two scope sentences of the comparison sit together, the methodology caveats after them.
+  // The pinned position of the all-in scope note: directly BEFORE the NIIT note — the rule, then its
+  // exception (the 2026-10-06 pre-land Caddie read; recommendationView.ts's DISCLOSURE_ORDER comment).
   it('DISCLOSURE_ORDER pins the all-in scope note directly BEFORE the NIIT note (the rule, then its exception — the 2026-10-06 Caddie read)', () => {
     expect(DISCLOSURE_ORDER).toEqual(['ss-claim-fixed', 'all-in-scope', 'niit', 'state-tax', 'heir-bracket', 'aca-slcsp'])
   })
@@ -471,7 +471,7 @@ describe('recommendationView — the disclosures adjacent to the delta', () => {
   it('the state-tax scope note rides an UNPRICED household and DROPS for a priced one', () => {
     const payload = leaveMoreRec()
     const unpriced = disclosuresFor(payload, undefined, false).find((d) => d.id === 'state-tax')
-    expect(unpriced, 'off the roster the federal-only scope note is true and must ride').toBeDefined()
+    expect(unpriced, 'off the roster the state-tax scope note ("left out of this comparison") is true and must ride').toBeDefined()
     expect(unpriced!.text).toBe(copy.recDiscStateTax)
     // Every member of the shipped roster drops it — not just the one that surfaced the defect. A new
     // PricedState cannot silently join this list: `composeRecStateTaxDisclosure`'s switch is exhaustive.

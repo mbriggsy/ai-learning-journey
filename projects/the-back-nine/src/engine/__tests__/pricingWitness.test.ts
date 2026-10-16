@@ -531,9 +531,9 @@ export function checkWitness(
 }
 
 /**
- * THE PINS — the baseline, computed from the tree the ledger shipped with (ledger v10, 2026-09-27).
- * `atVersion` = the newest row declaring the family (`aca`: none yet). Re-pin ONLY as `checkWitness`'s
- * message prescribes.
+ * THE PINS — the baseline, computed from the tree the ledger shipped with (ledger v10, 2026-09-27;
+ * the `spending` family first pinned at ledger v11, 2026-10-09). `atVersion` = the newest row declaring
+ * the family (`aca`: none yet). Re-pin ONLY as `checkWitness`'s message prescribes.
  */
 const PINNED: Readonly<Record<PricingFamily, WitnessPin>> = {
   tax: { atVersion: 6, digest: 16_675_659 },

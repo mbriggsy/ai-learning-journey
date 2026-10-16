@@ -109,7 +109,7 @@ function essentialsClaims(text: string): string[] {
  * the verdict surface (isVerdictKey — "best" is the product's own framing question, and intake carries
  * factual numerals); `catastrophe` is survivor-scoped. That split is copyGuard.ts's law (its SCOPE
  * docblock, copyGuard.ts:19-23), and it is WHY the rec* canary at the foot of this file has to pin the
- * unscoped keys BY NAME — an unscoped flat key rides those two gates and nothing else. The ADVERSARIAL CORPUS below tests the threat CLASS,
+ * unscoped keys BY NAME — an unscoped flat key rides those three gates and nothing else. The ADVERSARIAL CORPUS below tests the threat CLASS,
  * not the lexicon tokens — it is the regression net that fails loud when the lexicon rots (the gate
  * is a tripwire + net, NOT a proof; the N=1 cold-read is the human oracle). staticDisclosures is
  * OUT by design (proven meaningful below). See copyGuard.ts for the full rationale.
@@ -380,7 +380,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   //     documented law (copy.ts: chrome/note prefixes carry no odds and recommend nothing), which
   //     makes it the WEAKEST net in the catalog — and these are the strings that tell a household
   //     their saved answer may have moved. This arm sweeps every one of them through the two
-  //     SCOPED gates the prefix exempts them from (superlative + free-numeral) on top of the two
+  //     SCOPED gates the prefix exempts them from (superlative + free-numeral) on top of the three
   //     universal gates the catalog enumeration already applies, and then pins the aggregate
   //     line's specific promises. ---
   it('U17 §S4: every staleness* warning string clears the SCOPED gates too, not just the universal gates', () => {
@@ -736,7 +736,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     rothPlanRanked: slots.rothPlanRanked('43,000', 9, 2026, true),
     // Council 2026-07-30 — the band note naming BOTH spending levels. Sampled with a REAL gap
     // (74,000 vs 46,000, the datesplit shape) rather than equal figures, so the guard reads the
-    // sentence a household actually meets. `band*` leads neither prefix list, so these ride the two
+    // sentence a household actually meets. `band*` leads neither prefix list, so these ride the three
     // universal gates — correct: they state two arithmetic facts and must wear no hedge.
     bandPricesFullBudgetWithLevels: slots.bandPricesFullBudgetWithLevels('74,000', '46,000'),
     bandPricesEssentialsWithLevels: slots.bandPricesEssentialsWithLevels('46,000', '74,000'),
@@ -1369,7 +1369,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     expect(unscopedFlat.slice().sort()).toEqual([...UNSCOPED_FLAT_REC].sort())
     // Every exception is figure-free chrome: a numeral or a dollar sign makes it a plan-moving claim,
     // which belongs in a scope, not on this list. AND every one must crown nothing: `superlative` is
-    // VERDICT-scoped (copyGuard.ts:19-23), so these five ride only false-certainty + advice-verb — and
+    // VERDICT-scoped (copyGuard.ts:19-23), so these five ride only the three universal gates — and
     // without the second arm `recVizWithLabel: 'The best strategy'` (R12's crowning sin) would ship green
     // as the recommended arm's on-chart label AND inside the spoken aria sentence.
     for (const k of UNSCOPED_FLAT_REC) {
@@ -1379,7 +1379,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     // No SLOT may sit outside CONTROL scope: a slot exists to carry a FIGURE, so an unscoped one is the
     // pre-rename `recVizAria` shape by construction. VERDICT scope is deliberately NOT counted as
     // protection here (2026-09-08) — it buys a SLOT nothing: the SLOT_RENDER sweep above runs
-    // false-certainty/advice-verb/superlative (+catastrophe) over EVERY slot whatever its scope,
+    // false-certainty/advice-verb/superlative/survival-claim (+catastrophe) over EVERY slot whatever its scope,
     // `require-hedge` runs over isControlKey slots ALONE, and free-numeral never runs over slots at all.
     // So naming the next AT sentence `recommendVizAria` rather than `recDeltaVizAria` would have kept
     // this canary green while require-hedge went silent — the pre-rename hole, re-opened under a

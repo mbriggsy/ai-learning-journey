@@ -573,7 +573,7 @@ describe('the save gesture — R1: with no vault the tap MINTS and opens the cer
   it('mints from the COMMITTED fingerprint, not a fresh draft read — proven with the two forced apart', async () => {
     /**
      * THE ASYMMETRY THIS CLOSES. Every other arm asserts `record.fingerprint === RUN_FINGERPRINT`
-     * (`:529`), which CANNOT discriminate: on a healthy frame the committed run's fingerprint and
+     * (`:549`, the first), which CANNOT discriminate: on a healthy frame the committed run's fingerprint and
      * `currentDraftFingerprint()` are equal by construction, so swapping the mint's basis from
      * `s.solve.fingerprint` to `appModel.currentDraftFingerprint()` leaves the whole suite green.
      * The swap is a structural no-op TODAY (step 3 re-confirms `committed` with no await before the
@@ -759,7 +759,7 @@ describe('the record-card memo — a DATE route refuses the card structurally', 
      *
      * WHY THE CONJUNCT IS THE ONLY THING STANDING THERE — the reason a mutant here is dangerous
      * rather than redundant. `Result.tsx` gates the whole RECOMMENDATION SURFACE off on a date route
-     * (`:509`), but `SavedRecordCard` mounts OUTSIDE that gate (`:546`). So Result's own date
+     * (`:515`), but `SavedRecordCard` mounts OUTSIDE that gate (`:559`). So Result's own date
      * suppression does NOT cover the card: delete the memo's conjunct and a crowned-date frame draws
      * a record card fed by an exposure read its own producer forbids.
      *
@@ -795,7 +795,7 @@ describe('the record-card memo — a DATE route refuses the card structurally', 
     expect(document.querySelector('main.result'), 'conjunct 1: the result phase was reached').not.toBeNull()
     // …and the record really is live on the hydrated draft.
     expect(draftRecord(), 'conjunct 3: the vault carries a record').not.toBeUndefined()
-    // Result's own date gate is visibly in force — and it is NOT what suppresses the card (:508
+    // Result's own date gate is visibly in force — and it is NOT what suppresses the card (:559
     // mounts outside it), which is precisely why the memo's conjunct has to.
     expect(
       document.querySelector('.recommendation-surface'),

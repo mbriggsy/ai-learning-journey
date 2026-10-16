@@ -167,8 +167,12 @@ export interface AcaSolution {
 // MAGI crosses each applicable-% discontinuity, bisects each (now-monotone) segment, and picks the CHEAPEST
 // feasible self-consistent root — the rational household's equilibrium, and the same "pick cheaper" rule the
 // cliff branch already uses. 64 halvings shrink any realistic premium far below a cent; a non-converged
-// segment solve THROWS (fail-loud, never a default, burned/062). (Globally-unique-root was the M3 assumption
-// the U3-exit code-review pilot corrected — the 133% kink was previously unhandled.)
+// segment solve THROWS (fail-loud, never a default, burned/062) — ⚑ EXCEPT at the 100%-FPL eligibility floor,
+// which is never split: where the subsidized premium's MAGI sits under the line and the full premium's over
+// it, r jumps DOWN there with no root, and bisectSegment returns its probe once `b - a < ACA_EPSILON`
+// with the residual still in the thousands (measured 2026-10-14, wf_11d1f63d-06b; the register's Tier 0
+// *The ACA solve finds no root at the 100 %-FPL line and returns a non-root silently…*). (Globally-unique-root
+// was the M3 assumption the U3-exit code-review pilot corrected — the 133% kink was previously unhandled.)
 const ACA_MAX_PASSES = 64
 const ACA_EPSILON = 1e-6 // dollars (net-premium / bracket-width precision)
 
@@ -309,8 +313,10 @@ export function solveAcaFundedGross(
   }
 
   // Solve the cliff-removed residual r(P) = netPremium(P) − P over a SINGLE monotone segment [lo, hi]
-  // (r is strictly decreasing there). Returns the converged probe, or null when the segment holds no root
-  // (r has the same sign at both ends ⇒ the root lives in another segment). Finiteness-gated (insight 010).
+  // (r is strictly decreasing there). Returns the converged probe, or null when r has the same sign at both
+  // ends (⇒ the root lives in another segment). ⚑ At the never-split 100%-FPL floor r can jump DOWN past zero
+  // with no root, and the `b - a < ACA_EPSILON` exit returns a NON-root probe (the register's Tier 0
+  // *The ACA solve finds no root at the 100 %-FPL line…*). Finiteness-gated (insight 010).
   const bisectSegment = (lo: number, hi: number): ReturnType<typeof probeAt> | null => {
     const loProbe = probeAt(lo)
     const hiProbe = probeAt(hi)

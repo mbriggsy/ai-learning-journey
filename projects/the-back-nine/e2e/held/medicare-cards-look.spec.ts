@@ -6,7 +6,8 @@ import { gotoSeedFinal, REAL, REAL_DPR, PHONE, PHONE_DPR } from '../reviewSurfac
 // (LOOK_SEEDS=healthnc,healthgap by default). Held, not gated: vitest excludes e2e/held, the CSP harness
 // denylists it, and the partition test records this spec as owned by shots.config.ts alone.
 
-// LOOK_OUT names the run dir (before / after); LOOK_SEEDS a comma list (default both Medicare seeds).
+// LOOK_OUT names the run dir (before / after); LOOK_SEEDS a comma list (default the era-arm pair,
+// healthnc + healthgap; LOOK_SEEDS=healthss for the one-figure arm — the one door-bearing seed on it).
 const OUT = process.env.LOOK_OUT ?? 'temp/look/adhoc'
 const SEEDS = (process.env.LOOK_SEEDS ?? 'healthnc,healthgap').split(',')
 const SEATS = [

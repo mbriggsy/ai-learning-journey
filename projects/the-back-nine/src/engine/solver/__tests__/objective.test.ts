@@ -141,14 +141,14 @@ describe('objective ≡ headline — the ranked order agrees with the displayed 
     expect(stats).toEqual([...stats].sort((a, b) => b - a))
   })
 
-  it('pay-less-tax: the headline tax is non-decreasing down the ranking', () => {
+  it('pay-less-tax: the headline all-in is non-decreasing down the ranking on case (v) — healthcare off, so all-in ≡ income tax there', () => {
     const outcomes = evaluateCandidates(caseNoChange.buildBase(), caseNoChange.buildCandidates(), caseNoChange.seed, {
       heirBracket: caseNoChange.preconditions.heirBracket,
     })
     const ranked = rankForGoal(outcomes, 'pay-less-tax', caseNoChange.tieTolerance).filter(isScored)
     expect(ranked.length).toBeGreaterThan(1)
-    // lower-is-better ⇒ the displayed tax is non-decreasing down the ranking: the ranked order equals
-    // the figures sorted ASCENDING.
+    // lower-is-better ⇒ the displayed all-in cost is non-decreasing down the ranking: the ranked order
+    // equals the figures sorted ASCENDING.
     const stats = ranked.map((o) => goalHeadlineStatistic(o.score, 'pay-less-tax'))
     expect(stats).toEqual([...stats].sort((a, b) => a - b))
   })

@@ -66,8 +66,12 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   half-entered `'entered'` with no committed dollar ALL fund the conservative-HIGH typical;
   only the affirmed `'none'` arm resolves to $0. Absent-means-$0 would delete a real recurring
   bill post-flip = the cardinal optimistic sin — the MIRROR of `oopMedicalAnnual`, whose absence
-  is pessimistic-safe. Nothing is pre-selected, so the MA plurality actively lands on $0. An
-  AFFIRMED $0 is honest; a SILENT $0 is the sin.
+  is pessimistic-safe (⚑ 2026-10-16 doc audit: since the 2026-10-08 survivor-medical lean —
+  council `wf_7eb3303c-7f3`, built `c1ada867` — its blank is no longer one-directional: it
+  disables the HSA cap AND the budgetless survivor lean, the most pessimistic reading for an HSA
+  household and the less cautious for a budgetless couple without an HSA;
+  `src/shared/model.ts:1608-1617`). Nothing is pre-selected, so the MA plurality actively lands
+  on $0. An AFFIRMED $0 is honest; a SILENT $0 is the sin.
 
 ## F2 — anchor + provenance
 
@@ -86,7 +90,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   adopted the old figure. No official national Medigap average exists to pin to; the constant's
   `pinTo` says so explicitly rather than naming a source that isn't published.
 - **Per-person explicit persisted provenance stamp.** `MedicareExtrasEntryV3`
-  (`src/shared/model.ts:2179`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
+  (`src/shared/model.ts:2181`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
   'unanswered'` — with `adoptionVintage` recording the era adopted, keyed to the SAVED era and
   never re-derived from `value == current-typical` (the `src/shared/appDefaults.ts:8-15`
   saved-era inversion trap). `'unanswered'` is the honest persisted hole: it funds the typical
@@ -128,7 +132,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   (`src/engine/taxOverlay.ts:561-572`), which holds only IDENTITY-MATCHED members so a stranger
   ref throws at the year loop's identity guard rather than silently dropping a member's premium
   from the Σ (the cost-understating direction). base+surcharge stays the existing count×uniform
-  line in `medicareAnnualCost` (`src/engine/healthOverlay.ts:816-830`), untouched.
+  line in `medicareAnnualCost` (`src/engine/healthOverlay.ts:822-836`), untouched.
 - **Ship gate, met:** the DND-012 externally-derived **ASYMMETRIC survivor golden** ships as
   `src/engine/__tests__/medicareExtras.test.ts:86-159` — extras `[0, 200]` with the $0 owner
   dying first, hand-derived per year, so the survivor is still charged their full $200×12; the

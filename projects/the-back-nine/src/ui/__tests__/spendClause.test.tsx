@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 /**
  * The spend lane on the sentence (council wf_faa1af2d-052): the gate (`spendClauseFor`), the three
- * clause forms (figure-less / pending lead / sized with the edge named — the figure-less form with
- * room's two variants for an unsized reason that denies room, `within-a-step` and `survivor-short`),
- * the verified figure quoted exactly (never re-rounded), and the clause-only announce when the figure
- * lands under an unchanged verdict.
+ * clause forms (figure-less / pending lead / sized, room's with its edge named and trim's with none
+ * since Briggsy's 2026-10-14 cut — the figure-less form with room's two variants for an unsized
+ * reason that denies room, `within-a-step` and `survivor-short`), the verified figure quoted exactly
+ * (never re-rounded), and the clause-only announce when the figure lands under an unchanged verdict.
  */
 import { afterEach, describe, expect, it } from 'vitest'
 import '@testing-library/jest-dom/vitest'

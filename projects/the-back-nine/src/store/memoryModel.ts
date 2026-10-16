@@ -748,14 +748,14 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
 
     update(mutate) {
       draft = mutate(draft)
-      // §S6 — THE EDIT-TIME KILL (2026-09-03, ranked item 5). A fingerprint-moving edit while a solve
-      // is PENDING supersedes the run. The worker's runSolve is ONE synchronous call (the solver's
-      // generator steps, 7e0365c1, are driven to completion inside it with no event-loop yield; the
-      // cooperative seam's predicate cannot even cross the wire), so the superseded solve would keep
-      // the ONE worker for its remaining minutes while THIS edit's own recompute queued behind it —
-      // and would resolve into `stale` anyway (the pending-during-edit guard). Demote NOW through
-      // commitSolve, minting through `++solveDispatchedEpoch`: the killed dispatch's rejection (and,
-      // on the main-thread fallback, its late resolve) is then held by BOTH
+      // §S6 — THE EDIT-TIME KILL (2026-09-03, the register's *The solve lane…*). A fingerprint-moving
+      // edit while a solve is PENDING supersedes the run. The worker's runSolve is ONE synchronous
+      // call (the solver's generator steps, 7e0365c1, are driven to completion inside it with no
+      // event-loop yield; the cooperative seam's predicate cannot even cross the wire), so the
+      // superseded solve would keep the ONE worker for its remaining minutes while THIS edit's own
+      // recompute queued behind it — and would resolve into `stale` anyway (the pending-during-edit
+      // guard). Demote NOW through commitSolve, minting through `++solveDispatchedEpoch`: the killed
+      // dispatch's rejection (and, on the main-thread fallback, its late resolve) is then held by BOTH
       // guards — dispatchSolve's `epoch !== solveDispatchedEpoch` and commitSolve's committed-epoch
       // compare — and, the part that is LOAD-BEARING, the dispatched epoch stays monotonic PAST the
       // stale commit, so the household's next re-invite mints strictly above it (a `+ 1` commit
@@ -911,9 +911,10 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
       const build = deps.builders.buildSolveDispatch
       if (build === undefined) return
 
-      // PRECONDITION 1 — the chosen goal (§S5 (3); plan line 175). Read the draft DIRECTLY so the
-      // gap is precise (`goal-unset` ⇒ U16 presents the GoalPicker first). The solve is never
-      // dispatched while unset — no Tier-1-only tie-break is crowned as advice (burned/062).
+      // PRECONDITION 1 — the chosen goal (§S5 (3); docs/plans/4-recommendation.md, the
+      // "A chosen Tier-2 goal" bullet). Read the draft DIRECTLY so the gap is precise
+      // (`goal-unset` ⇒ U16 presents the GoalPicker first). The solve is never dispatched while
+      // unset — no Tier-1-only tie-break is crowned as advice (burned/062).
       if (draft.chosenGoal === undefined) {
         // A LOCAL decision, but epoch-gated all the same: mint the newest solve epoch and commit
         // through commitSolve, so a stale in-flight resolve (an older dispatch still pending
@@ -924,10 +925,11 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
         return
       }
 
-      // PRECONDITION 2 — the builder's TYPED refusal (plan line 174; the steer-seed increment): the
-      // injected builder names WHICH precondition failed (`no-pretax` / `spine-unready`) instead of
-      // the old one-size null. An unbuildable draft is a silent measurement, the calm-but-wrong
-      // shape — refuse with the TRUE reason, never solve on it and never mis-name the gap.
+      // PRECONDITION 2 — the builder's TYPED refusal (docs/plans/4-recommendation.md, the
+      // "Per-account buckets" bullet; the steer-seed increment): the injected builder names WHICH
+      // precondition failed (`no-pretax` / `spine-unready`) instead of the old one-size null. An
+      // unbuildable draft is a silent measurement, the calm-but-wrong shape — refuse with the TRUE
+      // reason, never solve on it and never mis-name the gap.
       const request = build(draft)
       if (typeof request === 'string') {
         // Epoch-gated for the same reason as goal-unset above: mint + commit so a stale in-flight

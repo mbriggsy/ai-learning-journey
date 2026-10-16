@@ -1,6 +1,6 @@
 /**
- * U14 S2 — the optimality oracle: the five hand-derived known-best cases + the two
- * state-dimension companions, each judged against its OWN closed-form re-derivation from
+ * U14 S2 — the optimality oracle: the five hand-derived known-best cases + case (vi) + the
+ * two state-dimension companions, each judged against its OWN closed-form re-derivation from
  * the canonical constants (DND-012 + insight 032), with the planted-wrong-best control arm
  * proving the oracle can FAIL (insights 016/070, burned/070) and the precondition-refusal
  * arms proving a known-best never grades a world it wasn't derived for (insight 023).
@@ -54,7 +54,7 @@ const byId = (outcomes: readonly CandidateOutcome[], id: string) => {
   return hit
 }
 
-describe('the five oracle cases + state companions — every ranking matches its hand derivation', () => {
+describe('the five oracle cases + case (vi) + state companions — every ranking matches its hand derivation', () => {
   for (const fixture of SOLVER_CASES) {
     it(`${fixture.id} — ${fixture.title}`, () => {
       const verdict = checkOracleCase(fixture)

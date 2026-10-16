@@ -269,8 +269,10 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
           <p className="control-sheet__intro">{copy.leverRothIntro}</p>
           {/* P3·U11 follow-up — the priced-Medicare residual note STANDS on the sheet (never inside
               the ready-arm notes slot, which hides until a comparison lands): the household reads
-              the ONE residual — the surcharge IS priced now, only real-flat Part B remains — BEFORE
-              weighing any delta. */}
+              the ONE optimistic lean the conversion channel still carries — since 2026-07-19 Part B
+              and the income surcharge are priced trended; only the surcharge's drug-plan piece,
+              held at its 2035 real level past the projections' edge, remains (the one home:
+              `MEDICARE_PART_D_HOLD_CONSEQUENCE`, copy.ts) — BEFORE weighing any delta. */}
           {medicarePricedNote && <p className="field-help">{copy.rothMedicareResidualNote}</p>}
           <div className="control-plan">
             <CurrencyField

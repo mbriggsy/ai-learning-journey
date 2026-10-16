@@ -9,8 +9,11 @@
  * THE CONSTRUCTIBLE REGIME (why this can exist at all): with the live `tieTolerance: 0` the
  * survival top-set is the STRICT max, so in a non-surplus world the crown is decided on SEED-A
  * SURVIVAL alone — the goal dollar never voted. A candidate that survives a hair better than the
- * conventional prior while paying MORE lifetime tax (or leaving LESS) at seed-B display is exactly
- * an inversion; a candidate whose goal-dollar edge is real-but-sub-step is the zero-collapse.
+ * conventional prior while paying MORE lifetime all-in cost (or leaving LESS) at seed-B display is
+ * exactly an inversion; a candidate whose goal-dollar edge is real-but-sub-step is the
+ * zero-collapse. (Pay-less-tax's all-in cost = income tax + net ACA premium + Medicare — what
+ * `goalHeadlineStatistic` returns since 6dab9ec0, Briggsy's 2026-10-05 ruling; this hunt was
+ * written 2026-07-23, when it returned lifetime income tax alone.)
  *
  * METHOD (the shipped-path law, insight 095): every probe drives the REAL intake builder
  * (`buildSolveRequest` over a ScenarioDraft variant of the shipped `retired` seed) → the REAL

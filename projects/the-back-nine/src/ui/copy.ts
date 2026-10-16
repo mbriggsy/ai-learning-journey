@@ -1094,7 +1094,6 @@ export const copy = {
   // --- The two-figure premium card (council 2026-09-13, 8/10 — the era-loud frame): the surcharge
   //     clause binds PER QUOTED YEAR, never one predicate spanning two years. These are the
   //     digit-free arms; the figure-carrying arms are `slots.irmaaStep*` below. ---
-  /** NEITHER quoted year carries a surcharge on the middle path — the one-line form. */
   /** The ONE basis clause on the two-figure card (Briggsy 2026-09-24, reading the 61/40 card's 3× beside the
    *  extras pair's 2×: "spouses with later entries into Medicare are higher due to annual increases in
    *  premiums"): the era figure grows with the era year's distance because Part B is priced TRENDED
@@ -1117,6 +1116,7 @@ export const copy = {
    *  dearest, where "keep rising" would point the wrong way (review wf_0f6a7da2-fb1). No figure, no percentage, no
    *  arrow (the basis clause's own negatives); the second clause stays the PAIR's — it is false on one figure. */
   irmaaStepTrendNoteOne: 'Even in today’s dollars, each person’s Part B premium is likely to keep rising.',
+  /** NEITHER quoted year carries a surcharge on the middle path — the one-line form. */
   irmaaStepBothBase:
     'Both figures are the base rate — on the middle-of-the-road path, no income surcharge would apply in either year.',
   /** A ONE-figure card's figure is the base rate — the no-era arm's on-ramp figure, and since 2026-10-15
@@ -1148,7 +1148,7 @@ export const copy = {
   // ⚠️ "the benchmark premium itself" WAS IN BOTH LISTS AND WAS FALSE — struck 2026-08-03.
   // The benchmark (SLCSP) is not merely counted, it is the ANCHOR of the whole credit:
   // `intakeMap.ts:678` builds `slcsp` into the overlay params, `taxOverlay.ts:262` calls it "the
-  // §36B PTC basis", and `slidingScalePtc` (healthOverlay.ts:218-228) computes
+  // §36B PTC basis", and `slidingScalePtc` (healthOverlay.ts:222-232) computes
   // `max(0, slcsp − applicable% × MAGI)` FROM it. Telling the reader the tool ignores the one
   // figure the discount is calculated from is the same false-negation shape O16 fixed on the Roth
   // strings (`rothOmissionsNoteAcaPriced` above) — a "not counted" claim about something that is.
@@ -1156,7 +1156,7 @@ export const copy = {
   // STRUCK, NOT REPLACED WITH AN AFFIRMATION, and that is deliberate. The O16 house pattern is
   // affirm-with-residual, but these two strings are gated on `statePriced` ALONE
   // (`stateTaxDisclosure.ts:144`) — they carry no ACA-priced axis, so the identical sentence also
-  // ships to a Medicare-only household (`intakeMap.ts:615-618`) that has no benchmark at all.
+  // ships to a Medicare-only household (`intakeMap.ts:683-686`) that has no benchmark at all.
   // "The benchmark is already in these numbers" would be a NEW false claim for that population.
   // Affirming here needs the three-state gate the Roth strings have; until then, silence is true.
   //
@@ -1305,7 +1305,7 @@ export const copy = {
   // 'date' prefix or a 'readout'/'headline' substring, which free-numeral sweeps) —
   // provenance lines carry factual numerals (a table year, a section number) exactly like
   // intake copy. The scope-seam pins in copyGuard.test.ts document the exemption (the U11
-  // precedent); the universal gates (false-certainty / advice-verb) still cover every string.
+  // precedent); the three universal gates (false-certainty / advice-verb / survival-claim) still cover every string.
   // Keys containing 'survivor' stay survivor-scoped (catastrophe-gated) by the substring net,
   // and `assumptionTruerPicture` joins isMortalityKey BY NAME (it renders at the worst
   // moment). FIRST-DRAFT craftsman's-lead wording throughout — the door CTA, the market-floor
@@ -1639,7 +1639,7 @@ export const copy = {
   recommendSaveSavedBadge: 'Saved to this device — your plan and this strategy read',
   // THE REFUSALS. None carries a retry control: the mint is deterministic, so a retry re-fails
   // identically, and an affordance that cannot succeed is the lying-remedy shape
-  // (Result.tsx:473-481). Each says what did NOT happen, in the reader's frame.
+  // (Result.tsx:474-482). Each says what did NOT happen, in the reader's frame.
   recommendSaveRefusalRecordInvalidHeading: 'This strategy read couldn’t be kept',
   recommendSaveRefusalRecordInvalidBody:
     'We couldn’t build a record of it, so nothing reached this device — your plan here is exactly as you left it. The answer above is still current.',
@@ -2764,7 +2764,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:1242` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:1248` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -3191,8 +3191,8 @@ export const slots = {
    *  NAMED onto the `recDelta*` control prefix (`CONTROL_KEY_PREFIXES`, copyGuard.ts:124) so `require-hedge`
    *  BITES it the way it bites its visual twin `recDeltaTypical`: the AT reader hears the same figures the
    *  sighted reader sees, so the same modal law must hold. A `recViz` prefix was rejected — it would red the
-   *  three correctly hedge-free arm labels (`recVizWithLabel`/`recVizWithoutLabel`/`recVizRunnerUpLabel`,
-   *  copy.ts:1991-1998 — each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
+   *  three correctly hedge-free arm labels (`recVizWithLabel`/`recVizWithoutLabel`/`recVizRunnerUpLabel` —
+   *  each reds `require-hedge` on its own, measured 2026-09-08); a by-NAME arm on
    *  `isControlKey` was rejected — it breaks that predicate's "by prefix ALONE" law (copyGuard.ts:130). */
   recDeltaVizAria: (withoutLabel: string, withoutFig: string, withLabel: string, withFig: string, deltaFig: string): string =>
     `${withoutLabel} lands near about $${withoutFig}; ${withLabel} about $${withFig} — a difference of about $${deltaFig}.`,

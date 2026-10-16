@@ -34,7 +34,9 @@
  * Re-anchoring it is a copy decision (his), never a silent figure change here.
  */
 export const OOP_MEDICAL_TYPICAL_HOUSEHOLD = {
-  /** Conservative round household anchor ($/yr, real). */
+  /** The round household anchor ($/yr, real), set just BELOW the federal average — for honesty
+   *  (a right-skewed distribution) and for the HSA class, NOT because a low anchor is safe for
+   *  every household (the ⚑ above: it is not, and no copy may say so). */
   annual: 3_000,
   /** The federal-average figure the anchor sits "a bit under" — SHOWN to the user (the cold-read:
    *  "a bit under the average" is hollow without the number). The BLS 55–64 out-of-pocket figure
@@ -43,7 +45,7 @@ export const OOP_MEDICAL_TYPICAL_HOUSEHOLD = {
    *  confirmed). Single-sourced here so the hint copy reads it and never re-types a dated figure. */
   federalAverageApproxAnnual: 3_400,
   citation:
-    'BLS Consumer Expenditure Survey 2023 (released 2024-09-25), per consumer unit — out-of-pocket EXCLUDING premiums = medical services + drugs + medical supplies ≈ $3,397 (ages 55–64) / $3,807 (65–74). $3,000 anchors conservatively below that average; no median-by-age is separately published.',
+    'BLS Consumer Expenditure Survey 2023 (released 2024-09-25), per consumer unit — out-of-pocket EXCLUDING premiums = medical services + drugs + medical supplies ≈ $3,397 (ages 55–64) / $3,807 (65–74). $3,000 anchors just below that average (the distribution is right-skewed); no median-by-age is separately published.',
   directionalUntilPinned: true,
   pinTo:
     'BLS CE 2023 "Age of reference person" table — verify the medical-services + drugs + medical-supplies cells before pinning (figures currently grounded-search-sourced, not primary-table-confirmed).',

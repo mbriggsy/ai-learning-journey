@@ -19,9 +19,9 @@ status: shipped
 > sourced `medicareCostTrend`, flipped `PART_B_PRICING_MODE` `'real-flat'→'trended'`
 > (`taxOverlay.ts:936`) with genuine per-year consumption (074: a stamp nothing reads prices
 > nothing; 081: the label flip and the pricing change are ONE commit or the mirror lies),
-> re-wired the two solver seams the U15 tripwire named (`solve.test.ts:220`), re-calibrated the
-> conversion-near-tie demotion margin on a Medicare-bearing post-flip world (U15 council Q4d),
-> and reworded the real-flat residual copy. Conversions rank end-to-end.
+> re-wired the two solver seams the U15 tripwire named (both pinned at `solve.test.ts:205-228`),
+> re-calibrated the conversion-near-tie demotion margin on a Medicare-bearing post-flip world
+> (U15 council Q4d), and reworded the real-flat residual copy. Conversions rank end-to-end.
 
 ## The ratified rulings (council wf_c673339e-257 — binding; outcomes folded in)
 
@@ -108,7 +108,7 @@ status: shipped
   the consumer, never stored; the report's own "1.7% real" is GDP-deflated and would overstate
   CPI-real by ~0.35pp, the packet's named trap), `vintage`, `directionalUntilPinned: false`,
   `reportEdition`, and `pinTo` the 2026 Trustees Report Tables V.E2/V.E4/II.D1/III.B12/§III.D.
-  The pure resolver is `buildPartBPricingSchedule` (`healthOverlay.ts:512`), returning one
+  The pure resolver is `buildPartBPricingSchedule` (`healthOverlay.ts:518`), returning one
   `PartBYearPricing {baseMonthlyReal, scales}` per sim year: table years deflate nominal→real
   horizon-matched, pre-anchor years clamp to the anchor, post-edge rides the ultimate escalator
   off the edge's own real value (C0 by construction). It walks iteratively (cumulative multiplies,
@@ -125,11 +125,11 @@ status: shipped
   convergence re-verified under year-varying premiums (013 watch) — see S3 for the measurement.
 - **S2 — the solver seams (the tripwire's named pair).** `solve.ts`'s rankable partition derives
   from the token's trend clause, not the old hardcoded `conversion === null` filter;
-  `enumerateWithheldConversionLevers` (`solve.ts:265`) self-empties as the clause clears; the U15
+  `enumerateWithheldConversionLevers` (`solve.ts:268`) self-empties as the clause clears; the U15
   tripwire test flipped to its post-sourcing form (the clause CLEARS and conversions RANK); the
   token's NC-blocks/FL-mints and remaining clauses were re-verified live, and the mint now
   evaluates the TRUE roster amounts. Because the live clause is clear, the mint gained a
-  `_trendOverride` seam (`oracleToken.ts:309` — the `_epsilonRequired` precedent) so the blocking
+  `_trendOverride` seam (`oracleToken.ts:311` — the `_epsilonRequired` precedent) so the blocking
   arm stays exercised. Conversions rank end-to-end (solve/solveEntry green: rankedIds 5-wide,
   `grid:taxable-first:20000/40000` present, withheld levers `[]`).
 - **S3 — the rank-flip probe: (c) CONFIRMED.** The probe ran the SHIPPED search→select path (095)
@@ -222,7 +222,7 @@ that across the 2030 boundary** (the tiers jump by DIFFERENT ratios — tier 1 �
 2.46× — while the base jumps 1.77×; V.E4 footnote 3 names the new base-premium percentage). So the
 engine consumes **V.E4 verbatim per tier**: `partDIrmaa` joins `medicareCostTrend` (2027–2035 rows;
 the 2026 anchor stays in `irmaa.tiers`, one home, identity-pinned), `IrmaaSurchargeScales.partD`
-became `partDByTier` (`healthOverlay.ts:444-449` — a scalar is FORBIDDEN, it cannot represent the
+became `partDByTier` (`healthOverlay.ts:450-455` — a scalar is FORBIDDEN, it cannot represent the
 2030 divergence), the resolver deflates V.E4 by the same horizon-matched deflator and HOLDS the
 2035 real level beyond the printed edge (an unsourced tail is never extrapolated as sourced; the
 hold's optimistic direction is disclosed in the constant note and the residual copy), and the

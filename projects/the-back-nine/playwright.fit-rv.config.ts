@@ -7,9 +7,10 @@ import { defineConfig } from '@playwright/test'
  * solve alone on the single worker and a ~6–8 min test per arm once the seed's final tier and the
  * audits rode on it (measured 2026-09-07, at `timeout` below). The 2026-10-03 worker pool cut the
  * solve to ~30 s at 12 eval workers on his laptop (playwright.caddie.config.ts); on a 4-vCPU CI
- * runner it pools at P = 2, and the whole three-arm gate ran in 5.4 min (run 37166135388). Beside
- * the fit harness's concurrent date-seed finals (counted in playwright.fit.config.ts) it would
- * starve them of cores and they would starve it —
+ * runner it pools at P = 2, and the whole three-arm gate ran in 5.4 min (run 37166135388);
+ * 4.9–9.1 min across the green pooled runs since (runs 38693180201 / 37221659495). Beside the fit
+ * harness's concurrent date-seed finals (counted in playwright.fit.config.ts) it would starve them
+ * of cores and they would starve it —
  * the datesplit arms already timed out once at ten concurrent solves, after the chart-text spec grew
  * to 18 date renders (playwright.fit.config.ts).
  *
@@ -43,7 +44,8 @@ export default defineConfig({
   // worker) + two audits and the planted control. 900 s holds a full-budget lockup with the seed's
   // final tier and the audits inside it with room to spare — the lockup is the part that actually
   // varies. Measured 2026-09-07 on the single worker (20-thread laptop): 8.0 / 7.7 / 6.0 min per arm
-  // (PHONE / FLOOR / REAL), 21.8 min for the gate; on the pool, CI runs all three in 5.4–8.8 min.
+  // (PHONE / FLOOR / REAL), 21.8 min for the gate; on the pool, CI runs all three in 4.9–9.1 min
+  // (runs 38693180201 / 37221659495, the two ends of every green run 2026-10-04 → 10-16).
   timeout: 900_000,
   use: {
     baseURL: 'http://127.0.0.1:4192', // 127.0.0.1, NOT localhost (dodges the IPv4/IPv6 readiness flake)

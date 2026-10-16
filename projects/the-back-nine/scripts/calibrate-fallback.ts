@@ -8,8 +8,9 @@
  *
  *  1. `solverInteractivePaths` — the smallest path rung at which EVERY battery cell's crown is
  *     IDENTICAL to its 16k-truth crown (winner-cannot-flip), then ONE RUNG of headroom (the
- *     class-plus-headroom idiom). tieTolerance runs at 0 — the STRICTEST regime (a looser live
- *     tolerance only makes flips rarer), so the pin is conservative-safe.
+ *     class-plus-headroom idiom). tieTolerance runs at 0 — the live solve's own value, an exact
+ *     0 by ruling (`docs/decisions/survival-tie-tolerance.md`, 2026-10-06), so the pin is
+ *     measured in the live regime; a reopened tolerance re-measures it (that record's gate (e)).
  *  2. `solverCoarseSurvivors` — at the pinned rung, the worst rank-position of the 16k-truth
  *     crown inside the rung's own selection ordering, +1 to convert position→count, +1 headroom:
  *     the refine set provably contains the true optimum on every measured cell.

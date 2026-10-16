@@ -39,8 +39,8 @@ export default defineConfig({
   // Playwright's default (50% of logical cores) is 10 workers on a 20-thread
   // laptop — ten concurrent solves saturate the cores and stretch a 60 s final past the tier wait
   // (measured 2026-09-05: the datesplit arms timed out only once the chart-text spec grew to 18 date
-  // renders). Locally, cap to the solve's real cost; CI (ubuntu-latest, 4 vCPU → 2 workers) is left
-  // at the default, where contention never arose.
+  // renders). Locally, cap to the solve's real cost; CI (the pinned ubuntu-26.04, 4 vCPU → 2 workers)
+  // is left at the default, where contention never arose.
   workers: process.env.CI ? undefined : '30%',
   forbidOnly: !!process.env.CI, // a stray test.only fails CI rather than silently narrowing the gate
   retries: process.env.CI ? 1 : 0,

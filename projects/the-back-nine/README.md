@@ -60,7 +60,7 @@ A few of the contracts that make the answer trustworthy:
 - **Every dated tax/health figure lives in one canonical, year-keyed table** that the engine, the plan, and the tests all read. A number is never re-typed — a shape test (`src/engine/constants/__tests__/constants.shape.test.ts`) fails if a distinctive figure appears anywhere in `src/` outside that table. The ACA legislative entry re-verifies on every build — it can flip the entire pre-65 model, and a stale figure there is a quiet catastrophe.
 - **A strict CSP ships via HTTP response headers** (`script-src 'self'`, no inline, no eval, `connect-src 'self'`), enforcement-tested in real Chromium — the in-session decrypted model is guarded against injected page scripts.
 
-The recommendation layer is gated *structurally*: the solver cannot speak until a validation harness — an independent oracle that checks it actually found the optimum, stability checks that the ranking doesn't flip run-to-run, and grade calibration on seeds it never trained against — mints a pass-token the solver literally cannot run without. `solve(token, input)` takes that token as a required parameter, so a recommendation without it is a compile error, not a matter of discipline.
+The recommendation layer is gated *structurally*: the solver cannot speak until a validation harness — an independent oracle that checks it ranks the candidates in eight hand-worked fixture worlds exactly as the hand derivation does, stability checks that the ranking doesn't flip run-to-run, and grade calibration on seeds it never trained against — mints a pass-token the solver literally cannot run without. `solve(token, input)` takes that token as a required parameter, so a recommendation without it is a compile error, not a matter of discipline. The token certifies the machinery, not each household's answer: the solver ranks a finite roster of candidate amounts, and a 2026-10-04 probe found a better conversion amount outside it on 8 of the 10 dev seeds it probed (measured while pay-less-tax ranked income tax alone; unmeasured on today's all-in ranking) — widening the roster broke the solve-time cap, so that fix closed unshipped (the register's closed *The solver's rail anchors stand under their line on COMMITTED income only…*).
 
 ---
 
@@ -79,7 +79,7 @@ The MVP is four acts. Each is a real milestone with its own plan, gates, and ver
 
 Act 1's engine is pinned against primary sources: every dated tax and healthcare figure carries an IRS / CMS / HHS / SSA / eCFR citation (and a directional-until-pinned flag where one isn't yet locked), and cohort mortality is re-derived 1:1 from the SSA 2024 Trustees-Report cohort life tables (Alternative 2) for the primary household's birth cohorts (male 1969, female 1972). Every household reads that one pair of curves today. Per-person birth-year keying is not built, so an older household's longevity is slightly overstated (conservative) and a younger one's slightly understated (optimistic). The guided intake delivers a **live, provisional Monte Carlo reading that sharpens as you answer each question**, proven end-to-end in real Chromium under the enforced CSP.
 
-The engine and intake carry **4101 tests across 209 files**, all green, alongside lint, bundle-budget, ACA-freshness, state-tax-freshness, browser-CSP, and real-browser vertical-fit gates. Per-unit feature detail lives once in [the roadmap's You-Are-Here table](docs/roadmap.md#the-you-are-here-table) — this file never enumerates it.
+The engine and intake carry **4102 tests across 209 files**, all green, alongside lint, bundle-budget, ACA-freshness, state-tax-freshness, browser-CSP, and real-browser vertical-fit gates. Per-unit feature detail lives once in [the roadmap's You-Are-Here table](docs/roadmap.md#the-you-are-here-table) — this file never enumerates it.
 
 ---
 
@@ -116,7 +116,7 @@ pnpm verify:aca     # fails if the ACA enhanced-subsidy status is stale/unconfir
 pnpm verify:state-tax  # fails if a priced state's {NC, PA, FL} tax record is stale/unconfirmed
 pnpm verify:csp     # real-browser CSP enforcement walk in Chromium + the two @cross-browser vault arms again under WebKit (Playwright)
 pnpm verify:fit     # real-Chromium vertical-fit + chart-text + phone intake-fold gates — the one-frame fit law + every band / ladder / TwoFutures word legible + the intake step's scroll-reset / editor-heading / nav-yield laws, on the dev server
-pnpm verify:fit:rv  # real-Chromium RecommendationViz chart-text gate — the fourth chart on its own serialized solve harness (a full-precision solve per arm — all three arms 5.4 min on CI since the worker pool)
+pnpm verify:fit:rv  # real-Chromium RecommendationViz chart-text gate — the fourth chart on its own serialized solve harness (a full-precision solve per arm — all three arms 4.9–9.1 min on CI on the worker pool, green runs 2026-10-04 → 10-16)
 pnpm verify:doc-stats  # the doc numbers with a single home (test count, register count, insights index) + every code citation resolves + every insight carries its four sections
 ```
 

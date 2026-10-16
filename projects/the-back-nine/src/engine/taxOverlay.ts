@@ -1803,11 +1803,11 @@ export function runTaxAwareDecumulation(
           (irmaaMagiOverride[t] ?? 0) + irmaaMagi(magiComponentsThisYear) + (ongoingTaxableIrmaaOnly[t] ?? 0)
       }
       // The year's federal tax, read off the converged identities (U3 · M6 — the lifetime-tax
-      // surface): the gross funds EXACTLY fundingNet + netAcaPremium + tax in both branches
-      // (the ACA solve's gross is fundNet(fundingNet + P*).gross = that sum; the else branch
-      // is the P* = 0 case), so the difference IS the tax — no solver plumbing, no recompute
-      // (objective ≡ headline: a re-derived tax could drift from the converged one). Sub-cent
-      // residual only: the ACA root's |impliedNet − P*| < 1e-6 bisection tolerance.
+      // surface): the gross funds EXACTLY fundingNet + netAcaPremium + tax in both branches (the ACA
+      // solve's gross is fundNet(fundingNet + P*).gross = that sum; the else branch is the P* = 0
+      // case), so the difference IS the tax — no solver plumbing, no recompute (objective ≡ headline:
+      // a re-derived tax could drift from the converged one). Sub-cent residual (1e-6) only where a
+      // root EXISTS (the register's Tier 0 *The ACA solve finds no root at the 100 %-FPL line…*).
       taxPaidThisYear = grossWithdrawal - fundingNet - acaNetPremiumThisYear
     } else {
       grossWithdrawal = net

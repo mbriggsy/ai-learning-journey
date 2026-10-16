@@ -692,9 +692,10 @@ describe('solve() — the displayed baseline is the household’s OWN entered st
       _gradeMinPaths: 50,
     })
     if (out.kind !== 'recommended') throw new Error('unreachable')
-    // `noChange` gates `recComposeAlready` — "You're already on one of the strongest paths". It is
-    // true ONLY when the crowned PLAN is the one the household already runs. Whatever wins here, the
-    // flag must agree with the crowned id rather than with the conventional arm's identity.
+    // `noChange` is ONE of four disjuncts that route to `recComposeAlready` — "You're already on
+    // one of the strongest paths" (`recommendationView.ts` `noDollar`). The flag is true ONLY
+    // when the crowned PLAN is the one the household already runs. Whatever wins here, the flag
+    // must agree with the crowned id rather than with the conventional arm's identity.
     const winnerIsTheirs = out.winner.id === 'baseline:proportional:0' || out.winner.id === 'grid:proportional:0'
     expect(out.noChange, `crown=${out.winner.id} — "already" must track the household’s own plan`).toBe(winnerIsTheirs)
   }, 120_000)

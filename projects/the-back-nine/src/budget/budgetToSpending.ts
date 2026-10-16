@@ -75,8 +75,8 @@ export function compileBudget(
     for (let k = item.startYear; k <= last; k++) target[k]! += item.annualAmountReal
   }
 
-  // The injected OOP-medical floor line: sticky (a survivor's qualified medical does
-  // not scale by the couple ratio) and lifelong (B1 cap-only semantics — a 65+
+  // The injected OOP-medical floor line: sticky (held whole at widowhood — a disclosed
+  // conservative lean, insight 055) and lifelong (B1 cap-only semantics — a 65+
   // member's out-of-pocket continues; the overlay stream it must dominate is flat).
   if (oopMedicalAnnual !== undefined) {
     for (let k = 0; k < maxHorizonYears; k++) sticky[k]! += oopMedicalAnnual
@@ -109,8 +109,8 @@ export function budgetYearZeroFullTotal(
  *  obvious computation — sum the user's typed lines — is WRONG in two independent ways, and both
  *  fail SILENTLY toward a rosier or a scarier number.
  *    1. It omits the INJECTED out-of-pocket medical. `compileBudget` adds `oopMedicalAnnual` to the
- *       STICKY floor on top of the typed lines (see :81-83), because a survivor's qualified medical
- *       neither scales by the couple ratio nor ends. A raw line-sum therefore UNDERSTATES essentials
+ *       STICKY floor on top of the typed lines (see :81-83), held whole at widowhood (a disclosed
+ *       conservative lean, insight 055) and lifelong. A raw line-sum therefore UNDERSTATES essentials
  *       by exactly M — the mirror of the double-count `anchorTarget` exists to prevent.
  *    2. It ignores tiering. Essentials is everything NOT discretionary — `compileBudget` routes a
  *       line to `discretionary` only on `tier === 'discretionary'`, and BOTH other destinations

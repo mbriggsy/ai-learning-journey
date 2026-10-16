@@ -85,7 +85,10 @@ overwrites a bundle a reader panel is mid-read on (the first live run's filed de
 
 Walk shapes: a `seed:<key>` target captures the settled landing **then opens EVERY quiet-row
 door** and captures each sheet (the tape's first coverage lesson — his real read free-walks
-the doors); a lever sheet (policy/regime radios, the Roth plan fields) additionally gets ONE
+the doors); a FOLDED survivor card (`budget` — the floor relief holds the inline slot) is first
+opened, captured as a `survivor-open` state with the pointer parked, and closed again, so every
+door captures the default frame (2026-10-14, `0581e783`); a lever sheet (policy/regime radios,
+the Roth plan fields) additionally gets ONE
 preview DRIVEN and its TwoFutures chart captured as a `-preview` state (increment 3 — the
 rule-36 one-dialect check was un-verifiable on pre-commit input states; preview-only, nothing
 is Applied). A `vault:<key>` target drives the U13 decrypt-on-return arc (unlock → the
@@ -99,7 +102,13 @@ ISOLATION, then the borderline NC-clause hero; its Assumptions door is the price
 picker-row face). The state seeds (`seed:nc|pa|fl|elsewhere|datenc`, increment 5) ride the
 plain `seed:<key>` shape — each landing carries its state's verdict clause (NC bites to
 borderline / PA "usually a small piece" / FL's \$0 affirmation / the elsewhere monolith / the
-date-route NC witness). An
+date-route NC witness). A `solve:<key>` target (increment 6 — `nc`, `surplus`, `failing`,
+`steer`; `SOLVE_GOAL` in the spec) walks the recommend-second arc from the settled landing:
+`landing` → `goalpicker` (the goal picked by its rendered label) → `pending` (the breathe) →
+`committed` (the HELD card or RECOMMENDED lockup at full worker precision, polled up to
+`SOLVE_LOCKUP_MS` 300 s inside a 480 s `SOLVE_TEST_MS`); `nc` adds the `stale` demotion, `failing`
+ends on the open `goalpicker` (nothing picked), `steer` on the `steer-note` refusal (nothing
+dispatches); any `solve:` target serializes the run (`workers: 1`, `playwright.caddie.config.ts`). An
 `intake:fork` target (increment 4) drives the GUIDED INTAKE to the Medicare-extras payment
 fork — blank-start → the half-answer R19 block → mixed provenance (one entered dollar, one
 adopted typical) — capturing the spend step en route, plus (increment 5) the retirement-state
@@ -116,8 +125,12 @@ route, so this is its only capturable home:
 - `cvd-deuteranopia.png` / `cvd-protanopia.png` / `cvd-grayscale.png` — Chrome-native CVD
   emulation (CDP `Emulation.setEmulatedVisionDeficiency`) of the above-fold frame; PLUS
   `cvd-<arm>-<chart>.png` device-scale crops of every chart on the state (band / ladder /
-  TwoFutures — increment 4: the above-fold arms were structurally blind to below-fold charts)
-  and `cvd-<arm>-state-picker.png` (increment 5: the fork walk's ANSWERED state picker under
+  TwoFutures — increment 4: the above-fold arms were structurally blind to below-fold charts;
+  `recviz`, the RecommendationViz two-arm chart — increment 6), `cvd-<arm>-survivor.png`
+  (2026-10-14, `0581e783`: the survivor card sits below the phone's first frame, so no arm had
+  screened it — a card, not a chart; skipped while its fold is closed, and on `budget` the
+  floor-relief card shares the class, so `-1` / `-2`) and `cvd-<arm>-state-picker.png`
+  (increment 5: the fork walk's ANSWERED state picker under
   every arm — a selected-control face, not a chart)
 - `aria.yaml` — the ARIA snapshot (the programmatic-availability channel)
 - `copy.txt` / `dialog.txt` — the VERBATIM rendered text from the DOM (words are always read

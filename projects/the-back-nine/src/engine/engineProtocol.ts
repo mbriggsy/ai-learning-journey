@@ -73,7 +73,7 @@ export function runEngine(
       // list below (that list is for detachable buffers only). Mirrors taxAware's presence key.
       ...(result.distribution.bandFan ? { bandFan: result.distribution.bandFan } : {}),
       // P3·U11 — the per-year healthcare readout series (the `healthReadout` option, present
-      // iff opted in AND the overlay priced healthcare). Compact years×9 STRUCTURED-CLONE
+      // iff opted in AND the overlay priced healthcare). Compact years×12 STRUCTURED-CLONE
       // payload — NEVER the transfer list (the bandFan discipline).
       ...(result.distribution.healthReadout ? { healthReadout: result.distribution.healthReadout } : {}),
       // The U7 survivor surfaces — present iff the run opted in (the `survivorConditioned` option,

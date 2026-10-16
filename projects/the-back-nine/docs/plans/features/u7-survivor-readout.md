@@ -24,8 +24,10 @@ while both were alive" from "the plan carried the SURVIVOR through widowhood." `
 is household *existence* (≥1 alive), not survivor *survival* — it cannot substitute.
 
 The survivor phase is the **fragile** one: at the first death one Social Security benefit ends, filing
-flips MFJ→single (smaller brackets, half the deduction, lower SS-taxation thresholds), and spending only
-steps down to `survivorSpendingRatio` (~0.75) — a partial offset. So the survivor-conditioned outcome is
+flips MFJ→single (smaller brackets, half the deduction, lower SS-taxation thresholds), and spending steps
+down only in part — a budget's sticky lines and a budgetless couple's entered out-of-pocket medical are
+held whole, only the rest scales by `survivorSpendingRatio` (~0.75), and `budget`'s survivor still spends
+87.7 % of the couple's figure (§8) — a partial offset. So the survivor-conditioned outcome is
 **typically worse than the joint headline**, and a calm joint number *hides* that elevated risk. That is
 the exact calm-but-wrong sin this readout exists to prevent. (The SS sub-engine review already caught an
 optimistic survivor-floor bug — see insight 040. The cash math was already correct going in, and the

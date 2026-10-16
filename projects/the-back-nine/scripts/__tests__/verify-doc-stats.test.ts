@@ -207,15 +207,17 @@ describe('the register + insights arms (2026-09-06 — the numbers the doc audit
   })
 
   describe('findStrayCounts', () => {
-    it('flags both re-typed phrasings and ignores everything else', () => {
+    it('flags every re-typed phrasing and ignores everything else', () => {
       expect(
         findStrayCounts([
           { surface: 'a.md', content: 'leaving **46 open items** in the register' },
           { surface: 'b.md', content: 'consolidated into a 43-item open register' },
           { surface: 'c.md', content: 'the open count lives in the register header' },
           { surface: 'd.md', content: '46 open questions remain' },
+          // TODO's close STATE line re-typed it this way through 2026-10-16 (the doc audit's find).
+          { surface: 'e.md', content: 'the register 119 open' },
         ]),
-      ).toEqual(['a.md', 'b.md'])
+      ).toEqual(['a.md', 'b.md', 'e.md'])
     })
     it('the REAL doc set types the count nowhere but the register header', () => {
       const cwd = process.cwd()
@@ -341,6 +343,11 @@ describe('the register + insights arms (2026-09-06 — the numbers the doc audit
       expect(stripArchived(content).split('\n')).toHaveLength(5)
       const p = checkCitations([{ surface: 'd.md', content }], resolve)
       expect(p).toEqual([{ surface: 'd.md', line: 5, citation: 'gone.ts:2', reason: 'file not found' }])
+    })
+    it('does not treat an inline `<details>` mention as an archived block', () => {
+      const out = stripArchived('calls it a `<details>` disclosure\n`gone.ts:1`\n<details><summary>old</summary>\n`gone.ts:2`\n</details>').split('\n')
+      expect(out[1]).toBe('`gone.ts:1`')
+      expect(out[3]!.trim()).toBe('')
     })
     it('the REAL live docs resolve every citation — and the roster excludes the dated logs + insights', () => {
       // Live on purpose (like the register arm): a citation to a deleted file or a vanished line is a

@@ -91,9 +91,10 @@ export function goalHeadlineStatistic(score: CandidateScore, goal: OracleGoal): 
 
 /**
  * Is the goal's headline BETTER when larger? (leave-more: yes — more to heirs; pay-less-tax: no —
- * less tax.) The ONE place the display orientation is named; `objective.test.ts` asserts `rankForGoal`'s
- * order agrees with sorting by `goalHeadlineStatistic` in THIS direction within the survival-top set
- * (the objective ≡ headline pin — a sign flip in either function fails it).
+ * less lifetime ALL-IN cost: income tax + net ACA premium + Medicare.) The ONE place the display
+ * orientation is named; `objective.test.ts` asserts `rankForGoal`'s order agrees with sorting by
+ * `goalHeadlineStatistic` in THIS direction within the survival-top set (the objective ≡ headline
+ * pin — a sign flip in either function fails it).
  */
 export function goalHigherIsBetter(goal: OracleGoal): boolean {
   // EXHAUSTIVE switch + never-guard: a future third goal fails tsc here rather than defaulting to

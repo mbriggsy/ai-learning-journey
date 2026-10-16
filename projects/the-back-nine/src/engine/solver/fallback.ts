@@ -77,7 +77,7 @@ export const solverCoarseSurvivors: Sourced<number> = sourced(2, {
 export type SolveComputeTier = 'interactive' | 'full-precision'
 
 /** The coarse-then-refine plan (rung 1 + 2) in structured form. Its three fields are the knobs above,
- *  PINNED 2026-07-22 (`:38` / `:52` / `:66`, each `directionalUntilPinned: false`) — what is still
+ *  PINNED 2026-07-22 (`:38` / `:53` / `:67`, each `directionalUntilPinned: false`) — what is still
  *  unbuilt is the ALGORITHM that would consume them: U16 §S5, DECIDED-and-deferred on the record
  *  with a named revival trigger (the build spec's standing posture), never "waiting on the
  *  measurement". `assertFallbackCalibrated` still fails closed while any field is uncalibrated. */

@@ -249,7 +249,7 @@ export default function IntakeApp({
    * THE SHORT-CIRCUIT DOES ZERO WORK, AND THAT IS THE FIT-FRAME CONTRACT. Both reads below are
    * expensive: `currentDraftFingerprint()` runs the injected solve builder (→ `buildSpineParams` →
    * the candidate enumeration) and canon-serializes the whole params object plus the roster, and
-   * `exposureForDraft` calls SIX separate params producers. On a `{kind:'unsaved'}` mount — every
+   * `exposureForDraft` calls SEVEN separate params producers. On a `{kind:'unsaved'}` mount — every
    * `?seed=` route, the Caddie walk, `pnpm verify:fit` — there is no record to judge, so the honest
    * answer costs nothing and must COST nothing. `currentDraftFingerprint()` is never called bare in
    * a render body for the same reason.
@@ -274,7 +274,7 @@ export default function IntakeApp({
     // PHASE FIRST — this memo's zero-work contract has to hold during INTAKE too, and nothing
     // consumes it there. Without this conjunct, a returning household with a save-ready draft pays
     // a full `currentDraftFingerprint()` (buildSolveRequest → buildSpineParams → candidate
-    // enumeration → canon serialize) PLUS `exposureForDraft`'s six params producers on every single
+    // enumeration → canon serialize) PLUS `exposureForDraft`'s seven params producers on every single
     // keystroke-committed edit of the intake — for a card that cannot render until `result`.
     if (phase !== 'result') return undefined
     if (persist.kind === 'unsaved') return undefined

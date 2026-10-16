@@ -86,8 +86,10 @@ export interface SolveInput {
   /** The ranking objective — goal + heir bracket. MUST equal the objective the token's fingerprint
    *  pins (§S0.2); a `leave-more` token can never bless a `pay-less-tax` solve. */
   readonly ranking: SolverRunRanking
-  /** The A-side CRN-difference selection tie-tolerance the ranking runs at (heldOutSeed's
-   *  `selectionTieTolerance` in a live solve; 0 on the zero-vol oracle worlds). */
+  /** The A-side Tier-1 survival tie-tolerance the ranking runs at. Every shipped caller passes an
+   *  exact 0, the live solve by ruling (`buildSolveRequest`; `docs/decisions/
+   *  survival-tie-tolerance.md`). Never heldOutSeed's `selectionTieTolerance` — that goal-difference
+   *  SE feeds the Tier-2 shrinkage only. */
   readonly tieTolerance: number
   /** TEST-SEAM ONLY (insight 048): overrides the grade's live 16,000-path B-floor so the grade
    *  path is drivable at a small path count. The live binding NEVER passes this — the calibrated
@@ -127,7 +129,8 @@ export interface SolveArm {
   readonly survivalB: number
 }
 
-/** A pruned/losing candidate — a SCALAR only (structured clone, no distribution; plan line 178). */
+/** A pruned/losing candidate — a SCALAR only (structured clone, no distribution;
+ *  docs/plans/4-recommendation.md, the "K-candidate solve-result wire-shape" bullet). */
 export interface SolvePrunedScore {
   readonly id: string
   /** Position in the shrunk seed-A ranked order (0 = would-be winner). */
@@ -287,7 +290,8 @@ export function enumerateWithheldConversionLevers(
 }
 
 /** The grade decision axis: SURVIVAL in the on-track regime (the headline is survival), the GOAL
- *  dollar axis in the surplus regime (the headline pivots to the goal — §S4.4 / plan line 224). */
+ *  dollar axis in the surplus regime (the headline pivots to the goal — §S4.4 /
+ *  docs/plans/4-recommendation.md, the "Objective ≡ headline, rendered explicitly" bullet). */
 export function gradeAxisFor(goal: OracleGoal, surplusRegime: boolean): GradeStatistic {
   if (!surplusRegime) return 'survival'
   // EXHAUSTIVE switch + never-guard: in the surplus regime the axis IS the goal dollar — a future

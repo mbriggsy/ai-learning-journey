@@ -216,7 +216,7 @@ status: shipped
    "no state income tax" words.
 3. **FIVE disclosure homes, not the four this plan first named** (SIX since 2026-09-11 — the standalone verdict note, see the S5 note below) — `verdictMedicareResidual`
    (copy.ts:1227), `rothOmissionsNote` (copy.ts:987), `controlHealthOmissionsNote`
-   (copy.ts:1166), the spendHelp branch (`spendHelpKeyFor`, intakeMap:981), and the
+   (copy.ts:1166), the spendHelp branch (`spendHelpKeyFor`, intakeMap.ts:1040), and the
    RECOMMENDATION surface's disclosure rail (`recDiscStateTax`). The fifth was born unguarded:
    it shipped as the only household-DEPENDENT builder with no condition, so an NC household
    would read "this compares federal tax only" three inches under a spine that had just named
@@ -228,7 +228,7 @@ status: shipped
    pin that the view actually FORWARDS `pricedStateForRun` to the disclosure builder (the defect
    was never a wrong decision — the predicate was computed and simply never handed down).
 4. **The statePriced predicate is PRODUCER'S-OUTPUT ONLY, roster-gated (red-team fold):**
-   `pricedStateForRun` (intakeMap:808) reads the state-pricing answer off the route's own BUILT
+   `pricedStateForRun` (intakeMap.ts:849) reads the state-pricing answer off the route's own BUILT
    params (the `spineMedicarePriced` shape — buildSpineParams' overlay output; the date route
    reads its own builder's output), never geography and never ages. It returns a `PricedState`
    or `undefined`, so every one of the five homes swaps its clause by the SAME rule (six since 2026-09-11 — the verdict's STANDALONE state note, `composeVerdictStateNote`, is the sixth: home #1 renders only for the all-65+ no-door household, so a pre-65 household's verdict carried no clause on either route until the four-faces walk's Card 4 caught it; same predicate, own gate). **The bare `isDateRoute` disjunct is STRIPPED for state** —
@@ -256,7 +256,7 @@ status: shipped
   `state-tax-{nc,pa,fl}-last-verified.json` record at the project root, plus a CI gate that fails
   when any is missing, hollow, unconfirmed, or past its `nextDue`. The gate is REAL, not
   local-only: `pnpm verify:state-tax` runs in the monorepo-root workflow
-  `.github/workflows/verify-the-back-nine.yml` (`verify-the-back-nine.yml:65`, beside `verify:aca`) — note the
+  `.github/workflows/verify-the-back-nine.yml` (`verify-the-back-nine.yml:67`, beside `verify:aca`) — note the
   workflow sits ABOVE this project directory, which is why a search inside `projects/the-back-nine`
   finds no `.github/`. The roster is single-sourced
   from `PRICED_STATES`, so a new priced state cannot ship without a record. RED-proven on both

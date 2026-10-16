@@ -45,8 +45,9 @@ the named, lesser defect. ⚑ **Re-grounded 2026-10-12** (council `wf_cfa961da-1
 T0 is NOT reopened; flagged with the D1 amendment, RATIFIED by Briggsy 2026-10-12): "R21's absolute floor"
 now reads **R21's survival-first order** — on the retired route Tier 1 is full-plan survival, the
 hero's own quantity, and it is never traded for the goal. Every arm here was measured on that full key,
-so the ruling's evidence is unchanged; reopening T0 still needs the fresh A′/B′ pre-registration below. The Honesty Hawk's veto covers every loosening (T_crn, gap-closed T_crn and P20 for the repeated loss;
-P5 for its unregistered, non-CRN shape) and does not touch T0.
+so the ruling's evidence is unchanged; reopening T0 still needs the fresh A′/B′ pre-registration below.
+The Honesty Hawk's veto covers every loosening (T_crn, gap-closed T_crn and P20 for the repeated loss; P5
+for its unregistered, non-CRN shape) and does not touch T0.
 
 ## The known cost — the winner's curse
 
@@ -60,6 +61,9 @@ are law:
    pinned by `src/ui/__tests__/copyGuard.test.ts`, mutation-proven). It is universal rather than keyed to
    seed A, because seed A decides the crown but seed B is what the reader sees (insight 099). The
    displayed-count readouts ("about 7 of 10 either way") stay legal — they quote the B display.
+
+⚑ **ACCEPTED by Briggsy 2026-10-12** (`b29a550d`; the 2026-10-06 council's yours-to-close, closed on the
+pilot's rec): the ~$10k `nc` true-tie cost is accepted — T0 stands, contained by the `survival-claim` gate.
 
 ## What would reopen this
 

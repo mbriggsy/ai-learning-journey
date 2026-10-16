@@ -226,7 +226,9 @@ interface RankRecord {
 
 /**
  * The pure selection over shrunk scores (§S4 (2)/(3)). Quantized lexicographic — the survival-top set
- * on the raw CRN survival tolerance (identical to `rankCandidates`), then the SHRUNK `tier2` ascending
+ * on the A-side survival `tieTolerance` (identical to `rankCandidates`; every shipped caller passes an
+ * exact 0, the live solve by ruling, `docs/decisions/survival-tie-tolerance.md` — never the
+ * goal-difference `selectionTieTolerance` the shrinkage reads), then the SHRUNK `tier2` ascending
  * (a near-tie candidate's advantage over the prior collapses onto the prior's score), then a
  * CONVENTIONAL-INCUMBENT tie-break (a top collapse-tie DEFAULTS to the conventional prior — the
  * incumbent wins even against a lower-`candidateTieBreak` policy like `proportional`, so the no-change

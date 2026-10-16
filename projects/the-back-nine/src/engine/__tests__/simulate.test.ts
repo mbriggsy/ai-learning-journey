@@ -441,8 +441,8 @@ describe('R19 engine half + dire-but-honest edges', () => {
       return r.indeterminate ? r.reason : ''
     }
     expect(reasonOf(overlay({}))).toMatch(/irmaaMagiSeed/) // MISSING seed → the coverage gate (simulate.ts:1003-1005)
-    expect(reasonOf(overlay({ irmaaMagiSeed: [Number.NaN, 60_000] }))).toMatch(/irmaaMagiSeed/) // NaN → finiteness gate (:786)
-    expect(reasonOf(overlay({ irmaaMagiSeed: [-1, 60_000] }))).toMatch(/irmaaMagiSeed/) // negative → finiteness gate (:786)
+    expect(reasonOf(overlay({ irmaaMagiSeed: [Number.NaN, 60_000] }))).toMatch(/irmaaMagiSeed/) // NaN → finiteness gate (simulate.ts:839)
+    expect(reasonOf(overlay({ irmaaMagiSeed: [-1, 60_000] }))).toMatch(/irmaaMagiSeed/) // negative → finiteness gate (simulate.ts:839)
   })
 
   it('R19 enum + person-field + empty-bucket-basis gaps → indeterminate (U3-exit code-review pilot)', () => {

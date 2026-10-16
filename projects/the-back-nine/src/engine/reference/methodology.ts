@@ -88,6 +88,13 @@ export const productionMarket: Sourced<MarketAssumptions> = sourced(
  * direction is documented: too LOW understates the survivor's need (the unsafe
  * direction for a survivor product), so the default is never a silent un-sourced
  * number, and a low user edit warrants a calm note (the UI half, P3).
+ * It never scales the household's own ENTERED out-of-pocket medical M, held whole
+ * on both spend arms: a budget injects M into its sticky floor (`budgetToSpending.ts`
+ * `compileBudget`); budgetless, a survivor year spends m + r·(S − m), m = min(M, S)
+ * (`simulate.ts` `budgetlessSurvivorSpending`) — the 2026-10-08 DISCLOSED
+ * CONSERVATIVE LEAN (council wf_7eb3303c-7f3), never a research finding. Nor does it
+ * scale a budget's sticky essentials lines (housing, utilities, other —
+ * `budgetModel.ts` `isSurvivorSticky`).
  */
 export const survivorSpendingRatio: Sourced<number> = sourced(0.75, {
   citation:

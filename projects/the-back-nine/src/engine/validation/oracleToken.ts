@@ -276,7 +276,9 @@ export type MintOutcome =
 /**
  * Mint the oracle-cleared token for ONE graded household (S6.2's withheld-until list):
  *
- *  - the seven oracle cases (i)–(v) + the NC/PA state companions of (i) passed on their declared preconditions → the branded
+ *  - the eight `SOLVER_CASES` fixtures — cases (i)–(v), the NC/PA state companions of (ii),
+ *    and case (vi), the pay-less-tax all-in ACA trap — passed on their declared
+ *    preconditions → the branded
  *    {@link OracleReport} is a REQUIRED parameter (mintable only by `runOptimalityOracle`
  *    on a clean roster — a planted wrong-best yields failures, never a report, so no token);
  *  - K-candidate ranking stability → the branded {@link RankingStabilityReport} likewise;

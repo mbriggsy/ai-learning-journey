@@ -74,7 +74,7 @@ status: shipped
      `medicareExtrasTypicalMonthly()`, never re-typed. The entry's `vintage` bump
      deliberately fires the U13 staleness clock on vaults that adopted the old figure, and
      the `?seed=dip` knife-edge was re-tuned to restore its `nm=[0,1,2]` shape.
-   - **`survivorSpendingRatio`** (`methodology.ts:92`) — methodology-substrate KIND
+   - **`survivorSpendingRatio`** (`methodology.ts:99`) — methodology-substrate KIND
      (ships-disclosed, `directionalKind: 'methodology-substrate'`); if ever pinned it needs a
      **sourced equivalence-scale anchor** (the U12 advisory's ≈⅔ note), never a guessed one.
    - **The 16 state-tax entries** — 15 pinned in this pass on the annual `verify:state-tax`
@@ -126,7 +126,7 @@ status: shipped
   PTC cliff, the IRMAA bill steps) are never bisected at all, so no bisection can span a
   discontinuity and find a phantom root. The rail substrate is the shipped `magiLandscape`
   fill model, which carries the same well-behavedness contract the `bracketFillCeilings`
-  seam (`model.ts:445`) already carries — reuse, never re-derive (insight 068: fill to the
+  seam (`model.ts:447`) already carries — reuse, never re-derive (insight 068: fill to the
   *binding effective* ceiling via the branch's own predicate, never the nominal bracket top),
   so the enumerator and the engine agree on the geometry by construction.
 - Imported by BOTH this harness and U15's `search.ts` — the two can never drift to
@@ -142,7 +142,9 @@ status: shipped
   its declared preconditions** — a federal-only known-best never grades a priced-state run.
   The NC/PA priced fixtures whose hand-derived dollars **include** state shipped alongside
   (the state spec's NC-vs-PA conversion-delta DND-012 fixture is the pattern), giving
-  `SOLVER_CASES` its **seven committed fixtures**. **NC is the proof the refusal is
+  `SOLVER_CASES` its **seven committed fixtures** at U14 (eight since 2026-10-06, `6dab9ec0`:
+  case (vi), the pay-less-tax all-in ACA trap `caseAllInAcaTrap.ts`, landed with the all-in
+  objective Briggsy ruled 2026-10-05 — plan 4's Unit-14 section). **NC is the proof the refusal is
   load-bearing, not ceremonial:** NC's flat rate stacked on the federal band prices a 22%-band
   conversion at ≈26%, above the fixture's 0.23 heir bracket, while the 12% band prices at
   ≈16% — the optimum DROPS from the federal 22%-top anchor to the 12%-top anchor on the SAME
@@ -266,7 +268,13 @@ status: shipped
   B-measured level band re-contaminates the held-out — planted-fail arm) and the **display
   band** is B-measured; both stored with **out-of-range sentinel defaults** (burned/062) —
   an uncalibrated ε is detectably unset, and a NaN margin must not pass the `> ε` compare
-  (finiteness at the chokepoint — insights 008/010/039).
+  (finiteness at the chokepoint — insights 008/010/039). ⚑ **AMENDED 2026-10-06**
+  (`docs/decisions/survival-tie-tolerance.md`, council `wf_6e72eca9-c20`): the LIVE Tier-1
+  survival tolerance is an exact **0** by ruling — `buildSolveRequest`
+  (`src/intake/solveDispatch.ts`) passes `tieTolerance: 0` — and `selectionTieTolerance`
+  (`heldOutSeed.ts`) is never the survival tolerance: it feeds `select.ts`'s Tier-2
+  shrinkage only. CRN-difference keying stays the law for any FUTURE loosening, which must
+  clear that record's reopen gates first.
 
 ## S6 — the oracle-cleared token (the structural gate)
 

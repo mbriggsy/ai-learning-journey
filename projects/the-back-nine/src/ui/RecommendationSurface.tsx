@@ -117,9 +117,9 @@ export function RecommendationSurface({
    *  survival context is REUSED by reference, never a second authored survival claim. */
   readonly spineConfidence?: ConfidenceStatementView
   /** The PricedState THIS run priced (`pricedStateForRun`, threaded from Result) — drops the
-   *  state-tax scope note, which claims the delta is federal-only and is FALSE for a priced
-   *  household. Optional: an in-isolation surface (the unit tests) has no draft, and `undefined`
-   *  keeps the shipped not-priced words. */
+   *  state-tax scope note, which says an unpriced state's income tax is "left out of this
+   *  comparison" and is FALSE for a priced household. Optional: an in-isolation surface (the unit
+   *  tests) has no draft, and `undefined` keeps the shipped not-priced words. */
   readonly pricedState?: PricedState
   /** Did THIS run's BUILT overlay price healthcare (`spineMedicarePriced`, threaded from Result —
    *  build spec D7)? Picks the pay-less-tax hero's arm (all-in words vs today's tax-only words) and
@@ -208,7 +208,7 @@ export function RecommendationSurface({
   // edit-time kill, on the pending arm — but this seat reads the committed one only); `view` is a
   // `RecommendationView` and `mode` only on `RecommendedView` — both reads are TS2339 unwrapped, and a
   // cast here would compile, lint, and leave every trichotomy arm green while stamping a record with
-  // the wrong run (model.ts:2000-2008 documents that exact shape). The two values are lifted into
+  // the wrong run (model.ts:2002-2010 documents that exact shape). The two values are lifted into
   // CONSTS so the handler closes over already-narrowed data — parameter narrowing does not survive
   // into a closure.
   const ticket: RecommendationSaveTicket | undefined =

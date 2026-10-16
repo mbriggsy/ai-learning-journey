@@ -51,7 +51,7 @@ export interface ResolvedWire {
   readonly bandFan?: BandFan
   /** The P3·U11 per-year healthcare readout series — present iff the run opted in (`run`'s
    *  `healthReadout` option) AND the overlay priced healthcare. Crosses by structured clone
-   *  (compact years×9 plain numbers), NOT a transferable buffer — absent from the worker's
+   *  (compact years×12 plain numbers), NOT a transferable buffer — absent from the worker's
    *  `Comlink.transfer` list (the bandFan discipline). DND/009-clean: every field finite. */
   readonly healthReadout?: HealthReadout
   /** The U7 survivor-conditioned surface — present iff the run opted in (`run`'s `survivorConditioned`
@@ -123,7 +123,7 @@ export function fromWire(wire: EngineWire): EngineResult {
         // fallback hands back the engine's own immutable object), so it carries through
         // directly; nothing to widen, mirroring the date-search's clone-only unpack.
         ...(wire.bandFan ? { bandFan: wire.bandFan } : {}),
-        // P3·U11 — the healthcare readout series is compact plain data (years×9 numbers) —
+        // P3·U11 — the healthcare readout series is compact plain data (years×12 numbers) —
         // clone delivered it; pass through presence-keyed (the bandFan discipline).
         ...(wire.healthReadout ? { healthReadout: wire.healthReadout } : {}),
         // The survivor-conditioned surface is compact (six numbers and a flag) — structured clone delivered it
@@ -220,7 +220,8 @@ export function twoArmFromWire(wire: TwoArmWire): TwoArmResult {
 // (refused / withheld / aborted / token-withheld / mint-failed / unwitnessable) is already plain data and crosses unchanged.
 //
 // The per-solve allocation is sized for THREE distributions + scalars, never K full distributions —
-// keeping Act-1's "fresh per run, retains none" discipline true at K-candidate scale (plan line 178).
+// keeping Act-1's "fresh per run, retains none" discipline true at K-candidate scale
+// (docs/plans/4-recommendation.md, the "K-candidate solve-result wire-shape" bullet).
 // ---------------------------------------------------------------------------
 
 /** One displayed arm in WIRE form — its seed-B distribution as transferable typed-array buffers (the

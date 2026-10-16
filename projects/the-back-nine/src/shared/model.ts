@@ -17,8 +17,8 @@
 // ---------------------------------------------------------------------------
 // Outcome-state set — engine-owned, single-sourced HERE (contract: the engine is
 // the sole authority that selects the state and owns every band edge). The P3
-// budget split adds a two-tier lexicographic *reading* over these same states —
-// never a 7th state.
+// budget split adds the essentials-floor reading (the relief line — reported, never
+// ranked; council wf_cfa961da-13c) over these same states — never a 7th state.
 // ---------------------------------------------------------------------------
 
 /** The single-metric first-answer outcome states. */
@@ -263,8 +263,10 @@ export function expandRothConversion(
 
 /** The Tier-2 surplus goals the recommender ranks on above Tier 1's full-plan survival (R21):
  *  `leave-more` = maximize the after-tax-to-heirs bequest (first-order §1014/IRD at the
- *  disclosed heir bracket — never the gross figure); `pay-less-tax` = minimize lifetime
- *  tax paid. (`live-bigger-now` is a plan-named third goal deferred past U15 — it ranks a
+ *  disclosed heir bracket — never the gross figure); `pay-less-tax` = minimize the lifetime
+ *  ALL-IN cost (income tax + the net ACA premium + Medicare — never income tax alone;
+ *  Briggsy's 2026-10-05 ruling, {@link TaxAwareDistribution}).
+ *  (`live-bigger-now` is a plan-named third goal deferred past U15 — it ranks a
  *  confidence-over-fixed-spending statistic, not a distributional dollar, so it joins this
  *  vocabulary additively when its objective wiring lands.) */
 export const RECOMMENDATION_GOALS = ['leave-more', 'pay-less-tax'] as const
@@ -2044,7 +2046,7 @@ export interface SavedRecommendationV3 {
  *  NO `conversion` FIELD. ⚠️ The original rationale — "`SolveArm.conversion` is ALWAYS NULL in
  *  the live sequencing-only ranking, conversions WITHHELD as `withheldConversionLevers`" — EXPIRED
  *  2026-07-19, when Part B went `'trended'` and the trend clause cleared: conversion candidates rank
- *  live now (solve.ts:14-16, :116-118), so a crowned arm CAN carry a real `RothConversionPlan`. This
+ *  live now (solve.ts:14-16, :118-120), so a crowned arm CAN carry a real `RothConversionPlan`. This
  *  record keeps only what `candidateId` embeds — the conversion's `annualAmountReal`, inside an id
  *  that is OPAQUE and never parsed (below) — and does NOT persist the plan's `startYearOffset` /
  *  `years` window. Nothing re-enacts a conversion from this record today — its one reader,

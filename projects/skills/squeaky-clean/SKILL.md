@@ -11,7 +11,7 @@ End-of-session cleanup. Every step runs in order — don't skip, don't reorder. 
 ### 1. Update TODO.md
 
 If TODO.md exists in the project root, update it to reflect reality:
-- Current state (test counts, build status, bundle sizes — run the actual commands, don't copy from memory)
+- Current state (build and gate status by exit code, bundle sizes; a test or open count only where the project gives it no single gated home — a TODO that says its counts live elsewhere, e.g. under a doc-stats gate, gets the gate's NAME, never its numbers — run the actual commands, don't copy from memory)
 - Next steps in priority order
 - Landmines (known issues, gotchas, things that'll bite the next session)
 

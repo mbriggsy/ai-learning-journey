@@ -486,7 +486,7 @@ describe('the out-of-pocket step — the optional-field BLS reference hint (cold
     expect(heading()).toBe(copy.qOopHeading)
   }
 
-  it('shows the grounded conservative hint while the field is empty, and hides it once a figure is entered', () => {
+  it('shows the grounded below-average hint while the field is empty, and hides it once a figure is entered', () => {
     const m = freshModel()
     m.update((d) => ({
       ...d,

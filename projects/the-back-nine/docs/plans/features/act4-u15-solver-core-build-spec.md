@@ -52,7 +52,7 @@ being born (insight 020's shape). Both shapes carry a `fingerprint` field today
    The schema is `solver-run-fp/v2` — the 2026-07-19 review fold added `seedA` and
    `tieTolerance` (both ranking-affecting siblings that had lived beside the serialized
    triple). `tieTolerance`'s finiteness refusal lives one layer up, in `solve()`'s input
-   validation AHEAD of the fingerprint gate (`tie-tolerance-invalid`, solve.ts:447-453) — a
+   validation AHEAD of the fingerprint gate (`tie-tolerance-invalid`, solve.ts:451-457) — a
    NaN tolerance admits every candidate to the survival-top set, so it is refused before any
    identity is computed.
    **NOT `consumedConstantEntries`** — red-team-falsified as HOUSEHOLD-BLIND
@@ -99,12 +99,12 @@ being born (insight 020's shape). Both shapes carry a `fingerprint` field today
   scorer** (a solver-native scorer pins finitely many fixtures and drifts between them —
   the seam contract evaluate.ts:5-18 names for exactly this council). The adapter is
   `rankForGoal`, test-pinned identical to `rankCandidates`.
-- **`tier2` was un-privated and exported** (evaluate.ts:231) so `select.ts` composes shrinkage
+- **`tier2` was un-privated and exported** (evaluate.ts:232) so `select.ts` composes shrinkage
   and tie-break on the one orientation — no re-derived sign conventions.
 - The lexicographic contract is unchanged from the plan: Tier-1 survival floor in the
   spine's `X of 10`; survival-equivalence decided by the **A-side CRN-difference selection
   tie-tolerance**, never the B display band; Tier-2 = the goal's statistic in the exact
-  units the headline renders (objective ≡ headline, contract #4 — locked). ⚑ **AMENDED 2026-10-06** ([`docs/decisions/survival-tie-tolerance.md`](../../decisions/survival-tie-tolerance.md)): the live tolerance is an exact **0** by ruling (council `wf_6e72eca9-c20`) — every measured loosening that moves `borderline` / `budget` (T_crn, gap-closed, P20) crowned a repeated small survival loss, and P5 (it moves only `nc`) is not CRN-keyed or pre-registered; CRN-difference keying stays the law for any FUTURE loosening, which must clear that record's reopen gates first. ⚑ **SUPERSEDED 2026-10-12** (council `wf_cfa961da-13c`, 8/10 — the D1 amendment ⚑ RATIFIED by Briggsy 2026-10-12): "Tier-1 survival floor", read as the essentials floor, is superseded — on the retired route Tier 1 is full-plan survival, `Distribution.survivalFraction`, which is what this unit shipped (`src/engine/validation/evaluate.ts:116`); the essentials-only floor is reported, never ranked. The text above is kept as written.
+  units the headline renders (objective ≡ headline, contract #4 — locked). ⚑ **AMENDED 2026-10-06** ([`docs/decisions/survival-tie-tolerance.md`](../../decisions/survival-tie-tolerance.md)): the live tolerance is an exact **0** by ruling (council `wf_6e72eca9-c20`) — every measured loosening that moves `borderline` / `budget` (T_crn, gap-closed, P20) crowned a repeated small survival loss, and P5 (it moves only `nc`) is not CRN-keyed or pre-registered; CRN-difference keying stays the law for any FUTURE loosening, which must clear that record's reopen gates first. ⚑ **SUPERSEDED 2026-10-12** (council `wf_cfa961da-13c`, 8/10 — the D1 amendment ⚑ RATIFIED by Briggsy 2026-10-12): "Tier-1 survival floor", read as the essentials floor, is superseded — on the retired route Tier 1 is full-plan survival, `Distribution.survivalFraction`, which is what this unit shipped (`src/engine/validation/evaluate.ts:117`); the essentials-only floor is reported, never ranked. The text above is kept as written.
 
 ## S2 — the Q2 resolution rule + the dispersed-world fixture verdict (INTRACTABLE)
 

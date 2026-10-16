@@ -44,8 +44,9 @@ export { afterTaxBequestPerPath, lifetimeAllInCostPerPath }
  *  model.ts) so the engine's ranking objective, the codec's enum gate, and the intake GoalPicker
  *  read ONE membership surface (U15 §S5 — the chosen-goal field rides that same vocabulary). The
  *  members are unchanged (`leave-more` / `pay-less-tax`); the `live-bigger-now` goal joins the
- *  shared vocabulary additively when its objective wiring lands (the oracle's five cases exercise
- *  tax + bequest + no-change). */
+ *  shared vocabulary additively when its objective wiring lands (the oracle's eight cases — the
+ *  five plan cases, the NC/PA state companions and case (vi), the pay-less-tax all-in ACA trap —
+ *  exercise tax + all-in cost + bequest + no-change). */
 export type OracleGoal = RecommendationGoal
 
 export interface CandidateScore {

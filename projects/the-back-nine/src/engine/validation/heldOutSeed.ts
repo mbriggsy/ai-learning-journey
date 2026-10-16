@@ -24,6 +24,12 @@
  *    survival-relevant gap into Tier-2). Deciding equivalence on a B-measured level band
  *    would re-contaminate the held-out — the calibration battery carries the arm that
  *    demonstrates the over-declaration.
+ *    LIVE STATUS (2026-10-06): the live solve's Tier-1 survival top set does NOT consume
+ *    this tolerance — it is an exact `tieTolerance` 0 by ruling (council `wf_6e72eca9-c20`,
+ *    `docs/decisions/survival-tie-tolerance.md`: keyed on survival, this construction
+ *    crowned a repeated small survival loss on two dev seeds). Its one live consumer is
+ *    `select.ts`'s Tier-2 shrinkage, fed the per-path goal vector; a Tier-1 consumer must
+ *    clear that record's reopen gates first.
  *  - the DISPLAY band is B-measured (the rendered interval — the date-search SE idiom).
  * Every numeric input is finiteness-guarded FIRST (insights 008/010/039).
  */

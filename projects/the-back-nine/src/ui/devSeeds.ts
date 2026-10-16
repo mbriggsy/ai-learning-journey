@@ -454,7 +454,7 @@ const retiredBudget: ScenarioDraft = {
  * lifestyle at 8", labelled Engine-proven, and both figures were wrong):**
  *   provisional (2,000 paths) — floor **2** `confirmed-date` · lifestyle **10** `window-edge-unconfirmed`
  *   final       (16,000 paths) — floor **2** `confirmed-date` · lifestyle **9** `confirmed-date`
- * The LIVE surface runs `final` (`IntakeApp.tsx:318`, `Result.tsx:280`/`:294`), so the shipped hero is
+ * The LIVE surface runs `final` (`IntakeApp.tsx:318`, `Result.tsx:281`/`:295`), so the shipped hero is
  * the 9 — and it is a CONFIRMED date, i.e. the band owes no edge hedge there. The 10 is real but is a
  * provisional-tier reading, and it is `window-edge-unconfirmed`: during entry the hedge RENDERS and
  * then WITHDRAWS when final lands. That transient has never been cold-read.
@@ -1068,6 +1068,14 @@ const healthNcSeed: ScenarioDraft = { ...retiredHealth, retirementState: 'NC' }
  * reached. Pinned through the real engine in healthSheetSeedGate.test.ts. Never doctored into a
  * vault; a 40-year-old "retired at 40" is a witness shape, not a plan.
  */
+const healthGapSeed: ScenarioDraft = {
+  ...healthNcSeed,
+  people: [
+    healthNcSeed.people[0]!,
+    { ...healthNcSeed.people[1]!, birthYear: 1986, currentAge: 40, retirementAge: 40 },
+  ],
+}
+
 /**
  * THE EARLY-CLAIM WITNESS — `?seed=healthss` (2026-10-15, the register's Tier 0 "The health sheet's
  * conversion tile prices the federal tax at the bare bracket rate — …"). `health` with both members 62
@@ -1085,14 +1093,6 @@ const healthSsSeed: ScenarioDraft = {
     { ...retiredHealth.people[1]!, birthYear: 1964, currentAge: 62, retirementAge: 58, socialSecurityClaimAge: 62 },
   ],
   annualSpendingReal: 60_000,
-}
-
-const healthGapSeed: ScenarioDraft = {
-  ...healthNcSeed,
-  people: [
-    healthNcSeed.people[0]!,
-    { ...healthNcSeed.people[1]!, birthYear: 1986, currentAge: 40, retirementAge: 40 },
-  ],
 }
 
 /**

@@ -38,8 +38,9 @@ import { type Audit, floorPx, audit, assertChartText } from './chartTextAudit'
  * (temp/chart-text/raw-1b-sweep-rv.json — a sweep that starts at 632, so it says nothing about the
  * phone). No 320 arm yet: on the single worker every arm was a ~6–8 min test (a ~4–7 min solve plus
  * the seed's final tier and the audits — measured 2026-09-07: 8.0 / 7.7 / 6.0 min on a 20-thread
- * laptop, 21.8 min for the gate; on the worker pool CI runs all three in 5.4 min, run 37166135388),
- * and the RV has never been rendered at 320 by anyone (register: "The gates that don't bite").
+ * laptop, 21.8 min for the gate; on the worker pool CI runs all three in 4.9–9.1 min — runs
+ * 38693180201 / 37221659495, the two ends of every green run 2026-10-04 → 10-16), and the RV has
+ * never been rendered at 320 by anyone (register: "The gates that don't bite").
  *
  * Every measurement waits for the FINAL engine tier (gotoSeedFinal), the committed lockup, the real
  * `svg.rv` (never the Suspense placeholder) and a settled layout (settleLayout).

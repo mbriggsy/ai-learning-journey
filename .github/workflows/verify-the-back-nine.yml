@@ -4,10 +4,12 @@ name: Verify The Back Nine
 # ARE the product, so CI runs the FULL gate — eleven scripts across two parallel jobs:
 # `verify` — ACA re-verify, state-tax re-verify, lint (layer boundaries + engine
 # purity), typecheck, doc-stats, tests, build, the initial-JS byte budget, the
-# real-Chromium CSP enforcement walk and the real-Chromium vertical-fit + chart-text
-# gate; `verify-rv-chart-text` — the RecommendationViz chart-text gate on its own
-# serialized solve harness (three arms, each a full-precision solve on the worker
-# pool — the whole step ran 5.4 min on CI at 53f1ae71, run 37166135388).
+# real-Chromium CSP enforcement walk and the real-Chromium vertical-fit + chart-text +
+# phone intake-fold gates (one harness, playwright.fit.config.ts);
+# `verify-rv-chart-text` — the RecommendationViz chart-text gate on its own serialized
+# solve harness (three arms, each a full-precision solve on the worker pool — the
+# whole step ran 5.4 min on CI at 53f1ae71, run 37166135388; 4.9–9.1 min across the
+# green pooled runs 2026-10-04 → 2026-10-16, runs 38693180201 / 37221659495).
 
 on:
   push:
@@ -87,11 +89,14 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium webkit
       - run: pnpm verify:csp
       # The real-browser VERTICAL-FIT gate (council 2026-07-08): the one-frame fit law
-      # (--laptop-fit-height) + the date-route order contract, driven through `pnpm dev` on its own
-      # harness (playwright.fit.config.ts) — the ?seed= routes it measures are DCE'd out of dist/,
-      # so it cannot ride the CSP harness above. Needs no dist; chromium is already installed.
+      # (--laptop-fit-height) + the date-route order contract, plus the chart-text gate (2026-09-05)
+      # and the phone intake-fold gate (2026-09-08), driven through `pnpm dev` on its own harness
+      # (playwright.fit.config.ts) — the ?seed= routes it measures are DCE'd out of dist/, so it
+      # cannot ride the CSP harness above. Needs no dist; chromium is already installed.
       - run: pnpm verify:fit
-      # Surface the HTML report (+ traces) when the CSP e2e fails, so a CI-only failure is debuggable.
+      # Surface the HTML report (+ traces) when verify:csp or verify:fit fails, so a CI-only failure is
+      # debuggable — both harnesses write the default playwright-report/, and a red stops the job, so
+      # the report is the failing gate's.
       - if: failure()
         uses: actions/upload-artifact@v7
         with:
@@ -101,7 +106,8 @@ jobs:
 
   # The RecommendationViz chart-text gate — its OWN job, in parallel with `verify`: the one chart
   # that exists only after a full-precision (16k-path) worker solve, three arms (the whole step ran
-  # 5.4 min on CI with the worker pool, at 53f1ae71, run 37166135388),
+  # 5.4 min on CI with the worker pool, at 53f1ae71, run 37166135388; 4.9–9.1 min across the green
+  # pooled runs 2026-10-04 → 2026-10-16, runs 38693180201 / 37221659495),
   # SERIALIZED (`workers: 1`, playwright.fit-rv.config.ts) so each solve gets the whole runner.
   # Beside verify:fit's date-seed finals it would starve them of cores (the reason it is not in that
   # harness); appended to the job above it would double its wall-clock. Needs no dist/ — it drives

@@ -81,7 +81,7 @@ export function acaAnchor(readout: HealthReadout): HealthReadoutYear | null {
 }
 
 /** The Medicare anchor: the first quotable year where a base Part B bill actually landed. Shared by
- *  the premium card's on-ramp figure AND the step card (its MAGI, headroom and two-of-you fork all
+ *  the premium card's on-ramp figure (or its one figure, when the era IS the anchor) AND the step card (its MAGI, headroom and two-of-you fork all
  *  ride this year — the two-year look-back hazard lands here) — it never moves. */
 export function medicareAnchor(readout: HealthReadout): HealthReadoutYear | null {
   return quotableYears(readout).find((y) => y.medicareBaseP50 > 0) ?? null
@@ -411,12 +411,17 @@ export function composeHealthSheet(
     //  · DEGENERATE (the era IS the anchor — every all-65+ household, every one-person household, and
     //    a pre-65 couple who reach 65 the same calendar year, `healthss`): the one-figure composition,
     //    its extras spoken by the no-era arm's singular carve-out (2026-10-15 — one law for every arm:
-    //    the healthss walk read the bare "~$5,200" as the couple's whole Medicare bill). That is
-    //    the ONLY degenerate case: the council's "equal rounded totals" collapse was a confirmed
+    //    the healthss walk read the bare "~$5,200" as the couple's whole Medicare bill). The era IS
+    //    the anchor is the ONLY degenerate case: the council's "equal rounded totals" collapse was a confirmed
     //    BLOCKER (review 2026-09-13 late) — one enrollee + a look-back surcharge (2,700 + 3,100)
     //    collides at the $100 grain with two at base (5,800), and the collapse then spoke the
     //    ANCHOR's surcharge under the multi-year frame — a surcharge the era years never pay. Two
-    //    frames that share one figure are still two frames; the era arm binds them by frame.
+    //    frames that share one figure are still two frames; the era arm binds them by frame. For two
+    //    or more the card is DATED and "start at" under the both-on-it eyebrow, with his trend clause
+    //    on an unsurcharged first year (2026-10-15/16, b9-toronto3 — the healthss walk's other read:
+    //    the undated frame quoted the era's cheapest year as every year); the 2026-09-13 council's
+    //    "today's slots byte-identical" clause for this arm predates a door-bearing degenerate seed
+    //    and now binds only the one-person form.
     //  · ERA (a later year): the LOUD figure is the era's total; the one-enrollee on-ramp years are
     //    quoted SECOND with their span; the surcharge AND the extras each bound per QUOTED year —
     //    by FRAME, with the figure re-quoted — never one predicate spanning both years;
@@ -427,22 +432,52 @@ export function composeHealthSheet(
     // Part B + Part D IRMAA — so the noun is "Part B premiums and any income surcharge" and the
     // carve-out names the drug and supplement PLANS themselves (what the figure leaves out).
     const era = medicareEraYear(readout, draft.people.length)
+    // The anchor year already pays an income surcharge on the middle path (the one-figure arms' split line).
+    const surcharged = roundDollar(medicare.irmaaSurchargeP50) > 0
+    // His trend clause on the ONE-figure cards (2026-10-16): a lone "start at" read as WHEN, not as a rise.
+    // Never on a surcharged first year — a look-back surcharge can make that year the DEAREST (a big
+    // conversion at 63–64 bills at 65), where "keep rising" would point the wrong way (review wf_0f6a7da2-fb1).
+    const oneFigureTrend: readonly string[] = surcharged ? [] : [copy.irmaaStepTrendNoteOne]
     if (era === medicare) {
-      facts.push({
-        id: 'medicare',
-        eyebrow: copy.healthFactMedicare,
-        figure: slots.healthFigPerYear(nowF),
-        lines: [
-          copy.irmaaStepStory,
-          roundDollar(medicare.irmaaSurchargeP50) > 0
-            ? slots.irmaaStepNowSurcharged(nowF, formatDollar(medicare.irmaaSurchargeP50))
-            : slots.irmaaStepNowBase(nowF),
-          // ONE figure on this card — the singular carve-out, the no-era arm's own law.
-          roundDollar(medicare.medicareExtrasP50) > 0
-            ? slots.irmaaStepExtrasAddOne(formatDollar(medicare.medicareExtrasP50))
-            : copy.irmaaStepExtrasNoneOne,
-        ],
-      })
+      // ONE figure on this card — the singular carve-out, the no-era arm's own law.
+      const extrasLine =
+        roundDollar(medicare.medicareExtrasP50) > 0
+          ? slots.irmaaStepExtrasAddOne(formatDollar(medicare.medicareExtrasP50))
+          : copy.irmaaStepExtrasNoneOne
+      if (draft.people.length >= 2) {
+        // Two or more, all enrolled from the first billed year: the figure is the two-of-you era's FIRST
+        // year, and on an unsurcharged first year the run's real Part B escalator makes that the era's
+        // CHEAPEST (`healthss`: ~$5,200 in 2029 rising to ~$7,700 by 2047, today's dollars — the
+        // register's Tier 0 *The one-figure Medicare card quotes the cheapest Medicare year as every
+        // year…*). So the card speaks the era arm's own ruled frame — dated, "start at" (the 2026-09-13
+        // council's trend carrier) — under the eyebrow that agrees with it, the split on the no-era arm's
+        // single-year lines, and his trend clause (`oneFigureTrend`). The figure itself never moves.
+        facts.push({
+          id: 'medicare',
+          eyebrow: copy.healthFactMedicareBoth,
+          figure: slots.healthFigPerYear(nowF),
+          lines: [
+            copy.irmaaStepStory,
+            slots.irmaaStepEraStart(nowF, medicare.yearsFromNow - 1 - sincePlanBuilt, draft.startCalendarYear + medicare.yearsFromNow - 1),
+            surcharged ? slots.irmaaStepSurchargeOf(nowF, formatDollar(medicare.irmaaSurchargeP50)) : copy.irmaaStepOnRampBase,
+            ...oneFigureTrend,
+            extrasLine,
+          ],
+        })
+      } else {
+        // One person — never minted by the intake (`people: [{}, {}]` at birth), so the pre-build sentence
+        // stands: "while you're both on Medicare" would be false, and dated one-person words were never ruled.
+        facts.push({
+          id: 'medicare',
+          eyebrow: copy.healthFactMedicare,
+          figure: slots.healthFigPerYear(nowF),
+          lines: [
+            copy.irmaaStepStory,
+            surcharged ? slots.irmaaStepNowSurcharged(nowF, formatDollar(medicare.irmaaSurchargeP50)) : slots.irmaaStepNowBase(nowF),
+            extrasLine,
+          ],
+        })
+      }
     } else if (era !== null) {
       const eraF = formatDollar(era.medicareBaseP50 + era.irmaaSurchargeP50)
       const nowSurcharged = roundDollar(medicare.irmaaSurchargeP50) > 0
@@ -507,9 +542,8 @@ export function composeHealthSheet(
         lines: [
           copy.irmaaStepStory,
           slots.irmaaStepOnRampOpen(nowF),
-          roundDollar(medicare.irmaaSurchargeP50) > 0
-            ? slots.irmaaStepSurchargeOf(nowF, formatDollar(medicare.irmaaSurchargeP50))
-            : copy.irmaaStepOnRampBase,
+          surcharged ? slots.irmaaStepSurchargeOf(nowF, formatDollar(medicare.irmaaSurchargeP50)) : copy.irmaaStepOnRampBase,
+          ...oneFigureTrend,
           // ONE figure on this card — the singular carve-out (review 2026-09-13 late).
           roundDollar(medicare.medicareExtrasP50) > 0
             ? slots.irmaaStepExtrasAddOne(formatDollar(medicare.medicareExtrasP50))

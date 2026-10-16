@@ -1049,7 +1049,9 @@ export const copy = {
   // surcharge"; the surcharge is the COMBINED Part B + Part D IRMAA, so "Part B premiums" alone would
   // mis-scope a surcharged path — the review's 2026-09-13 negative). The fold (extras into the hero)
   // was declined: on both seeds the extras are the door-6 placeholder the sheet calls "not an actual
-  // bill". "Part B" is glossed ONCE, in `irmaaStepStory`, which every arm renders first.
+  // bill". "Part B" is glossed ONCE, in `irmaaStepStory`, which every arm renders first. Since 2026-10-15
+  // (b9-toronto3) its only consumer is the ONE-PERSON one-figure card, whose line 2 still says "premiums"
+  // (`irmaaStepNowBase`) — a household the intake never mints; every two-or-more card wears a per-arm frame.
   healthFactMedicare: 'Part B premiums and any surcharge',
   // The era-loud card's per-arm eyebrows (council wf_9921d7e3-55b, 2026-09-13 late, 8/10 — "frame the
   // hero"): the eyebrow is BOTH the visible caption above the aria-hidden figure AND the fact's
@@ -1057,7 +1059,8 @@ export const copy = {
   // figure in both channels at zero added height. The ERA arm's figure prices the years BOTH are
   // enrolled; the NO-ERA arm's prices the years ONE is. The frame word must AGREE with the sentences
   // beneath ("while … both on it" / "while only one of you is") — never a third frame. The degenerate
-  // arm (`retired`) keeps `healthFactMedicare` byte-identical.
+  // arm wears `healthFactMedicareBoth` too for two or more (2026-10-15, b9-toronto3 — its sentence now
+  // says "while you're both on Medicare"); only the one-person form keeps `healthFactMedicare`.
   healthFactMedicareBoth: 'Part B premiums and any surcharge while you’re both on it',
   healthFactMedicareOne: 'Part B premiums and any surcharge while only one of you is on it',
   healthFactStep: 'The next premium step',
@@ -1104,9 +1107,21 @@ export const copy = {
    *  "even in today’s dollars … keep rising" = faster than prices in plain words, no "each year" (the deflated V.E2
    *  path is flat 2026→2027), "likely" the catalog hedge ("expected" is not one). */
   irmaaStepEraTrendNote: 'Even in today’s dollars, each person’s Part B premium is likely to keep rising, so the later years when you’re both on Medicare cost more per person than the earlier years when only one of you is.',
+  /** The ONE-figure cards' trend clause (Briggsy 2026-10-16, b9-toronto3 — "I like the reco wording", then
+   *  "yep that was it" once told the drug and supplement plans sit IN ADDITION to the figure): the FIRST clause of
+   *  his 2026-09-24 basis clause above, verbatim (a test pins the prefix). A one-figure card's "start at" read as
+   *  WHEN, not as a rise (the 2026-10-16 Caddie walk: three of four refuters SURVIVED it) and its dated year
+   *  invited a check against that year's own-dollar bill (~$5,724 in 2029 for `healthss` against ~$5,200) — this
+   *  clause names the basis AND the direction. It renders on the degenerate arm (two or more) and the no-era arm,
+   *  after the base-rate line, and NEVER on a surcharged first year: a look-back surcharge can make that year the
+   *  dearest, where "keep rising" would point the wrong way (review wf_0f6a7da2-fb1). No figure, no percentage, no
+   *  arrow (the basis clause's own negatives); the second clause stays the PAIR's — it is false on one figure. */
+  irmaaStepTrendNoteOne: 'Even in today’s dollars, each person’s Part B premium is likely to keep rising.',
   irmaaStepBothBase:
     'Both figures are the base rate — on the middle-of-the-road path, no income surcharge would apply in either year.',
-  /** The no-era arm's on-ramp figure is the base rate. */
+  /** A ONE-figure card's figure is the base rate — the no-era arm's on-ramp figure, and since 2026-10-15
+   *  (b9-toronto3) the degenerate arm's dated first-year figure for two or more. No frame words, so it is
+   *  true under either. */
   irmaaStepOnRampBase:
     'That would be the base rate, with no income surcharge on the middle-of-the-road path.',
   /** The no-era arm: the plan never reaches a quotable year with everyone enrolled ON THE MIDDLE
@@ -2818,7 +2833,8 @@ export const slots = {
   /** What Medicare costs BEFORE any next step — the anchor the step line is measured from
    *  (cold-read 2026-07-03: "What are they before the next step?"). The wire's base/surcharge
    *  split (council Q3) earns its render seat here. Base arm: the middle path pays no
-   *  surcharge at the anchor. */
+   *  surcharge at the anchor. Since 2026-10-15 (b9-toronto3) the ONE-PERSON degenerate card only —
+   *  undated, it quotes the era's cheapest year as every year, so two or more speak `irmaaStepEraStart`. */
   irmaaStepNowBase: (totalFormatted: string): string =>
     `In your plan’s Medicare years, premiums could run about ~$${totalFormatted} a year for your household — the base rate, with no income surcharge on the middle-of-the-road path.`,
   /** The surcharged arm — the middle-of-the-road path already sits above at least one line. */
@@ -2840,9 +2856,13 @@ export const slots = {
   //     (`irmaaStepExtrasAdd*`) and bound PER QUOTED YEAR like the surcharge — six seats held the
   //     register's negative: extras are provenance-mixed (entered / affirmed-zero / a typical
   //     placeholder "not an actual bill"), so folding them into a modelled headline is a new
-  //     calm-but-wrong. An all-65+ household (the era IS the anchor) keeps `irmaaStepNowBase` /
-  //     `irmaaStepNowSurcharged` byte-identical. "Start at" carries the sourced real trend: the era
-  //     year is the era's CHEAPEST. ---
+  //     calm-but-wrong. An all-65+ household (the era IS the anchor) kept `irmaaStepNowBase` /
+  //     `irmaaStepNowSurcharged` byte-identical — until 2026-10-15 (b9-toronto3): that arm's one figure
+  //     is the era's first year too, so it now speaks `irmaaStepEraStart` for two or more (the register's
+  //     Tier 0 *The one-figure Medicare card quotes the cheapest Medicare year as every year…*); the two
+  //     "now" slots serve only the one-person form. "Start at" carries the sourced real trend: the era
+  //     year is the era's CHEAPEST — on an unsurcharged era year; a look-back surcharge (a big conversion
+  //     two years before) can make it the DEAREST, where "start at" overstates (review wf_0f6a7da2-fb1). ---
   //     DATED (the Caddie read of both cards, 2026-09-14 — five seats across both panels on the
   //     wide-gap seed, one at BLOCKER, every refuter survived it): neither era named WHEN it starts,
   //     so "the first 21 years" read from TODAY put the ~$2,700 on-ramp figure over the household's
@@ -2891,7 +2911,8 @@ export const slots = {
     `While you’re both on Medicare, about ~$${eraSurcharge} of the ~$${eraTotal} is already income surcharge on the middle-of-the-road path; while only one of you is on it, the ~$${onRampTotal} is the base rate.`,
   irmaaStepSurchargeBoth: (onRampTotal: string, onRampSurcharge: string, eraTotal: string, eraSurcharge: string): string =>
     `Income surcharge is already in both on the middle-of-the-road path — about ~$${onRampSurcharge} of the ~$${onRampTotal} while only one of you is on Medicare, and about ~$${eraSurcharge} of the ~$${eraTotal} while you’re both on it.`,
-  /** The single-year surcharge line (the no-era arm's on-ramp figure). */
+  /** The single-year surcharge line (the no-era arm's on-ramp figure; the degenerate arm's dated
+   *  first-year figure for two or more, since 2026-10-15). */
   irmaaStepSurchargeOf: (totalFormatted: string, surchargeFormatted: string): string =>
     `Of the ~$${totalFormatted}, about ~$${surchargeFormatted} is already income surcharge on the middle-of-the-road path.`,
   /** The extras carve-out, SPOKEN not folded and bound PER QUOTED YEAR (the engine charges extras

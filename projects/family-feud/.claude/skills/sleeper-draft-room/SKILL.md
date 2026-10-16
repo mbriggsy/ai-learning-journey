@@ -121,6 +121,10 @@ CLAUDE.md). If the team ever gets renamed, re-read it from `/rosters` + `/users`
 - A full-viewport `.alert-modal` (`Cancel` / `Ok`) sits in the DOM at **opacity 0** at all times.
   It is not a live dialog. Don't click it and don't wait on it.
 - Modal and row text carry newlines. Normalise `\s+` before any regex.
+- 🚨 **A team DEF on BYE this week is absent from the Players search.** Measured 2026-10-16 (Week 6):
+  `Minnesota`, `Detroit`, `Miami` and `Cincinnati` returned **0 DEF rows**. Houston, Patriots and Seattle
+  returned theirs, and DEF rows read `Houston. Texans`. A bye-week player (D. Meyers, CIN) still lists.
+  So "no row" for a DEF means check his bye, not "he's taken". `/rosters` is the ownership oracle.
 
 ### Move to IR / drop-only — `/team` (measured 2026-10-13)
 

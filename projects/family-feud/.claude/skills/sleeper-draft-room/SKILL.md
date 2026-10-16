@@ -121,6 +121,13 @@ CLAUDE.md). If the team ever gets renamed, re-read it from `/rosters` + `/users`
 - A full-viewport `.alert-modal` (`Cancel` / `Ok`) sits in the DOM at **opacity 0** at all times.
   It is not a live dialog. Don't click it and don't wait on it.
 - Modal and row text carry newlines. Normalise `\s+` before any regex.
+- 🚨 **`/team` keeps showing a player you dropped after his game, until the week rolls over.** The page
+  renders the week's **frozen scoring record** (`/matchups/<week>`), not the roster. Measured 2026-10-16:
+  E. Wilson was dropped Thu 20:23 in-game. On Friday a fresh `/team` load still listed `BN | E Wilson`.
+  `/matchups/6` held 17 players including 11435, while `/rosters` held 16 without him. His Players-tab
+  row read `W Wed`, and the Add modal said "You have 1 empty slot". So, two oracles for "is there room?":
+  `/rosters` and the Add modal's wording. **Never** count `/team` rows. This confused Briggsy, and
+  reasonably so: the page shows a full bench.
 - 🚨 **A team DEF on BYE this week is absent from the Players search.** Measured 2026-10-16 (Week 6):
   `Minnesota`, `Detroit`, `Miami` and `Cincinnati` returned **0 DEF rows**. Houston, Patriots and Seattle
   returned theirs, and DEF rows read `Houston. Texans`. A bye-week player (D. Meyers, CIN) still lists.

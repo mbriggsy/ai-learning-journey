@@ -81,7 +81,11 @@ CLAUDE.md). If the team ever gets renamed, re-read it from `/rosters` + `/users`
 - Never walk up a fixed number of levels from a leaf. Four levels up is the whole list
   (measured 09-25).
 - A player whose game has started shows `disabled` on his position square (`rb disabled`).
-  He's locked. Leave him alone.
+  He's locked. Leave him alone. 🚨 The class sits on the **inner** `div` (`.league-slot-position-square >
+  div.bn.disabled` / `div.def.disabled`), **not** on `a.cell-position`. That link's className stays
+  `link-button cell-position`, so testing the link reads "unlocked" on a live game. The row also gains
+  `playing` (and `in-game` once he has a stat line). Measured 2026-10-15 on SEA @ DEN, in the 1st quarter.
+  Locked means no lineup move. A **drop** still works (Block C dropped E. Wilson in-game).
 - FLEX shows as `WRT`. An empty slot or IR row reads `Empty`.
 
 ### Add / drop a FREE AGENT — `/players`

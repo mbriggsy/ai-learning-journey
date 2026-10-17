@@ -400,6 +400,32 @@ describe('HealthcareSheet — the Medicare-extras door home (F5)', () => {
     expect(copy.controlHealthOmissionsNoteStatePriced).not.toContain('held flat')
   })
 
+  it('the $0 Medicare card speaks THROUGH the sheet above the per-person lines it points at: both answered none ⇒ his none form; one none beside a priced spouse ⇒ the pointer (Briggsy, 2026-10-16)', () => {
+    const zeroRow = (over: Partial<HealthReadoutYear>): HealthReadoutYear => ({
+      yearsFromNow: 5, acaNetPremiumP50: 0, medicareBaseP50: 2_703, irmaaSurchargeP50: 0, medicareExtrasP50: 0,
+      medicareEnrolledP50: 1, acaMagiP50: 46_020, irmaaMagiP50: 46_020, ssBenefitP50: 0, overCliffFraction: 0,
+      acaPricedFraction: 0, cohortFraction: 1, ...over,
+    })
+    // The no-era card: the anchor year bills only the first enrollee, so the extras median is $0.
+    const noEra: HealthReadout = { byYear: [zeroRow({}), zeroRow({ yearsFromNow: 6 })] }
+    const cases: ReadonlyArray<readonly [string, ScenarioDraft, string, string]> = [
+      ['both none', doorDraft((d) => ({ ...d, medicareExtrasByPerson: [{ kind: 'none' }, { kind: 'none' }] })), copy.irmaaStepExtrasNoneOne, slots.medicareExtrasFactNone('B')],
+      ['none + typical', doorDraft((d) => ({ ...d, medicareExtrasByPerson: [{ kind: 'none' }, { kind: 'unanswered' }] })), copy.medicareExtrasPointerOne, slots.medicareExtrasFactTypical('B', Math.round(medicareExtrasTypicalMonthly()).toLocaleString('en-US'))],
+    ]
+    for (const [label, draft, extrasLine, spouseLine] of cases) {
+      const { unmount } = render(
+        <HealthcareSheet open draft={draft} readout={noEra} preview={deferredPreview().fn} onApply={vi.fn()} onClose={vi.fn()} todayEpochDay={FRESH_CLOCK} statePricedNote={undefined} />,
+      )
+      const text = document.body.textContent ?? '' // the sheet portals to the body
+      expect(text, `${label}: the card's extras line`).toContain(extrasLine)
+      expect(text, `${label}: the spouse's own line`).toContain(spouseLine)
+      // "the lines below": the card's sentence sits ABOVE the block's lead and its per-person lines.
+      expect(text.indexOf(extrasLine), `${label}: above the extras block`).toBeLessThan(text.indexOf(copy.medicareExtrasSheetLead))
+      expect(text.indexOf(copy.medicareExtrasSheetLead), `${label}: the lead above the lines`).toBeLessThan(text.indexOf(spouseLine))
+      unmount()
+    }
+  })
+
   it('an unpriced draft (no Medicare-bearing overlay) reads NO held-flat line — the block and the line are absent together', () => {
     renderSheet() // the incomplete fresh-model draft — no priced run, no extras block, no line
     expect(screen.queryByText(copy.medicareExtrasSheetLead)).toBeNull()

@@ -163,7 +163,7 @@ describe('dev seeds reach a worded (engine-accepted) answer', () => {
     expect(wire.headline.outcomeState, 'the full track: scared-but-honest').toBe('borderline')
     expect(wire.floorReading!.outcomeState, 'the essentials floor: the relief').toBe('over-funded')
     expect(
-      floorRelief(wire.headline, wire.floorReading),
+      floorRelief(wire.headline, wire.floorReading, 0),
       'the relief gate must EARN the subordinate line (no degenerate collapse)',
     ).not.toBeNull()
   })

@@ -27,30 +27,32 @@ export interface FloorReliefView {
   /** The engine's floor reading, passed through VERBATIM (never re-derived — the U7/D2
    *  honesty contract). */
   readonly reading: Headline
-  /** The Kitces action-first trim note ("trimming would start with the extras, not the
-   *  basics") is itself a CLAIM — it is only true when the floor actually holds. Gated on
-   *  the floor's own state being on-track-or-better; a floor that is itself borderline or
-   *  worse renders the honest word + count with NO reassuring rider. */
+  /** The trim note ("That’s if you live on just the essentials starting now, not once money
+   *  runs short.", Briggsy 2026-10-16) names the COUNT's own assumption: `FloorTrack` spends only
+   *  the essentials from the run's year 0, never from a shortfall. That is true of every earned
+   *  relief line, so the floor's state does not gate it (his 2026-10-16 ruling — the old rider
+   *  claimed trimming would suffice, which only held on a floor that holds). The PLAN CLOCK does:
+   *  on an aged plan year 0 is the BUILD year (`bandAnnotations.ts`'s wall-time anchor), so
+   *  "starting now" would be false by the years since — withheld, never reworded here. */
   readonly showTrimNote: boolean
 }
 
 /**
  * The floor-relief gate: the subordinate relief line's view, or `null` when no line is
  * earned (absent floor — no budget rode — or a value-equal degenerate, where the hero
- * already IS the floor statement).
+ * already IS the floor statement). `planClockYears` is the plan clock
+ * (`yearsSincePlanBuilt`, 0 on every fresh plan) — it gates only the trim note, and an UNKNOWN
+ * clock (`undefined` — a mount that threaded no anchor) withholds it: fail closed, never "now".
  */
 export function floorRelief(
   headline: Headline,
   floorReading: Headline | undefined,
+  planClockYears: number | undefined,
 ): FloorReliefView | null {
   if (floorReading === undefined) return null
   const equal =
     floorReading.outcomeState === headline.outcomeState &&
     floorReading.xOfTen.value === headline.xOfTen.value
   if (equal) return null
-  return {
-    reading: floorReading,
-    showTrimNote:
-      floorReading.outcomeState === 'on-track' || floorReading.outcomeState === 'over-funded',
-  }
+  return { reading: floorReading, showTrimNote: planClockYears === 0 }
 }

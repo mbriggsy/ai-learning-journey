@@ -1204,7 +1204,7 @@ test.describe(`?seed=nc — the NC state clause on the priced residual (${REAL.w
     await assertMedicareNote(page, true)
     const residual = page.locator('.cs-medicare-residual')
     await expect(residual, 'the NC affirmation must swap into the residual').toContainText(
-      'Your North Carolina state income tax is reflected in these numbers',
+      'Your North Carolina state income tax is already counted in this answer, on top of your spending',
     )
     // The unpriced monolith's distinctive aside DIES for a priced household (the swap, not an append).
     await expect(residual, 'the unpriced clause must not survive on a priced household').not.toContainText(
@@ -1294,7 +1294,7 @@ test.describe(`?seed=healthnc — the priced pre-65 household's standalone state
     // Exactly ONE state clause on the whole rendered verdict (the matrix law, in the real DOM).
     const clauses = await page
       .locator('main.result')
-      .evaluate((el) => (el.textContent ?? '').match(/isn’t priced yet|is reflected in these numbers|no state income tax/g)?.length ?? 0)
+      .evaluate((el) => (el.textContent ?? '').match(/isn’t priced yet|is already counted in this answer|no state income tax/g)?.length ?? 0)
     expect(clauses, 'one state clause on the verdict — never zero, never two').toBe(1)
     await assertOneVisibleDisclaimer(page, 'laptop')
     await assertFrameFits(page, true)
@@ -1376,7 +1376,7 @@ test.describe(`?seed=date65 — priced Medicare on the date route, no false "unp
     // Medicare is named PRICED, never falsely "unpriced" — the affirmation and the narrowed residual
     // both render on the date surface (distinctive substrings of verdictMedicarePriced / Residual).
     await expect(
-      page.getByText('are already in these numbers'),
+      page.getByText('are already counted in this answer, on top of your spending'),
       'the priced-Medicare affirmation must render on the date route',
     ).toBeVisible()
     await expect(
@@ -1423,7 +1423,7 @@ test.describe(`?seed=datenc — the NC clause on the date residual + the order c
     // The NC affirmation rides the date residual (the .fod-note render block; the second producer's
     // live witness — a date-route roster regression would drop or mis-name this clause).
     await expect(
-      page.getByText('Your North Carolina state income tax is reflected in these numbers'),
+      page.getByText('Your North Carolina state income tax is already counted in this answer, on top of your spending'),
       'the NC state clause must render on the date residual',
     ).toBeVisible()
     // Card 4: the residual carries the clause on this all-65+ household — no standalone note (never twice).
@@ -2006,7 +2006,7 @@ test.describe(`the state-tax staleness return (?vault=statestale) — the isolat
     await expect(
       page.locator('.cs-medicare-residual'),
       'the NC state clause must ride the echoed hero',
-    ).toContainText('Your North Carolina state income tax is reflected in these numbers')
+    ).toContainText('Your North Carolina state income tax is already counted in this answer, on top of your spending')
 
     // THE ECHO WHITESPACE BUDGET (insight 075) — pinned by COMPUTED style so a deleted
     // `:has(.cs-staleness-note)` rule goes red on EVERY platform, never only under CI's taller
@@ -2526,7 +2526,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
       //
       // The bound is TIGHT BY CONSTRUCTION (~10px at 1536×791), so this is a live constraint on the
-      // copy rather than a formality: it is what makes the length note in copy.ts:1717-1721 enforceable
+      // copy rather than a formality: it is what makes the length note in copy.ts:1725-1729 enforceable
       // instead of advisory. Text is captured so a red names the sentence that outgrew the slack.
       expect(
         geometry.standingBottom,

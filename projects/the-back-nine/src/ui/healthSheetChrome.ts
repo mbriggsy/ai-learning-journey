@@ -49,6 +49,7 @@ import { COHORT_FADE } from '@viz/bandGeometry'
 import { copy, slots } from './copy'
 import { composeTwoFutures, type TwoFuturesView } from './twoFuturesChrome'
 import type { BandPlanClockAnchor } from './bandAnnotations'
+import { resolveMedicareExtrasMonthly } from '@intake/intakeMap'
 
 /** Humane rounding for a readout dollar (the `~$X` grammar owns the imprecision). */
 const roundDollar = (v: number): number => Math.round(v / 100) * 100
@@ -265,6 +266,8 @@ export function composeHealthSheet(
      *  (council 2026-09-13); the era year needs only the household's COUNT. */
     readonly people: ReadonlyArray<{ readonly currentAge?: number }>
     readonly health: { readonly slcspMonthlyToday?: number }
+    /** The extras answers — the none form's gate reads the run's own vector off them (the extras block). */
+    readonly medicareExtrasByPerson?: ScenarioV3['medicareExtrasByPerson']
   },
   todayEpochDay: number,
   /** The RUN's priced state (`pricedStateForRun`, threaded from the sheet's `statePricedNote`) — the
@@ -438,12 +441,21 @@ export function composeHealthSheet(
     // Never on a surcharged first year — a look-back surcharge can make that year the DEAREST (a big
     // conversion at 63–64 bills at 65), where "keep rising" would point the wrong way (review wf_0f6a7da2-fb1).
     const oneFigureTrend: readonly string[] = surcharged ? [] : [copy.irmaaStepTrendNoteOne]
+    // "You answered about nothing … the lines below add none" (Briggsy, 2026-10-16) holds only when EVERY person's
+    // priced extras are $0 — read off the producer itself (`resolveMedicareExtrasMonthly`, the vector `buildParams`
+    // prices and the per-person lines below print). A $0 median beside anyone priced above $0 (the later enrollee on
+    // a wide-gap no-era card, a tiny entry) takes the pointer twin, which claims no amount — never "add none".
+    const extrasMonthly = resolveMedicareExtrasMonthly(draft)
+    const extrasAllNone = extrasMonthly.every((m) => m === 0)
+    // An entry under the $100 grain (below ~$4 a month): a year that rounds to $0 beside it is not "nothing".
+    const extrasTinyEntry = extrasMonthly.some((m) => m > 0 && roundDollar(m * 12) === 0)
+    const extrasNoneOne = extrasAllNone ? copy.irmaaStepExtrasNoneOne : copy.medicareExtrasPointerOne
     if (era === medicare) {
       // ONE figure on this card — the singular carve-out, the no-era arm's own law.
       const extrasLine =
         roundDollar(medicare.medicareExtrasP50) > 0
           ? slots.irmaaStepExtrasAddOne(formatDollar(medicare.medicareExtrasP50))
-          : copy.irmaaStepExtrasNoneOne
+          : extrasNoneOne
       if (draft.people.length >= 2) {
         // Two or more, all enrolled from the first billed year: the figure is the two-of-you era's FIRST
         // year, and on an unsurcharged first year the run's real Part B escalator makes that the era's
@@ -497,11 +509,15 @@ export function composeHealthSheet(
       const nowExtras = roundDollar(medicare.medicareExtrasP50)
       const extrasLine =
         eraExtras === 0 && nowExtras === 0
-          ? copy.irmaaStepExtrasNone
+          ? extrasAllNone
+            ? copy.irmaaStepExtrasNone
+            : copy.medicareExtrasPointer
           : eraExtras === nowExtras
             ? slots.irmaaStepExtrasAdd(formatDollar(era.medicareExtrasP50))
             : nowExtras === 0
-              ? slots.irmaaStepExtrasAddEraOnly(formatDollar(era.medicareExtrasP50))
+              ? extrasTinyEntry
+                ? copy.medicareExtrasPointer
+                : slots.irmaaStepExtrasAddEraOnly(formatDollar(era.medicareExtrasP50))
               : slots.irmaaStepExtrasAddBoth(formatDollar(era.medicareExtrasP50), formatDollar(medicare.medicareExtrasP50))
       facts.push({
         id: 'medicare',
@@ -547,7 +563,7 @@ export function composeHealthSheet(
           // ONE figure on this card — the singular carve-out (review 2026-09-13 late).
           roundDollar(medicare.medicareExtrasP50) > 0
             ? slots.irmaaStepExtrasAddOne(formatDollar(medicare.medicareExtrasP50))
-            : copy.irmaaStepExtrasNoneOne,
+            : extrasNoneOne,
           copy.irmaaStepNoEraYear,
         ],
       })
@@ -637,7 +653,7 @@ export function composeRegimeFutures(
 
 /**
  * Should the verdict surfaces wear the priced-Medicare disclosure — the AFFIRMATION that base Part
- * B + the income surcharge ARE in these numbers, TOGETHER with the narrowed residual of what still
+ * B + the income surcharge are COUNTED in the answer, on top of the spending, TOGETHER with the narrowed residual of what still
  * isn't (copy `verdictMedicarePriced` + `verdictMedicareResidual`; the Roth lever's own
  * `rothMedicareResidualNote`)? True exactly when the run PRICED Medicare and the household reaches
  * no Healthcare door.

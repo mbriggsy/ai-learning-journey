@@ -31,10 +31,10 @@ describe('S5 — composeVerdictMedicareResidual (the verdict home, clause swaps 
     expect(copy.verdictMedicareResidual.endsWith(copy.verdictResidualTail)).toBe(true)
   })
 
-  it('each PRICED state NAMES the state, affirms it is REFLECTED, and drops the unpriced "isn’t priced yet" clause', () => {
+  it('each PRICED state NAMES the state, affirms it is COUNTED on top of the spending, and drops the unpriced "isn’t priced yet" clause', () => {
     const nc = composeVerdictMedicareResidual('NC')
     expect(nc).toContain('North Carolina')
-    expect(nc).toContain('reflected in these numbers')
+    expect(nc).toContain('is already counted in this answer, on top of your spending')
     expect(nc, 'the unpriced "isn’t priced yet" clause dies for a priced household').not.toContain('isn’t priced yet')
 
     const pa = composeVerdictMedicareResidual('PA')
@@ -45,6 +45,18 @@ describe('S5 — composeVerdictMedicareResidual (the verdict home, clause swaps 
     const fl = composeVerdictMedicareResidual('FL')
     expect(fl, 'FL names the genuinely-zero fact').toContain('Florida has no state income tax')
     expect(fl).not.toContain('isn’t priced yet')
+  })
+
+  it('his 2026-10-16 words, pinned LITERALLY: the answer carries Medicare and the state tax ON TOP of the spending (a paraphrase must red here)', () => {
+    expect(copy.verdictMedicarePriced).toBe(
+      'Medicare’s costs for the two of you are already counted in this answer, on top of your spending — the Part B premium, its income surcharge, and extra coverage: a drug plan, a supplement plan, or a Medicare Advantage premium.',
+    )
+    expect(copy.verdictResidualStateNC).toBe('Your North Carolina state income tax is already counted in this answer, on top of your spending')
+    expect(copy.verdictResidualStatePA).toBe(
+      'Your Pennsylvania state income tax — usually a small piece, since Pennsylvania leaves most retirement income untaxed — is already counted in this answer, on top of your spending',
+    )
+    // The composed residual reads one sentence per fact: the clause, then the Tail’s period graft.
+    expect(composeVerdictMedicareResidual('PA')).toContain('on top of your spending. The extra-coverage premiums are held flat')
   })
 
   it('the affirmation NEVER renders alone — every priced variant ships WITH the narrowed residual (the still-flat clause)', () => {
@@ -192,7 +204,7 @@ describe('Card 4 — composeVerdictStateNote (the standalone state clause for th
   })
 
   it('every composition is a SINGLE state clause (the matrix law: one, never zero, never two), holds the verdict voice, and quotes no rate', () => {
-    const STATE_CLAUSE = /isn’t priced yet|is reflected in these numbers|no state income tax/g
+    const STATE_CLAUSE = /isn’t priced yet|is already counted in this answer|no state income tax/g
     for (const pricedState of [undefined, 'NC', 'PA', 'FL'] as const) {
       const note = composeVerdictStateNote(pricedState, false)!
       expect(note.match(STATE_CLAUSE)?.length, `${String(pricedState)}: one clause`).toBe(1)

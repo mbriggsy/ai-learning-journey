@@ -29,7 +29,7 @@ import {
 } from '@engine/validation/oracleToken'
 import { acaEnhancedSubsidyStatus } from '@engine/constants/health'
 import { solverAcaFreshnessWindowDays } from '@engine/constants/solver'
-import type { HealthReadout, HealthReadoutYear, TwoArmOutcome } from '@shared/model'
+import type { HealthReadout, HealthReadoutYear, MedicareExtrasEntryV3, TwoArmOutcome } from '@shared/model'
 
 /** The injected clock, expressed RELATIVE to the live record rather than as a literal date —
  *  a re-verify moves `verifiedOn` roughly monthly and must never churn this file (nor tempt
@@ -85,7 +85,9 @@ const year = (over: Partial<HealthReadoutYear>): HealthReadoutYear => ({
   ...over,
 })
 
-const draft = (over: { enhanced?: true; ages?: readonly number[]; slcsp?: number; startYear?: number } = {}) => ({
+const draft = (
+  over: { enhanced?: true; ages?: readonly number[]; slcsp?: number; startYear?: number; extras?: readonly MedicareExtrasEntryV3[] } = {},
+) => ({
   filing: 'mfj' as const,
   // The sunset unit (C4): the anchor's calendar year = startCalendarYear + yearsIn windows
   // the senior bonus out of the shadow-rate stack past 2028. 2026 = the in-window anchor
@@ -94,7 +96,17 @@ const draft = (over: { enhanced?: true; ages?: readonly number[]; slcsp?: number
   ...(over.enhanced ? { enhancedSubsidies: true as const } : {}),
   people: (over.ages ?? [60, 60]).map((a) => ({ currentAge: a })),
   health: { slcspMonthlyToday: over.slcsp ?? 1_000 },
+  ...(over.extras ? { medicareExtrasByPerson: over.extras } : {}),
 })
+
+/** Both answered "about nothing beyond Part B" — the one answer under which the ruled none form is TRUE
+ *  (Briggsy 2026-10-16: "you answered about nothing for them, so the lines below add none"). A draft with
+ *  no answers funds the TYPICAL for each person (`resolveMedicareExtrasMonthly`), so a $0 readout beside it
+ *  is the pointer face, never the none face. */
+const NONE_BOTH: readonly MedicareExtrasEntryV3[] = [{ kind: 'none' }, { kind: 'none' }]
+/** A tiny entry beside an "about nothing": the median rounds to $0 at the $100 grain, yet a line below
+ *  prints a dollar — "add none" would be false there. */
+const TINY: readonly MedicareExtrasEntryV3[] = [{ kind: 'entered', monthly: 2 }, { kind: 'none' }]
 
 describe('the anchors + the thin-cohort withdrawal', () => {
   it('quotableYears drops thin-cohort years (the band’s own COHORT_FADE.full discipline)', () => {
@@ -317,7 +329,7 @@ describe('composeHealthSheet', () => {
     const readout: HealthReadout = {
       byYear: [year({ yearsFromNow: 1, medicareBaseP50: 4_870, medicareEnrolledP50: 2, irmaaMagiP50: 150_000 })],
     }
-    const view = composeHealthSheet(readout, draft({ ages: [66, 66] }), FRESH, undefined)
+    const view = composeHealthSheet(readout, draft({ ages: [66, 66], extras: NONE_BOTH }), FRESH, undefined)
     // The Medicare fact: story + the anchor (base 4,870 + surcharge 0 → '4,900') as the two-of-you era's
     // FIRST year (row 1 = calendar 2026, distance 0 → "Around 2026") + the base-rate line + his trend clause
     // (an unsurcharged first year) + the singular extras carve-out (this fixture prices none → "about nothing").
@@ -365,7 +377,7 @@ describe('composeHealthSheet', () => {
         year({ yearsFromNow: 1, medicareBaseP50: 4_870, irmaaSurchargeP50: 2_400, medicareEnrolledP50: 2, irmaaMagiP50: 230_000 }),
       ],
     }
-    const view = composeHealthSheet(readout, draft({ ages: [66, 66] }), FRESH, undefined)
+    const view = composeHealthSheet(readout, draft({ ages: [66, 66], extras: NONE_BOTH }), FRESH, undefined)
     // 4,870 + 2,400 = 7,270 → '7,300' starts the era; the surcharge itself quoted at '2,400' on the
     // single-year surcharge line (the no-era arm's own form — one figure, so "Of the ~$X"). The WHOLE fact,
     // not only its lines (review wf_0f6a7da2-fb1: a base-only hero ~$4,900 over "start at about ~$7,300",
@@ -517,8 +529,11 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
     const f = medicareFact(twoFigure({ irmaaSurchargeP50: 800 }, { irmaaSurchargeP50: 1_600 }))
     expect(f.lines[4]).toBe(slots.irmaaStepSurchargeBoth('3,500', '800', '7,400', '1,600'))
   })
-  it('… neither (the one-line form); and the extras carve-out reads "about nothing" when the plan prices none in EITHER quoted year — five lines, never a sixth', () => {
-    const f = medicareFact(twoFigure({ medicareExtrasP50: 0 }, { medicareExtrasP50: 0 }))
+  it('… neither (the one-line form); and the extras carve-out credits the couple’s own answer when both of you answered about nothing — ONE extras line, never a second', () => {
+    const f = factOf(
+      composeHealthSheet(twoFigure({ medicareExtrasP50: 0 }, { medicareExtrasP50: 0 }), draft({ ages: [64, 62], extras: NONE_BOTH }), FRESH, undefined),
+      'medicare',
+    )!
     expect(f.lines[4]).toBe(copy.irmaaStepBothBase)
     expect(f.lines[5]).toBe(copy.irmaaStepExtrasNone)
     // Six since 2026-09-24 (the ONE basis clause after the on-ramp line); the LAW this pins is the extras
@@ -560,12 +575,47 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
     const readout: HealthReadout = {
       byYear: [year({ yearsFromNow: 5, medicareBaseP50: 2_703, irmaaSurchargeP50: 800, medicareEnrolledP50: 1, irmaaMagiP50: 230_000 })],
     }
-    const f = factOf(composeHealthSheet(readout, draft({ ages: [61, 59] }), FRESH, undefined), 'medicare')!
+    const f = factOf(composeHealthSheet(readout, draft({ ages: [61, 59], extras: NONE_BOTH }), FRESH, undefined), 'medicare')!
     expect(f.lines[1]).toBe(slots.irmaaStepOnRampOpen('3,500'))
     expect(f.lines[2]).toBe(slots.irmaaStepSurchargeOf('3,500', '800'))
     expect(f.lines[3]).toBe(copy.irmaaStepExtrasNoneOne) // ONE figure on this card — the singular none form
     expect(f.lines[4]).toBe(copy.irmaaStepNoEraYear)
     expect(f.lines).not.toContain(copy.irmaaStepTrendNoteOne)
+  })
+
+  it('planted-fail: the none form credits the couple’s answer ONLY when every person priced $0 (Briggsy, 2026-10-16) — a $0 median beside anyone priced above $0 (the later-enrolling spouse on a wide-gap no-era card, a tiny entry) points at the lines instead', () => {
+    // The no-era anchor year bills ONLY the first enrollee: their "about nothing" zeroes the median while the
+    // other spouse's line below prints a real figure — "the lines below add none" would be contradicted there.
+    const noEra: HealthReadout = {
+      byYear: [year({ yearsFromNow: 5, medicareBaseP50: 2_703, medicareEnrolledP50: 1, medicareExtrasP50: 0, irmaaMagiP50: 46_020 })],
+    }
+    const extrasLine = (extras?: readonly MedicareExtrasEntryV3[]) =>
+      factOf(composeHealthSheet(noEra, draft({ ages: [61, 38], ...(extras ? { extras } : {}) }), FRESH, undefined), 'medicare')!.lines[4]
+    const others: readonly MedicareExtrasEntryV3[] = [
+      { kind: 'typical', adoptionVintage: '2026' },
+      { kind: 'unanswered' },
+      { kind: 'entered', monthly: 300 },
+    ]
+    for (const other of others) {
+      expect(extrasLine([{ kind: 'none' }, other]), `none + ${other.kind}`).toBe(copy.medicareExtrasPointerOne)
+    }
+    expect(extrasLine(undefined), 'never asked ⇒ the typical funds both (DEFENSIVE: the run would price the typical, so the real wire never pairs this draft with a $0 median)').toBe(copy.medicareExtrasPointerOne)
+    expect(extrasLine(TINY), 'a tiny entry ⇒ a line below prints a dollar').toBe(copy.medicareExtrasPointerOne)
+    // Both answered nothing — or typed $0 — ⇒ his ruled sentence, true by construction.
+    expect(extrasLine(NONE_BOTH)).toBe(copy.irmaaStepExtrasNoneOne)
+    expect(extrasLine([{ kind: 'entered', monthly: 0 }, { kind: 'none' }])).toBe(copy.irmaaStepExtrasNoneOne)
+    // The plural (era) arm: both quoted years round to $0 on a tiny entry, yet a line below prints a dollar.
+    const era = (extras: readonly MedicareExtrasEntryV3[]) =>
+      factOf(composeHealthSheet(twoFigure({ medicareExtrasP50: 0 }, { medicareExtrasP50: 0 }), draft({ ages: [64, 62], extras }), FRESH, undefined), 'medicare')!
+        .lines[5]
+    expect(era(TINY)).toBe(copy.medicareExtrasPointer)
+    expect(era(NONE_BOTH)).toBe(copy.irmaaStepExtrasNone)
+    // …and the era-only arm ("…and nothing while only one of you is"): a $0 on-ramp beside a TINY entry is not
+    // "nothing" — the pointer; an on-ramp enrollee who answered none keeps the era-only sentence.
+    const eraOnly = (extras: readonly MedicareExtrasEntryV3[]) =>
+      factOf(composeHealthSheet(twoFigure({ medicareExtrasP50: 0 }, {}), draft({ ages: [64, 62], extras }), FRESH, undefined), 'medicare')!.lines[5]
+    expect(eraOnly([{ kind: 'entered', monthly: 2 }, { kind: 'unanswered' }])).toBe(copy.medicareExtrasPointer)
+    expect(eraOnly([{ kind: 'none' }, { kind: 'unanswered' }])).toBe(slots.irmaaStepExtrasAddEraOnly('5,900'))
   })
 
   it('DEGENERATE arms (the era IS the anchor — an all-65+ household like `retired`, a pre-65 couple who reach 65 the same year like `healthss`, a one-person household) keep the one-figure hero and SPEAK the extras with the singular carve-out — the no-era arm’s own law, one law for every arm (the register’s Tier 0 *The Medicare premium card on a couple who reach 65 the same year drops the drug-and-supplement line…*); a household of two or more frames that figure as the era’s FIRST year, dated and "start at" (the register’s Tier 0 *The one-figure Medicare card quotes the cheapest Medicare year as every year…*)', () => {
@@ -585,7 +635,7 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
       slots.irmaaStepExtrasAddOne('5,900'), // 5,856 → the $100 grain
     ])
     // The same card pricing NO extras says so — the singular "about nothing" form, never silence.
-    expect(factOf(composeHealthSheet(bothAt(0), draft({ ages: [66, 65] }), FRESH, undefined), 'medicare')!.lines).toEqual([
+    expect(factOf(composeHealthSheet(bothAt(0), draft({ ages: [66, 65], extras: NONE_BOTH }), FRESH, undefined), 'medicare')!.lines).toEqual([
       copy.irmaaStepStory,
       slots.irmaaStepEraStart('4,900', 0, 2026),
       copy.irmaaStepOnRampBase,
@@ -593,10 +643,10 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
       copy.irmaaStepExtrasNoneOne,
     ])
     // The $100 grain's tie, pinned on BOTH sides (the no-era arm's own `roundDollar` predicate): $49 rounds to
-    // $0 → the none form; $50 rounds to $100 → spoken. A threshold moved either way (raw `> 0`, `>= 100`,
+    // $0 → the $0 arm (a tiny entry, so the POINTER form — never "add none"); $50 rounds to $100 → spoken. A threshold moved either way (raw `> 0`, `>= 100`,
     // `> 50`) reds one of the two.
-    expect(factOf(composeHealthSheet(bothAt(49), draft({ ages: [66, 65] }), FRESH, undefined), 'medicare')!.lines[4]).toBe(
-      copy.irmaaStepExtrasNoneOne,
+    expect(factOf(composeHealthSheet(bothAt(49), draft({ ages: [66, 65], extras: TINY }), FRESH, undefined), 'medicare')!.lines[4]).toBe(
+      copy.medicareExtrasPointerOne,
     )
     expect(factOf(composeHealthSheet(bothAt(50), draft({ ages: [66, 65] }), FRESH, undefined), 'medicare')!.lines[4]).toBe(
       slots.irmaaStepExtrasAddOne('100'),
@@ -635,7 +685,16 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
     // presupposed a second figure the reader could not find — review 2026-09-13 late). Both slots are the
     // composer's own producers, so a slot-built expectation cannot see a reworded string; these can.
     expect(copy.irmaaStepExtrasNoneOne).toBe(
-      'That figure doesn’t count what you’d pay for drug and supplement plans, which this plan prices at about nothing.',
+      'That figure doesn’t count what you’d pay for drug and supplement plans — you answered about nothing for them, so the lines below add none.',
+    )
+    expect(copy.irmaaStepExtrasNone).toBe(
+      'Neither figure counts what you’d pay for drug and supplement plans — you answered about nothing for them, so the lines below add none.',
+    )
+    expect(copy.medicareExtrasPointerOne).toBe(
+      'That figure doesn’t count what you’d pay for drug and supplement plans — the lines below give the amount for each of you.',
+    )
+    expect(copy.medicareExtrasPointer).toBe(
+      'Neither figure counts what you’d pay for drug and supplement plans — the lines below give the amount for each of you.',
     )
     expect(slots.irmaaStepExtrasAddOne('5,900')).toBe(
       'That figure doesn’t count what you’d pay for drug and supplement plans, which the lines below add at about ~$5,900 a year.',
@@ -676,7 +735,7 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
     const soloSurcharged: HealthReadout = {
       byYear: [year({ yearsFromNow: 1, medicareBaseP50: 2_435, irmaaSurchargeP50: 1_200, medicareEnrolledP50: 1, irmaaMagiP50: 230_000 })],
     }
-    expect(factOf(composeHealthSheet(soloSurcharged, draft({ ages: [66] }), FRESH, undefined), 'medicare')).toEqual({
+    expect(factOf(composeHealthSheet(soloSurcharged, draft({ ages: [66], extras: [{ kind: 'none' }] }), FRESH, undefined), 'medicare')).toEqual({
       id: 'medicare',
       eyebrow: copy.healthFactMedicare,
       figure: slots.healthFigPerYear('3,600'),
@@ -692,7 +751,7 @@ describe('the two-figure premium card — the era-loud frame (council 2026-09-13
         year({ yearsFromNow: 3, medicareBaseP50: 5_800, medicareEnrolledP50: 2, irmaaMagiP50: 90_000 }),
       ],
     }
-    const f = factOf(composeHealthSheet(equal, draft({ ages: [64, 62] }), FRESH, undefined), 'medicare')!
+    const f = factOf(composeHealthSheet(equal, draft({ ages: [64, 62], extras: NONE_BOTH }), FRESH, undefined), 'medicare')!
     expect(f.figure).toBe(slots.healthFigPerYear('5,800'))
     expect(f.lines).toEqual([
       copy.irmaaStepStory,

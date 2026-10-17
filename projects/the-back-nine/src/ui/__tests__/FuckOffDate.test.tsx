@@ -529,7 +529,7 @@ describe('P3-U11 follow-up — the priced-Medicare disclosure on the date claim'
 // state clause on every date verdict — inside the residual where it renders, a standalone
 // `.fod-note.cs-state-note` where it does not. ConfidenceStatement.test.tsx pins the spine's cells.
 describe('Card 4 — exactly ONE state clause on every date verdict ({all-65+, pre-65} × {unpriced, priced})', () => {
-  const STATE_CLAUSE = /isn’t priced yet|is reflected in these numbers|no state income tax/g
+  const STATE_CLAUSE = /isn’t priced yet|is already counted in this answer|no state income tax/g
   const cells = [
     { cohort: 'all-65+', medicarePricedNote: true, statePricedNote: undefined },
     { cohort: 'all-65+', medicarePricedNote: true, statePricedNote: 'NC' },

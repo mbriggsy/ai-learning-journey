@@ -509,7 +509,7 @@ describe('R40 — the other-income construct wires into the overlay (the early-r
   // priced" split — buildOverlay's degenerate early-return fires UPSTREAM of the medicareOnly
   // branch, so NO overlay exists and Medicare priced $0, while the age predicate still reads
   // true. The disclosure MUST read the built output (spineMedicarePriced), or the verdict
-  // surface asserts "Medicare's premiums are already in these numbers" over a run that priced
+  // surface asserts "Medicare’s costs … are already counted in this answer" over a run that priced
   // nothing — a confidently-false factual claim (the unit's own cardinal class).
   it('the SS-only $0-portfolio all-65+ household: age predicate TRUE, spineMedicarePriced FALSE — the affirmation is withheld', () => {
     const d = base({

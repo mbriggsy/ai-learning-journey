@@ -810,8 +810,8 @@ export function irmaaTierSurchargeMonthly(
  * The overlay funds this whole cost (the post-65 analog of funding the full pre-65 net ACA premium),
  * so terminalReal drops by the grossed-up withdrawal that pays it. SCOPE — disclosed boundaries,
  * never silent omissions (the cardinal rule):
- *   - Part D BASE plan premium is NOT modeled (plan-specific, no sourced constant; the user budgets
- *     their chosen Part D plan). Only the income-related Part D SURCHARGE is here.
+ *   - Part D BASE plan premium is NOT in this function: it rides the extras vector (`medicareExtrasMonthly`,
+ *     added on top of spending in taxOverlay.ts). Only the income-related Part D SURCHARGE is here.
  *   - The Part B deductible / OOP cost-sharing is not a premium — it is HSA / OOP-medical (M5).
  *   - Premium-free Part A is assumed (a retired couple with a 40-quarter history, §Strand 5);
  *     purchased Part A premiums (partA2026) are out of scope.

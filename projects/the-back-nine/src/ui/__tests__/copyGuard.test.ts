@@ -1083,7 +1083,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     const MUST_PASS = [
       copy.floorReadoutEyebrow, // "Just the essentials" — the subordinate relief line
       `${slots.xOfTen(9)} ${copy.floorReadoutCoverage}`, // "9 of 10 futures your essentials are covered"
-      copy.floorReadoutTrimNote, // "…start with the extras — not the basics." (gated on the floor holding)
+      copy.floorReadoutTrimNote, // "That’s if you live on just the essentials starting now…" (the count's own assumption)
       copy.goalPickerIntro, // "With the basics covered…" — gated on the FULL displayed state
       copy.budgetSheetIntro, // "Essentials are the part that has to hold…"
       copy.bandPricesEssentialsNote,
@@ -1282,6 +1282,15 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // ============================================================================================
 
   const controlGates: CopyGate[] = ['false-certainty', 'advice-verb', 'superlative', 'require-hedge']
+
+  it('the Medicare card’s $0-arm POINTER twins stay FIGURE-FREE — they sit outside require-hedge only because they claim no amount (Briggsy, 2026-10-16)', () => {
+    for (const k of ['medicareExtrasPointerOne', 'medicareExtrasPointer'] as const) {
+      const s = copy[k]
+      expect(isControlKey(k), `${k}: the mechanism family is not control-scoped`).toBe(false)
+      expect(s, 'no digit, no dollar, no tilde: an amount would re-enter the hedged irmaaStep* family').not.toMatch(/[0-9$~]/)
+      expect(lintCopy(s, ['false-certainty', 'advice-verb', 'superlative', 'free-numeral', 'catastrophe']), s).toEqual([])
+    }
+  })
 
   it('every control readout passes the ban-gates AND wears a hedge (require-hedge — sweeps when U10-6 lands)', () => {
     for (const [k, v] of entries.filter(([k]) => isControlKey(k))) {

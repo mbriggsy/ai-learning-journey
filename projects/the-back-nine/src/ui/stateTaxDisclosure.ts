@@ -29,7 +29,7 @@
  * household reads today's words verbatim.
  *
  * NEVER AN OPTIMIZATION CLAIM (§V / S2.8 twin constraint): the affirmation says the state tax is
- * REFLECTED in the numbers (an outcome fact), never that the conversion/sequencing recommendation
+ * COUNTED in the answer, on top of the spending (an outcome fact), never that the recommendation
  * was state-OPTIMIZED — the bracket-fill rails stay FEDERAL in v1, provably neutral for a
  * flat-or-zero roster. The caveat becomes mandatory the moment a graduated state joins the roster.
  */

@@ -1194,7 +1194,7 @@ export function buildHealthReadout(agg: HealthAgg, paths: number): HealthReadout
       irmaaSurchargeP50: median(agg.irmaaSurcharge[t] ?? []),
       // CONSUMED since 2026-09-13 by the health sheet's Medicare premium card: the extras
       // carve-out speaks this median per quoted year (healthSheetChrome.ts → the
-      // `irmaaStepExtrasAdd*` / `irmaaStepExtrasNone*` lines) — spoken beside the base +
+      // `irmaaStepExtrasAdd*` / `irmaaStepExtrasNone*` / `medicareExtrasPointer*` lines) — spoken beside the base +
       // surcharge figure, never folded into it (provenance-mixed extras: a typical placeholder is
       // "not an actual bill"). The draft-side per-person disclosure (medicareExtrasDisclosureView)
       // stays the separate channel that survives the date route, where this readout is absent.

@@ -1055,7 +1055,9 @@ export function spendHelpKeyFor(d: ScenarioDraft): 'spendHelp' | 'spendHelpState
  *  A mid-entry 'entered' with NO committed dollar also degrades to the TYPICAL (conservative
  *  — an unfinished answer never zeroes a bill; the R19 sanity rule names the half-answered
  *  state at the field before Save can persist it). */
-export function resolveMedicareExtrasMonthly(d: ScenarioDraft): readonly number[] {
+export function resolveMedicareExtrasMonthly(
+  d: Pick<ScenarioDraft, 'medicareExtrasByPerson'> & { readonly people: ReadonlyArray<unknown> },
+): readonly number[] {
   const typical = medicareExtrasTypicalMonthly()
   return d.people.map((_, i) => {
     const e = d.medicareExtrasByPerson?.[i]

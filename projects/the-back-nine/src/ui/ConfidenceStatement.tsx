@@ -365,8 +365,8 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
     // degenerate — the single-metric statement renders verbatim, no relief LINE (the subordinates
     // wrapper itself always mounts since Card 4: the state clause is unconditional, inside the
     // residual or standalone). Reads the RAW headline (a drill-down must agree with the engine
-    // record, never the sticky display).
-    const relief = floorRelief(view.headline, view.floorReading)
+    // record, never the sticky display). The plan clock gates only the trim note (aged or unknown ⇒ withheld).
+    const relief = floorRelief(view.headline, view.floorReading, savedAnchor?.yearsSincePlanBuilt)
     // The folded survivor's CLOSED face (2026-07-02 rework — the raw disclosure row read as a
     // form control, not a statement): the summary speaks the eyebrow AND the verdict lockup
     // (glyph + word, the same scale as its subordinate siblings), so the fold reads as a real

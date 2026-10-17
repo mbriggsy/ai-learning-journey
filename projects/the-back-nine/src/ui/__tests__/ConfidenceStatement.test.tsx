@@ -87,6 +87,7 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
     const { container } = render(
       <ConfidenceStatement
         view={{ kind: 'reading', ...READING_FIXTURES['borderline'], floorReading }}
+        savedAnchor={{ startCalendarYear: 2026, yearsSincePlanBuilt: 0 }}
       />,
     )
     expect(screen.getByText(copy.floorReadoutEyebrow)).toBeInTheDocument()
@@ -96,8 +97,10 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
     const relief = container.querySelector('.floor-readout')!
     expect(relief.textContent).toContain(slots.xOfTen(10))
     expect(relief.textContent).not.toContain('$')
-    // The floor holds (on-track) ⇒ the Kitces action-first rider renders.
+    // A fresh plan ⇒ the trim note names the count's own assumption (essentials only, from today).
     expect(relief.textContent).toContain(copy.floorReadoutTrimNote)
+    // His ruled words (2026-10-16), pinned LITERALLY — a paraphrase must red here, not survive by key.
+    expect(copy.floorReadoutTrimNote).toBe('That’s if you live on just the essentials starting now, not once money runs short.')
   })
 
   it('the DEGENERATE (value-equal floor) renders the single-metric statement VERBATIM — no relief line', () => {
@@ -113,13 +116,40 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
     expect(container.querySelector('.floor-readout')).toBeNull()
   })
 
-  it('a floor that is itself NOT holding renders the honest word + count WITHOUT the trim rider (the rider is a claim)', () => {
+  it('a floor that is itself NOT holding still names the count’s assumption — the trim note rides every earned relief line on a fresh plan (Briggsy, 2026-10-16)', () => {
     const floorReading = { xOfTen: { value: 6, marginToEdge: 0.02 }, outcomeState: 'borderline' as const, stateMarginToEdge: 0.02 }
     const { container } = render(
-      <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['off-track'], floorReading }} />,
+      <ConfidenceStatement
+        view={{ kind: 'reading', ...READING_FIXTURES['off-track'], floorReading }}
+        savedAnchor={{ startCalendarYear: 2026, yearsSincePlanBuilt: 0 }}
+      />,
     )
     const relief = container.querySelector('.floor-readout')!
     expect(relief.textContent).toContain(slots.xOfTen(6))
+    expect(relief.textContent).toContain(copy.floorReadoutTrimNote)
+  })
+
+  it('planted-fail: an UNKNOWN plan clock (no anchor threaded) withholds the trim note — fail closed, never “starting now” over a count whose year 0 is unknown', () => {
+    const floorReading = { xOfTen: { value: 10, marginToEdge: 0.05 }, outcomeState: 'on-track' as const, stateMarginToEdge: 0.05 }
+    const { container } = render(
+      <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['borderline'], floorReading }} />,
+    )
+    const relief = container.querySelector('.floor-readout')!
+    expect(relief.textContent).toContain(copy.floorReadoutCoverage)
+    expect(relief.textContent).not.toContain(copy.floorReadoutTrimNote)
+  })
+
+  it('planted-fail: on an AGED plan the relief line renders WITHOUT the trim note — its count starts at the build year, so “starting now” would be false', () => {
+    const floorReading = { xOfTen: { value: 10, marginToEdge: 0.05 }, outcomeState: 'on-track' as const, stateMarginToEdge: 0.05 }
+    const { container } = render(
+      <ConfidenceStatement
+        view={{ kind: 'reading', ...READING_FIXTURES['borderline'], floorReading }}
+        savedAnchor={{ startCalendarYear: 2024, yearsSincePlanBuilt: 2 }}
+        onReconfirm={vi.fn()}
+      />,
+    )
+    const relief = container.querySelector('.floor-readout')!
+    expect(relief.textContent).toContain(copy.floorReadoutCoverage)
     expect(relief.textContent).not.toContain(copy.floorReadoutTrimNote)
   })
 
@@ -644,7 +674,7 @@ describe('P3-U11 follow-up — the priced-Medicare disclosure on the verdict sur
   })
 
   // S5 — the state-tax affirmation SWAPS the residual's embedded state clause IN PLACE (same
-  // paragraph, no new row): a priced household names its state and reads "reflected"; undefined
+  // paragraph, no new row): a priced household names its state and reads "counted"; undefined
   // reads the "isn’t priced yet" words (the O14 sweep's family frame, 2026-07-17 — was "isn’t
   // counted", the counts/counted polysemy). Gated on `statePricedNote` (the run's own priced code).
   it('a PRICED state (NC) swaps the residual clause to the outcome-scoped affirmation — one block, still text-reachable', () => {
@@ -657,7 +687,7 @@ describe('P3-U11 follow-up — the priced-Medicare disclosure on the verdict sur
     )
     const residual = container.querySelector('.cs-medicare-residual')!
     expect(residual.textContent).toContain('North Carolina')
-    expect(residual.textContent).toContain('reflected in these numbers')
+    expect(residual.textContent).toContain('is already counted in this answer, on top of your spending')
     expect(residual.textContent, 'the unpriced clause dies for a priced household').not.toContain('isn’t priced yet')
     expect(residual, 'plain text, never decoration').not.toHaveAttribute('aria-hidden')
     expect(container.querySelectorAll('.cs-medicare-residual')).toHaveLength(1) // no new row
@@ -735,7 +765,7 @@ describe('ConfidenceStatement — the aged band premise + the structural fan wit
 // (all-65+), a standalone `.cs-state-note` where it does not (pre-65 / the door household).
 // FuckOffDate.test.tsx pins the date route's four cells; these are the spine's four.
 describe('Card 4 — exactly ONE state clause on every spine verdict ({all-65+, pre-65} × {unpriced, priced})', () => {
-  const STATE_CLAUSE = /isn’t priced yet|is reflected in these numbers|no state income tax/g
+  const STATE_CLAUSE = /isn’t priced yet|is already counted in this answer|no state income tax/g
   const cells = [
     { cohort: 'all-65+', medicarePricedNote: true, statePricedNote: undefined },
     { cohort: 'all-65+', medicarePricedNote: true, statePricedNote: 'NC' },

@@ -540,9 +540,9 @@ export const copy = {
   floorReadoutEyebrow: 'Just the essentials',
   // The "X of 10" tail (composed with slots.xOfTen) — parallels confidenceCoverageCaption.
   floorReadoutCoverage: 'futures your essentials are covered',
-  // The Kitces action-first rider — GATED (twoTier.ts) on the floor's own state holding: a claim
-  // that trimming suffices is only honest when the essentials actually clear.
-  floorReadoutTrimNote: 'If trimming were ever needed, it would start with the extras — not the basics.',
+  // The count's OWN assumption (Briggsy 2026-10-16): essentials only from year 0, never from a shortfall — no
+  // magnitude, true on every earned relief line; withheld on an aged plan, whose year 0 is the build year (twoTier.ts).
+  floorReadoutTrimNote: 'That’s if you live on just the essentials starting now, not once money runs short.',
   // --- U7 confidence band chrome (the inline "show me the range" drawer card — BandLabels +
   //     BandPanelChrome for ConfidenceBandPanel). BAND-SCOPED keys: chart chrome describing the
   //     fan's geometry, not a verdict claim, so the universal gates apply (as for factual intake
@@ -1133,18 +1133,18 @@ export const copy = {
    *  BY NAME (hygiene: the catastrophe-lexicon sweep reads it as the worst-moment class it is). */
   irmaaStepNoEraYear:
     'On the middle-of-the-road path, this plan doesn’t reach a year with both of you on Medicare, so there’s no second figure here for what those years could cost.',
-  /** The extras carve-out when the plan prices the drug and supplement PLANS at nothing in both
-   *  quoted years — affirmed none, or no extras vector on the run: both price at 0, and the
-   *  sentence is true in each. "Plans" (what you'd pay for them), never "coverage beyond Part B":
-   *  the figures DO carry the Part D income surcharge (the wire's `irmaaSurchargeP50` is the
-   *  combined Part B + Part D IRMAA), so the carve-out names the plan premiums the figure leaves
-   *  out, not a coverage the figure partly bills (review 2026-09-13 late). */
+  /** The extras carve-out when EVERY person's priced extras are $0 (both answered "about nothing", or typed $0 —
+   *  `healthSheetChrome`'s gate): the $0 is the couple's OWN answer, so Briggsy's words (2026-10-16) credit it to
+   *  them, never the plan ("this plan prices at about nothing" read as a checked price). "Plans" (what you'd pay
+   *  for them), never "coverage beyond Part B": the figures DO carry the Part D income surcharge (the wire's
+   *  `irmaaSurchargeP50` is the combined Part B + Part D IRMAA), so the carve-out names the plan premiums the figure
+   *  leaves out, not a coverage the figure partly bills (review 2026-09-13 late). */
   irmaaStepExtrasNone:
-    'Neither figure counts what you’d pay for drug and supplement plans, which this plan prices at about nothing.',
+    'Neither figure counts what you’d pay for drug and supplement plans — you answered about nothing for them, so the lines below add none.',
   /** The singular twin for every ONE-figure card — the no-era arm, and the degenerate arm since 2026-10-15
    *  (review 2026-09-13 late — "neither" presupposed a second figure the reader could not find). */
   irmaaStepExtrasNoneOne:
-    'That figure doesn’t count what you’d pay for drug and supplement plans, which this plan prices at about nothing.',
+    'That figure doesn’t count what you’d pay for drug and supplement plans — you answered about nothing for them, so the lines below add none.',
   // ⚠️ "the benchmark premium itself" WAS IN BOTH LISTS AND WAS FALSE — struck 2026-08-03.
   // The benchmark (SLCSP) is not merely counted, it is the ANCHOR of the whole credit:
   // `intakeMap.ts:678` builds `slcsp` into the overlay params, `taxOverlay.ts:262` calls it "the
@@ -1177,6 +1177,14 @@ export const copy = {
   // WHO adds WHAT, the reader's entries as supporting context in the per-person lines.
   medicareExtrasSheetLead:
     'Coverage beyond Part B — the tool adds each person’s premium on top of your spending:',
+  // The Medicare card's $0-arm POINTER twins (Briggsy, 2026-10-16): the quoted years round to $0 while someone is
+  // priced above it (a later enrollee on a wide-gap no-era card, a tiny entry), so the ruled none form's "add
+  // none" would be false. A MECHANISM pointer at this block — no amount, no forecast — so this family (the lead's
+  // reasoning above: not control-scoped, the universal gates still apply); copyGuard pins it figure-free.
+  medicareExtrasPointerOne:
+    'That figure doesn’t count what you’d pay for drug and supplement plans — the lines below give the amount for each of you.',
+  medicareExtrasPointer:
+    'Neither figure counts what you’d pay for drug and supplement plans — the lines below give the amount for each of you.',
   // The extras block's held-flat line — Briggsy's ruled sentence, VERBATIM from `verdictResidualTail`
   // minus its period graft (never reworded; healthSheetChrome.test drift-pins Tail ≡ ". " + this
   // key, so the two homes cannot diverge). The engine charges the extras REAL-FLAT (no sourced trend
@@ -1197,7 +1205,7 @@ export const copy = {
   // The post-65 PRICED-Medicare disclosure (the Medicare-pricing unit, 2026-07-10 — supersedes the
   // retired age-keyed "unpriced" note). An all-65+ household reaches no ACA door, so these two lines
   // are its ONLY Medicare honesty surface: the AFFIRMATION that base Part B + the income surcharge
-  // ARE in the numbers (so a steeper figure has its cause named) SHIPS WITH the narrowed residual
+  // are COUNTED in the answer, on top of the spending (a steeper figure has its cause named) SHIPS WITH the narrowed residual
   // (what still isn't) — the affirmative alone would imply ALL of Medicare is priced, a fresh
   // optimistic lie. A household that reaches the Healthcare door is NOT shown these: its sheet holds
   // the held-flat line (medicareExtrasSheetHeldFlat) + its omissions list — one honest home per fact.
@@ -1213,7 +1221,7 @@ export const copy = {
   // bi-directional sentence (slots.medicareExtrasTypical*) appended INSIDE the residual
   // paragraph — same block, no new frame row (the one-frame fit law's tallest composite).
   verdictMedicarePriced:
-    'Medicare’s costs for the two of you are already in these numbers — the Part B premium, its income surcharge, and extra coverage: a drug plan, a supplement plan, or a Medicare Advantage premium.',
+    'Medicare’s costs for the two of you are already counted in this answer, on top of your spending — the Part B premium, its income surcharge, and extra coverage: a drug plan, a supplement plan, or a Medicare Advantage premium.',
   // Reworded 2026-07-17 (council wf_d3666133-c34, O14 sweep): (1) the old "isn’t counted" was the
   // family's lone outlier — one lexeme, two referents against intake's "keep that bill inside this
   // figure so it still counts" (a compliant taxed-state household read its kept-inside bill as
@@ -1239,7 +1247,7 @@ export const copy = {
   verdictResidualLead:
     'Those are the pieces this tool adds by itself. The rare Part A premium belongs in the spending you gave us.',
   // The Tail now opens with a period graft (was an em-dash): every priced affirmation ends
-  // mid-clause ("…reflected in these numbers" / "…no state bill on your withdrawals"), so the
+  // mid-clause ("…on top of your spending" / "…no state bill on your withdrawals"), so the
   // Tail closes that sentence and starts its own — one fact per sentence on both compositions.
   // Swapped 2026-07-19, TWICE (the trend unit, then its Part D sourcing pass): the old
   // "Premiums are held flat" covered EVERY tool-added premium — false once Part B + its
@@ -1253,9 +1261,9 @@ export const copy = {
   // one-line class the fold law measured.
   verdictResidualTail:
     '. The extra-coverage premiums are held flat in today’s dollars, so their true cost could run higher than shown.',
-  verdictResidualStateNC: 'Your North Carolina state income tax is reflected in these numbers',
+  verdictResidualStateNC: 'Your North Carolina state income tax is already counted in this answer, on top of your spending',
   verdictResidualStatePA:
-    'Your Pennsylvania state income tax is reflected in these numbers, usually a small piece since Pennsylvania leaves most retirement income untaxed',
+    'Your Pennsylvania state income tax — usually a small piece, since Pennsylvania leaves most retirement income untaxed — is already counted in this answer, on top of your spending',
   verdictResidualStateFL: 'Florida has no state income tax, so there’s no state bill on your withdrawals',
   // Card 4 (the four-faces Caddie walk, 2026-09-11) — the STANDALONE state clause for the household
   // whose residual is WITHHELD (a pre-65 member ⇒ the Healthcare door carries the Medicare residual;

@@ -16,8 +16,8 @@
  * WORD + COUNT ONLY. `floorReading` is a bare Headline — no DollarAdjustment exists for
  * the floor, and there is no "trim to make the floor safe" figure. Borrowing the
  * full-track dollar here would be the insight-056 mixed-pairing sin; this surface renders
- * NO dollar (test-pinned NOT-contains). The optional Kitces trim rider is gated in the
- * PURE helper (twoTier.ts — insight 048): it is a claim, only honest when the floor holds.
+ * NO dollar (test-pinned NOT-contains). The trim note (the count's own assumption) is gated in
+ * the PURE helper (twoTier.ts — insight 048): on every fresh plan, withheld on an aged one.
  *
  * THE DEGENERATE COLLAPSE lives upstream (floorRelief): when the floor reading is
  * value-equal to the hero, the parent renders NOTHING here — the single-metric statement

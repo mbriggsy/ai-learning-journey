@@ -72,6 +72,18 @@
    (long-TD curve fold; the Wan'Dale / Michael Wilson board-membership look) and the five draft-era
    tests re-arm on their own (`draft_era_cache_or_skip`, `draft_era_pool_or_skip`). Start from
    `af491a71`'s TODO.
+8. **Fix `gameday_check.py`'s "Expected" header — it ignores live points for any game played TODAY**
+   (found 2026-10-18 wk 6). `projected_total()` (~line 364) banks a starter's live points only when
+   his game date is `< today`; a game that kicked off today is still scored at its PRE-GAME
+   projection. Wk 6 11:00: the header read us 146.5 / them 121.6 while their Tuten (London 9:30)
+   already had 19.0 against a 13.2 projection — live-adjusted it was ~141 / ~133. The 15:00 run is
+   worst: every 1:00 game is near-final and still projected. **Fix:** pass the kickoff map
+   `pull_kickoffs()` already returns (+ ESPN's per-event `status`) into `projected_total`; kickoff
+   passed + game final → live `players_points`; in progress → live + projection × fraction of game
+   remaining (ESPN `status.period`/`clock`); not started → projection. No kickoff map (ESPN down) →
+   keep today's rule and say so on the header line, as the ↑ line already does. Unit-test with a
+   frozen wk-6 payload (Tuten 19.0 at half). Do it OFF game day — never edit a script a scheduled
+   game-day run imports between Sat 20:00 and the Sun 15:00 run.
 
 ## Landmines
 

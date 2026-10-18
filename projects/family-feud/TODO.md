@@ -84,6 +84,15 @@
    keep today's rule and say so on the header line, as the ↑ line already does. Unit-test with a
    frozen wk-6 payload (Tuten 19.0 at half). Do it OFF game day — never edit a script a scheduled
    game-day run imports between Sat 20:00 and the Sun 15:00 run.
+9. **Fix `external_projections.py`: CBS silently serves the CURRENT week for any week 2+ ahead.**
+   Found 2026-10-18. `temp/proj_wk8.json` (pulled 10-16, i.e. wk 6 asking for wk 8) has **55**
+   players on wk-8 bye teams (HOU/NO/NYG/SF) with a nonzero CBS number — Collins reads CBS 17.98,
+   his wk-6 line — so the consensus averages a bye week as ~6 pts. One week ahead is clean (today's
+   `proj_wk7.json`: 0 JAX bye rows nonzero). The map-proof gate can't see it: the stat map is right,
+   the WEEK is wrong. **Fix in `pull_cbs()` (~line 212):** after the join, take the bye set from
+   Sleeper's own projections for that week (team's players all 0 / absent) and REFUSE the CBS column
+   if any bye-team player carries CBS points ("CBS served week N, not week W" on the header, CBS
+   column blank, `n` drops to 2). Test with the frozen `proj_wk8.json` rows.
 
 ## Landmines
 

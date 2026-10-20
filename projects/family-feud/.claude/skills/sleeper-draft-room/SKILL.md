@@ -159,7 +159,13 @@ CLAUDE.md). If the team ever gets renamed, re-read it from `/rosters` + `/users`
 3. `.next-button` `NEXT` → *Review Trade Offer*: expiry dropdown (default `NEVER`), a *SEND DIRECT MESSAGE*
    section (left empty), and `.next-button` `SEND TRADE`. **No native dialog fired** (stubbed: 0 calls).
 4. Oracle: the TRADES tab (`.item-tab` index 5, label `1 TRADES`) → *Active Trades · OUTGOING*. The public
-   `/transactions/<week>` shows nothing while a trade is pending.
+   `/transactions/<week>` shows nothing while a trade is pending — **or after it is rejected** (weeks 1-9 held zero
+   trade records on 10-20 with one rejected offer on file).
+5. 🚨 **A rejected offer just vanishes from *Active Trades*** (`Active Trades 0 · No active trades yet`) — no banner
+   on the tab. The only record is the website's own GraphQL `league_transactions_filtered` (roster filter, type
+   `trade`), fired when the TRADES tab loads: the transaction carries `metadata.rejecter_id` and `status_updated`.
+   Measured 2026-10-20: the Kittle offer sent 17:54:41 ET, rejected by Kaeperni 18:01:02. **Re-check the tab before
+   telling Briggsy an offer is still live** — "sent ✅" was true and stale six minutes later.
 
 🚨 **Adds/drops post to `/transactions/<display_week>`, not `state.week`.** On Tue 10-20 (`week: 7`,
 `display_week: 6`) the Hockenson drop landed on `/transactions/6`, and `/transactions/7` read `[]`. `/rosters` is

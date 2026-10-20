@@ -25,7 +25,7 @@
  * mid-sentence (`verdictMedicareResidual`) and mid-comma-list (`rothOmissionsNote`,
  * `controlHealthOmissionsNote`). A static string can't drop one clause — so the copy is SPLIT into
  * clause-parts and RE-COMPOSED here. The UNPRICED composition is byte-identical to the shipped
- * monolith (a copyGuard drift-pin proves it), so a non-priced / 'elsewhere' / unbuilt-state
+ * monolith (a stateTaxDisclosure.test drift-pin proves it), so a non-priced / 'elsewhere' / unbuilt-state
  * household reads today's words verbatim.
  *
  * NEVER AN OPTIMIZATION CLAIM (§V / S2.8 twin constraint): the affirmation says the state tax is

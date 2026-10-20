@@ -43,7 +43,15 @@ for (const seed of SEEDS) {
       await twoFrames(page)
       await dialog.screenshot({ path: `${dir}/2-premium-card.png` })
 
-      // 3. Scrolled so the step card sits mid-sheet (the pair read together).
+      // 2b. The extras rows mid-sheet, with the premium card's "the lines below" above them (the rows moved directly
+      // under that card — Briggsy 2026-10-16, b9-1): pointer + rows in ONE frame at every seat (2. can clip them on PHONE).
+      const extras = dialog.getByText(/^Coverage beyond Part B/)
+      await expect(extras).toBeAttached()
+      await extras.evaluate((el) => el.scrollIntoView({ block: 'center' }))
+      await twoFrames(page)
+      await dialog.screenshot({ path: `${dir}/2b-extras-rows.png` })
+
+      // 3. Scrolled so the step card sits mid-sheet (since 2026-10-16 b9-1 the extras rows sit between the two cards).
       const step = dialog.getByRole('region', { name: 'The next premium step' })
       await expect(step).toBeAttached()
       await step.evaluate((el) => el.scrollIntoView({ block: 'center' }))

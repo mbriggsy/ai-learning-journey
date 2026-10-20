@@ -216,7 +216,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   - **Population B (near-65 date route / the Healthcare door):** the door sheet carries its OWN
     legible extras block — never buried in the six-item run-on — from
     `composeMedicareExtrasLines` (`src/ui/healthSheetChrome.ts:722`) under the
-    `medicareExtrasSheetLead` heading, rendered at `src/intake/HealthcareSheet.tsx:213-231`. The
+    `medicareExtrasSheetLead` heading, built at `src/intake/HealthcareSheet.tsx:146-164` and seated directly under the Medicare premium card (`:213`; after the preview when no card renders, `:249` — his 2026-10-16 ruling, built 2026-10-19). The
     per-person fact line carries the provenance as its load-bearing content: whose number, and
     whether it was entered, affirmed, or typical.
 - Both homes consume ONE assembly, `medicareExtrasDisclosureView`

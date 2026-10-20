@@ -27,8 +27,8 @@ export interface FloorReliefView {
   /** The engine's floor reading, passed through VERBATIM (never re-derived — the U7/D2
    *  honesty contract). */
   readonly reading: Headline
-  /** The trim note ("That’s if you live on just the essentials starting now, not once money
-   *  runs short.", Briggsy 2026-10-16) names the COUNT's own assumption: `FloorTrack` spends only
+  /** The trim note ("That’s if you live on just the essentials starting now, rather than once
+   *  money runs short.", Briggsy 2026-10-16, b9-1) names the COUNT's own assumption: `FloorTrack` spends only
    *  the essentials from the run's year 0, never from a shortfall. That is true of every earned
    *  relief line, so the floor's state does not gate it (his 2026-10-16 ruling — the old rider
    *  claimed trimming would suffice, which only held on a floor that holds). The PLAN CLOCK does:

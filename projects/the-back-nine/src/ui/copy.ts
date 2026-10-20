@@ -542,7 +542,7 @@ export const copy = {
   floorReadoutCoverage: 'futures your essentials are covered',
   // The count's OWN assumption (Briggsy 2026-10-16): essentials only from year 0, never from a shortfall — no
   // magnitude, true on every earned relief line; withheld on an aged plan, whose year 0 is the build year (twoTier.ts).
-  floorReadoutTrimNote: 'That’s if you live on just the essentials starting now, not once money runs short.',
+  floorReadoutTrimNote: 'That’s if you live on just the essentials starting now, rather than once money runs short.',
   // --- U7 confidence band chrome (the inline "show me the range" drawer card — BandLabels +
   //     BandPanelChrome for ConfidenceBandPanel). BAND-SCOPED keys: chart chrome describing the
   //     fan's geometry, not a verdict claim, so the universal gates apply (as for factual intake
@@ -1219,9 +1219,9 @@ export const copy = {
   // Part D real-hold is disclosed on the Roth sheet + the assumptions row, both from MEDICARE_PART_D_HOLD_CONSEQUENCE), a SWAP never an ADD.
   // The on-typical household additionally gets a per-person
   // bi-directional sentence (slots.medicareExtrasTypical*) appended INSIDE the residual
-  // paragraph — same block, no new frame row (the one-frame fit law's tallest composite).
+  // paragraph — same block, no new frame row (the one-frame fit law's tallest composite). The list rides INSIDE the subject as a dash apposition (Briggsy 2026-10-16, b9-1): placed after "your spending" it read as part of the spending. Its subject says "premiums" (his 2026-10-19 ruling, b9-2): "costs … like a drug, supplement, or Medicare Advantage plan" let a $0-premium Medicare Advantage couple read its copays and prescriptions as counted on top (raised by the 2026-10-19 walk's readers on the budget, pa and datenc landings; two refuters held it at medium).
   verdictMedicarePriced:
-    'Medicare’s costs for the two of you are already counted in this answer, on top of your spending — the Part B premium, its income surcharge, and extra coverage: a drug plan, a supplement plan, or a Medicare Advantage premium.',
+    'Medicare’s premiums for the two of you — Part B, its income surcharge, and extra coverage like a drug plan, a supplement plan, or Medicare Advantage — are already counted in this answer, on top of your spending.',
   // Reworded 2026-07-17 (council wf_d3666133-c34, O14 sweep): (1) the old "isn’t counted" was the
   // family's lone outlier — one lexeme, two referents against intake's "keep that bill inside this
   // figure so it still counts" (a compliant taxed-state household read its kept-inside bill as
@@ -1231,9 +1231,9 @@ export const copy = {
   // shown" was twice refuter-confirmed ambiguous in the ROSIER direction (more precise vs less
   // margin) — replaced with an explicit not-rosier direction. S1 magnitude law holds: the state
   // bill stays "a real yearly bill", never a rounding hedge. Final sentence swapped 2026-07-19
-  // (the trend unit — see the Tail's note; the drift-pin keeps monolith ≡ Lead…Tail).
+  // (the trend unit — see the Tail's note; the drift-pin keeps monolith ≡ Lead…Tail). First sentence scoped 2026-10-16 (b9-1, his ruling): "Those are the Medicare pieces" — the Medicare line's list no longer ends right above it.
   verdictMedicareResidual:
-    'Those are the pieces this tool adds by itself. The rare Part A premium belongs in the spending you gave us. State income tax isn’t priced yet. In a taxing state, that’s a real yearly bill. The extra-coverage premiums are held flat in today’s dollars, so their true cost could run higher than shown.',
+    'Those are the Medicare pieces this tool adds by itself. The rare Part A premium belongs in the spending you gave us. State income tax isn’t priced yet. In a taxing state, that’s a real yearly bill. The extra-coverage premiums are held flat in today’s dollars, so their true cost could run higher than shown.',
   // S5.2/S5.3 — the verdict residual SPLIT into clause-parts (the monolith above stays as the
   // UNPRICED render, verbatim). For a state-PRICED household the embedded "state income tax isn’t
   // counted" clause DIES and is REPLACED by the outcome-scoped affirmation naming the state,
@@ -1241,11 +1241,11 @@ export const copy = {
   // The affirmation ALWAYS ships WITH the narrowed residual (the `…Tail` "premiums held flat"
   // clause) — never affirm-alone (that would imply ALL of state tax is optimized; the rails stay
   // FEDERAL in v1, provably state-neutral for a flat roster — §V/S2.8, so this is outcome
-  // language, never an optimization claim). A copyGuard drift-pin asserts `verdictMedicareResidual`
+  // language, never an optimization claim). A stateTaxDisclosure.test drift-pin asserts `verdictMedicareResidual`
   // starts with `…Lead` and ends with `…Tail`, so the split can't silently diverge from the
-  // shipped monolith. `verdict` prefix ⇒ free-numeral-gated: NAME the state, never a rate.
+  // shipped monolith. `verdict` prefix ⇒ free-numeral-gated: NAME the state, never a rate. The Lead names "the Medicare pieces" (2026-10-16, b9-1): an NC or PA affirm after it is a tool-added piece too (Florida's adds none), but never a Medicare one.
   verdictResidualLead:
-    'Those are the pieces this tool adds by itself. The rare Part A premium belongs in the spending you gave us.',
+    'Those are the Medicare pieces this tool adds by itself. The rare Part A premium belongs in the spending you gave us.',
   // The Tail now opens with a period graft (was an em-dash): every priced affirmation ends
   // mid-clause ("…on top of your spending" / "…no state bill on your withdrawals"), so the
   // Tail closes that sentence and starts its own — one fact per sentence on both compositions.

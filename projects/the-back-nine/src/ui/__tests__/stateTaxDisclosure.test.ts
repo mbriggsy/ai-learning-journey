@@ -29,6 +29,7 @@ describe('S5 — composeVerdictMedicareResidual (the verdict home, clause swaps 
     // lead/tail than the unpriced ones. (The composeMedicareExtras split-part precedent.)
     expect(copy.verdictMedicareResidual.startsWith(copy.verdictResidualLead)).toBe(true)
     expect(copy.verdictMedicareResidual.endsWith(copy.verdictResidualTail)).toBe(true)
+    expect(copy.verdictMedicareResidual, 'and nothing rides between them: the Lead, the unpriced clause, the Tail — whole').toBe(`${copy.verdictResidualLead} ${copy.verdictStateUnpricedNote.slice(0, -1)}${copy.verdictResidualTail}`)
   })
 
   it('each PRICED state NAMES the state, affirms it is COUNTED on top of the spending, and drops the unpriced "isn’t priced yet" clause', () => {
@@ -49,12 +50,14 @@ describe('S5 — composeVerdictMedicareResidual (the verdict home, clause swaps 
 
   it('his 2026-10-16 words, pinned LITERALLY: the answer carries Medicare and the state tax ON TOP of the spending (a paraphrase must red here)', () => {
     expect(copy.verdictMedicarePriced).toBe(
-      'Medicare’s costs for the two of you are already counted in this answer, on top of your spending — the Part B premium, its income surcharge, and extra coverage: a drug plan, a supplement plan, or a Medicare Advantage premium.',
+      'Medicare’s premiums for the two of you — Part B, its income surcharge, and extra coverage like a drug plan, a supplement plan, or Medicare Advantage — are already counted in this answer, on top of your spending.',
     )
     expect(copy.verdictResidualStateNC).toBe('Your North Carolina state income tax is already counted in this answer, on top of your spending')
     expect(copy.verdictResidualStatePA).toBe(
       'Your Pennsylvania state income tax — usually a small piece, since Pennsylvania leaves most retirement income untaxed — is already counted in this answer, on top of your spending',
     )
+    // The residual's lead (his 2026-10-16 b9-1 ruling — "Medicare" scopes it; the drift pin above carries it into the monolith).
+    expect(copy.verdictResidualLead).toBe('Those are the Medicare pieces this tool adds by itself. The rare Part A premium belongs in the spending you gave us.')
     // The composed residual reads one sentence per fact: the clause, then the Tail’s period graft.
     expect(composeVerdictMedicareResidual('PA')).toContain('on top of your spending. The extra-coverage premiums are held flat')
   })

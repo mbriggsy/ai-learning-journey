@@ -100,7 +100,7 @@ describe('ConfidenceStatement — the U7 verdict-first surface', () => {
     // A fresh plan ⇒ the trim note names the count's own assumption (essentials only, from today).
     expect(relief.textContent).toContain(copy.floorReadoutTrimNote)
     // His ruled words (2026-10-16), pinned LITERALLY — a paraphrase must red here, not survive by key.
-    expect(copy.floorReadoutTrimNote).toBe('That’s if you live on just the essentials starting now, not once money runs short.')
+    expect(copy.floorReadoutTrimNote).toBe('That’s if you live on just the essentials starting now, rather than once money runs short.')
   })
 
   it('the DEGENERATE (value-equal floor) renders the single-metric statement VERBATIM — no relief line', () => {

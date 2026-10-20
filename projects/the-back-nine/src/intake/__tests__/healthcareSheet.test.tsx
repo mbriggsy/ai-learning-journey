@@ -393,6 +393,8 @@ describe('HealthcareSheet — the Medicare-extras door home (F5)', () => {
       expect(heldFlat, `${label}: DIRECTLY under the last per-person line`).toBe(indexOf(paras, lastPersonLine) + 1)
       expect(heldFlat, `${label}: above the survivor note`).toBeLessThan(indexOf(paras, copy.controlHealthSurvivorNote))
       expect(heldFlat, `${label}: above the omissions list`).toBeLessThan(indexOf(paras, copy.controlHealthOmissionsNote))
+      // No premium card (the date route / pre-resolve): the ruling has no referent — the block keeps its pre-ruling seat.
+      expect(document.querySelector('.control-preview')!.nextElementSibling, `${label}: no card ⇒ the block sits directly after the preview`).toBe(screen.getByText(copy.medicareExtrasSheetLead))
       unmount()
     }
     // Never folded into the "Not counted here" list (priced, only possibly understated — the register's NEGATIVE).
@@ -400,14 +402,14 @@ describe('HealthcareSheet — the Medicare-extras door home (F5)', () => {
     expect(copy.controlHealthOmissionsNoteStatePriced).not.toContain('held flat')
   })
 
+  const zeroRow = (over: Partial<HealthReadoutYear>): HealthReadoutYear => ({
+    yearsFromNow: 5, acaNetPremiumP50: 0, medicareBaseP50: 2_703, irmaaSurchargeP50: 0, medicareExtrasP50: 0,
+    medicareEnrolledP50: 1, acaMagiP50: 46_020, irmaaMagiP50: 46_020, ssBenefitP50: 0, overCliffFraction: 0,
+    acaPricedFraction: 0, cohortFraction: 1, ...over,
+  })
+  // The no-era card: the anchor year bills only the first enrollee, so the extras median is $0.
+  const noEra: HealthReadout = { byYear: [zeroRow({}), zeroRow({ yearsFromNow: 6 })] }
   it('the $0 Medicare card speaks THROUGH the sheet above the per-person lines it points at: both answered none ⇒ his none form; one none beside a priced spouse ⇒ the pointer (Briggsy, 2026-10-16)', () => {
-    const zeroRow = (over: Partial<HealthReadoutYear>): HealthReadoutYear => ({
-      yearsFromNow: 5, acaNetPremiumP50: 0, medicareBaseP50: 2_703, irmaaSurchargeP50: 0, medicareExtrasP50: 0,
-      medicareEnrolledP50: 1, acaMagiP50: 46_020, irmaaMagiP50: 46_020, ssBenefitP50: 0, overCliffFraction: 0,
-      acaPricedFraction: 0, cohortFraction: 1, ...over,
-    })
-    // The no-era card: the anchor year bills only the first enrollee, so the extras median is $0.
-    const noEra: HealthReadout = { byYear: [zeroRow({}), zeroRow({ yearsFromNow: 6 })] }
     const cases: ReadonlyArray<readonly [string, ScenarioDraft, string, string]> = [
       ['both none', doorDraft((d) => ({ ...d, medicareExtrasByPerson: [{ kind: 'none' }, { kind: 'none' }] })), copy.irmaaStepExtrasNoneOne, slots.medicareExtrasFactNone('B')],
       ['none + typical', doorDraft((d) => ({ ...d, medicareExtrasByPerson: [{ kind: 'none' }, { kind: 'unanswered' }] })), copy.medicareExtrasPointerOne, slots.medicareExtrasFactTypical('B', Math.round(medicareExtrasTypicalMonthly()).toLocaleString('en-US'))],
@@ -424,6 +426,85 @@ describe('HealthcareSheet — the Medicare-extras door home (F5)', () => {
       expect(text.indexOf(copy.medicareExtrasSheetLead), `${label}: the lead above the lines`).toBeLessThan(text.indexOf(spouseLine))
       unmount()
     }
+  })
+
+  // ⚑ THE ROWS' SEAT (Briggsy's ruling, 2026-10-16 b9-1 — "the lines below"): the per-person rows sit DIRECTLY under the
+  // Medicare premium card and above the step card. Before this arm NO sheet arm told the two seats apart (the arm above
+  // holds "card sentence above the lead", true in both). Planted-mutant record (2026-10-19): the block back in its old
+  // seat, the medicare card pushed into the lower list, the block in both seats, the block inside the upper list, the
+  // step card dropped, the step card duplicated, the seat keyed on the step card, the seat keyed on any fact, the HSA
+  // note moved above the block, the whole run wrapped in one div — each reddened this arm; each restored from a
+  // snapshot and cmp'd. The last four came from the whole-file review (wf_a571bdd0-90a), which found them surviving.
+  it('the per-person rows sit DIRECTLY under the Medicare premium card and above the step card — every composed card once, in order (Briggsy, 2026-10-16)', () => {
+    const fig = Math.round(medicareExtrasTypicalMonthly()).toLocaleString('en-US')
+    // ACA cards above an ERA card (the anchor bills one enrollee, year 7 bills both) — the split's ACA-present path.
+    const acaEra: HealthReadout = {
+      byYear: [
+        zeroRow({ yearsFromNow: 1, medicareBaseP50: 0, medicareEnrolledP50: 0, acaNetPremiumP50: 9_950, acaMagiP50: 66_600, irmaaMagiP50: 60_000, overCliffFraction: 0.31, acaPricedFraction: 1 }),
+        zeroRow({ yearsFromNow: 5, medicareExtrasP50: 2_928 }),
+        zeroRow({ yearsFromNow: 7, medicareBaseP50: 5_765, medicareEnrolledP50: 2, medicareExtrasP50: 5_856, irmaaMagiP50: 41_372 }),
+      ],
+    }
+    // The top IRMAA tier: the anchor's income sits above the last joint step, so the chrome composes NO step card —
+    // the premium card closes the facts and the block must still sit directly under it (never fall back below the lever).
+    const noEraTop: HealthReadout = { byYear: noEra.byYear.map((r) => ({ ...r, irmaaMagiP50: 2_000_000, irmaaSurchargeP50: 6_000 })) }
+    // A COMPLETE HSA account (its blend answered) — without one the draft builds no priced run and the block never renders.
+    const withHsa = (d: ScenarioDraft): ScenarioDraft => ({
+      ...d,
+      enteredAccounts: [...d.enteredAccounts, { ownerIndex: 1, kind: 'hsa', valueToday: 40_000, manualBlend: { kind: 'exact', stockPct: 60, bondPct: 35, cashPct: 5 } }],
+    })
+    const cases: ReadonlyArray<readonly [string, ScenarioDraft, HealthReadout, readonly string[], string, string, boolean]> = [
+      ['both none — his none form', doorDraft((d) => ({ ...d, medicareExtrasByPerson: [{ kind: 'none' }, { kind: 'none' }] })), noEra,
+        [copy.healthFactMedicareOne, copy.healthFactStep], copy.healthFactMedicareOne, slots.medicareExtrasFactNone('B'), false],
+      ['none + typical — the pointer', doorDraft((d) => ({ ...d, medicareExtrasByPerson: [{ kind: 'none' }, { kind: 'unanswered' }] })), noEra,
+        [copy.healthFactMedicareOne, copy.healthFactStep], copy.healthFactMedicareOne, slots.medicareExtrasFactTypical('B', fig), false],
+      ['ACA cards above an era card, both typical, an HSA entered — a priced arm', doorDraft(withHsa), acaEra,
+        [copy.healthFactCoverage, copy.healthFactDiscount, copy.healthFactConversion, copy.healthFactMedicareBoth, copy.healthFactStep],
+        copy.healthFactMedicareBoth, slots.medicareExtrasFactTypical('B', fig), true],
+      ['the top tier — no step card, the premium card closes the facts', doorDraft((d) => ({ ...d, medicareExtrasByPerson: [{ kind: 'none' }, { kind: 'unanswered' }] })), noEraTop,
+        [copy.healthFactMedicareOne], copy.healthFactMedicareOne, slots.medicareExtrasFactTypical('B', fig), false],
+    ]
+    for (const [label, draft, readout, eyebrows, premiumEyebrow, lastPersonLine, hsaEntered] of cases) {
+      const { unmount } = render(
+        <HealthcareSheet open draft={draft} readout={readout} preview={deferredPreview().fn} onApply={vi.fn()} onClose={vi.fn()} todayEpochDay={FRESH_CLOCK} statePricedNote={undefined} />,
+      )
+      // The sheet portals to document.body — never container queries.
+      const sections = Array.from(document.querySelectorAll('section.hs-fact'))
+      expect(sections.map((s) => s.getAttribute('aria-label')), `${label}: every composed card exactly once, in order`).toEqual(eyebrows)
+      const premium = screen.getByRole('region', { name: premiumEyebrow })
+      const step = eyebrows.includes(copy.healthFactStep) ? screen.getByRole('region', { name: copy.healthFactStep }) : null
+      const lead = screen.getByText(copy.medicareExtrasSheetLead)
+      const heldFlat = screen.getByText(copy.medicareExtrasSheetHeldFlat)
+      const lever = document.querySelector('fieldset.control-policies')!
+      const hsaNote = screen.queryByText(copy.controlHealthHsaNote)
+      const upper = premium.parentElement!
+      expect(upper.lastElementChild, `${label}: the premium card closes the upper list`).toBe(premium)
+      expect(upper.nextElementSibling, `${label}: the lead is the very next block under the premium card`).toBe(lead)
+      // ControlSheet renders its children straight into the dialog: a direct child of .control-sheet rides its gap rhythm.
+      for (const [name, el] of [['the upper list', upper], ['the lead', lead], ['the held-flat line', heldFlat]] as const) {
+        expect(el.parentElement, `${label}: ${name} is a direct child of the sheet, never wrapped`).toHaveClass('control-sheet')
+      }
+      expect(heldFlat.previousElementSibling?.textContent, `${label}: the held-flat line closes the per-person rows`).toBe(lastPersonLine)
+      if (step !== null) {
+        expect(heldFlat.nextElementSibling, `${label}: the step card's list sits directly under the block`).toBe(step.parentElement)
+        expect(step.parentElement!.firstElementChild, `${label}: the step card opens the lower list`).toBe(step)
+      }
+      // After the facts (the lower list, or the block itself when no step card renders): the HSA note iff entered, then the lever.
+      const afterFacts = step !== null ? step.parentElement! : heldFlat
+      expect(hsaNote !== null, `${label}: the HSA note renders iff an HSA was entered`).toBe(hsaEntered)
+      expect(afterFacts.nextElementSibling, `${label}: the HSA note, else the lever, follows the facts`).toBe(hsaNote ?? lever)
+      if (hsaNote !== null) expect(hsaNote.nextElementSibling, `${label}: the lever follows the HSA note`).toBe(lever)
+      unmount()
+    }
+    // ACA cards with NO premium card (a door household whose readout quotes no Medicare year): no referent for "the
+    // lines below", so the block keeps its pre-ruling seat directly after the preview — never above the lever.
+    render(
+      <HealthcareSheet open draft={doorDraft()} readout={READOUT} preview={deferredPreview().fn} onApply={vi.fn()} onClose={vi.fn()} todayEpochDay={FRESH_CLOCK} statePricedNote={undefined} />,
+    )
+    expect(document.querySelectorAll('section.hs-fact').length, 'ACA-only: the ACA cards render').toBeGreaterThan(0)
+    expect(screen.queryByRole('region', { name: copy.healthFactMedicareOne }), 'ACA-only: no premium card').toBeNull()
+    expect(screen.queryByRole('region', { name: copy.healthFactMedicareBoth }), 'ACA-only: no premium card').toBeNull()
+    expect(document.querySelector('.control-preview')!.nextElementSibling, 'ACA-only: the block sits directly after the preview').toBe(screen.getByText(copy.medicareExtrasSheetLead))
   })
 
   it('an unpriced draft (no Medicare-bearing overlay) reads NO held-flat line — the block and the line are absent together', () => {

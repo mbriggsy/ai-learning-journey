@@ -209,7 +209,7 @@ status: shipped
    composeMedicareExtrasTypicalNote pattern), re-composed in ONE pure home,
    `src/ui/stateTaxDisclosure.ts` — the honesty decision lives there and is tested there, never
    in a render path (insight 048). The UNPRICED composition is byte-identical to the shipped
-   monolith (a copyGuard drift-pin proves it), so a non-priced / `'elsewhere'` / unbuilt-state
+   monolith (a drift-pin in `src/ui/__tests__/stateTaxDisclosure.test.ts` proves it), so a non-priced / `'elsewhere'` / unbuilt-state
    household reads today's words verbatim. The per-state affirmation switch is EXHAUSTIVE by
    construction — no catch-all arm, so widening `PricedState` fails `tsc` until the new state's
    own affirmation ships, rather than silently dressing a future SC household in Florida's

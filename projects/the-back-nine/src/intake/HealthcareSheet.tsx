@@ -39,9 +39,10 @@ import { medicareExtrasDisclosureView } from './intakeMap'
 
 type Regime = 'reverted' | 'enhanced'
 
-/** One era-chapter of the stepped fact readout — single-file, rules included (the grammar the
- *  cold-read cleared). Empty chapters render nothing (a fact absent means its data honestly
- *  doesn't exist — decided in the pure chrome seam). */
+/** One run of the stepped fact readout — single-file, rules included (the grammar the cold-read
+ *  cleared; each run closes with its own hairline). The sheet splits the facts after the Medicare
+ *  premium card, if one renders, so the extras rows sit under it. An empty run renders nothing (a
+ *  fact absent means its data honestly doesn't exist — decided in the pure chrome seam). */
 function FactList({ facts }: { readonly facts: readonly import('@ui/healthSheetChrome').HealthFact[] }) {
   if (facts.length === 0) return null
   return (
@@ -132,6 +133,35 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
   // The held-flat line under those dollars — present whenever the block is, a $0 figure included (the chrome seam).
   const extrasHeldFlat = composeMedicareExtrasHeldFlat(extrasView)
   const hasHsa = draft.enteredAccounts.some((a) => a.kind === 'hsa')
+  // ⚑ THE EXTRAS ROWS' SEAT (Briggsy's ruling, 2026-10-16 b9-1 — the "lines below" referent): the Medicare premium
+  // card's carve-out points at "the lines below", so the per-person rows sit DIRECTLY under that card (and above the
+  // step card, when the chrome composes one). Both cards live in one composed list, so the list SPLITS at the `medicare` fact (two `.hs-facts`
+  // lists; the chrome's order is untouched) and the block's paragraphs stay DIRECT children of the sheet — inside a
+  // list they would lose the sheet's gap rhythm. With no premium card (the date route, pre-resolve, a readout with no
+  // quotable Medicare year) the ruling has no referent: the block keeps its pre-ruling seat after the preview, so
+  // those faces are unchanged. ONE block, built once, placed in exactly one seat (insight 086).
+  const medicareAt = view.facts.findIndex((f) => f.id === 'medicare')
+  const factsAbove = medicareAt < 0 ? view.facts : view.facts.slice(0, medicareAt + 1)
+  const factsBelow = medicareAt < 0 ? [] : view.facts.slice(medicareAt + 1)
+  // The Medicare-extras block (F5, the door home — its OWN legible lines, never folded into the omissions run-on):
+  // per-person provenance for the premiums the tool adds on top, INDEPENDENT of the wire readout (the date route's
+  // sheet composes with no readout, and this population is exactly who the verdict residual is structurally
+  // withheld from — showMedicarePricedNote).
+  const extrasBlock =
+    extrasLines === null ? null : (
+      <>
+        <p className="field-help">{copy.medicareExtrasSheetLead}</p>
+        {extrasLines.map((line) => (
+          <p key={line} className="field-help">
+            {line}
+          </p>
+        ))}
+        {/* The held-flat line (the extras are charged REAL-FLAT — no sourced trend): DIRECTLY under
+            the per-person dollars "than shown" refers to, never in the omissions list below (the
+            extras ARE priced, only possibly understated — a different category). */}
+        {extrasHeldFlat !== null && <p className="field-help">{extrasHeldFlat}</p>}
+      </>
+    )
 
   // Open-edge re-seed (the BudgetBuilder rule): the applied regime pre-selects.
   useEffect(() => {
@@ -171,12 +201,17 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
       {/* STRAIGHT DOWN (Briggsy's pick, 2026-07-03 — the chaptered 3-column spread lost the
           test spin; it lives at f6aedb78 if history ever wants it). One reading line: the
           stepped facts, then the lever, the preview, the disclosures, the actions — the
-          chrome-less scroll + shadow carry the "there's more" cue at every width. Each fact:
-          calm sentence-case eyebrow (the region's accessible name) + a tabular-nums dollar
-          anchor (aria-hidden — every figure also lives in a hedged body sentence, so AT hears
-          it once) + the honed sentence(s). Composed + honesty-gated in the PURE chrome seam,
-          never here. */}
-      <FactList facts={view.facts} />
+          chrome-less scroll + shadow carry the "there's more" cue at every width. One
+          disclosure sits BETWEEN the facts since 2026-10-16 (b9-1, his ruling): the per-person
+          extras rows, directly under the Medicare premium card (the seat comment on
+          `extrasBlock` above); with no premium card they keep their seat after the preview.
+          Each fact: calm sentence-case eyebrow (the region's accessible name) + a tabular-nums
+          dollar anchor (aria-hidden — every figure also lives in a hedged body sentence, so AT
+          hears it once) + the honed sentence(s). Composed + honesty-gated in the PURE chrome
+          seam, never here. */}
+      <FactList facts={factsAbove} />
+      {medicareAt >= 0 && extrasBlock}
+      <FactList facts={factsBelow} />
       {hasHsa && <p className="field-help">{copy.controlHealthHsaNote}</p>}
 
       {/* The ONE lever — which subsidy rules the plan figures under (the SequencingControl
@@ -210,25 +245,8 @@ export function HealthcareSheet({ open, draft, readout, preview, previewBlocking
 
       <ControlPreviewReadout previewState={previewState} previewBlocking={previewBlocking} notes={null} />
 
-      {/* The Medicare-extras block (F5, the door home — its OWN legible lines, never folded
-          into the omissions run-on): per-person provenance for the premiums the tool adds on
-          top, INDEPENDENT of the wire readout (the date route's sheet composes with no
-          readout, and this population is exactly who the verdict residual is structurally
-          withheld from — showMedicarePricedNote). */}
-      {extrasLines !== null && (
-        <>
-          <p className="field-help">{copy.medicareExtrasSheetLead}</p>
-          {extrasLines.map((line) => (
-            <p key={line} className="field-help">
-              {line}
-            </p>
-          ))}
-          {/* The held-flat line (the extras are charged REAL-FLAT — no sourced trend): DIRECTLY under
-              the per-person dollars "than shown" refers to, never in the omissions list below (the
-              extras ARE priced, only possibly understated — a different category). */}
-          {extrasHeldFlat !== null && <p className="field-help">{extrasHeldFlat}</p>}
-        </>
-      )}
+      {/* No premium card ⇒ the extras block keeps its pre-ruling seat here (the seat comment on `extrasBlock`). */}
+      {medicareAt < 0 && extrasBlock}
 
       {/* The survivor + omission disclosures describe the WHOLE readout, not just a landed
           preview — they stand on the sheet unconditionally (the ready-arm `notes` slot would

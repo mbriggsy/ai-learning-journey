@@ -101,12 +101,39 @@ if (sessionId) {
   label = "Context (GUESS — no session id; newest log here, maybe another session's)";
 }
 
+// A COMPACTION after the last measured turn makes that measure stale. On
+// 2026-10-20 the harness compacted this project's session while it sat idle
+// (both times ~55 min after a turn ended: 212,652 → 43,451 and 485,045 →
+// 45,821). /window, run as the next turn's first step, reported the
+// pre-compaction 48.3% while the live context was ~12.3%: the backward scan
+// passed the `compact_boundary` entry and the newest usage behind it was the
+// old one (a turn's own usage lands in the log only after its first tool call
+// returns). The boundary's postTokens counts the summary alone (the re-sent
+// system prompt, tools and memory sit outside it), so it is no estimate of
+// the live size either: say there is no live read instead of guessing.
+function compactedLine(entry) {
+  const meta = entry.compactMetadata || {};
+  const mins = Math.round((Date.now() - Date.parse(entry.timestamp)) / 60_000);
+  const age = !Number.isFinite(mins) ? "" : mins < 90 ? ` ${mins} min ago` : ` ${Math.round(mins / 60)} h ago`;
+  const sizes =
+    Number.isFinite(meta.preTokens) && Number.isFinite(meta.postTokens)
+      ? ` (${meta.preTokens.toLocaleString()} → a ${meta.postTokens.toLocaleString()}-token summary)`
+      : "";
+  return `Context: compacted${age}${sizes} — no live read since; ask again after one more step.`;
+}
+
 const lines = readFileSync(transcript, "utf8").split("\n");
 let usage = null;
+let compacted = null;
 for (let i = lines.length - 1; i >= 0; i--) {
   if (!lines[i].trim()) continue;
   try {
-    const u = (JSON.parse(lines[i]).message || {}).usage;
+    const entry = JSON.parse(lines[i]);
+    if (entry.type === "system" && entry.subtype === "compact_boundary") {
+      compacted = entry;
+      break;
+    }
+    const u = (entry.message || {}).usage;
     if (u && (u.input_tokens || u.cache_read_input_tokens || u.cache_creation_input_tokens)) {
       usage = u;
       break;
@@ -115,6 +142,7 @@ for (let i = lines.length - 1; i >= 0; i--) {
     /* skip non-JSON / partial lines */
   }
 }
+if (compacted) line(compactedLine(compacted));
 if (!usage) line("Context: no usage data in the active session yet.");
 
 report(

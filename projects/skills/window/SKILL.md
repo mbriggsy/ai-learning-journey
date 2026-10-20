@@ -13,10 +13,11 @@ user-invocable: true
 
 !`node "$HOME/.claude/skills/window/window.mjs" "${CLAUDE_SESSION_ID}"`
 
-The line above is the answer. Relay it as your reply — on the phone, that one line is the whole point. Three lines are NOT this session's number, and you say so instead of relaying a figure:
+The line above is the answer. Relay it as your reply — on the phone, that one line is the whole point. Four lines are NOT this session's number, and you say so instead of relaying a figure:
 - `Context (TEST` — `WINDOW_TEST_TOKENS` is set and must be unset for a live read.
 - `Context (GUESS` — the script got no session id and read the newest log in the folder, which a concurrent session can own.
 - `two session ids disagree` — the skill's id and the shell's `CLAUDE_CODE_SESSION_ID` name different sessions; relay it verbatim, it is a fault to fix, not a reading.
+- `Context: compacted` — the session was compacted since its last measured turn, so the log holds no live number yet; relay it, and when a number is needed, run the script again after one more tool call.
 
 - **Never fire `/context`.** It blasts an unscrollable table to his phone; this parser one-liner is the deliberate substitute. The script reads the active session's transcript directly and sums input + cache tokens against the 1M window.
 - **Add at most one sentence** of interpretation, and only if the tier warrants it. The line's tail already names the tier and its action: warn line → steer toward a clean milestone; no-fan-out line → start no fan-out that can't finish in the remaining room; wrap line → wrap up and suggest a fresh terminal. The three thresholds live ONLY in `window.mjs` (`WARN` / `NO_FANOUT` / `WRAP`) — quote the line's own numbers, never numbers from memory. No padding, no marketing voice. Match his energy.

@@ -66,6 +66,8 @@ The last assistant message's `usage` is what the API saw on input for the curren
 
 A non-UUID argument — the shell expanding an unfilled `${CLAUDE_SESSION_ID}` to an empty string — is ignored.
 
+**After a compaction — no number, never the old one.** A compaction writes a `compact_boundary` entry into the log, and the newest `usage` behind it is the PRE-compaction size. A turn's own usage lands in the log only after its first tool call returns, so `/window` run as the first step after a compaction used to print that stale figure. On 2026-10-20 the harness compacted a session while it sat idle (485,045 tokens down to a 45,821-token summary, ~55 min after the last turn ended); the next turn's `/window` read 48.3% while the live context was ~12.3%. The scan now stops at a boundary it meets before any usage and prints `Context: compacted 17 h ago (485,045 → a 45,821-token summary) — no live read since; ask again after one more step.` It reports no estimate on purpose: the boundary's post-compaction count is the summary alone, and the re-sent system prompt, tools and memory sit outside it.
+
 **Two open checks, both needing a fresh session:** whether the env id follows a `/clear` (a new session in the same process), and whether the harness fills `${CLAUDE_SESSION_ID}` inside the `!` line at all. Skill content is cached when a session starts, so neither can be probed from the session that edited it. If the env id goes stale after `/clear` and the argument arrives filled, the disagreement line catches it. If the argument never arrives filled, a stale env id after `/clear` would read the pre-clear log — the one silent case left.
 
 ## Installation

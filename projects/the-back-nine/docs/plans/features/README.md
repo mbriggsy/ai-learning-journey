@@ -21,7 +21,7 @@ lived only in a session scratchpad. Four docs here were not council-ratified: th
 pilot-decided, the pay-less-tax all-in spec was drafted by a planning workflow (`wf_23bd4439-e6d`) on
 Briggsy's 2026-10-05 ruling, and the U7 readout and the U17 S5 plan are as-built records. A spec is the
 *executable* shape the act plan's prose (where one existed) was refined into — its precedence declaration at the top names what
-it supersedes and dates each supersession. All of them are **shipped** (the roadmap's You-Are-Here table is
+it supersedes and dates each supersession. All of them are **shipped** except the working-year tax floor (planned and deepened 2026-10-20, the next build) (the roadmap's You-Are-Here table is
 the authority on per-unit status; a spec never re-types it). Line anchors inside a spec predate its build
 and have drifted — open every cited line before acting on it.
 
@@ -40,3 +40,4 @@ and have drifted — open every cited line before acting on it.
 | [state-tax-build-spec.md](state-tax-build-spec.md) | The State-Tax Engine Unit — build spec (council-ratified) |
 | [u13-build-spec.md](u13-build-spec.md) | U13 build spec — the council-ratified corrected package (2026-07-09, wf_a1ef7e25-64d, 9/10) |
 | [u7-survivor-readout.md](u7-survivor-readout.md) | U7 items e1–e2 — the survivor-conditioned engine distribution + the survivor readout (as built) |
+| [working-year-tax-floor-build-spec.md](working-year-tax-floor-build-spec.md) | The working-year tax floor — a working-year conversion, RMD or Medicare draw priced on top of the household's pay (the register Tier 0, b9-3; KTD11 council-decided, `wf_ef6cf7c5-a2b`) — PLANNED, not built |

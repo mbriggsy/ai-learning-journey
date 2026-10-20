@@ -166,6 +166,10 @@ CLAUDE.md). If the team ever gets renamed, re-read it from `/rosters` + `/users`
    `trade`), fired when the TRADES tab loads: the transaction carries `metadata.rejecter_id` and `status_updated`.
    Measured 2026-10-20: the Kittle offer sent 17:54:41 ET, rejected by Kaeperni 18:01:02. **Re-check the tab before
    telling Briggsy an offer is still live** — "sent ✅" was true and stale six minutes later.
+6. 🚨 **SEND TRADE also posts into a DM thread with the other manager, from our account** — even with the review
+   screen's *SEND DIRECT MESSAGE* left empty: `@PoppaBriggsy has proposed a trade in Family Feud` plus a trade card.
+   That card is **where a rejected trade stays visible**: left nav *Direct Messages* → the thread → the card reads
+   `REJECTED <date>` with the players and a VIEW button. So never tell Briggsy "no message was sent".
 
 🚨 **Adds/drops post to `/transactions/<display_week>`, not `state.week`.** On Tue 10-20 (`week: 7`,
 `display_week: 6`) the Hockenson drop landed on `/transactions/6`, and `/transactions/7` read `[]`. `/rosters` is

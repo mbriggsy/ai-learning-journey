@@ -149,6 +149,22 @@ CLAUDE.md). If the team ever gets renamed, re-read it from `/rosters` + `/users`
   `[native code]`. Measured: stubbed to `false`, the drop cancels cleanly and nothing changes.
   Stubbed to `true`, Dell was dropped and the API confirmed it.
 
+### Propose a trade — `/players` (measured 2026-10-20, the Kittle offer)
+
+1. Players tab in-app (as under *Waiver claims*), search the target. A player on another roster shows
+   `a.player-action-button.trade` (no text). Click it → `.modal-item` *Add Trade Assets*, target pre-selected.
+2. Every asset is a `.trade-center-player-box.clickable` (owns `onClick`), text `POS - TEAM(bye) F. Last`,
+   gaining `selected` and a ` to <team>` suffix when picked. Pick our outgoing players, then read the
+   *Trade Summary* (`… RECEIVES SENDS …`) and throw unless it names exactly the agreed players both ways.
+3. `.next-button` `NEXT` → *Review Trade Offer*: expiry dropdown (default `NEVER`), a *SEND DIRECT MESSAGE*
+   section (left empty), and `.next-button` `SEND TRADE`. **No native dialog fired** (stubbed: 0 calls).
+4. Oracle: the TRADES tab (`.item-tab` index 5, label `1 TRADES`) → *Active Trades · OUTGOING*. The public
+   `/transactions/<week>` shows nothing while a trade is pending.
+
+🚨 **Adds/drops post to `/transactions/<display_week>`, not `state.week`.** On Tue 10-20 (`week: 7`,
+`display_week: 6`) the Hockenson drop landed on `/transactions/6`, and `/transactions/7` read `[]`. `/rosters` is
+the oracle; the transaction log is the receipt — look in both weeks.
+
 ### 🚨 WAIVER CLAIMS — never type the `/players` URL. Enter through the league.
 
 **A cold load of `…/players` (typed URL or `navigate`) never loads waiver data.** Every waiver

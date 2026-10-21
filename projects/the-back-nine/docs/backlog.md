@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **134 open items** (191 entries, 57 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
+> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **182 open items** (239 entries, 57 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -736,6 +736,7 @@ Briggsy's eye, and should not be re-filed as a copy defect without a read.
   exhaustive `stateTaxDisclosure.ts` switches that fail `tsc` until written, and a 4 → 11-arm intake
   picker measured against `verify:fit`. Never widen on a "structural $0" claim; whether to widen at all
   is his scope call (the owner line).
+- ⚑ **RULED 2026-10-21 (b9-7, Briggsy):** the priced roster stays NC, PA and FL "for now". **His idea, filed here (thinking out loud — not yet ruled to build):** a generic facility for every other state — ask the household's state income-tax rate and whether the state taxes Social Security benefits (D7 rule 2: ask, never assume $0). Today a household outside the three cannot even name its state: the picker offers NC / PA / FL / "Somewhere else" (`src/intake/questions.tsx:537-541`). When it ranks: source the shape first (one flat effective rate vs brackets; the Social Security exemption flag; how states treat pensions and IRA withdrawals), then a council on the question's words. ⚑ NEGATIVE: never a plausible default rate (burned/062).
 
 ### ~~The recommendation tells a priced-state household we can't price their state~~ — **CLOSED 2026-08-03** (`12d2bb6e`)
 
@@ -914,6 +915,20 @@ Briggsy's eye, and should not be re-filed as a copy defect without a read.
   - (1) Measure. On every date seed, compute each clamped year's take-home: pay − the worker's own pre-tax deferral − the floor's tax on the base − payroll tax − every other contribution. Set it against the year's spending, and name each seed and household shape that goes short, and by how much.
   - (2) `/council` the remedy: draw the shortfall from savings, flag it at intake ("does your pay cover your spending?" against figures already entered), or both. A draw re-opens §7's double-count question, so the contribution and the draw must net, never stack.
   - Payroll tax (FICA) is unmodeled and absent from the constants. Source it before any take-home figure, never as a plausible default (burned/062).
+- ⚑ **MEASURED 2026-10-21 (b9-7) — prescription (1) is done** (`wf_560447e6-0fc`). Three agents did it. A read-only probe ran every working-household dev seed × all 11 stop-date offsets × every working year, with each seed built the way the app builds it. A hand derivation of `date` and `dip` year 0, independent of the engine, matched the probe to the cent; it read Rev. Proc. 2025-32, IRS Topics 751, 560 and 424, §86, §151(d)(5)(C) and N.C.G.S. §105-153.5. A skeptic re-ran the probe byte-identical. Payroll tax was read at IRS Topic 751 (6.2 % up to $184,500 per worker, plus 1.45 %) and Topic 560 (0.9 % above $250,000 married filing jointly — frozen since 2013, so it is deflated by `cumulativePriceIndex`).
+  - **Everyone alive: no working year on any seed or offset is short.** The tightest margins, all in year 0 and without the entered investment income: `datenc` $1,645 (about 2 % of its spending), `date65` $5,216, `dip` $6,505, `date` $16,985, `datemixed` $46,290, and `dateborder` / `datesplit` $70,290. `datesolo` is refused before any run. The pilot's prediction, written before the run ("at most two short, `datemixed` likeliest"), was WRONG.
+  - **Survivor paths do go short.** When one worker dies and the other keeps working, `dip` comes up short by as much as ~$33,197 a year and `datemixed` by as much as ~$15,372, on the full track. Only the deaths the engine actually draws count: none before 65 (`src/engine/longevity.ts:59-66`). Within those, it is about 0.8–1.5 % of paths per affected year, and never at a crowned offset.
+  - **What the check must count, and must not double-count.**
+    - The Medicare costs the engine already funds from savings in a working year (`src/engine/taxOverlay.ts:2069`) must never also be charged against pay. That double count is what read $147 / $3,718 "short" on `date65` / `datenc`.
+    - The earnings test: a claim before full retirement age, made while still working, inflates cash in. With it, `dip`'s t ≥ 5 margin is $6,505–$6,901, not ~$34,800.
+    - Employer health premiums taken from pay: never asked. Any premium above $1,645 a year flips `datenc` short, so this is a D7 ask.
+    - State tax on pay where the household WORKS: *The tool asks only where you'll live in retirement, and taxes your working years as if you already lived there*.
+    - PA's tax on wages: a class-based state's base ignores the pay (`src/engine/stateTax.ts:114-121`).
+  - **Two findings for the build.**
+    - A surplus is thrown away too: `dateborder` keeps about $70,000 a year nowhere (*Money coming in beyond what the household spends is thrown away…*). The council rules the shortfall and the surplus together.
+    - `dip`'s "Go-go years" travel line is charged in every working year, though a budget line's start counts from the stop date ("0 = the first retirement year", `src/shared/model.ts:599-600`). It is inert under today's clamp and live the day the check ships.
+  - Stale seed comments: `src/ui/devSeeds.ts:279` (`dateborder` "≈ 7 years out", measured window-edge @10) and `src/ui/devSeeds.ts:507` (`datemixed` floor "≈ 4", measured @7).
+  - **Next: prescription (2), the council**, fed the measurement and the proposed remedy to attack (insight 026).
 - ⚑ NEGATIVE:
   - Never restore the gross-pay subtraction the clamp replaced. It stacked a draw on top of the contributions and ignored every tax on the pay.
   - Never key the clamp on a value. A 1¢ contribution must never flip the draw regime (§7's presence law); a shortfall check is its own quantity, never a new gate on the clamp.
@@ -1105,6 +1120,181 @@ Briggsy's eye, and should not be re-filed as a copy defect without a read.
 - **Prescription (as filed: the pilot's lean, unbuilt — DISCHARGED by `e17c40e4`, the ✅ block above).** (1) For a household of two or more, compose the arm's sentence from the era arm's own ruled line, `slots.irmaaStepEraStart` — on `healthss` "About three years from now, around 2029, while you're both on Medicare, Part B premiums and any income surcharge start at about ~$5,200 a year for your household." — "start at" plus the date the card lacks — with `copy.healthFactMedicareBoth` as the eyebrow so the frame words agree (the 2026-09-13 late council: never a third frame), and `irmaaStepSurchargeOf` on a surcharged anchor. Decide whether a trend sentence is owed: `irmaaStepEraTrendNote`'s first clause ("Even in today's dollars, each person's Part B premium is likely to keep rising") fits a one-figure card, but its second clause is the PAIR's — a trimmed or new sentence is his words. (2) The one-person shape: reachability first; if reachable, its words are his. (3) Pins on `healthss` through the real engine (the dated "start at" line, the frame word), red-proven; a Caddie re-walk of `healthss`.
 - **Folded in (the hunter's nit, correctness lane):** the card's dollars are today's (the extras' held-flat line says so; the Part B line never does), while the story line points at "the premium bill at 65" — the 2029 bill in that year's own dollars is ~$5,700 (V.E2's $238.50 × 24), so a couple matching the card against their first real bill reads the tool ~$500 low. The era arm's dated line has the same property (`healthnc`'s "around 2032, … ~$5,800"). Decide with (1).
 - ⚑ NEGATIVE: never fold the extras into the hero (the 2026-09-14 "eyebrow" ruling); never a percentage or an arrow on the card (the basis clause's own negatives); never re-derive enrollment from ages (`medicareEnrolledP50`); the figure stays the anchor year's — the fix is the frame, never a different number.
+
+### Money taken from retirement accounts before age 59½ is never charged the 10% early-withdrawal tax — the engine never checks the owner's age when it draws
+
+`L` · **pilot** (measure → build) · **council** (whose account a mixed-age couple draws first) · **briggsy** (any household-facing words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs and engine sweeps)
+
+- **The gap (read).** `allocateWithdrawal` takes balances and a policy, never an age (`src/engine/sequencing.ts:134-146`). The year's ordinary income is the pre-tax draw, the conversion, the ongoing taxable income and taxable Social Security, with no Roth term (`src/engine/taxOverlay.ts:1203-1205`). Nothing in `src/` applies the federal 10% additional tax on a draw before 59½ (26 U.S.C. §72(t)), its age-55 exception for a job's plan, or the Roth rule that only contributions (and conversions past their five-year clock) come out free of it. The one 59½ rule is PA's state gate (`src/engine/constants/stateTax.ts:241-250`; its note says the date route reaches ages under 59½). A register grep for early withdrawal / 72(t) / rule of 55 / separation from service finds no entry.
+- **Direction.** Rosy: every missed charge is money the household really owes. Unmeasured. The date search tests stops 0–10 years out (`src/engine/dateSearch.ts:61-69`), so a household in its late 40s or early 50s draws pre-tax right after a tested stop under the default proportional order (`src/store/memoryModel.ts:567`). On the spine, `healthgap`'s Sam is 40, retired, and owns the household's only Roth IRA, $150,000 (`src/ui/devSeeds.ts:759-769`, `:785-789`, `:1088-1093`). The recommendation can crown pre-tax-first, bracket-fill, or a conversion whose tax is partly paid by pre-tax draws (`src/engine/roth.ts:33-41`) for an under-59½ couple.
+- **D7.** USE what is held: birth years and the per-person pre-tax ledger (`src/intake/intakeMap.ts:594-599`) already say whose draw is under 59½. ASK what is not: the year each person left the job whose plan they draw from (for a retired member the entered stop age is that fact, and it moves nothing today), the Roth contributions-to-date total, and whether a plan is a governmental 457(b) (no 10% charge, outside knowledge; no account kind of its own, `src/shared/model.ts:1537-1545`). A "not sure" keeps the full charge. Birth month is not asked, so the 59½ line is ±1 year (PA's gate takes it at 60, `src/engine/stateTax.ts:95-96`).
+- **Prescription.** (1) Measure on every date seed and on `healthgap`: the date, the grade, and whether the crown moves with the charge on. (2) Build the charge on each under-59½ owner's share of the pre-tax draw and of any Roth draw above the charge-free amount, with a ledger row and a DND-012 fixture worked by hand. Re-read §72(t), §72(t)(2)(A)(v) and §408A(d) before pinning (outside knowledge: a Roth 401(k)'s rule differs, and each year's conversion has its own five-year clock). The age-55 exception needs a per-person employer-plan ledger: build it once, with *A still-working employer-plan participant's RMD is forced…*. `/council` the mixed-age couple: the ledger splits the pre-tax draw pro-rata by balance (`src/engine/taxOverlay.ts:800-802`), so it charges the younger spouse's share, while a real couple can draw the older spouse's account first; the Roth bucket has no per-owner ledger at all.
+- ⚑ NEGATIVE: never apply the age-55 exception to IRA dollars; an unknown Roth basis is fully charged, never a plausible default (burned/062); the charge is deterministic post-draw arithmetic, never a new draw. The on-screen word is his call: copyGuard bans "penalty" (`src/ui/copyGuard.ts:301`) only in the survivor copy.
+
+### Fund fees and adviser fees are never taken out of the growth
+
+`M` · **pilot** (measure → build) · **briggsy** (the question's words; the per-account half rides his per-account-mix ruling) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the engine sweep)
+
+- **The gap (read).** Growth uses the production real returns, stocks 5.0% and bonds 1.0% a year after inflation (`src/engine/reference/methodology.ts:55-63`), with nothing taken off for fund expenses or an adviser's percentage. The model, intake and engine have no fee field, and the methodology rows state those returns with no word on fees (`src/ui/copy.ts:3059-3062`). The shipped intake collects no ticker (`src/shared/model.ts:1555-1560`, `src/intake/AccountEntry.tsx:21-24`), and the bundled blend table is dead code (*Intake shape — no single-person household, and no way to enter what you actually own*), so a fund's expense ratio cannot be looked up. A register grep for expense ratio / adviser / AUM finds no entry.
+- **Direction.** Rosy for every household that pays fees: a 1% adviser fee alone equals the whole 1.0% bond real return the defaults assume. Unmeasured.
+- **D7.** ASK: a fund-cost figure (per account or for the household), and whether an adviser charges a percentage of assets. A "not sure" gets no plausible default (burned/062).
+- **Prescription.** (1) Measure the headline's move at a few fee levels on the spine and date seeds before building. (2) Build a household-level deduction from the blended return: deterministic arithmetic after the one shared draw in the yearly step (`src/engine/decumulation.ts:69-95`), presence-keyed so an absent answer is byte-identical. A fee that differs by account is a per-bucket tilt — the same invariant question as the per-account-mix entry filed by this audit — so that half waits on his ruling.
+- ⚑ NEGATIVE: never a second or per-bucket return draw for a fee; never perturb the Trinity/Bengen golden cases, which run fee-free.
+
+### Before Medicare the tool assumes marketplace coverage — a former employer's retiree plan, COBRA or military coverage isn't asked, and a benchmark entered for one can invent a subsidy
+
+`S` · **pilot** (build) · **briggsy** (the question's words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs sweep)
+
+- **The gap (read).** The pre-65 step asks two monthly figures, the household's premium and the "Benchmark Silver plan", and links to the marketplace (`src/intake/questions.tsx:595-627`, `src/ui/copy.ts:222-231`). The engine computes a premium credit against any positive benchmark for an income in the subsidy range (`src/engine/healthOverlay.ts:222-231`), and the entered quote is split by age on the marketplace's rating curve (`copy.ts:225-226`; `src/engine/constants/health.ts:313-316`). An explicit $0 benchmark is the only way to say "not marketplace" (the engine's own comment names it for employer retiree coverage, `src/engine/simulate.ts:1155-1157`), and no help text says so. The one coverage question asks only whether a working spouse's plan covers the retired one (`copy.ts:241-246`). A register grep for COBRA / retiree plan / TRICARE finds no entry.
+- **Direction.** Rosy: a household on a retiree plan, COBRA or military coverage that copies a benchmark from the linked quote gets a credit it is generally not eligible for (outside knowledge). Unmeasured.
+- **D7.** ASK the coverage type before the quote pair: marketplace / a former employer's retiree plan / COBRA / military / other.
+- **Prescription.** Build: a non-marketplace answer prices the entered premium as-is — no credit (the benchmark structurally 0) and no marketplace age curve, an individual-market rule — plus a COBRA end date where it applies, after which the marketplace pair is asked. SOURCE the eligibility rule per coverage type before building (26 U.S.C. §36B(c)(2) and its regulations; whether the person is enrolled or merely eligible matters — outside knowledge), never a plausible default. Distinct from the CLOSED mixed-household entry, which asked only about a working spouse's plan.
+- ⚑ NEGATIVE: never price a credit for a non-marketplace answer, whatever benchmark was typed.
+
+### A pension from the job you still work at counts the same whatever stop date is tested — stopping earlier never shrinks it
+
+`M` · **pilot** (measure) → **council** (re-opens KTD-8a's same-income-for-every-date rule) → **briggsy** (the question's words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the critic)
+
+- **The gap (read).** Other income is compiled once and handed unchanged to every candidate stop date. `income` "is Y-INVARIANT (a pension is received the same in real terms whatever date the household stops working)" (`src/engine/dateSearch.ts:212-217`; the R40 record's KTD-8a, `docs/decisions/other-income-r40.md:88`; pinned by `src/engine/__tests__/dateSearch.test.ts:340`). A stream is one amount and one start age (`src/shared/model.ts:1748`, `:1751`), and intake never asks whether it depends on how long the person keeps working (`src/ui/copy.ts:376`, `:382`). So a defined-benefit pension estimated for one retirement age is credited in full to every earlier stop the search tests. In reality, stopping earlier means fewer service years, often a lower final-pay base, and sometimes a later or reduced start.
+- **Direction.** Rosy for every tested stop earlier than the age the estimate assumes, which are exactly the stops that pull the crowned date earlier. Gloomy for later ones. Unmeasured. This is the shape of the open Tier 0 *The Social Security statement's default figure assumes continued earnings…*, applied to pensions. A register grep for pension with stop / service / accrual / Y-invariant found nothing.
+- **D7.** Ask for it, per pension: "Does this pension grow while you keep working here?" If yes, ask for the plan's estimate at two ages (interpolated per candidate), or the multiplier and the earliest unreduced age.
+- **Prescription.**
+  - (1) Measure first: build a date-route household with a current-job pension scaled to service, and compare its crowned date with and without the scaling.
+  - (2) `/council` the shape. Varying income per candidate adds no random draw, because the draw schedule depends on dimensions only. It does re-open KTD-8a's compile-once rule and the CRN test (common random numbers: every candidate sees the same futures) that pins identical income vectors. Never a silent fix.
+- ⚑ NEGATIVE (extending the warning at `dateSearch.ts:215-216`): never truncate an already-earned pension over the working years, whether a retiree's or a deferred one from a former employer. That would un-model income they really receive. Only a still-working owner's current-job pension may vary with the stop date.
+
+### Nobody in the model can die before 65, though the life tables the tool already holds cover every age
+
+`M` · **pilot** (measure → build) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, all three sweeps: the inputs and copy skeptics, and the engine sweep)
+
+- **The gap (read).** `survivalProbability` returns 1 at every age up to `SURVIVAL_BASE_AGE = 65` (`src/engine/reference/mortality.ts:50`, `:122-123`). The sampler's earliest death age is one past the later of the current age and 65 (`src/engine/longevity.ts:66-67`).
+  - So everyone now under 65 lives past 65 on every path, on both routes.
+  - The code calls it "a directional limitation" without naming the direction (`longevity.ts:59-61`).
+  - The committed SSA cohort snapshot already holds every age from 0 (`src/engine/reference/ssa-snapshot/CohLifeTables_M_Alt2_TR2024.csv` and its female twin).
+  - The register mentions it only in the measurement-limit lists of two CLOSED entries (`docs/backlog.md:1769`, `:2055`, `:2128`), and the panel's longevity row (`src/ui/copy.ts:1439-1440`) never says it.
+- **Direction.** Either way, broad reach, unmeasured. A worker's early death ends pay and deposits and starts the survivor's draws early; missing that reads rosy. The years of spending it removes read gloomy. The sweeps lean rosy for a working household; measure before claiming a direction.
+- **D7.** Use it: the odds below 65 are a table the tool already holds. How long each person lives stays unknowable, and the plan already runs on odds.
+- **Prescription.**
+  - (1) Measure every band-named seed's headline and crowned date first, with expected values derived independently (DND 012).
+  - (2) Build: extend the curve below 65 from the snapshot. The sampler already divides by survival at the current age (`longevity.ts:64`, `:68`), so it conditions on today's age once the curve drops below 1 there. If the open Tier 2 *Mortality is keyed to the primary household's 1969/1972 cohorts…* is reached first, build the two together.
+  - **Sequencing landmine.** On the flagship `?seed=date` (Alex 58 and working, Sam 60 and retired; `src/ui/devSeeds.ts:1118`), Alex can die today only at 66 or later, when Sam is already past 65. So the open Tier 0 *On a death path the surviving retired spouse's health coverage is priced at $0 until the dead worker's planned stop date…* cannot fire its rosy leg (a pre-65 survivor's $0 coverage) there. That is derived, not measured. Sampling deaths before 65 makes it fire on that household, so land that entry first or in the same change.
+- ⚑ NEGATIVE (the cohort entry's, binding): one uniform per person on the inverse-CDF sampler. Never a change to the draw schedule, since that is what keeps every candidate on identical futures. Never a blended or period table.
+
+### The brokerage account's cost basis is held at today's dollars forever, so the inflation part of every future gain is never taxed
+
+`M` · **pilot** (measure → build) · **council** (the one inflation path, ruled once for the cluster) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs sweep)
+
+- **The gap (read).** The engine runs in today's dollars. It keeps each brokerage account's entered cost basis as a fixed real amount, cut only pro-rata on withdrawals: "Basis is NOT scaled by growth" (`src/engine/taxOverlay.ts:2355-2361`).
+  - Tax law taxes the dollar gain, inflation's share included. A real-dollar basis that never shrinks leaves that share untaxed.
+  - A real loss that is still a dollar gain is floored to no gain (`taxOverlay.ts:1199-1202`).
+  - The one price index (`src/engine/priceIndex.ts`) already deflates other figures fixed in dollars, but not this one.
+  - Same class as the CLOSED *The Social Security taxation thresholds are FROZEN by law…* and *The other frozen-nominal figures still priced FLAT…*. A register grep for basis near inflation / real / deflate / price index found nothing.
+- **Direction.** Rosy, growing with the horizon. Unmeasured. Derived, not measured: each withdrawal's missed gain is the withdrawal × (basis ÷ balance) × (1 − 1 ÷ prices' growth since the basis was entered). So it is largest for a brokerage-heavy household whose basis is a large share of its balance. At 3 % a year, a basis is worth about three-quarters of its face after ten years (1/1.03^10 ≈ 0.744).
+- **D7.** Use it: the basis is entered, and the law's dollar-gain rule is known.
+- **Prescription.**
+  - (1) Measure the realized-gain and tax change, headline and crowned date, on every seed with a taxable account.
+  - (2) Build: deflate the basis each year by the one cumulative price index. Take growth through `cpiGrowth`, never a quotient of clamped levels (insight 138). Add a ledger row and a hand fixture (DND 012).
+- ⚑ CONTRADICTION (found here; it does not block this build): the engine carries two inflation paths.
+  - The price index rides the trustees' CPI path. Its header says every frozen-nominal figure divides by it, "never by a hand-typed rate, never by a second index" (`priceIndex.ts:9-10`). A basis is such a figure, so it takes this index.
+  - Flat pensions deflate at the market model's 3 % mean instead (`src/intake/intakeMap.ts:575-580`; `src/engine/reference/methodology.ts:64`).
+  - Rule it once for every D7 inflation-path gap filed 2026-10-21.
+
+### The health-insurance quote question never says whether to enter the price before or after the marketplace discount, and the tool takes its own discount off whatever is entered
+
+`XS` · **pilot** (draft) → **briggsy** (the words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the copy sweep's skeptic)
+
+- **The gap (read).** The engine works out the discount (the premium tax credit) from the benchmark and the year's income. It then charges `Math.max(0, enrolled - Math.min(ptc, enrolled))` (`src/engine/healthOverlay.ts:303`), so it treats the entered premium as the full price. No label, help line or preflight says "before any discount" (`src/ui/copy.ts:53-54`, `:223-231`).
+- **Direction.** Rosy, unmeasured.
+  - A household that types its chosen plan's after-discount price gets the discount twice.
+  - One that types both figures after the discount sees a cost that barely moves with income. That hides the subsidy cliff from conversions, which reads rosy for converting.
+- **D7.** Ask for it right (rule 2): one plain line asking for the price before any discount.
+- **Prescription.**
+  - (1) Check first, not verified here, whether healthcare.gov shows after-discount prices by default: a grounded search, then the site itself.
+  - (2) Draft the line; the words are his. The `slcspHelp` comment (`copy.ts:227-229`) records that "the discount" can't be forward-referenced at this step. So the line asks for the full price in words that don't lean on a term the reader hasn't met yet, unless that constraint is re-ruled.
+  - This is distinct from the Tier 2 *The ACA card's eyebrow names "The income-based discount"…*. A register grep for before-the-discount / sticker / full-price wording found nothing.
+
+### Someone still working after 65 is assumed to stay off Medicare — no Medicare premium is charged until work stops, and health-savings-account deposits keep counting after Social Security starts
+
+`S` · **pilot** (build) · **briggsy** (the question's words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs and engine sweeps; the HSA half by the critic)
+
+- **The gap (read).** Each person's Medicare start is `max(65 − currentAge, retireOffset)` (`src/engine/healthcareStreams.ts:45-51`, `:124-127`). The module calls the delay "the correct real-world model", which holds only where the job's plan lets a worker delay. So a member working past 65 accrues no Medicare cost until they stop: no Part B (Medicare's standard premium), no income surcharge (IRMAA) and no extra coverage (`src/engine/taxOverlay.ts:613-624`, `:1962-1965`). Intake never asks, and no sentence covers it. A self-employed worker, or one at a small employer where Medicare pays first, must enroll and pay (outside knowledge, unverified: fewer than 20 workers).
+- **The HSA half (read).** Health-savings-account (HSA) deposits stop at that same start (`src/engine/simulate.ts:655-663`), which has no Social Security term. The constants' note says claiming Social Security past 65 backdates Part A up to six months, which ends HSA deposits, and that this trap is "disclosed at intake (D1)" (`src/engine/constants/contributions.ts:122`). That is false: `src/ui/copy.ts` has no six months / retroactive / backdate line. The only related line is "Once Medicare starts, new contributions stop counting" (`copy.ts:1203-1204`).
+- **Direction.** Rosy: no Medicare premium is charged, and deposits the law disallows stay tax-free (up to one year's HSA limit per year of overlap). Unmeasured. The Part B late-enrollment penalty is also unmodeled (`src/ui/copy.ts:1105`).
+- **D7.** Ask each member who will reach 65 while working: "At 65, will you sign up for Medicare, or stay on your job's plan?", with a "not sure" option. The HSA cutoff is use, not ask: the claim year is already entered.
+- **Prescription.** (1) Measure which seeds carry a member working past 65, and the Part B cost and HSA deposits in those years. (2) Build: the answer sets that member's Medicare start, and "not sure" takes the reading that never flatters the date. End each owner's HSA deposits at the earlier of their Medicare start and the later of 65 and six months before their Social Security start; the half year needs a ruled rounding in a yearly model. Source the small-employer rule and the Part A look-back at the primary first. Correct the false "disclosed at intake" note in the same change.
+- ⚑ NEGATIVE: never fold the Social Security term into `medicareOnsetSimYear`. That start prices Part B, which a worker on a job's plan may still delay, while Part A alone ends HSA deposits, so the HSA cutoff is its own quantity. The answer is additive-optional in the saved record, never a required field (a required field bricks saved vaults — the heir-bracket lesson).
+
+### A retiree already drawing Social Security is asked for a "full retirement age" figure their paperwork no longer shows — a current check typed there gets adjusted for early or late claiming a second time
+
+`S` · **pilot** (build) · **briggsy** (the question's words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the critic)
+
+- **The gap (read).** The step asks for the "Monthly benefit at full retirement age", with the help "The figure your statement shows at full retirement age… the tool adjusts from there" (`src/ui/copy.ts:92-94`). The figure ×12 is stored as `pia`, the unreduced benefit (`src/intake/questions.tsx:270-281`). The engine then treats it as unreduced:
+  - `adjustOwnBenefitAnnual` applies the claim-age factor (`src/engine/socialSecurityBenefit.ts:146-149`).
+  - The spousal add-on is built from the higher earner's UNREDUCED figure (`socialSecurityBenefit.ts:155-162`).
+  - A past claim year just starts the benefit at year 0 (`src/engine/simulate.ts:310`).
+- The decision record's input is "pia + claim age (not an already-adjusted benefit)" (`docs/decisions/ss-computation.md:63`), and it never addresses a household already being paid. No copy string or register entry mentions the case.
+- **Direction.** Either way, on the already-retired route's headline; unmeasured. An early claimer's check is cut twice (gloomy). A check from a claim at 70 gets the delayed credit twice (rosy). A check that already includes a spousal add-on gets it again (rosy). Outside fact, unpinned: a beneficiary gets a benefit verification letter, not the Statement.
+- **D7.** Ask for the figure they actually have: "Already receiving it? Enter this year's monthly check."
+- **Prescription.** (1) Measure on hand worksheets (DND 012): an early claimer, a claimer at 70, and a couple with a spousal add-on, each typed in as today's check, against the right benefit. (2) Build the branch: back the received check out to `pia` through the inverse of the same exact-fraction factor, or let a received figure skip the factor. Split a received spousal add-on out by inverting the Method C sum once the higher earner's benefit is known.
+- ⚑ NEGATIVE: never store a received check as `pia` unconverted (§1's input is the unreduced benefit). Never re-type a reduction percentage for the inverse; invert the one factor table. The new answer is additive-optional in the saved record, never a required field.
+
+### Tax brackets and the standard deduction keep their full 2026 value after inflation, though the law raises them by a slower-rising price measure
+
+`S` · **pilot** (research the sourced gap → build) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the engine sweep)
+
+- **The gap (read).** `bracketsFor`, `deductionStack` and `capitalGainsBreakpointsFor` read the 2026 figures in every year (`src/engine/taxCore.ts:38-40`, `:114-118`, `:217-219`). In the engine's after-inflation dollars, holding a figure flat is the same as indexing it (`src/engine/priceIndex.ts:5-10`), and the engine's one price path is the Trustees' CPI-W assumption: 3.2% a year near-term, then 2.4% (`src/engine/priceIndex.ts:12-17`, `src/engine/constants/health.ts:233-234`). Federal law indexes these figures by the "chained" consumer price index, which usually runs a little below (outside knowledge, unverified here), so their real value should shrink slowly. "Chained" appears nowhere in `src/`, and no register entry covers it.
+- ⚑ **CONTRADICTION.** The CLOSED entry 'The other frozen-nominal figures still priced FLAT in real dollars…' rules the federal brackets and standard deduction NEVER deflated ("indexed by law — flat-real is right for them"). That holds only if the law's index matches the engine's price path. This entry re-opens that ruling on that one point, never on the whole index. It is a smaller cousin of the frozen-figure class, not a member.
+- **Direction.** Rosy: the brackets stay wider than the law makes them. Small per year, growing with the horizon. Unmeasured.
+- **D7.** Use it. This is law the engine can apply once the gap is sourced; nobody has to be asked.
+- **Prescription.** (1) Measure first, before any figure is chosen: the tax change on the longest-horizon seeds per tenth of a point a year of real shrink (a sensitivity, never the gap itself). (2) Read each figure's indexing statute (the brackets' IRC §1(f), each deduction, each breakpoint), because not every figure the engine holds is chained-indexed. Source a published forecast of the chained-versus-CPI-W gap. Then deflate only the chained-indexed figures by that gap, on top of the one index.
+- ⚑ NEGATIVE: never type a plausible gap as a default; it is an `Unsourced` sentinel until sourced (burned/062). Never add a second, free-standing price index (`src/engine/priceIndex.ts:9-10`); the gap is one sourced ratio on the one path. Never deflate a federal figure by the whole index (the closed entry's NEVER stands for that).
+
+### Out-of-pocket medical costs and Medicare's drug-plan and supplement premiums never grow — both stay at today's price after inflation for life
+
+`M` · **pilot** (research a sourced trend → build) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs, copy and engine sweeps)
+
+- **The gap (read).**
+  - Coverage beyond Part B (drug plans, supplements, Medicare Advantage) is charged at each enrolled person's same real amount every year, "deliberately NOT ridden on the Part B trend" for want of a sourced trend (`src/engine/taxOverlay.ts:2021-2033`). Part B and the surcharges are trended (`:1286-1294`). The disclosure entry 'A pre-65 household is never told its Medicare extra-coverage premiums are held flat…' CLOSED 2026-10-15 on the sentence alone (`src/ui/copy.ts:1199-1200`). This entry is the build behind it.
+  - Out-of-pocket medical lives inside the spending figure ("out-of-pocket costs should already be inside your spending figure", `src/ui/copy.ts:258-259`) and stays flat like every line. Its own stream is the same real figure every year (`src/intake/intakeMap.ts:697-699`); it sizes HSA draws, a budgetless survivor's held-whole medical, and a budget's sticky floor (`:734-744`). Because it is entered separately, the engine could grow that piece alone.
+- **Direction.** Rosy wherever these costs outpace general prices; unmeasured. That they do is itself unsourced: the Part D surcharge path the engine holds runs flat to falling in real terms through 2035 ('The Part D hold's direction is asserted "optimistic" in a dozen places and sourced in none…'). Reaches every household that reaches Medicare or enters an out-of-pocket figure.
+- **D7.** Use it. This is a sourced-trend build on the Part B precedent, not a rule-3 unknowable. The held-flat note stands only while this build is open.
+- **Prescription.** (1) Measure the reach before choosing any trend: each Medicare-reaching seed's extras and out-of-pocket as a share of its lifetime spending. (2) Research at the primary source. The Trustees' report behind the Part B trend may carry a Part D base-premium path (not verified). Out-of-pocket needs a medical-cost growth path. Each figure is an `Unsourced` sentinel until sourced. Medigap may have no primary at all ('Gate honesty after the 2026-09-30 constants re-cite…'); for that piece the honest end is a plain can't-be-known line, in his words. (3) Build: grow the extras; for out-of-pocket, add only its growth above today's level to the year's spending.
+- ⚑ NEGATIVE: never trend the extras without a sourced trend (the closed disclosure entry's NEGATIVE binds). Never add the out-of-pocket figure on top of spending whole; it is already inside. Siblings: 'Pre-65 health insurance is priced with no cost growth…' (the marketplace half, research-blocked the same way); 'Health-constant riders…' pins today's out-of-pocket level, not its growth.
+
+### A retired 65+ couple with no savings entered and no pension or other income is charged no Medicare premiums at all — after the spending help told them to leave Part B out
+
+`S` · **pilot** (build) · **briggsy** (any words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs sweep)
+
+- **The gap (read).**
+  - With no entered accounts, no marketplace premium and no other-income stream, `buildOverlay` returns no overlay (`src/intake/intakeMap.ts:585-590`). A 65+ couple living on Social Security alone gets no tax layer and no health layer: Part B, its income surcharge and the Medicare extras are priced at $0, and no federal tax is figured on the benefits.
+  - The code knows: the comment at `intakeMap.ts:616-625` names this household as the one the Medicare-only branch never reaches, and `spineMedicarePriced` reads it as false (`:811-821`). So the "Medicare is priced in" note is withheld (`src/ui/Result.tsx:217-221`, `src/ui/healthSheetChrome.ts:681-686`), and nothing says the cost was left out.
+  - The spending help tells every household to leave Part B, its surcharge and any Part D / Medigap / Advantage premium OUT of spending (`src/ui/copy.ts:135`).
+- **Direction.** Rosier: a certain yearly bill is removed after the tool told the household to remove it. Reach: an all-65+ household on Social Security only with no savings entered — save-ready, per `intakeMap.ts:946-948`. Unmeasured. A register grep for no accounts / Social-Security-only found nothing.
+- **D7.** Use it. The ages and benefits are entered and the Medicare prices are in the constants.
+- **Prescription.**
+  - (1) Measure on a constructed all-65+ Social-Security-only couple: survival and the yearly Medicare dollar, with the overlay and without.
+  - (2) Build: admit `medicareOnlyPriced(d)` (`intakeMap.ts:803`) at the early-return guard, giving this household the Medicare-only overlay every other all-65+ household gets. Confirm `validateParams` accepts an overlay whose buckets are all zero; red-first on the constructed couple. The engine's spine goldens are untouched (the change is upstream, in the intake builder). `overlayBuiltForRun` (`intakeMap.ts:942-958`) names this household as its only overlay-absent population; re-read it and its tests in the same change.
+- ⚑ NEGATIVE:
+  - Never cure it with a "Medicare isn't counted" sentence: that is the D7 gap, not the fix.
+  - Keep the disclosure reading the BUILT params (`spineMedicarePriced`), never the age predicate (the 2026-07-10 fold's finding).
+
+### Social Security is paid in full for the whole plan, and nothing says future law could cut it
+
+`S` · **pilot** (read the Trustees Report) → **briggsy** (the words, and whether a payable-share what-if ships) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs and engine sweeps)
+
+- **The gap (read).**
+  - The engine pays the full scheduled benefit (the entered amount, adjusted for claim age) in every year of every future (`src/engine/simulate.ts:432-433`; `src/engine/socialSecurityBenefit.ts:1-8`).
+  - No methodology row (`METHODOLOGY_DISCLOSURES`, `src/ui/assumptionRegistry.ts:218`) and no copy string names the program's funding shortfall; a grep of `src`, `docs` and this register for trust fund / insolvency / payable benefit finds nothing. The only future-law lines are the marketplace subsidy's (`src/ui/copy.ts:2827-2843`).
+- **Direction.** Rosier, for every household with a benefit. The audit's outside knowledge, unverified: under current law only the payable share is paid once the trust fund runs out, so paying 100 % is itself a bet that Congress acts. Unmeasured.
+- **D7.** Can't be known: whether Congress closes the gap is future law, so rule 3 owes a plain "nobody can know this" line, and none exists.
+- **Prescription.**
+  - (1) Read the latest Social Security Trustees Report (the primary) for the projected depletion year and payable share.
+  - (2) His words for the line, in the methodology rows.
+  - (3) His framing call: whether a payable-share what-if ships beside it, the way the subsidy offers the other law as a what-if (`acaCostStatusEnhanced`, `copy.ts:2831-2832`).
+  - Sibling: *Two unruled honesty questions — the expiring-tax-law caveat and the per-strategy floor verdict* (future TAX law; it says nothing on Social Security).
+- ⚑ NEGATIVE:
+  - Never cut the benefit in the main run on a pilot call: full benefit versus payable share is a framing fork, and it is his.
+  - Never quote a depletion year or a cut size from memory or a secondary source (burned/062).
 
 ## Tier 1 — the differentiator does not land
 
@@ -2286,6 +2476,7 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 - **Panel only — never asked in intake.** "What bracket will your kids be in?" invites a
   confidently-wrong guess worse than the 24% default. This also sets the precedent for every future
   methodology knob (`market` sits in the same limbo).
+- ⚑ **SUPERSEDED 2026-10-21 (b9-7) by Briggsy's ruling under D7** (`docs/product.md §4`). Asked "Ask it in setup?", he answered "yes". The panel-only NEGATIVE above no longer binds; the build is the open entry filed the same day, *The heirs' tax bracket for "leave more behind" is a 24% default found only in the assumptions panel — ask it in setup* (Tier 1). Nor does the precedent that bullet claimed for every future methodology knob bind by itself any more; each knob is judged under D7. This closure's build laws still bind: additive-optional `heirBracket`, and the SegmentedControl over the derived ladder.
 
 ### The third goal — "live bigger now" doesn't exist
 
@@ -2370,6 +2561,7 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 - THE DETAIL-DOOR ERA — its own post-U16 unit + walk
 - The assumptions door (*Everything the answer leans on*) has no Medicare cost-trend line: nothing there says Medicare's premium and surcharge are priced to climb faster than prices, year by year from the Trustees' tables (filed 2026-07-19 by the trend unit's Caddie pre-walk; `medicare-cost-trend-build-spec.md` 'The close'). The filing's other two pieces are DISCHARGED: the 2035 table edge and the drug-plan surcharge hold reached the door 2026-09-23 inside the conversion-tax row (`assumptionConversionTaxValue`; the CLOSED 'never oversold' entry). ⚑ Never add them as a second row.
 - The Medicare-only Healthcare door/sheet for an all-65+ household: the door is still ACA-scoped (`healthcarePriced` in `src/intake/intakeMap.ts` needs a pre-65 member). It carries his 2026-07-11 demand signal *'What are the numbers? How much is the premium and surcharge?'* (`docs/caddie/tape.md` 2026-07-11 row; `docs/caddie/cold-read-log.md` 2026-07-12 Card 2; `medicare-pricing-build-spec.md` Phase C and 'Explicitly OUT'). ⚑ 2026-10-19 (b9-2, the walk `temp/caddie/walk-rulings-1019`, `seed:pa`, the copy-law seat, refuter SURVIVED at medium): on an all-65+ face with no on-typical person (pa: one typed premium, one "about nothing") NO Medicare dollar renders on the landing or any door, so the Tail's "their true cost could run higher than shown" binds to nothing — this door is where the dollars it qualifies would live.
+- ⚑ **2026-10-21 (b9-7) — his ruling and the D7 audit's map.** Asked whether trust means the answer or the working-out, Briggsy: "I think it's both. I want them to trust what we're building and be able to see how we got to the answer." Ranked SECOND in the D7 queue, after the working-year batch, whose per-year take-home it shares. The audit found no surface that walks a household through a year in its own dollars ("you spend $X, Social Security brings $Y, so savings covers $Z, plus about $T in tax"). The ingredients exist every year in `cashTermsForYear` (`src/engine/simulate.ts`) and never leave the engine except at year 0 for the survivor line (`survivorSpendingBasis`); the engine's `Distribution` (`src/shared/model.ts`) carries no per-year money breakdown. The build: a per-year breakdown on the wire beside the band and health series (plus each year's tax), a sentence composer in the `healthSheetChrome.ts` mould, and a "How we got here" fold under the main answer on both routes.
 
 ### The three U17 action-warning branches plan 4 specified and the build never shipped — same-strategy-degraded copy, the retroactive-ACA past-cost note, the gate-red branch on the token's withheld reason
 
@@ -2458,6 +2650,7 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
   - (2) Engine: a per-person, per-year withholding in the claimed-while-working years (the living-worker predicate `cashTermsForYear` already carries), plus the adjustment at FRA. The exempt amounts go in the constants table with their citation; they are indexed by law, so real-flat is right.
   - (3) A ledger row with its family.
 - ⚑ NEGATIVE: never count investment income, pensions or Social Security as earnings under the test (wages and net self-employment only); never apply the household's earnings to a survivor's benefit without that rule read (the survivor's own earnings govern); never quote $24,480 / $65,160 before the SSA primary is read.
+- **"The cash half is moot" holds only while the surplus gap stands (2026-10-21, b9-7).** "Nothing is saved back" is not a law. It is the open gap 'Money coming in beyond what the household spends is thrown away…', filed by the D7 audit (`wf_f54446ec-1a9`). Once that build credits a working year's surplus to savings, the cash half stops being moot: a benefit the test withholds must never be credited. So this entry's withholding lands first, or in the same change.
 
 ### The one-figure Medicare card's "start at" reads as a floor when the first billed year carries a look-back surcharge — a couple who convert big at 63–64 read "start at about ~$11,400" where the later years bill about ~$5,600
 
@@ -2478,6 +2671,261 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 - **What a size must clear.** The 2026-09-24 basis clause's negatives — no percentage, no arrow, never a third figure on the era card — and the closed Tier 0's — the hero stays the anchor year's. A dated dollar ("…to about ~$7,700 a year by 2047") is not barred by name, but it is a second figure on a one-figure card and a third on the era card: his words, or a council.
 - **✅ CLOSED 2026-10-16 (b9-toronto3) — RULED UNSIZED by Briggsy** (in-session; the pilot's rec, taken): direction only, the same as his 2026-09-24 ruling on the two-figure card. The second walk's refuters had already killed the "flat forever" reading; a figure 18 years out would be false precision and a second number on a one-figure card. ⚑ Re-open only on his eye, never on a panel's "how much?".
 - ⚑ NEGATIVE: never a percentage or an arrow; never a different hero figure.
+
+### Medicare's income surcharge is figured on working-year income that is too high — full pay with no 401(k) or payroll HSA money taken off, and no "work stopped" recheck for the first bills after retiring
+
+`M` · **pilot** (measure → build) · **council** (which year's income the recheck reads) · **briggsy** (any words; whether the household would file the recheck) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs sweep and its skeptic, the engine sweep)
+
+- **The gap (read).** The surcharge (IRMAA, the income-based add-on to Medicare's Part B and D premiums) bills each year on income from two years back (`src/engine/constants/health.ts:151`). Two things overstate that income.
+  - (1) **Gross pay.** A working year's figure is pay + entered investment income (`src/intake/intakeMap.ts:1204-1205`), "conservatively-high" by design (`src/engine/healthcareStreams.ts:53-62`; R33, `docs/product.md:161`). The same year's tax base subtracts each worker's own pre-tax deferral (`src/engine/simulate.ts:528`), so one year carries two "pay" figures. Medicare's income is adjusted gross income plus tax-exempt interest, which leaves out 401(k)/403(b) deferrals and payroll HSA money (outside knowledge). Every bill that looks back at a working year reads it: the first bills after a stop, and every year one spouse is on Medicare while the other works (the override sums the still-working members, `healthcareStreams.ts:185-197`).
+  - (2) **No recheck.** Stopping work is a life-changing event: the household can file Form SSA-44 so the first bills after it use the new, lower income. The project's research says so, and that the model "should not assume the 63/64 spike is unavoidable" (`docs/research/pre65-healthcare.md:123`). The constants record only that a Roth conversion does not qualify (`src/engine/constants/health.ts:161`), and the one shipped disclosure warns the other way (`src/ui/copy.ts:276-277`).
+- **Direction.** Gloomy: both raise the same income, and they stack in the first Medicare years after a stop near 65; either can push a couple up a surcharge step. Unmeasured.
+- **D7.** USE the deferrals already entered. The recheck is the household's to file: model it with a plain line that they must file the form, or ASK whether they will (his call). A deliberately high stand-in for a figure the tool holds is itself a gap under D7, so R33's "conservatively-high" words change in the same commit.
+- **Prescription.** (1) Measure on `date65` and every date seed whose first Medicare bills look back at a working year: the billed tier per year, the date and the grade, each half on and off. (2) Subtract each worker's own pre-tax deferral and employee HSA money from their override figure, sharing the per-person employee-HSA channel that *The working-year base never subtracts an employee's own HSA contribution…* builds and carrying the §219(g) caveat of *The working-year base subtracts every traditional-IRA contribution…*. (3) `/council` the recheck: SSA-44 swaps in a more recent year's income, and reading the bill year's own income would make the surcharge a same-year function of the income the gross-up is solving — the step hazard `src/engine/healthOverlay.ts:432-435` says cannot reach a root-finder today (insight 013). Re-read SSA's life-changing-event rule before building.
+- ⚑ NEGATIVE: do NOT fold in the survivor's SSA-44 recheck — a separate omission, pessimistic-safe by decision, on *Knowingly omitted costs — the discussion he parked*; never let a conversion qualify (`src/engine/constants/health.ts:161`); the override stays additive over the computed income (`healthcareStreams.ts:59-62`).
+
+### Pay is one steady figure all the way to the stop date — planned raises, a pay cut or part-time years can't be entered
+
+`M` · **pilot** (build) · **briggsy** (the question's words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs and copy sweeps)
+
+- **The gap (read).** Intake asks one "Yearly pay, before tax" and says "A steady figure in today’s dollars is enough." (`src/ui/copy.ts:89-90`); the model holds it flat for every working year (`src/shared/model.ts:102-104`). The same figure feeds the spine's earned income (`src/engine/simulate.ts:422`), the working-year tax base (`simulate.ts:528`) and Medicare's working-year income (`src/intake/intakeMap.ts:1204-1205`). R31 says "No raise/promotion curve in v1" (`docs/product.md:159`), and a copy comment says "the engine can't model a time-varying salary anyway" (`copy.ts:264`). Under D7 that is this build.
+- **Direction.** Either. A raise or bonus the figure misses understates the Medicare surcharge and, in most brackets, the tax on the portfolio's own working-year income (rosy); a cut or part-time years overstate both (gloomy). Beyond those, pay moves no cash: the §7 clamp draws nothing from savings while anyone works, so a cut that leaves the household short is the gap of *A working year never checks the household's pay against its spending…*. Only the pay-spike-before-Medicare half is disclosed (`copy.ts:276-277`). Unmeasured.
+- **D7.** ASK: optional per-person pay steps ("from age X, pay Y") on top of the steady figure.
+- **Prescription.** (1) Measure on every date seed: a step in the final working years (a raise; a halving) — does the date, the grade or a surcharge tier move? (2) Build it with or right after *A working year never checks…*, which names "a pay cut before the stop date" as a shortfall the steady figure cannot express. Additive-optional within schema v3 (`src/shared/model.ts:1770`), so an absent answer keeps today's flat line byte-identical; the per-year pay replaces the scalar in every reader of `earnedIncomeReal` in one commit. R31 and the accumulation record's "No raise / promotion / career modeling" line (`docs/decisions/accumulation-fuck-off-date.md:51`) are amended in the same commit.
+- ⚑ NEGATIVE: a step to $0 before the stop date is a stop, never a working year with no pay — the §7 clamp's test is income-blind and draws nothing from savings for a $0 earner (`src/engine/simulate.ts:1110-1113`); never a value-keyed change to the §7 clamp.
+
+### The first answer assumes money comes out of every account in proportion — the household's own withdrawal order isn't asked
+
+`S` · **pilot** (build) · **briggsy** (the question's words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs sweep)
+
+- **The gap (read).** A new draft's `drawdownPolicy` is `'proportional'` (`src/store/memoryModel.ts:567`), and the headline runs on it (`src/intake/intakeMap.ts:726`) until it is changed on the withdrawal sheet after the answer (`src/ui/assumptionRegistry.ts:130-131`). The recommendation's no-change test anchors on the household's own order (`isNoChange`, `src/engine/solver/select.ts:408-409`), so a household that really draws its brokerage first is measured against an order it never chose. No register entry covers it.
+- **Direction.** Either, on the headline and on the size of the recommended change. Unmeasured. A household with money in only one of pre-tax, Roth or brokerage is immune: every order gives the same drawdown (`src/engine/sequencing.ts:131-132`).
+- **D7.** ASK the household's CURRENT intention. It is not the recommendation: the order is what the second beat recommends.
+- **Prescription.** (1) Measure on the multi-bucket seeds: the headline under each shipped order — does the band or grade move? (2) Build one setup question over the shipped orders, asked only when two or more of those accounts hold money; "not sure / no plan yet" keeps proportional. The fields already persist (`src/shared/model.ts:1783`, `:1818`), so no schema change.
+- ⚑ NEGATIVE: never frame the household's answer as the tool's advice, and never let it replace the solver's search.
+
+### A couple with a health savings account each gets no answer at all
+
+`M` · **pilot** (build) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs and copy sweeps)
+
+- **The gap (read).** The engine carries one HSA owner (`src/shared/model.ts:529-535`), the first HSA's (`src/intake/intakeMap.ts:607`). A household that enters two is marked unrepresentable (`intakeMap.ts:254-261`, re-tagged `kindHsaBothSpouses` by the CLOSED mixed-household entry), and the answer is withheld: "This is a limit of the tool, not something missing from your answers" (`src/ui/copy.ts:465-471`). No open register entry covers the build.
+- **Direction.** A refusal, not a wrong number; but the differentiator never lands for a plausible couple.
+- **D7.** USE: both accounts are household numbers the tool already holds.
+- **Prescription.** Build per-owner HSA balances: each spouse's own catch-up (the constant's note: "+$1,000 in EACH spouse’s OWN HSA", `src/engine/constants/contributions.ts:122`), deposits that end at that owner's own Medicare start, the 65+ premium privilege keyed per owner, and the rollover to the survivor at a death. Re-read §223(b)(5) first (outside knowledge: a married couple with family coverage shares one family limit). Presence-keyed: a one-HSA household stays byte-identical. Drop the unrepresentable block in the same change. Red-first by hand.
+- ⚑ NEGATIVE: the open *Post-65 non-qualified HSA money is silently forfeited* and its NEGATIVEs bind on any forfeit wording; the HSA stays medical-earmarked, never a general source (`src/engine/sequencing.ts:126-128`).
+
+### Every spending line keeps pace with inflation — a fixed mortgage payment that shrinks in real terms can't be marked
+
+`S` · **pilot** (build) · **briggsy** (the question's words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs sweep)
+
+- **The gap (read).** Budget lines are entered in today's dollars with an optional end year (`src/shared/model.ts:592-605`), and each is added flat in today's dollars across its window (`src/budget/budgetToSpending.ts:71-76`). A fixed-rate mortgage payment, or any bill fixed in dollars, really shrinks every year in today's dollars. Income streams already carry that choice (a nominal-flat stream deflates, `src/intake/otherIncome.ts:51-55`); budget lines do not. A register grep for mortgage / fixed-dollar finds no entry.
+- **Direction.** Gloomy, for a household carrying a fixed-dollar bill into retirement: the line is over-funded in every year it runs. Unmeasured.
+- **D7.** ASK, per line: "Is this a fixed dollar amount that won't go up?"
+- **Prescription.** Build: deflate a marked line by its calendar year. A line's years count from the work-stop (`src/engine/simulate.ts:394-396`), so on the date route the calendar year moves with each tested stop. Presence-keyed: an absent answer is today's behavior, byte-identical. The engine carries two inflation figures — the one price index (`src/engine/priceIndex.ts:1-16`) and the flat 3% a nominal income stream deflates by (`src/intake/intakeMap.ts:575-580`, `src/engine/reference/methodology.ts:64`) — so name which one; it is the same question as the brokerage-basis-vs-inflation entry filed by this audit. A household with no itemized budget has no line to mark (his call whether the single spending figure gets its own ask).
+
+### Life insurance paid at the first death is never asked about — every widowhood future runs without it
+
+`M` · **pilot** (build) · **briggsy** (the question's words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs sweep)
+
+- **The gap (read).** At a sampled first death the cash terms change spending (the survivor share, `src/engine/simulate.ts:393-409`), Social Security (the survivor benefit, `:455-469`) and other income (each stream's survivor variant, `:182-212`); no lump sum ever arrives. The persisted scenario has no field for one (`ScenarioV3`, `src/shared/model.ts:1768`), a grep of `src/` for life insurance / death benefit finds no input, and the register has no entry.
+- **Direction.** Gloomy, on the survivor card and on every path with a death. Unmeasured.
+- **D7.** ASK, per person: a death benefit, who receives it, and the age a term policy ends (blank for life).
+- **Prescription.** Build: on a sampled death while the policy is in force, with the surviving spouse as beneficiary, credit the benefit to the taxable bucket at full basis (proceeds are generally income-tax-free under §101(a); outside knowledge, re-read before building). It is deterministic arithmetic on the death the path already samples, so no new draw. Presence-keyed: nothing entered means byte-identical. Red-first against a hand-worked survivor year.
+- ⚑ NEGATIVE: never credit a benefit paid to someone outside the household; never a new random draw for the payout (CRN).
+
+### The investment mix is frozen at today's blend for life — a planned shift toward bonds, or a target-date fund's glide, isn't asked
+
+`M`–`L` · **pilot** (build) · **briggsy** (the question's words; the per-account half waits on his per-account-mix ruling) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs and engine sweeps)
+
+- **The gap (read).** Intake collapses every account's mix into one value-weighted stock weight at today's balances (`src/intake/intakeMap.ts:315-326`), and each year's step re-splits the whole portfolio at that one weight for the whole plan (`src/engine/decumulation.ts:69-95`). The ticker table's header calls a target-date fund "today's allocation, held constant", says its disclosure string "is owned by D1", and names the glide curve "the named correctness upgrade" (`src/engine/reference/tickerBlend.ts:9-11`). The accumulation record defers it (`docs/decisions/accumulation-fuck-off-date.md:59`), and no copy string says the mix is held. The shipped intake collects no ticker, so a glide can't be recognized. A register grep for glide / target-date finds no entry.
+- **Direction.** Either: a shift toward bonds lowers both growth and swings. Unmeasured.
+- **D7.** ASK: "Do you plan to shift toward bonds over time?", answered with a target year and an end mix.
+- **Prescription.** (1) Measure the headline under a plausible glide on the spine and date seeds. (2) Build a deterministic household stock-weight schedule by year, presence-keyed (absent means the scalar, byte-identical), on the one shared draw — no new draw, so every candidate still sees the same futures. The per-account half (mixes that differ by account, and the drift as one account is spent first) is the per-account-mix entry filed by this audit.
+- ⚑ NEGATIVE: never a per-bucket or second return draw (`docs/architecture.md:101-105`).
+
+### If the retired spouse buys their own health insurance while the other still works, the tool refuses to give a date — though the pay it would need is already entered
+
+`L` · **pilot** (measure → build) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs and copy sweeps)
+
+- **The gap (read).** Answering "Buying their own coverage" pushes an `unrepresentable` fact, and the date is withheld (`src/intake/intakeMap.ts:229-242`). Underneath, two things block it:
+  - The working window zeroes the premium, benchmark and out-of-pocket streams while anyone works (`src/engine/healthcareStreams.ts:200-202`).
+  - The engine refuses any positive premium on a working year (`src/engine/simulate.ts:1132-1148`), because ACA-MAGI (the income the marketplace discount is tested on) has no wage term (`src/engine/healthOverlay.ts:104-106`).
+  - Yet the worker's pay, deferrals and working-year investment income are all entered. The CLOSED *Mixed household: the already-retired spouse is priced at zero health cost while the other works* shipped ask + refuse (his ruling, 2026-08-02). No open entry files pricing it.
+- **Direction.** A refusal, not a wrong number. Under D7, though, refusing over numbers the household gave is a gap, and the date never lands for a plausible mixed household.
+- **D7.** Use it: the pay is already in the intake.
+- **Prescription.**
+  - (1) Measure on `?seed=datesolo`, the refusal witness (`src/ui/devSeeds.ts:1116-1135`): on a prototype, find the crowned date with the retired member's age share of the quote priced from their stop.
+  - (2) Build ACA-MAGI for a working year as the sum of the floor's base (each worker's pay net of their own pre-tax deferral, plus clamped other income), working-year investment income, portfolio income, and the full Social Security benefit. Un-window only the retired member's share: `escalateQuote` already computes each member's age share (`src/intake/intakeMap.ts:362`) but returns the household sum. Lift the `unrepresentable` arm in the same change.
+  - Eligibility may itself turn on whether the worker's employer offers the spouse affordable coverage. That is outside knowledge, unverified here: source it (§36B) before the build, and if it binds, it is one more ask.
+- ⚑ NEGATIVE (the closed entry's warnings, updated):
+  - Never simply un-gate the premium: the bridge-year arm in `simulate.ts` fails every candidate.
+  - `completeDateDraft` and `DEV_SEEDS.date` answer `true` (`src/intake/__tests__/intakeMap.test.ts:120`; `src/ui/devSeeds.ts:191`) and stay byte-identical. What moves is `?seed=datesolo` and the false-arm test (`intakeMap.test.ts:282`).
+  - `datesolo` is the only live drive of the cannot-price block (`devSeeds.ts:1122-1126`). Once it prices, the two-HSA arm (`kindHsaBothSpouses`) needs its own witness seed, or the block ships undrivable (insight 048).
+  - `healthQuoteHelp` (`src/ui/copy.ts:225-226`) and `employerCoverageHelp` (`:245-246`) change in the same pass; re-read the health-quote join in the open *The 2026-08-20 desktop intake walk's open findings…* with them.
+
+### In Pennsylvania the tool taxes a pension the household marked as a pension, though Pennsylvania doesn't tax a pension paid after retirement
+
+`S` · **pilot** (read the PA primary → build) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the critic)
+
+- **The gap (read).** A stream's type only seeds intake defaults (`src/shared/model.ts:1686-1688`).
+  - The engine receives one summed `ongoingTaxable` (`src/engine/taxOverlay.ts:1213`, `:1234-1240`), and PA adds it to its flat base at every age (summed at `src/engine/stateTax.ts:176`). The code's own words: "an eligible-plan pension would be PA-exempt at the qualified age, but the generic stream can't distinguish, so it is taxed" (`stateTax.ts:74-79`). Yet the household said "Pension".
+  - Meanwhile the PA verdict line tells the household "Pennsylvania leaves most retirement income untaxed" (`src/ui/copy.ts:1265-1266`).
+  - No register entry covers it. PA's open entries are the employer-plan conversion, Tax Forgiveness, the local investment-income tax and the date-route clause wording.
+- **Direction.** Gloomy, for every PA household with a pension (PA is one of the three priced states). Unmeasured.
+- **D7.** Use it: the household already said what the stream is.
+- **Prescription.**
+  - (1) Read the PA primary first. That means the Department of Revenue's Personal Income Tax Guide, which the PA constants already cite (`src/engine/constants/stateTax.ts:255-261`). It also means 61 Pa. Code § 101.6(c)(8)(iii)(A), quoted in the open *Is a still-working Pennsylvanian's employer-plan Roth conversion PA-taxable?…*: a distribution "upon or after his retirement from service after reaching a specific age or after a stated period of employment" is excluded.
+  - Settle which pensions and annuities are exempt, and on what condition. That entry's gap runs rosy (the engine exempts a conversion by age alone); this one runs gloomy (the engine never exempts a pension). A pension already being paid usually meets the condition by its nature; confirm that at the primary.
+  - (2) Build: split the compiled income into a retirement-plan-pension / qualified-annuity channel and a rental / other channel. Carry the split to `stateIncomeTax` and give PA's pension channel its gate. Add a ledger row naming `stateTax` for PA, and a hand fixture (DND 012).
+  - Military retirement pay is also PA-exempt (the critic's reading; confirm it at the primary). It needs the same question as the D7 audit's NC government/military pension gap, and the channel split is shared with that gap.
+- ⚑ NEGATIVE: never exempt on the type label alone without the primary's condition. NC and FL totals stay byte-identical through the split until the NC gap is ruled.
+
+### A household where no one is 64 yet is never asked what it will pay for Medicare drug and supplement plans — the pricier typical figure is charged
+
+`S` · **pilot** (build) · **briggsy** (the question's words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs and copy sweeps)
+
+- **The gap (read).** The Medicare-extras step shares the Medicare income-history step's gate: someone must be 64 or older (`src/intake/questions.tsx:1258-1259`, `:1277`). The code says so: "Younger households are never asked" (`questions.tsx:901-907`).
+  - Each unasked person is funded from their Medicare start at the typical Medigap Plan G + Part D figure, about $244 a month (`src/intake/intakeMap.ts:647`, `:1092-1105`; `src/engine/constants/health.ts:268-284`).
+  - The constant's note calls that figure conservative-high "by REGIME CHOICE": "roughly half of enrollees pay ~$0 extra on Medicare Advantage" (`health.ts:279`).
+  - The 64+ step's fork already offers that answer, "About nothing beyond Part B (common on Medicare Advantage)" (`src/ui/copy.ts:293`). The assumptions-panel row is unconditional (`src/intake/AssumptionPanel.tsx:817-822`). Only setup never asks.
+  - The CLOSED *A pre-65 household is never told its Medicare extra-coverage premiums are held flat…* closed the disclosure, never the ask.
+- **Direction.** Gloomy for a younger household that will pay less, a Medicare Advantage one most of all. Close to right, erring high by design, for a supplement household. Reach: every household with no one 64 or older. Unmeasured.
+- **D7.** Ask for it. Which kind of plan they mean to take (Advantage or a supplement) is knowable years ahead even when the dollar isn't.
+- **Prescription.**
+  - (1) Measure the headline and crowned date on every seed with no one 64 or older, under each fork answer.
+  - (2) Build: lift the 64 gate on the `medicare-extras` step alone; the income-history seed keeps its gate. Reuse the shipped fork, with its typical arm standing for "not sure". Any rewording for a household years from Medicare is his.
+- ⚑ NEGATIVE: an unanswered fork never funds $0 (the constant's "never a silent $0"). Never trend the extras without a sourced trend.
+
+### A known one-time inflow — an inheritance, a home sale, downsizing — has no place to go
+
+`M` · **pilot** (build) · **briggsy** (the question's words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs sweep)
+
+- **The gap (read).** Only recurring income streams (`src/shared/model.ts:1740-1763`) and budget lines (spending only, never negative: `model.ts:592-605`) exist. There is no lump inflow, and home equity is never asked.
+  - The only workaround is an "Other" income stream with the same start and end age. Its intro frames other income as money that "keeps coming in after work stops" (`src/ui/copy.ts:356-357`).
+  - The workaround also leaks. The year's draw is floored at zero, and nothing credits income above spending back to savings (`src/engine/simulate.ts:508`; `docs/architecture.md:119`, "never contributes surplus back"). Every lump dollar above that year's spending vanishes, and in a working year all of it does.
+- **Direction.** Gloomy, for a household with a planned lump inflow. Unmeasured.
+- **D7.** Ask for it: amount, year, and tax character.
+- **Prescription.**
+  - (1) Build a deterministic inflow credited in its year, with no draw. It enters the taxable account at full basis, the way a taxable contribution does (`src/engine/taxOverlay.ts:2361`). It is presence-keyed, so with no inflow the run stays byte-identical.
+  - (2) Tax character per kind, each rule SOURCED before use (burned/062): an inherited cash lump, and a home sale's excluded gain. An inherited IRA is not a lump of cash and follows its own distribution rules, so it is out of this entry.
+  - A register grep for lump sum / windfall / home sale / downsizing / inheritance found nothing.
+- ⚑ NEGATIVE: never route it through the income-stream workaround (the surplus floor drops it). Never a random draw for its timing or amount.
+
+### Money coming in beyond what the household spends is thrown away — a Social Security or pension check that arrives while one of you still works never reaches savings
+
+`M` · **pilot** (measure) → **council** (the remedy, built with the pay-versus-spending check) · **briggsy** (the question's words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs and copy sweeps' skeptics)
+
+- **The gap (read).** `cashTermsForYear` sets the year's draw to `clamped ? 0 : Math.max(0, spending − earned − sel.gross − ss)` (`src/engine/simulate.ts:507-508`). Nothing in the engine credits income above spending back to savings.
+  - Working year (the §7 clamp): the draw is 0 whatever comes in, so a claimed Social Security (SS) benefit and every pension, rental or annuity paid that year vanish, a retired spouse's pension included. The benefit's tax is still charged, because `ss` is deliberately left in the tax math (`simulate.ts:486-487`).
+  - Retired year: the floor at 0 drops income above spending, while the overlay still funds the pension's tax from savings (the gross-up arm, `simulate.ts:498-499`).
+  - The architecture table states it as a rule: "never contributes surplus back" (`docs/architecture.md:119`). The earnings-test entry records "nothing is saved back, so the cash half is moot" as a fact. No household-facing line says it.
+- **Direction.** Gloomy: balances read low and the date reads late. Unmeasured. Reach: every mixed household (one spouse retired with a pension or benefit, one working), retirees whose fixed income exceeds spending, and anyone claiming while working. The earnings-test entry's Reach bullet counts the clamped path-years carrying SS: `dip` 30,000; `date65` / `datenc` 84,448; `date` / `atceiling` 12,051; `dateborder` / `datesplit` / `datemixed` 6,085.
+- **D7.** Use it: every figure is already entered. The one thing the tool lacks is whether a household saves or spends a surplus, and that is asked (rule 2), never assumed.
+- **Prescription.** (1) Measure money in against money out for each seed and year: take-home pay, SS and other income, against spending, contributions not already taken from pay, and the tax savings fund. Name each seed whose years run a surplus, and by how much. (2) `/council` the remedy together with 'A working year never checks the household's pay against its spending…' (Tier 0). One per-year comparison closes both: a surplus is credited to savings and a shortfall is drawn.
+- ⚑ NEGATIVE: a surplus and a shortfall net, never stack (the §7 double-count lesson). Never restore the gross-pay subtraction. Never credit a benefit claimed before full retirement age while working until the earnings test withholds its share; that would save cash Social Security holds back (the rosy direction). Never key the clamp on a value. An income-absent run stays byte-identical (reduce-to-spine).
+
+### The heirs' tax bracket for "leave more behind" is a 24% default found only in the assumptions panel — ask it in setup
+
+`S` · **pilot** (build) · **briggsy** (the question's words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs and copy sweeps)
+
+- **The gap (read).** `solveDispatch` ranks leave-more at `draft.heirBracket ?? solverAssumedHeirBracket.value`, which is 0.24 (`src/intake/solveDispatch.ts:104-109`, `src/engine/constants/solver.ts:141-149`). The walk-through never asks. Only the panel seat does, and it shows only under the leave-more goal (`src/intake/AssumptionPanel.tsx:448-469`). The value of converting scales directly with this number (`src/ui/copy.ts:1392-1400`).
+- **Direction.** Either way: too low under-rates converting, too high over-rates it. Unmeasured.
+- **D7.** Ask it. ⚑ RULED 2026-10-21 (b9-7): asked "Ask it in setup?", Briggsy answered "yes". This SUPERSEDES the CLOSED entry 'The assumed heir tax bracket: the shipped copy sent the reader to a control that did not exist': its "Panel only — never asked in intake" bullet is overruled, and the precedent it claimed for every methodology knob no longer binds by itself (each knob is judged under D7). The supersession is recorded on that entry.
+- **Prescription.** (1) Build the setup question on the closed entry's laws, which still bind:
+  - `heirBracket` stays additive-OPTIONAL: absent means "took our default", behind the codec's exclusive [0, 1) gate (`src/shared/scenarioCodec.ts:849-853`).
+  - The control is a SegmentedControl over the statutory ladder derived from `ordinaryBracketsMFJ`, never a PercentField (`afterTaxBequestPerPath` throws outside [0, 1)).
+  - "Not sure" keeps the 24% default and its shipped disclosure (`src/ui/copy.ts:3223-3224`), answering the closed entry's worry that the question invites a confident wrong guess.
+  - The panel seat stays as the editor.
+- (2) Open for the build: where it sits relative to the goal pick, since the bracket matters only under leave-more; and whether the same step asks who the heirs are, which the Pennsylvania inheritance-tax gap filed by the same audit needs.
+- ⚑ NEGATIVE: never make `heirBracket` a REQUIRED vault field; the survivor-ratio shape bricks every existing vault at `needFinite`. Never a free percent field.
+
+### A widowed spouse's survivor benefit always starts at the earliest age allowed and stays reduced for life — waiting for a bigger one is never tested
+
+`M` · **pilot** (measure → build) · **council** (re-opens the Social Security decision record's deferral) · **briggsy** (pulling a chapter-two lever forward is scope) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the copy and engine sweeps)
+
+- **The gap (read).** At a death, the survivor benefit starts at `max(60, the survivor's age then)`, and its reduction is locked there for life (`src/engine/simulate.ts:463-464`; `src/engine/socialSecurityBenefit.ts:229-237`). Each year pays the larger of the survivor's own benefit (from their entered claim age) and that locked benefit (`simulate.ts:465-467`), so survivor-first then own-at-the-entered-age is covered. Two choices are never tried: starting the survivor benefit later (unreduced at full retirement age), and a switch age other than the one entered.
+- **Why it was deferred.** The decision record calls the default "one-signed conservative" and hands the timing to "the chapter-two claim-age optimizer" (`docs/decisions/ss-computation.md:121`, `:215`; `docs/product.md:93`).
+- **Direction.** Gloomy against the best start a survivor could choose without hindsight. Reaches every death path whose survivor is under their survivor full retirement age. Unmeasured.
+- **D7.** Use it: the engine holds every input the better start needs.
+- **Copy.** The panel row calls the survivor benefit "law the plan applies, not a setting it exposes" (`src/ui/copy.ts:1442-1443`). The start timing is a choice, so that line changes with the build.
+- **Prescription.** (1) Measure on the couple seeds: the change in the survivor floor and in confidence if each death path's survivor instead took the benefit unreduced at full retirement age. (2) `/council` the rule: a fixed alternative, a pick per path, or an ask.
+- ⚑ NEGATIVE: never pick the start per path with hindsight of that path's own lifespan; a perfect-foresight pick is the rosy direction. Never ramp the locked factor (the record's LOCK-FLAT law, `docs/decisions/ss-computation.md:119`).
+
+### Two working spouses always stop work in the same year — a plan where one keeps working longer can't be entered
+
+`L` · **pilot** (measure → build) · **council** (what the date names when the two stops differ) · **briggsy** (the question's words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs, copy and engine sweeps)
+
+- **The gap (read).** `buildCandidateParams` sets every still-working person's stop age to their own age plus the one tested offset Y (`src/engine/dateSearch.ts:185-188`), so a two-earner couple always stops together. A working member is never asked when they plan to stop: intake builds a never-asked placeholder one year out (`src/intake/intakeMap.ts:542-559`), and the panel's `person-stop` seat is for retired members only (`src/ui/assumptionRegistry.ts:55`). The accumulation decision record deferred a per-person search but promised the asymmetry "stays an editable assumption applied on top" (`docs/decisions/accumulation-fuck-off-date.md:61`). No such control exists, and no copy string tells a two-earner couple the date assumes they stop together. A register grep for asymmetric / years apart / per-person stop found nothing.
+- **Direction.** Either way, unmeasured. Read as the first stop, the date reads LATE for a couple whose second earner keeps working (that pay and those deposits are dropped). Read as the moment both have stopped, it reads EARLY.
+- **D7.** Ask for it. The household knows whether one of them plans to work longer.
+- **Prescription.**
+  - (1) Measure on the two-earner date seeds (`dateborder`, `dip`): shift one member's stop by +1 … +5 years against today's together-sweep, and report each crown year and grade move.
+  - (2) `/council` what the answer names when the stops differ: the first stop, the second, or both years. The household date stays ONE search over Y, with the gap applied on top.
+  - (3) Build one answer — who stops later, and by how many years — additive-optional within schema v3 (absent = today's together run). `buildCandidateParams` reads it as `currentAge_i + Y + gap_i`; the per-person contribution window and the healthcare onset must then follow each person's own stop, since the same builder derives all three from Y today (`dateSearch.ts:131-150`).
+- ⚑ NEGATIVE:
+  - Never store the gap as a working member's `retirementAge`: `PersonInputsV3` keeps that field ABSENT for a working person under a codec-enforced biconditional (`src/shared/model.ts:1522-1530`).
+  - Never a REQUIRED vault field (every older vault would fail restore), and never a two-dimensional date search (the record's deferred optimizer is a different item).
+  - An absent answer reproduces today's run byte-identically.
+
+### Investment income is asked only of whoever still works, as one figure of unknown kind — a retired spouse's is never asked, and it vanishes the year work stops
+
+`M` · **pilot** (measure) → **council** (re-opens the working-year floor's three-reading rule) · **briggsy** (the question's words, and the methodology row's changed words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs, copy and engine sweeps)
+
+- **The gap (read).**
+  - Who: "Investment income on top" is asked only of a working member (`src/intake/questions.tsx:774`, `:1276`); the writer forces a retired member's slot to 0 (`:755`), and `buildDateInput` zeroes a non-working member's investment and Medicare-income slots again (`src/intake/intakeMap.ts:1204-1209`). The engine reads the figure only in a clamped year (the accumulation record's §7 rule: nothing is drawn from savings while anyone works) and only for members working that year (`src/engine/simulate.ts:527-529`), so an intake ask alone would not carry it. A worker's figure drops away the year they stop; an all-retired household never sees the question.
+  - What kind: the figure carries none. In a clamped year the tax on what savings supply (a conversion, a required withdrawal, a Medicare draw) is priced three ways — the figure left out, taxed like pay, taxed at the dividend-and-gains rate (`src/engine/taxOverlay.ts:1059-1071`) — and the highest is charged (`:1102-1103`). A real mix can cost more (the copy comment's $2,700 against $2,500, `src/ui/copy.ts:1484-1485`).
+  - Tax-free (municipal-bond) interest has no slot: the term is "0 in the MVP" in both Medicare's surcharge income (IRMAA-MAGI) and the marketplace's income (ACA-MAGI) (`src/engine/healthOverlay.ts:99`, `:109`).
+  - The omissions sentence (`copy.ts:1508-1509`) names the first half — a sentence standing in for the build.
+- **Direction.** Unmeasured. The zeroing is rosier: with the figure at 0 only the "left out" reading remains, so the working-year charge can only fall and Medicare-surcharge income reads lower; after work stops the income is absent from every tax and health-income read. The missing kind cuts either way: the highest reading sits above a pure kind other than the highest, and below some mixes.
+- **D7.** Ask for it, per person, working or not. The split is on the household's own year-end 1099-INT and 1099-DIV forms (interest, qualified dividends, tax-free interest).
+- **Prescription.**
+  - (1) Measure on the date seeds that carry a working-year investment figure: the charge under each pure kind and a 50/50 mix, against the highest of the three.
+  - (2) `/council` the re-open. A typed figure replaces the three-reading rule, and a retired member's figure changes a binding NEGATIVE of *The taxable account's yield never reaches a year's tax base…* ("the household sum of the entered slots of members working at t").
+  - (3) Build the ask additive-optional within schema v3 (absent = today's reading), carried into every year, not only clamped ones.
+- ⚑ NEGATIVE:
+  - Today's help asks for "Interest, dividends, or other investment income" with no word on which money (`copy.ts:274-275`). Once the yield entry's all-years model lands, the ask covers only money held OUTSIDE entered accounts (bank interest, CDs, munis) and says so; never count an entered account's yield twice.
+  - The yield entry's other NEGATIVEs bind: never claim the figure persists after a death (unsourced); never a second return draw; never price it as ordinary income alone without the council (its (B), refuted by `dip`).
+  - Tax-free interest enters BOTH MAGIs and the Social Security provisional income (§86) in the SAME change (`healthOverlay.ts:65-68`'s forward landmine).
+
+### When the first spouse dies, the brokerage account's cost basis isn't reset the way tax law resets it, so the survivor is taxed on gains the law forgives
+
+`M` · **pilot** (measure → build) · **briggsy** (the account-title question's words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs and engine sweeps)
+
+- **The gap (read).**
+  - Each account's owner is entered, as a two-way pick with no "joint" option (`src/intake/AccountEntry.tsx:240-247`). Intake then sums cost basis (what was paid in, for tax) across both spouses' brokerage accounts into one household figure (`src/intake/intakeMap.ts:601-604`), so who owned what is lost before the engine sees it.
+  - The engine moves basis only on a withdrawal, a relocated required withdrawal or a deposit (`src/engine/taxOverlay.ts:2355-2361`), and otherwise only zeroes it when savings run out — never at a death.
+  - The reset at death is applied only to what heirs receive at the very end, in the leave-more score (`src/engine/solver/objectiveHeadline.ts:43-63`).
+  - A register grep for step-up / §1014 found nothing.
+- **Direction.** Gloomier, on every death path of a couple holding an appreciated brokerage account: the survivor's later withdrawals realize gains the law erased, lifting their tax, the Social Security tax rule (§86) and the Medicare surcharge reads, and the survivor card. Unmeasured.
+- **D7.** Both halves. Use it: each account's owner is entered. Ask for it: whether an account is held jointly or individually, which the owner pick cannot say.
+- **Prescription.**
+  - (1) Measure on the brokerage-holding seeds (`buckets`, `steer`, `order`, `health`): survivor-years tax and survival with the basis reset at the sampled first death, against today.
+  - (2) Build: keep basis per owner through intake and the overlay; at the sampled first death, reset the deceased's share to market value — deterministic arithmetic on the path's own balances, no new draw.
+  - (3) Ask joint or individual title per brokerage account. Read the law (IRC §1014, and §2040(b) for spouses' joint interests) before building. The audit's outside knowledge, unread here: half of a joint account resets, all of one in the deceased's name, the whole account in a community-property state. Rule the "not sure" answer.
+- ⚑ NEGATIVE:
+  - Never a per-owner or per-bucket return draw (the single shared market draw).
+  - "Not sure" never takes the larger reset: it takes the smaller one the owner pick allows (half when the deceased is the named owner, none when the survivor is).
+  - Never reset basis on a title rule not read from the statute.
+
+### What the surviving spouse would spend is a 75 % default plus a fixed rule about which budget lines continue — setup never asks
+
+`M` · **pilot** (measure → build) → **council** (the "a guess is worse than the default" objection) · **briggsy** (the question's words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs and copy sweeps)
+
+- **The gap (read).**
+  - The survivor share is seeded from the app default (`src/store/memoryModel.ts:566`; 0.75 at `src/shared/appDefaults.ts:36`) and changes only at the panel's `survivor-ratio` row (`src/intake/AssumptionPanel.tsx:404-430`).
+  - With a budget, housing, utilities and "other" essentials stay whole and every other line takes the share (`src/budget/budgetModel.ts:33-36`, read at `src/engine/simulate.ts:396-399`). Without one, the flat figure takes the share and entered out-of-pocket medical stays whole (`:401-407`).
+  - The help names the unsafe direction: "Set it lower and the later years can read easier than they may prove." (`src/ui/copy.ts:1389`).
+  - Related open entries: *No sourced NON-medical survivor ratio…* (the research) and *On an itemized budget the assumptions sheet says the survivor share is "75" %…* (the display). This entry is the never-asked half.
+- **Direction.** Either way, on the survivor card and every death path. Unmeasured.
+- **D7.** Ask for it. A survivor's spending is the household's own plan, not a statistic, and a household can say what a survivor would keep or drop, line by line on a budget. "Not sure" keeps the researched default.
+- **Prescription.**
+  - (1) Measure the survivor card and the headline across shares of 0.6–0.9 on `retired` and `budget`, so the council sees what the ask can move.
+  - (2) `/council` the ask against the CLOSED *The assumed heir tax bracket…* entry's "Panel only — never asked in intake" (a confidently-wrong guess is worse than the default; "the precedent for every future methodology knob"). His 2026-10-21 ruling to ask the heirs' bracket in setup cuts the other way.
+  - (3) Build one setup question that writes `survivorSpendingRatio`; on a budget, a per-line "keeps going if one of you is on your own" mark that overrides the category rule, additive-optional on the line.
+- ⚑ NEGATIVE:
+  - An asked answer carries its own additive-optional provenance: the staleness reader treats a share EQUAL to its era's default as "took the default" (`src/store/staleness.ts:533`), so an asked 75 % would read as never asked.
+  - Never re-shape the required, seeded field.
+  - A per-line mark never lets an entered out-of-pocket medical figure shrink (the 2026-10-09 CLOSED medical-hold entry).
 
 ## Tier 2 — what breaks on someone else’s device
 
@@ -3285,6 +3733,212 @@ re-clear it from this list.
 - **⚑ RULED 2026-10-16 (b9-1) — the "lines below" referent: MOVE THE ROWS UP** (Briggsy took the pilot's rec, in-session AskUserQuestion). The 2026-10-16 walk re-found it on the none face at medium (both refuters SURVIVED): "so the lines below add none" sits directly over the premium-step card "+~$3,300 a year … could add", the per-person "Coverage beyond Part B" rows ~700 CSS px further down. The build: move the extras block to sit directly under the Medicare premium card, above the step card — no word changes (all three extras sentences say "the lines below"); `src/intake/__tests__/healthcareSheet.test.tsx`'s order arms move with it; walk `healthnc` and the none-face plant (the *"about nothing"* entry's BUILT bullet has the recipe).
 - **✅ BUILT 2026-10-19 (b9-2) — the ⚑ RULED move.** `src/intake/HealthcareSheet.tsx` splits the composed fact list at the `medicare` fact (two `.hs-facts` runs; the chrome's order untouched) and seats the one extras block, built once, between them — its paragraphs direct children of the sheet (the 16 px gap rhythm). No word changed. Where no premium card renders (the date route, pre-resolve, an ACA-only readout) the ruling has no referent: the block keeps its pre-ruling seat after the preview, so those faces are byte-identical (no `date` walk owed). "The order arms move with it" had nothing to move — no existing `src/intake/__tests__/healthcareSheet.test.tsx` arm told the two seats apart — so a NEW arm pins it: every composed card once and in order, the block directly under the premium card, each block paragraph a direct child of `.control-sheet`, the step card's run directly under the held-flat line, then the HSA note and the lever; four cases (his none form, the pointer, ACA cards above an era card with an HSA, the top IRMAA tier where no step card composes) plus the ACA-only seat, and the no-card arm pins the old seat. Red-first, and mutation-checked from a snapshot (cp + cmp) — eleven mutants, each reddened: the block back in its old seat, the medicare card pushed below, the block in both seats, the block inside the list, the step card dropped or duplicated, the no-card block moved below the facts, and the four the whole-file review (`wf_a571bdd0-90a`) found SURVIVING the first arm — the seat keyed on the step card, the seat keyed on any fact, the HSA note above the block, the run wrapped in one div. The "lines below" pointer is eight strings in three families (his none forms, the pointer twins, the priced adds), all rendered inside the medicare card; it now crosses one hairline to its rows. Residuals, recorded and not built: the no-era card's `irmaaStepNoEraYear` still sits between the pointer and the rows (chrome order; no shipped seed reaches the no-era arm); nothing asserts a premium card implies the block (one snapshot feeds both today; a stale readout mid-recompute can show a card over no rows — pre-existing); the step card's "By those Medicare years" now reads across the rows to its premium card. Caddie walk: `healthnc` and the none-face plant (`temp/caddie/walk-rulings-1019`; the scrolled frames from `e2e/held/medicare-cards-look.spec.ts`'s new `2b-extras-rows` capture) — the cold-read log's 2026-10-19 (b9-2) card.
 
+### A brokerage sale at a loss gives no tax break
+
+`S` · **pilot** (build) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the engine sweep)
+
+- **The gap (read).** A taxable draw realizes a pro-rata share of the embedded gain, floored at 0 (`src/engine/taxOverlay.ts:1201-1202`), and the gains tax floors it again (`src/engine/taxCore.ts:229-240`). The yearly offset of a net capital loss against other income (§1211(b)) and the carry-forward of the rest (§1212(b)) are not modeled. Both comments call that "OUT-but-disclosed" (`taxCore.ts:231`, `taxOverlay.ts:1200`), but no household-facing string says it; the comment fix is a bullet on *The gates that don't bite…*. A register grep for capital loss / carryforward / harvest finds no entry.
+- **Direction.** Gloomy and narrow: it needs basis above value on a brokerage withdrawal. Unmeasured.
+- **D7.** USE: the brokerage balance and basis are entered.
+- **Prescription.** (1) Measure, after the brokerage-basis-vs-inflation build: how many path-years on the shipped seeds realize a loss, and what the offset is worth. (2) Build a per-path loss balance: net it against the year's gains, offset ordinary income up to the yearly limit, carry the rest forward — deterministic per-path state that rides every income read the realized gain already rides. The yearly limit goes into the constants table from §1211(b) (taxCore's comment says $3k; re-read it), and the fixture is worked by hand from §1211/§1212 (re-read what happens to a carryover at a death).
+- ⚑ NEGATIVE: never book a loss against the basis as the engine holds it today. The basis stays at its entered amount in today's dollars, never re-scaled (`taxOverlay.ts:2355-2361`), so a loss in today's dollars can be a dollar GAIN in law. Build after the brokerage-basis-vs-inflation entry filed by this same audit lands, or the offset reads rosy.
+
+### In North Carolina a government or military pension is taxed in full, because the tool never asks whether a pension qualifies for the state's exemptions
+
+`S` · **pilot** (re-read the statute → build) · **briggsy** (the question's words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the critic)
+
+- **The gap (read).** A pension stream rides the one summed ongoing taxable amount, which NC adds to its flat-rate base at every age (`src/engine/stateTax.ts:168-176`). The constant rules out NC's two exemptions as "never modeled — this household never qualifies" (`src/engine/constants/stateTax.ts:154-164`): the Bailey settlement exemption (government plans, 5+ years of creditable service by 8/12/1989, G.S. 105-153.5(b)(5)) and the military retirement deduction (20+ years or a medical retirement, (b)(5a)). The income step asks the type ("Pension", `src/ui/copy.ts:371`) and the taxable part (`:417-419`), never who paid it. The premise fits one household, not a friend with a state, federal or military pension: someone who started a government job by mid-1984 can meet the 1989 date. A register grep for Bailey / military finds no entry.
+- **Direction.** Gloomy, for an NC household with such a pension. Unmeasured.
+- **D7.** ASK two plain questions: "Is this pension from government or military service?" and, for government service, whether the person had 5 years of it by August 1989 (the test is service by that date, not a start before it).
+- **Prescription.** Re-read G.S. 105-153.5(b)(5)/(5a) and NCDOR's Bailey page first; the facts above are the constant's note, not re-pinned. Then route a qualifying stream to an NC-exempt channel — the same type-aware income channel the PA pension entry filed by this audit builds, so build that split once. Whether a Bailey-qualified government 401(k) or 457 in the pooled pre-tax bucket also qualifies is read at the statute, never assumed; it would need the per-person employer-plan ledger. Red-first against a hand worksheet.
+- ⚑ NEGATIVE: never exempt on "government" or "military" alone; the service-date and 20-year/medical tests are the law.
+
+### The tool asks only where you'll live in retirement, and taxes your working years as if you already lived there
+
+`S`–`M` · **pilot** (build) · **briggsy** (the question's words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the critic)
+
+- **The gap (read).** Intake asks one state: "Where will you live in retirement?" (`src/ui/copy.ts:105`, lead `:110-111`). Where the household lives now is never asked. Since the working-year tax floor shipped (2026-10-20), a working year's conversion, required withdrawal and brokerage gain carry state tax, stacked on top of the pay and the entered investment income. All of it is priced at that one state (`src/engine/taxOverlay.ts:1192`, the floor's state baseline at `:1073-1089`; `src/engine/stateTax.ts:98-108`).
+- **Direction.** Either way, for date-route households who plan to move and have portfolio income in working years. Unmeasured.
+  - Working in NC and retiring to FL: those working-year state taxes read $0 (rosy).
+  - Working in FL and retiring to NC: NC tax is charged in years none is owed (gloomy).
+- **D7.** Ask for it with one question, "Where do you live now?", shown only on the working route.
+- **Prescription.**
+  - (1) Measure on `datenc`, and on `dip` re-stated to NC and to FL (`dip` crowns a date with a working-year conversion). Record the working-year state charge under a swapped current state, and whether the crowned date moves.
+  - (2) Build: the tax step uses the current state while anyone works and the retirement state after. The move year is the household's last stop, unless he rules to ask it. Both states must be priced. An unpriced current state falls under *Unpriced states — a confident winner computed with zero state income tax* and his 2026-10-21 generic-state idea: ask the state's rate and whether it taxes Social Security.
+  - This is distinct from the open wording entry *On the date route the North Carolina / Pennsylvania clause says "your state income tax" with no scope…*.
+- ⚑ NEGATIVE: with the new answer absent or equal to the retirement state, the run stays byte-identical to today's (presence-keyed). Never infer the current state from anything else.
+
+### The tax-free share of a pension or annuity stays tax-free for life, though it really stops once the money paid in has come back
+
+`S` · **pilot** (build) · **briggsy** (the question's words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs and copy sweeps)
+
+- **The gap (read).** `effectiveTaxableFraction` is one constant per stream (`src/intake/otherIncome.ts:20-36`), applied to every paying year (`a.taxableFull[t]! += gross * effFrac`, `:99`). Nothing ends the exclusion once the paid-in amount is recovered.
+  - The R40 record calls it "OPTIMISTIC, opt-in, disclosed". It says the true tax-free portion "is a fixed nominal $ that shrinks in real terms then stops" (`docs/decisions/other-income-r40.md:109`).
+  - The help for the pension/rental/other "taxable part" discloses it (`src/ui/copy.ts:418-419`). The help for the non-qualified annuity's "tax-free part" is silent (`copy.ts:410-412`).
+- **Direction.** Rosy, late in the plan, and only for households that entered a tax-free share. Unmeasured.
+- **D7.** Ask for it: the total paid in (or the start date and the recovery period) is on the household's paperwork.
+- **Prescription.**
+  - (1) Measure on a test household with a non-qualified annuity and an entered exclusion: the late-plan taxable income and the headline once the exclusion ends.
+  - (2) Build: ask the total paid in and carry the tax-free dollars as a nominal amount. Deflate it by the one inflation path ruled for *The brokerage account's cost basis is held at today's dollars forever…*, and end the exclusion once the amount is recovered. Red-first against a hand fixture (DND 012).
+  - The recovery rule (the exclusion ratio, the Simplified Method's table) is SOURCED before use (burned/062).
+  - A register grep for exclusion ratio / paid-in / cost recovery found only the PA conversion entry's unrelated basis note.
+
+### The employer match is always treated as pre-tax money — a Roth match can't be entered
+
+`XS`–`S` · **pilot** (build) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs sweep)
+
+- **The gap (read).** Every match dollar lands in the pre-tax bucket, "even when the employee deferral is Roth (a SECURE 2.0 §604 Roth match is a deferred option)" (`src/shared/model.ts:360-362`). The intake asks only "Employer match each year" (`src/ui/copy.ts:336`).
+  - The accumulation decision record defers it (`docs/decisions/accumulation-fuck-off-date.md:60`) and records the rule: a Roth match is an optional plan feature, taxable in the year it is made (`:84`).
+  - No register entry covers it.
+- **Direction.** Either way, small, unmeasured. A Roth match is taxed now and comes out tax-free; the pre-tax reading defers that tax to withdrawal.
+- **D7.** Ask for it beside "Employer match each year": pre-tax or Roth. "Not sure" means pre-tax, which is today's reading.
+- **Prescription.**
+  - (1) Re-read §604 at the primary; the record's reading is secondhand to this entry.
+  - (2) Build: route a Roth match to the Roth bucket AND add it to that year's taxable pay, which is the working-year floor's base and feeds IRMAA-MAGI (the income the Medicare surcharge is tested on). Routing it alone would read rosy. Add a hand fixture; "not sure" and absent stay byte-identical to today.
+
+### In Pennsylvania, every retirement-account withdrawal and Roth conversion is state-taxed until the younger spouse turns 60, even money taken from the older spouse's own accounts
+
+`M` · **pilot** (read the per-spouse rule at the PA primary → build) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the critic)
+
+- **The gap (read).** Pennsylvania's (PA's) exemption fires only when every living member is at least 60, a whole-year stand-in for 59½ (`src/engine/stateTax.ts:88-97`, `:164-167`; the household minimum at `src/engine/taxOverlay.ts:2071-2083`). The reason given: the year's pre-tax draw and conversion are one household total where the tax is solved. So a 62/55 couple pays 3.07% on every pre-tax dollar for five years. PA's 59½ gate (`src/engine/constants/stateTax.ts:241-250`) is read per spouse, since PA computes each spouse's income separately even on a joint return (outside knowledge, unverified at the primary here).
+- **The input already exists.** The per-person pre-tax ledger splits each year's conversion pro-rata by each person's convertible room, and the draw by balance (`advancePerPersonLedger`, `src/engine/taxOverlay.ts:797-828`). It does so only after the year's tax is solved.
+- **Direction.** Gloomy for PA couples with an age gap; the code calls it the conservative direction (`src/engine/stateTax.ts:93-94`). Unmeasured. It can tilt the recommendation, because conversions and pre-tax draws in those years read costlier than they are. The PA verdict line ("Pennsylvania leaves most retirement income untaxed", `src/ui/copy.ts:1265-1266`) reads untrue for that couple's first years.
+- **D7.** Use it: both birth years and each account's owner are entered.
+- **Prescription.** (1) Read the per-spouse rule at the PA primary (the PIT Guide, 72 P.S. § 7303). (2) Measure on a 62/55 PA hand case (DND 012) and on the shipped PA seeds: PA tax by year under per-owner attribution against today's gate, and whether the winner changes. (3) Build: the pro-rata weights come from the start-of-year ledger, so the taxed share is a known fraction of the household total where the tax is solved. Apply PA's age test per owner there, wherever the ledger exists.
+- ⚑ NEGATIVE: build beside 'Is a still-working Pennsylvanian's employer-plan Roth conversion PA-taxable?…', which works on the same gate; its NEGATIVEs bind (never change PA's age gate on a secondary search alone; never apply the employer-plan rule to IRA dollars). This build changes who is taxed, never how the draw splits. Choosing whose account to draw first would be a new solver lever (`docs/product.md` §5), not this fix.
+
+### The pre-Medicare premium is aged along the federal default age curve wherever you live
+
+`S` · **pilot** (build) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs sweep)
+
+- **The gap (read).** `escalateQuote` scales today's marketplace quote along the federal default age curve as each member ages (`src/intake/intakeMap.ts:332-343`, `:348-368`). Today's quote is right; only its aging can be wrong. The curve's note names the exceptions "OUT-but-disclosed" (`src/engine/constants/health.ts:317-319`): AL, DC, MA, MN, MS, OR and UT rate on their own curves, and NY and VT community-rate, with no age factor. No household-facing string says so. None of NC, PA or FL is an exception, so only a "Somewhere else" household is reached (`src/ui/copy.ts:120`), and its state is never asked.
+- **Direction.** Either way, narrow reach; unmeasured. A community-rated household's premium climbs with age when it shouldn't (gloomy); an own-curve state's runs either way. Both the quote and the benchmark plan ride the same curve (`src/intake/intakeMap.ts:684-685`), so where the subsidy is live it absorbs most of the age rise; the reach is mostly the unsubsidized.
+- **D7.** Ask: the tool can't use a state it doesn't have. His 2026-10-21 idea for every unpriced state (a generic facility that asks the state's income tax rate and whether it taxes Social Security, filed against 'Unpriced states — a confident winner computed with zero state income tax') asks neither the name nor the rating rule. Add the name if this gap is to use it.
+- **Prescription.** (1) Measure on a pre-65 "Somewhere else" household with the longest marketplace stretch: the premium path on the federal curve against a flat one. (2) Build: for NY or VT, hold the quote flat by age; for an own-curve state, use its sourced curve (the CMS bulletin behind the federal curve may carry them — not verified); every other state keeps the federal default. The constant's "OUT-but-disclosed" is false; correct it in the same change.
+
+### A pension that doesn't keep up with inflation is shrunk by a fixed 3%-a-year inflation rate in every future — not by the engine's one price index, which every other fixed-in-dollars figure uses
+
+`S` · **pilot** (rule the one inflation path → build) · **briggsy** (the can't-be-known words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs sweep)
+
+- **The gap (read).** A flat pension, or one with a fixed raise, is divided by 1.03 a year, the market model's inflation mean, in every future (`src/intake/otherIncome.ts:51-56`, fed at `src/intake/intakeMap.ts:575-580`; `src/engine/reference/methodology.ts:64`). The engine samples no inflation: the 4.1% swing beside that mean has no consumer. So a high-inflation future that erodes a flat pension faster never appears. The market row says only "Inflation — about 3% a year" (`src/ui/copy.ts:3063`), never that a flat pension is eroded at exactly that rate.
+- ⚑ **CONTRADICTION.** A flat pension is a frozen-in-dollars figure. The one price index says every such figure "must divide by THIS index… never by a hand-typed rate, never by a second index" (`src/engine/priceIndex.ts:9-10`), and that index follows the Trustees' path, 3.2% near-term then 2.4% (`src/engine/constants/health.ts:233-234`). The income compile instead cites KTD-2 for the market mean (`src/intake/intakeMap.ts:574`). Two rulings, two paths; the brokerage-basis gap filed by the same audit needs the same path, so it is ruled once.
+- **Direction.** Either way: 3% erodes the pension faster than the index's 2.4% long-run rate and slower than its 3.2% near-term rate. Unmeasured.
+- **D7.** Future inflation is a genuine unknowable (rule 3), so the plain line is owed, in his words. The deflation path is not unknowable: it is the engine's own, ruled once.
+- **Prescription.** (1) Rule the one path. Then measure, on the seeds carrying a flat pension, the date and confidence under that path against today's 3%. (2) Build: deflate the pension stream through the one index, and add the plain can't-be-known line for a flat pension. Sampled inflation stays with 'DEFERRED BUILD — the richer market draw: block-bootstrap + stochastic correlated inflation' on 'The gates that don't bite…'; cite it, don't rebuild it here.
+- ⚑ NEGATIVE: never add a per-path inflation draw outside that build (the single shared market draw).
+
+### Ages are whole years from the birth year alone — the birth month isn't asked
+
+`M` · **pilot** (build) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs sweep)
+
+- **The gap (read).** Intake asks for the "Birth year" (`src/ui/copy.ts:76`) and derives `currentAge = startCalendarYear − birthYear` once (`src/intake/questions.tsx:126-133`). The overlay ages each person the same way, "a ±1yr birth-month approximation" (`src/engine/taxOverlay.ts:119-122`). Rules that key on these whole-year ages: Medicare at 65, required withdrawals, catch-up limits, the age-rating curve, Social Security claiming, and Pennsylvania's 59½, taken at 60 (`src/engine/stateTax.ts:95-96`).
+- ⚑ **CONTRADICTION.** R35 lists "DOB" (date of birth) among the setup's inputs (`docs/product.md:163`); the shipped step asks for the year only.
+- **Direction.** Either way, up to one year at every age line; unmeasured. It also bears on the 59½ line of the early-withdrawal-penalty build, if that lands.
+- **D7.** Ask for the birth month.
+- **Prescription.** (1) Measure the bound: re-run each seed with every birth year moved one year earlier and one later, and name each change in the date or confidence. (2) Build: a birth month, additive-optional in schema v3, where an absent answer keeps today's whole-year reading. A yearly model also needs a ruled convention for the year a threshold is crossed: prorate it, or take the side that never flatters.
+- ⚑ NEGATIVE: never a required field. A required v3 field bricks saved vaults at `needFinite` (the heir-bracket lesson).
+
+### Money the household says is in cash is grown and swung like bonds
+
+`M` · **pilot** (measure) → **council** (a fixed-return cash sleeve vs the two-asset draw) → **pilot** (build) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs and engine sweeps)
+
+- **The gap (read).** Each account's "Cash %" is asked exactly (`src/ui/copy.ts:342`). Then `stockWeightForBlend` folds cash into the bond sleeve, as `stock / (stock + bond + cash)` (`src/engine/reference/tickerBlend.ts:1603-1623`, `:5-7`). So cash earns the bond return, about 1% a year after inflation, with bond-sized swings of about 6% (`src/engine/reference/methodology.ts:63`). No copy string says so.
+- **Direction.** Either way, unmeasured. The average reads rosier if cash earns less than bonds after inflation (unsourced here); the swings read gloomier. The reach grows with the cash share.
+- **D7.** Use it: the household told us the cash share.
+- **Prescription.** (1) Measure the cash share across the shipped seeds. Then measure the change in date and confidence with cash moved to a zero-swing sleeve at the bond mean, which isolates the swing half without inventing a cash return. (2) `/council` the shape. The decision record defers a cash sleeve because "a separate cash draw would break the 2-asset CRN contract" (`docs/decisions/accumulation-fuck-off-date.md:58`), but a sleeve with a fixed, sourced real return needs no extra random draw. A fixed return also hides the swing cash really has against inflation; the council weighs both. (3) The cash return is an `Unsourced` sentinel until sourced.
+- ⚑ NEGATIVE: never a second random draw for cash (the single shared market draw; CRN = common random numbers). The cash share stays household-level, like the stock weight, never per account (that would re-enable asset-location). A zero-cash run stays byte-identical (reduce-to-spine). Never type a plausible cash return as a default (burned/062).
+
+### For a Pennsylvania couple who picks "leave more behind", what the heirs get "after taxes" leaves out Pennsylvania's inheritance tax
+
+`S` · **pilot** (pin the PA primary → build) · **briggsy** (who inherits, and what "not sure" takes — rides the heirs' question in setup) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the critic)
+
+- **The gap (read).**
+  - `afterTaxBequestPerPath` scores the bequest as the taxable account at full value + pre-tax × (1 − heir bracket) + Roth at full value + HSA × (1 − heir bracket) (`src/engine/solver/objectiveHeadline.ts:51-63`). Its definition names only federal rules — the §1014 reset and the income tax heirs owe on inherited pre-tax money (`src/engine/validation/evaluate.ts:70-73`).
+  - No state levy exists: a grep for inheritance tax / estate tax over `src/engine`, `src/ui/copy.ts` and this register finds nothing.
+  - The screen still says "Leaves about $X more to your heirs than today’s plan, after taxes." (`src/ui/copy.ts:3133-3134`) and quotes a typical amount left behind (`:3160-3161`).
+- **Direction.** Rosier on the shown amounts for a PA household. The ranking can move too, unmeasured: income tax paid on a conversion shrinks the estate the levy taxes, so in PA converting is under-credited. Per the audit (secondary sources), NC and FL levy no inheritance tax.
+- **D7.** Use it: the state is entered and PA's levy is law. The one missing fact, who inherits, is asked.
+- **Prescription.**
+  - (1) Read the PA Department of Revenue's inheritance-tax guidance and the statute it cites before quoting any figure. The audit's secondary figures, unpinned: 0 % to a spouse, 4.5 % to children, 12 % to siblings, 15 % to others, with Roth and most IRAs included.
+  - (2) Build a per-state bequest levy in the constants table, applied in `afterTaxBequestPerPath` at the heir class's rate, and add "who inherits" (children / siblings / others) to the heirs' question his 2026-10-21 ruling moved into setup. Red-first by hand; bump `SOLVER_CODE_VERSION`, because the leave-more score moves.
+- ⚑ NEGATIVE:
+  - Never pick the heir class silently. What "not sure" takes is his call (the children's rate is the common case but the rosiest non-spouse class), and the line names it.
+  - Never use a rate before the primary read (burned/062).
+  - The first death of a couple passes to the spouse; never levy it.
+
+### A household that pays a Part A premium has to fold it into spending, so it's charged from today — though the tool already holds the Part A price
+
+`S` · **pilot** (build) · **briggsy** (the question's words, and the residual's ruled Part A sentence) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the copy sweep)
+
+- **The gap (read).**
+  - Medicare pricing assumes premium-free Part A (`src/engine/healthOverlay.ts:816-817`).
+  - The spending help tells a buyer to keep the premium inside the spending figure (`src/ui/copy.ts:135`), and the verdict residual repeats it in his 2026-10-16 (b9-1) words, "The rare Part A premium belongs in the spending you gave us." (`:1236`, `:1248`).
+  - The sourced 2026 figures sit parked in the constants, read against CMS: $311 a month with 30+ quarters of work, $565 full (`src/engine/constants/health.ts:249-258`).
+  - A spending figure is charged from year 0, so a premium folded into it starts years before Medicare and never follows each person's own Medicare start or a death. No open register entry covers it.
+- **Direction.** Either way, and rare: a pre-65 household that complies pays it years too early (gloomier); one that forgets loses it (rosier). Unmeasured.
+- **D7.** Ask for it — one question (none / the reduced premium / the full one) — then price it from the figure the tool already holds.
+- **Prescription.**
+  - (1) Build an additive-optional per-person answer (none / reduced / full), priced from each person's Medicare start until their death in the same per-year Medicare pricing as Part B. In the same change the spending help and the residual drop the "keep it inside" instruction (his words for the residual).
+  - (2) The price past 2026 needs a sourced path: Part B rides the Trustees' trend, but Part A's buy-in has no trend in the constants. Source one, or hold the price flat and say so — never a plausible escalator (burned/062).
+- ⚑ NEGATIVE:
+  - Never infer a Part A buyer from work history or benefit figures.
+  - Never let the "keep it inside your spending" instruction survive beside the priced premium: that charges it twice.
+
+### Children or other dependents are never asked about — the marketplace subsidy and the health quote assume just the two of you
+
+`L` · **briggsy** (whether intake asks about dependents) → **pilot** (build) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs and engine sweeps)
+
+- **The gap (read).**
+  - The marketplace (ACA) subsidy's poverty-line household size is the number of living spouses (`src/engine/taxOverlay.ts:633-635`, read at `:1911` and `:2165`). Every household uses the 48-states-and-DC table; Alaska's and Hawaii's higher tables are "OUT-but-disclosed" only in a constants note (`src/engine/constants/health.ts:112`, `:120`).
+  - The quote help asks for "a quote for everyone under 65 in the household" (`src/ui/copy.ts:225-226`), but `escalateQuote` splits it across the adults' ages only and ends each share at that adult's 65th year (`src/intake/intakeMap.ts:348-368`), so a child's share ages along a parent's curve and ends with it.
+  - A widowed parent files single: the surviving-spouse rates a dependent child allows are excluded by the constant (`src/engine/constants/tax.ts:337-344`). The engine has no federal child tax credit either.
+  - Existing slices: *North Carolina's child deduction is unmodeled…* (its ask already his call — "children's ages is a schema addition, additive-optional within v3") and *Pennsylvania's Tax Forgiveness is unmodeled…* ("Dependents are not collected"). One dependents question serves all of them.
+- **Direction.** Mostly gloomier: a bigger household gets more subsidy and a higher cliff at the same income, and that effect runs one way. The quote split leans either way in a given year. Unmeasured.
+- **D7.** Ask for it. The household knows its dependents; the tool must not assume an empty nest.
+- **Prescription.**
+  - (1) His call on asking — the same call the NC entry already left with him.
+  - (2) Build one additive-optional dependents answer within schema v3 (each dependent's age, and whether they are on the marketplace quote), feeding the poverty-line size, the quote split, the surviving-spouse filing rule, the federal child credit, NC's child deduction and PA's forgiveness table. Each consumer red-first from its own statute; read each age-out rule separately (the ACA's, IRC §2(a)'s, §24's and NC's differ).
+- ⚑ NEGATIVE:
+  - Never default a dependent count (the NC and PA entries' NEGATIVE).
+  - An absent answer reproduces today's two-adult run byte-identically.
+  - Never price Alaska's or Hawaii's table without a state answer that names them; "somewhere else" does not.
+
+### Tax is always figured with the standard deduction — itemized deductions, and giving straight from an IRA after 70½, can't be entered
+
+`M` · **pilot** (read the law → build) · **briggsy** (the question's words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs and engine sweeps)
+
+- **The gap (read).**
+  - `deductionStack` is the standard deduction + the age-65 addition + the 2025–2028 senior bonus, and nothing else (`src/engine/taxCore.ts:114-118`); the federal tax reads it (`:265-282`). There is no itemized path (mortgage interest, state and local taxes, charity, medical costs above the floor).
+  - There is no qualified charitable distribution (QCD): an IRA gift after 70½ that counts toward the required withdrawal and stays out of income.
+  - The budget's "gifts" category (`src/shared/model.ts:565-573`) never touches tax, and the out-of-pocket medical figure never reaches a deduction.
+  - A grep of `src/engine` for itemized / QCD / SALT finds only budget wording and PA's note; the register's "itemized" hits are all itemized-budget entries.
+- **Direction.** Gloomier, for charitable households and big late-life medical years; a QCD would also lower the Social Security tax rule (§86) and the Medicare surcharge reads. Unmeasured.
+- **D7.** Ask for it: yearly giving and whether it comes from an IRA, plus any large itemizable items (mortgage interest, property tax).
+- **Prescription.**
+  - (1) Read the law first: the itemized categories and floors, the QCD age and cap (IRC §408(d)(8)), which pieces of today's stack survive itemizing (the senior bonus's rule is P.L. 119-21 §70103's), and any charitable deduction current law gives a non-itemizer. Type none of it from memory (burned/062).
+  - (2) Build: take the larger of the standard and itemized stacks, and add a QCD that moves IRA dollars to the entered giving tax-free and counts toward the required withdrawal. Additive-optional within v3 (absent = today), red-first by hand.
+- ⚑ NEGATIVE:
+  - Never let a QCD exceed the giving the household entered, or count the gift as spending twice.
+  - Never feed an itemized medical deduction from the out-of-pocket figure without the AGI floor, and without netting the dollars the HSA already pays.
+
+### After-tax money put into a traditional IRA is taxed a second time when it comes out
+
+`M` · **pilot** (read the law → build) · **briggsy** (the question's words) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the engine sweep)
+
+- **The gap (read).**
+  - Every traditional IRA, 401(k) and 403(b) dollar lands in one pre-tax bucket (`src/intake/intakeMap.ts:75-83`), and every withdrawal or conversion from it is ordinary income in full (`src/engine/taxOverlay.ts:1203-1213`).
+  - No after-tax basis is tracked — the money put in without a deduction, recorded on IRS Form 8606. So a Roth conversion is mispriced too: the law taxes only its pre-tax share (the pro-rata rule).
+  - Intake asks only each account's balance and yearly deposit. A grep of `src` and `docs` for nondeductible / 8606 / pro-rata rule / after-tax basis finds only the §219(g) entry's "non-deductible".
+- **Direction.** Gloomier on withdrawals and conversions for a household that holds basis; converting is under-credited. Unmeasured.
+- **D7.** Ask for it: each person's IRA after-tax basis, from their last Form 8606. "Not sure" means none, which is today's reading.
+- **Prescription.**
+  - (1) Read IRC §72 and §408(d)(2) (the per-person IRA aggregation) before building.
+  - (2) Build an additive-optional basis per owner, beside the per-owner pre-tax ledger (`taxOverlay.ts:2341-2346`). The one bucket merges IRA and employer-plan dollars, so the build needs each owner's IRA share — the same split *A still-working employer-plan participant's RMD is forced…* needs. Each IRA draw and conversion excludes the basis share pro-rata, and the basis falls with it; red-first against a hand Form 8606 worksheet.
+  - (3) Couple it to *The working-year base subtracts every traditional-IRA contribution…* (the deposit side): once a deposit there is non-deductible, its dollars must enter this basis, or they are taxed twice.
+- ⚑ NEGATIVE:
+  - Never apply the IRA aggregation to a 401(k) or 403(b): employer-plan after-tax money follows its own rules; read them first.
+  - Never a second return draw for the basis — it is arithmetic on the path's own balances.
+
 ## Tier 3 — Briggsy’s call (taste, scope, one-way doors)
 
 ### A household that kept its state bill inside its spending, then picked a priced state in the panel, has the state tax counted twice — the 2026-10-16 "on top" words now name it
@@ -3639,6 +4293,7 @@ legend-deviation session, 8/10 — `docs/council-log.md`)
   - Dev seeds DO reach the line (MAGI through the engine's own cash terms, 2026-10-20 fix-pass probe; the NIIT dollars unmeasured). In the engine's real dollars the $250,000 is $250,000 / `cumulativePriceIndex(2035)` ≈ $188,300 by 2035. At Y = 10 the clamped year t = 9 carries MAGI of about $204,200 before any draw on `date` / `atceiling` ($130,000 of pay net of deferral + $30,000 of I + 85 % × $52,000 of SS), and about $160,900 plus Alex's first RMD (roughly $60,000 at a zero real return, derived by hand) on `date65` / `datenc`. Each enters investment income, the surtax's base. `dateborder`'s t = 9 crosses the MAGI line too, but enters no investment income. `dip`'s heaviest clamped year (about $173,400: pay, I, the $34,000 conversion and taxable SS) stays under its year's line. Measure through the engine before quoting a NIIT dollar.
   - **The pilot's half, owed whatever he rules:** correct the note's premise — a code comment that says how NIIT is left out and for whom a conversion moves it. Never re-word the shipped `recDiscNiit` (his 2026-10-05 words).
 - ⚑ NEGATIVE: never silently drop an item from the list to shorten the sentence (a disclosed omission that becomes undisclosed is the calm-but-wrong sin); never add a "reason" that guesses a magnitude — the reasons are the recorded ones above or nothing.
+- ⚑ **D7 (ruled 2026-10-21) answers this discussion's framing.** A cost the tool can figure from numbers it already holds is figured, never disclosed instead (rule 1); one that needs a number the tool lacks is asked for (rule 2). The 2026-10-21 D7 audit (`wf_f54446ec-1a9`) re-sorted the items: the 3.8% investment-income surtax → figure it (D6's OUT-but-disclosed member, re-opened by D7); marketplace cost-sharing help → ask (the plan's metal level); state subsidy top-ups → ask; the survivor's Medicare income re-check → figure it.
 
 ### The well-funded leave-more hold — ship the hold (~1 in 8 well-funded leave-more couples get a hold, not an answer) or calibrate the conversion-near-tie demotion width on the dollar axes
 
@@ -3653,6 +4308,41 @@ legend-deviation session, 8/10 — `docs/council-log.md`)
   payload-agnostic and already ships for token withholds, so the unproven link is narrow. Mint a seed
   from the probe's `2.5M/120k/pretax30%` world to close it.
 - The evidence for the call is the crash-fix entry's measured frequency (Tier 0, *Well-funded household with a converting winner crashes…*: 3–4 of 27 well-funded leave-more worlds, 11–15 %, stable across path counts, NOT modal). Its pre-fix "⚑ BRIGGSY DECIDES … modal target user" bullet is refuted by that measurement and stays in the closed record.
+
+### Each account's stock/bond mix is averaged into one household mix, so drawing one account down never shifts the overall mix — the household's own numbers against the one-shared-return rule
+
+`XL` · **briggsy** (the invariant call) → **council** (the shape) → **pilot** (build) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs and engine sweeps)
+
+- **The gap (read).** Each account's Stocks / Bonds / Cash split is entered or derived from its ticker. A value-weighted average at today's balances then becomes one stock weight (`src/intake/intakeMap.ts:312-326`), and every year the whole portfolio is put back to it (`stepYear`, `src/engine/decumulation.ts:69-95`). So a Roth held all in stocks grows exactly like a pre-tax account held all in bonds, and spending one account first never changes the overall mix.
+- ⚑ **CONTRADICTION. His ruling comes first; nothing is built before it.**
+  - D7 says use the household's per-account split.
+  - The architecture's locked invariant says buckets differ only in tax treatment: one shared return draw, with asset location structurally foreclosed (`docs/architecture.md:99-103`; `src/engine/taxOverlay.ts:23-25`).
+  - Product R37 collapses holdings to one household blend "because the engine does no asset-location" (`docs/product.md:165`).
+- **The fork is product, not plumbing.** The architecture leaves one door open: "a deterministic per-bucket tilt on the one shared draw, never a separate draw" (`docs/architecture.md:105`). That keeps every candidate on the same futures. But per-account mixes make the withdrawal-order and conversion recommendation depend on which account holds what (asset location), and the thesis deliberately excluded that.
+- **Direction.** Either way, unmeasured.
+- **Prescription.**
+  - (1) His call. Today the split is used only as a blend: keep R37, or open asset location.
+  - (2) If he opens it: `/council` the shape, then measure on a test household with opposite mixes in its Roth and pre-tax accounts.
+  - The D7 audit's per-account fee gap is the same question; rule both together.
+- ⚑ NEGATIVE, whatever he rules: never per-bucket draws, which break the shared-futures rule and the draw-schedule dimension. When every account shares one mix, the run stays byte-identical to today's.
+
+### The "just the essentials" odds assume living on essentials from today, not cutting extras only when money runs short — which is what the household was told extras are for
+
+`L` · **council** (the construct) → **briggsy** (re-opens his D1 relief-line frame) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the copy sweep)
+
+- **The gap (read).**
+  - The budget sheet tells the household "extras are what could give if it ever came to that" (`src/ui/copy.ts:174-175`).
+  - The relief count is the engine's `FloorTrack`: essentials only from year 0, on the same draws (`src/shared/model.ts:1042-1065`).
+  - The CLOSED *The relief line's trim note reads as trimming when needed…* measured the gap on `budget`: 0.9785 cutting from today against 0.71 cutting at the shortfall. It closed by naming the assumption — "That’s if you live on just the essentials starting now, rather than once money runs short." (`copy.ts:545`) — a sentence standing in for the build under D7, and one withheld on a plan reopened in a later year (the open *On a plan reopened in a later year the relief line names no assumption…*).
+- **Direction.** Rosier: the count quotes the more optimistic of the two bookends for when the household trims. Measured on five households only.
+- **D7.** Use it. The household marked every line essential or extra and was told what extras are for, so the tool holds what a cut-when-short count needs.
+- **Prescription.**
+  - (1) `/council` the construct: a presence-keyed, plan-following floor (extras cut from the year the money would run short, or a guardrail) on the shared futures, with fixtures derived by an independent path (DND 012).
+  - (2) His call, because it re-opens his ruled D1 frame (that ruling made plan-as-executed a probe, never a key) and the relief line's words.
+- ⚑ NEGATIVE (the CLOSED entry's, binding):
+  - Never build a plan-following floor without its own presence-keyed engine construct that keeps the shared futures (CRN), DND-012 fixtures and a council.
+  - Never fit a trim trigger, margin or threshold to the measured counts; never generalize past the five measured households.
+  - Never change the D1 thesis words or the relief line's words without him; the count is a relief-line reading, never a Tier 1 key without his D1 re-ruling.
 
 ## Tier 4 — hygiene (no user-visible wrong answer)
 
@@ -3819,6 +4509,7 @@ legend-deviation session, 8/10 — `docs/council-log.md`)
 - 106 bare `:NN` tokens with no named citation anywhere in their paragraph are unattributable by arm 4 or any reader — name the file in prose before they can be checked (the 2026-09-10 re-anchor's residual; moved here from `TODO.md`'s session record 2026-09-25).
 - `src/ui/preview/U7Preview.tsx` / `DatePreview.tsx` (DEV previews) render a verdict with no Disclaimer mount, so `aria-describedby` dangles there; a unit test importing `e2e/reviewSurface.ts` (`scripts/__tests__/breakpoint-mirrors.test.ts`) pulls `@playwright/test` into the tsc program (a shared constants module is the clean home). Both advisory from the 2026-09-10 24 px fit-law review, never fixed.
 - `twoPaneHonestyFloor.test.ts` types `REM_PX = 16` literally; leave until a src-side home exists (a shared constant would cross e2e→src the wrong way).
+- **False source comment (c) — OPEN, filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the engine and inputs sweeps and the critic).** Eight comments claim a disclosure, for five omissions, that no household-facing string makes; a grep of `src/ui` and `src/intake` for Alaska / Hawaii / capital loss / community rating / age curve / target-date / glide / retroactive / six months finds none outside copyGuard's word lists. They are: the capital-loss offset (`src/engine/taxCore.ts:231`, "an OUT-but-disclosed conservatism"; `src/engine/taxOverlay.ts:1200`); the HSA retroactive-Part-A cutoff (`src/engine/constants/contributions.ts:122`, "the retro trap is disclosed at intake (D1)"); the Alaska and Hawaii poverty tables (`src/engine/constants/health.ts:112`, `:120`; `src/engine/constants/types.ts:257`); the states' own age curves and community rating (`src/engine/constants/health.ts:317-319`); and the target-date static snapshot (`src/engine/reference/tickerBlend.ts:9-11`, "the user-facing disclosure string is owned by D1"). Rewrite each to say what is left out, for whom and in which direction, naming the entry that builds it; never re-word a household-facing string in this pass. Where a gap's own build lands first, that commit fixes its comment. The same pass checks the below-100 %-FPL Medicaid claim (`src/engine/constants/health.ts:72`, `src/engine/constants/types.ts:242`; no "Medicaid" in `src/ui` or `src/intake`) for a plain-words disclosure.
 
 ### Gate honesty after the 2026-09-30 constants re-cite — the parked ACA-MAGI / PTC rules run on every healthcare-on household yet can never withhold its token, the Medigap anchor has no primary to be flag-false against, and the self-description tripwire knows one secondary publisher
 

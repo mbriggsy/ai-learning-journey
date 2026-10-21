@@ -44,6 +44,11 @@ replaced the oracle with a grep of it.
 
 ## Also Applies To
 
+- **A plan's WITNESS label (2026-10-21, the working-year tax floor's As-built decision 4).** The plan named `dip`'s
+  I = $10,000 the "ordinary-wins" witness; its own hand derivation prices the PREFERENTIAL reading at $5,880 against the
+  ordinary $5,380 (the conversion lifts the gain block past the $98,900 0 % edge). U1's and U3's expectations were false
+  as written. A witness's name is a claim about which arm wins: derive the winning arm before naming it, and pin the
+  name with the figure (the true ordinary-wins witness is B 150,000, I 80,000, X 34,000 → $7,888).
 - Any "N tests red" claim in a commit message or register entry — refute it from the arm topology
   (which arms can see the change?) before trusting it.
 - Vitest mutants planted in `copy.ts` vs a fixture (the copyGuard canary lesson): the plant's LOCATION

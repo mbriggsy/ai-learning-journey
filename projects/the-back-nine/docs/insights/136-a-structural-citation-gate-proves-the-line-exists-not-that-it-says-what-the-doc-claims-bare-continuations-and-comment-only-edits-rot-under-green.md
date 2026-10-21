@@ -30,3 +30,11 @@ A structural gate's green means "no gross rot", never "current". When the semant
 - A `~NNN` approximate anchor: it drifts past its own tilde and reads as precise (`docs/backlog.md`'s `Result.tsx` anchors did).
 - [[042]] — a cleanup "from the ledger" proves coherence, not currency; this is the same blind spot one level down, at the line.
 - [[122]] — gate every single-home number; a citation IS a single-home number pair, and the gate half that exists covers only one of the pair.
+- **The verification method that caught 59 + 9 misses (2026-10-21, b9-6: one `pnpm doc:reanchor` run, 625 edits).** The
+  tool skips both files of an ambiguous basename outright (`stateTax.ts`, engine and constants), cannot see a bare token
+  on a line that names no file, and re-shifts quoted tokens inside its own bug entry. A naive HEAD-side pair-check goes
+  blind to every line the tool itself rewrote. What worked: (1) pair same-size hunks POSITIONALLY; (2) sweep cross-line
+  bare tokens; (3) send every disagreement to a two-reader content pass; (4) apply each verdict by a UNIQUE windowed
+  match. The scripts (`pair-check.mjs`, `crossline-sweep.mjs`, `citation-content-verdicts.workflow.js`,
+  `apply-verdicts.cjs`) sit outside the repo in the session memory folder `b9-reanchor-verification-tools/`; they belong
+  beside the register's Tier 4 re-anchor entry.

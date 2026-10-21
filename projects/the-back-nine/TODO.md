@@ -48,8 +48,13 @@ whole-file review → `/distill`. The day the check ships, the working-year row'
 all of that…" sentence comes out. Until then it stays: pulling it first would leave the date quietly too early.
 
 **SESSION 2026-10-21 (b9-7):**
-**CI:** GREEN by run id on the b9-6 land `b4bbbd3e` (39545809499) and its squeaky `0a96c249` (39546240537). This session's
-commits: D7 `14a4df0b`, then the register filing and this file (read their runs first).
+**STATE on the final tree, by exit code (re-run at the close):** typecheck · lint · `verify:doc-stats` · build · `verify:bundle`
+272.5 KiB · `verify:aca` (verified 2026-10-20) · `verify:state-tax` — all exit 0. No code changed this session (docs only).
+**CI:** GREEN by run id on D7 `14a4df0b` (39632358611) and the register filing `3d49ffdd` (39651405227). The council's ruling
+`8c32a8c7` (39656951906) was IN PROGRESS at close and the squeaky commit's run follows it: read both first (`gh run view <id>`).
+**THE PAY-CHECK PROBE (for build 1's re-measure):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-probe\`
+(`paycheck.mts` + `paycheck-years.json` + the skeptic's `survivor.mts` / `survivor-rows.json`). Absolute imports into `src/`;
+re-point each script's output path off the dead session scratchpad before running. Run it from the project dir with tsx.
 **THE D7 QUEUE — his order, ruled 2026-10-21 ("yep, seems right").** Every item is a register entry; cite it by title.
 1. **An honest quit date (the working years).** Most of these make the date read too early:
    - (a) pay is never checked against spending, taxes and deposits, and payroll tax is never figured: *A working year never checks the household's pay against its spending…* (START HERE);
@@ -69,7 +74,7 @@ commits: D7 `14a4df0b`, then the register filing and this file (read their runs 
 - **States:** the priced roster stays NC, PA and FL "for now" (his ruling 2026-10-21). His generic-state idea (ask the state's rate, and whether it taxes Social Security) is filed on *Unpriced states — a confident winner computed with zero state income tax*.
 - **The pilot's working rule (a HOW call, not his ruling):** no new process or tooling work unless a D7 build needs it. October ran 55 docs/bookkeeping commits to 17 features; that ratio is part of what took us off course.
 **WHERE THE SOLVE STANDS (carried from b9-6, unchanged):** ONE pricing change since the 2026-10-12 (b9-2) close — ledger v12, the working-year tax floor (`b4bbbd3e`): a reprice of `tax` + NC's `stateTax` gated row-wide on `reach: 'working-years'`, UNSCORED (the solver runs only on the all-retired spine, so `SOLVER_CODE_VERSION` stays 11; the date-route Roth preview moves, unpersisted); no roster change — THE POOL (`225d8da4`, laws in `docs/architecture.md`'s *The pooled solve*), the all-in objective (v10, `6dab9ec0`), the budgetless survivor-medical lean (v11, `c1ada867` — the current `SOLVER_CODE_VERSION`; a scored spend-side pricing change, no roster change), the v9 window walk, rosters `retired`-type 93 / `health` 97 / `healthgap` 101; THE APP (production, his laptop, P = 12): `retired` 36.5 s · `nc` 39.8 s · `healthnc` 150.9 s (ANY roster growth re-times `healthnc` first, `e2e/held/solve-timing.spec.ts`). The PHONE half of the pending-line entry is still owed (a ≤ 3-core device gets no pool).
-**UNFINISHED (carried from b9-6):** DISTILL the floor's lessons — owed since the build, the pilot's (the Stop hook never arms): run `/brief` on each first (an insight may already hold it), then `/distill` (i) a plan's witness LABEL can be refuted by its own hand derivation (`dip`'s "ordinary-wins" witness was the preferential reading, $5,880 — the plan's As-built decision 4); (ii) a reach measurement enumerates EVERY portfolio-funded dollar AND every MAGI read in the year (the Medicare-draw channel the register missed; the SS-only seeds that move only through IRMAA); (iii) the re-anchor verification that caught 59 + 9 misses the tool cannot see — a HEAD-side pair-check that pairs tool-edited lines positionally, a cross-line no-file sweep, a two-reader content pass on every disagreement, applied by unique windowed match (the scripts: `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-reanchor-verification-tools\`; they belong beside the Tier 4 re-anchor entry, (24) below).
+**UNFINISHED:** the distills are DONE (2026-10-21, b9-7): insights 141 (a headline on the population its caveat names), 142 (a disclosure instead of a used number — D7) and 143 (reach enumerates every consumer), plus refinements on 126 (a plan witness LABEL) and 136 (the re-anchor verification method). Still open from them: move the re-anchor verification scripts (`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-reanchor-verification-tools\`) into the repo beside the register Tier 4 re-anchor entry, so they stop living only in a session folder.
 **OWED (carried from b9-6):** to HIM — the "Income Medicare looks at" heading (⚑, `docs/council-log.md` 2026-10-20 — the figure now also sets the income-tax base). The NIIT clause's "here" is no longer a word call: under D7 the surtax gets figured (queue 3), and the clause goes. OWED (both carried from b9-2, still live): (a) the engine measurement of the discount a crossing dollar loses, for the scope entry (Tier 0 *The health sheet's "26¢ on each dollar converted" holds only inside the ~$18,600 of room…*) — only hand figures exist, from the 2026-10-15 early-claim Caddie walk's hunter in b9-toronto1 (`healthss` $9,479 at the anchor; about $8,374 at the ~$84,600 line, the same on `healthnc`'s line — both seeds carry `slcspMonthlyToday` 1,400); measure through the engine on `healthnc`, `healthgap` (the register's Prescription (1) names it — its cliff is live, "about 2 of 10 futures") and `healthss` (a paired CRN run across the line, the anchor year's readout) before his words; (b) the Caddie tape rows awaiting his read — 2026-10-06 all-in, 2026-10-09 survivor-medical, 2026-10-14 survivor spending-basis, and 2026-10-15's four (held-flat, NC cents, early-claim cents, the same-age Medicare card), 2026-10-16's one (the one-figure card's first-year frame + his trend clause), 2026-10-16 (b9-1)'s one (his three rulings + his two in-session rulings), and 2026-10-19 (b9-2)'s one (his four b9-1 walk rulings + his in-session Medicare re-ruling), and 2026-10-21 (b9-6)'s one (the working-year tax row, three walks — his in-chat reads of its DRAFTS are on it as E20, not a read of the shipped face) — `docs/caddie/tape.md`.
 **Keep out of every commit from here:** the three family-feud working files (`../family-feud/newsletter/…`) are uncommitted on purpose; never stage them from this project.
 
@@ -661,6 +666,20 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 *Engineering lessons live in [`docs/insights/`](docs/insights/) (one file per lesson; cite by full path + slug).
 These are the mechanical ones that keep costing hours.*
 
+- **From the b9-7 close (2026-10-21, D7 ruled; the audit, the filing, the pay-check measurement and its council):**
+  - **`node -e` mangles Windows paths.** The shell ate the backslashes in a TODO edit (`C:\Users\brigg\.claude…` came out
+    `C:Users\brigg.claude…`). It was caught only by a snapshot + `cmp` at squeaky. Edit docs with the Edit tool, or with a
+    script FILE, never `node -e`.
+  - **`docs/insights/README.md` is CRLF, and the insight files are LF.** A `cat >>` append put LF lines into the CRLF index.
+    The Edit tool keeps a file's own line ending. Count `\r\n` with a node script before trusting Git Bash.
+  - **A shell-made edit is invisible to squeaky's ownership check** (TODO.md went `contested`, the index `foreign`). Make
+    doc edits with the Edit tool, or squeaky cannot commit them.
+  - **A summary's headline is computed on the population its caveat names** (insight 141). The survivor rows carry a
+    `reachable` column: filter on it first, then take the max.
+  - **ssa.gov answers curl with 403.** Read the IRS Topic pages instead (751 payroll, 560 Additional Medicare: primary,
+    and they curl fine), or LII for the statute. A grounded search alone is secondary.
+  - **A council fed a wrong headline reasons from it.** Every opening seat built on the mis-filtered survivor figure until
+    the red team re-read the rows file. Re-count a brief's numbers from the source before convening.
 - **From the b9-6 close (2026-10-21, (B) landed `b4bbbd3e`; the working-year row walked three times):**
   - **The re-anchor and its misses.** `pnpm doc:reanchor` made 625 edits, then verification found 59 + 9 more it cannot see:
     - it SKIPS both files of an ambiguous basename outright (`stateTax.ts`, the engine file and the constants file), so resolve each by content;

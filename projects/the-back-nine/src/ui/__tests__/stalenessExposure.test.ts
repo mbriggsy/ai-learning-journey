@@ -31,6 +31,7 @@ import {
   spineAcaPriced,
   spineMedicarePriced,
   survivorMedicalLeanForRun,
+  workingYearTaxForRun,
 } from '@intake/intakeMap'
 import type { ScenarioDraft } from '@store/memoryModel'
 
@@ -49,6 +50,7 @@ describe('exposureForDraft — the SPINE route (both healthcare reads exact: one
       contributions: 'unpriced',
       blend: 'unpriced',
       spending: 'unpriced',
+      workingYearTax: 'unpriced',
       pricedState: undefined,
     })
   })
@@ -80,6 +82,9 @@ describe('exposureForDraft — the SPINE route (both healthcare reads exact: one
       expect(e.contributions === 'priced', `${k}: contributions`).toBe(contributionsPricedForRun(d))
       expect(e.blend === 'priced', `${k}: blend`).toBe(blendTableReadForRun(d))
       expect(e.spending === 'priced', `${k}: spending`).toBe(survivorMedicalLeanForRun(d))
+      expect(e.workingYearTax, `${k}: workingYearTax`).toBe(workingYearTaxForRun(d))
+      // A spine run has no living worker and no accumulation construct — it never clamps.
+      expect(e.workingYearTax, `${k}: the spine never reaches the working-year floor`).toBe('unpriced')
       expect(e.pricedState, `${k}: state`).toBe(pricedStateForRun(d))
       // The structural pair: ACA pricing implies healthcare is on, so 'priced' ACA with an
       // unpriced Medicare read is impossible.
@@ -112,6 +117,7 @@ describe('exposureForDraft — THE AGE/OVERLAY DIVERGENCE (insight 080’s scar,
       contributions: 'unpriced',
       blend: 'unpriced',
       spending: 'unpriced',
+      workingYearTax: 'unpriced',
       pricedState: undefined,
     })
   })
@@ -139,7 +145,7 @@ describe('exposureForDraft — the DATE route', () => {
   })
 
   it('ACA reads UNPRICED (proven) when the base overlay carries no quote stream — window-gating can only shrink, never synthesize', () => {
-    // `buildHealthcareStreams` only WINDOW-GATES an entered stream (healthcareStreams.ts:178-181),
+    // `buildHealthcareStreams` only WINDOW-GATES an entered stream (healthcareStreams.ts:199-202),
     // so with no base stream NO candidate offset can price ACA. FALSE here is exact.
     const d = DEV_SEEDS.date65
     expect(dateBaseAcaPriced(d), 'no candidate could price ACA').toBe(false)
@@ -172,7 +178,7 @@ describe('exposureForDraft — the DATE route', () => {
   })
 
   it('CONTRIBUTIONS read the BASE overlay, not the forced candidate construct (F3): a date-route household whose accounts all belong to the RETIRED spouse prices no limit', () => {
-    // `dateSearch.ts:230` sets `accumulation` on EVERY candidate — so a candidate-level read is a
+    // `dateSearch.ts:241` sets `accumulation` on EVERY candidate — so a candidate-level read is a
     // constant `true` and discriminates nothing. What it carries is the BASE overlay's streams,
     // and `buildOverlay` spreads `accumulation` only when some WORKING owner actually
     // contributes. Strip the working owner's contribution dollars and the construct disappears
@@ -231,8 +237,82 @@ describe('exposureForDraft — no run at all', () => {
       contributions: 'unknown',
       blend: 'unknown',
       spending: 'unknown',
+      workingYearTax: 'unknown',
       pricedState: undefined,
     })
+    // …and the working-year read's own producer says the same off the missing-facts arm (it is not
+    // only the seam's early return that makes it `unknown`).
+    expect(workingYearTaxForRun(broken)).toBe('unknown')
+  })
+})
+
+// ── THE WORKING-YEAR TAX FLOOR'S REACH (ledger v12, 2026-10-20 — the plan's U5) ──────────────────
+// The row-level `reach: 'working-years'` read. U4 MEASURED every date seed at DEV_CRN_SEED on the
+// pre-change tree and after, both tiers: ALL EIGHT moved (dip by its conversion + SS; date / atceiling by
+// the Medicare draw + SS; date65 / datenc by the Medicare draw, SS and an RMD; dateborder / datesplit /
+// datemixed by SS alone — no tax draw (T(0, ss) is $0 there), but its taxable share, now read on the
+// pay-inclusive provisional, lifts IRMAA-MAGI). So all eight must read `priced` — a seed reading
+// `unpriced` here would be a vault told nothing about a recompute that moved (the silent stale).
+describe('exposureForDraft — the working-year tax floor’s reach (ledger v12)', () => {
+  const MEASURED_MOVED = ['date', 'dateborder', 'datesplit', 'datemixed', 'dip', 'date65', 'datenc', 'atceiling'] as const
+
+  it('every date seed U4 measured as MOVED reads `priced` — and those eight ARE the buildable date-route seeds (a new one must be measured before it can join)', () => {
+    for (const k of MEASURED_MOVED) {
+      expect(isDateRoute(DEV_SEEDS[k]), `${k} is a date-route seed`).toBe(true)
+      expect(exposureForDraft(DEV_SEEDS[k]).workingYearTax, k).toBe('priced')
+    }
+    const buildableDateSeeds = (Object.keys(DEV_SEEDS) as (keyof typeof DEV_SEEDS)[]).filter(
+      (k) => isDateRoute(DEV_SEEDS[k]) && missingRequiredFacts(DEV_SEEDS[k]).length === 0,
+    )
+    expect([...buildableDateSeeds].sort()).toEqual([...MEASURED_MOVED].sort())
+  })
+
+  it('the unbuildable date seed (`datesolo`, the employer-coverage refusal) reads `unknown` — never a silent `unpriced`', () => {
+    expect(isDateRoute(DEV_SEEDS.datesolo)).toBe(true)
+    expect(missingRequiredFacts(DEV_SEEDS.datesolo).length).toBeGreaterThan(0)
+    expect(exposureForDraft(DEV_SEEDS.datesolo).workingYearTax).toBe('unknown')
+  })
+
+  it('a draft the ENGINE refuses inside the walk (a claim age outside 62–70, which no missing-fact names) reads `unknown` — and the seam does not crash the unlock', () => {
+    // `runDateSearch` turns this same throw into its calm input-failure; the exposure is undecidable, so
+    // it must aggregate, never fall silent and never throw out of `exposureForDraft`.
+    const refused: ScenarioDraft = {
+      ...DEV_SEEDS.date,
+      people: [{ ...DEV_SEEDS.date.people[0]!, socialSecurityClaimAge: 55 }, DEV_SEEDS.date.people[1]!],
+    }
+    expect(missingRequiredFacts(refused), 'no missing fact names it').toEqual([])
+    expect(workingYearTaxForRun(refused)).toBe('unknown')
+    expect(exposureForDraft(refused).workingYearTax).toBe('unknown')
+  })
+
+  it('the seam reads the PRODUCER: every seed’s field equals `workingYearTaxForRun`, route by route', () => {
+    for (const k of Object.keys(DEV_SEEDS) as (keyof typeof DEV_SEEDS)[]) {
+      const d = DEV_SEEDS[k]
+      if (missingRequiredFacts(d).length > 0) continue
+      expect(exposureForDraft(d).workingYearTax, k).toBe(workingYearTaxForRun(d))
+    }
+  })
+
+  it('an UNREACHED date-route household reads `unpriced` (both still working, 45 + 47, nothing in a clamped year for the floor to price), and the same household with a working-year conversion reads `priced`', () => {
+    // `date` made young and two-earner: no Social Security for 20 years (a survivor's needs 60), no RMD
+    // age, Medicare onset 18+ years out, no conversion — B > 0 in every clamped year, P = 0 in all of them.
+    const base = DEV_SEEDS.date
+    // A still-working person carries no retirement age (the save gate refuses one) — Sam's is dropped.
+    const { retirementAge: _samRetired, ...sam } = base.people[1]!
+    const young: ScenarioDraft = {
+      ...base,
+      people: [
+        { ...base.people[0]!, birthYear: 1981, currentAge: 45 },
+        { ...sam, birthYear: 1979, currentAge: 47, workStatus: 'working', earnedIncomeReal: 60_000 },
+      ],
+    }
+    expect(isDateRoute(young)).toBe(true)
+    expect(missingRequiredFacts(young), 'buildable').toEqual([])
+    expect(exposureForDraft(young).workingYearTax).toBe('unpriced')
+    // The moved control: a conversion starting in the build year sits inside every Y ≥ 1 working window.
+    const converting: ScenarioDraft = { ...young, rothConversion: { annualAmountReal: 20_000, startYearOffset: 0, years: 2 } }
+    expect(missingRequiredFacts(converting), 'buildable').toEqual([])
+    expect(exposureForDraft(converting).workingYearTax).toBe('priced')
   })
 })
 
@@ -263,7 +343,7 @@ describe('the SHIPPED consumer binds to this seam (source-bind, not replication)
     // Any of these appearing in the component means someone re-typed a decision that belongs to
     // the seam (the class that made the S0 verifier's `+ 3` survive 1096 green tests).
     expect(src, 'never a hand-written exposure literal in the component').not.toMatch(
-      /(aca|medicare|overlayBuilt|contributions|blend|spending)\s*:\s*'(priced|unpriced|unknown)'/,
+      /(aca|medicare|overlayBuilt|contributions|blend|spending|workingYearTax)\s*:\s*'(priced|unpriced|unknown)'/,
     )
   })
 })

@@ -7,6 +7,7 @@ import {
   cashTermsForYear,
   contributionsForYear,
   ongoingIncomeForYear,
+  personOffsetsFor,
   ENGINE_MAX_DOLLAR,
   type PersonOffsets,
   type SimOutput,
@@ -440,9 +441,9 @@ describe('R19 engine half + dire-but-honest edges', () => {
       expect(r.indeterminate).toBe(true) // the DEFINED output — simulate did NOT throw/crash (R19)
       return r.indeterminate ? r.reason : ''
     }
-    expect(reasonOf(overlay({}))).toMatch(/irmaaMagiSeed/) // MISSING seed → the coverage gate (simulate.ts:1003-1005)
-    expect(reasonOf(overlay({ irmaaMagiSeed: [Number.NaN, 60_000] }))).toMatch(/irmaaMagiSeed/) // NaN → finiteness gate (simulate.ts:839)
-    expect(reasonOf(overlay({ irmaaMagiSeed: [-1, 60_000] }))).toMatch(/irmaaMagiSeed/) // negative → finiteness gate (simulate.ts:839)
+    expect(reasonOf(overlay({}))).toMatch(/irmaaMagiSeed/) // MISSING seed → the coverage gate (simulate.ts:1095-1097)
+    expect(reasonOf(overlay({ irmaaMagiSeed: [Number.NaN, 60_000] }))).toMatch(/irmaaMagiSeed/) // NaN → finiteness gate (simulate.ts:916)
+    expect(reasonOf(overlay({ irmaaMagiSeed: [-1, 60_000] }))).toMatch(/irmaaMagiSeed/) // negative → finiteness gate (simulate.ts:916)
   })
 
   it('R19 enum + person-field + empty-bucket-basis gaps → indeterminate (U3-exit code-review pilot)', () => {
@@ -2365,6 +2366,259 @@ describe('R40 · seam 1 — cashTermsForYear nets the ongoing gross + splits the
     expect(cash.net).toBe(0) // clamped: the portfolio funds nothing this year
     expect(cash.ongoingTaxableGrossUp).toBe(0) // clamped routes NOTHING to the gross-up feed
     expect(cash.ongoingTaxableIrmaaOnly).toBe(42_000) // owner 0 FULL 30k + owner 1 SURVIVOR 12k
+  })
+})
+
+// ===========================================================================
+// The working-year tax floor (2026-10-20 — `docs/plans/features/working-year-tax-floor-build-spec.md`
+// U3 · KTD2/KTD4/KTD5/KTD11) — the WIRING half, beside R40 seam 1's pattern. The pricing math is
+// golden at the overlay level (taxOverlay.test.ts's floor block); the `dip` integration lives in
+// devSeeds.test.ts (engine tests never import @ui). These pin `cashTermsForYear`'s
+// `workingYearOutside` — B = Σ over the LIVING workers of max(0, pay − that person's OWN pre-tax
+// deferral this year) + the clamped ongoing taxable; I = Σ of the entered investment income of the
+// members WORKING at t; `undefined` in every unclamped year — then the R19 arm and the tax-off
+// non-forwarding. Every expected figure is whole-dollar hand arithmetic on the fixture (exact).
+// ===========================================================================
+describe('the working-year tax floor — cashTermsForYear carries the clamped year’s OUTSIDE income (U3 · KTD2/KTD4/KTD5/KTD11)', () => {
+  // `dip`'s household at the engine boundary: two 57-year-olds stopping at 62 (retire offset 5) and
+  // claiming at 62 (offset 5 — no SS in any working year). Alex: $75,000 of pay, an $8,000 401(k)
+  // deferral and a $4,000 employer match. Sam: $35,000 of pay and NO pre-tax deferral — but a Roth
+  // deferral, an HSA and a taxable contribution, none of which is the worker's OWN pre-tax channel
+  // (KTD4: §402(e)(3) excludes only the elective pre-tax deferral from Box 1; the match is never the
+  // worker's income; HSA is a disclosed non-subtraction).
+  const ALEX: PersonInputs = {
+    sex: 'female', currentAge: 57, birthYear: 1969, retirementAge: 62,
+    earnedIncomeReal: 75_000, pia: 26_000, socialSecurityClaimAge: 62,
+  }
+  const SAM: PersonInputs = {
+    sex: 'male', currentAge: 57, birthYear: 1969, retirementAge: 62,
+    earnedIncomeReal: 35_000, pia: 20_000, socialSecurityClaimAge: 62,
+  }
+  const STREAMS: AccumulationParams['contributionsByPerson'] = [
+    { pretax: flatN(5, 8_000), employerMatch: flatN(5, 4_000) },
+    { roth: flatN(5, 5_000), hsa: flatN(5, 3_000), taxable: flatN(5, 2_000) },
+  ]
+  const withI = (
+    investment: readonly number[],
+    contributionsByPerson: AccumulationParams['contributionsByPerson'] = STREAMS,
+  ): AccumulationParams => ({ contributionsByPerson, workingYearInvestmentByPerson: investment })
+  /** A tax-on overlay carrying the construct (or not) — `cashTermsForYear` reads only the construct,
+   *  the income construct and the spend, so the buckets are a consistent placeholder. */
+  const floorParams = (
+    people: PersonInputs[],
+    accumulation: AccumulationParams | undefined,
+    income?: IncomeParams,
+  ): SimulationParams =>
+    makeParams({
+      annualSpendingReal: 78_000,
+      people,
+      overlay: {
+        taxEnabled: true,
+        rmdEnabled: true,
+        startCalendarYear: 2026,
+        buckets: { taxable: 0, pretax: 700, roth: 300 },
+        filing: 'mfj',
+        ...(income ? { income } : {}),
+        ...(accumulation ? { accumulation } : {}),
+      },
+    })
+  const outsideAt = (t: number, params: SimulationParams, deaths: readonly number[] = [50, 50]) => {
+    const { offsets, higherClaimOffset } = personOffsetsFor(params.people)
+    return cashTermsForYear(t, params, offsets, deaths, higherClaimOffset)
+  }
+
+  it('personOffsetsFor — the ONE pre-loop builder simulate and the U5 predicate share: per-person offsets + the higher earner’s claim gate', () => {
+    const { offsets, higherClaimOffset } = personOffsetsFor([ALEX, { ...SAM, socialSecurityClaimAge: 64 }])
+    expect(offsets.map((o) => [o.retire, o.claim, o.earnedIncomeReal])).toEqual([
+      [5, 5, 75_000],
+      [5, 7, 35_000],
+    ])
+    // The SS amounts are the sub-engine's own (golden in socialSecurityBenefit's tests) — wired, not re-derived.
+    const benefits = householdBenefits([
+      { piaAnnual: 26_000, claimAge: 62, birthYear: 1969 },
+      { piaAnnual: 20_000, claimAge: 64, birthYear: 1969 },
+    ])
+    expect(offsets.map((o) => [o.socialSecurityReal, o.spousalExcessAnnual])).toEqual(
+      benefits.map((b) => [b.ownAnnual, b.spousalExcessAnnual]),
+    )
+    expect(higherClaimOffset, 'argmax pia — Alex (26,000): her claim offset, not Sam’s 7').toBe(5)
+    // An equal-PIA tie resolves to the FIRST person (strict `>`), whichever claims first.
+    const tie = personOffsetsFor([{ ...ALEX, pia: 20_000, socialSecurityClaimAge: 64 }, SAM])
+    expect(tie.higherClaimOffset, 'tie → person 0’s claim offset (7)').toBe(7)
+  })
+
+  it('a two-worker clamped year: B = (75,000 − 8,000) + (35,000 − 0) = 102,000 and I = 10,000 — the match, HSA, Roth and taxable contributions are NOT subtracted', () => {
+    const params = floorParams([ALEX, SAM], withI([10_000, 0]))
+    for (const t of [0, 4]) {
+      const cash = outsideAt(t, params)
+      expect(cash.net, `t=${t}: clamped — the household lives on its pay`).toBe(0)
+      // A match-subtracting wire reads 98,000; an every-channel one 92,000; a household-I one is the same here.
+      expect(cash.workingYearOutside, `t=${t}`).toEqual({ ordinaryBase: 102_000, investmentIncome: 10_000 })
+    }
+  })
+
+  it('the deferral is read at THIS year’s index (a year-varying stream moves B year by year)', () => {
+    const streams: AccumulationParams['contributionsByPerson'] = [{ pretax: [8_000, 0, 23_500] }, {}]
+    const params = floorParams([ALEX, SAM], withI([10_000, 0], streams))
+    expect(outsideAt(0, params).workingYearOutside?.ordinaryBase, '75,000 − 8,000 + 35,000').toBe(102_000)
+    expect(outsideAt(1, params).workingYearOutside?.ordinaryBase, '75,000 − 0 + 35,000').toBe(110_000)
+    expect(outsideAt(2, params).workingYearOutside?.ordinaryBase, '75,000 − 23,500 + 35,000').toBe(86_500)
+    expect(outsideAt(3, params).workingYearOutside?.ordinaryBase, 'a short stream is a $0 year').toBe(110_000)
+  })
+
+  it('a worker DEAD earlier in the path contributes 0 to B and their I slot drops out', () => {
+    // Both slots nonzero, so a household-summed I (every member, not the workers) reads 12,500 at t=4.
+    const params = floorParams([ALEX, SAM], withI([10_000, 2_500]))
+    expect(outsideAt(2, params, [3, 50]).workingYearOutside, 't=2: both alive and working').toEqual({
+      ordinaryBase: 102_000,
+      investmentIncome: 12_500,
+    })
+    const widowed = outsideAt(4, params, [3, 50])
+    expect(widowed.net, 't=4: Sam still works — the clamp holds').toBe(0)
+    expect(widowed.workingYearOutside, 't=4: Alex died at 3 — only Sam’s pay and Sam’s slot').toEqual({
+      ordinaryBase: 35_000,
+      investmentIncome: 2_500,
+    })
+  })
+
+  it('a living RETIRED spouse contributes 0 to B and their I slot drops out — I sums the members WORKING at t, never the household', () => {
+    const people = [ALEX, { ...SAM, retirementAge: 59 }] // Sam stops at offset 2, Alex at 5
+    const params = floorParams(people, withI([10_000, 2_500]))
+    expect(outsideAt(1, params).workingYearOutside, 't=1: both working').toEqual({
+      ordinaryBase: 102_000,
+      investmentIncome: 12_500,
+    })
+    expect(outsideAt(4, params).workingYearOutside, 't=4: Sam alive but retired — Alex alone').toEqual({
+      ordinaryBase: 67_000,
+      investmentIncome: 10_000,
+    })
+    expect(outsideAt(5, params).workingYearOutside, 't=5: nobody works — unclamped').toBeUndefined()
+  })
+
+  it('contributions above pay floor at 0 PER PERSON (never a negative wage, never netted against a spouse’s pay)', () => {
+    const params = floorParams([{ ...ALEX, earnedIncomeReal: 5_000 }, SAM], withI([10_000, 0]))
+    // max(0, 5,000 − 8,000) + max(0, 35,000 − 0) = 35,000; a household-level floor would read 32,000.
+    expect(outsideAt(4, params).workingYearOutside).toEqual({ ordinaryBase: 35_000, investmentIncome: 10_000 })
+  })
+
+  it('an UNCLAMPED year carries no entry (undefined — a hole on the overlay stream): a retired year, and every year without the construct', () => {
+    const params = floorParams([ALEX, SAM], withI([10_000, 0]))
+    expect(outsideAt(5, params).workingYearOutside, 't=5: both retired').toBeUndefined()
+    const noConstruct = floorParams([ALEX, SAM], undefined)
+    expect(outsideAt(2, noConstruct).workingYearOutside, 'construct absent: never clamped').toBeUndefined()
+  })
+
+  it('a CLAMPED zero-pay year still carries an entry — B = 0, I = 0 (R6: the key is the clamp, never pay > 0 or I > 0)', () => {
+    const params = floorParams(
+      [{ ...ALEX, earnedIncomeReal: 0 }, { ...SAM, earnedIncomeReal: 0 }],
+      { contributionsByPerson: [{}, {}] },
+    )
+    const cash = outsideAt(2, params)
+    expect(cash.net, 'clamped (presence-keyed)').toBe(0)
+    expect(cash.workingYearOutside).toEqual({ ordinaryBase: 0, investmentIncome: 0 })
+  })
+
+  it('a working-year PENSION lands in B (its TAXABLE, never its gross) AND still rides ongoingTaxableIrmaaOnly (KTD2 beside R40 KTD-9)', () => {
+    const pension: IncomeParams = {
+      incomeByPerson: [{ grossFull: flatN(40, 30_000), taxableFull: flatN(40, 24_000) }, {}],
+    }
+    const params = floorParams([ALEX, SAM], withI([10_000, 0]), pension)
+    const clamped = outsideAt(4, params)
+    expect(clamped.workingYearOutside, '102,000 of pay + the 24,000 taxable').toEqual({
+      ordinaryBase: 126_000,
+      investmentIncome: 10_000,
+    })
+    expect(clamped.ongoingTaxableIrmaaOnly, 'KTD-9 unchanged: still IRMAA-only').toBe(24_000)
+    expect(clamped.ongoingTaxableGrossUp, 'never a phantom gross-up withdrawal').toBe(0)
+    const retired = outsideAt(5, params)
+    expect(retired.workingYearOutside).toBeUndefined()
+    expect(retired.ongoingTaxableGrossUp, 'unclamped: the gross-up feed carries it').toBe(24_000)
+  })
+
+  describe('the R19 arm — validateParams rejects a malformed workingYearInvestmentByPerson (aligned, finite ≥ 0, no holes)', () => {
+    const run = (investment: readonly number[]) =>
+      simulate(
+        makeParams({
+          people: [ALEX, SAM],
+          paths: 20,
+          maxHorizonYears: 10,
+          overlay: offOverlayWith(1000, { contributionsByPerson: [{}, {}], workingYearInvestmentByPerson: investment }),
+        }),
+        1,
+      )
+    const holed = new Array<number>(2)
+    holed[0] = 10_000 // slot 1 is a HOLE — `.every` would skip it; a hole is a silently $0 member
+
+    it.each([
+      ['NaN', [Number.NaN, 0]],
+      ['+Infinity', [Number.POSITIVE_INFINITY, 0]],
+      ['negative', [-1, 0]],
+      ['above ENGINE_MAX_DOLLAR', [ENGINE_MAX_DOLLAR * 2, 0]],
+      ['a hole', holed],
+    ] as const)('%s → indeterminate (each slot finite ≥ 0, no holes)', (_label, investment) => {
+      const out = run(investment)
+      expect(out.indeterminate).toBe(true)
+      if (out.indeterminate) expect(out.reason).toContain('workingYearInvestmentByPerson invalid')
+    })
+
+    it.each([
+      ['short', [10_000]],
+      ['long', [10_000, 0, 0]],
+    ] as const)('a %s vector → indeterminate (a mis-aligned vector mis-maps a spouse — never re-indexed)', (_label, investment) => {
+      const out = run(investment)
+      expect(out.indeterminate).toBe(true)
+      if (out.indeterminate) expect(out.reason).toContain('workingYearInvestmentByPerson length must match people')
+    })
+
+    it('control: a well-formed vector resolves (the arm rejects the malformation, not the field)', () => {
+      expect(run([10_000, 0]).indeterminate).toBe(false)
+      expect(run([0, 0]).indeterminate).toBe(false)
+    })
+  })
+
+  it('a tax-OFF construct run is untouched by I: two runs differing ONLY in workingYearInvestmentByPerson are byte-identical (Object.is) — and the tax-ON pair moves (the control)', () => {
+    // The stream is forwarded only when the construct rides WITH tax on (KTD5); with tax off nothing in
+    // the overlay prices a working year, so the OUTPUT must be I-invariant. The tax-on pair is the
+    // presence companion (burned/027): the same two households, tax on, pay a different year-4 tax on
+    // the $34,000 working-year conversion — so the identity below is not vacuous.
+    const household = (taxEnabled: boolean, investment?: readonly number[]): SimulationParams =>
+      makeParams({
+        people: [ALEX, SAM],
+        initialPortfolio: 999_000,
+        annualSpendingReal: 78_000,
+        paths: 64,
+        maxHorizonYears: 10,
+        overlay: {
+          taxEnabled,
+          rmdEnabled: taxEnabled,
+          startCalendarYear: 2026,
+          buckets: { taxable: 0, pretax: 700_000, roth: 299_000 },
+          filing: 'mfj',
+          conversions: [0, 0, 0, 0, 34_000],
+          accumulation: {
+            contributionsByPerson: [{ pretax: flatN(5, 8_000), employerMatch: flatN(5, 4_000) }, {}],
+            ...(investment ? { workingYearInvestmentByPerson: investment } : {}),
+          },
+        },
+      })
+    const offWith = dist(simulate(household(false, [10_000, 2_500]), 4242))
+    const offWithout = dist(simulate(household(false), 4242))
+    expect(offWith.terminalValuesReal.length).toBe(64)
+    for (let p = 0; p < offWith.terminalValuesReal.length; p++) {
+      expect(Object.is(offWith.terminalValuesReal[p], offWithout.terminalValuesReal[p]), `path ${p}`).toBe(true)
+    }
+    expect(offWith.depletionYears).toEqual(offWithout.depletionYears)
+    expect(Object.is(offWith.survivalFraction, offWithout.survivalFraction)).toBe(true)
+
+    const onWith = dist(simulate(household(true, [10_000, 2_500]), 4242))
+    const onWithout = dist(simulate(household(true), 4242))
+    expect(onWith.terminalValuesReal, 'tax on: I is priced in the clamped conversion year').not.toEqual(
+      onWithout.terminalValuesReal,
+    )
+    // The direction: pricing the costliest reading of I on top of the pay can only charge MORE.
+    for (let p = 0; p < onWith.terminalValuesReal.length; p++) {
+      expect(onWith.taxAware!.lifetimeTaxPaidReal[p]!, `path ${p}`).toBeGreaterThan(onWithout.taxAware!.lifetimeTaxPaidReal[p]!)
+    }
   })
 })
 

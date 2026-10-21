@@ -36,6 +36,7 @@ import {
   stateRateForYear,
   stateStandardDeductionFor,
   type PricedState,
+  type StateBaseSystem,
   type StateIncomeTreatment,
 } from '@engine/constants'
 import type { FilingStatus, RetirementState } from '@shared/model'
@@ -94,6 +95,34 @@ export interface StateTaxYearContext {
    *  Integer-age proxy for 59½ (the engine's ±1yr age is integral): the gate fires at age 60, one year
    *  conservative vs the true mid-year 59½ crossing — overstating PA tax in the boundary year. */
   readonly minLivingAge: number
+  /** The working-year tax floor (2026-10-20, KTD7): a §7-CLAMPED working year's outside ordinary
+   *  income — the household's taxable pay + clamped ongoing taxable + its entered working-year
+   *  investment income (B + I, the state taking I ONCE, as ordinary). PRESENCE-keyed: ABSENT ⇒ the
+   *  literal pre-floor base. Read ONLY by a `federal-agi-derived` state (NC — AGI carries the wages;
+   *  G.S. 105-153.3(1) / 105-153.4(a), no 401(k) add-back), where it sits inside the base the standard
+   *  deduction reduces. A `class-based` state (PA) ignores it STRUCTURALLY: PA taxes compensation at
+   *  the same flat rate with no deduction (61 Pa. Code §101.6(c)(7)–(8)), so the increment over it is
+   *  pay-invariant and ignoring it keeps PA exact — true only because Schedule SP Tax Forgiveness is
+   *  OUT (the constants note's caveat). FL is the structural 0. The CALLER owns the subtraction
+   *  (`taxOverlay.workingYearStateCharge`) — this function only prices the base it is handed. */
+  readonly clampedOrdinaryBase?: number
+}
+
+/** How much of the clamped working year's outside ordinary income enters the state's base, by its
+ *  base system (the working-year tax floor, KTD7). Exhaustive like {@link includeByTreatment}: a new
+ *  base system must choose its rule here, never fall to a silent 0 (tsc holds the door). */
+function includeClampedBase(amount: number, system: StateBaseSystem): number {
+  switch (system) {
+    case 'federal-agi-derived':
+      return amount
+    case 'class-based':
+    case 'no-income-tax':
+      return 0
+    default: {
+      const never: never = system
+      throw new Error(`unhandled state base system ${String(never)}`)
+    }
+  }
 }
 
 /** How much of a channel enters the state's flat ordinary base under its per-figure treatment flag.
@@ -144,7 +173,10 @@ export function stateIncomeTax(ctx: StateTaxYearContext): number {
     // Ongoing other-income has no per-figure flag — both NC (AGI) and PA (taxable class) tax it flat,
     // regardless of age. It sits INSIDE the base the standard deduction reduces (matters only for NC;
     // PA's deduction is $0).
-    ctx.ongoingTaxable
+    ctx.ongoingTaxable +
+    // The working-year floor's outside income (KTD7) — `+ 0` exactly when absent or ignored by the
+    // base system, so every pre-floor call and every PA / FL call prices the literal pre-floor base.
+    (ctx.clampedOrdinaryBase === undefined ? 0 : includeClampedBase(ctx.clampedOrdinaryBase, profile.baseSystem))
   // The statute's deduction is a FROZEN NOMINAL figure (NC: no COLA; PA: none at all), so in the
   // engine's real dollars it shrinks every year — deflated by the ONE price index for this CALENDAR
   // year (identity at the anchor, so year 0 is the statute figure). Subtracting it flat would index

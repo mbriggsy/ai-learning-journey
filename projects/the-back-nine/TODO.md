@@ -19,20 +19,69 @@
 **Where we are:** all four acts are built; Act 4 closed at U17·S6 (S7 deferred, Briggsy's ruling). What is
 left is not units. It is the gap between *the build is done* and *a friend can bet real money on this*.
 
-▶ **START HERE — the fresh session's entry is the NEWEST session block's NEXT list: today, the 2026-10-20 (b9-4)
-block directly below — its (B), the NEW Tier 0 working-year tax build, is the pilot's next job: its PLAN is written,
-deepened and reviewed (2026-10-20, b9-4 — `docs/plans/features/working-year-tax-floor-build-spec.md`, U1–U7, ONE commit;
-KTD11 council-decided, `wf_ef6cf7c5-a2b`), so the next session BUILDS it from that plan (brief → build → whole-file
-review → distill; the plan is the brief's input) — and that list ends "then the 2026-09-13 late (b9-9) list below as ranked": its open items 5–12,
-then its HIS EYE batch. The register is the open surface. Every eye frame is re-made before a sitting — the commands
-are in the NEXT list and the HIS EYE batch's "Frames:" line (`temp/` is emptied at every squeaky).**
+▶ **START HERE — (B), the Tier 0 working-year tax floor, is BUILT, REVIEWED and UNCOMMITTED in the working tree
+(2026-10-20, b9-5 — the session wrapped at the 60 % line before the walk and the commit). FINISH IT AS ONE COMMIT, in
+this order, then return to the 2026-10-20 (b9-4) block's NEXT list below from its (1):**
+1. **Read the state first.** `git status --short -- projects/the-back-nine` + `git diff --stat` (≈ 35 files: the engine,
+   the U5 ledger/staleness/exposure, the U7 row, the docs, the register). The b9-5 block below lists what was built,
+   measured and decided, and the fix pass's outcome. Durable backup of every probe, the U4 measurement JSONs and the
+   builder handoff: `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-wip-working-year-floor\`.
+2. **Gates on the touched files** (foreground, never the full suite): `pnpm typecheck` · `pnpm lint` · `pnpm exec vitest run`
+   over taxOverlay / stateTax / simulate / dateSearch / pricingVersion / pricingWitness / historical (engine),
+   staleness (store), intakeMap (intake), devSeeds / stalenessExposure / reentry / workingYearTaxDisclosure / copyGuard /
+   conversionTaxDisclosure (ui), assumptionPanel (intake). Any red is fixed before step 3.
+3. **Caddie-walk the U7 row** — the `working-year-tax` methodology row (`src/ui/assumptionRegistry.ts`, its copy in
+   `src/ui/copy.ts`), on the assumptions panel's methodology list. Builder-drafted (~190 words, the longest row; it
+   renders for every household, retired ones included — a walk question). Ships by default under the batched-oracle
+   grant (a chaired card); his-call items stay his: the row's words and the "Income Medicare looks at" heading
+   (`docs/council-log.md` 2026-10-20, ⚑).
+4. **Counts + citations, ONCE and LAST:** `pnpm doc:reanchor HEAD` (dry) → `--apply`, minding every b9-1/toronto
+   landmine below (restore `e2e/held/fit-24px-measurements.md`; hand-fix REVIEW citations by content; first-token-only;
+   restore insight 136's historical citations); then README + roadmap test counts from `pnpm verify:doc-stats`'s live
+   figure (it read 4210 tests / 210 files before the fix pass added tests — re-read it); the register header count was
+   re-counted by builder D (133 open) — re-count if anything was filed or closed after; `verify:doc-stats` green.
+5. **`pnpm verify:fit`** on the date arms (`dip`, `date65`, `datenc`, `datestale`, `datearrived`) — never beside vitest.
+6. **Date the row:** ledger row v12's `shippedOn` AND the literal in `pricingVersion.test.ts`'s v12 arm = the commit's
+   LOCAL date (both say 2026-10-20 now).
+7. **Commit ONE** with `git commit -- <paths>` (NEVER `-a` — the three `../family-feud/` files are another session's),
+   the U4 before/after table in the message, push, read CI by run id (the full SHA). Then distill (the floor's lessons:
+   a plan's witness label can be refuted by its own hand derivation; reach = every portfolio dollar AND every MAGI read).**
+
+**SESSION 2026-10-20 (b9-5) — (B) built, UNCOMMITTED (the START HERE above finishes it):**
+**BUILT (U1–U7, the plan's units):** U1 `taxOverlay.ts` — `prepareWorkingYearFloor` / `workingYearFederalCharge` /
+`workingYearStateCharge` (exported; the gross-up and the pricing witness call the same helpers), the clamped year's charge
+max over the readings of T(base + P) − T(base) + T(0, ss), the R8 entry checks + the marker-and-mask cross-check;
+U2 `stateTax.ts` `clampedOrdinaryBase` (NC takes it, PA/FL ignore it structurally); U3 `simulate.ts` —
+`cashTermsForYear.workingYearOutside` (B, I), the exported `personOffsetsFor`, the stream + mask under the construct, the
+R19 arm; `AccumulationParams.workingYearInvestmentByPerson`; `DateSearchInput` + `buildCandidateParams` + `buildDateInput`;
+U5 ledger row v12 (`reach: 'working-years'`, tax + stateTax, NC; `SOLVER_CODE_VERSION` 11) + the `workingYearTaxReach`
+predicate + the staleness combine; U6 docs + the register (Tier 0 CLOSED, residuals filed, header 133); U7 the
+`working-year-tax` row (DRAFT words, walk owed). Red-first: 18 floor fixtures red on the HEAD engine; every new witness
+seen red under a planted mutant (≈ 30 mutants across the build, each restored by copy + cmp).
+**MEASURED (U4, `DEV_CRN_SEED`, HEAD vs after, both tiers, both tracks):** NO crown and NO non-monotone set moved on any
+date seed; every moved point moved DOWN. `dip` lifestyle @5 grade 0.89 → 0.88 (final p 0.8892 → 0.8866); its preview's
+conversion arm 0.8965 → 0.894, both arms 9 of 10. ALL EIGHT date seeds are reached (the register had one): the Medicare
+draw (date65/datenc 101,451 clamped path-years; date/atceiling 29,330), the conversion (dip 36,000), the RMD
+(date65/datenc 1,668), and the SS-only seeds through the pay-informed taxable SS reaching IRMAA. No re-tune (dip's law
+did not fire). The full record: `dip`'s docblock + the CLOSED register entry + the plan's "As built" section.
+**DECIDED IN THE BUILD (the plan's As-built section):** the exactness ordering (bit-exact at base = 0 AND at P = 0); the
+I = 0 single-reading shortcut; taxable SS rides B + I + P (KTD6 refined); the plan's "ordinary-wins" `dip` witness was
+WRONG — the preferential reading wins, $5,880; a floor entry without the construct throws; PA Tax Forgiveness's bound is
+$399.10 MFJ (builder C, the PA-40 Table 2), not the plan's ~$470.
+**REVIEW (`wf_899aa36c-118`, 3 reviewers, 24 confirmed findings: 3 P1 — a red devSeeds 'stale' arm, no witness for NC
+taking I, the predicate's contributed-pre-tax RMD channel untested):** ALL 24 APPLIED by the fix pass (23 as prescribed,
+R3-4 placed at the paragraph's end; R3-5 = the re-anchor, step 4 above), each new witness seen red under its mutant (M1–M4,
+D1/D3/D4/D5; the tax digest re-pinned at v12 for the exactness fixture's SS 143,013.29 probe). Re-verified by the pilot at the
+wrap: `pnpm typecheck` 0 · `pnpm lint` 0 · 16 touched suites, 987 / 987 pass. The README / roadmap counts are stale until
+step 4 (4 more tests than the 4210 the gate last read). The fix pass corrected the SS-only seeds' mechanism in the record:
+T(0, ss) = $0 there, so they move only through Medicare (the pay-informed taxable SS reaching IRMAA-MAGI), never a tax draw.
 
 **SESSION 2026-10-20 (b9-4):**
 **STATE on the final tree, by exit code (re-run at the 2026-10-20 b9-4 close):** typecheck · lint · `verify:doc-stats` · build · `verify:bundle` 271.3 KiB · `verify:aca` (verified 2026-10-20) · `verify:state-tax` (PA + FL next due 2027-07-15, NC 2027-08-02). No test run this session (docs only — a plan, a council row, an index line). `SOLVER_CODE_VERSION` 11, ledger v11 (unchanged: no engine edit).
 **CI:** GREEN by run id on `ubuntu-26.04`: `29421b4e` (39505131676, the b9-3 squeaky). The plan commit `8484bd24` (39515239983) was IN PROGRESS at close — read its conclusion first (`gh run view 39515239983`); the squeaky commit's own run follows.
 **WHERE THE SOLVE STANDS:** unchanged since the 2026-10-12 (b9-2) close (no pricing change, no roster change; b9-3 and b9-4 made no engine edit) — THE POOL (`225d8da4`, laws in `docs/architecture.md`'s *The pooled solve*), the all-in objective (v10, `6dab9ec0`), the budgetless survivor-medical lean (v11, `c1ada867` — the current `SOLVER_CODE_VERSION`; a scored spend-side pricing change, no roster change), the v9 window walk, rosters `retired`-type 93 / `health` 97 / `healthgap` 101; THE APP (production, his laptop, P = 12): `retired` 36.5 s · `nc` 39.8 s · `healthnc` 150.9 s (ANY roster growth re-times `healthnc` first, `e2e/held/solve-timing.spec.ts`). The PHONE half of the pending-line entry is still owed (a ≤ 3-core device gets no pool).
 **UNFINISHED (prescriptions):** none open — b9-4 built nothing (it planned (B): `docs/plans/features/working-year-tax-floor-build-spec.md`, `8484bd24`). OWED to HIM from that plan (both in `docs/council-log.md`'s 2026-10-20 row, ⚑): the U7 disclosure row's words (pilot-drafted at the build, Caddie-walked, ship by default) and the "Income Medicare looks at" heading (left as written; the figure now also sets the income-tax base). OWED (both carried from b9-2, still live): (a) the engine measurement of the discount a crossing dollar loses, for the scope entry (Tier 0 *The health sheet's "26¢ on each dollar converted" holds only inside the ~$18,600 of room…*) — only hand figures exist, from the 2026-10-15 early-claim Caddie walk's hunter in b9-toronto1 (`healthss` $9,479 at the anchor; about $8,374 at the ~$84,600 line, the same on `healthnc`'s line — both seeds carry `slcspMonthlyToday` 1,400); measure through the engine on `healthnc`, `healthgap` (the register's Prescription (1) names it — its cliff is live, "about 2 of 10 futures") and `healthss` (a paired CRN run across the line, the anchor year's readout) before his words; (b) the Caddie tape rows awaiting his read — 2026-10-06 all-in, 2026-10-09 survivor-medical, 2026-10-14 survivor spending-basis, and 2026-10-15's four (held-flat, NC cents, early-claim cents, the same-age Medicare card), 2026-10-16's one (the one-figure card's first-year frame + his trend clause), 2026-10-16 (b9-1)'s one (his three rulings + his two in-session rulings), and 2026-10-19 (b9-2)'s one (his four b9-1 walk rulings + his in-session Medicare re-ruling) — `docs/caddie/tape.md`.
-**NEXT, in order:** (A) the ACA re-verify — ✅ CLEARED 2026-10-20 (regime unchanged; the ceiling 119-124, every law above 119-118 matched by bill number and swept clean; the record's two self-contradictions corrected — `lawsInEffect` turned out to be one stamp per RELEASE, neither per section nor site-wide); the next FULL pass is due by CI-red ~2026-11-19 00:00 UTC / runtime 2026-11-20 — follow the record's `forwardClock` (its ⚑ 2026-10-20 head: the Senate resumes business 2026-11-09, so the pass lands in the first floor weeks before the December 11, 2026 cliff; the twelve House bills presented 10-14/15 first, by bill number; two new referral-only vehicles to watch — H.R. 10730, retroactive to TY2026 and permanent, and S. 5496, permanent from TY2027) · (B) **NEW Tier 0, the pilot's next build** — *A working-year Roth conversion or RMD on the date route is taxed as if the household had no pay…* (filed 2026-10-20, b9-3, by (1b)'s measurement): `solveGrossWithdrawal` prices a clamped working year's conversion / RMD with no wage term, federal and state; `dip`'s SHIPPED lifestyle crown (Y = 5, both tiers) carries its year-4 $34,000 conversion at $180 federal where the engine's own tax function charges $4,380 on top of its $102,000 of wages. PLANNED 2026-10-20 (b9-4): build it from `docs/plans/features/working-year-tax-floor-build-spec.md` — U1–U7 land as ONE commit (the U4 pin settlement, the U5 ledger row v12 `reach: 'working-years'`, the U6 counts / re-anchor / register, the U7 disclosure row). The plan widened the entry three ways, each recorded there: the Medicare/extras funding draw is a reach channel the register never measured (derived to reach `date` / `atceiling` / `date65` / `datenc`), the charge keeps today's figure at zero outside income (the T(0, ss) term — the ⚑ NEGATIVE's own premise), and the entered working-year investment income joins the base at the costliest of three readings (council `wf_ef6cf7c5-a2b`, 7/10 — its disclosure row's words are yours-to-close via the Caddie; the "Income Medicare looks at" heading is LEFT for you, flagged in the council log). The red-first figures are hand-derived from the IRS PDF (4,380 / 180; `dip` integration 5,153.1149 at I = 0 / 193.1734 floor-absent, re-derived with I = 10,000). Whether any date moves is what the build measures — two-sided, both tiers · (1) the three filings his 2026-10-16 (b9-1) walk left open (the four rulings themselves are BUILT + WALKED, `1b685648` — git log and the cold-read log's 2026-10-19 (b9-2) card are the record): (1a) Tier 1 *On a plan reopened in a later year the relief line names no assumption…* — words his (the pilot's draft is on the entry), due before 2027-01-01; (1b) Tier 1 *On the date route the North Carolina / Pennsylvania clause says "your state income tax" with no scope…* — MEASURED 2026-10-20 (no priced-state seed reaches at its crown; the mechanism is federal too and moved to the Tier 0 at (B)), so only the words are left, his; (1c) Tier 3 *A household that kept its state bill inside its spending, then picked a priced state in the panel…* — his product call · (2) **HIS WORD CALLS** (what is left after his 2026-10-16 rulings — each needs the pilot's measurement or draft first): (iii) Tier 0 *The health sheet's "26¢ on each dollar converted" holds only inside the ~$18,600 of room…* — OWED (a) first; the bound is the FIRST POINT THE RATE CHANGES, never the room (on `healthss` 28¢ holds for ~$1,260 converted; the rest of the room costs 32.16¢, filling it $3,528 — the entry's AMENDED bullet); (iv) Tier 0 *The survivor step-down attribution…* — its third misreading, the order of death ("$990" is the floor; ~42 % of `healthss`'s survivor futures drop ~$1,283, the refuter's `sampleCouplePath` run) — measure on the engine, then words his; (v) the 2026-10-14 survivor-basis build's and walk's word-his Tier 1s: *The survivor card's spending-basis line is withheld on a RAMPED budget…*, *On an itemized budget the assumptions sheet says the survivor share is "75" %…*, *The survivor card carries no closeness hedge…* (per each entry's owner line — the hedge: pilot measures + the flag first, then words his; the RAMPED line: words his, then the pilot builds; the "75": words his); (vi) Tier 1 *The conversion tile's "all told" leaves out the tax on the money that pays the tax…* — framing his (~1.5¢ on `health`, ~33¢ derived on `healthss` against the tile's 28¢) · (3) Tier 0 *The ACA solve finds no root at the 100 %-FPL line…* — pilot measure + the build's mechanics → council on what a household AT the line pays · (4) Tier 1 *The conversion tile's federal term treats a realized gain as ordinary income…* — pilot (measure reach → build; the gain split is not on the wire today; for a couple reachable only past the subsidy cliff) · (5) Tier 2 *The 2026-10-15 held-flat walk's other pre-existing sheet findings…* — pilot (layout + measure) → words his · (6) Tier 1 *The relief line has no branch for a floor BELOW the hero…* — NOT a Tier 0 (the 2026-10-14 probe found floor < full unreached on every measured face); next: reachability outside the measured family (the entry's Prescription bullet) · (6b) Tier 1 *The one-figure Medicare card's "start at" reads as a floor when the first billed year carries a look-back surcharge…* — NEW 2026-10-16 (b9-toronto3), from the card's build review (`wf_0f6a7da2-fb1`, reproduced through the engine; PESSIMISTIC — it overstates): pilot measures reach on the MEDIAN path (a big conversion two years before enrollment; a high look-back seed), then words his for a surcharged first year (⚑ never the trend clause there; never a second figure without a ruling) · (7) Tier 1 *The date route's Tier-1 key is unruled…* — ruled in the same council as the working-route solve (`datesplit` / `datemixed` / `dip`, plan-as-executed as a probe; the fiduciary elder's charter is already amended, `.claude/workflows/council.js:119` — the workflow, not the skill directory) · (8) Tier 1 *The TwoFutures even line swallows a lever's harm…* — measure across the roster's previews AND the off-roster HSA construct (the 3.94 pp HSA-class loss was measured on `healthgap` + a $150,000 HSA, wf_d98e02fb-08c — no dev seed carries an HSA, so a roster-only measure cannot reach that class), then `/council` on the grammar · (9) Tier 1 *No sourced NON-medical survivor ratio…* — the research leg (a sourced r_N, or a sourced survivor-OOP fall ≥ (1 − r), FLIPS the survivor-medical ruling to keep-flat-and-disclose — so says `docs/council-log.md`'s 2026-10-08 row; ⚑ the register's Prescription and `docs/decisions/ss-computation.md` §6a disagree, both APPLYING a sourced r_N to both arms (the Prescription flipping only on the OOP fall): resolve which governs BEFORE the leg acts on a finding — found 2026-10-15, b9-toronto3; §6a's side added by the 2026-10-16 doc audit, and the register entry's ⚑ flag names all four homes, the CLOSED survivor-medical entry's Dissent bullet among them) · (10) Tier 1 *The band sentence's low figure reads as a FLOOR…* (words his or a council); its two Tier 2 siblings (the delta hero's mean lead; the 10-06 read's other findings) ride the ranked list as filed · (11) the headroom look-back entry TOGETHER with *The step card's room covers the one-enrollee years…* (Tier 1, pilot + council — open, not blocked; figures re-derive under the growth base) · (12) Tier 2 *The engine-pricing ledger cannot name a date-route or spending-figure change…* (8d4d4e58, 6e4c065d — RE-READ 2026-10-15 b9-toronto3: ledger v11's `spending` family does NOT cover the spending half — its exposure read is `survivorMedicalLeanMoves`, its phrase the survivor-spending one, its witness `cashTermsForYear`, and no row names 6e4c065d; the register's "five families" is six now) · (13) Tier 2 *The spend lane's test + polish debt…* · (14) the Roth sheet's blank amount box (Tier 1 — its rail half's shape RULED 2026-10-04, the entry's ⚑ RULED block; built with the sheet after (11) — and after (18)(c): the entry's COUPLING bullet says the fact lines make the sheet taller, so "the build rides" the tall-sheet decision) · (15) the step card's "a year" read (Tier 2, words his) · (16) the echo-ink entry · (17) the Part D hold-direction research leg · (18) **the three owed councils** (the pilot's since the 2026-09-30 re-triage; ≥ 7/10 executes with its ⚑ line in `docs/council-log.md`, a lower score or a Hawk veto returns to HIS EYE with the rec): (a) the 20 px two-pane overrun (Tier 2 *The app on someone else's device…*, candidates (i)–(iii) in its ⚑ OPEN FORK bullet); (b) the phone strip-reserve fork (the block after HIS EYE); (c) Tier 3 *The lever sheets at his seat…* — the hidden actions row (one shape for the control-sheet family) plus Apply-before-the-comparison (the pilot's lean: block while pending) · (19) Tier 2 *`bandPercentile` INTERPOLATES…* — build its ruled shape (pilot; engine-side, observe-only, reduce-to-spine byte-identical): the path-observed (nearest-rank / lower) median for the integer enrolled count and the both-enrolled path FRACTION on the wire (the `overCliffFraction` shape), the base read CONDITIONED on the count the card names; red-first on a fixture splitting exactly 50/50 on enrollment; re-pin the seed gate from the engine; put any moved health card on the next Caddie walk (⚑ never round at the UI; the era-year RULE untouched) · (20) the statistic half of Tier 2 *The premium card's era arm fires on a both-enrolled median window of ONE year…* — BLOCKED on (19); then measure the fraction at the era year through the real engine across 61/59 · 61/45 · 61/43 · 61/41 · 61/40 · 61/38 and on `healthnc`; a candidate must leave the shipped `healthnc` card's routing unchanged; `/council` before any routing change (⚑ never a K; never re-open the era-year rule on a pilot number) · (21) Tier 2 *`tax.rmdStartAge` vs 26 CFR 1.401(a)(9)-2(b)(2)…* (pilot, `S`): the 1959 row's honest form (consumption keyed to birth year, or a disclosed caveat), the unreachable pre-1949-07-01 70½ band, re-cite to the eCFR read + 89 FR 58644, delete the entry's `EXEMPT` row in `constants.shape.test.ts` (⚑ never flip the whole entry) · (22) the latent staleness gate (Tier 4 — shares `staleness.ts` with the ledger) · (23) Tier 4 *Gate honesty after the 2026-09-30 constants re-cite…* (pilot, `M`): rule the parked ACA-MAGI / PTC pair (against §36B(d)(2)(B) + Form 8962 Worksheet 1-1 and §1395r(i)(4)(A)), classify `medicareExtrasTypical`, widen the tripwire's `RESEARCH_OR_SECONDARY` list, re-cite `health.irmaa` with its CMS read date (⚑ never walk the pair as `certification-pinnable` before the primary read) · (24) Tier 4 `pnpm doc:reanchor` self-citations (including the frozen-file class: it rewrites the FROZEN `e2e/held/fit-24px-measurements.md` on every run, `scripts/reanchor-citations.mjs:65` scanning every tracked `.md` with no frozen-file exclusion — restore it after each run, the landmine below; on the entry's size line since `e17c40e4`, "past six by 2026-10-15" — and its b9-toronto1 bullet (27 missed continuations, the pair-check law) and b9-toronto2 bullet (`:N+`, code-block and `~N` forms; preserved rot) ride this item too) — and the three shapes met 2026-10-12 (the register entry's ⚑ 2026-10-12 bullet: only the first bare token per line moves, a re-run against HEAD after `--apply` double-shifts, historical citations move like live ones) · (25) Tier 4 *No priced-state seed crosses the confidence band any more…* — mint a NEW borderline seed + its state-off twin on NC or PA (the `devSeeds.test.ts:490-498` shape), MEASURED by a real-engine pin, added beside `{ seed: 'nc', … }` in `e2e/vertical-fit.spec.ts` and to the next Caddie walk; reword the routing in `docs/plans/features/state-seed-increment-brief.md` in the mint commit (⚑ never re-tune `nc`'s own accounts) · (26) the two 2026-10-19 (b9-2) Tier 4 `XS` filings from the build's pre-trace (pilot): *A passing `verify:fit` spine arm prints no headroom…* (one `console.log` per spine one-frame arm, mirroring `[U16 pending posture]`; ⚑ never a threshold tuned to it) and *No gate holds the catalog's typographic apostrophe…* (a `copyGuard.test.ts` sweep of string VALUES; survey for legitimate straight quotes first) · then the 2026-09-13 late (b9-9) list below as ranked. **ON THE CLOCK:** the ACA window — (A), next due ~2026-11-19. The roster-recall stays CLOSED; its code waits on `b9-v10-gapfill-wip` (`f7aeaf35`), never for main.
+**NEXT, in order:** (A) the ACA re-verify — ✅ CLEARED 2026-10-20 (regime unchanged; the ceiling 119-124, every law above 119-118 matched by bill number and swept clean; the record's two self-contradictions corrected — `lawsInEffect` turned out to be one stamp per RELEASE, neither per section nor site-wide); the next FULL pass is due by CI-red ~2026-11-19 00:00 UTC / runtime 2026-11-20 — follow the record's `forwardClock` (its ⚑ 2026-10-20 head: the Senate resumes business 2026-11-09, so the pass lands in the first floor weeks before the December 11, 2026 cliff; the twelve House bills presented 10-14/15 first, by bill number; two new referral-only vehicles to watch — H.R. 10730, retroactive to TY2026 and permanent, and S. 5496, permanent from TY2027) · (B) **NEW Tier 0, the pilot's next build** — *A working-year Roth conversion or RMD on the date route is taxed as if the household had no pay…* (filed 2026-10-20, b9-3, by (1b)'s measurement): `solveGrossWithdrawal` prices a clamped working year's conversion / RMD with no wage term, federal and state; `dip`'s SHIPPED lifestyle crown (Y = 5, both tiers) carries its year-4 $34,000 conversion at $180 federal where the engine's own tax function charges $4,380 on top of its $102,000 of wages. PLANNED 2026-10-20 (b9-4): build it from `docs/plans/features/working-year-tax-floor-build-spec.md` — U1–U7 land as ONE commit (the U4 pin settlement, the U5 ledger row v12 `reach: 'working-years'`, the U6 counts / re-anchor / register, the U7 disclosure row). The plan widened the entry three ways, each recorded there: the Medicare/extras funding draw is a reach channel the register never measured (derived to reach `date` / `atceiling` / `date65` / `datenc`), the charge keeps today's figure at zero outside income (the T(0, ss) term — the ⚑ NEGATIVE's own premise), and the entered working-year investment income joins the base at the costliest of three readings (council `wf_ef6cf7c5-a2b`, 7/10 — its disclosure row's words are yours-to-close via the Caddie; the "Income Medicare looks at" heading is LEFT for you, flagged in the council log). The red-first figures are hand-derived from the IRS PDF (4,380 / 180; `dip` integration 5,153.1149 at I = 0 / 193.1734 floor-absent, re-derived with I = 10,000). Whether any date moves is what the build measures — two-sided, both tiers · (1) the three filings his 2026-10-16 (b9-1) walk left open (the four rulings themselves are BUILT + WALKED, `1b685648` — git log and the cold-read log's 2026-10-19 (b9-2) card are the record): (1a) Tier 1 *On a plan reopened in a later year the relief line names no assumption…* — words his (the pilot's draft is on the entry), due before 2027-01-01; (1b) Tier 1 *On the date route the North Carolina / Pennsylvania clause says "your state income tax" with no scope…* — MEASURED 2026-10-20 (no priced-state seed reaches at its crown; the mechanism is federal too and moved to the Tier 0 at (B)), so only the words are left, his; (1c) Tier 3 *A household that kept its state bill inside its spending, then picked a priced state in the panel…* — his product call · (2) **HIS WORD CALLS** (what is left after his 2026-10-16 rulings — each needs the pilot's measurement or draft first): (iii) Tier 0 *The health sheet's "26¢ on each dollar converted" holds only inside the ~$18,600 of room…* — OWED (a) first; the bound is the FIRST POINT THE RATE CHANGES, never the room (on `healthss` 28¢ holds for ~$1,260 converted; the rest of the room costs 32.16¢, filling it $3,528 — the entry's AMENDED bullet); (iv) Tier 0 *The survivor step-down attribution…* — its third misreading, the order of death ("$990" is the floor; ~42 % of `healthss`'s survivor futures drop ~$1,283, the refuter's `sampleCouplePath` run) — measure on the engine, then words his; (v) the 2026-10-14 survivor-basis build's and walk's word-his Tier 1s: *The survivor card's spending-basis line is withheld on a RAMPED budget…*, *On an itemized budget the assumptions sheet says the survivor share is "75" %…*, *The survivor card carries no closeness hedge…* (per each entry's owner line — the hedge: pilot measures + the flag first, then words his; the RAMPED line: words his, then the pilot builds; the "75": words his); (vi) Tier 1 *The conversion tile's "all told" leaves out the tax on the money that pays the tax…* — framing his (~1.5¢ on `health`, ~33¢ derived on `healthss` against the tile's 28¢) · (3) Tier 0 *The ACA solve finds no root at the 100 %-FPL line…* — pilot measure + the build's mechanics → council on what a household AT the line pays · (4) Tier 1 *The conversion tile's federal term treats a realized gain as ordinary income…* — pilot (measure reach → build; the gain split is not on the wire today; for a couple reachable only past the subsidy cliff) · (5) Tier 2 *The 2026-10-15 held-flat walk's other pre-existing sheet findings…* — pilot (layout + measure) → words his · (6) Tier 1 *The relief line has no branch for a floor BELOW the hero…* — NOT a Tier 0 (the 2026-10-14 probe found floor < full unreached on every measured face); next: reachability outside the measured family (the entry's Prescription bullet) · (6b) Tier 1 *The one-figure Medicare card's "start at" reads as a floor when the first billed year carries a look-back surcharge…* — NEW 2026-10-16 (b9-toronto3), from the card's build review (`wf_0f6a7da2-fb1`, reproduced through the engine; PESSIMISTIC — it overstates): pilot measures reach on the MEDIAN path (a big conversion two years before enrollment; a high look-back seed), then words his for a surcharged first year (⚑ never the trend clause there; never a second figure without a ruling) · (7) Tier 1 *The date route's Tier-1 key is unruled…* — ruled in the same council as the working-route solve (`datesplit` / `datemixed` / `dip`, plan-as-executed as a probe; the fiduciary elder's charter is already amended, `.claude/workflows/council.js:119` — the workflow, not the skill directory) · (8) Tier 1 *The TwoFutures even line swallows a lever's harm…* — measure across the roster's previews AND the off-roster HSA construct (the 3.94 pp HSA-class loss was measured on `healthgap` + a $150,000 HSA, wf_d98e02fb-08c — no dev seed carries an HSA, so a roster-only measure cannot reach that class), then `/council` on the grammar · (9) Tier 1 *No sourced NON-medical survivor ratio…* — the research leg (a sourced r_N, or a sourced survivor-OOP fall ≥ (1 − r), FLIPS the survivor-medical ruling to keep-flat-and-disclose — so says `docs/council-log.md`'s 2026-10-08 row; ⚑ the register's Prescription and `docs/decisions/ss-computation.md` §6a disagree, both APPLYING a sourced r_N to both arms (the Prescription flipping only on the OOP fall): resolve which governs BEFORE the leg acts on a finding — found 2026-10-15, b9-toronto3; §6a's side added by the 2026-10-16 doc audit, and the register entry's ⚑ flag names all four homes, the CLOSED survivor-medical entry's Dissent bullet among them) · (10) Tier 1 *The band sentence's low figure reads as a FLOOR…* (words his or a council); its two Tier 2 siblings (the delta hero's mean lead; the 10-06 read's other findings) ride the ranked list as filed · (11) the headroom look-back entry TOGETHER with *The step card's room covers the one-enrollee years…* (Tier 1, pilot + council — open, not blocked; figures re-derive under the growth base) · (12) Tier 2 *The engine-pricing ledger cannot name a date-route or spending-figure change…* (8d4d4e58, 6e4c065d — RE-READ 2026-10-15 b9-toronto3: ledger v11's `spending` family does NOT cover the spending half — its exposure read is `survivorMedicalLeanMoves`, its phrase the survivor-spending one, its witness `cashTermsForYear`, and no row names 6e4c065d; the register's "five families" is six now) · (13) Tier 2 *The spend lane's test + polish debt…* · (14) the Roth sheet's blank amount box (Tier 1 — its rail half's shape RULED 2026-10-04, the entry's ⚑ RULED block; built with the sheet after (11) — and after (18)(c): the entry's COUPLING bullet says the fact lines make the sheet taller, so "the build rides" the tall-sheet decision) · (15) the step card's "a year" read (Tier 2, words his) · (16) the echo-ink entry · (17) the Part D hold-direction research leg · (18) **the three owed councils** (the pilot's since the 2026-09-30 re-triage; ≥ 7/10 executes with its ⚑ line in `docs/council-log.md`, a lower score or a Hawk veto returns to HIS EYE with the rec): (a) the 20 px two-pane overrun (Tier 2 *The app on someone else's device…*, candidates (i)–(iii) in its ⚑ OPEN FORK bullet); (b) the phone strip-reserve fork (the block after HIS EYE); (c) Tier 3 *The lever sheets at his seat…* — the hidden actions row (one shape for the control-sheet family) plus Apply-before-the-comparison (the pilot's lean: block while pending) · (19) Tier 2 *`bandPercentile` INTERPOLATES…* — build its ruled shape (pilot; engine-side, observe-only, reduce-to-spine byte-identical): the path-observed (nearest-rank / lower) median for the integer enrolled count and the both-enrolled path FRACTION on the wire (the `overCliffFraction` shape), the base read CONDITIONED on the count the card names; red-first on a fixture splitting exactly 50/50 on enrollment; re-pin the seed gate from the engine; put any moved health card on the next Caddie walk (⚑ never round at the UI; the era-year RULE untouched) · (20) the statistic half of Tier 2 *The premium card's era arm fires on a both-enrolled median window of ONE year…* — BLOCKED on (19); then measure the fraction at the era year through the real engine across 61/59 · 61/45 · 61/43 · 61/41 · 61/40 · 61/38 and on `healthnc`; a candidate must leave the shipped `healthnc` card's routing unchanged; `/council` before any routing change (⚑ never a K; never re-open the era-year rule on a pilot number) · (21) Tier 2 *`tax.rmdStartAge` vs 26 CFR 1.401(a)(9)-2(b)(2)…* (pilot, `S`): the 1959 row's honest form (consumption keyed to birth year, or a disclosed caveat), the unreachable pre-1949-07-01 70½ band, re-cite to the eCFR read + 89 FR 58644, delete the entry's `EXEMPT` row in `constants.shape.test.ts` (⚑ never flip the whole entry) · (22) the latent staleness gate (Tier 4 — shares `staleness.ts` with the ledger) · (23) Tier 4 *Gate honesty after the 2026-09-30 constants re-cite…* (pilot, `M`): rule the parked ACA-MAGI / PTC pair (against §36B(d)(2)(B) + Form 8962 Worksheet 1-1 and §1395r(i)(4)(A)), classify `medicareExtrasTypical`, widen the tripwire's `RESEARCH_OR_SECONDARY` list, re-cite `health.irmaa` with its CMS read date (⚑ never walk the pair as `certification-pinnable` before the primary read) · (24) Tier 4 `pnpm doc:reanchor` self-citations (including the frozen-file class: it rewrites the FROZEN `e2e/held/fit-24px-measurements.md` on every run, `scripts/reanchor-citations.mjs:65` scanning every tracked `.md` with no frozen-file exclusion — restore it after each run, the landmine below; on the entry's size line since `e17c40e4`, "past six by 2026-10-15" — and its b9-toronto1 bullet (27 missed continuations, the pair-check law) and b9-toronto2 bullet (`:N+`, code-block and `~N` forms; preserved rot) ride this item too) — and the three shapes met 2026-10-12 (the register entry's ⚑ 2026-10-12 bullet: only the first bare token per line moves, a re-run against HEAD after `--apply` double-shifts, historical citations move like live ones) · (25) Tier 4 *No priced-state seed crosses the confidence band any more…* — mint a NEW borderline seed + its state-off twin on NC or PA (the `devSeeds.test.ts:491-499` shape), MEASURED by a real-engine pin, added beside `{ seed: 'nc', … }` in `e2e/vertical-fit.spec.ts` and to the next Caddie walk; reword the routing in `docs/plans/features/state-seed-increment-brief.md` in the mint commit (⚑ never re-tune `nc`'s own accounts) · (26) the two 2026-10-19 (b9-2) Tier 4 `XS` filings from the build's pre-trace (pilot): *A passing `verify:fit` spine arm prints no headroom…* (one `console.log` per spine one-frame arm, mirroring `[U16 pending posture]`; ⚑ never a threshold tuned to it) and *No gate holds the catalog's typographic apostrophe…* (a `copyGuard.test.ts` sweep of string VALUES; survey for legitimate straight quotes first) · then the 2026-09-13 late (b9-9) list below as ranked. **ON THE CLOCK:** the ACA window — (A), next due ~2026-11-19. The roster-recall stays CLOSED; its code waits on `b9-v10-gapfill-wip` (`f7aeaf35`), never for main.
 **SQUEAKY CLOSE 2026-10-20 (b9-4):** typecheck, lint, doc-stats, build + bundle, `verify:aca`, `verify:state-tax` re-run at close; `temp/` emptied; no dev servers were started this session; the three family-feud working files are uncommitted on purpose (never stage them from here). Landmines moved to *Operational landmines* (the b9-4 (2026-10-20) bullet at its head).
 
 **NEXT, in order — RE-RANKED 2026-09-13 late (b9-9) by the verify pass (13 seats + 12 refuters over the b9-8 list; all 13 items OPEN at `084f94f0`, none stale, every refuter agreed; what the pass CORRECTED in the prescriptions is inline below, each re-opened at source; every item is `execute` EXCEPT Card 9, which the register and the batched-oracle law keep PARKED as a framing fork — it moves to HIS EYE). Its ✅ items 1–4 — the two Tier 0s that led it (the Medicare-era premium sentence, the step card's per-person figure), Card 3 and the "never oversold" row — are BUILT and were cut from this list 2026-09-25: their records are their register entries (all four are CLOSED, each with its ⚑ NEGATIVEs — the Medicare-era entry on his 2026-09-25 ruling, `b83bb464`) and `git log`. The rest by tier, then by cost:**
@@ -130,23 +179,23 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    to the Caddie or Briggsy's eye; do not re-file it as a copy defect without a read.
 
 2. **Pre-65 ACA premiums are priced real-flat — the sin the Medicare council ruled solver-BLOCKING.**
-   `intakeMap.ts:341-361` (`escalateQuote`) builds both the enrolled premium and the SLCSP benchmark from
+   `intakeMap.ts:348-368` (`escalateQuote`) builds both the enrolled premium and the SLCSP benchmark from
    `acaAgeRatingCurve` factors alone — **no cost-trend term**. Part B was fixed for exactly this reason;
    `oracleToken.ts:112-133` writes the argument out (*"disclose-and-ship is FORBIDDEN — a disclosure fixes
    a number, never a mis-ranking"*). The same argument holds at the 400%-FPL cliff, where the household
    eats the full premium. The token has an ACA **legislative freshness** clause and **no ACA pricing-mode
    clause**.
    ⚑ **Audit corrections 2026-08-02 — three anchors were wrong and the fix shape is NOT Part B's:**
-   (a) `healthOverlay.ts:305` is a **closing brace**, not a consumer; the real seam is `taxOverlay.ts:1710` plus `taxOverlay.ts:1752-1759`
+   (a) `healthOverlay.ts:305` is a **closing brace**, not a consumer; the real seam is `taxOverlay.ts:2119` plus `taxOverlay.ts:2161-2168`
    → `healthOverlay.ts:279`. (b) `copy.ts:1055` (`healthFactMedicare`) is a Medicare eyebrow; the strings that claim
    the coupling is priced are **`copy.ts:1016-1019`**. (c) the excess-APTC field moved to
    `aca-last-verified.json:43` (was `:21`) and `scripts/verify-aca-status.ts:40-103` declares and REQUIRES the key
    (`adjacentButSharp` at `:90`, `needProse` at `:169`, since 2026-08-03) — **the gate is presence-only**: nothing checks that the prose models the uncapped clawback.
    ⚑ **STRUCTURAL — this is why it isn't a Part B copy-paste:** Part B's schedule is built INSIDE the
    engine, which is why the oracle token can witness it. The ACA escalator lives in **intake**
-   (`intakeMap.ts:341-361`), which the engine cannot import — so an `ACA_PRICING_MODE` flag bolted onto
+   (`intakeMap.ts:348-368`), which the engine cannot import — so an `ACA_PRICING_MODE` flag bolted onto
    intakeMap would be the exact lying-mirror `oracleToken.ts:114-122` warns about. The honest fix moves the
-   schedule build to an engine-owned `buildAcaPricingSchedule` beside `partBPricingByT` (`taxOverlay.ts:1132`).
+   schedule build to an engine-owned `buildAcaPricingSchedule` beside `partBPricingByT` (`taxOverlay.ts:1537`).
    ⚑ **Re-tag: BLOCKED ON RESEARCH.** No sourced ACA cost-trend primary exists in the repo, so a solver
    block would hold for months over the whole pre-65 population.
    ⚑ **2026-08-03 double-blind — the pricing defect is REAL and confirmed; the near-term copy move as filed
@@ -160,11 +209,11 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    claim on this surface. (c) the editable strings are **`copy.ts:1017` and `:1019`** (the key names sit one line
    above), and both must move together.
    ⚑ **The direction claim must be CLIFF-SCOPED, never blanket.** `healthOverlay.ts:231`+`:303` give
-   under-cliff net = `enrolled − slcsp + contribution`, and `intakeMap.ts:677-678` scale **both** streams by
+   under-cliff net = `enrolled − slcsp + contribution`, and `intakeMap.ts:684-685` scale **both** streams by
    the same `escalateQuote` factor — so under the cliff a missing trend is **zero** when E=S
-   (`devSeeds.ts:615-616` = 4200/4200) and **reversed (pessimistic)** when E<S, which `copy.ts:231` invites.
+   (`devSeeds.ts:632-633` = 4200/4200) and **reversed (pessimistic)** when E<S, which `copy.ts:231` invites.
    It bites one-way optimistic **only over the cliff** (`healthOverlay.ts:308-312`, full enrolled premium).
-   The shipped sibling `recDiscAcaSlcsp` (`copy.ts:2027-2028`) hedges bidirectionally on this exact fact and
+   The shipped sibling `recDiscAcaSlcsp` (`copy.ts:2069-2070`) hedges bidirectionally on this exact fact and
    `medicare-pricing-build-spec.md:43` bans the false unidirectional. Draft to append to BOTH strings:
    *"One modeling choice: these prices step up with your ages, not with the way plan prices themselves climb
    — so a conversion that crosses the income line could cost more than shown."*
@@ -187,7 +236,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      gate; the scoping error was looking inside `projects/the-back-nine/` when the git root is
      `ai-learning-journey`. See the CI note under "Standing cadences".
    - **A false negation on the health sheet (XS).** `copy.ts:1005/960` list *"the benchmark premium itself"*
-     under "Not counted here" while the entered benchmark **is** priced (`intakeMap.ts:678` →
+     under "Not counted here" while the entered benchmark **is** priced (`intakeMap.ts:685` →
      `healthOverlay.ts:222-232`) — the same false-negation shape O16 fixed on the Roth strings.
    </details>
 
@@ -197,12 +246,12 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    conversion ranking **with** the new disclosure (what the BLOCKED-ON-RESEARCH tag silently assumes), or
    does the token gain an **ACA pricing-mode clause** that withholds the ranking — as Medicare's did — until
    a sourced trend lands?
-   ⚑ **2026-09-04 anchors + two unfiled facts:** `escalateQuote` is `intakeMap.ts:341-361` (not `:271-291`);
+   ⚑ **2026-09-04 anchors + two unfiled facts:** `escalateQuote` is `intakeMap.ts:348-368` (not `:271-291`);
    the "Not counted here" pair is `copy.ts:988` / `:993` (not `:895/:897`) and the surface is SIX strings
    (`copy.ts:988`, `:993, :1007, :1009, :1017, :1019` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
    affirmation, not append to it) + the two health-control siblings (`copy.ts:1167`, `:1173`), which CANNOT take it
-   (gated on `statePriced` alone — `copy.ts:1159-1161`). Unfiled: `shadowRateHeadroom` (`copy.ts:2839`)
+   (gated on `statePriced` alone — `copy.ts:1159-1161`). Unfiled: `shadowRateHeadroom` (`copy.ts:2881`)
    quotes cliff headroom against an SLCSP that never trends — the headroom figure inherits the held-price
    optimism; and there is NO ACA cost-trend constant at all (`health.ts` carries only `medicareCostTrend`)
    — ACA premiums are the one health channel with no trend, no clause AND no disclosure, in the
@@ -216,7 +265,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    used to cite — the NC certification block — **is retired**; (b) the withhold machinery gates `solve()`
    ONLY, so a withhold-only fix still ships a **state-blind headline / fuck-off date**.
    ⚑ **2026-08-03 double-blind — diagnosis CONFIRMED, and the "cheap partial" is not cheap and not sound.**
-   Pricing is membership-keyed at `taxOverlay.ts:885`; `PRICED_STATES` is `constants/stateTax.ts:50`; the
+   Pricing is membership-keyed at `taxOverlay.ts:1233`; `PRICED_STATES` is `constants/stateTax.ts:50`; the
    flip is pinned live at `optimalityOracle.test.ts:295-306` (NC crowns the 12%-top anchor, the state-absent
    twin the 22%-top). Correction (a) is **half-stale** — the `state-certification-pending` WithheldReason
    (`oracleToken.ts:48`), its humane string (`recommendationView.ts:364-365`) and the whole *held* card
@@ -232,9 +281,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    `verdictResidualState<X>` (the THREE exhaustive switches at `stateTaxDisclosure.ts:52-63`,
    `stateTaxDisclosure.ts:93-104` (the standalone note, Card 4) and `stateTaxDisclosure.ts:172-181` fail
    `tsc` until written) · `recommendationView.ts:344-348` · the intake picker **4 → 11 vertical arms**
-   against `verify:fit`. Engine cost is genuinely near-zero (`stateTax.ts:134` structural early return).
+   against `verify:fit`. Engine cost is genuinely near-zero (`stateTax.ts:163` structural early return).
    ⚑ **The filed "every saved vault decodes Corrupt" blocker is FALSE — do not act on it, and do NOT loosen
-   the compile tie.** `_V3FieldsCover` (`model.ts:2413-2415`) covers only `keyof ScenarioV3`;
+   the compile tie.** `_V3FieldsCover` (`model.ts:2424-2426`) covers only `keyof ScenarioV3`;
    `checkStateTaxVintageV3` (`scenarioCodec.ts:552-557`) is hand-written and compels no `needString`. Safe
    because `scenarioCodec.ts:793-794` gates `retirementState` via `needVocab(STATE_ROSTER)`, so no
    pre-widening vault can *be* a household in a newly-priced state. The prescribed remedy — loosening
@@ -272,7 +321,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `sanity.ts:52-75`). ⚑ **Size is M, not S, and a ceiling is the wrong instrument:** a 10× slip on
      $500k is $5M — a perfectly coherent household, so no threshold catches it. The shape that works is
      **one confirm on the household TOTAL** at the accounts step (the figure the engine actually consumes),
-     reusing the running total already rendered at `copy.ts:2173` / `questions.tsx:1080-1082`.
+     reusing the running total already rendered at `copy.ts:2215` / `questions.tsx:1080-1082`.
      ⚑ **"Briggsy sets the number" is the WRONG ask — there IS no honest number** (every total is
      coherent, so any threshold is the guessed plausibility band burned/062 bans). The only rule that
      invents nothing is an **unconditional** one-tap confirm for any household with ≥1 account. That is a
@@ -296,12 +345,12 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      and the fit gate's panel arm (`vertical-fit.spec.ts:1734-1763`) asserts only that the dialog box fits
      **and** `scrollHeight > clientHeight` — content growth makes the second assertion *more* true.
      ⚑ **The drafted HSA sentence would have DENIED the very forfeit it discloses — do not ship "stays
-     put" / "simply sits."** The balance is not parked, it is **destroyed**: `taxOverlay.ts:1836-1837` sets
-     `buckets = EMPTY_BUCKETS` (hsa: 0) → `simulate.ts:1886` `terminalHsaReal = 0` →
+     put" / "simply sits."** The balance is not parked, it is **destroyed**: `taxOverlay.ts:2248-2249` sets
+     `buckets = EMPTY_BUCKETS` (hsa: 0) → `simulate.ts:1967` `terminalHsaReal = 0` →
      `objectiveHeadline.ts:62` bequest contribution **$0**. On the exact path the sentence names, the HSA
      adds nothing to the leave-more dollar the reader sees. **The sentence must say the balance is DROPPED.**
      ⚑ **Sweep BOTH stale comments in the same commit** — `healthOverlay.ts:881-884` (which says
-     fix-or-it-re-rots) **and** `taxOverlay.ts:1827-1829`, which still calls post-65 HSA-as-ordinary-income
+     fix-or-it-re-rots) **and** `taxOverlay.ts:2239-2241`, which still calls post-65 HSA-as-ordinary-income
      *"a DISCLOSED non-feature, the survivor-SS class"* — the same false claim, in the file that **owns** the
      mechanism.
      ⚑ **The genuine ruling here is scope, not wording** (tone is Caddie-chair under the batched-oracle law):
@@ -313,17 +362,17 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      ⚑ **2026-09-04 re-anchor (drifted AGAIN, +62/+101 in a month) + four traps the build must clear.** The
      panel is `src/intake/AssumptionPanel.tsx` — section a opens `:399` / closes `:567`, section b `:570` /
      `:851`, footer `:857`, the disclosures map `:533-565`; the `assumption*` prefix law is
-     `copy.ts:1309-1320` (keys `:1321-1468`); the panel fit arm is `vertical-fit.spec.ts:1734-1763`;
+     `copy.ts:1309-1320` (keys `:1321-1510`); the panel fit arm is `vertical-fit.spec.ts:1734-1763`;
      `sheetShell.css:34-35`/`:94`; the overlays are `src/engine/healthOverlay.ts:880-884` and
-     `src/engine/taxOverlay.ts:1826-1829` (there is no `overlays/` dir). NIIT's two homes confirmed
+     `src/engine/taxOverlay.ts:2238-2241` (there is no `overlays/` dir). NIIT's two homes confirmed
      (`recommendationView.ts:101` unconditional; `copy.ts:1166-1167`) — the scope fork is self-resolving:
      HSA + LTC only. TRAP 1 — `Row` REQUIRES a `seat` from the CLOSED 22-member `AssumptionSeat` union
-     (`AssumptionPanel.tsx:108`, `assumptionRegistry.ts:39-61`): a leaves-out row is a hand-rolled
+     (`AssumptionPanel.tsx:108`, `assumptionRegistry.ts:40-63`): a leaves-out row is a hand-rolled
      `<li className="ap-row">` or a registry extension — "mirror the section" yields only the shell.
      TRAP 2 — a heading literally "What this leaves out" that names two items is ITSELF a completeness claim
      the constants falsify (`health.ts:72/:112/:120/:135/:319` declare four more OUT-but-disclosed facts) —
      scope the heading or name them. TRAP 3 — the HSA sentence must be true across ALL THREE zeroing
-     branches (`taxOverlay.ts:1835-1841`, `:1855-1860`, `:1984-1987`): on each, EVERY bucket is zeroed
+     branches (`taxOverlay.ts:2247-2253`, `:2267-2272`, `:2396-2399`): on each, EVERY bucket is zeroed
      because the path DEPLETED, so a bequest-framed sentence ("dropped from what's left to your heirs")
      names a state the engine cannot reach; the honest harm is that the plan is COUNTED AS HAVING RUN OUT
      while HSA dollars remain unspent (understated survival), because HSA outflow is qualified-medical-only
@@ -335,8 +384,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      section ships — rewrite the whole `:869-878`). Caddie walk before "shipped".
 
    ⚑ **CLOSED AS PHANTOM — the date-route ACA clock does NOT over-alarm.** The date route simulates all 11
-   offsets (`dateSearch.ts:425/450/457`) and candidate Y=0 carries the base ACA stream **ungated**
-   (`healthcareStreams.ts:160` → `windowStart = 0`, so the window gate is a pass-through). So
+   offsets (`dateSearch.ts:578/450/457`) and candidate Y=0 carries the base ACA stream **ungated**
+   (`healthcareStreams.ts:181` → `windowStart = 0`, so the window gate is a pass-through). So
    `exposure.aca === 'priced'` *proves* the ACA tables were consumed — the clock is load-bearing, not
    spurious. ✅ **THE TRAP IS DELETED 2026-08-02.** `stalenessExposure.ts` no longer prescribes
    "re-derive against the CROWNED offset" — that arm would have **silenced** the ACA clock for exactly the
@@ -374,11 +423,11 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    committed answer, not the draft, and anchoring candidates at a future retirement year is a real ranking
    question.
    ⚑ **2026-09-04 anchors:** the gates are `Result.tsx:515` (surface) and `:378` (the invite conjunct; door
-   `Result.tsx:587-595`); a THIRD exclusion kills the record card at its producer (`IntakeApp.tsx:284`). Strike
+   `Result.tsx:587-595`); a THIRD exclusion kills the record card at its producer (`IntakeApp.tsx:286`). Strike
    "~89px headroom" — that is the SPINE idle frame's figure; the date arms of `verify:fit` assert ORDER + REACHABILITY only — never fit
    (spec header `vertical-fit.spec.ts:22-23`). `Result.tsx:351-353`'s "covers the date route honestly" comment was FALSE (never
    minted there; a route-flip render is dropped) — swept 2026-09-04. A crowned-offset params builder ALREADY
-   exists (`buildControlPreviewParams`, `intakeMap.ts:1135-1144`), so parity's base shape is not from zero.
+   exists (`buildControlPreviewParams`, `intakeMap.ts:1169-1178`), so parity's base shape is not from zero.
    Build shape: the ⚑ Folded 2026-09-06 block directly below.
    ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 6, the date-route one-liner) — its 2026-09-04 re-verify clause, still live:** Date-route one-liner (S) via a Caddie card — words must be true on all FOUR date-hero framings
    (anchor on WORK STATUS, never "a date ahead of you"); the one token yours: does it promise parity.
@@ -410,7 +459,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     **Briggsy's words, or ship the engine half first.**
     ⚑ **2026-09-04 anchors:** the described arm is `solveDispatch.ts:102` (`:89` is the separate no-tax-overlay
     arm; `~:79` was mis-pointed at filing — the file is untouched since 2026-08-14); the refusal string is
-    `copy.ts:1791-1792` with its three-rewrite comment `:1768-1790` (`:1646-1650` now holds an unrelated
+    `copy.ts:1833-1834` with its three-rewrite comment `:1810-1832` (`:1688-1692` now holds an unrelated
     save-refusal block).
 
 10. ✅ **SHIPPED 2026-08-14 (`2816d036`) — the heir bracket is the household's now.** Register Tier 1 records the closure and the three swept comments.
@@ -440,13 +489,13 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     household (up to **14** steps — 8 unconditional + 6 gated, `questions.tsx:1264-1282`) if the
     reader confirms the dialog, because nothing is written until Save (the D1 law; a plaintext
     draft outside the vault is a security-posture ruling, never a build) · the
-    `schemaVersion` migration ladder **does not exist as code** — `IntakeApp.tsx:578` refuses anything but
+    `schemaVersion` migration ladder **does not exist as code** — `IntakeApp.tsx:580` refuses anything but
     v3, and the brick runs in the LEGACY direction: a v4 blob is caught honestly upstream
     (`scenarioCodec.ts:947` → `unlockNewerVersion`), but the moment a future build writes v4, today's v3
     vaults fall into the arm v1/v2 sit in now — decode-ok, then "That didn't work. Try again." over a
-    reload that cannot succeed (`IntakeApp.tsx:670-687`) — and their backups fail identically (same bytes,
+    reload that cannot succeed (`IntakeApp.tsx:672-689`) — and their backups fail identically (same bytes,
     `backup.ts:84-93`) · there is **no way to delete the vault** (`clearVault` exists; its only PRODUCTION
-    caller is the dev seed planter, `devSeeds.ts:1758` — eight test/e2e files also call it).
+    caller is the dev seed planter, `devSeeds.ts:1775` — eight test/e2e files also call it).
     ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 9 — the aged note, the v2→v3 ladder, the leaves-out section) — its 2026-09-04 re-verify clause, still live:** Aged-window disclosure note (S; the ranking fork stays yours, three arms with corrected costs, due
     before 2027-01-01) · migration ladder scaffold (S; the honest legacy state names NO remedy — the
     backup carries the same bytes) · HSA-forfeit + LTC "What this leaves out" section (M; pilot per the
@@ -455,14 +504,14 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     copy" and both nearest register entries — *The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed* and *Unscored Caddie tape rows plus the four aged-surface tone calls due before 2027-01-01* — are owned **briggsy**; neither is a copy fix; the "three arms with
     corrected costs" existed NOWHERE — they are now written, with sizes, under the register's "The aged
     surface" entry. A shipped copy defect on the SAME cohort WAS pilot and is FIXED (2026-09-04: the singular arm ships at
-    `copy.ts:2743-2745` under the NUMBER AGREEMENT post-mortem at `copy.ts:2729`, covered by `copyGuard.test.ts:864`):
+    `copy.ts:2785-2787` under the NUMBER AGREEMENT post-mortem at `copy.ts:2771`, covered by `copyGuard.test.ts:864`):
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:263-264`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
-    PRESCRIBED: `model.ts:1490-1492` mints synthetic entered accounts from the old aggregates "so the ladder
+    PRESCRIBED: `model.ts:1498-1500` mints synthetic entered accounts from the old aggregates "so the ladder
     stays total"; the write primitive exists (`db.ts:231 rewriteModel`, pinned `db.test.ts:180`); today's
     ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:930-947`), and a v1 vault survives
-    every store seam on real IndexedDB (`e2e/vaultHarness.ts:19-20`) to die only at `IntakeApp.tsx:578`.
+    every store seam on real IndexedDB (`e2e/vaultHarness.ts:19-20`) to die only at `IntakeApp.tsx:580`.
     Two new defects ride with it: `session.ts:464-468` claims the writer and UNLOCKS before the version is
     judged (the recovery path claims unconditionally, `:539`), and `backup.ts:209-213` LANDS a legacy backup
     on a clean device and only then dead-ends. Size M–L, not S. His word narrows to the TERMINAL arm's
@@ -505,7 +554,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     both harnesses model it with a wipe). ENLARGED TEXT: `Page.setFontSizes` re-probed 2026-09-04 against
     the repo's chromium-1223 — the param shape is `{ fontSizes: { standard: 24, fixed: 24 } }` (the flat
     form is rejected); it propagates because the type scale is rem/clamp with ZERO literal-px `font-size`
-    rules; the `newCDPSession` pattern is at `caddie-walk.spec.ts:329`, and the shipped arm's own helper is `raiseDefaultFont` (`vertical-fit.spec.ts:468-481`); re-run the 8 REAL+TIER one-frame
+    rules; the `newCDPSession` pattern is at `caddie-walk.spec.ts:345`, and the shipped arm's own helper is `raiseDefaultFont` (`vertical-fit.spec.ts:468-481`); re-run the 8 REAL+TIER one-frame
     arms (4 spine seeds × 2), not all 52; PROTECTED = `vertical-fit.spec.ts:17-21`.
 
 ### Tier 3 — Briggsy's call
@@ -537,9 +586,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     riders, the open copy obligations, the deferred richer market draw, and the `dateinvert` (c) mint —
     its own session, a size-L parameter hunt.
     ⚑ **2026-09-04:** two bullets were half-dead and are closed — the `partBTrendVintage` "no exposure gate"
-    clause was swept in `staleness.ts:629-632` but still lived verbatim at `model.ts:2370` (swept), and
+    clause was swept in `staleness.ts:662-665` but still lived verbatim at `model.ts:2381` (swept), and
     Plan 4's "the record carries `seedA`/`seedB`" (`plans/4-recommendation.md:283`) had outlived its own
-    "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:1991-2013`) has no seed
+    "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:2002-2024`) has no seed
     field (struck in the plan). ⚑ (b)'s SOURCE twin outlived that close — `heldOutSeed.ts:13-14` still said
     the U17 record stores the seed — and was swept 2026-09-25 (the register bullet is closed with it).
     ✅ **NC's RETIRED CERTIFICATION CHECKPOINT — SWEPT 2026-08-14.** Six shipped surfaces (not the
@@ -555,7 +604,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     page and the codified G.S. page both still show the struck "after 2025 — 3.99%", so they read as
     CONTRADICTING the pinned record until they recompile — **session law wins, do not "correct" the
     engine table back to a flat 3.99%.** Comment-only; typecheck · lint · 3289 tests · state-tax gate
-    all green. (`copy.ts:3157` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
+    all green. (`copy.ts:3199` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think
@@ -571,7 +620,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     screen reader outside require-hedge — the AT twin of the gated `recDeltaTypical` — and its exclusion was
     a RECORDED decision in the SLOT_RENDER fixture's own comment, so the fix reversed a stated call, not an
     accident. **DONE 2026-09-08:** RENAMED onto the existing `recDelta` control prefix (`recDeltaVizAria`,
-    `copy.ts:3205`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
+    `copy.ts:3247`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
     `require-hedge` on its own) + a catalog canary over `/^rec(?!over)/` (a bare `/^rec/` reds the 16
     innocent `recovery*`/`recover*` intake keys) with a NAMED allowlist that SPLITS flat keys from slots
     (unscoped flat keys get 2 gates, unscoped slots get 3 + catastrophe). Scope is decided ONLY in the test
@@ -582,7 +631,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     flag) and BOTH candidate fixes cost something — "mint through `update()`" turns a deferred false-arm
     into an immediate one; an eager mint in `createMemoryModel` breaks the WRITTEN contract #1b (mint at the
     FIRST ENGINE RUN, `plans/2-first-answer.md:57`) with no test that would catch it. His ruling, framed as
-    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:2370` and
+    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:2381` and
     `plans/4-recommendation.md:283`.
 
 ---
@@ -613,6 +662,16 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 *Engineering lessons live in [`docs/insights/`](docs/insights/) (one file per lesson; cite by full path + slug).
 These are the mechanical ones that keep costing hours.*
 
+- **From the b9-5 close (2026-10-20, (B) built, uncommitted):** the HEAD engine is measurable without touching the tree:
+  `git worktree add --no-checkout <scratch>/head HEAD` → `git sparse-checkout set --no-cone projects/the-back-nine/src …tsconfig.json
+  …package.json …vite.config.ts` → `git checkout` → a JUNCTION to the real `node_modules` (`New-Item -ItemType Junction`), then run the
+  probe from the worktree's project dir · REMOVE THE JUNCTION FIRST (`cmd /c rmdir <junction>`) and only then `git worktree remove
+  --force` — a recursive delete must never walk into the real `node_modules` · a fan-out of parallel builders on ONE tree leaves a
+  cross-file fallout (an existing arm another builder's change reds) flagged by both and fixed by neither — name an owner for every
+  fallout in the brief · a 3-builder + docs + 3-reviewer workflow ran ~75 min and 2.7M subagent tokens, and the build itself took the
+  pilot to ~50 % before it — plan the walk + the commit for a FRESH session · `node -e` ate a comment's backticks AGAIN (this
+  session) — the rule stands: any script text with backticks goes in a FILE · `C:/wt/b9` (branch `b9-squeaky`) is ANOTHER
+  session's worktree — never remove it.
 - **From the b9-4 close (2026-10-20, (B) planned):** the plan + its deepening + a four-persona doc review + a full council cost ~50 % of the window (10 opus agents + a 21-agent council, `wf_ef6cf7c5-a2b`, 2.27M subagent tokens, ~31 min) — BUILD (B) in a FRESH session, never on the planning session's tail · the build is ONE commit (U1–U7): the `dip` re-tune (the register's same-commit law), the ledger row (a row-less engine push recomputes saved vaults silently — the witness cannot see the gross-up), and the test counts (`verify:doc-stats` arm 1 is a CI step) are all CI- or honesty-coupled · the register's reach measurement for (B) covered only the channels its title names — the year's OTHER portfolio draw (a retired spouse's Medicare/extras, `fundingNet`) was found only by the deepening's flow analysis: a reach measurement enumerates EVERY portfolio-funded dollar in the year, not the named ones · a binding NEGATIVE can be falsified by its own entry's Prescription formula (tax(W+X) − tax(W) charged $0 where Social Security alone is taxable) — check the formula against the NEGATIVE before building it · `bridgeYearMask` is built only under `healthcareEnabled` (`simulate.ts`), so any guard keyed on it is silent on a healthcare-off run (the plan's KTD5 builds it under the construct) · a session can be FORKED into a background job mid-conversation (this one became `b9 (2)`, a new session id, its scratchpad gone) — `/window` takes `$CLAUDE_CODE_SESSION_ID`, never a remembered id · background sessions: `claude agents --json` lists them, `claude stop <id>` stops one and keeps its conversation; an INTERACTIVE terminal session is not a daemon job (`claude stop` answers "No job matching") and killing its `claude.exe` is classifier-blocked ("Interfere With Workloads") — it needs `/exit` in its own window; never `claude daemon stop`, which ends EVERY background session, the caller included · uscode.house.gov answered "Under Maintenance" 2026-10-20 — LII (`law.cornell.edu/uscode/text/26/<section>`) carried §402 / §86; IRS PDFs read clean through `pdftotext -layout`.
 - **From the b9-3 close (2026-10-20, the ACA re-verify + (1b)'s measurement):** every ACA instrument change this pass met lives in the record's `forwardClock` ⚑ 2026-10-20 head — uscode's `versions.json` lists only the newest id and an unknown id answers HTTP 500 with a 75 B body; the GovTrack JSON API is retired (enumerate new measures from govinfo BILLSTATUS bulk listings); the govinfo PLAW not-published shell is now 44,172 B (detect it by content); archives.gov needs a cache-busting query; the Senate vote menu moved to `roll_call_lists/` — read that head before the next pass, never this line · a presented bill past its tenth day can already be law with no list showing it (S. 195 was signed 10-09 and read "unsigned" on 10-12) — read the bill's own BILLSTATUS actions · a GPO HTML bill print can render a table as "TABLE TOOL ERROR" (S. 5496) — read the XML · research agents that browse drive Playwright from the repo and leave `.playwright-mcp/` in it — sweep it after any such agent · a probe script outside the project runs under `pnpm exec tsx` from the project dir (its relative imports reach `src/`, whose `@engine/*` aliases then resolve), but only as `.mts` — a `.ts` with top-level await dies "not supported with the cjs output format" · a commit message's summed counts come from the run outputs (582 + 98 + 29 = 709 across 21 files), never a recalled figure — the ACA commit first said 680 and was corrected before the push.
 - **From the b9-2 close (2026-10-19, his four b9-1 walk rulings + his Medicare re-ruling):** the harness now COMPACTS an idle session (summarizes it; it does not clear it) ~55 min after a turn ends — twice this session (212,652 → 43,451 and 485,045 → 45,821 tokens), and the status bar read ~0 after. Write the squeaky close while the session's detail is live, before he walks away; the full log stays on disk (`~/.claude/projects/<slug>/<session>.jsonl`) for anything the summary dropped. `/window`'s first read after a compaction was the stale pre-compaction 48.3% — fixed in the monorepo (`7faa5c5d`); it now prints "compacted … no live read since" · one walked copy build (pre-trace + build + whole-file review + TWO Caddie walks, 103 panel agents) cost ~48 % of the window — keep ONE walked build per session · `git show <sha>:src/…` resolves from the MONOREPO root and fails; from the project dir use `git show <sha>:./src/…` · a healthcare-sheet fixture account added without `manualBlend` left the draft with no priced run, so the per-person extras block never rendered — fix the fixture, never the assertion · the Caddie panel's output file wraps the verdicts as `{ summary, …, result }` — parse `.result` · a seat arm whose every fixture shared an incidental property (a step card) let a step-keyed seat mutant survive, and a sibling assertion that implied its parent hid a second — vary the incidental property and assert each parent directly (insight 140's *Also Applies To*).
@@ -645,7 +704,7 @@ These are the mechanical ones that keep costing hours.*
 - **`pnpm verify:bundle` reads `dist/` WITHOUT rebuilding.** A stale `dist/` is a false green; this has
   bitten twice. Fresh `pnpm build` first, every time.
 - **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:736-746`
-  excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:53`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:724-726`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:49-52`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
+  excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:53`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:750-752`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:49-52`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
   under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
   1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:2423-2425`), a once-measured
   prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's
@@ -910,7 +969,7 @@ even when one exists; the plain `/` route is the Unlock check.
 ## Driving the app
 
 `pnpm dev`, then a `?seed=` or `?vault=` param. DEV-only, DCE'd from prod. Source of truth:
-`src/ui/devSeeds.ts` — `DEV_SEEDS` at `devSeeds.ts:1141`, `AGED_PLANTS` at `devSeeds.ts:1690`.
+`src/ui/devSeeds.ts` — `DEV_SEEDS` at `devSeeds.ts:1158`, `AGED_PLANTS` at `devSeeds.ts:1707`.
 
 **Scenario seeds** — jump straight to a worded result + band:
 
@@ -953,7 +1012,7 @@ like prod; re-planting is an explicit re-entry of the URL, never a refresh side 
 
 ⚑ **NO-SOLVE DRIVE RECIPE, so the next walk costs minutes not hours.** `?vault=rec` → Unlock
 (passphrase pre-filled) → *"I forgot my passphrase"* → RecoveryFlow. Recovery word for every plant
-is **`lattice harbor cinder vellum 48 thicket`** (`devSeeds.ts:1188`). For RestoreFlow you need a
+is **`lattice harbor cinder vellum 48 thicket`** (`devSeeds.ts:1205`). For RestoreFlow you need a
 real backup FILE and no full intake is required: unlock any plant → Result → **"Save a backup
 file"** → *Download backup* (an `<a>` with a blob URL, **not** a button — a `button:has-text()`
 selector misses it) → then delete the DB and reload. **`indexedDB.deleteDatabase` is BLOCKED while

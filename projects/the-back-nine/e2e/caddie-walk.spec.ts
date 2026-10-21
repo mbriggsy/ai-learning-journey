@@ -95,6 +95,12 @@ import { copy } from '../src/ui/copy'
  *    the invite retires with the note). The `spine-unready` sibling stays unit-pinned only
  *    (RecommendationSurface.test) — its live face needs a facts-broken re-dispatch, not a seed.
  *
+ * The METHODOLOGY frame (2026-10-20, the working-year tax row's walk):
+ *  - The assumptions door also captures `door-N-<slug>-methodology`: the sheet's OWN scroller brought
+ *    to the end of section a's methodology rows, plus `crop-method-last-row`. Those rows sit far below
+ *    the sheet's visible box, so no frame had ever painted them — a reader judged their words from
+ *    `dialog.txt` alone and never their weight on the page.
+ *
  * Targets: `CADDIE_TARGETS="vault:retired,vault:stale,seed:date,intake:fork"` (comma list).
  * Back-compat: `CADDIE_SEED=budget` still works (one seed target). Default: `seed:retired`.
  */
@@ -143,8 +149,18 @@ const CROP_TARGETS = [
   { name: 'twofutures', selector: '.tf-reveal' },
   { name: 'recviz', selector: '.rv-reveal' },
   { name: 'disclaimer', selector: 'footer.disclaimer.disclaimer--in-frame' },
-  { name: 'echo', selector: '.ap-echo' },
+  // `panel` BEFORE `echo`, and the methodology row LAST: `.ap-echo` and the row both live INSIDE the
+  // sheet's own scroller, so each crop scrolls it. `panel` crops whatever the scroller shows when
+  // the state is captured — the panel's top on the door state, the methodology frame on its
+  // `-methodology` state — and only then may the two inner crops move it.
   { name: 'panel', selector: '[role="dialog"]' },
+  { name: 'echo', selector: '.ap-echo' },
+  // The LAST methodology row (2026-10-20 — the working-year tax row, the longest of them): far below
+  // the sheet's visible box, so only an element crop, which scrolls it into view, paints it.
+  {
+    name: 'method-last-row',
+    selector: '[role="dialog"] section[aria-labelledby="ap-methodology"] li.ap-row:last-child',
+  },
   // U13 (increment 2): the staleness surfaces + the frames the batch asks his eye on.
   { name: 'staleness-note', selector: '.cs-staleness-note' },
   { name: 'reentry-notes', selector: '.reentry-notes' },
@@ -581,6 +597,16 @@ async function walkDoors(page: Page, outDir: string): Promise<void> {
         await captureCvdRegion(page, stateDir, selector, regionName)
       }
       panelScreened = true
+      // The METHODOLOGY frame (2026-10-20): the frame a reader sees on reaching the end of the
+      // methodology rows — the last row's bottom on the visible box's bottom edge, the rows before it
+      // filling the frame above. LAST, by the same scroll-side-effect law as the crops above;
+      // `settleLayout` pins only the WINDOW scroll, so the sheet's own scroll survives into the
+      // capture. Hard-asserted: the panel always renders these rows, so an empty list is a broken
+      // panel, never a state to skip (insight 029).
+      const methodRows = dialog.locator('section[aria-labelledby="ap-methodology"] li.ap-row')
+      await expect(methodRows, 'the assumptions panel rendered no methodology rows').not.toHaveCount(0)
+      await methodRows.last().evaluate((el) => el.scrollIntoView({ block: 'end' }))
+      await captureState(page, `${stateDir}-methodology`)
     }
     // The family-wide close, and it applies to EVERY door again as of 2026-08-02. It briefly did
     // not: the GoalPicker rendered no visible dismiss affordance at all, so this click could never

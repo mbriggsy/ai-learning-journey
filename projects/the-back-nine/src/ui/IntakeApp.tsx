@@ -249,7 +249,9 @@ export default function IntakeApp({
    * THE SHORT-CIRCUIT DOES ZERO WORK, AND THAT IS THE FIT-FRAME CONTRACT. Both reads below are
    * expensive: `currentDraftFingerprint()` runs the injected solve builder (→ `buildSpineParams` →
    * the candidate enumeration) and canon-serializes the whole params object plus the roster, and
-   * `exposureForDraft` calls SEVEN separate params producers. On a `{kind:'unsaved'}` mount — every
+   * `exposureForDraft` calls EIGHT separate params producers (the eighth, `workingYearTaxForRun` — the
+   * 2026-10-20 working-year tax floor's ledger reach — walks every date-route candidate's cash terms).
+   * On a `{kind:'unsaved'}` mount — every
    * `?seed=` route, the Caddie walk, `pnpm verify:fit` — there is no record to judge, so the honest
    * answer costs nothing and must COST nothing. `currentDraftFingerprint()` is never called bare in
    * a render body for the same reason.
@@ -260,8 +262,8 @@ export default function IntakeApp({
    *
    * THE DATE-ROUTE CONJUNCT IS THE STRUCTURAL FORM OF Result.tsx's OWN SUPPRESSION.
    * `exposureForDraft` carries a hard prohibition — "DO NOT LIFT THIS FUNCTION TO A CROWNED
-   * SURFACE… the base read WOULD lie there" (stalenessExposure.ts:82-85) — and on a date route it
-   * takes exactly the arm that reads the PRE-SWEEP base ACA overlay (:169-174), while the result
+   * SURFACE… the base read WOULD lie there" (stalenessExposure.ts:88-91) — and on a date route it
+   * takes exactly the arm that reads the PRE-SWEEP base ACA overlay (:179-184), while the result
    * screen it would feed sits beside a CROWNED date. `savedRecommendation.ts:88-94` proves no
    * record can be BORN on a date route, but the frame is reachable the other way round (a
    * household saves a record, then a spouse un-retires), and Result already refuses to render the
@@ -274,7 +276,7 @@ export default function IntakeApp({
     // PHASE FIRST — this memo's zero-work contract has to hold during INTAKE too, and nothing
     // consumes it there. Without this conjunct, a returning household with a save-ready draft pays
     // a full `currentDraftFingerprint()` (buildSolveRequest → buildSpineParams → candidate
-    // enumeration → canon serialize) PLUS `exposureForDraft`'s seven params producers on every single
+    // enumeration → canon serialize) PLUS `exposureForDraft`'s eight params producers on every single
     // keystroke-committed edit of the intake — for a card that cannot render until `result`.
     if (phase !== 'result') return undefined
     if (persist.kind === 'unsaved') return undefined

@@ -412,3 +412,20 @@ supersedes anything derived from this file.
   Lesson: an entered figure beside a verdict reads as "where you are" without saying so, and
   "close to the line" is vocabulary he reads at its true weight. **Direction of error feared: the
   chair over-weighting softener-stacking flags when the sentence's direction is plain.**
+- **E20 — the working-year tax row's drafts, read in chat across its three walks (2026-10-20/21).**
+  Read as the copy in question previews, NOT the rendered surface (E13(a): a chat read does not
+  survive the surface read; the shipped face still awaits his eye). Trigger: the pilot's first draft
+  ("the tool counts your pay as covering your living costs… works it out three ways"); then the plain
+  rewrite's "It doesn't check that your pay really covers all of that, so if it falls short, this
+  answer looks better than it really is."; then a proposed "Interest and dividends" row explaining the
+  tool's yearly-dividend shortcut. His verbatim, in order: **"why does the tool 'assume' anything???
+  Doesn't the tool have all the user inputs?"** · **"I feel like I need a PHD or lawyer with me to read
+  our own verbiage. We're straying..."** · **"'It doesn't check that your pay really covers all of
+  that...' why the fuck not? what are we building???"** · **"Another example of we are way off
+  course."** Lesson: E18's WHY-NOT at the level of the MODEL — a disclosure that the tool skips
+  something it already has the inputs for reads to him as a product failure, not as honesty; and a
+  methodology row that explains HOW the tool computes reads as legalese however plain each word is.
+  The direction-honest disclosure is the interim; the finish is using the inputs. It opened his
+  OFF-COURSE discussion (owed before the queue resumes). **Direction of error feared: the chair
+  clearing a direction-honest "we don't do X" sentence as the finish when he reads it as an
+  admission the product should not need.**

@@ -10,7 +10,7 @@ import {
 import { floorLineText, heroLead } from '../FuckOffDate'
 import { planClockAnchor } from '../bandAnnotations'
 import type { ScenarioDraft } from '@store/memoryModel'
-import type { ScenarioV3 } from '@shared/model'
+import type { ScenarioV3, SimulationParams } from '@shared/model'
 import { decodeScenario, encodeScenario } from '@shared/scenarioCodec'
 import { SOLVER_CODE_VERSION } from '@engine/solver/solverCodeVersion'
 import { solverRunFingerprint } from '@engine/validation/solverRunFingerprint'
@@ -31,7 +31,7 @@ import {
   spineMedicarePriced,
 } from '@intake/intakeMap'
 import { showMedicarePricedNote } from '../healthSheetChrome'
-import { validateParams } from '@engine/simulate'
+import { simulate, validateParams } from '@engine/simulate'
 import { runEngine, engineApi } from '@engine/engineProtocol'
 import { solveFromWire } from '@engine/engineWire'
 import { buildSolveRequest } from '@intake/solveDispatch'
@@ -48,6 +48,7 @@ import {
   runDateSearch,
   DATE_OFFSET_WINDOW_TOP,
   DATE_SEARCH_PATHS,
+  type DateSearchInput,
 } from '@engine/dateSearch'
 
 /**
@@ -621,7 +622,7 @@ describe('the state-tax seed faces (the state-carrying seed increment)', () => {
 //
 // WHY THE LIGHT DOCTOR (the bug this shape supersedes): routing `statestale` through the FULL
 // doctorStaleVault aged `startCalendarYear` −2 (→ 2024), and the engine's priced-state lower bound
-// (simulate.ts:777-780) correctly REFUSES a priced-NC household whose year-0 precedes NC's earliest
+// (simulate.ts:854-857) correctly REFUSES a priced-NC household whose year-0 precedes NC's earliest
 // rate row (2026) → the affirm recompute demoted to the R19 calm indeterminate (S2's live drive
 // caught it). The engine-acceptance arm below is the pin that would have caught it up front.
 // ===========================================================================
@@ -1073,8 +1074,10 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
     // through buildOverlay's Medicare-only branch, ACA structurally unpriced (no quote pair ⇒ the
     // engine's ACA gate can never open), no contributions (both retired), and NO blend-table read
     // (its single account carries a per-account manual blend, never a ticker), and no survivor-medical
-    // lean (no out-of-pocket medical entered — the ledger's v11 `spending` family is silent). The aging
-    // does NOT move any of this — `currentAge` is persisted per person and rides the strip verbatim.
+    // lean (no out-of-pocket medical entered — the ledger's v11 `spending` family is silent), and the
+    // working-year tax floor's reach is silent (a spine run carries no accumulation construct, so it never
+    // clamps — ledger v12's row-level reach narrows to unpriced). The aging does NOT move any of this —
+    // `currentAge` is persisted per person and rides the strip verbatim.
     expect(exposure).toEqual({
       overlayBuilt: 'priced',
       medicare: 'priced',
@@ -1082,6 +1085,7 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
       contributions: 'unpriced',
       blend: 'unpriced',
       spending: 'unpriced',
+      workingYearTax: 'unpriced',
       pricedState: undefined,
     })
 
@@ -1109,9 +1113,13 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
     // back, so every `reprice` row shipped after that save and reaching a family this household
     // prices (tax, Medicare — no state, no contributions, no marketplace) is spoken in ONE method
     // line; the full doctor STRIPS the extras marker, so the Medicare-spending re-confirm always
-    // asks. Derived against the plant's own savedAt, so the pin can never drift with the calendar.
+    // asks. A row with a row-level `reach` (v12's 'working-years') is excluded: this household's reach
+    // read is pinned `unpriced` above, and an unpriced reach silences every family on its row.
+    // Derived against the plant's own savedAt, so the pin can never drift with the calendar.
     const crossed = new Set(
-      ENGINE_PRICING_LEDGER.filter((r) => r.kind === 'reprice' && r.sinceEpochDay > aged.savedAt!).flatMap((r) => [...r.families]),
+      ENGINE_PRICING_LEDGER.filter((r) => r.kind === 'reprice' && r.reach === undefined && r.sinceEpochDay > aged.savedAt!).flatMap(
+        (r) => [...r.families],
+      ),
     )
     const phrases = [
       ...(crossed.has('tax') ? [copy.stalenessPricingTax] : []),
@@ -1137,7 +1145,7 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
   // its SPINE sibling, which rides the very doctor that caused that bug, never did. Its only
   // witnesses were a ~90-second Chromium fit arm (`vertical-fit.spec.ts` drives `?vault=stale`
   // through a real unlock and asserts a resolved spine) and a DIFFERENT plant's date-route arm over
-  // a DIFFERENT base — `retired` is all-retired and `dateSearch.ts:389` refuses such a household
+  // a DIFFERENT base — `retired` is all-retired and `dateSearch.ts:542` refuses such a household
   // outright, so no date-route arm can ever cover it. This is the insight-051 tell: the plant
   // shipped its fit pin before it had a unit source. Now a doctored shape the engine would refuse
   // fails HERE, in under a second.
@@ -1162,7 +1170,7 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
     // ⚑ PINNED AS FOUND, NOT AS EXPECTED — and the difference is the point. Fresh `retired` is
     // ON-TRACK (0.8555, the documented knife-edge sitting on the 0.85 band edge); this plant reads
     // BORDERLINE. The cause is MEASURED: `doctorStaleVault` ages `startCalendarYear` alone, so the
-    // overlay's DERIVED birth year (`startCalendarYear − currentAge`, simulate.ts:1492) forks from
+    // overlay's DERIVED birth year (`startCalendarYear − currentAge`, simulate.ts:1558) forks from
     // each person's STATED `birthYear` — here 1958/1959 derived against 1960/1961 stated, which
     // straddles the SECURE-2.0 RMD band edge (`bornThrough: 1959 → 73` vs `null → 75`) for BOTH
     // people. The doctored household is therefore forced into RMDs two years earlier than the
@@ -1343,7 +1351,7 @@ describe('the arrived aged plant (the first live route to the hero\'s dateInYear
   // Arm 1 — THE MODEL INVARIANT THIS DOCTOR EXISTS TO HOLD. `PersonInputs` (model.ts:98) documents
   // `currentAge === startCalendarYear − birthYear`, and the engine reads a birth year through TWO
   // paths that must agree: the SS sub-engine's stated `p.birthYear` (FRA / DRC / deemed-filing) and
-  // the tax overlay's DERIVED `startCalendarYear − currentAge` (simulate.ts:1492). Aging the build
+  // the tax overlay's DERIVED `startCalendarYear − currentAge` (simulate.ts:1558). Aging the build
   // clock ALONE forks them by the full depth — silently, because nothing in the codec, the hydrator
   // or the sanity layer enforces the invariant. The arm pins all three halves: currentAge frozen
   // (so the engine sees the same household), birthYear moved by the SAME depth, invariant intact.
@@ -1453,12 +1461,167 @@ describe('the arrived aged plant (the first live route to the hero\'s dateInYear
   })
 
   // Arm 5 — THE STATELESS REQUIREMENT IS ENFORCED, not merely documented. A priced-state base
-  // rejects at any depth ≥1 on the engine's priced-state year bound (simulate.ts:777-780), which is
+  // rejects at any depth ≥1 on the engine's priced-state year bound (simulate.ts:854-857), which is
   // insight 085's own origin story — so the doctor fail-louds at the plant instead of shipping a
   // fixture that renders the R19 calm indeterminate and reads as a broken feature.
   it('REFUSES a priced-state base (the insight-085 bound), rather than minting an R19 fixture', () => {
     const built = scenarioFromDraft(DEV_SEEDS.nc)
     if (!built.ready) return
     expect(() => doctorArrivedVault(built.scenario, TODAY)).toThrow(/priced-state base/i)
+  })
+})
+
+// ===========================================================================
+// The working-year tax floor (2026-10-20 — `docs/plans/features/working-year-tax-floor-build-spec.md`
+// U3's integration witness; engine tests never import @ui, so it lives here). `dip`'s crowned Y = 5
+// candidate, built through the REAL date-route builders (`buildDateInput` → `buildCandidateParams`),
+// re-shaped to a ZERO market (stocks and bonds mean 0 / stdDev 0 ⇒ every simple return is exp(0) − 1
+// = 0 exactly) over a FIXED 5-year horizon on one path — so the only money that leaves the portfolio
+// is year 4's tax, and every figure below is derived BY HAND from the primary IRS table (DND 012 —
+// never from `src/engine/constants/tax.ts`, never from the function under test).
+//
+// THE HAND DERIVATION. Rev. Proc. 2025-32 (read 2026-10-20): §4.01 Table 1 (MFJ) — 10 % to 24,800,
+// 12 % to 100,800, 22 % to 211,400; §4.14(1) the 32,200 MFJ standard deduction; §4.03 the 0 % LTCG
+// edge at 98,900 of taxable income, 15 % above. All indexed by law ⇒ flat in the engine's real
+// dollars, so calendar 2030 (sim year 4) reads the 2026 table.
+//   Premises (pinned in the first arm — insight 023, walk every rule boundary first): nobody is 65
+//   (age 61 in year 4 ⇒ no §63(f) addition, no senior bonus); no SS (both claim at 62 = year 5); no
+//   RMD (born 1969); no ACA (a clamped working year carries no priced premium); no state; no taxable
+//   bucket (the draw realizes no gain).
+//   Year 4 OPENS at pre-tax 700,000 + 4 × (8,000 deferral + 4,000 match) = 748,000, Roth 299,000 (the
+//   contributions credit end-of-year). The 34,000 conversion leaves 714,000 / 333,000, so the
+//   proportional draw g is s = 714,000 / 1,047,000 = 238/349 pre-tax (ordinary income) and the rest
+//   Roth (tax-free).
+//   B = (75,000 − 8,000) + (35,000 − 0) = 102,000 (the match is not Alex's pay) → taxable 69,800 →
+//   T = 10 % × 24,800 + 12 % × 45,000 = 2,480 + 5,400 = 7,880.
+//   · I EXCLUDED: 69,800 + 34,000 + s·g = 103,800 + s·g → 2,480 + 12 % × 76,000 + 22 % × (3,000 + s·g)
+//     = 12,260 + 0.22·s·g ⇒ +4,380 + 0.22·s·g.
+//   · I ORDINARY (B + I = 112,000 → taxable 79,800 → 2,480 + 6,600 = 9,080): 113,800 + s·g → 11,600 +
+//     22 % × (13,000 + s·g) = 14,460 + 0.22·s·g ⇒ +5,380 + 0.22·s·g.
+//   · I PREFERENTIAL: the ordinary half is the excluded reading's (+4,380 + 0.22·s·g); the 10,000 gain
+//     block stacks on 69,800 → 79,800 in the base (all ≤ 98,900: 0 %) and on 103,800 + s·g → with the
+//     portfolio's income (all > 98,900: 15 %) ⇒ +1,500 ⇒ +5,880 + 0.22·s·g — the COSTLIEST reading, so
+//     it is the charge (the build's decision 4: the plan's "ordinary wins on `dip`" was wrong).
+//   T(0, ss) = 0 (no SS), so the year's tax solves g = 5,880 + 0.22·s·g ⇒ g = 5,880 / (1 − 0.22·s).
+//   Every s·g lands inside the 22 % bracket (113,800 + s·g ≪ 211,400), so the closed form holds.
+//   I = 0 ⇒ only the excluded reading: g = 4,380 / (1 − 0.22·s). B = I = 0 ⇒ today's wage-blind
+//   figure: 34,000 + s·g − 32,200 = 1,800 + s·g, all at 10 % ⇒ g = 180 / (1 − 0.10·s).
+//   Terminal: 999,000 + 5 × 12,000 of contributions − g = 1,059,000 − g (the conversion moves dollars
+//   between buckets; nothing else leaves).
+// ===========================================================================
+describe('the working-year tax floor — `dip`’s year-4 conversion priced on top of its pay (U3 integration, hand-derived)', () => {
+  const S = 714_000 / 1_047_000 // = 238/349, the year-4 draw's pre-tax share
+  const G_I_ON = 5_880 / (1 - 0.22 * S) // ≈ 6,917.8803 — the preferential reading
+  const G_I_OFF = 4_380 / (1 - 0.22 * S) // ≈ 5,153.1149 — the excluded reading alone (the plan's figure)
+  const G_WAGE_BLIND = 180 / (1 - 0.1 * S) // ≈ 193.1734 — today's figure (the plan's floor-absent arm)
+  const END = 999_000 + 5 * 12_000 // 1,059,000
+
+  const zeroMarket = (p: SimulationParams): SimulationParams => ({
+    ...p,
+    market: { ...p.market, stock: { mean: 0, stdDev: 0 }, bond: { mean: 0, stdDev: 0 } },
+    longevityMode: 'fixed-horizon',
+    maxHorizonYears: 5,
+  })
+  const builtInput = (): DateSearchInput => {
+    const input = buildDateInput(DEV_SEEDS.dip)
+    if (input === null) throw new Error('dip must build a date input')
+    return input
+  }
+  const candidate = (input: DateSearchInput): SimulationParams => zeroMarket(buildCandidateParams(input, 5, 1))
+  /** One deterministic path. The band fan observes the ESSENTIALS-FLOOR pass (dip carries a budget),
+   *  so the floor pass's year-end balances are visible beside the full pass's terminal + taxAware. */
+  const run = (p: SimulationParams) => {
+    const out = simulate(p, DEV_SEEDS.dip.seed!, { bandFan: true, bandFanTrack: 'floor' })
+    if (out.indeterminate) throw new Error(`unexpected indeterminate: ${out.reason}`)
+    if (out.infeasible) throw new Error(`unexpected infeasible: ${out.reason}`)
+    return out.distribution
+  }
+
+  it('the derivation’s premises hold on the BUILT candidate (insight 023 — every rule boundary walked first)', () => {
+    const input = builtInput()
+    expect(input.workingYearInvestmentByPerson, 'I rides the built date input (KTD11)').toEqual([10_000, 0])
+    const p = candidate(input)
+    expect(
+      p.people.map((x) => [x.currentAge, x.retirementAge, x.socialSecurityClaimAge, x.birthYear, x.earnedIncomeReal]),
+      'both stop at 62 (Y = 5) and claim at 62 (year 5) — no SS, no 65, no RMD in years 0–4',
+    ).toEqual([
+      [57, 62, 62, 1969, 75_000],
+      [57, 62, 62, 1969, 35_000],
+    ])
+    const o = p.overlay!
+    expect(o.taxEnabled).toBe(true)
+    expect(o.filing).toBe('mfj')
+    expect(o.startCalendarYear, 'year 4 is calendar 2030').toBe(2026)
+    expect(o.retirementState, 'no state priced').toBeUndefined()
+    expect(o.buckets).toEqual({ taxable: 0, pretax: 700_000, roth: 299_000 })
+    expect(o.conversions?.slice(0, 5), 'the absolute-year conversion: year 4 only inside the horizon').toEqual([
+      0, 0, 0, 0, 34_000,
+    ])
+    expect(o.accumulation, 'the Y-truncated streams + the raw investment vector').toEqual({
+      contributionsByPerson: [{ pretax: [8_000, 8_000, 8_000, 8_000, 8_000], employerMatch: [4_000, 4_000, 4_000, 4_000, 4_000] }, {}],
+      workingYearInvestmentByPerson: [10_000, 0],
+    })
+    expect(o.enrolledPremium?.slice(0, 5), 'no priced ACA premium in a working year').toEqual([0, 0, 0, 0, 0])
+    expect(o.medicareOnsetSimYear, 'nobody Medicare-enrolled inside the 5-year horizon').toEqual([8, 8])
+    expect(p.drawdownPolicy).toBe('proportional')
+    expect(p.budget, 'a budget ⇒ the essentials-floor pass runs (the floor-track arm below)').toBeDefined()
+  })
+
+  it('I = 10,000 (the built input): the PREFERENTIAL reading prices year 4 — lifetime tax = 5,880 / (1 − 0.22·s), terminal = 1,059,000 − g, buckets split by s', () => {
+    const d = run(candidate(builtInput()))
+    const tax = d.taxAware!.lifetimeTaxPaidReal[0]!
+    // Lifetime = year 4's tax alone: years 0–3 carry no portfolio income, so their charge is exactly 0.
+    expect(tax).toBeCloseTo(G_I_ON, 6)
+    expect(d.terminalValuesReal[0]).toBeCloseTo(END - G_I_ON, 6)
+    // Per bucket: pre-tax 714,000 − s·g + the year-4 12,000 credit; Roth 333,000 − (1 − s)·g; no taxable.
+    expect(d.taxAware!.terminalPretaxReal[0]).toBeCloseTo(714_000 + 12_000 - S * G_I_ON, 6)
+    expect(d.taxAware!.terminalRothReal[0]).toBeCloseTo(333_000 - (1 - S) * G_I_ON, 6)
+    expect(d.taxAware!.terminalTaxableReal[0]).toBe(0)
+  })
+
+  it('I = 0 (the built input with the investment vector stripped): the excluded reading alone — 4,380 / (1 − 0.22·s) = 5,153.1149…; I-on and I-off differ', () => {
+    const { workingYearInvestmentByPerson: _stripped, ...withoutI } = builtInput()
+    const off = run(candidate(withoutI))
+    const offTax = off.taxAware!.lifetimeTaxPaidReal[0]!
+    expect(offTax).toBeCloseTo(G_I_OFF, 6)
+    expect(offTax, 'the plan’s figure').toBeCloseTo(5_153.1149, 4)
+    expect(off.terminalValuesReal[0]).toBeCloseTo(END - G_I_OFF, 6)
+    const onTax = run(candidate(builtInput())).taxAware!.lifetimeTaxPaidReal[0]!
+    expect(onTax, 'I is live: the 10,000 moves the year-4 tax').not.toBe(offTax)
+    // The move is the preferential block's own 1,500, grossed up: 1,500 / (1 − 0.22·s).
+    expect(onTax - offTax).toBeCloseTo(1_500 / (1 - 0.22 * S), 6)
+  })
+
+  it('a ZERO-VALUED stream (no pay, no investment ⇒ B = I = 0) passes R8 and prices exactly the wage-blind figure — 180 / (1 − 0.10·s) = 193.1734…', () => {
+    const p = candidate(builtInput())
+    const zeroValued: SimulationParams = {
+      ...p,
+      // No pay: Alex's 8,000 deferral above 0 pay floors at 0 per person, so B = 0; no vector ⇒ I = 0.
+      people: p.people.map((x) => ({ ...x, earnedIncomeReal: 0 })),
+      overlay: { ...p.overlay!, accumulation: { contributionsByPerson: p.overlay!.accumulation!.contributionsByPerson } },
+    }
+    const d = run(zeroValued) // resolves ⇒ the present-but-zero entries pass the R8 cross-check
+    const tax = d.taxAware!.lifetimeTaxPaidReal[0]!
+    expect(tax).toBeCloseTo(G_WAGE_BLIND, 6)
+    expect(tax, 'the plan’s floor-absent figure').toBeCloseTo(193.1734, 4)
+    expect(d.terminalValuesReal[0]).toBeCloseTo(END - G_WAGE_BLIND, 6)
+  })
+
+  it('the ESSENTIALS-FLOOR pass inherits the same outside income: its year-4 end balance equals the full pass’s terminal exactly', () => {
+    // `simulate` surfaces no floor-pass TAX (taxAware is full-track only), but the floor pass's BALANCES
+    // are observable through the floor-track band fan. Every year here is clamped, so the floor pass's
+    // net is 0 too and its year-4 end balance is 1,059,000 − (its own year-4 tax): equal by Object.is to
+    // the full pass's terminal ⇒ both passes priced year 4 identically. A floor pass that lost the
+    // stream would throw the R8 cross-check (the mask rides with it); one that lost both would price
+    // the wage-blind 193.17 and end ~6,725 higher.
+    const d = run(candidate(builtInput()))
+    expect(d.floor, 'the floor pass ran').toBeDefined()
+    const fan = d.bandFan!.byYear
+    expect(fan.map((y) => y.yearsFromNow)).toEqual([0, 1, 2, 3, 4, 5])
+    for (let k = 1; k <= 4; k++) {
+      expect(fan[k]!.p50, `end of year ${k - 1}: the contributions alone — no tax, no draw`).toBeCloseTo(999_000 + 12_000 * k, 6)
+    }
+    expect(Object.is(fan[5]!.p50, d.terminalValuesReal[0]), 'floor pass year-4 end ≡ full pass terminal').toBe(true)
+    expect(fan[5]!.p50).toBeCloseTo(END - G_I_ON, 6)
   })
 })

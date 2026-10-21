@@ -86,9 +86,9 @@
  * A bare vintage compare answers "did the TABLE move?", never "did THIS household's answer
  * move?". Shipped defect (pilot-verified 2026-07-25): `reentryChrome.ts` pushed one healthcare
  * line off the OR-collapse of all seven healthcare clocks, so an all-65+ household — which
- * takes `buildOverlay`'s Medicare-only branch (`intakeMap.ts:683-686`), ships NO
+ * takes `buildOverlay`'s Medicare-only branch (`intakeMap.ts:690-693`), ships NO
  * `enrolledPremium`, and can therefore NEVER open the engine's ACA gate
- * (`taxOverlay.ts:1717-1722`: `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0`) —
+ * (`taxOverlay.ts:2126-2131`: `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0`) —
  * was told "Health-coverage rules have been updated" on a moved `acaStatus` stamp. They price
  * ZERO ACA. That is insight 101 inverted: the warning described its poster child, not the
  * predicate's extension. And it was never only a copy bug — `healthcare.moved` fed `rulesMoved`,
@@ -113,8 +113,8 @@
  *
  * WHAT THE WITHDRAWN HEURISTIC WOULD HAVE SHIPPED — a SILENT STALE, built while fixing an
  * over-alarm. It bucketed `irmaa-freeze` to the aggregate because `irmaaTopTierFrozenThrough`
- * has no engine reader. But `irmaa.value` IS engine-read (simulate.ts:996; solveAnchor.ts:222,231;
- * taxOverlay.ts:1124; healthOverlay.ts:638 — `boundPartBPricingSchedule`, where the tier ladder's Part D
+ * has no engine reader. But `irmaa.value` IS engine-read (simulate.ts:1088; solveAnchor.ts:222,231;
+ * taxOverlay.ts:1529; healthOverlay.ts:638 — `boundPartBPricingSchedule`, where the tier ladder's Part D
  * add-ons feed `buildPartBPricingSchedule`), and
  * `consumedConstants.ts:112` puts the ENTIRE `health.` family in the consumed set on
  * `healthcareEnabled === true`. This repo's own tripwire
@@ -136,7 +136,7 @@
  * `irmaa-freeze` names the Medicare line for EVERY healthcare-priced household, including one
  * whose MAGI never reaches the first IRMAA tier and who therefore pays no surcharge either way.
  * That is deliberate and it is NOT the withdrawn heuristic returning. The run reads the IRMAA
- * schedule (`taxOverlay.ts:1124`) whenever Medicare is priced — that is the exposure fact, and it
+ * schedule (`taxOverlay.ts:1529`) whenever Medicare is priced — that is the exposure fact, and it
  * is decidable at this seam. Whether the tiers bite depends on where a stochastic MAGI path
  * lands across the whole horizon (RMDs grow, a conversion spikes it), which is not a property of
  * the household's inputs at all and cannot be read from any builder's output. Gating on it would
@@ -162,7 +162,12 @@ import { healthcareVintageStamp } from '@engine/constants/health'
 import { taxVintageStamp } from '@engine/constants/tax'
 import { stateTaxVintageStamp, stateProfileKey, type PricedState } from '@engine/constants/stateTax'
 import { dateVintageStamp } from '@engine/constants'
-import { ENGINE_PRICING_LEDGER, type PricingFamily, type PricingLedgerRow } from '@engine/pricingVersion'
+import {
+  ENGINE_PRICING_LEDGER,
+  type PricingFamily,
+  type PricingLedgerRow,
+  type PricingReach,
+} from '@engine/pricingVersion'
 
 /** Which healthcare clock moved. U17 §S4 split the v1 single line into FAMILY-specific lines:
  *  the ACA family and the Medicare family name themselves separately, each behind its OWN
@@ -191,7 +196,7 @@ export type HealthcareFamily = 'aca' | 'medicare'
  *     make the "every read is unpriced" silence arm vacuously true and quietly kill a clock.
  *
  * THE SOURCE FOR EACH ROW:
- *   · `coverage-year` — `COVERAGE_YEAR` is documented at `model.ts:2344` as "the coverage year
+ *   · `coverage-year` — `COVERAGE_YEAR` is documented at `model.ts:2355` as "the coverage year
  *     the ACA/IRMAA tables are keyed to", so it dates BOTH families and names each one the run
  *     priced. It is the ONLY marker for every annually-re-indexed health figure that carries no
  *     stamp of its own (the four interior IRMAA thresholds, the ACA applicable-percentage bands,
@@ -199,7 +204,7 @@ export type HealthcareFamily = 'aca' | 'medicare'
  *     invisible to exactly the pre-65 marketplace planner it hits hardest.
  *   · `aca-status` / `fpl-guideline` — the marketplace rulebook (`acaEnhancedSubsidyStatus`,
  *     `federalPovertyGuidelines`), priced only where the engine's per-year ACA gate can open
- *     (`taxOverlay.ts:1717-1722`).
+ *     (`taxOverlay.ts:2126-2131`).
  *   · `irmaa-freeze` — dates the IRMAA schedule, which IS engine-read on every healthcare-priced
  *     run (see the header's ruling). Medicare, exactly like `part-b`.
  *   · `part-b` / `part-b-trend` / `extras-typical` — the Medicare cost figures.
@@ -240,15 +245,15 @@ export type ExposureRead = 'priced' | 'unpriced' | 'unknown'
 export interface StalenessExposure {
   /** Did the run BUILD a tax overlay at all (`overlayBuiltForRun` — the route's own builder's
    *  `params.overlay !== undefined`)? This is the FEDERAL tax family's gate: `taxEnabled: true`
-   *  is hardcoded on every built overlay (`intakeMap.ts:653`) and `consumedConstants.ts:104`
+   *  is hardcoded on every built overlay (`intakeMap.ts:660`) and `consumedConstants.ts:104`
    *  gates the whole `tax.` family on exactly that flag — so a run that took `buildOverlay`'s
-   *  degenerate early return (`intakeMap.ts:578-583`: no accounts, no premium, no income —
+   *  degenerate early return (`intakeMap.ts:585-590`: no accounts, no premium, no income —
    *  reachable today by a save-ready Social-Security-only household) re-prices NO tax constant
    *  and is byte-identical under any tax vintage.
    *
    *  ITS OWN BIT, NEVER INFERRED FROM `medicare` (insight 081's shape). The two are CORRELATED
    *  today — and only by an accident of the intake gate: `missingRequiredFacts` REQUIRES the
-   *  marketplace quote pair for any household with a pre-65 member (`intakeMap.ts:213-219`), and
+   *  marketplace quote pair for any household with a pre-65 member (`intakeMap.ts:220-226`), and
    *  an all-65+ household takes the Medicare-only branch, so EVERY save-ready built overlay
    *  happens to carry `healthcareEnabled`. That is a coincidence of two unrelated rules, not a
    *  law: it breaks the day a third overlay branch ships, or the day the quote pair becomes
@@ -269,16 +274,16 @@ export interface StalenessExposure {
   readonly aca: ExposureRead
   /** Did the run's built overlay carry the ACCUMULATION construct — i.e. does any working
    *  owner actually contribute (`contributionsPricedForRun`)? The date route is NOT sufficient
-   *  on its own: `dateSearch.ts:230` forces `accumulation` onto EVERY candidate, but it
+   *  on its own: `dateSearch.ts:241` forces `accumulation` onto EVERY candidate, but it
    *  truncates the BASE overlay's streams, and `contributionStreamsFor` returns `{}` for a
-   *  non-working owner (`intakeMap.ts:467-470`) — so a date-route household whose accounts all
+   *  non-working owner (`intakeMap.ts:474-477`) — so a date-route household whose accounts all
    *  belong to the retired spouse carries EMPTY streams on every candidate and reads no
    *  contribution limit (`consumedConstants.ts:124` gates the `contributions.` family on the
    *  construct's presence; the limits' only pricing read is `annualAdditionsCeilingFor`'s
    *  §415(c) match trim inside `contributionStreamsFor`, which never runs for them). */
   readonly contributions: ExposureRead
   /** Does the run's stock weight READ the dated ticker-blend table (`blendTableReadForRun`)?
-   *  `resolveBlend` (`intakeMap.ts:292`) consults it ONLY for an account whose ticker hits
+   *  `resolveBlend` (`intakeMap.ts:299`) consults it ONLY for an account whose ticker hits
    *  a row; an all-manual-blend household — or one whose portfolio totals $0, where
    *  `householdStockWeight` returns null and the run takes the inert `?? 0` — is PROVABLY
    *  inert under any `BLEND_SNAPSHOT_AS_OF` bump. `'priced'` still never NAMES itself (see
@@ -293,6 +298,16 @@ export interface StalenessExposure {
    *  ratio above 1 reads `'priced'`: refused when committed, yet a vault can carry one, and there the
    *  lean moves the spend the other way. An unbuildable draft reads `'unknown'` like every sibling. */
   readonly spending: ExposureRead
+  /** Can the 2026-10-20 working-year tax floor move THIS run (`workingYearTaxForRun` — the engine's own
+   *  `dateSearch.workingYearTaxReach` over every candidate the date search sweeps, on the no-death and
+   *  every single-death timeline)? The ledger's ROW-LEVEL `reach: 'working-years'` read (v12): `'priced'`
+   *  ⇔ some swept run carries a §7-clamped working year with outside income (pay, clamped ongoing
+   *  taxable, or entered working-year investment income) AND a portfolio income channel (SS, a
+   *  conversion, an RMD-age holder's pre-tax pool, a Medicare-enrolled member's premium draw).
+   *  `'unpriced'` is a PROOF that every swept run is byte-identical with or without the floor — the
+   *  whole spine route (no living worker, no construct) and an unreached date-route household alike.
+   *  An unbuildable draft reads `'unknown'` like every sibling. */
+  readonly workingYearTax: ExposureRead
   /** The priced state code THIS run actually priced (`pricedStateForRun`'s built-overlay
    *  read), or `undefined` for a household whose run prices no state tax. Closes the state
    *  clock's former KNOWN QUIET LIMITATION — see the clock below. */
@@ -326,6 +341,24 @@ const PRICING_FAMILY_READS: Readonly<
   contributions: (e) => e.contributions,
   spending: (e) => e.spending,
 }
+
+/**
+ * A row's REACH qualifier — each one exposure read (exhaustive by type, like the families above). It
+ * gates EVERY family on the row: the row speaks to a household only where BOTH its family's read AND
+ * its reach read allow (`narrowerRead`). The 2026-10-20 working-year tax floor (ledger v12) is the
+ * first: its families are "your taxes" / "your state tax", but only a run that can reach a §7-clamped
+ * working year moved — telling every retired household its taxes moved would be false.
+ */
+const PRICING_REACH_READS: Readonly<Record<PricingReach, (e: StalenessExposure) => ExposureRead>> = {
+  'working-years': (e) => e.workingYearTax,
+}
+
+/** The narrower of two exposure reads on ONE row: `'unpriced'` beats `'unknown'` beats `'priced'`. A
+ *  proof of non-exposure on EITHER axis is a proof the row moved nothing for this household (silent);
+ *  an undecidable axis with no such proof stays undecidable (the nameless hedge); only priced on both
+ *  is a named claim. `narrowerRead(x, 'priced') === x`, so a row with no reach reads exactly as before. */
+const narrowerRead = (a: ExposureRead, b: ExposureRead): ExposureRead =>
+  a === 'unpriced' || b === 'unpriced' ? 'unpriced' : a === 'unknown' || b === 'unknown' ? 'unknown' : 'priced'
 
 /** The ONE order the named families are spoken in — Medicare LAST (its phrase carries its own
  *  trailing clause). Exhaustive: every family appears exactly once (a shape test pins it). */
@@ -405,7 +438,7 @@ export interface StalenessReport {
     /** Contribution-limit table year moved, TWICE-GATED (U17 §S4, the F3 correction): the
      *  ROUTE gate (`!allRetired`) protects the WORDING — `stalenessDate` says "behind your
      *  date", which a household with no date must never hear — and `exposure.contributions`
-     *  protects the CLAIM. "Structurally exposed because `dateSearch.ts:230` forces the
+     *  protects the CLAIM. "Structurally exposed because `dateSearch.ts:241` forces the
      *  accumulation construct" was necessary-but-not-sufficient, the very error the
      *  `extras-typical` conjunct (c) note calls out: the forced construct carries the BASE
      *  overlay's streams, and a date-route household whose accounts all belong to the retired
@@ -518,7 +551,7 @@ export function deriveStaleness(
   // `taxEnabled: true` is hardcoded on every built overlay. The first half is true; the
   // conclusion was not — a household that builds NO overlay reaches a verdict all the same
   // (`buildParams` returns params with `initialPortfolio: 0` and the inert `stockWeight ?? 0`,
-  // `intakeMap.ts:707-716`), so "no overlay ⇒ nothing to be stale about" was false.
+  // `intakeMap.ts:714-723`), so "no overlay ⇒ nothing to be stale about" was false.
   const currentTax = taxVintageStamp()
   const savedTax = scenario.taxVintageDetail
   const taxStampMoved =
@@ -562,7 +595,7 @@ export function deriveStaleness(
   // it and no field of this stamp can describe a change to its answer. WHICH family a clock
   // answers to is {@link HEALTHCARE_CLOCK_FAMILIES}'s job — there is no second opinion here.
   //   · ACA family → `exposure.aca`. The engine's per-year ACA gate is
-  //     `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0` (`taxOverlay.ts:1717-1722`);
+  //     `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0` (`taxOverlay.ts:2126-2131`);
   //     the Medicare-only branch ships NO quote pair, so it can never open — an all-65+
   //     household prices ZERO ACA and must stay SILENT on it.
   //   · Medicare family → `exposure.medicare`.
@@ -628,7 +661,7 @@ export function deriveStaleness(
     //
     // ITS "no exposure gate" COMMENT WAS FALSE and is swept here (U17 §S4, insight 087): the
     // trend schedule `partBPricingByT` is constructed ONLY under
-    // `healthcareEnabled && config.taxEnabled` (`taxOverlay.ts:1132-1133`), so a run that built
+    // `healthcareEnabled && config.taxEnabled` (`taxOverlay.ts:1537-1538`), so a run that built
     // no healthcare overlay never constructs it and re-prices nothing under the new edition.
     if (
       savedHealth.partBTrendVintage !== undefined &&
@@ -655,11 +688,11 @@ export function deriveStaleness(
   // The contribution clock is ROUTE-gated (header) AND EXPOSURE-gated (U17 §S4's F3 fix). The
   // route gate keeps the WORDING honest — `stalenessDate` says "behind your date". The exposure
   // gate keeps the CLAIM honest: "every date candidate carries the accumulation construct
-  // (`dateSearch.ts:230`) ⇒ structurally exposed" is necessary but NOT sufficient, because the
+  // (`dateSearch.ts:241`) ⇒ structurally exposed" is necessary but NOT sufficient, because the
   // forced construct is filled from the BASE overlay's streams and `contributionStreamsFor`
-  // returns `{}` for a non-working owner (`intakeMap.ts:467-470`). A 66/retired + 62/working couple
+  // returns `{}` for a non-working owner (`intakeMap.ts:474-477`). A 66/retired + 62/working couple
   // whose accounts all belong to the retired spouse is on the date route with EMPTY streams:
-  // `anyContributions` is false (`intakeMap.ts:620-626`), no `accumulation` reaches the base
+  // `anyContributions` is false (`intakeMap.ts:627-633`), no `accumulation` reaches the base
   // overlay, and the limit tables' only pricing read (the §415(c) match trim) never runs.
   //
   // The blend clock never NAMES itself on either route (see `date.blendMoved`'s own note): the
@@ -721,8 +754,12 @@ export function deriveStaleness(
       continue
     }
     if (!crossed && !sameDay) continue
+    // The row-level reach (v12+): read ONCE per row, then narrowed into every family's read. A row with
+    // no reach takes the family read verbatim (rows 1–11).
+    const reachRead = r.reach === undefined ? undefined : PRICING_REACH_READS[r.reach](exposure)
     for (const f of r.families) {
-      const read = PRICING_FAMILY_READS[f](exposure, r)
+      const familyRead = PRICING_FAMILY_READS[f](exposure, r)
+      const read = reachRead === undefined ? familyRead : narrowerRead(familyRead, reachRead)
       if (read === 'unpriced') continue
       if (crossed && read === 'priced') namedPricing.add(f)
       else hedgedPricing.add(f)

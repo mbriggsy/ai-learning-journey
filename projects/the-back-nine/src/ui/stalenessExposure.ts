@@ -19,15 +19,20 @@
  *     the ACA note below for why the pre-crown base overlay IS that producer at THIS surface,
  *     and why the same read is forbidden beside a crowned one.
  *
- * SEVEN READS, SEVEN PRODUCERS — NEVER ONE DERIVED FROM ANOTHER. `overlayBuilt`, `medicare`, `aca`,
- * `contributions`, `blend`, `spending` and `pricedState` each call their own exported predicate.
+ * EIGHT READS, EIGHT PRODUCERS — NEVER ONE DERIVED FROM ANOTHER. `overlayBuilt`, `medicare`, `aca`,
+ * `contributions`, `blend`, `spending`, `workingYearTax` and `pricedState` each call their own exported
+ * predicate. (`workingYearTax` — the 2026-10-20 working-year tax floor's row-level ledger reach — walks
+ * every candidate the date search would sweep, so on the DATE route it is the one read here that costs
+ * more than a build: ~11 candidates of draw-free cash terms, at unlock. On the spine route it returns at
+ * the construct check, and IntakeApp's result-phase record card returns before calling this function on
+ * the date route.)
  *
  * BE PRECISE ABOUT WHY, because the obvious justification is FALSE and was written here once
  * before being caught (two reviewers, 2026-07-25): `overlayBuilt` and `medicare` do NOT currently
  * disagree on any reachable household. There is no "accounts but no marketplace quote pair"
  * witness — the pair is a REQUIRED fact for any household with a pre-65 member
- * (`intakeMap.ts:213-219`), and an all-65+ household takes the Medicare-only branch, which sets
- * `healthcareEnabled: true` with no quote pair at all (`intakeMap.ts:686`). So for every draft this
+ * (`intakeMap.ts:220-226`), and an all-65+ household takes the Medicare-only branch, which sets
+ * `healthcareEnabled: true` with no quote pair at all (`intakeMap.ts:693`). So for every draft this
  * function actually evaluates (the missing-facts arm has already returned), an overlay exists IFF
  * healthcare is on. **The two predicates are perfectly correlated today.**
  *
@@ -56,6 +61,7 @@ import {
   spineAcaPriced,
   spineMedicarePriced,
   survivorMedicalLeanForRun,
+  workingYearTaxForRun,
 } from '@intake/intakeMap'
 import type { ExposureRead, StalenessExposure } from '@store/staleness'
 
@@ -71,7 +77,7 @@ const read = (priced: boolean): ExposureRead => (priced ? 'priced' : 'unpriced')
  * `spineMedicarePriced` is the shipped precedent (`healthSheetChrome`'s Medicare disclosure
  * rides it); `spineAcaPriced` is its sibling over the same overlay.
  *
- * DATE. Medicare is EXACT: `dateSearch.ts:229` forces `healthcareEnabled: true` on every
+ * DATE. Medicare is EXACT: `dateSearch.ts:240` forces `healthcareEnabled: true` on every
  * candidate, so the only question is whether the run built an overlay at all. ACA reads the
  * PRE-SWEEP BASE overlay (`dateBaseAcaPriced`) — and that is the right producer HERE, at a
  * surface taken ONCE at unlock, BEFORE any date search dispatches: there is no crowned run for
@@ -86,7 +92,7 @@ const read = (priced: boolean): ExposureRead => (priced ? 'priced' : 'unpriced')
  *
  * AND BE HONEST ABOUT WHERE THIS ONE ALREADY TRAVELS (a reviewer's catch, 2026-07-25 — the clause
  * above overstated its own boundary). This read feeds `rulesMoved`, and `rulesMoved` is carried to
- * `IntakeApp.tsx:819` → `Result.tsx:662,677` → `FuckOffDate.tsx:444`, which renders the standing
+ * `IntakeApp.tsx:821` → `Result.tsx:662,677` → `FuckOffDate.tsx:444`, which renders the standing
  * hero echo BESIDE THE CROWNED DATE. So for a 63-working/67-retired household with the required
  * quote pair, a moved `acaStatus` names the ACA line at the gate (honest — the gate is pre-crown)
  * and ALSO lights that echo, even where a crown ≥2 years out puts both members at 65+ and the
@@ -111,14 +117,14 @@ const read = (priced: boolean): ExposureRead => (priced ? 'priced' : 'unpriced')
  * silent stale on the more consequential clock. That is precisely the trade the paragraph above
  * says was rejected, and precisely insight 103's shape (a rule written to kill an over-alarm must
  * be checked in the SILENCING direction). `acaPricedForRun` already exists and is exported
- * (`intakeMap.ts:1029`) — the predicate was never the missing piece.
+ * (`intakeMap.ts:1063`) — the predicate was never the missing piece.
  *
  * THE ACTUAL FIX — AND ONE OF ITS TWO ARMS IS ALSO A TRAP (corrected 2026-08-02, the second time
  * this comment's own prescription has had to be withdrawn).
  *
  * ✗ "Re-derive the exposure against the CROWNED offset" — DO NOT. It is the same insight-103 shape a
- *   third time. The date route SWEEPS every offset (`dateSearch.ts:425/450/457`) and candidate Y=0
- *   carries the base ACA stream UNGATED (`healthcareStreams.ts:160` → `windowStart = 0`, so
+ *   third time. The date route SWEEPS every offset (`dateSearch.ts:578/450/457`) and candidate Y=0
+ *   carries the base ACA stream UNGATED (`healthcareStreams.ts:181` → `windowStart = 0`, so
  *   `windowGate` is a pass-through). So `exposure.aca === 'priced'` PROVES the ACA tables were
  *   consumed somewhere in the sweep — it is not an over-read. Re-deriving against the crown alone
  *   would silence the ACA line for a household whose crown sits at 65+ *precisely because* a subsidy
@@ -153,16 +159,20 @@ export function exposureForDraft(d: ScenarioDraft): StalenessExposure {
       contributions: 'unknown',
       blend: 'unknown',
       spending: 'unknown',
+      workingYearTax: 'unknown',
       pricedState: undefined,
     }
   }
   // The route-INVARIANT reads: each producer unions the two builders internally (the
-  // `pricedStateForRun` idiom), so no `isDateRoute` branch may fork them.
+  // `pricedStateForRun` idiom), so no `isDateRoute` branch may fork them. `workingYearTaxForRun`
+  // already answers three-valued (each route walks its own built params through the engine's one
+  // predicate; a candidate build that throws is undecidable), so it is taken verbatim.
   const routeInvariant = {
     overlayBuilt: read(overlayBuiltForRun(d)),
     contributions: read(contributionsPricedForRun(d)),
     blend: read(blendTableReadForRun(d)),
     spending: read(survivorMedicalLeanForRun(d)),
+    workingYearTax: workingYearTaxForRun(d),
     pricedState: pricedStateForRun(d),
   }
 

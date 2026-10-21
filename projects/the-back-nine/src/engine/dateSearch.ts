@@ -42,7 +42,8 @@
  * epoch compare in engineProtocol.ts — the same injected-dependency shape as the seed, so a
  * plain-environment test can drive cancellation directly).
  */
-import { simulate, validateParams } from '@engine/simulate'
+import { cashTermsForYear, personOffsetsFor, simulate, validateParams } from '@engine/simulate'
+import { rmdStartAgeForBirthYear } from '@engine/rmd'
 import { BANDS, quantizeSurvival, summarize } from '@engine/confidence'
 import { buildHealthcareStreams, type EnteredHealthSchedules } from '@engine/healthcareStreams'
 import type {
@@ -93,6 +94,12 @@ export const DATE_SEARCH_Z = 1.645
 export interface DateSearchInput {
   readonly params: SimulationParams
   readonly workingYearIrmaaMagiByPerson?: readonly number[]
+  /** The working-year tax floor (2026-10-20, KTD11): each person's RAW entered working-year
+   *  investment income, derived beside `workingYearIrmaaMagiByPerson` under the SAME completeness gate
+   *  (so `override − earnedIncomeReal === investment` for every working member). Y-INVARIANT (a
+   *  per-person annual figure); `buildCandidateParams` lands it on the candidate's accumulation
+   *  construct, where the engine prices it in each clamped working year. Absent ⇒ I = 0. */
+  readonly workingYearInvestmentByPerson?: readonly number[]
 }
 
 /** Sweep options: the compute tier + the cooperative-cancellation gate (awaited between
@@ -224,10 +231,14 @@ export function buildCandidateParams(
     accumulation: _a,
     ...overlayBase
   } = overlay
+  // The working-year investment income (the working-year tax floor, KTD11) rides the construct
+  // UN-truncated: it is a per-person annual figure, and the engine reads it only in a clamped year
+  // (a member working at t), so the candidate's own window decides which years carry it.
+  const investment = input.workingYearInvestmentByPerson
   const candidateOverlay: OverlayParams = {
     ...overlayBase,
     healthcareEnabled: true,
-    accumulation: { contributionsByPerson },
+    accumulation: { contributionsByPerson, ...(investment ? { workingYearInvestmentByPerson: investment } : {}) },
     medicareOnsetSimYear: streams.medicareOnsetSimYear,
     ...(streams.enrolledPremium ? { enrolledPremium: streams.enrolledPremium } : {}),
     ...(streams.slcsp ? { slcsp: streams.slcsp } : {}),
@@ -236,6 +247,148 @@ export function buildCandidateParams(
   }
 
   return { ...params, people, paths, overlay: candidateOverlay }
+}
+
+/** The working-year tax floor's exposure read (U5): `'priced'` ⇔ some run the household's date
+ *  search sweeps can reach a §7-clamped year the floor prices differently; `'unpriced'` is a PROOF
+ *  that none can (every swept candidate is byte-identical with or without the floor). */
+export type WorkingYearTaxReach = 'priced' | 'unpriced'
+
+/**
+ * Can the working-year tax floor (2026-10-20 — `docs/plans/features/working-year-tax-floor-build-spec.md`
+ * U5, KTD8) move THIS household's date-route recompute? — the engine-pricing ledger's row-level
+ * `reach: 'working-years'` read (`ENGINE_PRICING_LEDGER` v12, through `intakeMap.workingYearTaxForRun`
+ * → `stalenessExposure.ts`), written ONCE here beside the transform that builds every candidate it
+ * reads (insight 020: one predicate, every consumer).
+ *
+ * THE WALK, never a re-derivation (insight 081): every candidate `buildCandidateParams(input, Y, 1)`
+ * for Y = 0..{@link DATE_OFFSET_WINDOW_TOP} (the path count is inert — no draw is read), and on each
+ * the engine's OWN per-year cash seam (`cashTermsForYear` over `personOffsetsFor` — the builder
+ * `simulate` itself calls), so "clamped", B, I and SS are the producer's figures. The death timelines
+ * walked: no death, and — under sampled longevity with a couple — EACH single death (person i dies at
+ * every offset d in [0, maxHorizonYears), the other alive throughout). That puts a still-working
+ * survivor's §202 benefit and an inherited pre-tax pool inside the clamp's domain (insight 027: the
+ * predicate's domain is the clamp's, never the no-death subset of it). A second death leaves no living
+ * worker, so no clamped year is missed. A single-death year t < d IS the no-death year (a member is
+ * alive iff t < their death offset), so each single-death timeline is walked from t = d.
+ *
+ * A clamped year reads `'priced'` when its outside income is non-zero (B > 0 OR I > 0 — at B = I = 0
+ * the charge is today's T(P, ss) bit for bit; at B = 0 with I > 0 the ordinary and preferential
+ * readings still sit on a non-zero base) AND the floor can move something in it — any of:
+ *   - SS > 0 (own, spousal or the §202 survivor benefit): the returned taxable SS is now read on the
+ *     provisional that carries the pay (KTD6), so it lifts the year's IRMAA-MAGI, billed two years on —
+ *     the measured `dateborder` / `datesplit` / `datemixed` channel, where T(0, ss) is $0 and no tax draw
+ *     is made at all. At a large benefit T(0, ss) > 0 is also a tax the portfolio funds, and that
+ *     funding draw is priced on top of the pay;
+ *   - a requested conversion in the year (`overlay.conversions[t] > 0`);
+ *   - a LIVING holder at or past `rmdStartAgeForBirthYear` (on the overlay's own derived birth year,
+ *     `startCalendarYear − currentAge`) with pre-tax dollars — entered, contributed (deferral or
+ *     match), or inherited from a member dead by t (the spousal rollover); on the aggregate pool (no
+ *     per-person split) the holder is the first living member and any household pre-tax counts;
+ *   - a LIVING member Medicare-enrolled at t (t ≥ that candidate's `medicareOnsetSimYear[i]`; the
+ *     biological-65 default where absent) under `healthcareEnabled` — the premium draw.
+ * Otherwise the year's portfolio income P is 0, the charge is T(0, ss) — today's figure — and nothing
+ * moves. There are NO standalone age, pension or I triggers: with P = 0 and SS = 0, B and I change nothing.
+ * The ACA premium is not a channel: a candidate window-gates it to t ≥ Y, and a clamped year is t < Y.
+ *
+ * DIRECTION OF THE RESIDUAL: `'priced'` may over-read (a conversion clamped to an empty pre-tax pool,
+ * a premium the HSA pays, a candidate the sweep later rejects) — an over-present "worth a look" line,
+ * the side the staleness module may err on. `'unpriced'` never under-reads: it is exactly the
+ * complement of every channel the clamped year's portfolio income can come from.
+ *
+ * No tax overlay ⇒ `'unpriced'` (no candidate is ever built — `runDateSearch` rejects calmly — and no
+ * year is taxed). PURE, draw-free; cost ≈ 11 candidates × (1 + 2·H) timelines × H years of cash terms.
+ */
+export function workingYearTaxReach(input: DateSearchInput): WorkingYearTaxReach {
+  const overlay = input.params.overlay
+  if (overlay === undefined || !overlay.taxEnabled) return 'unpriced'
+  for (let y = 0; y <= DATE_OFFSET_WINDOW_TOP; y++) {
+    if (workingYearTaxReachOfRun(buildCandidateParams(input, y, 1)) === 'priced') return 'priced'
+  }
+  return 'unpriced'
+}
+
+/**
+ * {@link workingYearTaxReach}'s per-run walk over ONE built params object — exported so the SPINE
+ * route's exposure read walks its own built params through the same code (`intakeMap.workingYearTaxForRun`)
+ * rather than asserting "no worker ⇒ unpriced" from the route: a run with no accumulation construct
+ * never clamps, and this reads exactly that from the producer's cash terms.
+ */
+export function workingYearTaxReachOfRun(params: SimulationParams): WorkingYearTaxReach {
+  const overlay = params.overlay
+  // The floor's stream is built only under the construct with tax on (`simulate`, KTD5).
+  if (overlay === undefined || !overlay.taxEnabled || overlay.accumulation === undefined) return 'unpriced'
+  const people = params.people
+  const horizon = params.maxHorizonYears
+  const { offsets, higherClaimOffset } = personOffsetsFor(people)
+  const start = overlay.startCalendarYear
+  // The overlay's OWN person ageing: `simulate` hands the overlay `birthYear = startCalendarYear −
+  // currentAge`, so its age in sim-year t is `currentAge + t` (the RMD and biological-65 gates read it).
+  const overlayBirthYears = people.map((p) => start - p.currentAge)
+  const streams = overlay.accumulation.contributionsByPerson
+  const positive = (s: readonly number[] | undefined): boolean => s !== undefined && s.some((x) => x > 0)
+  const contributesPretax = (i: number): boolean => positive(streams[i]?.pretax) || positive(streams[i]?.employerMatch)
+  const perPerson = overlay.pretaxByPerson
+  const holdsPretax = (i: number): boolean => (perPerson?.[i] ?? 0) > 0 || contributesPretax(i)
+  const householdHoldsPretax = overlay.buckets.pretax > 0 || people.some((_, i) => contributesPretax(i))
+  const atRmdAge = (i: number, t: number): boolean => {
+    const birthYear = overlayBirthYears[i]!
+    return start + t - birthYear >= rmdStartAgeForBirthYear(birthYear)
+  }
+  const onset = overlay.medicareOnsetSimYear
+
+  /** Does clamped year t on this death timeline carry a portfolio income channel? */
+  const portfolioIncomeIn = (t: number, deaths: readonly number[], ss: number): boolean => {
+    if (ss > 0) return true
+    if ((overlay.conversions?.[t] ?? 0) > 0) return true
+    const alive = (i: number): boolean => t < (deaths[i] ?? 0)
+    if (overlay.rmdEnabled) {
+      if (perPerson !== undefined) {
+        for (let i = 0; i < people.length; i++) {
+          if (!alive(i) || !atRmdAge(i, t)) continue
+          if (holdsPretax(i)) return true
+          // The spousal rollover: a member dead by t has already rolled their pool to the survivor.
+          for (let j = 0; j < people.length; j++) if (j !== i && !alive(j) && holdsPretax(j)) return true
+        }
+      } else {
+        // The aggregate pool rides the first living member (`resolveYear`'s `rmdOwner = living[0]`).
+        let holder = -1
+        for (let i = 0; i < people.length && holder < 0; i++) if (alive(i)) holder = i
+        if (holder >= 0 && householdHoldsPretax && atRmdAge(holder, t)) return true
+      }
+    }
+    if (overlay.healthcareEnabled === true) {
+      for (let i = 0; i < people.length; i++) {
+        if (!alive(i)) continue
+        const o = onset?.[i]
+        if (o !== undefined ? t >= o : people[i]!.currentAge + t >= 65) return true
+      }
+    }
+    return false
+  }
+
+  /** Walk one death timeline from `from`, true at the first reached clamped year. */
+  const reaches = (deaths: readonly number[], from: number): boolean => {
+    for (let t = from; t < horizon; t++) {
+      const cash = cashTermsForYear(t, params, offsets, deaths, higherClaimOffset)
+      const outside = cash.workingYearOutside
+      if (outside === undefined) continue
+      if (outside.ordinaryBase <= 0 && outside.investmentIncome <= 0) continue
+      if (portfolioIncomeIn(t, deaths, cash.ss)) return true
+    }
+    return false
+  }
+
+  const noDeath = people.map(() => horizon)
+  if (reaches(noDeath, 0)) return 'priced'
+  if (params.longevityMode === 'sampled' && people.length > 1) {
+    for (let i = 0; i < people.length; i++) {
+      for (let d = 0; d < horizon; d++) {
+        if (reaches(people.map((_, j) => (j === i ? d : horizon)), d)) return 'priced'
+      }
+    }
+  }
+  return 'unpriced'
 }
 
 /** One candidate offset's raw sweep evidence (the decision rule derives the rest). */

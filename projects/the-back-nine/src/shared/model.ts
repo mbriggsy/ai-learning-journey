@@ -371,6 +371,14 @@ export interface PersonContributionStreams {
 export interface AccumulationParams {
   /** Per-person contribution streams, aligned by index to `people` (validated, R19). */
   readonly contributionsByPerson: readonly PersonContributionStreams[]
+  /** The working-year tax floor (2026-10-20, KTD11): each person's entered working-year INVESTMENT
+   *  income (annual real $, aligned by index to `people`, finite ≥ 0 — validated, R19), the raw
+   *  vector the date route derives beside the IRMAA override (`intakeMap.buildDateInput` →
+   *  `DateSearchInput` → `buildCandidateParams`). `simulate.cashTermsForYear` sums the slots of the
+   *  members WORKING in a §7-clamped year into that year's outside income I, which the tax overlay
+   *  prices at the costliest of three readings (excluded / ordinary / preferential). ABSENT ⇒ I = 0
+   *  in every clamped year (presence-keyed; the three readings then coincide bit for bit). */
+  readonly workingYearInvestmentByPerson?: readonly number[]
 }
 
 /** One person's COMPILED other-income leaf (R40 · KTD-4) — the per-year real-$ vectors
@@ -867,7 +875,7 @@ export interface TaxAwareDistribution {
    *  concentrates in the pre-65 ACA years and may barely move the portfolio median. */
   readonly lifetimeNetPremiumReal: readonly number[]
   /** Σ Medicare cost actually paid across the path's funded years (real $; base Part B + IRMAA +
-   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:1873`; P3·U11), an
+   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:2285`; P3·U11), an
    *  addend of the pay-less-tax all-in cost. Same accrual rule as its siblings. */
   readonly lifetimeMedicareCostReal: readonly number[]
 }
@@ -1625,8 +1633,11 @@ export interface HealthIntakeV3 {
    *  `intakeMap.buildDateInput` derives the engine's per-person override as
    *  `earnedIncomeReal + investment` (the salary already funds the bridge — re-asking it was
    *  redundant + confusing, and the engine cannot model a time-varying salary anyway). This
-   *  investment income is on the R40 OUT-list and reaches IRMAA-MAGI ONLY through this field, so
-   *  omitting it under-states Medicare cost = the cardinal sin — hence it's a first-class required
+   *  investment income is on the R40 OUT-list and reaches the engine ONLY through this field — the
+   *  IRMAA override AND, since the working-year tax floor (2026-10-20, KTD11), the clamped working
+   *  year's income tax, where it is priced at the costliest of three readings (excluded / ordinary /
+   *  preferential; `buildDateInput` passes the raw vector through) — so omitting it under-states
+   *  Medicare cost and the working-year tax = the cardinal sin — hence it's a first-class required
    *  input (an explicit 0, never a silent skip). EXCLUDES the separately-modeled R40 streams
    *  (pension/rental/annuity/alimony) — those ride `ongoingTaxableIrmaaOnly` in every year, so
    *  entering one here double-counts (KTD-9). A retired member's slot is 0. (A bonus/RSU spike

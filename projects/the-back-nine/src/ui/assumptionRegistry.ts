@@ -15,7 +15,8 @@
  *    fails as an excess property. The registry can never lag the model.
  *  - {@link METHODOLOGY_DISCLOSURES} carries the NON-draft methodology constants — the
  *    four non-parameters (supersession #1: longevity table, survivor-SS §202, death-order
- *    mixture, conversion-tax funding) plus the hardcoded market moments. These are baked
+ *    mixture, conversion-tax funding) plus the hardcoded market moments, plus (2026-10-20, R13)
+ *    the working-year tax floor's pricing of entered investment income. These are baked
  *    engine behavior, not draft fields, so the compiler cannot tie them to a model key;
  *    the rendered-seat test walks this list instead (the runtime half of the pin).
  *
@@ -45,6 +46,7 @@ export type AssumptionSeat =
   | 'survivor-ss' // §202 RIB-LIM law — disclosure (law-computed, not a parameter)
   | 'outlive-order' // the per-path sampled death-order mixture — disclosure (no conditional knob exists)
   | 'conversion-tax' // the v1 per-policy gross-up funding rule — disclosure + its conservative direction
+  | 'working-year-tax' // the working-year tax floor (2026-10-20, R13) — how a working year's investment income is priced, and what is left out
   | 'drawdown' // via-sheet → SequencingControl (one editor home per fact, insight 058)
   | 'roth-conversion' // via-sheet → RothLever
   | 'subsidy-regime' // via-sheet → HealthcareSheet
@@ -193,7 +195,7 @@ export const DRAFT_DISPOSITIONS: Record<keyof ScenarioDraft, AssumptionDispositi
  *  The market row ALSO renders live figures read from `productionMarket.value` (never
  *  re-typed) plus the standing market-floor line — composed in the panel, pinned in tests. */
 export interface MethodologyDisclosure {
-  readonly id: 'market' | 'longevity' | 'survivor-ss' | 'outlive-order' | 'conversion-tax'
+  readonly id: 'market' | 'longevity' | 'survivor-ss' | 'outlive-order' | 'conversion-tax' | 'working-year-tax'
   readonly seat: AssumptionSeat
   readonly nameKey: CopyKey
   readonly lineKeys: readonly CopyKey[]
@@ -204,6 +206,14 @@ export interface MethodologyDisclosure {
  * as on-your-behalf DISCLOSURE rows — visible, provenance-named, honestly non-editable.
  * Fabricated knobs for them were explicitly rejected; the market editor is FILED behind a
  * sourced two-sided bound (the F1 defer).
+ *
+ * The SIXTH row, `working-year-tax` (R13 — the working-year tax floor, 2026-10-20; council
+ * wf_ef6cf7c5-a2b): how a §7-clamped working year's entered investment income is priced (the
+ * costliest of three readings — `taxOverlay.ts`'s `prepareWorkingYearFloor`) and what is left out.
+ * Static and unconditional like the five before it — every sentence is scoped by its own words ("While
+ * either of you is still working…"), so it stays true for an all-retired household it never touches.
+ * Its own seat, `seat === id`, the way the five pick theirs. The census, the banned-word guard and the
+ * engine referent behind its "higher still" sentence live in `workingYearTaxDisclosure.test.ts`.
  */
 export const METHODOLOGY_DISCLOSURES: readonly MethodologyDisclosure[] = [
   {
@@ -235,6 +245,12 @@ export const METHODOLOGY_DISCLOSURES: readonly MethodologyDisclosure[] = [
     seat: 'conversion-tax',
     nameKey: 'assumptionConversionTaxName',
     lineKeys: ['assumptionConversionTaxValue'],
+  },
+  {
+    id: 'working-year-tax',
+    seat: 'working-year-tax',
+    nameKey: 'assumptionWorkingYearTaxName',
+    lineKeys: ['assumptionWorkingYearTaxValue', 'assumptionWorkingYearTaxReadings', 'assumptionWorkingYearTaxOmissions'],
   },
 ]
 

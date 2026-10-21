@@ -1355,7 +1355,7 @@ test.describe(`?seed=dip — the date route's order contract (${REAL.width}×${R
 })
 
 // ── the all-65+ still-working date route (?seed=date65): priced Medicare, no false "unpriced" ──
-// The insight-080 fix, live on the date route: dateSearch.ts:229 forces healthcareEnabled true on
+// The insight-080 fix, live on the date route: dateSearch.ts:240 forces healthcareEnabled true on
 // every candidate, so a still-working all-65+ household PRICES Medicare even with no ACA door. The
 // retired age-predicate called this exact household "Medicare not priced" over numbers Medicare had
 // already moved; the surface now names it PRICED (affirmation + narrowed residual, shipped together)
@@ -2526,7 +2526,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
       //
       // The bound is TIGHT BY CONSTRUCTION (~10px at 1536×791), so this is a live constraint on the
-      // copy rather than a formality: it is what makes the length note in copy.ts:1725-1729 enforceable
+      // copy rather than a formality: it is what makes the length note in copy.ts:1767-1771 enforceable
       // instead of advisory. Text is captured so a red names the sentence that outgrew the slack.
       expect(
         geometry.standingBottom,

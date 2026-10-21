@@ -24,6 +24,7 @@ import {
   type Household,
   type HouseholdYear,
   type OverlayPerson,
+  type WorkingYearOutsideIncome,
   type YearContribution,
 } from '@engine/taxOverlay'
 import { totalAcrossBuckets } from '@engine/sequencing'
@@ -276,6 +277,47 @@ export function survivorMedicalLeanMoves(params: SimulationParams): boolean {
 }
 
 /**
+ * Each person's per-candidate offsets + the higher earner's claim offset — the pre-loop inputs every
+ * {@link cashTermsForYear} call reads, EXPORTED as the ONE builder `simulate` and the date route's
+ * working-year exposure predicate (`dateSearch.workingYearTaxReach`, the working-year tax floor's U5)
+ * share, so the predicate walks the producer's own cash terms and never re-derives them (insight 081).
+ *
+ * The SS sub-engine resolves each person's actual benefit AMOUNTS from their PIA + claim age + birth
+ * year — own (claim-age-adjusted) + the Method-C spousal excess — ONCE, pre-loop. It depends on NONE
+ * of the date-search-swept fields (the sweep varies only retirementAge → the retire offset; claim
+ * offsets, pia, and birthYear are held verbatim), so it is candidate-invariant and consumes ZERO draws
+ * (CRN-safe). PIA=0 ⇒ {ownAnnual:0, spousalExcessAnnual:0} ⇒ byte-identical to the legacy
+ * socialSecurityReal=0 spine (validated birthYear keeps `fraMonthsForBirthYear` from throwing).
+ *
+ * The higher earner's claim offset — the START gate for the spousal excess (the worker must have filed,
+ * RS 00202.001). argmax pia, strict-`>` tie-to-first, mirroring householdBenefits' own `higher` rule (an
+ * equal-PIA tie carries a 0 excess either way, so the tie resolution is immaterial). Pre-loop, candidate-
+ * invariant (pia + claim are not swept). For people-of-one the lone person is its own "higher" and the
+ * excess is 0, so the gate has no effect.
+ */
+export function personOffsetsFor(people: readonly PersonInputs[]): {
+  readonly offsets: PersonOffsets[]
+  readonly higherClaimOffset: number
+} {
+  const benefitPeople: BenefitPerson[] = people.map((p) => ({
+    piaAnnual: p.pia,
+    claimAge: p.socialSecurityClaimAge,
+    birthYear: p.birthYear,
+  }))
+  const benefits = householdBenefits(benefitPeople)
+  const offsets: PersonOffsets[] = people.map((p, i) => ({
+    retire: p.retirementAge - p.currentAge,
+    claim: p.socialSecurityClaimAge - p.currentAge,
+    earnedIncomeReal: p.earnedIncomeReal,
+    socialSecurityReal: benefits[i]?.ownAnnual ?? 0,
+    spousalExcessAnnual: benefits[i]?.spousalExcessAnnual ?? 0,
+  }))
+  let higherIdx = 0
+  for (let i = 1; i < people.length; i++) if ((people[i]?.pia ?? 0) > (people[higherIdx]?.pia ?? 0)) higherIdx = i
+  return { offsets, higherClaimOffset: offsets[higherIdx]?.claim ?? 0 }
+}
+
+/**
  * The full cash decomposition for one year: the survivor-adjusted spending, the earned-income
  * bridge (alive AND still working), the ongoing other-income gross (R40 · death-gated, NOT
  * retire-truncated — it keeps paying after work stops), the Social-Security benefit (summed while
@@ -317,6 +359,13 @@ export function cashTermsForYear(
    *  income nets against it or the working-year clamp zeroes the draw. Pure observation; consumed by
    *  {@link survivorSpendingBasis} (the survivor card's basis line), never by the decumulation. */
   readonly spendingReal: number
+  /** The working-year tax floor (2026-10-20): the year's OUTSIDE income when the §7 clamp fires —
+   *  B = Σ over the LIVING workers of max(0, `earnedIncomeReal_i` − that person's own pre-tax deferral
+   *  this year, read BEFORE the employer match merges in) + the clamped ongoing taxable (KTD2/KTD4),
+   *  and I = Σ of the entered working-year investment income of the members working this year
+   *  (KTD11). `undefined` in every UNCLAMPED year (a hole on the overlay's stream). Decided by the SAME
+   *  clamp as `net` and the KTD-9 split, so the floor and the clamp can never disagree on a year. */
+  readonly workingYearOutside: WorkingYearOutsideIncome | undefined
 } {
   let aliveCount = 0
   for (let i = 0; i < deathOffsets.length; i++) if (t < (deathOffsets[i] ?? 0)) aliveCount++
@@ -451,10 +500,37 @@ export function cashTermsForYear(
   //  - CLAMPED working year ⇒ `ongoingTaxableIrmaaOnly` (the wages fund the income's tax OUTSIDE
   //    the portfolio, so it must NOT mint a phantom gross-up withdrawal — but it STILL lifts
   //    IRMAA-MAGI, where the wages alone do not reach; the engine owns each modeled stream's
-  //    IRMAA-MAGI contribution in all years — KTD-9).
+  //    IRMAA-MAGI contribution in all years — KTD-9). Since the working-year tax floor (2026-10-20,
+  //    KTD2) the same dollars also sit in the year's tax BASE (`workingYearOutside.ordinaryBase`
+  //    below) — income whose own tax the household pays outside the portfolio, so a conversion or RMD
+  //    on top of it is priced in the brackets the household's income really reaches.
   const clamped = accumulating && livingWorker
   const net = clamped ? 0 : Math.max(0, spending - earned - sel.gross - ss)
   const netFloor = clamped ? 0 : Math.max(0, essentialsSpending - earned - sel.gross - ss)
+  // The working-year tax floor (2026-10-20): the clamped year's outside income, read on the SAME
+  // alive∧working filter the clamp and `contributionsForYear` use. Each worker's pay is taxed net of
+  // their OWN pre-tax deferral (§402(e)(3) — W-2 Box 1 excludes 401(k)/403(b) elective deferrals;
+  // §62(a)(7) for a deductible IRA), read before the employer match merges in (the match is never
+  // the worker's income); HSA is not subtracted (a disclosed simplification, filed). Floored at 0 per
+  // person: contributions above pay are never a negative wage. Computed ONLY in a clamped year, so
+  // every unclamped year's hot path is untouched.
+  let workingYearOutside: WorkingYearOutsideIncome | undefined
+  if (clamped) {
+    const accumulation = params.overlay?.accumulation
+    const deferrals = accumulation?.contributionsByPerson
+    const investment = accumulation?.workingYearInvestmentByPerson
+    let taxablePay = 0
+    let investmentIncome = 0
+    for (let i = 0; i < offsets.length; i++) {
+      const o = offsets[i]
+      if (o === undefined) continue
+      if (t < (deathOffsets[i] ?? 0) && t < o.retire) {
+        taxablePay += Math.max(0, o.earnedIncomeReal - (deferrals?.[i]?.pretax?.[t] ?? 0))
+        investmentIncome += investment?.[i] ?? 0
+      }
+    }
+    workingYearOutside = { ordinaryBase: taxablePay + sel.taxable, investmentIncome }
+  }
   return {
     net,
     netFloor,
@@ -467,6 +543,7 @@ export function cashTermsForYear(
     // `spending` the `net` above was computed from, exposed unchanged (an observation: no arithmetic
     // added to the hot path, so every existing output is byte-identical).
     spendingReal: spending,
+    workingYearOutside,
   }
 }
 
@@ -908,6 +985,21 @@ export function validateParams(params: SimulationParams): string | null {
         }
         if (!Number.isFinite(yearTotal))
           return 'overlay accumulation contributions overflow (a year’s assembled total is non-finite)'
+      }
+      // The working-year tax floor (2026-10-20, KTD11): the entered working-year investment income,
+      // aligned per person like the streams above (a short/long vector silently mis-maps a spouse's
+      // income — reject, never re-index), each slot a finite ≥ 0 annual real dollar (NaN-first: a NaN
+      // would poison the clamped year's base, and the overlay's backstop only sees the household sum).
+      const investment = acc.workingYearInvestmentByPerson
+      if (investment !== undefined) {
+        if (investment.length !== params.people.length)
+          return 'overlay accumulation workingYearInvestmentByPerson length must match people'
+        // An index loop, not `.every` — `.every` skips a hole, and a hole here is a silently $0 member.
+        for (let i = 0; i < investment.length; i++) {
+          const x = investment[i]
+          if (x === undefined || !finiteNonNeg(x))
+            return 'overlay accumulation workingYearInvestmentByPerson invalid (each slot finite ≥ 0, no holes)'
+        }
       }
       // The zero-balance start (C2 §2): stepYear's depletion predicate (`afterWithdrawal <= 0`)
       // would mark a $0-start run depleted at t = 0 and the depleted branch would silently swallow
@@ -1452,33 +1544,7 @@ export function simulate(
   const rho = market.stockBondCorrelation
   const sqrt1mRho2 = Math.sqrt(Math.max(0, 1 - rho * rho))
 
-  // The SS sub-engine resolves each person's actual benefit AMOUNTS from their PIA + claim age + birth
-  // year — own (claim-age-adjusted) + the Method-C spousal excess — ONCE, pre-loop. It depends on NONE
-  // of the date-search-swept fields (the sweep varies only retirementAge → the retire offset; claim
-  // offsets, pia, and birthYear are held verbatim), so it is candidate-invariant and consumes ZERO draws
-  // (CRN-safe). PIA=0 ⇒ {ownAnnual:0, spousalExcessAnnual:0} ⇒ byte-identical to the legacy
-  // socialSecurityReal=0 spine (validated birthYear keeps `fraMonthsForBirthYear` from throwing).
-  const benefitPeople: BenefitPerson[] = people.map((p) => ({
-    piaAnnual: p.pia,
-    claimAge: p.socialSecurityClaimAge,
-    birthYear: p.birthYear,
-  }))
-  const benefits = householdBenefits(benefitPeople)
-  const offsets: PersonOffsets[] = people.map((p, i) => ({
-    retire: p.retirementAge - p.currentAge,
-    claim: p.socialSecurityClaimAge - p.currentAge,
-    earnedIncomeReal: p.earnedIncomeReal,
-    socialSecurityReal: benefits[i]?.ownAnnual ?? 0,
-    spousalExcessAnnual: benefits[i]?.spousalExcessAnnual ?? 0,
-  }))
-  // The higher earner's claim offset — the START gate for the spousal excess (the worker must have filed,
-  // RS 00202.001). argmax pia, strict-`>` tie-to-first, mirroring householdBenefits' own `higher` rule (an
-  // equal-PIA tie carries a 0 excess either way, so the tie resolution is immaterial). Pre-loop, candidate-
-  // invariant (pia + claim are not swept). For people-of-one the lone person is its own "higher" and the
-  // excess is 0, so the gate has no effect.
-  let higherIdx = 0
-  for (let i = 1; i < people.length; i++) if ((people[i]?.pia ?? 0) > (people[higherIdx]?.pia ?? 0)) higherIdx = i
-  const higherClaimOffset = offsets[higherIdx]?.claim ?? 0
+  const { offsets, higherClaimOffset } = personOffsetsFor(people)
   const longevityPeople: LongevityPerson[] = people.map((p) => ({ sex: p.sex, currentAge: p.currentAge }))
 
   // Tax-and-accounts overlay (U2 · M6a) setup, computed once. `overlayPeople[i]` carries each
@@ -1655,6 +1721,10 @@ export function simulate(
     // the income construct is present (presence-keyed spread below ⇒ byte-identical reduce-to-spine).
     const ongoingTaxableGrossUp: number[] = []
     const ongoingTaxableIrmaaOnly: number[] = []
+    // The working-year tax floor (2026-10-20): each clamped year's outside income, a HOLE in every
+    // unclamped year — assembled per-path (the clamp is death-aware) from the SAME cash call that sets
+    // the year's net, and forwarded only when the accumulation construct rides with tax on.
+    const workingYearOutsideIncome: WorkingYearOutsideIncome[] = []
     for (let t = 0; t < horizon; t++) {
       const zs = sRow?.[t]
       const zbRaw = bRow?.[t]
@@ -1675,6 +1745,7 @@ export function simulate(
           ongoingTaxableGrossUp.push(cash.ongoingTaxableGrossUp)
           ongoingTaxableIrmaaOnly.push(cash.ongoingTaxableIrmaaOnly)
         }
+        if (cash.workingYearOutside !== undefined) workingYearOutsideIncome[t] = cash.workingYearOutside
         const living: OverlayPerson[] = []
         for (let i = 0; i < overlayPeople.length; i++) {
           const op = overlayPeople[i]
@@ -1687,10 +1758,13 @@ export function simulate(
         // validateParams' isBridgeYear EXACTLY (insight 020 — the guard keys to the hazard's
         // creator): under the accumulation construct the §7 clamp zeroes a zero-income worker's
         // draw-MAGI too, so their working years must also arm the overlay's fail-loud reads.
-        // Zero-draw, CRN-safe; consumed only by the overlay's two throw-or-nothing
-        // fail-loud arms (the masked lagged read + the ACA price gate), so supplying it can
-        // never perturb a value (byte-identity by construction).
-        if (overlay.healthcareEnabled) {
+        // Zero-draw, CRN-safe; consumed only by the overlay's throw-or-nothing fail-loud arms
+        // (the masked lagged read + the ACA price gate, both inside healthcare-gated blocks, and
+        // the working-year floor's wiring cross-check), so supplying it can never perturb a value
+        // (byte-identity by construction). Built whenever the construct is present too, not only
+        // under healthcare (the working-year tax floor, 2026-10-20, KTD5): under the construct the
+        // mask IS the §7 clamp, the cross-check's second witness.
+        if (overlay.healthcareEnabled || overlay.accumulation) {
           const accumulating = overlay.accumulation !== undefined
           bridgeMask.push(
             offsets.some(
@@ -1759,6 +1833,13 @@ export function simulate(
                 ongoingTaxableIrmaaOnly,
               }
             : {}),
+          // The working-year tax floor (2026-10-20, KTD5): spread ONLY when the accumulation construct
+          // rides with tax on (absent ⇒ the byte-identical pre-floor taxInputs). Inside `taxInputs`, so
+          // the essentials-floor pass inherits the SAME outside income (a tier changes the spend, never
+          // the pay). The mask rides whenever the construct does (the overlay's R8 cross-check reads
+          // the pair) — and under healthcare as before.
+          ...(overlay.accumulation && overlay.taxEnabled ? { workingYearOutsideIncome } : {}),
+          ...(overlay.healthcareEnabled || overlay.accumulation ? { bridgeYearMask: bridgeMask } : {}),
           // U3 · M3 Slice 4 healthcare streams: spread ONLY when the overlay is enabled, so a
           // healthcare-off run passes the byte-identical pre-Slice-4 taxInputs (reduce-to-spine).
           // validateParams has already rejected healthcareEnabled with tax off (indeterminate).
@@ -1772,11 +1853,11 @@ export function simulate(
                 // gate has already required it whenever a member is Medicare-ENROLLED (per-person onset,
                 // biological-65 default) in years 0..lookback−1.
                 irmaaMagiSeed: overlay.irmaaMagiSeed ?? [],
-                // C3 §3b: the per-person onset + the working-year additive override + the per-path
-                // bridge mask, all inside this healthcareEnabled spread so the healthcare-off
-                // taxInputs stay byte-identical. The mask is always supplied (throw-or-nothing —
-                // it can never perturb a value); onset/override spread only when present.
-                bridgeYearMask: bridgeMask,
+                // C3 §3b: the per-person onset + the working-year additive override, inside this
+                // healthcareEnabled spread so the healthcare-off taxInputs stay byte-identical; both
+                // spread only when present. (The per-path bridge mask is spread above, beside the
+                // working-year floor — whenever healthcare OR the construct rides; throw-or-nothing,
+                // it can never perturb a value.)
                 ...(overlay.medicareOnsetSimYear ? { medicareOnsetSimYear: overlay.medicareOnsetSimYear } : {}),
                 ...(overlay.irmaaMagiOverride ? { irmaaMagiOverride: overlay.irmaaMagiOverride } : {}),
                 // The ask-for-Medicare-extras per-person vector — inside the healthcareEnabled

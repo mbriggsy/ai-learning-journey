@@ -415,3 +415,62 @@ flowchart TB
 - **PA:** 61 Pa. Code §101.6(c)(7)–(8); the 2025 PA-40 instructions (Schedule SP Table 2); the PIT Guide's Tax Forgiveness chapter.
 - **The code:** `solveGrossWithdrawal` / `GrossUpContext` (`src/engine/taxOverlay.ts`); `cashTermsForYear` (`src/engine/simulate.ts`); the proportional rule (`src/engine/sequencing.ts`); `buildCandidateParams` (`src/engine/dateSearch.ts`); `buildHealthcareStreams` (`src/engine/healthcareStreams.ts`); `stateIncomeTax` (`src/engine/stateTax.ts`); `ENGINE_PRICING_LEDGER` (`src/engine/pricingVersion.ts`); `PRICING_FAMILY_READS` (`src/store/staleness.ts`); `buildSolveRequest` (`src/intake/solveDispatch.ts`); `METHODOLOGY_DISCLOSURES` (`src/ui/assumptionRegistry.ts`); `dateDipSeed` (`src/ui/devSeeds.ts`).
 - **The insights:** 027, 007, 135, 137, 023, 049, 029, 011.
+
+---
+
+## As built (2026-10-20)
+
+Built in one working tree (b9-5) and landed as one commit. This section records where the build departed from the plan text above, and what U4 measured. The sections above stay as planned.
+
+### The five decisions the build made
+
+1. **Exactness (KTD1).** Where a reading's base adds no tax of its own (T(base) === T(0, ss)), the charge is evaluated as T(base + P) directly. Elsewhere it is (T(base + P) − T(base)) + T(0, ss). The two forms are the same quantity. The first is bit-exact at base = 0, even when SS alone is taxable; the second is bit-exact at P = 0. Both corners return the pre-floor figure exactly (`taxOverlay.ts`, the EXACTNESS note above `WorkingYearOutsideIncome`).
+2. **I = 0 is a shortcut (KTD11).** At I = 0 only the excluded reading is evaluated, since the three readings coincide bit for bit there.
+3. **KTD6, refined.** The returned `ssBenefitTaxable` rides the provisional that carries B + I + P, which is the ordinary reading's. I is in AGI under either character (§86(b)(2)). `nonSSordinary` and `realizedGain` exclude both B and I.
+4. **The plan's ordinary-wins witness was wrong.** `dip`'s I = $10,000 prices the PREFERENTIAL reading at $5,880, not the ordinary reading's $5,380. The conversion lifts the $10,000 gain block past the $98,900 0 % edge, so the charge is 4,380 + 15 % × 10,000. U1's and U3's "ordinary-wins" expectations are therefore false as written. The ordinary-wins witness is B = 150,000, I = 80,000, X = 34,000 → **$7,888**. `dip`'s U3 integration figure is 5,880 / (1 − 0.22·s) = 6,917.88, with s = 238/349; the I = 0 rebuild stays 5,153.1149, and the zero-valued stream stays 193.1734.
+5. **A floor entry without the construct marker throws.** This is stricter than KTD5: the floor describes a §7-clamped year, and there is no clamp without the construct.
+
+### U4 — the measurement
+
+Run at `DEV_CRN_SEED` (0xbada55) on the pre-change tree and after, at both tiers and on both tracks.
+
+- **No crown moved.** No crown offset or kind, and no non-monotone set, moved on any date seed at either tier. Every point that moved, moved DOWN.
+- **`dip`.** The floor track is confirmed at 0 with no non-monotone offsets. The lifestyle track is confirmed at 5, nm [0,1,2] provisional and [0,1] final. The final tier was already [0,1] at HEAD: the docblock's "both tiers [0,1,2]" was stale and is corrected. The lifestyle grade fell one cell, 0.89 → 0.88, at both tiers (final p 0.8892 → 0.8866; provisional 0.8965 → 0.894). Offsets 0–4 are byte-identical.
+- **The other seeds.**
+  - `date`: confirmed at 9 on both tracks; p at Y9 0.8712 → 0.8699 (final), grade holds at 0.87.
+  - `date65` / `datenc` / `atceiling`: confirmed at 0; later offsets a few tenths of a point lower.
+  - `dateborder`: window-edge at 10; Y10 p 0.85356 → 0.8535; grade holds at 0.85.
+  - `datesplit` (floor at 2; lifestyle at 9 final, window-edge at 10 provisional) and `datemixed` (floor at 7; lifestyle no-date): moved under 0.0003, at the final tier only.
+- **Reach**, counted as clamped path-years at the provisional tier (2,000 paths), summed over Y = 0..10:
+
+| Seed | Channels reached |
+|---|---|
+| `dip` | conversion 36,000 (Y ≥ 5) · SS 30,000 (Y ≥ 6) |
+| `date` / `atceiling` | Medicare draw 29,330 · SS 12,051 (Y 6–10) |
+| `date65` / `datenc` | Medicare draw 101,451 (Y 1–10) · SS 84,448 (Y 2–10) · RMD 1,668 (Y = 10 only — Alex reaches 75 at t = 9) |
+| `dateborder` / `datesplit` / `datemixed` | SS only, 6,085 (Y 8–10) — they move through Medicare, not an income-tax draw: T(0, ss) is $0 in every one of those clamped years (benefits up to $48,000), so no draw funds it; the clamped year's taxable SS, now read on the provisional that carries the pay (KTD6), enters IRMAA-MAGI and is billed two years on (row v12's residual (b)). With healthcare off, the floor moves nothing on them, bit for bit |
+
+  Pension reach is 0 everywhere. I > 0 on `dip`, `date`, `date65`, `datenc` and `atceiling`. **Every date seed is reached.** The register's "no reach" for `date`, `dateborder`, `datesplit`, `datemixed` and `atceiling` came from a measurement of conversions and RMDs only.
+- **The preview.** `dip`'s crowned-candidate (Y = 5) conversion preview: the with-arm 0.8965 → 0.894, the without-arm unmoved at 0.955. Both read 9 of 10 on track, so no headline flipped and no Caddie walk is owed for the preview. No test pins a date-route preview figure; U3's "Preview" scenario is recorded in `dip`'s docblock, not as a test.
+- **Policies.** No date seed runs `bracket-fill`; all are `proportional`. Date-search wall time in a single-threaded probe rose about 5–19 %, measured with two probes and tests running concurrently, so the figure is noisy.
+- **No re-tune.** `dip`'s re-tune law did not fire (no lost dip, no lost crown), so no seed was re-tuned. `datearrived` and `datestale` need no settlement, since their base seeds' crowns did not move. Their pins were still to be confirmed by the fit gate when this was written.
+
+### Other as-built deltas
+
+- **U5's predicate keys outside income as B > 0 OR I > 0**, not B > 0 alone. With B = 0 and I > 0 the ordinary and preferential readings still sit on a non-zero base, so the charge can move. B = I = 0 stays exactly `'unpriced'`. The spine route walks its own built params through the same per-run code, instead of being declared unpriced because it is the spine. A throw while building candidates reads `'unknown'`. Single-death timelines are walked only under sampled longevity with at least two people, matching `simulate`. `'priced'` can over-read (a conversion clamped to an empty pre-tax pool, a premium the HSA pays), which is the direction the staleness module may err in; `'unpriced'` is exact.
+- **KTD7's PA bound was wrong as stated.** The "~$470" is 3.07 % × $15,250, the REAL increment at the worst corner. The engine already charges 3.07 % × that corner's $2,250, so the understatement is at most 3.07 % × $13,000 = **$399.10** a year, MFJ with no dependent children. That is $690.75 with one child, per the 2025 PA-40 instruction booklet p. 39, Eligibility Income Table 2. The constants note carries the verified figure.
+- **The PA in-service conversion question (KTD7) is unsettled.** It is filed in the register as a research item; the engine's PA age gate is unchanged.
+- **U7's row** renders as three short paragraphs: the premise and its one-way cost, the costliest-of-a-few-ways rule, and what is left out. No existing census counted the registry's rows, so the census, the banned-word guard and three engine-claim arms live in a new `src/ui/__tests__/workingYearTaxDisclosure.test.ts`. Two Caddie walks shaped it.
+  - The first (`wf_48998b24-de1`) walked the pilot's draft. It surfaced the §7 clamp's one-way cost, which the accumulation decision record required disclosed and which no string had ever said. It also surfaced a closing sentence that told an all-retired couple about an entry they never made, and that cold readers took for "our retirement dividends go untaxed".
+  - Briggsy then ruled the words PLAIN ("I feel like I need a PHD or lawyer with me to read our own verbiage") and chose a sentence for the yield gap himself. The NIIT clause stays his 2026-10-05 words verbatim.
+  - The second walk (`wf_78c8c7fe-9e0`) read the plain row. It moved three points:
+    - pay also funds the yearly contributions, so the shortfall test names the whole load;
+    - a conversion moves money inside savings, so it isn't "money out";
+    - the costliest reading sits above OR below the real tax.
+    It also read the yield sentence as a tax rule. A row of its own explaining that shortcut was, in his words, "another example of we are way off course", so the sentence was pulled and the gap stays filed. The third walk (`wf_9868160a-2c4`) read the shipped words, and its two surviving referent findings were re-worded inside their lines before land (the card in `docs/caddie/cold-read-log.md`).
+  - Filed the same day: the clamp's missing pay check, a new Tier 0 (*A working year never checks the household's pay against its spending…*). On the disclosure he said: "why the fuck not? what are we building???"
+  - Both gaps are examples for his OFF-COURSE discussion: "I really think we're off course here. A discussion for another day". It is owed before the queue resumes.
+- **Tax-off non-forwarding cannot be observed.** KTD5's "only when `taxEnabled`" gate on the stream cannot be seen through any output: with tax off nothing reads the stream. A planted mutant that forwards it anyway survives. The test pins that a tax-off run's output does not depend on I, not the gate itself.
+- **KTD3's and the Risks table's "an absurd B fails loud" is wrong.** Above B ≈ $1e8 the T(base + P) − T(base) cancellation quantizes the increment at about ulp(T(base)), roughly $1e-4 at B = $1e12. The iteration is monotone on that staircase, so it still lands on an exact fixed point: measured converging up to B = $2e12 and I = $1e12, with a sub-cent error and no throw. The written k derivation KTD3 asked for is in the `GROSS_UP_MAX_PASSES` comment; k_sup ≈ 0.78 stands under all three readings, so the council's flip condition does not fire.
+- **KTD8's residual (a) gave the wrong reason.** An NC vault reached only through SS is named for a state tax whose working-year charge did not move. The reason is that no draw funds SS's tax there: T(0, ss) is $0 at realistic benefits, so P = 0 and NC's base gains nothing. "NC exempts SS" is not the reason. Those vaults move only through IRMAA, residual (b). Row v12's `what` carries the corrected reason.
+- **Row v12's `shippedOn`** is the literal `'2026-10-20'`. If the commit lands after midnight, re-date it and the v12 literal in `pricingVersion.test.ts`.

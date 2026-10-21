@@ -29,7 +29,9 @@
  *     channel, D2-owned". It was not. `METHODOLOGY_DISCLOSURES` carried five rows — market,
  *     longevity, survivor-ss, outlive-order, conversion-tax — and none of them was healthcare.
  *     A false disclosure claim in a comment is worse than silence: it retires the very question
- *     that would have found the defect.)
+ *     that would have found the defect. Re-checked 2026-10-20: the registry now carries SIX rows —
+ *     the sixth, `working-year-tax`, prices working-year investment income, not healthcare — and the
+ *     residual this bullet names is closed by the ask-and-refuse above, never by a row.)
  *   - Gated working years carry an EXPLICIT 0 — an entered "no premium", never an absent
  *     hole: the validateParams date-route coverage arm treats ABSENT as the error (a silently
  *     healthcare-blind date), while the wage-blind arm rejects only POSITIVE premiums in
@@ -61,7 +63,26 @@
  *
  * PURE: a function of its arguments only — no clock/entropy/environment (engine-purity lint).
  * Death truncation is deliberately ABSENT here: streams are per-CANDIDATE, not per-path (one
- * transform cannot see per-path deaths); the death-path residual is disclosed (§7, D2-owned).
+ * transform cannot see per-path deaths). THE DEATH-PATH RESIDUAL, as modeled: on a path where the
+ * household's LAST worker dies at `d < windowStart`, the clamp stops at `d` (`simulate.ts`'s
+ * `cashTermsForYear` is death-aware) but every stream here keeps its working-window value through
+ * `windowStart` — so in `[d, windowStart)`:
+ *   - a retired pre-65 survivor's coverage is still $0 (`enrolledPremium` / `slcsp` gated to 0: the
+ *     plan at work the intake's premise leaned on was the worker's, and whatever replaces it is
+ *     unpriced — the OPTIMISTIC direction, on the flagship route's mixed household);
+ *   - `oopMedical` is still 0, so no HSA-qualified spend is sized in those years (the survivor's
+ *     spending hold reads its own scalar, `survivorOopMedicalReal`, and is untouched);
+ *   - the IRMAA-MAGI override still sums the dead worker's working-year figure to that worker's own
+ *     stop (the overlay adds it with no liveness gate), so a Medicare-enrolled survivor whose lookback
+ *     reads those years carries an OVERSTATED MAGI.
+ * UNDISCLOSED: no string a household reads names it — `employerCoverageHelp` says the tool counts no
+ * health costs for the stopped spouse "while one of you is still working", which reads as the
+ * OPPOSITE timing on a death path, and no METHODOLOGY_DISCLOSURES row is healthcare. Filed 2026-10-20:
+ * the register's Tier 0 *On a death path the surviving retired spouse's health coverage is priced at $0
+ * until the dead worker's planned stop date…*.
+ * (CORRECTED 2026-10-20: this line said "the death-path residual is disclosed (§7, D2-owned)". The
+ * accumulation decision record's §7 promised a disclosure through the §0 channel — the SAME channel
+ * the 2026-08-14 correction above found never shipped.)
  */
 
 /** One household member, in the builder's vocabulary: their whole-year age at sim year 0 and

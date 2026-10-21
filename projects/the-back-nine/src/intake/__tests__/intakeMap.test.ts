@@ -23,6 +23,7 @@ import { acaAgeRatingCurve, medicareCostTrend, medicareExtrasTypicalMonthly } fr
 import { employerPlan2026, catchUpForAge, hsa2026 } from '@engine/constants/contributions'
 import type { ScenarioDraft, PersonDraft } from '@store/memoryModel'
 import { copy } from '@ui/copy'
+import { DEV_SEEDS } from '@ui/devSeeds'
 
 /**
  * The intake→engine contract battery (D1 slice (e)).
@@ -1051,5 +1052,87 @@ describe('contribution streams (R31 + the step-down)', () => {
   it('a no-contribution household carries NO accumulation construct (presence-keyed §1)', () => {
     const params = buildSpineParams(completeSpineDraft())!
     expect(params.overlay!.accumulation).toBeUndefined()
+  })
+})
+
+// The working-year tax floor (2026-10-20 — `docs/plans/features/working-year-tax-floor-build-spec.md`
+// U3 · KTD11): `buildDateInput` derives the RAW per-person working-year investment vector beside the
+// IRMAA override under the SAME completeness gate, so the two can never disagree about a member —
+// the identity `override − earnedIncomeReal === investment` for every working member, 0 in both for a
+// retired one, and BOTH absent when a working member's figure is missing (never a silent $0). Whole
+// dollars ⇒ the identity is exact (`toBe`, never `toBeCloseTo`).
+describe('the working-year tax floor — the investment vector rides beside the IRMAA override (the KTD11 identity)', () => {
+  it('every working member of every date-route dev seed: override − earnedIncomeReal === I exactly; a retired member is 0 in both', () => {
+    let seeds = 0
+    let workingMembers = 0
+    let nonzeroSlots = 0
+    let retiredMembers = 0
+    for (const [key, d] of Object.entries(DEV_SEEDS)) {
+      const input = buildDateInput(d)
+      if (input === null) continue // the spine route (and a refusal seed) builds no date input
+      const override = input.workingYearIrmaaMagiByPerson
+      const investment = input.workingYearInvestmentByPerson
+      expect(override, `${key}: every date-route dev seed enters complete investment figures`).toBeDefined()
+      expect(investment, `${key}: the vector rides wherever the override does`).toBeDefined()
+      if (override === undefined || investment === undefined) continue
+      seeds++
+      expect(override.length, `${key}: override aligned to people`).toBe(d.people.length)
+      expect(investment.length, `${key}: I aligned to people`).toBe(d.people.length)
+      d.people.forEach((p, i) => {
+        if (p.workStatus === 'working') {
+          workingMembers++
+          // The ENGINE's pay figure (the built params the overlay reads), which must be the draft's own.
+          const earned = input.params.people[i]!.earnedIncomeReal
+          expect(earned, `${key} member ${i}: the built pay is the entered pay`).toBe(p.earnedIncomeReal)
+          expect(override[i]! - earned, `${key} member ${i}: override − earned === I`).toBe(investment[i])
+          if (investment[i]! > 0) nonzeroSlots++
+        } else {
+          retiredMembers++
+          expect(override[i], `${key} member ${i} (retired): override slot`).toBe(0)
+          expect(investment[i], `${key} member ${i} (retired): I slot`).toBe(0)
+        }
+      })
+    }
+    // Non-vacuity: the loop reached date seeds, working members with a real figure, and retired spouses.
+    expect(seeds, 'date-route seeds checked').toBeGreaterThan(0)
+    expect(workingMembers, 'working members checked').toBeGreaterThan(0)
+    expect(nonzeroSlots, 'working members with a nonzero investment figure').toBeGreaterThan(0)
+    expect(retiredMembers, 'retired members checked').toBeGreaterThan(0)
+  })
+
+  it('a RETIRED member’s entered figure never leaks — 0 in BOTH fields, and a retired member’s missing slot leaves the gate complete', () => {
+    const date = DEV_SEEDS.date // Alex working (150,000 of pay), the spouse retired
+    expect(date.people.map((p) => p.workStatus)).toEqual(['working', 'retired'])
+    const stale = buildDateInput({ ...date, health: { ...date.health, workingYearInvestmentByPerson: [30_000, 7_000] } })!
+    expect(stale.workingYearIrmaaMagiByPerson).toEqual([180_000, 0])
+    expect(stale.workingYearInvestmentByPerson, 'the retired spouse’s 7,000 never reaches the engine').toEqual([30_000, 0])
+    const short = buildDateInput({ ...date, health: { ...date.health, workingYearInvestmentByPerson: [30_000, undefined] } })!
+    expect(short.workingYearIrmaaMagiByPerson, 'only WORKING members gate completeness').toEqual([180_000, 0])
+    expect(short.workingYearInvestmentByPerson).toEqual([30_000, 0])
+  })
+
+  it('an INCOMPLETE entry (a working member’s figure missing, or the vector absent) ⇒ BOTH fields absent — no date input at all, the fact named', () => {
+    // The missing-facts gate refuses FIRST (`workInvestmentLabel` for each working member without a
+    // figure ⇒ `buildParams` null ⇒ `buildDateInput` null), so neither field can ever reach the engine
+    // as a silent $0. (`buildDateInput`'s own completeness gate is the inner defense behind it: every
+    // draft that passes the missing-facts gate is complete, so that inner arm is not reachable through
+    // this builder — what is pinned here is the public consequence.)
+    const dip = DEV_SEEDS.dip // both members working
+    const missingSlot: ScenarioDraft = { ...dip, health: { ...dip.health, workingYearInvestmentByPerson: [10_000, undefined] } }
+    expect(buildDateInput(missingSlot), 'a working member’s figure missing ⇒ no date input').toBeNull()
+    expect(missingRequiredFacts(missingSlot).filter((m) => m.labelKey === 'workInvestmentLabel')).toEqual([
+      { labelKey: 'workInvestmentLabel', personIndex: 1 },
+    ])
+    const { workingYearInvestmentByPerson: _absent, ...healthWithout } = dip.health
+    const absent: ScenarioDraft = { ...dip, health: healthWithout }
+    expect(buildDateInput(absent), 'the vector absent ⇒ no date input').toBeNull()
+    expect(missingRequiredFacts(absent).filter((m) => m.labelKey === 'workInvestmentLabel')).toEqual([
+      { labelKey: 'workInvestmentLabel', personIndex: 0 },
+      { labelKey: 'workInvestmentLabel', personIndex: 1 },
+    ])
+    // Control: the complete seed carries both (the refusal above is the gate, not the seed).
+    const complete = buildDateInput(dip)!
+    expect(complete.workingYearIrmaaMagiByPerson).toEqual([85_000, 35_000])
+    expect(complete.workingYearInvestmentByPerson).toEqual([10_000, 0])
   })
 })

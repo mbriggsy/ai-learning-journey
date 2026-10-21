@@ -16,6 +16,8 @@
  *     spoken as a Medicare sentence);
  *   · `solverCodeVersion` null only before the solver existed, then non-decreasing, never past the live
  *     `SOLVER_CODE_VERSION`;
+ *   · the row-level `reach` qualifier is ABSENT on rows 1–11 (the reader takes their family reads
+ *     verbatim, so they read exactly as before it existed) and names a real `PricingReach`;
  *   · `FIRST_UNAMBIGUOUS_SAVE_DAY` = the newest ship day + 1; the ledger array is frozen;
  *   · `PRICING_FAMILY_ORDER` (the ONE order the named method line speaks) covers every family once,
  *     Medicare LAST (its phrase carries its own trailing clause).
@@ -28,6 +30,7 @@ import {
   ENGINE_PRICING_VERSION,
   FIRST_UNAMBIGUOUS_SAVE_DAY,
   type PricingFamily,
+  type PricingReach,
 } from '@engine/pricingVersion'
 import { epochDayFromIsoDate } from '@engine/validation/oracleToken'
 import { SOLVER_CODE_VERSION } from '@engine/solver/solverCodeVersion'
@@ -44,6 +47,11 @@ const FAMILY_SET: Readonly<Record<PricingFamily, true>> = {
   spending: true,
 }
 const ALL_FAMILIES = Object.keys(FAMILY_SET) as readonly PricingFamily[]
+/** Every reach qualifier, the same compile-time-exhaustive way. */
+const REACH_SET: Readonly<Record<PricingReach, true>> = { 'working-years': true }
+const ALL_REACHES = Object.keys(REACH_SET) as readonly PricingReach[]
+/** The rows that shipped before the row-level reach existed (2026-10-20) — append-only, so pinned here. */
+const PRE_REACH_ROWS = 11
 
 /** An independent civil-date → epoch-day path (the `Date` global is test-legal here) — the ledger's own
  *  helper is Hinnant's days_from_civil, so agreeing with the UTC calendar is a second opinion. */
@@ -139,18 +147,60 @@ describe('ENGINE_PRICING_LEDGER — the append-only shape the staleness reader l
     }
   })
 
-  it('PIN (moves with the next solver bump): the solver is at 11, and the newest reprice row (the survivor-medical lean) shipped WITH 11 — a scored pricing change bumps both together', () => {
+  it('PIN (moves with the next solver bump): the solver is at 11; the survivor-medical lean (v11) shipped WITH 11, and the working-year tax floor (v12) records 11 WITHOUT a bump — it is unscored', () => {
     const newestReprice = [...rows].reverse().find((r) => r.kind === 'reprice')!
     expect(
-      { solverCodeVersion: SOLVER_CODE_VERSION, newestRepriceRow: newestReprice.solverCodeVersion },
+      {
+        solverCodeVersion: SOLVER_CODE_VERSION,
+        newestRepriceVersion: newestReprice.version,
+        newestRepriceRow: newestReprice.solverCodeVersion,
+        survivorLeanRow: rows.find((r) => r.version === 11)?.solverCodeVersion,
+      },
       'The budgetless survivor-medical lean (ledger v11, the `spending` family, 2026-10-08 council) is a SCORED pricing ' +
         'change — every candidate’s survivor-year spend moves, and Tier 1 ranks on survival — so it bumped ' +
         'SOLVER_CODE_VERSION 10 → 11 AND recorded 11 on its row. (Before it: the IRMAA growth base shipped with 7; v8, v9 ' +
-        'and v10 were ranking logic only and appended no row.) This pin MOVES with the next solver bump: a SCORED ' +
-        'pricing change bumps the solver AND appends a ledger row recording that same version (re-pin both numbers ' +
-        'together); a solver bump that is not a pricing change (ranking logic only) appends no row — re-pin only ' +
-        '`solverCodeVersion` and say why in the commit.',
-    ).toEqual({ solverCodeVersion: 11, newestRepriceRow: 11 })
+        'and v10 were ranking logic only and appended no row.) The working-year tax floor (ledger v12, 2026-10-20) is an ' +
+        'UNSCORED pricing change (the plan’s KTD9): the solver and the spend solve run only on the all-retired spine, ' +
+        'which has no living worker and so never a clamped working year — it records the live 11 and bumps nothing (a ' +
+        'bump would demote every retired household’s saved recommendation for a change that cannot reach it). This pin ' +
+        'MOVES with the next solver bump: a SCORED pricing change bumps the solver AND appends a ledger row recording ' +
+        'that same version (re-pin both numbers together); an UNSCORED one appends a row at the live version; a solver ' +
+        'bump that is not a pricing change (ranking logic only) appends no row — re-pin only `solverCodeVersion` and ' +
+        'say why in the commit.',
+    ).toEqual({ solverCodeVersion: 11, newestRepriceVersion: 12, newestRepriceRow: 11, survivorLeanRow: 11 })
+  })
+
+  it('the row-level `reach` is ABSENT on every row that shipped before it existed (v1–v11) — the reader takes those rows’ family reads verbatim', () => {
+    expect(rows.length, 'premise: the reach-era rows exist').toBeGreaterThan(PRE_REACH_ROWS)
+    for (const r of rows.slice(0, PRE_REACH_ROWS)) expect(r.reach, `v${r.version}`).toBeUndefined()
+    // Every reach that IS declared is a real qualifier (the reader's read table is exhaustive by type).
+    for (const r of rows) if (r.reach !== undefined) expect(ALL_REACHES, `v${r.version}: ${r.reach}`).toContain(r.reach)
+  })
+
+  it('v12 — the working-year tax floor: a reprice of `tax` + NC’s `stateTax`, gated row-wide on the `working-years` reach, shipped 2026-10-21 at solver 11', () => {
+    const v12 = rows.find((r) => r.version === 12)
+    expect(v12, 'the row exists').toBeDefined()
+    expect({
+      kind: v12!.kind,
+      families: v12!.families,
+      states: v12!.states,
+      reach: v12!.reach,
+      shippedOn: v12!.shippedOn,
+      solverCodeVersion: v12!.solverCodeVersion,
+    }).toEqual({
+      kind: 'reprice',
+      families: ['tax', 'stateTax'],
+      states: ['NC'],
+      reach: 'working-years',
+      shippedOn: '2026-10-21',
+      solverCodeVersion: 11,
+    })
+    // The `what` carries the plan's three KTD8 residuals for the next reader (never rendered).
+    expect(v12!.what).toMatch(/no draw funds SS’s tax there/)
+    expect(v12!.what).toMatch(/second-order Medicare move/)
+    expect(v12!.what).toMatch(/stale-PWA residual/)
+    // The copy law reaches the ledger's prose too: the floor is described by HOW it is modeled.
+    expect(v12!.what).not.toMatch(/conservative|worst case|\bfixed\b/i)
   })
 
   it('FIRST_UNAMBIGUOUS_SAVE_DAY is the day AFTER the newest ship day (a save ON a ship day is the ambiguous day)', () => {

@@ -28,6 +28,7 @@ import { copy, slots } from '../copy'
 import type { PricedState } from '@engine/constants/stateTax'
 import type { ScenarioV3 } from '@shared/model'
 import type { DateTrackOutcome } from '@shared/model'
+import type { ScenarioDraft } from '@store/memoryModel'
 
 afterEach(cleanup)
 
@@ -129,7 +130,7 @@ describe('composeReentry — the read-back', () => {
     } as ScenarioV3
     const view = composeReentry(doctored, reportFor(doctored))
     expect(view.noteLines).toContain(copy.stalenessTax)
-    // U17 §S4 — `coverageYear` dates the ACA/IRMAA tables (model.ts:2344), so for THIS all-65+
+    // U17 §S4 — `coverageYear` dates the ACA/IRMAA tables (model.ts:2355), so for THIS all-65+
     // household it names the Medicare half and only that: they price the IRMAA ladder every
     // year and zero marketplace years. Not the old collapsed "Health-coverage rules" line, and
     // not the nameless aggregate the first cut mis-bucketed it to.
@@ -595,6 +596,91 @@ describe('composeReentry — the engine-pricing lines', () => {
       expect(onDayReport.rulesMoved, `saved ${day}`).toBe(false)
       expect(composeReentry(onDay, onDayReport).noteLines.every((l) => isMethodLine(l) || PRICING_LINES.has(l)), `saved ${day}`).toBe(true)
     }
+  })
+})
+
+// =============================================================================================
+// THE WORKING-YEAR TAX FLOOR AT THE GATE (ledger v12, 2026-10-20 — the plan's U5). End to end, seed →
+// built params → exposure (the engine's own `workingYearTaxReach` walk) → report → rendered sentence: a
+// date-route vault the floor can reach hears the shipped "your taxes" line (and "your state tax" in NC);
+// a retired vault, an NC one included, and an unreachable date-route vault hear nothing new.
+// =============================================================================================
+describe('composeReentry — the working-year tax floor (ledger v12)', () => {
+  const V12 = ENGINE_PRICING_LEDGER.find((r) => r.version === 12)!
+  /** The day before v12 shipped — after v11 (2026-10-09), so v12 is the only row this save crosses. */
+  const DAY_BEFORE = V12.sinceEpochDay - 1
+  const savedOnDay = (s: ScenarioV3, savedAt: number): ScenarioV3 => ({ ...s, savedAt })
+  const linesFor = (key: keyof typeof DEV_SEEDS | ScenarioV3, exposure: StalenessExposure, savedAt: number) => {
+    const s = savedOnDay(typeof key === 'string' ? scenarioFor(key) : key, savedAt)
+    return composeReentry(s, deriveStaleness(s, TODAY, exposure)).noteLines
+  }
+  /** `date` made young and two-earner (45 + 47) — nothing in any clamped year for the floor to price. A
+   *  still-working person carries no retirement age (the save gate refuses one), so Sam's is dropped. */
+  const { retirementAge: _samRetired, ...sam } = DEV_SEEDS.date.people[1]!
+  const youngDraft: ScenarioDraft = {
+    ...DEV_SEEDS.date,
+    people: [
+      { ...DEV_SEEDS.date.people[0]!, birthYear: 1981, currentAge: 45 },
+      { ...sam, birthYear: 1979, currentAge: 47, workStatus: 'working' as const, earnedIncomeReal: 60_000 },
+    ],
+  }
+  const youngScenario = (): ScenarioV3 => {
+    const r = scenarioFromDraft(youngDraft)
+    if (!r.ready) throw new Error('the unreached date-route draft must be save-ready')
+    return r.scenario
+  }
+
+  it('premise: v12 is the working-year floor row (tax + NC state tax, gated on the working-years reach), and the day before it crosses no other row', () => {
+    expect({ families: V12.families, states: V12.states, reach: V12.reach }).toEqual({
+      families: ['tax', 'stateTax'],
+      states: ['NC'],
+      reach: 'working-years',
+    })
+    expect(ENGINE_PRICING_LEDGER.filter((r) => r.sinceEpochDay >= DAY_BEFORE).map((r) => r.version)).toEqual([12])
+  })
+
+  it('a `dip` vault saved before the ship day renders the shipped tax line — exactly that sentence, nothing else', () => {
+    const exposure = exposureForDraft(DEV_SEEDS.dip)
+    expect(exposure.workingYearTax, 'premise: the floor reaches dip (its year-4 conversion on top of its pay)').toBe('priced')
+    const lines = linesFor('dip', exposure, DAY_BEFORE)
+    expect(lines).toEqual([slots.stalenessPricing(copy.stalenessPricingTax)])
+    // The rendered words, typed out (the slot is the producer; this pins what the household reads).
+    expect(lines[0]).toBe('Since your save, we’ve changed how this tool works out your taxes. This reading uses the current method.')
+  })
+
+  it('a `datenc` vault adds "your state tax" — NC’s AGI-derived base takes the pay too', () => {
+    const exposure = exposureForDraft(DEV_SEEDS.datenc)
+    expect(exposure.workingYearTax).toBe('priced')
+    expect(exposure.pricedState).toBe('NC')
+    expect(linesFor('datenc', exposure, DAY_BEFORE)).toEqual([
+      slots.stalenessPricing(`${copy.stalenessPricingTax} and ${copy.stalenessPricingStateTax}`),
+    ])
+  })
+
+  it('RETIRED vaults crossing v12 — `retired`, and `nc` (an NC-priced retired household) — get NO v12 line: their taxes did not move', () => {
+    expect(linesFor('retired', RETIRED_EXPOSURE, DAY_BEFORE)).toEqual([])
+    const ncExposure = exposureForDraft(DEV_SEEDS.nc)
+    expect(ncExposure.pricedState, 'premise: the run prices NC').toBe('NC')
+    expect(ncExposure.workingYearTax, 'premise: and reaches no working year').toBe('unpriced')
+    expect(linesFor('nc', ncExposure, DAY_BEFORE)).toEqual([])
+  })
+
+  it('an UNREACHABLE date-route vault crossing v12 gets no line', () => {
+    const exposure = exposureForDraft(youngDraft)
+    expect(exposure.workingYearTax, 'premise: unreached').toBe('unpriced')
+    expect(linesFor(youngScenario(), exposure, DAY_BEFORE)).toEqual([])
+  })
+
+  it('THE SHIP DAY: an unreached vault saved ON v12’s day is silent; a reached one is spoken namelessly', () => {
+    expect(linesFor(youngScenario(), exposureForDraft(youngDraft), V12.sinceEpochDay)).toEqual([])
+    expect(linesFor('dip', exposureForDraft(DEV_SEEDS.dip), V12.sinceEpochDay)).toEqual([copy.stalenessPricingHedged])
+  })
+
+  it('GUARD: a retired vault saved before the ledger began STILL names "your taxes" — the reach gates v12 alone, never the rows before it', () => {
+    const lines = linesFor('retired', RETIRED_EXPOSURE, ENGINE_PRICING_LEDGER[0]!.sinceEpochDay - 1)
+    const method = lines.filter((l) => l.startsWith(slots.stalenessPricing('\u0000').split('\u0000')[0]!))
+    expect(method).toHaveLength(1)
+    expect(method[0]).toContain(copy.stalenessPricingTax)
   })
 })
 

@@ -29,12 +29,22 @@
  * inside S, and above S (the clamp). Its pin is the family's first; a planted pre-v11 composition (M
  * ignored) moves it 3,410,359,151 → 2,319,140,495, so the grid sees the change the row records.
  *
+ * THE WORKING-YEAR FLOOR PROBES (ledger v12, 2026-10-20). The `tax` grid gained the floor's two exported
+ * helpers (`prepareWorkingYearFloor` + `workingYearFederalCharge`, the exact calls the gross-up makes in a
+ * §7-clamped year) over B, I, SS and the portfolio's own income, with the floor-ABSENT figure beside them;
+ * the `stateTax` grid gained the wage axis (`clampedOrdinaryBase`) and the floor's state charge. When v12
+ * appended, both pins read `'row-unpinned'` with the digest UNMOVED — the old grids could not see the
+ * floor — so the grids were widened, not the pins merely bumped. The pre-v12 probes are kept as a
+ * verbatim slice that still digests to the v6 pins (the floor is additive), and a "floor ignored" mutant
+ * (the helper handed B = 0, or I = 0, or a zero wage) is kept as an arm that must move each digest.
+ *
  * CROSS-ENGINE GUARD: every pricer here is basic IEEE arithmetic (no transcendental), but a probe value
  * whose fractional part sat within 1e-4 of .5 would still round on a knife edge. One arm asserts no
  * probe output does, so a CI Linux run can never flip a digest a Windows run pinned.
  *
  * WHAT IT CANNOT SEE (so no one reads a green run as total): only these pure pricers are probed. A change
- * in how they are COMPOSED — the tax overlay's gross-up fixed point, the IRMAA two-year lag and survivor
+ * in how they are COMPOSED — the tax overlay's gross-up fixed point (including WHICH years carry a
+ * working-year floor, and the B / I `simulate.cashTermsForYear` hands it), the IRMAA two-year lag and survivor
  * filing flip, the RMD path, or `intakeMap`'s draft → params mapping beyond the quote escalator — can move
  * a saved household's recompute with every digest here unmoved. The ledger's append discipline still
  * binds those changes; this gate simply cannot enforce it for them.
@@ -59,6 +69,7 @@ import { nextIrmaaStep } from '@engine/magiLandscape'
 import { acaApplicablePercentage, acaApplicablePercentageEnhanced, irmaa, PRICED_STATES } from '@engine/constants'
 import { ACCOUNT_KINDS, FILING_STATUSES, type FilingStatus, type MarketAssumptions, type PersonInputs, type SimulationParams } from '@shared/model'
 import { cashTermsForYear } from '@engine/simulate'
+import { prepareWorkingYearFloor, workingYearFederalCharge, workingYearStateCharge } from '@engine/taxOverlay'
 import { annualAdditionsCeilingFor, contributionCeilingInYear } from '@intake/sanity'
 import { escalateQuote } from '@intake/intakeMap'
 
@@ -87,7 +98,24 @@ const erase = <G,>(p: FamilyProbe<G>): ErasedProbe => ({
 const NONE = -1
 
 // ── tax: the deduction stack (+ the windowed, deflated, per-person senior bonus), §86 SS taxation
-//    (deflated thresholds), ordinary tax, ordinary + LTCG ─────────────────────────────────────────
+//    (deflated thresholds), ordinary tax, ordinary + LTCG — and (ledger v12) the working-year tax
+//    floor's two exported helpers, with the floor-absent figure beside them ────────────────────────
+/** The working-year tax floor's probe (ledger v12, 2026-10-20): `prepareWorkingYearFloor` +
+ *  `workingYearFederalCharge` — the exact helpers `solveGrossWithdrawal` calls in a §7-clamped year —
+ *  over the outside income B (taxable pay + clamped ongoing taxable) and I (entered working-year
+ *  investment income, the three readings), beside SS and the portfolio's own ordinary / gain income P.
+ *  The floor-ABSENT figure (the gross-up's own pre-floor expression, T(P, ss)) rides the digest too: it
+ *  is the control the B = I = 0 corner must reproduce bit for bit (R3 — the arm below). */
+interface FloorGrid {
+  readonly years: readonly number[]
+  readonly ss: readonly number[]
+  /** B — the outside ordinary base. */
+  readonly bases: readonly number[]
+  /** I — the entered working-year investment income. */
+  readonly investments: readonly number[]
+  /** P — what the portfolio supplies: [ordinary (RMD/draw/conversion), realized gain]. */
+  readonly portfolio: ReadonlyArray<readonly [ordinary: number, gain: number]>
+}
 interface TaxGrid {
   readonly years: readonly number[]
   readonly magis: readonly number[]
@@ -95,13 +123,77 @@ interface TaxGrid {
   readonly ssBenefit: readonly number[]
   readonly ordinary: readonly number[]
   readonly gains: readonly number[]
+  readonly floor: FloorGrid
 }
 const count65sFor = (filing: FilingStatus): readonly number[] => (filing === 'mfj' ? [0, 1, 2] : [0, 1])
+/** The gross-up's floor-ABSENT federal expression — the §86 provisional over ordinary + gain, the taxable
+ *  SS added to the ordinary base, the gain stacked on top (`taxOverlay.federalTaxBesideSs`'s order of
+ *  operations, which is module-private; re-composed here from the same exported pricers). */
+const floorAbsentTax = (ordinary: number, gain: number, ss: number, filing: FilingStatus, c: number, y: number): number =>
+  ordinaryPlusCapitalGainsTax(ordinary + taxableSocialSecurity(ordinary + gain, ss, filing, y), gain, filing, c, y)
+/** The pre-v12 tax probes, VERBATIM — kept as their own slice so the arm below can prove the floor is
+ *  purely additive: this slice still digests to the v6 pin. */
+const taxLegacyProbes = (g: TaxGrid): Probed => {
+  const out: Array<readonly [string, number]> = []
+  for (const filing of FILING_STATUSES) {
+    for (const y of g.years) {
+      for (const c of count65sFor(filing)) {
+        for (const m of g.magis) out.push([`deductionStack ${filing} ${c}×65 magi ${m} ${y}`, deductionStack(filing, c, m, y)])
+        for (const o of g.ordinary) out.push([`ordinaryIncomeTax ${filing} ${c}×65 ${o} ${y}`, ordinaryIncomeTax(o, filing, c, y)])
+        for (const o of g.ordinary.slice(0, 3)) {
+          for (const gain of g.gains) {
+            out.push([`ordinary+LTCG ${filing} ${c}×65 ${o}+${gain} ${y}`, ordinaryPlusCapitalGainsTax(o, gain, filing, c, y)])
+          }
+        }
+      }
+      for (const o of g.ssOther) {
+        for (const b of g.ssBenefit) out.push([`taxableSS ${filing} other ${o} benefit ${b} ${y}`, taxableSocialSecurity(o, b, filing, y)])
+      }
+    }
+  }
+  return out
+}
+/** The floor probes. `outsideFor` is the seam the planted "floor ignored" mutant is recorded through
+ *  (the B the helper is handed) — identity here. */
+const taxFloorProbes = (
+  f: FloorGrid,
+  outsideFor: (b: number, i: number) => { ordinaryBase: number; investmentIncome: number } = (b, i) => ({ ordinaryBase: b, investmentIncome: i }),
+): Probed => {
+  const out: Array<readonly [string, number]> = []
+  for (const filing of FILING_STATUSES) {
+    for (const y of f.years) {
+      for (const c of count65sFor(filing)) {
+        for (const ss of f.ss) {
+          for (const [po, pg] of f.portfolio) {
+            out.push([`floor-absent ${filing} ${c}×65 ss ${ss} P ${po}+${pg} ${y}`, floorAbsentTax(po, pg, ss, filing, c, y)])
+          }
+          for (const b of f.bases) {
+            for (const i of f.investments) {
+              const floor = prepareWorkingYearFloor(outsideFor(b, i), { ssBenefit: ss, filing, count65: c, calendarYear: y, minLivingAge: 60 })
+              for (const [po, pg] of f.portfolio) {
+                const charge = workingYearFederalCharge(floor, po, pg)
+                const at = `${filing} ${c}×65 ss ${ss} B ${b} I ${i} P ${po}+${pg} ${y}`
+                out.push([`floor tax ${at}`, charge.tax])
+                out.push([`floor ssTaxable ${at}`, charge.ssTaxable])
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return out
+}
 /** The tax inputs carry ODD CENTS on purpose: round-dollar inputs × the statutory rates (10/12/15/22/
  *  24/32/35/37 %, the 6 % phase-out, the 50/85 % SS inclusions) land EXACTLY on $x.50 — 75 such probe
  *  outputs in the first cut — which the cross-engine guard below refuses. Exact is not the hazard
  *  (IEEE basic arithmetic is identical everywhere), but a digest is only as robust as its most
- *  knife-edged value, so the grid is moved off the edge rather than the guard relaxed. */
+ *  knife-edged value, so the grid is moved off the edge rather than the guard relaxed. The floor grid
+ *  follows the same rule; its years straddle the senior-bonus window (2027 in, 2030 out) and a deflated
+ *  §86 year (2041), its B values both sides of the deduction and across brackets, its I values the
+ *  `dip`-scale and a gain-dominant one, its P values a conversion, a mixed draw and a large RMD. Its
+ *  large SS value carries a tax of its own (T(0, ss) > 0) in the deflated years, where the floor's
+ *  EXACTNESS branch is what keeps the B = I = 0 corner bit-exact — the control arm below reads it. */
 const TAX: FamilyProbe<TaxGrid> = {
   grid: {
     years: [2025, 2026, 2027, 2028, 2029, 2031, 2036, 2046, 2061],
@@ -110,27 +202,20 @@ const TAX: FamilyProbe<TaxGrid> = {
     ssBenefit: [0, 18_017.19, 37_023.47, 61_031.67],
     ordinary: [20_013.37, 60_047.11, 120_089.73, 250_131.19, 600_173.83],
     gains: [0, 40_021.29, 150_067.41],
+    floor: {
+      years: [2026, 2027, 2030, 2041],
+      ss: [0, 31_013.29, 143_013.29],
+      bases: [0, 21_011.37, 102_003.67, 251_029.13],
+      investments: [0, 10_007.23, 80_011.59],
+      portfolio: [
+        [0, 0],
+        [34_001.19, 0],
+        [12_003.31, 7_009.87],
+        [90_021.53, 0],
+      ],
+    },
   },
-  run: (g) => {
-    const out: Array<readonly [string, number]> = []
-    for (const filing of FILING_STATUSES) {
-      for (const y of g.years) {
-        for (const c of count65sFor(filing)) {
-          for (const m of g.magis) out.push([`deductionStack ${filing} ${c}×65 magi ${m} ${y}`, deductionStack(filing, c, m, y)])
-          for (const o of g.ordinary) out.push([`ordinaryIncomeTax ${filing} ${c}×65 ${o} ${y}`, ordinaryIncomeTax(o, filing, c, y)])
-          for (const o of g.ordinary.slice(0, 3)) {
-            for (const gain of g.gains) {
-              out.push([`ordinary+LTCG ${filing} ${c}×65 ${o}+${gain} ${y}`, ordinaryPlusCapitalGainsTax(o, gain, filing, c, y)])
-            }
-          }
-        }
-        for (const o of g.ssOther) {
-          for (const b of g.ssBenefit) out.push([`taxableSS ${filing} other ${o} benefit ${b} ${y}`, taxableSocialSecurity(o, b, filing, y)])
-        }
-      }
-    }
-    return out
-  },
+  run: (g) => [...taxLegacyProbes(g), ...taxFloorProbes(g.floor)],
   perturb: (g) => ({ ...g, magis: g.magis.map((m) => (m === 150_011.29 ? 151_011.29 : m)) }),
 }
 
@@ -141,6 +226,66 @@ interface StateGrid {
   readonly years: readonly number[]
   readonly ages: readonly number[]
   readonly channels: readonly StateChannels[]
+  /** The working-year floor's WAGE axis (ledger v12): `clampedOrdinaryBase` — a clamped year's outside
+   *  ordinary income B + I, which NC's AGI-derived base takes and PA / FL ignore structurally. The
+   *  ABSENT value is the legacy slice above it (kept verbatim). */
+  readonly wages: readonly number[]
+  /** The floor's state half (`workingYearStateCharge`): [B, I] pairs, at a subset of the years. */
+  readonly floorOutside: ReadonlyArray<readonly [b: number, i: number]>
+  readonly floorYears: readonly number[]
+}
+/** The pre-v12 state probes, VERBATIM (the channel grid with no wage) — the slice the arm below proves
+ *  still digests to the v6 pin. */
+const stateLegacyProbes = (g: StateGrid): Probed => {
+  const out: Array<readonly [string, number]> = []
+  for (const state of PRICED_STATES) {
+    for (const filing of FILING_STATUSES) {
+      for (const calendarYear of g.years) {
+        for (const minLivingAge of g.ages) {
+          g.channels.forEach((ch, i) => {
+            out.push([
+              `stateIncomeTax ${state} ${filing} ${calendarYear} age ${minLivingAge} channels#${i}`,
+              stateIncomeTax({ state, filing, calendarYear, minLivingAge, ...ch }),
+            ])
+          })
+        }
+      }
+    }
+  }
+  return out
+}
+/** The wage axis and the floor's state charge. `wageFor` is the planted-mutant seam (the base the
+ *  pricer is handed) — identity here. */
+const stateWageProbes = (g: StateGrid, wageFor: (w: number) => number = (w) => w): Probed => {
+  const out: Array<readonly [string, number]> = []
+  for (const state of PRICED_STATES) {
+    for (const filing of FILING_STATUSES) {
+      for (const calendarYear of g.years) {
+        for (const minLivingAge of g.ages) {
+          g.channels.forEach((ch, i) => {
+            for (const w of g.wages) {
+              out.push([
+                `stateIncomeTax ${state} ${filing} ${calendarYear} age ${minLivingAge} channels#${i} wage ${w}`,
+                stateIncomeTax({ state, filing, calendarYear, minLivingAge, ...ch, clampedOrdinaryBase: wageFor(w) }),
+              ])
+            }
+          })
+        }
+      }
+      for (const calendarYear of g.floorYears) {
+        for (const [b, i] of g.floorOutside) {
+          const floor = prepareWorkingYearFloor(
+            { ordinaryBase: wageFor(b), investmentIncome: i },
+            { ssBenefit: 0, filing, count65: 0, calendarYear, pricedState: state, minLivingAge: 58 },
+          )
+          g.channels.forEach((ch, k) => {
+            out.push([`workingYearStateCharge ${state} ${filing} ${calendarYear} B ${b} I ${i} channels#${k}`, workingYearStateCharge(floor, ch)])
+          })
+        }
+      }
+    }
+  }
+  return out
 }
 const STATE_TAX: FamilyProbe<StateGrid> = {
   grid: {
@@ -156,25 +301,16 @@ const STATE_TAX: FamilyProbe<StateGrid> = {
       { pretaxDistribution: 11_000, conversion: 0, ongoingTaxable: 0, realizedGain: 0, ssBenefitTaxable: 0 },
       { pretaxDistribution: 91_000, conversion: 47_000, ongoingTaxable: 13_000, realizedGain: 21_000, ssBenefitTaxable: 29_000 },
     ],
+    // Both sides of NC's (deflated) $25,500 MFJ / $12,750 single deduction, and a large wage.
+    wages: [0, 9_013.41, 41_007.29, 150_019.83],
+    floorOutside: [
+      [0, 0],
+      [9_013.41, 0],
+      [102_003.67, 10_007.23],
+    ],
+    floorYears: [2026, 2030, 2040],
   },
-  run: (g) => {
-    const out: Array<readonly [string, number]> = []
-    for (const state of PRICED_STATES) {
-      for (const filing of FILING_STATUSES) {
-        for (const calendarYear of g.years) {
-          for (const minLivingAge of g.ages) {
-            g.channels.forEach((ch, i) => {
-              out.push([
-                `stateIncomeTax ${state} ${filing} ${calendarYear} age ${minLivingAge} channels#${i}`,
-                stateIncomeTax({ state, filing, calendarYear, minLivingAge, ...ch }),
-              ])
-            })
-          }
-        }
-      }
-    }
-    return out
-  },
+  run: (g) => [...stateLegacyProbes(g), ...stateWageProbes(g)],
   perturb: (g) => ({ ...g, channels: g.channels.map((c, i) => (i === 1 ? { ...c, pretaxDistribution: 39_000 } : c)) }),
 }
 
@@ -532,18 +668,30 @@ export function checkWitness(
 
 /**
  * THE PINS — the baseline, computed from the tree the ledger shipped with (ledger v10, 2026-09-27;
- * the `spending` family first pinned at ledger v11, 2026-10-09). `atVersion` = the newest row declaring
- * the family (`aca`: none yet). Re-pin ONLY as `checkWitness`'s message prescribes.
+ * the `spending` family first pinned at ledger v11, 2026-10-09; `tax` and `stateTax` re-pinned at ledger
+ * v12, 2026-10-20, the working-year tax floor). `atVersion` = the newest row declaring the family
+ * (`aca`: none yet). Re-pin ONLY as `checkWitness`'s message prescribes.
  */
 const PINNED: Readonly<Record<PricingFamily, WitnessPin>> = {
-  tax: { atVersion: 6, digest: 16_675_659 },
-  stateTax: { atVersion: 6, digest: 612_050_713 },
+  // v12 (the working-year tax floor): the grids GREW (the floor helpers; the wage axis) — the pre-v12
+  // probes are a verbatim slice that still digests to the v6 pins below ({@link PRE_FLOOR_PINS}).
+  tax: { atVersion: 12, digest: 934_978_903 },
+  stateTax: { atVersion: 12, digest: 556_955_509 },
   medicare: { atVersion: 10, digest: 412_678_172 },
   aca: { atVersion: 0, digest: 2_928_507_043 },
   contributions: { atVersion: 6, digest: 2_046_752_883 },
   // NEW at ledger v11 (the survivor-medical lean) — the family's first pin, so no prior digest.
   spending: { atVersion: 11, digest: 3_410_359_151 },
 }
+
+/** The `tax` / `stateTax` pins as they stood before ledger v12 — the digest of each family's LEGACY
+ *  slice (the probes that existed then, verbatim). Two arms read them: the floor is purely ADDITIVE
+ *  (every pre-floor pricer output is byte-identical — R5), and against the shipped ledger these pins
+ *  read `'row-unpinned'` (v12 declares both families, so they could never have stayed). */
+const PRE_FLOOR_PINS = {
+  tax: { atVersion: 6, digest: 16_675_659 },
+  stateTax: { atVersion: 6, digest: 612_050_713 },
+} as const satisfies Partial<Record<PricingFamily, WitnessPin>>
 
 // =============================================================================================
 // The arms.
@@ -577,6 +725,79 @@ describe('the pricing witness — a moved pricer with no ledger row is LOUD', ()
     expect(witnessDigest(nudged)).not.toBe(witnessDigest(base))
     // …and the grid is not degenerate: it produces many distinct whole-dollar answers.
     expect(new Set(wholeDollars(base)).size, `${family}: distinct outputs`).toBeGreaterThan(10)
+  })
+})
+
+describe('the working-year tax floor’s probes (ledger v12, 2026-10-20) — additive, controlled, and not blind', () => {
+  const floorGrid = TAX.grid.floor
+
+  it('the floor is purely ADDITIVE: each family’s legacy slice (the pre-v12 probes, verbatim) still digests to its pre-v12 pin', () => {
+    // R5 at the pricer level: every output the witness pinned before the floor is byte-identical after
+    // it — the re-pin at v12 is the grid GROWING, never a pre-floor price moving.
+    expect(witnessDigest(taxLegacyProbes(TAX.grid)), 'tax legacy slice').toBe(PRE_FLOOR_PINS.tax.digest)
+    expect(witnessDigest(stateLegacyProbes(STATE_TAX.grid)), 'stateTax legacy slice').toBe(PRE_FLOOR_PINS.stateTax.digest)
+  })
+
+  it('THE CONTROL (R3): at B = I = 0 the floor helpers return the floor-ABSENT figure BIT FOR BIT, at every probe point — and the base moves it where it should', () => {
+    // The "pay never lowers the charge" check below is a property of this grid's SMALL benefits only:
+    // past the §86 85 %-of-benefit cap at a large benefit the pay CAN lower the portfolio's increment (KTD4
+    // — regime-conditional; the floor block's §86-cap arm pins one), so the large SS value skips it.
+    const MONOTONE_SS_MAX = 31_013.29
+    let checked = 0
+    let movedByBase = 0
+    let ssTaxedAlone = 0
+    for (const filing of FILING_STATUSES) {
+      for (const y of floorGrid.years) {
+        for (const c of count65sFor(filing)) {
+          for (const ss of floorGrid.ss) {
+            const ctx = { ssBenefit: ss, filing, count65: c, calendarYear: y, minLivingAge: 60 }
+            const zero = prepareWorkingYearFloor({ ordinaryBase: 0, investmentIncome: 0 }, ctx)
+            const withPay = prepareWorkingYearFloor({ ordinaryBase: 102_003.67, investmentIncome: 0 }, ctx)
+            if (zero.zeroTax > 0) ssTaxedAlone += 1
+            for (const [po, pg] of floorGrid.portfolio) {
+              const absent = floorAbsentTax(po, pg, ss, filing, c, y)
+              const at = `${filing} ${c}×65 ss ${ss} P ${po}+${pg} ${y}`
+              expect(Object.is(workingYearFederalCharge(zero, po, pg).tax, absent), `B = I = 0: ${at}`).toBe(true)
+              checked += 1
+              const paid = workingYearFederalCharge(withPay, po, pg).tax
+              // On this grid's small benefits the pay never lowers the charge — a grid property, not a law.
+              if (ss <= MONOTONE_SS_MAX) expect(paid, `B > 0 never charges less: ${at}`).toBeGreaterThanOrEqual(absent - 1e-6)
+              if (po + pg > 0 && paid > absent + 1) movedByBase += 1
+            }
+          }
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(100)
+    expect(movedByBase, 'non-vacuity: $102,003.67 of pay lifts the charge on portfolio income at many probe points').toBeGreaterThan(20)
+    expect(ssTaxedAlone, 'non-vacuity: the large benefit carries a tax of its own (T(0, ss) > 0), so the exactness branch is read').toBeGreaterThan(0)
+  })
+
+  it('FLOOR IGNORED (the recorded "helper ignores B" mutant, kept as an arm): handing the helper B = 0 — or I = 0 — moves the tax digest off its pin', () => {
+    const pinned = witnessDigest(TAX.run(TAX.grid))
+    expect(pinned, 'premise: the live grid is the pinned one').toBe(PINNED.tax.digest)
+    const ignoringB = witnessDigest([...taxLegacyProbes(TAX.grid), ...taxFloorProbes(floorGrid, (_b, i) => ({ ordinaryBase: 0, investmentIncome: i }))])
+    const ignoringI = witnessDigest([...taxLegacyProbes(TAX.grid), ...taxFloorProbes(floorGrid, (b) => ({ ordinaryBase: b, investmentIncome: 0 }))])
+    expect(ignoringB, 'a floor blind to the pay is caught').not.toBe(pinned)
+    expect(ignoringI, 'a floor blind to the investment income is caught').not.toBe(pinned)
+  })
+
+  it('WAGE IGNORED (the state twin): handing the state pricer a zero wage moves the stateTax digest off its pin — NC’s base is seen', () => {
+    const pinned = witnessDigest(STATE_TAX.run(STATE_TAX.grid))
+    expect(pinned, 'premise: the live grid is the pinned one').toBe(PINNED.stateTax.digest)
+    const ignoringWage = witnessDigest([...stateLegacyProbes(STATE_TAX.grid), ...stateWageProbes(STATE_TAX.grid, () => 0)])
+    expect(ignoringWage).not.toBe(pinned)
+  })
+
+  it('against the SHIPPED ledger the pre-v12 pins read `row-unpinned` for BOTH families — v12 declares tax AND stateTax, so neither pin could have stayed', () => {
+    for (const family of ['tax', 'stateTax'] as const) {
+      const old = PRE_FLOOR_PINS[family]
+      const v = checkWitness(family, old.digest, old, ENGINE_PRICING_LEDGER)
+      expect(v.ok, family).toBe(false)
+      if (v.ok) continue
+      expect(v.reason, family).toBe('row-unpinned')
+      expect(v.message, family).toMatch(/v12 declares/)
+    }
   })
 })
 

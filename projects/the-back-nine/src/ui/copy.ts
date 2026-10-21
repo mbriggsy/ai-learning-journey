@@ -1147,7 +1147,7 @@ export const copy = {
     'That figure doesn’t count what you’d pay for drug and supplement plans — you answered about nothing for them, so the lines below add none.',
   // ⚠️ "the benchmark premium itself" WAS IN BOTH LISTS AND WAS FALSE — struck 2026-08-03.
   // The benchmark (SLCSP) is not merely counted, it is the ANCHOR of the whole credit:
-  // `intakeMap.ts:678` builds `slcsp` into the overlay params, `taxOverlay.ts:262` calls it "the
+  // `intakeMap.ts:685` builds `slcsp` into the overlay params, `taxOverlay.ts:276` calls it "the
   // §36B PTC basis", and `slidingScalePtc` (healthOverlay.ts:222-232) computes
   // `max(0, slcsp − applicable% × MAGI)` FROM it. Telling the reader the tool ignores the one
   // figure the discount is calculated from is the same false-negation shape O16 fixed on the Roth
@@ -1156,7 +1156,7 @@ export const copy = {
   // STRUCK, NOT REPLACED WITH AN AFFIRMATION, and that is deliberate. The O16 house pattern is
   // affirm-with-residual, but these two strings are gated on `statePriced` ALONE
   // (`stateTaxDisclosure.ts:144`) — they carry no ACA-priced axis, so the identical sentence also
-  // ships to a Medicare-only household (`intakeMap.ts:683-686`) that has no benchmark at all.
+  // ships to a Medicare-only household (`intakeMap.ts:690-693`) that has no benchmark at all.
   // "The benchmark is already in these numbers" would be a NEW false claim for that population.
   // Affirming here needs the three-state gate the Roth strings have; until then, silence is true.
   //
@@ -1465,6 +1465,48 @@ export const copy = {
   // "the tool makes" (whose choice). The direction words are pinned in order by that test.
   assumptionConversionTaxValue:
     `Tax on a Roth conversion comes out of the year’s withdrawals in the same order as everything else. Paying it that way makes converting look a little less worthwhile than it might really be, so this part of the answer leans against converting, not for it. One other choice the tool makes can lean the other way: Medicare’s own year-by-year figures stop at 2035, and past that the drug-plan piece of Medicare’s income surcharge is held at its last level, ${MEDICARE_PART_D_HOLD_CONSEQUENCE}`,
+  // The working-year tax row (R13 — the working-year tax floor, 2026-10-20,
+  // `docs/plans/features/working-year-tax-floor-build-spec.md` U7; council wf_ef6cf7c5-a2b, 7/10: the
+  // disclosure ships in the SAME commit as the engine change). What it describes: in a §7-CLAMPED year
+  // (any living member still working) the portfolio takes nothing for living costs — the clamp never
+  // compares pay with spending (`simulate.ts` `cashTermsForYear`: net = 0 whatever the pay) — and funds
+  // only the tax its OWN income adds on top of the household's pay (B) and entered working-year
+  // investment income (I), I read at the COSTLIEST of three characters (excluded / ordinary /
+  // preferential, KTD11) because the wire carries no tax character for it.
+  // PLAIN WORDS, BY HIS RULING (2026-10-20, on the first Caddie walk's draft: "I feel like I need a PHD
+  // or lawyer with me to read our own verbiage"): the row says what a couple needs, never how the floor
+  // computes it — "a few ways", not the three readings by name. Three short paragraphs, one job each:
+  //  - the premise and its one-way cost. The clamp's direction is NOT regime-conditional — it only ever
+  //    removes draws, so the answer is optimistic iff the household really draws from savings while
+  //    working (`docs/decisions/accumulation-fuck-off-date.md` §7, whose required disclosure never
+  //    shipped before this row). Then what savings still pays in those years, and that its tax sits on
+  //    top of pay + I (KTD1); I's own tax is never portfolio-funded (R3);
+  //  - the costliest of the readings, and that a mix can cost MORE (the 20/80 witness in
+  //    `workingYearTaxDisclosure.test.ts`, by hand: $2,700 against the $2,500 the max charges);
+  //  - what is left out: I counts only for a working member (`buildDateInput` force-zeroes a retired
+  //    member's slot); NIIT — `recDiscNiit` VERBATIM, HIS words 2026-10-05, never re-worded on a pilot
+  //    call (the register's NEGATIVE).
+  // The second walk (`wf_78c8c7fe-9e0`) moved three things: pay also has to fund what goes into savings
+  // each year (the clamp adds the contributions while drawing nothing), so "all of that" names the
+  // whole load; a conversion MOVES money inside savings, so savings "create taxable income" rather than
+  // money "coming out"; and the costliest reading can sit above OR below a household's real tax (a mix
+  // costs more, a pure character other than the max costs less), so P2 says exactly that.
+  // NO all-years yield sentence (2026-10-21): the one he chose after the first walk read to the second
+  // walk as a tax rule ("dividends aren't taxed until withdrawn" — false in real life), and a row
+  // explaining the shortcut instead was, in his words, "another example of we are way off course". The
+  // gap stays the register's *The taxable account's yield never reaches a year's tax base…*.
+  // BANNED in every string this row renders (the Hawk's narrowed ban, pinned by
+  // `workingYearTaxDisclosure.test.ts`): "conservative", "worst case", "only later" — the floor's own
+  // simplifications are regime-conditional (KTD4). `assumption*` ⇒ hedge- and verdict-exempt chrome;
+  // the three universal gates still bind. The "Income Medicare looks at" heading (`qWorkIncomeHeading`)
+  // stays as written (his, flagged in `docs/council-log.md` 2026-10-20).
+  assumptionWorkingYearTaxName: 'Tax while either of you is still working',
+  assumptionWorkingYearTaxValue:
+    'While either of you is still working, the tool treats your pay as covering your living costs, the tax on your pay and investment income, and what you put into savings each year. It doesn’t check that your pay really covers all of that, so if it falls short, this answer looks better than it really is. Savings can still create taxable income in those years, like a Roth conversion, a required withdrawal, or money taken out for Medicare costs. That income is taxed on top of your pay and investment income, and the tax is paid from savings.',
+  assumptionWorkingYearTaxReadings:
+    'Investment income can be taxed like pay or at the lower rate for dividends and gains, and the tool doesn’t know your split. So it figures the tax on that income from savings a few ways and uses whichever comes out highest. Depending on your mix, your real tax could still be higher or lower.',
+  assumptionWorkingYearTaxOmissions:
+    'Investment income counts only for whoever is still working; the tool doesn’t ask for it from someone who has stopped. A federal surtax on higher investment income isn’t counted here, and it could apply.',
   assumptionSsClaimAgeLabel: 'The age Social Security starts',
   errBirthYearBlank: 'The plan needs a birth year to run — mind putting one back?',
   // --- P3·U13 — the re-entry gate + the staleness notes ---------------------------------

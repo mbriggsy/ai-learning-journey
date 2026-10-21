@@ -25,13 +25,15 @@ import {
   buildCandidateParams,
   decideTrack,
   runDateSearch,
+  workingYearTaxReach,
+  workingYearTaxReachOfRun,
   type DateSearchInput,
 } from '@engine/dateSearch'
-import { simulate } from '@engine/simulate'
+import { cashTermsForYear, personOffsetsFor, simulate, validateParams, type SimResolved } from '@engine/simulate'
 import { dateSearchFromWire } from '@engine/engineWire'
 import { BANDS, SURVIVAL_GRID, quantizeSurvival } from '@engine/confidence'
 import { validationMarket } from '@engine/reference/methodology'
-import type { IncomeParams, OverlayParams, PersonInputs, SimulationParams } from '@shared/model'
+import type { IncomeParams, OverlayParams, PersonContributionStreams, PersonInputs, SimulationParams } from '@shared/model'
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -671,5 +673,298 @@ describe('runDateSearch — the D2 crowned band fan', () => {
     if (out.kind !== 'dates') return
     expect(out.floor.kind).toBe('no-date-in-window')
     expect(out.band).toBeUndefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The working-year tax floor's exposure read (2026-10-20 — the plan's U5, KTD8): which households the
+// ledger's v12 row may tell "we've changed how this tool works out your taxes"
+// ---------------------------------------------------------------------------
+
+describe('workingYearTaxReach — can the working-year tax floor move this household? (U5, KTD8)', () => {
+  const HORIZON = 50
+  const ZEROS = Array.from({ length: HORIZON }, () => 0)
+  const flat = (x: number) => Array.from({ length: 12 }, () => x)
+
+  /** A young working couple (45 + 47): real Social Security records claimed at 67, pre-tax dollars and a
+   *  pre-tax deferral + match, a taxable account, and entered working-year investment income — so every
+   *  clamped year carries B > 0 and I > 0, and NO clamped year carries a portfolio income channel: their
+   *  own claims sit 20+ years out, a survivor's §202 benefit needs the survivor at 60 (13+ years out), no
+   *  one reaches an RMD age, Medicare onset is 18+ years out, and nothing converts. */
+  const W45: PersonInputs = {
+    sex: 'male', currentAge: 45, birthYear: 1981, retirementAge: 46,
+    earnedIncomeReal: 95_000, pia: 30_000, socialSecurityClaimAge: 67,
+  }
+  const W47: PersonInputs = {
+    sex: 'female', currentAge: 47, birthYear: 1979, retirementAge: 48,
+    earnedIncomeReal: 60_000, pia: 22_000, socialSecurityClaimAge: 67,
+  }
+  const BASE_OVERLAY: OverlayParams = {
+    taxEnabled: true,
+    rmdEnabled: true,
+    startCalendarYear: 2026,
+    buckets: { taxable: 100_000, pretax: 400_000, roth: 100_000 },
+    pretaxByPerson: [250_000, 150_000],
+    initialTaxableBasis: 80_000,
+    filing: 'mfj',
+    healthcareEnabled: true,
+    // An explicit $0 marketplace entry for every year (employer retiree coverage): the date-route coverage
+    // rule demands a finite entry for each pre-65 retired year, and a $0 never opens the ACA gate.
+    enrolledPremium: ZEROS,
+    slcsp: ZEROS,
+    accumulation: { contributionsByPerson: [{ pretax: flat(19_000), employerMatch: flat(5_000) }, { roth: flat(7_000) }] },
+  }
+  interface Shape {
+    readonly people?: readonly PersonInputs[]
+    readonly overlay?: Partial<OverlayParams>
+    readonly longevityMode?: SimulationParams['longevityMode']
+    /** The entered working-year investment income per person (the override is built as earned + this). */
+    readonly investment?: readonly number[]
+  }
+  const household = (s: Shape = {}): DateSearchInput => {
+    const people = s.people ?? [W45, W47]
+    const investment = s.investment ?? [10_000, 4_000]
+    return {
+      params: {
+        initialPortfolio: 600_000,
+        annualSpendingReal: 80_000,
+        stockWeight: 0.6,
+        people,
+        survivorSpendingRatio: 0.75,
+        drawdownPolicy: 'proportional',
+        market: validationMarket.value,
+        paths: 1,
+        maxHorizonYears: HORIZON,
+        longevityMode: s.longevityMode ?? 'sampled',
+        overlay: { ...BASE_OVERLAY, ...s.overlay },
+      },
+      workingYearIrmaaMagiByPerson: people.map((p, i) => p.earnedIncomeReal + (investment[i] ?? 0)),
+      workingYearInvestmentByPerson: investment,
+    }
+  }
+  /** One person paid differently (a pay change, nothing else) — the B-invariance proof's twin. */
+  const withPay = (input: DateSearchInput, i: number, earned: number): DateSearchInput => {
+    const people = input.params.people.map((p, j) => (j === i ? { ...p, earnedIncomeReal: earned } : p))
+    return { ...input, params: { ...input.params, people } }
+  }
+  type Resolved = SimResolved
+  /** Run one candidate: the resolved distribution, or a loud failure (never a silent skip). */
+  const run = (input: DateSearchInput, y: number): Resolved => {
+    const candidate = buildCandidateParams(input, y, 300)
+    const invalid = validateParams(candidate)
+    if (invalid !== null) throw new Error(`fixture candidate Y=${y} rejected: ${invalid}`)
+    const out = simulate(candidate, 20261020)
+    if (out.indeterminate || out.infeasible) throw new Error(`fixture candidate Y=${y} did not resolve`)
+    return out
+  }
+  /** Every terminal value and every lifetime tax figure identical, bit for bit (Object.is per path). */
+  const bitIdentical = (a: Resolved, b: Resolved): boolean => {
+    const ta = a.distribution.terminalValuesReal
+    const tb = b.distribution.terminalValuesReal
+    const la = a.distribution.taxAware?.lifetimeTaxPaidReal ?? []
+    const lb = b.distribution.taxAware?.lifetimeTaxPaidReal ?? []
+    if (la.length !== ta.length || ta.length !== tb.length || la.length !== lb.length || la.length === 0) return false
+    return ta.every((v, p) => Object.is(v, tb[p])) && la.every((v, p) => Object.is(v, lb[p]))
+  }
+
+  it('UNREACHED: a working couple with B > 0 and I > 0 but no SS, conversion, RMD or Medicare in any clamped year — on any death timeline — reads `unpriced`', () => {
+    const input = household()
+    // Non-vacuity: the floor really runs in these years — a clamped year carries B > 0 and I > 0; it just
+    // has nothing to price on top of them.
+    const candidate = buildCandidateParams(input, 6, 1)
+    const { offsets, higherClaimOffset } = personOffsetsFor(candidate.people)
+    const outside = cashTermsForYear(0, candidate, offsets, [HORIZON, HORIZON], higherClaimOffset).workingYearOutside
+    // B = (95,000 − 19,000 deferral) + (60,000 − 0) = 136,000 (the match is never pay); I = 10,000 + 4,000.
+    expect(outside).toEqual({ ordinaryBase: 136_000, investmentIncome: 14_000 })
+    expect(workingYearTaxReach(input)).toBe('unpriced')
+  })
+
+  it('THE PROOF ARM: the unreached household’s recompute is B-INVARIANT — two runs differing only in pay agree bit for bit — while a moved control (the same + one working-year conversion) is B-variant', { timeout: 120_000 }, () => {
+    const input = household()
+    expect(bitIdentical(run(input, 6), run(withPay(input, 0, 150_000), 6)), 'unpriced ⇒ nothing the floor prices moves with B').toBe(true)
+    // The control: a $20,000 conversion in sim-year 2 (inside Y = 6's working window) is portfolio income
+    // in a clamped year — the predicate reads it, and the recompute moves with the pay under it.
+    const moved = household({ overlay: { conversions: [0, 0, 20_000] } })
+    expect(workingYearTaxReach(moved)).toBe('priced')
+    expect(bitIdentical(run(moved, 6), run(withPay(moved, 0, 150_000), 6)), 'priced ⇒ the pay under the conversion moves its tax').toBe(false)
+  })
+
+  it('CONVERSION: read per CLAMPED year — a conversion in sim-year 3 reaches; one in sim-year 10 (clamped for no Y ≤ 10) reaches nothing', () => {
+    expect(workingYearTaxReach(household({ overlay: { conversions: [0, 0, 0, 20_000] } }))).toBe('priced')
+    const late = Array.from({ length: 11 }, (_, t) => (t === 10 ? 20_000 : 0))
+    expect(workingYearTaxReach(household({ overlay: { conversions: late } }))).toBe('unpriced')
+  })
+
+  it('OWN SS while working: a claim inside the window reads `priced` — the walk reaches the window TOP (claim offset 9 is clamped only at Y = 10); offset 10 is never clamped', () => {
+    const single = (currentAge: number): DateSearchInput =>
+      household({
+        people: [{ ...W45, currentAge, birthYear: 2026 - currentAge, retirementAge: currentAge + 1, pia: 24_000, socialSecurityClaimAge: 70 }],
+        overlay: {
+          buckets: { taxable: 100_000, pretax: 400_000, roth: 100_000 },
+          pretaxByPerson: [400_000],
+          filing: 'single',
+          accumulation: { contributionsByPerson: [{ roth: flat(7_000) }] },
+        },
+        investment: [0],
+      })
+    expect(workingYearTaxReach(single(61)), 'claim offset 9 ⇒ clamped at Y = 10, t = 9').toBe('priced')
+    expect(workingYearTaxReach(single(60)), 'claim offset 10 ⇒ never clamped').toBe('unpriced')
+  })
+
+  it('SURVIVOR SS (insight 027): a couple both working at 55, claiming at 67, no conversion, reads `priced` — through the §202 benefit a still-working survivor draws from 60 — and the SAME household with no deaths in its timeline reads `unpriced`', () => {
+    const at55 = (sex: PersonInputs['sex']): PersonInputs => ({
+      sex, currentAge: 55, birthYear: 1971, retirementAge: 56, earnedIncomeReal: 80_000, pia: 28_000, socialSecurityClaimAge: 67,
+    })
+    const shape: Shape = { people: [at55('male'), at55('female')], investment: [0, 0] }
+    expect(workingYearTaxReach(household(shape)), 'sampled: a single death puts survivor SS in a clamped year').toBe('priced')
+    expect(workingYearTaxReach(household({ ...shape, longevityMode: 'fixed-horizon' })), 'no death ⇒ no SS until 67').toBe('unpriced')
+  })
+
+  it('RMD: a still-working holder at the RMD age with pre-tax dollars reads `priced`; all-Roth, or RMDs off, reads `unpriced`', () => {
+    // Born 1952 ⇒ RMD start 73; a working 74-year-old (Medicare onset = Y — never enrolled while working),
+    // no Social Security record, nothing converted: the RMD is the only channel.
+    const w74: PersonInputs = { ...W45, currentAge: 74, birthYear: 1952, retirementAge: 75, pia: 0, socialSecurityClaimAge: 70 }
+    const shape = (pretax: number, rmdEnabled: boolean): Shape => ({
+      people: [w74],
+      overlay: {
+        rmdEnabled,
+        buckets: { taxable: 100_000, pretax, roth: 500_000 - pretax },
+        pretaxByPerson: [pretax],
+        filing: 'single',
+        irmaaMagiSeed: [110_000, 110_000],
+        accumulation: { contributionsByPerson: [{ roth: flat(7_000) }] },
+      },
+      investment: [0],
+    })
+    expect(workingYearTaxReach(household(shape(300_000, true)))).toBe('priced')
+    expect(workingYearTaxReach(household(shape(0, true))), 'no pre-tax dollars ⇒ no RMD').toBe('unpriced')
+    expect(workingYearTaxReach(household(shape(300_000, false))), 'RMDs off').toBe('unpriced')
+  })
+
+  it('RMD on a CONTRIBUTED pool: an RMD-age worker with $0 entered pre-tax reads `priced` whether the inflow is their own deferral or only the employer match', () => {
+    // The same working 74-year-old (RMD start 73), $0 of pre-tax entered: the pool the RMD forces is
+    // built by the year's inflow — a pre-tax deferral, or a match alone beside a Roth deferral. The RMD
+    // arm's `shape(0, true)` above is the `unpriced` control (no inflow ⇒ no pool ⇒ no RMD). Reading
+    // `unpriced` here would be the dangerous direction: a recompute that moves, told nothing.
+    const w74: PersonInputs = { ...W45, currentAge: 74, birthYear: 1952, retirementAge: 75, pia: 0, socialSecurityClaimAge: 70 }
+    const shape = (stream: PersonContributionStreams): Shape => ({
+      people: [w74],
+      overlay: {
+        buckets: { taxable: 100_000, pretax: 0, roth: 500_000 },
+        pretaxByPerson: [0],
+        filing: 'single',
+        irmaaMagiSeed: [110_000, 110_000],
+        accumulation: { contributionsByPerson: [stream] },
+      },
+      investment: [0],
+    })
+    expect(workingYearTaxReach(household(shape({ pretax: flat(19_000) }))), 'own deferral').toBe('priced')
+    expect(workingYearTaxReach(household(shape({ employerMatch: flat(5_000), roth: flat(7_000) }))), 'the match alone').toBe('priced')
+  })
+
+  it('RMD on an INHERITED pool: an RMD-age worker with no pre-tax of their own reaches it only once the spouse who held the pool has died — `priced` sampled, `unpriced` with no deaths', () => {
+    const w74: PersonInputs = { ...W45, currentAge: 74, birthYear: 1952, retirementAge: 75, pia: 0, socialSecurityClaimAge: 70 }
+    const w60: PersonInputs = { ...W47, currentAge: 60, birthYear: 1966, retirementAge: 61, pia: 0, socialSecurityClaimAge: 70 }
+    const shape: Shape = {
+      people: [w74, w60],
+      overlay: {
+        buckets: { taxable: 100_000, pretax: 300_000, roth: 200_000 },
+        pretaxByPerson: [0, 300_000],
+        irmaaMagiSeed: [150_000, 150_000],
+        accumulation: { contributionsByPerson: [{ roth: flat(7_000) }, { roth: flat(7_000) }] },
+      },
+      investment: [0, 0],
+    }
+    expect(workingYearTaxReach(household(shape)), 'the spousal rollover lands the pool on an RMD-age worker').toBe('priced')
+    expect(workingYearTaxReach(household({ ...shape, longevityMode: 'fixed-horizon' })), 'no death ⇒ the pool’s holder is 60').toBe('unpriced')
+  })
+
+  it('RMD on the AGGREGATE pool (no per-person split — M6a): the holder is the FIRST LIVING member, so the pool is forced only when THEY are at the RMD age', () => {
+    const w74: PersonInputs = { ...W45, currentAge: 74, birthYear: 1952, retirementAge: 75, pia: 0, socialSecurityClaimAge: 70 }
+    const w60: PersonInputs = { ...W47, currentAge: 60, birthYear: 1966, retirementAge: 61, pia: 0, socialSecurityClaimAge: 70 }
+    const aggregate = (people: readonly PersonInputs[], longevityMode: SimulationParams['longevityMode']): DateSearchInput => {
+      const input = household({
+        people,
+        overlay: {
+          buckets: { taxable: 100_000, pretax: 300_000, roth: 200_000 },
+          irmaaMagiSeed: [150_000, 150_000],
+          accumulation: { contributionsByPerson: [{ roth: flat(7_000) }, { roth: flat(7_000) }] },
+        },
+        investment: [0, 0],
+        longevityMode,
+      })
+      const { pretaxByPerson: _split, ...overlay } = input.params.overlay!
+      return { ...input, params: { ...input.params, overlay } }
+    }
+    expect(aggregate([w74, w60], 'fixed-horizon').params.overlay?.pretaxByPerson, 'premise: no split').toBeUndefined()
+    expect(workingYearTaxReach(aggregate([w74, w60], 'fixed-horizon')), 'the 74-year-old holds the pool').toBe('priced')
+    expect(workingYearTaxReach(aggregate([w60, w74], 'fixed-horizon')), 'the 60-year-old holds it — not forced').toBe('unpriced')
+    expect(workingYearTaxReach(aggregate([w60, w74], 'sampled')), 'once the holder dies, the pool rides the 74-year-old').toBe('priced')
+  })
+
+  it('MEDICARE ONLY: a worker beside an enrolled retired spouse reads `priced` and MOVES with the pay (the premium draw is taxed above it); at B = I = 0 it reads `unpriced`, and B = 0 with I > 0 still reads `priced`', { timeout: 120_000 }, () => {
+    // A 60-year-old worker + a retired 65-year-old (enrolled from year 0; born 1961 ⇒ RMD at 75 = sim-year
+    // 10, never clamped), neither with a Social Security record, nothing converted: the Part B draw is the
+    // only portfolio income a clamped year carries.
+    const w60: PersonInputs = { ...W45, currentAge: 60, birthYear: 1966, retirementAge: 61, pia: 0, socialSecurityClaimAge: 70 }
+    const r65: PersonInputs = { ...W47, currentAge: 65, birthYear: 1961, retirementAge: 63, earnedIncomeReal: 0, pia: 0, socialSecurityClaimAge: 70 }
+    const shape = (earned: number, investment: number): Shape => ({
+      people: [{ ...w60, earnedIncomeReal: earned }, r65],
+      overlay: {
+        buckets: { taxable: 100_000, pretax: 400_000, roth: 100_000 },
+        pretaxByPerson: [150_000, 250_000],
+        irmaaMagiSeed: [90_000, 92_000],
+        accumulation: { contributionsByPerson: [{ pretax: flat(12_000) }, {}] },
+      },
+      investment: [investment, 0],
+    })
+    expect(workingYearTaxReach(household(shape(90_000, 0)))).toBe('priced')
+    expect(workingYearTaxReach(household(shape(0, 0))), 'B = I = 0 ⇒ the charge is today’s T(P, ss)').toBe('unpriced')
+    expect(workingYearTaxReach(household(shape(0, 8_000))), 'B = 0, I > 0 ⇒ the ordinary/preferential readings sit on I').toBe('priced')
+    // …and it MOVES: the same household at two pays, every other input equal.
+    expect(bitIdentical(run(household(shape(90_000, 0)), 5), run(household(shape(160_000, 0)), 5)), 'the Medicare draw’s tax rides the pay under it').toBe(false)
+  })
+
+  it('THE BOUNDARIES: the onset year and the RMD-start year are each a reached year — read inclusively, as the engine gates them (fixed horizon; each is the ONLY reached clamped year, at Y = 10)', () => {
+    // (1) Medicare: a 60-year-old worker beside a retired 56-year-old (biological 65 at t = 9), no Social
+    // Security record, no pre-tax, nothing converted — the onset year t = 9 is the only clamped year with a
+    // portfolio channel, and it is clamped only at Y = 10.
+    const onsetAtNine = household({
+      people: [
+        { ...W45, currentAge: 60, birthYear: 1966, retirementAge: 61, earnedIncomeReal: 90_000, pia: 0, socialSecurityClaimAge: 70 },
+        { ...W47, currentAge: 56, birthYear: 1970, retirementAge: 55, earnedIncomeReal: 0, pia: 0, socialSecurityClaimAge: 70 },
+      ],
+      overlay: {
+        buckets: { taxable: 100_000, pretax: 0, roth: 500_000 },
+        pretaxByPerson: [0, 0],
+        accumulation: { contributionsByPerson: [{ roth: flat(7_000) }, {}] },
+      },
+      investment: [0, 0],
+      longevityMode: 'fixed-horizon',
+    })
+    expect(workingYearTaxReach(onsetAtNine), 'enrolled from t = 9 ⇒ the t = 9 premium draw is reached').toBe('priced')
+    // (2) RMD: a single 66-year-old worker born 1960 (RMD start 75 = t 9) holding $300,000 pre-tax.
+    const rmdAtNine = household({
+      people: [{ ...W45, currentAge: 66, birthYear: 1960, retirementAge: 67, earnedIncomeReal: 90_000, pia: 0, socialSecurityClaimAge: 70 }],
+      overlay: {
+        buckets: { taxable: 100_000, pretax: 300_000, roth: 200_000 },
+        pretaxByPerson: [300_000],
+        filing: 'single',
+        irmaaMagiSeed: [100_000, 100_000],
+        accumulation: { contributionsByPerson: [{ roth: flat(7_000) }] },
+      },
+      investment: [0],
+      longevityMode: 'fixed-horizon',
+    })
+    expect(workingYearTaxReach(rmdAtNine), 'age 75 at t = 9 ⇒ the first RMD is reached').toBe('priced')
+  })
+
+  it('no tax overlay ⇒ `unpriced` (no candidate is built, no year is taxed); a construct-absent run ⇒ `unpriced` (it never clamps)', () => {
+    const input = household()
+    const { overlay: _o, ...bare } = input.params
+    expect(workingYearTaxReach({ params: bare })).toBe('unpriced')
+    expect(workingYearTaxReach({ params: { ...input.params, overlay: { ...BASE_OVERLAY, taxEnabled: false } } })).toBe('unpriced')
+    const { accumulation: _a, ...noConstruct } = BASE_OVERLAY
+    expect(workingYearTaxReachOfRun({ ...input.params, overlay: { ...noConstruct, conversions: [20_000] } })).toBe('unpriced')
   })
 })

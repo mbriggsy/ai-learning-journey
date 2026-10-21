@@ -49,9 +49,22 @@
  *     ordinary base, and is sheltered by any unused deduction (the QDCGT-worksheet effect). The
  *     new ledger is the taxable bucket's BASIS (absolute $, NOT scaled by growth — growth is
  *     unrealized gain). Within-year order: RMD → conversion (reserved out of the draw pool) →
- *     spending. QD is subsumed into realization-on-withdrawal (no sourced dividend-yield constant;
- *     the annual-dividend MAGI bump is an OUT-but-disclosed, optimistic-direction boundary — it
- *     sharpens once U3's ACA/IRMAA cliffs land). Worst-case contraction k ≈ 0.74 (the cap-gains
+ *     spending. QD is subsumed into realization-on-withdrawal in EVERY year (no sourced dividend-yield
+ *     constant): the taxable bucket throws off no annual income, so its yield never reaches a year's
+ *     ordinary base, gain block or MAGI reads (§86, the senior bonus, IRMAA, ACA, a priced state's
+ *     base) — it is taxed only as pro-rata gain when withdrawn, on a basis that never takes the
+ *     reinvested yield. The ONE place a yield-like figure is priced is a §7-CLAMPED working year (the
+ *     working-year tax floor, 2026-10-20): the household's ENTERED working-year investment income rides
+ *     the floor's I ({@link WorkingYearOutsideIncome}`.investmentIncome`), inside the year's tax base at
+ *     the costliest of three readings (excluded / ordinary / preferential), never portfolio-funded —
+ *     disclosed to the household by the `working-year-tax` METHODOLOGY_DISCLOSURES row
+ *     (`src/ui/assumptionRegistry.ts`). Every other year's omission is UNDISCLOSED (CORRECTED
+ *     2026-10-20: this line called the yield "an OUT-but-disclosed, optimistic-direction boundary", and
+ *     no row had ever disclosed it): the annual MAGI bump is missing in the year it would land
+ *     (optimistic in that year's IRMAA / ACA / §86 reads), while the later withdrawal realizes more gain
+ *     than an account whose basis took the reinvested yield — so the omission's net direction is
+ *     regime-conditional and unmeasured. Filed with the working-year tax floor build (the all-years
+ *     yield model with a tax character). Worst-case contraction k ≈ 0.74 (the cap-gains
  *     15→20% straddle × the SS torpedo); GROSS_UP_MAX_PASSES was 128 at M5 — the state-tax unit
  *     re-derived k_total ≈ 0.78 (the flat state term, no SS torpedo) and raised it to 192 (see below).
  *   - M6a (this): the MFJ→single survivor filing switch. The overlay reads a per-year
@@ -82,6 +95,7 @@ import {
   irmaa,
   isPricedState,
   type AcaApplicablePercentageTable,
+  type PricedState,
 } from '@engine/constants'
 // The RMD divisor + start-age are re-homed to `@engine/rmd` (U16 §S1) — the ONE producer shared
 // with the live solve-request anchor deriver, so the render-layer builder never re-derives them.
@@ -362,8 +376,24 @@ export interface TaxYearInputs {
    *  it must NOT mint a phantom gross-up withdrawal — but it STILL belongs in IRMAA-MAGI, where the
    *  wages-only override does not reach (the engine owns each modeled stream's IRMAA-MAGI in ALL years,
    *  clamped and unclamped). Recorded ADDITIVELY at the IRMAA-MAGI history site, counted exactly once;
-   *  it never touches the gross-up, the §86 base, or ACA-MAGI (a clamped working year prices no ACA). */
+   *  it never mints a gross-up WITHDRAWAL and never reaches ACA-MAGI (a clamped working year prices no
+   *  ACA). It DOES sit in the year's tax base since the working-year tax floor (2026-10-20, KTD2): the
+   *  same dollars ride {@link workingYearOutsideIncome}'s `ordinaryBase` — the ordinary base, the §86
+   *  provisional, the senior-bonus MAGI, the gain-stacking base and NC's base — as income whose own tax
+   *  the household pays outside the portfolio (only what the PORTFOLIO's income adds on top is funded). */
   readonly ongoingTaxableIrmaaOnly?: readonly number[]
+  /** The working-year tax floor (2026-10-20 — `docs/plans/features/working-year-tax-floor-build-spec.md`):
+   *  per-year OUTSIDE income of each §7-CLAMPED working year, ABSOLUTE-year-indexed, a HOLE in every
+   *  unclamped year. A present entry prices that year's tax as what the portfolio's own income adds on
+   *  top of the household's pay and investment income, plus SS's own tax ({@link prepareWorkingYearFloor});
+   *  a hole is the literal pre-floor year. `simulate` builds it from the SAME `cashTermsForYear` call
+   *  that decides the clamp, whenever the accumulation construct rides with tax on. THE CROSS-CHECK
+   *  (R8): with tax on, the construct marker (`contributions` present) AND `bridgeYearMask` present,
+   *  every masked year must carry an entry and every entry must sit on a masked year — under the
+   *  construct the mask IS the clamp (`∃` a living worker), so a mismatch is a wiring fault and throws
+   *  (a silently dropped floor re-opens the wage-blind optimistic year). A present entry is finite ≥ 0
+   *  in both fields; an entry with no construct marker throws (a floor needs a clamp to describe). */
+  readonly workingYearOutsideIncome?: readonly (WorkingYearOutsideIncome | undefined)[]
   // --- U6/U7 band fan: an OPTIONAL output sink (not an input). ABSENT ⇒ no observation, the
   //     pre-fan path verbatim. ---
   /** An optional sink the caller passes to OBSERVE the per-year portfolio total: each iterated
@@ -404,9 +434,14 @@ export interface HealthYearSink {
    *  enrollment frame reads this, never a UI-side biological age-65 proxy). 0 when nobody is
    *  enrolled (a pre-65 year, or a year the regime is absent). */
   readonly medicareEnrolled: number[]
-  /** The year's converged ACA-MAGI (full-SS calculator) — the readout's empirical anchor. */
+  /** The year's converged ACA-MAGI (full-SS calculator) — the readout's empirical anchor. In a
+   *  §7-CLAMPED working year (the working-year tax floor) it is a MIXED figure: the portfolio's own
+   *  income, plus a taxable SS computed on a provisional that also carries the household's pay and
+   *  investment income (which the components themselves exclude). Unread there: the readout is
+   *  spine-only, and the spine has no clamped year. */
   readonly acaMagi: number[]
-  /** The year's IRMAA-MAGI (taxable-SS calculator) — the distinct second anchor. */
+  /** The year's IRMAA-MAGI (taxable-SS calculator) — the distinct second anchor (mixed in a clamped
+   *  working year, exactly as `acaMagi` above). */
   readonly irmaaMagi: number[]
   /** The year's FULL Social Security benefit — the converged `ssBenefitFull` component both MAGIs
    *  read (observed, never consumed): the health sheet prices the benefit taxation a converted
@@ -503,6 +538,31 @@ const AGE_65_THRESHOLD = 65
 // years [2025..2028] — in a post-sunset year that corner vanishes entirely, so per-year k can
 // only SHRINK below the bound above. The k_total ≈ 0.78 witness never used the bonus channel
 // (senior bonus long gone at ~$645k ordinary), so the bound and 192 passes are year-invariant.
+//
+// THE WORKING-YEAR FLOOR (2026-10-20 — KTD3 / KTD11 of `docs/plans/features/working-year-tax-floor-
+// build-spec.md`; the derivation the council's dissent named as a flip condition, "the preferential k
+// exceeds about 0.78"). In a §7-clamped year the map is gross ↦ net + max over the readings r of
+// [T(base_r + P(gross)) − T(base_r)] + T(0, ss), and each reading is the SAME monotone map with a
+// YEAR-CONSTANT base:
+//   - EXCLUDED (B) and ORDINARY (B + I): the base sits in the ordinary argument exactly where a year-
+//     constant conversion or `ongoingTaxable` sits, so the corners above already range over it;
+//   - PREFERENTIAL (ordinary B, gain I): I is a year-constant gain block in the gain argument and in
+//     §86's other income, stacked UNDER the draw's own realized gain — the corner algebra never asked
+//     where the gain block comes from, so k = (m_ord + j) × (1 + ssInclusionSlope) + m_state is
+//     unchanged: the 0→15 % straddle needs ordinary taxable income under the 0 % edge (Rev. Proc.
+//     2025-32 §4.03: $98,900 MFJ / $49,450 single), inside the 12 % bracket ($100,800 / $50,400) —
+//     k ≲ 0.60 even with the per-person senior-bonus phase-out; the 15→20 % straddle ($613,700 MFJ) sits
+//     in the 35 % bracket — k ≲ 0.78, the same sup.
+// Subtracting the year-constant T(base_r) (or T(0, ss)) changes no slope; a max of monotone k-Lipschitz
+// maps is monotone and k-Lipschitz; and the EXACTNESS branch (`baseTax === zeroTax`) is chosen once per
+// year, so each pass evaluates one fixed formula. The state half is ONE increment over a constant base
+// (NC takes B + I once, at its flat rate), added beside the federal max, so it adds the same m_state ≈
+// 0.04 to the sum's slope whichever reading wins. So k_sup ≈ 0.78 stands, the dissent's flip condition
+// does not fire, and 192 passes stand. Measured (the 2026-10-20 review's faithful-copy probe): worst 67
+// passes over a 24k-point B × I × SS × NC × filing grid, no non-convergence. FLOAT: at an absurd base the T(base + P) − T(base) cancellation quantizes the
+// increment at about ulp(T(base)) — roughly $1e-4 at B = $1e12, above GROSS_UP_EPSILON — but the map
+// stays monotone on that staircase, so the iteration still lands on an exact fixed point (|Δ| = 0):
+// measured converging to B = $2e12, I = $1e12, a sub-cent quantum, never a throw.
 //
 // 192 passes SUFFICES at k_total ≈ 0.78 (geometric: n ≈ ln(tax/ε)/ln(1/k), ε = 10^-7). Two corners,
 // mirroring the federal derivation: (1) the self-limiting cap-gains-straddle corner k ≈ 0.78 pins a
@@ -846,11 +906,292 @@ interface GrossUpContext {
   /** The MIN integer age among this year's LIVING members — the household-granularity qualified-age
    *  gate for a class-based age-gated state (PA 59½). Year-constant; consumed only by the state term. */
   readonly minLivingAge: number
+  /** The working-year tax floor (2026-10-20): this §7-CLAMPED year's outside income — the
+   *  household's taxable pay + clamped ongoing taxable (B) and its entered working-year investment
+   *  income (I). PRESENT only in a clamped year under the accumulation construct (the caller's
+   *  `workingYearOutsideIncome[t]`); ABSENT ⇒ the literal pre-floor expression below, so every
+   *  unclamped, construct-absent and retired-route year is byte-identical. See
+   *  {@link prepareWorkingYearFloor}. Year-constant, so the fixed point stays 1-D. */
+  readonly workingYearOutside?: WorkingYearOutsideIncome
+}
+
+// =========================================================================
+// The working-year tax floor (2026-10-20 — `docs/plans/features/working-year-tax-floor-build-spec.md`)
+// =========================================================================
+//
+// In a §7-CLAMPED working year (the accumulation construct present AND a living member still
+// working — `simulate.cashTermsForYear`) the household lives on its pay: the spending net is 0 and
+// the wages fund their OWN tax outside the portfolio. The portfolio still supplies money in that year
+// — a forced RMD, the household's own Roth conversion, the draw that pays a retired spouse's Medicare
+// — and the tax return that money lands on also carries the pay. Pricing that portfolio money as if
+// it were the household's only income lets the standard deduction and the bottom brackets the wages
+// already fill shelter it a second time (the register's Tier 0 *A working-year Roth conversion or RMD
+// on the date route is taxed as if the household had no pay…*: `dip`'s year-4 $34,000 conversion
+// charged $180 where $4,380 is owed on top of its wages — the optimistic direction).
+//
+// THE CHARGE (KTD1). For one base, the portfolio funds T(base + P, ss) − T(base, ss) + T(0, ss):
+//   - T(base + P) − T(base) is what the portfolio's own income P adds ON TOP of the outside income;
+//   - T(0, ss) is the tax Social Security alone carries, which today's engine already funds from
+//     the portfolio (a working household's SS is not pay; the NEGATIVE keeps today's figure there).
+// So the tax the outside income adds BY ITSELF, T(base, ss) − T(0, ss), is never portfolio-funded
+// (the §7 law), and at base = 0 the charge is today's T(P, ss) exactly. Rejected (recorded in the
+// plan): the base with no subtraction (funds the wages' tax); the register's T(base + P) − T(base)
+// with no T(0, ss) term (charges $0 where SS alone is taxable — falsifies its own NEGATIVE); a
+// baseline without SS (charges the portfolio SS's tax on cash it never receives).
+//
+// THE THREE READINGS OF I (KTD11, council wf_ef6cf7c5-a2b, 7/10). The entered working-year
+// investment income has no tax character on the wire, so the federal charge is the COSTLIEST of
+// three readings' increments, plus T(0, ss) once: I EXCLUDED (base B), I as ORDINARY income (base
+// B + I), I as PREFERENTIAL income (I stacked in the gain argument and in §86's other income). Never
+// max-of-totals minus max-of-baselines; the excluded arm is what keeps the max honest in the concave
+// §86 regime, where a larger base LOWERS the increment. At I = 0 the three coincide bit for bit, so
+// only the excluded arm is evaluated there — an exact shortcut, never a semantic key on I > 0.
+//
+// EXACTNESS (R3). Where the base adds no tax of its own (T(base) === T(0)) the charge is evaluated as
+// T(base + P) directly — algebraically the same quantity, bit-exact at base = 0 even when SS alone is
+// taxable; elsewhere the evaluation order (T(base + P) − T(base)) + T(0) is bit-exact at P = 0. Both
+// corners therefore return today's figure exactly.
+
+/** One §7-clamped working year's OUTSIDE income — what the household's pay and its own entered
+ *  working-year investment income bring to the year's return, which no modeled cash in the engine
+ *  pays (the clamp: wages fund their own tax). Built by `simulate.cashTermsForYear` and supplied
+ *  per year as {@link TaxYearInputs.workingYearOutsideIncome}; both fields are real $, finite ≥ 0. */
+export interface WorkingYearOutsideIncome {
+  /** B (KTD2/KTD4) — Σ over the LIVING workers of max(0, `earnedIncomeReal_i` − that person's own
+   *  pre-tax deferral this year), plus the year's clamped ongoing other-income taxable (R40 KTD-9's
+   *  IRMAA-only feed). Ordinary income on the return; never portfolio-funded. */
+  readonly ordinaryBase: number
+  /** I (KTD11) — the household sum of the entered working-year investment income of the members
+   *  working this year. Priced at the costliest of three readings (excluded / ordinary / preferential). */
+  readonly investmentIncome: number
+}
+
+/** The tax a reading's base adds may not fall below this when portfolio income is added on top —
+ *  every channel in `taxCore.ts` is non-decreasing in income, so a NEGATIVE increment is a defect,
+ *  never rounding dust (a sub-cent tolerance; the increment is a difference of two converged sums). */
+const WORKING_YEAR_INCREMENT_FLOOR = -1e-6
+
+/** T(ordinaryOther, gainOther; ss): the year's federal tax on the given non-SS ordinary income and
+ *  realized gain beside the year's Social Security — the gross-up's OWN order of operations (the
+ *  §86 provisional reads ordinary + gain; the ordinary base adds the taxable SS; the gain stacks on
+ *  top), so a zero base reproduces the pre-floor expression bit for bit. */
+function federalTaxBesideSs(
+  ordinaryOther: number,
+  gainOther: number,
+  ssBenefit: number,
+  filing: FilingStatus,
+  count65: number,
+  calendarYear: number,
+): { readonly tax: number; readonly ssTaxable: number } {
+  const ssTaxable = taxableSocialSecurity(ordinaryOther + gainOther, ssBenefit, filing, calendarYear)
+  return {
+    tax: ordinaryPlusCapitalGainsTax(ordinaryOther + ssTaxable, gainOther, filing, count65, calendarYear),
+    ssTaxable,
+  }
+}
+
+/** One reading of the outside income: its ordinary and preferential halves and the federal tax that
+ *  base carries by itself beside the year's SS (portfolio income zero). */
+interface WorkingYearReading {
+  readonly ordinaryBase: number
+  readonly gainBase: number
+  readonly baseTax: number
+}
+
+/** The year-constant state half of a prepared floor — present iff the household's state is priced. */
+interface WorkingYearStateFloor {
+  readonly state: PricedState
+  readonly minLivingAge: number
+  /** B + I — the state takes the outside income ONCE, as ordinary (KTD7, council). */
+  readonly ordinaryBase: number
+  /** The state tax the outside income carries by itself (portfolio channels zero, SS at its B + I value). */
+  readonly baseTax: number
+  /** The state tax at zero outside and zero portfolio income — the state's T(0, ss). */
+  readonly zeroTax: number
+}
+
+/** A clamped year's floor, prepared ONCE per gross-up solve (every baseline is gross-independent, so
+ *  it is a constant inside the fixed point). Exported with {@link workingYearFederalCharge} /
+ *  {@link workingYearStateCharge} so the pricing witness probes the exact helpers the gross-up calls. */
+export interface PreparedWorkingYearFloor {
+  readonly ssBenefit: number
+  readonly filing: FilingStatus
+  readonly count65: number
+  readonly calendarYear: number
+  /** T(0, ss) — the tax SS alone carries, funded from the portfolio exactly as before the floor. */
+  readonly zeroTax: number
+  /** [excluded] when I = 0, else [excluded, ordinary, preferential] (KTD11). */
+  readonly readings: readonly WorkingYearReading[]
+  readonly stateFloor?: WorkingYearStateFloor
+}
+
+/** The year's household context a prepared floor needs (every field year-constant). */
+export interface WorkingYearFloorContext {
+  readonly ssBenefit: number
+  readonly filing: FilingStatus
+  readonly count65: number
+  readonly calendarYear: number
+  /** Present ⇒ the state half is prepared (the caller keys on `isPricedState` membership first). */
+  readonly pricedState?: PricedState
+  readonly minLivingAge: number
+}
+
+/**
+ * Prepare one clamped year's floor: T(0, ss), each reading's base tax, and the priced state's two
+ * baselines. THROWS on a non-finite or negative B or I (burned/062 — an in-range default for a figure
+ * that moves the answer is the calm-but-wrong sin, and a NaN would sail through every compare below).
+ */
+export function prepareWorkingYearFloor(
+  outside: WorkingYearOutsideIncome,
+  ctx: WorkingYearFloorContext,
+): PreparedWorkingYearFloor {
+  const b = outside.ordinaryBase
+  const i = outside.investmentIncome
+  if (!(Number.isFinite(b) && b >= 0) || !(Number.isFinite(i) && i >= 0)) {
+    throw new Error(
+      `[taxOverlay] a working-year outside income must be finite and ≥ 0 (ordinaryBase=${b}, investmentIncome=${i}) — insights 008/010; burned/062`,
+    )
+  }
+  const { ssBenefit, filing, count65, calendarYear } = ctx
+  const taxAt = (ordinary: number, gain: number) =>
+    federalTaxBesideSs(ordinary, gain, ssBenefit, filing, count65, calendarYear)
+  const zero = taxAt(0, 0)
+  const shapes: ReadonlyArray<readonly [ordinaryBase: number, gainBase: number]> =
+    i === 0
+      ? [[b, 0]]
+      : [
+          [b, 0], // I excluded
+          [b + i, 0], // I as ordinary income
+          [b, i], // I as preferential income (the gain argument and §86's other income)
+        ]
+  const readings = shapes.map(([ordinaryBase, gainBase]) => ({
+    ordinaryBase,
+    gainBase,
+    baseTax: taxAt(ordinaryBase, gainBase).tax,
+  }))
+  let stateFloor: WorkingYearStateFloor | undefined
+  if (ctx.pricedState !== undefined) {
+    const stateBase = b + i
+    const zeroChannels = { pretaxDistribution: 0, conversion: 0, ongoingTaxable: 0, realizedGain: 0 }
+    const common = { state: ctx.pricedState, filing, calendarYear, minLivingAge: ctx.minLivingAge }
+    stateFloor = {
+      state: ctx.pricedState,
+      minLivingAge: ctx.minLivingAge,
+      ordinaryBase: stateBase,
+      baseTax: stateIncomeTax({
+        ...common,
+        ...zeroChannels,
+        ssBenefitTaxable: taxAt(stateBase, 0).ssTaxable,
+        clampedOrdinaryBase: stateBase,
+      }),
+      zeroTax: stateIncomeTax({ ...common, ...zeroChannels, ssBenefitTaxable: zero.ssTaxable }),
+    }
+  }
+  return {
+    ssBenefit,
+    filing,
+    count65,
+    calendarYear,
+    zeroTax: zero.tax,
+    readings,
+    ...(stateFloor !== undefined ? { stateFloor } : {}),
+  }
+}
+
+/**
+ * One pass's federal charge in a clamped year (KTD1 × KTD11): max over the readings of
+ * T(base + P) − T(base), plus T(0, ss) once — `portfolioOrdinary` / `portfolioGain` are everything the
+ * portfolio supplies this pass (the RMD-or-draw pre-tax distribution, the conversion, the funding
+ * draw's realized gain). `ssTaxable` is the year's taxable SS on the provisional that carries ALL of
+ * the year's AGI — B + I + the portfolio income (I is in AGI under either character, §86(b)(2)) — the
+ * figure the returned `MagiComponents` carry. THROWS when a reading's increment is negative beyond
+ * dust (a monotonicity breach is a defect, never a silent negative tax).
+ */
+export function workingYearFederalCharge(
+  floor: PreparedWorkingYearFloor,
+  portfolioOrdinary: number,
+  portfolioGain: number,
+): { readonly tax: number; readonly ssTaxable: number } {
+  const { ssBenefit, filing, count65, calendarYear, zeroTax, readings } = floor
+  let tax = Number.NEGATIVE_INFINITY
+  let ssTaxable = 0
+  for (let r = 0; r < readings.length; r++) {
+    const reading = readings[r]!
+    const full = federalTaxBesideSs(
+      portfolioOrdinary + reading.ordinaryBase,
+      portfolioGain + reading.gainBase,
+      ssBenefit,
+      filing,
+      count65,
+      calendarYear,
+    )
+    const increment = full.tax - reading.baseTax
+    if (increment < WORKING_YEAR_INCREMENT_FLOOR) {
+      throw new Error(
+        `[taxOverlay] a working-year reading's increment is negative (${increment}) — every federal channel is non-decreasing in income, so this is a defect, never dust`,
+      )
+    }
+    const charge = reading.baseTax === zeroTax ? full.tax : increment + zeroTax
+    if (charge > tax) tax = charge
+    // The ordinary reading (index 1 when I > 0) carries B + I + P on its provisional; at I = 0 the
+    // single reading carries B + P, which IS B + I + P.
+    if (r === (readings.length > 1 ? 1 : 0)) ssTaxable = full.ssTaxable
+  }
+  return { tax, ssTaxable }
+}
+
+/** The portfolio-sourced state channels of one pass (the same floored values the federal charge reads). */
+export interface WorkingYearStateChannels {
+  readonly pretaxDistribution: number
+  readonly conversion: number
+  readonly ongoingTaxable: number
+  readonly realizedGain: number
+  readonly ssBenefitTaxable: number
+}
+
+/**
+ * One pass's priced-state charge in a clamped year (KTD7): state(B + I + P) − state(B + I) +
+ * state(0), evaluated as state(B + I + P) where the outside income adds no state tax by itself (PA and
+ * FL structurally; NC inside its deduction). THROWS on a negative increment beyond dust. 0 when the
+ * floor carries no state half (the household's state is unpriced — the structural `+ 0`).
+ */
+export function workingYearStateCharge(floor: PreparedWorkingYearFloor, channels: WorkingYearStateChannels): number {
+  const sf = floor.stateFloor
+  if (sf === undefined) return 0
+  const full = stateIncomeTax({
+    state: sf.state,
+    filing: floor.filing,
+    calendarYear: floor.calendarYear,
+    minLivingAge: sf.minLivingAge,
+    ...channels,
+    clampedOrdinaryBase: sf.ordinaryBase,
+  })
+  const increment = full - sf.baseTax
+  if (increment < WORKING_YEAR_INCREMENT_FLOOR) {
+    throw new Error(
+      `[taxOverlay] a working-year state increment is negative (${increment}) — the state base is non-decreasing in income, so this is a defect, never dust`,
+    )
+  }
+  return sf.baseTax === sf.zeroTax ? full : increment + sf.zeroTax
 }
 
 function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution {
-  const { drawPool, policy, customOrder, rmd, conversion, taxableBasis, filing, count65, calendarYear, ssBenefit, bracketFillCeiling, ongoingTaxable, retirementState, minLivingAge } = ctx
+  const { drawPool, policy, customOrder, rmd, conversion, taxableBasis, filing, count65, calendarYear, ssBenefit, bracketFillCeiling, ongoingTaxable, retirementState, minLivingAge, workingYearOutside } = ctx
   const taxableValue = drawPool.taxable
+  // The working-year floor (2026-10-20): prepared ONCE here — every baseline is gross-independent.
+  // ABSENT (every unclamped / construct-absent / retired-route year) ⇒ undefined ⇒ the literal
+  // pre-floor branch below, byte-identical.
+  const floor =
+    workingYearOutside === undefined
+      ? undefined
+      : prepareWorkingYearFloor(workingYearOutside, {
+          ssBenefit,
+          filing,
+          count65,
+          calendarYear,
+          ...(retirementState !== undefined && isPricedState(retirementState) ? { pricedState: retirementState } : {}),
+          minLivingAge,
+        })
   let gross = net
   for (let pass = 0; pass < GROSS_UP_MAX_PASSES; pass++) {
     const alloc = allocateWithdrawal(drawPool, gross, policy, bracketFillCeiling, customOrder)
@@ -865,35 +1206,59 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
     // realized gain joins provisional's "other income" (lifting taxable SS) but is taxed at
     // preferential rates inside ordinaryPlusCapitalGainsTax — never folded into the ordinary base.
     const pretaxDistribution = Math.max(alloc.pretax, rmd)
+    // Everything the PORTFOLIO supplies as ordinary income this pass. In a clamped working year the
+    // outside income (B, I) is never folded in here — it rides the floor below and stays OUT of the
+    // returned MagiComponents (KTD6: the IRMAA override already carries pay + investment income, and
+    // the KTD-9 feed (3) carries the clamped pension — folding them in would double-count).
     const nonSSordinary = pretaxDistribution + conversion + ongoingTaxable
-    // Surface the taxable-SS local (M3): the identical value + call as before, so `nextGross` stays
-    // byte-identical — now also fed to the returned MagiComponents so acaMagi reads the FLOORED
-    // converged locals (never recomputed off a raw-gain ledger; the named sign-inversion).
-    const ssBenefitTaxable = taxableSocialSecurity(nonSSordinary + realizedGain, ssBenefit, filing, calendarYear)
-    const ordinaryIncome = nonSSordinary + ssBenefitTaxable
-    // The state income tax (the state-tax unit) folds in as a SECOND ADDEND beside the federal tax —
-    // INSIDE the fixed point, so the gross is solved to net `net` AFTER both taxes jointly, never
-    // bolted on after convergence. MEMBERSHIP-keyed on `isPricedState` (the red-team fold): absent /
-    // `'elsewhere'` / an unbuilt roster code take the LITERAL `+ 0` STRUCTURALLY (the module is never
-    // called), so the non-state path is byte-identical to the pre-state expression `net + federalTax`
-    // and the reduce-to-spine float lineage is untouched. A priced state's own base is assembled from
-    // these converged channels (NC folds SS out + gains into ordinary; PA age-gates the distribution +
-    // conversion; FL is a structural 0) — the state term rides WITHOUT the SS torpedo (k re-derivation
-    // above). The k_total ≈ 0.78 contraction still converges within GROSS_UP_MAX_PASSES.
-    const federalTax = ordinaryPlusCapitalGainsTax(ordinaryIncome, realizedGain, filing, count65, calendarYear)
-    let nextGross = net + federalTax
-    if (retirementState !== undefined && isPricedState(retirementState)) {
-      nextGross += stateIncomeTax({
-        state: retirementState,
-        filing,
-        calendarYear,
-        pretaxDistribution,
-        conversion,
-        ongoingTaxable,
-        realizedGain,
-        ssBenefitTaxable,
-        minLivingAge,
-      })
+    let ssBenefitTaxable: number
+    let nextGross: number
+    if (floor === undefined) {
+      // Surface the taxable-SS local (M3): the identical value + call as before, so `nextGross` stays
+      // byte-identical — now also fed to the returned MagiComponents so acaMagi reads the FLOORED
+      // converged locals (never recomputed off a raw-gain ledger; the named sign-inversion).
+      ssBenefitTaxable = taxableSocialSecurity(nonSSordinary + realizedGain, ssBenefit, filing, calendarYear)
+      const ordinaryIncome = nonSSordinary + ssBenefitTaxable
+      // The state income tax (the state-tax unit) folds in as a SECOND ADDEND beside the federal tax —
+      // INSIDE the fixed point, so the gross is solved to net `net` AFTER both taxes jointly, never
+      // bolted on after convergence. MEMBERSHIP-keyed on `isPricedState` (the red-team fold): absent /
+      // `'elsewhere'` / an unbuilt roster code take the LITERAL `+ 0` STRUCTURALLY (the module is never
+      // called), so the non-state path is byte-identical to the pre-state expression `net + federalTax`
+      // and the reduce-to-spine float lineage is untouched. A priced state's own base is assembled from
+      // these converged channels (NC folds SS out + gains into ordinary; PA age-gates the distribution +
+      // conversion; FL is a structural 0) — the state term rides WITHOUT the SS torpedo (k re-derivation
+      // above). The k_total ≈ 0.78 contraction still converges within GROSS_UP_MAX_PASSES.
+      const federalTax = ordinaryPlusCapitalGainsTax(ordinaryIncome, realizedGain, filing, count65, calendarYear)
+      nextGross = net + federalTax
+      if (retirementState !== undefined && isPricedState(retirementState)) {
+        nextGross += stateIncomeTax({
+          state: retirementState,
+          filing,
+          calendarYear,
+          pretaxDistribution,
+          conversion,
+          ongoingTaxable,
+          realizedGain,
+          ssBenefitTaxable,
+          minLivingAge,
+        })
+      }
+    } else {
+      // A clamped working year: the portfolio funds what its own income adds on top of the outside
+      // income, plus SS's own tax (KTD1 × KTD11), federal and priced-state alike (KTD7). The taxable SS
+      // the components carry rides the provisional that holds the year's whole AGI (KTD6).
+      const federal = workingYearFederalCharge(floor, nonSSordinary, realizedGain)
+      ssBenefitTaxable = federal.ssTaxable
+      nextGross = net + federal.tax
+      if (floor.stateFloor !== undefined) {
+        nextGross += workingYearStateCharge(floor, {
+          pretaxDistribution,
+          conversion,
+          ongoingTaxable,
+          realizedGain,
+          ssBenefitTaxable,
+        })
+      }
     }
     if (Math.abs(nextGross - gross) < GROSS_UP_EPSILON) {
       // Components key off THIS converging pass's gross (pre-update); the |nextGross − gross| < 1e-7
@@ -907,7 +1272,11 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
     gross = nextGross
   }
   throw new Error(
-    `tax gross-up did not converge in ${GROSS_UP_MAX_PASSES} passes (net=${net}, rmd=${rmd}, ss=${ssBenefit}, conversion=${conversion}) — refusing an unconverged tax (burned/062)`,
+    `tax gross-up did not converge in ${GROSS_UP_MAX_PASSES} passes (net=${net}, rmd=${rmd}, ss=${ssBenefit}, conversion=${conversion}` +
+      (workingYearOutside !== undefined
+        ? `, working-year ordinaryBase=${workingYearOutside.ordinaryBase}, investmentIncome=${workingYearOutside.investmentIncome}`
+        : '') +
+      `) — refusing an unconverged tax (burned/062)`,
   )
 }
 
@@ -996,6 +1365,7 @@ export function runTaxAwareDecumulation(
     contributions = [],
     ongoingTaxableGrossUp = [],
     ongoingTaxableIrmaaOnly = [],
+    workingYearOutsideIncome = [],
     balancesOut,
     healthOut,
   } = taxInputs
@@ -1093,6 +1463,41 @@ export function runTaxAwareDecumulation(
   }
   if (!ongoingTaxableIrmaaOnly.every((x) => Number.isFinite(x) && x >= 0)) {
     throw new Error('[taxOverlay] ongoingTaxableIrmaaOnly entries must be finite and ≥ 0 (insights 008/010; burned/062)')
+  }
+  // The working-year tax floor (2026-10-20, R8) — the overlay's own backstop, finiteness FIRST
+  // (insights 008/010: a NaN sails through every compare and `?? 0`). A hole is an unclamped year
+  // (`.every` skips it, and an explicit `undefined` is the same reading); a PRESENT entry is two
+  // finite ≥ 0 dollars. Then the wiring cross-check: under the construct the bridge mask IS the §7
+  // clamp (`∃` a living worker — `simulate`'s mask predicate is `(earned > 0 || accumulating) && t <
+  // retire && alive`), so an entry off the mask or a masked year with no entry is a wiring fault —
+  // and a silently missing entry is the wage-blind, optimistic year this floor exists to close.
+  if (
+    !workingYearOutsideIncome.every(
+      (e) =>
+        e === undefined ||
+        (Number.isFinite(e.ordinaryBase) && e.ordinaryBase >= 0 && Number.isFinite(e.investmentIncome) && e.investmentIncome >= 0),
+    )
+  ) {
+    throw new Error('[taxOverlay] workingYearOutsideIncome entries must be finite and ≥ 0 in both fields (insights 008/010; burned/062)')
+  }
+  if (config.taxEnabled) {
+    const constructMarker = taxInputs.contributions !== undefined
+    if (!constructMarker && workingYearOutsideIncome.some((e) => e !== undefined)) {
+      throw new Error(
+        '[taxOverlay] a workingYearOutsideIncome entry needs the accumulation construct (contributions) — the floor describes a §7-clamped year, and there is no clamp without the construct',
+      )
+    }
+    if (constructMarker && taxInputs.bridgeYearMask !== undefined) {
+      for (let t = 0; t < netWithdrawals.length; t++) {
+        const masked = bridgeYearMask[t] === true
+        const floored = workingYearOutsideIncome[t] !== undefined
+        if (masked !== floored) {
+          throw new Error(
+            `[taxOverlay] sim year ${t} is ${masked ? 'a clamped working year with no' : 'not a clamped working year but carries a'} workingYearOutsideIncome entry — under the construct the bridge mask is the §7 clamp, so this is a wiring fault (a dropped floor prices the year wage-blind, the optimistic direction; R8)`,
+          )
+        }
+      }
+    }
   }
 
   // The ACA applicable-% table is year-invariant; select it ONCE per run. `enhanced` = the ARPA/IRA
@@ -1679,6 +2084,7 @@ export function runTaxAwareDecumulation(
 
       // The inner tax gross-up as a closure the ACA solver probes at (fundingNet + a candidate premium).
       // The year-constant inputs are bundled into one NAMED context (no positional transposition risk).
+      const workingYearOutsideThisYear = workingYearOutsideIncome[t]
       const grossUpCtx: GrossUpContext = {
         drawPool,
         policy,
@@ -1701,6 +2107,9 @@ export function runTaxAwareDecumulation(
           ? { retirementState: config.household.retirementState }
           : {}),
         minLivingAge: stateMinLivingAge,
+        // The working-year tax floor (2026-10-20): presence-keyed on this year's entry — a hole (every
+        // unclamped year) omits the field, so the gross-up takes its literal pre-floor branch.
+        ...(workingYearOutsideThisYear !== undefined ? { workingYearOutside: workingYearOutsideThisYear } : {}),
       }
       const fundNet = (netTotal: number): GrossUpSolution => solveGrossWithdrawal(netTotal, grossUpCtx)
       // AGE GATE (red-team blocker): ACA prices ONLY when ≥1 living member is pre-65. With every living
@@ -1808,6 +2217,9 @@ export function runTaxAwareDecumulation(
       // case), so the difference IS the tax — no solver plumbing, no recompute (objective ≡ headline:
       // a re-derived tax could drift from the converged one). Sub-cent residual (1e-6) only where a
       // root EXISTS (the register's Tier 0 *The ACA solve finds no root at the 100 %-FPL line…*).
+      // In a CLAMPED working year (the working-year tax floor) this is the PORTFOLIO-FUNDED tax — what
+      // the portfolio's own income adds on top of the household's pay, plus SS's own tax — never the
+      // household's whole return (the pay's own tax is funded outside the portfolio, the §7 law).
       taxPaidThisYear = grossWithdrawal - fundingNet - acaNetPremiumThisYear
     } else {
       grossWithdrawal = net

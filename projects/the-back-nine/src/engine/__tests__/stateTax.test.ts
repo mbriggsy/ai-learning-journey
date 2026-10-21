@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { stateIncomeTax, type StateTaxYearContext } from '@engine/stateTax'
-import { isPricedState, stateRateForYear, stateStandardDeductionFor } from '@engine/constants'
+import { isPricedState, medicareCostTrend, stateRateForYear, stateStandardDeductionFor } from '@engine/constants'
 
 // ===========================================================================
 // The PURE state-income-tax primitive — externally-derived DND-012 fixtures. Every expected number
@@ -192,5 +192,74 @@ describe('stateIncomeTax — Florida (sourced constitutional $0; structural lite
     // is an HONEST affirmation (a pinned constitutional $0), not an unbuilt-state omission.
     expect(isPricedState('FL')).toBe(true)
     expect(stateIncomeTax(mk({ state: 'FL', conversion: 1_000_000, minLivingAge: 45 }))).toBe(0)
+  })
+})
+
+// ===========================================================================
+// THE WORKING-YEAR TAX FLOOR (2026-10-20, KTD7): a §7-clamped working year hands the state its outside
+// ordinary income (pay + clamped ongoing taxable + working-year investment income, B + I) on the
+// PRESENCE-keyed `clampedOrdinaryBase` channel. The CALLER owns the subtraction (state(B + I + P) −
+// state(B + I) + state(0), `taxOverlay.workingYearStateCharge`); these arms pin what the primitive does
+// with the channel. NC's base is AGI-derived (G.S. 105-153.3(1) / 105-153.4(a) — the wages are in AGI,
+// no 401(k) add-back), so the channel enters it INSIDE the deduction; PA (class-based, flat, no
+// deduction) and FL (no income tax) ignore it STRUCTURALLY — their calls are exactly the pre-floor ones.
+// The NC deduction is frozen nominal, so 2030 reads it deflated — re-derived by the closed form here.
+// ===========================================================================
+describe('stateIncomeTax — the working-year floor channel (KTD7)', () => {
+  // NC's deduction is frozen nominal, so a 2030 year meets it deflated by the price level — re-derived
+  // here by the CLOSED FORM ((1 + cpi)^n through the printed table's edge, the ultimate rate beyond; 1 at
+  // and before the anchor), an independent path to the engine's running-product `cumulativePriceIndex`
+  // (the taxOverlay suite's `closedFormIndex`, insight 135).
+  const closedFormIndex = (calendarYear: number): number => {
+    const trend = medicareCostTrend.value
+    if (calendarYear <= trend.anchorYear) return 1
+    const edge = trend.anchorYear + trend.premiums.length
+    return (
+      (1 + trend.cpiNearTermAvg) ** (Math.min(calendarYear, edge) - trend.anchorYear) *
+      (1 + trend.cpiUltimate) ** Math.max(0, calendarYear - edge)
+    )
+  }
+  const nc2030 = stateRateForYear('NC', 2030)
+  const ncSd2030 = (filing: 'mfj' | 'single') => stateStandardDeductionFor('NC', filing) / closedFormIndex(2030)
+
+  it('NC, B + I above the deduction (2030): the channel moves the increment from rate × (X − D) to rate × X', () => {
+    const d = ncSd2030('mfj')
+    expect(d).toBeLessThan(ncSdMfj) // frozen nominal ⇒ smaller in 2030's real dollars
+    const withBase = (x: number) => stateIncomeTax(mk({ calendarYear: 2030, conversion: x, clampedOrdinaryBase: 110_000 }))
+    // With B + I = 110,000 > D, the conversion's increment is the whole conversion at the flat rate.
+    expect(withBase(34_000) - withBase(0)).toBeCloseTo(nc2030 * 34_000, 6)
+    // Floor-absent (today's wage-blind pricing): the deduction shelters the first D of the conversion.
+    const bare = (x: number) => stateIncomeTax(mk({ calendarYear: 2030, conversion: x }))
+    expect(bare(34_000) - bare(0)).toBeCloseTo(nc2030 * Math.max(0, 34_000 - d), 6)
+  })
+
+  it('NC, B + I below the deduction: only the part of the conversion past the deduction’s remainder is taxed', () => {
+    const d = ncSd2030('mfj')
+    const at = (x: number) => stateIncomeTax(mk({ calendarYear: 2030, conversion: x, clampedOrdinaryBase: 10_000 }))
+    expect(at(0)).toBe(0)
+    expect(at(34_000)).toBeCloseTo(nc2030 * Math.max(0, 10_000 + 34_000 - d), 6)
+  })
+
+  it('NC single (a working survivor): the single deduction, read through the constant, never typed', () => {
+    const d = ncSd2030('single')
+    expect(d).toBeLessThan(ncSdSingle)
+    const at = (x: number) => stateIncomeTax(mk({ calendarYear: 2030, filing: 'single', conversion: x, clampedOrdinaryBase: 5_000 }))
+    expect(at(30_000)).toBeCloseTo(nc2030 * Math.max(0, 5_000 + 30_000 - d), 6)
+  })
+
+  it('PA ignores the channel STRUCTURALLY — bit for bit, under AND over the qualified age', () => {
+    for (const minLivingAge of [45, 67]) {
+      const ctx = mk({ state: 'PA', calendarYear: 2030, conversion: 34_000, pretaxDistribution: 12_000, realizedGain: 3_000, ongoingTaxable: 2_000, minLivingAge })
+      expect(Object.is(stateIncomeTax({ ...ctx, clampedOrdinaryBase: 110_000 }), stateIncomeTax(ctx))).toBe(true)
+    }
+  })
+
+  it('FL is a structural 0 with the channel too', () => {
+    expect(stateIncomeTax(mk({ state: 'FL', calendarYear: 2030, conversion: 34_000, clampedOrdinaryBase: 110_000 }))).toBe(0)
+  })
+
+  it('the channel ABSENT is the literal pre-floor call — an explicit 0 prices the same as no channel', () => {
+    const ctx = mk({ calendarYear: 2030, conversion: 34_000, pretaxDistribution: 20_000 })
+    expect(Object.is(stateIncomeTax({ ...ctx, clampedOrdinaryBase: 0 }), stateIncomeTax(ctx))).toBe(true)
   })
 })

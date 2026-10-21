@@ -43,7 +43,13 @@ import {
   type RetirementState,
   type TickerClassification,
 } from '@shared/model'
-import { buildCandidateParams, DATE_SEARCH_PATHS, type DateSearchInput } from '@engine/dateSearch'
+import {
+  buildCandidateParams,
+  DATE_SEARCH_PATHS,
+  workingYearTaxReach,
+  workingYearTaxReachOfRun,
+  type DateSearchInput,
+} from '@engine/dateSearch'
 import { survivorMedicalLeanMoves } from '@engine/simulate'
 import { productionMarket } from '@engine/reference/methodology'
 import { findBlendRow, stockWeightForBlend } from '@engine/reference/tickerBlend'
@@ -51,6 +57,7 @@ import { acaAgeRatingCurve, medicareExtrasTypicalMonthly } from '@engine/constan
 import { acaRegimeReachable } from '@engine/acaRegime'
 import { isPricedState, type PricedState } from '@engine/constants/stateTax'
 import type { ScenarioDraft } from '@store/memoryModel'
+import type { ExposureRead } from '@store/staleness'
 import { compileBudget } from '@budget/budgetToSpending'
 import { annualAdditionsCeilingFor, contributionCeilingFor, contributionCeilingInYear, isEmployerPlanKind } from './sanity'
 import { compileIncomeStreams } from './otherIncome'
@@ -871,7 +878,7 @@ function acaPricedOverlayArm(o: OverlayParams | undefined): boolean {
  *  This is the read that makes the all-65+ household honest: it takes `buildOverlay`'s
  *  Medicare-only branch (`intakeMap.ts:683-686` — "healthcareEnabled with NO ACA quote pair"),
  *  so `enrolledPremium` is absent, the engine's per-year ACA gate
- *  (`taxOverlay.ts:1717-1722`) can never open, and this correctly reads FALSE. `buildSpineParams`
+ *  (`taxOverlay.ts:2126-2131`) can never open, and this correctly reads FALSE. `buildSpineParams`
  *  returns null on the date route ⇒ false there (the caller handles that route separately —
  *  reading false as "unpriced" off-route would be the insight-080 shortcut, not a fact). */
 export function spineAcaPriced(d: ScenarioDraft): boolean {
@@ -884,7 +891,7 @@ export function spineAcaPriced(d: ScenarioDraft): boolean {
  *  BOTH DIRECTIONS, AND WHERE EACH IS VALID:
  *    · FALSE is EXACT everywhere. `buildCandidateParams` derives each candidate's ACA stream
  *      from this one through `buildHealthcareStreams`, which only WINDOW-GATES an entered
- *      stream and never synthesizes one (`healthcareStreams.ts:179-181`), so gating can only
+ *      stream and never synthesizes one (`healthcareStreams.ts:200-202`), so gating can only
  *      SHRINK positives: no base stream ⇒ no candidate offset can price ACA ⇒ the household is
  *      PROVEN unexposed (`date65`, the all-65+ still-working seed, is the witness). That is the
  *      arm the staleness silence rides, and it cannot lie.
@@ -912,7 +919,7 @@ export function dateBaseAcaPriced(d: ScenarioDraft): boolean {
 }
 
 /** "Did the DATE route's run price Medicare?" — `dateSearch` forces `healthcareEnabled: true` on
- *  EVERY candidate (`dateSearch.ts:229`), so the only question left is whether a run exists at
+ *  EVERY candidate (`dateSearch.ts:240`), so the only question left is whether a run exists at
  *  all: `buildDateInput` returns null off-route / on missing facts, and an overlay-less
  *  household (the degenerate early-return) prices no healthcare whatever the sweep forces —
  *  `buildCandidateParams` throws on it and `runDateSearch` pre-rejects it calmly. Reading the
@@ -954,7 +961,7 @@ export function overlayBuiltForRun(d: ScenarioDraft): boolean {
  *  BASE overlay, U17 §S4's exposure read for the contribution-limit clock.
  *
  *  READ THE BASE, NOT A CANDIDATE. `buildCandidateParams` sets `accumulation` on EVERY date
- *  candidate unconditionally (`dateSearch.ts:230` — its presence keys the §7 working-year
+ *  candidate unconditionally (`dateSearch.ts:241` — its presence keys the §7 working-year
  *  zero-withdrawal clamp), so a candidate's `accumulation !== undefined` is a constant `true`
  *  and discriminates nothing. What it actually carries is this base overlay's streams,
  *  TRUNCATED (`truncateStreams(enteredContributions?.[i] ?? {}, Y)`) — and `buildOverlay` spreads
@@ -983,6 +990,33 @@ export function contributionsPricedForRun(d: ScenarioDraft): boolean {
 export function survivorMedicalLeanForRun(d: ScenarioDraft): boolean {
   const params = builtRunParams(d)
   return params !== null && survivorMedicalLeanMoves(params)
+}
+
+/** "Can the 2026-10-20 working-year tax floor move THIS run?" — the engine-pricing ledger's ROW-LEVEL
+ *  `reach: 'working-years'` read (ledger v12, both of its families) for U17 §S4's staleness gate. Each
+ *  route walks its OWN producer through the engine's one predicate (insights 080/081 — never an age,
+ *  pension or route shortcut):
+ *    · DATE — `workingYearTaxReach` over `buildDateInput`'s output: every candidate the sweep builds,
+ *      on the no-death and every single-death timeline (a still-working survivor's §202 benefit and an
+ *      inherited pre-tax pool are inside the clamp's domain — insight 027).
+ *    · SPINE — `workingYearTaxReachOfRun` over `buildSpineParams`' output: an all-retired run carries
+ *      no accumulation construct (`buildOverlay` builds it only for a WORKING owner's contribution),
+ *      so it never clamps — read from the walk, not asserted from the route.
+ *  `'unknown'` where no run can be built (the missing-facts residual), and where the date route's
+ *  candidate construction THROWS on a draft that is otherwise buildable — `runDateSearch` turns that
+ *  same throw into its calm input-failure, so the exposure is genuinely undecidable, and the re-entry
+ *  gate (which reads this at unlock) must never crash on it. Never a silent `'unpriced'`. */
+export function workingYearTaxForRun(d: ScenarioDraft): ExposureRead {
+  const input = buildDateInput(d)
+  if (input !== null) {
+    try {
+      return workingYearTaxReach(input)
+    } catch {
+      return 'unknown'
+    }
+  }
+  const spine = buildSpineParams(d)
+  return spine === null ? 'unknown' : workingYearTaxReachOfRun(spine)
 }
 
 /** "Does THIS run's stock weight READ the dated ticker-blend table?" — U17 §S4's exposure read
@@ -1160,12 +1194,18 @@ export function buildDateInput(d: ScenarioDraft): DateSearchInput | null {
   const complete =
     investment !== undefined &&
     d.people.every((p, i) => p.workStatus !== 'working' || investment[i] !== undefined)
+  // The working-year tax floor (2026-10-20, KTD11): the RAW per-person investment figure rides beside
+  // the override under the SAME completeness gate, so `override − earnedIncomeReal === investment`
+  // holds for every working member (a retired member's slot is 0 in both — they never work a year).
   return {
     params,
     ...(complete
       ? {
           workingYearIrmaaMagiByPerson: d.people.map((p, i) =>
             p.workStatus === 'working' ? (p.earnedIncomeReal ?? 0) + (investment[i] ?? 0) : 0,
+          ),
+          workingYearInvestmentByPerson: d.people.map((p, i) =>
+            p.workStatus === 'working' ? (investment[i] ?? 0) : 0,
           ),
         }
       : {}),

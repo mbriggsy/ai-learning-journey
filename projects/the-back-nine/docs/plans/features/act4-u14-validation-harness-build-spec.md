@@ -126,7 +126,7 @@ status: shipped
   PTC cliff, the IRMAA bill steps) are never bisected at all, so no bisection can span a
   discontinuity and find a phantom root. The rail substrate is the shipped `magiLandscape`
   fill model, which carries the same well-behavedness contract the `bracketFillCeilings`
-  seam (`model.ts:447`) already carries — reuse, never re-derive (insight 068: fill to the
+  seam (`model.ts:455`) already carries — reuse, never re-derive (insight 068: fill to the
   *binding effective* ceiling via the branch's own predicate, never the nominal bracket top),
   so the enumerator and the engine agree on the geometry by construction.
 - Imported by BOTH this harness and U15's `search.ts` — the two can never drift to

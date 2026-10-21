@@ -49,6 +49,7 @@ import {
   FIRST_UNAMBIGUOUS_SAVE_DAY,
   type PricingFamily,
   type PricingLedgerRow,
+  type PricingReach,
 } from '@engine/pricingVersion'
 
 /** The injected clock — never earlier than the first day a save is unambiguously THIS build's (the
@@ -63,8 +64,9 @@ const stampedToday = (s: ScenarioV3): ScenarioV3 => ({ ...s, savedAt: TODAY })
 // --- the exposure fixtures (the populations the three-way distinguishes) ----------------------
 /** A household whose run prices EVERYTHING — the pre-65 marketplace-quoted, still-contributing,
  *  ticker-holding household. Both healthcare families, the tax overlay, the contribution
- *  streams, the dated blend table, and (a budgetless couple with entered OOP medical, r < 1) the
- *  survivor-medical lean's `spending` family. */
+ *  streams, the dated blend table, (a budgetless couple with entered OOP medical, r < 1) the
+ *  survivor-medical lean's `spending` family, and (a date-route household whose sweep reaches a
+ *  clamped working year with a portfolio income channel) the working-year tax floor's reach. */
 const ACA_PRICED: StalenessExposure = {
   overlayBuilt: 'priced',
   medicare: 'priced',
@@ -72,11 +74,13 @@ const ACA_PRICED: StalenessExposure = {
   contributions: 'priced',
   blend: 'priced',
   spending: 'priced',
+  workingYearTax: 'priced',
   pricedState: undefined,
 }
 /** The all-65+ Medicare-only household: `healthcareEnabled` with NO quote pair, so the engine's
- *  ACA gate can never open. Retired ⇒ no contributions; manual blends ⇒ the table is never read.
- *  THE witness for the shipped defect, and the REAL shape of `DEV_SEEDS.retired`. */
+ *  ACA gate can never open. Retired ⇒ no contributions and no working year (the floor's reach is
+ *  unpriced); manual blends ⇒ the table is never read. THE witness for the shipped defect, and the
+ *  REAL shape of `DEV_SEEDS.retired`. */
 const MEDICARE_ONLY: StalenessExposure = {
   overlayBuilt: 'priced',
   medicare: 'priced',
@@ -84,6 +88,7 @@ const MEDICARE_ONLY: StalenessExposure = {
   contributions: 'unpriced',
   blend: 'unpriced',
   spending: 'unpriced',
+  workingYearTax: 'unpriced',
   pricedState: undefined,
 }
 /** The DEGENERATE household — `buildOverlay`'s early return (no accounts, no premium, no ongoing
@@ -96,6 +101,7 @@ const NO_OVERLAY: StalenessExposure = {
   contributions: 'unpriced',
   blend: 'unpriced',
   spending: 'unpriced',
+  workingYearTax: 'unpriced',
   pricedState: undefined,
 }
 /** DELIBERATELY HYPOTHETICAL — a run with a tax overlay but no healthcare. Today's intake gate
@@ -112,6 +118,7 @@ const OVERLAY_NO_HEALTH: StalenessExposure = {
   contributions: 'unpriced',
   blend: 'unpriced',
   spending: 'unpriced',
+  workingYearTax: 'unpriced',
   pricedState: undefined,
 }
 /** Undecidable on every axis — the unbuildable draft (a cross-build vault missing a fact a newer
@@ -123,6 +130,7 @@ const UNDECIDABLE: StalenessExposure = {
   contributions: 'unknown',
   blend: 'unknown',
   spending: 'unknown',
+  workingYearTax: 'unknown',
   pricedState: undefined,
 }
 const pricing = (e: StalenessExposure, s: PricedState | undefined): StalenessExposure => ({
@@ -213,12 +221,12 @@ describe('deriveStaleness — the tax clock', () => {
   it('is EXPOSURE-GATED on the overlay existing, NOT on healthcare — a run with a tax overlay and no healthcare still fires (the clock reads its OWN bit)', () => {
     // THE REPLACED CLAIM (U17 §S4's F-pass): this arm used to assert the federal clock takes NO
     // exposure gate, on the premise "a household without an overlay reaches no verdict to be
-    // stale about". That premise is FALSE — `buildParams` (intakeMap.ts:700-716) returns a full
+    // stale about". That premise is FALSE — `buildParams` (intakeMap.ts:707-723) returns a full
     // params object for the $0-portfolio/no-overlay household and it gets a real verdict. A test
     // that pins a defect is the defect's second copy, so it is rewritten, not relaxed.
     //
     // What survives is the half that WAS true and still matters: `taxEnabled: true` is hardcoded
-    // on every built overlay (intakeMap.ts:653), so the gate must be `overlayBuilt` — a clock
+    // on every built overlay (intakeMap.ts:660), so the gate must be `overlayBuilt` — a clock
     // wired to `medicare` instead would silence a real federal rulebook move for this household.
     const s = freshSave()
     const basisMoved = { ...s, taxVintageDetail: { ...s.taxVintageDetail!, legalBasis: 'TCJA (pre-OBBBA)' } }
@@ -229,7 +237,7 @@ describe('deriveStaleness — the tax clock', () => {
 
   it('is SILENT for the DEGENERATE household — no overlay ⇒ `taxEnabled` never set ⇒ consumedConstants skips the whole `tax.` family ⇒ their recompute is byte-identical under any vintage', () => {
     // The population: save-ready, $0 accounts, Social-Security-only income ⇒ `buildOverlay`'s
-    // early return (intakeMap.ts:578-583). Reachable — `stalenessExposure.test.ts` builds exactly
+    // early return (intakeMap.ts:585-590). Reachable — `stalenessExposure.test.ts` builds exactly
     // this draft and proves `missingRequiredFacts` is empty for it.
     const s = freshSave()
     const basisMoved = { ...s, taxVintageDetail: { ...s.taxVintageDetail!, legalBasis: 'TCJA (pre-OBBBA)' } }
@@ -385,8 +393,8 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     ['part-b', { partBStandardMonthly: hv.partBStandardMonthly + 10 }],
     ['part-b-trend', { partBTrendVintage: 'part-b-trend-2025x' }],
     // THE F1 CORRECTION, pinned as an equal member of the family. `irmaaTopTierFrozenThrough`
-    // has no engine reader of its own; the table it DATES (`irmaa`) is read at simulate.ts:996,
-    // solveAnchor.ts:221-231 and taxOverlay.ts:1124, and consumedConstants.ts:112 consumes the
+    // has no engine reader of its own; the table it DATES (`irmaa`) is read at simulate.ts:1088,
+    // solveAnchor.ts:221-231 and taxOverlay.ts:1529, and consumedConstants.ts:112 consumes the
     // whole `health.` family on `healthcareEnabled`. Re-bucketing it to the aggregate reds here.
     ['irmaa-freeze', { irmaaTopTierFrozenThrough: hv.irmaaTopTierFrozenThrough + 1 }],
   ] as const)(
@@ -400,7 +408,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
       expect(named.rulesMoved).toBe(true)
       // The SWEPT part-b-trend comment claimed "no exposure gate: the trend prices every
       // Medicare-bearing year both routes reach". FALSE: `partBPricingByT` is built only under
-      // `healthcareEnabled && taxEnabled` (taxOverlay.ts:1132-1133). Reverting it to ungated
+      // `healthcareEnabled && taxEnabled` (taxOverlay.ts:1537-1538). Reverting it to ungated
       // reds this arm.
       const silent = deriveStaleness(moved, TODAY, NO_OVERLAY)
       expect(silent.healthcare.movedClocks).toEqual([])
@@ -428,7 +436,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     })
   })
 
-  it('`coverage-year` dates BOTH tables (model.ts:2344) — it names each family the run PRICED, and only those', () => {
+  it('`coverage-year` dates BOTH tables (model.ts:2355) — it names each family the run PRICED, and only those', () => {
     // It is the ONLY marker for every annually-re-indexed health figure with no stamp of its own
     // (the four interior IRMAA thresholds, the ACA applicable-percentage bands, the age-rating
     // curve), so bucketing it nameless hid the annual re-key from the pre-65 planner it hits
@@ -576,7 +584,7 @@ describe('deriveStaleness — every healthcare clock names exactly the families 
 
   /** WHICH SENTENCE each clock is allowed to speak — the law, restated by hand. */
   const FAMILY: Readonly<Record<HealthcareClock, { readonly aca: boolean; readonly medicare: boolean }>> = {
-    'coverage-year': { aca: true, medicare: true }, // "the ACA/IRMAA tables" (model.ts:2344)
+    'coverage-year': { aca: true, medicare: true }, // "the ACA/IRMAA tables" (model.ts:2355)
     'aca-status': { aca: true, medicare: false },
     'fpl-guideline': { aca: true, medicare: false },
     'irmaa-freeze': { aca: false, medicare: true }, // dates the IRMAA schedule (the F1 ruling)
@@ -662,9 +670,9 @@ describe('deriveStaleness — the date clocks', () => {
 
   it('the EXPOSURE GATE (U17 §S4 F3): a DATE-route household whose built overlay carries NO accumulation is silent — "every candidate carries the construct" was necessary but NOT sufficient', () => {
     // The population: 66/retired holding everything + 62/working holding nothing. They ARE on
-    // the date route, and `dateSearch.ts:230` DOES force `accumulation` onto every candidate —
+    // the date route, and `dateSearch.ts:241` DOES force `accumulation` onto every candidate —
     // but it fills it from the BASE overlay's streams, and `contributionStreamsFor` returns `{}`
-    // for a non-working owner (intakeMap.ts:467-470). Their candidates sweep with empty streams and
+    // for a non-working owner (intakeMap.ts:474-477). Their candidates sweep with empty streams and
     // read no limit. Same fixture, same moved stamp, ONE differing read (insight 029).
     const s = freshDateSave()
     const bumped = {
@@ -850,20 +858,28 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
   const PRE_LEDGER_DAY = ENGINE_PRICING_LEDGER[0]!.sinceEpochDay - 1
   const SHIP_DAYS = [...new Set(ENGINE_PRICING_LEDGER.map((r) => r.sinceEpochDay))]
 
-  /** Each fixture's PRICED families, stated by hand (the exposure literals above, read as the law reads
-   *  them; `stateTax` is decided per row by the household's state, below). */
-  const ACA_PRICED_FAMILIES: ReadonlySet<PricingFamily> = new Set(['tax', 'contributions', 'aca', 'spending', 'medicare'])
-  const MEDICARE_ONLY_FAMILIES: ReadonlySet<PricingFamily> = new Set(['tax', 'medicare'])
-  const OVERLAY_NO_HEALTH_FAMILIES: ReadonlySet<PricingFamily> = new Set(['tax'])
+  /** Each fixture's PRICED families AND the row-level reach qualifiers its run satisfies, stated by hand
+   *  (the exposure literals above, read as the law reads them; `stateTax` is decided per row by the
+   *  household's state, below). ACA_PRICED is a date-route household its sweep reaches (`workingYearTax:
+   *  'priced'`); the other three are not. */
+  type PricedSet = ReadonlySet<PricingFamily | PricingReach>
+  const ACA_PRICED_FAMILIES: PricedSet = new Set(['tax', 'contributions', 'aca', 'spending', 'medicare', 'working-years'])
+  const MEDICARE_ONLY_FAMILIES: PricedSet = new Set(['tax', 'medicare'])
+  const OVERLAY_NO_HEALTH_FAMILIES: PricedSet = new Set(['tax'])
+  /** ACA_PRICED with the working-year reach PROVEN unpriced — the same household, one axis flipped. */
+  const ACA_UNREACHED = withRead(ACA_PRICED, { workingYearTax: 'unpriced' })
+  const ACA_UNREACHED_FAMILIES: PricedSet = new Set(['tax', 'contributions', 'aca', 'spending', 'medicare'])
 
   const crosses = (savedAt: number | undefined, r: PricingLedgerRow): boolean => savedAt === undefined || savedAt < r.sinceEpochDay
-  /** Does row `r` reach family `f` for a household pricing `priced` in `state`? */
-  const reaches = (r: PricingLedgerRow, f: PricingFamily, priced: ReadonlySet<PricingFamily>, state: PricedState | undefined) =>
+  /** Does row `r` reach family `f` for a household pricing `priced` in `state`? A row-level `reach`
+   *  (v12+) gates every family on the row: the household must satisfy it too. */
+  const reaches = (r: PricingLedgerRow, f: PricingFamily, priced: PricedSet, state: PricedState | undefined) =>
     r.families.includes(f) &&
+    (r.reach === undefined || priced.has(r.reach)) &&
     (f === 'stateTax' ? state !== undefined && (r.states ?? []).includes(state) : priced.has(f))
-  const expectedNamed = (savedAt: number | undefined, priced: ReadonlySet<PricingFamily>, state?: PricedState) =>
+  const expectedNamed = (savedAt: number | undefined, priced: PricedSet, state?: PricedState) =>
     PRICING_FAMILY_ORDER.filter((f) => REPRICE.some((r) => crosses(savedAt, r) && reaches(r, f, priced, state)))
-  const expectedHedged = (savedAt: number | undefined, priced: ReadonlySet<PricingFamily>, state?: PricedState) => {
+  const expectedHedged = (savedAt: number | undefined, priced: PricedSet, state?: PricedState) => {
     const named = new Set(expectedNamed(savedAt, priced, state))
     return REPRICE.some(
       (r) => r.sinceEpochDay === savedAt && r.families.some((f) => reaches(r, f, priced, state) && !named.has(f)),
@@ -942,11 +958,17 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
     expect(deriveStaleness(savedOn(day + 1), TODAY, exposure).pricing, 'unambiguously this build: quiet').toEqual(QUIET)
   })
 
-  it('an ambiguous day is silent where the family is UNPRICED — the hedge never speaks for a figure the run does not price', () => {
-    // The newest row (v11) reaches only the survivor-medical lean's `spending` family: a run that prices
-    // only tax hears nothing on that day.
-    expect(NEWEST.families.every((f) => !OVERLAY_NO_HEALTH_FAMILIES.has(f)), 'premise: the newest row reaches no family this fixture prices').toBe(true)
+  it('an ambiguous day is silent where the row does not REACH the run — the hedge never speaks for a figure the run does not price', () => {
+    // The newest row (v12, the working-year tax floor) declares `tax` — which this fixture prices — but
+    // its row-level `working-years` reach is PROVEN unpriced for it (no working year to clamp), so the
+    // row reaches nothing here and the run hears nothing on that day. (Before v12 this premise read "the
+    // newest row reaches no family this fixture prices" — v11 declared `spending` alone; v12 broke it.)
+    expect(NEWEST.families, 'premise: the newest row declares a family this fixture prices').toContain('tax')
+    expect(NEWEST.families.every((f) => !reaches(NEWEST, f, OVERLAY_NO_HEALTH_FAMILIES, undefined)), 'premise: …and reaches none of them').toBe(true)
     expect(deriveStaleness(savedOn(NEWEST.sinceEpochDay), TODAY, OVERLAY_NO_HEALTH).pricing).toEqual(QUIET)
+    // Non-vacuity: the SAME run with the reach proven priced hears the nameless line on that day.
+    const reached = deriveStaleness(savedOn(NEWEST.sinceEpochDay), TODAY, withRead(OVERLAY_NO_HEALTH, { workingYearTax: 'priced' }))
+    expect(reached.pricing).toEqual({ namedFamilies: [], hedged: true, reconfirmMedicareSpending: false, moved: true })
   })
 
   it('SUPPRESSION: saved ON an earlier ship day that a LATER row crosses for the same family ⇒ that family is named and its hedge is suppressed', () => {
@@ -962,9 +984,15 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
   })
 
   it('…and the suppression is PER FAMILY: an ambiguous tax day still hedges while Medicare, crossed later, is named', () => {
-    // v6 (2026-09-25) is the newest TAX row; later rows cross only Medicare and (v11) spending.
+    // v6 (2026-09-25) is the newest tax row that REACHES this all-retired run; later rows cross Medicare,
+    // (v11) spending, and (v12) tax again — but v12's `working-years` reach is proven unpriced here.
+    // (Before v12 this premise read "no later tax row"; v12 is one, so the premise is stated as reach.)
     const day = rowV(6).sinceEpochDay
-    expect(REPRICE.some((r) => r.sinceEpochDay > day && r.families.includes('tax')), 'premise: no later tax row').toBe(false)
+    expect(REPRICE.some((r) => r.sinceEpochDay > day && r.families.includes('tax')), 'premise: a later tax row exists (v12)').toBe(true)
+    expect(
+      REPRICE.some((r) => r.sinceEpochDay > day && reaches(r, 'tax', MEDICARE_ONLY_FAMILIES, undefined)),
+      'premise: …but no later tax row REACHES this fixture',
+    ).toBe(false)
     const report = deriveStaleness(savedOn(day), TODAY, MEDICARE_ONLY)
     expect(report.pricing.namedFamilies).toEqual(expectedNamed(day, MEDICARE_ONLY_FAMILIES))
     expect(report.pricing.namedFamilies).not.toContain('tax')
@@ -980,6 +1008,9 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
       ['OVERLAY_NO_HEALTH', OVERLAY_NO_HEALTH, OVERLAY_NO_HEALTH_FAMILIES],
       ['ACA_PRICED+NC', pricing(ACA_PRICED, 'NC'), ACA_PRICED_FAMILIES],
       ['MEDICARE_ONLY+PA', pricing(MEDICARE_ONLY, 'PA'), MEDICARE_ONLY_FAMILIES],
+      // The working-year reach split (v12): the same everything-priced household, reach proven unpriced.
+      ['ACA_UNREACHED+NC', pricing(ACA_UNREACHED, 'NC'), ACA_UNREACHED_FAMILIES],
+      ['MEDICARE_ONLY+NC', pricing(MEDICARE_ONLY, 'NC'), MEDICARE_ONLY_FAMILIES],
     ] as const
     let hedgedSeen = 0
     let namedSeen = 0
@@ -1075,5 +1106,80 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
     // Non-vacuity: both values of rulesMoved are in the sweep.
     expect(deriveStaleness(taxMovedToo, TODAY, ACA_PRICED).rulesMoved).toBe(true)
     expect(deriveStaleness(base, TODAY, ACA_PRICED).rulesMoved).toBe(false)
+  })
+
+  // ── THE ROW-LEVEL REACH (ledger v12, the working-year tax floor, 2026-10-20) ──────────────────────
+  // v12 declares `tax` + NC's `stateTax` under `reach: 'working-years'`: a household hears it only where
+  // its run can reach a §7-clamped working year with a portfolio income channel. The reader narrows each
+  // family's read by the reach read — `'unpriced'` beats `'unknown'` beats `'priced'`.
+  const V12 = rowV(12)
+  /** Saved the day before v12 shipped (and long after v11): v12 is the ONLY row this save crosses. */
+  const ONLY_V12 = V12.sinceEpochDay - 1
+
+  it('premise: v12 is the working-year floor row, and a save the day before it crosses no other row', () => {
+    expect({ families: V12.families, states: V12.states, reach: V12.reach }).toEqual({
+      families: ['tax', 'stateTax'],
+      states: ['NC'],
+      reach: 'working-years',
+    })
+    expect(ENGINE_PRICING_LEDGER.filter((r) => crosses(ONLY_V12, r) || r.sinceEpochDay === ONLY_V12).map((r) => r.version)).toEqual([12])
+  })
+
+  it('a REACHED date-route run crossing v12 hears "your taxes" — and "your state tax" in NC; the SAME run with the reach proven unpriced hears NOTHING, NC included', () => {
+    expect(deriveStaleness(savedOn(ONLY_V12), TODAY, ACA_PRICED).pricing).toEqual({ namedFamilies: ['tax'], hedged: false, reconfirmMedicareSpending: false, moved: true })
+    expect(deriveStaleness(savedOn(ONLY_V12), TODAY, pricing(ACA_PRICED, 'NC')).pricing.namedFamilies).toEqual(['tax', 'stateTax'])
+    // PA and FL never hear the state line (v12's states are NC only) — the tax line still speaks.
+    for (const state of ['PA', 'FL'] as const) {
+      expect(deriveStaleness(savedOn(ONLY_V12), TODAY, pricing(ACA_PRICED, state)).pricing.namedFamilies, state).toEqual(['tax'])
+    }
+    for (const state of [undefined, 'NC', 'PA', 'FL'] as const) {
+      expect(deriveStaleness(savedOn(ONLY_V12), TODAY, pricing(ACA_UNREACHED, state)).pricing, `unreached ${String(state)}`).toEqual(QUIET)
+    }
+  })
+
+  it('the reach gates EVERY family on the row: a RETIRED run crossing v12 — NC-priced or not — gets no v12 line', () => {
+    for (const state of [undefined, 'NC'] as const) {
+      const report = deriveStaleness(savedOn(ONLY_V12), TODAY, pricing(MEDICARE_ONLY, state))
+      expect(report.pricing, String(state)).toEqual(QUIET)
+      expect(report.anyStale, String(state)).toBe(false)
+    }
+  })
+
+  it('THE COMBINE LAW, every pair: `unpriced` on EITHER axis is silent, else `unknown` on either is the nameless hedge, else named — the tax family read (overlayBuilt) × the reach read', () => {
+    const reads = ['priced', 'unpriced', 'unknown'] as const
+    let cells = 0
+    for (const family of reads) {
+      for (const reach of reads) {
+        const exposure = withRead(OVERLAY_NO_HEALTH, { overlayBuilt: family, workingYearTax: reach })
+        const p = deriveStaleness(savedOn(ONLY_V12), TODAY, exposure).pricing
+        const at = `family ${family} × reach ${reach}`
+        if (family === 'unpriced' || reach === 'unpriced') expect(p, at).toEqual(QUIET)
+        else if (family === 'unknown' || reach === 'unknown') {
+          expect(p, at).toEqual({ namedFamilies: [], hedged: true, reconfirmMedicareSpending: false, moved: true })
+        } else expect(p, at).toEqual({ namedFamilies: ['tax'], hedged: false, reconfirmMedicareSpending: false, moved: true })
+        cells += 1
+      }
+    }
+    expect(cells).toBe(9)
+  })
+
+  it('the ship-day rules hold under the reach: an UNREACHED vault saved ON v12’s day is silent; a REACHED one is spoken namelessly', () => {
+    expect(deriveStaleness(savedOn(V12.sinceEpochDay), TODAY, ACA_UNREACHED).pricing).toEqual(QUIET)
+    expect(deriveStaleness(savedOn(V12.sinceEpochDay), TODAY, ACA_PRICED).pricing).toEqual({
+      namedFamilies: [],
+      hedged: true,
+      reconfirmMedicareSpending: false,
+      moved: true,
+    })
+  })
+
+  it('rows 1–11 read EXACTLY as before: a retired run saved before the ledger still names "your taxes" (v1/v5/v6 carry no reach), and an undecidable reach adds no hedge beside a family already named', () => {
+    const retired = deriveStaleness(savedOn(PRE_LEDGER_DAY), TODAY, MEDICARE_ONLY)
+    expect(retired.pricing.namedFamilies).toEqual(['tax', 'medicare'])
+    // Flipping the reach read changes NOTHING for a pre-ledger save: tax is named by reach-less rows, and
+    // v12 adds no family (stateTax needs a priced NC; a priced reach names tax again, already named).
+    for (const reach of ['priced', 'unknown'] as const) {
+      expect(deriveStaleness(savedOn(PRE_LEDGER_DAY), TODAY, withRead(MEDICARE_ONLY, { workingYearTax: reach })).pricing, reach).toEqual(retired.pricing)
+    }
   })
 })

@@ -61,7 +61,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   `src/engine/__tests__/medicareExtras.test.ts:191-225`), never a silent $0; and the F5 disclosure
   homes key off the run's built params, not ages, so the never-asked household is still TOLD the
   typical is being funded. Widening the gate is a live option, not a correction.
-- **Degradation:** `resolveMedicareExtrasMonthly` (`src/intake/intakeMap.ts:1058`) is the ONE
+- **Degradation:** `resolveMedicareExtrasMonthly` (`src/intake/intakeMap.ts:1092`) is the ONE
   fork→dollar owner. An absent field, an `'unanswered'` entry, a `'typical'` entry, and a
   half-entered `'entered'` with no committed dollar ALL fund the conservative-HIGH typical;
   only the affirmed `'none'` arm resolves to $0. Absent-means-$0 would delete a real recurring
@@ -70,7 +70,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   council `wf_7eb3303c-7f3`, built `c1ada867` — its blank is no longer one-directional: it
   disables the HSA cap AND the budgetless survivor lean, the most pessimistic reading for an HSA
   household and the less cautious for a budgetless couple without an HSA;
-  `src/shared/model.ts:1608-1617`). Nothing is pre-selected, so the MA plurality actively lands
+  `src/shared/model.ts:1616-1625`). Nothing is pre-selected, so the MA plurality actively lands
   on $0. An AFFIRMED $0 is honest; a SILENT $0 is the sin.
 
 ## F2 — anchor + provenance
@@ -90,7 +90,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   adopted the old figure. No official national Medigap average exists to pin to; the constant's
   `pinTo` says so explicitly rather than naming a source that isn't published.
 - **Per-person explicit persisted provenance stamp.** `MedicareExtrasEntryV3`
-  (`src/shared/model.ts:2181`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
+  (`src/shared/model.ts:2192`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
   'unanswered'` — with `adoptionVintage` recording the era adopted, keyed to the SAVED era and
   never re-derived from `value == current-typical` (the `src/shared/appDefaults.ts:8-15`
   saved-era inversion trap). `'unanswered'` is the honest persisted hole: it funds the typical
@@ -107,10 +107,10 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   SLOT, never a digit in the string. Refine path = the assumption-panel
   seat + the U13 re-entry walk.
 - **R7 via a TOP-LEVEL draft key.** `medicareExtrasByPerson` sits at the top level of
-  `ScenarioDraft` by deliberate design (`src/ui/assumptionRegistry.ts:87`) — a nested `health.*`
-  sub-field would dodge the compile gate (the assumptionRegistry.ts:84 landmine) — and is
+  `ScenarioDraft` by deliberate design (`src/ui/assumptionRegistry.ts:89`) — a nested `health.*`
+  sub-field would dodge the compile gate (the assumptionRegistry.ts:86 landmine) — and is
   registered `{ kind: 'row-editable', seats: ['medicare-extras'] }` at
-  `src/ui/assumptionRegistry.ts:153`. The panel seat (`src/intake/AssumptionPanel.tsx:822-838`)
+  `src/ui/assumptionRegistry.ts:155`. The panel seat (`src/intake/AssumptionPanel.tsx:822-838`)
   re-hosts the SAME `MedicareExtrasFork` face over the same write shape, `onWrite` adapting to
   the host's commit seam — and passes `standingNote`, which the intake step does not: when the
   fork is UNANSWERED the panel shows the read-only line naming the typical the plan is funding
@@ -126,10 +126,10 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   person's own premium × 12, **ending at each death** — **NEVER `enrolledCount × average`**
   (count×avg reproduces the exact optimistic survivor under-charge per-person was chosen to
   kill; it passes symmetric couples and hides in aggregate). The Σ lives in the tax overlay's
-  year loop (`src/engine/taxOverlay.ts:1624-1628`), indexing
+  year loop (`src/engine/taxOverlay.ts:2029-2033`), indexing
   `OverlayParams.medicareExtrasMonthly` by `regime.medicareEnrolledIndices` — the canonical
   living∩enrolled index set minted for exactly this purpose
-  (`src/engine/taxOverlay.ts:561-572`), which holds only IDENTITY-MATCHED members so a stranger
+  (`src/engine/taxOverlay.ts:621-632`), which holds only IDENTITY-MATCHED members so a stranger
   ref throws at the year loop's identity guard rather than silently dropping a member's premium
   from the Σ (the cost-understating direction). base+surcharge stays the existing count×uniform
   line in `medicareAnnualCost` (`src/engine/healthOverlay.ts:822-836`), untouched.
@@ -148,8 +148,8 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   edited to accommodate the vector: a superset, not a perturbation.
 - The vector is validated like its per-person siblings: `validateParams` rejects a negative
   entry (the insight-046 netted-away optimistic class), a NaN entry, and a length mismatch
-  (`src/engine/simulate.ts:858-861`), and the overlay's direct callers get their own up-front
-  length backstop (`src/engine/taxOverlay.ts:1276-1280`) so a short vector on a two-person
+  (`src/engine/simulate.ts:935-938`), and the overlay's direct callers get their own up-front
+  length backstop (`src/engine/taxOverlay.ts:1681-1685`) so a short vector on a two-person
   household throws rather than under-charging.
 - Extras are **real-flat**, and deliberately NOT ridden on the Part B trend: Medigap/Part D plan
   premiums are user-entered market figures with no sourced trend. The 2026-07-19 trend sourcing
@@ -220,7 +220,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
     per-person fact line carries the provenance as its load-bearing content: whose number, and
     whether it was entered, affirmed, or typical.
 - Both homes consume ONE assembly, `medicareExtrasDisclosureView`
-  (`src/intake/intakeMap.ts:1115`), which keys off the run's route-aware **BUILT-params output**
+  (`src/intake/intakeMap.ts:1149`), which keys off the run's route-aware **BUILT-params output**
   (`buildParams(d)?.overlay`) — never ages or inputs — and returns NULL when the run prices no
   Medicare-bearing overlay at all, so no claim is made. The three-way provenance
   (`'entered' | 'affirmed-zero' | 'typical'`) is read from the draft, which is honest: who chose
@@ -256,7 +256,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   optional-with-average by design, so there is no red-asterisk state to encode.
 - **Insight-076 re-audit of `validateParams`.** The overlay length backstop that was added is
   purely downstream of the existing gate, so it narrows no contract — noted in place at
-  `src/engine/taxOverlay.ts:1274-1275`.
+  `src/engine/taxOverlay.ts:1679-1680`.
 - **Dev-seed drift recorded before any re-tune.** The flagship `retiredOnTrack` seed carries the
   mixed-provenance showcase — one entered dollar, one affirmed MA-$0
   (`src/ui/devSeeds.ts:121-122`) — and the `borderline` / `?seed=dip` seeds were re-probed under
@@ -266,7 +266,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   the Caddie close `cad2529e`. Sequence as ratified: ultramode review → Caddie pre-walk →
   pilot-clear + ship (the 2026-07-11 batched-oracle grant — his eye audits any-time + at the
   gauntlet).
-- **Staleness.** The `extras-typical` clock (`src/store/staleness.ts:603-622`) fires only when the
+- **Staleness.** The `extras-typical` clock (`src/store/staleness.ts:636-655`) fires only when the
   saved stamp carries an extras vintage, that vintage differs from the current one, AND the
   household is actually exposed (an absent or `typical`/`unanswered` fork answer). It is mapped
   to the `medicare` family in the exhaustive `HEALTHCARE_CLOCK_FAMILIES` record, so a clock with

@@ -10,6 +10,10 @@ import {
   type HouseholdYear,
   type OverlayPerson,
   type TaxYearInputs,
+  type HealthYearSink,
+  type PreparedWorkingYearFloor,
+  prepareWorkingYearFloor,
+  workingYearFederalCharge,
 } from '@engine/taxOverlay'
 import { runDecumulation, type PortfolioState } from '@engine/decumulation'
 import { DRAWDOWN_POLICIES, NEVER_DEPLETED, type RetirementState } from '@shared/model'
@@ -4815,6 +4819,94 @@ describe('taxOverlay — state income tax (the state-tax unit)', () => {
         }
       }
     })
+
+    // The working-year tax floor (2026-10-20, R7 / KTD3): a clamped year's outside income shifts WHERE
+    // the portfolio's income lands, never the slope of any channel — B (and I read as ordinary) sit in
+    // the ordinary base exactly as a year-constant conversion does, and I read as preferential is a
+    // year-constant gain block stacked under the draw's own gain, so the straddle algebra (insight 007)
+    // is the same and a max over readings of k-Lipschitz maps is k-Lipschitz (the derivation lives in the
+    // GROSS_UP_MAX_PASSES comment). The sweep crosses the same slow corner with B and I axes, I > 0 so all
+    // three readings run, B up to $1e8. Above that, the T(base + P) − T(base) cancellation quantizes the
+    // increment at about ulp(T(base)), roughly $1e-4 at B = $1e12. The iteration is monotone on that
+    // staircase, so it still reaches an exact fixed point (measured to B = $2e12, I = $1e12), and the tax
+    // errs only by that sub-cent quantum — it does not throw.
+    it('…and with a clamped year’s outside income (B up to $1e8, I under all three readings) it still converges', () => {
+      const nc = withState(TAX_ON_NO_RMD, 'NC')
+      for (const pool of [2_000_000, 50_000_000]) {
+        for (const ss of [0, 5_000_000]) {
+          for (const conv of [0, 200_000]) {
+            for (const b of [0, 500_000, 100_000_000]) {
+              for (const i of [0, 300_000]) {
+                const buckets: AccountBuckets = { taxable: pool / 2, pretax: pool / 2, roth: 0 }
+                expect(() =>
+                  runTaxAwareDecumulation(buckets, realStock, realBond, [0], STOCK_W, 'proportional', nc, {
+                    ssBenefits: [ss],
+                    conversions: [conv],
+                    initialTaxableBasis: 1,
+                    contributions: [],
+                    bridgeYearMask: [true],
+                    workingYearOutsideIncome: [{ ordinaryBase: b, investmentIncome: i }],
+                  }),
+                ).not.toThrow()
+              }
+            }
+          }
+        }
+      }
+    })
+  })
+
+  // The working-year tax floor's NC half (2026-10-20, KTD7) inside the real gross-up: `dip`'s clamped 2030
+  // year (B = $102,000, I = $10,000) in NC. Federally the floor block's hand derivation gives $5,880 (the
+  // preferential reading wins); NC takes B + I = $112,000 ONCE, as ordinary — far above its deflated
+  // deduction — so the whole $34,000 conversion pays the flat rate. Floor-absent, NC's deduction first
+  // shelters the conversion and the federal charge is $180. Roth-first funding keeps the conversion the
+  // year's only portfolio income on both tax systems.
+  it('NC in a clamped working year: federal $5,880 + the flat rate on the whole conversion; floor-absent $180 + the rate past the deduction', () => {
+    const household = mkHousehold(2030, 1973, 1973)
+    const nc: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: { ...household, retirementState: 'NC' } }
+    const rate = stateRateForYear('NC', 2030)
+    const deduction2030 = ncSdMfj / closedFormIndex(2030) // frozen nominal ⇒ deflated
+    const pool: AccountBuckets = { taxable: 0, pretax: 500_000, roth: 300_000 }
+    const run = (inputs: TaxYearInputs) =>
+      runTaxAwareDecumulation(pool, realStock, realBond, [0], STOCK_W, 'custom', nc, { conversions: [34_000], contributions: [], ...inputs }, CUSTOM_TEST_ORDER)
+        .totalTaxPaidReal
+    expect(run({ bridgeYearMask: [true], workingYearOutsideIncome: [{ ordinaryBase: 102_000, investmentIncome: 10_000 }] })).toBeCloseTo(
+      5_880 + rate * 34_000,
+      6,
+    )
+    expect(run({})).toBeCloseTo(180 + rate * Math.max(0, 34_000 - deduction2030), 6)
+  })
+
+  // KTD7's council rule — the state takes I ONCE, AS ORDINARY — needs a household where B alone sits
+  // UNDER NC's deflated deduction and B + I over it (the arm above is over it either way, so it cannot
+  // see I). 2030, MFJ 57, B $10,000, I $30,000, a $20,000 conversion, roth-first (the conversion is the
+  // year's only portfolio income on both tax systems). Federal, by hand from Rev. Proc. 2025-32 Table 1:
+  //   excluded (base 10,000): 10,000 and 30,000 both sit under the $32,200 deduction → 0;
+  //   ordinary (base 40,000): 7,800 taxable → 780; + 20,000 → 27,800 → 2,480 + 12 % × 3,000 = 2,840 → 2,060;
+  //   preferential (ordinary 10,000, gain 30,000): the unused deduction shelters part of the gain and the
+  //     rest sits under the $98,900 0 % edge both sides → 0.
+  // So the federal charge is 2,060 (T(0, ss) = 0: no SS). NC: B + I = 40,000 is past the deduction, so
+  // the whole conversion pays the flat rate. A state base blind to I would see 10,000 (under the
+  // deduction) and tax only the conversion's part past it — rate × (30,000 − D).
+  it('NC takes I in its base: B $10,000 under the deduction, B + I $40,000 over it → federal $2,060 + the flat rate on the whole $20,000', () => {
+    const nc: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: { ...mkHousehold(2030, 1973, 1973), retirementState: 'NC' } }
+    const rate = stateRateForYear('NC', 2030)
+    const d = ncSdMfj / closedFormIndex(2030) // frozen nominal ⇒ deflated
+    expect(10_000).toBeLessThan(d)
+    expect(40_000).toBeGreaterThan(d)
+    const got = runTaxAwareDecumulation(
+      { taxable: 0, pretax: 500_000, roth: 300_000 },
+      realStock,
+      realBond,
+      [0],
+      STOCK_W,
+      'custom',
+      nc,
+      { conversions: [20_000], contributions: [], bridgeYearMask: [true], workingYearOutsideIncome: [{ ordinaryBase: 10_000, investmentIncome: 30_000 }] },
+      CUSTOM_TEST_ORDER,
+    ).totalTaxPaidReal
+    expect(got).toBeCloseTo(2_060 + rate * 20_000, 6)
   })
 
   // ---------------------------------------------------------------------------
@@ -4837,6 +4929,350 @@ describe('taxOverlay — state income tax (the state-tax unit)', () => {
           runTaxAwareDecumulation({ taxable: 0, pretax: 500_000, roth: 0 }, realStock, realBond, [40_000], STOCK_W, 'pre-tax-first', withState(TAX_ON_NO_RMD, s)),
         ).not.toThrow()
       }
+    })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// THE WORKING-YEAR TAX FLOOR (2026-10-20 — `docs/plans/features/working-year-tax-floor-build-spec.md`,
+// the register's Tier 0 *A working-year Roth conversion or RMD on the date route is taxed as if the
+// household had no pay…*). In a §7-clamped working year the portfolio funds T(base + P) − T(base) +
+// T(0, ss): what its own income adds ON TOP of the household's pay, plus SS's own tax. EVERY expected
+// figure below is derived by hand from the PRIMARY tables — Rev. Proc. 2025-32 §4.01 Table 1 (MFJ:
+// 10 % to $24,800, 12 % to $100,800, 22 % to $211,400, 24 % to $403,550) and Table 3 (single: 10 % to
+// $12,400, 12 % to $50,400, 22 % to $105,700), §4.03 (the MFJ 0 % gain edge $98,900), §4.14(1) (the
+// standard deduction $32,200 MFJ / $16,100 single) and §4.14(3) (the §63(f) aged addition $1,650
+// married), read from the IRS PDF 2026-10-20 — never from `constants/tax.ts` (insight 137). The brackets,
+// the deduction, the aged addition and the gain edges are indexed by law, so they are flat in the
+// engine's real dollars in every year; the §86 lines and the senior bonus are frozen nominal (deflated by
+// `closedFormIndex`). A fixture walks its rule boundaries first (insight 023): nobody 65 unless the arm is
+// about the age-65 stack, no SS unless the arm is about §86, the senior-bonus window only in its own arm.
+// ---------------------------------------------------------------------------
+describe('taxOverlay — the working-year tax floor (2026-10-20): a clamped year pays only what its portfolio income adds on top of the pay', () => {
+  const MFJ_57_IN_2030: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2030, 1973, 1973) }
+  /** A §7-clamped year as `simulate` wires it: the construct marker, the mask (the clamp), one floor entry. */
+  const clampedYear = (ordinaryBase: number, investmentIncome: number): TaxYearInputs => ({
+    contributions: [],
+    bridgeYearMask: [true],
+    workingYearOutsideIncome: [{ ordinaryBase, investmentIncome }],
+  })
+  /** The SAME year with the floor absent — today's (pre-floor) pricing, the control arm. */
+  const unclampedControl: TaxYearInputs = { contributions: [] }
+  const ROTH_FIRST = { taxable: 0, pretax: 500_000, roth: 300_000 } satisfies AccountBuckets
+  const yearTax = (
+    buckets: AccountBuckets,
+    policy: (typeof DRAWDOWN_POLICIES)[number],
+    config: TaxOverlayConfig,
+    inputs: TaxYearInputs,
+    order?: readonly ('taxable' | 'pretax' | 'roth')[],
+  ) => runTaxAwareDecumulation(buckets, realStock, realBond, [0], STOCK_W, policy, config, inputs, order)
+
+  describe('the KTD1 charge — red-first on `dip`’s shape (2030, MFJ, nobody 65, no SS, a $34,000 conversion)', () => {
+    it('B = $102,000: the conversion is charged $4,380 on top of the pay; floor-absent it is $180 (today’s wage-blind figure)', () => {
+      // Table 1, by hand. Base: 102,000 − 32,200 = 69,800 taxable → 2,480 + 12 % × 45,000 = 7,880.
+      // With the conversion: 136,000 − 32,200 = 103,800 → 11,600 + 22 % × 3,000 = 12,260. Increment 4,380.
+      // Floor-absent (B unseen): 34,000 − 32,200 = 1,800 → 10 % = 180. The roth-first order funds the
+      // tax from Roth, so the conversion is the year's only portfolio income (P_o = 34,000, P_g = 0).
+      const inputs = { conversions: [34_000] }
+      const floored = yearTax(ROTH_FIRST, 'custom', MFJ_57_IN_2030, { ...inputs, ...clampedYear(102_000, 0) }, CUSTOM_TEST_ORDER)
+      const control = yearTax(ROTH_FIRST, 'custom', MFJ_57_IN_2030, { ...inputs, ...unclampedControl }, CUSTOM_TEST_ORDER)
+      expect(floored.totalTaxPaidReal).toBeCloseTo(4_380, 6)
+      expect(control.totalTaxPaidReal).toBeCloseTo(180, 6)
+      // The presence companion (insight 029): the extra tax LEFT the portfolio.
+      expect(floored.terminalReal).toBeLessThan(control.terminalReal)
+    })
+
+    it('the fixed point: drawn from pre-tax, the tax that pays the tax is in the 22 % bracket — g = 4,380 + 0.22·g', () => {
+      // Pre-tax-first: the draw g is ordinary income too. 103,800 + g stays inside 22 % (g < 107,600),
+      // so g = 4,380 + 0.22·g ⇒ g = 4,380 / 0.78 = 5,615.384615…
+      const got = yearTax({ taxable: 0, pretax: 500_000, roth: 0 }, 'pre-tax-first', MFJ_57_IN_2030, {
+        conversions: [34_000],
+        ...clampedYear(102_000, 0),
+      })
+      expect(got.totalTaxPaidReal).toBeCloseTo(4_380 / 0.78, 6)
+    })
+  })
+
+  describe('KTD11 — the costliest of three readings of the working-year investment income I', () => {
+    // Each witness is derived for ALL THREE readings by hand; the max is the charge. A mutant that drops a
+    // reading, or takes max-of-totals minus max-of-baselines, turns at least one witness red (recorded in
+    // the build's commit: always-ordinary, always-preferential, max-of-totals and no-excluded-arm).
+    const run = (b: number, i: number, x: number, config: TaxOverlayConfig = MFJ_57_IN_2030, ss?: number) =>
+      yearTax(
+        ROTH_FIRST,
+        'custom',
+        config,
+        { conversions: [x], ...(ss !== undefined ? { ssBenefits: [ss] } : {}), ...clampedYear(b, i) },
+        CUSTOM_TEST_ORDER,
+      ).totalTaxPaidReal
+
+    it('ORDINARY wins: B = $150,000, I = $80,000, X = $34,000 → $7,888', () => {
+      // Excluded (base 150,000 → 117,800 taxable): +34,000 stays in 22 % → 7,480.
+      // Ordinary (base 230,000 → 197,800): 11,600 + 22 % × 97,000 = 32,940; +34,000 → 231,800:
+      //   35,932 + 24 % × 20,400 = 40,828. Increment 7,888.
+      // Preferential (ordinary 150,000, gain 80,000): the gain already sits wholly above the $98,900 edge
+      //   (117,800..197,800 → all 15 %), and stays at 15 % when the conversion lifts it — 7,480 + 0.
+      expect(run(150_000, 80_000, 34_000)).toBeCloseTo(7_888, 6)
+    })
+
+    it('PREFERENTIAL wins: B = $100,000, I = $20,000 of gains, X = $34,000 → $7,180', () => {
+      // Excluded (67,800 taxable → 7,640; +34,000 → 101,800 → 11,820): 4,180.
+      // Ordinary (87,800 → 10,040; 121,800 → 16,220): 6,180.
+      // Preferential: base 67,800 ordinary with the gain at 67,800..87,800 (0 %) → 7,640; the conversion
+      //   lifts ordinary to 101,800 (11,820) and the gain to 101,800..121,800, all past the $98,900 edge
+      //   → 15 % × 20,000 = 3,000 → 14,820. Increment 7,180 — the conversion's own 4,180 + the 3,000 push.
+      expect(run(100_000, 20_000, 34_000)).toBeCloseTo(7_180, 6)
+    })
+
+    it('`dip`’s own I = $10,000 (B = $102,000, X = $34,000) prices the PREFERENTIAL reading: $5,880, not the ordinary $5,380', () => {
+      // Ordinary (79,800 → 9,080; 113,800 → 14,460): 5,380. Excluded: 4,380.
+      // Preferential: base 69,800 ordinary with the gain at 69,800..79,800 (0 %) → 7,880; the conversion
+      //   lifts ordinary to 103,800 (12,260) and the gain to 103,800..113,800 — past the edge, 15 % × 10,000
+      //   = 1,500 → 13,760. Increment 5,880. (The plan named this the ORDINARY-wins witness; the hand
+      //   derivation refutes that — the max is the rule, so the charge is the preferential 5,880.)
+      expect(run(102_000, 10_000, 34_000)).toBeCloseTo(5_880, 6)
+    })
+
+    it('EXCLUDED wins under §86 saturation: SS $40,000, B = $50,000, I = $20,000, X = $5,000 → $1,110 (2026, the nominal §86 lines)', () => {
+      // 2026 is the price-index anchor (closedFormIndex(2026) = 1), so the §86 lines are $32,000 / $44,000.
+      // Excluded: provisional 50,000 + 20,000 = 70,000 → 6,000 + 0.85 × 26,000 = 28,100 taxable SS (< the
+      //   $34,000 cap); with X: 75,000 → 32,350. Ordinary 78,100 → 87,350, taxable 45,900 → 55,150, all
+      //   12 % → 12 % × 9,250 = 1,110 (the conversion × 1.85, the torpedo).
+      // Ordinary (base 70,000): provisional 90,000 → SS capped at 34,000 before AND after → 12 % × 5,000 = 600.
+      // Preferential (ordinary 50,000, gain 20,000): provisional 90,000 → capped; ordinary 84,000 → 89,000
+      //   (51,800 → 56,800 taxable, 12 %), the gain at 0 % both sides → 600.
+      // T(0, ss) = 0 (provisional 20,000 < 32,000). Including I LOWERS the charge here — the concave regime
+      // the excluded reading exists for (the council's red-team hit).
+      const MFJ_56_IN_2026: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1970, 1970) }
+      expect(closedFormIndex(2026)).toBe(1)
+      expect(run(50_000, 20_000, 5_000, MFJ_56_IN_2026, 40_000)).toBeCloseTo(1_110, 6)
+    })
+
+    it('the I = 0 SHORTCUT, pinned: at I = 0 the floor prepares ONE reading (the three coincide), at I > 0 all three — and the one reading carries the hand figures', () => {
+      // The build's decision 2: at I = 0 the excluded, ordinary and preferential readings are the same
+      // arguments bit for bit, so only the excluded one is evaluated. Pinned structurally (a three-reading
+      // evaluation at I = 0 prices identically, so no tax figure can see it) and against Table 1 by hand:
+      // base 102,000 − 32,200 = 69,800 → 2,480 + 12 % × 45,000 = 7,880; + 34,000 → the 4,380 increment.
+      const ctx = { ssBenefit: 0, filing: 'mfj' as const, count65: 0, calendarYear: 2030, minLivingAge: 57 }
+      const at0 = prepareWorkingYearFloor({ ordinaryBase: 102_000, investmentIncome: 0 }, ctx)
+      expect(at0.readings).toHaveLength(1)
+      expect(at0.readings[0]!.baseTax).toBeCloseTo(7_880, 6)
+      expect(prepareWorkingYearFloor({ ordinaryBase: 102_000, investmentIncome: 10_000 }, ctx).readings).toHaveLength(3)
+      expect(workingYearFederalCharge(at0, 34_000, 0).tax).toBeCloseTo(4_380, 6)
+    })
+  })
+
+  describe('every portfolio channel the clamped year can carry is priced on top of the pay', () => {
+    it('a RETIRED spouse’s RMD in a working year: 2032, the holder 73 (one §63(f) addition), B = $80,000 → $4,800; floor-absent $615', () => {
+      // Owner born 1959: 73 in 2032 (RMD start 73, retired, the pool holder); spouse born 1968: 64, working,
+      // 9 years younger (inside the JLLS gap, so the Uniform Lifetime divisor holds). Pre-tax = 40,000 ×
+      // the age-73 ULT divisor ⇒ the RMD is exactly 40,000. 2032 is past the senior-bonus window.
+      // Deduction 32,200 + 1,650 = 33,850. Base: 80,000 → 46,150 taxable (12 %); + the 40,000 RMD →
+      // 86,150 (still 12 %) → 4,800. The tax draw (pre-tax-first) sits inside the RMD (max(draw, rmd)),
+      // so it adds no income: g = 4,800. Floor-absent: 40,000 − 33,850 = 6,150 → 615.
+      const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: true, household: mkHousehold(2032, 1959, 1968) }
+      const pool = { taxable: 0, pretax: 40_000 * ultDivisor(73), roth: 0 }
+      const floored = yearTax(pool, 'pre-tax-first', cfg, clampedYear(80_000, 0))
+      const control = yearTax(pool, 'pre-tax-first', cfg, unclampedControl)
+      expect(floored.totalTaxPaidReal).toBeCloseTo(4_800, 6)
+      expect(control.totalTaxPaidReal).toBeCloseTo(615, 6)
+    })
+
+    it('the Medicare draw alone: a retired 67-year-old enrolled in 2030, B = $80,000 → the draw pays 12 % on itself; floor-absent it is sheltered', () => {
+      // Owner born 1963: 67 (enrolled, biological 65), spouse born 1975: 55, working. The seed MAGI 0 bills
+      // the base tier; M = the trended 2030 base Part B × 12 (the file's hand oracle). Base: 80,000 −
+      // 33,850 = 46,150 (12 %); the draw g (pre-tax-first) is the year's only portfolio income and stays
+      // in 12 %: g = M + 0.12·g ⇒ the tax is 0.12·M / 0.88. Floor-absent: M < 33,850 ⇒ sheltered, tax 0.
+      const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2030, 1963, 1975) }
+      const health: TaxYearInputs = { healthcareEnabled: true, irmaaMagiSeed: [0, 0] }
+      const pool = { taxable: 0, pretax: 500_000, roth: 0 }
+      const m = medicareAnnualReal(1, null, 2030)
+      const floored = yearTax(pool, 'pre-tax-first', cfg, { ...health, ...clampedYear(80_000, 0) })
+      const control = yearTax(pool, 'pre-tax-first', cfg, { ...health, ...unclampedControl })
+      expect(floored.totalMedicareCostReal).toBeCloseTo(m, 6)
+      expect(floored.totalTaxPaidReal).toBeCloseTo((0.12 * m) / 0.88, 6)
+      expect(control.totalTaxPaidReal).toBe(0)
+    })
+
+    it('a realized gain on the funding draw: B lifts the base past the $98,900 edge, so the draw’s gain pays 15 %', () => {
+      // 2030, MFJ 57. A 10,000 conversion funded taxable-first from a 50 %-basis pool (gain = ½ the draw).
+      // Base 140,000 → 107,800 taxable (22 %, and ≥ the 0 % edge); the conversion adds 22 % × 10,000 =
+      // 2,200; the draw's gain ½·g stacks above 117,800 → 15 %: g = 2,200 + 0.075·g ⇒ g = 2,200 / 0.925.
+      // Floor-absent: 10,000 of ordinary leaves 22,200 of deduction to shelter the gain ⇒ tax 0.
+      const pool = { taxable: 500_000, pretax: 100_000, roth: 0 }
+      const order = ['taxable', 'roth', 'pretax'] as const
+      const inputs = { conversions: [10_000], initialTaxableBasis: 250_000 }
+      const floored = yearTax(pool, 'custom', MFJ_57_IN_2030, { ...inputs, ...clampedYear(140_000, 0) }, order)
+      const control = yearTax(pool, 'custom', MFJ_57_IN_2030, { ...inputs, ...unclampedControl }, order)
+      expect(floored.totalTaxPaidReal).toBeCloseTo(2_200 / 0.925, 6)
+      expect(control.totalTaxPaidReal).toBe(0)
+    })
+  })
+
+  describe('R3 — the outside income’s own tax is never portfolio-funded, and today’s figure survives bit for bit at both corners', () => {
+    it('B = I = 0, no SS: the clamped year equals the floor-absent year BIT FOR BIT (the control arm, insight 029)', () => {
+      const inputs = { conversions: [34_000] }
+      const floored = yearTax({ taxable: 0, pretax: 500_000, roth: 0 }, 'pre-tax-first', MFJ_57_IN_2030, { ...inputs, ...clampedYear(0, 0) })
+      const control = yearTax({ taxable: 0, pretax: 500_000, roth: 0 }, 'pre-tax-first', MFJ_57_IN_2030, { ...inputs, ...unclampedControl })
+      expect(control.totalTaxPaidReal).toBeGreaterThan(0) // non-vacuous: a real tax is paid
+      expect(Object.is(floored.totalTaxPaidReal, control.totalTaxPaidReal)).toBe(true)
+      expect(Object.is(floored.terminalReal, control.terminalReal)).toBe(true)
+    })
+
+    it('B = I = 0 WITH SS taxable on its own: still bit for bit (the zero base adds no tax, so the charge is T(P) itself)', () => {
+      // The EXACTNESS branch's witness. 2030 reads the §86 lines DEFLATED ($32,000 / $44,000 ÷ the 2030
+      // index), so SS $143,000 alone is taxed a little (T(0, ss) > 0 — the premise below) and the floor's
+      // T0 is a non-round float. There the naive (T(P) − T0) + T0 drifts one ulp from T(P) at a $3,000
+      // conversion (roth-first: the conversion is the only portfolio income); the floor evaluates T(P)
+      // itself where the base adds no tax of its own, so it must match the floor-absent figure BIT FOR BIT.
+      // (At 2026's round nominal lines no such drift is reachable, which is why this fixture is 2030.)
+      const inputs = { conversions: [3_000], ssBenefits: [143_000] }
+      const ssAlone = yearTax(ROTH_FIRST, 'custom', MFJ_57_IN_2030, { ssBenefits: [143_000], ...unclampedControl }, CUSTOM_TEST_ORDER)
+      expect(ssAlone.totalTaxPaidReal, 'premise: SS alone carries a tax — T(0, ss) > 0').toBeGreaterThan(0)
+      const floored = yearTax(ROTH_FIRST, 'custom', MFJ_57_IN_2030, { ...inputs, ...clampedYear(0, 0) }, CUSTOM_TEST_ORDER)
+      const control = yearTax(ROTH_FIRST, 'custom', MFJ_57_IN_2030, { ...inputs, ...unclampedControl }, CUSTOM_TEST_ORDER)
+      expect(Object.is(floored.totalTaxPaidReal, control.totalTaxPaidReal)).toBe(true)
+    })
+
+    it('B > 0 with SS alone taxable and NO portfolio income (roth-first): the charge is T(0, ss) — the floor-absent figure, bit for bit', () => {
+      // SS 200,000 alone: provisional 100,000 → 6,000 + 0.85 × 56,000 = 53,600 taxable → 21,400 taxable
+      // income → 2,140. The tax draw comes from Roth, so the portfolio supplies no income; the pay's own
+      // tax (and its lift of SS's taxable share) is never charged.
+      const MFJ_56_IN_2026: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1970, 1970) }
+      const inputs = { ssBenefits: [200_000] }
+      const floored = yearTax(ROTH_FIRST, 'custom', MFJ_56_IN_2026, { ...inputs, ...clampedYear(50_000, 0) }, CUSTOM_TEST_ORDER)
+      const control = yearTax(ROTH_FIRST, 'custom', MFJ_56_IN_2026, { ...inputs, ...unclampedControl }, CUSTOM_TEST_ORDER)
+      expect(control.totalTaxPaidReal).toBeCloseTo(2_140, 6)
+      expect(Object.is(floored.totalTaxPaidReal, control.totalTaxPaidReal)).toBe(true)
+    })
+  })
+
+  describe('§86 with the pay in the base, the regime-conditional sign, and the single filer', () => {
+    /** The components surface through the healthOut sink: irmaaMagi = nonSS + gain + taxable SS,
+     *  acaMagi = nonSS + gain + full SS. */
+    const sink = (): HealthYearSink => ({ acaNetPremium: [], medicareBase: [], irmaaSurcharge: [], medicareExtras: [], medicareEnrolled: [], acaMagi: [], irmaaMagi: [], ssBenefit: [], acaCliffState: [] })
+
+    it('B = $60,000, SS $30,000, X = $20,000 (2030): the returned taxable SS carries B; the returned ordinary income does not', () => {
+      // With B: provisional 60,000 + 20,000 + 15,000 = 95,000 — far past the deflated $44,000 line ⇒ the
+      // 85 %-of-benefit cap binds: 25,500. Floor-absent: 35,000 sits in the 50 % band on the deflated lines
+      // ⇒ ½ × (35,000 − 32,000 / index). nonSSordinary = the conversion alone.
+      const fSink = sink()
+      const cSink = sink()
+      const inputs = { conversions: [20_000], ssBenefits: [30_000] }
+      yearTax(ROTH_FIRST, 'custom', MFJ_57_IN_2030, { ...inputs, ...clampedYear(60_000, 0), healthOut: fSink }, CUSTOM_TEST_ORDER)
+      yearTax(ROTH_FIRST, 'custom', MFJ_57_IN_2030, { ...inputs, ...unclampedControl, healthOut: cSink }, CUSTOM_TEST_ORDER)
+      const idx = closedFormIndex(2030)
+      expect(35_000).toBeLessThan(44_000 / idx) // the floor-absent provisional is inside the 50 % band
+      expect(fSink.irmaaMagi[0]).toBeCloseTo(20_000 + 25_500, 6)
+      expect(fSink.acaMagi[0]).toBeCloseTo(20_000 + 30_000, 6) // B never enters nonSSordinary
+      expect(cSink.irmaaMagi[0]).toBeCloseTo(20_000 + 0.5 * (35_000 - 32_000 / idx), 6)
+    })
+
+    it('I > 0: the returned taxable SS rides the provisional carrying B + I + P (the build’s decision 3, §86(b)(2)) — 2026, SS $30,000, B $20,000, I $10,000, X $5,000', () => {
+      // 2026, the index anchor: the nominal §86 lines $32,000 / $44,000. Each reading, by hand:
+      //   ORDINARY (base 30,000): provisional 30,000 + 15,000 = 45,000 → 0.85 × 1,000 + 6,000 = 6,850 taxable
+      //     SS → 36,850 − 32,200 = 4,650 → 465; with X: 50,000 → 0.85 × 6,000 + 6,000 = 11,100 → 46,100 −
+      //     32,200 = 13,900 → 1,390. Increment 925.
+      //   EXCLUDED (base 20,000): provisional 35,000 → 1,500; with X 40,000 → 4,000; ordinary 21,500 → 29,000
+      //     stays under the deduction → 0.
+      //   PREFERENTIAL (ordinary 20,000, gain 10,000): base → 6,850 taxable SS, ordinary 26,850 sheltered, the
+      //     gain at 0 % → 0; with X → 11,100, ordinary 36,100 → 3,900 → 390, the gain at 0 % → 390.
+      // T(0, ss) = 0 (provisional 15,000). So the charge is the ordinary 925, and the taxable SS the
+      // components carry is the one on the provisional holding ALL of the year's AGI — B + I + X = 35,000 —
+      // 11,100 (I is in AGI under either character). The excluded reading's B + X provisional would read
+      // 4,000. irmaaMagi = X + 11,100; acaMagi = X + the full benefit (B and I never enter nonSSordinary).
+      const MFJ_56_IN_2026: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1970, 1970) }
+      const s = sink()
+      const r = yearTax(ROTH_FIRST, 'custom', MFJ_56_IN_2026, { conversions: [5_000], ssBenefits: [30_000], ...clampedYear(20_000, 10_000), healthOut: s }, CUSTOM_TEST_ORDER)
+      expect(r.totalTaxPaidReal).toBeCloseTo(925, 6)
+      expect(s.irmaaMagi[0]).toBeCloseTo(5_000 + 11_100, 6)
+      expect(s.acaMagi[0]).toBeCloseTo(5_000 + 30_000, 6)
+    })
+
+    it('KTD4’s sign is regime-conditional: past the §86 cap an OVERSTATED B lowers the increment (2026: B $45,000 → $2,220, B $53,750 → $1,525.50)', () => {
+      // SS 40,000, X = 10,000, the nominal lines (2026). B = 45,000: provisional 65,000 → 23,850; +X →
+      // 75,000 → 32,350 (both under the 34,000 cap — the torpedo throughout). Ordinary 68,850 → 87,350,
+      // taxable 36,650 → 55,150, 12 % ⇒ 2,220. B = 53,750 (an 8,750 overstatement): provisional 73,750 →
+      // 31,287.5; +X → 83,750 → capped 34,000. Taxable 52,837.5 → 65,550, 12 % ⇒ 1,525.5. So no doc may call
+      // an overstated B "conservative" — the direction inverts past the cap.
+      const MFJ_56_IN_2026: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2026, 1970, 1970) }
+      const at = (b: number) =>
+        yearTax(ROTH_FIRST, 'custom', MFJ_56_IN_2026, { conversions: [10_000], ssBenefits: [40_000], ...clampedYear(b, 0) }, CUSTOM_TEST_ORDER)
+          .totalTaxPaidReal
+      expect(at(45_000)).toBeCloseTo(2_220, 6)
+      expect(at(53_750)).toBeCloseTo(1_525.5, 6)
+    })
+
+    it('a working SURVIVOR files single (Table 3): B = $50,000, X = $20,000 → $2,750; floor-absent $390', () => {
+      // 2026, the survivor alone in the living set. Base 50,000 − 16,100 = 33,900 → 1,240 + 12 % × 21,500 =
+      // 3,820; + 20,000 → 53,900 → 5,800 + 22 % × 3,500 = 6,570. Increment 2,750. Floor-absent: 20,000 −
+      // 16,100 = 3,900 → 390.
+      const household = mkHousehold(2026, 1970, 1972)
+      const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household }
+      const survivorYear: HouseholdYear[] = [{ living: [household.owner] }]
+      const inputs = { conversions: [20_000], householdYears: survivorYear }
+      const floored = yearTax(ROTH_FIRST, 'custom', cfg, { ...inputs, ...clampedYear(50_000, 0) }, CUSTOM_TEST_ORDER)
+      const control = yearTax(ROTH_FIRST, 'custom', cfg, { ...inputs, ...unclampedControl }, CUSTOM_TEST_ORDER)
+      expect(floored.totalTaxPaidReal).toBeCloseTo(2_750, 6)
+      expect(control.totalTaxPaidReal).toBeCloseTo(390, 6)
+    })
+
+    it('the senior bonus phases on the pay-inclusive MAGI, per person (2027, one 65+ worker, B = $180,000, X = $20,000)', () => {
+      // Schedule 1-A line 35 per qualifying person (the file's form oracle `line35Mfj`): one qualifier (the
+      // owner, 66; the spouse is 60). Deduction = 32,200 + 1,650 + line35(MAGI). Both sides sit in 22 %
+      // (≈142k and ≈164k taxable) with the bonus still positive, so the increment is 22 % × (20,000 + the
+      // bonus the extra MAGI phases away). Floor-absent: 20,000 of MAGI is wholly sheltered ⇒ 0.
+      const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: mkHousehold(2027, 1961, 1967) }
+      const taxable = (magi: number) => magi - 32_200 - 1_650 - line35Mfj(magi, 2027)
+      expect(line35Mfj(200_000, 2027)).toBeGreaterThan(0) // still inside the phase-out band
+      expect(taxable(180_000)).toBeGreaterThan(100_800)
+      expect(taxable(200_000)).toBeLessThan(211_400)
+      const run = (inputs: TaxYearInputs) =>
+        yearTax(ROTH_FIRST, 'custom', cfg, { conversions: [20_000], ...inputs }, CUSTOM_TEST_ORDER).totalTaxPaidReal
+      expect(run(clampedYear(180_000, 0))).toBeCloseTo(0.22 * (taxable(200_000) - taxable(180_000)), 6)
+      expect(run(unclampedControl)).toBe(0)
+    })
+  })
+
+  describe('R8 — a wiring fault fails loud', () => {
+    const base = { conversions: [34_000] }
+    const call = (inputs: TaxYearInputs) => () =>
+      yearTax(ROTH_FIRST, 'custom', MFJ_57_IN_2030, { ...base, ...inputs }, CUSTOM_TEST_ORDER)
+
+    it('a non-finite, negative or NaN outside income throws', () => {
+      for (const bad of [Number.NaN, Number.POSITIVE_INFINITY, -1]) {
+        expect(call({ ...clampedYear(bad, 0) })).toThrow(/workingYearOutsideIncome/)
+        expect(call({ ...clampedYear(0, bad) })).toThrow(/workingYearOutsideIncome/)
+      }
+    })
+
+    it('a masked (clamped) year with no entry throws, and an entry on an unmasked year throws', () => {
+      expect(call({ contributions: [], bridgeYearMask: [true] })).toThrow(/clamped working year with no/)
+      expect(call({ contributions: [], bridgeYearMask: [false], workingYearOutsideIncome: [{ ordinaryBase: 1, investmentIncome: 0 }] })).toThrow(
+        /not a clamped working year but carries/,
+      )
+    })
+
+    it('an entry with no construct marker throws (no clamp, no floor)', () => {
+      expect(call({ workingYearOutsideIncome: [{ ordinaryBase: 1, investmentIncome: 0 }] })).toThrow(/needs the accumulation construct/)
+    })
+
+    it('a negative increment beyond dust throws (a doctored floor whose base out-taxes its own base-plus-income)', () => {
+      const doctored: PreparedWorkingYearFloor = {
+        ssBenefit: 0,
+        filing: 'mfj',
+        count65: 0,
+        calendarYear: 2030,
+        zeroTax: 0,
+        readings: [{ ordinaryBase: 0, gainBase: 0, baseTax: 1_000 }],
+      }
+      expect(() => workingYearFederalCharge(doctored, 0, 0)).toThrow(/increment is negative/)
+    })
+
+    it('prepareWorkingYearFloor rejects a NaN base directly (the helper’s own backstop)', () => {
+      expect(() =>
+        prepareWorkingYearFloor({ ordinaryBase: Number.NaN, investmentIncome: 0 }, { ssBenefit: 0, filing: 'mfj', count65: 0, calendarYear: 2030, minLivingAge: 57 }),
+      ).toThrow(/finite and ≥ 0/)
     })
   })
 })

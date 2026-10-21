@@ -25,7 +25,12 @@
  * spending-figure change…* carries them.
  * Row 10 (the IRMAA growth base) shipped in `252b88da` — its own commit, so its `commits` field could
  * only carry a placeholder. Row 11 (the budgetless survivor-medical lean) likewise ships in its own
- * commit and carries a placeholder; its `shippedOn` must be that commit's local date.
+ * commit and carries a placeholder; its `shippedOn` must be that commit's local date. Row 12 (the
+ * working-year tax floor) is the first row with a ROW-LEVEL `reach` qualifier (`'working-years'`): its
+ * families are the shipped "your taxes" / "your state tax", but only a date-route household whose run
+ * can reach a §7-clamped working year with outside income and a portfolio channel hears them — a
+ * retired household's taxes did not move (the reader combines the reach read with each family's read,
+ * `'unpriced'` beating `'unknown'` beating `'priced'`; rows 1–11 carry no reach and read as before).
  *
  * THE PARKED RESIDUALS (one-way doors the council parked, stated so no one reads the ledger as
  * total): (1) a save made AFTER a ship day by an OLD build (a stale PWA) reads as covered but was
@@ -68,6 +73,15 @@ import { epochDayFromIsoDate } from '@engine/validation/oracleToken'
  *  priced if a vault carries it, moves the spend the other way). */
 export type PricingFamily = 'tax' | 'stateTax' | 'medicare' | 'aca' | 'contributions' | 'spending'
 
+/** A ROW-LEVEL qualifier narrowing WHICH households a row's families reach — each maps onto ONE
+ *  producer's-output exposure read in `src/store/staleness.ts` (`PRICING_REACH_READS`, exhaustive by
+ *  type). `'working-years'` (row v12, 2026-10-20): the change reaches only a run that can carry a
+ *  §7-clamped working year with outside income and a portfolio income channel — the engine's own
+ *  `dateSearch.workingYearTaxReach`, read through `intakeMap.workingYearTaxForRun`. A qualifier, not a
+ *  family: the noun it gates ("your taxes") is already shipped and true for every household it names
+ *  (the 2026-10-20 plan's KTD8 — a new family would be a new phrase for the same noun). */
+export type PricingReach = 'working-years'
+
 export interface PricingLedgerRow {
   /** 1, 2, 3 … — strictly increasing, no gaps (shape-tested). */
   readonly version: number
@@ -77,6 +91,10 @@ export interface PricingLedgerRow {
   /** For a `stateTax` row: the priced states whose profile the change reaches (a PA household
    *  is not told NC's standard deduction moved). Absent ⇔ the row declares no `stateTax`. */
   readonly states?: readonly string[]
+  /** Gates EVERY family on the row (`states` included): a household whose reach read is `'unpriced'`
+   *  hears nothing from this row, whatever its family reads say. ABSENT ⇔ the row reaches every
+   *  household its families do — rows 1–11 (shape-tested: an absent reach reads exactly as before). */
+  readonly reach?: PricingReach
   /** The ship day, ISO (the commit's local date). */
   readonly shippedOn: string
   readonly sinceEpochDay: number
@@ -196,6 +214,17 @@ export const ENGINE_PRICING_LEDGER: readonly PricingLedgerRow[] = Object.freeze(
     solverCodeVersion: 11,
     commits: ['(the budgetless survivor-medical lean, b9-1)'],
     what: 'A budgetless couple’s entered out-of-pocket medical M is held whole in the survivor years: a survivor year spends m + r·(S − m), m = min(M, S), where it spent r·S (council wf_7eb3303c-7f3, 2026-10-08 — a DISCLOSED CONSERVATIVE LEAN under insight 055, the budget arm’s sticky-medical composition brought to the flat path; never a correction). Harsher at r < 1: +m·(1 − r) a survivor year (+$1,000 on `health` / `healthnc` / `healthgap` at M $4,000, r 0.75); `healthgap` borderline 7/10 → off-track 6/10 at the app’s spine run. Budgeted, single, OOP-blank (or M = 0) households are unmoved, and r = 1 ones up to one ulp when M carries cents (the exposure read is `survivorMedicalLeanMoves`); r > 1 is refused when committed, but a vault that carries one is priced, and there the spend falls by m·(r − 1). SCORED: the solver ranks on survival, so v11 re-stales saved recommendations.',
+  }),
+  row({
+    version: 12,
+    kind: 'reprice',
+    families: ['tax', 'stateTax'],
+    states: ['NC'],
+    reach: 'working-years',
+    shippedOn: '2026-10-21',
+    solverCodeVersion: 11,
+    commits: ['(the working-year tax floor, b9-5/b9-6)'],
+    what: 'The working-year tax floor (docs/plans/features/working-year-tax-floor-build-spec.md): in a §7-clamped working year on the date route, what the portfolio supplies (a forced RMD, the household’s Roth conversion, the draw paying an enrolled member’s Medicare, the draw funding the tax) is now taxed on top of the household’s taxable pay plus clamped ongoing taxable (B) and its entered working-year investment income (I, the costliest of three readings — excluded / ordinary / preferential): T(base + P, ss) − T(base, ss) + T(0, ss); NC adds B + I to its AGI-derived base (PA and FL structurally unmoved). Harsher on every measured seed (lower past the §86 85 %-of-benefit cap for a large-benefit household — regime-conditional, KTD4): `dip`’s year-4 $34,000 conversion $180 → $5,880 federal. U4, measured at DEV_CRN_SEED on both tiers and both tracks: no crown and no non-monotone set moved on any date seed, every moved point moved down (`dip` lifestyle grade 0.89 → 0.88), and all eight date seeds are reached (conversion, RMD, the Medicare draw, or SS’s taxable share, now read on the pay-inclusive provisional, lifting IRMAA-MAGI). UNSCORED: the solver and the spend solve run only on the all-retired spine (`buildSolveRequest` returns spine-unready off it), which has no living worker, so SOLVER_CODE_VERSION stays 11 (KTD9) — the date-route Roth preview moves, unpersisted. The row-level `reach: \'working-years\'` gates BOTH families on `dateSearch.workingYearTaxReach`, so no retired household (an NC one included) is told. Residuals (KTD8): (a) an NC vault reached ONLY through Social Security is named for a state tax that did not move (no draw funds SS’s tax there — T(0, ss) is $0 at realistic benefits — so NC’s base gains nothing; only the IRMAA move (b) reaches it); (b) the second-order Medicare move — the B-informed taxable SS lifting IRMAA-MAGI, billed two years on — rides `tax` alone (row v5’s precedent), never a `medicare` line; (c) the header’s stale-PWA residual (1).',
   }),
 ])
 

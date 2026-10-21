@@ -22,36 +22,35 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-10-21, b9-7): build #1 of the D7 queue, the honest quit date — step (3), BUILD 1, in a FRESH
-session.** Read `git log` first. Steps (1) and (2) are DONE. Both live on the register entry *A working year never checks
-the household's pay against its spending…* (its ⚑ MEASURED bullet, corrected, and its ⚑ RULED 2026-10-21 bullet + NEGATIVEs)
-and on `docs/council-log.md` 2026-10-21. Council `wf_2247c0df-73b` scored it 7.5/10 and it was executed.
-The measurement in one line: with everyone alive no seed is short. Counting only the deaths the engine can draw, `dip` has
-ONE short path-year (~0.8 %), and it is the retirement travel line being charged while still working. The survivor figures
-"~$33,197 / ~$15,372" the first bullet carried came from deaths the engine never draws, and are struck.
-**Build 1, the council's shape:**
-- a new presence-keyed working-year cost answer, W (confirm-or-correct, quoting the household's own figure, naming health
-  premiums taken from pay);
-- a shortfall = max(0, −cash), added at `fundingNet` and drawn through the withdrawal order, keyed on accumulation ∧
-  taxEnabled ∧ W present (+ a `validateParams` rule; W absent ⇒ byte-identical to today);
-- deposits stay as entered; the tax on pay comes only from the floor's baseTax − zeroTax;
-- payroll tax pinned in the constants figure by figure (IRS Topics 751 / 560; married-joint AND single; the 0.9 % line
-  deflated by `cumulativePriceIndex`);
-- the earnings test per person, `Unsourced` until the SSA primary is read (its exempt amounts are UNREAD — read them first:
-  ssa.gov blocks curl, so use LII / the CFR / a grounded search, then a primary-host page);
-- both tracks charge W in working years;
-- a static year-0 ledger on the wire, in place of the rejected shortfall sentence;
-- with W answered the working-year row's two sentences are rewritten; without W today's sentence stays.
-It is sizable, so run the full flow: `/brief` → plan, deepened → build → whole-file review → `/distill`. Build 2, the
-surplus question, follows the earnings test. It is sizable, so run the full flow: `/brief` → plan, deepened → build →
-whole-file review → `/distill`. The day the check ships, the working-year row's "It doesn't check that your pay really covers
-all of that…" sentence comes out. Until then it stays: pulling it first would leave the date quietly too early.
+▶ **START HERE (2026-10-21, b9-8): build #1 of the D7 queue, the working-year pay check, from its PLAN — in a FRESH
+session.** Read `git log` first. The plan is `docs/plans/features/working-year-pay-check-build-spec.md` (`84983ae1`):
+planned and deepened (13 units, three phases, KTD1–KTD22). In order:
+1. **Apply the doc review first, before any code.** Five ce-doc-review personas reviewed the deepened plan
+   (`wf_ed90312b-6af`): **83 findings, 0 at P0, 16 at P1** (40 P2, 27 P3). They were NOT refuted — open every cited
+   line before applying one (the measured filed-prescription hit rate is ~25–40 %). They are in
+   `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-plan-review\`
+   (`coherence-reviewer.md`, `feasibility-reviewer.md`, `adversarial-document-reviewer.md`, `scope-guardian-reviewer.md`,
+   `design-lens-reviewer.md`). Apply what survives to the plan, resolving in place (never a stacked "resolutions" layer);
+   preserve every U-ID; commit the plan.
+2. **Build Phase A** (U1–U6, the engine, inert in the app until setup asks the question), then Phase B (U7 + U8 + U12 +
+   U13 land as ONE commit — the draft-key compile gate and the R7 walk tie them), then Phase C (U10 seeds + measurement,
+   U11 docs). Per unit: test-first where the plan says so; the U5 loop reorder lands ALONE, byte-identical, before any new term.
+   Then a whole-file review and `/distill`. Expect more than one session: one walked build cost ~48 % of a window (b9-2).
+**The research, durable:** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-research\`
+— the skeptic-verified primaries (`research-*.json` + `verdict-*.json`: payroll 6.2 % to $184,500, 1.45 %, 0.9 % over
+$250,000 MFJ / $200,000 single; earnings test $24,480 / $65,160, FR Doc 2025-19763), local copies of every source in
+`sources\` (ssa.gov 403s curl; the FR raw text, eCFR and secure.ssa.gov POMS fetch fine), the code maps (`map-*.md`) and
+the deepening's findings (`deepen\`, `wf_675930c0-d75`, 64 findings, all integrated into the plan).
+**His calls, shipped flagged (never blocking):** every new string (drafted, Caddie-walked); the return-path "Not now"
+(KTD22); the R27 reading (both tracks charge W in working years); the main-thread money picture as an amendment of the ⚑
+RULED "read from the wire" (KTD12). The day the check ships, the working-year row's "It doesn't check that your pay really
+covers all of that…" sentence comes out for a household with W (U9). Build 2, the surplus question, follows this build.
 
-**SESSION 2026-10-21 (b9-7):**
+**SESSION 2026-10-21 (b9-8):**
 **STATE on the final tree, by exit code (re-run at the close):** typecheck · lint · `verify:doc-stats` · build · `verify:bundle`
-272.5 KiB · `verify:aca` (verified 2026-10-20) · `verify:state-tax` — all exit 0. No code changed this session (docs only).
-**CI:** GREEN by run id on D7 `14a4df0b` (39632358611) and the register filing `3d49ffdd` (39651405227). The council's ruling
-`8c32a8c7` (39656951906) was IN PROGRESS at close and the squeaky commit's run follows it: read both first (`gh run view <id>`).
+272.5 KiB · `verify:aca` (verified 2026-10-20) · `verify:state-tax` — all exit 0. No code changed this session (the plan only).
+**CI:** GREEN by run id on the plan `84983ae1` (39670286853), on the b9-7 close `2a045351` (39660401052) and the council's
+ruling `8c32a8c7` (39656951906). The squeaky commit's run follows: read it first (`gh run view <id>`).
 **THE PAY-CHECK PROBE (for build 1's re-measure):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-probe\`
 (`paycheck.mts` + `paycheck-years.json` + the skeptic's `survivor.mts` / `survivor-rows.json`). Absolute imports into `src/`;
 re-point each script's output path off the dead session scratchpad before running. Run it from the project dir with tsx.
@@ -666,6 +665,19 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 *Engineering lessons live in [`docs/insights/`](docs/insights/) (one file per lesson; cite by full path + slug).
 These are the mechanical ones that keep costing hours.*
 
+- **From the b9-8 close (2026-10-21, the pay-check plan: research → plan → deepen → doc review):**
+  - **A plan cycle ate the window.** `/brief`, the two-primary research fan-out, the plan, a nine-agent deepening and a
+    five-agent doc review reached ~55 % with no code written. That confirms b9-4: build in a fresh session.
+  - **Fan-out outputs that must outlive the session go OUTSIDE the session scratchpad.** Use
+    `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-<name>\`. Have the
+    agents write files there and return only a count, which is how the doc review ran past the 50 % fan-out line.
+  - **The 5-hour session limit kills workflow agents mid-run.** Resume with `resumeFromRunId`: finished agents replay
+    from cache. A "failed" agent may already have written its file (design-lens did); the re-run overwrites it, so read
+    the file's own totals line before trusting it.
+  - **A council-ruled mechanism can be wrong in detail.** The pay-check ruling's survivor W
+    (`budgetlessSurvivorSpending(W, r, M)`) reduces to r·W under a budget, which is the ratio-on-total shape the
+    2026-07-02 council vetoed ($27,000 vs $32,000 on `dip`). The plan records it as a refinement (R9, KTD6). The register
+    amendment is U11's.
 - **From the b9-7 close (2026-10-21, D7 ruled; the audit, the filing, the pay-check measurement and its council):**
   - **`node -e` mangles Windows paths.** The shell ate the backslashes in a TODO edit (`C:\Users\brigg\.claude…` came out
     `C:Users\brigg.claude…`). It was caught only by a snapshot + `cmp` at squeaky. Edit docs with the Edit tool, or with a

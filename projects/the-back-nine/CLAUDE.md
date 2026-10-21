@@ -6,6 +6,8 @@ A **personal** (never-sold) retirement / tax-strategy co-pilot for a married cou
 
 **The cardinal rule: calm-but-wrong is the sin.** Friends bet real retirement money on this answer with *less* protection than a commercial tool — so the honesty + engine-validation bar **rises**, it never softens. *"It's just for friends" never excuses a confidently-wrong recommendation.*
 
+**Use it, ask for it, or say nobody can know it (D7, Briggsy's ruling 2026-10-21 — [`docs/product.md §4`](docs/product.md)).** If the household gave us a number, the engine uses it. If the engine needs a number it doesn't have, intake asks. Only the truly unknowable (markets, lifespans, future law) gets a plain "can't be known" line. A gap is a **build item, never a note around it**; a note survives only as a stopgap while its build is open. Go as deep as the math needs, in words Briggsy reads without a PhD (app copy AND every question put to him), and show the household how we got to the answer, in their own numbers.
+
 ## The map (where truth lives)
 
 Start at [`docs/README.md`](docs/README.md). The documentation is story-first:

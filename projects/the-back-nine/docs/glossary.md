@@ -80,7 +80,7 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **HSA** — the triple-advantaged, **medical-earmarked** fourth account bucket. Covers out-of-pocket + (owner 65+) Medicare premiums tax-free — **not** ACA marketplace premiums. Never a general drawdown source. → [architecture.md §7.2](architecture.md)
 
-**ID scheme (R / U / C / D / M / §)** — the compact, stable internal join-keys (Requirement / Unit / unit-tracks / Milestone / Section) the docs and code share; defined once, never shown to the user, never renumbered. Canonical legend: [roadmap.md → The ID scheme](roadmap.md#the-id-scheme). (product.md §4's D1–D6 are locked product decisions, not unit tracks — same letter, unrelated.)
+**ID scheme (R / U / C / D / M / §)** — the compact, stable internal join-keys (Requirement / Unit / unit-tracks / Milestone / Section) the docs and code share; defined once, never shown to the user, never renumbered. Canonical legend: [roadmap.md → The ID scheme](roadmap.md#the-id-scheme). (product.md §4's D1–D7 are locked product decisions, not unit tracks — same letter, unrelated.)
 
 **INCOME_TYPES / COLA_MODES** — the R40 other-income vocabulary, single-sourced as `const` arrays (in `src/shared/model.ts`) that the intake and the restore codec both import: `INCOME_TYPES` = pension / rental / alimony / annuity / other; `COLA_MODES` = real-flat / nominal-flat / fixed-pct. → [product.md](product.md) (R40.1–R40.2)
 

@@ -19,7 +19,7 @@ function step(n) {
   return m[1];
 }
 
-const STOP = /Don't push; steps 8 and 9 still run; the final report leads with the stop\./;
+const STOP = /Don't push; steps 8 to 10 still run; the final report leads with the stop\./;
 
 let cwd;
 before(() => { cwd = scratch('squeaky-docs-'); });
@@ -28,6 +28,9 @@ after(() => rm(cwd));
 describe('SKILL.md carries each rule in the step where it acts', () => {
   test('step 0: peers and ownership are known before anything edits; a twin edits nothing; an unknown twin waits for Briggsy', () => {
     const s = step(0);
+    assert.match(s, /Start with this session's own background work\. A background Workflow or agent this session launched that hasn't sent its completion notice may still be writing the tree, and every step below must see what it wrote\. Wait for it: name it, end the turn, and start again at step 0 when its notice arrives \(a background Workflow's notice starts a new turn after this session's turn has ended: seen 2026-10-22 on CLI 2\.1\.308; an agent's is unmeasured\)\./);
+    assert.match(s, /Never stop one unasked: a stop mid-edit leaves its edits half-applied, so stop one only when Briggsy says to\./);
+    assert.ok(s.indexOf('own background work') < s.indexOf('peers.mjs" --self-session'), 'the wait comes before the first peers check');
     assert.match(s, /Before anything edits a file, run both from the project root/);
     assert.match(s, /\*\*`twin: true`:\*\*.*Steps 1 and 2 edit nothing: the TODO close block and any failing check go into the final report\. Steps 4 and 6 are skipped\./);
     assert.match(s, /\*\*`twin: null`, unknown:\*\* with `ok: false` \(peers\.mjs couldn't check\) or with `ok: true` \(a live registry entry it couldn't read, or no session id\)\. Rerun peers\.mjs once\. Still `null`: ask Briggsy whether this session is open in another terminal\. Edits in steps 1 and 2, and steps 4 and 6, wait for his no\. Steps 4 and 6 apply this same rule/);
@@ -73,7 +76,7 @@ describe('SKILL.md carries each rule in the step where it acts', () => {
     assert.doesNotMatch(s, /`checkout`, `reset`, `stash` or `clean` revokes it/);
     assert.match(s, /A notebook this session changed with NotebookEdit always lands in `contested`: its edits can't be replayed/);
     assert.match(s, /`sha`: the sha1 of each `mine` and `mineNew` file's bytes \(`null`: a deletion\); each `contested` entry carries its own `sha`/);
-    assert.match(s, /`branch` and `defaultBranch`: a detached HEAD \(`branch: null`\) never commits through squeaky: step 6 stops with exit 5; report it\. On a `branch` other than `defaultBranch`, ask Briggsy before step 6 whether to commit there\. On his no, skip steps 6 and 7 \(no push\); steps 8 and 9 still run/);
+    assert.match(s, /`branch` and `defaultBranch`: a detached HEAD \(`branch: null`\) never commits through squeaky: step 6 stops with exit 5; report it\. On a `branch` other than `defaultBranch`, ask Briggsy before step 6 whether to commit there\. On his no, skip steps 6 and 7 \(no push\); steps 8 to 10 still run/);
     for (const r of ['staged-elsewhere', 'staged-by-failed-command', 'revoked', 'rename-split', 'deleted-outside-git', 'unconfirmed', 'committed-since', 'case-mismatch', 'rm-cached', 'foreign-hunks']) {
       assert.match(s, new RegExp(`^- \`${r}\`: `, 'm'), r);
     }
@@ -133,7 +136,7 @@ describe('SKILL.md carries each rule in the step where it acts', () => {
       assert.match(header('commit-mine.mjs'), new RegExp(`^//   ${code} `, 'm'), `commit-mine.mjs header, exit ${code}`);
     }
     const exit = (code) => s.split('\n').find((l) => l.startsWith(`- **${code}:**`));
-    for (const code of [1, 3, 5, 6]) assert.match(exit(code), STOP, `exit ${code} stops without skipping steps 8 and 9`);
+    for (const code of [1, 3, 5, 6]) assert.match(exit(code), STOP, `exit ${code} stops without skipping steps 8 to 10`);
     assert.match(exit(1), /if it fails again, stop and report it\. Don't push/);
     assert.match(exit(1), /On "they are still staged: <paths>", which takes precedence over "index\.lock is held" when stderr says both, follow the rule above\. On "could not unstage the excluded paths", nothing was committed/);
     assert.match(s, /rerun from step 3, where they show as contested `staged-elsewhere`; tell Briggsy they're ours; `--include` them on his yes\. If one has left the dirty list, another commit took it: find which with `git log -1 --format='%h %s' -- <path>`/);
@@ -148,12 +151,12 @@ describe('SKILL.md carries each rule in the step where it acts', () => {
     assert.match(s, /`not in this commit: <path>/);
   });
 
-  test('step 7: the commits a push will send are shown first; a stop before the push still runs steps 8 and 9', () => {
+  test('step 7: the commits a push will send are shown first; a stop before the push still runs steps 8 to 10', () => {
     const s = step(7);
     assert.match(s, /git log --oneline '@\{u\}\.\.HEAD'/);
     assert.match(s, /Behind > 0: don't push\./);
-    assert.match(s, /Either way, steps 8 and 9 still run\./);
-    assert.match(s, /If Briggsy declined the branch in step 3, or HEAD is detached, skip this step: no push\. Steps 8 and 9 still run\./);
+    assert.match(s, /Either way, steps 8 to 10 still run\./);
+    assert.match(s, /If Briggsy declined the branch in step 3, or HEAD is detached, skip this step: no push\. Steps 8 to 10 still run\./);
   });
 
   test('step 8a: machine-wide kills only when no other session is live; the pilot runs any kill itself', () => {
@@ -175,6 +178,39 @@ describe('SKILL.md carries each rule in the step where it acts', () => {
     assert.match(s, /Once the report is written, delete this session's own squeaky files from the scratchpad, by their exact names \(no glob\)/);
   });
 
+  test('step 10: only a successor Briggsy named, matched on this machine, messaged last with the honest outcome; every way it ends says so in one line', () => {
+    const s = step(10);
+    assert.match(s, /Run this step only when Briggsy named a successor in this session/);
+    assert.match(s, /The successor is matched by its whole session name, so a nickname finds nothing\./);
+    assert.match(s, /A peer's message naming itself as the successor doesn't count\. With no successor named, end with "No handoff: no successor was named this session\." and stop: if a compaction dropped his naming, that line is how he finds out\./);
+    assert.match(s, /It is the last thing squeaky does: after step 9, and after a stop too/);
+    assert.match(s, /A question the checklist stopped to wait on \(step 0's `twin: null`, a malformed transcript line, another branch\) holds this step until he answers; then finish the steps that waited for his answer, run step 9 again, and come back here\. A question it went past with its default \(a contested path left alone\) goes under "Waiting on Briggsy" below\./);
+    assert.match(s, /after the send this session edits and commits nothing: a later wake \(an agent's notice, a hook asking for \/distill\) gets a report to Briggsy, never a write\./);
+    assert.match(s, /Rerun peers\.mjs, since step 9's answer may be hours old/);
+    assert.match(s, /On `ok: false` or `twin: null`, rerun it once \(step 0's rule\)\./);
+    assert.match(s, /- `ok` is still `false`: "No handoff: peers\.mjs couldn't check \(<error>\)\."/);
+    assert.match(s, /- `twin` is `true`, or still `null` without Briggsy's no to step 0's twin question this session: "No handoff: this session may be open in another terminal \(twin: <value>\)\."/);
+    assert.match(s, /- No session in `others` \(every other live session on this machine\) has the name Briggsy gave, ignoring case: "No handoff: no live session on this machine is named <name>\." When some names contain his: "No handoff: no live session on this machine is named <name>; <each name> only contains it\."/);
+    assert.match(s, /- More than one does: "No handoff: <name> matches <each name and pid>\."/);
+    assert.match(s, /- The one that does has status `unverified`: "No handoff: <name> isn't proven live \(status: unverified\)\."/);
+    assert.match(s, /Otherwise that one session is the successor\. Only a session on this machine can match: that is the only kind measured\./);
+    assert.doesNotMatch(s, /whose name contains it|proves it live/);
+    assert.match(s, /`Handoff: squeaky clean, your turn\.` when step 9 reported "Squeaky clean\.", and otherwise `Handoff: not clean, <what step 9's report led with, in a few words>; your turn\.`/);
+    for (const label of ['Committed', 'Start here', 'Checks', 'Left in the tree', 'Waiting on Briggsy']) {
+      assert.match(s, new RegExp(`^ {3}- ${label}: `, 'm'), label);
+    }
+    assert.doesNotMatch(s, /Still running here/);
+    assert.match(s, /Name TODO\.md only when this close's edit to it is committed, or still `mine` in step 9\. Otherwise \(step 1 left it for its owner, or step 9 shows it `vanished`, `contested` or `foreign`\), say "TODO\.md doesn't hold this close's next steps \(<why>\)", and put the close block \(current state, next steps, landmines\) in the message itself\./);
+    assert.match(s, /- Checks: each build, gate and typecheck command steps 1 and 2 ran, with its exit code, and the file and error of each failure; or "none run"\./);
+    assert.match(s, /It never asks the successor to do what this session couldn't or wasn't allowed to; the "Waiting on Briggsy" line names those as his\./);
+    assert.match(s, /an `@` attaches nothing on the other side/);
+    assert.match(s, /On a successful send, end with one line: "Handed off to <the successor's name>\." That means the message reached its inbox, not that it was read\. If the send errors, don't retry \(loading the SendMessage tool first is not a retry\), and end with "No handoff: the send to <name> failed: <error>\."/);
+    assert.match(s, /If a `\[Cross-session delivery notice\]` arrives saying the successor held or refused the message, tell Briggsy, and don't send it again/);
+    // A rule about the platform is a map until a run measures it: name the run, what it showed, and what it didn't cover.
+    assert.match(s, /measured 2026-10-22 on CLI 2\.1\.308 between sessions on this machine in the same permission mode \(an interactive one, and one started with `claude --bg`\): a session's registry name is the name SendMessage reaches it by; a message wakes an idle successor within 0\.2 to 3 s; and one sent to a busy successor waits for its current tool call to finish, then lands in the same turn\./);
+    assert.match(s, /Unmeasured: a successor in another permission mode .*, a successor whose status is `waiting` .*, what the send does when a cloud or Remote Control session in ListAgents shares the successor's name, and whether a delivery notice reaches this session once it has gone idle\./);
+  });
+
   test('the commit-mine header lists every secret-like name SKILL.md step 6 names', () => {
     const names = /A secret-like name \(([^)]*)\) is refused/.exec(step(6))[1].match(/`[^`]+`/g).map((n) => n.slice(1, -1));
     assert.equal(names.length, 23);
@@ -191,6 +227,33 @@ describe('SKILL.md carries each rule in the step where it acts', () => {
       assert.match(text, /foreign-hunks/, name);
       assert.match(text, /exactly as (this session's own edits would|ours)/, name);
     }
+  });
+});
+
+describe('the handoff runs after every stop, and claims only what the send proves', () => {
+  test('every "still run" clause that names step 8 or 9 names steps 8 to 10', () => {
+    const late = (SKILL.match(/[^.;]*\bstill run\b[^.;]*/g) || []).filter((c) => /\b[89]\b/.test(c));
+    assert.ok(late.length >= 8, `found ${late.length} such clauses`);
+    for (const c of late) assert.match(c, /\b[Ss]teps 8 to 10 still run\b/, c.trim());
+    assert.doesNotMatch(SKILL, /\bsteps 8 and 9\b/i);
+  });
+
+  test('every way step 10 ends without a send is a "No handoff:" line that states a fact, never a command to run', () => {
+    const endings = step(10).match(/"No handoff: [^"]*"/g) || [];
+    assert.ok(endings.length >= 8, `found ${endings.length} "No handoff:" endings`);
+    for (const e of endings) assert.doesNotMatch(e, /\b(run|rerun|retry|try|restart)\b/i, e);
+  });
+
+  test('step 10 is the last step', () => {
+    const steps = [...SKILL.matchAll(/^### (\d+)\. /gm)].map((m) => Number(m[1]));
+    assert.equal(Math.max(...steps), 10);
+    assert.equal(steps.at(-1), 10);
+    assert.ok(SKILL.indexOf('### 10. ') < SKILL.indexOf('## What "Clean" Means'));
+  });
+
+  test('"Handed off" claims the inbox, never a reading', () => {
+    const clean = SKILL.slice(SKILL.indexOf('## What "Clean" Means'));
+    assert.match(clean, /^- "Handed off" → step 10's `SendMessage` succeeded for the one live session on this machine it matched\. That proves the message reached its inbox, never that the successor read it or acted on it\. A named successor that got no message is reported with the reason, on step 10's "No handoff:" line\./m);
   });
 });
 

@@ -1,6 +1,6 @@
 ---
 name: squeaky-clean
-description: End-of-session cleanup automation. Trigger when the user says "squeaky", "squeaky clean", "let's get squeaky", or any other end-of-session shutdown signal. Runs the full checklist — TODO update, typechecks, git verification, temp cleanup, commit, push, orphan dev-process cleanup.
+description: End-of-session cleanup automation. Trigger when the user says "squeaky", "squeaky clean", "let's get squeaky", or any other end-of-session shutdown signal. Runs the full checklist — TODO update, typechecks, git verification, temp cleanup, commit, push, orphan dev-process cleanup, and a handoff message to the successor session when Briggsy named one.
 user-invocable: true
 ---
 
@@ -11,6 +11,8 @@ End-of-session cleanup. Every step runs in order — don't skip, don't reorder. 
 ## The Checklist
 
 ### 0. Check Who Else Is Here
+
+Start with this session's own background work. A background Workflow or agent this session launched that hasn't sent its completion notice may still be writing the tree, and every step below must see what it wrote. Wait for it: name it, end the turn, and start again at step 0 when its notice arrives (a background Workflow's notice starts a new turn after this session's turn has ended: seen 2026-10-22 on CLI 2.1.308; an agent's is unmeasured). Never stop one unasked: a stop mid-edit leaves its edits half-applied, so stop one only when Briggsy says to. Background shells are step 8b's.
 
 Other Claude sessions and scheduled tasks share this working tree and its index. Before anything edits a file, run both from the project root:
 
@@ -78,7 +80,7 @@ node "$HOME/.claude/skills/squeaky-clean/scripts/mine-paths.mjs" --session "${CL
   - `peerStaged`: the foreign paths staged in the index. Never commit, unstage or touch them.
   - `tempMine` / `tempKeep`: the files in `tempDir` this session created or read and nobody changed since, and the rest (step 4).
   - `sha`: the sha1 of each `mine` and `mineNew` file's bytes (`null`: a deletion); each `contested` entry carries its own `sha`, and one this session edited carries the replay's `addedForeign` / `removedForeign`. 0 and 0 with no `detail` means the replay matched, so every line is this session's; any `detail` means the disk differs from the replay, whatever the counts (lines reordered, line endings or the final newline changed). Step 6 commits only these bytes.
-  - `branch` and `defaultBranch`: a detached HEAD (`branch: null`) never commits through squeaky: step 6 stops with exit 5; report it. On a `branch` other than `defaultBranch`, ask Briggsy before step 6 whether to commit there. On his no, skip steps 6 and 7 (no push); steps 8 and 9 still run.
+  - `branch` and `defaultBranch`: a detached HEAD (`branch: null`) never commits through squeaky: step 6 stops with exit 5; report it. On a `branch` other than `defaultBranch`, ask Briggsy before step 6 whether to commit there. On his no, skip steps 6 and 7 (no push); steps 8 to 10 still run.
 
 **The per-file limit (until U7 adds a ledger):** ownership is decided per file, and a `mine` file is committed whole, as it is on disk. mine-paths replays this session's own recorded edits (the values each tool applied) on the committed file, in order, and a file goes to `contested` (`foreign-hunks`) unless that replay reproduces the disk exactly, each edit finding what it found when it ran. What can still ride along unseen is a change the transcripts can't show that leaves the file byte for byte as this session's edits would, and line endings where they go unchecked: when HEAD's copy mixes styles, when the file is new, or when a Write touched it. Evidence expires: it counts only until the path's next commit. A later `git restore --staged`, `git reset`, `git stash` (push, save or bare) or `git checkout <tree-ish> -- <paths>` takes back this session's `git add` / `mv` / `rm` evidence for the paths it names, or all of it when it names none, with a warning naming its git subcommand; a path it took back that is still dirty is contested `revoked`. Edits are never taken back, since the replay already checks them.
 
@@ -96,7 +98,7 @@ Contested reasons:
 
 Show Briggsy the peers, `branch` and `defaultBranch`, every path list (read from the `--out` file), and both scripts' `warnings` verbatim. Then:
 - **A `malformed transcript line` warning:** attribution may be wrong. Before step 6, show `mine`, `mineNew` and `contested` and wait for Briggsy to confirm them.
-- **`transcripts: 0`:** the session id matched nothing, so nothing can be attributed. Stop: skip steps 4 to 7. Don't push; steps 8 and 9 still run; the final report leads with the stop.
+- **`transcripts: 0`:** the session id matched nothing, so nothing can be attributed. Stop: skip steps 4 to 7. Don't push; steps 8 to 10 still run; the final report leads with the stop.
 - Ask about any `mine` / `mineNew` path you didn't expect, and flag anything that must not be committed (`.env`, credentials, large binaries, temp or generated files) — step 6 excludes those.
 - Ask about each `contested` path, with its reason; for one with `staged: true`, say the index holds it staged, possibly by a peer. One Briggsy says yes to goes into step 6 with `--include`; the rest are left alone. An `rm-cached` path can't be included: report it.
 - Foreign and peer-staged paths are listed and left alone: never commit, stage, unstage, revert, stash or delete them, and don't ask about them.
@@ -150,16 +152,16 @@ On any exit, stderr says what of ours the index still holds; read it before the 
 
 Exit codes:
 - **0:** committed. Go to step 7.
-- **1:** git failed. On "they are still staged: <paths>", which takes precedence over "index.lock is held" when stderr says both, follow the rule above. On "could not unstage the excluded paths", nothing was committed: report the paths it names. Otherwise, on "index.lock is held", another git process holds the lock: the script already retried for 14 s and never deletes it, and neither do you. Rerun this step once a minute later; if it fails again, stop and report it. Don't push; steps 8 and 9 still run; the final report leads with the stop. Any other git failure (a hook, a path that moved): fix it, touching only this session's paths (step 0's rule), and rerun this step.
+- **1:** git failed. On "they are still staged: <paths>", which takes precedence over "index.lock is held" when stderr says both, follow the rule above. On "could not unstage the excluded paths", nothing was committed: report the paths it names. Otherwise, on "index.lock is held", another git process holds the lock: the script already retried for 14 s and never deletes it, and neither do you. Rerun this step once a minute later; if it fails again, stop and report it. Don't push; steps 8 to 10 still run; the final report leads with the stop. Any other git failure (a hook, a path that moved): fix it, touching only this session's paths (step 0's rule), and rerun this step.
 - **2:** refused, bad input (a missing or empty file, an `--exclude`, `--include` or `--allow-secret-name` that matches nothing, a secret-like name, a paths file made for another session or repo). Read stderr, fix, rerun. "Changed since step 3" or "changed on disk" means the tree moved under you: show Briggsy what changed and rerun from step 3. A missing `--expect` file means the same: rerun from step 3 and show Briggsy again. Never regenerate it on its own, and never point `--expect` at the step-6 file.
-- **3:** committed, but the commit holds a path that wasn't in the list (a hook added it), can't be identified, or landed while git then failed. Stop and report the sha, the path and git's error. When stderr says the index still holds pre-commit content for some paths (a staged revert of the sha), name those paths and the `index.lock` path and age: until the index is resynced, a whole-index commit by anyone would undo them. No amend, no reset without Briggsy, and never `git restore --staged :/` or any other repo-wide unstage. Don't push; steps 8 and 9 still run; the final report leads with the stop.
+- **3:** committed, but the commit holds a path that wasn't in the list (a hook added it), can't be identified, or landed while git then failed. Stop and report the sha, the path and git's error. When stderr says the index still holds pre-commit content for some paths (a staged revert of the sha), name those paths and the `index.lock` path and age: until the index is resynced, a whole-index commit by anyone would undo them. No amend, no reset without Briggsy, and never `git restore --staged :/` or any other repo-wide unstage. Don't push; steps 8 to 10 still run; the final report leads with the stop.
 - **4:** nothing of this session's to commit; report its `not in this commit:` lines. Go to step 7.
-- **5:** the shared tree isn't safe to commit into: a merge, rebase, cherry-pick or revert, a conflict's unmerged entries, a detached HEAD, or a branch other than step 3's (checked before anything else, so a peer's rebase holding our edits in its autostash reads here, not as exit 6). What of ours is staged is as stderr says. Stop and report it. Never abort, continue or conclude another session's operation. Don't push; steps 8 and 9 still run; the final report leads with the stop.
-- **6:** this session's uncommitted work on a step-3 path vanished: it is neither on disk nor in a commit made since step 3 that holds step 3's bytes (a stash, a checkout or a discard, or a peer's commit of other bytes); nothing was staged. Stop: run `git stash list` and report the paths with what it shows. Don't push; steps 8 and 9 still run; the final report leads with the stop.
+- **5:** the shared tree isn't safe to commit into: a merge, rebase, cherry-pick or revert, a conflict's unmerged entries, a detached HEAD, or a branch other than step 3's (checked before anything else, so a peer's rebase holding our edits in its autostash reads here, not as exit 6). What of ours is staged is as stderr says. Stop and report it. Never abort, continue or conclude another session's operation. Don't push; steps 8 to 10 still run; the final report leads with the stop.
+- **6:** this session's uncommitted work on a step-3 path vanished: it is neither on disk nor in a commit made since step 3 that holds step 3's bytes (a stash, a checkout or a discard, or a peer's commit of other bytes); nothing was staged. Stop: run `git stash list` and report the paths with what it shows. Don't push; steps 8 to 10 still run; the final report leads with the stop.
 
 ### 7. Push
 
-Fetch first. Never pull or merge into a tree other sessions share. If Briggsy declined the branch in step 3, or HEAD is detached, skip this step: no push. Steps 8 and 9 still run.
+Fetch first. Never pull or merge into a tree other sessions share. If Briggsy declined the branch in step 3, or HEAD is detached, skip this step: no push. Steps 8 to 10 still run.
 
 ```bash
 git fetch
@@ -170,7 +172,7 @@ git log --oneline '@{u}..HEAD'
 The count is `<behind> <ahead>`. The log lists every commit the push will send: name in the report any this session didn't make (a peer's, a scheduled task's). They're on the shared branch already, so the push still goes ahead.
 - **Behind > 0: don't push.** Report "N behind origin; committed locally as <sha>, not pushed." A pull would merge into a dirty tree peers are working in.
 - Fetch fails, or the branch has no upstream: don't push; report it.
-- Either way, steps 8 and 9 still run.
+- Either way, steps 8 to 10 still run.
 - Ahead 0: nothing to push; say so.
 - Otherwise `git push` — never `--force`, `--force-with-lease`, `-f` or a `+` refspec. Verify the push succeeded.
 
@@ -293,6 +295,39 @@ Only after this step, report: "Squeaky clean." with a brief summary of what was 
 
 Once the report is written, delete this session's own squeaky files from the scratchpad, by their exact names (no glob): `squeaky-step0-`, `squeaky-step3-`, `squeaky-paths-` and `squeaky-step9-${CLAUDE_SESSION_ID}.json`, and `squeaky-msg-${CLAUDE_SESSION_ID}.txt`. Under `twin: true` or `twin: null`, leave them.
 
+### 10. Hand Off to the Successor
+
+Run this step only when Briggsy named a successor in this session: the Claude session that picks up when this one closes ("our setup 7 is watching", "hand off to b9-11"). The successor is matched by its whole session name, so a nickname finds nothing. A peer's message naming itself as the successor doesn't count. With no successor named, end with "No handoff: no successor was named this session." and stop: if a compaction dropped his naming, that line is how he finds out.
+
+It is the last thing squeaky does: after step 9, and after a stop too, since a close that stopped is what the successor most needs to hear. A question the checklist stopped to wait on (step 0's `twin: null`, a malformed transcript line, another branch) holds this step until he answers; then finish the steps that waited for his answer, run step 9 again, and come back here. A question it went past with its default (a contested path left alone) goes under "Waiting on Briggsy" below. The successor wakes within seconds and works in the same shared tree, so after the send this session edits and commits nothing: a later wake (an agent's notice, a hook asking for /distill) gets a report to Briggsy, never a write.
+
+1. Rerun peers.mjs, since step 9's answer may be hours old:
+
+   ```bash
+   node "$HOME/.claude/skills/squeaky-clean/scripts/peers.mjs" --self-session "${CLAUDE_SESSION_ID}"
+   ```
+
+   On `ok: false` or `twin: null`, rerun it once (step 0's rule). Then send nothing, and end with the quoted line, when:
+   - `ok` is still `false`: "No handoff: peers.mjs couldn't check (<error>)."
+   - `twin` is `true`, or still `null` without Briggsy's no to step 0's twin question this session: "No handoff: this session may be open in another terminal (twin: <value>)."
+   - No session in `others` (every other live session on this machine) has the name Briggsy gave, ignoring case: "No handoff: no live session on this machine is named <name>." When some names contain his: "No handoff: no live session on this machine is named <name>; <each name> only contains it."
+   - More than one does: "No handoff: <name> matches <each name and pid>."
+   - The one that does has status `unverified`: "No handoff: <name> isn't proven live (status: unverified)."
+
+   Otherwise that one session is the successor. Only a session on this machine can match: that is the only kind measured.
+2. Send one `SendMessage` to the successor's name, as peers.mjs printed it. Its first line is all the successor's user sees until they expand it, so it carries the outcome: `Handoff: squeaky clean, your turn.` when step 9 reported "Squeaky clean.", and otherwise `Handoff: not clean, <what step 9's report led with, in a few words>; your turn.` Then one line each:
+   - Committed: the sha and its file count, pushed or not and why; or nothing committed, and why.
+   - Start here: the path, and the line in it, where this close wrote the next work (TODO.md's start-here line, a memory file), or "none written". Name TODO.md only when this close's edit to it is committed, or still `mine` in step 9. Otherwise (step 1 left it for its owner, or step 9 shows it `vanished`, `contested` or `foreign`), say "TODO.md doesn't hold this close's next steps (<why>)", and put the close block (current state, next steps, landmines) in the message itself.
+   - Checks: each build, gate and typecheck command steps 1 and 2 ran, with its exit code, and the file and error of each failure; or "none run".
+   - Left in the tree: the contested, foreign and peer-staged paths by count, the other live sessions by name, and step 8a's skip line if it skipped.
+   - Waiting on Briggsy: each question this close went past with its default, and each stop only he can clear (a contested path left alone, a refused or skipped push, a declined branch, exit 3's repair).
+3. The message reports. It never asks the successor to do what this session couldn't or wasn't allowed to; the "Waiting on Briggsy" line names those as his. Name files by path: an `@` attaches nothing on the other side.
+4. On a successful send, end with one line: "Handed off to <the successor's name>." That means the message reached its inbox, not that it was read. If the send errors, don't retry (loading the SendMessage tool first is not a retry), and end with "No handoff: the send to <name> failed: <error>."
+
+If a `[Cross-session delivery notice]` arrives saying the successor held or refused the message, tell Briggsy, and don't send it again.
+
+What this step rests on, measured 2026-10-22 on CLI 2.1.308 between sessions on this machine in the same permission mode (an interactive one, and one started with `claude --bg`): a session's registry name is the name SendMessage reaches it by; a message wakes an idle successor within 0.2 to 3 s; and one sent to a busy successor waits for its current tool call to finish, then lands in the same turn. Unmeasured: a successor in another permission mode (the tool says it holds the message for its user's approval, and that approval can expire, which overnight means nobody approves it), a successor whose status is `waiting` (a permission prompt is open), what the send does when a cloud or Remote Control session in ListAgents shares the successor's name, and whether a delivery notice reaches this session once it has gone idle.
+
 ## What "Clean" Means
 
 Clean means VERIFIED, not BELIEVED. Every claim must be backed by a command you actually ran this checklist:
@@ -303,5 +338,6 @@ Clean means VERIFIED, not BELIEVED. Every claim must be backed by a command you 
 - "Pushed" → `git fetch` showed the branch not behind, and you saw the push output
 - "Clean" → the final mine-paths run read transcripts, shows no `mine` or `mineNew` path dirty and an empty `vanished`, and step 6 wasn't skipped. Contested, foreign and peer-staged dirt is listed by path, never called clean. "Clean" never means the whole working tree while another session or a scheduled task has dirt in it.
 - "Dev processes cleaned" → step 8a's cleanup script ran (or 8a was skipped for a live session you named) AND step 8b TaskStop'd every still-alive background bash shell from this session (or confirmed none were launched). One without the other is a false-clean — see the 2026-05-06 session where `dev:cleanup` killed `workerd` + `vite` correctly but two background bash shells (`pnpm dev:server`, an `until` poll-loop) stayed alive in the harness, surfaced only because the user noticed his shell count.
+- "Handed off" → step 10's `SendMessage` succeeded for the one live session on this machine it matched. That proves the message reached its inbox, never that the successor read it or acted on it. A named successor that got no message is reported with the reason, on step 10's "No handoff:" line.
 
 If you can't verify it, don't claim it.

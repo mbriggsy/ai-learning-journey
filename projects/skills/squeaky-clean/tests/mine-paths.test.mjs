@@ -422,7 +422,8 @@ describe('mine-paths.mjs', () => {
     }
     assert.deepEqual(touched, [], 'a share path reached the file system');
     assert.ok(shares.seen >= 6, `share paths counted: ${shares.seen}`);
-    assert.ok([...ev.touched.keys()].some((k) => k.toLowerCase().endsWith('/multi.txt')), 'a \\\\?\\C:\\ local device path is the local file');
+    // A \\?\ local device path is a Windows form; elsewhere it names no file.
+    if (WIN) assert.ok([...ev.touched.keys()].some((k) => k.toLowerCase().endsWith('/multi.txt')), 'a \\\\?\\C:\\ local device path is the local file');
     const r = runScript('mine-paths.mjs', ['--session', 'sess-unc', '--repo', repo], { env: { SQUEAKY_PROJECTS_DIR: path.join(root, 'unc-projects') } });
     assert.equal(r.status, 0, r.stderr);
     assert.ok(JSON.parse(r.stdout).warnings.some((w) => /path\(s\) on a network share in this session's tool calls were ignored, never opened/.test(w)));
@@ -435,7 +436,8 @@ describe('mine-paths.mjs', () => {
     const got = headBlobs(lone, ['a.txt'], warnings);
     assert.equal(got.size, 0);
     assert.equal(warnings.length, 1);
-    assert.match(warnings[0], /^git cat-file --batch failed \(.+\): no file can be compared with HEAD, so none is mine$/);
+    // git's message can span lines (Linux adds "Stopping at filesystem boundary").
+    assert.match(warnings[0], /^git cat-file --batch failed \([\s\S]+\): no file can be compared with HEAD, so none is mine$/);
   });
 
   test('a failed run leaves the --out file absent, even when an earlier run wrote one', () => {

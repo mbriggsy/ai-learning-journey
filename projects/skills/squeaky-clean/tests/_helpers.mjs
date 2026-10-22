@@ -199,13 +199,16 @@ export function deadPid() {
 }
 
 // Independent oracle for process start times (FILETIME strings), Windows only.
+// Elsewhere it knows none, as peers.mjs looks none up there, so a planted
+// registry entry carries no procStart, as one written on that platform would.
 export function fileTimes(pids) {
+  const map = new Map();
+  if (process.platform !== 'win32') return map;
   const r = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',
     "$env:T_PIDS -split ',' | ForEach-Object { $p = Get-Process -Id ([int]$_); '{0} {1}' -f $p.Id, $p.StartTime.ToFileTimeUtc() }"], {
     env: { ...process.env, T_PIDS: pids.join(',') }, encoding: 'utf8', windowsHide: true,
   });
-  const map = new Map();
-  for (const line of r.stdout.split(/\r?\n/)) {
+  for (const line of (r.stdout ?? '').split(/\r?\n/)) {
     const m = /^(\d+) (\d+)$/.exec(line.trim());
     if (m) map.set(Number(m[1]), m[2]);
   }

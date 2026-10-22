@@ -8,17 +8,18 @@ import {
   contributionsForYear,
   ongoingIncomeForYear,
   personOffsetsFor,
+  survivorYearBenefit,
   ENGINE_MAX_DOLLAR,
   type PersonOffsets,
   type SimOutput,
 } from '@engine/simulate'
-import { householdBenefits, realizedClaimAgeAtDeath } from '@engine/socialSecurityBenefit'
+import { householdBenefits, realizedClaimAgeAtDeath, survivorBenefitAnnual, type BenefitPerson } from '@engine/socialSecurityBenefit'
 import { validationMarket } from '@engine/reference/methodology'
 import { sampleCouplePath } from '@engine/longevity'
 import { toRealSeries, rollingSuccessRate } from '@engine/historical'
 import { SHILLER_1925_1995 } from '@engine/reference/shillerSeries'
 import { runTaxAwareDecumulation, type HouseholdYear, type OverlayPerson } from '@engine/taxOverlay'
-import { toLogMoments, simpleReturnFromNormal } from '@engine/rng'
+import { toLogMoments, simpleReturnFromNormal, mulberry32 } from '@engine/rng'
 import {
   NEVER_DEPLETED,
   type AccumulationParams,
@@ -441,9 +442,9 @@ describe('R19 engine half + dire-but-honest edges', () => {
       expect(r.indeterminate).toBe(true) // the DEFINED output — simulate did NOT throw/crash (R19)
       return r.indeterminate ? r.reason : ''
     }
-    expect(reasonOf(overlay({}))).toMatch(/irmaaMagiSeed/) // MISSING seed → the coverage gate (simulate.ts:1128-1130)
-    expect(reasonOf(overlay({ irmaaMagiSeed: [Number.NaN, 60_000] }))).toMatch(/irmaaMagiSeed/) // NaN → finiteness gate (simulate.ts:916)
-    expect(reasonOf(overlay({ irmaaMagiSeed: [-1, 60_000] }))).toMatch(/irmaaMagiSeed/) // negative → finiteness gate (simulate.ts:916)
+    expect(reasonOf(overlay({}))).toMatch(/irmaaMagiSeed/) // MISSING seed → the coverage gate (simulate.ts:1182-1184)
+    expect(reasonOf(overlay({ irmaaMagiSeed: [Number.NaN, 60_000] }))).toMatch(/irmaaMagiSeed/) // NaN → finiteness gate (simulate.ts:970)
+    expect(reasonOf(overlay({ irmaaMagiSeed: [-1, 60_000] }))).toMatch(/irmaaMagiSeed/) // negative → finiteness gate (simulate.ts:970)
   })
 
   it('R19 enum + person-field + empty-bucket-basis gaps → indeterminate (U3-exit code-review pilot)', () => {
@@ -2697,5 +2698,226 @@ describe('R40 · validateParams income block (vectors only; scalars are entity-s
     const out = simulate(withIncome(huge), 1)
     expect(out.indeterminate).toBe(true)
     if (out.indeterminate) expect(out.reason).toContain('income vector invalid')
+  })
+})
+
+// ===========================================================================
+// The survivor-year composition, extracted (the pay check's A2 — `docs/plans/features/
+// working-year-pay-check-build-spec.md`, KTD10). The §202 survivor year moves out of
+// `cashTermsForYear` into one exported helper that the cash seam and the earnings test's schedule
+// both read. A pure refactor: the sweep proves the extracted `ss` is `Object.is` the inline code it
+// replaced, over a seeded population of households and death timelines; the hand-derived goldens in
+// 'SS seam — …' above pin what the figures ARE (DND 012).
+// ===========================================================================
+describe('the survivor-year composition — one exported helper, Object.is the inline code it replaced', () => {
+  // FROZEN: the pre-extraction `ss` composition of `cashTermsForYear`, copied verbatim from
+  // simulate.ts at e2890887 (the all-alive own + spousal-excess sum, then the inline §202 survivor
+  // branch). It is the oracle the extraction is proven against, never a second home of the rule:
+  // nothing outside this describe reads it, and it is never edited to follow the engine.
+  const legacySs = (
+    t: number,
+    params: SimulationParams,
+    offsets: readonly PersonOffsets[],
+    deathOffsets: readonly number[],
+    higherClaimOffset: number,
+  ): number => {
+    let aliveCount = 0
+    for (let i = 0; i < deathOffsets.length; i++) if (t < (deathOffsets[i] ?? 0)) aliveCount++
+    const allAlive = aliveCount === offsets.length
+    let ss = 0
+    let survivorIdx = -1
+    let deceasedIdx = -1
+    for (let i = 0; i < offsets.length; i++) {
+      const o = offsets[i]
+      const death = deathOffsets[i] ?? 0
+      if (o === undefined) continue
+      const alive = t < death
+      if (allAlive) {
+        if (alive && t >= o.claim) ss += o.socialSecurityReal
+        if (alive && t >= Math.max(o.claim, higherClaimOffset)) ss += o.spousalExcessAnnual
+      } else if (alive) {
+        survivorIdx = i
+      } else {
+        deceasedIdx = i
+      }
+    }
+    if (!allAlive && aliveCount >= 1 && survivorIdx >= 0 && deceasedIdx >= 0) {
+      const s = params.people[survivorIdx]
+      const d = params.people[deceasedIdx]
+      const sOff = offsets[survivorIdx]
+      if (s !== undefined && d !== undefined && sOff !== undefined) {
+        const deceasedDeathOffset = deathOffsets[deceasedIdx] ?? 0
+        const deceasedClaim = realizedClaimAgeAtDeath(d.socialSecurityClaimAge, d.birthYear, d.currentAge + deceasedDeathOffset)
+        const deceased: BenefitPerson = { piaAnnual: d.pia, claimAge: deceasedClaim, birthYear: d.birthYear }
+        const survivorStartAge = Math.max(60, s.currentAge + deceasedDeathOffset)
+        const survivorStream = survivorBenefitAnnual(deceased, s.birthYear, survivorStartAge)
+        const survivorEligible = s.currentAge + t >= 60
+        const ownStream = t >= sOff.claim ? sOff.socialSecurityReal : 0
+        ss = Math.max(ownStream, survivorEligible ? survivorStream : 0)
+      }
+    }
+    return ss
+  }
+
+  // A seeded population: couples (nine in ten) and singles, ages 50–80 in 2026, PIAs from $1,000 to
+  // $48,000 in cents (a quarter at $0), every claim age 62–70, each person's death offset 0–35, read at
+  // every year 0–35. Wider than the sampled deaths (drawn from 66) on purpose: the identity has to hold
+  // on the whole input domain, not only on the paths a run reaches.
+  interface Household {
+    readonly params: SimulationParams
+    readonly offsets: readonly PersonOffsets[]
+    readonly higherClaimOffset: number
+    readonly deaths: readonly number[]
+  }
+  const population = (seed: number, count: number): Household[] => {
+    const rand = mulberry32(seed)
+    const int = (lo: number, hi: number): number => lo + Math.floor(rand() * (hi - lo + 1))
+    const person = (sex: 'male' | 'female'): PersonInputs => {
+      const currentAge = int(50, 80)
+      return {
+        sex,
+        currentAge,
+        birthYear: 2026 - currentAge,
+        retirementAge: currentAge + int(0, 5),
+        earnedIncomeReal: 0,
+        pia: rand() < 0.25 ? 0 : int(100_000, 4_800_000) / 100,
+        socialSecurityClaimAge: int(62, 70),
+      }
+    }
+    const out: Household[] = []
+    for (let h = 0; h < count; h++) {
+      const people = rand() < 0.9 ? [person('male'), person('female')] : [person('female')]
+      const { offsets, higherClaimOffset } = personOffsetsFor(people)
+      out.push({
+        params: makeParams({ people, annualSpendingReal: 1_000_000, survivorSpendingRatio: 0.75 }),
+        offsets,
+        higherClaimOffset,
+        deaths: people.map(() => int(0, 35)),
+      })
+    }
+    return out
+  }
+  const HOUSEHOLDS = population(20261021, 1_500)
+  const YEARS = 36
+
+  it('cashTermsForYear’s ss is Object.is the frozen inline composition in every household-year of the sweep', () => {
+    let compared = 0
+    let survivorYears = 0
+    for (const h of HOUSEHOLDS) {
+      for (let t = 0; t < YEARS; t++) {
+        const got = cashTermsForYear(t, h.params, h.offsets, h.deaths, h.higherClaimOffset).ss
+        const want = legacySs(t, h.params, h.offsets, h.deaths, h.higherClaimOffset)
+        if (!Object.is(got, want)) {
+          throw new Error(`ss moved at t ${t}: got ${got}, want ${want} — ${JSON.stringify({ people: h.params.people, deaths: h.deaths })}`)
+        }
+        compared++
+        const alive = h.deaths.filter((d) => t < d).length
+        if (alive >= 1 && alive < h.deaths.length) survivorYears++
+      }
+    }
+    expect(compared).toBe(HOUSEHOLDS.length * YEARS)
+    expect(survivorYears, 'the sweep reaches survivor years').toBeGreaterThan(10_000)
+  })
+
+  it('survivorYearBenefit is defined exactly on the survivor years, pays what cashTermsForYear pays, and names its winner truly — every branch reached', () => {
+    const reach = { survivor: 0, own: 0, none: 0, underSixty: 0, tie: 0, diedBeforeClaim: 0, claimedEarly: 0, allAlive: 0, allDead: 0, single: 0 }
+    for (const h of HOUSEHOLDS) {
+      for (let t = 0; t < YEARS; t++) {
+        const people = h.params.people
+        const sy = survivorYearBenefit(t, people, h.offsets, h.deaths)
+        const alive = h.deaths.filter((d) => t < d).length
+        if (alive === h.deaths.length) {
+          reach.allAlive++
+          expect(sy).toBeUndefined()
+          continue
+        }
+        if (alive === 0 || people.length === 1) {
+          if (people.length === 1) reach.single++
+          else reach.allDead++
+          expect(sy).toBeUndefined()
+          continue
+        }
+        if (sy === undefined) throw new Error(`a survivor year with no composition at t ${t}: ${JSON.stringify(h.deaths)}`)
+        // the indexes name the living and the dead spouse
+        expect(t < h.deaths[sy.survivorIdx]! && t >= h.deaths[sy.deceasedIdx]!).toBe(true)
+        expect(Object.is(sy.paid, cashTermsForYear(t, h.params, h.offsets, h.deaths, h.higherClaimOffset).ss)).toBe(true)
+        const s = people[sy.survivorIdx]!
+        const d = people[sy.deceasedIdx]!
+        expect(sy.survivorStartAge).toBe(Math.max(60, s.currentAge + h.deaths[sy.deceasedIdx]!))
+        expect(sy.survivorEligible).toBe(s.currentAge + t >= 60)
+        expect(sy.deceased.piaAnnual).toBe(d.pia)
+        expect(sy.deceased.claimAge).toBeLessThanOrEqual(Math.max(d.socialSecurityClaimAge, 67))
+        // the winner, read from what each benefit IS this year, never from the helper's own ternary
+        if (sy.winner === 'survivor') {
+          expect(sy.survivorEligible && sy.survivorStream > sy.ownStream && Object.is(sy.paid, sy.survivorStream)).toBe(true)
+          reach.survivor++
+        } else if (sy.winner === 'own') {
+          expect(sy.ownStream > 0 && Object.is(sy.paid, sy.ownStream)).toBe(true)
+          expect(sy.survivorEligible ? sy.survivorStream : 0).toBeLessThanOrEqual(sy.ownStream)
+          if (sy.survivorEligible && sy.survivorStream === sy.ownStream) reach.tie++
+          reach.own++
+        } else {
+          expect(sy.paid).toBe(0)
+          expect(sy.ownStream).toBe(0)
+          expect(sy.survivorEligible ? sy.survivorStream : 0).toBe(0)
+          reach.none++
+        }
+        if (!sy.survivorEligible) reach.underSixty++
+        if (d.currentAge + h.deaths[sy.deceasedIdx]! < d.socialSecurityClaimAge) reach.diedBeforeClaim++
+        if (sy.deceased.claimAge < 66) reach.claimedEarly++
+      }
+    }
+    // Non-vacuity: the sweep drives every branch the composition has (a tie is rare by chance, so it is
+    // pinned by its own hand-built arm below instead).
+    for (const [branch, n] of Object.entries(reach)) {
+      if (branch === 'tie') continue
+      expect(n, `the sweep reaches '${branch}'`).toBeGreaterThan(50)
+    }
+  })
+
+  it('on the §202 golden household every field is the hand-derived figure (deceased PIA $24,000 at 67; the survivor 58, widowed at 61)', () => {
+    // The 'cash-term seam' golden above: P0 dies at offset 3 (age 68, after the planned claim at 67, so the
+    // realized claim is 67); the survivor is 61 then, so the stream starts locked at 61: $24,000 × 63480/84000
+    // = $18,136.80 a year. At t = 5 the survivor is 63 (payable) and has not claimed her own (offset 9).
+    const deceased: PersonInputs = { sex: 'male', currentAge: 65, birthYear: 1961, retirementAge: 65, earnedIncomeReal: 0, pia: 24_000, socialSecurityClaimAge: 67 }
+    const survivor: PersonInputs = { sex: 'female', currentAge: 58, birthYear: 1968, retirementAge: 58, earnedIncomeReal: 0, pia: 0, socialSecurityClaimAge: 67 }
+    const people = [deceased, survivor]
+    const { offsets } = personOffsetsFor(people)
+    const sy = survivorYearBenefit(5, people, offsets, [3, 50])
+    expect(sy).toEqual({
+      survivorIdx: 1,
+      deceasedIdx: 0,
+      deceased: { piaAnnual: 24_000, claimAge: 67, birthYear: 1961 },
+      survivorStartAge: 61,
+      survivorStream: 18_136.8,
+      survivorEligible: true,
+      ownStream: 0,
+      paid: 18_136.8,
+      winner: 'survivor',
+    })
+    // widowed at 58 instead (P0 dies at offset 0): the stream locks at 60, and is not payable until she is 60
+    const early = survivorYearBenefit(1, people, offsets, [0, 50])
+    expect(early?.survivorStartAge).toBe(60)
+    expect(early?.survivorEligible, 'she is 59 at t = 1').toBe(false)
+    expect(early?.paid).toBe(0)
+    expect(early?.winner).toBe('none')
+    // and not a survivor year at all while both live, or once both have died
+    expect(survivorYearBenefit(2, people, offsets, [3, 50])).toBeUndefined()
+    expect(survivorYearBenefit(6, people, offsets, [3, 5])).toBeUndefined()
+  })
+
+  it('a tie between the two benefits is paid as the survivor’s own (the widow(er) benefit adds nothing over it)', () => {
+    // Both born 1960 (retirement FRA exactly 67), both PIA $30,000 claimed at 67, so each own benefit is
+    // $30,000. He dies at offset 2 (age 68, past his claim: realized 67, $30,000); she is 68 then, past
+    // her survivor FRA, so the widow(er) benefit is the full $30,000 too. At t = 3 she has claimed (offset 1).
+    const him: PersonInputs = { sex: 'male', currentAge: 66, birthYear: 1960, retirementAge: 66, earnedIncomeReal: 0, pia: 30_000, socialSecurityClaimAge: 67 }
+    const her: PersonInputs = { ...him, sex: 'female' }
+    const people = [him, her]
+    const { offsets } = personOffsetsFor(people)
+    const sy = survivorYearBenefit(3, people, offsets, [2, 50])
+    expect(sy?.ownStream).toBe(30_000)
+    expect(sy?.survivorStream).toBe(30_000)
+    expect(sy?.paid).toBe(30_000)
+    expect(sy?.winner).toBe('own')
   })
 })

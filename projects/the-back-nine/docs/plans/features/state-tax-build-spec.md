@@ -134,7 +134,7 @@ status: shipped
    arms: absent field, `'elsewhere'`, and each unbuilt roster state, all against the golden
    spine.
 6. **validateParams / R19:** the state code is an ENUM-MEMBERSHIP gate (the `filing` idiom,
-   simulate.ts:836) — an out-of-union value crossing the worker boundary returns the calm
+   simulate.ts:890) — an out-of-union value crossing the worker boundary returns the calm
    indeterminate, never a silently-selected branch; mirrored fail-loud backstop in
    `runTaxAwareDecumulation` for direct callers.
 7. **Survivor transition (insight 014):** the NC standard deduction moves $25,500 → $12,750

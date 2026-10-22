@@ -317,6 +317,89 @@ export function personOffsetsFor(people: readonly PersonInputs[]): {
   return { offsets, higherClaimOffset: offsets[higherIdx]?.claim ?? 0 }
 }
 
+/** One survivor year's Social Security — see {@link survivorYearBenefit}. */
+export interface SurvivorYearBenefit {
+  /** The living spouse — an index into `people` and the offsets. */
+  readonly survivorIdx: number
+  /** The spouse who died — an index into `people` and the offsets. */
+  readonly deceasedIdx: number
+  /** The deceased's record as the widow(er) benefit reads it: their PIA at the claim age they
+   *  REALIZED (`realizedClaimAgeAtDeath` — the planned age, capped by the age at death). */
+  readonly deceased: BenefitPerson
+  /** The age the widow(er) benefit starts at, locked: max(60, the survivor's age at the death). */
+  readonly survivorStartAge: number
+  /** The widow(er) benefit at the locked start age, real $ a year, before the age-60 gate. */
+  readonly survivorStream: number
+  /** The widow(er) benefit is payable this year: the survivor is at least 60. */
+  readonly survivorEligible: boolean
+  /** The survivor's own benefit this year: once they have claimed it, else 0. */
+  readonly ownStream: number
+  /** The benefit paid: max(own, the widow(er) benefit when payable). */
+  readonly paid: number
+  /** Which benefit `paid` is: `'survivor'` when the payable widow(er) benefit is strictly the larger,
+   *  `'own'` when the survivor's own benefit is paid (a tie is `'own'`: the widow(er) benefit adds
+   *  nothing over it), `'none'` when nothing is payable this year. */
+  readonly winner: 'own' | 'survivor' | 'none'
+}
+
+/**
+ * One survivor year's Social Security (plan §6) — the ONE home of the §202 composition. It is read by
+ * {@link cashTermsForYear} (the year's `ss` once a spouse has died) and, from the pay check's earnings
+ * test on (`docs/plans/features/working-year-pay-check-build-spec.md`, KTD10), by the test's schedule,
+ * which has to know which benefit a working widow(er) is paid before it can hold it back or credit it.
+ *
+ * It replaces the old `$0-until-own-claim` stub. Once one spouse has died, the survivor each year
+ * collects max(their OWN benefit, the survivor benefit on the deceased's record). The survivor
+ * benefit's age-reduction factor is LOCKED at the survivor's age when the stream starts (max(60, age
+ * at the first death)) and held FLAT — it does NOT ramp toward 100% as the survivor ages (a ramp would
+ * optimistically overstate the early-widowhood floor: the cardinal calm-but-wrong sin). The deceased's
+ * DRCs flow through and RIB-LIM caps a deceased who claimed reduced — all inside
+ * `survivorBenefitAnnual`, applied to the deceased's REALIZED claim age: a worker can't file after
+ * death, so a deceased who died before their PLANNED claim age realized only the credits they lived to
+ * earn — `realizedClaimAgeAtDeath` caps the planned age at age-at-death (an unfiled pre-FRA death lands
+ * on the full PIA, never a phantom delayed credit; 20 CFR §404.313 / RS 00615.301). Passing the
+ * planned age verbatim would overstate the survivor floor on early-death paths — the cardinal
+ * optimistic sin, on exactly the early-widowhood scenario this branch exists to harden. The spousal
+ * excess does NOT carry into widowhood (it ended at the death).
+ *
+ * `undefined` unless this is a survivor year — someone has died and someone is alive. The
+ * `aliveCount >= 1` + index guards skip the people-of-one death and the all-dead year. Constant once
+ * the death offset is fixed: PURE and draw-free (CRN-safe), a function of the death timeline + inputs.
+ */
+export function survivorYearBenefit(
+  t: number,
+  people: readonly PersonInputs[],
+  offsets: readonly PersonOffsets[],
+  deathOffsets: readonly number[],
+): SurvivorYearBenefit | undefined {
+  let aliveCount = 0
+  for (let i = 0; i < deathOffsets.length; i++) if (t < (deathOffsets[i] ?? 0)) aliveCount++
+  if (aliveCount === offsets.length) return undefined // everyone alive: not a survivor year
+  let survivorIdx = -1
+  let deceasedIdx = -1
+  for (let i = 0; i < offsets.length; i++) {
+    if (offsets[i] === undefined) continue
+    if (t < (deathOffsets[i] ?? 0)) survivorIdx = i
+    else deceasedIdx = i
+  }
+  if (aliveCount < 1 || survivorIdx < 0 || deceasedIdx < 0) return undefined
+  const s = people[survivorIdx]
+  const d = people[deceasedIdx]
+  const sOff = offsets[survivorIdx]
+  if (s === undefined || d === undefined || sOff === undefined) return undefined
+  const deceasedDeathOffset = deathOffsets[deceasedIdx] ?? 0
+  const deceasedClaim = realizedClaimAgeAtDeath(d.socialSecurityClaimAge, d.birthYear, d.currentAge + deceasedDeathOffset)
+  const deceased: BenefitPerson = { piaAnnual: d.pia, claimAge: deceasedClaim, birthYear: d.birthYear }
+  const survivorStartAge = Math.max(60, s.currentAge + deceasedDeathOffset)
+  const survivorStream = survivorBenefitAnnual(deceased, s.birthYear, survivorStartAge)
+  const survivorEligible = s.currentAge + t >= 60 // the §202 widow(er) benefit is not payable before age 60
+  const ownStream = t >= sOff.claim ? sOff.socialSecurityReal : 0
+  const payableSurvivor = survivorEligible ? survivorStream : 0
+  const paid = Math.max(ownStream, payableSurvivor)
+  const winner = paid === 0 ? 'none' : payableSurvivor > ownStream ? 'survivor' : 'own'
+  return { survivorIdx, deceasedIdx, deceased, survivorStartAge, survivorStream, survivorEligible, ownStream, paid, winner }
+}
+
 /**
  * The full cash decomposition for one year: the survivor-adjusted spending, the earned-income
  * bridge (alive AND still working), the ongoing other-income gross (R40 · death-gated, NOT
@@ -410,8 +493,6 @@ export function cashTermsForYear(
 
   let earned = 0
   let ss = 0
-  let survivorIdx = -1
-  let deceasedIdx = -1
   let livingWorker = false
   for (let i = 0; i < offsets.length; i++) {
     const o = offsets[i]
@@ -431,41 +512,14 @@ export function cashTermsForYear(
       // double-counting with the survivor stream (plan §7).
       if (alive && t >= o.claim) ss += o.socialSecurityReal
       if (alive && t >= Math.max(o.claim, higherClaimOffset)) ss += o.spousalExcessAnnual
-    } else if (alive) {
-      survivorIdx = i
-    } else {
-      deceasedIdx = i
     }
   }
-  // §202 survivor benefit (plan §6) — replaces the old `$0-until-own-claim` stub. Once one spouse has
-  // died, the survivor each year collects max(their OWN benefit, the survivor benefit on the deceased's
-  // record). The survivor benefit's age-reduction factor is LOCKED at the survivor's age when the stream
-  // starts (max(60, age at the first death)) and held FLAT — it does NOT ramp toward 100% as the survivor
-  // ages (a ramp would optimistically overstate the early-widowhood floor: the cardinal calm-but-wrong
-  // sin). The deceased's DRCs flow through and RIB-LIM caps a deceased who claimed reduced — all inside
-  // `survivorBenefitAnnual`, applied to the deceased's REALIZED claim age: a worker can't file after death,
-  // so a deceased who died before their PLANNED claim age realized only the credits they lived to earn —
-  // `realizedClaimAgeAtDeath` caps the planned age at age-at-death (an unfiled pre-FRA death lands on the
-  // full PIA, never a phantom delayed credit; 20 CFR §404.313 / RS 00615.301). Passing the planned age
-  // verbatim would overstate the survivor floor on early-death paths — the cardinal optimistic sin, on
-  // exactly the early-widowhood scenario this branch exists to harden. The spousal excess does NOT carry
-  // into widowhood (it ended at the death). The `aliveCount >= 1` + index guards skip the people-of-one
-  // all-dead case (ss stays 0). Constant once the death offset is fixed (CRN-safe: a pure function of the
-  // death timeline + inputs).
-  if (!allAlive && aliveCount >= 1 && survivorIdx >= 0 && deceasedIdx >= 0) {
-    const s = params.people[survivorIdx]
-    const d = params.people[deceasedIdx]
-    const sOff = offsets[survivorIdx]
-    if (s !== undefined && d !== undefined && sOff !== undefined) {
-      const deceasedDeathOffset = deathOffsets[deceasedIdx] ?? 0
-      const deceasedClaim = realizedClaimAgeAtDeath(d.socialSecurityClaimAge, d.birthYear, d.currentAge + deceasedDeathOffset)
-      const deceased: BenefitPerson = { piaAnnual: d.pia, claimAge: deceasedClaim, birthYear: d.birthYear }
-      const survivorStartAge = Math.max(60, s.currentAge + deceasedDeathOffset)
-      const survivorStream = survivorBenefitAnnual(deceased, s.birthYear, survivorStartAge)
-      const survivorEligible = s.currentAge + t >= 60 // the §202 widow(er) benefit is not payable before age 60
-      const ownStream = t >= sOff.claim ? sOff.socialSecurityReal : 0
-      ss = Math.max(ownStream, survivorEligible ? survivorStream : 0)
-    }
+  // §202 survivor benefit (plan §6): once one spouse has died, the survivor's year is
+  // {@link survivorYearBenefit}'s — the larger of their own benefit and the widow(er) benefit on the
+  // deceased's record. A lone person's death and an all-dead year pay nothing (ss stays 0).
+  if (!allAlive) {
+    const survivorYear = survivorYearBenefit(t, params.people, offsets, deathOffsets)
+    if (survivorYear !== undefined) ss = survivorYear.paid
   }
 
   // C2 §7 — the working-year zero-withdrawal clamp, PRESENCE-GATED on the accumulation construct

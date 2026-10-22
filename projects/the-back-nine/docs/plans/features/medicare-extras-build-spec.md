@@ -148,7 +148,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   edited to accommodate the vector: a superset, not a perturbation.
 - The vector is validated like its per-person siblings: `validateParams` rejects a negative
   entry (the insight-046 netted-away optimistic class), a NaN entry, and a length mismatch
-  (`src/engine/simulate.ts:935-938`), and the overlay's direct callers get their own up-front
+  (`src/engine/simulate.ts:989-992`), and the overlay's direct callers get their own up-front
   length backstop (`src/engine/taxOverlay.ts:1681-1685`) so a short vector on a two-person
   household throws rather than under-charging.
 - Extras are **real-flat**, and deliberately NOT ridden on the Part B trend: Medigap/Part D plan

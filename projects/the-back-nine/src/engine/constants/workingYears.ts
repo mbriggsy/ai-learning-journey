@@ -11,9 +11,9 @@
  *  - WAGE-INDEXED (the OASDI wage base, by the national average wage index, 42 U.S.C. §430(b)):
  *    held FLAT in real terms. Real wages grow, so the real base grows too; holding it flat taxes
  *    pay above it slightly LOW in later years (rosy, small) — disclosed with the figure.
- *  - FROZEN NOMINAL (the two Additional Medicare Tax lines, §3101(b)(2): "aren't indexed for
- *    inflation"): the constant stays the statute's figure, and the consumer divides it by the
- *    engine's one price index for its calendar year (`priceIndex.ts`), never here.
+ *  - FROZEN NOMINAL (the two Additional Medicare Tax lines of §3101(b)(2); the Form 8959
+ *    instructions: "aren't indexed for inflation"): the constant stays the statute's figure, and the
+ *    consumer divides it by the engine's one price index for its calendar year (`priceIndex.ts`).
  * The rates are statute. The spine reads NOTHING from here.
  */
 import { sourced, type ConstantEntry } from './types'
@@ -28,7 +28,7 @@ export const oasdiRate = sourced(0.062, {
   directionalUntilPinned: false,
   pinTo: '26 U.S.C. §3101(a)',
   legalBasis: '26 U.S.C. §3101(a)',
-  note: 'The employee share only: the employer’s matching 6.2 % is never the household’s money out. Wages are FICA wages (§3121(a)): 401(k), 403(b) and 457(b) elective deferrals stay IN them (§3121(v)(1)(A); Pub 15), so the consumer passes gross pay.',
+  note: 'The employee share only: the employer’s matching 6.2 % is never the household’s money out. Wages are FICA wages (§3121(a)): elective deferrals stay IN them — 401(k) by §3121(v)(1)(A); 403(b) by the salary-reduction carve-out in §3121(a)(5)(D); 457(b) because a §457(a) plan is not an exempt governmental plan (§3121(v)(3)(A)) and its deferrals count when the work is done (§3121(v)(2)(A), (C)); Pub 15 (2026) §15 rows 2, 4, 8 — so the consumer passes gross pay. Gross pay over-reads FICA wages by any §125 cafeteria-plan amounts (pre-tax health premiums, a cafeteria-plan HSA: §3121(a)(5)(G)); charging them errs gloomy, the plan’s K11, disclosed until intake asks.',
 })
 
 /** The 2026 OASDI contribution and benefit base: the most of each person's wages the 6.2 % reaches. */

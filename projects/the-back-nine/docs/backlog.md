@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **182 open items** (239 entries, 57 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
+> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **184 open items** (241 entries, 57 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -1179,7 +1179,7 @@ Briggsy's eye, and should not be re-filed as a copy defect without a read.
   - So everyone now under 65 lives past 65 on every path, on both routes.
   - The code calls it "a directional limitation" without naming the direction (`longevity.ts:59-61`).
   - The committed SSA cohort snapshot already holds every age from 0 (`src/engine/reference/ssa-snapshot/CohLifeTables_M_Alt2_TR2024.csv` and its female twin).
-  - The register mentions it only in the measurement-limit lists of two CLOSED entries (`docs/backlog.md:1769`, `:2055`, `:2128`), and the panel's longevity row (`src/ui/copy.ts:1439-1440`) never says it.
+  - The register mentions it only in the measurement-limit lists of two CLOSED entries (`docs/backlog.md:1805`, `:2091`, `:2164`), and the panel's longevity row (`src/ui/copy.ts:1439-1440`) never says it.
 - **Direction.** Either way, broad reach, unmeasured. A worker's early death ends pay and deposits and starts the survivor's draws early; missing that reads rosy. The years of spending it removes read gloomy. The sweeps lean rosy for a working household; measure before claiming a direction.
 - **D7.** Use it: the odds below 65 are a table the tool already holds. How long each person lives stays unknowable, and the plan already runs on odds.
 - **Prescription.**
@@ -1303,6 +1303,42 @@ Briggsy's eye, and should not be re-filed as a copy defect without a read.
 - ⚑ NEGATIVE:
   - Never cut the benefit in the main run on a pilot call: full benefit versus payable share is a framing fork, and it is his.
   - Never quote a depletion year or a cut size from memory or a secondary source (burned/062).
+
+### The widow(er) benefit is capped before the survivor's age reduction, where the law caps it after — the early-widowhood floor reads low whenever the deceased claimed early and the survivor starts before full retirement age
+
+`M` · **pilot** (measure → build: a law-correctness fix; his words only if a survivor sentence moves) · filed 2026-10-22 (b9-10) by the A2+A3 review (`wf_69c7171f-55e`, the law and contract lenses, each skeptic-confirmed) and the RIB-LIM read (`research-riblim.json` + `verdict-riblim.json` in the pay-check research folder)
+
+- **The gap (read).**
+  - `survivorBenefitAnnual` takes the larger of 82.5 % of the PIA and the deceased's reduced benefit, THEN applies the survivor's age factor (`src/engine/socialSecurityBenefit.ts:222-237`).
+  - The law reduces the survivor's benefit for her age first and caps it after: payable = min(the age-reduced widow(er) benefit, max(82.5 % of the PIA, the deceased's if-alive benefit)). The sources: 42 U.S.C. §402(e)(2)(D) ("as determined under subparagraph (A) and after application of subsection (q)"); §402(f)(2)(D) for widowers; POMS RS 00615.320 A.3 and the RS 00615.322 D worksheet; GN 00204.045 C ("the WIB amount will not increase beyond this month").
+  - The order is pinned as deliberate (`src/engine/__tests__/socialSecurityBenefit.test.ts:134-137`, "cap-then-age-reduce → $623.40/mo") and recorded so in `docs/decisions/ss-computation.md:172` ("no standalone oracle covers this junction"; RS 00615.322 D is that oracle) and `docs/architecture.md:255`.
+- **Direction.** Gloomy, never rosy. For an age factor f ≤ 1, f·max(c, R) ≤ min(f·PIA, max(c, R)) because max(c, R) ≤ PIA.
+  - The skeptics' probe on the live function (deceased PIA $1,000 a month, claimed at 62): a survivor starting at 61 gets $623.40 from the engine and $755.70 under the law, $1,587.60 a year low. At 60: $589.80 vs $715.00. From 63 the law's cap binds at $825.00, while the engine climbs to it only at 67.
+  - Over 200 cells (claims at 62–66, starts at 60–67, five PIAs) the engine was below the law 175 times, equal 25 times and above 0 times.
+  - Which seeds and surfaces move is UNMEASURED: the survivor card and its step-down, the survivor-conditioned odds, the solver's survivor paths, and the `healthss` widow figures (`docs/backlog.md:997`).
+- **D7.** USE: the law is read and current, and the engine already holds every input (PIA, claim ages, birth years).
+- **Prescription.** One dedicated commit, BEFORE the pay check's A4: U3 builds widow(er) crediting on this function (the plan's KTD10).
+  - (1) In `survivorBenefitAnnual`, age-reduce the full base first, with the monthly dime-round: the PIA when the deceased claimed early, `deceasedAdjusted` (with DRCs) otherwise. Then, only when the deceased claimed early, return min(that, max(the dime-floored 82.5 % × PIA, `deceasedAdjusted`)).
+  - (2) Re-derive the junction golden from the RS 00615.322 D worksheet: $755.70 a month (75,570 cents × 12). Add a cap-binds arm (PIA $1,000 claimed at 62, survivor starting at 66: $825.00, where the engine pays $791.40 today), the at-60 arm ($715.00), and the GN 00204.045 worked example (FRA 66, WIB PIA $740.50, RIB LIM $633.50: 35 or 36 months early pays $633.50, 37 months early $632.00).
+  - (3) Measure every seed and the survivor surfaces before and after. Decide the pricing-ledger row (`src/engine/pricingVersion.ts`: a W-absent recompute moves) and `SOLVER_CODE_VERSION` (the solver scores survivor paths). Re-pin what moves, with its measurement in the docblock, and Caddie-walk any survivor sentence that changes.
+  - (4) Amend `docs/decisions/ss-computation.md:172` and `docs/architecture.md:255` (age-reduce, then cap; name RS 00615.322 D), and re-measure the `healthss` widow figures (`docs/backlog.md:997`).
+- ⚑ NEGATIVE:
+  - Never fold this into a commit that claims byte-identity (the pay check's A5).
+  - Never derive the junction figure from the engine's own function (DND 012): the RS 00615.322 D worksheet is the oracle.
+  - The lock-flat rule stands: the survivor's age factor is fixed at her start age. Only the cap's input can step, under the earnings test's credits (the pay-check plan's KTD11).
+
+### Disability is not modeled — no disability benefit for a worker, and no disabled widow(er) benefit from age 50
+
+`M` · **pilot** (source → build) · **briggsy** (the question's words) · filed 2026-10-22 (b9-10) by the A2+A3 review's law lens (`wf_69c7171f-55e`, F7, skeptic PARTIAL: the comment half was fixed in place, this is the filing half)
+
+- **The gap (read).**
+  - The engine models no disability; a grep of `src/engine`, `src/shared` and `src/intake` finds no disability insurance benefit.
+  - The survivor year pays the aged widow(er) benefit from 60 only (`src/engine/simulate.ts:395`). The law also pays a disabled widow(er) from 50 (42 U.S.C. §402(e)(1)(B)(ii)), at 71.5 % of the unreduced benefit (POMS RS 00615.301 B.1.e).
+  - The gap lives only as notes today (`src/engine/socialSecurityBenefit.ts:231`, "DWB-50 deferred"; `docs/decisions/ss-computation.md:75`).
+- **Direction.** Gloomy on the benefit: a disabled member's income is missing. The pay side's lean (a disabled member who no longer works) is unmeasured; record it separately.
+- **D7.** ASK the current status: "Is either of you getting, or applying for, Social Security disability?" A future disability is a "nobody can know this" line.
+- **Prescription.** Source the disability and disabled-widow(er) rules at the primaries first (42 U.S.C. §423, §402(e)(1)(B)(ii), RS 00615.301). Then build the question, the benefit and the disabled widow(er) branch, measured, with a DND-012 fixture.
+- ⚑ NEGATIVE: never infer disability from an age or a stop date; never a plausible default for an unanswered status (burned/062).
 
 ## Tier 1 — the differentiator does not land
 

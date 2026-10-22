@@ -392,7 +392,7 @@ export function survivorYearBenefit(
   const deceased: BenefitPerson = { piaAnnual: d.pia, claimAge: deceasedClaim, birthYear: d.birthYear }
   const survivorStartAge = Math.max(60, s.currentAge + deceasedDeathOffset)
   const survivorStream = survivorBenefitAnnual(deceased, s.birthYear, survivorStartAge)
-  const survivorEligible = s.currentAge + t >= 60 // the §202 widow(er) benefit is not payable before age 60
+  const survivorEligible = s.currentAge + t >= 60 // the AGED widow(er) benefit starts at 60 (§202(e)(1)(B)(i)); the disabled one from 50 is not modeled
   const ownStream = t >= sOff.claim ? sOff.socialSecurityReal : 0
   const payableSurvivor = survivorEligible ? survivorStream : 0
   const paid = Math.max(ownStream, payableSurvivor)

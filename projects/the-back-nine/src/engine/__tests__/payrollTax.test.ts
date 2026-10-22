@@ -110,5 +110,8 @@ describe('payrollTaxForYear — fails loud, never a silent $0 (burned/062)', () 
   it('a non-integer calendar year throws before any wage is read', () => {
     expect(() => payrollTaxForYear([50_000], 'single', 2026.5)).toThrow(/integer calendar year/)
     expect(() => payrollTaxForYear([], 'single', Number.NaN)).toThrow(/integer calendar year/)
+    // The ORDER: with a bad wage AND a bad year, the year's guard answers. Were the wage loop first,
+    // the wage's own message would throw instead (the price index's guard runs only after the loop).
+    expect(() => payrollTaxForYear([Number.NaN], 'single', 2026.5)).toThrow(/\[payrollTax\] calendarYear/)
   })
 })

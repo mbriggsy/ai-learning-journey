@@ -31,13 +31,15 @@ ranked under that rule.
 1. **Phase A** (engine, inert in the app): ~~A1 U4~~ ✅ `e2890887` → ~~A2 the survivor-year extraction~~ ✅ `512df53f`
    (`survivorYearBenefit` in `simulate.ts`, the one home of the §202 year; its `winner` is `'own' | 'survivor' | 'none'`,
    a tie is `'own'`) → ~~A3 U1's payroll keys + U2~~ ✅ `5d44ed68` (`src/engine/constants/workingYears.ts`,
-   `WORKING_YEARS_YEAR`; `payrollTaxForYear` → `{ socialSecurity, medicare, additionalMedicare, total }`) → **A4 U1's
-   earnings-test keys + U3 (NEXT).** FIRST read the RIB-LIM primary's answer: `research-riblim.json` + `verdict-riblim.json`
-   in the research folder below (read and skeptic-checked by `wf_69c7171f-55e`, launched at the b9-10 close; if the files
-   are missing or the two disagree, that IS the first job — KTD11's last bullet: build what the law says, and only an OPEN
-   answer ships a gloomy stopgap with a key). The keys ($24,480 / $65,160, rates 1/2 and 1/3, FR Doc 2025-19763,
-   §403(f)(3)) join `workingYears.ts` with WITNESS rows bound to `src/engine/earningsTest.ts`. The producer reads the
-   survivor year only through `survivorYearBenefit`, never a second composition (insight 081). Then → A5 U5's loop
+   `WORKING_YEARS_YEAR`; `payrollTaxForYear` → `{ socialSecurity, medicare, additionalMedicare, total }`) → **NEXT: the
+   RIB-LIM order fix, its own commit**: the register's Tier 0 *The widow(er) benefit is capped before the survivor's age
+   reduction…*. It is gloomy, it moves today's W-absent survivor floors UP, and its Prescription carries the measurement, the
+   ledger / `SOLVER_CODE_VERSION` decision, the re-pins and the oracle (RS 00615.322 D). A4's widow(er) crediting builds on
+   it → **then A4, U1's earnings-test keys + U3.** The RIB-LIM read is DONE: CREDITED (the plan's KTD11, amended
+   2026-10-22; `research-riblim.json` + `verdict-riblim.json` in the research folder below). The keys ($24,480 / $65,160,
+   rates 1/2 and 1/3, FR Doc 2025-19763, §403(f)(3)) join `workingYears.ts` with WITNESS rows bound to
+   `src/engine/earningsTest.ts`. The producer reads the survivor year only through `survivorYearBenefit`, which gains an
+   optional credits input (KTD10), never a second composition (insight 081). Then → A5 U5's loop
    reorder + extractions alone, byte-identical → A6 U5's check → A7 U6a. A constants key lands only with the producer its
    WITNESS row names. Every commit refreshes the README/roadmap test-count claims and runs `pnpm doc:reanchor` +
    `pnpm verify:doc-stats` (CI runs it before the tests), and a planted-mutant pass (the harness below).
@@ -61,11 +63,16 @@ the full suite green (the count lives under `verify:doc-stats`). `verify:aca` / 
 constants they gate moved).
 **CI:** GREEN by run id on A1 `e2890887` (39714577412) and A2 `512df53f` (39719780603, both jobs). A3 `5d44ed68`'s run was IN
 PROGRESS at the close: read it first (`gh run list --commit <FULL sha>`, then `gh run view <id>`).
-**THE A2+A3 REVIEW (`wf_69c7171f-55e`, launched at the close):** three fresh-context lenses (correctness / the law and every
-citation / fitness for A4–A7's contracts), each finding challenged at source by a skeptic. Findings and verdicts land in
-`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a2a3-review\` (`<lens>.md`,
-`<lens>-verdicts.md`). Before A4: act on every CONFIRMED / PARTIAL verdict (fix + commit), never on a finding a skeptic
-refuted, and never on a fix a skeptic corrected without the correction.
+**THE A2+A3 REVIEW (`wf_69c7171f-55e`, DONE and ACTED ON):** three fresh-context lenses (correctness, the law and every
+citation, fitness for A4–A7's contracts), each finding challenged at source by a skeptic. 14 findings: 11 survived and 3
+were refuted (C3, C4, F4). The files are in
+`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a2a3-review\`.
+- Fixed in place, in the commit after A3: the A2 golden comment's missing dime floor; the §3121 pins for 403(b) / 457(b);
+  the Form 8959 attribution; the §125 clause (gloomy, K11); the age-60 comment (aged vs disabled widow(er)); and the
+  payroll test's order arm, which now proves the year guard runs first.
+- Filed (Tier 0): the RIB-LIM order defect (NEXT, above), and *Disability is not modeled…*.
+- Written into the plan: KTD10's widow(er) order and the helper's credits input; KTD11's credited RIB-LIM, with no
+  adjustment at death and the §403(f)(3) death year; R14's carve-out; §402(f)(2)(D), not (f)(3)(D), for widowers.
 **THE MUTATION HARNESS (durable):** `mutants-spec.cjs` in the re-anchor tools folder (UNFINISHED's path), run from the
 project dir as `node <tools>\mutants-spec.cjs <spec.json>`; `mutants-spec.example-a3.json` is A3's eight-mutant spec. Each
 plant must land exactly once, the named tests must go red, and every file is restored and byte-compared.
@@ -695,7 +702,10 @@ These are the mechanical ones that keep costing hours.*
   - **`pnpm doc:reanchor` skips `index.ts` too** (two are tracked: `src/engine/constants/index.ts` and
     `src/engine/reference/solver-cases/index.ts`), the ambiguous-basename class. Run `git grep -n "index\.ts:[0-9]"` and fix
     by content. Its missed-bare-token class recurred: backlog's `:401-407` sat ~90 characters after `simulate.ts:396-399`,
-    and pair-check's DOCHUNK section caught it.
+    and pair-check's DOCHUNK section caught it. It also never moves a doc's citations INTO ITSELF, and neither tool flagged
+    it: two new register entries shifted `docs/backlog.md:1769`, `:2055`, `:2128` (cited from inside the register) by +36.
+    After any edit that adds lines to a doc, run `git grep -n "<doc>:[0-9]"` across the repo, the doc itself included, and
+    compare HEAD vs tree content at each shifted number.
   - **The single-source gate in `constants.shape.test.ts` scans EVERY `src` file, tests included**; only `engine/constants/`
     is exempt. A test elsewhere that types a DISTINCTIVE figure (now including `184500`) reds. Read the figure from the
     constant and type only the derived dollars.

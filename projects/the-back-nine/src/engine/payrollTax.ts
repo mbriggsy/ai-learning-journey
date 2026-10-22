@@ -11,8 +11,11 @@
  *    so it is divided by the engine's one price index for the calendar year (`priceIndex.ts`):
  *    the identity at the anchor year, a lower real line every later year (insight 135).
  *
- * WAGES ARE GROSS PAY: 401(k), 403(b) and 457(b) elective deferrals stay in FICA wages
- * (§3121(v)(1)(A); IRS Publication 15), unlike the income-tax base. The wage base is wage-indexed and
+ * WAGES ARE GROSS PAY: 401(k), 403(b) and 457(b) elective deferrals stay in FICA wages, unlike the
+ * income-tax base (401(k): §3121(v)(1)(A); 403(b): §3121(a)(5)(D)'s salary-reduction carve-out;
+ * 457(b): §3121(v)(2)(A), (C) with (v)(3)(A); IRS Publication 15 (2026) §15). §125 cafeteria-plan
+ * amounts are not FICA wages (§3121(a)(5)(G)), so gross pay over-reads them: gloomy, the plan's K11,
+ * disclosed until intake asks. The wage base is wage-indexed and
  * held flat in real dollars (its constant's note says which way that leans). Filing status is the
  * year's own regime filing status; the engine has no married-filing-separately status. Payroll tax
  * never reduces the income-tax base (§275(a)(1)(A)) — this producer feeds the pay check's money out

@@ -41,7 +41,7 @@ The origin is the register's Tier 0 entry *A working year never checks the house
 - payroll: 26 U.S.C. §3101; Form 8959 instructions; IRS Topics 560 and 751; Pub 15 (2026); FR Doc 2025-19763;
 - the earnings test: 42 U.S.C. §402(q)(7), §403(b) and (f); 20 CFR 404.412, .415, .428–.439; POMS RS 00615.482 / .490 and RS 02501.021 / .025 / .030 / .080 / .095; IRS Pub 915.
 
-One primary is still unread and is a U3 prerequisite: 42 U.S.C. §402(e)(2)(D) and its POMS section, for whether a widow(er)'s RIB-LIM reads a credited benefit (KTD11).
+U3's last prerequisite was read on 2026-10-22 and confirmed by a skeptic: 42 U.S.C. §402(e)(2)(D) (widows) and §402(f)(2)(D) (widowers) with POMS RS 00615.320. A widow(er)'s RIB-LIM reads a CREDITED benefit (KTD11). The same read found that the engine applies the cap before the survivor's age reduction, where the law applies it after. That fix is its own register entry and lands before U3 (KTD10).
 
 ### Departures from the ruling
 
@@ -107,7 +107,7 @@ Bare R-numbers are this plan's. A foreign one names its home: product R7 / R19 /
   - a widow(er)'s benefit at 62 (first paid the year after 62) and at survivor FRA.
 
   Only in-plan months are credited. Months withheld before the plan's first year are invisible to the engine (gloomy; KTD11).
-- R14. A survivor is tested on the survivor's own earnings, against the retirement full retirement age, and the deceased's earnings never reach the survivor's benefit.
+- R14. A survivor is tested on the survivor's own earnings, against the retirement full retirement age, and the deceased's earnings never WITHHOLD the survivor's benefit. They reach it only upward: months withheld from the deceased while alive raise the RIB-LIM cap from the deceased's actual or would-be FRA (POMS RS 00615.320 B.2.c, RS 00615.598; KTD11).
 - R15. Withheld benefits are never taxed. The one withholding reaches cash, taxable Social Security and IRMAA-MAGI together (R11). The withheld figure the picture names is read from the schedule, never from a second `ss` on the cash return.
 
 **The picture and the words**
@@ -197,7 +197,7 @@ Bare R-numbers are this plan's. A foreign one names its home: product R7 / R19 /
   - The closed form, recorded: at year 0 `zeroTax` is $0 at every lawful benefit. Federally, the tax on Social Security alone stays under the standard deduction (provisional income is half the benefit); the priced states exempt Social Security. U6 pins it.
   - The per-pass charge picks its own costliest reading, so for every reading r, increment_r* ≥ increment_r and baseTax_r' ≥ baseTax_r. The household's total charge is therefore never below its full tax under any reading.
 - KTD9. **Payroll tax is one pure producer**, `payrollTaxForYear(wagesByWorker, filing, calendarYear)`, in `src/engine/payrollTax.ts`.
-  - Wages are gross pay. 401(k), 403(b) and 457(b) deferrals stay in payroll-tax wages (§3121(v)(1)(A); Pub 15).
+  - Wages are gross pay. 401(k), 403(b) and 457(b) deferrals stay in payroll-tax wages: 401(k) by §3121(v)(1)(A), 403(b) by the salary-reduction carve-out in §3121(a)(5)(D), and 457(b) by §3121(v)(2)(A) and (C) with (v)(3)(A); Pub 15 (2026) §15. §125 cafeteria-plan amounts are not FICA wages (§3121(a)(5)(G)), so gross pay over-reads them: gloomy, K11.
   - The two 0.9 % lines, $250,000 married filing jointly and $200,000 single, are frozen nominal, and are divided by the same year's price index (insight 135). The engine has no married-filing-separately status.
   - The wage base is wage-indexed and held flat in real terms. The direction is disclosed: real wages grow, so pay above $184,500 is taxed slightly low (rosy).
   - Filing status is the regime's own filing status. Payroll tax never reduces the income-tax base (§275(a)(1)(A)).
@@ -207,7 +207,8 @@ Bare R-numbers are this plan's. A foreign one names its home: product R7 / R19 /
   - **The survivor-year composition** (the deceased's realized claim, the locked start age, eligibility at 60, and max(own, survivor) with which one wins) is first extracted from `cashTermsForYear` into one exported helper that both call. An `Object.is` arm proves the extraction before any test logic lands.
   - **Crediting.** Each benefit has its own crediting entry:
     - worker and spouse: the private `reductionFactor` with n − credits;
-    - widow(er): `survivorBenefitAnnual`'s linear 28.5 % arithmetic with monthsEarly − credits, RIB-LIM's larger-of kept ahead of it, credited at 62 and at survivor FRA, and counting only months before survivor FRA.
+    - widow(er): the age reduction FIRST, on the full base (the PIA, or the deceased's DRC-adjusted benefit when they did not claim early), with `survivorBenefitAnnual`'s linear 28.5 % arithmetic at monthsEarly − credits; THEN the RIB-LIM cap at the larger of 82.5 % of the PIA and the deceased's if-alive benefit for that year (§402(e)(2)(D) / §402(f)(2)(D); POMS RS 00615.322 D), re-checked every survivor year (RS 00615.320 A.3). Credited at 62 and at survivor FRA, counting only months before survivor FRA. A credit raises the age-reduced benefit only until the cap binds (RS 00615.585 B.3). This lands only after the register's order fix (*The widow(er) benefit is capped before the survivor's age reduction…*), which moves today's W-absent survivor floors up and is its own commit.
+    - `survivorYearBenefit` takes an optional per-path credits input: the survivor's own crediting months, the widow(er) crediting months, and the deceased's crediting months (while alive and before FRA) for the cap. Absent, its output is `Object.is` today's, and A2's standing sweep is the proof. Every credited survivor year is composed only through it.
   - **Fast path.** There is no separate predicate. The per-path producer returns the shared no-test schedule iff no living worker (t before their retire offset) is owed a benefit in a year R12 and KTD11 test. "Owed" is composed from the offsets' own and spousal gates and the extracted survivor-year helper (the §202 survivor stream has no claim or work gate), never by calling `cashTermsForYear`, which requires the schedule this produces. A path whose schedule withholds nothing (no tested year, or an excess of 0) is `Object.is` to W-absent when it has no shortfall as well.
   - **Every caller under W.** `cashTermsForYear` throws when W is present and no schedule is passed. The callers are:
     - the hot loop;
@@ -225,7 +226,13 @@ Bare R-numbers are this plan's. A foreign one names its home: product R7 / R19 /
   - **Wage indexing.** The exempt amounts are wage-indexed and held flat in real terms, so the model withholds slightly more than the law in working years: lower cash then (gloomy). A partial month counts as a full crediting month, so the extra withholding can add a credit month that raises the benefit after FRA (rosy on long-lived paths). Mixed and small; disclosed with the wage base (U9) and filed with the wage-indexed drift.
   - **Months withheld before the plan's first year** are invisible: a member who claimed before `startCalendarYear` and kept working had months withheld the engine never sees, so they are never credited (gloomy). U11 files the D7 ask ("Has Social Security held back any of your checks because of your pay? About how many months?").
   - **A worker who dies before FRA** never receives their own credit (404.412).
-  - **RIB-LIM** reads the deceased's actual reduced benefit at death. Whether SSA uses a credited figure there is current law, not an unknowable: U3 reads 42 U.S.C. §402(e)(2)(D) and its POMS section before it ships, and builds what the law says. Only if the read leaves it open does a gloomy stopgap ship with a key.
+  - **RIB-LIM reads a credited benefit** (read 2026-10-22, skeptic-checked; `research-riblim.json` and `verdict-riblim.json` in the pay-check research folder). The cap's deceased figure is the benefit the deceased would get "for such month if such individual were still living" (§402(e)(2)(D)(i)). It is time-varying:
+    - before the deceased's actual or would-be FRA, the original reduction;
+    - from then on, the reduction less the months withheld while the deceased was alive (POMS RS 00615.320 B.2.c, RS 00615.598). There is no adjustment at death: "Months beginning with the month of death up to FRA are not eliminated from the reduction factor."
+    - In the annual frame, the credited figure applies from the calendar year after the deceased's FRA year: gloomy by up to 12 months until the birth month is asked.
+    - The deceased's count reads the same per-path producer as their own credit, and only months alive (§403(f)(1)(A)).
+    - It changes the check only when the cap binds (RS 00615.585 B.3), so pin both a no-step and a step case.
+  - **The year of death.** §403(f)(3) counts the death year as twelve months ("the number of months in the taxable year in which an individual dies shall be 12"), with no proration of the exempt amount, and applies the FRA-year amount at $1 for $3 when the deceased "would have attained" FRA before the year closes.
 - KTD12. **The money picture is one engine producer**, `workingYearLedger(input)`, computed on the main thread (Departures item 4).
   - The setup step and the panel row must render from the draft before, or without, any sweep, and a W edit must redraw without one. Every line comes from the engine producer, and the UI computes nothing. The 'dates' outcome never carries a second picture.
   - **What it composes:** `cashTermsForYear` with the schedule; `payrollTaxForYear`; `prepareWorkingYearFloor` (exported from `src/engine/taxOverlay.ts`); the KTD6 composition; `medicareChargeForYear`; and a new exported pure year-context helper extracted from the overlay's year loop. That helper returns the filing status, count65, the enrolled count, the calendar year, the priced state and `minLivingAge` from the household, the living set and t. The year loop calls the same helper, and `resolveYear` stays private behind it.
@@ -415,8 +422,8 @@ The engine reads W in every state but Absent. Stale reads the last figure given,
 
 - **Goal:** pay Social Security as the law pays it while someone works before full retirement age, and credit every withheld month on that benefit's own schedule.
 - **Requirements:** R12, R13, R14, R15.
-- **Dependencies:** U1 (its earnings-test keys land in the producer's commit).
-- **Prerequisite read:** 42 U.S.C. §402(e)(2)(D) and its POMS section, for RIB-LIM against a credited benefit (KTD11), filed into the research folder beside the other primaries before the producer lands.
+- **Dependencies:** U1 (its earnings-test keys land in the producer's commit); the register's order fix (*The widow(er) benefit is capped before the survivor's age reduction…*), landed first in its own commit.
+- **Prerequisite read:** DONE 2026-10-22. RIB-LIM reads a credited benefit (KTD11); the files are `research-riblim.json` and `verdict-riblim.json` in the research folder, with local source copies in `sources\`.
 - **Files:**
   - `src/engine/earningsTest.ts` (new);
   - `src/engine/socialSecurityBenefit.ts` (the credited entries for worker, spouse and widow(er));
@@ -441,11 +448,11 @@ The engine reads W in every state but Absent. Stale reads the last figure given,
     - A claim made at 67 is never tested.
     - A credited benefit is first paid in the calendar year after the FRA year.
   - **Survivor.**
-    - The worker's earnings never reach the widow(er)'s benefit.
+    - The worker's earnings never withhold the widow(er)'s benefit. Their months withheld while alive raise the cap from the worker's would-be FRA (KTD11): a no-step case where the cap does not bind, and a step case where it does.
     - A working survivor before FRA is tested on her own wages.
     - A survivor who started at 60 and works to 65 is credited on the linear 28.5 % schedule, with a credit landing at 62 and first paid the year after.
     - The sampled shape: deaths are drawn from 66, so the fixture's older spouse dies at 66 or later while the younger works before FRA.
-  - **Death before FRA.** The worker never receives their own credit. RIB-LIM follows the prerequisite read.
+  - **Death before FRA.** The worker never receives their own credit. The widow(er)'s cap uses the worker's if-alive benefit, credited from the would-be FRA year (KTD11). The death year counts as twelve months (§403(f)(3)).
   - **Forgiven excess.** Excess beyond the year's chargeable benefits is forgiven, never carried.
   - **Fast path.** A path with no tested year gives the no-test schedule. A tested worker whose pay is at or under the lower amount gives a schedule that withholds nothing.
   - **Extraction.** The survivor-year helper's extraction is `Object.is`-identical across a seeded survivor sweep.
@@ -670,7 +677,7 @@ U6 is split. U6a (the engine producer) lands in Phase A. U6b (the intake read) l
       - K11, health premiums and HSA money taken before tax;
       - K12, a job outside Social Security;
       - K13, months held back before the plan's first year, not credited;
-      - K14, RIB-LIM, only if U3's read leaves it open.
+      - (K14 retired 2026-10-22: the read settled RIB-LIM, KTD11.)
   - The build that closes a gap deletes its key.
 - **Patterns to follow:** `METHODOLOGY_DISCLOSURES`; the test's `rowStrings` and census sweeps.
 - **Test scenarios:**
@@ -756,7 +763,7 @@ U6 is split. U6a (the engine producer) lands in Phase A. U6b (the intake read) l
     - months held back before the plan's first year (the D7 ask, K13);
     - a move between two unpriced states leaves W unstaled (KTD18);
     - an old cached build opening a W-present plan (from the first real save on);
-    - RIB-LIM × credit, only if U3's read leaves it open.
+    - (RIB-LIM × credit: not filed. The read settled it, KTD11.)
   - **Record:** the pre-59½ count on the dissent; KTD22's reason (nobody has used the product, so no return-path ask).
 - **Test expectation:** none. The work is docs-only, gated by `verify:doc-stats`.
 - **Verification:** `verify:doc-stats` is green, and the register's header count matches its body.
@@ -835,7 +842,7 @@ The return-path ask was cut: nobody has used the product, so no real saved plan 
 | A stale answer drives a date silently | One stale predicate; KTD21's surfaces; U13's clock |
 | A constants key lands without its witness | Keys land only with their producer (KTD13) |
 | Entry-JS growth from the copy catalog | Bytes recorded before and after; an 8 KiB allowance; engine modules kept out of the entry graph |
-| RIB-LIM against a credited benefit is misread | U3 reads the primary before it ships |
+| RIB-LIM against a credited benefit is misread | Read 2026-10-22 and skeptic-checked (KTD11); the cap-order defect it found lands first, in its own commit |
 
 ---
 
@@ -901,13 +908,13 @@ None park. The pilot drafts every new string and the Caddie walks it; they ship 
 - **The review:** five ce-doc-review personas (`wf_ed90312b-6af`, 83 findings), verified against source and challenged by skeptics (`wf_46aab717-201`); the verdicts are in `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-plan-review\verify\`.
 - **Primary reads (2026-10-21)**, each confirmed by a skeptic at two hosts:
   - FR Doc 2025-19763 (90 FR 49047);
-  - 26 U.S.C. §3101(a)–(b), §3121(v)(1)(A), §275(a)(1)(A);
+  - 26 U.S.C. §3101(a)–(b), §3121(v)(1)(A), §275(a)(1)(A); and, from the 2026-10-22 review, §3121(a)(5)(D), (a)(5)(G) and (v)(2)–(3);
   - the Form 8959 instructions (Example 5; "aren't indexed for inflation"); IRS Topics 560 and 751; Pub 15 and Pub 15-B (2026);
   - 42 U.S.C. §402(q)(7)–(9), §403(b), (f);
   - 20 CFR 404.304(f), 404.410, .412, .415, .428, .429, .430, .434, .435, .437, .439;
   - POMS RS 00615.482 / .490 and RS 02501.021 / .025 / .030 / .080 / .095 / .120;
   - Pub 915 (boxes 3–5); §86(d)(2)(A).
-- **To read before U3 ships:** 42 U.S.C. §402(e)(2)(D) and its POMS section.
+- **Read 2026-10-22 (U3's prerequisite), skeptic-checked:** 42 U.S.C. §402(e)(2)(D), §402(f)(2)(D), §402(q)(1) and (7), §403(f)(1)(A) and (3); 20 CFR 404.338(c), 404.412; POMS RS 00615.320, .322, .482, .585, .598 and GN 00204.045 (`research-riblim.json`, `verdict-riblim.json`).
 - **Code anchors:**
   - `src/engine/simulate.ts`: `cashTermsForYear`, `contributionsForYear`, `validateParams`, `survivorIncomeStepDownMonthlyReal`, `survivorSpendingBasis`, `netWithdrawalForYear`, `budgetlessSurvivorSpending`;
   - `src/engine/taxOverlay.ts`: `prepareWorkingYearFloor`, `workingYearFederalCharge`, `fundingNet`, `resolveYear`, the Medicare charge;

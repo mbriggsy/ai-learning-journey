@@ -2877,8 +2877,9 @@ describe('the survivor-year composition — one exported helper, Object.is the i
 
   it('on the §202 golden household every field is the hand-derived figure (deceased PIA $24,000 at 67; the survivor 58, widowed at 61)', () => {
     // The 'cash-term seam' golden above: P0 dies at offset 3 (age 68, after the planned claim at 67, so the
-    // realized claim is 67); the survivor is 61 then, so the stream starts locked at 61: $24,000 × 63480/84000
-    // = $18,136.80 a year. At t = 5 the survivor is 63 (payable) and has not claimed her own (offset 9).
+    // realized claim is 67); the survivor is 61 then, so the stream starts locked at 61: $2,000 a month ×
+    // 63480/84000 = $1,511.43, dime-floored to $1,511.40 (the engine's monthly dime-round), × 12 = $18,136.80
+    // a year. At t = 5 the survivor is 63 (payable) and has not claimed her own (offset 9).
     const deceased: PersonInputs = { sex: 'male', currentAge: 65, birthYear: 1961, retirementAge: 65, earnedIncomeReal: 0, pia: 24_000, socialSecurityClaimAge: 67 }
     const survivor: PersonInputs = { sex: 'female', currentAge: 58, birthYear: 1968, retirementAge: 58, earnedIncomeReal: 0, pia: 0, socialSecurityClaimAge: 67 }
     const people = [deceased, survivor]

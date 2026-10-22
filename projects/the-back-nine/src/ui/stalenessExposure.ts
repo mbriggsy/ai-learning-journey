@@ -77,7 +77,7 @@ const read = (priced: boolean): ExposureRead => (priced ? 'priced' : 'unpriced')
  * `spineMedicarePriced` is the shipped precedent (`healthSheetChrome`'s Medicare disclosure
  * rides it); `spineAcaPriced` is its sibling over the same overlay.
  *
- * DATE. Medicare is EXACT: `dateSearch.ts:240` forces `healthcareEnabled: true` on every
+ * DATE. Medicare is EXACT: `dateSearch.ts:253` forces `healthcareEnabled: true` on every
  * candidate, so the only question is whether the run built an overlay at all. ACA reads the
  * PRE-SWEEP BASE overlay (`dateBaseAcaPriced`) — and that is the right producer HERE, at a
  * surface taken ONCE at unlock, BEFORE any date search dispatches: there is no crowned run for
@@ -123,7 +123,7 @@ const read = (priced: boolean): ExposureRead => (priced ? 'priced' : 'unpriced')
  * this comment's own prescription has had to be withdrawn).
  *
  * ✗ "Re-derive the exposure against the CROWNED offset" — DO NOT. It is the same insight-103 shape a
- *   third time. The date route SWEEPS every offset (`dateSearch.ts:578/450/457`) and candidate Y=0
+ *   third time. The date route SWEEPS every offset (`dateSearch.ts:596/450/457`) and candidate Y=0
  *   carries the base ACA stream UNGATED (`healthcareStreams.ts:181` → `windowStart = 0`, so
  *   `windowGate` is a pass-through). So `exposure.aca === 'priced'` PROVES the ACA tables were
  *   consumed somewhere in the sweep — it is not an over-read. Re-deriving against the crown alone

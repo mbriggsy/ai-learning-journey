@@ -100,6 +100,13 @@ export interface DateSearchInput {
    *  per-person annual figure); `buildCandidateParams` lands it on the candidate's accumulation
    *  construct, where the engine prices it in each clamped working year. Absent ⇒ I = 0. */
   readonly workingYearInvestmentByPerson?: readonly number[]
+  /** The working-year pay check (2026-10-21, KTD2): W, the household's yearly cost while anyone
+   *  works. Y-INVARIANT; `buildCandidateParams` lands it on every candidate's rebuilt construct.
+   *  Absent ⇒ every candidate is byte-identical to the run without it. */
+  readonly workingYearCostReal?: number
+  /** The employer's share of each person's `hsa` stream, per person per absolute sim-year (KTD6);
+   *  truncated to [0, Y) per candidate like the streams it is a share of. Rides only with W. */
+  readonly employerHsaByPerson?: readonly (readonly number[])[]
 }
 
 /** Sweep options: the compute tier + the cooperative-cancellation gate (awaited between
@@ -235,10 +242,21 @@ export function buildCandidateParams(
   // UN-truncated: it is a per-person annual figure, and the engine reads it only in a clamped year
   // (a member working at t), so the candidate's own window decides which years carry it.
   const investment = input.workingYearInvestmentByPerson
+  // The working-year pay check (KTD2): W rides the construct as entered (Y-invariant, read only in a
+  // clamped year); the employer-HSA stream is a share of the `hsa` streams, so it is cut to [0, Y)
+  // exactly as they are. The input's per-person alignment is kept as given — validateParams refuses a
+  // misaligned vector rather than this transform silently re-indexing it.
+  const workingYearCost = input.workingYearCostReal
+  const employerHsa = input.employerHsaByPerson?.map((s) => s.slice(0, offsetYears))
   const candidateOverlay: OverlayParams = {
     ...overlayBase,
     healthcareEnabled: true,
-    accumulation: { contributionsByPerson, ...(investment ? { workingYearInvestmentByPerson: investment } : {}) },
+    accumulation: {
+      contributionsByPerson,
+      ...(investment ? { workingYearInvestmentByPerson: investment } : {}),
+      ...(workingYearCost !== undefined ? { workingYearCostReal: workingYearCost } : {}),
+      ...(employerHsa ? { employerHsaByPerson: employerHsa } : {}),
+    },
     medicareOnsetSimYear: streams.medicareOnsetSimYear,
     ...(streams.enrolledPremium ? { enrolledPremium: streams.enrolledPremium } : {}),
     ...(streams.slcsp ? { slcsp: streams.slcsp } : {}),

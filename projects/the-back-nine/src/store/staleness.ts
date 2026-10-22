@@ -113,7 +113,7 @@
  *
  * WHAT THE WITHDRAWN HEURISTIC WOULD HAVE SHIPPED — a SILENT STALE, built while fixing an
  * over-alarm. It bucketed `irmaa-freeze` to the aggregate because `irmaaTopTierFrozenThrough`
- * has no engine reader. But `irmaa.value` IS engine-read (simulate.ts:1088; solveAnchor.ts:222,231;
+ * has no engine reader. But `irmaa.value` IS engine-read (simulate.ts:1121; solveAnchor.ts:222,231;
  * taxOverlay.ts:1529; healthOverlay.ts:638 — `boundPartBPricingSchedule`, where the tier ladder's Part D
  * add-ons feed `buildPartBPricingSchedule`), and
  * `consumedConstants.ts:112` puts the ENTIRE `health.` family in the consumed set on
@@ -196,7 +196,7 @@ export type HealthcareFamily = 'aca' | 'medicare'
  *     make the "every read is unpriced" silence arm vacuously true and quietly kill a clock.
  *
  * THE SOURCE FOR EACH ROW:
- *   · `coverage-year` — `COVERAGE_YEAR` is documented at `model.ts:2355` as "the coverage year
+ *   · `coverage-year` — `COVERAGE_YEAR` is documented at `model.ts:2368` as "the coverage year
  *     the ACA/IRMAA tables are keyed to", so it dates BOTH families and names each one the run
  *     priced. It is the ONLY marker for every annually-re-indexed health figure that carries no
  *     stamp of its own (the four interior IRMAA thresholds, the ACA applicable-percentage bands,
@@ -274,7 +274,7 @@ export interface StalenessExposure {
   readonly aca: ExposureRead
   /** Did the run's built overlay carry the ACCUMULATION construct — i.e. does any working
    *  owner actually contribute (`contributionsPricedForRun`)? The date route is NOT sufficient
-   *  on its own: `dateSearch.ts:241` forces `accumulation` onto EVERY candidate, but it
+   *  on its own: `dateSearch.ts:254` forces `accumulation` onto EVERY candidate, but it
    *  truncates the BASE overlay's streams, and `contributionStreamsFor` returns `{}` for a
    *  non-working owner (`intakeMap.ts:474-477`) — so a date-route household whose accounts all
    *  belong to the retired spouse carries EMPTY streams on every candidate and reads no
@@ -438,7 +438,7 @@ export interface StalenessReport {
     /** Contribution-limit table year moved, TWICE-GATED (U17 §S4, the F3 correction): the
      *  ROUTE gate (`!allRetired`) protects the WORDING — `stalenessDate` says "behind your
      *  date", which a household with no date must never hear — and `exposure.contributions`
-     *  protects the CLAIM. "Structurally exposed because `dateSearch.ts:241` forces the
+     *  protects the CLAIM. "Structurally exposed because `dateSearch.ts:254` forces the
      *  accumulation construct" was necessary-but-not-sufficient, the very error the
      *  `extras-typical` conjunct (c) note calls out: the forced construct carries the BASE
      *  overlay's streams, and a date-route household whose accounts all belong to the retired
@@ -688,7 +688,7 @@ export function deriveStaleness(
   // The contribution clock is ROUTE-gated (header) AND EXPOSURE-gated (U17 §S4's F3 fix). The
   // route gate keeps the WORDING honest — `stalenessDate` says "behind your date". The exposure
   // gate keeps the CLAIM honest: "every date candidate carries the accumulation construct
-  // (`dateSearch.ts:241`) ⇒ structurally exposed" is necessary but NOT sufficient, because the
+  // (`dateSearch.ts:254`) ⇒ structurally exposed" is necessary but NOT sufficient, because the
   // forced construct is filled from the BASE overlay's streams and `contributionStreamsFor`
   // returns `{}` for a non-working owner (`intakeMap.ts:474-477`). A 66/retired + 62/working couple
   // whose accounts all belong to the retired spouse is on the date route with EMPTY streams:

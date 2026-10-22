@@ -379,6 +379,19 @@ export interface AccumulationParams {
    *  prices at the costliest of three readings (excluded / ordinary / preferential). ABSENT ⇒ I = 0
    *  in every clamped year (presence-keyed; the three readings then coincide bit for bit). */
   readonly workingYearInvestmentByPerson?: readonly number[]
+  /** The working-year pay check (2026-10-21, `docs/plans/features/working-year-pay-check-build-spec.md`):
+   *  W, the household's answer to what a year costs while anyone still works (annual real $, finite,
+   *  0 ≤ W ≤ `ENGINE_MAX_DOLLAR` — validated, R19). Its PRESENCE keys every new working-year term (the
+   *  pay check and the earnings test, KTD1); ABSENT ⇒ every run is byte-identical to the run without
+   *  it. It rides only with the tax AND healthcare overlays (the check charges payroll and income tax,
+   *  and Medicare is priced only under healthcare). Lands on each candidate through `DateSearchInput`
+   *  (`buildCandidateParams` rebuilds this construct, so a W placed on the base construct is dropped). */
+  readonly workingYearCostReal?: number
+  /** The employer's HSA dollar inside each person's `hsa` stream, per person (aligned by index to
+   *  `people`) and per ABSOLUTE sim-year, scaled by the same family factor the deposit is (R7, KTD6):
+   *  the pay check charges a worker only their OWN deposits, so it subtracts this share. Each entry is
+   *  finite ≥ 0 and never above that person's `hsa[t]`; it rides only with `workingYearCostReal`. */
+  readonly employerHsaByPerson?: readonly (readonly number[])[]
 }
 
 /** One person's COMPILED other-income leaf (R40 · KTD-4) — the per-year real-$ vectors

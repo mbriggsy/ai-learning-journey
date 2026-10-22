@@ -287,7 +287,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    `tsc` until written) · `recommendationView.ts:344-348` · the intake picker **4 → 11 vertical arms**
    against `verify:fit`. Engine cost is genuinely near-zero (`stateTax.ts:163` structural early return).
    ⚑ **The filed "every saved vault decodes Corrupt" blocker is FALSE — do not act on it, and do NOT loosen
-   the compile tie.** `_V3FieldsCover` (`model.ts:2424-2426`) covers only `keyof ScenarioV3`;
+   the compile tie.** `_V3FieldsCover` (`model.ts:2437-2439`) covers only `keyof ScenarioV3`;
    `checkStateTaxVintageV3` (`scenarioCodec.ts:552-557`) is hand-written and compels no `needString`. Safe
    because `scenarioCodec.ts:793-794` gates `retirementState` via `needVocab(STATE_ROSTER)`, so no
    pre-widening vault can *be* a household in a newly-priced state. The prescribed remedy — loosening
@@ -350,7 +350,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      **and** `scrollHeight > clientHeight` — content growth makes the second assertion *more* true.
      ⚑ **The drafted HSA sentence would have DENIED the very forfeit it discloses — do not ship "stays
      put" / "simply sits."** The balance is not parked, it is **destroyed**: `taxOverlay.ts:2248-2249` sets
-     `buckets = EMPTY_BUCKETS` (hsa: 0) → `simulate.ts:1967` `terminalHsaReal = 0` →
+     `buckets = EMPTY_BUCKETS` (hsa: 0) → `simulate.ts:2000` `terminalHsaReal = 0` →
      `objectiveHeadline.ts:62` bequest contribution **$0**. On the exact path the sentence names, the HSA
      adds nothing to the leave-more dollar the reader sees. **The sentence must say the balance is DROPPED.**
      ⚑ **Sweep BOTH stale comments in the same commit** — `healthOverlay.ts:881-884` (which says
@@ -388,7 +388,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      section ships — rewrite the whole `:869-878`). Caddie walk before "shipped".
 
    ⚑ **CLOSED AS PHANTOM — the date-route ACA clock does NOT over-alarm.** The date route simulates all 11
-   offsets (`dateSearch.ts:578/450/457`) and candidate Y=0 carries the base ACA stream **ungated**
+   offsets (`dateSearch.ts:596/450/457`) and candidate Y=0 carries the base ACA stream **ungated**
    (`healthcareStreams.ts:181` → `windowStart = 0`, so the window gate is a pass-through). So
    `exposure.aca === 'priced'` *proves* the ACA tables were consumed — the clock is load-bearing, not
    spurious. ✅ **THE TRAP IS DELETED 2026-08-02.** `stalenessExposure.ts` no longer prescribes
@@ -512,7 +512,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:263-264`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
-    PRESCRIBED: `model.ts:1498-1500` mints synthetic entered accounts from the old aggregates "so the ladder
+    PRESCRIBED: `model.ts:1511-1513` mints synthetic entered accounts from the old aggregates "so the ladder
     stays total"; the write primitive exists (`db.ts:231 rewriteModel`, pinned `db.test.ts:180`); today's
     ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:930-947`), and a v1 vault survives
     every store seam on real IndexedDB (`e2e/vaultHarness.ts:19-20`) to die only at `IntakeApp.tsx:580`.
@@ -590,9 +590,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     riders, the open copy obligations, the deferred richer market draw, and the `dateinvert` (c) mint —
     its own session, a size-L parameter hunt.
     ⚑ **2026-09-04:** two bullets were half-dead and are closed — the `partBTrendVintage` "no exposure gate"
-    clause was swept in `staleness.ts:662-665` but still lived verbatim at `model.ts:2381` (swept), and
+    clause was swept in `staleness.ts:662-665` but still lived verbatim at `model.ts:2394` (swept), and
     Plan 4's "the record carries `seedA`/`seedB`" (`plans/4-recommendation.md:283`) had outlived its own
-    "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:2002-2024`) has no seed
+    "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:2015-2037`) has no seed
     field (struck in the plan). ⚑ (b)'s SOURCE twin outlived that close — `heldOutSeed.ts:13-14` still said
     the U17 record stores the seed — and was swept 2026-09-25 (the register bullet is closed with it).
     ✅ **NC's RETIRED CERTIFICATION CHECKPOINT — SWEPT 2026-08-14.** Six shipped surfaces (not the
@@ -635,7 +635,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     flag) and BOTH candidate fixes cost something — "mint through `update()`" turns a deferred false-arm
     into an immediate one; an eager mint in `createMemoryModel` breaks the WRITTEN contract #1b (mint at the
     FIRST ENGINE RUN, `plans/2-first-answer.md:57`) with no test that would catch it. His ruling, framed as
-    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:2381` and
+    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:2394` and
     `plans/4-recommendation.md:283`.
 
 ---

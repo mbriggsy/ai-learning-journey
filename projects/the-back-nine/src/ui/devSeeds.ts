@@ -813,7 +813,7 @@ const retiredHealth: ScenarioDraft = {
  * the DATE route: the live drive for the disclosure's date-route arm (insight 080). Alex is 66 and
  * still working (deferring Medicare until retirement), Sam is 65 and retired — so no member is
  * pre-65 (the marketplace questions are never asked; `healthcarePriced` reads FALSE, no ACA door),
- * yet `dateSearch.ts:240` forces `healthcareEnabled: true` on every candidate, so Medicare IS priced
+ * yet `dateSearch.ts:253` forces `healthcareEnabled: true` on every candidate, so Medicare IS priced
  * on this route. The RETIRED age-predicate (`medicareUnpriced`) called this household "Medicare not
  * priced" over numbers Medicare had already moved — the exact false statement insight 080 names;
  * `showMedicarePricedNote` fixes it, and this seed proves the fix live. Both ≥ 64 ⇒ the IRMAA seed
@@ -1421,7 +1421,7 @@ const ARRIVED_SAVED_DAYS_AGO = 30
  * (`model.ts:98`) documents `currentAge === startCalendarYear − birthYear` as a model invariant, and
  * the engine reads a birth year through TWO paths that must agree: the SS sub-engine's stated
  * `p.birthYear` (FRA / DRC / deemed-filing lookups) and the tax overlay's DERIVED
- * `startCalendarYear − currentAge` (`simulate.ts:1558`). Aging the build clock ALONE forks them by
+ * `startCalendarYear − currentAge` (`simulate.ts:1591`). Aging the build clock ALONE forks them by
  * the full depth and fabricates a household that is organically impossible — in 2020 this couple
  * would have been 51, not 57. Aging `birthYear` by the same depth restores the invariant exactly,
  * keeps `currentAge` (so the engine sees the SAME household and the crown does not move — MEASURED:
@@ -1457,7 +1457,7 @@ export function doctorArrivedVault(s: ScenarioV3, todayEpochDay: number): Scenar
           `− birthYear (${p.currentAge} !== ${s.startCalendarYear} − ${p.birthYear}) BEFORE aging. ` +
           `This doctor shifts both clocks to KEEP that invariant; over a base that already violates ` +
           `it, the engine's two birth-year reads (p.birthYear for the SS FRA lookup vs ` +
-          `simulate.ts:1558's derived startCalendarYear − currentAge) stay forked and nothing says so.`,
+          `simulate.ts:1591's derived startCalendarYear − currentAge) stay forked and nothing says so.`,
       )
     }
   }

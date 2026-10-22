@@ -393,7 +393,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     ['part-b', { partBStandardMonthly: hv.partBStandardMonthly + 10 }],
     ['part-b-trend', { partBTrendVintage: 'part-b-trend-2025x' }],
     // THE F1 CORRECTION, pinned as an equal member of the family. `irmaaTopTierFrozenThrough`
-    // has no engine reader of its own; the table it DATES (`irmaa`) is read at simulate.ts:1088,
+    // has no engine reader of its own; the table it DATES (`irmaa`) is read at simulate.ts:1121,
     // solveAnchor.ts:221-231 and taxOverlay.ts:1529, and consumedConstants.ts:112 consumes the
     // whole `health.` family on `healthcareEnabled`. Re-bucketing it to the aggregate reds here.
     ['irmaa-freeze', { irmaaTopTierFrozenThrough: hv.irmaaTopTierFrozenThrough + 1 }],
@@ -436,7 +436,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     })
   })
 
-  it('`coverage-year` dates BOTH tables (model.ts:2355) — it names each family the run PRICED, and only those', () => {
+  it('`coverage-year` dates BOTH tables (model.ts:2368) — it names each family the run PRICED, and only those', () => {
     // It is the ONLY marker for every annually-re-indexed health figure with no stamp of its own
     // (the four interior IRMAA thresholds, the ACA applicable-percentage bands, the age-rating
     // curve), so bucketing it nameless hid the annual re-key from the pre-65 planner it hits
@@ -584,7 +584,7 @@ describe('deriveStaleness — every healthcare clock names exactly the families 
 
   /** WHICH SENTENCE each clock is allowed to speak — the law, restated by hand. */
   const FAMILY: Readonly<Record<HealthcareClock, { readonly aca: boolean; readonly medicare: boolean }>> = {
-    'coverage-year': { aca: true, medicare: true }, // "the ACA/IRMAA tables" (model.ts:2355)
+    'coverage-year': { aca: true, medicare: true }, // "the ACA/IRMAA tables" (model.ts:2368)
     'aca-status': { aca: true, medicare: false },
     'fpl-guideline': { aca: true, medicare: false },
     'irmaa-freeze': { aca: false, medicare: true }, // dates the IRMAA schedule (the F1 ruling)
@@ -670,7 +670,7 @@ describe('deriveStaleness — the date clocks', () => {
 
   it('the EXPOSURE GATE (U17 §S4 F3): a DATE-route household whose built overlay carries NO accumulation is silent — "every candidate carries the construct" was necessary but NOT sufficient', () => {
     // The population: 66/retired holding everything + 62/working holding nothing. They ARE on
-    // the date route, and `dateSearch.ts:241` DOES force `accumulation` onto every candidate —
+    // the date route, and `dateSearch.ts:254` DOES force `accumulation` onto every candidate —
     // but it fills it from the BASE overlay's streams, and `contributionStreamsFor` returns `{}`
     // for a non-working owner (intakeMap.ts:474-477). Their candidates sweep with empty streams and
     // read no limit. Same fixture, same moved stamp, ONE differing read (insight 029).

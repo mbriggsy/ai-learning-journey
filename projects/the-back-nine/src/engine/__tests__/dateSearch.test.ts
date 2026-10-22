@@ -29,7 +29,7 @@ import {
   workingYearTaxReachOfRun,
   type DateSearchInput,
 } from '@engine/dateSearch'
-import { cashTermsForYear, personOffsetsFor, simulate, validateParams, type SimResolved } from '@engine/simulate'
+import { ENGINE_MAX_DOLLAR, cashTermsForYear, personOffsetsFor, simulate, validateParams, type SimResolved } from '@engine/simulate'
 import { dateSearchFromWire } from '@engine/engineWire'
 import { BANDS, SURVIVAL_GRID, quantizeSurvival } from '@engine/confidence'
 import { validationMarket } from '@engine/reference/methodology'
@@ -966,5 +966,136 @@ describe('workingYearTaxReach — can the working-year tax floor move this house
     expect(workingYearTaxReach({ params: { ...input.params, overlay: { ...BASE_OVERLAY, taxEnabled: false } } })).toBe('unpriced')
     const { accumulation: _a, ...noConstruct } = BASE_OVERLAY
     expect(workingYearTaxReachOfRun({ ...input.params, overlay: { ...noConstruct, conversions: [20_000] } })).toBe('unpriced')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The working-year pay check, U4 (2026-10-21 — docs/plans/features/working-year-pay-check-build-spec.md
+// KTD2 / KTD16 / R19): W and the employer-HSA stream reach every candidate's rebuilt construct, and
+// validateParams refuses a malformed one before any run. Nothing reads them yet (U5 does).
+// ---------------------------------------------------------------------------
+
+describe('the working-year pay check — W and the employer-HSA stream land on every candidate (U4, KTD2/KTD16)', () => {
+  const W = 52_000
+  /** Person 0 deposits $4,000 a year to an HSA, of which the employer pays $1,000; person 1 has no HSA. */
+  const HSA = Array.from({ length: 12 }, () => 4_000)
+  const EMPLOYER_HSA: readonly (readonly number[])[] = [Array.from({ length: 12 }, () => 1_000), []]
+  const hsaInput = (extra: Partial<DateSearchInput> = {}): DateSearchInput => ({
+    params: {
+      ...coupleParams,
+      overlay: {
+        ...coupleOverlay,
+        hsaOwnerIndex: 0,
+        accumulation: {
+          contributionsByPerson: [
+            { pretax: Array.from({ length: 12 }, () => 20_000), hsa: HSA },
+            { pretax: Array.from({ length: 12 }, () => 15_000) },
+          ],
+        },
+      },
+    },
+    workingYearIrmaaMagiByPerson: [90_000, 70_000],
+    ...extra,
+  })
+  const withW = hsaInput({ workingYearCostReal: W, employerHsaByPerson: EMPLOYER_HSA })
+  /** A Y = 4 candidate whose construct is replaced by `acc` — the vehicle for the refusal arms. */
+  const reasonWith = (patch: (acc: NonNullable<OverlayParams['accumulation']>) => NonNullable<OverlayParams['accumulation']>, overlayPatch: Partial<OverlayParams> = {}) => {
+    const c = buildCandidateParams(withW, 4, 1)
+    const acc = c.overlay?.accumulation
+    if (acc === undefined) throw new Error('fixture: the candidate lost its construct')
+    return validateParams({ ...c, overlay: { ...c.overlay!, ...overlayPatch, accumulation: patch(acc) } })
+  }
+
+  it('W lands on EVERY candidate (Y = 0..top) as entered, and the employer-HSA stream is cut to [0, Y) like the hsa stream it is a share of', () => {
+    for (let y = 0; y <= DATE_OFFSET_WINDOW_TOP; y++) {
+      const acc = buildCandidateParams(withW, y, 1).overlay?.accumulation
+      expect(acc?.workingYearCostReal).toBe(W)
+      expect(acc?.employerHsaByPerson).toEqual([EMPLOYER_HSA[0]!.slice(0, y), []])
+      // Cut exactly where the deposit it is a share of is cut — a stop one year late fails here.
+      expect(acc?.employerHsaByPerson?.[0]?.length).toBe(acc?.contributionsByPerson[0]?.hsa?.length)
+    }
+  })
+
+  it('a candidate with W validates — and W = 0 is accepted (the engine takes the household’s number; intake refuses an entered 0)', () => {
+    for (const y of [0, 4, DATE_OFFSET_WINDOW_TOP]) {
+      expect(validateParams(buildCandidateParams(withW, y, 1)), `Y = ${y}`).toBeNull()
+    }
+    expect(validateParams(buildCandidateParams(hsaInput({ workingYearCostReal: 0 }), 4, 1))).toBeNull()
+  })
+
+  it('ABSENT ⇒ absent: an input without W or the stream builds a construct carrying neither key', () => {
+    const acc = buildCandidateParams(hsaInput(), 4, 1).overlay?.accumulation
+    expect(acc).toBeDefined()
+    expect(acc !== undefined && 'workingYearCostReal' in acc).toBe(false)
+    expect(acc !== undefined && 'employerHsaByPerson' in acc).toBe(false)
+  })
+
+  it('THE LANDMINE: a W placed on the BASE construct is dropped by the rebuild — only DateSearchInput carries it', () => {
+    const base = hsaInput()
+    const onBase: DateSearchInput = {
+      ...base,
+      params: {
+        ...base.params,
+        overlay: {
+          ...base.params.overlay!,
+          accumulation: { ...base.params.overlay!.accumulation!, workingYearCostReal: W, employerHsaByPerson: EMPLOYER_HSA },
+        },
+      },
+    }
+    const acc = buildCandidateParams(onBase, 4, 1).overlay?.accumulation
+    expect(acc?.workingYearCostReal).toBeUndefined()
+    expect(acc?.employerHsaByPerson).toBeUndefined()
+  })
+
+  it('buildCandidateParams throws on W over a tax-OFF base (the date is never computed tax-blind)', () => {
+    const taxOff: DateSearchInput = { ...withW, params: { ...withW.params, overlay: { ...withW.params.overlay!, taxEnabled: false } } }
+    expect(() => buildCandidateParams(taxOff, 4, 1)).toThrow(/taxEnabled/)
+  })
+
+  it.each([
+    ['NaN', Number.NaN],
+    ['+Infinity', Number.POSITIVE_INFINITY],
+    ['negative', -1],
+    ['above ENGINE_MAX_DOLLAR', ENGINE_MAX_DOLLAR * 2],
+  ] as const)('validateParams refuses a %s W', (_label, w) => {
+    expect(reasonWith((acc) => ({ ...acc, workingYearCostReal: w }))).toContain('workingYearCostReal invalid')
+  })
+
+  it('validateParams refuses W with healthcare OFF, and W with tax AND healthcare off (W rides only with both)', () => {
+    expect(reasonWith((acc) => acc, { healthcareEnabled: false })).toContain('workingYearCostReal requires the tax and healthcare overlays')
+    expect(reasonWith((acc) => acc, { healthcareEnabled: false, taxEnabled: false, hsaOwnerIndex: undefined })).toContain(
+      'workingYearCostReal requires the tax and healthcare overlays',
+    )
+  })
+
+  it('validateParams refuses a malformed employer-HSA stream: misaligned, negative, NaN, a hole, above the person’s own hsa[t], or riding without W', () => {
+    const holed = new Array<number>(4)
+    holed[0] = 1_000 // entries 1..3 are HOLES — `.every` would skip them; a hole is a silently $0 share
+    const cases: ReadonlyArray<readonly [string, readonly (readonly number[])[], string]> = [
+      ['short', [[1_000, 1_000, 1_000, 1_000]], 'employerHsaByPerson length must match people'],
+      ['long', [[1_000], [], []], 'employerHsaByPerson length must match people'],
+      ['negative', [[1_000, -1, 1_000, 1_000], []], 'employerHsaByPerson invalid'],
+      ['NaN', [[1_000, Number.NaN, 1_000, 1_000], []], 'employerHsaByPerson invalid'],
+      ['a hole', [holed, []], 'employerHsaByPerson invalid'],
+      ['above hsa[t]', [[1_000, 4_000.01, 1_000, 1_000], []], 'employerHsaByPerson invalid'],
+      ['a share where no hsa was deposited', [[1_000, 1_000, 1_000, 1_000], [500]], 'employerHsaByPerson invalid'],
+    ]
+    for (const [label, stream, reason] of cases) {
+      expect(reasonWith((acc) => ({ ...acc, employerHsaByPerson: stream })), label).toContain(reason)
+    }
+    const { workingYearCostReal: _w, ...withoutW } = buildCandidateParams(withW, 4, 1).overlay!.accumulation!
+    expect(reasonWith(() => withoutW)).toContain('employerHsaByPerson rides only with workingYearCostReal')
+    // Control: the share AT the deposit (the employer paid all of it) is legal — the bound is ≤, not <.
+    expect(reasonWith((acc) => ({ ...acc, employerHsaByPerson: [[4_000, 4_000, 4_000, 4_000], []] }))).toBeNull()
+  })
+
+  it('the Y = 0 candidate WITH W equals its construct-dropped twin (no working year, so W is inert — §1)', { timeout: 60_000 }, () => {
+    const candidate = buildCandidateParams(withW, 0, 400)
+    expect(candidate.overlay?.accumulation?.workingYearCostReal).toBe(W) // non-vacuity: W really rides it
+    const { accumulation: _drop, ...overlayRest } = candidate.overlay!
+    const twin: SimulationParams = { ...candidate, overlay: overlayRest }
+    const a = simulate(candidate, 4242)
+    expect(a.indeterminate).toBe(false)
+    expect(a).toEqual(simulate(twin, 4242))
   })
 })

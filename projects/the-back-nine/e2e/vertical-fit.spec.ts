@@ -1355,7 +1355,7 @@ test.describe(`?seed=dip — the date route's order contract (${REAL.width}×${R
 })
 
 // ── the all-65+ still-working date route (?seed=date65): priced Medicare, no false "unpriced" ──
-// The insight-080 fix, live on the date route: dateSearch.ts:240 forces healthcareEnabled true on
+// The insight-080 fix, live on the date route: dateSearch.ts:253 forces healthcareEnabled true on
 // every candidate, so a still-working all-65+ household PRICES Medicare even with no ACA door. The
 // retired age-predicate called this exact household "Medicare not priced" over numbers Medicare had
 // already moved; the surface now names it PRICED (affirmation + narrowed residual, shipped together)

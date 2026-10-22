@@ -1001,6 +1001,39 @@ export function validateParams(params: SimulationParams): string | null {
             return 'overlay accumulation workingYearInvestmentByPerson invalid (each slot finite ≥ 0, no holes)'
         }
       }
+      // The working-year pay check (2026-10-21, R19 / KTD16): W, the household's yearly cost while
+      // anyone works — finite, 0 ≤ W ≤ ENGINE_MAX_DOLLAR (W = 0 is the household's own number; intake
+      // refuses an entered 0). The check it keys charges payroll and income tax and prices Medicare,
+      // so W rides only with the tax AND healthcare overlays — a wiring fault, never a silent skip.
+      const workingYearCost = acc.workingYearCostReal
+      if (workingYearCost !== undefined) {
+        if (!finiteNonNeg(workingYearCost))
+          return 'overlay accumulation workingYearCostReal invalid (finite, 0 ≤ W ≤ the engine cap)'
+        if (!o.taxEnabled || o.healthcareEnabled !== true)
+          return 'overlay accumulation workingYearCostReal requires the tax and healthcare overlays'
+      }
+      // The employer's share of each `hsa` stream (R7, KTD6), per person per year: finite ≥ 0 and never
+      // above that person's own hsa[t] (a larger share would subtract more than was deposited — own
+      // deposits read low, the shortfall small: the rosy direction). Only the pay check reads it, so it
+      // rides only with W. Index loops, not `.every` — a hole is a silently $0 entry.
+      const employerHsa = acc.employerHsaByPerson
+      if (employerHsa !== undefined) {
+        if (workingYearCost === undefined)
+          return 'overlay accumulation employerHsaByPerson rides only with workingYearCostReal'
+        if (employerHsa.length !== params.people.length)
+          return 'overlay accumulation employerHsaByPerson length must match people'
+        for (let i = 0; i < employerHsa.length; i++) {
+          const stream = employerHsa[i]
+          const hsa = acc.contributionsByPerson[i]?.hsa
+          if (stream === undefined)
+            return 'overlay accumulation employerHsaByPerson invalid (each entry finite ≥ 0 and ≤ that person’s hsa[t], no holes)'
+          for (let t = 0; t < stream.length; t++) {
+            const x = stream[t]
+            if (x === undefined || !finiteNonNeg(x) || x > (hsa?.[t] ?? 0))
+              return 'overlay accumulation employerHsaByPerson invalid (each entry finite ≥ 0 and ≤ that person’s hsa[t], no holes)'
+          }
+        }
+      }
       // The zero-balance start (C2 §2): stepYear's depletion predicate (`afterWithdrawal <= 0`)
       // would mark a $0-start run depleted at t = 0 and the depleted branch would silently swallow
       // every later contribution — reject as indeterminate (calm: "enter at least one account

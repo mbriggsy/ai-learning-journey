@@ -178,7 +178,7 @@ describe('exposureForDraft — the DATE route', () => {
   })
 
   it('CONTRIBUTIONS read the BASE overlay, not the forced candidate construct (F3): a date-route household whose accounts all belong to the RETIRED spouse prices no limit', () => {
-    // `dateSearch.ts:241` sets `accumulation` on EVERY candidate — so a candidate-level read is a
+    // `dateSearch.ts:254` sets `accumulation` on EVERY candidate — so a candidate-level read is a
     // constant `true` and discriminates nothing. What it carries is the BASE overlay's streams,
     // and `buildOverlay` spreads `accumulation` only when some WORKING owner actually
     // contributes. Strip the working owner's contribution dollars and the construct disappears

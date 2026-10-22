@@ -1145,7 +1145,7 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
   // its SPINE sibling, which rides the very doctor that caused that bug, never did. Its only
   // witnesses were a ~90-second Chromium fit arm (`vertical-fit.spec.ts` drives `?vault=stale`
   // through a real unlock and asserts a resolved spine) and a DIFFERENT plant's date-route arm over
-  // a DIFFERENT base — `retired` is all-retired and `dateSearch.ts:542` refuses such a household
+  // a DIFFERENT base — `retired` is all-retired and `dateSearch.ts:560` refuses such a household
   // outright, so no date-route arm can ever cover it. This is the insight-051 tell: the plant
   // shipped its fit pin before it had a unit source. Now a doctored shape the engine would refuse
   // fails HERE, in under a second.
@@ -1170,7 +1170,7 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
     // ⚑ PINNED AS FOUND, NOT AS EXPECTED — and the difference is the point. Fresh `retired` is
     // ON-TRACK (0.8555, the documented knife-edge sitting on the 0.85 band edge); this plant reads
     // BORDERLINE. The cause is MEASURED: `doctorStaleVault` ages `startCalendarYear` alone, so the
-    // overlay's DERIVED birth year (`startCalendarYear − currentAge`, simulate.ts:1558) forks from
+    // overlay's DERIVED birth year (`startCalendarYear − currentAge`, simulate.ts:1591) forks from
     // each person's STATED `birthYear` — here 1958/1959 derived against 1960/1961 stated, which
     // straddles the SECURE-2.0 RMD band edge (`bornThrough: 1959 → 73` vs `null → 75`) for BOTH
     // people. The doctored household is therefore forced into RMDs two years earlier than the
@@ -1351,7 +1351,7 @@ describe('the arrived aged plant (the first live route to the hero\'s dateInYear
   // Arm 1 — THE MODEL INVARIANT THIS DOCTOR EXISTS TO HOLD. `PersonInputs` (model.ts:98) documents
   // `currentAge === startCalendarYear − birthYear`, and the engine reads a birth year through TWO
   // paths that must agree: the SS sub-engine's stated `p.birthYear` (FRA / DRC / deemed-filing) and
-  // the tax overlay's DERIVED `startCalendarYear − currentAge` (simulate.ts:1558). Aging the build
+  // the tax overlay's DERIVED `startCalendarYear − currentAge` (simulate.ts:1591). Aging the build
   // clock ALONE forks them by the full depth — silently, because nothing in the codec, the hydrator
   // or the sanity layer enforces the invariant. The arm pins all three halves: currentAge frozen
   // (so the engine sees the same household), birthYear moved by the SAME depth, invariant intact.

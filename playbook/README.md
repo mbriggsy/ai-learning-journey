@@ -69,7 +69,7 @@ These fire by themselves. Claude runs the window check itself at checkpoints, an
 
 ## In this folder
 
-- [principles.md](principles.md): the principles that still hold.
+- [principles.md](principles.md): the rules underneath every play.
 - [cheat-sheet.md](cheat-sheet.md): when X happens, say Y.
 - [how-to/session-chains.md](how-to/session-chains.md): hand off from one session to a named successor.
 - [how-to/throwaway-sessions.md](how-to/throwaway-sessions.md): short-lived background test sessions with `claude --bg`.
@@ -82,4 +82,3 @@ These fire by themselves. Claude runs the window check itself at checkpoints, an
 - **Plugin skills:** `ce-plan` and `ce-work` come from the compound-engineering plugin, installed under `~/.claude/plugins/`.
 - **Lessons:** each project keeps its own `docs/insights/` folder. `/distill` writes to it; `/brief` reads from it. For example: [the-back-nine](../projects/the-back-nine/docs/insights/), [burned](../projects/burned/docs/insights/), [hooks](../projects/hooks/docs/insights/).
 - **Claude's private memory:** under `~/.claude`, outside this public repo.
-- **The old playbook:** archived at [projects/archive/briggsy-playbook/](../projects/archive/briggsy-playbook/PLAYBOOK.md). This folder replaces it.

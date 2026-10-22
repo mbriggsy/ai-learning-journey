@@ -67,7 +67,7 @@ These aren't experiments — they're the scaffolding that keeps the methodology 
 
 - **[`projects/hooks/`](projects/hooks/)** — Claude Code hooks for session discipline. `PreToolUse` gates `/brief` before work begins. `PostToolUse` drops a distill marker silently. `Stop` hook enforces `/distill` when work is complete. Together they turn "remember to capture lessons" from a habit into a rule the harness enforces.
 - **[`projects/skills/`](projects/skills/)** — custom Claude Code skills built on top of the agentic workflow. `doc-audit` (5 specialized agents, 4 iterations, 100% pass rate on BURNED's documentation), `distill-and-brief`, a forthcoming `/product-specification` skill scaffolded from lessons learned during BURNED's spec authoring.
-- **[`playbook/`](playbook/)** — the front door to how I work with Claude: the plays we run for sizable work (brief → deepened plan → build → whole-file review → distill → close → hand off), the principles under them, a cheat sheet, and how-tos. The old notes it replaces are archived in [`projects/archive/briggsy-playbook/`](projects/archive/briggsy-playbook/).
+- **[`playbook/`](playbook/)** — the front door to how I work with Claude: the plays we run for sizable work (brief → deepened plan → build → whole-file review → distill → close → hand off), the principles under them, a cheat sheet, and how-tos.
 
 ### Earlier work
 

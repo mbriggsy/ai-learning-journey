@@ -1,12 +1,12 @@
 # Hooks
 
-**Status:** the flat hooks are deployed and enforcing. What U3 added (the status line, the settings writer, versioned deploys, the pre-push leak gate) and Q14's live recorder are built and tested but not live yet: each section says what puts it live.
+**Status:** the hooks, the status line, the settings writer, versioned deploys and the monorepo's pre-push leak gate are live. Q14's live recorder is built and tested but not live yet: its section says what puts it live.
 
 ### Claude Code SessionStart, PreToolUse, PostToolUse & Stop Hooks
 
 ---
 
-Blocking hooks that enforce the distill-and-brief knowledge loop, plus the session-start manifesto injection and its config-liveness check. Deployed at `~/.claude/hooks/`, configured in `~/.claude/settings.json` (flat copies until a `deploy.mjs deploy` first switches settings; see Deployment). U3 added the status line, the settings writer, versioned deploys and the monorepo's pre-push leak gate, each with its own section below.
+Blocking hooks that enforce the distill-and-brief knowledge loop, plus the session-start manifesto injection and its config-liveness check. Deployed by `deploy.mjs` into a version folder under `~/.claude/hooks/`, configured in `~/.claude/settings.json` (see Deployment). U3 added the status line, the settings writer, versioned deploys and the monorepo's pre-push leak gate, each with its own section below.
 
 ---
 
@@ -197,13 +197,13 @@ A code review (`compound-engineering:ce-code-review` or `ultramode-code-review`)
 
 ## The Status Line
 
-`statusline.py` is the Claude Code status line once the first deploy (U3's live step 6) points `statusLine.command` at a version folder's copy; until then settings run the old `~/.claude/statusline.py`. Claude Code runs the status line after each assistant message (debounced 300 ms) with a JSON description of the session on stdin, showing the first line it prints:
+`statusline.py` is the Claude Code status line; settings run the copy in the live version folder under `~/.claude/hooks/`. Claude Code runs the status line after each assistant message (debounced 300 ms) with a JSON description of the session on stdin, showing the first line it prints:
 
 ```
 [Model] dir  branch | context bar pct% | 5h x% wk y% | session/all-time tokens | time | effort
 ```
 
-U3 brought it here from `~/.claude/statusline.py` (the old script, still the live one until the first deploy) and rewrote it, so CI tests it and `deploy.mjs` ships it in each version folder. Python 3.8+, standard library only. A run by hand that reads the real transcripts without writing the real caches:
+U3 brought it here from `~/.claude/statusline.py` (the old script) and rewrote it, so CI tests it and `deploy.mjs` ships it in each version folder. Python 3.8+, standard library only. A run by hand that reads the real transcripts without writing the real caches:
 
 ```bash
 echo '{}' | CLAUDE_STATUSLINE_CACHE_DIR="$(mktemp -d)" python3 projects/hooks/statusline.py
@@ -220,7 +220,7 @@ It refuses nothing, and a failure shows in the line, not as an exit code: any ex
 
 ## The Settings Writer
 
-`tools/settings-write.mjs`, with `lib/encoding.mjs`, is the writer every change of ours to `~/.claude/settings.json`, any `settings.local.json` (through `--file`) and, key by key, `~/.claude.json` is meant to go through (KTD 14). Nothing live calls it yet. Its first live write is U3's live step 2 (the em-dash fold), and steps 3 and 4 (six `autoMode.allow` rules, then `env.DISABLE_AUTOUPDATER`), 6 (the first deploy, which `deploy.mjs` makes through it) and 8 (the Q14 hook into `projects/.claude/settings.local.json`, and Q8's trusted folder into `~/.claude.json`) write through it too. The CLI goes on writing these files itself (an "always allow" saves a permission rule, and it rewrites `~/.claude.json` all the time), which is why the writer checks for a change before its rename and, always for `~/.claude.json` and on request for settings, for a clobber after it. On 2026-10-16 a tool read settings.json as Windows-1252 and wrote it back as UTF-8, and every em dash came back as mojibake; a hand edit or a tool's own rewrite can also reorder or reformat the file, so a diff no longer shows what changed. The writer refuses a damaged file, keeps settings text pure ASCII so no cp1252 round trip can garble it again, changes only the paths a patch names, and records the ops that undo each write.
+`tools/settings-write.mjs`, with `lib/encoding.mjs`, is the writer every change of ours to `~/.claude/settings.json`, any `settings.local.json` (through `--file`) and, key by key, `~/.claude.json` is meant to go through (KTD 14). Its first live writes were U3's live steps 2 (the em-dash fold), 3 and 4 (six `autoMode.allow` rules, then `env.DISABLE_AUTOUPDATER`) and 6 (the first deploy, which `deploy.mjs` makes through it); step 8's last two writes (the Q14 hook into `projects/.claude/settings.local.json`, and Q8's trusted folder into `~/.claude.json`) go through it too. The CLI goes on writing these files itself (an "always allow" saves a permission rule, and it rewrites `~/.claude.json` all the time), which is why the writer checks for a change before its rename and, always for `~/.claude.json` and on request for settings, for a clobber after it. On 2026-10-16 a tool read settings.json as Windows-1252 and wrote it back as UTF-8, and every em dash came back as mojibake; a hand edit or a tool's own rewrite can also reorder or reformat the file, so a diff no longer shows what changed. The writer refuses a damaged file, keeps settings text pure ASCII so no cp1252 round trip can garble it again, changes only the paths a patch names, and records the ops that undo each write.
 
 ```
 node projects/hooks/tools/settings-write.mjs --target settings|claude-json
@@ -272,7 +272,7 @@ Output: one JSON object on stdout, `{ok, exit, action, ...}`; errors also go to 
 
 ## The Pre-push Leak Gate
 
-`tools/pre-push-leak.mjs` (D8) is the monorepo's pre-push gate once `install-git-hooks.mjs --go` installs it (U3's live step 8; until then nothing runs it before a push): it refuses a push that would publish a leak into the scanned folders. CI's leak test runs after a push, too late for a public repo; this runs the same rules and scope (`tests/leak.mjs`: its rules, the binary and UTF-16 handling, the path checks) over what the push is about to send. Git runs it as `pre-push-leak.mjs <remote name> <url>`, with one stdin line per ref: `<local ref> <local sha> <remote ref> <remote sha>`.
+`tools/pre-push-leak.mjs` (D8) is the monorepo's pre-push gate, installed by `install-git-hooks.mjs --go`: it refuses a push that would publish a leak into the scanned folders. CI's leak test runs after a push, too late for a public repo; this runs the same rules and scope (`tests/leak.mjs`: its rules, the binary and UTF-16 handling, the path checks) over what the push is about to send. Git runs it as `pre-push-leak.mjs <remote name> <url>`, with one stdin line per ref: `<local ref> <local sha> <remote ref> <remote sha>`.
 
 - **Every commit the push publishes** is scanned, not just the tip, since the remote receives them all: `git rev-list <local sha> --not <remote sha>`, or `--not --remotes` (every commit no remote-tracking ref holds) for a new remote ref or a remote sha this repo lacks. A leak added in one commit and removed in a later one of the same push is still refused. A delete publishes nothing. It never runs `git fetch`.
 - **What it reads:** every path under the scope a commit adds or modifies, from one `git diff-tree -r --root --raw -c` call fed all the commits. `-c` reads a merge: it lists the paths whose merged blob differs from every parent, so content written during the merge is scanned, while a path taken unchanged from a parent carries a blob some earlier commit introduced, scanned there or already public. Each path's name and each blob's body go through `leak.mjs`, every blob read in one `git cat-file --batch`.
@@ -289,7 +289,7 @@ node projects/hooks/tools/install-git-hooks.mjs [--repo <dir>] --go             
 node projects/hooks/tools/install-git-hooks.mjs [--repo <dir>] --uninstall [--go]   remove it
 ```
 
-Without `--go` it changes nothing: it prints what it would do and exits with the code that action would have. `--repo` defaults to the repo the file sits in. The gate runs only in a repo where `--go` has installed it; for the monorepo that is U3's live step 8, and tests install into temp repos only.
+Without `--go` it changes nothing: it prints what it would do and exits with the code that action would have. `--repo` defaults to the repo the file sits in. The gate runs only in a repo where `--go` has installed it; the monorepo has it (U3's live step 8a), and tests install into temp repos only.
 
 - **The hook runs HEAD's committed gate**, never the work tree's. Every session shares one work tree, so a gate run from there would run whatever a session is halfway through editing: a syntax error would refuse every clean push, and a rule weakened there would pass a leak. At each push the hook (`#!/bin/sh`, a marker line, LF endings, mode 755) extracts the whole `projects/hooks` folder from HEAD into a fresh `mktemp -d` folder (in TMPDIR, falling back to /tmp when TMPDIR can't take one, so a stale TMPDIR can't refuse every push) in two steps, `git archive --format=tar HEAD -- projects/hooks` into a file there, then `tar -xf` of that file: never a pipe, whose status under `sh` (no pipefail) is `tar`'s alone and would hide a failed `git archive`. It runs that copy of the gate from the work tree's top with git's arguments and stdin, and removes the folder on every way out. HEAD, not the remote's main, so a committed fix to a false positive applies to the push that carries it from the checked-out branch (a push of another branch still runs HEAD's gate). The whole folder rather than a list of the gate's files, so a gate that gains an import needs no reinstall (measured 2026-10-22: `git archive` of the folder took 0.26 s and wrote 942 KB). It fails closed by name when no temp folder can be made, `git archive` or `tar` fails, or HEAD has no gate. Tests keep symlinks out of that folder (Git Bash's tar can't unpack one, so every push from Windows would be refused), and the `export-ignore` and `export-subst` attributes off it and the folders above it (`git archive` obeys both, dropping or rewriting the gate's files).
 - **Which hook is its own:** a file whose bytes are exactly `HOOK_TEXT`, or exactly one of `PRIOR_HOOK_TEXTS` (an earlier version's text; empty, since no earlier version of the hook was ever installed on a real repo). `--go` replaces an earlier version's hook, and `--uninstall` removes either. Anything else at the hook path is refused by name and left byte for byte: a hook without the marker line, or one with the marker and other text, since replacing or removing it could drop someone's own lines. Installing the same text again writes nothing. A test pins `HOOK_TEXT`'s sha256: changing the hook fails it, naming the upgrade steps (append the old text to `PRIOR_HOOK_TEXTS`, run `--go` on the monorepo before pushing, and keep the old gate paths in HEAD until then).
@@ -301,45 +301,41 @@ Installer exit codes: 0 done, would do, or nothing to do; 1 internal error; 2 re
 
 ## Deployment
 
-Scripts deployed flat at `~/.claude/hooks/` (until the first versioned deploy, below). The Elite Engineer manifesto deploys alongside at `~/.claude/manifesto/elite-engineer.md` (sibling directory — content vs code separation). Configuration in `~/.claude/settings.json`:
+Scripts deployed into a version folder, `~/.claude/hooks/v-<sha12>/`, by `deploy.mjs` (see Deploys). The Elite Engineer manifesto deploys alongside at `~/.claude/manifesto/elite-engineer.md` (sibling directory — content vs code separation). Configuration in `~/.claude/settings.json`:
 
 ```json
 {
   "hooks": {
     "SessionStart": [
-      { "matcher": "", "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/elite-engineer-session-start.sh" }] }
+      { "matcher": "", "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/v-<sha12>/elite-engineer-session-start.sh" }] }
     ],
     "PreToolUse": [
-      { "matcher": "WebFetch", "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/block-webfetch.sh", "onFailure": "block" }] },
-      { "matcher": "Skill", "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/enforce-brief-before-work.sh", "onFailure": "block" }] }
+      { "matcher": "WebFetch", "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/v-<sha12>/block-webfetch.sh", "onFailure": "block" }] },
+      { "matcher": "Skill", "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/v-<sha12>/enforce-brief-before-work.sh", "onFailure": "block" }] }
     ],
     "PostToolUse": [
-      { "matcher": "Skill", "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/remind-distill-after-work.sh" }] }
+      { "matcher": "Skill", "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/v-<sha12>/remind-distill-after-work.sh" }] }
     ],
     "Stop": [
-      { "matcher": "", "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/stop-distill-gate.sh" }] }
+      { "matcher": "", "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/v-<sha12>/stop-distill-gate.sh" }] }
     ]
   },
-  "statusLine": { "type": "command", "command": "python ~/.claude/statusline.py" }
+  "statusLine": { "type": "command", "command": "python ~/.claude/hooks/v-<sha12>/statusline.py" }
 }
 ```
 
 The two PreToolUse guards carry `onFailure: "block"` (Finding 5): a copy of this block without it lets a broken guard fail open. The live file also holds a Notification hook (a PowerShell message box), which nothing here ships and `deploy.mjs` leaves alone.
 
-This project folder is source control. The deployed copies at `~/.claude/hooks/` (and the manifesto at `~/.claude/manifesto/`) are the live versions. The status line is set apart from the hooks, in `statusLine.command`, which names the old copy, `~/.claude/statusline.py`, until the first deploy below.
+This project folder is source control. The version folder settings name (and the manifesto at `~/.claude/manifesto/`) is the live copy; `deploy.mjs status` names it. The status line sits apart from the hooks, in `statusLine.command`, which names the version folder's `statusline.py`.
 
-**`deploy.mjs` replaces the copy steps below once its first run switches settings** (see Deploys). That is U3's live step 6, after the U3 code lands and after the em-dash fold (live step 2): the writer refuses a patch whose settings output would hold non-ASCII, which on today's settings (15 em dashes) is every patch but the fold itself (see The Settings Writer). So until the fold, deploy's switch refuses (exit 2), and so does `deploy --dry-run`, since the writer checks its output before its dry-run stop; snapshot-flat, which writes no settings, can run. `node projects/hooks/deploy.mjs snapshot-flat` keeps today's flat hooks (and `~/.claude/statusline.py`) in a version folder as the first rollback target, then `node projects/hooks/deploy.mjs deploy` at the landed commit (`--commit <rev>`, HEAD by default) builds `~/.claude/hooks/v-<sha12>/` and, in one write, points every command above and `statusLine.command` at it. If the flat hooks were re-synced to the landed commit (below) and that commit changed one of the six, snapshot-flat names its folder by that commit, and the deploy of that commit then refuses, since a snapshot is never rewritten: deploy a later commit (an empty one does). A deploy that succeeds leaves no command naming a flat file; `deploy.mjs status` then names the live version, and a hook change ships as a commit followed by `deploy.mjs deploy`, never a copy. Until that first deploy has run, the flat copies are live and the steps below stand. The manifesto is not in `deploy.mjs`'s MANIFEST, so its copy step stays either way.
+**A hook change ships as a commit followed by `node projects/hooks/deploy.mjs deploy`, never a copy** (see Deploys). `deploy` (`--commit <rev>`, HEAD by default) builds `~/.claude/hooks/v-<sha12>/` from that commit's blobs and, in one write, points every command above and `statusLine.command` at it; `deploy.mjs rollback` undoes the newest switch. The first deploy was U3's live step 6: `snapshot-flat` kept the flat hooks (and `~/.claude/statusline.py`) in a version folder as the first rollback target, then `deploy` switched settings off the flat files. The six flat files still sitting directly in `~/.claude/hooks/` are no command's target any more. A deploy of the very commit a snapshot is named by refuses, since a snapshot is never rewritten: deploy a later commit (an empty one does).
 
-**Install / re-sync** (the hooks: until the first deploy; the manifesto: always):
+**Install / re-sync the manifesto** (`deploy.mjs`'s MANIFEST doesn't ship it):
 
 ```bash
-# Shell hooks + the liveness check the session-start hook calls (until the first deploy)
-cp projects/hooks/*.sh projects/hooks/check-config-liveness.mjs ~/.claude/hooks/
-chmod +x ~/.claude/hooks/*.sh
-
-# Elite Engineer manifesto — goes to a sibling dir, NOT ~/.claude/hooks/ (always: deploy.mjs doesn't ship it)
+# Elite Engineer manifesto — goes to a sibling dir, NOT ~/.claude/hooks/
 mkdir -p ~/.claude/manifesto
 cp projects/hooks/elite-engineer.md ~/.claude/manifesto/elite-engineer.md
 ```
 
-After any source edit in this folder, re-run the copy that applies, then `cmp` each pair — the live and tracked copies must stay byte-identical (a deployed version folder is compared with its commit's blobs by `deploy.mjs` itself). The hook reads the manifesto at `~/.claude/manifesto/elite-engineer.md` at session start, so the runtime copy is what Claude sees.
+After an edit to the manifesto, re-run that copy, then `cmp` the pair — the live and tracked copies must stay byte-identical (a deployed version folder is compared with its commit's blobs by `deploy.mjs` itself). The hook reads the manifesto at `~/.claude/manifesto/elite-engineer.md` at session start, so the runtime copy is what Claude sees.

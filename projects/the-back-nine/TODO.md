@@ -61,8 +61,14 @@ covers all of that…" sentence comes out for a household with W (U9). Build 2, 
 **STATE on A3's tree, by exit code:** typecheck · lint · `verify:doc-stats` · build · `verify:bundle` 272.5 KiB — all exit 0;
 the full suite green (the count lives under `verify:doc-stats`). `verify:aca` / `verify:state-tax` were not re-run (no
 constants they gate moved).
-**CI:** GREEN by run id on A1 `e2890887` (39714577412) and A2 `512df53f` (39719780603, both jobs). A3 `5d44ed68`'s run was IN
-PROGRESS at the close: read it first (`gh run list --commit <FULL sha>`, then `gh run view <id>`).
+**CI:** GREEN by run id, both jobs each: A1 `e2890887` (39714577412), A2 `512df53f` (39719780603), A3 `5d44ed68`
+(39721368898), the close `797108fa` (39721795318), the review fixes `a5d62b06` (39725761174). This stamp's own commit
+follows: read its run first (`gh run list --commit <FULL sha>`, then `gh run view <id>`).
+**DISTILL CANDIDATE (b9-10, for the pay check's Phase C `/distill`):** a decision record's "no oracle exists" is a claim
+to check at the primary, not a fact. `docs/decisions/ss-computation.md`'s junction bullet said no standalone oracle covers
+the RIB-LIM × age-reduction order, and pinned the engine's own order as deliberate. POMS RS 00615.322 D's worksheet is
+that oracle, and the order was backwards (gloomy). It surfaced only because a law-lens reviewer re-read the primaries
+for an unrelated commit.
 **THE A2+A3 REVIEW (`wf_69c7171f-55e`, DONE and ACTED ON):** three fresh-context lenses (correctness, the law and every
 citation, fitness for A4–A7's contracts), each finding challenged at source by a skeptic. 14 findings: 11 survived and 3
 were refuted (C3, C4, F4). The files are in

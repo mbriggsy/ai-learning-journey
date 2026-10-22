@@ -25,7 +25,7 @@ draft-day operation lives in [`draft-day-runbook.md`](draft-day-runbook.md).
 | Kaeperni | `959918157764825088` | league member | |
 | BuschLight420 | `1128840111103348736` | league member | |
 | kblizzy23 | `1392435446868381696` | league member | Joined by **2026-08-10 03:35** |
-| Cltchiefs | `1393428034064748544` | league member | Joined by **2026-08-12 21:35** — filled the last seat |
+| Cltchiefs | `1393428034064748544` | **Nayan** — Briggsy's good friend | Joined by **2026-08-12 21:35** — filled the last seat. Roster 8. Name per Briggsy 2026-10-22 ("we're playing my good friend Nayan"), when live `/matchups/7` paired us with Cltchiefs |
 
 🚨 **THE HANDLE `briggsy007` IS NOT BRIGGSY. IT IS HUNTER — the rival.** Briggsy is
 **PoppaBriggsy**, `1390750540631150592`, roster_id 3, *Saquon Deez Nuts*. Confirmed by him directly

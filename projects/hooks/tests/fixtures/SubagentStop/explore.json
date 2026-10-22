@@ -1,0 +1,14 @@
+{
+  "session_id": "sess-fixture",
+  "transcript_path": "/home/user/.claude/projects/-home-user-proj/sess-fixture.jsonl",
+  "cwd": "/home/user/proj",
+  "hook_event_name": "SubagentStop",
+  "permission_mode": "default",
+  "stop_hook_active": false,
+  "agent_id": "agent-fixture-1",
+  "agent_type": "Explore",
+  "agent_transcript_path": "/home/user/.claude/projects/-home-user-proj/sess-fixture/subagents/agent-fixture-1.jsonl",
+  "last_assistant_message": "Found 3 files.",
+  "background_tasks": [],
+  "session_crons": []
+}

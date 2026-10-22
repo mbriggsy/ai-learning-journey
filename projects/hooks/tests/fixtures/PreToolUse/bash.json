@@ -1,0 +1,19 @@
+{
+  "session_id": "sess-fixture",
+  "transcript_path": "/home/user/.claude/projects/-home-user-proj/sess-fixture.jsonl",
+  "cwd": "/home/user/proj",
+  "hook_event_name": "PreToolUse",
+  "permission_mode": "default",
+  "prompt_id": "prompt-fixture-1",
+  "effort": {
+    "level": "high"
+  },
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "npm test",
+    "description": "Run test suite",
+    "timeout": 120000,
+    "run_in_background": false
+  },
+  "tool_use_id": "toolu_fixture_1"
+}

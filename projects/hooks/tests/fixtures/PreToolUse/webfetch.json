@@ -1,0 +1,17 @@
+{
+  "session_id": "sess-fixture",
+  "transcript_path": "/home/user/.claude/projects/-home-user-proj/sess-fixture.jsonl",
+  "cwd": "/home/user/proj",
+  "hook_event_name": "PreToolUse",
+  "permission_mode": "default",
+  "prompt_id": "prompt-fixture-1",
+  "effort": {
+    "level": "high"
+  },
+  "tool_name": "WebFetch",
+  "tool_input": {
+    "url": "https://example.com/docs",
+    "prompt": "Summarize the page"
+  },
+  "tool_use_id": "toolu_fixture_2"
+}

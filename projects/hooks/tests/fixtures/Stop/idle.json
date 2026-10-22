@@ -1,0 +1,15 @@
+{
+  "session_id": "sess-fixture",
+  "transcript_path": "/home/user/.claude/projects/-home-user-proj/sess-fixture.jsonl",
+  "cwd": "/home/user/proj",
+  "hook_event_name": "Stop",
+  "permission_mode": "default",
+  "prompt_id": "prompt-fixture-1",
+  "effort": {
+    "level": "high"
+  },
+  "stop_hook_active": false,
+  "last_assistant_message": "Done.",
+  "background_tasks": [],
+  "session_crons": []
+}

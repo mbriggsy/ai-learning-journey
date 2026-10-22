@@ -1,0 +1,27 @@
+{
+  "session_id": "sess-fixture",
+  "transcript_path": "C:\\claude-config\\projects\\C--project\\sess-fixture.jsonl",
+  "cwd": "C:\\project",
+  "hook_event_name": "PostToolUse",
+  "permission_mode": "default",
+  "prompt_id": "prompt-fixture-1",
+  "effort": {
+    "level": "high"
+  },
+  "tool_name": "Read",
+  "tool_input": {
+    "file_path": "C:\\project\\a.txt"
+  },
+  "tool_response": {
+    "type": "text",
+    "file": {
+      "filePath": "C:/project/a.txt",
+      "content": "alpha\n",
+      "numLines": 2,
+      "startLine": 1,
+      "totalLines": 2
+    }
+  },
+  "tool_use_id": "toolu_fixture_9",
+  "duration_ms": 12
+}

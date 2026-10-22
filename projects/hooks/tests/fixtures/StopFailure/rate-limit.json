@@ -1,0 +1,9 @@
+{
+  "session_id": "sess-fixture",
+  "transcript_path": "/home/user/.claude/projects/-home-user-proj/sess-fixture.jsonl",
+  "cwd": "/home/user/proj",
+  "hook_event_name": "StopFailure",
+  "error": "rate_limit",
+  "error_details": "429 Too Many Requests",
+  "last_assistant_message": "API Error: Rate limit reached"
+}

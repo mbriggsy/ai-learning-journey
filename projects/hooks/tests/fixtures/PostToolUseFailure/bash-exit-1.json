@@ -1,0 +1,20 @@
+{
+  "session_id": "sess-fixture",
+  "transcript_path": "/home/user/.claude/projects/-home-user-proj/sess-fixture.jsonl",
+  "cwd": "/home/user/proj",
+  "hook_event_name": "PostToolUseFailure",
+  "permission_mode": "default",
+  "prompt_id": "prompt-fixture-1",
+  "effort": {
+    "level": "high"
+  },
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "npm test",
+    "description": "Run test suite"
+  },
+  "tool_use_id": "toolu_fixture_6",
+  "error": "Exit code 1\nError: Cannot find module",
+  "is_interrupt": false,
+  "duration_ms": 4187
+}

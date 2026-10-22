@@ -1,0 +1,22 @@
+{
+  "session_id": "sess-fixture",
+  "transcript_path": "/home/user/.claude/projects/-home-user-proj/sess-fixture.jsonl",
+  "cwd": "/home/user/proj",
+  "hook_event_name": "PostToolUse",
+  "permission_mode": "default",
+  "prompt_id": "prompt-fixture-1",
+  "effort": {
+    "level": "high"
+  },
+  "tool_name": "Write",
+  "tool_input": {
+    "file_path": "/home/user/proj/notes.txt",
+    "content": "x\n"
+  },
+  "tool_response": {
+    "filePath": "/home/user/proj/notes.txt",
+    "type": "create"
+  },
+  "tool_use_id": "toolu_fixture_5",
+  "duration_ms": 12
+}

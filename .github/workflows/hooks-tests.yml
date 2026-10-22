@@ -1,0 +1,77 @@
+name: Hooks tests
+
+# The hook harness, its fixtures and the leak test (projects/hooks/tests), plus
+# U29's squeaky-clean suite. Both were local-only gates until this workflow:
+# a verify script that never runs in CI isn't enforced. The leak test scans
+# the hooks folder and the four skill folders the flow publishes into, so a
+# change to any of them re-runs it. The Windows-only squeaky-clean tests skip
+# on this runner (they carry `skip: !WIN`).
+
+on:
+  push:
+    branches: [main]
+    # Include this workflow file so a change to the gate itself re-runs the gate.
+    # GitHub skips a filtered run only when a push's diff tops 3,000 files with
+    # no match in the first 3,000, and CI runs after the push anyway: the stop
+    # for a leak is U3's pre-push hook, not dropping this filter.
+    paths:
+      - 'projects/hooks/**'
+      - 'projects/skills/ultramode-code-review/**'
+      - 'projects/skills/deepen-verify/**'
+      - 'projects/skills/squeaky-clean/**'
+      - 'projects/skills/distill-and-brief/**'
+      - '.github/workflows/hooks-tests.yml'
+  pull_request:
+    paths:
+      - 'projects/hooks/**'
+      - 'projects/skills/ultramode-code-review/**'
+      - 'projects/skills/deepen-verify/**'
+      - 'projects/skills/squeaky-clean/**'
+      - 'projects/skills/distill-and-brief/**'
+      - '.github/workflows/hooks-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    # Pinned, never `ubuntu-latest` (that label moves with no commit), matching
+    # verify-the-back-nine.yml.
+    runs-on: ubuntu-26.04
+    # Both suites take under 90 s on Windows, where every case runs; a hang
+    # (a git spawn has no timeout of its own) ends here, not at GitHub's 6 h.
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      # Node 24.13, the release the suites are run against locally. Pinned to
+      # the minor, like the runner, because a bare 24 takes whatever 24.x the
+      # runner's cache holds; and hook-runner.mjs needs import.meta.main
+      # (24.2+), without which every runHook throws.
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24.13'
+      # block-webfetch.sh builds its payload with jq. A missing jq must fail
+      # here by name, not as a confusing hook-test failure.
+      - run: node --version && jq --version && bash --version | head -1
+      # Each suite runs the files bash lists. node --test reads a glob that
+      # matches nothing as 0 tests and exits 0, so a renamed tests/ folder
+      # would go green with no suite run; a file with no tests still counts as
+      # one, so the file count is the guard. (`node --test tests/` fails on
+      # Node 24 with MODULE_NOT_FOUND.)
+      - name: Hooks harness, fixtures and leak test
+        working-directory: projects/hooks
+        shell: bash
+        run: |
+          shopt -s nullglob
+          files=(tests/*.test.mjs)
+          [ ${#files[@]} -gt 0 ] || { echo 'no test files match tests/*.test.mjs'; exit 1; }
+          node --test "${files[@]}"
+      - name: squeaky-clean suite
+        working-directory: projects/skills/squeaky-clean
+        shell: bash
+        run: |
+          shopt -s nullglob
+          files=(tests/*.test.mjs)
+          [ ${#files[@]} -gt 0 ] || { echo 'no test files match tests/*.test.mjs'; exit 1; }
+          node --test "${files[@]}"

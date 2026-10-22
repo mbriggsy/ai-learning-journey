@@ -1,8 +1,3 @@
----
-aliases: [undercover-mob-boss, UMB, mob-boss]
-tags: [project, complete]
----
-
 # Undercover Mob Boss
 
 **Status: COMPLETE** — the masterpiece. Deployed, playtested, trailered.
@@ -11,20 +6,20 @@ A digital-physical social deduction game for 5-10 players in the same room. 1940
 
 ## Project Map
 
-> Internal docs surfaced for the Obsidian graph. The full README continues below.
+> The full README continues below.
 
-- [[CLAUDE|CLAUDE.md]] — Claude's working agreement for this project
-- [[TODO]] — what's left
-- **Specs** (locked): [[docs/v1/spec/SPEC|v1 SPEC]] · [[docs/v2/spec/SPEC|v2 SPEC]]
-- **Player-facing:** [[docs/shared/user/HOW-TO-PLAY|HOW-TO-PLAY]]
-- **V1 verification:** [[docs/v1/EVIDENCE|EVIDENCE]] · [[docs/v1/verification/sh-rules-checklist|Secret Hitler rules checklist]] · [[docs/v1/verification/verification-results|verification results]] · [[docs/v1/verification/TEST-EVIDENCE|test evidence]]
-- **V1 playtests / QA:** [[docs/v1/playtest-round-3|playtest round 3]] · [[docs/v1/QA-ISSUES|QA issues]]
-- **V1 ideation:** [[docs/v1/ideation/CONCEPT|CONCEPT]] · [[docs/v1/ideation/BRAINSTORM|BRAINSTORM]] · [[docs/v1/ideation/TOOLING-IDEAS|TOOLING-IDEAS]]
-- **V1 plans (7 phases):** [[docs/v1/plans/2026-03-16-001-feat-phase-0-asset-generation-plan|phase 0 assets]] · [[docs/v1/plans/2026-03-16-002-feat-phase-1-game-engine-plan|phase 1 engine]] · [[docs/v1/plans/2026-03-16-003-feat-phase-2-multiplayer-plan|phase 2 multiplayer]] · [[docs/v1/plans/2026-03-16-004-feat-phase-3-player-view-plan|phase 3 player view]] · [[docs/v1/plans/2026-03-16-005-feat-phase-4-host-table-view-plan|phase 4 host view]] · [[docs/v1/plans/2026-03-16-006-feat-phase-5-audio-polish-plan|phase 5 audio]] · [[docs/v1/plans/2026-03-16-007-feat-phase-6-deployment-plan|phase 6 deploy]]
-- **V1 environment:** [[docs/v1/env-setup/ENVIRONMENT-SETUP|env setup]] · [[docs/v1/env-setup/VIDEO-ENVIRONMENT-SETUP|video env setup]]
-- **V2 ideation:** [[docs/v2/ideation/BRAINSTORM|BRAINSTORM]] · [[docs/v2/ideation/SKILL-IDEA-voice-over|voice-over skill idea]]
-- **V2 plans:** [[docs/v2/plans/2026-03-24-001-feat-commissioner-rename-plan|commissioner rename]] · [[docs/v2/plans/2026-03-24-002-feat-named-policy-cards-plan|named policy cards]] · [[docs/v2/plans/2026-03-24-003-feat-narrator-variant-pool-plan|narrator variant pool]] · [[docs/v2/plans/2026-03-24-004-feat-millbrook-city-gazette-plan|Millbrook City Gazette]]
-- **Brainstorms:** [[docs/v1/brainstorms/2026-03-16-deck-reshuffle-brainstorm|deck reshuffle]]
+- [CLAUDE.md](CLAUDE.md) — Claude's working agreement for this project
+- [TODO](TODO.md) — what's left
+- **Specs** (locked): [v1 SPEC](docs/v1/spec/SPEC.md) · [v2 SPEC](docs/v2/spec/SPEC.md)
+- **Player-facing:** [HOW-TO-PLAY](docs/shared/user/HOW-TO-PLAY.md)
+- **V1 verification:** [EVIDENCE](docs/v1/EVIDENCE.md) · [Secret Hitler rules checklist](docs/v1/verification/sh-rules-checklist.md) · [verification results](docs/v1/verification/verification-results.md) · [test evidence](docs/v1/verification/TEST-EVIDENCE.md)
+- **V1 playtests / QA:** [playtest round 3](docs/v1/playtest-round-3.md) · [QA issues](docs/v1/QA-ISSUES.md)
+- **V1 ideation:** [CONCEPT](docs/v1/ideation/CONCEPT.md) · [BRAINSTORM](docs/v1/ideation/BRAINSTORM.md) · [TOOLING-IDEAS](docs/v1/ideation/TOOLING-IDEAS.md)
+- **V1 plans (7 phases):** [phase 0 assets](docs/v1/plans/2026-03-16-001-feat-phase-0-asset-generation-plan.md) · [phase 1 engine](docs/v1/plans/2026-03-16-002-feat-phase-1-game-engine-plan.md) · [phase 2 multiplayer](docs/v1/plans/2026-03-16-003-feat-phase-2-multiplayer-plan.md) · [phase 3 player view](docs/v1/plans/2026-03-16-004-feat-phase-3-player-view-plan.md) · [phase 4 host view](docs/v1/plans/2026-03-16-005-feat-phase-4-host-table-view-plan.md) · [phase 5 audio](docs/v1/plans/2026-03-16-006-feat-phase-5-audio-polish-plan.md) · [phase 6 deploy](docs/v1/plans/2026-03-16-007-feat-phase-6-deployment-plan.md)
+- **V1 environment:** [env setup](docs/v1/env-setup/ENVIRONMENT-SETUP.md) · [video env setup](docs/v1/env-setup/VIDEO-ENVIRONMENT-SETUP.md)
+- **V2 ideation:** [BRAINSTORM](docs/v2/ideation/BRAINSTORM.md) · [voice-over skill idea](docs/v2/ideation/SKILL-IDEA-voice-over.md)
+- **V2 plans:** [commissioner rename](docs/v2/plans/2026-03-24-001-feat-commissioner-rename-plan.md) · [named policy cards](docs/v2/plans/2026-03-24-002-feat-named-policy-cards-plan.md) · [narrator variant pool](docs/v2/plans/2026-03-24-003-feat-narrator-variant-pool-plan.md) · [Millbrook City Gazette](docs/v2/plans/2026-03-24-004-feat-millbrook-city-gazette-plan.md)
+- **Brainstorms:** [deck reshuffle](docs/v1/brainstorms/2026-03-16-deck-reshuffle-brainstorm.md)
 
 ---
 

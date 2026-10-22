@@ -1,8 +1,3 @@
----
-aliases: [code-review, code-review-research, review-deep-dive]
-tags: [research]
----
-
 # Code Review — Deep Dive
 
 Parallel multi-agent PR review with confidence scoring. Official Anthropic plugin.

@@ -1,8 +1,3 @@
----
-aliases: [top-down-racer-04, racer-04, td-04, racer04]
-tags: [project, complete]
----
-
 # Top-Down Racer v04
 
 **Status: COMPLETE** — deployed, playable, documented. The other jewel.
@@ -11,14 +6,14 @@ tags: [project, complete]
 
 ## Project Map
 
-> Internal docs surfaced for the Obsidian graph. Full README continues below.
+> The full README continues below.
 
-- [[CLAUDE|CLAUDE.md]] — project conventions
-- **Spec & playbook:** [[docs/Top-Down-Racer-v04-CE-Spec|CE Spec]] · [[docs/Top-Down-Racer-v04-CE-Playbook|CE Playbook]]
-- **Plans (Compound Engineering, by phase):** [[docs/plans/2026-03-11-feat-phase-neg1-foundation-plan|phase -1 foundation]] · [[docs/plans/2026-03-11-feat-phase-0-asset-generation-plan|phase 0 asset gen]] · [[docs/plans/2026-03-11-feat-phase-1-asset-pipeline-track-redesign-plan|phase 1 pipeline + track redesign]] · [[docs/plans/2026-03-11-feat-phase-2-core-visual-upgrade-plan|phase 2 core visual]] · [[docs/plans/2026-03-12-feat-phase-3-post-processing-effects-plan|phase 3 post-processing]] · [[docs/plans/2026-03-12-feat-phase-4-commercial-ui-audio-plan|phase 4 UI/audio]] · [[docs/plans/2026-03-12-feat-phase-5-ai-retraining-validation-plan|phase 5 AI retrain]] · [[docs/plans/2026-03-12-feat-phase-6-integration-polish-plan|phase 6 integration polish]]
-- **Evidence package:** [[docs/evidence/evidence-package|evidence package]] · [[docs/evidence/methodology-in-practice|methodology in practice]] · [[docs/evidence/technical-architecture|technical architecture]]
-- **Learnings & research:** [[docs/Phase-3-Post-Processing-Learnings|phase 3 post-processing learnings]] · [[docs/research/2026-03-12-integration-best-practices|integration best practices]] · [[docs/FUTURE-PLAN-MO-CE-Integration|future plan: MO ↔ CE integration]] · [[docs/brainstorms/2026-03-11-full-build-brainstorm|full build brainstorm]]
-- **Solutions / postmortems:** [[docs/solutions/ui-bugs/render-clipping-dark-artifacts-filtermanager-20260312|render clipping FilterManager bug]]
+- [CLAUDE.md](CLAUDE.md) — project conventions
+- **Spec & playbook:** [CE Spec](docs/Top-Down-Racer-v04-CE-Spec.md) · [CE Playbook](docs/Top-Down-Racer-v04-CE-Playbook.md)
+- **Plans (Compound Engineering, by phase):** [phase -1 foundation](docs/plans/2026-03-11-feat-phase-neg1-foundation-plan.md) · [phase 0 asset gen](docs/plans/2026-03-11-feat-phase-0-asset-generation-plan.md) · [phase 1 pipeline + track redesign](docs/plans/2026-03-11-feat-phase-1-asset-pipeline-track-redesign-plan.md) · [phase 2 core visual](docs/plans/2026-03-11-feat-phase-2-core-visual-upgrade-plan.md) · [phase 3 post-processing](docs/plans/2026-03-12-feat-phase-3-post-processing-effects-plan.md) · [phase 4 UI/audio](docs/plans/2026-03-12-feat-phase-4-commercial-ui-audio-plan.md) · [phase 5 AI retrain](docs/plans/2026-03-12-feat-phase-5-ai-retraining-validation-plan.md) · [phase 6 integration polish](docs/plans/2026-03-12-feat-phase-6-integration-polish-plan.md)
+- **Evidence package:** [evidence package](docs/evidence/evidence-package.md) · [methodology in practice](docs/evidence/methodology-in-practice.md) · [technical architecture](docs/evidence/technical-architecture.md)
+- **Learnings & research:** [phase 3 post-processing learnings](docs/Phase-3-Post-Processing-Learnings.md) · [integration best practices](docs/research/2026-03-12-integration-best-practices.md) · [future plan: MO ↔ CE integration](docs/FUTURE-PLAN-MO-CE-Integration.md) · [full build brainstorm](docs/brainstorms/2026-03-11-full-build-brainstorm.md)
+- **Solutions / postmortems:** [render clipping FilterManager bug](docs/solutions/ui-bugs/render-clipping-dark-artifacts-filtermanager-20260312.md)
 
 ---
 

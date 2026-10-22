@@ -23,9 +23,5 @@ utils/
 .DS_Store
 Thumbs.db
 
-# Obsidian session state — auto-managed, churns every launch.
-# Vault config (app.json, core-plugins.json, appearance.json) stays tracked.
-.obsidian/workspace.json
-.obsidian/workspace-mobile.json
 .secrets/
 __pycache__/

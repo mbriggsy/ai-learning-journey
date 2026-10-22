@@ -1,8 +1,3 @@
----
-aliases: [skills-2.0-sharpen, skills-2-sharpen]
-tags: [research]
----
-
 # Leveling Up
 
 **Read time:** ~12 minutes. Read this after you've shipped one or two skills and you're ready to compose them.

@@ -1,8 +1,3 @@
----
-aliases: [sequential-thinking, seq-thinking, sequential-thinking-deep-dive]
-tags: [research]
----
-
 # Sequential Thinking MCP Server — Deep Dive
 
 A structured reasoning tool that transforms Claude from a fast answer machine into a methodical problem solver.

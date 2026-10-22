@@ -1,8 +1,3 @@
----
-aliases: [tic-tac-toe, ttt]
-tags: [project, complete]
----
-
 # Tic-Tac-Toe
 
 **Status: COMPLETE** — our very first project. Built in a single session on Feb 21, 2026.

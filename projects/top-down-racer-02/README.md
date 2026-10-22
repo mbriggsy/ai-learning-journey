@@ -1,8 +1,3 @@
----
-aliases: [top-down-racer-02, racer-02, td-02, racer02]
-tags: [project, complete]
----
-
 # TOP-DOWN RACER v02
 
 **Status: COMPLETE** — deployed, playable, documented. One of the jewels.
@@ -11,15 +6,15 @@ tags: [project, complete]
 
 ## Project Map
 
-> Internal docs surfaced for the Obsidian graph. Full README continues below.
+> The full README continues below.
 
-- [[CLAUDE|CLAUDE.md]] — project conventions
-- **Headline docs:** [[docs/summary/00-Executive-Summary|Executive Summary]] · [[docs/summary/AI-Autonomy-Executive-Deck|AI Autonomy Executive Deck]] · [[docs/Top-Down-Racer-v02-Complete-Tool-Stack|Complete Tool Stack]]
-- **Build history & process:** [[docs/2026-02-27-build-day|build-day notes]] · [[docs/gsd-interview-prep|GSD interview prep]] · [[docs/autonomous-pipeline-future-plan|autonomous pipeline future plan]] · [[docs/issues|issues log]]
-- **Project planning hub:** [[.planning/PROJECT|PROJECT]] · [[.planning/REQUIREMENTS|REQUIREMENTS]] · [[.planning/ROADMAP|ROADMAP]] · [[.planning/STATE|STATE]] · context: [[.planning/01-CONTEXT|01]] · [[.planning/02-CONTEXT|02]] · [[.planning/03-CONTEXT|03]]
-- **Codebase analysis:** [[.planning/codebase/ARCHITECTURE|ARCHITECTURE]] · [[.planning/codebase/STACK|STACK]] · [[.planning/codebase/STRUCTURE|STRUCTURE]] · [[.planning/codebase/CONVENTIONS|CONVENTIONS]] · [[.planning/codebase/TESTING|TESTING]] · [[.planning/codebase/INTEGRATIONS|INTEGRATIONS]] · [[.planning/codebase/CONCERNS|CONCERNS]]
-- **Pre-build research:** [[.planning/research/SUMMARY|research SUMMARY]] · [[.planning/research/ARCHITECTURE|architecture]] · [[.planning/research/STACK|stack]] · [[.planning/research/FEATURES|features]] · [[.planning/research/PITFALLS|pitfalls]]
-- **Phase plans:** ~70 phase plan/summary files across 6 phases under `.planning/phases/`. Phase entry points: [[.planning/phases/01-core-simulation-engine/01-RESEARCH|p1 research]] · [[.planning/phases/02-pixijs-renderer-playable-game/02-CONTEXT|p2 context]] · [[.planning/phases/04-gymnasium-environment-wrapper/04-RESEARCH|p4 research]] · [[.planning/phases/05-ai-training-pipeline/05-CONTEXT|p5 context]] · [[.planning/phases/06-ai-vs-human-mode/06-CONTEXT|p6 context]]
+- [CLAUDE.md](CLAUDE.md) — project conventions
+- **Headline docs:** [Executive Summary](docs/summary/00-Executive-Summary.md) · [AI Autonomy Executive Deck](docs/summary/AI-Autonomy-Executive-Deck.md) · [Complete Tool Stack](docs/Top-Down-Racer-v02-Complete-Tool-Stack.md)
+- **Build history & process:** [build-day notes](docs/2026-02-27-build-day.md) · [GSD interview prep](docs/gsd-interview-prep.md) · [autonomous pipeline future plan](docs/autonomous-pipeline-future-plan.md) · [issues log](docs/issues.md)
+- **Project planning hub:** [PROJECT](.planning/PROJECT.md) · [REQUIREMENTS](.planning/REQUIREMENTS.md) · [ROADMAP](.planning/ROADMAP.md) · [STATE](.planning/STATE.md) · context: [01](.planning/01-CONTEXT.md) · [02](.planning/02-CONTEXT.md) · [03](.planning/03-CONTEXT.md)
+- **Codebase analysis:** [ARCHITECTURE](.planning/codebase/ARCHITECTURE.md) · [STACK](.planning/codebase/STACK.md) · [STRUCTURE](.planning/codebase/STRUCTURE.md) · [CONVENTIONS](.planning/codebase/CONVENTIONS.md) · [TESTING](.planning/codebase/TESTING.md) · [INTEGRATIONS](.planning/codebase/INTEGRATIONS.md) · [CONCERNS](.planning/codebase/CONCERNS.md)
+- **Pre-build research:** [research SUMMARY](.planning/research/SUMMARY.md) · [architecture](.planning/research/ARCHITECTURE.md) · [stack](.planning/research/STACK.md) · [features](.planning/research/FEATURES.md) · [pitfalls](.planning/research/PITFALLS.md)
+- **Phase plans:** ~70 phase plan/summary files across 6 phases under `.planning/phases/`. Phase entry points: [p1 research](.planning/phases/01-core-simulation-engine/01-RESEARCH.md) · [p2 context](.planning/phases/02-pixijs-renderer-playable-game/02-CONTEXT.md) · [p4 research](.planning/phases/04-gymnasium-environment-wrapper/04-RESEARCH.md) · [p5 context](.planning/phases/05-ai-training-pipeline/05-CONTEXT.md) · [p6 context](.planning/phases/06-ai-vs-human-mode/06-CONTEXT.md)
 
 ---
 

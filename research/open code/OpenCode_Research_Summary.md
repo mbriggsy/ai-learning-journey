@@ -1,8 +1,3 @@
----
-aliases: [opencode, opencode-research]
-tags: [research]
----
-
 # OpenCode: Research Summary
 *AI Coding Agent Deep Dive — March 2026*
 

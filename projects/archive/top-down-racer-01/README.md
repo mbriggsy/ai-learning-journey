@@ -1,22 +1,17 @@
----
-aliases: [top-down-racer-01, racer-01, td-01, racer01, td-racer-01]
-tags: [project, archived]
----
-
 # Top-Down Racer 01
 
 **Status: COMPLETE / ARCHIVED** — learning lab that led to Racer 02 and 04. Chaotic, educational, and worth every training run.
 
 ## Project Map
 
-> Internal docs surfaced for the Obsidian graph. This project is archived but the docs are kept as a record of what we learned.
+> This project is archived but the docs are kept as a record of what we learned.
 
-- [[CLAUDE|CLAUDE.md]] — project conventions
-- **Status & history:** [[BUILD_LOG]] — build journal · [[CURRENT_STATUS]] · [[ISSUES]] · [[PROJECT_GENESIS]]
-- **Setup & quickstart:** [[SETUP]] · [[QUICKSTART]]
-- **Specs:** [[PHASE2_AI_SPEC|Phase 2 AI spec]] · [[WATCH_FIX_SPEC]]
-- **Fix prompts (chronological iteration log):** [[v4_fix_prompt|v4]] · [[v5_fix_prompt|v5]] · [[v6_fix_prompt|v6]] · [[v7_fix_prompt|v7]] · [[v8_fix_prompt|v8]] · [[v9_fix_prompt|v9]] · [[v10_fix_prompt|v10]] · [[v11_fix_prompt|v11]] · [[v12_fix_prompt|v12]]
-- **Other prompts:** [[spawn_fix_prompt]] · [[reward_tune_prompt]] · [[watch_fix_prompt]] · [[docs_update_prompt]]
+- [CLAUDE.md](CLAUDE.md) — project conventions
+- **Status & history:** [BUILD_LOG](BUILD_LOG.md) — build journal · [CURRENT_STATUS](CURRENT_STATUS.md) · [ISSUES](ISSUES.md) · [PROJECT_GENESIS](PROJECT_GENESIS.md)
+- **Setup & quickstart:** [SETUP](SETUP.md) · [QUICKSTART](QUICKSTART.md)
+- **Specs:** [Phase 2 AI spec](PHASE2_AI_SPEC.md) · [WATCH_FIX_SPEC](WATCH_FIX_SPEC.md)
+- **Fix prompts (chronological iteration log):** [v4](v4_fix_prompt.md) · [v5](v5_fix_prompt.md) · [v6](v6_fix_prompt.md) · [v7](v7_fix_prompt.md) · [v8](v8_fix_prompt.md) · [v9](v9_fix_prompt.md) · [v10](v10_fix_prompt.md) · [v11](v11_fix_prompt.md) · [v12](v12_fix_prompt.md)
+- **Other prompts:** [spawn_fix_prompt](spawn_fix_prompt.md) · [reward_tune_prompt](reward_tune_prompt.md) · [watch_fix_prompt](watch_fix_prompt.md) · [docs_update_prompt](docs_update_prompt.md)
 
 A 2D top-down racing game with drift mechanics, built in Python with Arcade + pymunk, trained by reinforcement learning AI (PPO via Stable-Baselines3). 12 training iterations, 9 distinct reward-shaping strategies, and a pile of hard-won RL lessons.
 

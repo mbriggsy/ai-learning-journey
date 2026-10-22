@@ -1,8 +1,3 @@
----
-aliases: [compound-engineering, CE, compound, compound-deep-dive]
-tags: [research]
----
-
 # Compound Engineering — Deep Dive
 
 Make every unit of engineering work easier than the last. Turn mistakes into institutional knowledge.

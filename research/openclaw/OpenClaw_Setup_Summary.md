@@ -1,8 +1,3 @@
----
-aliases: [openclaw-setup, openclaw-install]
-tags: [research]
----
-
 # 🦞 OpenClaw Installation & Setup
 
 **Session Date:** February 21, 2026  

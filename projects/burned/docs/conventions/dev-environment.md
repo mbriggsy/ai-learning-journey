@@ -29,7 +29,7 @@ Rules for the local dev loop, debugging, dev hooks, and tooling. Read when setti
 
 ## Git topology
 
-- **`projects/burned/` is NOT a standalone repo.** It's a subdirectory of the `ai-learning-journey/` monorepo. The git index is shared with every other project (`undercover-mob-boss/`, `briggsy-playbook/`, etc.) plus root-level config (`.mcp.json`, `.gitignore`, vault files). Running `git status` from `burned/` shows parent-tree files with `../../` path prefixes — easy to skim past as "not my concern" but the index treats them as ordinary staged entries.
+- **`projects/burned/` is NOT a standalone repo.** It's a subdirectory of the `ai-learning-journey/` monorepo. The git index is shared with every other project (`undercover-mob-boss/`, `playbook/`, etc.) plus root-level config (`.mcp.json`, `.gitignore`). Running `git status` from `burned/` shows parent-tree files with `../../` path prefixes — easy to skim past as "not my concern" but the index treats them as ordinary staged entries.
 - **Pre-staged blast radius.** A prior session can leave the index dirty with staged changes that have nothing to do with the current work. `git commit` will sweep ALL of them — yours plus the leftovers — into one commit. Caught 2026-05-09: a 6-file drift fix shipped as a 67-file commit because parent-tree Obsidian + playbook deletions were already staged. Reset-soft + selective re-stage cleans it up *if* you catch it before pushing.
 - **Pre-commit checklist.** Before `git commit`: run `git diff --cached --name-only | wc -l` and confirm the count matches what you staged. If the number's surprising, run `git diff --cached --name-only` and look. Don't commit blind.
 

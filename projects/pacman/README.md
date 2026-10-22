@@ -1,8 +1,3 @@
----
-aliases: [pacman, Pac-Man]
-tags: [project, complete]
----
-
 # Pac-Man
 
 **Status: COMPLETE**
@@ -11,9 +6,7 @@ A faithful browser-based recreation of the classic Pac-Man arcade game, built en
 
 ## Project Map
 
-> Internal docs surfaced for the Obsidian graph.
-
-- [[session-summary]] — full build story + debugging deep-dives
+- [session-summary](session-summary.md) — full build story + debugging deep-dives
 
 ## Fully Autonomous SDLC
 

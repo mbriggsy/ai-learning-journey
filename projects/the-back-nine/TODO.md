@@ -22,19 +22,25 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-10-21, b9-9): build #1 of the D7 queue, the working-year pay check — A1 is LANDED (`e2890887`);
-NEXT is A2, in a FRESH session.** Read `git log` first. The plan is `docs/plans/features/working-year-pay-check-build-spec.md`:
-planned, deepened and reviewed. The doc review's 83 findings were verified against source and challenged by skeptics (`wf_46aab717-201`;
-verdicts in `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-plan-review\verify\`),
-and every surviving fix is applied in place. **U12, the return-path ask, is CUT**: nobody has used the product, so no
-saved plan predates the new answer (Briggsy, 2026-10-21). Build in the plan's commit order:
-1. **Phase A** (engine, inert in the app): ~~A1 U4~~ ✅ `e2890887` → **A2 U3's survivor-year extraction alone (NEXT:
-   extract the survivor-year composition out of `cashTermsForYear` into one exported helper both call; `Object.is` arm
-   over a seeded survivor sweep in `simulate.test.ts`; a pure refactor, every existing test unedited)** → A3 U1's payroll keys + U2 →
-   A4 U1's earnings-test keys + U3 (read 42 U.S.C. §402(e)(2)(D) and its POMS section FIRST — the RIB-LIM × credit
-   primary) → A5 U5's loop reorder + extractions alone, byte-identical → A6 U5's check → A7 U6a. A constants key lands
-   only with the producer its WITNESS row names. Every commit refreshes the README/roadmap test-count claims and runs
-   `pnpm doc:reanchor` + `pnpm verify:doc-stats` (CI runs it before the tests).
+▶ **START HERE (2026-10-22, b9-10): build #1 of the D7 queue, the working-year pay check — A1, A2 and A3 are LANDED
+(`e2890887`, `512df53f`, `5d44ed68`); NEXT is A4, in a FRESH session.** Read `git log` first. The plan is
+`docs/plans/features/working-year-pay-check-build-spec.md`: planned, deepened and reviewed (`wf_46aab717-201`; verdicts in
+`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-plan-review\verify\`).
+**U12, the return-path ask, is CUT**: nobody has used the product, so no saved plan predates the new answer (Briggsy,
+2026-10-21). Build in the plan's commit order:
+1. **Phase A** (engine, inert in the app): ~~A1 U4~~ ✅ `e2890887` → ~~A2 the survivor-year extraction~~ ✅ `512df53f`
+   (`survivorYearBenefit` in `simulate.ts`, the one home of the §202 year; its `winner` is `'own' | 'survivor' | 'none'`,
+   a tie is `'own'`) → ~~A3 U1's payroll keys + U2~~ ✅ `5d44ed68` (`src/engine/constants/workingYears.ts`,
+   `WORKING_YEARS_YEAR`; `payrollTaxForYear` → `{ socialSecurity, medicare, additionalMedicare, total }`) → **A4 U1's
+   earnings-test keys + U3 (NEXT).** FIRST read the RIB-LIM primary's answer: `research-riblim.json` + `verdict-riblim.json`
+   in the research folder below (read and skeptic-checked by `wf_69c7171f-55e`, launched at the b9-10 close; if the files
+   are missing or the two disagree, that IS the first job — KTD11's last bullet: build what the law says, and only an OPEN
+   answer ships a gloomy stopgap with a key). The keys ($24,480 / $65,160, rates 1/2 and 1/3, FR Doc 2025-19763,
+   §403(f)(3)) join `workingYears.ts` with WITNESS rows bound to `src/engine/earningsTest.ts`. The producer reads the
+   survivor year only through `survivorYearBenefit`, never a second composition (insight 081). Then → A5 U5's loop
+   reorder + extractions alone, byte-identical → A6 U5's check → A7 U6a. A constants key lands only with the producer its
+   WITNESS row names. Every commit refreshes the README/roadmap test-count claims and runs `pnpm doc:reanchor` +
+   `pnpm verify:doc-stats` (CI runs it before the tests), and a planted-mutant pass (the harness below).
 2. **Phase B**, ONE go-live commit: U6b + U7 + U8 + U9 + U13, `datesolo`'s own W, the short and stale-W witness seeds,
    and the intake-fold edits; `verify:fit` green at that commit.
 3. **Phase C**: U10 (every date seed gets W; measured), then U11 (docs). Then a whole-file review and `/distill`.
@@ -49,13 +55,20 @@ main-thread money picture (the plan's *Departures from the ruling*, item 4). The
 Briggsy saves his first real plan; the tool is built for him (a friend using it is "a crazy outside chance", his words, 2026-10-21). The day the check ships, the working-year row's "It doesn't check that your pay really
 covers all of that…" sentence comes out for a household with W (U9). Build 2, the surplus question, follows this build.
 
-**SESSION 2026-10-21 (b9-9):**
-**STATE on the final tree, by exit code (re-run at the close):** typecheck · lint · `verify:doc-stats` · build · `verify:bundle`
-272.5 KiB · `verify:aca` (verified 2026-10-20) · `verify:state-tax` — all exit 0; the full suite green on A1's tree (the
-count lives under `verify:doc-stats`).
-**CI:** GREEN by run id on the reviewed plan `9edcd3c3` (39712473541; `dd5222e5` rode the same push). A1 `e2890887`'s run
-39714577412 was IN PROGRESS at the close, and the squeaky commit's run follows: read both first (`gh run view <id>`;
-`gh run list --commit` needs the FULL sha).
+**SESSION 2026-10-22 (b9-10, overnight while he slept):**
+**STATE on A3's tree, by exit code:** typecheck · lint · `verify:doc-stats` · build · `verify:bundle` 272.5 KiB — all exit 0;
+the full suite green (the count lives under `verify:doc-stats`). `verify:aca` / `verify:state-tax` were not re-run (no
+constants they gate moved).
+**CI:** GREEN by run id on A1 `e2890887` (39714577412) and A2 `512df53f` (39719780603, both jobs). A3 `5d44ed68`'s run was IN
+PROGRESS at the close: read it first (`gh run list --commit <FULL sha>`, then `gh run view <id>`).
+**THE A2+A3 REVIEW (`wf_69c7171f-55e`, launched at the close):** three fresh-context lenses (correctness / the law and every
+citation / fitness for A4–A7's contracts), each finding challenged at source by a skeptic. Findings and verdicts land in
+`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a2a3-review\` (`<lens>.md`,
+`<lens>-verdicts.md`). Before A4: act on every CONFIRMED / PARTIAL verdict (fix + commit), never on a finding a skeptic
+refuted, and never on a fix a skeptic corrected without the correction.
+**THE MUTATION HARNESS (durable):** `mutants-spec.cjs` in the re-anchor tools folder (UNFINISHED's path), run from the
+project dir as `node <tools>\mutants-spec.cjs <spec.json>`; `mutants-spec.example-a3.json` is A3's eight-mutant spec. Each
+plant must land exactly once, the named tests must go red, and every file is restored and byte-compared.
 **FOR HIM (one read, no rush):** two `docs/product.md` spots still lean on friends using the tool — R13's "kept on honesty
 grounds for friend-users" and the test-driver list naming real friends' households. The tool is built for him (his
 correction, 2026-10-21); whether R13's reason and the test-driver framing change is his call.
@@ -673,6 +686,24 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 *Engineering lessons live in [`docs/insights/`](docs/insights/) (one file per lesson; cite by full path + slug).
 These are the mechanical ones that keep costing hours.*
 
+- **From the b9-10 close (2026-10-22, A2 and A3 landed overnight):**
+  - **Another Claude session works in the same monorepo** (`projects/hooks/` files showed modified under `git status ..`
+    mid-session, and MEMORY.md changed on disk). Commit by explicit paths only (`git commit -- <paths>`); check that
+    `git diff --cached --name-only` holds nothing outside `projects/the-back-nine/` before every commit.
+  - **Windows has carried RebootRequired + RebootPending since 2026-10-15 01:43** (last boot 2026-10-08 05:14) and did not
+    auto-restart through six 02:00–08:00 windows. Still check both keys before overnight work, but it is not forcing.
+  - **`pnpm doc:reanchor` skips `index.ts` too** (two are tracked: `src/engine/constants/index.ts` and
+    `src/engine/reference/solver-cases/index.ts`), the ambiguous-basename class. Run `git grep -n "index\.ts:[0-9]"` and fix
+    by content. Its missed-bare-token class recurred: backlog's `:401-407` sat ~90 characters after `simulate.ts:396-399`,
+    and pair-check's DOCHUNK section caught it.
+  - **The single-source gate in `constants.shape.test.ts` scans EVERY `src` file, tests included**; only `engine/constants/`
+    is exempt. A test elsewhere that types a DISTINCTIVE figure (now including `184500`) reds. Read the figure from the
+    constant and type only the derived dollars.
+  - **A pure refactor's proof** (A2's arm): a FROZEN verbatim copy of the replaced code in the test, swept over a seeded
+    population, green on the untouched engine FIRST, then green after the extraction, plus planted mutants on the new code.
+  - **Window cost:** A2 + A3 together, each with a mutant pass, a re-anchor and two full-suite runs, plus the session's
+    reading, brought the window to ~41 % by A3's commit. A4 (the month-by-month earnings test and its credits) is larger:
+    build it fresh, alone.
 - **From the b9-9 close (2026-10-21, the review verified and applied; A1 landed):**
   - **Nobody uses the product yet, and it is built for Briggsy alone.** His words: "There is no one who has used this
     product yet, not even me" and "This tool is for me, if one of my friends uses it, it'll be a crazy outside chance."

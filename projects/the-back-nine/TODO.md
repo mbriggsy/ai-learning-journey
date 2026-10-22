@@ -22,13 +22,15 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-10-21, b9-9): build #1 of the D7 queue, the working-year pay check, from its REVIEWED plan.**
-Read `git log` first. The plan is `docs/plans/features/working-year-pay-check-build-spec.md`: planned, deepened and
-reviewed. The doc review's 83 findings were verified against source and challenged by skeptics (`wf_46aab717-201`;
+▶ **START HERE (2026-10-21, b9-9): build #1 of the D7 queue, the working-year pay check — A1 is LANDED (`e2890887`);
+NEXT is A2, in a FRESH session.** Read `git log` first. The plan is `docs/plans/features/working-year-pay-check-build-spec.md`:
+planned, deepened and reviewed. The doc review's 83 findings were verified against source and challenged by skeptics (`wf_46aab717-201`;
 verdicts in `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-plan-review\verify\`),
 and every surviving fix is applied in place. **U12, the return-path ask, is CUT**: nobody has used the product, so no
 saved plan predates the new answer (Briggsy, 2026-10-21). Build in the plan's commit order:
-1. **Phase A** (engine, inert in the app): A1 U4 → A2 U3's survivor-year extraction alone → A3 U1's payroll keys + U2 →
+1. **Phase A** (engine, inert in the app): ~~A1 U4~~ ✅ `e2890887` → **A2 U3's survivor-year extraction alone (NEXT:
+   extract the survivor-year composition out of `cashTermsForYear` into one exported helper both call; `Object.is` arm
+   over a seeded survivor sweep in `simulate.test.ts`; a pure refactor, every existing test unedited)** → A3 U1's payroll keys + U2 →
    A4 U1's earnings-test keys + U3 (read 42 U.S.C. §402(e)(2)(D) and its POMS section FIRST — the RIB-LIM × credit
    primary) → A5 U5's loop reorder + extractions alone, byte-identical → A6 U5's check → A7 U6a. A constants key lands
    only with the producer its WITNESS row names. Every commit refreshes the README/roadmap test-count claims and runs
@@ -47,11 +49,16 @@ main-thread money picture (the plan's *Departures from the ruling*, item 4). The
 Briggsy saves his first real plan; the tool is built for him (a friend using it is "a crazy outside chance", his words, 2026-10-21). The day the check ships, the working-year row's "It doesn't check that your pay really
 covers all of that…" sentence comes out for a household with W (U9). Build 2, the surplus question, follows this build.
 
-**SESSION 2026-10-21 (b9-8):**
+**SESSION 2026-10-21 (b9-9):**
 **STATE on the final tree, by exit code (re-run at the close):** typecheck · lint · `verify:doc-stats` · build · `verify:bundle`
-272.5 KiB · `verify:aca` (verified 2026-10-20) · `verify:state-tax` — all exit 0. No code changed this session (the plan only).
-**CI:** GREEN by run id on the plan `84983ae1` (39670286853), on the b9-7 close `2a045351` (39660401052) and the council's
-ruling `8c32a8c7` (39656951906). The squeaky commit's run follows: read it first (`gh run view <id>`).
+272.5 KiB · `verify:aca` (verified 2026-10-20) · `verify:state-tax` — all exit 0; the full suite green on A1's tree (the
+count lives under `verify:doc-stats`).
+**CI:** GREEN by run id on the reviewed plan `9edcd3c3` (39712473541; `dd5222e5` rode the same push). A1 `e2890887`'s run
+39714577412 was IN PROGRESS at the close, and the squeaky commit's run follows: read both first (`gh run view <id>`;
+`gh run list --commit` needs the FULL sha).
+**FOR HIM (one read, no rush):** two `docs/product.md` spots still lean on friends using the tool — R13's "kept on honesty
+grounds for friend-users" and the test-driver list naming real friends' households. The tool is built for him (his
+correction, 2026-10-21); whether R13's reason and the test-driver framing change is his call.
 **THE PAY-CHECK PROBE (for build 1's re-measure):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-probe\`
 (`paycheck.mts` + `paycheck-years.json` + the skeptic's `survivor.mts` / `survivor-rows.json`). Absolute imports into `src/`;
 re-point each script's output path off the dead session scratchpad before running. Run it from the project dir with tsx.
@@ -74,7 +81,7 @@ re-point each script's output path off the dead session scratchpad before runnin
 - **States:** the priced roster stays NC, PA and FL "for now" (his ruling 2026-10-21). His generic-state idea (ask the state's rate, and whether it taxes Social Security) is filed on *Unpriced states — a confident winner computed with zero state income tax*.
 - **The pilot's working rule (a HOW call, not his ruling):** no new process or tooling work unless a D7 build needs it. October ran 55 docs/bookkeeping commits to 17 features; that ratio is part of what took us off course.
 **WHERE THE SOLVE STANDS (carried from b9-6, unchanged):** ONE pricing change since the 2026-10-12 (b9-2) close — ledger v12, the working-year tax floor (`b4bbbd3e`): a reprice of `tax` + NC's `stateTax` gated row-wide on `reach: 'working-years'`, UNSCORED (the solver runs only on the all-retired spine, so `SOLVER_CODE_VERSION` stays 11; the date-route Roth preview moves, unpersisted); no roster change — THE POOL (`225d8da4`, laws in `docs/architecture.md`'s *The pooled solve*), the all-in objective (v10, `6dab9ec0`), the budgetless survivor-medical lean (v11, `c1ada867` — the current `SOLVER_CODE_VERSION`; a scored spend-side pricing change, no roster change), the v9 window walk, rosters `retired`-type 93 / `health` 97 / `healthgap` 101; THE APP (production, his laptop, P = 12): `retired` 36.5 s · `nc` 39.8 s · `healthnc` 150.9 s (ANY roster growth re-times `healthnc` first, `e2e/held/solve-timing.spec.ts`). The PHONE half of the pending-line entry is still owed (a ≤ 3-core device gets no pool).
-**UNFINISHED:** the distills are DONE (2026-10-21, b9-7): insights 141 (a headline on the population its caveat names), 142 (a disclosure instead of a used number — D7) and 143 (reach enumerates every consumer), plus refinements on 126 (a plan witness LABEL) and 136 (the re-anchor verification method). Still open from them: move the re-anchor verification scripts (`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-reanchor-verification-tools\`) into the repo beside the register Tier 4 re-anchor entry, so they stop living only in a session folder.
+**UNFINISHED:** the distills are DONE (2026-10-21, b9-7): insights 141 (a headline on the population its caveat names), 142 (a disclosure instead of a used number — D7) and 143 (reach enumerates every consumer), plus refinements on 126 (a plan witness LABEL) and 136 (the re-anchor verification method). Still open from them: move the re-anchor verification scripts (`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-reanchor-verification-tools\`, now with `content-check.mjs` — b9-9's cited-line content check) into the repo beside the register Tier 4 re-anchor entry, so they stop living only in a session folder. No distill is owed for b9-9 yet: the pay-check build's whole-file review and `/distill` run at its end (the plan's Phase C).
 **OWED (carried from b9-6):** to HIM — the "Income Medicare looks at" heading (⚑, `docs/council-log.md` 2026-10-20 — the figure now also sets the income-tax base). The NIIT clause's "here" is no longer a word call: under D7 the surtax gets figured (queue 3), and the clause goes. OWED (both carried from b9-2, still live): (a) the engine measurement of the discount a crossing dollar loses, for the scope entry (Tier 0 *The health sheet's "26¢ on each dollar converted" holds only inside the ~$18,600 of room…*) — only hand figures exist, from the 2026-10-15 early-claim Caddie walk's hunter in b9-toronto1 (`healthss` $9,479 at the anchor; about $8,374 at the ~$84,600 line, the same on `healthnc`'s line — both seeds carry `slcspMonthlyToday` 1,400); measure through the engine on `healthnc`, `healthgap` (the register's Prescription (1) names it — its cliff is live, "about 2 of 10 futures") and `healthss` (a paired CRN run across the line, the anchor year's readout) before his words; (b) the Caddie tape rows awaiting his read — 2026-10-06 all-in, 2026-10-09 survivor-medical, 2026-10-14 survivor spending-basis, and 2026-10-15's four (held-flat, NC cents, early-claim cents, the same-age Medicare card), 2026-10-16's one (the one-figure card's first-year frame + his trend clause), 2026-10-16 (b9-1)'s one (his three rulings + his two in-session rulings), and 2026-10-19 (b9-2)'s one (his four b9-1 walk rulings + his in-session Medicare re-ruling), and 2026-10-21 (b9-6)'s one (the working-year tax row, three walks — his in-chat reads of its DRAFTS are on it as E20, not a read of the shipped face) — `docs/caddie/tape.md`.
 **Keep out of every commit from here:** the three family-feud working files (`../family-feud/newsletter/…`) are uncommitted on purpose; never stage them from this project.
 
@@ -666,6 +673,24 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 *Engineering lessons live in [`docs/insights/`](docs/insights/) (one file per lesson; cite by full path + slug).
 These are the mechanical ones that keep costing hours.*
 
+- **From the b9-9 close (2026-10-21, the review verified and applied; A1 landed):**
+  - **Nobody uses the product yet, and it is built for Briggsy alone.** His words: "There is no one who has used this
+    product yet, not even me" and "This tool is for me, if one of my friends uses it, it'll be a crazy outside chance."
+    The reviewers, the council and the b9-8 plan all assumed saved plans and friend users; a whole unit (U12) existed for
+    plans that cannot exist. Before designing any migration, legacy-vault or "returning household" path, read the memory
+    `project-back-nine-no-users-yet`. A saved shape is not a one-way door until HIS first real save.
+  - **Never apply a verifier's resolution unchallenged.** The skeptics caught real defects in the verifiers' own fixes:
+    a bottom line that rounds to −0 ("Left over $0" while the engine draws $0.40), a couple's $8,640 expected on a lone
+    worker ($240), a yearly default under a period rule whose 8,000 floor only means something under a month default.
+  - **The verification fan-out cost** ~2.6M subagent tokens and 32 minutes (9 agents); the reviewed plan plus A1 took the
+    window to ~47 %. Build A2 onward fresh.
+  - **The re-anchor after an engine edit.** `pnpm doc:reanchor HEAD` (dry run) then `--apply` made 148 edits, including
+    dated logs and insights (the precedent `b4bbbd3e` accepted the same). Then: hand-fix each REVIEW token by content
+    (a reworded cited line); run `pair-check.mjs` + `crossline-sweep.mjs` + `content-check.mjs` from the tools folder.
+    `pair-check` flags a HISTORICAL token as MISMATCH (TODO's "`model.ts`'s `:658` … had been stale") — a recorded
+    number stays. `crossline-sweep` found two bare `:151-152` docstring tokens the tool cannot see (fixed by hand).
+  - **A plan doc under `docs/` must carry no line-numbered code citation and no count:** `verify:doc-stats` scans every
+    doc there for both.
 - **From the b9-8 close (2026-10-21, the pay-check plan: research → plan → deepen → doc review):**
   - **A plan cycle ate the window.** `/brief`, the two-primary research fan-out, the plan, a nine-agent deepening and a
     five-agent doc review reached ~55 % with no code written. That confirms b9-4: build in a fresh session.

@@ -52,8 +52,10 @@ jobs:
         with:
           node-version: '24.13'
       # block-webfetch.sh builds its payload with jq. A missing jq must fail
-      # here by name, not as a confusing hook-test failure.
-      - run: node --version && jq --version && bash --version | head -1
+      # here by name, not as a confusing hook-test failure. statusline.test.mjs
+      # runs statusline.py under python3 and skips when it finds no Python 3.8+,
+      # so a missing python3 must fail here by name too, not as a quiet skip.
+      - run: node --version && jq --version && bash --version | head -1 && python3 --version
       # Each suite runs the files bash lists. node --test reads a glob that
       # matches nothing as 0 tests and exits 0, so a renamed tests/ folder
       # would go green with no suite run; a file with no tests still counts as

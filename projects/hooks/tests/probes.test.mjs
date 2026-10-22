@@ -19,9 +19,9 @@ import {
 } from '../probes/lib.mjs';
 import { BEGIN, END, renderBlock, writeReport } from '../probes/report.mjs';
 import {
-  DEFS, EXPECTED, LOAD_BEARING, PROBE_CEILING_MS, UNSETTLED_OK, childrenOf, cleanupTargets, endChildren, endEach, gitView, hashParts, judge,
-  leftoversSaid, loadProbes, measured, parseCimProcesses, parsePsProcesses, passCheck, passedOn, probeHash, recordOf, treeOf, withCeiling,
-  withLock, writePasses,
+  DEFS, EXPECTED, JOBS, LOAD_BEARING, PROBE_CEILING_MS, Q8_BG, UNSETTLED_OK, bgLaunchId, childrenOf, cleanup, cleanupTargets, endChildren, endEach,
+  gitView, hashParts, judge, leftoversSaid, loadProbes, measured, parseCimProcesses, parsePsProcesses, passCheck, passedOn, probeHash, recordOf,
+  treeOf, withCeiling, withLock, writePasses,
 } from '../probes/run.mjs';
 import { RULES } from './leak.mjs';
 
@@ -339,6 +339,211 @@ describe('--cleanup deletes only what a probe made', () => {
   test('a run folder with no records, or none at all, yields nothing', () => {
     assert.deepEqual(cleanupTargets(fresh('empty')), []);
     assert.deepEqual(cleanupTargets(path.join(dir, 'no-such-run')), []);
+  });
+});
+
+// O24. Every root is a temp folder: the real ~/.claude/jobs holds real
+// background sessions' folders, and no test may list it.
+describe("--cleanup also deletes the job folder Q8's --bg session left (O24)", () => {
+  const short = () => randomUUID().slice(0, 8);
+  const sid = (id) => `${id}${randomUUID().slice(8)}`;
+  const roots = () => ({ tmp: fresh('tmp'), projects: fresh('projects'), tasks: fresh('tasks'), cache: null, jobs: fresh('jobs') });
+  // What `claude --bg` prints once a session is up (agent-view.md's sample).
+  const launched = (id) => [
+    `backgrounded · ${id}`,
+    '  claude agents             list sessions',
+    `  claude attach ${id}    open in this terminal`,
+    `  claude logs ${id}      show recent output`,
+    `  claude stop ${id}      stop this session`,
+    '',
+  ].join('\n');
+  // A run whose Q8 bg arm made `ws` and kept a launch record, as the def
+  // writes both: <run>/Q8/made.json and <run>/Q8/bg/bg-launch.json.
+  const bgRun = (ws, stdout, stderr = '') => {
+    const run = fresh('run');
+    fs.mkdirSync(path.join(run, 'Q8', 'bg'), { recursive: true });
+    fs.writeFileSync(path.join(run, 'Q8', 'made.json'), JSON.stringify([ws]));
+    fs.writeFileSync(path.join(run, 'Q8', 'bg', 'bg-launch.json'), JSON.stringify({ code: 0, signal: null, stdout, stderr, ms: 900 }, null, 2));
+    return run;
+  };
+  // A job folder as the CLI leaves one: tmp/ and, unless state is undefined,
+  // a state.json (a string is written as is).
+  const job = (jobs, name, state) => {
+    const d = path.join(jobs, name);
+    fs.mkdirSync(path.join(d, 'tmp'), { recursive: true });
+    if (state !== undefined) fs.writeFileSync(path.join(d, 'state.json'), typeof state === 'string' ? state : JSON.stringify(state));
+    return d;
+  };
+  // A probe workspace in the temp root, and a run whose launch record names `id`.
+  const setUp = (id = short()) => {
+    const r = roots();
+    const ws = path.join(r.tmp, 'claude-probe-q8-bg-abc');
+    fs.mkdirSync(ws);
+    return { r, ws, id, run: bgRun(ws, launched(id)) };
+  };
+
+  test('JOBS is ~/.claude/jobs, where every background session keeps its folder', () => {
+    assert.equal(JOBS, path.join(os.homedir(), '.claude', 'jobs'));
+  });
+
+  test('its folder goes with the workspace; every other job folder, the settled folder and pins.json stay', () => {
+    const { r, ws, id, run } = setUp();
+    const mine = job(r.jobs, id, { state: 'stopped', sessionId: sid(id), daemonShort: id, cwd: ws });
+    // A live session of someone else's, and one started in a probe-named
+    // folder this run never made.
+    const other = short();
+    job(r.jobs, other, { state: 'done', sessionId: sid(other), cwd: path.join(dir, 'the-back-nine') });
+    const stranger = short();
+    job(r.jobs, stranger, { state: 'stopped', sessionId: sid(stranger), cwd: path.join(r.tmp, 'claude-probe-q8-bg-zzz') });
+    fs.mkdirSync(path.join(r.jobs, 'settled'));
+    fs.writeFileSync(path.join(r.jobs, 'pins.json'), '[]');
+    const notes = [];
+    assert.deepEqual(cleanupTargets(run, { ...r, notes }).sort(), [ws, mine].sort());
+    assert.deepEqual(notes, []);
+  });
+
+  test("each ended state goes, and so does a session started in a folder inside the workspace or a worktree whose originCwd is the workspace", () => {
+    for (const [label, state] of [
+      ['done', (ws, id) => ({ state: 'done', sessionId: sid(id), cwd: ws })],
+      ['failed', (ws, id) => ({ state: 'failed', sessionId: sid(id), cwd: ws })],
+      ['inside the workspace', (ws, id) => ({ state: 'stopped', sessionId: sid(id), cwd: path.join(ws, 'repo') })],
+      ['a worktree', (ws, id) => ({ state: 'stopped', sessionId: sid(id), cwd: path.join(dir, 'worktree-x'), originCwd: ws })],
+      ['no sessionId', (ws) => ({ state: 'stopped', cwd: ws })],
+      ['the workspace spelled in the other case', (ws, id) => ({ state: 'stopped', sessionId: sid(id), cwd: process.platform === 'win32' ? ws.toUpperCase() : ws })],
+    ]) {
+      const { r, ws, id, run } = setUp();
+      const mine = job(r.jobs, id, state(ws, id));
+      const notes = [];
+      assert.deepEqual(cleanupTargets(run, { ...r, notes }).sort(), [ws, mine].sort(), label);
+      assert.deepEqual(notes, [], label);
+    }
+  });
+
+  test("a folder that can't show it is this run's ended session is kept, and a note says why", () => {
+    const cases = [
+      ['still working', (ws, id) => ({ state: 'working', sessionId: sid(id), cwd: ws }), (id) => new RegExp(`reads "working", so it may still be running: claude stop ${id}, then claude rm ${id}`)],
+      ['blocked', (ws, id) => ({ state: 'blocked', sessionId: sid(id), cwd: ws }), () => /reads "blocked", so it may still be running/],
+      ['no state', (ws, id) => ({ sessionId: sid(id), cwd: ws }), () => /reads null, so it may still be running/],
+      ['an unknown state', (ws, id) => ({ state: 'paused', sessionId: sid(id), cwd: ws }), () => /reads "paused"/],
+      ['no state.json', () => undefined, () => /no readable state\.json/],
+      ['a torn state.json', () => '{"state":"sto', () => /no readable state\.json/],
+      ['a state.json that is no object', () => '["stopped"]', () => /no readable state\.json/],
+      ['another folder', (ws, id) => ({ state: 'stopped', sessionId: sid(id), cwd: path.join(dir, 'the-back-nine') }), () => /names no workspace this run made/],
+      ['a look-alike sharing the prefix', (ws, id) => ({ state: 'stopped', sessionId: sid(id), cwd: `${ws}x` }), () => /names no workspace this run made/],
+      ['a relative cwd', (ws, id) => ({ state: 'stopped', sessionId: sid(id), cwd: path.basename(ws) }), () => /names no workspace this run made/],
+      ['another session', (ws) => ({ state: 'stopped', sessionId: randomUUID(), cwd: ws }), () => /names another session/],
+    ];
+    for (const [label, state, why] of cases) {
+      const { r, ws, id, run } = setUp();
+      const kept = job(r.jobs, id, state(ws, id));
+      const notes = [];
+      assert.deepEqual(cleanupTargets(run, { ...r, notes }), [ws], label);
+      assert.equal(notes.length, 1, `${label}: ${notes}`);
+      assert.ok(notes[0].startsWith(`kept ${kept} (`), `${label}: ${notes[0]}`);
+      assert.match(notes[0], why(id), label);
+      assert.ok(fs.existsSync(kept), label);
+    }
+    // A file in the folder's place, and a link to a folder that would pass.
+    const { r, ws, id, run } = setUp();
+    fs.writeFileSync(path.join(r.jobs, id), 'not a folder');
+    const notes = [];
+    assert.deepEqual(cleanupTargets(run, { ...r, notes }), [ws]);
+    assert.match(notes[0], /not a plain folder/);
+    const real = job(fresh('elsewhere'), 'real', { state: 'stopped', sessionId: sid(id), cwd: ws });
+    fs.rmSync(path.join(r.jobs, id));
+    let linked = true;
+    try { fs.symlinkSync(real, path.join(r.jobs, id), 'junction'); } catch { linked = false; }
+    if (linked) {
+      const linkNotes = [];
+      assert.deepEqual(cleanupTargets(run, { ...r, notes: linkNotes }), [ws]);
+      assert.match(linkNotes[0], /not a plain folder/);
+      assert.ok(fs.existsSync(path.join(real, 'state.json')));
+    }
+  });
+
+  test('no record, a refused launch, or a gone folder leave nothing to look for and say nothing', () => {
+    const r = roots();
+    const ws = path.join(r.tmp, 'claude-probe-q8-bg-abc');
+    const id = short();
+    job(r.jobs, id, { state: 'stopped', sessionId: sid(id), cwd: ws });
+    // No launch record: the bg arm never ran.
+    const bare = fresh('run');
+    fs.mkdirSync(path.join(bare, 'Q8'));
+    fs.writeFileSync(path.join(bare, 'Q8', 'made.json'), JSON.stringify([ws]));
+    // The CLI refused the folder: no session started, whatever id-like text it printed.
+    const refused = bgRun(ws, `claude stop ${id}\n`, 'Workspace not trusted. Run `claude` in <ws> once and accept the trust prompt, then retry.\n');
+    // The record names an id whose folder is gone.
+    const gone = bgRun(ws, launched(short()));
+    for (const [label, run] of [['no record', bare], ['refused', refused], ['gone', gone]]) {
+      const notes = [];
+      assert.deepEqual(cleanupTargets(run, { ...r, notes }), [ws], label);
+      assert.deepEqual(notes, [], label);
+    }
+    assert.deepEqual(bgLaunchId(bare), { id: null });
+    assert.deepEqual(bgLaunchId(refused), { id: null });
+  });
+
+  test('the id comes only from the launch record Q8 kept, read the way its def reads it', () => {
+    const src = fs.readFileSync(path.join(DEFS, 'q08-session-kind-env.mjs'), 'utf8');
+    for (const re of [Q8_BG.refused, ...Q8_BG.ids]) assert.ok(src.includes(String(re)), `${re} is no longer in q08's def: make Q8_BG read as the def does`);
+    assert.ok(src.includes(`${Q8_BG.ids[0]}.exec(text) ?? ${Q8_BG.ids[1]}.exec(text)`), "q08's def no longer tries the two patterns in Q8_BG's order");
+    assert.ok(src.includes('const text = `${launch.stdout}\\n${launch.stderr}`;'), "q08's def no longer joins stdout and stderr that way");
+    assert.ok(src.includes("arm(ctx, 'bg')") && src.includes("path.join(out, 'bg-launch.json')"), "q08's def no longer keeps its launch at <run>/Q8/bg/bg-launch.json");
+
+    const id = short();
+    const record = (launch) => {
+      const run = fresh('run');
+      fs.mkdirSync(path.join(run, 'Q8', 'bg'), { recursive: true });
+      fs.writeFileSync(path.join(run, 'Q8', 'bg', 'bg-launch.json'), typeof launch === 'string' ? launch : JSON.stringify(launch));
+      return bgLaunchId(run);
+    };
+    const said = (stdout, stderr = '') => record({ code: 0, signal: null, stdout, stderr, ms: 1 });
+    assert.deepEqual(said(launched(id)), { id });
+    assert.deepEqual(said(`Starting background service…\n${launched(id)}`), { id });
+    assert.deepEqual(said('', `claude stop ${id}\n`), { id }, 'the second pattern, on stderr');
+    assert.match(said('Starting background service…\n').why, /names no session id/);
+    // Q8's own pattern reads a color code glued to the id, or a word: no
+    // short id, so no folder is looked for.
+    for (const text of [`backgrounded · \u001b[36m${id}\u001b[39m\n`, 'backgrounded · settled\n', `backgrounded · ${id.toUpperCase().replace(/^./, 'A')}\n`, 'backgrounded · abc123\n']) {
+      assert.match(said(text).why, /not a background session's short id/, JSON.stringify(text));
+    }
+    assert.match(record('{"stdout": "backgr').why, /unreadable or holds no launch output/);
+    assert.match(record({ stdout: null, stderr: '' }).why, /unreadable or holds no launch output/);
+
+    // A note, never a target, when the record names no usable id.
+    const { r, ws } = setUp();
+    const run = bgRun(ws, `backgrounded · \u001b[36m${id}\u001b[39m\n`);
+    job(r.jobs, id, { state: 'stopped', sessionId: sid(id), cwd: ws });
+    const notes = [];
+    assert.deepEqual(cleanupTargets(run, { ...r, notes }), [ws]);
+    assert.equal(notes.length, 1);
+    assert.match(notes[0], /^no --bg job folder looked for: Q8 read ".*" from its launch/);
+  });
+
+  test('cleanup() deletes the job folder with the rest, says what it kept and why, and leaves the exit code to its caller', () => {
+    const { r, ws, id, run } = setUp();
+    const mine = job(r.jobs, id, { state: 'done', sessionId: sid(id), cwd: ws });
+    const said = [];
+    const warned = [];
+    const exitBefore = process.exitCode;
+    const res = cleanup(run, { ...r, say: (l) => said.push(l), warn: (l) => warned.push(l) });
+    assert.equal(res.failed, 0);
+    assert.deepEqual(res.targets.sort(), [ws, mine].sort());
+    assert.deepEqual(said.sort(), [`deleted ${ws}`, `deleted ${mine}`].sort());
+    assert.deepEqual(warned, []);
+    assert.ok(!fs.existsSync(ws) && !fs.existsSync(mine));
+    // A later run on the same (now deleted) workspace whose session still
+    // works: its folder stays, and the line says how to stop it.
+    const id2 = short();
+    const run2 = bgRun(ws, launched(id2));
+    const working = job(r.jobs, id2, { state: 'working', sessionId: sid(id2), cwd: ws });
+    said.length = 0;
+    const res2 = cleanup(run2, { ...r, say: (l) => said.push(l), warn: (l) => warned.push(l) });
+    assert.deepEqual(res2, { targets: [ws], failed: 0 });
+    assert.ok(fs.existsSync(working));
+    assert.ok(said.some((l) => l.startsWith(`kept ${working} (`) && l.includes(`claude stop ${id2}`)), said.join('\n'));
+    assert.deepEqual(warned, []);
+    assert.equal(process.exitCode, exitBefore);
   });
 });
 

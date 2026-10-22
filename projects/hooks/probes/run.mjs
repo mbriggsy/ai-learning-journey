@@ -4,7 +4,9 @@
 //
 //   node run.mjs [--only Q1,Q2] [--out <dir>]
 //   node run.mjs --cleanup <run dir>    delete the throwaway probe sessions
-//                                       that run made (transcripts, workspaces)
+//                                       that run made (transcripts,
+//                                       workspaces, a --bg session's job
+//                                       folder)
 //
 // Each probe answers one question the flow's design relies on, by running
 // throwaway headless sessions (lib.mjs) and reading what their hooks saw. It
@@ -45,6 +47,8 @@ import { CAPTURE, HERE, cliVersion, gitEnv, sleep } from './lib.mjs';
 
 export const FLOW_PROBES = path.join(os.homedir(), '.claude', 'flow', 'probes');
 export const PROJECTS = path.join(os.homedir(), '.claude', 'projects');
+// Where background sessions keep their job folders (see bgJob).
+export const JOBS = path.join(os.homedir(), '.claude', 'jobs');
 export const DEFS = path.join(HERE, 'defs');
 const LIB = path.join(HERE, 'lib.mjs');
 
@@ -215,6 +219,113 @@ const slug = (p) => p.replace(/[^A-Za-z0-9]/g, '-');
 // A name or path as the file system compares it: case-blind on Windows.
 const fold = (s) => (process.platform === 'win32' ? s.toLowerCase() : s);
 
+// How Q8's --bg arm (defs/q08-session-kind-env.mjs, bgArm) reads its launch's
+// output: the stdout and stderr it kept in <run>/Q8/bg/bg-launch.json, joined
+// by a newline; a launch the CLI refused (an untrusted folder) started nothing,
+// and otherwise the session's short id is the first match of `ids`, in order.
+// Copied here, not imported: the def keeps them inline, and editing it to
+// export them would change its hash and void Q8's verdict. tests/probes.test.mjs
+// checks each one still stands in the def word for word.
+export const Q8_BG = { refused: /not trusted/i, ids: [/backgrounded\W+([0-9a-z]{6,})/i, /claude stop ([0-9a-z]{6,})/i] };
+
+// A background session's short id: the first 8 characters of its session
+// UUID. The 2.1.307 binary names a new job `u=f??v.slice(0,8)` (v the new
+// session id); agent-view.md's sample launch prints the id 7c5dcf5d; and each
+// of the four job folders on this machine on 2026-10-22 was named so, equal
+// to its state.json's sessionId prefix and daemonShort. Q8's pattern is
+// looser ({6,}, any letter): what it reads that has another shape is no
+// session's folder name (an ANSI color code glued to the id, or a word such
+// as `settled`, a folder the binary's own cleanup reads under the jobs root),
+// so it names no folder here.
+const SHORT_ID = /^[0-9a-f]{8}$/;
+
+// The short id Q8's --bg arm read out of its launch, from the record that arm
+// kept and nothing else: {id}, or {id: null} with `why` when there was a
+// launch record but no usable id in it. No record, or a refused launch, is
+// {id: null} alone: no session started, so no folder can be its.
+export function bgLaunchId(runDir) {
+  const file = path.join(runDir, 'Q8', 'bg', 'bg-launch.json');
+  if (!fs.existsSync(file)) return { id: null };
+  const launch = readJson(file);
+  if (typeof launch?.stdout !== 'string' || typeof launch.stderr !== 'string') return { id: null, why: `${file} is unreadable or holds no launch output` };
+  const text = `${launch.stdout}\n${launch.stderr}`;
+  if (Q8_BG.refused.test(text)) return { id: null };
+  const id = (Q8_BG.ids[0].exec(text) ?? Q8_BG.ids[1].exec(text))?.[1];
+  if (!id) return { id: null, why: "Q8's launch record names no session id" };
+  if (!SHORT_ID.test(id)) return { id: null, why: `Q8 read ${JSON.stringify(id)} from its launch, which is not a background session's short id (8 lowercase hex)` };
+  return { id };
+}
+
+// Background-session states that mean its turn is over: done, failed,
+// stopped. working and blocked mean it is still going or waits on someone
+// (agent-view.md, "Read session state from a script"), so a process may still
+// use the folder, and deleting it would neither stop that process nor leave
+// it a handle to stop it by.
+const ENDED = ['done', 'failed', 'stopped'];
+
+// The job folder Q8's --bg session left, or null. `claude --bg` keeps each
+// background session's state in <config dir>/jobs/<short id>/ (state.json,
+// timeline.jsonl, tmp/): agent-view.md, "Manage sessions from the shell"
+// ("each session's ID is its directory name under ~/.claude/jobs/") and
+// "Where state is stored"; the 2.1.307 binary makes it at
+// join(<config dir>, "jobs", short), `BGo(){return ST(Fe(),"jobs")}` and
+// `fo(e){return H(qD(),e)}`, with Fe() the folder that also holds projects/,
+// plans/ and agent-memory/. The config dir is ~/.claude here even when the
+// runner has CLAUDE_CONFIG_DIR set: cleanEnv drops every CLAUDE* variable
+// from the probe's launch. Deleting the session, `claude rm <id>`, is the
+// supported way to clear it (agent-view.md says it removes tmp/; whether it
+// takes the whole folder is unmeasured, since no --bg session has run here).
+// Q8 runs it only once the id shows in its workspace's own session listing,
+// so a launch it never found there, a failed rm or a crash leaves the folder.
+//
+// The same root holds every real background session's folder, so the target
+// is named only by the id Q8's own launch record gives (bgLaunchId), sits
+// directly under the jobs root as a plain folder (no link), and must show it
+// is this run's session before it goes: its state.json's cwd (or originCwd,
+// the folder it started in when it runs in a worktree) is a workspace this
+// run made or a folder in one, its sessionId (when it has one) starts with the
+// id, and its state is an ended one. A folder that fails any of these is kept
+// and a line in `notes` says why. state.json is no stable interface
+// (agent-view.md says so), so a CLI that moves those fields makes this keep
+// the folder, never take another: the CLI's own retention sweep ages a kept
+// one out after cleanupPeriodDays. `workspaces` are the run's workspaces as
+// folded absolute paths.
+function bgJob(runDir, { jobs, workspaces, notes }) {
+  const { id, why } = bgLaunchId(runDir);
+  if (why) notes.push(`no --bg job folder looked for: ${why}`);
+  if (!id) return null;
+  const root = path.resolve(jobs);
+  const dir = path.join(root, id);
+  if (path.dirname(dir) !== root || path.basename(dir) !== id) return null;
+  let st;
+  try {
+    st = fs.lstatSync(dir);
+  } catch {
+    return null; // gone: deleted with its session, or never made
+  }
+  const keep = (reason) => {
+    notes.push(`kept ${dir} (${reason})`);
+    return null;
+  };
+  if (st.isSymbolicLink() || !st.isDirectory()) return keep('not a plain folder');
+  const state = readJson(path.join(dir, 'state.json'));
+  if (!state || typeof state !== 'object' || Array.isArray(state)) return keep("no readable state.json to show it is this run's session");
+  const started = [state.cwd, state.originCwd].filter((c) => typeof c === 'string' && path.isAbsolute(c)).map((c) => fold(path.resolve(c)));
+  if (!started.some((c) => workspaces.some((w) => c === w || c.startsWith(`${w}${path.sep}`)))) return keep('its state.json names no workspace this run made');
+  if (typeof state.sessionId === 'string' && !state.sessionId.startsWith(id)) return keep('its state.json names another session');
+  if (!ENDED.includes(state.state)) return keep(`its session reads ${JSON.stringify(state.state ?? null)}, so it may still be running: claude stop ${id}, then claude rm ${id}, or --cleanup again once it has ended`);
+  return dir;
+}
+
+// A workspace as bgJob compares it: its folded absolute path and, while it
+// still exists, its real path (a temp dir reached through a link, as macOS's
+// /var is, reads as the folder it links to in a CLI's cwd).
+function spellings(d) {
+  const out = new Set([fold(path.resolve(d))]);
+  try { out.add(fold(fs.realpathSync.native(d))); } catch { /* gone already */ }
+  return [...out];
+}
+
 // Only folders a probe made: a workspace is <tmp>/claude-probe-*, and its
 // transcripts live in <projects>/<slug of that workspace, or of a folder in
 // it>. Anything else a run folder lists (a look-alike elsewhere, the roots
@@ -231,8 +342,11 @@ const fold = (s) => (process.platform === 'win32' ? s.toLowerCase() : s);
 // <cache>, follows the same naming and holds an MCP server's logs
 // (mcp-logs-<server>), which Q15's probe-local stub server leaves: on Windows
 // %LOCALAPPDATA%\claude-cli-nodejs\Cache (seen on disk; elsewhere pass `cache`).
+// Q8's --bg session also leaves a job folder under <jobs> (bgJob says which
+// and when); `notes` collects a line for each one kept, and for a launch
+// record that named no usable id.
 const CLI_CACHE = process.platform === 'win32' && process.env.LOCALAPPDATA ? path.join(process.env.LOCALAPPDATA, 'claude-cli-nodejs', 'Cache') : null;
-export function cleanupTargets(runDir, { projects = PROJECTS, tmp = os.tmpdir(), tasks = path.join(tmp, 'claude'), cache = CLI_CACHE } = {}) {
+export function cleanupTargets(runDir, { projects = PROJECTS, tmp = os.tmpdir(), tasks = path.join(tmp, 'claude'), cache = CLI_CACHE, jobs = JOBS, notes = [] } = {}) {
   const tmpAbs = path.resolve(tmp);
   const projAbs = path.resolve(projects);
   const prefix = `${slug(tmpAbs)}-claude-probe-`;
@@ -243,15 +357,17 @@ export function cleanupTargets(runDir, { projects = PROJECTS, tmp = os.tmpdir(),
     const inProjects = path.dirname(abs) === projAbs && base.startsWith(prefix);
     return inTmp || inProjects;
   });
-  const workspaces = listed.filter((d) => path.dirname(path.resolve(d)) === tmpAbs).map((d) => fold(slug(path.resolve(d))));
+  const wsDirs = listed.filter((d) => path.dirname(path.resolve(d)) === tmpAbs);
+  const workspaces = wsDirs.map((d) => fold(slug(path.resolve(d))));
   const named = (root) => {
     let names = [];
     try { names = workspaces.length ? fs.readdirSync(root) : []; } catch { /* no such root */ }
     return names.filter((n) => workspaces.some((w) => fold(n) === w || fold(n).startsWith(`${w}-`))).map((n) => path.join(root, n));
   };
+  const job = bgJob(runDir, { jobs, workspaces: wsDirs.flatMap(spellings), notes });
   // One entry per folder, however its listing spelled it (drive-letter case).
   const targets = new Map();
-  for (const d of [...listed, ...named(projAbs), ...named(path.resolve(tasks)), ...(cache ? named(path.resolve(cache)) : [])]) {
+  for (const d of [...listed, ...named(projAbs), ...named(path.resolve(tasks)), ...(cache ? named(path.resolve(cache)) : []), ...(job ? [job] : [])]) {
     const key = fold(path.resolve(d));
     if (!targets.has(key)) targets.set(key, d);
   }
@@ -442,24 +558,28 @@ export function gitView(dir) {
   }
 }
 
-function cleanup(runDir) {
-  const targets = cleanupTargets(runDir);
+// --cleanup: delete cleanupTargets(runDir) and say what it kept and why.
+// `roots` are cleanupTargets' root overrides (tests pass temp folders); `say`
+// and `warn` take the lines stdout and stderr would. Returns {targets,
+// failed}: the caller decides the exit code.
+export function cleanup(runDir, { say = console.log, warn = console.error, ...roots } = {}) {
+  const notes = [];
+  const targets = cleanupTargets(runDir, { ...roots, notes });
   const doomed = new Set(targets.map((t) => fold(path.resolve(t))));
-  for (const d of madeIn(runDir).filter((x) => !doomed.has(fold(path.resolve(x))))) console.log(`kept ${d} (not a probe workspace or transcript folder)`);
+  for (const d of madeIn(runDir).filter((x) => !doomed.has(fold(path.resolve(x))))) say(`kept ${d} (not a probe workspace or transcript folder)`);
+  for (const n of notes) say(n);
   let failed = 0;
   for (const d of targets) {
     try {
       fs.rmSync(d, { recursive: true, force: true, maxRetries: 3 });
-      console.log(`deleted ${d}`);
+      say(`deleted ${d}`);
     } catch (e) {
       failed++;
-      console.error(`could not delete ${d}: ${e.code || e.message}`);
+      warn(`could not delete ${d}: ${e.code || e.message}`);
     }
   }
-  if (failed) {
-    console.error(`${failed} of ${targets.length} folders were not deleted; run --cleanup again once nothing holds them`);
-    process.exitCode = 1;
-  }
+  if (failed) warn(`${failed} of ${targets.length} folders were not deleted; run --cleanup again once nothing holds them`);
+  return { targets, failed };
 }
 
 // A def's own timeoutMs when it is a usable timer length, else the default.
@@ -580,7 +700,10 @@ function endLeftovers(id) {
 // `hung` collects the probes that outran their ceiling, for the caller.
 async function main(hung) {
   const args = parseArgs(process.argv.slice(2));
-  if (args.cleanup) return cleanup(args.cleanup);
+  if (args.cleanup) {
+    if (cleanup(args.cleanup).failed) process.exitCode = 1;
+    return;
+  }
   const version = cliVersion();
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   // Captures hold real session ids and paths: an --out folder may sit in no

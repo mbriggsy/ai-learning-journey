@@ -33,7 +33,10 @@ fi
 # system32\timeout.exe (a "wait N seconds" tool that rejects `3 node ...` and exits
 # non-zero), which silently skipped the check. A PATH timeout is used only if it
 # identifies itself as GNU coreutils.
-LIVENESS="$HOME/.claude/hooks/check-config-liveness.mjs"
+# From this script's own folder, never a hard-coded one: deploy.mjs runs it from
+# a versioned copy (~/.claude/hooks/v-<sha>/), whose liveness check is the one
+# that ships with it.
+LIVENESS="$(dirname "${BASH_SOURCE[0]}")/check-config-liveness.mjs"
 CONFIG_LIVENESS_WARNINGS=""
 TIMEOUT_BIN=""
 if [ -x /usr/bin/timeout ]; then

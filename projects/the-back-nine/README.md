@@ -6,9 +6,9 @@ A **personal** retirement and tax-strategy co-pilot for a married couple. It ans
 
 The name is the metaphor: the **back nine** is the second half of the round. Every shot counts more, the scorecard is mostly written, and you're playing for the finish. This is the tool for those holes.
 
-**It is never sold.** Briggsy's laptop plus a handful of financially-literate friends, betting real retirement money. Not a commercial product — and that *raises* the bar rather than lowering it. There is no regulatory net, no terms-of-service disclaimer to hide behind, no "consult a professional" escape hatch. Friends act on this answer with *less* protection than a commercial tool would give them, and they trust it *more*. So the entire load transfers onto two things: **honesty** and **engine validation**. Both get stricter.
+**It is never sold.** It is built for Briggsy, on his laptop, betting his own retirement money; a friend using it is a remote outside chance. Not a commercial product — and that *raises* the bar rather than lowering it. There is no regulatory net, no terms-of-service disclaimer to hide behind, no "consult a professional" escape hatch. He acts on this answer with *less* protection than a commercial tool would give him, and he trusts it *more*. So the entire load transfers onto two things: **honesty** and **engine validation**. Both get stricter.
 
-**The cardinal rule: calm-but-wrong is the sin.** A confidently-stated wrong recommendation is worse than no tool at all. *"It's just for friends" never excuses it.*
+**The cardinal rule: calm-but-wrong is the sin.** A confidently-stated wrong recommendation is worse than no tool at all. *"It's just for me" never excuses it.*
 
 ---
 

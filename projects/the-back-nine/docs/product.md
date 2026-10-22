@@ -8,7 +8,7 @@ sources: [docs/research/engine-validation-and-tax.md, docs/research/pre65-health
 
 # The Back Nine — Product
 
-A **personal** retirement / tax-strategy co-pilot for one married couple and a handful of friends. Never sold. This doc is the single home for the *why* and the *what*: the thesis, the product model, the locked decisions, the lever set, the carried landmines, and the full requirements ledger (R1–R40).
+A **personal** retirement / tax-strategy co-pilot for one married couple: Briggsy's. A friend using it is a remote outside chance, never a design driver (his correction, 2026-10-21). Never sold. This doc is the single home for the *why* and the *what*: the thesis, the product model, the locked decisions, the lever set, the carried landmines, and the full requirements ledger (R1–R40).
 
 Precedence runs through three docs: **this one carries the *why* and the *what*; [docs/roadmap.md](roadmap.md)'s [You-Are-Here table](roadmap.md#the-you-are-here-table) carries the build *status*; [docs/architecture.md](architecture.md) carries the engine invariants and wins on any conflict over one.** Because the tool is personal — never sold, no compensation, no holding-out — there is no regulatory net to lean on; the binding constraint is **honesty + engine validation**, and that constraint is *stricter* for it, not looser.
 
@@ -24,7 +24,7 @@ The thesis, in three sentences:
 
 ## 2. The cardinal rule
 
-**Calm-but-wrong is the cardinal sin, and the bar RISES for a recommender** — a wrong recommended strategy costs real dollars. *"It's just for friends" must never soften validation*: friends risk identical real money with **less** protection and trust the tool **more**. The removal of the regulatory net is a **load transfer onto correctness + confidence-grading**, never a loosening.
+**Calm-but-wrong is the cardinal sin, and the bar RISES for a recommender** — a wrong recommended strategy costs real dollars. *"It's just for me" must never soften validation*: Briggsy risks his own real money with **less** protection than a commercial tool and trusts it **more**. The removal of the regulatory net is a **load transfer onto correctness + confidence-grading**, never a loosening.
 
 This is not a tone preference. It is the governing constraint on every engine decision, every disclosure, and the voice itself. A confidently-stated wrong strategy is worse than no tool at all.
 
@@ -140,7 +140,7 @@ The locked contract. Terse by design — this is a reference, not prose. Numbers
 - **R12.** The product **does make recommendations** — but **every recommendation is probabilistically framed and confidence-graded.** Certainty language stays banned (*"guaranteed / optimal / locks in / you will save"*). String-level enforcement is **"require the hedge on the headline"** (a positive/require lint, not just a ban-list — see the copyGuard note in [docs/architecture.md](architecture.md)).
 - **R13.** An **optional** in-product honest-limits note (*"this is a model — validate big, irreversible moves with a pro"*) — kept on **honesty** grounds for friend-users. There is no Terms/License and no RIA entity.
 - **R14.** Scary, complex truths are stated in **plain human language without being dumbed down** (*"9 of 10 versions of your future,"* not "85% Monte Carlo success").
-- **R25 (the cardinal honesty requirement).** Calm-but-wrong is the cardinal sin and the bar rises for a recommender; "it's just for friends" never softens validation, and removing the regulatory net is a load transfer onto correctness + confidence-grading. *(Full canonical statement: §2.)*
+- **R25 (the cardinal honesty requirement).** Calm-but-wrong is the cardinal sin and the bar rises for a recommender; "it's just for me" never softens validation, and removing the regulatory net is a load transfer onto correctness + confidence-grading. *(Full canonical statement: §2.)*
 
 **Trust & Data Safety** *(personal hygiene, justified on engineering grounds)*
 - **R15.** No user-facing **marketing privacy claim** is required or made (personal tool, no audience to make it to). The underlying honesty — *don't misrepresent what the architecture does* — survives.

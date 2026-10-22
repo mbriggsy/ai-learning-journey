@@ -1,15 +1,10 @@
----
-aliases: [quick-ref, cheat-sheet, qref, quick-reference]
-tags: [playbook]
----
-
 # Quick Reference — 1-page Claude Code cheat sheet
 
 Common scenarios, fast answers. When something's not here, check the other files.
 
 ## Starting a new project
 - Run `/ce:ce-brainstorm` to author the product spec through collaborative dialogue
-- Use the 4-question quality bar elicitation (see [[workflows#Quality Bar First]])
+- Use the 4-question quality bar elicitation (see [workflows: Quality Bar First](workflows.md#quality-bar-first))
 
 ## Session is getting long (~70% context)
 - Say *"write the TODO"* to update `TODO.md`
@@ -24,7 +19,7 @@ Common scenarios, fast answers. When something's not here, check the other files
 ## Claude got too ambitious / scope-creeped
 - "Stop, just do X" — Claude responds well to hard scope clamps
 - "Only change these lines" is better than "don't change too much"
-- See [[claude-watch-outs#Will expand scope unless explicitly clamped]]
+- See [claude-watch-outs: Will expand scope unless explicitly clamped](claude-watch-outs.md#will-expand-scope-unless-explicitly-clamped)
 
 ## Need to share a screenshot
 - Drop the screenshot in the project's `temp/` folder
@@ -54,7 +49,7 @@ Common scenarios, fast answers. When something's not here, check the other files
 ## Claude pattern-matches a reference you don't recognize
 - Ask: *"where did that come from?"* or *"did I say that?"*
 - If Claude invented it, PURGE before it calcifies across files
-- See [[lessons-learned#The Saul Bass incident]]
+- See [lessons-learned: The Saul Bass incident](lessons-learned.md#2026-04-10--the-saul-bass-incident-hallucinated-reference-calcified-across-13-files)
 
 ## Debugging something multi-step
 - Say *"use sequential thinking"* — invokes the sequential-thinking MCP tool
@@ -70,7 +65,7 @@ Common scenarios, fast answers. When something's not here, check the other files
 - Hit `Esc` to interrupt — Claude stops after the current tool call finishes
 - For high-risk work (rm, force push, migrations, mass edits), enter **Plan Mode** *before* you fire the prompt: `Shift+Tab` cycles into it. Claude can't run state-changing tools until you approve a plan.
 - After interrupting, tell Claude what to do instead — Claude won't auto-resume the previous direction
-- See [[workflows#Plan Mode]]
+- See [workflows: Plan Mode](workflows.md#plan-mode-claude-code)
 
 ## Need Claude to forget a recent decision
 - Verbal rollback: *"forget what we just decided about X"* or *"throw out that approach, here's the new direction"*
@@ -80,8 +75,8 @@ Common scenarios, fast answers. When something's not here, check the other files
 
 ## Starting a chat session in Cowork (or any non-Code Claude)
 - Cowork doesn't auto-load the playbook. Mount the vault folder first (and `ai-learning-journey-private` if relevant).
-- One-shot orientation prompt: *"Read OBSIDIAN.md, _HOME.md, and briggsy-playbook/principles.md before doing anything else."* (the [[principles]] doc is the load-bearing onboarding read)
-- Resuming a long-running task across sessions: write a **Session checkpoint** section into whatever doc is the work product, then in the new session point Cowork at that section. See [[cowork#Session checkpoint]] for the pattern.
+- One-shot orientation prompt: *"Read briggsy-playbook/principles.md before doing anything else."* (the [principles](principles.md) doc is the load-bearing onboarding read)
+- Resuming a long-running task across sessions: write a **Session checkpoint** section into whatever doc is the work product, then in the new session point Cowork at that section. See [cowork: Session checkpoint](cowork.md#session-checkpoint-pattern-resume-across-sessions) for the pattern.
 - Folder access does NOT persist between Cowork sessions — re-grant on each new session.
 
 ## Asking Claude to build something

@@ -2,8 +2,6 @@
 created: 2026-05-09
 type: workflow-reference
 covers: Cowork mode (Claude desktop)
-aliases: [cowork, cowork-mode, desktop-claude]
-tags: [cowork, claude-mode, playbook]
 ---
 
 # Cowork Mode
@@ -40,7 +38,7 @@ Cowork starts every session blind. Three things to fix on the way in:
 
 1. **Mount the folder.** Cowork can only read/write folders you've explicitly granted access to. Re-grant on every session.
 2. **Orient.** Send a one-shot orientation prompt — Cowork doesn't auto-load anything from the vault. The pattern that works:
-   > *"Read OBSIDIAN.md, _HOME.md, and briggsy-playbook/principles.md before doing anything else."*
+   > *"Read briggsy-playbook/principles.md before doing anything else."*
 3. **Point at the work.** If you're resuming a long-running task, point Cowork at the checkpoint section of the relevant doc (see next section).
 
 ## Session checkpoint pattern (resume across sessions)
@@ -75,5 +73,3 @@ The same trick works for any long-running task — write the resumption state in
 ## Origin
 
 This file added 2026-05-09 during the playbook audit (L1 finding). The pattern of "use Cowork to maintain the vault, and write checkpoints into the work product so the next cold-start session can resume" was already established by the time this got written — `PLAYBOOK-AUDIT.md` is the proof of concept.
-
-#cowork #playbook #workflow

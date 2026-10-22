@@ -1,8 +1,3 @@
----
-aliases: [watch-outs, gotchas, failure-modes, claude-bugs, claude-watchouts]
-tags: [playbook]
----
-
 # Claude's failure modes — catch them before they propagate
 
 Known Claude behaviors that have caused problems. Each entry: what it looks like, why it happens, how to catch it, and what to do instead.
@@ -15,7 +10,7 @@ Known Claude behaviors that have caused problems. Each entry: what it looks like
 
 **How to catch:** When Claude hands back a revised plan, scan the *out-of-scope* and *decisions locked* sections for any phrase that lowers the bar on something the bar should apply to. If you spot *"doesn't break,"* *"good enough,"* *"this isn't a [thing] app,"* — push back.
 
-**Example:** 2026-05-24 ai-journey-stats TODO revision. Claude inherited *"Mobile-first deep optimization beyond 'doesn't break' (this is a desktop showcase)"* from the pre-WHAT-interview version, kept it in the revised out-of-scope section even after applying every other WHAT-interview correction. Briggsy caught it: *"While maybe not mobile first, it still needs to render and shine in mobile. Like UMB's help file."* Full incident: [[lessons-learned#2026-05-24 — Inherited "desktop showcase" framing in ai-journey-stats TODO|see lessons-learned]].
+**Example:** 2026-05-24 ai-journey-stats TODO revision. Claude inherited *"Mobile-first deep optimization beyond 'doesn't break' (this is a desktop showcase)"* from the pre-WHAT-interview version, kept it in the revised out-of-scope section even after applying every other WHAT-interview correction. Briggsy caught it: *"While maybe not mobile first, it still needs to render and shine in mobile. Like UMB's help file."* Full incident: [see lessons-learned](lessons-learned.md#2026-05-24--inherited-desktop-showcase-framing-in-ai-journey-stats-todo).
 
 **Rule for Claude:** When revising existing docs, treat every scope-shrinking phrase as a candidate for re-litigation against the bar, not load-bearing wording to preserve. Especially: anything about mobile, anything about polish, anything about "v1 minimum." The bar applies everywhere unless there's a specific written reason it doesn't.
 
@@ -29,7 +24,7 @@ Known Claude behaviors that have caused problems. Each entry: what it looks like
 
 **How to catch:** When Claude creates a document by mirroring another one, ask *"what did you copy exactly vs. adapt?"* Audit any specific claims — names, methodologies, dates, references — for accuracy in the NEW context.
 
-**Example from BURNED session (2026-04-10):** *"Built with Maximum Overdrive. SDLC is the product."* — copied from UMB's SPEC.md footer. UMB was NOT built with Maximum Overdrive either; it was a latent bug in UMB's spec that Claude replicated without verifying. Full incident: [[lessons-learned#2026-04-10 — "Maximum Overdrive" footer copied from UMB's spec by reflex|see lessons-learned]].
+**Example from BURNED session (2026-04-10):** *"Built with Maximum Overdrive. SDLC is the product."* — copied from UMB's SPEC.md footer. UMB was NOT built with Maximum Overdrive either; it was a latent bug in UMB's spec that Claude replicated without verifying. Full incident: [see lessons-learned](lessons-learned.md#2026-04-10--maximum-overdrive-footer-copied-from-umbs-spec-by-reflex).
 
 **Rule for Claude:** Copy structure only; never copy specific claims from reference templates.
 
@@ -43,7 +38,7 @@ Known Claude behaviors that have caused problems. Each entry: what it looks like
 
 **How to catch:** When Claude uses a proper noun or specific methodology you don't recognize, ASK immediately. *"Where did that come from?"* or *"Did I say that?"* If Claude can't trace it to something you said, it's a hallucination. **Purge it.**
 
-**Example:** *"Saul Bass"* as BURNED's visual reference — Claude introduced the phrase, Briggsy didn't know who Saul Bass was, didn't flag it. Phrase propagated across **13 files in 5 days** before being purged. Full incident: [[lessons-learned#2026-04-10 — The Saul Bass incident (hallucinated reference calcified across 13 files)|see lessons-learned]].
+**Example:** *"Saul Bass"* as BURNED's visual reference — Claude introduced the phrase, Briggsy didn't know who Saul Bass was, didn't flag it. Phrase propagated across **13 files in 5 days** before being purged. Full incident: [see lessons-learned](lessons-learned.md#2026-04-10--the-saul-bass-incident-hallucinated-reference-calcified-across-13-files).
 
 **Rule for Claude:** When user says *"I don't know what X is"*, treat it as a flag to verify. Users don't own vocabulary they've never heard.
 
@@ -57,7 +52,7 @@ Known Claude behaviors that have caused problems. Each entry: what it looks like
 
 **How to catch:** After you give feedback, watch whether Claude's next response has visibly sanitized beyond what you asked. If yes, call it out.
 
-**Example from BURNED session (2026-04-10):** I mentioned I didn't know "touchstone." Claude immediately said *"I'll stop using words like that."* — wrong correction. The right move: use "touchstone" with a brief inline gloss. Full incident: [[lessons-learned#2026-04-10 — Claude over-corrected on vocabulary ("touchstone")|see lessons-learned]].
+**Example from BURNED session (2026-04-10):** I mentioned I didn't know "touchstone." Claude immediately said *"I'll stop using words like that."* — wrong correction. The right move: use "touchstone" with a brief inline gloss. Full incident: [see lessons-learned](lessons-learned.md#2026-04-10--claude-over-corrected-on-vocabulary-touchstone).
 
 **Rule for Claude:** Feedback is usually specific, not categorical. Fix the instance and note the pattern — don't generalize to the whole class unless explicitly told to.
 

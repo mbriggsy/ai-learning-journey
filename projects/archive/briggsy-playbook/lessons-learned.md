@@ -1,8 +1,3 @@
----
-aliases: [lessons, lessons-learned, mistakes, incidents]
-tags: [playbook]
----
-
 # Lessons learned — dated incidents with specific lessons
 
 Things we figured out the hard way. Each entry: date, incident, lesson. Newest at top.
@@ -56,7 +51,7 @@ Claude went and read `projects/undercover-mob-boss/public/how-to-play.html` (170
 
 **Memorialized in:**
 - `feedback-mobile-must-shine-not-survive.md` in Claude's memory
-- [[claude-watch-outs#Inherits scope-shrinking framing from existing docs without challenging the bar]]
+- [claude-watch-outs: Inherits scope-shrinking framing from existing docs without challenging the bar](claude-watch-outs.md#inherits-scope-shrinking-framing-from-existing-docs-without-challenging-the-bar)
 - TODO updates in `projects/ai-journey-stats/TODO.md`
 
 **Same-day repeat (2026-05-24, hours later):** I caught Claude again. Same TODO, different inherited phrase: *"Dark/light theme toggle (it's dark, period)"* was in the pre-WHAT out-of-scope section and Claude kept it through the revision pass. I asked: *"and why not have a light/dark mode? what's your thoughts? ... I think we should include it. First class citizen, not a bolt on. And what is my OS preference?"* Claude checked my Windows registry (`HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize`) and confirmed I'm set to LIGHT for both apps and system. Meaning **I'd land on the dark version of my own site every visit if we shipped dark-only — opposite to my preference.** TODO updated: both palettes first-class, `prefers-color-scheme` honored, Phase 9 polish protocol now requires FOUR cold-watch captures (desktop-dark, desktop-light, mobile-dark, mobile-light). Watch-out caught the pattern; lessons-learned tracks the repeat. Two scope-shrinking slips in one session means the watch-out is doing real work — and that I should run a full out-of-scope audit any time I revise an inherited doc, not just edit the parts being explicitly changed.
@@ -164,7 +159,7 @@ Claude initially held the position. I pushed on the UMB precedent — UMB's Phas
 
 ## (Earlier lessons from Claude's memory — incorporated by reference)
 
-These lessons live in `C:/Users/brigg/.claude/projects/C--Users-brigg-ai-learning-journey/memory/` as `feedback-*.md` files. Rather than duplicate the full content here, the table below names each file and the rule it carries. Open the actual file when you need the full incident, the *why*, and the *how to apply*.
+These lessons live in `~/.claude/projects/<this repo>/memory/` as `feedback-*.md` files. Rather than duplicate the full content here, the table below names each file and the rule it carries. Open the actual file when you need the full incident, the *why*, and the *how to apply*.
 
 | File | Rule |
 |---|---|

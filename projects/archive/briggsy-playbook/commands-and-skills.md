@@ -1,8 +1,3 @@
----
-aliases: [commands, skills, slash-commands, commands-and-skills]
-tags: [playbook]
----
-
 # Commands and skills inventory
 
 Slash commands and skills available in Claude Code. Say `/command-name` to invoke, or describe what you want and Claude will find the right one.
@@ -123,7 +118,7 @@ Slash commands and skills available in Claude Code. Say `/command-name` to invok
 
 ### `/ce:ce-plan`
 **What:** Transform feature descriptions into well-structured project plans following conventions.
-**When:** After brainstorm, before execution. For foundational work where agent-orchestrated research and forcing-function sections (System-Wide Impact, alternatives, quality gates) pay rent. See [[workflows#Planning: Codified vs. Native]] for the decision framework.
+**When:** After brainstorm, before execution. For foundational work where agent-orchestrated research and forcing-function sections (System-Wide Impact, alternatives, quality gates) pay rent. See [workflows: Planning: Codified vs. Native](workflows.md#planning-codified-vs-native) for the decision framework.
 **Under the hood:** 6-step pipeline — brainstorm ingestion → parallel local research (repo + learnings) → conditional external research → SpecFlow gap-finder → templated plan with mandatory sections → standardized downstream handoff menu. Hard "NEVER CODE" gate at the end.
 **Full breakdown:** `projects/burned/docs/workflow/ce-plan-skill-analysis.md`
 

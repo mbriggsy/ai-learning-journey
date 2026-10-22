@@ -1,8 +1,3 @@
----
-aliases: [workflows, workflow, patterns]
-tags: [playbook]
----
-
 # Workflows that work
 
 Patterns proven to produce great results. Each entry: what it is, when to use it, how to run it, and why it matters.
@@ -154,10 +149,10 @@ The interview also captures something a paraphrase can't — verbatim words, ref
 
 ## Write The TODO / Squeaky Clean
 
-End-of-session protocols. Both are explicit verbal triggers — Claude won't auto-run either. Full mechanics in [[commands-and-skills]].
+End-of-session protocols. Both are explicit verbal triggers — Claude won't auto-run either. Full mechanics in [commands-and-skills](commands-and-skills.md).
 
-- **Write the TODO** — say *"write the TODO"* or *"update the TODO"*. Updates `TODO.md` as a forward-looking handoff (prescriptions, not diagnoses; no session diary). [[commands-and-skills#"Write the TODO"|Full reference]].
-- **Squeaky clean** — say *"squeaky clean"*. Runs the `/squeaky-clean` skill in a fork: TODO + typechecks + git verify + temp cleanup + commit + push. Safe by default. [[commands-and-skills#`/squeaky-clean`|Full reference]].
+- **Write the TODO** — say *"write the TODO"* or *"update the TODO"*. Updates `TODO.md` as a forward-looking handoff (prescriptions, not diagnoses; no session diary). [Full reference](commands-and-skills.md#write-the-todo).
+- **Squeaky clean** — say *"squeaky clean"*. Runs the `/squeaky-clean` skill in a fork: TODO + typechecks + git verify + temp cleanup + commit + push. Safe by default. [Full reference](commands-and-skills.md#squeaky-clean).
 
 **Why the workflow framing matters:** Claude has no memory of the session once the terminal closes. The TODO is the handoff to future-you and future-Claude. Squeaky-clean ensures the project is ship-ready when you walk away.
 
@@ -165,7 +160,7 @@ End-of-session protocols. Both are explicit verbal triggers — Claude won't aut
 
 ## One Change At A Time (Visual Work)
 
-**Promoted to a principle.** See [[principles#8. One visual change at a time.|principle #8]] for the rule. The mechanics: one change → verify on phone → next; never chain visual changes blind. Origin: `feedback-visual-work-one-change-at-a-time.md` in Claude's memory.
+**Promoted to a principle.** See [principle #8](principles.md#8-one-visual-change-at-a-time) for the rule. The mechanics: one change → verify on phone → next; never chain visual changes blind. Origin: `feedback-visual-work-one-change-at-a-time.md` in Claude's memory.
 
 ---
 

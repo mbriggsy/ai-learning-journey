@@ -3,14 +3,12 @@ created: 2026-05-08
 last-updated: 2026-05-09
 type: principles
 status: live — updated through directed edits
-aliases: [principles, 11 commandments, 10 commandments, manifesto, briggsy-principles]
 sources:
-  - "[[workflows]]"
-  - "[[claude-watch-outs]]"
-  - "[[claude-strengths]]"
-  - "[[session-hygiene]]"
-  - "[[lessons-learned]]"
-tags: [principles, playbook, manifesto]
+  - "workflows.md"
+  - "claude-watch-outs.md"
+  - "claude-strengths.md"
+  - "session-hygiene.md"
+  - "lessons-learned.md"
 ---
 
 # Briggsy's Principles for Working with Claude
@@ -26,19 +24,19 @@ tags: [principles, playbook, manifesto]
 
 Vision, quality bar, tone, product direction, acceptance tests, when something feels off — these are yours. Architecture, libraries, state management, type design, build config, performance tradeoffs — these are Claude's. *So is the keyboard.* You have not authored or edited a single file in this portfolio — every line of code, every doc, every config, including this principle, is Claude writing under your direction. You pick stacks you have no execution experience in *deliberately*; that's what makes the partnership real, not theater.
 
-Source: [[workflows#Expert-Pilot Partnership]] · stated 2026-05-09 ("not a single file in the entire portfolio")
+Source: [workflows: Expert-Pilot Partnership](workflows.md#expert-pilot-partnership) · stated 2026-05-09 ("not a single file in the entire portfolio")
 
 ### 2. Pushback is the safety net. Fast agreement is the failure mode.
 
 In a normal AI/user setup, the user catches hallucinations because they're the domain expert. In your setup that's inverted — Claude is the only one in the system who knows the plane. If Claude defers out of politeness, nothing catches the mistakes until production bites. *"Actually, one concern..."* is the feature, not the bug.
 
-Source: [[workflows#Expert-Pilot Partnership]] · [[claude-watch-outs#Fast-agrees under time pressure]]
+Source: [workflows: Expert-Pilot Partnership](workflows.md#expert-pilot-partnership) · [claude-watch-outs: Fast-agrees under time pressure](claude-watch-outs.md#fast-agrees-under-time-pressure)
 
 ### 3. Honest uncertainty is the rule.
 
 When Claude doesn't know, Claude says so plainly. No bluffing. Your confidence signals only work if Claude's are calibrated — one bluffed answer poisons every confident answer after.
 
-Source: [[workflows#Expert-Pilot Partnership]]
+Source: [workflows: Expert-Pilot Partnership](workflows.md#expert-pilot-partnership)
 
 ---
 
@@ -48,13 +46,13 @@ Source: [[workflows#Expert-Pilot Partnership]]
 
 Vague bars drift. Binary tests don't. Every project starts by establishing the bar as a concrete, testable line — comparison product, visual touchstone, tone reference, proof mode. The bar becomes the gate every visual decision has to pass.
 
-Source: [[workflows#Quality Bar First]]
+Source: [workflows: Quality Bar First](workflows.md#quality-bar-first)
 
 ### 5. Vibes get translated into discipline, out loud.
 
 When you say *"water beads"* or *"smooth,"* Claude translates it into concrete technical discipline (60fps on mid-tier Android, clamp formulas, bundle budget) and explains the tradeoffs. You catch vibe misses. Claude catches discipline misses. Neither of us can do the other's job — the translation between vibe and discipline is the work.
 
-Source: [[workflows#Expert-Pilot Partnership]]
+Source: [workflows: Expert-Pilot Partnership](workflows.md#expert-pilot-partnership)
 
 ---
 
@@ -64,19 +62,19 @@ Source: [[workflows#Expert-Pilot Partnership]]
 
 Multi-phase plans get strengthened phase-by-phase, sequentially — phase N+1's review needs phase N's corrections to be visible before it starts. Strengthening is non-negotiable: bugs caught in plan review cost $0; bugs caught in production cost 10–100x. Without a spec, plans inherit nothing. Without strengthening, plans ship their bugs intact. Tokens in the resulting code are the *real* enforcement mechanism — future sessions grep them and follow patterns by convention.
 
-Source: [[workflows#Spec → Plan → Strengthen → Code (Transitive Enforcement)]] · Maximum Overdrive Lessons 3 (strengthening non-negotiable) and 14 (strengthen serially, agents parallel)
+Source: [workflows: Spec → Plan → Strengthen → Code (Transitive Enforcement)](workflows.md#spec--plan--strengthen--code-transitive-enforcement) · Maximum Overdrive Lessons 3 (strengthening non-negotiable) and 14 (strengthen serially, agents parallel)
 
 ### 7. Debate before deciding. Evidence flips positions; pressure shouldn't.
 
 If Claude has a strong position, engage it. If you have a counter-position, state it and back it with evidence. If Claude flips after a single push with no new evidence, that's fast-agreement in disguise — push back again. The final design is cleaner *because* of the friction.
 
-Source: [[workflows#Debate-Pushback]] · [[lessons-learned#The Visual Architecture debate flip]]
+Source: [workflows: Debate-Pushback](workflows.md#debate-pushback) · [lessons-learned: The Visual Architecture debate flip](lessons-learned.md#2026-04-10--the-visual-architecture-debate-flip-position-flip-after-evidence)
 
 ### 8. One visual change at a time.
 
 Visual changes compound unpredictably. Chaining 3 changes blind means you can't isolate which one broke things. Describe one change, Claude implements, you verify on phone, *then* the next.
 
-Source: [[workflows#One Change At A Time (Visual Work)]]
+Source: [workflows: One Change At A Time (Visual Work)](workflows.md#one-change-at-a-time-visual-work)
 
 ---
 
@@ -86,13 +84,13 @@ Source: [[workflows#One Change At A Time (Visual Work)]]
 
 What's left to do, in priority order. Unfinished fixes as **prescriptions** (exact file:line changes), not diagnoses. Git log has the history; TODO is the handoff to future-you.
 
-Source: [[session-hygiene#"Write the TODO" is explicit]]
+Source: [session-hygiene: "Write the TODO" is explicit](session-hygiene.md)
 
 ### 10. Specific feedback ≠ categorical feedback.
 
 "Don't use this specific word without explaining it" is not "dumb your vocab forever." When Claude over-corrects from a specific note to a categorical ban, call it out. Fix the instance, note the pattern, don't generalize.
 
-Source: [[claude-watch-outs#Over-corrects when you flag ONE specific thing]] · [[lessons-learned#Claude over-corrected on vocabulary]]
+Source: [claude-watch-outs: Over-corrects when you flag ONE specific thing](claude-watch-outs.md#over-corrects-when-you-flag-one-specific-thing) · [lessons-learned: Claude over-corrected on vocabulary](lessons-learned.md#2026-04-10--claude-over-corrected-on-vocabulary-touchstone)
 
 ---
 
@@ -102,7 +100,7 @@ Source: [[claude-watch-outs#Over-corrects when you flag ONE specific thing]] · 
 
 Same lesson, learned twice on the same day (2026-04-10): the Saul Bass hallucination calcifying across 13 files in 5 days, and the *"Built with Maximum Overdrive"* footer reflex-copied from UMB's spec. When using a template, structural reuse is fine; specific claims (names, methodologies, dates, references) must be re-verified in the new context.
 
-Source: [[lessons-learned#The Saul Bass incident]] · [[lessons-learned#"Maximum Overdrive" footer copied from UMB's spec]]
+Source: [lessons-learned: The Saul Bass incident](lessons-learned.md#2026-04-10--the-saul-bass-incident-hallucinated-reference-calcified-across-13-files) · [lessons-learned: "Maximum Overdrive" footer copied from UMB's spec](lessons-learned.md#2026-04-10--maximum-overdrive-footer-copied-from-umbs-spec-by-reflex)
 
 ---
 
@@ -110,11 +108,11 @@ Source: [[lessons-learned#The Saul Bass incident]] · [[lessons-learned#"Maximum
 
 A few candidates I considered and excluded:
 
-- **"Use sequential-thinking after multi-agent research"** — important rule, but it's a tactic, not a principle. Lives well in [[workflows]] and [[tools-and-integrations]].
+- **"Use sequential-thinking after multi-agent research"** — important rule, but it's a tactic, not a principle. Lives well in [workflows](workflows.md) and [tools-and-integrations](tools-and-integrations.md).
 - **"Never use WebFetch"** — same reason. Tactical safety rule, not a principle.
 - **"Squeaky-clean / write-the-TODO at session end"** — protocol, not principle.
 - **"Verify before you claim done"** — strong candidate; arguably belongs as #11. Currently captured in the Honest Uncertainty principle (#3) but worth promoting if you want it standalone.
-- **"Battle scars have expiration dates"** — this is the [[OVERDRIVE-EVOLUTION#The Meta-Lesson (Lesson 13)|meta-lesson from the Maximum Overdrive synthesis]]. Cross-vault application; could be added if you want a "meta" principle.
+- **"Battle scars have expiration dates"** — this is the meta-lesson from the Maximum Overdrive synthesis. Cross-vault application; could be added if you want a "meta" principle.
 
 ---
 
@@ -128,5 +126,3 @@ A few candidates I considered and excluded:
 ---
 
 *— Living document. Authored 2026-05-08, last directed edit 2026-05-09. —*
-
-#principles #playbook #manifesto

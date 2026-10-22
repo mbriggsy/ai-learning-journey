@@ -1,8 +1,3 @@
----
-aliases: [status-line, statusline, status-bar]
-tags: [playbook]
----
-
 # Claude Code Custom Status Line — Setup Guide
 
 How to replace the default Claude Code status bar with a custom one that shows you what actually matters: model, context usage, cost, session duration, git branch, and effort level — all at a glance.

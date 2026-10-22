@@ -1,8 +1,3 @@
----
-aliases: [tools, integrations, tools-and-integrations, mcp]
-tags: [playbook]
----
-
 # Tools and integrations — MCP servers, hooks, external tools
 
 Claude Code integrates with several external tools via MCP (Model Context Protocol) servers, hooks, and built-in integrations. This is the inventory and how to use them.
@@ -124,7 +119,7 @@ Hooks are small scripts that run on specific Claude events. They can block tool 
 
 **Critical gotcha (from `feedback-mcp-server-install.md` in memory):** MCP servers MUST be installed via `claude mcp add`, NOT via manual `.mcp.json` editing. On Windows, paths use `//c` not `/c`. Wasted 3 sessions learning this.
 
-**Correct command:** `claude mcp add <server-name> <command>` with Windows paths like `//c/Users/brigg/...`.
+**Correct command:** `claude mcp add <server-name> <command>` with Windows paths written in the `//c/...` form (two leading slashes).
 
 ---
 
@@ -164,7 +159,7 @@ See `feedback-serena-killed.md` in Claude's memory.
 
 Custom status bar showing model, context %, cost, duration, git branch, and effort level. Context window % is the one to watch — when it hits yellow, start wrapping up.
 
-**Full setup + customization:** [[status-line]]
+**Full setup + customization:** [status-line](status-line.md)
 
 ---
 

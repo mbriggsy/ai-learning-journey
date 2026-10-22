@@ -2,18 +2,17 @@
 created: 2026-05-08
 type: audit
 audited:
-  - "[[PLAYBOOK]]"
-  - "[[claude-strengths]]"
-  - "[[claude-watch-outs]]"
-  - "[[commands-and-skills]]"
-  - "[[lessons-learned]]"
-  - "[[quick-reference]]"
-  - "[[session-hygiene]]"
-  - "[[status-line]]"
-  - "[[tools-and-integrations]]"
-  - "[[workflows]]"
+  - "PLAYBOOK.md"
+  - "claude-strengths.md"
+  - "claude-watch-outs.md"
+  - "commands-and-skills.md"
+  - "lessons-learned.md"
+  - "quick-reference.md"
+  - "session-hygiene.md"
+  - "status-line.md"
+  - "tools-and-integrations.md"
+  - "workflows.md"
 status: complete — 16 of 16 findings applied (closed 2026-05-09)
-tags: [audit, playbook, meta]
 ---
 
 # Briggsy Playbook — Audit
@@ -38,10 +37,10 @@ Total findings: **16**, broken down 4 high / 8 medium / 4 low.
 ### H1. Stale model version: "Opus 4.6" referenced throughout, current model has moved on
 
 **Where:**
-- [[claude-strengths]] line 65: *"Claude Opus 4.6 has a 1M token context window."*
-- [[session-hygiene]] line 22: *"Claude Opus 4.6 has a 1 million token context window."*
-- [[status-line]] line 7 (example): *"[Opus 4.6 (1M context)]"*
-- [[status-line]] line 170 (display example): same
+- [claude-strengths](claude-strengths.md) line 65: *"Claude Opus 4.6 has a 1M token context window."*
+- [session-hygiene](session-hygiene.md) line 22: *"Claude Opus 4.6 has a 1 million token context window."*
+- [status-line](status-line.md) line 7 (example): *"[Opus 4.6 (1M context)]"*
+- [status-line](status-line.md) line 170 (display example): same
 
 **Issue:** Today is **2026-05-08**. Opus has moved on (Opus 4.7 is current per env). All four references will keep aging.
 
@@ -61,16 +60,16 @@ If a future-you (or future-Claude) opens the playbook to onboard fast, the first
 
 **Sample principles I'd nominate** (drawn from your existing prose):
 
-1. **You own WHAT and WHY. Claude owns HOW.** — From [[workflows#Expert-Pilot Partnership|Expert-Pilot Partnership]]
+1. **You own WHAT and WHY. Claude owns HOW.** — From [Expert-Pilot Partnership](workflows.md#expert-pilot-partnership)
 2. **Pushback is the safety net.** Fast agreement is the failure mode. — Same source
-3. **Quality bar first, before any work.** Vague bars drift; binary tests don't. — From [[workflows#Quality Bar First|Quality Bar First]]
-4. **Spec → Plan → Strengthen → Code is the contract.** Without a spec, plans have nothing to inherit from; without strengthening, plans ship their bugs intact. — From [[workflows#Spec → Plan → Strengthen → Code (Transitive Enforcement)|Transitive Enforcement]]
-5. **Debate before deciding. Evidence flips positions; pressure shouldn't.** — [[workflows#Debate-Pushback|Debate-Pushback]]
-6. **One visual change at a time.** Layout thrashing eats sessions. — [[workflows#One Change At A Time (Visual Work)|One Change At A Time]]
-7. **Vibes get translated into discipline, out loud.** *"Water beads"* → 60fps + clamp formulas + bundle budget. — [[workflows#Expert-Pilot Partnership|Expert-Pilot Partnership]]
-8. **TODO is forward-looking, not a diary.** Git log has the history. — [[session-hygiene]]
-9. **Specific feedback ≠ categorical feedback.** "Don't use this word without explaining" ≠ "dumb your vocab." — [[claude-watch-outs]]
-10. **Reference templates: copy structure, never copy claims.** — [[lessons-learned#The Saul Bass incident|Saul Bass]] + [[lessons-learned#Maximum Overdrive footer|MO footer]]
+3. **Quality bar first, before any work.** Vague bars drift; binary tests don't. — From [Quality Bar First](workflows.md#quality-bar-first)
+4. **Spec → Plan → Strengthen → Code is the contract.** Without a spec, plans have nothing to inherit from; without strengthening, plans ship their bugs intact. — From [Transitive Enforcement](workflows.md#spec--plan--strengthen--code-transitive-enforcement)
+5. **Debate before deciding. Evidence flips positions; pressure shouldn't.** — [Debate-Pushback](workflows.md#debate-pushback)
+6. **One visual change at a time.** Layout thrashing eats sessions. — [One Change At A Time](workflows.md#one-change-at-a-time-visual-work)
+7. **Vibes get translated into discipline, out loud.** *"Water beads"* → 60fps + clamp formulas + bundle budget. — [Expert-Pilot Partnership](workflows.md#expert-pilot-partnership)
+8. **TODO is forward-looking, not a diary.** Git log has the history. — [session-hygiene](session-hygiene.md)
+9. **Specific feedback ≠ categorical feedback.** "Don't use this word without explaining" ≠ "dumb your vocab." — [claude-watch-outs](claude-watch-outs.md)
+10. **Reference templates: copy structure, never copy claims.** — [Saul Bass](lessons-learned.md#2026-04-10--the-saul-bass-incident-hallucinated-reference-calcified-across-13-files) + [MO footer](lessons-learned.md#2026-04-10--maximum-overdrive-footer-copied-from-umbs-spec-by-reflex)
 
 **Effort:** 30–60 min to draft and refine.
 
@@ -98,9 +97,9 @@ You've clearly developed strong instincts here (the BURNED CLAUDE.md is sophisti
 ### H4. `/product-specification` pending status — has it been built since 2026-04-10?
 
 **Where:**
-- [[commands-and-skills]] line 75: *"PENDING — NOT BUILT YET"*
-- [[quick-reference]] line 7: *"Run `/product-specification` (when built — currently pending)"*
-- [[workflows]] line 114: *"use `/product-specification` once built, or manual authoring"*
+- [commands-and-skills](commands-and-skills.md) line 75: *"PENDING — NOT BUILT YET"*
+- [quick-reference](quick-reference.md) line 7: *"Run `/product-specification` (when built — currently pending)"*
+- [workflows](workflows.md) line 114: *"use `/product-specification` once built, or manual authoring"*
 
 **Issue:** Three files all carry the *pending* status. That was the state on 2026-04-10. It's now 2026-05-08 — about a month later. Either:
 - It was built → update all three references
@@ -117,13 +116,13 @@ You've clearly developed strong instincts here (the BURNED CLAUDE.md is sophisti
 ### M1. Tonal tension: "70% context, wrap up" vs. "use the 1M, it's enormous"
 
 **Where:**
-- [[session-hygiene]] line 17: *"When Claude Code's context window is ~70% full, start a new terminal."*
-- [[session-hygiene]] line 22: *"70% of that is a LOT — long sessions are fine."*
-- [[claude-strengths]] line 65: *"Don't worry about 'am I asking Claude to hold too much in mind?' — Claude Opus 4.6 has a 1M token context window. That's enormous. Use it."*
+- [session-hygiene](session-hygiene.md) line 17: *"When Claude Code's context window is ~70% full, start a new terminal."*
+- [session-hygiene](session-hygiene.md) line 22: *"70% of that is a LOT — long sessions are fine."*
+- [claude-strengths](claude-strengths.md) line 65: *"Don't worry about 'am I asking Claude to hold too much in mind?' — Claude Opus 4.6 has a 1M token context window. That's enormous. Use it."*
 
 **Issue:** Not technically contradictory (one says "you can run long" and the other says "wrap when you hit 70% of long"), but a fast reader gets mixed signals. The 70% rule is sound; the "use the enormous context" is also sound; they need to be reconciled in one place.
 
-**Proposed fix:** Add a sentence to claude-strengths.md after the 1M reference: *"That said — quality starts to degrade past ~70% utilization. See [[session-hygiene#Start a new terminal at ~70% context|session-hygiene]] for the wrap protocol."* That keeps both true and bridges them.
+**Proposed fix:** Add a sentence to claude-strengths.md after the 1M reference: *"That said — quality starts to degrade past ~70% utilization. See [session-hygiene](session-hygiene.md#start-a-new-terminal-at-70-context) for the wrap protocol."* That keeps both true and bridges them.
 
 **Effort:** 2 min.
 
@@ -132,13 +131,13 @@ You've clearly developed strong instincts here (the BURNED CLAUDE.md is sophisti
 ### M2. Squeaky-clean documented in 3 places with overlapping content
 
 **Where:**
-- [[commands-and-skills]] (slash-command entry, ~6 lines)
-- [[session-hygiene]] (verbose 7-step nuclear cleanup section, ~20 lines)
-- [[workflows]] (Squeaky Clean workflow, also 7-step list, ~17 lines)
+- [commands-and-skills](commands-and-skills.md) (slash-command entry, ~6 lines)
+- [session-hygiene](session-hygiene.md) (verbose 7-step nuclear cleanup section, ~20 lines)
+- [workflows](workflows.md) (Squeaky Clean workflow, also 7-step list, ~17 lines)
 
-**Issue:** The 7 numbered steps are nearly verbatim in [[session-hygiene]] and [[workflows]]. If the steps ever change (typecheck adds linting, push behavior changes), three files need updates.
+**Issue:** The 7 numbered steps are nearly verbatim in [session-hygiene](session-hygiene.md) and [workflows](workflows.md). If the steps ever change (typecheck adds linting, push behavior changes), three files need updates.
 
-**Proposed fix:** Pick **one canonical home** (I recommend [[commands-and-skills]] since it's the slash-command index). The other two link there with a one-line summary: *"Full protocol: [[commands-and-skills#`/squeaky-clean`|see commands-and-skills]]."*
+**Proposed fix:** Pick **one canonical home** (I recommend [commands-and-skills](commands-and-skills.md) since it's the slash-command index). The other two link there with a one-line summary: *"Full protocol: [see commands-and-skills](commands-and-skills.md#squeaky-clean)."*
 
 **Effort:** 10 min.
 
@@ -147,12 +146,12 @@ You've clearly developed strong instincts here (the BURNED CLAUDE.md is sophisti
 ### M3. "Write The TODO", "Distill", "Brief" — same triple-documentation pattern
 
 Same issue as M2 for three more procedures. Each shows up in:
-- [[commands-and-skills]] (definition)
-- [[session-hygiene]] (full guide)
-- [[workflows]] (workflow entry)
-- [[quick-reference]] also lists each as a signal
+- [commands-and-skills](commands-and-skills.md) (definition)
+- [session-hygiene](session-hygiene.md) (full guide)
+- [workflows](workflows.md) (workflow entry)
+- [quick-reference](quick-reference.md) also lists each as a signal
 
-**Proposed fix:** Same pattern — canonical home in [[commands-and-skills]], cross-references elsewhere. [[quick-reference]] keeps its one-liner mentions (that's its job) but loses the prose.
+**Proposed fix:** Same pattern — canonical home in [commands-and-skills](commands-and-skills.md), cross-references elsewhere. [quick-reference](quick-reference.md) keeps its one-liner mentions (that's its job) but loses the prose.
 
 **Effort:** 15 min for all three.
 
@@ -161,10 +160,10 @@ Same issue as M2 for three more procedures. Each shows up in:
 ### M4. Status line documented in 2 places
 
 **Where:**
-- [[status-line]] — the full 273-line guide
-- [[tools-and-integrations]] lines 159–173 — duplicates the "what each piece shows" content
+- [status-line](status-line.md) — the full 273-line guide
+- [tools-and-integrations](tools-and-integrations.md) lines 159–173 — duplicates the "what each piece shows" content
 
-**Proposed fix:** [[tools-and-integrations]] keeps the section but reduces it to: 1 sentence what it is + link to [[status-line]]. The detailed table moves to [[status-line]] only.
+**Proposed fix:** [tools-and-integrations](tools-and-integrations.md) keeps the section but reduces it to: 1 sentence what it is + link to [status-line](status-line.md). The detailed table moves to [status-line](status-line.md) only.
 
 **Effort:** 5 min.
 
@@ -173,12 +172,12 @@ Same issue as M2 for three more procedures. Each shows up in:
 ### M5. Saul Bass / Maximum Overdrive footer / Touchstone — described in 2 files each
 
 **Where:**
-- [[claude-watch-outs]]: each is a "pattern" entry with example
-- [[lessons-learned]]: each is a dated incident with full context
+- [claude-watch-outs](claude-watch-outs.md): each is a "pattern" entry with example
+- [lessons-learned](lessons-learned.md): each is a dated incident with full context
 
 **Issue:** The verbatim file lists, the descriptions, and the lessons are largely duplicated. Both files serve a real purpose (patterns vs. dated incidents) but the duplication is heavy.
 
-**Proposed fix:** [[claude-watch-outs]] keeps the **pattern** (one paragraph: symptom, why, how to catch, rule) and adds a wikilink to [[lessons-learned#The Saul Bass incident]] for the dated incident details. Avoids 80% of the prose duplication.
+**Proposed fix:** [claude-watch-outs](claude-watch-outs.md) keeps the **pattern** (one paragraph: symptom, why, how to catch, rule) and adds a wikilink to [lessons-learned: The Saul Bass incident](lessons-learned.md#2026-04-10--the-saul-bass-incident-hallucinated-reference-calcified-across-13-files) for the dated incident details. Avoids 80% of the prose duplication.
 
 **Effort:** 10 min.
 
@@ -186,7 +185,7 @@ Same issue as M2 for three more procedures. Each shows up in:
 
 ### M6. lessons-learned "Earlier lessons" section is a bare file-name list
 
-**Where:** [[lessons-learned]] lines 110–130 — 20+ `feedback-*.md` filenames listed without context.
+**Where:** [lessons-learned](lessons-learned.md) lines 110–130 — 20+ `feedback-*.md` filenames listed without context.
 
 **Issue:** Useful as a directory but not as a learning resource. Reader has to open each file to know what it covers.
 
@@ -204,7 +203,7 @@ Same issue as M2 for three more procedures. Each shows up in:
 
 ### M7. status-line.md is 273 lines — could split
 
-**Where:** [[status-line]]
+**Where:** [status-line](status-line.md)
 
 **Issue:** Setup guide + full Python script + customization examples + troubleshooting + bash example + reference table. That's 4–5 docs in one. Functional but heavy.
 
@@ -220,7 +219,7 @@ Same issue as M2 for three more procedures. Each shows up in:
 
 ### M8. workflows.md is 261 lines — some entries don't fit the "workflow" frame
 
-**Where:** [[workflows]]
+**Where:** [workflows](workflows.md)
 
 **Issue:** Most entries are workflows (multi-step patterns). But:
 - *"One Change At A Time"* is more of a rule than a workflow
@@ -251,7 +250,7 @@ Same issue as M2 for three more procedures. Each shows up in:
 
 **Issue:** Claude Code's plan mode (where Claude proposes a plan before executing) isn't mentioned. Worth a workflow entry.
 
-**Proposed fix:** Add a section to [[workflows]] on when to invoke plan mode and when to skip it.
+**Proposed fix:** Add a section to [workflows](workflows.md) on when to invoke plan mode and when to skip it.
 
 **Effort:** 15 min.
 
@@ -284,10 +283,10 @@ Same issue as M2 for three more procedures. Each shows up in:
 
 ### What's working really well
 
-- **Dated lessons.** Every incident in [[lessons-learned]] has a date. That's gold. Don't lose this discipline.
+- **Dated lessons.** Every incident in [lessons-learned](lessons-learned.md) has a date. That's gold. Don't lose this discipline.
 - **Origin pointers.** Most workflows note where they came from (BURNED session, UMB phase 4, etc.). Makes them feel real, not theoretical.
 - **Memory pointers.** *"Memorialized in: feedback-X.md in Claude's memory"* — these are the connective tissue between this playbook and Claude's memory. Important pattern, keep it up.
-- **The watch-outs are concrete.** [[claude-watch-outs]] has actual examples with file counts and timelines, not vague warnings.
+- **The watch-outs are concrete.** [claude-watch-outs](claude-watch-outs.md) has actual examples with file counts and timelines, not vague warnings.
 
 ### What's at risk
 
@@ -362,7 +361,7 @@ I lean toward **Option B**. It's the safest version of "let Claude maintain my v
 1. **Open Cowork** in a new session.
 2. **Send this prompt** (it grants folder access AND tells Cowork what to do):
 
-> *"Mount `C:\Users\brigg\ai-learning-journey` and `C:\Users\brigg\ai-learning-journey-private`. Then I'm resuming a playbook audit — read OBSIDIAN.md for the vault setup, _HOME.md for the map, then PLAYBOOK-AUDIT.md and scroll to the 'Session checkpoint' section at the bottom for the punch list. Don't re-read the whole audit unless you need to. Then ask me what I want to tackle next."*
+> *"Mount the `ai-learning-journey` and `ai-learning-journey-private` folders. Then I'm resuming a playbook audit — read PLAYBOOK-AUDIT.md and scroll to the 'Session checkpoint' section at the bottom for the punch list. Don't re-read the whole audit unless you need to. Then ask me what I want to tackle next."*
 
 3. **Cowork will pop a folder-access prompt** — approve both folders. Then it'll read the checkpoint and resume.
 
@@ -371,5 +370,3 @@ That's it. Cowork starts fresh, including folder access, but the vault carries t
 ### Open questions for next session
 
 None — the audit is closed. The playbook is in working order; future sharpening happens through normal directed-edit cadence (Briggsy directs, Claude writes).
-
-#audit #playbook #meta #checkpoint

@@ -1,8 +1,3 @@
----
-aliases: [hygiene, session-hygiene, session]
-tags: [playbook]
----
-
 # Session hygiene
 
 Session-level protocols that prevent pain. Follow these and your sessions end cleanly.
@@ -36,7 +31,7 @@ When Claude Code's context window is ~70% full, start a new terminal. Don't wait
 
 ## Claude's memory location
 
-`C:/Users/brigg/.claude/projects/C--Users-brigg-ai-learning-journey/memory/`
+`~/.claude/projects/<this repo>/memory/`
 
 That's where Claude stores everything it remembers about you. If you're curious what Claude is "thinking" about a project or a preference, browse that folder. It's human-readable markdown.
 
@@ -54,17 +49,17 @@ That's where Claude stores everything it remembers about you. If you're curious 
 
 ## End-of-session protocols
 
-These are the protocols you reach for when wrapping up. Full mechanics live in [[commands-and-skills]] — this section covers when to use them in your session flow.
+These are the protocols you reach for when wrapping up. Full mechanics live in [commands-and-skills](commands-and-skills.md) — this section covers when to use them in your session flow.
 
-- **Update the TODO** before stepping away or starting a new terminal. Say *"write the TODO"*. Forward-looking only — no session history, no diary. See [[commands-and-skills#"Write the TODO"]].
-- **Squeaky clean** when you want a ship-ready state. Say *"squeaky clean"*. Updates TODO + typechecks + temp cleanup + commit + push, all in a fork. See [[commands-and-skills#`/squeaky-clean`]].
-- **Distill** when you've solved something tricky and the lesson would otherwise evaporate. Say *"capture this"* or *"distill this"*. Hard-won knowledge only — not bug fixes or feature work. See [[commands-and-skills#`/distill`]].
+- **Update the TODO** before stepping away or starting a new terminal. Say *"write the TODO"*. Forward-looking only — no session history, no diary. See [commands-and-skills: "Write the TODO"](commands-and-skills.md#write-the-todo).
+- **Squeaky clean** when you want a ship-ready state. Say *"squeaky clean"*. Updates TODO + typechecks + temp cleanup + commit + push, all in a fork. See [commands-and-skills: `/squeaky-clean`](commands-and-skills.md#squeaky-clean).
+- **Distill** when you've solved something tricky and the lesson would otherwise evaporate. Say *"capture this"* or *"distill this"*. Hard-won knowledge only — not bug fixes or feature work. See [commands-and-skills: `/distill`](commands-and-skills.md#distill).
 
 ---
 
 ## Start-of-work protocols
 
-- **Brief** before touching a subsystem you haven't worked on in a while, or when Claude says *"I think I've seen this before"* (make Claude verify against insights). Say *"brief me on X"*. See [[commands-and-skills#`/brief`]].
+- **Brief** before touching a subsystem you haven't worked on in a while, or when Claude says *"I think I've seen this before"* (make Claude verify against insights). Say *"brief me on X"*. See [commands-and-skills: `/brief`](commands-and-skills.md#brief).
 
 ---
 
@@ -81,7 +76,7 @@ Hooks CAN fail. Don't rely on them for safety. Claude should still avoid WebFetc
 
 ## Claude Code has NO project isolation between memory files
 
-All Claude Code memory in `C:/Users/brigg/.claude/projects/C--Users-brigg-ai-learning-journey/memory/` is shared across every project in `ai-learning-journey`. BURNED, UMB, Racer — all the same memory pool.
+All Claude Code memory in `~/.claude/projects/<this repo>/memory/` is shared across every project in `ai-learning-journey`. BURNED, UMB, Racer — all the same memory pool.
 
 **What this means:** A feedback note captured in a BURNED session applies to all future sessions, in all projects, until removed. This is intentional — cross-project lessons should generalize.
 

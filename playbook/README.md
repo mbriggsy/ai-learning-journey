@@ -2,9 +2,11 @@
 
 This folder is the front door to how we work: Briggsy directs and judges the result, and Claude builds. It is written for Briggsy, so "you" below means him. Each page explains a play and points to where it lives. The machinery stays where it is: hooks (small scripts Claude Code runs by itself at set moments, such as session start or just before a tool runs) in [projects/hooks/](../projects/hooks/), and skills (written instructions Claude loads for one kind of job) in [projects/skills/](../projects/skills/).
 
+Sessions for this work start in this folder: open the terminal in `playbook/` and say "resume our setup work". Screenshots for those sessions go in `playbook/temp/`, which never leaves this laptop.
+
 ## The plays, in order
 
-For sizable work, steps 1 to 5 are required, in this order: brief, a deepened plan, the build, the whole-file review, and distill. Steps 6 and 7 close the session: squeaky when you call it, and the handoff when you have named a successor. Which tool delivers a step is Claude's call, made job by job, and it can change when a better tool comes along.
+For sizable work, steps 1 to 5 are required, in this order: brief, a deepened and checked plan, the build, the whole-file review, and distill. Steps 6 and 7 close the session: squeaky when you call it, and the handoff when you have named a successor. Which tool delivers a step is Claude's call, made job by job, and it can change when a better tool comes along.
 
 ### 1. Brief
 
@@ -13,11 +15,13 @@ Before work starts on a topic, Claude finds the few past lessons in the project'
 - **Start it:** "brief me on <topic>", "any gotchas with <topic>?", "what should I know before I start <topic>?", or `/brief <topic>`.
 - **Lives in:** [projects/skills/distill-and-brief/brief/](../projects/skills/distill-and-brief/brief/SKILL.md)
 
-### 2. Plan, then deepen
+### 2. Plan, deepen, then check the plan
 
 Claude writes a structured plan into the project's `docs/plans/` folder, and the planning skill gives it a quick strength check automatically. Deepening is the extra pass on a finished plan: it scores each section, picks the two to five weakest, and sends helper agents (other copies of Claude that Claude starts to do part of a job) to research them.
 
-- **Start it:** "plan <the work>", then "deepen the plan". For the full, broader research pass instead of the quick, targeted one, add "do not use fast path".
+Then, before any build, the deepened plan gets checked as a whole: skeptical reviewers look for parts that contradict each other, sections a later change left out of date, steps that can't be built, and work nobody asked for. Their fixes go into the plan before any code is written.
+
+- **Start it:** "plan <the work>", then "deepen the plan". For the full, broader research pass instead of the quick, targeted one, add "do not use fast path". Claude runs the check itself once the deepen is done: today with the compound-engineering plugin's `ce-doc-review` skill or a batch of reviewer agents, until our own version is built.
 - **Lives in:** the `ce-plan` skill of the compound-engineering plugin (an add-on pack of skills installed into Claude Code), under `~/.claude/plugins/`.
 
 ### 3. Build

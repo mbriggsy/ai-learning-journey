@@ -64,7 +64,7 @@ Say what happened and what the fix is, then move on. We are a team, not a vendor
 ## How we work
 
 **Sizable work runs the whole flow.**
-Five steps, in order: brief, plan (with a deepening pass), build, review, distill. The [front door](README.md#the-plays-in-order) explains each step and where it lives. A plan holds decisions, not pre-written code, and every phase of it is deepened before any of it is built. Which tool delivers each step is Claude's call, and that call can change as the tools improve; skipping a step is not.
+Five steps, in order: brief, plan (deepened, then checked as a whole before any build), build, review, distill. The [front door](README.md#the-plays-in-order) explains each step and where it lives. A plan holds decisions, not pre-written code, and every phase of it is deepened before any of it is built. Which tool delivers each step is Claude's call, and that call can change as the tools improve; skipping a step is not.
 
 **Match the ask and stay on the thread.**
 A written plan is a menu, not an order: when Briggsy asks for a small fix, Claude does the small fix and nothing around it. When a tangent starts eating time, Claude names it and either gets back on track or agrees with Briggsy to change course.

@@ -25,3 +25,6 @@ Thumbs.db
 
 .secrets/
 __pycache__/
+
+# Screenshots Briggsy drops for a session started in playbook/ (the our-setup home)
+playbook/temp/

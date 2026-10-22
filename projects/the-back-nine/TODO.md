@@ -22,28 +22,29 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-10-21, b9-8): build #1 of the D7 queue, the working-year pay check, from its PLAN — in a FRESH
-session.** Read `git log` first. The plan is `docs/plans/features/working-year-pay-check-build-spec.md` (`84983ae1`):
-planned and deepened (13 units, three phases, KTD1–KTD22). In order:
-1. **Apply the doc review first, before any code.** Five ce-doc-review personas reviewed the deepened plan
-   (`wf_ed90312b-6af`): **83 findings, 0 at P0, 16 at P1** (40 P2, 27 P3). They were NOT refuted — open every cited
-   line before applying one (the measured filed-prescription hit rate is ~25–40 %). They are in
-   `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-plan-review\`
-   (`coherence-reviewer.md`, `feasibility-reviewer.md`, `adversarial-document-reviewer.md`, `scope-guardian-reviewer.md`,
-   `design-lens-reviewer.md`). Apply what survives to the plan, resolving in place (never a stacked "resolutions" layer);
-   preserve every U-ID; commit the plan.
-2. **Build Phase A** (U1–U6, the engine, inert in the app until setup asks the question), then Phase B (U7 + U8 + U12 +
-   U13 land as ONE commit — the draft-key compile gate and the R7 walk tie them), then Phase C (U10 seeds + measurement,
-   U11 docs). Per unit: test-first where the plan says so; the U5 loop reorder lands ALONE, byte-identical, before any new term.
-   Then a whole-file review and `/distill`. Expect more than one session: one walked build cost ~48 % of a window (b9-2).
+▶ **START HERE (2026-10-21, b9-9): build #1 of the D7 queue, the working-year pay check, from its REVIEWED plan.**
+Read `git log` first. The plan is `docs/plans/features/working-year-pay-check-build-spec.md`: planned, deepened and
+reviewed. The doc review's 83 findings were verified against source and challenged by skeptics (`wf_46aab717-201`;
+verdicts in `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-plan-review\verify\`),
+and every surviving fix is applied in place. **U12, the return-path ask, is CUT**: nobody has used the product, so no
+saved plan predates the new answer (Briggsy, 2026-10-21). Build in the plan's commit order:
+1. **Phase A** (engine, inert in the app): A1 U4 → A2 U3's survivor-year extraction alone → A3 U1's payroll keys + U2 →
+   A4 U1's earnings-test keys + U3 (read 42 U.S.C. §402(e)(2)(D) and its POMS section FIRST — the RIB-LIM × credit
+   primary) → A5 U5's loop reorder + extractions alone, byte-identical → A6 U5's check → A7 U6a. A constants key lands
+   only with the producer its WITNESS row names. Every commit refreshes the README/roadmap test-count claims and runs
+   `pnpm doc:reanchor` + `pnpm verify:doc-stats` (CI runs it before the tests).
+2. **Phase B**, ONE go-live commit: U6b + U7 + U8 + U9 + U13, `datesolo`'s own W, the short and stale-W witness seeds,
+   and the intake-fold edits; `verify:fit` green at that commit.
+3. **Phase C**: U10 (every date seed gets W; measured), then U11 (docs). Then a whole-file review and `/distill`.
+   Expect more than one session: one walked build cost ~48 % of a window (b9-2).
 **The research, durable:** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-research\`
 — the skeptic-verified primaries (`research-*.json` + `verdict-*.json`: payroll 6.2 % to $184,500, 1.45 %, 0.9 % over
 $250,000 MFJ / $200,000 single; earnings test $24,480 / $65,160, FR Doc 2025-19763), local copies of every source in
 `sources\` (ssa.gov 403s curl; the FR raw text, eCFR and secure.ssa.gov POMS fetch fine), the code maps (`map-*.md`) and
 the deepening's findings (`deepen\`, `wf_675930c0-d75`, 64 findings, all integrated into the plan).
-**His calls, shipped flagged (never blocking):** every new string (drafted, Caddie-walked); the return-path "Not now"
-(KTD22); the R27 reading (both tracks charge W in working years); the main-thread money picture as an amendment of the ⚑
-RULED "read from the wire" (KTD12). The day the check ships, the working-year row's "It doesn't check that your pay really
+**Nothing parks.** Every new string is drafted, Caddie-walked and shipped flagged, and so are the R27 reading and the
+main-thread money picture (the plan's *Departures from the ruling*, item 4). The saved shapes are the pilot's until
+Briggsy saves his first real plan; the tool is built for him (a friend using it is "a crazy outside chance", his words, 2026-10-21). The day the check ships, the working-year row's "It doesn't check that your pay really
 covers all of that…" sentence comes out for a household with W (U9). Build 2, the surplus question, follows this build.
 
 **SESSION 2026-10-21 (b9-8):**

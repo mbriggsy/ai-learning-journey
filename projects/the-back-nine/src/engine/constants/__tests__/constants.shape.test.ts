@@ -18,6 +18,12 @@ import {
   STATE_TAX_PROFILES,
   medicareCostTrend,
   partB2026,
+  workingYearsConstants,
+  WORKING_YEARS_YEAR,
+  oasdiRate,
+  oasdiWageBase,
+  hiRate,
+  additionalMedicareTax,
 } from '../index'
 import { isUnsourced, sourced } from '../types'
 
@@ -365,8 +371,29 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
       Object.keys(healthConstants).length +
       Object.keys(contributionConstants).length +
       Object.keys(socialSecurityConstants).length +
-      Object.keys(solverConstants).length
+      Object.keys(solverConstants).length +
+      Object.keys(workingYearsConstants).length
     expect(Object.keys(ALL_CONSTANTS).length).toBe(expected)
+  })
+
+  it('the working-years payroll figures are the primaries’ own, each read 2026-10-21 (§3101; FR Doc 2025-19763; the Form 8959 instructions)', () => {
+    // Typed from the primaries (DND 012), never from the module: 26 U.S.C. §3101(a) "6.2 percent",
+    // §3101(b)(1) "1.45 percent", §3101(b)(2) "0.9 percent … (A) … joint return, $250,000, … (C) in
+    // any other case, $200,000"; FR Doc 2025-19763 "The OASDI contribution and benefit base is
+    // $184,500 for remuneration paid in 2026".
+    expect(WORKING_YEARS_YEAR).toBe(2026)
+    expect(oasdiRate.value).toBe(0.062)
+    expect(oasdiWageBase.value).toBe(184_500)
+    expect(hiRate.value).toBe(0.0145)
+    expect(additionalMedicareTax.value).toEqual({ rate: 0.009, thresholdMfj: 250_000, thresholdSingle: 200_000 })
+    for (const [key, entry] of Object.entries(workingYearsConstants)) {
+      expect(entry.directionalUntilPinned, `${key} is primary-read`).toBe(false)
+      expect(entry.citation, `${key} carries its dated primary read`).toMatch(/read 2026-10-21/)
+      expect(entry.pinTo, `${key} names its primary`).toBeDefined()
+    }
+    // The frozen lines say so (the consumer deflates them); the wage base says it is wage-indexed.
+    expect(additionalMedicareTax.note).toMatch(/FROZEN in nominal dollars/)
+    expect(oasdiWageBase.note).toMatch(/WAGE-INDEXED/)
   })
 
   describe('state income tax — the v1 priced roster {NC, PA, FL} (the state-tax unit, DND/012)', () => {
@@ -799,6 +826,9 @@ describe('canonical constants — shape & provenance (contract #6)', () => {
       // unrelated 0.85×30,000 SS-taxable figure in healthOverlay.test.ts (the exact
       // collision the comment above names); the state-shape test pins it by assertion instead.
       '12750', '0.0399', '0.0307',
+      // The working-years table (single-sourced in workingYears.ts): the 2026 OASDI wage base.
+      // (Its $250,000 / $200,000 Additional Medicare lines and the rates are too collision-prone.)
+      '184500',
     ]
     // Underscore-insensitive so 768_700 and 768700 both match.
     const norm = (s: string) => s.replace(/_/g, '')

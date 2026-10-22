@@ -198,6 +198,12 @@ const WITNESSES: ReadonlyArray<readonly [key: string, file: string, symbol: stri
   ['socialSecurity.spousalRate', 'src/engine/socialSecurityBenefit.ts', 'spousalRate'],
   ['contributions.employerPlan2026', 'src/intake/sanity.ts', 'employerPlan2026'],
   ['contributions.hsa2026', 'src/intake/sanity.ts', 'hsa2026'],
+  // The pay check's payroll keys (A3), each bound to the producer that reads it. The family's walk
+  // rule (consumed iff the construct carries W) lands with the check (U5); until then no run reads them.
+  ['workingYears.oasdiRate', 'src/engine/payrollTax.ts', 'oasdiRate'],
+  ['workingYears.oasdiWageBase', 'src/engine/payrollTax.ts', 'oasdiWageBase'],
+  ['workingYears.hiRate', 'src/engine/payrollTax.ts', 'hiRate'],
+  ['workingYears.additionalMedicareTax', 'src/engine/payrollTax.ts', 'additionalMedicareTax'],
 ] as const
 
 /** Doc/meta/parked rows: NO run-layer (engine outside constants, or intake) file may import

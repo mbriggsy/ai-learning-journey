@@ -16,6 +16,9 @@
  *     no cost-of-living clause), inside `seniorBonusFor` (every reader goes through `deductionStack`);
  *     the 6 % phase-out RATE is a rate, never deflated; the 2025–2028 window is unchanged. The bonus
  *     also phases PER PERSON (IRS Schedule 1-A lines 32–37), which the hand oracle below encodes.
+ *   - The Additional Medicare Tax lines ($250,000 joint / $200,000 single — 26 U.S.C. §3101(b)(2), "aren't
+ *     indexed for inflation" per the Form 8959 instructions), inside `payrollTaxForYear` (the pay check's
+ *     payroll producer); the 0.9 % rate is a rate, and the wage base is wage-indexed, so neither deflates.
  *   - The HSA age-55 catch-up ($1,000, IRC §223(b)(3)(B), outside §223(g)'s COLA) is intake-side: its
  *     arm lives in `src/intake/__tests__/intakeMap.test.ts` (the runway ceiling, `contributionCeilingInYear`).
  *   - NOT the IRMAA top tier. It IS frozen nominal through bill year 2027, but the statute compares each
@@ -31,7 +34,9 @@
 import { describe, it, expect } from 'vitest'
 import { stateIncomeTax, type StateTaxYearContext } from '@engine/stateTax'
 import { deductionStack } from '@engine/taxCore'
+import { payrollTaxForYear } from '@engine/payrollTax'
 import {
+  additionalMedicareTax,
   age65AdditionMFJ,
   age65AdditionSingle,
   medicareCostTrend,
@@ -176,5 +181,35 @@ describe('the OBBBA senior bonus — its dollar figures fall in real terms insid
   it('the window is unchanged — nothing before 2025 or after 2028, deflated or not', () => {
     expect(bonusIn('mfj', 2, 100_000, 2029)).toBe(0)
     expect(bonusIn('mfj', 2, 100_000, 2045)).toBe(0)
+  })
+})
+
+describe('the Additional Medicare Tax lines — $250,000 joint / $200,000 single fall in real terms (the pay check’s payroll producer)', () => {
+  // §3101(b)(2), and the Form 8959 instructions: "The threshold amounts below aren't indexed for
+  // inflation." The 0.9 % RATE is a rate, never deflated; the wage base is wage-indexed and stays
+  // flat-real (the statute indexes it), so only the two lines move.
+  const AMT = additionalMedicareTax.value
+  const handAmt = (combinedWages: number, filing: 'mfj' | 'single', year: number): number =>
+    AMT.rate * Math.max(0, combinedWages - (filing === 'mfj' ? AMT.thresholdMfj : AMT.thresholdSingle) / oracleIndex(year))
+
+  it('at the anchor year each line is the statute figure itself: pay exactly at it owes nothing', () => {
+    expect(payrollTaxForYear([AMT.thresholdSingle], 'single', ANCHOR).additionalMedicare).toBe(0)
+    expect(payrollTaxForYear([AMT.thresholdMfj / 2, AMT.thresholdMfj / 2], 'mfj', ANCHOR).additionalMedicare).toBe(0)
+  })
+
+  it('ten years out, the SAME real pay crosses a lower real line — the hand rule on the deflated line, both statuses', () => {
+    const y = ANCHOR + 10
+    // Non-vacuous: pay exactly at the nominal line owed $0 undeflated; deflated it owes on the gap.
+    expect(handAmt(AMT.thresholdSingle, 'single', y)).toBeGreaterThan(100)
+    expect(payrollTaxForYear([AMT.thresholdSingle], 'single', y).additionalMedicare).toBeCloseTo(handAmt(AMT.thresholdSingle, 'single', y), 6)
+    expect(payrollTaxForYear([150_000, 120_000], 'mfj', y).additionalMedicare).toBeCloseTo(handAmt(270_000, 'mfj', y), 6)
+  })
+
+  it('the per-person taxes do not move with the year — the wage base is wage-indexed, held flat in real dollars', () => {
+    const at = payrollTaxForYear([250_000], 'single', ANCHOR)
+    const later = payrollTaxForYear([250_000], 'single', ANCHOR + 25)
+    expect(later.socialSecurity).toBe(at.socialSecurity)
+    expect(later.medicare).toBe(at.medicare)
+    expect(later.additionalMedicare).toBeGreaterThan(at.additionalMedicare)
   })
 })

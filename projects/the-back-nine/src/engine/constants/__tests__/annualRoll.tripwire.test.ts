@@ -25,9 +25,10 @@
  *  1. Re-source EVERY dated figure for the new year from its primary — IRS Rev. Proc. (brackets,
  *     standard deduction, RMD tables), the IRS COLA notice (contribution limits), CMS (Part B,
  *     IRMAA), HHS (poverty guidelines), SSA (wage base, COLA).
- *  2. Bump `TAX_YEAR` / `COVERAGE_YEAR` / `CONTRIBUTION_YEAR` and every figure they key.
- *  3. Update the coupled year pins: `src/shared/__tests__/scaffold.smoke.test.ts:10-13` asserts all
- *     three literals AND `CONSTANTS_VINTAGE`, and `constants.shape.test.ts` carries per-figure pins
+ *  2. Bump `TAX_YEAR` / `COVERAGE_YEAR` / `CONTRIBUTION_YEAR` / `WORKING_YEARS_YEAR` and every figure
+ *     they key (the last keys the payroll wage base, from the year's SSA Federal Register notice).
+ *  3. Update the coupled year pins: `src/shared/__tests__/scaffold.smoke.test.ts:10-14` asserts all
+ *     four year literals AND `CONSTANTS_VINTAGE`, and `constants.shape.test.ts` carries per-figure pins
  *     (including the FPL guideline year). They red together by design — that is the forcing function.
  *  4. The vintage stamps move, which stales saved vaults on unlock. That is correct: their answers
  *     really were priced on the old year.
@@ -38,17 +39,19 @@ import {
   COVERAGE_YEAR,
   CONTRIBUTION_YEAR,
   TAX_YEAR,
+  WORKING_YEARS_YEAR,
   federalPovertyGuidelines,
 } from '@engine/constants'
 
 describe('the annual-roll tripwire (a re-verify gate, not a unit test)', () => {
   it('the constant table MUST be re-sourced for the new tax year — this arm goes red on 2027-01-01', () => {
-    // The three years move together by construction; a split would mean a partial roll shipped,
-    // which is its own defect (half the table on the new year, half on the old).
+    // The years move together by construction; a split would mean a partial roll shipped, which is
+    // its own defect (half the table on the new year, half on the old). WORKING_YEARS_YEAR (the
+    // payroll wage base and, with the earnings test, its exempt amounts) joined the set 2026-10-22.
     expect(
-      new Set([TAX_YEAR, COVERAGE_YEAR, CONTRIBUTION_YEAR]).size,
-      'PARTIAL ROLL: TAX_YEAR / COVERAGE_YEAR / CONTRIBUTION_YEAR disagree, so some figures are on ' +
-        'the new year and some on the old. Roll all three together or none.',
+      new Set([TAX_YEAR, COVERAGE_YEAR, CONTRIBUTION_YEAR, WORKING_YEARS_YEAR]).size,
+      'PARTIAL ROLL: TAX_YEAR / COVERAGE_YEAR / CONTRIBUTION_YEAR / WORKING_YEARS_YEAR disagree, so ' +
+        'some figures are on the new year and some on the old. Roll all four together or none.',
     ).toBe(1)
     expect(CONSTANTS_VINTAGE).toEqual({
       taxYear: TAX_YEAR,

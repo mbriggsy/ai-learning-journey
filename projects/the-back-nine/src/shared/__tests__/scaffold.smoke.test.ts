@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { CONSTANTS_VINTAGE, TAX_YEAR, COVERAGE_YEAR, CONTRIBUTION_YEAR } from '@engine/constants'
+import { CONSTANTS_VINTAGE, TAX_YEAR, COVERAGE_YEAR, CONTRIBUTION_YEAR, WORKING_YEARS_YEAR } from '@engine/constants'
 
 describe('scaffold smoke', () => {
   it('the test harness runs', () => {
@@ -10,6 +10,7 @@ describe('scaffold smoke', () => {
     expect(TAX_YEAR).toBe(2026)
     expect(COVERAGE_YEAR).toBe(2026)
     expect(CONTRIBUTION_YEAR).toBe(2026)
+    expect(WORKING_YEARS_YEAR).toBe(2026)
     expect(CONSTANTS_VINTAGE).toEqual({ taxYear: 2026, coverageYear: 2026, contributionYear: 2026 })
   })
 })

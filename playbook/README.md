@@ -78,6 +78,7 @@ These fire by themselves. Claude runs the window check itself at checkpoints, an
 - [how-to/session-chains.md](how-to/session-chains.md): hand off from one session to a named successor.
 - [how-to/throwaway-sessions.md](how-to/throwaway-sessions.md): short-lived background test sessions with `claude --bg`.
 - [how-to/code-review.md](how-to/code-review.md): the ultramode code review, step by step.
+- [TODO.md](TODO.md): the queue for our-setup work. A session starts at its START HERE line; the full flight plan stays private, and the TODO says where it is.
 - [docs/insights/](docs/insights/): the lessons our-setup work has paid for, one numbered note each. Sessions start in this folder, so `/brief` finds them here and `/distill` adds to them here.
 
 ## Where things live

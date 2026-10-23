@@ -4,25 +4,34 @@ The queue for our-setup work. Sessions for it start in this folder. The full fli
 
 ## ▶ START HERE
 
-**U3 step 8c, the Q14 hook. It's under way: round 1's review is done and its fixes are being built.** The full steps are in the plan's U3 section, NEXT #3; the record (triage, patches, review digests) is in the private backup folder `~/.claude/flow/backup/step8c-2026-10-22/`. **Step 8c records Q14's live data. It does not settle Q14:** Q14's `decide()` can't return VERIFIED, and nothing reads the recorder's captures yet, so that is its own follow-up (Next #4 below).
+**U3 step 8c, the Q14 hook: it's LIVE and recording. Three arms and the end checks are left.** The full steps are in the plan's U3 section, NEXT #3 (e); the record is in the private backup folder `~/.claude/flow/backup/step8c-2026-10-22/`. Read `live-groundtruth.txt` there first (one line per arrival so far, plus the findings), then `live-provenance.txt`. The captures are in `~/.claude/flow/probes/q14-live/captures.jsonl`. **Step 8c records Q14's live data. It does not settle Q14:** Q14's `decide()` can't return VERIFIED, and nothing reads the captures yet, so that is its own follow-up (Next #4 below).
 
-In this order:
+**Done (2026-10-23):** the code landed in `9658d4b6` (CI run `39893753866` passed); both settings-writer patches were applied (C29's rule and the hook); `--only Q14` filed PARTIAL with the new summary and was cleaned up. Live arms recorded so far: a task notification, an agent's message back, a peer message that arrived mid-turn, two `/loop` ticks, and two of Briggsy's own prompts (one each into "our setup" and "our setup-2"). The hook loaded mid-session with no restart. All 6 polling lines got their after-return line, and every line carries the committed recorder's stamp.
 
-1. **The monorepo edits, through the review cadence.** The path change (`projects/` to `playbook/`) in `projects/hooks/probes/defs/q14-prompt-origin.mjs` (lines 26 and 145), `probes/live/q14-recorder.mjs` (line 3) and `projects/hooks/README.md` (lines 68 and 223), plus round 1's fixes: the recorder notes a peer message's fixed wrapper and stamps every line with a hash of its own bytes, and the probe's summary and census cover peer messages and /loop ticks. Commit by path.
-2. **Patch 01, through the settings writer:** rewrite C29's Q14 entry in `~/.claude/settings.json` `autoMode.allow` as a whole (a test, then a set). A find-and-replace can't do it: the path appears twice, once inside Briggsy's own quoted words, so it would either be refused or change his words. The new entry keeps his 2026-10-20 quote and adds his typed 2026-10-22 approval.
-3. **Patch 02, through the writer:** add the recorder to `playbook/.claude/settings.local.json` as a `UserPromptSubmit` hook in exec form (`command: "node"` plus `args`), the form the probes' own hooks fire through.
-4. **`--only Q14`**, then `report.mjs` and `--cleanup`. It files PARTIAL again, with the new summary.
-5. **Live, with Briggsy.** First, his next typed prompt must leave a line tagged with this session; with none, check `/hooks` or start a fresh session in `playbook/`. Then: typed prompts, two Remote Control prompts (he says which), a task notification, two `/loop` ticks and one peer message. Every `polling: true` line needs its `afterReturn` line, and zero polling lines means that question is untested, not passed. Then check that the captures file holds only fixed tokens, times and tags. The large-transcript timing is already done (12.9 ms against 9.0 ms on a 63.7 MB transcript).
+**Left, in this order:**
 
-The hook stays until Q14's verdict arm settles Q14. It comes out through the writer, with Briggsy's words if the safety check blocks it. Step 1's code goes through the review cadence before it lands.
+1. **Ask Briggsy how he sent his two prompts of 2026-10-23,** in plain words: "Did you type your first messages this morning, at 11:07 and 11:09 your time, on the laptop keyboard, or send them from your phone?" Write his answer into `live-groundtruth.txt` against the `15:07:59Z` and `15:09:39Z` lines. Both records read `promptSource: typed`, so this answer decides whether a phone message looks different at all.
+2. **Two Remote Control prompts.** Briggsy sends two short messages from his phone into this session, starting with `rc` (say, `rc one` and `rc two`), and confirms he sent them that way. Log one ground-truth line for each.
+3. **A peer message that opens a turn.** The peer message measured so far landed mid-turn, so the usual handoff case, a message that wakes an idle session, is unmeasured. A throwaway `claude --bg` session, launched in a fresh folder inside `$TEMP/claude-probe-q8-trusted/`, waits about 60 s and then messages this session by its exact name while this session is idle. Clean up with `claude stop <id>` and `claude rm <id>`; it leaves one more dead `~/.claude.json` entry for Next #6.
+4. **The end checks**, per the plan's (e): the provenance check (disk blob equals the HEAD blob; every line's `recorder` equals the file's stamp), the mechanical audit of `captures.jsonl` (no key outside the recorder header's schema, every string a fixed token, an ISO time or a hex tag), and the tree-kill tally (every `polling: true` line joined to its `afterReturn` line).
+5. **Write the results down:** the plan's U3 NEXT #3 gets (e)'s results, and its (f) gets the findings below as design inputs. Then, through the review cadence, update `projects/hooks/README.md` line 3 ("built and tested but not live yet") and line 68 ("which stays unmeasured until the install step"), plus the recorder's header lines 31 to 35 ("Whether it does is measured at the install step"), to the measured result with its count. Edit the recorder only after the measurement ends (see Landmines).
+
+**Findings so far** (detail in `live-groundtruth.txt`):
+- **The prompt's origin can't be read while the hook runs.** In all 6 turn-opening lines, the prompt's record was missing when the hook looked (20 to 38 ms) and present after it returned (about 0.7 to 1 s).
+- **A peer message that arrives mid-turn fires the hook with the current turn's prompt id.** Anything that keys a prompt's origin on its prompt id would file that peer message as the turn opener. This is a trap for U15.
+- **A task notification queued at the start of a turn produced no hook line** (seen once).
+- **An agent's message back reached the hook starting at its bare `<agent-message>` tag,** while its stored record starts with the "Another Claude session sent a message:" preamble.
+
+The hook stays until Q14's verdict arm settles Q14. It comes out through the writer (patch 02's inverse), with Briggsy's words if the safety check blocks it.
 
 ## Current state
 
 - **U3 is landed and live:** the one settings writer, versioned hook deploys, the status line and the pre-push leak gate.
 - **Step 8b is done** (2026-10-23): probe Q8's background-session arm runs in a fresh folder inside one trusted folder, and Q8 is VERIFIED on CLI 2.1.309.
 - **Probes on 2.1.309:** the load-bearing set waits only on Q13 (unit U10) and Q14 (step 8c records its live data; Next #4 turns that data into a verdict).
+- **The Q14 hook is live** in `playbook/.claude/settings.local.json` (gitignored), so every session started in this folder records into the captures file.
 - **Lessons** live in [docs/insights/](docs/insights/), 001 to 007.
-- **Gates:** the hooks suite (`cd projects/hooks && node --test "tests/*.test.mjs"`) exits 0 locally. CI's "Hooks tests" passed on `0c762cfa` (run `39883908135`).
+- **Gates:** the hooks suite (`cd projects/hooks && node --test "tests/*.test.mjs"`) exits 0 locally (run 2026-10-23). CI's "Hooks tests" passed on `9658d4b6` (run `39893753866`).
 
 ## Next, in order
 
@@ -41,3 +50,5 @@ The hook stays until Q14's verdict arm settles Q14. It comes out through the wri
 - **Read a surprising probe run's own record before blaming the CLI** (`modelUsage`, `permission_denials`). Probe sessions can switch models mid-run (insight 003).
 - **Tests never build fixture paths with the code under test.** Mutation runs go on a copy and compare the real temp folder before and after (insight 006).
 - **A new laptop needs per-machine setup again,** including the probes' one-time trusted-folder approval (the steps are in the private backup folder for step 8b).
+- **Don't edit `projects/hooks/probes/live/q14-recorder.mjs` while 8c's measurement runs.** Any edit changes the stamp on every line written after it, so lines from before and after the edit count separately, and the end check (disk blob equals HEAD blob) fails until the edit is committed.
+- **Every capture line carries its CLI version (`cli`).** If Briggsy has updated the CLI past 2.1.309, the arms left in 8c land on the new version. The verdict arm counts each version separately, and the new version needs the full probe rerun first (the landmine above).

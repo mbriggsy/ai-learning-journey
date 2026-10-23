@@ -75,4 +75,4 @@ Untested:
 ## Where it lives
 
 - The handoff is step 10 of the [squeaky-clean skill](../../projects/skills/squeaky-clean/SKILL.md). Step 0 is where squeaky waits for background jobs.
-- Why the handoff waits for background jobs and takes whole names only: [the handoff lesson](../../projects/hooks/docs/insights/005-a-your-turn-handoff-claims-every-writer-the-sender-still-has-and-a-fuzzy-name-fallback-fires-when-the-target-is-gone.md).
+- Why the handoff waits for background jobs and takes whole names only: [the handoff lesson](../docs/insights/005-a-your-turn-handoff-claims-every-writer-the-sender-still-has-and-a-fuzzy-name-fallback-fires-when-the-target-is-gone.md).

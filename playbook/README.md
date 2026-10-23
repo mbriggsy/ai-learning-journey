@@ -78,11 +78,12 @@ These fire by themselves. Claude runs the window check itself at checkpoints, an
 - [how-to/session-chains.md](how-to/session-chains.md): hand off from one session to a named successor.
 - [how-to/throwaway-sessions.md](how-to/throwaway-sessions.md): short-lived background test sessions with `claude --bg`.
 - [how-to/code-review.md](how-to/code-review.md): the ultramode code review, step by step.
+- [docs/insights/](docs/insights/): the lessons our-setup work has paid for, one numbered note each. Sessions start in this folder, so `/brief` finds them here and `/distill` adds to them here.
 
 ## Where things live
 
 - **Hooks:** [projects/hooks/](../projects/hooks/) holds the source and the tests; its [README](../projects/hooks/README.md) explains each hook. The live copies run from a version folder under `~/.claude/hooks/`, which the deploy script builds from a commit ([Deploys](../projects/hooks/README.md#deploys)).
 - **Skills we built:** [projects/skills/](../projects/skills/) holds brief and distill, squeaky-clean, ultramode-code-review, window and doc-audit. Claude Code loads them from `~/.claude/skills/`.
 - **Plugin skills:** `ce-plan` and `ce-work` come from the compound-engineering plugin, installed under `~/.claude/plugins/`.
-- **Lessons:** each project keeps its own `docs/insights/` folder. `/distill` writes to it; `/brief` reads from it. For example: [the-back-nine](../projects/the-back-nine/docs/insights/), [burned](../projects/burned/docs/insights/), [hooks](../projects/hooks/docs/insights/).
+- **Lessons:** each project keeps its own `docs/insights/` folder, with the lessons that project's work discovered. `/distill` writes to it; `/brief` reads from it. For example: [the-back-nine](../projects/the-back-nine/docs/insights/), [burned](../projects/burned/docs/insights/), and [our-setup's](docs/insights/), in this folder. Most of those are about the hooks code; each one names the files it is about.
 - **Claude's private memory:** under `~/.claude`, outside this public repo.

@@ -393,6 +393,33 @@ class TestScoring(unittest.TestCase):
         self.assertEqual(g.score(None, SCORING), 0.0)
 
 
+class TestKickingKeys(unittest.TestCase):
+    """Sleeper's projection rows say fgm_50p / fgmiss_<range>; the league pays fgm_50_59 / fgmiss."""
+
+    LEAGUE_K = {"fgm_0_19": 3.0, "fgm_20_29": 3.0, "fgm_30_39": 3.0, "fgm_40_49": 4.0, "fgm_50_59": 5.0,
+                "fgm_60p": 6.0, "fgmiss": -1.0, "xpm": 1.0, "xpmiss": -1.0}
+    # Spencer Shrader's real week-7 projection row, fg/xp keys only (Sleeper, pulled 2026-10-22 21:36)
+    SHRADER_WK7 = {"fga": 2.16, "fgm": 1.79, "fgm_20_29": 0.37, "fgm_30_39": 0.49, "fgm_40_49": 0.56,
+                   "fgm_50p": 0.37, "fgm_yds": 75.87, "fgmiss_30_39": 0.06, "fgmiss_40_49": 0.12,
+                   "fgmiss_50p": 0.19, "xpa": 2.54, "xpm": 2.47, "xpmiss": 0.06}
+
+    def test_a_real_projection_row_scores_its_long_makes_and_its_misses(self):
+        # 0.37*3 + 0.49*3 + 0.56*4 + 0.37*5 - (0.06+0.12+0.19) + 2.47 - 0.06
+        self.assertAlmostEqual(g.score(self.SHRADER_WK7, self.LEAGUE_K), 8.71, places=6)
+
+    def test_without_the_translation_the_same_row_reads_low(self):
+        # the pre-2026-10-22 number: 50+ makes and every miss silently scored 0
+        legacy = sum(self.LEAGUE_K.get(k, 0.0) * v for k, v in self.SHRADER_WK7.items() if k in self.LEAGUE_K)
+        self.assertAlmostEqual(legacy, 7.23, places=6)
+
+    def test_a_line_already_in_league_keys_is_never_counted_twice(self):
+        line = {"fgm_50_59": 1.0, "fgm_50p": 1.0, "fgmiss": 1.0, "fgmiss_40_49": 1.0}
+        self.assertAlmostEqual(g.score(line, self.LEAGUE_K), 5.0 - 1.0)
+
+    def test_a_scoring_dict_without_kicking_leaves_the_line_alone(self):
+        self.assertEqual(g.kicking_keys(self.SHRADER_WK7, SCORING), self.SHRADER_WK7)
+
+
 class TestRender(unittest.TestCase):
     def test_quiet_report_says_so_and_names_the_opponent(self):
         f = Fixture()

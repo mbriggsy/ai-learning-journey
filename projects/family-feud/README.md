@@ -13,6 +13,7 @@ Snake draft, 16 rounds, ~Aug 29. Full PPR, 6 of 8 make the playoffs.
 | **A live draft engine** | reads the cumulative Sleeper picks feed and prints board state, every roster's open needs, run watch, tier cliffs, best-available, VBD leans — and LINEUP DELTAS, the roster-aware queue that replayed +391.8 startable VORP over board order (2026-08-19) |
 | **A proven executor mode** | Claude drives Briggsy's logged-in Chrome and clicks the picks. Live-proven 2026-08-15: an API-confirmed fire at pick #1, then seven picks on a live 120s clock, worst case 61s, zero missed. Never yet run on the real league draft |
 | **An hourly data mule** | a Windows scheduled task hauling 10 Sleeper endpoints (`/state/nfl` first, and the week-keyed `/matchups` and `/transactions` addressed from it since 2026-09-17) + 5 fantasy RSS feeds + the expert consensus and the market ADP pool to disk — **17 sources, 15 of them landing in `newsletter/data/inbox/`**; the two draft-era fetchers stand down in-season with an `ok (stood down …)` line — so nothing depends on a network call at draft time. It **validates what it caught** — status, content-type, that it parses, that a feed has items — and **never overwrites good cargo with bad**: a failed source keeps the last payload and records how old it now is |
+| **A trade evaluator** | `scripts/trade_eval.py`: prices any offer week by week for both teams, on Sleeper's projections and on three sites, with the same roster-fix and free-agent rules before and after the trade. `--search` ranks counters. It never says accept or decline (insight 035) |
 | **A draft-state watcher** | the mule's first consumer. Hourly, it notices the moment `start_time` stops being null — or moves — and writes it down, because the date is a handshake that can shift **earlier**. It also refuses to go quiet: stale cargo, a lost baseline, a moved seat, or a re-created draft each raise their own alert |
 
 ## Where things are
@@ -121,7 +122,7 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         section [2], who the consensus ranks that the board does
                                         not carry — the half a rank-gap metric cannot see.
                                         → docs/insights/018
-tests/           1236 tests: python -m unittest discover -s tests  (run from the root)
+tests/           1298 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```

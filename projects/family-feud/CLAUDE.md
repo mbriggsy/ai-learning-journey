@@ -19,6 +19,7 @@ Draft ~Aug 29, 2026. Mission: beat Hunter. [`README.md`](README.md) is the map.
 | [`newsletter/data/state/DRAFT_ALERTS.md`](newsletter/data/state/DRAFT_ALERTS.md) | Everything `scripts/watch_draft_state.py` has ever fired — the draft date appearing or MOVING, your slot appearing/moving/vanishing, a re-created draft, dead cargo, and the T-7/T-48/T-6 countdown. Append-only, newest last. Push and email are dead account-wide, so this file IS the delivery — **open it at the start of a session, not when you go looking** |
 | [`newsletter/data/state/GAMEDAY.md`](newsletter/data/state/GAMEDAY.md) | Every run of `scripts/gameday_check.py` — Sat 20:00, Sun 08:00, Sun 11:30, Sun 15:00 (late-window inactives). A LIVE pull (never cargo): tagged starters with the best untagged bench sub, empty slots, bench bodies out-projecting a starter by 2+, the opponent's tags, and both sides' expected total. It names the move; a session fires it. Append-only, newest last. **Open it Sunday morning before touching the lineup** |
 | [`scripts/external_projections.py`](scripts/external_projections.py) | Weekly projections from three sources side by side (Sleeper + CBS + ESPN), all re-scored by OUR league's rules, with a consensus and a spread. **Every in-season lineup, waiver or blocking call reads it, never Sleeper alone.** That's Briggsy's rule from 2026-10-14: "always look externally". FantasyPros has a sign-up wall after 10 rows; we don't circumvent it |
+| [`scripts/trade_eval.py`](scripts/trade_eval.py) | **Every trade question: an offer received, an offer to send, or `--search` for counters.** It prices the change week by week, for both teams, on Sleeper and on three sites. The baseline gets every remedy the trade gets (insight 035). It never says accept or decline; Briggsy decides, and the browser skill executes |
 | `TODO.md` | What's next, ranked |
 
 **Precedence:** the runbook's instruction sections are current doctrine; its changelog is history
@@ -99,5 +100,11 @@ and never overrides them. Changelog entries quote pre-migration paths (`Draft Ki
   Describe the *object* ("a small silver whistle on a cord"), never the role. 2 of 4 rolls
   corrupted by one word. Working call: `imagen-4.0-generate-001`, `sampleImageSize: "2K"`,
   `aspectRatio: "1:1"`, `personGeneration: "allow_adult"`.
+- **Sleeper's kicker PROJECTIONS use keys the league doesn't score**: `fgm_50p` and
+  `fgmiss_<range>`, where the league scores `fgm_50_59` and `fgmiss`. `gameday_check.score` drops
+  unknown keys silently, so until 2026-10-22 every projected 50+ yarder and miss scored 0 in every
+  tool. `gameday_check.KICK_ALIASES` / `kicking_keys` translate them now, and `trade_eval.py`
+  refuses on any new distance key the translation doesn't map. Teach `KICK_ALIASES` first; never
+  widen the refusal.
 - **Anthropic push/email notifications are broken account-wide** — deliver output as files in this
   folder, never via notification.

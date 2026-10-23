@@ -140,7 +140,25 @@ Sunday." Reusing it for a weekly start/sit would produce a confident number with
 information in it at all. Either haul a real weekly projection source or have the check report
 availability only and say plainly that it is not ranking anyone.
 
-### 3. Trade evaluation, on demand
+### 3. Trade evaluation, on demand — ✅ BUILT 2026-10-22 (`scripts/trade_eval.py`)
+
+```
+python scripts/trade_eval.py --give "Zay Flowers" --get "A.J. Brown" --get "Tucker Kraft"
+python scripts/trade_eval.py --search --team Kaeperni --give "Zay Flowers"      # counters, ~2.5 min
+```
+
+**Built the night Kaeperni's offer was priced by hand twice, wrong both times.** The full account
+is [insight 035](insights/035-the-baseline-was-denied-the-remedy-the-trade-was-credited-with.md).
+The decisions and their reasons are in [`plans/2026-10-22-001-feat-trade-eval-plan.md`](plans/2026-10-22-001-feat-trade-eval-plan.md).
+
+- **What it reads:** weekly projections (Sleeper, plus three sites for the current week and next),
+  not VORP. The VORP caveat below is therefore history.
+- **How it works:** both worlds and both teams go through the same roster-fix and stream rules.
+- **What it prints:** the assumptions first, and it never says accept or decline.
+- **Transactions are not its job.** Every proposal, accept or decline still goes through the
+  `sleeper-draft-room` skill, and only when Briggsy names it.
+
+*The original stub follows, kept for its reasoning.*
 
 **Answers:** does this offer help us, given both rosters and what the board thinks of the players.
 

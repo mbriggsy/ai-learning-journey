@@ -170,10 +170,37 @@ def clock(dt):
     return f"{e.hour % 12 or 12}:{e:%M} {'PM' if e.hour >= 12 else 'AM'} ET"
 
 
+#: Sleeper's PROJECTION rows name kicking stats differently from the league's scoring_settings
+#: (measured 2026-10-22): rows carry `fgm_50p` and `fgmiss_30_39` / `_40_49` / `_50p`, the league
+#: scores `fgm_50_59`, `fgm_60p` and `fgmiss`. Unknown keys are ignored below, so before this every
+#: projected 50+ yarder and every projected miss scored 0 -- Shrader read ~1.5/wk low. Projections
+#: do not split out 60+, so a 50+ make is scored as 50-59.
+KICK_ALIASES = (("fgm_50p", "fgm_50_59"),)
+
+
+def kicking_keys(stats, scoring):
+    """A stat line with Sleeper's projection kicking keys renamed to the ones `scoring` pays. Only a
+    key the league does NOT score is moved, and only onto a key the line does not already carry, so a
+    line already in league keys (CBS's, an actual box score) is returned untouched -- never counted twice."""
+    out = None
+    for src, dst in KICK_ALIASES:
+        if src in stats and src not in scoring and dst in scoring and dst not in stats:
+            out = dict(stats) if out is None else out
+            out[dst] = out.pop(src)
+    if "fgmiss" in scoring and "fgmiss" not in stats:
+        misses = [k for k in stats if k.startswith("fgmiss_") and k not in scoring
+                  and isinstance(stats[k], (int, float))]
+        if misses:
+            out = dict(stats) if out is None else out
+            out["fgmiss"] = sum(out.pop(k) for k in misses)
+    return stats if out is None else out
+
+
 def score(stats, scoring):
     """Points this league pays for a Sleeper stat line. Missing stats are zero, unknown stats ignored."""
     if not stats:
         return 0.0
+    stats = kicking_keys(stats, scoring)
     return sum(scoring.get(k, 0.0) * v for k, v in stats.items() if k in scoring and isinstance(v, (int, float)))
 
 

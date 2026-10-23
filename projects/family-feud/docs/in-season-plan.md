@@ -144,7 +144,7 @@ availability only and say plainly that it is not ranking anyone.
 
 ```
 python scripts/trade_eval.py --give "Zay Flowers" --get "A.J. Brown" --get "Tucker Kraft"
-python scripts/trade_eval.py --search --team Kaeperni --give "Zay Flowers"      # counters, ~2.5 min
+python scripts/trade_eval.py --search --team Kaeperni --give "Zay Flowers"      # counters, ~6 min
 ```
 
 **Built the night Kaeperni's offer was priced by hand twice, wrong both times.** The full account

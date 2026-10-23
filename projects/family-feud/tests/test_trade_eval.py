@@ -57,8 +57,14 @@ def total(delta, weeks=None):
 
 class TestThePublishedNumber(unittest.TestCase):
     """The documented command on the frozen payloads reproduces the RECORDED result -- recorded from
-    the shipped method on 2026-10-22, never tuned to a scratch number. Insight 035 explains the gaps
-    to the hand-built -45.6 / -33.0: the free agent used twice, the denied baseline swap, IR returns."""
+    the shipped method, never tuned to a scratch number. Insight 035 explains the gaps to the
+    hand-built -45.6 / -33.0. Re-recorded 2026-10-23 after the whole-file review, from -36.9 / -47.8
+    (Kaeperni +43.7 / +53.9), step by step on this night (three sites us/them, Sleeper us/them):
+      swaps repeat until none gains (one swap was not parity)    -32.74 / +39.34, -45.76 / +50.18
+      a tied add goes to the player the market values most        -32.74 / +38.47, unchanged
+      IR return needs 2 of 3 sites; one-week ratios carry r       -32.83 / +38.93, unchanged
+      a man let go at processing is on waivers until next week    -36.25 / +43.19, -45.53 / +50.43
+    The drop-pool, empty-spot IR and position fixes do not move this night."""
 
     @classmethod
     def setUpClass(cls):
@@ -69,18 +75,38 @@ class TestThePublishedNumber(unittest.TestCase):
 
     def test_our_numbers(self):
         three, sleeper = self.js["sets"]["THREE SITES"]["delta"], self.js["sets"]["SLEEPER"]["delta"]
-        self.assertAlmostEqual(total(three[str(US)]), -36.9, places=1)
-        self.assertAlmostEqual(total(three[str(US)], range(7, 15)), -25.5, places=1)
-        self.assertAlmostEqual(total(three[str(US)], range(15, 18)), -11.4, places=1)
-        self.assertAlmostEqual(three[str(US)]["7"], -4.2, places=1)
-        self.assertAlmostEqual(total(sleeper[str(US)]), -47.8, places=1)
-        self.assertAlmostEqual(total(sleeper[str(US)], range(7, 15)), -33.5, places=1)
-        self.assertAlmostEqual(total(sleeper[str(US)], range(15, 18)), -14.3, places=1)
-        self.assertAlmostEqual(sleeper[str(US)]["7"], -6.1, places=1)
+        self.assertAlmostEqual(total(three[str(US)]), -36.25, places=2)
+        self.assertAlmostEqual(total(three[str(US)], range(7, 15)), -24.66, places=2)
+        self.assertAlmostEqual(total(three[str(US)], range(15, 18)), -11.60, places=2)
+        self.assertAlmostEqual(three[str(US)]["7"], -4.68, places=2)
+        self.assertAlmostEqual(total(sleeper[str(US)]), -45.53, places=2)
+        self.assertAlmostEqual(total(sleeper[str(US)], range(7, 15)), -31.19, places=2)
+        self.assertAlmostEqual(total(sleeper[str(US)], range(15, 18)), -14.34, places=2)
+        self.assertAlmostEqual(sleeper[str(US)]["7"], -6.10, places=2)
 
     def test_their_numbers(self):
-        self.assertAlmostEqual(total(self.js["sets"]["THREE SITES"]["delta"][str(THEM)]), 43.7, places=1)
-        self.assertAlmostEqual(total(self.js["sets"]["SLEEPER"]["delta"][str(THEM)]), 53.9, places=1)
+        self.assertAlmostEqual(total(self.js["sets"]["THREE SITES"]["delta"][str(THEM)]), 43.19, places=2)
+        self.assertAlmostEqual(total(self.js["sets"]["SLEEPER"]["delta"][str(THEM)]), 50.43, places=2)
+
+    def test_the_printed_table_carries_the_same_numbers(self):
+        """The table is what Briggsy reads; the JSON is not. Pinned only in --json, a row printing the
+        wrong set, a 'rest of season' that is really the regular season, or a '16-17' summing all three
+        playoff weeks all passed the suite (review 2026-10-23, mutants M10-M12)."""
+        rows = {}
+        for line in self.out.split("WEEK BY WEEK")[1].split("HOW MUCH")[0].splitlines():
+            if " | " in line and "," in line.split("|")[0]:          # a side's row, not the header
+                label, _, tail = line.strip().partition("  ")
+                rows[label] = [float(v) for v in line.split("|", 1)[1].replace("|", " ").split()]
+        self.assertEqual(rows["us, three sites"], [-24.7, -11.6, -8.3, -36.3])       # regular, playoffs, 16-17, rest
+        self.assertEqual(rows["us, sleeper"], [-31.2, -14.3, -9.9, -45.5])
+        self.assertEqual(rows["Kaeperni, three sites"], [30.3, 12.9, 9.8, 43.2])
+        self.assertEqual(rows["Kaeperni, sleeper"], [33.9, 16.6, 11.4, 50.4])
+
+    def test_it_says_what_the_numbers_rest_on(self):
+        self.assertIn("is on waivers until next week, so nobody starts him in week 7", self.out)
+        self.assertIn("With the trade, Kaeperni wanted Kyler Murray too; we pick free agents first", self.out)
+        self.assertEqual((self.js["process_at"], self.js["sleeper_only"], self.js["three_site_weeks"]),
+                         ("2026-10-23T21:30:00-04:00", None, [7, 8]))
 
     def test_our_drop_is_a_three_way_tie_and_printed_as_one(self):
         moves = self.js["sets"]["THREE SITES"]["moves"]["after"][str(US)]
@@ -96,7 +122,7 @@ class TestThePublishedNumber(unittest.TestCase):
         self.assertIn("A.J. Brown is locked by then (in a starting slot), so his week-7 points stay Kaeperni's", self.out)
 
     def test_the_head_to_head_week_prints_the_net_swing(self):
-        self.assertIn("Week 10 we play Kaeperni: our change minus theirs = three sites -5.8, sleeper -8.3", self.out)
+        self.assertIn("Week 10 we play Kaeperni: our change minus theirs = three sites -5.2, sleeper -8.3", self.out)
 
 
 class TestNoPlayerIsUsedTwice(unittest.TestCase):
@@ -125,6 +151,9 @@ class TestNoPlayerIsUsedTwice(unittest.TestCase):
                         for w in ctx.weeks:
                             seen.setdefault(w, {})[rid] = (set(world["sides"][rid].available(w)),
                                                           {p for _, p, _ in lines[w]}, streams[w])
+                            # the lineup inspected here IS the one scored -- not a re-derived copy
+                            self.assertAlmostEqual(sum(v for _, _, v in lines[w]), world["weekly"][rid][w], places=6,
+                                                   msg=f"{label} {tag} {rid} week {w}: detail is not what was scored")
                     for w, by in seen.items():
                         where = f"{label} {tag} week {w}"
                         self.assertEqual(by[US][1] & by[THEM][1], set(), f"{where}: starts for both sides")
@@ -356,6 +385,70 @@ class TestTheBaselineGetsEveryRemedy(unittest.TestCase):
             # 15 (FA QB) + RB 15 + WR 15 + TE 10 + K 8 = 63: the QB slot is NOT a zero in the bye week
             self.assertAlmostEqual(before["weekly"][US][12], 63.0, places=6)
 
+    def test_a_second_free_agent_is_open_to_the_baseline_too(self):
+        """One swap was not parity: a trade that frees a spot fills it AND swaps -- two free agents --
+        while today's full roster got one. Insight 035's denied remedy again, found by the 2026-10-23
+        review (frozen night: Kaeperni added Goff and McConkey after, McConkey only before). Here our
+        RB and WR share a week-12 bye: the second free agent covers one hole, the stream the other."""
+        m = Mini()
+        m.byes["B12"] = {12}
+        us = standard(m, US, "us")                                    # FLEX is a zero bench body
+        for pos in ("RB", "WR"):
+            m.players[us[pos]]["team"] = "B12"
+        standard(m, THEM, "th", team="CCC")
+        m.add("thf", "WR", 30.0, team="CCC", roster=THEM, name="Their Flex")     # they need nobody
+        m.roster[THEM].remove("th2")
+        m.add("fw1", "WR", 12.0, team="DDD", name="Free Wideout")
+        m.add("fr1", "RB", 9.0, team="DDD", name="Free Back")
+        m.add("fw2", "WR", 7.0, team="DDD", name="Spare Wideout")
+        code, out, js = m.run(["--give", "us0", "--give", "us1", "--get", "th0"])     # two zero bodies for one
+        self.assertEqual(code, 0, out)
+        for s in ("THREE SITES", "SLEEPER"):
+            self.assertAlmostEqual(total(js["sets"][s]["delta"][str(US)]), 0.0, places=6, msg=s)
+            before = js["sets"][s]["moves"]["before"][str(US)]
+            self.assertEqual(sorted(add for _, add in before["swaps"]), ["fr1", "fw1"], msg=s)
+
+    def test_a_fill_worth_nothing_takes_the_free_agent_the_market_values_most(self):
+        """Their open spot gains them nothing whoever fills it. The fill used to break that tie by
+        shortlist order -- a quarterback first -- and took the QB we stream in our bye week: -15 to us
+        for a trade of zero-point bodies. Ties now go by raw Sleeper value: the 16-point back."""
+        m = Mini()
+        m.byes["B12"] = {12}
+        us = standard(m, US, "us", rb=20.0, wr=20.0)                   # neither free agent starts for us
+        m.players[us["QB"]]["team"] = "B12"                            # our only QB: bye in week 12
+        m.add("usf", "WR", 25.0, roster=US, name="Our Flex")
+        m.roster[US].remove("us2")
+        standard(m, THEM, "th", team="CCC", qb=30.0, rb=30.0, wr=30.0, te_=30.0, k=30.0)
+        m.add("thf", "WR", 30.0, team="CCC", roster=THEM, name="Their Flex")
+        m.roster[THEM].remove("th2")
+        m.add("fq", "QB", 15.0, team="DDD", name="Free Quarterback")
+        m.add("fr", "RB", 16.0, team="DDD", name="Free Back")
+        code, out, js = m.run(["--give", "us0", "--get", "th0", "--get", "th1"])     # they end one body short
+        self.assertEqual(code, 0, out)
+        for s in ("THREE SITES", "SLEEPER"):
+            self.assertEqual(js["sets"][s]["moves"]["after"][str(THEM)]["add"], ["fr"], msg=s)
+            self.assertAlmostEqual(js["sets"][s]["delta"][str(US)]["12"], 0.0, places=6, msg=s)
+
+    def test_a_man_let_go_at_processing_is_on_waivers_until_next_week(self):
+        """This league's waivers run on Wednesdays, so a man cut when a Friday trade processes cannot
+        start for anyone that Sunday. Streaming him the week he was cut moved the frozen night's
+        headline 3.4 points once swaps repeated (review 2026-10-23)."""
+        m = Mini()
+        standard(m, US, "us")                                          # FLEX: a zero body
+        standard(m, THEM, "th", team="CCC")
+        m.add("thgood", "WR", 14.0, team="CCC", roster=THEM, name="Their Cut")    # they must cut someone
+        m.roster[THEM].remove("th2")
+        with m.world() as (data, ctx, sets):
+            sim = sets["SLEEPER"]
+            after = te.run_world(sim, ctx, ctx.rosters, ["us0", "us1"], ["th0"])      # they end one over
+            self.assertEqual(ctx.cur, 10)
+            cut = after["moves"][THEM]["drop"]
+            self.assertTrue(cut)
+            U = after["universe"][US]
+            for p in cut:
+                self.assertFalse(U.has(p, 10), f"{p} streamable the week he was cut")
+                self.assertTrue(U.has(p, 11))
+
     def test_the_stream_tries_every_position_not_only_the_top_free_agent(self):
         """The single top FA overall is a QB every week and could never cover a kicker bye."""
         m = Mini()
@@ -398,6 +491,94 @@ class TestRosterFix(unittest.TestCase):
             self.assertNotIn(shed[0][2], ("ir1",))
             # he starts at FLEX from week 12: 18 more than week 11
             self.assertAlmostEqual(before["weekly"][US][12] - before["weekly"][US][11], 18.0, places=6)
+
+    def test_an_over_cap_drop_is_judged_the_way_the_season_is_scored(self):
+        """A man let go is a free agent from next week, and we may stream him back. The over-cap drop
+        used to be judged as if he vanished, so it kept the wrong body: Cover A matters only in week 13,
+        when our stream is free (we stream him back); Cover B in week 14, when the stream must go to a
+        free quarterback. Keep B, cut A (review 2026-10-23). Nothing else may fill A's week-13 hole --
+        not a free TE, not B (his own bye) -- or the old rule happened to cut A as well."""
+        m = Mini(slots=["QB", "RB", "WR", "TE", "FLEX", "K", "BN", "BN", "BN"])
+        m.byes.update({"W13": {13}, "B13": {13}, "R14": {14}})
+        us = standard(m, US, "us", rb=20.0, bench=1)
+        m.players[us["WR"]]["team"] = "W13"
+        m.players[us["RB"]]["team"] = "R14"
+        m.players[us["QB"]]["team"] = "R14"                            # RB and QB both off in week 14
+        m.add("usf", "WR", 25.0, roster=US, name="Our Flex")
+        m.add("usa", "WR", 10.0, roster=US, name="Cover A")
+        m.add("usb", "RB", 6.0, team="B13", roster=US, name="Cover B")
+        standard(m, THEM, "th", team="CCC")
+        m.add("fq", "QB", 8.0, team="DDD", name="Free Quarterback")
+        code, out, js = m.run(["--give", "us0", "--get", "th0", "--get", "th1"])     # one over the cap
+        self.assertEqual(code, 0, out)
+        for s in ("THREE SITES", "SLEEPER"):
+            self.assertEqual(js["sets"][s]["moves"]["after"][str(US)]["drop"], ["usa"], msg=s)
+
+    def test_an_ir_return_into_an_open_roster_spot_sheds_nobody(self):
+        m = Mini()
+        standard(m, US, "us", bench=2)                                 # seven bodies: a spot is open
+        m.add("ir1", "RB", {w: (0.0 if w < 12 else 18.0) for w in range(10, 18)}, roster=US, ir=True, name="Back Later")
+        standard(m, THEM, "th", team="CCC")
+        with m.world() as (data, ctx, sets):
+            side = te.sides_for(ctx, ctx.rosters, (), ())[US]
+            _, moves, _ = sets["SLEEPER"].fix(side, te.Universe(frozenset()))      # nobody to fill it with
+            self.assertEqual(moves["shed"], [("ir1", 12, None)])
+            self.assertIn("Back Later back from IR in week 12, into an open roster spot", te.moves_text(moves, data.players))
+
+    def test_an_ir_player_is_back_in_three_sites_only_when_two_sites_project_him(self):
+        """Sleeper's blank row for an IR player scores 0 and counts as a vote, so one stale site made a
+        three-site consensus above 0: the frozen night brought Alec Pierce back in week 8 on CBS's 10.8
+        against blanks from Sleeper and ESPN (Sleeper alone: week 11). Review 2026-10-23."""
+        m = Mini()
+        standard(m, US, "us")
+        back = {w: (0.0 if w < 12 else 18.0) for w in range(10, 18)}
+        m.add("stale", "WR", back, roster=US, ir=True, name="Stale Line")
+        m.add("real", "WR", back, roster=US, ir=True, name="Really Back")
+        for w in (10, 11):
+            m.raw_stats[(w, "stale")] = m.raw_stats[(w, "real")] = {}
+            m.x[(w, "stale")] = {"sleeper": 0.0, "cbs": 30.0, "espn": 0.0, "consensus": 10.0}
+            m.x[(w, "real")] = {"sleeper": 0.0, "cbs": 6.0, "espn": 11.0, "consensus": 5.67}
+        standard(m, THEM, "th", team="CCC")
+        with m.world() as (data, ctx, sets):
+            self.assertEqual(sets["THREE SITES"].return_week("stale"), 12)       # one stale site is not a return
+            self.assertEqual(sets["THREE SITES"].return_week("real"), 10)        # two sites projecting him are
+            self.assertEqual(sets["SLEEPER"].return_week("real"), 12)
+
+    def test_two_incoming_ir_players_for_one_open_slot_seat_the_same_one_every_run(self):
+        m = Mini()
+        standard(m, US, "us")
+        m.add("ourir", "WR", 0.0, roster=US, ir=True, name="Our Hurt One")      # one of our two IR slots taken
+        standard(m, THEM, "th", team="CCC")
+        m.add("tz", "WR", 0.0, team="CCC", roster=THEM, ir=True, name="Hurt Z")
+        m.add("ta", "WR", 0.0, team="CCC", roster=THEM, ir=True, name="Hurt A")
+        code, out, js = m.run(["--give", "us0", "--get", "tz", "--get", "ta"])
+        self.assertEqual(code, 0, out)
+        self.assertEqual(js["sets"]["SLEEPER"]["moves"]["after"][str(US)]["ir_in"], ["ta"])
+
+    def test_a_db_who_plays_wr_is_priced_at_wr_not_zero(self):
+        """Sleeper lists Travis Hunter as a DB with fantasy positions [DB, WR], a fullback as FB with
+        [RB]. Priced at the raw position he could never start: a 25-point receiver read as 0, so getting
+        him for our 15-point WR printed -120 instead of +80 (review 2026-10-23)."""
+        m = Mini()
+        standard(m, US, "us")
+        standard(m, THEM, "th", team="CCC")
+        m.add("thdb", "DB", 25.0, team="CCC", roster=THEM, fp=["DB", "WR"], name="Two Way Star")
+        m.roster[THEM].remove("th0")
+        code, out, js = m.run(["--give", "uswr", "--get", "thdb"])
+        self.assertEqual(code, 0, out)
+        for s in ("THREE SITES", "SLEEPER"):
+            self.assertAlmostEqual(total(js["sets"][s]["delta"][str(US)]), 80.0, places=6, msg=s)
+
+    def test_a_multi_position_free_agent_is_never_streamed(self):
+        m = Mini()
+        standard(m, US, "us")                                          # FLEX: a zero body, so he would start
+        standard(m, THEM, "th", team="CCC")
+        m.add("fmp", "RB", 40.0, team="DDD", fp=["RB", "WR"], name="Both Ways")
+        with m.world() as (data, ctx, sets):
+            self.assertIn("fmp", ctx.multi_excluded)
+            before = te.run_world(sets["SLEEPER"], ctx, ctx.rosters, (), ())
+            _, streams = sets["SLEEPER"].detail(before["sides"][US], before["universe"][US])
+            self.assertNotIn("fmp", streams.values())
 
     def test_an_incoming_ir_player_takes_an_open_ir_slot_not_a_roster_spot(self):
         m = Mini()
@@ -466,6 +647,31 @@ class TestLocks(unittest.TestCase):
         self.assertEqual(code, 0, out)
         self.assertIn("Kickoff times unavailable (ESPN scoreboard: HTTP 503)", out)
         self.assertIn("is locked by then", out)
+
+    def test_blind_with_games_on_the_processing_day_refuses(self):
+        """With no kickoff times, a game on the processing day may or may not have started. The blind
+        fallback called it unlocked, so a Saturday-night run (processing Sunday night) moved players
+        whose games were over (review 2026-10-23)."""
+        m, us, th = self.league()
+        code, out, _ = m.run(["--give", "us1", "--get", "th1", "--process-at", "2026-11-15 13:00"],
+                             kick_fails="ESPN scoreboard: HTTP 503")
+        self.assertEqual(code, 2, out)
+        self.assertIn("whether they have kicked off by then cannot be known", out)
+
+    def test_blind_before_the_earliest_kickoff_of_a_game_day_still_runs(self):
+        m, us, th = self.league()
+        code, out, _ = m.run(["--give", "us1", "--get", "th1", "--process-at", "2026-11-15 08:00"],
+                             kick_fails="ESPN scoreboard: HTTP 503")
+        self.assertEqual(code, 0, out)
+
+    def test_a_team_missing_from_espns_scoreboard_locks_by_date_and_is_named(self):
+        m, us, th = self.league()
+        n = m.net()
+        del n.fx["kickoffs"]["10"]["THU"]
+        code, out, _ = run_json(["--give", us["QB"], "--get", "th1"], n)
+        self.assertEqual(code, 0, out)
+        self.assertIn("ESPN's scoreboard has no kickoff for THU; their games lock by DATE only", out)
+        self.assertIn("is locked by then", out)                 # THU played Thursday: still locked
 
     def test_the_current_week_is_dropped_against_the_processing_instant_not_the_wall_clock(self):
         m, us, th = self.league()
@@ -546,11 +752,31 @@ class TestThreeSites(unittest.TestCase):
         self.assertAlmostEqual(pts[9]["t0"], 10.0, places=6)       # a TE's gap is noise here: no carry
 
     def test_too_few_pairs_means_no_carry(self):
+        """Five WRs whose ratios move together exactly (r would be 1): five pairs are under MIN_PAIRS, so
+        none of it carries. The first version gave all five ONE ratio, statistics.correlation refuses
+        constant input, and the test passed with the guard deleted (review 2026-10-23)."""
         P = self.players([(f"w{i}", "WR") for i in range(5)])
-        x = {7: {f"w{i}": self.row(10.0, 12.0) for i in range(5)}, 8: {f"w{i}": self.row(10.0, 12.0) for i in range(5)}}
+        x = {w: {f"w{i}": self.row(10.0, 10.0 * (0.9 + 0.08 * i)) for i in range(5)} for w in (7, 8)}
         pts, info = te.three_sites(FakeData(P, x), {w: {p: 10.0 for p in P} for w in (7, 8, 9)}, [7, 8, 9])
         self.assertEqual(info["r_pos"]["WR"], (0.0, 5))
-        self.assertAlmostEqual(pts[9]["w0"], 10.0)
+        self.assertAlmostEqual(pts[9]["w4"], 10.0)
+
+    def test_a_one_week_ratio_carries_r_and_a_two_week_one_2r_over_1_plus_r(self):
+        """A mean of k weeks persists k*r/(1+(k-1)*r). A player usable in one clean week only got the
+        two-week carry -- 28 rostered players on the frozen night (review 2026-10-23)."""
+        P = self.players([(f"w{i}", "WR") for i in range(12)] + [("solo", "WR"), ("both", "WR")])
+        x = {7: {}, 8: {}}
+        for i in range(12):
+            a = 0.85 + 0.03 * i
+            x[7][f"w{i}"] = self.row(10.0, 10.0 * a)
+            x[8][f"w{i}"] = self.row(10.0, 10.0 * (a + (0.05 if i % 2 else -0.05)))
+        x[7]["solo"], x[8]["solo"] = self.row(10.0, 12.0), self.row(10.0, 12.0, n=2)    # usable in week 7 only
+        x[7]["both"], x[8]["both"] = self.row(10.0, 12.0), self.row(10.0, 12.0)
+        pts, info = te.three_sites(FakeData(P, x), {w: {p: 10.0 for p in P} for w in (7, 8, 9)}, [7, 8, 9])
+        r = info["r_pos"]["WR"][0]
+        self.assertTrue(0.3 < r < 0.99, r)
+        self.assertAlmostEqual(pts[9]["solo"], 10.0 * (1 + r * 0.2), places=9)
+        self.assertAlmostEqual(pts[9]["both"], 10.0 * (1 + 2 * r / (1 + r) * 0.2), places=9)
 
 
 class TestKicking(unittest.TestCase):
@@ -592,6 +818,14 @@ class TestIdentity(unittest.TestCase):
         msg = str(cm.exception)
         self.assertIn("A.J. Brown [1]", msg)
         self.assertIn("Chase Brown [2]", msg)
+
+    def test_two_rostered_players_under_one_exact_name_refuse(self):
+        with self.assertRaises(g.Refuse) as cm:
+            te.resolve("Kenneth Walker", self.ROSTERED | {"4"}, self.P)
+        msg = str(cm.exception)
+        self.assertIn("matches more than one rostered player", msg)
+        self.assertIn("[3]", msg)
+        self.assertIn("[4]", msg)
 
     def test_a_lone_shared_token_still_refuses(self):
         """Exactly one candidate is not proof of identity (insight 010): 'Walker' narrows to one
@@ -656,6 +890,105 @@ class TestRefusalsThroughMain(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("week 13: Sleeper returned no projections", out)
 
+    def test_getting_one_of_our_own_players_refuses(self):
+        code, out, _ = self.league().run(["--give", "us0", "--get", "uswr"])
+        self.assertEqual(code, 2)
+        self.assertIn("every --get must be on ONE roster that is not ours", out)
+
+    def test_a_player_named_twice_refuses(self):
+        """The lists collapse to sets downstream, so a player given by id and by name quietly priced a
+        smaller trade than the one typed (review 2026-10-23)."""
+        code, out, _ = self.league().run(["--give", "us0", "--get", "thwr", "--get", "Th Wr"])
+        self.assertEqual(code, 2)
+        self.assertIn("--get names Th WR more than once ('thwr' and 'Th Wr')", out)
+
+    def test_top_below_one_refuses(self):
+        code, out, _ = self.league().run(["--search", "--team", "Rival", "--give", "us0", "--top", "0"])
+        self.assertEqual(code, 2)
+        self.assertIn("--top 0: show at least one package", out)
+
+    def test_a_process_at_in_the_past_refuses(self):
+        code, out, _ = self.league().run(["--give", "us0", "--get", "th0", "--process-at", "2026-11-11 12:00"])
+        self.assertEqual(code, 2)
+        self.assertIn("is in the past", out)
+
+    def test_a_process_at_on_next_weeks_first_game_day_or_later_refuses(self):
+        """Any later instant used to be priced as if it fell next week: the deadline went unchecked and
+        nothing was locked (review 2026-10-23: the frozen night ran clean at a week-12 date)."""
+        code, out, _ = self.league().run(["--give", "us0", "--get", "th0", "--process-at", "2026-11-22 12:00"])
+        self.assertEqual(code, 2)
+        self.assertIn("on or after week 11's first game day", out)
+        code, out, _ = run_json(KAEPERNI + ["--process-at", "2026-11-27 12:00"])         # the frozen night
+        self.assertEqual(code, 2, out)
+        self.assertIn("on or after week 8's first game day", out)
+
+    def test_no_week_left_to_price_refuses(self):
+        m = self.league(week=17, deadline=99)
+        code, out, _ = m.run(["--give", "us0", "--get", "th0", "--process-at", "2027-01-04 09:00"],
+                             now=NOW + datetime.timedelta(weeks=7))
+        self.assertEqual(code, 2, out)
+        self.assertIn("no week is left to price", out)
+
+    def test_a_multi_position_player_on_either_roster_refuses(self):
+        m = self.league()
+        m.add("thmp", "RB", 10.0, team="CCC", roster=THEM, fp=["RB", "WR"], name="Swiss Army")
+        m.roster[THEM].remove("th2")
+        code, out, _ = m.run(["--give", "us0", "--get", "th0"])
+        self.assertEqual(code, 2)
+        self.assertIn("multi-position players are not modelled", out)
+
+    def test_a_playoff_format_it_cannot_model_refuses(self):
+        n = self.league().net()
+        n.fx["league"]["settings"]["playoff_round_type"] = 1
+        code, out, _ = run_json(["--give", "us0", "--get", "th0"], n)
+        self.assertEqual(code, 2)
+        self.assertIn("playoff_round_type 1 is not modelled", out)
+
+    def test_a_projection_week_that_is_not_a_list_refuses(self):
+        n = self.league().net()
+        n.fx["projections"]["12"] = {"error": "rate limited"}
+        code, out, _ = run_json(["--give", "us0", "--get", "th0"], n)
+        self.assertEqual(code, 2)
+        self.assertIn("week 12 projections are dict, expected a list", out)
+
+    def test_no_roster_of_ours_refuses(self):
+        n = self.league().net()
+        for r in n.fx["rosters"]:
+            if r["owner_id"] == g.BRIGGSY_USER_ID:
+                r["owner_id"] = "someone else"
+        code, out, _ = run_json(["--give", "us0", "--get", "th0"], n)
+        self.assertEqual(code, 2)
+        self.assertIn("no roster belongs to PoppaBriggsy", out)
+
+    def test_projection_rows_that_lost_their_opponents_refuse(self):
+        """A bye is read off a DEF row's missing opponent. Rows that lost the field made every team look
+        on bye and left nobody to count as zero, so a broken week printed (review 2026-10-23)."""
+        n = self.league().net()
+        for r in n.fx["projections"]["13"]:
+            r["opponent"] = None
+        code, out, _ = run_json(["--give", "us0", "--get", "th0"], n)
+        self.assertEqual(code, 2)
+        self.assertIn("week 13:", out)
+        self.assertIn("show no opponent -- that is a broken pull", out)
+
+    def test_a_dropped_connection_refuses_instead_of_a_traceback(self):
+        n = self.league().net(fetch_fails=ConnectionResetError("connection reset by peer"))
+        code, out, _ = run_json(["--give", "us0", "--get", "th0"], n)
+        self.assertEqual(code, 2)
+        self.assertIn("the Sleeper pull failed: ConnectionResetError: connection reset by peer", out)
+
+    def test_a_refused_run_never_leaves_an_earlier_runs_numbers_in_the_json(self):
+        m = self.league()
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "out.json")
+            net.run(["--give", "us0", "--get", "th0", "--json", path], m.net())
+            with open(path, encoding="utf-8") as fh:
+                self.assertIn("sets", json.load(fh))
+            code, _ = net.run(["--give", "us0", "--get", "th0", "--get", "ot0", "--json", path], m.net())
+            self.assertEqual(code, 2)
+            with open(path, encoding="utf-8") as fh:
+                self.assertEqual(list(json.load(fh)), ["refused"])
+
     def test_half_the_league_at_zero_refuses(self):
         m = self.league()
         n = m.net()
@@ -686,6 +1019,49 @@ class TestReport(unittest.TestCase):
         self.assertNotIn("three sites", out.split("WEEK BY WEEK")[1].split("HOW MUCH")[0])
         self.assertIn("No second projection set tonight; disagreement not measured.", out)
         self.assertEqual(list(js["sets"]), ["SLEEPER"])
+
+    def test_any_failure_in_cbs_or_espn_falls_back_to_sleeper_only(self):
+        """Not only a refusal: an empty crosswalk raises IndexError and an HTML page a JSONDecodeError,
+        and either used to end the run in a traceback (review 2026-10-23)."""
+        code, out, js = self.league().run(["--give", "uswr", "--get", "thw"], xload_fails=IndexError("list index out of range"))
+        self.assertEqual(code, 0, out)
+        self.assertIn("SLEEPER ONLY tonight: the CBS + ESPN pull refused (IndexError: list index out of range)", out)
+        self.assertEqual(list(js["sets"]), ["SLEEPER"])
+
+    def test_next_weeks_pull_failing_leaves_three_sites_on_this_week_alone(self):
+        code, out, js = self.league().run(["--give", "uswr", "--get", "thw"], next_fails=KeyError("cbs"))
+        self.assertEqual(code, 0, out)
+        self.assertIn("Next week's CBS + ESPN pull refused (KeyError: 'cbs'); three sites cover this week only.", out)
+        self.assertEqual(js["three_site_weeks"], [10])
+
+    def test_this_week_played_and_next_week_refused_is_sleeper_only_not_a_copy_of_it(self):
+        """No priced week had a three-site line and no ratio carried, so the 'three sites' column was
+        Sleeper's to the decimal, under 'the two sets differ by 0.0' (review 2026-10-23)."""
+        code, out, js = self.league().run(["--give", "uswr", "--get", "thw", "--process-at", "2026-11-17 09:00"],
+                                          next_fails="CBS: HTTP 503")
+        self.assertEqual(code, 0, out)
+        self.assertIn("SLEEPER ONLY", out.splitlines()[1])
+        self.assertIn("No second projection set tonight; disagreement not measured.", out)
+        self.assertEqual(list(js["sets"]), ["SLEEPER"])
+
+    def test_a_player_no_nfl_team_carries_is_never_listed_on_bye(self):
+        """A numeric id, as Sleeper's are: a letters-only id reads as a DEF's team code, which gave
+        the first version of this test a team and walked it past the guard (review 2026-10-23)."""
+        m = self.league()
+        m.add("90210", "WR", 16.0, team="CCC", roster=THEM, name="Released Vet")
+        m.roster[THEM].remove("th1")
+        n = m.net()
+        n.fx["players"]["90210"]["team"] = None                     # after build: the builder sorts teams
+        code, out, _ = run_json(["--give", "uswr", "--get", "90210"], n)
+        self.assertEqual(code, 0, out)
+        self.assertIn("Released Vet (WR FA)", out)
+        self.assertNotIn("Released Vet wk", out)
+
+    def test_the_sets_disagree_only_when_both_are_past_a_tie(self):
+        self.assertFalse(te.opposite(0.0, 0.1))
+        self.assertFalse(te.opposite(-9.0, 0.0))
+        self.assertTrue(te.opposite(0.1, -0.1))
+        self.assertTrue(te.opposite(-3.0, 2.0))
 
     def test_assumptions_and_the_sign_line_print_before_any_number(self):
         m = self.league()
@@ -752,6 +1128,32 @@ class TestSearch(unittest.TestCase):
         self.assertIn("moves: we ", out)
         self.assertIn(f"Evaluated {len(pk)} packages; kept {len(kept)}", out)
         self.assertIn("change sign for us between the two projection sets", out)
+
+    def test_the_memos_are_emptied_for_each_give_and_no_number_moves(self):
+        """--search kept every lineup it ever solved: 3.9M entries and a 9.6 GB peak on the frozen
+        night. They are emptied for each give, which must change no number (review 2026-10-23)."""
+        cleared = []
+
+        class Counting(dict):
+            def clear(self):
+                cleared.append(len(self))
+                super().clear()
+
+        class Keeping(dict):
+            def clear(self):
+                pass
+
+        runs = {}
+        for name, memo in (("cleared", Counting), ("kept", Keeping)):
+            with self.league().world() as (data, ctx, sets):
+                for sim in sets.values():
+                    sim._fills, sim._cands = memo(), memo()
+                res = te.search(data, ctx, sets, None, ["uswr"], 5)
+                runs[name] = [(r["give"], r["get"], {s: (v["us"], v["them"]) for s, v in r["sets"].items()})
+                              for r in res["rows"]]
+        self.assertEqual(len(cleared), 2 * 2 * (1 + 7))          # 2 memos x 2 sets x (the anchor + 7 more gives)
+        self.assertGreater(max(cleared), 0)
+        self.assertEqual(runs["cleared"], runs["kept"])
 
     def test_a_package_they_lose_on_is_never_in_the_ranking(self):
         m = self.league()

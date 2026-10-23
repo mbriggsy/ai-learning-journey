@@ -43,7 +43,13 @@ detected by reading the result, so the result looks like a finding.
 It never says accept or decline. It prints the assumptions first, then the numbers, then **what the
 simulation did**.
 
-On the frozen night it says: us **−36.9** on three sites (−47.8 on Sleeper), Kaeperni **+43.7**.
+On the frozen night it said: us **−36.9** on three sites (−47.8 on Sleeper), Kaeperni **+43.7**.
+
+> **Amended 2026-10-23.** The whole-file review found this file's own fix incomplete: it allowed ONE
+> swap, so a trade that freed a spot still got a fill AND a swap while today's full roster got one —
+> this insight's defect 1, one level down. Swaps now repeat until none gains, and the frozen night
+> reads **−36.25 / −45.53, Kaeperni +43.19 / +50.43**. The full account, and why the headline landing
+> near −36.9 again is a coincidence, is in [insight 036](036-a-parity-fix-capped-at-one-remedy-is-not-parity.md).
 
 ## Proving it
 
@@ -51,7 +57,9 @@ On the frozen night it says: us **−36.9** on three sites (−47.8 on Sleeper),
   week: does a player count for more than one side? A per-trade unit test would not have caught
   them, since each total was plausible. The invariant is cheap and covers every trade, so write it
   for any multi-party simulation.
-- **38 mutants planted, one per axis, all 38 killed.** Two of them taught something:
+- **38 mutants planted, one per axis, all 38 killed** — *unverified as of 2026-10-23*: that scratch
+  harness is gone, and the review's own harness first produced false kills twice (insight 036), so
+  this count rests on a tool nobody re-checked. Two of them taught something:
   - **One survived because the code was dead.** A "displaced starter bumps the weakest FLEX" term
     always equalled the direct-to-FLEX option, so it could never change an answer. It was deleted.
   - **One survived because the test was hollow.** The search test's league scored every kept

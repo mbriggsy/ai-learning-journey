@@ -76,11 +76,32 @@ prints both choices.
 2. **Over the cap.** Drop the excess from the non-incoming bodies, choosing the drop that costs the
    least rest-of-season points. Every combination is tried.
 3. **Under the cap.** Add the best free agent(s) from the shortlist.
-4. **One optional swap.** Drop one non-incoming body and add one shortlist free agent, if that
-   raises rest-of-season points. It is found by best-add-then-best-drop. Both worlds get this, so
-   today's roster is never denied an upgrade the trade is credited with. This fixes defect 1 for
-   good: the plan check measured Kaeperni's side moving from +53.2 to +48.8 once the baseline got
-   the same swap.
+4. **Swaps, until none gains.** Drop one non-incoming body and add one shortlist free agent, if that
+   raises rest-of-season points by more than the tie margin; repeat until no swap does. Each is
+   found by best-add-then-best-drop. Both worlds get this, so today's roster is never denied an
+   upgrade the trade is credited with. *Amended by the 2026-10-23 review:* the first build allowed
+   ONE swap, and that was not parity — a trade that freed a spot got a fill AND a swap (two free
+   agents) while today's full roster got one. On the frozen night Kaeperni added Goff and McConkey
+   after the trade, McConkey only before. The swap loop refuses if it has not settled in 2 × cap
+   swaps (every swap gains, so it must settle).
+
+**Every drop is judged in the pool it is committed to** (review 2026-10-23). A man let go is a free
+agent from the week he goes, streamable by either side, because that is how the season is then
+scored. The over-cap drop and the IR shed were first judged with him gone for good, so the world
+that was over the cap chose by a different rule from the one it was scored by.
+
+**Waivers** (review 2026-10-23, unverified, printed). A man let go when the trade processes is free
+to others from NEXT week if this week is under way: this league's waivers run once a week, on
+Wednesday (`daily_waivers: 0`), so a Friday drop cannot start for anyone on Sunday. Worth 3.4 on the
+frozen night's headline once swaps repeat. To verify: watch one real Friday drop — does the player
+read `W Wed` on the Players tab, or is he addable at once?
+
+**Ties among adds** go to the free agent the market values MOST (raw Sleeper rest-of-season), ties
+among drops to the body it values least. A tied add first went to the top of the shortlist — a
+quarterback, whatever his worth — and a choice that is a coin flip for one side moves the OTHER
+side's number: on the frozen night the add rule alone moved Kaeperni's three-site total by up to 4.
+
+**An IR player who comes back into an open roster spot** sheds nobody (review 2026-10-23).
 
 **The weekly stream:** each week, try the universe's best free agent at each position, keep the one
 that raises that week's best lineup the most, or none. In the current week, a free agent whose game is
@@ -119,7 +140,13 @@ already carry the target key. Then nothing is ever counted twice.
   - `multiplier = 1 + r₂·(ratio − 1)`.
   - `r` is measured on every run, per position: the correlation between players' clean-week-1
     ratio and their clean-week-2 ratio. It takes at least 10 pairs, otherwise `r = 0`.
-  - `r₂ = 2r/(1+r)`, clipped to [0, 1] (the persistence of a two-week mean).
+  - `r₂ = 2r/(1+r)`, clipped to [0, 1] (the persistence of a two-week mean). *Review 2026-10-23:* a
+    player usable in only ONE clean week carries `r`, not `r₂` — a mean of k weeks persists
+    `k·r / (1 + (k−1)·r)`. 28 rostered players had a one-week ratio on the frozen night.
+  - **IR returns in THREE SITES need two of the three sites** (review 2026-10-23). Sleeper's blank
+    row for an IR player scores 0 and counts as a vote, so one stale site made a consensus above 0:
+    Alec Pierce came back in week 8 on CBS's 10.8 against blanks from Sleeper and ESPN (Sleeper:
+    week 11). The consensus itself still counts the blank as a 0 — the lineup report relies on it.
   - Measured tonight: WR 0.82, K 0.60, RB 0.57, QB 0.47, DEF 0.18, TE 0.10. So a TE's two-week
     disagreement is mostly noise and barely moves him.
 - **The clamp.** The ratio is clamped to [0.75, 1.25]. This is a modelling choice: tonight it bit
@@ -131,8 +158,10 @@ already carry the target key. Then nothing is ever counted twice.
   week or next; his three-site number is Sleeper's."
 - **One header line, in plain words:** "The three-site number counts Sleeper as one of its three
   votes, so it can never fully disagree with Sleeper." (Insight 018.)
-- **When x.load fails.** `x.load` refuses as a whole if the crosswalk, CBS or ESPN fails; it has no
-  per-source fallback. The run then continues **SLEEPER ONLY**:
+- **When x.load fails** — with a refusal or ANY other error (an empty crosswalk raised IndexError and
+  ended the run in a traceback; review 2026-10-23). `x.load` has no per-source fallback. The run
+  then continues **SLEEPER ONLY**. It also runs SLEEPER ONLY when this week is all played and next
+  week's pull fails: no priced week has three sites, and the column would be Sleeper's to the decimal.
   - The first header line says so and names what refused.
   - The three-site column and the disagreement line are left out, never filled with Sleeper's
     numbers.
@@ -156,7 +185,14 @@ before the processing instant:
   alike.
 
 **ESPN down:** the lock falls back to the projection's game date, and the header says the run is
-blind on kickoffs.
+blind on kickoffs. A game on an earlier day is locked and a later one is not; a game ON the
+processing day cannot be known, so the run **refuses** unless it processes before 9:30 AM ET (review
+2026-10-23: the fallback called that day unlocked, so a Saturday-night run moved players whose games
+were over). A team missing from ESPN's scoreboard gets the same date rule, and the header names it.
+
+**The window** (review 2026-10-23): `--process-at` must be from now to before next week's first game
+day. A later instant was priced as if it fell next week — deadline unchecked, nothing locked — and a
+past one unlocked games already played. Both refuse.
 
 **The current week is dropped** when every kickoff is at or before the processing instant. This is
 measured against the processing instant, never the wall clock.
@@ -170,6 +206,9 @@ offer.
 - **Active cap** = `len(roster_positions)`, which is 16 (10 starters + 6 BN). Sleeper doesn't list
   IR in `roster_positions`: IR is `settings.reserve_slots` (2) and is never subtracted.
   Active bodies = players − reserve − taxi.
+- **Positions:** Sleeper's `position`, unless the league never starts it (DB, FB); then the one
+  fantasy position he is listed at (review 2026-10-23: Travis Hunter is a DB who plays WR, and was
+  priced at 0).
 - **Accepted slots:** QB, RB, WR, TE, FLEX (RB/WR/TE), K, DEF, BN. Any other slot refuses: greedy is
   exact only for nested flex sets, and the plan check found a non-nested counterexample (11.0 vs an
   optimum of 19.0). A pool player whose `fantasy_positions` lists more than one starting position
@@ -286,6 +325,12 @@ Plain words throughout. The report never prints "ROS", "legalisation" or "consen
   - the counts evaluated and kept;
   - **how many evaluated packages flip sign between the sets.**
 - **The old ranking is gone.** `min(us, 2×them)` buried *Flowers + Swift for Bijan*.
+- **Cost** (measured 2026-10-23 on the frozen night, 2,736 packages): 355-365 s. One swap took about
+  72 s; repeated swaps are the price of parity (Kaeperni makes up to 13 in one package). The lineup
+  and stream memos are emptied for each give: kept forever they reached a 9.6 GB peak, and emptying
+  them per give changes no number (pinned by a test).
+- **"Disagree"** means one set gains and the other loses, each by more than the tie margin; a plain
+  sign test called 0.0 against +0.1 a disagreement and 0.0 against −9 an agreement.
 
 ### D11 — Reuse, and the files touched
 
@@ -334,6 +379,14 @@ Plain words throughout. The report never prints "ROS", "legalisation" or "consen
   - their pickup.
 
   Insight 035 explains every gap to the scratch −45.6 / −33.0.
+
+  **Re-recorded 2026-10-23 after the whole-file review**, from −36.9 / −47.8 (Kaeperni +43.7 / +53.9)
+  to **−36.25 / −45.53 (Kaeperni +43.19 / +50.43)**. The steps, on this night: swaps repeat (−32.74 /
+  −45.76); a tied add goes to the most valued player (Kaeperni three sites +39.34 → +38.47); IR
+  returns need two of three sites and one-week ratios carry r (−32.83); a man let go at processing
+  waits for waivers (−36.25 / −45.53). The headline landing near the old one is a coincidence of two
+  moves in opposite directions, not a confirmation. The printed table is now pinned too, not only
+  the `--json`.
 
 ## Test plan (`tests/test_trade_eval.py`, no network)
 

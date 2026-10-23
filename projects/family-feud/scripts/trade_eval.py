@@ -14,8 +14,10 @@ THE METHOD. Two worlds -- BEFORE (today's rosters) and AFTER (the trade applied)
 projection sets -- SLEEPER, and THREE SITES (Sleeper + CBS + ESPN). One procedure runs identically
 in every world and every set:
   1. fix each side's roster: an incoming IR player takes an open IR slot; the excess is dropped (the
-     body whose loss costs least); a gap is filled from a free-agent shortlist; one optional
-     drop-for-free-agent swap; an IR player who comes back forces a shed from his first week;
+     body whose loss costs least); a gap is filled from a free-agent shortlist; drop-for-free-agent
+     swaps until none gains; an IR player who comes back takes an open spot or forces a shed from his
+     first week. A man let go is a free agent from that week -- next week if the drop falls in a week
+     under way, because this league's waivers run on Wednesdays;
   2. each week, each side may stream ONE free agent (the best at each position that week is tried);
   3. each week, start the best legal lineup;
 and the answer is AFTER minus BEFORE, week by week, for both sides.
@@ -34,6 +36,7 @@ does not fail loudly, it prints a clean number; look at what it did, not only wh
 """
 import argparse
 import datetime
+import http.client
 import itertools
 import json
 import math
@@ -61,6 +64,7 @@ RATIO_FLOOR = 5.0                      # below this a 1-pt Sleeper line against 
 RATIO_CLAMP = (0.75, 1.25)             # a modelling choice: bit on 7 of 127 rostered players 2026-10-22
 MIN_PAIRS = 10                         # fewer week-to-week pairs than this and a position's r is 0
 TIE = 0.05                             # rest-of-season totals this close are the same answer
+EARLIEST_KICKOFF = datetime.time(9, 30)  # ET: the London games; nothing in the NFL kicks off earlier
 PAUSE = 0.1                            # sequential, polite (global rule: rate-limit safety)
 PROJ_PATH = ("/projections/nfl/{season}/{week}?season_type=regular"
              "&position[]=QB&position[]=RB&position[]=WR&position[]=TE&position[]=K&position[]=DEF")
@@ -90,10 +94,17 @@ def playoff_weeks(league):
     return list(range(start, start + (math.ceil(math.log2(teams)) if teams > 1 else 0)))
 
 
+def why(e):
+    """A failure in plain words: a refusal's own message, anything else named by its type."""
+    return str(e) if isinstance(e, Refuse) else f"{type(e).__name__}: {e}"
+
+
 def load():
     """Fetch the snapshot. Three sites come from external_projections.load, which refuses as a whole
     when the crosswalk, CBS or ESPN fails -- it has no per-source fallback -- and then the run is
-    SLEEPER ONLY and says so; a secondary source never kills the run (gameday_check's rule)."""
+    SLEEPER ONLY and says so; a secondary source never kills the run (gameday_check's rule). ANY
+    failure in it counts, not only a Refuse: an empty crosswalk raised IndexError, an HTML page from
+    ESPN a JSONDecodeError, and either one used to end the run in a traceback (review 2026-10-23)."""
     sleeper_only = next_missing = None
     xrows = {}
     try:
@@ -101,10 +112,10 @@ def load():
         xrows[state["week"]] = rows
         try:
             xrows[state["week"] + 1] = x.load(state["week"] + 1)[1]
-        except Refuse as e:
-            next_missing = str(e)
-    except Refuse as e:
-        sleeper_only = str(e)
+        except Exception as e:  # noqa: BLE001 -- the secondary source, see the docstring
+            next_missing = why(e)
+    except Exception as e:  # noqa: BLE001
+        sleeper_only = why(e)
         state, league, rosters, users, _m, players, _p = g.pull()
     season, week = state["season"], state["week"]
     final = playoff_weeks(league)[-1]
@@ -134,8 +145,22 @@ def load():
 
 
 def position(players, pid):
+    """The lineup position: Sleeper's `position`, unless it is one this league never starts (DB, FB) --
+    then the one fantasy position he is listed at. Travis Hunter is a DB who plays WR and a fullback is
+    an RB; priced at the raw position, either could never start and scored 0 (review 2026-10-23)."""
     p = players.get(pid) or {}
-    return p.get("position") or ("DEF" if pid.isalpha() else None)
+    pos = p.get("position")
+    if pos in POSITIONS:
+        return pos
+    fp = {q for q in (p.get("fantasy_positions") or []) if q in POSITIONS}
+    if len(fp) == 1:
+        return fp.pop()
+    return pos or ("DEF" if pid.isalpha() else None)
+
+
+def team_of(players, pid):
+    """His NFL team; a DEF is its own team code. None for a player no NFL team carries."""
+    return (players.get(pid) or {}).get("team") or (pid if pid.isalpha() else None)
 
 
 def display(players, pid):
@@ -206,13 +231,17 @@ def sleeper_points(data, weeks):
 
 def positive_control(data, pts, weeks, rostered):
     """Refuse before printing a number off a broken pull (insight 008: zero reads like a finding)."""
-    teams = {(data.players.get(p) or {}).get("team") or (p if p.isalpha() else None) for p in rostered} - {None}
+    teams = {team_of(data.players, p) for p in rostered} - {None}
     for w in weeks:
         if not data.proj[w]:
             raise Refuse(f"week {w}: Sleeper returned no projections at all")
         byes = bye_teams(data.proj[w], teams)
-        live = [p for p in rostered
-                if ((data.players.get(p) or {}).get("team") or (p if p.isalpha() else None)) not in byes | {None}]
+        if len(byes) > len(teams) / 2:
+            # A bye is read off the DEF row's missing opponent; rows that lost the field would make every
+            # team "on bye" and leave nobody to count as zero below (review 2026-10-23).
+            raise Refuse(f"week {w}: {len(byes)} of {len(teams)} rostered teams show no opponent -- "
+                         "that is a broken pull, not a bye week")
+        live = [p for p in rostered if team_of(data.players, p) not in byes | {None}]
         zero = [p for p in live if pts[w].get(p, 0.0) <= 0.0]
         if live and len(zero) > len(live) / 2:
             raise Refuse(f"week {w}: {len(zero)} of {len(live)} rostered players not on bye project 0 -- "
@@ -235,7 +264,8 @@ def three_sites(data, s_pts, weeks):
     ahead, TODO's CBS item) use the three-site consensus directly where all three sites have the
     player. Later weeks scale Sleeper by the player's clean-week ratio (sum consensus / sum Sleeper,
     Sleeper >= 5 and n == 3), CLAMPED, then SHRUNK by how far that ratio persists from one week to
-    the next at his position: r is measured on every run, and a two-week mean persists 2r/(1+r).
+    the next at his position: r is measured on every run, and a mean of k weeks persists
+    k*r/(1+(k-1)*r) -- 2r/(1+r) for a two-week ratio, r for a one-week one.
     Measured 2026-10-22: WR .82, K .60, RB .57, QB .47, DEF .18, TE .10 -- a TE's two-week gap with
     Sleeper is mostly matchup noise and barely moves him. K and DEF are never adjusted.
 
@@ -253,12 +283,13 @@ def three_sites(data, s_pts, weeks):
         for pid, r in rows[w].items():
             if usable(r, pid) and (r.get("sleeper") or 0.0) >= RATIO_FLOOR:
                 per_week[w][pid] = (r["consensus"], r["sleeper"])
-    ratio = {}
+    ratio, span = {}, {}
     for pid in set().union(*per_week.values()) if per_week else set():
         num = sum(per_week[w][pid][0] for w in measured if pid in per_week[w])
         den = sum(per_week[w][pid][1] for w in measured if pid in per_week[w])
         raw = num / den
         ratio[pid] = (raw, min(max(raw, RATIO_CLAMP[0]), RATIO_CLAMP[1]))
+        span[pid] = sum(1 for w in measured if pid in per_week[w])
     r_pos = {}
     for pos in POSITIONS:
         pairs = []
@@ -269,23 +300,42 @@ def three_sites(data, s_pts, weeks):
         r_pos[pos] = (pearson(pairs), len(pairs))
 
     def multiplier(pid):
+        # A k-week mean persists k*r / (1 + (k-1)*r): 2r/(1+r) for two weeks, r for ONE. A player with a
+        # usable ratio in one clean week only (a bye, or n < 3 in the other) used to get the two-week
+        # carry -- 28 rostered players on the frozen night (review 2026-10-23).
         if pid not in ratio:
             return 1.0
-        r = r_pos.get(position(players, pid), (0.0, 0))[0]
-        keep = min(max(2 * r / (1 + r), 0.0), 1.0) if r > 0 else 0.0
+        r, k = r_pos.get(position(players, pid), (0.0, 0))[0], span[pid]
+        keep = min(max(k * r / (1 + (k - 1) * r), 0.0), 1.0) if r > 0 else 0.0
         return 1.0 + keep * (ratio[pid][1] - 1.0)
 
-    pts = {}
+    pts, served = {}, set()
     for w in weeks:
         out = {}
         for pid, v in s_pts[w].items():
             if w in rows:
                 r = rows[w].get(pid)
-                out[pid] = r["consensus"] if usable(r, pid) else v
+                if usable(r, pid):
+                    out[pid] = r["consensus"]
+                    served.add((w, pid))
+                else:
+                    out[pid] = v
             else:
                 out[pid] = v * multiplier(pid)
         pts[w] = out
-    return pts, {"ratio": ratio, "r_pos": r_pos, "multiplier": multiplier, "clean": [w for w in measured if w in weeks]}
+
+    def plays(w, pid):
+        """Is he back (an IR player's first week)? Where the consensus is served, two of the three sites
+        must project him: Sleeper's blank row for an IR player scores 0 and counts as a vote, so one
+        stale site alone made a consensus above 0 -- the frozen night brought Alec Pierce back in week 8
+        on CBS's 10.8 against blanks from Sleeper and ESPN (Sleeper alone: week 11). Review 2026-10-23."""
+        if (w, pid) in served:
+            r = rows[w][pid]
+            return sum((r.get(s) or 0.0) > 0.0 for s in ("sleeper", "cbs", "espn")) >= 2
+        return pts[w].get(pid, 0.0) > 0.0
+
+    return pts, {"ratio": ratio, "r_pos": r_pos, "multiplier": multiplier, "plays": plays,
+                 "clean": [w for w in measured if w in weeks]}
 
 
 # ------------------------------------------------------------------ the simulation
@@ -355,8 +405,9 @@ class Side:
 class Sim:
     """One projection set's league: its weekly points and the lineup / stream / roster-fix rules."""
 
-    def __init__(self, ctx, pts, label):
+    def __init__(self, ctx, pts, label, plays=None):
         self.ctx, self.pts, self.label = ctx, pts, label
+        self.plays = plays or (lambda w, pid: pts[w].get(pid, 0.0) > 0.0)
         pos = ctx.pos
         every = set().union(*(set(pts[w]) for w in ctx.weeks))
         self.ros = {p: sum(pts[w].get(p, 0.0) for w in ctx.weeks) for p in every}
@@ -464,11 +515,17 @@ class Sim:
             self._cands[key] = hit
         return hit
 
-    def week(self, w, side, universe):
-        """(points, streamed player) for one side's best lineup this week, one stream allowed."""
+    def _slate(self, w, side):
+        """(fixed, pool) for one side's week: in the current week its locked starters hold their slots
+        and every other locked player sits out. One definition, read by week() and detail() alike, so
+        the lineups the tests inspect are the lineups that were scored."""
         cur = w == self.ctx.cur
         fixed = self.ctx.fixed.get(side.rid, {}) if cur else {}
-        pool = [p for p in side.available(w) if not (cur and p in self.ctx.locked)]
+        return fixed, [p for p in side.available(w) if not (cur and p in self.ctx.locked)]
+
+    def week(self, w, side, universe):
+        """(points, streamed player) for one side's best lineup this week, one stream allowed."""
+        fixed, pool = self._slate(w, side)
         fill = self._fill(w, pool, fixed)
         best, pick = 0.0, None
         for c in self.stream_candidates(w, universe):
@@ -502,22 +559,38 @@ class Sim:
         return out
 
     def return_week(self, pid):
-        return next((w for w in self.ctx.weeks if self.pts[w].get(pid, 0.0) > 0.0), None)
+        return next((w for w in self.ctx.weeks if self.plays(w, pid)), None)
 
-    def _pick(self, scored):
-        """Best of [(total, choice)], with every choice within TIE of it, tie broken toward the lowest
-        raw Sleeper rest-of-season points -- the cheapest body by the yardstick both sets share."""
+    def _pick(self, scored, prefer="least"):
+        """Best of [(total, choice)], with every choice within TIE of it a tie. A tie goes by raw Sleeper
+        rest-of-season points, the yardstick both sets share: to the body the market values LEAST when
+        choosing a drop, and to the free agent it values MOST when choosing an add (D1 step 3, "add the
+        best free agent"). A tied add used to go to the top of the shortlist -- a quarterback, whatever
+        his worth -- and a choice that is a coin flip for one side moves the OTHER side's number: on the
+        frozen night the add rule alone moved Kaeperni's three-site total by up to 4 points."""
         best = max(t for t, _ in scored)
         ties = [c for t, c in scored if best - t <= TIE]
         raw = self.ctx.raw_ros
-        pick = min(ties, key=lambda c: (sum(raw.get(p, 0.0) for p in c), c))
+        sign = 1 if prefer == "least" else -1
+        pick = min(ties, key=lambda c: (sign * sum(raw.get(p, 0.0) for p in c), c))
         return pick, ties
 
     def fix(self, side, universe):
-        """D1's roster fix, the same steps in both worlds. Returns (side, moves, universe after)."""
+        """D1's roster fix, the same steps in both worlds. Returns (side, moves, universe after).
+
+        Two rules hold every step to the same yardstick (review 2026-10-23):
+        - SWAPS REPEAT UNTIL NONE GAINS. One swap was not parity: a trade that freed a spot got a fill
+          AND a swap, two free agents, while today's full roster got one -- insight 035's denied remedy
+          again (frozen night: Kaeperni added Goff and McConkey after, McConkey only before).
+        - EVERY DROP IS JUDGED IN THE POOL IT IS COMMITTED TO. The man let go is a free agent from the
+          week he goes, streamable by either side, because that is how the season is then scored; the
+          over-cap drop and the IR shed used to be judged with him gone for good, so the world that was
+          over the cap chose its drop by a different rule from the one it was scored by.
+        Every choice between near-equal options (within TIE) is settled by _pick: the drop the market
+        values least, the add it values most."""
         ctx = self.ctx
         active, reserve, incoming = list(side.active), list(side.reserve), set(side.incoming)
-        moves = {"ir_in": [], "drop": [], "drop_ties": [], "add": [], "swap": None, "shed": []}
+        moves = {"ir_in": [], "drop": [], "drop_ties": [], "add": [], "swaps": [], "shed": []}
         open_ir = ctx.reserve_slots - len(reserve)
         for pid in side.incoming_ir:                                   # 1. incoming IR players
             if open_ir > 0:
@@ -526,49 +599,65 @@ class Sim:
                 moves["ir_in"].append(pid)
             else:
                 active.append(pid)
-        U = universe
+        # A man let go when the trade processes is free to others from w0 -- next week if this week is
+        # under way: this league's waivers run once a week, on Wednesday (daily_waivers 0), so a Friday
+        # drop cannot start for anyone on Sunday. Unverified, printed; worth 3.4 on the frozen night's
+        # headline once swaps repeat, by letting the other side stream a man the week he was cut.
+        U, w0 = universe, ctx.weeks[0] + (1 if ctx.weeks[0] == ctx.cur else 0)
 
-        def tot(act, u=None):
-            return self.total(Side(side.rid, act), u or U)
+        def tot(act, u):
+            return self.total(Side(side.rid, act), u)
+
+        def best_add(sl):
+            (add,), _ = self._pick([(tot(active + [f], U.without([f])), (f,)) for f in sl], prefer="most")
+            return add
 
         excess = len(active) - ctx.cap                                 # 2. over the cap
         if excess > 0:
             cands = [p for p in active if p not in incoming]
-            scored = [(tot([p for p in active if p not in combo]), combo)
+            scored = [(tot([p for p in active if p not in combo], U.adding(combo, w0)), combo)
                       for combo in itertools.combinations(cands, excess)]
             pick, ties = self._pick(scored)
             active = [p for p in active if p not in pick]
             moves["drop"], moves["drop_ties"] = list(pick), [list(c) for c in ties]
-            U = U.adding(pick, ctx.weeks[0])
+            U = U.adding(pick, w0)
         while len(active) < ctx.cap:                                   # 3. under the cap
             sl = self.shortlist(U)
             if not sl:
                 break
-            add = max(sl, key=lambda f: (tot(active + [f], U.without([f])), -sl.index(f)))
+            add = best_add(sl)
             active.append(add)
             moves["add"].append(add)
             U = U.without([add])
-        sl = self.shortlist(U)                                         # 4. one optional swap
-        if sl:
-            now_t = tot(active)
-            add = max(sl, key=lambda f: (tot(active + [f], U.without([f])), -sl.index(f)))
-            U2 = U.without([add])
+        for _ in range(2 * ctx.cap):                                   # 4. swaps, until none gains
+            sl = self.shortlist(U)
             cands = [p for p in active if p not in incoming]
-            if cands:
-                scored = [(tot([p for p in active if p != d] + [add], U2.adding([d], ctx.weeks[0])), (d,)) for d in cands]
-                (drop,), _ = self._pick(scored)
-                after = tot([p for p in active if p != drop] + [add], U2.adding([drop], ctx.weeks[0]))
-                if after > now_t + TIE:
-                    active = [p for p in active if p != drop] + [add]
-                    moves["swap"] = (drop, add)
-                    U = U2.adding([drop], ctx.weeks[0])
+            if not sl or not cands:
+                break
+            now_t = tot(active, U)
+            add = best_add(sl)
+            U2 = U.without([add])
+            scored = [(tot([p for p in active if p != d] + [add], U2.adding([d], w0)), (d,)) for d in cands]
+            (drop,), _ = self._pick(scored)
+            if dict((c, t) for t, c in scored)[(drop,)] <= now_t + TIE:
+                break
+            active = [p for p in active if p != drop] + [add]
+            moves["swaps"].append((drop, add))
+            U = U2.adding([drop], w0)
+        else:
+            # Every swap gains more than TIE, so the loop must settle; reaching here means it didn't.
+            raise Refuse(f"the roster fix for roster {side.rid} was still swapping after {2 * ctx.cap} swaps")
         timeline = []                                                  # 5. IR returns
         for k, pin in sorted((self.return_week(p), p) for p in reserve if self.return_week(p) is not None):
+            if len(Side(side.rid, active, timeline=timeline + [(pin, k, None)]).available(k)) <= ctx.cap:
+                timeline.append((pin, k, None))                        # an open spot takes him: nobody goes
+                moves["shed"].append((pin, k, None))
+                continue
             shed = {o for _, _, o in timeline}
             cands = [p for p in active if p not in incoming and p not in shed]
             if not cands:
                 continue
-            scored = [(self.total(Side(side.rid, active, timeline=timeline + [(pin, k, o)]), U), (o,))
+            scored = [(self.total(Side(side.rid, active, timeline=timeline + [(pin, k, o)]), U.adding([o], k)), (o,))
                       for o in cands]
             (out,), _ = self._pick(scored)
             timeline.append((pin, k, out))
@@ -581,10 +670,8 @@ class Sim:
         lines, streams = {}, {}
         for w in self.ctx.weeks:
             _, pick = self.week(w, side, universe)
-            cur = w == self.ctx.cur
-            fixed = self.ctx.fixed.get(side.rid, {}) if cur else {}
-            pool = [p for p in side.available(w) if not (cur and p in self.ctx.locked)] + ([pick] if pick else [])
-            lines[w] = self.lineup(w, pool, fixed, detail=True)[1]
+            fixed, pool = self._slate(w, side)
+            lines[w] = self.lineup(w, pool + ([pick] if pick else []), fixed, detail=True)[1]
             streams[w] = pick
         return lines, streams
 
@@ -598,10 +685,12 @@ def sides_for(ctx, rosters, give, get):
         other = rosters[ctx.them if rid == ctx.us else ctx.us]
         res, taxi = set(r.get("reserve") or []), set(r.get("taxi") or [])
         other_res = set(other.get("reserve") or [])
-        active = [p for p in r["players"] if p not in res | taxi | outgoing]
-        active += [p for p in incoming if p not in other_res]
-        out[rid] = Side(rid, active, [p for p in res if p not in outgoing], incoming,
-                        [p for p in incoming if p in other_res])
+        active = [p for p in (r.get("players") or []) if p not in res | taxi | outgoing]
+        # sorted, never set order: with two incoming IR players and one open IR slot, which one is
+        # seated used to change from run to run with Python's string hashing (review 2026-10-23)
+        active += sorted(p for p in incoming if p not in other_res)
+        out[rid] = Side(rid, active, sorted(p for p in res if p not in outgoing), incoming,
+                        sorted(p for p in incoming if p in other_res))
     return out
 
 
@@ -645,34 +734,59 @@ def prepare(data, process_at):
 
     week = state["week"]
     ply = playoff_weeks(league)
-    kick = data.kickoffs
+    kick = data.kickoffs or {}
     proj_cur = data.proj.get(week, {})
 
-    def team_of(p):
-        return (players.get(p) or {}).get("team") or (p if p.isalpha() else None)
+    def game_days(rows):
+        """{team: game date} off each team's DEF row; a team with no opponent is on bye."""
+        out = {}
+        for t in {team_of(players, p) for p in rows} - {None}:
+            r = rows.get(t) or {}
+            if r.get("opponent") and r.get("date"):
+                out[t] = datetime.date.fromisoformat(r["date"])
+        return out
 
-    if kick is not None:
-        def locked_team(t):
-            k = kick.get(t)
-            return k is not None and k <= process_at
-        last_game = max(kick.values()) if kick else None
-        all_locked = bool(kick) and all(k <= process_at for k in kick.values())
-    else:                                       # blind: dates only (a game today is not yet locked)
-        dates = {t: (proj_cur.get(t) or {}).get("date") for t in {team_of(p) for p in proj_cur} - {None}}
+    # A team ESPN gave no kickoff for -- every team when ESPN is down -- locks by game DATE: a game on an
+    # earlier day has kicked off, a later one has not, and one ON the processing day cannot be known.
+    # The blind fallback used to call that day unlocked, so a Saturday-night run (processing Sunday
+    # night) moved players whose games were over (review 2026-10-23); now it refuses.
+    days = game_days(proj_cur)
+    undated = sorted(t for t in days if t not in kick)
+    same_day = [t for t in undated if days[t] == process_at.date()]
+    if same_day and process_at.astimezone(g.EASTERN).time() >= EARLIEST_KICKOFF:
+        why = f"ESPN's kickoff times are unavailable ({data.blind})" if data.blind else \
+              f"ESPN's scoreboard has no kickoff for {', '.join(same_day)}"
+        raise Refuse(f"{why}, and {', '.join(same_day)} play on {process_at:%a %b %d}, the day the trade would "
+                     "process -- whether they have kicked off by then cannot be known. Run it again when ESPN "
+                     "answers, or pass --process-at for a time before that day's games")
 
-        def locked_team(t):
-            d = dates.get(t)
-            return bool(d) and datetime.date.fromisoformat(d) < process_at.date()
-        known = [datetime.date.fromisoformat(d) for d in dates.values() if d]
-        last_game = (datetime.datetime.combine(max(known), datetime.time(23, 59), tzinfo=g.EASTERN)
-                     if known else None)
-        all_locked = bool(known) and all(d < process_at.date() for d in known)
+    def locked_team(t):
+        if t in kick:
+            return kick[t] <= process_at
+        return t in days and days[t] < process_at.date()
+
+    ends = list(kick.values()) + [datetime.datetime.combine(days[t], datetime.time(23, 59), tzinfo=g.EASTERN)
+                                  for t in undated]
+    last_game = max(ends) if ends else None
+    all_locked = bool(ends) and all(locked_team(t) for t in set(kick) | set(undated))
+    # The window this tool can model: from now to before next week's first game day. A later instant
+    # used to be priced as if it fell next week -- deadline unchecked, nothing locked -- and an earlier
+    # one unlocked games already played (review 2026-10-23; main refuses a past --process-at).
+    nxt = game_days(data.proj.get(week + 1, {}))
+    if last_game is not None and process_at > last_game and nxt and process_at.date() >= min(nxt.values()):
+        raise Refuse(f"the trade would process {process_at:%a %b %d}, on or after week {week + 1}'s first game day "
+                     f"({min(nxt.values()):%a %b %d}). This tool prices a trade that processes in week {week} or "
+                     f"before week {week + 1} kicks off; it knows no kickoff times later than that")
 
     weeks = [w for w in range(week, ply[-1] + 1) if not (w == week and all_locked)]
-    cur = week if weeks and weeks[0] == week else None
+    if not weeks:
+        raise Refuse(f"no week is left to price: week {week} is past the last playoff week ({ply[-1]}), "
+                     "or every game in it has been played")
+    cur = week if weeks[0] == week else None
     locked = set()
     if cur is not None:
-        locked = {p for p in set(proj_cur) | owned if team_of(p) and locked_team(team_of(p))}
+        locked = {p for p in set(proj_cur) | owned
+                  if team_of(players, p) and locked_team(team_of(players, p))}
     fixed = {}
     for rid, r in rosters.items():
         fixed[rid] = {}
@@ -696,7 +810,7 @@ def prepare(data, process_at):
                reg=[w for w in weeks if w < ply[0]], ply=[w for w in weeks if w in ply],
                ply_late=[w for w in weeks if w in ply[1:]], owned=owned,
                universe0=Universe(frozenset(universe0 - multi)), multi_excluded=sorted(multi),
-               dropped_current=(week not in weeks), raw_ros={})
+               dropped_current=(week not in weeks), raw_ros={}, undated=undated)
 
 
 def check_rostered_positions(ctx, players, rids):
@@ -720,7 +834,15 @@ def build_sets(data, ctx):
     info = None
     if not data.sleeper_only:
         t_pts, info = three_sites(data, s_pts, ctx.weeks)
-        sets["THREE SITES"] = Sim(ctx, t_pts, "THREE SITES")
+        if info["clean"]:
+            sets["THREE SITES"] = Sim(ctx, t_pts, "THREE SITES", plays=info["plays"])
+        else:
+            # This week is all played (not priced) and next week's CBS + ESPN refused: no priced week
+            # has a three-site line and no ratio carries, so the "three sites" column would be Sleeper's
+            # numbers to the decimal, and "the sets differ by 0.0" fake agreement (review 2026-10-23).
+            data.sleeper_only = (f"week {data.state['week'] + 1}: {data.next_missing}; week "
+                                 f"{data.state['week']} is all played, so no priced week has three sites")
+            info = None
     return sets, info
 
 
@@ -772,8 +894,20 @@ def evaluate(data, ctx, sets, info, give, get):
                 starts[tag][rid] = c
                 if rid == ctx.us and ctx.cur is not None:
                     cur_lines[tag] = lines[ctx.cur]
-        out["sets"][label] = {"before": before, "after": after, "delta": d, "starts": starts, "cur_lines": cur_lines}
+        # D1: when both sides want one free agent, we take him (in both worlds) and they re-choose. Their
+        # fix run as if they chose first shows who they wanted; the report names any we took.
+        clash = {}
+        for tag, world, (gv, gt) in (("before", before, ((), ())), ("after", after, (give, get))):
+            alone = sim.fix(sides_for(ctx, ctx.rosters, gv, gt)[ctx.them], ctx.universe0)[1]
+            clash[tag] = sorted(acquired(world["moves"][ctx.us]) & acquired(alone))
+        out["sets"][label] = {"before": before, "after": after, "delta": d, "starts": starts, "cur_lines": cur_lines,
+                              "clash": clash}
     return out
+
+
+def acquired(moves):
+    """Every free agent a roster fix brought in: the fills and the swaps' adds."""
+    return set(moves["add"]) | {add for _, add in moves["swaps"]}
 
 
 def summarize(delta, ctx):
@@ -784,8 +918,10 @@ def summarize(delta, ctx):
 # ------------------------------------------------------------------ the report
 
 
-def f1(v):
-    return f"{v:+.1f}"
+def opposite(a, b):
+    """The two sets disagree on gain or loss: one gains and the other loses, each by more than TIE. A
+    plain sign test called 0.0 against +0.1 a disagreement and 0.0 against -9 an agreement."""
+    return (a > TIE and b < -TIE) or (a < -TIE and b > TIE)
 
 
 def moves_text(moves, players):
@@ -802,10 +938,11 @@ def moves_text(moves, players):
             parts.append(f"drop {' + '.join(nm(p) for p in moves['drop'])}")
     for p in moves["add"]:
         parts.append(f"add {nm(p)} to fill the open spot")
-    if moves["swap"]:
-        parts.append(f"swap {nm(moves['swap'][0])} for free agent {nm(moves['swap'][1])}")
+    for drop, add in moves["swaps"]:
+        parts.append(f"swap {nm(drop)} for free agent {nm(add)}")
     for pin, k, pout in moves["shed"]:
-        parts.append(f"{nm(pin)} back from IR in week {k}, so {nm(pout)} goes")
+        parts.append(f"{nm(pin)} back from IR in week {k}, so {nm(pout)} goes" if pout
+                     else f"{nm(pin)} back from IR in week {k}, into an open roster spot")
     return "; ".join(parts) or "no roster moves"
 
 
@@ -847,7 +984,10 @@ def render(data, ctx, info, res, give, get):
             whose = "ours" if owner == ctx.us else them_name + "'s"
             w(f"  {nm(p)} is locked by then ({where}), so his week-{ctx.cur} points stay {whose}.")
     if data.blind:
-        w(f"  Kickoff times unavailable ({data.blind}); locks are by game DATE only -- a game today counts as unlocked.")
+        w(f"  Kickoff times unavailable ({data.blind}); locks are by game DATE only -- a game before the "
+          "processing day has kicked off, a later one has not.")
+    elif ctx.undated:
+        w(f"  ESPN's scoreboard has no kickoff for {', '.join(ctx.undated)}; their games lock by DATE only.")
     w(f"  Weeks priced: {weeks_label(ctx.weeks)} (regular season {weeks_label(ctx.reg)}, playoffs {weeks_label(ctx.ply)}).")
     if not data.sleeper_only:
         clean = info["clean"]
@@ -866,13 +1006,16 @@ def render(data, ctx, info, res, give, get):
           f"from one week to the next ({rtxt}; 1 = it always holds, 0 = pure noise).")
         w("   - Kickers and defenses use Sleeper's numbers in both sets.")
     w("   - A starter locked before the trade processes scores for his old team that week (unverified for a mid-week trade).")
+    if ctx.cur is not None:
+        w(f"   - A player either team lets go when the trade processes is on waivers until next week, so nobody starts "
+          f"him in week {ctx.cur} (unverified: this league's waivers run on Wednesdays).")
     w("   - A player who never starts is worth 0 here; injury cover is outside the model.")
     for p in list(give) + list(get):
         if ctx.raw_ros.get(p, 0.0) <= 0.0:
             w(f"  🚨 {nm(p)} projects zero all season -- injured or a bad join; these numbers are not meaningful for him.")
     if not data.sleeper_only:
         for p in list(give) + list(get):
-            if p not in info["ratio"] and (P.get(p) or {}).get("position") not in NEVER_ADJUSTED:
+            if p not in info["ratio"] and position(P, p) not in NEVER_ADJUSTED:
                 w(f"  {nm(p)}: no usable three-site projection in the three-site weeks; his three-site number is Sleeper's.")
         involved = set(give) | set(get)
         for tag in ("before", "after"):
@@ -880,10 +1023,11 @@ def render(data, ctx, info, res, give, get):
                 involved |= set(res["sets"][head]["starts"][tag][rid])
         for p in sorted(involved):
             raw = info["ratio"].get(p)
-            if raw and raw[0] != raw[1]:
+            # only where the clamp moves a number: a position whose r is 0 carries no ratio at all
+            if raw and raw[0] != raw[1] and info["r_pos"].get(position(P, p), (0.0, 0))[0] > 0:
                 w(f"  Clamped: {nm(p)} ran {raw[0]:.2f}x Sleeper in the three-site weeks; held to {raw[1]:.2f}x.")
     tot = {s: {rid: summarize(res["sets"][s]["delta"][rid], ctx) for rid in (ctx.us, ctx.them)} for s in labels}
-    if len(labels) == 2 and (tot[labels[0]][ctx.us]["rest"] > 0) != (tot[labels[1]][ctx.us]["rest"] > 0):
+    if len(labels) == 2 and opposite(tot[labels[0]][ctx.us]["rest"], tot[labels[1]][ctx.us]["rest"]):
         w("  THE TWO PROJECTION SETS DISAGREE ON WHETHER WE GAIN OR LOSE.")
 
     h2h = h2h_weeks(data, ctx)
@@ -905,7 +1049,10 @@ def render(data, ctx, info, res, give, get):
     w(f"  ('16-17' is the playoffs for a top-2 seed, who skips week {ctx.playoffs[0]}.)")
     byes = []
     for p in list(give) + list(get):
-        zero = [k for k in ctx.weeks if (P.get(p) or {}).get("team") in bye_teams(data.proj[k], {(P.get(p) or {}).get("team")})]
+        t = team_of(P, p)
+        if t is None:      # no NFL team: "no opponent" would read as a bye every week
+            continue
+        zero = [k for k in ctx.weeks if t in bye_teams(data.proj[k], {t})]
         if zero:
             byes.append(f"{nm(p)} wk {', '.join(map(str, zero))}")
     if byes:
@@ -938,6 +1085,9 @@ def render(data, ctx, info, res, give, get):
     for tag, title in (("before", "Without the trade"), ("after", "With the trade")):
         for rid, who in ((ctx.us, "we"), (ctx.them, them_name)):
             w(f"  {title}, {who}: {moves_text(S[tag]['moves'][rid], P)}.")
+        if S["clash"][tag]:
+            w(f"  {title}, {them_name} wanted {', '.join(nm(p) for p in S['clash'][tag])} too; we pick free agents "
+              "first in both worlds, so they took others.")
     for rid, who in ((ctx.us, "Our"), (ctx.them, them_name + "'s")):
         b, a_ = S["starts"]["before"][rid], S["starts"]["after"][rid]
         changed = sorted((p for p in set(b) | set(a_) if b.get(p, 0) != a_.get(p, 0)),
@@ -979,6 +1129,12 @@ def search(data, ctx, sets, info, anchors, top):
     before = {s: run_world(sim, ctx, ctx.rosters, (), ()) for s, sim in sets.items()}
     rows = []
     for gv in gives:
+        # The lineup and stream memos never evicted: the frozen night's search held 3.9M entries, a
+        # 9.6 GB peak. Within one give they hit 2.3x more often than across gives, so they are emptied
+        # here -- exact, since they are pure memos of a Sim whose inputs never change (review 2026-10-23).
+        for sim in sets.values():
+            sim._fills.clear()
+            sim._cands.clear()
         for gt in gets:
             row = {"give": gv, "get": gt, "sets": {}}
             for s, sim in sets.items():
@@ -990,7 +1146,7 @@ def search(data, ctx, sets, info, anchors, top):
             rows.append(row)
     labels = [s for s in SETS if s in sets]
     head = labels[0]
-    flips = sum(1 for r in rows if len(labels) == 2 and (r["sets"][labels[0]]["us"] > 0) != (r["sets"][labels[1]]["us"] > 0))
+    flips = sum(1 for r in rows if len(labels) == 2 and opposite(r["sets"][labels[0]]["us"], r["sets"][labels[1]]["us"]))
     kept = sorted((r for r in rows if r["sets"][head]["them"] >= 0), key=lambda r: -r["sets"][head]["us"])
     wish = sorted(rows, key=lambda r: -r["sets"][head]["us"])[:5]
     return {"rows": rows, "kept": kept, "wish": wish, "flips": flips, "labels": labels, "head": head, "top": top}
@@ -1021,7 +1177,7 @@ def render_search(data, ctx, res, anchors):
 
     def line(i, r):
         cells = " | ".join(f"{s.lower()}: us {r['sets'][s]['us']:+.1f}, them {r['sets'][s]['them']:+.1f}" for s in labels)
-        mark = " ±" if len(labels) == 2 and (r["sets"][labels[0]]["us"] > 0) != (r["sets"][labels[1]]["us"] > 0) else ""
+        mark = " ±" if len(labels) == 2 and opposite(r["sets"][labels[0]]["us"], r["sets"][labels[1]]["us"]) else ""
         w(f"  {i:>2}. give {' + '.join(nm(p) for p in r['give'])}  for  {' + '.join(nm(p) for p in r['get'])}{mark}")
         w(f"      {cells}")
         mv = r["sets"][head]["moves"]
@@ -1065,16 +1221,25 @@ def main(argv=None):
         if a.search:
             if not a.team or not a.give or a.get:
                 raise Refuse("--search needs --team and at least one --give, and no --get")
+            if a.top < 1:
+                raise Refuse(f"--top {a.top}: show at least one package")
         elif not a.give or not a.get:
             raise Refuse("pricing a trade needs at least one --give and one --get")
-        data = load()
+        try:
+            data = load()
+        except (OSError, http.client.HTTPException) as e:   # a dropped connection get_json does not wrap
+            raise Refuse(f"the Sleeper pull failed: {why(e)}") from e
         review = int(data.league["settings"].get("trade_review_days") or 0)
-        process_at = (parse_process_at(a.process_at) if a.process_at
-                      else g.now().replace(tzinfo=g.EASTERN) + datetime.timedelta(days=review))
+        now = g.now().replace(tzinfo=g.EASTERN)
+        process_at = parse_process_at(a.process_at) if a.process_at else now + datetime.timedelta(days=review)
+        if process_at < now:
+            raise Refuse(f"--process-at {a.process_at} is in the past; a trade processes after it is accepted, "
+                         "and a past instant would unlock games already played")
         ctx = prepare(data, process_at)
         rostered = {p for r in data.rosters for p in (r.get("players") or [])}
         owner = {p: r["roster_id"] for r in data.rosters for p in (r.get("players") or [])}
         give = [resolve(t, rostered, data.players) for t in a.give]
+        once(give, a.give, "--give", data.players)
         bad = [f"{display(data.players, p)} (roster {owner[p]})" for p in give if owner[p] != ctx.us]
         if bad:
             raise Refuse(f"--give must be our players (roster {ctx.us}); these are not: {', '.join(bad)}")
@@ -1090,6 +1255,7 @@ def main(argv=None):
             ctx.them = rid
         else:
             get = [resolve(t, rostered, data.players) for t in a.get]
+            once(get, a.get, "--get", data.players)
             homes = {owner[p] for p in get}
             if len(homes) != 1 or ctx.us in homes:
                 where = ", ".join(f"{display(data.players, p)} (roster {owner[p]})" for p in get)
@@ -1097,31 +1263,50 @@ def main(argv=None):
             ctx.them = homes.pop()
         check_rostered_positions(ctx, data.players, (ctx.us, ctx.them))
         sets, info = build_sets(data, ctx)
+        # what the numbers rest on, so a reader of the file alone can tell a thin run from a full one
+        dump = {"process_at": process_at.isoformat(), "sleeper_only": data.sleeper_only,
+                "next_missing": data.next_missing, "three_site_weeks": info["clean"] if info else [],
+                "them": ctx.them, "weeks": ctx.weeks}
         if a.search:
             res = search(data, ctx, sets, info, give, a.top)
             text = render_search(data, ctx, res, give)
-            dump = {"them": ctx.them, "weeks": ctx.weeks, "flips": res["flips"],
-                    "packages": [{"give": r["give"], "get": r["get"],
-                                  "sets": {s: {k: v for k, v in r["sets"][s].items() if k != "moves"} for s in r["sets"]}}
-                                 for r in res["rows"]]}
+            dump.update(flips=res["flips"],
+                        packages=[{"give": r["give"], "get": r["get"],
+                                   "sets": {s: {k: v for k, v in r["sets"][s].items() if k != "moves"} for s in r["sets"]}}
+                                  for r in res["rows"]])
         else:
             res = evaluate(data, ctx, sets, info, give, get)
             text = render(data, ctx, info, res, give, get)
-            dump = {"them": ctx.them, "weeks": ctx.weeks, "give": give, "get": get,
-                    "sets": {s: {"delta": {str(rid): v["delta"][rid] for rid in v["delta"]},
-                                 "moves": {t: {str(rid): v[t]["moves"][rid] for rid in v[t]["moves"]}
-                                           for t in ("before", "after")}}
-                             for s, v in res["sets"].items()}}
+            dump.update(give=give, get=get,
+                        sets={s: {"delta": {str(rid): v["delta"][rid] for rid in v["delta"]},
+                                  "moves": {t: {str(rid): v[t]["moves"][rid] for rid in v[t]["moves"]}
+                                            for t in ("before", "after")}}
+                              for s, v in res["sets"].items()})
     except Refuse as e:
         print(f"REFUSED: {e}")
+        if a.json:   # never leave an earlier run's numbers standing under a refused run's name
+            write_json(a.json, {"refused": str(e)})
         return 2
     print(text)
     if a.json:
-        os.makedirs(os.path.dirname(os.path.abspath(a.json)), exist_ok=True)
-        with open(a.json, "w", encoding="utf-8") as fh:
-            json.dump(dump, fh, indent=1, default=list)
+        write_json(a.json, dump)
         print(f"\nwrote {a.json}")
     return 0
+
+
+def write_json(path, obj):
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(obj, fh, indent=1, default=list)
+
+
+def once(ids, texts, flag, players):
+    """Refuse a player named twice: the lists collapse to sets downstream, so 'A.J. Brown' plus his id
+    quietly priced a smaller trade than the one typed (review 2026-10-23)."""
+    for p in dict.fromkeys(ids):
+        if ids.count(p) > 1:
+            said = " and ".join(repr(t) for t, q in zip(texts, ids) if q == p)
+            raise Refuse(f"{flag} names {display(players, p)} more than once ({said})")
 
 
 if __name__ == "__main__":

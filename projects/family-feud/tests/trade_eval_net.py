@@ -37,16 +37,26 @@ def fixture():
     return copy.deepcopy(_CACHE["fx"])
 
 
-class Net:
-    """Serves one fixture dict. Knobs: xload_fails / next_fails (str -> Refuse), kick_fails (str)."""
+def fault(spec):
+    """A knob's failure: a str is a Refuse with that text; an exception instance is raised as itself,
+    for the faults the network layer does not wrap (an IndexError, a dropped connection)."""
+    return spec if isinstance(spec, BaseException) else g.Refuse(spec)
 
-    def __init__(self, fx=None, now=PRICED_AT, xload_fails=None, next_fails=None, kick_fails=None):
+
+class Net:
+    """Serves one fixture dict. Knobs: xload_fails / next_fails (str -> Refuse, or an exception),
+    kick_fails (str), fetch_fails (an exception every Sleeper fetch raises)."""
+
+    def __init__(self, fx=None, now=PRICED_AT, xload_fails=None, next_fails=None, kick_fails=None, fetch_fails=None):
         self.fx = fx if fx is not None else fixture()
         self.now, self.xload_fails, self.next_fails, self.kick_fails = now, xload_fails, next_fails, kick_fails
+        self.fetch_fails = fetch_fails
         self.paths = []
 
     def fetch(self, path, timeout=None):
         self.paths.append(path)
+        if self.fetch_fails:
+            raise self.fetch_fails
         fx = self.fx
         lid = fx["league"]["league_id"]
         m = re.match(r"^/projections/nfl/\d+/(\d+)\?", path)
@@ -66,9 +76,9 @@ class Net:
         fx = self.fx
         w = week or fx["state"]["week"]
         if self.xload_fails and week is None:
-            raise g.Refuse(self.xload_fails)
+            raise fault(self.xload_fails)
         if self.next_fails and week is not None and week != fx["state"]["week"]:
-            raise g.Refuse(self.next_fails)
+            raise fault(self.next_fails)
         rows = fx["xload_rows"].get(str(w))
         if rows is None:
             raise g.Refuse(f"no fixture rows for week {w}")

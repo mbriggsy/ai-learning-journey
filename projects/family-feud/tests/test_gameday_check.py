@@ -413,8 +413,10 @@ class TestKickingKeys(unittest.TestCase):
         self.assertAlmostEqual(legacy, 7.23, places=6)
 
     def test_a_line_already_in_league_keys_is_never_counted_twice(self):
-        line = {"fgm_50_59": 1.0, "fgm_50p": 1.0, "fgmiss": 1.0, "fgmiss_40_49": 1.0}
-        self.assertAlmostEqual(g.score(line, self.LEAGUE_K), 5.0 - 1.0)
+        # unequal values: with 1.0 everywhere, overwriting the league key or adding into it scored the
+        # same, and those mutants passed (review 2026-10-23)
+        line = {"fgm_50_59": 1.0, "fgm_50p": 0.4, "fgmiss": 2.0, "fgmiss_40_49": 0.3}
+        self.assertAlmostEqual(g.score(line, self.LEAGUE_K), 5.0 * 1.0 - 1.0 * 2.0)
 
     def test_a_scoring_dict_without_kicking_leaves_the_line_alone(self):
         self.assertEqual(g.kicking_keys(self.SHRADER_WK7, SCORING), self.SHRADER_WK7)

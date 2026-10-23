@@ -14,48 +14,47 @@
   both on bye). Moves log for weeks 6-7: `temp/week7-moves-log.md` (gitignored, local).
 - **Kaeperni's offer (A.J. Brown + Tucker Kraft for Zay Flowers) was DECLINED 10-22 ~22:20 ET** on
   Briggsy's word. Verified: the panel read REJECTED, Active Trades was empty, `/rosters` unchanged.
-- **`scripts/trade_eval.py` is BUILT and COMMITTED 10-23** on Briggsy's yes (`git log -- scripts/trade_eval.py`),
-  with its tests, the frozen Kaeperni fixture, insight 035, the plan, and the kicker-key fix.
-  **Its whole-file review is still owed** (below).
-- **Suite: 1298 tests, OK (skipped=6)**, run 2026-10-22 with `python -m unittest discover -s tests`.
-  31 test files · 29 scripts · 35 insights.
+- **`scripts/trade_eval.py` is BUILT, COMMITTED (10-23) and REVIEWED (10-23):** 9 opus lenses, 18
+  verifiers, all fixes in (insight 036; the plan's decisions carry each change). The frozen night now
+  reads us −36.25 / −45.53, Kaeperni +43.19 / +50.43. **The fixture
+  `tests/fixtures/trade_eval_kaeperni_20261022.json.gz` can never be re-made** — it holds the 10-22
+  projections `TestThePublishedNumber` pins. Don't delete or regenerate it.
+- **Suite: 1333 tests, OK (skipped=6)**, run 2026-10-23 with `python -m unittest discover -s tests`.
+  31 test files · 29 scripts · 36 insights.
 - **Clocks:** mule hourly · `gameday_check.py` Sat 20:00 · Sun 08:00 · 11:30 · 15:00 · draft
   watcher · newsletter 21:45. Push/email are dead, so the files are the delivery.
 
 ## Ranked next
 
-1. **OWED: the whole-file ultramode review of `scripts/trade_eval.py`** (the `ultramode-code-review`
-   skill). It was skipped: the context window was past 50%, so no fan-outs were allowed.
-   - **Done already:**
-     - a whole-plan check (Workflow wf_68e18b45-54d, 3 opus lenses, all fixes folded in);
-     - 45 tests;
-     - **38/38 mutants killed** (scratch `mutants.py`, one per axis);
-     - a live run against today's data;
-     - a check that the trimmed fixture gives output identical to the untrimmed payloads.
-   - **`tests/fixtures/trade_eval_kaeperni_20261022.json.gz` can never be re-made:** it holds the
-     10-22 projections that `TestThePublishedNumber` pins. Don't delete or regenerate it.
-   - **Review focus:**
-     - D1's sequential roster fix: we decide first, from a pool that doesn't yet see their adds;
-     - the IR-return shed: it lets the shedding side stream its own shed player back;
-     - `--search` runtime, about 2.5 min for 2,736 packages.
-2. **Week 8 lineup vs Hunter (by Sun 10-25):**
+1. **Week 8 lineup vs Hunter (by Sun 10-25):**
    - Strange at TE (Fannin back on the bench);
    - Wilson for Collins (HOU bye);
    - SEA for HOU at DEF.
 
    Run `scripts/external_projections.py --week 8` first, then `trade_eval.py` if a trade comes up.
    Maye's week-11 bye: we have no backup QB. Stream a free agent, using a bench spot.
-3. **Build the Tuesday waiver report** (`docs/in-season-plan.md` §1 — still unbuilt; the gameday
+2. **Settle trade_eval's waiver assumption at the next real drop** (it moves the frozen headline 3.4).
+   The tool assumes a man dropped when a trade processes can't start for anyone until next week
+   (waivers run Wednesdays, `daily_waivers: 0`). After the next drop Briggsy names, open the Players
+   tab IN-APP (league home → Players) and search the dropped man: `W Wed` confirms it. If he shows
+   `.add` instead, edit `scripts/trade_eval.py` `Sim.fix`: the line
+   `U, w0 = universe, ctx.weeks[0] + (1 if ctx.weeks[0] == ctx.cur else 0)` becomes `U, w0 = universe, ctx.weeks[0]`,
+   drop the waiver line in `render`, re-record `TestThePublishedNumber` (it was −32.83 / −45.76,
+   Kaeperni +38.93 / +50.18 under that rule) and update `docs/league.md`'s waiver section either way.
+3. **Optional: make `--search` fast again without moving a number.** It takes 355-365 s for 2,736
+   packages on the frozen night (72 s before swaps repeated). Profile `Sim.fix`'s swap loop first; the
+   suite pins every number, and `TestSearch.test_the_memos_are_emptied...` pins the memo contract.
+4. **Build the Tuesday waiver report** (`docs/in-season-plan.md` §1 — still unbuilt; the gameday
    check is §2 and done). Inputs are all in the inbox (`sleeper_transactions.json`,
    `sleeper_rosters.json`, `sleeper_state.json`, trending add/drop). Waivers clear **Wed ~03:15 ET**,
    measured twice (09-16, 09-23). Read Hunter's transaction log first, every Wednesday.
-4. ~~**Fold the in-season browser mechanics into the `sleeper-draft-room` skill**~~ — **DONE 2026-10-06.**
+5. ~~**Fold the in-season browser mechanics into the `sleeper-draft-room` skill**~~ — **DONE 2026-10-06.**
    The skill now has an *In season* section (lineup swap, FA add/drop, the DEF-lands-on-bench landmine)
    and its own read-only `/team` self-test (PASSED live, 18 rows). 🚨 **Waiver claims work on the
    website ONLY when `/players` is reached in-app** (league home → Players tab): the row then reads
    `.waiver` / `W Wed` and the card `W (Wed)`. A typed `/players` URL hides waivers, shows ADD, and the
    server refuses (`docs/insights/034`). The 09-25 `.waiver` note was right.
-5. **Byes — plan the week before** (derived 2026-09-27 from zero-point weeks in Sleeper's wk4-14
+6. **Byes — plan the week before** (derived 2026-09-27 from zero-point weeks in Sleeper's wk4-14
    projections; a bye shows as a 0.0 entry, not a missing one):
    - **Week 6:** C. Brown, Bates, Goff, Hockenson — stream a K; RB depth is zero on the bench.
    - **Week 5 — Hunter's QB hole:** Mahomes AND Kelce bye, and his QB2 Daniels is Out (dislocated
@@ -66,11 +65,11 @@
      are the cover — a Kittle trade moves that cover). · **Week 13:** Taylor, Flowers. ·
      **Week 14:** Wilson.
    - Trade deadline **week 11**. Playoffs 6 of 8, weeks 15-17.
-6. **Next August, before the 2027 draft:** the draft-era payloads still owed at the board refresh
+7. **Next August, before the 2027 draft:** the draft-era payloads still owed at the board refresh
    (long-TD curve fold; the Wan'Dale / Michael Wilson board-membership look) and the five draft-era
    tests re-arm on their own (`draft_era_cache_or_skip`, `draft_era_pool_or_skip`). Start from
    `af491a71`'s TODO.
-7. **Fix `gameday_check.py`'s "Expected" header — it ignores live points for any game played TODAY**
+8. **Fix `gameday_check.py`'s "Expected" header — it ignores live points for any game played TODAY**
    (found 2026-10-18 wk 6). `projected_total()` (~line 364) banks a starter's live points only when
    his game date is `< today`; a game that kicked off today is still scored at its PRE-GAME
    projection. Wk 6 11:00: the header read us 146.5 / them 121.6 while their Tuten (London 9:30)
@@ -82,7 +81,7 @@
    keep today's rule and say so on the header line, as the ↑ line already does. Unit-test with a
    frozen wk-6 payload (Tuten 19.0 at half). Do it OFF game day — never edit a script a scheduled
    game-day run imports between Sat 20:00 and the Sun 15:00 run.
-8. **Fix `external_projections.py`: CBS silently serves the CURRENT week for any week 2+ ahead.**
+9. **Fix `external_projections.py`: CBS silently serves the CURRENT week for any week 2+ ahead.**
    Found 2026-10-18. `temp/proj_wk8.json` (pulled 10-16, i.e. wk 6 asking for wk 8) has **55**
    players on wk-8 bye teams (HOU/NO/NYG/SF) with a nonzero CBS number — Collins reads CBS 17.98,
    his wk-6 line — so the consensus averages a bye week as ~6 pts. One week ahead is clean (today's
@@ -95,6 +94,30 @@
 ## Landmines
 
 Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the worked cases.
+
+**trade_eval (review 2026-10-23: deferred on purpose, each measured)**
+- **Their number is soft, ours is not.** A choice that is a coin flip for one side moves the OTHER
+  side's total: Kaeperni's three-site +35.4 to +39.3 across tie rules on the frozen night, ours
+  −32.3 to −32.7. `--search` keeps packages where theirs is ≥ 0, so a package near 0 for them can sit
+  either side of the line.
+- **D1's order:** we fix first, so we can only stream, never roster, a man they drop. A reviewer
+  measured reversing the order at ≤ 1.0 on the frozen night (on the PRE-review code, one swap); the
+  report now names any free agent both sides wanted.
+- **A side may stream back a man it let go** (symmetric; ≤ 0.1 on the frozen night, measured by a
+  reviewer on the pre-review code). A locked free
+  agent can still be ADDED by the roster fix (number-neutral: he sits out the locked week). Incoming
+  bodies are never the ones cut (plan D1).
+- **Kicker keys:** if Sleeper ever adds `fgm_60p` beside an inclusive `fgm_50p`, 60+ makes would count
+  twice and KICK_BUCKET would not catch it (both keys are scored). Check a kicker row when 60+ appears.
+
+**Tooling on this machine**
+- **`grep -c $'\r$'` lies in Git Bash:** it printed the full line count for an LF file and 0 for a
+  CRLF one (10-23). Count line endings with Python (`b.count(b'\r\n')`) or `file`. Every file in
+  this project is LF in git.
+- **A mutant harness needs four things or its kills mean nothing:** run the baseline FIRST and refuse
+  unless it is clean; give every mutant its own file and `sys.dont_write_bytecode = True` (same-size
+  mutants written in one second share a `.pyc` stamp); reload `trade_eval_net` with the modules it
+  patches; block the network. The review's harness broke the first two (insight 036).
 
 **In-season**
 - 🚨 **The late window is the dangerous one.** A 4:05/4:25 inactive posts ~2:35/2:55 ET, after every

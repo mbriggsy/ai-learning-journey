@@ -3,9 +3,9 @@ name: Hooks tests
 # The hook harness, its fixtures and the leak test (projects/hooks/tests), plus
 # U29's squeaky-clean suite. Both were local-only gates until this workflow:
 # a verify script that never runs in CI isn't enforced. The leak test scans
-# the hooks folder and the four skill folders the flow publishes into, so a
-# change to any of them re-runs it. The Windows-only squeaky-clean tests skip
-# on this runner (they carry `skip: !WIN`).
+# the hooks folder, the four skill folders the flow publishes into and
+# playbook/, so a change to any of them re-runs it. The Windows-only
+# squeaky-clean tests skip on this runner (they carry `skip: !WIN`).
 
 on:
   push:
@@ -20,6 +20,7 @@ on:
       - 'projects/skills/deepen-verify/**'
       - 'projects/skills/squeaky-clean/**'
       - 'projects/skills/distill-and-brief/**'
+      - 'playbook/**'
       - '.github/workflows/hooks-tests.yml'
   pull_request:
     paths:
@@ -28,6 +29,7 @@ on:
       - 'projects/skills/deepen-verify/**'
       - 'projects/skills/squeaky-clean/**'
       - 'projects/skills/distill-and-brief/**'
+      - 'playbook/**'
       - '.github/workflows/hooks-tests.yml'
   workflow_dispatch:
 

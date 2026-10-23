@@ -1,10 +1,11 @@
 // leak.mjs: the leak scan for the public folders the flow publishes into.
 //
-// projects/hooks and four skill folders hold code, fixtures and insight files
-// that later units write, and the monorepo is public. A real session id, a
-// path under a Windows user profile, or a field copied out of a transcript
-// must never land there. Hooks see all three (session_id, transcript_path and
-// the transcript itself), so a captured payload pasted into a fixture is the
+// projects/hooks and four skill folders hold code, fixtures and insight
+// files that later units write, playbook/ holds our-setup's docs and its
+// insight files, and the monorepo is public. A real session id, a path under
+// a Windows user profile, or a field copied out of a transcript must never
+// land there. Hooks see all three (session_id, transcript_path and the
+// transcript itself), so a captured payload pasted into a fixture is the
 // failure this guards against.
 //
 // It scans what git would commit: tracked files plus untracked ones that
@@ -61,6 +62,7 @@ export const SCOPE = [
   'projects/skills/deepen-verify',
   'projects/skills/squeaky-clean',
   'projects/skills/distill-and-brief',
+  'playbook',
 ];
 
 const hex = (n) => `[0-9a-f]{${n}}`;

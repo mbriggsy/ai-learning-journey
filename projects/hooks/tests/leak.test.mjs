@@ -17,7 +17,7 @@ import path from 'node:path';
 import { after, before, describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { GIT_LOCATION_VARS } from '../probes/lib.mjs';
-import { REVIEWED_BINARIES, SCOPE, gitEnv, scan, scanBlob } from './leak.mjs';
+import { REVIEWED_BINARIES, SCOPE, gitEnv, listFiles, scan, scanBlob } from './leak.mjs';
 
 const sha256 = (buf) => createHash('sha256').update(buf).digest('hex');
 // Hits in a fixed order: by file, then line, then rule (one file can hold a
@@ -28,20 +28,46 @@ const PNG_HEAD = () => Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 
-test('the scope is the five folders the plan names', () => {
+test('the scope is the six folders the plan names', () => {
   assert.deepEqual(SCOPE, [
     'projects/hooks',
     'projects/skills/ultramode-code-review',
     'projects/skills/deepen-verify',
     'projects/skills/squeaky-clean',
     'projects/skills/distill-and-brief',
+    'playbook',
   ]);
+});
+
+// CI's paths filter is a hand-kept copy of SCOPE (a workflow file can't import
+// it), so a folder in SCOPE but missing from either list could change without
+// CI running the leak test on it.
+test("CI's paths filter lists every folder in the scope, on push and on pull_request", () => {
+  const yml = fs.readFileSync(path.join(REPO, '.github', 'workflows', 'hooks-tests.yml'), 'utf8');
+  const lists = {};
+  let event = null;
+  let inPaths = false;
+  for (const line of yml.split(/\r?\n/)) {
+    if (/^\s*(#|$)/.test(line)) continue;
+    const key = /^ {2}(\w+):/.exec(line);
+    if (key) [event, inPaths] = [key[1], false];
+    else if (/^ {4}paths:\s*$/.test(line)) inPaths = true;
+    else if (inPaths && /^ {6}- /.test(line)) (lists[event] ??= []).push(/^ {6}- '([^']*)'\s*$/.exec(line)?.[1] ?? line.trim());
+    else inPaths = false;
+  }
+  for (const ev of ['push', 'pull_request']) {
+    assert.ok(lists[ev]?.length, `no paths list read for ${ev}: the check would pass with nothing to compare`);
+    assert.deepEqual(SCOPE.filter((dir) => !lists[ev].includes(`${dir}/**`)), [], `folders in SCOPE missing from the ${ev} paths filter`);
+  }
 });
 
 test('the published folders carry no uuid, user-profile path, transcript field, API id or binary', (t) => {
   const out = scan(REPO);
   const hooks = out.roots.find((r) => r.dir === 'projects/hooks');
   assert.ok(hooks.exists, 'projects/hooks is missing: the scan would read as clean with nothing to scan');
+  // Ignored leftovers (playbook/temp/, playbook/.claude/) keep the folder on
+  // disk after a move, so this asks git what it would commit there.
+  assert.ok(listFiles(REPO, ['playbook']).length > 0, 'git lists no file under playbook: the scan would read as clean with nothing to scan there');
   assert.ok(out.files > 0, 'no files listed: an empty scan must never read as clean');
   for (const r of out.roots.filter((x) => !x.exists)) t.diagnostic(`not created yet: ${r.dir}`);
   for (const b of out.reviewed) t.diagnostic(`reviewed binary, body not read: ${b}`);
@@ -142,21 +168,25 @@ describe('planted leaks', () => {
   after(() => fs.rmSync(repo, { recursive: true, force: true }));
 
   for (const [name, make] of Object.entries(SAMPLES)) {
-    test(`a planted ${name} fails the scan, in projects/hooks and in a covered skill folder`, () => {
+    test(`a planted ${name} fails the scan, in projects/hooks, in a covered skill folder and in playbook`, () => {
       const slug = name.replace(/\W+/g, '-');
       const inHooks = `projects/hooks/tests/fixtures/${slug}.json`;
       const inSkill = `projects/skills/squeaky-clean/tests/${slug}.mjs`;
+      const inPlaybook = `playbook/docs/insights/${slug}.md`;
       put(inHooks, `{\n  "ok": 1,\n  "x": "${make()}"\n}\n`);
       put(inSkill, `// clean line\nconst x = '${make()}';\n`);
+      put(inPlaybook, `# A clean heading\n\n- an example: ${make()}\n`);
       try {
-        const hits = scan(repo).hits.filter((h) => h.file === inHooks || h.file === inSkill);
+        const hits = scan(repo).hits.filter((h) => [inHooks, inSkill, inPlaybook].includes(h.file));
         assert.deepEqual(hits, [
+          { file: inPlaybook, line: 3, rule: ruleOf(name) },
           { file: inHooks, line: 3, rule: ruleOf(name) },
           { file: inSkill, line: 2, rule: ruleOf(name) },
         ]);
       } finally {
         fs.rmSync(path.join(repo, inHooks));
         fs.rmSync(path.join(repo, inSkill));
+        fs.rmSync(path.join(repo, inPlaybook));
       }
     });
   }

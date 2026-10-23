@@ -28,3 +28,11 @@ __pycache__/
 
 # Screenshots Briggsy drops for a session started in playbook/ (the our-setup home)
 playbook/temp/
+# Local settings and a browser tool's scratch files in folders the leak gate
+# scans: they can hold a user-folder path (a hook command, say) or
+# screenshots, so they stay out on every machine, not only where a global git
+# ignore covers them. (Other projects track their settings.local.json on
+# purpose: no wildcard here.)
+playbook/.claude/settings.local.json
+playbook/.playwright-mcp/
+projects/skills/ultramode-code-review/.claude/settings.local.json

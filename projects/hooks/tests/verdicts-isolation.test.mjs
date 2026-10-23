@@ -16,6 +16,7 @@ import * as q00 from '../probes/defs/q00-parent-settings.mjs';
 import * as q05 from '../probes/defs/q05-background-tasks.mjs';
 import * as q08 from '../probes/defs/q08-session-kind-env.mjs';
 import * as q14 from '../probes/defs/q14-prompt-origin.mjs';
+import { TRUSTED_NAME } from '../probes/lib.mjs';
 import { measured } from '../probes/run.mjs';
 
 let dir;
@@ -154,6 +155,17 @@ describe('Q8: the verdict', () => {
       assert.deepEqual([d.verdict, d.unsettledOnly], ['PARTIAL', true], d.summary);
       assert.equal(unmeasured('Q8', d), true);
     }
+  });
+
+  // One refusal reads the same whatever caused it, so the summary names the
+  // trusted folder and each cause, and claims none of them.
+  test('a refused --bg names the trusted folder and every cause it could be, and guesses none', () => {
+    const d = q08.decide(obs({ bg: bgBlocked }));
+    assert.deepEqual([d.verdict, d.unsettledOnly], ['PARTIAL', true], d.summary);
+    assert.ok(d.summary.includes(`a fresh folder inside the trusted probe folder ${TRUSTED_NAME} as trusted`), d.summary);
+    for (const cause of [/its one-time trust entry in ~\/\.claude\.json is gone/, /this CLI no longer takes trust from a parent folder/, /this run's temp dir is spelled differently from that entry/]) assert.match(d.summary, cause);
+    assert.match(d.summary, /find out which before approving the trust write again\)/);
+    assert.doesNotMatch(d.summary, /no probe folder is trusted|can't accept the workspace trust dialog/);
   });
 
   test('a deviation is CONTRADICTED and never opts out, whatever stays open', () => {

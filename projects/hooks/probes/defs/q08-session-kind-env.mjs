@@ -9,9 +9,11 @@
 //   p-stream    claude -p over stream-json, one turn
 //   workflow    claude -p whose model launches a Workflow; its one agent runs
 //               the env script, so hooks fire inside the agent (agent_id set)
-//   bg          claude --bg started from this script. The docs say a folder
-//               nobody trusted is refused there ("Workspace not trusted",
-//               permissions.md:760), which leaves the arm BLOCKED, not a guess
+//   bg          claude --bg started from this script, in a fresh folder inside
+//               the one trusted probe folder (lib's TRUSTED_NAME): the CLI
+//               refuses a folder nobody trusted ("Workspace not trusted",
+//               permissions.md:760), and a refusal leaves the arm BLOCKED,
+//               not a guess
 // In every session something runs `node q8env.js`, which prints the Bash
 // tool's own CLAUDE* env; the PostToolUse capture holds that output and the
 // hook's env side by side. A post whose output carries that env, from the
@@ -46,7 +48,7 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { arm, baseArgs, byLabel, cleanEnv, hook, readCaptures, runClaude, runStream, scrubber, sleep, track, write, writeSettings } from '../lib.mjs';
+import { TRUSTED_NAME, arm, baseArgs, byLabel, cleanEnv, hook, readCaptures, runClaude, runStream, scrubber, sleep, track, trustedDir, write, writeSettings } from '../lib.mjs';
 
 const ENV_SCRIPT = [
   "const keep = /^(CLAUDE|ENTRYPOINT|ATTENDED|AI_AGENT)/;",
@@ -210,8 +212,11 @@ function cli(args, { cwd, env = {}, timeoutMs = 90_000 } = {}) {
   });
 }
 
+// A script can't accept the trust dialog, so the session runs inside the one
+// folder a person trusted (lib's trustedDir), in a fresh folder of its own:
+// it inherits the trust, and no other run shares its cwd.
 async function bgArm(ctx) {
-  const { ws, out } = arm(ctx, 'bg');
+  const { ws, out } = arm(ctx, 'bg', { root: trustedDir() });
   write(path.join(ws, 'q8env.js'), `${ENV_SCRIPT}\n`);
   // The background worker is started by a supervisor, not by this process,
   // so PROBE_OUT rides in the settings' env block as well.
@@ -220,7 +225,7 @@ async function bgArm(ctx) {
   const text = `${launch.stdout}\n${launch.stderr}`;
   write(path.join(out, 'bg-launch.json'), JSON.stringify(launch, null, 2));
   const said = scrub(text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).slice(0, 3).join(' | ').replaceAll(fwd(ws), '<ws>').replaceAll(ws, '<ws>'));
-  if (/not trusted/i.test(text)) return { state: 'blocked', said, code: launch.code };
+  if (/Workspace not trusted/i.test(text)) return { state: 'blocked', said, code: launch.code };
   const id = (/backgrounded\W+([0-9a-z]{6,})/i.exec(text) ?? /claude stop ([0-9a-z]{6,})/i.exec(text))?.[1];
   if (!id) return { state: 'no-id', said, code: launch.code };
   // The id is parsed from free text, so stop and rm get it only once this
@@ -313,7 +318,9 @@ export function decide({ version, launcher, launcherVersion: lv, arms, bg }) {
           ? `this run's own env, a Bash tool's in an attended interactive session on CLI ${version}, read cli / 1, and every measured session gave a Bash env reading that matched its hook env, so cli / 1 stands for that session's hook env`
           : `this run's own Bash env read cli / 1, but ${bridgeGap}, so it can't stand for hook env`,
   ];
-  const open = [!interactiveOk && 'the interactive arm', bg.state === 'blocked' && 'the --bg arm (a script can\'t accept the workspace trust dialog, and no probe folder is trusted)'].filter(Boolean);
+  // One refusal says all three of these the same way, so the text names each
+  // and never guesses which.
+  const open = [!interactiveOk && 'the interactive arm', bg.state === 'blocked' && `the --bg arm (the CLI did not count a fresh folder inside the trusted probe folder ${TRUSTED_NAME} as trusted: its one-time trust entry in ~/.claude.json is gone, this CLI no longer takes trust from a parent folder, or this run's temp dir is spelled differently from that entry; find out which before approving the trust write again)`].filter(Boolean);
   const notRun = 'Desktop app and Agent SDK sessions were not run (a human, a new dependency)';
   const notClaimed = 'Open arm, never claimed: whether an interactive session\'s workflow agents carry its cli / 1 (agents ran only in a -p session, whose main thread and agents both read sdk-cli / 0, as they would under a CLI that pinned every agent to sdk-cli / 0)';
   if (open.length) {

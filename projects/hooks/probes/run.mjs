@@ -43,7 +43,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { CAPTURE, HERE, cliVersion, gitEnv, sleep } from './lib.mjs';
+import { CAPTURE, HERE, cliVersion, gitEnv, sleep, trustedDir } from './lib.mjs';
 
 export const FLOW_PROBES = path.join(os.homedir(), '.claude', 'flow', 'probes');
 export const PROJECTS = path.join(os.homedir(), '.claude', 'projects');
@@ -221,12 +221,14 @@ const fold = (s) => (process.platform === 'win32' ? s.toLowerCase() : s);
 
 // How Q8's --bg arm (defs/q08-session-kind-env.mjs, bgArm) reads its launch's
 // output: the stdout and stderr it kept in <run>/Q8/bg/bg-launch.json, joined
-// by a newline; a launch the CLI refused (an untrusted folder) started nothing,
-// and otherwise the session's short id is the first match of `ids`, in order.
-// Copied here, not imported: the def keeps them inline, and editing it to
-// export them would change its hash and void Q8's verdict. tests/probes.test.mjs
-// checks each one still stands in the def word for word.
-export const Q8_BG = { refused: /not trusted/i, ids: [/backgrounded\W+([0-9a-z]{6,})/i, /claude stop ([0-9a-z]{6,})/i] };
+// by a newline; a launch the CLI refused (an untrusted folder: every refusal
+// string in the 2.1.309 binary holds "Workspace not trusted", and the --bg one
+// was measured) started nothing, and otherwise the session's short id is the
+// first match of `ids`, in order. Copied here, not imported: run.mjs imports
+// no def, since a def that failed to load would then stop every run and
+// --cleanup, where loadProbes files it as ERROR. tests/probes.test.mjs checks
+// each one still stands in the def word for word.
+export const Q8_BG = { refused: /Workspace not trusted/i, ids: [/backgrounded\W+([0-9a-z]{6,})/i, /claude stop ([0-9a-z]{6,})/i] };
 
 // A background session's short id: the first 8 characters of its session
 // UUID. The 2.1.307 binary names a new job `u=f??v.slice(0,8)` (v the new
@@ -273,10 +275,12 @@ const ENDED = ['done', 'failed', 'stopped'];
 // plans/ and agent-memory/. The config dir is ~/.claude here even when the
 // runner has CLAUDE_CONFIG_DIR set: cleanEnv drops every CLAUDE* variable
 // from the probe's launch. Deleting the session, `claude rm <id>`, is the
-// supported way to clear it (agent-view.md says it removes tmp/; whether it
-// takes the whole folder is unmeasured, since no --bg session has run here).
-// Q8 runs it only once the id shows in its workspace's own session listing,
-// so a launch it never found there, a failed rm or a crash leaves the folder.
+// supported way to clear it, and it takes the whole folder (measured on
+// 2.1.309: jobs/<id>/ was gone after it, and the session left the
+// workspace's listing; agent-view.md says only that it removes tmp/). Q8 runs
+// `claude stop` and then rm once the id shows in its workspace's own session
+// listing, so a folder is here to find only when that never ran or failed: a
+// launch Q8 never saw in the listing, a failed rm, a crash.
 //
 // The same root holds every real background session's folder, so the target
 // is named only by the id Q8's own launch record gives (bgLaunchId), sits
@@ -326,10 +330,15 @@ function spellings(d) {
   return [...out];
 }
 
-// Only folders a probe made: a workspace is <tmp>/claude-probe-*, and its
-// transcripts live in <projects>/<slug of that workspace, or of a folder in
-// it>. Anything else a run folder lists (a look-alike elsewhere, the roots
-// themselves, a nested path) is never a target. A listed workspace's own
+// Only folders a probe made: a workspace is <tmp>/claude-probe-*, or
+// <trusted>/claude-probe-* for an arm lib's arm() made inside the trusted
+// folder (Q8's --bg arm; lib's TRUSTED_NAME), and its transcripts live in
+// <projects>/<slug of that workspace, or of a folder in it>. Anything else a
+// run folder lists (a look-alike elsewhere, the roots themselves, a nested
+// path) is never a target, and neither is the trusted folder, in any
+// spelling: it outlives every run, and each run's folder inside it has a slug
+// that starts with its own, so taking it, or finding folders by its name,
+// would take every run's. A listed workspace's own
 // folders are also found by name, listed or not: a crash or an arm whose hooks
 // never fired lists no transcript folder, and a session started in a folder
 // inside the workspace (Q0's <ws>/repo) gets one named <slug of ws>-<rest>.
@@ -346,18 +355,29 @@ function spellings(d) {
 // and when); `notes` collects a line for each one kept, and for a launch
 // record that named no usable id.
 const CLI_CACHE = process.platform === 'win32' && process.env.LOCALAPPDATA ? path.join(process.env.LOCALAPPDATA, 'claude-cli-nodejs', 'Cache') : null;
-export function cleanupTargets(runDir, { projects = PROJECTS, tmp = os.tmpdir(), tasks = path.join(tmp, 'claude'), cache = CLI_CACHE, jobs = JOBS, notes = [] } = {}) {
+export function cleanupTargets(runDir, { projects = PROJECTS, tmp = os.tmpdir(), tasks = path.join(tmp, 'claude'), cache = CLI_CACHE, jobs = JOBS, trusted = trustedDir(tmp), notes = [] } = {}) {
   const tmpAbs = path.resolve(tmp);
   const projAbs = path.resolve(projects);
+  const trustedAbs = path.resolve(trusted);
   const prefix = `${slug(tmpAbs)}-claude-probe-`;
+  // A folder whose slug would find the trusted folder's own folders by name:
+  // the trusted folder itself, or one whose name is a prefix of it.
+  const trustedSlug = fold(slug(trustedAbs));
+  const findsTrusted = (abs) => {
+    const w = fold(slug(abs));
+    return trustedSlug === w || trustedSlug.startsWith(`${w}-`);
+  };
+  const trustedTranscripts = fold(path.join(projAbs, slug(trustedAbs)));
   const listed = madeIn(runDir).filter((d) => {
     const abs = path.resolve(d);
     const base = path.basename(abs);
-    const inTmp = path.dirname(abs) === tmpAbs && base.startsWith('claude-probe-');
-    const inProjects = path.dirname(abs) === projAbs && base.startsWith(prefix);
-    return inTmp || inProjects;
+    const parent = path.dirname(abs);
+    const inTmp = parent === tmpAbs && base.startsWith('claude-probe-') && !findsTrusted(abs);
+    const inTrusted = parent === trustedAbs && base.startsWith('claude-probe-');
+    const inProjects = parent === projAbs && base.startsWith(prefix) && fold(abs) !== trustedTranscripts;
+    return inTmp || inTrusted || inProjects;
   });
-  const wsDirs = listed.filter((d) => path.dirname(path.resolve(d)) === tmpAbs);
+  const wsDirs = listed.filter((d) => [tmpAbs, trustedAbs].includes(path.dirname(path.resolve(d))));
   const workspaces = wsDirs.map((d) => fold(slug(path.resolve(d))));
   const named = (root) => {
     let names = [];

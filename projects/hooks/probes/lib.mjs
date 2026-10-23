@@ -24,7 +24,10 @@
 //   a -p session binds an inbox like an interactive one, and a live session's
 //   message must never land in a probe's turn.
 // - --strict-mcp-config: no configured MCP server starts. A def may add its
-//   own probe-local stub with --mcp-config (Q15 does); nothing else loads.
+//   own probe-local stub with --mcp-config (Q15 does). The CLI's built-in
+//   Chrome connector is no configured server: measured on 2.1.309, it
+//   started in Q8's --bg session (a log folder in the CLI cache) and in no
+//   -p session.
 //
 // lib.mjs and capture.mjs are hashed into every verdict (run.mjs probeHash):
 // an edit here makes every recorded verdict stale until its probe re-runs.
@@ -111,8 +114,27 @@ export function cleanEnv(extra = {}) {
   return { ...env, ...extra };
 }
 
-export function workspace(id) {
-  return fs.mkdtempSync(path.join(os.tmpdir(), `claude-probe-${id.toLowerCase()}-`));
+// The one folder a probe needs trusted: Q8's `claude --bg` arm, which the CLI
+// refuses to start in a folder nobody trusted, and a script can't accept the
+// trust dialog (a -p session skips it). A person approved its trust entry once
+// (ruled 2026-10-22, written 2026-10-23 through tools/settings-write.mjs
+// --target claude-json, the CLI's own default project entry with
+// hasTrustDialogAccepted true; inverse in ~/.claude/flow/settings-writer/,
+// 2026-10-23T00-01-11-960Z-claude-json-inverse.json). No probe code writes
+// ~/.claude.json. A folder inside it inherits that trust (measured on CLI
+// 2.1.309: the same --bg launch in a subfolder was refused before the write
+// and started after it; the CLI walks up from the cwd to the first trusted
+// ancestor), so each run works in a fresh folder inside it (arm's `root`)
+// and no two runs share a cwd. --cleanup never deletes this folder itself
+// (run.mjs cleanupTargets). Its safety rests on the temp dir being the
+// user's own, as Windows %TEMP% is; a shared /tmp would need an owner check
+// before a run trusted what it found there.
+export const TRUSTED_NAME = 'claude-probe-q8-trusted';
+export const trustedDir = (tmp = os.tmpdir()) => path.join(tmp, TRUSTED_NAME);
+
+// A fresh folder for one arm, made directly inside `root`.
+export function workspace(id, root = os.tmpdir()) {
+  return fs.mkdtempSync(path.join(root, `claude-probe-${id.toLowerCase()}-`));
 }
 
 export function write(file, text) {
@@ -521,15 +543,20 @@ export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Each folder a probe makes joins ctx.made and is written to <ctx.out>/made.json
 // at once, so run.mjs --cleanup can find it even when the probe crashes later.
+// A `root` arm makes for its workspace is never recorded: it outlives the run
+// (the trusted folder above).
 function recordMade(ctx, dir) {
   if (ctx.made.includes(dir)) return;
   ctx.made.push(dir);
   if (ctx.out) write(path.join(ctx.out, 'made.json'), `${JSON.stringify(ctx.made, null, 2)}\n`);
 }
 
-// A fresh workspace and capture folder for one arm of a probe.
-export function arm(ctx, name) {
-  const ws = workspace(`${ctx.id}-${name}`);
+// A fresh workspace and capture folder for one arm of a probe. The workspace
+// goes directly in the system temp dir, or directly in `root` (made if
+// missing) when one is given.
+export function arm(ctx, name, { root } = {}) {
+  if (root) fs.mkdirSync(root, { recursive: true });
+  const ws = workspace(`${ctx.id}-${name}`, root);
   recordMade(ctx, ws);
   const out = path.join(ctx.out, name);
   fs.mkdirSync(out, { recursive: true });

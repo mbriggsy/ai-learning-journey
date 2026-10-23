@@ -14,8 +14,8 @@ import path from 'node:path';
 import { after, before, describe, test } from 'node:test';
 import { pathToFileURL } from 'node:url';
 import {
-  CAPTURE, HERE, baseArgs, claudeMdExcludes, cleanEnv, cliVersion, failure, gitEnv, readCaptures, runClaude, runClaudeAsync,
-  runStream, scrubber, setClaudeCommand, sleep, writeSettings,
+  CAPTURE, HERE, TRUSTED_NAME, arm, baseArgs, claudeMdExcludes, cleanEnv, cliVersion, failure, gitEnv, readCaptures, runClaude, runClaudeAsync,
+  runStream, scrubber, setClaudeCommand, sleep, trustedDir, writeSettings,
 } from '../probes/lib.mjs';
 import { BEGIN, END, renderBlock, writeReport } from '../probes/report.mjs';
 import {
@@ -488,7 +488,7 @@ describe("--cleanup also deletes the job folder Q8's --bg session left (O24)", (
     for (const re of [Q8_BG.refused, ...Q8_BG.ids]) assert.ok(src.includes(String(re)), `${re} is no longer in q08's def: make Q8_BG read as the def does`);
     assert.ok(src.includes(`${Q8_BG.ids[0]}.exec(text) ?? ${Q8_BG.ids[1]}.exec(text)`), "q08's def no longer tries the two patterns in Q8_BG's order");
     assert.ok(src.includes('const text = `${launch.stdout}\\n${launch.stderr}`;'), "q08's def no longer joins stdout and stderr that way");
-    assert.ok(src.includes("arm(ctx, 'bg')") && src.includes("path.join(out, 'bg-launch.json')"), "q08's def no longer keeps its launch at <run>/Q8/bg/bg-launch.json");
+    assert.ok(src.includes("arm(ctx, 'bg', { root: trustedDir() })") && src.includes("path.join(out, 'bg-launch.json')"), "q08's def no longer keeps its launch at <run>/Q8/bg/bg-launch.json");
 
     const id = short();
     const record = (launch) => {
@@ -544,6 +544,191 @@ describe("--cleanup also deletes the job folder Q8's --bg session left (O24)", (
     assert.ok(said.some((l) => l.startsWith(`kept ${working} (`) && l.includes(`claude stop ${id2}`)), said.join('\n'));
     assert.deepEqual(warned, []);
     assert.equal(process.exitCode, exitBefore);
+  });
+});
+
+// Step 8b. Q8's --bg arm runs in a fresh folder inside the one trusted folder
+// (lib's TRUSTED_NAME), so --cleanup takes a run's folder there and what is
+// named for it, and never the trusted folder or another run's folder. Every
+// root is a temp folder, as above.
+describe("--cleanup and Q8's runs inside the trusted folder (step 8b)", () => {
+  const short = () => randomUUID().slice(0, 8);
+  const sid = (id) => `${id}${randomUUID().slice(8)}`;
+  const roots = () => ({ tmp: fresh('tmp'), projects: fresh('projects'), tasks: fresh('tasks'), cache: fresh('cache'), jobs: fresh('jobs') });
+  // The trusted folder under a test's own temp root, built here and never
+  // with trustedDir(): fixtures made through the code under test go wherever
+  // a broken trustedDir() points, and a mutant of it once put them in the real
+  // trusted folder.
+  const trustedIn = (tmp) => path.join(tmp, TRUSTED_NAME);
+  // One run's bg arm as the CLI left it on 2.1.309: its folder inside the
+  // trusted folder, the transcript folder track() lists (with its memory/),
+  // the task output (two session-id folders), the cache's MCP log folder, a
+  // job folder whose state.json reads `state`, and the run's own records.
+  const bgRunIn = (r, name, state = 'done') => {
+    const ws = path.join(trustedIn(r.tmp), `claude-probe-q8-bg-${name}`);
+    const id = short();
+    const tr = path.join(r.projects, slug(ws));
+    const out = path.join(r.tasks, slug(ws));
+    const logs = path.join(r.cache, slug(ws));
+    const job = path.join(r.jobs, id);
+    for (const d of [ws, path.join(tr, 'memory'), path.join(out, sid(id)), path.join(out, randomUUID()), path.join(logs, 'mcp-logs-chrome'), path.join(job, 'tmp')]) fs.mkdirSync(d, { recursive: true });
+    const setState = (s) => fs.writeFileSync(path.join(job, 'state.json'), JSON.stringify({ state: s, sessionId: sid(id), daemonShort: id, cwd: ws }));
+    setState(state);
+    const run = fresh('run');
+    fs.mkdirSync(path.join(run, 'Q8', 'bg'), { recursive: true });
+    fs.writeFileSync(path.join(run, 'Q8', 'made.json'), JSON.stringify([ws, tr]));
+    fs.writeFileSync(path.join(run, 'Q8', 'bg', 'bg-launch.json'), JSON.stringify({ code: 0, signal: null, stdout: `backgrounded · ${id}\n  claude stop ${id}      stop this session\n`, stderr: '', ms: 1 }));
+    return { run, ws, tr, job, setState, all: [ws, tr, out, logs, job] };
+  };
+  const listing = (run, list) => fs.writeFileSync(path.join(run, 'Q8', 'made.json'), JSON.stringify(list));
+
+  test("the trusted folder is lib's TRUSTED_NAME in the temp dir, and Q8's bg arm makes its folder there", () => {
+    assert.equal(TRUSTED_NAME, 'claude-probe-q8-trusted');
+    assert.equal(trustedDir(), path.join(os.tmpdir(), TRUSTED_NAME));
+    const t = fresh('t');
+    assert.equal(trustedDir(t), path.join(t, TRUSTED_NAME));
+    const src = fs.readFileSync(path.join(DEFS, 'q08-session-kind-env.mjs'), 'utf8');
+    assert.ok(src.includes("const { ws, out } = arm(ctx, 'bg', { root: trustedDir() });"), "q08's bg arm no longer makes its folder inside the trusted folder");
+    // ...and launches there, never in the trusted folder itself, which every
+    // run would then share.
+    assert.ok(src.includes("ENV_PROMPT], { cwd: ws, env: { PROBE_OUT: out } });"), "q08's --bg launch no longer runs in its own folder");
+  });
+
+  test('arm() with a root makes the root when it is missing, puts the workspace directly in it, and lists only the workspace', () => {
+    const ctx = { id: 'Q8', out: fresh('out'), made: [] };
+    const root = path.join(fresh('tmp'), TRUSTED_NAME);
+    // The no-root arm makes its workspace in the real temp dir, and a broken
+    // arm() can put the others there too, so every workspace it listed goes
+    // at the end, even when an assert fails first.
+    try {
+      const a = arm(ctx, 'bg', { root });
+      assert.equal(path.dirname(a.ws), root);
+      assert.match(path.basename(a.ws), /^claude-probe-q8-bg-[A-Za-z0-9]{6}$/);
+      assert.equal(a.out, path.join(ctx.out, 'bg'));
+      assert.ok(fs.statSync(a.out).isDirectory());
+      const b = arm(ctx, 'bg', { root });
+      assert.equal(path.dirname(b.ws), root);
+      assert.notEqual(a.ws, b.ws);
+      assert.deepEqual(ctx.made, [a.ws, b.ws]);
+      assert.deepEqual(JSON.parse(fs.readFileSync(path.join(ctx.out, 'made.json'), 'utf8')), [a.ws, b.ws]);
+      // With no root it is today's arm: directly in the system temp dir.
+      const c = arm(ctx, 'plain');
+      assert.equal(path.dirname(c.ws), os.tmpdir());
+      assert.match(path.basename(c.ws), /^claude-probe-q8-plain-[A-Za-z0-9]{6}$/);
+      assert.deepEqual(ctx.made, [a.ws, b.ws, c.ws]);
+    } finally {
+      for (const ws of ctx.made) fs.rmSync(ws, { recursive: true, force: true });
+    }
+  });
+
+  test("a run's folder inside the trusted folder goes with everything named for it; the trusted folder stays", () => {
+    const r = roots();
+    const a = bgRunIn(r, 'aaa111');
+    const notes = [];
+    assert.deepEqual(cleanupTargets(a.run, { ...r, notes }).sort(), [...a.all].sort());
+    assert.deepEqual(notes, []);
+    // A session there that still works: its job folder stays, with a line
+    // saying how to stop it; the rest of the run's folders still go.
+    const w = bgRunIn(r, 'ccc333', 'working');
+    const wNotes = [];
+    assert.deepEqual(cleanupTargets(w.run, { ...r, notes: wNotes }).sort(), w.all.filter((d) => d !== w.job).sort());
+    assert.equal(wNotes.length, 1, wNotes.join('\n'));
+    assert.ok(wNotes[0].startsWith(`kept ${w.job} (`) && wNotes[0].includes('claude stop'), wNotes[0]);
+  });
+
+  test('the trusted folder, its own transcript folder and a name that would find their folders are never targets, and derive nothing (I1)', () => {
+    const r = roots();
+    const a = bgRunIn(r, 'aaa111');
+    bgRunIn(r, 'bbb222');
+    const trusted = trustedIn(r.tmp);
+    const own = path.join(r.projects, slug(trusted));
+    fs.mkdirSync(own);
+    const bad = [
+      trusted,
+      `${trusted}${path.sep}`,
+      own,
+      // Its slug is a prefix of the trusted folder's, so finding folders by
+      // its name would find every run's.
+      path.join(r.tmp, 'claude-probe-q8'),
+      // Another name with the trusted folder's slug: folders are found by
+      // slug, so a name check alone would miss it.
+      path.join(r.tmp, 'claude-probe-q8_trusted'),
+      // Windows compares names case-blind; elsewhere these are other folders.
+      ...(process.platform === 'win32' ? [path.join(r.tmp, 'claude-probe-Q8-Trusted'), path.join(r.projects, slug(trusted).replace(/q8-trusted$/, 'Q8-Trusted'))] : []),
+    ];
+    listing(a.run, [a.ws, a.tr, ...bad]);
+    const notes = [];
+    assert.deepEqual(cleanupTargets(a.run, { ...r, notes }).sort(), [...a.all].sort());
+    // Listed alone, they take nothing: no other run's folder, no own folder.
+    const only = fresh('run');
+    fs.mkdirSync(path.join(only, 'Q8'));
+    fs.writeFileSync(path.join(only, 'Q8', 'made.json'), JSON.stringify(bad));
+    assert.deepEqual(cleanupTargets(only, { ...r, notes }), []);
+    assert.deepEqual(notes, []);
+  });
+
+  test('a look-alike of the trusted folder or of a run folder in it is never a target', () => {
+    const r = roots();
+    const trusted = trustedIn(r.tmp);
+    const looks = [
+      path.join(fresh('elsewhere'), TRUSTED_NAME, 'claude-probe-q8-bg-xyz123'),
+      path.join(trusted, 'claude-probe-q8-bg-xyz123', 'claude-probe-nested'),
+      path.join(trusted, 'other-name'),
+      path.join(r.tmp, 'another-folder', 'claude-probe-x'),
+    ];
+    for (const d of looks) fs.mkdirSync(d, { recursive: true });
+    const run = fresh('run');
+    fs.mkdirSync(path.join(run, 'Q8'));
+    fs.writeFileSync(path.join(run, 'Q8', 'made.json'), JSON.stringify(looks));
+    assert.deepEqual(cleanupTargets(run, r), []);
+  });
+
+  test('two overlapping runs: cleaning one takes exactly its own folders; the other run and the trusted folder stay (I2)', () => {
+    const r = roots();
+    const a = bgRunIn(r, 'aaa111');
+    const b = bgRunIn(r, 'bbb222', 'working');
+    const said = [];
+    const warned = [];
+    const io = { say: (l) => said.push(l), warn: (l) => warned.push(l) };
+    const resA = cleanup(a.run, { ...r, ...io });
+    assert.equal(resA.failed, 0);
+    assert.deepEqual(resA.targets.sort(), [...a.all].sort());
+    for (const d of a.all) assert.ok(!fs.existsSync(d), d);
+    for (const d of b.all) assert.ok(fs.existsSync(d), d);
+    assert.ok(said.every((l) => !b.all.some((d) => l.includes(d))), said.join('\n'));
+    // B's session ends; cleaning B then takes all of B's, never the trusted folder.
+    b.setState('done');
+    said.length = 0;
+    const resB = cleanup(b.run, { ...r, ...io });
+    assert.equal(resB.failed, 0);
+    assert.deepEqual(resB.targets.sort(), [...b.all].sort());
+    for (const d of b.all) assert.ok(!fs.existsSync(d), d);
+    assert.deepEqual(fs.readdirSync(trustedIn(r.tmp)), []);
+    assert.deepEqual(warned, []);
+  });
+
+  // A tripwire, not a proof: code that wrote the CLI's config without naming
+  // the file, the trust key or the writer would get past it.
+  test("tripwire: no probe code writes ~/.claude.json; the one code line naming it is Q8's refusal text, and none names the trust key or the settings writer (I5)", () => {
+    const files = [];
+    const walk = (d) => {
+      for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+        const p = path.join(d, e.name);
+        if (e.isDirectory()) walk(p);
+        else if (e.name.endsWith('.mjs')) files.push(p);
+      }
+    };
+    walk(HERE);
+    assert.ok(files.length > EXPECTED.length, `only ${files.length} .mjs files under ${HERE}`);
+    const hits = [];
+    for (const f of files) {
+      fs.readFileSync(f, 'utf8').split('\n').forEach((line, i) => {
+        if (!line.trim().startsWith('//') && /\.claude\.json|settings-write|hasTrustDialogAccepted/.test(line)) hits.push({ at: `${path.relative(HERE, f)}:${i + 1}`, line });
+      });
+    }
+    assert.equal(hits.length, 1, hits.map((h) => h.at).join('\n'));
+    assert.match(hits[0].at, /^defs[\\/]q08-session-kind-env\.mjs:\d+$/);
+    assert.ok(hits[0].line.includes('its one-time trust entry in ~/.claude.json is gone'), hits[0].line);
   });
 });
 
@@ -883,6 +1068,19 @@ describe('the verdict hash covers every file a probe runs', () => {
       assert.ok(specs.includes('node:fs'), `${path.basename(f)}: the reader found no imports`);
       assert.deepEqual(specs.filter((s) => !s.startsWith('node:')), [], `${path.basename(f)} imports a file the verdict hash does not cover`);
       assert.deepEqual(dynamicLoads(src), [], `${path.basename(f)} loads a file the verdict hash may not cover`);
+    }
+  });
+
+  // loadProbes files a def that fails to load as ERROR and goes on; a def in
+  // run.mjs's own imports would instead stop every run, --cleanup and
+  // report.mjs (which imports run.mjs).
+  test('run.mjs and report.mjs import no def, only node: builtins, ./lib.mjs and ./run.mjs, and load nothing by a quoted name', () => {
+    for (const f of ['run.mjs', 'report.mjs']) {
+      const src = fs.readFileSync(path.join(HERE, f), 'utf8');
+      const specs = staticImports(src, f);
+      assert.ok(specs.includes('./lib.mjs'), `${f}: the reader found no imports`);
+      assert.deepEqual(specs.filter((s) => !s.startsWith('node:') && s !== './lib.mjs' && s !== './run.mjs'), [], `${f} imports a file other than lib.mjs and run.mjs`);
+      assert.deepEqual(dynamicLoads(src), [], `${f} loads a file by a quoted name`);
     }
   });
 });

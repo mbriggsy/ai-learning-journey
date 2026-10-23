@@ -6,45 +6,60 @@
 > handoffs) was pruned 2026-09-27 and lives at commit **`af491a71`** — `git show af491a71:projects/family-feud/TODO.md`.
 > Read it before the 2027 draft, not before.
 
-## ▶ START HERE — as of Sun 2026-09-27 ~12:00 ET (week 3, games in progress)
+## ▶ START HERE — as of Thu 2026-10-22 ~23:30 ET (week 7, TNF NE @ CHI just played)
 
 **We are PoppaBriggsy, roster 3, *Saquon Deez Nuts*. `briggsy007` is HUNTER** (CLAUDE.md landmine).
 
-- **Record 1-1** (W vs Hunter 165.92–140.56 · L vs kblizzy23 103.02–151.72). Week 3 vs **Kaeperni**,
-  projected 145.3–127.6 at 11:31 with London's 28.4 banked Thursday.
-- **Week-3 lineup, API-verified 11:40:** QB Maye · RB Taylor, C. Brown · WR London, **M. Wilson** ·
-  TE Fannin · FLEX Stevenson, Swift · K Bates · DEF **SF**. Bench: Goff, Flowers (Q hamstring —
-  benched on Yahoo's "trending towards missing… snap count" + a 17.1→14.1 projection cut), Vele,
-  Odunze, Hockenson, Collins (**Out**, hamstring). IR: Dell (ACL/MCL). One IR slot open.
-- **Moves this week (all `free_agent` complete on `/transactions/3`):** +Goff −Pittman, +Hockenson
-  −Pollard (09-23) · +SF DEF −TB DEF, +Michael Wilson −Godwin (09-25).
-- **Clocks running, all proven by output freshness:** mule hourly (last cargo 09-27 11:29) ·
-  `gameday_check.py` **Sat 20:00 · Sun 08:00 · 11:30 · 15:00** (15:00 added 09-25 for the 4:05/4:25
-  inactives) · draft watcher · nightly newsletter 21:45.
-- **Suite: 1236 tests, OK (skipped=6)** — five draft-era stand-downs by design + the standing one.
-  Ran 2026-09-27. 29 test files · 27 scripts · 33 insights.
+- **Record 3-3 (4th).** Week 7 vs Cltchiefs; **week 8 vs HUNTER** (his RBs McCaffrey + Montgomery are
+  both on bye). Moves log for weeks 6-7: `temp/week7-moves-log.md` (gitignored, local).
+- **Kaeperni's offer (A.J. Brown + Tucker Kraft for Zay Flowers) was DECLINED 10-22 ~22:20 ET** on
+  Briggsy's word. Verified: the panel read REJECTED, Active Trades was empty, `/rosters` unchanged.
+- **`scripts/trade_eval.py` is BUILT but UNCOMMITTED. It is waiting on Briggsy's yes** (squeaky could not prove
+  these files are the session's own: they were edited through shell scripts, so they read as contested/foreign).
+- **Suite: 1298 tests, OK (skipped=6)**, run 2026-10-22 with `python -m unittest discover -s tests`.
+  31 test files · 29 scripts · 35 insights.
+- **Clocks:** mule hourly · `gameday_check.py` Sat 20:00 · Sun 08:00 · 11:30 · 15:00 · draft
+  watcher · newsletter 21:45. Push/email are dead, so the files are the delivery.
 
 ## Ranked next
 
-1. **Sun 09-27 15:00 — read the late check before 16:05.** If Flowers is announced a full go at the
-   ~14:55 inactives, flipping him back over Wilson is Briggsy's call and must happen before Wilson's
-   16:05 kickoff. Default is leave it. Push/email are dead — the check only writes `GAMEDAY.md`.
-2. **Trade offer — Briggsy's call, send nothing without his go. Earliest: after MNF 09-28** (we play
-   Kaeperni this week; a mid-week trade would reshuffle both lineups).
-   Win-win search 2026-09-26 (Sleeper weekly projections wks 4-17 scored with our settings; optimal
-   weekly lineup per team; every 1-for-1 and 2-for-1 with all 7 teams; kept only trades both sides
-   gain AND the side giving receives ≥90% of raw ROS points; a freed roster spot is filled with the
-   best FA). Top three:
-   | Offer | us | playoffs | them |
-   |---|---|---|---|
-   | **Goff + Hockenson → Kaeperni for Kittle** (the recommendation) | +19.0 | +4.0 | +4.1 |
-   | Fannin + Swift → RMonk9 for Bowers | +17.3 | +4.1 | +2.9 |
-   | Maye + Goff → RMonk9 for Lamar | +17.5 | +6.0 | +3.1 |
-   ~1.4 pts/week — real but inside projection noise. **If Goff goes, week 11 needs a FA QB**
-   (Shough / Love / Mayfield all ~17 proj and unowned 09-26). No win-win involved Hunter.
-   The search script was session scratch and is gone; if trade evaluation becomes a standing tool,
-   build it as `scripts/trade_eval.py` from the method above (in-season plan §3 "Trade evaluation,
-   on demand" is its home).
+1. **Commit the trade_eval bundle, on Briggsy's yes (one commit).**
+   - **Contested** (`--include` them in squeaky step 6):
+     - `scripts/trade_eval.py`
+     - `tests/test_trade_eval.py`
+     - `tests/test_gameday_check.py`
+     - `README.md`
+   - **Foreign**, because a script wrote it (it needs a plain `git add` on his yes):
+     `tests/fixtures/trade_eval_kaeperni_20261022.json.gz`. **This file can never be re-made:**
+     it holds tonight's projections. Don't delete it.
+   - **Mine, held back so the feature lands whole:**
+     - `scripts/gameday_check.py` (the kicker-key fix)
+     - `CLAUDE.md`
+     - `docs/in-season-plan.md`
+     - `docs/insights/035-…md`
+     - `docs/plans/2026-10-22-001-feat-trade-eval-plan.md`
+     - `tests/trade_eval_net.py`
+   - **Before committing:** rerun `python -m unittest tests.test_trade_eval tests.test_gameday_check`.
+     It should report 45 + kicker tests OK.
+2. **OWED: the whole-file ultramode review of `scripts/trade_eval.py`** (the `ultramode-code-review`
+   skill). It was skipped: the context window was past 50%, so no fan-outs were allowed.
+   - **Done already:**
+     - a whole-plan check (Workflow wf_68e18b45-54d, 3 opus lenses, all fixes folded in);
+     - 45 tests;
+     - **38/38 mutants killed** (scratch `mutants.py`, one per axis);
+     - a live run against today's data;
+     - a check that the trimmed fixture gives output identical to the untrimmed payloads.
+   - **Review focus:**
+     - D1's sequential roster fix: we decide first, from a pool that doesn't yet see their adds;
+     - the IR-return shed: it lets the shedding side stream its own shed player back;
+     - `--search` runtime, about 2.5 min for 2,736 packages.
+3. **Week 8 lineup vs Hunter (by Sun 10-25):**
+   - Strange at TE (Fannin back on the bench);
+   - Wilson for Collins (HOU bye);
+   - SEA for HOU at DEF.
+
+   Run `scripts/external_projections.py --week 8` first, then `trade_eval.py` if a trade comes up.
+   Maye's week-11 bye: we have no backup QB. Stream a free agent, using a bench spot.
 3. **Week 4 lineup (vs ? — re-pull `/matchups/4`).** Flowers' hamstring decides WR2 (he projects
    18.7 wk4); Collins projects 18.5 wk4 if activated. Wilson/Vele/Odunze are the WR depth.
 4. **Build the Tuesday waiver report** (`docs/in-season-plan.md` §1 — still unbuilt; the gameday

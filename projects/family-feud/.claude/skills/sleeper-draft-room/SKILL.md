@@ -171,6 +171,23 @@ CLAUDE.md). If the team ever gets renamed, re-read it from `/rosters` + `/users`
    That card is **where a rejected trade stays visible**: left nav *Direct Messages* → the thread → the card reads
    `REJECTED <date>` with the players and a VIEW button. So never tell Briggsy "no message was sent".
 
+### Decline an INCOMING trade — the TRADES tab (measured 2026-10-22, Kaeperni's A.J. Brown + Kraft for Flowers)
+
+1. League home → `.center-tab-selector > .item-tab` index 5 (label `1 TRADES` while an offer is live); verify it reads
+   `TRADES` once selected. The offer is a `.trade-list-item` (owns `onClick`; its text is
+   `INCOMING <age> PoppaBriggsy, <them> 2-way trade <players>`). The handler-less `.users-name` leaf inside it is fine to
+   find it by, never to click.
+2. Click `.trade-list-item` → `.trade-center-wrapper` *Trade Offer* panel: our side reads
+   `PoppaBriggsy PENDING RECEIVES SENDS <name> <POS> • <TEAM> From <them> … To <them>` with full names. **Match the
+   whole RECEIVES/SENDS string before any button**, and throw unless exactly one `.trade-list-item` exists.
+3. Three `div.trade-button`s, each owning `onClick`: `DECLINE` (`gray rounded`), `COUNTER` (`green left`), `ACCEPT`
+   (`green right`). Click the one whose text is exactly `DECLINE`.
+4. **No native dialog fired** (confirm/alert/prompt stubbed: 0 calls). Keep the stub armed anyway. The opacity-0
+   `.alert-modal` (`Cancel Ok`) is NOT a live dialog here either.
+5. Oracle: the same panel re-renders as `Trade Rejected RECEIVED <date> REJECTED PoppaBriggsy REJECTED …` with a
+   `REVISE` button, the tab label drops its count (`TRADES`), *Active Trades* reads `No active trades yet`, and
+   `/rosters` (cache-busted) still has every player where he was. Close with `.modal-item-underlay`.
+
 🚨 **Adds/drops post to `/transactions/<display_week>`, not `state.week`.** On Tue 10-20 (`week: 7`,
 `display_week: 6`) the Hockenson drop landed on `/transactions/6`, and `/transactions/7` read `[]`. `/rosters` is
 the oracle; the transaction log is the receipt — look in both weeks.

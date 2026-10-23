@@ -41,9 +41,11 @@
    `U, w0 = universe, ctx.weeks[0] + (1 if ctx.weeks[0] == ctx.cur else 0)` becomes `U, w0 = universe, ctx.weeks[0]`,
    drop the waiver line in `render`, re-record `TestThePublishedNumber` (it was −32.83 / −45.76,
    Kaeperni +38.93 / +50.18 under that rule) and update `docs/league.md`'s waiver section either way.
-3. **Optional: make `--search` fast again without moving a number.** It takes 355-365 s for 2,736
-   packages on the frozen night (72 s before swaps repeated). Profile `Sim.fix`'s swap loop first; the
-   suite pins every number, and `TestSearch.test_the_memos_are_emptied...` pins the memo contract.
+3. **Optional: make `--search` fast again without moving a number.** It takes 355-373 s for 2,736
+   packages on the frozen night (72 s before swaps repeated) and peaks at **2.7 GB** even with the
+   memos emptied per give (measured 10-23; a reviewer measured ~1 GB on the one-swap code). Fine on
+   this 32 GB laptop; check it before trusting a smaller one. Profile `Sim.fix`'s swap loop first;
+   the suite pins every number, and `TestSearch.test_the_memos_are_emptied...` pins the memo contract.
 4. **Build the Tuesday waiver report** (`docs/in-season-plan.md` §1 — still unbuilt; the gameday
    check is §2 and done). Inputs are all in the inbox (`sleeper_transactions.json`,
    `sleeper_rosters.json`, `sleeper_state.json`, trending add/drop). Waivers clear **Wed ~03:15 ET**,

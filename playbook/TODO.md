@@ -26,7 +26,7 @@ It's a hooks code change, so it goes through the review cadence before it lands.
 - **The record** is in the private backup folder `~/.claude/flow/backup/step8c-2026-10-22/`: `live-groundtruth.txt` (each arrival, as seen), `live-provenance.txt` (the end checks) and `endcheck/` (the frozen 35 lines, plus the scripts and results of the three counts: Claude's and each auditor's).
 - **Probes on 2.1.309:** the load-bearing set waits only on Q13 (unit U10) and Q14 (its verdict arm, Next #4).
 - **The Q14 hook stays live** in `playbook/.claude/settings.local.json` (gitignored), so every session started in this folder keeps recording into the captures file, `~/.claude/flow/probes/q14-live/captures.jsonl`. It stays until Q14's verdict arm settles Q14. Then the settings writer takes it out by undoing patch 02 (the write that put it in), with Briggsy's words if the safety check blocks it.
-- **Lessons** live in [docs/insights/](docs/insights/), 001 to 007.
+- **Lessons** live in [docs/insights/](docs/insights/), 001 to 008.
 - **Gates:** the hooks suite (`cd projects/hooks && node --test "tests/*.test.mjs"`) exits 0 locally: 668 tests, 0 failures; 4 or 5 skip, depending on timing and on which shells are installed (run 2026-10-23).
 
 ## What step 8c found (inputs to Q14's verdict arm)

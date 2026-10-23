@@ -18,6 +18,7 @@ claude --bg -n <name> --permission-mode auto --effort low "<prompt>"
 
 - Launch it from the repo folder or a folder inside it. In a folder Claude Code hasn't been told to trust, it refuses and says "Workspace not trusted".
 - Never hand-edit the trust settings in `~/.claude.json` to get past that.
+- The one exception is the probes' trusted folder, `claude-probe-q8-trusted` in the system temp folder. You approved it once, on 2026-10-23, and Claude wrote it through the settings writer, never by hand. A folder inside it counts as trusted too, so each probe run makes a fresh folder there and starts its throwaway in it. That approval lives on this laptop only: a new machine needs it again.
 - A git worktree is a second copy of the repo in a folder of its own. A throwaway launched from the repo's main folder (the main checkout) makes none: `git worktree list` shows the same list before and after. Leave out `-w` / `--worktree`, which makes one on purpose.
 
 ## See what it is doing
@@ -32,7 +33,7 @@ claude --bg -n <name> --permission-mode auto --effort low "<prompt>"
 Claude runs both steps, in this order, on every throwaway it starts, before its own session ends:
 
 1. `claude stop <id>` stops it. Its conversation is kept for now.
-2. `claude rm <id>` deletes it. It also works on one that has already exited, and it deletes the session's worktree too, if it has one and that is safe.
+2. `claude rm <id>` deletes it, including its whole folder under `~/.claude/jobs/`. It also works on one that has already exited, and it deletes the session's worktree too, if it has one and that is safe. Until it runs, the throwaway also shows in your Remote Control session list.
 
 Clean up each one by its own id. Never run `claude daemon stop`: it ends every background session at once, not just the throwaway.
 

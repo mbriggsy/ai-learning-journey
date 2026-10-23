@@ -4,20 +4,13 @@ The queue for our-setup work. Sessions for it start in this folder. The full fli
 
 ## ▶ START HERE
 
-**Add `playbook/` to the leak gate.** The leak gate is the check that refuses a push carrying a private detail (a session id, a path into a Windows user folder). `playbook/` is public, and the gate doesn't look at it yet. Six edits, in one change:
-
-1. `projects/hooks/tests/leak.mjs` line 58: add `'playbook',` to `SCOPE`; and its header, line 3: "projects/hooks and four skill folders" becomes "projects/hooks, four skill folders and playbook/".
-2. `projects/hooks/tests/leak.test.mjs` line 31: add `'playbook'` to the list pinned by "the scope is the five folders the plan names", and rename the test to "six".
-3. `.github/workflows/hooks-tests.yml`: add `- 'playbook/**'` to both `paths` lists (`push` and `pull_request`), so a push that changes only `playbook/` reruns the leak test in CI; and name `playbook/` in the comment at lines 5 to 7.
-4. `projects/hooks/README.md` line 40: add `playbook` to the folders the leak test scans; line 32: "on every change to this folder or to the four skill folders the leak test covers" adds "or to `playbook/`".
-5. `playbook/README.md` line 71: "It checks only the hooks folder and the brief and distill, squeaky-clean and ultramode-code-review skill folders" adds "and this playbook folder".
-6. Run the hooks suite: the leak test then scans `playbook/` on every run.
-
-It's a hooks code change, so it goes through the review cadence before it lands. Until it does, run the gate's rules over `playbook/` by hand before every push: `scan(repo, ['playbook'])` from `leak.mjs` (clean on 2026-10-23: 14 files, 0 hits).
+1. **If Briggsy is at the laptop: the one-minute laptop mid-turn re-run** (Next #2). It needs him at the keyboard, so it goes first whenever he is.
+2. **Then U4**, per the plan's U4 section: permissions, the push boundary and the review-lens agent. It's a full unit, so it runs the whole flow (brief, plan, deepen, whole-plan check, build, review, distill), and it starts in a fresh session. It writes `~/.claude/settings.json`, which auto mode's safety check blocks until Briggsy states the exact write in his own words (Landmines), and it lands while B9 is idle.
 
 ## Current state
 
 - **U3 is landed and live:** the one settings writer, versioned hook deploys, the status line and the pre-push leak gate.
+- **The leak gate scans `playbook/`** (2026-10-23, `096babb1`, CI `39991926311`): the leak test, the pre-push gate and CI's paths filter all cover it, and a test pins CI's paths to the gate's folder list. A sandbox push planting an id in `playbook/` was refused by the new gate and let through by the old one.
 - **Step 8b is done** (2026-10-23): probe Q8's background-session arm runs in a fresh folder inside one trusted folder, and Q8 is VERIFIED on CLI 2.1.309.
 - **Step 8c is done** (2026-10-23): on CLI 2.1.309 the Q14 hook recorded every kind of prompt the plan names, and its three end checks passed. Three separate counts (Claude's own script and two auditors working blind) got the same numbers:
   - all 35 recorded lines carry the fingerprint of the recorder's code as committed during the run (`5ed869b0dee2`);
@@ -27,15 +20,15 @@ It's a hooks code change, so it goes through the review cadence before it lands.
 - **Probes on 2.1.309:** the load-bearing set waits only on Q13 (unit U10) and Q14 (its verdict arm, Next #4).
 - **The Q14 hook stays live** in `playbook/.claude/settings.local.json` (gitignored), so every session started in this folder keeps recording into the captures file, `~/.claude/flow/probes/q14-live/captures.jsonl`. It stays until Q14's verdict arm settles Q14. Then the settings writer takes it out by undoing patch 02 (the write that put it in), with Briggsy's words if the safety check blocks it.
 - **Lessons** live in [docs/insights/](docs/insights/), 001 to 008.
-- **Gates:** the hooks suite (`cd projects/hooks && node --test "tests/*.test.mjs"`) exits 0 locally: 668 tests, 0 failures; 4 or 5 skip, depending on timing and on which shells are installed (run 2026-10-23).
+- **Gates:** the hooks suite (`cd projects/hooks && node --test "tests/*.test.mjs"`) exits 0 locally: 669 tests, 0 failures; 4 or 5 skip, depending on timing and on which shells are installed (run 2026-10-23). CI's "Hooks tests" passed on `096babb1` (run `39991926311`).
 
 ## What step 8c found (inputs to Q14's verdict arm)
 
-Some words first. A "prompt record" is the transcript's own entry for a prompt. An "attachment" is a side entry the transcript files inside a turn that is already running. "Keys" are a record's field names, and the words in code font are the transcript's own: field names, and after a colon, a field's value. Each of Briggsy's prompts below was sent the way he said he sent it, or was asked to send it (`live-groundtruth.txt` says which; three laptop ones still wait on his word, Next #2). On CLI 2.1.309:
+Some words first. A "prompt record" is the transcript's own entry for a prompt. An "attachment" is a side entry the transcript files inside a turn that is already running. "Keys" are a record's field names, and the words in code font are the transcript's own: field names, and after a colon, a field's value. Each of Briggsy's prompts below was sent the way he said he sent it, or was asked to send it (`live-groundtruth.txt` says which). Asked later, he put every laptop one on the laptop for certain but two: the one-word go-ahead that started a turn at 11:37:00 and the test message sent mid-turn at 11:37:13, which he is "very sure" came from the laptop, though not certain. On CLI 2.1.309:
 
 | | Starts a turn (session idle) | Arrives while a turn is running |
 |---|---|---|
-| **Laptop keyboard** | its own prompt record, `promptSource: typed`, and no queue entries (8 of 8) | no prompt record of its own: an attachment of type `queued_command` with `origin.kind: human`, `humanTurn: true` and no `promptSource`, plus two queue entries (in, then out as absorbed into the running turn) (1 of 1) |
+| **Laptop keyboard** | its own prompt record, `promptSource: typed`, and no queue entries (8 of 8: 7 laptop by his own account, 1 he is "very sure" of) | no prompt record of its own: an attachment of type `queued_command` with `origin.kind: human`, `humanTurn: true` and no `promptSource`, plus two queue entries (in, then out as absorbed into the running turn) (1 of 1, which he is "very sure" of but not certain: Next #2 re-runs it) |
 | **Phone (Remote Control)** | its own prompt record, `promptSource: queued`, plus two queue entries (in, then out) and one extra field, `queueSkipSlashCommands` (3 of 3) | the same as the laptop's: an attachment with the same keys and the same values for `commandMode`, `origin` and `humanTurn`, and the same two queue entries (1 of 1) |
 
 **What the verdict arm can actually read:** from the transcript, the recorder's captures hold only a turn-starting prompt's own record (`promptSource`, `origin.kind`, `turnOrigin`, `entrypoint`, and its keys, `queueSkipSlashCommands` among them). The mid-turn column and the queue entries came from Claude reading the transcript by hand; the recorder never reads an attachment or a queue entry. In the captures, a prompt that arrives mid-turn shows only as a hook line with its own opening (how its text starts, and its length) but the turn opener's record. A verdict that needs those fields needs a recorder change and a new measurement.
@@ -49,8 +42,8 @@ Some words first. A "prompt record" is the transcript's own entry for a prompt. 
 
 ## Next, in order
 
-1. Add `playbook/` to the leak gate (above).
-2. **Briggsy's word on three laptop messages.** Ask him whether the three short messages he sent at 11:36 and 11:37 his time on 2026-10-23, when the session asked for them from the laptop, were typed on the laptop keyboard. Write his answer under the CORRECTION line in `live-groundtruth.txt`. If any came from the phone, fix the counts in the table above and in the plan's step 8c DONE line and (f) inputs (11:37:13 is the laptop mid-turn column's only sample). If one that started a turn (11:36:34 or 11:37:00) did, the finding that `promptSource` tells phone from laptop no longer holds: rework the first finding above, the plan's (f) inputs and the recorder header's lines 134 to 137 (a header edit gives later lines a new fingerprint).
+1. ~~Add `playbook/` to the leak gate~~ **DONE 2026-10-23:** `096babb1`, CI `39991926311` (see Current state).
+2. **Re-run the laptop mid-turn test, with Briggsy's word at the time.** He answered the three-message question (logged under the CORRECTION line in `live-groundtruth.txt`), but the only laptop mid-turn sample (11:37:13 on 2026-10-23) is "very sure", not certain. When he is at the laptop: he sends a short go-ahead from the laptop; the session answers "TYPE NOW" and holds its turn on a script that waits, up to 150 s, for its transcript to grow; he types a short message on the laptop keyboard during the wait, then says in his own words that he typed it there. Read the attachment by hand from the transcript (the recorder never captures it) and log one ground-truth line. If it differs from the table's laptop mid-turn cell, fix the table and the plan's (f) inputs.
 3. **U4**, per the plan's U4 section.
 4. **Q14's verdict arm**, its own flow (plan, deepen, check, build, review): the probe reads the recorder's lines for the run's CLI version. It matches each hook-time line to its follow-up line by three values they share (`sessionTag`, `promptTag` and `at`: tags for the session and the prompt, and the time the hook started); a pair whose two lines carry different fingerprints was split by an edit to the recorder, so it counts for neither. It returns VERIFIED or CONTRADICTED on whether a hook can tell Briggsy's prompts from the rest. The findings above are its inputs. Which fingerprints count is that plan's call: step 8c's lines carry `5ed869b0dee2`, and its docs commit moved the committed fingerprint off it with a comment-only edit, so reading only the newest committed fingerprint would never read step 8c's lines. That plan settles the framing (decide while the hook runs, or from the record once it has finished) and the per-version cost (a Remote Control prompt for every CLI version would be a chore for Briggsy). The plan's U3 NEXT #3 (f) has the detail.
 5. **Q6's prompt.** On 2.1.309 the model declines to repeat an identical read, so Q6 reads INCONCLUSIVE. Rework `projects/hooks/probes/defs/q06-once.mjs` so each read has its own reason (for example, a different file each time), then rerun with `--only Q6`. It goes through the review cadence. Q6 isn't load-bearing.
@@ -60,6 +53,7 @@ Some words first. A "prompt record" is the transcript's own entry for a prompt. 
 ## Landmines
 
 - **Writes to Claude Code's own config get blocked.** Auto mode's safety check stops any write to `~/.claude.json` or `~/.claude/settings.json` as self-modification unless a standing rule names it. Ask Briggsy for the exact write in his own words, then run the same write again.
+- **The leak gate now refuses a push that puts these in `playbook/`:** any uuid (even a made-up one, or the one in a `claude.ai/code/artifact/` link), a user-folder path even with a placeholder name (the dashed form Claude Code names a project's folder by included), and any binary file, a screenshot for one. Write paths as `~/...`, a project folder as `<slug>` and ids as `<id>`; screenshots go in the ignored `playbook/temp/`.
 - **Every CLI version starts with no passed probes.** Briggsy updates the CLI before each session, so rerun the full probe suite on each new version, from a Bash tool in this session: `cd "$TEMP" && node <repo>/projects/hooks/probes/run.mjs`, then `report.mjs`, then `--cleanup <run dir>`.
 - **Read a surprising probe run's own record before blaming the CLI** (`modelUsage`, `permission_denials`). Probe sessions can switch models mid-run (insight 003).
 - **Tests never build fixture paths with the code under test.** Mutation runs go on a copy and compare the real temp folder before and after (insight 006).

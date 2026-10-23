@@ -4,7 +4,7 @@ The queue for our-setup work. Sessions for it start in this folder. The full fli
 
 ## ▶ START HERE
 
-1. **U4's build, in a fresh session.** U4 (permissions, the push boundary and the review-lens agent) is briefed, planned, deepened and whole-plan-checked (2026-10-23, session "our-setup-2"). Its HOW spec is private, because it names security work that isn't finished: `~/.claude/flow/backup/u4-2026-10-23/u4-design.md` (v3), with `u4-triage.md` beside it. Start at its section 10 (the build lanes), then follow its section 6 (review, probes, landing). Nothing is built or written yet. Two things wait on Briggsy: his answer to the design's D3 question (do force and delete pushes ask on every branch, or only on main), and at landing one paste-ready consent sentence he types in the landing session (step 0c). It lands while B9 is idle.
+1. **U4's build, in a fresh session.** U4 (permissions, the push boundary and the review-lens agent) is briefed, planned, deepened and whole-plan-checked (2026-10-23, session "our-setup-2"). Its HOW spec is private, because it names security work that isn't finished: `~/.claude/flow/backup/u4-2026-10-23/u4-design.md` (v3), with `u4-triage.md` beside it. Start at its section 10 (the build lanes), then follow its section 6 (review, probes, landing). Nothing is built or written yet. The design's D3 question is settled: force and delete pushes ask on every branch (Briggsy handed the call to the pilot on 2026-10-23; over 60 days of transcripts that rule would have asked once). One thing waits on Briggsy: at landing, one paste-ready consent sentence he types in the landing session (step 0c), because the safety check reads his own words for a settings write. It lands while B9 is idle.
 
 ## Current state
 

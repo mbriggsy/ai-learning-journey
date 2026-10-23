@@ -50,28 +50,24 @@
    check is §2 and done). Inputs are all in the inbox (`sleeper_transactions.json`,
    `sleeper_rosters.json`, `sleeper_state.json`, trending add/drop). Waivers clear **Wed ~03:15 ET**,
    measured twice (09-16, 09-23). Read Hunter's transaction log first, every Wednesday.
-5. ~~**Fold the in-season browser mechanics into the `sleeper-draft-room` skill**~~ — **DONE 2026-10-06.**
-   The skill now has an *In season* section (lineup swap, FA add/drop, the DEF-lands-on-bench landmine)
-   and its own read-only `/team` self-test (PASSED live, 18 rows). 🚨 **Waiver claims work on the
-   website ONLY when `/players` is reached in-app** (league home → Players tab): the row then reads
-   `.waiver` / `W Wed` and the card `W (Wed)`. A typed `/players` URL hides waivers, shows ADD, and the
-   server refuses (`docs/insights/034`). The 09-25 `.waiver` note was right.
-6. **Byes — plan the week before** (derived 2026-09-27 from zero-point weeks in Sleeper's wk4-14
-   projections; a bye shows as a 0.0 entry, not a missing one):
-   - **Week 6:** C. Brown, Bates, Goff, Hockenson — stream a K; RB depth is zero on the bench.
-   - **Week 5 — Hunter's QB hole:** Mahomes AND Kelce bye, and his QB2 Daniels is Out (dislocated
-     elbow). He must add a QB that week; watch his Wednesday log (week 5 waivers clear Wed 10-07).
-   - **Week 8 vs HUNTER:** his worst week (McCaffrey + Montgomery — now HOU — both bye). **Never trade
-     him a RB or any week-8 flex body.** Ours that week: Collins, Vele, SF DEF — stream a DEF.
-   - **Week 10:** Swift, Odunze. · **Week 11:** Maye, London, Fannin, Stevenson (Goff + Hockenson
-     are the cover — a Kittle trade moves that cover). · **Week 13:** Taylor, Flowers. ·
-     **Week 14:** Wilson.
+5. **Byes — plan the week before** (re-derived 2026-10-23 from live `/rosters` and Sleeper's weekly
+   projections: a team whose DEF row has no opponent is on bye, `trade_eval.bye_teams`' rule.
+   Re-derive after any roster move):
+   - **Week 8 vs HUNTER:** ours are Collins and the HOU DEF (the lineup item covers both). It's his
+     worst week: McCaffrey, Montgomery and Vele are all on bye. **Never trade him a RB or any week-8
+     flex body.**
+   - **Week 9:** Tate. · **Week 10:** Swift. · **Week 12:** nobody.
+   - **Week 11 is the big one:** Maye, London, Fannin, Stevenson AND the SEA DEF. There's no backup QB
+     on the roster, so stream a QB that week, and a DEF too if SEA is still the starter. Hunter loses
+     Stafford and Myers.
+   - **Week 13:** Taylor, Flowers, Shrader (stream a K). · **Week 14:** M. Wilson.
+   - Hunter later: wk 10 D. Smith · wk 13 G. Wilson, B. Allen, BAL DEF · wk 14 McBride, Allgeier.
    - Trade deadline **week 11**. Playoffs 6 of 8, weeks 15-17.
-7. **Next August, before the 2027 draft:** the draft-era payloads still owed at the board refresh
+6. **Next August, before the 2027 draft:** the draft-era payloads still owed at the board refresh
    (long-TD curve fold; the Wan'Dale / Michael Wilson board-membership look) and the five draft-era
    tests re-arm on their own (`draft_era_cache_or_skip`, `draft_era_pool_or_skip`). Start from
    `af491a71`'s TODO.
-8. **Fix `gameday_check.py`'s "Expected" header — it ignores live points for any game played TODAY**
+7. **Fix `gameday_check.py`'s "Expected" header — it ignores live points for any game played TODAY**
    (found 2026-10-18 wk 6). `projected_total()` (~line 364) banks a starter's live points only when
    his game date is `< today`; a game that kicked off today is still scored at its PRE-GAME
    projection. Wk 6 11:00: the header read us 146.5 / them 121.6 while their Tuten (London 9:30)
@@ -83,7 +79,7 @@
    keep today's rule and say so on the header line, as the ↑ line already does. Unit-test with a
    frozen wk-6 payload (Tuten 19.0 at half). Do it OFF game day — never edit a script a scheduled
    game-day run imports between Sat 20:00 and the Sun 15:00 run.
-9. **Fix `external_projections.py`: CBS silently serves the CURRENT week for any week 2+ ahead.**
+8. **Fix `external_projections.py`: CBS silently serves the CURRENT week for any week 2+ ahead.**
    Found 2026-10-18. `temp/proj_wk8.json` (pulled 10-16, i.e. wk 6 asking for wk 8) has **55**
    players on wk-8 bye teams (HOU/NO/NYG/SF) with a nonzero CBS number — Collins reads CBS 17.98,
    his wk-6 line — so the consensus averages a bye week as ~6 pts. One week ahead is clean (today's
@@ -122,6 +118,9 @@ Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the
   patches; block the network. The review's harness broke the first two (insight 036).
 
 **In-season**
+- 🚨 **Waiver claims on the website work ONLY when `/players` is reached in-app** (league home →
+  Players tab): the row then reads `.waiver` / `W Wed`. A typed `/players` URL hides waivers, shows
+  ADD, and the server refuses (`docs/insights/034`; the `sleeper-draft-room` skill has the path).
 - 🚨 **The late window is the dangerous one.** A 4:05/4:25 inactive posts ~2:35/2:55 ET, after every
   morning check. The 15:00 run covers it only if someone reads `GAMEDAY.md` — nothing pushes.
 - 🚨 **A Sleeper projection drop on game morning is news, not noise.** Flowers 17.1→14.1 between

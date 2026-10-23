@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // q14-recorder.mjs: Q14's live instrument, a UserPromptSubmit hook for real
-// sessions (playbook/.claude/settings.local.json, installed through the
-// settings writer under C29 once Briggsy says so).
+// sessions (playbook/.claude/settings.local.json, installed there through the
+// settings writer under C29 on 2026-10-23).
 //
 // Q14 asks whether a hook can tell Briggsy's own prompts (typed, or sent over
 // Remote Control) from a peer's message, a task notification and a /loop tick.
@@ -24,14 +24,18 @@
 //   with no console window and its stdio ignored, so the CLI's pipes close
 //   when the hook exits. It looks again every 150 ms until the record turns
 //   up or Q14_LIVE_BUDGET_MS after the hook started (10 s by default), then
-//   writes an `afterReturn` line, which joins the atHook line on promptTag.
-//   The hook hands it the transcript path and the prompt id in its
-//   environment, never on its command line, which any process listing shows
-//   (and the raw session id not at all: only its tag).
+//   writes an `afterReturn` line, which joins the atHook line on sessionTag,
+//   promptTag and `at`: a prompt that arrives mid-turn carries the current
+//   turn's prompt id (all 3 in step 8c's live run, 2026-10-23), so promptTag
+//   alone can name more than one atHook line. The hook hands the poller the
+//   transcript path and the prompt id in its environment, never on its
+//   command line, which any process listing shows (and the raw session id not
+//   at all: only its tag).
 // atHook.polling says whether a poller was started. A polling atHook line with
 // no afterReturn line means the poller died before it could write: on Windows
-// the CLI may kill a hook's whole process tree when the hook exits (a job
-// object would). Whether it does is measured at the install step; the atHook
+// the CLI could kill a hook's whole process tree when the hook exits (a job
+// object would). It doesn't on 2.1.309: in step 8c's live run (2026-10-23)
+// each of the 16 polling atHook lines got its afterReturn line. The atHook
 // line holds either way.
 //
 // The hook's look reads only the transcript's last 4 MB (HOOK_TAIL_BYTES),
@@ -78,9 +82,11 @@
 // else null. A prompt that isn't a string gives false and null (and a length
 // of null). Every peer record on disk on 2026-10-22 (64, in 4071 transcript
 // files) opened "Another Claude session sent a message:" and a newline, then
-// `<agent-message ` (52) or `<cross-session-message ` (12). Whether a hook's
-// `prompt` carries that line, or opens at the tag, is unmeasured, so both
-// are read.
+// `<agent-message ` (52) or `<cross-session-message ` (12). In step 8c's
+// live run on 2.1.309 (2026-10-23), a hook's `prompt` opened at the tag,
+// without that line, for all 3 peer messages: an agent's message back and
+// two cross-session messages, one of them mid-turn. headOf() still reads both
+// forms.
 //
 // `recorder`, on every line (error lines too), is the first 12 hex of the
 // sha256 of this file's own bytes, read once as the process starts. The
@@ -90,10 +96,10 @@
 // afterReturn line a different stamp from its atHook line; one 39 ms or
 // more after did not). A verdict holds only for the bytes that produced it
 // (insight 003), so a later verdict reads only the lines stamped with the
-// bytes it names, and a pair joined on promptTag whose two stamps differ
-// straddles an edit: it counts under neither stamp, and its atHook line is
-// never read as one whose poller died. It is null when the read fails, and
-// nothing else changes.
+// bytes it names, and a joined pair whose two stamps differ straddles an
+// edit: it counts under neither stamp, and its atHook line is never read as
+// one whose poller died. It is null when the read fails, and nothing else
+// changes.
 //
 // `window`, on the atHook line only, is what the hook's look read: the byte
 // offset it started at (`from`, after moving back to a line's start), the
@@ -124,8 +130,11 @@
 //   way, plus its key names: its runId, and any field a later CLI adds, which
 //   could carry a peer's session id, stay out. turnOrigin and sessionKind go
 //   beyond the build design's list: both sit on human prompt records (Q14's
-//   census counted them) and either may be what tells a Remote Control prompt
-//   from a typed one.
+//   census counted them), and either might have told a Remote Control prompt
+//   from a typed one. Neither did in step 8c's live run on 2.1.309
+//   (2026-10-23): turnOrigin read `human` on all 11 human prompt records and
+//   none had sessionKind. promptSource did, for a prompt that started a turn:
+//   `typed` from the laptop, `queued` over Remote Control.
 //
 // It prints nothing, since a UserPromptSubmit hook's stdout becomes context
 // for the model, and always exits 0, the poller too: an instrument must never
@@ -137,10 +146,10 @@
 //
 // `cli` is the CLI version read from AI_AGENT (claude-code_<x>-<y>-<z>_...,
 // which the 2.1.307 binary writes into its own environment, in ksr(), and
-// which probe Q8 read in a Bash tool's environment), or null. Whether a hook
-// process gets it too is unmeasured: capture.mjs keeps only CLAUDE* names.
-// The poller inherits the hook's environment. record.version, when the record
-// turns up, names the CLI that wrote it.
+// which probe Q8 read in a Bash tool's environment), or null. A hook process
+// gets it too: all 35 lines of step 8c's live run carry `cli` 2.1.309
+// (2026-10-23). The poller inherits the hook's environment. record.version,
+// when the record turns up, names the CLI that wrote it.
 //
 // Test seams: Q14_LIVE_OUT (the folder), and Q14_LIVE_BUDGET_MS (how long after
 // the hook started the poller keeps looking: 10000 by default, at most 10000;

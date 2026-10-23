@@ -7,9 +7,12 @@
 // background task's report and a /loop tick. Three instruments:
 //   census     a read-only tally of the user records in transcripts on disk
 //              since 2.1.300 shipped: origin.kind / subkind / producer,
-//              promptSource and entrypoint, as counts and key names only. It
-//              never reads prompt text. Real sessions hold the human, peer and
-//              notification samples a headless run can't make.
+//              promptSource, entrypoint, turnOrigin and isMeta, as counts and
+//              key names only. It never reads prompt text. Real sessions hold
+//              the human, peer, notification and scheduled samples a headless
+//              run can't make. A peer message and a scheduled tick are stored
+//              isMeta, so an isMeta record counts when it carries an origin
+//              or a turnOrigin.
 //   hook view  headless arms whose UserPromptSubmit hook records its own
 //              input keys and, at that moment, reads the transcript for the
 //              record carrying its prompt_id: is the origin already there for
@@ -22,9 +25,10 @@
 // probe is INCONCLUSIVE: an arm that never fired says nothing about input
 // keys or timing. The input keys are reported as observed, the union over
 // every firing of each kind.
-// Typed and Remote Control prompts reach a hook only in a live session; the
-// plan's probe hook in projects/.claude/settings.local.json measures those
-// once U3's settings writer exists, so those arms are BLOCKED here.
+// The headless arms make no typed, Remote Control, peer-message or /loop
+// prompt, so those arms are BLOCKED here; the live probe hook in
+// playbook/.claude/settings.local.json (probes/live/q14-recorder.mjs) records
+// each one that fires it.
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -71,8 +75,19 @@ const kindOf = (prompt) => (String(prompt ?? '').startsWith('<task-notification>
 const count = (list, kind) => list.filter((x) => x.kind === kind).length;
 const keysOf = (firings, kind) => [...new Set(firings.filter((f) => f.kind === kind).flatMap((f) => f.keys))].sort();
 
-async function census() {
-  const root = path.join(os.homedir(), '.claude', 'projects');
+// The turnOrigin values the 2.1.309 binary defines (its list aQt, and all
+// that its GOs() returns). Any other value is tallied as (other), so the
+// census never copies a turnOrigin value nobody has read. The key's other
+// fields go in as they are: origin.kind, subkind and producer are fixed
+// values in the 2.1.309 schema, promptSource comes from the CLI's own
+// switch, and entrypoint is a CLI literal or CLAUDE_CODE_ENTRYPOINT. A new
+// kind then shows as itself, which is what Q14 is looking for.
+const TURN_ORIGINS = ['human', 'sdk', 'scheduled', 'task_notification', 'auto_continuation', 'peer', 'host_synthetic', 'system', 'unknown'];
+const turnOf = (t) => (typeof t !== 'string' ? '(none)' : TURN_ORIGINS.includes(t) ? t : '(other)');
+
+// root: the folder of project transcript folders, the real one unless a test
+// plants its own.
+export async function census(root = path.join(os.homedir(), '.claude', 'projects')) {
   const tally = {};
   const originKeys = new Set();
   const humanKeys = {};
@@ -96,16 +111,23 @@ async function census() {
           if (!line.includes('"type":"user"')) continue;
           let r;
           try { r = JSON.parse(line); } catch { continue; }
-          if (r.type !== 'user' || r.isMeta) continue;
+          if (r.type !== 'user') continue;
+          const o = r.origin;
+          // Every peer message and scheduled tick on disk is isMeta, and each
+          // carries an origin or a turnOrigin; an isMeta record with neither
+          // is no prompt this tally can file.
+          if (r.isMeta && !(o && typeof o === 'object') && typeof r.turnOrigin !== 'string') continue;
           const c = r.message?.content;
           // a tool result is a user record too; only prompts count
           if (Array.isArray(c) && c.some((b) => b.type === 'tool_result')) continue;
           records++;
-          const o = r.origin;
           if (o && typeof o === 'object') Object.keys(o).forEach((k) => originKeys.add(k));
-          const key = [o?.kind ?? '(none)', o?.subkind ?? '', o?.producer ?? '', `src=${r.promptSource ?? '(none)'}`, `entry=${r.entrypoint ?? '(none)'}`].join('|');
+          // The kind stays first: decide() reads it as k.split('|')[0].
+          const key = [o?.kind ?? '(none)', o?.subkind ?? '', o?.producer ?? '', `src=${r.promptSource ?? '(none)'}`, `entry=${r.entrypoint ?? '(none)'}`, `turn=${turnOf(r.turnOrigin)}`, `meta=${!!r.isMeta}`].join('|');
           tally[key] = (tally[key] || 0) + 1;
-          if (o?.kind === 'human' || !o) for (const k of Object.keys(r)) humanKeys[k] = (humanKeys[k] || 0) + 1;
+          // Non-meta records only: a scheduled tick has no origin either, and
+          // its keys (scheduledTaskId and the like) are no human prompt's.
+          if (!r.isMeta && (o?.kind === 'human' || !o)) for (const k of Object.keys(r)) humanKeys[k] = (humanKeys[k] || 0) + 1;
         }
       } catch (e) {
         if (e.code === 'ENOENT') continue; // deleted between the stat and the open
@@ -119,7 +141,8 @@ async function census() {
 
 // The verdict from what run() observed ({census, rows}): pure, so a test can
 // plant it. Q14 has no CONTRADICTED path: once every arm fired as due, what
-// stays open is the typed and Remote Control arms, BLOCKED until U3, so its
+// stays open is the typed, Remote Control, peer-message and /loop arms,
+// BLOCKED here (the live hook records each one that fires it), so its
 // PARTIAL says unsettledOnly.
 export function decide({ census: c, rows }) {
   const short = Object.entries(rows).filter(([, r]) => r.missing.length).map(([k, r]) => `${k} (${r.missing.join(', ')})`);
@@ -142,7 +165,7 @@ export function decide({ census: c, rows }) {
     `notification turns fired the hook ${notes.length} time(s), transcript origin.kind ${JSON.stringify(notes.map((v) => v.afterRun?.origin?.kind ?? null))}`,
     `at hook time the prompt's own record was ${readable('p')} -p firings and ${readable('notification')} notification firings${views.some((v) => !v.atHookTime?.found) ? ' (the write lags the hook)' : ''}`,
     `census kinds: ${JSON.stringify([...new Set(Object.keys(c.tally).map((k) => k.split('|')[0]))])}`,
-    'typed and Remote Control prompts: BLOCKED until the probe hook in projects/.claude/settings.local.json records them (after U3)',
+    'typed, Remote Control, peer-message and /loop prompts: BLOCKED, as the headless arms here make none of them; the live hook in playbook/.claude/settings.local.json records each one that fires it',
   ].join('; ');
   return { verdict: 'PARTIAL', summary, unsettledOnly: true };
 }
@@ -184,8 +207,8 @@ export default {
     const scrub = scrubber();
     const evidence = [
       `census: ${c.records} prompt records in ${c.files} transcripts since 2026-10-14; origin keys seen ${JSON.stringify(c.originKeys)}`,
-      `census tally (kind|subkind|producer|promptSource|entrypoint): ${JSON.stringify(c.tally)}`,
-      `top-level keys on human/no-origin records: ${JSON.stringify(c.humanOrNoOriginKeys)}`,
+      `census tally (kind|subkind|producer|promptSource|entrypoint|turnOrigin|isMeta): ${JSON.stringify(c.tally)}`,
+      `top-level keys on non-meta human/no-origin records: ${JSON.stringify(c.humanOrNoOriginKeys)}`,
       ...Object.entries(rows).map(([k, r]) => `${k}: UserPromptSubmit firings -p ${r.fired.p} of ${r.due.p}, notification ${r.fired.notification} of ${r.due.notification}${r.missing.length ? ` (missing: ${r.missing.join(', ')})` : ''}; input keys -p ${JSON.stringify(keysOf(r.firings, 'p'))}, notification ${JSON.stringify(keysOf(r.firings, 'notification'))}; prompt heads ${JSON.stringify(r.views.map((v) => v.head))}; record readable at hook time ${JSON.stringify(r.views.map((v) => v.atHookTime))}; record after the run ${JSON.stringify(r.views.map((v) => v.afterRun))}`),
     ].map(scrub);
     const observed = { census: c, rows };

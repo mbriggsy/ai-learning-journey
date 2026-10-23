@@ -106,7 +106,11 @@ export function renderBlock(passes, { defs = DEFS, notes = {}, scrub = scrubber(
       if (e?.run) lines.push(`- **Run:** \`${scrub(fwd(path.join(e.run, id)))}\`${r ? ` (CLI ${r.version}, ${Math.round((r.ms ?? 0) / 1000)} s)` : ''}`);
       if (r) {
         lines.push('- **Evidence:**');
-        for (const ev of r.evidence ?? []) lines.push(`  - ${item(scrub(ev).slice(0, 1200))}`);
+        for (const ev of r.evidence ?? []) {
+          // A long line is cut, and says so: result.json keeps it whole.
+          const s = scrub(ev);
+          lines.push(`  - ${item(s.length > 1200 ? `${s.slice(0, 1200)} ... (cut at 1200 of ${s.length} characters; the whole line is in result.json)` : s)}`);
+        }
       }
       lines.push('');
     }

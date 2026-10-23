@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // q14-recorder.mjs: Q14's live instrument, a UserPromptSubmit hook for real
-// sessions (projects/.claude/settings.local.json, installed through the
+// sessions (playbook/.claude/settings.local.json, installed through the
 // settings writer under C29 once Briggsy says so).
 //
 // Q14 asks whether a hook can tell Briggsy's own prompts (typed, or sent over
@@ -8,9 +8,10 @@
 // Its headless probe (defs/q14-prompt-origin.mjs) can't make a typed or a
 // Remote Control prompt: only a person in a live session can. So this hook
 // records, for each prompt a live session submits, what a hook can know at
-// that moment: its input's key names, and whether the transcript already holds
-// the prompt's own record (the user record carrying its prompt id) and what
-// that record says about where the prompt came from.
+// that moment: its input's key names, how the prompt opens (head, below), and
+// whether the transcript already holds the prompt's own record (the user
+// record carrying its prompt id) and what that record says about where the
+// prompt came from.
 //
 // It looks once and returns at once. The CLI waits for a UserPromptSubmit hook
 // before the prompt goes on, so a hook that waited for the record would hold
@@ -48,13 +49,14 @@
 //
 // Lines go to captures.jsonl in ~/.claude/flow/probes/q14-live/
 // (Q14_LIVE_OUT names another folder):
-//   {at, phase: 'atHook', cli, hookEvent, inputKeys, sessionTag,
-//    promptIdPresent, promptTag, head: {taskNotification, slash, length},
+//   {at, phase: 'atHook', cli, recorder, hookEvent, inputKeys, sessionTag,
+//    promptIdPresent, promptTag,
+//    head: {taskNotification, slash, length, peerPreamble, wrapper},
 //    polling,
 //    record: {found, ms, window: {from, bytes, whole} | null, readError?,
 //             origin, promptSource, entrypoint, turnOrigin, sessionKind,
 //             version, keys}}
-//   {at, phase: 'afterReturn', cli, sessionTag, promptTag,
+//   {at, phase: 'afterReturn', cli, recorder, sessionTag, promptTag,
 //    record: {found, ms, tries, readError?, origin, promptSource, entrypoint,
 //             turnOrigin, sessionKind, version, keys}}
 // `at` is when the hook process started, on both lines, and `ms` counts from
@@ -62,6 +64,36 @@
 // come only when the record was found. readError names why a look failed (a
 // transcript not written yet reads ENOENT), or why the hook had nothing to
 // look for: no-transcript-path, no-prompt-id.
+//
+// `head` is how the prompt opens. Q14 asks whether a hook can tell a peer's
+// message from Briggsy's own prompt at UserPromptSubmit time, and the
+// prompt's own wrapper is the one signal a hook has then: the headless runs
+// found no origin key in the hook's input and the prompt's record not yet in
+// the transcript. taskNotification and slash say whether the prompt opens
+// `<task-notification>` or `/`, and length is its length. peerPreamble says
+// whether it opens with one of the fixed lines the CLI puts before a peer's
+// message (PEER_PREAMBLES, below). wrapper is the tag that opens it, after
+// that line and one newline when it has them: a name from the fixed list
+// WRAPPERS when `<` and the name come first and whitespace or `>` follows,
+// else null. A prompt that isn't a string gives false and null (and a length
+// of null). Every peer record on disk on 2026-10-22 (64, in 4071 transcript
+// files) opened "Another Claude session sent a message:" and a newline, then
+// `<agent-message ` (52) or `<cross-session-message ` (12). Whether a hook's
+// `prompt` carries that line, or opens at the tag, is unmeasured, so both
+// are read.
+//
+// `recorder`, on every line (error lines too), is the first 12 hex of the
+// sha256 of this file's own bytes, read once as the process starts. The
+// poller reads the file again when it starts, so its stamp names the bytes
+// it ran: its hook's, unless the file changed in between (measured
+// 2026-10-22 on a copy: an edit 1 ms after the hook exited gave the
+// afterReturn line a different stamp from its atHook line; one 39 ms or
+// more after did not). A verdict holds only for the bytes that produced it
+// (insight 003), so a later verdict reads only the lines stamped with the
+// bytes it names, and a pair joined on promptTag whose two stamps differ
+// straddles an edit: it counts under neither stamp, and its atHook line is
+// never read as one whose poller died. It is null when the read fails, and
+// nothing else changes.
 //
 // `window`, on the atHook line only, is what the hook's look read: the byte
 // offset it started at (`from`, after moving back to a line's start), the
@@ -78,7 +110,9 @@
 // What it never writes:
 // - What was typed. No prompt text at all, not even the 24-character head the
 //   headless probe's reader keeps: only whether the prompt opens a task
-//   notification or a slash command, and its length.
+//   notification, a slash command or a peer's preamble, which tag from a
+//   fixed list opens it, and its length. A wrapper's attributes (a peer's
+//   `from=` address or name) and its body stay out.
 // - A raw session id, prompt id or transcript path. sessionTag and promptTag
 //   are the first 8 hex of the sha256 of the session id and the prompt id:
 //   enough to group a session's lines and to join a line to its transcript
@@ -96,10 +130,10 @@
 // It prints nothing, since a UserPromptSubmit hook's stdout becomes context
 // for the model, and always exits 0, the poller too: an instrument must never
 // block or alter a prompt. A failure writes an error line instead, {at, cli,
-// phase, promptTag?, error: {stage, code, name}}, never the error's message,
-// which can quote the input or a path. The poller never creates the captures
-// folder: the hook's line made it, so if it is gone someone removed it, and the
-// poller's line is dropped.
+// recorder, phase, promptTag?, error: {stage, code, name}}, never the error's
+// message, which can quote the input or a path. The poller never creates the
+// captures folder: the hook's line made it, so if it is gone someone removed
+// it, and the poller's line is dropped.
 //
 // `cli` is the CLI version read from AI_AGENT (claude-code_<x>-<y>-<z>_...,
 // which the 2.1.307 binary writes into its own environment, in ksr(), and
@@ -120,6 +154,16 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const SELF = fileURLToPath(import.meta.url);
+// The first 12 hex of the sha256 of this file's bytes, every line's
+// `recorder`: read once, here, so it names the bytes this process loaded as
+// nearly as a read can. null when the read fails.
+const RECORDER = (() => {
+  try {
+    return createHash('sha256').update(fs.readFileSync(SELF)).digest('hex').slice(0, 12);
+  } catch {
+    return null;
+  }
+})();
 // The poller is this script run with this one argument. What it looks for
 // comes in these environment variables, set only by the hook that starts it.
 const POLLER_ARG = '--after-return';
@@ -190,9 +234,28 @@ function cliOf(aiAgent) {
 }
 const CLI = cliOf(process.env.AI_AGENT);
 
+// The lines the CLI puts before a peer's message, each followed there by a
+// newline: the 2.1.309 binary's own list (Eye, which it strips to read the
+// tag after one), measured with grep -a.
+const PEER_PREAMBLES = [
+  'Another Claude session sent a message while you were working:',
+  'Another Claude session sent a message:',
+  'A peer session sent a message while you were working:',
+];
+// The wrapper tags the head names. Each appears as a tag in the 2.1.309
+// binary; agent-message and cross-session-message open the peer records on
+// disk. Any other tag reads as null: a name off this list could be text.
+const WRAPPERS = ['task-notification', 'cross-session-message', 'agent-message', 'teammate-message', 'command-name', 'command-message'];
+
+// How the prompt opens, as the header describes: flags, its length, and a
+// name from WRAPPERS or null, never its text.
 function headOf(p) {
-  if (typeof p !== 'string') return { taskNotification: false, slash: false, length: null };
-  return { taskNotification: p.startsWith('<task-notification>'), slash: p.startsWith('/'), length: p.length };
+  if (typeof p !== 'string') return { taskNotification: false, slash: false, length: null, peerPreamble: false, wrapper: null };
+  const preamble = PEER_PREAMBLES.find((s) => p.startsWith(s));
+  let rest = preamble === undefined ? p : p.slice(preamble.length);
+  if (preamble !== undefined && rest.startsWith('\n')) rest = rest.slice(1);
+  const wrapper = WRAPPERS.find((w) => rest.startsWith(`<${w}`) && /^[\s>]/.test(rest.slice(w.length + 1))) ?? null;
+  return { taskNotification: p.startsWith('<task-notification>'), slash: p.startsWith('/'), length: p.length, peerPreamble: preamble !== undefined, wrapper };
 }
 
 function originOf(o) {
@@ -347,7 +410,7 @@ function append(line, { create = true } = {}) {
   fs.appendFileSync(path.join(OUT, 'captures.jsonl'), `${JSON.stringify(line)}\n`);
 }
 
-const errorLine = (phase, stage, e, extra = {}) => ({ at: AT, cli: CLI, phase, ...extra, error: { stage, code: token(e?.code), name: token(e?.name) } });
+const errorLine = (phase, stage, e, extra = {}) => ({ at: AT, cli: CLI, recorder: RECORDER, phase, ...extra, error: { stage, code: token(e?.code), name: token(e?.name) } });
 
 // Starts the poller and lets go of it: the hook's exit then waits on nothing
 // the poller holds. A start that fails says so in an error line.
@@ -403,6 +466,7 @@ function hookMain() {
     at: AT,
     phase: 'atHook',
     cli: CLI,
+    recorder: RECORDER,
     hookEvent: token(input.hook_event_name),
     inputKeys: keysOf(input),
     sessionTag,
@@ -430,6 +494,7 @@ async function pollerMain() {
     at: AT,
     phase: 'afterReturn',
     cli: CLI,
+    recorder: RECORDER,
     sessionTag: /^[0-9a-f]{8}$/.test(sessionTag) ? sessionTag : null,
     promptTag,
     record: { ...look, ...(rec ? reduce(rec) : {}) },

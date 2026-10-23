@@ -18,6 +18,12 @@
 // says what the hook's look read: the whole of a short transcript, or a span
 // that starts mid-file. That is how a reader tells a record the hook's look
 // missed from one that landed after it.
+//
+// The head cases plant a peer's address and a body no field could produce,
+// behind each preamble and in each wrapper, and find neither in the captures:
+// the head names a fixed tag, never what the wrapper holds. Every line kind
+// carries `recorder`, checked against the sha256 this file computes from the
+// recorder's bytes itself.
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
@@ -28,6 +34,9 @@ import { after, before, describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 const RECORDER = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'probes', 'live', 'q14-recorder.mjs');
+// What every line's `recorder` must be: the first 12 hex of the sha256 of the
+// recorder file's bytes, read here, not taken from the recorder.
+const STAMP = createHash('sha256').update(fs.readFileSync(RECORDER)).digest('hex').slice(0, 12);
 
 let dir;
 before(() => { dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hooks-q14-live-')); });
@@ -88,10 +97,11 @@ function userRecord(input, extra = {}) {
 }
 const line = (o) => `${JSON.stringify(o)}\n`;
 
-// Run the recorder to its end on `input` (an object, or raw text). spawnSync
-// returns once the hook has exited and its pipes are closed.
-function record(input, env, args = []) {
-  return spawnSync(process.execPath, [RECORDER, ...args], { input: typeof input === 'string' ? input : JSON.stringify(input), env, encoding: 'utf8', shell: false, windowsHide: true, timeout: 30_000 });
+// Run the recorder to its end on `input` (an object, or raw text), with
+// `nodeArgs` before the script. spawnSync returns once the hook has exited and
+// its pipes are closed.
+function record(input, env, args = [], nodeArgs = []) {
+  return spawnSync(process.execPath, [...nodeArgs, RECORDER, ...args], { input: typeof input === 'string' ? input : JSON.stringify(input), env, encoding: 'utf8', shell: false, windowsHide: true, timeout: 30_000 });
 }
 
 // Run the hook as the CLI would and time it from the moment its input is
@@ -273,8 +283,8 @@ describe('q14-recorder.mjs', () => {
     assertNothingRaw(text, input);
     assert.equal(lines.length, 2);
     const later = lines.find(isAfter);
-    assert.deepEqual([later.at, later.cli, later.sessionTag, later.promptTag], [atHook.at, '9.8.7', tag(input.session_id), tag(input.prompt_id)], 'the afterReturn line joins the atHook line');
-    assert.deepEqual([atHook.cli, atHook.sessionTag, atHook.promptTag], ['9.8.7', tag(input.session_id), tag(input.prompt_id)]);
+    assert.deepEqual([later.at, later.cli, later.recorder, later.sessionTag, later.promptTag], [atHook.at, '9.8.7', STAMP, tag(input.session_id), tag(input.prompt_id)], 'the afterReturn line joins the atHook line');
+    assert.deepEqual([atHook.cli, atHook.recorder, atHook.sessionTag, atHook.promptTag], ['9.8.7', STAMP, tag(input.session_id), tag(input.prompt_id)]);
     const c = later.record;
     assert.equal(c.found, true, JSON.stringify(c));
     assert.ok(c.tries > 1, `found on try ${c.tries}: the poller's first look should have missed`);
@@ -303,7 +313,8 @@ describe('q14-recorder.mjs', () => {
     assert.equal(c.sessionTag, tag(input.session_id));
     assert.equal(c.promptTag, tag(input.prompt_id));
     assert.equal(c.promptIdPresent, true);
-    assert.deepEqual(c.head, { taskNotification: false, slash: false, length: input.prompt.length });
+    assert.deepEqual(c.head, { taskNotification: false, slash: false, length: input.prompt.length, peerPreamble: false, wrapper: null });
+    assert.equal(c.recorder, STAMP);
     assert.equal(c.polling, false);
     assert.ok(Date.parse(c.at) <= Date.now());
     const { ms, ...rec } = c.record;
@@ -494,9 +505,9 @@ describe('q14-recorder.mjs', () => {
 
   test('a task notification and a slash command are flagged by their head alone', () => {
     for (const [prompt, head] of [
-      ['<task-notification>\n<task-id>x</task-id>', { taskNotification: true, slash: false }],
-      ['/squeaky', { taskNotification: false, slash: true }],
-      [` /not-a-command ${PHRASE}`, { taskNotification: false, slash: false }],
+      ['<task-notification>\n<task-id>x</task-id>', { taskNotification: true, slash: false, peerPreamble: false, wrapper: 'task-notification' }],
+      ['/squeaky', { taskNotification: false, slash: true, peerPreamble: false, wrapper: null }],
+      [` /not-a-command ${PHRASE}`, { taskNotification: false, slash: false, peerPreamble: false, wrapper: null }],
     ]) {
       const out = fresh('out');
       const input = inputFor(path.join(fresh('tx'), 'none.jsonl'), { prompt });
@@ -505,6 +516,148 @@ describe('q14-recorder.mjs', () => {
       assert.deepEqual(lines[0].head, { ...head, length: prompt.length });
       assert.ok(!text.includes('task-id') && !text.includes('squeaky') && !text.includes(PHRASE), text);
     }
+  });
+
+  // The fixed lists the head reads, written out here, never read from the
+  // recorder: the 2.1.309 binary's peer preambles, and tags that appear in it
+  // (agent-message and cross-session-message open the peer records on disk).
+  const PREAMBLES = [
+    'Another Claude session sent a message while you were working:',
+    'Another Claude session sent a message:',
+    'A peer session sent a message while you were working:',
+  ];
+  const WRAPPERS = ['task-notification', 'cross-session-message', 'agent-message', 'teammate-message', 'command-name', 'command-message'];
+  // A peer's address and a body no field could produce by chance.
+  const FROM = 'WOMBAT-FROM-3319-peer-addr';
+  const BODY = 'NARWHAL-BODY-5527-do-the-thing';
+  const peer = (w) => `<${w} from="${FROM}">\n${BODY}\n</${w}>`;
+  const plain = { taskNotification: false, slash: false, peerPreamble: false, wrapper: null };
+
+  // Checks each case's head, from a hook run that starts no poller, and that
+  // its captures hold nothing the prompt held: the address, the body, the
+  // phrase, the preamble's words or an attribute.
+  function headsOf(cases) {
+    for (const [prompt, head, label] of cases) {
+      const out = fresh('out');
+      const input = inputFor(path.join(fresh('tx'), 'none.jsonl'), { prompt });
+      const r = record(input, envFor(out, { Q14_LIVE_BUDGET_MS: '0' }));
+      assert.equal(r.status, 0, `${label}: ${r.stderr}`);
+      assert.deepEqual([r.stdout, r.stderr], ['', ''], label);
+      const { text, lines } = captures(out);
+      assert.equal(lines.length, 1, label);
+      assert.deepEqual(lines[0].head, { ...head, length: typeof prompt === 'string' ? prompt.length : null }, label);
+      for (const held of [FROM, BODY, PHRASE, 'sent a message', 'from=']) assert.ok(!text.includes(held), `${label}: the captures hold ${held}: ${text}`);
+    }
+  }
+
+  test('a wrapper tag that opens the prompt is named from the fixed list, with a space, a newline or > after it; its attributes and body stay out', () => {
+    const cases = [];
+    for (const w of WRAPPERS) {
+      cases.push([peer(w), { ...plain, wrapper: w }, `${w} with an attribute`]);
+      cases.push([`<${w}>${BODY}</${w}>`, { ...plain, taskNotification: w === 'task-notification', wrapper: w }, `${w} bare`]);
+    }
+    cases.push([`<cross-session-message\nfrom="${FROM}">${BODY}`, { ...plain, wrapper: 'cross-session-message' }, 'a newline after the name']);
+    headsOf(cases);
+  });
+
+  test('a peer preamble is flagged, and the wrapper after it (with its newline or without) is named; a preamble with no wrapper after it names none', () => {
+    const cases = [];
+    for (const p of PREAMBLES) {
+      cases.push([`${p}\n${peer('cross-session-message')}`, { ...plain, peerPreamble: true, wrapper: 'cross-session-message' }, `${p} newline`]);
+      cases.push([`${p}${peer('cross-session-message')}`, { ...plain, peerPreamble: true, wrapper: 'cross-session-message' }, `${p} no newline`]);
+      cases.push([`${p}\n${BODY}`, { ...plain, peerPreamble: true }, `${p} with no wrapper`]);
+      cases.push([p, { ...plain, peerPreamble: true }, `${p} alone`]);
+    }
+    // The shape 52 of the 64 peer records on disk had.
+    cases.push([`${PREAMBLES[1]}\n${peer('agent-message')}`, { ...plain, peerPreamble: true, wrapper: 'agent-message' }, 'agent-message behind its preamble']);
+    headsOf(cases);
+  });
+
+  test('a tag off the list, a name that runs on, a tag not at the start, a newline no preamble owns and a typed or non-string prompt all name no wrapper', () => {
+    headsOf([
+      [`<channel source="${FROM}">${BODY}`, plain, 'a tag off the list'],
+      [`<cross-session-messages>${BODY}`, plain, 'a name that runs on'],
+      ['<cross-session-message', plain, 'a name with nothing after it'],
+      [`< cross-session-message>${BODY}`, plain, 'a space before the name'],
+      [`${BODY}<cross-session-message>`, plain, 'a tag not at the start'],
+      [`${PREAMBLES[1]}\n\n<cross-session-message>${BODY}`, { ...plain, peerPreamble: true }, 'two newlines after the preamble'],
+      [`\n<cross-session-message>${BODY}`, plain, 'a newline with no preamble before it'],
+      [`${PREAMBLES[1]}\n<slack-ping>${BODY}`, { ...plain, peerPreamble: true }, 'a preamble, then a tag off the list'],
+      [` ${PREAMBLES[1]}\n${peer('cross-session-message')}`, plain, 'a preamble not at the start'],
+      [`Another Claude session sent a message yesterday: ${BODY}`, plain, "a preamble's words that run on"],
+      [`Another Claude session sent a message while you were away:\n${peer('cross-session-message')}`, plain, 'a near-miss preamble'],
+      [`A peer session sent a message:\n${peer('cross-session-message')}`, plain, 'a peer-session line the binary never writes'],
+      [`please ${PHRASE} now`, plain, 'a typed prompt'],
+      [42, plain, 'a number'],
+      [null, plain, 'null'],
+      [undefined, plain, 'no prompt key'],
+    ]);
+  });
+
+  test('every line kind carries recorder, the first 12 hex of the sha256 of the recorder file\'s bytes: the same on a prompt\'s atHook and afterReturn lines, and on error lines', { timeout: 30_000 }, async () => {
+    assert.match(STAMP, /^[0-9a-f]{12}$/);
+    // atHook and afterReturn: the record lands after the hook returned.
+    const out = fresh('out');
+    const transcript = path.join(fresh('tx'), 'session.jsonl');
+    const input = inputFor(transcript);
+    fs.writeFileSync(transcript, line({ type: 'system', note: 'earlier' }));
+    assert.equal(record(input, envFor(out, { Q14_LIVE_BUDGET_MS: '5000' })).status, 0);
+    fs.appendFileSync(transcript, line(userRecord(input)));
+    const { lines } = await captureOf(out, isAfter);
+    assert.deepEqual(lines.map((l) => [l.phase, l.promptTag, l.recorder]), [['atHook', tag(input.prompt_id), STAMP], ['afterReturn', tag(input.prompt_id), STAMP]]);
+    // Error lines: the hook's (input it cannot parse; a poller it cannot
+    // start, for a NUL byte in the path it would hand over), and the poller's
+    // (started with no handoff).
+    const bad = fresh('out');
+    assert.equal(record(`${PHRASE} is not JSON`, envFor(bad)).status, 0);
+    const nul = inputFor(path.join(fresh('tx'), 'a\u0000b.jsonl'));
+    assert.equal(record(nul, envFor(bad)).status, 0);
+    assert.equal(record('', envFor(bad), ['--after-return']).status, 0);
+    const { text, lines: errors } = captures(bad);
+    assert.deepEqual(errors.map((l) => [l.phase, l.error?.stage ?? null, l.recorder]), [
+      ['atHook', 'parse', STAMP],
+      ['atHook', null, STAMP],
+      ['atHook', 'poller-start', STAMP],
+      ['afterReturn', 'handoff', STAMP],
+    ], text);
+    assert.ok(!text.includes(PHRASE), text);
+  });
+
+  test('a recorder that cannot read its own file stamps recorder: null and changes nothing else: the same line, exit 0, nothing printed', () => {
+    // A preload that fails every read of the recorder's file through
+    // fs.readFileSync, as a denied read would: node's loader (24.13.1, measured)
+    // loads the script without it, so only the recorder's own read meets it.
+    // Its path is built here, never by the recorder.
+    const preload = path.join(fresh('preload'), 'deny-self-read.cjs');
+    fs.writeFileSync(preload, [
+      "const fs = require('node:fs');",
+      "const path = require('node:path');",
+      `const self = path.resolve(${JSON.stringify(RECORDER)}).toLowerCase();`,
+      'const real = fs.readFileSync;',
+      'fs.readFileSync = function (p, ...rest) {',
+      "  if (typeof p === 'string' && path.resolve(p).toLowerCase() === self) throw Object.assign(new Error('denied'), { code: 'EACCES' });",
+      '  return real.call(this, p, ...rest);',
+      '};',
+      '',
+    ].join('\n'));
+    const transcript = path.join(fresh('tx'), 'session.jsonl');
+    const input = inputFor(transcript);
+    fs.writeFileSync(transcript, line(userRecord(input)));
+    const run = (nodeArgs) => {
+      const out = fresh('out');
+      const r = record(input, envFor(out, { Q14_LIVE_BUDGET_MS: '0' }), [], nodeArgs);
+      assert.deepEqual([r.status, r.stdout, r.stderr], [0, '', ''], r.stderr);
+      const { lines } = captures(out);
+      assert.equal(lines.length, 1);
+      return lines[0];
+    };
+    const normal = run([]);
+    const denied = run(['--require', preload]);
+    assert.equal(normal.recorder, STAMP);
+    assert.equal(denied.recorder, null);
+    // Only `at` and the look's ms may differ between two runs.
+    const same = (l) => ({ ...l, at: null, record: { ...l.record, ms: null } });
+    assert.deepEqual(same(denied), { ...same(normal), recorder: null });
   });
 
   test('values that are no short token show as their type, and odd key names as ?', () => {

@@ -1323,6 +1323,24 @@ describe('report.mjs', () => {
     assert.ok(!fs.existsSync(path.join(root, 'passes.json.lock')));
   });
 
+  test('an evidence line over 1200 characters is cut with a mark that says so; one of 1200 stays whole', async () => {
+    const cut = fresh('report-cut');
+    const at = path.join(cut, '1.0.0', 'stamp');
+    const id = LOAD_BEARING.find((x) => x !== 'Q2' && x !== 'Q3');
+    await writePasses('1.0.0', at, [{ id, verdict: 'VERIFIED', hash: probeHash(defOf(defs, id)) }], { root: cut, defs });
+    fs.mkdirSync(path.join(at, id), { recursive: true });
+    const long = 'x'.repeat(1300);
+    const whole = 'y'.repeat(1200);
+    fs.writeFileSync(path.join(at, id, 'result.json'), JSON.stringify({ id, question: 'q?', assumption: 'a', verdict: 'VERIFIED', summary: 's', evidence: [long, whole], version: '1.0.0', ms: 1000 }));
+    const doc = path.join(cut, 'probes.md');
+    await writeReport({ root: cut, defs, doc });
+    const text = fs.readFileSync(doc, 'utf8');
+    assert.ok(text.includes(`  - ${'x'.repeat(1200)} ... (cut at 1200 of 1300 characters; the whole line is in result.json)\n`), 'the cut line and its mark');
+    assert.ok(!text.includes('x'.repeat(1201)), 'more than 1200 of the long line');
+    assert.ok(text.includes(`  - ${whole}\n`), 'the 1200-character line, whole');
+    assert.ok(!text.includes(`${whole} ...`), 'a mark on a line that was not cut');
+  });
+
   test('a document with no block is refused and left as it was', async () => {
     const doc = path.join(root, 'hand.md');
     fs.writeFileSync(doc, 'hand only\n');

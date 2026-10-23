@@ -3,8 +3,9 @@
 // without claude. A PARTIAL whose open arms are only unsettled or blocked
 // must say unsettledOnly, which run.mjs's measured() honors for these ids; a
 // deviation must never say it. Q8's launcher-version check, Q0's real-tree
-// tripwire and real-run gate, and Q14's reader hook run here too. Every id
-// and path is built at run time, so this file stays clean for the leak test.
+// tripwire and real-run gate, and Q14's reader hook and census run here too.
+// Every id and path is built at run time, so this file stays clean for the
+// leak test.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
@@ -509,7 +510,7 @@ describe('Q5: the verdict', () => {
   });
 });
 
-describe('Q14: the verdict and the reader hook', () => {
+describe('Q14: the verdict, the census and the reader hook', () => {
   const view = (kind, found, originKind = null) => ({
     kind,
     head: kind === 'p' ? 'Reply with the single' : '<task-notification>',
@@ -524,13 +525,14 @@ describe('Q14: the verdict and the reader hook', () => {
     firings: [{ kind: 'p', keys }, ...Array.from({ length: notes }, () => ({ kind: 'notification', keys }))],
     views: [view('p', true), ...Array.from({ length: notes }, () => view('notification', false, 'task-notification'))],
   });
-  const census = { files: 2, records: 3, tally: { [['human', '', '', 'src=typed', 'entry=cli'].join('|')]: 2, [['task-notification', '', 'session-task', 'src=system', 'entry=cli'].join('|')]: 1 }, originKeys: ['kind'], humanOrNoOriginKeys: {} };
+  const census = { files: 2, records: 3, tally: { [['human', '', '', 'src=typed', 'entry=cli', 'turn=human', 'meta=false'].join('|')]: 2, [['task-notification', '', 'session-task', 'src=system', 'entry=cli', 'turn=task_notification', 'meta=false'].join('|')]: 1 }, originKeys: ['kind'], humanOrNoOriginKeys: {} };
   const observed = (over = {}) => ({ census, rows: { 'typed-equivalent': armRow(0), 'shell-notification': armRow(1), 'agent-notification': armRow(1), ...over } });
 
-  test('every arm fired as due: PARTIAL with the human origins BLOCKED, unsettled only', () => {
+  test('every arm fired as due: PARTIAL with the four live-only kinds BLOCKED, unsettled only', () => {
     const d = q14.decide(observed());
     assert.deepEqual([d.verdict, d.unsettledOnly], ['PARTIAL', true], d.summary);
-    assert.match(d.summary, /typed and Remote Control prompts: BLOCKED/);
+    assert.match(d.summary, /; typed, Remote Control, peer-message and \/loop prompts: BLOCKED, as the headless arms here make none of them; the live hook in playbook\/\.claude\/settings\.local\.json records each one that fires it$/);
+    assert.doesNotMatch(d.summary, /after U3/);
     assert.match(d.summary, /transcript origin\.kind \["task-notification","task-notification"\]/);
     assert.match(d.summary, /already readable in all 3 -p firings and missing in 2 of 2 notification firings \(the write lags the hook\)/);
     assert.match(d.summary, /census kinds: \["human","task-notification"\]/);
@@ -542,6 +544,86 @@ describe('Q14: the verdict and the reader hook', () => {
     assert.equal(d.verdict, 'INCONCLUSIVE', d.summary);
     assert.equal(d.unsettledOnly, undefined);
     assert.match(d.summary, /agent-notification \(notification 0 of 1 in the capture hook\)/);
+  });
+
+  // The census on a planted projects folder. Every path is built here with
+  // path.join from the test's own root, never with the def's helpers (insight
+  // 006), and each transcript's mtime is set: after SINCE (2026-10-14) to be
+  // read, before it to be skipped.
+  test('the census counts the isMeta records that carry an origin or a string turnOrigin (peer, scheduled, channel, an unlisted turnOrigin), files every 2.1.309 turnOrigin, and a subkind and a producer, as itself, skips the rest of isMeta and every tool result, and copies none of their text', async () => {
+    const root = fresh('projects');
+    const phrase = ['marmalade', 'quokka', 'lighthouse'].join('-');
+    const from = ['heron', 'tamarind'].join('-');
+    const oddTurn = `${phrase}-turn`;
+    const read = new Date('2026-10-20T00:00:00Z');
+    const old = new Date('2026-10-01T00:00:00Z');
+    const put = (proj, name, records, mtime) => {
+      fs.mkdirSync(path.join(root, proj), { recursive: true });
+      const f = path.join(root, proj, name);
+      fs.writeFileSync(f, `${records.map((r) => JSON.stringify(r)).join('\n')}\n`);
+      fs.utimesSync(f, mtime, mtime);
+    };
+    const said = (content) => ({ role: 'user', content });
+    const toolResult = said([{ type: 'tool_result', content: phrase }]);
+    const human = { type: 'user', promptSource: 'typed', entrypoint: 'cli', turnOrigin: 'human', origin: { kind: 'human' }, message: said(phrase) };
+    put('proj-a', 'one.jsonl', [
+      human,
+      // every other 2.1.309 turnOrigin, on records carrying a subkind and a producer
+      ...['sdk', 'task_notification', 'auto_continuation', 'host_synthetic', 'system', 'unknown'].map((t) => ({ type: 'user', promptSource: 'system', entrypoint: 'cli', turnOrigin: t, origin: { kind: 'task-notification', subkind: 'scheduled-trigger', producer: 'session-task' }, message: said(phrase) })),
+      // a kept record whose turnOrigin is no string files it as (none)
+      { type: 'user', promptSource: 'system', entrypoint: 'cli', turnOrigin: 7, origin: { kind: 'task-notification' }, message: said(phrase) },
+      { type: 'user', isMeta: true, promptSource: 'system', entrypoint: 'cli', turnOrigin: 'peer', origin: { kind: 'peer', from, body: phrase }, message: said(phrase) },
+      { type: 'assistant', message: { role: 'assistant', content: phrase } },
+    ], read);
+    put('proj-b', 'two.jsonl', [
+      { type: 'user', isMeta: true, promptSource: 'system', entrypoint: 'cli', turnOrigin: 'scheduled', scheduledTaskId: 'task-1', message: said(phrase) },
+      // a turnOrigin outside the 2.1.309 list is counted, as (other)
+      { type: 'user', isMeta: true, promptSource: 'system', entrypoint: 'cli', turnOrigin: oddTurn, message: said(phrase) },
+      // an origin alone keeps one too: older records carry no turnOrigin
+      { type: 'user', isMeta: true, promptSource: 'system', entrypoint: 'cli', origin: { kind: 'channel' }, message: said(phrase) },
+      // isMeta with neither an origin nor a string turnOrigin: skipped
+      { type: 'user', isMeta: true, entrypoint: 'cli', message: said(phrase) },
+      { type: 'user', isMeta: true, entrypoint: 'cli', turnOrigin: 7, message: said(phrase) },
+      // tool results: skipped, even one that would pass the isMeta test
+      { type: 'user', entrypoint: 'cli', message: toolResult },
+      { type: 'user', isMeta: true, entrypoint: 'cli', turnOrigin: 'peer', message: toolResult },
+    ], read);
+    // Read nowhere: a transcript older than SINCE, a probe session's folder,
+    // and a file that is no transcript.
+    put('proj-b', 'old.jsonl', [human], old);
+    put('claude-probe-q14-abc123', 'three.jsonl', [human], read);
+    put('proj-a', 'notes.txt', [human], read);
+
+    const c = await q14.census(root);
+    assert.deepEqual([c.files, c.records], [2, 12]);
+    assert.deepEqual(c.tally, {
+      'human|||src=typed|entry=cli|turn=human|meta=false': 1,
+      'peer|||src=system|entry=cli|turn=peer|meta=true': 1,
+      '(none)|||src=system|entry=cli|turn=scheduled|meta=true': 1,
+      '(none)|||src=system|entry=cli|turn=(other)|meta=true': 1,
+      'channel|||src=system|entry=cli|turn=(none)|meta=true': 1,
+      'task-notification|scheduled-trigger|session-task|src=system|entry=cli|turn=sdk|meta=false': 1,
+      'task-notification|scheduled-trigger|session-task|src=system|entry=cli|turn=task_notification|meta=false': 1,
+      'task-notification|scheduled-trigger|session-task|src=system|entry=cli|turn=auto_continuation|meta=false': 1,
+      'task-notification|scheduled-trigger|session-task|src=system|entry=cli|turn=host_synthetic|meta=false': 1,
+      'task-notification|scheduled-trigger|session-task|src=system|entry=cli|turn=system|meta=false': 1,
+      'task-notification|scheduled-trigger|session-task|src=system|entry=cli|turn=unknown|meta=false': 1,
+      'task-notification|||src=system|entry=cli|turn=(none)|meta=false': 1,
+    });
+    assert.deepEqual(c.originKeys, ['body', 'from', 'kind', 'producer', 'subkind']);
+    // The human/no-origin key count stays non-meta: no scheduledTaskId.
+    assert.deepEqual(c.humanOrNoOriginKeys, Object.fromEntries(Object.keys(human).map((k) => [k, 1])));
+    // decide() still reads the kind first.
+    const d = q14.decide({ ...observed(), census: c });
+    assert.deepEqual(JSON.parse(d.summary.match(/census kinds: (\[[^\]]*\])/)[1]).sort(), ['(none)', 'channel', 'human', 'peer', 'task-notification']);
+    for (const s of [JSON.stringify(c), d.summary]) for (const planted of [phrase, from, oddTurn]) assert.ok(!s.includes(planted), planted);
+  });
+
+  test('run() takes the census of the real folder and files its tally under all seven fields', () => {
+    assert.match(String(q14.census), /^async function census\(root = path\.join\(os\.homedir\(\), '\.claude', 'projects'\)\) \{/);
+    const src = q14.default.run.toString();
+    assert.match(src, /const c = await census\(\);/);
+    assert.match(src, /`census tally \(kind\|subkind\|producer\|promptSource\|entrypoint\|turnOrigin\|isMeta\): \$\{JSON\.stringify\(c\.tally\)\}`/);
   });
 
   // The hook as the probe runs it: node <file>, the hook input on stdin.

@@ -23,7 +23,7 @@ in words he reads without a PhD, and show the household how we got to the answer
 ranked under that rule.
 
 ▶ **START HERE (2026-10-27, b9-12): build #1 of the D7 queue, the working-year pay check — A1, A2, A3 and A4 are LANDED
-(`e2890887`, `512df53f`, `5d44ed68`, and A4 on 2026-10-27 in its own commit), and so is the RIB-LIM order fix (`99ffc746`;
+(`e2890887`, `512df53f`, `5d44ed68`, `fde13929`), and so is the RIB-LIM order fix (`99ffc746`;
 the register's CLOSED *The widow(er) benefit is capped before the survivor's age reduction…* is its record —
 `SOLVER_CODE_VERSION` is 12). NEXT is A5.** Read `git log` first. The plan is
 `docs/plans/features/working-year-pay-check-build-spec.md`: planned, deepened and reviewed (`wf_46aab717-201`; verdicts in
@@ -34,7 +34,7 @@ the register's CLOSED *The widow(er) benefit is capped before the survivor's age
    (`survivorYearBenefit` in `simulate.ts`, the one home of the §202 year; its `winner` is `'own' | 'survivor' | 'none'`,
    a tie is `'own'`) → ~~A3 U1's payroll keys + U2~~ ✅ `5d44ed68` (`src/engine/constants/workingYears.ts`,
    `WORKING_YEARS_YEAR`; `payrollTaxForYear` → `{ socialSecurity, medicare, additionalMedicare, total }`) → ~~the
-   RIB-LIM order fix~~ ✅ `99ffc746` → ~~A4 U1's earnings-test keys + U3~~ ✅ 2026-10-27 (`src/engine/earningsTest.ts`:
+   RIB-LIM order fix~~ ✅ `99ffc746` → ~~A4 U1's earnings-test keys + U3~~ ✅ `fde13929` (`src/engine/earningsTest.ts`:
    `earningsTestSchedule(path)` → the shared `NO_EARNINGS_TEST` or `{ paid, withheld, fraYearAtMost, creditMonths }`, read
    through `socialSecurityPaid(schedule, t, composedSs)`; the credited entries in `socialSecurityBenefit.ts`;
    `survivorYearBenefit`'s optional credits; the review `wf_bb2c6dec-c1c` caught three rosy-or-wrong FRA-year rules, all fixed —
@@ -60,11 +60,12 @@ main-thread money picture (the plan's *Departures from the ruling*, item 4). The
 Briggsy saves his first real plan; the tool is built for him (a friend using it is "a crazy outside chance", his words, 2026-10-21). The day the check ships, the working-year row's "It doesn't check that your pay really
 covers all of that…" sentence comes out for a household with W (U9). Build 2, the surplus question, follows this build.
 
-**SESSION 2026-10-27 (b9-11):**
-**STATE on the RIB-LIM fix's tree (`99ffc746`), by exit code:** typecheck · lint · `verify:doc-stats` · build ·
-`verify:bundle` 272.5 KiB — all exit 0; the full suite green (the count lives under `verify:doc-stats`).
+**SESSION 2026-10-28 (b9-12):**
+**STATE on A4's tree (`fde13929`), by exit code (re-run at this close):** typecheck · lint · `verify:doc-stats` · build ·
+`verify:bundle` 272.5 KiB — all exit 0; the full suite green at `fde13929` (the count lives under `verify:doc-stats`).
 `verify:aca` / `verify:state-tax` were not re-run (no constants they gate moved).
-**CI:** `99ffc746` → run 40607687008 and the close `577b0a04` → run 40608232508: both completed SUCCESS (read by id, b9-12).
+**CI:** `fde13929` → run 40616448986 completed SUCCESS, both jobs (`verify`, `verify-rv-chart-text`), read by id. Read
+this close's own run by id before starting A5.
 **FILED (b9-11, both Tier 0, ranked with *The other new Tier 0s* below by measured reach):** *A typed Social Security
 amount with odd cents is never rounded to the dime…* (own benefit rosy up to a dime a month, two on the delayed-credit
 path; the spousal excess either way; its Prescription moves most seeds' goldens) and *A spouse who dies in the year
@@ -108,7 +109,12 @@ project dir as `node <tools>\mutants-spec.cjs <spec.json>`; `mutants-spec.exampl
 plant must land exactly once, the named tests must go red, and every file is restored and byte-compared.
 **FOR HIM (one read, no rush):** two `docs/product.md` spots still lean on friends using the tool — R13's "kept on honesty
 grounds for friend-users" and the test-driver list naming real friends' households. The tool is built for him (his
-correction, 2026-10-21); whether R13's reason and the test-driver framing change is his call.
+correction, 2026-10-21); whether R13's reason and the test-driver framing change is his call. And one A4 call that is his
+to overrule (b9-12): a widow(er) benefit that STARTS in the survivor's full-retirement-age year is never earnings-tested
+(the engine prices it as begun at FRA, and the plan says such a benefit is untested), though a death early in that year can
+mean a few months the law would test. It joined the disclosed K5 residual (the plan's U9 K5 key), beside "a claim at 67
+is paid for the whole year"; the review's two refuters split on it. Asking the birth month closes both (the register's
+*Ages are whole years from the birth year alone — the birth month isn't asked*).
 **THE PAY-CHECK PROBE (for build 1's re-measure):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-probe\`
 (`paycheck.mts` + `paycheck-years.json` + the skeptic's `survivor.mts` / `survivor-rows.json`). Absolute imports into `src/`;
 re-point each script's output path off the dead session scratchpad before running. Run it from the project dir with tsx.

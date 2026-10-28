@@ -137,5 +137,24 @@
  * `spending` family) records the same version. Budgeted, single and OOP-blank (or M = 0) households are
  * unmoved, and r = 1 ones up to one ulp when M carries cents; the stamp is global, so their records
  * re-stale too (the when-in-doubt over-re-run).
+ *
+ * VERSION 12 (2026-10-27) — a change that can move a ranked figure, under this file's head rule ("ANY
+ * change that can move a candidate ranking"): the survivor benefit's RIB-LIM now applies AFTER the
+ * survivor's age reduction, and every amount in it reads ONE PIA floored to the dime
+ * (`socialSecurityBenefit.survivorBenefitAnnual`; POMS RS 00615.320 A.3, the RS 00615.322 D worksheet,
+ * Social Security Act §215(a); the register's CLOSED Tier 0 *The widow(er) benefit is capped before the
+ * survivor's age reduction…*). On a path where a spouse who claimed before FRA dies and leaves the other
+ * under survivor-FRA, the widow(er) benefit rises; where it is the benefit paid (a survivor year pays the
+ * larger of it and the survivor's own), Tier 1 survival and every Tier 2 statistic are scored on more
+ * income than a v11 record saw. The dime floor moves the other way, on a PIA with odd cents: by at most a
+ * dime a month for an early claimer at or past survivor-FRA, and by up to two dimes a month for a deceased
+ * with delayed credits, at any survivor start age (the credits carry the raw PIA's sub-dime excess past a
+ * dime: $1,000.49 claimed at 70 paid $1,240.60, the law $1,240.40).
+ * A death is drawn no earlier than the year after max(current age, 65), so a same-age couple under 66
+ * reaches the reorder only through a death at 66; an age-gapped couple whose older spouse claimed early
+ * reaches it on more. No pricer moved — Social Security income is no `PricingFamily` — so
+ * `ENGINE_PRICING_LEDGER` appends no row (pricingVersion.test pins the split; the register's
+ * ledger-cannot-name entry carries the change). The stamp is global, so every record re-stales (the
+ * when-in-doubt over-re-run).
  */
-export const SOLVER_CODE_VERSION = 11
+export const SOLVER_CODE_VERSION = 12

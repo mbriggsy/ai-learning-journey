@@ -131,12 +131,101 @@ describe('SS benefit sub-engine — survivor §202 (POMS RS 00615.301/.320, RIB-
     expect(survivorBenefitAnnual(dec(1000, 67), BY, 63)).toBeLessThan(survivorBenefitAnnual(dec(1000, 67), BY, 67))
   })
 
-  it('the combined early-widowhood junction (RIB-LIM × age-reduction) — the value the unit exists to get right', () => {
-    // deceased claimed 62 (RIB-LIM floor → $825/mo base) AND survivor claims at 61 (age factor 75.57%).
-    const v = survivorBenefitAnnual(dec(1000, 62), BY, 61)
-    expect(cents(v), 'cap-then-age-reduce → $623.40/mo').toBe(62_340 * 12)
-    // It DIFFERS from the old naive scalar (the deceased's reduced $700/mo) — the §202 path changed the value.
-    expect(v).not.toBe(annual(700))
+  it('the graduated survivor-FRA cohorts reduce over THEIR span (28.5% spread over the months 60 → survivor-FRA, RS 00615.301)', () => {
+    // Survivor born 1958: survivor-FRA 66y4m (796 mo), span 76. Start 63 (756 mo) = 40 months early →
+    // 1 − .285 × 40/76 = .85 → $850.00. Survivor born 1960: 66y8m (800 mo), span 80; start 63 = 44 months early →
+    // 1 − .285 × 44/80 = .84325 → $843.25 → $843.20. (A deceased who claimed at FRA: no RIB-LIM, the full rate is the
+    // PIA.) The property test cannot see the span — its reduced WIB comes from this same formula — so these pin it.
+    expect(cents(survivorBenefitAnnual(dec(1000, 67), 1958, 63)), '$850.00/mo').toBe(85_000 * 12)
+    expect(cents(survivorBenefitAnnual(dec(1000, 67), 1960, 63)), '$843.20/mo').toBe(84_320 * 12)
+  })
+
+  // THE EARLY-WIDOWHOOD JUNCTION — RIB-LIM is applied AFTER the survivor's age reduction. The law reduces the
+  // widow(er)'s full rate for her start age FIRST and caps the result: payable = the reduced WIB, unless it
+  // exceeds BOTH 82.5% of the death PIA and the deceased's if-alive benefit (POMS RS 00615.320 A.3 — "when the
+  // WIB after adjustment for the family maximum and reduction for age is more than BOTH…"; 42 U.S.C.
+  // §402(e)(2)(D) "after application of subsection (q)", §402(f)(2)(D) for widowers). THE ORACLE is the
+  // RS 00615.322 D worksheet: sort {reduced WIB, 82.5% death PIA, the deceased's RIB} low → high and pay the
+  // amount its chart underlines. One arm per chart row below, every figure hand-derived from that chart and
+  // the POMS fractions — never from this function. (Until 2026-10-27 the engine capped first and reduced
+  // after: below the law on every Sequence arm here — the gloomy direction; each Sequence arm's TITLE records
+  // the old figure. The FRA-66 arm records none, and the at/after-FRA arm is unmoved by construction.)
+  //
+  // The hand derivation, PIA $1,000/mo, deceased AND survivor FRA 67 (BY 1969):
+  //   reduced WIB, 28.5% over the 84 months 60→67: 60 → .715 = $715.00 · 61 → .755714 = $755.70 · 62 → .796429
+  //     = $796.40 · 63 → .837143 = $837.10 · 64 → .877857 = $877.80 · 66 → .959286 = $959.20 (dime-floored)
+  //   the deceased's RIB, 5/9% a month for 36 months then 5/12%: 62 → 70% = $700.00 · 64 → 80% = $800.00 ·
+  //     65 → 86.667% = $866.60 · 66 → 93.333% = $933.30
+  //   82.5% of the death PIA = $825.00
+  describe('RIB-LIM applies AFTER the age reduction — one arm per RS 00615.322 D chart row', () => {
+    it('Sequence 1 (reduced WIB < 82.5% < RIB) pays the reduced WIB: claimed 65, survivor 61 → $755.70 (old order $654.90)', () => {
+      // 755.70 < 825.00 < 866.60
+      expect(cents(survivorBenefitAnnual(dec(1000, 65), BY, 61))).toBe(75_570 * 12)
+    })
+
+    it('Sequence 2 (reduced WIB < RIB < 82.5%) pays the reduced WIB: claimed 64, survivor 62 → $796.40 (old order $657.00)', () => {
+      // 796.40 < 800.00 < 825.00
+      expect(cents(survivorBenefitAnnual(dec(1000, 64), BY, 62))).toBe(79_640 * 12)
+    })
+
+    it('Sequence 3 (82.5% < reduced WIB < RIB) pays the reduced WIB: claimed 66, survivor 64 → $877.80 (old order $819.30)', () => {
+      // 825.00 < 877.80 < 933.30
+      expect(cents(survivorBenefitAnnual(dec(1000, 66), BY, 64))).toBe(87_780 * 12)
+    })
+
+    it("Sequence 4 (82.5% < RIB < reduced WIB) pays the deceased's RIB: claimed 65, survivor 66 → $866.60 (old order $831.30)", () => {
+      // 825.00 < 866.60 < 959.20
+      expect(cents(survivorBenefitAnnual(dec(1000, 65), BY, 66))).toBe(86_660 * 12)
+    })
+
+    it('Sequence 5 (RIB < reduced WIB < 82.5%) pays the reduced WIB: claimed 62, survivor 61 → $755.70 (old order $623.40); at 60 → $715.00 (old $589.80)', () => {
+      // 700.00 < 755.70 < 825.00 — the register's junction (the old golden pinned $623.40, the defect's second copy)
+      expect(cents(survivorBenefitAnnual(dec(1000, 62), BY, 61))).toBe(75_570 * 12)
+      // 700.00 < 715.00 < 825.00 — the deepest reduction the aged WIB allows
+      expect(cents(survivorBenefitAnnual(dec(1000, 62), BY, 60))).toBe(71_500 * 12)
+    })
+
+    it('Sequence 6 (RIB < 82.5% < reduced WIB) pays 82.5% of the death PIA: claimed 62, survivor 66 or 63 → $825.00 (old order $791.40 / $690.60)', () => {
+      // 700.00 < 825.00 < 959.20, and 700.00 < 825.00 < 837.10 — the cap binds from 63 on, years before FRA.
+      expect(cents(survivorBenefitAnnual(dec(1000, 62), BY, 66))).toBe(82_500 * 12)
+      expect(cents(survivorBenefitAnnual(dec(1000, 62), BY, 63))).toBe(82_500 * 12)
+    })
+
+    it('the FRA-66 cohort (a 72-month span) at GN 00204.045 C’s WIB PIA of $740.50: survivor 62 / 63 / 64 → $599.80 / $634.90 / $641.70', () => {
+      // Both born 1950: retirement FRA 66 (1943–54) and survivor FRA 66 (1945–56). Deceased claimed 64, 24 months
+      // early: 13/15 × 740.50 = 641.77 → RIB $641.70. 82.5% × 740.50 = 610.9125 → $610.90. Reduced WIB, 28.5%
+      // over 72 months: 62 → .81 = 599.805 → $599.80 (Sequence 1: 599.80 < 610.90 < 641.70 → the WIB);
+      // 63 → .8575 = 634.97875 → $634.90 (Sequence 3: 610.90 < 634.90 < 641.70 → the WIB); 64 → .905 = 670.1525
+      // → $670.10 (Sequence 4: 610.90 < 641.70 < 670.10 → the RIB). (GN's own example needs month-level claim
+      // and start ages the whole-year API cannot express; its 36-vs-37-month figures agree with this order.)
+      const dec1950: BenefitPerson = { piaAnnual: annual(740.5), claimAge: 64, birthYear: 1950 }
+      expect(cents(survivorBenefitAnnual(dec1950, 1950, 62)), '$599.80/mo').toBe(59_980 * 12)
+      expect(cents(survivorBenefitAnnual(dec1950, 1950, 63)), '$634.90/mo').toBe(63_490 * 12)
+      expect(cents(survivorBenefitAnnual(dec1950, 1950, 64)), '$641.70/mo').toBe(64_170 * 12)
+    })
+
+    it('a deceased who claimed at or after FRA is never RIB-limited: reduced WIB on the PIA (plus DRCs) at every start age', () => {
+      // claimed 67 (no reduced RIB): survivor 61 → .755714 × 1000 = $755.70, the same reduced WIB Sequence 5
+      // pays — the cap never binds there. Claimed 70: the $1,240 DRC base reduced at 61 → 937.09 → $937.00.
+      expect(cents(survivorBenefitAnnual(dec(1000, 67), BY, 61))).toBe(75_570 * 12)
+      expect(cents(survivorBenefitAnnual(dec(1000, 70), BY, 61))).toBe(93_700 * 12)
+    })
+
+    it('a PIA typed with odd cents is floored to the dime ONCE, and every amount reads it (§215(a): "the next lower multiple of $0.10")', () => {
+      // RIB path (Sequence 4): $508.02 → PIA $508.00. Deceased born 1955 (retirement FRA 66y2m), claimed 65: 14
+      // months early → 166/180 × 508.00 = 468.49 → RIB $468.40 (the raw $508.02 gives $468.50, a dime high).
+      // 82.5% × 508.00 = 419.10. Survivor born 1945 (survivor FRA 66y0m) starting at 65: 12 of 72 months →
+      // .9525 × 508.00 = 483.87 → $483.80. 419.10 < 468.40 < 483.80 → the RIB, $468.40.
+      const odd: BenefitPerson = { piaAnnual: annual(508.02), claimAge: 65, birthYear: 1955 }
+      expect(cents(survivorBenefitAnnual(odd, 1945, 65)), 'the RIB on the dime PIA, $468.40/mo').toBe(46_840 * 12)
+      // 82.5% path (Sequence 6): $1,000.19 → PIA $1,000.10. 82.5% × 1,000.10 = 825.08 → $825.00 (the raw PIA
+      // gives $825.10). RIB 70% = 700.07 → $700.00; reduced WIB at 63, .837143 × 1,000.10 = 837.23 → $837.20.
+      // 700.00 < 825.00 < 837.20 → 82.5%, $825.00.
+      expect(cents(survivorBenefitAnnual(dec(1000.19, 62), BY, 63)), '82.5% of the dime PIA, $825.00/mo').toBe(82_500 * 12)
+      // DRC path, survivor at FRA: $1,000.49 → PIA $1,000.40; claimed 70, × 1.24 = 1,240.496 → $1,240.40 (the raw
+      // PIA gives $1,240.60, two dimes high).
+      expect(cents(survivorBenefitAnnual(dec(1000.49, 70), BY, 67)), 'DRCs on the dime PIA, $1,240.40/mo').toBe(124_040 * 12)
+    })
   })
 
   it('reduce-to-spine: a deceased with PIA 0 yields a survivor benefit of 0', () => {
@@ -158,7 +247,7 @@ describe('SS benefit sub-engine — entry guards (fail loud; never a silent NaN 
     expect(() => adjustOwnBenefitAnnual(annual(1000), Infinity, BY)).toThrow(/claimAge/)
     expect(() => householdBenefits([{ piaAnnual: annual(1000), claimAge: NaN, birthYear: BY }])).toThrow(/claimAge/)
     // The survivor path is the subtle one: a NaN deceased.claimAge made `claimedEarly` false and, at/after
-    // survivor-FRA, returned survivorFull = NaN with NO throw. The entry guard now closes it.
+    // survivor-FRA, returned a NaN benefit with NO throw. The entry guard now closes it.
     expect(() => survivorBenefitAnnual({ piaAnnual: annual(1000), claimAge: NaN, birthYear: BY }, BY, 67)).toThrow(/claimAge/)
   })
 

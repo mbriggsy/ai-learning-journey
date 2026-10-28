@@ -1,7 +1,7 @@
 /**
  * Social Security benefit constants — the statutory actuarial factors the PIA-driven
  * benefit sub-engine reads (own reduction/credit · the Method C spousal excess ·
- * §202 survivor + RIB-LIM). See `docs/plans/features/social-security.md`.
+ * §202 survivor + RIB-LIM). See `docs/decisions/ss-computation.md`.
  *
  * UNLIKE the tax/health/contribution tables these are NOT year-keyed COLA figures —
  * they are STATUTE (42 U.S.C. §402/§416; 20 CFR 404; the POMS section cited per

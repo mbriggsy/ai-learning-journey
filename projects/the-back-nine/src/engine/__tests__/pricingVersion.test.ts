@@ -147,7 +147,7 @@ describe('ENGINE_PRICING_LEDGER — the append-only shape the staleness reader l
     }
   })
 
-  it('PIN (moves with the next solver bump): the solver is at 11; the survivor-medical lean (v11) shipped WITH 11, and the working-year tax floor (v12) records 11 WITHOUT a bump — it is unscored', () => {
+  it('PIN (moves with the next solver bump): the solver is at 12 with NO ledger row for it (the RIB-LIM order — Social Security income, which no family names); the survivor-medical lean (v11) shipped WITH 11, and the working-year tax floor (v12) records 11 WITHOUT a bump — it is unscored', () => {
     const newestReprice = [...rows].reverse().find((r) => r.kind === 'reprice')!
     expect(
       {
@@ -166,8 +166,12 @@ describe('ENGINE_PRICING_LEDGER — the append-only shape the staleness reader l
         'MOVES with the next solver bump: a SCORED pricing change bumps the solver AND appends a ledger row recording ' +
         'that same version (re-pin both numbers together); an UNSCORED one appends a row at the live version; a solver ' +
         'bump that is not a pricing change (ranking logic only) appends no row — re-pin only `solverCodeVersion` and ' +
-        'say why in the commit.',
-    ).toEqual({ solverCodeVersion: 11, newestRepriceVersion: 12, newestRepriceRow: 11, survivorLeanRow: 11 })
+        'say why in the commit. SOLVER 12 (2026-10-27) is the third kind’s sibling: a scored ENGINE change (the ' +
+        'survivor benefit’s RIB-LIM now applies after the age reduction, `socialSecurityBenefit.survivorBenefitAnnual`) ' +
+        'that is no pricer’s output, so no family can name it — never folded into `tax` to find one (the register’s ' +
+        '*The engine-pricing ledger cannot name a date-route or spending-figure change…* carries it beside 8d4d4e58 and ' +
+        '6e4c065d). It appends no row; only `solverCodeVersion` moved.',
+    ).toEqual({ solverCodeVersion: 12, newestRepriceVersion: 12, newestRepriceRow: 11, survivorLeanRow: 11 })
   })
 
   it('the row-level `reach` is ABSENT on every row that shipped before it existed (v1–v11) — the reader takes those rows’ family reads verbatim', () => {

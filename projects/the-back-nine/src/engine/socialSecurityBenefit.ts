@@ -3,9 +3,9 @@
  * household's PIAs + claim ages + birth years; reads NO clock/entropy/env). It turns
  * the user-entered PIA (benefit at FRA) into the ACTUAL real benefit the cash seam
  * consumes: the claim-age-adjusted OWN benefit + the Method C SPOUSAL EXCESS.
- * Survivor §202 (RIB-LIM, lock-flat reduction) is a sibling function added next.
+ * Survivor §202 (the lock-flat age reduction, then RIB-LIM) is the sibling `survivorBenefitAnnual`.
  *
- * See `docs/plans/features/social-security.md` §3/§4.
+ * See `docs/decisions/ss-computation.md` §3/§4 (own + spousal) and §6 (survivor).
  *
  * EXACTNESS (the load-bearing implementation choice): every factor is an INTEGER
  * rational `{num, denom}` (derived from the POMS per-month fractions in
@@ -194,18 +194,29 @@ export const householdBenefits = (people: readonly BenefitPerson[]): readonly Pe
 /**
  * The §202 survivor (widow/er) ANNUAL benefit a survivor receives on the deceased's
  * record, for a stream that STARTS at `survivorStartAge` (the seam passes the locked
- * `max(60, age-at-first-death)` and holds the result FLAT — plan §6). Composition:
+ * `max(60, age-at-first-death)` and holds the result FLAT — `docs/decisions/ss-computation.md`
+ * §6). Composition, in the law's order (POMS RS 00615.320 A.3; 42 U.S.C. §402(e)(2)(D) /
+ * (f)(2)(D) — "after application of subsection (q)"), every amount read off ONE PIA floored
+ * to the dime (the comment at `piaDime`):
  *
- *  1. survivorFull = the deceased's adjusted benefit (DRCs flow through automatically,
- *     since we feed the adjusted figure — RS 00615.301/.702). If the deceased claimed
- *     reduced RIB BEFORE their FRA, RIB-LIM caps it at the GREATER of 82.5% of the
- *     death PIA or that actual reduced benefit (RS 00615.320 — a "larger-of", 82.5% a
- *     floor not a haircut).
+ *  1. full rate = 100% of the deceased's PIA, plus their DRCs when they claimed at or
+ *     after FRA (`deceasedAdjusted` carries them — RS 00615.301/.702, RS 00615.322 A/B).
+ *     A deceased who claimed early carries no DRCs, so the full rate is the PIA itself,
+ *     never their reduced benefit.
  *  2. age reduction — LOCK-FLAT: 100% at survivor-FRA grading to (1 − maxReductionPct)
  *     at age 60, the factor fixed at `survivorStartAge` (NO post-claim ramp; a ramp
  *     would optimistically overstate the early-widowhood floor — the calm-but-wrong sin).
+ *  3. RIB-LIM, AFTER step 2 and only when the deceased claimed reduced RIB before their
+ *     FRA: the reduced benefit is capped at the GREATER of 82.5% of the death PIA or the
+ *     deceased's reduced benefit as if alive (RS 00615.320 — a "larger-of", 82.5% a floor
+ *     within the cap, not a haircut). payable = min(reduced, max(82.5% × PIA, RIB)). The
+ *     RS 00615.322 D worksheet is the oracle (its chart is pinned row by row in the tests).
+ *     Until 2026-10-27 the cap came FIRST and the capped figure was reduced — on a
+ *     dime-multiple PIA never above the law, and below it whenever the survivor started
+ *     before survivor-FRA; on a PIA with odd cents the raw-PIA cap ran up to a dime high, and
+ *     a deceased's delayed-credit full rate, read off the raw PIA too, up to two dimes high.
  *
- * Both steps run through the exact integer-cents dime-round. Survivor-FRA is keyed
+ * Every step runs through the exact integer-cents dime-round. Survivor-FRA is keyed
  * SEPARATELY from retirement-FRA (coincides at 67 for the 1962+ cohorts). PIA 0 ⇒ 0.
  */
 export const survivorBenefitAnnual = (
@@ -214,27 +225,38 @@ export const survivorBenefitAnnual = (
   survivorStartAge: number,
 ): number => {
   assertFinite(deceased.piaAnnual, 'deceased.piaAnnual')
-  assertClaimAge(deceased.claimAge) // closes the silent-NaN leak: a NaN claimedEarly comparison (:193) would otherwise pass
+  assertClaimAge(deceased.claimAge) // closes the silent-NaN leak: a NaN in the `claimedEarly` comparison below would otherwise pass
   if (!Number.isFinite(survivorStartAge) || !Number.isInteger(survivorStartAge))
     throw new Error(`[ssBenefit] survivorStartAge must be a finite whole year (got ${survivorStartAge}) — insights 010/020`)
   if (deceased.piaAnnual < 0) throw new Error(`[ssBenefit] deceased.piaAnnual must be ≥ 0 (got ${deceased.piaAnnual})`)
 
-  const deceasedAdjusted = adjustOwnBenefitAnnual(deceased.piaAnnual, deceased.claimAge, deceased.birthYear)
+  // ONE PIA for all three amounts below. A real PIA is a whole number of dimes (Social Security Act §215(a),
+  // 42 U.S.C. §415(a): "round … to the next lower multiple of $0.10" — FR Doc. 2025-19763), and a typed one may
+  // carry odd cents, so it is floored once here. With the cap's 82.5% or RIB off the raw figure and the full rate
+  // off the floored one, the cap sat a dime above the law, and the reorder pays the cap itself before survivor-FRA
+  // (rosy); a delayed-credit full rate off the raw figure ran up to two dimes high. The own-benefit path still
+  // reads the raw PIA: the register's *A typed Social Security amount with odd cents is never rounded to the dime…*.
+  const piaDime = applyFactorAnnual(deceased.piaAnnual, { num: 1, denom: 1 })
+  const deceasedAdjusted = adjustOwnBenefitAnnual(piaDime, deceased.claimAge, deceased.birthYear)
   const claimedEarly = deceased.claimAge * 12 < fraMonthsForBirthYear(deceased.birthYear, 'retirement')
-  const floorMilli = Math.round(ribLim.value.floorPctOfDeathPia * 1000)
-  const survivorFull = claimedEarly
-    ? Math.max(applyFactorAnnual(deceased.piaAnnual, { num: floorMilli, denom: 1000 }), deceasedAdjusted)
-    : deceasedAdjusted
+  const fullRate = claimedEarly ? piaDime : deceasedAdjusted
 
   const survivorFra = fraMonthsForBirthYear(survivorBirthYear, 'survivor')
   const earliestMonths = survivorReduction.value.earliestAge * 12
   const startMonths = Math.max(survivorStartAge * 12, earliestMonths) // aged WIB from 60 (DWB-50 deferred)
-  if (startMonths >= survivorFra) return survivorFull // 100% at/after survivor-FRA, no reduction
   const span = survivorFra - earliestMonths
   const monthsEarly = survivorFra - startMonths
   const reductionMilli = Math.round(survivorReduction.value.maxReductionPct * 1000)
-  // factor = 1 − maxReductionPct × monthsEarly/span, as an exact integer rational.
-  return applyFactorAnnual(survivorFull, { num: 1000 * span - reductionMilli * monthsEarly, denom: 1000 * span })
+  // factor = 1 − maxReductionPct × monthsEarly/span, as an exact integer rational; 100% at/after survivor-FRA.
+  const reduced =
+    startMonths >= survivorFra
+      ? fullRate
+      : applyFactorAnnual(fullRate, { num: 1000 * span - reductionMilli * monthsEarly, denom: 1000 * span })
+  if (!claimedEarly) return reduced
+
+  const floorMilli = Math.round(ribLim.value.floorPctOfDeathPia * 1000)
+  const ribLimCap = Math.max(applyFactorAnnual(piaDime, { num: floorMilli, denom: 1000 }), deceasedAdjusted)
+  return Math.min(reduced, ribLimCap)
 }
 
 /**

@@ -22,7 +22,9 @@
  * rows because no family here can name them — the date-route band following the full-lifestyle track
  * (8d4d4e58, 2026-07-30) and the verdict's spending-room figure moving from a proxy to the spend solve
  * (6e4c065d, 2026-09-26): the register's *The engine-pricing ledger cannot name a date-route or
- * spending-figure change…* carries them.
+ * spending-figure change…* carries them. A third joined them on 2026-10-27: the survivor benefit's
+ * RIB-LIM order (Social Security income, which no family names). It bumped `SOLVER_CODE_VERSION` to 12
+ * all the same — a change no family can name is still scored when it can move a ranked figure.
  * Row 10 (the IRMAA growth base) shipped in `252b88da` — its own commit, so its `commits` field could
  * only carry a placeholder. Row 11 (the budgetless survivor-medical lean) likewise ships in its own
  * commit and carries a placeholder; its `shippedOn` must be that commit's local date. Row 12 (the

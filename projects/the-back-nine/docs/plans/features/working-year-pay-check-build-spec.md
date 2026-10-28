@@ -130,7 +130,7 @@ Bare R-numbers are this plan's. A foreign one names its home: product R7 / R19 /
 
     An edit that changes an existing expected value about a W-absent run is a defect, never an exception;
   - every pricing-witness digest is unmoved;
-  - no `ENGINE_PRICING_LEDGER` row is added, and `SOLVER_CODE_VERSION` stays 11.
+  - no `ENGINE_PRICING_LEDGER` row is added, and `SOLVER_CODE_VERSION` stays 12 (11 when this plan was written; the RIB-LIM order fix, 2026-10-27, moved it to 12 one commit before A4).
 - R19. W present requires the construct, `taxEnabled` and `healthcareEnabled`. W must be finite, 0 ≤ W ≤ `ENGINE_MAX_DOLLAR`. The employer-HSA stream is aligned per person and per year, and every entry is finite, ≥ 0 and ≤ that person's `hsa[t]`. A wiring fault fails loud.
 - R20. A W-present plan is never re-priced silently. The `workingYears` figures carry their own vintage stamp and staleness clock (U13).
 

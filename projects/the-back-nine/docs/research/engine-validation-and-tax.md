@@ -150,7 +150,7 @@ The pinned snapshot lives at `src/engine/reference/ssa-snapshot/` (the two CSVs 
 | Worker-must-be-entitled | spousal excess is $0 until the higher earner has **filed** | POMS RS 00202.001 | a temporal path-year gate, not a static scalar |
 | Deemed filing | DOB ≥ **Jan 2, 1954** ⇒ one filing = both (both cohorts subject) | **POMS GN 00204.035** (NOT RS 00615.020) | one claim-age per person; no restricted application; **survivor exempt** |
 | Survivor §202 | start **60**; **71.5% @60 → 100% @ survivor-FRA**, factor **locked at claim age**; deceased's **DRCs flow through**; max reduction **28.5%** (19/56 @FRA67) | POMS RS 00615.301/.702/.310 | derive the per-mo fraction from the 60→survivor-FRA span, never hardcode `19/40` |
-| RIB-LIM | cap = **greater of** {82.5% of death PIA, deceased's actual reduced RIB if alive} | **POMS RS 00615.320** | a "larger-of" pair, NOT a flat 82.5% haircut; 82.5% is a **floor** within the cap |
+| RIB-LIM | cap = **greater of** {82.5% of death PIA, deceased's actual reduced RIB if alive}, applied to the widow(er)'s benefit **after** its reduction for age | **POMS RS 00615.320** (A.3 for the order); the **RS 00615.322 D** worksheet chart is the order's oracle | a "larger-of" pair, NOT a flat 82.5% haircut; 82.5% is a **floor** within the cap |
 | survivor-FRA | separate schedule; **= 67** for both cohorts (coincides — don't alias) | POMS RS 00615.301B.2 | key it **separately** or a cohort change silently breaks |
 | Statement input | ask "benefit at **FRA (67)**", never "PIA"; figure is **today's-dollars (real)** | POMS RM 01310.005 | the default figure **assumes continued earnings** → overstates for an early-stopper |
 

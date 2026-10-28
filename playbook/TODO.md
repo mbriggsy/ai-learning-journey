@@ -6,7 +6,7 @@ The queue for our-setup work. Sessions for it start in this folder. The full fli
 
 ## ▶ START HERE
 
-1. **Land U4, when B9 is idle.** U4 is committed (`7f2dbd4a`, on top of B9's `fde13929`), not pushed by this session: B9 had that commit unpushed and was busy, and whoever pushes `main` first pushes both. Check `git status -sb`; once it's on origin, read CI's "Hooks tests" run for it. Then the landing, per the private `~/.claude/flow/backup/u4-2026-10-23/u4-cut-build-plan.md`, "The landing":
+1. **Land U4, when B9 is idle.** U4 is committed and pushed (`7f2dbd4a`), and CI's "Hooks tests" run `40616651286` is green on it (Linux: 894 tests, 892 pass, 0 failures). The landing follows the private `~/.claude/flow/backup/u4-2026-10-23/u4-cut-build-plan.md`, "The landing":
    - Step 0: the stale `C:/wt/b9` worktree (branch `b9-squeaky`; no session ever started there) goes, with B9's word, since its settings copies hold every old allow.
    - Step 1: Q17, Q18 and Q19 are VERIFIED on 2.1.312 (Q17 and Q18 on the final catalog). If the installed CLI differs at landing, rerun those three (`--only Q17,Q18,Q19`, `report.mjs`, `--cleanup`).
    - Step 2: Briggsy types one consent sentence naming every write (the safety check blocks a write to Claude Code's own settings without his words); the plan lists them.
@@ -25,7 +25,7 @@ The queue for our-setup work. Sessions for it start in this folder. The full fli
 
 - **U3 is landed and live:** the one settings writer, versioned hook deploys, the status line and the pre-push leak gate (it scans `playbook/` too).
 - **U4 is committed, not live** (`7f2dbd4a`, 21 files): the permission catalog (129 deny rules: the history-wiping pushes in both shells, other vendors' AI CLIs, five Skill denials, Playwright's run-code on twelve servers; no ask rule; CE's marketplace set to auto-update), the patch tool, check 4 of the session-start liveness check, plugin-grant watching and probes Q17 to Q19. Nothing asks Briggsy. The CE freeze the plan had is gone, and the landing also turns the CLI's own auto-updater back on.
-- **Gates:** the hooks suite (`cd projects/hooks && node --test "tests/*.test.mjs"`) exits 0: 894 tests, 890 pass, 0 failures, 4 skipped (run 2026-10-27 after the last edit; under load, two timing guards in `harness.test.mjs` skip on purpose, so up to 6). Review round 3 passed the harm-class gate (11 distinct issues, all P3, fixed). Mutation: 48 of 48 killed. CI's "Hooks tests" last passed on `096babb1`; U4 runs there once it's pushed.
+- **Gates:** the hooks suite (`cd projects/hooks && node --test "tests/*.test.mjs"`) exits 0: 894 tests, 890 pass, 0 failures, 4 skipped (run 2026-10-27 after the last edit; under load, two timing guards in `harness.test.mjs` skip on purpose, so up to 6). Review round 3 passed the harm-class gate (11 distinct issues, all P3, fixed). Mutation: 48 of 48 killed. CI's "Hooks tests" passed on U4 (run `40616651286`, on `9b2352b6`).
 - **Probes run only when a unit that depends on them is built or landed,** never after every CLI update.
 - **Lessons** live in [docs/insights/](docs/insights/), 001 to 008.
 

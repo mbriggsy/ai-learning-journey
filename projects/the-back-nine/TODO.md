@@ -58,28 +58,41 @@ main-thread money picture (the plan's *Departures from the ruling*, item 4). The
 Briggsy saves his first real plan; the tool is built for him (a friend using it is "a crazy outside chance", his words, 2026-10-21). The day the check ships, the working-year row's "It doesn't check that your pay really
 covers all of that…" sentence comes out for a household with W (U9). Build 2, the surplus question, follows this build.
 
-**SESSION 2026-10-22 (b9-10, overnight while he slept):**
-**STATE on A3's tree, by exit code:** typecheck · lint · `verify:doc-stats` · build · `verify:bundle` 272.5 KiB — all exit 0;
-the full suite green (the count lives under `verify:doc-stats`). `verify:aca` / `verify:state-tax` were not re-run (no
-constants they gate moved).
-**CI:** GREEN by run id, both jobs each: A1 `e2890887` (39714577412), A2 `512df53f` (39719780603), A3 `5d44ed68`
-(39721368898), the close `797108fa` (39721795318), the review fixes `a5d62b06` (39725761174). This stamp's own commit
-follows: read its run first (`gh run list --commit <FULL sha>`, then `gh run view <id>`).
-**DISTILL CANDIDATE (b9-10, for the pay check's Phase C `/distill`):** a decision record's "no oracle exists" is a claim
-to check at the primary, not a fact. `docs/decisions/ss-computation.md`'s junction bullet said no standalone oracle covers
-the RIB-LIM × age-reduction order, and pinned the engine's own order as deliberate. POMS RS 00615.322 D's worksheet is
-that oracle, and the order was backwards (gloomy). It surfaced only because a law-lens reviewer re-read the primaries
-for an unrelated commit.
-**THE A2+A3 REVIEW (`wf_69c7171f-55e`, DONE and ACTED ON):** three fresh-context lenses (correctness, the law and every
-citation, fitness for A4–A7's contracts), each finding challenged at source by a skeptic. 14 findings: 11 survived and 3
-were refuted (C3, C4, F4). The files are in
-`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a2a3-review\`.
-- Fixed in place, in the commit after A3: the A2 golden comment's missing dime floor; the §3121 pins for 403(b) / 457(b);
-  the Form 8959 attribution; the §125 clause (gloomy, K11); the age-60 comment (aged vs disabled widow(er)); and the
-  payroll test's order arm, which now proves the year guard runs first.
-- Filed (Tier 0): the RIB-LIM order defect (✅ CLOSED 2026-10-27), and *Disability is not modeled…*.
-- Written into the plan: KTD10's widow(er) order and the helper's credits input; KTD11's credited RIB-LIM, with no
-  adjustment at death and the §403(f)(3) death year; R14's carve-out; §402(f)(2)(D), not (f)(3)(D), for widowers.
+**SESSION 2026-10-27 (b9-11):**
+**STATE on the RIB-LIM fix's tree (`99ffc746`), by exit code:** typecheck · lint · `verify:doc-stats` · build ·
+`verify:bundle` 272.5 KiB — all exit 0; the full suite green (the count lives under `verify:doc-stats`).
+`verify:aca` / `verify:state-tax` were not re-run (no constants they gate moved).
+**CI:** `99ffc746` → run 40607687008, IN PROGRESS when this close was written: read it first (`gh run view 40607687008`),
+then this close's own run (`gh run list --commit <FULL sha>`, then `gh run view <id>`).
+**FILED (b9-11, both Tier 0, ranked with *The other new Tier 0s* below by measured reach):** *A typed Social Security
+amount with odd cents is never rounded to the dime…* (own benefit rosy up to a dime a month, two on the delayed-credit
+path; the spousal excess either way; its Prescription moves most seeds' goldens) and *A spouse who dies in the year
+they planned to claim is treated as having filed early…* (gloomy; reach needs a planned claim AT 66, which no seed has).
+**DISTILL CANDIDATES (for the pay check's Phase C `/distill`):**
+- (b9-10, now proven by the fix) a decision record's "no oracle exists" is a claim to check at the primary, not a
+  fact: `ss-computation.md` said no oracle covered the RIB-LIM × age-reduction order and pinned the engine's order as
+  deliberate; the RS 00615.322 D worksheet's chart (its payable cell is a `poms-underline` span — plain text drops it)
+  is that oracle, and the order was backwards.
+- (b9-11) a reach claim reasoned from who a change is "for" missed a branch: "only the early claimers can move" was
+  false — the dime floor's delayed-credit path reaches every pre-1960 cohort claiming at 67 (past a ~66 FRA). A probe
+  of the CHANGED FUNCTION over every seed's death orders and drawable death ages, old against new
+  (`b9-seed-probe\reach.mts`), settled it; and a seed reading byte-identical is a statement about OUTPUTS — `failing`'s
+  function moved on all 93 cells and no output reads it (every path is depleted in year 0). Insight 143's sibling, one
+  level down: enumerate the function's own domain, never infer it.
+- (b9-11) a normalization added inside ONE function makes a mixed basis with its siblings: flooring the PIA to the
+  dime for the full rate while the cap read the raw figure let the reorder pay a cap a dime above the law — the round-1
+  law lens's catch (`wf_c6ac19f3-207`); the own-benefit sibling is the filing above.
+- (b9-11) a property whose oracle calls the function under test certifies that shared arithmetic: say what it pins (the
+  composition) and pin the rest by hand goldens; count a chart row "reached" only on strictly ordered amounts (a $0 PIA
+  ties all three) — both mutant-proven.
+**THE SEED PROBES (durable, b9-11):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-seed-probe\`
+— `seeds.mts` (every dev seed's FULL engine output through the app's own calls: the spine run with band fan + survivor
+reading + health readout, both date tiers; typed arrays digested), `diff.mjs` (every moved field per seed — it stops at 80
+lines per seed, so recount from the JSON), `solve.mts` (`buildSolveRequest` → `solveWithMint`; pass `seed:goal`),
+`extras.mts` (`healthss`'s spend solve + the step-down distribution path by path) and `reach.mts` (HEAD's function against
+the tree's, per seed). Re-point each script's output DIR off this session's scratchpad; run from the project dir with
+`pnpm exec tsx`. For a "before" run, snapshot the HEAD module with an absolute constants import (as `reach.mts`'s comment
+says) or swap the HEAD file in with snapshot + restore + `cmp`, never `git checkout`.
 **THE MUTATION HARNESS (durable):** `mutants-spec.cjs` in the re-anchor tools folder (UNFINISHED's path), run from the
 project dir as `node <tools>\mutants-spec.cjs <spec.json>`; `mutants-spec.example-a3.json` is A3's eight-mutant spec. Each
 plant must land exactly once, the named tests must go red, and every file is restored and byte-compared.
@@ -108,7 +121,7 @@ re-point each script's output path off the dead session scratchpad before runnin
 - **States:** the priced roster stays NC, PA and FL "for now" (his ruling 2026-10-21). His generic-state idea (ask the state's rate, and whether it taxes Social Security) is filed on *Unpriced states — a confident winner computed with zero state income tax*.
 - **The pilot's working rule (a HOW call, not his ruling):** no new process or tooling work unless a D7 build needs it. October ran 55 docs/bookkeeping commits to 17 features; that ratio is part of what took us off course.
 **WHERE THE SOLVE STANDS (carried from b9-6; the RIB-LIM clause added 2026-10-27, b9-11):** ONE pricing change since the 2026-10-12 (b9-2) close — ledger v12, the working-year tax floor (`b4bbbd3e`): a reprice of `tax` + NC's `stateTax` gated row-wide on `reach: 'working-years'`, UNSCORED (the solver runs only on the all-retired spine, so it left `SOLVER_CODE_VERSION` at 11; the date-route Roth preview moves, unpersisted); no roster change — THE POOL (`225d8da4`, laws in `docs/architecture.md`'s *The pooled solve*), the all-in objective (v10, `6dab9ec0`), the budgetless survivor-medical lean (v11, `c1ada867`; a scored spend-side pricing change, no roster change), then — no ledger row — the RIB-LIM order (`SOLVER_CODE_VERSION` 12, 2026-10-27, the current one: survivor income where a member claims before FRA, and a dime or two lower on a PIA with odd cents; measured on `healthss`, both goals, crown / runner-up / grade / top five unmoved), the v9 window walk, rosters `retired`-type 93 / `health` 97 / `healthgap` 101; THE APP (production, his laptop, P = 12): `retired` 36.5 s · `nc` 39.8 s · `healthnc` 150.9 s (ANY roster growth re-times `healthnc` first, `e2e/held/solve-timing.spec.ts`). The PHONE half of the pending-line entry is still owed (a ≤ 3-core device gets no pool).
-**UNFINISHED:** the distills are DONE (2026-10-21, b9-7): insights 141 (a headline on the population its caveat names), 142 (a disclosure instead of a used number — D7) and 143 (reach enumerates every consumer), plus refinements on 126 (a plan witness LABEL) and 136 (the re-anchor verification method). Still open from them: move the re-anchor verification scripts (`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-reanchor-verification-tools\`, now with `content-check.mjs` — b9-9's cited-line content check) into the repo beside the register Tier 4 re-anchor entry, so they stop living only in a session folder. No distill is owed for b9-9 yet: the pay-check build's whole-file review and `/distill` run at its end (the plan's Phase C).
+**UNFINISHED:** the distills are DONE (2026-10-21, b9-7): insights 141 (a headline on the population its caveat names), 142 (a disclosure instead of a used number — D7) and 143 (reach enumerates every consumer), plus refinements on 126 (a plan witness LABEL) and 136 (the re-anchor verification method). Still open from them: move the re-anchor verification scripts (`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-reanchor-verification-tools\`, now with `content-check.mjs` — b9-9's cited-line content check) into the repo beside the register Tier 4 re-anchor entry, so they stop living only in a session folder. No distill is owed for b9-9 or b9-11 yet: the pay-check build's whole-file review and `/distill` run at its end (the plan's Phase C), with the DISTILL CANDIDATES above.
 **OWED (carried from b9-6):** to HIM — the "Income Medicare looks at" heading (⚑, `docs/council-log.md` 2026-10-20 — the figure now also sets the income-tax base). The NIIT clause's "here" is no longer a word call: under D7 the surtax gets figured (queue 3), and the clause goes. OWED (both carried from b9-2, still live): (a) the engine measurement of the discount a crossing dollar loses, for the scope entry (Tier 0 *The health sheet's "26¢ on each dollar converted" holds only inside the ~$18,600 of room…*) — only hand figures exist, from the 2026-10-15 early-claim Caddie walk's hunter in b9-toronto1 (`healthss` $9,479 at the anchor; about $8,374 at the ~$84,600 line, the same on `healthnc`'s line — both seeds carry `slcspMonthlyToday` 1,400); measure through the engine on `healthnc`, `healthgap` (the register's Prescription (1) names it — its cliff is live, "about 2 of 10 futures") and `healthss` (a paired CRN run across the line, the anchor year's readout) before his words; (b) the Caddie tape rows awaiting his read — 2026-10-06 all-in, 2026-10-09 survivor-medical, 2026-10-14 survivor spending-basis, and 2026-10-15's four (held-flat, NC cents, early-claim cents, the same-age Medicare card), 2026-10-16's one (the one-figure card's first-year frame + his trend clause), 2026-10-16 (b9-1)'s one (his three rulings + his two in-session rulings), and 2026-10-19 (b9-2)'s one (his four b9-1 walk rulings + his in-session Medicare re-ruling), and 2026-10-21 (b9-6)'s one (the working-year tax row, three walks — his in-chat reads of its DRAFTS are on it as E20, not a read of the shipped face) — `docs/caddie/tape.md`.
 **Keep out of every commit from here:** the three family-feud working files (`../family-feud/newsletter/…`) are uncommitted on purpose; never stage them from this project.
 
@@ -700,6 +713,20 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 *Engineering lessons live in [`docs/insights/`](docs/insights/) (one file per lesson; cite by full path + slug).
 These are the mechanical ones that keep costing hours.*
 
+- **From the b9-11 close (2026-10-27, the RIB-LIM order fix):**
+  - **`pnpm doc:reanchor` runs ONCE, LAST — and docs edited after it ran need hand moves.** A re-run against HEAD
+    double-shifts every token it already moved (its dry run proposed `solverCodeVersion.ts:154 → :171` for a citation
+    already at the right line). Move the later ones by hand from content, then run `content-check.mjs` (the re-anchor
+    tools folder) — every DIFF it prints must be a construct this change edited on purpose. It also rewrote a HISTORICAL
+    example inside a landmine below (the "two new register entries shifted `docs/backlog.md:1769`…" line) as if it were
+    live: reverted by hand; read its WOULD list for examples before `--apply`.
+  - **A dev seed carries no `chosenGoal`**, so `buildSolveRequest` returns `spine-unready` for it — a node-side solve
+    probe passes `{ ...seed, chosenGoal }` (`b9-seed-probe\solve.mts`'s `seed:goal`). Single-threaded, `healthss` takes
+    ~15–18 min per goal.
+  - **`solvePayloadIdentity.health.test.ts` (180 s budget) timed out in the full suite under background-probe load**;
+    alone it ran in ~53 s. Re-run a solve-test timeout alone before believing it; keep heavy probes off the suite.
+  - **Inline `node -e` scripts are shell-interpolated** — a regex with `$&` broke at parse (it failed before writing, so
+    nothing moved). Write the script to a file in the scratchpad (the memory rule, met again).
 - **From the b9-10 close (2026-10-22, A2 and A3 landed overnight):**
   - **Another Claude session works in the same monorepo** (`projects/hooks/` files showed modified under `git status ..`
     mid-session, and MEMORY.md changed on disk). Commit by explicit paths only (`git commit -- <paths>`); check that

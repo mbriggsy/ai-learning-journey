@@ -295,3 +295,118 @@ describe('SS benefit sub-engine — non-FRA-67 cohorts (the graduated-FRA band +
     expect(Math.round(adjustOwnBenefitAnnual(annual(1000), 62, BY58) * 100), '$716.60/mo × 12').toBe(71_660 * 12)
   })
 })
+
+// ===========================================================================
+// The earnings test's CREDITS (the pay check's U3 — `docs/plans/features/working-year-pay-check-build-
+// spec.md`, KTD10): a benefit recomputed with its withheld months taken out of its early-claim reduction
+// (42 U.S.C. §402(q)(7); 20 CFR 404.412; POMS RS 00615.490 B.1 — the normal tiers on n − credits, never the
+// pre-1978 §402(q)(10) ratio). Every figure hand-derived from the per-month fractions (DND 012).
+// ===========================================================================
+describe('SS benefit sub-engine — earnings-test credits (§402(q)(7))', () => {
+  const cents = (annualDollars: number) => Math.round(annualDollars * 100)
+  const monthly = (monthlyCents: number) => monthlyCents * 12
+
+  it('own benefit: 60 months early less 36 credits = 24 at 5/9 % → 156/180 → $866.60; less 12 = 48 → 0.75 → $750.00; less all 60 → the full PIA', () => {
+    const pia = annual(1000)
+    expect(cents(adjustOwnBenefitAnnual(pia, 62, BY, 36))).toBe(monthly(86_660))
+    expect(cents(adjustOwnBenefitAnnual(pia, 62, BY, 12)), '36 × 5/9 % + 12 × 5/12 % = 25 %').toBe(monthly(75_000))
+    expect(cents(adjustOwnBenefitAnnual(pia, 62, BY, 60))).toBe(monthly(100_000))
+    expect(Object.is(adjustOwnBenefitAnnual(pia, 62, BY, 0), adjustOwnBenefitAnnual(pia, 62, BY)), 'credits 0 is the uncredited path').toBe(true)
+  })
+
+  it('the research’s worker: PIA $2,142.86, 45 credits → 15 months → 165/180 → $1,964.28, dime-floored to $1,964.20', () => {
+    // The research's $1,964.26 applies §402(q)(8) (round the REDUCTION up to the dime) to a PIA with odd
+    // cents; the engine dime-floors the benefit instead — the register's *A typed Social Security amount
+    // with odd cents is never rounded to the dime…*. On a dime-multiple PIA the two agree.
+    expect(cents(adjustOwnBenefitAnnual(annual(2142.86), 62, BY, 45))).toBe(monthly(196_420))
+  })
+
+  it('a graduated-FRA cohort recomputes on its own months early: 1958, claim 62 = 56 months, less 20 → 36 → 0.80 → $800.00', () => {
+    expect(cents(adjustOwnBenefitAnnual(annual(1000), 62, 1958, 20))).toBe(monthly(80_000))
+  })
+
+  it('credits beyond the months early, a fractional credit, or any credit on an unreduced claim THROW — the factor would pass 1', () => {
+    expect(() => adjustOwnBenefitAnnual(annual(1000), 62, BY, 61)).toThrow(/\[0, 60\]/)
+    expect(() => adjustOwnBenefitAnnual(annual(1000), 62, BY, 1.5)).toThrow(/whole number/)
+    expect(() => adjustOwnBenefitAnnual(annual(1000), 62, BY, -1)).toThrow(/whole number/)
+    expect(() => adjustOwnBenefitAnnual(annual(1000), 67, BY, 1)).toThrow(/\[0, 0\]/)
+    expect(() => adjustOwnBenefitAnnual(annual(1000), 70, BY, 1)).toThrow(/\[0, 0\]/)
+  })
+
+  it('householdBenefits credits each benefit on its own schedule: his own 36 → $1,733.30; her spousal excess 36 at 25/36 % → 120/144 → $833.30', () => {
+    // His PIA $2,000 at 62 → $1,400; with 36 credits, 156/180 × 2,000 = $1,733.33 → $1,733.30. Hers: spousal
+    // only, 50 % × 2,000 = $1,000, 60 months early → 0.65 → $650; with 36 credits, 120/144 → $833.33 → $833.30.
+    const people: BenefitPerson[] = [
+      { piaAnnual: annual(2000), claimAge: 62, birthYear: BY },
+      { piaAnnual: 0, claimAge: 62, birthYear: BY },
+    ]
+    const credited = householdBenefits(people, [{ own: 36, spousal: 0 }, { own: 0, spousal: 36 }])
+    expect(cents(credited[0]!.ownAnnual)).toBe(monthly(173_330))
+    expect(cents(credited[1]!.spousalExcessAnnual)).toBe(monthly(83_330))
+    // A dual earner's excess recomputes alone: her own PIA $800 → excess $200, 36 credits → $166.66 → $166.60.
+    const dual = householdBenefits(
+      [people[0]!, { piaAnnual: annual(800), claimAge: 62, birthYear: BY }],
+      [{ own: 0, spousal: 0 }, { own: 0, spousal: 36 }],
+    )
+    expect(cents(dual[1]!.spousalExcessAnnual)).toBe(monthly(16_660))
+    expect(cents(dual[1]!.ownAnnual), 'her own benefit carries no credits: $560').toBe(monthly(56_000))
+  })
+
+  it('householdBenefits with zero credits is Object.is the uncredited call; spousal credits on a person with no excess, or a misaligned array, THROW', () => {
+    const people: BenefitPerson[] = [
+      { piaAnnual: annual(2000), claimAge: 63, birthYear: BY },
+      { piaAnnual: annual(450.55), claimAge: 62, birthYear: BY },
+    ]
+    const plain = householdBenefits(people)
+    const zero = householdBenefits(people, [{ own: 0, spousal: 0 }, { own: 0, spousal: 0 }])
+    plain.forEach((b, i) => {
+      expect(Object.is(zero[i]!.ownAnnual, b.ownAnnual)).toBe(true)
+      expect(Object.is(zero[i]!.spousalExcessAnnual, b.spousalExcessAnnual)).toBe(true)
+    })
+    expect(() => householdBenefits(people, [{ own: 0, spousal: 1 }, { own: 0, spousal: 0 }])).toThrow(/no spousal excess/)
+    expect(() => householdBenefits(people, [{ own: 0, spousal: 0 }])).toThrow(/index-aligned/)
+  })
+
+  describe('the widow(er) benefit', () => {
+    const dec = (piaMonthly: number, claimAge: number): BenefitPerson => ({ piaAnnual: piaMonthly * 12, claimAge, birthYear: BY })
+
+    it('her own credits come out of her months early on the 28.5 % schedule: started at 60, 12 credits → 72 of 84 → $755.70; all 84 → the full $1,000', () => {
+      // The deceased claimed at FRA, so no RIB-LIM: 1,000 × (1 − 0.285 × 72/84) = $755.714 → $755.70.
+      expect(cents(survivorBenefitAnnual(dec(1000, 67), BY, 60, { widow: 12, deceased: 0 }))).toBe(monthly(75_570))
+      expect(cents(survivorBenefitAnnual(dec(1000, 67), BY, 60, { widow: 84, deceased: 0 }))).toBe(monthly(100_000))
+      expect(() => survivorBenefitAnnual(dec(1000, 67), BY, 60, { widow: 85, deceased: 0 })).toThrow(/\[0, 84\]/)
+      expect(() => survivorBenefitAnnual(dec(1000, 67), BY, 67, { widow: 1, deceased: 0 }), 'no months early at survivor FRA').toThrow(/\[0, 0\]/)
+    })
+
+    it('the deceased’s credits raise the cap’s "if alive" benefit: claimed at 62, she starts at FRA — 28 credits leave $825.00, 29 give $827.70, 36 give $866.60', () => {
+      // Payable = min(her age-reduced benefit, max(82.5 % × PIA, his if-alive benefit)); at her FRA the first
+      // is the PIA itself. His if-alive benefit with c credits: (180 − (60 − c)) / 180 × 1,000 for 60 − c ≤ 36:
+      // c = 28 → 148/180 → $822.20 (under the $825 floor); c = 29 → 149/180 → $827.70; c = 36 → $866.60.
+      expect(cents(survivorBenefitAnnual(dec(1000, 62), BY, 67, { widow: 0, deceased: 28 }))).toBe(monthly(82_500))
+      expect(cents(survivorBenefitAnnual(dec(1000, 62), BY, 67, { widow: 0, deceased: 29 }))).toBe(monthly(82_770))
+      expect(cents(survivorBenefitAnnual(dec(1000, 62), BY, 67, { widow: 0, deceased: 36 }))).toBe(monthly(86_660))
+    })
+
+    it('a higher cap pays nothing more when her reduced benefit is already under the old one (RS 00615.585 B.3): claimed 64, five credits, she starts at 61 → $755.70 either way', () => {
+      const uncredited = survivorBenefitAnnual(dec(1000, 64), BY, 61)
+      expect(cents(uncredited)).toBe(monthly(75_570))
+      expect(survivorBenefitAnnual(dec(1000, 64), BY, 61, { widow: 0, deceased: 5 })).toBe(uncredited)
+      // And her own credits raise her reduced benefit only up to the cap: claimed 62, she starts at 61 with
+      // 12 credits → 60 of 84 early → 66,900/84,000 × 1,000 = $796.43 → $796.40, under the $825 cap.
+      expect(cents(survivorBenefitAnnual(dec(1000, 62), BY, 61, { widow: 12, deceased: 0 }))).toBe(monthly(79_640))
+      expect(cents(survivorBenefitAnnual(dec(1000, 62), BY, 61, { widow: 24, deceased: 0 })), '48 early → $837.10, capped at $825').toBe(monthly(82_500))
+    })
+
+    it('credits on a deceased who claimed at or after FRA THROW (nothing to remove); zero credits are Object.is the uncredited call across a sweep', () => {
+      expect(() => survivorBenefitAnnual(dec(1000, 67), BY, 62, { widow: 0, deceased: 1 })).toThrow(/did not claim early/)
+      for (const pia of [0, 1000, 1234.5, 2875.55]) {
+        for (const claim of [62, 63, 64, 65, 66, 67, 68, 70]) {
+          for (const start of [60, 61, 63, 65, 67, 70]) {
+            const plain = survivorBenefitAnnual(dec(pia, claim), BY, start)
+            expect(Object.is(survivorBenefitAnnual(dec(pia, claim), BY, start, { widow: 0, deceased: 0 }), plain), `${pia}/${claim}/${start}`).toBe(true)
+          }
+        }
+      }
+    })
+  })
+})

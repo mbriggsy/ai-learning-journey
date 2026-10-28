@@ -204,6 +204,9 @@ const WITNESSES: ReadonlyArray<readonly [key: string, file: string, symbol: stri
   ['workingYears.oasdiWageBase', 'src/engine/payrollTax.ts', 'oasdiWageBase'],
   ['workingYears.hiRate', 'src/engine/payrollTax.ts', 'hiRate'],
   ['workingYears.additionalMedicareTax', 'src/engine/payrollTax.ts', 'additionalMedicareTax'],
+  // The pay check's earnings-test keys (A4), bound to the producer that reads them.
+  ['workingYears.earningsTestExemptAmounts', 'src/engine/earningsTest.ts', 'earningsTestExemptAmounts'],
+  ['workingYears.earningsTestWithholdingRates', 'src/engine/earningsTest.ts', 'earningsTestWithholdingRates'],
 ] as const
 
 /** Doc/meta/parked rows: NO run-layer (engine outside constants, or intake) file may import

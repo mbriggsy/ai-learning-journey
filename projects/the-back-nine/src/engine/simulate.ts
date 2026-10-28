@@ -28,7 +28,13 @@ import {
   type YearContribution,
 } from '@engine/taxOverlay'
 import { totalAcrossBuckets } from '@engine/sequencing'
-import { householdBenefits, survivorBenefitAnnual, realizedClaimAgeAtDeath, type BenefitPerson } from '@engine/socialSecurityBenefit'
+import {
+  adjustOwnBenefitAnnual,
+  householdBenefits,
+  survivorBenefitAnnual,
+  realizedClaimAgeAtDeath,
+  type BenefitPerson,
+} from '@engine/socialSecurityBenefit'
 import { irmaa } from '@engine/constants'
 import { isPricedState, earliestPricedRateYear } from '@engine/constants/stateTax'
 import {
@@ -317,6 +323,16 @@ export function personOffsetsFor(people: readonly PersonInputs[]): {
   return { offsets, higherClaimOffset: offsets[higherIdx]?.claim ?? 0 }
 }
 
+/** The earnings test's crediting months IN EFFECT in one survivor year — see {@link survivorYearBenefit}. */
+export interface SurvivorYearCredits {
+  /** On the survivor's own retirement benefit: 0 until the year after the survivor's FRA year. */
+  readonly survivorOwn: number
+  /** On the widow(er) benefit itself: the at-62 recompute's months, then the at-FRA recompute's. */
+  readonly widow: number
+  /** The deceased's own months, for the RIB-LIM cap: 0 until the year after the deceased's (would-be) FRA year. */
+  readonly deceasedOwn: number
+}
+
 /** One survivor year's Social Security — see {@link survivorYearBenefit}. */
 export interface SurvivorYearBenefit {
   /** The living spouse — an index into `people` and the offsets. */
@@ -365,12 +381,19 @@ export interface SurvivorYearBenefit {
  * `undefined` unless this is a survivor year — someone has died and someone is alive. The
  * `aliveCount >= 1` + index guards skip the people-of-one death and the all-dead year. Constant once
  * the death offset is fixed: PURE and draw-free (CRN-safe), a function of the death timeline + inputs.
+ *
+ * `credits` (optional) are the earnings test's crediting months IN EFFECT this year (KTD10; the
+ * schedule in `earningsTest.ts` owns when each takes effect): the survivor's own benefit and the
+ * widow(er) benefit are paid as recomputed, and the deceased's months raise the RIB-LIM cap. Every
+ * credited survivor year is composed here and nowhere else. Absent, or all 0, takes exactly the
+ * uncredited path.
  */
 export function survivorYearBenefit(
   t: number,
   people: readonly PersonInputs[],
   offsets: readonly PersonOffsets[],
   deathOffsets: readonly number[],
+  credits?: SurvivorYearCredits,
 ): SurvivorYearBenefit | undefined {
   let aliveCount = 0
   for (let i = 0; i < deathOffsets.length; i++) if (t < (deathOffsets[i] ?? 0)) aliveCount++
@@ -391,9 +414,17 @@ export function survivorYearBenefit(
   const deceasedClaim = realizedClaimAgeAtDeath(d.socialSecurityClaimAge, d.birthYear, d.currentAge + deceasedDeathOffset)
   const deceased: BenefitPerson = { piaAnnual: d.pia, claimAge: deceasedClaim, birthYear: d.birthYear }
   const survivorStartAge = Math.max(60, s.currentAge + deceasedDeathOffset)
-  const survivorStream = survivorBenefitAnnual(deceased, s.birthYear, survivorStartAge)
+  const survivorStream =
+    credits === undefined || (credits.widow === 0 && credits.deceasedOwn === 0)
+      ? survivorBenefitAnnual(deceased, s.birthYear, survivorStartAge)
+      : survivorBenefitAnnual(deceased, s.birthYear, survivorStartAge, { widow: credits.widow, deceased: credits.deceasedOwn })
   const survivorEligible = s.currentAge + t >= 60 // the AGED widow(er) benefit starts at 60 (§202(e)(1)(B)(i)); the disabled one from 50 is not modeled
-  const ownStream = t >= sOff.claim ? sOff.socialSecurityReal : 0
+  const ownStream =
+    t >= sOff.claim
+      ? credits === undefined || credits.survivorOwn === 0
+        ? sOff.socialSecurityReal
+        : adjustOwnBenefitAnnual(s.pia, s.socialSecurityClaimAge, s.birthYear, credits.survivorOwn)
+      : 0
   const payableSurvivor = survivorEligible ? survivorStream : 0
   const paid = Math.max(ownStream, payableSurvivor)
   const winner = paid === 0 ? 'none' : payableSurvivor > ownStream ? 'survivor' : 'own'

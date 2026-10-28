@@ -89,14 +89,14 @@ The MEASURED probe substituted its vector before `adoptObservedOutcome`. The gra
 **D5 Byte-identity when healthcare is off.**
 - The premium and Medicare yearly values start at 0 (`taxOverlay.ts:1938-1944`, map).
 - They are written only under the healthcare gate (`taxOverlay.ts:1507`, `:1968`, `:2126-2132`).
-- healthcareEnabled requires taxEnabled (`taxOverlay.ts:1378`; `simulate.ts:1148`).
+- healthcareEnabled requires taxEnabled (`taxOverlay.ts:1378`; `simulate.ts:1179`).
 - `totalTaxPaidReal` starts at +0, so `(t + 0) + 0 === t`, including the sign of zero.
 
 Result: the all-in vector equals the tax vector element by element, and its mean, SE, grade diffs and headline are bit-identical. The goldens and the two healthcare-OFF pay-less-tax oracle cases cannot move: `caseConstantRate.ts:149` and `caseNoChange.ts:56`, and `healthcareEnabled` appears only in caseAcaCliff (map).
 
 **D6 Finiteness seam.**
-- Add `!Number.isFinite(taxRes.totalNetPremiumReal) || !Number.isFinite(taxRes.totalMedicareCostReal)` to `simulate.ts:2027-2041` (read: today it checks terminal, tax, basis and buckets only).
-- *Chair's pick:* the full arm ONLY. `floorTaxRes` has the same type (`simulate.ts:1958`, read), but no ranked statistic reads the floor arm's premium. The existing floor clause checks terminal + tax for the same reason.
+- Add `!Number.isFinite(taxRes.totalNetPremiumReal) || !Number.isFinite(taxRes.totalMedicareCostReal)` to `simulate.ts:2058-2072` (read: today it checks terminal, tax, basis and buckets only).
+- *Chair's pick:* the full arm ONLY. `floorTaxRes` has the same type (`simulate.ts:1989`, read), but no ranked statistic reads the floor arm's premium. The existing floor clause checks terminal + tax for the same reason.
 - It is throw-or-nothing, so no value moves. A non-finite value then takes the typed infeasible route instead of throwing in `mean` and aborting the batch.
 - ⚑ SKEPTIC: D6 lands in the SAME Phase A commit as the D2 field (the new `mean` throw path must never exist without its seam). In principle it can mark a previously scored candidate infeasible (`solverCodeVersion.ts:12-21`: bump on anything that can move a ranking); in practice it is measure-zero (the premium sits inside `grossWithdrawal`, so an overflow hits `terminalReal` first). The Phase A commit and the VERSION 10 block both say so: unreachable in practice, landed before the bump.
 
@@ -121,7 +121,7 @@ Result: the all-in vector equals the tax vector element by element, and its mean
 - `objective.ts`: site 2.
 - `select.ts`: site 4.
 - `gradeCalibration.ts`: site 5.
-- `simulate.ts:2027-2041`: D6.
+- `simulate.ts:2058-2072`: D6.
 - `solverCodeVersion.ts`: D8.
 - NEW `reference/solver-cases/caseAllInAcaTrap.ts` plus its `index.ts` entry (§5.1).
 

@@ -22,10 +22,10 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-10-27, b9-11): build #1 of the D7 queue, the working-year pay check — A1, A2 and A3 are LANDED
-(`e2890887`, `512df53f`, `5d44ed68`), and so is the RIB-LIM order fix A4 builds on (2026-10-27, its own commit; the
-register's CLOSED *The widow(er) benefit is capped before the survivor's age reduction…* is its record — `SOLVER_CODE_VERSION`
-is now 12). NEXT is A4, in a FRESH session.** Read `git log` first. The plan is
+▶ **START HERE (2026-10-27, b9-12): build #1 of the D7 queue, the working-year pay check — A1, A2, A3 and A4 are LANDED
+(`e2890887`, `512df53f`, `5d44ed68`, and A4 on 2026-10-27 in its own commit), and so is the RIB-LIM order fix (`99ffc746`;
+the register's CLOSED *The widow(er) benefit is capped before the survivor's age reduction…* is its record —
+`SOLVER_CODE_VERSION` is 12). NEXT is A5.** Read `git log` first. The plan is
 `docs/plans/features/working-year-pay-check-build-spec.md`: planned, deepened and reviewed (`wf_46aab717-201`; verdicts in
 `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-plan-review\verify\`).
 **U12, the return-path ask, is CUT**: nobody has used the product, so no saved plan predates the new answer (Briggsy,
@@ -34,14 +34,16 @@ is now 12). NEXT is A4, in a FRESH session.** Read `git log` first. The plan is
    (`survivorYearBenefit` in `simulate.ts`, the one home of the §202 year; its `winner` is `'own' | 'survivor' | 'none'`,
    a tie is `'own'`) → ~~A3 U1's payroll keys + U2~~ ✅ `5d44ed68` (`src/engine/constants/workingYears.ts`,
    `WORKING_YEARS_YEAR`; `payrollTaxForYear` → `{ socialSecurity, medicare, additionalMedicare, total }`) → ~~the
-   RIB-LIM order fix~~ ✅ 2026-10-27 (`survivorBenefitAnnual` age-reduces first, caps after, every amount on ONE PIA floored
-   to the dime) → **NEXT: A4, U1's earnings-test keys + U3.** A4's widow(er) crediting adjusts the survivor's months early
-   and the cap's input through that function's three amounts (KTD10 / KTD11). The RIB-LIM read is DONE: CREDITED (the plan's KTD11, amended
-   2026-10-22; `research-riblim.json` + `verdict-riblim.json` in the research folder below). The keys ($24,480 / $65,160,
-   rates 1/2 and 1/3, FR Doc 2025-19763, §403(f)(3)) join `workingYears.ts` with WITNESS rows bound to
-   `src/engine/earningsTest.ts`. The producer reads the survivor year only through `survivorYearBenefit`, which gains an
-   optional credits input (KTD10), never a second composition (insight 081). Then → A5 U5's loop
-   reorder + extractions alone, byte-identical → A6 U5's check → A7 U6a. A constants key lands only with the producer its
+   RIB-LIM order fix~~ ✅ `99ffc746` → ~~A4 U1's earnings-test keys + U3~~ ✅ 2026-10-27 (`src/engine/earningsTest.ts`:
+   `earningsTestSchedule(path)` → the shared `NO_EARNINGS_TEST` or `{ paid, withheld, fraYearAtMost, creditMonths }`, read
+   through `socialSecurityPaid(schedule, t, composedSs)`; the credited entries in `socialSecurityBenefit.ts`;
+   `survivorYearBenefit`'s optional credits; the review `wf_bb2c6dec-c1c` caught three rosy-or-wrong FRA-year rules, all fixed —
+   the plan's KTD11 *As built (A4)* bullets are the record) → **NEXT: A5, U5's loop reorder + extractions alone,
+   byte-identical.** Per KTD11's last as-built bullet, A5 ALSO extracts `cashTermsForYear`'s both-alive own + spousal pieces
+   into one exported helper that the producer's `compose` then calls (today the producer mirrors those gates, pinned only by
+   the seeded `Object.is` sweep in `earningsTest.test.ts`), and A6's check reads `socialSecurityPaid` in EVERY year — a credit
+   raises the retired years too — never only inside the clamped block KTD6 lists it under. Then → A6 U5's check → A7 U6a.
+   A constants key lands only with the producer its
    WITNESS row names. Every commit refreshes the README/roadmap test-count claims and runs `pnpm doc:reanchor` +
    `pnpm verify:doc-stats` (CI runs it before the tests), and a planted-mutant pass (the harness below).
 2. **Phase B**, ONE go-live commit: U6b + U7 + U8 + U9 + U13, `datesolo`'s own W, the short and stale-W witness seeds,
@@ -62,13 +64,21 @@ covers all of that…" sentence comes out for a household with W (U9). Build 2, 
 **STATE on the RIB-LIM fix's tree (`99ffc746`), by exit code:** typecheck · lint · `verify:doc-stats` · build ·
 `verify:bundle` 272.5 KiB — all exit 0; the full suite green (the count lives under `verify:doc-stats`).
 `verify:aca` / `verify:state-tax` were not re-run (no constants they gate moved).
-**CI:** `99ffc746` → run 40607687008, IN PROGRESS when this close was written: read it first (`gh run view 40607687008`),
-then this close's own run (`gh run list --commit <FULL sha>`, then `gh run view <id>`).
+**CI:** `99ffc746` → run 40607687008 and the close `577b0a04` → run 40608232508: both completed SUCCESS (read by id, b9-12).
 **FILED (b9-11, both Tier 0, ranked with *The other new Tier 0s* below by measured reach):** *A typed Social Security
 amount with odd cents is never rounded to the dime…* (own benefit rosy up to a dime a month, two on the delayed-credit
 path; the spousal excess either way; its Prescription moves most seeds' goldens) and *A spouse who dies in the year
 they planned to claim is treated as having filed early…* (gloomy; reach needs a planned claim AT 66, which no seed has).
 **DISTILL CANDIDATES (for the pay check's Phase C `/distill`):**
+- (b9-12) "starts this year" is not "starts at FRA": the FRA-year exemption has to key on how the ENGINE PRICED the benefit
+  (unreduced = begun at FRA), never on its start year — a spousal excess the other spouse's filing starts that year is priced
+  as the payee's early claim, and an own claim at 67 was shielding a widow(er) benefit begun years before (the review's two
+  confirmed rosy holes, `wf_bb2c6dec-c1c`).
+- (b9-12) "the most the year can hold back" was a flat 11; derive the bound from the sourced table per cohort, (FRA + 11) mod 12 —
+  the one cohort a plan can reach on a fractional FRA (1959) holds 9.
+- (b9-12) owed − withheld in floating point leaves a crumb (a year withheld in full read −3.6e-12): keep the composed float
+  where nothing is withheld (bit-identity) and sum the remaining months in exact cents where something is — the seeded sweep
+  caught it on its first run.
 - (b9-10, now proven by the fix) a decision record's "no oracle exists" is a claim to check at the primary, not a
   fact: `ss-computation.md` said no oracle covered the RIB-LIM × age-reduction order and pinned the engine's order as
   deliberate; the RS 00615.322 D worksheet's chart (its payable cell is a `poms-underline` span — plain text drops it)
@@ -397,7 +407,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      **and** `scrollHeight > clientHeight` — content growth makes the second assertion *more* true.
      ⚑ **The drafted HSA sentence would have DENIED the very forfeit it discloses — do not ship "stays
      put" / "simply sits."** The balance is not parked, it is **destroyed**: `taxOverlay.ts:2248-2249` sets
-     `buckets = EMPTY_BUCKETS` (hsa: 0) → `simulate.ts:2054` `terminalHsaReal = 0` →
+     `buckets = EMPTY_BUCKETS` (hsa: 0) → `simulate.ts:2085` `terminalHsaReal = 0` →
      `objectiveHeadline.ts:62` bequest contribution **$0**. On the exact path the sentence names, the HSA
      adds nothing to the leave-more dollar the reader sees. **The sentence must say the balance is DROPPED.**
      ⚑ **Sweep BOTH stale comments in the same commit** — `healthOverlay.ts:881-884` (which says

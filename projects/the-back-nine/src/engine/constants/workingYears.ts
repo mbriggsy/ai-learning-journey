@@ -1,16 +1,20 @@
 /**
  * The working-years constants (the working-year pay check — `docs/plans/features/
  * working-year-pay-check-build-spec.md`, KTD13): the federal payroll-tax figures a working year
- * pays on its wages. The earnings-test figures join this table with their producer (KTD13's
- * witness law: a key lands only in the commit that creates the code its WITNESS row names).
+ * pays on its wages (read by `payrollTax.ts`), and the Social Security earnings test's exempt
+ * amounts and withholding rates (read by `earningsTest.ts`). Each key landed in the commit that
+ * created the code its WITNESS row names (KTD13's witness law).
  *
  * Every figure was read from its primary on 2026-10-21 and confirmed by a skeptic at a second
  * host (the research is in the pay-check research folder: `research-payroll.json` +
- * `verdict-payroll.json`). Two kinds of dollar figure live here, and the consumer treats them
- * differently in the engine's REAL dollars:
- *  - WAGE-INDEXED (the OASDI wage base, by the national average wage index, 42 U.S.C. §430(b)):
- *    held FLAT in real terms. Real wages grow, so the real base grows too; holding it flat taxes
- *    pay above it slightly LOW in later years (rosy, small) — disclosed with the figure.
+ * `verdict-payroll.json`, `research-earnings-test.json` + `verdict-earnings-test.json`). Two kinds
+ * of dollar figure live here, and the consumer treats them differently in the engine's REAL dollars:
+ *  - WAGE-INDEXED (the OASDI wage base, by the national average wage index, 42 U.S.C. §430(b); the
+ *    earnings test's two exempt amounts, by the same index, §403(f)(8)(B)): held FLAT in real terms.
+ *    Real wages grow, so the real figures grow too. Holding the base flat taxes pay above it slightly
+ *    LOW in later years (rosy, small); holding the exempt amounts flat withholds slightly MORE than
+ *    the law in later working years (gloomy then, with a small rosy echo through the extra credit
+ *    months) — each disclosed with its figure.
  *  - FROZEN NOMINAL (the two Additional Medicare Tax lines of §3101(b)(2); the Form 8959
  *    instructions: "aren't indexed for inflation"): the constant stays the statute's figure, and the
  *    consumer divides it by the engine's one price index for its calendar year (`priceIndex.ts`).
@@ -65,10 +69,42 @@ export const additionalMedicareTax = sourced(
   },
 )
 
+/** The Social Security earnings test's two 2026 ANNUAL exempt amounts, per beneficiary: the lower
+ *  one for every year wholly before the year the beneficiary reaches full retirement age, the higher
+ *  one for the earnings of the months before full retirement age in that year. */
+export const earningsTestExemptAmounts = sourced(
+  { lowerAnnual: 24_480, higherAnnual: 65_160 },
+  {
+    citation:
+      'FR Doc 2025-19763, 90 FR 49047 (SSA, "Cost-of-Living Increase and Other Determinations for 2026", read 2026-10-21: "The lower annual exempt amount is $24,480 under the retirement earnings test." and "The higher annual exempt amount is $65,160 under the retirement earnings test."; "The annual exempt amounts are exactly 12 times the monthly amounts" — $2,040 and $5,430) + POMS RS 02501.025 D (secure.ssa.gov, the second host: "2026 | $24,480 | $2,040 | $2 over $24,480" and "$65,160 | $5,430 | $3 over $65,160")',
+    directionalUntilPinned: false,
+    pinTo: 'FR Doc 2025-19763 (federalregister.gov, 2025-11-03)',
+    legalBasis: '42 U.S.C. §403(f)(3), (f)(8) (the wage-indexed exempt amounts); 20 CFR 404.430',
+    note: 'Per BENEFICIARY, on the beneficiary’s own earnings: gross wages for services in the year (20 CFR 404.429(c)), never pensions, investment income or Social Security (§403(f)(5)). The HIGHER amount applies in full to the earnings of the months before full retirement age, even when there are fewer than twelve (20 CFR 404.430(a)(1)). WAGE-INDEXED (§403(f)(8)(B), a ratchet), so it is held FLAT in real dollars: real wages grow, so the real amounts grow and the engine withholds slightly MORE than the law in later working years (gloomy then; the extra withheld months are also credited back, a small rosy echo on long-lived paths). The monthly amounts apply only in a grace year (404.435), which an annual engine whose work stops on a year boundary never reaches. Never quote a 2027 figure before the 2027 Federal Register notice is read.',
+  },
+)
+
+/** The earnings test's two withholding rates (§403(f)(3)): $1 of benefits for every $2 of earnings
+ *  above the lower amount in a year wholly before the full-retirement-age year, and $1 for every $3
+ *  above the higher amount in that year. Exact integer fractions — "33⅓ percent" has no exact float. */
+export const earningsTestWithholdingRates = sourced(
+  { beforeFraYear: { withheld: 1, per: 2 }, fraYear: { withheld: 1, per: 3 } },
+  {
+    citation:
+      '42 U.S.C. §403(f)(3) (LII, read 2026-10-21: "an individual\'s excess earnings for a taxable year shall be 33⅓ percent of his earnings for such year in excess of the product of the applicable exempt amount … in the case of an individual who has attained (or, but for the individual\'s death, would have attained) retirement age … before the close of such taxable year, or 50 percent of his earnings for such year in excess of such product in the case of any other individual … The excess earnings … if not a multiple of $1, shall be reduced to the next lower multiple of $1.") + POMS RS 02501.080 B.1.d ("Divide the remainder by 2, then round down to the next lower dollar") and B.2.a ("Divide the amount of earnings over the exempt amount by 3 … round down to the next lower dollar")',
+    directionalUntilPinned: false,
+    pinTo: '42 U.S.C. §403(f)(3)',
+    legalBasis: '42 U.S.C. §403(f)(3)',
+    note: 'Statute, not a dated figure. The consumer takes the rate of the earner’s own year (the lower-amount rate before the full-retirement-age year, the higher-amount rate in it), and floors the excess to the next lower whole dollar.',
+  },
+)
+
 /** The full working-years table — also the iteration surface for the shape test. */
 export const workingYearsConstants = {
   oasdiRate,
   oasdiWageBase,
   hiRate,
   additionalMedicareTax,
+  earningsTestExemptAmounts,
+  earningsTestWithholdingRates,
 } satisfies Record<string, ConstantEntry>

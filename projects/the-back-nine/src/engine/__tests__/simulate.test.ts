@@ -442,9 +442,9 @@ describe('R19 engine half + dire-but-honest edges', () => {
       expect(r.indeterminate).toBe(true) // the DEFINED output — simulate did NOT throw/crash (R19)
       return r.indeterminate ? r.reason : ''
     }
-    expect(reasonOf(overlay({}))).toMatch(/irmaaMagiSeed/) // MISSING seed → the coverage gate (simulate.ts:1182-1184)
-    expect(reasonOf(overlay({ irmaaMagiSeed: [Number.NaN, 60_000] }))).toMatch(/irmaaMagiSeed/) // NaN → finiteness gate (simulate.ts:970)
-    expect(reasonOf(overlay({ irmaaMagiSeed: [-1, 60_000] }))).toMatch(/irmaaMagiSeed/) // negative → finiteness gate (simulate.ts:970)
+    expect(reasonOf(overlay({}))).toMatch(/irmaaMagiSeed/) // MISSING seed → the coverage gate (simulate.ts:1213-1215)
+    expect(reasonOf(overlay({ irmaaMagiSeed: [Number.NaN, 60_000] }))).toMatch(/irmaaMagiSeed/) // NaN → finiteness gate (simulate.ts:1001)
+    expect(reasonOf(overlay({ irmaaMagiSeed: [-1, 60_000] }))).toMatch(/irmaaMagiSeed/) // negative → finiteness gate (simulate.ts:1001)
   })
 
   it('R19 enum + person-field + empty-bucket-basis gaps → indeterminate (U3-exit code-review pilot)', () => {
@@ -2920,5 +2920,54 @@ describe('the survivor-year composition — one exported helper, Object.is the i
     expect(sy?.survivorStream).toBe(30_000)
     expect(sy?.paid).toBe(30_000)
     expect(sy?.winner).toBe('own')
+  })
+
+  // The earnings test's credits (A4, KTD10): the helper takes the credits in effect this year and stays
+  // the one home of every credited survivor year. Absent — or all zero — it is the A2 composition.
+  it('with credits absent or all zero, every field is Object.is the uncredited composition across the sweep', () => {
+    const zero = { survivorOwn: 0, widow: 0, deceasedOwn: 0 }
+    let survivorYears = 0
+    for (const h of HOUSEHOLDS) {
+      for (let t = 0; t < YEARS; t++) {
+        const plain = survivorYearBenefit(t, h.params.people, h.offsets, h.deaths)
+        const zeroed = survivorYearBenefit(t, h.params.people, h.offsets, h.deaths, zero)
+        if (plain === undefined) {
+          expect(zeroed).toBeUndefined()
+          continue
+        }
+        survivorYears++
+        for (const k of ['survivorStream', 'ownStream', 'paid'] as const) {
+          if (!Object.is(zeroed![k], plain[k])) throw new Error(`${k} moved at t ${t}: ${zeroed![k]} vs ${plain[k]}`)
+        }
+        expect(zeroed!.winner).toBe(plain.winner)
+      }
+    }
+    expect(survivorYears, 'the sweep reaches survivor years').toBeGreaterThan(10_000)
+  })
+
+  it('credits in effect pay each benefit recomputed — her own, her widow(er) benefit, and the cap his credits raise (hand-derived)', () => {
+    // He: PIA $2,000 a month, claimed at 62 ($1,400), dies at offset 3 (68; realized claim 62, so RIB-LIM
+    // applies). She: born 1968, 58 at t = 0, widowed at 61; her own PIA $1,500 claimed at 62 → $1,050.
+    // At t = 6 (she is 64): her widow(er) benefit, 72 of 84 months early → 2,000 × 63,480/84,000 =
+    // $1,511.43 → $1,511.40, under the cap max(82.5 % × 2,000 = $1,650, $1,400) — so she is paid $1,511.40.
+    const him: PersonInputs = { sex: 'male', currentAge: 65, birthYear: 1961, retirementAge: 65, earnedIncomeReal: 0, pia: 24_000, socialSecurityClaimAge: 62 }
+    const her: PersonInputs = { sex: 'female', currentAge: 58, birthYear: 1968, retirementAge: 58, earnedIncomeReal: 0, pia: 18_000, socialSecurityClaimAge: 62 }
+    const people = [him, her]
+    const { offsets } = personOffsetsFor(people)
+    const cents = (x: number | undefined) => Math.round((x ?? Number.NaN) * 100)
+    expect(cents(survivorYearBenefit(6, people, offsets, [3, 50])?.paid)).toBe(151_140 * 12)
+    // Her own 24 credits → 36 months → 144/180 × 1,500 = $1,200.00; her widow(er) 12 → 60 of 84 →
+    // 2,000 × 66,900/84,000 = $1,592.86 → $1,592.80, still under $1,650: paid $1,592.80.
+    const own = survivorYearBenefit(6, people, offsets, [3, 50], { survivorOwn: 24, widow: 12, deceasedOwn: 0 })
+    expect(cents(own?.ownStream)).toBe(120_000 * 12)
+    expect(cents(own?.paid)).toBe(159_280 * 12)
+    expect(own?.winner).toBe('survivor')
+    // Her widow(er) 24 → 48 of 84 → $1,674.29 → $1,674.20 — over $1,650, so the cap binds: $1,650.00 …
+    const capped = survivorYearBenefit(6, people, offsets, [3, 50], { survivorOwn: 0, widow: 24, deceasedOwn: 0 })
+    expect(cents(capped?.paid)).toBe(165_000 * 12)
+    // … until his 40 credits raise his if-alive benefit to 160/180 × 2,000 = $1,777.70: the cap is then
+    // $1,777.70 and she is paid her own reduced figure, $1,674.20 (RS 00615.585 B.4).
+    const lifted = survivorYearBenefit(6, people, offsets, [3, 50], { survivorOwn: 0, widow: 24, deceasedOwn: 40 })
+    expect(cents(lifted?.paid)).toBe(167_420 * 12)
   })
 })

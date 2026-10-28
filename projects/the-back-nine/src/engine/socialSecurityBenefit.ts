@@ -106,6 +106,29 @@ const spousalExcessFactor = (claimAge: number, birthYear: number): Factor => {
   return reductionFactor(spouseReduction.value, n)
 }
 
+/** A count of CREDITING months (the earnings test's months withheld, 42 U.S.C. §402(q)(7)) must be a
+ *  whole number from 0 to the benefit's own reduction months: the adjusted reduction period is the
+ *  reduction period less those months, and a benefit paid with no reduction has none to remove. More
+ *  credits than months early would drive the factor past 1 — a raise the law never pays. */
+const assertCredits = (credits: number, reductionMonths: number, label: string): void => {
+  const most = Math.max(0, reductionMonths)
+  if (!Number.isInteger(credits) || credits < 0 || credits > most) {
+    throw new Error(
+      `[ssBenefit] ${label} must be a whole number of months in [0, ${most}] (the benefit's months early; got ${credits}) — §402(q)(7)`,
+    )
+  }
+}
+
+/** The CREDITED (adjusted-reduction-factor) factor for a benefit claimed `n` months early with
+ *  `credits` of those months withheld under the earnings test: the same two-segment schedule recomputed
+ *  on n − credits months (POMS RS 00615.490 B.1: "Determine crediting months. Subtract from original
+ *  reduction factor. Apply result to PIA (or unreduced spouse's benefit)"; the §402(q)(10) ratio
+ *  method is the pre-1978 provision and is not used). n − credits = 0 gives exactly 1. */
+const creditedFactor = (schedule: ReductionSchedule, n: number, credits: number, label: string): Factor => {
+  assertCredits(credits, n, label)
+  return reductionFactor(schedule, n - credits)
+}
+
 /** Apply a benefit factor to an annual PIA and return the annual benefit, with the
  *  SSA MONTHLY dime-round (down to the next lower $0.10, POMS RS 00615.101) done in
  *  exact INTEGER CENTS, then ×12. Throws on a non-finite/negative piaAnnual. The result
@@ -142,10 +165,23 @@ const assertClaimAge = (claimAge: number): void => {
 /** A worker's own claim-age-adjusted ANNUAL benefit (no spousal). PIA=0 ⇒ 0 (the
  *  reduce-to-spine zero). `adjustOwnBenefitAnnual` is the claim-age CHOKEPOINT — every own and
  *  spousal claim age (household, single-person, and the survivor's deceased) routes through it,
- *  so the one `assertClaimAge` here guards them all. */
-export const adjustOwnBenefitAnnual = (piaAnnual: number, claimAge: number, birthYear: number): number => {
+ *  so the one `assertClaimAge` here guards them all.
+ *
+ *  `credits` (default 0) is the earnings test's crediting months on this benefit (the pay check's
+ *  KTD10): the benefit recomputed with that many months taken out of its early-claim reduction, the
+ *  amount paid from the recompute on (the CALLER owns when: the year after full retirement age for the
+ *  worker's own benefit; the cap's "if alive" figure for a deceased). Only an early claim can carry
+ *  credits. 0 takes exactly the uncredited path. */
+export const adjustOwnBenefitAnnual = (
+  piaAnnual: number,
+  claimAge: number,
+  birthYear: number,
+  credits: number = 0,
+): number => {
   assertClaimAge(claimAge)
-  return applyFactorAnnual(piaAnnual, ownFactor(claimAge, birthYear))
+  if (credits === 0) return applyFactorAnnual(piaAnnual, ownFactor(claimAge, birthYear))
+  const n = fraMonthsForBirthYear(birthYear, 'retirement') - claimAge * 12
+  return applyFactorAnnual(piaAnnual, creditedFactor(workerReduction.value, n, credits, 'own-benefit credits'))
 }
 
 const assertFinite = (x: number, label: string): void => {
@@ -164,8 +200,17 @@ const assertFinite = (x: number, label: string): void => {
  *
  * Returns `spousalExcessAnnual` separately so the seam can gate its start (the higher
  * earner must have filed) and end (the worker's death) — plan §7.
+ *
+ * `credits` (optional, index-aligned) carries each person's earnings-test crediting months on each
+ * benefit (the pay check's KTD10; POMS RS 00615.482 B.3: "grant ARFs separately on each record"):
+ * the own benefit and the spousal excess are each recomputed on their own schedule with those months
+ * removed. Absent — or 0 for a benefit — takes exactly the uncredited arithmetic. A person with no
+ * spousal excess can carry no spousal credits.
  */
-export const householdBenefits = (people: readonly BenefitPerson[]): readonly PersonBenefit[] => {
+export const householdBenefits = (
+  people: readonly BenefitPerson[],
+  credits?: readonly BenefitCredits[],
+): readonly PersonBenefit[] => {
   if (people.length === 0) return []
   if (people.length > 2)
     throw new Error(
@@ -176,19 +221,60 @@ export const householdBenefits = (people: readonly BenefitPerson[]): readonly Pe
     assertClaimAge(p.claimAge)
     if (p.piaAnnual < 0) throw new Error(`[ssBenefit] people[${i}].piaAnnual must be ≥ 0 (got ${p.piaAnnual})`)
   })
+  if (credits !== undefined && credits.length !== people.length) {
+    throw new Error(`[ssBenefit] credits must be index-aligned to people (${credits.length} for ${people.length})`)
+  }
   // The higher earner (spousal is paid on THEIR record). Ties resolve to the first —
   // immaterial, since an equal-PIA spouse's excess floors to 0 either way.
   let higher = people[0]!
   for (const p of people) if (p.piaAnnual > higher.piaAnnual) higher = p
 
-  return people.map((p): PersonBenefit => {
-    const ownAnnual = adjustOwnBenefitAnnual(p.piaAnnual, p.claimAge, p.birthYear)
+  return people.map((p, i): PersonBenefit => {
+    const c = credits?.[i]
+    const ownAnnual = adjustOwnBenefitAnnual(p.piaAnnual, p.claimAge, p.birthYear, c?.own ?? 0)
     const spousalBase = spousalRate.value * higher.piaAnnual
     const excessFull = spousalBase - p.piaAnnual
+    const spousalCredits = c?.spousal ?? 0
+    if (p === higher || excessFull <= 0) {
+      if (spousalCredits !== 0) {
+        throw new Error(`[ssBenefit] people[${i}] has no spousal excess, so it can carry no spousal credits (got ${spousalCredits})`)
+      }
+      return { ownAnnual, spousalExcessAnnual: 0 }
+    }
     const spousalExcessAnnual =
-      p === higher || excessFull <= 0 ? 0 : applyFactorAnnual(excessFull, spousalExcessFactor(p.claimAge, p.birthYear))
+      spousalCredits === 0
+        ? applyFactorAnnual(excessFull, spousalExcessFactor(p.claimAge, p.birthYear))
+        : applyFactorAnnual(
+            excessFull,
+            creditedFactor(
+              spouseReduction.value,
+              fraMonthsForBirthYear(p.birthYear, 'retirement') - p.claimAge * 12,
+              spousalCredits,
+              `people[${i}] spousal credits`,
+            ),
+          )
     return { ownAnnual, spousalExcessAnnual }
   })
+}
+
+/** One person's earnings-test crediting months, by benefit (see {@link householdBenefits}). */
+export interface BenefitCredits {
+  /** Months the person's OWN retirement benefit was withheld before full retirement age. */
+  readonly own: number
+  /** Months the person's spousal benefit (the excess, on the higher earner's record) was withheld
+   *  before the person's own full retirement age — by either spouse's earnings. */
+  readonly spousal: number
+}
+
+/** The widow(er) benefit's earnings-test credits (see {@link survivorBenefitAnnual}). */
+export interface SurvivorCredits {
+  /** Months the widow(er) benefit itself was withheld before survivor FRA, in effect for this year
+   *  (20 CFR 404.412(b): the adjustment is made at 62 and again at full retirement age). */
+  readonly widow: number
+  /** The deceased's months withheld on their OWN benefit while alive and before their FRA, in effect
+   *  for the RIB-LIM cap this year — 0 until the deceased's would-be FRA has passed (42 U.S.C.
+   *  §402(e)(2)(D)(i), "if such individual were still living"; POMS RS 00615.320 B.2.c, RS 00615.598). */
+  readonly deceased: number
 }
 
 /**
@@ -218,11 +304,19 @@ export const householdBenefits = (people: readonly BenefitPerson[]): readonly Pe
  *
  * Every step runs through the exact integer-cents dime-round. Survivor-FRA is keyed
  * SEPARATELY from retirement-FRA (coincides at 67 for the 1962+ cohorts). PIA 0 ⇒ 0.
+ *
+ * `credits` (optional — the pay check's KTD10) carries the earnings test's credits in effect this
+ * year, each entering where the law puts it: the widow(er)'s own withheld months come out of step 2's
+ * months early (the linear 28.5 % schedule at monthsEarly − credits), and the deceased's withheld
+ * months raise step 3's "if alive" benefit (their own reduction at n − credits). A credit raises the
+ * age-reduced benefit only until the cap binds (POMS RS 00615.585 B.3), which the min() below does
+ * by itself. Absent, or both 0, takes exactly the uncredited arithmetic.
  */
 export const survivorBenefitAnnual = (
   deceased: BenefitPerson,
   survivorBirthYear: number,
   survivorStartAge: number,
+  credits?: SurvivorCredits,
 ): number => {
   assertFinite(deceased.piaAnnual, 'deceased.piaAnnual')
   assertClaimAge(deceased.claimAge) // closes the silent-NaN leak: a NaN in the `claimedEarly` comparison below would otherwise pass
@@ -245,17 +339,32 @@ export const survivorBenefitAnnual = (
   const earliestMonths = survivorReduction.value.earliestAge * 12
   const startMonths = Math.max(survivorStartAge * 12, earliestMonths) // aged WIB from 60 (DWB-50 deferred)
   const span = survivorFra - earliestMonths
-  const monthsEarly = survivorFra - startMonths
+  const widowCredits = credits?.widow ?? 0
+  if (widowCredits !== 0) assertCredits(widowCredits, survivorFra - startMonths, 'widow(er) credits')
+  const monthsEarly = survivorFra - startMonths - widowCredits
   const reductionMilli = Math.round(survivorReduction.value.maxReductionPct * 1000)
   // factor = 1 − maxReductionPct × monthsEarly/span, as an exact integer rational; 100% at/after survivor-FRA.
   const reduced =
     startMonths >= survivorFra
       ? fullRate
       : applyFactorAnnual(fullRate, { num: 1000 * span - reductionMilli * monthsEarly, denom: 1000 * span })
-  if (!claimedEarly) return reduced
+  const deceasedCredits = credits?.deceased ?? 0
+  if (!claimedEarly) {
+    if (deceasedCredits !== 0) {
+      throw new Error(`[ssBenefit] a deceased who did not claim early has no reduction to credit (got ${deceasedCredits} credits)`)
+    }
+    return reduced
+  }
 
   const floorMilli = Math.round(ribLim.value.floorPctOfDeathPia * 1000)
-  const ribLimCap = Math.max(applyFactorAnnual(piaDime, { num: floorMilli, denom: 1000 }), deceasedAdjusted)
+  // The deceased's benefit "if such individual were still living" (§402(e)(2)(D)(i)): their reduced
+  // benefit, recomputed without the months the earnings test withheld while they lived once their
+  // actual or would-be FRA has passed (the caller passes 0 before then).
+  const ribIfAlive =
+    deceasedCredits === 0
+      ? deceasedAdjusted
+      : adjustOwnBenefitAnnual(piaDime, deceased.claimAge, deceased.birthYear, deceasedCredits)
+  const ribLimCap = Math.max(applyFactorAnnual(piaDime, { num: floorMilli, denom: 1000 }), ribIfAlive)
   return Math.min(reduced, ribLimCap)
 }
 

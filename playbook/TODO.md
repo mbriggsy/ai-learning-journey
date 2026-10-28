@@ -6,7 +6,11 @@ The queue for our-setup work. Sessions for it start in this folder. The full fli
 
 ## ▶ START HERE
 
-1. **Land U4, when B9 is idle.** U4 is committed and pushed (`7f2dbd4a`), and CI's "Hooks tests" run `40616651286` is green on it (Linux: 894 tests, 892 pass, 0 failures). The landing follows the private `~/.claude/flow/backup/u4-2026-10-23/u4-cut-build-plan.md`, "The landing":
+**HOLD: the next session opens with a discussion, not work.** Briggsy, signing off 2026-10-27: "I'm afraid we accomplished the polar opposite of what I was hoping to achieve - streamlining our process/setup ... we made shit waaaay harder and fucking way more complicated. So consideration for tomorrow - total flush and get back to where we were before this exercise and start-over. I don't need safety checks for stuff that isn't a threat to us." And: "We worked REALLY REALLY good ... before this "reset" ... (although our plan,deepen,doc-review.... process stopped working.)"
+- **Bring him one page, in plain words:** everything the our-setup program added since its rollback point (U1, 2026-10-19: config repo `22015c5` snapshot, `8d72e09` baseline, backups in `~/.claude/flow/backup/2026-10-19/`), what each piece does for him day to day, and a flush-or-keep call on each, with one recommendation; plus what broke in plan, deepen and doc review, and how a flush gets to that work.
+- **Do not land U4, deploy hooks, or write any settings until he decides.** The items below stand only if he keeps them.
+
+1. **Land U4, when B9 is idle** (on HOLD, above). U4 is committed and pushed (`7f2dbd4a`), and CI's "Hooks tests" run `40616651286` is green on it (Linux: 894 tests, 892 pass, 0 failures). The landing follows the private `~/.claude/flow/backup/u4-2026-10-23/u4-cut-build-plan.md`, "The landing":
    - Step 0: the stale `C:/wt/b9` worktree (branch `b9-squeaky`; no session ever started there) goes, with B9's word, since its settings copies hold every old allow.
    - Step 1: Q17, Q18 and Q19 are VERIFIED on 2.1.312 (Q17 and Q18 on the final catalog). If the installed CLI differs at landing, rerun those three (`--only Q17,Q18,Q19`, `report.mjs`, `--cleanup`).
    - Step 2: Briggsy types one consent sentence naming every write (the safety check blocks a write to Claude Code's own settings without his words); the plan lists them.

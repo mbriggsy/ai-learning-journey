@@ -6,12 +6,15 @@
 > handoffs) was pruned 2026-09-27 and lives at commit **`af491a71`** — `git show af491a71:projects/family-feud/TODO.md`.
 > Read it before the 2027 draft, not before.
 
-## ▶ START HERE — as of Tue 2026-10-27 (week 8)
+## ▶ START HERE — as of Wed 2026-10-28 (week 8)
 
 **We are PoppaBriggsy, roster 3, *Saquon Deez Nuts*. `briggsy007` is HUNTER** (CLAUDE.md landmine).
 
 - **Record 4-3 (4th)**, after beating Cltchiefs 147.24–98.22 in week 7. **Week 8 is vs HUNTER, Sun 11-01 / Mon 11-02.**
   His McCaffrey, Montgomery and Vele are all on bye. The lineup was set and verified on `/rosters` on 10-27.
+- **Added Seth McGowan (RB IND, Taylor's backup) as a free agent and dropped the HOU DEF, 10-28 11:04 ET**, on
+  Briggsy's word. Verified: `/rosters` shows him added, HOU gone, starters unchanged; `/transactions/8` shows a
+  `free_agent` move, `complete`. SEA is now our only DEF.
   The morning brief (lineup re-checks, the McGowan option, the Kittle trade recommendation) is
   `temp/week8-moves-log.md` (gitignored, local). Weeks 6-7: `temp/week7-moves-log.md`.
 - **Kaeperni's offer (A.J. Brown + Tucker Kraft for Zay Flowers) was DECLINED 10-22 ~22:20 ET** on
@@ -28,20 +31,30 @@
 
 ## Ranked next
 
-1. **Week 8 vs Hunter: the lineup is SET (10-27). What's left is two re-checks and one trade decision.**
-   - **London (Q, head):** read Atlanta's Wed 10-28 practice report. If he sits, Tate goes to WR.
-   - **Swift vs Stevenson:** if Chicago clears Kyle Monangai, swap Stevenson in before NE's Sun 4:25 PM kickoff.
-   - **Kittle trade:** Briggsy decides Wed morning. The recommendation is Swift + Strange for Kittle (us +14.2 / +24.4
-     rest of season, Kaeperni −0.1 / +0.6). Fallbacks and the post-trade lineup are in `temp/week8-moves-log.md`.
+1. **Week 8 vs Hunter: the lineup is SET (10-27). What's left is two re-checks.**
+   - **London:** Sleeper dropped his Q (head) tag overnight (10-27 21:37 Q → 10-28 11:00 none). Still read
+     Atlanta's practice report (Wed/Thu). If he sits, Tate goes to WR.
+   - **Swift vs Stevenson:** Sleeper moved Monangai Out → Q (toe) on 10-28, but he missed Tuesday's practice and the
+     Bears called up RB Zavier Scott. If Chicago's Thu 10-29 / Fri reports clear him fully, swap Stevenson in before
+     NE's Sun 4:25 PM kickoff.
+   - **Kittle trade: ON HOLD (Briggsy, 10-28: "Let's hold on Kaeperni trade").** Don't re-pitch it unprompted.
+     Kaeperni rejected Tate + Goff for Kittle on 10-20. The priced package (Swift + Strange for Kittle) is in
+     `temp/week8-moves-log.md` if he reopens it. Trade deadline is week 11.
    - Maye's week-11 bye: we have no backup QB. Stream a free agent, using a bench spot.
-2. **Settle trade_eval's waiver assumption at the next real drop** (it moves the frozen headline 3.4).
-   The tool assumes a man dropped when a trade processes can't start for anyone until next week
-   (waivers run Wednesdays, `daily_waivers: 0`). After the next drop Briggsy names, open the Players
-   tab IN-APP (league home → Players) and search the dropped man: `W Wed` confirms it. If he shows
-   `.add` instead, edit `scripts/trade_eval.py` `Sim.fix`: the line
-   `U, w0 = universe, ctx.weeks[0] + (1 if ctx.weeks[0] == ctx.cur else 0)` becomes `U, w0 = universe, ctx.weeks[0]`,
-   drop the waiver line in `render`, re-record `TestThePublishedNumber` (it was −32.83 / −45.76,
-   Kaeperni +38.93 / +50.18 under that rule) and update `docs/league.md`'s waiver section either way.
+2. **Settle trade_eval's waiver assumption. The measurement is IN, and it was neither outcome the old item
+   expected** (it moves the frozen headline 3.4). The tool assumes a man dropped when a trade processes can't start
+   for anyone until next week. **Measured 2026-10-28:** Josh Downs, dropped by RMonk9 in the 03:15 Wed waiver run,
+   read **`W Thu`** in the in-app Players tab (one day on waivers, then gettable). The live league object
+   agrees: `waiver_clear_days: 1` (also `daily_waivers: 0`, `waiver_day_of_week: 2`). So a drop is on waivers for
+   **one day**, separately from the Wednesday run for players whose games were played, and a man cut Wed-Fri can start for
+   someone that Sunday. Our own HOU DEF drop (10-28 11:04) can't be read: a bye-week DEF is absent from the search.
+   **Fix:** in `scripts/trade_eval.py` `Sim.fix`, `U, w0 = universe, ctx.weeks[0] + (1 if ctx.weeks[0] == ctx.cur else 0)`
+   becomes `U, w0 = universe, ctx.weeks[0]`. Rewrite the comment above it, the docstring at line ~20, and the waiver line
+   in `render` (~line 1010) to "on waivers one day (`waiver_clear_days: 1`), so he can start for the other side this
+   week". Re-record `TestThePublishedNumber`: the TODO quoted −32.83 / −45.76, Kaeperni +38.93 / +50.18 under that
+   rule. Re-run it; don't copy those. Run the full suite, and add the measurement to `docs/league.md`'s waiver section.
+   **Open nuance (Briggsy's call before building):** a trade that processes Sat night clears Sun night, too late
+   for that week. Week-level `w0 = weeks[0]` overstates the other side slightly in that case only.
 3. **Optional: make `--search` fast again without moving a number.** It takes 355-373 s for 2,736
    packages on the frozen night (72 s before swaps repeated) and peaks at **2.7 GB** even with the
    memos emptied per give (measured 10-23; a reviewer measured ~1 GB on the one-swap code). Fine on
@@ -59,7 +72,7 @@
    - **Week 11 is the big one:** Maye, London, Fannin, Stevenson AND the SEA DEF. There's no backup QB
      on the roster, so stream a QB that week, and a DEF too if SEA is still the starter. Hunter loses
      Stafford and Myers.
-   - **Week 13:** Taylor, Flowers, Shrader (stream a K). · **Week 14:** M. Wilson.
+   - **Week 13:** Taylor, McGowan, Flowers, Shrader (stream a K). · **Week 14:** M. Wilson.
    - Hunter later: wk 10 D. Smith · wk 13 G. Wilson, B. Allen, BAL DEF · wk 14 McBride, Allgeier.
    - Trade deadline **week 11**. Playoffs 6 of 8, weeks 15-17.
 6. **Next August, before the 2027 draft:** the draft-era payloads still owed at the board refresh

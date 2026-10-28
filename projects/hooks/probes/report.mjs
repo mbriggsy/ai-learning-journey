@@ -42,7 +42,7 @@ const HEADER = [
   '',
   'Each probe settles one platform behavior the flow design relies on, by running throwaway headless Claude Code sessions and reading what their hooks saw. Code: `projects/hooks/probes/` (public). Results: `~/.claude/flow/probes/<version>/<stamp>/` (private).',
   '',
-  'Re-run on every new CLI version: `cd "$TEMP" && node <repo>/projects/hooks/probes/run.mjs`, then `node <repo>/projects/hooks/probes/report.mjs`. The block below is generated from `passes.json` and the run folders; do not hand-edit it. Record anything else outside it. KTD 10: the gate enforces only on a version where `passedOn(version)` (run.mjs) returns true; `passCheck(version)` lists the probes that fail it and why.',
+  'Run a probe when a unit that depends on its answer is built or landed (`cd "$TEMP" && node <repo>/projects/hooks/probes/run.mjs --only <ids>`), then `node <repo>/projects/hooks/probes/report.mjs` and `run.mjs --cleanup <run dir>`; not after every CLI update (Briggsy, 2026-10-27: nothing live reads the verdicts yet). The block below is generated from `passes.json` and the run folders; do not hand-edit it. Record anything else outside it. KTD 10: the gate, once built, enforces only on a version where `passedOn(version)` (run.mjs) returns true; `passCheck(version)` lists the probes that fail it and why.',
   '',
 ].join('\n');
 

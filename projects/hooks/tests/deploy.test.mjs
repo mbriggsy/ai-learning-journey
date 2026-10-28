@@ -2183,3 +2183,128 @@ describe('deploy.mjs manifest and CLI', () => {
     assert.equal(imported.stdout, 'imported\n');
   });
 });
+
+describe('deploy.mjs --patch from tools/permission-patch.mjs (U4: the user settings patch rides the switch)', () => {
+  // The landing's user step (U4 design steps 6 and 7.4): the real generator
+  // makes the patch from this file's settings fixture plus a push allow and
+  // a playwright glob, with the real catalog; deploy lands it with the switch
+  // in one write, and one bare rollback undoes both. A direct writer call on
+  // a path the patch changed, made in between, leaves the switch's inverse
+  // stale: the bare rollback must refuse by that path, with nothing written,
+  // until that write is undone by its own inverse (insight 004: the sequence,
+  // asserted after each step). As at the landing, settings already point at a
+  // kept version (live, v-84b0dfbb922a) when the U4 commit is deployed, so the
+  // undo has a folder to land on.
+  const TOOL = path.join(HOOKS_DIR, 'tools', 'permission-patch.mjs');
+  const WRITER = path.join(HOOKS_DIR, 'tools', 'settings-write.mjs');
+  const CATALOG_FILE = path.join(HOOKS_DIR, 'lib', 'permission-rules.json');
+  const node = (args) => spawnSync(process.execPath, args, { env: gitEnv(), shell: false, windowsHide: true, encoding: 'utf8' });
+
+  // A world whose settings hold a push allow and a playwright glob and point
+  // at version A, a commit B to land, and the patch the generator makes from
+  // those settings, in the world's root. The glob stays (the catalog denies
+  // its run-code since the U4 cut); the push allow goes.
+  function permWorld() {
+    const w = world();
+    const doc = settingsFixture();
+    doc.permissions.allow.push('Bash(git push:*)', 'mcp__playwright__*');
+    write(w.settings, canonical(doc));
+    assert.equal(run(w, ['deploy']).status, EXIT.OK);
+    const b = commit(w, { 'check-config-liveness.mjs': body('check-config-liveness.mjs', 'u4') }, 'u4');
+    const rules = readJson(CATALOG_FILE);
+    const marketplaces = path.join(w.root, 'known_marketplaces.json');
+    write(marketplaces, canonical({ [rules.marketplace.name]: { source: { source: 'github', repo: 'example/every-plugin' }, lastUpdated: '2026-01-01T00:00:00.000Z' } }));
+    const expected = path.join(w.root, 'expected-user.json');
+    write(expected, JSON.stringify(['Bash(git push:*)']));
+    const out = path.join(w.root, 'user-patch.json');
+    const r = node([TOOL, '--rules', CATALOG_FILE, '--target', 'user', '--file', w.settings, '--marketplaces', marketplaces, '--expected', expected, '--out', out]);
+    assert.equal(r.status, 0, `${r.stdout}\n${r.stderr}`);
+    return { w, rules, out, version: vOf(b), original: fs.readFileSync(w.settings) };
+  }
+
+  test('deploy --patch <generated> lands the permission ops with the switch in one write, exactly those ops; a bare rollback restores the bytes', async () => {
+    const { applyOps } = await import('../tools/settings-write.mjs');
+    const { skipsSafetyCheck } = await import('../lib/permissions.mjs');
+    const { w, rules, out, version, original } = permWorld();
+    const dep = run(w, ['deploy', '--patch', out]);
+    assert.equal(dep.status, EXIT.OK, dep.stdout);
+    const want = JSON.parse(original.toString('utf8'));
+    applyOps(want, readJson(out).ops);
+    assert.equal(fs.readFileSync(w.settings, 'utf8'), canonical(switchedFixture(version, want)), 'the switch plus the patch, nothing else');
+    const doc = readJson(w.settings);
+    assert.equal(activeOf(doc).active, version);
+    assert.deepEqual(doc.permissions.allow.filter((r) => skipsSafetyCheck(r, { denies: doc.permissions.deny })), [], 'no allow lets a push skip the check or reaches run-code past its deny');
+    assert.ok(doc.permissions.allow.includes('mcp__playwright__*'), 'the playwright glob stays');
+    assert.deepEqual([doc.permissions.ask, doc.permissions.deny.slice(1)], [[], rules.deny.map((r) => r.rule)], 'an empty ask list: nothing asks');
+    assert.equal(logLines(w).length, 2, 'one write, one log line (after A\'s)');
+
+    const back = run(w, ['rollback']);
+    assert.equal(back.status, EXIT.OK, back.stdout);
+    assert.equal(back.json.undoes, logLines(w)[1].id);
+    assert.ok(fs.readFileSync(w.settings).equals(original), 'the switch and every permission op undone, byte for byte');
+    assertClean(w);
+  });
+
+  test('an allow written by a direct writer call between the deploy and the rollback makes the bare rollback refuse by path, with nothing written or logged; once that write is undone by its own inverse, the bare rollback goes through', () => {
+    const { w, out, original } = permWorld();
+    assert.equal(run(w, ['deploy', '--patch', out]).status, EXIT.OK);
+    const dep = logLines(w)[1];
+
+    const extra = path.join(w.root, 'extra-allow.json');
+    write(extra, JSON.stringify({ ops: [{ op: 'push', path: ['permissions', 'allow'], value: 'Bash(npm test)' }] }));
+    const extraInverse = path.join(w.root, 'extra-allow-inverse.json');
+    const direct = node([WRITER, '--target', 'settings', '--file', w.settings, '--patch', extra, '--inverse-out', extraInverse]);
+    assert.equal(direct.status, 0, `${direct.stdout}\n${direct.stderr}`);
+    const between = fs.readFileSync(w.settings);
+
+    const refused = run(w, ['rollback']);
+    assert.equal(refused.status, EXIT.REFUSED, refused.stdout);
+    assert.ok(refused.json.error.startsWith(`the logged inverse of ${dep.id}, ${dep.inverse}, no longer applies: op `), refused.json.error);
+    assert.match(refused.json.error, /, no longer applies: op \d+ \(test \["permissions","allow"\]\): test failed: the value differs \(it holds \{"type":"array","length":\d+,"sha8":"[0-9a-f]{8}"\}\)\. Settings changed since that switch; /,'refused by the path the direct write changed, its value never printed');
+    assert.ok(refused.json.error.includes('; nothing was written.'), refused.json.error);
+    assert.equal(refused.json.inverse, dep.inverse);
+    assert.equal(refused.json.fallback, undefined, 'no hand-applied inverse is offered: it would not apply either');
+    assert.ok(fs.readFileSync(w.settings).equals(between), 'nothing written');
+    assert.equal(logLines(w).length, 2, 'nothing logged');
+
+    // The way on: the direct write's own inverse, then the bare rollback.
+    const undo = node([WRITER, '--target', 'settings', '--file', w.settings, '--apply-inverse', extraInverse, '--inverse-out', path.join(w.root, 'undo-inverse.json')]);
+    assert.equal(undo.status, 0, `${undo.stdout}\n${undo.stderr}`);
+    const back = run(w, ['rollback']);
+    assert.equal(back.status, EXIT.OK, back.stdout);
+    assert.equal(back.json.undoes, dep.id);
+    assert.ok(fs.readFileSync(w.settings).equals(original), 'back to the bytes before the U4 deploy');
+    assert.equal(logLines(w).length, 3);
+    assertClean(w);
+  });
+
+  test('a patch gone stale (a push allow added to settings after it was made) refuses the deploy at its plan, exit 2: nothing built, written or logged', () => {
+    const { w, out } = permWorld();
+    const doc = readJson(w.settings);
+    doc.permissions.allow.push('Bash(git push origin main)');
+    write(w.settings, canonical(doc));
+    const before = fs.readFileSync(w.settings);
+    const builtBefore = versions(w);
+    const dep = run(w, ['deploy', '--patch', out]);
+    assert.equal(dep.status, EXIT.REFUSED, dep.stdout);
+    assert.match(dep.json.error, /^the switch would not apply: op \d+ \(test \["permissions","allow"\]\): test failed: the value differs \(it holds \{"type":"array",.*\); nothing was written$/);
+    assert.ok(fs.readFileSync(w.settings).equals(before), 'nothing written');
+    assert.deepEqual(versions(w), builtBefore, 'nothing built');
+    assert.equal(logLines(w).length, 1, 'nothing logged');
+    assertClean(w);
+  });
+
+  test('rollback --to the version before is the liveness-only undo: the hooks go back, every permission op stays (S1 stays closed)', async () => {
+    const { applyOps } = await import('../tools/settings-write.mjs');
+    const { w, out, original } = permWorld();
+    const a = activeOf(JSON.parse(original.toString('utf8'))).active;
+    assert.equal(run(w, ['deploy', '--patch', out]).status, EXIT.OK);
+    const to = run(w, ['rollback', '--to', a]);
+    assert.equal(to.status, EXIT.OK, to.stdout);
+    const want = JSON.parse(original.toString('utf8'));
+    applyOps(want, readJson(out).ops);
+    assert.equal(fs.readFileSync(w.settings, 'utf8'), canonical(want), 'pointing at A, with the patch\'s permission ops in place');
+    assert.equal(logLines(w).length, 3);
+    assertClean(w);
+  });
+});

@@ -55,7 +55,7 @@ describe('passes.json, passedOn and passCheck (KTD 10)', () => {
   });
 
   test('the probe table and the load-bearing set are pinned', () => {
-    assert.deepEqual(EXPECTED, Array.from({ length: 17 }, (_, i) => `Q${i}`));
+    assert.deepEqual(EXPECTED, Array.from({ length: 20 }, (_, i) => `Q${i}`));
     assert.deepEqual(LOAD_BEARING, ['Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q8', 'Q11', 'Q12', 'Q13', 'Q14', 'Q15']);
   });
 

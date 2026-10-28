@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// run.mjs: run the platform probes (Q0-Q16) on the installed CLI and record
+// run.mjs: run the platform probes (Q0-Q19) on the installed CLI and record
 // what they found.
 //
 //   node run.mjs [--only Q1,Q2] [--out <dir>]
@@ -52,13 +52,16 @@ export const JOBS = path.join(os.homedir(), '.claude', 'jobs');
 export const DEFS = path.join(HERE, 'defs');
 const LIB = path.join(HERE, 'lib.mjs');
 
-// Q0-Q16, the plan's probe table. A version can't pass while any of them has
-// no probe file.
-export const EXPECTED = Array.from({ length: 17 }, (_, i) => `Q${i}`);
+// Q0-Q19, the plan's probe table: Q0-Q16 from U2, and U4's Q17 (the push
+// boundary), Q18 (the Skill denials) and Q19 (review-lens). A version can't
+// pass while any of them has no probe file.
+export const EXPECTED = Array.from({ length: 20 }, (_, i) => `Q${i}`);
 
 // The probes KTD 10's gate rests on. Pinned here, never read from a def's
 // own loadBearing flag: an edited flag must not drop a probe from the gate.
 // Q11 (resume/fork id stability, which the ledger keys on) stays in it.
+// U4's Q17-Q19 stay out (its D12): they test the CLI on pinned inputs for
+// U4's landing, and no flow unit gates on them.
 export const LOAD_BEARING = ['Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q8', 'Q11', 'Q12', 'Q13', 'Q14', 'Q15'];
 
 export const VERDICTS = ['VERIFIED', 'CONTRADICTED', 'PARTIAL', 'INCONCLUSIVE', 'BLOCKED'];

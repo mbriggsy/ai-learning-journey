@@ -308,12 +308,18 @@ export const FLAT_HOOKS = Object.freeze([
 ]);
 
 // Everything a version folder holds, relative to projects/hooks. The writer
-// imports ../lib/encoding.mjs, so the layout is kept as it is in the repo.
+// imports ../lib/encoding.mjs, and the liveness check loads
+// lib/permissions.mjs, which imports its catalog, and lib/plugin-grants.mjs,
+// which imports lib/permissions.mjs, so the layout is kept as it is in the
+// repo.
 export const MANIFEST = Object.freeze([
   ...FLAT_HOOKS,
   'statusline.py',
   'tools/settings-write.mjs',
   'lib/encoding.mjs',
+  'lib/permissions.mjs',
+  'lib/permission-rules.json',
+  'lib/plugin-grants.mjs',
 ]);
 
 export const EXIT = Object.freeze({ OK: 0, INTERNAL: 1, REFUSED: 2, CONCURRENT: 3, POSTCHECK: 4 });

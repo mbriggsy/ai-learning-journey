@@ -1,0 +1,1663 @@
+{
+  "about": "U4 permission catalog (our-setup flight plan). deny lands in user settings; ask is empty, since nothing asks Briggsy (2026-10-27: the history-wiping pushes are denied, U4 D3 as the cut changed it); projects lists the tracked project-file edits; playwright is the per-tool allow list the writer puts in place of a run-code allow that no deny covers (none at the landing: run-code is denied on every Playwright server); softDeny is the autoMode.soft_deny entry; marketplace turns auto-update on for every-marketplace, where CE comes from, since nothing is frozen (2026-10-27: Briggsy wants updates; U4 D7's freeze is lifted, and the matcher rows that expected it to deny a CE update now expect no rule); matcherTable is what Q17 expects the CLI to decide; pushSamples are the spellings matchesPush tests an allow against. Public: it names none of the rules the user settings hold today (the generator finds those at run time) and holds no private text.",
+  "ask": [],
+  "deny": [
+    {
+      "rule": "Bash(git push *--force)",
+      "why": "a force push overwrites the remote branch (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git push *--force)",
+      "why": "a force push overwrites the remote branch (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git * push *--force)",
+      "why": "a force push overwrites the remote branch, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git * push *--force)",
+      "why": "a force push overwrites the remote branch, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git push *--force *)",
+      "why": "a force push overwrites the remote branch (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git push *--force *)",
+      "why": "a force push overwrites the remote branch (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git * push *--force *)",
+      "why": "a force push overwrites the remote branch, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git * push *--force *)",
+      "why": "a force push overwrites the remote branch, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git push -f *)",
+      "why": "a force push overwrites the remote branch (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git push -f *)",
+      "why": "a force push overwrites the remote branch (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git * push -f *)",
+      "why": "a force push overwrites the remote branch, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git * push -f *)",
+      "why": "a force push overwrites the remote branch, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git push * -f)",
+      "why": "a force push overwrites the remote branch (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git push * -f)",
+      "why": "a force push overwrites the remote branch (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git * push * -f)",
+      "why": "a force push overwrites the remote branch, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git * push * -f)",
+      "why": "a force push overwrites the remote branch, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git push * -f *)",
+      "why": "a force push overwrites the remote branch (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git push * -f *)",
+      "why": "a force push overwrites the remote branch (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git * push * -f *)",
+      "why": "a force push overwrites the remote branch, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git * push * -f *)",
+      "why": "a force push overwrites the remote branch, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git push +*)",
+      "why": "a +refspec force-pushes that ref (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git push +*)",
+      "why": "a +refspec force-pushes that ref (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git * push +*)",
+      "why": "a +refspec force-pushes that ref, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git * push +*)",
+      "why": "a +refspec force-pushes that ref, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git push * +*)",
+      "why": "a +refspec force-pushes that ref (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git push * +*)",
+      "why": "a +refspec force-pushes that ref (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git * push * +*)",
+      "why": "a +refspec force-pushes that ref, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git * push * +*)",
+      "why": "a +refspec force-pushes that ref, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git push * :**)",
+      "why": "a :ref refspec deletes that remote ref (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git push * :**)",
+      "why": "a :ref refspec deletes that remote ref (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git * push * :**)",
+      "why": "a :ref refspec deletes that remote ref, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git * push * :**)",
+      "why": "a :ref refspec deletes that remote ref, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git push *--de*)",
+      "why": "--delete erases remote branches or tags (U4 D3; blocked on every branch); git takes any unambiguous abbreviation of --delete (--de is the shortest; measured 2026-10-24), so the rule names that"
+    },
+    {
+      "rule": "PowerShell(git push *--de*)",
+      "why": "--delete erases remote branches or tags (U4 D3; blocked on every branch); git takes any unambiguous abbreviation of --delete (--de is the shortest; measured 2026-10-24), so the rule names that"
+    },
+    {
+      "rule": "Bash(git * push *--de*)",
+      "why": "--delete erases remote branches or tags, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch); git takes any unambiguous abbreviation of --delete (--de is the shortest; measured 2026-10-24), so the rule names that"
+    },
+    {
+      "rule": "PowerShell(git * push *--de*)",
+      "why": "--delete erases remote branches or tags, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch); git takes any unambiguous abbreviation of --delete (--de is the shortest; measured 2026-10-24), so the rule names that"
+    },
+    {
+      "rule": "Bash(git push -d *)",
+      "why": "-d erases remote branches or tags (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git push -d *)",
+      "why": "-d erases remote branches or tags (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git * push -d *)",
+      "why": "-d erases remote branches or tags, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git * push -d *)",
+      "why": "-d erases remote branches or tags, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git push * -d)",
+      "why": "-d erases remote branches or tags (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git push * -d)",
+      "why": "-d erases remote branches or tags (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git * push * -d)",
+      "why": "-d erases remote branches or tags, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git * push * -d)",
+      "why": "-d erases remote branches or tags, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git push * -d *)",
+      "why": "-d erases remote branches or tags (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git push * -d *)",
+      "why": "-d erases remote branches or tags (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git * push * -d *)",
+      "why": "-d erases remote branches or tags, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "PowerShell(git * push * -d *)",
+      "why": "-d erases remote branches or tags, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch)"
+    },
+    {
+      "rule": "Bash(git push *--mi*)",
+      "why": "--mirror overwrites and deletes every remote ref to match local (U4 D3; blocked on every branch); git takes any unambiguous abbreviation of --mirror (--mi is the shortest; measured 2026-10-24), so the rule names that"
+    },
+    {
+      "rule": "PowerShell(git push *--mi*)",
+      "why": "--mirror overwrites and deletes every remote ref to match local (U4 D3; blocked on every branch); git takes any unambiguous abbreviation of --mirror (--mi is the shortest; measured 2026-10-24), so the rule names that"
+    },
+    {
+      "rule": "Bash(git * push *--mi*)",
+      "why": "--mirror overwrites and deletes every remote ref to match local, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch); git takes any unambiguous abbreviation of --mirror (--mi is the shortest; measured 2026-10-24), so the rule names that"
+    },
+    {
+      "rule": "PowerShell(git * push *--mi*)",
+      "why": "--mirror overwrites and deletes every remote ref to match local, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch); git takes any unambiguous abbreviation of --mirror (--mi is the shortest; measured 2026-10-24), so the rule names that"
+    },
+    {
+      "rule": "Bash(git push *--pru*)",
+      "why": "--prune deletes every remote ref with no local counterpart (U4 D3; blocked on every branch); git takes any unambiguous abbreviation of --prune (--pru is the shortest; measured 2026-10-24), so the rule names that"
+    },
+    {
+      "rule": "PowerShell(git push *--pru*)",
+      "why": "--prune deletes every remote ref with no local counterpart (U4 D3; blocked on every branch); git takes any unambiguous abbreviation of --prune (--pru is the shortest; measured 2026-10-24), so the rule names that"
+    },
+    {
+      "rule": "Bash(git * push *--pru*)",
+      "why": "--prune deletes every remote ref with no local counterpart, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch); git takes any unambiguous abbreviation of --prune (--pru is the shortest; measured 2026-10-24), so the rule names that"
+    },
+    {
+      "rule": "PowerShell(git * push *--pru*)",
+      "why": "--prune deletes every remote ref with no local counterpart, written as git -C <dir> push or git -c <k>=<v> push (U4 D3; blocked on every branch); git takes any unambiguous abbreviation of --prune (--pru is the shortest; measured 2026-10-24), so the rule names that"
+    },
+    {
+      "rule": "Bash(git * push -f)",
+      "why": "a bare force push of the current branch, written as git -C <dir> push -f (U4 D3; blocked on every branch, departure B1)"
+    },
+    {
+      "rule": "PowerShell(git * push -f)",
+      "why": "a bare force push of the current branch, written as git -C <dir> push -f (U4 D3; blocked on every branch, departure B1)"
+    },
+    {
+      "rule": "Bash(codex *)",
+      "why": "codex runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(codex *)",
+      "why": "codex runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(gemini *)",
+      "why": "gemini runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(gemini *)",
+      "why": "gemini runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(copilot *)",
+      "why": "copilot runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(copilot *)",
+      "why": "copilot runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(aider *)",
+      "why": "aider runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(aider *)",
+      "why": "aider runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(ollama *)",
+      "why": "ollama runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(ollama *)",
+      "why": "ollama runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(opencode *)",
+      "why": "opencode runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(opencode *)",
+      "why": "opencode runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(qwen *)",
+      "why": "qwen runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(qwen *)",
+      "why": "qwen runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(cursor-agent *)",
+      "why": "cursor-agent runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(cursor-agent *)",
+      "why": "cursor-agent runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(llm *)",
+      "why": "llm runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(llm *)",
+      "why": "llm runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(amp *)",
+      "why": "amp runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(amp *)",
+      "why": "amp runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(crush *)",
+      "why": "crush runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(crush *)",
+      "why": "crush runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(gh copilot *)",
+      "why": "gh copilot runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(gh copilot *)",
+      "why": "gh copilot runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(gh agent-task *)",
+      "why": "gh agent-task runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(gh agent-task *)",
+      "why": "gh agent-task runs another vendor's model (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(npx *@openai/codex*)",
+      "why": "npx fetches and runs @openai/codex, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(npx *@openai/codex*)",
+      "why": "npx fetches and runs @openai/codex, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(npx *@google/gemini-cli*)",
+      "why": "npx fetches and runs @google/gemini-cli, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(npx *@google/gemini-cli*)",
+      "why": "npx fetches and runs @google/gemini-cli, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(bunx *@openai/codex*)",
+      "why": "bunx fetches and runs @openai/codex, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(bunx *@openai/codex*)",
+      "why": "bunx fetches and runs @openai/codex, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(bunx *@google/gemini-cli*)",
+      "why": "bunx fetches and runs @google/gemini-cli, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(bunx *@google/gemini-cli*)",
+      "why": "bunx fetches and runs @google/gemini-cli, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(pnpm dlx *@openai/codex*)",
+      "why": "pnpm dlx fetches and runs @openai/codex, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(pnpm dlx *@openai/codex*)",
+      "why": "pnpm dlx fetches and runs @openai/codex, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(pnpm dlx *@google/gemini-cli*)",
+      "why": "pnpm dlx fetches and runs @google/gemini-cli, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(pnpm dlx *@google/gemini-cli*)",
+      "why": "pnpm dlx fetches and runs @google/gemini-cli, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(npm exec *@openai/codex*)",
+      "why": "npm exec fetches and runs @openai/codex, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(npm exec *@openai/codex*)",
+      "why": "npm exec fetches and runs @openai/codex, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(npm exec *@google/gemini-cli*)",
+      "why": "npm exec fetches and runs @google/gemini-cli, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(npm exec *@google/gemini-cli*)",
+      "why": "npm exec fetches and runs @google/gemini-cli, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(npm x *@openai/codex*)",
+      "why": "npm x fetches and runs @openai/codex, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(npm x *@openai/codex*)",
+      "why": "npm x fetches and runs @openai/codex, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(npm x *@google/gemini-cli*)",
+      "why": "npm x fetches and runs @google/gemini-cli, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(npm x *@google/gemini-cli*)",
+      "why": "npm x fetches and runs @google/gemini-cli, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(yarn dlx *@openai/codex*)",
+      "why": "yarn dlx fetches and runs @openai/codex, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(yarn dlx *@openai/codex*)",
+      "why": "yarn dlx fetches and runs @openai/codex, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(yarn dlx *@google/gemini-cli*)",
+      "why": "yarn dlx fetches and runs @google/gemini-cli, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(yarn dlx *@google/gemini-cli*)",
+      "why": "yarn dlx fetches and runs @google/gemini-cli, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(bun x *@openai/codex*)",
+      "why": "bun x fetches and runs @openai/codex, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(bun x *@openai/codex*)",
+      "why": "bun x fetches and runs @openai/codex, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Bash(bun x *@google/gemini-cli*)",
+      "why": "bun x fetches and runs @google/gemini-cli, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "PowerShell(bun x *@google/gemini-cli*)",
+      "why": "bun x fetches and runs @google/gemini-cli, another vendor's model CLI (ruling 1; U4 D5)"
+    },
+    {
+      "rule": "Skill(skill:compound-engineering:ce-work-beta)",
+      "why": "ruling 1: not a skill the model starts (U4 D6)"
+    },
+    {
+      "rule": "Skill(skill:compound-engineering:ce-optimize)",
+      "why": "ruling 1: not a skill the model starts (U4 D6)"
+    },
+    {
+      "rule": "Skill(skill:compound-engineering:ce-riffrec-feedback-analysis)",
+      "why": "ruling 1: not a skill the model starts (U4 D6)"
+    },
+    {
+      "rule": "Skill(skill:compound-engineering:ce-resolve-pr-feedback)",
+      "why": "its allowed-tools Bash(git *) lets a push skip the safety check during its turn (U4 D1, D6)"
+    },
+    {
+      "rule": "Skill(skill:commit-commands:commit-push-pr)",
+      "why": "its allowed-tools Bash(git push:*) lets a push skip the safety check during its turn (U4 D1, D6)"
+    },
+    {
+      "rule": "mcp__playwright__browser_run_code_unsafe",
+      "why": "playwright's run-code tool runs arbitrary code in the server's Node process; never once called, so blocked rather than asked (U4 cut, C11)"
+    },
+    {
+      "rule": "mcp__playwright-seat-1__browser_run_code_unsafe",
+      "why": "playwright's run-code tool runs arbitrary code in the server's Node process; never once called, so blocked rather than asked (U4 cut, C11)"
+    },
+    {
+      "rule": "mcp__playwright-seat-2__browser_run_code_unsafe",
+      "why": "playwright's run-code tool runs arbitrary code in the server's Node process; never once called, so blocked rather than asked (U4 cut, C11)"
+    },
+    {
+      "rule": "mcp__playwright-seat-3__browser_run_code_unsafe",
+      "why": "playwright's run-code tool runs arbitrary code in the server's Node process; never once called, so blocked rather than asked (U4 cut, C11)"
+    },
+    {
+      "rule": "mcp__playwright-seat-4__browser_run_code_unsafe",
+      "why": "playwright's run-code tool runs arbitrary code in the server's Node process; never once called, so blocked rather than asked (U4 cut, C11)"
+    },
+    {
+      "rule": "mcp__playwright-seat-5__browser_run_code_unsafe",
+      "why": "playwright's run-code tool runs arbitrary code in the server's Node process; never once called, so blocked rather than asked (U4 cut, C11)"
+    },
+    {
+      "rule": "mcp__playwright-seat-6__browser_run_code_unsafe",
+      "why": "playwright's run-code tool runs arbitrary code in the server's Node process; never once called, so blocked rather than asked (U4 cut, C11)"
+    },
+    {
+      "rule": "mcp__playwright-seat-7__browser_run_code_unsafe",
+      "why": "playwright's run-code tool runs arbitrary code in the server's Node process; never once called, so blocked rather than asked (U4 cut, C11)"
+    },
+    {
+      "rule": "mcp__playwright-seat-8__browser_run_code_unsafe",
+      "why": "playwright's run-code tool runs arbitrary code in the server's Node process; never once called, so blocked rather than asked (U4 cut, C11)"
+    },
+    {
+      "rule": "mcp__playwright-seat-9__browser_run_code_unsafe",
+      "why": "playwright's run-code tool runs arbitrary code in the server's Node process; never once called, so blocked rather than asked (U4 cut, C11)"
+    },
+    {
+      "rule": "mcp__playwright-seat-10__browser_run_code_unsafe",
+      "why": "playwright's run-code tool runs arbitrary code in the server's Node process; never once called, so blocked rather than asked (U4 cut, C11)"
+    },
+    {
+      "rule": "mcp__plugin_playwright_playwright__browser_run_code_unsafe",
+      "why": "playwright's run-code tool runs arbitrary code in the server's Node process; never once called, so blocked rather than asked (U4 cut, C11)"
+    }
+  ],
+  "projects": {
+    "projects/burned/.claude/settings.local.json": {
+      "remove": [
+        "Bash(git push *)",
+        "Bash(git push)"
+      ],
+      "playwright": []
+    },
+    "projects/archive/top-down-racer-01/.claude/settings.json": {
+      "remove": [
+        "Bash(python*)"
+      ],
+      "playwright": []
+    }
+  },
+  "playwright": {
+    "package": "@playwright/mcp",
+    "version": "0.0.83",
+    "serverVersion": "1.64.0-alpha-1790635538000",
+    "measured": "2026-10-23",
+    "caps": "default",
+    "runCode": "browser_run_code_unsafe",
+    "tools": [
+      "browser_click",
+      "browser_close",
+      "browser_console_messages",
+      "browser_drag",
+      "browser_drop",
+      "browser_emulate_media",
+      "browser_evaluate",
+      "browser_file_upload",
+      "browser_fill_form",
+      "browser_find",
+      "browser_handle_dialog",
+      "browser_hover",
+      "browser_navigate",
+      "browser_navigate_back",
+      "browser_network_request",
+      "browser_network_requests",
+      "browser_press_key",
+      "browser_resize",
+      "browser_select_option",
+      "browser_snapshot",
+      "browser_tabs",
+      "browser_take_screenshot",
+      "browser_type",
+      "browser_wait_for"
+    ]
+  },
+  "softDeny": "Destructive git pushes to a repository's default branch (main or master), in any repository and from either shell, however they are spelled: --force or -f (combined short flags such as -fu included), --force-with-lease, a +refspec, a :main delete or --delete, --mirror and --prune, including through git -C <dir>, git -c <key>=<value>, a quoted 'push', bash -c, PowerShell or a script. Literal deny rules in permissions.deny block the common spellings before the classifier sees them (U4, 2026-10-27); this entry covers every other spelling.",
+  "marketplace": {
+    "name": "every-marketplace",
+    "autoUpdate": true
+  },
+  "matcherTable": [
+    {
+      "shell": "Bash",
+      "command": "git push origin main --force",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git -C . push origin main --force",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push --force origin main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git -C . push --force origin main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push -f origin main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git -c push.default=current push -f origin main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push origin main -f",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git -C . push origin main -f",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push origin -f main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git -C . push origin -f main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push +main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git -C . push +main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push origin +main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git -C . push origin +main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push origin :feature",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git -C . push origin :feature",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push origin --delete feature",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git -C . push origin --delete feature",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push -d origin feature",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git -c push.default=current push -d origin feature",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push origin feature -d",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git -C . push origin feature -d",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push origin -d feature",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git -C . push origin -d feature",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push --mirror origin",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git -C . push --mirror origin",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push --prune origin",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git -C . push --prune origin",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git -C . push -f",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git push origin main --force",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git -C . push origin main --force",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git push --force origin main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git -C . push --force origin main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git push -f origin main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git -c push.default=current push -f origin main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git push origin main -f",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git -C . push origin main -f",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git push origin -f main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git -C . push origin -f main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git push +main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git -C . push +main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git push origin +main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git -C . push origin +main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git push origin :feature",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git -C . push origin :feature",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git push origin --delete feature",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git -C . push origin --delete feature",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git push -d origin feature",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git -c push.default=current push -d origin feature",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git push origin feature -d",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git -C . push origin feature -d",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git push origin -d feature",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git -C . push origin -d feature",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git push --mirror origin",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git -C . push --mirror origin",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git push --prune origin",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git -C . push --prune origin",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git -C . push -f",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "Git Push --Force origin main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git.exe push --force origin main",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "codex",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "codex exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "gemini",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "gemini exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "copilot",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "copilot exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "aider",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "aider exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "ollama",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "ollama exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "opencode",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "opencode exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "qwen",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "qwen exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "cursor-agent",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "cursor-agent exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "llm",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "llm exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "amp",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "amp exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "crush",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "crush exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "gh copilot",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "gh copilot exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "gh agent-task",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "gh agent-task exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "codex exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "gemini -p hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "npx -y @openai/codex exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "npx @google/gemini-cli -p hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "bunx -y @openai/codex exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "bunx @google/gemini-cli -p hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "pnpm dlx -y @openai/codex exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "pnpm dlx @google/gemini-cli -p hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "npm exec -y @openai/codex exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "npm exec @google/gemini-cli -p hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "npm x -y @openai/codex exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "npm x @google/gemini-cli -p hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "yarn dlx -y @openai/codex exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "yarn dlx @google/gemini-cli -p hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "bun x -y @openai/codex exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "bun x @google/gemini-cli -p hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "npx -y @openai/codex exec hi",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "npm exec -y @google/gemini-cli",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "claude plugin update compound-engineering@every-marketplace",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "claude plugin install compound-engineering@every-marketplace",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "claude plugin i compound-engineering@every-marketplace",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "claude plugin marketplace update every-marketplace",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "claude plugins update compound-engineering@every-marketplace",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "claude plugins install compound-engineering@every-marketplace",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "claude plugins i compound-engineering@every-marketplace",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "claude plugins marketplace update every-marketplace",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "claude plugin marketplace update",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "claude plugin update compound-engineering@every-marketplace",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "claude plugin marketplace update",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push origin main",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push -u origin feature",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push --set-upstream origin feature",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push --follow-tags origin main",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push --tags origin",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push --force-with-lease origin feature",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push --force-with-lease=feature:abc123 origin feature",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push --force-with-lease --force-if-includes origin feature",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push origin HEAD:refs/heads/x",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push origin feature-fix",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push origin force-update",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push origin delete-old",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push origin mirror-sync",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push origin prune-x",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push origin c++-port",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git -C . push -q origin main",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git -c push.default=current push origin main",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "npx prettier --write .",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "npx -y tsc --noEmit",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "claude plugin list",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "claude plugin marketplace update claude-plugins-official",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git push origin main",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push origin :",
+      "expect": "deny",
+      "plain": true,
+      "note": "over-match: the matching refspec"
+    },
+    {
+      "shell": "Bash",
+      "command": "git push -o \"ci.skip +x\" origin main",
+      "expect": "deny",
+      "plain": true,
+      "note": "over-match: a push option holding \" +\""
+    },
+    {
+      "shell": "Bash",
+      "command": "git push -o \"x -d y\" origin main",
+      "expect": "deny",
+      "plain": true,
+      "note": "over-match: a push option holding \" -d \""
+    },
+    {
+      "shell": "Bash",
+      "command": "git push -o \"a :b\" origin main",
+      "expect": "deny",
+      "plain": true,
+      "note": "over-match: a push option holding \" :\""
+    },
+    {
+      "shell": "Bash",
+      "command": "git commit -m \"say push --force now\"",
+      "expect": "deny",
+      "plain": true,
+      "note": "over-match: a git * push form matching a commit message"
+    },
+    {
+      "shell": "Bash",
+      "command": "cd . && git push --force origin main",
+      "expect": "deny",
+      "plain": false,
+      "note": "compound: the CLI splits subcommands"
+    },
+    {
+      "shell": "Bash",
+      "command": "git status && git push origin main",
+      "expect": "none",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git status; git push --force origin main",
+      "expect": "deny",
+      "plain": false,
+      "note": "compound: the CLI splits statements"
+    },
+    {
+      "shell": "Bash",
+      "command": "git.exe push --force origin main",
+      "expect": "deny",
+      "plain": false,
+      "note": "Bash strips .exe"
+    },
+    {
+      "shell": "Bash",
+      "command": "/usr/bin/git push --force origin main",
+      "expect": "deny",
+      "plain": false,
+      "note": "Bash strips the path"
+    },
+    {
+      "shell": "Bash",
+      "command": "env git push --force origin main",
+      "expect": "deny",
+      "plain": false,
+      "note": "Bash strips env"
+    },
+    {
+      "shell": "Bash",
+      "command": "timeout 60 git push --force origin main",
+      "expect": "deny",
+      "plain": false,
+      "note": "Bash strips timeout"
+    },
+    {
+      "shell": "Bash",
+      "command": "GIT_TRACE=1 git push origin '+main'",
+      "expect": "deny",
+      "plain": false,
+      "note": "Bash strips the assignment, then joins the unquoted argv"
+    },
+    {
+      "shell": "Bash",
+      "command": "git push origin '+main'",
+      "expect": "none",
+      "plain": true,
+      "note": "a quoted word with nothing stripped is not unquoted"
+    },
+    {
+      "shell": "PowerShell",
+      "command": "& git push --force origin main",
+      "expect": "deny",
+      "plain": false,
+      "note": "PowerShell matches the AST name plus arguments"
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git 'push' --force origin main",
+      "expect": "deny",
+      "plain": false,
+      "note": "PowerShell matches the unquoted arguments"
+    },
+    {
+      "shell": "Bash",
+      "command": "git push --delet origin feature",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push --de origin feature",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push --mirr origin",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git push --pru origin",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "Bash",
+      "command": "git -C . push --delet origin feature",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git push --delet origin feature",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git push --de origin feature",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git push --mirr origin",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git push --pru origin",
+      "expect": "deny",
+      "plain": true
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git -C . push --delet origin feature",
+      "expect": "deny",
+      "plain": true
+    }
+  ],
+  "pushSamples": [
+    {
+      "shell": "Bash",
+      "command": "git push"
+    },
+    {
+      "shell": "Bash",
+      "command": "git push origin main"
+    },
+    {
+      "shell": "Bash",
+      "command": "git push --force origin main"
+    },
+    {
+      "shell": "Bash",
+      "command": "git -C . push origin main"
+    },
+    {
+      "shell": "Bash",
+      "command": "git -c push.default=current push origin main"
+    },
+    {
+      "shell": "Bash",
+      "command": "git.exe push origin main"
+    },
+    {
+      "shell": "Bash",
+      "command": "timeout 60 git push origin main"
+    },
+    {
+      "shell": "Bash",
+      "command": "time git push origin main"
+    },
+    {
+      "shell": "Bash",
+      "command": "nice git push origin main"
+    },
+    {
+      "shell": "Bash",
+      "command": "nohup git push origin main"
+    },
+    {
+      "shell": "Bash",
+      "command": "stdbuf -oL git push origin main"
+    },
+    {
+      "shell": "Bash",
+      "command": "command git push origin main"
+    },
+    {
+      "shell": "Bash",
+      "command": "env git push origin main"
+    },
+    {
+      "shell": "Bash",
+      "command": "GIT_TRACE=1 git push origin main"
+    },
+    {
+      "shell": "Bash",
+      "command": "bash -c 'git push origin main'"
+    },
+    {
+      "shell": "Bash",
+      "command": "sh -c 'git push origin main'"
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git push"
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git push origin main"
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git -C . push origin main"
+    },
+    {
+      "shell": "PowerShell",
+      "command": "git.exe push origin main"
+    },
+    {
+      "shell": "PowerShell",
+      "command": "pwsh -c 'git push origin main'"
+    }
+  ]
+}

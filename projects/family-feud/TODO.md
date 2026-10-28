@@ -6,12 +6,14 @@
 > handoffs) was pruned 2026-09-27 and lives at commit **`af491a71`** — `git show af491a71:projects/family-feud/TODO.md`.
 > Read it before the 2027 draft, not before.
 
-## ▶ START HERE — as of Fri 2026-10-23 (week 7)
+## ▶ START HERE — as of Tue 2026-10-27 (week 8)
 
 **We are PoppaBriggsy, roster 3, *Saquon Deez Nuts*. `briggsy007` is HUNTER** (CLAUDE.md landmine).
 
-- **Record 3-3 (4th).** Week 7 vs Cltchiefs; **week 8 vs HUNTER** (his RBs McCaffrey + Montgomery are
-  both on bye). Moves log for weeks 6-7: `temp/week7-moves-log.md` (gitignored, local).
+- **Record 4-3 (4th)**, after beating Cltchiefs 147.24–98.22 in week 7. **Week 8 is vs HUNTER, Sun 11-01 / Mon 11-02.**
+  His McCaffrey, Montgomery and Vele are all on bye. The lineup was set and verified on `/rosters` on 10-27.
+  The morning brief (lineup re-checks, the McGowan option, the Kittle trade recommendation) is
+  `temp/week8-moves-log.md` (gitignored, local). Weeks 6-7: `temp/week7-moves-log.md`.
 - **Kaeperni's offer (A.J. Brown + Tucker Kraft for Zay Flowers) was DECLINED 10-22 ~22:20 ET** on
   Briggsy's word. Verified: the panel read REJECTED, Active Trades was empty, `/rosters` unchanged.
 - **`scripts/trade_eval.py` is BUILT, COMMITTED (10-23) and REVIEWED (10-23):** 9 opus lenses, 18
@@ -26,13 +28,12 @@
 
 ## Ranked next
 
-1. **Week 8 lineup vs Hunter (by Sun 10-25):**
-   - Strange at TE (Fannin back on the bench);
-   - Wilson for Collins (HOU bye);
-   - SEA for HOU at DEF.
-
-   Run `scripts/external_projections.py --week 8` first, then `trade_eval.py` if a trade comes up.
-   Maye's week-11 bye: we have no backup QB. Stream a free agent, using a bench spot.
+1. **Week 8 vs Hunter: the lineup is SET (10-27). What's left is two re-checks and one trade decision.**
+   - **London (Q, head):** read Atlanta's Wed 10-28 practice report. If he sits, Tate goes to WR.
+   - **Swift vs Stevenson:** if Chicago clears Kyle Monangai, swap Stevenson in before NE's Sun 4:25 PM kickoff.
+   - **Kittle trade:** Briggsy decides Wed morning. The recommendation is Swift + Strange for Kittle (us +14.2 / +24.4
+     rest of season, Kaeperni −0.1 / +0.6). Fallbacks and the post-trade lineup are in `temp/week8-moves-log.md`.
+   - Maye's week-11 bye: we have no backup QB. Stream a free agent, using a bench spot.
 2. **Settle trade_eval's waiver assumption at the next real drop** (it moves the frozen headline 3.4).
    The tool assumes a man dropped when a trade processes can't start for anyone until next week
    (waivers run Wednesdays, `daily_waivers: 0`). After the next drop Briggsy names, open the Players
@@ -53,9 +54,7 @@
 5. **Byes — plan the week before** (re-derived 2026-10-23 from live `/rosters` and Sleeper's weekly
    projections: a team whose DEF row has no opponent is on bye, `trade_eval.bye_teams`' rule.
    Re-derive after any roster move):
-   - **Week 8 vs HUNTER:** ours are Collins and the HOU DEF (the lineup item covers both). It's his
-     worst week: McCaffrey, Montgomery and Vele are all on bye. **Never trade him a RB or any week-8
-     flex body.**
+   - **Never trade Hunter a RB or any flex body.** The 10-27 trade search left him out on purpose.
    - **Week 9:** Tate. · **Week 10:** Swift. · **Week 12:** nobody.
    - **Week 11 is the big one:** Maye, London, Fannin, Stevenson AND the SEA DEF. There's no backup QB
      on the roster, so stream a QB that week, and a DEF too if SEA is still the starter. Hunter loses
@@ -134,6 +133,10 @@ Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the
   every search reads "no match". Close the tab so the extension opens a fresh window.
 - **The mule misses runs while the laptop sleeps** (6.7 h stale 09-26 09:09, self-recovered). A stale
   alert in `DRAFT_ALERTS.md` means "no new data", not "nothing happened".
+- 🚨 **A dead battery skips game day silently.** 10-24: unplugged 22:49, critical battery 00:19, asleep until Mon 07:39.
+  All three Sunday `gameday_check` runs never fired, and `GAMEDAY.md` simply has no Sunday entry. Each scheduled task
+  still showed `Last Result: 0`. The diagnosis is the Kernel-Power events in the System log. Keep the laptop on the
+  charger Sat–Mon.
 
 **Draft-night (carried for 2027)**
 - `ffQueueSync {rebuild:true}` and any bridge call over ~3 DOM ops **timed out the CDP evaluate at

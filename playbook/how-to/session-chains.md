@@ -53,7 +53,7 @@ Squeaky's last step sends the handoff. It runs even when squeaky stopped partway
 
 Every miss ends the close with a `No handoff:` line and the reason:
 
-- No successor was named. A session can lose your naming when its older conversation is boiled down to a summary, which also happens to an idle session about 55 minutes after its last reply. This line is how you find out.
+- No successor was named. A session can lose your naming when its older conversation is boiled down to a summary (a compaction, which happens when the window fills; idle compaction is off since 2026-10-29). This line is how you find out.
 - No live session on this laptop has that name, or only lookalikes do.
 - More than one live session on this laptop has that name.
 - The send failed.

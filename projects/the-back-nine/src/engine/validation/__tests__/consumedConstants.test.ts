@@ -157,6 +157,21 @@ describe('consumedConstantEntries — the derivation is the run, not the registr
     expect(keysOf(makeParams({ overlay: baseOverlay }))).not.toContain('contributions.employerPlan2026')
   })
 
+  it('the working-years family is consumed iff the construct carries W (the pay check’s key — U5’s family rule)', () => {
+    const family = Object.keys(ALL_CONSTANTS).filter((k) => k.startsWith('workingYears.'))
+    expect(family.length, 'the payroll and earnings-test keys').toBe(6)
+    const health: OverlayParams = { ...baseOverlay, healthcareEnabled: true }
+    // A spine run (no construct) and a W-absent date candidate (the construct, no W) read none of it.
+    expect(keysOf(makeParams({ overlay: health })).filter((k) => k.startsWith('workingYears.'))).toEqual([])
+    const noW: OverlayParams = { ...health, accumulation: { contributionsByPerson: [{}] } }
+    expect(keysOf(makeParams({ overlay: noW })).filter((k) => k.startsWith('workingYears.'))).toEqual([])
+    // A W-present candidate reads every one of them (W = 0 is still W: the key is presence).
+    for (const W of [52_000, 0]) {
+      const withW: OverlayParams = { ...health, accumulation: { contributionsByPerson: [{}], workingYearCostReal: W } }
+      expect(keysOf(makeParams({ overlay: withW })).filter((k) => k.startsWith('workingYears.')).sort(), `W = ${W}`).toEqual([...family].sort())
+    }
+  })
+
   it('solver.* calibration entries NEVER join the walk (their enforcement is the ε clause)', () => {
     const everything = makeParams({
       people: [{ ...P65, pia: 24_000 }],
@@ -199,7 +214,7 @@ const WITNESSES: ReadonlyArray<readonly [key: string, file: string, symbol: stri
   ['contributions.employerPlan2026', 'src/intake/sanity.ts', 'employerPlan2026'],
   ['contributions.hsa2026', 'src/intake/sanity.ts', 'hsa2026'],
   // The pay check's payroll keys (A3), each bound to the producer that reads it. The family's walk
-  // rule (consumed iff the construct carries W) lands with the check (U5); until then no run reads them.
+  // rule (consumed iff the construct carries W) landed with the check (A6).
   ['workingYears.oasdiRate', 'src/engine/payrollTax.ts', 'oasdiRate'],
   ['workingYears.oasdiWageBase', 'src/engine/payrollTax.ts', 'oasdiWageBase'],
   ['workingYears.hiRate', 'src/engine/payrollTax.ts', 'hiRate'],

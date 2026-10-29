@@ -24,9 +24,12 @@ import {
   type Household,
   type HouseholdYear,
   type OverlayPerson,
+  type WorkingYearCheckTerms,
   type WorkingYearOutsideIncome,
+  type WorkingYearProbe,
   type YearContribution,
 } from '@engine/taxOverlay'
+import { earningsTestSchedule, socialSecurityPaid, type EarningsTestSchedule } from '@engine/earningsTest'
 import { totalAcrossBuckets } from '@engine/sequencing'
 import {
   adjustOwnBenefitAnnual,
@@ -492,6 +495,22 @@ export function bothAliveYearBenefit(
  * The clamp (`accumulating && livingWorker`) is single-sourced HERE so the two seams can never
  * disagree about which years are clamped. Consumes ZERO draws (CRN-safe — a pure function of the
  * death timeline + the financial inputs).
+ *
+ * THE PAY CHECK (`docs/plans/features/working-year-pay-check-build-spec.md`, KTD1 / KTD6 / KTD10). W
+ * (`accumulation.workingYearCostReal`) keys everything new, so a W-absent call is the pre-check
+ * function bit for bit. With W present:
+ *  - `schedule` is REQUIRED — this path's earnings-test schedule (`earningsTestSchedule`, built on the
+ *    SAME death timeline) — and the year's one `ss` is the schedule's PAID figure in EVERY year, worked
+ *    or retired (R11): withheld while someone works before full retirement age, credited later. `net`,
+ *    the floor's `ssBenefit`, taxable SS, IRMAA-MAGI and the check's cash all read that one number, so
+ *    withheld benefits are never taxed (R15). A schedule without W throws too: it would move nothing
+ *    the run is keyed on.
+ *  - a clamped year also carries {@link WorkingYearCheckTerms} on `workingYearCheck`: each living
+ *    worker's gross pay, the ongoing other-income gross, the household's OWN deposits
+ *    ({@link ownDepositsForYear}) and W_t ({@link workingYearCostForYear}). The tax overlay adds the
+ *    payroll tax and the tax on the outside income and composes the shortfall
+ *    (`taxOverlay.workingYearCashLines`). `net`, `netFloor`, the clamp and the deposits are untouched
+ *    (R11): the shortfall is drawn on top of `net`, never through it.
  */
 export function cashTermsForYear(
   t: number,
@@ -499,6 +518,7 @@ export function cashTermsForYear(
   offsets: readonly PersonOffsets[],
   deathOffsets: readonly number[],
   higherClaimOffset: number,
+  schedule?: EarningsTestSchedule,
 ): {
   readonly net: number
   /** P3·U9 — the FLOOR (essentials-only) track's portfolio-funded withdrawal, through the
@@ -525,7 +545,21 @@ export function cashTermsForYear(
    *  (KTD11). `undefined` in every UNCLAMPED year (a hole on the overlay's stream). Decided by the SAME
    *  clamp as `net` and the KTD-9 split, so the floor and the clamp can never disagree on a year. */
   readonly workingYearOutside: WorkingYearOutsideIncome | undefined
+  /** The pay check (KTD6): the clamped year's terms the overlay composes into the shortfall — present
+   *  in exactly the years `workingYearOutside` is, and only when W is. `undefined` otherwise. */
+  readonly workingYearCheck: WorkingYearCheckTerms | undefined
 } {
+  // W keys the check AND the earnings test (KTD1): a W-present caller holds the path's schedule, and
+  // a schedule on a W-absent run is a wiring fault — either mismatch fails loud (burned/062).
+  const workingYearCost = params.overlay?.accumulation?.workingYearCostReal
+  if (workingYearCost !== undefined && schedule === undefined) {
+    throw new Error(
+      '[simulate] cashTermsForYear needs the path’s earnings-test schedule when W (workingYearCostReal) is present — the year’s Social Security is the paid figure (R11), never the composed one',
+    )
+  }
+  if (workingYearCost === undefined && schedule !== undefined) {
+    throw new Error('[simulate] an earnings-test schedule rides only with W (workingYearCostReal) — W keys the test (KTD1)')
+  }
   let aliveCount = 0
   for (let i = 0; i < deathOffsets.length; i++) if (t < (deathOffsets[i] ?? 0)) aliveCount++
   const allAlive = aliveCount === offsets.length
@@ -596,6 +630,10 @@ export function cashTermsForYear(
     const survivorYear = survivorYearBenefit(t, params.people, offsets, deathOffsets)
     if (survivorYear !== undefined) ss = survivorYear.paid
   }
+  // The pay check (R11): under W the year's one Social Security figure is what the earnings test PAYS —
+  // the composed figure itself on a path the test never reaches, or a year with nothing held back and no
+  // credit in effect (`earningsTest.ts` pays that float bit for bit).
+  if (schedule !== undefined) ss = socialSecurityPaid(schedule, t, ss)
 
   // C2 §7 — the working-year zero-withdrawal clamp, PRESENCE-GATED on the accumulation construct
   // and DEATH-AWARE. While the construct is present AND at least one LIVING person is still working
@@ -612,6 +650,10 @@ export function cashTermsForYear(
   // shipped pre-C2 caller — is byte-identical by construction. Direction: the clamp only ever
   // REMOVES withdrawals → weakly higher balances → a weakly earlier date; optimistic ONLY for a
   // household that really draws from the portfolio while working (disclosed — D2 owns the copy).
+  // UNDER W (the pay check) that household is priced: `net` stays 0 here, but the overlay composes the
+  // year's check from `workingYearCheck` below and draws any shortfall on top of the need, while the
+  // deposits stay as entered (R11) — so a short working year DOES draw, and the optimism above is
+  // closed for a W-present run.
   // `ss` is NOT clamped: a claimed-while-working benefit still flows to the tax overlay as
   // provisional income (an overlay-forced working-year outflow is legal — §2's overlap-safe fold).
   // R40 seam 1 — the ongoing other-income SELECT (per-owner death-gated, KTD-4/KTD-7), netted into
@@ -644,10 +686,15 @@ export function cashTermsForYear(
   // person: contributions above pay are never a negative wage. Computed ONLY in a clamped year, so
   // every unclamped year's hot path is untouched.
   let workingYearOutside: WorkingYearOutsideIncome | undefined
+  // The pay check (KTD6): under W the same clamped year carries the terms the overlay composes into the
+  // shortfall — read on the same alive∧working filter, from the same ongoing select, in the same block,
+  // so the check and the floor can never disagree on a year.
+  let workingYearCheck: WorkingYearCheckTerms | undefined
   if (clamped) {
     const accumulation = params.overlay?.accumulation
     const deferrals = accumulation?.contributionsByPerson
     const investment = accumulation?.workingYearInvestmentByPerson
+    const wagesByPerson: number[] | undefined = workingYearCost !== undefined ? new Array<number>(offsets.length).fill(0) : undefined
     let taxablePay = 0
     let investmentIncome = 0
     for (let i = 0; i < offsets.length; i++) {
@@ -656,9 +703,20 @@ export function cashTermsForYear(
       if (t < (deathOffsets[i] ?? 0) && t < o.retire) {
         taxablePay += Math.max(0, o.earnedIncomeReal - (deferrals?.[i]?.pretax?.[t] ?? 0))
         investmentIncome += investment?.[i] ?? 0
+        if (wagesByPerson !== undefined) wagesByPerson[i] = o.earnedIncomeReal
       }
     }
     workingYearOutside = { ordinaryBase: taxablePay + sel.taxable, investmentIncome }
+    if (accumulation !== undefined && workingYearCost !== undefined && wagesByPerson !== undefined) {
+      workingYearCheck = {
+        wagesByPerson,
+        ongoingGross: sel.gross,
+        ownDeposits: ownDepositsForYear(t, accumulation, offsets, deathOffsets, params.people, params.overlay?.medicareOnsetSimYear),
+        workingYearCost: workingYearCostForYear(params, workingYearCost, allAlive),
+        ongoingTaxable: sel.taxable,
+        investmentIncome,
+      }
+    }
   }
   return {
     net,
@@ -673,7 +731,66 @@ export function cashTermsForYear(
     // added to the hot path, so every existing output is byte-identical).
     spendingReal: spending,
     workingYearOutside,
+    workingYearCheck,
   }
+}
+
+/**
+ * W_t — what a working year costs in sim year t (the pay check's R9). With everyone alive it is W
+ * itself. On a survivor path it is s + r·(W − s), s = min(W, S): the survivor-sticky part S of a working
+ * year is held whole and only the rest scales by the run's survivor ratio r (scaling all of W is the
+ * ratio-on-total shape the 2026-07-02 council vetoed; charging all of W overstates). S is derived from
+ * the run's OWN compiled profile, read live (never saved with the answer):
+ *  - a budget: `budget.sticky[0]` — every sticky line active at k = 0 (a working year is always k = 0:
+ *    some living member works, so t is before the work-stop anchor), finite-ended ones included, with
+ *    the out-of-pocket medical M already injected by the compile;
+ *  - no budget: M (`survivorOopMedicalReal`, 0 when absent) — so the budgetless arm IS
+ *    {@link budgetlessSurvivorSpending}(W, r, M), bit for bit (absent M: 0 + r·W is r·W).
+ * S > W is CLAMPED by the min (W + r·0 is W), never refused — the `budgetlessSurvivorSpending`
+ * precedent. PURE, draw-free; the caller has validated W (finite, 0 ≤ W ≤ ENGINE_MAX_DOLLAR).
+ */
+export function workingYearCostForYear(params: SimulationParams, workingYearCost: number, allAlive: boolean): number {
+  if (allAlive) return workingYearCost
+  const held = params.budget !== undefined ? (params.budget.sticky[0] ?? 0) : (params.survivorOopMedicalReal ?? 0)
+  const s = Math.min(workingYearCost, held)
+  return s + params.survivorSpendingRatio * (workingYearCost - s)
+}
+
+/**
+ * The household's OWN deposits in sim year t — what the pay check charges a working year's pay for
+ * savings (R7, KTD6). It reads {@link contributionsForYear}, the run's own deposit filters (death, the
+ * alive∧working window, the owner's Medicare onset zeroing the HSA), called exactly as the hot loop
+ * calls it, then per LIVING WORKER takes out what is not the worker's own money:
+ *  - the employer match (`employerMatch[t]` — `contributionsForYear` merges it into the pre-tax slot);
+ *  - the employer's HSA dollar (`employerHsaByPerson[i][t]`), only where that person's HSA deposit was
+ *    actually made this year — past their Medicare onset the deposit is zeroed and its employer share
+ *    with it, so nothing is subtracted (an employer share of a zeroed deposit would read own deposits
+ *    low: the rosy direction).
+ * Floored at 0 per person. Whole-dollar streams compose exactly. PURE, draw-free (CRN-safe).
+ */
+export function ownDepositsForYear(
+  t: number,
+  accumulation: AccumulationParams,
+  offsets: readonly PersonOffsets[],
+  deathOffsets: readonly number[],
+  people: readonly PersonInputs[],
+  medicareOnsetSimYear?: readonly number[],
+): number {
+  const year = contributionsForYear(t, accumulation, offsets, deathOffsets, people, medicareOnsetSimYear)
+  const employerHsa = accumulation.employerHsaByPerson
+  let own = 0
+  for (let i = 0; i < offsets.length; i++) {
+    const o = offsets[i]
+    if (o === undefined || !(t < (deathOffsets[i] ?? 0) && t < o.retire)) continue
+    const match = accumulation.contributionsByPerson[i]?.employerMatch?.[t] ?? 0
+    const hsa = year.hsaByPerson[i] ?? 0
+    const employerHsaShare = hsa > 0 ? (employerHsa?.[i]?.[t] ?? 0) : 0
+    own += Math.max(
+      0,
+      (year.taxableByPerson[i] ?? 0) + ((year.pretaxByPerson[i] ?? 0) - match) + (year.rothByPerson[i] ?? 0) + (hsa - employerHsaShare),
+    )
+  }
+  return own
 }
 
 /**
@@ -698,23 +815,30 @@ export function cashTermsForYear(
  * PURE, draw-free (CRN-safe): it re-runs the pure cash function in `simulate`'s post-loop reduction (the
  * {@link survivorIncomeStepDownMonthlyReal} precedent), so a survivor-emitting run stays byte-identical
  * on every joint field. Called only when the survivor surface exists (≥ 1 survivor phase ⇒ ≥ 2 people).
+ *
+ * `schedule` (the pay check, KTD10) — REQUIRED under W, as every `cashTermsForYear` caller's is: `simulate`
+ * passes the NO-DEATH timeline's earnings-test schedule, built for `horizonYears`. It is not this
+ * function's timelines' own schedule, and it need not be: the output reads ONLY `spendingReal`, which
+ * never reads Social Security, so no schedule can move it (pinned). A change that reads anything else off
+ * these calls (`net`, `ss`) must build each timeline's own schedule first.
  */
 export function survivorSpendingBasis(
   params: SimulationParams,
   offsets: readonly PersonOffsets[],
   higherClaimOffset: number,
   horizonYears: number,
+  schedule?: EarningsTestSchedule,
 ): SurvivorSpendingBasis {
   // `t < death` is "alive at t", so a death offset of 1 is alive at year 0 and 0 is gone at year 0.
   const everyoneAlive = offsets.map(() => 1)
   const firstGoneAtYearZero = offsets.map((_, i) => (i === 0 ? 0 : 1))
-  const survivorAnnual = cashTermsForYear(0, params, offsets, firstGoneAtYearZero, higherClaimOffset).spendingReal
-  const coupleAnnual = cashTermsForYear(0, params, offsets, everyoneAlive, higherClaimOffset).spendingReal
+  const survivorAnnual = cashTermsForYear(0, params, offsets, firstGoneAtYearZero, higherClaimOffset, schedule).spendingReal
+  const coupleAnnual = cashTermsForYear(0, params, offsets, everyoneAlive, higherClaimOffset, schedule).spendingReal
   let steady = true
   for (let gone = 0; gone < offsets.length && steady; gone++) {
     const survivorThroughout = offsets.map((_, i) => (i === gone ? 0 : horizonYears + 1))
     for (let t = 0; t < horizonYears && steady; t++) {
-      steady = Object.is(cashTermsForYear(t, params, offsets, survivorThroughout, higherClaimOffset).spendingReal, survivorAnnual)
+      steady = Object.is(cashTermsForYear(t, params, offsets, survivorThroughout, higherClaimOffset, schedule).spendingReal, survivorAnnual)
     }
   }
   return { survivorMonthlyReal: survivorAnnual / 12, coupleMonthlyReal: coupleAnnual / 12, steady }
@@ -728,7 +852,8 @@ export function survivorSpendingBasis(
  * withdrawal here. With the construct present, working years with a living worker return 0
  * outright (the §7 clamp — the household lives on salary). A thin projection of
  * {@link cashTermsForYear}; exported for direct unit testing of the seam (bridge truncation at
- * death, SS step-down, clamp).
+ * death, SS step-down, clamp). `schedule` is the path's earnings-test schedule, REQUIRED under W
+ * (the pay check, KTD10) and refused without it.
  */
 export function netWithdrawalForYear(
   t: number,
@@ -736,8 +861,9 @@ export function netWithdrawalForYear(
   offsets: readonly PersonOffsets[],
   deathOffsets: readonly number[],
   higherClaimOffset: number,
+  schedule?: EarningsTestSchedule,
 ): number {
-  return cashTermsForYear(t, params, offsets, deathOffsets, higherClaimOffset).net
+  return cashTermsForYear(t, params, offsets, deathOffsets, higherClaimOffset, schedule).net
 }
 
 /**
@@ -1576,7 +1702,15 @@ export function buildSurvivorConditioned(
  *  (`tStar` clamped pre-claim), so a transient §202-ahead-of-an-unclaimed-benefit year can never read as
  *  a negative step-down (the cardinal understating direction). Median (not mean) so a handful of
  *  early-widowhood outliers cannot drag the representative figure. Returns 0 only on the unreachable
- *  no-survivor-phase input (the caller computes it solely when a survivor surface exists). */
+ *  no-survivor-phase input (the caller computes it solely when a survivor surface exists).
+ *
+ *  THE PAY CHECK (KTD10): under W each leg's Social Security is the earnings test's PAID figure on THAT
+ *  leg's own timeline — the path's deaths for the survivor leg, the pushed-past `bothAlive` timeline for
+ *  the counterfactual — so each leg gets its own schedule, built here over the whole window
+ *  (`earningsTestSchedule` is pure in the timeline, and a year's figure reads only that year and earlier
+ *  ones, so the survivor leg pays what the hot loop paid on every year the path lives). Each leg then reads
+ *  what IT is paid on its own timeline, so the drop moves by whatever each leg held back — on a path whose
+ *  first death is the worker's, only the both-alive leg's. */
 export function survivorIncomeStepDownMonthlyReal(
   deathOffsetsByPath: readonly (readonly number[])[],
   maxHorizonYears: number,
@@ -1589,6 +1723,7 @@ export function survivorIncomeStepDownMonthlyReal(
   // floors it at fd, so an already-claiming household measures at the death itself).
   let claimYear = offsets.length > 0 ? offsets[0]!.claim : 0
   for (let i = 1; i < offsets.length; i++) if (offsets[i]!.claim > claimYear) claimYear = offsets[i]!.claim
+  const withEarningsTest = params.overlay?.accumulation?.workingYearCostReal !== undefined
   const annualDrops: number[] = []
   for (let p = 0; p < deathOffsetsByPath.length; p++) {
     const deaths = deathOffsetsByPath[p]!
@@ -1605,8 +1740,12 @@ export function survivorIncomeStepDownMonthlyReal(
     // "Both alive at tStar": every offset that died at/before tStar (the first-dier) pushed one year
     // past it; the survivor (death > tStar) is untouched.
     const bothAlive = deaths.map((d) => (d <= tStar ? tStar + 1 : d))
-    const incomeBothAlive = cashTermsForYear(tStar, params, offsets, bothAlive, higherClaimOffset).nonPortfolioIncomeReal
-    const incomeSurvivor = cashTermsForYear(tStar, params, offsets, deaths, higherClaimOffset).nonPortfolioIncomeReal
+    const scheduleFor = (timeline: readonly number[]): EarningsTestSchedule | undefined =>
+      withEarningsTest
+        ? earningsTestSchedule({ people: params.people, offsets, deathOffsets: timeline, higherClaimOffset, horizonYears: maxHorizonYears })
+        : undefined
+    const incomeBothAlive = cashTermsForYear(tStar, params, offsets, bothAlive, higherClaimOffset, scheduleFor(bothAlive)).nonPortfolioIncomeReal
+    const incomeSurvivor = cashTermsForYear(tStar, params, offsets, deaths, higherClaimOffset, scheduleFor(deaths)).nonPortfolioIncomeReal
     annualDrops.push(Math.max(0, incomeBothAlive - incomeSurvivor))
   }
   if (annualDrops.length === 0) return 0
@@ -1666,6 +1805,12 @@ export function simulate(
      *  from product code — a shape test pins the only non-test consumers; dimensions are
      *  fail-loud-guarded (a mismatched matrix would read as silent NaN paths). */
     readonly _injectedDraws?: Draws
+    /** PROBE-ONLY (the pay check's observation hook, KTD7 / KTD20 — `taxOverlay`'s
+     *  {@link WorkingYearProbe}): forwarded into EVERY tax-aware pass of every path (both tracks of a
+     *  budget run), so a test or a measurement script can watch each clamped year's floor preparation,
+     *  the check's composed lines and draw, and the IRMAA-MAGI recorded. A pure observation — a run with
+     *  it is byte-identical to one without. NEVER set from product code (a consumer pin holds the line). */
+    readonly _workingYearProbe?: WorkingYearProbe
   },
 ): SimOutput {
   // The seed is part of the R19 surface (U4 persists it with a bit-identical
@@ -1716,6 +1861,9 @@ export function simulate(
   // never read for the resolution (only `startCalendarYear` is); the config is the EXHAUSTIVE-OFF
   // pass-through (no household) unless tax or RMD is on.
   const overlay = params.overlay
+  // The pay check's key (KTD1): W present ⇒ every path builds its earnings-test schedule and the
+  // overlay composes each clamped year's check. Absent ⇒ none of it runs (the pre-check run, bit for bit).
+  const workingYearCost = overlay?.accumulation?.workingYearCostReal
   const overlayPeople: readonly OverlayPerson[] = overlay
     ? people.map((pp) => ({ birthYear: overlay.startCalendarYear - pp.currentAge }))
     : []
@@ -1887,6 +2035,15 @@ export function simulate(
     // unclamped year — assembled per-path (the clamp is death-aware) from the SAME cash call that sets
     // the year's net, and forwarded only when the accumulation construct rides with tax on.
     const workingYearOutsideIncome: WorkingYearOutsideIncome[] = []
+    // The pay check (KTD6/KTD10): under W, this path's earnings-test schedule (on THIS path's deaths,
+    // for every year it lives) makes each year's `ss` the paid figure, and each clamped year's check
+    // terms ride beside the floor's outside income — a hole wherever the floor has one. W absent ⇒
+    // no schedule, an empty stream that is never forwarded: the pre-check run bit for bit.
+    const schedule =
+      workingYearCost !== undefined
+        ? earningsTestSchedule({ people, offsets, deathOffsets, higherClaimOffset, horizonYears: horizon })
+        : undefined
+    const workingYearCheck: WorkingYearCheckTerms[] = []
     for (let t = 0; t < horizon; t++) {
       const zs = sRow?.[t]
       const zbRaw = bRow?.[t]
@@ -1894,7 +2051,7 @@ export function simulate(
       const zb = rho * zs + sqrt1mRho2 * zbRaw
       realStock.push(simpleReturnFromNormal(logStock, zs))
       realBond.push(simpleReturnFromNormal(logBond, zb))
-      const cash = cashTermsForYear(t, params, offsets, deathOffsets, higherClaimOffset)
+      const cash = cashTermsForYear(t, params, offsets, deathOffsets, higherClaimOffset, schedule)
       withdrawals.push(cash.net)
       if (withdrawalsFloor) withdrawalsFloor.push(cash.netFloor)
       if (overlay) {
@@ -1908,6 +2065,7 @@ export function simulate(
           ongoingTaxableIrmaaOnly.push(cash.ongoingTaxableIrmaaOnly)
         }
         if (cash.workingYearOutside !== undefined) workingYearOutsideIncome[t] = cash.workingYearOutside
+        if (cash.workingYearCheck !== undefined) workingYearCheck[t] = cash.workingYearCheck
         const living: OverlayPerson[] = []
         for (let i = 0; i < overlayPeople.length; i++) {
           const op = overlayPeople[i]
@@ -2001,6 +2159,11 @@ export function simulate(
           // the pay). The mask rides whenever the construct does (the overlay's R8 cross-check reads
           // the pair) — and under healthcare as before.
           ...(overlay.accumulation && overlay.taxEnabled ? { workingYearOutsideIncome } : {}),
+          // The pay check (KTD6): the check's terms, spread ONLY under W (which validateParams admits only
+          // with the construct, tax and healthcare), inside `taxInputs` so the essentials-floor pass
+          // draws the SAME shortfall (R10: a tier changes the spend, never the pay or what work costs).
+          ...(workingYearCost !== undefined ? { workingYearCheck } : {}),
+          ...(options?._workingYearProbe !== undefined ? { _workingYearProbe: options._workingYearProbe } : {}),
           ...(overlay.healthcareEnabled || overlay.accumulation ? { bridgeYearMask: bridgeMask } : {}),
           // U3 · M3 Slice 4 healthcare streams: spread ONLY when the overlay is enabled, so a
           // healthcare-off run passes the byte-identical pre-Slice-4 taxInputs (reduce-to-spine).
@@ -2237,7 +2400,17 @@ export function simulate(
             offsets,
             higherClaimOffset,
           ),
-          spendingBasis: survivorSpendingBasis(params, offsets, higherClaimOffset, maxHorizon),
+          // Under W the basis takes the no-death timeline's schedule (its output reads only the spend —
+          // see its docblock); absent W, none.
+          spendingBasis: survivorSpendingBasis(
+            params,
+            offsets,
+            higherClaimOffset,
+            maxHorizon,
+            workingYearCost !== undefined
+              ? earningsTestSchedule({ people, offsets, deathOffsets: people.map(() => maxHorizon), higherClaimOffset, horizonYears: maxHorizon })
+              : undefined,
+          ),
         }
       : null
 

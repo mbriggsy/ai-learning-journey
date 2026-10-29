@@ -13,7 +13,9 @@ import { exportVault, restoreVault } from '../src/store/backup'
 import { createSession, type VaultSession } from '../src/store/session'
 import { profileDateSearch } from '../src/engine/dateSearchProfile'
 import { validationMarket } from '../src/engine/reference/methodology'
-import type { DateSearchInput } from '../src/engine/dateSearch'
+import { DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS, buildCandidateParams, type DateSearchInput } from '../src/engine/dateSearch'
+import { personOffsetsFor } from '../src/engine/simulate'
+import { earningsTestSchedule } from '../src/engine/earningsTest'
 import type { OverlayParams, PersonInputs, Scenario, SimulationParams } from '../src/shared/model'
 
 const MODEL: Scenario = {
@@ -271,6 +273,19 @@ const PROFILE_INPUT: DateSearchInput = {
   workingYearIrmaaMagiByPerson: [90_000, 70_000],
 }
 
+/** The working-year pay check's twin (U5): the same household answering W — set as a `DateSearchInput` field,
+ *  never on `params.overlay.accumulation` (`buildCandidateParams` rebuilds that construct and would drop it) —
+ *  with its second member claiming a $24,000 PIA at 62, below their entered stop at 63, so the earnings-test
+ *  schedule runs on every candidate that keeps them at work past 62. */
+const PROFILE_INPUT_W: DateSearchInput = {
+  ...PROFILE_INPUT,
+  params: { ...PROFILE_INPUT.params, people: [PROFILE_A, { ...PROFILE_B, pia: 24_000, socialSecurityClaimAge: 62 }] },
+  workingYearCostReal: 60_000,
+}
+/** The W twin's control: the SAME household (the claiming second member included) without W, so the spike's
+ *  percentage measures W's cost alone, never the PIA change that comes with the twin. */
+const { workingYearCostReal: _w, ...PROFILE_INPUT_W_CONTROL } = PROFILE_INPUT_W
+
 export interface RecomputeSpikeReport {
   /** ONE 16k-path `simulate` — the SPINE (already-retired) decrypt-on-return recompute cost. */
   readonly finalSingleSimulateMs: number
@@ -281,6 +296,20 @@ export interface RecomputeSpikeReport {
   /** The 2k provisional sweep — the interactive-refire tier, for contrast. */
   readonly provisionalSweepMs: number
   readonly outcomeKind: string
+  /** The W-present twin's sweep (the pay check, U5), measured beside the W-absent one above — with the
+   *  non-vacuity read the spec asserts before it records the time. */
+  readonly withW: {
+    readonly finalSweepMs: number
+    readonly provisionalSweepMs: number
+    /** The same twin household without W, at both tiers — the denominator of W's own cost. */
+    readonly controlFinalSweepMs: number
+    readonly controlProvisionalSweepMs: number
+    readonly outcomeKind: string
+    /** Every final-tier candidate's construct carried W (the twin really ran the check). */
+    readonly everyCandidateCarriesW: boolean
+    /** What the earnings test held back on the top candidate's no-death path, real $ (> 0: the schedule ran). */
+    readonly topCandidateWithheldReal: number
+  }
 }
 
 /**
@@ -296,6 +325,22 @@ export async function recomputeSpike(): Promise<RecomputeSpikeReport> {
   const seed = 0x0ddba11
   const final = await profileDateSearch(PROFILE_INPUT, seed, 'final', now)
   const provisional = await profileDateSearch(PROFILE_INPUT, seed, 'provisional', now)
+  const finalW = await profileDateSearch(PROFILE_INPUT_W, seed, 'final', now)
+  const provisionalW = await profileDateSearch(PROFILE_INPUT_W, seed, 'provisional', now)
+  const finalControl = await profileDateSearch(PROFILE_INPUT_W_CONTROL, seed, 'final', now)
+  const provisionalControl = await profileDateSearch(PROFILE_INPUT_W_CONTROL, seed, 'provisional', now)
+  const candidates = Array.from({ length: DATE_OFFSET_WINDOW_TOP + 1 }, (_, y) =>
+    buildCandidateParams(PROFILE_INPUT_W, y, DATE_SEARCH_PATHS.final),
+  )
+  const top = candidates[DATE_OFFSET_WINDOW_TOP]!
+  const { offsets, higherClaimOffset } = personOffsetsFor(top.people)
+  const topSchedule = earningsTestSchedule({
+    people: top.people,
+    offsets,
+    deathOffsets: top.people.map(() => top.maxHorizonYears),
+    higherClaimOffset,
+    horizonYears: top.maxHorizonYears,
+  })
   return {
     finalSingleSimulateMs: final.singleSimulateMs,
     finalSweepMs: final.sweepMs,
@@ -303,5 +348,14 @@ export async function recomputeSpike(): Promise<RecomputeSpikeReport> {
     finalRatioVsSingle: final.ratioVsSingle,
     provisionalSweepMs: provisional.sweepMs,
     outcomeKind: final.outcomeKind,
+    withW: {
+      finalSweepMs: finalW.sweepMs,
+      provisionalSweepMs: provisionalW.sweepMs,
+      controlFinalSweepMs: finalControl.sweepMs,
+      controlProvisionalSweepMs: provisionalControl.sweepMs,
+      outcomeKind: finalW.outcomeKind,
+      everyCandidateCarriesW: candidates.every((c) => c.overlay?.accumulation?.workingYearCostReal === PROFILE_INPUT_W.workingYearCostReal),
+      topCandidateWithheldReal: topSchedule.tested ? topSchedule.withheld.reduce((a, b) => a + b, 0) : 0,
+    },
   }
 }

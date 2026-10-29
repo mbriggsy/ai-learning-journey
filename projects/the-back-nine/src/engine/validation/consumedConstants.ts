@@ -80,6 +80,10 @@ const NOT_RUN_CONSUMED: ReadonlySet<string> = new Set([
  *    block is the token's own S0.4 clause, keyed to the candidate set, not to a run.
  *  - `contributions.*` — consumed iff the accumulation construct is present (the intake's
  *    per-runway-year ceilings baked the contribution streams).
+ *  - `workingYears.*` — consumed iff the construct carries W (`workingYearCostReal`, the pay check's
+ *    key — the `medicareExtrasTypical` presence refinement): W keys the payroll tax and the earnings
+ *    test, so a run without it reads none of the family, and a run with it reads every one (over-inclusion
+ *    where no one is tested is the conservative side). No spine run carries W.
  *  - `socialSecurity.*` — consumed iff any person carries a positive PIA (the pre-loop
  *    benefit sub-engine runs; the FRA tables resolve through every person's birth year).
  *  - `methodology.productionMarket` — consumed iff the run's market moments are byte-equal to
@@ -122,6 +126,10 @@ export function consumedConstantEntries(params: SimulationParams): readonly Cons
 
   if (o?.accumulation !== undefined) {
     includeFamily('contributions.')
+  }
+
+  if (o?.accumulation?.workingYearCostReal !== undefined) {
+    includeFamily('workingYears.')
   }
 
   if (params.people.some((p) => p.pia > 0)) {

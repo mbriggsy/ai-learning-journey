@@ -56,7 +56,7 @@ being born (insight 020's shape). Both shapes carry a `fingerprint` field today
    NaN tolerance admits every candidate to the survival-top set, so it is refused before any
    identity is computed.
    **NOT `consumedConstantEntries`** — red-team-falsified as HOUSEHOLD-BLIND
-   (consumedConstants.ts:89-138 derives from overlay flags alone; two different households
+   (consumedConstants.ts:93-146 derives from overlay flags alone; two different households
    in one state fingerprint identically; the goal is not a constant at all).
 2. **Both reports carry it; the solve entry refuses a mismatch.** The fingerprint joins
    `mintedOver` AND `RankingStabilityReport`; `solve()` refuses a token/report whose

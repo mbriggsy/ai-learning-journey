@@ -314,6 +314,13 @@ export type WorkingYearTaxReach = 'priced' | 'unpriced'
  * the side the staleness module may err on. `'unpriced'` never under-reads: it is exactly the
  * complement of every channel the clamped year's portfolio income can come from.
  *
+ * A RUN CARRYING W (the working-year pay check, `docs/plans/features/working-year-pay-check-build-spec.md`
+ * KTD15) is not walked: it reads `'priced'` iff some person's retire offset is above 0, before the first
+ * per-year read, and `'unpriced'` otherwise (no one works, so no year is clamped and nothing the floor or
+ * the check prices exists). It may over-read the same way — a working year whose pay covers W, whose
+ * portfolio income is nothing — and never under-reads: every W-present run with a worker has a clamped
+ * year 0. A W-absent run walks bit-identically to the pre-check walk.
+ *
  * No tax overlay ⇒ `'unpriced'` (no candidate is ever built — `runDateSearch` rejects calmly — and no
  * year is taxed). PURE, draw-free; cost ≈ 11 candidates × (1 + 2·H) timelines × H years of cash terms.
  */
@@ -339,6 +346,11 @@ export function workingYearTaxReachOfRun(params: SimulationParams): WorkingYearT
   const people = params.people
   const horizon = params.maxHorizonYears
   const { offsets, higherClaimOffset } = personOffsetsFor(people)
+  // The pay check (KTD15): a run carrying W is read before any per-year cash term — its `cashTermsForYear`
+  // would need a per-path earnings-test schedule this walk never builds. It reads `'priced'` iff someone
+  // still works (a retire offset above 0 puts a clamped year at t = 0 on every timeline, and that year's
+  // check and floor run whatever its numbers). The over-read is on the safe side (the residual below).
+  if (overlay.accumulation.workingYearCostReal !== undefined) return offsets.some((o) => o.retire > 0) ? 'priced' : 'unpriced'
   const start = overlay.startCalendarYear
   // The overlay's OWN person ageing: `simulate` hands the overlay `birthYear = startCalendarYear −
   // currentAge`, so its age in sim-year t is `currentAge + t` (the RMD and biological-65 gates read it).

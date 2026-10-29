@@ -178,10 +178,12 @@ test('the KDF-location spike: measure whether PBKDF2-600k blocks the Chromium ma
 test('the U8 decrypt-on-return recompute spike: the 16k-path "restoring…" wall-clock in a real renderer', async ({
   page,
 }, testInfo) => {
-  // OPT-IN: three 16k sweeps (~24s). Reproducible on the reference device on demand, but
+  // OPT-IN: the W-absent household's sweeps, then the pay check's W twin and its no-W control at both tiers
+  // (about a minute and a half of real sweeps, so the test carries its own timeout). Reproducible on the reference device on demand, but
   // skipped by default so it never taxes the CI CSP gate. Run:
   //   PROFILE=1 pnpm exec playwright test vault.spec.ts -g "recompute spike"
-  test.skip(!process.env.PROFILE, 'perf profile — set PROFILE=1 to run (~24s of real 16k sweeps)')
+  test.skip(!process.env.PROFILE, 'perf profile — set PROFILE=1 to run (about 90s of real 16k sweeps)')
+  test.setTimeout(300_000)
   await page.goto(CONTROL_ORIGIN)
   await page.addScriptTag({ content: harnessBundle })
   const spike = await page.evaluate(() => window.VaultHarness.recomputeSpike())
@@ -201,4 +203,19 @@ test('the U8 decrypt-on-return recompute spike: the 16k-path "restoring…" wall
     `ratioVsSingle=${spike.finalRatioVsSingle.toFixed(1)} provisional-sweep-2k=${spike.provisionalSweepMs.toFixed(1)}ms`
   testInfo.annotations.push({ type: 'recompute-spike', description: line })
   console.log(line)
+
+  // The working-year pay check's W-present twin (U5), timed beside the W-absent arm — but only once it is
+  // proven to have run the check: every candidate carried W, the earnings test held money back, and the
+  // sweep crowned dates (a vacuous twin would time the W-absent engine twice).
+  expect(spike.withW.everyCandidateCarriesW).toBe(true)
+  expect(spike.withW.topCandidateWithheldReal).toBeGreaterThan(0)
+  expect(spike.withW.outcomeKind).toBe('dates')
+  const lineW =
+    `[recompute-spike W] final-sweep-16k=${spike.withW.finalSweepMs.toFixed(1)}ms ` +
+    `(vs ${spike.withW.controlFinalSweepMs.toFixed(1)}ms for the same household without W, ` +
+    `${((spike.withW.finalSweepMs / spike.withW.controlFinalSweepMs - 1) * 100).toFixed(1)}%) ` +
+    `provisional-sweep-2k=${spike.withW.provisionalSweepMs.toFixed(1)}ms (control ${spike.withW.controlProvisionalSweepMs.toFixed(1)}ms) ` +
+    `withheld-top=${spike.withW.topCandidateWithheldReal.toFixed(2)}`
+  testInfo.annotations.push({ type: 'recompute-spike-w', description: lineW })
+  console.log(lineW)
 })

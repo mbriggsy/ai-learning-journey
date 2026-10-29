@@ -878,7 +878,7 @@ function acaPricedOverlayArm(o: OverlayParams | undefined): boolean {
  *  This is the read that makes the all-65+ household honest: it takes `buildOverlay`'s
  *  Medicare-only branch (`intakeMap.ts:683-686` — "healthcareEnabled with NO ACA quote pair"),
  *  so `enrolledPremium` is absent, the engine's per-year ACA gate
- *  (`taxOverlay.ts:2237-2242`) can never open, and this correctly reads FALSE. `buildSpineParams`
+ *  (`taxOverlay.ts:2404-2409`) can never open, and this correctly reads FALSE. `buildSpineParams`
  *  returns null on the date route ⇒ false there (the caller handles that route separately —
  *  reading false as "unpriced" off-route would be the insight-080 shortcut, not a fact). */
 export function spineAcaPriced(d: ScenarioDraft): boolean {
@@ -941,7 +941,7 @@ function builtRunParams(d: ScenarioDraft): SimulationParams | null {
 
 /** "Did THIS run build a tax overlay at all?" — the FEDERAL tax family's exposure read for U17
  *  §S4's staleness gate. `taxEnabled: true` is hardcoded on every built overlay
- *  (`intakeMap.ts:653`) and `consumedConstants.ts:104` gates the whole `tax.` family on exactly
+ *  (`intakeMap.ts:653`) and `consumedConstants.ts:108` gates the whole `tax.` family on exactly
  *  that flag, so overlay-absent ⟺ no tax constant was consumed ⟺ the recompute is byte-identical
  *  under any tax vintage. The population that reads FALSE is real and save-ready: `buildOverlay`'s
  *  degenerate early return (no accounts, no marketplace premium, no ongoing income) — a
@@ -968,7 +968,7 @@ export function overlayBuiltForRun(d: ScenarioDraft): boolean {
  *  `accumulation` only when `anyContributions` holds: some WORKING owner's account carries a
  *  positive contribution, match, or employer-HSA dollar (`intakeMap.ts:620-626`). A 66/retired +
  *  62/working couple whose accounts all belong to the retired spouse therefore sweeps candidates
- *  with `{}` streams and reads no limit: `consumedConstants.ts:124` gates the `contributions.`
+ *  with `{}` streams and reads no limit: `consumedConstants.ts:128` gates the `contributions.`
  *  family on the construct, and the limits' only pricing read is `annualAdditionsCeilingFor`'s
  *  §415(c) match trim INSIDE `contributionStreamsFor`, which returns early for a non-working
  *  owner (`intakeMap.ts:467-470`) and never runs for an owner with no accounts. */

@@ -65,7 +65,7 @@
  * no schedule arrays, but the scan that decides it does build its small per-path state. Fails loud on
  * a non-finite or out-of-range wage or benefit — never a silent $0 (burned/062).
  *
- * IMPORT CYCLE (U5 on): `simulate.ts` will import this module and this module imports `simulate.ts`.
+ * IMPORT CYCLE: `simulate.ts` imports this module (since A6, the pay check's check) and this module imports `simulate.ts`.
  * That is safe only while neither reads the other's bindings at module top level (both use them inside
  * functions); keep it so.
  */

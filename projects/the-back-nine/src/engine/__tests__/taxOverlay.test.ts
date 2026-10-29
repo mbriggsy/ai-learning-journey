@@ -13,6 +13,7 @@ import {
   type HealthYearSink,
   type PreparedWorkingYearFloor,
   type MedicareChargeInputs,
+  type WorkingYearProbe,
   prepareWorkingYearFloor,
   workingYearFederalCharge,
   overlayYearContext,
@@ -5451,5 +5452,107 @@ describe('the pay check’s A5 — the year context and the Medicare charge, one
       expect(sink.irmaaSurcharge[2], 'the conversion surcharges year 2').toBeGreaterThan(sink.irmaaSurcharge[0]!)
       expect(surcharged).toBeGreaterThanOrEqual(2)
     })
+  })
+})
+
+// The pay check's A6 (docs/plans/features/working-year-pay-check-build-spec.md, KTD7): the three items the A5
+// review (wf_0e3d95d9-ae0) filed against the hoisted floor and the year context, each pinned here.
+describe('the pay check’s A6 — the A5 review’s filed items on the hoisted floor and the year context', () => {
+  describe('(i) a floored AND ACA-priced year fails on the ACA guards before any floor arithmetic', () => {
+    // The review's repro: a start year (2025) before the state's first rate step, so preparing the floor's
+    // state half would throw `[stateTax] no rate step…`. Both guards must speak first, as before A5.
+    const H4 = 4
+    const run = (state: 'NC' | 'PA', inputs: TaxYearInputs) =>
+      runTaxAwareDecumulation(
+        { taxable: 300_000, pretax: 500_000, roth: 50_000 },
+        Array.from({ length: H4 }, () => 0.05),
+        Array.from({ length: H4 }, () => 0.02),
+        Array.from({ length: H4 }, () => 40_000),
+        STOCK_W,
+        'proportional',
+        { taxEnabled: true, rmdEnabled: false, household: { startCalendarYear: 2025, filing: 'single', owner: { birthYear: 1975 }, retirementState: state } },
+        {
+          initialTaxableBasis: 200_000,
+          healthcareEnabled: true,
+          enrolledPremium: Array.from({ length: H4 }, () => 12_000),
+          slcsp: Array.from({ length: H4 }, () => 10_000),
+          workingYearOutsideIncome: [{ ordinaryBase: 50_000, investmentIncome: 0 }],
+          ...inputs,
+        },
+      )
+    const contribution = { taxableByPerson: [2_000], pretaxByPerson: [0], rothByPerson: [0], hsaByPerson: [0] }
+
+    it('a contribution in the priced year: the §6 guard, for NC and for PA', () => {
+      for (const state of ['NC', 'PA'] as const) {
+        expect(() => run(state, { contributions: [contribution] }), state).toThrow(/a priced ACA year cannot carry a contribution inflow/)
+      }
+    })
+
+    it('the priced year on the bridge mask: the wage-blind guard', () => {
+      expect(() => run('NC', { contributions: [], bridgeYearMask: [true, false, false, false], irmaaMagiOverride: [50_000] })).toThrow(
+        /a priced ACA year cannot land on BRIDGE year 0/,
+      )
+    })
+
+    it('the control: with neither guard tripped, the floor’s own refusal is what speaks', () => {
+      expect(() => run('NC', { contributions: [] })).toThrow(/\[stateTax\] no rate step covers tax year 2025/)
+    })
+  })
+
+  describe('(ii) the hoisted floor’s own calendar-year and living-age wires', () => {
+    const floored = (n: number): TaxYearInputs => ({
+      contributions: [],
+      bridgeYearMask: Array.from({ length: n }, () => true),
+      workingYearOutsideIncome: Array.from({ length: n }, () => ({ ordinaryBase: 102_000, investmentIncome: 10_000 })),
+    })
+    const pool: AccountBuckets = { taxable: 0, pretax: 500_000, roth: 300_000 }
+    const runWith = (household: Household, conversions: number[], probe?: WorkingYearProbe) =>
+      runTaxAwareDecumulation(
+        pool,
+        realStock,
+        realBond,
+        conversions.map(() => 0),
+        STOCK_W,
+        'custom',
+        { taxEnabled: true, rmdEnabled: false, household },
+        { ...floored(conversions.length), conversions, ...(probe ? { _workingYearProbe: probe } : {}) },
+        CUSTOM_TEST_ORDER,
+      )
+
+    it('NC, five clamped years from 2026: each floor is prepared in ITS calendar year, and a 2030 conversion pays 2030’s rate', () => {
+      const prepared: PreparedWorkingYearFloor[] = []
+      const nc: Household = { ...mkHousehold(2026, 1973, 1973), retirementState: 'NC' }
+      const conversions = [0, 0, 0, 0, 34_000]
+      const tax = runWith(nc, conversions, { floorPrepared: (_t, floor) => prepared.push(floor) }).totalTaxPaidReal
+      expect(prepared.map((f) => f.calendarYear)).toEqual([2026, 2027, 2028, 2029, 2030])
+      expect(prepared.map((f) => f.stateFloor?.minLivingAge)).toEqual([53, 54, 55, 56, 57])
+      // NC's whole $34,000 conversion sits above its deduction (B + I = $112,000 is far past it), so the state
+      // half of the charge is 2030's flat rate on it; FL prices no state tax. The federal halves are identical.
+      expect(stateRateForYear('NC', 2030), 'the companion: the rate steps between 2026 and 2030').not.toBe(stateRateForYear('NC', 2026))
+      const fl = runWith({ ...mkHousehold(2026, 1973, 1973), retirementState: 'FL' }, conversions).totalTaxPaidReal
+      expect(tax - fl).toBeCloseTo(stateRateForYear('NC', 2030) * 34_000, 6)
+    })
+
+    it('PA with a member under 60: the floor carries the LIVING-age floor, so a working-year conversion is PA-taxed', () => {
+      // Born 1970 and 1960: 56 and 66 in 2026. PA taxes a conversion while the youngest living member is under
+      // 60 (class-based, household-granularity); at the flat rate, nothing else on the state return here.
+      const prepared: PreparedWorkingYearFloor[] = []
+      const pa: Household = { ...mkHousehold(2026, 1970, 1960), retirementState: 'PA' }
+      const tax = runWith(pa, [34_000], { floorPrepared: (_t, floor) => prepared.push(floor) }).totalTaxPaidReal
+      expect(prepared.map((f) => f.stateFloor?.minLivingAge)).toEqual([56])
+      const fl = runWith({ ...mkHousehold(2026, 1970, 1960), retirementState: 'FL' }, [34_000]).totalTaxPaidReal
+      expect(tax - fl).toBeCloseTo(stateRateForYear('PA', 2026) * 34_000, 6)
+    })
+  })
+
+  it('(iii) the year context reads the LIVING set, not the static household: the OLDER spouse surviving reads 67, never 64', () => {
+    // Born 1960 (owner) and 1963: in 2027 the owner is 67 and the spouse 64. With only the owner alive, a
+    // static read would floor the household at the dead spouse's 64.
+    const h = mkHousehold(2026, 1960, 1963)
+    const years: HouseholdYear[] = [{ living: [h.owner, h.spouse!] }, { living: [h.owner] }]
+    const survivor = overlayYearContext(h, years, 1)
+    expect([survivor.filing, survivor.livingCount, survivor.minLivingAge, survivor.count65]).toEqual(['single', 1, 67, 1])
+    expect(survivor.rmdOwner).toBe(h.owner)
+    expect(overlayYearContext(h, [], 1).minLivingAge, 'the static household it must not read').toBe(64)
   })
 })

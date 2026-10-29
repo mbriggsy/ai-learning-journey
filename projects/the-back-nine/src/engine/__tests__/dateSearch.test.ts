@@ -967,6 +967,32 @@ describe('workingYearTaxReach — can the working-year tax floor move this house
     const { accumulation: _a, ...noConstruct } = BASE_OVERLAY
     expect(workingYearTaxReachOfRun({ ...input.params, overlay: { ...noConstruct, conversions: [20_000] } })).toBe('unpriced')
   })
+
+  // The working-year pay check (docs/plans/features/working-year-pay-check-build-spec.md, KTD15): a run carrying
+  // W is read before any per-year cash term (its cashTermsForYear needs a per-path earnings-test schedule the walk
+  // never builds, and throws without one) — `priced` iff someone still works, over-reading on the safe side.
+  it('A RUN CARRYING W: the walk reads `priced` iff someone works — without throwing — and the W-absent walk is unmoved', () => {
+    const unreached = household()
+    expect(workingYearTaxReach(unreached), 'the W-absent control above').toBe('unpriced')
+    const withW: DateSearchInput = { ...unreached, workingYearCostReal: 60_000 }
+    // The armed throw is real: the walk's own per-year read would refuse a W-present candidate.
+    const candidate = buildCandidateParams(withW, 6, 1)
+    const { offsets, higherClaimOffset } = personOffsetsFor(candidate.people)
+    expect(() => cashTermsForYear(0, candidate, offsets, [HORIZON, HORIZON], higherClaimOffset)).toThrow(/earnings-test schedule/)
+    // …and the walk never reaches it: the W-present household reads `priced` (the over-read on the safe side).
+    expect(workingYearTaxReach(withW)).toBe('priced')
+    // Per candidate: Y = 0 has no worker (every still-working member retires at Y), so nothing is clamped.
+    expect(workingYearTaxReachOfRun(buildCandidateParams(withW, 0, 1))).toBe('unpriced')
+    expect(workingYearTaxReachOfRun(candidate)).toBe('priced')
+    // A household where nobody works at all reads `unpriced` with W too.
+    const retired = household({ people: [{ ...W45, retirementAge: 45 }, { ...W47, retirementAge: 47 }] })
+    expect(workingYearTaxReach({ ...retired, workingYearCostReal: 60_000 })).toBe('unpriced')
+    // ONE worker beside a retired spouse is a clamped household: `priced` (an `every` would under-read it).
+    const mixed = { ...household({ people: [W45, { ...W47, retirementAge: 47 }] }), workingYearCostReal: 60_000 }
+    const mixedCandidate = buildCandidateParams(mixed, 3, 1)
+    expect(personOffsetsFor(mixedCandidate.people).offsets.map((o) => o.retire)).toEqual([3, 0])
+    expect(workingYearTaxReachOfRun(mixedCandidate)).toBe('priced')
+  })
 })
 
 // ---------------------------------------------------------------------------

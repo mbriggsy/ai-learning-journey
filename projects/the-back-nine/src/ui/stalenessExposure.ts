@@ -123,7 +123,7 @@ const read = (priced: boolean): ExposureRead => (priced ? 'priced' : 'unpriced')
  * this comment's own prescription has had to be withdrawn).
  *
  * ✗ "Re-derive the exposure against the CROWNED offset" — DO NOT. It is the same insight-103 shape a
- *   third time. The date route SWEEPS every offset (`dateSearch.ts:596/450/457`) and candidate Y=0
+ *   third time. The date route SWEEPS every offset (`dateSearch.ts:608/450/457`) and candidate Y=0
  *   carries the base ACA stream UNGATED (`healthcareStreams.ts:181` → `windowStart = 0`, so
  *   `windowGate` is a pass-through). So `exposure.aca === 'priced'` PROVES the ACA tables were
  *   consumed somewhere in the sweep — it is not an over-read. Re-deriving against the crown alone

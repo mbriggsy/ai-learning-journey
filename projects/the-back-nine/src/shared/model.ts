@@ -888,7 +888,7 @@ export interface TaxAwareDistribution {
    *  concentrates in the pre-65 ACA years and may barely move the portfolio median. */
   readonly lifetimeNetPremiumReal: readonly number[]
   /** Σ Medicare cost actually paid across the path's funded years (real $; base Part B + IRMAA +
-   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:2396`; P3·U11), an
+   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:2657`; P3·U11), an
    *  addend of the pay-less-tax all-in cost. Same accrual rule as its siblings. */
   readonly lifetimeMedicareCostReal: readonly number[]
 }

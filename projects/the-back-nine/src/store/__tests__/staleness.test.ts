@@ -393,8 +393,8 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     ['part-b', { partBStandardMonthly: hv.partBStandardMonthly + 10 }],
     ['part-b-trend', { partBTrendVintage: 'part-b-trend-2025x' }],
     // THE F1 CORRECTION, pinned as an equal member of the family. `irmaaTopTierFrozenThrough`
-    // has no engine reader of its own; the table it DATES (`irmaa`) is read at simulate.ts:1250,
-    // solveAnchor.ts:221-231 and taxOverlay.ts:1680, and consumedConstants.ts:112 consumes the
+    // has no engine reader of its own; the table it DATES (`irmaa`) is read at simulate.ts:1376,
+    // solveAnchor.ts:221-231 and taxOverlay.ts:1899, and consumedConstants.ts:116 consumes the
     // whole `health.` family on `healthcareEnabled`. Re-bucketing it to the aggregate reds here.
     ['irmaa-freeze', { irmaaTopTierFrozenThrough: hv.irmaaTopTierFrozenThrough + 1 }],
   ] as const)(
@@ -408,7 +408,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
       expect(named.rulesMoved).toBe(true)
       // The SWEPT part-b-trend comment claimed "no exposure gate: the trend prices every
       // Medicare-bearing year both routes reach". FALSE: `partBPricingByT` is built only under
-      // `healthcareEnabled && taxEnabled` (taxOverlay.ts:1688-1689). Reverting it to ungated
+      // `healthcareEnabled && taxEnabled` (taxOverlay.ts:1907-1908). Reverting it to ungated
       // reds this arm.
       const silent = deriveStaleness(moved, TODAY, NO_OVERLAY)
       expect(silent.healthcare.movedClocks).toEqual([])
@@ -520,7 +520,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
   it('extras-typical: the typical-exposed conjunct is NECESSARY BUT NOT SUFFICIENT — an ABSENT fork field on a run that priced no healthcare funds NO extras, so it must not name itself (U17 §S4)', () => {
     // The exact hole the ruling named: absence satisfies conjunct (c) while the run prices
     // nothing at all (`buildOverlay` resolves the extras vector only on `healthcareOn ||
-    // medicareOnly`; consumedConstants.ts:118 requires `medicareExtrasMonthly` present).
+    // medicareOnly`; consumedConstants.ts:122 requires `medicareExtrasMonthly` present).
     const exposedAbsent = {
       ...s,
       healthcareVintage: { ...hv, medicareExtrasTypicalVintage: 'extras-2024x' },

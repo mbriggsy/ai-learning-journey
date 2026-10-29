@@ -94,6 +94,7 @@ import {
   acaApplicablePercentageEnhanced,
   irmaa,
   isPricedState,
+  STATE_TAX_PROFILES,
   type AcaApplicablePercentageTable,
   type PricedState,
 } from '@engine/constants'
@@ -110,6 +111,7 @@ import {
   type CommittedYearIncome,
 } from '@engine/magiLandscape'
 import { solveAcaFundedGross, fplForHousehold, medicareAnnualCharge, acaMagi, irmaaMagi, irmaaScheduleAsCompared, boundPartBPricingSchedule, hsaQualifiedSpend, type GrossUpSolution, type MagiComponents, type PartBYearPricing } from '@engine/healthOverlay'
+import { payrollTaxForYear, type PayrollTaxYear } from '@engine/payrollTax'
 import { NEVER_DEPLETED, isRetirementState, type DepletionYear, type DrawdownPolicy, type FilingStatus, type RetirementState } from '@shared/model'
 
 // Filing status is shared model vocabulary (the persisted scenario speaks it too). Re-exported
@@ -394,6 +396,20 @@ export interface TaxYearInputs {
    *  (a silently dropped floor re-opens the wage-blind optimistic year). A present entry is finite ≥ 0
    *  in both fields; an entry with no construct marker throws (a floor needs a clamp to describe). */
   readonly workingYearOutsideIncome?: readonly (WorkingYearOutsideIncome | undefined)[]
+  /** The working-year pay check (2026-10-21 — `docs/plans/features/working-year-pay-check-build-spec.md`,
+   *  KTD6): per-year {@link WorkingYearCheckTerms} of each §7-CLAMPED year, ABSOLUTE-year-indexed, a HOLE
+   *  in every unclamped year. `simulate` builds it from the SAME `cashTermsForYear` call as the floor's
+   *  stream, and supplies it only when the household answered W. A present entry runs the check: the
+   *  year's shortfall ({@link workingYearCashLines}) is added to `fundingNet` and drawn like any other
+   *  need. ABSENT ⇒ no year is checked (the pre-check overlay, byte-identical). THE CROSS-CHECK (KTD16,
+   *  the floor's R8 mirror): a present entry is finite ≥ 0 in every field; an entry needs tax on and the
+   *  construct marker (`contributions`); and a stream that is supplied must carry an entry in EXACTLY the
+   *  years the floor's stream does (the floor's own check ties those to the bridge mask) — a check with no
+   *  floor would have no tax to read, and a floored year with no check silently drops its shortfall (the
+   *  rosy direction). */
+  readonly workingYearCheck?: readonly (WorkingYearCheckTerms | undefined)[]
+  /** PROBE-ONLY — the pay check's observation hook ({@link WorkingYearProbe}); never set by product code. */
+  readonly _workingYearProbe?: WorkingYearProbe
   // --- U6/U7 band fan: an OPTIONAL output sink (not an input). ABSENT ⇒ no observation, the
   //     pre-fan path verbatim. ---
   /** An optional sink the caller passes to OBSERVE the per-year portfolio total: each iterated
@@ -1082,9 +1098,11 @@ interface GrossUpContext {
 //
 // In a §7-CLAMPED working year (the accumulation construct present AND a living member still
 // working — `simulate.cashTermsForYear`) the household lives on its pay: the spending net is 0 and
-// the wages fund their OWN tax outside the portfolio. The portfolio still supplies money in that year
-// — a forced RMD, the household's own Roth conversion, the draw that pays a retired spouse's Medicare
-// — and the tax return that money lands on also carries the pay. Pricing that portfolio money as if
+// the wages fund their OWN tax outside the portfolio (under the pay check, W, a year whose pay falls
+// short draws that shortfall — which carries the pay's payroll and income tax — from the portfolio, as
+// part of the year's need; see the pay check's section below). The portfolio still supplies money in
+// that year — a forced RMD, the household's own Roth conversion, the draw that pays a retired spouse's
+// Medicare, a pay-check shortfall — and the tax return that money lands on also carries the pay. Pricing that portfolio money as if
 // it were the household's only income lets the standard deduction and the bottom brackets the wages
 // already fill shelter it a second time (the register's Tier 0 *A working-year Roth conversion or RMD
 // on the date route is taxed as if the household had no pay…*: `dip`'s year-4 $34,000 conversion
@@ -1336,6 +1354,167 @@ export function workingYearStateCharge(floor: PreparedWorkingYearFloor, channels
   return sf.baseTax === sf.zeroTax ? full : increment + sf.zeroTax
 }
 
+// =========================================================================
+// The working-year pay check (2026-10-21 — `docs/plans/features/working-year-pay-check-build-spec.md`)
+// =========================================================================
+//
+// The §7 clamp assumes a working year's pay covers what the year costs, the tax on that pay and every
+// deposit, and before this check nothing tested it. With the household's answer W (what a year costs
+// while anyone works) present, each clamped year runs the check (R5):
+//   cash = the living workers' gross pay + Social Security PAID + ongoing income (gross)
+//          − federal payroll tax − the tax on the outside income − the household's own deposits − W_t
+//   shortfall = max(0, −cash), added to `fundingNet` and drawn through the withdrawal order.
+// `simulate.cashTermsForYear` gathers the year's terms ({@link WorkingYearCheckTerms}); this module adds
+// what only the overlay knows — the payroll tax (`payrollTaxForYear`, on the year's filing status and
+// calendar year) and the tax on the outside income, read off the ONE prepared floor the charge also reads
+// (R6, KTD7/KTD8) — in {@link workingYearCashLines}, which the year loop calls (and A7's money picture will).
+// The entered investment income I is never money in (the portfolio's total return already includes it),
+// but its tax is money out (R5) — federally through the floor, and for a class-based state (PA), whose
+// floor ignores the clamped base because its tax on pay rides in W, through the check itself
+// (`stateTaxOnOutsideIncome`, the A6 review's catch: the floor alone charged PA nothing on I or a
+// pension). Never in the shortfall: the Medicare draw (its own `fundingNet` term) and T(0, ss)
+// (`zeroTax` — savings funds SS's own tax exactly as before the floor).
+
+/** One §7-clamped working year's pay-check terms (KTD6) — what `simulate.cashTermsForYear` knows of the
+ *  year, carried per year on {@link TaxYearInputs.workingYearCheck} beside the floor's
+ *  {@link WorkingYearOutsideIncome}. Every figure is real $, finite ≥ 0. Social Security is NOT here: the
+ *  year's one paid figure reaches the check through the prepared floor's `ssBenefit` (R11 — no second
+ *  Social Security field). */
+export interface WorkingYearCheckTerms {
+  /** Each person's GROSS pay this year (aligned to the household's people), 0 for anyone not alive and
+   *  working — the payroll-tax wages (deferrals stay in, KTD9) and the pay line. */
+  readonly wagesByPerson: readonly number[]
+  /** The year's ongoing other-income GROSS (pensions and the like, R40's select) — money in. */
+  readonly ongoingGross: number
+  /** The household's OWN deposits this year (`simulate.ownDepositsForYear`): the match and the employer's
+   *  HSA dollar taken out (R7). */
+  readonly ownDeposits: number
+  /** W_t (R9): W while everyone lives; s + r·(W − s) on a survivor path. */
+  readonly workingYearCost: number
+  /** The NON-PAY outside income, by part — the clamped ongoing other-income taxable (inside the floor's B)
+   *  and the entered investment income I (the floor's I). Read only for a class-based priced state (PA),
+   *  whose floor ignores the whole clamped base because its tax on PAY rides in W (R1, KTD18): the check
+   *  charges that state's tax on these two itself, since nothing else would. */
+  readonly ongoingTaxable: number
+  readonly investmentIncome: number
+}
+
+/** One clamped year's composed check — every R5 line, the bottom line and the shortfall (real $). */
+export interface WorkingYearCashLines {
+  /** Σ the living workers' gross pay. */
+  readonly pay: number
+  /** The year's Social Security as PAID (the floor's `ssBenefit`, the earnings test's figure under W). */
+  readonly socialSecurity: number
+  /** The ongoing other-income gross. */
+  readonly ongoingIncome: number
+  /** The year's federal payroll tax, by its three parts (`payrollTaxForYear`). */
+  readonly payroll: PayrollTaxYear
+  /** The tax the outside income carries by itself: the costliest reading's `baseTax − zeroTax`, plus the
+   *  priced state's own — `baseTax − zeroTax` for a state that taxes the clamped base (NC), or a class-based
+   *  state's tax on the non-pay outside income (PA; its tax on pay is in W) — never `zeroTax` itself (R6, KTD8). */
+  readonly taxOnOutsideIncome: number
+  readonly ownDeposits: number
+  /** W_t. */
+  readonly workingYearCost: number
+  /** Money in less money out — negative when the year runs short. */
+  readonly cash: number
+  /** max(0, −cash): added to the year's need (`fundingNet`) and drawn from savings. */
+  readonly shortfall: number
+}
+
+/**
+ * The priced state's tax on a clamped year's outside income, BY ITSELF (R6's state pair). A state that
+ * prices the clamped base (NC, `federal-agi-derived`: pay, the clamped ongoing taxable and I all sit in
+ * its AGI) carries it in the floor already: `baseTax − zeroTax`. A `class-based` state (PA) is different:
+ * the floor ignores its whole clamped base, because PA's tax on PAY is the household's to put in W (R1,
+ * KTD18; the increment over pay is pay-invariant), so the floor's pair is 0 — and with it PA's tax on the
+ * NON-pay outside income, which nothing else charges. Here PA prices that part itself, through the one
+ * state primitive: the clamped ongoing taxable and I on its flat, ungated ongoing-income channel (I has no
+ * tax character on the wire, and PA taxes interest, dividends and gains alike — the costliest reading). A
+ * no-income-tax state is 0. The floor and the gross-up's charge are untouched, so a run without W prices
+ * exactly as before.
+ */
+function stateTaxOnOutsideIncome(terms: WorkingYearCheckTerms, floor: PreparedWorkingYearFloor): number {
+  const sf = floor.stateFloor
+  if (sf === undefined) return 0
+  if (STATE_TAX_PROFILES[sf.state].baseSystem !== 'class-based') return sf.baseTax - sf.zeroTax
+  const onNonPay = stateIncomeTax({
+    state: sf.state,
+    filing: floor.filing,
+    calendarYear: floor.calendarYear,
+    minLivingAge: sf.minLivingAge,
+    pretaxDistribution: 0,
+    conversion: 0,
+    ongoingTaxable: terms.ongoingTaxable + terms.investmentIncome,
+    realizedGain: 0,
+    ssBenefitTaxable: 0,
+  })
+  return onNonPay - sf.zeroTax
+}
+
+/**
+ * Compose one clamped year's check (R5–R8, KTD6–KTD8) from its terms and the floor the year loop
+ * prepared ONCE for it — the same object the gross-up's charge reads, so the take-home and the charge can
+ * never disagree on the tax. The payroll tax rides the floor's own filing status and calendar year; the
+ * Social Security line is the floor's `ssBenefit` (the year's one paid figure). THROWS when the
+ * outside-income tax reads negative beyond dust (every federal and state channel is non-decreasing in
+ * income, so a negative is a defect, never a silent credit to the household's cash).
+ *
+ * The bottom line sums money in, then takes money out in the order R5 lists, so whole-dollar inputs
+ * compose exactly; the shortfall is 0 whenever cash ≥ 0 (a −0 never escapes).
+ */
+export function workingYearCashLines(terms: WorkingYearCheckTerms, floor: PreparedWorkingYearFloor): WorkingYearCashLines {
+  let pay = 0
+  for (const wages of terms.wagesByPerson) pay += wages
+  const payroll = payrollTaxForYear(terms.wagesByPerson, floor.filing, floor.calendarYear)
+  let costliestBaseTax = Number.NEGATIVE_INFINITY
+  for (const reading of floor.readings) if (reading.baseTax > costliestBaseTax) costliestBaseTax = reading.baseTax
+  const federalOnOutside = costliestBaseTax - floor.zeroTax
+  const stateOnOutside = stateTaxOnOutsideIncome(terms, floor)
+  if (federalOnOutside < WORKING_YEAR_INCREMENT_FLOOR || stateOnOutside < WORKING_YEAR_INCREMENT_FLOOR) {
+    throw new Error(
+      `[taxOverlay] the tax on a working year's outside income reads negative (federal ${federalOnOutside}, state ${stateOnOutside}) — every channel is non-decreasing in income, so this is a defect, never dust`,
+    )
+  }
+  const taxOnOutsideIncome = federalOnOutside + stateOnOutside
+  const socialSecurity = floor.ssBenefit
+  const cash =
+    pay + socialSecurity + terms.ongoingGross - payroll.total - taxOnOutsideIncome - terms.ownDeposits - terms.workingYearCost
+  return {
+    pay,
+    socialSecurity,
+    ongoingIncome: terms.ongoingGross,
+    payroll,
+    taxOnOutsideIncome,
+    ownDeposits: terms.ownDeposits,
+    workingYearCost: terms.workingYearCost,
+    cash,
+    shortfall: cash < 0 ? -cash : 0,
+  }
+}
+
+/**
+ * The pay check's PROBE-ONLY observation hook (KTD7's "prepared exactly once", KTD20's pre-59½ count):
+ * optional callbacks the year loop calls as it runs — the first three in §7-clamped years only, the
+ * IRMAA one in every year it records. A pure observation — every callback
+ * receives values already computed, and a run with the hook is byte-identical to one without. Supplied
+ * only by tests and measurement scripts (through `simulate`'s `_workingYearProbe` option or
+ * {@link TaxYearInputs._workingYearProbe}); never by product code.
+ */
+export interface WorkingYearProbe {
+  /** The year's floor, the moment it is prepared (once per clamped year per pass). */
+  readonly floorPrepared?: (t: number, floor: PreparedWorkingYearFloor) => void
+  /** A year carrying the check: the floor its composition read (`===` the one prepared) and its lines. */
+  readonly checkComposed?: (t: number, floor: PreparedWorkingYearFloor, lines: WorkingYearCashLines) => void
+  /** A checked year's draw, after the allocation: what savings funded and what the pre-tax bucket paid. */
+  readonly checkDrawn?: (
+    t: number,
+    drawn: { readonly shortfall: number; readonly fundingNet: number; readonly grossWithdrawal: number; readonly pretaxDrawn: number },
+  ) => void
+  /** Every year's IRMAA-MAGI as recorded into the lagged history (healthcare on). */
+  readonly irmaaMagiRecorded?: (t: number, irmaaMagi: number) => void
+}
+
 function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution {
   const { drawPool, policy, customOrder, rmd, conversion, taxableBasis, filing, count65, calendarYear, ssBenefit, bracketFillCeiling, ongoingTaxable, retirementState, minLivingAge, workingYear } = ctx
   const taxableValue = drawPool.taxable
@@ -1517,6 +1696,8 @@ export function runTaxAwareDecumulation(
     ongoingTaxableGrossUp = [],
     ongoingTaxableIrmaaOnly = [],
     workingYearOutsideIncome = [],
+    workingYearCheck = [],
+    _workingYearProbe: probe,
     balancesOut,
     healthOut,
   } = taxInputs
@@ -1647,6 +1828,44 @@ export function runTaxAwareDecumulation(
             `[taxOverlay] sim year ${t} is ${masked ? 'a clamped working year with no' : 'not a clamped working year but carries a'} workingYearOutsideIncome entry — under the construct the bridge mask is the §7 clamp, so this is a wiring fault (a dropped floor prices the year wage-blind, the optimistic direction; R8)`,
           )
         }
+      }
+    }
+  }
+  // The pay check's backstop (KTD16 — the floor's R8 arms, mirrored; finiteness FIRST, insights 008/010).
+  // A present entry is finite ≥ 0 in every field — a NaN would sail through the `cash < 0` compare and
+  // silently zero the shortfall. Then the wiring: an entry needs tax on (no tax, no payroll or income tax
+  // to charge) and the construct marker (no clamp to describe), and a SUPPLIED stream must carry an entry
+  // in exactly the floor's years (the floor's own check ties those to the bridge mask). A floored year with
+  // no entry silently drops its shortfall; an entry with no floor has no tax to read.
+  if (
+    !workingYearCheck.every(
+      (e) =>
+        e === undefined ||
+        (e.wagesByPerson.every((w) => Number.isFinite(w) && w >= 0) &&
+          [e.ongoingGross, e.ownDeposits, e.workingYearCost, e.ongoingTaxable, e.investmentIncome].every((x) => Number.isFinite(x) && x >= 0)),
+    )
+  ) {
+    throw new Error('[taxOverlay] workingYearCheck entries must be finite and ≥ 0 in every field (insights 008/010; burned/062)')
+  }
+  if (taxInputs.workingYearCheck !== undefined) {
+    const checkedSomewhere = workingYearCheck.some((e) => e !== undefined)
+    if (checkedSomewhere && !config.taxEnabled) {
+      throw new Error(
+        '[taxOverlay] a workingYearCheck entry needs tax on — the check charges the payroll tax and the tax on the outside income, so a tax-off run cannot run it',
+      )
+    }
+    if (checkedSomewhere && taxInputs.contributions === undefined) {
+      throw new Error(
+        '[taxOverlay] a workingYearCheck entry needs the accumulation construct (contributions) — the check describes a §7-clamped year, and there is no clamp without the construct',
+      )
+    }
+    for (let t = 0; t < netWithdrawals.length; t++) {
+      const floored = workingYearOutsideIncome[t] !== undefined
+      const checked = workingYearCheck[t] !== undefined
+      if (floored !== checked) {
+        throw new Error(
+          `[taxOverlay] sim year ${t} ${floored ? 'is a clamped working year with no' : 'is not a clamped working year but carries a'} workingYearCheck entry — the check runs in exactly the floor's years, so this is a wiring fault (a dropped check silently skips the year's shortfall, the rosy direction; KTD16)`,
+        )
       }
     }
   }
@@ -2096,6 +2315,11 @@ export function runTaxAwareDecumulation(
     let medicareExtrasThisYear = 0
     let hsaSpendThisYear = 0
     let taxPaidThisYear = 0
+    // The pay check (KTD6): a checked year's shortfall (undefined in every unchecked year) and the
+    // year's funded need — set in the tax block, read by the probe-only draw observation after the
+    // allocation (never by any arithmetic outside the tax block).
+    let checkShortfallThisYear: number | undefined
+    let fundingNetThisYear = 0
     // P3·U11 — the healthcare readout's year-locals (observed, never consumed): the IRMAA
     // surcharge slice of medicareCostThisYear, the two converged MAGIs, and the ACA cliff
     // state (-1 = not priced / 0 = priced under / 1 = priced over). Set at the pricing sites
@@ -2165,11 +2389,59 @@ export function runTaxAwareDecumulation(
           fundingNeed: net + medicareCostThisYear + medicareExtrasThisYear,
         })
       }
+      // AGE GATE (red-team blocker): ACA prices ONLY when ≥1 living member is pre-65. With every living
+      // member ≥ 65 (all on Medicare) there is no marketplace household — zero the ACA cost (post-65 is
+      // IRMAA's job above), never a phantom subsidy. pre65 = livingCount − living-65+.
+      const pre65 = regime.livingCount - regime.count65
+      const enrolledThisYear = enrolledPremium[t]
+      // The per-year ACA price/skip gate (`acaTable !== undefined` IS the healthcareEnabled gate; the
+      // up-front backstop already rejected any PRESENT non-finite/negative enrolled/slcsp). A priced year
+      // funds fundingNet (spending + Medicare) PLUS the net ACA premium; a non-priced year just grosses
+      // up fundingNet for tax. BOTH record this year's IRMAA-MAGI (the lagged feed-forward source for
+      // year t+lookback) off the converged FLOORED components — never a raw-gain ledger (the sign-inversion).
+      // Decided ONCE here, before the floor is prepared, so a malformed priced year fails on its own
+      // guards below before any floor arithmetic can throw first (the A5 review's throw-order finding).
+      const acaPricedThisYear =
+        acaTable !== undefined &&
+        enrolledThisYear !== undefined &&
+        Number.isFinite(enrolledThisYear) &&
+        enrolledThisYear > 0 &&
+        pre65 > 0
+      if (acaPricedThisYear) {
+        // §6 EMPTY-OVERLAP INVARIANT (C2): a priced ACA year can NEVER carry a contribution. In
+        // the v1 model contributions occupy the working years and ACA pricing the retired pre-65
+        // window — the same boundary `Y` (R31 + R33), so the overlap is structurally empty; an
+        // input carrying both is incoherent (the model does not price the HSA-contribution MAGI
+        // deduction, so the year would be priced WRONG, not conservatively). FAIL LOUD — this is
+        // the falsifiable structural guard that replaces the vacuous date==date comparison (§6);
+        // the "may be slightly earlier" one-directional reading is D2's disclosure copy, not code.
+        if (contributionTotal > 0) {
+          throw new Error(
+            '[taxOverlay] a priced ACA year cannot carry a contribution inflow — contributions and ACA pricing are temporally disjoint in the v1 model (C2 §6; the HSA-contribution MAGI deduction is unmodeled, so the year would price wrong)',
+          )
+        }
+        // The masked ACA arm (C3 §3b — the wage-blind sibling): a PRICED ACA year on a BRIDGE year
+        // computes ACA-MAGI with no wage component (`earnedIncomeReal` is netted away upstream;
+        // MagiComponents has no wage term) — wage-blind in BOTH directions, OPTIMISTIC in the
+        // subsidy band (wages shrink the net withdrawal → computed MAGI ≈ withdrawals only →
+        // phantom near-max PTC → understated cost), so the year is UNPRICEABLE, not boundable —
+        // rejection beats disclosure. validateParams' sibling arm shields `simulate`; this is the
+        // mask-conditional direct-caller backstop (recorded limitation, §3b).
+        if (bridgeYearMask[t] === true) {
+          throw new Error(
+            `[taxOverlay] a priced ACA year cannot land on BRIDGE year ${t} — ACA-MAGI is wage-blind ` +
+              `(phantom near-max PTC in the subsidy band, the cost-understating direction), so the year is ` +
+              `unpriceable (C3 §3b; burned/062)`,
+          )
+        }
+      }
+
       // The working-year tax floor (2026-10-20), prepared ONCE per clamped year (the pay check's KTD7):
       // every baseline is year-constant — never a function of the gross — so one preparation per pass is
-      // exact, and every gross-up solve this year (each ACA probe too, for a direct caller with no bridge
-      // mask; under simulate a clamped year never prices ACA) reads it. Presence-keyed on this year's entry: a hole (every unclamped year) prepares
-      // nothing, and the gross-up takes its literal pre-floor branch.
+      // exact, and every gross-up solve this year reads it (each ACA probe too, for a direct caller with no
+      // bridge mask; under simulate a clamped year never prices ACA), as does the year's pay check below.
+      // Presence-keyed on this year's entry: a hole (every unclamped year) prepares nothing, and the
+      // gross-up takes its literal pre-floor branch.
       const workingYearOutsideThisYear = workingYearOutsideIncome[t]
       const workingYear =
         workingYearOutsideThisYear === undefined
@@ -2185,14 +2457,36 @@ export function runTaxAwareDecumulation(
                 minLivingAge: regime.minLivingAge,
               }),
             }
+      if (workingYear !== undefined) probe?.floorPrepared?.(t, workingYear.floor)
+
+      // The pay check (KTD6/KTD7): a checked year composes its lines from its terms and THE floor just
+      // prepared — the object the gross-up's charge reads too — and its shortfall joins what savings
+      // funds. The backstop above ties every checked year to a floored one.
+      const checkTerms = workingYearCheck[t]
+      if (checkTerms !== undefined) {
+        if (workingYear === undefined) {
+          throw new Error(`[taxOverlay] sim year ${t} carries a workingYearCheck entry but no floor — the backstop admits neither alone (KTD16)`)
+        }
+        const lines = workingYearCashLines(checkTerms, workingYear.floor)
+        probe?.checkComposed?.(t, workingYear.floor, lines)
+        checkShortfallThisYear = lines.shortfall
+      }
 
       // The cash this year must fund = base spending + the (known) Medicare cost + the extras
       // vector − the qualified HSA-paid portion (U3 · M5: the hsa bucket pays its share OUTSIDE
       // the gross-up, so the taxable withdrawal — and through it both MAGIs — genuinely DROPS:
       // the loop-breaking lever). With no Medicare cost, no extras, and no live hsa,
       // fundingNet === net EXACTLY (`net + 0 + 0 − 0`), so the pre-65 / pre-M5 paths are
-      // untouched. ≥ 0 by the cap's fundingNeed clamp.
-      const fundingNet = net + medicareCostThisYear + medicareExtrasThisYear - hsaSpendThisYear
+      // untouched. ≥ 0 by the cap's fundingNeed clamp. A checked year that runs short adds its
+      // shortfall on top (the pay check, R5 — the HSA spend above stays sized on the need WITHOUT it:
+      // the HSA pays only qualified medical, KTD7); with no shortfall the addend is skipped, so the
+      // expression is today's bit for bit.
+      const fundingNetBeforeCheck = net + medicareCostThisYear + medicareExtrasThisYear - hsaSpendThisYear
+      const fundingNet =
+        checkShortfallThisYear !== undefined && checkShortfallThisYear > 0
+          ? fundingNetBeforeCheck + checkShortfallThisYear
+          : fundingNetBeforeCheck
+      fundingNetThisYear = fundingNet
 
       // The inner tax gross-up as a closure the ACA solver probes at (fundingNet + a candidate premium).
       // The year-constant inputs are bundled into one NAMED context (no positional transposition risk).
@@ -2223,50 +2517,8 @@ export function runTaxAwareDecumulation(
         ...(workingYear !== undefined ? { workingYear } : {}),
       }
       const fundNet = (netTotal: number): GrossUpSolution => solveGrossWithdrawal(netTotal, grossUpCtx)
-      // AGE GATE (red-team blocker): ACA prices ONLY when ≥1 living member is pre-65. With every living
-      // member ≥ 65 (all on Medicare) there is no marketplace household — zero the ACA cost (post-65 is
-      // IRMAA's job above), never a phantom subsidy. pre65 = livingCount − living-65+.
-      const pre65 = regime.livingCount - regime.count65
-      const enrolledThisYear = enrolledPremium[t]
-      // The per-year ACA price/skip gate (`acaTable !== undefined` IS the healthcareEnabled gate; the
-      // up-front backstop already rejected any PRESENT non-finite/negative enrolled/slcsp). A priced year
-      // funds fundingNet (spending + Medicare) PLUS the net ACA premium; a non-priced year just grosses
-      // up fundingNet for tax. BOTH record this year's IRMAA-MAGI (the lagged feed-forward source for
-      // year t+lookback) off the converged FLOORED components — never a raw-gain ledger (the sign-inversion).
       let magiComponentsThisYear: MagiComponents
-      if (
-        acaTable !== undefined &&
-        enrolledThisYear !== undefined &&
-        Number.isFinite(enrolledThisYear) &&
-        enrolledThisYear > 0 &&
-        pre65 > 0
-      ) {
-        // §6 EMPTY-OVERLAP INVARIANT (C2): a priced ACA year can NEVER carry a contribution. In
-        // the v1 model contributions occupy the working years and ACA pricing the retired pre-65
-        // window — the same boundary `Y` (R31 + R33), so the overlap is structurally empty; an
-        // input carrying both is incoherent (the model does not price the HSA-contribution MAGI
-        // deduction, so the year would be priced WRONG, not conservatively). FAIL LOUD — this is
-        // the falsifiable structural guard that replaces the vacuous date==date comparison (§6);
-        // the "may be slightly earlier" one-directional reading is D2's disclosure copy, not code.
-        if (contributionTotal > 0) {
-          throw new Error(
-            '[taxOverlay] a priced ACA year cannot carry a contribution inflow — contributions and ACA pricing are temporally disjoint in the v1 model (C2 §6; the HSA-contribution MAGI deduction is unmodeled, so the year would price wrong)',
-          )
-        }
-        // The masked ACA arm (C3 §3b — the wage-blind sibling): a PRICED ACA year on a BRIDGE year
-        // computes ACA-MAGI with no wage component (`earnedIncomeReal` is netted away upstream;
-        // MagiComponents has no wage term) — wage-blind in BOTH directions, OPTIMISTIC in the
-        // subsidy band (wages shrink the net withdrawal → computed MAGI ≈ withdrawals only →
-        // phantom near-max PTC → understated cost), so the year is UNPRICEABLE, not boundable —
-        // rejection beats disclosure. validateParams' sibling arm shields `simulate`; this is the
-        // mask-conditional direct-caller backstop (recorded limitation, §3b).
-        if (bridgeYearMask[t] === true) {
-          throw new Error(
-            `[taxOverlay] a priced ACA year cannot land on BRIDGE year ${t} — ACA-MAGI is wage-blind ` +
-              `(phantom near-max PTC in the subsidy band, the cost-understating direction), so the year is ` +
-              `unpriceable (C3 §3b; burned/062)`,
-          )
-        }
+      if (acaPricedThisYear) {
         // A missing benchmark in a priced year fails LOUD via the solver's own R19 backstop
         // (NaN → throw → the worker's calm-error), never a silent phantom subsidy. burned/062.
         const aca = solveAcaFundedGross(
@@ -2319,8 +2571,10 @@ export function runTaxAwareDecumulation(
         // In a clamped working year feed (2)'s ongoing component is 0 and feed (3) carries it; in an
         // unclamped year feed (3) is 0 and feed (2) carries it — never both, so the stream's taxable
         // hits IRMAA-MAGI exactly once. Absent income ⇒ both `?? 0` ⇒ byte-identical to pre-R40.
-        irmaaMagiHistory[t] =
+        const recordedIrmaaMagi =
           (irmaaMagiOverride[t] ?? 0) + irmaaMagi(magiComponentsThisYear) + (ongoingTaxableIrmaaOnly[t] ?? 0)
+        irmaaMagiHistory[t] = recordedIrmaaMagi
+        probe?.irmaaMagiRecorded?.(t, recordedIrmaaMagi)
       }
       // The year's federal tax, read off the converged identities (U3 · M6 — the lifetime-tax
       // surface): the gross funds EXACTLY fundingNet + netAcaPremium + tax in both branches (the ACA
@@ -2330,7 +2584,9 @@ export function runTaxAwareDecumulation(
       // root EXISTS (the register's Tier 0 *The ACA solve finds no root at the 100 %-FPL line…*).
       // In a CLAMPED working year (the working-year tax floor) this is the PORTFOLIO-FUNDED tax — what
       // the portfolio's own income adds on top of the household's pay, plus SS's own tax — never the
-      // household's whole return (the pay's own tax is funded outside the portfolio, the §7 law).
+      // household's whole return (the pay's own tax is funded outside the portfolio, the §7 law). Under
+      // the pay check the payroll tax and the tax on the outside income ride INSIDE the shortfall, which
+      // is part of `fundingNet`, so they never land here either (KTD7, by design).
       taxPaidThisYear = grossWithdrawal - fundingNet - acaNetPremiumThisYear
     } else {
       grossWithdrawal = net
@@ -2341,6 +2597,11 @@ export function runTaxAwareDecumulation(
     const totalBefore = totalAcrossBuckets(buckets) // === totalAcrossBuckets(drawPool)
     const alloc = allocateWithdrawal(drawPool, grossWithdrawal, policy, bracketFillCeiling, customOrder)
     const drawn = alloc.taxable + alloc.pretax + alloc.roth
+    // The pay check's probe-only draw observation (KTD20's pre-59½ count reads it): a checked year's
+    // shortfall, its funded need, the converged gross and what the pre-tax bucket paid.
+    if (checkShortfallThisYear !== undefined) {
+      probe?.checkDrawn?.(t, { shortfall: checkShortfallThisYear, fundingNet: fundingNetThisYear, grossWithdrawal, pretaxDrawn: alloc.pretax })
+    }
 
     // GENERAL-DEPLETION (U3 · M5): with a live HSA the authoritative total (which `stepYear`'s own
     // depletion predicate reads) includes MEDICAL-EARMARKED dollars a spending withdrawal may not

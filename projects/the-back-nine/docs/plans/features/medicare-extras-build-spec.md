@@ -126,10 +126,10 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   person's own premium × 12, **ending at each death** — **NEVER `enrolledCount × average`**
   (count×avg reproduces the exact optimistic survivor under-charge per-person was chosen to
   kill; it passes symmetric couples and hides in aggregate). The Σ lives in the tax overlay's
-  year loop (`src/engine/taxOverlay.ts:869-872`), indexing
+  year loop (`src/engine/taxOverlay.ts:885-888`), indexing
   `OverlayParams.medicareExtrasMonthly` by `regime.medicareEnrolledIndices` — the canonical
   living∩enrolled index set minted for exactly this purpose
-  (`src/engine/taxOverlay.ts:621-632`), which holds only IDENTITY-MATCHED members so a stranger
+  (`src/engine/taxOverlay.ts:637-648`), which holds only IDENTITY-MATCHED members so a stranger
   ref throws at the year loop's identity guard rather than silently dropping a member's premium
   from the Σ (the cost-understating direction). base+surcharge stays the existing count×uniform
   line in `medicareAnnualCost` (`src/engine/healthOverlay.ts:823-867`), untouched.
@@ -148,8 +148,8 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   edited to accommodate the vector: a superset, not a perturbation.
 - The vector is validated like its per-person siblings: `validateParams` rejects a negative
   entry (the insight-046 netted-away optimistic class), a NaN entry, and a length mismatch
-  (`src/engine/simulate.ts:1064-1067`), and the overlay's direct callers get their own up-front
-  length backstop (`src/engine/taxOverlay.ts:1832-1836`) so a short vector on a two-person
+  (`src/engine/simulate.ts:1190-1193`), and the overlay's direct callers get their own up-front
+  length backstop (`src/engine/taxOverlay.ts:2051-2055`) so a short vector on a two-person
   household throws rather than under-charging.
 - Extras are **real-flat**, and deliberately NOT ridden on the Part B trend: Medigap/Part D plan
   premiums are user-entered market figures with no sourced trend. The 2026-07-19 trend sourcing
@@ -256,7 +256,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   optional-with-average by design, so there is no red-asterisk state to encode.
 - **Insight-076 re-audit of `validateParams`.** The overlay length backstop that was added is
   purely downstream of the existing gate, so it narrows no contract — noted in place at
-  `src/engine/taxOverlay.ts:1830-1831`.
+  `src/engine/taxOverlay.ts:2049-2050`.
 - **Dev-seed drift recorded before any re-tune.** The flagship `retiredOnTrack` seed carries the
   mixed-provenance showcase — one entered dollar, one affirmed MA-$0
   (`src/ui/devSeeds.ts:121-122`) — and the `borderline` / `?seed=dip` seeds were re-probed under

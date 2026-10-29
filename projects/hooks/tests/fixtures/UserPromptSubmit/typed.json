@@ -1,8 +1,0 @@
-{
-  "session_id": "sess-fixture",
-  "transcript_path": "/home/user/.claude/projects/-home-user-proj/sess-fixture.jsonl",
-  "cwd": "/home/user/proj",
-  "hook_event_name": "UserPromptSubmit",
-  "permission_mode": "default",
-  "prompt": "squeaky"
-}

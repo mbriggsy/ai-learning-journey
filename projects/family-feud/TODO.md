@@ -31,12 +31,29 @@
 
 ## Ranked next
 
-1. **Week 8 vs Hunter: the lineup is SET (10-27). What's left is two re-checks.**
-   - **London:** Sleeper dropped his Q (head) tag overnight (10-27 21:37 Q → 10-28 11:00 none). Still read
-     Atlanta's practice report (Wed/Thu). If he sits, Tate goes to WR.
-   - **Swift vs Stevenson:** Sleeper moved Monangai Out → Q (toe) on 10-28, but he missed Tuesday's practice and the
-     Bears called up RB Zavier Scott. If Chicago's Thu 10-29 / Fri reports clear him fully, swap Stevenson in before
-     NE's Sun 4:25 PM kickoff.
+1. **Week 8 vs Hunter: the lineup is SET (10-27) and still right as of Thu 10-29 ~3:50 PM ET. Friday's and
+   Saturday's reports decide three calls.** Thursday's re-check: four researchers, each practice line re-sourced by an
+   independent verifier. Detail in `temp/week8-moves-log.md`. Three-site consensus (Thu 15:29): us **147.5**, Hunter's
+   set lineup 122.1, his best roster ~127. Bench: Tate 12.6 · Stevenson 12.4 · White 11.1 · Fannin 9.8. No free agent
+   beats the bench this week.
+   - **London (ATL, Sun 1:00): likely plays.** He is on neither official Falcons report (Wed, Thu), which means a full
+     practice with no injury, and there's no Concussion line. (DT *LaCale* London on that report is a different player.) Read
+     Friday's report (~3:30-4 PM ET) for a new listing.
+   - **Michael Wilson (ARI, Sun 1:00, STARTING): leaning plays.** Sleeper Q (ribs). Wed official LP, in a non-contact
+     jersey ("just being smart"); he played 90% of snaps in week 7. Arizona posts in the evening (Wed's: 8:06 PM ET).
+     Thu LP/FP → likely plays; Thu DNP → coin flip. Friday's designation settles it.
+   - **Tate (TEN, bench) is NOT a safe fallback: leaning sits.** Sleeper Q (shoulder). DNP Wed (official), not seen
+     Thu (beat writers). Tennessee is on bye week 9, so a 1-6 team can rest its rookie 2.5 weeks. **If Wilson or
+     London sits: Flowers FLEX → WR, and Stevenson (12.4) or White (11.1) into FLEX.** Tate only if he practices
+     Friday AND isn't listed Doubtful/Out. All three WRs kick off Sun 1:00, so the swap lands before 1:00 PM ET (the
+     11:30 gameday run names it; a session fires it).
+   - **Swift vs Stevenson: Monangai (CHI's other RB) leaning sits, ~30-40% to play Monday.** 9 straight official DNPs
+     in weeks 5-7, ruled Out three times. No practice Tue/Wed this week, stationary bike Wed. The only positive is
+     Fowler (ESPN, Wed): "chances are better". The Bears' first official report (Thu) was not out at 3:51 PM ET.
+     **The deciding document is Chicago's SATURDAY 10-31 report (Monday's designations):** Out/Doubtful → keep Swift;
+     Questionable after Fri/Sat practice → swap Stevenson in before NE's Sun 4:25 PM kickoff (Stevenson locks then).
+     If Monangai plays, expect 6-10 carries / 25-35% of snaps taken from Swift (weeks 1-3: Swift 65% and 18 carries
+     a game, Monangai 36% and 10).
    - **Kittle trade: ON HOLD (Briggsy, 10-28: "Let's hold on Kaeperni trade").** Don't re-pitch it unprompted.
      Kaeperni rejected Tate + Goff for Kittle on 10-20. The priced package (Swift + Strange for Kittle) is in
      `temp/week8-moves-log.md` if he reopens it. Trade deadline is week 11.

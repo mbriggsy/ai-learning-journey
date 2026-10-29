@@ -2,7 +2,7 @@
 title: When review rounds stop shrinking but severity keeps falling, the tail belongs to the method; gate the landing on a harm class
 date: 2026-10-21
 phase: our-setup U29 (peer-safe squeaky-clean)
-modules: [projects/skills/squeaky-clean]
+modules: [projects/skills/squeaky-clean/SKILL.md]
 tags: [code-review, ultramode, review-rounds, convergence, seams, landing-criteria, mutation-testing, workflow-audit, read-only-lenses]
 ---
 

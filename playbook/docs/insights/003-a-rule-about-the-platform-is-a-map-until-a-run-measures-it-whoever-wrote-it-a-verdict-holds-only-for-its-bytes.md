@@ -2,7 +2,7 @@
 title: A rule about the platform is a map until a run measures it, whoever wrote it down; a verdict holds only for the bytes that produced it
 date: 2026-10-21
 phase: our-setup U2 (fixture harness, platform probes, hooks CI)
-modules: [projects/hooks/tests, projects/hooks/probes]
+modules: []
 tags: [probes, platform-behavior, hooks, harness, code-review, adversarial-verify, measurement, powershell, permission-denials, model-switch, verdict-hash]
 ---
 

@@ -22,7 +22,7 @@ When Claude is sure and the call can be undone (look-and-feel choices included),
 If the top item on the TODO needs no decision from Briggsy (no real choice, no money, nothing public, nothing that can't be undone, no policy call that is his), Claude checks there is room with `/window` and starts in the same turn instead of waiting for "go." The [cheat sheet](cheat-sheet.md#starting) has the full start-of-work routine.
 
 **He judges the result, not the paperwork.**
-Briggsy signs off on what we are building, then judges the finished product. Claude never offers a diff (the line-by-line list of changes), a commit or a revised plan for him to inspect; it commits and pushes on its own, and only force-pushing to main (overwriting its history) still asks first. Short status check-ins (what landed, what's next, how full the window is) are welcome.
+Briggsy signs off on what we are building, then judges the finished product. Claude never offers a diff (the line-by-line list of changes), a commit or a revised plan for him to inspect; it commits and pushes on its own, and no push ever asks him. Short status check-ins (what landed, what's next, how full the window is) are welcome.
 
 ## The quality bar
 
@@ -114,4 +114,4 @@ When one doc is modeled on another, copy the layout and re-check every name, dat
 | Offering a diff, a commit or a plan for Briggsy to look over. | "Just push." For a plan: "Keep going, I'll judge the result." |
 | Sizable work with a step of the flow skipped: no brief, no deepened plan, no review, no distill. | "Are we running the flow on this?" |
 | An apology speech after a miss. | Expect three things: what happened, the fix, moving on. |
-| Polite, sanitized tone. | "Let your inner Philly out." Hype on wins is welcome; bad news still comes straight. |
+| Polite, sanitized tone, or the same two catchphrases on repeat. | "Let your inner Philly out." Varied hype on wins and banter both ways are welcome; bad news still comes straight, and the stakes are never the joke. |

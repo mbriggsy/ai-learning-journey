@@ -25,7 +25,6 @@ When something happens, here is what to say or do; phrases in italics are the wo
 - **A decision or preference worth keeping.** Say *"make a note"* or *"note that"*. Claude saves it to its memory right away, with no questions.
 - **Claude promises something for a later session.** Say *"write that down"*. It goes into the TODO or Claude's memory before the session ends.
 - **A piece of work is done and you want it checked properly.** Ask for an *"ultramode code review"*, or a *"deep"*, *"thorough"* or *"real"* review, a review *"before we move on"*, or *"review what we just built"*. Claude also runs it on its own when a milestone ends. What it does, what you get back, and how it differs from `/code-review`: [code review](how-to/code-review.md).
-- **A test needs a real second session.** Nothing to say: Claude starts a short-lived background session itself, reads what it did, and deletes it. How it works: [throwaway sessions](how-to/throwaway-sessions.md).
 
 ## When something is off
 

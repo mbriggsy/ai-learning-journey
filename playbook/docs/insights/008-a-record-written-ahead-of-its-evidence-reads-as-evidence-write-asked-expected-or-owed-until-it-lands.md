@@ -2,7 +2,7 @@
 title: A record written ahead of its evidence reads as evidence; write "asked", "expected" or "owed" until the evidence lands
 date: 2026-10-23
 phase: our-setup U3 step 8c (the Q14 live measurement)
-modules: [projects/hooks/probes/live, playbook/TODO.md, the private flight plan]
+modules: [playbook/TODO.md]
 tags: [measurement, ground-truth, evidence, records, review-rounds, fix-wording, overclaim, confirmation, docs]
 ---
 

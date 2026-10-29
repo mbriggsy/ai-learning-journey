@@ -2,7 +2,7 @@
 title: A "your turn" handoff claims every writer the sender still has, and a fuzzy name fallback fires exactly when the named target is gone
 date: 2026-10-22
 phase: our-setup (squeaky-clean step 10, the successor handoff)
-modules: [projects/skills/squeaky-clean/SKILL.md, projects/skills/squeaky-clean/tests/docs.test.mjs]
+modules: [projects/skills/squeaky-clean/SKILL.md]
 tags: [cross-session, sendmessage, handoff, successor, squeaky-clean, background-workflows, stop-hooks, name-matching, fallback, platform-behavior, measurement]
 ---
 
@@ -22,7 +22,7 @@ Squeaky's new step 10 messages a successor session ("Handoff: ...; your turn.") 
 - **Step 0 now opens by waiting** for this session's background Workflows and agents: end the turn, then restart at step 0 when the notice arrives. It never stops one unasked, since a stop mid-edit half-applies the edits.
 - **Step 10 runs last, and after the send this session edits and commits nothing.** A later wake (an agent's notice, a /distill hook) gets a report to Briggsy, not a write.
 - **Exact-name matching only** (ignoring case), against peers.mjs `others`, the registry's live sessions on this machine. A miss reports near-misses as a fact: "No handoff: no live session on this machine is named successor; msg-test-successor only contains it." Two exact matches, or an `unverified` row, also send nothing.
-- **Every non-send ends in a "No handoff:" line.** A property test asserts that none tells anyone to run anything (insight 004).
+- **Every non-send ends in a "No handoff:" line,** and none of those lines tells anyone to run anything.
 - **The label now says what was seen:** "a background Workflow's notice starts a new turn... seen 2026-10-22; an agent's is unmeasured."
 - **Evidence:**
   - 277 tests, plus 21 of 21 mutants killed on a copy.

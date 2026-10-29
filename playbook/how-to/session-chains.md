@@ -6,7 +6,7 @@ When a session closes, it can message the next session and wake it up, so work k
 
 - **Both sessions run on this laptop.** A session on another machine or in the cloud can't be the successor.
 - **Both run in the same permission mode.** That is the setting for which actions Claude may take without asking you, for example `auto`. Claude's messaging rules say that if the modes differ, the message waits for you to approve it, and it can expire. Overnight, nobody approves it.
-- **Each session has its own name.** Type `/rename <name>` inside the session. It answers `Session renamed to: <name>`. A background test session gets its name when Claude starts it (see [throwaway sessions](throwaway-sessions.md)).
+- **Each session has its own name.** Type `/rename <name>` inside the session. It answers `Session renamed to: <name>`.
 
 ## Set it up
 

@@ -281,6 +281,33 @@ Bare R-numbers are this plan's. A foreign one names its home: product R7 / R19 /
   - It returns finite fields only (DND 009).
   - Intake reads it through `intakeMap.workingYearLedgerForRun` (the `workingYearTaxForRun` try/catch-to-`'unknown'` shape). The read is called only while the money-picture step or the panel's W row is mounted, and is memoized on the draft reference.
   - A test pins the producer's year 0 against the overlay's own recorded year 0.
+  - **As built (A7, 2026-10-29).** `workingYearLedger({ params, draftEvents })` is in `src/engine/workingYearLedger.ts`. The result types (`WorkingYearLedger`, its year 0 and later years, the event and basis vocabularies) are in `src/shared/model.ts`.
+    - **The input.** `params` is a built run that carries W. On the date route it is the window-top candidate (`buildCandidateParams(input, DATE_OFFSET_WINDOW_TOP, 1)`), so the working years are 0..9, and year t reads the same for every candidate still working in year t. The producer composes every year of the run's own working window on the no-death timeline, capped by the run's horizon, so it holds no window constant of its own.
+    - **The draft's events.** `draftEvents` carries the later-year events the compiled run has lost. They are every year a catch-up window closes on an owner's deposit (every one, not only the first: a couple can have two), and every other-income stream's first paying year and the year after its last. The run cannot show a stream's end: a person's streams are pre-summed into one compiled leaf, so a pension that ends beside a second stream never reaches 0. U6b builds the list from the draft: the catch-up years on `firstStepDownYear`'s 'band' frame, and each stream's years from that stream compiled alone.
+    - **The allowlist, as built.** It is KTD12's list plus the three ruled additions (`rmdStartAgeForBirthYear`, the law-steps helper `workingYearLawSteps`, and the household builder `overlayHouseholdFor`, which `simulate` now calls too). Two more names come from `@engine/simulate`:
+      - `bothAliveYearBenefit`, the one home of the claim and spousal-start gates, so the events read who starts from the gate itself (insight 081);
+      - `validateParams`, so the picture never shows numbers for a run the date search turns away.
+
+      The source test pins the list and proves the scan catches a forbidden import.
+    - **The law steps.** `workingYearLawSteps(prior, floor)` in `taxOverlay.ts` names two steps:
+      - a priced state's rate step, read through `stateRateForYear`, the table the state charge reads;
+      - the senior bonus's sunset: this year is past the bonus's window (`seniorBonusAvailableIn`), and the year before carried a bonus at its costliest reading's own MAGI (`seniorBonusFor`). Both are now exported from `taxCore.ts`.
+
+      Whether a step moves the household is read off the composed lines: `WorkingYearCashLines` now carries `taxOnOutsideIncomeParts: { federal, state }`.
+    - **The events, as built.** The ruled list, plus one more:
+      - `turns65`: a member turns 65 while the year before carried federal tax on the outside income. The larger standard deduction (and, inside its window, the senior bonus) lowers that tax, so the bottom line moves. R16 names every discrete change; the ruled list left this one out.
+      - The Social Security events are gated on the run's own paid or held-back figure moving; both are flat in real terms between discrete changes. They are named by who starts (`bothAliveYearBenefit`). A move no start explains, such as the FRA year's stopgap or the year a credit takes effect, is `earningsTestStep`.
+      - A claim the test holds back in full still names its year: the held-back figure moves while the paid one stays $0.
+      - A spousal-only filer's own filing is her `claim`. `spousalStart` is a spousal benefit that starts after the member's own claim, when the other spouse files.
+      - Each event is gated on this household: `turns65` and `seniorBonusSunset` on the year before carrying federal tax on the outside income, and `stateRateStep` on the state line being above 0 in either year.
+      - A short year with no event is `erosion` when the year before was not short, and `stillShort` when it was.
+    - **Rounding, as built.** The money grain is the cent. Each line's engine value and the year's cash are snapped to the cent first, and KTD12's bottom-line rule then applies to that cash. The lines are placed by largest remainder twice: to the cent against the cash, then to the dollar against the bottom line, exactly, in integer cents. Without the cent snap, float dust above a round figure ($3,060.0000000000005 of payroll) would read $3,061 on a round-number household. A shortfall under half a cent reads "Left over $0". The held-back Social Security and the Medicare figures sit outside the sum, so each rounds to its own nearest dollar.
+    - **The worded tax line** (`savingsTaxLine`) shows when year 0 bills Medicare, draws a shortfall, or lands a conversion or a required withdrawal. The RMD is read on the household's own birth years, per person on a split pool. The extras arm is dropped: extras ride only beside an enrolled member, whose base bill is already above $0.
+    - **The tests** are in `src/engine/__tests__/workingYearLedger.test.ts`:
+      - every year-0 line is `Object.is` the overlay's recorded year 0 (the probe hook), and every named later year's cash is its own year's, on every W-present candidate the file builds;
+      - the Medicare group is `Object.is` the health readout's year 0 on a date65-shaped household;
+      - the figures are typed by hand for the one earner, the worked-example couple and both FRA-year arms, and every event list from the household's own calendar;
+      - the closed form, the rounding and the allowlist each have their own arms.
 - KTD13. **The new figures go in a new constants table**, `src/engine/constants/workingYears.ts` (prefix `workingYears.`, year key `WORKING_YEARS_YEAR`).
   - It holds:
     - payroll: the OASDI rate and the wage base, the HI rate, and the two 0.9 % lines;
@@ -601,6 +628,10 @@ U6 is split. U6a (the engine producer) lands in Phase A. U6b (the intake read) l
   - Every field is finite.
 - **Test scenarios (U6b):** a W-absent or unbuildable draft returns `'unknown'`; a W-present draft returns the producer's result; the read is memoized on the draft reference.
 - **Verification:** the cross-check, sum and event arms are green. The seed sweeps run in U10.
+- **As built (U6a, A7, 2026-10-29).** KTD12's *As built (A7)* bullets are the record.
+  - U6b's read hands the producer two things: the window-top candidate, `buildCandidateParams(buildDateInput(d), DATE_OFFSET_WINDOW_TOP, 1)`, and the draft's events (every catch-up step-down year on the 'band' frame, and each other-income stream's first paying year and the year after its last, from that stream compiled alone).
+  - The mutation pass planted 53 mutants across `workingYearLedger.ts`, `taxOverlay.ts` and `taxCore.ts`, and all 53 went red. Four test arms were written to kill a plant that had survived the first draft: a claim held back in full, a spousal-only filer, the swapped-order couple (the event sort) and the costliest reading's MAGI under investment income. Every file was restored byte for byte.
+  - Every W-absent run is byte-identical: every dev seed's full engine output (25 seeds, the spine run and both date tiers) matched the pre-A7 tree bit for bit, and the existing suite passed unedited.
 
 ### U7. Model, codec and the quote
 

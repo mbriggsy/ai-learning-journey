@@ -888,7 +888,7 @@ export interface TaxAwareDistribution {
    *  concentrates in the pre-65 ACA years and may barely move the portfolio median. */
   readonly lifetimeNetPremiumReal: readonly number[]
   /** Σ Medicare cost actually paid across the path's funded years (real $; base Part B + IRMAA +
-   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:2657`; P3·U11), an
+   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:2716`; P3·U11), an
    *  addend of the pay-less-tax all-in cost. Same accrual rule as its siblings. */
   readonly lifetimeMedicareCostReal: readonly number[]
 }
@@ -1457,6 +1457,129 @@ export type DateSearchOutcome =
     }
   | { readonly kind: 'input-failure'; readonly reason: string }
   | { readonly kind: 'cancelled' }
+
+// ---------------------------------------------------------------------------
+// The working-year money picture (the pay check's KTD12 — `docs/plans/features/working-year-pay-check-build-spec.md`
+// R16, U6): one engine producer, `src/engine/workingYearLedger.ts`, composed on the main thread from a built
+// run that carries W, through the same functions the run's year loop calls. Never persisted and never on the
+// worker wire; every field is finite (DND 009). The picture's money grain is the cent: each figure's whole
+// dollars are rounded from its engine value snapped to the cent.
+// ---------------------------------------------------------------------------
+
+/** One figure of the picture: the whole dollars it shows and the engine's own unrounded value. */
+export interface WorkingYearLedgerAmount {
+  /** Whole dollars, ≥ 0 — the figure as shown; its group gives its sign. */
+  readonly dollars: number
+  /** The engine's value (real $, ≥ 0): `Object.is` the run's own year-loop figure. */
+  readonly exact: number
+}
+
+/** Is a year's held-back Social Security the law's figure, or the most that year can hold back — the
+ *  full-retirement-age year's stopgap until the birth month is asked (the pay check's KTD11)? */
+export const WORKING_YEAR_WITHHELD_BASES = ['law', 'fraYearAtMost'] as const
+export type WorkingYearWithheldBasis = (typeof WORKING_YEAR_WITHHELD_BASES)[number]
+
+/** Why a later working year enters the picture (KTD12). The per-person codes carry `person`. */
+export const WORKING_YEAR_LEDGER_EVENT_CODES = [
+  /** A member's own Social Security starts. */
+  'claim',
+  /** A member's spousal benefit starts (on its own, after their own claim). */
+  'spousalStart',
+  /** The earnings test holds back a different amount, or a credit for held-back months starts — no claim explains it. */
+  'earningsTestStep',
+  /** A member's Medicare starts (paid from savings, never in the bottom line). */
+  'medicareStarts',
+  /** A member turns 65: the larger standard deduction (and, inside its window, the senior bonus) lowers the tax on the outside income. */
+  'turns65',
+  /** A member's savings deposit steps down as a catch-up window closes. */
+  'catchUpStepDown',
+  /** A member's pension or other income starts. */
+  'incomeStarts',
+  /** A member's pension or other income ends. */
+  'incomeEnds',
+  /** The household's state changes its income-tax rate (NC's enacted steps). */
+  'stateRateStep',
+  /** The year after the senior bonus's last year, for a household whose tax carried it. */
+  'seniorBonusSunset',
+  /** A short year with no event, the year before not short. */
+  'erosion',
+  /** A short year with no event, the year before short too. */
+  'stillShort',
+] as const
+export type WorkingYearLedgerEventCode = (typeof WORKING_YEAR_LEDGER_EVENT_CODES)[number]
+
+/** One reason a later working year is named. */
+export interface WorkingYearLedgerEvent {
+  readonly code: WorkingYearLedgerEventCode
+  /** The member it is about (an index into `people`), on the per-person codes; absent on the household's. */
+  readonly person?: number
+}
+
+/** Year 0 of the picture: every line of the year's check (R5), grouped. Σ `comingIn` dollars − Σ `goingOut`
+ *  dollars === `bottomLine`, exactly (largest remainder). */
+export interface WorkingYearLedgerYear0 {
+  readonly calendarYear: number
+  readonly comingIn: {
+    /** The living workers' gross pay. */
+    readonly pay: WorkingYearLedgerAmount
+    /** Social Security as PAID this year, after the earnings test (R11). */
+    readonly socialSecurity: WorkingYearLedgerAmount
+    /** Pensions and other ongoing income, gross. */
+    readonly otherIncome: WorkingYearLedgerAmount
+  }
+  /** The Social Security the earnings test held back this year — named inside the Social Security line,
+   *  never in the sum (R16). Its own nearest dollar. */
+  readonly socialSecurityHeldBack: WorkingYearLedgerAmount
+  readonly withheldBasis: WorkingYearWithheldBasis
+  readonly goingOut: {
+    /** Federal Social Security and Medicare payroll tax (R8). */
+    readonly payrollTax: WorkingYearLedgerAmount
+    /** The income tax the outside income carries by itself, federal and state (R6). */
+    readonly taxOnOutsideIncome: WorkingYearLedgerAmount
+    /** The household's own savings deposits (R7). */
+    readonly ownDeposits: WorkingYearLedgerAmount
+    /** W, what the household says a working year costs. */
+    readonly workingYearCost: WorkingYearLedgerAmount
+  }
+  /** Signed whole dollars: left over (≥ 0) or short (< 0). On the cash `c` snapped to the cent,
+   *  `c < 0 ? −⌈−c⌉ : ⌊c⌋` — a draw reads at least "Short $1", a surplus rounds down, never −0. */
+  readonly bottomLine: number
+  /** The engine's unrounded cash (money in less money out). */
+  readonly cash: number
+  /** Also paid from savings — Medicare only, never netted into the sum. Each its own nearest dollar. */
+  readonly alsoFromSavings: {
+    /** Part B and the income surcharge, as billed. */
+    readonly medicarePremiums: WorkingYearLedgerAmount
+    /** The income-surcharge slice of `medicarePremiums`. */
+    readonly medicareSurcharge: WorkingYearLedgerAmount
+    /** The entered Part D / Medigap / Medicare Advantage premiums. */
+    readonly medicareExtras: WorkingYearLedgerAmount
+  }
+  /** Show the worded line "plus any income tax on what savings pays out, which the answer counts": year 0
+   *  funds Medicare, extras or a shortfall from savings, or a Roth conversion or a required withdrawal lands. */
+  readonly savingsTaxLine: boolean
+}
+
+/** A later working year the picture names: one in which a discrete event moves this household's lines, or
+ *  whose own bottom line is short (always named). Worded conditionally: "if you're still working in …". */
+export interface WorkingYearLedgerLaterYear {
+  /** Years after year 0 (1 or more). */
+  readonly yearsIn: number
+  readonly calendarYear: number
+  /** Why it is named, in a fixed order; never empty. */
+  readonly events: readonly WorkingYearLedgerEvent[]
+  /** Signed whole dollars, by year 0's rule. */
+  readonly bottomLine: number
+  readonly cash: number
+  readonly withheldBasis: WorkingYearWithheldBasis
+}
+
+/** The working-year money picture: year 0 in full, then every later working year that changes or runs short. */
+export interface WorkingYearLedger {
+  readonly year0: WorkingYearLedgerYear0
+  /** In year order; at most one entry per later working year (nine on the date route's window). */
+  readonly laterYears: readonly WorkingYearLedgerLaterYear[]
+}
 
 /** The schemaVersion-2 plaintext scenario: the v1 spine inputs + the U2 tax-overlay fields.
  *  Additive over v1 — every v1 field carries through unchanged, so the migration is a pure

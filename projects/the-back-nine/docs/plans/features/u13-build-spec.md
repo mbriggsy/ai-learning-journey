@@ -35,7 +35,7 @@ still 3; see the U17 build spec's ruling 2). Every new field landed in ONE
 atomic change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` + the draft shape +
 `DRAFT_DISPOSITIONS` entry (R7 compile gate) + codec tolerant-reader + planted-fail codec arms (burned/063).
 
-1. **`savedAt?: number`** (model.ts:1896) — finite integer **epoch-day**, encrypted in the model. The unit is
+1. **`savedAt?: number`** (model.ts:2019) — finite integer **epoch-day**, encrypted in the model. The unit is
    the household's **LOCAL** calendar day, not UTC: `currentEpochDay()` (scenarioFromDraft.ts:62) mints it
    local because the persisted `startCalendarYear` is local-minted, and a UTC day expired budget windows a
    few hours early every Dec 31 for any household behind UTC (the ultramode review's basis-mismatch catch,
@@ -48,9 +48,9 @@ atomic change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` +
    - Stamped by `scenarioFromDraft` at the **atomic save-commit**, from the ui layer's clock.
    - **THE NORMALIZER (the clerk's determinism catch):** `scenarioFromDraft`'s output is BOTH the disk
      payload AND the dirty/clean compare operand — a fresh `savedAt` per call would make every session
-     permanently dirty. ONE shared normalizer, `scenarioIdentity` (model.ts:2289), strips ONLY `savedAt`;
+     permanently dirty. ONE shared normalizer, `scenarioIdentity` (model.ts:2412), strips ONLY `savedAt`;
      the dirty compare goes through its key-order-insensitive serialization `scenarioIdentityKey`
-     (model.ts:2326) so key order and absent-vs-undefined cannot read as a change. Both consumers — the
+     (model.ts:2449) so key order and absent-vs-undefined cannot read as a change. Both consumers — the
      unsaved-buffer dirty compare and the draft↔scenario round-trip guard — import it; neither
      re-implements it.
    - **Absent `savedAt`** (every vault saved before U13): the "~N years since your save" claim is
@@ -256,7 +256,7 @@ future builder would otherwise re-derive.*
    in either world. **Do not re-file it.** The engine gap was filed REQUIRED, build-tripwired, and
    **CLOSED the same day** — council-ratified 8/10 (wf_a5ccd576-048, no veto; the honesty hawk's opening
    seat crashed on a schema mismatch and its rebuttal-round seat voted RATIFY explicitly — recorded,
-   insight-019 handling). `seniorBonusFor` (taxCore.ts:83) now prices the bonus ONLY in calendar years
+   insight-019 handling). `seniorBonusFor` (taxCore.ts:92) now prices the bonus ONLY in calendar years
    [effectiveFrom .. sunsetAfter] = [2025 .. 2028], read from the constant's own metadata behind a
    fail-loud non-integer guard, symmetric shape pins on both ends; the calendar (`startCalendarYear + t`)
    threads `deductionStack`/`ordinaryIncomeTax`/`ordinaryPlusCapitalGainsTax`/`CommittedYearIncome`/

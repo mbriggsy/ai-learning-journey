@@ -95,13 +95,14 @@ import {
   irmaa,
   isPricedState,
   STATE_TAX_PROFILES,
+  stateRateForYear,
   type AcaApplicablePercentageTable,
   type PricedState,
 } from '@engine/constants'
 // The RMD divisor + start-age are re-homed to `@engine/rmd` (U16 §S1) — the ONE producer shared
 // with the live solve-request anchor deriver, so the render-layer builder never re-derives them.
 import { rmdStartAgeForBirthYear, selectRmdDivisor } from '@engine/rmd'
-import { ordinaryPlusCapitalGainsTax, taxableSocialSecurity } from '@engine/taxCore'
+import { ordinaryPlusCapitalGainsTax, seniorBonusAvailableIn, seniorBonusFor, taxableSocialSecurity } from '@engine/taxCore'
 import { stateIncomeTax } from '@engine/stateTax'
 import {
   acaCliffFillHeadroom,
@@ -1413,6 +1414,8 @@ export interface WorkingYearCashLines {
    *  priced state's own — `baseTax − zeroTax` for a state that taxes the clamped base (NC), or a class-based
    *  state's tax on the non-pay outside income (PA; its tax on pay is in W) — never `zeroTax` itself (R6, KTD8). */
   readonly taxOnOutsideIncome: number
+  /** `taxOnOutsideIncome` by government — the money picture reads which side a law step can move (A7). */
+  readonly taxOnOutsideIncomeParts: { readonly federal: number; readonly state: number }
   readonly ownDeposits: number
   /** W_t. */
   readonly workingYearCost: number
@@ -1420,6 +1423,14 @@ export interface WorkingYearCashLines {
   readonly cash: number
   /** max(0, −cash): added to the year's need (`fundingNet`) and drawn from savings. */
   readonly shortfall: number
+}
+
+/** The reading whose base carries the most federal tax by itself — R6's costliest reading (the first, on a
+ *  tie). A prepared floor always holds at least one reading. */
+function costliestReading(floor: PreparedWorkingYearFloor): WorkingYearReading {
+  let costliest = floor.readings[0]!
+  for (const reading of floor.readings) if (reading.baseTax > costliest.baseTax) costliest = reading
+  return costliest
 }
 
 /**
@@ -1467,9 +1478,7 @@ export function workingYearCashLines(terms: WorkingYearCheckTerms, floor: Prepar
   let pay = 0
   for (const wages of terms.wagesByPerson) pay += wages
   const payroll = payrollTaxForYear(terms.wagesByPerson, floor.filing, floor.calendarYear)
-  let costliestBaseTax = Number.NEGATIVE_INFINITY
-  for (const reading of floor.readings) if (reading.baseTax > costliestBaseTax) costliestBaseTax = reading.baseTax
-  const federalOnOutside = costliestBaseTax - floor.zeroTax
+  const federalOnOutside = costliestReading(floor).baseTax - floor.zeroTax
   const stateOnOutside = stateTaxOnOutsideIncome(terms, floor)
   if (federalOnOutside < WORKING_YEAR_INCREMENT_FLOOR || stateOnOutside < WORKING_YEAR_INCREMENT_FLOOR) {
     throw new Error(
@@ -1486,11 +1495,61 @@ export function workingYearCashLines(terms: WorkingYearCheckTerms, floor: Prepar
     ongoingIncome: terms.ongoingGross,
     payroll,
     taxOnOutsideIncome,
+    taxOnOutsideIncomeParts: { federal: federalOnOutside, state: stateOnOutside },
     ownDeposits: terms.ownDeposits,
     workingYearCost: terms.workingYearCost,
     cash,
     shortfall: cash < 0 ? -cash : 0,
   }
+}
+
+/** The pinned law steps between two consecutive working years — see {@link workingYearLawSteps}. */
+export interface WorkingYearLawSteps {
+  /** The household's priced state taxes at a different flat rate this calendar year than the year before. */
+  readonly stateRateStep: boolean
+  /** This is the first year past the OBBBA senior bonus's window, and the year before carried a bonus. */
+  readonly seniorBonusSunset: boolean
+}
+
+/**
+ * The pinned law steps that land between two consecutive working years of one household (the working-year
+ * money picture's later-year events — the pay check's KTD12, ruled before A7): the one place the picture
+ * learns a law's dated step, read from the tables this overlay prices with, never re-typed (the
+ * single-source gate holds no years, so a re-typed 2027 would go unseen).
+ *  - `stateRateStep`: the floor's priced state takes a different flat rate this calendar year than the year
+ *    before (`stateRateForYear`, the schedule the state charge reads: NC's S.L. 2026-41 steps). False for an
+ *    unpriced state and for a state without a rate (FL).
+ *  - `seniorBonusSunset`: this year sits past the OBBBA senior bonus's window, and the prior year's costliest
+ *    reading carried a bonus (so the prior year was inside it) — evaluated at that reading's own MAGI (its
+ *    ordinary base, the taxable Social Security beside it and its gain: the MAGI the deduction stack read),
+ *    on the return's 65+ count.
+ * Whether a step MOVES the household's tax is the caller's to read off the composed lines
+ * ({@link WorkingYearCashLines}`.taxOnOutsideIncomeParts`). THROWS when the floors are not consecutive years.
+ */
+export function workingYearLawSteps(prior: PreparedWorkingYearFloor, floor: PreparedWorkingYearFloor): WorkingYearLawSteps {
+  if (floor.calendarYear !== prior.calendarYear + 1) {
+    throw new Error(
+      `[taxOverlay] workingYearLawSteps compares consecutive years (got ${prior.calendarYear} then ${floor.calendarYear})`,
+    )
+  }
+  const state = floor.stateFloor?.state
+  const stateRateStep =
+    state !== undefined && stateRateForYear(state, floor.calendarYear) !== stateRateForYear(state, prior.calendarYear)
+  let seniorBonusSunset = false
+  if (!seniorBonusAvailableIn(floor.calendarYear)) {
+    const costliest = costliestReading(prior)
+    const { ssTaxable } = federalTaxBesideSs(
+      costliest.ordinaryBase,
+      costliest.gainBase,
+      prior.ssBenefit,
+      prior.filing,
+      prior.count65,
+      prior.calendarYear,
+    )
+    const magi = costliest.ordinaryBase + ssTaxable + costliest.gainBase
+    seniorBonusSunset = seniorBonusFor(prior.filing, prior.count65, magi, prior.calendarYear) > 0
+  }
+  return { stateRateStep, seniorBonusSunset }
 }
 
 /**

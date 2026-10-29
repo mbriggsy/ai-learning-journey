@@ -71,6 +71,14 @@ function seniorBonusWindow(): { readonly from: number; readonly through: number 
   return { from, through }
 }
 
+/** Is the OBBBA senior bonus on the books in this calendar tax year — inside its consumed window
+ *  [effectiveFrom .. sunsetAfter]? Exported for the working-year money picture, which names the first
+ *  year past the window (the pay check's KTD12, through `taxOverlay.workingYearLawSteps`). */
+export function seniorBonusAvailableIn(calendarYear: number): boolean {
+  const { from, through } = seniorBonusWindow()
+  return calendarYear >= from && calendarYear <= through
+}
+
 /** The OBBBA senior bonus for a filing status, count of 65+ filers, MAGI, and CALENDAR
  *  YEAR: EACH qualifying person's `perPerson65Plus` reduced linearly at `phaseOutRatePerDollar`
  *  above the filing-status phase-out start, floored at 0, then × the count (Schedule 1-A lines
@@ -79,8 +87,9 @@ function seniorBonusWindow(): { readonly from: number; readonly through: number 
  *  the derived `fullyGoneAbove` ceilings are consistent with it (and 0 below the start). THE SUNSET (the U13-filed engine unit, council-ratified 2026-07-09): the bonus
  *  prices ONLY in calendar tax years [effectiveFrom .. sunsetAfter] = [2025 .. 2028] —
  *  outside the window it is 0, so a 2029+ sim year stops crediting the expired deduction
- *  (the pre-unit engine credited it in EVERY year — calm-but-wrong optimistic, insight 074). */
-function seniorBonusFor(filing: FilingStatus, count65: number, magi: number, calendarYear: number): number {
+ *  (the pre-unit engine credited it in EVERY year — calm-but-wrong optimistic, insight 074).
+ *  Exported for `taxOverlay.workingYearLawSteps` (whether a working year's tax carried the bonus). */
+export function seniorBonusFor(filing: FilingStatus, count65: number, magi: number, calendarYear: number): number {
   if (!Number.isInteger(calendarYear)) {
     // NaN would fail BOTH window compares and silently price a $0 bonus (insight 010's
     // shape — conservative here, but a desynced consumer is never the honest answer).

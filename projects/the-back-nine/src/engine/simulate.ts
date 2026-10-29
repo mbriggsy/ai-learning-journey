@@ -326,6 +326,48 @@ export function personOffsetsFor(people: readonly PersonInputs[]): {
   return { offsets, higherClaimOffset: offsets[higherIdx]?.claim ?? 0 }
 }
 
+/**
+ * The tax overlay's household for a run — the ONE builder `simulate` and the working-year money picture
+ * (`workingYearLedger.ts`, the pay check's KTD12) share, so the picture can never birth-year the household
+ * differently from the run. `people[i]` carries person i's birth year as the overlay ages it
+ * (startCalendarYear − age at year 0, never the entered birth year); the aggregated pre-tax pool's static
+ * owner is people[0] (the survivor inherits it — handled per-year by the caller's `householdYears`
+ * regime, whose living sets must hold THESE references: the overlay matches them by identity). With a
+ * per-year stream supplied, `household.owner`/`spouse` are never read for the resolution (only
+ * `startCalendarYear` is); the config is the EXHAUSTIVE-OFF pass-through (no household) unless tax or RMD
+ * is on. No overlay ⇒ no people.
+ */
+export function overlayHouseholdFor(params: SimulationParams): {
+  readonly people: readonly OverlayPerson[]
+  readonly config: TaxOverlayConfig
+} {
+  const overlay = params.overlay
+  const overlayPeople: readonly OverlayPerson[] = overlay
+    ? params.people.map((pp) => ({ birthYear: overlay.startCalendarYear - pp.currentAge }))
+    : []
+  const owner = overlayPeople[0]
+  const spouse = overlayPeople[1]
+  const config: TaxOverlayConfig =
+    overlay && (overlay.taxEnabled || overlay.rmdEnabled) && owner
+      ? {
+          taxEnabled: overlay.taxEnabled,
+          rmdEnabled: overlay.rmdEnabled,
+          household: {
+            startCalendarYear: overlay.startCalendarYear,
+            filing: overlay.filing,
+            owner,
+            ...(spouse ? { spouse } : {}),
+            // The state-tax unit: thread the household state (presence-keyed — absent ⇒ the field is
+            // omitted ⇒ the engine's structural `+ 0` no-op, byte-identical to the spine). The engine
+            // keys pricing on `isPricedState` membership; the BUILT `params.overlay.retirementState`
+            // is what the S5 producer's-output predicate reads (never a geography re-derivation).
+            ...(overlay.retirementState !== undefined ? { retirementState: overlay.retirementState } : {}),
+          } satisfies Household,
+        }
+      : { taxEnabled: false, rmdEnabled: false }
+  return { people: overlayPeople, config }
+}
+
 /** The earnings test's crediting months IN EFFECT in one survivor year — see {@link survivorYearBenefit}. */
 export interface SurvivorYearCredits {
   /** On the survivor's own retirement benefit: 0 until the year after the survivor's FRA year. */
@@ -1854,39 +1896,12 @@ export function simulate(
   const { offsets, higherClaimOffset } = personOffsetsFor(people)
   const longevityPeople: LongevityPerson[] = people.map((p) => ({ sex: p.sex, currentAge: p.currentAge }))
 
-  // Tax-and-accounts overlay (U2 · M6a) setup, computed once. `overlayPeople[i]` carries each
-  // person's birth year (startCalendarYear − age at year 0); the aggregated pre-tax pool's static
-  // owner is people[0] (the survivor inherits it — handled per-year via the householdYears regime
-  // built in the path loop). With a per-year stream always supplied, `household.owner`/`spouse` are
-  // never read for the resolution (only `startCalendarYear` is); the config is the EXHAUSTIVE-OFF
-  // pass-through (no household) unless tax or RMD is on.
+  // Tax-and-accounts overlay (U2 · M6a) setup, computed once (`overlayHouseholdFor`).
   const overlay = params.overlay
   // The pay check's key (KTD1): W present ⇒ every path builds its earnings-test schedule and the
   // overlay composes each clamped year's check. Absent ⇒ none of it runs (the pre-check run, bit for bit).
   const workingYearCost = overlay?.accumulation?.workingYearCostReal
-  const overlayPeople: readonly OverlayPerson[] = overlay
-    ? people.map((pp) => ({ birthYear: overlay.startCalendarYear - pp.currentAge }))
-    : []
-  const owner = overlayPeople[0]
-  const spouse = overlayPeople[1]
-  const overlayConfig: TaxOverlayConfig =
-    overlay && (overlay.taxEnabled || overlay.rmdEnabled) && owner
-      ? {
-          taxEnabled: overlay.taxEnabled,
-          rmdEnabled: overlay.rmdEnabled,
-          household: {
-            startCalendarYear: overlay.startCalendarYear,
-            filing: overlay.filing,
-            owner,
-            ...(spouse ? { spouse } : {}),
-            // The state-tax unit: thread the household state (presence-keyed — absent ⇒ the field is
-            // omitted ⇒ the engine's structural `+ 0` no-op, byte-identical to the spine). The engine
-            // keys pricing on `isPricedState` membership; the BUILT `params.overlay.retirementState`
-            // is what the S5 producer's-output predicate reads (never a geography re-derivation).
-            ...(overlay.retirementState !== undefined ? { retirementState: overlay.retirementState } : {}),
-          } satisfies Household,
-        }
-      : { taxEnabled: false, rmdEnabled: false }
+  const { people: overlayPeople, config: overlayConfig } = overlayHouseholdFor(params)
 
   const terminalValuesReal: number[] = new Array(paths)
   const depletionYears: DepletionYear[] = new Array(paths)

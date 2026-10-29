@@ -81,12 +81,16 @@ main-thread money picture (the plan's *Departures from the ruling*, item 4). The
 Briggsy saves his first real plan; the tool is built for him (a friend using it is "a crazy outside chance", his words, 2026-10-21). The day the check ships, the working-year row's "It doesn't check that your pay really
 covers all of that…" sentence comes out for a household with W (U9). Build 2, the surplus question, follows this build.
 
-**SESSION 2026-10-28 (b9-12):**
-**STATE on A4's tree (`fde13929`), by exit code (re-run at this close):** typecheck · lint · `verify:doc-stats` · build ·
-`verify:bundle` 272.5 KiB — all exit 0; the full suite green at `fde13929` (the count lives under `verify:doc-stats`).
-`verify:aca` / `verify:state-tax` were not re-run (no constants they gate moved).
-**CI:** `fde13929` → run 40616448986 completed SUCCESS, both jobs (`verify`, `verify-rv-chart-text`), read by id; the
-close `87ed7a6a` → run 40786474078 completed SUCCESS, both jobs (read by id, b9-13).
+**SESSION 2026-10-28 (b9-13):**
+**STATE on A5's tree (`9b6a6daf`), by exit code:** typecheck · build · `verify:bundle` 272.5 KiB — exit 0, re-run at
+this close; lint · `verify:doc-stats` · the full suite — exit 0 on the committed content before the commit (the count
+lives under `verify:doc-stats`). `verify:aca` / `verify:state-tax` were not re-run (no constants they gate moved).
+**CI:** `9b6a6daf` → run 40799552250 completed SUCCESS, both jobs (`verify`, `verify-rv-chart-text`), read by id. Read
+this close's own run by id (`gh run list --commit <FULL sha>`, then `gh run view <id>`) before starting A6.
+**Landmine (b9-13):** `pnpm doc:reanchor` again missed bare tokens on lines that name another file first (39 hand moves
+by content this time) and rewrote two HISTORICAL lines (`docs/backlog.md`'s quoted re-anchor incident, insight 136's
+wrong-citation example) — after `--apply`, run `pair-check.mjs` + `crossline-sweep.mjs` + `content-check.mjs` and restore
+any recorded number to HEAD; `crossline-sweep` caught four bare `taxOverlay.ts` tokens inside `objectiveHeadline.ts`.
 **FILED (b9-11, both Tier 0, ranked with *The other new Tier 0s* below by measured reach):** *A typed Social Security
 amount with odd cents is never rounded to the dime…* (own benefit rosy up to a dime a month, two on the delayed-credit
 path; the spousal excess either way; its Prescription moves most seeds' goldens) and *A spouse who dies in the year

@@ -10,18 +10,19 @@ When a session closes, it can message the next session and wake it up, so work k
 
 ## Set it up
 
-1. Name both sessions, for example `our setup 6` (closing) and `our setup 7` (successor).
-2. Tell the successor what to do when the message comes: "our setup 6 hands off to you when it closes; when its message arrives, pick up where it says to start." It acts on the message only as far as these instructions say.
-3. Tell the closing session who is next, by the successor's whole name: "our setup 7 is watching." Say it any time before the close.
+1. Name both sessions, for example `b9` (closing) and `b9-2` (successor).
+2. Tell the successor what to do when the message comes: "b9 hands off to you when it closes; when its message arrives, pick up where it says to start." It acts on the message only as far as these instructions say.
+3. Tell the closing session who is next, by the successor's whole name: "b9-2 is watching." Say it any time before the close.
 4. Close it. Say "squeaky" to close it now. Or, before you walk away, tell it to run squeaky on its own at a good stopping point; that is how it closes overnight without you.
 
-Saying "our setup 7 is watching" also makes the closing session write its close for the successor to read. Do it every time.
+Saying "b9-2 is watching" also makes the closing session write its close for the successor to read. Do it every time.
 
 ## Whole names only
 
-- The closing session looks for a live session whose name is exactly the name you gave. Capital letters don't matter.
-- A nickname or part of a name sends nothing, by design. Say "setup 7" when the session is `our setup 7`, and you get: `No handoff: no live session on this machine is named setup 7; our setup 7 only contains it.`
-- If two live sessions match, nothing is sent.
+- The closing session looks, in Claude Code's own list of sessions, for a live session on this laptop whose name is exactly the name you gave. Capital letters don't matter.
+- A nickname or part of a name sends nothing, by design. Say "b9 2" when the session is `b9-2`, and you get: `No handoff: no live session on this machine is named b9 2.`
+- If two live sessions on this laptop match, nothing is sent.
+- Old sessions with the same name (offline ones, ones on another machine or in the cloud) don't count. When one shares the successor's name, the closing session addresses the live one by its short id, because a send by name alone is refused when names clash.
 - Only you name the successor. Another session's message claiming the job doesn't count.
 
 ## What the closing session does
@@ -54,10 +55,8 @@ Every miss ends the close with a `No handoff:` line and the reason:
 
 - No successor was named. A session can lose your naming when its older conversation is boiled down to a summary, which also happens to an idle session about 55 minutes after its last reply. This line is how you find out.
 - No live session on this laptop has that name, or only lookalikes do.
-- More than one session has that name.
-- The named session isn't proven to be running.
-- Squeaky couldn't check which sessions are live.
-- The closing session may be open in a second terminal window too, so squeaky can't tell which copy's work is which.
+- More than one live session on this laptop has that name.
+- The send failed.
 
 ## What can go wrong
 
@@ -69,7 +68,8 @@ Untested:
 
 - a successor in a different permission mode
 - a successor stuck on a permission question nobody has answered
-- a session on another machine or in the cloud with the same name as the successor
+- the send by short id when an old session shares the successor's name (a send by name alone was refused for exactly that clash on 2026-10-29; the short id is the fix)
+- the hand-off as a whole since it moved from a script to Claude Code's own session list (2026-10-29)
 - whether a held-or-refused notice reaches a closing session that has gone idle
 
 ## Where it lives

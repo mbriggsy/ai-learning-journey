@@ -21,7 +21,7 @@ Squeaky's new step 10 messages a successor session ("Handoff: ...; your turn.") 
 ## Fix
 - **Step 0 now opens by waiting** for this session's background Workflows and agents: end the turn, then restart at step 0 when the notice arrives. It never stops one unasked, since a stop mid-edit half-applies the edits.
 - **Step 10 runs last, and after the send this session edits and commits nothing.** A later wake (an agent's notice, a /distill hook) gets a report to Briggsy, not a write.
-- **Exact-name matching only** (ignoring case), against peers.mjs `others`, the registry's live sessions on this machine. A miss reports near-misses as a fact: "No handoff: no live session on this machine is named successor; msg-test-successor only contains it." Two exact matches, or an `unverified` row, also send nothing.
+- **Exact-name matching only** (ignoring case), against the live sessions on this machine (since 2026-10-29 read from Claude Code's own `ListAgents`, before that from a script). A miss reports near-misses as a fact: "No handoff: no live session on this machine is named successor; msg-test-successor only contains it." Two exact matches also send nothing.
 - **Every non-send ends in a "No handoff:" line,** and none of those lines tells anyone to run anything.
 - **The label now says what was seen:** "a background Workflow's notice starts a new turn... seen 2026-10-22; an agent's is unmeasured."
 - **Evidence:**

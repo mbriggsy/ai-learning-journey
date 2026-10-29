@@ -47,7 +47,7 @@ Claude writes the hard-won lesson as a short, numbered note in the project's `do
 
 ### 6. Squeaky (close the session)
 
-The end-of-session checklist, in order: wait for this session's own background jobs and check which other sessions are running, update `TODO.md`, run the code checks, see which changed files are this session's, delete only the temp files this session made or read (and nobody changed since), check that docs it changed don't now contradict other docs, commit only this session's own files, push (unless GitHub already has commits this laptop doesn't), stop leftover background programs, run a final check, and hand off. It says "Squeaky clean." only when that final check proves it.
+The end-of-session checklist, in order: wait for this session's own background jobs and check which other sessions are running, update `TODO.md`, run the code checks, see which changed files are this session's, delete only the temp files this session made or read, check that docs it changed don't now contradict other docs, commit only this session's own files, push (unless GitHub already has commits this laptop doesn't), stop leftover background programs, run a final check, and hand off. It says "Squeaky clean." only when that final check proves it.
 
 - **Start it:** "squeaky", "squeaky clean", or "let's get squeaky".
 - **Lives in:** [projects/skills/squeaky-clean/](../projects/skills/squeaky-clean/SKILL.md)
@@ -56,7 +56,7 @@ The end-of-session checklist, in order: wait for this session's own background j
 
 When you have named the session that takes over, squeaky's last step sends it one message saying how the close went and where to start. An idle successor wakes within seconds; a busy one reads the message as soon as its current step finishes.
 
-- **Start it:** tell the closing session the next session's whole name, for example "our setup 7 is watching". Both sessions must run on this laptop (a session anywhere else gets no message) and in the same permission mode (the setting for which actions Claude may take without asking you); if the modes differ, the successor holds the message for your approval, and overnight that approval can run out. The full rules: [how-to/session-chains.md](how-to/session-chains.md).
+- **Start it:** tell the closing session the next session's whole name, for example "b9-2 is watching". Both sessions must run on this laptop (a session anywhere else gets no message) and in the same permission mode (the setting for which actions Claude may take without asking you); if the modes differ, the successor holds the message for your approval, and overnight that approval can run out. The full rules: [how-to/session-chains.md](how-to/session-chains.md).
 - **Lives in:** step 10 of [projects/skills/squeaky-clean/SKILL.md](../projects/skills/squeaky-clean/SKILL.md).
 
 ## Always on

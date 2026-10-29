@@ -72,26 +72,13 @@ main-thread money picture (the plan's *Departures from the ruling*, item 4). The
 Briggsy saves his first real plan; the tool is built for him (a friend using it is "a crazy outside chance", his words, 2026-10-21). The day the check ships, the working-year row's "It doesn't check that your pay really
 covers all of that…" sentence comes out for a household with W (U9). Build 2, the surplus question, follows this build.
 
-**SESSION 2026-10-28 (b9-13):**
-**STATE on A5's tree (`9b6a6daf`), by exit code:** typecheck · build · `verify:bundle` 272.5 KiB — exit 0, re-run at
-this close; lint · `verify:doc-stats` · the full suite — exit 0 on the committed content before the commit (the count
-lives under `verify:doc-stats`). `verify:aca` / `verify:state-tax` were not re-run (no constants they gate moved).
-**CI:** `9b6a6daf` → run 40799552250 completed SUCCESS, both jobs (`verify`, `verify-rv-chart-text`), read by id. Read
-this close's own run by id (`gh run list --commit <FULL sha>`, then `gh run view <id>`) before starting A6.
-**Landmine (b9-13):** `pnpm doc:reanchor` again missed bare tokens on lines that name another file first (39 hand moves
-by content this time) and rewrote two HISTORICAL lines (`docs/backlog.md`'s quoted re-anchor incident, insight 136's
-wrong-citation example) — after `--apply`, run `pair-check.mjs` + `crossline-sweep.mjs` + `content-check.mjs` and restore
-any recorded number to HEAD; `crossline-sweep` caught four bare `taxOverlay.ts` tokens inside `objectiveHeadline.ts`.
-**FILED (b9-11, both Tier 0, ranked with *The other new Tier 0s* below by measured reach):** *A typed Social Security
-amount with odd cents is never rounded to the dime…* (own benefit rosy up to a dime a month, two on the delayed-credit
-path; the spousal excess either way; its Prescription moves most seeds' goldens) and *A spouse who dies in the year
-they planned to claim is treated as having filed early…* (gloomy; reach needs a planned claim AT 66, which no seed has).
-**Landmine (b9-14):** NEVER run `pnpm doc:reanchor HEAD --apply` twice, not even once to count and once for the
-tail: the second run re-maps numbers that are already new, so every citation shifts twice (A6 did it, 983 → 1109 →
-1235). Capture ONE run's output to a file. Recovery without touching any other edit:
-`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a6-tools\unreanchor.mjs`
-(an LCS over lines with citation numbers masked puts HEAD's text back on every line that differs only in those
-numbers), then one fresh run, then the three checkers.
+**SESSION 2026-10-29 (b9-14):**
+**STATE on A6's tree (`24ed7410`), by exit code:** typecheck — exit 0, re-run at this close; lint · build ·
+`verify:bundle` 272.5 KiB · `verify:doc-stats` · the full suite — exit 0 on the committed content before the commit (the
+count lives under `verify:doc-stats`); the opt-in recompute spike (`PROFILE=1`, its W twin) passed in Chromium.
+`verify:aca` / `verify:state-tax` were not re-run (no constants they gate moved); `verify:fit` was not (no UI moved).
+**CI:** `24ed7410` → run 40957994633 completed SUCCESS, both jobs (`verify`, `verify-rv-chart-text`), read by id. Read
+this close's own run by id (`gh run list --commit <FULL sha>`, then `gh run view <id>`) before starting A7.
 **DISTILL CANDIDATES (for the pay check's Phase C `/distill`):**
 - (b9-14) a "reads the SAME object" test that checks what a probe was HANDED proves nothing about what the code READ: the
   check composed from a second floor preparation survived, because the probe was passed the prepared floor while the
@@ -134,6 +121,12 @@ numbers), then one fresh run, then the three checkers.
 - (b9-11) a property whose oracle calls the function under test certifies that shared arithmetic: say what it pins (the
   composition) and pin the rest by hand goldens; count a chart row "reached" only on strictly ordered amounts (a $0 PIA
   ties all three) — both mutant-proven.
+**THE A6 TOOLS (durable, b9-14):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a6-tools\`
+— `seeds.mts` (`b9-seed-probe`'s, rooted at the CWD's `src`: run it once from `b9-a6-head\` — a `git archive` of HEAD's
+`src` + tsconfig with a `node_modules` junction; refresh it with `git archive HEAD:projects/the-back-nine src tsconfig.json
+package.json` — and once from the project, then `cmp` the two outputs for a byte-identity proof that never touches the live
+tree), `timing.mts` (final-tier wall time, W-absent vs W-present, alternating), `unreanchor.mjs` (the landmine below) and
+the A6 mutant specs. The A6 review's repros: `b9-a6-review\` (`wf_fdc509f6-84c`).
 **THE SEED PROBES (durable, b9-11):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-seed-probe\`
 — `seeds.mts` (every dev seed's FULL engine output through the app's own calls: the spine run with band fan + survivor
 reading + health readout, both date tiers; typed arrays digested), `diff.mjs` (every moved field per seed — it stops at 80
@@ -169,7 +162,7 @@ re-point each script's output path off the dead session scratchpad before runnin
 3. **Taxes it can already figure:** *The taxable account's yield never reaches a year's tax base…*; the 3.8% surtax (the D7 bullet on *Knowingly omitted costs — the discussion he parked*); *A brokerage sale at a loss gives no tax break*; *When the first spouse dies, the brokerage account's cost basis isn't reset…*; *The brokerage account's cost basis is held at today's dollars forever…*; *Tax brackets and the standard deduction keep their full 2026 value after inflation…*; PA's two (*In Pennsylvania the tool taxes a pension the household marked as a pension…*, *In Pennsylvania, every retirement-account withdrawal and Roth conversion is state-taxed until the younger spouse turns 60…*).
 4. **Health costs that grow over time:** *Pre-65 health insurance is priced with no cost growth…*; *Out-of-pocket medical costs and Medicare's drug-plan and supplement premiums never grow…*.
 5. **New setup questions** (each its own register entry, filed 2026-10-21): *Investment income is asked only of whoever still works…*; *Children or other dependents are never asked about…*; *Before Medicare the tool assumes marketplace coverage…*; *Fund fees and adviser fees are never taken out of the growth*; *Tax is always figured with the standard deduction…*; *Life insurance paid at the first death is never asked about…*; *A known one-time inflow…*; **the heirs' rate — *The heirs' tax bracket for "leave more behind" is a 24% default found only in the assumptions panel — ask it in setup* (his ruling 2026-10-21: "yes")**.
-- **The other new Tier 0s** (filed 2026-10-21) rank after bucket 1 by measured reach: *Nobody in the model can die before 65…*, *Social Security is paid in full for the whole plan…*, *The health-insurance quote question never says whether to enter the price before or after the marketplace discount…*, *A retiree already drawing Social Security is asked for a "full retirement age" figure…*, *A retired 65+ couple with no savings entered and no pension or other income is charged no Medicare premiums at all…*. The register holds all 48 of the day's filings; search it for "filed 2026-10-21 (b9-7)".
+- **The other new Tier 0s** (filed 2026-10-21) rank after bucket 1 by measured reach: *Nobody in the model can die before 65…*, *Social Security is paid in full for the whole plan…*, *The health-insurance quote question never says whether to enter the price before or after the marketplace discount…*, *A retiree already drawing Social Security is asked for a "full retirement age" figure…*, *A retired 65+ couple with no savings entered and no pension or other income is charged no Medicare premiums at all…*; and the two b9-11 filings, *A typed Social Security amount with odd cents is never rounded to the dime…* (own benefit rosy up to a dime a month, two on the delayed-credit path; the spousal excess either way; its Prescription moves most seeds' goldens) and *A spouse who dies in the year they planned to claim is treated as having filed early…* (gloomy; reach needs a planned claim AT 66, which no seed has). The register holds all 48 of the 2026-10-21 filings; search it for "filed 2026-10-21 (b9-7)".
 6. **The plain-words pass:** the audit's 30 worst sentences, drafted plain by the pilot, Caddie-walked, and read by him in ONE sitting, never one call at a time. Many vanish with 1–5.
 - **ON THE CLOCK, above all of it:** the ACA re-verify, CI-red ~2026-11-19 (the *Dated* table).
 - **States:** the priced roster stays NC, PA and FL "for now" (his ruling 2026-10-21). His generic-state idea (ask the state's rate, and whether it taxes Social Security) is filed on *Unpriced states — a confident winner computed with zero state income tax*.
@@ -767,6 +760,19 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 *Engineering lessons live in [`docs/insights/`](docs/insights/) (one file per lesson; cite by full path + slug).
 These are the mechanical ones that keep costing hours.*
 
+- **From the b9-14 close (2026-10-29, A6):**
+  - **The once-only re-anchor rule below was broken anyway** — `pnpm doc:reanchor HEAD --apply` was invoked twice in one
+    shell line (once piped to a count, once to a tail), so 276 citations moved twice (983 → 1109 → 1235). Capture ONE
+    run's output to a file and read the file. The recovery that touches no other edit is
+    `b9-a6-tools\unreanchor.mjs` (an LCS over lines with citation numbers masked puts HEAD's text back on every line that
+    differs only in them; it snapshots first), then one fresh run, then the three checkers.
+  - **The re-anchor tool still misses bare tokens on a line that names another file first** (four this time, plus four
+    bare `taxOverlay.ts` tokens in `objectiveHeadline.ts`'s docblock that only `crossline-sweep.mjs` sees — the same four
+    as b9-13), and still rewrites the two HISTORICAL lines (`docs/backlog.md`'s quoted re-anchor incident, insight 136's
+    wrong-citation example): after the one `--apply`, run `pair-check.mjs` + `crossline-sweep.mjs` + `content-check.mjs`
+    and put every recorded number back to HEAD.
+  - **`copyFence.test.ts` (30 s default) timed out once in the full suite under load** — ESLint's cold start; alone it ran
+    in 0.9 s, and the next full run passed. Re-run a lint-in-test timeout alone before believing it.
 - **From the b9-11 close (2026-10-27, the RIB-LIM order fix):**
   - **`pnpm doc:reanchor` runs ONCE, LAST — and docs edited after it ran need hand moves.** A re-run against HEAD
     double-shifts every token it already moved (its dry run proposed `solverCodeVersion.ts:154 → :171` for a citation

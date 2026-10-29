@@ -436,7 +436,7 @@ export function solveAcaFundedGross(
 // The Part-B cost-trend schedule (the trend sourcing unit, council wf_c673339e-257) — the
 // pure derivation from the sourced `medicareCostTrend` table to per-sim-year REAL pricing.
 // Consumed by runTaxAwareDecumulation (taxOverlay), which binds the constants and passes the
-// per-year pricing into `medicareAnnualCost` — the consumption half of the U14 token's
+// per-year pricing, through `medicareChargeForYear`, into `medicareAnnualCharge` — the consumption half of the U14 token's
 // Medicare-trend clause (insight 074: a stamp nothing reads prices nothing).
 // =========================================================================
 
@@ -654,7 +654,7 @@ export function irmaaBillScalesFor(schedule: ComparedIrmaaSchedule): IrmaaSurcha
 // =========================================================================
 // These two functions are the pure pieces; the per-year IRMAA-MAGI history, the 2yr lag, the seed for
 // a sim starting near 65, and the survivor MFJ→single threshold flip (lagged +2yr, since year t's
-// threshold uses filing[t−2]) all live in taxOverlay.ts's runTaxAwareDecumulation.
+// threshold uses filing[t−2]) all live in taxOverlay.ts (the history in runTaxAwareDecumulation; the rest in medicareChargeForYear).
 //
 // PURE: a function of (the IRMAA-MAGI scalar, filing, the constants). Reads ZERO draws (CRN-safe).
 // =========================================================================
@@ -818,6 +818,7 @@ export function irmaaTierSurchargeMonthly(
  *
  * `irmaaMagiForBill` is IRMAA-MAGI[t−2] (the 2-year lag) and `filing` is the filing status of THAT
  * lagged year (so the survivor MFJ→single threshold flip is itself lagged +2yr) — both from the caller.
+ * The figure is {@link medicareAnnualCharge}'s `cost`.
  */
 export function medicareAnnualCost(
   irmaaMagiForBill: number,
@@ -825,14 +826,44 @@ export function medicareAnnualCost(
   enrolledCount: number,
   schedule: ComparedIrmaaSchedule,
   partBBaseMonthly: number,
-  /** The billed year's surcharge trend scales — the SAME object the caller's readout split
-   *  reads (single-producer: base = cost − surcharge stays exact by construction). */
   scales: IrmaaSurchargeScales,
 ): number {
+  return medicareAnnualCharge(irmaaMagiForBill, filing, enrolledCount, schedule, partBBaseMonthly, scales).cost
+}
+
+/** One year's Medicare bill and its IRMAA slice — see {@link medicareAnnualCharge}. */
+export interface MedicareAnnualCharge {
+  /** {@link medicareAnnualCost}: base Part B + the IRMAA surcharge, × enrolled × 12. */
+  readonly cost: number
+  /** The IRMAA surcharge slice of `cost` (Part B + Part D), × enrolled × 12 — so the base is
+   *  `cost − surcharge`. */
+  readonly surcharge: number
+}
+
+const NO_MEDICARE_CHARGE: MedicareAnnualCharge = Object.freeze({ cost: 0, surcharge: 0 })
+
+/**
+ * The year's Medicare bill ({@link medicareAnnualCost}) and its IRMAA slice from ONE tier lookup, so the
+ * readout's base-vs-surcharge split can never disagree with the bill (the pay check's A5: the overlay's
+ * year charge and the working-year money picture both read it). Same arguments and the same arithmetic
+ * as the bill, operand for operand.
+ */
+export function medicareAnnualCharge(
+  irmaaMagiForBill: number,
+  filing: FilingStatus,
+  enrolledCount: number,
+  schedule: ComparedIrmaaSchedule,
+  partBBaseMonthly: number,
+  /** The billed year's surcharge trend scales (the trend unit's per-program disaggregation). */
+  scales: IrmaaSurchargeScales,
+): MedicareAnnualCharge {
   assertComparedIrmaaSchedule(schedule, 'medicareAnnualCost')
-  if (enrolledCount <= 0) return 0
+  if (enrolledCount <= 0) return NO_MEDICARE_CHARGE
   const surchargeMonthly = irmaaTierSurchargeMonthly(irmaaMagiForBill, filing, schedule, scales)
-  return enrolledCount * (partBBaseMonthly + surchargeMonthly) * 12
+  return {
+    cost: enrolledCount * (partBBaseMonthly + surchargeMonthly) * 12,
+    surcharge: enrolledCount * surchargeMonthly * 12,
+  }
 }
 
 // =========================================================================

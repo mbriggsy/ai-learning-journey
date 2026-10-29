@@ -97,7 +97,7 @@ status: shipped
 ## S2 — engine shape
 
 1. **Placement:** a pure per-state family beside taxCore's primitives, joining the SAME
-   per-year gross-up fixed point as a **second addend at `taxOverlay.ts:1233-1245`**
+   per-year gross-up fixed point as a **second addend at `taxOverlay.ts:1384-1396`**
    (`solveGrossWithdrawal`) — never bolted on after convergence. `GrossUpContext` carries the
    state code; the calendar threads as `startCalendarYear + t` (the senior-bonus pattern —
    the rate lookup **CONSUMES the year**, insight 074). That last point stopped being
@@ -134,7 +134,7 @@ status: shipped
    arms: absent field, `'elsewhere'`, and each unbuilt roster state, all against the golden
    spine.
 6. **validateParams / R19:** the state code is an ENUM-MEMBERSHIP gate (the `filing` idiom,
-   simulate.ts:921) — an out-of-union value crossing the worker boundary returns the calm
+   simulate.ts:965) — an out-of-union value crossing the worker boundary returns the calm
    indeterminate, never a silently-selected branch; mirrored fail-loud backstop in
    `runTaxAwareDecumulation` for direct callers.
 7. **Survivor transition (insight 014):** the NC standard deduction moves $25,500 → $12,750
@@ -148,7 +148,7 @@ status: shipped
    k-derivation comment (`taxOverlay.ts:518-521`) and re-stated in
    [architecture.md §7.1](../../architecture.md).
 9. **Accounting:** state tax folds into the year's tax-paid surface the way federal does
-   (`taxPaidThisYear`, taxOverlay.ts:2223 family) — one lifetime-tax lens, no parallel ledger
+   (`taxPaidThisYear`, taxOverlay.ts:2334 family) — one lifetime-tax lens, no parallel ledger
    in v1.
 
 ## S3 — intake + the R7 seat

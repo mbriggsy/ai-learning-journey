@@ -109,7 +109,7 @@ import {
   irmaaStepFillHeadroom,
   type CommittedYearIncome,
 } from '@engine/magiLandscape'
-import { solveAcaFundedGross, fplForHousehold, medicareAnnualCost, acaMagi, irmaaMagi, irmaaTierSurchargeMonthly, irmaaScheduleAsCompared, boundPartBPricingSchedule, hsaQualifiedSpend, type GrossUpSolution, type MagiComponents } from '@engine/healthOverlay'
+import { solveAcaFundedGross, fplForHousehold, medicareAnnualCharge, acaMagi, irmaaMagi, irmaaScheduleAsCompared, boundPartBPricingSchedule, hsaQualifiedSpend, type GrossUpSolution, type MagiComponents, type PartBYearPricing } from '@engine/healthOverlay'
 import { NEVER_DEPLETED, isRetirementState, type DepletionYear, type DrawdownPolicy, type FilingStatus, type RetirementState } from '@shared/model'
 
 // Filing status is shared model vocabulary (the persisted scenario speaks it too). Re-exported
@@ -607,7 +607,7 @@ function count65PlusInSimYear(household: Household, t: number): number {
 
 /** Sim-year `t`'s resolved tax identity: the filing status, the 65+ deduction count, and the
  *  RMD pool-holder (+ the JLLS sole-spouse arg, M6b). */
-interface ResolvedYear {
+export interface ResolvedYear {
   readonly filing: FilingStatus
   readonly count65: number
   /** The Medicare-ENROLLED living count (C3 §3b): `|living ∩ {i : t ≥ onset_i}|`. With no onset
@@ -714,6 +714,163 @@ function resolveYear(
     rmdOwner: household.owner,
     rmdSpouse: household.spouse,
   }
+}
+
+/** Sim-year `t`'s household context — see {@link overlayYearContext}. */
+export interface OverlayYearContext extends ResolvedYear {
+  /** The sim year's calendar year, `household.startCalendarYear + t`. */
+  readonly calendarYear: number
+  /** The household's retirement state when it is PRICED (`isPricedState` membership); absent for an
+   *  absent state, `'elsewhere'` or an unbuilt roster code — the structural `+ 0` state branch. */
+  readonly pricedState?: PricedState
+  /** The MIN integer age among this year's LIVING members — the household-granularity qualified-age
+   *  gate of a class-based age-gated state (PA 59½). +Infinity when nobody is alive (defensive; the
+   *  horizon guarantees one), which reads as "qualified". */
+  readonly minLivingAge: number
+}
+
+/**
+ * Sim-year `t`'s household context — the one producer of the year's tax identity: {@link ResolvedYear}
+ * (filing, the 65+ count, who is Medicare-enrolled, the living count, the RMD holder) plus the calendar
+ * year, the priced state and the living-age floor. The year loop reads it, and so will the working-year
+ * money picture (the pay check's KTD12), so the two can never disagree on a year's household. The living
+ * set is resolveYear's (`householdYears[t]`, else the static household). Reads ZERO draws (CRN-safe).
+ */
+export function overlayYearContext(
+  household: Household,
+  householdYears: readonly HouseholdYear[],
+  t: number,
+  medicareOnsetSimYear?: readonly number[],
+): OverlayYearContext {
+  const resolved = resolveYear(household, householdYears, t, medicareOnsetSimYear)
+  // The living set is resolveYear's rmdOwner/rmdSpouse (living[0]/living[1]); the aggregate draw and
+  // conversion are NOT per-person-attributable, so the state's age gate is household-granularity
+  // conservative (all-living-must-be-qualified — see stateIncomeTax).
+  const livingPeople = [resolved.rmdOwner, resolved.rmdSpouse].filter((p): p is OverlayPerson => p !== undefined)
+  const minLivingAge =
+    livingPeople.length > 0
+      ? Math.min(...livingPeople.map((p) => ageInSimYear(p, household.startCalendarYear, t)))
+      : Number.POSITIVE_INFINITY
+  const state = household.retirementState
+  return {
+    ...resolved,
+    calendarYear: household.startCalendarYear + t,
+    ...(state !== undefined && isPricedState(state) ? { pricedState: state } : {}),
+    minLivingAge,
+  }
+}
+
+/** One sim year's Medicare charge — see {@link medicareChargeForYear}. */
+export interface MedicareYearCharge {
+  /** Base Part B + the IRMAA surcharge for every living enrolled member, as billed — the only Medicare
+   *  premium the HSA may pay (Pub 969). */
+  readonly cost: number
+  /** The IRMAA surcharge slice of `cost`, from the same tier lookup (the base is `cost − surcharge`). */
+  readonly surcharge: number
+  /** The entered Part D / Medigap / Medicare Advantage premiums of the living enrolled members, × 12 —
+   *  kept apart from `cost` (Medigap is Pub 969's named exclusion; the readout's base reads `cost`). */
+  readonly extras: number
+}
+
+/** What {@link medicareChargeForYear} reads — the year loop's own streams; the IRMAA schedule and the
+ *  Part B pricing are the engine's one binding of the sourced constants, bound inside. */
+export interface MedicareChargeInputs {
+  readonly household: Household
+  /** The per-year living stream (survivor-aware); empty = the static household. */
+  readonly householdYears: readonly HouseholdYear[]
+  readonly medicareOnsetSimYear?: readonly number[]
+  readonly t: number
+  /** Sim-year `t`'s enrolled members: the pricing count and their canonical indices. */
+  readonly year: Pick<ResolvedYear, 'medicareEnrolledCount' | 'medicareEnrolledIndices'>
+  /** IRMAA-MAGI recorded for every earlier sim year (the lagged bill reads index t − lookback). */
+  readonly irmaaMagiHistory: readonly number[]
+  /** The MAGI of a bill whose look-back year predates the sim, by sim year. */
+  readonly irmaaMagiSeed: readonly number[]
+  readonly irmaaMagiOverride: readonly number[]
+  readonly bridgeYearMask: readonly boolean[]
+  readonly medicareExtrasMonthly?: readonly number[]
+  /** The run's per-sim-year Part B pricing, when the caller has already bound it (the year loop does,
+   *  once per path). Absent, the year's own slot is bound here through the same binding — every value
+   *  of its walk is keyed on the calendar year alone, so a one-year slice IS the run schedule's slot
+   *  (the identity `irmaaBillScalesFor` reads; test-pinned). */
+  readonly partBPricing?: readonly PartBYearPricing[]
+}
+
+const NO_MEDICARE_YEAR_CHARGE: MedicareYearCharge = Object.freeze({ cost: 0, surcharge: 0, extras: 0 })
+
+/**
+ * Sim-year `t`'s Medicare charge (M4 + the extras unit): the base Part B and IRMAA surcharge of every
+ * living Medicare-enrolled member, and their entered extras. The year loop funds it, and the
+ * working-year money picture's "also paid from savings" group will read the same function (the pay
+ * check's KTD7). Nothing is charged in a year nobody is enrolled.
+ *
+ * The surcharge is a 2-year-LAGGED feed-forward (research §4c), never a fixed point: the bill of year t
+ * reads IRMAA-MAGI[t − lookback] (the seed when that year predates the sim) against the lines of that
+ * MAGI year's price frame, at the filing status of that lagged year (so the survivor MFJ→single flip is
+ * itself lagged). The extras are each enrolled member's OWN premium, by canonical index, so a person's
+ * extras end at their death (count × average is the forbidden shape — it under-charges the surviving
+ * high-premium spouse), held real-flat (no sourced trend; the disclosed residual names it).
+ *
+ * THROWS (burned/062, insight 010) when the lagged read lands on a bridge year with no finite working-
+ * year override (a clamped year's computed MAGI is ≈$0 — a silent lowest tier), or when the MAGI it
+ * needs is missing or non-finite.
+ */
+export function medicareChargeForYear(inputs: MedicareChargeInputs): MedicareYearCharge {
+  const { household, t, year } = inputs
+  if (!(year.medicareEnrolledCount > 0)) return NO_MEDICARE_YEAR_CHARGE
+  const irmaaSchedule = irmaa.value
+  const lookback = irmaaSchedule.magiLookbackYears
+  const lag = t - lookback
+  // The masked LAGGED-READ arm (C3 §3b — the true mirror of the seed throw below, which cannot fire
+  // here: a lagged read landing on a clamped WORKING year returns a FINITE ≈$0 computed MAGI → lowest
+  // tier → understated surcharge → a falsely-early date, SILENTLY). A bridge year at the lagged index
+  // demands finite override coverage of that index — the additive write is what recorded it into
+  // history, so absent coverage means the recorded value was computed-only ≈$0. Mask-conditional for a
+  // direct caller (recorded limitation, §3b).
+  if (lag >= 0 && inputs.bridgeYearMask[lag] === true && !Number.isFinite(inputs.irmaaMagiOverride[lag])) {
+    throw new Error(
+      `[taxOverlay] IRMAA's lagged read lands on BRIDGE year ${lag} with no finite irmaaMagiOverride[${lag}] — ` +
+        `a clamped working year's computed IRMAA-MAGI is ≈$0, silently pricing the lowest tier (understated cost, ` +
+        `the falsely-early-date direction); supply the working-year override (C3 §3b; burned/062)`,
+    )
+  }
+  const magiForBill = lag >= 0 ? inputs.irmaaMagiHistory[lag] : inputs.irmaaMagiSeed[t]
+  // Finiteness FIRST (insight 010): a missing seed for a near-65 start, or a NaN, must FAIL LOUD — never
+  // default 0 (a phantom $0 surcharge → understated cost → overstated survival, the cardinal
+  // calm-but-wrong sin; burned/062). validateParams shields `simulate`; this is the direct-caller backstop.
+  if (magiForBill === undefined || !Number.isFinite(magiForBill)) {
+    throw new Error(
+      `[taxOverlay] IRMAA needs a finite IRMAA-MAGI[t−${lookback}] for sim year ${t} (a Medicare-enrolled member) — ` +
+        `supply irmaaMagiSeed[${t}] for a sim starting within ${lookback}yr of age 65 (no default 0; burned/062, insight 010)`,
+    )
+  }
+  const filingForBill =
+    lag >= 0 ? resolveYear(household, inputs.householdYears, lag, inputs.medicareOnsetSimYear).filing : household.filing
+  // THE PRICE FRAME: the bill of calendar year start + t compares the MAGI of start + lag (a seed year
+  // when lag < 0) against that bill year's lines, in the MAGI year's real dollars.
+  const billSchedule = irmaaScheduleAsCompared(irmaaSchedule, household.startCalendarYear + lag)
+  const partBYear =
+    inputs.partBPricing !== undefined
+      ? inputs.partBPricing[t]
+      : boundPartBPricingSchedule(household.startCalendarYear + t, 1)[0]
+  if (partBYear === undefined) {
+    throw new Error(`[taxOverlay] the Part B pricing schedule does not cover sim year ${t} — it is built for the run's whole horizon`)
+  }
+  // One tier lookup prices the bill and its surcharge slice, at the year's own trend scales — the
+  // readout's base = cost − surcharge is exact by construction.
+  const bill = medicareAnnualCharge(
+    magiForBill,
+    filingForBill,
+    year.medicareEnrolledCount,
+    billSchedule,
+    partBYear.baseMonthlyReal,
+    partBYear.scales,
+  )
+  let extras = 0
+  if (inputs.medicareExtrasMonthly !== undefined) {
+    for (const idx of year.medicareEnrolledIndices) extras += (inputs.medicareExtrasMonthly[idx] ?? 0) * 12
+  }
+  return { cost: bill.cost, surcharge: bill.surcharge, extras }
 }
 
 // =========================================================================
@@ -908,11 +1065,15 @@ interface GrossUpContext {
   readonly minLivingAge: number
   /** The working-year tax floor (2026-10-20): this §7-CLAMPED year's outside income — the
    *  household's taxable pay + clamped ongoing taxable (B) and its entered working-year investment
-   *  income (I). PRESENT only in a clamped year under the accumulation construct (the caller's
-   *  `workingYearOutsideIncome[t]`); ABSENT ⇒ the literal pre-floor expression below, so every
-   *  unclamped, construct-absent and retired-route year is byte-identical. See
-   *  {@link prepareWorkingYearFloor}. Year-constant, so the fixed point stays 1-D. */
-  readonly workingYearOutside?: WorkingYearOutsideIncome
+   *  income (I) — and the floor the year loop prepared from it ONCE ({@link prepareWorkingYearFloor};
+   *  the pay check's KTD7 hoist). PRESENT only in a clamped year under the accumulation construct (the
+   *  caller's `workingYearOutsideIncome[t]`); ABSENT ⇒ the literal pre-floor expression below, so every
+   *  unclamped, construct-absent and retired-route year is byte-identical. Year-constant, so the fixed
+   *  point stays 1-D. */
+  readonly workingYear?: {
+    readonly outside: WorkingYearOutsideIncome
+    readonly floor: PreparedWorkingYearFloor
+  }
 }
 
 // =========================================================================
@@ -1010,8 +1171,8 @@ interface WorkingYearStateFloor {
   readonly zeroTax: number
 }
 
-/** A clamped year's floor, prepared ONCE per gross-up solve (every baseline is gross-independent, so
- *  it is a constant inside the fixed point). Exported with {@link workingYearFederalCharge} /
+/** A clamped year's floor, prepared ONCE per clamped year by the year loop (every baseline is
+ *  gross-independent, so it is a constant inside the fixed point). Exported with {@link workingYearFederalCharge} /
  *  {@link workingYearStateCharge} so the pricing witness probes the exact helpers the gross-up calls. */
 export interface PreparedWorkingYearFloor {
   readonly ssBenefit: number
@@ -1176,22 +1337,12 @@ export function workingYearStateCharge(floor: PreparedWorkingYearFloor, channels
 }
 
 function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution {
-  const { drawPool, policy, customOrder, rmd, conversion, taxableBasis, filing, count65, calendarYear, ssBenefit, bracketFillCeiling, ongoingTaxable, retirementState, minLivingAge, workingYearOutside } = ctx
+  const { drawPool, policy, customOrder, rmd, conversion, taxableBasis, filing, count65, calendarYear, ssBenefit, bracketFillCeiling, ongoingTaxable, retirementState, minLivingAge, workingYear } = ctx
   const taxableValue = drawPool.taxable
-  // The working-year floor (2026-10-20): prepared ONCE here — every baseline is gross-independent.
-  // ABSENT (every unclamped / construct-absent / retired-route year) ⇒ undefined ⇒ the literal
-  // pre-floor branch below, byte-identical.
-  const floor =
-    workingYearOutside === undefined
-      ? undefined
-      : prepareWorkingYearFloor(workingYearOutside, {
-          ssBenefit,
-          filing,
-          count65,
-          calendarYear,
-          ...(retirementState !== undefined && isPricedState(retirementState) ? { pricedState: retirementState } : {}),
-          minLivingAge,
-        })
+  // The working-year floor (2026-10-20), as the year loop prepared it — every baseline is
+  // gross-independent. ABSENT (every unclamped / construct-absent / retired-route year) ⇒ undefined ⇒
+  // the literal pre-floor branch below, byte-identical.
+  const floor = workingYear?.floor
   let gross = net
   for (let pass = 0; pass < GROSS_UP_MAX_PASSES; pass++) {
     const alloc = allocateWithdrawal(drawPool, gross, policy, bracketFillCeiling, customOrder)
@@ -1273,8 +1424,8 @@ function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution
   }
   throw new Error(
     `tax gross-up did not converge in ${GROSS_UP_MAX_PASSES} passes (net=${net}, rmd=${rmd}, ss=${ssBenefit}, conversion=${conversion}` +
-      (workingYearOutside !== undefined
-        ? `, working-year ordinaryBase=${workingYearOutside.ordinaryBase}, investmentIncome=${workingYearOutside.investmentIncome}`
+      (workingYear !== undefined
+        ? `, working-year ordinaryBase=${workingYear.outside.ordinaryBase}, investmentIncome=${workingYear.outside.investmentIncome}`
         : '') +
       `) — refusing an unconverged tax (burned/062)`,
   )
@@ -1524,8 +1675,8 @@ export function runTaxAwareDecumulation(
   // the disaggregated IRMAA surcharge scales, derived from the sourced `medicareCostTrend` table
   // (V.E2 verbatim, horizon-matched deflation, ultimate tail; healthOverlay owns the derivation).
   // The anchor is STILL `partB2026.standardPremiumMonthly` (one home; V.E2[2026] identity pinned).
-  // Both the billed total (`medicareAnnualCost`) and the readout split's surcharge recomputation
-  // read the SAME per-year entry — base = cost − surcharge stays exact by construction.
+  // The billed total and the readout split's surcharge come from ONE tier lookup at the SAME per-year
+  // entry (`medicareChargeForYear` → `medicareAnnualCharge`) — base = cost − surcharge is exact by construction.
   const irmaaSchedule = irmaa.value
   const irmaaLookback = irmaaSchedule.magiLookbackYears
   // Bound ONLY on the healthcare-priced arm: the tax-off / healthcare-off runs never touch the
@@ -1749,12 +1900,13 @@ export function runTaxAwareDecumulation(
     const contributionTotal = cTaxable + cPretaxTotal + cRoth + cHsa
 
     // Per-year household regime (M6a): the survivor-aware filing / 65+ count / RMD-owner, from the
-    // injected stream when present, else the static household (verbatim M1–M5). Resolved only when
-    // the overlay is active (tax or RMD on ⇒ the ON config carries `household`); under the
+    // injected stream when present, else the static household (verbatim M1–M5) — plus the calendar
+    // year, the priced state and the living-age floor, all from the one context producer. Resolved only
+    // when the overlay is active (tax or RMD on ⇒ the ON config carries `household`); under the
     // EXHAUSTIVE OFF condition it is never consulted (gross = net, rmd = 0).
     const regime =
       config.taxEnabled || config.rmdEnabled
-        ? resolveYear(config.household, householdYears, t, medicareOnsetSimYear)
+        ? overlayYearContext(config.household, householdYears, t, medicareOnsetSimYear)
         : undefined
 
     // Spousal rollover (M6b·B): a deceased canonical person's pre-tax IRA passes to the surviving
@@ -1892,7 +2044,7 @@ export function runTaxAwareDecumulation(
         ssBenefit: ssBenefits[t] ?? 0,
         filing: regime.filing,
         count65: regime.count65,
-        calendarYear: config.household.startCalendarYear + t,
+        calendarYear: regime.calendarYear,
       }
       // The tax-bracket rail — always active under bracket-fill.
       let ceiling = bracketEdgeFillHeadroom(committed)
@@ -1957,80 +2109,33 @@ export function runTaxAwareDecumulation(
       // IRMAA (M4): the year's post-65 Medicare cost is a CONSTANT addend to the spending the gross-up
       // funds — keyed off IRMAA-MAGI[t−lookback] (already known), so it is NEVER a fixed point and NEVER
       // a search variable (the step discontinuity, insight 013, cannot reach a root-finder here). Priced
-      // when ≥1 member is Medicare-ENROLLED (regime.medicareEnrolledCount > 0 — per-person onset-aware,
-      // C3 §3b; the absent-signal default is biological 65, today's predicate verbatim — the post-65
-      // mirror of the ACA pre-65 gate) AND healthcare is on (acaTable !== undefined). A member working
-      // past 65 (onset > their 65th sim-year) accrues ZERO Medicare cost ENTIRELY during the working
-      // years — base Part B included, the pricing count gates both — while `count65` stays biological
-      // for the deduction stack + the ACA pre65 denominator. `filing[t−lookback]` is the threshold
-      // column, so the survivor MFJ→single flip is itself lagged +2yr; for t < lookback the lagged MAGI
-      // + filing predate the sim, supplied via irmaaMagiSeed + the initial household filing.
-      if (acaTable !== undefined && regime.medicareEnrolledCount > 0) {
-        const lag = t - irmaaLookback
-        // The masked LAGGED-READ arm (C3 §3b — the true mirror of the seed throw below, which cannot
-        // fire here: a lagged read landing on a clamped WORKING year returns a FINITE ≈$0 computed
-        // MAGI → lowest tier → understated surcharge → a falsely-early date, SILENTLY). A bridge year
-        // at the lagged index demands finite override coverage of that index — the additive write
-        // below is what recorded it into history, so absent coverage means the recorded value was
-        // computed-only ≈$0. Mask-conditional for a direct caller (recorded limitation, §3b).
-        if (lag >= 0 && bridgeYearMask[lag] === true && !Number.isFinite(irmaaMagiOverride[lag])) {
-          throw new Error(
-            `[taxOverlay] IRMAA's lagged read lands on BRIDGE year ${lag} with no finite irmaaMagiOverride[${lag}] — ` +
-              `a clamped working year's computed IRMAA-MAGI is ≈$0, silently pricing the lowest tier (understated cost, ` +
-              `the falsely-early-date direction); supply the working-year override (C3 §3b; burned/062)`,
-          )
-        }
-        const magiForBill = lag >= 0 ? irmaaMagiHistory[lag] : irmaaMagiSeed[t]
-        // Finiteness FIRST (insight 010): a missing seed for a near-65 start, or a NaN, must FAIL LOUD —
-        // never default 0 (a phantom $0 surcharge → understated cost → overstated survival, the cardinal
-        // calm-but-wrong sin; burned/062). validateParams shields `simulate`; this is the direct-caller backstop.
-        if (magiForBill === undefined || !Number.isFinite(magiForBill)) {
-          throw new Error(
-            `[taxOverlay] IRMAA needs a finite IRMAA-MAGI[t−${irmaaLookback}] for sim year ${t} (a Medicare-enrolled member) — ` +
-              `supply irmaaMagiSeed[${t}] for a sim starting within ${irmaaLookback}yr of age 65 (no default 0; burned/062, insight 010)`,
-          )
-        }
-        const filingForBill =
-          lag >= 0
-            ? resolveYear(config.household, householdYears, lag, medicareOnsetSimYear).filing
-            : config.household.filing
-        // THE PRICE FRAME: the bill of calendar year start + t compares the MAGI of start + lag (a seed
-        // year when lag < 0) against that bill year's lines, in the MAGI year's real dollars.
-        const billSchedule = irmaaScheduleAsCompared(irmaaSchedule, config.household.startCalendarYear + lag)
-        // Non-null by construction: this block runs under the healthcare gate, and healthcare-on
-        // without tax-on threw at entry — exactly the arm the schedule was bound for.
-        const partBYear = partBPricingByT![t]!
-        medicareCostThisYear = medicareAnnualCost(
-          magiForBill,
-          filingForBill,
-          regime.medicareEnrolledCount,
-          billSchedule,
-          partBYear.baseMonthlyReal,
-          partBYear.scales,
-        )
-        // P3·U11 — the readout's base-vs-surcharge SPLIT, observed through the SAME canonical
-        // tier lookup medicareAnnualCost just used, at the SAME per-year trend scales (single
-        // producer — the split can never disagree with the billed total: base = cost − surcharge
-        // exactly, by construction).
-        if (healthOut) {
-          irmaaSurchargeThisYear =
-            regime.medicareEnrolledCount *
-            irmaaTierSurchargeMonthly(magiForBill, filingForBill, billSchedule, partBYear.scales) *
-            12
-        }
-        // The ask-for-Medicare-extras Σ — the per-person HETEROGENEOUS vector: each living∩
-        // enrolled member is charged THEIR OWN premium × 12 via the canonical index, so a
-        // person's extras end at their death and the surviving high-premium spouse keeps their
-        // full premium (count×avg is the forbidden shape — it under-charges that survivor).
-        // Same gate as base Part B (this block); the extras stay REAL-FLAT (the same constant
-        // every year — deliberately NOT ridden on the Part B trend: Medigap/Part D plan premiums
-        // are user-entered market figures with no sourced trend, the disclosed residual names
-        // it); absent vector / a $0 entry ⇒ `+ 0` — byte-identical reduce-to-spine.
-        if (medicareExtrasMonthly !== undefined) {
-          for (const idx of regime.medicareEnrolledIndices) {
-            medicareExtrasThisYear += (medicareExtrasMonthly[idx] ?? 0) * 12
-          }
-        }
+      // when ≥1 member is Medicare-ENROLLED (per-person onset-aware, C3 §3b; the absent-signal default is
+      // biological 65 — the post-65 mirror of the ACA pre-65 gate) AND healthcare is on (the `acaTable`
+      // gate). A member working past 65 (onset > their 65th sim-year) accrues ZERO Medicare cost during
+      // the working years — base Part B included, the pricing count gates both — while `count65` stays
+      // biological for the deduction stack + the ACA pre65 denominator. The bill, its surcharge slice and
+      // the extras vector are {@link medicareChargeForYear}'s (the money picture reads the same function).
+      if (acaTable !== undefined) {
+        const charge = medicareChargeForYear({
+          household: config.household,
+          householdYears,
+          medicareOnsetSimYear,
+          t,
+          year: regime,
+          irmaaMagiHistory,
+          irmaaMagiSeed,
+          irmaaMagiOverride,
+          bridgeYearMask,
+          // Non-null by construction: this block runs under the healthcare gate, and healthcare-on
+          // without tax-on threw at entry — exactly the arm the schedule was bound for.
+          partBPricing: partBPricingByT!,
+          medicareExtrasMonthly,
+        })
+        medicareCostThisYear = charge.cost
+        medicareExtrasThisYear = charge.extras
+        // P3·U11 — the readout's base-vs-surcharge SPLIT (observed, never consumed): the same tier
+        // lookup the bill used, so base = cost − surcharge exactly, by construction.
+        irmaaSurchargeThisYear = charge.surcharge
       }
       // HSA qualified spend (U3 · M5): the MAGI-invisible dollars the hsa bucket pays this year —
       // capped at the qualified set (OOP medical + the owner-65+ Medicare premiums; the ACA premium
@@ -2060,6 +2165,27 @@ export function runTaxAwareDecumulation(
           fundingNeed: net + medicareCostThisYear + medicareExtrasThisYear,
         })
       }
+      // The working-year tax floor (2026-10-20), prepared ONCE per clamped year (the pay check's KTD7):
+      // every baseline is year-constant — never a function of the gross — so one preparation per pass is
+      // exact, and every gross-up solve this year (each ACA probe too, for a direct caller with no bridge
+      // mask; under simulate a clamped year never prices ACA) reads it. Presence-keyed on this year's entry: a hole (every unclamped year) prepares
+      // nothing, and the gross-up takes its literal pre-floor branch.
+      const workingYearOutsideThisYear = workingYearOutsideIncome[t]
+      const workingYear =
+        workingYearOutsideThisYear === undefined
+          ? undefined
+          : {
+              outside: workingYearOutsideThisYear,
+              floor: prepareWorkingYearFloor(workingYearOutsideThisYear, {
+                ssBenefit: ssBenefits[t] ?? 0,
+                filing: regime.filing,
+                count65: regime.count65,
+                calendarYear: regime.calendarYear,
+                ...(regime.pricedState !== undefined ? { pricedState: regime.pricedState } : {}),
+                minLivingAge: regime.minLivingAge,
+              }),
+            }
+
       // The cash this year must fund = base spending + the (known) Medicare cost + the extras
       // vector − the qualified HSA-paid portion (U3 · M5: the hsa bucket pays its share OUTSIDE
       // the gross-up, so the taxable withdrawal — and through it both MAGIs — genuinely DROPS:
@@ -2068,23 +2194,8 @@ export function runTaxAwareDecumulation(
       // untouched. ≥ 0 by the cap's fundingNeed clamp.
       const fundingNet = net + medicareCostThisYear + medicareExtrasThisYear - hsaSpendThisYear
 
-      // The state-tax unit: the household's LIVING-age floor for the class-based qualified-age gate
-      // (PA 59½). The living set is resolveYear's rmdOwner/rmdSpouse (living[0]/living[1]); the
-      // aggregate draw + conversion are NOT per-person-attributable (recon §5), so the gate is
-      // household-granularity conservative (all-living-must-be-qualified — see stateIncomeTax).
-      // +Infinity when nobody is alive (defensive; the horizon guarantees ≥1 living), reading as
-      // "qualified". Year-constant, consumed ONLY inside the priced-state branch of the fixed point.
-      const livingPeople = [regime.rmdOwner, regime.rmdSpouse].filter(
-        (p): p is OverlayPerson => p !== undefined,
-      )
-      const stateMinLivingAge =
-        livingPeople.length > 0
-          ? Math.min(...livingPeople.map((p) => ageInSimYear(p, config.household.startCalendarYear, t)))
-          : Number.POSITIVE_INFINITY
-
       // The inner tax gross-up as a closure the ACA solver probes at (fundingNet + a candidate premium).
       // The year-constant inputs are bundled into one NAMED context (no positional transposition risk).
-      const workingYearOutsideThisYear = workingYearOutsideIncome[t]
       const grossUpCtx: GrossUpContext = {
         drawPool,
         policy,
@@ -2094,7 +2205,7 @@ export function runTaxAwareDecumulation(
         taxableBasis: basis,
         filing: regime.filing,
         count65: regime.count65,
-        calendarYear: config.household.startCalendarYear + t,
+        calendarYear: regime.calendarYear,
         ssBenefit: ssBenefits[t] ?? 0,
         bracketFillCeiling,
         // R40 seam 2 (KTD-1): the UNCLAMPED-year ongoing taxable enters `nonSSordinary` ONCE — the
@@ -2106,10 +2217,10 @@ export function runTaxAwareDecumulation(
         ...(config.household.retirementState !== undefined
           ? { retirementState: config.household.retirementState }
           : {}),
-        minLivingAge: stateMinLivingAge,
-        // The working-year tax floor (2026-10-20): presence-keyed on this year's entry — a hole (every
-        // unclamped year) omits the field, so the gross-up takes its literal pre-floor branch.
-        ...(workingYearOutsideThisYear !== undefined ? { workingYearOutside: workingYearOutsideThisYear } : {}),
+        // The household's LIVING-age floor for the class-based qualified-age gate (PA 59½) — the year
+        // context's (household-granularity conservative); consumed ONLY inside the priced-state branch.
+        minLivingAge: regime.minLivingAge,
+        ...(workingYear !== undefined ? { workingYear } : {}),
       }
       const fundNet = (netTotal: number): GrossUpSolution => solveGrossWithdrawal(netTotal, grossUpCtx)
       // AGE GATE (red-team blocker): ACA prices ONLY when ≥1 living member is pre-65. With every living
@@ -2290,7 +2401,7 @@ export function runTaxAwareDecumulation(
     // P3·U11 — the healthcare readout sink records on the SAME after-depletion footing (one
     // entry per FUNDED year, index-aligned across its arrays): a year the portfolio could not
     // fund observed nothing, exactly like the Σ accruals above. base = billed − surcharge, by
-    // construction (the split shares medicareAnnualCost's own tier lookup).
+    // construction (the split and the bill are one tier lookup, `medicareAnnualCharge`).
     if (healthOut) {
       healthOut.acaNetPremium.push(acaNetPremiumThisYear)
       healthOut.medicareBase.push(medicareCostThisYear - irmaaSurchargeThisYear)

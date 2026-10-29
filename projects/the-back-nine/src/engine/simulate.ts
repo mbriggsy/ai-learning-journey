@@ -431,6 +431,51 @@ export function survivorYearBenefit(
   return { survivorIdx, deceasedIdx, deceased, survivorStartAge, survivorStream, survivorEligible, ownStream, paid, winner }
 }
 
+/** One living person's Social Security in a year both spouses are alive — see {@link bothAliveYearBenefit}. */
+export interface BothAliveYearBenefit {
+  /** The first sim year their own benefit is paid: their claim offset. */
+  readonly ownStart: number
+  /** The first sim year their spousal excess is paid: max(their claim, the higher earner's claim). */
+  readonly spousalStart: number
+  /** Their own benefit this year: the amount from `ownStart` on, else 0. */
+  readonly own: number
+  /** Their spousal excess this year: the amount from `spousalStart` on, else 0. */
+  readonly spousal: number
+}
+
+/**
+ * One living person's Social Security in a year BOTH spouses are alive — the one home of the both-alive
+ * gates. {@link cashTermsForYear} sums these pieces into the year's `ss`, and the pay check's earnings
+ * test (`earningsTest.ts`) composes the same pieces at its credited amounts, so the two can never
+ * disagree on who is paid what (insight 081).
+ *
+ * The own benefit is paid once its owner has claimed it. The Method-C spousal EXCESS is paid once BOTH
+ * the recipient and the higher earner have filed: start = max(this claim, the higher earner's claim),
+ * RS 00202.001's worker-must-be-entitled gate. The excess is 0 for the higher earner and for a
+ * non-recipient, so paying it gated is safe. Its END gate is the caller's: once a spouse dies, the §202
+ * survivor year ({@link survivorYearBenefit}) owns Social Security, so the excess vanishes at the first
+ * death and never double-counts with the survivor stream (plan §7).
+ *
+ * The amounts default to the run's own (`socialSecurityReal`, `spousalExcessAnnual`); the earnings test
+ * passes the credited ones. PURE and draw-free (CRN-safe).
+ */
+export function bothAliveYearBenefit(
+  t: number,
+  offset: PersonOffsets,
+  higherClaimOffset: number,
+  ownAnnual: number = offset.socialSecurityReal,
+  spousalAnnual: number = offset.spousalExcessAnnual,
+): BothAliveYearBenefit {
+  const ownStart = offset.claim
+  const spousalStart = Math.max(offset.claim, higherClaimOffset)
+  return {
+    ownStart,
+    spousalStart,
+    own: t >= ownStart ? ownAnnual : 0,
+    spousal: t >= spousalStart ? spousalAnnual : 0,
+  }
+}
+
 /**
  * The full cash decomposition for one year: the survivor-adjusted spending, the earned-income
  * bridge (alive AND still working), the ongoing other-income gross (R40 · death-gated, NOT
@@ -534,15 +579,14 @@ export function cashTermsForYear(
       earned += o.earnedIncomeReal
       livingWorker = true
     }
-    if (allAlive) {
-      // Own benefit once claimed + the Method-C spousal EXCESS once BOTH the recipient and the higher
-      // earner have filed (start = max(this claim, the higher earner's claim) — RS 00202.001's worker-
-      // must-be-entitled gate). The excess is 0 for the higher earner and for a non-recipient, so adding
-      // it gated is safe. Its END gate is THIS branch: once a spouse dies, `allAlive` is false and the
-      // §202 survivor benefit (below) owns SS — the excess vanishes at the first death, never
-      // double-counting with the survivor stream (plan §7).
-      if (alive && t >= o.claim) ss += o.socialSecurityReal
-      if (alive && t >= Math.max(o.claim, higherClaimOffset)) ss += o.spousalExcessAnnual
+    if (allAlive && alive) {
+      // Own benefit once claimed + the Method-C spousal excess once both spouses have filed — the
+      // gates live in {@link bothAliveYearBenefit} (the earnings test reads the same pieces). Its END
+      // gate is THIS branch: once a spouse dies, `allAlive` is false and the §202 survivor benefit
+      // (below) owns SS. A closed gate adds an exact 0, so the sum is the pre-extraction float.
+      const pieces = bothAliveYearBenefit(t, o, higherClaimOffset)
+      ss += pieces.own
+      ss += pieces.spousal
     }
   }
   // §202 survivor benefit (plan §6): once one spouse has died, the survivor's year is

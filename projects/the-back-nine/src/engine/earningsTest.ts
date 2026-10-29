@@ -76,7 +76,7 @@ import {
   spousalRate,
 } from '@engine/constants'
 import { adjustOwnBenefitAnnual, householdBenefits, type BenefitCredits } from '@engine/socialSecurityBenefit'
-import { ENGINE_MAX_DOLLAR, survivorYearBenefit, type PersonOffsets, type SurvivorYearCredits } from '@engine/simulate'
+import { ENGINE_MAX_DOLLAR, bothAliveYearBenefit, survivorYearBenefit, type PersonOffsets, type SurvivorYearCredits } from '@engine/simulate'
 import type { PersonInputs } from '@shared/model'
 
 const MONTHS = 12
@@ -305,19 +305,18 @@ export function earningsTestSchedule(path: EarningsTestPath): EarningsTestSchedu
     auxIsWidow = false
     widowPayable = 0
     if (aliveCount === n) {
-      // Mirrors cashTermsForYear's all-alive sum term for term, in its order, so a year with nothing
-      // withheld and no credit in effect pays the same float the run pays today (R18).
+      // The same both-alive pieces cashTermsForYear sums (bothAliveYearBenefit, the one home of their
+      // gates), at the credited amounts and summed in its order, so a year with nothing withheld and no
+      // credit in effect pays the same float the run pays today (R18). A credit only exists for a piece
+      // already paid in an earlier year, so reading the amounts before the gates reads nothing new.
       for (let i = 0; i < n; i++) {
-        const o = offsets[i]!
-        const own = t >= o.claim ? ownAmount(i, t) : 0
-        const spousalStart = Math.max(o.claim, higherClaimOffset)
-        const spousal = t >= spousalStart ? spousalAmount(i, t) : 0
-        gross += own
-        gross += spousal
-        ownA[i] = own
-        auxA[i] = spousal
-        ownStart[i] = o.claim
-        auxStart[i] = spousalStart
+        const pieces = bothAliveYearBenefit(t, offsets[i]!, higherClaimOffset, ownAmount(i, t), spousalAmount(i, t))
+        gross += pieces.own
+        gross += pieces.spousal
+        ownA[i] = pieces.own
+        auxA[i] = pieces.spousal
+        ownStart[i] = pieces.ownStart
+        auxStart[i] = pieces.spousalStart
         auxEarly[i] = claimedEarly[i]!
       }
       return

@@ -74,10 +74,10 @@ export function afterTaxBequestPerPath(dist: Distribution, heirBracket: number):
  * strict `!==` on every priced run).
  *
  * THE ADDENDS ARE DISJOINT (no double count), per `taxOverlay.ts`:
- *  - the premium is taken OUT of the year's tax (`:2223`, `taxPaid = gross − fundingNet − premium`);
- *  - Medicare is funded outside the tax identity (`:2069`, it rides `fundingNet`, not the tax);
- *  - all three accrue together on the same after-depletion footing (`:2278-2289`).
- * `totalQualifiedHsaSpendReal` (`:2287`) is a FUNDING SOURCE for those costs, NOT an addend.
+ *  - the premium is taken OUT of the year's tax (`:2334`, `taxPaid = gross − fundingNet − premium`);
+ *  - Medicare is funded outside the tax identity (`:2195`, it rides `fundingNet`, not the tax);
+ *  - all three accrue together on the same after-depletion footing (`:2389-2400`).
+ * `totalQualifiedHsaSpendReal` (`:2398`) is a FUNDING SOURCE for those costs, NOT an addend.
  *
  * Healthcare OFF, the premium and Medicare vectors are exact +0 and `(t + 0) + 0 === t`, so this vector
  * IS `lifetimeTaxPaidReal` element by element (reduce-to-spine). `undefined` when the run carried no tax

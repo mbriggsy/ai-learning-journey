@@ -9,6 +9,7 @@ import {
   irmaaTierSurchargeMonthly,
   irmaaScheduleAsCompared,
   medicareAnnualCost,
+  medicareAnnualCharge,
   hsaQualifiedSpend,
   IRMAA_ANCHOR_SCALES,
   type MagiComponents,
@@ -476,6 +477,44 @@ describe('healthOverlay — M4: medicareAnnualCost (base Part B + IRMAA surcharg
 
   it('zero enrolled (nobody on Medicare) = zero cost (the pre-65 / reduce-to-spine domain)', () => {
     expect(medicareAnnualCost(mfjThresh(1) + 1, 'mfj', 0, IRMAA, PARTB_BASE, IRMAA_ANCHOR_SCALES)).toBe(0)
+  })
+})
+
+// The pay check's A5 (docs/plans/features/working-year-pay-check-build-spec.md, KTD7): the overlay's year
+// charge and the money picture read the bill AND its IRMAA slice, so one tier lookup now feeds both. The
+// proof of a pure refactor: a FROZEN copy of the pre-A5 arithmetic (medicareAnnualCost's own formula, and
+// the overlay's readout split, a second call at the same arguments), swept over every tier edge.
+describe('medicareAnnualCharge — the bill and its IRMAA slice from one tier lookup (A5)', () => {
+  const frozenCost = (magi: number, filing: 'single' | 'mfj', count: number, scales: typeof IRMAA_ANCHOR_SCALES): number =>
+    count <= 0 ? 0 : count * (PARTB_BASE + irmaaTierSurchargeMonthly(magi, filing, IRMAA, scales)) * 12
+  const frozenSurcharge = (magi: number, filing: 'single' | 'mfj', count: number, scales: typeof IRMAA_ANCHOR_SCALES): number =>
+    count * irmaaTierSurchargeMonthly(magi, filing, IRMAA, scales) * 12
+  // A later bill's scales (non-unit, so every product is a real float multiply), shaped like the anchor's.
+  const LATER = { partB: 1.237, partDByTier: IRMAA_ANCHOR_SCALES.partDByTier.map((s, k) => s * (1.05 + k / 100)) }
+
+  it('the bill and the slice are Object.is the pre-A5 arithmetic at every tier edge, both filings, one and two enrolled', () => {
+    for (const scales of [IRMAA_ANCHOR_SCALES, LATER]) {
+      for (const filing of ['single', 'mfj'] as const) {
+        const edge = filing === 'single' ? singleThresh : mfjThresh
+        const magis = [0, ...T.flatMap((_, i) => [edge(i), edge(i) + 1, edge(i) + 0.37])]
+        const slicesReached = new Set<number>()
+        for (const magi of magis) {
+          for (const count of [1, 2]) {
+            const charge = medicareAnnualCharge(magi, filing, count, IRMAA, PARTB_BASE, scales)
+            expect(Object.is(charge.cost, frozenCost(magi, filing, count, scales)), `cost ${filing} ${magi} ×${count}`).toBe(true)
+            expect(Object.is(charge.surcharge, frozenSurcharge(magi, filing, count, scales)), `slice ${filing} ${magi} ×${count}`).toBe(true)
+            expect(Object.is(medicareAnnualCost(magi, filing, count, IRMAA, PARTB_BASE, scales), charge.cost)).toBe(true)
+            if (count === 1) slicesReached.add(charge.surcharge)
+          }
+        }
+        // Non-vacuity: no surcharge, and every tier's own.
+        expect(slicesReached.size, `${filing}: the base tier and each surcharge tier`).toBe(T.length + 1)
+      }
+    }
+  })
+
+  it('nobody enrolled: no bill and no slice', () => {
+    expect(medicareAnnualCharge(mfjThresh(4) + 1, 'mfj', 0, IRMAA, PARTB_BASE, IRMAA_ANCHOR_SCALES)).toEqual({ cost: 0, surcharge: 0 })
   })
 })
 

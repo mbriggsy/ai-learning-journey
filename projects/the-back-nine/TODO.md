@@ -22,10 +22,10 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-10-27, b9-12): build #1 of the D7 queue, the working-year pay check — A1, A2, A3 and A4 are LANDED
-(`e2890887`, `512df53f`, `5d44ed68`, `fde13929`), and so is the RIB-LIM order fix (`99ffc746`;
-the register's CLOSED *The widow(er) benefit is capped before the survivor's age reduction…* is its record —
-`SOLVER_CODE_VERSION` is 12). NEXT is A5.** Read `git log` first. The plan is
+▶ **START HERE (2026-10-28, b9-13): build #1 of the D7 queue, the working-year pay check — A1 through A5 are LANDED
+(`e2890887`, `512df53f`, `5d44ed68`, `fde13929`, and A5 on 2026-10-28 in its own commit), and so is the RIB-LIM order fix
+(`99ffc746`; the register's CLOSED *The widow(er) benefit is capped before the survivor's age reduction…* is its record —
+`SOLVER_CODE_VERSION` is 12). NEXT is A6.** Read `git log` first. The plan is
 `docs/plans/features/working-year-pay-check-build-spec.md`: planned, deepened and reviewed (`wf_46aab717-201`; verdicts in
 `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-plan-review\verify\`).
 **U12, the return-path ask, is CUT**: nobody has used the product, so no saved plan predates the new answer (Briggsy,
@@ -38,12 +38,33 @@ the register's CLOSED *The widow(er) benefit is capped before the survivor's age
    `earningsTestSchedule(path)` → the shared `NO_EARNINGS_TEST` or `{ paid, withheld, fraYearAtMost, creditMonths }`, read
    through `socialSecurityPaid(schedule, t, composedSs)`; the credited entries in `socialSecurityBenefit.ts`;
    `survivorYearBenefit`'s optional credits; the review `wf_bb2c6dec-c1c` caught three rosy-or-wrong FRA-year rules, all fixed —
-   the plan's KTD11 *As built (A4)* bullets are the record) → **NEXT: A5, U5's loop reorder + extractions alone,
-   byte-identical.** Per KTD11's last as-built bullet, A5 ALSO extracts `cashTermsForYear`'s both-alive own + spousal pieces
-   into one exported helper that the producer's `compose` then calls (today the producer mirrors those gates, pinned only by
-   the seeded `Object.is` sweep in `earningsTest.test.ts`), and A6's check reads `socialSecurityPaid` in EVERY year — a credit
-   raises the retired years too — never only inside the clamped block KTD6 lists it under. Then → A6 U5's check → A7 U6a.
-   A constants key lands only with the producer its
+   the plan's KTD11 *As built (A4)* bullets are the record) → ~~A5 U5's loop reorder + extractions~~ ✅ 2026-10-28,
+   byte-identical (`bothAliveYearBenefit` in `simulate.ts`, read by `cashTermsForYear` and the producer's `compose`;
+   `overlayYearContext` — the loop's `regime` — and `medicareChargeForYear` in `taxOverlay.ts`; `medicareAnnualCharge` in
+   `healthOverlay.ts`; the floor prepared once per clamped year and carried as `GrossUpContext.workingYear` — the plan's
+   KTD7 *As built (A5)* bullets are the record) → **NEXT: A6, U5's check** (the plan's U5: the clamped block's terms, the
+   required schedule, the own-deposit helper, the stream, KTD7's composition between the hoisted floor and `fundingNet`,
+   the probe-only observation hook, KTD15's reach-walk arm, the consumed-constants family rule). A6 reads
+   `socialSecurityPaid` in EVERY year — a credit raises the retired years too — never only inside the clamped block KTD6
+   lists it under; its composition reads the loop's `workingYear.floor`, never a second preparation; and its "prepared
+   exactly once" arm is the first user of the observation hook. Then → A7 U6a, which calls `medicareChargeForYear` WITHOUT
+   a run schedule (its allowlist names neither `@engine/healthOverlay` nor the constants; the one-year slice is pinned
+   `Object.is` the run schedule's slot). **A6 also owes four items from the A5 review (`wf_0e3d95d9-ae0`; every repro
+   in `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a5-review\`):**
+   (i) the throw ORDER moved for a malformed direct call: `taxOverlay.ts`'s hoisted `prepareWorkingYearFloor` now runs
+   BEFORE the ACA branch's contribution and bridge-year guards, so an NC/PA household whose start year has no rate step,
+   floored AND ACA-priced in one year, throws `[stateTax] no rate step…` where HEAD threw the guard (both refuse;
+   `validateParams` rejects that input first, so production cannot reach it). Fix in A6: compute the ACA-priced predicate
+   ONCE before the floor (`const acaPricedThisYear = …`, the same conjuncts — keep the `enrolledThisYear > 0 &&` line and
+   the census lines `acaProbeInertness.test.ts` pins), run the two guards there, and branch on that const;
+   (ii) no test pins the hoisted floor's own `calendarYear` / `minLivingAge` wires (planted `start year` / `+Infinity`
+   passed 489 and 401 tests): add a multi-year clamped arm at t > 0 on NC and a PA arm with a member under 60;
+   (iii) the `overlayYearContext` survivor arm cannot tell the living set from the static household (its survivor is the
+   younger spouse): add the OLDER spouse as survivor (living [owner] at t = 1 reads 67, a static read gives 64);
+   (iv) for A7, KTD12's later-year events (the senior-bonus sunset "if the prior year's bonus was > 0", NC's rate steps,
+   the catch-up step-down's `firstStepDownYear` band) need data no allowlisted import returns (`seniorBonusFor` is
+   private in `taxCore.ts`; the steps live in the constants; the bands in intake) — rule the source (an exported engine
+   helper, or the allowlist amended) before A7 builds. A constants key lands only with the producer its
    WITNESS row names. Every commit refreshes the README/roadmap test-count claims and runs `pnpm doc:reanchor` +
    `pnpm verify:doc-stats` (CI runs it before the tests), and a planted-mutant pass (the harness below).
 2. **Phase B**, ONE go-live commit: U6b + U7 + U8 + U9 + U13, `datesolo`'s own W, the short and stale-W witness seeds,
@@ -64,13 +85,21 @@ covers all of that…" sentence comes out for a household with W (U9). Build 2, 
 **STATE on A4's tree (`fde13929`), by exit code (re-run at this close):** typecheck · lint · `verify:doc-stats` · build ·
 `verify:bundle` 272.5 KiB — all exit 0; the full suite green at `fde13929` (the count lives under `verify:doc-stats`).
 `verify:aca` / `verify:state-tax` were not re-run (no constants they gate moved).
-**CI:** `fde13929` → run 40616448986 completed SUCCESS, both jobs (`verify`, `verify-rv-chart-text`), read by id. Read
-this close's own run by id before starting A5.
+**CI:** `fde13929` → run 40616448986 completed SUCCESS, both jobs (`verify`, `verify-rv-chart-text`), read by id; the
+close `87ed7a6a` → run 40786474078 completed SUCCESS, both jobs (read by id, b9-13).
 **FILED (b9-11, both Tier 0, ranked with *The other new Tier 0s* below by measured reach):** *A typed Social Security
 amount with odd cents is never rounded to the dime…* (own benefit rosy up to a dime a month, two on the delayed-credit
 path; the spousal excess either way; its Prescription moves most seeds' goldens) and *A spouse who dies in the year
 they planned to claim is treated as having filed early…* (gloomy; reach needs a planned claim AT 66, which no seed has).
 **DISTILL CANDIDATES (for the pay check's Phase C `/distill`):**
+- (b9-13) an extraction is cut for its NEXT consumer's constraints, not only its first caller's: `medicareChargeForYear` first
+  took the IRMAA schedule and the run's Part B schedule as inputs, which is what the year loop holds — but A7's ledger, the
+  reason the function exists, may import neither `@engine/healthOverlay` nor the constants (KTD12's allowlist), so A7 would
+  have re-cut it. Read the downstream unit's import and data constraints before fixing an extracted signature.
+- (b9-13) an equivalent mutant is a question the DOMAIN answers: the producer's both-alive `auxStart` survived planting
+  (`spousalStart` → `ownStart`) because in the FRA year a piece that began in an earlier year was always claimed before FRA,
+  so it is already priced early and its start never decides; 20,000 aimed households (2,735 paying a spousal excess in a
+  working FRA year) digested identically. Prove it by an aimed fuzz, never by the argument alone.
 - (b9-12) "starts this year" is not "starts at FRA": the FRA-year exemption has to key on how the ENGINE PRICED the benefit
   (unreduced = begun at FRA), never on its start year — a spousal excess the other spouse's filing starts that year is priced
   as the payee's early claim, and an own claim at 67 was shielding a widow(er) benefit begun years before (the review's two
@@ -253,7 +282,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    eats the full premium. The token has an ACA **legislative freshness** clause and **no ACA pricing-mode
    clause**.
    ⚑ **Audit corrections 2026-08-02 — three anchors were wrong and the fix shape is NOT Part B's:**
-   (a) `healthOverlay.ts:305` is a **closing brace**, not a consumer; the real seam is `taxOverlay.ts:2119` plus `taxOverlay.ts:2161-2168`
+   (a) `healthOverlay.ts:305` is a **closing brace**, not a consumer; the real seam is `taxOverlay.ts:2230` plus `taxOverlay.ts:2272-2279`
    → `healthOverlay.ts:279`. (b) `copy.ts:1055` (`healthFactMedicare`) is a Medicare eyebrow; the strings that claim
    the coupling is priced are **`copy.ts:1016-1019`**. (c) the excess-APTC field moved to
    `aca-last-verified.json:43` (was `:21`) and `scripts/verify-aca-status.ts:40-103` declares and REQUIRES the key
@@ -262,7 +291,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    engine, which is why the oracle token can witness it. The ACA escalator lives in **intake**
    (`intakeMap.ts:348-368`), which the engine cannot import — so an `ACA_PRICING_MODE` flag bolted onto
    intakeMap would be the exact lying-mirror `oracleToken.ts:114-122` warns about. The honest fix moves the
-   schedule build to an engine-owned `buildAcaPricingSchedule` beside `partBPricingByT` (`taxOverlay.ts:1537`).
+   schedule build to an engine-owned `buildAcaPricingSchedule` beside `partBPricingByT` (`taxOverlay.ts:1688`).
    ⚑ **Re-tag: BLOCKED ON RESEARCH.** No sourced ACA cost-trend primary exists in the repo, so a solver
    block would hold for months over the whole pre-65 population.
    ⚑ **2026-08-03 double-blind — the pricing defect is REAL and confirmed; the near-term copy move as filed
@@ -332,7 +361,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    used to cite — the NC certification block — **is retired**; (b) the withhold machinery gates `solve()`
    ONLY, so a withhold-only fix still ships a **state-blind headline / fuck-off date**.
    ⚑ **2026-08-03 double-blind — diagnosis CONFIRMED, and the "cheap partial" is not cheap and not sound.**
-   Pricing is membership-keyed at `taxOverlay.ts:1233`; `PRICED_STATES` is `constants/stateTax.ts:50`; the
+   Pricing is membership-keyed at `taxOverlay.ts:1384`; `PRICED_STATES` is `constants/stateTax.ts:50`; the
    flip is pinned live at `optimalityOracle.test.ts:295-306` (NC crowns the 12%-top anchor, the state-absent
    twin the 22%-top). Correction (a) is **half-stale** — the `state-certification-pending` WithheldReason
    (`oracleToken.ts:48`), its humane string (`recommendationView.ts:364-365`) and the whole *held* card
@@ -381,7 +410,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 5. **Smaller, each self-contained** *(all four re-anchored by the 2026-08-02 audit)*:
 
    - **Post-65 non-qualified HSA money is silently forfeited.** ✅ The false *"(conservative, disclosed)"*
-     claim at `healthOverlay.ts:881` is **corrected 2026-08-02** — it now says the direction is safe but
+     claim at `healthOverlay.ts:912` is **corrected 2026-08-02** — it now says the direction is safe but
      the disclosure does **not** exist, and asks whoever adds it to fix the comment in the same change.
      **The disclosure itself is still OWED** (candidate home: the new "What this leaves out" section below).
    - **Account balances have no magnitude sanity rule** while spend and PIA each got one (real range
@@ -412,12 +441,12 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      and the fit gate's panel arm (`vertical-fit.spec.ts:1734-1763`) asserts only that the dialog box fits
      **and** `scrollHeight > clientHeight` — content growth makes the second assertion *more* true.
      ⚑ **The drafted HSA sentence would have DENIED the very forfeit it discloses — do not ship "stays
-     put" / "simply sits."** The balance is not parked, it is **destroyed**: `taxOverlay.ts:2248-2249` sets
-     `buckets = EMPTY_BUCKETS` (hsa: 0) → `simulate.ts:2085` `terminalHsaReal = 0` →
+     put" / "simply sits."** The balance is not parked, it is **destroyed**: `taxOverlay.ts:2359-2360` sets
+     `buckets = EMPTY_BUCKETS` (hsa: 0) → `simulate.ts:2129` `terminalHsaReal = 0` →
      `objectiveHeadline.ts:62` bequest contribution **$0**. On the exact path the sentence names, the HSA
      adds nothing to the leave-more dollar the reader sees. **The sentence must say the balance is DROPPED.**
-     ⚑ **Sweep BOTH stale comments in the same commit** — `healthOverlay.ts:881-884` (which says
-     fix-or-it-re-rots) **and** `taxOverlay.ts:2239-2241`, which still calls post-65 HSA-as-ordinary-income
+     ⚑ **Sweep BOTH stale comments in the same commit** — `healthOverlay.ts:912-915` (which says
+     fix-or-it-re-rots) **and** `taxOverlay.ts:2350-2352`, which still calls post-65 HSA-as-ordinary-income
      *"a DISCLOSED non-feature, the survivor-SS class"* — the same false claim, in the file that **owns** the
      mechanism.
      ⚑ **The genuine ruling here is scope, not wording** (tone is Caddie-chair under the batched-oracle law):
@@ -430,8 +459,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      panel is `src/intake/AssumptionPanel.tsx` — section a opens `:399` / closes `:567`, section b `:570` /
      `:851`, footer `:857`, the disclosures map `:533-565`; the `assumption*` prefix law is
      `copy.ts:1309-1320` (keys `:1321-1510`); the panel fit arm is `vertical-fit.spec.ts:1734-1763`;
-     `sheetShell.css:34-35`/`:94`; the overlays are `src/engine/healthOverlay.ts:880-884` and
-     `src/engine/taxOverlay.ts:2238-2241` (there is no `overlays/` dir). NIIT's two homes confirmed
+     `sheetShell.css:34-35`/`:94`; the overlays are `src/engine/healthOverlay.ts:911-915` and
+     `src/engine/taxOverlay.ts:2349-2352` (there is no `overlays/` dir). NIIT's two homes confirmed
      (`recommendationView.ts:101` unconditional; `copy.ts:1166-1167`) — the scope fork is self-resolving:
      HSA + LTC only. TRAP 1 — `Row` REQUIRES a `seat` from the CLOSED 22-member `AssumptionSeat` union
      (`AssumptionPanel.tsx:108`, `assumptionRegistry.ts:40-63`): a leaves-out row is a hand-rolled
@@ -439,7 +468,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      TRAP 2 — a heading literally "What this leaves out" that names two items is ITSELF a completeness claim
      the constants falsify (`health.ts:72/:112/:120/:135/:319` declare four more OUT-but-disclosed facts) —
      scope the heading or name them. TRAP 3 — the HSA sentence must be true across ALL THREE zeroing
-     branches (`taxOverlay.ts:2247-2253`, `:2267-2272`, `:2396-2399`): on each, EVERY bucket is zeroed
+     branches (`taxOverlay.ts:2358-2364`, `:2378-2383`, `:2507-2510`): on each, EVERY bucket is zeroed
      because the path DEPLETED, so a bequest-framed sentence ("dropped from what's left to your heirs")
      names a state the engine cannot reach; the honest harm is that the plan is COUNTED AS HAVING RUN OUT
      while HSA dollars remain unspent (understated survival), because HSA outflow is qualified-medical-only
@@ -447,8 +476,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `copyGuard.ts:255`; `FALSE_CERTAINTY_INTERNAL` (`copyGuard.ts:148-157`) is universal and
      non-suppressible — "can't run out while the HSA lasts" reds. TRAP 4 — `verify:doc-stats` reds on ANY
      added test until README `:82` + roadmap `:165` move in the same commit. Sweep THREE comment spans (the
-     `healthOverlay.ts:881-883` "a sweep found NO user-facing disclosure" clause becomes false the moment the
-     section ships — rewrite the whole `:869-878`). Caddie walk before "shipped".
+     `healthOverlay.ts:912-914` "a sweep found NO user-facing disclosure" clause becomes false the moment the
+     section ships — rewrite the whole `:900-909`). Caddie walk before "shipped".
 
    ⚑ **CLOSED AS PHANTOM — the date-route ACA clock does NOT over-alarm.** The date route simulates all 11
    offsets (`dateSearch.ts:596/450/457`) and candidate Y=0 carries the base ACA stream **ungated**

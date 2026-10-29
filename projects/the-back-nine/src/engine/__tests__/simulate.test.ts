@@ -9,6 +9,7 @@ import {
   ongoingIncomeForYear,
   personOffsetsFor,
   survivorYearBenefit,
+  bothAliveYearBenefit,
   ENGINE_MAX_DOLLAR,
   type PersonOffsets,
   type SimOutput,
@@ -442,9 +443,9 @@ describe('R19 engine half + dire-but-honest edges', () => {
       expect(r.indeterminate).toBe(true) // the DEFINED output — simulate did NOT throw/crash (R19)
       return r.indeterminate ? r.reason : ''
     }
-    expect(reasonOf(overlay({}))).toMatch(/irmaaMagiSeed/) // MISSING seed → the coverage gate (simulate.ts:1213-1215)
-    expect(reasonOf(overlay({ irmaaMagiSeed: [Number.NaN, 60_000] }))).toMatch(/irmaaMagiSeed/) // NaN → finiteness gate (simulate.ts:1001)
-    expect(reasonOf(overlay({ irmaaMagiSeed: [-1, 60_000] }))).toMatch(/irmaaMagiSeed/) // negative → finiteness gate (simulate.ts:1001)
+    expect(reasonOf(overlay({}))).toMatch(/irmaaMagiSeed/) // MISSING seed → the coverage gate (simulate.ts:1257-1259)
+    expect(reasonOf(overlay({ irmaaMagiSeed: [Number.NaN, 60_000] }))).toMatch(/irmaaMagiSeed/) // NaN → finiteness gate (simulate.ts:1045)
+    expect(reasonOf(overlay({ irmaaMagiSeed: [-1, 60_000] }))).toMatch(/irmaaMagiSeed/) // negative → finiteness gate (simulate.ts:1045)
   })
 
   it('R19 enum + person-field + empty-bucket-basis gaps → indeterminate (U3-exit code-review pilot)', () => {
@@ -2969,5 +2970,54 @@ describe('the survivor-year composition — one exported helper, Object.is the i
     // $1,777.70 and she is paid her own reduced figure, $1,674.20 (RS 00615.585 B.4).
     const lifted = survivorYearBenefit(6, people, offsets, [3, 50], { survivorOwn: 0, widow: 24, deceasedOwn: 40 })
     expect(cents(lifted?.paid)).toBe(167_420 * 12)
+  })
+})
+
+// The pay check's A5 (docs/plans/features/working-year-pay-check-build-spec.md, KTD11's as-built bullets):
+// the both-alive gates get one exported home that cashTermsForYear and the earnings test both read. The
+// frozen inline sweep above re-proves cashTermsForYear's ss unmoved, and earningsTest.test.ts's seeded sweep
+// re-proves the test's composition; these arms pin the helper's own contract.
+describe('the both-alive pieces — one exported helper (A5)', () => {
+  // A spouse who claims at offset 3: $12,000 a year of her own, and a $4,800 spousal excess.
+  const o: PersonOffsets = { retire: 0, claim: 3, earnedIncomeReal: 0, socialSecurityReal: 12_000, spousalExcessAnnual: 4_800 }
+
+  it('pays the own benefit from its claim, and the spousal excess from the later of the two claims', () => {
+    // The higher earner files at offset 5, after her: the excess waits for him.
+    expect(bothAliveYearBenefit(2, o, 5)).toEqual({ ownStart: 3, spousalStart: 5, own: 0, spousal: 0 })
+    expect(bothAliveYearBenefit(3, o, 5)).toEqual({ ownStart: 3, spousalStart: 5, own: 12_000, spousal: 0 })
+    expect(bothAliveYearBenefit(4, o, 5)).toEqual({ ownStart: 3, spousalStart: 5, own: 12_000, spousal: 0 })
+    expect(bothAliveYearBenefit(5, o, 5)).toEqual({ ownStart: 3, spousalStart: 5, own: 12_000, spousal: 4_800 })
+    // He filed first, at offset 1: the excess starts with her own claim.
+    expect(bothAliveYearBenefit(2, o, 1)).toEqual({ ownStart: 3, spousalStart: 3, own: 0, spousal: 0 })
+    expect(bothAliveYearBenefit(3, o, 1)).toEqual({ ownStart: 3, spousalStart: 3, own: 12_000, spousal: 4_800 })
+  })
+
+  it('pays the amounts it is given (the earnings test passes its credited ones), behind the same gates', () => {
+    expect(bothAliveYearBenefit(6, o, 5, 12_345.6, 5_001.2)).toEqual({ ownStart: 3, spousalStart: 5, own: 12_345.6, spousal: 5_001.2 })
+    expect(bothAliveYearBenefit(4, o, 5, 12_345.6, 5_001.2)).toEqual({ ownStart: 3, spousalStart: 5, own: 12_345.6, spousal: 0 })
+    expect(bothAliveYearBenefit(2, o, 5, 12_345.6, 5_001.2)).toEqual({ ownStart: 3, spousalStart: 5, own: 0, spousal: 0 })
+  })
+
+  it('cashTermsForYear’s ss while both live is the pieces summed in person order, Object.is, every year', () => {
+    // He: PIA $30,000, claims at 70 (offset 8). She: PIA $9,000, claims at 62 (offset 2); her spousal
+    // excess on his record waits for his claim.
+    const him: PersonInputs = { sex: 'male', currentAge: 62, birthYear: 1964, retirementAge: 62, earnedIncomeReal: 0, pia: 30_000, socialSecurityClaimAge: 70 }
+    const her: PersonInputs = { sex: 'female', currentAge: 60, birthYear: 1966, retirementAge: 60, earnedIncomeReal: 0, pia: 9_000, socialSecurityClaimAge: 62 }
+    const people = [him, her]
+    const { offsets, higherClaimOffset } = personOffsetsFor(people)
+    const params = makeParams({ people })
+    expect(higherClaimOffset).toBe(8)
+    expect(offsets[1]!.spousalExcessAnnual, 'she is owed an excess').toBeGreaterThan(0)
+    expect(bothAliveYearBenefit(7, offsets[1]!, higherClaimOffset).spousal).toBe(0)
+    expect(bothAliveYearBenefit(8, offsets[1]!, higherClaimOffset).spousal).toBe(offsets[1]!.spousalExcessAnnual)
+    for (let t = 0; t < 20; t++) {
+      let want = 0
+      for (const offset of offsets) {
+        const pieces = bothAliveYearBenefit(t, offset, higherClaimOffset)
+        want += pieces.own
+        want += pieces.spousal
+      }
+      expect(Object.is(cashTermsForYear(t, params, offsets, [50, 50], higherClaimOffset).ss, want), `year ${t}`).toBe(true)
+    }
   })
 })

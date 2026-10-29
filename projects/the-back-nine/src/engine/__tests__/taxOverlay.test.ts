@@ -12,14 +12,17 @@ import {
   type TaxYearInputs,
   type HealthYearSink,
   type PreparedWorkingYearFloor,
+  type MedicareChargeInputs,
   prepareWorkingYearFloor,
   workingYearFederalCharge,
+  overlayYearContext,
+  medicareChargeForYear,
 } from '@engine/taxOverlay'
 import { runDecumulation, type PortfolioState } from '@engine/decumulation'
 import { DRAWDOWN_POLICIES, NEVER_DEPLETED, type RetirementState } from '@shared/model'
 import { totalAcrossBuckets, type AccountBuckets } from '@engine/sequencing'
 import { uniformLifetimeTableDivisors, capitalGainsBreakpoints, irmaa, partB2026, medicareCostTrend, stateRateForYear, stateStandardDeductionFor } from '@engine/constants'
-import { fplForHousehold, irmaaScheduleAsCompared } from '@engine/healthOverlay'
+import { boundPartBPricingSchedule, fplForHousehold, irmaaScheduleAsCompared } from '@engine/healthOverlay'
 
 // ---------------------------------------------------------------------------
 // The FROZEN-NOMINAL hand oracle (the frozen-nominal Tier 0, 2026-09-25). A figure the statute freezes in
@@ -5273,6 +5276,180 @@ describe('taxOverlay — the working-year tax floor (2026-10-20): a clamped year
       expect(() =>
         prepareWorkingYearFloor({ ordinaryBase: Number.NaN, investmentIncome: 0 }, { ssBenefit: 0, filing: 'mfj', count65: 0, calendarYear: 2030, minLivingAge: 57 }),
       ).toThrow(/finite and ≥ 0/)
+    })
+  })
+})
+
+// The pay check's A5 (docs/plans/features/working-year-pay-check-build-spec.md, KTD7 + KTD12): the year
+// loop's household context and its Medicare charge each get one exported producer, which the loop reads and
+// the working-year money picture will read. Every existing overlay arm above re-proves the loop unmoved; these
+// pin each producer's own contract against the hand oracle (`medicareAnnualReal`), and tie the loop's
+// recorded Medicare readout to the charge, year by year.
+describe('the pay check’s A5 — the year context and the Medicare charge, one producer each', () => {
+  describe('overlayYearContext', () => {
+    it('the static household: the configured filing, the 65+ count, the calendar year, the living-age floor, and the state only when it is priced', () => {
+      // Born 1960 and 1963, starting 2026: 66 and 63 at t = 0, 70 and 67 at t = 4.
+      const nc: Household = { ...mkHousehold(2026, 1960, 1963), retirementState: 'NC' }
+      const y0 = overlayYearContext(nc, [], 0)
+      expect(y0.filing).toBe('mfj')
+      expect(y0.calendarYear).toBe(2026)
+      expect(y0.count65).toBe(1)
+      expect(y0.medicareEnrolledCount).toBe(1)
+      expect(y0.medicareEnrolledIndices).toEqual([0])
+      expect(y0.livingCount).toBe(2)
+      expect(y0.minLivingAge).toBe(63)
+      expect(y0.pricedState).toBe('NC')
+      const y4 = overlayYearContext(nc, [], 4)
+      expect([y4.calendarYear, y4.count65, y4.minLivingAge]).toEqual([2030, 2, 67])
+      // An unpriced roster code, 'elsewhere', and no state at all carry no priced state.
+      for (const state of ['SC', 'elsewhere', undefined] as const) {
+        const h: Household = { ...mkHousehold(2026, 1960, 1963), ...(state !== undefined ? { retirementState: state as RetirementState } : {}) }
+        expect('pricedState' in overlayYearContext(h, [], 0), String(state)).toBe(false)
+      }
+    })
+
+    it('the injected living set: a survivor year files single with the survivor’s own floor; a year with nobody alive reads +Infinity', () => {
+      const h = mkHousehold(2026, 1960, 1963)
+      const years: HouseholdYear[] = [{ living: [h.owner, h.spouse!] }, { living: [h.spouse!] }, { living: [] }]
+      const both = overlayYearContext(h, years, 0)
+      expect([both.filing, both.livingCount, both.minLivingAge]).toEqual(['mfj', 2, 63])
+      const survivor = overlayYearContext(h, years, 1)
+      expect([survivor.filing, survivor.livingCount, survivor.minLivingAge, survivor.count65]).toEqual(['single', 1, 64, 0])
+      expect(survivor.rmdOwner).toBe(h.spouse)
+      expect(overlayYearContext(h, years, 2).minLivingAge).toBe(Number.POSITIVE_INFINITY)
+    })
+  })
+
+  describe('medicareChargeForYear', () => {
+    // Both born 1959: 67 in 2026, so both are enrolled every year (no onset signal ⇒ biological 65).
+    const POST65 = mkHousehold(2026, 1959, 1959)
+    const T = irmaa.value.tiers
+    const PRICING = boundPartBPricingSchedule(2026, 8)
+    /** A MAGI in the middle of tier k for the filing's column — clear of every line's price-frame drift. */
+    const midTier = (k: number, col: 'mfjMagiThreshold' | 'singleMagiThreshold') => (T[k]![col] + T[k + 1]![col]) / 2
+    const LOW = 60_000 // below every line
+    const inputs = (t: number, over: Partial<MedicareChargeInputs> = {}): MedicareChargeInputs => {
+      const household = over.household ?? POST65
+      const householdYears = over.householdYears ?? []
+      return {
+        household,
+        householdYears,
+        t,
+        year: overlayYearContext(household, householdYears, t, over.medicareOnsetSimYear),
+        irmaaMagiHistory: [],
+        irmaaMagiSeed: [LOW, LOW],
+        irmaaMagiOverride: [],
+        bridgeYearMask: [],
+        partBPricing: PRICING,
+        ...over,
+      }
+    }
+
+    it('with no run schedule passed, it binds the year’s own Part B slot — Object.is the run schedule’s, every start and year (the money picture’s path)', () => {
+      const HZ = 14
+      const history = Array.from({ length: HZ }, (_, i) => midTier(i % 4, 'mfjMagiThreshold'))
+      let compared = 0
+      for (let start = 2024; start <= 2031; start++) {
+        const household = mkHousehold(start, 1959, 1959)
+        const run = boundPartBPricingSchedule(start, HZ)
+        for (let t = 0; t < HZ; t++) {
+          const base = { household, irmaaMagiSeed: [midTier(2, 'mfjMagiThreshold'), midTier(1, 'mfjMagiThreshold')], irmaaMagiHistory: history }
+          const bound = medicareChargeForYear(inputs(t, { ...base, partBPricing: run }))
+          const own = medicareChargeForYear(inputs(t, { ...base, partBPricing: undefined }))
+          expect(Object.is(own.cost, bound.cost) && Object.is(own.surcharge, bound.surcharge), `start ${start}, t ${t}`).toBe(true)
+          if (bound.surcharge > 0) compared++
+        }
+      }
+      // Non-vacuity: surcharged bills on every start, across the table years, the tail and the pre-anchor clamp.
+      expect(compared).toBe(8 * HZ)
+    })
+
+    it('nobody enrolled: no charge, and nothing else is read (no seed, no history, no Part B schedule)', () => {
+      const young = mkHousehold(2026, 1970, 1972)
+      const charge = medicareChargeForYear(inputs(0, { household: young, irmaaMagiSeed: [], partBPricing: [] }))
+      expect(charge).toEqual({ cost: 0, surcharge: 0, extras: 0 })
+    })
+
+    it('the seed bills a year whose look-back year predates the sim; the history bills the rest, two years on, at each bill year’s own trend', () => {
+      const seed = [midTier(0, 'mfjMagiThreshold'), LOW]
+      const history = [midTier(1, 'mfjMagiThreshold'), LOW]
+      const at = (t: number) => medicareChargeForYear(inputs(t, { irmaaMagiSeed: seed, irmaaMagiHistory: history }))
+      expect(at(0).cost).toBeCloseTo(medicareAnnualReal(2, 0, 2026), 6) // the seed's tier 1, the 2026 anchor
+      expect(at(1).cost).toBeCloseTo(medicareAnnualReal(2, null, 2027), 6) // the low seed: base only
+      expect(at(2).cost).toBeCloseTo(medicareAnnualReal(2, 1, 2028), 6) // MAGI[0]'s tier 2, billed in 2028
+      expect(at(3).cost).toBeCloseTo(medicareAnnualReal(2, null, 2029), 6) // MAGI[1] is low
+      // The slice is the surcharge alone: the base is cost − surcharge.
+      for (const [t, year] of [[0, 2026], [2, 2028]] as const) {
+        const c = at(t)
+        expect(c.surcharge).toBeGreaterThan(0)
+        expect(c.cost - c.surcharge).toBeCloseTo(medicareAnnualReal(2, null, year), 6)
+      }
+      expect(at(1).surcharge).toBe(0)
+    })
+
+    it('the filing of the LAGGED year sets the lines: a survivor meets the joint lines for two years after the death', () => {
+      const h = mkHousehold(2026, 1959, 1959)
+      const years: HouseholdYear[] = [{ living: [h.owner, h.spouse!] }, { living: [h.spouse!] }, { living: [h.spouse!] }, { living: [h.spouse!] }]
+      // A MAGI inside the single column's first tier and below the joint column's first line.
+      const magi = midTier(0, 'singleMagiThreshold')
+      expect(magi).toBeLessThan(T[0]!.mfjMagiThreshold)
+      const at = (t: number) => medicareChargeForYear(inputs(t, { household: h, householdYears: years, irmaaMagiHistory: [magi, magi] }))
+      expect(at(2).cost).toBeCloseTo(medicareAnnualReal(1, null, 2028), 6) // MAGI of 2026, filed jointly: no surcharge
+      expect(at(3).cost).toBeCloseTo(medicareAnnualReal(1, 0, 2029), 6) // MAGI of 2027, filed single: tier 1
+    })
+
+    it('the extras are each living enrolled member’s own premium × 12: they end at a death and wait for a late enrollment', () => {
+      const h = mkHousehold(2026, 1959, 1959)
+      const extras = [150, 40]
+      expect(medicareChargeForYear(inputs(0, { household: h, medicareExtrasMonthly: extras })).extras).toBe(150 * 12 + 40 * 12)
+      // He has died: only her premium is charged.
+      const years: HouseholdYear[] = [{ living: [h.owner, h.spouse!] }, { living: [h.spouse!] }]
+      expect(medicareChargeForYear(inputs(1, { household: h, householdYears: years, medicareExtrasMonthly: extras })).extras).toBe(40 * 12)
+      // She enrolls at sim year 5: until then only he is billed, base and extras alike.
+      const late = medicareChargeForYear(inputs(1, { household: h, medicareOnsetSimYear: [0, 5], medicareExtrasMonthly: extras }))
+      expect(late.extras).toBe(150 * 12)
+      expect(late.cost).toBeCloseTo(medicareAnnualReal(1, null, 2027), 6)
+      // The bill never carries the extras.
+      expect(medicareChargeForYear(inputs(0, { household: h, medicareExtrasMonthly: extras })).cost).toBeCloseTo(medicareAnnualReal(2, null, 2026), 6)
+    })
+
+    it('fails loud on a lagged read landing on a bridge year with no override, and on a missing or non-finite MAGI', () => {
+      expect(() => medicareChargeForYear(inputs(2, { irmaaMagiHistory: [LOW], bridgeYearMask: [true] }))).toThrow(/BRIDGE year 0/)
+      expect(() => medicareChargeForYear(inputs(2, { irmaaMagiHistory: [LOW], bridgeYearMask: [true], irmaaMagiOverride: [40_000] }))).not.toThrow()
+      expect(() => medicareChargeForYear(inputs(0, { irmaaMagiSeed: [] }))).toThrow(/finite IRMAA-MAGI/)
+      expect(() => medicareChargeForYear(inputs(2, { irmaaMagiHistory: [Number.NaN] }))).toThrow(/finite IRMAA-MAGI/)
+    })
+
+    it('the year loop charges exactly this: its recorded base, surcharge and extras are the charge’s, Object.is, every year', () => {
+      const H5 = 5
+      const sink: HealthYearSink = { acaNetPremium: [], medicareBase: [], irmaaSurcharge: [], medicareExtras: [], medicareEnrolled: [], acaMagi: [], irmaaMagi: [], ssBenefit: [], acaCliffState: [] }
+      const seed = [midTier(0, 'mfjMagiThreshold'), LOW]
+      const extras = [150, 40]
+      const cfg: TaxOverlayConfig = { taxEnabled: true, rmdEnabled: false, household: POST65 }
+      // A big year-0 conversion lifts MAGI[0] past several lines, so year 2's bill carries a history-driven surcharge.
+      const r = runTaxAwareDecumulation({ taxable: 0, pretax: 2_000_000, roth: 0 }, realStock, realBond, flat(40_000).slice(0, H5), STOCK_W, 'pre-tax-first', cfg, {
+        healthcareEnabled: true,
+        irmaaMagiSeed: seed,
+        medicareExtrasMonthly: extras,
+        conversions: [midTier(2, 'mfjMagiThreshold'), 0, 0, 0, 0],
+        healthOut: sink,
+      })
+      expect(r.depletionYear).toBe(NEVER_DEPLETED)
+      expect(sink.medicareBase).toHaveLength(H5)
+      let surcharged = 0
+      for (let t = 0; t < H5; t++) {
+        // With no override and no clamped ongoing income, the recorded history IS the readout's IRMAA-MAGI.
+        const charge = medicareChargeForYear(
+          inputs(t, { irmaaMagiSeed: seed, irmaaMagiHistory: sink.irmaaMagi, medicareExtrasMonthly: extras, partBPricing: boundPartBPricingSchedule(2026, H5) }),
+        )
+        expect(Object.is(charge.surcharge, sink.irmaaSurcharge[t]), `surcharge, year ${t}`).toBe(true)
+        expect(Object.is(charge.cost - charge.surcharge, sink.medicareBase[t]), `base, year ${t}`).toBe(true)
+        expect(Object.is(charge.extras, sink.medicareExtras[t]), `extras, year ${t}`).toBe(true)
+        if (charge.surcharge > 0) surcharged++
+      }
+      expect(sink.irmaaSurcharge[0], 'the seed surcharges year 0').toBeGreaterThan(0)
+      expect(sink.irmaaSurcharge[2], 'the conversion surcharges year 2').toBeGreaterThan(sink.irmaaSurcharge[0]!)
+      expect(surcharged).toBeGreaterThanOrEqual(2)
     })
   })
 })

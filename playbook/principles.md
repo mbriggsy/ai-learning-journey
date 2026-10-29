@@ -72,8 +72,8 @@ A written plan is a menu, not an order: when Briggsy asks for a small fix, Claud
 **Watch the window.**
 [`/window`](../projects/skills/window/README.md) reports in one line how full the session's working memory (the context window) is. Claude runs it at natural checkpoints without being asked and wraps up at 60%; what each line means is on the [cheat sheet](cheat-sheet.md#during-the-session). Below 60%, room alone is never a reason to stop.
 
-**A rule nobody checks is only a suggestion.**
-If a check matters, something has to run it automatically, and something has to notice when it never fires. A check that runs only when someone remembers will get skipped.
+**A safety check needs an incident.**
+Before building a check, gate or hook, name the time the thing actually happened to us (a commit, a transcript, a lost file). Without one, a one-line rule is the ceiling, and following it is on Claude.
 
 **Write promises down.**
 Anything Claude commits to for a later session goes into the TODO or Claude's memory before the session ends. When Briggsy says "make a note," Claude saves it right then.

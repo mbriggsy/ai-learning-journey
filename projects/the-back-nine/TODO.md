@@ -25,7 +25,11 @@ ranked under that rule.
 ▶ **START HERE (2026-10-29, the b9-2 session of that day): build #1 of the D7 queue, the working-year pay check — Phase A
 (A1 through A7) is LANDED (`e2890887`, `512df53f`, `5d44ed68`, `fde13929`, `9b6a6daf`, `24ed7410`, and A7 on 2026-10-29 in its
 own commit), and so is the RIB-LIM order fix (`99ffc746`; the register's CLOSED *The widow(er) benefit is capped before the
-survivor's age reduction…* is its record — `SOLVER_CODE_VERSION` is 12). NEXT is Phase B, the ONE go-live commit.** Read
+survivor's age reduction…* is its record — `SOLVER_CODE_VERSION` is 12). NEXT is Phase B, the ONE go-live commit — but
+FIRST, A7's whole-file review, which has NOT run** (A7 is `2990b8c1`; its session hit the 60 % wrap line after the gates, so
+the fan-out waits for a fresh window — the A6 precedent is `wf_fdc509f6-84c`: four lenses, a skeptic per finding, over
+`workingYearLedger.ts`, its test, `workingYearLawSteps` and the `overlayHouseholdFor` extraction). Read `2990b8c1`'s CI run by
+id before starting (`gh run list --commit <FULL sha>`, then `gh run view <id>`); it was not read at that close. Read
 `git log` first. The plan is
 `docs/plans/features/working-year-pay-check-build-spec.md`: planned, deepened and reviewed (`wf_46aab717-201`; verdicts in
 `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-plan-review\verify\`).
@@ -80,6 +84,12 @@ count lives under `verify:doc-stats`); the opt-in recompute spike (`PROFILE=1`, 
 **CI:** `24ed7410` → run 40957994633 completed SUCCESS, both jobs (`verify`, `verify-rv-chart-text`), read by id. Read
 this close's own run by id (`gh run list --commit <FULL sha>`, then `gh run view <id>`) before starting A7.
 **DISTILL CANDIDATES (for the pay check's Phase C `/distill`):**
+- (A7, 2026-10-29) a floor-based dollar rule turns float dust into a visible dollar: $3,060.0000000000005 of payroll, as a
+  money-out line, floors to −$3,061 on a round-number household. Snap each figure to the money's own grain (the cent) before
+  any dollar rule; then the largest remainder is exact in integer cents (`roundLinesToBottomLine`).
+- (A7) a compiled input that pre-sums per-item vectors loses the items' boundaries: a person's income streams are one leaf, so
+  a pension ending beside a second stream never reaches 0 in the run. An event producer takes such a boundary from the source
+  that still holds it (the draft, compiled one stream at a time), never from the summed vector.
 - (b9-14) a "reads the SAME object" test that checks what a probe was HANDED proves nothing about what the code READ: the
   check composed from a second floor preparation survived, because the probe was passed the prepared floor while the
   composition used the copy. Pin it by a value only the right object carries (an NC household through the loop, a later

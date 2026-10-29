@@ -6,6 +6,8 @@ modules: []
 tags: [probes, platform-behavior, hooks, harness, code-review, adversarial-verify, measurement, powershell, permission-denials, model-switch, verdict-hash]
 ---
 
+*The probe and harness code this lesson came from was flushed on 2026-10-29 (`git show bd5ee4a2^:projects/hooks/probes/`); the lesson stands on its own.*
+
 ## Problem
 U2's harness scores hooks the way Claude Code does, and its probes settle what the platform really does. Across five review rounds, confident statements about the platform were wrong, from three different sources:
 - **Our own earlier finding.** #42250 (filed 2026-04) said only error-path output reaches the model. Probe Q1 measured `additionalContext` reaching it on PostToolUse and Stop, and a Stop context extending the turn. The round-1 harness had not modeled that: it scored a Stop context as letting Claude stop.

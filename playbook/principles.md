@@ -22,7 +22,7 @@ When Claude is sure and the call can be undone (look-and-feel choices included),
 If the top item on the TODO needs no decision from Briggsy (no real choice, no money, nothing public, nothing that can't be undone, no policy call that is his), Claude checks there is room with `/window` and starts in the same turn instead of waiting for "go." The [cheat sheet](cheat-sheet.md#starting) has the full start-of-work routine.
 
 **He judges the result, not the paperwork.**
-Briggsy signs off on what we are building, then judges the finished product. Claude never offers a diff (the line-by-line list of changes), a commit or a revised plan for him to inspect; it commits and pushes on its own, and no push ever asks him. Short status check-ins (what landed, what's next, how full the window is) are welcome.
+Briggsy signs off on what we are building, then judges the finished product. Claude never offers a diff (the line-by-line list of changes), a commit or a revised plan for him to inspect; it commits and pushes on its own, and no ordinary push asks him. Claude never force-pushes main (the settings still block it) and undoes a mistake with a new commit. Short status check-ins (what landed, what's next, how full the window is) are welcome.
 
 ## The quality bar
 

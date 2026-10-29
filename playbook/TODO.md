@@ -2,31 +2,34 @@
 
 The queue for work on how we work. Sessions for it start in this folder.
 
-**The direction (Briggsy, 2026-10-27):** "we still haven't got to the dev process - the actual thing I wanted us to focus on - ce-plan, ce-plan:deepen, ce-docreview, ce-work, ultramode, brief, distill - or functional equivalents that allow Claude to upgrade and not be confined." Every item is judged by one test: does this ever happen to us, or does it change his day? Nothing gets frozen: "We want updates."
+**The direction (Briggsy, 2026-10-27):** "we still haven't got to the dev process -the actually thing I wanted us to focus on -ce-plan, ce-plan:deepen, ce-docreview, ce-work, ultramode, brief, distill - or functional equivalents that allow Claude to upgrade and not be confined." Every item is judged by one test: does this ever happen to us, or does it change his day? Nothing gets frozen: "We want updates."
 
 ## ▶ START HERE
 
-1. **Owed from the 2026-10-29 flush, finish first:**
-   - Squeaky shrinks to short rules: `projects/skills/squeaky-clean/scripts/` and `tests/` go, `SKILL.md` keeps the one-line rules and a trimmed step 10, and `how-to/session-chains.md` follows it. Do it when no Back Nine or Feud session is mid-close: the skill folder is a junction, so a saved edit is live at once.
-   - A fresh session proves the flush: the manifesto loads, the status bar shows, a skill runs, a push goes through.
-   - Then, with Briggsy's words already given: delete `~/.claude/hooks/v-84b0dfbb922a` and `~/.claude/hooks/v-9ff5496bba84` once every session running before the flush has restarted (a deleted folder under a live session's old settings would refuse its skill calls); remove the 17 probe entries from `~/.claude.json`; delete `~/.claude/flow`.
+1. **Owed from the 2026-10-29 flush (his words already given, unless marked):**
+   - **Delete squeaky's old `projects/skills/squeaky-clean/scripts/` and `tests/`** (about 6,900 lines). Nothing calls them: `SKILL.md` and `how-to/session-chains.md` were rewritten without them in `364b48fe`. Do it when no Back Nine or Feud session is mid-close: one that started its close on the old text still calls them, and the skill folder is a junction, so a deletion is live at once.
+   - **Delete `~/.claude/hooks/v-84b0dfbb922a` and `~/.claude/hooks/v-9ff5496bba84`** once every session that was running before the settings switch (2026-10-29, about 15:27 local) has restarted. A deleted folder under such a session's old hook paths would refuse its skill calls, since the Skill guard fails closed. Those sessions also keep the old update freeze in their environment until they restart (harmless).
+   - **Needs his words first:** four harmless leftovers the auto-mode check won't delete on the flush sentence alone: the empty `claude-probe-q8-trusted` folder in system temp, the probe transcript folder `~/.claude/projects/<slug>` named `...claude-probe-q8-trusted-q14-peer-open-...`, the orphaned old status-line cache `~/.claude/token-cache.json`, and a stray `_old` file in system temp.
+   - **His call, offered 2026-10-29:** `principles.md`'s "A rule nobody checks is only a suggestion" is the doctrine behind the flushed machinery (failure mode #8). The recommended rewrite: "**A safety check needs an incident.** Before building a check, gate or hook, name the time the thing actually happened to us (a commit, a transcript, a lost file). Without one, a one-line rule is the ceiling, and following it is on Claude."
 2. **The dev process, in a fresh session (the real goal).** One capability at a time: plan, deepen, the plan check (doc review), build, ultramode review, brief, distill. For each, what native Claude Code does now, what compound-engineering (CE) does, and what ours does; keep the thinnest version that works and gets better as Claude Code gets better, never a wrapper that locks in today's behavior. Bring Briggsy a short list with one recommendation.
-   - **What the 2026-10-29 audit found:** nothing crashed. Plan, deepen and doc review stopped being used from the summer (the last Back Nine deepen was 06-17, the last anywhere 08-07), before the our-setup program and untouched by it. They ran well from 10-19 to 10-21 and lapsed again by 10-23. A written rule has failed twice to keep them going ("deepen ALL plans first" in the summer, "sizable work MUST run the full flow" in October). The open question is how the flow sticks without building machinery.
-   - **CE is at 3.14.3** (since 2026-06-24, 40 releases behind): Claude Code never auto-updates a third-party marketplace. Updating it belongs here, because CE 3.15+ adds a review pass by another vendor's model, Codex first, on by default, and Briggsy said "No Codex".
+   - **What the 2026-10-29 audit found:** nothing crashed. Plan, deepen and doc review stopped being used from the summer (the last Back Nine deepen was 06-17, the last anywhere 08-07), before the our-setup program and untouched by it. They ran again from 10-19 to 10-23 (the last full deepen and whole-plan check was U4's, on 10-23), and a Feud build skipped its deepen that same day. A written rule has failed twice to keep them going ("deepen ALL plans first" in the summer, "sizable work MUST run the full flow" in October). The open question is how the flow sticks without building machinery.
+   - **CE is at 3.14.3** (since 2026-06-24; 40 releases behind as of 3.31.0 on 2026-10-16): Claude Code doesn't auto-update a third-party marketplace by default. Updating it belongs here. CE 3.15+ adds a review pass by another vendor's model, Codex first, on by default, and Briggsy said "I don't want to introduce codex (not a fan)". Turning that mode off isn't enough on its own: CE's bakeoff step and its model elevation are two more ways out (memory `feedback-upgrades-always-approved`).
    - **brief and distill nudges key on skill names** (`ce-work` and the review skills), so a build done by a Workflow passes no gate. ultramode works and reads CE's reviewer persona files fresh on each run.
-   - The research half exists: the 2026-10-17 preflight page (memory `reference-our-setup-preflight`).
+   - The research half exists: the 2026-10-17 preflight page (memory `reference-our-setup-preflight`). Its freeze advice is overruled by "We want updates".
 
 ## Current state
 
-- **The our-setup program (2026-10-19 to 10-27) is flushed** (monorepo `bd5ee4a2`, config repo `5fda78b`): `projects/hooks` matches its pre-program state, the live hooks run from `~/.claude/hooks/*.sh`, the status line from `~/.claude/statusline.py`, and nothing freezes updates.
-- **Kept from it:** ultracode on by default, the status bar's live effort level, the `/window` fix after compaction, and squeaky's hand-off to a named successor.
+- **The our-setup program (2026-10-19 to 10-27) is flushed** (monorepo `bd5ee4a2`, `02127262`, `364b48fe` and the review-fix commit; config repo `5fda78b`, `7689c1e`, `e6066fc`): `projects/hooks` matches its pre-program state, the live hooks run from `~/.claude/hooks/*.sh`, the status line from `~/.claude/statusline.py`, the update freeze is gone, the probe entries are out of `~/.claude.json`, and `~/.claude/flow` is deleted.
+- **Proven in a fresh session (2026-10-29):** the manifesto loads, a skill runs through the Skill guard with no denials, and the update freeze is unset (with the parent shell's copy stripped; a shell started inside a pre-flush session inherits the old value).
+- **Kept from the program:** ultracode on by default, the status bar's live effort level, the `/window` fix after compaction, and squeaky's hand-off to a named successor (now found with `ListAgents`; the `<name> [ref]` send for a name clash is untested end to end).
 - **Lessons** live in [docs/insights/](docs/insights/): 002, 003, 005 and 008.
 
 ## Landmines
 
-- **Auto mode blocks removing a safety check, and writes to Claude Code's own config, without Briggsy's own words.** Write the exact sentence for him, paste-ready, and bundle every such step into one ask.
-- **Never restore `~/.claude/settings.json` whole from an old commit.** The 10-19 snapshot has garbled dashes, no ultracode and a status-line path that no longer exists. Edit it key by key.
+- **Auto mode blocks removing a safety check, an irreversible delete, and writes to Claude Code's own config, without Briggsy's own words.** Name every path in the sentence you draft for him: a delete command that bundles a path he didn't name gets refused.
+- **Never restore `~/.claude/settings.json` whole from an old commit.** The 10-19 snapshot (config repo `22015c5`) has 15 garbled dashes and no ultracode. Edit it key by key.
 - **The hooks are copies.** `~/.claude/hooks/*.sh` must match `projects/hooks/*.sh` byte for byte: a change edits both, then compares them.
+- **A test session started from a Claude session's shell inherits that session's environment.** Strip a variable (`env -u NAME claude -p ...`) before claiming a fresh session lacks it.
 - **A peer's unpushed commit under yours:** pushing `main` publishes it too. Commit path-scoped (`git commit -- <paths>`) and check `git log origin/main..HEAD` before a push.
 - **Never freeze or pin a version** (memory `feedback-upgrades-always-approved`).
 - **This folder is public.** Write paths as `~/...`, a project folder as `<slug>` and ids as `<id>`; screenshots go in the ignored `playbook/temp/`.

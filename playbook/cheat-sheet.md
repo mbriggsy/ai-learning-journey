@@ -17,7 +17,7 @@ When something happens, here is what to say or do; phrases in italics are the wo
   - **60%:** Claude wraps up at a clean stopping point, writes the TODO and tells you to open a fresh terminal. Open one in the same folder and say *"what's next"*.
 
   The three numbers live in [window.mjs](../projects/skills/window/window.mjs). To see what is using the room, type `/context` yourself: it prints a big table that won't scroll on the phone, so Claude never runs it for you.
-- **Sharing a screenshot.** Save it in the project's `temp/` folder, then mention it or say *"look at this"*. Claude reads the newest image there. You never need to paste a file path. At the end of the session, the cleanup routine (squeaky, under Ending) deletes only the `temp/` files this session made or read, if nobody changed them since; everything else stays.
+- **Sharing a screenshot.** Save it in the project's `temp/` folder, then mention it or say *"look at this"*. Claude reads the newest image there. You never need to paste a file path. At the end of the session, the cleanup routine (squeaky, under Ending) deletes the `temp/` files this session made, and the ones it only read unless another session is working in the same project; everything else stays.
 - **Claude wants your eye on something.** It saves the image in `temp/` and names the file and the folder in its message.
 - **An ask from Claude makes no sense.** Say *"I don't understand the ask"*. That is Claude's miss, and it rewrites the ask shorter and plainer.
 - **Claude hands you a bare "A or B?"** Ask *"do you have a recommendation?"*. Claude owes you one pick with its reasons, in plain words, and then acts on it.

@@ -26,10 +26,10 @@ Thumbs.db
 .secrets/
 __pycache__/
 
-# Screenshots Briggsy drops for a session started in playbook/ (the our-setup home)
+# Screenshots Briggsy drops for a session started in playbook/
 playbook/temp/
-# Local settings and a browser tool's scratch files in folders the leak gate
-# scans: they can hold a user-folder path (a hook command, say) or
+# Local settings and a browser tool's scratch files in public folders: they
+# can hold a user-folder path (a hook command, say) or
 # screenshots, so they stay out on every machine, not only where a global git
 # ignore covers them. (Other projects track their settings.local.json on
 # purpose: no wildcard here.)

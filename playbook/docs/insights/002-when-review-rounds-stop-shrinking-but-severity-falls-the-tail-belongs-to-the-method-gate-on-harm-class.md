@@ -6,6 +6,8 @@ modules: [projects/skills/squeaky-clean]
 tags: [code-review, ultramode, review-rounds, convergence, seams, landing-criteria, mutation-testing, workflow-audit, read-only-lenses]
 ---
 
+*The squeaky scripts this lesson came from were flushed on 2026-10-29 (their last version is in git history before that day); the lesson stands on its own.*
+
 ## Problem
 U29, the peer-safe squeaky-clean, went through six whole-file review rounds before it landed.
 - Each round ran 11 opus lenses, and every finding was adversarially verified.

@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { REAL, REAL_DPR, PHONE, PHONE_DPR, FINAL_TIER_MS, gotoSeedFinal, settleLayout } from './reviewSurface'
+import { REAL, REAL_DPR, PHONE, PHONE_DPR, FINAL_TIER_MS, gotoSeedFinal, rewalkSeedTo, settleLayout } from './reviewSurface'
 /* The no-anchor arm's handle reads the CATALOG, never a re-typed sentence (this import is the
  * precedent the fit specs cite). A hardcoded literal here is a second copy of the product's words: U17 §S6
  * reworded this exact string, and a literal would have re-broken the only walk that reaches the
@@ -101,6 +101,17 @@ import { copy } from '../src/ui/copy'
  *    the sheet's visible box, so no frame had ever painted them — a reader judged their words from
  *    `dialog.txt` alone and never their weight on the page.
  *
+ * Increment 7 (2026-10-30, the pay check's go-live — `docs/plans/features/working-year-pay-check-build-spec.md` U8):
+ *  - `intake:paycheck` — the date route's two new steps, reached the only way a real household is: a
+ *    seed's result → the Assumptions door → the re-walk. Three households, one face each: the stale-W
+ *    witness (`datecoststale`: the W step's stale face, its blocked Continue, the figure option open, then
+ *    the re-answered picture), the short witness (`dateshort`: the picture at its fullest — held-back
+ *    Social Security, Medicare from savings, every later year short) and the refusal witness
+ *    (`datesolo`: the picture step's calm unknown line). The existing `intake:fork` answers "Already
+ *    retired" twice, so it never reaches either step.
+ *  - `seed:datecoststale` rides the ordinary seed walk for the result's standing line and the panel's W
+ *    row (its doors walk opens the panel); both have their own crops below.
+ *
  * Targets: `CADDIE_TARGETS="vault:retired,vault:stale,seed:date,intake:fork"` (comma list).
  * Back-compat: `CADDIE_SEED=budget` still works (one seed target). Default: `seed:retired`.
  */
@@ -155,6 +166,9 @@ const CROP_TARGETS = [
   // `-methodology` state — and only then may the two inner crops move it.
   { name: 'panel', selector: '[role="dialog"]' },
   { name: 'echo', selector: '.ap-echo' },
+  // The pay check's W row (U8) — below every row whose edit can stale it, so only an element crop,
+  // which scrolls the sheet, paints it.
+  { name: 'w-row', selector: '[role="dialog"] [data-assumption-seat="working-year-cost"]' },
   // The LAST methodology row (2026-10-20 — the working-year tax row, the longest of them): far below
   // the sheet's visible box, so only an element crop, which scrolls it into view, paints it.
   {
@@ -163,6 +177,10 @@ const CROP_TARGETS = [
   },
   // U13 (increment 2): the staleness surfaces + the frames the batch asks his eye on.
   { name: 'staleness-note', selector: '.cs-staleness-note' },
+  // The pay check's surfaces (U8): the result's standing line, the W question and the money picture.
+  { name: 'paycheck-note', selector: '.cs-paycheck-note' },
+  { name: 'w-question', selector: '.intake-shell .working-cost' },
+  { name: 'money-picture', selector: '.intake-shell .wy-ledger' },
   { name: 'reentry-notes', selector: '.reentry-notes' },
   { name: 'backup-door', selector: '.result-backup-door' },
   { name: 'hero-lead', selector: '.reveal__lead' },
@@ -261,6 +279,13 @@ const FOLD_TARGETS = [
   // Medicare-pricing unit: the door is now DOM-ordered BELOW the disclaimer; these boxes keep the
   // before/after on the record).
   '.cs-staleness-note',
+  '.cs-paycheck-note',
+  // The intake frames (increment 7): where the strip, the question, the picture and Continue sit.
+  '.answer-strip',
+  '.step-heading',
+  '.working-cost',
+  '.wy-ledger',
+  '.intake-nav',
   '.reentry-notes',
   '.save-actions',
   '.result-backup-door',
@@ -550,8 +575,8 @@ async function walkDoors(page: Page, outDir: string): Promise<void> {
   for (let i = 0; i < count; i++) {
     const door = doors.nth(i)
     const name = (await door.innerText()).trim()
-    // The assumptions door by its OWN stable stamp (Result.tsx:627), never by index: the
-    // `.result-recommend-invite` door (Result.tsx:587) is conditional, so door-4 is door-4 only
+    // The assumptions door by its OWN stable stamp (Result.tsx:644), never by index: the
+    // `.result-recommend-invite` door (Result.tsx:604) is conditional, so door-4 is door-4 only
     // on the plants where the solve is un-invitable. Read BEFORE the click — the row survives the
     // open, but nothing here should depend on that.
     const isAssumptions = (await door.getAttribute('data-door')) === 'assumptions'
@@ -561,7 +586,7 @@ async function walkDoors(page: Page, outDir: string): Promise<void> {
     // exact class, the same one `SequencingControl`/`HealthcareSheet` use. So on every target where
     // `solveInvitable` holds, the walk opened this door, CHECKED A GOAL RADIO as a side effect, then
     // waited 120s for a TwoFutures `svg.tf` that the GoalPicker never renders — and this door is
-    // FIRST in the doors DOM order (Result.tsx:582-595), so the walk died before reaching any other
+    // FIRST in the doors DOM order (Result.tsx:599-612), so the walk died before reaching any other
     // door, including the assumptions panel the Card 11 crops below live on. Measured RED at both
     // viewports on `seed:retired`, which is the walk's DEFAULT target.
     // This is the `datemixed` shape at a new site, and the header comment above already names it:
@@ -617,7 +642,7 @@ async function walkDoors(page: Page, outDir: string): Promise<void> {
     await expect(dialog).toBeHidden()
   }
   // The receipt tests the SAME predicate the crops do, not a weaker one: it fails iff the loop
-  // never entered the branch that writes them. `hatchReachable` (Result.tsx:326-335) is satisfied
+  // never entered the branch that writes them. `hatchReachable` (Result.tsx:343-352) is satisfied
   // by `focusKey`, and every walkDoors caller has already awaited
   // `main.result[data-answer-tier="final"]` — so a missing assumptions door means the door row
   // changed shape under the harness, which is exactly when a silent skip would be worst.
@@ -938,6 +963,40 @@ async function walkSolveStale(page: Page, outDir: string): Promise<void> {
 }
 
 /**
+ * The PAY CHECK walk (increment 7 — `intake:paycheck`; the header names the three households). A
+ * radio is picked with a NATIVE element click (`walkIntakeFork`'s idiom: the segment radios are sr-only
+ * 1px boxes, and a forced Playwright click can land off-target on the phone arm).
+ */
+async function walkIntakePaycheck(page: Page, outDir: string): Promise<void> {
+  const pick = async (name: string): Promise<void> => {
+    const radio = page.getByRole('radio', { name, exact: true })
+    await radio.evaluate((el) => (el as HTMLInputElement).click())
+    await expect(radio, 'the picked radio did not commit').toBeChecked()
+  }
+  const next = () => page.evaluate(() => document.querySelector<HTMLButtonElement>('.intake-nav .btn-primary')?.click())
+
+  await rewalkSeedTo(page, 'datecoststale', copy.qWorkingCostHeading, { final: true })
+  await captureState(page, path.join(outDir, 'w-step-stale'))
+  await next()
+  await expect(page.getByRole('alert')).toContainText(copy.errWorkingCostUnanswered)
+  await captureState(page, path.join(outDir, 'w-step-blocked'))
+  await pick(copy.workingCostDifferent)
+  await captureState(page, path.join(outDir, 'w-step-figure'))
+  await pick(copy.workingCostYes)
+  await next()
+  await expect(page.locator('.step-heading')).toHaveText(copy.qWorkingLedgerHeading)
+  await captureState(page, path.join(outDir, 'picture-answered'))
+
+  await rewalkSeedTo(page, 'dateshort', copy.qWorkingLedgerHeading, { final: true })
+  await captureState(page, path.join(outDir, 'picture-short'))
+  // Never color alone (R16): the bottom line's word and sign under each color-vision arm.
+  await captureCvdRegion(page, path.join(outDir, 'picture-short'), '.intake-shell .wy-row--bottom', 'bottom-line')
+
+  await rewalkSeedTo(page, 'datesolo', copy.qWorkingLedgerHeading)
+  await captureState(page, path.join(outDir, 'picture-unknown'))
+}
+
+/**
  * The INTAKE walk (increment 4 — `intake:fork`): the Medicare-extras payment fork is
  * intake-ONLY — every seed/vault target bypasses the guided flow entirely, so the fork's
  * blank-start frame, its half-answer R19 block, and the mixed-provenance state (one entered
@@ -1124,10 +1183,9 @@ for (const target of TARGETS) {
               target.key === 'recold',
           })
         } else if (target.kind === 'intake') {
-          if (target.key !== 'fork') {
-            throw new Error(`unknown intake walk "${target.key}" — only intake:fork exists`)
-          }
-          await walkIntakeFork(page, outDir)
+          if (target.key === 'fork') await walkIntakeFork(page, outDir)
+          else if (target.key === 'paycheck') await walkIntakePaycheck(page, outDir)
+          else throw new Error(`unknown intake walk "${target.key}" — intake:fork and intake:paycheck exist`)
         } else if (target.kind === 'solve') {
           await walkSolve(page, target.key, outDir)
         } else {

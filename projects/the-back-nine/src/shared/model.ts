@@ -1532,6 +1532,19 @@ export type WorkingYearLedgerEvent =
   | { readonly code: WorkingYearLedgerPersonEventCode; readonly person: number }
   | { readonly code: WorkingYearLedgerHouseholdEventCode }
 
+/** Why year 0's held-back Social Security does or does not raise a benefit later in the run (the
+ *  earnings-test schedule's crediting rule, KTD11). More than one can hold in one year. */
+export interface WorkingYearHeldBackRaise {
+  /** Some held-back month is credited: it raises that benefit later, after its payee's full retirement age. */
+  readonly credited: boolean
+  /** Some raises nothing in the run only because its year may hold someone's full retirement age (the
+   *  earner's stopgap, or the payee's own) — the law credits the months before it: gloomy, until the
+   *  birth-month ask. */
+  readonly untilBirthMonth: boolean
+  /** Some was held from someone past full retirement age all year, whom the law credits nothing. */
+  readonly pastFullRetirementAge: boolean
+}
+
 /** Year 0 of the picture: every line of the year's check (R5), grouped. Σ `comingIn` dollars − Σ `goingOut`
  *  dollars === `bottomLine`, exactly (largest remainder). */
 export interface WorkingYearLedgerYear0 {
@@ -1548,6 +1561,9 @@ export interface WorkingYearLedgerYear0 {
    *  never in the sum (R16). Its own nearest dollar. */
   readonly socialSecurityHeldBack: WorkingYearLedgerAmount
   readonly withheldBasis: WorkingYearWithheldBasis
+  /** Whether what was held back raises a benefit later in the run, by reason — the Social Security line's
+   *  own words. All false when nothing is held back. */
+  readonly heldBackRaise: WorkingYearHeldBackRaise
   readonly goingOut: {
     /** Federal Social Security and Medicare payroll tax (R8). */
     readonly payrollTax: WorkingYearLedgerAmount
@@ -1558,6 +1574,12 @@ export interface WorkingYearLedgerYear0 {
     /** W, what the household says a working year costs. */
     readonly workingYearCost: WorkingYearLedgerAmount
   }
+  /** The STATE slice of `goingOut.taxOnOutsideIncome` — never in the sum (that line already holds it). $0
+   *  wherever the run charges no state tax on this income (no income tax, or an unpriced state); for a
+   *  class-based state (PA) it is the tax on the income OTHER than pay only — PA's tax on pay is the
+   *  household's to put in W. Its own nearest dollar. The tax line's label reads it, so the line never
+   *  claims a state tax the run did not charge (the b9-5 Caddie re-walk). */
+  readonly taxOnOutsideIncomeState: WorkingYearLedgerAmount
   /** Signed whole dollars: left over (≥ 0) or short (< 0). On the cash `c` snapped to the cent,
    *  `c < 0 ? −⌈−c⌉ : ⌊c⌋` — a draw reads at least "Short $1", a surplus rounds down, never −0. */
   readonly bottomLine: number
@@ -2098,6 +2120,16 @@ export interface ScenarioV3 {
    *  `heirBracket`, so editing it demotes a saved recommendation through the shipped path with
    *  no new wiring. */
   readonly heirBracket?: number
+  /** The household's answer to "what does a year cost while someone still works?" — W, the pay
+   *  check's one new setup answer (`docs/plans/features/working-year-pay-check-build-spec.md`
+   *  KTD4). ADDITIVE-OPTIONAL within schemaVersion 3 (the `heirBracket` precedent: no version
+   *  bump, never seeded); a user fact carried through `...draft` at Save. Absent ⇒ no working-year
+   *  check, and every run is byte-identical to a build without it (R18). The intake REQUIRES it on
+   *  the date route through the W step's gate, never through `missingRequiredFacts` (KTD3: the
+   *  codec keeps it optional). Its figure is ANNUAL real dollars on both kinds; `entryPeriod` is a
+   *  display unit only (the `spendEntryPeriod` precedent). TOP-LEVEL so the R7 registry compile
+   *  gate reaches it (the `medicareExtrasByPerson` reasoning). */
+  readonly workingYearCost?: WorkingYearCostV3
   /** Act-4 · U17 — the SAVED RECOMMENDATION record (the spec's Q5 payload). ADDITIVE-OPTIONAL
    *  within schemaVersion 3 (the chosenGoal/rothConversion/savedAt tolerant-reader precedent —
    *  a pre-U17 vault lacks the field and decodes unchanged; NO schemaVersion bump). ABSENCE IS
@@ -2178,7 +2210,7 @@ export interface SavedRecommendationV3 {
    *  2026-09-03 edit-time kill the pending arm does too; produced by the private `fingerprintOf` at
    *  `:698`) — the identity of the run this record actually describes — and NEVER from a fresh
    *  recompute taken at save time. The trichotomy's `freshFingerprint` is the OTHER operand,
-   *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:712`): what the draft WOULD solve
+   *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:718`): what the draft WOULD solve
    *  now. The two are equal at the mint and diverge afterwards, and that divergence IS the mechanism
    *  — so minting from the fresh side instead would stamp the record with inputs the recommendation
    *  was never computed against, which on a stale draft is a calm-but-wrong memory rather than a
@@ -2358,6 +2390,42 @@ export interface MedicareExtrasEntryV3 {
   readonly adoptionVintage?: string
 }
 
+/** The two ways a household answers W (the pay check's KTD4): `confirmed` — "yes, the quote is
+ *  what a working year costs" — or `entered`, a figure of its own. A closed vocabulary: build 2's
+ *  surplus answer gets its own top-level key, never a new kind here. */
+export const WORKING_YEAR_COST_KINDS = ['confirmed', 'entered'] as const
+export type WorkingYearCostKind = (typeof WORKING_YEAR_COST_KINDS)[number]
+
+/** Which state income tax W was asked to hold, persisted with the answer (KTD18) so a change of
+ *  state is never silent: `agi-derived` (NC's kind — the tool charges it on pay, so W leaves it
+ *  out), `class-based` (PA's kind — the tool does not, so W keeps PA's tax on pay in), `none` (no
+ *  state income tax), `unpriced` (a state the tool does not price, or none answered — W keeps it
+ *  in). A shared-leaf vocabulary, deliberately NOT the engine's `StateBaseSystem` names; the
+ *  mapping lives in `src/intake/workingYearQuote.ts`, exhaustive over the engine's type. */
+export const WORKING_YEAR_STATE_TAX_READINGS = ['agi-derived', 'class-based', 'none', 'unpriced'] as const
+export type WorkingYearStateTaxReading = (typeof WORKING_YEAR_STATE_TAX_READINGS)[number]
+
+/** The persisted W answer (KTD4), discriminated on `kind`. Both figures are ANNUAL real dollars,
+ *  > 0 and ≤ the engine's dollar ceiling (codec-enforced). A real union, unlike the extras
+ *  entry's loose interface: the draft never holds a figure-less `entered` (the type-a-figure
+ *  choice lives in component state until a valid figure commits). */
+export type WorkingYearCostV3 =
+  | {
+      readonly kind: 'confirmed'
+      /** The quote the household said yes to (annual real $), kept so a later move of the
+       *  quote's inputs reads as stale (KTD21), never silent. */
+      readonly quotedReal: number
+      readonly stateTaxReading: WorkingYearStateTaxReading
+    }
+  | {
+      readonly kind: 'entered'
+      /** The household's own figure (annual real $). */
+      readonly amountReal: number
+      /** The unit the figure was typed in — display only; the figure is already annual. */
+      readonly entryPeriod: SpendEntryPeriod
+      readonly stateTaxReading: WorkingYearStateTaxReading
+    }
+
 /** The persisted structured tax vintage (P3·U13 → the controls-surface clock). Keyed on the
  *  two things a real statutory/table change moves: the table year and the legal-basis
  *  sentence (verbatim from the canonical entry — any wording change is a vintage bump, the
@@ -2376,6 +2444,10 @@ export interface DateVintageV3 {
   /** The ticker-blend/TDF static-snapshot as-of date (ISO), aggregated across the
    *  classification table (`BLEND_SNAPSHOT_AS_OF`). */
   readonly blendSnapshotAsOf: string
+  /** The working-years table's vintage (`WORKING_YEARS_VINTAGE`: payroll tax and the Social
+   *  Security earnings test — the pay check's U13). Additive-optional: a save without it is not
+   *  comparable, so the clock stays quiet (the healthcare sub-vintage precedent). */
+  readonly workingYearsVintage?: string
 }
 
 /** The persisted state-tax vintage (the state-tax unit → the `controls.stateTaxMoved` clock in
@@ -2570,6 +2642,7 @@ export const SCENARIO_V3_FIELDS = [
   'stateTaxVintage',
   'chosenGoal',
   'heirBracket',
+  'workingYearCost',
   'savedRecommendation',
 ] as const
 

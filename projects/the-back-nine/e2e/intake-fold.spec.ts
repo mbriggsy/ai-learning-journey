@@ -11,8 +11,9 @@ import { copy } from '../src/ui/copy'
  * 1. THE SCROLL RESET. The DOCUMENT is the scroller (`.intake-shell` declares no `overflow`, and
  *    neither does `html` or `body`), so the scroll offset survives a step swap. On this viewport
  *    the reader routinely has to scroll to reach Continue — measured on the walk this gate was
- *    built from, Continue's bottom edge sits below the 862 px window at scroll 0 on SIX of this
- *    route's twelve steps, reaching 1430 px on the Social Security step — and the answer strip,
+ *    built from (2026-09-08, when this route had twelve steps; the pay check's two make it
+ *    fourteen), Continue's bottom edge sat below the 862 px window at scroll 0 on SIX of them,
+ *    reaching 1430 px on the Social Security step — and the answer strip,
  *    which sits ABOVE the step heading, is what a carried offset pushes off the top. On that walk
  *    four steps arrived scrolled, three of them with the strip 48 px, 210 px and 152 px above the
  *    fold. `useFocusHeadingOnStep` (src/intake/a11y.ts) now focuses with `preventScroll` and then
@@ -35,10 +36,12 @@ import { copy } from '../src/ui/copy'
  *    second h2 would break every singular level-2 query in the intake suite.
  *
  * 3. THE NAV YIELD. While an editor is open the step's own Continue/Back must be GONE, not merely
- *    styled: the other-income step is the LAST step and its `fields` are empty, so one tap on a live
- *    Continue fires the flow's terminal `onComplete()`, unmounts the editor and takes a fully typed
- *    pension with it. The rule is a single CSS selector (src/intake/intake.css:507), and it named only
- *    the ACCOUNT editor's root until 2026-09-08 — so this arm opens BOTH editors, never just one.
+ *    styled: the other-income step's `fields` are empty, so one tap on a live Continue always
+ *    advances — into the pay check's W step on this date route, or through the flow's terminal
+ *    `onComplete()` on the all-retired route, where other income is the LAST step — and either way
+ *    the step re-keys, the editor unmounts and takes a fully typed pension with it. The rule is a
+ *    single CSS selector (src/intake/intake.css:514), and it named only the ACCOUNT editor's root
+ *    until 2026-09-08 — so this arm opens BOTH editors, never just one.
  *
  * NOT AN ARM: the editor's own scroll-into-view (`focusHeading`'s `preventScroll: false` default,
  * src/intake/a11y.ts) — it is not observable on this route, MEASURED 2026-09-08 rather than assumed.
@@ -229,10 +232,13 @@ test.describe('the phone intake fold', () => {
         now.innerHeight,
       )
     }
-    // The walk must actually have happened: datesolo's sequence is 12 steps
+    // The walk must actually have happened: datesolo's sequence is 14 steps
     // (names · work · pay · Social Security · state · spend · health quote · employer coverage ·
-    // out-of-pocket · work investment · accounts · other income), so 11 arrivals follow the first.
-    expect(arrivals, 'the walk advanced through fewer steps than datesolo has').toBeGreaterThanOrEqual(11)
+    // out-of-pocket · work investment · accounts · other income · working-year cost · money picture),
+    // so 13 arrivals follow the first. The W step passes on datesolo's OWN confirmed W (a W-less date
+    // draft would stall here on the W gate); the money picture reads its calm unknown line (datesolo
+    // is the refusal witness), and its Continue is the terminal advance that leaves the flow.
+    expect(arrivals, 'the walk advanced through fewer steps than datesolo has').toBeGreaterThanOrEqual(13)
   })
 
   test('the account editor names itself and takes focus; Never mind hands focus to the list', async ({ page }) => {
@@ -289,8 +295,9 @@ test.describe('the phone intake fold', () => {
     const nav = page.locator('.intake-nav')
 
     // Walked in sequence: accounts comes before other income, so one re-walk covers both. The
-    // other-income half is the one that matters most — that step is LAST and its `fields` are
-    // empty, so a live Continue there is a silent discard, not merely a broken-looking screen.
+    // other-income half is the one that matters most — its `fields` are empty, so a live Continue
+    // there always advances (into the W step here) and the open editor is a silent discard, not
+    // merely a broken-looking screen.
     for (const step of [
       { heading: copy.qAccountsHeading, add: copy.addAccount, cancel: copy.accountCancel },
       { heading: copy.qOtherIncomeHeading, add: copy.addOtherIncome, cancel: copy.otherIncomeCancel },

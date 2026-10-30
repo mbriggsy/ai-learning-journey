@@ -611,7 +611,8 @@ describe('the accounts step — loop mechanics through the real flow', () => {
   it('add → list → edit → remove, all through the single draft (back-nav-safe)', () => {
     const m = modelWith({})
     render(<Harness model={m} />)
-    // Walk to the accounts step (the last step).
+    // Walk to the accounts step (the other-income loop follows it, and on the date route the pay
+    // check's two steps).
     while (screen.getByRole('heading', { level: 2 }).textContent !== copy.qAccountsHeading) {
       fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
     }

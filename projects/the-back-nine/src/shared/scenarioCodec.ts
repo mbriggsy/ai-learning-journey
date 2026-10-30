@@ -41,6 +41,8 @@ import {
   STATE_ROSTER,
   TICKER_CLASSIFICATION_CHOICES,
   WORK_STATUSES,
+  WORKING_YEAR_COST_KINDS,
+  WORKING_YEAR_STATE_TAX_READINGS,
   type AnyScenario,
   type Scenario,
   type ScenarioV2,
@@ -186,7 +188,7 @@ function needUnitFraction(o: Obj, field: string, path: string): void {
 function needColaRate(o: Obj, field: string, path: string): void {
   needFinite(o, field, path)
   const n = o[field] as number
-  // Reuse the ONE shared predicate the two intake gates use (sanity.ts:534, OtherIncomeEntry.tsx:217)
+  // Reuse the ONE shared predicate the two intake gates use (sanity.ts:567, OtherIncomeEntry.tsx:217)
   // so all THREE gates run byte-identical range logic — the band's inclusivity can never silently
   // desync via a hand-copied comparison (insight 020). needFinite ran first (colaRateInRange assumes a
   // finite caller — a NaN passes every relational compare, insights 008/010).
@@ -540,11 +542,15 @@ function checkTaxVintageV3(v: unknown, path: string): void {
   needString(v, 'legalBasis', path)
 }
 
-/** P3·U13 — the date-surface vintage (same atomic-object contract). */
+/** P3·U13 — the date-surface vintage (same atomic-object contract). ONE additive-optional member
+ *  rides inside it: the working-years table's vintage (the pay check's U13) — a stamp minted before
+ *  that table existed legitimately lacks it, and absence reads not-comparable (the clock stays
+ *  quiet), never "unchanged" (the healthcare sub-vintage precedent above). */
 function checkDateVintageV3(v: unknown, path: string): void {
   needObject(v, path)
   needInteger(v, 'contributionYear', path)
   needString(v, 'blendSnapshotAsOf', path)
+  if (v.workingYearsVintage !== undefined) needString(v, 'workingYearsVintage', path)
 }
 
 /** The state-tax vintage stamp. Each field is a serialized per-state profile (a plain string);
@@ -851,6 +857,51 @@ function checkV3Fields(o: Obj): string[] {
     const hb = o.heirBracket as number
     if (hb < 0 || hb >= 1) {
       throw new Corrupt(`scenario.heirBracket: expected a fraction in [0, 1) (got ${hb})`)
+    }
+  }
+  // The pay check's W, what a year costs while someone still works (`docs/plans/features/
+  // working-year-pay-check-build-spec.md` KTD4; additive-optional, the heirBracket precedent: no
+  // schemaVersion bump). One kind-discriminated object over a CLOSED vocabulary. On the restore path
+  // every check below is this codec's alone: the engine's `validateParams` sees only the figure
+  // (through `buildDateInput`), never the kind, the period or the reading.
+  //  · `stateTaxReading` is required on BOTH kinds: it is what makes a change of state stale the
+  //    answer (R4), so a missing one would read "never stale" forever. Its vocabulary is the
+  //    persisted one, never the engine's `StateBaseSystem` names (`federal-agi-derived` is refused).
+  //  · The kind's figure (confirmed → `quotedReal`, entered → `amountReal`, both ANNUAL real $) runs
+  //    finite FIRST, then > 0, then ≤ the ceiling — the `checkRothConversionPlanV3` shape, NOT the
+  //    extras' `needNonNegativeDollar`, which admits 0. KTD4 refuses ≤ 0: intake never commits an
+  //    entered $0 (`working-cost-zero`) and never mints a confirmed $0 quote, so a present ≤ 0 figure
+  //    is a writer bug. The ceiling is insight 046 (finiteness is not range): the engine's own W bound
+  //    (R19) would otherwise throw at run time instead of this decode failing calm.
+  //  · The other kind's fields are refused (the extras biconditional, both directions): a `confirmed`
+  //    carrying `amountReal` or `entryPeriod`, or an `entered` carrying `quotedReal`, is a mismatched
+  //    pair no writer emits. An UNKNOWN extra key still passes (the tolerant reader, header).
+  //  · `entered` requires its `entryPeriod`, the unit the figure was typed in (display only, KTD4).
+  if (o.workingYearCost !== undefined) {
+    const p = 'scenario.workingYearCost'
+    const w = o.workingYearCost
+    needObject(w, p)
+    needVocab(w, 'kind', WORKING_YEAR_COST_KINDS, p)
+    needVocab(w, 'stateTaxReading', WORKING_YEAR_STATE_TAX_READINGS, p)
+    const confirmed = w.kind === 'confirmed'
+    const figure = confirmed ? 'quotedReal' : 'amountReal'
+    needFinite(w, figure, p)
+    if ((w[figure] as number) <= 0) {
+      throw new Corrupt(`${p}.${figure}: must be > 0 (a $0 answer is refused at intake, never persisted)`)
+    }
+    needAtMostMaxDollar(w, figure, p)
+    if (confirmed) {
+      if (w.amountReal !== undefined) {
+        throw new Corrupt(`${p}.amountReal: only meaningful when kind is 'entered' (writer bug)`)
+      }
+      if (w.entryPeriod !== undefined) {
+        throw new Corrupt(`${p}.entryPeriod: only meaningful when kind is 'entered' (writer bug)`)
+      }
+    } else {
+      if (w.quotedReal !== undefined) {
+        throw new Corrupt(`${p}.quotedReal: only meaningful when kind is 'confirmed' (writer bug)`)
+      }
+      needVocab(w, 'entryPeriod', SPEND_ENTRY_PERIODS, p)
     }
   }
   // ─────────────────────────────────────────────────────────────────────────────────────────

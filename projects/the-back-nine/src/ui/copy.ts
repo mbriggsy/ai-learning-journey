@@ -242,8 +242,14 @@ export const copy = {
   employerCoverageLegend: 'Coverage for the one who has stopped working',
   employerCoverageCovered: 'Covered by the other one’s plan at work',
   employerCoverageOwn: 'Buying their own coverage',
+  // Re-worded with the pay check (insight 086, Phase B): the old "counts no health costs for the one
+  // who has already stopped" became false once W can carry that spouse's share of the plan at work.
+  // The tool prices no premium of its own for her BEFORE her Medicare starts; from then the run bills
+  // her Medicare from savings while the other still works (the money picture names that year — the
+  // b9-3 review's catch: "adds no health cost of its own" had no end). What the plan costs from pay is
+  // the household's to put in W, asked a few steps on (date route only, like this step).
   employerCoverageHelp:
-    'While one of you is still working, the tool counts no health costs for the one who has already stopped — which only holds if a plan at work covers them both.',
+    'While one of you is still working, the tool adds no health cost of its own for the one who has already stopped, until their Medicare starts. That only holds if a plan at work covers you both. Once their Medicare starts, the tool adds it, paid from savings. What the plan at work costs from pay belongs in your figure for a working year, which comes up a few questions on.',
   qOopHeading: 'Out-of-pocket health costs',
   oopLabel: 'A typical year, out of pocket',
   // The containment contrast stays VERBATIM ("should already be inside your spending figure" — the
@@ -438,6 +444,144 @@ export const copy = {
   errIncomeAlimonyDateRequired: 'Still need when the agreement was signed.',
   errIncomeAnnuityKindRequired: 'Still need the kind of annuity.',
   errIncomeExclusionRequired: 'Still need the tax-free part of the annuity.',
+  // --- THE PAY CHECK'S W STEP, ITS MONEY PICTURE AND THE PANEL'S W ROW (U8;
+  //     `docs/plans/features/working-year-pay-check-build-spec.md` KTD3, KTD5, KTD12, KTD17, KTD18,
+  //     KTD21). Date route only, asked after the other-income loop: W is what a year costs while
+  //     either of you still works, and the tool checks each working year's pay against it. Every
+  //     figure rides a slot (`slots.workingCost*` / `slots.workingLedger*`), never a typed number
+  //     here. The Hawk's narrowed ban binds every string ("conservative", "worst case", "only
+  //     later" never appear — `copyGuard.test.ts`); no key is a verdict or control key.
+  //     PILOT-DRAFTED, shipped flagged under the batched-oracle law (KTD19). ---
+  qWorkingCostHeading: 'What does a year cost while you’re still working?',
+  // The STATIC legend under the quoted figure (KTD17): the figure sits in its own slot above it, so
+  // the fieldset's accessible name never carries a number.
+  workingCostLegend: 'Is that about what a year costs while you’re working?',
+  workingCostYes: 'Yes, that’s about right',
+  workingCostDifferent: 'No — I’ll enter a different figure',
+  workingCostAmountLabel: 'What a year costs while you’re working',
+  // THE HELP (R1, KTD18): what W holds — two short lists for every household (what to count, what
+  // the tool works out itself; `WorkingCostQuestion`'s HELP_COUNT / HELP_LEAVE_OUT order them), then
+  // ONE state sentence chosen by the draft's state-tax reading (`workingYearStateTaxReading`,
+  // draft-keyed, so it always agrees with the spend step's help). Lists, not one paragraph: the b9-5
+  // Caddie re-walk's five reading seats stalled on the 111-word paragraph (b9-3's card predicted it).
+  // The premiums are the ones paid TODAY for anyone not on Medicare yet: a retired spouse's share of
+  // the plan at work stays in W after her Medicare starts (Phase B ruling 1 — the register's entry,
+  // measured gloomy), and a working spouse's own premium counts even when the other is already on
+  // Medicare (the b9-3 Caddie walk: "before anyone's Medicare starts" read as nothing to count on
+  // `dateshort`, rosy). A plan bought on one's own can only be the one still working's — the stopped
+  // spouse buying their own is refused (`employerCoverageUnpriced`). The count list's Medicare item is
+  // the stopgap for the register's *Someone still working after 65 is assumed to stay off Medicare…*:
+  // the run charges a worker no Medicare until the stop (`medicareOnsetForPerson`), so "leave out
+  // Medicare premiums" alone told a worker on Medicare to drop a cost nothing else counts. Its reason
+  // names WHOSE work (b9-5: "only once work stops" read as the household's, which is false for a
+  // retired spouse the run charges while the other works). It goes when that build lands.
+  workingCostHelpCountLead: 'Count everything a year costs while either of you still works:',
+  workingCostHelpCountSpend: 'what you spend',
+  workingCostHelpCountPremiums:
+    'the health premiums you pay today for anyone not on Medicare yet, whether taken from pay or for a plan someone still working buys on their own',
+  workingCostHelpCountMedicare:
+    'the Medicare premiums of anyone on Medicare who is still working (the tool starts charging someone’s Medicare only once they stop working)',
+  workingCostHelpCountLocalTax: 'any local tax on pay, like a city wage tax or earned-income tax',
+  workingCostHelpCountStateDeduction: 'any state disability or family-leave deduction from pay',
+  workingCostHelpLeaveOutLead: 'Leave out what the tool works out itself:',
+  workingCostHelpLeaveOutPayrollTax: 'federal Social Security and Medicare tax',
+  workingCostHelpLeaveOutIncomeTax: 'federal income tax',
+  workingCostHelpLeaveOutSavings: 'what you put into savings',
+  workingCostHelpLeaveOutMedicare: 'Medicare premiums for anyone who has stopped working',
+  // The four state sentences, one per reading (`WORKING_YEAR_STATE_TAX_READINGS`). The two that ask
+  // for the tax say ADD, never "keep … inside": tax on pay is taken from pay, so no spending figure
+  // holds it, and "keep" read as already counted (b9-5's walk — a rosy Yes in any state that taxes
+  // pay). The spend step told a priced-state household to leave state tax out of spending, and an
+  // unpriced one to keep only the tax on retirement income in it.
+  workingCostHelpStateUnpriced:
+    'State income tax isn’t priced for your state. If your state taxes pay, add that tax to this figure: it’s taken from pay, so it isn’t part of what you spend.',
+  workingCostHelpStateAgiDerived: 'Leave out state income tax as well — the tool works out your state’s tax on pay too.',
+  workingCostHelpStateClassBased:
+    'Add your state’s income tax on pay to this figure: the tool doesn’t work that tax out for working years, and your spending figure leaves state income tax out.',
+  workingCostHelpStateNone: 'Your state has no income tax, so there’s no state tax to count.',
+  // The W gate (KTD3; one message for absent and stale — the stale note, role="note", already says
+  // what moved). Shown only after a blocked Continue, through the shared FieldError.
+  errWorkingCostUnanswered: 'This answer is how the tool checks each working year — answer it above to go on.',
+  // `errSpendZero`'s mirror (KTD17).
+  errWorkingCostZero: 'A working year can’t cost $0 — enter what a year costs while you’re still working.',
+  // THE MONEY PICTURE (R16, KTD12): the year-0 check in the household's own numbers, then every later
+  // working year that changes or runs short. Grouped `<dl>`s, each under a legend that says "a year";
+  // outflows carry a minus sign as well as their group, and the bottom line carries a word AND a
+  // sign — never color alone.
+  qWorkingLedgerHeading: 'How a working year adds up',
+  workingLedgerComingIn: 'Coming in, a year',
+  workingLedgerGoingOut: 'Going out, a year',
+  workingLedgerBottomLine: 'The bottom line, a year',
+  workingLedgerAlsoFromSavings: 'Also paid from savings, a year',
+  workingLedgerPay: 'Pay',
+  workingLedgerSocialSecurity: 'Social Security',
+  workingLedgerOtherIncome: 'Pensions and other income',
+  workingLedgerPayrollTax: 'Social Security and Medicare tax on pay',
+  // The tax line names what it holds: "federal and state" only where the run charged a state slice
+  // (`taxOnOutsideIncomeState`); "federal" elsewhere — "Income tax" alone read as every income tax, so
+  // an unpriced household's Left over looked like it was after a state tax the run never charged (the
+  // b9-5 re-walk, three seats, survived refutation).
+  workingLedgerIncomeTaxFederal: 'Federal income tax on that income',
+  workingLedgerIncomeTaxFederalState: 'Federal and state income tax on that income',
+  // …and where the W step asked the household to fold its state's tax on pay into W, where it went: an
+  // unpriced state (the tool can't say whether it taxes pay), then a class-based one (PA taxes pay; the
+  // line may still hold its tax on the other income, which the run prices).
+  workingLedgerIncomeTaxStateInW:
+    'If your state taxes pay, that tax isn’t in this line: it belongs in your figure for a working year, below.',
+  workingLedgerIncomeTaxStatePayInW:
+    'Your state’s tax on pay isn’t in this line: it belongs in your figure for a working year, below.',
+  workingLedgerDeposits: 'What you put into savings',
+  workingLedgerCost: 'Your figure for a working year',
+  workingLedgerLeftOver: 'Left over',
+  workingLedgerShort: 'Short',
+  // The bottom line's own explanation, by sign (D7: show how the answer is reached). The left-over
+  // one is K9's gloomy simplification said where the reader meets it.
+  workingLedgerShortNote: 'A short year is taken from savings, in your withdrawal order, like any other withdrawal.',
+  workingLedgerLeftOverNote: 'Pay left over isn’t added to savings here — only what you said you put in counts.',
+  workingLedgerHeldBackNote:
+    'Each month Social Security holds back raises the benefit later, starting after full retirement age.',
+  // Where not every held-back month earns that raise in the run (the earnings-test schedule's own
+  // crediting rule, KTD11): each reason says what the run does, then "the rest" for any that do (the
+  // b9-3 review: the one sentence above read on every held-back row, false for both reasons below).
+  workingLedgerHeldBackNoteUntilBirthMonth:
+    'Until the tool asks your birth month, it counts no later raise for months held back in the year someone reaches full retirement age.',
+  workingLedgerHeldBackNotePastFra:
+    'What’s held back from someone already past full retirement age never raises their benefit later.',
+  workingLedgerHeldBackNoteRest: 'The rest raises the benefit later, starting after full retirement age.',
+  workingLedgerMedicare: 'Medicare Part B',
+  workingLedgerMedicareExtras: 'Part D, Medigap or Medicare Advantage',
+  workingLedgerSavingsTax: 'Plus any income tax on what savings pays out, which the answer counts too.',
+  workingLedgerLaterHeading: 'In later working years',
+  // A later year in the full-retirement-age year (KTD11's stopgap, K10): its bottom line reads the
+  // most that year can hold back.
+  workingLedgerLaterAtMost: 'That year holds back the most Social Security it can, until the tool asks your birth month.',
+  // A short year that no single event explains (KTD12's `erosion`).
+  workingLedgerErosion: 'No single change causes it — small shifts from year to year add up.',
+  // The household-wide later-year reasons (KTD12's household event codes); the per-member ones are
+  // slots that take `who` — the entered name, or one of these two when no name was given.
+  // One code covers three moves (KTD12's `earningsTestStep`): the held-back amount moves, the hold-back
+  // stops, or the raise for months already held back begins — so the words name both halves.
+  workingLedgerEventEarningsTest:
+    'Social Security changes because of pay: what it holds back moves, or the raise for months it held back begins.',
+  workingLedgerEventStateRate: 'Your state’s income-tax rate changes.',
+  workingLedgerEventSeniorBonusEnds: 'The extra tax deduction for people 65 and over ends.',
+  workingLedgerWhoYou: 'you',
+  workingLedgerWhoSpouse: 'your spouse',
+  // The `'unknown'` face: no `<dl>`, no zeros — one calm line, then the strip's own names.
+  workingLedgerUnknownLead: 'There’s no money picture to show yet.',
+  // …where nothing left to enter would draw one (every blocker is one this version cannot price, or
+  // the engine refused the run): "yet" there promised an unlock the strip beside it rules out.
+  workingLedgerUnknownLeadFinal: 'There’s no money picture to show.',
+  // The walk's unknown face points at the answer strip instead of echoing it: the strip sits at the
+  // top of the same screen and already names every blocker word for word (b9-5's walk read the pair
+  // twice on one screen). The panel's row keeps the echo — its sheet covers the strip.
+  workingLedgerUnknownSeeStrip: 'What stands in the way is named at the top of this page.',
+  workingLedgerUnknownRefused: 'The tool can’t work out a working year from these answers.',
+  // The panel's W row (U8): its name, the value line for the two faces with no figure, and the one
+  // announcement when an edit in the open panel makes the answer stale (KTD21).
+  assumptionWorkingCostName: 'What a year costs while you’re working',
+  assumptionWorkingCostUnanswered: 'Not answered yet — the working years aren’t checked until it is.',
+  assumptionWorkingCostStaleAnnounce: 'Your figure for a working year no longer matches your spending or state.',
   // --- the provisional answer strip (D1 — surfaces and sharpens during entry;
   //     D2 builds the full state-adaptive surface over U6/U7) ---
   // A STABLE, state-agnostic region name: the strip's accessible label must not
@@ -1147,7 +1291,7 @@ export const copy = {
     'That figure doesn’t count what you’d pay for drug and supplement plans — you answered about nothing for them, so the lines below add none.',
   // ⚠️ "the benchmark premium itself" WAS IN BOTH LISTS AND WAS FALSE — struck 2026-08-03.
   // The benchmark (SLCSP) is not merely counted, it is the ANCHOR of the whole credit:
-  // `intakeMap.ts:685` builds `slcsp` into the overlay params, `taxOverlay.ts:285` calls it "the
+  // `intakeMap.ts:728` builds `slcsp` into the overlay params, `taxOverlay.ts:285` calls it "the
   // §36B PTC basis", and `slidingScalePtc` (healthOverlay.ts:222-232) computes
   // `max(0, slcsp − applicable% × MAGI)` FROM it. Telling the reader the tool ignores the one
   // figure the discount is calculated from is the same false-negation shape O16 fixed on the Roth
@@ -1156,7 +1300,7 @@ export const copy = {
   // STRUCK, NOT REPLACED WITH AN AFFIRMATION, and that is deliberate. The O16 house pattern is
   // affirm-with-residual, but these two strings are gated on `statePriced` ALONE
   // (`stateTaxDisclosure.ts:144`) — they carry no ACA-priced axis, so the identical sentence also
-  // ships to a Medicare-only household (`intakeMap.ts:690-693`) that has no benchmark at all.
+  // ships to a Medicare-only household (`intakeMap.ts:733-736`) that has no benchmark at all.
   // "The benchmark is already in these numbers" would be a NEW false claim for that population.
   // Affirming here needs the three-state gate the Roth strings have; until then, silence is true.
   //
@@ -1405,13 +1549,13 @@ export const copy = {
   //
   // ⚠️ THE TOGGLE SETS THE ENTRY UNIT TOO, AND THE OLD SENTENCE HID IT (fixed 2026-08-03).
   // It read "switching this never changes the amount" — but the SHOWN figure jumps exactly 12×
-  // (`spendDisplayed`, AssumptionPanel.tsx:344-349), so the reader watches the number move while
+  // (`spendDisplayed`, AssumptionPanel.tsx:516-521), so the reader watches the number move while
   // being told nothing moved. The natural repair is to retype the old digits, and the panel's own
-  // commit (AssumptionPanel.tsx:607-617, the `entered * 12` arm at :614) then multiplies by 12
+  // commit (AssumptionPanel.tsx:779-789, the `entered * 12` arm at :786) then multiplies by 12
   // under 'month' — so a household "correcting" 78,000 back to 6,500 under 'Each year' commits a
-  // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:258) hard-disarms
-  // `spend-period-unconfirmed` (sanity.ts:348-371, the disarm read at :359) on this surface, and
-  // 6,500 is under SPEND_AMBIGUOUS_MIN (sanity.ts:75) regardless — so the rule could not have
+  // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:422) hard-disarms
+  // `spend-period-unconfirmed` (sanity.ts:381-404, the disarm read at :392) on this surface, and
+  // 6,500 is under SPEND_AMBIGUOUS_MIN (sanity.ts:89) regardless — so the rule could not have
   // caught it even armed. The replacement must therefore say BOTH halves — the money is
   // unchanged AND the next figure you enter is read in the unit you just picked. A draft that said
   // only "the same money either way" was REJECTED for exactly that omission.
@@ -1507,6 +1651,51 @@ export const copy = {
     'Investment income can be taxed like pay or at the lower rate for dividends and gains, and the tool doesn’t know your split. So it figures the tax on that income from savings a few ways and uses whichever comes out highest. Depending on your mix, your real tax could still be higher or lower.',
   assumptionWorkingYearTaxOmissions:
     'Investment income counts only for whoever is still working; the tool doesn’t ask for it from someone who has stopped. A federal surtax on higher investment income isn’t counted here, and it could apply.',
+  // THE PAY CHECK'S ARM of the same row (U9, R17; `docs/plans/features/working-year-pay-check-build-spec.md`).
+  // It renders INSTEAD of `assumptionWorkingYearTaxValue` for a household whose run carries W (the arm is
+  // the BUILT run's, `intakeMap.workingYearCostForRun` — insight 132); a household without W keeps the
+  // paragraph above verbatim (KTD22). One whole paragraph, never a split of the old key (insight 086): its
+  // first two sentences are rewritten (the check now runs on the household's own figure, and a short year is
+  // drawn from savings), its last two carry over word for word. The Readings and Omissions paragraphs render
+  // unchanged after it (the Omissions sentence already names the investment-income surtax, so it gets no
+  // key). Then ONE key per open register gap that can move the check, each naming its lean in plain words —
+  // looks better than it really is, could go either way, looks a little worse — in that pinned order. The
+  // build that closes a gap deletes its key. K14 is retired (the RIB-LIM read settled it); K15 is the
+  // 2026-10-29 measurement's (the register's *A retired spouse's share of the plan at work stays in W…*).
+  // The Hawk's narrowed ban binds every one; PILOT-DRAFTED, shipped flagged (KTD19).
+  assumptionWorkingYearCheckValue:
+    'While either of you is still working, the tool checks each year’s pay against what you said a working year costs. It adds your pay, any Social Security actually paid, and any other income, then takes out payroll tax, the income tax on that income and on your investment income, what you put into savings, and your working-year figure; if a year comes up short, the difference comes out of savings like any other withdrawal. Savings can still create taxable income in those years, like a Roth conversion, a required withdrawal, or money taken out for Medicare costs. That income is taxed on top of your pay and investment income, and the tax is paid from savings.',
+  // Leans better than real (K1–K5).
+  assumptionWorkingYearCheckEarlyCharge:
+    'A short year covered from a retirement account before age 59½ isn’t charged the 10% early-withdrawal penalty here, so that year looks a little better than it really is.',
+  assumptionWorkingYearCheckSelfEmployed:
+    'Someone who works for themselves pays both halves of Social Security and Medicare tax; the tool counts only an employee’s half, so the answer can look better than it really is.',
+  assumptionWorkingYearCheckIraDeduction:
+    'Every traditional IRA deposit is treated as tax-deductible, even where a plan at work and higher pay would limit the deduction, so the answer can look a little better than it really is.',
+  assumptionWorkingYearCheckRothCatchUp:
+    'Catch-up deposits the law now requires higher earners to make as Roth, after tax, are treated here as going in before tax, so the answer can look a little better than it really is.',
+  assumptionWorkingYearCheckFullYearClaim:
+    'A Social Security benefit that starts at full retirement age is counted for that whole year, though checks begin in the birth month, and the same goes for a widow’s or widower’s benefit that starts that year. Until the tool asks your birth month, that year can look a little better than it really is.',
+  // Could go either way (K6–K8).
+  assumptionWorkingYearCheckSteadyPay:
+    'Pay is one steady figure, in today’s dollars, all the way to the stop date. If your pay falls before you stop, the answer looks better than it really is; if it rises, a little worse.',
+  assumptionWorkingYearCheckWorkState:
+    'Your working years are taxed by the state you said you’ll live in once you stop, not the state you work in now, which could go either way.',
+  assumptionWorkingYearCheckWageFigures:
+    'Two Social Security figures that rise with wages each year are held at today’s level: the most of your pay that Social Security tax applies to, and the earnings limit that decides how much of an early benefit is held back. So pay above that most is taxed a little low, and a little more of an early benefit is held back than the law would.',
+  // Leans a little worse than real (K9–K13, K15).
+  assumptionWorkingYearCheckLeftOver:
+    'Pay left over in a working year isn’t added to savings — only what you said you put in counts — so the answer can look a little worse than it really is.',
+  assumptionWorkingYearCheckBirthMonth:
+    'In the year you reach full retirement age, the tool holds back the most Social Security that year could and counts no later raise for it, because it doesn’t know your birth month, so that year and the benefit after it can look a little worse than they really are.',
+  assumptionWorkingYearCheckPreTaxBenefits:
+    'Health premiums and health savings account money taken from pay before tax are treated as taxed, so the tax on pay reads a little high and the answer a little worse than it really is.',
+  assumptionWorkingYearCheckNoSocialSecurityJob:
+    'A job that doesn’t pay into Social Security, like some government jobs, is still charged Social Security tax here, so the answer can look a little worse than it really is.',
+  assumptionWorkingYearCheckEarlierHeldBack:
+    'If Social Security has already held back some of your checks because of your pay, before this plan starts, those months aren’t credited back later, so your later benefit can read a little low.',
+  assumptionWorkingYearCheckSpouseMedicare:
+    'If one of you is on the other’s plan at work and starts Medicare while the other still works, your working-year figure keeps paying for that plan after Medicare starts, so those years can look a little worse than they really are.',
   assumptionSsClaimAgeLabel: 'The age Social Security starts',
   errBirthYearBlank: 'The plan needs a birth year to run — mind putting one back?',
   // --- P3·U13 — the re-entry gate + the staleness notes ---------------------------------
@@ -1580,6 +1769,19 @@ export const copy = {
   // either route, so a household with no date is now covered by the aggregate line.
   stalenessDate:
     'The retirement-account contribution limits behind your date have been updated since your save — this reading uses today’s.',
+  // The pay check's U13 — the working-years clock (`WORKING_YEARS_VINTAGE`: payroll tax and the
+  // Social Security earnings test). Named only where the run reads the table: a date-route plan
+  // that answered W (the exposure read `workingYearCost`). It joins `rulesMoved`, like its
+  // siblings; no direction is claimed. PILOT-DRAFTED, shipped flagged (KTD19).
+  stalenessWorkingYears:
+    'The payroll tax and Social Security figures behind your working years have been updated since your save — this reading uses today’s.',
+  // The pay check's KTD21 — the household's own W answer no longer matches what it was given
+  // against (the quote's inputs, or the state-tax reading). It is NOT a rules change, so it feeds
+  // `anyStale` only, never the hero's "today's rules" echo; the engine keeps using the last figure
+  // the household gave (R4). A static, digit-free line (this seam takes no draft, so it cannot
+  // quote the figure). PILOT-DRAFTED, shipped flagged (KTD19).
+  stalenessWorkingYearCost:
+    'Your figure for what a year costs while you’re working no longer matches the spending or state you entered. Worth a look.',
   // THE AGGREGATE (U17 §S4, bucket 3) — the ONE nameless sentence for every clock that fired
   // where no producer read can attribute it to THIS household. Its members after the F-pass
   // correction: the BLEND snapshot for a household that DOES read the ticker table (the stamp is
@@ -1674,7 +1876,7 @@ export const copy = {
   // the gesture returns before `appModel.update` and before the write, so on BOTH routes nothing
   // reached the device. The obligation as originally filed — "we saved your plan, we could not save
   // the recommendation" — was drafted for a save-proceeds-then-drops-the-atom flow that
-  // scenarioCodec.ts:660-664 instructs S5 to make UNREACHABLE. Shipping that sentence would have
+  // scenarioCodec.ts:666-670 instructs S5 to make UNREACHABLE. Shipping that sentence would have
   // been the cardinal sin pointed the other way: a save reported that never happened.
   recommendSaveCta: 'Keep this strategy read',
   // R1 AND R2, both named BEFORE the tap. The no-vault route escalates a "keep this" tap into vault
@@ -1689,7 +1891,7 @@ export const copy = {
   recommendSaveSavedBadge: 'Saved to this device — your plan and this strategy read',
   // THE REFUSALS. None carries a retry control: the mint is deterministic, so a retry re-fails
   // identically, and an affordance that cannot succeed is the lying-remedy shape
-  // (Result.tsx:474-482). Each says what did NOT happen, in the reader's frame.
+  // (Result.tsx:491-499). Each says what did NOT happen, in the reader's frame.
   recommendSaveRefusalRecordInvalidHeading: 'This strategy read couldn’t be kept',
   recommendSaveRefusalRecordInvalidBody:
     'We couldn’t build a record of it, so nothing reached this device — your plan here is exactly as you left it. The answer above is still current.',
@@ -1799,6 +2001,17 @@ export const copy = {
   // so the echo keeps the two STANDING epistemic facts — rules currency + input vintage —
   // and the "what changed" alarm stays at the gate (just affirmed through, per-clock).
   stalenessHeroNote: 'Figured under today’s rules, from the numbers you saved.',
+  // The pay check's KTD21 standing line on the result: the household's W no longer matches what it
+  // was given against, and the engine keeps using the last figure it gave (R4) — so the date says so,
+  // calmly, in the `.fod-note` register. Never role=alert. The door opens the assumptions panel at
+  // the W row; a read-only tab gets the sentences alone (no dead-end door). This lead is digit-free;
+  // the sentence after it is the W step's own stale note (`workingYearCostStaleText` — both figures
+  // and the cause that really moved, one home for the three surfaces; the b9-3 walk read "your last
+  // figure … the spending or state you entered" as a figure it could not see and a state never set).
+  // "This answer", never "this date": the line also stands beside the no-date reading, where there is
+  // no date to speak of. PILOT-DRAFTED, shipped flagged (KTD19).
+  stalenessPayCheckNote: 'This answer still uses your last figure for what a year costs while you’re working.',
+  stalenessPayCheckCta: 'Look at that figure',
   // Act-4 · U16 §S2 — the ENTRY surfaces (the recommend-second's invited affordance, the GoalPicker,
   // the pending tell). All calm, plain-language, hedge-free-where-a-hedge-would-mush (a door label and
   // a status line carry no figure to hedge — the require-hedge scope must stay on the GRADE/figure keys
@@ -2493,6 +2706,98 @@ export const slots = {
   /** The "still needed" strip's overflow counter — a self-describing list item
    *  (its own span), never a bare "(+N)" glyph fused onto the prior fact name. */
   factsMore: (n: number): string => `${n} more`,
+  // --- THE PAY CHECK'S W STEP, MONEY PICTURE AND PANEL ROW (U8 — the flat keys' block explains).
+  //     Every figure arrives PRE-formatted by the intake money formatter (digits and grouping, no
+  //     glyph); the templates add the `$`, the minus sign (U+2212) and the period words, and stay
+  //     digit-free (the '§§§' sentinel arm). PILOT-DRAFTED, shipped flagged (KTD19). ---
+  /** The quote (KTD5): the household's own figure, named in its own period. */
+  workingCostQuoteMonthly: (amountFormatted: string, yearlyFormatted: string): string =>
+    `Your spending figure is $${amountFormatted} a month, which is $${yearlyFormatted} a year.`,
+  workingCostQuoteYearly: (amountFormatted: string): string => `Your spending figure is $${amountFormatted} a year.`,
+  workingCostQuoteBudget: (totalFormatted: string): string =>
+    `Your budget’s first year after work stops comes to $${totalFormatted} a year.`,
+  workingCostQuoteBudgetMedical: (totalFormatted: string, medicalFormatted: string): string =>
+    `Your budget’s first year after work stops, with $${medicalFormatted} of out-of-pocket medical, comes to $${totalFormatted} a year.`,
+  /** The lines the quote left out (KTD5) — at most three names, then the rest counted. */
+  workingCostLeftOut: (names: string): string =>
+    `That leaves out extras that end or start in a later year, since those read as plans for after work: ${names}.`,
+  workingCostLeftOutMore: (names: string, more: number): string =>
+    `That leaves out extras that end or start in a later year, since those read as plans for after work: ${names}, and ${more} more.`,
+  /** The stale note (KTD21, role="note", present before any tap): the last figure, the current
+   *  quote where it moved, and which input moved — the spending figures (spending, budget lines or
+   *  medical, one cause) and/or the state answer. Both figures yearly, each with its own words. */
+  workingCostStaleQuote: (lastFormatted: string, nowFormatted: string): string =>
+    `You said yes to $${lastFormatted} a year, but your spending figures have changed since — they now come to $${nowFormatted} a year.`,
+  workingCostStaleQuoteGone: (lastFormatted: string): string =>
+    `You said yes to $${lastFormatted} a year, but your spending figures have changed since, and there’s no spending figure to offer now.`,
+  workingCostStaleStateConfirmed: (lastFormatted: string): string =>
+    `You said yes to $${lastFormatted} a year before your state answer changed, and that changes which state income tax this figure should hold.`,
+  workingCostStaleStateEntered: (lastFormatted: string): string =>
+    `You entered $${lastFormatted} a year before your state answer changed, and that changes which state income tax this figure should hold.`,
+  workingCostStaleBoth: (lastFormatted: string, nowFormatted: string): string =>
+    `You said yes to $${lastFormatted} a year, but your spending figures and your state answer have changed since. Your spending now comes to $${nowFormatted} a year, and the state changes which state income tax this figure should hold.`,
+  workingCostStaleBothGone: (lastFormatted: string): string =>
+    `You said yes to $${lastFormatted} a year, but your spending figures and your state answer have changed since, and there’s no spending figure to offer now.`,
+  /** The stale ENTERED answer's re-confirm (KTD21: committing it unchanged re-stamps it). */
+  workingCostKeepMonthly: (amountFormatted: string): string => `Keep $${amountFormatted} a month`,
+  workingCostKeepYearly: (amountFormatted: string): string => `Keep $${amountFormatted} a year`,
+  /** KTD17's W-below-M note — calm, non-blocking, both figures in-sentence (the `oopExceedsSpend`
+   *  precedent); the engine uses W as given. */
+  workingCostBelowMedical: (costFormatted: string, medicalFormatted: string): string =>
+    `Your figure for a working year, $${costFormatted} a year, is less than the $${medicalFormatted} a year you said you pay out of pocket for medical costs. Out-of-pocket costs belong inside it, so one of the two may be worth a second look — the tool uses your figure as given.`,
+  /** The picture's lead (KTD12, the plan clock): an aged plan says it shows its first year as entered. */
+  workingLedgerLead: (year: number): string =>
+    `Your plan’s first year, ${year}, with the pay and figures you entered, in today’s dollars.`,
+  workingLedgerLeadAged: (year: number): string =>
+    `Your plan’s first year as you entered it, ${year}, in that year’s dollars.`,
+  workingLedgerAmount: (amountFormatted: string): string => `$${amountFormatted}`,
+  workingLedgerOutflow: (amountFormatted: string): string => `−$${amountFormatted}`,
+  /** The Social Security row's own words when the earnings test holds some back (R16): the row's
+   *  figure is what is PAID, and the held-back amount is named inside the row, never in the sum.
+   *  The FRA-year arm carries the stopgap words (K10). */
+  workingLedgerSsHeldBack: (heldFormatted: string): string =>
+    `This is what’s paid after $${heldFormatted} is held back this year because of pay.`,
+  workingLedgerSsHeldBackAtMost: (heldFormatted: string): string =>
+    `This is what’s paid after $${heldFormatted} is held back this year because of pay. That’s the most that year can hold back, until the tool asks your birth month.`,
+  /** The tax line's detail when the run carries working-year investment income (R5 keeps that income
+   *  out of Coming in, but its tax is in this line's figure). */
+  workingLedgerIncomeTaxInvestment: (investmentFormatted: string): string =>
+    `Includes the tax on the $${investmentFormatted} a year of investment income you entered, which isn’t counted as coming in.`,
+  workingLedgerMedicareSurcharge: (surchargeFormatted: string): string =>
+    `Including $${surchargeFormatted} of income surcharge`,
+  /** A W the household gave monthly, echoed in its own unit beside the yearly line. */
+  workingLedgerMonthlyEcho: (monthlyFormatted: string): string => `$${monthlyFormatted} a month, as you gave it`,
+  /** A CONFIRMED quote's monthly echo — no "as you gave it": its unit is the quote's, not a choice the
+   *  draft records. */
+  workingLedgerMonthlyPlain: (monthlyFormatted: string): string => `$${monthlyFormatted} a month`,
+  /** Later working years — every one worded conditionally: the picture never reads a crown. */
+  workingLedgerLaterYear: (year: number): string => `If you’re still working in ${year}`,
+  workingLedgerLaterRun: (firstYear: number, lastYear: number): string =>
+    `If you’re still working from ${firstYear} through ${lastYear}`,
+  workingLedgerLaterLeftOver: (amountFormatted: string): string => `Left over: $${amountFormatted}`,
+  workingLedgerLaterShort: (amountFormatted: string): string => `Short: −$${amountFormatted}`,
+  workingLedgerLaterShortEach: (amountFormatted: string): string => `Short each year: −$${amountFormatted}`,
+  workingLedgerLaterShortRange: (smallerFormatted: string, largerFormatted: string): string =>
+    `Short each year: −$${smallerFormatted} to −$${largerFormatted}`,
+  workingLedgerStillShortSince: (year: number): string => `Still short, as in ${year}.`,
+  workingLedgerEventClaim: (who: string): string => `Social Security starts for ${who}.`,
+  workingLedgerEventSpousalStart: (who: string): string => `A spousal benefit starts for ${who}.`,
+  workingLedgerEventMedicareStarts: (who: string): string => `Medicare starts for ${who}, paid from savings.`,
+  workingLedgerEventTurns65: (who: string): string => `A larger tax deduction at 65 starts for ${who}.`,
+  workingLedgerEventCatchUpStepDown: (who: string): string =>
+    `Savings deposits step down for ${who} as a catch-up limit ends.`,
+  workingLedgerEventIncomeStarts: (who: string): string => `A pension or other income starts for ${who}.`,
+  workingLedgerEventIncomeEnds: (who: string): string => `A pension or other income ends for ${who}.`,
+  /** The panel's W row value line (ruling 12: a one-line summary above each face). */
+  assumptionWorkingCostConfirmed: (amountFormatted: string): string =>
+    `$${amountFormatted} a year — your spending figure, confirmed`,
+  // A budget's quote is its first-year lines plus out-of-pocket medical, never the spending figure (the
+  // b9-3 review's overflow: the line above named a figure the household's budget had replaced).
+  assumptionWorkingCostConfirmedBudget: (amountFormatted: string): string =>
+    `$${amountFormatted} a year — from your budget, confirmed`,
+  assumptionWorkingCostEntered: (amountFormatted: string): string => `$${amountFormatted} a year — your own figure`,
+  assumptionWorkingCostStale: (amountFormatted: string): string =>
+    `$${amountFormatted} a year — your earlier answer, from before a later change`,
   // --- U9b budget-builder reconciliation slots (all figures pre-formatted by the caller) --------
   /** The anchor — the figure the current answer reads against. */
   budgetAnchorLead: (totalFormatted: string): string =>
@@ -2814,7 +3119,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:1248` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:1405` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,

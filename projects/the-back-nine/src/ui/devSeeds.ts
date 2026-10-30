@@ -36,6 +36,7 @@ import { SOLVER_CODE_VERSION } from '@engine/solver/solverCodeVersion'
 import { FIRST_UNAMBIGUOUS_SAVE_DAY } from '@engine/pricingVersion'
 import { solverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 import { buildSolveRequest } from '@intake/solveDispatch'
+import { confirmedWorkingYearCost } from '@intake/workingYearQuote'
 import { mintSavedRecommendation } from '@store/savedRecommendationMint'
 import { decodeScenario, encodeScenario } from '@shared/scenarioCodec'
 import { draftFromScenario } from './draftFromScenario'
@@ -454,7 +455,7 @@ const retiredBudget: ScenarioDraft = {
  * lifestyle at 8", labelled Engine-proven, and both figures were wrong):**
  *   provisional (2,000 paths) — floor **2** `confirmed-date` · lifestyle **10** `window-edge-unconfirmed`
  *   final       (16,000 paths) — floor **2** `confirmed-date` · lifestyle **9** `confirmed-date`
- * The LIVE surface runs `final` (`IntakeApp.tsx:320`, `Result.tsx:281`/`:295`), so the shipped hero is
+ * The LIVE surface runs `final` (`IntakeApp.tsx:321`, `Result.tsx:298`/`:296`), so the shipped hero is
  * the 9 — and it is a CONFIRMED date, i.e. the band owes no edge hedge there. The 10 is real but is a
  * provisional-tier reading, and it is `window-edge-unconfirmed`: during entry the hedge RENDERS and
  * then WITHDRAWS when final lands. That transient has never been cold-read.
@@ -1154,6 +1155,104 @@ const atCeilingSeed: ScenarioDraft = {
   ],
 }
 
+/**
+ * THE PAY CHECK'S W ON A SEED (`docs/plans/features/working-year-pay-check-build-spec.md` U8, U10's
+ * general rule): mint W LAST, on the seed's OWN final draft — the `confirmed` answer the W step's
+ * "yes" would store there (its own quote, its own state-tax reading). Applied at the registry entry,
+ * never inside a seed const: every date const is spread by another (`datesolo`/`atceiling` from
+ * `stillWorking`, `datesplit`/`datemixed` from `stillWorkingBorderline`, `datenc` from
+ * `stillWorkingAllMedicare`), and a W in a const literal would ride into its spreads with the WRONG
+ * quote — a stale answer no one gave. Fail-loud on a seed with nothing to quote (a $0 quote cannot be
+ * confirmed; the codec refuses it), never a silent W-less seed.
+ */
+function withConfirmedW(draft: ScenarioDraft): ScenarioDraft {
+  const w = confirmedWorkingYearCost(draft)
+  if (w === null) throw new Error('withConfirmedW: the seed quotes $0 — a confirmed W needs a quote above $0')
+  return { ...draft, workingYearCost: w }
+}
+
+/**
+ * THE SHORT WITNESS — `?seed=dateshort` (the pay check's R21): an early claimant working PART-TIME
+ * beside a retired spouse, whose working years do not cover what a working year costs. Alex is 63,
+ * works part-time for $30,000 and claimed Social Security at 62, so the earnings test holds part of
+ * the benefit back (the held-back words inside the picture's Social Security row); Sam is 66, retired
+ * and on Medicare (the picture's also-paid-from-savings group). What a year costs, $70,000, is more
+ * than pay plus both benefits — so every working year runs SHORT and draws the difference from savings
+ * (the picture's "Short" bottom line). Stateless (the unpriced reading), budgetless, yearly spend, so
+ * its W is a plain confirmed $70,000. Before the pay check this household's working years drew
+ * NOTHING (the §7 clamp assumed pay covered everything) — the rosy hole the check closes.
+ */
+const dateShortWitness: ScenarioDraft = {
+  people: [
+    {
+      name: 'Alex',
+      sex: 'female',
+      birthYear: 1963,
+      currentAge: 63,
+      workStatus: 'working',
+      earnedIncomeReal: 30_000,
+      pia: 21_600,
+      socialSecurityClaimAge: 62,
+    },
+    {
+      name: 'Sam',
+      sex: 'male',
+      birthYear: 1960,
+      currentAge: 66,
+      workStatus: 'retired',
+      retirementAge: 64,
+      earnedIncomeReal: 0,
+      pia: 18_000,
+      socialSecurityClaimAge: 65,
+    },
+  ],
+  enteredAccounts: [
+    { ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 700_000, annualContribution: 3_000 },
+    { ownerIndex: 1, kind: 'roth-ira', ticker: 'VFIFX', valueToday: 250_000 },
+  ],
+  incomeStreams: [],
+  tickerClassifications: {},
+  health: {
+    // Alex is pre-65 and stops somewhere in the window, so the marketplace quote is required; Sam is
+    // 66, so the 2-year IRMAA seed is too. Alex's working-year investment income is the explicit
+    // figure the date route needs; retired Sam's is the explicit 0.
+    enrolledPremiumMonthlyToday: 900,
+    slcspMonthlyToday: 850,
+    irmaaMagiSeed: [60_000, 60_000],
+    workingYearInvestmentByPerson: [2_000, 0],
+  },
+  annualSpendingReal: 70_000,
+  spendEntryPeriod: 'year',
+  survivorSpendingRatio: 0.75,
+  drawdownPolicy: 'proportional',
+  filing: 'mfj',
+  startCalendarYear: 2026,
+  taxVintage: 'OBBBA-2025',
+  appDefaultVersion: 'p2-dev-seed',
+  seed: DEV_CRN_SEED,
+}
+
+/**
+ * THE STALE-W WITNESS — `?seed=datecoststale` (the pay check's KTD21, R21): `date`'s household after
+ * it confirmed W at its $84,000 spending, then lowered that spending to $78,000. Its W no longer
+ * matches the quote it confirmed, so the walk's W step opens on the stale note with no answer checked
+ * (and holds Continue until it is re-answered), the result wears the standing pay-check line, and the
+ * panel's W row opens on its stale face. The engine keeps running on the last figure given, $84,000
+ * (R4) — exactly what the line says. The spending moves DOWN on purpose: the line must be seen beside a
+ * date its working years decide (measured in real Chromium 2026-10-30: crowned about 7 years out,
+ * around 2033). `date` itself crowns 9 years out, at the window's edge, and a raise costs it the crown;
+ * the over-funded `atceiling` crowns today, where no working year exists for W to touch.
+ *
+ * THE ONE EXCEPTION to "mint W last, on the seed's own final draft" (`withConfirmedW`): a stale answer
+ * is BY DEFINITION one minted on an earlier draft. So it is minted on `date`'s own draft, and the
+ * spending moves AFTER the mint — named here, never a W typed into a literal. `stillWorking` itself
+ * stays W-free (U10 gives `date` its own W).
+ */
+const dateCostStaleWitness: ScenarioDraft = {
+  ...withConfirmedW(stillWorking),
+  annualSpendingReal: 78_000,
+}
+
 /** The seed registry — `?seed=<key>` selects one. */
 export const DEV_SEEDS = {
   retired: retiredOnTrack,
@@ -1179,8 +1278,14 @@ export const DEV_SEEDS = {
   healthnc: healthNcSeed,
   healthgap: healthGapSeed,
   healthss: healthSsSeed,
-  datesolo: dateSoloCoverage,
+  // The pay check (U8): `datesolo` carries its own W — the walk's W gate would stall the intake-fold
+  // re-walk without it (a W-absent date draft cannot complete the walk). It is the refusal witness, so
+  // its quote reads the DRAFT (`workingYearQuote` never builds a run) and its money picture is the
+  // calm `'unknown'` face.
+  datesolo: withConfirmedW(dateSoloCoverage),
   atceiling: atCeilingSeed,
+  dateshort: withConfirmedW(dateShortWitness),
+  datecoststale: dateCostStaleWitness,
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS
@@ -1386,6 +1491,42 @@ export function doctorStateStaleVault(s: ScenarioV3, todayEpochDay: number): Sce
   }
 }
 
+/**
+ * The pay check's U13 LIGHT doctor — a W-carrying date plan as if saved under the PREVIOUS
+ * working-years vintage (payroll tax and the Social Security earnings test,
+ * `WORKING_YEARS_VINTAGE`). It moves ONLY two things: `savedAt` back 150 days (the
+ * {@link doctorStateStaleVault} shape — never before the engine-pricing ledger's first unambiguous
+ * save day, so no ledger method line speaks beside it) and `dateVintage.workingYearsVintage` one
+ * vintage back ({@link agedWorkingYearsVintage}). `startCalendarYear`, `retirementState` and every
+ * quote input stay untouched, so the plan's W answer stays FRESH (no re-mint) and the working-years
+ * clock fires in ISOLATION. Fail-loud on a base that carries no W or no working-years stamp — such a
+ * plan never reads the table, so the clock could never fire (a wiring error, never a silent no-op).
+ * The `wyclock` plant over it lands with U10 (W on every date seed).
+ */
+export function doctorWorkingYearsStaleVault(s: ScenarioV3, todayEpochDay: number): ScenarioV3 {
+  const stamp = s.dateVintage?.workingYearsVintage
+  if (s.workingYearCost === undefined || s.dateVintage === undefined || stamp === undefined) {
+    throw new Error(
+      'doctorWorkingYearsStaleVault requires a W-carrying date plan with a working-years stamp ' +
+        '(a plan without W never reads the table, so the clock could never fire).',
+    )
+  }
+  return {
+    ...s,
+    savedAt: Math.max(todayEpochDay - 150, FIRST_UNAMBIGUOUS_SAVE_DAY),
+    dateVintage: { ...s.dateVintage, workingYearsVintage: agedWorkingYearsVintage(stamp) },
+  }
+}
+
+/** One working-years vintage back: the stamp's year less one (`working-years-2026a` →
+ *  `working-years-2025a`). Throws on a stamp of any other shape — a renamed stamp format must be
+ *  taught here, never aged by a guess that could land on the CURRENT stamp and fire nothing. */
+export function agedWorkingYearsVintage(stamp: string): string {
+  const m = /^(working-years-)(\d{4})([a-z])$/.exec(stamp)
+  if (m === null) throw new Error(`agedWorkingYearsVintage: unrecognised working-years stamp "${stamp}"`)
+  return `${m[1]}${Number(m[2]) - 1}${m[3]}`
+}
+
 /** How many calendar years back `?vault=datearrived`'s plan was BUILT. It must exceed the base's
  *  lifestyle crown so `offsetHasPassed(crown, yearsSincePlanBuilt)` is true and the hero takes its
  *  ARRIVED arm — `dip` crowns lifestyle at 5, MEASURED through the real date search (the arm below
@@ -1429,7 +1570,7 @@ const ARRIVED_SAVED_DAYS_AGO = 30
  * arrived household: born 1963, planned at 57 to stop at offset 5, and that year is now behind them.
  *
  * ⚠️ THIS PLANT LIGHTS **ONE** ARRIVED ARM, NOT TWO. The floor crowns at 0, and `floorLineText`
- * (`FuckOffDate.tsx:229`) SHORT-CIRCUITS offset 0 to the plain `dateFloorCovered` line BEFORE the
+ * (`FuckOffDate.tsx:236`) SHORT-CIRCUITS offset 0 to the plain `dateFloorCovered` line BEFORE the
  * three-way split — mirroring `heroLead`'s free-today precedence, deliberately ("covered from the
  * plan's own start ⇒ still covered now"). So `dateFloorCoveredPast` does NOT fire here; its live
  * route is and remains `?vault=datestale`, whose floor crown sits strictly inside its window. (An
@@ -1667,7 +1808,7 @@ export function doctorRecordSuperseded(s: ScenarioV3, todayEpochDay: number): Sc
  *  the two corrections this note's first draft got wrong (it ages `birthYear` alongside
  *  `startCalendarYear` to hold the `currentAge === startCalendarYear − birthYear` model invariant,
  *  and it lights ONE arrived arm rather than two, because a floor crown of 0 short-circuits past
- *  the three-way split at `FuckOffDate.tsx:229`). The base must be STATELESS: `datenc` rejects at
+ *  the three-way split at `FuckOffDate.tsx:236`). The base must be STATELESS: `datenc` rejects at
  *  any depth ≥1 with "startCalendarYear precedes the priced state rate schedule"
  *  (`simulate.ts:1151-1154`), which is the real bound the S6 spec's `earliestPricedRateYear` probe
  *  was reaching for — and that probe is VACUOUS on a stateless base (the gate is `isPricedState`-

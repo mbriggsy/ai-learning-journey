@@ -1,8 +1,11 @@
 // @vitest-environment jsdom
+import { useSyncExternalStore } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
-import { AssumptionPanel, type AssumptionPanelProps } from '../AssumptionPanel'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { AssumptionPanel, methodologyArmFor, type AssumptionPanelProps } from '../AssumptionPanel'
+import { confirmedWorkingYearCost } from '../workingYearQuote'
+import { DEV_SEEDS } from '@ui/devSeeds'
 import { createMemoryModel, type MemoryModel, type MemoryModelSnapshot, type ScenarioDraft, type StickyDisplay } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
 import { requiredSeats, METHODOLOGY_DISCLOSURES } from '@ui/assumptionRegistry'
@@ -10,6 +13,7 @@ import { copy, slots } from '@ui/copy'
 import { planClockAnchor } from '@ui/bandAnnotations'
 import { formatMoney } from '../fields'
 import { missingRequiredFacts } from '../intakeMap'
+import { commitBudgetPatch } from '@budget/budgetToSpending'
 import type { BudgetLineItem, SimulationResult } from '@shared/model'
 import { ordinaryBracketsMFJ, ordinaryBracketsSingle } from '@engine/constants/tax'
 import { solverAssumedHeirBracket } from '@engine/constants'
@@ -171,6 +175,7 @@ function renderPanel(
     snapshot?: MemoryModelSnapshot
     missing?: AssumptionPanelProps['missing']
     savedAnchor?: AssumptionPanelProps['savedAnchor']
+    initialSeat?: AssumptionPanelProps['initialSeat']
   } = {},
 ) {
   const props = {
@@ -186,9 +191,31 @@ function renderPanel(
     onOpenHealth: vi.fn(),
     onReview: vi.fn(),
     onClose: vi.fn(),
+    ...(over.initialSeat !== undefined ? { initialSeat: over.initialSeat } : {}),
   }
   const utils = render(<AssumptionPanel {...props} />)
   return { props, ...utils }
+}
+
+/** The panel wired like Result wires it: the store's snapshot, every commit through `update` — for the
+ *  arms that need the draft to really move under the open sheet. */
+function WiredPanel({ model }: { readonly model: MemoryModel }) {
+  const snapshot = useSyncExternalStore(model.subscribe, model.getSnapshot)
+  return (
+    <AssumptionPanel
+      open
+      snapshot={snapshot}
+      missing={[]}
+      savedAnchor={planClockAnchor(2026, 2026)}
+      onCommitEdit={(mutate) => model.update(mutate)}
+      onOpenBudget={() => {}}
+      onOpenSequencing={() => {}}
+      onOpenRoth={() => {}}
+      onOpenHealth={() => {}}
+      onReview={() => {}}
+      onClose={() => {}}
+    />
+  )
 }
 
 const commitAndApply = (
@@ -221,7 +248,7 @@ describe('the R7 registry completeness walk (the compile gate’s runtime half)'
     // ⚠️ NON-VACUITY CENSUS — the only assertion in this arm lives INSIDE the loop, so an empty
     // (or silently-shrunken) roster passes GREEN while proving nothing, and the R7 completeness
     // claim evaporates with the gate still reporting OK. `requiredSeats()` derives from TWO
-    // sources (`assumptionRegistry.ts:260-267`: the non-`internal` DRAFT_DISPOSITIONS, plus
+    // sources (`assumptionRegistry.ts:318-325`: the non-`internal` DRAFT_DISPOSITIONS, plus
     // METHODOLOGY_DISCLOSURES), so census BOTH — either half dropping out would otherwise be
     // invisible here.
     const seats = requiredSeats()
@@ -831,5 +858,396 @@ describe('the conversion-tax disclosure row — rendered, on the household that 
     expect(text).toContain(copy.assumptionConversionTaxName)
     expect(text, 'the WHOLE ruled row reaches the pre-65 reader (it carries the ONE constant)').toContain(copy.assumptionConversionTaxValue)
     expect(text).not.toMatch(/never oversold/i)
+  })
+})
+
+// The pay check's U9: which arm the working-year methodology row renders. The BUILT run decides
+// (`workingYearCostForRun`, insight 132); where no run can be built, the build's own carriage rule
+// stands in — `buildDateInput` lands W exactly when a date-route draft holds an answer.
+describe('methodologyArmFor — the working-year row’s arm (U9, KTD22)', () => {
+  const withW = (d: ScenarioDraft): ScenarioDraft => {
+    const w = confirmedWorkingYearCost(d)
+    if (w === null) throw new Error('[test setup] the seed quotes $0 — no W to confirm')
+    return { ...d, workingYearCost: w }
+  }
+
+  it('a date-route run carrying W reads the pay check’s arm; the same draft without W reads today’s row', () => {
+    expect(methodologyArmFor(withW(DEV_SEEDS.date))).toBe('workingCost')
+    expect(methodologyArmFor(DEV_SEEDS.date)).toBe('default')
+  })
+
+  it('an all-retired draft never reads the pay check’s arm, even holding a stored W (the spine never carries it)', () => {
+    const retired = DEV_SEEDS.retired
+    expect(methodologyArmFor({ ...retired, workingYearCost: { kind: 'entered', amountReal: 60_000, entryPeriod: 'year', stateTaxReading: 'unpriced' } })).toBe('default')
+  })
+
+  it('an unbuildable date-route draft reads the arm its build would carry: W held ⇒ the pay check’s arm, none ⇒ today’s', () => {
+    const unbuildable: ScenarioDraft = { ...DEV_SEEDS.date, annualSpendingReal: undefined }
+    expect(missingRequiredFacts(unbuildable).length, 'the fixture really is unbuildable').toBeGreaterThan(0)
+    expect(methodologyArmFor(unbuildable)).toBe('default')
+    expect(
+      methodologyArmFor({ ...unbuildable, workingYearCost: { kind: 'entered', amountReal: 84_000, entryPeriod: 'year', stateTaxReading: 'unpriced' } }),
+    ).toBe('workingCost')
+  })
+
+  it('the fallback carries only what a build would: an entered $0 reads today’s row, and so does an unbuildable all-retired draft holding W', () => {
+    const unbuildable: ScenarioDraft = { ...DEV_SEEDS.date, annualSpendingReal: undefined }
+    expect(
+      methodologyArmFor({ ...unbuildable, workingYearCost: { kind: 'entered', amountReal: 0, entryPeriod: 'month', stateTaxReading: 'unpriced' } }),
+    ).toBe('default')
+    const retiredUnbuildable: ScenarioDraft = {
+      ...DEV_SEEDS.retired,
+      annualSpendingReal: undefined,
+      budget: undefined,
+      workingYearCost: { kind: 'entered', amountReal: 60_000, entryPeriod: 'year', stateTaxReading: 'unpriced' },
+    }
+    expect(missingRequiredFacts(retiredUnbuildable).length, 'the fixture really is unbuildable').toBeGreaterThan(0)
+    expect(methodologyArmFor(retiredUnbuildable)).toBe('default')
+  })
+})
+
+// The arm the row RENDERS — the selector above is unit-pinned; this proves the panel hands it the run's
+// arm and the draft's state reading (claim 9 of the U9 review: a default-arm render told a W household
+// "It doesn't check that your pay really covers all of that", false with W).
+describe('the working-year methodology row renders the run’s own arm (U9)', () => {
+  const withW = (d: ScenarioDraft): ScenarioDraft => {
+    const w = confirmedWorkingYearCost(d)
+    if (w === null) throw new Error('[test setup] the seed quotes $0 — no W to confirm')
+    return { ...d, workingYearCost: w }
+  }
+  const withoutW = (d: ScenarioDraft): ScenarioDraft => {
+    const { workingYearCost: _w, ...rest } = d
+    return rest
+  }
+
+  it('a household whose run carries W reads the pay check’s paragraph and its better-than-real gaps, never today’s row', () => {
+    renderPanel({ snapshot: snap(DEV_SEEDS.dateshort) })
+    expect(screen.getByText(copy.assumptionWorkingYearCheckValue)).toBeInTheDocument()
+    expect(screen.getByText(copy.assumptionWorkingYearCheckEarlyCharge)).toBeInTheDocument()
+    expect(screen.queryByText(copy.assumptionWorkingYearTaxValue)).toBeNull()
+  })
+
+  it('the same household with no W reads today’s row', () => {
+    renderPanel({ snapshot: snap(withoutW(DEV_SEEDS.dateshort)) })
+    expect(screen.getByText(copy.assumptionWorkingYearTaxValue)).toBeInTheDocument()
+    expect(screen.queryByText(copy.assumptionWorkingYearCheckValue)).toBeNull()
+  })
+
+  it('the state gap shows only where the run taxes working years by the state; where W holds that tax, never', () => {
+    const cases: readonly [ScenarioDraft['retirementState'], boolean][] = [
+      ['NC', true],
+      ['FL', true],
+      ['PA', false],
+      [undefined, false],
+    ]
+    for (const [state, shows] of cases) {
+      const { retirementState: _s, ...rest } = withoutW(DEV_SEEDS.dateshort)
+      renderPanel({ snapshot: snap(withW(state === undefined ? rest : { ...rest, retirementState: state })) })
+      expect(screen.getByText(copy.assumptionWorkingYearCheckValue), `${state}: the W arm`).toBeInTheDocument()
+      expect(screen.queryByText(copy.assumptionWorkingYearCheckWorkState) !== null, `${state ?? 'no state'}: K7`).toBe(shows)
+      cleanup()
+    }
+  })
+})
+
+// ─── the pay check's W row (U8; KTD17, KTD21) ─────────────────────────────────────────────
+
+describe('the W row — four faces, one question (U8)', () => {
+  const row = () => {
+    const r = document.querySelector<HTMLElement>('[data-assumption-seat="working-year-cost"]')
+    if (r === null) throw new Error('no W row rendered')
+    return r
+  }
+  const typeFigure = (value: string) => {
+    const input = within(row()).getByLabelText(copy.workingCostAmountLabel)
+    fireEvent.focus(input)
+    fireEvent.change(input, { target: { value } })
+    fireEvent.blur(input)
+  }
+
+  it('ABSENT: the question alone — the quote and the fork, no picture, and never the walk’s gate', () => {
+    renderPanel({ snapshot: snap(mixedDraft) })
+    expect(within(row()).getByText(copy.assumptionWorkingCostUnanswered)).toBeInTheDocument()
+    expect(within(row()).getByText(slots.workingCostQuoteMonthly('8,000', '96,000'))).toBeInTheDocument()
+    expect(within(row()).getByRole('radiogroup', { name: copy.workingCostLegend })).toBeInTheDocument()
+    expect(within(row()).queryByRole('heading', { name: copy.workingLedgerComingIn })).toBeNull()
+    expect(document.body.textContent).not.toContain(copy.errWorkingCostUnanswered)
+  })
+
+  it('ANSWERED: the value line, then the money picture under h4 legends (the panel’s sections are h3), then the question', () => {
+    renderPanel({ snapshot: snap(DEV_SEEDS.dateshort) })
+    expect(within(row()).getByText(slots.assumptionWorkingCostConfirmed('70,000'))).toBeInTheDocument()
+    expect(within(row()).getByRole('heading', { level: 4, name: copy.workingLedgerComingIn })).toBeInTheDocument()
+    expect(within(row()).getByText(copy.workingLedgerShort)).toBeInTheDocument()
+    expect(within(row()).getByRole('radio', { name: copy.workingCostYes })).toBeChecked()
+  })
+
+  it('STALE: the stale value line and note, no answer checked, and no picture of a figure that no longer matches', () => {
+    renderPanel({ snapshot: snap(DEV_SEEDS.datecoststale) })
+    expect(within(row()).getByText(slots.assumptionWorkingCostStale('84,000'))).toBeInTheDocument()
+    expect(within(row()).getByRole('note')).toHaveTextContent(slots.workingCostStaleQuote('84,000', '78,000'))
+    expect(within(row()).getByRole('radio', { name: copy.workingCostYes })).not.toBeChecked()
+    expect(within(row()).queryByRole('heading', { name: copy.workingLedgerComingIn })).toBeNull()
+  })
+
+  it('STALE yes: the keep door commits the old quote as the household’s own yearly figure — the period rule never refuses it (ruling 34)', () => {
+    const { props } = renderPanel({ snapshot: snap(DEV_SEEDS.datecoststale) })
+    fireEvent.click(within(row()).getByRole('button', { name: slots.workingCostKeepYearly('84,000') }))
+    // $84,000 sits above the period rule's floor, and no period was tapped — but the door said "a year".
+    expect(props.onCommitEdit).toHaveBeenCalledTimes(1)
+    expect(commitAndApply(props.onCommitEdit, DEV_SEEDS.datecoststale).workingYearCost).toEqual({
+      kind: 'entered',
+      amountReal: 84_000,
+      entryPeriod: 'year',
+      stateTaxReading: 'unpriced',
+    })
+    expect(within(row()).queryByRole('alert')).toBeNull()
+  })
+
+  it('UNKNOWN: answered on a household no picture can be drawn for — the calm line, then the question', () => {
+    renderPanel({ snapshot: snap(DEV_SEEDS.datesolo) })
+    expect(within(row()).getByText(copy.workingLedgerUnknownLeadFinal)).toBeInTheDocument()
+    // The sheet covers the answer strip, so the row echoes its words rather than pointing at it.
+    expect(within(row()).getByText(`${copy.answerCannotPrice} ${copy.employerCoverageUnpriced}`)).toBeInTheDocument()
+    expect(within(row()).queryByText(copy.workingLedgerUnknownSeeStrip)).toBeNull()
+    expect(within(row()).queryByRole('heading', { name: copy.workingLedgerComingIn })).toBeNull()
+    expect(within(row()).getByRole('radiogroup', { name: copy.workingCostLegend })).toBeInTheDocument()
+  })
+
+  it('the row is the date route’s alone — an all-retired household has no W row', () => {
+    renderPanel({ snapshot: snap(DEV_SEEDS.retired) })
+    expect(document.querySelector('[data-assumption-seat="working-year-cost"]')).toBeNull()
+  })
+
+  it('"yes" and an entered correction commit W through the ONE seam, read off the CURRENT draft', () => {
+    const { props } = renderPanel({ snapshot: snap(mixedDraft) })
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.workingCostYes }))
+    expect(commitAndApply(props.onCommitEdit, mixedDraft).workingYearCost).toEqual({
+      kind: 'confirmed',
+      quotedReal: 96_000,
+      stateTaxReading: 'unpriced',
+    })
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.workingCostDifferent }))
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.periodYear }))
+    typeFigure('90000')
+    expect(commitAndApply(props.onCommitEdit, mixedDraft).workingYearCost).toEqual({
+      kind: 'entered',
+      amountReal: 90_000,
+      entryPeriod: 'year',
+      stateTaxReading: 'unpriced',
+    })
+  })
+
+  it('choosing "a different figure" in the panel never clears the held answer (KTD4) — only a committed figure replaces it', () => {
+    const { props } = renderPanel({ snapshot: snap(DEV_SEEDS.dateshort) })
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.workingCostDifferent }))
+    expect(props.onCommitEdit).not.toHaveBeenCalled()
+  })
+
+  it('a cleared figure is a no-op (the panel keeps the last answer)', () => {
+    const entered: ScenarioDraft = {
+      ...DEV_SEEDS.dateshort,
+      workingYearCost: { kind: 'entered', amountReal: 75_000, entryPeriod: 'year', stateTaxReading: 'unpriced' },
+    }
+    const { props } = renderPanel({ snapshot: snap(entered) })
+    typeFigure('')
+    expect(props.onCommitEdit).not.toHaveBeenCalled()
+  })
+
+  it('an entered $0 is REFUSED before it reaches the draft, with the calm zero message', () => {
+    const { props } = renderPanel({ snapshot: snap(mixedDraft) })
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.workingCostDifferent }))
+    typeFigure('0')
+    expect(props.onCommitEdit).not.toHaveBeenCalled()
+    expect(within(row()).getByRole('alert')).toHaveTextContent(copy.errWorkingCostZero)
+  })
+
+  it('the W period rule runs here too: a first W of 9,000 under the untapped month is refused; a W entered at open is never re-asked', () => {
+    const first = renderPanel({ snapshot: snap(mixedDraft) })
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.workingCostDifferent }))
+    typeFigure('9000')
+    expect(first.props.onCommitEdit).not.toHaveBeenCalled()
+    expect(within(row()).getByRole('alert')).toHaveTextContent(copy.periodConfirmPrompt)
+    // An explicit tap disarms it; the figure then commits.
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.periodMonth }))
+    typeFigure('9000')
+    expect(commitAndApply(first.props.onCommitEdit, mixedDraft).workingYearCost).toMatchObject({ amountReal: 108_000 })
+    cleanup()
+    const entered: ScenarioDraft = {
+      ...mixedDraft,
+      workingYearCost: { kind: 'entered', amountReal: 84_000, entryPeriod: 'month', stateTaxReading: 'unpriced' },
+    }
+    const again = renderPanel({ snapshot: snap(entered) })
+    typeFigure('9000')
+    expect(commitAndApply(again.props.onCommitEdit, entered).workingYearCost).toMatchObject({ amountReal: 108_000 })
+  })
+
+  it('a figure the period rule refused stays on screen, and the prompt’s own tap commits THOSE digits in the tapped unit (B3)', () => {
+    const { props } = renderPanel({ snapshot: snap(mixedDraft) })
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.workingCostDifferent }))
+    typeFigure('40000') // meant "a year", typed under the untapped month
+    expect(props.onCommitEdit).not.toHaveBeenCalled()
+    expect(within(row()).getByRole('alert')).toHaveTextContent(copy.periodConfirmPrompt)
+    expect(within(row()).getByLabelText(copy.workingCostAmountLabel)).toHaveValue('40,000')
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.periodYear }))
+    // A tap on an unchecked segment reaches its handler twice (SegmentedControl's click AND change —
+    // the register's *A tap on a segmented control commits twice…*); every commit lands the same answer.
+    expect(props.onCommitEdit).toHaveBeenCalled()
+    for (const [mutate] of props.onCommitEdit.mock.calls) {
+      expect(mutate(mixedDraft).workingYearCost).toEqual({
+        kind: 'entered',
+        amountReal: 40_000,
+        entryPeriod: 'year',
+        stateTaxReading: 'unpriced',
+      })
+    }
+    expect(within(row()).queryByRole('alert')).toBeNull()
+  })
+
+  it('…and "each month" commits them as a monthly figure: 9,000 a month is 108,000 a year (B3)', () => {
+    const { props } = renderPanel({ snapshot: snap(mixedDraft) })
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.workingCostDifferent }))
+    typeFigure('9000')
+    expect(props.onCommitEdit).not.toHaveBeenCalled()
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.periodMonth }))
+    expect(commitAndApply(props.onCommitEdit, mixedDraft).workingYearCost).toEqual({
+      kind: 'entered',
+      amountReal: 108_000,
+      entryPeriod: 'month',
+      stateTaxReading: 'unpriced',
+    })
+  })
+
+  it('a refused $0 is never held: a period tap after it commits nothing, and the zero message stays (B3)', () => {
+    const { props } = renderPanel({ snapshot: snap(mixedDraft) })
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.workingCostDifferent }))
+    typeFigure('0')
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.periodYear }))
+    expect(props.onCommitEdit).not.toHaveBeenCalled()
+    expect(within(row()).getByRole('alert')).toHaveTextContent(copy.errWorkingCostZero)
+  })
+
+  it('a pass through the figure with no keystroke commits nothing — a tab-through never re-stamps a stale answer (B6)', () => {
+    // Entered at $7,000 a month under FL; the state answer then moved to PA, so the answer is stale.
+    const staleEntered: ScenarioDraft = {
+      ...DEV_SEEDS.date,
+      retirementState: 'PA',
+      workingYearCost: { kind: 'entered', amountReal: 84_000, entryPeriod: 'month', stateTaxReading: 'none' },
+    }
+    const { props } = renderPanel({ snapshot: snap(staleEntered) })
+    const input = within(row()).getByLabelText(copy.workingCostAmountLabel)
+    fireEvent.focus(input)
+    fireEvent.blur(input)
+    expect(props.onCommitEdit).not.toHaveBeenCalled()
+    expect(within(row()).getByRole('note')).toBeInTheDocument()
+    // A real retype is an answer: it passes through other text on its way back to the same figure.
+    fireEvent.focus(input)
+    fireEvent.change(input, { target: { value: '700' } })
+    fireEvent.change(input, { target: { value: '7000' } })
+    fireEvent.blur(input)
+    expect(commitAndApply(props.onCommitEdit, staleEntered).workingYearCost).toEqual({
+      kind: 'entered',
+      amountReal: 84_000,
+      entryPeriod: 'month',
+      stateTaxReading: 'class-based',
+    })
+  })
+
+  it('an entered answer’s value line names it the household’s own figure; a confirmed one, the quote it said yes to', () => {
+    const entered: ScenarioDraft = {
+      ...DEV_SEEDS.dateshort,
+      workingYearCost: { kind: 'entered', amountReal: 75_000, entryPeriod: 'year', stateTaxReading: DEV_SEEDS.dateshort.workingYearCost!.stateTaxReading },
+    }
+    renderPanel({ snapshot: snap(entered) })
+    expect(within(row()).getByText(slots.assumptionWorkingCostEntered('75,000'))).toBeInTheDocument()
+    expect(within(row()).queryByText(slots.assumptionWorkingCostConfirmed('75,000'))).toBeNull()
+  })
+
+  it('a confirmed BUDGET quote’s value line says it came from the budget, never "your spending figure" (40,000 of lines + 4,000 of medical)', () => {
+    const w = confirmedWorkingYearCost(governedDraft)
+    if (w === null) throw new Error('[test setup] the governed draft quotes $0')
+    expect(w).toMatchObject({ kind: 'confirmed', quotedReal: 44_000 })
+    renderPanel({ snapshot: snap({ ...governedDraft, workingYearCost: w }) })
+    expect(within(row()).getByText(slots.assumptionWorkingCostConfirmedBudget('44,000'))).toBeInTheDocument()
+    expect(within(row()).queryByText(slots.assumptionWorkingCostConfirmed('44,000'))).toBeNull()
+  })
+
+  it('the picture reads the plan clock: a plan built in an earlier year says it shows its first year as entered', () => {
+    renderPanel({ snapshot: snap(DEV_SEEDS.dateshort), savedAnchor: planClockAnchor(2026, 2027) })
+    expect(within(row()).getByText(slots.workingLedgerLeadAged(2026))).toBeInTheDocument()
+    cleanup()
+    renderPanel({ snapshot: snap(DEV_SEEDS.dateshort) })
+    expect(within(row()).getByText(slots.workingLedgerLead(2026))).toBeInTheDocument()
+  })
+
+  it('an edit elsewhere that un-stales W never pulls focus down to the W row — only a keep moves focus (B5)', () => {
+    const m = freshModel()
+    m.update(() => DEV_SEEDS.datecoststale)
+    render(<WiredPanel model={m} />)
+    expect(within(row()).getByRole('note')).toBeInTheDocument()
+    // Retype the spending back to the $84,000 the W confirmed, then blur to the page (a tap on blank
+    // sheet space, or the phone keyboard's Done).
+    const spend = screen.getByLabelText(copy.spendLabel)
+    act(() => spend.focus())
+    fireEvent.change(spend, { target: { value: '7000' } })
+    act(() => spend.blur())
+    expect(m.getSnapshot().draft.annualSpendingReal).toBe(84_000)
+    expect(within(row()).queryByRole('note')).toBeNull()
+    expect(document.activeElement).not.toBe(within(row()).getByRole('radio', { name: copy.workingCostYes }))
+    expect(document.activeElement).toBe(document.body)
+  })
+
+  it('a W commit followed by a spend edit renders no error on the row (the gate never reaches the panel)', () => {
+    const { rerender, props } = renderPanel({ snapshot: snap(mixedDraft) })
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.workingCostYes }))
+    const committed = commitAndApply(props.onCommitEdit, mixedDraft)
+    rerender(<AssumptionPanel {...props} snapshot={snap({ ...committed, annualSpendingReal: 100_000 })} />)
+    expect(within(row()).queryByRole('alert')).toBeNull()
+    expect(within(row()).getByRole('note')).toBeInTheDocument()
+  })
+
+  it('initialSeat lands focus on the W row’s name (after the sheet’s own heading focus)', () => {
+    renderPanel({ snapshot: snap(DEV_SEEDS.datecoststale), initialSeat: 'working-year-cost' })
+    expect(document.activeElement).toBe(within(row()).getByText(copy.assumptionWorkingCostName))
+  })
+
+  it('without initialSeat the sheet keeps its own landing — the W row never takes focus', () => {
+    renderPanel({ snapshot: snap(DEV_SEEDS.datecoststale) })
+    expect(document.activeElement).not.toBe(within(row()).getByText(copy.assumptionWorkingCostName))
+  })
+})
+
+describe('the W row — an edit in the open panel that stales W (KTD21)', () => {
+  const region = () => {
+    const r = document.querySelector<HTMLElement>('.sr-only[role="status"]')
+    if (r === null) throw new Error('no sheet live region')
+    return r
+  }
+  const fresh = DEV_SEEDS.dateshort
+  const triggers: readonly [string, (d: ScenarioDraft) => ScenarioDraft][] = [
+    ['a spend commit', (d) => ({ ...d, annualSpendingReal: 75_000 })],
+    ['an out-of-pocket medical commit', (d) => ({ ...d, health: { ...d.health, oopMedicalAnnual: 5_000 }, ...commitBudgetPatch(LINES, 5_000) })],
+    ['a retirement-state commit', (d) => ({ ...d, retirementState: 'PA' })],
+    ['a BudgetBuilder commit', (d) => ({ ...d, ...commitBudgetPatch(LINES, d.health.oopMedicalAnnual) })],
+  ]
+
+  it.each(triggers)('%s re-renders the row’s stale face in that edit, and the sheet names it ONCE', (_name, edit) => {
+    const { rerender, props } = renderPanel({ snapshot: snap(fresh) })
+    expect(region().textContent).toBe('')
+    const staled = edit(fresh)
+    rerender(<AssumptionPanel {...props} snapshot={snap(staled)} />)
+    const r = document.querySelector<HTMLElement>('[data-assumption-seat="working-year-cost"]')!
+    expect(within(r).getByRole('note')).toBeInTheDocument()
+    expect(region().textContent).toBe(copy.assumptionWorkingCostStaleAnnounce)
+    // The provisional and final recomputes re-render the SAME draft: silent.
+    region().textContent = ''
+    rerender(<AssumptionPanel {...props} snapshot={snap(staled, { displayed: shown(7) })} />)
+    rerender(<AssumptionPanel {...props} snapshot={snap(staled, { displayed: shown(8) })} />)
+    expect(region().textContent).toBe('')
+  })
+
+  it('opening onto an already-stale row is silent (the note says it; nothing is announced)', () => {
+    renderPanel({ snapshot: snap(DEV_SEEDS.datecoststale) })
+    expect(region().textContent).toBe('')
   })
 })

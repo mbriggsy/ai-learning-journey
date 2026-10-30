@@ -510,7 +510,8 @@ describe('the other-income loop — widow’s-numbers summary + the not-saved af
 
   it('renders the form, toggles already-receiving, commits, and surfaces the widow’s number — never a raw survivorPct', () => {
     const m = modelWithPeople()
-    // The spend + ACA preamble facts so the flow can reach the (last) other-income step.
+    // The spend + ACA preamble facts so the flow can reach the other-income step (the last step on
+    // the all-retired route; the pay check's two steps follow it on the date route).
     m.update((d) => ({
       ...d,
       annualSpendingReal: 60_000,

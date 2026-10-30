@@ -72,7 +72,7 @@ vi.mock('../vaultSession', () => ({
  * entire point of `mintSavedRecommendation`'s own gate, which runs the SAME
  * `checkSavedRecommendationV3` the codec runs, so a record this probe could drop can never get past
  * the mint. But a declared refusal with no producer is the dead arm insight 100 forbids, and the
- * ORDER it guards (probe BEFORE the store write) is the data-loss case `scenarioCodec.ts:660-664`
+ * ORDER it guards (probe BEFORE the store write) is the data-loss case `scenarioCodec.ts:666-670`
  * names. So it is witnessed with the planted-seam idiom this repo already uses for the
  * broken-trichotomy split (`recommendationSaveView.test.ts`): passthrough everywhere, and one extra
  * atom reported ONLY for a record-bearing candidate, ONLY while armed. The paired control inside
@@ -421,7 +421,7 @@ afterEach(cleanup)
 /**
  * THE MUTANT THIS SECTION EXISTS FOR: move `appModel.update` above the mint's validation / the
  * gate's probe. It is the worst one in the feature, and it is invisible to every other battery.
- * `scenarioCodec.ts:660-664` names the loss: where the disk already holds a VALID record and a new
+ * `scenarioCodec.ts:666-670` names the loss: where the disk already holds a VALID record and a new
  * mint is bad, the codec deletes the bad record from the LIVE operand only, the two
  * `scenarioIdentityKey`s diverge, `deriveResultSave` reads DIRTY, and the household's next
  * plan-save writes a record-FREE scenario OVER the good record. The refusal renders either way —
@@ -584,7 +584,7 @@ describe('the save gesture — R1: with no vault the tap MINTS and opens the cer
      *
      * So this arm FORCES the two apart — the only way the difference becomes observable — by
      * making the fresh read return a sentinel no committed run could produce. The gesture consumes
-     * `currentDraftFingerprint()` nowhere (`IntakeApp.tsx:457-475` reads only the snapshot), so the
+     * `currentDraftFingerprint()` nowhere (`IntakeApp.tsx:458-476` reads only the snapshot), so the
      * mock cannot perturb the path under test.
      *
      * MUTANT: `s.solve.fingerprint` → `appModel.currentDraftFingerprint()` at the mint — this reds.
@@ -748,7 +748,7 @@ describe('the record-card memo — a DATE route refuses the card structurally', 
     /**
      * WHY THE CONJUNCT EXISTS. `exposureForDraft` carries a hard in-source prohibition — "DO NOT
      * LIFT THIS FUNCTION TO A CROWNED SURFACE… the base read WOULD lie there"
-     * (`stalenessExposure.ts:88-91`) — because on a date route it takes the arm that reads the
+     * (`stalenessExposure.ts:95-98`) — because on a date route it takes the arm that reads the
      * PRE-SWEEP base ACA overlay, while the screen it would feed sits beside a CROWNED date. So
      * IntakeApp refuses at the PRODUCER (`isDateRoute(snapshot.draft) ⇒ undefined`): the lying read
      * is never TAKEN, rather than taken and then discarded.

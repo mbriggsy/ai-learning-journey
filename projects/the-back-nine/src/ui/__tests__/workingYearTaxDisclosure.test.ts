@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { copy } from '@ui/copy'
-import { METHODOLOGY_DISCLOSURES, requiredSeats } from '@ui/assumptionRegistry'
+import { METHODOLOGY_DISCLOSURES, methodologyLines, requiredSeats } from '@ui/assumptionRegistry'
 import { lintCopy } from '@ui/copyGuard'
+import { HAWK_BAN } from './hawkBan'
 import { prepareWorkingYearFloor, workingYearFederalCharge } from '@engine/taxOverlay'
 import { ordinaryPlusCapitalGainsTax } from '@engine/taxCore'
 
@@ -48,24 +49,9 @@ function rowStrings(): readonly string[] {
   return [copy[entry.nameKey], ...entry.lineKeys.map((k) => copy[k])]
 }
 
-/** The Hawk's narrowed ban — each pattern with the samples it must catch (non-vacuity, burned/070). */
-const BANNED: readonly { readonly word: string; readonly re: RegExp; readonly mustCatch: readonly string[] }[] = [
-  {
-    word: 'conservative',
-    re: /\bconservativ/i,
-    mustCatch: ['A conservative reading of your investment income.', 'Priced conservatively, on purpose.', 'The Conservative choice.'],
-  },
-  {
-    word: 'worst case',
-    re: /\bworst[\s-]+case\b/i,
-    mustCatch: ['The tool takes the worst case.', 'A worst-case reading.', 'Worst  case, it costs more.'],
-  },
-  {
-    word: 'only later',
-    re: /\bonly\s+later\b/i,
-    mustCatch: ['It applies only later, once you stop.', 'Only later years count.'],
-  },
-]
+/** The Hawk's narrowed ban — the ONE lexicon and its planted corpus (`hawkBan.ts`), shared with the copy
+ *  guard's sweep over every new pay-check string. */
+const BANNED = HAWK_BAN
 
 describe('the working-year tax disclosure row (R13 — the working-year tax floor, 2026-10-20)', () => {
   it('CENSUS — six methodology rows, in order, each on its own seat, and the R7 seat walk demands the new one', () => {
@@ -219,5 +205,115 @@ describe('the working-year tax disclosure row (R13 — the working-year tax floo
     // The pay and the investment income carry real tax by themselves (the ordinary reading alone is
     // $13,624 by Table 1), and none of it is portfolio-funded: R3's NEGATIVE, as the row words it.
     expect(workingYearFederalCharge(floor(), 0, 0).tax).toBe(0)
+  })
+})
+
+/*
+ * The pay check's arm of the same row (U9, R17 — `docs/plans/features/working-year-pay-check-build-spec.md`).
+ * A household whose run carries W reads `workingCostLineKeys` instead of `lineKeys`, through the ONE
+ * selector the panel calls (`methodologyLines`, insight 086). The arm itself is the built run's
+ * (`AssumptionPanel.methodologyArmFor`, pinned in `assumptionPanel.test.tsx`). The W-absent arm is
+ * today's row VERBATIM (KTD22), which is why every pin above stays unedited.
+ */
+describe('the pay check’s arm of the working-year row (U9, R17)', () => {
+  // The pinned order, typed by hand: the rewrite, the two unchanged paragraphs, then one key per open
+  // gap — looks better than it really is (K1–K5), either way (K6–K8), a little worse (K9–K13, K15).
+  const W_ARM: readonly string[] = [
+    'assumptionWorkingYearCheckValue',
+    'assumptionWorkingYearTaxReadings',
+    'assumptionWorkingYearTaxOmissions',
+    'assumptionWorkingYearCheckEarlyCharge',
+    'assumptionWorkingYearCheckSelfEmployed',
+    'assumptionWorkingYearCheckIraDeduction',
+    'assumptionWorkingYearCheckRothCatchUp',
+    'assumptionWorkingYearCheckFullYearClaim',
+    'assumptionWorkingYearCheckSteadyPay',
+    'assumptionWorkingYearCheckWorkState',
+    'assumptionWorkingYearCheckWageFigures',
+    'assumptionWorkingYearCheckLeftOver',
+    'assumptionWorkingYearCheckBirthMonth',
+    'assumptionWorkingYearCheckPreTaxBenefits',
+    'assumptionWorkingYearCheckNoSocialSecurityJob',
+    'assumptionWorkingYearCheckEarlierHeldBack',
+    'assumptionWorkingYearCheckSpouseMedicare',
+  ]
+  const row = (): NonNullable<typeof entry> => {
+    if (entry === undefined) throw new Error('[test setup] no working-year-tax row in METHODOLOGY_DISCLOSURES')
+    return entry
+  }
+  const wArmStrings = (): readonly string[] => [copy[row().nameKey], ...methodologyLines(row(), 'workingCost', 'agi-derived').map((k) => copy[k])]
+
+  it('the W-absent arm is today’s row, verbatim (KTD22)', () => {
+    expect(methodologyLines(row(), 'default', 'agi-derived')).toEqual([
+      'assumptionWorkingYearTaxValue',
+      'assumptionWorkingYearTaxReadings',
+      'assumptionWorkingYearTaxOmissions',
+    ])
+  })
+
+  it('the W arm renders the rewrite, the two unchanged paragraphs, then every gap key in the pinned order', () => {
+    expect(methodologyLines(row(), 'workingCost', 'agi-derived')).toEqual(W_ARM)
+  })
+
+  it('K7 (the state tax on pay) reads only where the run taxes working years by the state; where W holds that tax it is dropped, the order kept', () => {
+    const k7 = 'assumptionWorkingYearCheckWorkState'
+    for (const reading of ['agi-derived', 'none'] as const) {
+      expect(methodologyLines(row(), 'workingCost', reading), reading).toEqual(W_ARM)
+    }
+    for (const reading of ['unpriced', 'class-based'] as const) {
+      expect(methodologyLines(row(), 'workingCost', reading), reading).toEqual(W_ARM.filter((k) => k !== k7))
+    }
+    // Today's row never carried it, under any reading.
+    for (const reading of ['agi-derived', 'none', 'unpriced', 'class-based'] as const) {
+      expect(methodologyLines(row(), 'default', reading)).not.toContain(k7)
+    }
+  })
+
+  it('a row with no W arm reads its own lines on both arms', () => {
+    for (const m of METHODOLOGY_DISCLOSURES.filter((x) => x.id !== 'working-year-tax')) {
+      expect(m.workingCostLineKeys, `${m.id} carries no W arm`).toBeUndefined()
+      expect(methodologyLines(m, 'workingCost', 'agi-derived')).toEqual(m.lineKeys)
+    }
+  })
+
+  it('the investment-income surtax is said exactly once in the W arm — through Omissions, never a key of its own', () => {
+    const strings = wArmStrings()
+    expect(strings.filter((s) => s.includes(copy.recDiscNiit))).toHaveLength(1)
+    expect(strings.filter((s) => /surtax/i.test(s))).toHaveLength(1)
+  })
+
+  it('BANNED and the house voice hold on every W-arm string', () => {
+    const strings = wArmStrings()
+    expect(strings.length, 'the sweep reads the whole W arm (the name and seventeen lines)').toBe(18)
+    for (const s of strings) {
+      for (const b of BANNED) expect(s, `the W arm says "${b.word}": "${s}"`).not.toMatch(b.re)
+      expect(s, `a straight apostrophe in "${s}" (the catalog writes ’)`).not.toMatch(/'/)
+      expect(lintCopy(s, ['false-certainty', 'advice-verb', 'survival-claim']), s).toEqual([])
+    }
+  })
+
+  it('the rewrite drops the unchecked-pay claim, says the check and the draw, and keeps the old paragraph’s last two sentences word for word', () => {
+    const old = copy.assumptionWorkingYearTaxValue
+    const rewrite = copy.assumptionWorkingYearCheckValue
+    const carried = old.slice(old.indexOf('Savings can still'))
+    expect(carried.length, 'the carried tail is real text').toBeGreaterThan(100)
+    expect(rewrite.endsWith(carried), 'sentences 3–4 carry over verbatim').toBe(true)
+    expect(rewrite).not.toMatch(/doesn’t check that your pay/i)
+    expect(rewrite).toMatch(/checks each year’s pay against what you said a working year costs/i)
+    expect(rewrite).toMatch(/payroll tax[^.;]*the income tax on that income[^.;]*what you put into savings[^.;]*your working-year figure/i)
+    expect(rewrite).toMatch(/comes up short[^.]*comes out of savings/i)
+  })
+
+  it('each gap key names its lean: better than real (K1–K5), either way (K6–K8), a little worse (K9–K13, K15)', () => {
+    const keys = methodologyLines(row(), 'workingCost', 'agi-derived').slice(3)
+    const text = (i: number): string => copy[keys[i] as keyof typeof copy]
+    for (let i = 0; i < 5; i++) expect(text(i), keys[i]).toMatch(/better than (it|they) really (is|are)/)
+    expect(text(5), keys[5]).toMatch(/better than it really is[^.]*worse/)
+    expect(text(6), keys[6]).toMatch(/either way/)
+    expect(text(7), keys[7]).toMatch(/taxed a little low[^.]*more of an early benefit is held back/)
+    for (let i = 8; i < keys.length; i++) {
+      expect(text(i), keys[i]).toMatch(/a little worse than (it|they) really (is|are)|read a little low/)
+      expect(text(i), keys[i]).not.toMatch(/better than/)
+    }
   })
 })

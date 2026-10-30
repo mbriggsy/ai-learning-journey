@@ -123,9 +123,36 @@ export interface EarningsTestYears {
   /** 1 where some of year t's withholding comes from a year that may hold FRA — the stopgap's most the
    *  year can hold back, so the figure is "at most" (the money picture's `'fraYearAtMost'`). */
   readonly fraYearAtMost: Uint8Array
+  /** Why year t's held-back months do or do not raise a benefit later in THIS run, one bit per reason
+   *  ({@link HELD_BACK_CREDITED}, {@link HELD_BACK_UNTIL_BIRTH_MONTH}, {@link HELD_BACK_PAST_FRA}); 0 where
+   *  nothing is held back. On the crediting rule itself, so a month reads credited exactly when it counts
+   *  in `creditMonths`. The money picture's held-back words read year 0's. */
+  readonly heldBackCredit: Uint8Array
   /** Each person's crediting months over the path (each in effect from its own recompute year). */
   readonly creditMonths: readonly CreditMonths[]
 }
+
+/** A held-back month that is a crediting month for its benefit: it raises that benefit later. */
+export const HELD_BACK_CREDITED = 1
+/** A held-back month the run credits nothing only because its year may hold FRA — the earner's (the
+ *  stopgap's charge marks no deduction month) or the payee's (KTD11) — where the law credits the pre-FRA
+ *  months a birth month would place: gloomy, until the birth-month ask. */
+export const HELD_BACK_UNTIL_BIRTH_MONTH = 2
+/** A held-back month from a payee certainly past FRA all year, whom the law credits nothing (§402(q)(7)
+ *  removes only months inside the reduction period): a spousal excess a younger worker's pay charges. */
+export const HELD_BACK_PAST_FRA = 4
+
+/** One held-back month of one benefit, classified. `deducted`: the month is a deduction month on that
+ *  benefit (a charge in a year certainly before the EARNER's FRA); the frame pair is the PAYEE's for that
+ *  benefit (survivor FRA for a widow(er) benefit). The crediting branch is the settle's own test. */
+const heldBackReason = (deducted: boolean, age: number, creditBeforeAge: number, fraYearAge: number): number =>
+  !deducted
+    ? HELD_BACK_UNTIL_BIRTH_MONTH
+    : age < creditBeforeAge
+      ? HELD_BACK_CREDITED
+      : age <= fraYearAge
+        ? HELD_BACK_UNTIL_BIRTH_MONTH
+        : HELD_BACK_PAST_FRA
 
 export type EarningsTestSchedule = NoEarningsTest | EarningsTestYears
 
@@ -401,6 +428,7 @@ export function earningsTestSchedule(path: EarningsTestPath): EarningsTestSchedu
   const paid = new Float64Array(horizonYears)
   const withheld = new Float64Array(horizonYears)
   const fraYearAtMost = new Uint8Array(horizonYears)
+  const heldBackCredit = new Uint8Array(horizonYears)
   const rate = spousalRate.value
   const remOwn = [new Float64Array(MONTHS), new Float64Array(MONTHS)]
   const remAux = [new Float64Array(MONTHS), new Float64Array(MONTHS)]
@@ -479,10 +507,14 @@ export function earningsTestSchedule(path: EarningsTestPath): EarningsTestSchedu
           }
         }
       }
-      // Settle the year: what was held back, and the crediting months it earned each benefit.
+      // Settle the year: what was held back, the crediting months it earned each benefit, and why each
+      // held-back month does or does not raise a benefit later (on the same crediting rule, below).
+      let reasons = 0
       for (let i = 0; i < n; i++) {
         const age = people[i]!.currentAge + t
         const frame = frames[i]!
+        const auxCreditAge = auxIsWidow ? frame.survivorCreditBeforeAge : frame.creditBeforeAge
+        const auxFraYearAge = auxIsWidow ? frame.survivorFraYearAge : frame.fraYearAge
         let ownMonths = 0
         let auxMonths = 0
         for (let m = 0; m < MONTHS; m++) {
@@ -490,6 +522,8 @@ export function earningsTestSchedule(path: EarningsTestPath): EarningsTestSchedu
           paidCents += remOwn[i]![m]! + remAux[i]![m]!
           ownMonths += dedOwn[i]![m]!
           auxMonths += dedAux[i]![m]!
+          if (remOwn[i]![m]! < fullOwn[i]!) reasons |= heldBackReason(dedOwn[i]![m]! === 1, age, frame.creditBeforeAge, frame.fraYearAge)
+          if (remAux[i]![m]! < fullAux[i]!) reasons |= heldBackReason(dedAux[i]![m]! === 1, age, auxCreditAge, auxFraYearAge)
         }
         if (age < frame.creditBeforeAge) ownCredits[i] = ownCredits[i]! + ownMonths
         if (auxIsWidow) {
@@ -497,6 +531,7 @@ export function earningsTestSchedule(path: EarningsTestPath): EarningsTestSchedu
           if (age < WIDOW_FIRST_RECOMPUTE_AGE) widowCreditsBefore62[i] = widowCreditsBefore62[i]! + auxMonths
         } else if (age < frame.creditBeforeAge) spousalCredits[i] = spousalCredits[i]! + auxMonths
       }
+      heldBackCredit[t] = reasons
     }
     withheld[t] = withheldCents / 100
     // A year with nothing held back pays the composed float itself — the run's own figure, bit for bit
@@ -510,6 +545,7 @@ export function earningsTestSchedule(path: EarningsTestPath): EarningsTestSchedu
     paid,
     withheld,
     fraYearAtMost,
+    heldBackCredit,
     creditMonths: people.map((_, i) => ({ own: ownCredits[i]!, spousal: spousalCredits[i]!, widow: widowCredits[i]! })),
   }
 }

@@ -24,6 +24,7 @@ import { ENGINE_PRICING_LEDGER, FIRST_UNAMBIGUOUS_SAVE_DAY, type PricingFamily }
 import { DEV_SEEDS } from '../devSeeds'
 import { deriveStaleness, PRICING_FAMILY_ORDER, type StalenessExposure, type StalenessReport } from '@store/staleness'
 import { exposureForDraft } from '../stalenessExposure'
+import { isWorkingYearCostStale } from '@intake/workingYearQuote'
 import { copy, slots } from '../copy'
 import type { PricedState } from '@engine/constants/stateTax'
 import type { ScenarioV3 } from '@shared/model'
@@ -72,7 +73,31 @@ const pricing = (e: StalenessExposure, s: PricedState | undefined): StalenessExp
   pricedState: s,
 })
 const reportFor = (s: ScenarioV3, exposure: StalenessExposure = RETIRED_EXPOSURE) =>
-  deriveStaleness(s, TODAY, exposure)
+  deriveStaleness(s, TODAY, exposure, false)
+
+// The pay check's W. `date` without W (whatever W the seed registry later gives it), and the same
+// household with W confirmed — typed by hand from the seed's own facts: no budget ⇒ the quote is its
+// $84,000 spending; no retirement state ⇒ the 'unpriced' reading (KTD5, KTD18). The exposure and the
+// stale flag are the REAL producers' answers, never literals (this file's end-to-end law).
+const { workingYearCost: _seedW, ...DATE_NO_W } = DEV_SEEDS.date
+const DATE_WITH_W: ScenarioDraft = {
+  ...DATE_NO_W,
+  workingYearCost: { kind: 'confirmed', quotedReal: 84_000, stateTaxReading: 'unpriced' },
+}
+/** The W-present household after it raised its spending to $90,000 — the quote moved, the answer
+ *  did not (KTD21's quoteMoved). */
+const DATE_STALE_W: ScenarioDraft = { ...DATE_WITH_W, annualSpendingReal: 90_000 }
+/** A save by THIS build of a hand-built draft (the `readySave` twin for a non-seed draft). */
+const savedDraft = (d: ScenarioDraft): ScenarioV3 => {
+  const r = scenarioFromDraft(d)
+  if (!r.ready) throw new Error('the fixture draft must be save-ready')
+  return { ...r.scenario, savedAt: TODAY }
+}
+/** A save carrying the working-years stamp of the PREVIOUS table (any value but the current one). */
+const withOlderWorkingYearsStamp = (s: ScenarioV3): ScenarioV3 => ({
+  ...s,
+  dateVintage: { ...s.dateVintage!, workingYearsVintage: 'working-years-2025a' },
+})
 
 describe('composeReentry — the read-back', () => {
   it('sums balances per ENGINE bucket and omits empty buckets (retired: pretax only; date: pretax + roth — never a noise "$0 Roth" row)', () => {
@@ -130,7 +155,7 @@ describe('composeReentry — the read-back', () => {
     } as ScenarioV3
     const view = composeReentry(doctored, reportFor(doctored))
     expect(view.noteLines).toContain(copy.stalenessTax)
-    // U17 §S4 — `coverageYear` dates the ACA/IRMAA tables (model.ts:2508), so for THIS all-65+
+    // U17 §S4 — `coverageYear` dates the ACA/IRMAA tables (model.ts:2580), so for THIS all-65+
     // household it names the Medicare half and only that: they price the IRMAA ladder every
     // year and zero marketplace years. Not the old collapsed "Health-coverage rules" line, and
     // not the nameless aggregate the first cut mis-bucketed it to.
@@ -272,10 +297,12 @@ describe('composeReentry — the read-back', () => {
         { ...date, dateVintage: { ...date.dateVintage!, contributionYear: date.dateVintage!.contributionYear - 1 } },
         DATE_EXPOSURE,
       ],
+      // The pay check's U13 clock: a W-present plan saved under the previous working-years table.
+      ['working-years', withOlderWorkingYearsStamp(savedDraft(DATE_WITH_W)), exposureForDraft(DATE_WITH_W)],
     ]
     let fired = 0
     for (const [label, scenario, exposure] of cases) {
-      const report = deriveStaleness(scenario, TODAY, exposure)
+      const report = deriveStaleness(scenario, TODAY, exposure, false)
       const view = composeReentry(scenario, report)
       if (report.rulesMoved) {
         fired += 1
@@ -287,6 +314,46 @@ describe('composeReentry — the read-back', () => {
     // NON-VACUITY: the sweep must actually exercise the true branch for every row, or the
     // implication holds trivially (burned/070).
     expect(fired, 'every case must raise rulesMoved — otherwise the invariant is vacuous').toBe(cases.length)
+  })
+
+  // The pay check's two re-entry lines — U13's clock (a NAMED rules line) and KTD21's stale answer
+  // (worth a look, never a rules line) — end to end: real draft → real exposure + real stale
+  // predicate → report → rendered sentence.
+  it('the pay check: the working-years clock renders its own named line, once, and only for a run that carries W', () => {
+    const s = withOlderWorkingYearsStamp(savedDraft(DATE_WITH_W))
+    const report = deriveStaleness(s, TODAY, exposureForDraft(DATE_WITH_W), isWorkingYearCostStale(DATE_WITH_W))
+    expect(report.rulesMoved).toBe(true)
+    expect(composeReentry(s, report).noteLines).toEqual([copy.stalenessWorkingYears])
+    // The same stamp on the same household WITHOUT W: its run reads the table nowhere — no line.
+    const noW = withOlderWorkingYearsStamp(savedDraft(DATE_NO_W))
+    const silent = deriveStaleness(noW, TODAY, exposureForDraft(DATE_NO_W), isWorkingYearCostStale(DATE_NO_W))
+    expect(composeReentry(noW, silent).noteLines).toEqual([])
+    expect(silent.anyStale).toBe(false)
+  })
+
+  it('the pay check: a plan saved stale on its W answer renders the worth-a-look line ONCE, with rulesMoved false (never the rules register)', () => {
+    expect(isWorkingYearCostStale(DATE_STALE_W), 'the fixture is stale').toBe(true)
+    const s = savedDraft(DATE_STALE_W)
+    const report = deriveStaleness(s, TODAY, exposureForDraft(DATE_STALE_W), isWorkingYearCostStale(DATE_STALE_W))
+    expect(report.rulesMoved, 'the hero echo must stay dark').toBe(false)
+    expect(report.anyStale).toBe(true)
+    const view = composeReentry(s, report)
+    expect(view.noteLines).toEqual([copy.stalenessWorkingYearCost])
+    expect(copy.stalenessWorkingYearCost, 'distinct text — ReEntry keys each note by it').not.toBe(copy.stalenessWorkingYears)
+  })
+
+  it('the pay check: push order — the contribution clock, then the working-years clock, then the stale-answer line', () => {
+    const base = withOlderWorkingYearsStamp(savedDraft(DATE_STALE_W))
+    const s: ScenarioV3 = {
+      ...base,
+      dateVintage: { ...base.dateVintage!, contributionYear: base.dateVintage!.contributionYear - 1 },
+    }
+    const report = deriveStaleness(s, TODAY, exposureForDraft(DATE_STALE_W), isWorkingYearCostStale(DATE_STALE_W))
+    expect(composeReentry(s, report).noteLines).toEqual([
+      copy.stalenessDate,
+      copy.stalenessWorkingYears,
+      copy.stalenessWorkingYearCost,
+    ])
   })
 
   // S5.4 — the state-tax staleness clock's own named line: a PRICED household (NC) whose own
@@ -481,7 +548,7 @@ describe('composeReentry — the engine-pricing lines', () => {
     for (const [name, scenario, exposure] of households) {
       for (const day of days) {
         const s = savedOn(scenario, day)
-        const report = deriveStaleness(s, TODAY, exposure)
+        const report = deriveStaleness(s, TODAY, exposure, false)
         const view = composeReentry(s, report)
         const at = `${name} saved ${String(day)}`
         if (report.pricing.moved) {
@@ -612,7 +679,7 @@ describe('composeReentry — the working-year tax floor (ledger v12)', () => {
   const savedOnDay = (s: ScenarioV3, savedAt: number): ScenarioV3 => ({ ...s, savedAt })
   const linesFor = (key: keyof typeof DEV_SEEDS | ScenarioV3, exposure: StalenessExposure, savedAt: number) => {
     const s = savedOnDay(typeof key === 'string' ? scenarioFor(key) : key, savedAt)
-    return composeReentry(s, deriveStaleness(s, TODAY, exposure)).noteLines
+    return composeReentry(s, deriveStaleness(s, TODAY, exposure, false)).noteLines
   }
   /** `date` made young and two-earner (45 + 47) — nothing in any clamped year for the floor to price. A
    *  still-working person carries no retirement age (the save gate refuses one), so Sam's is dropped. */

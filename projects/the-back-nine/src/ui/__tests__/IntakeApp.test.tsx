@@ -27,18 +27,21 @@ vi.mock('../Result', () => ({
     onReview,
     stalenessNote = false,
     computing,
+    readOnly = false,
   }: {
     save: { kind: string; onKeep?: () => void }
     backup?: { onSave: () => void }
     onReview: () => void
     stalenessNote?: boolean
     computing?: boolean
+    readOnly?: boolean
   }) => (
     <div
       data-save-kind={save.kind}
       data-backup={backup ? 'offered' : 'none'}
       data-staleness={String(stalenessNote)}
       data-computing={String(computing)}
+      data-read-only={String(readOnly)}
     >
       result stub
       <button type="button" onClick={onReview}>
@@ -142,6 +145,9 @@ describe('IntakeApp — the read-only verdict reaches deriveResultSave (Fork C i
     await affirmGate(true)
     const stub = await screen.findByText('result stub')
     expect(stub).toHaveAttribute('data-save-kind', 'none')
+    // …and Result itself is told, so the pay check's standing line offers no door into an edit this
+    // tab could never keep (KTD21).
+    expect(stub).toHaveAttribute('data-read-only', 'true')
   })
 
   it('the WRITABLE twin derives the clean saved badge — the flag is the verdict, not a global mute', async () => {
@@ -149,6 +155,7 @@ describe('IntakeApp — the read-only verdict reaches deriveResultSave (Fork C i
     await affirmGate()
     const stub = await screen.findByText('result stub')
     expect(stub).toHaveAttribute('data-save-kind', 'clean')
+    expect(stub).toHaveAttribute('data-read-only', 'false')
   })
 })
 

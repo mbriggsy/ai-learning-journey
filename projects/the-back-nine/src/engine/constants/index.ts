@@ -17,7 +17,7 @@ import { healthConstants, COVERAGE_YEAR } from './health'
 import { contributionConstants, CONTRIBUTION_YEAR } from './contributions'
 import { socialSecurityConstants } from './socialSecurity'
 import { solverConstants } from './solver'
-import { workingYearsConstants } from './workingYears'
+import { workingYearsConstants, WORKING_YEARS_VINTAGE } from './workingYears'
 import type { ConstantEntry } from './types'
 import { BLEND_SNAPSHOT_AS_OF } from '../reference/tickerBlend'
 import type { DateVintageV3 } from '@shared/model'
@@ -64,10 +64,15 @@ export const CONSTANTS_VINTAGE = Object.freeze({
  *  the contribution-limit table year (constants) and the ticker-blend static-snapshot
  *  as-of (reference — governed by the blend single-source gate, not this registry). The
  *  save path writes it fresh (`scenarioFromDraft`); U13's staleness comparator diffs a
- *  persisted stamp against THIS at unlock. */
+ *  persisted stamp against THIS at unlock. The pay check's U13 adds a third figure, the
+ *  working-years table's vintage (payroll tax and the earnings test): a bumpable stamp, not
+ *  a year, because the roll tripwire pins `WORKING_YEARS_YEAR` equal to its siblings, so an
+ *  in-year correction could never move a year-keyed stamp. It stays OUT of
+ *  `CONSTANTS_VINTAGE`, whose three-year shape the tripwire and the scaffold smoke test pin. */
 export function dateVintageStamp(): DateVintageV3 {
   return {
     contributionYear: CONTRIBUTION_YEAR,
     blendSnapshotAsOf: BLEND_SNAPSHOT_AS_OF,
+    workingYearsVintage: WORKING_YEARS_VINTAGE,
   }
 }

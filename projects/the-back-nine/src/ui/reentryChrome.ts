@@ -58,8 +58,9 @@ export interface ReentryView {
   /** The calm note lines, in push order — the named fired clocks (app default, tax, state tax,
    *  ACA, Medicare), then the engine-pricing ledger (`report.pricing`: the ONE named method line,
    *  its nameless twin, the Medicare-spending re-confirm), then the contribution clock
-   *  (`stalenessDate`), the ONE nameless reference-tables line, and one budget line per boundary
-   *  year (empty = nothing to flag). */
+   *  (`stalenessDate`), the working-years clock (`stalenessWorkingYears`), the ONE nameless
+   *  reference-tables line, the stale-W re-confirm (`stalenessWorkingYearCost`), and one budget
+   *  line per boundary year (empty = nothing to flag). */
   readonly noteLines: readonly string[]
   /** The "~N years since your save" line, or null (absent savedAt / under a year —
    *  SUPPRESSED, never fabricated). */
@@ -137,10 +138,19 @@ export function composeReentry(scenario: ScenarioV3, report: StalenessReport): R
   // "behind your date" wording is true) and exposure (their run actually prices a contribution
   // stream). (The blend clause left this line — it aggregates or goes silent now.)
   if (report.date.contributionMoved) noteLines.push(copy.stalenessDate)
+  // The pay check's U13 clock — the working-years table (payroll tax, the earnings test) — the last
+  // NAMED rules line, beside its date-surface sibling. Exposure-gated upstream: the run carries W,
+  // the table's one reader, so "behind your working years" is true of every household that hears it.
+  if (report.workingYear.vintageMoved) noteLines.push(copy.stalenessWorkingYears)
   // THE AGGREGATE, pushed AT MOST ONCE — `ReEntry.tsx:84` keys each note <p> by its own TEXT,
   // so a second push of the same sentence would collide on the React key. One `if` over the
   // whole bucket is the structural guarantee (never a per-clock loop over `.clocks`).
   if (report.unattributed.moved) noteLines.push(copy.stalenessReferenceTables)
+  // The pay check's KTD21 — the household's own W answer no longer matches the spending or state it
+  // was given against. Not a rules line (it rides `anyStale` only), so it sits with the input
+  // re-confirms, before the budget lines: a static key, because this seam takes no draft and must
+  // never re-derive the quote to put a figure in it.
+  if (report.workingYear.costStale) noteLines.push(copy.stalenessWorkingYearCost)
   // One line per boundary YEAR: the copy quotes only the calendar year, so two lines
   // sharing an endYear would render byte-identical sentences (and collide on the render
   // key) — the year carries the whole message once.

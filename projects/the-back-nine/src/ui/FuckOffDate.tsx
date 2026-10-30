@@ -176,6 +176,13 @@ export interface FuckOffDateProps {
    *  an aged projection with no stated premise (the spec's no-fold-legal-premise arm, made
    *  structural). Fresh sessions (plan clock 0) ignore it. */
   readonly onReconfirm?: () => void
+  /** The pay check's KTD21 standing line: present ⇔ the household's W answer no longer matches the
+   *  spending or state it was given against — the date still uses that last figure (R4), so the
+   *  claim says so among its notes. `onOpen` present ⇒ the sentence carries a door into the
+   *  assumptions panel at the W row (Result passes it only when the tab can save); absent ⇒ the
+   *  read-only face states the fact with no door (ReEntry's dead-end-CTA doctrine). `text` is the W
+   *  step's own stale sentence (`workingYearCostStaleText`): both figures and the cause that moved. */
+  readonly payCheckNote?: { readonly text: string; readonly onOpen?: () => void }
 }
 
 /** The hero claim's heading text — shared by the render and the polite sharpen announce, so what
@@ -241,7 +248,7 @@ export function floorLineText(
   return slots.dateFloorCoveredAnchored(fl.offsetYears - anchor.yearsSincePlanBuilt, calendarYear, odds, fl.unconfirmed)
 }
 
-export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote = false, medicareExtrasTypicalNote, statePricedNote, stalenessNote = false, dateAnchor, agedBalancesYear, sheetOpen = false, onReconfirm }: FuckOffDateProps) {
+export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote = false, medicareExtrasTypicalNote, statePricedNote, stalenessNote = false, dateAnchor, agedBalancesYear, sheetOpen = false, onReconfirm, payCheckNote }: FuckOffDateProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
   // Announce on the FIRST landing only (the undefined→defined edge). The date route is TIERED: the
   // provisional→final sharpen can crown a DIFFERENT offset, which flips focusSignal — but re-firing
@@ -442,6 +449,23 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
           {/* P3·U13 — the standing staleness echo (Q1): the per-clock disclosure rendered at
               the re-entry gate; this line keeps the fact visible WITH the date claim. */}
           {stalenessNote && <p className="fod-note cs-staleness-note">{copy.stalenessHeroNote}</p>}
+          {/* The pay check's KTD21 standing line — right after the staleness echo, still in the lead
+              and above the graphs: a calm note in the same register, never role=alert. Its door is
+              inline after the sentence (the band premise's grammar), and only where the tab can act
+              on it; a read-only tab reads the fact alone. */}
+          {payCheckNote !== undefined && (
+            <p className="fod-note cs-paycheck-note">
+              <span>{`${copy.stalenessPayCheckNote} ${payCheckNote.text}`}</span>
+              {payCheckNote.onOpen !== undefined && (
+                <>
+                  {' '}
+                  <button type="button" className="band-premise__cta" onClick={payCheckNote.onOpen}>
+                    {copy.stalenessPayCheckCta}
+                  </button>
+                </>
+              )}
+            </p>
+          )}
         </div>
         {/* BOTH GRAPHS share one wrapper: display:contents in single column (the phone DOM renders
             byte-identically) and the right-pane grid cell on two-pane — so the LEFT column's rows

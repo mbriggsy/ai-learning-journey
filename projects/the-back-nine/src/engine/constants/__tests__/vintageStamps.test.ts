@@ -18,6 +18,7 @@ import {
   healthConstants,
 } from '../health'
 import { stateTaxVintageStamp, STATE_TAX_PROFILES, ncRateSchedule } from '../stateTax'
+import { WORKING_YEARS_VINTAGE, workingYearsConstants } from '../workingYears'
 import { BLEND_SNAPSHOT_AS_OF, TICKER_BLEND_ROWS } from '../../reference/tickerBlend'
 
 describe('taxVintageStamp — the controls-surface clock producer', () => {
@@ -112,10 +113,46 @@ describe('stateTaxVintageStamp — the state-tax clock producer', () => {
 })
 
 describe('dateVintageStamp — the fuck-off-date clock producer', () => {
-  it('source-binds contributionYear to CONTRIBUTION_YEAR and blendSnapshotAsOf to the table aggregate', () => {
+  it('source-binds contributionYear to CONTRIBUTION_YEAR, blendSnapshotAsOf to the table aggregate, and workingYearsVintage to the working-years stamp', () => {
+    // Edited by the pay check's U13 (R18 names this assertion): the third field is the
+    // working-years table's own stamp, read from its canonical export — never a re-typed literal.
     expect(dateVintageStamp()).toEqual({
       contributionYear: CONTRIBUTION_YEAR,
       blendSnapshotAsOf: BLEND_SNAPSHOT_AS_OF,
+      workingYearsVintage: WORKING_YEARS_VINTAGE,
+    })
+  })
+
+  /**
+   * THE STAMP↔CONTENT BINDING for the WORKING-YEARS table (the pay check's U13 / R20; the tax and
+   * health twins above). The stamp is a bumpable string, not the table year, because the roll
+   * tripwire holds `WORKING_YEARS_YEAR` equal to its siblings — so an in-year correction (a wage
+   * base, an exempt amount) can only reach a saved plan's clock through a stamp bump, and this pin
+   * makes forgetting that bump impossible: any change to the table's values under an unchanged
+   * stamp fails here, with the maintenance contract in the message. The pinned digest was computed
+   * from the values typed by hand from their primaries, not read back off the module (DND 012).
+   */
+  it('the table CONTENT is bound to WORKING_YEARS_VINTAGE — a value edit must bump the stamp (or consciously re-pin here)', () => {
+    const fingerprint = JSON.stringify(
+      Object.fromEntries(
+        Object.entries(workingYearsConstants).map(([k, entry]) => [k, (entry as { value?: unknown }).value ?? null]),
+      ),
+    )
+    // A cheap stable digest (djb2) — the pin is the stamp↔digest BINDING, not the bytes.
+    let h = 5381
+    for (let i = 0; i < fingerprint.length; i++) h = ((h * 33) ^ fingerprint.charCodeAt(i)) >>> 0
+    expect(
+      { stamp: WORKING_YEARS_VINTAGE, contentDigest: h },
+      'The working-years table CONTENT (payroll tax, the earnings test) changed under an unchanged ' +
+        'WORKING_YEARS_VINTAGE. If a real figure moved (a new year, an in-year correction), bump the stamp’s ' +
+        'suffix letter (working-years-2026a → 2026b; a new year restarts at a) so every saved W-present plan’s ' +
+        'clock fires (R20: never re-priced silently) — THEN update this pin. Only re-pin alone for a non-value edit.',
+    ).toEqual({
+      stamp: 'working-years-2026a',
+      // Pinned 2026-10-30 (the pay check's Phase B): oasdiRate 0.062, oasdiWageBase 184,500, hiRate
+      // 0.0145, additionalMedicareTax {0.009, 250,000, 200,000}, the exempt amounts {24,480, 65,160}
+      // and the withholding rates {1 per 2, 1 per 3}.
+      contentDigest: 69_364_110,
     })
   })
 })

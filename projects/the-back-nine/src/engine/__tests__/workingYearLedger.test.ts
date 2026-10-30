@@ -313,6 +313,8 @@ describe('Social Security while working (R12, R16): the paid figure is in the su
     expect(cents(y0.socialSecurityHeldBack.exact)).toBe(1_776_060)
     expect(y0.socialSecurityHeldBack.dollars).toBe(17_761)
     expect(y0.withheldBasis).toBe('law')
+    // Both 63, both years from FRA: every month held back is credited (the schedule's own reason, passed on).
+    expect(y0.heldBackRaise).toEqual({ credited: true, untilBirthMonth: false, pastFullRetirementAge: false })
     expect(cents(y0.comingIn.otherIncome.exact)).toBe(720_000)
     expect(cents(y0.goingOut.ownDeposits.exact)).toBe(500_000) // the match is the employer’s, never charged
     expect(cents(y0.goingOut.payrollTax.exact)).toBe(459_000)
@@ -359,7 +361,33 @@ describe('the full-retirement-age year carries `fraYearAtMost` (KTD11, R16)', ()
     const ledger = ledgerOf(params)
     expect(ledger.year0.withheldBasis).toBe('fraYearAtMost')
     expect(cents(ledger.year0.socialSecurityHeldBack.exact)).toBe(828_000)
+    // The stopgap credits none of its months, so the picture never claims their later raise.
+    expect(ledger.year0.heldBackRaise).toEqual({ credited: false, untilBirthMonth: true, pastFullRetirementAge: false })
     expectMatchesTheRun(params, ledger)
+  })
+
+  it('a younger worker’s pay holding back a spouse past FRA: his months are credited, hers raise nothing by law', () => {
+    // He: born 1964, 62, claimed at 62, works for $60,000. She: born 1958 (FRA 66y8m), 68, spousal only on his
+    // record. His excess is charged against the family on his record, her spousal months too; she is past FRA
+    // all year, so §402(q)(7) has no reduction month to remove for them.
+    const params = candidateOf({
+      people: [
+        worker({ currentAge: 62, birthYear: 1964, retirementAge: 65, earnedIncomeReal: 60_000, pia: 24_000, socialSecurityClaimAge: 62 }),
+        retiree({ currentAge: 68, birthYear: 1958, socialSecurityClaimAge: 62 }),
+      ],
+      W: 60_000,
+      irmaaSeed: [70_000, 70_000], // she is on Medicare: the lookback's two years, under the first tier
+    })
+    const ledger = ledgerOf(params)
+    expect(ledger.year0.socialSecurityHeldBack.exact).toBeGreaterThan(0)
+    expect(ledger.year0.heldBackRaise).toEqual({ credited: true, untilBirthMonth: false, pastFullRetirementAge: true })
+  })
+
+  it('a year with nothing held back carries no reason at all', () => {
+    const params = candidateOf({ people: [worker({ currentAge: 58, birthYear: 1968, earnedIncomeReal: 120_000, pia: 30_000 })], W: 60_000 })
+    const ledger = ledgerOf(params)
+    expect(ledger.year0.socialSecurityHeldBack.exact).toBe(0)
+    expect(ledger.year0.heldBackRaise).toEqual({ credited: false, untilBirthMonth: false, pastFullRetirementAge: false })
   })
 
   it('a 1960-born early claimant: 2026 holds back the whole benefit (the law’s figure); the 2027 entry, his FRA year, is a test step at most', () => {
@@ -779,6 +807,22 @@ describe('the tax on the outside income splits by government, and the parts sum 
     expect(nc.taxOnOutsideIncomeParts.federal).toBe(0)
     expect(nc.taxOnOutsideIncomeParts.state).toBe(nc.taxOnOutsideIncome)
     expect(nc.taxOnOutsideIncome).toBeGreaterThan(0)
+  })
+
+  it('the picture carries the STATE slice beside the line, outside the sum — the run’s own part, $0 with no state', () => {
+    const fedParams = earner(35_000)
+    const fed = ledgerOf(fedParams)
+    expect(fed.year0.taxOnOutsideIncomeState).toEqual({ dollars: 0, exact: 0 })
+    expect(fed.year0.goingOut.taxOnOutsideIncome.dollars).toBe(1_900)
+    const ncParams = candidateOf({ people: [worker({ currentAge: 55, birthYear: 1971, earnedIncomeReal: 14_000 })], W: 5_000, state: 'NC' })
+    const nc = ledgerOf(ncParams)
+    const lines = recordedYears(ncParams).byYear[0]!.lines
+    expect(nc.year0.taxOnOutsideIncomeState.exact).toBe(lines.taxOnOutsideIncomeParts.state)
+    expect(nc.year0.taxOnOutsideIncomeState.dollars).toBe(Math.round(lines.taxOnOutsideIncomeParts.state))
+    expect(nc.year0.taxOnOutsideIncomeState.dollars).toBeGreaterThan(0)
+    // A slice, never a term: the bottom line is still the groups' own sum.
+    expect(lineSum(nc.year0)).toBe(nc.year0.bottomLine)
+    expectFiniteAndSigned(nc)
   })
 
   it('a malformed floor fails loud: a reading whose tax is not a number, or a floor with no reading, throws — never a NaN cash', () => {

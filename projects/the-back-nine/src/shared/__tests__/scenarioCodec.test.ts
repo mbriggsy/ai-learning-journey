@@ -21,6 +21,7 @@ import {
   type Scenario,
   type ScenarioV2,
   type ScenarioV3,
+  type WorkingYearCostV3,
 } from '../model'
 import { decodeScenario, encodeScenario, MAX_REAL_DOLLAR } from '../scenarioCodec'
 
@@ -635,6 +636,27 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     }
   })
 
+  it('dateVintage tolerates the ADDITIVE working-years vintage (the pay check\'s U13): present-string passes, absent passes (a stamp minted before the table), a non-string is corrupt at the top level', () => {
+    // The healthcare sub-vintage twin (above). A deleted guard would let a numeric stamp decode
+    // clean and turn the working-years clock's compare into an unconditional "moved"; a REQUIRED
+    // member would reject every stamp minted before the table existed.
+    const stamp = { contributionYear: 2026, blendSnapshotAsOf: '2026-04-30' }
+    const withVintage: ScenarioV3 = { ...V3, dateVintage: { ...stamp, workingYearsVintage: 'working-years-2026a' } }
+    expect(decodeScenario(encodeScenario(withVintage))).toEqual({ ok: true, scenario: withVintage, droppedAtoms: [] })
+    const without: ScenarioV3 = { ...V3, dateVintage: stamp }
+    const decoded = decodeScenario(encodeScenario(without))
+    expect(decoded).toEqual({ ok: true, scenario: without, droppedAtoms: [] })
+    if (decoded.ok && decoded.scenario.schemaVersion === 3) {
+      expect(decoded.scenario.dateVintage?.workingYearsVintage).toBeUndefined()
+    }
+    for (const bad of [2026, null, true, { year: 2026 }]) {
+      const d = decodeScenario(mutated(V3, (o) => { o.dateVintage = { ...stamp, workingYearsVintage: bad } }))
+      expect(d.ok, `workingYearsVintage=${JSON.stringify(bad)} must be rejected`).toBe(false)
+      if (!d.ok) expect(d.reason).toBe('corrupt')
+      if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('dateVintage.workingYearsVintage')
+    }
+  })
+
   // The state-tax unit — retirementState (a needVocab enum) + the stateTaxVintage stamp (an
   // atomic object). Additive-optional: a pre-unit vault lacks both and decodes unchanged.
   it('v3 WITH retirementState round-trips exactly — a PRICED state (NC), an explicit "elsewhere", and ABSENT (pre-unit) all persist as themselves', () => {
@@ -708,6 +730,122 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       const d = decodeScenario(mutated(V3, (o) => { o.heirBracket = bad }))
       expect(d.ok, `heirBracket=${String(bad)} must be rejected`).toBe(false)
       if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('heirBracket')
+    }
+  })
+
+  // The pay check's W (`docs/plans/features/working-year-pay-check-build-spec.md` KTD4 / U7 —
+  // additive-optional, the heirBracket precedent). A kind-discriminated object over a CLOSED
+  // vocabulary; the figure is ANNUAL real $, refused ≤ 0 (KTD4) and over the ceiling (insight 046).
+  // On the restore path the codec is the only gate for the kind, the period and the reading — the
+  // engine sees only the figure.
+  const W_CONFIRMED: WorkingYearCostV3 = { kind: 'confirmed', quotedReal: 84_000, stateTaxReading: 'unpriced' }
+  const W_ENTERED: WorkingYearCostV3 = {
+    kind: 'entered',
+    amountReal: 96_000,
+    entryPeriod: 'month',
+    stateTaxReading: 'class-based',
+  }
+
+  it('v3 WITH workingYearCost round-trips exactly — both kinds, both entry periods, every state-tax reading, a cents figure; ABSENT decodes untouched', () => {
+    const answers: WorkingYearCostV3[] = [
+      W_CONFIRMED,
+      W_ENTERED,
+      { kind: 'confirmed', quotedReal: 36_000.25, stateTaxReading: 'agi-derived' },
+      { kind: 'entered', amountReal: 1, entryPeriod: 'year', stateTaxReading: 'none' },
+    ]
+    for (const w of answers) {
+      const s: ScenarioV3 = { ...V3, workingYearCost: w }
+      expect(decodeScenario(encodeScenario(s)), `${w.kind} / ${w.stateTaxReading}`).toEqual({ ok: true, scenario: s, droppedAtoms: [] })
+    }
+    // ABSENT: no W was ever answered (every pre-pay-check vault) — decodes unchanged, never seeded.
+    const decoded = decodeScenario(encodeScenario(V3))
+    expect(decoded).toEqual({ ok: true, scenario: V3, droppedAtoms: [] })
+    if (decoded.ok && decoded.scenario.schemaVersion === 3) expect(decoded.scenario.workingYearCost).toBeUndefined()
+    // The top-level null rides the every-field null sweep below; this pins that the sweep reaches W.
+    expect(SCENARIO_V3_FIELDS).toContain('workingYearCost')
+  })
+
+  it('workingYearCost ceiling: the figure AT the inclusive ceiling passes on each kind; one dollar over it is corrupt (finiteness is not range, insight 046)', () => {
+    for (const w of [
+      { ...W_CONFIRMED, quotedReal: MAX_REAL_DOLLAR },
+      { ...W_ENTERED, amountReal: MAX_REAL_DOLLAR },
+    ]) {
+      expect(decodeScenario(mutated(V3, (o) => { o.workingYearCost = w })).ok, `${w.kind} at the ceiling`).toBe(true)
+    }
+    for (const [w, field] of [
+      [{ ...W_CONFIRMED, quotedReal: MAX_REAL_DOLLAR + 1 }, 'quotedReal'],
+      [{ ...W_ENTERED, amountReal: MAX_REAL_DOLLAR + 1 }, 'amountReal'],
+      [{ ...W_CONFIRMED, quotedReal: MAX_REAL_DOLLAR * 10 }, 'quotedReal'],
+      [{ ...W_ENTERED, amountReal: MAX_REAL_DOLLAR * 10 }, 'amountReal'],
+    ] as const) {
+      const d = decodeScenario(mutated(V3, (o) => { o.workingYearCost = w }))
+      expect(d.ok, `${field} over the ceiling`).toBe(false)
+      if (!d.ok) expect(d.reason).toBe('corrupt')
+      if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain(`workingYearCost.${field}`)
+    }
+  })
+
+  /** Each corrupt W, and the field its refusal must name (the path is the codec's only message to a
+   *  maintainer, so a refusal naming the wrong field is a defect of its own). NaN and ±Infinity have
+   *  no JSON spelling — they reach the codec as their JSON shadow, null (DND 009). */
+  const badWorkingYearCostArms: ReadonlyArray<readonly [string, unknown, string]> = [
+    // Not an object at all — a bare number (KTD4's rejected shape: staleness would be undetectable).
+    ['a bare number', 84_000, 'workingYearCost:'],
+    ['a bare kind string', 'confirmed', 'workingYearCost:'],
+    ['an array', [W_CONFIRMED], 'workingYearCost:'],
+    // The kind: closed. Build 2's surplus answer gets its own top-level key, never a kind here.
+    ['an unknown kind (surplus)', { ...W_CONFIRMED, kind: 'surplus' }, 'workingYearCost.kind'],
+    ['an empty kind', { ...W_CONFIRMED, kind: '' }, 'workingYearCost.kind'],
+    ['a numeric kind', { ...W_CONFIRMED, kind: 1 }, 'workingYearCost.kind'],
+    ['a null kind', { ...W_CONFIRMED, kind: null }, 'workingYearCost.kind'],
+    ['a missing kind', { quotedReal: 84_000, stateTaxReading: 'unpriced' }, 'workingYearCost.kind'],
+    // The reading: required on BOTH kinds, in the PERSISTED vocabulary — the engine's own
+    // `StateBaseSystem` names are refused, which pins the renamed vocabulary.
+    ['the engine name federal-agi-derived', { ...W_CONFIRMED, stateTaxReading: 'federal-agi-derived' }, 'workingYearCost.stateTaxReading'],
+    ['the engine name no-income-tax', { ...W_ENTERED, stateTaxReading: 'no-income-tax' }, 'workingYearCost.stateTaxReading'],
+    ['a state code for a reading', { ...W_CONFIRMED, stateTaxReading: 'NC' }, 'workingYearCost.stateTaxReading'],
+    ['a missing reading (confirmed)', { kind: 'confirmed', quotedReal: 84_000 }, 'workingYearCost.stateTaxReading'],
+    ['a missing reading (entered)', { kind: 'entered', amountReal: 96_000, entryPeriod: 'month' }, 'workingYearCost.stateTaxReading'],
+    ['a null reading (confirmed)', { ...W_CONFIRMED, stateTaxReading: null }, 'workingYearCost.stateTaxReading'],
+    ['a null reading (entered)', { ...W_ENTERED, stateTaxReading: null }, 'workingYearCost.stateTaxReading'],
+    // Each kind missing its figure.
+    ['confirmed without quotedReal', { kind: 'confirmed', stateTaxReading: 'unpriced' }, 'workingYearCost.quotedReal'],
+    ['entered without amountReal', { kind: 'entered', entryPeriod: 'month', stateTaxReading: 'none' }, 'workingYearCost.amountReal'],
+    // A figure that is there but not a finite number.
+    ['a null quotedReal', { ...W_CONFIRMED, quotedReal: null }, 'workingYearCost.quotedReal'],
+    ['a null amountReal', { ...W_ENTERED, amountReal: null }, 'workingYearCost.amountReal'],
+    ['a NaN quotedReal', { ...W_CONFIRMED, quotedReal: Number.NaN }, 'workingYearCost.quotedReal'],
+    ['a NaN amountReal', { ...W_ENTERED, amountReal: Number.NaN }, 'workingYearCost.amountReal'],
+    ['an Infinity quotedReal', { ...W_CONFIRMED, quotedReal: Number.POSITIVE_INFINITY }, 'workingYearCost.quotedReal'],
+    ['an Infinity amountReal', { ...W_ENTERED, amountReal: Number.POSITIVE_INFINITY }, 'workingYearCost.amountReal'],
+    ['a string quotedReal', { ...W_CONFIRMED, quotedReal: '84000' }, 'workingYearCost.quotedReal'],
+    // ≤ 0 on each kind (KTD4): intake never commits a $0 answer, so a present one is a writer bug.
+    ['a zero quotedReal', { ...W_CONFIRMED, quotedReal: 0 }, 'workingYearCost.quotedReal'],
+    ['a zero amountReal', { ...W_ENTERED, amountReal: 0 }, 'workingYearCost.amountReal'],
+    ['a negative quotedReal', { ...W_CONFIRMED, quotedReal: -84_000 }, 'workingYearCost.quotedReal'],
+    ['a negative amountReal', { ...W_ENTERED, amountReal: -1 }, 'workingYearCost.amountReal'],
+    // The other kind's fields, both directions (the extras biconditional precedent).
+    ['confirmed carrying amountReal', { ...W_CONFIRMED, amountReal: 84_000 }, 'workingYearCost.amountReal'],
+    ['confirmed carrying entryPeriod', { ...W_CONFIRMED, entryPeriod: 'month' }, 'workingYearCost.entryPeriod'],
+    ['entered carrying quotedReal', { ...W_ENTERED, quotedReal: 84_000 }, 'workingYearCost.quotedReal'],
+    // The entered figure's period: required, in the spend vocabulary.
+    ['entered without entryPeriod', { kind: 'entered', amountReal: 96_000, stateTaxReading: 'none' }, 'workingYearCost.entryPeriod'],
+    ['a null entryPeriod', { ...W_ENTERED, entryPeriod: null }, 'workingYearCost.entryPeriod'],
+    ['an entryPeriod of week', { ...W_ENTERED, entryPeriod: 'week' }, 'workingYearCost.entryPeriod'],
+  ]
+
+  it.each(badWorkingYearCostArms)('workingYearCost with %s is CORRUPT, naming the field it refused', (_label, bad, field) => {
+    const d = decodeScenario(mutated(V3, (o) => { o.workingYearCost = bad }))
+    expect(d.ok).toBe(false)
+    if (!d.ok) expect(d.reason).toBe('corrupt')
+    if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain(field)
+  })
+
+  it('workingYearCost is a tolerant reader too — an UNKNOWN extra key passes; only the other kind\'s KNOWN fields are refused', () => {
+    // The reconciliation of U7's "a stray figure on the wrong kind" with the file's tolerant-reader
+    // law: the refused strays are the named sibling fields above, never an arbitrary additive key.
+    for (const w of [{ ...W_CONFIRMED, futureAdditiveField: 'present' }, { ...W_ENTERED, note: 1 }]) {
+      expect(decodeScenario(mutated(V3, (o) => { o.workingYearCost = w })).ok, w.kind).toBe(true)
     }
   })
 
@@ -873,6 +1011,12 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     // stamp set is meaningless, so a missing member of a PRESENT stamp is corruption.
     ['era.taxVintageDetail partial', { ...RECORD, era: { ...RECORD.era, taxVintageDetail: { taxYear: 2026 } } }],
     ['era.dateVintage non-object', { ...RECORD, era: { ...RECORD.era, dateVintage: '2026' } }],
+    // The additive working-years member runs the same one-home validator inside the era: a
+    // PRESENT non-string drops the record (the scenario-level twin is a fatal corrupt).
+    [
+      'era.dateVintage.workingYearsVintage non-string',
+      { ...RECORD, era: { ...RECORD.era, dateVintage: { ...RECORD.era.dateVintage, workingYearsVintage: 2026 } } },
+    ],
     [
       'era.stateTaxVintage DND-009 null member',
       { ...RECORD, era: { ...RECORD.era, stateTaxVintage: { ncProfile: 'a', paProfile: null, flProfile: 'c' } } },
@@ -912,14 +1056,14 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
 
   it('a NON-Corrupt throw from INSIDE a validator ESCAPES decodeScenario — a programming defect is never laundered into a calm dropped atom', () => {
     // THE TWO RE-THROWS THIS COVERS, and they CHAIN, so one arm holds both:
-    //   `scenarioCodec.ts:899`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
-    //   `scenarioCodec.ts:944`  `throw e`                              (decodeScenario's outer catch)
+    //   `scenarioCodec.ts:950`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
+    //   `scenarioCodec.ts:995`  `throw e`                              (decodeScenario's outer catch)
     // Both were UNEXERCISED. They were filed as "correct-by-inspection but SEAM-LESS" on the
     // reasoning that decodeScenario builds its input from `JSON.parse` — data properties only,
     // no getters — and that no validator here recurses or calls a method on an unchecked value.
     // That reasoning is CORRECT ABOUT THE INPUT and wrong about the seam. The failure being
     // modelled is a defect in the VALIDATOR, not a hostile payload, and a validator's own
-    // dependency can be made to fail: `needInteger` (:122-127) calls `Number.isInteger`.
+    // dependency can be made to fail: `needInteger` (:124-128) calls `Number.isInteger`.
     // Spying THAT — value-targeted, so nothing else in this ~100-arm file can see it — reaches
     // :899 through the REAL decodeScenario with no prototype pollution and no injection seam
     // added to shipping code.

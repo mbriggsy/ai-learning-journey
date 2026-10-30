@@ -564,3 +564,55 @@ describe('Card 4 — exactly ONE state clause on every date verdict ({all-65+, p
     })
   }
 })
+
+// The pay check's KTD21 standing line (`docs/plans/features/working-year-pay-check-build-spec.md`): the
+// household's W no longer matches the spending or state it was given against, and the answer still runs on
+// that last figure (R4). A calm note in the lead's `.fod-note` register — after the staleness echo, never an
+// alert — whose door into the assumptions panel exists only where the tab can save.
+describe('the pay check’s standing line (KTD21)', () => {
+  // The stale sentence the result passes (`workingYearCostStaleText`) — a fixture here: the line
+  // renders whatever it is handed, after its own digit-free lead.
+  const STALE = slots.workingCostStaleQuote('84,000', '78,000')
+  it('absent unless passed — a household whose W still matches reads no line', () => {
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} />)
+    expect(container.querySelector('.cs-paycheck-note')).toBeNull()
+  })
+
+  it('with a door: the sentence, then an inline control that opens the panel', () => {
+    const onOpen = vi.fn()
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ text: STALE, onOpen }} />)
+    const note = container.querySelector('p.fod-note.cs-paycheck-note')
+    expect(note).not.toBeNull()
+    expect(note?.textContent).toContain(`${copy.stalenessPayCheckNote} ${STALE}`)
+    fireEvent.click(screen.getByRole('button', { name: copy.stalenessPayCheckCta }))
+    expect(onOpen).toHaveBeenCalledTimes(1)
+  })
+
+  it('read-only: the same sentence with NO door (a dead-end control is the lying-remedy shape)', () => {
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ text: STALE }} />)
+    expect(container.querySelector('.cs-paycheck-note')?.textContent).toBe(`${copy.stalenessPayCheckNote} ${STALE}`)
+    expect(screen.queryByRole('button', { name: copy.stalenessPayCheckCta })).toBeNull()
+  })
+
+  it('sits in the lead AFTER the staleness echo and the state note, ABOVE the graphs — and is never an alert', () => {
+    const { container } = render(
+      <FuckOffDate view={dates(DATE_FIXTURES.confirmed)} stalenessNote payCheckNote={{ text: STALE, onOpen: () => {} }} />,
+    )
+    const lead = container.querySelector('.reveal__lead')!
+    const notes = Array.from(lead.querySelectorAll('.fod-note'))
+    const payIdx = notes.findIndex((n) => n.classList.contains('cs-paycheck-note'))
+    const staleIdx = notes.findIndex((n) => n.classList.contains('cs-staleness-note'))
+    expect(staleIdx).toBeGreaterThanOrEqual(0)
+    expect(payIdx).toBe(notes.length - 1)
+    expect(payIdx).toBeGreaterThan(staleIdx)
+    const graphs = container.querySelector('.fod-graphs')
+    expect(graphs, 'the graphs wrapper renders').not.toBeNull()
+    expect(notes[payIdx]!.compareDocumentPosition(graphs!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(notes[payIdx]!.closest('[role="alert"]')).toBeNull()
+    expect(notes[payIdx]!.getAttribute('role')).toBeNull()
+  })
+
+  it('names no state in the Card 4 matrix’s words — it never doubles the one state clause', () => {
+    expect(copy.stalenessPayCheckNote).not.toMatch(/isn’t priced yet|is already counted in this answer|no state income tax/)
+  })
+})

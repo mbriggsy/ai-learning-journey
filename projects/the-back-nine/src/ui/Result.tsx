@@ -22,6 +22,7 @@ import { SequencingControl } from '@intake/SequencingControl'
 import { RothLever } from '@intake/RothLever'
 import { HealthcareSheet } from '@intake/HealthcareSheet'
 import { AssumptionPanel } from '@intake/AssumptionPanel'
+import { workingYearCostStaleText } from '@intake/workingYearQuote'
 import { composeMedicareExtrasTypicalNote, showMedicarePricedNote } from './healthSheetChrome'
 import { budgetGoverns } from '@budget/budgetModel'
 import { commitBudgetPatch } from '@budget/budgetToSpending'
@@ -99,6 +100,7 @@ export function Result({
   computing = false,
   stalenessNote = false,
   agedBalancesYear,
+  readOnly = false,
 }: {
   readonly onReview: () => void
   readonly save: ResultSaveProp
@@ -130,6 +132,10 @@ export function Result({
    *  the background final sharpen never re-hides the row — and a compute-error shows it
    *  (editing inputs is that failure's remedy). */
   readonly computing?: boolean
+  /** The unlock's read-only arm (a second tab holds the plan): nothing edited here can be kept, so a
+   *  door that exists only to edit (the pay check's KTD21 line) is withheld — the fact is still said.
+   *  Default false (every fresh session, and the preview/test mounts). */
+  readonly readOnly?: boolean
 }) {
   const snapshot = useSyncExternalStore(appModel.subscribe, appModel.getSnapshot)
   const missing = useMemo(() => missingRequiredFacts(snapshot.draft), [snapshot.draft])
@@ -197,6 +203,12 @@ export function Result({
   const [rothOpen, setRothOpen] = useState(false)
   const [healthOpen, setHealthOpen] = useState(false)
   const [assumptionsOpen, setAssumptionsOpen] = useState(false)
+  // Where the assumptions panel lands when it opens: the W row when the pay check's stale line
+  // opened it, nowhere special from the plain door. Dropped the moment the panel closes, on EVERY
+  // close and route-away path at once (a render-phase reset), so the ordinary door never re-lands
+  // on W.
+  const [assumptionsSeat, setAssumptionsSeat] = useState<'working-year-cost' | undefined>(undefined)
+  if (!assumptionsOpen && assumptionsSeat !== undefined) setAssumptionsSeat(undefined)
   // Act-4 · U16 §S2 — the recommend-second GOAL choice (the picker precedes the solve). The affordance
   // opens it; a confirmed pick writes `chosenGoal` and dispatches the solve.
   const [goalOpen, setGoalOpen] = useState(false)
@@ -236,6 +248,11 @@ export function Result({
   // omission, and the sheet's conversion tile adds the state's tax to its cents; the RECOMMENDATION
   // surface drops its state-tax scope note, `recDiscStateTax`), each gating on `!== undefined`.
   const statePricedNote = useMemo(() => pricedStateForRun(snapshot.draft), [snapshot.draft])
+  // The pay check's KTD21 standing line: the household's W no longer matches the spending or state
+  // it was given against, and the date still runs on that last figure (R4). The ONE stale predicate
+  // (`workingYearQuote.ts`), read off the draft — the same answer the walk's gate and the panel's
+  // row read. Its door opens the panel at the W row, and exists only where the tab can save.
+  const payCheckStaleText = useMemo(() => workingYearCostStaleText(snapshot.draft), [snapshot.draft])
   // The pay-less-tax ALL-IN hero's scope (build spec D7): did the SOLVE's built overlay price
   // healthcare? Deliberately NOT `medicarePriced` above — that one ORs the date route in (structurally
   // priced there), while the solve never runs on the date route (`spine-unready`) and its base is
@@ -625,7 +642,10 @@ export function Result({
             type="button"
             className="btn-quiet"
             data-door="assumptions"
-            onClick={() => setAssumptionsOpen(true)}
+            onClick={() => {
+              setAssumptionsSeat(undefined)
+              setAssumptionsOpen(true)
+            }}
           >
             {copy.assumptionDoorCta}
           </button>
@@ -664,6 +684,19 @@ export function Result({
             agedBalancesYear={agedBalancesYear}
             sheetOpen={sheetOpen}
             onReconfirm={onReview}
+            payCheckNote={
+              payCheckStaleText !== null
+                ? readOnly
+                  ? { text: payCheckStaleText }
+                  : {
+                      text: payCheckStaleText,
+                      onOpen: () => {
+                        setAssumptionsSeat('working-year-cost')
+                        setAssumptionsOpen(true)
+                      },
+                    }
+                : undefined
+            }
           />
         )}
         {elevated.kind === 'spine' && (
@@ -806,6 +839,7 @@ export function Result({
           onReview()
         }}
         onClose={() => setAssumptionsOpen(false)}
+        initialSeat={assumptionsSeat}
         // The panel's own trigger is the landmark — re-queried at close, because the dead-end
         // repair remounts the actions row while the panel is open (see AssumptionPanelProps).
         restoreFallback={restoreToAssumptionsDoor}

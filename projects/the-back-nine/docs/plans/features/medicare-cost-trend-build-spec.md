@@ -205,7 +205,7 @@ status: shipped
   TWICE the same day — the interim wording narrowed the still-flat referent to the extra-coverage
   premiums *plus* the drug-plan surcharge piece, and the Part D sourcing pass below narrowed it to
   the extra-coverage premiums ALONE (the shipped string is `verdictResidualTail`,
-  `src/ui/copy.ts:1262-1263`, mirrored in the monolith `verdictMedicareResidual` at `:1235`), with the roth
+  `src/ui/copy.ts:1406-1407`, mirrored in the monolith `verdictMedicareResidual` at `:1379`), with the roth
   note pricing the drug-plan piece's climb and naming the >2035 hold as its modeling choice.
   Architecture §7.2 was re-written to the trended contract; roadmap, TODO and the council-log
   action cell synced.

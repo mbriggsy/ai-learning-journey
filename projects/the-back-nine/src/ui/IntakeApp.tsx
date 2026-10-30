@@ -5,6 +5,7 @@ import { AnswerStrip } from '@intake/AnswerStrip'
 import { isDateRoute, missingRequiredFacts } from '@intake/intakeMap'
 import { validateDraft, type FieldPath } from '@intake/sanity'
 import { subscribeUnsavedBuffers, unsavedBuffersHeld } from '@intake/unsavedBuffer'
+import { isWorkingYearCostStale } from '@intake/workingYearQuote'
 import type { SolverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 import { draftIdentityKey, type ScenarioDraft } from '@store/memoryModel'
 import { deriveSavedRecommendationStatus, type SavedRecommendationStatus } from '@store/savedRecommendation'
@@ -249,7 +250,7 @@ export default function IntakeApp({
    * THE SHORT-CIRCUIT DOES ZERO WORK, AND THAT IS THE FIT-FRAME CONTRACT. Both reads below are
    * expensive: `currentDraftFingerprint()` runs the injected solve builder (→ `buildSpineParams` →
    * the candidate enumeration) and canon-serializes the whole params object plus the roster, and
-   * `exposureForDraft` calls EIGHT separate params producers (the eighth, `workingYearTaxForRun` — the
+   * `exposureForDraft` calls NINE separate params producers (one, `workingYearTaxForRun` — the
    * 2026-10-20 working-year tax floor's ledger reach — walks every date-route candidate's cash terms).
    * On a `{kind:'unsaved'}` mount — every
    * `?seed=` route, the Caddie walk, `pnpm verify:fit` — there is no record to judge, so the honest
@@ -262,7 +263,7 @@ export default function IntakeApp({
    *
    * THE DATE-ROUTE CONJUNCT IS THE STRUCTURAL FORM OF Result.tsx's OWN SUPPRESSION.
    * `exposureForDraft` carries a hard prohibition — "DO NOT LIFT THIS FUNCTION TO A CROWNED
-   * SURFACE… the base read WOULD lie there" (stalenessExposure.ts:88-91) — and on a date route it
+   * SURFACE… the base read WOULD lie there" (stalenessExposure.ts:95-98) — and on a date route it
    * takes exactly the arm that reads the PRE-SWEEP base ACA overlay (:179-184), while the result
    * screen it would feed sits beside a CROWNED date. `savedRecommendation.ts:88-94` proves no
    * record can be BORN on a date route, but the frame is reachable the other way round (a
@@ -276,7 +277,7 @@ export default function IntakeApp({
     // PHASE FIRST — this memo's zero-work contract has to hold during INTAKE too, and nothing
     // consumes it there. Without this conjunct, a returning household with a save-ready draft pays
     // a full `currentDraftFingerprint()` (buildSolveRequest → buildSpineParams → candidate
-    // enumeration → canon serialize) PLUS `exposureForDraft`'s eight params producers on every single
+    // enumeration → canon serialize) PLUS `exposureForDraft`'s nine params producers on every single
     // keystroke-committed edit of the intake — for a card that cannot render until `result`.
     if (phase !== 'result') return undefined
     if (persist.kind === 'unsaved') return undefined
@@ -396,7 +397,7 @@ export default function IntakeApp({
    * U17 §S5 — THE SAVE GESTURE FOR THE RECOMMENDATION ON SCREEN.
    *
    * THE ORDER IS THE WHOLE DESIGN: the mint is PROBED AND REFUSED BEFORE THE STORE IS TOUCHED, and
-   * the store is touched before anything reaches disk. `scenarioCodec.ts:671-674` names this
+   * the store is touched before anything reaches disk. `scenarioCodec.ts:677-680` names this
    * function as the seam that "MUST validate its own mint HERE, before the record ever touches the
    * draft", and the reason is a DATA-LOSS case, not tidiness: if the disk already holds a VALID
    * record and a new mint is invalid, the codec deletes the bad record from the LIVE operand only,
@@ -629,7 +630,15 @@ export default function IntakeApp({
         // The store cannot make this read (layer law), and re-deriving it from ages/geography
         // is the insight-080/081 defect class. The draft is the round-trip inverse of the same
         // `model` the stamps come from, so the exposure and the stamps describe one household.
-        const report = deriveStaleness(model, currentEpochDay(), exposureForDraft(hydrated.draft))
+        // The pay check's KTD21 rides BESIDE the exposure record, never inside it: whether the
+        // household's own W answer still matches its quote is an intake predicate over the same
+        // hydrated draft (an answer against its inputs, not a built run), passed as its own argument.
+        const report = deriveStaleness(
+          model,
+          currentEpochDay(),
+          exposureForDraft(hydrated.draft),
+          isWorkingYearCostStale(hydrated.draft),
+        )
         setReentry({ view: composeReentry(model, report), rulesMoved: report.rulesMoved })
         setPhase('reentry')
       } catch {
@@ -823,6 +832,9 @@ export default function IntakeApp({
         // machine's OWN saved scenario — a re-save or an in-session edit suppresses it
         // through the machine's state, never a second bookkeeping (resultSave.ts doc).
         agedBalancesYear={agedBalancesYearFor(persist, view, currentEpochDay())}
+        // The pay check's KTD21 standing line offers its door into the panel only where an edit can
+        // be kept: a second tab is read-only (the unlock's `readOnly`), so it reads the fact alone.
+        readOnly={readOnly}
       />
     )
   }

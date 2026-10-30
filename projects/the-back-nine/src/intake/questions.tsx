@@ -1,5 +1,8 @@
-import { useEffect, useRef, useState, type ReactNode, type Ref } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode, type Ref } from 'react'
 import { copy, slots } from '@ui/copy'
+import { planClockAnchor } from '@ui/bandAnnotations'
+import { currentEpochDay } from '@ui/scenarioFromDraft'
+import { epochDayToCalendarYear } from '@store/staleness'
 import type { PersonDraft, ScenarioDraft } from '@store/memoryModel'
 import type { MedicareExtrasEntryV3, RetirementState, WorkStatus } from '@shared/model'
 import { fraMonthsForBirthYear } from '@engine/constants/socialSecurity'
@@ -7,11 +10,28 @@ import { medicareExtrasTypical, medicareExtrasTypicalMonthly } from '@engine/con
 import { budgetGoverns, isActiveAt, isRampedBudget } from '@budget/budgetModel'
 import { budgetYearZeroFullTotal, commitBudgetPatch } from '@budget/budgetToSpending'
 import { focusHeading } from './a11y'
-import { anyPre65OrUnknown, anyRetiredPre65WhileAnotherWorks, spendHelpKeyFor } from './intakeMap'
+import {
+  anyPre65OrUnknown,
+  anyRetiredPre65WhileAnotherWorks,
+  isDateRoute,
+  spendHelpKeyFor,
+  workingYearLedgerForRun,
+} from './intakeMap'
 import { BudgetBuilder, medicalExceedsTotal } from './BudgetBuilder'
 import { CurrencyField, IntegerField, NameField, SegmentedControl, formatMoney, type SegmentOption } from './fields'
 import { FieldError } from './FieldError'
-import { accountField, personField, SS_CLAIM_MIN, SS_CLAIM_MAX } from './sanity'
+import {
+  accountField,
+  personField,
+  SS_CLAIM_MIN,
+  SS_CLAIM_MAX,
+  WORKING_COST_ANSWER_FIELD,
+  WORKING_COST_FIELD,
+  WORKING_COST_PERIOD_FIELD,
+} from './sanity'
+import { WorkingCostQuestion } from './WorkingCostQuestion'
+import { WorkingYearLedgerPicture, WorkingYearLedgerUnknown } from './WorkingYearLedger'
+import { writeClearedWorkingYearCost } from './workingYearQuote'
 import { AccountEntry, kindLabel } from './AccountEntry'
 import { OtherIncomeEntry, incomeTypeLabel, survivorNoteFor } from './OtherIncomeEntry'
 import { ExternalLink } from './ExternalLink'
@@ -24,7 +44,10 @@ import type { StepApi, StepDef } from './flow'
  * `validateParams` acceptance — and the first provisional answer — is reachable
  * as soon as the first account lands (the spend figure and the ACA questions
  * deliberately ride the preamble for exactly that reason; a planted
- * question-after-the-loop ordering fails the surface-early test).
+ * question-after-the-loop ordering fails the surface-early test). The pay check's
+ * W step sits AFTER the loop on purpose and breaks no part of that law: W is GATED
+ * at its own step's Continue (`working-cost-unanswered`), never a missing fact, so
+ * the provisional answer surfaces exactly as early as before (KTD3).
  *
  * The step list is DERIVED from the draft (conditional gates below), so it
  * recomputes as answers land; the flow clamps its index if a back-nav edit
@@ -39,7 +62,9 @@ import type { StepApi, StepDef } from './flow'
  *                       source — a RETURN income figure, never a salary echo);
  *  - IRMAA seed       ⇐ any person 64+ (Medicare's 2-year lookback can reach
  *                       pre-sim tax years; the engine's own coverage rule is
- *                       the backstop if this gate ever under-asks).
+ *                       the backstop if this gate ever under-asks);
+ *  - working-year cost
+ *    + money picture  ⇐ any person ASKED-working (`isDateRoute`), last.
  *
  * Work-status drives the branch (asked, never inferred): RETIRED ⇒ the stop
  * age is asked (≤ currentAge legitimate — the status-conditional R19 rule) and
@@ -589,7 +614,7 @@ const stateStep: StepDef = {
 
 /** The route-true face of the state step (the Caddie chair fix, 2026-07-15): an already-retired
  *  household reads "Where WILL you live…" as not-applicable-to-us — same body, present-tense
- *  heading. intakeSteps picks by the derived route (anyWorking). */
+ *  heading. intakeSteps picks by the derived route (`isDateRoute`). */
 const stateStepRetired: StepDef = { ...stateStep, headingKey: 'qStateHeadingRetired' }
 
 const healthQuoteStep: StepDef = {
@@ -1240,7 +1265,8 @@ function OtherIncomeStep({ api }: { api: StepApi }) {
 
 /** The other-income step (R40) — opt-in, no advance-gate fields (the form gates
  *  every stream atomically; the entity-scalar ranges live in sanity's income
- *  rules, exercised on a directly-mutated draft / the U8 restore path). */
+ *  rules, exercised on a directly-mutated draft / the U8 restore path). The LAST
+ *  step on the all-retired route; on the date route the pay check's two steps follow. */
 const otherIncomeStep: StepDef = {
   id: 'other-income',
   headingKey: 'qOtherIncomeHeading',
@@ -1249,35 +1275,117 @@ const otherIncomeStep: StepDef = {
 }
 
 // ---------------------------------------------------------------------------
-// the conditional sequence
+// the pay check (`docs/plans/features/working-year-pay-check-build-spec.md` U8): what a year costs
+// while either of you still works (W), then the money picture of the first working year. Date
+// route only, after the other-income loop, so every input the quote and the picture read is
+// answered first. Neither step has a draft gate, so the step count never moves while the household
+// answers (KTD17).
 // ---------------------------------------------------------------------------
 
-const anyWorking = (d: ScenarioDraft): boolean =>
-  d.people.some((p) => p.workStatus === 'working')
+/** The W step (KTD3, KTD17, KTD21). Its gate is `working-cost-unanswered` on its own path — listed
+ *  here and nowhere else, so W is REQUIRED through this step's Continue alone, never as a missing
+ *  fact (that would hold every working household's provisional answer until the last question; the
+ *  header's surface-early law). The gate's touched state is dropped on every ARRIVAL, so returning
+ *  after an upstream edit stales W opens on the calm stale note, not an alert, until Continue. So is
+ *  the period tap's, where the draft holds no figure: the tapped unit lived in the step's own state,
+ *  which the arrival remounts at month, so a kept disarm would let a re-typed monthly figure run 12×
+ *  unasked. A figure the step's Continue would refuse ($0, or a period never confirmed) never leaves
+ *  by Back either (`discardOnBack`): a route change would drop this step with it still in the draft,
+ *  and the codec refuses it at Save. */
+const workingCostStep: StepDef = {
+  id: 'working-cost',
+  headingKey: 'qWorkingCostHeading',
+  fields: [WORKING_COST_FIELD, WORKING_COST_ANSWER_FIELD],
+  freshOnArrival: (d) =>
+    d.workingYearCost?.kind === 'entered'
+      ? [WORKING_COST_ANSWER_FIELD]
+      : [WORKING_COST_ANSWER_FIELD, WORKING_COST_PERIOD_FIELD],
+  discardOnBack: { field: WORKING_COST_FIELD, discard: writeClearedWorkingYearCost },
+  render: (api) => (
+    <WorkingCostQuestion
+      draft={api.draft}
+      host="step"
+      onWrite={(write) => {
+        // A typed $0 lands in the draft like a $0 spend does (ruling 17), so the shared zero rule and
+        // the Continue gate both see it; `buildDateInput` never carries it. The walk never refuses.
+        api.update(write)
+        api.commitField(WORKING_COST_FIELD)
+        return true
+      }}
+      onPeriodTap={() => api.commitField(WORKING_COST_PERIOD_FIELD)}
+      // Re-edit forgiveness for the gate too: picking "a different figure", or typing the figure, is
+      // answering — the gate's alert clears until the next Continue re-touches it.
+      onPickFigure={() => api.clearTouched(WORKING_COST_ANSWER_FIELD)}
+      onEditFigure={() => {
+        api.clearTouched(WORKING_COST_FIELD)
+        api.clearTouched(WORKING_COST_ANSWER_FIELD)
+      }}
+      answerInvalid={api.violationsFor(WORKING_COST_ANSWER_FIELD).length > 0}
+      answerErrors={errorsFor(api, WORKING_COST_ANSWER_FIELD)}
+      figureInvalid={api.violationsFor(WORKING_COST_FIELD).length > 0}
+      figureErrors={errorsFor(api, WORKING_COST_FIELD)}
+    />
+  ),
+}
+
+/** The money-picture step's body (R16, KTD12): the engine's own picture of the first working year,
+ *  composed on the main thread from the draft (`workingYearLedgerForRun`, memoized on the draft
+ *  reference) — or, where none can be drawn, one calm line naming why. The plan clock reads the one
+ *  local-calendar chain (`currentEpochDay` → `epochDayToCalendarYear`, Result's own), once per step
+ *  arrival: an aged plan (a Review walk over an older save) says it shows its first year as entered. */
+function WorkingLedgerStepBody({ draft }: { readonly draft: ScenarioDraft }) {
+  const ledger = useMemo(() => workingYearLedgerForRun(draft), [draft])
+  const [wallYear] = useState(() => epochDayToCalendarYear(currentEpochDay()))
+  if (ledger === 'unknown') return <WorkingYearLedgerUnknown draft={draft} echoStrip={false} />
+  const aged = planClockAnchor(draft.startCalendarYear, wallYear).yearsSincePlanBuilt > 0
+  return <WorkingYearLedgerPicture ledger={ledger} draft={draft} headingLevel={3} aged={aged} />
+}
+
+/** The money-picture step — the date route's LAST step, so its Continue is the flow's terminal
+ *  `onComplete()` (the final-tier recompute). Nothing to answer here (`fields: []`): an
+ *  unbuildable draft's calm line still advances. */
+const workingLedgerStep: StepDef = {
+  id: 'working-ledger',
+  headingKey: 'qWorkingLedgerHeading',
+  fields: [],
+  render: (api) => <WorkingLedgerStepBody draft={api.draft} />,
+}
+
+// ---------------------------------------------------------------------------
+// the conditional sequence
+// ---------------------------------------------------------------------------
 
 const anyNearMedicare = (d: ScenarioDraft): boolean =>
   d.people.some((p) => p.currentAge !== undefined && p.currentAge >= 64)
 
 /** The full intake sequence for the current draft state: the household
  *  preamble (spend + ACA inputs BEFORE the loop — first-acceptance
- *  reachability), then the variable-length account loop. */
+ *  reachability), then the variable-length account loop, then the opt-in
+ *  other-income loop, and — on the date route — the pay check's two steps. */
 export function intakeSteps(draft: ScenarioDraft): readonly StepDef[] {
+  // "Anyone still working" is the date route's own predicate (`isDateRoute`), read here for every
+  // working-only step — one predicate, never a private copy of it (insight 081).
+  const working = isDateRoute(draft)
   const steps: StepDef[] = [namesStep, workStep]
-  if (anyWorking(draft)) steps.push(incomeStep)
+  if (working) steps.push(incomeStep)
   // The retirement-state step lands UNCONDITIONALLY, right BEFORE spend — the placement is
   // load-bearing (S5's spendHelp branches on the answered state; a step after spend would leave
   // spendHelp generic).
-  steps.push(ssStep, anyWorking(draft) ? stateStep : stateStepRetired, spendStep)
+  steps.push(ssStep, working ? stateStep : stateStepRetired, spendStep)
   if (anyPre65OrUnknown(draft)) steps.push(healthQuoteStep)
   // Straight after the quote it qualifies: the quote says what pre-65 coverage COSTS, this says
   // WHO is paying it during the working years. Gated on the exported predicate, never re-derived.
   if (anyRetiredPre65WhileAnotherWorks(draft)) steps.push(employerCoverageStep)
   steps.push(oopStep)
-  if (anyWorking(draft)) steps.push(workIncomeStep)
+  if (working) steps.push(workIncomeStep)
   if (anyNearMedicare(draft)) steps.push(irmaaSeedStep, medicareExtrasStep)
   steps.push(accountsStep(draft))
-  // R40 — the opt-in other-income loop, last (off the 5-minute guided path; a
-  // household with no pension/rental/annuity/alimony simply advances past it).
+  // R40 — the opt-in other-income loop (off the 5-minute guided path; a household with no
+  // pension/rental/annuity/alimony simply advances past it). The LAST step on the all-retired route.
   steps.push(otherIncomeStep)
+  // The pay check (U8, KTD17): on the date route, W and then the money picture close the walk —
+  // after every input the quote and the picture read. The picture's Continue is the flow's terminal
+  // `onComplete()`. No draft gate on either, so the count never moves while the household answers.
+  if (working) steps.push(workingCostStep, workingLedgerStep)
   return steps
 }

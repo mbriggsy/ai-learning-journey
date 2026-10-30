@@ -301,6 +301,9 @@ export function SegmentedControl<V extends string>({
   name,
   required = false,
   vertical = false,
+  errorField,
+  invalid = false,
+  describedByIds,
 }: {
   readonly legendKey: CopyKey
   readonly options: ReadonlyArray<SegmentOption<V>>
@@ -316,12 +319,40 @@ export function SegmentedControl<V extends string>({
   /** Stack the segments as full-width rows instead of a side-by-side track —
    *  for long option labels that cram when squeezed into equal-width segments. */
   readonly vertical?: boolean
+  /** OPT-IN error ownership (the pay check's W fork, Phase B ruling 11): the sanity field path a
+   *  rule fires on when THIS choice is unanswered. The group then owns its error the way a field
+   *  does — `role="radiogroup"` on the fieldset (ARIA 1.2 allows it there, and `aria-invalid` is
+   *  supported on a radiogroup but on neither a radio nor a plain group), named by its legend, with
+   *  `aria-invalid` + `aria-describedby` → the FieldError id while `invalid`. Without it the control
+   *  is the plain fieldset it always was (a kind picker with no single invalid input lets its error
+   *  fall through to the Add slot instead — AccountEntry's doctrine, unchanged). */
+  readonly errorField?: string
+  readonly invalid?: boolean
+  /** OPT-IN description: ids of the lines the legend's question is about (the W fork's quote, its
+   *  left-out names, its stale note) — so a forms-mode reader hears the figure the "yes" would keep,
+   *  not a bare "Is that about…?". The error id joins them while `invalid`. */
+  readonly describedByIds?: string
 }) {
   const id = useId()
+  // The radiogroup's name is the question alone: the visible required marker rides in the legend,
+  // and `aria-required` says it once, so the name never reads "… (required)" twice over.
+  const legendId = `${id}-legend`
+  const ownsError = errorField !== undefined
+  const describedIds = [describedByIds, ownsError && invalid ? fieldErrorId(errorField) : undefined]
+    .filter((s): s is string => s !== undefined && s !== '')
+    .join(' ')
   return (
-    <fieldset className="segmented">
+    <fieldset
+      className="segmented"
+      role={ownsError ? 'radiogroup' : undefined}
+      aria-labelledby={ownsError ? legendId : undefined}
+      aria-invalid={ownsError && invalid ? true : undefined}
+      // A radiogroup carries its own requiredness (ARIA 1.2); a plain group's radios carry it below.
+      aria-required={ownsError && required ? true : undefined}
+      aria-describedby={describedIds === '' ? undefined : describedIds}
+    >
       <legend className="field-label">
-        {copy[legendKey]}
+        <span id={legendId}>{copy[legendKey]}</span>
         {required && (
           <>
             {' '}
@@ -340,7 +371,7 @@ export function SegmentedControl<V extends string>({
               className="sr-only"
               name={`${id}-${name}`}
               checked={value === opt.value}
-              aria-required={required ? true : undefined}
+              aria-required={required && !ownsError ? true : undefined}
               onChange={() => onChange(opt.value)}
               // A click on the ALREADY-checked segment fires no change event —
               // but tapping the current segment must still count as an explicit

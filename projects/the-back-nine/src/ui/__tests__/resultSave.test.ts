@@ -283,7 +283,7 @@ describe('deriveResultSave — the dirty compare is key-order-INSENSITIVE (never
  * not run the codec — it compares two `scenarioIdentityKey`s (resultSave.ts:63-64) — so a
  * hand-assembled `SaveReady` whose scenario simply LACKS a record would make every assertion below
  * pass against a hand-typed ABSENCE, while the mutant that matters (removing
- * `delete o.savedRecommendation`, scenarioCodec.ts:900) stayed green. Driving the live operand
+ * `delete o.savedRecommendation`, scenarioCodec.ts:951) stayed green. Driving the live operand
  * through `scenarioFromDraft` — the SAME round-trip the real save runs — makes the delete itself the
  * thing under test: `droppedAtoms.length === 1` witnesses the codec REPORTING the drop, and the
  * absence assertion witnesses it MUTATING the object it returns.
@@ -312,7 +312,7 @@ describe('deriveResultSave — a record the codec DROPS, in all three disk state
     expect(dropped.droppedAtoms[0]).toContain('savedRecommendation')
     expect(dropped.droppedAtoms[0]).toContain('mintedAt')
     // …and it is GONE from the returned scenario. MUTANT (delete the `delete` at
-    // scenarioCodec.ts:900): the report still fires, this line reds, and case (b) below flips.
+    // scenarioCodec.ts:951): the report still fires, this line reds, and case (b) below flips.
     expect(dropped.scenario.savedRecommendation).toBeUndefined()
     // NON-VACUITY: the SAME pipeline keeps a valid record, so the drop above is the record being
     // bad — not this pipeline losing records.

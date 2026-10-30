@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test'
+import { copy } from '../src/ui/copy'
 
 /**
  * The ONE canonical home of the review-surface constants + the settle recipe, shared by every
@@ -119,4 +120,50 @@ export async function gotoVaultFinal(page: Page, key: string): Promise<void> {
   await affirm.click()
   await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: FINAL_TIER_MS })
   await settleLayout(page)
+}
+
+/**
+ * Re-walk a dev seed's intake to the step headed `heading` — the ONE route into the intake flow with
+ * a real household behind it. `?seed=` applies a complete draft and lands on the result (there are no
+ * steps to advance there); the AssumptionPanel's re-walk door remounts the flow at index 0 over that
+ * draft, which is what a returning reader does. Lives HERE because two specs drive it (intake-fold's
+ * own spec-local copy predates it, and vertical-fit's pay-check arms need it) and a spec cannot import
+ * another spec.
+ *
+ * The anchor is the Assumptions door itself, never the final-tier stamp: the refusal witness
+ * (`datesolo`) never stamps one. For a buildable seed pass `final: true` so the final-tier recompute
+ * commits BEFORE the walk starts (it would otherwise land mid-walk). Advances are IN-PAGE clicks on
+ * the step's primary button (no Playwright auto-scroll), and a step that will not advance fails loud
+ * — a W gate holding Continue on a stale or absent W is exactly that.
+ */
+export async function rewalkSeedTo(
+  page: Page,
+  seed: string,
+  heading: string,
+  opts: { readonly final?: boolean } = {},
+): Promise<void> {
+  await page.goto(`/?seed=${seed}`)
+  if (opts.final === true) {
+    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: FINAL_TIER_MS })
+  }
+  const door = page.locator('[data-door="assumptions"]')
+  await expect(door, `?seed=${seed}: no Assumptions door — the result never offered the re-walk`).toBeVisible({
+    timeout: FINAL_TIER_MS,
+  })
+  await door.click()
+  await page.getByRole('button', { name: copy.assumptionRewalkCta }).click()
+  await expect(page.locator('.intake-shell')).toBeVisible({ timeout: 30_000 })
+  for (let taken = 0; taken < 30; taken += 1) {
+    const now = await page.locator('.step-heading').textContent()
+    if (now === heading) {
+      await settleLayout(page)
+      return
+    }
+    await page.evaluate(() => document.querySelector<HTMLButtonElement>('.intake-nav .btn-primary')?.click())
+    await page.waitForTimeout(350)
+    if ((await page.locator('.step-heading').textContent()) === now) {
+      throw new Error(`?seed=${seed}: Continue did not advance past "${now ?? '?'}" on the way to "${heading}"`)
+    }
+  }
+  throw new Error(`?seed=${seed}: never reached the step headed "${heading}"`)
 }

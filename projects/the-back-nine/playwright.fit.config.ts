@@ -31,11 +31,15 @@ export default defineConfig({
   testMatch: ['**/vertical-fit.spec.ts', '**/chart-text.spec.ts', '**/intake-fold.spec.ts'],
   fullyParallel: true,
   // The date seeds are CPU-BOUND: a 16k-path final across two arms takes ~60 s alone, and the two
-  // MEASURING specs load one 28 times (re-counted 2026-09-08 against the current specs: chart-text 25
-  // — datemixed + datesplit + atceiling on each of its six arms, four standalone date renders, the two
-  // ?vault=datestale arms and the reduced-motion reload — plus vertical-fit's dip · date65 · datenc).
-  // The THIRD spec on this harness adds NONE: intake-fold drives `?seed=datesolo`, the refusal witness
-  // whose `buildDateInput` returns null, so it renders the date ROUTE without ever running a solve.
+  // MEASURING specs render one's final 39 times (re-counted 2026-10-30 against the current specs:
+  // chart-text 25 — datemixed + datesplit + atceiling on each of its six arms, four standalone date
+  // renders, the two ?vault=datestale arms and the reduced-motion reload — and vertical-fit 14: dip ·
+  // date65 · datenc, dip on the phone and at both 24 px widths, the ?vault=datestale and
+  // ?vault=datearrived returns, and the pay check's datecoststale ×4 and dateshort ×2; its
+  // computing-frame probe loads dip but never waits for the final). The THIRD spec on this harness adds
+  // NONE: intake-fold drives `?seed=datesolo`, the refusal witness whose `buildDateInput` returns null,
+  // so it renders the date ROUTE without ever running a solve — and so does vertical-fit's own
+  // datesolo pay-check arm.
   // Playwright's default (50% of logical cores) is 10 workers on a 20-thread
   // laptop — ten concurrent solves saturate the cores and stretch a 60 s final past the tier wait
   // (measured 2026-09-05: the datesplit arms timed out only once the chart-text spec grew to 18 date

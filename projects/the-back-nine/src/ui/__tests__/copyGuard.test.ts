@@ -9,6 +9,7 @@ import {
   SURVIVAL_CLAIMS,
   type CopyGate,
 } from '../copyGuard'
+import { HAWK_BAN } from './hawkBan'
 
 /** The survival-claim corpus (council wf_6e72eca9-c20) — every phrasing a card could use to sell the
  *  crown as a survival win or a survival tie. Each SURVIVAL_CLAIMS pattern owns at least one sample
@@ -832,6 +833,50 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     assumptionHeirBracketOption: slots.assumptionHeirBracketOption('24'),
     recDeltaVizAria: slots.recDeltaVizAria(copy.recVizWithoutLabel, '740,000', copy.recVizWithLabel, '788,000', '48,000'),
     recommendRecordSavedIn: slots.recommendRecordSavedIn(2026),
+    // The pay check's W step, money picture and panel row (U8) — one representative render each.
+    workingCostQuoteMonthly: slots.workingCostQuoteMonthly('7,000', '84,000'),
+    workingCostQuoteYearly: slots.workingCostQuoteYearly('84,000'),
+    workingCostQuoteBudget: slots.workingCostQuoteBudget('36,000'),
+    workingCostQuoteBudgetMedical: slots.workingCostQuoteBudgetMedical('44,000', '8,000'),
+    workingCostLeftOut: slots.workingCostLeftOut('Go-go years'),
+    workingCostLeftOutMore: slots.workingCostLeftOutMore('Travel, Boat, Golf', 2),
+    workingCostStaleQuote: slots.workingCostStaleQuote('84,000', '90,000'),
+    workingCostStaleQuoteGone: slots.workingCostStaleQuoteGone('84,000'),
+    workingCostStaleStateConfirmed: slots.workingCostStaleStateConfirmed('84,000'),
+    workingCostStaleStateEntered: slots.workingCostStaleStateEntered('90,000'),
+    workingCostStaleBoth: slots.workingCostStaleBoth('84,000', '90,000'),
+    workingCostStaleBothGone: slots.workingCostStaleBothGone('84,000'),
+    workingCostKeepMonthly: slots.workingCostKeepMonthly('7,500'),
+    workingCostKeepYearly: slots.workingCostKeepYearly('90,000'),
+    workingCostBelowMedical: slots.workingCostBelowMedical('6,000', '8,000'),
+    workingLedgerLead: slots.workingLedgerLead(2026),
+    workingLedgerLeadAged: slots.workingLedgerLeadAged(2026),
+    workingLedgerAmount: slots.workingLedgerAmount('150,000'),
+    workingLedgerOutflow: slots.workingLedgerOutflow('11,475'),
+    workingLedgerSsHeldBack: slots.workingLedgerSsHeldBack('9,763'),
+    workingLedgerSsHeldBackAtMost: slots.workingLedgerSsHeldBackAtMost('5,780'),
+    workingLedgerIncomeTaxInvestment: slots.workingLedgerIncomeTaxInvestment('30,000'),
+    workingLedgerMedicareSurcharge: slots.workingLedgerMedicareSurcharge('1,036'),
+    workingLedgerMonthlyEcho: slots.workingLedgerMonthlyEcho('7,000'),
+    workingLedgerMonthlyPlain: slots.workingLedgerMonthlyPlain('7,000'),
+    workingLedgerLaterYear: slots.workingLedgerLaterYear(2029),
+    workingLedgerLaterRun: slots.workingLedgerLaterRun(2030, 2033),
+    workingLedgerLaterLeftOver: slots.workingLedgerLaterLeftOver('1,200'),
+    workingLedgerLaterShort: slots.workingLedgerLaterShort('3,200'),
+    workingLedgerLaterShortEach: slots.workingLedgerLaterShortEach('3,200'),
+    workingLedgerLaterShortRange: slots.workingLedgerLaterShortRange('3,100', '3,400'),
+    workingLedgerStillShortSince: slots.workingLedgerStillShortSince(2026),
+    workingLedgerEventClaim: slots.workingLedgerEventClaim('Sam'),
+    workingLedgerEventSpousalStart: slots.workingLedgerEventSpousalStart('your spouse'),
+    workingLedgerEventMedicareStarts: slots.workingLedgerEventMedicareStarts('Sam'),
+    workingLedgerEventTurns65: slots.workingLedgerEventTurns65('you'),
+    workingLedgerEventCatchUpStepDown: slots.workingLedgerEventCatchUpStepDown('Alex'),
+    workingLedgerEventIncomeStarts: slots.workingLedgerEventIncomeStarts('Sam'),
+    workingLedgerEventIncomeEnds: slots.workingLedgerEventIncomeEnds('Sam'),
+    assumptionWorkingCostConfirmed: slots.assumptionWorkingCostConfirmed('84,000'),
+    assumptionWorkingCostConfirmedBudget: slots.assumptionWorkingCostConfirmedBudget('36,000'),
+    assumptionWorkingCostEntered: slots.assumptionWorkingCostEntered('90,000'),
+    assumptionWorkingCostStale: slots.assumptionWorkingCostStale('84,000'),
   }
 
   it('every U10 delta-readout slot WEARS a hedge (the control readouts are slot-composed, so the require-hedge sweep must reach the rendered samples here)', () => {
@@ -1096,6 +1141,118 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     }
   })
 
+  // --- THE PAY CHECK'S NEW STRINGS (U8, U9, U13, KTD21; KTD19's law). Every key and slot the pay check
+  //     adds passes the Hawk's narrowed ban (the ONE lexicon, `hawkBan.ts`), writes the curly apostrophe,
+  //     and sits outside the verdict and control scopes — so no new string inherits a verdict's
+  //     free-numeral sweep or a control's forced hedge by its name. Enumerated by PREFIX (a key added
+  //     later is swept with no edit), plus the named strays outside the prefixes; the counts below are
+  //     floors, so the enumeration can never silently empty. ---
+  const PAY_CHECK_KEYS: readonly CopyKey[] = (Object.keys(copy) as CopyKey[]).filter(
+    (k) =>
+      /^(q?[wW]orkingCost|q?[wW]orkingLedger|assumptionWorkingCost|assumptionWorkingYearCheck)/.test(k) ||
+      [
+        'errWorkingCostUnanswered',
+        'errWorkingCostZero',
+        'stalenessWorkingYears',
+        'stalenessWorkingYearCost',
+        'stalenessPayCheckNote',
+        'stalenessPayCheckCta',
+        'employerCoverageHelp',
+      ].includes(k),
+  )
+  const PAY_CHECK_SLOTS = (Object.keys(slots) as (keyof typeof slots)[]).filter((k) =>
+    /^(workingCost|workingLedger|assumptionWorkingCost)/.test(k),
+  )
+  const payCheckStrings = (): readonly (readonly [string, string])[] => [
+    ...PAY_CHECK_KEYS.map((k) => [k, copy[k]] as const),
+    ...PAY_CHECK_SLOTS.map((k) => [k, SLOT_RENDER[k]] as const),
+  ]
+
+  it('the pay check’s enumeration is non-vacuous — its prefixes reach every new string', () => {
+    expect(PAY_CHECK_KEYS.length, PAY_CHECK_KEYS.join(', ')).toBeGreaterThanOrEqual(60)
+    expect(PAY_CHECK_SLOTS.length, PAY_CHECK_SLOTS.join(', ')).toBeGreaterThanOrEqual(40)
+    for (const named of ['qWorkingCostHeading', 'qWorkingLedgerHeading', 'errWorkingCostUnanswered', 'stalenessPayCheckNote'] as const) {
+      expect(PAY_CHECK_KEYS).toContain(named)
+    }
+  })
+
+  it('no pay-check string says "conservative", "worst case" or "only later" (the Hawk’s narrowed ban)', () => {
+    for (const [name, text] of payCheckStrings()) {
+      for (const b of HAWK_BAN) expect(text, `${name} says "${b.word}": "${text}"`).not.toMatch(b.re)
+    }
+  })
+
+  it('the Hawk’s ban is non-vacuous here too — every pattern catches its planted corpus', () => {
+    for (const b of HAWK_BAN) {
+      expect(b.mustCatch.length, `${b.word} owns at least one sample`).toBeGreaterThan(0)
+      for (const sample of b.mustCatch) expect(sample, `${b.word} must catch: "${sample}"`).toMatch(b.re)
+    }
+  })
+
+  it('every pay-check string writes the curly apostrophe (the catalog writes ’)', () => {
+    for (const [name, text] of payCheckStrings()) {
+      expect(text, `${name}: a straight apostrophe in "${text}"`).not.toMatch(/'/)
+    }
+  })
+
+  it('no pay-check key or slot is a verdict or control key (KTD19) — chrome and notes, never the verdict’s sweep', () => {
+    for (const [name] of payCheckStrings()) {
+      expect(isVerdictKey(name), `${name} is verdict-scoped`).toBe(false)
+      expect(isControlKey(name), `${name} is control-scoped`).toBe(false)
+    }
+  })
+
+  it('the pay check’s string-taking slots hardcode no numeral in the template (the figures ride the args)', () => {
+    const S = '§§§' // a non-numeric sentinel — any digit left is a hardcoded one in the template
+    for (const rendered of [
+      slots.workingCostQuoteMonthly(S, S),
+      slots.workingCostQuoteYearly(S),
+      slots.workingCostQuoteBudget(S),
+      slots.workingCostQuoteBudgetMedical(S, S),
+      slots.workingCostLeftOut(S),
+      slots.workingCostStaleQuote(S, S),
+      slots.workingCostStaleQuoteGone(S),
+      slots.workingCostStaleStateConfirmed(S),
+      slots.workingCostStaleStateEntered(S),
+      slots.workingCostStaleBoth(S, S),
+      slots.workingCostStaleBothGone(S),
+      slots.workingCostKeepMonthly(S),
+      slots.workingCostKeepYearly(S),
+      slots.workingCostBelowMedical(S, S),
+      slots.workingLedgerAmount(S),
+      slots.workingLedgerOutflow(S),
+      slots.workingLedgerSsHeldBack(S),
+      slots.workingLedgerSsHeldBackAtMost(S),
+      slots.workingLedgerIncomeTaxInvestment(S),
+      slots.workingLedgerMedicareSurcharge(S),
+      slots.workingLedgerMonthlyEcho(S),
+      slots.workingLedgerMonthlyPlain(S),
+      slots.workingLedgerLaterLeftOver(S),
+      slots.workingLedgerLaterShort(S),
+      slots.workingLedgerLaterShortEach(S),
+      slots.workingLedgerLaterShortRange(S, S),
+      slots.assumptionWorkingCostConfirmed(S),
+      slots.assumptionWorkingCostConfirmedBudget(S),
+      slots.assumptionWorkingCostEntered(S),
+      slots.assumptionWorkingCostStale(S),
+    ]) {
+      expect(lintCopy(rendered, ['free-numeral']), rendered).toEqual([])
+    }
+  })
+
+  it('every pay-check outflow and shortfall carries a MINUS SIGN as well as its words (never color alone, R16)', () => {
+    for (const rendered of [
+      slots.workingLedgerOutflow('1'),
+      slots.workingLedgerLaterShort('1'),
+      slots.workingLedgerLaterShortEach('1'),
+      slots.workingLedgerLaterShortRange('1', '2'),
+    ]) {
+      expect(rendered, rendered).toMatch(/−\$/)
+    }
+    expect(slots.workingLedgerLaterShort('1')).toMatch(/^Short/)
+    expect(copy.workingLedgerShort).toBe('Short')
+  })
+
   it('every essentials-claim pattern owns a corpus sample no other pattern catches (deleting any one reds the corpus)', () => {
     const norm = (s: string) => s.replace(/[’‘]/g, "'")
     ESSENTIALS_CLAIMS.forEach((re, i) => {
@@ -1350,7 +1507,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:741-751, 822-839), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:885-895, 822-839), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop
@@ -1466,7 +1623,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // --- THE UNIT-INERTNESS BAN (Tier-0, fixed 2026-08-03; until now the string had NO pin at all).
   //     The killed line was "…switching this never changes the amount." The panel toggle really
   //     does leave `annualSpendingReal` alone — but the SHOWN figure jumps exactly 12×
-  //     (`spendDisplayed`, AssumptionPanel.tsx:344-349) while the sentence says nothing moved, and
+  //     (`spendDisplayed`, AssumptionPanel.tsx:516-521) while the sentence says nothing moved, and
   //     the panel's own commit (:607-617) multiplies by 12 under 'month'. So the reader's natural
   //     repair — retype the digits they remember — commits a plan off by 12× in the UNSAFE
   //     direction, and nothing downstream catches it (PANEL_PROVENANCE disarms the force-confirm;

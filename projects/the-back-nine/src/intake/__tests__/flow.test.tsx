@@ -254,3 +254,41 @@ describe('IntakeFlow — completion + commit-triggered recompute', () => {
     expect(recompute).toHaveBeenCalledTimes(2) // 2 non-final advances refire; the final delegates solely to onComplete
   })
 })
+
+describe('IntakeFlow — a step’s arrival-fresh fields (`freshOnArrival`, the pay check’s KTD3)', () => {
+  const contradiction = (): MemoryModel => {
+    const m = freshModel()
+    m.update((d) => ({
+      ...d,
+      people: [{ ...d.people[0], workStatus: 'retired', retirementAge: 66, currentAge: 65 }, d.people[1]],
+    }))
+    return m
+  }
+  const gateStep = (fresh: boolean): StepDef => ({
+    ...STEPS[1]!,
+    ...(fresh ? { freshOnArrival: [personField(0, 'retirementAge')] } : {}),
+  })
+  const steps = (fresh: boolean): readonly StepDef[] => [STEPS[2]!, gateStep(fresh), { ...STEPS[2]!, id: 's4' }]
+  const next = () => fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
+  const back = () => fireEvent.click(screen.getByRole('button', { name: copy.flowBack }))
+
+  it('a fresh field’s alert never greets an ARRIVAL — Back into it or Continue into it — only that step’s own Continue', () => {
+    render(<IntakeFlow steps={steps(true)} model={contradiction()} />)
+    next() // arrive
+    expect(screen.queryByRole('alert')).toBeNull()
+    next() // blocked: the alert shows
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+    back() // leave the way we came…
+    next() // …and arrive again by Continue
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it('without the opt-in the flow keeps the field touched across arrivals (directional re-validation, unchanged)', () => {
+    render(<IntakeFlow steps={steps(false)} model={contradiction()} />)
+    next()
+    next() // blocked
+    back()
+    next()
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+  })
+})

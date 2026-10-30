@@ -18,7 +18,7 @@ created: 2026-10-05
 - **(map)** = taken from the reader maps and not re-opened by me.
 - **unverified** = no one opened it.
 
-*Coupled entry:* the Tier 1 entry "The live solve ranks survival at `tieTolerance` 0…" (`backlog.md:1188-1198`, map). It stays BLOCKED and untouched. This build unblocks it on paper and does not execute it.
+*Coupled entry:* the Tier 1 entry "The live solve ranks survival at `tieTolerance` 0…" (`backlog.md:1198-1208`, map). It stays BLOCKED and untouched. This build unblocks it on paper and does not execute it.
 
 ## 0. Ruled scope, not re-opened
 
@@ -84,7 +84,7 @@ The MEASURED probe substituted its vector before `adoptObservedOutcome`. The gra
 - `selectionTieTolerance` (`heldOutSeed.ts:139`), which is vector-generic;
 - `gradeAxisFor`: the axis label is keyed by goal, and `GradeStatistic 'pay-less-tax'` keeps its name;
 - `demotionAxisCalibrated` (`gradeCalibration.ts:163`) is unchanged.
-- ⚑ SKEPTIC (missing readers; each follows through sites 1-2, named so nothing is assumed): the hero delta itself (`recommendationView.ts:634-646` `winnerDisplaysAhead` / `deltaReal`, and the zero-collapse guard at `:653`, which decide dollar vs no-dollar); `runnerUpVizFor` (`recommendationView.ts:880-881`, leave-more gated today); `namedDriverProbe` / `namedDriverProbeSteps` (`gradeCalibration.ts:399-436`), which re-rank under `rankCandidates` and drive F2's `aca-enhanced-subsidies` driver and the coin-flip hinge `recGradeNoteHingeAca` (`copy.ts:1999-2000`). That sentence will now fire on PREMIUM-driven flips, so it joins the §8 Caddie read.
+- ⚑ SKEPTIC (missing readers; each follows through sites 1-2, named so nothing is assumed): the hero delta itself (`recommendationView.ts:634-646` `winnerDisplaysAhead` / `deltaReal`, and the zero-collapse guard at `:653`, which decide dollar vs no-dollar); `runnerUpVizFor` (`recommendationView.ts:880-881`, leave-more gated today); `namedDriverProbe` / `namedDriverProbeSteps` (`gradeCalibration.ts:399-436`), which re-rank under `rankCandidates` and drive F2's `aca-enhanced-subsidies` driver and the coin-flip hinge `recGradeNoteHingeAca` (`copy.ts:2212-2213`). That sentence will now fire on PREMIUM-driven flips, so it joins the §8 Caddie read.
 
 **D5 Byte-identity when healthcare is off.**
 - The premium and Medicare yearly values start at 0 (`taxOverlay.ts:2376-2382`, map).
@@ -100,7 +100,7 @@ Result: the all-in vector equals the tax vector element by element, and its mean
 - It is throw-or-nothing, so no value moves. A non-finite value then takes the typed infeasible route instead of throwing in `mean` and aborting the batch.
 - ⚑ SKEPTIC: D6 lands in the SAME Phase A commit as the D2 field (the new `mean` throw path must never exist without its seam). In principle it can mark a previously scored candidate infeasible (`solverCodeVersion.ts:12-21`: bump on anything that can move a ranking); in practice it is measure-zero (the premium sits inside `grossWithdrawal`, so an overflow hits `terminalReal` first). The Phase A commit and the VERSION 10 block both say so: unreachable in practice, landed before the bump.
 
-**D7 The hero's scope follows the run's BUILT pricing state.** ⚑ RESOLVED 2026-10-05 at source (Phase A's implementer + both reviewers, re-read by the pilot): the skeptic's correction below was ITSELF wrong — `missingRequiredFacts` REQUIRES both ACA quotes for any household with a pre-65 or not-yet-known age (`intakeMap.ts:220-227`, `anyPre65OrUnknown`), an all-65+ household takes the Medicare-only branch (`medicareOnlyPriced`, `:803-809`), and the one healthcare-off overlay left (the degenerate $0-accounts early return) is refused as `no-pretax` before any solve. So every live solve today prices healthcare, and cohorts (a) / (b) below cannot reach one. The UNPRICED arm is kept as DEFENCE-IN-DEPTH, keyed on the built predicate (the `spineMedicarePriced` idiom), so a future intake change that drops a quote can never make the hero claim premiums it did not count; its Phase B test builds a base directly with `overlay.healthcareEnabled` false. Phase A's `solveDispatch.test.ts` arm pins the refusal (a pre-65 household without quotes is `spine-unready`) — if the quotes ever become optional it reds and the unpriced arm is re-checked. Briggsy's words for that arm (today's string) stand; only the reason changed. *The original skeptic text, kept so the drift stays visible:* live runs do NOT always price healthcare. `intakeMap.ts:681-694` sets `healthcareEnabled` only when `healthcareOn` (both ACA quotes entered + someone under 65, `:615`, `:781-787`) or `medicareOnly` (EVERY member 65+, `:803-809`); `missingRequiredFacts` (`:167-183`) does not require the quotes. Two live cohorts therefore solve with healthcare OFF: (a) a pre-65 household that skipped the quotes; (b) a mixed-age household with no quotes (the 65+ member's Medicare unpriced too). On them all-in ≡ income tax (D5), so the engine is right, and a hero claiming premiums were counted would be calm-but-wrong copy. So the hero and the scope disclosure key on `base.overlay.healthcareEnabled` (the predicate the spine route, `intakeMap.ts:811-820`, and the Medicare / ACA disclosure seams already read), with a PRICED arm and an UNPRICED arm (§6). The test: the hero arm follows `overlay.healthcareEnabled` on both values, with a planted unpriced pre-65 household. The cohort is named in the word packet so Briggsy rules on its words.
+**D7 The hero's scope follows the run's BUILT pricing state.** ⚑ RESOLVED 2026-10-05 at source (Phase A's implementer + both reviewers, re-read by the pilot): the skeptic's correction below was ITSELF wrong — `missingRequiredFacts` REQUIRES both ACA quotes for any household with a pre-65 or not-yet-known age (`intakeMap.ts:224-231`, `anyPre65OrUnknown`), an all-65+ household takes the Medicare-only branch (`medicareOnlyPriced`, `:803-809`), and the one healthcare-off overlay left (the degenerate $0-accounts early return) is refused as `no-pretax` before any solve. So every live solve today prices healthcare, and cohorts (a) / (b) below cannot reach one. The UNPRICED arm is kept as DEFENCE-IN-DEPTH, keyed on the built predicate (the `spineMedicarePriced` idiom), so a future intake change that drops a quote can never make the hero claim premiums it did not count; its Phase B test builds a base directly with `overlay.healthcareEnabled` false. Phase A's `solveDispatch.test.ts` arm pins the refusal (a pre-65 household without quotes is `spine-unready`) — if the quotes ever become optional it reds and the unpriced arm is re-checked. Briggsy's words for that arm (today's string) stand; only the reason changed. *The original skeptic text, kept so the drift stays visible:* live runs do NOT always price healthcare. `intakeMap.ts:724-737` sets `healthcareEnabled` only when `healthcareOn` (both ACA quotes entered + someone under 65, `:615`, `:781-787`) or `medicareOnly` (EVERY member 65+, `:803-809`); `missingRequiredFacts` (`:167-183`) does not require the quotes. Two live cohorts therefore solve with healthcare OFF: (a) a pre-65 household that skipped the quotes; (b) a mixed-age household with no quotes (the 65+ member's Medicare unpriced too). On them all-in ≡ income tax (D5), so the engine is right, and a hero claiming premiums were counted would be calm-but-wrong copy. So the hero and the scope disclosure key on `base.overlay.healthcareEnabled` (the predicate the spine route, `intakeMap.ts:854-863`, and the Medicare / ACA disclosure seams already read), with a PRICED arm and an UNPRICED arm (§6). The test: the hero arm follows `overlay.healthcareEnabled` on both values, with a planted unpriced pre-65 household. The cohort is named in the word packet so Briggsy rules on its words.
 
 **D8 Versioning.**
 - `SOLVER_CODE_VERSION` 9 → 10 (`solverCodeVersion.ts:160`, read; the line reads 12 since the 2026-10-27 RIB-LIM order, after 11 from the 2026-10-09 survivor-medical lean), in the SWITCH commit only. Add a VERSION 10 block saying:
@@ -109,8 +109,8 @@ Result: the all-in vector equals the tax vector element by element, and its mean
   - the stamp is global, so leave-more records re-stale too. That over-re-run is accepted under the file's when-in-doubt rule.
 - Re-pin `pricingVersion.test.ts:150-174` to `{ solverCodeVersion: 10, newestRepriceRow: 7 }`, and retitle it "v8, v9 and v10 were ranking logic only". (Then; the 2026-10-09 survivor-medical lean, a scored pricing change, re-pinned it to `{ solverCodeVersion: 11, newestRepriceRow: 11 }`, and since the 2026-10-27 RIB-LIM order — scored, no ledger row — it reads `{ solverCodeVersion: 12, newestRepriceRow: 11 }`.)
 - **No ledger row** (`pricingVersion.ts:46-53`): no figure from a saved household's spine recompute moves. `FIRST_UNAMBIGUOUS_SAVE_DAY` stays put.
-- **No `FINGERPRINT_SCHEMA` bump and no objective tag** (`solverRunFingerprint.ts:63-65`). Either would add a false 'inputs-changed' cause, which renders "Your numbers have changed since then." (`copy.ts:1781`). Saved records must report ONE cause, 'solver-changed', which renders "The way strategies are worked out has changed since then." (the string is at `copy.ts:1784`, mapped from the cause at `Result.tsx:85`). That sentence is true. Records persist no dollar figure (`model.ts:2155-2217`).
-- **Persisted id `'pay-less-tax'` stays.** It lives in `model.ts:272` RECOMMENDATION_GOALS, the codec needVocab gate (`:2073`) and the fingerprint canon (`solverRunFingerprint.ts:121`). Renaming it is a one-way door: memories dropped, plus a false 'inputs-changed'.
+- **No `FINGERPRINT_SCHEMA` bump and no objective tag** (`solverRunFingerprint.ts:63-65`). Either would add a false 'inputs-changed' cause, which renders "Your numbers have changed since then." (`copy.ts:1983`). Saved records must report ONE cause, 'solver-changed', which renders "The way strategies are worked out has changed since then." (the string is at `copy.ts:1986`, mapped from the cause at `Result.tsx:86`). That sentence is true. Records persist no dollar figure (`model.ts:2187-2249`).
+- **Persisted id `'pay-less-tax'` stays.** It lives in `model.ts:272` RECOMMENDATION_GOALS, the codec needVocab gate (`:2095`) and the fingerprint canon (`solverRunFingerprint.ts:121`). Renaming it is a one-way door: memories dropped, plus a false 'inputs-changed'.
 - **v10 collision:** `council-log.md`'s 2026-10-04 *Adoption of the roster-recall fix* row and `backlog.md:1126-1135` earmark v10 for the unmerged gap-fill (`b9-v10-gapfill-wip`). Note in the register's recall entry: "v10 = the all-in objective; a revived gap-fill re-measures on all-in and takes a later version." The council rows stay as records.
 
 ## 2. Every site
@@ -130,12 +130,12 @@ Result: the all-in vector equals the tax vector element by element, and its mean
 - `solve.ts:214-224, :385-390` (deltaSkew wording).
 - `stateTaxDisclosure.ts:151-155`: the priced-state layer reaches the hero through the tax addend; the logic is unchanged.
 - `recommendationView.ts:100` and `:720`.
-- `copy.ts:1877` comment and `:3233`.
+- `copy.ts:2090` comment and `:3538`.
 - the `recommendationView.test.ts:596` comment.
 
 The viz suppression off leave-more stays correct, because all-in is still lower-is-better.
 
-**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:3142-3143`, read), `goalPayLessTaxGloss` (`:1884`), `recDiscNiit` (`:2055-2056`), `recDiscStateTax` (`:2060-2061`), the optional new `recDisc*`, and `recDeltaTypical*` (`:3170-3189`) only under a "$X less" hero.
+**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:3447-3448`, read), `goalPayLessTaxGloss` (`:2097`), `recDiscNiit` (`:2268-2269`), `recDiscStateTax` (`:2060-2061`), the optional new `recDisc*`, and `recDeltaTypical*` (`:3170-3189`) only under a "$X less" hero.
 
 **Calibration:**
 - Add "an objective-statistic change" to the RE-MEASURE triggers at `fallback.ts:44, :58, :72` (map).
@@ -205,7 +205,7 @@ The viz suppression off leave-more stays correct, because all-in is still lower-
       - Otherwise append the decomposition to the register's as-built note.
       - *Why over Spec 1's record-only:* Spec 1 records the bias but never checks whether it decides a crown. On this point calm-but-wrong is a live risk.
 15. Land Briggsy's chosen strings (§6). Then:
-    - add a `SLOT_RENDER` sample for any new slot, cohort arm or `recDisc*` key (`copyGuard.test.ts:847-849`, the burned/070 completeness test);
+    - add a `SLOT_RENDER` sample for any new slot, cohort arm or `recDisc*` key (`copyGuard.test.ts:892-894`, the burned/070 completeness test);
     - update the pinned DISCLOSURE_ORDER test (`recommendationView.ts:131-132`, map) if a scope disclosure is added;
     - add the `recommendationView.test` arms (§5.5).
 16. Docs (§7). Then `pnpm doc:reanchor`, grepping the dry run for "(bare, after", the tool's 5th blind class. Then doc-stats.
@@ -298,8 +298,8 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 - **Premium-only plant:** a difference in premium alone moves all five sites.
 
 **5.3 hl50: the register's "~$50k-spend witness household".** It is OWED by the RULED block; case vi is the chair's addition.
-- `retiredHealth` at `annualSpendingReal` 50,000 (`devSeeds.ts:746-809`, map), constructed in the test.
-- Keep it OUT of DEV_SEEDS: membership enrolls it in every DEV_SEEDS loop and in Caddie (`devSeeds.test.ts:79-113`). Adding it is HIS call.
+- `retiredHealth` at `annualSpendingReal` 50,000 (`devSeeds.ts:747-810`, map), constructed in the test.
+- Keep it OUT of DEV_SEEDS: membership enrolls it in every DEV_SEEDS loop and in Caddie (`devSeeds.test.ts:83-117`). Adding it is HIS call.
 - Roster: {the user baseline, pre-tax-first:0, bracket-fill:0}, at 16,000 paths on BOTH live seeds (12245589 / −1438857764), then `selectRecommendation`.
 - The expected crown is bracket-fill:0, taken from an INDEPENDENT ranker: direct `simulate(applyCandidate)` plus the test's own tier-1/tier-2 sort over the three summed vectors (register method b).
 - Assert:
@@ -330,11 +330,11 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 
 *The packet as sent (the options he chose among):*
 
-**Constraints the drafts meet.** This was a hand-lint against `copyGuard.ts:148-309` + `HEDGE_TOKENS` (`copy.ts:2134-2143`); the suite runs on whatever he picks.
+**Constraints the drafts meet.** This was a hand-lint against `copyGuard.ts:148-309` + `HEDGE_TOKENS` (`copy.ts:2347-2356`); the suite runs on whatever he picks.
 - A hedge ("about" / "could"); `recDelta*` and `recDisc*` are require-hedge swept (`copyGuard.ts:124-128`).
 - No superlative, no clause-leading directive verb (`:262`), no "pays off" or "better off" (`:251-252`), no em-dash apposition on the figure.
-- The hero stays one line (`recommendationView.ts:172-174`) and keeps "than today’s plan" (the userBaseline seam, `copy.ts:1919-1926`).
-- The slot keeps its one-arg signature, so `recommendationView.ts:673` and `copyGuard.test.ts:815` need no wiring change.
+- The hero stays one line (`recommendationView.ts:172-174`) and keeps "than today’s plan" (the userBaseline seam, `copy.ts:2132-2139`).
+- The slot keeps its one-arg signature, so `recommendationView.ts:673` and `copyGuard.test.ts:816` need no wiring change.
 - Rejected: "health costs" and "in your pocket". Out-of-pocket and cost-sharing are not counted, and funded-year accrual makes any wealth claim an overclaim. Also do not reuse the health sheet's "Lifetime health costs" lexeme: one lexeme with two referents is the O14 class.
 
 **Hero `recDeltaPayLessTax`.** Today: "Keeps about $X more out of your lifetime tax than today’s plan."
@@ -356,7 +356,7 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 **Label "Pay less tax": lean KEEP (HIS call).**
 - His ruling covered the objective and the hero, not the D1/R21 vocabulary.
 - A lost PTC is a shadow tax (`pre65-healthcare.md:76`).
-- Five regex selectors pin it: `e2e/csp.spec.ts:337` (CI), `caddie-walk.spec.ts:774/755`, `held/solve-timing.spec.ts:51`, `recommendInvite.test.tsx:127/145/213`.
+- Five regex selectors pin it: `e2e/csp.spec.ts:338` (CI), `caddie-walk.spec.ts:799/755`, `held/solve-timing.spec.ts:51`, `recommendInvite.test.tsx:127/145/213`.
 
 **`recDiscNiit`** renders on BOTH goals. "Your federal income tax" is already wrong on NC/PA/FL.
 - Draft (HIS): "A federal surtax on higher investment income isn’t counted here, and it could apply."
@@ -404,11 +404,11 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 4. `pnpm verify:doc-stats`: test count, register count and arm-4 citations after reanchor.
 5. `pnpm build`
 6. `pnpm verify:bundle`: ≤ 300 KiB.
-7. `pnpm verify:csp`: the label regex at `csp.spec.ts:337` must still match, and this arm runs a pay-less-tax solve.
+7. `pnpm verify:csp`: the label regex at `csp.spec.ts:338` must still match, and this arm runs a pay-less-tax solve.
 8. `pnpm verify:fit`: GoalPicker gloss wrap at 390 px and at his 1536×791.
 9. `pnpm verify:fit:rv`: a FULL run. The RV gate drives leave-more, and the rewritten NIIT and state-tax disclosures render there.
 10. **Caddie read of the re-worded hero.** No automated fit or text gate covers the pay-less-tax committed surface.
-    - Walk `pnpm caddie:walk`'s pay-less-tax arms (`solve:nc` / failing, `caddie-walk.spec.ts:774,781`, map) at 1536×791@2.5 and on the phone.
+    - Walk `pnpm caddie:walk`'s pay-less-tax arms (`solve:nc` / failing, `caddie-walk.spec.ts:799,781`, map) at 1536×791@2.5 and on the phone.
     - Plus one planted hl50-shape ACA household where premiums dominate.
     - Focus: does the hero say what it counts? Can "premiums" be read as out-of-pocket or money kept? Do the gloss, hero, scope, NIIT and state lines agree?
     - Run it on his candidate words BEFORE the land. The card travels with the packet: it informs his choice and cannot clear his words. A framing-level hit parks for him.

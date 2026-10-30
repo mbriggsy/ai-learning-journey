@@ -15,10 +15,18 @@ import {
   spineStatePriced,
   dateStatePriced,
   pricedStateForRun,
+  isDateRoute,
+  workingYearCostForRun,
+  workingYearDraftEvents,
+  workingYearLedgerForRun,
+  workingYearTaxForRun,
 } from '../intakeMap'
 import { contributionCeilingFor, contributionCeilingInYear } from '../sanity'
+import { confirmedWorkingYearCost, isWorkingYearCostStale } from '../workingYearQuote'
 import { validateParams } from '@engine/simulate'
-import { buildCandidateParams, DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS } from '@engine/dateSearch'
+import { buildCandidateParams, DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS, workingYearTaxReach } from '@engine/dateSearch'
+import { workingYearLedger } from '@engine/workingYearLedger'
+import type { IncomeStream, WorkingYearCostV3 } from '@shared/model'
 import { acaAgeRatingCurve, medicareCostTrend, medicareExtrasTypicalMonthly } from '@engine/constants/health'
 import { employerPlan2026, catchUpForAge, hsa2026 } from '@engine/constants/contributions'
 import type { ScenarioDraft, PersonDraft } from '@store/memoryModel'
@@ -1134,5 +1142,416 @@ describe('the working-year tax floor — the investment vector rides beside the 
     const complete = buildDateInput(dip)!
     expect(complete.workingYearIrmaaMagiByPerson).toEqual([85_000, 35_000])
     expect(complete.workingYearInvestmentByPerson).toEqual([10_000, 0])
+  })
+})
+
+// ── THE PAY CHECK'S W (2026-10-29 — `docs/plans/features/working-year-pay-check-build-spec.md`) ────────
+// U7's intake half (KTD2, KTD6: W and the employer's HSA dollar ride `DateSearchInput`), U9/U13's run
+// read (`workingYearCostForRun`), U5's moved reach arm, and U6b's money-picture read (KTD12). Every
+// expected figure is typed by hand from the draft and the statute tables (DND 012).
+
+/** W as the household answers "Yes" on the W step: the draft's own quote and reading. */
+const withMintedW = (d: ScenarioDraft): ScenarioDraft => {
+  const w = confirmedWorkingYearCost(d)
+  if (w === null) throw new Error('test fixture: this draft quotes $0, so there is no W to confirm')
+  return { ...d, workingYearCost: w }
+}
+
+/** The same draft with no W answer at all (whatever a seed carries). */
+const withoutW = (d: ScenarioDraft): ScenarioDraft => {
+  const { workingYearCost: _w, ...rest } = d
+  return rest
+}
+
+/** A household's own figure, $90,000 a year. */
+const ENTERED_W: WorkingYearCostV3 = { kind: 'entered', amountReal: 90_000, entryPeriod: 'year', stateTaxReading: 'unpriced' }
+
+const HSA_BLEND = { kind: 'exact', stockPct: 80, bondPct: 20, cashPct: 0 } as const
+
+/** A 61-year-old worker with an HSA: $3,000 of her own and $1,000 from her employer — $4,000, under the
+ *  $9,750 family-plus-catch-up ceiling at every age, so the stream's scale is 1 in every year. The
+ *  spouse is retired (60, stopped at 58). Youngest 60 ⇒ a horizon of 119 − 60 + 1 = 60 years. */
+const hsaEmployerDraft = (): ScenarioDraft => ({
+  ...completeDateDraft(),
+  people: [
+    workingPerson({ birthYear: 1965, currentAge: 61 }),
+    retiredPerson({ name: 'S', birthYear: 1966, currentAge: 60, retirementAge: 58 }),
+  ] as ScenarioDraft['people'],
+  enteredAccounts: [
+    { ownerIndex: 0, kind: 'hsa', valueToday: 30_000, annualContribution: 3_000, hsaEmployerAnnual: 1_000, manualBlend: HSA_BLEND },
+  ] as ScenarioDraft['enteredAccounts'],
+})
+
+/** A 56-year-old worker at today's whole HSA ceiling, $9,750 ($8,750 family + the $1,000 age-55
+ *  catch-up), of which $1,000 is her employer's. The catch-up is statute-fixed, so every later runway
+ *  year's ceiling erodes in real terms and the stream trims (the frozen-nominal Tier 0). */
+const hsaTrimmedDraft = (): ScenarioDraft => ({
+  ...completeDateDraft(),
+  people: [
+    workingPerson({ birthYear: 1970, currentAge: 56 }),
+    retiredPerson({ name: 'S', birthYear: 1966, currentAge: 60, retirementAge: 58 }),
+  ] as ScenarioDraft['people'],
+  enteredAccounts: [
+    { ownerIndex: 0, kind: 'hsa', valueToday: 30_000, annualContribution: 8_750, hsaEmployerAnnual: 1_000, manualBlend: HSA_BLEND },
+  ] as ScenarioDraft['enteredAccounts'],
+})
+
+describe('the pay check’s W on the date input (U7: KTD2 and KTD6’s intake half)', () => {
+  it('at scale 1 the employer-HSA stream is the entered employer dollar in every year of the horizon; a retired member’s entry is []', () => {
+    const input = buildDateInput({ ...hsaEmployerDraft(), workingYearCost: ENTERED_W })!
+    const employer = input.employerHsaByPerson!
+    expect(employer).toHaveLength(2)
+    expect(employer[0], 'one entry per year of the 60-year horizon').toHaveLength(60)
+    expect(employer[0]!.every((x) => x === 1_000), 'the $1,000 employer dollar, unscaled').toBe(true)
+    expect(employer[1], 'the retired spouse deposits nothing — an empty entry, never a hole').toEqual([])
+  })
+
+  it('in a trimmed year the employer dollar is scaled by the SAME factor as the hsa stream it rides in', () => {
+    // The runway ceiling of calendar year y in real dollars: 8,750 + 1,000 ÷ the price index of y (the
+    // closed form the stream's own test derives, re-typed here from the trend table).
+    const trend = medicareCostTrend.value
+    const idx = (y: number): number =>
+      y <= trend.anchorYear
+        ? 1
+        : (1 + trend.cpiNearTermAvg) ** (Math.min(y, trend.anchorYear + trend.premiums.length) - trend.anchorYear) *
+          (1 + trend.cpiUltimate) ** Math.max(0, y - trend.anchorYear - trend.premiums.length)
+    const input = buildDateInput({ ...hsaTrimmedDraft(), workingYearCost: ENTERED_W })!
+    const hsa = input.params.overlay!.accumulation!.contributionsByPerson[0]!.hsa!
+    const employer = input.employerHsaByPerson![0]!
+    expect(employer[0]).toBe(1_000) // year 0: today's ceiling, untrimmed
+    for (const t of [1, 5, 9]) {
+      const scale = (8_750 + 1_000 / idx(2026 + t)) / 9_750
+      expect(scale, `year ${t} trims`).toBeLessThan(1)
+      expect(employer[t], `year ${t}: the employer dollar × the year's scale`).toBeCloseTo(1_000 * scale, 9)
+      expect(employer[t], `year ${t}: the hsa stream's own scale`).toBeCloseTo((1_000 * hsa[t]!) / 9_750, 9)
+    }
+    expect(1_000 - employer[9]!, 'non-vacuous: the trim is real cents by year 9').toBeGreaterThan(5)
+  })
+
+  it('W changes NOTHING inside the built params — the contribution streams are byte-identical with and without it', () => {
+    for (const d of [hsaEmployerDraft(), hsaTrimmedDraft(), completeDateDraft()]) {
+      const without = buildDateInput(d)!
+      const withW = buildDateInput({ ...d, workingYearCost: ENTERED_W })!
+      expect(withW.params.overlay!.accumulation!.contributionsByPerson).toEqual(
+        without.params.overlay!.accumulation!.contributionsByPerson,
+      )
+      expect(withW.params).toEqual(without.params)
+    }
+  })
+
+  it('every employer entry is ≤ that person’s hsa deposit in the same year (validateParams’ bound)', () => {
+    let compared = 0
+    for (const d of [hsaEmployerDraft(), hsaTrimmedDraft()]) {
+      const input = buildDateInput({ ...d, workingYearCost: ENTERED_W })!
+      input.employerHsaByPerson!.forEach((entry, i) => {
+        const hsa = input.params.overlay!.accumulation!.contributionsByPerson[i]!.hsa
+        entry.forEach((x, t) => {
+          expect(x, `person ${i}, year ${t}`).toBeLessThanOrEqual(hsa?.[t] ?? 0)
+          compared++
+        })
+      })
+    }
+    expect(compared, 'non-vacuous').toBeGreaterThan(100)
+  })
+
+  it('W and the stream ride ONLY when W is present — absent, neither key exists', () => {
+    const absent = buildDateInput(completeDateDraft())!
+    expect('workingYearCostReal' in absent).toBe(false)
+    expect('employerHsaByPerson' in absent).toBe(false)
+    const entered = buildDateInput({ ...completeDateDraft(), workingYearCost: ENTERED_W })!
+    expect(entered.workingYearCostReal).toBe(90_000)
+    const confirmed = buildDateInput({
+      ...completeDateDraft(),
+      workingYearCost: { kind: 'confirmed', quotedReal: 84_000, stateTaxReading: 'unpriced' },
+    })!
+    expect(confirmed.workingYearCostReal).toBe(84_000)
+    // A worker with no HSA rides a zero for every year (58 youngest ⇒ 62 years); the retired spouse [].
+    expect(confirmed.employerHsaByPerson).toEqual([new Array<number>(62).fill(0), []])
+  })
+
+  it('an entered $0 never rides — the run reads exactly as before W was answered (rulings 17 and 22: the ONE carriage rule)', () => {
+    // The walk writes a typed $0 into the draft so its own zero rule can hold Continue; the engine
+    // accepts W = 0, so the carriage rule's "above $0" is the only thing between that 0 and a run.
+    const zero: WorkingYearCostV3 = { kind: 'entered', amountReal: 0, entryPeriod: 'month', stateTaxReading: 'unpriced' }
+    const d: ScenarioDraft = { ...completeDateDraft(), workingYearCost: zero }
+    const input = buildDateInput(d)!
+    expect(input, 'the draft is buildable').not.toBeNull()
+    expect('workingYearCostReal' in input).toBe(false)
+    expect('employerHsaByPerson' in input).toBe(false)
+    expect(input).toEqual(buildDateInput(completeDateDraft()))
+    expect(workingYearCostForRun(d)).toBe('unpriced')
+  })
+
+  it('a STALE W still rides — the engine keeps using the last figure the household gave (R4)', () => {
+    // Confirmed at 80,000; the draft now quotes its 84,000 spending.
+    const d: ScenarioDraft = {
+      ...completeDateDraft(),
+      workingYearCost: { kind: 'confirmed', quotedReal: 80_000, stateTaxReading: 'unpriced' },
+    }
+    expect(isWorkingYearCostStale(d)).toBe(true)
+    expect(buildDateInput(d)!.workingYearCostReal).toBe(80_000)
+  })
+
+  it('validateParams accepts EVERY candidate Y = 0..top of a W-present draft with an employer HSA dollar', () => {
+    for (const d of [hsaEmployerDraft(), hsaTrimmedDraft()]) {
+      expect(missingRequiredFacts(d), 'buildable').toEqual([])
+      const input = buildDateInput({ ...d, workingYearCost: ENTERED_W })!
+      for (let y = 0; y <= DATE_OFFSET_WINDOW_TOP; y++) {
+        const candidate = buildCandidateParams(input, y, DATE_SEARCH_PATHS.provisional)
+        expect(validateParams(candidate), `Y=${y}`).toBeNull()
+        const acc = candidate.overlay!.accumulation!
+        expect(acc.workingYearCostReal, `Y=${y}: W lands on the candidate`).toBe(90_000)
+        expect(acc.employerHsaByPerson![0], `Y=${y}: the stream is cut to the working years`).toHaveLength(y)
+      }
+    }
+  })
+})
+
+describe('workingYearCostForRun — does THIS run carry W? (U9, U13)', () => {
+  it('a W-present date draft reads priced; the same draft without W reads unpriced', () => {
+    expect(workingYearCostForRun(withMintedW(DEV_SEEDS.date))).toBe('priced')
+    expect(workingYearCostForRun(withoutW(DEV_SEEDS.date))).toBe('unpriced')
+  })
+
+  it('an unbuildable draft reads unknown, W or not', () => {
+    const noSpend = { ...withMintedW(DEV_SEEDS.date), annualSpendingReal: undefined } as unknown as ScenarioDraft
+    expect(missingRequiredFacts(noSpend).length).toBeGreaterThan(0)
+    expect(workingYearCostForRun(noSpend)).toBe('unknown')
+    const solo = withMintedW(DEV_SEEDS.datesolo)
+    expect(missingRequiredFacts(solo).length).toBeGreaterThan(0)
+    expect(workingYearCostForRun(solo)).toBe('unknown')
+  })
+
+  it('an all-retired draft carrying a stored W reads unpriced — the spine never carries it', () => {
+    const d = withMintedW(completeSpineDraft())
+    expect(isDateRoute(d)).toBe(false)
+    expect(missingRequiredFacts(d)).toEqual([])
+    expect(workingYearCostForRun(d)).toBe('unpriced')
+  })
+})
+
+describe('the reach walk under W (U5’s moved arm, KTD15)', () => {
+  it('a W-present draft reads priced through the intake read and the walk — never a masked throw', () => {
+    const d = withMintedW(DEV_SEEDS.date)
+    const input = buildDateInput(d)!
+    expect(input.workingYearCostReal, 'W rides the input').toBe(84_000)
+    expect(() => workingYearTaxReach(input)).not.toThrow()
+    expect(workingYearTaxReach(input)).toBe('priced')
+    expect(workingYearTaxForRun(d), 'its catch would turn a throw into unknown').toBe('priced')
+  })
+
+  it('non-vacuous: a household the floor never reaches reads unpriced without W and priced with it — the W branch answers', () => {
+    // Both still working at 45 and 47 (the floor's unreached household, stalenessExposure.test.ts).
+    const base = DEV_SEEDS.date
+    const { retirementAge: _samRetired, ...sam } = base.people[1]!
+    const young: ScenarioDraft = withoutW({
+      ...base,
+      people: [
+        { ...base.people[0]!, birthYear: 1981, currentAge: 45 },
+        { ...sam, birthYear: 1979, currentAge: 47, workStatus: 'working', earnedIncomeReal: 60_000 },
+      ],
+    })
+    expect(missingRequiredFacts(young), 'buildable').toEqual([])
+    expect(workingYearTaxForRun(young)).toBe('unpriced')
+    expect(workingYearTaxForRun(withMintedW(young))).toBe('priced')
+  })
+})
+
+describe('the money picture’s draft events (U6b; KTD12 as built A7)', () => {
+  /** A worker at the 60–63 super catch-up ceiling in her 401(k). */
+  const superBand = (ownerIndex: 0 | 1, age: number) => ({
+    ownerIndex,
+    kind: '401k' as const,
+    ticker: 'VTI',
+    valueToday: 500_000,
+    annualContribution: contributionCeilingFor('401k', age)!,
+  })
+
+  it('a 61-year-old super-band depositor steps down in year 3 — the year she turns 64 and the 60–63 window closes', () => {
+    const d: ScenarioDraft = {
+      ...completeDateDraft(),
+      people: [
+        workingPerson({ birthYear: 1965, currentAge: 61 }),
+        retiredPerson({ name: 'S', birthYear: 1966, currentAge: 60, retirementAge: 58 }),
+      ] as ScenarioDraft['people'],
+      enteredAccounts: [superBand(0, 61)] as ScenarioDraft['enteredAccounts'],
+    }
+    const H = buildDateInput(d)!.params.maxHorizonYears
+    expect(workingYearDraftEvents(d, H)).toEqual([{ yearsIn: 3, code: 'catchUpStepDown', person: 0 }])
+  })
+
+  it('TWO super-band depositors give TWO step-downs — every one, not only the first (62 steps down in year 2, 61 in year 3)', () => {
+    const d: ScenarioDraft = {
+      ...completeDateDraft(),
+      people: [
+        workingPerson({ birthYear: 1965, currentAge: 61 }),
+        workingPerson({ name: 'S', sex: 'male', birthYear: 1964, currentAge: 62, earnedIncomeReal: 90_000 }),
+      ] as ScenarioDraft['people'],
+      enteredAccounts: [superBand(0, 61), superBand(1, 62)] as ScenarioDraft['enteredAccounts'],
+    }
+    expect(workingYearDraftEvents(d, 20)).toEqual([
+      { yearsIn: 2, code: 'catchUpStepDown', person: 1 },
+      { yearsIn: 3, code: 'catchUpStepDown', person: 0 },
+    ])
+  })
+
+  it('no step-down where nothing steps down: a deposit under the age-64 ceiling, or a retired owner', () => {
+    const under: ScenarioDraft = {
+      ...completeDateDraft(),
+      people: [
+        workingPerson({ birthYear: 1965, currentAge: 61 }),
+        retiredPerson({ name: 'S', birthYear: 1966, currentAge: 60, retirementAge: 58 }),
+      ] as ScenarioDraft['people'],
+      // $20,000 sits under the age-64 ceiling ($24,500 + the $8,000 catch-up), so no year trims it.
+      enteredAccounts: [{ ...superBand(0, 61), annualContribution: 20_000 }] as ScenarioDraft['enteredAccounts'],
+    }
+    expect(workingYearDraftEvents(under, 20)).toEqual([])
+    const retired: ScenarioDraft = {
+      ...completeSpineDraft(),
+      enteredAccounts: [superBand(1, 63)] as ScenarioDraft['enteredAccounts'],
+    }
+    expect(workingYearDraftEvents(retired, 20)).toEqual([])
+  })
+
+  /** `completeDateDraft` (W 58 working, S 60 retired ⇒ a 62-year horizon) with other income. */
+  const withIncome = (...incomeStreams: IncomeStream[]): ScenarioDraft => ({ ...completeDateDraft(), incomeStreams })
+  const pension = (over: Partial<IncomeStream> = {}): IncomeStream =>
+    ({ ownerIndex: 0, type: 'pension', annualRealToday: 30_000, startAge: 55, colaMode: 'real-flat', survivorPct: 0.5, ...over }) as IncomeStream
+
+  it('a pension that ends inside the window gives incomeEnds the year after its last paying year (58 → its last at 62 is year 4, so year 5)', () => {
+    const d = withIncome(pension({ endAge: 62 }))
+    expect(workingYearDraftEvents(d, 62)).toEqual([{ yearsIn: 5, code: 'incomeEnds', person: 0 }])
+  })
+
+  it('a stream that starts later gives incomeStarts (the spouse, 60, from 63: year 3); a lifetime stream’s end lands at the horizon', () => {
+    const d = withIncome(pension({ ownerIndex: 1, startAge: 63 }))
+    expect(workingYearDraftEvents(d, 62)).toEqual([
+      { yearsIn: 3, code: 'incomeStarts', person: 1 },
+      { yearsIn: 62, code: 'incomeEnds', person: 1 },
+    ])
+  })
+
+  it('each stream is read ALONE: a pension ending beside a second stream of the same owner still names its end', () => {
+    // Pre-summed, the owner's leaf never reaches 0 in year 5 (the rental keeps paying); alone, it does.
+    const d = withIncome(pension({ endAge: 62 }), pension({ type: 'rental', annualRealToday: 12_000 } as Partial<IncomeStream>))
+    expect(workingYearDraftEvents(d, 62)).toEqual([
+      { yearsIn: 5, code: 'incomeEnds', person: 0 },
+      { yearsIn: 62, code: 'incomeEnds', person: 0 },
+    ])
+  })
+
+  it('a stream that already ended, or pays $0, names nothing — never a negative year', () => {
+    expect(workingYearDraftEvents(withIncome(pension({ startAge: 40, endAge: 50 })), 62)).toEqual([])
+    expect(workingYearDraftEvents(withIncome(pension({ annualRealToday: 0 })), 62)).toEqual([])
+  })
+})
+
+describe('workingYearLedgerForRun — the money picture’s intake read (U6b; KTD12)', () => {
+  it('no W, or no run to build, reads unknown', () => {
+    expect(workingYearLedgerForRun(withoutW(DEV_SEEDS.date)), 'W absent').toBe('unknown')
+    const solo = withMintedW(DEV_SEEDS.datesolo)
+    expect(missingRequiredFacts(solo).length, 'datesolo is unbuildable').toBeGreaterThan(0)
+    expect(workingYearLedgerForRun(solo)).toBe('unknown')
+    expect(workingYearLedgerForRun(withMintedW(completeSpineDraft())), 'the all-retired route has no picture').toBe('unknown')
+  })
+
+  it('a draft the ENGINE refuses (a claim age of 55, which no missing fact names) reads unknown — never a crash', () => {
+    const refused = withMintedW({
+      ...DEV_SEEDS.date,
+      people: [{ ...DEV_SEEDS.date.people[0]!, socialSecurityClaimAge: 55 }, DEV_SEEDS.date.people[1]!],
+    })
+    expect(missingRequiredFacts(refused), 'no missing fact').toEqual([])
+    const input = buildDateInput(refused)!
+    expect(() => workingYearLedger({ params: buildCandidateParams(input, DATE_OFFSET_WINDOW_TOP, 1), draftEvents: [] })).toThrow()
+    expect(workingYearLedgerForRun(refused)).toBe('unknown')
+  })
+
+  it('a horizon the date search turns away (at or below the window top) reads unknown, though the producer itself would compose it', () => {
+    // A plant that ages the household WITHOUT moving its birth years (so Social Security still prices),
+    // isolating the guard: youngest 110 ⇒ 119 − 110 + 1 = 10 years, at the window top.
+    const aged = (age: number): ScenarioDraft =>
+      withMintedW({
+        ...DEV_SEEDS.date,
+        people: [
+          { ...DEV_SEEDS.date.people[0]!, currentAge: age },
+          { ...DEV_SEEDS.date.people[1]!, currentAge: age + 2 },
+        ],
+        health: { ...DEV_SEEDS.date.health, irmaaMagiSeed: [180_000, 40_000] },
+      })
+    const atTop = aged(110)
+    const input = buildDateInput(atTop)!
+    expect(input.params.maxHorizonYears).toBe(10)
+    const params = buildCandidateParams(input, DATE_OFFSET_WINDOW_TOP, 1)
+    expect(() => workingYearLedger({ params, draftEvents: [] }), 'the producer alone composes it').not.toThrow()
+    expect(workingYearLedgerForRun(atTop)).toBe('unknown')
+    // One year younger the horizon clears the top (11 years), and the picture shows.
+    expect(buildDateInput(aged(109))!.params.maxHorizonYears).toBe(11)
+    expect(workingYearLedgerForRun(aged(109))).not.toBe('unknown')
+  })
+
+  it('a W-present draft reads the PRODUCER’s picture of the window-top candidate, its W line the confirmed quote', () => {
+    const d = withMintedW(DEV_SEEDS.date)
+    expect(workingYearDraftEvents(d, 62), 'date names no draft event').toEqual([])
+    const read = workingYearLedgerForRun(d)
+    expect(read).toEqual(
+      workingYearLedger({ params: buildCandidateParams(buildDateInput(d)!, DATE_OFFSET_WINDOW_TOP, 1), draftEvents: [] }),
+    )
+    if (read === 'unknown') throw new Error('unreachable')
+    expect(read.year0.goingOut.workingYearCost.dollars, 'date spends $84,000 a year').toBe(84_000)
+  })
+
+  it('the draft’s events reach the picture: a pension ending in year 5 and two catch-up step-downs are each named in their year', () => {
+    const pensionEnds: ScenarioDraft = withMintedW({
+      ...completeDateDraft(),
+      incomeStreams: [
+        { ownerIndex: 0, type: 'pension', annualRealToday: 30_000, startAge: 55, endAge: 62, colaMode: 'real-flat', survivorPct: 0.5 },
+      ],
+    })
+    expect(missingRequiredFacts(pensionEnds)).toEqual([])
+    const p = workingYearLedgerForRun(pensionEnds)
+    if (p === 'unknown') throw new Error('the pension household must compose')
+    expect(p.laterYears.find((y) => y.yearsIn === 5)?.events).toContainEqual({ code: 'incomeEnds', person: 0 })
+
+    const twoSteps: ScenarioDraft = withMintedW({
+      ...completeDateDraft(),
+      people: [
+        workingPerson({ birthYear: 1965, currentAge: 61 }),
+        workingPerson({ name: 'S', sex: 'male', birthYear: 1964, currentAge: 62, earnedIncomeReal: 90_000 }),
+      ] as ScenarioDraft['people'],
+      enteredAccounts: [
+        { ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 500_000, annualContribution: contributionCeilingFor('401k', 61)! },
+        { ownerIndex: 1, kind: '401k', ticker: 'VTI', valueToday: 500_000, annualContribution: contributionCeilingFor('401k', 62)! },
+      ] as ScenarioDraft['enteredAccounts'],
+      health: { enrolledPremiumMonthlyToday: 1_100, slcspMonthlyToday: 1_000, workingYearInvestmentByPerson: [30_000, 0] },
+    })
+    expect(missingRequiredFacts(twoSteps)).toEqual([])
+    const s = workingYearLedgerForRun(twoSteps)
+    if (s === 'unknown') throw new Error('the two-saver household must compose')
+    expect(s.laterYears.find((y) => y.yearsIn === 2)?.events).toContainEqual({ code: 'catchUpStepDown', person: 1 })
+    expect(s.laterYears.find((y) => y.yearsIn === 3)?.events).toContainEqual({ code: 'catchUpStepDown', person: 0 })
+  })
+
+  it('memoized on the draft REFERENCE: the same draft returns the same object; a copy is recomposed', () => {
+    const d = withMintedW(DEV_SEEDS.date)
+    const first = workingYearLedgerForRun(d)
+    expect(first).not.toBe('unknown')
+    expect(workingYearLedgerForRun(d)).toBe(first)
+    const copyOf = workingYearLedgerForRun({ ...d })
+    expect(copyOf).toEqual(first)
+    expect(copyOf).not.toBe(first)
+  })
+
+  it('every date seed given its own confirmed W shows a picture exactly when it is buildable — only datesolo is not', () => {
+    const unknown: string[] = []
+    let shown = 0
+    for (const [key, seed] of Object.entries(DEV_SEEDS)) {
+      if (!isDateRoute(seed)) continue
+      const read = workingYearLedgerForRun(withMintedW(seed))
+      expect(read === 'unknown', key).toBe(missingRequiredFacts(seed).length > 0)
+      if (read === 'unknown') unknown.push(key)
+      else shown++
+    }
+    expect(unknown).toEqual(['datesolo'])
+    expect(shown, 'at least the eight buildable date seeds').toBeGreaterThanOrEqual(8)
   })
 })

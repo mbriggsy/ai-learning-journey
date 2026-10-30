@@ -42,15 +42,19 @@ import {
   type PersonContributionStreams,
   type RetirementState,
   type TickerClassification,
+  type WorkingYearCostV3,
+  type WorkingYearLedger,
 } from '@shared/model'
 import {
   buildCandidateParams,
+  DATE_OFFSET_WINDOW_TOP,
   DATE_SEARCH_PATHS,
   workingYearTaxReach,
   workingYearTaxReachOfRun,
   type DateSearchInput,
 } from '@engine/dateSearch'
 import { survivorMedicalLeanMoves } from '@engine/simulate'
+import { workingYearLedger, type WorkingYearDraftEvent } from '@engine/workingYearLedger'
 import { productionMarket } from '@engine/reference/methodology'
 import { findBlendRow, stockWeightForBlend } from '@engine/reference/tickerBlend'
 import { acaAgeRatingCurve, medicareExtrasTypicalMonthly } from '@engine/constants/health'
@@ -448,33 +452,56 @@ function familyScaleAt(
   return ceiling === null ? 1 : Math.min(1, ceiling / combined)
 }
 
+/** One catch-up step-down: the sim-year (≥1) a catch-up WINDOW closes on an owner's deposits. */
+interface CatchUpStepDown {
+  readonly yearsIn: number
+  readonly ownerIndex: number
+}
+
+/** Every (sim-year, owner) at which a catch-up WINDOW closes on that owner's deposits — THE step-down
+ *  predicate (insight 081): `firstStepDownYear`'s disclosure reads the first, and the money picture's
+ *  draft events (`workingYearDraftEvents`) read them all, because a couple can have two (the pay
+ *  check's KTD12, as built A7). Reads the `'band'` frame, so the HSA catch-up's continuous real
+ *  erosion is never a window closing. `familyScaleAt`'s early returns already confine a drop to a
+ *  WORKING owner who DEPOSITS in that family, so every entry moves a real deposit. One entry per
+ *  (year, owner) however many of the owner's families step down together; in year order, then owner. */
+function catchUpStepDowns(d: ScenarioDraft, horizonYears: number): readonly CatchUpStepDown[] {
+  const out: CatchUpStepDown[] = []
+  for (let t = 1; t < horizonYears; t += 1) {
+    for (let ownerIndex = 0; ownerIndex < d.people.length; ownerIndex += 1) {
+      const stepsDown = (['employerPlan', 'ira', 'hsa'] as const).some(
+        (family) =>
+          familyScaleAt(d, ownerIndex, family, t, 'band') < familyScaleAt(d, ownerIndex, family, t - 1, 'band'),
+      )
+      if (stepsDown) out.push({ yearsIn: t, ownerIndex })
+    }
+  }
+  return out
+}
+
 /** The first sim-year (≥1) a catch-up WINDOW closes on any of the owner's streams — the calm
  *  disclosure names this year (D1). Null when no step-down occurs in horizon. Reads the `'band'`
  *  frame: the HSA catch-up's continuous real erosion is not a window closing. */
 export function firstStepDownYear(d: ScenarioDraft, horizonYears: number): number | null {
-  for (let t = 1; t < horizonYears; t += 1) {
-    for (const ownerIndex of [0, 1]) {
-      for (const family of ['employerPlan', 'ira', 'hsa'] as const) {
-        if (
-          familyScaleAt(d, ownerIndex, family, t, 'band') < familyScaleAt(d, ownerIndex, family, t - 1, 'band')
-        ) {
-          return t
-        }
-      }
-    }
-  }
-  return null
+  return catchUpStepDowns(d, horizonYears)[0]?.yearsIn ?? null
 }
 
-function contributionStreamsFor(
+/** One owner's contribution streams PLUS the employer's dollar inside the `hsa` stream, per year
+ *  (the pay check's KTD6 intake half): the check charges a worker's OWN deposits, so it subtracts
+ *  the employer's HSA dollar the `hsa` stream carries. The employer share is the SAME product the
+ *  stream adds (`a.hsaEmployerAnnual * scale`, gated on `kind === 'hsa'`), so `hsa` is byte-
+ *  identical to before and each year's share is ≤ that year's `hsa` (an ordered sum of
+ *  non-negatives only grows — `validateParams`' per-year bound). A non-working owner deposits
+ *  nothing: `[]`, never a hole (`validateParams` refuses an undefined entry). */
+function contributionChannelsFor(
   d: ScenarioDraft,
   ownerIndex: number,
   horizonYears: number,
-): PersonContributionStreams {
+): { readonly streams: PersonContributionStreams; readonly employerHsa: readonly number[] } {
   // Only a WORKING owner contributes; a retired owner's stale stream is engine-
   // inert at runtime but trips the §6 raw-stream ACA-overlap pre-check, so omit
   // it here to keep no-missing ⟹ validateParams accepts (D1 review C1).
-  if (!isWorkingOwner(d, ownerIndex)) return {}
+  if (!isWorkingOwner(d, ownerIndex)) return { streams: {}, employerHsa: [] }
   const channels: Record<'taxable' | 'pretax' | 'roth' | 'hsa' | 'employerMatch', number[]> = {
     taxable: [],
     pretax: [],
@@ -482,8 +509,10 @@ function contributionStreamsFor(
     hsa: [],
     employerMatch: [],
   }
+  const employerHsa: number[] = []
   for (let t = 0; t < horizonYears; t += 1) {
     const sums = { taxable: 0, pretax: 0, roth: 0, hsa: 0, employerMatch: 0 }
+    let employerHsaT = 0
     for (const a of d.enteredAccounts) {
       if (a.ownerIndex !== ownerIndex) continue
       const family = familyOf(a.kind)
@@ -493,7 +522,9 @@ function contributionStreamsFor(
         // Employer HSA money joins the owner's OWN hsa inflow (same bucket, same
         // family scale) — never the pretax employer-match channel. The combined
         // employer+employee HSA ceiling is the sanity-layer guard, not a stream trim.
-        sums.hsa += a.hsaEmployerAnnual * scale
+        const employer = a.hsaEmployerAnnual * scale
+        sums.hsa += employer
+        employerHsaT += employer
       }
       if (a.employerMatchAnnual !== undefined && isEmployerPlanKind(a.kind)) {
         // §415(c) additions: cap contribution+match at the per-year additions
@@ -519,6 +550,7 @@ function contributionStreamsFor(
     channels.roth.push(sums.roth)
     channels.hsa.push(sums.hsa)
     channels.employerMatch.push(sums.employerMatch)
+    employerHsa.push(employerHsaT)
   }
   const nonZero = (s: number[]) => (s.some((v) => v !== 0) ? s : undefined)
   const taxable = nonZero(channels.taxable)
@@ -527,12 +559,23 @@ function contributionStreamsFor(
   const hsa = nonZero(channels.hsa)
   const employerMatch = nonZero(channels.employerMatch)
   return {
-    ...(taxable ? { taxable } : {}),
-    ...(pretax ? { pretax } : {}),
-    ...(roth ? { roth } : {}),
-    ...(hsa ? { hsa } : {}),
-    ...(employerMatch ? { employerMatch } : {}),
+    streams: {
+      ...(taxable ? { taxable } : {}),
+      ...(pretax ? { pretax } : {}),
+      ...(roth ? { roth } : {}),
+      ...(hsa ? { hsa } : {}),
+      ...(employerMatch ? { employerMatch } : {}),
+    },
+    employerHsa,
   }
+}
+
+function contributionStreamsFor(
+  d: ScenarioDraft,
+  ownerIndex: number,
+  horizonYears: number,
+): PersonContributionStreams {
+  return contributionChannelsFor(d, ownerIndex, horizonYears).streams
 }
 
 // ---------------------------------------------------------------------------
@@ -1209,5 +1252,131 @@ export function buildDateInput(d: ScenarioDraft): DateSearchInput | null {
           ),
         }
       : {}),
+    // The pay check (KTD2): W and the employer's HSA share ride as top-level `DateSearchInput` keys
+    // — NEVER on `params.overlay.accumulation`, which `buildCandidateParams` drops and rebuilds per
+    // candidate. They ride TOGETHER under W alone (`validateParams` refuses the stream without W), so
+    // a draft without W builds byte-identically to before (R18). A stale W still rides: the engine
+    // keeps using the last figure the household gave (R4). A W of $0 never rides: the W step writes a
+    // typed 0 into the draft so `working-cost-zero` can hold Continue on it (Phase B ruling 17), and
+    // that transient 0 must never run as a free working year (rosy) — the run reads as it did before
+    // W was answered. The codec refuses a persisted 0, so no saved plan holds one.
+    ...(d.workingYearCost !== undefined && carriesWorkingYearCost(d)
+      ? {
+          workingYearCostReal: workingYearCostFigure(d.workingYearCost),
+          employerHsaByPerson: d.people.map(
+            (_, i) => contributionChannelsFor(d, i, params.maxHorizonYears).employerHsa,
+          ),
+        }
+      : {}),
+  }
+}
+
+/** A W answer's yearly figure (annual real $), whichever way it was given — the ONE read of it. */
+export function workingYearCostFigure(w: WorkingYearCostV3): number {
+  return w.kind === 'confirmed' ? w.quotedReal : w.amountReal
+}
+
+/** Does this draft's W ride into a date run? Present AND above $0 — the ONE carriage rule
+ *  `buildDateInput` lands W by, exported so a surface that must say what the build WOULD carry where
+ *  no run can be built (the methodology row's arm) reads the same rule, never a re-derivation. */
+export function carriesWorkingYearCost(d: ScenarioDraft): boolean {
+  return d.workingYearCost !== undefined && workingYearCostFigure(d.workingYearCost) > 0
+}
+
+/** "Does THIS run carry the pay check's W?" — the one read both the methodology row's arm (U9,
+ *  KTD22) and the working-years staleness clock's exposure (U13) take, off the BUILT input
+ *  (insight 132: the arm is the run's, never a re-derivation from the draft). The date route reads
+ *  `buildDateInput`'s own W and confirms the window-top candidate lands it (the construct the
+ *  money picture composes); the spine never carries W (`buildSpineParams` has no accumulation
+ *  route for it), so a stored W on an all-retired draft reads `'unpriced'`. `'unknown'` where no
+ *  run can be built, or the candidate build throws (the `workingYearTaxForRun` shape). */
+export function workingYearCostForRun(d: ScenarioDraft): ExposureRead {
+  const input = buildDateInput(d)
+  if (input !== null) {
+    try {
+      return buildCandidateParams(input, DATE_OFFSET_WINDOW_TOP, 1).overlay?.accumulation
+        ?.workingYearCostReal !== undefined
+        ? 'priced'
+        : 'unpriced'
+    } catch {
+      return 'unknown'
+    }
+  }
+  return buildSpineParams(d) === null ? 'unknown' : 'unpriced'
+}
+
+/** The later-year events only the DRAFT can name for the money picture (the pay check's KTD12, as
+ *  built A7: `WorkingYearLedgerInput.draftEvents`) — what the compiled run has lost:
+ *   · every catch-up step-down, per (year, owner), on `firstStepDownYear`'s `'band'` frame (one
+ *     predicate, `catchUpStepDowns`) — a couple can have two;
+ *   · each other-income stream's first paying year (`incomeStarts`, only when it starts after year 0)
+ *     and the year after its last (`incomeEnds`), read off THAT STREAM COMPILED ALONE with
+ *     `buildOverlay`'s exact arguments. The run pre-sums a person's streams into one leaf, so a
+ *     pension that ends beside a second stream never reaches 0 there; and the compile owns the
+ *     start clamp and the end cut, so a year is never derived from a raw `endAge − currentAge`, which
+ *     goes negative for a stream already ended and would make the producer refuse the whole picture.
+ *     A stream that pays nothing in the horizon (a $0 or already-ended one) compiles to nothing and
+ *     names nothing. A lifetime stream's `incomeEnds` lands at the horizon, past every working year,
+ *     where the producer never reads it.
+ *  `horizonYears` is the run's own (`params.maxHorizonYears`), so every year here is the run's frame. */
+export function workingYearDraftEvents(d: ScenarioDraft, horizonYears: number): readonly WorkingYearDraftEvent[] {
+  const events: WorkingYearDraftEvent[] = catchUpStepDowns(d, horizonYears).map(({ yearsIn, ownerIndex }) => ({
+    yearsIn,
+    code: 'catchUpStepDown',
+    person: ownerIndex,
+  }))
+  const currentAges = d.people.map((p) => p.currentAge!)
+  for (const s of d.incomeStreams) {
+    const gross = compileIncomeStreams([s], currentAges, horizonYears, productionMarket.value.inflation.mean)
+      ?.incomeByPerson[s.ownerIndex]?.grossFull
+    if (gross === undefined) continue
+    const first = gross.findIndex((x) => x !== 0)
+    const last = gross.findLastIndex((x) => x !== 0)
+    if (first >= 1) events.push({ yearsIn: first, code: 'incomeStarts', person: s.ownerIndex })
+    events.push({ yearsIn: last + 1, code: 'incomeEnds', person: s.ownerIndex })
+  }
+  return events
+}
+
+/** The money picture's reads, memoized on the draft REFERENCE: every draft edit makes a new object, so
+ *  a stale entry can never be served, and an unmounted draft's entry goes with it (a WeakMap). */
+const workingYearLedgerMemo = new WeakMap<ScenarioDraft, WorkingYearLedger | 'unknown'>()
+
+/** The working-year money picture of THIS draft (the pay check's U6b; KTD12) — the main-thread read
+ *  (Departures item 4): the W step's picture and the assumption panel's W row must render from the
+ *  draft before, or without, any sweep, and a W edit must redraw without one. Called only while the
+ *  money-picture step or the panel's W row is mounted, and memoized on the draft reference.
+ *
+ *  It hands the engine producer the window-top candidate (`buildCandidateParams(input,
+ *  DATE_OFFSET_WINDOW_TOP, 1)`: every worker stops at the window top, so its working years 0..top − 1
+ *  read the same as every candidate still working then) and the draft's own events
+ *  (`workingYearDraftEvents`). Every line is the producer's; nothing here computes a figure.
+ *
+ *  `'unknown'` where there is no picture to show: no date run can be built (the missing-facts
+ *  residual, or the all-retired route), the run carries no W, the run's horizon is one
+ *  `runDateSearch` turns away (at or below the window top — mirrored so the picture never shows
+ *  numbers for a run the date search refuses), or the candidate build or the producer THROWS (a
+ *  claim age the engine refuses — the `workingYearTaxForRun` shape). The caller tells a missing fact
+ *  from a refusal through `missingRequiredFacts`.
+ *
+ *  NAMES: the result TYPE `WorkingYearLedger` (`@shared/model`) and the producer FUNCTION
+ *  `workingYearLedger` (`@engine/workingYearLedger`) differ only in their first letter's case. */
+export function workingYearLedgerForRun(d: ScenarioDraft): WorkingYearLedger | 'unknown' {
+  const memo = workingYearLedgerMemo.get(d)
+  if (memo !== undefined) return memo
+  const read = composeWorkingYearLedger(d)
+  workingYearLedgerMemo.set(d, read)
+  return read
+}
+
+function composeWorkingYearLedger(d: ScenarioDraft): WorkingYearLedger | 'unknown' {
+  const input = buildDateInput(d)
+  if (input === null || input.workingYearCostReal === undefined) return 'unknown'
+  if (input.params.maxHorizonYears <= DATE_OFFSET_WINDOW_TOP) return 'unknown'
+  try {
+    const params = buildCandidateParams(input, DATE_OFFSET_WINDOW_TOP, 1)
+    return workingYearLedger({ params, draftEvents: workingYearDraftEvents(d, params.maxHorizonYears) })
+  } catch {
+    return 'unknown'
   }
 }

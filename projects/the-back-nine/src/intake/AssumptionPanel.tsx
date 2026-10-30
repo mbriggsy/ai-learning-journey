@@ -35,26 +35,51 @@
  * Close ≠ Cancel: there is NO discard semantics, and we do not fake an un-commit (the
  * BudgetBuilder inline variant's edits-survive precedent).
  */
-import { useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type Ref } from 'react'
 import type { MemoryModelSnapshot, ScenarioDraft, StickyDisplay } from '@store/memoryModel'
 import { copy, slots, type CopyKey } from '@ui/copy'
 import { rothPlanStartFor, type BandPlanClockAnchor } from '@ui/bandAnnotations'
 import { composeVerdictReading, spendClauseFor } from '@ui/verdictSentence'
-import { METHODOLOGY_DISCLOSURES, type AssumptionSeat } from '@ui/assumptionRegistry'
+import {
+  METHODOLOGY_DISCLOSURES,
+  methodologyLines,
+  type AssumptionSeat,
+  type MethodologyArm,
+  type MethodologyDisclosure,
+} from '@ui/assumptionRegistry'
 import { productionMarket } from '@engine/reference/methodology'
 import { ordinaryBracketsMFJ } from '@engine/constants/tax'
 import { solverAssumedHeirBracket } from '@engine/constants'
 import { formatBracketPercent } from '@ui/money'
 import { budgetGoverns } from '@budget/budgetModel'
 import { budgetYearZeroFullTotal } from '@budget/budgetToSpending'
-import type { Announcer } from './a11y'
+import { focusHeading, type Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
 import { CurrencyField, IntegerField, PercentField, SegmentedControl, formatMoney, formatPercent } from './fields'
-import { blockedLeadFor, missingFactNames } from './AnswerStrip'
+import { blockedLeadFor, missingFactLines } from './AnswerStrip'
 import { FieldError } from './FieldError'
-import { validateField, personField, type SanityViolation } from './sanity'
-import { anyPre65OrUnknown, healthcarePriced, isDateRoute, spendHelpKeyFor, type MissingFact } from './intakeMap'
+import {
+  validateField,
+  personField,
+  WORKING_COST_FIELD,
+  WORKING_COST_PERIOD_FIELD,
+  type SanityViolation,
+} from './sanity'
+import {
+  anyPre65OrUnknown,
+  carriesWorkingYearCost,
+  healthcarePriced,
+  isDateRoute,
+  spendHelpKeyFor,
+  workingYearCostFigure,
+  workingYearCostForRun,
+  workingYearLedgerForRun,
+  type MissingFact,
+} from './intakeMap'
 import { MedicareExtrasFork, OopExceedsSpendNote, StateResidencePicker, writeWorkingYearInvestment } from './questions'
+import { WorkingCostQuestion, type WorkingCostWriteKind } from './WorkingCostQuestion'
+import { WorkingYearLedgerPicture, WorkingYearLedgerUnknown } from './WorkingYearLedger'
+import { workingYearCostStaleness, workingYearQuote, workingYearStateTaxReading } from './workingYearQuote'
 import './assumptions.css'
 
 /** The heir-bracket rungs — DERIVED from the shipped federal ordinary-bracket schedule, never
@@ -102,6 +127,11 @@ export interface AssumptionPanelProps {
    *  flips Result's `computing` for one beat, the actions row remounts, and the captured door
    *  is a disconnected element at close; without this, focus strands on <body>. */
   readonly restoreFallback?: () => HTMLElement | null
+  /** The row to land on when the panel OPENS (the pay check's KTD21 door: the result's stale-W line
+   *  opens the panel at the W row). After the sheet's own h2 focus, the row's name takes focus —
+   *  which scrolls it into view. Typed to the one seat that has a door into it; a seat with no
+   *  landing would be a prop that silently does nothing. */
+  readonly initialSeat?: 'working-year-cost'
 }
 
 /** One panel row, stamped with its registry seat — the R7 completeness walk reads these. */
@@ -110,6 +140,123 @@ function Row({ seat, children }: { readonly seat: AssumptionSeat; readonly child
     <li className="ap-row" data-assumption-seat={seat}>
       {children}
     </li>
+  )
+}
+
+/** A methodology row's disclosure sentences. */
+function MethodologyLines({ keys }: { readonly keys: readonly CopyKey[] }) {
+  return (
+    <>
+      {keys.map((k) => (
+        <p key={k} className="ap-row__prov">
+          {copy[k]}
+        </p>
+      ))}
+    </>
+  )
+}
+
+/** Which arm the working-year row renders for a draft (the pay check's U9). The BUILT run decides
+ *  (insight 132): `'priced'` — the run carries W — reads the pay check's arm, `'unpriced'` today's
+ *  row (KTD22). Where no run can be built (`'unknown'`) there is no run to read, so it falls back to
+ *  what the build WOULD carry: `buildDateInput` lands W exactly when a date-route draft holds an
+ *  answer above $0 (`carriesWorkingYearCost`, the one carriage rule), so such a draft reads the pay
+ *  check's arm and any other reads today's. */
+export function methodologyArmFor(d: ScenarioDraft): MethodologyArm {
+  const read = workingYearCostForRun(d)
+  if (read === 'priced') return 'workingCost'
+  if (read === 'unpriced') return 'default'
+  return isDateRoute(d) && carriesWorkingYearCost(d) ? 'workingCost' : 'default'
+}
+
+/** A methodology row with a pay-check arm. Its own component so the engine read behind the arm
+ *  (a candidate build) runs only while the panel is OPEN and is memoized on the draft — the panel's
+ *  own body is evaluated on every store notify, open or closed. */
+function ArmedMethodologyLines({ m, draft }: { readonly m: MethodologyDisclosure; readonly draft: ScenarioDraft }) {
+  const arm = useMemo(() => methodologyArmFor(draft), [draft])
+  return <MethodologyLines keys={methodologyLines(m, arm, workingYearStateTaxReading(draft))} />
+}
+
+/** The pay check's W row (`docs/plans/features/working-year-pay-check-build-spec.md` U8; KTD17,
+ *  KTD21) — date route only, seated after the working-year investment rows: BELOW every row whose
+ *  edit can stale W (spend, state, out-of-pocket medical), so a face swap here never shifts a field
+ *  being edited above it. Its own component so the engine reads behind it (the stale predicate, the
+ *  money picture's candidate build) run only while the panel is OPEN, memoized on the draft.
+ *
+ *  Four faces, chosen from the STORED answer before any producer call, each under a one-line value
+ *  (Phase B ruling 12): ABSENT — the question alone; STALE — the question opening on its stale note
+ *  (KTD21's face); ANSWERED — the money picture (h4 legends, under the panel's h3 sections), then
+ *  the question to correct or re-confirm it; UNKNOWN — answered, but no picture can be drawn: the
+ *  calm line, then the question. The question is the walk's own face (`WorkingCostQuestion`), so
+ *  the two surfaces never disagree; here it never clears and never shows the walk's gate. */
+function WorkingCostRow({
+  draft,
+  aged,
+  nameRef,
+  announce,
+  onWrite,
+  onPeriodTap,
+  onEditFigure,
+  figureInvalid,
+  figureErrors,
+}: {
+  readonly draft: ScenarioDraft
+  readonly aged: boolean
+  readonly nameRef: Ref<HTMLParagraphElement>
+  readonly announce: (text: string) => void
+  readonly onWrite: (write: (d: ScenarioDraft) => ScenarioDraft, kind: WorkingCostWriteKind) => boolean
+  readonly onPeriodTap: () => void
+  readonly onEditFigure: () => void
+  readonly figureInvalid: boolean
+  readonly figureErrors: ReactNode
+}) {
+  const w = draft.workingYearCost
+  const stale = useMemo(() => workingYearCostStaleness(draft) !== null, [draft])
+  // ANNOUNCED ONCE, on the edge (KTD21): an edit in the open panel that stales W is named through
+  // the sheet's own announcer — never `.ap-echo`, which re-speaks on every recompute. The previous
+  // value starts at mount's, so opening onto an already-stale row, and the provisional and final
+  // re-renders of one edit, stay silent. Focus and scroll never move.
+  const wasStale = useRef(stale)
+  useEffect(() => {
+    if (!wasStale.current && stale) announce(copy.assumptionWorkingCostStaleAnnounce)
+    wasStale.current = stale
+  }, [stale, announce])
+  const ledger = useMemo(
+    () => (w !== undefined && !stale ? workingYearLedgerForRun(draft) : null),
+    [draft, w, stale],
+  )
+  const figure = w === undefined ? undefined : formatMoney(workingYearCostFigure(w))
+  const value =
+    w === undefined || figure === undefined
+      ? copy.assumptionWorkingCostUnanswered
+      : stale
+        ? slots.assumptionWorkingCostStale(figure)
+        : w.kind === 'confirmed'
+          ? // Fresh, so the current quote IS the one confirmed: its source names where the figure came from.
+            workingYearQuote(draft).source === 'budget'
+            ? slots.assumptionWorkingCostConfirmedBudget(figure)
+            : slots.assumptionWorkingCostConfirmed(figure)
+          : slots.assumptionWorkingCostEntered(figure)
+  return (
+    <Row seat="working-year-cost">
+      <p className="ap-row__name" tabIndex={-1} ref={nameRef}>
+        {copy.assumptionWorkingCostName}
+      </p>
+      <p className="ap-row__value">{value}</p>
+      {ledger === 'unknown' && <WorkingYearLedgerUnknown draft={draft} echoStrip />}
+      {ledger !== null && ledger !== 'unknown' && (
+        <WorkingYearLedgerPicture ledger={ledger} draft={draft} headingLevel={4} aged={aged} />
+      )}
+      <WorkingCostQuestion
+        draft={draft}
+        host="panel"
+        onWrite={onWrite}
+        onPeriodTap={onPeriodTap}
+        onEditFigure={onEditFigure}
+        figureInvalid={figureInvalid}
+        figureErrors={figureErrors}
+      />
+    </Row>
   )
 }
 
@@ -167,8 +314,13 @@ export function AssumptionPanel({
   onReview,
   onClose,
   restoreFallback,
+  initialSeat,
 }: AssumptionPanelProps) {
   const announcerRef = useRef<Announcer | null>(null)
+  // The W row's name — the landing for `initialSeat` (reached by ref: the panel is portaled).
+  const workingCostNameRef = useRef<HTMLParagraphElement | null>(null)
+  // Stable, so the W row's announce effect never re-runs on a mere re-render.
+  const announce = useCallback((text: string) => announcerRef.current?.announce(text), [])
   const { draft, answer, displayed, spend } = snapshot
   const governs = budgetGoverns(draft.budget)
   const dateRoute = isDateRoute(draft)
@@ -189,12 +341,24 @@ export function AssumptionPanel({
   // state on the open EDGE — render-phase adjustment, so the first open frame can never
   // compare against a stale prior-open baseline. Held for the whole open (an edit is judged
   // against what the user saw when they came in, not against the previous edit).
-  const [openState, setOpenState] = useState<{ open: boolean; baseline: StickyDisplay | null }>({
+  // The same open edge captures the W figure's period provenance (KTD17; `SanityProvenance`): an
+  // ENTERED W on the draft at open already cleared the period gate, so editing its amount here must
+  // not re-ask the unit. Captured from the draft, never assumed — and never the spend flag.
+  const [openState, setOpenState] = useState<{
+    open: boolean
+    baseline: StickyDisplay | null
+    workingCostPeriodConfirmed: boolean
+  }>({
     open: false,
     baseline: null,
+    workingCostPeriodConfirmed: false,
   })
   if (open !== openState.open) {
-    setOpenState({ open, baseline: open ? displayed : null })
+    setOpenState({
+      open,
+      baseline: open ? displayed : null,
+      workingCostPeriodConfirmed: open && draft.workingYearCost?.kind === 'entered',
+    })
     if (open) {
       setTouched(new Set())
       setRefused(new Map())
@@ -252,22 +416,40 @@ export function AssumptionPanel({
   //
   // The disarm still HOLDS, but on the first clause alone (completing intake IS the receipt that
   // the period was answered). Re-arming would not have caught the case above anyway: the rule
-  // needs `entered >= SPEND_AMBIGUOUS_MIN` (sanity.ts:75, 8,000), and the misentry that matters is
+  // needs `entered >= SPEND_AMBIGUOUS_MIN` (sanity.ts:89, 8,000), and the misentry that matters is
   // a household typing a MONTHLY figure under 'year' — below that floor by construction. The
   // defense here is the copy, not the rule.
-  const PANEL_PROVENANCE = { periodConfirmed: true } as const
+  const PANEL_PROVENANCE = {
+    periodConfirmed: true,
+    workingCostPeriodConfirmed: openState.workingCostPeriodConfirmed,
+  } as const
+
+  // THE W ROW'S LANDING (KTD21's door). The sheet's own open effect focuses its h2 first — a child's
+  // effects run before its parent's in one commit — so this lands after it, on the W row's name, and
+  // the browser scrolls the name into view (`focusHeading` never prevents the scroll).
+  useEffect(() => {
+    if (open && initialSeat === 'working-year-cost') focusHeading(workingCostNameRef.current)
+  }, [open, initialSeat])
 
   /** Validate the PATCHED draft for `field`; a firing rule REFUSES the commit (true
-   *  impossibilities never reach the draft — burned/021); clean commits through the seam. */
-  const commitRefusing = (field: string, mutate: (d: ScenarioDraft) => ScenarioDraft) => {
-    const violations = validateField(mutate(draft), field, touched, PANEL_PROVENANCE)
+   *  impossibilities never reach the draft — burned/021); clean commits through the seam. `true`
+   *  when it landed. `alsoTouched` counts a path the SAME gesture just touched, which this render's
+   *  `touched` cannot hold yet (the W period tap that answers the prompt it refused on). */
+  const commitRefusing = (
+    field: string,
+    mutate: (d: ScenarioDraft) => ScenarioDraft,
+    alsoTouched: readonly string[] = [],
+  ): boolean => {
+    const asTouched = alsoTouched.length === 0 ? touched : new Set([...touched, ...alsoTouched])
+    const violations = validateField(mutate(draft), field, asTouched, PANEL_PROVENANCE)
     if (violations.length > 0) {
       refuse(field, violations)
-      return
+      return false
     }
     clearRefusal(field)
     touch(field)
     onCommitEdit(mutate)
+    return true
   }
 
   /** Commit WITHOUT refusing (the spend row's channel-checked path): the committed draft's
@@ -324,20 +506,10 @@ export function AssumptionPanel({
   // copy.ts legislates against by name — and the frame was unreachable here until the dead-end
   // door landed; `?seed=datesolo` and the two-HSA household now open onto it. The lead is the
   // strip's own (`blockedLeadFor`: keep-going only while something is left to enter), each kind
-  // gets its own line only when its bucket is non-empty, and the names come through the ONE shared
-  // producer (`missingFactNames`) so the two surfaces can never disagree on what "N more" hides.
-  const missingEcho = (() => {
-    const line = (facts: readonly MissingFact[], lead: string): string | null => {
-      if (facts.length === 0) return null
-      const { shown, more } = missingFactNames(facts)
-      return `${lead} ${shown.join(' · ')}${more > 0 ? ` · ${slots.factsMore(more)}` : ''}`
-    }
-    return {
-      lead: blockedLeadFor(missing),
-      stillNeeded: line(missing.filter((m) => (m.kind ?? 'absent') === 'absent'), copy.answerStillNeeded),
-      cannotPrice: line(missing.filter((m) => m.kind === 'unrepresentable'), copy.answerCannotPrice),
-    }
-  })()
+  // gets its own line only when its bucket is non-empty, and both lines come through the ONE shared
+  // composer (`missingFactLines`, which the money picture's unknown face reads too) so no surface can
+  // disagree on a lead, a separator or what "N more" hides.
+  const missingEcho = { lead: blockedLeadFor(missing), ...missingFactLines(missing) }
 
   const total = draft.enteredAccounts.reduce((s, a) => s + (a.valueToday || 0), 0)
   const showHealthQuote = anyPre65OrUnknown(draft)
@@ -553,11 +725,11 @@ export function AssumptionPanel({
                   </p>
                 </>
               )}
-              {m.lineKeys.map((k) => (
-                <p key={k} className="ap-row__prov">
-                  {copy[k]}
-                </p>
-              ))}
+              {m.workingCostLineKeys === undefined ? (
+                <MethodologyLines keys={m.lineKeys} />
+              ) : (
+                <ArmedMethodologyLines m={m} draft={draft} />
+              )}
               {/* The STANDING market-floor line (F8) — static, always present under the
                   market block; a pure statement, never a stop-refining directive. */}
               {m.id === 'market' && <p className="ap-row__prov">{copy.assumptionMarketFloorNote}</p>}
@@ -813,6 +985,31 @@ export function AssumptionPanel({
                   />
                 </Row>
               ))}
+
+          {/* The pay check's W — what a year costs while either of you still works (U8). Date route
+              only, BELOW every row whose edit can stale it. Commits on the figure's own path through
+              `commitRefusing` (the zero and period rules refuse before the draft holds it); a unit
+              re-base after an explicit tap commits open. Never on `.answer`: the walk's gate never
+              reaches the panel (KTD3). */}
+          {dateRoute && (
+            <WorkingCostRow
+              draft={draft}
+              aged={savedAnchor.yearsSincePlanBuilt > 0}
+              nameRef={workingCostNameRef}
+              announce={announce}
+              onWrite={(write, kind) => {
+                if (kind === 'period') {
+                  commitOpen(WORKING_COST_FIELD, write)
+                  return true
+                }
+                return commitRefusing(WORKING_COST_FIELD, write, kind === 'tapped-answer' ? [WORKING_COST_PERIOD_FIELD] : [])
+              }}
+              onPeriodTap={() => touch(WORKING_COST_PERIOD_FIELD)}
+              onEditFigure={() => forgive(WORKING_COST_FIELD)}
+              figureInvalid={errorsFor(WORKING_COST_FIELD).length > 0}
+              figureErrors={renderErrors(WORKING_COST_FIELD)}
+            />
+          )}
 
           {/* The Medicare-extras payment fork (the ask-for-Medicare-extras unit) — the
               standing refine seat AND the details home for the funded typical (corpus rule

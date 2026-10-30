@@ -52,14 +52,47 @@ export interface StepDef {
   readonly headingKey: CopyKey
   /** The fields this step owns — touched + validated on attempt-to-advance. */
   readonly fields: readonly FieldPath[]
+  /** Fields whose touched state is DROPPED every time the step is arrived at (Continue into it, or
+   *  Back into it), in the same state batch as the step change — so a gate the household met on an
+   *  earlier pass never shows its alert on arrival, only after this step's own Continue (the pay
+   *  check's W gate, KTD3: after an upstream edit stales W, the step opens on its calm note, not an
+   *  alert). Done here, never in the step body's mount effect: an effect lands a frame after the
+   *  first paint, so the alert would flash. The function form reads the draft the step is arrived
+   *  over: a disarm that only means something beside an answer the draft holds (the W period tap,
+   *  whose unit lives in the step's own state until a figure commits) is dropped where there is none. */
+  readonly freshOnArrival?: readonly FieldPath[] | ((draft: ScenarioDraft) => readonly FieldPath[])
+  /** An answer that must never leave the step half-made. Back is never gated, so a value this step's
+   *  own Continue would refuse (the pay check's typed $0, or a figure whose period was never confirmed)
+   *  could otherwise leave through it, then reach a route change that drops the step (the codec refuses
+   *  the value at Save) or a later mount whose provenance reads it as confirmed. On Back, if `field`'s
+   *  own rules fire on the current draft (touched as if committed), `discard` clears it first. */
+  readonly discardOnBack?: {
+    readonly field: FieldPath
+    readonly discard: (draft: ScenarioDraft) => ScenarioDraft
+  }
   readonly render: (api: StepApi) => ReactNode
+}
+
+/** `touched` without a step's arrival-fresh fields (identity when there are none to drop). */
+function withoutFresh(
+  touched: ReadonlySet<FieldPath>,
+  step: StepDef | undefined,
+  draft: ScenarioDraft,
+): ReadonlySet<FieldPath> {
+  const spec = step?.freshOnArrival
+  const fresh = typeof spec === 'function' ? spec(draft) : spec
+  if (fresh === undefined || !fresh.some((f) => touched.has(f))) return touched
+  const next = new Set(touched)
+  for (const f of fresh) next.delete(f)
+  return next
 }
 
 export interface IntakeFlowProps {
   readonly steps: readonly StepDef[]
   readonly model: MemoryModel
-  /** Fired after the LAST step advances cleanly (slice (e): the account-set-
-   *  complete boundary → the final-tier recompute). */
+  /** Fired after the LAST step advances cleanly (slice (e): the end of intake → the final-tier
+   *  recompute). The last step is the money picture on the date route (the pay check's KTD17) and
+   *  the other-income loop on the all-retired route. */
   readonly onComplete?: () => void
   /** The provisional answer surface, rendered between the header and the step
    *  (cross-cutting #6: the confidence surface CO-EXISTS with intake). */
@@ -84,6 +117,12 @@ export function IntakeFlow({
   const [index, setIndex] = useState(0)
   const [direction, setDirection] = useState<'forward' | 'back'>('forward')
   const [touched, setTouched] = useState<ReadonlySet<FieldPath>>(() => new Set())
+  // The W figure's period provenance (the pay check's KTD17; `SanityProvenance` explains the second
+  // capture pattern): read ONCE, off the draft this flow mounts over — an entered W there already
+  // cleared the period gate before it could be committed. Lazy, so StrictMode's double call is moot.
+  const [workingCostPeriodConfirmed] = useState(
+    () => model.getSnapshot().draft.workingYearCost?.kind === 'entered',
+  )
 
   // Conditional steps derive from the draft (work-status / age gates), so a
   // back-nav edit can SHRINK the sequence while we're standing past the cut —
@@ -98,8 +137,8 @@ export function IntakeFlow({
   const announcer = useLiveAnnouncer()
 
   const violations = useMemo(
-    () => validateDraft(snapshot.draft, touched, { periodConfirmed }),
-    [snapshot.draft, touched, periodConfirmed],
+    () => validateDraft(snapshot.draft, touched, { periodConfirmed, workingCostPeriodConfirmed }),
+    [snapshot.draft, touched, periodConfirmed, workingCostPeriodConfirmed],
   )
 
   const commitField = useCallback((field: FieldPath) => {
@@ -125,7 +164,9 @@ export function IntakeFlow({
     // gate the move. Rules whose inputs are absent simply don't fire — an
     // unanswered-but-required fact never reaches the engine: the builders return null on it,
     // pre-first-resolve the store stays `idle` and the strip names it (memoryModel's recompute),
-    // post-first-resolve it demotes to `inputs-incomplete` — never a hard wall here.
+    // post-first-resolve it demotes to `inputs-incomplete` — never a hard wall here. The ONE
+    // recorded exception is the pay check's W (sanity.ts's header, KTD3): it is gated, never
+    // missing, so `working-cost-unanswered` fires on its absence and walls the W step alone.
     const nextTouched = new Set(touched)
     for (const f of step.fields) nextTouched.add(f)
     setTouched(nextTouched)
@@ -133,12 +174,14 @@ export function IntakeFlow({
     // blur-commit and the Continue tap can land in the same task (programmatic
     // dispatch, exotic browsers), and the closure would be one commit stale —
     // letting an unconfirmed value slip past its gate.
-    const blocking = validateDraft(model.getSnapshot().draft, nextTouched, { periodConfirmed }).some(
-      (v) => step.fields.includes(v.field),
-    )
+    const blocking = validateDraft(model.getSnapshot().draft, nextTouched, {
+      periodConfirmed,
+      workingCostPeriodConfirmed,
+    }).some((v) => step.fields.includes(v.field))
     if (blocking) return
 
     if (safeIndex + 1 < steps.length) {
+      setTouched(withoutFresh(nextTouched, steps[safeIndex + 1], model.getSnapshot().draft))
       setDirection('forward')
       setIndex(safeIndex + 1)
       announcer.announce(slots.questionPosition(safeIndex + 2))
@@ -150,14 +193,28 @@ export function IntakeFlow({
       // would win over the 16k final and render the uncrowned tier (D1 review).
       onComplete?.()
     }
-  }, [safeIndex, model, onComplete, step.fields, steps.length, touched, periodConfirmed])
+  }, [safeIndex, model, onComplete, step.fields, steps, touched, periodConfirmed, workingCostPeriodConfirmed])
 
   const back = useCallback(() => {
     if (safeIndex === 0) return
+    // Never gated: the draft keeps every downstream answer — except one this step's own Continue
+    // would refuse (`discardOnBack`), validated on the model's CURRENT draft like `advance`.
+    let arrived = model.getSnapshot().draft
+    const leave = step.discardOnBack
+    if (
+      leave !== undefined &&
+      validateDraft(arrived, new Set(touched).add(leave.field), { periodConfirmed, workingCostPeriodConfirmed }).some(
+        (v) => v.field === leave.field,
+      )
+    ) {
+      model.update(leave.discard)
+      arrived = leave.discard(arrived)
+    }
+    setTouched((prev) => withoutFresh(prev, steps[safeIndex - 1], arrived))
     setDirection('back')
-    setIndex(safeIndex - 1) // never gated; the draft keeps every downstream answer
+    setIndex(safeIndex - 1)
     announcer.announce(slots.questionPosition(safeIndex))
-  }, [safeIndex])
+  }, [safeIndex, steps, step.discardOnBack, model, touched, periodConfirmed, workingCostPeriodConfirmed])
 
   const api: StepApi = useMemo(
     () => ({ draft: snapshot.draft, update: model.update, commitField, clearTouched, violationsFor }),

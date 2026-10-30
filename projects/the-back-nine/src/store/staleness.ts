@@ -86,7 +86,7 @@
  * A bare vintage compare answers "did the TABLE move?", never "did THIS household's answer
  * move?". Shipped defect (pilot-verified 2026-07-25): `reentryChrome.ts` pushed one healthcare
  * line off the OR-collapse of all seven healthcare clocks, so an all-65+ household — which
- * takes `buildOverlay`'s Medicare-only branch (`intakeMap.ts:690-693`), ships NO
+ * takes `buildOverlay`'s Medicare-only branch (`intakeMap.ts:733-736`), ships NO
  * `enrolledPremium`, and can therefore NEVER open the engine's ACA gate
  * (`taxOverlay.ts:2471-2476`: `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0`) —
  * was told "Health-coverage rules have been updated" on a moved `acaStatus` stamp. They price
@@ -155,6 +155,13 @@
  * producer of `healthcareEnabled`). The caller therefore hands us {@link StalenessExposure},
  * computed at the ui/intake seam off the run's OWN BUILT PARAMS (`src/ui/stalenessExposure.ts`).
  * This function stays PURE and layer-clean: exposure is a parameter, not an import.
+ *
+ * ONE MORE INJECTED FACT, AND IT IS NOT EXPOSURE (the pay check's KTD21). Whether the household's
+ * own W answer has gone stale is an intake predicate over the draft (`isWorkingYearCostStale`), so
+ * it too arrives as a parameter — its own, beside the exposure record, never a field on it: it
+ * compares an answer with the quote it was given against, which says nothing about what the run
+ * priced. It feeds `anyStale` only: the engine keeps using the last figure given (R4), so no
+ * recompute moves with it.
  */
 import type { BudgetCategory, ScenarioV3 } from '@shared/model'
 import { appDefaultEraFor, CURRENT_APP_DEFAULT_VERSION } from '@shared/appDefaults'
@@ -196,7 +203,7 @@ export type HealthcareFamily = 'aca' | 'medicare'
  *     make the "every read is unpriced" silence arm vacuously true and quietly kill a clock.
  *
  * THE SOURCE FOR EACH ROW:
- *   · `coverage-year` — `COVERAGE_YEAR` is documented at `model.ts:2508` as "the coverage year
+ *   · `coverage-year` — `COVERAGE_YEAR` is documented at `model.ts:2580` as "the coverage year
  *     the ACA/IRMAA tables are keyed to", so it dates BOTH families and names each one the run
  *     priced. It is the ONLY marker for every annually-re-indexed health figure that carries no
  *     stamp of its own (the four interior IRMAA thresholds, the ACA applicable-percentage bands,
@@ -224,8 +231,9 @@ const HEALTHCARE_CLOCK_FAMILIES: Readonly<
 /** A clock that fired but may only be spoken NAMELESSLY (bucket 3): the blend snapshot (whose
  *  MAX-across-rows stamp cannot be attributed even to a household that DOES read the table), and
  *  any clock whose exposure read came back `'unknown'` — today only the unbuildable-draft
- *  residual, which is why the non-healthcare members appear here at all. */
-export type UnattributedClock = HealthcareClock | 'blend' | 'tax' | 'contribution'
+ *  residual, which is why the non-healthcare members appear here at all (`workingYears` is the
+ *  pay check's U13 clock, the working-years table's stamp). */
+export type UnattributedClock = HealthcareClock | 'blend' | 'tax' | 'contribution' | 'workingYears'
 
 /** One constant family's answer to "did the run THIS report describes actually PRICE it?" —
  *  a producer's-output read, computed by the caller from the run's own built params.
@@ -245,15 +253,15 @@ export type ExposureRead = 'priced' | 'unpriced' | 'unknown'
 export interface StalenessExposure {
   /** Did the run BUILD a tax overlay at all (`overlayBuiltForRun` — the route's own builder's
    *  `params.overlay !== undefined`)? This is the FEDERAL tax family's gate: `taxEnabled: true`
-   *  is hardcoded on every built overlay (`intakeMap.ts:660`) and `consumedConstants.ts:108`
+   *  is hardcoded on every built overlay (`intakeMap.ts:703`) and `consumedConstants.ts:108`
    *  gates the whole `tax.` family on exactly that flag — so a run that took `buildOverlay`'s
-   *  degenerate early return (`intakeMap.ts:585-590`: no accounts, no premium, no income —
+   *  degenerate early return (`intakeMap.ts:628-633`: no accounts, no premium, no income —
    *  reachable today by a save-ready Social-Security-only household) re-prices NO tax constant
    *  and is byte-identical under any tax vintage.
    *
    *  ITS OWN BIT, NEVER INFERRED FROM `medicare` (insight 081's shape). The two are CORRELATED
    *  today — and only by an accident of the intake gate: `missingRequiredFacts` REQUIRES the
-   *  marketplace quote pair for any household with a pre-65 member (`intakeMap.ts:220-226`), and
+   *  marketplace quote pair for any household with a pre-65 member (`intakeMap.ts:224-230`), and
    *  an all-65+ household takes the Medicare-only branch, so EVERY save-ready built overlay
    *  happens to carry `healthcareEnabled`. That is a coincidence of two unrelated rules, not a
    *  law: it breaks the day a third overlay branch ships, or the day the quote pair becomes
@@ -276,14 +284,14 @@ export interface StalenessExposure {
    *  owner actually contribute (`contributionsPricedForRun`)? The date route is NOT sufficient
    *  on its own: `dateSearch.ts:254` forces `accumulation` onto EVERY candidate, but it
    *  truncates the BASE overlay's streams, and `contributionStreamsFor` returns `{}` for a
-   *  non-working owner (`intakeMap.ts:474-477`) — so a date-route household whose accounts all
+   *  non-working owner (`intakeMap.ts:501-504`) — so a date-route household whose accounts all
    *  belong to the retired spouse carries EMPTY streams on every candidate and reads no
    *  contribution limit (`consumedConstants.ts:128` gates the `contributions.` family on the
    *  construct's presence; the limits' only pricing read is `annualAdditionsCeilingFor`'s
    *  §415(c) match trim inside `contributionStreamsFor`, which never runs for them). */
   readonly contributions: ExposureRead
   /** Does the run's stock weight READ the dated ticker-blend table (`blendTableReadForRun`)?
-   *  `resolveBlend` (`intakeMap.ts:299`) consults it ONLY for an account whose ticker hits
+   *  `resolveBlend` (`intakeMap.ts:303`) consults it ONLY for an account whose ticker hits
    *  a row; an all-manual-blend household — or one whose portfolio totals $0, where
    *  `householdStockWeight` returns null and the run takes the inert `?? 0` — is PROVABLY
    *  inert under any `BLEND_SNAPSHOT_AS_OF` bump. `'priced'` still never NAMES itself (see
@@ -308,6 +316,15 @@ export interface StalenessExposure {
    *  whole spine route (no living worker, no construct) and an unreached date-route household alike.
    *  An unbuildable draft reads `'unknown'` like every sibling. */
   readonly workingYearTax: ExposureRead
+  /** Does THIS run carry the pay check's W (`workingYearCostForRun` — the date route's window-top
+   *  candidate lands `workingYearCostReal` on its rebuilt construct)? The working-years table
+   *  (payroll tax, the earnings test) has exactly one reader, the W-keyed check (KTD1: a run without
+   *  W never reads it), so this is the U13 clock's exposure read — the same producer the
+   *  methodology row's arm reads (insights 080/081). `'unpriced'` is a PROOF: no W was answered, or
+   *  the household is on the spine, which never carries W. An unbuildable draft reads `'unknown'`
+   *  like every sibling. NOT the household's stale-answer flag — that is `deriveStaleness`'s own
+   *  argument, because it compares an answer with its quote, never a table with a run. */
+  readonly workingYearCost: ExposureRead
   /** The priced state code THIS run actually priced (`pricedStateForRun`'s built-overlay
    *  read), or `undefined` for a household whose run prices no state tax. Closes the state
    *  clock's former KNOWN QUIET LIMITATION — see the clock below. */
@@ -454,6 +471,26 @@ export interface StalenessReport {
      *  aggregate's sentence true of every household that hears it (insight 101, lens (c)). */
     readonly blendMoved: boolean
   }
+  /** The pay check's two staleness facts (`docs/plans/features/working-year-pay-check-build-spec.md`).
+   *  Their own group, never inside `date`: the two are different kinds of fact and feed different
+   *  predicates, and `date`'s shape is the fuck-off-date fixture clocks'. */
+  readonly workingYear: {
+    /** U13's clock: the working-years table's stamp (`dateVintage.workingYearsVintage`) moved since
+     *  the save AND this run carries W (`exposure.workingYearCost === 'priced'`) — the named line,
+     *  counted toward `rulesMoved`. A save without the stamp is not comparable (quiet); a run
+     *  without W reads the table nowhere (silent); an undecidable read lands in the aggregate. */
+    readonly vintageMoved: boolean
+    /** KTD21: the household's own W answer no longer matches the quote or the state-tax reading it
+     *  was given against (the caller's `workingYearCostStale`) AND the run is not PROVEN to leave W
+     *  unread (`exposure.workingYearCost !== 'unpriced'`). The engine keeps using the last figure
+     *  given (R4), so this is "worth a look", counted toward `anyStale` ONLY, never `rulesMoved`.
+     *  The exposure conjunct silences one case only: a W left on a spine-route draft (a household
+     *  that answered it while working, then retired). That run never reads W, no surface there
+     *  asks or shows it (the W step and the panel row are date-route), and KTD21 scopes the line to
+     *  surfaces that show a date — a line about it would be alarm-when-fine with no door. On the
+     *  date route a stored W is always 'priced' (or 'unknown', which keeps the line: fail-safe). */
+    readonly costStale: boolean
+  }
   /** Budget lines whose window has passed by pure calendar advance — ALREADY-RETIRED
    *  (spine-route) households only: their year-0 anchor is the save's `startCalendarYear`.
    *  A date-route household's budget anchors to the FUTURE crowned work-stop year, so no
@@ -488,7 +525,8 @@ export interface StalenessReport {
    *  (unattributed) are EXCLUDED: neither supports the claim that their answer moved. */
   readonly rulesMoved: boolean
   /** Anything worth a line at the re-entry gate — `rulesMoved` OR an unattributed re-base OR a
-   *  budget re-confirm OR an engine-pricing line (`pricing.moved`). */
+   *  budget re-confirm OR an engine-pricing line (`pricing.moved`) OR a stale W answer
+   *  (`workingYear.costStale`, KTD21). */
   readonly anyStale: boolean
 }
 
@@ -507,10 +545,22 @@ type Bucket = 'named' | 'silent' | 'aggregate'
 const bucketFor = (read: ExposureRead): Bucket =>
   read === 'priced' ? 'named' : read === 'unpriced' ? 'silent' : 'aggregate'
 
+/**
+ * @param workingYearCostStale KTD21 (the pay check): does the household's own W answer no longer
+ *   match the quote or the state-tax reading it was given against? The store cannot import intake,
+ *   so the caller passes the intake predicate's answer — `isWorkingYearCostStale` on the hydrated
+ *   draft. It is NOT an exposure read and never joins {@link StalenessExposure}: it compares a
+ *   stored answer with its quote, not a stamp with a table, so it says nothing about what the run
+ *   priced (`stalenessExposure.ts`'s built-reads-only law). It feeds `anyStale` ONLY, and is
+ *   silenced only where the exposure record proves the run never reads W (`workingYear.costStale`).
+ *   REQUIRED, never optional-with-a-default (the house law at `savedRecommendation.ts:83-86`): a
+ *   caller that forgets it must fail to compile, never read a silent `false`.
+ */
 export function deriveStaleness(
   scenario: ScenarioV3,
   todayEpochDay: number,
   exposure: StalenessExposure,
+  workingYearCostStale: boolean,
 ): StalenessReport {
   const wallYear = epochDayToCalendarYear(todayEpochDay)
 
@@ -551,7 +601,7 @@ export function deriveStaleness(
   // `taxEnabled: true` is hardcoded on every built overlay. The first half is true; the
   // conclusion was not — a household that builds NO overlay reaches a verdict all the same
   // (`buildParams` returns params with `initialPortfolio: 0` and the inert `stockWeight ?? 0`,
-  // `intakeMap.ts:714-723`), so "no overlay ⇒ nothing to be stale about" was false.
+  // `intakeMap.ts:757-766`), so "no overlay ⇒ nothing to be stale about" was false.
   const currentTax = taxVintageStamp()
   const savedTax = scenario.taxVintageDetail
   const taxStampMoved =
@@ -690,9 +740,9 @@ export function deriveStaleness(
   // gate keeps the CLAIM honest: "every date candidate carries the accumulation construct
   // (`dateSearch.ts:254`) ⇒ structurally exposed" is necessary but NOT sufficient, because the
   // forced construct is filled from the BASE overlay's streams and `contributionStreamsFor`
-  // returns `{}` for a non-working owner (`intakeMap.ts:474-477`). A 66/retired + 62/working couple
+  // returns `{}` for a non-working owner (`intakeMap.ts:501-504`). A 66/retired + 62/working couple
   // whose accounts all belong to the retired spouse is on the date route with EMPTY streams:
-  // `anyContributions` is false (`intakeMap.ts:627-633`), no `accumulation` reaches the base
+  // `anyContributions` is false (`intakeMap.ts:670-676`), no `accumulation` reaches the base
   // overlay, and the limit tables' only pricing read (the §415(c) match trim) never runs.
   //
   // The blend clock never NAMES itself on either route (see `date.blendMoved`'s own note): the
@@ -708,6 +758,20 @@ export function deriveStaleness(
   const blendMoved =
     savedDate !== undefined && savedDate.blendSnapshotAsOf !== currentDate.blendSnapshotAsOf
   if (blendMoved && bucketFor(exposure.blend) !== 'silent') unattributedClocks.push('blend')
+
+  // ── the pay check's U13: the working-years clock ─────────────────────────────────────
+  // The working-years table (payroll tax, the earnings test) is read only by the W-keyed check
+  // (KTD1), so the clock is EXPOSURE-gated on `exposure.workingYearCost` — does THIS run carry W —
+  // and needs no route gate of its own: the spine never carries W, so its read is a proof of
+  // 'unpriced'. The stamp is the healthcare sub-vintage shape: a save minted before the table had
+  // a stamp lacks it — absent is not comparable, quiet, never coerced to "unchanged" or "moved".
+  // An undecidable read goes to the aggregate through `nameable`, like every non-healthcare clock.
+  const workingYearsVintageMoved =
+    savedDate?.workingYearsVintage !== undefined &&
+    savedDate.workingYearsVintage !== currentDate.workingYearsVintage &&
+    nameable('workingYears', exposure.workingYearCost)
+  // KTD21's stale answer, silent only where the run provably never reads W (see `costStale`'s note).
+  const workingYearCostMoved = workingYearCostStale && exposure.workingYearCost !== 'unpriced'
 
   // ── budget: expired time-boxed windows (spine route only — Q6) ───────────────────────
   const expiredLines: ExpiredBudgetLine[] = []
@@ -772,18 +836,26 @@ export function deriveStaleness(
   const pricingMoved = pricingNamedFamilies.length > 0 || pricingHedged || reconfirmMedicareSpending
 
   // The two predicates, now fed by the three-way (header). `rulesMoved` takes bucket 1 ONLY —
-  // every disjunct here is a NAMED clock: `taxMoved`/`contributionMoved` already carry their
-  // exposure gate, `movedClocks` excludes the silenced and the aggregated, and `blendMoved` is
-  // DELIBERATELY absent — a nameless re-base can never license the hero's "Some rules changed"
-  // echo or `savedRecommendation`'s 'rules-changed' demotion. THE INVARIANT THAT MUST HOLD
-  // (pinned in `reentry.test.tsx`): `rulesMoved === true` ⇒ `composeReentry` renders at least one
-  // line. An alarm nothing is allowed to explain is worse than either arm of the three-way.
+  // every disjunct here is a NAMED clock: `taxMoved`/`contributionMoved`/`workingYearsVintageMoved`
+  // already carry their exposure gate, `movedClocks` excludes the silenced and the aggregated, and
+  // `blendMoved` is DELIBERATELY absent — a nameless re-base can never license the hero's "Some
+  // rules changed" echo or `savedRecommendation`'s 'rules-changed' demotion. THE INVARIANT THAT
+  // MUST HOLD (pinned in `reentry.test.tsx`): `rulesMoved === true` ⇒ `composeReentry` renders at
+  // least one line. An alarm nothing is allowed to explain is worse than either arm of the three-way.
   const rulesMoved =
-    appDefaultMoved || taxMoved || stateTaxMoved || movedClocks.length > 0 || contributionMoved
+    appDefaultMoved ||
+    taxMoved ||
+    stateTaxMoved ||
+    movedClocks.length > 0 ||
+    contributionMoved ||
+    workingYearsVintageMoved
   const unattributedMoved = unattributedClocks.length > 0
   // `pricingMoved` joins `anyStale` ONLY (the council's placement): a method change is worth a
-  // line at the gate, but it never licenses the "rules changed" register.
-  const anyStale = rulesMoved || unattributedMoved || expiredLines.length > 0 || pricingMoved
+  // line at the gate, but it never licenses the "rules changed" register. A stale W answer
+  // (KTD21) joins it ONLY too: the household's own answer drifting from its inputs moves no rule
+  // and no recompute (the engine keeps the last figure given, R4).
+  const anyStale =
+    rulesMoved || unattributedMoved || expiredLines.length > 0 || pricingMoved || workingYearCostMoved
 
   return {
     elapsed,
@@ -799,6 +871,7 @@ export function deriveStaleness(
     },
     unattributed: { moved: unattributedMoved, clocks: unattributedClocks },
     date: { contributionMoved, blendMoved },
+    workingYear: { vintageMoved: workingYearsVintageMoved, costStale: workingYearCostMoved },
     budget: { expiredLines },
     pricing: {
       namedFamilies: pricingNamedFamilies,

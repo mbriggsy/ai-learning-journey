@@ -7,6 +7,9 @@ import {
   personField,
   validateDraft,
   validateField,
+  WORKING_COST_ANSWER_FIELD,
+  WORKING_COST_FIELD,
+  WORKING_COST_PERIOD_FIELD,
 } from '../sanity'
 import { formatMoney } from '../fields'
 import type { ScenarioDraft, PersonDraft } from '@store/memoryModel'
@@ -462,6 +465,102 @@ describe('sanity — R40 income entity-scalar ranges (fail-loud, the KTD-4 entit
     const d = incomeDraft([s])
     for (const f of ['survivorPct', 'taxableFraction', 'exclusionFraction', 'colaPct'] as const) {
       expect(validateField(d, incomeField(0, f))).toEqual([])
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The pay check's W rules (`docs/plans/features/working-year-pay-check-build-spec.md` KTD3, KTD17).
+// Every expected value is the rule's own contract, typed by hand.
+// ---------------------------------------------------------------------------
+
+describe('sanity — the pay check’s W rules (KTD3, KTD17)', () => {
+  const working: PersonDraft = { workStatus: 'working', currentAge: 58 }
+  const retired: PersonDraft = { workStatus: 'retired', currentAge: 60, retirementAge: 58 }
+  /** A date-route draft whose quote is $84,000 (budgetless, monthly spend period). */
+  const dateDraft = (over: Partial<ScenarioDraft> = {}): ScenarioDraft =>
+    draft(working, retired, { annualSpendingReal: 84_000, spendEntryPeriod: 'month', ...over })
+  const gateTouched = new Set([WORKING_COST_ANSWER_FIELD])
+  const figureTouched = new Set([WORKING_COST_FIELD])
+  const confirmed84 = { kind: 'confirmed', quotedReal: 84_000, stateTaxReading: 'unpriced' } as const
+  const entered = (amountReal: number, entryPeriod: 'month' | 'year') =>
+    ({ kind: 'entered', amountReal, entryPeriod, stateTaxReading: 'unpriced' }) as const
+
+  it('the three paths are distinct — the gate never lands on the figure or the period path', () => {
+    expect(new Set([WORKING_COST_ANSWER_FIELD, WORKING_COST_FIELD, WORKING_COST_PERIOD_FIELD]).size).toBe(3)
+  })
+
+  it('the W gate FIRES ON AN ABSENT W on the date route (the doctrine’s one recorded exception), and only once touched', () => {
+    expect(validateDraft(dateDraft(), gateTouched)).toEqual([
+      { rule: 'working-cost-unanswered', field: WORKING_COST_ANSWER_FIELD, messageKey: 'errWorkingCostUnanswered' },
+    ])
+    // Untouched, nothing shows (no alert before the first Continue).
+    expect(validateDraft(dateDraft(), new Set())).toEqual([])
+  })
+
+  it('the W gate is silent on the all-retired route — the spine never reads W', () => {
+    expect(validateDraft(draft(retired, retired, { annualSpendingReal: 84_000 }), gateTouched)).toEqual([])
+  })
+
+  it('a fresh answer of either kind clears the gate; a STALE one holds it (R4)', () => {
+    expect(validateDraft(dateDraft({ workingYearCost: confirmed84 }), gateTouched)).toEqual([])
+    expect(validateDraft(dateDraft({ workingYearCost: entered(90_000, 'year') }), gateTouched)).toEqual([])
+    // The quote moved by one dollar: the confirmed answer no longer matches it.
+    const moved = dateDraft({ workingYearCost: confirmed84, annualSpendingReal: 84_001 })
+    expect(validateDraft(moved, gateTouched).map((v) => v.rule)).toEqual(['working-cost-unanswered'])
+    // The state reading moved: an entered answer stales too.
+    const ncMove = dateDraft({ workingYearCost: entered(90_000, 'year'), retirementState: 'NC' })
+    expect(validateDraft(ncMove, gateTouched).map((v) => v.rule)).toEqual(['working-cost-unanswered'])
+  })
+
+  it('the gate never reaches the panel’s field — `validateField` on the figure path holds no gate', () => {
+    expect(validateField(dateDraft(), WORKING_COST_FIELD)).toEqual([])
+    expect(validateField(dateDraft(), WORKING_COST_ANSWER_FIELD).map((v) => v.rule)).toEqual(['working-cost-unanswered'])
+  })
+
+  it('working-cost-zero: an entered $0 blocks at the figure; a figure above $0 passes', () => {
+    expect(validateDraft(dateDraft({ workingYearCost: entered(0, 'month') }), figureTouched)).toEqual([
+      { rule: 'working-cost-zero', field: WORKING_COST_FIELD, messageKey: 'errWorkingCostZero' },
+    ])
+    expect(validateDraft(dateDraft({ workingYearCost: entered(1, 'year') }), figureTouched)).toEqual([])
+    // A confirmed answer is never the zero rule's (a $0 quote offers no "yes").
+    expect(validateDraft(dateDraft({ workingYearCost: confirmed84 }), figureTouched)).toEqual([])
+  })
+
+  it('the W period rule: a month-view figure at the floor asks the unit; below it passes (the spend rule’s 8,000 floor)', () => {
+    // $9,000 typed under the untapped month → stored 108,000 a year → asked.
+    expect(validateDraft(dateDraft({ workingYearCost: entered(108_000, 'month') }), figureTouched)).toEqual([
+      { rule: 'working-cost-period-unconfirmed', field: WORKING_COST_FIELD, messageKey: 'periodConfirmPrompt' },
+    ])
+    // Exactly the floor (8,000 a month) is asked; one dollar under passes.
+    expect(validateDraft(dateDraft({ workingYearCost: entered(96_000, 'month') }), figureTouched)).toHaveLength(1)
+    expect(validateDraft(dateDraft({ workingYearCost: entered(95_988, 'month') }), figureTouched)).toEqual([])
+    // $7,000 a month (84,000 a year) passes.
+    expect(validateDraft(dateDraft({ workingYearCost: entered(84_000, 'month') }), figureTouched)).toEqual([])
+    // A yearly 40,000 is at the floor in the month view, so it is asked too.
+    expect(validateDraft(dateDraft({ workingYearCost: entered(40_000, 'year') }), figureTouched)).toHaveLength(1)
+  })
+
+  it('the W period rule is disarmed by a tap on ITS period control, or by its own provenance — never by the spend flag', () => {
+    const d = dateDraft({ workingYearCost: entered(108_000, 'month') })
+    expect(validateDraft(d, new Set([WORKING_COST_FIELD, WORKING_COST_PERIOD_FIELD]))).toEqual([])
+    expect(validateDraft(d, figureTouched, { workingCostPeriodConfirmed: true })).toEqual([])
+    // The spend period's provenance says nothing about W's unit.
+    expect(validateDraft(d, figureTouched, { periodConfirmed: true }).map((v) => v.rule)).toEqual([
+      'working-cost-period-unconfirmed',
+    ])
+    // And a tap on the SPEND period does not disarm it either.
+    expect(validateDraft(d, new Set([WORKING_COST_FIELD, 'spendEntryPeriod'])).map((v) => v.rule)).toEqual([
+      'working-cost-period-unconfirmed',
+    ])
+  })
+
+  it('the zero and period rules never fire together (they would share one error id)', () => {
+    for (const amount of [0, 1, 95_988, 96_000, 108_000]) {
+      for (const period of ['month', 'year'] as const) {
+        const v = validateDraft(dateDraft({ workingYearCost: entered(amount, period) }), figureTouched)
+        expect(v.length, `${amount} ${period}`).toBeLessThanOrEqual(1)
+      }
     }
   })
 })

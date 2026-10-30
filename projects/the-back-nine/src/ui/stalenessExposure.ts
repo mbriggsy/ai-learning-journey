@@ -19,29 +19,35 @@
  *     the ACA note below for why the pre-crown base overlay IS that producer at THIS surface,
  *     and why the same read is forbidden beside a crowned one.
  *
- * EIGHT READS, EIGHT PRODUCERS — NEVER ONE DERIVED FROM ANOTHER. `overlayBuilt`, `medicare`, `aca`,
- * `contributions`, `blend`, `spending`, `workingYearTax` and `pricedState` each call their own exported
- * predicate. (`workingYearTax` — the 2026-10-20 working-year tax floor's row-level ledger reach — walks
- * every candidate the date search would sweep, so on the DATE route it is the one read here that costs
- * more than a build: ~11 candidates of draw-free cash terms, at unlock. On the spine route it returns at
- * the construct check, and IntakeApp's result-phase record card returns before calling this function on
- * the date route.)
+ * NINE READS, NINE PRODUCERS — NEVER ONE DERIVED FROM ANOTHER. `overlayBuilt`, `medicare`, `aca`,
+ * `contributions`, `blend`, `spending`, `workingYearTax`, `workingYearCost` and `pricedState` each call
+ * their own exported predicate. (`workingYearTax` — the 2026-10-20 working-year tax floor's row-level
+ * ledger reach — walks every candidate the date search would sweep, so on the DATE route it is the one
+ * read here that costs more than a build: ~11 candidates of draw-free cash terms, at unlock. On the
+ * spine route it returns at the construct check, and IntakeApp's result-phase record card returns
+ * before calling this function on the date route. `workingYearCost` — the pay check's U13 clock — is one
+ * date build plus one candidate rebuild, and the SAME producer the methodology row's arm reads, so the
+ * clock and the row can never disagree about whether this run carries W: insights 080/081.)
+ *
+ * THE PAY CHECK'S STALE ANSWER IS NOT A READ HERE (KTD21). `isWorkingYearCostStale` compares the
+ * household's stored W with the quote it was given against — an answer against its inputs, not a
+ * built run — so it travels as `deriveStaleness`'s own argument beside this record (IntakeApp's unlock).
  *
  * BE PRECISE ABOUT WHY, because the obvious justification is FALSE and was written here once
  * before being caught (two reviewers, 2026-07-25): `overlayBuilt` and `medicare` do NOT currently
  * disagree on any reachable household. There is no "accounts but no marketplace quote pair"
  * witness — the pair is a REQUIRED fact for any household with a pre-65 member
- * (`intakeMap.ts:220-226`), and an all-65+ household takes the Medicare-only branch, which sets
- * `healthcareEnabled: true` with no quote pair at all (`intakeMap.ts:693`). So for every draft this
+ * (`intakeMap.ts:224-230`), and an all-65+ household takes the Medicare-only branch, which sets
+ * `healthcareEnabled: true` with no quote pair at all (`intakeMap.ts:736`). So for every draft this
  * function actually evaluates (the missing-facts arm has already returned), an overlay exists IFF
  * healthcare is on. **The two predicates are perfectly correlated today.**
  *
- * THAT IS THE ARGUMENT FOR SEVEN CALLS, NOT AGAINST IT. The correlation is a coincidence of two
+ * THAT IS THE ARGUMENT FOR SEPARATE CALLS, NOT AGAINST IT. The correlation is a coincidence of two
  * unrelated rules — one about which facts intake demands, one about which overlay branch an
  * all-65+ household takes — and neither rule exists to keep these two predicates equal. A third
  * overlay branch, or a relaxed quote-pair requirement, breaks it with nothing going red. Deriving
- * one from the other would be insight 081's shape one level up: the cost of seven calls is seven
- * builder invocations; the cost of one derivation is a silent lie the day the coincidence lapses.
+ * one from the other would be insight 081's shape one level up: the cost of a separate call is a
+ * builder invocation; the cost of one derivation is a silent lie the day the coincidence lapses.
  *
  * The practical consequence, recorded so nobody deletes the fixture: the `overlayBuilt` gate is
  * falsifiable ONLY through a deliberately-hypothetical fixture (`OVERLAY_NO_HEALTH`), because no
@@ -61,6 +67,7 @@ import {
   spineAcaPriced,
   spineMedicarePriced,
   survivorMedicalLeanForRun,
+  workingYearCostForRun,
   workingYearTaxForRun,
 } from '@intake/intakeMap'
 import type { ExposureRead, StalenessExposure } from '@store/staleness'
@@ -92,7 +99,7 @@ const read = (priced: boolean): ExposureRead => (priced ? 'priced' : 'unpriced')
  *
  * AND BE HONEST ABOUT WHERE THIS ONE ALREADY TRAVELS (a reviewer's catch, 2026-07-25 — the clause
  * above overstated its own boundary). This read feeds `rulesMoved`, and `rulesMoved` is carried to
- * `IntakeApp.tsx:821` → `Result.tsx:662,677` → `FuckOffDate.tsx:444`, which renders the standing
+ * `IntakeApp.tsx:830` → `Result.tsx:682,710` → `FuckOffDate.tsx:451`, which renders the standing
  * hero echo BESIDE THE CROWNED DATE. So for a 63-working/67-retired household with the required
  * quote pair, a moved `acaStatus` names the ACA line at the gate (honest — the gate is pre-crown)
  * and ALSO lights that echo, even where a crown ≥2 years out puts both members at 65+ and the
@@ -110,14 +117,14 @@ const read = (priced: boolean): ExposureRead => (priced ? 'priced' : 'unpriced')
  * THE FIX THIS COMMENT USED TO PRESCRIBE IS WRONG — CORRECTED 2026-07-26. It said: "the echo
  * renders AFTER a crown exists, so it can gate on `acaPricedForRun(d, crownedOffset)` rather than
  * inheriting the gate's pre-crown boolean." Executing that would SILENCE more than it fixes.
- * `rulesMoved` reaches the echo as ONE OR-collapsed boolean with no clock attribution
- * (`staleness.ts`: appDefault ∨ tax ∨ stateTax ∨ movedClocks ∨ contribution), so gating THAT on
+ * `rulesMoved` reaches the echo as ONE OR-collapsed boolean with no clock attribution (`staleness.ts`:
+ * appDefault ∨ tax ∨ stateTax ∨ movedClocks ∨ contribution ∨ workingYears), so gating THAT on
  * ACA pricing also suppresses the echo for a household whose FEDERAL-TAX or MEDICARE clock moved
  * while the crowned run happens to price zero ACA years — trading a bounded over-alarm for a
  * silent stale on the more consequential clock. That is precisely the trade the paragraph above
  * says was rejected, and precisely insight 103's shape (a rule written to kill an over-alarm must
  * be checked in the SILENCING direction). `acaPricedForRun` already exists and is exported
- * (`intakeMap.ts:1063`) — the predicate was never the missing piece.
+ * (`intakeMap.ts:1106`) — the predicate was never the missing piece.
  *
  * THE ACTUAL FIX — AND ONE OF ITS TWO ARMS IS ALSO A TRAP (corrected 2026-08-02, the second time
  * this comment's own prescription has had to be withdrawn).
@@ -160,19 +167,21 @@ export function exposureForDraft(d: ScenarioDraft): StalenessExposure {
       blend: 'unknown',
       spending: 'unknown',
       workingYearTax: 'unknown',
+      workingYearCost: 'unknown',
       pricedState: undefined,
     }
   }
   // The route-INVARIANT reads: each producer unions the two builders internally (the
   // `pricedStateForRun` idiom), so no `isDateRoute` branch may fork them. `workingYearTaxForRun`
-  // already answers three-valued (each route walks its own built params through the engine's one
-  // predicate; a candidate build that throws is undecidable), so it is taken verbatim.
+  // and `workingYearCostForRun` already answer three-valued (each reads its route's own built
+  // params; a candidate build that throws is undecidable), so they are taken verbatim.
   const routeInvariant = {
     overlayBuilt: read(overlayBuiltForRun(d)),
     contributions: read(contributionsPricedForRun(d)),
     blend: read(blendTableReadForRun(d)),
     spending: read(survivorMedicalLeanForRun(d)),
     workingYearTax: workingYearTaxForRun(d),
+    workingYearCost: workingYearCostForRun(d),
     pricedState: pricedStateForRun(d),
   }
 

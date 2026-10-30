@@ -25,6 +25,14 @@ import { sourced, type ConstantEntry } from './types'
 /** The year the year-keyed figures here govern (the wage base is the 2026 figure). */
 export const WORKING_YEARS_YEAR = 2026
 
+/** The table's vintage stamp, saved with every plan (`DateVintageV3.workingYearsVintage`, the
+ *  pay check's U13) so a W-present plan is never re-priced silently. BUMP IT ON ANY VALUE CHANGE
+ *  here — a new year's figures or an in-year correction alike (the suffix letter moves within a
+ *  year, the `extras-2026b` precedent). A content-digest pin in `vintageStamps.test.ts` reds any
+ *  table change made under an unchanged stamp. Not a `ConstantEntry`: it is a stamp, not a figure,
+ *  so it never joins `ALL_CONSTANTS`. */
+export const WORKING_YEARS_VINTAGE = 'working-years-2026a'
+
 /** The employee's Social Security (OASDI) tax rate, per person, on wages up to the wage base. */
 export const oasdiRate = sourced(0.062, {
   citation:

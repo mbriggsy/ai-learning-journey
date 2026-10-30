@@ -20,7 +20,7 @@ import { copy } from '@ui/copy'
  *    the step body's runs twice, after. A `useRef(true)` first-render latch is spent by pass 1 and
  *    pass 2 then focused the LIST heading on arrival, taking the focus the flow had just put on the
  *    step h2 with nothing to put it back. The latch is the previous `editing` value now, which is
- *    idempotent under the pair (src/intake/questions.tsx:985 · :1125).
+ *    idempotent under the pair (src/intake/questions.tsx:1010 · :1150).
  *
  *    WHY THE WALK IS TRIMMED TO TWO STEPS. The bug needs an ADVANCE onto the list step (a fresh
  *    mount under an already-mounted parent) — at the flow's FIRST mount the whole tree is newly
@@ -53,7 +53,7 @@ const nullClient: EngineClient = {
 }
 
 /** Two named, already-retired people with birth years — the names step's own gate fields
- *  (`personField(i, 'birthYear')`, questions.tsx:107) are answered, so Continue is never refused
+ *  (`personField(i, 'birthYear')`, questions.tsx:132) are answered, so Continue is never refused
  *  for a reason this file is not about. */
 function retiredCouple(): MemoryModel {
   const m = createMemoryModel({

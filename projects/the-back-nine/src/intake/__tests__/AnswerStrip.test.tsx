@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen } from '@testing-library/react'
-import { AnswerStrip } from '../AnswerStrip'
+import { AnswerStrip, missingFactNames, threeThenMore } from '../AnswerStrip'
 import { copy, slots } from '@ui/copy'
 import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft } from '@store/memoryModel'
 import type { OutcomeState, SimulationResult } from '@shared/model'
@@ -189,5 +189,38 @@ describe('AnswerStrip — the honesty branches (D1 review T3)', () => {
     )
     expect(screen.getByText(copy.answerStillNeeded)).toBeInTheDocument()
     expect(screen.queryByText(copy.answerCannotPrice)).toBeNull()
+  })
+})
+
+describe('threeThenMore — the one three-names-then-"N more" rule (KTD5)', () => {
+  it('five distinct names show the first three, in order, and count the other two', () => {
+    expect(threeThenMore(['Cruise', 'Europe', 'New car', 'Kitchen', 'Boat'])).toEqual({
+      shown: ['Cruise', 'Europe', 'New car'],
+      more: 2,
+    })
+  })
+
+  it('duplicates collapse BEFORE the cap — a repeated name is one name and is never counted twice', () => {
+    expect(threeThenMore(['Travel', 'Travel', 'Gifts', 'Travel', 'Boat', 'Gifts', 'Car'])).toEqual({
+      shown: ['Travel', 'Gifts', 'Boat'],
+      more: 1,
+    })
+  })
+
+  it('no names show nothing and count nothing; three or fewer show all with no count', () => {
+    expect(threeThenMore([])).toEqual({ shown: [], more: 0 })
+    expect(threeThenMore(['Travel', 'Gifts'])).toEqual({ shown: ['Travel', 'Gifts'], more: 0 })
+  })
+
+  it('missingFactNames is the same rule over the facts’ catalog names (two facts with one name are one)', () => {
+    expect(
+      missingFactNames([
+        { labelKey: 'spendLabel' },
+        { labelKey: 'salaryLabel', personIndex: 0 },
+        { labelKey: 'salaryLabel', personIndex: 1 },
+        { labelKey: 'ssAmountLabel' },
+        { labelKey: 'oopLabel' },
+      ]),
+    ).toEqual({ shown: [copy.spendLabel, copy.salaryLabel, copy.ssAmountLabel], more: 1 })
   })
 })

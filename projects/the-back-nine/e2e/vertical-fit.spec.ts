@@ -1,5 +1,5 @@
 import { test, expect, type Page, type BrowserContext, type CDPSession } from '@playwright/test'
-import { REAL, REAL_DPR, TIER, SHOWCASE, FLOOR, PHONE, gotoSeedFinal, settleLayout } from './reviewSurface'
+import { REAL, REAL_DPR, TIER, SHOWCASE, FLOOR, PHONE, PHONE_DPR, gotoSeedFinal, rewalkSeedTo, settleLayout } from './reviewSurface'
 // THE SHIPPED CATALOG, never re-typed here (the `e2e/caddie-walk.spec.ts:9` precedent). Every
 // string this spec injects or reads back is the one the app ships: a spec-local literal would pin a
 // reservation, a clause list or a heading against a fiction, and a re-word that overflowed the real
@@ -2526,7 +2526,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
       //
       // The bound is TIGHT BY CONSTRUCTION (~10px at 1536×791), so this is a live constraint on the
-      // copy rather than a formality: it is what makes the length note in copy.ts:1767-1771 enforceable
+      // copy rather than a formality: it is what makes the length note in copy.ts:1969-1973 enforceable
       // instead of advisory. Text is captured so a red names the sentence that outgrew the slack.
       expect(
         geometry.standingBottom,
@@ -2840,3 +2840,213 @@ test.describe('the spend lane — the solved figure lands without moving anythin
     })
   })
 })
+
+// ── the pay check: its two intake steps, its panel row and its standing line (U8) ───────────────
+//
+// THE INTAKE STEP CONTRACT (defined here, 2026-10-30 — the one-frame law above is a RESULT-frame law,
+// and the intake scrolls by design: a step's help and the money picture run long on a phone). What a
+// scrolling step owes the reader instead:
+//   (a) its question lands in the first frame — the step heading ends above the fold;
+//   (b) nothing inside the flow spills sideways — every rendered box inside `.intake-shell` sits within
+//       the viewport's width, and the document never scrolls sideways;
+//   (c) every figure in the money picture reads WHOLE — no `.wy-row__value` clipped by its row;
+//   (d) Continue is in the document below the content, never overlapped by it.
+// The walk is SCOPED to `.intake-shell`: the App's trailing disclaimer sits below the 100svh shell by
+// design, and a `body *` walk would read it as an offender on every intake frame.
+// PHONE runs under the intake precedent's FULL mobile emulation (`e2e/intake-fold.spec.ts`), never the
+// bare-viewport phone the result arms above use: the intake is what a reader types into on a phone.
+
+/** The rendered boxes inside a scope that spill past the viewport's right edge (or its left), the
+ *  document's sideways scroll, and how many boxes the walk counted (insight 029: a blank page must
+ *  fail the floor, never pass an empty-offender check). */
+async function sidewaysReport(
+  page: Page,
+  scope: string,
+): Promise<{ readonly counted: number; readonly offenders: readonly string[]; readonly docOverflow: number }> {
+  return page.evaluate((sel) => {
+    const vw = document.documentElement.clientWidth
+    const offenders: string[] = []
+    let counted = 0
+    for (const el of Array.from(document.querySelectorAll<HTMLElement>(`${sel} *`))) {
+      if (el.closest('.sr-only') !== null) continue
+      const style = window.getComputedStyle(el)
+      if (style.display === 'none' || style.visibility === 'hidden' || style.position === 'fixed') continue
+      if (el.getClientRects().length === 0) continue
+      const r = el.getBoundingClientRect()
+      if (r.width <= 1 || r.height <= 1) continue
+      counted++
+      if (r.right > vw + 0.5 || r.left < -0.5) {
+        const cls = el.getAttribute('class')
+        offenders.push(`${el.tagName.toLowerCase()}${cls !== null && cls !== '' ? `.${cls.split(/\s+/)[0]}` : ''} [${Math.round(r.left)}, ${Math.round(r.right)}] of ${vw}`)
+      }
+    }
+    const docOverflow = document.documentElement.scrollWidth - document.documentElement.clientWidth
+    return { counted, offenders, docOverflow }
+  }, scope)
+}
+
+/** Every money-picture figure that does not fit its own box (its text clipped or spilling). */
+async function clippedFigures(page: Page, scope: string): Promise<readonly string[]> {
+  return page.evaluate((sel) => {
+    const out: string[] = []
+    for (const el of Array.from(document.querySelectorAll<HTMLElement>(`${sel} .wy-row__value`))) {
+      if (el.scrollWidth > el.clientWidth + 1) out.push(`${el.textContent ?? ''} (${el.scrollWidth} > ${el.clientWidth})`)
+      const row = el.closest('.wy-rows')
+      if (row !== null) {
+        const r = el.getBoundingClientRect()
+        const box = row.getBoundingClientRect()
+        if (r.right > box.right + 0.5 || r.left < box.left - 0.5) out.push(`${el.textContent ?? ''} outside its group`)
+      }
+    }
+    return out
+  }, scope)
+}
+
+/** (a)–(d) on the step the page stands on. `minBoxes` is the arm's own non-vacuity floor. */
+async function assertIntakeStepHolds(page: Page, where: string, minBoxes: number): Promise<void> {
+  await settleLayout(page)
+  const heading = await page.locator('.step-heading').boundingBox()
+  expect(heading, `${where}: the step heading must render`).not.toBeNull()
+  const innerHeight = await page.evaluate(() => window.innerHeight)
+  expect(heading!.y + heading!.height, `${where}: the question is below the first frame`).toBeLessThanOrEqual(innerHeight)
+  const sideways = await sidewaysReport(page, '.intake-shell')
+  expect(sideways.counted, `${where}: the walk counted too few boxes — the step did not render`).toBeGreaterThan(minBoxes)
+  expect(sideways.offenders, `${where}: boxes spill past the viewport's sides`).toEqual([])
+  expect(sideways.docOverflow, `${where}: the document scrolls sideways`).toBeLessThanOrEqual(0)
+  expect(await clippedFigures(page, '.intake-shell'), `${where}: a money-picture figure is clipped`).toEqual([])
+  const body = await page.locator('.step-body').boundingBox()
+  const nav = await page.locator('.intake-nav').boundingBox()
+  expect(body !== null && nav !== null, `${where}: the step body and its nav must render`).toBe(true)
+  expect(nav!.y, `${where}: Continue overlaps the step's content`).toBeGreaterThanOrEqual(body!.y + body!.height - 0.5)
+}
+
+const PAY_CHECK_VIEWPORTS = [
+  { name: `${REAL.width}×${REAL.height}`, use: { viewport: REAL, deviceScaleFactor: REAL_DPR } },
+  { name: `phone ${PHONE.width}×${PHONE.height}`, use: { viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true } },
+] as const
+
+for (const vp of PAY_CHECK_VIEWPORTS) {
+  test.describe(`the pay check’s W step and money picture (${vp.name})`, () => {
+    test.use(vp.use)
+
+    test('?seed=datecoststale: the stale face, the blocked Continue, the figure option, then the answered picture', async ({ page }) => {
+      await rewalkSeedTo(page, 'datecoststale', copy.qWorkingCostHeading, { final: true })
+      // The stale face: the calm note before any tap, no answer checked, no alert.
+      await expect(page.getByRole('note')).toContainText(slots.workingCostStaleQuote('84,000', '78,000'))
+      await expect(page.getByRole('alert')).toHaveCount(0)
+      await assertIntakeStepHolds(page, 'W step, stale', 25)
+      // A blocked Continue: the gate's message under the fork, the fork marked invalid.
+      await page.evaluate(() => document.querySelector<HTMLButtonElement>('.intake-nav .btn-primary')?.click())
+      await expect(page.getByRole('alert')).toContainText(copy.errWorkingCostUnanswered)
+      await expect(page.locator('fieldset[role="radiogroup"]')).toHaveAttribute('aria-invalid', 'true')
+      await assertIntakeStepHolds(page, 'W step, blocked', 25)
+      // The figure option open: the field and its period control in one slot.
+      await page.getByRole('radio', { name: copy.workingCostDifferent }).evaluate((el) => (el as HTMLInputElement).click())
+      // By role and EXACT name: a bare getByLabel matches by substring, and the fork's legend ("Is that about
+      // what a year costs while you’re working?") contains the field's own label.
+      await expect(page.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })).toBeVisible()
+      await expect(page.getByRole('radio', { name: copy.periodMonth })).toBeChecked()
+      await assertIntakeStepHolds(page, 'W step, figure open', 30)
+      // Re-answer "yes" and walk on to the picture of the answered household.
+      await page.getByRole('radio', { name: copy.workingCostYes }).evaluate((el) => (el as HTMLInputElement).click())
+      await page.evaluate(() => document.querySelector<HTMLButtonElement>('.intake-nav .btn-primary')?.click())
+      await expect(page.locator('.step-heading')).toHaveText(copy.qWorkingLedgerHeading)
+      await expect(page.locator('.wy-row--bottom')).toContainText(copy.workingLedgerLeftOver)
+      await assertIntakeStepHolds(page, 'money picture, datecoststale', 40)
+    })
+
+    test('?seed=dateshort: the picture at its fullest — held-back Social Security, Medicare from savings, every later year short', async ({ page }) => {
+      await rewalkSeedTo(page, 'dateshort', copy.qWorkingLedgerHeading, { final: true })
+      await expect(page.locator('.wy-row--bottom')).toContainText(copy.workingLedgerShort)
+      await expect(page.locator('.wy-ledger')).toContainText('held back this year because of pay')
+      await expect(page.getByRole('heading', { level: 3, name: copy.workingLedgerAlsoFromSavings })).toBeVisible()
+      await expect(page.getByRole('heading', { level: 3, name: copy.workingLedgerLaterHeading })).toBeVisible()
+      await expect(page.locator('[role="alert"], .wy-ledger [aria-live]')).toHaveCount(0)
+      await assertIntakeStepHolds(page, 'money picture, dateshort', 60)
+    })
+
+    test('?seed=datesolo: the refusal witness walks every step, and its picture step reads one calm line', async ({ page }) => {
+      await rewalkSeedTo(page, 'datesolo', copy.qWorkingLedgerHeading)
+      // Nothing the household can enter draws a picture (no "yet"), and the step points at the answer
+      // strip, which names the blocker ONCE on the screen (rulings 36; b9-3's C13 dropped the "yet").
+      const face = page.locator('.wy-ledger--unknown')
+      await expect(face).toContainText(copy.workingLedgerUnknownLeadFinal)
+      await expect(face).not.toContainText(copy.workingLedgerUnknownLead)
+      await expect(face).toContainText(copy.workingLedgerUnknownSeeStrip)
+      await expect(page.locator('.answer-strip')).toContainText(copy.employerCoverageUnpriced)
+      expect(
+        await page.evaluate((needle) => document.body.innerText.split(needle).length - 1, copy.employerCoverageUnpriced),
+        'the blocker is named once on the screen, in the strip',
+      ).toBe(1)
+      await expect(page.locator('.intake-shell dl')).toHaveCount(0)
+      await assertIntakeStepHolds(page, 'money picture, unknown', 10)
+    })
+  })
+
+  test.describe(`the pay check’s standing line and panel row on ?seed=datecoststale (${vp.name})`, () => {
+    test.use(vp.use)
+
+    test('the line sits in the lead after the other notes, above the graphs, doors last; its door opens the panel at the W row', async ({ page }) => {
+      await gotoSeedFinal(page, 'datecoststale')
+      await assertResolvedDate(page)
+      const line = page.locator('.fod-reveal .reveal__lead > p.fod-note.cs-paycheck-note')
+      await expect(line, 'the standing line renders in the lead').toHaveCount(1)
+      await expect(line).toContainText(copy.stalenessPayCheckNote)
+      // DOM ORDER in the lead (at REAL the graphs sit BESIDE the lead, so "above" is DOM order there):
+      // the last note of the lead, and before the graphs.
+      const order = await page.evaluate(() => {
+        const lead = document.querySelector('.fod-reveal .reveal__lead')
+        const notes = lead === null ? [] : Array.from(lead.querySelectorAll(':scope > .fod-note'))
+        const pay = document.querySelector('.cs-paycheck-note')
+        const graphs = document.querySelector('.fod-graphs')
+        return {
+          last: notes.length > 0 && notes[notes.length - 1] === pay,
+          beforeGraphs: pay !== null && graphs !== null && (pay.compareDocumentPosition(graphs) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0,
+        }
+      })
+      expect(order.last, 'the line is the lead’s last note').toBe(true)
+      expect(order.beforeGraphs, 'the line comes before the graphs').toBe(true)
+      if (vp.use.viewport.width === PHONE.width) {
+        // At PHONE `.fod-graphs` is display:contents (no box), so the first graph is the geometry.
+        const lineBox = await line.boundingBox()
+        const band = await page.locator('.fod-band').boundingBox()
+        expect(lineBox !== null && band !== null).toBe(true)
+        expect(lineBox!.y + lineBox!.height, 'the line sits above the first graph').toBeLessThanOrEqual(band!.y + 0.5)
+        await assertOneVisibleDisclaimer(page, 'narrow')
+        await assertCaveatOrderAndReach(page, DATE_VERDICT)
+      } else {
+        await assertOneVisibleDisclaimer(page, 'laptop')
+        const doors = await page.locator('.result-quiet-row').boundingBox()
+        expect(doors, 'the quiet doors render').not.toBeNull()
+        const trailing = await doorsLastWalk(page, 'body')
+        expect(trailing.counted).toBeGreaterThan(DOORS_WALK_FLOOR)
+        expect(trailing.maxOtherBottom, `content renders BELOW the quiet doors (${trailing.desc})`).toBeLessThanOrEqual(
+          doors!.y + doors!.height + 0.5,
+        )
+      }
+      // The door: the panel opens AT the W row — its name focused, the row inside the dialog, nothing
+      // spilling sideways — and a "yes" there draws the picture under h4 legends, every figure whole.
+      await page.getByRole('button', { name: copy.stalenessPayCheckCta }).click()
+      const dialog = page.getByRole('dialog')
+      await expect(dialog).toBeVisible()
+      await page.waitForTimeout(400)
+      const focusedName = await page.evaluate(() => document.activeElement?.textContent ?? '')
+      expect(focusedName).toBe(copy.assumptionWorkingCostName)
+      const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
+      const dialogBox = await dialog.boundingBox()
+      const nameBox = await row.locator('.ap-row__name').boundingBox()
+      expect(dialogBox !== null && nameBox !== null).toBe(true)
+      expect(nameBox!.y, 'the W row’s name is scrolled into the dialog').toBeGreaterThanOrEqual(dialogBox!.y - 0.5)
+      expect(nameBox!.y + nameBox!.height).toBeLessThanOrEqual(dialogBox!.y + dialogBox!.height + 0.5)
+      await expect(row.getByRole('note')).toContainText(slots.workingCostStaleQuote('84,000', '78,000'))
+      await row.getByRole('radio', { name: copy.workingCostYes }).evaluate((el) => (el as HTMLInputElement).click())
+      await expect(row.getByRole('heading', { level: 4, name: copy.workingLedgerComingIn })).toBeVisible({ timeout: 30_000 })
+      await row.evaluate((el) => el.scrollIntoView({ block: 'start' }))
+      await settleLayout(page)
+      const sideways = await sidewaysReport(page, '[role="dialog"] [data-assumption-seat="working-year-cost"]')
+      expect(sideways.counted).toBeGreaterThan(30)
+      expect(sideways.offenders, 'the W row spills past the viewport').toEqual([])
+      expect(await clippedFigures(page, '[role="dialog"]'), 'a panel money-picture figure is clipped').toEqual([])
+    })
+  })
+}

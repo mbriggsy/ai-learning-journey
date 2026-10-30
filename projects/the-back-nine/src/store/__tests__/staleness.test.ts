@@ -23,6 +23,11 @@
  *      stamp must be silent for an all-65+ household and named for an ACA-priced one.
  *  10. F7a — the clock→family mapping is EXHAUSTIVE and each clock names only the families it
  *      dates, so `rulesMoved` can never fire without a line to explain it.
+ *  11. The pay check's U13 — the working-years clock names itself (+rulesMoved) only for a run that
+ *      carries W, is silent for one that provably does not, aggregates when undecidable, and is
+ *      quiet on a save that predates its stamp.
+ *  12. The pay check's KTD21 — a stale W answer is "worth a look" (anyStale) and NEVER a rules
+ *      change; it arrives as its own argument, never an exposure read.
  *
  * WHY THE EXPOSURE IS AN INJECTED LITERAL IN MOST ARMS: this file tests the BUCKETING law.
  * The derivation of the exposure itself — the producer's-output reads — is source-bound to the
@@ -41,6 +46,8 @@ import {
 import { scenarioFromDraft, currentEpochDay } from '@ui/scenarioFromDraft'
 import { exposureForDraft } from '@ui/stalenessExposure'
 import { DEV_SEEDS } from '@ui/devSeeds'
+import { isWorkingYearCostStale } from '@intake/workingYearQuote'
+import type { ScenarioDraft } from '../memoryModel'
 import { CURRENT_APP_DEFAULT_VERSION, appDefaultEraFor } from '@shared/appDefaults'
 import type { PricedState } from '@engine/constants/stateTax'
 import type { HealthcareVintageV3, ScenarioV3, StateTaxVintageV3 } from '@shared/model'
@@ -65,8 +72,9 @@ const stampedToday = (s: ScenarioV3): ScenarioV3 => ({ ...s, savedAt: TODAY })
 /** A household whose run prices EVERYTHING — the pre-65 marketplace-quoted, still-contributing,
  *  ticker-holding household. Both healthcare families, the tax overlay, the contribution
  *  streams, the dated blend table, (a budgetless couple with entered OOP medical, r < 1) the
- *  survivor-medical lean's `spending` family, and (a date-route household whose sweep reaches a
- *  clamped working year with a portfolio income channel) the working-year tax floor's reach. */
+ *  survivor-medical lean's `spending` family, (a date-route household whose sweep reaches a
+ *  clamped working year with a portfolio income channel) the working-year tax floor's reach, and
+ *  (a date-route household that answered the pay check's W) the working-years table. */
 const ACA_PRICED: StalenessExposure = {
   overlayBuilt: 'priced',
   medicare: 'priced',
@@ -75,6 +83,7 @@ const ACA_PRICED: StalenessExposure = {
   blend: 'priced',
   spending: 'priced',
   workingYearTax: 'priced',
+  workingYearCost: 'priced',
   pricedState: undefined,
 }
 /** The all-65+ Medicare-only household: `healthcareEnabled` with NO quote pair, so the engine's
@@ -89,6 +98,7 @@ const MEDICARE_ONLY: StalenessExposure = {
   blend: 'unpriced',
   spending: 'unpriced',
   workingYearTax: 'unpriced',
+  workingYearCost: 'unpriced',
   pricedState: undefined,
 }
 /** The DEGENERATE household — `buildOverlay`'s early return (no accounts, no premium, no ongoing
@@ -102,6 +112,7 @@ const NO_OVERLAY: StalenessExposure = {
   blend: 'unpriced',
   spending: 'unpriced',
   workingYearTax: 'unpriced',
+  workingYearCost: 'unpriced',
   pricedState: undefined,
 }
 /** DELIBERATELY HYPOTHETICAL — a run with a tax overlay but no healthcare. Today's intake gate
@@ -119,6 +130,7 @@ const OVERLAY_NO_HEALTH: StalenessExposure = {
   blend: 'unpriced',
   spending: 'unpriced',
   workingYearTax: 'unpriced',
+  workingYearCost: 'unpriced',
   pricedState: undefined,
 }
 /** Undecidable on every axis — the unbuildable draft (a cross-build vault missing a fact a newer
@@ -131,6 +143,7 @@ const UNDECIDABLE: StalenessExposure = {
   blend: 'unknown',
   spending: 'unknown',
   workingYearTax: 'unknown',
+  workingYearCost: 'unknown',
   pricedState: undefined,
 }
 const pricing = (e: StalenessExposure, s: PricedState | undefined): StalenessExposure => ({
@@ -157,15 +170,24 @@ function freshDateSave(): ScenarioV3 {
 }
 
 describe('deriveStaleness — the property arm (a fresh save is never stale)', () => {
-  it.each(['retired', 'date', 'budget', 'borderline'] as const)(
+  // `dateshort` is the pay check's non-stale W witness: a W that still matches is no stale fact. (Never
+  // `datecoststale` here — it reads stale by design; the KTD21 arms below pin it.)
+  it.each(['retired', 'date', 'budget', 'borderline', 'datesolo', 'dateshort'] as const)(
     'a freshly-stamped %s save fires NO clock (every comparator diffs write-time truth against the same build)',
     (key) => {
       const r = scenarioFromDraft(DEV_SEEDS[key])
       if (!r.ready) return // non-save-ready seeds are covered by the registry arms elsewhere
-      // The REAL exposure for this REAL seed — the one arm in this file that joins the
-      // bucketing law to its actual producer (insight 095: probe the shipped decision path).
-      const report = deriveStaleness(stampedToday(r.scenario), TODAY, exposureForDraft(DEV_SEEDS[key]))
+      // The REAL exposure AND the real stale-answer predicate for this REAL seed — the one arm in
+      // this file that joins the bucketing law to its actual producers, exactly as IntakeApp's
+      // unlock calls them (insight 095: probe the shipped decision path).
+      const report = deriveStaleness(
+        stampedToday(r.scenario),
+        TODAY,
+        exposureForDraft(DEV_SEEDS[key]),
+        isWorkingYearCostStale(DEV_SEEDS[key]),
+      )
       expect(report.anyStale).toBe(false)
+      expect(report.workingYear).toEqual({ vintageMoved: false, costStale: false })
       expect(report.pricing).toEqual({ namedFamilies: [], hedged: false, reconfirmMedicareSpending: false, moved: false })
       expect(report.rulesMoved).toBe(false)
       expect(report.spine.appDefaultMoved).toBe(false)
@@ -190,7 +212,7 @@ describe('deriveStaleness — the legacy vault (absent stamps = not-applicable, 
     delete legacy.taxVintageDetail
     delete legacy.dateVintage
     delete legacy.healthcareVintage
-    const report = deriveStaleness(legacy as unknown as ScenarioV3, TODAY, ACA_PRICED)
+    const report = deriveStaleness(legacy as unknown as ScenarioV3, TODAY, ACA_PRICED, false)
     expect(report.rulesMoved).toBe(false)
     expect(report.unattributed.moved).toBe(false)
     expect(report.elapsed).toBeNull() // NEVER fabricated from startCalendarYear
@@ -210,38 +232,38 @@ describe('deriveStaleness — the legacy vault (absent stamps = not-applicable, 
 describe('deriveStaleness — the tax clock', () => {
   it('fires on a taxYear move and on a legalBasis wording change; quiet when identical', () => {
     const s = freshSave()
-    expect(deriveStaleness(s, TODAY, ACA_PRICED).controls.taxMoved).toBe(false)
+    expect(deriveStaleness(s, TODAY, ACA_PRICED, false).controls.taxMoved).toBe(false)
     const yearMoved = { ...s, taxVintageDetail: { ...s.taxVintageDetail!, taxYear: s.taxVintageDetail!.taxYear - 1 } }
-    expect(deriveStaleness(yearMoved, TODAY, ACA_PRICED).controls.taxMoved).toBe(true)
+    expect(deriveStaleness(yearMoved, TODAY, ACA_PRICED, false).controls.taxMoved).toBe(true)
     const basisMoved = { ...s, taxVintageDetail: { ...s.taxVintageDetail!, legalBasis: 'TCJA (pre-OBBBA)' } }
-    expect(deriveStaleness(basisMoved, TODAY, ACA_PRICED).controls.taxMoved).toBe(true)
-    expect(deriveStaleness(basisMoved, TODAY, ACA_PRICED).anyStale).toBe(true)
+    expect(deriveStaleness(basisMoved, TODAY, ACA_PRICED, false).controls.taxMoved).toBe(true)
+    expect(deriveStaleness(basisMoved, TODAY, ACA_PRICED, false).anyStale).toBe(true)
   })
 
   it('is EXPOSURE-GATED on the overlay existing, NOT on healthcare — a run with a tax overlay and no healthcare still fires (the clock reads its OWN bit)', () => {
     // THE REPLACED CLAIM (U17 §S4's F-pass): this arm used to assert the federal clock takes NO
     // exposure gate, on the premise "a household without an overlay reaches no verdict to be
-    // stale about". That premise is FALSE — `buildParams` (intakeMap.ts:707-723) returns a full
+    // stale about". That premise is FALSE — `buildParams` (intakeMap.ts:750-766) returns a full
     // params object for the $0-portfolio/no-overlay household and it gets a real verdict. A test
     // that pins a defect is the defect's second copy, so it is rewritten, not relaxed.
     //
     // What survives is the half that WAS true and still matters: `taxEnabled: true` is hardcoded
-    // on every built overlay (intakeMap.ts:660), so the gate must be `overlayBuilt` — a clock
+    // on every built overlay (intakeMap.ts:703), so the gate must be `overlayBuilt` — a clock
     // wired to `medicare` instead would silence a real federal rulebook move for this household.
     const s = freshSave()
     const basisMoved = { ...s, taxVintageDetail: { ...s.taxVintageDetail!, legalBasis: 'TCJA (pre-OBBBA)' } }
-    const report = deriveStaleness(basisMoved, TODAY, OVERLAY_NO_HEALTH)
+    const report = deriveStaleness(basisMoved, TODAY, OVERLAY_NO_HEALTH, false)
     expect(report.controls.taxMoved).toBe(true)
     expect(report.rulesMoved).toBe(true)
   })
 
   it('is SILENT for the DEGENERATE household — no overlay ⇒ `taxEnabled` never set ⇒ consumedConstants skips the whole `tax.` family ⇒ their recompute is byte-identical under any vintage', () => {
     // The population: save-ready, $0 accounts, Social-Security-only income ⇒ `buildOverlay`'s
-    // early return (intakeMap.ts:585-590). Reachable — `stalenessExposure.test.ts` builds exactly
+    // early return (intakeMap.ts:628-633). Reachable — `stalenessExposure.test.ts` builds exactly
     // this draft and proves `missingRequiredFacts` is empty for it.
     const s = freshSave()
     const basisMoved = { ...s, taxVintageDetail: { ...s.taxVintageDetail!, legalBasis: 'TCJA (pre-OBBBA)' } }
-    const silent = deriveStaleness(basisMoved, TODAY, NO_OVERLAY)
+    const silent = deriveStaleness(basisMoved, TODAY, NO_OVERLAY, false)
     expect(silent.controls.taxMoved, 'no tax constant was consumed — nothing to be stale about').toBe(false)
     expect(silent.rulesMoved, 'the hero echo must stay dark').toBe(false)
     expect(silent.anyStale, 'and it is not even "worth a look"').toBe(false)
@@ -252,13 +274,13 @@ describe('deriveStaleness — the tax clock', () => {
     // NON-VACUITY (insight 029): the SAME scenario with the SAME moved stamp fires the moment the
     // run builds an overlay. Only the exposure differs, so only the gate can separate them —
     // dropping it turns this arm red.
-    expect(deriveStaleness(basisMoved, TODAY, ACA_PRICED).controls.taxMoved).toBe(true)
+    expect(deriveStaleness(basisMoved, TODAY, ACA_PRICED, false).controls.taxMoved).toBe(true)
   })
 
   it('an UNDECIDABLE overlay read AGGREGATES the tax clock — nameless, `anyStale` only, never silent (silence must be EARNED)', () => {
     const s = freshSave()
     const basisMoved = { ...s, taxVintageDetail: { ...s.taxVintageDetail!, legalBasis: 'TCJA (pre-OBBBA)' } }
-    const report = deriveStaleness(basisMoved, TODAY, UNDECIDABLE)
+    const report = deriveStaleness(basisMoved, TODAY, UNDECIDABLE, false)
     expect(report.controls.taxMoved).toBe(false)
     expect(report.rulesMoved).toBe(false)
     expect(report.unattributed).toEqual({ moved: true, clocks: ['tax'] })
@@ -276,9 +298,9 @@ describe('deriveStaleness — the state-tax clock (exposure-gated on the state t
 
   it('FIRES for a run that PRICED NC and whose NC profile drifted — and raises rulesMoved/anyStale', () => {
     const s = { ...freshSave(), retirementState: 'NC' as const }
-    expect(deriveStaleness(s, TODAY, pricing(ACA_PRICED, 'NC')).controls.stateTaxMoved, 'a fresh save is quiet').toBe(false)
+    expect(deriveStaleness(s, TODAY, pricing(ACA_PRICED, 'NC'), false).controls.stateTaxMoved, 'a fresh save is quiet').toBe(false)
     const moved = drift(s, { ncProfile: '{"drifted":"nc"}' })
-    const report = deriveStaleness(moved, TODAY, pricing(ACA_PRICED, 'NC'))
+    const report = deriveStaleness(moved, TODAY, pricing(ACA_PRICED, 'NC'), false)
     expect(report.controls.stateTaxMoved).toBe(true)
     expect(report.rulesMoved).toBe(true)
     expect(report.anyStale).toBe(true)
@@ -289,9 +311,9 @@ describe('deriveStaleness — the state-tax clock (exposure-gated on the state t
     // existed anywhere in the file, so a paProfile→ncProfile mis-selection survived the whole
     // suite (the wrong-profile mutant the derived stateProfileKey now makes structural).
     const s = { ...freshSave(), retirementState: 'PA' as const }
-    expect(deriveStaleness(s, TODAY, pricing(ACA_PRICED, 'PA')).controls.stateTaxMoved, 'a fresh save is quiet').toBe(false)
+    expect(deriveStaleness(s, TODAY, pricing(ACA_PRICED, 'PA'), false).controls.stateTaxMoved, 'a fresh save is quiet').toBe(false)
     const moved = drift(s, { paProfile: '{"drifted":"pa"}' })
-    const report = deriveStaleness(moved, TODAY, pricing(ACA_PRICED, 'PA'))
+    const report = deriveStaleness(moved, TODAY, pricing(ACA_PRICED, 'PA'), false)
     expect(report.controls.stateTaxMoved).toBe(true)
     expect(report.rulesMoved).toBe(true)
   })
@@ -303,11 +325,11 @@ describe('deriveStaleness — the state-tax clock (exposure-gated on the state t
     // producer's-output exposure says the run built no overlay, so only the new gate can be
     // reading. Restoring `isPricedState(scenario.retirementState)` turns this red.
     const s = drift({ ...freshSave(), retirementState: 'NC' as const }, { ncProfile: '{"drifted":"nc"}' })
-    const report = deriveStaleness(s, TODAY, pricing(ACA_PRICED, undefined))
+    const report = deriveStaleness(s, TODAY, pricing(ACA_PRICED, undefined), false)
     expect(report.controls.stateTaxMoved).toBe(false)
     expect(report.rulesMoved).toBe(false)
     // …and the SAME scenario with the SAME stamp fires the moment the run does price NC.
-    expect(deriveStaleness(s, TODAY, pricing(ACA_PRICED, 'NC')).controls.stateTaxMoved).toBe(true)
+    expect(deriveStaleness(s, TODAY, pricing(ACA_PRICED, 'NC'), false).controls.stateTaxMoved).toBe(true)
   })
 
   it("ROUTE-TRUE quiet: an 'elsewhere' / absent / unbuilt-roster household prices no state, so a drifted stamp NEVER fires", () => {
@@ -318,7 +340,7 @@ describe('deriveStaleness — the state-tax clock (exposure-gated on the state t
         ncProfile: '{"drifted":"nc"}',
         paProfile: '{"drifted":"pa"}',
       })
-      const report = deriveStaleness(s, TODAY, pricing(ACA_PRICED, undefined))
+      const report = deriveStaleness(s, TODAY, pricing(ACA_PRICED, undefined), false)
       expect(report.controls.stateTaxMoved, `${String(code)}`).toBe(false)
       expect(report.rulesMoved, `${String(code)}`).toBe(false)
     }
@@ -326,22 +348,22 @@ describe('deriveStaleness — the state-tax clock (exposure-gated on the state t
 
   it('PER-STATE: an NC-priced run compares ONLY its ncProfile — a PA/FL profile drift never alarms it (the alarm-when-fine the header refuses)', () => {
     const s = drift({ ...freshSave(), retirementState: 'NC' as const }, { paProfile: '{"drifted":"pa"}', flProfile: '{"drifted":"fl"}' })
-    expect(deriveStaleness(s, TODAY, pricing(ACA_PRICED, 'NC')).controls.stateTaxMoved).toBe(false)
+    expect(deriveStaleness(s, TODAY, pricing(ACA_PRICED, 'NC'), false).controls.stateTaxMoved).toBe(false)
   })
 
   it('quiet on an IDENTICAL stamp (same build), and on an ABSENT stamp (a pre-unit vault has nothing to compare)', () => {
     const nc = { ...freshSave(), retirementState: 'NC' as const }
-    expect(deriveStaleness(nc, TODAY, pricing(ACA_PRICED, 'NC')).controls.stateTaxMoved).toBe(false)
+    expect(deriveStaleness(nc, TODAY, pricing(ACA_PRICED, 'NC'), false).controls.stateTaxMoved).toBe(false)
     const noStamp = { ...nc } as Record<string, unknown>
     delete noStamp.stateTaxVintage
     expect(
-      deriveStaleness(noStamp as unknown as ScenarioV3, TODAY, pricing(ACA_PRICED, 'NC')).controls.stateTaxMoved,
+      deriveStaleness(noStamp as unknown as ScenarioV3, TODAY, pricing(ACA_PRICED, 'NC'), false).controls.stateTaxMoved,
     ).toBe(false)
   })
 
   it('FL is a constitutional $0 — byte-identical forever; an FL-priced run reads clean on a fresh stamp', () => {
     const fl = { ...freshSave(), retirementState: 'FL' as const }
-    expect(deriveStaleness(fl, TODAY, pricing(ACA_PRICED, 'FL')).controls.stateTaxMoved).toBe(false)
+    expect(deriveStaleness(fl, TODAY, pricing(ACA_PRICED, 'FL'), false).controls.stateTaxMoved).toBe(false)
   })
 })
 
@@ -352,7 +374,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
 
   it('acaVerifiedOn ALONE is provenance, never drift (re-verify same-law must not stale every vault monthly)', () => {
     const reVerified = withStamp({ acaVerifiedOn: '2031-01-01' })
-    const report = deriveStaleness(reVerified, TODAY, ACA_PRICED)
+    const report = deriveStaleness(reVerified, TODAY, ACA_PRICED, false)
     expect(report.healthcare.moved).toBe(false)
     expect(report.healthcare.silencedClocks).toEqual([])
     expect(report.unattributed.moved).toBe(false)
@@ -363,7 +385,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
   // NOTHING but the exposure read, so only the gate can separate them (insight 029).
   it('THE WITNESS (silence): an all-65+ Medicare-only household whose acaStatus stamp MOVED is SILENT on the ACA family — no named clock, no rulesMoved', () => {
     const moved = withStamp({ acaStatus: 'enhanced subsidies restored (no cliff)' })
-    const report = deriveStaleness(moved, TODAY, MEDICARE_ONLY)
+    const report = deriveStaleness(moved, TODAY, MEDICARE_ONLY, false)
     expect(report.healthcare.movedClocks, 'the clock must not NAME itself').toEqual([])
     expect(report.healthcare.acaMoved).toBe(false)
     expect(report.healthcare.moved).toBe(false)
@@ -376,7 +398,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
 
   it('THE WITNESS (naming): the SAME moved acaStatus stamp on an ACA-priced household still gets its named line and raises rulesMoved', () => {
     const moved = withStamp({ acaStatus: 'enhanced subsidies restored (no cliff)' })
-    const report = deriveStaleness(moved, TODAY, ACA_PRICED)
+    const report = deriveStaleness(moved, TODAY, ACA_PRICED, false)
     expect(report.healthcare.movedClocks).toEqual(['aca-status'])
     expect(report.healthcare.acaMoved).toBe(true)
     expect(report.healthcare.silencedClocks).toEqual([])
@@ -385,8 +407,8 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
 
   it('the ACA family is BOTH clocks: fplGuidelineYear rides the same exposure read as acaStatus', () => {
     const moved = withStamp({ fplGuidelineYear: hv.fplGuidelineYear + 1 })
-    expect(deriveStaleness(moved, TODAY, ACA_PRICED).healthcare.movedClocks).toEqual(['fpl-guideline'])
-    expect(deriveStaleness(moved, TODAY, MEDICARE_ONLY).healthcare.silencedClocks).toEqual(['fpl-guideline'])
+    expect(deriveStaleness(moved, TODAY, ACA_PRICED, false).healthcare.movedClocks).toEqual(['fpl-guideline'])
+    expect(deriveStaleness(moved, TODAY, MEDICARE_ONLY, false).healthcare.silencedClocks).toEqual(['fpl-guideline'])
   })
 
   it.each([
@@ -401,7 +423,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     'the Medicare family (%s) NAMES itself for a Medicare-priced run and is SILENT for a run that built no healthcare overlay',
     (clock, over) => {
       const moved = withStamp(over)
-      const named = deriveStaleness(moved, TODAY, MEDICARE_ONLY)
+      const named = deriveStaleness(moved, TODAY, MEDICARE_ONLY, false)
       expect(named.healthcare.movedClocks).toEqual([clock])
       expect(named.healthcare.medicareMoved).toBe(true)
       expect(named.healthcare.acaMoved, 'a Medicare clock never speaks the marketplace line').toBe(false)
@@ -410,7 +432,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
       // Medicare-bearing year both routes reach". FALSE: `partBPricingByT` is built only under
       // `healthcareEnabled && taxEnabled` (taxOverlay.ts:1974-1975). Reverting it to ungated
       // reds this arm.
-      const silent = deriveStaleness(moved, TODAY, NO_OVERLAY)
+      const silent = deriveStaleness(moved, TODAY, NO_OVERLAY, false)
       expect(silent.healthcare.movedClocks).toEqual([])
       expect(silent.healthcare.silencedClocks).toEqual([clock])
       expect(silent.rulesMoved).toBe(false)
@@ -426,7 +448,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     // priced against SUPERSEDED IRMAA brackets. A silent stale, on the one clock the repo's own
     // tripwire promises will move.
     const reindexed = withStamp({ irmaaTopTierFrozenThrough: hv.irmaaTopTierFrozenThrough + 1 })
-    const report = deriveStaleness(reindexed, TODAY, MEDICARE_ONLY)
+    const report = deriveStaleness(reindexed, TODAY, MEDICARE_ONLY, false)
     expect(report.healthcare.movedClocks).toEqual(['irmaa-freeze'])
     expect(report.healthcare.medicareMoved, 'the Medicare cost line renders').toBe(true)
     expect(report.rulesMoved, 'the hero echo may ride — their brackets genuinely moved').toBe(true)
@@ -436,19 +458,19 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     })
   })
 
-  it('`coverage-year` dates BOTH tables (model.ts:2508) — it names each family the run PRICED, and only those', () => {
+  it('`coverage-year` dates BOTH tables (model.ts:2580) — it names each family the run PRICED, and only those', () => {
     // It is the ONLY marker for every annually-re-indexed health figure with no stamp of its own
     // (the four interior IRMAA thresholds, the ACA applicable-percentage bands, the age-rating
     // curve), so bucketing it nameless hid the annual re-key from the pre-65 planner it hits
     // hardest. Naming BOTH families unconditionally would be the opposite lie — hence per-family.
     const moved = withStamp({ coverageYear: hv.coverageYear + 1 })
-    const both = deriveStaleness(moved, TODAY, ACA_PRICED)
+    const both = deriveStaleness(moved, TODAY, ACA_PRICED, false)
     expect(both.healthcare.movedClocks).toEqual(['coverage-year'])
     expect(both.healthcare.acaMoved).toBe(true)
     expect(both.healthcare.medicareMoved).toBe(true)
     expect(both.rulesMoved).toBe(true)
     // The all-65+ household prices the IRMAA half and NOT the marketplace half: one line, not two.
-    const medicareOnly = deriveStaleness(moved, TODAY, MEDICARE_ONLY)
+    const medicareOnly = deriveStaleness(moved, TODAY, MEDICARE_ONLY, false)
     expect(medicareOnly.healthcare.movedClocks).toEqual(['coverage-year'])
     expect(medicareOnly.healthcare.medicareMoved).toBe(true)
     expect(medicareOnly.healthcare.acaMoved, 'they price ZERO ACA — that sentence would be false').toBe(false)
@@ -456,7 +478,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
 
   it('the vintage markers go SILENT when the run priced NO healthcare at all — consumedConstants gates the whole health.* family on healthcareEnabled', () => {
     const moved = withStamp({ coverageYear: hv.coverageYear + 1, irmaaTopTierFrozenThrough: hv.irmaaTopTierFrozenThrough + 1 })
-    const report = deriveStaleness(moved, TODAY, NO_OVERLAY)
+    const report = deriveStaleness(moved, TODAY, NO_OVERLAY, false)
     expect(report.healthcare.silencedClocks).toEqual(['coverage-year', 'irmaa-freeze'])
     expect(report.unattributed).toEqual({ moved: false, clocks: [] })
     expect(report.anyStale).toBe(false)
@@ -466,7 +488,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     // The date-route ACA household: the base quote stream is positive, but a work-to-65+ crown
     // window-gates ACA to zero years (insight 088), and no crown exists at the gate.
     const moved = withStamp({ acaStatus: 'enhanced subsidies restored (no cliff)' })
-    const report = deriveStaleness(moved, TODAY, UNDECIDABLE)
+    const report = deriveStaleness(moved, TODAY, UNDECIDABLE, false)
     expect(report.healthcare.movedClocks).toEqual([])
     expect(report.healthcare.silencedClocks).toEqual([])
     expect(report.unattributed).toEqual({ moved: true, clocks: ['aca-status'] })
@@ -482,7 +504,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     const exposedAbsent = { ...s, healthcareVintage: movedStamp } as Record<string, unknown>
     delete exposedAbsent.medicareExtrasByPerson
     expect(
-      deriveStaleness(exposedAbsent as unknown as ScenarioV3, TODAY, MEDICARE_ONLY).healthcare.movedClocks,
+      deriveStaleness(exposedAbsent as unknown as ScenarioV3, TODAY, MEDICARE_ONLY, false).healthcare.movedClocks,
     ).toEqual(['extras-typical'])
     // (b) Typical-exposed by an explicit 'typical'/'unanswered' entry.
     const exposedTypical = {
@@ -493,7 +515,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
         { kind: 'typical' as const, adoptionVintage: 'extras-2024x' },
       ],
     }
-    expect(deriveStaleness(exposedTypical, TODAY, MEDICARE_ONLY).healthcare.movedClocks).toEqual(['extras-typical'])
+    expect(deriveStaleness(exposedTypical, TODAY, MEDICARE_ONLY, false).healthcare.movedClocks).toEqual(['extras-typical'])
     // (c) An all-EXPLICIT household (entered + affirmed-$0) does not care the typical moved —
     // firing would be alarm-when-fine.
     const explicit = {
@@ -504,7 +526,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
         { kind: 'none' as const },
       ],
     }
-    expect(deriveStaleness(explicit, TODAY, MEDICARE_ONLY).healthcare.movedClocks).toEqual([])
+    expect(deriveStaleness(explicit, TODAY, MEDICARE_ONLY, false).healthcare.movedClocks).toEqual([])
     // (d) A pre-extras-unit stamp LACKS the vintage — not-comparable, quiet (never coerced
     // to "unchanged", and never fired off absence).
     const preUnit = { ...s } as Record<string, unknown>
@@ -513,7 +535,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     preUnit.healthcareVintage = legacyHv
     delete preUnit.medicareExtrasByPerson
     expect(
-      deriveStaleness(preUnit as unknown as ScenarioV3, TODAY, MEDICARE_ONLY).healthcare.movedClocks,
+      deriveStaleness(preUnit as unknown as ScenarioV3, TODAY, MEDICARE_ONLY, false).healthcare.movedClocks,
     ).toEqual([])
   })
 
@@ -526,7 +548,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
       healthcareVintage: { ...hv, medicareExtrasTypicalVintage: 'extras-2024x' },
     } as Record<string, unknown>
     delete exposedAbsent.medicareExtrasByPerson
-    const report = deriveStaleness(exposedAbsent as unknown as ScenarioV3, TODAY, NO_OVERLAY)
+    const report = deriveStaleness(exposedAbsent as unknown as ScenarioV3, TODAY, NO_OVERLAY, false)
     expect(report.healthcare.movedClocks).toEqual([])
     expect(report.healthcare.silencedClocks).toEqual(['extras-typical'])
     expect(report.rulesMoved).toBe(false)
@@ -540,7 +562,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     const legacyHv = { ...hv } as Record<string, unknown>
     delete legacyHv.partBTrendVintage
     const preTrend = { ...s, healthcareVintage: legacyHv } as unknown as ScenarioV3
-    const report = deriveStaleness(preTrend, TODAY, MEDICARE_ONLY)
+    const report = deriveStaleness(preTrend, TODAY, MEDICARE_ONLY, false)
     expect(report.healthcare.movedClocks).toEqual([])
     expect(report.healthcare.silencedClocks).toEqual([])
   })
@@ -584,7 +606,7 @@ describe('deriveStaleness — every healthcare clock names exactly the families 
 
   /** WHICH SENTENCE each clock is allowed to speak — the law, restated by hand. */
   const FAMILY: Readonly<Record<HealthcareClock, { readonly aca: boolean; readonly medicare: boolean }>> = {
-    'coverage-year': { aca: true, medicare: true }, // "the ACA/IRMAA tables" (model.ts:2508)
+    'coverage-year': { aca: true, medicare: true }, // "the ACA/IRMAA tables" (model.ts:2580)
     'aca-status': { aca: true, medicare: false },
     'fpl-guideline': { aca: true, medicare: false },
     'irmaa-freeze': { aca: false, medicare: true }, // dates the IRMAA schedule (the F1 ruling)
@@ -608,7 +630,7 @@ describe('deriveStaleness — every healthcare clock names exactly the families 
     '%s fires alone, names exactly its own families, and NEVER raises rulesMoved without a line beneath it',
     (clock) => {
       const moved: ScenarioV3 = { ...base, healthcareVintage: { ...hv, ...MUTATION[clock] } }
-      const report = deriveStaleness(moved, TODAY, ACA_PRICED)
+      const report = deriveStaleness(moved, TODAY, ACA_PRICED, false)
       expect(report.healthcare.movedClocks, `${clock}: fires, and alone`).toEqual([clock])
       expect(report.healthcare.acaMoved, `${clock}: the ACA line`).toBe(FAMILY[clock].aca)
       expect(report.healthcare.medicareMoved, `${clock}: the Medicare line`).toBe(FAMILY[clock].medicare)
@@ -628,7 +650,7 @@ describe('deriveStaleness — every healthcare clock names exactly the families 
     // names the Medicare half). This is what makes the per-family conjunct falsifiable.
     for (const clock of CLOCKS) {
       const moved: ScenarioV3 = { ...base, healthcareVintage: { ...hv, ...MUTATION[clock] } }
-      const report = deriveStaleness(moved, TODAY, MEDICARE_ONLY)
+      const report = deriveStaleness(moved, TODAY, MEDICARE_ONLY, false)
       const speaks = FAMILY[clock].medicare
       expect(report.healthcare.movedClocks, `${clock}`).toEqual(speaks ? [clock] : [])
       expect(report.healthcare.silencedClocks, `${clock}`).toEqual(speaks ? [] : [clock])
@@ -641,15 +663,16 @@ describe('deriveStaleness — the date clocks', () => {
   it('contributionYear NAMES itself for a date-route run that actually prices a stream; blendSnapshotAsOf AGGREGATES for a table-reading household', () => {
     const s = freshDateSave()
     const dv = s.dateVintage!
-    expect(deriveStaleness(s, TODAY, ACA_PRICED).date).toEqual({ contributionMoved: false, blendMoved: false })
+    expect(deriveStaleness(s, TODAY, ACA_PRICED, false).date).toEqual({ contributionMoved: false, blendMoved: false })
     const contributionMoved = deriveStaleness(
       { ...s, dateVintage: { ...dv, contributionYear: dv.contributionYear - 1 } },
       TODAY,
       ACA_PRICED,
+      false,
     )
     expect(contributionMoved.date.contributionMoved).toBe(true)
     expect(contributionMoved.rulesMoved, 'their built overlay carries real contribution streams').toBe(true)
-    const blendMoved = deriveStaleness({ ...s, dateVintage: { ...dv, blendSnapshotAsOf: '2019-01-01' } }, TODAY, ACA_PRICED)
+    const blendMoved = deriveStaleness({ ...s, dateVintage: { ...dv, blendSnapshotAsOf: '2019-01-01' } }, TODAY, ACA_PRICED, false)
     expect(blendMoved.date.blendMoved).toBe(true)
     expect(blendMoved.unattributed).toEqual({ moved: true, clocks: ['blend'] })
     expect(blendMoved.rulesMoved).toBe(false)
@@ -663,6 +686,7 @@ describe('deriveStaleness — the date clocks', () => {
       { ...s, dateVintage: { ...dv, contributionYear: dv.contributionYear - 1 } },
       TODAY,
       MEDICARE_ONLY,
+      false,
     )
     expect(contributionBumped.date.contributionMoved).toBe(false)
     expect(contributionBumped.anyStale).toBe(false)
@@ -672,22 +696,22 @@ describe('deriveStaleness — the date clocks', () => {
     // The population: 66/retired holding everything + 62/working holding nothing. They ARE on
     // the date route, and `dateSearch.ts:254` DOES force `accumulation` onto every candidate —
     // but it fills it from the BASE overlay's streams, and `contributionStreamsFor` returns `{}`
-    // for a non-working owner (intakeMap.ts:474-477). Their candidates sweep with empty streams and
+    // for a non-working owner (intakeMap.ts:501-504). Their candidates sweep with empty streams and
     // read no limit. Same fixture, same moved stamp, ONE differing read (insight 029).
     const s = freshDateSave()
     const bumped = {
       ...s,
       dateVintage: { ...s.dateVintage!, contributionYear: s.dateVintage!.contributionYear - 1 },
     }
-    const silent = deriveStaleness(bumped, TODAY, withRead(ACA_PRICED, { contributions: 'unpriced' }))
+    const silent = deriveStaleness(bumped, TODAY, withRead(ACA_PRICED, { contributions: 'unpriced' }), false)
     expect(silent.date.contributionMoved, 'scaling zero is zero').toBe(false)
     expect(silent.rulesMoved).toBe(false)
     expect(silent.anyStale).toBe(false)
     expect(silent.unattributed, 'PROVEN unexposed ⇒ silenced, not aggregated').toEqual({ moved: false, clocks: [] })
     // NON-VACUITY: the contributing household still gets its named line off the same stamp.
-    expect(deriveStaleness(bumped, TODAY, ACA_PRICED).date.contributionMoved).toBe(true)
+    expect(deriveStaleness(bumped, TODAY, ACA_PRICED, false).date.contributionMoved).toBe(true)
     // …and an UNDECIDABLE read aggregates rather than silencing (an unbuildable draft).
-    const undecidable = deriveStaleness(bumped, TODAY, withRead(ACA_PRICED, { contributions: 'unknown' }))
+    const undecidable = deriveStaleness(bumped, TODAY, withRead(ACA_PRICED, { contributions: 'unknown' }), false)
     expect(undecidable.date.contributionMoved).toBe(false)
     expect(undecidable.unattributed).toEqual({ moved: true, clocks: ['contribution'] })
     expect(undecidable.anyStale).toBe(true)
@@ -702,6 +726,7 @@ describe('deriveStaleness — the date clocks', () => {
       { ...s, dateVintage: { ...s.dateVintage!, blendSnapshotAsOf: '2019-01-01' } },
       TODAY,
       ACA_PRICED,
+      false,
     )
     expect(blendBumped.date.blendMoved).toBe(true)
     expect(blendBumped.unattributed).toEqual({ moved: true, clocks: ['blend'] })
@@ -723,6 +748,7 @@ describe('deriveStaleness — the date clocks', () => {
       { ...s, dateVintage: { ...s.dateVintage!, blendSnapshotAsOf: '2019-01-01' } },
       TODAY,
       MEDICARE_ONLY,
+      false,
     )
     expect(blendBumped.date.blendMoved, 'the stamp genuinely moved — the silence is the gate biting').toBe(true)
     expect(blendBumped.unattributed).toEqual({ moved: false, clocks: [] })
@@ -734,8 +760,150 @@ describe('deriveStaleness — the date clocks', () => {
         { ...s, dateVintage: { ...s.dateVintage!, blendSnapshotAsOf: '2019-01-01' } },
         TODAY,
         withRead(MEDICARE_ONLY, { blend: 'priced' }),
+        false,
       ).unattributed,
     ).toEqual({ moved: true, clocks: ['blend'] })
+  })
+})
+
+/** The working-years stamp a save made under the previous table carries (typed by hand — any value
+ *  other than the current stamp; the current one is source-bound in `vintageStamps.test.ts`). */
+const OLDER_WORKING_YEARS_STAMP = 'working-years-2025a'
+
+/** `DEV_SEEDS.date` with no W (whatever a later build gives the seed), and the same household with
+ *  W confirmed — the answer typed by hand from the seed's own facts: no budget, so the quote is the
+ *  spending figure, $84,000 a year; no retirement state, so the reading is 'unpriced' (KTD5, KTD18). */
+const { workingYearCost: _seedW, ...DATE_NO_W } = DEV_SEEDS.date
+const DATE_WITH_W: ScenarioDraft = {
+  ...DATE_NO_W,
+  workingYearCost: { kind: 'confirmed', quotedReal: 84_000, stateTaxReading: 'unpriced' },
+}
+
+/** A fresh save of `d`, its working-years stamp set to `stamp` (`undefined` deletes it). */
+function savedWithWorkingYearsStamp(d: ScenarioDraft, stamp: string | undefined): ScenarioV3 {
+  const r = scenarioFromDraft(d)
+  if (!r.ready) throw new Error('the fixture draft should be save-ready')
+  const { workingYearsVintage: _current, ...rest } = r.scenario.dateVintage!
+  return stampedToday({
+    ...r.scenario,
+    dateVintage: stamp === undefined ? rest : { ...rest, workingYearsVintage: stamp },
+  })
+}
+
+describe('deriveStaleness — the working-years clock (the pay check\'s U13)', () => {
+  it('a fresh save carries the stamp and is QUIET (the identical-stamp arm — non-vacuous: the stamp is there to compare)', () => {
+    const s = freshDateSave()
+    expect(s.dateVintage?.workingYearsVintage, 'every save mints the stamp').toBeDefined()
+    const report = deriveStaleness(s, TODAY, ACA_PRICED, false)
+    expect(report.workingYear).toEqual({ vintageMoved: false, costStale: false })
+    expect(report.rulesMoved).toBe(false)
+    expect(report.anyStale).toBe(false)
+  })
+
+  it('an OLDER stamp on a run that carries W NAMES the clock — rulesMoved, anyStale, nothing aggregated, no other clock', () => {
+    const s = savedWithWorkingYearsStamp(DEV_SEEDS.date, OLDER_WORKING_YEARS_STAMP)
+    const report = deriveStaleness(s, TODAY, ACA_PRICED, false)
+    expect(report.workingYear).toEqual({ vintageMoved: true, costStale: false })
+    expect(report.rulesMoved, 'a rulebook the run reads moved ⇒ the hero echo may ride').toBe(true)
+    expect(report.anyStale).toBe(true)
+    expect(report.unattributed).toEqual({ moved: false, clocks: [] })
+    // Isolation: the stamp is the only thing that moved.
+    expect(report.date).toEqual({ contributionMoved: false, blendMoved: false })
+    expect(report.controls).toEqual({ taxMoved: false, stateTaxMoved: false })
+    expect(report.healthcare.moved).toBe(false)
+    expect(report.pricing.moved).toBe(false)
+  })
+
+  it('the same older stamp on a run PROVEN not to carry W is SILENT — it reads the table nowhere (KTD1)', () => {
+    const s = savedWithWorkingYearsStamp(DEV_SEEDS.date, OLDER_WORKING_YEARS_STAMP)
+    const report = deriveStaleness(s, TODAY, withRead(ACA_PRICED, { workingYearCost: 'unpriced' }), false)
+    expect(report.workingYear.vintageMoved).toBe(false)
+    expect(report.rulesMoved).toBe(false)
+    expect(report.anyStale).toBe(false)
+    expect(report.unattributed, 'PROVEN unexposed ⇒ silenced, not aggregated').toEqual({ moved: false, clocks: [] })
+  })
+
+  it('an UNDECIDABLE read AGGREGATES — nameless, anyStale only, never rulesMoved (silence must be earned)', () => {
+    const s = savedWithWorkingYearsStamp(DEV_SEEDS.date, OLDER_WORKING_YEARS_STAMP)
+    const report = deriveStaleness(s, TODAY, withRead(ACA_PRICED, { workingYearCost: 'unknown' }), false)
+    expect(report.workingYear.vintageMoved).toBe(false)
+    expect(report.unattributed).toEqual({ moved: true, clocks: ['workingYears'] })
+    expect(report.rulesMoved).toBe(false)
+    expect(report.anyStale).toBe(true)
+  })
+
+  it('a save WITHOUT the stamp (minted before the table had one) is not comparable — quiet on every read, never "moved"', () => {
+    const s = savedWithWorkingYearsStamp(DEV_SEEDS.date, undefined)
+    expect(s.dateVintage, 'the date stamp itself is still there').toBeDefined()
+    expect(s.dateVintage?.workingYearsVintage).toBeUndefined()
+    for (const read of ['priced', 'unknown', 'unpriced'] as const) {
+      const report = deriveStaleness(s, TODAY, withRead(ACA_PRICED, { workingYearCost: read }), false)
+      expect(report.workingYear.vintageMoved, read).toBe(false)
+      expect(report.unattributed, read).toEqual({ moved: false, clocks: [] })
+      expect(report.anyStale, read).toBe(false)
+    }
+  })
+
+  it('through the REAL exposure: a W-present plan saved under the older stamp names the clock; the same plan without W never does (U13\'s two scenarios)', () => {
+    const withW = savedWithWorkingYearsStamp(DATE_WITH_W, OLDER_WORKING_YEARS_STAMP)
+    const named = deriveStaleness(withW, TODAY, exposureForDraft(DATE_WITH_W), isWorkingYearCostStale(DATE_WITH_W))
+    expect(named.workingYear).toEqual({ vintageMoved: true, costStale: false })
+    expect(named.rulesMoved).toBe(true)
+    const withoutW = savedWithWorkingYearsStamp(DATE_NO_W, OLDER_WORKING_YEARS_STAMP)
+    const silent = deriveStaleness(withoutW, TODAY, exposureForDraft(DATE_NO_W), isWorkingYearCostStale(DATE_NO_W))
+    expect(silent.workingYear).toEqual({ vintageMoved: false, costStale: false })
+    expect(silent.unattributed.clocks).not.toContain('workingYears')
+    expect(silent.rulesMoved).toBe(false)
+  })
+})
+
+describe('deriveStaleness — a stale W answer (the pay check\'s KTD21): worth a look, never a rules change', () => {
+  it('the flag raises anyStale and costStale, and NEVER rulesMoved — the engine keeps the last figure given (R4)', () => {
+    const s = freshDateSave()
+    const report = deriveStaleness(s, TODAY, ACA_PRICED, true)
+    expect(report.workingYear).toEqual({ vintageMoved: false, costStale: true })
+    expect(report.anyStale).toBe(true)
+    expect(report.rulesMoved, 'no rule moved — the hero echo and conjunct 3 must not ride this').toBe(false)
+    expect(report.unattributed).toEqual({ moved: false, clocks: [] })
+  })
+
+  it('the flag false and nothing else moved ⇒ nothing at all', () => {
+    const report = deriveStaleness(freshDateSave(), TODAY, ACA_PRICED, false)
+    expect(report.workingYear.costStale).toBe(false)
+    expect(report.anyStale).toBe(false)
+  })
+
+  it('a stale W on a run PROVEN not to read W (a W left on a spine draft) is silent; an UNDECIDABLE run keeps the line (fail-safe)', () => {
+    const s = freshSave()
+    const spine = deriveStaleness(s, TODAY, withRead(MEDICARE_ONLY, { workingYearCost: 'unpriced' }), true)
+    expect(spine.workingYear.costStale).toBe(false)
+    expect(spine.anyStale).toBe(false)
+    const undecidable = deriveStaleness(s, TODAY, withRead(MEDICARE_ONLY, { workingYearCost: 'unknown' }), true)
+    expect(undecidable.workingYear.costStale).toBe(true)
+    expect(undecidable.anyStale).toBe(true)
+    expect(undecidable.rulesMoved).toBe(false)
+  })
+
+  it('beside a moved working-years stamp both facts stand: the clock rides rulesMoved, the stale answer stays anyStale-only', () => {
+    const s = savedWithWorkingYearsStamp(DEV_SEEDS.date, OLDER_WORKING_YEARS_STAMP)
+    const report = deriveStaleness(s, TODAY, ACA_PRICED, true)
+    expect(report.workingYear).toEqual({ vintageMoved: true, costStale: true })
+    expect(report.rulesMoved).toBe(true)
+    expect(report.anyStale).toBe(true)
+  })
+
+  it('through the REAL predicate: a plan saved stale on its W answer (spending moved after the yes) reads costStale, never rulesMoved', () => {
+    // The household confirmed $84,000, then raised its spending to $90,000 — the quote moved, the
+    // answer did not (KTD21's quoteMoved).
+    const stale: ScenarioDraft = { ...DATE_WITH_W, annualSpendingReal: 90_000 }
+    expect(isWorkingYearCostStale(stale), 'the fixture is stale').toBe(true)
+    expect(isWorkingYearCostStale(DATE_WITH_W), 'its unmoved twin is not').toBe(false)
+    const r = scenarioFromDraft(stale)
+    if (!r.ready) throw new Error('the stale-W fixture should be save-ready')
+    const report = deriveStaleness(stampedToday(r.scenario), TODAY, exposureForDraft(stale), isWorkingYearCostStale(stale))
+    expect(report.workingYear).toEqual({ vintageMoved: false, costStale: true })
+    expect(report.anyStale).toBe(true)
+    expect(report.rulesMoved).toBe(false)
   })
 })
 
@@ -745,13 +913,13 @@ describe('deriveStaleness — the Q7 saved-era rule (the council-rebuilt directi
   // SHAPE the U17-inheritable map locks in.
   it('a save from an UNKNOWN era is not-comparable — quiet, never coerced to "not overridden"', () => {
     const s = { ...freshSave(), appDefaultVersion: 'p9-from-the-future' }
-    expect(deriveStaleness(s, TODAY, ACA_PRICED).spine.appDefaultMoved).toBe(false)
+    expect(deriveStaleness(s, TODAY, ACA_PRICED, false).spine.appDefaultMoved).toBe(false)
   })
 
   it('same version → quiet regardless of the household value', () => {
     const s = { ...freshSave(), survivorSpendingRatio: 0.5 }
     expect(s.appDefaultVersion).toBe(CURRENT_APP_DEFAULT_VERSION)
-    expect(deriveStaleness(s, TODAY, ACA_PRICED).spine.appDefaultMoved).toBe(false)
+    expect(deriveStaleness(s, TODAY, ACA_PRICED, false).spine.appDefaultMoved).toBe(false)
   })
 
   it('the DIRECTION law, proven by construction: with a known differing era, the took-the-default household FIRES and the overrider is IMMUNE', () => {
@@ -762,7 +930,7 @@ describe('deriveStaleness — the Q7 saved-era rule (the council-rebuilt directi
     const tookDefault = { ...freshSave(), survivorSpendingRatio: era.survivorSpendingRatio }
     const overrode = { ...freshSave(), survivorSpendingRatio: era.survivorSpendingRatio - 0.1 }
     // Same-version guard first (both quiet today)…
-    expect(deriveStaleness(tookDefault, TODAY, ACA_PRICED).spine.appDefaultMoved).toBe(false)
+    expect(deriveStaleness(tookDefault, TODAY, ACA_PRICED, false).spine.appDefaultMoved).toBe(false)
     // …then the cross-era shape via a version alias: if a future era 'p9' reuses the same
     // defaults, a p2-d1 saved household compares against p2-d1's OWN defaults, not p9's.
     // (Direct cross-era firing becomes testable the day a second era entry ships; this
@@ -780,7 +948,7 @@ describe('deriveStaleness — the senior-bonus sunset has NO clock (a dated supe
     // the engine-pricing rows, a different clock this arm is not about).
     const savedIn2026 = { ...s, savedAt: FIRST_UNAMBIGUOUS_SAVE_DAY }
     expect(epochDayToCalendarYear(FIRST_UNAMBIGUOUS_SAVE_DAY), 'the save sits inside the bonus window (it sunsets after 2028) — a later ledger row past it needs a new fixture here').toBeLessThan(2029)
-    const report = deriveStaleness(savedIn2026, dayIn2029, MEDICARE_ONLY)
+    const report = deriveStaleness(savedIn2026, dayIn2029, MEDICARE_ONLY, false)
     expect(report.rulesMoved).toBe(false)
     expect(report.anyStale).toBe(false)
     // The shape law rides the type too: the report carries no sunset field to mis-render.
@@ -801,9 +969,9 @@ describe('deriveStaleness — the budget time-box (Q6: spine route only)', () =>
     const y0 = s.startCalendarYear
     const dayInYear = (y: number) => Math.floor(Date.UTC(y, 5, 1) / 86_400_000)
     // elapsed 2 == endYear 2 → still ACTIVE (inclusive last year, model.ts contract)
-    expect(deriveStaleness(withBudget, dayInYear(y0 + 2), MEDICARE_ONLY).budget.expiredLines).toEqual([])
+    expect(deriveStaleness(withBudget, dayInYear(y0 + 2), MEDICARE_ONLY, false).budget.expiredLines).toEqual([])
     // elapsed 3 > endYear 2 → expired, named with its calendar boundary
-    const report = deriveStaleness(withBudget, dayInYear(y0 + 3), MEDICARE_ONLY)
+    const report = deriveStaleness(withBudget, dayInYear(y0 + 3), MEDICARE_ONLY, false)
     expect(report.budget.expiredLines).toEqual([
       { index: 1, category: 'travel', endYear: 2, endCalendarYear: y0 + 2 },
     ])
@@ -823,14 +991,14 @@ describe('deriveStaleness — the budget time-box (Q6: spine route only)', () =>
       ] as ScenarioV3['budget'],
     } as ScenarioV3
     const farFuture = Math.floor(Date.UTC(s.startCalendarYear + 20, 5, 1) / 86_400_000)
-    expect(deriveStaleness(withBudget, farFuture, ACA_PRICED).budget.expiredLines).toEqual([])
+    expect(deriveStaleness(withBudget, farFuture, ACA_PRICED, false).budget.expiredLines).toEqual([])
   })
 })
 
 describe('deriveStaleness — the wall-time anchor', () => {
   it('elapsed days clamp at 0 for a future savedAt (clock skew never yields a negative claim)', () => {
     const s = { ...freshSave(), savedAt: TODAY + 30 }
-    expect(deriveStaleness(s, TODAY, MEDICARE_ONLY).elapsed?.days).toBe(0)
+    expect(deriveStaleness(s, TODAY, MEDICARE_ONLY, false).elapsed?.days).toBe(0)
   })
 })
 
@@ -902,7 +1070,7 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
   it('a save that CROSSED reprice rows names exactly the crossed families its run priced, in PRICING_FAMILY_ORDER — anyStale rises, rulesMoved does NOT', () => {
     // The day before v5 (2026-09-24): v5 … the newest are crossed; the Medicare re-confirm rows are long past.
     const savedAt = rowV(5).sinceEpochDay - 1
-    const report = deriveStaleness(savedOn(savedAt), TODAY, ACA_PRICED)
+    const report = deriveStaleness(savedOn(savedAt), TODAY, ACA_PRICED, false)
     const expected = expectedNamed(savedAt, ACA_PRICED_FAMILIES)
     expect(expected.length, 'non-vacuity: the ledger names more than one family for this save').toBeGreaterThan(1)
     expect(report.pricing).toEqual({ namedFamilies: expected, hedged: false, reconfirmMedicareSpending: false, moved: true })
@@ -919,10 +1087,10 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
       ['MEDICARE_ONLY', MEDICARE_ONLY, MEDICARE_ONLY_FAMILIES],
       ['OVERLAY_NO_HEALTH', OVERLAY_NO_HEALTH, OVERLAY_NO_HEALTH_FAMILIES],
     ] as const) {
-      const report = deriveStaleness(savedOn(undefined), TODAY, exposure)
+      const report = deriveStaleness(savedOn(undefined), TODAY, exposure, false)
       expect(report.pricing.namedFamilies, name).toEqual(expectedNamed(undefined, priced))
       expect(report.pricing.namedFamilies, `${name}: identical to a save the day before the ledger began`).toEqual(
-        deriveStaleness(savedOn(PRE_LEDGER_DAY), TODAY, exposure).pricing.namedFamilies,
+        deriveStaleness(savedOn(PRE_LEDGER_DAY), TODAY, exposure, false).pricing.namedFamilies,
       )
       expect(report.pricing.hedged, name).toBe(false)
     }
@@ -931,7 +1099,7 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
   it('a save AFTER the newest ship day is QUIET on every fixture — undecidable, unpriced and state-priced alike', () => {
     for (const savedAt of [FIRST_UNAMBIGUOUS_SAVE_DAY, TODAY]) {
       for (const exposure of [ACA_PRICED, MEDICARE_ONLY, NO_OVERLAY, OVERLAY_NO_HEALTH, UNDECIDABLE, pricing(ACA_PRICED, 'NC')]) {
-        const report = deriveStaleness(savedOn(savedAt), TODAY, exposure)
+        const report = deriveStaleness(savedOn(savedAt), TODAY, exposure, false)
         expect(report.pricing).toEqual(QUIET)
         expect(report.anyStale).toBe(false)
       }
@@ -944,18 +1112,18 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
     const exposure = pricing(ACA_PRICED, (NEWEST.states?.[0] ?? 'NC') as PricedState)
     const priced = ACA_PRICED_FAMILIES
     const day = NEWEST.sinceEpochDay
-    const before = deriveStaleness(savedOn(day - 1), TODAY, exposure).pricing
+    const before = deriveStaleness(savedOn(day - 1), TODAY, exposure, false).pricing
     expect(before.namedFamilies, 'crossed: named').toEqual(expectedNamed(day - 1, priced, exposure.pricedState))
     expect(before.namedFamilies.length).toBeGreaterThan(0)
     // ON the ship day — either build could have figured the save: no family may be named, the hedge speaks.
-    const on = deriveStaleness(savedOn(day), TODAY, exposure)
+    const on = deriveStaleness(savedOn(day), TODAY, exposure, false)
     expect(on.pricing.namedFamilies, 'ambiguous: nothing named').toEqual([])
     expect(on.pricing.hedged, 'ambiguous: the nameless line').toBe(true)
     expect(on.pricing.hedged).toBe(expectedHedged(day, priced, exposure.pricedState))
     expect(on.pricing.moved).toBe(true)
     expect(on.anyStale).toBe(true)
     expect(on.rulesMoved).toBe(false)
-    expect(deriveStaleness(savedOn(day + 1), TODAY, exposure).pricing, 'unambiguously this build: quiet').toEqual(QUIET)
+    expect(deriveStaleness(savedOn(day + 1), TODAY, exposure, false).pricing, 'unambiguously this build: quiet').toEqual(QUIET)
   })
 
   it('an ambiguous day is silent where the row does not REACH the run — the hedge never speaks for a figure the run does not price', () => {
@@ -965,9 +1133,9 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
     // newest row reaches no family this fixture prices" — v11 declared `spending` alone; v12 broke it.)
     expect(NEWEST.families, 'premise: the newest row declares a family this fixture prices').toContain('tax')
     expect(NEWEST.families.every((f) => !reaches(NEWEST, f, OVERLAY_NO_HEALTH_FAMILIES, undefined)), 'premise: …and reaches none of them').toBe(true)
-    expect(deriveStaleness(savedOn(NEWEST.sinceEpochDay), TODAY, OVERLAY_NO_HEALTH).pricing).toEqual(QUIET)
+    expect(deriveStaleness(savedOn(NEWEST.sinceEpochDay), TODAY, OVERLAY_NO_HEALTH, false).pricing).toEqual(QUIET)
     // Non-vacuity: the SAME run with the reach proven priced hears the nameless line on that day.
-    const reached = deriveStaleness(savedOn(NEWEST.sinceEpochDay), TODAY, withRead(OVERLAY_NO_HEALTH, { workingYearTax: 'priced' }))
+    const reached = deriveStaleness(savedOn(NEWEST.sinceEpochDay), TODAY, withRead(OVERLAY_NO_HEALTH, { workingYearTax: 'priced' }), false)
     expect(reached.pricing).toEqual({ namedFamilies: [], hedged: true, reconfirmMedicareSpending: false, moved: true })
   })
 
@@ -976,7 +1144,7 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
     const day = rowV(7).sinceEpochDay
     expect(REPRICE.some((r) => r.sinceEpochDay === day && r.families.includes('medicare')), 'premise: a Medicare row ships that day').toBe(true)
     expect(REPRICE.some((r) => r.sinceEpochDay > day && r.families.includes('medicare')), 'premise: a later Medicare row crosses it').toBe(true)
-    const report = deriveStaleness(savedOn(day), TODAY, MEDICARE_ONLY)
+    const report = deriveStaleness(savedOn(day), TODAY, MEDICARE_ONLY, false)
     expect(report.pricing.namedFamilies).toEqual(expectedNamed(day, MEDICARE_ONLY_FAMILIES))
     expect(report.pricing.namedFamilies).toContain('medicare')
     expect(report.pricing.hedged, 'a crossed row already proves the method changed under Medicare — no nameless twin').toBe(false)
@@ -993,7 +1161,7 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
       REPRICE.some((r) => r.sinceEpochDay > day && reaches(r, 'tax', MEDICARE_ONLY_FAMILIES, undefined)),
       'premise: …but no later tax row REACHES this fixture',
     ).toBe(false)
-    const report = deriveStaleness(savedOn(day), TODAY, MEDICARE_ONLY)
+    const report = deriveStaleness(savedOn(day), TODAY, MEDICARE_ONLY, false)
     expect(report.pricing.namedFamilies).toEqual(expectedNamed(day, MEDICARE_ONLY_FAMILIES))
     expect(report.pricing.namedFamilies).not.toContain('tax')
     expect(report.pricing.namedFamilies).toContain('medicare')
@@ -1016,7 +1184,7 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
     let namedSeen = 0
     for (const day of SHIP_DAYS.flatMap((d) => [d - 1, d, d + 1])) {
       for (const [name, exposure, priced] of fixtures) {
-        const report = deriveStaleness(savedOn(day), TODAY, exposure)
+        const report = deriveStaleness(savedOn(day), TODAY, exposure, false)
         const at = `${name} saved ${day}`
         expect(report.pricing.namedFamilies, at).toEqual(expectedNamed(day, priced, exposure.pricedState))
         expect(report.pricing.hedged, at).toBe(expectedHedged(day, priced, exposure.pricedState))
@@ -1031,7 +1199,7 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
 
   it('an UNDECIDABLE exposure + crossed rows ⇒ the hedge AND the re-confirm, nothing named (no read can say which family reached them)', () => {
     for (const savedAt of [undefined, PRE_LEDGER_DAY]) {
-      const report = deriveStaleness(savedOn(savedAt), TODAY, UNDECIDABLE)
+      const report = deriveStaleness(savedOn(savedAt), TODAY, UNDECIDABLE, false)
       expect(report.pricing).toEqual({ namedFamilies: [], hedged: true, reconfirmMedicareSpending: true, moved: true })
       expect(report.anyStale).toBe(true)
       expect(report.rulesMoved).toBe(false)
@@ -1040,16 +1208,16 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
 
   it('NO_OVERLAY ⇒ SILENT everywhere — named, hedged AND the re-confirm (a premium the plan does not price cannot be double-counted)', () => {
     for (const savedAt of [undefined, PRE_LEDGER_DAY, ...SHIP_DAYS, ...SHIP_DAYS.map((d) => d - 1)]) {
-      const report = deriveStaleness(savedOn(savedAt), TODAY, NO_OVERLAY)
+      const report = deriveStaleness(savedOn(savedAt), TODAY, NO_OVERLAY, false)
       expect(report.pricing, `saved ${String(savedAt)}`).toEqual(QUIET)
       expect(report.anyStale, `saved ${String(savedAt)}`).toBe(false)
     }
     // …even with the extras marker missing.
-    expect(deriveStaleness(withoutExtrasMarker(savedOn(TODAY)), TODAY, NO_OVERLAY).pricing).toEqual(QUIET)
+    expect(deriveStaleness(withoutExtrasMarker(savedOn(TODAY)), TODAY, NO_OVERLAY, false).pricing).toEqual(QUIET)
   })
 
   it('OVERLAY_NO_HEALTH (tax overlay, no healthcare) ⇒ tax named, never Medicare, never the re-confirm', () => {
-    const report = deriveStaleness(savedOn(undefined), TODAY, OVERLAY_NO_HEALTH)
+    const report = deriveStaleness(savedOn(undefined), TODAY, OVERLAY_NO_HEALTH, false)
     expect(report.pricing.namedFamilies).toEqual(expectedNamed(undefined, OVERLAY_NO_HEALTH_FAMILIES))
     expect(report.pricing.namedFamilies).toEqual(['tax'])
     expect(report.pricing.reconfirmMedicareSpending).toBe(false)
@@ -1060,11 +1228,11 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
     const savedAt = rowV(6).sinceEpochDay - 1
     expect(rowV(6).families, 'premise: v6 reaches the NC standard deduction').toContain('stateTax')
     expect(rowV(6).states).toEqual(['NC'])
-    const nc = deriveStaleness(savedOn(savedAt), TODAY, pricing(MEDICARE_ONLY, 'NC'))
+    const nc = deriveStaleness(savedOn(savedAt), TODAY, pricing(MEDICARE_ONLY, 'NC'), false)
     expect(nc.pricing.namedFamilies).toEqual(expectedNamed(savedAt, MEDICARE_ONLY_FAMILIES, 'NC'))
     expect(nc.pricing.namedFamilies).toContain('stateTax')
     for (const state of ['PA', 'FL', undefined] as const) {
-      const other = deriveStaleness(savedOn(savedAt), TODAY, pricing(MEDICARE_ONLY, state))
+      const other = deriveStaleness(savedOn(savedAt), TODAY, pricing(MEDICARE_ONLY, state), false)
       expect(other.pricing.namedFamilies, String(state)).not.toContain('stateTax')
       expect(other.pricing.namedFamilies, String(state)).toEqual(expectedNamed(savedAt, MEDICARE_ONLY_FAMILIES, state))
     }
@@ -1072,21 +1240,21 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
 
   it('the RE-CONFIRM: crossed, or saved ON a reconfirm row’s ship day ⇒ asked; the day after the last reconfirm row ⇒ not asked', () => {
     const lastReconfirm = RECONFIRM[RECONFIRM.length - 1]!
-    expect(deriveStaleness(savedOn(lastReconfirm.sinceEpochDay - 1), TODAY, MEDICARE_ONLY).pricing.reconfirmMedicareSpending, 'crossed').toBe(true)
-    expect(deriveStaleness(savedOn(lastReconfirm.sinceEpochDay), TODAY, MEDICARE_ONLY).pricing.reconfirmMedicareSpending, 'the ambiguous day asks the conditional too').toBe(true)
-    expect(deriveStaleness(savedOn(lastReconfirm.sinceEpochDay + 1), TODAY, MEDICARE_ONLY).pricing.reconfirmMedicareSpending, 'after the flip, with the marker').toBe(false)
+    expect(deriveStaleness(savedOn(lastReconfirm.sinceEpochDay - 1), TODAY, MEDICARE_ONLY, false).pricing.reconfirmMedicareSpending, 'crossed').toBe(true)
+    expect(deriveStaleness(savedOn(lastReconfirm.sinceEpochDay), TODAY, MEDICARE_ONLY, false).pricing.reconfirmMedicareSpending, 'the ambiguous day asks the conditional too').toBe(true)
+    expect(deriveStaleness(savedOn(lastReconfirm.sinceEpochDay + 1), TODAY, MEDICARE_ONLY, false).pricing.reconfirmMedicareSpending, 'after the flip, with the marker').toBe(false)
   })
 
   it('the RE-CONFIRM on a POST-LEDGER save whose healthcare stamp LACKS the extras marker ⇒ asked; the same save on a run that prices no Medicare ⇒ not', () => {
     const noMarker = withoutExtrasMarker(savedOn(TODAY))
-    const asked = deriveStaleness(noMarker, TODAY, MEDICARE_ONLY)
+    const asked = deriveStaleness(noMarker, TODAY, MEDICARE_ONLY, false)
     expect(asked.pricing).toEqual({ namedFamilies: [], hedged: false, reconfirmMedicareSpending: true, moved: true })
     expect(asked.anyStale).toBe(true)
     expect(asked.rulesMoved).toBe(false)
-    expect(deriveStaleness(noMarker, TODAY, UNDECIDABLE).pricing.reconfirmMedicareSpending, 'undecidable is not unpriced').toBe(true)
-    expect(deriveStaleness(noMarker, TODAY, withRead(MEDICARE_ONLY, { medicare: 'unpriced' })).pricing.reconfirmMedicareSpending).toBe(false)
+    expect(deriveStaleness(noMarker, TODAY, UNDECIDABLE, false).pricing.reconfirmMedicareSpending, 'undecidable is not unpriced').toBe(true)
+    expect(deriveStaleness(noMarker, TODAY, withRead(MEDICARE_ONLY, { medicare: 'unpriced' }), false).pricing.reconfirmMedicareSpending).toBe(false)
     // Non-vacuity: the marker is what asked — the same post-ledger save WITH it is quiet.
-    expect(deriveStaleness(savedOn(TODAY), TODAY, MEDICARE_ONLY).pricing).toEqual(QUIET)
+    expect(deriveStaleness(savedOn(TODAY), TODAY, MEDICARE_ONLY, false).pricing).toEqual(QUIET)
   })
 
   it('the ledger NEVER moves rulesMoved — in either direction, with or without a real rulebook move beside it', () => {
@@ -1094,18 +1262,18 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
     const taxMovedToo: ScenarioV3 = { ...base, taxVintageDetail: { ...base.taxVintageDetail!, legalBasis: 'TCJA (pre-OBBBA)' } }
     for (const scenario of [base, taxMovedToo]) {
       for (const exposure of [ACA_PRICED, MEDICARE_ONLY, OVERLAY_NO_HEALTH, UNDECIDABLE]) {
-        const fresh = deriveStaleness(scenario, TODAY, exposure).rulesMoved
+        const fresh = deriveStaleness(scenario, TODAY, exposure, false).rulesMoved
         for (const savedAt of [undefined, PRE_LEDGER_DAY, NEWEST.sinceEpochDay]) {
           const s = { ...scenario } as Record<string, unknown>
           if (savedAt === undefined) delete s.savedAt
           else s.savedAt = savedAt
-          expect(deriveStaleness(s as unknown as ScenarioV3, TODAY, exposure).rulesMoved, `saved ${String(savedAt)}`).toBe(fresh)
+          expect(deriveStaleness(s as unknown as ScenarioV3, TODAY, exposure, false).rulesMoved, `saved ${String(savedAt)}`).toBe(fresh)
         }
       }
     }
     // Non-vacuity: both values of rulesMoved are in the sweep.
-    expect(deriveStaleness(taxMovedToo, TODAY, ACA_PRICED).rulesMoved).toBe(true)
-    expect(deriveStaleness(base, TODAY, ACA_PRICED).rulesMoved).toBe(false)
+    expect(deriveStaleness(taxMovedToo, TODAY, ACA_PRICED, false).rulesMoved).toBe(true)
+    expect(deriveStaleness(base, TODAY, ACA_PRICED, false).rulesMoved).toBe(false)
   })
 
   // ── THE ROW-LEVEL REACH (ledger v12, the working-year tax floor, 2026-10-20) ──────────────────────
@@ -1126,20 +1294,20 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
   })
 
   it('a REACHED date-route run crossing v12 hears "your taxes" — and "your state tax" in NC; the SAME run with the reach proven unpriced hears NOTHING, NC included', () => {
-    expect(deriveStaleness(savedOn(ONLY_V12), TODAY, ACA_PRICED).pricing).toEqual({ namedFamilies: ['tax'], hedged: false, reconfirmMedicareSpending: false, moved: true })
-    expect(deriveStaleness(savedOn(ONLY_V12), TODAY, pricing(ACA_PRICED, 'NC')).pricing.namedFamilies).toEqual(['tax', 'stateTax'])
+    expect(deriveStaleness(savedOn(ONLY_V12), TODAY, ACA_PRICED, false).pricing).toEqual({ namedFamilies: ['tax'], hedged: false, reconfirmMedicareSpending: false, moved: true })
+    expect(deriveStaleness(savedOn(ONLY_V12), TODAY, pricing(ACA_PRICED, 'NC'), false).pricing.namedFamilies).toEqual(['tax', 'stateTax'])
     // PA and FL never hear the state line (v12's states are NC only) — the tax line still speaks.
     for (const state of ['PA', 'FL'] as const) {
-      expect(deriveStaleness(savedOn(ONLY_V12), TODAY, pricing(ACA_PRICED, state)).pricing.namedFamilies, state).toEqual(['tax'])
+      expect(deriveStaleness(savedOn(ONLY_V12), TODAY, pricing(ACA_PRICED, state), false).pricing.namedFamilies, state).toEqual(['tax'])
     }
     for (const state of [undefined, 'NC', 'PA', 'FL'] as const) {
-      expect(deriveStaleness(savedOn(ONLY_V12), TODAY, pricing(ACA_UNREACHED, state)).pricing, `unreached ${String(state)}`).toEqual(QUIET)
+      expect(deriveStaleness(savedOn(ONLY_V12), TODAY, pricing(ACA_UNREACHED, state), false).pricing, `unreached ${String(state)}`).toEqual(QUIET)
     }
   })
 
   it('the reach gates EVERY family on the row: a RETIRED run crossing v12 — NC-priced or not — gets no v12 line', () => {
     for (const state of [undefined, 'NC'] as const) {
-      const report = deriveStaleness(savedOn(ONLY_V12), TODAY, pricing(MEDICARE_ONLY, state))
+      const report = deriveStaleness(savedOn(ONLY_V12), TODAY, pricing(MEDICARE_ONLY, state), false)
       expect(report.pricing, String(state)).toEqual(QUIET)
       expect(report.anyStale, String(state)).toBe(false)
     }
@@ -1151,7 +1319,7 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
     for (const family of reads) {
       for (const reach of reads) {
         const exposure = withRead(OVERLAY_NO_HEALTH, { overlayBuilt: family, workingYearTax: reach })
-        const p = deriveStaleness(savedOn(ONLY_V12), TODAY, exposure).pricing
+        const p = deriveStaleness(savedOn(ONLY_V12), TODAY, exposure, false).pricing
         const at = `family ${family} × reach ${reach}`
         if (family === 'unpriced' || reach === 'unpriced') expect(p, at).toEqual(QUIET)
         else if (family === 'unknown' || reach === 'unknown') {
@@ -1164,8 +1332,8 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
   })
 
   it('the ship-day rules hold under the reach: an UNREACHED vault saved ON v12’s day is silent; a REACHED one is spoken namelessly', () => {
-    expect(deriveStaleness(savedOn(V12.sinceEpochDay), TODAY, ACA_UNREACHED).pricing).toEqual(QUIET)
-    expect(deriveStaleness(savedOn(V12.sinceEpochDay), TODAY, ACA_PRICED).pricing).toEqual({
+    expect(deriveStaleness(savedOn(V12.sinceEpochDay), TODAY, ACA_UNREACHED, false).pricing).toEqual(QUIET)
+    expect(deriveStaleness(savedOn(V12.sinceEpochDay), TODAY, ACA_PRICED, false).pricing).toEqual({
       namedFamilies: [],
       hedged: true,
       reconfirmMedicareSpending: false,
@@ -1174,12 +1342,12 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
   })
 
   it('rows 1–11 read EXACTLY as before: a retired run saved before the ledger still names "your taxes" (v1/v5/v6 carry no reach), and an undecidable reach adds no hedge beside a family already named', () => {
-    const retired = deriveStaleness(savedOn(PRE_LEDGER_DAY), TODAY, MEDICARE_ONLY)
+    const retired = deriveStaleness(savedOn(PRE_LEDGER_DAY), TODAY, MEDICARE_ONLY, false)
     expect(retired.pricing.namedFamilies).toEqual(['tax', 'medicare'])
     // Flipping the reach read changes NOTHING for a pre-ledger save: tax is named by reach-less rows, and
     // v12 adds no family (stateTax needs a priced NC; a priced reach names tax again, already named).
     for (const reach of ['priced', 'unknown'] as const) {
-      expect(deriveStaleness(savedOn(PRE_LEDGER_DAY), TODAY, withRead(MEDICARE_ONLY, { workingYearTax: reach })).pricing, reach).toEqual(retired.pricing)
+      expect(deriveStaleness(savedOn(PRE_LEDGER_DAY), TODAY, withRead(MEDICARE_ONLY, { workingYearTax: reach }), false).pricing, reach).toEqual(retired.pricing)
     }
   })
 })

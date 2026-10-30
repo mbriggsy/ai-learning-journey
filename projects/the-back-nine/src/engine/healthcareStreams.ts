@@ -75,9 +75,9 @@
  *   - the IRMAA-MAGI override still sums the dead worker's working-year figure to that worker's own
  *     stop (the overlay adds it with no liveness gate), so a Medicare-enrolled survivor whose lookback
  *     reads those years carries an OVERSTATED MAGI.
- * UNDISCLOSED: no string a household reads names it — `employerCoverageHelp` says the tool counts no
- * health costs for the stopped spouse "while one of you is still working", which reads as the
- * OPPOSITE timing on a death path, and no METHODOLOGY_DISCLOSURES row is healthcare. Filed 2026-10-20:
+ * UNDISCLOSED: no string a household reads names it — `employerCoverageHelp` says the tool adds no health
+ * cost of its own for the stopped spouse "while one of you is still working", "until their Medicare starts",
+ * which reads as the OPPOSITE timing on a death path; no METHODOLOGY_DISCLOSURES row is healthcare. Filed 2026-10-20:
  * the register's Tier 0 *On a death path the surviving retired spouse's health coverage is priced at $0
  * until the dead worker's planned stop date…*.
  * (CORRECTED 2026-10-20: this line said "the death-path residual is disclosed (§7, D2-owned)". The

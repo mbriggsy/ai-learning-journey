@@ -26,6 +26,14 @@
  * session, and a fresh IntakeFlow mount starts `touched` empty (see
  * {@link SanityProvenance}).
  *
+ * ONE RECORDED EXCEPTION to (1): `working-cost-unanswered`, the pay check's W
+ * gate (`docs/plans/features/working-year-pay-check-build-spec.md` KTD3), fires
+ * on an ABSENT input. On the date route W is GATED, never missing: it never joins
+ * `missingRequiredFacts` (a missing fact would hold every working household's
+ * provisional answer until the last question), so the W step asks for it here,
+ * on its own path, listed only in that step's fields. Every other rule still
+ * never fires on absence.
+ *
  * VALIDATION TIMING is the flow's job (blur / attempt-to-advance, never per
  * keystroke; clear on re-edit) — these predicates are timing-free.
  */
@@ -43,6 +51,12 @@ import {
   type CatchUpAccountKind,
 } from '@engine/constants/contributions'
 import { cumulativePriceIndex } from '@engine/priceIndex'
+// An import CYCLE, safe by use: `intakeMap` imports this file's ceiling helpers, and the W gate
+// reads `isDateRoute` and the stale predicate (which reads `intakeMap` too). Neither side reads the
+// other's bindings at module top level — every use is inside a function or a rule's `check` — and
+// it must stay that way (the simulate/earningsTest cycle's rule).
+import { isDateRoute } from './intakeMap'
+import { isWorkingYearCostStale } from './workingYearQuote'
 
 /** Engine longevity-table ceiling (SSA snapshot support, P1-exit pin pass). */
 const MAX_MODEL_AGE = 119
@@ -83,6 +97,14 @@ export const accountField = (index: number, field: string): FieldPath =>
   `enteredAccounts.${index}.${field}`
 export const incomeField = (index: number, field: string): FieldPath =>
   `incomeStreams.${index}.${field}`
+/** The pay check's W paths (KTD3, KTD17), kept apart on purpose: the gate lands on `.answer`
+ *  (the W step's fields only — never the panel's); the zero and period rules land on the figure's
+ *  own path, where both the step and the panel commit it; a tap on the W period control marks
+ *  `.entryPeriod`, this session's disarm of the period rule (so the step never clears it on
+ *  arrival, and never clears `.answer`'s neighbour by accident). */
+export const WORKING_COST_ANSWER_FIELD: FieldPath = 'workingYearCost.answer'
+export const WORKING_COST_FIELD: FieldPath = 'workingYearCost'
+export const WORKING_COST_PERIOD_FIELD: FieldPath = 'workingYearCost.entryPeriod'
 
 // ---------------------------------------------------------------------------
 // Contribution ceilings (R19 via C1) — ONE source for both the AccountEntry
@@ -195,9 +217,19 @@ export type SanityViolation = {
  *  channel it has. With it set, revisiting the spend AMOUNT (touching
  *  `annualSpendingReal` without re-tapping the period) must NOT re-fire the nag.
  *  A fresh draft leaves this false/absent, so the first-session honesty affordance
- *  (a silent 'month' default misread as 'year' is a 12× error) is unchanged. */
+ *  (a silent 'month' default misread as 'year' is a 12× error) is unchanged.
+ *
+ *  `workingCostPeriodConfirmed` — the same confirmation for the W figure's period (the pay
+ *  check's KTD17), and NEVER the spend flag above: answering one period says nothing about the
+ *  other. True iff the draft held an ENTERED W when the surface opened — that figure cleared this
+ *  same gate before it could be committed. It is a SECOND capture pattern, on purpose: the spend
+ *  flag is an `IntakeApp` prop built from three app-lifetime signals, while this one is read off
+ *  the draft itself, once, where the surface mounts (`IntakeFlow`'s lazy initial state; the
+ *  assumption panel's open edge) — a Review or re-walk remounts the flow over a draft that already
+ *  holds the entered W, so the draft is the one witness every route shares. */
 export interface SanityProvenance {
   readonly periodConfirmed?: boolean
+  readonly workingCostPeriodConfirmed?: boolean
 }
 
 interface SanityRule {
@@ -205,7 +237,8 @@ interface SanityRule {
   /** The field this rule guards (the firing site — must be touched to fire). */
   readonly target: (draft: ScenarioDraft) => readonly FieldPath[]
   /** Returns violations given EVERY input it needs is present; absent inputs ⇒
-   *  the rule simply does not fire (never a default — burned/062). `touched`
+   *  the rule simply does not fire (never a default — burned/062) — save the one
+   *  recorded exception, `working-cost-unanswered` (the header's KTD3 note). `touched`
    *  is available for confirmation-class rules (the period force-confirm clears
    *  the instant its control is explicitly answered THIS session); `provenance`
    *  carries the equivalent PRIOR-session confirmation a hydrated draft can't
@@ -536,6 +569,59 @@ const RULES: readonly SanityRule[] = [
         }
       })
       return out
+    },
+  },
+  // ── The pay check's W — what a year costs while someone still works (KTD3, KTD17). Appended last
+  //    so every earlier `sanity.ts:NN` citation holds. ──
+  {
+    // KTD3 — the header's ONE recorded exception: it fires on an ABSENT W. On the date route W is
+    // gated, never missing (R2: the codec keeps it optional, and it never joins `missingRequiredFacts`),
+    // so the W step asks for it through this rule on its own path, listed ONLY in that step's fields.
+    // The panel commits W on `WORKING_COST_FIELD` and `validateField` filters by field, so this gate
+    // never reaches the panel (KTD3: the panel never touches `.answer`). It fires while W is absent or
+    // STALE (R4): the walk cannot complete on an answer that no longer matches the quote or the state
+    // reading it was given against. A pure draft read — the stale predicate is draft-keyed and never
+    // builds params (Phase B ruling 18), so the flow can evaluate it on every commit.
+    id: 'working-cost-unanswered',
+    target: () => [WORKING_COST_ANSWER_FIELD],
+    check: (d) =>
+      isDateRoute(d) && (d.workingYearCost === undefined || isWorkingYearCostStale(d))
+        ? [{ rule: 'working-cost-unanswered', field: WORKING_COST_ANSWER_FIELD, messageKey: 'errWorkingCostUnanswered' }]
+        : [],
+  },
+  {
+    // KTD17 — `spend-zero`'s W mirror: a working year that costs $0 is an entry error, never a free
+    // year (the engine takes W as given, so 0 would run rosy). The walk writes a typed 0 into the
+    // draft so this rule can hold Continue on it (ruling 17); `buildDateInput` never carries it, the
+    // codec refuses it, and the panel never commits it (`commitRefusing` checks the mutated draft
+    // first). A `confirmed` answer cannot be 0: the step offers "yes" only on a quote above $0.
+    id: 'working-cost-zero',
+    target: () => [WORKING_COST_FIELD],
+    check: (d) => {
+      const w = d.workingYearCost
+      return w?.kind === 'entered' && Number.isFinite(w.amountReal) && w.amountReal <= 0
+        ? [{ rule: 'working-cost-zero', field: WORKING_COST_FIELD, messageKey: 'errWorkingCostZero' }]
+        : []
+    },
+  },
+  {
+    // KTD17 — `spend-period-unconfirmed`'s W mirror, on the same floor (`SPEND_AMBIGUOUS_MIN`, never
+    // re-typed). The W figure's untapped period is MONTH on every household, so a monthly figure
+    // read 12× low can never pass silently: a figure at or above the floor in the month view asks
+    // which period was meant. Disarmed by a tap on the W period control THIS session (touched gains
+    // `WORKING_COST_PERIOD_FIELD`) or by `provenance.workingCostPeriodConfirmed` — NEVER by the spend
+    // flag. Mutually exclusive with `working-cost-zero` (≤ 0 vs ≥ the floor), so the two never render
+    // twin FieldErrors under one DOM id.
+    id: 'working-cost-period-unconfirmed',
+    target: () => [WORKING_COST_FIELD],
+    check: (d, touched, provenance) => {
+      const w = d.workingYearCost
+      if (w?.kind !== 'entered' || !Number.isFinite(w.amountReal)) return []
+      if (provenance.workingCostPeriodConfirmed === true || touched.has(WORKING_COST_PERIOD_FIELD)) return []
+      const entered = w.entryPeriod === 'month' ? w.amountReal / 12 : w.amountReal
+      return entered >= SPEND_AMBIGUOUS_MIN
+        ? [{ rule: 'working-cost-period-unconfirmed', field: WORKING_COST_FIELD, messageKey: 'periodConfirmPrompt' }]
+        : []
     },
   },
 ]

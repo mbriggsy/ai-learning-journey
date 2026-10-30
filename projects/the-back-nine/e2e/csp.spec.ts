@@ -158,8 +158,9 @@ async function driveIntakeToResult(page: Page): Promise<void> {
   await next()
   await expect(page.getByTestId('engine-reading')).toHaveText(/of 10/, { timeout: 60_000 })
 
-  // R40's opt-in other-income loop is the LAST intake step (src/intake/questions.tsx pushes
-  // `otherIncomeStep` after the accounts step, with `fields: []`, so nothing blocks the advance) —
+  // R40's opt-in other-income loop is the LAST intake step on THIS walk's all-retired route
+  // (src/intake/questions.tsx pushes `otherIncomeStep` after the accounts step, with `fields: []`,
+  // so nothing blocks the advance; the pay check's two steps follow it only on the date route) —
   // one more Continue completes the intake (flow.tsx onComplete → IntakeApp `complete` →
   // setPhase('result')) and lands the Result, so a REAL chart's text layer is proven under the REAL
   // enforced headers. The fit harness structurally cannot do this: `?seed=` is DCE'd out of dist/

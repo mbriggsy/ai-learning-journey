@@ -95,15 +95,21 @@
 }
 
 /* Each "still needed" fact is an atomic unit: it never splits mid-token (the claim-age range
- * "(62–70)" was breaking at the en-dash). The list wraps BETWEEN facts at the middot, which is
- * a CSS-generated separator (keeps it out of the copy catalog) and a normal break opportunity. */
+ * "(62–70)" was breaking at the en-dash), and the list wraps BETWEEN facts. An inline-block keeps a
+ * fact whole whenever it fits on a line; a fact LONGER than the whole line wraps inside its own box
+ * (max-inline-size), never past the screen — `nowrap` ran "Coverage bought on your own while the
+ * other one still works" 8 px off a 390 px phone and 75 px off a 320 px one. The middot is a
+ * CSS-generated separator (keeps it out of the copy catalog) at the END of the fact before it, glued
+ * by a no-break space, so a line can end on a separator but never begin with one; its trailing space
+ * is held (`pre`) because an inline-block drops the collapsible spaces at its edges. */
 .strip-fact {
-  white-space: nowrap;
+  display: inline-block;
+  max-inline-size: 100%;
 }
 
-.strip-fact + .strip-fact::before {
-  content: ' · ';
-  white-space: normal;
+.strip-fact:not(:last-child)::after {
+  content: '\a0· ';
+  white-space: pre;
 }
 
 .strip-tertiary {
@@ -500,9 +506,10 @@
  *
  * BOTH editor roots, never just the account one. `.income-entry` is a DISTINCT class token
  * (src/intake/OtherIncomeEntry.tsx:304) — the shared `.account-entry-actions` inside it does not
- * make the selector match — and the other-income step is the LAST step with `fields: []`
- * (src/intake/questions.tsx:1247), so a live Continue over an open income editor fires the flow's
- * terminal `onComplete()`, unmounts the editor and silently discards a typed pension. Gated by
+ * make the selector match — and the other-income step has `fields: []`, so a live Continue over an
+ * open income editor always advances: into the pay check's W step on the date route, or through the
+ * flow's terminal `onComplete()` on the all-retired route, where it is the LAST step. Either way the
+ * step section re-keys, the editor unmounts and a typed pension is silently discarded. Gated by
  * e2e/intake-fold.spec.ts's nav-yield arm, which opens each editor in turn. */
 .step-body:has(.account-entry, .income-entry) + .intake-nav {
   display: none;
@@ -730,4 +737,158 @@
   font-size: var(--text-sm);
   color: var(--ink-muted);
   text-align: center;
+}
+
+/* ----- the pay check: the W question + the money picture (U8) ----------------------------- */
+
+/* The W question is ONE face for the intake step and the assumption panel's W row
+ * (src/intake/WorkingCostQuestion.tsx), so it carries its own column rhythm rather than
+ * borrowing either host's. */
+.working-cost {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* The quote: the household's own figure in its own slot ABOVE the static legend (KTD17) — the
+ * governed spend step's read-only value, a touch above body size. Tabular by inheritance. */
+.working-cost__quote {
+  margin: 0;
+  font-size: var(--text-lg);
+  line-height: var(--leading-tight);
+  color: var(--ink);
+}
+
+/* The stale note (KTD21): a calm raised well with an info glyph and words — never a colored
+ * badge, never an alert (role="note"). The "keep" door, when there is one, sits inside it. */
+.working-cost__stale {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+}
+
+.working-cost__stale-text {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--ink);
+}
+
+.working-cost__keep {
+  align-self: flex-start;
+}
+
+/* The help's two lists (R1): what to count, then what the tool works out itself — each under its
+ * lead line, read at a glance instead of as one paragraph. Plain discs, the help's own size and muted
+ * ink (`.field-help` on the list); the lead and its list sit closer than the column's rhythm, so each
+ * pair reads as one unit. */
+.working-cost__help {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.working-cost__help-list {
+  margin: 0;
+  padding-inline-start: var(--space-5);
+  max-width: var(--measure);
+  list-style: disc;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* The figure and its period control open TOGETHER, in one slot: the period control is there from
+ * the moment the figure option opens, so it never appears under a thumb after a figure is typed. */
+.working-cost__figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* The money picture (R16, KTD12): grouped definition lists on the read-back's raised-paper grammar
+ * (save.css's `.reentry-rows`, re-declared here — the intake layer owns its own classes). The
+ * legend is an h3 in the step and an h4 in the panel, styled as one quiet label either way. */
+.wy-ledger {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.wy-group__legend {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  letter-spacing: normal;
+  line-height: var(--leading-tight);
+  color: var(--ink-muted);
+}
+
+.wy-rows {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-lg);
+  background: var(--paper-raised);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Label left, figure right — the figures scan as one tabular column; a row's own words span the
+ * row beneath its figure. */
+.wy-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--space-4);
+  row-gap: var(--space-1);
+  align-items: baseline;
+}
+
+.wy-row__label {
+  margin: 0;
+  color: var(--ink);
+}
+
+.wy-row__value {
+  margin: 0;
+  font-weight: var(--weight-medium);
+  text-align: end;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+.wy-row__detail {
+  grid-column: 1 / -1;
+  margin: 0;
+  max-width: var(--measure);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--ink-muted);
+}
+
+/* The bottom line is the picture's one emphasis: its word and its signed figure a step larger. */
+.wy-row--bottom .wy-row__label,
+.wy-row--bottom .wy-row__value {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+/* A later working year stacks: the conditional year, then its bottom line, then why — the year
+ * phrase and a range are both too long to share a line at phone width. */
+.wy-row--stack {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.wy-row--stack .wy-row__value {
+  text-align: start;
+  white-space: normal;
 }

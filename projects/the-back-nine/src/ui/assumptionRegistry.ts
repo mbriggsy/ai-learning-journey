@@ -30,6 +30,7 @@
  * ui-layer home: the panel (src/intake) and the tests both read it; ui is the established
  * meeting point (intake→@ui/copy is the standing carve-out).
  */
+import type { WorkingYearStateTaxReading } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { CopyKey } from './copy'
 
@@ -58,6 +59,7 @@ export type AssumptionSeat =
   | 'health-oop' // OOP medical (re-reconciles atomically under a governing budget — the oopStep pattern)
   | 'health-quote' // the ACA quote pair (pre-65 households)
   | 'work-investment' // working-year investment income (date route, per working member)
+  | 'working-year-cost' // W, what a year costs while someone still works (date route; the pay check's question + money picture)
   | 'medicare-extras' // the per-person Medicare-extras payment fork (the ask-for-Medicare-extras unit — the refine path + the details home for the funded typical)
   | 'retirement-state' // the household's retirement state (the state-tax unit S3 — a changeable best guess; edit → re-run the SC-vs-GA what-if)
   | 'collections' // accounts + other income — via-intake ("edit in the walk-through")
@@ -127,6 +129,10 @@ export const DRAFT_DISPOSITIONS: Record<keyof ScenarioDraft, AssumptionDispositi
   // `r7-editable`) — so it owes a genuine editor, not a disclosure. The row is gated on
   // `chosenGoal === 'leave-more'`, the only goal whose objective reads it.
   heirBracket: { kind: 'row-editable', seats: ['heir-bracket'] },
+  // W, the pay check's answer. A household fact the run uses in every working year, so it owes a
+  // real editor: the panel row answers, corrects or re-confirms it, and shows the money picture.
+  // Gated on the date route (W is a working-household answer; the spine never reads it).
+  workingYearCost: { kind: 'row-editable', seats: ['working-year-cost'] },
   drawdownPolicy: { kind: 'via-sheet', seats: ['drawdown'] },
   drawdownOrder: { kind: 'via-sheet', seats: ['drawdown'] },
   filing: {
@@ -198,7 +204,34 @@ export interface MethodologyDisclosure {
   readonly id: 'market' | 'longevity' | 'survivor-ss' | 'outlive-order' | 'conversion-tax' | 'working-year-tax'
   readonly seat: AssumptionSeat
   readonly nameKey: CopyKey
+  /** The row's lines — for `working-year-tax`, the arm of a household whose run carries no W. */
   readonly lineKeys: readonly CopyKey[]
+  /** The pay check's arm (U9, R17): the lines a household whose run carries W reads INSTEAD of
+   *  `lineKeys`. Present only on `working-year-tax`; read only through {@link methodologyLines}. */
+  readonly workingCostLineKeys?: readonly CopyKey[]
+}
+
+/** Which arm a methodology row renders: `'workingCost'` iff THIS run carries the pay check's W. */
+export type MethodologyArm = 'default' | 'workingCost'
+
+/** The state readings under which the RUN taxes working years by the retirement state itself — the
+ *  priced AGI-derived states (NC) and the no-income-tax ones (FL). Under the other two the household
+ *  holds that tax inside W (the W step's own state sentence says so), so the pay check's K7 ("taxed by
+ *  the state you said you'll live in…") would contradict the W row beside it — the b9-3 walk's "one
+ *  sheet, two answers" on a household with no state set. */
+const WORK_STATE_TAXED: ReadonlySet<WorkingYearStateTaxReading> = new Set(['agi-derived', 'none'])
+
+/** A methodology row's lines for an arm — the ONE selector the panel and the disclosure test both
+ *  call, so the arm choice cannot drift between them (insight 086). A row without a W arm reads its
+ *  `lineKeys` on both arms. `stateReading` is the draft's working-year state-tax reading (the W step's
+ *  own, `workingYearStateTaxReading`), REQUIRED so no caller can skip the K7 gate. */
+export function methodologyLines(
+  m: MethodologyDisclosure,
+  arm: MethodologyArm,
+  stateReading: WorkingYearStateTaxReading,
+): readonly CopyKey[] {
+  const keys = arm === 'workingCost' && m.workingCostLineKeys !== undefined ? m.workingCostLineKeys : m.lineKeys
+  return WORK_STATE_TAXED.has(stateReading) ? keys : keys.filter((k) => k !== 'assumptionWorkingYearCheckWorkState')
 }
 
 /**
@@ -210,8 +243,11 @@ export interface MethodologyDisclosure {
  * The SIXTH row, `working-year-tax` (R13 — the working-year tax floor, 2026-10-20; council
  * wf_ef6cf7c5-a2b): how a §7-clamped working year's entered investment income is priced (the
  * costliest of three readings — `taxOverlay.ts`'s `prepareWorkingYearFloor`) and what is left out.
- * Static and unconditional like the five before it — every sentence is scoped by its own words ("While
+ * Its `lineKeys` are static like the five before it — every sentence is scoped by its own words ("While
  * either of you is still working…"), so it stays true for an all-retired household it never touches.
+ * Since the pay check (U9) it has a SECOND arm, `workingCostLineKeys`, for a household whose run carries
+ * W: the old row's "it doesn't check that your pay really covers all of that" is false there. The arm is
+ * the built run's (`intakeMap.workingYearCostForRun`), read through {@link methodologyLines}.
  * Its own seat, `seat === id`, the way the five pick theirs. The census, the banned-word guard and the
  * engine referent behind its "higher still" sentence live in `workingYearTaxDisclosure.test.ts`.
  */
@@ -251,6 +287,28 @@ export const METHODOLOGY_DISCLOSURES: readonly MethodologyDisclosure[] = [
     seat: 'working-year-tax',
     nameKey: 'assumptionWorkingYearTaxName',
     lineKeys: ['assumptionWorkingYearTaxValue', 'assumptionWorkingYearTaxReadings', 'assumptionWorkingYearTaxOmissions'],
+    // The pay check's arm (U9): the rewritten paragraph, the two unchanged ones, then one key per open
+    // gap that can move the check, in the pinned order — looks better than it really is (K1–K5), either
+    // way (K6–K8), a little worse (K9–K13, K15). The build that closes a gap deletes its key.
+    workingCostLineKeys: [
+      'assumptionWorkingYearCheckValue',
+      'assumptionWorkingYearTaxReadings',
+      'assumptionWorkingYearTaxOmissions',
+      'assumptionWorkingYearCheckEarlyCharge',
+      'assumptionWorkingYearCheckSelfEmployed',
+      'assumptionWorkingYearCheckIraDeduction',
+      'assumptionWorkingYearCheckRothCatchUp',
+      'assumptionWorkingYearCheckFullYearClaim',
+      'assumptionWorkingYearCheckSteadyPay',
+      'assumptionWorkingYearCheckWorkState',
+      'assumptionWorkingYearCheckWageFigures',
+      'assumptionWorkingYearCheckLeftOver',
+      'assumptionWorkingYearCheckBirthMonth',
+      'assumptionWorkingYearCheckPreTaxBenefits',
+      'assumptionWorkingYearCheckNoSocialSecurityJob',
+      'assumptionWorkingYearCheckEarlierHeldBack',
+      'assumptionWorkingYearCheckSpouseMedicare',
+    ],
   },
 ]
 

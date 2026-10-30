@@ -31,9 +31,11 @@ import {
   spineAcaPriced,
   spineMedicarePriced,
   survivorMedicalLeanForRun,
+  workingYearCostForRun,
   workingYearTaxForRun,
 } from '@intake/intakeMap'
 import type { ScenarioDraft } from '@store/memoryModel'
+import type { WorkingYearCostV3 } from '@shared/model'
 
 describe('exposureForDraft — the SPINE route (both healthcare reads exact: one builder, the headline run’s own)', () => {
   it('the all-65+ Medicare-only household prices Medicare and NO ACA — the shipped defect’s witness', () => {
@@ -51,6 +53,7 @@ describe('exposureForDraft — the SPINE route (both healthcare reads exact: one
       blend: 'unpriced',
       spending: 'unpriced',
       workingYearTax: 'unpriced',
+      workingYearCost: 'unpriced',
       pricedState: undefined,
     })
   })
@@ -85,6 +88,9 @@ describe('exposureForDraft — the SPINE route (both healthcare reads exact: one
       expect(e.workingYearTax, `${k}: workingYearTax`).toBe(workingYearTaxForRun(d))
       // A spine run has no living worker and no accumulation construct — it never clamps.
       expect(e.workingYearTax, `${k}: the spine never reaches the working-year floor`).toBe('unpriced')
+      expect(e.workingYearCost, `${k}: workingYearCost`).toBe(workingYearCostForRun(d))
+      // `buildSpineParams` has no route for the pay check's W — the working-years table goes unread.
+      expect(e.workingYearCost, `${k}: the spine never carries W`).toBe('unpriced')
       expect(e.pricedState, `${k}: state`).toBe(pricedStateForRun(d))
       // The structural pair: ACA pricing implies healthcare is on, so 'priced' ACA with an
       // unpriced Medicare read is impossible.
@@ -118,6 +124,7 @@ describe('exposureForDraft — THE AGE/OVERLAY DIVERGENCE (insight 080’s scar,
       blend: 'unpriced',
       spending: 'unpriced',
       workingYearTax: 'unpriced',
+      workingYearCost: 'unpriced',
       pricedState: undefined,
     })
   })
@@ -238,6 +245,7 @@ describe('exposureForDraft — no run at all', () => {
       blend: 'unknown',
       spending: 'unknown',
       workingYearTax: 'unknown',
+      workingYearCost: 'unknown',
       pricedState: undefined,
     })
     // …and the working-year read's own producer says the same off the missing-facts arm (it is not
@@ -255,16 +263,22 @@ describe('exposureForDraft — no run at all', () => {
 // `unpriced` here would be a vault told nothing about a recompute that moved (the silent stale).
 describe('exposureForDraft — the working-year tax floor’s reach (ledger v12)', () => {
   const MEASURED_MOVED = ['date', 'dateborder', 'datesplit', 'datemixed', 'dip', 'date65', 'datenc', 'atceiling'] as const
+  // The pay check's two W-carrying witnesses (Phase B) read `priced` through the reach walk's W branch
+  // (KTD15: a construct carrying W reads `priced` whenever anyone still works — the safe-side over-read),
+  // never through a U4 measurement: a W-present run has no pre-floor twin to measure against. Kept
+  // apart so the measured list stays a measurement. U10 re-measures every date seed once each carries W.
+  const W_KEYED = ['dateshort', 'datecoststale'] as const
 
-  it('every date seed U4 measured as MOVED reads `priced` — and those eight ARE the buildable date-route seeds (a new one must be measured before it can join)', () => {
-    for (const k of MEASURED_MOVED) {
+  it('every date seed U4 measured as MOVED reads `priced` — and those eight, with the W-keyed witnesses, ARE the buildable date-route seeds (a new one must be measured before it can join)', () => {
+    for (const k of [...MEASURED_MOVED, ...W_KEYED]) {
       expect(isDateRoute(DEV_SEEDS[k]), `${k} is a date-route seed`).toBe(true)
       expect(exposureForDraft(DEV_SEEDS[k]).workingYearTax, k).toBe('priced')
     }
+    for (const k of W_KEYED) expect(DEV_SEEDS[k].workingYearCost, `${k} carries W`).toBeDefined()
     const buildableDateSeeds = (Object.keys(DEV_SEEDS) as (keyof typeof DEV_SEEDS)[]).filter(
       (k) => isDateRoute(DEV_SEEDS[k]) && missingRequiredFacts(DEV_SEEDS[k]).length === 0,
     )
-    expect([...buildableDateSeeds].sort()).toEqual([...MEASURED_MOVED].sort())
+    expect([...buildableDateSeeds].sort()).toEqual([...MEASURED_MOVED, ...W_KEYED].sort())
   })
 
   it('the unbuildable date seed (`datesolo`, the employer-coverage refusal) reads `unknown` — never a silent `unpriced`', () => {
@@ -316,6 +330,51 @@ describe('exposureForDraft — the working-year tax floor’s reach (ledger v12)
   })
 })
 
+// ── THE PAY CHECK'S W (U13's clock read, `workingYearCostForRun`) ─────────────────────────────────
+// Does THIS run carry W? The working-years table's only reader is the W-keyed check (KTD1), so this is
+// the working-years clock's exposure. The fixtures are built here, not taken from a seed's own W, so
+// each arm holds whatever W the seed registry gives a seed later (Phase C gives `date` its own).
+describe('exposureForDraft — the pay check’s W (the working-years clock’s read)', () => {
+  const { workingYearCost: _seedW, ...dateNoW } = DEV_SEEDS.date
+  /** `date`'s own W, typed by hand: no budget ⇒ the quote is its $84,000 spending; no retirement
+   *  state ⇒ the 'unpriced' reading (KTD5, KTD18). */
+  const W: WorkingYearCostV3 = { kind: 'confirmed', quotedReal: 84_000, stateTaxReading: 'unpriced' }
+
+  it('a date-route draft that answered W reads `priced`; the same draft without W reads `unpriced` (a proof, not a default)', () => {
+    expect(isDateRoute(dateNoW)).toBe(true)
+    expect(missingRequiredFacts(dateNoW), 'buildable').toEqual([])
+    expect(exposureForDraft({ ...dateNoW, workingYearCost: W }).workingYearCost).toBe('priced')
+    expect(exposureForDraft(dateNoW).workingYearCost).toBe('unpriced')
+    // An entered answer is W too — the read keys on presence, never on the kind.
+    const entered: WorkingYearCostV3 = { kind: 'entered', amountReal: 90_000, entryPeriod: 'year', stateTaxReading: 'unpriced' }
+    expect(exposureForDraft({ ...dateNoW, workingYearCost: entered }).workingYearCost).toBe('priced')
+  })
+
+  it('a spine-route draft reads `unpriced` — even one still carrying a W from its working years (the spine never reads W)', () => {
+    const retired = DEV_SEEDS.retired
+    expect(isDateRoute(retired)).toBe(false)
+    expect(exposureForDraft(retired).workingYearCost).toBe('unpriced')
+    expect(exposureForDraft({ ...retired, workingYearCost: W }).workingYearCost).toBe('unpriced')
+  })
+
+  it('the unbuildable date seed (`datesolo`) reads `unknown`, whatever W it carries — never a silent `unpriced`', () => {
+    expect(isDateRoute(DEV_SEEDS.datesolo)).toBe(true)
+    expect(missingRequiredFacts(DEV_SEEDS.datesolo).length).toBeGreaterThan(0)
+    expect(exposureForDraft(DEV_SEEDS.datesolo).workingYearCost).toBe('unknown')
+    expect(exposureForDraft({ ...DEV_SEEDS.datesolo, workingYearCost: W }).workingYearCost).toBe('unknown')
+  })
+
+  it('the seam reads the PRODUCER: every buildable seed’s field equals `workingYearCostForRun`, with and without W', () => {
+    for (const k of Object.keys(DEV_SEEDS) as (keyof typeof DEV_SEEDS)[]) {
+      const d = DEV_SEEDS[k]
+      if (missingRequiredFacts(d).length > 0) continue
+      expect(exposureForDraft(d).workingYearCost, k).toBe(workingYearCostForRun(d))
+      const withW: ScenarioDraft = { ...d, workingYearCost: W }
+      expect(exposureForDraft(withW).workingYearCost, `${k} + W`).toBe(workingYearCostForRun(withW))
+    }
+  })
+})
+
 // ── THE SOURCE-BIND on the CONSUMER (insights 032/081; the idiom is draftFromScenario.test.ts:409)
 //
 // F6, verbatim: mutating `IntakeApp.tsx`'s third argument to `{ ...exposureForDraft(draft), aca:
@@ -333,9 +392,15 @@ describe('the SHIPPED consumer binds to this seam (source-bind, not replication)
       /import \{[^}]*exposureForDraft[^}]*\} from '\.\/stalenessExposure'/,
     )
     // The exact shipped call, third argument included. A spread-and-override
-    // (`{ ...exposureForDraft(…), aca: 'priced' }`) does not match this pattern.
+    // (`{ ...exposureForDraft(…), aca: 'priced' }`) does not match this pattern. The fourth is the
+    // pay check's KTD21 flag (edited in with it — R18 names this call site): the intake's ONE stale
+    // predicate over the SAME hydrated draft, never a literal `false` and never folded into the
+    // exposure record.
     expect(src, 'the report is derived with the seam’s own record').toMatch(
-      /deriveStaleness\(model, currentEpochDay\(\), exposureForDraft\(hydrated\.draft\)\)/,
+      /deriveStaleness\(\s*model,\s*currentEpochDay\(\),\s*exposureForDraft\(hydrated\.draft\),\s*isWorkingYearCostStale\(hydrated\.draft\),?\s*\)/,
+    )
+    expect(src, 'the stale predicate is the intake’s own, imported — not re-declared').toMatch(
+      /import \{[^}]*isWorkingYearCostStale[^}]*\} from '@intake\/workingYearQuote'/,
     )
   })
 
@@ -343,7 +408,7 @@ describe('the SHIPPED consumer binds to this seam (source-bind, not replication)
     // Any of these appearing in the component means someone re-typed a decision that belongs to
     // the seam (the class that made the S0 verifier's `+ 3` survive 1096 green tests).
     expect(src, 'never a hand-written exposure literal in the component').not.toMatch(
-      /(aca|medicare|overlayBuilt|contributions|blend|spending|workingYearTax)\s*:\s*'(priced|unpriced|unknown)'/,
+      /(aca|medicare|overlayBuilt|contributions|blend|spending|workingYearTax|workingYearCost)\s*:\s*'(priced|unpriced|unknown)'/,
     )
   })
 })

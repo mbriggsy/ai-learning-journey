@@ -15,6 +15,9 @@
 import { describe, it, expect } from 'vitest'
 import {
   earningsTestSchedule,
+  HELD_BACK_CREDITED,
+  HELD_BACK_PAST_FRA,
+  HELD_BACK_UNTIL_BIRTH_MONTH,
   NO_EARNINGS_TEST,
   socialSecurityPaid,
   type EarningsTestPath,
@@ -94,6 +97,7 @@ describe('the research worked example, re-derived under the engine (a couple bot
     expect(cents(s.withheld[0]!)).toBe(1_776_060)
     expect(cents(s.paid[0]! + s.withheld[0]!)).toBe(cents(owedSs(path, 0)))
     expect(s.fraYearAtMost[0]).toBe(0)
+    expect(s.heldBackCredit[0], 'both are years from FRA: every month held back is credited').toBe(HELD_BACK_CREDITED)
   })
 
   it('every year 2026–2029 credits nine months to each (January–September — the partial month counts), 36 in-plan in all', () => {
@@ -101,6 +105,8 @@ describe('the research worked example, re-derived under the engine (a couple bot
     // when the worker's work caused it. 2025's months (the research's fifth year) are before the plan: invisible.
     const s = tested(path)
     for (let t = 0; t < 4; t++) expect(cents(s.paid[t]!), `year ${t}`).toBe(859_620)
+    for (let t = 0; t < 4; t++) expect(s.heldBackCredit[t], `year ${t}`).toBe(HELD_BACK_CREDITED)
+    expect(s.heldBackCredit[4], 'their FRA year is untested: nothing held back, no reason').toBe(0)
     expect(s.creditMonths).toEqual([
       { own: 36, spousal: 0, widow: 0 },
       { own: 0, spousal: 36, widow: 0 },
@@ -206,8 +212,37 @@ describe('the age gap: an older spouse past FRA on a younger worker’s record',
     expect(s.paid[0]).toBe(0)
     expect(s.withheld[0]).toBe(0)
     for (const t of [2, 3, 4]) expect(cents(s.paid[t]!), `year ${t}`).toBe(703_780)
+    // His own months are credited; hers, held after her FRA, raise nothing (the reasons the picture words).
+    for (const t of [2, 3, 4]) expect(s.heldBackCredit[t], `year ${t}`).toBe(HELD_BACK_CREDITED | HELD_BACK_PAST_FRA)
+    expect([s.heldBackCredit[0], s.heldBackCredit[1]], 'before his claim nothing is held back').toEqual([0, 0])
     // Nine crediting months a year for him (ages 62–64); none for her — the months withheld fall after her
     // FRA, outside her 56-month reduction period, so none can be removed from it (§402(q)(7)).
+    expect(s.creditMonths).toEqual([
+      { own: 27, spousal: 0, widow: 0 },
+      { own: 0, spousal: 0, widow: 0 },
+    ])
+  })
+})
+
+describe('the age gap, one step closer: a spouse IN her FRA year on a younger worker’s record', () => {
+  it('loses months to his excess the run credits none of — until the birth-month ask — and from the year after, past FRA all year, none by law', () => {
+    // The age-gap household with her born 1961 (FRA 67): 65 in 2026, 67 in 2028, the year of his first
+    // claim. Her spousal excess is $1,000 at 0.65 (60 months early) = $650.00, so the family is $2,050.00
+    // and his $17,760 excess still reaches nine months a year (eight full, September partial): 27 for him.
+    // The law credits her months before her birth month in 2028 (§402(q)(7)); the run holds no birth
+    // month, so it credits none of them (gloomy, KTD11). From 2029 she is past FRA all year: none by law.
+    const path = pathOf(
+      [
+        person({ currentAge: 60, birthYear: 1966, retirementAge: 65, earnedIncomeReal: 60_000, pia: 24_000, socialSecurityClaimAge: 62 }),
+        person({ sex: 'female', currentAge: 65, birthYear: 1961, socialSecurityClaimAge: 62 }),
+      ],
+      [50, 50],
+      5,
+    )
+    expect(cents(path.offsets[1]!.spousalExcessAnnual)).toBe(780_000)
+    const s = tested(path)
+    expect(s.heldBackCredit[2]).toBe(HELD_BACK_CREDITED | HELD_BACK_UNTIL_BIRTH_MONTH)
+    for (const t of [3, 4]) expect(s.heldBackCredit[t], `year ${t}`).toBe(HELD_BACK_CREDITED | HELD_BACK_PAST_FRA)
     expect(s.creditMonths).toEqual([
       { own: 27, spousal: 0, widow: 0 },
       { own: 0, spousal: 0, widow: 0 },
@@ -235,6 +270,8 @@ describe('the FRA calendar year (KTD11)', () => {
     expect(cents(s.paid[1]!)).toBe(1_342_000)
     expect(cents(s.withheld[1]!)).toBe(578_000)
     expect(s.fraYearAtMost[1], 'the stopgap year is "at most"').toBe(1)
+    expect(s.heldBackCredit[0], 'the year before is credited').toBe(HELD_BACK_CREDITED)
+    expect(s.heldBackCredit[1], 'the stopgap credits none of its months, until the birth-month ask').toBe(HELD_BACK_UNTIL_BIRTH_MONTH)
     expect(cents(s.paid[2]!)).toBe(2_079_960)
     expect(s.withheld[2], 'no test after the FRA year').toBe(0)
     expect(s.creditMonths[0]).toEqual({ own: 12, spousal: 0, widow: 0 })
@@ -263,6 +300,9 @@ describe('the FRA calendar year (KTD11)', () => {
     expect(s.paid[0]).toBe(0)
     expect(cents(s.paid[1]!)).toBe(2_121_900)
     expect(cents(s.withheld[1]!)).toBe(578_100)
+    expect(s.heldBackCredit[0]).toBe(HELD_BACK_CREDITED)
+    // Her months in his stopgap year read the same reason as his: the stopgap's charge marks no deduction.
+    expect(s.heldBackCredit[1]).toBe(HELD_BACK_UNTIL_BIRTH_MONTH)
     expect(s.fraYearAtMost[1]).toBe(1)
     expect(cents(s.paid[2]!)).toBe(2_859_960)
     expect(cents(s.paid[5]!)).toBe(2_919_960)
@@ -302,6 +342,10 @@ describe('the FRA calendar year (KTD11)', () => {
     const s = tested(path)
     expect(s.paid[0]).toBe(0)
     expect(s.fraYearAtMost[0], 'a year that may hold FRA is "at most" too').toBe(1)
+    expect([s.heldBackCredit[0], s.heldBackCredit[1]], 'both years may hold FRA: no month raises anything yet').toEqual([
+      HELD_BACK_UNTIL_BIRTH_MONTH,
+      HELD_BACK_UNTIL_BIRTH_MONTH,
+    ])
     expect(cents(s.paid[1]!)).toBe(1_621_860)
     expect(cents(s.withheld[1]!)).toBe(78_060)
     expect(s.fraYearAtMost[1]).toBe(1)
@@ -446,6 +490,34 @@ describe('survivors (§403(f)(9), 404.311(b), RS 00615.320 B.2.c / .598 / .585)'
     for (const t of [7, 8, 9]) expect(cents(s.paid[t]!), `age ${58 + t}, retired, before the FRA recompute`).toBe(906_840)
     for (const t of [10, 11]) expect(cents(s.paid[t]!), `age ${58 + t}`).toBe(980_040)
     expect(s.creditMonths[1]).toEqual({ own: 0, spousal: 0, widow: 30 })
+    // Every month held from her widow(er) benefit falls before survivor FRA: credited, on its own frame.
+    for (const t of [2, 3, 4, 5, 6]) expect(s.heldBackCredit[t], `age ${58 + t}`).toBe(HELD_BACK_CREDITED)
+  })
+
+  it('a widow’s held-back months read HER survivor frame: born 1960, survivor FRA 66y8m against a retirement FRA of 67', () => {
+    // He: born 1958, 68, drawing his benefit, dies after 2026 (offset 1). She: born 1960, 65, works to 68 for
+    // $60,000 and has no record of her own, so from 2027 she draws the widow(er) benefit and her own pay is
+    // charged against it (§403(f)(9)), on the RETIREMENT FRA: her age-66 year is wholly before it, so the
+    // months are deduction months. Their credit is the survivor benefit's, counted only before survivor FRA
+    // (404.412(b)): 66y8m falls inside her age-66 year, so the run credits none of them — the year may hold
+    // it — until the birth-month ask. Her age-67 year is the retirement stopgap, and holds back nothing:
+    // 11/12 × 60,000 = 55,000 is under the higher amount.
+    const path = pathOf(
+      [
+        person({ currentAge: 68, birthYear: 1958, pia: 24_000, socialSecurityClaimAge: 67 }),
+        person({ sex: 'female', currentAge: 65, birthYear: 1960, retirementAge: 68, earnedIncomeReal: 60_000 }),
+      ],
+      [1, 50],
+      3,
+    )
+    expect(fraMonthsForBirthYear(1960, 'survivor')).toBe(800)
+    const s = tested(path)
+    expect(s.withheld[0], 'married, her claim not yet made: nothing to hold back').toBe(0)
+    expect(s.withheld[1]).toBeGreaterThan(0)
+    expect(s.heldBackCredit[1], 'her age-66 year, against her survivor FRA').toBe(HELD_BACK_UNTIL_BIRTH_MONTH)
+    expect(s.withheld[2], 'her stopgap year holds back nothing').toBe(0)
+    expect(s.heldBackCredit[2], 'nothing held back, no reason').toBe(0)
+    expect(s.creditMonths[1]).toEqual({ own: 0, spousal: 0, widow: 0 })
   })
 
   it('a dead worker’s earnings never withhold the widow(er) benefit, even with work planned past the death', () => {
@@ -540,7 +612,18 @@ describe('the producer over a seeded population (every path, every year)', () =>
   })
 
   it('pays owed less withheld; withholds only in a tested working year; credits never exceed a benefit’s months early; and with no credit, every year is Object.is the run', () => {
-    const reach = { tested: 0, untested: 0, withheldYears: 0, survivorWithheld: 0, atMostYears: 0, credited: 0, identityYears: 0 }
+    const reach = {
+      tested: 0,
+      untested: 0,
+      withheldYears: 0,
+      survivorWithheld: 0,
+      atMostYears: 0,
+      credited: 0,
+      identityYears: 0,
+      reasonCredited: 0,
+      reasonUntilBirthMonth: 0,
+      reasonPastFra: 0,
+    }
     for (const path of PATHS) {
       const s = earningsTestSchedule(path)
       if (!s.tested) {
@@ -562,6 +645,15 @@ describe('the producer over a seeded population (every path, every year)', () =>
           if (path.deathOffsets.some((d) => t >= d)) reach.survivorWithheld++
         }
         if (s.fraYearAtMost[t]) reach.atMostYears++
+        // The held-back reasons (the money picture's words): a reason exactly where something is held back,
+        // the stopgap's year always among them, and "credited" only on a path whose months count.
+        const why = s.heldBackCredit[t]!
+        expect(why !== 0, `year ${t}: a reason iff something is held back`).toBe(cents(s.withheld[t]!) > 0)
+        if (s.fraYearAtMost[t]) expect(why & HELD_BACK_UNTIL_BIRTH_MONTH, `year ${t}: the stopgap`).not.toBe(0)
+        if (!credited) expect(why & HELD_BACK_CREDITED, `year ${t}: nothing on this path is credited`).toBe(0)
+        if (why & HELD_BACK_CREDITED) reach.reasonCredited++
+        if (why & HELD_BACK_UNTIL_BIRTH_MONTH) reach.reasonUntilBirthMonth++
+        if (why & HELD_BACK_PAST_FRA) reach.reasonPastFra++
         if (!credited) {
           // No credit anywhere on the path: the year pays exactly what is owed less what was held back,
           // and a year with nothing held back is the run's own float.

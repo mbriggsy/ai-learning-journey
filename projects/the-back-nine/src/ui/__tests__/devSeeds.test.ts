@@ -6,7 +6,10 @@ import {
   doctorRecordSuperseded,
   doctorStaleVault,
   doctorStateStaleVault,
+  doctorWorkingYearsStaleVault,
+  agedWorkingYearsVintage,
 } from '../devSeeds'
+import { isWorkingYearCostStale, workingYearCostStaleness } from '@intake/workingYearQuote'
 import { floorLineText, heroLead } from '../FuckOffDate'
 import { planClockAnchor } from '../bandAnnotations'
 import type { ScenarioDraft } from '@store/memoryModel'
@@ -29,6 +32,7 @@ import {
   missingRequiredFacts,
   pricedStateForRun,
   spineMedicarePriced,
+  workingYearLedgerForRun,
 } from '@intake/intakeMap'
 import { showMedicarePricedNote } from '../healthSheetChrome'
 import { simulate, validateParams } from '@engine/simulate'
@@ -651,7 +655,7 @@ describe('the statestale aged plant (the state-tax gate note; light doctor, F2 s
     )
     // U17 §S4 — the exposure record is the REAL one for this seed (`pricedStateForRun` reads NC
     // off the built overlay), so the clock is proven to fire through the producer's-output gate.
-    const report = deriveStaleness(aged, TODAY, exposureForDraft(DEV_SEEDS.nc))
+    const report = deriveStaleness(aged, TODAY, exposureForDraft(DEV_SEEDS.nc), false)
     expect(report.controls.stateTaxMoved, "the NC household's own profile moved ⇒ the state-tax clock fires").toBe(true)
     expect(report.rulesMoved, 'a rulebook moved ⇒ the hero echo may ride').toBe(true)
     // ISOLATION — the fresh vintages leave every OTHER clock dark.
@@ -732,7 +736,7 @@ describe('the statestale aged plant (the state-tax gate note; light doctor, F2 s
       statelessBuilt.scenario.stateTaxVintage,
     )
     expect(
-      deriveStaleness(aged, TODAY, exposureForDraft(DEV_SEEDS.datesplit)).controls.stateTaxMoved,
+      deriveStaleness(aged, TODAY, exposureForDraft(DEV_SEEDS.datesplit), false).controls.stateTaxMoved,
       'a stateless household never fires the clock',
     ).toBe(false)
   })
@@ -1076,8 +1080,9 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
     // (its single account carries a per-account manual blend, never a ticker), and no survivor-medical
     // lean (no out-of-pocket medical entered — the ledger's v11 `spending` family is silent), and the
     // working-year tax floor's reach is silent (a spine run carries no accumulation construct, so it never
-    // clamps — ledger v12's row-level reach narrows to unpriced). The aging does NOT move any of this —
-    // `currentAge` is persisted per person and rides the strip verbatim.
+    // clamps — ledger v12's row-level reach narrows to unpriced), and it carries no pay check's W (a
+    // spine run never does — the working-years clock's read is silent). The aging does NOT move any of
+    // this — `currentAge` is persisted per person and rides the strip verbatim.
     expect(exposure).toEqual({
       overlayBuilt: 'priced',
       medicare: 'priced',
@@ -1086,10 +1091,12 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
       blend: 'unpriced',
       spending: 'unpriced',
       workingYearTax: 'unpriced',
+      workingYearCost: 'unpriced',
       pricedState: undefined,
     })
 
-    const report = deriveStaleness(aged, TODAY, exposure)
+    // No W on this retired base, so KTD21's stale-answer flag is false (the intake predicate reads null).
+    const report = deriveStaleness(aged, TODAY, exposure, false)
     // What the doctor moved (devSeeds.ts): taxVintageDetail, coverageYear −1,
     // partBStandardMonthly −10, blendSnapshotAsOf −1y; the extras vintage is STRIPPED (a
     // pre-extras-era save ⇒ not-comparable ⇒ quiet).
@@ -1403,7 +1410,7 @@ describe('the arrived aged plant (the first live route to the hero\'s dateInYear
     ).toBeLessThan(depth)
     // NOT an incidental observation: the floor crowning at 0 is exactly why this plant lights ONE
     // arrived arm and not two. `floorLineText` short-circuits offset 0 BEFORE the three-way split
-    // (FuckOffDate.tsx:229, mirroring heroLead's free-today precedence), so `dateFloorCoveredPast`
+    // (FuckOffDate.tsx:236, mirroring heroLead's free-today precedence), so `dateFloorCoveredPast`
     // cannot fire here — its live route is and remains `?vault=datestale`. Arm 3 proves the
     // consequence on the renderer rather than leaving it as a comment.
     expect(out.floor.offsetYears, 'the floor crowns at 0 — the plain covered line, never the Past arm').toBe(0)
@@ -1623,5 +1630,99 @@ describe('the working-year tax floor — `dip`’s year-4 conversion priced on t
     }
     expect(Object.is(fan[5]!.p50, d.terminalValuesReal[0]), 'floor pass year-4 end ≡ full pass terminal').toBe(true)
     expect(fan[5]!.p50).toBeCloseTo(END - G_I_ON, 6)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The pay check's W on the seeds (`docs/plans/features/working-year-pay-check-build-spec.md` U8, U13;
+// U10's general rule). Phase B gives W to exactly three seeds: `datesolo` (the walk's W gate would stall
+// the intake-fold re-walk without it), the short witness and the stale-W witness. Every other seed stays
+// W-free until U10 mints W on each date seed by measurement.
+// ---------------------------------------------------------------------------
+describe('the pay check’s W on the seeds (U8, U13)', () => {
+  const TODAY = currentEpochDay()
+
+  it('exactly the three Phase B seeds carry W — no const literal leaks it into a spread', () => {
+    const carrying = Object.entries(DEV_SEEDS)
+      .filter(([, d]) => d.workingYearCost !== undefined)
+      .map(([k]) => k)
+      .sort()
+    expect(carrying).toEqual(['datecoststale', 'dateshort', 'datesolo'])
+  })
+
+  it('every W-carrying seed reads NOT stale through the one predicate — except the stale-W witness', () => {
+    for (const [key, d] of Object.entries(DEV_SEEDS)) {
+      if (d.workingYearCost === undefined) continue
+      expect(isWorkingYearCostStale(d), key).toBe(key === 'datecoststale')
+    }
+  })
+
+  it('a minted W is the "yes" the W step would store on that seed’s OWN draft — its own quote, its own reading', () => {
+    expect(DEV_SEEDS.datesolo.workingYearCost).toEqual({ kind: 'confirmed', quotedReal: 84_000, stateTaxReading: 'unpriced' })
+    expect(DEV_SEEDS.dateshort.workingYearCost).toEqual({ kind: 'confirmed', quotedReal: 70_000, stateTaxReading: 'unpriced' })
+  })
+
+  it('the stale-W witness is `date`’s answer after its spending moved: $84,000 confirmed, $78,000 now (quote moved, reading did not)', () => {
+    expect(DEV_SEEDS.datecoststale.workingYearCost).toEqual({ kind: 'confirmed', quotedReal: 84_000, stateTaxReading: 'unpriced' })
+    expect(DEV_SEEDS.datecoststale.annualSpendingReal).toBe(78_000)
+    expect(workingYearCostStaleness(DEV_SEEDS.datecoststale)).toEqual({ quoteMoved: true, readingMoved: false })
+    // Everything else is `date`’s own draft.
+    const { workingYearCost: _w, annualSpendingReal: _s, ...rest } = DEV_SEEDS.datecoststale
+    const { annualSpendingReal: _ds, ...dateRest } = DEV_SEEDS.date
+    expect(rest).toEqual(dateRest)
+  })
+
+  it('the short witness’s money picture runs SHORT in year 0 and in every later working year, with Social Security held back', () => {
+    const ledger = workingYearLedgerForRun(DEV_SEEDS.dateshort)
+    expect(ledger).not.toBe('unknown')
+    if (ledger === 'unknown') return
+    expect(ledger.year0.bottomLine).toBeLessThan(0)
+    expect(ledger.year0.socialSecurityHeldBack.dollars).toBeGreaterThan(0)
+    // Every later working year is named (a short year always is) and short.
+    expect(ledger.laterYears.map((y) => y.yearsIn)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9])
+    for (const y of ledger.laterYears) expect(y.bottomLine, `year ${y.yearsIn}`).toBeLessThan(0)
+  })
+
+  it('doctorWorkingYearsStaleVault ages ONLY the working-years stamp and savedAt, and its clock fires in ISOLATION', () => {
+    const built = scenarioFromDraft(DEV_SEEDS.dateshort)
+    expect(built.ready, 'dateshort must be save-ready').toBe(true)
+    if (!built.ready) return
+    const aged = doctorWorkingYearsStaleVault(built.scenario, TODAY)
+    expect(aged.dateVintage!.workingYearsVintage).toBe(agedWorkingYearsVintage(built.scenario.dateVintage!.workingYearsVintage!))
+    expect(aged.dateVintage!.workingYearsVintage).not.toBe(built.scenario.dateVintage!.workingYearsVintage)
+    // Nothing the quote or the run reads moved, so the W answer stays fresh (no re-mint).
+    const { savedAt: _a, dateVintage: _b, ...agedRest } = aged
+    const { savedAt: _c, dateVintage: _d, ...builtRest } = built.scenario
+    expect(agedRest).toEqual(builtRest)
+    const report = deriveStaleness(aged, TODAY, exposureForDraft(DEV_SEEDS.dateshort), isWorkingYearCostStale(DEV_SEEDS.dateshort))
+    expect(report.workingYear).toEqual({ vintageMoved: true, costStale: false })
+    expect(report.rulesMoved).toBe(true)
+    expect(report.controls.taxMoved).toBe(false)
+    expect(report.controls.stateTaxMoved).toBe(false)
+    expect(report.healthcare.moved).toBe(false)
+    expect(report.date).toEqual({ contributionMoved: false, blendMoved: false })
+    expect(composeReentry(aged, report).noteLines).toEqual([copy.stalenessWorkingYears])
+  })
+
+  it('the light doctor is ENGINE-ACCEPTED: the aged vault hydrates, builds and dates like the fresh seed (insight 085)', async () => {
+    const built = scenarioFromDraft(DEV_SEEDS.dateshort)
+    if (!built.ready) return
+    const aged = doctorWorkingYearsStaleVault(built.scenario, TODAY)
+    const hydrated = draftFromScenario(aged)
+    expect(hydrated.ok, 'the hydrator accepts the doctored vault').toBe(true)
+    if (!hydrated.ok) return
+    const input = buildDateInput(hydrated.draft)
+    expect(input, 'buildDateInput').not.toBeNull()
+    expect(input!.workingYearCostReal, 'the doctored vault still carries its W').toBe(70_000)
+    const out = await runDateSearch(input!, hydrated.draft.seed!, { tier: 'provisional' })
+    expect(out.kind, 'a dates outcome, never a refusal').toBe('dates')
+  }, 120_000)
+
+  it('the light doctor fails LOUD on a plan that never reads the table, and on a stamp it cannot age', () => {
+    const plain = scenarioFromDraft(DEV_SEEDS.date)
+    if (!plain.ready) throw new Error('[test setup] date must be save-ready')
+    expect(() => doctorWorkingYearsStaleVault(plain.scenario, TODAY)).toThrow(/W-carrying/)
+    expect(agedWorkingYearsVintage('working-years-2026a')).toBe('working-years-2025a')
+    expect(() => agedWorkingYearsVintage('wy-2026')).toThrow(/unrecognised/)
   })
 })

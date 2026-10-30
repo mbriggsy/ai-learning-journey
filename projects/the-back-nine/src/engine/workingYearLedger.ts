@@ -58,6 +58,7 @@ import type {
   WorkingYearLedgerEvent,
   WorkingYearLedgerEventCode,
   WorkingYearLedgerLaterYear,
+  WorkingYearHeldBackRaise,
   WorkingYearWithheldBasis,
 } from '@shared/model'
 import { WORKING_YEAR_LEDGER_EVENT_CODES } from '@shared/model'
@@ -68,7 +69,12 @@ import {
   personOffsetsFor,
   validateParams,
 } from '@engine/simulate'
-import { earningsTestSchedule } from '@engine/earningsTest'
+import {
+  earningsTestSchedule,
+  HELD_BACK_CREDITED,
+  HELD_BACK_PAST_FRA,
+  HELD_BACK_UNTIL_BIRTH_MONTH,
+} from '@engine/earningsTest'
 import {
   medicareChargeForYear,
   overlayYearContext,
@@ -234,6 +240,14 @@ export function workingYearLedger(input: WorkingYearLedgerInput): WorkingYearLed
   const heldBack = (t: number): number => (schedule.tested ? schedule.withheld[t]! : 0)
   const basisOf = (t: number): WorkingYearWithheldBasis =>
     schedule.tested && schedule.fraYearAtMost[t] === 1 ? 'fraYearAtMost' : 'law'
+  const raiseOf = (t: number): WorkingYearHeldBackRaise => {
+    const bits = schedule.tested ? schedule.heldBackCredit[t]! : 0
+    return {
+      credited: (bits & HELD_BACK_CREDITED) !== 0,
+      untilBirthMonth: (bits & HELD_BACK_UNTIL_BIRTH_MONTH) !== 0,
+      pastFullRetirementAge: (bits & HELD_BACK_PAST_FRA) !== 0,
+    }
+  }
 
   const years: ComposedYear[] = []
   for (let t = 0; t < span; t++) {
@@ -396,7 +410,9 @@ export function workingYearLedger(input: WorkingYearLedgerInput): WorkingYearLed
       comingIn: { pay: inLine(0), socialSecurity: inLine(1), otherIncome: inLine(2) },
       socialSecurityHeldBack: standalone(heldBack(0), 'the held-back Social Security'),
       withheldBasis: basisOf(0),
+      heldBackRaise: raiseOf(0),
       goingOut: { payrollTax: outLine(3), taxOnOutsideIncome: outLine(4), ownDeposits: outLine(5), workingYearCost: outLine(6) },
+      taxOnOutsideIncomeState: standalone(l0.taxOnOutsideIncomeParts.state, 'the state income tax'),
       bottomLine: bottomLine0,
       cash: l0.cash,
       alsoFromSavings: {

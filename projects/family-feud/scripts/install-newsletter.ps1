@@ -49,7 +49,12 @@ Write-Host "Python     : $python"
 
 $action = New-ScheduledTaskAction -Execute $python -Argument "`"$builder`"" -WorkingDirectory $project
 
-$trigger = New-ScheduledTaskTrigger -Daily -At ([datetime]::Today.AddHours(21).AddMinutes(45))
+$At = "21:45"
+$trigger = New-ScheduledTaskTrigger -Daily -At $At
+# LOCAL clock time, never a fixed UTC instant: -At writes StartBoundary in UTC ("...T01:45:00Z"), and
+# Task Scheduler keeps a zoned boundary pinned to that instant, so after the DST fall-back the build
+# would run at 20:45. Written here with no zone; install-gameday.ps1 has the measurement (2026-10-30).
+$trigger.StartBoundary = "{0:yyyy-MM-dd}T{1}:00" -f (Get-Date), $At
 
 # StartWhenAvailable so a run missed while the laptop slept fires on wake. A nightly job is far
 # more exposed to this than an hourly one: an hourly task that sleeps through 21:45 has another
@@ -61,6 +66,11 @@ Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger `
     -Settings $settings -Description "Builds The Nightly Feud from mule cargo + the board into newsletter\family-feud-newsletter.html, nightly at 21:45." `
     -Force | Out-Null
 Write-Host "Registered : $TaskName"
+
+# Read the trigger back from the task itself: the intended clock time, no zone.
+$bound = ([xml](Export-ScheduledTask -TaskName $TaskName)).Task.Triggers.CalendarTrigger.StartBoundary
+if ($bound -notmatch "^\d{4}-\d{2}-\d{2}T$($At):00$") { throw "Trigger registered as '$bound', not daily $At local time (no zone)." }
+Write-Host "Trigger    : daily $At local time"
 
 $edition = Join-Path $project "newsletter\family-feud-newsletter.html"
 $before = if (Test-Path $edition) { (Get-Item $edition).LastWriteTime } else { [datetime]::MinValue }

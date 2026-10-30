@@ -24,17 +24,13 @@ ranked under that rule.
 
 ▶ **START HERE (2026-10-30, written by b9-5 for b9-6): the pay check's Phase B is LIVE — `c07e5758`, CI run 41120580797
 green on both jobs (read by id). Next is Phase C.** Nothing of Phase B sits uncommitted any more.
-1. ⚑ **Briggsy's call, one command:** the backup ref `refs/wip/b9-phaseb` (`a1797bfb`, local and on origin) is spent — every
-   byte of it is on main, and the TODO's own rule was "delete it once CI is green" — but the permission classifier refused the
-   pilot's delete (`git push origin :refs/wip/b9-phaseb`, "Git Destructive"). His: `! git push origin :refs/wip/b9-phaseb && git
-   update-ref -d refs/wip/b9-phaseb`, or leave it; it harms nothing. Never route the delete through another session.
-2. **Phase C** (`docs/plans/features/working-year-pay-check-build-spec.md`): U10 (every date seed gets W, measured; the
+1. **Phase C** (`docs/plans/features/working-year-pay-check-build-spec.md`): U10 (every date seed gets W, measured; the
    `wyclock` plant — `doctorWorkingYearsStaleVault` is built), U11 (docs), the whole-file review and `/distill` (the DISTILL
    CANDIDATES below, b9-5's, b9-4's and b9-3's first). The rulings are `b9-phaseb\DECISIONS.md` 1–37; the review tools
    (every lens's repros, the mutant specs and the runner, the re-anchor classifier) are in
    `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-phaseb-review\` (`b9-4-mutants\`,
    `b9-5-mutants\`), its `FIXES.md` the progress record.
-3. **Rank the four registers filed by b9-5's re-walk** against the D7 queue (his order — never re-ordered without him):
+2. **Rank the four registers filed by b9-5's re-walk** against the D7 queue (his order — never re-ordered without him):
    Tier 0 *A self-employed worker's Social Security and Medicare tax is charged at an employee's half…* (a D7 ask, measure
    first); Tier 1 *The money picture's later years name a change without its dollars or its direction…*, *The assumptions
    sheet says "Everything the answer leans on, in one place" but shows no pay…*, *The working-year methodology row lists
@@ -837,7 +833,7 @@ These are the mechanical ones that keep costing hours.*
   `git commit-tree`, `git update-ref` with the old value — so the real index never moves; recover a lost file with
   `git show <ref>:projects/the-back-nine/<path>`, never a reset, and never `git checkout`/`restore`/`stash` the held paths.
   Deleting the spent ref (`git push origin :<ref>`) is refused to the pilot by the permission classifier: it is Briggsy's
-  one command (START HERE names it while `refs/wip/b9-phaseb` stands).
+  one command (`refs/wip/b9-phaseb` was his to delete, gone local and on origin since 2026-10-30).
 - **From the b9-14 close (2026-10-29, A6):**
   - **The once-only re-anchor rule below was broken anyway** — `pnpm doc:reanchor HEAD --apply` was invoked twice in one
     shell line (once piped to a count, once to a tail), so 276 citations moved twice (983 → 1109 → 1235). Capture ONE

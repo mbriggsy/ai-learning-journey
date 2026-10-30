@@ -112,6 +112,13 @@ import { copy } from '../src/ui/copy'
  *  - `seed:datecoststale` rides the ordinary seed walk for the result's standing line and the panel's W
  *    row (its doors walk opens the panel); both have their own crops below.
  *
+ * Increment 8 (2026-10-30, the pay check's Phase C — U10): the two unlock lines, each the gate's ONLY
+ * note. `vault:wyclock` (`date` saved under the previous working-years vintage — the clock's rules line)
+ * and `vault:datecoststale` (the stale-W witness planted as a vault — KTD21's "worth a look" input line)
+ * ride the key-agnostic `walkVaultReturn` grammar unedited: the gate frame, then the affirmed landing.
+ * Neither joins the door allowlist — their sheets are `seed:date`'s and `seed:datecoststale`'s, already
+ * walked.
+ *
  * Targets: `CADDIE_TARGETS="vault:retired,vault:stale,seed:date,intake:fork"` (comma list).
  * Back-compat: `CADDIE_SEED=budget` still works (one seed target). Default: `seed:retired`.
  */

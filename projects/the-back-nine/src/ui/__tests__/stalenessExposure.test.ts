@@ -266,7 +266,9 @@ describe('exposureForDraft — the working-year tax floor’s reach (ledger v12)
   // The pay check's two W-carrying witnesses (Phase B) read `priced` through the reach walk's W branch
   // (KTD15: a construct carrying W reads `priced` whenever anyone still works — the safe-side over-read),
   // never through a U4 measurement: a W-present run has no pre-floor twin to measure against. Kept
-  // apart so the measured list stays a measurement. U10 re-measures every date seed once each carries W.
+  // apart so the measured list stays a measurement. Since U10 the eight measured seeds carry W too, so
+  // their `priced` is over-determined (U4's measurement AND the W branch); the lists stay as the record
+  // of HOW each seed first earned it.
   const W_KEYED = ['dateshort', 'datecoststale'] as const
 
   it('every date seed U4 measured as MOVED reads `priced` — and those eight, with the W-keyed witnesses, ARE the buildable date-route seeds (a new one must be measured before it can join)', () => {
@@ -310,7 +312,9 @@ describe('exposureForDraft — the working-year tax floor’s reach (ledger v12)
   it('an UNREACHED date-route household reads `unpriced` (both still working, 45 + 47, nothing in a clamped year for the floor to price), and the same household with a working-year conversion reads `priced`', () => {
     // `date` made young and two-earner: no Social Security for 20 years (a survivor's needs 60), no RMD
     // age, Medicare onset 18+ years out, no conversion — B > 0 in every clamped year, P = 0 in all of them.
-    const base = DEV_SEEDS.date
+    // W stripped: `date` carries W since U10, and a construct carrying W reads `priced` through KTD15's
+    // branch whenever anyone still works — this arm measures the FLOOR's own reach, so it runs W-free.
+    const { workingYearCost: _w, ...base } = DEV_SEEDS.date
     // A still-working person carries no retirement age (the save gate refuses one) — Sam's is dropped.
     const { retirementAge: _samRetired, ...sam } = base.people[1]!
     const young: ScenarioDraft = {
@@ -333,7 +337,7 @@ describe('exposureForDraft — the working-year tax floor’s reach (ledger v12)
 // ── THE PAY CHECK'S W (U13's clock read, `workingYearCostForRun`) ─────────────────────────────────
 // Does THIS run carry W? The working-years table's only reader is the W-keyed check (KTD1), so this is
 // the working-years clock's exposure. The fixtures are built here, not taken from a seed's own W, so
-// each arm holds whatever W the seed registry gives a seed later (Phase C gives `date` its own).
+// each arm holds whatever W the seed registry gives a seed (U10 gave `date` its own — the same $84,000).
 describe('exposureForDraft — the pay check’s W (the working-years clock’s read)', () => {
   const { workingYearCost: _seedW, ...dateNoW } = DEV_SEEDS.date
   /** `date`'s own W, typed by hand: no budget ⇒ the quote is its $84,000 spending; no retirement

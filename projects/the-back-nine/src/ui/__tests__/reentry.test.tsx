@@ -682,10 +682,13 @@ describe('composeReentry — the working-year tax floor (ledger v12)', () => {
     return composeReentry(s, deriveStaleness(s, TODAY, exposure, false)).noteLines
   }
   /** `date` made young and two-earner (45 + 47) — nothing in any clamped year for the floor to price. A
-   *  still-working person carries no retirement age (the save gate refuses one), so Sam's is dropped. */
+   *  still-working person carries no retirement age (the save gate refuses one), so Sam's is dropped. W is
+   *  stripped: `date` carries W since U10, and a W-carrying construct reads reached through KTD15's branch
+   *  whenever anyone works — these arms measure the FLOOR's own reach. */
   const { retirementAge: _samRetired, ...sam } = DEV_SEEDS.date.people[1]!
+  const { workingYearCost: _w, ...dateNoW } = DEV_SEEDS.date
   const youngDraft: ScenarioDraft = {
-    ...DEV_SEEDS.date,
+    ...dateNoW,
     people: [
       { ...DEV_SEEDS.date.people[0]!, birthYear: 1981, currentAge: 45 },
       { ...sam, birthYear: 1979, currentAge: 47, workStatus: 'working' as const, earnedIncomeReal: 60_000 },

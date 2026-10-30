@@ -8,6 +8,7 @@ import {
   doctorStateStaleVault,
   doctorWorkingYearsStaleVault,
   agedWorkingYearsVintage,
+  AGED_PLANTS,
 } from '../devSeeds'
 import { isWorkingYearCostStale, workingYearCostStaleness } from '@intake/workingYearQuote'
 import { floorLineText, heroLead } from '../FuckOffDate'
@@ -54,6 +55,8 @@ import {
   DATE_SEARCH_PATHS,
   type DateSearchInput,
 } from '@engine/dateSearch'
+import type { WorkingYearCashLines } from '@engine/taxOverlay'
+import { workingYearBottomLine } from '@engine/workingYearLedger'
 
 /**
  * The dev-seed validity proof (the SAME render-anchor coupling intakeMap.test.ts
@@ -1564,9 +1567,19 @@ describe('the working-year tax floor — `dip`’s year-4 conversion priced on t
     expect(o.conversions?.slice(0, 5), 'the absolute-year conversion: year 4 only inside the horizon').toEqual([
       0, 0, 0, 0, 34_000,
     ])
-    expect(o.accumulation, 'the Y-truncated streams + the raw investment vector').toEqual({
+    // W rides the accumulation since U10 (the seed's own $36,000 quote), and with it — under W alone — the
+    // employer's HSA stream the own-deposits line takes back out ($0 here: no HSA). Against $110,000 of pay
+    // no working year runs short (measured 2026-10-30: zero short path-years at every offset, both tiers)
+    // and nobody has claimed before year 5, so no earnings test reaches years 0–4 — the derivation below is
+    // W-blind.
+    expect(o.accumulation, 'the Y-truncated streams + the raw investment vector + the seed’s W').toEqual({
       contributionsByPerson: [{ pretax: [8_000, 8_000, 8_000, 8_000, 8_000], employerMatch: [4_000, 4_000, 4_000, 4_000, 4_000] }, {}],
       workingYearInvestmentByPerson: [10_000, 0],
+      workingYearCostReal: 36_000,
+      employerHsaByPerson: [
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0],
+      ],
     })
     expect(o.enrolledPremium?.slice(0, 5), 'no priced ACA premium in a working year').toEqual([0, 0, 0, 0, 0])
     expect(o.medicareOnsetSimYear, 'nobody Medicare-enrolled inside the 5-year horizon').toEqual([8, 8])
@@ -1634,20 +1647,25 @@ describe('the working-year tax floor — `dip`’s year-4 conversion priced on t
 })
 
 // ---------------------------------------------------------------------------
-// The pay check's W on the seeds (`docs/plans/features/working-year-pay-check-build-spec.md` U8, U13;
-// U10's general rule). Phase B gives W to exactly three seeds: `datesolo` (the walk's W gate would stall
-// the intake-fold re-walk without it), the short witness and the stale-W witness. Every other seed stays
-// W-free until U10 mints W on each date seed by measurement.
+// The pay check's W on the seeds (`docs/plans/features/working-year-pay-check-build-spec.md` U8, U10,
+// U13). U10's general rule: EVERY date seed carries a confirmed W minted on its OWN final draft
+// (`withConfirmedW`), and no spine seed carries one. The stale-W witness is the one exception, minted on
+// `date`'s draft before its spending moved. Aged plants model a save made after this build shipped, so
+// each carries its base's W through its doctor, still fresh — except `wyclock`, whose STAMP is aged on
+// purpose (its answer stays fresh; the clock is what fires).
 // ---------------------------------------------------------------------------
-describe('the pay check’s W on the seeds (U8, U13)', () => {
+describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
   const TODAY = currentEpochDay()
+  const keys = Object.keys(DEV_SEEDS) as (keyof typeof DEV_SEEDS)[]
 
-  it('exactly the three Phase B seeds carry W — no const literal leaks it into a spread', () => {
-    const carrying = Object.entries(DEV_SEEDS)
-      .filter(([, d]) => d.workingYearCost !== undefined)
-      .map(([k]) => k)
-      .sort()
-    expect(carrying).toEqual(['datecoststale', 'dateshort', 'datesolo'])
+  it('every date seed carries W and no spine seed does — no const literal leaks it into a spread', () => {
+    const carrying = keys.filter((k) => DEV_SEEDS[k].workingYearCost !== undefined).sort()
+    expect(carrying).toEqual(keys.filter((k) => isDateRoute(DEV_SEEDS[k])).sort())
+    // Named, so a seed that falls off the date route cannot take its W with it unseen.
+    expect(carrying).toEqual([
+      'atceiling', 'date', 'date65', 'dateborder', 'datecoststale', 'datemixed', 'datenc', 'dateshort', 'datesolo',
+      'datesplit', 'dip',
+    ])
   })
 
   it('every W-carrying seed reads NOT stale through the one predicate — except the stale-W witness', () => {
@@ -1657,19 +1675,96 @@ describe('the pay check’s W on the seeds (U8, U13)', () => {
     }
   })
 
+  it('every aged plant built through its OWN doctor reads not stale — its W rides the save untouched', () => {
+    const plants = Object.entries(AGED_PLANTS)
+    expect(plants.map(([k]) => k).sort()).toEqual(['datearrived', 'datestale', 'rec', 'recold', 'stale', 'statestale', 'wyclock'])
+    for (const [key, plant] of plants) {
+      const built = scenarioFromDraft(DEV_SEEDS[plant!.base])
+      if (!built.ready) throw new Error(`[test setup] ${key}'s base ${plant!.base} must be save-ready`)
+      const hydrated = draftFromScenario(plant!.doctor(built.scenario, TODAY))
+      if (!hydrated.ok) throw new Error(`[test setup] ${key} must hydrate: ${hydrated.detail}`)
+      expect(hydrated.draft.workingYearCost, `${key} carries exactly its base's W`).toEqual(DEV_SEEDS[plant!.base].workingYearCost)
+      expect(isWorkingYearCostStale(hydrated.draft), key).toBe(false)
+    }
+  })
+
   it('a minted W is the "yes" the W step would store on that seed’s OWN draft — its own quote, its own reading', () => {
-    expect(DEV_SEEDS.datesolo.workingYearCost).toEqual({ kind: 'confirmed', quotedReal: 84_000, stateTaxReading: 'unpriced' })
-    expect(DEV_SEEDS.dateshort.workingYearCost).toEqual({ kind: 'confirmed', quotedReal: 70_000, stateTaxReading: 'unpriced' })
+    // Each quote HAND-DERIVED from the seed's literal (never through KTD5's function — DND 012): the
+    // spending figure where no budget governs; with one, the lines active in year 0 plus the
+    // out-of-pocket medical figure, minus a discretionary line that ends or starts later.
+    const quoted = (quotedReal: number, stateTaxReading: 'unpriced' | 'agi-derived' = 'unpriced') => ({
+      kind: 'confirmed',
+      quotedReal,
+      stateTaxReading,
+    })
+    expect(DEV_SEEDS.date.workingYearCost).toEqual(quoted(84_000))
+    expect(DEV_SEEDS.atceiling.workingYearCost).toEqual(quoted(84_000))
+    expect(DEV_SEEDS.datesolo.workingYearCost).toEqual(quoted(84_000))
+    expect(DEV_SEEDS.dateborder.workingYearCost).toEqual(quoted(74_000))
+    // 20,000 + 4,000 + 10,000 + 6,000 + 6,000 essentials, 14,000 + 6,000 lifelong discretionary, + 8,000 medical.
+    expect(DEV_SEEDS.datesplit.workingYearCost).toEqual(quoted(74_000))
+    // 24,000 + 5,000 + 12,000 + 6,000 + 5,000 essentials, 26,000 + 12,000 lifelong discretionary, + 8,000 medical.
+    expect(DEV_SEEDS.datemixed.workingYearCost).toEqual(quoted(98_000))
+    // Home 20,000 + Living 16,000; the go-go travel line ends (year 3), so it is left out; no medical figure.
+    expect(DEV_SEEDS.dip.workingYearCost).toEqual(quoted(36_000))
+    expect(DEV_SEEDS.date65.workingYearCost).toEqual(quoted(78_000))
+    // NC's base system starts from federal AGI.
+    expect(DEV_SEEDS.datenc.workingYearCost).toEqual(quoted(78_000, 'agi-derived'))
+    expect(DEV_SEEDS.dateshort.workingYearCost).toEqual(quoted(70_000))
   })
 
   it('the stale-W witness is `date`’s answer after its spending moved: $84,000 confirmed, $78,000 now (quote moved, reading did not)', () => {
     expect(DEV_SEEDS.datecoststale.workingYearCost).toEqual({ kind: 'confirmed', quotedReal: 84_000, stateTaxReading: 'unpriced' })
     expect(DEV_SEEDS.datecoststale.annualSpendingReal).toBe(78_000)
     expect(workingYearCostStaleness(DEV_SEEDS.datecoststale)).toEqual({ quoteMoved: true, readingMoved: false })
-    // Everything else is `date`’s own draft.
+    // Everything else is `date`’s own draft — whose own W (U10) is the same answer, still fresh there.
+    expect(DEV_SEEDS.date.workingYearCost).toEqual(DEV_SEEDS.datecoststale.workingYearCost)
     const { workingYearCost: _w, annualSpendingReal: _s, ...rest } = DEV_SEEDS.datecoststale
-    const { annualSpendingReal: _ds, ...dateRest } = DEV_SEEDS.date
+    const { workingYearCost: _dw, annualSpendingReal: _ds, ...dateRest } = DEV_SEEDS.date
     expect(rest).toEqual(dateRest)
+  })
+
+  // U6's SEED SWEEPS, owed to U10 (U6: "The seed sweeps run in U10"). On every W-carrying buildable date
+  // seed, the money picture's year 0 IS the run's own year 0 (`Object.is`, through the probe hook, on the run
+  // the picture describes: the window-top candidate, one path, nobody dies), every named later year's cash is
+  // its own year's, every year the RUN finds short is named (the producer-omission oracle), and the shown
+  // lines sum to the bottom line exactly. U6a pinned the same on test-local constructs; this is the seeds.
+  it('the money picture’s year 0 IS the run’s own on every W-carrying seed, every short year is named, and the shown lines sum to the bottom line', () => {
+    let swept = 0
+    for (const key of keys) {
+      const d = DEV_SEEDS[key]
+      if (d.workingYearCost === undefined || missingRequiredFacts(d).length > 0) continue
+      const ledger = workingYearLedgerForRun(d)
+      if (ledger === 'unknown') throw new Error(`${key}: a buildable W-carrying seed must draw a picture`)
+      const params = { ...buildCandidateParams(buildDateInput(d)!, DATE_OFFSET_WINDOW_TOP, 1), longevityMode: 'fixed-horizon' as const }
+      const byYear: WorkingYearCashLines[] = []
+      const run = simulate(params, d.seed!, { _workingYearProbe: { checkComposed: (t, _floor, lines) => (byYear[t] = lines) } })
+      expect(run.indeterminate === true || run.infeasible === true, `${key}: the run resolves`).toBe(false)
+      expect(byYear.length, `${key}: the run composed a check in every working year of the window`).toBe(DATE_OFFSET_WINDOW_TOP)
+      const l = byYear[0]!
+      const y0 = ledger.year0
+      expect(Object.is(y0.comingIn.pay.exact, l.pay), `${key}: pay`).toBe(true)
+      expect(Object.is(y0.comingIn.socialSecurity.exact, l.socialSecurity), `${key}: Social Security paid`).toBe(true)
+      expect(Object.is(y0.comingIn.otherIncome.exact, l.ongoingIncome), `${key}: other income`).toBe(true)
+      expect(Object.is(y0.goingOut.payrollTax.exact, l.payroll.total), `${key}: payroll tax`).toBe(true)
+      expect(Object.is(y0.goingOut.taxOnOutsideIncome.exact, l.taxOnOutsideIncome), `${key}: tax on the outside income`).toBe(true)
+      expect(Object.is(y0.goingOut.ownDeposits.exact, l.ownDeposits), `${key}: own deposits`).toBe(true)
+      expect(Object.is(y0.goingOut.workingYearCost.exact, l.workingYearCost), `${key}: W`).toBe(true)
+      expect(Object.is(y0.cash, l.cash), `${key}: the cash`).toBe(true)
+      for (const y of ledger.laterYears) expect(Object.is(y.cash, byYear[y.yearsIn]!.cash), `${key}: year ${y.yearsIn}'s cash`).toBe(true)
+      const named = new Set(ledger.laterYears.map((y) => y.yearsIn))
+      for (let t = 1; t < byYear.length; t++) {
+        if (workingYearBottomLine(byYear[t]!.cash) < 0) expect(named.has(t), `${key}: the run's short year ${t} is named`).toBe(true)
+      }
+      const shown =
+        y0.comingIn.pay.dollars + y0.comingIn.socialSecurity.dollars + y0.comingIn.otherIncome.dollars -
+        y0.goingOut.payrollTax.dollars - y0.goingOut.taxOnOutsideIncome.dollars - y0.goingOut.ownDeposits.dollars -
+        y0.goingOut.workingYearCost.dollars
+      expect(shown, `${key}: the shown lines sum to the bottom line`).toBe(y0.bottomLine)
+      swept++
+    }
+    // Every buildable date seed carries W (the arm above), so this is all ten of them, the short seed included.
+    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(10)
   })
 
   it('the short witness’s money picture runs SHORT in year 0 and in every later working year, with Social Security held back', () => {
@@ -1681,6 +1776,26 @@ describe('the pay check’s W on the seeds (U8, U13)', () => {
     // Every later working year is named (a short year always is) and short.
     expect(ledger.laterYears.map((y) => y.yearsIn)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9])
     for (const y of ledger.laterYears) expect(y.bottomLine, `year ${y.yearsIn}`).toBeLessThan(0)
+  })
+
+  // U10's "the short seed draws on every working path-year", through the RUN on drawn futures (the arm above
+  // reads the no-death picture). Measured 2026-10-30 at both tiers, every offset: short on every checked
+  // path-year (`b9-u10-tools\precount.mts`); here 200 paths at the window top, the full pass only (no budget).
+  it('the short witness draws on EVERY working path-year of 200 drawn futures — the run itself, not only the picture', () => {
+    const input = buildDateInput(DEV_SEEDS.dateshort)!
+    let checked = 0
+    let short = 0
+    const res = simulate(buildCandidateParams(input, DATE_OFFSET_WINDOW_TOP, 200), DEV_SEEDS.dateshort.seed!, {
+      _workingYearProbe: {
+        checkDrawn: (_t, x) => {
+          checked++
+          if (x.shortfall > 0) short++
+        },
+      },
+    })
+    expect(res.indeterminate === true || res.infeasible === true, 'the run resolves').toBe(false)
+    expect(checked, 'non-vacuous: the run checked its working years').toBeGreaterThan(1_000)
+    expect(short, 'every checked working path-year runs short').toBe(checked)
   })
 
   it('doctorWorkingYearsStaleVault ages ONLY the working-years stamp and savedAt, and its clock fires in ISOLATION', () => {
@@ -1718,9 +1833,46 @@ describe('the pay check’s W on the seeds (U8, U13)', () => {
     expect(out.kind, 'a dates outcome, never a refusal').toBe('dates')
   }, 120_000)
 
+  // `?vault=wyclock` — the registry plant (`AGED_PLANTS.wyclock`, the light doctor over `date`), driven
+  // the way `runPlantDevVault` + the unlock gate drive it: build, doctor, hydrate, read the exposure off
+  // the HYDRATED draft. The working-years line must be the gate's ONLY note (the `statestale` precedent).
+  it("'wyclock' fires the working-years clock in ISOLATION on the unlock gate — one note, and the affirm runs `date`'s own inputs", () => {
+    const plant = AGED_PLANTS.wyclock
+    expect(plant?.base, 'the plant rides the flagship date household').toBe('date')
+    expect(plant?.doctor, 'through the light doctor').toBe(doctorWorkingYearsStaleVault)
+    const built = scenarioFromDraft(DEV_SEEDS.date)
+    if (!built.ready) throw new Error('[test setup] date must be save-ready')
+    const aged = plant!.doctor(built.scenario, TODAY)
+    const hydrated = draftFromScenario(aged)
+    if (!hydrated.ok) throw new Error(`[test setup] wyclock must hydrate: ${hydrated.detail}`)
+    const report = deriveStaleness(aged, TODAY, exposureForDraft(hydrated.draft), isWorkingYearCostStale(hydrated.draft))
+    expect(report.workingYear).toEqual({ vintageMoved: true, costStale: false })
+    expect(composeReentry(aged, report).noteLines).toEqual([copy.stalenessWorkingYears])
+    // The doctor moves no engine input (only `savedAt` and the stamp), so the affirm's recompute is
+    // `?seed=date`'s own: identical date-search inputs, and the search is deterministic in them.
+    expect(buildDateInput(hydrated.draft)).toEqual(buildDateInput(DEV_SEEDS.date))
+  })
+
+  // `?vault=datecoststale` — the stale-W witness planted UNDOCTORED (KTD21's unlock line, U10): its own
+  // answer no longer matches its quote, and nothing else moved, so the gate's ONLY note is the "worth a
+  // look" line — never a rules line (it rides `anyStale`, never `rulesMoved`).
+  it("'datecoststale' as a vault speaks KTD21's \"worth a look\" line alone on the unlock gate — never a rules line", () => {
+    const built = scenarioFromDraft(DEV_SEEDS.datecoststale)
+    if (!built.ready) throw new Error('[test setup] datecoststale must be save-ready')
+    const hydrated = draftFromScenario(built.scenario)
+    if (!hydrated.ok) throw new Error(`[test setup] datecoststale must hydrate: ${hydrated.detail}`)
+    expect(hydrated.draft.workingYearCost, 'the stale answer survives the save').toEqual(DEV_SEEDS.datecoststale.workingYearCost)
+    const report = deriveStaleness(built.scenario, TODAY, exposureForDraft(hydrated.draft), isWorkingYearCostStale(hydrated.draft))
+    expect(report.workingYear).toEqual({ vintageMoved: false, costStale: true })
+    expect(report.rulesMoved, 'a stale answer is not a rules change').toBe(false)
+    expect(composeReentry(built.scenario, report).noteLines).toEqual([copy.stalenessWorkingYearCost])
+  })
+
   it('the light doctor fails LOUD on a plan that never reads the table, and on a stamp it cannot age', () => {
-    const plain = scenarioFromDraft(DEV_SEEDS.date)
-    if (!plain.ready) throw new Error('[test setup] date must be save-ready')
+    // `date` with its W stripped: every date seed carries W since U10, so the W-free plan is built here.
+    const { workingYearCost: _w, ...wFree } = DEV_SEEDS.date
+    const plain = scenarioFromDraft(wFree)
+    if (!plain.ready) throw new Error('[test setup] the W-free date plan must be save-ready')
     expect(() => doctorWorkingYearsStaleVault(plain.scenario, TODAY)).toThrow(/W-carrying/)
     expect(agedWorkingYearsVintage('working-years-2026a')).toBe('working-years-2025a')
     expect(() => agedWorkingYearsVintage('wy-2026')).toThrow(/unrecognised/)

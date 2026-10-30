@@ -1,8 +1,9 @@
 /**
  * The working-year pay check on a real dev seed (A6 of `docs/plans/features/working-year-pay-check-build-spec.md`,
- * U5's "Working widow(er)" scenario): `datemixed`'s draft, through the app's own `buildDateInput`, with W added
- * here (no seed carries W until Phase C). Engine tests never import `@ui`, so the seed-built arm lives beside the
- * seeds. Every expected figure is typed by hand from the primaries (DND 012).
+ * U5's "Working widow(er)" scenario): `datemixed`'s draft, through the app's own `buildDateInput`, carrying the
+ * seed's OWN W since U10 (it was added here before Phase C gave every date seed W; the premises arm pins that the
+ * seed's W is the $98,000 the derivation reads, and the W-absent twin strips it). Engine tests never import `@ui`,
+ * so the seed-built arm lives beside the seeds. Every expected figure is typed by hand from the primaries (DND 012).
  */
 import { describe, expect, it } from 'vitest'
 import { DEV_SEEDS } from '../devSeeds'
@@ -38,14 +39,15 @@ describe('a working widow(er) on `datemixed` (Y = 8): her whole widow(er) benefi
   const draft = DEV_SEEDS.datemixed
   const base = buildDateInput(draft)
   if (base === null) throw new Error('fixture: datemixed builds no date input')
-  const input = { ...base, workingYearCostReal: 98_000 }
+  const input = base
   const candidate = buildCandidateParams(input, 8, 1)
   const { offsets, higherClaimOffset } = personOffsetsFor(candidate.people)
   const horizon = candidate.maxHorizonYears
   const deaths = [horizon, 7] // Alex lives on; Sam dies at the end of year 6
   const schedule = earningsTestSchedule({ people: candidate.people, offsets, deathOffsets: deaths, higherClaimOffset, horizonYears: horizon })
 
-  it('the premises: the draft’s order, ages, pay and budget are the ones the hand derivation reads', () => {
+  it('the premises: the draft’s order, ages, pay, budget and its own W are the ones the hand derivation reads', () => {
+    expect(input.workingYearCostReal, 'the seed’s own confirmed W: its year-0 lines plus its medical').toBe(98_000)
     expect(candidate.people.map((p) => [p.currentAge, p.earnedIncomeReal, p.pia, p.socialSecurityClaimAge])).toEqual([
       [58, 95_000, 26_000, 67],
       [59, 85_000, 22_000, 67],
@@ -80,7 +82,8 @@ describe('a working widow(er) on `datemixed` (Y = 8): her whole widow(er) benefi
   })
 
   it('the W-absent twin is paid the benefit and carries no check — the earnings test is W’s alone (KTD1)', () => {
-    const twin = buildCandidateParams(base, 8, 1)
+    const { workingYearCostReal: _w, ...absent } = base
+    const twin = buildCandidateParams(absent, 8, 1)
     const cash = cashTermsForYear(7, twin, offsets, deaths, higherClaimOffset)
     expect(cents(cash.ss)).toBe(2_020_800)
     expect(cash.workingYearCheck).toBeUndefined()

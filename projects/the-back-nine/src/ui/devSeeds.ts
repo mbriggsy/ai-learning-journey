@@ -277,10 +277,14 @@ const retiredBorderline: ScenarioDraft = {
  * A BORDERLINE still-working couple — the DATE route's analog for the honesty cold-read: a confirmed
  * fuck-off date whose projection band STILL touches $0 in its lower percentiles (the council's point:
  * even an on-track date honestly draws the ruin tail). 58/59 both working, a marginal $800k 401(k)-
- * style Traditional IRA + $140k Roth against a $74k spend, so the crowned date (≈ 7 years out, "9 of
- * 10") carries a fan whose p10/p25 descend to $0. CAVEAT for the cold-read: the long decumulation
- * horizon gives a ~$5.7M p90 plume that squashes the ruin tail toward the axis (the parked
- * long-horizon band-scale item) — `borderline` (spine) is the cleaner ruin-tail render. The non-
+ * style Traditional IRA + $140k Roth against a $74k spend, so the crowned date carries a fan whose
+ * p10/p25 descend to $0. ⚑ CORRECTED 2026-10-30 (U10's measurement, at `DEV_CRN_SEED`): the crown is the
+ * window's EDGE — `window-edge-unconfirmed` at offset 10, quantized lower bound 0.85 at both tiers (p
+ * 0.858 provisional / 0.8535 final), floor and lifestyle identical (no budget) — not the "≈ 7 years out,
+ * 9 of 10" this line carried, which matched nothing the engine returns with or without W. CAVEAT for the
+ * cold-read: the long decumulation horizon gives a p90 plume of about $5.9M (the final tier's peak, year
+ * 54) that squashes the ruin tail toward the axis (the parked long-horizon band-scale item) —
+ * `borderline` (spine) is the cleaner ruin-tail render. The non-
  * monotone ACA-cliff "doesn't hold" dip is NOT reachable here: v1's proportional drawdown never
  * straddles the 400%-FPL cliff non-monotonically (16 candidates swept) — it needs Act 3's conversion
  * controls to manufacture, so the live cliff dip stays a parked D2c item.
@@ -504,16 +508,23 @@ const dateSplitSeed: ScenarioDraft = {
 
 /**
  * The MIXED date case (U9b Q3 — floor dated, lifestyle NOT within the window): the same
- * couple wanting a much richer retirement (heavy discretionary). Engine-proven (probe
- * 2026-07-02, provisional tier): the essentials floor crowns at offset ≈ 4 while the full
- * lifestyle never clears inside the 10-year window — the hero renders the words + how-close
+ * couple wanting a much richer retirement (heavy discretionary). The essentials floor crowns while
+ * the full lifestyle never clears inside the 10-year window — the hero renders the words + how-close
  * line, the floor line still gives the honest "essentials covered" beat. NOT the R27
  * inversion (floor earlier = the expected ordering; no disclosure note). Reconciled:
  * Σlines@0 (90,000) + M (8,000) = 98,000.
+ * ⚑ CORRECTED 2026-10-30 (U10's measurement, at `DEV_CRN_SEED`): the floor crowns at offset 7,
+ * `confirmed-date`, at BOTH tiers (quantized lower bound 0.86 provisional / 0.88 final) — not the
+ * "offset ≈ 4" the 2026-07-02 probe recorded, which matched nothing the engine returns with or without
+ * W; the lifestyle reads `no-date-in-window` at both. With W ($98,000, the budget's year-0 lines plus
+ * medical) the crowns hold, and offsets 8–10 fall a few hundredths of a point: the working widow(er)
+ * rows the earnings test now withholds turn short (the plan's U10 prediction; the U5 fixture in
+ * `workingYearCheckSeeds.test.ts` re-derives one of them by hand).
  *
  * R27 NOTE (the fourth prescribed seed, `dateinvert`, still does NOT exist — but it is now OWED,
  * not unreachable). ⚠️ CORRECTED 2026-08-01: the two sentences that used to head this note said
- * the inversion was "UNREACHABLE in v1" and would "reactivate with U10". U10 HAS SHIPPED — the
+ * the inversion was "UNREACHABLE in v1" and would "reactivate with U10". Act 3's U10 HAS SHIPPED (the
+ * Act 3 unit — not the pay check's U10 of the same number) — the
  * Roth-conversion lever is live (`rothConversion` on the draft, `expandRothConversion` wired in
  * intakeMap), and a roth-first `custom` order seed already exists in this file. Both sentences
  * were describing a world that ended; read as present tense they say the opposite of the truth.
@@ -611,6 +622,20 @@ const dateMixedSeed: ScenarioDraft = {
  * ⚑ CORRECTED at the same measurement: "nm [0,1,2] at BOTH tiers" above was already false at HEAD —
  * the FINAL tier reads [0,1] (the provisional pin in devSeeds.test.ts, the only tier pinned, holds
  * [0,1,2]). Some earlier engine change moved it unrecorded; this floor did not.
+ *
+ * THE PAY CHECK'S W (2026-10-30, `docs/plans/features/working-year-pay-check-build-spec.md` U10): W is
+ * $36,000 — Home + Living; the go-go travel line ENDS, so the quote leaves it out. MEASURED at
+ * `DEV_CRN_SEED`, W-absent against W-present, both tiers, both tracks: NO crown, non-monotone set or
+ * crowned grade moved (floor confirmed-date@0 []; lifestyle confirmed-date@5, nm [0,1,2] provisional and
+ * [0,1] final, the crown's p 0.894 / 0.8866 unchanged). Offsets 0–4 are byte-identical: their work stops
+ * before the age-62 claim, so no working year meets the earnings test. Offsets 6–10 RISE — the final
+ * lifestyle at 6 from 0.9132 to 0.9241 and at 10 from 0.9623 to 0.9848, the final floor at 10 from 0.9834
+ * to 0.9939: while both still work past 62 the test withholds most of the early benefit (excess $25,260
+ * for Alex, $5,260 for Sam) and credits those months back after full retirement age, and a withheld
+ * benefit is untaxed; without W the run paid the reduced benefit in full and the §7 clamp discarded the
+ * working-year surplus it made. The plan's prediction ("the crown moves at most one year earlier") did not
+ * happen: the crown is the claim year, which no offset below it can reach. No re-tune (the law above
+ * fires only on a lost dip or crown).
  */
 const dateDipSeed: ScenarioDraft = {
   people: [
@@ -1164,6 +1189,20 @@ const atCeilingSeed: ScenarioDraft = {
  * `stillWorkingAllMedicare`), and a W in a const literal would ride into its spreads with the WRONG
  * quote — a stale answer no one gave. Fail-loud on a seed with nothing to quote (a $0 quote cannot be
  * confirmed; the codec refuses it), never a silent W-less seed.
+ *
+ * U10's MEASUREMENT (2026-10-30, `DEV_CRN_SEED`, both tiers, both tracks — every date seed and date
+ * plant through the real date search, W-absent at HEAD against W minted by this function, then the
+ * edited tree re-run and byte-compared to the minted run): NO crown, NO non-monotone set and NO crowned
+ * grade moved on any seed or plant. `date65`, `datenc` and `atceiling` are byte-identical (each crowns
+ * at 0, and no working year in their window runs short or meets the earnings test). `date`,
+ * `dateborder`, `datesplit` and `datestale` move only in band percentiles and a few uncrowned offsets'
+ * fourth decimal (a working widow(er)'s benefit is withheld while they work and credited back later).
+ * `datemixed`'s offsets 8–10 fall a few hundredths of a point (its working-widow(er) rows turn short).
+ * `dip` and `datearrived` RISE at offsets 6–10 (see `dateDipSeed`). Year 0 of the money picture on every
+ * W-carrying seed matches a hand derivation from the primaries to the cent, line by line (pay, Social
+ * Security paid and held back, payroll, federal and NC tax, deposits, W, the bottom line). The quotes:
+ * `date` / `atceiling` / `datesolo` $84,000 · `dateborder` / `datesplit` $74,000 · `datemixed` $98,000 ·
+ * `dip` $36,000 (its go-go travel line ends, so the quote leaves it out) · `date65` / `datenc` $78,000.
  */
 function withConfirmedW(draft: ScenarioDraft): ScenarioDraft {
   const w = confirmedWorkingYearCost(draft)
@@ -1246,7 +1285,8 @@ const dateShortWitness: ScenarioDraft = {
  * THE ONE EXCEPTION to "mint W last, on the seed's own final draft" (`withConfirmedW`): a stale answer
  * is BY DEFINITION one minted on an earlier draft. So it is minted on `date`'s own draft, and the
  * spending moves AFTER the mint — named here, never a W typed into a literal. `stillWorking` itself
- * stays W-free (U10 gives `date` its own W).
+ * stays W-free: `date` takes its W at the registry like every date seed (U10) — the same $84,000 this
+ * witness confirmed, still fresh there because `date`'s spending never moved.
  */
 const dateCostStaleWitness: ScenarioDraft = {
   ...withConfirmedW(stillWorking),
@@ -1256,17 +1296,17 @@ const dateCostStaleWitness: ScenarioDraft = {
 /** The seed registry — `?seed=<key>` selects one. */
 export const DEV_SEEDS = {
   retired: retiredOnTrack,
-  date: stillWorking,
+  date: withConfirmedW(stillWorking),
   borderline: retiredBorderline,
-  dateborder: stillWorkingBorderline,
+  dateborder: withConfirmedW(stillWorkingBorderline),
   failing: retiredFailing,
   budget: retiredBudget,
-  datesplit: dateSplitSeed,
-  datemixed: dateMixedSeed,
-  dip: dateDipSeed,
+  datesplit: withConfirmedW(dateSplitSeed),
+  datemixed: withConfirmedW(dateMixedSeed),
+  dip: withConfirmedW(dateDipSeed),
   order: customOrderSeed,
   health: retiredHealth,
-  date65: stillWorkingAllMedicare,
+  date65: withConfirmedW(stillWorkingAllMedicare),
   surplus: surplusWitness,
   buckets: multiBucketWitness,
   steer: noPretaxSteer,
@@ -1274,16 +1314,16 @@ export const DEV_SEEDS = {
   pa: paAffirmation,
   fl: flAffirmation,
   elsewhere: elsewhereAnswered,
-  datenc: dateNcSeed,
+  datenc: withConfirmedW(dateNcSeed),
   healthnc: healthNcSeed,
   healthgap: healthGapSeed,
   healthss: healthSsSeed,
-  // The pay check (U8): `datesolo` carries its own W — the walk's W gate would stall the intake-fold
-  // re-walk without it (a W-absent date draft cannot complete the walk). It is the refusal witness, so
-  // its quote reads the DRAFT (`workingYearQuote` never builds a run) and its money picture is the
-  // calm `'unknown'` face.
+  // The pay check (U8 Phase B, U10 the rest): every date seed carries a confirmed W minted on its OWN
+  // final draft (`withConfirmedW`), so the W step opens on a fresh yes and the walk completes. `datesolo`
+  // is the refusal witness, so its quote reads the DRAFT (`workingYearQuote` never builds a run) and its
+  // money picture is the calm `'unknown'` face.
   datesolo: withConfirmedW(dateSoloCoverage),
-  atceiling: atCeilingSeed,
+  atceiling: withConfirmedW(atCeilingSeed),
   dateshort: withConfirmedW(dateShortWitness),
   datecoststale: dateCostStaleWitness,
 } satisfies Record<string, ScenarioDraft>
@@ -1501,7 +1541,7 @@ export function doctorStateStaleVault(s: ScenarioV3, todayEpochDay: number): Sce
  * quote input stay untouched, so the plan's W answer stays FRESH (no re-mint) and the working-years
  * clock fires in ISOLATION. Fail-loud on a base that carries no W or no working-years stamp — such a
  * plan never reads the table, so the clock could never fire (a wiring error, never a silent no-op).
- * The `wyclock` plant over it lands with U10 (W on every date seed).
+ * `?vault=wyclock` rides it, over `date` ({@link AGED_PLANTS}).
  */
 export function doctorWorkingYearsStaleVault(s: ScenarioV3, todayEpochDay: number): ScenarioV3 {
   const stamp = s.dateVintage?.workingYearsVintage
@@ -1566,7 +1606,10 @@ const ARRIVED_SAVED_DAYS_AGO = 30
  * the full depth and fabricates a household that is organically impossible — in 2020 this couple
  * would have been 51, not 57. Aging `birthYear` by the same depth restores the invariant exactly,
  * keeps `currentAge` (so the engine sees the SAME household and the crown does not move — MEASURED:
- * floor 0 / lifestyle 5 with and without the birth-year shift, byte-identical), and describes a real
+ * floor 0 / lifestyle 5 with and without the birth-year shift, byte-identical; RE-MEASURED 2026-10-30
+ * once `dip` carried W (the pay check's U10), both tiers: the whole date-search output is still
+ * byte-identical with and without the shift — the earnings test keys on `currentAge + t` and on a full
+ * retirement age both birth years share, 67), and describes a real
  * arrived household: born 1963, planned at 57 to stop at offset 5, and that year is now behind them.
  *
  * ⚠️ THIS PLANT LIGHTS **ONE** ARRIVED ARM, NOT TWO. The floor crowns at 0, and `floorLineText`
@@ -1840,12 +1883,15 @@ export function doctorRecordSuperseded(s: ScenarioV3, todayEpochDay: number): Sc
  *  priced-state stale plant rides the light {@link doctorStateStaleVault}, which never trips the
  *  engine's priced-state year bound). Both doctors share the `(ScenarioV3, todayEpochDay) → ScenarioV3`
  *  shape, so the dispatch is uniform. */
-interface AgedPlant {
+export interface AgedPlant {
   readonly base: DevSeedKey
   readonly doctor: (s: ScenarioV3, todayEpochDay: number) => ScenarioV3
 }
 
-const AGED_PLANTS: Readonly<Partial<Record<string, AgedPlant>>> = {
+/** EXPORTED for the devSeeds battery (like the doctors): the pay check's U10 sweep builds EVERY plant
+ *  through its own doctor and reads the one W-stale predicate on it — a list re-typed in the test would
+ *  drift from this one the day a plant is added. */
+export const AGED_PLANTS: Readonly<Partial<Record<string, AgedPlant>>> = {
   stale: { base: 'retired', doctor: doctorStaleVault },
   datestale: { base: 'datesplit', doctor: doctorStaleVault },
   // `statestale` = the NC-priced spine household (`nc`) doctored stale THIS SAME YEAR via the LIGHT
@@ -1869,6 +1915,13 @@ const AGED_PLANTS: Readonly<Partial<Record<string, AgedPlant>>> = {
   // ≥1). See {@link doctorArrivedVault} for why it ages `birthYear` alongside `startCalendarYear`
   // and why this plant lights ONE arrived arm, not two.
   datearrived: { base: 'dip', doctor: doctorArrivedVault },
+  // The pay check's U10 — `wyclock`: `date` (W confirmed at its own $84,000 quote) saved under the
+  // PREVIOUS working-years vintage through the LIGHT doctor, so the working-years clock fires in
+  // ISOLATION on the unlock gate (`stalenessWorkingYears` alone — the `statestale` precedent). `date`
+  // because it is the flagship date household and stateless: no state clock can join, and its
+  // contribution and blend stamps stay fresh (the doctor touches neither). The doctor moves no engine
+  // input, so the affirm lands `?seed=date`'s own reading.
+  wyclock: { base: 'date', doctor: doctorWorkingYearsStaleVault },
 }
 
 async function runPlantDevVault(key: string): Promise<PlantResult> {

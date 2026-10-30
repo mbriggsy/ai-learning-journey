@@ -2050,6 +2050,63 @@ test.describe(`the state-tax staleness return (?vault=statestale) — the isolat
   })
 })
 
+// ── the pay check's two unlock lines (?vault=wyclock · ?vault=datecoststale — U10) ────────────────
+// `wyclock` is `date` saved under the PREVIOUS working-years vintage (the light doctor), so the
+// working-years clock fires; `datecoststale` is the stale-W witness planted as a vault, so KTD21's "worth
+// a look" line fires (an input re-confirm, never a rules line). Each must be the gate's ONLY note, by
+// name, with the decision pair in the first frame — the `statestale` isolation law. The affirm lands the
+// date route's resolved reading; the date route scrolls by design, so past the gate the arm pins the
+// order contract (the `datestale` precedent), never a full one-frame fit.
+const PAY_CHECK_UNLOCKS = [
+  { key: 'wyclock', note: copy.stalenessWorkingYears, sibling: copy.stalenessWorkingYearCost },
+  { key: 'datecoststale', note: copy.stalenessWorkingYearCost, sibling: copy.stalenessWorkingYears },
+] as const
+
+for (const u of PAY_CHECK_UNLOCKS) {
+  test.describe(`the pay check’s unlock line (?vault=${u.key}) — one note, the decision pair in frame (${REAL.width}×${REAL.height})`, () => {
+    test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+    test('exactly one gate note, by name; the affirm lands the resolved date reading, doors last', async ({ page }) => {
+      await page.goto(`/?vault=${u.key}`)
+      const unlock = page.getByRole('button', { name: 'Open my plan' })
+      await expect(unlock, `the ${u.key} plant did not land on the unlock screen`).toBeVisible({ timeout: 30_000 })
+      await unlock.click()
+
+      const affirm = page.getByRole('button', { name: /Still about right/ })
+      await expect(affirm).toBeVisible({ timeout: 30_000 })
+      await page.evaluate(() => document.fonts.ready)
+      await page.evaluate(() => window.scrollTo(0, 0))
+      const affirmBox = await affirm.boundingBox()
+      expect(affirmBox, 'the affirm CTA reported no box').not.toBeNull()
+      expect(affirmBox!.y + affirmBox!.height, 'the affirm CTA sits below the first frame at the real window').toBeLessThanOrEqual(
+        REAL.height,
+      )
+      // THE ISOLATION: one note, this plant's own — and the pay check's other line is dark (a negative
+      // aimed at a live key, never a deleted one: insight 086).
+      const notes = page.locator('.reentry-notes p')
+      await expect(notes, `${u.key}: exactly one gate note`).toHaveCount(1)
+      await expect(notes).toContainText(u.note)
+      await expect(page.getByText(u.sibling), 'the pay check’s other unlock line stays dark').toHaveCount(0)
+
+      await affirm.click()
+      await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: 90_000 })
+      await settleLayout(page)
+      await page.evaluate(() => window.scrollTo(0, 0))
+      await assertResolvedDate(page)
+      await assertOneVisibleDisclaimer(page, 'laptop')
+      // The stale answer survives the save: the result keeps its standing line (R4 — the engine still
+      // runs on the last figure given). The fresh-vintage answer on `wyclock` carries none.
+      await expect(page.locator('.cs-paycheck-note')).toHaveCount(u.key === 'datecoststale' ? 1 : 0)
+      const doors = await page.locator('.result-quiet-row').boundingBox()
+      expect(doors, 'the quiet doors render').not.toBeNull()
+      const trailing = await doorsLastWalk(page, 'body')
+      expect(trailing.counted).toBeGreaterThan(DOORS_WALK_FLOOR)
+      expect(trailing.maxOtherBottom, `content renders BELOW the quiet doors (${trailing.desc})`).toBeLessThanOrEqual(
+        doors!.y + doors!.height + 0.5,
+      )
+    })
+  })
+}
+
 // ── U13 follow-up: the AGED date route (?vault=datestale — the re-based odds ladder) ──────────
 // The two-time-bases fix (council 2026-07-10): the hero re-derives "years out" from TODAY, and
 // the ladder below it must speak the SAME clock — the Caddie panel's hard-flagged blocker was

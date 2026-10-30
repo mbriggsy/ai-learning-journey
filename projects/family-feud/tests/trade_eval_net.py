@@ -39,7 +39,8 @@ def fixture():
 
 def fault(spec):
     """A knob's failure: a str is a Refuse with that text; an exception instance is raised as itself,
-    for the faults the network layer does not wrap (an IndexError, a dropped connection)."""
+    for the faults the network layer does not wrap (an IndexError). A raw dropped connection here is
+    raised ABOVE get_json, which has refused one itself since 2026-10-29 (docs/insights/038)."""
     return spec if isinstance(spec, BaseException) else g.Refuse(spec)
 
 

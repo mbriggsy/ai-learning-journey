@@ -9,9 +9,11 @@ cell holds the `/nfl/players/<cbs id>/` link, or `/nfl/teams/<CODE>/` on the DST
 controls are the point: a parser that silently returns nothing, or a stat map that scores every
 player wrong, must REFUSE rather than print a healthy-looking table.
 """
+import http.client
 import os
 import sys
 import unittest
+from unittest import mock
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts"))
 import external_projections as x  # noqa: E402
@@ -114,6 +116,17 @@ class ProveTheMap(unittest.TestCase):
     def test_refuses_too_little_evidence(self):
         with self.assertRaises(x.Refuse):
             x._prove([0.0] * 10, "TEST")
+
+
+class DroppedConnection(unittest.TestCase):
+    """urllib leaves a connection dropped mid-response unwrapped (docs/insights/038)."""
+
+    def test_every_dropped_connection_is_a_refusal_not_a_traceback(self):
+        for err in (http.client.RemoteDisconnected("Remote end closed connection without response"),
+                    http.client.IncompleteRead(b""), ConnectionResetError("reset")):
+            with mock.patch.object(x.urllib.request, "urlopen", side_effect=err):
+                with self.assertRaises(x.Refuse, msg=repr(err)):
+                    x._get("https://example.invalid")
 
 
 if __name__ == "__main__":

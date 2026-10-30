@@ -17,10 +17,14 @@ draft date; an Out tag that lands at 11:35 before a 13:00 kickoff is not an hour
   * /players/nfl            -> injury tags, positions, names (the ~14 MB dump; once per run is fine)
   * /projections/nfl/<season>/<week> -> Sleeper's per-player projections, scored with OUR league's
     scoring_settings so "bench beats starter" is measured in the points this league actually pays
-  * ESPN's scoreboard       -> kickoff TIMES. Sleeper carries a game's date and never its hour, and
-    the hour is what decides whether a swap is safe (see ⏸ below). A secondary source: if ESPN
-    fails, the report says so on its header line and the ↑ line runs blind to kickoff order, as it
-    did before 2026-09-27. It never refuses the run.
+  * ESPN's scoreboard       -> kickoff TIMES and where each game STANDS (scheduled / under way, with
+    its period and clock / final / bye). Sleeper carries a game's date and never its hour, and the
+    hour is what decides whether a swap is safe (see ⏸ below); the game's state is what decides
+    whether the Expected header reads a starter's live points. One fetch, read twice and
+    separately. A secondary source: if the fetch fails, the report says so on one header line, the
+    ↑ line runs blind to kickoff order (as before 2026-09-27) and Expected falls back to the date
+    rule (as before 2026-10-29). If only one reading fails, only its line prints. Never a refusal.
+  * /matchups/w players_points -> every rostered player's LIVE score in this league's points.
 
 WHAT IT SAYS, most urgent first:
   🚨 a starter tagged Out / Doubtful / IR / Suspended, or an empty slot -- with the best eligible
@@ -58,17 +62,26 @@ movable, on the bench (offered as a sub) and in the lineup (offered as the man t
 locked starter is left alone even if the score is ugly, because nothing can be done about him.
 A ⚠ fallback must still be unlocked when it is NEEDED -- at the Questionable starter's inactives,
 not at the time this runs -- so an 08:00 run no longer offers a 1:00 body as the fallback for a
-4:25 starter. The banked-points total and the opponent's ℹ line still read the date alone.
+4:25 starter. The opponent's ℹ line uses the same lock rule, so a 15:00 run no longer lists his tagged
+1:00 starters who have already played.
+
+THE EXPECTED HEADER reads each starter's game off ESPN: live points once it is final, live points
+plus the projection for the share of the game left while it is under way (a defense under way
+excepted -- see projected_total), the projection before it. Until 2026-10-29 it read the date alone,
+so every game played TODAY sat at its pre-game projection: wk 6, 11:00, it said us 146.5 / them 121.6
+while their Tuten (London, 9:30) already had 19.0 against 13.2. "On the board now" is Sleeper's own
+running score, partial games included.
 
 Exit codes mirror the draft watcher: 0 = ran, nothing urgent. 1 = something worth reading was
 written (🚨 / ⚠ / ↑). 2 = could not reach Sleeper or the payload was not what we asked for.
 """
 import argparse
+import collections
 import datetime
+import http.client
 import json
 import os
 import sys
-import urllib.error
 import urllib.request
 import random
 import zoneinfo
@@ -124,7 +137,12 @@ def get_json(url, label, timeout=TIMEOUT, headers=None):
             if r.status != 200:
                 raise Refuse(f"{label}: HTTP {r.status}")
             return json.loads(r.read().decode("utf-8"))
-    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
+    # OSError covers URLError and TimeoutError. HTTPException is a connection dropped mid-response
+    # (RemoteDisconnected, IncompleteRead): urllib raises those from getresponse()/read() unwrapped,
+    # and until 2026-10-29 one crashed the run with a traceback and exit 1 -- "something worth reading
+    # was written" -- having written nothing. ValueError covers a bad body: JSONDecodeError, and the
+    # UnicodeDecodeError .decode() raises on bytes that are not UTF-8 (docs/insights/038).
+    except (OSError, http.client.HTTPException, ValueError) as e:
         raise Refuse(f"{label}: {e}") from e
 
 
@@ -154,14 +172,65 @@ def kickoffs_from_espn(board):
     return out
 
 
-def pull_kickoffs(season, week, season_type):
+#: Where a starter's game stands, read off ESPN's scoreboard for the Expected header.
+FINAL, LIVE, AHEAD, BYE, UNKNOWN = "final", "live", "ahead", "bye", "unknown"
+QUARTER_SECONDS = 15 * 60
+
+
+def games_from_espn(board):
+    """Pure. ESPN scoreboard payload -> {Sleeper team abbr: (state, left)}.
+
+    state is FINAL (status.type.completed), LIVE (type.state "in"), AHEAD (type.state "pre"), BYE (named in
+    week.teamsOnBye) or UNKNOWN -- anything else, e.g. the real 2022 CIN-BUF game: STATUS_CANCELED, state
+    "post", completed false. `left` is the share of regulation still to play for a LIVE game, from ESPN's
+    period and the clock's seconds left in it: 1.0 at kickoff, 0.5 at halftime, 0 in overtime. Measured
+    2026-10-29: event.status and competitions[0].status carry the same fields; the latter is read.
+
+    Refuses a payload it cannot read whole, the arithmetic included (a clock of None is a TypeError), so
+    one changed field degrades the header to the date rule and says so, rather than crashing the run."""
+    events = board.get("events") if isinstance(board, dict) else None
+    if not events:
+        raise Refuse("ESPN scoreboard carried no events")
+    out = {}
+    try:
+        for e in events:
+            comp = e["competitions"][0]
+            st = comp["status"]
+            if st["type"]["completed"] is True:
+                state, left = FINAL, 0.0
+            elif st["type"]["state"] == "in":
+                period, clock = int(st["period"]), float(st["clock"])
+                left = 0.0 if period > 4 else ((4 - period) * QUARTER_SECONDS + clock) / (4 * QUARTER_SECONDS)
+                state, left = LIVE, min(1.0, max(0.0, left))
+            elif st["type"]["state"] == "pre":
+                state, left = AHEAD, 1.0
+            else:
+                state, left = UNKNOWN, None
+            for c in comp["competitors"]:
+                t = c["team"]["abbreviation"]
+                out[ESPN_TO_SLEEPER.get(t, t)] = (state, left)
+        for team in (board.get("week") or {}).get("teamsOnBye") or []:
+            t = team["abbreviation"]
+            out.setdefault(ESPN_TO_SLEEPER.get(t, t), (BYE, None))
+    except (KeyError, IndexError, TypeError, ValueError, AttributeError, OverflowError) as err:
+        raise Refuse(f"ESPN game status unreadable: {err!r}") from err
+    return out
+
+
+def pull_board(season, week, season_type):
+    """The week's raw ESPN scoreboard. main reads kickoffs and game status off ONE fetch, separately."""
     st = ESPN_SEASON_TYPE.get(season_type)
     if st is None:
         raise Refuse(f"no ESPN season type for {season_type!r}")
-    return kickoffs_from_espn(get_json(f"{ESPN}?seasontype={st}&week={week}&dates={season}", "ESPN scoreboard",
-                                       # ESPN 403s our named User-Agent (and only it: urllib's default,
-                                       # curl's and a browser's all 200 -- measured 2026-09-27)
-                                       headers={}))
+    return get_json(f"{ESPN}?seasontype={st}&week={week}&dates={season}", "ESPN scoreboard",
+                    # ESPN 403s our named User-Agent (and only it: urllib's default,
+                    # curl's and a browser's all 200 -- measured 2026-09-27)
+                    headers={})
+
+
+def pull_kickoffs(season, week, season_type):
+    """Kept for trade_eval.py, which reads kickoffs and nothing else."""
+    return kickoffs_from_espn(pull_board(season, week, season_type))
 
 
 def clock(dt):
@@ -378,9 +447,9 @@ def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=N
         for slot, pid in zip(slots, opp.get("starters") or []):
             if pid in ("0", "", None):
                 theirs.append(f"{slot}: EMPTY")
-            elif tag(pid) and not played(pid):
+            elif tag(pid) and not locked(pid):
                 theirs.append(f"{slot}: {describe(pid)}")
-            elif not has_game(pid) and not played(pid):
+            elif not has_game(pid) and not locked(pid):
                 theirs.append(f"{slot}: {describe(pid)} — NO GAME")
         if theirs:
             rows.append(("ℹ", "OPPONENT'S TAGGED STARTERS", "\n".join(theirs)))
@@ -388,18 +457,70 @@ def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=N
     return rows
 
 
-def projected_total(roster, proj, scoring, points_so_far, today):
-    """Banked actuals for played starters + projections for the rest."""
-    total = 0.0
+#: What a lineup should finish with, and how many starters are in each state. The counts are None
+#: when ESPN could not be read (the date rule has no "playing").
+Expected = collections.namedtuple("Expected", "total done playing ahead unknown")
+
+
+def projected_total(roster, proj, scoring, points_so_far, today, players, games):
+    """Every starter's live points, projection, or a blend, by where his game stands.
+
+    points_so_far: the matchup's players_points (Sleeper's live score, every rostered player listed).
+    players:       the /players/nfl dump: a starter's CURRENT team, used only when he has no projection
+                   row (Sleeper deletes the row of a player tagged Out).
+    games:         games_from_espn's map, or None when ESPN could not be read.
+
+    His game is found through his projection row's OPPONENT first: that team is in the very game the
+    row prices, and it never moves. A kicker cut on Friday after scoring on Thursday has team None in
+    the dump, and one claimed by a Monday team reads that team's game -- either way the dump's team
+    scored his real Thursday points at his projection (review 2026-10-29).
+
+    FINAL -> his live points. LIVE -> live + projection x the share of the game left (wk 6: Tuten had 19.0
+    at halftime against a 13.2 projection; the date rule scored him 13.2 all morning). AHEAD, BYE, no team
+    -> projection (0 for a bye). A DEFENSE whose game is LIVE scores its projection: its live line carries a
+    points-allowed tier that only falls (10 at kickoff in this league), so adding the projection to it
+    counted that tier twice. UNKNOWN -- an ESPN state that is none of these, a team on neither ESPN list
+    while Sleeper projects him a game, or a final/live starter missing from players_points -- scores his
+    projection and is counted, never banked as 0 (docs/insights/008).
+
+    games None -> the rule this function had before 2026-10-29: live points for a game dated before today,
+    projection for the rest. A game played TODAY reads as unplayed; the header says so."""
+    pts = points_so_far or {}
+    total, n = 0.0, dict.fromkeys(("done", "playing", "ahead", "unknown"), 0)
     for pid in roster.get("starters") or []:
         if pid in ("0", "", None):
             continue
-        d = (proj.get(pid) or {}).get("date")
-        if d and datetime.date.fromisoformat(d) < today:
-            total += float((points_so_far or {}).get(pid) or 0.0)
-        else:
-            total += score((proj.get(pid) or {}).get("stats"), scoring)
-    return total
+        row = proj.get(pid) or {}
+        projected = score(row.get("stats"), scoring)
+        if games is None:
+            d = row.get("date")
+            total += float(pts.get(pid) or 0.0) if d and datetime.date.fromisoformat(d) < today else projected
+            continue
+        p = players.get(pid) or {}
+        state, left = games.get(row.get("opponent"), games.get(p.get("team"), (None, None)))
+        live = pts.get(pid)
+        readable = isinstance(live, (int, float)) and not isinstance(live, bool)
+        if state is None and row.get("date"):
+            state = UNKNOWN                     # Sleeper says he plays this week; ESPN has never heard of it
+        if state in (FINAL, LIVE) and not readable:
+            state = UNKNOWN
+        if state == FINAL:
+            total += float(live)
+            n["done"] += 1
+        elif state == LIVE:
+            total += projected if p.get("position") == "DEF" else float(live) + projected * left
+            n["playing"] += 1
+        elif state == UNKNOWN:
+            total += projected
+            n["unknown"] += 1
+        elif state == AHEAD:
+            total += projected
+            n["ahead"] += 1
+        else:                                   # no game at all: a bye, a free agent
+            total += projected
+    if games is None:
+        return Expected(total, None, None, None, None)
+    return Expected(total, **n)
 
 
 def pull():
@@ -438,19 +559,45 @@ def sides(rosters, users, matchups):
     return ours, mine, opp, opp_m, names
 
 
-def render(week, ours, mine, opp, opp_m, names, rows, proj, scoring, today, stamp, blind=None):
-    us_total = projected_total(ours, proj, scoring, (mine or {}).get("players_points"), today)
+def counts(e):
+    """'3 done, 2 playing, 5 to go' -- with the unreadable count only when there is one."""
+    s = f"{e.done} done, {e.playing} playing, {e.ahead} to go"
+    if e.unknown:
+        s += f", {e.unknown} unreadable (scored at {'its' if e.unknown == 1 else 'their'} projection)"
+    return s
+
+
+def render(week, ours, mine, opp, opp_m, names, rows, proj, scoring, today, stamp, players, games,
+           blind=None, live_blind=None):
+    """blind: why kickoff times are missing. live_blind: why game status is missing (games is None).
+    Both carry the same reason when the one ESPN fetch failed, and print as one line."""
+    us = projected_total(ours, proj, scoring, (mine or {}).get("players_points"), today, players, games)
+    basis = ("live points for games under way, projections for the rest" if games is not None
+             else "projections for every game not dated before today")
     head = [f"## WEEK {week} GAME DAY — {stamp}", ""]
     if opp:
-        them = projected_total(opp, proj, scoring, (opp_m or {}).get("players_points"), today)
+        them = projected_total(opp, proj, scoring, (opp_m or {}).get("players_points"), today, players, games)
         head.append(f"vs **{names.get(opp.get('owner_id')) or '?'}** (roster {opp['roster_id']}). "
-                    f"Expected: us {us_total:.1f}, them {them:.1f} "
-                    f"(banked {float((mine or {}).get('points') or 0):.1f} / {float((opp_m or {}).get('points') or 0):.1f}, "
-                    f"projections for the rest).")
+                    f"Expected: us {us.total:.1f}, them {them.total:.1f} — {basis}. "
+                    f"On the board now: {float((mine or {}).get('points') or 0):.1f} / "
+                    f"{float((opp_m or {}).get('points') or 0):.1f}.")
+        if games is not None:
+            head.append(f"Our starters: {counts(us)} · theirs: {counts(them)}.")
     else:
-        head.append(f"No matchup found for week {week}. Expected {us_total:.1f}.")
-    if blind:
-        head += ["", f"_Kickoff times unavailable ({blind}) — ↑ lines do not know which game locks first._"]
+        head.append(f"No matchup found for week {week}. Expected {us.total:.1f} — {basis}.")
+        if games is not None:
+            head.append(f"Our starters: {counts(us)}.")
+    unlocked = "every line (🚨 ⚠ ↑ ℹ) treats a game played today as not yet locked"
+    if blind and blind == live_blind:
+        head += ["", f"_ESPN unavailable ({blind}) — ↑ lines do not know which game locks first, {unlocked}, "
+                     f"and Expected scores a game played today at its pre-game projection._"]
+    else:
+        if blind:
+            head += ["", f"_Kickoff times unavailable ({blind}) — ↑ lines do not know which game locks first, "
+                         f"and {unlocked}._"]
+        if live_blind:
+            head += ["", f"_Live game status unavailable ({live_blind}) — Expected scores a game played today "
+                         f"at its pre-game projection._"]
     head.append("")
     if not rows:
         head.append("Nothing to do. Every starter is untagged, every slot filled, no bench body projects "
@@ -481,16 +628,37 @@ def main(argv=None):
     except Refuse as e:
         print(f"REFUSED: {e}", file=sys.stderr)
         return 2
+    # ESPN is a secondary source: whatever goes wrong there is said on the report, never a refused run.
+    # Kickoffs and game status are read off one fetch SEPARATELY, so a field ESPN changes in one
+    # cannot cost the other.
+    kickoffs = games = blind = live_blind = None
     try:
-        kickoffs, blind = pull_kickoffs(state["season"], state["week"], state.get("season_type", "regular")), None
-    except Refuse as e:                 # secondary source: say so on the report, never refuse the run
-        kickoffs, blind = None, str(e)
-    today = now().date()
+        board = pull_board(state["season"], state["week"], state.get("season_type", "regular"))
+    except Refuse as e:
+        blind = live_blind = str(e)
+    else:
+        # A fetch that SUCCEEDS can still return the wrong thing: a 200 `null` reaches each parser,
+        # which refuses it, and a board for another week is refused here -- read against this week's
+        # players_points, a finished week banks every pre-game 0.0 as final (review 2026-10-29).
+        served = (board.get("week") or {}).get("number") if isinstance(board, dict) else None
+        if isinstance(served, int) and served != state["week"]:
+            blind = live_blind = f"ESPN served week {served}, not week {state['week']}"
+        else:
+            try:
+                kickoffs = kickoffs_from_espn(board)
+            except Refuse as e:
+                blind = str(e)
+            try:
+                games = games_from_espn(board)
+            except Refuse as e:
+                live_blind = str(e)
+    at = now()                          # one clock for the date, the lock rule and the stamp
+    today, now_utc = at.date(), at.astimezone(datetime.timezone.utc)
     rows = assess(ours, opp, players, proj, league.get("scoring_settings") or {},
-                  league.get("roster_positions") or [], today, kickoffs,
-                  datetime.datetime.now(datetime.timezone.utc))
+                  league.get("roster_positions") or [], today, kickoffs, now_utc)
     text = render(state["week"], ours, mine, opp, opp_m, names, rows, proj,
-                  league.get("scoring_settings") or {}, today, now().strftime("%Y-%m-%d %H:%M:%S"), blind)
+                  league.get("scoring_settings") or {}, today, at.strftime("%Y-%m-%d %H:%M:%S"),
+                  players, games, blind, live_blind)
     print(text)
     if not args.stdout:
         write(text)

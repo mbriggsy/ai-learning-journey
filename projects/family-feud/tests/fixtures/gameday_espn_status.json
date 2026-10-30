@@ -1,0 +1,364 @@
+{
+ "canceled_2022_wk17_cin_buf": {
+  "competitions": [
+   {
+    "competitors": [
+     {
+      "team": {
+       "abbreviation": "CIN"
+      }
+     },
+     {
+      "team": {
+       "abbreviation": "BUF"
+      }
+     }
+    ],
+    "status": {
+     "clock": 372.0,
+     "displayClock": "6:12",
+     "period": 1,
+     "type": {
+      "completed": false,
+      "name": "STATUS_CANCELED",
+      "shortDetail": "Canceled",
+      "state": "post"
+     }
+    }
+   }
+  ],
+  "date": "2023-01-03T01:30Z"
+ },
+ "tnf_wk8": {
+  "20261029-194338": {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "team": {
+        "abbreviation": "GB"
+       }
+      },
+      {
+       "team": {
+        "abbreviation": "CAR"
+       }
+      }
+     ],
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "period": 0,
+      "type": {
+       "completed": false,
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "10/29 - 8:15 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-10-30T00:15Z"
+  },
+  "20261029-194738": {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "team": {
+        "abbreviation": "GB"
+       }
+      },
+      {
+       "team": {
+        "abbreviation": "CAR"
+       }
+      }
+     ],
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "period": 0,
+      "type": {
+       "completed": false,
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "10/29 - 8:15 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-10-30T00:15Z"
+  },
+  "20261029-195138": {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "team": {
+        "abbreviation": "GB"
+       }
+      },
+      {
+       "team": {
+        "abbreviation": "CAR"
+       }
+      }
+     ],
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "period": 0,
+      "type": {
+       "completed": false,
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "10/29 - 8:15 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-10-30T00:15Z"
+  },
+  "20261029-195539": {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "team": {
+        "abbreviation": "GB"
+       }
+      },
+      {
+       "team": {
+        "abbreviation": "CAR"
+       }
+      }
+     ],
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "period": 0,
+      "type": {
+       "completed": false,
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "10/29 - 8:15 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-10-30T00:15Z"
+  },
+  "20261029-195939": {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "team": {
+        "abbreviation": "GB"
+       }
+      },
+      {
+       "team": {
+        "abbreviation": "CAR"
+       }
+      }
+     ],
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "period": 0,
+      "type": {
+       "completed": false,
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "10/29 - 8:15 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-10-30T00:15Z"
+  },
+  "20261029-200339": {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "team": {
+        "abbreviation": "GB"
+       }
+      },
+      {
+       "team": {
+        "abbreviation": "CAR"
+       }
+      }
+     ],
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "period": 0,
+      "type": {
+       "completed": false,
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "10/29 - 8:15 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-10-30T00:15Z"
+  },
+  "20261029-200739": {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "team": {
+        "abbreviation": "GB"
+       }
+      },
+      {
+       "team": {
+        "abbreviation": "CAR"
+       }
+      }
+     ],
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "period": 0,
+      "type": {
+       "completed": false,
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "10/29 - 8:15 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-10-30T00:15Z"
+  },
+  "20261029-201140": {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "team": {
+        "abbreviation": "GB"
+       }
+      },
+      {
+       "team": {
+        "abbreviation": "CAR"
+       }
+      }
+     ],
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "period": 0,
+      "type": {
+       "completed": false,
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "10/29 - 8:15 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-10-30T00:15Z"
+  },
+  "20261029-201540": {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "team": {
+        "abbreviation": "GB"
+       }
+      },
+      {
+       "team": {
+        "abbreviation": "CAR"
+       }
+      }
+     ],
+     "status": {
+      "clock": 0.0,
+      "displayClock": "0:00",
+      "period": 0,
+      "type": {
+       "completed": false,
+       "name": "STATUS_SCHEDULED",
+       "shortDetail": "10/29 - 8:15 PM EDT",
+       "state": "pre"
+      }
+     }
+    }
+   ],
+   "date": "2026-10-30T00:15Z"
+  },
+  "20261029-201940": {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "team": {
+        "abbreviation": "GB"
+       }
+      },
+      {
+       "team": {
+        "abbreviation": "CAR"
+       }
+      }
+     ],
+     "status": {
+      "clock": 787.0,
+      "displayClock": "13:07",
+      "period": 1,
+      "type": {
+       "completed": false,
+       "name": "STATUS_IN_PROGRESS",
+       "shortDetail": "13:07 - 1st",
+       "state": "in"
+      }
+     }
+    }
+   ],
+   "date": "2026-10-30T00:15Z"
+  },
+  "20261029-202340": {
+   "competitions": [
+    {
+     "competitors": [
+      {
+       "team": {
+        "abbreviation": "GB"
+       }
+      },
+      {
+       "team": {
+        "abbreviation": "CAR"
+       }
+      }
+     ],
+     "status": {
+      "clock": 703.0,
+      "displayClock": "11:43",
+      "period": 1,
+      "type": {
+       "completed": false,
+       "name": "STATUS_IN_PROGRESS",
+       "shortDetail": "11:43 - 1st",
+       "state": "in"
+      }
+     }
+    }
+   ],
+   "date": "2026-10-30T00:15Z"
+  }
+ }
+}

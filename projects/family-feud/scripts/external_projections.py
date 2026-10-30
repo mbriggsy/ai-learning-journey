@@ -61,8 +61,8 @@ import os
 import re
 import statistics
 import sys
+import http.client
 import time
-import urllib.error
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -134,7 +134,9 @@ def _get(url, headers=None):
             if r.status != 200:
                 raise Refuse(f"{url}: HTTP {r.status}")
             return r.read().decode("utf-8", "replace")
-    except (urllib.error.URLError, TimeoutError) as e:
+    # OSError covers URLError and TimeoutError; HTTPException is a connection dropped mid-response,
+    # which urllib leaves unwrapped (docs/insights/038 -- gameday_check.get_json had the same hole)
+    except (OSError, http.client.HTTPException) as e:
         raise Refuse(f"{url}: {e}") from e
 
 

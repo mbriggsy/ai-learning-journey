@@ -1227,7 +1227,7 @@ def main(argv=None):
             raise Refuse("pricing a trade needs at least one --give and one --get")
         try:
             data = load()
-        except (OSError, http.client.HTTPException) as e:   # a dropped connection get_json does not wrap
+        except (OSError, http.client.HTTPException) as e:   # a dropped connection (get_json wraps it since 10-29)
             raise Refuse(f"the Sleeper pull failed: {why(e)}") from e
         review = int(data.league["settings"].get("trade_review_days") or 0)
         now = g.now().replace(tzinfo=g.EASTERN)

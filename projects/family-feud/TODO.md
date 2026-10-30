@@ -25,7 +25,11 @@
   and the frozen night reads us −32.83 / −45.76, Kaeperni +38.93 / +50.18. **The fixture
   `tests/fixtures/trade_eval_kaeperni_20261022.json.gz` can never be re-made** — it holds the 10-22
   projections `TestThePublishedNumber` pins. Don't delete or regenerate it.
-- **Suite: 1387 tests, OK (skipped=6)**, run 2026-10-30 with `python -m unittest discover -s tests`.
+- **The live Expected header is proven on a real game (10-30):** `TestRealThursdayNight` runs CAR @ GB (TNF wk 8)
+  through `projected_total` at pre-game, Q1, halftime (`left` 0.5 from ESPN's own clock) and the final (Sleeper's
+  `points` to the cent). **`tests/fixtures/gameday_tnf_wk8.json` and `gameday_espn_status.json`'s `tnf_wk8` are
+  one-time captures that can never be re-made.** Don't regenerate them.
+- **Suite: 1394 tests, OK (skipped=6)**, run 2026-10-30 with `python -m unittest discover -s tests`.
   31 test files · 29 scripts · 38 insights.
 - **Clocks:** mule hourly · `gameday_check.py` Sat 20:00 · Sun 08:00 · 11:30 · 15:00 · draft
   watcher · newsletter 21:45. Push/email are dead, so the files are the delivery.
@@ -59,11 +63,11 @@
    memos emptied per give (measured 10-23; a reviewer measured ~1 GB on the one-swap code). Fine on
    this 32 GB laptop; check it before trusting a smaller one. Profile `Sim.fix`'s swap loop first;
    the suite pins every number, and `TestSearch.test_the_memos_are_emptied...` pins the memo contract.
-4. **Build the Tuesday waiver report** (`docs/in-season-plan.md` §1 — still unbuilt; the gameday
+3. **Build the Tuesday waiver report** (`docs/in-season-plan.md` §1 — still unbuilt; the gameday
    check is §2 and done). Inputs are all in the inbox (`sleeper_transactions.json`,
    `sleeper_rosters.json`, `sleeper_state.json`, trending add/drop). Waivers clear **Wed ~03:15 ET**,
    measured twice (09-16, 09-23). Read Hunter's transaction log first, every Wednesday.
-5. **Byes — plan the week before** (re-derived 2026-10-23 from live `/rosters` and Sleeper's weekly
+4. **Byes — plan the week before** (re-derived 2026-10-23 from live `/rosters` and Sleeper's weekly
    projections: a team whose DEF row has no opponent is on bye, `trade_eval.bye_teams`' rule.
    Re-derive after any roster move):
    - **Never trade Hunter a RB or any flex body.** The 10-27 trade search left him out on purpose.
@@ -74,19 +78,11 @@
    - **Week 13:** Taylor, McGowan, Flowers, Shrader (stream a K). · **Week 14:** M. Wilson.
    - Hunter later: wk 10 D. Smith · wk 13 G. Wilson, B. Allen, BAL DEF · wk 14 McBride, Allgeier.
    - Trade deadline **week 11**. Playoffs 6 of 8, weeks 15-17.
-6. **Next August, before the 2027 draft:** the draft-era payloads still owed at the board refresh
+5. **Next August, before the 2027 draft:** the draft-era payloads still owed at the board refresh
    (long-TD curve fold; the Wan'Dale / Michael Wilson board-membership look) and the five draft-era
    tests re-arm on their own (`draft_era_cache_or_skip`, `draft_era_pool_or_skip`). Start from
    `af491a71`'s TODO.
-7. **Finish the live Expected header's real-game proof (the header itself shipped 10-29).** The TNF
-   capture (CAR @ GB, 10-29, every 4 min) sits in the session scratchpad. Rebuild
-   `tests/fixtures/gameday_espn_status.json` with the builder (scratchpad `espn/build_fixtures.py`, which writes LF),
-   keeping ONLY the snapshots a test reads: pre, Q1, halftime, final. Add a test that runs the real Sleeper
-   matchups snapshots through `projected_total`, for the CAR/GB starters ONLY (each roster's Sunday
-   starters still sit at projection): at halftime `left` == 0.5 from ESPN's own period/clock, a mid-game
-   live part equals that snapshot's `players_points`, and the final done-sum equals Sleeper's `points`
-   to the cent. Must land before the Sat 20:00 run, OFF game day.
-8. **Fix `external_projections.py`: CBS silently serves the CURRENT week for any week 2+ ahead.**
+6. **Fix `external_projections.py`: CBS silently serves the CURRENT week for any week 2+ ahead.**
    Found 2026-10-18. `temp/proj_wk8.json` (pulled 10-16, i.e. wk 6 asking for wk 8) has **55**
    players on wk-8 bye teams (HOU/NO/NYG/SF) with a nonzero CBS number — Collins reads CBS 17.98,
    his wk-6 line — so the consensus averages a bye week as ~6 pts. One week ahead is clean (today's

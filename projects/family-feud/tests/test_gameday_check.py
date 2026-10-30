@@ -471,6 +471,9 @@ class TestGamesFromEspn(unittest.TestCase):
         live = g.games_from_espn(espn_board(tnf["20261029-201940"]))  # 13:07 left in the 1st
         self.assertEqual(live["GB"][0], g.LIVE)
         self.assertAlmostEqual(live["GB"][1], (3 * 900 + 787) / 3600)
+        self.assertEqual(g.games_from_espn(espn_board(tnf["20261029-214748"]))["GB"], (g.LIVE, 0.5))    # halftime
+        self.assertEqual(g.games_from_espn(espn_board(tnf["20261030-175541"]))["CAR"], (g.FINAL, 0.0))  # final
+        self.assertEqual(len(tnf), 4, "only the snapshots a test reads: pre, Q1, halftime, final")
 
     def test_the_share_left_runs_from_kickoff_to_the_final_whistle(self):
         # (0, 900.0) reads 1.25 unclamped: "in" with no period yet, the clock already set for the 1st
@@ -635,6 +638,79 @@ class TestRealWeek7(unittest.TestCase):
     def test_the_date_rule_alone_misses_every_roster(self):
         for m in self.d["matchups"]:
             self.assertGreater(abs(self.expected(m, None).total - m["points"]), 1.0, f"roster {m['roster_id']}")
+
+
+class TestRealThursdayNight(unittest.TestCase):
+    """CAR @ GB, TNF week 8 (2026-10-29): ESPN's event and Sleeper's /matchups/8, captured live every 4 minutes
+    (pre-game 20:15, Q1 20:19, halftime 21:47 ET); the final pulled 2026-10-30 17:55 ET. Each roster is cut to
+    its CAR/GB starters: its Sunday starters still sit at projection, and this board carries only this game.
+    Run with today = the game's own date, so the date rule reads every snapshot as unplayed and cannot pass."""
+
+    PRE, Q1, HALF, FINAL = "20261029-201540", "20261029-201940", "20261029-214748", "20261030-175541"
+
+    @classmethod
+    def setUpClass(cls):
+        cls.espn = fixture("gameday_espn_status.json")["tnf_wk8"]
+        cls.d = fixture("gameday_tnf_wk8.json")
+        cls.today = datetime.date(2026, 10, 29)
+
+    def at(self, stamp, espn=True):
+        """Every roster starting a CAR/GB player: (its snapshot, those starters, the header's Expected)."""
+        games = g.games_from_espn(espn_board(self.espn[stamp])) if espn else None
+        out = []
+        for m in self.d["snapshots"][stamp]:
+            tnf = [p for p in m["starters"] if p in self.d["proj"]]
+            if tnf:
+                e = g.projected_total({"starters": tnf}, self.d["proj"], self.d["scoring"], m["players_points"],
+                                      self.today, self.d["players"], games)
+                out.append((m, tnf, e))
+        return out
+
+    def proj(self, tnf):
+        return sum(g.score(self.d["proj"][p]["stats"], self.d["scoring"]) for p in tnf)
+
+    def test_the_capture_is_six_rosters_and_seven_starters_at_every_stamp(self):
+        """A fixture that lost its rows would pass every check below by checking nothing."""
+        for stamp in (self.PRE, self.Q1, self.HALF, self.FINAL):
+            rows = self.at(stamp)
+            self.assertEqual(sorted(m["roster_id"] for m, _, _ in rows), [2, 4, 5, 6, 7, 8], stamp)
+            self.assertEqual(sum(len(t) for _, t, _ in rows), 7, stamp)
+
+    def test_before_kickoff_a_listed_zero_is_not_banked(self):
+        for m, tnf, e in self.at(self.PRE):
+            self.assertEqual([m["players_points"][p] for p in tnf], [0.0] * len(tnf))   # Sleeper lists them, at 0
+            self.assertAlmostEqual(e.total, self.proj(tnf), places=6, msg=f"roster {m['roster_id']}")
+            self.assertEqual((e.done, e.playing, e.ahead, e.unknown), (0, 0, len(tnf), 0))
+
+    def test_thirteen_oh_seven_left_in_the_first_blends_by_espns_clock(self):
+        left = (3 * 900 + 787) / 3600
+        rows = self.at(self.Q1)
+        self.assertEqual({m["roster_id"]: m["points"] for m, _, _ in rows if m["points"]}, {7: 1.4})
+        for m, tnf, e in rows:
+            self.assertAlmostEqual(e.total, m["points"] + left * self.proj(tnf), places=6, msg=f"roster {m['roster_id']}")
+            self.assertEqual(e.playing, len(tnf))
+
+    def test_halftime_is_half_the_game_left_by_espns_own_period_and_clock(self):
+        st = self.espn[self.HALF]["competitions"][0]["status"]
+        self.assertEqual((st["type"]["name"], st["period"], st["clock"]), ("STATUS_HALFTIME", 2, 0.0))
+        self.assertEqual(g.games_from_espn(espn_board(self.espn[self.HALF])), {"GB": (g.LIVE, 0.5), "CAR": (g.LIVE, 0.5)})
+
+    def test_at_halftime_the_live_part_is_sleepers_own_score(self):
+        """Only this game had been played, so each roster's Sleeper `points` IS its CAR/GB starters' live sum."""
+        for m, tnf, e in self.at(self.HALF):
+            self.assertAlmostEqual(e.total - 0.5 * self.proj(tnf), m["points"], places=6, msg=f"roster {m['roster_id']}")
+            self.assertEqual((e.done, e.playing, e.ahead, e.unknown), (0, len(tnf), 0, 0))
+
+    def test_the_final_lands_on_sleepers_score_to_the_cent(self):
+        self.assertEqual(g.games_from_espn(espn_board(self.espn[self.FINAL])), {"GB": (g.FINAL, 0.0), "CAR": (g.FINAL, 0.0)})
+        for m, tnf, e in self.at(self.FINAL):
+            self.assertAlmostEqual(e.total, m["points"], places=2, msg=f"roster {m['roster_id']}")
+            self.assertEqual((e.done, e.playing, e.ahead, e.unknown), (len(tnf), 0, 0, 0))
+
+    def test_the_date_rule_alone_misses_the_final_for_every_roster(self):
+        for m, tnf, e in self.at(self.FINAL, espn=False):
+            self.assertAlmostEqual(e.total, self.proj(tnf), places=6)          # dated today: read as unplayed
+            self.assertGreater(abs(e.total - m["points"]), 1.0, f"roster {m['roster_id']}")
 
 
 class TestScoring(unittest.TestCase):

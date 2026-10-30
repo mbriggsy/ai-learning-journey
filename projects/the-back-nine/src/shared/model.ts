@@ -888,7 +888,7 @@ export interface TaxAwareDistribution {
    *  concentrates in the pre-65 ACA years and may barely move the portfolio median. */
   readonly lifetimeNetPremiumReal: readonly number[]
   /** Σ Medicare cost actually paid across the path's funded years (real $; base Part B + IRMAA +
-   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:2716`; P3·U11), an
+   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:2724`; P3·U11), an
    *  addend of the pay-less-tax all-in cost. Same accrual rule as its siblings. */
   readonly lifetimeMedicareCostReal: readonly number[]
 }
@@ -1470,7 +1470,9 @@ export type DateSearchOutcome =
 export interface WorkingYearLedgerAmount {
   /** Whole dollars, ≥ 0 — the figure as shown; its group gives its sign. */
   readonly dollars: number
-  /** The engine's value (real $, ≥ 0): `Object.is` the run's own year-loop figure. */
+  /** The engine's unrounded value (real $, ≥ 0). On year 0's lines it is `Object.is` the run's own year-loop
+   *  figure; on the held-back and Medicare figures it is the producer's read of the run's own functions (the
+   *  path's earnings-test schedule, `medicareChargeForYear`). */
   readonly exact: number
 }
 
@@ -1479,13 +1481,17 @@ export interface WorkingYearLedgerAmount {
 export const WORKING_YEAR_WITHHELD_BASES = ['law', 'fraYearAtMost'] as const
 export type WorkingYearWithheldBasis = (typeof WORKING_YEAR_WITHHELD_BASES)[number]
 
-/** Why a later working year enters the picture (KTD12). The per-person codes carry `person`. */
+/** Why a later working year enters the picture (KTD12), in the order a year lists them. The per-person codes
+ *  carry `person`; the household codes ({@link WORKING_YEAR_LEDGER_HOUSEHOLD_EVENT_CODES}) carry none. */
 export const WORKING_YEAR_LEDGER_EVENT_CODES = [
-  /** A member's own Social Security starts. */
+  /** A member files for Social Security: their own benefit starts, or a spousal benefit that starts with the
+   *  filing (a spousal-only filer's own filing), or both. */
   'claim',
-  /** A member's spousal benefit starts (on its own, after their own claim). */
+  /** A member's spousal benefit starts on its own, after their own filing, when the other spouse files. */
   'spousalStart',
-  /** The earnings test holds back a different amount, or a credit for held-back months starts — no claim explains it. */
+  /** The earnings test holds back a different amount, releases what it held, or a credit for held-back months
+   *  starts — a move no start explains. Named beside a start when the start cannot explain it (a release or a
+   *  credit). */
   'earningsTestStep',
   /** A member's Medicare starts (paid from savings, never in the bottom line). */
   'medicareStarts',
@@ -1499,7 +1505,8 @@ export const WORKING_YEAR_LEDGER_EVENT_CODES = [
   'incomeEnds',
   /** The household's state changes its income-tax rate (NC's enacted steps). */
   'stateRateStep',
-  /** The year after the senior bonus's last year, for a household whose tax carried it. */
+  /** The year after the senior bonus's last year, for a household whose return carried the bonus and whose
+   *  federal tax on the outside income that year is above $0 — so losing the bonus raised it. */
   'seniorBonusSunset',
   /** A short year with no event, the year before not short. */
   'erosion',
@@ -1508,12 +1515,22 @@ export const WORKING_YEAR_LEDGER_EVENT_CODES = [
 ] as const
 export type WorkingYearLedgerEventCode = (typeof WORKING_YEAR_LEDGER_EVENT_CODES)[number]
 
-/** One reason a later working year is named. */
-export interface WorkingYearLedgerEvent {
-  readonly code: WorkingYearLedgerEventCode
-  /** The member it is about (an index into `people`), on the per-person codes; absent on the household's. */
-  readonly person?: number
-}
+/** The codes about the whole household, which carry no `person`. */
+export const WORKING_YEAR_LEDGER_HOUSEHOLD_EVENT_CODES = [
+  'earningsTestStep',
+  'stateRateStep',
+  'seniorBonusSunset',
+  'erosion',
+  'stillShort',
+] as const satisfies readonly WorkingYearLedgerEventCode[]
+export type WorkingYearLedgerHouseholdEventCode = (typeof WORKING_YEAR_LEDGER_HOUSEHOLD_EVENT_CODES)[number]
+export type WorkingYearLedgerPersonEventCode = Exclude<WorkingYearLedgerEventCode, WorkingYearLedgerHouseholdEventCode>
+
+/** One reason a later working year is named: a per-person code with the member it is about (an index into
+ *  `people`), or a household code. */
+export type WorkingYearLedgerEvent =
+  | { readonly code: WorkingYearLedgerPersonEventCode; readonly person: number }
+  | { readonly code: WorkingYearLedgerHouseholdEventCode }
 
 /** Year 0 of the picture: every line of the year's check (R5), grouped. Σ `comingIn` dollars − Σ `goingOut`
  *  dollars === `bottomLine`, exactly (largest remainder). */
@@ -1566,7 +1583,7 @@ export interface WorkingYearLedgerLaterYear {
   /** Years after year 0 (1 or more). */
   readonly yearsIn: number
   readonly calendarYear: number
-  /** Why it is named, in a fixed order; never empty. */
+  /** Why it is named, in a fixed order (code, then person); never empty; each code and member at most once. */
   readonly events: readonly WorkingYearLedgerEvent[]
   /** Signed whole dollars, by year 0's rule. */
   readonly bottomLine: number

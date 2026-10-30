@@ -17,31 +17,39 @@
  * (the deposits are cut at the stop, the onset of a worker's Medicare sits at or past it, and the earnings
  * test's figure for a year reads only that year and the ones before it). The picture never reads a crown.
  *
- * THE LATER-YEAR EVENTS (KTD12), each gated on this household:
+ * THE LATER-YEAR EVENTS (KTD12), each gated on this household, every gate read at the cent (the picture's
+ * grain — a sub-cent part names nothing):
  *  - a claim, a spousal start, or an earnings-test step — gated on the year's Social Security PAID or HELD BACK
  *    moving (the run's own figures, constant in real terms between discrete changes); named by who starts, and
- *    as a test step when no start explains the move;
+ *    as a test step when no start explains the move. A start can only add to what the test holds back, and
+ *    never starts a credit (a credit exists only for a benefit paid in an earlier year), so beside a start a
+ *    release or a credit taking effect is named as the test's own step too;
  *  - a member's Medicare onset (the year context's enrolled set grows) — paid from savings, never in the sum;
  *  - a member turning 65 (the context's 65+ count grows) while the year before carried federal tax on the
  *    outside income: the larger standard deduction lowers it (as built A7 — a discrete step the ruled list left
  *    out);
  *  - a catch-up step-down and an income stream starting or ending — named by the draft, which the compiled run
- *    has lost (a person's streams are pre-summed into one leaf; the 'band' ceiling frame lives in intake);
+ *    has lost (a person's streams are pre-summed into one leaf; the 'band' ceiling frame lives in intake); two
+ *    of a member's streams stepping in one year name it once;
  *  - a pinned law step (`workingYearLawSteps`): a state rate step where the year's state line, before or after,
- *    is above 0; the senior bonus's sunset where the year before carried it and federal tax on the outside
- *    income.
+ *    is above 0; the senior bonus's sunset where the year before carried the bonus and THIS year's federal tax on
+ *    the outside income is above 0 — losing a deduction can only raise a tax, so it moves the year exactly then
+ *    (the A7 review, `wf_b97c0055-346`: gated on the year before, a bonus that had zeroed 2028's tax hid 2029's).
  * A short year with no event is `erosion` (the year before not short) or `stillShort`. Drift — the frozen
  * figures the price index deflates, an eroding pension — never names a year unless that year is short.
  *
  * ROUNDING (KTD12, as built A7). The money grain is the cent: each line's engine value and the year's cash are
  * snapped to the cent first, so float dust can never move a dollar (a $3,060.0000000000005 payroll line reads
- * $3,060). The bottom line is KTD12's rule on that cash — `c < 0 ? −⌈−c⌉ : ⌊c⌋ + 0`: a draw reads at least
- * "Short $1", a surplus rounds down, and −0 never appears. The lines are rounded by largest remainder twice
- * (to the cent against the cash, then to the dollar against the bottom line), so they sum to it exactly.
+ * $3,060), and a half-cent tie goes toward −∞ (the gloomy side: money in down, money out and a draw further
+ * out — a true −$12.005 reads "Short $13" whichever way the float lands). The bottom line is KTD12's rule on
+ * that cash — `c < 0 ? −⌈−c⌉ : ⌊c⌋ + 0`: a draw reads at least "Short $1", a surplus rounds down, and −0 never
+ * appears. The lines are rounded by largest remainder twice (to the cent against the cash, then to the dollar
+ * against the bottom line), so they sum to it exactly.
  *
  * PURE: no clock, entropy or environment; draw-free. Finite fields only (DND 009). THROWS on a run it cannot
- * describe — one `validateParams` refuses, one without W, or one in which nobody works in year 0 — and on a
- * malformed draft event; the intake read (`intakeMap.workingYearLedgerForRun`, U6b) catches to `'unknown'`.
+ * describe — one `validateParams` refuses, one without W, one in which nobody works in year 0, or one whose
+ * workers stop in different years (no event names a stop: the picture describes one household stop) — and on a
+ * malformed draft event; the intake read U6b builds (`intakeMap.workingYearLedgerForRun`) will catch to `'unknown'`.
  */
 import type {
   SimulationParams,
@@ -93,7 +101,10 @@ export interface WorkingYearLedgerInput {
   readonly params: SimulationParams
   /** The draft's own later-year events: every year a catch-up window closes on an owner's deposit
    *  (intake's 'band' frame, `firstStepDownYear`'s), and every other-income stream's first paying year and
-   *  the year after its last. An event outside the later working years is never read. */
+   *  the year after its last. The producer trusts each to move its member (it cannot see a pre-summed stream),
+   *  so the caller gates them: a step-down only for an owner who deposits. A malformed event (a year that is not
+   *  a whole number ≥ 0, an unknown code, a person outside `people`) throws wherever it sits; a well-formed one
+   *  outside the later working years is never read. */
   readonly draftEvents: readonly WorkingYearDraftEvent[]
 }
 
@@ -111,8 +122,13 @@ const finite = (x: number, label: string): number => {
   return x
 }
 
-/** A figure in whole cents, never −0. */
-const toCents = (dollars: number): number => Math.round(dollars * 100) + 0
+/** How far past a half cent float dust may land and still be read as the tie (a millionth of a cent — far
+ *  above the dust of a sum of real-money terms, far below any money). */
+const HALF_CENT_DUST = 1e-6
+/** A figure in whole cents, never −0: the nearest cent, a half-cent tie (within dust) toward −∞ — the gloomy
+ *  side of every line and of the cash (`Math.round` would settle the tie by the dust's sign, upward on a
+ *  true tie: −$12.005 would read "Short $12"). */
+const toCents = (dollars: number): number => Math.ceil(dollars * 100 - 0.5 - HALF_CENT_DUST) + 0
 
 /** KTD12's bottom line on a cash already in cents. */
 function bottomLineFromCents(cashCents: number): number {
@@ -173,8 +189,11 @@ const standalone = (exact: number, label: string): WorkingYearLedgerAmount =>
   amountOf(Math.round(toCents(finite(exact, label)) / 100), exact)
 
 const codeOrder = (code: WorkingYearLedgerEventCode): number => WORKING_YEAR_LEDGER_EVENT_CODES.indexOf(code)
+const personOf = (e: WorkingYearLedgerEvent): number => ('person' in e ? e.person : -1)
 const byCodeThenPerson = (a: WorkingYearLedgerEvent, b: WorkingYearLedgerEvent): number =>
-  codeOrder(a.code) - codeOrder(b.code) || (a.person ?? -1) - (b.person ?? -1)
+  codeOrder(a.code) - codeOrder(b.code) || personOf(a) - personOf(b)
+/** Above $0 at the picture's grain, the cent. */
+const aboveZero = (dollars: number): boolean => toCents(dollars) > 0
 
 /**
  * The working-year money picture of a W-present run (see the module docblock). THROWS on a run it cannot
@@ -189,15 +208,23 @@ export function workingYearLedger(input: WorkingYearLedgerInput): WorkingYearLed
     throw new Error('[workingYearLedger] the money picture describes a run that carries W (workingYearCostReal)')
   }
   const { people: overlayPeople, config } = overlayHouseholdFor(params)
-  // validateParams admits W only with the tax overlay on, so the config carries the household.
-  if (!config.taxEnabled) throw new Error('[workingYearLedger] W rides only with the tax overlay (validateParams)')
+  // validateParams admits W only with the tax and health overlays on, so the config carries the household and
+  // the year bills Medicare.
+  if (!config.taxEnabled || overlay.healthcareEnabled !== true) {
+    throw new Error('[workingYearLedger] W rides only with the tax and health overlays (validateParams)')
+  }
   const household = config.household
   const people = params.people
   const { offsets, higherClaimOffset } = personOffsetsFor(people)
 
-  // The no-death timeline over the run's working window (the run's horizon caps it).
+  // The no-death timeline over the run's working window (the run's horizon caps it). The picture describes ONE
+  // household stop — the date route's window-top candidate, whose every worker stops at the same offset — so a
+  // run whose workers stop in different years (a stop no event names) is refused, never described wrongly.
   let lastStop = 0
   for (const o of offsets) lastStop = Math.max(lastStop, o.retire)
+  if (new Set(offsets.filter((o) => o.retire > 0).map((o) => o.retire)).size > 1) {
+    throw new Error('[workingYearLedger] the workers stop in different years — the money picture describes one household stop (the window-top candidate)')
+  }
   const span = Math.min(lastStop, params.maxHorizonYears)
   if (span < 1) throw new Error('[workingYearLedger] nobody works in year 0 — the money picture has no working year to show')
   const noDeath = people.map(() => params.maxHorizonYears)
@@ -270,13 +297,17 @@ export function workingYearLedger(input: WorkingYearLedgerInput): WorkingYearLed
       ? overlayPeople.some((_, i) => (perPerson[i] ?? 0) > 0 && atRmdAge(i))
       : overlay.buckets.pretax > 0 && atRmdAge(0))
   const conversionLands = (overlay.conversions?.[0] ?? 0) > 0 && overlay.buckets.pretax > 0
-  // Extras ride only beside an enrolled member, whose base Part B bill is already above $0.
-  const savingsTaxLine = medicare.cost > 0 || l0.shortfall > 0 || conversionLands || rmdLands
+  // Extras ride only beside an enrolled member, whose base Part B bill is already above $0. A draw is read at
+  // the picture's own grain: a cash of −3.6e-12 (float dust on a hand $0.00) reads "Left over $0" and draws
+  // nothing the line could speak of.
+  const bottomLine0 = workingYearBottomLine(l0.cash)
+  const savingsTaxLine = medicare.cost > 0 || bottomLine0 < 0 || conversionLands || rmdLands
 
   // ---- The later years. ----
   for (const e of draftEvents) {
     if (
       !Number.isInteger(e.yearsIn) ||
+      e.yearsIn < 0 ||
       !(WORKING_YEAR_DRAFT_EVENT_CODES as readonly string[]).includes(e.code) ||
       !Number.isInteger(e.person) ||
       e.person < 0 ||
@@ -286,13 +317,24 @@ export function workingYearLedger(input: WorkingYearLedgerInput): WorkingYearLed
     }
   }
   const ageAt = (i: number, t: number): number => household.startCalendarYear + t - overlayPeople[i]!.birthYear
+  // Year t's lift from credited held-back months: the paid and held-back figures against the run's uncredited
+  // pieces, summed in `cashTermsForYear`'s order — 0 until a credit takes effect, then flat.
+  const creditLift = (t: number, ss: number): number => {
+    let uncredited = 0
+    for (let i = 0; i < people.length; i++) {
+      const pieces = bothAliveYearBenefit(t, offsets[i]!, higherClaimOffset)
+      uncredited += pieces.own
+      uncredited += pieces.spousal
+    }
+    return ss + heldBack(t) - uncredited
+  }
   const laterYears: WorkingYearLedgerLaterYear[] = []
   for (let t = 1; t < years.length; t++) {
     const prior = years[t - 1]!
     const year = years[t]!
     const events: WorkingYearLedgerEvent[] = []
     // Social Security: gated on the year's paid or held-back figure moving.
-    if (!Object.is(year.ss, prior.ss) || !Object.is(heldBack(t), heldBack(t - 1))) {
+    if (toCents(year.ss) !== toCents(prior.ss) || toCents(heldBack(t)) !== toCents(heldBack(t - 1))) {
       const starts: WorkingYearLedgerEvent[] = []
       for (let i = 0; i < people.length; i++) {
         const o = offsets[i]!
@@ -304,23 +346,35 @@ export function workingYearLedger(input: WorkingYearLedgerInput): WorkingYearLed
         if (pieces.ownStart === t && (ownStarts || spousalStarts)) starts.push({ code: 'claim', person: i })
         else if (spousalStarts) starts.push({ code: 'spousalStart', person: i })
       }
-      events.push(...(starts.length > 0 ? starts : [{ code: 'earningsTestStep' as const }]))
+      events.push(...starts)
+      // A start only adds to what the test holds back and never starts a credit, so with no start every move
+      // is the test's, and beside one a release or a credit taking effect still is (the A7 review: a claim in
+      // the year a spouse's credits start hid them).
+      const released = toCents(heldBack(t)) < toCents(heldBack(t - 1))
+      const credited = toCents(creditLift(t, year.ss)) !== toCents(creditLift(t - 1, prior.ss))
+      if (starts.length === 0 || released || credited) events.push({ code: 'earningsTestStep' })
     }
     for (const i of year.context.medicareEnrolledIndices) {
       if (!prior.context.medicareEnrolledIndices.includes(i)) events.push({ code: 'medicareStarts', person: i })
     }
-    if (year.context.count65 > prior.context.count65 && prior.lines.taxOnOutsideIncomeParts.federal > 0) {
-      for (let i = 0; i < overlayPeople.length; i++) if (ageAt(i, t) === 65) events.push({ code: 'turns65', person: i })
+    // Who turns 65 this year — the context's own 65+ count must agree (nobody dies on this timeline).
+    const turned65 = overlayPeople.flatMap((_, i) => (ageAt(i, t) === 65 ? [i] : []))
+    if (turned65.length !== year.context.count65 - prior.context.count65) {
+      throw new Error(`[workingYearLedger] sim year ${t}: ${turned65.length} member(s) turn 65 but the year context's 65+ count moved by ${year.context.count65 - prior.context.count65} — a wiring fault`)
     }
-    for (const e of draftEvents) if (e.yearsIn === t) events.push({ code: e.code, person: e.person })
+    if (aboveZero(prior.lines.taxOnOutsideIncomeParts.federal)) for (const i of turned65) events.push({ code: 'turns65', person: i })
+    for (const e of draftEvents) {
+      if (e.yearsIn !== t) continue
+      if (!events.some((x) => x.code === e.code && personOf(x) === e.person)) events.push({ code: e.code, person: e.person })
+    }
     const steps = workingYearLawSteps(prior.floor, year.floor)
     if (
       steps.stateRateStep &&
-      (prior.lines.taxOnOutsideIncomeParts.state > 0 || year.lines.taxOnOutsideIncomeParts.state > 0)
+      (aboveZero(prior.lines.taxOnOutsideIncomeParts.state) || aboveZero(year.lines.taxOnOutsideIncomeParts.state))
     ) {
       events.push({ code: 'stateRateStep' })
     }
-    if (steps.seniorBonusSunset && prior.lines.taxOnOutsideIncomeParts.federal > 0) events.push({ code: 'seniorBonusSunset' })
+    if (steps.seniorBonusSunset && aboveZero(year.lines.taxOnOutsideIncomeParts.federal)) events.push({ code: 'seniorBonusSunset' })
     const bottomLine = workingYearBottomLine(year.lines.cash)
     if (events.length === 0 && bottomLine < 0) {
       events.push({ code: workingYearBottomLine(prior.lines.cash) < 0 ? 'stillShort' : 'erosion' })
@@ -343,7 +397,7 @@ export function workingYearLedger(input: WorkingYearLedgerInput): WorkingYearLed
       socialSecurityHeldBack: standalone(heldBack(0), 'the held-back Social Security'),
       withheldBasis: basisOf(0),
       goingOut: { payrollTax: outLine(3), taxOnOutsideIncome: outLine(4), ownDeposits: outLine(5), workingYearCost: outLine(6) },
-      bottomLine: workingYearBottomLine(l0.cash),
+      bottomLine: bottomLine0,
       cash: l0.cash,
       alsoFromSavings: {
         medicarePremiums: standalone(medicare.cost, 'the Medicare premiums'),

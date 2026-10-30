@@ -5282,8 +5282,8 @@ describe('taxOverlay — the working-year tax floor (2026-10-20): a clamped year
 })
 
 // The pay check's A5 (docs/plans/features/working-year-pay-check-build-spec.md, KTD7 + KTD12): the year
-// loop's household context and its Medicare charge each get one exported producer, which the loop reads and
-// the working-year money picture will read. Every existing overlay arm above re-proves the loop unmoved; these
+// loop's household context and its Medicare charge each get one exported producer, which the loop and the
+// working-year money picture (A7, `workingYearLedger.ts`) both read. Every existing overlay arm above re-proves the loop unmoved; these
 // pin each producer's own contract against the hand oracle (`medicareAnnualReal`), and tie the loop's
 // recorded Medicare readout to the charge, year by year.
 describe('the pay check’s A5 — the year context and the Medicare charge, one producer each', () => {

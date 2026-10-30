@@ -102,7 +102,13 @@ import {
 // The RMD divisor + start-age are re-homed to `@engine/rmd` (U16 §S1) — the ONE producer shared
 // with the live solve-request anchor deriver, so the render-layer builder never re-derives them.
 import { rmdStartAgeForBirthYear, selectRmdDivisor } from '@engine/rmd'
-import { ordinaryPlusCapitalGainsTax, seniorBonusAvailableIn, seniorBonusFor, taxableSocialSecurity } from '@engine/taxCore'
+import {
+  federalMagi,
+  ordinaryPlusCapitalGainsTax,
+  seniorBonusAvailableIn,
+  seniorBonusFor,
+  taxableSocialSecurity,
+} from '@engine/taxCore'
 import { stateIncomeTax } from '@engine/stateTax'
 import {
   acaCliffFillHeadroom,
@@ -749,8 +755,8 @@ export interface OverlayYearContext extends ResolvedYear {
 /**
  * Sim-year `t`'s household context — the one producer of the year's tax identity: {@link ResolvedYear}
  * (filing, the 65+ count, who is Medicare-enrolled, the living count, the RMD holder) plus the calendar
- * year, the priced state and the living-age floor. The year loop reads it, and so will the working-year
- * money picture (the pay check's KTD12), so the two can never disagree on a year's household. The living
+ * year, the priced state and the living-age floor. The year loop and the working-year money picture
+ * (`workingYearLedger.ts`, the pay check's KTD12) both read it, so the two can never disagree on a year's household. The living
  * set is resolveYear's (`householdYears[t]`, else the static household). Reads ZERO draws (CRN-safe).
  */
 export function overlayYearContext(
@@ -818,8 +824,8 @@ const NO_MEDICARE_YEAR_CHARGE: MedicareYearCharge = Object.freeze({ cost: 0, sur
 /**
  * Sim-year `t`'s Medicare charge (M4 + the extras unit): the base Part B and IRMAA surcharge of every
  * living Medicare-enrolled member, and their entered extras. The year loop funds it, and the
- * working-year money picture's "also paid from savings" group will read the same function (the pay
- * check's KTD7). Nothing is charged in a year nobody is enrolled.
+ * working-year money picture's "also paid from savings" group reads the same function at year 0
+ * (`workingYearLedger.ts`, the pay check's KTD7 / KTD12). Nothing is charged in a year nobody is enrolled.
  *
  * The surcharge is a 2-year-LAGGED feed-forward (research §4c), never a fixed point: the bill of year t
  * reads IRMAA-MAGI[t − lookback] (the seed when that year predates the sim) against the lines of that
@@ -1368,7 +1374,7 @@ export function workingYearStateCharge(floor: PreparedWorkingYearFloor, channels
 // `simulate.cashTermsForYear` gathers the year's terms ({@link WorkingYearCheckTerms}); this module adds
 // what only the overlay knows — the payroll tax (`payrollTaxForYear`, on the year's filing status and
 // calendar year) and the tax on the outside income, read off the ONE prepared floor the charge also reads
-// (R6, KTD7/KTD8) — in {@link workingYearCashLines}, which the year loop calls (and A7's money picture will).
+// (R6, KTD7/KTD8) — in {@link workingYearCashLines}, which the year loop and A7's money picture both call.
 // The entered investment income I is never money in (the portfolio's total return already includes it),
 // but its tax is money out (R5) — federally through the floor, and for a class-based state (PA), whose
 // floor ignores the clamped base because its tax on pay rides in W, through the check itself
@@ -1426,8 +1432,9 @@ export interface WorkingYearCashLines {
 }
 
 /** The reading whose base carries the most federal tax by itself — R6's costliest reading (the first, on a
- *  tie). A prepared floor always holds at least one reading. */
+ *  tie). A prepared floor always holds at least one reading; THROWS on one that holds none. */
 function costliestReading(floor: PreparedWorkingYearFloor): WorkingYearReading {
+  if (floor.readings.length === 0) throw new Error('[taxOverlay] a prepared working-year floor holds no reading — a defect')
   let costliest = floor.readings[0]!
   for (const reading of floor.readings) if (reading.baseTax > costliest.baseTax) costliest = reading
   return costliest
@@ -1468,7 +1475,7 @@ function stateTaxOnOutsideIncome(terms: WorkingYearCheckTerms, floor: PreparedWo
  * prepared ONCE for it — the same object the gross-up's charge reads, so the take-home and the charge can
  * never disagree on the tax. The payroll tax rides the floor's own filing status and calendar year; the
  * Social Security line is the floor's `ssBenefit` (the year's one paid figure). THROWS when the
- * outside-income tax reads negative beyond dust (every federal and state channel is non-decreasing in
+ * outside-income tax reads negative beyond dust, or is not a number (every federal and state channel is non-decreasing in
  * income, so a negative is a defect, never a silent credit to the household's cash).
  *
  * The bottom line sums money in, then takes money out in the order R5 lists, so whole-dollar inputs
@@ -1480,9 +1487,10 @@ export function workingYearCashLines(terms: WorkingYearCheckTerms, floor: Prepar
   const payroll = payrollTaxForYear(terms.wagesByPerson, floor.filing, floor.calendarYear)
   const federalOnOutside = costliestReading(floor).baseTax - floor.zeroTax
   const stateOnOutside = stateTaxOnOutsideIncome(terms, floor)
-  if (federalOnOutside < WORKING_YEAR_INCREMENT_FLOOR || stateOnOutside < WORKING_YEAR_INCREMENT_FLOOR) {
+  // Written as "not at or above the floor" so a NaN fails loud too (the pre-A7 −∞ seed threw on it).
+  if (!(federalOnOutside >= WORKING_YEAR_INCREMENT_FLOOR) || !(stateOnOutside >= WORKING_YEAR_INCREMENT_FLOOR)) {
     throw new Error(
-      `[taxOverlay] the tax on a working year's outside income reads negative (federal ${federalOnOutside}, state ${stateOnOutside}) — every channel is non-decreasing in income, so this is a defect, never dust`,
+      `[taxOverlay] the tax on a working year's outside income reads negative or not a number (federal ${federalOnOutside}, state ${stateOnOutside}) — every channel is non-decreasing in income, so this is a defect, never dust`,
     )
   }
   const taxOnOutsideIncome = federalOnOutside + stateOnOutside
@@ -1546,7 +1554,7 @@ export function workingYearLawSteps(prior: PreparedWorkingYearFloor, floor: Prep
       prior.count65,
       prior.calendarYear,
     )
-    const magi = costliest.ordinaryBase + ssTaxable + costliest.gainBase
+    const magi = federalMagi(costliest.ordinaryBase + ssTaxable, costliest.gainBase)
     seniorBonusSunset = seniorBonusFor(prior.filing, prior.count65, magi, prior.calendarYear) > 0
   }
   return { stateRateStep, seniorBonusSunset }

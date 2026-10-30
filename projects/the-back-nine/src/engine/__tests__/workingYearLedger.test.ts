@@ -14,15 +14,18 @@
  * THE CONSTRUCTS are the date route's own window-top candidates (`buildCandidateParams(input,
  * DATE_OFFSET_WINDOW_TOP, 1)`), built here from test-local households: what U6b's intake read will hand the
  * producer. Each runs a ten-year horizon, the window itself, so every year the picture reads is a working year
- * and no retired pre-65 year needs a marketplace quote.
+ * (one arm cuts the horizon shorter, to pin the producer's cap). A retired member under 65 still needs an
+ * entered marketplace quote for `validateParams` (the coverage rule): `acaZeros` enters a $0 one.
  */
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import ts from 'typescript'
 import { simulate, type SimOutput } from '@engine/simulate'
 import { buildCandidateParams, DATE_OFFSET_WINDOW_TOP } from '@engine/dateSearch'
 import {
   prepareWorkingYearFloor,
+  workingYearCashLines,
   workingYearLawSteps,
   type PreparedWorkingYearFloor,
   type WorkingYearCashLines,
@@ -158,7 +161,8 @@ const recordedYears = (params: SimulationParams) => {
   return { byYear, healthReadout: d.healthReadout }
 }
 
-/** Year 0 matches the overlay's own year 0 line for line, and every named later year's cash its own year's. */
+/** Year 0 matches the overlay's own year 0 line for line, every named later year's cash its own year's — and
+ *  every later year the RUN finds short is named (R16), whatever the picture's own composition says. */
 const expectMatchesTheRun = (params: SimulationParams, ledger: WorkingYearLedger): void => {
   const { byYear } = recordedYears(params)
   const l = byYear[0]!.lines
@@ -172,6 +176,17 @@ const expectMatchesTheRun = (params: SimulationParams, ledger: WorkingYearLedger
   expect(y0.goingOut.workingYearCost.exact).toBe(l.workingYearCost)
   expect(y0.cash).toBe(l.cash)
   for (const y of ledger.laterYears) expect(y.cash, `year ${y.yearsIn}`).toBe(byYear[y.yearsIn]!.lines.cash)
+  const named = new Set(ledger.laterYears.map((y) => y.yearsIn))
+  for (let t = 1; t < byYear.length; t++) {
+    if (workingYearBottomLine(byYear[t]!.lines.cash) < 0) expect(named.has(t), `the run's short year ${t} is named`).toBe(true)
+  }
+}
+
+/** The producer's picture of a run, cross-checked against the run itself. */
+const checked = (params: SimulationParams, draftEvents: readonly WorkingYearDraftEvent[] = []): WorkingYearLedger => {
+  const ledger = ledgerOf(params, draftEvents)
+  expectMatchesTheRun(params, ledger)
+  return ledger
 }
 
 const lineSum = (y0: WorkingYearLedgerYear0): number =>
@@ -451,7 +466,7 @@ describe('the later years (KTD12): drift never names a year; each discrete event
     // The same household with the year-4 pension end left unnamed (a draft that missed it): 2030 is short with no
     // event, the year before was not.
     const pension = Array.from({ length: WINDOW }, (_, t) => (t < 4 ? 30_000 : 0))
-    const ledger = ledgerOf(
+    const ledger = checked(
       candidateOf({
         people: [worker({ currentAge: 55, birthYear: 1971, earnedIncomeReal: 60_000, pia: 30_000, socialSecurityClaimAge: 67 })],
         W: 60_000,
@@ -498,7 +513,7 @@ describe('the later years (KTD12): drift never names a year; each discrete event
     ])
     expectMatchesTheRun(params, ledger)
     // The same household listed the other way round: the events keep their fixed order (code, then person).
-    const swapped = ledgerOf(couple([her, him]))
+    const swapped = checked(couple([her, him]))
     expect(eventsOf(swapped)[1]).toEqual({
       yearsIn: 3,
       events: [{ code: 'claim', person: 1 }, { code: 'spousalStart', person: 0 }, { code: 'seniorBonusSunset' }],
@@ -550,16 +565,25 @@ describe('the later years (KTD12): drift never names a year; each discrete event
     // Born 1962, 64, $10,000 of pay, no Social Security: under the $16,100 deduction, so the larger deduction at
     // 65 (2027) and the bonus ending after 2028 move nothing.
     const params = candidateOf({ people: [worker({ currentAge: 64, birthYear: 1962, earnedIncomeReal: 10_000 })], W: 5_000 })
-    const ledger = ledgerOf(params)
+    const ledger = checked(params)
     expect(ledger.year0.goingOut.taxOnOutsideIncome.exact).toBe(0)
     expect(ledger.laterYears).toEqual([])
+  })
+
+  it('turning 65 is named where it LOWERS the tax, even to $0: $17,000 of pay owes $90 at 64 and nothing at 65', () => {
+    // Single, born 1962, $17,000 of pay, W = $5,000. 2026: 10 % × (17,000 − 16,100) = $90. 2027: the 65+ $2,050
+    // and the bonus take it to $0 — the bottom line rises $90 (payroll 1,300.50: 10,609.50 → 10,699.50). 2029
+    // owes nothing either (17,000 is under 18,150), so the bonus's end names nothing.
+    const ledger = checked(candidateOf({ people: [worker({ currentAge: 64, birthYear: 1962, earnedIncomeReal: 17_000 })], W: 5_000 }))
+    expect(ledger.year0.bottomLine).toBe(10_609)
+    expect(ledger.laterYears.map((y) => [y.yearsIn, y.bottomLine, y.events])).toEqual([[1, 10_699, [{ code: 'turns65', person: 0 }]]])
   })
 
   it('gated on this household: NC’s rate steps are named where NC’s line is above 0 — and only there', () => {
     // $14,000 of pay: under the $16,100 federal deduction (federal $0) but over NC’s $12,750 (state > $0) — the
     // steps are named. $10,000: under both — nothing is.
     const at = (pay: number) =>
-      ledgerOf(candidateOf({ people: [worker({ currentAge: 55, birthYear: 1971, earnedIncomeReal: pay })], W: 5_000, state: 'NC' }))
+      checked(candidateOf({ people: [worker({ currentAge: 55, birthYear: 1971, earnedIncomeReal: pay })], W: 5_000, state: 'NC' }))
     const named = at(14_000)
     expect(named.year0.goingOut.taxOnOutsideIncome.exact).toBeGreaterThan(0)
     expect(named.laterYears.map((y) => y.calendarYear)).toEqual([2027, 2030, 2033])
@@ -607,12 +631,167 @@ describe('the later years (KTD12): drift never names a year; each discrete event
     expectMatchesTheRun(params, ledger)
   })
 
-  it('a draft event outside the later working years is never read; a malformed one throws', () => {
+  it('the bonus’s end is named where it RAISES the tax from $0: a 2028 return the bonus zeroed, a 2029 one that owes', () => {
+    // Single, born 1960 (66), $20,000 of pay, no Social Security, W = $10,000. By hand (Rev. Proc. 2025-32): the
+    // deduction is 16,100 + 2,050 (65+, unmarried) + the bonus, so 2026–2028 owe $0; 2029 has no bonus: 10 % ×
+    // (20,000 − 18,150) = $185. Payroll 7.65 % × 20,000 = 1,530; cash 8,470 through 2028, then 8,285.
+    const single = checked(candidateOf({ people: [worker({ currentAge: 66, birthYear: 1960, earnedIncomeReal: 20_000 })], W: 10_000 }))
+    expect(single.year0.goingOut.taxOnOutsideIncome.exact).toBe(0)
+    expect(single.laterYears.map((y) => [y.yearsIn, y.bottomLine, y.events])).toEqual([[3, 8_285, [{ code: 'seniorBonusSunset' }]]])
+    // Joint, both born 1960, $22,000 of pay each, W = $30,000: 32,200 + 2 × 1,650 = 35,500 against 44,000 owes
+    // 10 % × 8,500 = $850 from 2029 — the two bonuses zeroed it through 2028. Cash 44,000 − 3,366 − 30,000 = 10,634,
+    // then 9,784.
+    const couple = checked(
+      candidateOf({
+        people: [
+          worker({ currentAge: 66, birthYear: 1960, earnedIncomeReal: 22_000 }),
+          worker({ sex: 'female', currentAge: 66, birthYear: 1960, earnedIncomeReal: 22_000 }),
+        ],
+        W: 30_000,
+      }),
+    )
+    expect(couple.laterYears.map((y) => [y.yearsIn, y.bottomLine, y.events])).toEqual([[3, 9_784, [{ code: 'seniorBonusSunset' }]]])
+  })
+
+  it('the bonus’s end is NOT named where it moves nothing: a pension that ends after 2028 leaves 2029 owing $0', () => {
+    // Single, born 1960, $10,000 of pay and a $20,000 pension through 2028, W = $5,000. 2026–2028 owe tax on
+    // $30,000 against a deduction under it; 2029's $10,000 is under the 16,100 + 2,050 = 18,150 deduction alone,
+    // so losing the bonus raised nothing: only the pension's end is named. Cash 2029 = 10,000 − 765 − 5,000 = 4,235.
+    const pension = Array.from({ length: WINDOW }, (_, t) => (t < 3 ? 20_000 : 0))
+    const ledger = checked(
+      candidateOf({
+        people: [worker({ currentAge: 66, birthYear: 1960, earnedIncomeReal: 10_000 })],
+        W: 5_000,
+        income: { incomeByPerson: [{ grossFull: pension, taxableFull: pension }] },
+      }),
+      [{ yearsIn: 3, code: 'incomeEnds', person: 0 }],
+    )
+    expect(ledger.year0.goingOut.taxOnOutsideIncome.exact).toBeGreaterThan(0)
+    expect(ledger.laterYears.map((y) => [y.yearsIn, y.bottomLine, y.events])).toEqual([[3, 4_235, [{ code: 'incomeEnds', person: 0 }]]])
+  })
+
+  it('the bonus’s sunset reads the year before’s own MAGI: a 2029 claim that would phase it out is not read back into 2028', () => {
+    // Single, born 1960, $150,000 of pay, PIA $40,000 filed at 69 in 2029 (24 delayed months: $49,600, untested
+    // past FRA). 2028's MAGI is the pay alone, inside the $75,000–$175,000 phase-out (6 %), so 2028 carried a
+    // bonus and 2029 loses it; 2029's own MAGI (the pay plus 85 % of $49,600) is past where the bonus is gone,
+    // so a sunset read on 2029's benefit would find no bonus and name nothing.
+    const ledger = checked(
+      candidateOf({
+        people: [worker({ currentAge: 66, birthYear: 1960, earnedIncomeReal: 150_000, pia: 40_000, socialSecurityClaimAge: 69 })],
+        W: 60_000,
+      }),
+    )
+    expect(eventsOf(ledger)).toEqual([{ yearsIn: 3, events: [{ code: 'claim', person: 0 }, { code: 'seniorBonusSunset' }] }])
+  })
+
+  it('beside a claim, a credit taking effect is still the test’s own step: 2033 names his claim AND her credit', () => {
+    // Both born 1965 (61). She works for $90,000, PIA $24,000, files at 65 (2030): 24 months early, $20,800 a
+    // year, all held back in 2030–2031 ((90,000 − 24,480) ÷ 2 = 32,760); 2032 is her FRA year (KTD11's stopgap:
+    // (11 × 90,000 − 781,920) ÷ 36 = $5,780 held back, at most). 2033: her withheld months are credited and
+    // nothing is held back. He works for $10,000, PIA $12,000, files at 68 in 2033 ($12,960; his PIA is half
+    // hers, so no spousal excess either way). 2033's Social Security rises by his $12,960 AND her credit — two
+    // reasons. Both turn 65 in 2030, with tax owed on $100,000 of pay in 2029.
+    const ledger = checked(
+      candidateOf({
+        people: [
+          worker({ currentAge: 61, birthYear: 1965, earnedIncomeReal: 10_000, pia: 12_000, socialSecurityClaimAge: 68 }),
+          worker({ sex: 'female', currentAge: 61, birthYear: 1965, earnedIncomeReal: 90_000, pia: 24_000, socialSecurityClaimAge: 65 }),
+        ],
+        W: 40_000,
+      }),
+    )
+    expect(eventsOf(ledger)).toEqual([
+      { yearsIn: 4, events: [{ code: 'claim', person: 1 }, { code: 'turns65', person: 0 }, { code: 'turns65', person: 1 }] },
+      { yearsIn: 6, events: [{ code: 'earningsTestStep' }] },
+      { yearsIn: 7, events: [{ code: 'claim', person: 0 }, { code: 'earningsTestStep' }] },
+    ])
+    expect(ledger.laterYears.map((y) => y.withheldBasis)).toEqual(['law', 'fraYearAtMost', 'law'])
+  })
+
+  it('beside a claim, a release alone and a credit alone are each the test’s own step (her claim in his FRA year, or the year after)', () => {
+    // He is the worked example's (born 1963, $60,000, $1,500 a month from 62): 2026–2029 hold back 17,760 of his
+    // 18,000; 2030 is his FRA year, and eleven months of $5,000 is under $65,160, so nothing is held — a RELEASE
+    // with no credit yet; 2031 pays his benefit recomputed on the credited months — a CREDIT with nothing left to
+    // release. She (born 1963, retired, her own $24,000 PIA, no spousal excess either way) files at 67 (2030) or at
+    // 68 (2031), so her claim lands beside each in turn. Both turn 65 in 2028 (her Medicare starts; he still
+    // works), and the bonus ends after 2028.
+    const withHerClaimAt = (claimAge: number) =>
+      checked(
+        candidateOf({
+          people: [HIM, retiree({ currentAge: 63, birthYear: 1963, pia: 24_000, socialSecurityClaimAge: claimAge })],
+          W: 30_000,
+          acaZeros: true,
+        }),
+      )
+    const common = [
+      { yearsIn: 2, events: [{ code: 'medicareStarts', person: 1 }, { code: 'turns65', person: 0 }, { code: 'turns65', person: 1 }] },
+      { yearsIn: 3, events: [{ code: 'seniorBonusSunset' }] },
+    ]
+    expect(eventsOf(withHerClaimAt(67))).toEqual([
+      ...common,
+      { yearsIn: 4, events: [{ code: 'claim', person: 1 }, { code: 'earningsTestStep' }] },
+      { yearsIn: 5, events: [{ code: 'earningsTestStep' }] },
+    ])
+    expect(eventsOf(withHerClaimAt(68))).toEqual([
+      ...common,
+      { yearsIn: 4, events: [{ code: 'earningsTestStep' }] },
+      { yearsIn: 5, events: [{ code: 'claim', person: 1 }, { code: 'earningsTestStep' }] },
+    ])
+  })
+
+  it('a draft event names the member it is about, once a year: her pension’s end is hers, and two streams ending together are one reason', () => {
+    // The worked-example couple (he works; she is retired, on the spousal benefit and a pension): 2027 has no
+    // event of its own.
+    const hers = checked(claimingCouple, [{ yearsIn: 1, code: 'incomeEnds', person: 1 }])
+    expect(hers.laterYears[0]).toMatchObject({ yearsIn: 1, events: [{ code: 'incomeEnds', person: 1 }] })
+    const twice = checked(claimingCouple, [
+      { yearsIn: 1, code: 'incomeEnds', person: 1 },
+      { yearsIn: 1, code: 'incomeEnds', person: 1 },
+      { yearsIn: 1, code: 'incomeEnds', person: 0 },
+    ])
+    expect(twice.laterYears[0]?.events).toEqual([{ code: 'incomeEnds', person: 0 }, { code: 'incomeEnds', person: 1 }])
+  })
+
+  it('a draft event outside the later working years is never read; a malformed one throws wherever it sits', () => {
     const params = earner(20_000)
     expect(ledgerOf(params, [{ yearsIn: 0, code: 'incomeStarts', person: 0 }, { yearsIn: 12, code: 'incomeEnds', person: 0 }]).laterYears).toEqual([])
     expect(() => ledgerOf(params, [{ yearsIn: 1.5, code: 'incomeEnds', person: 0 }])).toThrow(/malformed draft event/)
+    expect(() => ledgerOf(params, [{ yearsIn: -3, code: 'incomeEnds', person: 0 }])).toThrow(/malformed draft event/)
     expect(() => ledgerOf(params, [{ yearsIn: 1, code: 'incomeEnds', person: 1 }])).toThrow(/malformed draft event/)
+    expect(() => ledgerOf(params, [{ yearsIn: 1, code: 'incomeEnds', person: -1 }])).toThrow(/malformed draft event/)
+    expect(() => ledgerOf(params, [{ yearsIn: 1, code: 'incomeEnds', person: 0.5 }])).toThrow(/malformed draft event/)
     expect(() => ledgerOf(params, [{ yearsIn: 1, code: 'claim' as never, person: 0 }])).toThrow(/malformed draft event/)
+  })
+})
+
+// ===========================================================================
+// THE TAX ON THE OUTSIDE INCOME, BY GOVERNMENT — the law steps read which side moved (`taxOnOutsideIncomeParts`).
+// ===========================================================================
+describe('the tax on the outside income splits by government, and the parts sum to the line', () => {
+  it('no state: all of it federal ($1,900 on the one earner); NC under the federal deduction: all of it state', () => {
+    const fed = recordedYears(earner(35_000)).byYear[0]!.lines
+    expect(fed.taxOnOutsideIncomeParts).toEqual({ federal: fed.taxOnOutsideIncome, state: 0 })
+    expect(cents(fed.taxOnOutsideIncomeParts.federal)).toBe(190_000)
+    // $14,000 of pay in NC: under the $16,100 federal deduction, over NC's $12,750.
+    const nc = recordedYears(
+      candidateOf({ people: [worker({ currentAge: 55, birthYear: 1971, earnedIncomeReal: 14_000 })], W: 5_000, state: 'NC' }),
+    ).byYear[0]!.lines
+    expect(nc.taxOnOutsideIncomeParts.federal).toBe(0)
+    expect(nc.taxOnOutsideIncomeParts.state).toBe(nc.taxOnOutsideIncome)
+    expect(nc.taxOnOutsideIncome).toBeGreaterThan(0)
+  })
+
+  it('a malformed floor fails loud: a reading whose tax is not a number, or a floor with no reading, throws — never a NaN cash', () => {
+    const floor = prepareWorkingYearFloor(
+      { ordinaryBase: 40_000, investmentIncome: 0 },
+      { ssBenefit: 0, filing: 'single', count65: 0, calendarYear: START, minLivingAge: 50 },
+    )
+    const terms = { wagesByPerson: [40_000], ongoingGross: 0, ownDeposits: 0, workingYearCost: 20_000, ongoingTaxable: 0, investmentIncome: 0 }
+    expect(Number.isFinite(workingYearCashLines(terms, floor).cash)).toBe(true) // the control
+    expect(() => workingYearCashLines(terms, { ...floor, readings: [{ ...floor.readings[0]!, baseTax: Number.NaN }] })).toThrow(
+      /negative or not a number/,
+    )
+    expect(() => workingYearCashLines(terms, { ...floor, readings: [] })).toThrow(/holds no reading/)
   })
 })
 
@@ -657,10 +836,22 @@ describe('also paid from savings (R16): the Medicare group is the overlay’s ow
 // THE WORDED TAX LINE's trigger (KTD12): Medicare, extras or a shortfall from savings, or a conversion or an
 // RMD landing in year 0. The one earner at W = 20,000 has none of them (above), so each arm adds one.
 // ===========================================================================
-describe('the worded tax line shows exactly when savings pays out something taxable in year 0', () => {
+describe('the worded tax line shows exactly on KTD12’s trigger: year 0 bills Medicare, draws from savings, or lands a conversion or a required withdrawal', () => {
+  it('a draw is read at the picture’s grain: a hand-$0.00 year whose float reads −3.6e-12 is "Left over $0", with no line', () => {
+    // Single, 50, $30,160 of pay. By hand: payroll 7.65 % × 30,160 = 2,307.24; taxable 30,160 − 16,100 = 14,060,
+    // tax 1,240 + 12 % × 1,660 = 1,439.20; at W = 26,413.56 the cash is exactly $0.00.
+    const ledger = checked(candidateOf({ people: [worker({ currentAge: 50, earnedIncomeReal: 30_160 })], W: 26_413.56 }))
+    expect(Math.abs(ledger.year0.cash)).toBeLessThan(1e-9) // float dust on a hand $0.00
+    // Non-vacuity: the float lands BELOW $0, so the run draws dust and a raw `shortfall > 0` gate would fire.
+    expect(ledger.year0.cash < 0).toBe(true)
+    expect(Object.is(ledger.year0.bottomLine, 0)).toBe(true)
+    expect(ledger.year0.savingsTaxLine).toBe(false)
+    expect(ledger.laterYears).toEqual([])
+  })
+
   it('a Roth conversion in year 0 shows it; one only in a later year does not', () => {
     const at = (conversions: number[]) =>
-      ledgerOf(candidateOf({ people: [EARNER], W: 20_000, conversions, contributionsByPerson: [{ pretax: flat(WINDOW, 6_000) }] }))
+      checked(candidateOf({ people: [EARNER], W: 20_000, conversions, contributionsByPerson: [{ pretax: flat(WINDOW, 6_000) }] }))
     expect(at([5_000]).year0.savingsTaxLine).toBe(true)
     expect(at([0, 5_000]).year0.savingsTaxLine).toBe(false)
   })
@@ -669,14 +860,31 @@ describe('the worded tax line shows exactly when savings pays out something taxa
     // Born 1951: the SECURE 2.0 start age is 73. Born 1954: also 73, so at 72 nothing is required yet. A worker's
     // Medicare waits for the stop, so neither year bills Medicare.
     const at = (currentAge: number) =>
-      ledgerOf(candidateOf({ people: [worker({ currentAge, birthYear: START - currentAge, earnedIncomeReal: 50_000 })], W: 20_000 }))
+      checked(candidateOf({ people: [worker({ currentAge, birthYear: START - currentAge, earnedIncomeReal: 50_000 })], W: 20_000 }))
     expect(at(75).year0.savingsTaxLine).toBe(true)
     expect(at(72).year0.savingsTaxLine).toBe(false)
+    // At the start age itself (born 1953, 73 in 2026): the run takes the year's required withdrawal, so it shows.
+    expect(at(73).year0.savingsTaxLine).toBe(true)
+  })
+
+  it('the RMD and conversion arms read the run’s own switches: RMDs off, or a conversion with no pre-tax money, shows nothing', () => {
+    // The 75-year-old above with the required withdrawal switched off; the one earner converting from an empty
+    // pre-tax pool (the run converts min(asked, pool) = $0).
+    const rmdOn = candidateOf({ people: [worker({ currentAge: 75, birthYear: 1951, earnedIncomeReal: 50_000 })], W: 20_000 })
+    expect(checked({ ...rmdOn, overlay: { ...rmdOn.overlay!, rmdEnabled: false } }).year0.savingsTaxLine).toBe(false)
+    const emptyPool = candidateOf({
+      people: [EARNER],
+      W: 20_000,
+      conversions: [5_000],
+      buckets: { taxable: 0, pretax: 0, roth: 400_000 },
+      contributionsByPerson: [{ pretax: flat(WINDOW, 6_000) }],
+    })
+    expect(checked(emptyPool).year0.savingsTaxLine).toBe(false)
   })
 
   it('on the per-person split, only the holder at RMD age counts: the 75-year-old’s own pool shows it, the 60-year-old’s does not', () => {
     const at = (pretaxByPerson: number[]) =>
-      ledgerOf(
+      checked(
         candidateOf({
           people: [
             worker({ currentAge: 75, birthYear: 1951, earnedIncomeReal: 50_000 }),
@@ -701,6 +909,7 @@ describe('the closed form: year-0 `zeroTax` is $0, federal and state (KTD8)', ()
       const floor = recordedYears(params).byYear[0]!.floor
       expect(floor.zeroTax).toBe(0)
       expect(floor.stateFloor?.zeroTax ?? 0).toBe(0)
+      checked(params)
     }
   })
 
@@ -734,14 +943,42 @@ describe('rounding: KTD12’s bottom line on the cash snapped to the cent; large
 
   it('through the producer: the one earner at W = 29,040.40 is Short $1, at 29,039.30 Left over $0 — the lines sum either way', () => {
     // cash = 40,000 − 3,060 − 1,900 − 6,000 − W: −0.40 and +0.70.
-    const short = ledgerOf(earner(29_040.4)).year0
+    const shortLedger = checked(earner(29_040.4))
+    const short = shortLedger.year0
     expect(cents(short.cash)).toBe(-40)
     expect(short.bottomLine).toBe(-1)
     expect(lineSum(short)).toBe(-1)
-    const over = ledgerOf(earner(29_039.3)).year0
+    const overLedger = checked(earner(29_039.3))
+    const over = overLedger.year0
     expect(cents(over.cash)).toBe(70)
     expect(Object.is(over.bottomLine, 0)).toBe(true)
     expect(lineSum(over)).toBe(0)
+    // The same rule on every later year (KTD12): the flat −$0.40 is short every year, each named at −$1; the
+    // flat +$0.70 is never short, so nothing is named.
+    expect(shortLedger.laterYears.map((y) => [y.yearsIn, y.bottomLine, y.events])).toEqual(
+      [1, 2, 3, 4, 5, 6, 7, 8, 9].map((t) => [t, -1, [{ code: 'stillShort' }]]),
+    )
+    expect(overLedger.laterYears).toEqual([])
+  })
+
+  it('a true half-cent draw reads at least "Short $1", whichever way the float lands (the tie goes to the gloomy side)', () => {
+    // Single, 50, a $6,000 deferral, $72,570 of pay. By hand (Rev. Proc. 2025-32; 26 U.S.C. §3101): B = 66,570;
+    // taxable 50,470; tax = 1,240 + 4,560 + 22 % × 70 = 5,815.40; payroll = 7.65 % × 72,570 = 5,551.605 (a half
+    // cent); cash = 72,570 − 5,551.605 − 5,815.40 − 6,000 − W = 55,202.995 − W. At W = 55,203 that is −$0.005, at
+    // W = 55,215 −$12.005: KTD12 reads them "Short $1" and "Short $13". (The float lands just under or over each
+    // tie; snapped to the nearest cent with ties upward, they read $0 and "Short $12" — rosy.)
+    const at = (W: number) =>
+      checked(candidateOf({ people: [worker({ currentAge: 50, earnedIncomeReal: 72_570 })], W, contributionsByPerson: [{ pretax: flat(WINDOW, 6_000) }] }))
+    const halfCent = at(55_203)
+    expect(halfCent.year0.bottomLine).toBe(-1)
+    expect(lineSum(halfCent.year0)).toBe(-1)
+    expect(halfCent.laterYears).toHaveLength(9)
+    const twelve = at(55_215)
+    expect(twelve.year0.bottomLine).toBe(-13)
+    expect(lineSum(twelve.year0)).toBe(-13)
+    expect(workingYearBottomLine(-0.005)).toBe(-1)
+    expect(workingYearBottomLine(-12.005)).toBe(-13)
+    expect(workingYearBottomLine(12.005)).toBe(12)
   })
 
   it('float dust never moves a dollar: a $3,060.0000000000005 payroll line reads $3,060', () => {
@@ -796,6 +1033,25 @@ describe('the producer throws on a run it cannot describe', () => {
     expect(() => ledgerOf(nobodyWorks)).toThrow(/nobody works/)
     expect(() => ledgerOf({ ...noW, paths: 0 })).toThrow(/not computable/)
   })
+
+  it('a run whose workers stop in different years: the picture describes one household stop, so it refuses rather than hide a stop', () => {
+    // Two workers on the window-top candidate, then one of them moved to stop after three years: no event names
+    // a stop, so the year his pay ends would drop unnamed.
+    const both = candidateOf({
+      people: [worker({ currentAge: 55, earnedIncomeReal: 70_000 }), worker({ sex: 'female', currentAge: 55, earnedIncomeReal: 70_000 })],
+      W: 50_000,
+      acaZeros: true, // the one who stops at 58 is a retired member under 65 from then on
+    })
+    const staggered: SimulationParams = { ...both, people: [both.people[0]!, { ...both.people[1]!, retirementAge: 58 }] }
+    expect(() => ledgerOf(staggered)).toThrow(/stop in different years/)
+  })
+})
+
+describe('the run’s horizon caps the picture', () => {
+  it('a four-year horizon under a ten-year stop composes years 0..3 only (all short on the one earner)', () => {
+    const ledger = ledgerOf({ ...earner(35_000), maxHorizonYears: 4 })
+    expect(ledger.laterYears.map((y) => [y.yearsIn, y.events])).toEqual([1, 2, 3].map((t) => [t, [{ code: 'stillShort' }]]))
+  })
 })
 
 // ===========================================================================
@@ -823,16 +1079,33 @@ const ALLOWED: Readonly<Record<string, readonly string[] | 'any'>> = {
   '@engine/rmd': ['rmdStartAgeForBirthYear'],
 }
 
-/** Every `import … from '…'` in a source text: the module and the names it brings in. */
+/** Every module a source text reaches, read by the TypeScript parser — `import` and `export … from`
+ *  declarations wherever they sit (indented, several on a line, after a comment), with the names each brings
+ *  in (`*` for a whole module), plus every `import()` and `require()` call. */
 const importsOf = (source: string): { module: string; names: string[] }[] => {
   const found: { module: string; names: string[] }[] = []
-  for (const m of source.matchAll(/^import\s+(type\s+)?([\s\S]*?)\s+from\s+'([^']+)'/gm)) {
-    const clause = m[2]!.trim()
-    const names = clause.startsWith('{')
-      ? clause.slice(1, -1).split(',').map((s) => s.trim().replace(/^type\s+/, '').split(/\s+as\s+/)[0]!).filter(Boolean)
-      : [clause]
-    found.push({ module: m[3]!, names })
+  const visit = (node: ts.Node): void => {
+    if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier !== undefined) {
+      const names: string[] = []
+      if (ts.isImportDeclaration(node)) {
+        const clause = node.importClause
+        if (clause?.name !== undefined) names.push('default')
+        const bindings = clause?.namedBindings
+        if (bindings !== undefined && ts.isNamespaceImport(bindings)) names.push('*')
+        if (bindings !== undefined && ts.isNamedImports(bindings)) for (const e of bindings.elements) names.push((e.propertyName ?? e.name).text)
+      } else if (node.exportClause !== undefined && ts.isNamedExports(node.exportClause)) {
+        for (const e of node.exportClause.elements) names.push((e.propertyName ?? e.name).text)
+      } else names.push('*')
+      found.push({ module: (node.moduleSpecifier as ts.StringLiteral).text, names })
+    } else if (
+      ts.isCallExpression(node) &&
+      (node.expression.kind === ts.SyntaxKind.ImportKeyword || (ts.isIdentifier(node.expression) && node.expression.text === 'require'))
+    ) {
+      found.push({ module: 'a dynamic import', names: [] })
+    }
+    ts.forEachChild(node, visit)
   }
+  visit(ts.createSourceFile('scan.ts', source, ts.ScriptTarget.Latest, true))
   return found
 }
 const offendersOf = (source: string): string[] => {
@@ -842,7 +1115,6 @@ const offendersOf = (source: string): string[] => {
     if (allowed === undefined) offenders.push(module)
     else if (allowed !== 'any') for (const n of names) if (!allowed.includes(n)) offenders.push(`${module}: ${n}`)
   }
-  if (/\bimport\s*\(|\brequire\s*\(/.test(source)) offenders.push('a dynamic import')
   return offenders
 }
 
@@ -851,8 +1123,9 @@ describe('the import allowlist (KTD12): the picture composes the run’s own fun
 
   it('every import of `workingYearLedger.ts` is on the list', () => {
     const imports = importsOf(source)
-    // Non-vacuity: the scan sees every import statement in the file.
-    expect(imports.length).toBe((source.match(/^import\s/gm) ?? []).length)
+    // Non-vacuity, by a second reader: TypeScript's own pre-processor finds the same modules.
+    const preProcessed = ts.preProcessFile(source, true, true).importedFiles.map((f) => f.fileName)
+    expect(imports.map((i) => i.module)).toEqual(preProcessed)
     expect(imports.length).toBeGreaterThanOrEqual(5)
     expect(offendersOf(source)).toEqual([])
   })
@@ -866,5 +1139,17 @@ describe('the import allowlist (KTD12): the picture composes the run’s own fun
     ])
     expect(offendersOf(`import { simulate } from '@engine/simulate'`)).toEqual(['@engine/simulate: simulate'])
     expect(offendersOf(`const m = await import('@engine/stateTax')`)).toEqual(['a dynamic import'])
+  })
+
+  it('the scan bites where a line regex is blind: indented, a second import on one line, after a comment, a re-export, a namespace, require', () => {
+    expect(offendersOf(`  import { stateIncomeTax } from '@engine/stateTax'`)).toEqual(['@engine/stateTax'])
+    expect(offendersOf(`import { workingYearCashLines } from '@engine/taxOverlay'; import { irmaa } from '@engine/constants'`)).toEqual([
+      '@engine/constants',
+    ])
+    expect(offendersOf(`/* note */ import { ordinaryIncomeTax } from '@engine/taxCore'`)).toEqual(['@engine/taxCore'])
+    expect(offendersOf(`export { ordinaryIncomeTax } from '@engine/taxCore'`)).toEqual(['@engine/taxCore'])
+    expect(offendersOf(`export * from '@engine/taxOverlay'`)).toEqual(['@engine/taxOverlay: *'])
+    expect(offendersOf(`import * as sim from '@engine/simulate'`)).toEqual(['@engine/simulate: *'])
+    expect(offendersOf(`const t = require('@engine/taxCore')`)).toEqual(['a dynamic import'])
   })
 })

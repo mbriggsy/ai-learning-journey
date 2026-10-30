@@ -255,6 +255,14 @@ export function capitalGainsTax(
   return CG_FIFTEEN_RATE * at15 + CG_TWENTY_RATE * at20
 }
 
+/** The MAGI the deduction stack reads (the senior bonus's phase-out): the ordinary income (taxable Social
+ *  Security already in it) plus the realized gain, floored at 0 — the ONE home of that rule, read by
+ *  {@link ordinaryPlusCapitalGainsTax} and by `taxOverlay.workingYearLawSteps` (whether a working year's
+ *  tax carried the bonus; insight 081). */
+export function federalMagi(ordinaryIncome: number, realizedGain: number): number {
+  return ordinaryIncome + Math.max(0, realizedGain)
+}
+
 /**
  * The full per-year federal tax (M5): progressive ordinary tax on the deduction-reduced ordinary
  * income PLUS the preferential cap-gains tax on the realized gain stacked on top.
@@ -279,7 +287,7 @@ export function ordinaryPlusCapitalGainsTax(
   calendarYear: number,
 ): number {
   const gain = Math.max(0, realizedGain)
-  const magi = ordinaryIncome + gain
+  const magi = federalMagi(ordinaryIncome, realizedGain)
   const deduction = deductionStack(filing, count65, magi, calendarYear)
   const ordinaryTaxable = Math.max(0, ordinaryIncome - deduction)
   const leftoverDeduction = Math.max(0, deduction - ordinaryIncome)

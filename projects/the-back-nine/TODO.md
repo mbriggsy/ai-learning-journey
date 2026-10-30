@@ -22,53 +22,40 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-10-30, written by b9-2 for the next session): Phase B of the working-year pay check is BUILT and
-mid-gate — finish the gates and land the ONE go-live commit.** The whole Phase B tree sits UNCOMMITTED in the shared working
-tree on purpose (48 modified + 8 new files under `projects/the-back-nine`; backup ref `refs/wip/b9-phaseb` = `2837ab4f`, pushed;
-recover a file with `git show refs/wip/b9-phaseb:projects/the-back-nine/<path>`, NEVER a checkout/restore/stash). The plan is
-`docs/plans/features/working-year-pay-check-build-spec.md`; its *As built (Phase B)* bullets are ALREADY WRITTEN (U6b, U7, U8,
-U9, U13). Every ruling made while building is in
-`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-phaseb\DECISIONS.md` (1–29).
-**BUILT, by exit code at the b9-2 close:** typecheck 0; eslint over all 52 touched `.ts/.tsx` 0; `pnpm build` 0;
-`verify:bundle` 0 (284.7 KiB); the full vitest run (one run, while a dev server and a browser were busy) 4,636 passed / 5 failed,
-every failure since explained: `stalenessExposure`'s seed list and the single-source gate (`72000`) — both FIXED and re-run
-green; `solvePayloadIdentity` F1 and `.health` F2 — each passes ALONE (44 s, 104 s of a 180 s budget), contention timeouts,
-pre-existing and untouched; `verify-doc-stats`' live-citation arm — EXPECTED, fixed by `doc:reanchor` at the commit. Every
-new UI unit file green (W step 22, picture 22, panel W row 15 + the four stale triggers, Result line 4, FuckOffDate 5, flow 2,
-sanity 9, quote writes 5, copy guard 9, seeds 8). Walked live in Chromium at 1536×791 and 390×844 (W step, picture, stale
-face + blocked gate + arrival reset, panel W row via the result's door, announce-once, `datesolo`'s 14 steps): zero console
-errors.
+▶ **START HERE (2026-10-30, written by b9-3 for b9-4): Phase B is BUILT, fit-gated, Caddie-walked and whole-diff
+reviewed; the fixes from both are IN THE TREE — write their tests, re-walk, run the gates, land the ONE go-live commit.** The
+whole Phase B tree still sits UNCOMMITTED in the shared working tree on purpose (51 modified + 8 new files under
+`projects/the-back-nine`; backup ref `refs/wip/b9-phaseb` = `dd4837f9`, pushed — a fast-forward over b9-2's `2837ab4f`).
+**READ FIRST:** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-phaseb-review\FIXES.md` — the merged fix list (C1–C14 copy, B1–B8 behaviour, D1–D2 docs, T1–T4 tests) with a
+DONE / DEFERRED / OWED status per item and, for every owed test, the lens repro to adapt (each repro kills a named mutant).
+The review's brief is `brief.md` beside it; its result is workflow `wf_65e70286-868` (11 lenses, 54 agents, 25 findings: 19
+confirmed, 2 hand-verified, 4 advisory, 0 rejected — every pre-existing seed byte-identical HEAD vs tree,
+`adv-invariant\diff-result.txt`). The Caddie card is the cold-read log's 2026-10-30 (b9-3) entry (HELD on two rosy W-help
+holes, both fixed in words; the re-walk closes them).
+**DONE, by exit code at the b9-3 close:** `pnpm verify:fit` 0 — 150 passed — on the tree BEFORE the fix pass (the strip-fact
+overflow fixed: `.strip-fact` is an inline-block with `max-inline-size: 100%`, the separator a glued `::after`; measured
+zero sideways scroll at 390 and 320 and every other fact list pixel-identical); typecheck 0 and `eslint src/intake src/ui` 0 AFTER
+it; vitest over `src/intake` + copyGuard + FuckOffDate + workingYearTaxDisclosure + resultPayCheckLine 0 (31 files). The full
+suite, the build and `verify:bundle` were NOT run after the fix pass.
 **TO FINISH, in this order:**
-1. **`verify:fit` on a QUIET machine** (no dev server on 4190, no other browser): `pnpm exec playwright test -c
-   playwright.fit.config.ts e2e/intake-fold.spec.ts e2e/vertical-fit.spec.ts -g "phone intake fold|pay check"` first, then the
-   whole `pnpm verify:fit`. b9-2's run had ONE red, `vertical-fit.spec.ts` "?seed=datecoststale: the stale face, the blocked
-   Continue…" at 1536×791 was a LOCATOR bug in the arm (a bare `getByLabel` substring-matched the fork's legend too) — FIXED
-   to `getByRole('textbox', { name, exact: true })`, not yet re-run. Two more reds: (a) the same arm at PHONE timed out inside
-   `rewalkSeedTo` waiting on `.step-heading` — it overlaps a hot-reload b9-2's own edits caused mid-run (`devSeeds.ts`' line
-   endings at 1:25), so re-run it clean before diagnosing; (b) **a REAL pre-existing find**: on `?seed=datesolo` at PHONE the
-   answer strip's `span.strip-fact` spans [16, 398] on a 390 px viewport — the long cannot-price fact name ("Coverage bought on
-   your own while the other one still works") runs 8 px past the screen; the new sideways law caught what `intake-fold` never
-   measured. Diagnose the strip's CSS (`AnswerStrip.tsx` / `intake.css` `.strip-fact`: a `nowrap`?) and fix it in the strip —
-   never by scoping the arm around it. 9 of 12 passed: intake-fold's four (the 14-step walk, floor 13), the standing-line ORDER
-   arms at both sizes (the line last in the lead, before the graphs, doors last; its door lands on the W row), `dateshort`'s
-   picture at both sizes, `datesolo`'s at REAL.
-   Then re-count the fit harness's date-final renders in `playwright.fit.config.ts`' comment (the six new arms each render a
-   buildable date seed's final: `datecoststale` ×4, `dateshort` ×2).
-2. **The Caddie walk + card** (the `caddie` skill): `CADDIE_TARGETS="intake:paycheck,seed:datecoststale"` (the new
-   `intake:paycheck` target and the `w-row` / `paycheck-note` / `w-question` / `money-picture` crops are built). Every new
-   string ships flagged under the batched-oracle law.
-3. **A whole-diff review** of the Phase B diff (the `ultramode-code-review` skill), then fix what survives verification.
-4. **Gates, once, at the end**: README + roadmap test counts from `vitest list`; `pnpm doc:reanchor` ONCE, then `pnpm
-   verify:doc-stats` (fold by hand the lane reports' listed in-code cite shifts — `lane-staleness-report.md` "Line cites my edits
-   shifted"; and `intake.css:508` is already re-pointed in `e2e/intake-fold.spec.ts`); typecheck, lint, the FULL suite on a quiet
-   machine, build, `verify:bundle` (BEFORE = 278,997 B measured on a HEAD worktree build; AFTER = 291,570 B), `verify:fit`.
-   Then commit (`git commit -- <paths>`, never `-a`; NOT the family-feud paths), push, read CI by id, and delete the side ref
-   only once CI is green.
-**Departure owed a word to Briggsy (already recorded in the plan's U8 As-built and the register):** the entry JS grew
-+12.3 KiB, over the plan's own 8 KiB allowance — all of it the copy catalog, every string read only by lazy chunks. The words
-were not cut; the structural fix is filed (Tier 4, *The whole copy catalog ships in the entry JS…*).
+1. **The owed tests** — FIXES.md's "OWED, in order (b9-4)" item 1, one arm per fix (B1–B6, C6, C8) plus the testing lens's
+   nine survivors (T1–T4). Re-plant each named mutant to prove the new arm bites (the harness: THE MUTATION HARNESS below).
+2. **DECISIONS.md rulings 30–31** (B6 refines ruling 21; B1/B2's `discardOnBack` + function-form `freshOnArrival`), the plan's
+   *As built (Phase B)* bullets for both, and the register edits FIXES.md names (the over-65 worker entry's stopgap sentence;
+   the old `employerCoverageHelp` quoted at `docs/backlog.md` ~2951, the plan ~741, `healthcareStreams.ts` ~78).
+3. **Re-walk the Caddie** on the fixed tree (`CADDIE_TARGETS="intake:paycheck,seed:datecoststale"`) + the panel; amend the
+   b9-3 card's disposition (PILOT-CLEARED once both HOLDS findings read clean) and its tape row.
+4. **The gates, once, at the end** (b9-2's list, unchanged): README + roadmap test counts from `vitest list`; `pnpm doc:reanchor`
+   ONCE then `pnpm verify:doc-stats` (fold by hand the lane reports' in-code cite shifts — `b9-phaseb\lane-staleness-report.md`
+   "Line cites my edits shifted"); typecheck, lint, the FULL suite on a quiet machine, build, `verify:bundle` (BEFORE = 278,997 B
+   on a HEAD worktree build; b9-2's AFTER = 291,570 B — re-measure, the copy grew), `verify:fit` (re-run: the W fork gained a
+   visible required marker and the copy lengthened). Then commit (`git commit -- <paths>`, never `-a`; NOT the family-feud
+   paths), push, read CI by id, and delete the side ref only once CI is green.
+**Departure owed a word to Briggsy (recorded in the plan's U8 As-built and the register):** the entry JS grew +12.3 KiB at
+b9-2's count, over the plan's own 8 KiB allowance — all of it the copy catalog. The words were not cut; the structural fix is
+filed (Tier 4, *The whole copy catalog ships in the entry JS…*).
 **Then Phase C**: U10 (every date seed gets W, measured; the `wyclock` plant — `doctorWorkingYearsStaleVault` is built), U11
-(docs), the whole-file review and `/distill`.
+(docs), the whole-file review and `/distill` (the DISTILL CANDIDATES below, b9-3's first).
 **The research, durable:** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-research\`
 (the payroll and earnings-test primaries, verified) and `b9-phaseb\sources\` (42 CFR 407.20 and 411.172, read 2026-10-30 for the
 spouse-side Part B entry).
@@ -76,15 +63,27 @@ spouse-side Part B entry).
 real plan. The day the check ships, the working-year row's "It doesn't check that your pay really covers all of that…" sentence
 comes out for a household with W (built: U9's arm). Build 2, the surplus question, follows this build.
 
-**SESSION 2026-10-30 (b9-2, Phase B built, mid-gate — the tree is UNCOMMITTED on purpose):** see START HERE for the exit
-codes. HEAD is `e386cd20` (TODO-only above `903a9c5e`; CI on the engine commit `c805fa8f` was green, run 40985382777).
-**LANDMINES from this session:** a Python `open(p).read()` in TEXT mode turns CRLF into LF silently, so an "is it CRLF?" check
-inside the same script is blind — read and write BYTES (or compare against `git show HEAD:<path>`) on any file you rewrite;
-`devSeeds.ts` and `devSeeds.test.ts` are CRLF and were restored once already. `sed -i` strips CRLF too. A seed figure equal to
-a sourced constant's value (`72000` is the §415(c) cap) reds the single-source gate — pick a seed figure no constant holds.
-Editing ANY `src` file while a fit run is going hot-reloads its dev server mid-test.
+**SESSION 2026-10-30 (b9-3, Phase B fit-gated, walked, reviewed; fixes in the tree, their tests owed):** see START HERE for the
+exit codes. HEAD is `68557df9` (TODO-only above `903a9c5e`; CI on the engine commit `c805fa8f` was green, run 40985382777).
+**LANDMINES from this session:** `$'\r$'` inside a `$(…)` substitution in a Bash `for` loop matched EVERY line, so a CRLF count
+read "all CRLF" on pure-LF files — count line endings with a byte loop (`node -e` over `readFileSync`), never grep in a
+substitution. The review left a `node_modules` JUNCTION in `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-phaseb-review\head\` and `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-phaseb-review\verify-correctness\` — remove each link
+alone (`cmd //c rmdir <folder>\node_modules`) before deleting either folder. A prop added to a component's TYPE but not to its
+destructure silently resolves to any same-named module binding (`describedBy` in `fields.tsx`); a `(s): s is string` filter
+guard then hides it from tsc — destructure first, and name a new prop so it cannot collide.
 
 **DISTILL CANDIDATES (for the pay check's Phase C `/distill`):**
+- (b9-3) a stopgap sentence is read by EVERY household shape, not the one it was written for: ruling 1's "health premiums
+  before anyone's Medicare starts" was right for a retired spouse on the worker's plan and told `dateshort` (one already on
+  Medicare, one working) to count no premium at all; and "leave out Medicare premiums" turned a register gap ("no sentence covers
+  it") into an instruction that hides the cost. Walk a help sentence against each seed's shape before shipping it (the Caddie
+  card, b9-3).
+- (b9-3) four review lenses found the same exit independently: Back is the one ungated way out of a gated step, so a value the
+  step's Continue refuses ($0, an unconfirmed period) leaves through it and meets a route change or a remount's provenance. A
+  gated step owns what it leaves behind on EVERY exit (`discardOnBack`), not only on Continue.
+- (b9-3) a CSS fix outlives its reason: `.strip-fact { white-space: nowrap }` was written for a "(62–70)" label no longer in the
+  catalog, and ran a 60-character fact off a 390 px phone. An atomic-when-it-fits unit is an inline-block with `max-inline-size:
+  100%`, not nowrap.
 - (b9-1, Phase B) an input surface's reading must come from the same source as its sibling input surface: KTD18 took the
   W question's state reading from the BUILT run, which is `undefined` on any unbuildable draft, so the W step would have told an
   NC household the opposite of the spend step and then staled its answer when a skipped question was filled. Input surfaces
@@ -808,9 +807,14 @@ These are the mechanical ones that keep costing hours.*
   folder `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\`) hold a `node_modules`
   JUNCTION into the project's own `node_modules` (as `b9-a6-head\` does). Before deleting either folder, remove the link alone
   (`cmd /c rmdir <folder>\node_modules`), never a recursive delete through it.
-- **From the b9-1 and b9-2 closes (2026-10-30, Phase B built, mid-gate):** the shared working tree holds the pay check's Phase B
-  UNCOMMITTED (48 modified + 8 new files). Never `git checkout`/`restore`/`stash` any of them; the backup is the side ref
-  `refs/wip/b9-phaseb` (`2837ab4f`, pushed to origin; re-cut it through a TEMPORARY index — `GIT_INDEX_FILE=<scratch>/x.index`,
+- **From the b9-2 close (2026-10-30), migrated at b9-3:** a Python `open(p).read()` in TEXT mode turns CRLF into LF silently,
+  so an "is it CRLF?" check inside the same script is blind — read and write BYTES (or compare against `git show HEAD:<path>`) on
+  any file you rewrite; `devSeeds.ts` and `devSeeds.test.ts` are CRLF. `sed -i` strips CRLF too. A seed figure equal to a sourced
+  constant's value (`72000` is the §415(c) cap) reds the single-source gate — pick a figure no constant holds. Editing ANY `src`
+  file while a fit run is going hot-reloads its dev server mid-test.
+- **From the b9-1, b9-2 and b9-3 closes (2026-10-30, Phase B built, mid-gate):** the shared working tree holds the pay check's
+  Phase B UNCOMMITTED (51 modified + 8 new files at b9-3). Never `git checkout`/`restore`/`stash` any of them; the backup is the side ref
+  `refs/wip/b9-phaseb` (`dd4837f9`, pushed to origin; re-cut it through a TEMPORARY index — `GIT_INDEX_FILE=<scratch>/x.index`,
   `git read-tree HEAD`, `git add -A -- projects/the-back-nine`, `git write-tree`, `git commit-tree`, `git update-ref` with the
   old value — so the real index never moves) — recover a lost file with `git show refs/wip/b9-phaseb:projects/the-back-nine/<path>`,
   never a reset.

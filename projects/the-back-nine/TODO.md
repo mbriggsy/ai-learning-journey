@@ -30,8 +30,8 @@ agents; the plan's KTD12 *The review* bullet is the record) and its fixes are co
 on THIS year's federal line (the one rosy hole, found by six lenses), half-cent ties go gloomy, the worded line reads the
 picture's grain, a test step beside a claim is named, staggered stops and negative draft years are refused, the bonus's
 MAGI reads `taxCore.federalMagi`, the allowlist scan is an AST scan; 28 planted mutants, all red; every dev seed's full
-output byte-identical before vs after. NEXT is Phase B, the ONE go-live commit. Read the fix commit's CI run by id first
-(`gh run list --commit <FULL sha>`, then `gh run view <id>`). Read `git log` first. The plan is
+output byte-identical before vs after. The fix is `c805fa8f`; its CI run 40985382777 completed SUCCESS on both jobs
+(`verify`, `verify-rv-chart-text`), read by id. NEXT is Phase B, the ONE go-live commit. Read `git log` first. The plan is
 `docs/plans/features/working-year-pay-check-build-spec.md`: planned, deepened and reviewed (`wf_46aab717-201`; verdicts in
 `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-plan-review\verify\`).
 **U12, the return-path ask, is CUT**: nobody has used the product, so no saved plan predates the new answer (Briggsy,
@@ -154,6 +154,14 @@ this close's own run by id (`gh run list --commit <FULL sha>`, then `gh run view
 - (b9-11) a property whose oracle calls the function under test certifies that shared arithmetic: say what it pins (the
   composition) and pin the rest by hand goldens; count a chart row "reached" only on strictly ordered amounts (a $0 PIA
   ties all three) — both mutant-proven.
+**THE A7 REVIEW (durable, 2026-10-29):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a7-review\`
+— `brief.md` (the review's contract brief, a template for Phase C's), every lens's repros in its own folder, `a7-tools\` (A7's
+53-mutant spec and `seeds.mts`, saved from the dead A7 scratchpad), and `fixes\` (the fix's 28-mutant spec + its result,
+`seeds.mts` pointed at `fixes\out`, the before/after outputs; `head\` and `pre-a7\` are `git archive` copies with
+`node_modules` junctions). For U10: `adv-temporal\sweep.mts nocpi` is a drift-free completeness sweep over generated W
+households — it reads `adv-temporal\nocpi\src`, a `src` copy whose `priceIndex.ts` multiplies by `1 + 0 * cpiRateFor(y)` (no
+drift, so every cash move left is discrete), and prints each later year that moved UNNAMED, was named with no move (NOISE), or
+was MISATTRibuted. That copy is the PRE-fix tree: re-copy today's `src` into it and re-apply the one-line pin before re-running.
 **THE A6 TOOLS (durable, b9-14):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a6-tools\`
 — `seeds.mts` (`b9-seed-probe`'s, rooted at the CWD's `src`: run it once from `b9-a6-head\` — a `git archive` of HEAD's
 `src` + tsconfig with a `node_modules` junction; refresh it with `git archive HEAD:projects/the-back-nine src tsconfig.json

@@ -44,12 +44,25 @@ Write-Host "Python     : $python"
 
 $action = New-ScheduledTaskAction -Execute $python -Argument "`"$script`"" -WorkingDirectory $project
 
-$triggers = @(
-    (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Saturday -At 20:00),
-    (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday   -At 08:00),
-    (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday   -At 11:30),
-    (New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday   -At 15:00)
+$schedule = @(
+    @{ Day = "Saturday"; At = "20:00" },
+    @{ Day = "Sunday";   At = "08:00" },
+    @{ Day = "Sunday";   At = "11:30" },
+    @{ Day = "Sunday";   At = "15:00" }
 )
+# LOCAL wall-clock time, never a fixed UTC instant. New-ScheduledTaskTrigger -At writes StartBoundary
+# in UTC ("2026-10-30T15:30:00Z" for 11:30 EDT, in PowerShell 5.1 and 7 alike), and Task Scheduler
+# keeps any zoned boundary as "synchronize across time zones": the trigger is pinned to that instant,
+# so once DST ends every run fires an hour EARLY by the clock. Measured 2026-10-30, two days before the
+# fall-back: the registered task's Sunday triggers read Next Run 07:00 / 10:30 / 14:00. The 11:30 run
+# would have read the morning an hour before the inactives it exists to read. So StartBoundary is
+# written here as the intended clock time with no zone at all -- not edited from the cmdlet's value
+# (stripping its "Z" turned 20:00 EDT into a midnight trigger, 2026-10-30).
+$triggers = foreach ($s in $schedule) {
+    $t = New-ScheduledTaskTrigger -Weekly -DaysOfWeek $s.Day -At $s.At
+    $t.StartBoundary = "{0:yyyy-MM-dd}T{1}:00" -f (Get-Date), $s.At
+    $t
+}
 
 # StartWhenAvailable: a laptop asleep at 08:00 fires the run on wake. The players dump is ~14 MB,
 # so the limit is generous; a run that hangs on the CDN must still die before the next trigger.
@@ -61,6 +74,18 @@ Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $triggers `
     -Settings $settings -Description "Sunday-morning lineup check: tagged starters, empty slots, bench bodies out-projecting starters. Appends to newsletter\data\state\GAMEDAY.md." `
     -Force | Out-Null
 Write-Host "Registered : $TaskName"
+
+# Prove the triggers registered as the INTENDED local clock times: read them back from the task itself,
+# and match each against $schedule -- no zone, and the same hour and minute. A check for "no zone"
+# alone passed a midnight trigger on 2026-10-30.
+$bounds = @(([xml](Export-ScheduledTask -TaskName $TaskName)).Task.Triggers.ChildNodes | ForEach-Object { $_.StartBoundary })
+if ($bounds.Count -ne $schedule.Count) { throw "Expected $($schedule.Count) triggers, the task carries $($bounds.Count)." }
+for ($k = 0; $k -lt $schedule.Count; $k++) {
+    if ($bounds[$k] -notmatch "^\d{4}-\d{2}-\d{2}T$($schedule[$k].At):00$") {
+        throw "Trigger $k registered as '$($bounds[$k])', not $($schedule[$k].Day) $($schedule[$k].At) local time (no zone)."
+    }
+}
+Write-Host "Triggers   : local time -- $(($schedule | ForEach-Object { "$($_.Day) $($_.At)" }) -join ', ')"
 
 $out = Join-Path $project "newsletter\data\state\GAMEDAY.md"
 $before = if (Test-Path $out) { (Get-Item $out).LastWriteTime } else { [datetime]::MinValue }

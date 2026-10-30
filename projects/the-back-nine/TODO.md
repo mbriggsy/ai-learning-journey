@@ -28,8 +28,8 @@ own commit), and so is the RIB-LIM order fix (`99ffc746`; the register's CLOSED 
 survivor's age reduction…* is its record — `SOLVER_CODE_VERSION` is 12). NEXT is Phase B, the ONE go-live commit — but
 FIRST, A7's whole-file review, which has NOT run** (A7 is `2990b8c1`; its session hit the 60 % wrap line after the gates, so
 the fan-out waits for a fresh window — the A6 precedent is `wf_fdc509f6-84c`: four lenses, a skeptic per finding, over
-`workingYearLedger.ts`, its test, `workingYearLawSteps` and the `overlayHouseholdFor` extraction). Read `2990b8c1`'s CI run by
-id before starting (`gh run list --commit <FULL sha>`, then `gh run view <id>`); it was not read at that close. Read
+`workingYearLedger.ts`, its test, `workingYearLawSteps` and the `overlayHouseholdFor` extraction). `2990b8c1`'s CI run
+40969511538 completed SUCCESS on both jobs (`verify`, `verify-rv-chart-text`), read by id. Read
 `git log` first. The plan is
 `docs/plans/features/working-year-pay-check-build-spec.md`: planned, deepened and reviewed (`wf_46aab717-201`; verdicts in
 `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-plan-review\verify\`).

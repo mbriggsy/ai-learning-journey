@@ -22,81 +22,68 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-10-30, written by b9-1 for b9-2): finish Phase B of the working-year pay check — the ONE go-live
-commit — IN THE SHARED WORKING TREE, where about half of it already sits UNCOMMITTED (28 files; backup ref `refs/wip/b9-phaseb`
-= `7f37667`, pushed). Phase A is LANDED and green (`e2890887` … `c805fa8f`). The plan is
-`docs/plans/features/working-year-pay-check-build-spec.md` (Phase B = U6b + U7 + U8 + U9 + U13, plus `datesolo`'s W, the
-short and stale-W witness seeds, the e2e edits; `verify:fit` green at that commit). READ FIRST, in this order:
-`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-phaseb\DECISIONS.md` (19 + the
-lanes' rulings made while building — several are recorded departures from the plan, and each owes an *As built (Phase B)*
-bullet in the plan at the commit), then the two lane reports beside it, then the six code maps in `maps\` (line numbers are
-HEAD `903a9c5e`'s — re-verify). `premium\measure.json` is the Tier 1 premium measurement.
-**BUILT (uncommitted, typecheck + lint exit 0, every arm green):** U7's model / codec / draft / registry seat
-(`ScenarioV3.workingYearCost`, a real discriminated union; the codec range-caps it), `src/intake/workingYearQuote.ts` (the
-quote, the DRAFT-keyed state reading, the stale predicate, the mints), `buildDateInput`'s W + employer-HSA carriage,
-`workingYearCostForRun`; U6b (`workingYearLedgerForRun` + `workingYearDraftEvents`, every step-down per owner); `threeThenMore`;
-U13 (`WORKING_YEARS_VINTAGE` + its digest pin, the clock, the 9th exposure read) and KTD21's unlock (`deriveStaleness`' REQUIRED
-4th argument, the two re-entry lines); U9 (`methodologyLines` / `methodologyArmFor`, the W arm's paragraph + 14 gap keys,
-K15 new). Mutant passes 23 + 24 + the coordinator's arms, all red.
-**TO BUILD, in this order (each prescription's detail is in DECISIONS.md and the maps):**
-1. **The W step's rules** (`src/intake/sanity.ts`): `working-cost-unanswered` on `workingYearCost.answer` (date route; W absent
-   or stale), `working-cost-zero` and the W period rule on `workingYearCost` (reuse `SPEND_AMBIGUOUS_MIN`, `periodConfirmPrompt`;
-   disarm on `workingYearCost.entryPeriod` or `SanityProvenance.workingCostPeriodConfirmed`); KTD3's exception in all THREE
-   statements of the never-fires-on-absence doctrine; the provenance captured in `flow.tsx` (rulings 16–19). `buildDateInput`
-   carries W only when its figure is > 0 (ruling 17). New copy `errWorkingCostUnanswered`, `errWorkingCostZero`.
-2. **`SegmentedControl`'s opt-in `invalid`** (`src/intake/fields.tsx`: `role="radiogroup"` + `aria-invalid` + describedby, ruling 11).
-3. **The two steps** (`src/intake/questions.tsx`, after `otherIncomeStep`, gated on the exported `isDateRoute`): the W question
-   (the quote in a slot above a static legend; Yes / a different figure — choosing the figure CLEARS a held `confirmed`, ruling
-   10; a reserved period slot, untapped period month; the help by reading, INCLUDING "before anyone's Medicare starts" — the
-   Tier 1 measurement's stopgap words; the stale note `role="note"`; the W-below-M note; left-out names through
-   `threeThenMore`), and the money-picture step rendering a new `src/intake/WorkingYearLedger.tsx` (grouped `<dl>`s, a
-   heading-level prop — h3 in the step, h4 in the panel; minus signs and words, never color alone; held-back words inside the
-   Social Security row; the monthly echo; the FRA-year stopgap words; later years worded conditionally, consecutive short
-   no-event years collapsed; the `'unknown'` face naming missing facts apart from a refusal). Re-word `copy.employerCoverageHelp`
-   in the SAME commit (insight 086: it says the tool counts no health costs for the retired spouse — false once W can carry her
-   plan share). Move every "other income is the last step" rationale (seven sites, map-intake-flow C9).
-4. **The panel's W row** (`src/intake/AssumptionPanel.tsx`, after `work-investment`): four faces + a one-line value summary
-   (rulings 12–14), commits on `workingYearCost` through `commitRefusing` with an open-edge provenance, a clear is a no-op,
-   `initialSeat`, the stale face announced once through `announcerRef` from a child with a prev-ref.
-5. **The result's standing line** (`FuckOffDate.tsx` `p.fod-note.cs-paycheck-note` + `payCheckNote`; `Result.tsx` passes it
-   iff stale, opens the panel at `working-year-cost`, clears the seat on every close path; `readOnly` threaded from
-   `IntakeApp.tsx` → `Result`, no door when read-only).
-6. **Copy + guards**: every new string pilot-drafted and flagged (KTD19); a `SLOT_RENDER` row per new slot; in
-   `copyGuard.test.ts`, the three-word ban (hoist `workingYearTaxDisclosure.test.ts`' `BANNED` into one non-test helper under
-   `src/ui/__tests__/`) + the curly-apostrophe gate + the verdict/control scope pins over every new key and slot.
-7. **Seeds** (`src/ui/devSeeds.ts`): `withConfirmedW` at the registry entry (`datesolo` first — the intake-fold walk stalls
-   without it); the short witness and the stale-W witness (measure each, add it to `stalenessExposure.test.ts`'
-   `MEASURED_MOVED`, the non-stale one to the staleness property arm, check `survivorMedicalWiring`'s census);
-   `doctorWorkingYearsStaleVault` + its engine-acceptance arm (insight 085).
-8. **E2E**: `e2e/intake-fold.spec.ts` floor 11 → 13 and its step-list comment; hoist a re-walk driver into
-   `e2e/reviewSurface.ts`; `vertical-fit.spec.ts` arms for both steps (REAL + PHONE, the walk scoped to `.intake-shell`), the
-   panel row, and the stale-W ORDER arms (dip/datenc's doors-last shape; at PHONE `.fod-graphs` is `display: contents`);
-   `caddie-walk.spec.ts` a new date-route intake target.
-9. **The register**: amend *A retired spouse's pre-65 health premium stays in W after her Medicare starts…* (its premise is
-   wrong — she is never on the marketplace beside a worker; measured gloomy, $0 on every seed; the remedy is the W question's
-   words now and an entered-figure step later; DECISIONS ruling 1); file the spouse-side Part B sibling (read the primary first).
-10. **Gates, once, at the end**: README + roadmap test counts from `vitest list`; `pnpm doc:reanchor` ONCE then
-    `pnpm verify:doc-stats` (fold the lanes' listed in-code cite shifts by hand); typecheck, lint, test, build,
-    `verify:bundle` (record before/after; the 8 KiB allowance; `grep -c '\[workingYearLedger\]' dist/assets/index-*.js` == 0),
-    `verify:fit`; a Caddie walk + card; a whole-diff review; the plan's *As built (Phase B)* bullets from DECISIONS.md; commit,
-    push, read CI by id.
-**Then Phase C**: U10 (every date seed gets W; measured), U11 (docs), the whole-file review and `/distill`.
+▶ **START HERE (2026-10-30, written by b9-2 for the next session): Phase B of the working-year pay check is BUILT and
+mid-gate — finish the gates and land the ONE go-live commit.** The whole Phase B tree sits UNCOMMITTED in the shared working
+tree on purpose (48 modified + 8 new files under `projects/the-back-nine`; backup ref `refs/wip/b9-phaseb` = `2837ab4f`, pushed;
+recover a file with `git show refs/wip/b9-phaseb:projects/the-back-nine/<path>`, NEVER a checkout/restore/stash). The plan is
+`docs/plans/features/working-year-pay-check-build-spec.md`; its *As built (Phase B)* bullets are ALREADY WRITTEN (U6b, U7, U8,
+U9, U13). Every ruling made while building is in
+`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-phaseb\DECISIONS.md` (1–29).
+**BUILT, by exit code at the b9-2 close:** typecheck 0; eslint over all 52 touched `.ts/.tsx` 0; `pnpm build` 0;
+`verify:bundle` 0 (284.7 KiB); the full vitest run (one run, while a dev server and a browser were busy) 4,636 passed / 5 failed,
+every failure since explained: `stalenessExposure`'s seed list and the single-source gate (`72000`) — both FIXED and re-run
+green; `solvePayloadIdentity` F1 and `.health` F2 — each passes ALONE (44 s, 104 s of a 180 s budget), contention timeouts,
+pre-existing and untouched; `verify-doc-stats`' live-citation arm — EXPECTED, fixed by `doc:reanchor` at the commit. Every
+new UI unit file green (W step 22, picture 22, panel W row 15 + the four stale triggers, Result line 4, FuckOffDate 5, flow 2,
+sanity 9, quote writes 5, copy guard 9, seeds 8). Walked live in Chromium at 1536×791 and 390×844 (W step, picture, stale
+face + blocked gate + arrival reset, panel W row via the result's door, announce-once, `datesolo`'s 14 steps): zero console
+errors.
+**TO FINISH, in this order:**
+1. **`verify:fit` on a QUIET machine** (no dev server on 4190, no other browser): `pnpm exec playwright test -c
+   playwright.fit.config.ts e2e/intake-fold.spec.ts e2e/vertical-fit.spec.ts -g "phone intake fold|pay check"` first, then the
+   whole `pnpm verify:fit`. b9-2's run had ONE red, `vertical-fit.spec.ts` "?seed=datecoststale: the stale face, the blocked
+   Continue…" at 1536×791 was a LOCATOR bug in the arm (a bare `getByLabel` substring-matched the fork's legend too) — FIXED
+   to `getByRole('textbox', { name, exact: true })`, not yet re-run. Two more reds: (a) the same arm at PHONE timed out inside
+   `rewalkSeedTo` waiting on `.step-heading` — it overlaps a hot-reload b9-2's own edits caused mid-run (`devSeeds.ts`' line
+   endings at 1:25), so re-run it clean before diagnosing; (b) **a REAL pre-existing find**: on `?seed=datesolo` at PHONE the
+   answer strip's `span.strip-fact` spans [16, 398] on a 390 px viewport — the long cannot-price fact name ("Coverage bought on
+   your own while the other one still works") runs 8 px past the screen; the new sideways law caught what `intake-fold` never
+   measured. Diagnose the strip's CSS (`AnswerStrip.tsx` / `intake.css` `.strip-fact`: a `nowrap`?) and fix it in the strip —
+   never by scoping the arm around it. 9 of 12 passed: intake-fold's four (the 14-step walk, floor 13), the standing-line ORDER
+   arms at both sizes (the line last in the lead, before the graphs, doors last; its door lands on the W row), `dateshort`'s
+   picture at both sizes, `datesolo`'s at REAL.
+   Then re-count the fit harness's date-final renders in `playwright.fit.config.ts`' comment (the six new arms each render a
+   buildable date seed's final: `datecoststale` ×4, `dateshort` ×2).
+2. **The Caddie walk + card** (the `caddie` skill): `CADDIE_TARGETS="intake:paycheck,seed:datecoststale"` (the new
+   `intake:paycheck` target and the `w-row` / `paycheck-note` / `w-question` / `money-picture` crops are built). Every new
+   string ships flagged under the batched-oracle law.
+3. **A whole-diff review** of the Phase B diff (the `ultramode-code-review` skill), then fix what survives verification.
+4. **Gates, once, at the end**: README + roadmap test counts from `vitest list`; `pnpm doc:reanchor` ONCE, then `pnpm
+   verify:doc-stats` (fold by hand the lane reports' listed in-code cite shifts — `lane-staleness-report.md` "Line cites my edits
+   shifted"; and `intake.css:508` is already re-pointed in `e2e/intake-fold.spec.ts`); typecheck, lint, the FULL suite on a quiet
+   machine, build, `verify:bundle` (BEFORE = 278,997 B measured on a HEAD worktree build; AFTER = 291,570 B), `verify:fit`.
+   Then commit (`git commit -- <paths>`, never `-a`; NOT the family-feud paths), push, read CI by id, and delete the side ref
+   only once CI is green.
+**Departure owed a word to Briggsy (already recorded in the plan's U8 As-built and the register):** the entry JS grew
++12.3 KiB, over the plan's own 8 KiB allowance — all of it the copy catalog, every string read only by lazy chunks. The words
+were not cut; the structural fix is filed (Tier 4, *The whole copy catalog ships in the entry JS…*).
+**Then Phase C**: U10 (every date seed gets W, measured; the `wyclock` plant — `doctorWorkingYearsStaleVault` is built), U11
+(docs), the whole-file review and `/distill`.
 **The research, durable:** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-research\`
-— the skeptic-verified primaries (`research-*.json` + `verdict-*.json`: payroll 6.2 % to $184,500, 1.45 %, 0.9 % over
-$250,000 MFJ / $200,000 single; earnings test $24,480 / $65,160, FR Doc 2025-19763), local copies of every source in
-`sources\` (ssa.gov 403s curl; the FR raw text, eCFR and secure.ssa.gov POMS fetch fine), the code maps (`map-*.md`) and
-the deepening's findings (`deepen\`, `wf_675930c0-d75`, 64 findings, all integrated into the plan).
-**Nothing parks.** Every new string is drafted, Caddie-walked and shipped flagged, and so are the R27 reading and the
-main-thread money picture (the plan's *Departures from the ruling*, item 4). The saved shapes are the pilot's until
-Briggsy saves his first real plan; the tool is built for him (a friend using it is "a crazy outside chance", his words, 2026-10-21). The day the check ships, the working-year row's "It doesn't check that your pay really
-covers all of that…" sentence comes out for a household with W (U9). Build 2, the surplus question, follows this build.
+(the payroll and earnings-test primaries, verified) and `b9-phaseb\sources\` (42 CFR 407.20 and 411.172, read 2026-10-30 for the
+spouse-side Part B entry).
+**Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
+real plan. The day the check ships, the working-year row's "It doesn't check that your pay really covers all of that…" sentence
+comes out for a household with W (built: U9's arm). Build 2, the surplus question, follows this build.
 
-**SESSION 2026-10-30 (b9-1, Phase B mid-build — the tree is UNCOMMITTED on purpose):**
-**STATE of the working tree (28 files, uncommitted; backup `refs/wip/b9-phaseb` = `7f37667`, pushed), by exit code:**
-typecheck — exit 0, re-run at this close; eslint over every touched file — exit 0; the full suite — exit 1 on EXACTLY the
-two expected arms (the operational landmine of this close names them), everything else green. HEAD is `903a9c5e` (CI on its
-engine parent `c805fa8f` was green, run 40985382777, read by id). `verify:fit` / build / `verify:bundle` not run (no screen
-built yet).
+**SESSION 2026-10-30 (b9-2, Phase B built, mid-gate — the tree is UNCOMMITTED on purpose):** see START HERE for the exit
+codes. HEAD is `e386cd20` (TODO-only above `903a9c5e`; CI on the engine commit `c805fa8f` was green, run 40985382777).
+**LANDMINES from this session:** a Python `open(p).read()` in TEXT mode turns CRLF into LF silently, so an "is it CRLF?" check
+inside the same script is blind — read and write BYTES (or compare against `git show HEAD:<path>`) on any file you rewrite;
+`devSeeds.ts` and `devSeeds.test.ts` are CRLF and were restored once already. `sed -i` strips CRLF too. A seed figure equal to
+a sourced constant's value (`72000` is the §415(c) cap) reds the single-source gate — pick a seed figure no constant holds.
+Editing ANY `src` file while a fit run is going hot-reloads its dev server mid-test.
+
 **DISTILL CANDIDATES (for the pay check's Phase C `/distill`):**
 - (b9-1, Phase B) an input surface's reading must come from the same source as its sibling input surface: KTD18 took the
   W question's state reading from the BUILT run, which is `undefined` on any unbuildable draft, so the W step would have told an
@@ -821,9 +808,12 @@ These are the mechanical ones that keep costing hours.*
   folder `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\`) hold a `node_modules`
   JUNCTION into the project's own `node_modules` (as `b9-a6-head\` does). Before deleting either folder, remove the link alone
   (`cmd /c rmdir <folder>\node_modules`), never a recursive delete through it.
-- **From the b9-1 close (2026-10-30, Phase B mid-build):** the shared working tree holds the pay check's Phase B UNCOMMITTED
-  (28 files). Never `git checkout`/`restore`/`stash` any of them; the backup is the side ref `refs/wip/b9-phaseb` (`7f37667`,
-  pushed to origin) — recover a lost file with `git show refs/wip/b9-phaseb:projects/the-back-nine/<path>`, never a reset.
+- **From the b9-1 and b9-2 closes (2026-10-30, Phase B built, mid-gate):** the shared working tree holds the pay check's Phase B
+  UNCOMMITTED (48 modified + 8 new files). Never `git checkout`/`restore`/`stash` any of them; the backup is the side ref
+  `refs/wip/b9-phaseb` (`2837ab4f`, pushed to origin; re-cut it through a TEMPORARY index — `GIT_INDEX_FILE=<scratch>/x.index`,
+  `git read-tree HEAD`, `git add -A -- projects/the-back-nine`, `git write-tree`, `git commit-tree`, `git update-ref` with the
+  old value — so the real index never moves) — recover a lost file with `git show refs/wip/b9-phaseb:projects/the-back-nine/<path>`,
+  never a reset.
   The full suite is RED on exactly two arms until the go-live commit, both expected: the panel's registry completeness walk (the
   `working-year-cost` seat has no row yet) and `verify-doc-stats`' live-citation arm (line numbers moved; `pnpm doc:reanchor`
   runs ONCE at the commit).

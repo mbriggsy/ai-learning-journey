@@ -22,56 +22,65 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-10-29, the b9 session of that evening): build #1 of the D7 queue, the working-year pay check — Phase A
-(A1 through A7) is LANDED (`e2890887`, `512df53f`, `5d44ed68`, `fde13929`, `9b6a6daf`, `24ed7410`, `2990b8c1`), and so is
-the RIB-LIM order fix (`99ffc746`; the register's CLOSED *The widow(er) benefit is capped before the survivor's age
-reduction…* is its record — `SOLVER_CODE_VERSION` is 12). A7's whole-file review RAN (`wf_b97c0055-346`, nine lenses, 44
-agents; the plan's KTD12 *The review* bullet is the record) and its fixes are committed: the senior-bonus sunset is gated
-on THIS year's federal line (the one rosy hole, found by six lenses), half-cent ties go gloomy, the worded line reads the
-picture's grain, a test step beside a claim is named, staggered stops and negative draft years are refused, the bonus's
-MAGI reads `taxCore.federalMagi`, the allowlist scan is an AST scan; 28 planted mutants, all red; every dev seed's full
-output byte-identical before vs after. The fix is `c805fa8f`; its CI run 40985382777 completed SUCCESS on both jobs
-(`verify`, `verify-rv-chart-text`), read by id. NEXT is Phase B, the ONE go-live commit. Read `git log` first. The plan is
-`docs/plans/features/working-year-pay-check-build-spec.md`: planned, deepened and reviewed (`wf_46aab717-201`; verdicts in
-`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-plan-review\verify\`).
-**U12, the return-path ask, is CUT**: nobody has used the product, so no saved plan predates the new answer (Briggsy,
-2026-10-21). Build in the plan's commit order:
-1. **Phase A** (engine, inert in the app): ~~A1 U4~~ ✅ `e2890887` → ~~A2 the survivor-year extraction~~ ✅ `512df53f`
-   (`survivorYearBenefit` in `simulate.ts`, the one home of the §202 year; its `winner` is `'own' | 'survivor' | 'none'`,
-   a tie is `'own'`) → ~~A3 U1's payroll keys + U2~~ ✅ `5d44ed68` (`src/engine/constants/workingYears.ts`,
-   `WORKING_YEARS_YEAR`; `payrollTaxForYear` → `{ socialSecurity, medicare, additionalMedicare, total }`) → ~~the
-   RIB-LIM order fix~~ ✅ `99ffc746` → ~~A4 U1's earnings-test keys + U3~~ ✅ `fde13929` (`src/engine/earningsTest.ts`:
-   `earningsTestSchedule(path)` → the shared `NO_EARNINGS_TEST` or `{ paid, withheld, fraYearAtMost, creditMonths }`, read
-   through `socialSecurityPaid(schedule, t, composedSs)`; the credited entries in `socialSecurityBenefit.ts`;
-   `survivorYearBenefit`'s optional credits; the review `wf_bb2c6dec-c1c` caught three rosy-or-wrong FRA-year rules, all fixed —
-   the plan's KTD11 *As built (A4)* bullets are the record) → ~~A5 U5's loop reorder + extractions~~ ✅ 2026-10-28,
-   byte-identical (`bothAliveYearBenefit` in `simulate.ts`, read by `cashTermsForYear` and the producer's `compose`;
-   `overlayYearContext` — the loop's `regime` — and `medicareChargeForYear` in `taxOverlay.ts`; `medicareAnnualCharge` in
-   `healthOverlay.ts`; the floor prepared once per clamped year and carried as `GrossUpContext.workingYear` — the plan's
-   KTD7 *As built (A5)* bullets are the record) → ~~A6 U5's check~~ ✅ 2026-10-29 (`workingYearCashLines(terms, floor)` and
-   `WorkingYearCheckTerms` in `taxOverlay.ts`, `ownDepositsForYear` / `workingYearCostForYear` in `simulate.ts`, the required schedule
-   in every `cashTermsForYear` caller under W, the probe-only `WorkingYearProbe`, KTD15, the `workingYears.*` family rule; the
-   A5 review's items (i)–(iii) closed in it; its review `wf_fdc509f6-84c` caught PA's tax on the non-pay outside income charged
-   nowhere — fixed in the check — and ten test gaps, all closed. The plan's KTD6 / KTD7 / KTD8 / KTD10 / KTD12 / KTD15 / KTD16 /
-   KTD20 / U5 *As built (A6)* bullets are the record) → ~~A7 U6a, the engine producer~~ ✅ 2026-10-29
-   (`workingYearLedger({ params, draftEvents })` in `src/engine/workingYearLedger.ts`, its result types in `src/shared/model.ts`,
-   `workingYearLawSteps` in `taxOverlay.ts`, `overlayHouseholdFor` in `simulate.ts`; it adds a `turns65` event to the ruled
-   list, reads the cent as the money grain, and takes the draft's own catch-up and income-stream years on its input — the plan's
-   KTD12 *As built (A7)* and U6 *As built (U6a, A7)* bullets are the record). Every commit refreshes the README test-count claim
-   and runs `pnpm doc:reanchor` ONCE + `pnpm verify:doc-stats` (CI runs it before the tests), and a planted-mutant pass (the
-   harness below). A constants key lands only with the producer its WITNESS row names.
-2. **Phase B**, ONE go-live commit: U6b + U7 + U8 + U9 + U13 — U6b builds the producer's input as the plan's U6 *As built (U6a,
-   A7)* bullet says (the window-top candidate; every catch-up step-down year on the 'band' frame, not only the first; each
-   other-income stream's first and after-last year from that stream compiled alone), and gates each draft event to a member it
-   moves (a step-down only for an owner who deposits; the producer trusts the list and cannot see a pre-summed stream — it
-   dedupes, but cannot gate). U8's later-year words must not read an UNNAMED year as equal to the last named one: drift moves
-   unnamed years by up to ~$100–$200 a year on 37 of 752 grid households (the bonus phase-out, §86 deflation — the A7 review's
-   comments lens). Before go-live, MEASURE the new Tier 1 *A retired spouse's pre-65 health premium stays in W after her
-   Medicare starts…* (gloomy, live with Phase B) — its remedy may be U8's question words or an engine step-down. Plus U5's last arm moved from A6 (`intakeMap.workingYearTaxForRun`
-   on a W-present draft reads `'priced'`, never `'unknown'` — no draft could carry W in A6), `datesolo`'s own W, the short and stale-W witness seeds,
-   and the intake-fold edits; `verify:fit` green at that commit.
-3. **Phase C**: U10 (every date seed gets W; measured), then U11 (docs). Then a whole-file review and `/distill`.
-   Expect more than one session: one walked build cost ~48 % of a window (b9-2).
+▶ **START HERE (2026-10-30, written by b9-1 for b9-2): finish Phase B of the working-year pay check — the ONE go-live
+commit — IN THE SHARED WORKING TREE, where about half of it already sits UNCOMMITTED (28 files; backup ref `refs/wip/b9-phaseb`
+= `7f37667`, pushed). Phase A is LANDED and green (`e2890887` … `c805fa8f`). The plan is
+`docs/plans/features/working-year-pay-check-build-spec.md` (Phase B = U6b + U7 + U8 + U9 + U13, plus `datesolo`'s W, the
+short and stale-W witness seeds, the e2e edits; `verify:fit` green at that commit). READ FIRST, in this order:
+`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-phaseb\DECISIONS.md` (19 + the
+lanes' rulings made while building — several are recorded departures from the plan, and each owes an *As built (Phase B)*
+bullet in the plan at the commit), then the two lane reports beside it, then the six code maps in `maps\` (line numbers are
+HEAD `903a9c5e`'s — re-verify). `premium\measure.json` is the Tier 1 premium measurement.
+**BUILT (uncommitted, typecheck + lint exit 0, every arm green):** U7's model / codec / draft / registry seat
+(`ScenarioV3.workingYearCost`, a real discriminated union; the codec range-caps it), `src/intake/workingYearQuote.ts` (the
+quote, the DRAFT-keyed state reading, the stale predicate, the mints), `buildDateInput`'s W + employer-HSA carriage,
+`workingYearCostForRun`; U6b (`workingYearLedgerForRun` + `workingYearDraftEvents`, every step-down per owner); `threeThenMore`;
+U13 (`WORKING_YEARS_VINTAGE` + its digest pin, the clock, the 9th exposure read) and KTD21's unlock (`deriveStaleness`' REQUIRED
+4th argument, the two re-entry lines); U9 (`methodologyLines` / `methodologyArmFor`, the W arm's paragraph + 14 gap keys,
+K15 new). Mutant passes 23 + 24 + the coordinator's arms, all red.
+**TO BUILD, in this order (each prescription's detail is in DECISIONS.md and the maps):**
+1. **The W step's rules** (`src/intake/sanity.ts`): `working-cost-unanswered` on `workingYearCost.answer` (date route; W absent
+   or stale), `working-cost-zero` and the W period rule on `workingYearCost` (reuse `SPEND_AMBIGUOUS_MIN`, `periodConfirmPrompt`;
+   disarm on `workingYearCost.entryPeriod` or `SanityProvenance.workingCostPeriodConfirmed`); KTD3's exception in all THREE
+   statements of the never-fires-on-absence doctrine; the provenance captured in `flow.tsx` (rulings 16–19). `buildDateInput`
+   carries W only when its figure is > 0 (ruling 17). New copy `errWorkingCostUnanswered`, `errWorkingCostZero`.
+2. **`SegmentedControl`'s opt-in `invalid`** (`src/intake/fields.tsx`: `role="radiogroup"` + `aria-invalid` + describedby, ruling 11).
+3. **The two steps** (`src/intake/questions.tsx`, after `otherIncomeStep`, gated on the exported `isDateRoute`): the W question
+   (the quote in a slot above a static legend; Yes / a different figure — choosing the figure CLEARS a held `confirmed`, ruling
+   10; a reserved period slot, untapped period month; the help by reading, INCLUDING "before anyone's Medicare starts" — the
+   Tier 1 measurement's stopgap words; the stale note `role="note"`; the W-below-M note; left-out names through
+   `threeThenMore`), and the money-picture step rendering a new `src/intake/WorkingYearLedger.tsx` (grouped `<dl>`s, a
+   heading-level prop — h3 in the step, h4 in the panel; minus signs and words, never color alone; held-back words inside the
+   Social Security row; the monthly echo; the FRA-year stopgap words; later years worded conditionally, consecutive short
+   no-event years collapsed; the `'unknown'` face naming missing facts apart from a refusal). Re-word `copy.employerCoverageHelp`
+   in the SAME commit (insight 086: it says the tool counts no health costs for the retired spouse — false once W can carry her
+   plan share). Move every "other income is the last step" rationale (seven sites, map-intake-flow C9).
+4. **The panel's W row** (`src/intake/AssumptionPanel.tsx`, after `work-investment`): four faces + a one-line value summary
+   (rulings 12–14), commits on `workingYearCost` through `commitRefusing` with an open-edge provenance, a clear is a no-op,
+   `initialSeat`, the stale face announced once through `announcerRef` from a child with a prev-ref.
+5. **The result's standing line** (`FuckOffDate.tsx` `p.fod-note.cs-paycheck-note` + `payCheckNote`; `Result.tsx` passes it
+   iff stale, opens the panel at `working-year-cost`, clears the seat on every close path; `readOnly` threaded from
+   `IntakeApp.tsx` → `Result`, no door when read-only).
+6. **Copy + guards**: every new string pilot-drafted and flagged (KTD19); a `SLOT_RENDER` row per new slot; in
+   `copyGuard.test.ts`, the three-word ban (hoist `workingYearTaxDisclosure.test.ts`' `BANNED` into one non-test helper under
+   `src/ui/__tests__/`) + the curly-apostrophe gate + the verdict/control scope pins over every new key and slot.
+7. **Seeds** (`src/ui/devSeeds.ts`): `withConfirmedW` at the registry entry (`datesolo` first — the intake-fold walk stalls
+   without it); the short witness and the stale-W witness (measure each, add it to `stalenessExposure.test.ts`'
+   `MEASURED_MOVED`, the non-stale one to the staleness property arm, check `survivorMedicalWiring`'s census);
+   `doctorWorkingYearsStaleVault` + its engine-acceptance arm (insight 085).
+8. **E2E**: `e2e/intake-fold.spec.ts` floor 11 → 13 and its step-list comment; hoist a re-walk driver into
+   `e2e/reviewSurface.ts`; `vertical-fit.spec.ts` arms for both steps (REAL + PHONE, the walk scoped to `.intake-shell`), the
+   panel row, and the stale-W ORDER arms (dip/datenc's doors-last shape; at PHONE `.fod-graphs` is `display: contents`);
+   `caddie-walk.spec.ts` a new date-route intake target.
+9. **The register**: amend *A retired spouse's pre-65 health premium stays in W after her Medicare starts…* (its premise is
+   wrong — she is never on the marketplace beside a worker; measured gloomy, $0 on every seed; the remedy is the W question's
+   words now and an entered-figure step later; DECISIONS ruling 1); file the spouse-side Part B sibling (read the primary first).
+10. **Gates, once, at the end**: README + roadmap test counts from `vitest list`; `pnpm doc:reanchor` ONCE then
+    `pnpm verify:doc-stats` (fold the lanes' listed in-code cite shifts by hand); typecheck, lint, test, build,
+    `verify:bundle` (record before/after; the 8 KiB allowance; `grep -c '\[workingYearLedger\]' dist/assets/index-*.js` == 0),
+    `verify:fit`; a Caddie walk + card; a whole-diff review; the plan's *As built (Phase B)* bullets from DECISIONS.md; commit,
+    push, read CI by id.
+**Then Phase C**: U10 (every date seed gets W; measured), U11 (docs), the whole-file review and `/distill`.
 **The research, durable:** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-research\`
 — the skeptic-verified primaries (`research-*.json` + `verdict-*.json`: payroll 6.2 % to $184,500, 1.45 %, 0.9 % over
 $250,000 MFJ / $200,000 single; earnings test $24,480 / $65,160, FR Doc 2025-19763), local copies of every source in
@@ -82,16 +91,21 @@ main-thread money picture (the plan's *Departures from the ruling*, item 4). The
 Briggsy saves his first real plan; the tool is built for him (a friend using it is "a crazy outside chance", his words, 2026-10-21). The day the check ships, the working-year row's "It doesn't check that your pay really
 covers all of that…" sentence comes out for a household with W (U9). Build 2, the surplus question, follows this build.
 
-**SESSION 2026-10-29 (b9, the A7 review):**
-**STATE on the review fix's tree (`c805fa8f`), by exit code:** typecheck — exit 0, re-run at this close; lint · build ·
-`verify:bundle` 272.5 KiB · `verify:doc-stats` · the full suite — exit 0 on the committed content (the count lives under
-`verify:doc-stats`); every dev seed's full engine output byte-identical before vs after the fix (`cmp`).
-`verify:aca` / `verify:state-tax` were not re-run (no constants they gate moved); `verify:fit` was not (no UI moved).
-**CI:** `c805fa8f` → run 40985382777 completed SUCCESS, both jobs (`verify`, `verify-rv-chart-text`), read by id.
-**Landmine:** `b9-a7-review\fixes\head\` and `b9-a7-review\pre-a7\` hold a `node_modules` JUNCTION into the project's own
-`node_modules` (as `b9-a6-head\` does). Before deleting either folder, remove the link alone (`cmd /c rmdir <folder>\node_modules`),
-never a recursive delete through it.
+**SESSION 2026-10-30 (b9-1, Phase B mid-build — the tree is UNCOMMITTED on purpose):**
+**STATE of the working tree (28 files, uncommitted; backup `refs/wip/b9-phaseb` = `7f37667`, pushed), by exit code:**
+typecheck — exit 0, re-run at this close; eslint over every touched file — exit 0; the full suite — exit 1 on EXACTLY the
+two expected arms (the operational landmine of this close names them), everything else green. HEAD is `903a9c5e` (CI on its
+engine parent `c805fa8f` was green, run 40985382777, read by id). `verify:fit` / build / `verify:bundle` not run (no screen
+built yet).
 **DISTILL CANDIDATES (for the pay check's Phase C `/distill`):**
+- (b9-1, Phase B) an input surface's reading must come from the same source as its sibling input surface: KTD18 took the
+  W question's state reading from the BUILT run, which is `undefined` on any unbuildable draft, so the W step would have told an
+  NC household the opposite of the spend step and then staled its answer when a skipped question was filled. Input surfaces
+  read the draft (`spendHelpKeyFor`'s doctrine); output surfaces read the producer — check which a new surface is before
+  copying a predicate (`b9-phaseb\DECISIONS.md` ruling 5).
+- (b9-1) a register entry's premise is a claim to check against the code before measuring its size: the Tier 1 premium entry
+  assumed a marketplace spouse beside a worker, a household the intake refuses outright (`employerCoverageUnpriced`); the real
+  shape (her share of the plan at work, only inside an ENTERED W) changed the remedy from an engine step to words.
 - (A7 review, 2026-10-29) a gate copied from a sibling event whose step moves the quantity the OTHER way: `turns65` lowers
   a tax, so "the year before owed some" is its right gate; the senior bonus's end RAISES one, so the same gate hid every
   2029 where the bonus had zeroed 2028 (a $185–$1,050 yearly drop, unnamed — and it named a false sunset where a pension's
@@ -803,6 +817,16 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 *Engineering lessons live in [`docs/insights/`](docs/insights/) (one file per lesson; cite by full path + slug).
 These are the mechanical ones that keep costing hours.*
 
+- **From the b9 A7-review close (2026-10-29):** `b9-a7-review\fixes\head\` and `b9-a7-review\pre-a7\` (in the session
+  folder `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\`) hold a `node_modules`
+  JUNCTION into the project's own `node_modules` (as `b9-a6-head\` does). Before deleting either folder, remove the link alone
+  (`cmd /c rmdir <folder>\node_modules`), never a recursive delete through it.
+- **From the b9-1 close (2026-10-30, Phase B mid-build):** the shared working tree holds the pay check's Phase B UNCOMMITTED
+  (28 files). Never `git checkout`/`restore`/`stash` any of them; the backup is the side ref `refs/wip/b9-phaseb` (`7f37667`,
+  pushed to origin) — recover a lost file with `git show refs/wip/b9-phaseb:projects/the-back-nine/<path>`, never a reset.
+  The full suite is RED on exactly two arms until the go-live commit, both expected: the panel's registry completeness walk (the
+  `working-year-cost` seat has no row yet) and `verify-doc-stats`' live-citation arm (line numbers moved; `pnpm doc:reanchor`
+  runs ONCE at the commit).
 - **From the b9-14 close (2026-10-29, A6):**
   - **The once-only re-anchor rule below was broken anyway** — `pnpm doc:reanchor HEAD --apply` was invoked twice in one
     shell line (once piped to a count, once to a tail), so 276 citations moved twice (983 → 1109 → 1235). Capture ONE

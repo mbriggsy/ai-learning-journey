@@ -64,7 +64,10 @@ class TestThePublishedNumber(unittest.TestCase):
       a tied add goes to the player the market values most        -32.74 / +38.47, unchanged
       IR return needs 2 of 3 sites; one-week ratios carry r       -32.83 / +38.93, unchanged
       a man let go at processing is on waivers until next week    -36.25 / +43.19, -45.53 / +50.43
-    The drop-pool, empty-spot IR and position fixes do not move this night."""
+    The drop-pool, empty-spot IR and position fixes do not move this night. Re-recorded 2026-10-29: the
+    next-week rule was a guess (Wednesday waivers); measured 10-28, a dropped man is on waivers ONE day
+    (waiver_clear_days 1), so a man cut when this Friday-night trade processes can start that Sunday:
+      a man let go at processing can start for the other side that week  -32.83 / +38.93, -45.76 / +50.18"""
 
     @classmethod
     def setUpClass(cls):
@@ -75,18 +78,18 @@ class TestThePublishedNumber(unittest.TestCase):
 
     def test_our_numbers(self):
         three, sleeper = self.js["sets"]["THREE SITES"]["delta"], self.js["sets"]["SLEEPER"]["delta"]
-        self.assertAlmostEqual(total(three[str(US)]), -36.25, places=2)
-        self.assertAlmostEqual(total(three[str(US)], range(7, 15)), -24.66, places=2)
-        self.assertAlmostEqual(total(three[str(US)], range(15, 18)), -11.60, places=2)
-        self.assertAlmostEqual(three[str(US)]["7"], -4.68, places=2)
-        self.assertAlmostEqual(total(sleeper[str(US)]), -45.53, places=2)
+        self.assertAlmostEqual(total(three[str(US)]), -32.83, places=2)
+        self.assertAlmostEqual(total(three[str(US)], range(7, 15)), -21.70, places=2)
+        self.assertAlmostEqual(total(three[str(US)], range(15, 18)), -11.14, places=2)
+        self.assertAlmostEqual(three[str(US)]["7"], -2.19, places=2)
+        self.assertAlmostEqual(total(sleeper[str(US)]), -45.76, places=2)
         self.assertAlmostEqual(total(sleeper[str(US)], range(7, 15)), -31.19, places=2)
-        self.assertAlmostEqual(total(sleeper[str(US)], range(15, 18)), -14.34, places=2)
+        self.assertAlmostEqual(total(sleeper[str(US)], range(15, 18)), -14.57, places=2)
         self.assertAlmostEqual(sleeper[str(US)]["7"], -6.10, places=2)
 
     def test_their_numbers(self):
-        self.assertAlmostEqual(total(self.js["sets"]["THREE SITES"]["delta"][str(THEM)]), 43.19, places=2)
-        self.assertAlmostEqual(total(self.js["sets"]["SLEEPER"]["delta"][str(THEM)]), 50.43, places=2)
+        self.assertAlmostEqual(total(self.js["sets"]["THREE SITES"]["delta"][str(THEM)]), 38.93, places=2)
+        self.assertAlmostEqual(total(self.js["sets"]["SLEEPER"]["delta"][str(THEM)]), 50.18, places=2)
 
     def test_the_printed_table_carries_the_same_numbers(self):
         """The table is what Briggsy reads; the JSON is not. Pinned only in --json, a row printing the
@@ -97,13 +100,15 @@ class TestThePublishedNumber(unittest.TestCase):
             if " | " in line and "," in line.split("|")[0]:          # a side's row, not the header
                 label, _, tail = line.strip().partition("  ")
                 rows[label] = [float(v) for v in line.split("|", 1)[1].replace("|", " ").split()]
-        self.assertEqual(rows["us, three sites"], [-24.7, -11.6, -8.3, -36.3])       # regular, playoffs, 16-17, rest
-        self.assertEqual(rows["us, sleeper"], [-31.2, -14.3, -9.9, -45.5])
-        self.assertEqual(rows["Kaeperni, three sites"], [30.3, 12.9, 9.8, 43.2])
-        self.assertEqual(rows["Kaeperni, sleeper"], [33.9, 16.6, 11.4, 50.4])
+        self.assertEqual(rows["us, three sites"], [-21.7, -11.1, -7.8, -32.8])       # regular, playoffs, 16-17, rest
+        self.assertEqual(rows["us, sleeper"], [-31.2, -14.6, -10.1, -45.8])
+        self.assertEqual(rows["Kaeperni, three sites"], [28.3, 10.6, 8.4, 38.9])
+        self.assertEqual(rows["Kaeperni, sleeper"], [34.6, 15.6, 10.7, 50.2])
 
     def test_it_says_what_the_numbers_rest_on(self):
-        self.assertIn("is on waivers until next week, so nobody starts him in week 7", self.out)
+        self.assertIn("sits on waivers for 1 day (the league's waiver_clear_days), so he can start for the other "
+                      "side in week 7.", self.out)
+        self.assertNotIn("processes late", self.out)                  # Fri 21:30 clears Sat night: no kickoff in between
         self.assertIn("With the trade, Kaeperni wanted Kyler Murray too; we pick free agents first", self.out)
         self.assertEqual((self.js["process_at"], self.js["sleeper_only"], self.js["three_site_weeks"]),
                          ("2026-10-23T21:30:00-04:00", None, [7, 8]))
@@ -122,7 +127,7 @@ class TestThePublishedNumber(unittest.TestCase):
         self.assertIn("A.J. Brown is locked by then (in a starting slot), so his week-7 points stay Kaeperni's", self.out)
 
     def test_the_head_to_head_week_prints_the_net_swing(self):
-        self.assertIn("Week 10 we play Kaeperni: our change minus theirs = three sites -5.2, sleeper -8.3", self.out)
+        self.assertIn("Week 10 we play Kaeperni: our change minus theirs = three sites -5.4, sleeper -7.0", self.out)
 
 
 class TestNoPlayerIsUsedTwice(unittest.TestCase):
@@ -265,7 +270,8 @@ class Mini:
                 "league": {"league_id": g.LEAGUE_ID, "name": "Mini", "season": "2026",
                            "scoring_settings": {"rec_yd": 0.1, **self.extra_scoring}, "roster_positions": self.slots,
                            "settings": {"playoff_week_start": 15, "playoff_teams": 6, "playoff_round_type": 0,
-                                        "trade_deadline": self.deadline, "trade_review_days": 1, "reserve_slots": 2}},
+                                        "trade_deadline": self.deadline, "trade_review_days": 1, "reserve_slots": 2,
+                                        "waiver_clear_days": 1}},
                 "rosters": rosters, "users": users, "matchups": matchups, "projections": proj,
                 "players": self.players, "kickoffs": {str(self.week): kick}, "xload_rows": xrows}
 
@@ -429,10 +435,10 @@ class TestTheBaselineGetsEveryRemedy(unittest.TestCase):
             self.assertEqual(js["sets"][s]["moves"]["after"][str(THEM)]["add"], ["fr"], msg=s)
             self.assertAlmostEqual(js["sets"][s]["delta"][str(US)]["12"], 0.0, places=6, msg=s)
 
-    def test_a_man_let_go_at_processing_is_on_waivers_until_next_week(self):
-        """This league's waivers run on Wednesdays, so a man cut when a Friday trade processes cannot
-        start for anyone that Sunday. Streaming him the week he was cut moved the frozen night's
-        headline 3.4 points once swaps repeated (review 2026-10-23)."""
+    def test_a_man_let_go_at_processing_can_start_for_the_other_side_that_week(self):
+        """Measured 2026-10-28: a dropped player sits on waivers ONE day (waiver_clear_days 1), so a man
+        cut when a Friday trade processes can start that Sunday. The 10-23 review had guessed Wednesday
+        waivers and held him a week; that guess moved the frozen night's headline 3.4 points."""
         m = Mini()
         standard(m, US, "us")                                          # FLEX: a zero body
         standard(m, THEM, "th", team="CCC")
@@ -446,8 +452,22 @@ class TestTheBaselineGetsEveryRemedy(unittest.TestCase):
             self.assertTrue(cut)
             U = after["universe"][US]
             for p in cut:
-                self.assertFalse(U.has(p, 10), f"{p} streamable the week he was cut")
+                self.assertTrue(U.has(p, 10), f"{p} not streamable the week he was cut")
                 self.assertTrue(U.has(p, 11))
+
+    def test_a_late_processing_trade_says_its_cut_man_may_still_be_on_waivers(self):
+        """Processing Saturday 22:00, a cut man clears about Sunday 22:00 -- after the 1:00 kickoffs."""
+        m = Mini()
+        standard(m, US, "us")
+        standard(m, THEM, "th", team="CCC")
+        code, out, _ = m.run(["--give", "us0", "--get", "th0", "--process-at", "2026-11-14 22:00"])
+        self.assertEqual(code, 0, out)
+        self.assertIn("⚠ This one processes late: a man it lets go clears about Sun 10:00 PM ET, after some of "
+                      "week 10's games kick off.", out)
+        code, out, _ = m.run(["--give", "us0", "--get", "th0"])                    # Fri 21:30: clears Sat night
+        self.assertEqual(code, 0, out)
+        self.assertIn("sits on waivers for 1 day (the league's waiver_clear_days)", out)
+        self.assertNotIn("processes late", out)
 
     def test_the_stream_tries_every_position_not_only_the_top_free_agent(self):
         """The single top FA overall is a QB every week and could never cover a kicker bye."""
@@ -493,7 +513,7 @@ class TestRosterFix(unittest.TestCase):
             self.assertAlmostEqual(before["weekly"][US][12] - before["weekly"][US][11], 18.0, places=6)
 
     def test_an_over_cap_drop_is_judged_the_way_the_season_is_scored(self):
-        """A man let go is a free agent from next week, and we may stream him back. The over-cap drop
+        """A man let go is a free agent from the week he goes, and we may stream him back. The over-cap drop
         used to be judged as if he vanished, so it kept the wrong body: Cover A matters only in week 13,
         when our stream is free (we stream him back); Cover B in week 14, when the stream must go to a
         free quarterback. Keep B, cut A (review 2026-10-23). Nothing else may fill A's week-13 hole --

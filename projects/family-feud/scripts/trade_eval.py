@@ -16,8 +16,8 @@ in every world and every set:
   1. fix each side's roster: an incoming IR player takes an open IR slot; the excess is dropped (the
      body whose loss costs least); a gap is filled from a free-agent shortlist; drop-for-free-agent
      swaps until none gains; an IR player who comes back takes an open spot or forces a shed from his
-     first week. A man let go is a free agent from that week -- next week if the drop falls in a week
-     under way, because this league's waivers run on Wednesdays;
+     first week. A man let go is a free agent from that week, even one under way: this league holds a
+     dropped player on waivers for one day (waiver_clear_days 1, measured 2026-10-28);
   2. each week, each side may stream ONE free agent (the best at each position that week is tried);
   3. each week, start the best legal lineup;
 and the answer is AFTER minus BEFORE, week by week, for both sides.
@@ -599,11 +599,13 @@ class Sim:
                 moves["ir_in"].append(pid)
             else:
                 active.append(pid)
-        # A man let go when the trade processes is free to others from w0 -- next week if this week is
-        # under way: this league's waivers run once a week, on Wednesday (daily_waivers 0), so a Friday
-        # drop cannot start for anyone on Sunday. Unverified, printed; worth 3.4 on the frozen night's
-        # headline once swaps repeat, by letting the other side stream a man the week he was cut.
-        U, w0 = universe, ctx.weeks[0] + (1 if ctx.weeks[0] == ctx.cur else 0)
+        # A man let go when the trade processes is free to others from the first week priced -- THIS week
+        # if it is under way. Measured 2026-10-28: a dropped player sits on waivers ONE day
+        # (waiver_clear_days 1), not until the Wednesday run -- Josh Downs, cut at the 03:15 Wednesday
+        # run, read "W Thu" -- so a man cut when a Friday trade processes can start for the other side
+        # that Sunday. Exactly WHEN he clears (a day after the drop, or at the next morning's run) is
+        # unmeasured; render() says so when a trade processes late enough for it to matter.
+        U, w0 = universe, ctx.weeks[0]
 
         def tot(act, u):
             return self.total(Side(side.rid, act), u)
@@ -1007,8 +1009,19 @@ def render(data, ctx, info, res, give, get):
         w("   - Kickers and defenses use Sleeper's numbers in both sets.")
     w("   - A starter locked before the trade processes scores for his old team that week (unverified for a mid-week trade).")
     if ctx.cur is not None:
-        w(f"   - A player either team lets go when the trade processes is on waivers until next week, so nobody starts "
-          f"him in week {ctx.cur} (unverified: this league's waivers run on Wednesdays).")
+        clear = data.league["settings"].get("waiver_clear_days")
+        held = f"for {clear} day{'s' if clear != 1 else ''} (the league's waiver_clear_days)" if isinstance(clear, int) \
+            else "for a time the league settings do not state"
+        w(f"   - A player either team lets go when the trade processes sits on waivers {held}, so he can start "
+          f"for the other side in week {ctx.cur}.")
+        if isinstance(clear, int):
+            clears = ctx.process_at + datetime.timedelta(days=clear)
+            if any(ctx.process_at < k <= clears for k in (data.kickoffs or {}).values()):
+                ca = clears.astimezone(g.EASTERN)
+                w(f"     ⚠ This one processes late: a man it lets go clears about {ca:%a} {g.clock(ca)}, after some of "
+                  f"week {ctx.cur}'s games kick off. If his game is one of them, these numbers let the other side "
+                  f"start a man still on waivers. (Whether waivers clear a day after the drop or at the next "
+                  f"morning's run is unmeasured.)")
     w("   - A player who never starts is worth 0 here; injury cover is outside the model.")
     for p in list(give) + list(get):
         if ctx.raw_ros.get(p, 0.0) <= 0.0:

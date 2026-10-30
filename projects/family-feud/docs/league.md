@@ -157,3 +157,11 @@ That −4 floor is why streaming a defense into a bad matchup is genuinely expen
 
   **One look at the first live cycle settles it for good.** Until then, treat Wednesday as the
   working assumption and not as a fact you'd bet a claim on.
+
+  **A dropped player is on waivers ONE day, separate from the weekly run (measured 2026-10-28).**
+  The live league object carries `waiver_clear_days: 1` and `daily_waivers: 0`. Josh Downs, dropped by
+  RMonk9 in the 03:15 Wednesday run, read **`W Thu`** in the in-app Players tab: on waivers one day,
+  then gettable. So a man cut Wednesday to Friday can start for someone that Sunday.
+  `scripts/trade_eval.py` models exactly that (re-recorded 2026-10-29). **Still unmeasured:** whether
+  the day ends 24 hours after the drop or at the next morning's processing. The two disagree only
+  for a Saturday-night drop, so trade_eval prints a warning when a trade processes that late.

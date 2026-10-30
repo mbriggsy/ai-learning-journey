@@ -20,12 +20,13 @@
 - **Kaeperni's offer (A.J. Brown + Tucker Kraft for Zay Flowers) was DECLINED 10-22 ~22:20 ET** on
   Briggsy's word. Verified: the panel read REJECTED, Active Trades was empty, `/rosters` unchanged.
 - **`scripts/trade_eval.py` is BUILT, COMMITTED (10-23) and REVIEWED (10-23):** 9 opus lenses, 18
-  verifiers, all fixes in (insight 036; the plan's decisions carry each change). The frozen night now
-  reads us −36.25 / −45.53, Kaeperni +43.19 / +50.43. **The fixture
+  verifiers, all fixes in (insight 036; the plan's decisions carry each change). Since 10-29 a man cut
+  when a trade processes can start for the other side that week (`waiver_clear_days: 1`, measured 10-28),
+  and the frozen night reads us −32.83 / −45.76, Kaeperni +38.93 / +50.18. **The fixture
   `tests/fixtures/trade_eval_kaeperni_20261022.json.gz` can never be re-made** — it holds the 10-22
   projections `TestThePublishedNumber` pins. Don't delete or regenerate it.
-- **Suite: 1333 tests, OK (skipped=6)**, run 2026-10-23 with `python -m unittest discover -s tests`.
-  31 test files · 29 scripts · 36 insights.
+- **Suite: 1370 tests, OK (skipped=6)**, run 2026-10-29 with `python -m unittest discover -s tests`.
+  31 test files · 29 scripts · 38 insights.
 - **Clocks:** mule hourly · `gameday_check.py` Sat 20:00 · Sun 08:00 · 11:30 · 15:00 · draft
   watcher · newsletter 21:45. Push/email are dead, so the files are the delivery.
 
@@ -58,21 +59,7 @@
      Kaeperni rejected Tate + Goff for Kittle on 10-20. The priced package (Swift + Strange for Kittle) is in
      `temp/week8-moves-log.md` if he reopens it. Trade deadline is week 11.
    - Maye's week-11 bye: we have no backup QB. Stream a free agent, using a bench spot.
-2. **Settle trade_eval's waiver assumption. The measurement is IN, and it was neither outcome the old item
-   expected** (it moves the frozen headline 3.4). The tool assumes a man dropped when a trade processes can't start
-   for anyone until next week. **Measured 2026-10-28:** Josh Downs, dropped by RMonk9 in the 03:15 Wed waiver run,
-   read **`W Thu`** in the in-app Players tab (one day on waivers, then gettable). The live league object
-   agrees: `waiver_clear_days: 1` (also `daily_waivers: 0`, `waiver_day_of_week: 2`). So a drop is on waivers for
-   **one day**, separately from the Wednesday run for players whose games were played, and a man cut Wed-Fri can start for
-   someone that Sunday. Our own HOU DEF drop (10-28 11:04) can't be read: a bye-week DEF is absent from the search.
-   **Fix:** in `scripts/trade_eval.py` `Sim.fix`, `U, w0 = universe, ctx.weeks[0] + (1 if ctx.weeks[0] == ctx.cur else 0)`
-   becomes `U, w0 = universe, ctx.weeks[0]`. Rewrite the comment above it, the docstring at line ~20, and the waiver line
-   in `render` (~line 1010) to "on waivers one day (`waiver_clear_days: 1`), so he can start for the other side this
-   week". Re-record `TestThePublishedNumber`: the TODO quoted −32.83 / −45.76, Kaeperni +38.93 / +50.18 under that
-   rule. Re-run it; don't copy those. Run the full suite, and add the measurement to `docs/league.md`'s waiver section.
-   **Open nuance (Briggsy's call before building):** a trade that processes Sat night clears Sun night, too late
-   for that week. Week-level `w0 = weeks[0]` overstates the other side slightly in that case only.
-3. **Optional: make `--search` fast again without moving a number.** It takes 355-373 s for 2,736
+2. **Optional: make `--search` fast again without moving a number.** It takes 355-373 s for 2,736
    packages on the frozen night (72 s before swaps repeated) and peaks at **2.7 GB** even with the
    memos emptied per give (measured 10-23; a reviewer measured ~1 GB on the one-swap code). Fine on
    this 32 GB laptop; check it before trusting a smaller one. Profile `Sim.fix`'s swap loop first;
@@ -119,6 +106,11 @@
 Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the worked cases.
 
 **trade_eval (review 2026-10-23: deferred on purpose, each measured)**
+- **When a dropped player clears waivers is unmeasured.** `waiver_clear_days: 1` says one day, but not whether it
+  ends 24 hours after the drop or at the next morning's processing. The two disagree only for a Saturday-night
+  drop. trade_eval assumes the drop clears in time to play that week, and prints "⚠ This one processes late" when
+  the gap could matter. **To measure:** the next time anyone in the league drops a player on a Saturday evening,
+  read his `W` label in the in-app Players tab (league home → Players).
 - **Their number is soft, ours is not.** A choice that is a coin flip for one side moves the OTHER
   side's total: Kaeperni's three-site +35.4 to +39.3 across tie rules on the frozen night, ours
   −32.3 to −32.7. `--search` keeps packages where theirs is ≥ 0, so a package near 0 for them can sit

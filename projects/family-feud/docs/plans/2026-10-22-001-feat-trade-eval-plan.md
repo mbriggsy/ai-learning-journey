@@ -388,6 +388,12 @@ Plain words throughout. The report never prints "ROS", "legalisation" or "consen
   moves in opposite directions, not a confirmation. The printed table is now pinned too, not only
   the `--json`.
 
+  **Re-recorded 2026-10-29: the waiver step is reversed by measurement.** "Waits for waivers" was a
+  guess (Wednesday-only waivers). Measured 10-28, a dropped man is on waivers ONE day
+  (`waiver_clear_days: 1`), so a man cut when this Friday-night trade processes can start that Sunday:
+  **−32.83 / −45.76 (Kaeperni +38.93 / +50.18)**, the pre-waiver-step numbers, re-run rather than
+  copied. Week 10's head-to-head swing: three sites −5.4, Sleeper −7.0.
+
 ## Test plan (`tests/test_trade_eval.py`, no network)
 
 Each axis gets its own mutant (insight 019). The **Wiring** rows run through `main(argv)`, with

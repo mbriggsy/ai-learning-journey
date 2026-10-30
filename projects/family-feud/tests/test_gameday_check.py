@@ -143,9 +143,16 @@ class TestTheSirenFires(unittest.TestCase):
         self.assertIn("[Out: Hamstring]", rows[0][2])
 
     def test_out_rb_does_not_get_a_wr_sub(self):
+        """The WR never goes in the RB slot. Since 2026-10-30 he may go in at FLEX while the FLEX RB
+        slides over to RB; with no FLEX RB to slide, an add is still the only fix."""
         f = Fixture()
         f.players["rb1"]["injury_status"] = "Doubtful"
         f.players.pop("bn_rb"); f.our["players"].remove("bn_rb")
+        rows = f.rows()
+        self.assertEqual(len(rows), 1)
+        self.assertIn("Start instead: BN_WR (WR, XXX) vs OPP proj 8.0 at FLEX, with FX2 (RB, XXX) vs OPP proj 10.0 "
+                      "moved from FLEX to RB", rows[0][2])
+        f.players["fx2"]["position"] = "WR"                 # no RB in either FLEX slot
         rows = f.rows()
         self.assertEqual(len(rows), 1)
         self.assertIn("No bench body who is playing is eligible for RB", rows[0][2])
@@ -165,13 +172,21 @@ class TestTheSirenFires(unittest.TestCase):
         rows = f.rows()
         subs = [r[2].split("Start instead: ")[1].split(" ")[0] for r in rows if "Start instead" in r[2]]
         self.assertEqual(len(rows), 2)
-        self.assertEqual(len(subs), 1, "only one bench WR exists; it must not be handed to both slots")
+        # Only one bench WR exists; it must not be handed to both slots. The second slot is filled by
+        # sliding the FLEX WR over and starting the bench RB at FLEX (2026-10-30).
+        self.assertEqual(subs, ["BN_WR", "BN_RB"])
+        self.assertIn("with FX1 (WR, XXX) vs OPP proj 10.0 moved from FLEX to WR", rows[1][2])
 
     def test_tagged_sub_is_never_offered(self):
         f = Fixture()
         f.players["wr1"]["injury_status"] = "Out"
         f.players["bn_wr"]["injury_status"] = "Out"
         rows = f.rows()
+        self.assertNotIn("Start instead: BN_WR", rows[0][2])
+        self.assertIn("Start instead: BN_RB (RB, XXX) vs OPP proj 8.0 at FLEX, with FX1", rows[0][2])
+        f.players["fx1"]["position"] = "RB"                 # no FLEX WR to slide over
+        rows = f.rows()
+        self.assertNotIn("BN_WR", rows[0][2].split("\n")[1])
         self.assertIn("No bench body who is playing", rows[0][2])
 
     def test_an_out_starter_with_no_projection_is_not_called_a_bye(self):
@@ -279,6 +294,7 @@ class TestTheSirenFires(unittest.TestCase):
         f.players["wr1"]["injury_status"] = "Out"
         f.players["te"]["injury_status"] = "Questionable"
         f.proj["bn_rb"] = projection(14.0)
+        f.players["fx1"]["position"] = "RB"         # no FLEX WR to slide, so the 14.0 RB is still the ↑'s
         f.players["oqb"]["injury_status"] = "Doubtful"
         self.assertEqual(f.icons(), ["🚨", "⚠", "↑", "ℹ"])
 
@@ -810,6 +826,133 @@ class TestAnEmptiedRowIsNotABye(unittest.TestCase):
         self.assertEqual(rows[0][1], "STARTER NOT PLAYING — WR1 (WR)")
         self.assertIn("(no projection -- Sleeper pulls it for a player who is out) proj 0.0 [Out: Hamstring] "
                       "is tagged Out in the WR slot.", rows[0][2])
+
+
+class TestASlideThroughFlex(unittest.TestCase):
+    """2026-10-30 14:31 ET: Michael Wilson (WR, Questionable) and the ⚠ named Carnell Tate (0.0, his row
+    zeroed) as the fallback -- the only WR on our bench. The move was Flowers FLEX -> WR and Stevenson
+    (10.5) in at FLEX. In the Fixture, FX1 is the FLEX WR and FX2 the FLEX RB."""
+
+    def bench(self, f, pid, pos, points):
+        f.players[pid] = {"full_name": pid.upper(), "position": pos, "team": "XXX", "injury_status": None}
+        f.proj[pid] = projection(points)
+        f.our["players"].append(pid)
+
+    def out(self, f, pid):
+        f.players[pid]["injury_status"] = "Out"
+        del f.proj[pid]
+
+    def test_a_questionable_wr_with_a_zeroed_bench_wr_names_the_slide(self):
+        f = Fixture()
+        f.players["wr2"]["injury_status"] = "Questionable"
+        f.proj["bn_wr"] = projection(0.0)                   # Tate: a row with an opponent, no stats
+        f.proj["bn_rb"] = projection(10.5)
+        rows = f.rows()
+        self.assertEqual([r[0] for r in rows], ["⚠"])
+        self.assertIn("If he is scratched: BN_RB (RB, XXX) vs OPP proj 10.5 at FLEX, with FX1 (WR, XXX) vs OPP "
+                      "proj 10.0 moved from FLEX to WR (the best WR on the bench, BN_WR, projects 0.0)", rows[0][2])
+
+    def test_an_out_wr_names_the_slide_and_no_swap_contradicts_it(self):
+        f = Fixture()
+        self.out(f, "wr1")
+        f.proj["bn_wr"] = projection(3.0)
+        f.proj["bn_rb"] = projection(9.0)
+        rows = f.rows()
+        self.assertEqual([r[0] for r in rows], ["🚨"])
+        self.assertIn("Start instead: BN_RB (RB, XXX) vs OPP proj 9.0 at FLEX, with FX1 (WR, XXX) vs OPP proj 10.0 "
+                      "moved from FLEX to WR (the best WR on the bench, BN_WR, projects 3.0)", rows[0][2])
+
+    def test_a_tie_starts_the_direct_body_one_move_not_two(self):
+        f = Fixture()
+        self.out(f, "wr1")                                  # bn_wr 8.0, bn_rb 8.0
+        rows = f.rows()
+        self.assertIn("Start instead: BN_WR (WR, XXX) vs OPP proj 8.0", rows[0][2])
+        self.assertNotIn("moved from FLEX", rows[0][2])
+
+    def test_no_wr_on_the_bench_at_all_still_slides_and_names_no_bench_wr(self):
+        f = Fixture()
+        self.out(f, "wr1")
+        f.players["bn_wr"]["position"] = "TE"
+        f.proj["bn_wr"] = projection(6.0)
+        f.proj["bn_rb"] = projection(9.0)
+        rows = f.rows()
+        self.assertIn("Start instead: BN_RB (RB, XXX) vs OPP proj 9.0 at FLEX, with FX1", rows[0][2])
+        self.assertNotIn("the best WR on the bench", rows[0][2])
+        self.assertNotIn("An add is needed", rows[0][2])
+
+    def test_an_empty_slot_is_filled_by_the_slide_too(self):
+        f = Fixture()
+        f.our["starters"][4] = "0"                          # the second WR slot
+        f.our["players"].remove("wr2")                      # gone, not benched: a bench WR2 would fill it
+        f.proj["bn_wr"] = projection(2.0)
+        f.proj["bn_rb"] = projection(9.0)
+        rows = f.rows()
+        self.assertEqual(rows[0][1], "EMPTY SLOT — WR")
+        self.assertIn("Start: BN_RB (RB, XXX) vs OPP proj 9.0 at FLEX, with FX1 (WR, XXX) vs OPP proj 10.0 moved "
+                      "from FLEX to WR", rows[0][2])
+
+    def test_a_flex_starter_who_locks_before_the_inactives_cannot_slide(self):
+        f = Fixture()
+        f.players["wr2"].update(team="LATE", injury_status="Questionable")
+        f.players["fx1"]["team"] = "EARLY"
+        f.proj["bn_wr"] = projection(0.0)
+        f.proj["bn_rb"] = projection(10.5)
+        utc = lambda h, m=0: datetime.datetime(2026, 9, 13, h, m, tzinfo=datetime.timezone.utc)  # noqa: E731
+        kick = {"LATE": utc(20, 25), "EARLY": utc(17)}      # WR2's inactives ~18:55, after FX1 locks
+        rows = g.assess(f.our, f.opp, f.players, f.proj, SCORING, SLOTS, TODAY, kick, utc(16))
+        self.assertIn("If he is scratched: BN_WR (WR, XXX) vs OPP proj 0.0", rows[0][2])
+        self.assertNotIn("moved from FLEX", rows[0][2])
+
+    def test_only_a_flex_starter_eligible_for_the_slot_can_slide(self):
+        f = Fixture()
+        self.out(f, "wr1")
+        f.players["fx1"]["position"] = "RB"                 # both FLEX starters are RBs now
+        f.proj["bn_wr"] = projection(3.0)
+        f.proj["bn_rb"] = projection(9.0)
+        rows = f.rows()
+        self.assertIn("Start instead: BN_WR (WR, XXX) vs OPP proj 3.0", rows[0][2])
+        self.assertNotIn("moved from FLEX", rows[0][2])
+
+    def test_a_flex_starter_who_is_out_or_on_bye_cannot_slide(self):
+        for how in ("tagged Out, row kept", "bye: no row, no tag"):
+            with self.subTest(how):
+                f = Fixture()
+                self.out(f, "wr1")
+                if how.startswith("tagged"):
+                    f.players["fx1"]["injury_status"] = "Out"
+                else:
+                    del f.proj["fx1"]
+                f.proj["bn_wr"] = projection(3.0)
+                f.proj["bn_rb"] = projection(9.0)
+                rows = f.rows()
+                self.assertEqual(rows[0][1], "STARTER NOT PLAYING — WR1 (WR)")
+                self.assertIn("Start instead: BN_WR (WR, XXX) vs OPP proj 3.0", rows[0][2])
+                self.assertNotIn("moved from FLEX", rows[0][2])
+                self.assertIn("Start instead: BN_RB", rows[1][2])      # FX1's own siren takes the RB
+
+    def test_one_flex_starter_slides_once(self):
+        f = Fixture()
+        self.out(f, "wr1")
+        self.out(f, "wr2")
+        f.proj["bn_wr"] = projection(3.0)
+        f.proj["bn_rb"] = projection(9.0)
+        self.bench(f, "bn_r3", "RB", 7.0)
+        rows = f.rows()
+        self.assertIn("Start instead: BN_RB (RB, XXX) vs OPP proj 9.0 at FLEX, with FX1", rows[0][2])
+        self.assertIn("Start instead: BN_WR (WR, XXX) vs OPP proj 3.0", rows[1][2])
+        self.assertNotIn("moved from FLEX", rows[1][2])
+
+    def test_the_slid_flex_starter_is_not_offered_up_by_a_swap(self):
+        f = Fixture()
+        self.out(f, "wr1")
+        f.proj["fx1"] = projection(9.0)                     # the weakest starter a bench RB could replace
+        f.proj["bn_wr"] = projection(3.0)
+        f.proj["bn_rb"] = projection(13.0)
+        self.bench(f, "bn_r3", "RB", 12.5)
+        rows = f.rows()
+        self.assertEqual([r[0] for r in rows], ["🚨", "↑"])
+        self.assertIn("with FX1 (WR, XXX) vs OPP proj 9.0 moved from FLEX to WR", rows[0][2])
+        self.assertIn("BN_R3 over RB1 (RB)", rows[1][1])
 
 
 class TestMainWiring(unittest.TestCase):

@@ -28,7 +28,9 @@ draft date; an Out tag that lands at 11:35 before a 13:00 kickoff is not an hour
 
 WHAT IT SAYS, most urgent first:
   🚨 a starter tagged Out / Doubtful / IR / Suspended, or an empty slot -- with the best eligible
-     bench body by projection, so the fix is one click, not a research task
+     bench body by projection, so the fix is one click, not a research task. When a FLEX body on the
+     bench out-projects every bench body eligible for the slot, the fix slides a FLEX starter over
+     and starts him at FLEX instead (two clicks; the ⚠ fallback reads the same way)
   ⚠  a starter tagged Questionable -- named, with the fallback, NOT auto-recommended: Questionable
      in September is mostly "played through it" and swapping a WR1 for a bench body on that tag
      loses more weeks than it saves
@@ -379,14 +381,50 @@ def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=N
             return None
         return max(cands, key=pts)
 
+    moved = set()       # FLEX starters a fill already slides into another slot
+
+    def best_fill(slot, needed_at=None):
+        """How to fill `slot`, as (bench body, flex starter, the direct pick it beat). With no flex
+        starter, start the bench body in `slot`. With one, slide that FLEX starter into `slot` and start
+        the bench body at FLEX. The lineup gains the bench body's points either way, so the slide wins
+        only when the best FLEX-eligible body projects MORE than the best `slot`-eligible one.
+        2026-10-30: M. Wilson (WR, Questionable) -- the only WR on our bench was Tate (0.0, his
+        projection zeroed) and the ⚠ named him; Flowers FLEX -> WR with Stevenson (10.5) at FLEX was
+        the move. For `slot` FLEX itself the two picks are the same body, so no slide is ever named."""
+        direct = best_bench_for(slot, needed_at)
+        via = best_bench_for("FLEX", needed_at)
+        if via is None or (direct is not None and pts(via) <= pts(direct)):
+            return direct, None, None
+        movers = [
+            f for s, f in zip(slots, starters)
+            if s == "FLEX" and f not in ("0", "", None) and f not in moved
+            and eligible(pdata(f).get("position"), slot)
+            and tag(f) not in NOT_PLAYING and has_game(f) and not locked(f)
+            and not (needed_at and locked(f, needed_at))
+        ]
+        return (via, movers[0], direct) if movers else (direct, None, None)
+
+    def take(sub, mover):
+        claimed.add(sub)
+        if mover is not None:
+            moved.add(mover)
+
+    def fill_text(sub, mover, beat, slot):
+        if mover is None:
+            return describe(sub)
+        text = f"{describe(sub)} at FLEX, with {describe(mover)} moved from FLEX to {slot}"
+        if beat is not None:
+            text += f" (the best {slot} on the bench, {name(beat)}, projects {pts(beat):.1f})"
+        return text
+
     # --- 🚨 a starter who will not play, or an empty slot ----------------------------------
     for slot, pid in zip(slots, starters):
         if pid in ("0", "", None):
-            sub = best_bench_for(slot)
+            sub, mover, beat = best_fill(slot)
             body = f"The {slot} slot is EMPTY."
             if sub:
-                claimed.add(sub)
-                body += f"\nStart: {describe(sub)}"
+                take(sub, mover)
+                body += f"\nStart: {fill_text(sub, mover, beat, slot)}"
             rows.append(("🚨", f"EMPTY SLOT — {slot}", body))
             continue
         if locked(pid):
@@ -398,12 +436,12 @@ def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=N
                 why, title = "has NO PROJECTION, so Sleeper expects him to sit", "STARTER'S PROJECTION PULLED"
             else:
                 why, title = "has NO GAME this week (bye)", "STARTER NOT PLAYING"
-            sub = best_bench_for(slot)
+            sub, mover, beat = best_fill(slot)
             handled.add(pid)
             body = f"{describe(pid)} {why} in the {slot} slot."
             if sub:
-                claimed.add(sub)
-                body += f"\nStart instead: {describe(sub)}"
+                take(sub, mover)
+                body += f"\nStart instead: {fill_text(sub, mover, beat, slot)}"
             else:
                 body += f"\nNo bench body who is playing is eligible for {slot}. An add is needed."
             rows.append(("🚨", f"{title} — {name(pid)} ({slot})", body))
@@ -413,11 +451,11 @@ def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=N
         if pid in ("0", "", None) or locked(pid) or tag(pid) not in MAYBE:
             continue
         verdict = kickoff(pid) - INACTIVES_LEAD if kickoff(pid) else None
-        sub = best_bench_for(slot, verdict)
+        sub, mover, beat = best_fill(slot, verdict)
         body = (f"{describe(pid)} is Questionable in the {slot} slot. Read as playing unless the "
                 f"morning inactives say otherwise; inactives post ~90 minutes before kickoff.")
         if sub:
-            body += f"\nIf he is scratched: {describe(sub)}"
+            body += f"\nIf he is scratched: {fill_text(sub, mover, beat, slot)}"
         elif verdict:
             body += (f"\nIf he is scratched: no eligible bench body is still unlocked at his inactives "
                      f"(~{clock(verdict)}) — only an add can fill the slot.")
@@ -431,7 +469,8 @@ def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=N
     # The strongest bench body picks first; the next takes his best REMAINING slot.
     # A starter the 🚨 already filled is not on offer: 2026-10-30, an Out WR with two WRs on the bench
     # read "Start instead: BN_WR" on the 🚨 and "BN_RB over WR1" on the ↑ -- two men for one slot.
-    holds, replaced = [], set(handled)
+    # Nor is a FLEX starter the 🚨 slid into that slot: the fill already keeps him in the lineup.
+    holds, replaced = [], set(handled) | moved
     for b in sorted(bench, key=pts, reverse=True):
         if b in claimed or tag(b) in NOT_PLAYING or not has_game(b) or locked(b):
             continue

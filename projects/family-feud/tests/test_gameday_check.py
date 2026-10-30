@@ -728,12 +728,67 @@ class TestOpponentLineUsesTheLockRule(unittest.TestCase):
     def test_a_no_game_starter_is_listed_before_his_teams_kickoff_and_not_after(self):
         f = Fixture()
         f.players["owr2"]["team"] = "EARLY"
-        del f.proj["owr2"]                                    # Sleeper pulled his row: "— NO GAME"
+        del f.proj["owr2"]                    # Sleeper pulled his row, but EARLY kicks off: not a bye
         kick = {"EARLY": datetime.datetime(2026, 9, 13, 17, 0, tzinfo=datetime.timezone.utc)}
         at = lambda h: datetime.datetime(2026, 9, 13, h, 0, tzinfo=datetime.timezone.utc)  # noqa: E731
         rows = lambda h: g.assess(f.our, f.opp, f.players, f.proj, SCORING, SLOTS, TODAY, kick, at(h))  # noqa: E731
-        self.assertIn("NO GAME", rows(16)[0][2])
+        self.assertIn("— NO PROJECTION", rows(16)[0][2])
         self.assertEqual(rows(18), [])
+
+
+class TestAnEmptiedRowIsNotABye(unittest.TestCase):
+    """2026-10-30 14:31 ET: DeVonta Smith (PHI) still read Questionable, and Sleeper's week-8 row for him
+    carried no date, no opponent and no stats, while the PHI DEF row read WAS. The check printed "(no game
+    this week)" for a player whose team plays. The two rows below are that pull's, as pull() keeps them."""
+
+    SMITH = {"stats": {"adp_dd_ppr": 1000.0}, "date": None, "opponent": None}
+    PHI_DEF = {"stats": {"pts_allow_21_27": 1.0, "gp": 1.0}, "date": "2026-11-01", "opponent": "WAS"}
+
+    def fixture(self, who):
+        f = Fixture()
+        f.players[who].update(team="PHI", injury_status="Questionable", injury_body_part="Hamstring")
+        f.proj[who] = dict(self.SMITH)
+        f.proj["PHI"] = dict(self.PHI_DEF)
+        return f
+
+    def test_the_opponents_emptied_starter_reads_no_projection_not_no_game(self):
+        rows = self.fixture("owr1").rows()
+        self.assertEqual([r[0] for r in rows], ["ℹ"])
+        self.assertIn("OWR1 (WR, PHI) (no projection, though PHI plays this week", rows[0][2])
+        self.assertNotIn("no game this week", rows[0][2])
+
+    def test_our_emptied_starter_is_a_siren_with_the_true_reason_and_a_sub(self):
+        rows = self.fixture("wr1").rows()
+        self.assertEqual(rows[0][0], "🚨")
+        self.assertEqual(rows[0][1], "STARTER'S PROJECTION PULLED — WR1 (WR)")
+        self.assertIn("has NO PROJECTION, so Sleeper expects him to sit in the WR slot.", rows[0][2])
+        self.assertNotIn("bye", rows[0][2])
+        self.assertIn("Start instead: BN_WR", rows[0][2])
+
+    def test_an_espn_kickoff_alone_proves_the_team_plays(self):
+        f = Fixture()
+        f.players["owr2"]["team"] = "EARLY"
+        del f.proj["owr2"]
+        kick = {"EARLY": datetime.datetime(2026, 9, 13, 17, 0, tzinfo=datetime.timezone.utc)}
+        rows = g.assess(f.our, f.opp, f.players, f.proj, SCORING, SLOTS, TODAY, kick, None)
+        self.assertIn("(no projection, though EARLY plays this week", rows[0][2])
+        self.assertIn("— NO PROJECTION", rows[0][2])
+
+    def test_a_real_bye_still_reads_as_a_bye(self):
+        """Negative control: a team with no DEF row and no kickoff is on bye, and says so."""
+        f = self.fixture("wr1")
+        del f.proj["PHI"]
+        rows = f.rows()
+        self.assertEqual(rows[0][1], "STARTER NOT PLAYING — WR1 (WR)")
+        self.assertIn("(no game this week) proj 0.0 [Questionable: Hamstring] has NO GAME this week (bye)", rows[0][2])
+
+    def test_an_out_tag_still_wins_over_the_team_rule(self):
+        f = self.fixture("wr1")
+        f.players["wr1"]["injury_status"] = "Out"
+        rows = f.rows()
+        self.assertEqual(rows[0][1], "STARTER NOT PLAYING — WR1 (WR)")
+        self.assertIn("(no projection -- Sleeper pulls it for a player who is out) proj 0.0 [Out: Hamstring] "
+                      "is tagged Out in the WR slot.", rows[0][2])
 
 
 class TestMainWiring(unittest.TestCase):

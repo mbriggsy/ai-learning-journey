@@ -318,6 +318,15 @@ def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=N
     def has_game(pid):
         return bool((proj.get(pid) or {}).get("date"))
 
+    def team_plays(pid):
+        """His TEAM has a game this week, whatever his own row says. Sleeper empties the row of a
+        player it has written off, and not only once his tag reads Out: 2026-10-30 DeVonta Smith was
+        still Questionable with an empty row (no date, no opponent, no stats) while the PHI DEF row
+        read WAS, and this check printed "(no game this week)". The team's DEF row is the bye rule
+        trade_eval and external_projections use; an ESPN kickoff is the second witness."""
+        team = pdata(pid).get("team")
+        return bool(team) and (bool((proj.get(team) or {}).get("opponent")) or team in (kickoffs or {}))
+
     def kickoff(pid):
         return (kickoffs or {}).get(pdata(pid).get("team"))
 
@@ -343,6 +352,9 @@ def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=N
             vs = f" vs {game['opponent']}"
         elif tag(pid) in NOT_PLAYING:
             vs = " (no projection -- Sleeper pulls it for a player who is out)"
+        elif team_plays(pid):
+            vs = (f" (no projection, though {p['team']} plays this week -- Sleeper pulls it for a player "
+                  f"it expects to sit, sometimes before his tag changes)")
         else:
             vs = " (no game this week)"
         t = f" [{tag(pid)}" + (f": {p['injury_body_part']}" if p.get("injury_body_part") else "") + "]" if tag(pid) else ""
@@ -379,15 +391,20 @@ def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=N
         if locked(pid):
             continue
         if tag(pid) in NOT_PLAYING or not has_game(pid):
-            why = f"tagged {tag(pid)}" if tag(pid) in NOT_PLAYING else "has NO GAME this week (bye)"
+            if tag(pid) in NOT_PLAYING:
+                why, title = f"is tagged {tag(pid)}", "STARTER NOT PLAYING"
+            elif team_plays(pid):
+                why, title = "has NO PROJECTION, so Sleeper expects him to sit", "STARTER'S PROJECTION PULLED"
+            else:
+                why, title = "has NO GAME this week (bye)", "STARTER NOT PLAYING"
             sub = best_bench_for(slot)
-            body = f"{describe(pid)} is {why} in the {slot} slot."
+            body = f"{describe(pid)} {why} in the {slot} slot."
             if sub:
                 claimed.add(sub)
                 body += f"\nStart instead: {describe(sub)}"
             else:
                 body += f"\nNo bench body who is playing is eligible for {slot}. An add is needed."
-            rows.append(("🚨", f"STARTER NOT PLAYING — {name(pid)} ({slot})", body))
+            rows.append(("🚨", f"{title} — {name(pid)} ({slot})", body))
 
     # --- ⚠ Questionable starters: named, with the fallback, not recommended -----------------
     for slot, pid in zip(slots, starters):
@@ -450,7 +467,7 @@ def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=N
             elif tag(pid) and not locked(pid):
                 theirs.append(f"{slot}: {describe(pid)}")
             elif not has_game(pid) and not locked(pid):
-                theirs.append(f"{slot}: {describe(pid)} — NO GAME")
+                theirs.append(f"{slot}: {describe(pid)} — {'NO PROJECTION' if team_plays(pid) else 'NO GAME'}")
         if theirs:
             rows.append(("ℹ", "OPPONENT'S TAGGED STARTERS", "\n".join(theirs)))
 

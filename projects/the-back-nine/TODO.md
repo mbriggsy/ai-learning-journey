@@ -22,43 +22,58 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-10-30, written by b9-5 for b9-6): the pay check's Phase B is LIVE — `c07e5758`, CI run 41120580797
-green on both jobs (read by id). Next is Phase C.** Nothing of Phase B sits uncommitted any more.
-1. **Phase C** (`docs/plans/features/working-year-pay-check-build-spec.md`): U10 (every date seed gets W, measured; the
-   `wyclock` plant — `doctorWorkingYearsStaleVault` is built), U11 (docs), the whole-file review and `/distill` (the DISTILL
-   CANDIDATES below, b9-5's, b9-4's and b9-3's first). The rulings are `b9-phaseb\DECISIONS.md` 1–37; the review tools
-   (every lens's repros, the mutant specs and the runner, the re-anchor classifier) are in
+▶ **START HERE (2026-10-30, written by b9-6 for b9-7): Phase C's U10 is LANDED — `e5a88dd4`, CI run 41139971551
+green on both jobs (`verify`, `verify-rv-chart-text`), read by id.** Every date seed carries its own W, measured; nothing of U10 sits uncommitted. Next, in order:
+1. **U10's Caddie card** (owed; U10 changed no product code — every edit is a DEV-only fixture, a test or an e2e arm, and the
+   bundle is unchanged — so its commit did not wait on it): `CADDIE_TARGETS="vault:wyclock,vault:datecoststale,seed:date"
+   CADDIE_RUN=<name> pnpm caddie:walk` (both vault keys ride the key-agnostic `walkVaultReturn` unedited — the walk header's
+   Increment 8), chair the card, the cold-read log entry and its tape row.
+2. **U11** (docs and the register): the spec's §U11 close / amend / file lists ARE the prescription
+   (`docs/plans/features/working-year-pay-check-build-spec.md`), plus three U10 left it: the roadmap You-Are-Here row for the
+   pay check (none exists yet — `docs/roadmap.md` holds no pay-check row, so the build status lives only in the spec), the
+   pre-59½ count on the dissent (0 on every seed, offset and tier — the spec's U10 *As built*), and KTD22's reason.
+3. **The whole-file review** of the pay check (`/ultramode-code-review`, the A7 review's `brief.md` the template) and `/distill`
+   (the DISTILL CANDIDATES below — b9-6's, b9-5's, b9-4's and b9-3's first). The rulings are `b9-phaseb\DECISIONS.md` 1–37; the
+   review tools (every lens's repros, the mutant specs and the runner, the re-anchor classifier) are in
    `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-phaseb-review\` (`b9-4-mutants\`,
    `b9-5-mutants\`), its `FIXES.md` the progress record.
-2. **Rank the four registers filed by b9-5's re-walk** against the D7 queue (his order — never re-ordered without him):
+4. **Rank the four registers filed by b9-5's re-walk** against the D7 queue (his order — never re-ordered without him):
    Tier 0 *A self-employed worker's Social Security and Medicare tax is charged at an employee's half…* (a D7 ask, measure
    first); Tier 1 *The money picture's later years name a change without its dollars or its direction…*, *The assumptions
    sheet says "Everything the answer leans on, in one place" but shows no pay…*, *The working-year methodology row lists
    about fifteen caveats…*. Build 2, the surplus question, follows this build.
+**U10's measurement, durable:** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-u10-tools\`
+— its `README.md` indexes the date-search probe (`probe.mts`, `--w` mints W at run time on a frozen HEAD copy), `compare.mjs` /
+`deepdiff.mjs`, the hand-derived year-0 check (`year0check.mts`) and the pre-59½ count (`precount.mts`); `head\` holds a
+`node_modules` JUNCTION — remove the link alone before deleting the folder. The re-pointed pay-check probe
+(`b9-paycheck-probe\paycheck.mts`) writes to its own `out\` and passes the earnings-test schedule under W.
 **The research, durable:** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-research\`
 (the payroll and earnings-test primaries, verified) and `b9-phaseb\sources\` (42 CFR 407.20 and 411.172, read 2026-10-30 for the
 spouse-side Part B entry).
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-10-30 (b9-5, the Caddie re-walk, the gates, the go-live commit):** HEAD `c07e5758` (105 files). By exit code at
-this close: `pnpm typecheck` 0, `pnpm lint` 0, `pnpm verify:doc-stats` 0 (the suite count lives under that gate), `pnpm build`
-0, `pnpm verify:bundle` 0 at 286.7 KiB (293,535 B); the full suite and `verify:fit` green in CI (run 41120580797); locally each
-red only on load timeouts that pass alone (below). The card: the cold-read log's 2026-10-30 (b9-5) entry, PILOT-CLEARED, its tape
-row awaiting his read; b9-3's card amended PILOT-CLEARED.
-**LANDMINES from this session:** `verify:fit`'s four-worker run times out three final-tier waits on this laptop (the
-`?vault=datestale` and `?vault=datearrived` returns at 90 s, reduced-motion chart text at 180 s; 60–90 s alone) — re-run them
-with `--workers=1 -g` before calling one a regression; the full suite's parallel run timed out FOUR heavy tests this time
-(`budgetTwoTrack`'s compute profile, `solvePayloadIdentity` F1 / F4, `.health` F2 — 126–325 s against 120 s limits; 29/29
-alone). A background Bash command ending `; echo "EXIT $?" >> log` reports exit 0 in its task notification whatever the gate
-returned: read the log's own EXIT line. `verify:fit` was not re-run after b9-3's fix pass, so two of its arms carried a stale
-expectation for two sessions — after a fix pass that touches a gated surface, run that surface's gate, not only the unit
-tests. `pnpm doc:reanchor <BASE>` moves a citation written FRESH in the tree with the tree's own line numbers a second time:
-classify every proposed edit first (`b9-phaseb-review\b9-5-mutants\classify-reanchor.mjs <dry-run output>` — SAFE / CARRIED /
-FRESH by whether the citing line is new in the tree), hand-check each FRESH one, and note the tool never moves the second
-number of a comma pair (`Result.tsx:682,710`).
+**SESSION 2026-10-30 (b9-6, Phase C U10):** HEAD `e5a88dd4` (21 files). By exit code at this close: `pnpm typecheck` 0, `pnpm lint`
+0, `pnpm verify:doc-stats` 0 (the suite count lives under that gate), `pnpm build` 0, `pnpm verify:bundle` 0 at 286.7 KiB
+(unchanged), the full suite green locally (no load timeouts this run), `pnpm verify:fit` 0 (152 arms — the two new unlock arms
+included; the arm count is ungated). CI: run 41139971551 SUCCESS on both jobs (`verify`, `verify-rv-chart-text`), read by id.
+**LANDMINES from this session:** `git status --porcelain` prints REPO-ROOT paths, so a `git commit -- <paths>` built from it
+must run from the repo root — from the project dir every pathspec misses and NOTHING commits (no harm, but read the sha before
+believing a commit happened). A fixture that used a date seed as "the W-free draft" carries W since U10: strip
+`workingYearCost` where an arm measures the W-free case (seven arms needed it — the floor-reach pairs in
+`stalenessExposure.test.ts` and `reentry.test.tsx`, the methodology pair in `assumptionPanel.test.tsx`, `datemixed`'s W-absent
+twin, `dip`'s floor premise — W brings `employerHsaByPerson` with it — and the stale-W witness).
 
 **DISTILL CANDIDATES (for the pay check's Phase C `/distill`):**
+- (b9-6) a seed measurement can take its AFTER without touching the tree: mint the change at run time with the SHIPPED
+  producer on a frozen `git archive` HEAD copy (`b9-u10-tools\probe.mts --w`), then require the edited tree to reproduce that
+  run byte for byte. It splits "what the change does" from "did I make the change I measured" — and the edit can land while
+  the measurement runs.
+- (b9-6) a prediction is a claim about REACH before it is a claim about size: "dip's crown moves at most one year earlier"
+  could not happen, because the earnings test reaches only offsets that work past the 62 claim and the crown IS the claim
+  year — offsets 0–4 are byte-identical by construction. Ask which offsets a new mechanism can touch before predicting where
+  the crown goes. And measuring EVERY seed, not only the ones predicted to move, caught two docblock crowns ("≈ 7 years out",
+  "floor ≈ 4") that were wrong before the change too.
 - (b9-5) a fix that adds a control is a new surface with its OWN rosy direction: the Keep door closed one rosy path (the easy
   Yes cut W when spending fell) and, read cold as the stale note's only visible action, opened its mirror (a one-tap keep BELOW
   today's spending where spending rose). Re-read every new control in BOTH directions of the quantity it moves; the gate (shown
@@ -834,6 +849,17 @@ These are the mechanical ones that keep costing hours.*
   `git show <ref>:projects/the-back-nine/<path>`, never a reset, and never `git checkout`/`restore`/`stash` the held paths.
   Deleting the spent ref (`git push origin :<ref>`) is refused to the pilot by the permission classifier: it is Briggsy's
   one command (`refs/wip/b9-phaseb` was his to delete, gone local and on origin since 2026-10-30).
+- **From the b9-5 close (2026-10-30, migrated at b9-6's):** `verify:fit`'s four-worker run can time out final-tier waits on
+  this laptop under load (the `?vault=datestale` / `?vault=datearrived` returns at 90 s, reduced-motion chart text at 180 s;
+  60–90 s alone) — re-run them with `--workers=1 -g` before calling one a regression (b9-6's run, alone on the CPU, went 152/152
+  in 6.4 min). The full suite's parallel run can time out heavy tests the same way (`budgetTwoTrack`'s compute profile,
+  `solvePayloadIdentity` F1 / F4, `.health` F2 — 126–325 s against 120 s limits; pass alone). A background Bash command ending
+  `; echo "EXIT $?" >> log` reports exit 0 in its task notification whatever the gate returned: read the log's own EXIT line
+  (bit b9-6 too). After a fix pass that touches a gated surface, run that surface's gate, not only the unit tests.
+  `pnpm doc:reanchor <BASE>` moves a citation written FRESH in the tree a second time: classify every proposed edit first
+  (`b9-phaseb-review\b9-5-mutants\classify-reanchor.mjs <dry-run output>` — SAFE / CARRIED / FRESH), hand-check each FRESH one
+  and each REVIEW line (a citation inside a modified hunk is never moved), and move the second number of a comma pair by hand
+  (the tool moves only the first).
 - **From the b9-14 close (2026-10-29, A6):**
   - **The once-only re-anchor rule below was broken anyway** — `pnpm doc:reanchor HEAD --apply` was invoked twice in one
     shell line (once piped to a count, once to a tail), so 276 citations moved twice (983 → 1109 → 1235). Capture ONE

@@ -22,62 +22,59 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-10-30, written by b9-4 for b9-5): Phase B's tests are written and mutant-proven, and one more rosy
-sentence is fixed through the engine — re-walk the Caddie, run the gates once, land the ONE go-live commit.** The whole Phase
-B tree still sits UNCOMMITTED in the shared working tree on purpose (56 modified + 8 new paths under `projects/the-back-nine`,
-TODO.md aside; backup ref `refs/wip/b9-phaseb` = `a1797bfb`, pushed — a fast-forward over b9-3's `dd4837f9`).
-**READ FIRST:** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-phaseb-review\FIXES.md`, its "Progress (b9-4)" block — what was proven, the full suite's five reds and
-what became of each, and the two owed items. The rulings are `b9-phaseb\DECISIONS.md` 30–33. The Caddie card to close is the
-cold-read log's 2026-10-30 (b9-3) entry (HELD on two rosy W-help holes, both fixed in words in the tree).
-**DONE, by exit code at the b9-4 close:** `pnpm typecheck` 0, `pnpm lint` 0. The mutation passes, on a COPIED tree (tools in
-`b9-phaseb-review\b9-4-mutants\`): 44 plants for the owed arms and 16 for the held-back work, every one KILLED by a new arm,
-every restore byte-identical. The full suite (its first run since b9-3's fix pass, read by a JSON report): five reds — the
-constants gate (an arm typed 72000, the §415(c) cap; fixed) and `devSeeds.test`'s Phase B seed list (an unsorted expected list
-beside a `.sort()`; fixed) both re-run green; `solvePayloadIdentity` F1 and `.health` F2 TIMED OUT (122 s / 218 s) under the
-parallel run and pass alone — all-retired spine solves the earnings-test change never reaches; the live-docs citation arm is
-the gates' `doc:reanchor`. `verify:fit`, the build and `verify:bundle` were NOT run this session.
-**New in the tree this session (b9-4):** the held-back Social Security words say only what the run does (ruling 32: the
-earnings-test schedule's `heldBackCredit` reason bits → the ledger's `heldBackRaise` → the picture's per-reason sentences; K12
-says the stopgap counts no later raise); the panel's confirmed line names a budget quote "from your budget"; the register
-gained SegmentedControl's double handler call (Tier 4, *A tap on a segmented control commits twice…*) and C7's figure half and
-C14 (Tier 1, both deferred by b9-3 with no entry). **The bundle departure is settled** — Briggsy, 2026-10-30: "I'm not overly
-concerned with the download size. I'm the only user." (the register's copy-catalog entry and the plan's U8 As-built).
-**TO FINISH, in this order:**
-1. **Re-walk the Caddie** on the fixed tree (`CADDIE_TARGETS="intake:paycheck,seed:datecoststale" pnpm caddie:walk`) + the
-   panel's W row, with a fresh-context reader panel and a genuine false-pass hunt; read both HOLDS findings against the new W
-   help, and the money picture's held-back row on `dateshort` (every month credited: the one sentence — no seed reaches the new
-   per-reason sentences, which `WorkingYearLedger.test`'s `it.each` pins). Amend the b9-3 card's disposition (PILOT-CLEARED
-   once both read clean) and its row in `docs/caddie/tape.md`.
-2. **The gates, once, at the end:** README + roadmap test counts from `vitest list`; `pnpm doc:reanchor` ONCE then `pnpm
-   verify:doc-stats` (fold by hand the lane reports' in-code cite shifts — `b9-phaseb\lane-staleness-report.md` "Line cites my
-   edits shifted" — and b9-4's: `earningsTest.ts`, `workingYearLedger.ts`, `model.ts`, `copy.ts`, `AssumptionPanel.tsx`,
-   `WorkingYearLedger.tsx` all grew); typecheck, lint, the FULL suite on a quiet machine with its exit code captured (`pnpm
-   test | tail` reads 0 on a red suite — b9-4 hit it), build, `verify:bundle` (BEFORE = 278,997 B on a HEAD worktree build;
-   record the AFTER — no word owed), `verify:fit` (re-run: the W fork gained a visible required marker and the copy
-   lengthened). Then commit (`git commit -- <paths>`, never `-a`; NOT the family-feud paths), push, read CI by id, and delete
-   the side ref only once CI is green.
-**Then Phase C**: U10 (every date seed gets W, measured; the `wyclock` plant — `doctorWorkingYearsStaleVault` is built), U11
-(docs), the whole-file review and `/distill` (the DISTILL CANDIDATES below, b9-4's and b9-3's first).
+▶ **START HERE (2026-10-30, written by b9-5 for b9-6): the pay check's Phase B is LIVE — `c07e5758`, CI run 41120580797
+green on both jobs (read by id). Next is Phase C.** Nothing of Phase B sits uncommitted any more.
+1. ⚑ **Briggsy's call, one command:** the backup ref `refs/wip/b9-phaseb` (`a1797bfb`, local and on origin) is spent — every
+   byte of it is on main, and the TODO's own rule was "delete it once CI is green" — but the permission classifier refused the
+   pilot's delete (`git push origin :refs/wip/b9-phaseb`, "Git Destructive"). His: `! git push origin :refs/wip/b9-phaseb && git
+   update-ref -d refs/wip/b9-phaseb`, or leave it; it harms nothing. Never route the delete through another session.
+2. **Phase C** (`docs/plans/features/working-year-pay-check-build-spec.md`): U10 (every date seed gets W, measured; the
+   `wyclock` plant — `doctorWorkingYearsStaleVault` is built), U11 (docs), the whole-file review and `/distill` (the DISTILL
+   CANDIDATES below, b9-5's, b9-4's and b9-3's first). The rulings are `b9-phaseb\DECISIONS.md` 1–37; the review tools
+   (every lens's repros, the mutant specs and the runner, the re-anchor classifier) are in
+   `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-phaseb-review\` (`b9-4-mutants\`,
+   `b9-5-mutants\`), its `FIXES.md` the progress record.
+3. **Rank the four registers filed by b9-5's re-walk** against the D7 queue (his order — never re-ordered without him):
+   Tier 0 *A self-employed worker's Social Security and Medicare tax is charged at an employee's half…* (a D7 ask, measure
+   first); Tier 1 *The money picture's later years name a change without its dollars or its direction…*, *The assumptions
+   sheet says "Everything the answer leans on, in one place" but shows no pay…*, *The working-year methodology row lists
+   about fifteen caveats…*. Build 2, the surplus question, follows this build.
 **The research, durable:** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-research\`
 (the payroll and earnings-test primaries, verified) and `b9-phaseb\sources\` (42 CFR 407.20 and 411.172, read 2026-10-30 for the
 spouse-side Part B entry).
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
-real plan. The day the check ships, the working-year row's "It doesn't check that your pay really covers all of that…" sentence
-comes out for a household with W (built: U9's arm). Build 2, the surplus question, follows this build.
+real plan.
 
-**SESSION 2026-10-30 (b9-4, Phase B's tests written and mutant-proven; the held-back words fixed; re-walk + gates owed):** see
-START HERE for the exit codes. HEAD before this close is `25d13c24` (TODO-only above `c805fa8f`, whose CI run 40985382777 was green).
-**LANDMINES from this session:** a test "retype" that fires `change` with the value focus already put in the box (`CurrencyField`
-fills it with the figure on focus) fires NO React change event — the arm read a real product bug that was not there; a retype
-passes through other text (`'700'` then `'7000'`). A tap on an UNCHECKED segmented control reaches `onChange` twice (its click
-and its change), so an arm counting commits sees two — pin what each commit lands, never the count (filed Tier 4). The two
-`solvePayloadIdentity` solve witnesses time out (122 s / 218 s) inside a full parallel `pnpm test` on this laptop and pass alone:
-read the per-test duration in the JSON report before calling either a regression. A full-suite failure list needs the names:
-`vitest run --reporter=json --outputFile=<file>` and print `testResults[].assertionResults` with node — `| tail` keeps neither
-the names nor the exit code. A test written in a fix pass and never run (b9-3's targeted subsets skipped `devSeeds.test`) sat
-red for two sessions: after any fix pass, run the WHOLE suite before the next step.
+**SESSION 2026-10-30 (b9-5, the Caddie re-walk, the gates, the go-live commit):** HEAD `c07e5758` (105 files). By exit code at
+this close: `pnpm typecheck` 0, `pnpm lint` 0, `pnpm verify:doc-stats` 0 (the suite count lives under that gate), `pnpm build`
+0, `pnpm verify:bundle` 0 at 286.7 KiB (293,535 B); the full suite and `verify:fit` green in CI (run 41120580797); locally each
+red only on load timeouts that pass alone (below). The card: the cold-read log's 2026-10-30 (b9-5) entry, PILOT-CLEARED, its tape
+row awaiting his read; b9-3's card amended PILOT-CLEARED.
+**LANDMINES from this session:** `verify:fit`'s four-worker run times out three final-tier waits on this laptop (the
+`?vault=datestale` and `?vault=datearrived` returns at 90 s, reduced-motion chart text at 180 s; 60–90 s alone) — re-run them
+with `--workers=1 -g` before calling one a regression; the full suite's parallel run timed out FOUR heavy tests this time
+(`budgetTwoTrack`'s compute profile, `solvePayloadIdentity` F1 / F4, `.health` F2 — 126–325 s against 120 s limits; 29/29
+alone). A background Bash command ending `; echo "EXIT $?" >> log` reports exit 0 in its task notification whatever the gate
+returned: read the log's own EXIT line. `verify:fit` was not re-run after b9-3's fix pass, so two of its arms carried a stale
+expectation for two sessions — after a fix pass that touches a gated surface, run that surface's gate, not only the unit
+tests. `pnpm doc:reanchor <BASE>` moves a citation written FRESH in the tree with the tree's own line numbers a second time:
+classify every proposed edit first (`b9-phaseb-review\b9-5-mutants\classify-reanchor.mjs <dry-run output>` — SAFE / CARRIED /
+FRESH by whether the citing line is new in the tree), hand-check each FRESH one, and note the tool never moves the second
+number of a comma pair (`Result.tsx:682,710`).
 
 **DISTILL CANDIDATES (for the pay check's Phase C `/distill`):**
+- (b9-5) a fix that adds a control is a new surface with its OWN rosy direction: the Keep door closed one rosy path (the easy
+  Yes cut W when spending fell) and, read cold as the stale note's only visible action, opened its mirror (a one-tap keep BELOW
+  today's spending where spending rose). Re-read every new control in BOTH directions of the quantity it moves; the gate (shown
+  only at or above the quote) came from the second panel's first-look seat, not the chair.
+- (b9-5) a label is a claim about scope, and the producer owns scope: "Income tax on that income" read as every income tax
+  where the run charged federal only. The fix read the run's own state slice — and the chair's first rule (point at W only
+  where the slice is $0) was wrong for PA, whose run prices its tax on investment income and leaves its tax on pay to W. A
+  real-seed arm per reading (NC / PA / unpriced / FL) caught it before landing; key the words to what the producer did, per
+  reading, never to one inferred proxy.
+- (b9-5) each re-walk round after a fix found one more holds-type defect in the fix's neighborhood (walk 1: "keep" read as
+  already counted; walk 2: the federal-only line and the Keep door's mirror). A fixed sentence is a new sentence: put it in
+  front of fresh readers before clearing, and budget the second round.
 - (b9-4) a review's ADVISORY bucket is still findings: the held-back sentence (confidence 100, rosy words, a repro) sat in the
   review result's `advisory` list and fell out of b9-3's merged fix list, which drew from `confirmed` and the overflow. Merge
   EVERY bucket of a review result, then rule each item — an advisory is a severity guess, never a dismissal.
@@ -816,6 +813,15 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 *Engineering lessons live in [`docs/insights/`](docs/insights/) (one file per lesson; cite by full path + slug).
 These are the mechanical ones that keep costing hours.*
 
+- **From the b9-4 close (2026-10-30), migrated by b9-5:** a test "retype" that fires `change` with the value focus already put
+  in the box (`CurrencyField` fills it with the figure on focus) fires NO React change event — the arm read a real product bug
+  that was not there; a retype passes through other text (`'700'` then `'7000'`). A tap on an UNCHECKED segmented control
+  reaches `onChange` twice (its click and its change), so an arm counting commits sees two — pin what each commit lands, never
+  the count (filed Tier 4). A full-suite failure list needs the names: `vitest run --reporter=json --outputFile=<file>` and
+  print `testResults[].assertionResults` with node — `| tail` keeps neither the names nor the exit code. A test written in a fix
+  pass and never run sat red for two sessions: after any fix pass, run the WHOLE suite (and every gate whose surface it
+  touched) before the next step.
+
 - **From the b9 A7-review close (2026-10-29):** `b9-a7-review\fixes\head\` and `b9-a7-review\pre-a7\` (in the session
   folder `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\`) hold a `node_modules`
   JUNCTION into the project's own `node_modules` (as `b9-a6-head\` does). Before deleting either folder, remove the link alone
@@ -825,15 +831,13 @@ These are the mechanical ones that keep costing hours.*
   any file you rewrite; `devSeeds.ts` and `devSeeds.test.ts` are CRLF. `sed -i` strips CRLF too. A seed figure equal to a sourced
   constant's value (`72000` is the §415(c) cap) reds the single-source gate — pick a figure no constant holds. Editing ANY `src`
   file while a fit run is going hot-reloads its dev server mid-test.
-- **From the b9-1 to b9-4 closes (2026-10-30, Phase B built, mid-gate):** the shared working tree holds the pay check's
-  Phase B UNCOMMITTED (56 modified + 8 new paths at b9-4). Never `git checkout`/`restore`/`stash` any of them; the backup is the side ref
-  `refs/wip/b9-phaseb` (`a1797bfb`, pushed to origin; re-cut it through a TEMPORARY index — `GIT_INDEX_FILE=<scratch>/x.index`,
-  `git read-tree HEAD`, `git add -A -- projects/the-back-nine`, `git write-tree`, `git commit-tree`, `git update-ref` with the
-  old value — so the real index never moves) — recover a lost file with `git show refs/wip/b9-phaseb:projects/the-back-nine/<path>`,
-  never a reset.
-  The full suite is RED on one expected arm until the go-live commit: `verify-doc-stats`' live-citation arm (line numbers moved;
-  `pnpm doc:reanchor` runs ONCE at the commit) — the registry completeness walk went green once the W row landed (b9-4's run).
-  Inside a full parallel run the `solvePayloadIdentity` witnesses can time out on this laptop; they pass alone.
+- **From the b9-1 to b9-5 closes (2026-10-30, Phase B carried uncommitted across four sessions, landed as `c07e5758`):** when
+  a multi-session build must sit UNCOMMITTED in the shared tree, back it up on a side ref cut through a TEMPORARY index —
+  `GIT_INDEX_FILE=<scratch>/x.index`, `git read-tree HEAD`, `git add -A -- projects/the-back-nine`, `git write-tree`,
+  `git commit-tree`, `git update-ref` with the old value — so the real index never moves; recover a lost file with
+  `git show <ref>:projects/the-back-nine/<path>`, never a reset, and never `git checkout`/`restore`/`stash` the held paths.
+  Deleting the spent ref (`git push origin :<ref>`) is refused to the pilot by the permission classifier: it is Briggsy's
+  one command (START HERE names it while `refs/wip/b9-phaseb` stands).
 - **From the b9-14 close (2026-10-29, A6):**
   - **The once-only re-anchor rule below was broken anyway** — `pnpm doc:reanchor HEAD --apply` was invoked twice in one
     shell line (once piped to a count, once to a tail), so 276 citations moved twice (983 → 1109 → 1235). Capture ONE

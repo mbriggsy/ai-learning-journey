@@ -82,13 +82,15 @@ main-thread money picture (the plan's *Departures from the ruling*, item 4). The
 Briggsy saves his first real plan; the tool is built for him (a friend using it is "a crazy outside chance", his words, 2026-10-21). The day the check ships, the working-year row's "It doesn't check that your pay really
 covers all of that…" sentence comes out for a household with W (U9). Build 2, the surplus question, follows this build.
 
-**SESSION 2026-10-29 (b9-14):**
-**STATE on A6's tree (`24ed7410`), by exit code:** typecheck — exit 0, re-run at this close; lint · build ·
-`verify:bundle` 272.5 KiB · `verify:doc-stats` · the full suite — exit 0 on the committed content before the commit (the
-count lives under `verify:doc-stats`); the opt-in recompute spike (`PROFILE=1`, its W twin) passed in Chromium.
+**SESSION 2026-10-29 (b9, the A7 review):**
+**STATE on the review fix's tree (`c805fa8f`), by exit code:** typecheck — exit 0, re-run at this close; lint · build ·
+`verify:bundle` 272.5 KiB · `verify:doc-stats` · the full suite — exit 0 on the committed content (the count lives under
+`verify:doc-stats`); every dev seed's full engine output byte-identical before vs after the fix (`cmp`).
 `verify:aca` / `verify:state-tax` were not re-run (no constants they gate moved); `verify:fit` was not (no UI moved).
-**CI:** `24ed7410` → run 40957994633 completed SUCCESS, both jobs (`verify`, `verify-rv-chart-text`), read by id. Read
-this close's own run by id (`gh run list --commit <FULL sha>`, then `gh run view <id>`) before starting A7.
+**CI:** `c805fa8f` → run 40985382777 completed SUCCESS, both jobs (`verify`, `verify-rv-chart-text`), read by id.
+**Landmine:** `b9-a7-review\fixes\head\` and `b9-a7-review\pre-a7\` hold a `node_modules` JUNCTION into the project's own
+`node_modules` (as `b9-a6-head\` does). Before deleting either folder, remove the link alone (`cmd /c rmdir <folder>\node_modules`),
+never a recursive delete through it.
 **DISTILL CANDIDATES (for the pay check's Phase C `/distill`):**
 - (A7 review, 2026-10-29) a gate copied from a sibling event whose step moves the quantity the OTHER way: `turns65` lowers
   a tax, so "the year before owed some" is its right gate; the senior bonus's end RAISES one, so the same gate hid every

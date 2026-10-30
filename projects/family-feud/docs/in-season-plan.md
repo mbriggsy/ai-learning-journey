@@ -128,6 +128,16 @@ Same day, same root cause: every MOVE line now asks "locked?" (kickoff passed), 
 before today) -- the 15:00 run had been offering 1:00 players mid-game as subs and swap-outs -- and a
 ⚠ fallback must still be unlocked at the Questionable starter's inactives, not merely now.
 
+**The FLEX slide, an emptied row, the clock (2026-10-30, week 8).** Michael Wilson (WR, Questionable)
+and the ⚠ named Tate as his fallback -- the only WR on the bench, at 0.0. A fill now slides a FLEX
+starter into the slot and starts the bench body at FLEX when a FLEX-eligible body out-projects every
+slot-eligible one; the ↑ line never re-offers a starter a 🚨 already filled or slid. DeVonta Smith
+(Questionable, row emptied by Sleeper while PHI played) printed "(no game this week)"; a team with a
+DEF opponent or an ESPN kickoff is not on bye. And the triggers were pinned to EDT, which would have
+run Sunday's checks at 07:00 / 10:30 / 14:00 after the fall-back; they are local clock times now,
+proven on read-back. The check still reads Sleeper alone, so its pick can differ from the three-site
+consensus: on a move, the consensus decides.
+
 **Answers:** is anyone in my starting ten out, doubtful or on bye, and is a bench player the better
 start this week.
 

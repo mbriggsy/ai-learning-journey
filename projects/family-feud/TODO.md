@@ -6,7 +6,7 @@
 > handoffs) was pruned 2026-09-27 and lives at commit **`af491a71`** — `git show af491a71:projects/family-feud/TODO.md`.
 > Read it before the 2027 draft, not before.
 
-## ▶ START HERE — as of Wed 2026-10-28 (week 8)
+## ▶ START HERE — as of Fri 2026-10-30 (week 8)
 
 **We are PoppaBriggsy, roster 3, *Saquon Deez Nuts*. `briggsy007` is HUNTER** (CLAUDE.md landmine).
 
@@ -25,36 +25,31 @@
   and the frozen night reads us −32.83 / −45.76, Kaeperni +38.93 / +50.18. **The fixture
   `tests/fixtures/trade_eval_kaeperni_20261022.json.gz` can never be re-made** — it holds the 10-22
   projections `TestThePublishedNumber` pins. Don't delete or regenerate it.
-- **Suite: 1370 tests, OK (skipped=6)**, run 2026-10-29 with `python -m unittest discover -s tests`.
+- **Suite: 1387 tests, OK (skipped=6)**, run 2026-10-30 with `python -m unittest discover -s tests`.
   31 test files · 29 scripts · 38 insights.
 - **Clocks:** mule hourly · `gameday_check.py` Sat 20:00 · Sun 08:00 · 11:30 · 15:00 · draft
   watcher · newsletter 21:45. Push/email are dead, so the files are the delivery.
 
 ## Ranked next
 
-1. **Week 8 vs Hunter: the lineup is SET (10-27) and still right as of Thu 10-29 ~3:50 PM ET. Friday's and
-   Saturday's reports decide three calls.** Thursday's re-check: four researchers, each practice line re-sourced by an
-   independent verifier. Detail in `temp/week8-moves-log.md`. Three-site consensus (Thu 15:29): us **147.5**, Hunter's
-   set lineup 122.1, his best roster ~127. Bench: Tate 12.6 · Stevenson 12.4 · White 11.1 · Fannin 9.8. No free agent
-   beats the bench this week.
-   - **London (ATL, Sun 1:00): likely plays.** He is on neither official Falcons report (Wed, Thu), which means a full
-     practice with no injury, and there's no Concussion line. (DT *LaCale* London on that report is a different player.) Read
-     Friday's report (~3:30-4 PM ET) for a new listing.
-   - **Michael Wilson (ARI, Sun 1:00, STARTING): leaning plays.** Sleeper Q (ribs). Wed official LP, in a non-contact
-     jersey ("just being smart"); he played 90% of snaps in week 7. Arizona posts in the evening (Wed's: 8:06 PM ET).
-     Thu LP/FP → likely plays; Thu DNP → coin flip. Friday's designation settles it.
-   - **Tate (TEN, bench) is NOT a safe fallback: leaning sits.** Sleeper Q (shoulder). DNP Wed (official), not seen
-     Thu (beat writers). Tennessee is on bye week 9, so a 1-6 team can rest its rookie 2.5 weeks. **If Wilson or
-     London sits: Flowers FLEX → WR, and Stevenson (12.4) or White (11.1) into FLEX.** Tate only if he practices
-     Friday AND isn't listed Doubtful/Out. All three WRs kick off Sun 1:00, so the swap lands before 1:00 PM ET (the
-     11:30 gameday run names it; a session fires it).
-   - **Swift vs Stevenson: Monangai (CHI's other RB) leaning sits, ~30-40% to play Monday.** 9 straight official DNPs
-     in weeks 5-7, ruled Out three times. No practice Tue/Wed this week, stationary bike Wed. The only positive is
-     Fowler (ESPN, Wed): "chances are better". The Bears' first official report (Thu) was not out at 3:51 PM ET.
-     **The deciding document is Chicago's SATURDAY 10-31 report (Monday's designations):** Out/Doubtful → keep Swift;
-     Questionable after Fri/Sat practice → swap Stevenson in before NE's Sun 4:25 PM kickoff (Stevenson locks then).
-     If Monangai plays, expect 6-10 carries / 25-35% of snaps taken from Swift (weeks 1-3: Swift 65% and 18 carries
-     a game, Monangai 36% and 10).
+1. **Week 8 vs Hunter: the lineup is SET (10-27) and still right as of Fri 10-30 ~4:55 PM ET. No move needed now;
+   two calls are left.** Friday's re-check ran six lanes, each re-sourced by an independent verifier (workflow
+   `wf_274c3f63-2d9`). Detail is in `temp/week8-moves-log.md`. Three-site consensus (Fri 14:31): us **147.3**, Hunter
+   113.9. His DeVonta Smith is OUT (PHI, Fri 3:51 PM) and was still in his lineup at 16:52; Godwin is his only healthy
+   bench WR. No free agent beats our bench.
+   - **Settled:** London has no designation (absent from all three Falcons reports). Michael Wilson was LP Wed/Thu,
+     and LaFleur said Fri he "will play" (Arizona Sports, 2:32 PM); Arizona posts its Friday designation in the
+     evening, expect Q. Tate is OUT (bench). Taylor plays with a full workload (Steichen, Fri), and Maye is FP.
+   - **Sun ~11:30 AM ET, if Wilson is INACTIVE:** move Flowers FLEX → WR and put **Stevenson** (consensus 12.6) in at
+     FLEX. If Stevenson has already replaced Swift, use White (11.1). Make the move before 1:00 PM. The 11:30 gameday
+     run names this slide, but it reads Sleeper alone and names White (10.9). Go with the consensus.
+   - **Swift vs Stevenson: Chicago's SATURDAY 10-31 report decides.** Monangai was DNP Thu (estimated) and Fri
+     (Fishbain, 3:41 PM). The verifier rates him "likely sits": 26 days since the injury with no on-field work.
+     Out/Doubtful → keep Swift. Questionable after a Saturday practice → swap Stevenson in before NE's Sun 4:25 PM
+     kickoff. NE's TreVeyon Henderson is Q (ankle/illness), which means more work for Stevenson if he sits. Miami has
+     an 85% storm chance at 4:25.
+   - **Keep the laptop on the charger.** It slept on a dead battery Fri 12:58–14:21 (Kernel-Power: "Sleep Reason:
+     Battery"), the same failure that killed week 7's Sunday runs.
    - **Kittle trade: ON HOLD (Briggsy, 10-28: "Let's hold on Kaeperni trade").** Don't re-pitch it unprompted.
      Kaeperni rejected Tate + Goff for Kittle on 10-20. The priced package (Swift + Strange for Kittle) is in
      `temp/week8-moves-log.md` if he reopens it. Trade deadline is week 11.
@@ -126,6 +121,13 @@ Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the
   twice and KICK_BUCKET would not catch it (both keys are scored). Check a kicker row when 60+ appears.
 
 **Tooling on this machine**
+- 🚨 **`New-ScheduledTaskTrigger -At` writes StartBoundary in UTC (`…T15:30:00Z`), and Task Scheduler pins a zoned
+  boundary to that instant,** so every DST change shifts the run an hour on the clock. Found 10-30: Sunday's game-day
+  runs were set for 07:00 / 10:30 / 14:00 after the fall-back. `install-gameday.ps1` and `install-newsletter.ps1` now
+  write the clock time with no zone and match it on read-back. **Never strip the cmdlet's `Z`:** that turned 20:00 EDT
+  into a midnight trigger, and a "no zone" check passed it. The mule and watcher are still pinned, which is harmless
+  hourly. `Get-ScheduledTaskInfo` shows only the NEXT run. To see a run past a DST change, register a one-trigger
+  probe task (start date moved past the change) and read its `NextRunTime`.
 - **`grep -c $'\r$'` lies in Git Bash:** it printed the full line count for an LF file and 0 for a
   CRLF one (10-23). Count line endings with Python (`b.count(b'\r\n')`) or `file`. Every file in
   this project is LF in git.

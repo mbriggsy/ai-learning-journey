@@ -365,6 +365,7 @@ def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=N
     reserve = set(our.get("reserve") or [])
     bench = [p for p in (our.get("players") or []) if p not in starters and p not in reserve]
     claimed = set()
+    handled = set()     # starters a 🚨 already named the fix for; ↑ must not offer them up a second time
 
     def best_bench_for(slot, needed_at=None):
         """The best eligible body still movable now AND at `needed_at` (a ⚠ starter's inactives)."""
@@ -398,6 +399,7 @@ def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=N
             else:
                 why, title = "has NO GAME this week (bye)", "STARTER NOT PLAYING"
             sub = best_bench_for(slot)
+            handled.add(pid)
             body = f"{describe(pid)} {why} in the {slot} slot."
             if sub:
                 claimed.add(sub)
@@ -427,7 +429,9 @@ def assess(our, opp, players, proj, scoring, roster_positions, today, kickoffs=N
     # told to replace Stevenson (12.4) at FLEX, and Wilson (14.6, WR) -- the second-weakest
     # eligible starter, the slot the second of them actually belonged in -- was never named.
     # The strongest bench body picks first; the next takes his best REMAINING slot.
-    holds, replaced = [], set()
+    # A starter the 🚨 already filled is not on offer: 2026-10-30, an Out WR with two WRs on the bench
+    # read "Start instead: BN_WR" on the 🚨 and "BN_RB over WR1" on the ↑ -- two men for one slot.
+    holds, replaced = [], set(handled)
     for b in sorted(bench, key=pts, reverse=True):
         if b in claimed or tag(b) in NOT_PLAYING or not has_game(b) or locked(b):
             continue

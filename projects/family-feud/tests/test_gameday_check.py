@@ -187,6 +187,27 @@ class TestTheSirenFires(unittest.TestCase):
         self.assertIn("no projection", rows[0][2])
         self.assertNotIn("no game this week", rows[0][2])
 
+    def test_a_starter_the_siren_filled_is_not_offered_up_again_by_a_swap(self):
+        """2026-10-30: an Out WR with two WRs on the bench read "Start instead: BN_WR" on the 🚨 and
+        "BN_RB over WR1" on the ↑ -- two different men named for one slot."""
+        f = Fixture()
+        f.players["wr1"]["injury_status"] = "Out"
+        del f.proj["wr1"]                               # Sleeper deletes an Out player's row
+        f.players["bn_rb"]["position"] = "WR"
+        f.proj["bn_rb"] = projection(7.0)
+        rows = f.rows()
+        self.assertEqual([r[0] for r in rows], ["🚨"])
+        self.assertIn("Start instead: BN_WR", rows[0][2])
+
+    def test_a_siren_with_no_sub_still_leaves_no_swap_for_that_slot(self):
+        """The 🚨 already says an add is needed; no ↑ can fill a slot no bench body is eligible for."""
+        f = Fixture()
+        f.players["k"]["injury_status"] = "Out"
+        del f.proj["k"]
+        rows = f.rows()
+        self.assertEqual([r[0] for r in rows], ["🚨"])
+        self.assertIn("An add is needed", rows[0][2])
+
     def test_empty_slot_is_a_siren(self):
         f = Fixture()
         f.our["starters"][8] = "0"

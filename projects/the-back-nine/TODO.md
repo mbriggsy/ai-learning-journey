@@ -40,7 +40,20 @@ smaller; all fixed. U10's Caddie card stays **HARD-FLAG** on its two Tier 1 buil
 remove each link alone before deleting any folder there). Rulings 38–42 are in `b9-phaseb\DECISIONS.md`. Next, in order:
 1. **The old-copy version bump — BUILT AND PUSHED (b9-3, 2026-10-31): the bump `c2864eb9` (U1–U3, U5, U6's fixtures) and the
    version-floor test `9b0ef9db` (its own commit). Still owed, in order, each with its exact step:**
-   - **(a) The whole-file review's result — read it, then triage.** `/ultramode-code-review base:c4831850` launched it as Workflow
+   - **(a) The whole-file review FINISHED (53 agents, 11 of 11 lenses, none crashed): 6 confirmed, 3 hand-verify, 18 advisory,
+     1 rejected — the full result is saved durably as `review-wf_edc27bef-48a.result.json` in the `b9-schema-v4-proof` folder
+     (raw: `review-wf_edc27bef-48a.output.txt`).** Not yet triaged; the headlines, all docs/tests, none in the ladder's logic:
+     (1) P2 — live docs still say a pre-pay-check copy runs a CURRENT save without W (`docs/architecture.md` §7.7 twice,
+     `docs/product.md` D6 and R34, `docs/roadmap.md`, `docs/glossary.md` and one register line — the finding lists each); re-scope
+     each to "refuses a current save; still runs a version-3 plan an old copy saved itself". (2) P3 ×3 (one finding) — the codec
+     header's "the one thing it ever rewrites is a LABEL" is false: the tolerated drop deletes a bad `savedRecommendation`. (3) P3 —
+     the glossary's clamp entry and a Tier 1 header still list a pre-W copy as a W-less run. (4) P3 — the hydrate-gate test's v1/v2
+     fixture is ONE person, so `draftFromScenario`'s arity refusal passes it with the version clause deleted: make it two-person.
+     (5) hand-verify ×3, one theme — §7.3 says the schema-surface pin catches rules (b) and (c); it holds only vocabulary values
+     and the four stamps' key sets (not nested fields, not a loosened range gate): narrow the sentence, or widen the pin.
+     Read the 18 advisory items too (several overflow titles repeat (4); the residuals name the v3-with-W disk label that stays 3
+     until a Save, the one-seed frozen fixtures, and the two-tabs-on-two-builds race).
+     How it was launched: `/ultramode-code-review base:c4831850` ran it as Workflow
      run `wf_edc27bef-48a` (11 lenses on opus: correctness, architecture, testing, idiom, simplicity, api-contract, data-migration,
      docs-truth, adv-boundary, adv-temporal, adv-invariant; refuters scale 3/2/1). Its return value (coverage, confirmed,
      handVerify, advisory, rejected) is the last record in

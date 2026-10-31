@@ -22,7 +22,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-10-31, written by b9-1 for b9-2): the pay check's Phase C is closed, h2 and all.** The h2 cure landed at
+▶ **START HERE (2026-10-31, written by b9-1, item 1 re-written by b9-2 at 62 % of its window): the pay check's Phase C is closed, h2 and all.** The h2 cure landed at
 `68aba728` (CI run 41218240753 green on both jobs, read by id). `src/intake/gestureHold.ts` holds what the W face DREW at a press until that press's click
 (a press inside the face, or anywhere while focus is inside it): the stale note in `WorkingCostQuestion.tsx` (W alone, so another
 row's commit under the same press still re-gates its door), the value line and money picture in `AssumptionPanel.tsx`'s
@@ -38,12 +38,17 @@ matched) and its runner `mutants.cjs` + `mutants.spec.json` (per-test kills with
 smaller; all fixed. U10's Caddie card stays **HARD-FLAG** on its two Tier 1 builds (unchanged). The pay-check review's record:
 `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-whole-review\FIXES.md` (`pre\`, `pre-a4\`, `head\` and several lens folders hold `node_modules` JUNCTIONS —
 remove each link alone before deleting any folder there). Rulings 38–42 are in `b9-phaseb\DECISIONS.md`. Next, in order:
-1. **Build the old-copy version bump before his first real save** — the register's *A copy of the app built before the pay check
-   opens a plan carrying W without a word…*, ⚑ RULED 2026-10-31 (option (a), his OK): bump `schemaVersion` so a copy built before
-   the pay check refuses a current save with its own calm "saved by a newer version" face, instead of running it without W and
-   dropping the working-years stamp. Small, but on a clock: after his first real save the same bump would strand that save (no
-   migration ladder exists). The entry's RULED bullet carries what the build must decide (whether v4 still reads v3) and move (every
-   v3 dev plant and fixture).
+1. **Build the old-copy version bump before his first real save — the plan is PLANNED, DEEPENED AND CHECKED; NEXT: the build.**
+   The plan: `docs/plans/features/schema-v4-old-copy-refusal-build-spec.md` (`594e4ae9`; ce-plan 3.34.0, confirm:auto, opus
+   helpers; deepened by a data-integrity and an architecture lens; ce-doc-review with coherence, feasibility, scope-guardian,
+   adversarial and security, the whole plan to each, every finding applied — the resolved review is `plan-review.md` in
+   `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-schema-v4-proof\`, beside the
+   research dossiers and b9-2's ranking-pass notes). What it builds: `CURRENT_SCHEMA_VERSION = 4`; `ScenarioV3` renamed
+   `CurrentScenario`; the codec reads version 3 FOREVER by relabeling it to its literal successor; real version-3 plans from the
+   old builds frozen as fixtures; a version-floor test in its own second commit. Steps still owed, in order: `/brief` on the
+   unit (b9-2 briefed the topic: insights 102, 073, 085, 046/049, 018/041 — all CURRENT); the build (U6 and U4 first, before any
+   edit: they read the old builds; then U1–U3 and U5 in ONE commit, the floor test in a second); the whole-file ultramode review;
+   `/distill`. The register entry's RULED bullet still says option (a) "closes this half too": U5 corrects it (shape-keyed).
 2. **Rank the registers against the D7 queue** (his order; never re-ordered without him) — b9-8's list, unchanged, plus the review's:
    - **b9-5's four.** Tier 0 *A self-employed worker's Social Security and Medicare tax is charged at an employee's half…*
      (a D7 ask; measure first). Tier 1: *The money picture's later years name a change without its dollars or its
@@ -88,7 +93,9 @@ remove each link alone before deleting any folder there). Rulings 38–42 are in
      consequence, never by size". Either move all four up, or move §219(g) and the catch-up back down. Then write the rule
      into the register header so it stops being re-derived.
 3. **Build 2, the surplus question**, follows. The council's shape is on the ⚑ RULED bullet of the CLOSED Tier 0 *A working
-   year never checks the household's pay against its spending…*.
+   year never checks the household's pay against its spending…*. Its steps, all owed: `/brief` on the surplus question; the plan,
+   deepened and checked as a whole; the build; the whole-file review; `/distill`. Ride the Tier 4 *`simulate.ts` and
+   `earningsTest.ts` import each other…* on it (it touches `simulate.ts`).
 **The review's record, durable:** `wf_ea145a86-a5a` (the 15-lens review) and `wf_19d636e2-77c` (the three fix lanes + the overflow
 verifies), journals under
 `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\a321e571-5db1-4809-ab03-f84786d30233\subagents\workflows\`.

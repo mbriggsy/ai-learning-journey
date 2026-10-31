@@ -150,7 +150,7 @@ flowchart LR
     style BRIEF fill:#1e3a5f,stroke:#60a5fa,color:#fff
 ```
 
-Brief. Plan. Build. Review. Distill. Commit. Repeat. The knowledge base grows (274 lessons across nine insight folders as of 2026-10-31: the-back-nine 148, burned 72, family-feud 38, ai-journey-stats 8, the playbook 4, three skills 1 each, the repo root 1). Rediscovery drops. The whole flow, step by step: [the playbook](../../../playbook/README.md#the-plays-in-order).
+Brief. Plan. Build. Review. Distill. Commit. Repeat. The knowledge base grows (275 lessons across nine insight folders as of 2026-10-31: the-back-nine 148, burned 72, family-feud 38, ai-journey-stats 8, the playbook 5, three skills 1 each, the repo root 1). Rediscovery drops. The whole flow, step by step: [the playbook](../../../playbook/README.md#the-plays-in-order).
 
 ---
 

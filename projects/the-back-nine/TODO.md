@@ -146,11 +146,11 @@ JUNCTION — remove the link alone before deleting the folder.
 real plan.
 
 **SESSION 2026-10-31 (b9-3, the schema-v4 build; b9-2's plan-session block pruned into it):** `src` changed (`c2864eb9`,
-`9b0ef9db`). By exit code: `pnpm typecheck` 0; `pnpm lint` 0; `pnpm verify:doc-stats` 0 (4793 tests / 221 files, at `9b0ef9db`);
-`pnpm build` 0; `pnpm verify:bundle` 0 (288.5 KiB); `pnpm verify:csp` 16 of 16; the full suite 4791 of 4792 on the bump's tree
-before the re-anchor (the one red was the live-citation arm the re-anchor then fixed; that file 43 of 43 after) — NOT re-run on
-the final tree, so run it once after item 1(a)'s fixes. Engine identity (R6): every dev seed's full output `cmp`-identical, HEAD's
-archive vs the tree. Not run here: `verify:fit`, `verify:fit:rv` (CI's), the mutant pass (item 1(b)).
+`9b0ef9db`). By exit code: `pnpm typecheck` 0; `pnpm lint` 0; `pnpm verify:doc-stats` 0 (the test count lives under that gate,
+at `9b0ef9db`); `pnpm build` 0; `pnpm verify:bundle` 0 (288.5 KiB); `pnpm verify:csp` 16 of 16. The full suite locally: one red on
+the bump's tree before the re-anchor (the live-citation arm, which the re-anchor then fixed; that file all green after) — not re-run
+locally on the final tree, but CI run 41238303597 ran it there, green, with `verify:fit` and `verify:fit:rv`. Engine identity (R6):
+every dev seed's full output `cmp`-identical, HEAD's archive vs the tree. Not run: the mutant pass (item 1(b)).
 **DISTILL CANDIDATES (for the next `/distill`):**
 - (b9-10) a probe that scrolls its target into view tests the geometry the browser already cures. Chromium's scroll anchoring moved
   the scroller by exactly the shift on every run where the anchor node sat below the change and the scroller had room to move

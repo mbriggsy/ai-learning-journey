@@ -46,3 +46,27 @@ export function applyFill(text, fill) {
   }
   throw new Error(`${fill.lesson}: a fill names neither tags nor header`);
 }
+
+// Puts one applies_when line into a lesson's frontmatter, after the last line
+// of its tags: entry (after its last "- item" when tags is a block list), or as
+// the last frontmatter line when it has no tags:. A lesson that already
+// carries applies_when is returned unchanged, so applying twice changes nothing.
+// The line takes the file's own line ending.
+export function insertAppliesWhen(text, line) {
+  if (!/^applies_when: \[.*\]$/.test(line)) throw new Error(`not an applies_when line: ${line}`);
+  const eol = eolOf(text);
+  const bom = text.charCodeAt(0) === 0xfeff ? "﻿" : "";
+  const lines = (bom ? text.slice(1) : text).split(eol);
+  if (lines[0].trim() !== "---") throw new Error("no frontmatter to put applies_when in");
+  const end = lines.findIndex((l, i) => i > 0 && l.trim() === "---");
+  if (end < 0) throw new Error("unclosed frontmatter");
+  if (lines.slice(1, end).some((l) => /^applies_when:/.test(l))) return text;
+  let at = end; // default: the last frontmatter line
+  const tags = lines.findIndex((l, i) => i > 0 && i < end && /^tags:/.test(l));
+  if (tags >= 0) {
+    at = tags + 1;
+    while (at < end && /^\s+-\s/.test(lines[at])) at++;
+  }
+  lines.splice(at, 0, line);
+  return bom + lines.join(eol);
+}

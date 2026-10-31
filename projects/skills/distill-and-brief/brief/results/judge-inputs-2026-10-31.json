@@ -1,0 +1,217 @@
+{
+  "recovered": "2026-10-31",
+  "what": "The recall benchmark's judge inputs, recovered because the benchmark file holds neither (U6 step 1 of docs/plans/brief-recall-fix-plan.md). judgeRules is JUDGE_RULES verbatim from the benchmark workflow's record (wf_eb9c6c39-cab.json, its script); its last rule names that session's scratchpad, since deleted. briefs is briefs-blind.json as its judges read it: the cat output in four judges' transcripts is identical (sha1 of the JSON text 8e6717c5f08b7bc7e811a7e0d4d33577eeaf6197), 17 entries, each topic and ts equal to the benchmark's. commit is git rev-list -1 --before=<ts> HEAD, as the benchmark computed each brief's commit.",
+  "source": {
+    "workflow": "wf_eb9c6c39-cab",
+    "session": "f72cd7b5-9718-4536-b546-6db65e8f9645",
+    "briefsBlindSha1": "8e6717c5f08b7bc7e811a7e0d4d33577eeaf6197"
+  },
+  "judgeRules": [
+    "For each (brief, lesson) pair, decide whether the lesson bears on that work:",
+    "- strong: it names a specific trap this exact work could hit (same module, mechanism, test or review pattern), and knowing it would change what you do;",
+    "- moderate: the same mechanism or failure shape close by; worth reading before starting;",
+    "- otherwise leave it out. Never keep a lesson just because it shares a word or a broad theme (\"testing\", \"review\", \"copy\"). A general process lesson counts only when the work IS that process, and then at most moderate unless the commits show that exact step.",
+    "Be selective: most lessons are irrelevant to most briefs, and an empty list for a brief is a fine answer. For each kept pair, give one line naming the trap and how this work could hit it.",
+    "A lesson counts for a brief only if it existed before that brief's ts. Judge it on its text as it stood then: ignore any \"## Extended (YYYY-MM-DD)\" section or \"Out of date (corrected ...)\" note dated after the brief.",
+    "Stay blind: read only the files named here. Never open C:\\Users\\brigg\\AppData\\Local\\Temp\\claude\\C--Users-brigg-ai-learning-journey-playbook\\f72cd7b5-9718-4536-b546-6db65e8f9645\\scratchpad\\recall\\briefs.json (it holds what the briefs themselves said) and never open session transcripts. Read-only: edit nothing, write no files."
+  ],
+  "briefs": [
+    {
+      "id": "B01",
+      "ts": "2026-10-19T23:30:07.556Z",
+      "project": "projects",
+      "session": "our setup",
+      "topic": "Planning the \"our setup\" implementation: our Claude Code tooling and method. Covers the flow (brief, ce-plan + deepen, ultramode-code-review, distill) and making it structurally mandatory for sizable work; the global hooks in ~/.claude/hooks and projects/hooks; CE plugin version and review path; settings.json permissions and env; MCP servers; plugin cleanup; skill listing budget; squeaky-clean peer-session guard. Sources: the preflight reports (clearances C1–C24, squawks S1–S14).",
+      "commitsAfter": [
+        "docs(plan): Our Setup flight plan draft (pre-deepen) with preflight sources and 10-19 research",
+        "docs(plan): deepen the Our Setup flight plan (10 lenses + seam read, 0 abstained)"
+      ],
+      "commit": "8b2e1041c8ddc5a1601facb88c6cf64bd961a7db"
+    },
+    {
+      "id": "B02",
+      "ts": "2026-10-19T23:39:17.292Z",
+      "project": "projects-the-back-nine",
+      "session": "b9",
+      "topic": "The Back Nine: rewording three ruled verdict copy strings (floorReadoutTrimNote \"rather than once\", verdictMedicarePriced reorder so the Medicare list sits next to \"Medicare's costs\", verdictResidualLead \"Those are the Medicare pieces…\" + the verdictMedicareResidual monolith) and moving the Healthcare sheet's per-person \"Coverage beyond Part B\" extras block directly under the Medicare premium card (healthcareSheet order). Gotchas for copy changes, copyGuard pins, stateTaxDisclosure composer, verify:fit one-frame fit, health sheet layout, Caddie walk, doc:reanchor.",
+      "commitsAfter": [
+        "feat(copy): Briggsy's four 2026-10-16 (b9-1) walk rulings land, with his 2026-10-19 (b9-2) re-ruling of the Medicare line -- the trim note reads \"...starting now, rather than once money runs short.\"; the Medicare line puts its list beside the subject and, after the walk found a $0-premium Medicare Advantage couple reading its copays as counted on top, says \"Medicare's premiums for the two of you -",
+        "import fs from 'node:fs'",
+        "fix(window): report a compaction instead of the stale pre-compaction size",
+        "chore(todo): squeaky close 2026-10-19 (b9-2) -- the b9-1 block replaced by the b9-2 one (state re-run at close: typecheck, lint, doc-stats, build, bundle 271.3 KiB, verify:aca, verify:state-tax; CI green by run id on 1b685648 39355937811 and 0854e43c 39357728768, the ubuntu nc pending well at bottom=769), the NEXT list carried with his four b9-1 rulings cut as BUILT ((1) is now the three filings t"
+      ],
+      "commit": "8b2e1041c8ddc5a1601facb88c6cf64bd961a7db"
+    },
+    {
+      "id": "B04",
+      "ts": "2026-10-20T22:08:14.090Z",
+      "project": "projects-the-back-nine",
+      "session": "b9",
+      "topic": "the working-year tax build: solveGrossWithdrawal in a §7-clamped accumulation (date-route) year — pricing a Roth conversion / RMD incrementally over the workers' taxable wages (tax(W+X) − tax(W)), federal + state, the §86 provisional base, presence-keyed on the accumulation construct, reduce-to-spine byte-identical, the IRMAA lag-read clamped-year override, dip's Y=5 crown pins, SOLVER_CODE_VERSION / pricing-ledger bump",
+      "commitsAfter": [
+        "docs(plan): the working-year tax floor -- the Tier 0 (B) planned, deepened and reviewed (b9-4); KTD11 council-decided (wf_ef6cf7c5-a2b, 7/10)",
+        "chore(todo): squeaky close 2026-10-20 (b9-4) -- the b9-3 block replaced by the b9-4 one (state re-run at close: typecheck, lint, doc-stats, build, bundle 271.3 KiB, verify:aca verified 2026-10-20, verify:state-tax; CI green by run id on 29421b4e 39505131676, the plan commit 8484bd24's run 39515239983 in progress at close), START HERE re-pointed at BUILDING (B) from its plan in a fresh session, the"
+      ],
+      "commit": "29421b4eacfa2115f555aa49baa69cee99be320a"
+    },
+    {
+      "id": "B05",
+      "ts": "2026-10-21T00:31:00.347Z",
+      "project": "projects-the-back-nine",
+      "session": "b9",
+      "topic": "The working-year tax floor build (Tier 0 (B)): docs/plans/features/working-year-tax-floor-build-spec.md — solveGrossWithdrawal / GrossUpContext in src/engine/taxOverlay.ts priced by T(base+P,ss)−T(base,ss)+T(0,ss) with a three-arm max over the investment-income readings; cashTermsForYear's §7 clamp in src/engine/simulate.ts carrying the year's base B; state tax channel in src/engine/stateTax.ts (NC/PA/FL); the engine-pricing ledger row v12 with a reach qualifier (src/engine/pricingVersion.ts, src/store/staleness.ts, src/ui/stalenessExposure.ts); dip seed re-tune in src/ui/devSeeds.ts; byte-identity / reduce-to-spine; gross-up convergence GROSS_UP_MAX_PASSES; the methodology disclosure row in src/ui/assumptionRegistry.ts. Plan names insights 027, 007, 135, 137, 023, 049, 029, 011.",
+      "commitsAfter": [],
+      "commit": "4cdfc826e9a4ba230ec2be725ef526f85e2ddee3"
+    },
+    {
+      "id": "B06",
+      "ts": "2026-10-21T17:20:08.044Z",
+      "project": "projects-the-back-nine",
+      "session": "b9 10.21 -1",
+      "topic": "the working-year clamp (§7, cashTermsForYear) — measuring take-home pay vs spending per working year on the date seeds; payroll tax (FICA) sourcing; the contribute-and-draw double count",
+      "commitsAfter": [
+        "docs(register): the D7 audit files 48 new gaps (134 -> 182 open); his three rulings recorded; the TODO re-ranked under D7 in plain words; the pay-check measurement recorded",
+        "docs(register): the pay-check council (wf_2247c0df-73b, 7.5/10, executed) -- its ruling and NEGATIVEs recorded; the survivor-shortfall bullet corrected (it quoted deaths the engine never draws)"
+      ],
+      "commit": "14a4df0bdb541d6bb91ae11fbf2be7c832d48882"
+    },
+    {
+      "id": "B07",
+      "ts": "2026-10-21T19:25:28.178Z",
+      "project": "projects-the-back-nine",
+      "session": "b9 10.21 -2",
+      "topic": "The working-year pay check (D7 build 1): the accumulation §7 clamp in cashTermsForYear (simulate.ts), the working-year tax floor (b4bbbd3e — baseTax − zeroTax), fundingNet in taxOverlay.ts, presence-keyed overlays and the reduce-to-spine law, validateParams, payroll tax (FICA) constants sourcing, the Social Security earnings test, a new intake question (confirm-or-correct working-year cost W), the engine-pricing ledger / SOLVER_CODE_VERSION, and the date route (fuck-off date sweep). What should I know before planning and building this?",
+      "commitsAfter": [
+        "docs(plan): the working-year pay check (D7 build 1) -- planned and deepened (b9-8)"
+      ],
+      "commit": "2a0453515e4525e74d6a2702a91102993da22656"
+    },
+    {
+      "id": "B08",
+      "ts": "2026-10-22T13:46:48.119Z",
+      "project": "projects",
+      "session": "our setup",
+      "topic": "the squeaky-clean skill (projects/skills/squeaky-clean: SKILL.md contract + docs.test.mjs) and cross-session messaging / session handoff between Claude Code sessions",
+      "commitsAfter": [],
+      "commit": "84b0dfbb922a3904922b74a386e865098a67ac31"
+    },
+    {
+      "id": "B09",
+      "ts": "2026-10-22T23:52:06.751Z",
+      "project": "playbook",
+      "session": "our setup-1",
+      "topic": "projects/hooks probes: Q8 --bg arm, run.mjs bgJob and cleanupTargets, the trusted scratch folder (triage F27), the settings writer --target claude-json",
+      "commitsAfter": [
+        "docs(our-setup): U3 step 8b DONE, Q8 VERIFIED on 2.1.309 (monorepo 0c762cfa, CI 39883908135); the insights corpus moves to playbook/docs/insights at Briggsy's ruling; NEXT #6 done",
+        "docs(playbook): throwaway sessions name the one approved trust exception, and say what claude rm takes and where a throwaway shows until then",
+        "chore(memory): three rules from \"our setup-1\" -- Briggsy updates the CLI before every session; Windows only, one laptop; insights live in the docs/insights of the project whose work found them"
+      ],
+      "commit": "962ca20dbb3f5a81b8d9c9f739e378f6c81c21ba"
+    },
+    {
+      "id": "B10",
+      "ts": "2026-10-23T02:03:29.922Z",
+      "project": "projects-family-feud",
+      "session": "feud",
+      "topic": "building scripts/trade_eval.py — an on-demand trade evaluator for the Family Feud league: Sleeper weekly projections + three-source consensus, optimal weekly lineups both sides, drop/FA fill, week-lock modelling, counter-offer search",
+      "commitsAfter": [
+        "docs(family-feud): TODO records --search's measured peak, 2.7 GB with the memos emptied per give (373 s) -- fine on this laptop, check before a smaller one"
+      ],
+      "commit": "f2e21875d463a370d5dc97c16ac68017c67353d6"
+    },
+    {
+      "id": "B11",
+      "ts": "2026-10-23T17:30:05.772Z",
+      "project": "playbook",
+      "session": "our-setup-2",
+      "topic": "U4: permissions in ~/.claude/settings.json through the settings writer -- push boundary (deny/ask rules for force pushes in Bash and PowerShell, removing the user-scope Bash(*) allow), Skill denials in parameter form, other-vendor model CLI denials, the review-lens agent file, plugin marketplace autoUpdate, CLAUDE.md line 48",
+      "commitsAfter": [
+        "docs(playbook): TODO -- U4 is briefed, planned, deepened and whole-plan-checked; START HERE item 2 is its build in a fresh session from the private HOW spec, with Briggsy's D3 answer and his landing consent still owed; landmine: run.mjs --cleanup reads made.json one folder down",
+        "docs(our-setup): U4 design record -- briefed, researched, piloted, deepened and whole-plan-checked; the HOW spec v3 is in flow/backup/u4-2026-10-23; KTD 24 corrected to G1 (gemini-grounding stays the research agents' web search, barred only from lenses)",
+        "docs(playbook): TODO -- the laptop mid-turn re-run is done: \"keyborad\", typed on the laptop mid-turn with his word at the time, read the same as the table cell (queued_command attachment, queue in then out as absorbed_mid_turn, hook on the opener id); the table stands at 2 of 2; START HERE is U4",
+        "docs(plans): our-setup U3 step 8c -- the laptop mid-turn re-run is done (21:20:49Z, session \"our-setup-2\"): same attachment shape with his word at the time, so the (f) input stands at laptop 2 of 2 and turn-starting laptop 9 of 9; its captures lines carry stamp 46018f00a450",
+        "docs(playbook): TODO -- U4",
+        "docs(plans): our-setup U4 -- D3 settled at 21:25:34Z: force and delete asks fire on every branch (Briggsy handed the call to the pilot; 60-day push census in the design record); only the landing consent sentence still waits on him"
+      ],
+      "commit": "5a542e48261a6511fa38a4b5359cb1043c5b92d0"
+    },
+    {
+      "id": "B12",
+      "ts": "2026-10-27T00:48:06.320Z",
+      "project": "playbook",
+      "session": "our-setup",
+      "topic": "U4 round 2 fixes: the push-boundary allow-rule reader in projects/hooks/lib/permissions.mjs (pushesByStructure, matchesPush), plugin-grants, the landing check, Q17/Q18 probes",
+      "commitsAfter": [
+        "memory: no push ever asks Briggsy (2026-10-27, his words) -- the force-push-to-main carve-out becomes a pilot-side block (history-wiping pushes denied by rule, never asked); U4 D3 flips ask to deny, decided, not built",
+        "docs(playbook): TODO -- U4 is cut and the cut is built (Briggsy: nothing ever asks him; history-wiping pushes are blocked, Bash(*) stays, Playwright's run-code is blocked, the landing check is retired, the probes stop rerunning after every CLI update); START HERE is review round 3 of the cut, then Q17-Q19, then the landing; landmines: a commit message quoting a force push will be refused once U4 l",
+        "U4 cut: the probe suite no longer reruns after every CLI update (Briggsy approved 2026-10-27; nothing live reads the verdicts yet): probes.md (its 2.1.311 block too), the flight plan's suite line, and the CLI-update and preflight memories say so"
+      ],
+      "commit": "39b82f3147ae435ab453e8c1f8f546630925db6a"
+    },
+    {
+      "id": "B13",
+      "ts": "2026-10-27T22:24:32.757Z",
+      "project": "projects-the-back-nine",
+      "session": "b9",
+      "topic": "the survivor (widow/er) Social Security benefit — survivorBenefitAnnual's RIB-LIM × age-reduction order fix, the pricing ledger (pricingVersion.ts / pricingWitness) and SOLVER_CODE_VERSION bump decision, re-pinning seed goldens",
+      "commitsAfter": [],
+      "commit": "39b82f3147ae435ab453e8c1f8f546630925db6a"
+    },
+    {
+      "id": "B14",
+      "ts": "2026-10-29T19:15:57.881Z",
+      "project": "projects-the-back-nine",
+      "session": "b9",
+      "topic": "A6 of the working-year pay check: U5's check — the clamped working-year block in simulate.ts (required schedule, own-deposit helper, the stream, survivor W), taxOverlay.ts composition between the hoisted working-year floor and fundingNet, the observation hook, dateSearch.ts reach walk (KTD15), consumedConstants family rule, earnings-test schedule read in every year",
+      "commitsAfter": [
+        "chore(todo): squeaky close 2026-10-29 (b9-14) -- the close block moves to A6's tree (24ed7410; CI run 40957994633 green on both jobs, read by id; typecheck re-run at this close, exit 0); START HERE already points at A7 with its allowlist ruled in the plan's KTD12; the b9-13 and b9-14 re-anchor landmines and a lint-in-test load timeout migrate to Operational landmines; the two b9-11 Tier 0 filings "
+      ],
+      "commit": "412dbd32e34212613457a46fe63b8f897c26bfd0"
+    },
+    {
+      "id": "B15",
+      "ts": "2026-10-29T22:08:05.819Z",
+      "project": "projects-the-back-nine",
+      "session": "b9-2",
+      "topic": "A7 / U6a: the engine producer workingYearLedger.ts (the working-year money picture) composing cashTermsForYear, overlayYearContext, prepareWorkingYearFloor, workingYearCashLines, medicareChargeForYear; later-year events (claims, earnings-test steps, Medicare onset, catch-up step-down, income streams, NC rate steps, senior-bonus sunset); largest-remainder rounding; import allowlist source test; cross-check against the overlay's recorded year 0",
+      "commitsAfter": [
+        "feat(engine): the working-year pay check, A7 (U6a, the money picture's producer) -- one engine function composes year 0 of a W-present run line by line, and names every later working year that changes or runs short, through the run's own functions",
+        "chore(todo): A7 landed (2990b8c1) -- START HERE puts A7's whole-file review first (not run: the session hit the 60 % wrap line after the gates) and asks for 2990b8c1's CI run by id; two A7 distill candidates",
+        "chore(todo): 2990b8c1's CI run 40969511538 read by id, SUCCESS on both jobs"
+      ],
+      "commit": "1bece72543cf22bec23f57bb078c06264a50eb4c"
+    },
+    {
+      "id": "B16",
+      "ts": "2026-10-29T23:41:39.497Z",
+      "project": "projects-family-feud",
+      "session": "feud",
+      "topic": "gameday_check.py projected_total / the Expected header, ESPN scoreboard status, live points",
+      "commitsAfter": [],
+      "commit": "7f29fae0596bc61d7aa5c6b69b6cab22f0de1a67"
+    },
+    {
+      "id": "B17",
+      "ts": "2026-10-30T03:26:57.794Z",
+      "project": "projects-the-back-nine",
+      "session": "b9-1",
+      "topic": "Phase B of the working-year pay check: the go-live commit — the W answer (ScenarioV3 key, codec), the quote, the W question + money-picture intake steps, the assumption panel's W row, the stale line on the result, the methodology row by arm, the working-years vintage clock, dev seeds, verify:fit / intake-fold / caddie arms",
+      "commitsAfter": [
+        "WIP snapshot: the pay check's Phase B, partial (b9-1, 2026-10-30) — NOT for main; the backup of the uncommitted tree b9-2 continues",
+        "$(cat <<'EOF'"
+      ],
+      "commit": "903a9c5e12d95abc4e150d4da67b727052e74a2f"
+    },
+    {
+      "id": "B18",
+      "ts": "2026-10-31T14:11:53.048Z",
+      "project": "projects-the-back-nine",
+      "session": "b9-1",
+      "topic": "the h2 cure: a gesture hold that freezes the working-year figure face's above-control layout (WorkingCostQuestion stale note, AssumptionPanel WorkingCostRow picture) from pointerdown to click, so a blur-commit layout shift can't eat a tap on \"Each month\"; plus coordinate-tap verify:fit arms at 1536x1300 mouse and 1024x1366 touch, mutant-proven",
+      "commitsAfter": [
+        "docs(register): the old-copy entry is RULED -- option (a), a schemaVersion bump, built before Briggsy's first real save (his OK, 2026-10-31); TODO puts the build first in b9-2's queue"
+      ],
+      "commit": "8ee6d178a0af7bbaee27f442cc4cd7d7492f378d"
+    }
+  ]
+}

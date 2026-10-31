@@ -324,9 +324,15 @@ describe('the stale sentence names the cause that moved (KTD21)', () => {
     expect(workingYearCostStaleText(nc({ workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBeNull()
   })
 
-  it('the spending moved: both yearly figures; with no spending left to quote, no second figure', () => {
+  it('the spending moved: both yearly figures and which way the last one leans; with no spending left to quote, no second figure', () => {
+    // Spending ROSE past the figure the household said yes to: the answer can look better than it is.
     expect(workingYearCostStaleText(nc({ annualSpendingReal: 90_000, workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBe(
-      slots.workingCostStaleQuote('84,000', '90,000'),
+      `${slots.workingCostStaleQuote('84,000', '90,000')} ${slots.workingCostStaleLeansBetter('84,000')}`,
+    )
+    // Spending FELL under it: no lean at all — where no year runs short at either figure the answer is
+    // identical, and "can look worse" read as "the real answer is better" (b9-7, withdrawn).
+    expect(workingYearCostStaleText(nc({ annualSpendingReal: 78_000, workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBe(
+      slots.workingCostStaleQuote('84,000', '78,000'),
     )
     expect(workingYearCostStaleText(nc({ annualSpendingReal: undefined, workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBe(
       slots.workingCostStaleQuoteGone('84,000'),

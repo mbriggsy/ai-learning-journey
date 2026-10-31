@@ -1120,6 +1120,15 @@ export function spendHelpKeyFor(d: ScenarioDraft): 'spendHelp' | 'spendHelpState
     : 'spendHelp'
 }
 
+/** The out-of-pocket question's help variant — the same two input surfaces and the same draft-keyed
+ *  doctrine as {@link spendHelpKeyFor}. Anyone still working (the date route) gets the twin that says
+ *  premiums paid in a working year belong in W: the run adds none of the entered premium until the
+ *  last worker stops (`healthcareStreams.ts` `windowGate`), so the all-retired line's "Premiums are
+ *  added on top by the tool" would be false in every one of those years. */
+export function oopHelpKeyFor(d: ScenarioDraft): 'oopHelp' | 'oopHelpWorking' {
+  return isDateRoute(d) ? 'oopHelpWorking' : 'oopHelp'
+}
+
 /** Resolve the Medicare-extras payment fork to per-person MONTHLY dollars (the ask-for-
  *  Medicare-extras unit — the ONE fork→dollar owner; the engine never sees provenance):
  *  'entered' → the person's own dollar; 'none' → an AFFIRMED $0 (the Medicare-Advantage arm,

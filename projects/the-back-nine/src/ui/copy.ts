@@ -263,6 +263,16 @@ export const copy = {
   // Never "correction", never a claim that medical costs do not fall.
   oopHelp:
     'A rough yearly figure is plenty. Premiums are added on top by the tool, and out-of-pocket costs should already be inside your spending figure. If you have an HSA, the tool uses this to size its tax-free draw. And if one of you is on your own later, the tool keeps this amount whole rather than scaling it down — a deliberately cautious choice.',
+  // The DATE route's twin (`oopHelpKeyFor` — a draft read, like `spendHelpKeyFor`), b9-7's U10 Caddie
+  // card: "Premiums are added on top by the tool" is false in every working year there. The run zeroes
+  // the entered premium, the benchmark and out-of-pocket until the LAST worker stops
+  // (`healthcareStreams.ts` `windowGate`), and bills only Medicare for someone who has stopped; the
+  // plan at work's premium is the household's to put in W. Four seats read the old line beside W's
+  // "count the health premiums you pay today" as "the tool handles premiums" — a W confirmed without
+  // them, the rosy side (the refuter confirmed it in source). The containment contrast stays verbatim.
+  // PILOT-DRAFTED, shipped flagged.
+  oopHelpWorking:
+    'A rough yearly figure is plenty. The tool adds health premiums on top from the year you’ve both planned to stop working, and Medicare premiums for anyone on Medicare who has already stopped. Premiums paid while either of you still works belong in what a working year costs, which has its own question. Out-of-pocket costs should already be inside your spending figure. If you have an HSA, the tool uses this to size its tax-free draw. And if one of you is on your own later, the tool keeps this amount whole rather than scaling it down — a deliberately cautious choice.',
   qWorkIncomeHeading: 'Income Medicare looks at',
   // C3 → Option B, simplified (2026-06-30, Briggsy's call): the working-year IRMAA-MAGI is the
   // already-entered salary (`earnedIncomeReal`, derived at `intakeMap.buildDateInput`) PLUS the
@@ -1549,11 +1559,11 @@ export const copy = {
   //
   // ⚠️ THE TOGGLE SETS THE ENTRY UNIT TOO, AND THE OLD SENTENCE HID IT (fixed 2026-08-03).
   // It read "switching this never changes the amount" — but the SHOWN figure jumps exactly 12×
-  // (`spendDisplayed`, AssumptionPanel.tsx:516-521), so the reader watches the number move while
+  // (`spendDisplayed`, AssumptionPanel.tsx:517-522), so the reader watches the number move while
   // being told nothing moved. The natural repair is to retype the old digits, and the panel's own
-  // commit (AssumptionPanel.tsx:779-789, the `entered * 12` arm at :786) then multiplies by 12
+  // commit (AssumptionPanel.tsx:780-790, the `entered * 12` arm at :787) then multiplies by 12
   // under 'month' — so a household "correcting" 78,000 back to 6,500 under 'Each year' commits a
-  // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:422) hard-disarms
+  // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:423) hard-disarms
   // `spend-period-unconfirmed` (sanity.ts:381-404, the disarm read at :392) on this surface, and
   // 6,500 is under SPEND_AMBIGUOUS_MIN (sanity.ts:89) regardless — so the rule could not have
   // caught it even armed. The replacement must therefore say BOTH halves — the money is
@@ -1773,15 +1783,46 @@ export const copy = {
   // Social Security earnings test). Named only where the run reads the table: a date-route plan
   // that answered W (the exposure read `workingYearCost`). It joins `rulesMoved`, like its
   // siblings; no direction is claimed. PILOT-DRAFTED, shipped flagged (KTD19).
+  // Re-worded on b9-7's U10 Caddie card (`?vault=wyclock`, its first read): "the payroll tax and
+  // Social Security figures … have been updated" sat beside the gate's one block NOT tagged "as
+  // saved" — each person's Social Security monthly figure — and five of six seats read it as "the
+  // tool refreshed our benefit", a reason to affirm without checking the statement (refuted, survived).
+  // The line now names the two rules the table holds, in the methodology row's own words ("the earnings
+  // limit that decides how much of an early benefit is held back") and the intake's name for the tax,
+  // and says the household's own numbers are as saved.
   stalenessWorkingYears:
-    'The payroll tax and Social Security figures behind your working years have been updated since your save — this reading uses today’s.',
+    'The rules for your working years have been updated since your save: the Social Security and Medicare tax on pay, and the earnings limit that decides how much of an early Social Security benefit is held back. This reading uses today’s rules, with your own numbers below as you saved them.',
   // The pay check's KTD21 — the household's own W answer no longer matches what it was given
   // against (the quote's inputs, or the state-tax reading). It is NOT a rules change, so it feeds
   // `anyStale` only, never the hero's "today's rules" echo; the engine keeps using the last figure
-  // the household gave (R4). A static, digit-free line (this seam takes no draft, so it cannot
-  // quote the figure). PILOT-DRAFTED, shipped flagged (KTD19).
+  // the household gave (R4). A static, digit-free line — now the FALLBACK only: since b9-7's U10
+  // Caddie card the gate speaks the W step's own stale sentence (below), and this line renders only
+  // if `composeReentry` is handed no sentence while the report calls W stale. PILOT-DRAFTED, shipped
+  // flagged (KTD19).
   stalenessWorkingYearCost:
     'Your figure for what a year costs while you’re working no longer matches the spending or state you entered. Worth a look.',
+  // The gate's KTD21 line (b9-7, `?vault=datecoststale`'s first read): the static line above quoted no
+  // figure, hedged "spending or state" where the tool knew which, and its "Worth a look" had nothing on
+  // the gate to look at — six seats. The caller (`IntakeApp`, which holds the hydrated draft) passes the
+  // W step's own stale sentence (`workingYearCostStaleText` — both figures, the cause, which way it
+  // leans), framed by this lead and, where the tab can save, this pointer to where it changes.
+  stalenessPayCheckGateLead: 'Your answer still uses your last figure for what a year costs while you’re working.',
+  // BOTH gate choices reach W (b9-7, three first looks asked which button fixes it): "Still about right"
+  // lands on the answer, whose standing line opens the panel at the W row; "Something’s changed" routes
+  // into the walk (`IntakeApp` `onUpdate`), whose W step will not complete on a stale answer.
+  stalenessPayCheckGateDoor: 'Either choice below leads to where you can change it.',
+  // The ROSY-side warning, said after a quote-only stale sentence by `workingYearCostStaleText` when the
+  // household's spending now comes to MORE than the figure it said yes to (b9-7, the U10 Caddie card's
+  // False-PASS hunt, refuted and survived): the run treats a figure above what pay leaves as a short year
+  // drawn from savings, and pay left over is never saved, so a figure set too LOW can make the answer
+  // look better than it is (`taxOverlay.ts`, the working-year check). ONE-SIDED BY DESIGN: the card's
+  // first draft also said "can look worse" where spending fell, and on `datecoststale` — where neither
+  // figure makes a year short, so the answer is identical (measured) — two seats read it as "the real
+  // answer is better than shown", the rosy over-read. A false alarm here errs gloomy; that one did not.
+  // Never said where the state answer moved: the figures alone cannot tell which way a state's tax on
+  // pay runs. Saying which way it MOVES the answer, measured, is the register's *The gate's working-year
+  // lines can't say whether a change touches this household…*. The sentence itself is a SLOT
+  // (`slots.workingCostStaleLeansBetter`) — the final hunt: "costs more" named no figure to compare.
   // THE AGGREGATE (U17 §S4, bucket 3) — the ONE nameless sentence for every clock that fired
   // where no producer read can attribute it to THIS household. Its members after the F-pass
   // correction: the BLEND snapshot for a household that DOES read the ticker table (the stamp is
@@ -2534,7 +2575,7 @@ export const slots = {
    *
    *  ⚠️ DO NOT "FIX" THIS BY DROPPING THE TODAY TICK. That inverts the contradiction into the
    *  defect U13/§S0 already fixed — `bandAnnotations.ts:51-56` records it live from the first
-   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2282-2285` (the `?vault=datearrived` arm — "must still
+   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2285-2288` (the `?vault=datearrived` arm — "must still
    *  mark WALL-TIME today") forbids a band that loses its wall clock BY NAME. The tick is right; the sentence was wrong. */
   bandAgedPremiseFresh: (buildYear: number): string =>
     `This range runs from ${buildYear}, when the plan was built — the years since are modeled, not records. What you actually hold today is undetermined until you re-confirm.`,
@@ -2728,6 +2769,10 @@ export const slots = {
    *  medical, one cause) and/or the state answer. Both figures yearly, each with its own words. */
   workingCostStaleQuote: (lastFormatted: string, nowFormatted: string): string =>
     `You said yes to $${lastFormatted} a year, but your spending figures have changed since — they now come to $${nowFormatted} a year.`,
+  /** The rosy-side warning after a quote that ROSE past the figure said yes to (b9-7 — the copy's
+   *  `stalenessPayCheckGateDoor` neighbourhood carries the full why); names the figure it compares. */
+  workingCostStaleLeansBetter: (lastFormatted: string): string =>
+    `If a working year now costs more than $${lastFormatted} a year, this answer can look better than it really is.`,
   workingCostStaleQuoteGone: (lastFormatted: string): string =>
     `You said yes to $${lastFormatted} a year, but your spending figures have changed since, and there’s no spending figure to offer now.`,
   workingCostStaleStateConfirmed: (lastFormatted: string): string =>
@@ -2760,7 +2805,11 @@ export const slots = {
   workingLedgerSsHeldBackAtMost: (heldFormatted: string): string =>
     `This is what’s paid after $${heldFormatted} is held back this year because of pay. That’s the most that year can hold back, until the tool asks your birth month.`,
   /** The tax line's detail when the run carries working-year investment income (R5 keeps that income
-   *  out of Coming in, but its tax is in this line's figure). */
+   *  out of Coming in, but its tax is in this line's figure). b9-7's U10 Caddie card: the missing reason
+   *  read as a dropped cushion (three seats; the refuter kept it, medium, gloomy). A two-branch rewrite
+   *  was withdrawn the same session — `date` enters only a 401(k) and a Roth, where such income is never
+   *  taxed, so "from the savings you entered" could not be true there. The words wait on the register's
+   *  *Investment income is asked only of whoever still works…* (which money). */
   workingLedgerIncomeTaxInvestment: (investmentFormatted: string): string =>
     `Includes the tax on the $${investmentFormatted} a year of investment income you entered, which isn’t counted as coming in.`,
   workingLedgerMedicareSurcharge: (surchargeFormatted: string): string =>
@@ -3119,7 +3168,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:1405` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:1420` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,

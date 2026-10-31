@@ -2052,14 +2052,16 @@ test.describe(`the state-tax staleness return (?vault=statestale) — the isolat
 
 // ── the pay check's two unlock lines (?vault=wyclock · ?vault=datecoststale — U10) ────────────────
 // `wyclock` is `date` saved under the PREVIOUS working-years vintage (the light doctor), so the
-// working-years clock fires; `datecoststale` is the stale-W witness planted as a vault, so KTD21's "worth
-// a look" line fires (an input re-confirm, never a rules line). Each must be the gate's ONLY note, by
-// name, with the decision pair in the first frame — the `statestale` isolation law. The affirm lands the
-// date route's resolved reading; the date route scrolls by design, so past the gate the arm pins the
-// order contract (the `datestale` precedent), never a full one-frame fit.
+// working-years clock fires; `datecoststale` is the stale-W witness planted as a vault, so KTD21's line
+// fires (an input re-confirm, never a rules line) — since b9-7 the W step's own stale sentence framed by
+// the gate's lead and door hint ($84,000 said yes to, $78,000 now), never the figure-less fallback. Each
+// must be the gate's ONLY note, by name, with the decision pair in the first frame — the `statestale`
+// isolation law. The affirm lands the date route's resolved reading; the date route scrolls by design,
+// so past the gate the arm pins the order contract (the `datestale` precedent), never a full one-frame fit.
+const STALE_W_GATE_LINE = `${copy.stalenessPayCheckGateLead} ${slots.workingCostStaleQuote('84,000', '78,000')} ${copy.stalenessPayCheckGateDoor}`
 const PAY_CHECK_UNLOCKS = [
-  { key: 'wyclock', note: copy.stalenessWorkingYears, sibling: copy.stalenessWorkingYearCost },
-  { key: 'datecoststale', note: copy.stalenessWorkingYearCost, sibling: copy.stalenessWorkingYears },
+  { key: 'wyclock', note: copy.stalenessWorkingYears, sibling: copy.stalenessPayCheckGateLead },
+  { key: 'datecoststale', note: STALE_W_GATE_LINE, sibling: copy.stalenessWorkingYears },
 ] as const
 
 for (const u of PAY_CHECK_UNLOCKS) {
@@ -2086,6 +2088,7 @@ for (const u of PAY_CHECK_UNLOCKS) {
       await expect(notes, `${u.key}: exactly one gate note`).toHaveCount(1)
       await expect(notes).toContainText(u.note)
       await expect(page.getByText(u.sibling), 'the pay check’s other unlock line stays dark').toHaveCount(0)
+      await expect(page.getByText(copy.stalenessWorkingYearCost), 'never the figure-less fallback').toHaveCount(0)
 
       await affirm.click()
       await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: 90_000 })
@@ -2583,7 +2586,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
       //
       // The bound is TIGHT BY CONSTRUCTION (~10px at 1536×791), so this is a live constraint on the
-      // copy rather than a formality: it is what makes the length note in copy.ts:1969-1973 enforceable
+      // copy rather than a formality: it is what makes the length note in copy.ts:2010-2014 enforceable
       // instead of advisory. Text is captured so a red names the sentence that outgrew the slack.
       expect(
         geometry.standingBottom,

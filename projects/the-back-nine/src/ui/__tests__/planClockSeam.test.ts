@@ -253,7 +253,7 @@ describe('U17 §S0.1 — ONE exported arrived predicate, consumed (never re-type
     // the `)` of `formatMoney(...)`, which is argument ONE, so arguments 2+ — exactly where a
     // raw offset or a re-typed year sum would be handed in — were unreachable by it. An
     // occurrence count over the same source is both simpler and stronger: the panel reads the
-    // raw offset EXACTLY once, at the producer call (`AssumptionPanel.tsx:330`), so any second
+    // raw offset EXACTLY once, at the producer call (`AssumptionPanel.tsx:331`), so any second
     // read — handed to the echo, or re-summed against the anchor — reds regardless of argument
     // position or nesting depth.
     expect(
@@ -307,7 +307,7 @@ describe('U17 §S6 — the aged premise and the Today tick must not contradict e
    *
    * WHY THIS ARM HAD TO BE WRITTEN RATHER THAN ASSUMED: every existing consumer renders THROUGH the
    * slot — `FuckOffDate.test.tsx:328,335`, `ConfidenceStatement.test.tsx:721,734`,
-   * `copyGuard.test.ts:664-665` all call `slots.bandAgedPremise*(...)` and compare to its own
+   * `copyGuard.test.ts:675-676` all call `slots.bandAgedPremise*(...)` and compare to its own
    * output. They follow ANY reword silently, in both directions. Without the arm below, the §S6 fix
    * passes green and so does a future revert of it — the wording would be pinned by nothing at all.
    *

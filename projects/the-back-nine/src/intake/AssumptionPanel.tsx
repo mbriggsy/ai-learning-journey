@@ -70,6 +70,7 @@ import {
   carriesWorkingYearCost,
   healthcarePriced,
   isDateRoute,
+  oopHelpKeyFor,
   spendHelpKeyFor,
   workingYearCostFigure,
   workingYearCostForRun,
@@ -915,7 +916,7 @@ export function AssumptionPanel({
           <Row seat="health-oop">
             <CurrencyField
               labelKey="oopLabel"
-              helpKey="oopHelp"
+              helpKey={oopHelpKeyFor(draft)}
               field="health.oopMedicalAnnual"
               value={draft.health.oopMedicalAnnual}
               invalid={false}

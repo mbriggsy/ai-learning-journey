@@ -174,8 +174,11 @@ const CROP_TARGETS = [
   { name: 'panel', selector: '[role="dialog"]' },
   { name: 'echo', selector: '.ap-echo' },
   // The pay check's W row (U8) — below every row whose edit can stale it, so only an element crop,
-  // which scrolls the sheet, paints it.
-  { name: 'w-row', selector: '[role="dialog"] [data-assumption-seat="working-year-cost"]' },
+  // which scrolls the sheet, paints it. It is TALLER than the sheet's visible box, so it crops in
+  // segments (`captureTallSheetRegion`, `crop-w-row-<n>.png`), each also under every CVD arm: its
+  // chosen answer, Short / Left over and the fork are a read the color lane owes (b9-7 — no arm had
+  // screened the row, and the plain crop painted the landing over its top third).
+  { name: 'w-row', selector: '[role="dialog"] [data-assumption-seat="working-year-cost"]', cvd: true },
   // The LAST methodology row (2026-10-20 — the working-year tax row, the longest of them): far below
   // the sheet's visible box, so only an element crop, which scrolls it into view, paints it.
   {
@@ -383,7 +386,9 @@ async function captureState(page: Page, dir: string): Promise<void> {
 
   // 3) Full page, then element crops LAST — locator screenshots may scroll to their target.
   await page.screenshot({ path: path.join(dir, 'fullpage.png'), fullPage: true, scale: 'css' })
-  for (const { name, selector } of CROP_TARGETS) {
+  for (const crop of CROP_TARGETS) {
+    const { name, selector } = crop
+    const cvd = 'cvd' in crop && crop.cvd
     const target = page.locator(selector).first()
     // A crop needs a real BOX, not just visibility: display:contents groups (e.g.
     // `.reveal__lead` in single column / phone) have visible children but generate no box —
@@ -395,7 +400,11 @@ async function captureState(page: Page, dir: string): Promise<void> {
       (await target.isVisible()) &&
       (await target.boundingBox()) !== null
     ) {
-      await target.screenshot({ path: path.join(dir, `crop-${name}.png`), scale: 'device' })
+      // A region taller than its sheet's visible box crops in segments; everything else (every
+      // page-level region, and a sheet row that fits) keeps the plain element crop.
+      if (!(await captureTallSheetRegion(page, target, dir, name, cvd))) {
+        await target.screenshot({ path: path.join(dir, `crop-${name}.png`), scale: 'device' })
+      }
     }
   }
 
@@ -465,6 +474,102 @@ async function captureCvdRegion(
   }
   await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' })
   await cdp.detach()
+}
+
+/**
+ * Crop a region that lives INSIDE a scrolling sheet and is TALLER than the sheet's visible box, in
+ * segments (2026-10-30, b9-7). A locator screenshot of such a region scrolls what it can and then
+ * paints the page BEHIND the fixed sheet for the part outside the scroller's box: `crop-w-row.png`
+ * showed the landing's hero and band over its top third, then the backdrop, and none of the
+ * confirmed answer, Pay or the tax lines — four panel seats read them from copy.txt alone, and the
+ * CVD seat could not screen the row at all. PANEL_CVD_REGIONS dodged the same limit by cropping
+ * smaller pieces; the money picture alone is taller than the laptop's 743px sheet, so that cannot
+ * close it here.
+ *
+ * Each segment sets the sheet's OWN scroller (the nearest scrolling ancestor — `role="dialog"` IS
+ * that element) and clips the page frame to the region ∩ the scroller's visible box, at device
+ * scale: `crop-<name>-1.png`, `-2.png`, … top to bottom, overlapping by `SEGMENT_OVERLAP_PX` so a
+ * line on a cut reads whole in one of them. With `cvd`, each segment is also captured under every
+ * CVD arm (`cvd-<arm>-<name>-<n>.png`). The page is pinned to scroll 0 first, so a clip's viewport
+ * coordinates are its page coordinates (the sheet is fixed). The scroller's own scrollTop is
+ * restored afterwards: later crops expect the frame they were written against.
+ *
+ * Returns false, capturing nothing, when the region has no scrolling ancestor or fits its box —
+ * the caller keeps the plain element crop.
+ */
+const SEGMENT_OVERLAP_PX = 24
+
+async function captureTallSheetRegion(
+  page: Page,
+  target: ReturnType<Page['locator']>,
+  dir: string,
+  name: string,
+  cvd: boolean,
+): Promise<boolean> {
+  const fits = await target.evaluate((el) => {
+    let sc = el.parentElement
+    while (sc !== null) {
+      const oy = getComputedStyle(sc).overflowY
+      if ((oy === 'auto' || oy === 'scroll') && sc.scrollHeight > sc.clientHeight) break
+      sc = sc.parentElement
+    }
+    if (sc === null || el.getBoundingClientRect().height <= sc.clientHeight) return true
+    sc.setAttribute('data-caddie-scroller', '')
+    return false
+  })
+  if (fits) return false
+
+  await page.evaluate(() => window.scrollTo(0, 0))
+  const scroller = page.locator('[data-caddie-scroller]')
+  const startScrollTop = await scroller.evaluate((sc) => sc.scrollTop)
+  // The region's top in the scroller's CONTENT coordinates, and the box's visible height.
+  const { regionTop, regionHeight, boxHeight } = await target.evaluate((el) => {
+    const sc = el.closest('[data-caddie-scroller]')!
+    const r = el.getBoundingClientRect()
+    const s = sc.getBoundingClientRect()
+    return {
+      regionTop: r.top - (s.top + sc.clientTop) + sc.scrollTop,
+      regionHeight: r.height,
+      boxHeight: sc.clientHeight,
+    }
+  })
+  const step = boxHeight - SEGMENT_OVERLAP_PX
+  const cdp = cvd ? await page.context().newCDPSession(page) : null
+  for (let n = 1, offset = 0; offset < regionHeight; n++, offset += step) {
+    await scroller.evaluate((sc, top) => {
+      sc.scrollTop = top
+    }, regionTop + offset)
+    await settleLayout(page)
+    const clip = await target.evaluate((el) => {
+      const sc = el.closest('[data-caddie-scroller]')!
+      const r = el.getBoundingClientRect()
+      const s = sc.getBoundingClientRect()
+      const visTop = s.top + sc.clientTop
+      const top = Math.max(r.top, visTop)
+      const bottom = Math.min(r.bottom, visTop + sc.clientHeight)
+      const left = Math.max(r.left, s.left)
+      const right = Math.min(r.right, s.right)
+      return { x: left, y: top, width: right - left, height: bottom - top }
+    })
+    if (clip.height <= 0 || clip.width <= 0) break
+    await page.screenshot({ path: path.join(dir, `crop-${name}-${n}.png`), clip, scale: 'device' })
+    if (cdp !== null) {
+      for (const [armName, type] of CVD_ARMS) {
+        await cdp.send('Emulation.setEmulatedVisionDeficiency', { type })
+        await page.screenshot({ path: path.join(dir, `cvd-${armName}-${name}-${n}.png`), clip, scale: 'device' })
+      }
+      await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' })
+    }
+    // A scroller clamped at its end cannot bring a later offset up; the region's bottom is in this frame.
+    const atEnd = await scroller.evaluate((sc) => sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1)
+    if (atEnd) break
+  }
+  if (cdp !== null) await cdp.detach()
+  await scroller.evaluate((sc, top) => {
+    sc.scrollTop = top
+    sc.removeAttribute('data-caddie-scroller')
+  }, startScrollTop)
+  return true
 }
 
 const slugify = (name: string): string =>

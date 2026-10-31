@@ -5,7 +5,7 @@ import { AnswerStrip } from '@intake/AnswerStrip'
 import { isDateRoute, missingRequiredFacts } from '@intake/intakeMap'
 import { validateDraft, type FieldPath } from '@intake/sanity'
 import { subscribeUnsavedBuffers, unsavedBuffersHeld } from '@intake/unsavedBuffer'
-import { isWorkingYearCostStale } from '@intake/workingYearQuote'
+import { isWorkingYearCostStale, workingYearCostStaleText } from '@intake/workingYearQuote'
 import type { SolverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 import { draftIdentityKey, type ScenarioDraft } from '@store/memoryModel'
 import { deriveSavedRecommendationStatus, type SavedRecommendationStatus } from '@store/savedRecommendation'
@@ -639,7 +639,12 @@ export default function IntakeApp({
           exposureForDraft(hydrated.draft),
           isWorkingYearCostStale(hydrated.draft),
         )
-        setReentry({ view: composeReentry(model, report), rulesMoved: report.rulesMoved })
+        // The gate's KTD21 sentence from the SAME hydrated draft — the W step's own stale sentence,
+        // which the answer's standing line repeats (b9-7); the door hint only where this tab can save,
+        // the same condition as the answer's door (`Result`'s `onOpen`).
+        const payCheckStaleText = workingYearCostStaleText(hydrated.draft)
+        const payCheckStale = payCheckStaleText === null ? null : { text: payCheckStaleText, canChange: !readOnly }
+        setReentry({ view: composeReentry(model, report, payCheckStale), rulesMoved: report.rulesMoved })
         setPhase('reentry')
       } catch {
         if (!cancelled) setPhase('restore-failed')

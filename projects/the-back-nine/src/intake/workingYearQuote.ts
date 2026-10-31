@@ -234,7 +234,15 @@ export function workingYearCostStaleText(d: ScenarioDraft): string | null {
   if (s.quoteMoved && s.readingMoved) {
     return now === null ? slots.workingCostStaleBothGone(last) : slots.workingCostStaleBoth(last, now)
   }
-  if (s.quoteMoved) return now === null ? slots.workingCostStaleQuoteGone(last) : slots.workingCostStaleQuote(last, now)
+  if (s.quoteMoved) {
+    if (now === null) return slots.workingCostStaleQuoteGone(last)
+    // The rosy-side warning (b9-7): only where the spending alone moved, and only where it now comes to
+    // MORE than the figure said yes to — a figure too low can make the answer look better than it is.
+    // Never the mirror "can look worse": where no year runs short at either figure the answer is
+    // identical, and two seats read that sentence as "the real answer is better" (the copy's note).
+    const sentence = slots.workingCostStaleQuote(last, now)
+    return quote.annualReal > workingYearCostFigure(w) ? `${sentence} ${slots.workingCostStaleLeansBetter(last)}` : sentence
+  }
   return slots.workingCostStaleStateConfirmed(last)
 }
 

@@ -31,14 +31,14 @@ status: shipped
 
 ## F1 — intake shape
 
-The `medicare-extras` step (`src/intake/questions.tsx:932-952`) renders a **per-person PAIRED
+The `medicare-extras` step (`src/intake/questions.tsx:933-953`) renders a **per-person PAIRED
 fieldset on ONE screen** (the two-person law) through the shared `Paired` wrapper — never
 household-combined-then-split (that fabricates a split the domain doesn't support, forfeits the
 survivor-precision win, and the ACA combined-then-split precedent is a FALSE analogy here).
 
 - Each person's own combined monthly Part D / Medigap / Medicare-Advantage premium is asked as
   **one dollar figure** behind a **legible three-arm PAYMENT FORK** — `MedicareExtrasFork`
-  (`src/intake/questions.tsx:844`), a vertical `SegmentedControl` over
+  (`src/intake/questions.tsx:845`), a vertical `SegmentedControl` over
   `'none' | 'entered' | 'typical'` — never a plan-type/MA-vs-Medigap taxonomy the user can't
   self-sort. The shipped arm labels (`src/ui/copy.ts`) are "About nothing beyond Part B (common
   on Medicare Advantage)", "A monthly premium — entered below", and the slot-templated "Not
@@ -50,9 +50,9 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   survivor and blocks the calm first pass — U12 doctrine; R5 never-gate). Nothing on the step
   blocks advance except the self-contradictory entered-with-no-dollar half-answer, which the R19
   sanity rule `medicare-extras-entered-blank` (`src/intake/sanity.ts:343-358`) names at the field.
-- **WHO:** the step is gated on `anyNearMedicare` (`src/intake/questions.tsx:1358-1359`) — any
+- **WHO:** the step is gated on `anyNearMedicare` (`src/intake/questions.tsx:1359-1360`) — any
   member aged 64 or older, the same cohort gate as the IRMAA seed
-  (`src/intake/questions.tsx:1381` pushes both under the one predicate). That covers the all-65+
+  (`src/intake/questions.tsx:1382` pushes both under the one predicate). That covers the all-65+
   household and the NEAR-65 date route, but it is narrower than the ratified intent of "everyone
   whose run route-prices Medicare": a household with nobody yet 64 is never asked, while its date
   route still prices Medicare from each member's 65-crossing. Two things keep that gap honest and
@@ -61,7 +61,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   `src/engine/__tests__/medicareExtras.test.ts:191-225`), never a silent $0; and the F5 disclosure
   homes key off the run's built params, not ages, so the never-asked household is still TOLD the
   typical is being funded. Widening the gate is a live option, not a correction.
-- **Degradation:** `resolveMedicareExtrasMonthly` (`src/intake/intakeMap.ts:1135`) is the ONE
+- **Degradation:** `resolveMedicareExtrasMonthly` (`src/intake/intakeMap.ts:1144`) is the ONE
   fork→dollar owner. An absent field, an `'unanswered'` entry, a `'typical'` entry, and a
   half-entered `'entered'` with no committed dollar ALL fund the conservative-HIGH typical;
   only the affirmed `'none'` arm resolves to $0. Absent-means-$0 would delete a real recurring
@@ -110,7 +110,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   `ScenarioDraft` by deliberate design (`src/ui/assumptionRegistry.ts:91`) — a nested `health.*`
   sub-field would dodge the compile gate (the assumptionRegistry.ts:88 landmine) — and is
   registered `{ kind: 'row-editable', seats: ['medicare-extras'] }` at
-  `src/ui/assumptionRegistry.ts:161`. The panel seat (`src/intake/AssumptionPanel.tsx:1019-1035`)
+  `src/ui/assumptionRegistry.ts:161`. The panel seat (`src/intake/AssumptionPanel.tsx:1020-1036`)
   re-hosts the SAME `MedicareExtrasFork` face over the same write shape, `onWrite` adapting to
   the host's commit seam — and passes `standingNote`, which the intake step does not: when the
   fork is UNANSWERED the panel shows the read-only line naming the typical the plan is funding
@@ -220,7 +220,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
     per-person fact line carries the provenance as its load-bearing content: whose number, and
     whether it was entered, affirmed, or typical.
 - Both homes consume ONE assembly, `medicareExtrasDisclosureView`
-  (`src/intake/intakeMap.ts:1192`), which keys off the run's route-aware **BUILT-params output**
+  (`src/intake/intakeMap.ts:1201`), which keys off the run's route-aware **BUILT-params output**
   (`buildParams(d)?.overlay`) — never ages or inputs — and returns NULL when the run prices no
   Medicare-bearing overlay at all, so no claim is made. The three-way provenance
   (`'entered' | 'affirmed-zero' | 'typical'`) is read from the draft, which is honest: who chose

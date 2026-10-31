@@ -527,6 +527,22 @@ describe('OOP medical', () => {
     renderPanel({ snapshot: snap(draftWith(() => ({ ...governedDraft, health: { ...governedDraft.health, oopMedicalAnnual: 100_000 } }))) })
     expect(screen.queryByText(/is more than your whole spending figure/)).toBeNull()
   })
+
+  it('the OOP row’s help is route-true: a working household is told premiums paid while working belong in W; an all-retired one keeps "added on top" (b9-7, the U10 Caddie card)', () => {
+    // mixedDraft has Ari still working — the run adds none of the entered premium in those years.
+    renderPanel()
+    const row = () => document.querySelector('[data-assumption-seat="health-oop"]') as HTMLElement
+    expect(within(row()).getByText(copy.oopHelpWorking)).toHaveClass('field-help')
+    expect(within(row()).queryByText(copy.oopHelp)).toBeNull()
+    cleanup()
+    const allRetired = draftWith(() => ({
+      ...mixedDraft,
+      people: [{ ...mixedDraft.people[0], workStatus: 'retired' as const, retirementAge: 55 }, mixedDraft.people[1]],
+    }))
+    renderPanel({ snapshot: snap(allRetired) })
+    expect(within(row()).getByText(copy.oopHelp)).toHaveClass('field-help')
+    expect(within(row()).queryByText(copy.oopHelpWorking)).toBeNull()
+  })
 })
 
 // ─── the echo (displayed-not-raw + the two-class transition line) ────────────────────────

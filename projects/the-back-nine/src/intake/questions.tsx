@@ -14,6 +14,7 @@ import {
   anyPre65OrUnknown,
   anyRetiredPre65WhileAnotherWorks,
   isDateRoute,
+  oopHelpKeyFor,
   spendHelpKeyFor,
   workingYearLedgerForRun,
 } from './intakeMap'
@@ -703,7 +704,7 @@ const oopStep: StepDef = {
     <>
       <CurrencyField
         labelKey="oopLabel"
-        helpKey="oopHelp"
+        helpKey={oopHelpKeyFor(api.draft)}
         field="health.oopMedicalAnnual"
         value={api.draft.health.oopMedicalAnnual}
         onCommit={(v) =>

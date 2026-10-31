@@ -74,7 +74,21 @@ const BUCKET_LABEL_KEY: Readonly<Record<'pretax' | 'roth' | 'taxable' | 'hsa', C
   hsa: 'reentryBucketHsa',
 }
 
-export function composeReentry(scenario: ScenarioV3, report: StalenessReport): ReentryView {
+/** The gate's KTD21 sentence, composed by the caller from the HYDRATED draft this report describes
+ *  (`workingYearCostStaleText` — this seam never re-derives the quote): `text` is that sentence, and
+ *  `canChange` is whether the answer will offer the door to change it (a tab that can save). `null`
+ *  where W is not stale. REQUIRED, never optional-with-a-default: a caller that forgets it must fail
+ *  to compile, never fall back to the figure-less line in silence. */
+export interface ReentryPayCheckStale {
+  readonly text: string
+  readonly canChange: boolean
+}
+
+export function composeReentry(
+  scenario: ScenarioV3,
+  report: StalenessReport,
+  payCheckStale: ReentryPayCheckStale | null,
+): ReentryView {
   // The intro's register (Caddie card #1). It USED to double as the blend note's route-true
   // wording selector; U17 §S4 made the blend clock nameless on both routes, so this predicate
   // now has exactly one consumer (insight 087 — the comment is swept with the code it described).
@@ -148,9 +162,17 @@ export function composeReentry(scenario: ScenarioV3, report: StalenessReport): R
   if (report.unattributed.moved) noteLines.push(copy.stalenessReferenceTables)
   // The pay check's KTD21 — the household's own W answer no longer matches the spending or state it
   // was given against. Not a rules line (it rides `anyStale` only), so it sits with the input
-  // re-confirms, before the budget lines: a static key, because this seam takes no draft and must
-  // never re-derive the quote to put a figure in it.
-  if (report.workingYear.costStale) noteLines.push(copy.stalenessWorkingYearCost)
+  // re-confirms, before the budget lines. This seam takes no draft and never re-derives the quote:
+  // the caller hands it the W step's own stale sentence (both figures, the cause, which way it leans
+  // — b9-7's U10 Caddie card), and the static figure-less line is only the fallback for a report that
+  // calls W stale with no sentence beside it.
+  if (report.workingYear.costStale) {
+    noteLines.push(
+      payCheckStale === null
+        ? copy.stalenessWorkingYearCost
+        : [copy.stalenessPayCheckGateLead, payCheckStale.text, ...(payCheckStale.canChange ? [copy.stalenessPayCheckGateDoor] : [])].join(' '),
+    )
+  }
   // One line per boundary YEAR: the copy quotes only the calendar year, so two lines
   // sharing an endYear would render byte-identical sentences (and collide on the render
   // key) — the year carries the whole message once.

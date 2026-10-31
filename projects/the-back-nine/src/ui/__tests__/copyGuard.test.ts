@@ -334,6 +334,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   it('the survivor-medical strings disclose the lean and never sell it (the 2026-10-08 council’s honesty condition, drift-pin)', () => {
     const LEAN_STRINGS = [
       copy.oopHelp,
+      copy.oopHelpWorking,
       slots.oopHint('3,000', '3,400'),
       copy.assumptionSurvivorRatioHelp,
       slots.oopExceedsSpend('6,500', '5,000'),
@@ -366,6 +367,16 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     // first draft's passive "are held whole", right after "Research on surviving spouses…", read as one).
     expect(copy.oopHelp, 'the HSA job is conditional').toMatch(/If you have an HSA/)
     expect(copy.oopHelp, 'the hold is named as the tool’s choice').toMatch(/the tool keeps this amount whole[^.]*deliberately cautious/)
+    // The date route's twin (b9-7): every pin above holds for it too, and it never says the tool adds
+    // premiums in a working year — the run adds none until the last worker stops (`windowGate`).
+    const working = copy.oopHelpWorking
+    expect(working).toMatch(/out-of-pocket costs should already be inside your spending figure/i)
+    expect(working, 'the figure no longer has one job').not.toMatch(/\bonly\b/i)
+    expect(working, 'the HSA job is conditional').toMatch(/If you have an HSA/)
+    expect(working, 'the hold is named as the tool’s choice').toMatch(/the tool keeps this amount whole[^.]*deliberately cautious/)
+    expect(working, 'no unconditional "added on top"').not.toMatch(/Premiums are added on top by the tool/)
+    expect(working, 'working-year premiums have a home').toMatch(/Premiums paid while either of you still works belong in what a working year costs/)
+    expect(working, 'the stopped member’s Medicare is the tool’s').toMatch(/Medicare premiums for anyone on Medicare who has already stopped/)
     // The survivor-ratio help names the held-whole medical and claims nothing about "the rest" (a
     // budget's sticky lines do not take the share either).
     expect(copy.assumptionSurvivorRatioHelp).toMatch(/The tool deliberately keeps any out-of-pocket health costs you entered whole/)
@@ -842,6 +853,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workingCostLeftOutMore: slots.workingCostLeftOutMore('Travel, Boat, Golf', 2),
     workingCostStaleQuote: slots.workingCostStaleQuote('84,000', '90,000'),
     workingCostStaleQuoteGone: slots.workingCostStaleQuoteGone('84,000'),
+    workingCostStaleLeansBetter: slots.workingCostStaleLeansBetter('84,000'),
     workingCostStaleStateConfirmed: slots.workingCostStaleStateConfirmed('84,000'),
     workingCostStaleStateEntered: slots.workingCostStaleStateEntered('90,000'),
     workingCostStaleBoth: slots.workingCostStaleBoth('84,000', '90,000'),
@@ -1157,7 +1169,10 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
         'stalenessWorkingYearCost',
         'stalenessPayCheckNote',
         'stalenessPayCheckCta',
+        'stalenessPayCheckGateLead',
+        'stalenessPayCheckGateDoor',
         'employerCoverageHelp',
+        'oopHelpWorking',
       ].includes(k),
   )
   const PAY_CHECK_SLOTS = (Object.keys(slots) as (keyof typeof slots)[]).filter((k) =>
@@ -1507,7 +1522,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:885-895, 822-839), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:895-905, 822-839), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop
@@ -1623,7 +1638,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // --- THE UNIT-INERTNESS BAN (Tier-0, fixed 2026-08-03; until now the string had NO pin at all).
   //     The killed line was "…switching this never changes the amount." The panel toggle really
   //     does leave `annualSpendingReal` alone — but the SHOWN figure jumps exactly 12×
-  //     (`spendDisplayed`, AssumptionPanel.tsx:516-521) while the sentence says nothing moved, and
+  //     (`spendDisplayed`, AssumptionPanel.tsx:517-522) while the sentence says nothing moved, and
   //     the panel's own commit (:607-617) multiplies by 12 under 'month'. So the reader's natural
   //     repair — retype the digits they remember — commits a plan off by 12× in the UNSAFE
   //     direction, and nothing downstream catches it (PANEL_PROVENANCE disarms the force-confirm;

@@ -10,7 +10,7 @@ import {
   agedWorkingYearsVintage,
   AGED_PLANTS,
 } from '../devSeeds'
-import { isWorkingYearCostStale, workingYearCostStaleness } from '@intake/workingYearQuote'
+import { isWorkingYearCostStale, workingYearCostStaleText, workingYearCostStaleness } from '@intake/workingYearQuote'
 import { floorLineText, heroLead } from '../FuckOffDate'
 import { planClockAnchor } from '../bandAnnotations'
 import type { ScenarioDraft } from '@store/memoryModel'
@@ -1117,7 +1117,7 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
     expect(report.date.blendMoved, 'and the blend stamp DID move — the silence is the gate biting').toBe(true)
     expect(report.rulesMoved, 'the hero echo may ride — tax + the Medicare figures genuinely moved').toBe(true)
 
-    const view = composeReentry(aged, report)
+    const view = composeReentry(aged, report, null)
     // THE ENGINE-PRICING LINES (the ledger — the engine-domain council, 2026-09-27), from an
     // INDEPENDENT oracle over the ledger rows, never the reader's code: the plant saves ~760 days
     // back, so every `reprice` row shipped after that save and reaching a family this household
@@ -1816,7 +1816,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     expect(report.controls.stateTaxMoved).toBe(false)
     expect(report.healthcare.moved).toBe(false)
     expect(report.date).toEqual({ contributionMoved: false, blendMoved: false })
-    expect(composeReentry(aged, report).noteLines).toEqual([copy.stalenessWorkingYears])
+    expect(composeReentry(aged, report, null).noteLines).toEqual([copy.stalenessWorkingYears])
   })
 
   it('the light doctor is ENGINE-ACCEPTED: the aged vault hydrates, builds and dates like the fresh seed (insight 085)', async () => {
@@ -1847,16 +1847,18 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     if (!hydrated.ok) throw new Error(`[test setup] wyclock must hydrate: ${hydrated.detail}`)
     const report = deriveStaleness(aged, TODAY, exposureForDraft(hydrated.draft), isWorkingYearCostStale(hydrated.draft))
     expect(report.workingYear).toEqual({ vintageMoved: true, costStale: false })
-    expect(composeReentry(aged, report).noteLines).toEqual([copy.stalenessWorkingYears])
+    expect(composeReentry(aged, report, null).noteLines).toEqual([copy.stalenessWorkingYears])
     // The doctor moves no engine input (only `savedAt` and the stamp), so the affirm's recompute is
     // `?seed=date`'s own: identical date-search inputs, and the search is deterministic in them.
     expect(buildDateInput(hydrated.draft)).toEqual(buildDateInput(DEV_SEEDS.date))
   })
 
   // `?vault=datecoststale` — the stale-W witness planted UNDOCTORED (KTD21's unlock line, U10): its own
-  // answer no longer matches its quote, and nothing else moved, so the gate's ONLY note is the "worth a
-  // look" line — never a rules line (it rides `anyStale`, never `rulesMoved`).
-  it("'datecoststale' as a vault speaks KTD21's \"worth a look\" line alone on the unlock gate — never a rules line", () => {
+  // answer no longer matches its quote, and nothing else moved, so the gate's ONLY note is its stale
+  // line — never a rules line (it rides `anyStale`, never `rulesMoved`). Since b9-7 that line is the W
+  // step's own sentence, composed from the hydrated draft exactly as `IntakeApp` does: both figures and
+  // the cause (no lean: $84,000 held above $78,000 now is the safe side).
+  it("'datecoststale' as a vault speaks KTD21's stale line alone on the unlock gate — never a rules line", () => {
     const built = scenarioFromDraft(DEV_SEEDS.datecoststale)
     if (!built.ready) throw new Error('[test setup] datecoststale must be save-ready')
     const hydrated = draftFromScenario(built.scenario)
@@ -1865,7 +1867,11 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     const report = deriveStaleness(built.scenario, TODAY, exposureForDraft(hydrated.draft), isWorkingYearCostStale(hydrated.draft))
     expect(report.workingYear).toEqual({ vintageMoved: false, costStale: true })
     expect(report.rulesMoved, 'a stale answer is not a rules change').toBe(false)
-    expect(composeReentry(built.scenario, report).noteLines).toEqual([copy.stalenessWorkingYearCost])
+    const text = workingYearCostStaleText(hydrated.draft)
+    expect(text, '$84,000 held above $78,000 now — the safe side, so no lean is said').toBe(slots.workingCostStaleQuote('84,000', '78,000'))
+    expect(composeReentry(built.scenario, report, { text: text!, canChange: true }).noteLines).toEqual([
+      `${copy.stalenessPayCheckGateLead} ${text} ${copy.stalenessPayCheckGateDoor}`,
+    ])
   })
 
   it('the light doctor fails LOUD on a plan that never reads the table, and on a stamp it cannot age', () => {

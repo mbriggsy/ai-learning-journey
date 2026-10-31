@@ -83,7 +83,8 @@ describe('the pay check’s standing line through Result (KTD21)', () => {
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datecoststale)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} readOnly />)
-    // The lead, then the W step's own stale sentence: both figures and the cause that moved.
+    // The lead, then the W step's own stale sentence: both figures and the cause that moved ($84,000 held
+    // above $78,000 now — the safe side, so no lean is said).
     expect(line()?.textContent).toBe(`${copy.stalenessPayCheckNote} ${slots.workingCostStaleQuote('84,000', '78,000')}`)
     expect(lineDoor()).toBeNull()
   })

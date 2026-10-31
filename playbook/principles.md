@@ -91,7 +91,7 @@ Every sentence and every question reads on one pass without a PhD: no internal c
 It holds the current state, unfinished fixes written as exact prescriptions (file, line and change), next steps in priority order, and landmines (known traps for the next session). No "what we did" story: git already keeps it. When a new end-of-session block lands, the older ones are cut, but only after their landmines and open items move into the TODO's standing sections.
 
 **Every doc is for the next session.**
-If future work won't need it, don't write it: no dates of past work, no "used to," no "new" or "revised" markers. State the decision and what it means for the work.
+If future work won't need it, don't write it: no dates of past work, no "used to," no "new" or "revised" markers. State the decision and what it means for the work. Lessons in `docs/insights/` are the exception: each one records a dated case, and a correction note or an `Extended` section says when it landed.
 
 **When a number changes, change it everywhere.**
 Claude gets the real figure by running the count, never by copying it from another doc, and updates every place it appears in one pass: README, TODO, evidence pages, and numbers baked into videos and narration.

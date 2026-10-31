@@ -15,7 +15,7 @@ argument-hint: "[topic: the component, file, phase, or failure you're about to w
 
 # Brief: Insight Recall
 
-Find the few documented lessons that bear on ONE topic, read them in full, check them against today's code, and return a short brief. Never dump the corpus. The old version of this skill injected every insight body (~370 KB for 139 insights), and Claude Code cut that to a 2 KB preview holding insight 001 alone, so every brief silently recalled nothing.
+Find the few documented lessons that bear on ONE topic, read them in full, check them against today's code, correct any lesson the code has outgrown, and return a short brief. Never dump the corpus. The old version of this skill injected every insight body (~370 KB for 139 insights), and Claude Code cut that to a 2 KB preview holding insight 001 alone, so every brief silently recalled nothing.
 
 ## Topic
 
@@ -49,6 +49,8 @@ Search with the Grep tool: case-insensitive, `files_with_matches`, path `docs/in
    - `MOVED`: the code was renamed or relocated, and the lesson still stands. Give the new location.
    - `CONFLICTS`: today's code or a later insight contradicts it. Say which is right. Present evidence outranks a past lesson.
    - `NO CODE CLAIM`: a process lesson with nothing to check.
+
+   When a `MOVED` or `CONFLICTS` lesson is the stale side, correct it before you write the brief, so the next brief doesn't trip on it again. Under the paragraph that holds the stale claim, add one note: `> **Out of date (corrected YYYY-MM-DD):** <what changed, and when, if you know>. The current <thing> lives in <file and symbol, or insight NNN>.` Point there, and never copy today's value into the lesson: a copied value goes stale the same way. Leave the stale sentence itself as it is; a lesson whose note points at a home that still holds is `CURRENT`. Leave the lesson alone, and say why under Before you start, when the code is the wrong side (it broke what the lesson guards), when you can't tell which side is right, or when `git diff HEAD -- <path>` shows any change to it (another session is working in that lesson). Otherwise commit that file alone: `git commit -m "<message>" -- <path>`. A helper agent (one another session started) edits nothing here: it names each correction in its report to the session that started it.
 6. **Write the brief** in the format below. Distill each lesson; never paste insight text.
 
 ## Output
@@ -57,7 +59,7 @@ Search with the Grep tool: case-insensitive, `files_with_matches`, path `docs/in
 ## Brief: <topic>
 Searched: <tags, terms, paths used> · <N> insights · <M> candidates · read in full: NNN, NNN
 ### Landmines
-- **NNN: <short title>** (<date>). <The gotcha, one line.> Root cause: <one line>. Watch for: <one line>. Code check: CURRENT | MOVED to <where> | CONFLICTS: <what> | NO CODE CLAIM
+- **NNN: <short title>** (<date>). <The gotcha, one line.> Root cause: <one line>. Watch for: <one line>. Code check: CURRENT | MOVED to <where> | CONFLICTS: <what> | NO CODE CLAIM. Lesson (MOVED and CONFLICTS only): corrected | reported to caller | not corrected: <why>
 ### Also relevant (not read in full)
 - NNN: <title>. <Why it may matter.>
 ### Before you start

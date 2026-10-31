@@ -12,7 +12,7 @@ What keeps the steps running: each session's close writes the job's next step, b
 
 ### 1. Brief
 
-Before work starts on a topic, Claude finds the few past lessons in the project's `docs/insights/` folder that bear on it, checks each one against today's code, and hands back a short list of landmines. For sizable work it runs at the start of the job, before the plan, and again at the start of each build unit's session.
+Before work starts on a topic, Claude finds the few past lessons in the project's `docs/insights/` folder that bear on it, checks each one against today's code, corrects any lesson the code has outgrown, and hands back a short list of landmines. For sizable work it runs at the start of the job, before the plan, and again at the start of each build unit's session.
 
 - **Start it:** nothing to say for sizable work: START HERE names it. You can also say "brief me on <topic>", "any gotchas with <topic>?", "what should I know before I start <topic>?", or `/brief <topic>`.
 - **Lives in:** [projects/skills/distill-and-brief/brief/](../projects/skills/distill-and-brief/brief/SKILL.md)
@@ -53,7 +53,7 @@ The deep review at the end of a milestone or feature: whole files, specialist re
 
 ### 5. Distill
 
-Claude writes the hard-won lesson as a short, numbered note in the project's `docs/insights/` folder: the problem, the root cause, the fix, the lesson, and where else it applies. The next brief finds it.
+Claude writes the hard-won lesson as a short, numbered note in the project's `docs/insights/` folder: the problem, the root cause, the fix, the lesson, and where else it applies. When an older lesson already covers the same trap, Claude adds the new case to that one instead of writing a near-copy. The next brief finds it.
 
 - **Start it:** "distill", "capture this", "write it up", "before we forget", or `/distill`. For a job done in one session, the review runs it as its last step. A longer job saves its lessons in the TODO's DISTILL CANDIDATES list, and START HERE names the one `/distill` that writes them, right after the job's closing review.
 - **Lives in:** [projects/skills/distill-and-brief/distill/](../projects/skills/distill-and-brief/distill/SKILL.md)

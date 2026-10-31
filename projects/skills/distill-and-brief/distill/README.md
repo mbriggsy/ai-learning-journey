@@ -16,7 +16,7 @@ It does NOT fire for: fixing bugs, adding features, reading existing solutions (
 
 ## What It Produces
 
-A insight doc at `docs/insights/<number>-<slug>.md` with YAML frontmatter and five required sections:
+An insight doc at `docs/insights/<number>-<slug>.md` with YAML frontmatter and five required sections:
 
 | Section | Purpose |
 |---------|---------|
@@ -26,7 +26,7 @@ A insight doc at `docs/insights/<number>-<slug>.md` with YAML frontmatter and fi
 | **Key Insight** | The generalizable lesson — the most important section |
 | **Also Applies To** | Where else this pattern might appear |
 
-Docs are kept under 60 lines. Reference material, not novels.
+Docs stay as short as they can while carrying the problem, the cause and the lesson; there is no line cap. When an existing insight already covers the pattern, /distill adds the new case to it as a dated `## Extended (YYYY-MM-DD): ...` section, with any new search words added to its `tags:` line, instead of writing a near-copy.
 
 ## How It Works Under the Hood
 

@@ -19,6 +19,8 @@ It does NOT fire for: performing work (writing code, fixing bugs, building featu
 
 A compact brief for ONE topic (the words after `/brief`, else what you said you're about to work on; with neither, it asks "Brief on what?"): at most 5 insights chosen by a frontmatter grep and score, read in full and checked against today's code (`CURRENT` / `MOVED` / `CONFLICTS` / `NO CODE CLAIM`), plus up to 5 also-relevant lines and 1–3 before-you-start actions. It never dumps the corpus.
 
+A lesson that comes back `MOVED` or `CONFLICTS`, when the lesson is the stale side, is corrected in place before the brief is written: one dated note under the paragraph holding the stale claim, saying what changed and where the truth lives now (the file and symbol, or the later insight). The note points to that home and never copies today's value, which would go stale the same way; the stale sentence stays as it was, and the next brief reads the lesson as `CURRENT` while the note's pointer holds. The brief leaves the lesson alone, and names it as a before-you-start action, when the code is the wrong side, when it can't tell which side is right, or when another session has uncommitted edits in that lesson. It commits the corrected lesson alone, by its path. A helper agent edits nothing: it reports each correction to the session that started it.
+
 If no insights exist yet, or nothing matches the topic, the skill says so, lists what it searched, and points to /distill.
 
 ## How It Works Under the Hood

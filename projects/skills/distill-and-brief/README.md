@@ -86,14 +86,14 @@ What makes them run is the TODO's START HERE line: every session's close writes 
 
 ### The skills
 
-- **`/distill`** uses dynamic context injection to list the existing insight filenames and compute the next number before the agent writes; its quality bar greps the corpus's `title:` / `tags:` lines to prevent duplicates.
-- **`/brief`** injects a size-capped corpus card (counts, frontmatter coverage, tag vocabulary; never an insight body), then greps the frontmatter for ONE topic and reads at most the top 5 insights in full, on demand, in any session.
+- **`/distill`** uses dynamic context injection to list the existing insight filenames and compute the next number before the agent writes; its quality bar greps the corpus's `title:` / `tags:` lines to prevent duplicates, and extends an existing insight when one already covers the pattern.
+- **`/brief`** injects a size-capped corpus card (counts, frontmatter coverage, tag vocabulary; never an insight body), then greps the frontmatter for ONE topic and reads at most the top 5 insights in full, on demand, in any session. A lesson the code has outgrown gets corrected in place before the brief ends.
 
 ---
 
 ## What an Insight Doc Looks Like
 
-Lean. Focused. Under 60 lines.
+Lean and focused: as short as it can be while it still carries the problem, the cause and the lesson. When a later case teaches more about the same trap, it goes into the existing doc as a dated `## Extended (YYYY-MM-DD): ...` section instead of a near-copy.
 
 ```markdown
 ---

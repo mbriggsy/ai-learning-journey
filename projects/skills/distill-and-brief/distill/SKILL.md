@@ -18,7 +18,7 @@ argument-hint: "[optional: brief description of what was solved]"
 
 ## Instructions
 
-Create `docs/insights/` if it doesn't exist. Write an insight doc at `docs/insights/<next-number>-<slug>.md` with this format:
+Create `docs/insights/` if it doesn't exist. Write a new insight doc at `docs/insights/<next-number>-<slug>.md` with this format, unless an existing insight already covers the pattern (then extend it: see the Quality Bar):
 
 ```yaml
 ---
@@ -42,7 +42,8 @@ tags: [<searchable keywords>]
 
 - If the root cause is obvious from the fix, it doesn't need a solution doc
 - The "Key Insight" is the most important section — it's what prevents the next person from hitting the same wall
-- Keep it under 60 lines. These are reference docs, not novels.
+- Make it as short as it can be while it still carries the problem, the cause and the lesson. There is no line cap.
 - Don't duplicate: the list above is filenames only — before writing, grep the insight files' `title:` and `tags:` lines for your problem's key terms and read any hit before deciding the insight is new
+- Extend instead of copying: when an existing insight already covers the pattern, add the new case to it rather than writing a near-copy. Append a section headed `## Extended (YYYY-MM-DD): <what this case adds>` with the new case and what it teaches, and add any new search words to its `tags:` line. A new number is only for a lesson that is new.
 
 $ARGUMENTS

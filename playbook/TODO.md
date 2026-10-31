@@ -24,7 +24,7 @@ The queue for work on how we work. Sessions for it start in this folder.
 - **CE is at 3.34.0** with auto-update on for its marketplace. Its other-vendor review pass is off in the repo-root `.compound-engineering/config.yaml`, and `~/.claude/CLAUDE.md` says Claude models only. That line is the only off switch for CE's bake-off, where helpers each draft an approach and, unless told otherwise, look for other companies' models to do it. No other vendor's tool is installed.
 - **The our-setup program (2026-10-19 to 10-27) is flushed**, every leftover included (the two numbered hook folders went on 10-31).
 - **Kept from the program:** ultracode on by default, the status bar's live effort level, the `/window` fix after compaction, and squeaky's hand-off to a named successor (found with `ListAgents`; the `<name> [ref]` send for a name clash is untested end to end).
-- **Lessons** live in [docs/insights/](docs/insights/): 002, 003, 005 and 008.
+- **Lessons** live in [docs/insights/](docs/insights/): 002, 003, 005, 008 and 009.
 
 ## Landmines
 

@@ -38,8 +38,8 @@ matched) and its runner `mutants.cjs` + `mutants.spec.json` (per-test kills with
 smaller; all fixed. U10's Caddie card stays **HARD-FLAG** on its two Tier 1 builds (unchanged). The pay-check review's record:
 `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-whole-review\FIXES.md` (`pre\`, `pre-a4\`, `head\` and several lens folders hold `node_modules` JUNCTIONS —
 remove each link alone before deleting any folder there). Rulings 38–42 are in `b9-phaseb\DECISIONS.md`. Next, in order:
-1. **The old-copy version bump — BUILT (b9-3, 2026-10-31): the bump commit (U1–U3, U5, U6's fixtures) has landed; NEXT: the
-   version-floor test in its own second commit, then the gates, the whole-file ultramode review, `/distill`.** The plan:
+1. **The old-copy version bump — BUILT (b9-3, 2026-10-31): the bump (`c2864eb9`: U1–U3, U5, U6's fixtures) and the version-floor
+   test in its own second commit have landed; NEXT: the mutant pass, the whole-file ultramode review, `/distill`.** The plan:
    `docs/plans/features/schema-v4-old-copy-refusal-build-spec.md` (`594e4ae9`). U4 and U6 ran against `git archive` copies of the
    two old builds; their runs, cited reads and the mint script are in
    `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-schema-v4-proof\README.md`. The

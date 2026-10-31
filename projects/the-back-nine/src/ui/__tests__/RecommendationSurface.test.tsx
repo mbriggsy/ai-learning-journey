@@ -26,7 +26,7 @@ import {
   type Distribution,
   type SavedRecommendationEraV3,
   type SavedRecommendationV3,
-  type ScenarioV3,
+  type CurrentScenario,
 } from '@shared/model'
 import { headlineStatisticFromDistribution } from '@engine/solver/objectiveHeadline'
 import type { SolveArm, SolveRecommendation } from '@engine/solver/solve'
@@ -197,7 +197,7 @@ const EXPOSURE = exposureForDraft(DEV_SEEDS.retired)
 
 /** The five era-bearing fields of a REAL save. THROWS rather than `!`-asserting: a fixture that
  *  quietly built a stampless era would exercise the fail-open shape the codec refuses outright. */
-function eraOf(s: ScenarioV3): SavedRecommendationEraV3 {
+function eraOf(s: CurrentScenario): SavedRecommendationEraV3 {
   const { taxVintageDetail, stateTaxVintage, healthcareVintage, dateVintage } = s
   if (
     taxVintageDetail === undefined ||

@@ -14,7 +14,7 @@ import { isWorkingYearCostStale, workingYearCostStaleText, workingYearCostStalen
 import { floorLineText, heroLead } from '../FuckOffDate'
 import { planClockAnchor } from '../bandAnnotations'
 import type { ScenarioDraft } from '@store/memoryModel'
-import type { ScenarioV3, SimulationParams } from '@shared/model'
+import { CURRENT_SCHEMA_VERSION, type CurrentScenario, type SimulationParams } from '@shared/model'
 import { decodeScenario, encodeScenario } from '@shared/scenarioCodec'
 import { SOLVER_CODE_VERSION } from '@engine/solver/solverCodeVersion'
 import { solverRunFingerprint } from '@engine/validation/solverRunFingerprint'
@@ -1184,7 +1184,7 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
     // each person's STATED `birthYear` — here 1958/1959 derived against 1960/1961 stated, which
     // straddles the SECURE-2.0 RMD band edge (`bornThrough: 1959 → 73` vs `null → 75`) for BOTH
     // people. The doctored household is therefore forced into RMDs two years earlier than the
-    // household it claims to represent, and `PersonInputs` (model.ts:98) documents
+    // household it claims to represent, and `PersonInputs` (model.ts:99) documents
     // `currentAge === startCalendarYear − birthYear` as an invariant that fresh scenarios hold
     // (verified: fresh derives 1960/1961, exactly its stated pair).
     //
@@ -1218,7 +1218,7 @@ describe('the record-bearing plants (the remembered recommendation the fit gate 
 
   /** The plant's own chain, up to the point the app takes over: build the seed, doctor it, run the
    *  vault round-trip, and hydrate exactly as unlock does. Returns both halves the trichotomy needs. */
-  function plant(doctor: (s: ScenarioV3, today: number) => ScenarioV3) {
+  function plant(doctor: (s: CurrentScenario, today: number) => CurrentScenario) {
     const built = scenarioFromDraft(DEV_SEEDS.retired)
     expect(built.ready, 'retired must be save-ready').toBe(true)
     if (!built.ready) throw new Error('unreachable — asserted above')
@@ -1231,8 +1231,8 @@ describe('the record-bearing plants (the remembered recommendation the fit gate 
     expect(round.ok, 'the doctored scenario must survive the codec').toBe(true)
     if (!round.ok) throw new Error('unreachable — asserted above')
     expect(round.droppedAtoms, 'the planted record must NEVER be a tolerated drop').toEqual([])
-    expect(round.scenario.schemaVersion).toBe(3)
-    if (round.scenario.schemaVersion !== 3) throw new Error('unreachable — asserted above')
+    expect(round.scenario.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
+    if (round.scenario.schemaVersion !== CURRENT_SCHEMA_VERSION) throw new Error('unreachable — asserted above')
     const scenario = round.scenario
     const record = scenario.savedRecommendation
     expect(record, 'the plant exists to carry a record').not.toBeUndefined()
@@ -1325,7 +1325,7 @@ describe('the record-bearing plants (the remembered recommendation the fit gate 
   it('the two plants differ ONLY in what they claim to differ in (the twin guard: two frames that must stay comparable)', () => {
     const holds = plant(doctorRecordHolds)
     const superseded = plant(doctorRecordSuperseded)
-    const strip = (s: ScenarioV3) => {
+    const strip = (s: CurrentScenario) => {
       const { savedRecommendation: _record, annualSpendingReal: _spend, ...rest } = s
       return rest
     }
@@ -1350,7 +1350,7 @@ describe('the record-bearing plants (the remembered recommendation the fit gate 
 describe('the arrived aged plant (the first live route to the hero\'s dateInYearsPast arm)', () => {
   const TODAY = currentEpochDay()
 
-  function plantArrived(): { fresh: ScenarioV3; aged: ScenarioV3; depth: number } {
+  function plantArrived(): { fresh: CurrentScenario; aged: CurrentScenario; depth: number } {
     const built = scenarioFromDraft(DEV_SEEDS.dip)
     expect(built.ready, 'dip must be save-ready').toBe(true)
     if (!built.ready) throw new Error('dip is not save-ready — the arrived plant has no base')
@@ -1358,7 +1358,7 @@ describe('the arrived aged plant (the first live route to the hero\'s dateInYear
     return { fresh: built.scenario, aged, depth: built.scenario.startCalendarYear - aged.startCalendarYear }
   }
 
-  // Arm 1 — THE MODEL INVARIANT THIS DOCTOR EXISTS TO HOLD. `PersonInputs` (model.ts:98) documents
+  // Arm 1 — THE MODEL INVARIANT THIS DOCTOR EXISTS TO HOLD. `PersonInputs` (model.ts:99) documents
   // `currentAge === startCalendarYear − birthYear`, and the engine reads a birth year through TWO
   // paths that must agree: the SS sub-engine's stated `p.birthYear` (FRA / DRC / deemed-filing) and
   // the tax overlay's DERIVED `startCalendarYear − currentAge` (simulate.ts:346). Aging the build
@@ -1463,7 +1463,7 @@ describe('the arrived aged plant (the first live route to the hero\'s dateInYear
   it('REFUSES a base that already breaks the invariant, rather than propagating the fork', () => {
     const built = scenarioFromDraft(DEV_SEEDS.dip)
     if (!built.ready) return
-    const broken: ScenarioV3 = {
+    const broken: CurrentScenario = {
       ...built.scenario,
       people: built.scenario.people.map((p, i) => (i === 0 ? { ...p, birthYear: p.birthYear - 3 } : p)),
     }

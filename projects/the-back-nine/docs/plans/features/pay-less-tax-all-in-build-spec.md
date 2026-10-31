@@ -109,8 +109,8 @@ Result: the all-in vector equals the tax vector element by element, and its mean
   - the stamp is global, so leave-more records re-stale too. That over-re-run is accepted under the file's when-in-doubt rule.
 - Re-pin `pricingVersion.test.ts:150-174` to `{ solverCodeVersion: 10, newestRepriceRow: 7 }`, and retitle it "v8, v9 and v10 were ranking logic only". (Then; the 2026-10-09 survivor-medical lean, a scored pricing change, re-pinned it to `{ solverCodeVersion: 11, newestRepriceRow: 11 }`, and since the 2026-10-27 RIB-LIM order — scored, no ledger row — it reads `{ solverCodeVersion: 12, newestRepriceRow: 11 }`.)
 - **No ledger row** (`pricingVersion.ts:46-53`): no figure from a saved household's spine recompute moves. `FIRST_UNAMBIGUOUS_SAVE_DAY` stays put.
-- **No `FINGERPRINT_SCHEMA` bump and no objective tag** (`solverRunFingerprint.ts:63-65`). Either would add a false 'inputs-changed' cause, which renders "Your numbers have changed since then." (`copy.ts:2042`). Saved records must report ONE cause, 'solver-changed', which renders "The way strategies are worked out has changed since then." (the string is at `copy.ts:2045`, mapped from the cause at `Result.tsx:86`). That sentence is true. Records persist no dollar figure (`model.ts:2191-2253`).
-- **Persisted id `'pay-less-tax'` stays.** It lives in `model.ts:272` RECOMMENDATION_GOALS, the codec needVocab gate (`:2099`) and the fingerprint canon (`solverRunFingerprint.ts:121`). Renaming it is a one-way door: memories dropped, plus a false 'inputs-changed'.
+- **No `FINGERPRINT_SCHEMA` bump and no objective tag** (`solverRunFingerprint.ts:63-65`). Either would add a false 'inputs-changed' cause, which renders "Your numbers have changed since then." (`copy.ts:2042`). Saved records must report ONE cause, 'solver-changed', which renders "The way strategies are worked out has changed since then." (the string is at `copy.ts:2045`, mapped from the cause at `Result.tsx:86`). That sentence is true. Records persist no dollar figure (`model.ts:2226-2288`).
+- **Persisted id `'pay-less-tax'` stays.** It lives in `model.ts:273` RECOMMENDATION_GOALS, the codec needVocab gate (`:2130`) and the fingerprint canon (`solverRunFingerprint.ts:121`). Renaming it is a one-way door: memories dropped, plus a false 'inputs-changed'.
 - **v10 collision:** `council-log.md`'s 2026-10-04 *Adoption of the roster-recall fix* row and `backlog.md:1144-1153` earmark v10 for the unmerged gap-fill (`b9-v10-gapfill-wip`). Note in the register's recall entry: "v10 = the all-in objective; a revived gap-fill re-measures on all-in and takes a later version." The council rows stay as records.
 
 ## 2. Every site
@@ -126,7 +126,7 @@ Result: the all-in vector equals the tax vector element by element, and its mean
 - NEW `reference/solver-cases/caseAllInAcaTrap.ts` plus its `index.ts` entry (§5.1).
 
 **Docblock only:**
-- ⚑ SKEPTIC (missing site): `src/shared/model.ts`'s docblock (pre-Phase-A wording, as of `b3284566`; as built the re-worded docblock is `model.ts:890-892` and the field `model.ts:893`) documents `lifetimeMedicareCostReal` as "base Part B + the IRMAA surcharge", but `taxOverlay.ts:2724` accrues `medicareCostThisYear + medicareExtrasThisYear` (the Part D / Medigap / MA extras). Re-word it to "base Part B + IRMAA + the Part D / Medigap / MA extras (`taxOverlay.ts:2724`), an addend of the pay-less-tax all-in objective", and note at `model.ts:856-859` ("the P4 objective reads THESE") that pay-less-tax now ranks on tax + premium + Medicare. No type change; Phase A.
+- ⚑ SKEPTIC (missing site): `src/shared/model.ts`'s docblock (pre-Phase-A wording, as of `b3284566`; as built the re-worded docblock is `model.ts:891-893` and the field `model.ts:894`) documents `lifetimeMedicareCostReal` as "base Part B + the IRMAA surcharge", but `taxOverlay.ts:2724` accrues `medicareCostThisYear + medicareExtrasThisYear` (the Part D / Medigap / MA extras). Re-word it to "base Part B + IRMAA + the Part D / Medigap / MA extras (`taxOverlay.ts:2724`), an addend of the pay-less-tax all-in objective", and note at `model.ts:857-860` ("the P4 objective reads THESE") that pay-less-tax now ranks on tax + premium + Medicare. No type change; Phase A.
 - `solve.ts:214-224, :385-390` (deltaSkew wording).
 - `stateTaxDisclosure.ts:151-155`: the priced-state layer reaches the hero through the tax addend; the logic is unchanged.
 - `recommendationView.ts:100` and `:720`.
@@ -387,10 +387,10 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
   - D1 `:71`: one clause.
   - R21 `:129` and §6 `:101`: his shipped words, or a slot pointer.
   - R24 `:134`: holds for both goals. Edit it only in the shipping commit.
-- **`docs/architecture.md` §7.5 `:264`:** the three addends, the one composing function, and the invariants: shared footing (with the funded-years bias named), reduce-to-spine, no double count, HSA not an addend.
+- **`docs/architecture.md` §7.5 `:281`:** the three addends, the one composing function, and the invariants: shared footing (with the funded-years bias named), reduce-to-spine, no double count, HSA not an addend.
 - **`docs/plans/1-engine.md:121`:** a one-clause annotation.
 - **`act4-u16-recommendation-surface-build-spec.md:373, :380-400`:** "all-in lifetime cost, lower is better", plus the re-scoped disclosure list.
-- **`docs/glossary.md`:** a new entry "All-in cost (pay-less-tax objective)". ⚑ Disambiguate it from "all-in" as the Medicare base + Part D/Medigap figure (`council-log.md:24`, the `taxOverlay.ts:2722` comment), from the premiums-only median sum the U11 regime-toggle preview reads (`roth.ts:144`, documented at `model.ts:885-888`), and from "Household spending, all in" (`council-log.md:43`): three referents (⚑ SKEPTIC). Re-check `glossary.md:159` against the final verb.
+- **`docs/glossary.md`:** a new entry "All-in cost (pay-less-tax objective)". ⚑ Disambiguate it from "all-in" as the Medicare base + Part D/Medigap figure (`council-log.md:24`, the `taxOverlay.ts:2722` comment), from the premiums-only median sum the U11 regime-toggle preview reads (`roth.ts:144`, documented at `model.ts:886-889`), and from "Household spending, all in" (`council-log.md:43`): three referents (⚑ SKEPTIC). Re-check `glossary.md:159` against the final verb.
 - **`docs/roadmap.md:95`:** the fixture count.
 - **`backlog.md`:** Phase C step 19.
 

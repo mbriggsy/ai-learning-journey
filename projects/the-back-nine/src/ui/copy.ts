@@ -1935,7 +1935,7 @@ export const copy = {
   // the gesture returns before `appModel.update` and before the write, so on BOTH routes nothing
   // reached the device. The obligation as originally filed — "we saved your plan, we could not save
   // the recommendation" — was drafted for a save-proceeds-then-drops-the-atom flow that
-  // scenarioCodec.ts:666-670 instructs S5 to make UNREACHABLE. Shipping that sentence would have
+  // scenarioCodec.ts:682-686 instructs S5 to make UNREACHABLE. Shipping that sentence would have
   // been the cardinal sin pointed the other way: a save reported that never happened.
   recommendSaveCta: 'Keep this strategy read',
   // R1 AND R2, both named BEFORE the tap. The no-vault route escalates a "keep this" tap into vault

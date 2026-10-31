@@ -11,7 +11,8 @@
  * engine's core contract + a minimal plaintext `Scenario`. U2/U3 extend `Scenario`
  * with per-person account buckets + birth years (the schemaVersion-2 field shape);
  * U4 wraps it in the persisted record types + owns the `schemaVersion` DECODE ladder
- * (branch per version, refuse newer, no migrate step). Those extensions are additive — the fields here are written from v1.
+ * (branch per version, refuse newer, no field migration — the one step is the schema-v4 bump's
+ * label-only relabel of version 3). Those extensions are additive — the fields here are written from v1.
  */
 
 // ---------------------------------------------------------------------------
@@ -593,7 +594,7 @@ export type BudgetCategory = (typeof BUDGET_CATEGORIES)[number]
 export const BUDGET_TIERS = ['essentials', 'discretionary'] as const
 export type BudgetTier = (typeof BUDGET_TIERS)[number]
 
-/** One itemized budget line (persisted on {@link ScenarioV3} — additive-optional within
+/** One itemized budget line (persisted on {@link CurrentScenario} — additive-optional within
  *  schemaVersion 3). All amounts are TODAY'S-DOLLAR (real) figures, matching the spine's
  *  inflation-adjusted convention. The window is a pair of integer year-OFFSETS from the
  *  HOUSEHOLD work-stop anchor (year 0 = the year work stops; for an already-retired
@@ -785,7 +786,7 @@ export interface SurvivorReading {
    *  PRESENT on every reading this build's engine emits — the surface always carries it. OPTIONAL in the
    *  type so a reading from any other producer renders the card WITHOUT the line rather than a $0 one
    *  (insight 044, fail to absent). No shipping path persists a SurvivorReading (traced 2026-10-14): the
-   *  vault holds the {@link ScenarioV3} inputs and the {@link SavedRecommendationV3} record only — neither
+   *  vault holds the {@link CurrentScenario} inputs and the {@link SavedRecommendationV3} record only — neither
    *  carries a survivor field — so every card, the aged `?vault=` plants included, renders from a fresh
    *  run of this build; the only producers without it are the dev preview fixtures that opt out. */
   readonly spendingBasis?: SurvivorSpendingBasis
@@ -1256,8 +1257,8 @@ export interface Scenario {
 // schemaVersion-2 scenario shape (U2 · M6a). The v1 spine inputs + the tax-overlay
 // fields: PER-PERSON account buckets + birth year, the household filing status, and
 // provenance stamps. DEFINED HERE for the contract + the decode ladder — it
-// is NOT the forward-written persist shape: the guided intake first-writes ScenarioV3
-// at P2·U8 (see the schemaVersion-3 block below), and v2 survives only as a decode-
+// is NOT the forward-written persist shape: the guided intake first-writes CurrentScenario
+// at P2·U8 (see the current-shape block below), and v2 survives only as a decode-
 // ladder member (`AnyScenario`), decoded as-is with no up-convert. The decode ladder
 // is owned by U4. CONSUMED VIA `OverlayParams`: P2 intake maps these
 // per-person fields down to the engine's `OverlayParams` — the aggregated `buckets`
@@ -1654,10 +1655,23 @@ export interface ScenarioV2 {
 }
 
 // ---------------------------------------------------------------------------
-// schemaVersion-3 scenario shape (P2 · D1 — the account-level intake). The v2
-// semantics + the ENTERED truth the guided setup captures: per-person identity +
-// work-status, the user's actual account list, the ticker-keyed manual
-// classifications, and the household health-cost entry.
+// The CURRENT scenario shape — the field set introduced as schemaVersion 3 (P2 · D1 —
+// the account-level intake). The v2 semantics + the ENTERED truth the guided setup
+// captures: per-person identity + work-status, the user's actual account list, the
+// ticker-keyed manual classifications, and the household health-cost entry.
+//
+// ONE FIELD SET, TWO LABELS (the schema-v4 bump, 2026-10-31, Briggsy's OK on the register
+// entry *A copy of the app built before the pay check opens a plan carrying W…*): every
+// save since writes this shape as `schemaVersion` 4 ({@link CURRENT_SCHEMA_VERSION}), so a
+// copy built before the bump refuses it calmly ("saved by a newer version") instead of
+// running a plan carrying W without the pay check. Version 3 carries the identical
+// fields; the codec relabels it to 4 at decode, forever (`scenarioCodec.ts`). The
+// sub-types keep their `V3` names (`PersonInputsV3`, `SavedRecommendationV3`,
+// `WorkingYearCostV3`, the `*VintageV3` stamps, `SCENARIO_V3_FIELDS`, the codec's
+// `checkV3Fields`): they name this field GENERATION, which version 4 carries unchanged.
+// When a future field must bump the version: `docs/architecture.md` §7.3.
+//
+// What follows is the shape's history as first written (dated, kept as written):
 //
 // DEFINED HERE for the single-shape rule (phase-2 contract #1e: `memoryModel`
 // holds the same to-be-persisted MODEL shape, so an intake field can never be
@@ -1765,7 +1779,7 @@ export interface EnteredAccount {
 
 /** The manual ticker classification (R37 fallback): the calm 3-choice answer, or
  *  the advanced exact-% split (intake enforces sum-to-100). Keyed by ticker in
- *  `ScenarioV3.tickerClassifications` — answered once, reused across accounts
+ *  `CurrentScenario.tickerClassifications` — answered once, reused across accounts
  *  WITHIN the flow, persisted only at Save inside the encrypted record (R39). */
 export const TICKER_CLASSIFICATION_CHOICES = ['stocks', 'bonds', 'cash'] as const
 export type TickerClassificationChoice = (typeof TICKER_CLASSIFICATION_CHOICES)[number]
@@ -1912,7 +1926,7 @@ export type IncomeTaxTreatment =
       readonly exclusionFraction: number
     }
 
-/** One persisted other-income stream (R40 · KTD-3, on `ScenarioV3.incomeStreams`) — the common fields +
+/** One persisted other-income stream (R40 · KTD-3, on `CurrentScenario.incomeStreams`) — the common fields +
  *  the `type`-keyed tax-treatment union. Entity scalars (`survivorPct` / `taxableFraction` /
  *  `exclusionFraction` ∈ [0,1]) are range-gated ENTITY-side (intake sanity + U8's codec): they are
  *  multiplied away at compile, so the engine never sees them to range-check (KTD-4). */
@@ -1941,12 +1955,29 @@ export type IncomeStream = {
   readonly survivorPct: number
 } & IncomeTaxTreatment
 
-/** The schemaVersion-3 plaintext scenario: the account-level intake truth.
- *  See the section comment above for the define-now/write-at-U8 contract and the
- *  deliberate fidelity-over-duplication shape change vs v2. */
-export interface ScenarioV3 {
+/**
+ * The version every save writes — the ONE home of the current `schemaVersion` (the schema-v4
+ * plan's KTD1). The mint (`scenarioFromDraft`), the codec's top arm and its "newer" threshold,
+ * and the hydrate gate (`IntakeApp`) all read it; no production file re-types it, except the
+ * codec's version-3 step, which names its LITERAL successor (a step that jumps to "current"
+ * would carry an old plan past whatever step a later bump adds). Declared here, above the type
+ * it discriminates, as {@link BACKUP_FORMAT_VERSION} is: `model.ts` is the only home without an
+ * import cycle.
+ *
+ * A ONE-WAY DOOR ONCE A REAL SAVE CARRIES IT: a build with a lower ladder top shows that save as
+ * "saved by a newer version" with no newer version to update to. Never revert a bump or lower
+ * this constant after a real save — roll forward (`docs/architecture.md` §7.3). Each bump raises
+ * the version-floor test in its own follow-up commit.
+ */
+export const CURRENT_SCHEMA_VERSION = 4
+
+/** The current plaintext scenario: the account-level intake truth, written as
+ *  {@link CURRENT_SCHEMA_VERSION} (version 3 carries the same fields and relabels at decode).
+ *  See the section comment above for the label history, the define-now/write-at-U8 contract
+ *  and the deliberate fidelity-over-duplication shape change vs v2. */
+export interface CurrentScenario {
   /** Migration discriminant — read before any other field on decrypt (U4). */
-  readonly schemaVersion: 3
+  readonly schemaVersion: typeof CURRENT_SCHEMA_VERSION
   /** Exactly two (the married-couple precondition — the cold-start frame's one
    *  orientation line). */
   readonly people: readonly PersonInputsV3[]
@@ -2126,8 +2157,12 @@ export interface ScenarioV3 {
   readonly heirBracket?: number
   /** The household's answer to "what does a year cost while someone still works?" — W, the pay
    *  check's one new setup answer (`docs/plans/features/working-year-pay-check-build-spec.md`
-   *  KTD4). ADDITIVE-OPTIONAL within schemaVersion 3 (the `heirBracket` precedent: no version
-   *  bump, never seeded); a user fact carried through `...draft` at Save. Absent ⇒ no working-year
+   *  KTD4). It landed ADDITIVE-OPTIONAL within schemaVersion 3 (the `heirBracket` precedent, never
+   *  seeded); a user fact carried through `...draft` at Save. It is also the field the schema-v4
+   *  bump exists for (2026-10-31): a copy built before it ignored W and ran the working years
+   *  without the pay check, unflagged, so every save now writes version 4, which such a copy
+   *  refuses (§7.3's rule (a)). Optional still: a version-3 plan saved before W shipped has none,
+   *  and a current copy opens it with W unanswered (the register's shape-keyed W ask). Absent ⇒ no working-year
    *  check, and every run is byte-identical to a build without it (R18). The intake REQUIRES it on
    *  the date route through the W step's gate, never through `missingRequiredFacts` (KTD3: the
    *  codec keeps it optional). Its figure is ANNUAL real dollars on both kinds; `entryPeriod` is a
@@ -2190,7 +2225,7 @@ export type SavedRecommendationGrade = (typeof SAVED_RECOMMENDATION_GRADES)[numb
  */
 export interface SavedRecommendationV3 {
   /** The epoch-DAY the record was minted (the same finite-integer unit + range gate as
-   *  {@link ScenarioV3.savedAt} — DND 009, insight 046: an epoch-MILLISECOND value here is a
+   *  {@link CurrentScenario.savedAt} — DND 009, insight 046: an epoch-MILLISECOND value here is a
    *  finite integer that silently reads as year ~55000). DELIBERATELY NOT `scenario.savedAt`:
    *  that stamp re-mints on every re-save, so a household that edits its budget and re-saves
    *  would see its recommendation's age reset to today while the ranking behind it aged. */
@@ -2258,7 +2293,7 @@ export interface SavedRecommendationActionV3 {
   readonly candidateId: string
   readonly policy: DrawdownPolicy
   /** REQUIRED iff `policy === 'custom'` — the codec enforces the biconditional in BOTH
-   *  directions (the {@link ScenarioV3.drawdownOrder} precedent): a 'custom' action with no
+   *  directions (the {@link CurrentScenario.drawdownOrder} precedent): a 'custom' action with no
    *  order names nothing, and an order riding a named policy would silently NOT govern. */
   readonly drawdownOrder?: readonly DrawdownOrderKey[]
 }
@@ -2360,7 +2395,7 @@ export interface SavedRecommendationVerdictV3 {
  * household loses a memory; it never gets a stale ranking spoken in the present tense.
  *
  * (The overlay in `savedRecommendation.ts` writes all five keys through a
- * `Required<Pick<ScenarioV3, keyof SavedRecommendationEraV3>>` literal, so omitting one — or
+ * `Required<Pick<CurrentScenario, keyof SavedRecommendationEraV3>>` literal, so omitting one — or
  * re-optionalizing one here — is a COMPILE error rather than a silently-quiet clock.)
  */
 export interface SavedRecommendationEraV3 {
@@ -2502,7 +2537,7 @@ export const SAVED_AT_EPOCH_DAY_MAX = 47_482
  *  `JSON.stringify` OF THIS. This function's own contract is only: the same fields, minus
  *  `savedAt`. Deep-equality consumers (`toEqual` in the round-trip guard) are fine as they are —
  *  it is STRING comparison that must go through the canonical key. */
-export function scenarioIdentity(scenario: ScenarioV3): Omit<ScenarioV3, 'savedAt'> {
+export function scenarioIdentity(scenario: CurrentScenario): Omit<CurrentScenario, 'savedAt'> {
   const { savedAt: _savedAt, ...identity } = scenario
   return identity
 }
@@ -2539,7 +2574,7 @@ export function scenarioIdentity(scenario: ScenarioV3): Omit<ScenarioV3, 'savedA
  * because src/shared is a leaf that must not import the engine (the {@link MAX_REAL_DOLLAR}
  * precedent); the two serve different consumers and are not required to agree byte-for-byte.
  */
-export function scenarioIdentityKey(scenario: ScenarioV3): string {
+export function scenarioIdentityKey(scenario: CurrentScenario): string {
   return canonicalIdentityToken(scenarioIdentity(scenario))
 }
 
@@ -2616,7 +2651,12 @@ export interface HealthcareVintageV3 {
 
 /** The exhaustive v3 field set — U8's `checkV3Fields` checklist (burned/063: the
  *  codec arm iterates THIS list, so a field added to the interface cannot
- *  silently skip validation — it fails the compile-time tie below first). */
+ *  silently skip validation — it fails the compile-time tie below first).
+ *  Version 4 carries exactly this set (the label-only bump). A NEW field must join this list to
+ *  compile, and whether it also BUMPS {@link CURRENT_SCHEMA_VERSION} is decided by the rule in
+ *  `docs/architecture.md` §7.3 (would an older copy that ignores it answer differently, refuse it,
+ *  or drop it on save?). A new VALUE in a vocabulary the codec checks, or a new key in a vintage
+ *  stamp, never touches this list: the codec suite's schema-surface pin holds those. */
 export const SCENARIO_V3_FIELDS = [
   'schemaVersion',
   'people',
@@ -2650,18 +2690,20 @@ export const SCENARIO_V3_FIELDS = [
   'savedRecommendation',
 ] as const
 
-// Compile-time: the field array exactly covers ScenarioV3 (both directions).
-type _V3FieldsCover = (typeof SCENARIO_V3_FIELDS)[number] extends keyof ScenarioV3 ? true : never
-type _V3KeysCovered = keyof ScenarioV3 extends (typeof SCENARIO_V3_FIELDS)[number] ? true : never
+// Compile-time: the field array exactly covers CurrentScenario (both directions).
+type _V3FieldsCover = (typeof SCENARIO_V3_FIELDS)[number] extends keyof CurrentScenario ? true : never
+type _V3KeysCovered = keyof CurrentScenario extends (typeof SCENARIO_V3_FIELDS)[number] ? true : never
 const _v3FieldsExhaustive: _V3FieldsCover & _V3KeysCovered = true
 void _v3FieldsExhaustive
 
-/** The union of persistable plaintext scenario shapes (every version the decode
- *  ladder accepts today). ScenarioV3 JOINED at P2·U8 (its codec arm + first writer);
- *  v1/v2 remain only as legacy decode-ladder members, decoded as-is (no up-convert).
- *  The codec's unknown-version branch (now `> 3`) keeps a still-newer blob surfacing
- *  the calm "saved by a newer version" state, never a mis-parse. */
-export type AnyScenario = Scenario | ScenarioV2 | ScenarioV3
+/** The union of the scenario shapes a decode can RETURN. The current shape joined at P2·U8 (its
+ *  codec arm + first writer), labeled 3 until the schema-v4 bump; it now carries
+ *  {@link CURRENT_SCHEMA_VERSION}, and a version-3 plan never appears here — the codec relabels it
+ *  to its successor before returning, so 3 is in no type and every `=== 3` comparison is a
+ *  compile error. v1/v2 remain only as legacy decode-ladder members, decoded as-is (no
+ *  up-convert), which the hydrate gate refuses. Anything above the current version surfaces the
+ *  calm "saved by a newer version" state, never a mis-parse. */
+export type AnyScenario = Scenario | ScenarioV2 | CurrentScenario
 
 // ---------------------------------------------------------------------------
 // The at-rest vault record shapes (P1·U4) — the SINGLE-SOURCED definition the

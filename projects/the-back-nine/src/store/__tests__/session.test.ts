@@ -9,11 +9,14 @@
  * IndexedDB, real Web Locks, real BroadcastChannel) rides the U4 Playwright e2e.
  */
 import 'fake-indexeddb/auto'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { IDBFactory } from 'fake-indexeddb'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { VAULT_STORE_NAME, type Scenario } from '@shared/model'
-import { checkPassphraseFloor, type FloorCheckedPassphrase } from '../../crypto/kdf'
+import { CURRENT_SCHEMA_VERSION, VAULT_STORE_NAME, type AnyScenario, type Scenario } from '@shared/model'
+import { decrypt, unwrapDataKey } from '../../crypto/cipher'
+import { checkPassphraseFloor, derivePassphraseKey, type FloorCheckedPassphrase } from '../../crypto/kdf'
 import { clearVault, loadVault, markBackupMade, openVaultDb, type VaultDb } from '../db'
 
 // Pass-through mock: markBackupMade is a spy that DELEGATES to the real implementation, so every
@@ -620,5 +623,108 @@ describe('single-active-writer (BroadcastChannel second-tab detection)', () => {
     expect(result).toEqual({ ok: false, reason: 'open-in-another-tab' })
     await tabA.lock()
     await tabB.lock()
+  })
+})
+
+describe('the schema-v4 bump — a newer plan is refused before anything is installed; a version-3 plan opens as the current one, and the disk keeps what it holds', () => {
+  const NEWER = CURRENT_SCHEMA_VERSION + 1
+  const newerModel = (): Scenario => ({ ...MODEL, schemaVersion: NEWER }) as unknown as Scenario
+  /** A REAL version-3 save, frozen from the last build before the bump (the codec suite's U6 fixture).
+   *  Read with fs, never imported: the store layer may not reach into ui to mint one. */
+  const frozenV3 = (): AnyScenario =>
+    JSON.parse(
+      readFileSync(join(process.cwd(), 'src', 'shared', '__tests__', 'fixtures', 'scenario-v3-date-postw.json'), 'utf8'),
+    ) as AnyScenario
+
+  /** A vault holding `model` exactly as given (firstSave encodes, it never decodes), left locked. */
+  async function vaultHolding(model: AnyScenario): Promise<VaultDb> {
+    const db = await openVaultDb()
+    const session = createSession(db)
+    const saved = await session.firstSave(model, await floorPass(PASSPHRASE), await floorPass(RECOVERY_PASSPHRASE))
+    if (!saved.ok) throw new Error(`firstSave failed: ${JSON.stringify(saved)}`)
+    await session.lock()
+    return db
+  }
+
+  async function storedModelRecord(db: VaultDb): Promise<{ iv: number[]; ciphertext: number[] }> {
+    const vault = await loadVault(db)
+    if (vault.kind !== 'vault') throw new Error(`expected a vault, got ${vault.kind}`)
+    return { iv: Array.from(vault.model.iv), ciphertext: Array.from(vault.model.ciphertext) }
+  }
+
+  /** The label the DISK holds, read with the vault's own key and a plain JSON parse — through the codec
+   *  a version-3 plan would read as the current version whatever the disk held. */
+  async function diskLabel(db: VaultDb, passphrase: string): Promise<unknown> {
+    const vault = await loadVault(db)
+    if (vault.kind !== 'vault') throw new Error(`expected a vault, got ${vault.kind}`)
+    const key = await derivePassphraseKey(passphrase, vault.passphraseWrap.salt)
+    const dk = await unwrapDataKey(key, {
+      iv: vault.passphraseWrap.iv as Uint8Array<ArrayBuffer>,
+      ciphertext: vault.passphraseWrap.wrappedDataKey as Uint8Array<ArrayBuffer>,
+    })
+    const plaintext = await decrypt(dk, {
+      iv: vault.model.iv as Uint8Array<ArrayBuffer>,
+      ciphertext: vault.model.ciphertext as Uint8Array<ArrayBuffer>,
+    })
+    return (JSON.parse(new TextDecoder().decode(plaintext)) as { schemaVersion: unknown }).schemaVersion
+  }
+
+  it('UNLOCK of a plan saved by a newer version → newer-version: nothing installed, no writer claimed', async () => {
+    const db = await vaultHolding(newerModel())
+    const tabA = createSession(db)
+    expect(await tabA.unlock(PASSPHRASE)).toEqual({ ok: false, reason: 'newer-version', got: NEWER })
+    expect(tabA.currentModel()).toBeNull()
+    expect(tabA.status()).toBe('locked')
+    // No writer claimed: a recovery unlock probes for an active writer BEFORE it decodes, so a claimed
+    // tab A would turn it into 'open-in-another-tab' (the single-active-writer arm above proves the
+    // probe fires). It reaches the codec instead.
+    const tabB = createSession(db)
+    expect(await tabB.recoveryUnlock(RECOVERY_PASSPHRASE)).toEqual({ ok: false, reason: 'newer-version', got: NEWER })
+  })
+
+  it('RECOVERY UNLOCK of a plan saved by a newer version → newer-version: nothing installed, no writer claimed', async () => {
+    const db = await vaultHolding(newerModel())
+    const tabA = createSession(db)
+    expect(await tabA.recoveryUnlock(RECOVERY_PASSPHRASE)).toEqual({ ok: false, reason: 'newer-version', got: NEWER })
+    expect(tabA.currentModel()).toBeNull()
+    expect(tabA.status()).toBe('locked')
+    const tabB = createSession(db)
+    expect(await tabB.recoveryUnlock(RECOVERY_PASSPHRASE)).toEqual({ ok: false, reason: 'newer-version', got: NEWER })
+  })
+
+  it('a VERSION-3 vault unlocks to the current version in memory, and the unlock writes nothing (the stored model record is byte-identical)', async () => {
+    const db = await vaultHolding(frozenV3())
+    expect(await diskLabel(db, PASSPHRASE), 'the vault really holds a version-3 plan').toBe(3)
+    const before = await storedModelRecord(db)
+    const session = createSession(db)
+    expect(await session.unlock(PASSPHRASE)).toEqual({ ok: true, readOnly: false })
+    expect(session.currentModel()?.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
+    expect({ ...session.currentModel(), schemaVersion: 3 }).toEqual(frozenV3())
+    expect(await storedModelRecord(db)).toEqual(before)
+    await session.lock()
+    expect(await diskLabel(db, PASSPHRASE)).toBe(3)
+  })
+
+  it('a VERSION-3 vault through RECOVERY: the current version in memory, and the re-key rewrites only the passphrase wrap (the model record is byte-identical)', async () => {
+    const db = await vaultHolding(frozenV3())
+    const before = await storedModelRecord(db)
+    const session = createSession(db)
+    expect(await session.recoveryUnlock(RECOVERY_PASSPHRASE)).toEqual({ ok: true })
+    expect(session.currentModel()?.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
+    expect((await session.setNewPassphrase(await floorPass(NEW_PASSPHRASE))).ok).toBe(true)
+    expect(await storedModelRecord(db)).toEqual(before)
+    await session.lock()
+    expect(await diskLabel(db, NEW_PASSPHRASE)).toBe(3)
+  })
+
+  it('after the NEXT SAVE the disk holds the current version (read raw with the vault’s own key)', async () => {
+    const db = await vaultHolding(frozenV3())
+    const session = createSession(db)
+    expect((await session.unlock(PASSPHRASE)).ok).toBe(true)
+    const model = session.currentModel()
+    if (model === null) throw new Error('unlocked without a model')
+    expect((await session.save(model)).ok).toBe(true)
+    expect(await diskLabel(db, PASSPHRASE)).toBe(CURRENT_SCHEMA_VERSION)
+    await session.lock()
   })
 })

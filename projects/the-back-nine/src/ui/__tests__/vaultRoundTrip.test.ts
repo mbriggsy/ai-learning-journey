@@ -1,10 +1,10 @@
 /**
  * The FULL-STORE round-trip on the REAL v3 scenario shape (U8 decrypt-on-return spine).
  *
- * The existing byte-identity test (session.test.ts:83) round-trips a hand-written v1 MODEL,
+ * The existing byte-identity test (session.test.ts:86) round-trips a hand-written v1 MODEL,
  * so the rich v3 field set (incomeStreams / filing / startCalendarYear / health / per-person
  * workStatus) never travels encode→writeVault→loadVault→decode. This closes that gap: a real
- * ScenarioV3 (built by the same scenarioFromDraft path the Save ceremony uses) is saved,
+ * CurrentScenario (built by the same scenarioFromDraft path the Save ceremony uses) is saved,
  * evicted from memory, and reopened — the WHOLE object must survive byte-for-byte. A planted
  * companion proves the round-trip is field-SENSITIVE (carries actual values, not a template).
  *
@@ -20,7 +20,7 @@ import { loadVault, openVaultDb } from '@store/db'
 import { createSession } from '@store/session'
 import { currentEpochDay, scenarioFromDraft } from '../scenarioFromDraft'
 import { DEV_SEEDS, doctorRecordHolds } from '../devSeeds'
-import type { AnyScenario, ScenarioV3 } from '@shared/model'
+import { CURRENT_SCHEMA_VERSION, type AnyScenario, type CurrentScenario } from '@shared/model'
 
 const PASSPHRASE = 'plinth otter vivid casket 92 lampoon'
 const RECOVERY_PASSPHRASE = 'lattice harbor cinder vellum 48 thicket'
@@ -32,18 +32,18 @@ async function floorPass(p: string): Promise<FloorCheckedPassphrase> {
 }
 
 /**
- * `currentModel()` returns the `AnyScenario` MIGRATION UNION (v1 | v2 | v3), and
- * `savedRecommendation` exists on v3 alone. Narrow with a real assertion rather than a cast: a
- * reopened vault that came back as anything but v3 would be a genuine finding about the store, and
- * a bare `as ScenarioV3` would hide exactly that finding to buy a green compile.
+ * `currentModel()` returns the `AnyScenario` MIGRATION UNION (v1 | v2 | the current shape), and
+ * `savedRecommendation` exists on the current shape alone. Narrow with a real assertion rather than a
+ * cast: a reopened vault that came back as anything but the current version would be a genuine finding
+ * about the store, and a bare `as CurrentScenario` would hide exactly that finding to buy a green compile.
  */
-function reopenedV3(model: AnyScenario | null): ScenarioV3 {
+function reopenedV3(model: AnyScenario | null): CurrentScenario {
   expect(model, 'the reopened vault carried no model at all').not.toBeNull()
-  expect(model?.schemaVersion, 'the reopened model must be v3 — the record exists on no other shape').toBe(3)
-  return model as ScenarioV3
+  expect(model?.schemaVersion, 'the reopened model must be the current version — the record exists on no other shape').toBe(CURRENT_SCHEMA_VERSION)
+  return model as CurrentScenario
 }
 
-/** A real, complete ScenarioV3 — the canonical "ready to save" form the ceremony persists. */
+/** A real, complete CurrentScenario — the canonical "ready to save" form the ceremony persists. */
 function builtScenario() {
   const r = scenarioFromDraft(DEV_SEEDS.retired)
   if (!r.ready) throw new Error('DEV_SEEDS.retired should be a ready draft')
@@ -55,11 +55,11 @@ beforeEach(() => {
 })
 
 describe('the full-store round-trip on the REAL v3 scenario shape (field fidelity through IndexedDB)', () => {
-  it('a real ScenarioV3 survives firstSave → loadVault → unlock byte-for-byte (the whole v3 field set)', async () => {
+  it('a real CurrentScenario survives firstSave → loadVault → unlock byte-for-byte (the whole v3 field set)', async () => {
     const scenario = builtScenario()
     // Guard the fixture is genuinely the rich v3 shape, not a v1 stand-in — else the round-trip
     // proves nothing the existing v1 test doesn't already cover.
-    expect(scenario.schemaVersion).toBe(3)
+    expect(scenario.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
     expect(scenario.incomeStreams).toBeDefined()
     expect(scenario.people.length).toBeGreaterThan(0)
 

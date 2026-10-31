@@ -29,9 +29,9 @@ here exists because the aged surface that record lands on was not honest before 
    via the persisted seed when no clock fired is what keeps the screenshot promise. U17's real content is
    the **action-warning copy register**, not a re-presentation mechanism.
 2. **The "Act-4 `schemaVersion` 3 bump" is counterfactual.** v3 is the shipped forward-written shape
-   (`model.ts:1944-1949`; codec `> 3` = newer-version). `savedRecommendation?` landed **additive-optional
+   (`model.ts:1974-1980`; codec `> 3` = newer-version). `savedRecommendation?` landed **additive-optional
    within v3**, presence-keyed, following the `rothConversion` / `savedAt` / `retirementState` precedents
-   (`scenarioCodec.ts:737-740` was the pattern copied).
+   (`scenarioCodec.ts:753-756` was the pattern copied).
 
 ---
 
@@ -137,7 +137,7 @@ because only a NON-INTEGER negative routes differently (insight 029).
 ## S1 — Q2: the Roth echo speaks the calendar year, on READ and WRITE
 
 **Both re-bases are REFUSED** (hawk veto arm 2). `startYearOffset` is unambiguously sim-year-0-indexed and
-passes straight into `overlay.conversions` (`model.ts:239-249`, `roth.ts:82-93`). A presentation-only
+passes straight into `overlay.conversions` (`model.ts:240-250`, `roth.ts:82-93`). A presentation-only
 re-base states a start the engine does not price; a persisted re-base makes the same vault price a
 different schedule on a different day.
 
@@ -275,10 +275,10 @@ headline, where it would read as current).
   stays green. The identity consumers were enumerated first: `resultSave.ts`'s two compares and the
   round-trip guard.
 - **The `JSON.stringify` accident was removed, not documented.** `resultSave.ts` justified its compare with
-  *"decodeScenario builds every object."* It does **not** — `scenarioCodec.ts:989-991` is a validated
+  *"decodeScenario builds every object."* It does **not** — `scenarioCodec.ts:1022-1024` is a validated
   pass-through cast, and the behavior was safe only because `JSON.parse` preserves `encodeScenario`'s
   insertion order, so a future field reorder would have broken dirty-detection silently. The fix is
-  `scenarioIdentityKey` (`model.ts:2542`), which rebuilds plain objects with SORTED keys and throws on a
+  `scenarioIdentityKey` (`model.ts:2577`), which rebuilds plain objects with SORTED keys and throws on a
   non-serializable value, so key order and absent-vs-undefined can never read as a change.
 
 **Shipped 2026-07-25, commit `374299c9`, CI green by explicit run id 30163571502**, carrying one ruling
@@ -396,7 +396,7 @@ verdict prefix, unlike `staleness*`, so they clear the scoped gates rather than 
 
 **The four mint obligations**, all discharged in `src/store/savedRecommendationMint.ts`:
 
-1. `validateSavedRecommendation` (`scenarioCodec.ts:688`) is called BEFORE the record touches the draft
+1. `validateSavedRecommendation` (`scenarioCodec.ts:704`) is called BEFORE the record touches the draft
    (`savedRecommendationMint.ts:141`) — the SAME validator the decode path runs, never a parallel copy. It
    had ZERO product callers before this stage.
 2. A non-empty `droppedAtoms` at the gesture **refuses aloud** and never reports a saved recommendation
@@ -442,7 +442,7 @@ tallest producible card moves it zero pixels. Two dev plants carry records — `
 `?vault=recold` (superseded).
 
 **One sweep in `session.ts` is done:** a comment there once claimed `scenarioFromDraft` "REFUSES on a
-non-empty [dropped-atom] list." It does not — `scenarioFromDraft.ts:115` returns `ready:true`, and
+non-empty [dropped-atom] list." It does not — `scenarioFromDraft.ts:118` returns `ready:true`, and
 `draftFromScenario.test.ts:556` pins that a dropped atom never refuses the whole save. The comment now states
 the opposite explicitly, matching the recovery-path twin that never repeated the error.
 
@@ -474,7 +474,7 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   trusting the filing. (1) It lights **ONE** arrived arm, not two: the floor crowns at 0 and `floorLineText`
   short-circuits offset 0 before the three-way split (`FuckOffDate.tsx:236`), so `dateFloorCoveredPast`
   never fires here and keeps `?vault=datestale` as its only live route. (2) Aging `startCalendarYear` alone
-  breaks the documented `currentAge === startCalendarYear − birthYear` model invariant (`model.ts:98`) and
+  breaks the documented `currentAge === startCalendarYear − birthYear` model invariant (`model.ts:99`) and
   forks the engine's two birth-year reads, so `doctorArrivedVault` ages `birthYear` in step (the
   pre-aging invariant guard, `devSeeds.ts:1645-1652`) and refuses a priced-state base aloud (`:1636`).
   The crowns measured byte-identical either way, so

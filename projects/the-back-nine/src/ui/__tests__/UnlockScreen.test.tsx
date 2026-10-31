@@ -4,6 +4,7 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { UnlockScreen } from '../UnlockScreen'
 import { copy } from '../copy'
+import { CURRENT_SCHEMA_VERSION } from '@shared/model'
 
 /**
  * The decrypt-on-return Unlock screen (SLICE 2, surface 1). The crypto is a DYNAMIC import inside the
@@ -88,7 +89,7 @@ describe('UnlockScreen — the returning-user door', () => {
 
     cleanup()
     unlock.mockReset()
-    unlock.mockResolvedValue({ ok: false, reason: 'newer-version', got: 4 })
+    unlock.mockResolvedValue({ ok: false, reason: 'newer-version', got: CURRENT_SCHEMA_VERSION + 1 })
     render(<UnlockScreen onUnlocked={vi.fn()} />)
     fireEvent.change(field(), { target: { value: 'x' } })
     fireEvent.click(openBtn())

@@ -27,7 +27,7 @@
  * note to the what-if variant (an applied hypothesis must never read as current law —
  * council condition Q1).
  */
-import type { FilingStatus, HealthReadout, HealthReadoutYear, ScenarioV3, TwoArmOutcome } from '@shared/model'
+import type { FilingStatus, HealthReadout, HealthReadoutYear, CurrentScenario, TwoArmOutcome } from '@shared/model'
 import {
   cliffMagiFor,
   marginalOrdinaryRate,
@@ -258,7 +258,7 @@ export function stateConversionMarginal(at: {
  */
 export function composeHealthSheet(
   readout: HealthReadout | undefined,
-  draft: Pick<ScenarioV3, 'filing' | 'enhancedSubsidies' | 'startCalendarYear'> & {
+  draft: Pick<CurrentScenario, 'filing' | 'enhancedSubsidies' | 'startCalendarYear'> & {
     /** Ages feed the ACA anchor's biological `count65` for the deduction stack (the engine's own
      *  split: `count65` stays biological for §63(f), the pricing count is onset-aware) and the state
      *  probe's `minLivingAge` (PA's qualified-age gate — {@link stateConversionMarginal}). Medicare
@@ -267,7 +267,7 @@ export function composeHealthSheet(
     readonly people: ReadonlyArray<{ readonly currentAge?: number }>
     readonly health: { readonly slcspMonthlyToday?: number }
     /** The extras answers — the none form's gate reads the run's own vector off them (the extras block). */
-    readonly medicareExtrasByPerson?: ScenarioV3['medicareExtrasByPerson']
+    readonly medicareExtrasByPerson?: CurrentScenario['medicareExtrasByPerson']
   },
   todayEpochDay: number,
   /** The RUN's priced state (`pricedStateForRun`, threaded from the sheet's `statePricedNote`) — the

@@ -59,7 +59,7 @@ export type MintOutcome =
  * a clock that never fires). The engine is a pure function of these tables, and the solve being
  * minted ran in THIS process against THIS build — so the live stamps ARE the era that priced it.
  *
- * NOT READ OFF THE SCENARIO, deliberately. On `ScenarioV3` all five era-bearing fields type
+ * NOT READ OFF THE SCENARIO, deliberately. On `CurrentScenario` all five era-bearing fields type
  * `T | undefined` (a pre-U13 vault legitimately predates the stamps), so a scenario-sourced era
  * invites a `!` or a `?? {}` at exactly the seam where `SavedRecommendationEraV3` requires all five
  * PRESENT — and an era short one stamp pins that rulebook's clock `false` FOREVER, so the record

@@ -21,7 +21,8 @@ import {
  *  - allocation: the exact stock/bond/cash % split, always asked (the single
  *    ticker + the "mostly stocks" quick-pick were both retired — one precise
  *    allocation question; the multi-holding ticker entry is shape-ratified and
- *    deferred PAST U8, additive-within-v3 — docs/decisions/portfolio-holdings.md);
+ *    deferred PAST U8, ruled additive-within-v3 — docs/decisions/portfolio-holdings.md; whether
+ *    it bumps the schema version when built is docs/architecture.md §7.3's call);
  *  - contribution: only while the OWNER still works (a retired owner's inflow
  *    questions are inapplicable — the zeroed class);
  *  - employer match: working owner + employer-PLAN kinds only (→ pretax, §415(c));

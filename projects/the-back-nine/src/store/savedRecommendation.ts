@@ -27,7 +27,7 @@
  * PURE: the caller injects `todayEpochDay` and the freshly-built `SolverRunFingerprint` (or
  * `null`). No clock read, no engine dispatch, no store state — every arm is table-testable.
  */
-import type { ScenarioV3, SavedRecommendationV3, SavedRecommendationEraV3 } from '@shared/model'
+import type { CurrentScenario, SavedRecommendationV3, SavedRecommendationEraV3 } from '@shared/model'
 import { SOLVER_CODE_VERSION } from '@engine/solver/solverCodeVersion'
 import type { SolverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 import { deriveStaleness, type StalenessExposure, type StalenessReport } from './staleness'
@@ -72,7 +72,7 @@ export interface SavedRecommendationStatusInput {
    *  retirementState, medicareExtrasByPerson, survivorSpendingRatio) are the right basis for the
    *  clock's exposure gates and budget windows — those describe the household TODAY. Only the
    *  five ERA-bearing fields are overlaid from the record. */
-  readonly scenario: ScenarioV3
+  readonly scenario: CurrentScenario
   /** The freshly-built fingerprint of what a solve WOULD run on right now, or `null` when no run
    *  can be built (the fail-closed arm). Injected — the store owns the builder seam. */
   readonly freshFingerprint: SolverRunFingerprint | null
@@ -102,7 +102,7 @@ export function deriveSavedRecommendationStatus(
 
   // ── conjunct 3's basis: the scenario re-dressed in the RECORD's era ───────────────────────
   // THE OVERLAY IS TYPED SO THAT OMITTING ANY ERA-BEARING KEY IS A COMPILE ERROR.
-  // `Required<Pick<ScenarioV3, keyof SavedRecommendationEraV3>>` demands EXACTLY the five keys the
+  // `Required<Pick<CurrentScenario, keyof SavedRecommendationEraV3>>` demands EXACTLY the five keys the
   // era snapshot carries, each DEFINED (the era's own members are all required — model.ts
   // `SavedRecommendationEraV3` explains why the scenario's absent-is-quiet contract does not
   // transplant to a record). A forgotten key is TS2741 at this literal, not a silently-quiet clock
@@ -119,14 +119,14 @@ export function deriveSavedRecommendationStatus(
   // and the ENTIRE suite stayed green — `APP_DEFAULT_ERAS` holds one era and it IS the current
   // one, so `appDefaultMoved` is false on both sides of every assertion. The bind has to be
   // structural.
-  const overlay: Required<Pick<ScenarioV3, keyof SavedRecommendationEraV3>> = {
+  const overlay: Required<Pick<CurrentScenario, keyof SavedRecommendationEraV3>> = {
     appDefaultVersion: record.era.appDefaultVersion,
     taxVintageDetail: record.era.taxVintageDetail,
     stateTaxVintage: record.era.stateTaxVintage,
     healthcareVintage: record.era.healthcareVintage,
     dateVintage: record.era.dateVintage,
   }
-  const eraScenario: ScenarioV3 = { ...scenario, ...overlay }
+  const eraScenario: CurrentScenario = { ...scenario, ...overlay }
   // `workingYearCostStale` is `false` BY PROOF, not by default: a saved recommendation is always a
   // spine-route household (`exposure`'s doc above), and the spine never carries W — a W left on its
   // draft is never read, which `deriveStaleness` itself silences (`exposure.workingYearCost ===

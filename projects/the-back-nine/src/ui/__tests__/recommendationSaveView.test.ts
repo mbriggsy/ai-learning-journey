@@ -21,7 +21,7 @@ import {
   type Distribution,
   type SavedRecommendationEraV3,
   type SavedRecommendationV3,
-  type ScenarioV3,
+  type CurrentScenario,
 } from '@shared/model'
 import { SOLVER_CODE_VERSION } from '@engine/solver/solverCodeVersion'
 import type { SolveArm, SolveRecommendation } from '@engine/solver/solve'
@@ -121,7 +121,7 @@ const committed = (payload: SolvePayload = recommended()): SolveAnswer => ({
 
 /** The five era-bearing fields of a REAL save. It THROWS rather than `!`-asserting: a fixture that
  *  quietly built a stampless era would exercise the fail-open shape the codec refuses outright. */
-function eraOf(s: ScenarioV3): SavedRecommendationEraV3 {
+function eraOf(s: CurrentScenario): SavedRecommendationEraV3 {
   const { taxVintageDetail, stateTaxVintage, healthcareVintage, dateVintage } = s
   if (
     taxVintageDetail === undefined ||
@@ -136,7 +136,7 @@ function eraOf(s: ScenarioV3): SavedRecommendationEraV3 {
 
 /** A record minted against THIS scenario's era, describing THIS run's winner — the all-conjuncts-hold
  *  baseline every arm below moves exactly one thing away from. */
-function recordFor(scenario: ScenarioV3, over: Partial<SavedRecommendationV3> = {}): SavedRecommendationV3 {
+function recordFor(scenario: CurrentScenario, over: Partial<SavedRecommendationV3> = {}): SavedRecommendationV3 {
   return {
     mintedAt: TODAY - 10,
     fingerprint: FINGERPRINT,

@@ -70,7 +70,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   council `wf_7eb3303c-7f3`, built `c1ada867` — its blank is no longer one-directional: it
   disables the HSA cap AND the budgetless survivor lean, the most pessimistic reading for an HSA
   household and the less cautious for a budgetless couple without an HSA;
-  `src/shared/model.ts:1795-1804`). Nothing is pre-selected, so the MA plurality actively lands
+  `src/shared/model.ts:1809-1818`). Nothing is pre-selected, so the MA plurality actively lands
   on $0. An AFFIRMED $0 is honest; a SILENT $0 is the sin.
 
 ## F2 — anchor + provenance
@@ -90,7 +90,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   adopted the old figure. No official national Medigap average exists to pin to; the constant's
   `pinTo` says so explicitly rather than naming a source that isn't published.
 - **Per-person explicit persisted provenance stamp.** `MedicareExtrasEntryV3`
-  (`src/shared/model.ts:2381`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
+  (`src/shared/model.ts:2416`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
   'unanswered'` — with `adoptionVintage` recording the era adopted, keyed to the SAVED era and
   never re-derived from `value == current-typical` (the `src/shared/appDefaults.ts:8-15`
   saved-era inversion trap). `'unanswered'` is the honest persisted hole: it funds the typical
@@ -235,8 +235,8 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
 
 ## Ship gates (all met at close)
 
-- **Codec.** The persisted per-person entry is range-gated in `src/shared/scenarioCodec.ts:761-790`:
-  the `'entered'` dollar runs `needFinite` → `needNonNegativeDollar` (`scenarioCodec.ts:386`,
+- **Codec.** The persisted per-person entry is range-gated in `src/shared/scenarioCodec.ts:777-806`:
+  the `'entered'` dollar runs `needFinite` → `needNonNegativeDollar` (`scenarioCodec.ts:402`,
   throws `Corrupt`) — deliberately NOT the siblings' `optFinite` / finite-only
   `checkFiniteArray`, because a negative extras premium inside the funding sum is the insight-046
   optimistic class the engine cannot backstop. Both biconditionals are enforced in both

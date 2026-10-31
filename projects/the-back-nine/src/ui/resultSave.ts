@@ -22,8 +22,8 @@
  *
  * THE COMPARE IS KEY-ORDER-INSENSITIVE (U17·S3, correcting this header's own old claim). It
  * used to read `JSON.stringify(scenarioIdentity(a)) === JSON.stringify(scenarioIdentity(b))`,
- * justified here by *"decodeScenario builds every object."* IT DOES NOT: `scenarioCodec.ts`'s v3
- * arm is a validated PASS-THROUGH CAST of `JSON.parse`'s output — the codec constructs nothing,
+ * justified here by *"decodeScenario builds every object."* IT DOES NOT: `scenarioCodec.ts`'s current
+ * arm (the v3 field checks) is a validated PASS-THROUGH CAST of `JSON.parse`'s output — the codec constructs nothing,
  * and the key order it "guarantees" is really `JSON.parse` preserving the source text's order,
  * which nothing pins. Worse, one operand is already re-ordered in practice: `IntakeApp`'s
  * persist-seed reconstruction destructures `savedAt` off and re-appends it, moving that key to
@@ -33,7 +33,7 @@
  * documented: `scenarioIdentityKey` (model.ts) canonicalizes with SORTED object keys — while
  * keeping ARRAY order, because a real people/budget/drawdown reorder MUST still read dirty.
  */
-import { scenarioIdentityKey, type ScenarioV3 } from '@shared/model'
+import { scenarioIdentityKey, type CurrentScenario } from '@shared/model'
 import { epochDayToCalendarYear } from '@store/staleness'
 import type { SaveReady } from './scenarioFromDraft'
 import type { ResaveCopyKey } from './unlockCopy'
@@ -42,9 +42,9 @@ import type { ResaveCopyKey } from './unlockCopy'
  *  (during 'saving' and after 'save-failed' the disk still holds the previous commit). */
 export type PersistState =
   | { readonly kind: 'unsaved' }
-  | { readonly kind: 'saved'; readonly scenario: ScenarioV3 }
-  | { readonly kind: 'saving'; readonly scenario: ScenarioV3 }
-  | { readonly kind: 'save-failed'; readonly scenario: ScenarioV3; readonly errorKey: ResaveCopyKey }
+  | { readonly kind: 'saved'; readonly scenario: CurrentScenario }
+  | { readonly kind: 'saving'; readonly scenario: CurrentScenario }
+  | { readonly kind: 'save-failed'; readonly scenario: CurrentScenario; readonly errorKey: ResaveCopyKey }
 
 /** The Result screen's save slot, handler-free (IntakeApp attaches the callbacks). */
 export type ResultSaveView =
@@ -60,7 +60,7 @@ export type ResultSaveView =
  *  `scenarioIdentity` the round-trip guard uses). Two scenarios with identical content in a
  *  different key order are the SAME answer and must read clean; a nested VALUE difference — or a
  *  reordered people/budget/drawdown ARRAY — must still read dirty. See the header. */
-const sameScenario = (a: ScenarioV3, b: ScenarioV3): boolean =>
+const sameScenario = (a: CurrentScenario, b: CurrentScenario): boolean =>
   scenarioIdentityKey(a) === scenarioIdentityKey(b)
 
 /**
@@ -161,7 +161,7 @@ export function deriveResultSave(persist: PersistState, ready: SaveReady, readOn
  * That is harmless BY CONSTRUCTION, not by luck: the dirty compare goes through
  * `scenarioIdentityKey`, which sorts keys — see the header.
  */
-export function persistSeedFor(normalized: ScenarioV3, diskSavedAt: number | undefined): ScenarioV3 {
+export function persistSeedFor(normalized: CurrentScenario, diskSavedAt: number | undefined): CurrentScenario {
   const { savedAt: _freshStamp, ...diskIdentity } = normalized
   return diskSavedAt !== undefined ? { ...diskIdentity, savedAt: diskSavedAt } : diskIdentity
 }

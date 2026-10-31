@@ -50,7 +50,7 @@ import { isWorkingYearCostStale } from '@intake/workingYearQuote'
 import type { ScenarioDraft } from '../memoryModel'
 import { CURRENT_APP_DEFAULT_VERSION, appDefaultEraFor } from '@shared/appDefaults'
 import type { PricedState } from '@engine/constants/stateTax'
-import type { HealthcareVintageV3, ScenarioV3, StateTaxVintageV3 } from '@shared/model'
+import type { HealthcareVintageV3, CurrentScenario, StateTaxVintageV3 } from '@shared/model'
 import {
   ENGINE_PRICING_LEDGER,
   FIRST_UNAMBIGUOUS_SAVE_DAY,
@@ -66,7 +66,7 @@ import {
 const TODAY = Math.max(currentEpochDay(), FIRST_UNAMBIGUOUS_SAVE_DAY)
 /** `scenarioFromDraft` stamps `savedAt` off the WALL clock; a "fresh save by this build" fixture
  *  re-stamps it at {@link TODAY} (see above). */
-const stampedToday = (s: ScenarioV3): ScenarioV3 => ({ ...s, savedAt: TODAY })
+const stampedToday = (s: CurrentScenario): CurrentScenario => ({ ...s, savedAt: TODAY })
 
 // --- the exposure fixtures (the populations the three-way distinguishes) ----------------------
 /** A household whose run prices EVERYTHING — the pre-65 marketplace-quoted, still-contributing,
@@ -156,14 +156,14 @@ const withRead = (e: StalenessExposure, over: Partial<StalenessExposure>): Stale
 })
 
 /** A real, fully-stamped save-ready scenario (the retired household — spine route). */
-function freshSave(): ScenarioV3 {
+function freshSave(): CurrentScenario {
   const r = scenarioFromDraft(DEV_SEEDS.retired)
   if (!r.ready) throw new Error('DEV_SEEDS.retired should be save-ready')
   return stampedToday(r.scenario)
 }
 
 /** A still-working household (the date route) for the route-gate arms. */
-function freshDateSave(): ScenarioV3 {
+function freshDateSave(): CurrentScenario {
   const r = scenarioFromDraft(DEV_SEEDS.date)
   if (!r.ready) throw new Error('DEV_SEEDS.date should be save-ready')
   return stampedToday(r.scenario)
@@ -212,7 +212,7 @@ describe('deriveStaleness — the legacy vault (absent stamps = not-applicable, 
     delete legacy.taxVintageDetail
     delete legacy.dateVintage
     delete legacy.healthcareVintage
-    const report = deriveStaleness(legacy as unknown as ScenarioV3, TODAY, ACA_PRICED, false)
+    const report = deriveStaleness(legacy as unknown as CurrentScenario, TODAY, ACA_PRICED, false)
     expect(report.rulesMoved).toBe(false)
     expect(report.unattributed.moved).toBe(false)
     expect(report.elapsed).toBeNull() // NEVER fabricated from startCalendarYear
@@ -291,7 +291,7 @@ describe('deriveStaleness — the tax clock', () => {
 describe('deriveStaleness — the state-tax clock (exposure-gated on the state the RUN priced)', () => {
   /** A drifted disk stamp: the household's ncProfile is from an OLD build (an NC rate step that
    *  pinned since save), the rest fresh. */
-  const drift = (s: ScenarioV3, over: Partial<StateTaxVintageV3>): ScenarioV3 => ({
+  const drift = (s: CurrentScenario, over: Partial<StateTaxVintageV3>): CurrentScenario => ({
     ...s,
     stateTaxVintage: { ...s.stateTaxVintage!, ...over },
   })
@@ -357,7 +357,7 @@ describe('deriveStaleness — the state-tax clock (exposure-gated on the state t
     const noStamp = { ...nc } as Record<string, unknown>
     delete noStamp.stateTaxVintage
     expect(
-      deriveStaleness(noStamp as unknown as ScenarioV3, TODAY, pricing(ACA_PRICED, 'NC'), false).controls.stateTaxMoved,
+      deriveStaleness(noStamp as unknown as CurrentScenario, TODAY, pricing(ACA_PRICED, 'NC'), false).controls.stateTaxMoved,
     ).toBe(false)
   })
 
@@ -370,7 +370,7 @@ describe('deriveStaleness — the state-tax clock (exposure-gated on the state t
 describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure three-way)', () => {
   const s = freshSave()
   const hv = s.healthcareVintage!
-  const withStamp = (over: Partial<typeof hv>): ScenarioV3 => ({ ...s, healthcareVintage: { ...hv, ...over } })
+  const withStamp = (over: Partial<typeof hv>): CurrentScenario => ({ ...s, healthcareVintage: { ...hv, ...over } })
 
   it('acaVerifiedOn ALONE is provenance, never drift (re-verify same-law must not stale every vault monthly)', () => {
     const reVerified = withStamp({ acaVerifiedOn: '2031-01-01' })
@@ -458,7 +458,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     })
   })
 
-  it('`coverage-year` dates BOTH tables (model.ts:2584) — it names each family the run PRICED, and only those', () => {
+  it('`coverage-year` dates BOTH tables (model.ts:2619) — it names each family the run PRICED, and only those', () => {
     // It is the ONLY marker for every annually-re-indexed health figure with no stamp of its own
     // (the four interior IRMAA thresholds, the ACA applicable-percentage bands, the age-rating
     // curve), so bucketing it nameless hid the annual re-key from the pre-65 planner it hits
@@ -504,7 +504,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     const exposedAbsent = { ...s, healthcareVintage: movedStamp } as Record<string, unknown>
     delete exposedAbsent.medicareExtrasByPerson
     expect(
-      deriveStaleness(exposedAbsent as unknown as ScenarioV3, TODAY, MEDICARE_ONLY, false).healthcare.movedClocks,
+      deriveStaleness(exposedAbsent as unknown as CurrentScenario, TODAY, MEDICARE_ONLY, false).healthcare.movedClocks,
     ).toEqual(['extras-typical'])
     // (b) Typical-exposed by an explicit 'typical'/'unanswered' entry.
     const exposedTypical = {
@@ -535,7 +535,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     preUnit.healthcareVintage = legacyHv
     delete preUnit.medicareExtrasByPerson
     expect(
-      deriveStaleness(preUnit as unknown as ScenarioV3, TODAY, MEDICARE_ONLY, false).healthcare.movedClocks,
+      deriveStaleness(preUnit as unknown as CurrentScenario, TODAY, MEDICARE_ONLY, false).healthcare.movedClocks,
     ).toEqual([])
   })
 
@@ -548,7 +548,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
       healthcareVintage: { ...hv, medicareExtrasTypicalVintage: 'extras-2024x' },
     } as Record<string, unknown>
     delete exposedAbsent.medicareExtrasByPerson
-    const report = deriveStaleness(exposedAbsent as unknown as ScenarioV3, TODAY, NO_OVERLAY, false)
+    const report = deriveStaleness(exposedAbsent as unknown as CurrentScenario, TODAY, NO_OVERLAY, false)
     expect(report.healthcare.movedClocks).toEqual([])
     expect(report.healthcare.silencedClocks).toEqual(['extras-typical'])
     expect(report.rulesMoved).toBe(false)
@@ -561,7 +561,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     // between two carried vintages, never the feature's own arrival).
     const legacyHv = { ...hv } as Record<string, unknown>
     delete legacyHv.partBTrendVintage
-    const preTrend = { ...s, healthcareVintage: legacyHv } as unknown as ScenarioV3
+    const preTrend = { ...s, healthcareVintage: legacyHv } as unknown as CurrentScenario
     const report = deriveStaleness(preTrend, TODAY, MEDICARE_ONLY, false)
     expect(report.healthcare.movedClocks).toEqual([])
     expect(report.healthcare.silencedClocks).toEqual([])
@@ -587,10 +587,10 @@ describe('deriveStaleness — every healthcare clock names exactly the families 
   /** Typical-EXPOSED base: the `extras-typical` clock's conjunct (c) needs a household that is
    *  not all-explicit, and the `retired` seed carries an entered + affirmed-$0 pair. Absence of
    *  the fork field funds the typical at recompute ⇒ exposed. Every other clock is indifferent. */
-  const base: ScenarioV3 = (() => {
+  const base: CurrentScenario = (() => {
     const b = { ...s } as Record<string, unknown>
     delete b.medicareExtrasByPerson
-    return b as unknown as ScenarioV3
+    return b as unknown as CurrentScenario
   })()
 
   /** ONE stamp mutation per clock — the minimum edit that fires it, and nothing else. */
@@ -606,7 +606,7 @@ describe('deriveStaleness — every healthcare clock names exactly the families 
 
   /** WHICH SENTENCE each clock is allowed to speak — the law, restated by hand. */
   const FAMILY: Readonly<Record<HealthcareClock, { readonly aca: boolean; readonly medicare: boolean }>> = {
-    'coverage-year': { aca: true, medicare: true }, // "the ACA/IRMAA tables" (model.ts:2584)
+    'coverage-year': { aca: true, medicare: true }, // "the ACA/IRMAA tables" (model.ts:2619)
     'aca-status': { aca: true, medicare: false },
     'fpl-guideline': { aca: true, medicare: false },
     'irmaa-freeze': { aca: false, medicare: true }, // dates the IRMAA schedule (the F1 ruling)
@@ -629,7 +629,7 @@ describe('deriveStaleness — every healthcare clock names exactly the families 
   it.each(CLOCKS)(
     '%s fires alone, names exactly its own families, and NEVER raises rulesMoved without a line beneath it',
     (clock) => {
-      const moved: ScenarioV3 = { ...base, healthcareVintage: { ...hv, ...MUTATION[clock] } }
+      const moved: CurrentScenario = { ...base, healthcareVintage: { ...hv, ...MUTATION[clock] } }
       const report = deriveStaleness(moved, TODAY, ACA_PRICED, false)
       expect(report.healthcare.movedClocks, `${clock}: fires, and alone`).toEqual([clock])
       expect(report.healthcare.acaMoved, `${clock}: the ACA line`).toBe(FAMILY[clock].aca)
@@ -649,7 +649,7 @@ describe('deriveStaleness — every healthcare clock names exactly the families 
     // while the Medicare ones still name themselves (and `coverage-year`, which dates both,
     // names the Medicare half). This is what makes the per-family conjunct falsifiable.
     for (const clock of CLOCKS) {
-      const moved: ScenarioV3 = { ...base, healthcareVintage: { ...hv, ...MUTATION[clock] } }
+      const moved: CurrentScenario = { ...base, healthcareVintage: { ...hv, ...MUTATION[clock] } }
       const report = deriveStaleness(moved, TODAY, MEDICARE_ONLY, false)
       const speaks = FAMILY[clock].medicare
       expect(report.healthcare.movedClocks, `${clock}`).toEqual(speaks ? [clock] : [])
@@ -780,7 +780,7 @@ const DATE_WITH_W: ScenarioDraft = {
 }
 
 /** A fresh save of `d`, its working-years stamp set to `stamp` (`undefined` deletes it). */
-function savedWithWorkingYearsStamp(d: ScenarioDraft, stamp: string | undefined): ScenarioV3 {
+function savedWithWorkingYearsStamp(d: ScenarioDraft, stamp: string | undefined): CurrentScenario {
   const r = scenarioFromDraft(d)
   if (!r.ready) throw new Error('the fixture draft should be save-ready')
   const { workingYearsVintage: _current, ...rest } = r.scenario.dateVintage!
@@ -959,13 +959,13 @@ describe('deriveStaleness — the senior-bonus sunset has NO clock (a dated supe
 describe('deriveStaleness — the budget time-box (Q6: spine route only)', () => {
   it('an already-retired household: a line whose endYear has passed by calendar advance expires (boundary year INCLUSIVE-active); lifelong lines never expire', () => {
     const s = freshSave()
-    const withBudget: ScenarioV3 = {
+    const withBudget: CurrentScenario = {
       ...s,
       budget: [
         { category: 'housing', label: 'Housing', tier: 'essentials', annualAmountReal: 30_000, startYear: 0 },
         { category: 'travel', label: 'Travel', tier: 'discretionary', annualAmountReal: 8_000, startYear: 0, endYear: 2 },
-      ] as ScenarioV3['budget'],
-    } as ScenarioV3
+      ] as CurrentScenario['budget'],
+    } as CurrentScenario
     const y0 = s.startCalendarYear
     const dayInYear = (y: number) => Math.floor(Date.UTC(y, 5, 1) / 86_400_000)
     // elapsed 2 == endYear 2 → still ACTIVE (inclusive last year, model.ts contract)
@@ -984,12 +984,12 @@ describe('deriveStaleness — the budget time-box (Q6: spine route only)', () =>
 
   it('a DATE-route (still-working) household is inert — its budget anchors to the future work-stop, so no window can be past', () => {
     const s = freshDateSave()
-    const withBudget: ScenarioV3 = {
+    const withBudget: CurrentScenario = {
       ...s,
       budget: [
         { category: 'travel', label: 'Travel', tier: 'discretionary', annualAmountReal: 8_000, startYear: 0, endYear: 1 },
-      ] as ScenarioV3['budget'],
-    } as ScenarioV3
+      ] as CurrentScenario['budget'],
+    } as CurrentScenario
     const farFuture = Math.floor(Date.UTC(s.startCalendarYear + 20, 5, 1) / 86_400_000)
     expect(deriveStaleness(withBudget, farFuture, ACA_PRICED, false).budget.expiredLines).toEqual([])
   })
@@ -1053,14 +1053,14 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
       (r) => r.sinceEpochDay === savedAt && r.families.some((f) => reaches(r, f, priced, state) && !named.has(f)),
     )
   }
-  const savedOn = (savedAt: number | undefined): ScenarioV3 => {
+  const savedOn = (savedAt: number | undefined): CurrentScenario => {
     const s = { ...freshSave() } as Record<string, unknown>
     if (savedAt === undefined) delete s.savedAt
     else s.savedAt = savedAt
-    return s as unknown as ScenarioV3
+    return s as unknown as CurrentScenario
   }
   /** A save WITHOUT the healthcare stamp's extras marker (minted before 2026-07-11, or carried forward). */
-  const withoutExtrasMarker = (s: ScenarioV3): ScenarioV3 => {
+  const withoutExtrasMarker = (s: CurrentScenario): CurrentScenario => {
     const hv = { ...s.healthcareVintage! } as Record<string, unknown>
     delete hv.medicareExtrasTypicalVintage
     return { ...s, healthcareVintage: hv as unknown as HealthcareVintageV3 }
@@ -1259,7 +1259,7 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
 
   it('the ledger NEVER moves rulesMoved — in either direction, with or without a real rulebook move beside it', () => {
     const base = freshSave()
-    const taxMovedToo: ScenarioV3 = { ...base, taxVintageDetail: { ...base.taxVintageDetail!, legalBasis: 'TCJA (pre-OBBBA)' } }
+    const taxMovedToo: CurrentScenario = { ...base, taxVintageDetail: { ...base.taxVintageDetail!, legalBasis: 'TCJA (pre-OBBBA)' } }
     for (const scenario of [base, taxMovedToo]) {
       for (const exposure of [ACA_PRICED, MEDICARE_ONLY, OVERLAY_NO_HEALTH, UNDECIDABLE]) {
         const fresh = deriveStaleness(scenario, TODAY, exposure, false).rulesMoved
@@ -1267,7 +1267,7 @@ describe('deriveStaleness — the engine-pricing ledger', () => {
           const s = { ...scenario } as Record<string, unknown>
           if (savedAt === undefined) delete s.savedAt
           else s.savedAt = savedAt
-          expect(deriveStaleness(s as unknown as ScenarioV3, TODAY, exposure, false).rulesMoved, `saved ${String(savedAt)}`).toBe(fresh)
+          expect(deriveStaleness(s as unknown as CurrentScenario, TODAY, exposure, false).rulesMoved, `saved ${String(savedAt)}`).toBe(fresh)
         }
       }
     }

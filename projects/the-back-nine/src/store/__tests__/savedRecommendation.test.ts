@@ -24,13 +24,13 @@ import { exposureForDraft } from '@ui/stalenessExposure'
 import { DEV_SEEDS } from '@ui/devSeeds'
 import { SOLVER_CODE_VERSION } from '@engine/solver/solverCodeVersion'
 import { decodeScenario, encodeScenario } from '@shared/scenarioCodec'
-import type { ScenarioV3, SavedRecommendationV3, SavedRecommendationEraV3 } from '@shared/model'
+import { CURRENT_SCHEMA_VERSION, type CurrentScenario, type SavedRecommendationV3, type SavedRecommendationEraV3 } from '@shared/model'
 
 const TODAY = currentEpochDay()
 const FINGERPRINT = 'solver-run-fp/v2:{"goal"=s"leave-more"}'
 
 /** A real, fully-stamped save-ready scenario (the retired household — spine route). */
-function freshSave(): ScenarioV3 {
+function freshSave(): CurrentScenario {
   const r = scenarioFromDraft(DEV_SEEDS.retired)
   if (!r.ready) throw new Error('DEV_SEEDS.retired should be save-ready')
   return r.scenario
@@ -41,7 +41,7 @@ function freshSave(): ScenarioV3 {
  *  does not transplant to a record). It THROWS rather than `!`-asserting: a fixture that quietly
  *  built a stampless era would be exercising the exact fail-open shape the codec now refuses, and
  *  every arm below would then be testing a record no minter can produce. */
-function eraOf(s: ScenarioV3): SavedRecommendationEraV3 {
+function eraOf(s: CurrentScenario): SavedRecommendationEraV3 {
   const { taxVintageDetail, stateTaxVintage, healthcareVintage, dateVintage } = s
   if (
     taxVintageDetail === undefined ||
@@ -56,7 +56,7 @@ function eraOf(s: ScenarioV3): SavedRecommendationEraV3 {
 
 /** A record minted against THIS scenario's era — the all-three-hold baseline. Built from the
  *  scenario's own stamps so the era conjunct starts quiet and every arm below moves ONE thing. */
-function recordFor(scenario: ScenarioV3, over: Partial<SavedRecommendationV3> = {}): SavedRecommendationV3 {
+function recordFor(scenario: CurrentScenario, over: Partial<SavedRecommendationV3> = {}): SavedRecommendationV3 {
   return {
     mintedAt: TODAY - 10,
     fingerprint: FINGERPRINT,
@@ -83,7 +83,7 @@ const EXPOSURE = exposureForDraft(DEV_SEEDS.retired)
 const NC_EXPOSURE = exposureForDraft(DEV_SEEDS.nc)
 
 const statusOf = (
-  scenario: ScenarioV3,
+  scenario: CurrentScenario,
   record: SavedRecommendationV3,
   freshFingerprint: string | null = FINGERPRINT,
   exposure = EXPOSURE,
@@ -169,7 +169,7 @@ describe('the trichotomy — conjunct 3: the rulebooks, judged against the RECOR
     // no state tax and legitimately never fires), so that arm runs on the NC household with the
     // NC household's own exposure record.
     const drifts: ReadonlyArray<
-      readonly [string, ScenarioV3, Partial<ScenarioV3>, typeof EXPOSURE]
+      readonly [string, CurrentScenario, Partial<CurrentScenario>, typeof EXPOSURE]
     > = [
       ['appDefaultVersion', s, { appDefaultVersion: 'p0-ancient' }, EXPOSURE],
       ['taxVintageDetail', s, { taxVintageDetail: { ...s.taxVintageDetail!, taxYear: s.taxVintageDetail!.taxYear - 1 } }, EXPOSURE],
@@ -190,7 +190,7 @@ describe('the trichotomy — conjunct 3: the rulebooks, judged against the RECOR
     ]
     let firedCount = 0
     for (const [label, base, drift, exposure] of drifts) {
-      const driftedScenario: ScenarioV3 = { ...base, ...drift }
+      const driftedScenario: CurrentScenario = { ...base, ...drift }
       const viaScenario = deriveStaleness(driftedScenario, TODAY, exposure, false)
       const viaRecord = statusOf(base, recordFor(driftedScenario), FINGERPRINT, exposure)
       expect(viaRecord.eraStaleness, `${label}: the era overlay must reproduce the scenario-side report`).toEqual(
@@ -216,7 +216,7 @@ describe('the trichotomy — conjunct 3: the rulebooks, judged against the RECOR
     // sides of every assertion above no matter what this overlay does with the key. A verifier
     // proved it: deleting `appDefaultVersion` from the overlay left the ENTIRE suite green.
     // That key is pinned STRUCTURALLY instead — `savedRecommendation.ts` types the overlay as
-    // `Required<Pick<ScenarioV3, keyof SavedRecommendationEraV3>>`, so omitting it is a COMPILE
+    // `Required<Pick<CurrentScenario, keyof SavedRecommendationEraV3>>`, so omitting it is a COMPILE
     // error (TS2741), not a green run. A behavioural arm for it can only exist once a SECOND era
     // ships; until then the compiler is the only honest gate, and pretending otherwise here would
     // be the vacuous-assertion class this file exists to refuse.
@@ -261,7 +261,7 @@ describe('the trichotomy — conjunct 3: the rulebooks, judged against the RECOR
     if (!r.ready) throw new Error('DEV_SEEDS.budget should be save-ready')
     const s = r.scenario
     // Age the plan's build year past a time-boxed line's window — the spine-route calendar prompt.
-    const lapsed: ScenarioV3 = {
+    const lapsed: CurrentScenario = {
       ...s,
       startCalendarYear: s.startCalendarYear - 40,
       budget: (s.budget ?? []).map((line, i) => (i === 0 ? { ...line, endYear: 1 } : line)),
@@ -348,8 +348,8 @@ describe('the trichotomy — INSIGHT 101: every cause, never the first one found
 // ─────────────────────────────────────────────────────────────────────────────────────────────
 describe('the record’s era is REQUIRED WHOLE — a partial era never reaches the trichotomy', () => {
   /** The vault bytes for a scenario carrying `record`, with the era replaced wholesale. */
-  const vaultWithEra = (s: ScenarioV3, era: unknown): Uint8Array => {
-    const withRecord: ScenarioV3 = { ...s, savedRecommendation: recordFor(s) }
+  const vaultWithEra = (s: CurrentScenario, era: unknown): Uint8Array => {
+    const withRecord: CurrentScenario = { ...s, savedRecommendation: recordFor(s) }
     const obj = JSON.parse(new TextDecoder().decode(encodeScenario(withRecord))) as Record<string, unknown>
     ;(obj.savedRecommendation as Record<string, unknown>).era = era
     return new TextEncoder().encode(JSON.stringify(obj))
@@ -359,7 +359,7 @@ describe('the record’s era is REQUIRED WHOLE — a partial era never reaches t
     const s = freshSave()
     const decoded = decodeScenario(vaultWithEra(s, { appDefaultVersion: s.appDefaultVersion }))
     expect(decoded.ok).toBe(true)
-    if (!decoded.ok || decoded.scenario.schemaVersion !== 3) throw new Error('the vault must still open')
+    if (!decoded.ok || decoded.scenario.schemaVersion !== CURRENT_SCHEMA_VERSION) throw new Error('the vault must still open')
     expect(decoded.scenario.savedRecommendation).toBeUndefined()
     expect('savedRecommendation' in decoded.scenario).toBe(false)
     expect(decoded.droppedAtoms).toHaveLength(1)
@@ -374,7 +374,7 @@ describe('the record’s era is REQUIRED WHOLE — a partial era never reaches t
       delete era[missing]
       const decoded = decodeScenario(vaultWithEra(s, era))
       expect(decoded.ok).toBe(true)
-      if (!decoded.ok || decoded.scenario.schemaVersion !== 3) throw new Error('the vault must still open')
+      if (!decoded.ok || decoded.scenario.schemaVersion !== CURRENT_SCHEMA_VERSION) throw new Error('the vault must still open')
       expect(decoded.scenario.savedRecommendation).toBeUndefined()
       // The codec's own reason names the missing stamp — S5's refusal quotes it verbatim.
       expect(decoded.droppedAtoms[0]).toContain(missing)
@@ -399,7 +399,7 @@ describe('the record’s era is REQUIRED WHOLE — a partial era never reaches t
     const s = freshSave()
     const decoded = decodeScenario(vaultWithEra(s, eraOf(s)))
     expect(decoded.ok).toBe(true)
-    if (!decoded.ok || decoded.scenario.schemaVersion !== 3) throw new Error('the vault must open')
+    if (!decoded.ok || decoded.scenario.schemaVersion !== CURRENT_SCHEMA_VERSION) throw new Error('the vault must open')
     expect(decoded.droppedAtoms).toEqual([])
     const record = decoded.scenario.savedRecommendation
     expect(record).toBeDefined()

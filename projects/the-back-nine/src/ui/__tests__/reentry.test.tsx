@@ -27,7 +27,7 @@ import { exposureForDraft } from '../stalenessExposure'
 import { isWorkingYearCostStale, workingYearCostStaleText } from '@intake/workingYearQuote'
 import { copy, slots } from '../copy'
 import type { PricedState } from '@engine/constants/stateTax'
-import type { ScenarioV3 } from '@shared/model'
+import type { CurrentScenario } from '@shared/model'
 import type { DateTrackOutcome } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 
@@ -42,12 +42,12 @@ const readySave = (key: keyof typeof DEV_SEEDS) => {
   const r = scenarioFromDraft(DEV_SEEDS[key])
   return r.ready ? { ...r, scenario: { ...r.scenario, savedAt: TODAY } } : r
 }
-const freshSave = (): ScenarioV3 => {
+const freshSave = (): CurrentScenario => {
   const r = readySave('retired')
   if (!r.ready) throw new Error('retired seed must be save-ready')
   return r.scenario
 }
-const scenarioFor = (key: keyof typeof DEV_SEEDS): ScenarioV3 => {
+const scenarioFor = (key: keyof typeof DEV_SEEDS): CurrentScenario => {
   const r = readySave(key)
   if (!r.ready) throw new Error(`${key} seed must be save-ready`)
   return r.scenario
@@ -72,7 +72,7 @@ const pricing = (e: StalenessExposure, s: PricedState | undefined): StalenessExp
   ...e,
   pricedState: s,
 })
-const reportFor = (s: ScenarioV3, exposure: StalenessExposure = RETIRED_EXPOSURE) =>
+const reportFor = (s: CurrentScenario, exposure: StalenessExposure = RETIRED_EXPOSURE) =>
   deriveStaleness(s, TODAY, exposure, false)
 
 // The pay check's W. `date` without W (whatever W the seed registry later gives it), and the same
@@ -88,13 +88,13 @@ const DATE_WITH_W: ScenarioDraft = {
  *  did not (KTD21's quoteMoved). */
 const DATE_STALE_W: ScenarioDraft = { ...DATE_WITH_W, annualSpendingReal: 90_000 }
 /** A save by THIS build of a hand-built draft (the `readySave` twin for a non-seed draft). */
-const savedDraft = (d: ScenarioDraft): ScenarioV3 => {
+const savedDraft = (d: ScenarioDraft): CurrentScenario => {
   const r = scenarioFromDraft(d)
   if (!r.ready) throw new Error('the fixture draft must be save-ready')
   return { ...r.scenario, savedAt: TODAY }
 }
 /** A save carrying the working-years stamp of the PREVIOUS table (any value but the current one). */
-const withOlderWorkingYearsStamp = (s: ScenarioV3): ScenarioV3 => ({
+const withOlderWorkingYearsStamp = (s: CurrentScenario): CurrentScenario => ({
   ...s,
   dateVintage: { ...s.dateVintage!, workingYearsVintage: 'working-years-2025a' },
 })
@@ -140,22 +140,22 @@ describe('composeReentry — the read-back', () => {
 
   it('fired clocks are NAMED, one line each; an expired budget window quotes its calendar boundary', () => {
     const s = freshSave()
-    const doctored: ScenarioV3 = {
+    const doctored: CurrentScenario = {
       ...s,
       taxVintageDetail: { taxYear: 2019, legalBasis: 'TCJA (pre-OBBBA)' },
       healthcareVintage: { ...s.healthcareVintage!, coverageYear: 2019 },
       budget: [
         { category: 'travel', label: 'Travel', tier: 'discretionary', annualAmountReal: 8_000, startYear: 0, endYear: 0 },
-      ] as ScenarioV3['budget'],
+      ] as CurrentScenario['budget'],
       // An AGED vault: the plan started 2 calendar years back (the budget window anchors on
       // startCalendarYear — a spine household's year 0 is the plan's own start) and the save
       // is ~2 years old (the elapsed line reads off savedAt).
       startCalendarYear: s.startCalendarYear - 2,
       savedAt: TODAY - 730,
-    } as ScenarioV3
+    } as CurrentScenario
     const view = composeReentry(doctored, reportFor(doctored), null)
     expect(view.noteLines).toContain(copy.stalenessTax)
-    // U17 §S4 — `coverageYear` dates the ACA/IRMAA tables (model.ts:2584), so for THIS all-65+
+    // U17 §S4 — `coverageYear` dates the ACA/IRMAA tables (model.ts:2619), so for THIS all-65+
     // household it names the Medicare half and only that: they price the IRMAA ladder every
     // year and zero marketplace years. Not the old collapsed "Health-coverage rules" line, and
     // not the nameless aggregate the first cut mis-bucketed it to.
@@ -173,7 +173,7 @@ describe('composeReentry — the read-back', () => {
   // proves nothing: a gate that silenced everything would satisfy the first alone.
   it('THE WITNESS (silence): an all-65+ Medicare-only household whose acaStatus moved gets NO healthcare line and NO hero echo — they price zero ACA', () => {
     const s = freshSave() // ages 66 + 65, no marketplace quote pair
-    const moved: ScenarioV3 = {
+    const moved: CurrentScenario = {
       ...s,
       healthcareVintage: { ...s.healthcareVintage!, acaStatus: 'enhanced subsidies restored (no cliff)' },
     }
@@ -190,7 +190,7 @@ describe('composeReentry — the read-back', () => {
 
   it('THE WITNESS (naming): the SAME moved acaStatus on a pre-65 marketplace-quoted household DOES get the named ACA line and the hero echo', () => {
     const s = scenarioFor('health') // both retired at 61 + 59, quote pair entered
-    const moved: ScenarioV3 = {
+    const moved: CurrentScenario = {
       ...s,
       healthcareVintage: { ...s.healthcareVintage!, acaStatus: 'enhanced subsidies restored (no cliff)' },
     }
@@ -203,7 +203,7 @@ describe('composeReentry — the read-back', () => {
 
   it('the Medicare family gets its OWN line, distinct from the ACA family’s (the split is real, not an alias)', () => {
     const s = freshSave()
-    const moved: ScenarioV3 = {
+    const moved: CurrentScenario = {
       ...s,
       healthcareVintage: { ...s.healthcareVintage!, partBStandardMonthly: s.healthcareVintage!.partBStandardMonthly + 10 },
     }
@@ -222,7 +222,7 @@ describe('composeReentry — the read-back', () => {
     const s = scenarioFor('date')
     const hv = s.healthcareVintage!
     const dv = s.dateVintage!
-    const moved: ScenarioV3 = {
+    const moved: CurrentScenario = {
       ...s,
       taxVintageDetail: { ...s.taxVintageDetail!, taxYear: s.taxVintageDetail!.taxYear - 1 },
       healthcareVintage: { ...hv, acaStatus: 'enhanced subsidies restored (no cliff)' },
@@ -265,7 +265,7 @@ describe('composeReentry — the read-back', () => {
     /** Every clock the reader can fire, each as a minimal scenario mutation + the household it
      *  fires for. Adding a clock without adding a row here leaves the sweep incomplete — the
      *  per-clock family table in `staleness.test.ts` is the compile-time half of that guard. */
-    const cases: ReadonlyArray<readonly [string, ScenarioV3, StalenessExposure]> = [
+    const cases: ReadonlyArray<readonly [string, CurrentScenario, StalenessExposure]> = [
       ['tax', { ...spine, taxVintageDetail: { ...spine.taxVintageDetail!, taxYear: 2019 } }, RETIRED_EXPOSURE],
       [
         'state-tax',
@@ -288,7 +288,7 @@ describe('composeReentry — the read-back', () => {
         (() => {
           const b = { ...spine, healthcareVintage: { ...hvS, medicareExtrasTypicalVintage: 'extras-2024x' } } as Record<string, unknown>
           delete b.medicareExtrasByPerson
-          return b as unknown as ScenarioV3
+          return b as unknown as CurrentScenario
         })(),
         RETIRED_EXPOSURE,
       ],
@@ -360,7 +360,7 @@ describe('composeReentry — the read-back', () => {
 
   it('the pay check: push order — the contribution clock, then the working-years clock, then the stale-answer line', () => {
     const base = withOlderWorkingYearsStamp(savedDraft(DATE_STALE_W))
-    const s: ScenarioV3 = {
+    const s: CurrentScenario = {
       ...base,
       dateVintage: { ...base.dateVintage!, contributionYear: base.dateVintage!.contributionYear - 1 },
     }
@@ -377,7 +377,7 @@ describe('composeReentry — the read-back', () => {
   // onto stalenessTax — the two clocks fire independently).
   it('S5: a priced household whose state rules moved gets the state-tax staleness line, named', () => {
     const s = freshSave()
-    const drifted: ScenarioV3 = {
+    const drifted: CurrentScenario = {
       ...s,
       retirementState: 'NC',
       stateTaxVintage: { ...s.stateTaxVintage!, ncProfile: '{"drifted":"nc"}' },
@@ -390,7 +390,7 @@ describe('composeReentry — the read-back', () => {
 
   it("S5: an 'elsewhere' vault whose stamp drifted fires NO state-tax line (nothing state-priced to stale)", () => {
     const s = freshSave()
-    const drifted: ScenarioV3 = {
+    const drifted: CurrentScenario = {
       ...s,
       retirementState: 'elsewhere',
       stateTaxVintage: { ...s.stateTaxVintage!, ncProfile: '{"drifted":"nc"}' },
@@ -403,15 +403,15 @@ describe('composeReentry — the read-back', () => {
 
   it('two expired windows sharing an end year collapse to ONE line (the copy quotes only the year — twins would render byte-identical sentences and collide on the render key)', () => {
     const s = freshSave()
-    const doctored: ScenarioV3 = {
+    const doctored: CurrentScenario = {
       ...s,
       budget: [
         { category: 'travel', label: 'Travel', tier: 'discretionary', annualAmountReal: 8_000, startYear: 0, endYear: 0 },
         { category: 'gifts', label: 'Gifts', tier: 'discretionary', annualAmountReal: 2_000, startYear: 0, endYear: 0 },
         { category: 'other', label: 'Boat', tier: 'discretionary', annualAmountReal: 4_000, startYear: 0, endYear: 1 },
-      ] as ScenarioV3['budget'],
+      ] as CurrentScenario['budget'],
       startCalendarYear: s.startCalendarYear - 3,
-    } as ScenarioV3
+    } as CurrentScenario
     const view = composeReentry(doctored, reportFor(doctored), null)
     const budgetLines = view.noteLines.filter((l) => l.includes('budget'))
     expect(budgetLines).toEqual([
@@ -445,7 +445,7 @@ describe('composeReentry — the read-back', () => {
 
   it('the CONTRIBUTION clock keeps its own named line, route-gated to a household that actually has a date', () => {
     const d = scenarioFor('date')
-    const bumped: ScenarioV3 = {
+    const bumped: CurrentScenario = {
       ...d,
       dateVintage: { ...d.dateVintage!, contributionYear: d.dateVintage!.contributionYear - 1 },
     }
@@ -453,7 +453,7 @@ describe('composeReentry — the read-back', () => {
     expect(view.noteLines).toEqual([copy.stalenessDate])
     // The all-retired household is quiet on the same move (its answer reads no limit).
     const s = freshSave()
-    const retiredBumped: ScenarioV3 = {
+    const retiredBumped: CurrentScenario = {
       ...s,
       dateVintage: { ...s.dateVintage!, contributionYear: s.dateVintage!.contributionYear - 1 },
     }
@@ -464,7 +464,7 @@ describe('composeReentry — the read-back', () => {
     const s = freshSave()
     const anchorless = { ...s } as Record<string, unknown>
     delete anchorless.savedAt
-    expect(composeReentry(anchorless as unknown as ScenarioV3, reportFor(anchorless as unknown as ScenarioV3), null).elapsedLine).toBeNull()
+    expect(composeReentry(anchorless as unknown as CurrentScenario, reportFor(anchorless as unknown as CurrentScenario), null).elapsedLine).toBeNull()
     const recent = { ...s, savedAt: TODAY - 120 }
     expect(composeReentry(recent, reportFor(recent), null).elapsedLine).toBeNull()
   })
@@ -528,27 +528,27 @@ describe('composeReentry — the engine-pricing lines', () => {
   const quietScenario = () => freshSave()
   const withPricing = (
     pricing: Omit<StalenessReport['pricing'], 'moved'>,
-  ): { scenario: ScenarioV3; report: StalenessReport } => {
+  ): { scenario: CurrentScenario; report: StalenessReport } => {
     const scenario = quietScenario()
     const base = reportFor(scenario)
     const moved = pricing.namedFamilies.length > 0 || pricing.hedged || pricing.reconfirmMedicareSpending
     return { scenario, report: { ...base, pricing: { ...pricing, moved }, anyStale: base.anyStale || moved } }
   }
-  const savedOn = (s: ScenarioV3, savedAt: number | undefined): ScenarioV3 => {
+  const savedOn = (s: CurrentScenario, savedAt: number | undefined): CurrentScenario => {
     const out = { ...s } as Record<string, unknown>
     if (savedAt === undefined) delete out.savedAt
     else out.savedAt = savedAt
-    return out as unknown as ScenarioV3
+    return out as unknown as CurrentScenario
   }
   const SHIP_DAYS = [...new Set(ENGINE_PRICING_LEDGER.map((r) => r.sinceEpochDay))]
 
   it('INVARIANT: pricing.moved ⟹ at least one line, and every line unique — swept over REAL reports (seeds × save days × exposures)', () => {
-    const noMarker = (s: ScenarioV3): ScenarioV3 => {
+    const noMarker = (s: CurrentScenario): CurrentScenario => {
       const hv = { ...s.healthcareVintage! } as Record<string, unknown>
       delete hv.medicareExtrasTypicalVintage
-      return { ...s, healthcareVintage: hv as unknown as ScenarioV3['healthcareVintage'] }
+      return { ...s, healthcareVintage: hv as unknown as CurrentScenario['healthcareVintage'] }
     }
-    const households: ReadonlyArray<readonly [string, ScenarioV3, StalenessExposure]> = [
+    const households: ReadonlyArray<readonly [string, CurrentScenario, StalenessExposure]> = [
       ['retired', freshSave(), RETIRED_EXPOSURE],
       ['retired+NC', { ...freshSave(), retirementState: 'NC' }, pricing(RETIRED_EXPOSURE, 'NC')],
       ['retired, no extras marker', noMarker(freshSave()), RETIRED_EXPOSURE],
@@ -692,8 +692,8 @@ describe('composeReentry — the working-year tax floor (ledger v12)', () => {
   const V12 = ENGINE_PRICING_LEDGER.find((r) => r.version === 12)!
   /** The day before v12 shipped — after v11 (2026-10-09), so v12 is the only row this save crosses. */
   const DAY_BEFORE = V12.sinceEpochDay - 1
-  const savedOnDay = (s: ScenarioV3, savedAt: number): ScenarioV3 => ({ ...s, savedAt })
-  const linesFor = (key: keyof typeof DEV_SEEDS | ScenarioV3, exposure: StalenessExposure, savedAt: number) => {
+  const savedOnDay = (s: CurrentScenario, savedAt: number): CurrentScenario => ({ ...s, savedAt })
+  const linesFor = (key: keyof typeof DEV_SEEDS | CurrentScenario, exposure: StalenessExposure, savedAt: number) => {
     const s = savedOnDay(typeof key === 'string' ? scenarioFor(key) : key, savedAt)
     return composeReentry(s, deriveStaleness(s, TODAY, exposure, false), null).noteLines
   }
@@ -710,7 +710,7 @@ describe('composeReentry — the working-year tax floor (ledger v12)', () => {
       { ...sam, birthYear: 1979, currentAge: 47, workStatus: 'working' as const, earnedIncomeReal: 60_000 },
     ],
   }
-  const youngScenario = (): ScenarioV3 => {
+  const youngScenario = (): CurrentScenario => {
     const r = scenarioFromDraft(youngDraft)
     if (!r.ready) throw new Error('the unreached date-route draft must be save-ready')
     return r.scenario

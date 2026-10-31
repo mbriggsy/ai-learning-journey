@@ -145,7 +145,7 @@ export const solverAssumedHeirBracket = sourced(0.24, {
   // A methodology default (the household edits it); no dated event certifies a heir bracket. Ships
   // disclosed via the R7 note, never blocks — the mint's directional walk never consumes it.
   directionalKind: 'methodology-substrate',
-  note: 'The DEFAULT heir marginal rate the live leave-more solve ranks the after-tax bequest at; the household overrides it at the AssumptionPanel heir-bracket seat (persisted as ScenarioV3.heirBracket, additive-optional — ABSENT means they took this default). Deliberately outside solverConstants/ALL_CONSTANTS — a ranking default, not a harness-read calibration threshold.',
+  note: 'The DEFAULT heir marginal rate the live leave-more solve ranks the after-tax bequest at; the household overrides it at the AssumptionPanel heir-bracket seat (persisted as CurrentScenario.heirBracket, additive-optional — ABSENT means they took this default). Deliberately outside solverConstants/ALL_CONSTANTS — a ranking default, not a harness-read calibration threshold.',
 })
 
 /** Finiteness-FIRST calibration check (insights 008/010/039): a NaN/Infinity/sentinel is

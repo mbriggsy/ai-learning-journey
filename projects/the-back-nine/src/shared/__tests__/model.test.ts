@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+  CURRENT_SCHEMA_VERSION,
   OUTCOME_STATES,
   NEVER_DEPLETED,
   isDepleted,
@@ -8,7 +9,7 @@ import {
   expandRothConversion,
   scenarioIdentity,
   scenarioIdentityKey,
-  type ScenarioV3,
+  type CurrentScenario,
   type OutcomeState,
   type DepletionYear,
   type DateOffsetReading,
@@ -201,12 +202,12 @@ describe('DateSearchOutcome family — DND/009 persisted-finite round-trip (the 
  * still calls it (insight 032/081).
  */
 describe('scenarioIdentityKey — key-order-INSENSITIVE, array-order-SENSITIVE disk identity', () => {
-  // A minimal-but-real v3: two people (order-meaningful), a two-line budget (order-meaningful),
+  // A minimal-but-real current plan: two people (order-meaningful), a two-line budget (order-meaningful),
   // and a custom drawdown order (order-IS-the-strategy).
-  const base = (): ScenarioV3 =>
+  const base = (): CurrentScenario =>
     JSON.parse(
       JSON.stringify({
-        schemaVersion: 3,
+        schemaVersion: CURRENT_SCHEMA_VERSION,
         people: [
           { sex: 'male', currentAge: 62, birthYear: 1964, retirementAge: 65, earnedIncomeReal: 0, pia: 36_000, socialSecurityClaimAge: 67, name: 'Pat', workStatus: 'retired' },
           { sex: 'female', currentAge: 60, birthYear: 1966, retirementAge: 64, earnedIncomeReal: 0, pia: 28_000, socialSecurityClaimAge: 67, name: 'Sam', workStatus: 'retired' },
@@ -231,7 +232,7 @@ describe('scenarioIdentityKey — key-order-INSENSITIVE, array-order-SENSITIVE d
         ],
         savedAt: 20_500,
       }),
-    ) as ScenarioV3
+    ) as CurrentScenario
 
   /** Rebuild an object with its own keys in REVERSE order — a legal JSON re-serialization that a
    *  raw `JSON.stringify` compare treats as a different scenario. */
@@ -264,12 +265,12 @@ describe('scenarioIdentityKey — key-order-INSENSITIVE, array-order-SENSITIVE d
   it('ARRAY order is IDENTITY: reordering people, the budget, or the drawdown buckets each read DIFFERENT (sorting them would make a real reorder read clean — a lie in the dangerous direction)', () => {
     const a = base()
     const key = scenarioIdentityKey(a)
-    const swappedPeople = { ...base(), people: [base().people[1]!, base().people[0]!] } as ScenarioV3
+    const swappedPeople = { ...base(), people: [base().people[1]!, base().people[0]!] } as CurrentScenario
     expect(scenarioIdentityKey(swappedPeople)).not.toBe(key)
-    const swappedBudget = { ...base(), budget: [base().budget![1]!, base().budget![0]!] } as ScenarioV3
+    const swappedBudget = { ...base(), budget: [base().budget![1]!, base().budget![0]!] } as CurrentScenario
     expect(scenarioIdentityKey(swappedBudget)).not.toBe(key)
     // The drawdown order IS the strategy — a reversed sequence is a different plan entirely.
-    const reordered = { ...base(), drawdownOrder: ['roth', 'pretax', 'taxable'] } as ScenarioV3
+    const reordered = { ...base(), drawdownOrder: ['roth', 'pretax', 'taxable'] } as CurrentScenario
     expect(scenarioIdentityKey(reordered)).not.toBe(key)
   })
 
@@ -279,7 +280,7 @@ describe('scenarioIdentityKey — key-order-INSENSITIVE, array-order-SENSITIVE d
     expect(scenarioIdentityKey(a)).toBe(scenarioIdentityKey(b))
     // …and the saved-recommendation record is IN the identity: a record present vs absent is a
     // real difference on disk (it is a user fact carried on the draft, not a wall-time stamp).
-    const withRecord: ScenarioV3 = {
+    const withRecord: CurrentScenario = {
       ...base(),
       savedRecommendation: {
         mintedAt: 20_500,
@@ -309,7 +310,7 @@ describe('scenarioIdentityKey — key-order-INSENSITIVE, array-order-SENSITIVE d
     expect(scenarioIdentityKey(withRecord)).not.toBe(scenarioIdentityKey(a))
     // …and an OLD mintedAt vs a fresh one is a difference too — which is precisely what makes the
     // insight-073 aged-vault witness (draftFromScenario.test.ts) able to catch a re-stamp.
-    const reminted: ScenarioV3 = {
+    const reminted: CurrentScenario = {
       ...withRecord,
       savedRecommendation: { ...withRecord.savedRecommendation!, mintedAt: 20_800 },
     }
@@ -319,9 +320,9 @@ describe('scenarioIdentityKey — key-order-INSENSITIVE, array-order-SENSITIVE d
   it('a non-finite number gets a DISTINCT token, never JSON.stringify’s null coercion (DND 009 — three different values must not share one encoding)', () => {
     // The codec refuses to decode one, so this can only arrive on a hand-built operand — but a
     // normalizer that collapsed NaN/Infinity/null onto `null` would hide a real difference.
-    const nan = { ...base(), annualSpendingReal: Number.NaN } as ScenarioV3
-    const inf = { ...base(), annualSpendingReal: Number.POSITIVE_INFINITY } as ScenarioV3
-    const nul = { ...base(), annualSpendingReal: null as unknown as number } as ScenarioV3
+    const nan = { ...base(), annualSpendingReal: Number.NaN } as CurrentScenario
+    const inf = { ...base(), annualSpendingReal: Number.POSITIVE_INFINITY } as CurrentScenario
+    const nul = { ...base(), annualSpendingReal: null as unknown as number } as CurrentScenario
     const keys = new Set([scenarioIdentityKey(nan), scenarioIdentityKey(inf), scenarioIdentityKey(nul)])
     expect(keys.size).toBe(3)
   })

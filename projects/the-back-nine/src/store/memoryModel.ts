@@ -18,7 +18,7 @@
  *      fields + margin gating are seated in PHASE 3 (session-only, never
  *      persisted) — declared here as a documented placeholder, unused in P2;
  *  (e) holds the ONE plaintext shape — `ScenarioDraft`, the same field names as
- *      the to-be-persisted `ScenarioV3` (mapped FROM it, so a rename breaks both
+ *      the to-be-persisted `CurrentScenario` (mapped FROM it, so a rename breaks both
  *      together). No parallel intake shape, no field-mapping layer: Save is a
  *      clean serialize of the completed draft (U8's field-fidelity guard rests
  *      on this);
@@ -68,7 +68,7 @@ import type {
   IncomeStream,
   OutcomeState,
   PersonInputsV3,
-  ScenarioV3,
+  CurrentScenario,
   SimulationParams,
   SimulationResult,
   TickerClassification,
@@ -99,10 +99,10 @@ import { STATE_OPTIMISM_RANK, SURVIVAL_GRID } from '@engine/confidence'
 import { isEngineReset, type EngineClient } from './engineClient'
 
 // ---------------------------------------------------------------------------
-// The draft shape — ScenarioV3 mid-population. Same fields, same names; the
+// The draft shape — CurrentScenario mid-population. Same fields, same names; the
 // required USER-FACTS are optional while uncollected (sentinels at the builder
 // seam, never defaults), the methodology fields are pre-applied and surfaced.
-// Mapped FROM ScenarioV3 so the compile breaks if the shapes drift apart.
+// Mapped FROM CurrentScenario so the compile breaks if the shapes drift apart.
 // ---------------------------------------------------------------------------
 
 /** Person mid-entry: every asked fact optional until answered. */
@@ -160,7 +160,7 @@ export interface ScenarioDraft
     // (scenarioFromDraft overwrites it from the current build's constants; the draft's copy exists
     // for the shape tie and for U13's staleness reader, which reads the RAW-decoded model).
     Pick<
-      ScenarioV3,
+      CurrentScenario,
       | 'annualSpendingReal'
       | 'seed'
       | 'budget'
@@ -205,7 +205,7 @@ export interface ScenarioDraft
     >
   >,
     Pick<
-      ScenarioV3,
+      CurrentScenario,
       | 'spendEntryPeriod'
       | 'survivorSpendingRatio'
       | 'drawdownPolicy'
@@ -225,8 +225,8 @@ export interface ScenarioDraft
 // shape can drift in (the single-shape tie). ONE named exception: the draft has
 // no `schemaVersion` — it is prepended at U8's encrypt/Save step (contract #1e),
 // never carried mid-entry.
-type _DraftKeysAreV3Keys = keyof ScenarioDraft extends keyof ScenarioV3 ? true : never
-type _V3KeysAreDraftKeys = keyof ScenarioV3 extends keyof ScenarioDraft | 'schemaVersion'
+type _DraftKeysAreV3Keys = keyof ScenarioDraft extends keyof CurrentScenario ? true : never
+type _V3KeysAreDraftKeys = keyof CurrentScenario extends keyof ScenarioDraft | 'schemaVersion'
   ? true
   : never
 const _draftShapeTied: _DraftKeysAreV3Keys & _V3KeysAreDraftKeys = true

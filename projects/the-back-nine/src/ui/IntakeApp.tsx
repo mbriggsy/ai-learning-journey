@@ -10,7 +10,7 @@ import type { SolverRunFingerprint } from '@engine/validation/solverRunFingerpri
 import { draftIdentityKey, type ScenarioDraft } from '@store/memoryModel'
 import { deriveSavedRecommendationStatus, type SavedRecommendationStatus } from '@store/savedRecommendation'
 import { mintSavedRecommendation } from '@store/savedRecommendationMint'
-import type { SavedRecommendationV3 } from '@shared/model'
+import { CURRENT_SCHEMA_VERSION, type SavedRecommendationV3 } from '@shared/model'
 import { appModel } from './appModel'
 import { Result } from './Result'
 import { scenarioFromDraft, currentEpochDay } from './scenarioFromDraft'
@@ -397,7 +397,7 @@ export default function IntakeApp({
    * U17 §S5 — THE SAVE GESTURE FOR THE RECOMMENDATION ON SCREEN.
    *
    * THE ORDER IS THE WHOLE DESIGN: the mint is PROBED AND REFUSED BEFORE THE STORE IS TOUCHED, and
-   * the store is touched before anything reaches disk. `scenarioCodec.ts:677-680` names this
+   * the store is touched before anything reaches disk. `scenarioCodec.ts:693-696` names this
    * function as the seam that "MUST validate its own mint HERE, before the record ever touches the
    * draft", and the reason is a DATA-LOSS case, not tidiness: if the disk already holds a VALID
    * record and a new mint is invalid, the codec deletes the bad record from the LIVE operand only,
@@ -429,7 +429,7 @@ export default function IntakeApp({
       // mint a record and discover it at the write. Never reachable on the no-vault path — a fresh
       // session initialises 'locked' (session.ts:216) — so R1's ceremony route stays live.
       // THE DB OPEN CAN REJECT, AND A GESTURE THAT PROMISED AN AFFORDANCE OWES A RENDERED OUTCOME
-      // (insight 100). `getVaultSession()` → `openVaultDb()` → idb's `openDB()` (db.ts:61-67) REJECTS
+      // (insight 100). `getVaultSession()` → `openVaultDb()` → idb's `openDB()` (db.ts:62-68) REJECTS
       // on a blocked / unavailable / version-errored IndexedDB — a storage policy, Firefox private
       // browsing, a corrupt DB. Left bare, that rejection escapes the `void saveRecommendation(…)`
       // call site as an unhandled promise rejection and the household sees NOTHING happen: the one
@@ -576,9 +576,12 @@ export default function IntakeApp({
         const session = await getVaultSession()
         const model = session.currentModel()
         if (cancelled) return
-        // Unreachable for this app's own vaults (unlock just decoded a 2-person v3 we wrote), but the
-        // type admits null / legacy / a non-two-person shape → refuse rather than render a wrong plan.
-        if (model === null || model.schemaVersion !== 3) {
+        // Admits exactly the current version. A version-3 plan never reaches here as 3: the codec
+        // relabels it to its successor at unlock (scenarioCodec.ts), so it hydrates like any current
+        // save. What this refuses is null and the version-1/2 ladder members (decoded as-is, never
+        // up-converted — the register's *The couple's own data…* keeps that dead end) → refuse
+        // rather than render a wrong plan. A non-two-person shape is draftFromScenario's refusal below.
+        if (model === null || model.schemaVersion !== CURRENT_SCHEMA_VERSION) {
           setPhase('restore-failed')
           return
         }

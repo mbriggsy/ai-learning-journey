@@ -4,7 +4,7 @@
  * The result screen can be reached on an INDETERMINATE answer (the engine runs on burned/062
  * sentinels for absent facts), so reaching the Save beat does NOT prove the draft is saveable.
  * This gate decides it — and it does so WITHOUT a parallel validator that could drift from the
- * restore path: it constructs the single-shape candidate (`{ schemaVersion: 3, ...draft }` — no
+ * restore path: it constructs the single-shape candidate (`{ schemaVersion: CURRENT_SCHEMA_VERSION, ...draft }` — no
  * field-mapping layer, the draft IS the v3 field set minus the discriminant) and runs it through
  * the codec ROUND-TRIP. `decodeScenario` is the SAME authoritative gate the restore path runs, so
  * a missing required fact, an incomplete person, or a DND/009 array hole (an `undefined` element
@@ -21,12 +21,12 @@ import { taxVintageStamp } from '@engine/constants/tax'
 import { stateTaxVintageStamp } from '@engine/constants/stateTax'
 import { dateVintageStamp } from '@engine/constants'
 import { CURRENT_APP_DEFAULT_VERSION } from '@shared/appDefaults'
-import type { ScenarioV3 } from '@shared/model'
+import { CURRENT_SCHEMA_VERSION, type CurrentScenario } from '@shared/model'
 
 export type SaveReady =
   | {
       readonly ready: true
-      readonly scenario: ScenarioV3
+      readonly scenario: CurrentScenario
       /**
        * ATOMS THE SAVE GATE THREW AWAY (U17) — empty when the candidate survived intact.
        *
@@ -77,7 +77,7 @@ export function scenarioFromDraft(draft: ScenarioDraft): SaveReady {
   // the round-trip guard) go through `scenarioIdentity` — comparing raw output of this
   // function across days would read an untouched session as permanently dirty.
   const candidate = {
-    schemaVersion: 3 as const,
+    schemaVersion: CURRENT_SCHEMA_VERSION,
     ...draft,
     healthcareVintage: healthcareVintageStamp(),
     taxVintageDetail: taxVintageStamp(),
@@ -85,9 +85,12 @@ export function scenarioFromDraft(draft: ScenarioDraft): SaveReady {
     stateTaxVintage: stateTaxVintageStamp(),
     appDefaultVersion: CURRENT_APP_DEFAULT_VERSION,
     savedAt: currentEpochDay(),
-  } as ScenarioV3
+  } as CurrentScenario
   const decoded = decodeScenario(encodeScenario(candidate))
-  if (decoded.ok && decoded.scenario.schemaVersion === 3) {
+  // The version check is a TYPE NARROWING only (the schema-v4 plan's KTD2): the round trip relabels
+  // an old label to the current one, so it cannot see a mint that stamps a stale literal — the
+  // candidate's `CurrentScenario` type (the literal must fit `typeof CURRENT_SCHEMA_VERSION`) can.
+  if (decoded.ok && decoded.scenario.schemaVersion === CURRENT_SCHEMA_VERSION) {
     // A NON-FATAL DROP ON THE WRITE SIDE IS A MINTER DEFECT — REPORTED, never swallowed, and
     // never allowed to hold the household's PLAN hostage. (U17 F-pass ruling, dated 2026-07-25.)
     //

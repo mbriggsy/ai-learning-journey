@@ -72,7 +72,7 @@ vi.mock('../vaultSession', () => ({
  * entire point of `mintSavedRecommendation`'s own gate, which runs the SAME
  * `checkSavedRecommendationV3` the codec runs, so a record this probe could drop can never get past
  * the mint. But a declared refusal with no producer is the dead arm insight 100 forbids, and the
- * ORDER it guards (probe BEFORE the store write) is the data-loss case `scenarioCodec.ts:666-670`
+ * ORDER it guards (probe BEFORE the store write) is the data-loss case `scenarioCodec.ts:682-686`
  * names. So it is witnessed with the planted-seam idiom this repo already uses for the
  * broken-trichotomy split (`recommendationSaveView.test.ts`): passthrough everywhere, and one extra
  * atom reported ONLY for a record-bearing candidate, ONLY while armed. The paired control inside
@@ -154,7 +154,7 @@ import { currentEpochDay, scenarioFromDraft } from '../scenarioFromDraft'
 import { mintSavedRecommendation } from '@store/savedRecommendationMint'
 import { READING_FIXTURES } from '../preview/fixtures'
 import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft, SolveAnswer } from '@store/memoryModel'
-import { NEVER_DEPLETED, type Distribution, type SavedRecommendationV3, type ScenarioV3 } from '@shared/model'
+import { NEVER_DEPLETED, type Distribution, type SavedRecommendationV3, type CurrentScenario } from '@shared/model'
 import { headlineStatisticFromDistribution } from '@engine/solver/objectiveHeadline'
 import { SOLVER_CODE_VERSION } from '@engine/solver/solverCodeVersion'
 import type { SolveArm, SolveRecommendation } from '@engine/solver/solve'
@@ -364,7 +364,7 @@ async function mountFresh(solve: SolveAnswer = committedOn(), draft: ScenarioDra
 
 /** A RETURNING household over a real vault: the hydrate effect decodes the model, seeds `persist`
  *  from it, and lands on the U13 re-entry gate; affirming reveals the result. */
-async function mountReturning(model: ScenarioV3, solve: SolveAnswer = committedOn()) {
+async function mountReturning(model: CurrentScenario, solve: SolveAnswer = committedOn()) {
   h.model = model
   plant.solve = solve
   render(<IntakeApp hydrateFromVault />)
@@ -421,7 +421,7 @@ afterEach(cleanup)
 /**
  * THE MUTANT THIS SECTION EXISTS FOR: move `appModel.update` above the mint's validation / the
  * gate's probe. It is the worst one in the feature, and it is invisible to every other battery.
- * `scenarioCodec.ts:666-670` names the loss: where the disk already holds a VALID record and a new
+ * `scenarioCodec.ts:682-686` names the loss: where the disk already holds a VALID record and a new
  * mint is bad, the codec deletes the bad record from the LIVE operand only, the two
  * `scenarioIdentityKey`s diverge, `deriveResultSave` reads DIRTY, and the household's next
  * plan-save writes a record-FREE scenario OVER the good record. The refusal renders either way —
@@ -694,7 +694,7 @@ describe('the save gesture — a FAILED write claims nothing (the operand is the
 
     // The retry really carried the memory to disk (non-vacuity, read off the write itself).
     expect(h.saved).toHaveLength(2)
-    expect((h.saved[1] as ScenarioV3).savedRecommendation, 'the retry is record-bearing').not.toBeUndefined()
+    expect((h.saved[1] as CurrentScenario).savedRecommendation, 'the retry is record-bearing').not.toBeUndefined()
     // …so the slot may claim the save — and NOTHING beside it still claims the failure.
     expect(refusalCard(), 'no dead refusal over a write that landed').toBeNull()
     expect(savedBadge()?.textContent).toContain(copy.recommendSaveSavedBadge)

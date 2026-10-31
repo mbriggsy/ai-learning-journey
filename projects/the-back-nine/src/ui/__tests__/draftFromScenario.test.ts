@@ -1,14 +1,14 @@
 /**
  * The hydration inverse round-trip (U8 decrypt-on-return SLICE 2 correctness spine; Fork D).
  *
- * `vaultRoundTrip.test.ts` proves save → loadVault → unlock returns the exact ScenarioV3
+ * `vaultRoundTrip.test.ts` proves save → loadVault → unlock returns the exact CurrentScenario
  * (`currentModel()`). This proves the NEXT hop the decrypt-on-return path takes: that decoded
- * ScenarioV3 → `draftFromScenario` → the in-memory ScenarioDraft → `scenarioFromDraft` reproduces the
- * SAME ScenarioV3, byte-for-byte. Composed, the whole chain unlock → hydrate-draft → (a later re-save
+ * CurrentScenario → `draftFromScenario` → the in-memory ScenarioDraft → `scenarioFromDraft` reproduces the
+ * SAME CurrentScenario, byte-for-byte. Composed, the whole chain unlock → hydrate-draft → (a later re-save
  * would persist) the identical scenario is field-identity-proven — so a reload can never recompute a
  * DIFFERENT (calm-but-wrong) scenario than the one saved because a field was dropped in the strip.
  *
- * Run across EVERY real household shape (the dev-seed registry), so a future ScenarioV3 field that the
+ * Run across EVERY real household shape (the dev-seed registry), so a future CurrentScenario field that the
  * shallow strip mishandles fails here rather than surfacing as a silent reload drift.
  */
 import { describe, expect, it } from 'vitest'
@@ -25,17 +25,17 @@ import { taxVintageStamp } from '@engine/constants/tax'
 import { stateTaxVintageStamp } from '@engine/constants/stateTax'
 import { dateVintageStamp } from '@engine/constants'
 import { CURRENT_APP_DEFAULT_VERSION } from '@shared/appDefaults'
-import { scenarioIdentity, type DrawdownOrderKey, type RothConversionPlan, type ScenarioV3 } from '@shared/model'
+import { scenarioIdentity, type DrawdownOrderKey, type RothConversionPlan, type CurrentScenario } from '@shared/model'
 
-/** Every dev seed that is genuinely save-ready → its real, complete ScenarioV3. */
-const readyScenarios: ReadonlyArray<readonly [DevSeedKey, ScenarioV3]> = (
+/** Every dev seed that is genuinely save-ready → its real, complete CurrentScenario. */
+const readyScenarios: ReadonlyArray<readonly [DevSeedKey, CurrentScenario]> = (
   Object.keys(DEV_SEEDS) as DevSeedKey[]
 ).flatMap((key) => {
   const r = scenarioFromDraft(DEV_SEEDS[key])
   return r.ready ? [[key, r.scenario] as const] : []
 })
 
-const retiredV3 = (): ScenarioV3 => readyScenarios.find(([k]) => k === 'retired')![1]
+const retiredV3 = (): CurrentScenario => readyScenarios.find(([k]) => k === 'retired')![1]
 
 describe('draftFromScenario — the decrypt-on-return hydration inverse', () => {
   it('the dev-seed registry yields ≥2 save-ready shapes incl. the on-track retired household (non-vacuous coverage)', () => {
@@ -87,8 +87,8 @@ describe('draftFromScenario — the decrypt-on-return hydration inverse', () => 
     const v3 = retiredV3()
     // A decoded vault the codec would accept (people.length >= 1) but the draft cannot model:
     // dropping a spouse must NOT silently succeed (that would invent/erase a person on reload).
-    const solo = { ...v3, people: [v3.people[0]!] } as ScenarioV3
-    const trio = { ...v3, people: [v3.people[0]!, v3.people[1]!, v3.people[0]!] } as ScenarioV3
+    const solo = { ...v3, people: [v3.people[0]!] } as CurrentScenario
+    const trio = { ...v3, people: [v3.people[0]!, v3.people[1]!, v3.people[0]!] } as CurrentScenario
     for (const bad of [solo, trio]) {
       const hydrated = draftFromScenario(bad)
       expect(hydrated.ok).toBe(false)
@@ -99,11 +99,11 @@ describe('draftFromScenario — the decrypt-on-return hydration inverse', () => 
 
 describe('draftFromScenario — the U10 control levers round-trip byte-for-byte', () => {
   it('drawdownPolicy "custom" + drawdownOrder + rothConversion all survive the strip inverse together', () => {
-    // A future ScenarioV3 field the shallow strip mishandles must fail HERE, so pin the three U10
+    // A future CurrentScenario field the shallow strip mishandles must fail HERE, so pin the three U10
     // lever fields explicitly on a real save-ready household (the biconditional: custom ⟺ order).
     const order: readonly DrawdownOrderKey[] = ['roth', 'taxable', 'pretax']
     const rothConversion: RothConversionPlan = { annualAmountReal: 30_000, startYearOffset: 1, years: 4 }
-    const withLevers: ScenarioV3 = { ...retiredV3(), drawdownPolicy: 'custom', drawdownOrder: order, rothConversion }
+    const withLevers: CurrentScenario = { ...retiredV3(), drawdownPolicy: 'custom', drawdownOrder: order, rothConversion }
 
     const hydrated = draftFromScenario(withLevers)
     expect(hydrated.ok).toBe(true)
@@ -121,7 +121,7 @@ describe('draftFromScenario — the U10 control levers round-trip byte-for-byte'
 
 describe('draftFromScenario — the state-tax field round-trips (value AND absence)', () => {
   it('a PRICED retirementState (NC) survives the strip inverse byte-for-byte (the R7 seat + picker fact reaches the draft, not re-derived)', () => {
-    const withState: ScenarioV3 = { ...retiredV3(), retirementState: 'NC' }
+    const withState: CurrentScenario = { ...retiredV3(), retirementState: 'NC' }
     const hydrated = draftFromScenario(withState)
     expect(hydrated.ok).toBe(true)
     if (!hydrated.ok) return
@@ -132,7 +132,7 @@ describe('draftFromScenario — the state-tax field round-trips (value AND absen
   })
 
   it("an explicit 'elsewhere' persists as itself (a chosen fact, never collapsed to absence)", () => {
-    const withElsewhere: ScenarioV3 = { ...retiredV3(), retirementState: 'elsewhere' }
+    const withElsewhere: CurrentScenario = { ...retiredV3(), retirementState: 'elsewhere' }
     const hydrated = draftFromScenario(withElsewhere)
     expect(hydrated.ok).toBe(true)
     if (!hydrated.ok) return
@@ -156,7 +156,7 @@ describe('draftFromScenario — the state-tax field round-trips (value AND absen
 
 describe('draftFromScenario — the chosenGoal field round-trips (the U15 second-beat fact)', () => {
   it('a set chosenGoal survives draft → scenario → draft byte-for-byte (a writer dropping it in the strip reds here)', () => {
-    const withGoal: ScenarioV3 = { ...retiredV3(), chosenGoal: 'leave-more' }
+    const withGoal: CurrentScenario = { ...retiredV3(), chosenGoal: 'leave-more' }
     const hydrated = draftFromScenario(withGoal)
     expect(hydrated.ok).toBe(true)
     if (!hydrated.ok) return
@@ -237,7 +237,7 @@ describe('scenarioFromDraft — the U13 stamps (write-time truth, the healthcare
     expect(r.ready).toBe(true)
     if (!r.ready) return
     // Simulate a vault saved a month ago: identical content, older wall-time stamp.
-    const oldSave: ScenarioV3 = { ...r.scenario, savedAt: currentEpochDay() - 30 }
+    const oldSave: CurrentScenario = { ...r.scenario, savedAt: currentEpochDay() - 30 }
     const hydrated = draftFromScenario(oldSave)
     expect(hydrated.ok).toBe(true)
     if (!hydrated.ok) return
@@ -257,7 +257,7 @@ describe('scenarioFromDraft — the U13 stamps (write-time truth, the healthcare
     // disk (the vintage stamp is IN scenarioIdentity — not savedAt-stripped — so a naive compare
     // would read dirty on load). The clean-badge law holds because BOTH the persist seed and the
     // current answer come from scenarioFromDraft under the CURRENT build, which re-mints the stamp.
-    const drifted: ScenarioV3 = {
+    const drifted: CurrentScenario = {
       ...fresh,
       stateTaxVintage: { ncProfile: '{"old":"nc"}', paProfile: '{"old":"pa"}', flProfile: '{"old":"fl"}' },
     }
@@ -295,7 +295,7 @@ describe('scenarioFromDraft — the U13 stamps (write-time truth, the healthcare
  */
 describe('the saved-recommendation record survives the real hydrate → persist-seed → clean-badge chain (insight 073)', () => {
   /** A vault saved a month ago whose recommendation was minted a month before THAT. */
-  const agedVaultWithRecord = (): ScenarioV3 => ({
+  const agedVaultWithRecord = (): CurrentScenario => ({
     ...retiredV3(),
     savedAt: currentEpochDay() - 30,
     savedRecommendation: {
@@ -455,11 +455,11 @@ describe('scenarioFromDraft — a dropped atom on the WRITE side is a MINTER DEF
   const draftWithRecord = (record: unknown) => {
     const hydrated = draftFromScenario(retiredV3())
     if (!hydrated.ok) throw new Error('the retired seed should hydrate')
-    return { ...hydrated.draft, savedRecommendation: record as ScenarioV3['savedRecommendation'] }
+    return { ...hydrated.draft, savedRecommendation: record as CurrentScenario['savedRecommendation'] }
   }
 
   /** A valid record built against the retired seed's OWN stamps (all five era fields present). */
-  const validRecord = (): NonNullable<ScenarioV3['savedRecommendation']> => {
+  const validRecord = (): NonNullable<CurrentScenario['savedRecommendation']> => {
     const s = retiredV3()
     if (
       s.taxVintageDetail === undefined ||

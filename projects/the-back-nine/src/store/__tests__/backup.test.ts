@@ -9,10 +9,19 @@
  * nothing, and the recovery passphrase without the file has nothing to open.
  */
 import 'fake-indexeddb/auto'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { IDBFactory } from 'fake-indexeddb'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { BACKUP_FORMAT, VAULT_STORE_NAME, type Scenario } from '@shared/model'
+import {
+  BACKUP_FORMAT,
+  CURRENT_SCHEMA_VERSION,
+  VAULT_STORE_NAME,
+  type AnyScenario,
+  type BackupFileV1,
+  type Scenario,
+} from '@shared/model'
 import { checkPassphraseFloor, type FloorCheckedPassphrase } from '../../crypto/kdf'
 import { clearVault, loadVault, openVaultDb, type VaultDb } from '../db'
 import { exportVault, restoreVault } from '../backup'
@@ -141,7 +150,7 @@ describe('restore OVER a damaged vault (the survivor device-rot path — was unc
   // scenario is a device whose on-disk vault bit-rotted to a partial/damaged set — the
   // `damaged` arm restore actually flows through. restoreVault refuses only `kind:'vault'`
   // (backup.ts:135,208), so it proceeds over `damaged`; writeVault clears the store IN the
-  // same transaction before writing (db.ts:220), so no pre-clearVault is needed and none
+  // same transaction before writing (db.ts:221), so no pre-clearVault is needed and none
   // is called — a pre-clear would destroy this recoverable vault if the restore then failed.
   it('restores a partial (2-of-3) damaged vault to a clean vault, openable with the new passphrase', async () => {
     const { db, session } = await vaulted()
@@ -179,7 +188,7 @@ describe('restore OVER a damaged vault (the survivor device-rot path — was unc
     const restored = await restoreVault(db, exported.file, RECOVERY_PASSPHRASE, await floorPass(NEW_PASSPHRASE))
     expect(restored).toEqual({ ok: true })
 
-    // The stray is GONE — the in-transaction clear (db.ts:220) is what makes a
+    // The stray is GONE — the in-transaction clear (db.ts:221) is what makes a
     // pre-clearVault redundant AND harmful (it would destroy a recoverable vault on failure).
     expect(await storeKeys(db)).toEqual(['model', 'passphraseWrap', 'recoveryWrap'])
     const reopened = createSession(db)
@@ -288,12 +297,14 @@ describe('export failure modes', () => {
 
 describe('the U4 boundary-review folds', () => {
   it('a backup whose MODEL was saved by a newer app is told so — never "file-damaged" (the survivor with intact data)', async () => {
-    // Build a vault whose plaintext claims schemaVersion 4 (one past the v3 ladder this
-    // build writes — the untyped boundary lets a future app write it; this build must
-    // classify it honestly through restore).
+    // Build a vault whose plaintext claims one past the version this build writes (the untyped
+    // boundary lets a future app write it; this build must classify it honestly through restore).
+    // DERIVED from the constant (the schema-v4 plan's KTD5): the typed 4 this arm carried broke at
+    // that bump, and the next bump would break a typed 5 the same way.
+    const newer = CURRENT_SCHEMA_VERSION + 1
     const db = await openVaultDb()
     const session = createSession(db)
-    const futureScenario = { ...MODEL, schemaVersion: 4 } as unknown as Scenario
+    const futureScenario = { ...MODEL, schemaVersion: newer } as unknown as Scenario
     const saved = await session.firstSave(futureScenario, await floorPass(PASSPHRASE), await floorPass(RECOVERY_PASSPHRASE))
     if (!saved.ok) throw new Error('firstSave failed')
     const exported = await exportVault(db)
@@ -302,8 +313,42 @@ describe('the U4 boundary-review folds', () => {
     await clearVault(db)
 
     const result = await restoreVault(db, exported.file, RECOVERY_PASSPHRASE, await floorPass(NEW_PASSPHRASE))
-    expect(result).toEqual({ ok: false, reason: 'newer-version', got: 4 })
+    expect(result).toEqual({ ok: false, reason: 'newer-version', got: newer })
     expect(await loadVault(db)).toEqual({ kind: 'no-vault' }) // nothing landed
+  })
+
+  it('a VERSION-3 backup restores as the FILE’S OWN BYTES (the stored model record is byte-identical to the file’s), then unlocks as the current version', async () => {
+    // A REAL version-3 save, frozen from the last build before the schema-v4 bump (the codec suite's
+    // U6 fixture), read with fs: the store layer may not reach into ui to mint one. A backup keeps
+    // the version of the save it was cut from forever, so this is the restore a version-3 backup
+    // file meets in every later build.
+    const v3 = JSON.parse(
+      readFileSync(join(process.cwd(), 'src', 'shared', '__tests__', 'fixtures', 'scenario-v3-date-postw.json'), 'utf8'),
+    ) as AnyScenario
+    const db = await openVaultDb()
+    const session = createSession(db)
+    const saved = await session.firstSave(v3, await floorPass(PASSPHRASE), await floorPass(RECOVERY_PASSPHRASE))
+    if (!saved.ok) throw new Error('firstSave failed')
+    const exported = await exportVault(db)
+    if (!exported.ok) throw new Error('export failed')
+    await session.lock()
+    await clearVault(db)
+
+    expect(await restoreVault(db, exported.file, RECOVERY_PASSPHRASE, await floorPass(NEW_PASSPHRASE))).toEqual({ ok: true })
+    const file = JSON.parse(exported.file) as BackupFileV1
+    const fromB64 = (s: string): number[] => Array.from(atob(s), (c) => c.charCodeAt(0))
+    const landed = await loadVault(db)
+    if (landed.kind !== 'vault') throw new Error(`expected a vault, got ${landed.kind}`)
+    // Restore probes the plaintext through the codec (which relabels) but writes the FILE's bytes —
+    // never a re-encoded copy of what it decoded.
+    expect(Array.from(landed.model.iv)).toEqual(fromB64(file.model.iv))
+    expect(Array.from(landed.model.ciphertext)).toEqual(fromB64(file.model.ciphertext))
+
+    const reopened = createSession(db)
+    expect((await reopened.unlock(NEW_PASSPHRASE)).ok).toBe(true)
+    expect(reopened.currentModel()?.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
+    expect({ ...reopened.currentModel(), schemaVersion: 3 }).toEqual(v3)
+    await reopened.lock()
   })
 
   it('two concurrent restores from a wiped state: exactly one lands (the TOCTOU critical section)', async () => {

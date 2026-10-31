@@ -11,16 +11,30 @@
  * the bit-identical reproduction field). The engine's R19 `validateParams` proves
  * SEMANTICS (ranges, sums, age ordering) and remains in the path of every decoded
  * scenario before an answer renders — the codec never re-implements a domain rule,
- * so the two gates cannot disagree.
+ * so the two gates cannot disagree. It moves no field; the one thing it ever rewrites
+ * is a LABEL (the version-3 step below).
  *
  * VERSION LADDER: `schemaVersion` is judged BEFORE any other field (the migration
- * enabler). v1/v2/v3 decode today (v3 is the forward-written shape — its arm landed at
- * P2·U8); an INTEGER version above the ladder (now `> 3`) surfaces the calm "saved by a
- * newer version" state. A non-integer version is corruption, not a branch.
+ * enabler). An integer above {@link CURRENT_SCHEMA_VERSION} surfaces the calm "saved by a
+ * newer version" state, judged first, before any arm runs. Then each version has its own arm:
+ *   · 1 and 2 decode as-is (legacy ladder members; the hydrate gate refuses them).
+ *   · 3 is a LABEL-ONLY step: since the schema-v4 bump (2026-10-31) versions 3 and 4 carry the
+ *     identical field set, so the step relabels the parsed plan to its LITERAL successor, 4, in
+ *     place, and hands it to the next arm. It names the successor, never the current constant,
+ *     so a later bump's own step can never be skipped. It reads version 3 FOREVER: a backup keeps
+ *     the version of the save it was cut from, and a copy older than the bump can still make a
+ *     real first save. Nothing after the relabel can tell which label the disk held, so nothing
+ *     may key provenance on the in-memory `schemaVersion` (key it on the plan's shape).
+ *   · {@link CURRENT_SCHEMA_VERSION} runs the field checks (`checkV3Fields` — they name the v3
+ *     field GENERATION, which version 4 carries unchanged).
+ * A non-integer version, or one below 1, is corruption, not a branch.
  *
  * TOLERANT READER: unknown extra fields pass through untouched — the additive-within-
  * version pattern (hsa, contributions) depends on an older reader accepting a newer
- * sibling's additive optional fields under the SAME schemaVersion.
+ * sibling's additive optional fields under the SAME schemaVersion. Which new fields may
+ * stay additive and which must bump the version is ruled once, in `docs/architecture.md`
+ * §7.3 (from the older reader's side: would it answer differently, refuse the value, or drop
+ * it on save?).
  */
 import {
   ACCOUNT_KINDS,
@@ -43,10 +57,11 @@ import {
   WORK_STATUSES,
   WORKING_YEAR_COST_KINDS,
   WORKING_YEAR_STATE_TAX_READINGS,
+  CURRENT_SCHEMA_VERSION,
   type AnyScenario,
   type Scenario,
   type ScenarioV2,
-  type ScenarioV3,
+  type CurrentScenario,
 } from './model'
 import { COLA_PCT_MAX, COLA_PCT_MIN, colaRateInRange } from './incomeBounds'
 
@@ -289,7 +304,8 @@ function checkV2Fields(o: Obj): void {
   needString(o, 'appDefaultVersion', 'scenario')
 }
 
-// --- v3 (the forward-written persist shape — P2·U8 · the FIRST v3 writer) --------------------
+// --- v3 (the current field set — first written at P2·U8 as version 3; written as version 4 since
+// the schema-v4 bump, a label-only change, so these checks judge both) ---------------------------
 // The account-level intake truth. SEPARATE validators from the v1/v2 arm (the field shapes differ —
 // the live `pia`/`birthYear` person, entered accounts, two discriminated unions); the legacy
 // `checkPerson` is NEVER reused or mutated (plan §10). Same finiteness-first / vocab discipline.
@@ -860,8 +876,9 @@ function checkV3Fields(o: Obj): string[] {
     }
   }
   // The pay check's W, what a year costs while someone still works (`docs/plans/features/
-  // working-year-pay-check-build-spec.md` KTD4; additive-optional, the heirBracket precedent: no
-  // schemaVersion bump). One kind-discriminated object over a CLOSED vocabulary. On the restore path
+  // working-year-pay-check-build-spec.md` KTD4; it landed additive-optional within version 3, the
+  // heirBracket precedent, and the schema-v4 bump of 2026-10-31 is what makes a copy built before W
+  // refuse a plan carrying it — the header). One kind-discriminated object over a CLOSED vocabulary. On the restore path
   // every check below is this codec's alone: the engine's `validateParams` sees only the figure
   // (through `buildDateInput`), never the kind, the period or the reading.
   //  · `stateTaxReading` is required on BOTH kinds: it is what makes a change of state stale the
@@ -970,11 +987,17 @@ export function decodeScenario(bytes: Uint8Array): ScenarioDecode {
   if (!isObj(parsed)) return { ok: false, reason: 'corrupt', detail: 'plaintext is not a JSON object' }
 
   // The ladder discriminant — judged before ANY other field is trusted.
-  const version = parsed.schemaVersion
-  if (!isFiniteNumber(version) || !Number.isInteger(version)) {
+  const onDisk = parsed.schemaVersion
+  if (!isFiniteNumber(onDisk) || !Number.isInteger(onDisk)) {
     return { ok: false, reason: 'corrupt', detail: 'scenario.schemaVersion: expected an integer' }
   }
+  // "Newer" is judged first, before any arm (the `backup.ts` format-check order): the output is
+  // the same for every input, and the threshold reads the one constant.
+  if (onDisk > CURRENT_SCHEMA_VERSION) return { ok: false, reason: 'newer-version', got: onDisk }
 
+  // The version each step hands on. A label-only step moves it (and the parsed object's own label)
+  // to its literal successor; the next arm then judges it exactly as if the disk had said so.
+  let version = onDisk
   try {
     // The legacy ladders carry no tolerated atom — every field is fatal-or-fine, so their
     // `droppedAtoms` is the EMPTY LIST (the absence, spelled; never `undefined`).
@@ -986,15 +1009,26 @@ export function decodeScenario(bytes: Uint8Array): ScenarioDecode {
       checkV2Fields(parsed)
       return { ok: true, scenario: parsed as unknown as ScenarioV2, droppedAtoms: [] }
     }
+    // 3 → 4, LABEL ONLY (the schema-v4 bump, 2026-10-31): the two carry the identical field set, so
+    // only the discriminant moves, in place — every stamp the staleness reader diffs at unlock stays
+    // as written. The LITERAL successor, never `CURRENT_SCHEMA_VERSION`: a later bump adds its own
+    // 4 → 5 step after this one, and a step that jumped straight to "current" would skip it. Read
+    // forever (the header). Never call such a plan "legacy" — that word already means a plan missing
+    // optional fields (`staleness.ts`, `resultSave.ts`).
     if (version === 3) {
+      parsed.schemaVersion = 4
+      version = 4
+    }
+    if (version === CURRENT_SCHEMA_VERSION) {
       const droppedAtoms = checkV3Fields(parsed)
-      return { ok: true, scenario: parsed as unknown as ScenarioV3, droppedAtoms }
+      return { ok: true, scenario: parsed as unknown as CurrentScenario, droppedAtoms }
     }
   } catch (e) {
     if (e instanceof Corrupt) return { ok: false, reason: 'corrupt', detail: e.detail }
     throw e
   }
 
-  if (version > 3) return { ok: false, reason: 'newer-version', got: version }
-  return { ok: false, reason: 'corrupt', detail: `scenario.schemaVersion: ${version} is not a valid version` }
+  // Reached by 0 and below, or by a version no arm takes — the latter only if a bump raised the
+  // constant without adding its step (the ladder pin in the codec suite reds on exactly that).
+  return { ok: false, reason: 'corrupt', detail: `scenario.schemaVersion: ${onDisk} is not a valid version` }
 }

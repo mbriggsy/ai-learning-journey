@@ -8,7 +8,7 @@
  * makes the omission a BUILD ERROR instead:
  *
  *  - {@link DRAFT_DISPOSITIONS} is a `Record<keyof ScenarioDraft, AssumptionDisposition>`
- *    (the ScenarioDraft⟷ScenarioV3 tie precedent — memoryModel.ts's `_DraftKeysAreV3Keys` /
+ *    (the ScenarioDraft⟷CurrentScenario tie precedent — memoryModel.ts's `_DraftKeysAreV3Keys` /
  *    `_V3KeysAreDraftKeys` / `_draftShapeTied` block, cited by NAME because the old `:133-155`
  *    line cite had drifted onto unrelated prose): a future draft
  *    field WITHOUT a declared disposition fails `tsc`, and an entry for a REMOVED field

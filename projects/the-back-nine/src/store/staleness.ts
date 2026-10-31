@@ -163,7 +163,7 @@
  * priced. It feeds `anyStale` only: the engine keeps using the last figure given (R4), so no
  * recompute moves with it.
  */
-import type { BudgetCategory, ScenarioV3 } from '@shared/model'
+import type { BudgetCategory, CurrentScenario } from '@shared/model'
 import { appDefaultEraFor, CURRENT_APP_DEFAULT_VERSION } from '@shared/appDefaults'
 import { healthcareVintageStamp } from '@engine/constants/health'
 import { taxVintageStamp } from '@engine/constants/tax'
@@ -203,7 +203,7 @@ export type HealthcareFamily = 'aca' | 'medicare'
  *     make the "every read is unpriced" silence arm vacuously true and quietly kill a clock.
  *
  * THE SOURCE FOR EACH ROW:
- *   · `coverage-year` — `COVERAGE_YEAR` is documented at `model.ts:2584` as "the coverage year
+ *   · `coverage-year` — `COVERAGE_YEAR` is documented at `model.ts:2619` as "the coverage year
  *     the ACA/IRMAA tables are keyed to", so it dates BOTH families and names each one the run
  *     priced. It is the ONLY marker for every annually-re-indexed health figure that carries no
  *     stamp of its own (the four interior IRMAA thresholds, the ACA applicable-percentage bands,
@@ -557,7 +557,7 @@ const bucketFor = (read: ExposureRead): Bucket =>
  *   caller that forgets it must fail to compile, never read a silent `false`.
  */
 export function deriveStaleness(
-  scenario: ScenarioV3,
+  scenario: CurrentScenario,
   todayEpochDay: number,
   exposure: StalenessExposure,
   workingYearCostStale: boolean,

@@ -110,7 +110,7 @@ status: shipped
   domain: RMD age × pre-tax balance — insight 027).
 - **The search axis is the 4 named policies** `{proportional, taxable-first, pre-tax-first,
   bracket-fill}`: `SEARCHED_POLICIES` filters the shipped **5-wide** `DRAWDOWN_POLICIES`
-  (`model.ts:191`) down by excluding `custom`, which stays the injection point for the
+  (`model.ts:192`) down by excluding `custom`, which stays the injection point for the
   user's own `drawdownOrder` as an **out-of-grid labeled baseline** — never searched, always
   scored beside the grid (reconciliation ruling 8). The conventional-order / conversion-0
   baseline is **always present**, exported as `CONVENTIONAL_POLICY = 'taxable-first'` (the
@@ -126,7 +126,7 @@ status: shipped
   PTC cliff, the IRMAA bill steps) are never bisected at all, so no bisection can span a
   discontinuity and find a phantom root. The rail substrate is the shipped `magiLandscape`
   fill model, which carries the same well-behavedness contract the `bracketFillCeilings`
-  seam (`model.ts:468`) already carries — reuse, never re-derive (insight 068: fill to the
+  seam (`model.ts:469`) already carries — reuse, never re-derive (insight 068: fill to the
   *binding effective* ceiling via the branch's own predicate, never the nominal bracket top),
   so the enumerator and the engine agree on the geometry by construction.
 - Imported by BOTH this harness and U15's `search.ts` — the two can never drift to

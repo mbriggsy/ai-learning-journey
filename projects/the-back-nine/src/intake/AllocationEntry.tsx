@@ -9,7 +9,7 @@ import { blendOf } from './intakeMap'
  * enforced HERE so an invalid split never leaves the component (burned/062 — an
  * account's blend is never a silent default). The earlier "mostly stocks" quick-
  * pick AND the single-ticker lookup were both retired (decision: one precise
- * allocation question per account; the multi-holding ticker entry is shape-ratified and deferred PAST U8, additive-within-v3 — docs/decisions/portfolio-holdings.md). The
+ * allocation question per account; the multi-holding ticker entry is shape-ratified and deferred PAST U8, ruled additive-within-v3 — docs/decisions/portfolio-holdings.md; whether it bumps the schema version when built is docs/architecture.md §7.3's call). The
  * stored shape is still `TickerClassification` (the `exact` arm); the `simple`
  * arm is no longer produced here but kept in the model because saved scenarios may still carry it — and
  * a legacy `simple` blend on an edited account SEEDS the legs through `blendOf`

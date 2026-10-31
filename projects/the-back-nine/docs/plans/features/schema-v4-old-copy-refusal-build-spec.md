@@ -353,3 +353,15 @@ Who opens what:
 - The version-floor test lands in its own second commit.
 - No abandoned-attempt code, no scratch file in the repo, no running dev server or headless browser left behind.
 - START HERE names the next sizable step: the whole-file ultramode review of this change, then `/distill`.
+
+---
+
+## As built (b9-3, 2026-10-31)
+
+Built as planned, in two commits. What the build changed from the plan, and why:
+
+- **U4 and U6 ran in `git archive` copies, not a detached worktree plus the live checkout.** One archive of `c07e5758^` (59417d29) and one of HEAD (`c4831850`, whose `src` was unchanged since `68aba728`), each with a `node_modules` junction. The same tracked sources, no worktree registered in a checkout other sessions share, and the post-W build could not pick up another session's uncommitted edit. Runs, cited reads and the mint script: `b9-schema-v4-proof\README.md` in the project's memory folder.
+- **The M10 prediction reads differently.** "Newer" is judged on the DISK label before any arm (U2 step 2), so with the constant lowered to 3 the mint's 3 relabels to 4 and lands on "not a valid version" (corrupt), not on "newer" as the Verification Contract worded it. The kill set is the same.
+- **Arms beyond the plan's list:** a version-3 vault through RECOVERY unlock (the re-key leaves the model record byte-identical); the hydrate gate refuses version 2 and null as well as version 1; every dev seed's save carries the current version in the plan AND in the encoded bytes; the version-3 twin's required-field arm runs four field kinds.
+- **The schema-surface pin reads the codec's own source** for its vocabulary arguments (each `needVocab` third argument, plus the order-key `includes`), so a NEW vocabulary the record does not hold reds, not only a changed one. The record stores no version: a second typed 4 would make the absolute pin no longer the one place a test types the literal.
+- **`src/engine/constants/solver.ts`'s rename is a `note:` string in a constants entry, not a comment.** Nothing reads it (only `.value` is consumed); the seed probe proved every dev seed's engine output byte-identical.

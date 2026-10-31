@@ -211,7 +211,7 @@ standing valve; the §7 triggers in `docs/decisions/market-model.md` stay live a
   reduced-motion slide→fade). `role="dialog"`, real labelled radios, one radio per
   `RECOMMENDATION_GOALS` member, each with a one-line gloss: two shipped (`leave-more`,
   `pay-less-tax`); the plan's third R21 goal, `live-bigger-now`, did not ship
-  (`src/shared/model.ts:264-272`, deferred past U15 — plan 4 contract #4; open in the register as
+  (`src/shared/model.ts:265-273`, deferred past U15 — plan 4 contract #4; open in the register as
   *The third goal — "live bigger now" doesn't exist*). Activating the affordance opens GoalPicker
   FIRST (the goal precedes the solve); unset sentinel, never a silent default; a re-pick VISIBLY
   re-solves (request-epoch), both futures update.

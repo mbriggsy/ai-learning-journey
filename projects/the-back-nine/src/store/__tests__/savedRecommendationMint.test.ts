@@ -50,7 +50,7 @@ import { scenarioFromDraft, currentEpochDay } from '@ui/scenarioFromDraft'
 import { exposureForDraft } from '@ui/stalenessExposure'
 import { DEV_SEEDS } from '@ui/devSeeds'
 import type { ScenarioDraft } from '../memoryModel'
-import type { ScenarioV3 } from '@shared/model'
+import { CURRENT_SCHEMA_VERSION, type CurrentScenario } from '@shared/model'
 
 const TODAY = currentEpochDay()
 /** The heir bracket every leave-more fixture is scored at (any fixed value — it only has to be the
@@ -360,7 +360,7 @@ describe('the mint — noDollarRegister is COPIED from the composed view, never 
 // ---- 4. the producer's-output fingerprint bind ---------------------------------------------------
 
 /** A real, fully-stamped save-ready scenario for the spine-route household every arm below uses. */
-function freshSave(draft: ScenarioDraft = solvableDraft()): ScenarioV3 {
+function freshSave(draft: ScenarioDraft = solvableDraft()): CurrentScenario {
   const r = scenarioFromDraft(draft)
   if (!r.ready) throw new Error(`the fixture draft must be save-ready — the codec said: ${r.detail}`)
   return r.scenario
@@ -413,8 +413,8 @@ describe('the mint — the fingerprint slot carries the RUN IDENTITY, proven aga
     expect(decoded.ok).toBe(true)
     if (!decoded.ok) return
     expect(decoded.droppedAtoms, 'a minted record must never be a tolerated drop').toEqual([])
-    expect(decoded.scenario.schemaVersion).toBe(3)
-    if (decoded.scenario.schemaVersion !== 3) return
+    expect(decoded.scenario.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
+    if (decoded.scenario.schemaVersion !== CURRENT_SCHEMA_VERSION) return
     const persisted = decoded.scenario.savedRecommendation
     expect(persisted?.fingerprint).toBe(fingerprint)
     if (persisted === undefined) return

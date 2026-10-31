@@ -10,8 +10,9 @@
  * only at recovery time). A save reports success ONLY after `tx.done` resolves.
  * `rewriteModel` is the single-record degenerate case — the model re-written under
  * the EXISTING in-memory DK with a fresh IV, wraps untouched — so the U8 v2→v3 vault
- * upgrade (and any later model-only schema upgrade) inherits this atomicity instead of
- * re-implementing it.
+ * upgrade (never built) and any later model-only schema upgrade inherit this atomicity instead
+ * of re-implementing it. The schema-v4 bump (2026-10-31) needed none: a version-3 plan is
+ * relabeled in memory at decode, and the disk changes only at the household's next Save.
  *
  * DURABILITY is best-effort + backstopped: the write COMMITS before
  * `navigator.storage.persist()` is attempted; its boolean is advisory only and never

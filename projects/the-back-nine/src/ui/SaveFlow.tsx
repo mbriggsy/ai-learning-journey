@@ -28,7 +28,7 @@ import { holdUpdateApply } from './updateGate'
 import { useUnloadGuard } from './unloadGuard'
 import { PassphraseStep } from './PassphraseStep'
 import { ExportConfirm } from './ExportConfirm'
-import type { ScenarioV3 } from '@shared/model'
+import type { CurrentScenario } from '@shared/model'
 import type { FloorCheckedPassphrase } from '@crypto/kdf'
 
 type Step = 'passphrase' | 'recovery' | 'securing' | 'export' | 'complete' | 'error'
@@ -55,7 +55,7 @@ export function SaveFlow({
   onCommitted,
   onComplete,
 }: {
-  readonly scenario: ScenarioV3
+  readonly scenario: CurrentScenario
   readonly onCancel: () => void
   /** Fired the instant `firstSave` lands the vault (the ok arm) — the disk now holds the plan, so the
    *  caller's unsaved-work guard disarms HERE, not at the Done tap several steps later. */

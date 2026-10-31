@@ -8,11 +8,37 @@
  * decoded scenario still passes the R19 gate before any answer renders, so the codec
  * never re-implements (and can never drift from) the engine's domain rules.
  */
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 import { describe, expect, it, vi } from 'vitest'
 
+import { dateVintageStamp } from '@engine/constants'
+import { healthcareVintageStamp } from '@engine/constants/health'
+import { stateTaxVintageStamp } from '@engine/constants/stateTax'
+import { taxVintageStamp } from '@engine/constants/tax'
 import { ENGINE_MAX_DOLLAR } from '@engine/simulate'
 
 import {
+  ACCOUNT_KINDS,
+  BUDGET_CATEGORIES,
+  BUDGET_TIERS,
+  COLA_MODES,
+  CURRENT_SCHEMA_VERSION,
+  DRAWDOWN_ORDER_KEYS,
+  DRAWDOWN_POLICIES,
+  FILING_STATUSES,
+  INCOME_TYPES,
+  MEDICARE_EXTRAS_KINDS,
+  RECOMMENDATION_GOALS,
+  SAVED_RECOMMENDATION_GRADES,
+  SEXES,
+  SPEND_ENTRY_PERIODS,
+  STATE_ROSTER,
+  TICKER_CLASSIFICATION_CHOICES,
+  WORK_STATUSES,
+  WORKING_YEAR_COST_KINDS,
+  WORKING_YEAR_STATE_TAX_READINGS,
   NEVER_DEPLETED,
   SAVED_AT_EPOCH_DAY_MAX,
   SAVED_AT_EPOCH_DAY_MIN,
@@ -20,7 +46,7 @@ import {
   type SavedRecommendationV3,
   type Scenario,
   type ScenarioV2,
-  type ScenarioV3,
+  type CurrentScenario,
   type WorkingYearCostV3,
 } from '../model'
 import { decodeScenario, encodeScenario, MAX_REAL_DOLLAR } from '../scenarioCodec'
@@ -78,11 +104,13 @@ const V2: ScenarioV2 = {
   appDefaultVersion: 'defaults-2026-06',
 }
 
-// The forward-written v3 shape (U8) — exercises the live pia/birthYear person, entered accounts,
+// The current shape — the v3 field set (U8), labeled with the current version (the schema-v4 bump; this
+// fixture was named `V3` before it). It exercises the live pia/birthYear person, entered accounts,
 // BOTH discriminated unions (ticker classification + the income-stream tax treatment), every income
 // `type` arm, the fixed-pct colaPct, and the optional health fields. Hand-authored (not engine-derived).
-const V3: ScenarioV3 = {
-  schemaVersion: 3,
+// A version-3 twin is this fixture relabeled 3 (`asVersion`), never a typed literal: 3 is in no type.
+const CURRENT: CurrentScenario = {
+  schemaVersion: CURRENT_SCHEMA_VERSION,
   people: [
     { sex: 'male', currentAge: 62, birthYear: 1964, retirementAge: 65, earnedIncomeReal: 0, pia: 36_000, socialSecurityClaimAge: 67, name: 'Pat', workStatus: 'retired' },
     // A still-working person carries NO retirementAge (Option B, council 2026-06-30 — the swept date
@@ -123,7 +151,7 @@ const V3: ScenarioV3 = {
 }
 
 /** Encode, surgically mutate the JSON, return the re-encoded bytes. */
-function mutated(base: Scenario | ScenarioV2 | ScenarioV3, mutate: (obj: Obj) => void): Uint8Array {
+function mutated(base: Scenario | ScenarioV2 | CurrentScenario, mutate: (obj: Obj) => void): Uint8Array {
   const obj = JSON.parse(new TextDecoder().decode(encodeScenario(base))) as Obj
   mutate(obj)
   return new TextEncoder().encode(JSON.stringify(obj))
@@ -148,16 +176,19 @@ describe('round-trip', () => {
 
 describe('the schemaVersion ladder (read FIRST, branch before any field is trusted)', () => {
   it('an unknown newer version → the calm newer-version state, never a mis-parse', () => {
-    // v3 is now a LIVE ladder member (U8), so the "newer than this build" case is 4.
+    // "Newer" is DERIVED from the constant (the schema-v4 plan's KTD5): a typed 4 here broke at the
+    // bump, and the next bump would break a typed 5 the same way.
+    const newer = CURRENT_SCHEMA_VERSION + 1
     const bytes = mutated(V1, (o) => {
-      o.schemaVersion = 4
+      o.schemaVersion = newer
     })
-    expect(decodeScenario(bytes)).toEqual({ ok: false, reason: 'newer-version', got: 4 })
+    expect(decodeScenario(bytes)).toEqual({ ok: false, reason: 'newer-version', got: newer })
   })
 
   it('a newer version with OTHERWISE GARBAGE fields is still newer-version (version is judged before shape)', () => {
-    const bytes = new TextEncoder().encode(JSON.stringify({ schemaVersion: 7, complete: 'nonsense' }))
-    expect(decodeScenario(bytes)).toEqual({ ok: false, reason: 'newer-version', got: 7 })
+    const newer = CURRENT_SCHEMA_VERSION + 3
+    const bytes = new TextEncoder().encode(JSON.stringify({ schemaVersion: newer, complete: 'nonsense' }))
+    expect(decodeScenario(bytes)).toEqual({ ok: false, reason: 'newer-version', got: newer })
   })
 
   it('a missing schemaVersion is corruption', () => {
@@ -178,6 +209,227 @@ describe('the schemaVersion ladder (read FIRST, branch before any field is trust
       expect(decoded.ok).toBe(false)
       if (!decoded.ok) expect(decoded.reason).toBe('corrupt')
     }
+  })
+})
+
+/** The same plan's bytes under another label (plus an optional extra edit) — the only way a test can
+ *  write a version this build no longer types. */
+const asVersion = (base: CurrentScenario, version: number, mutate?: (o: Obj) => void): Uint8Array =>
+  mutated(base, (o) => {
+    o.schemaVersion = version
+    mutate?.(o)
+  })
+
+/**
+ * Real version-3 plans, frozen from the old builds that wrote them (the schema-v4 plan's U6; DND 012:
+ * the old code is the oracle). A version-3 twin made by relabeling `CURRENT` moves with the shared
+ * checks if they ever tighten, so it could never catch a real backup stranding; these bytes cannot
+ * move. Each is the `date` dev seed minted by that build's own `scenarioFromDraft` (an invented
+ * household, no real data); how they were made is recorded in the b9-schema-v4-proof folder's README.
+ * Read as RAW bytes: once the codec relabels, any check of the disk version through it is vacuous.
+ */
+const FROZEN_V3 = [
+  { file: 'scenario-v3-date-prew.json', build: 'c07e5758^ (59417d29, before the pay check)', carriesW: false },
+  { file: 'scenario-v3-date-postw.json', build: 'c4831850 (the last build before the bump)', carriesW: true },
+] as const
+const frozenBytes = (file: string): Uint8Array =>
+  new Uint8Array(readFileSync(join(process.cwd(), 'src', 'shared', '__tests__', 'fixtures', file)))
+
+describe('version 3 relabels to its successor; the ladder stays honest for the next bump (the schema-v4 bump)', () => {
+  it('a version-3 plan decodes as the CURRENT plan: the label moves to its successor, every other field is its current twin’s', () => {
+    const fromThree = decodeScenario(asVersion(CURRENT, 3))
+    expect(fromThree).toEqual(decodeScenario(encodeScenario(CURRENT)))
+    expect(fromThree).toEqual({ ok: true, scenario: CURRENT, droppedAtoms: [] })
+    if (!fromThree.ok) return
+    expect(fromThree.scenario.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
+    // Relabeled IN PLACE: the label keeps its first-key seat (encodeScenario's "schemaVersion first").
+    expect(Object.keys(fromThree.scenario)[0]).toBe('schemaVersion')
+  })
+
+  it('a version-3 plan carrying a bad saved recommendation DROPS it exactly as its current twin does (same atoms, same remaining plan)', () => {
+    const badRecord = (o: Obj): void => {
+      o.savedRecommendation = 'not a record'
+    }
+    const twin = decodeScenario(mutated(CURRENT, badRecord))
+    expect(twin.ok, 'the current twin drops the atom and opens').toBe(true)
+    const fromThree = decodeScenario(asVersion(CURRENT, 3, badRecord))
+    expect(fromThree).toEqual(twin)
+    if (!fromThree.ok) return
+    expect(fromThree.droppedAtoms).toHaveLength(1)
+    expect(fromThree.droppedAtoms[0]).toContain('savedRecommendation')
+    expect('savedRecommendation' in fromThree.scenario).toBe(false)
+  })
+
+  it('a version-3 plan with a bad REQUIRED field fails exactly as its current twin does — the relabel never skips a check', () => {
+    const arms: ReadonlyArray<readonly [string, (o: Obj) => void]> = [
+      ['a null spend', (o) => { o.annualSpendingReal = null }],
+      ['no people', (o) => { o.people = [] }],
+      ['a string in a health dollar slot', (o) => { (o.health as Obj).oopMedicalAnnual = 'lots' }],
+      ['an unknown filing status', (o) => { o.filing = 'mfs' }],
+    ]
+    for (const [label, bad] of arms) {
+      const twin = decodeScenario(mutated(CURRENT, bad))
+      expect(twin.ok, `${label}: the current twin must fail`).toBe(false)
+      expect(decodeScenario(asVersion(CURRENT, 3, bad)), label).toEqual(twin)
+    }
+  })
+
+  it.each(FROZEN_V3)('the real version-3 plan from $build decodes as the current plan, every field but the label unchanged', ({ file, carriesW }) => {
+    const bytes = frozenBytes(file)
+    const onDisk = JSON.parse(new TextDecoder().decode(bytes)) as Obj
+    // What the file IS, read raw (never through the codec, which would report the current label).
+    expect(onDisk.schemaVersion, 'the frozen file is a version-3 save').toBe(3)
+    expect('workingYearCost' in onDisk, 'W rides the post-W save only').toBe(carriesW)
+    expect('workingYearsVintage' in (onDisk.dateVintage as Obj), 'the working-years stamp rides the post-W save only').toBe(carriesW)
+    const decoded = decodeScenario(bytes)
+    expect(decoded.ok).toBe(true)
+    if (!decoded.ok) return
+    expect(decoded.droppedAtoms).toEqual([])
+    expect(decoded.scenario.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
+    expect({ ...decoded.scenario, schemaVersion: 3 }).toEqual(onDisk)
+  })
+
+  it('THE ABSOLUTE PIN: a plan labeled with the literal 4 decodes as the current version (the one place a test types it — every derived pin stays green under a reverted bump)', () => {
+    const decoded = decodeScenario(asVersion(CURRENT, 4))
+    expect(decoded.ok, 'a version-4 save must open in this build and in every later one').toBe(true)
+    if (decoded.ok) expect(decoded.scenario.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
+  })
+
+  it('THE LADDER PIN: every version from 1 to the current one reaches its own arm; one past it is newer; 0 and below are corrupt', () => {
+    const planAt = (version: number): Uint8Array =>
+      version === 1 ? encodeScenario(V1) : version === 2 ? encodeScenario(V2) : asVersion(CURRENT, version)
+    for (let version = 1; version <= CURRENT_SCHEMA_VERSION; version++) {
+      const decoded = decodeScenario(planAt(version))
+      // Raising the constant without adding the step for the version below it lands HERE.
+      expect(decoded, `version ${version} must reach a named arm`).not.toEqual({
+        ok: false,
+        reason: 'corrupt',
+        detail: `scenario.schemaVersion: ${version} is not a valid version`,
+      })
+      expect(decoded.ok, `version ${version} opens`).toBe(true)
+    }
+    const newer = CURRENT_SCHEMA_VERSION + 1
+    expect(decodeScenario(asVersion(CURRENT, newer))).toEqual({ ok: false, reason: 'newer-version', got: newer })
+    for (const below of [0, -1]) {
+      expect(decodeScenario(asVersion(CURRENT, below))).toEqual({
+        ok: false,
+        reason: 'corrupt',
+        detail: `scenario.schemaVersion: ${below} is not a valid version`,
+      })
+    }
+  })
+
+  it('a relabeled plan is itself current: decode → encode → decode is a fixed point for every version from 3 up, and the re-encoded bytes carry the current label', () => {
+    for (let version = 3; version <= CURRENT_SCHEMA_VERSION; version++) {
+      const first = decodeScenario(asVersion(CURRENT, version))
+      expect(first.ok, `version ${version}`).toBe(true)
+      if (!first.ok) continue
+      const reencoded = encodeScenario(first.scenario)
+      expect(decodeScenario(reencoded), `version ${version}`).toEqual(first)
+      // Raw, never through the codec: what the NEXT save would put on disk.
+      expect((JSON.parse(new TextDecoder().decode(reencoded)) as Obj).schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
+    }
+  })
+})
+
+describe('the schema surface — docs/architecture.md §7.3 rules (b) and (c), held beside CURRENT_SCHEMA_VERSION', () => {
+  /**
+   * What a copy built at the current version KNOWS. `SCENARIO_V3_FIELDS` catches a new top-level field
+   * (it must join the list to compile); it never sees these two, so this record does:
+   *   (b) a new VALUE in a vocabulary the codec checks — a copy built before it refuses that value, so
+   *       it calls a good plan "damaged" (the filed `stateTaxReading` and `chosenGoal` cases);
+   *   (c) a new KEY in a vintage stamp — every save re-mints the stamps from the build's own constants,
+   *       so a copy built before it DROPS the key when it saves (the working-years stamp was this case).
+   * WHEN THIS FAILS: either bump `CURRENT_SCHEMA_VERSION` under §7.3 and update this record in the same
+   * change, or — if no older copy is harmed — update the record with a one-line comment saying why.
+   */
+  const RECORDED_VOCABULARIES: Readonly<Record<string, readonly string[]>> = {
+    ACCOUNT_KINDS: ['401k', '403b', 'traditional-ira', 'roth-401k', 'roth-ira', 'brokerage', 'hsa'],
+    BUDGET_CATEGORIES: ['housing', 'utilities', 'food', 'transportation', 'travel', 'gifts', 'other'],
+    BUDGET_TIERS: ['essentials', 'discretionary'],
+    COLA_MODES: ['real-flat', 'nominal-flat', 'fixed-pct'],
+    DRAWDOWN_ORDER_KEYS: ['taxable', 'pretax', 'roth'],
+    DRAWDOWN_POLICIES: ['proportional', 'taxable-first', 'pre-tax-first', 'bracket-fill', 'custom'],
+    FILING_STATUSES: ['mfj', 'single'],
+    INCOME_TYPES: ['pension', 'rental', 'alimony', 'annuity', 'other'],
+    MEDICARE_EXTRAS_KINDS: ['none', 'entered', 'typical', 'unanswered'],
+    RECOMMENDATION_GOALS: ['leave-more', 'pay-less-tax'],
+    SAVED_RECOMMENDATION_GRADES: ['just-do-it', 'coin-flip'],
+    SEXES: ['male', 'female'],
+    SPEND_ENTRY_PERIODS: ['month', 'year'],
+    STATE_ROSTER: ['NC', 'PA', 'FL', 'SC', 'GA', 'DE', 'elsewhere'],
+    TICKER_CLASSIFICATION_CHOICES: ['stocks', 'bonds', 'cash'],
+    WORK_STATUSES: ['working', 'retired'],
+    WORKING_YEAR_COST_KINDS: ['confirmed', 'entered'],
+    WORKING_YEAR_STATE_TAX_READINGS: ['agi-derived', 'class-based', 'none', 'unpriced'],
+  }
+  /** The one vocabulary the codec spells inline (the ticker classification's `kind`), as it spells it. */
+  const RECORDED_INLINE_VOCABULARY = "['simple', 'exact']"
+  const RECORDED_STAMP_KEYS: Readonly<Record<string, readonly string[]>> = {
+    healthcareVintage: [
+      'coverageYear',
+      'acaStatus',
+      'acaVerifiedOn',
+      'fplGuidelineYear',
+      'irmaaTopTierFrozenThrough',
+      'partBStandardMonthly',
+      'medicareExtrasTypicalVintage',
+      'partBTrendVintage',
+    ],
+    taxVintageDetail: ['taxYear', 'legalBasis'],
+    dateVintage: ['contributionYear', 'blendSnapshotAsOf', 'workingYearsVintage'],
+    stateTaxVintage: ['ncProfile', 'paProfile', 'flProfile'],
+  }
+  const LIVE_VOCABULARIES: Readonly<Record<string, readonly string[]>> = {
+    ACCOUNT_KINDS,
+    BUDGET_CATEGORIES,
+    BUDGET_TIERS,
+    COLA_MODES,
+    DRAWDOWN_ORDER_KEYS,
+    DRAWDOWN_POLICIES,
+    FILING_STATUSES,
+    INCOME_TYPES,
+    MEDICARE_EXTRAS_KINDS,
+    RECOMMENDATION_GOALS,
+    SAVED_RECOMMENDATION_GRADES,
+    SEXES,
+    SPEND_ENTRY_PERIODS,
+    STATE_ROSTER,
+    TICKER_CLASSIFICATION_CHOICES,
+    WORK_STATUSES,
+    WORKING_YEAR_COST_KINDS,
+    WORKING_YEAR_STATE_TAX_READINGS,
+  }
+  const why = (what: string): string =>
+    `${what} changed while CURRENT_SCHEMA_VERSION is ${CURRENT_SCHEMA_VERSION}: an older copy would ` +
+    'refuse the new value (§7.3 rule (b)) or drop the new key on save (rule (c)). Bump the version under ' +
+    'docs/architecture.md §7.3, or update this record with a one-line reason no older copy is harmed.'
+
+  it('every vocabulary the codec checks is recorded, value for value', () => {
+    expect(LIVE_VOCABULARIES, why('A vocabulary the codec checks')).toEqual(RECORDED_VOCABULARIES)
+  })
+
+  it('the codec checks no vocabulary this record does not hold (read from its source: every needVocab / includes argument)', () => {
+    const source = readFileSync(join(process.cwd(), 'src', 'shared', 'scenarioCodec.ts'), 'utf8')
+    const vocabArgs = new Set<string>()
+    // needVocab(<obj>, '<field>', <VOCAB>, <path>) — the third argument; an inline array literal is kept whole.
+    for (const m of source.matchAll(/needVocab\(\s*[^,]+,\s*'[^']*',\s*(\[[^\]]*\]|[A-Z_]+)/g)) vocabArgs.add(m[1]!)
+    // (<VOCAB> as readonly string[]).includes(…) — the order-key check spells its vocabulary this way.
+    for (const m of source.matchAll(/\(([A-Z_]+) as readonly string\[\]\)\.includes\(/g)) vocabArgs.add(m[1]!)
+    const named = [...vocabArgs].filter((a) => !a.startsWith('[')).sort()
+    const inline = [...vocabArgs].filter((a) => a.startsWith('['))
+    expect(named, why('The set of vocabularies the codec checks')).toEqual(Object.keys(RECORDED_VOCABULARIES).sort())
+    expect(inline, why('The codec’s inline vocabulary')).toEqual([RECORDED_INLINE_VOCABULARY])
+  })
+
+  it('every vintage stamp a save mints carries exactly the recorded keys', () => {
+    const live = {
+      healthcareVintage: Object.keys(healthcareVintageStamp()),
+      taxVintageDetail: Object.keys(taxVintageStamp()),
+      dateVintage: Object.keys(dateVintageStamp()),
+      stateTaxVintage: Object.keys(stateTaxVintageStamp()),
+    }
+    expect(live, why('A vintage stamp’s key set')).toEqual(RECORDED_STAMP_KEYS)
   })
 })
 
@@ -298,19 +550,19 @@ describe('tolerant reader (additive-within-version fields pass through)', () => 
   })
 })
 
-describe('v3 — the forward-written persist shape (U8, the first v3 writer)', () => {
-  it('v3 round-trips EXACTLY — people(pia/birthYear/name/workStatus), entered accounts, both unions, health, income streams', () => {
-    const decoded = decodeScenario(encodeScenario(V3))
-    expect(decoded).toEqual({ ok: true, scenario: V3, droppedAtoms: [] })
+describe('the current shape — the v3 field set (U8, the first v3 writer), written as the current version', () => {
+  it('the current shape round-trips EXACTLY — people(pia/birthYear/name/workStatus), entered accounts, both unions, health, income streams', () => {
+    const decoded = decodeScenario(encodeScenario(CURRENT))
+    expect(decoded).toEqual({ ok: true, scenario: CURRENT, droppedAtoms: [] })
     if (decoded.ok) expect(decoded.scenario.seed).toBe(0x0badf00d) // the determinism field survives
   })
 
-  // P3·U9 — the budget field (ADDITIVE-OPTIONAL within v3: the V3 fixture above carries
+  // P3·U9 — the budget field (ADDITIVE-OPTIONAL within v3: the CURRENT fixture above carries
   // none and round-trips — that IS the pre-U9-vault tolerant-reader proof; these arms
   // cover the present-and-valid and present-and-corrupt shapes).
   it('v3 WITH a budget round-trips exactly — windowed + lifelong lines, both tiers', () => {
-    const withBudget: ScenarioV3 = {
-      ...V3,
+    const withBudget: CurrentScenario = {
+      ...CURRENT,
       budget: [
         { category: 'housing', label: 'Mortgage + tax', annualAmountReal: 30_000, tier: 'essentials', startYear: 0 },
         { category: 'travel', label: 'See the world', annualAmountReal: 15_000, tier: 'discretionary', startYear: 0, endYear: 19 },
@@ -320,8 +572,8 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
   })
 
   it('v3 budget corruption arms: bad category/tier vocab, reversed window, negative start, null endYear (DND-009), non-finite amount — each named corrupt', () => {
-    const withBudget: ScenarioV3 = {
-      ...V3,
+    const withBudget: CurrentScenario = {
+      ...CURRENT,
       budget: [{ category: 'food', label: 'Groceries', annualAmountReal: 12_000, tier: 'essentials', startYear: 2, endYear: 5 }],
     }
     const arms: ((b: Obj) => void)[] = [
@@ -351,8 +603,8 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
   })
 
   it('v3 budget: an amount OVER the computable-domain ceiling is corruption; a large-but-legitimate amount at/below it passes (not over-strict)', () => {
-    const withBudget: ScenarioV3 = {
-      ...V3,
+    const withBudget: CurrentScenario = {
+      ...CURRENT,
       budget: [{ category: 'housing', label: 'Estate', annualAmountReal: 30_000, tier: 'essentials', startYear: 0 }],
     }
     // An absurd/corrupted vault value the engine's own domain gate (finiteNonNeg ≤ ENGINE_MAX_DOLLAR) would
@@ -367,21 +619,21 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     }
   })
 
-  // P3·U10 — the Roth-conversion lever (ADDITIVE-OPTIONAL within v3: the base V3 fixture
+  // P3·U10 — the Roth-conversion lever (ADDITIVE-OPTIONAL within v3: the base CURRENT fixture
   // carries none and round-trips — the pre-U10-vault tolerant-reader proof; these arms cover
   // present-and-valid + present-and-corrupt). The codec is the SOLE restore gate for the plan
   // (the per-year vector is derived downstream — insight 046's multiplied-away class).
   it('v3 WITH a rothConversion plan round-trips exactly', () => {
-    const withLever: ScenarioV3 = {
-      ...V3,
+    const withLever: CurrentScenario = {
+      ...CURRENT,
       rothConversion: { annualAmountReal: 40_000, startYearOffset: 2, years: 5 },
     }
     expect(decodeScenario(encodeScenario(withLever))).toEqual({ ok: true, scenario: withLever, droppedAtoms: [] })
   })
 
   it('rothConversion corruption arms: zero/negative/non-finite amount, fractional/zero years, negative/fractional offset — each named corrupt', () => {
-    const withLever: ScenarioV3 = {
-      ...V3,
+    const withLever: CurrentScenario = {
+      ...CURRENT,
       rothConversion: { annualAmountReal: 40_000, startYearOffset: 2, years: 5 },
     }
     const arms: ((p: Obj) => void)[] = [
@@ -401,8 +653,8 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
   })
 
   it('v3 rothConversion: an amount OVER the computable-domain ceiling is corruption; a large-but-legitimate amount at/below it passes', () => {
-    const withLever: ScenarioV3 = {
-      ...V3,
+    const withLever: CurrentScenario = {
+      ...CURRENT,
       rothConversion: { annualAmountReal: 40_000, startYearOffset: 2, years: 5 },
     }
     // The engine clamps a requested conversion to [0, pretax − RMD] (taxOverlay.ts), so an over-ceiling
@@ -420,8 +672,8 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
   // P3·U10 — the custom-order biconditional (the retirementAge-biconditional precedent:
   // a mismatched pair is unrepresentable-persisted, both directions).
   it("v3 WITH drawdownPolicy 'custom' + a full-permutation order round-trips exactly", () => {
-    const withCustom: ScenarioV3 = {
-      ...V3,
+    const withCustom: CurrentScenario = {
+      ...CURRENT,
       drawdownPolicy: 'custom',
       drawdownOrder: ['roth', 'taxable', 'pretax'],
     }
@@ -429,20 +681,20 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
   })
 
   it("'custom' WITHOUT an order is REJECTED (the order is required, never guessed)", () => {
-    const d = decodeScenario(mutated(V3, (o) => { o.drawdownPolicy = 'custom' }))
+    const d = decodeScenario(mutated(CURRENT, (o) => { o.drawdownPolicy = 'custom' }))
     expect(d.ok).toBe(false)
     if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('drawdownOrder')
   })
 
   it('an order riding a NAMED policy is REJECTED (it would silently not govern)', () => {
-    const d = decodeScenario(mutated(V3, (o) => { o.drawdownOrder = ['roth', 'taxable', 'pretax'] }))
+    const d = decodeScenario(mutated(CURRENT, (o) => { o.drawdownOrder = ['roth', 'taxable', 'pretax'] }))
     expect(d.ok).toBe(false)
     if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('drawdownOrder')
   })
 
   it('drawdownOrder corruption arms: short, duplicated, unknown key, hsa (never a general source) — each corrupt', () => {
-    const withCustom: ScenarioV3 = {
-      ...V3,
+    const withCustom: CurrentScenario = {
+      ...CURRENT,
       drawdownPolicy: 'custom',
       drawdownOrder: ['roth', 'taxable', 'pretax'],
     }
@@ -463,8 +715,8 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
   // P3·U11 — the enhanced-subsidy regime toggle + the healthcare vintage stamp (both
   // additive-optional; the budget/rothConversion tolerant-reader precedent).
   it('v3 WITH enhancedSubsidies: true + a healthcare vintage stamp round-trips exactly', () => {
-    const withU11: ScenarioV3 = {
-      ...V3,
+    const withU11: CurrentScenario = {
+      ...CURRENT,
       enhancedSubsidies: true,
       healthcareVintage: {
         coverageYear: 2026,
@@ -480,7 +732,7 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
 
   it('enhancedSubsidies must be the LITERAL true — false/1/"yes" are writer bugs named corrupt (the writer strips the key on revert; absence IS the reverted regime)', () => {
     for (const bad of [false, 1, 'yes', 0]) {
-      const d = decodeScenario(mutated(V3, (o) => { o.enhancedSubsidies = bad }))
+      const d = decodeScenario(mutated(CURRENT, (o) => { o.enhancedSubsidies = bad }))
       expect(d.ok, `enhancedSubsidies=${String(bad)} must be rejected`).toBe(false)
       if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('enhancedSubsidies')
     }
@@ -499,7 +751,7 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       (o) => { o.healthcareVintage = 'reverted' }, // not an object
     ]
     for (const mutate of bads) {
-      const d = decodeScenario(mutated(V3, mutate))
+      const d = decodeScenario(mutated(CURRENT, mutate))
       expect(d.ok).toBe(false)
       if (!d.ok) expect(d.reason).toBe('corrupt')
     }
@@ -508,13 +760,13 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
   // The ask-for-Medicare-extras payment fork (wf_efc6ece2-675 — additive-optional; the
   // biconditional discipline is the drawdownOrder precedent, both directions).
   it('v3 WITH medicareExtrasByPerson round-trips exactly across all four kinds; absent decodes unchanged', () => {
-    const arms: ScenarioV3[] = [
-      { ...V3, medicareExtrasByPerson: [{ kind: 'entered', monthly: 220 }, { kind: 'none' }] },
-      { ...V3, medicareExtrasByPerson: [{ kind: 'typical', adoptionVintage: 'extras-2026a' }, { kind: 'unanswered' }] },
-      { ...V3, medicareExtrasByPerson: [{ kind: 'entered', monthly: 0 }, { kind: 'entered', monthly: 1_500 }] }, // an explicit $0 entry is honest
+    const arms: CurrentScenario[] = [
+      { ...CURRENT, medicareExtrasByPerson: [{ kind: 'entered', monthly: 220 }, { kind: 'none' }] },
+      { ...CURRENT, medicareExtrasByPerson: [{ kind: 'typical', adoptionVintage: 'extras-2026a' }, { kind: 'unanswered' }] },
+      { ...CURRENT, medicareExtrasByPerson: [{ kind: 'entered', monthly: 0 }, { kind: 'entered', monthly: 1_500 }] }, // an explicit $0 entry is honest
     ]
     for (const s of arms) expect(decodeScenario(encodeScenario(s))).toEqual({ ok: true, scenario: s, droppedAtoms: [] })
-    expect(decodeScenario(encodeScenario(V3))).toEqual({ ok: true, scenario: V3, droppedAtoms: [] }) // pre-unit vault untouched
+    expect(decodeScenario(encodeScenario(CURRENT))).toEqual({ ok: true, scenario: CURRENT, droppedAtoms: [] }) // pre-unit vault untouched
   })
 
   it('extras corruption arms: negative/over-ceiling/NaN dollar, both biconditional directions, garbage kind, length mismatch — each corrupt (the strict needNonNegativeDollar path, never optFinite)', () => {
@@ -542,7 +794,7 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       (o) => { o.medicareExtrasByPerson = { kind: 'none' } },
     ]
     for (const mutate of bads) {
-      const d = decodeScenario(mutated(V3, mutate))
+      const d = decodeScenario(mutated(CURRENT, mutate))
       expect(d.ok).toBe(false)
       if (!d.ok) expect(d.reason).toBe('corrupt')
     }
@@ -553,14 +805,14 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       coverageYear: 2026, acaStatus: 'reverted', acaVerifiedOn: '2026-06-04',
       fplGuidelineYear: 2025, irmaaTopTierFrozenThrough: 2027, partBStandardMonthly: 123.45,
     }
-    const withVintage: ScenarioV3 = {
-      ...V3,
+    const withVintage: CurrentScenario = {
+      ...CURRENT,
       healthcareVintage: { ...stamp, medicareExtrasTypicalVintage: 'extras-2026a' },
     }
     expect(decodeScenario(encodeScenario(withVintage))).toEqual({ ok: true, scenario: withVintage, droppedAtoms: [] })
-    const without: ScenarioV3 = { ...V3, healthcareVintage: stamp }
+    const without: CurrentScenario = { ...CURRENT, healthcareVintage: stamp }
     expect(decodeScenario(encodeScenario(without))).toEqual({ ok: true, scenario: without, droppedAtoms: [] })
-    const bad = decodeScenario(mutated(V3, (o) => { o.healthcareVintage = { ...stamp, medicareExtrasTypicalVintage: 7 } }))
+    const bad = decodeScenario(mutated(CURRENT, (o) => { o.healthcareVintage = { ...stamp, medicareExtrasTypicalVintage: 7 } }))
     expect(bad.ok).toBe(false)
     if (!bad.ok) expect(bad.reason).toBe('corrupt')
   })
@@ -573,29 +825,29 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       coverageYear: 2026, acaStatus: 'reverted', acaVerifiedOn: '2026-06-04',
       fplGuidelineYear: 2025, irmaaTopTierFrozenThrough: 2027, partBStandardMonthly: 123.45,
     }
-    const withVintage: ScenarioV3 = {
-      ...V3,
+    const withVintage: CurrentScenario = {
+      ...CURRENT,
       healthcareVintage: { ...stamp, partBTrendVintage: 'medicare-trend-2026a' },
     }
     expect(decodeScenario(encodeScenario(withVintage))).toEqual({ ok: true, scenario: withVintage, droppedAtoms: [] })
-    const without: ScenarioV3 = { ...V3, healthcareVintage: stamp }
+    const without: CurrentScenario = { ...CURRENT, healthcareVintage: stamp }
     expect(decodeScenario(encodeScenario(without))).toEqual({ ok: true, scenario: without, droppedAtoms: [] })
-    const bad = decodeScenario(mutated(V3, (o) => { o.healthcareVintage = { ...stamp, partBTrendVintage: 7 } }))
+    const bad = decodeScenario(mutated(CURRENT, (o) => { o.healthcareVintage = { ...stamp, partBTrendVintage: 7 } }))
     expect(bad.ok).toBe(false)
     if (!bad.ok) expect(bad.reason).toBe('corrupt')
   })
 
   // P3·U13 — the save wall-time anchor + the two new vintage stamps (additive-optional).
   it('v3 WITH savedAt + taxVintageDetail + dateVintage round-trips exactly; absent-all decodes unchanged (the legacy-vault arm)', () => {
-    const withU13: ScenarioV3 = {
-      ...V3,
+    const withU13: CurrentScenario = {
+      ...CURRENT,
       savedAt: 20_643, // ~2026-07 as an epoch-day — shape-only fixture value
       taxVintageDetail: { taxYear: 2026, legalBasis: 'OBBBA — One Big Beautiful Bill Act, signed 2025-07-04' },
       dateVintage: { contributionYear: 2026, blendSnapshotAsOf: '2026-04-30' },
     }
     expect(decodeScenario(encodeScenario(withU13))).toEqual({ ok: true, scenario: withU13, droppedAtoms: [] })
     // The legacy vault (none of the three) is untouched by the U13 vocabulary.
-    expect(decodeScenario(encodeScenario(V3))).toEqual({ ok: true, scenario: V3, droppedAtoms: [] })
+    expect(decodeScenario(encodeScenario(CURRENT))).toEqual({ ok: true, scenario: CURRENT, droppedAtoms: [] })
   })
 
   it('savedAt is RANGE-gated, not merely finite (insight 046): an epoch-MILLISECOND value, a negative, a float, and both just-out-of-range days reject; both boundaries pass', () => {
@@ -609,12 +861,12 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       Number.POSITIVE_INFINITY,
     ]
     for (const bad of bads) {
-      const d = decodeScenario(mutated(V3, (o) => { o.savedAt = bad }))
+      const d = decodeScenario(mutated(CURRENT, (o) => { o.savedAt = bad }))
       expect(d.ok, `savedAt=${String(bad)} must be rejected`).toBe(false)
       if (!d.ok) expect(d.reason).toBe('corrupt')
     }
     for (const boundary of [SAVED_AT_EPOCH_DAY_MIN, SAVED_AT_EPOCH_DAY_MAX]) {
-      const d = decodeScenario(mutated(V3, (o) => { o.savedAt = boundary }))
+      const d = decodeScenario(mutated(CURRENT, (o) => { o.savedAt = boundary }))
       expect(d.ok, `savedAt=${boundary} (boundary) must pass — the gate must not be over-strict`).toBe(true)
     }
   })
@@ -630,7 +882,7 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       (o) => { o.dateVintage = { contributionYear: 2026, blendSnapshotAsOf: 20260430 } }, // non-string as-of
     ]
     for (const mutate of bads) {
-      const d = decodeScenario(mutated(V3, mutate))
+      const d = decodeScenario(mutated(CURRENT, mutate))
       expect(d.ok).toBe(false)
       if (!d.ok) expect(d.reason).toBe('corrupt')
     }
@@ -641,16 +893,16 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     // clean and turn the working-years clock's compare into an unconditional "moved"; a REQUIRED
     // member would reject every stamp minted before the table existed.
     const stamp = { contributionYear: 2026, blendSnapshotAsOf: '2026-04-30' }
-    const withVintage: ScenarioV3 = { ...V3, dateVintage: { ...stamp, workingYearsVintage: 'working-years-2026a' } }
+    const withVintage: CurrentScenario = { ...CURRENT, dateVintage: { ...stamp, workingYearsVintage: 'working-years-2026a' } }
     expect(decodeScenario(encodeScenario(withVintage))).toEqual({ ok: true, scenario: withVintage, droppedAtoms: [] })
-    const without: ScenarioV3 = { ...V3, dateVintage: stamp }
+    const without: CurrentScenario = { ...CURRENT, dateVintage: stamp }
     const decoded = decodeScenario(encodeScenario(without))
     expect(decoded).toEqual({ ok: true, scenario: without, droppedAtoms: [] })
-    if (decoded.ok && decoded.scenario.schemaVersion === 3) {
+    if (decoded.ok && decoded.scenario.schemaVersion === CURRENT_SCHEMA_VERSION) {
       expect(decoded.scenario.dateVintage?.workingYearsVintage).toBeUndefined()
     }
     for (const bad of [2026, null, true, { year: 2026 }]) {
-      const d = decodeScenario(mutated(V3, (o) => { o.dateVintage = { ...stamp, workingYearsVintage: bad } }))
+      const d = decodeScenario(mutated(CURRENT, (o) => { o.dateVintage = { ...stamp, workingYearsVintage: bad } }))
       expect(d.ok, `workingYearsVintage=${JSON.stringify(bad)} must be rejected`).toBe(false)
       if (!d.ok) expect(d.reason).toBe('corrupt')
       if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('dateVintage.workingYearsVintage')
@@ -660,31 +912,31 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
   // The state-tax unit — retirementState (a needVocab enum) + the stateTaxVintage stamp (an
   // atomic object). Additive-optional: a pre-unit vault lacks both and decodes unchanged.
   it('v3 WITH retirementState round-trips exactly — a PRICED state (NC), an explicit "elsewhere", and ABSENT (pre-unit) all persist as themselves', () => {
-    const nc: ScenarioV3 = { ...V3, retirementState: 'NC' }
-    const elsewhere: ScenarioV3 = { ...V3, retirementState: 'elsewhere' }
+    const nc: CurrentScenario = { ...CURRENT, retirementState: 'NC' }
+    const elsewhere: CurrentScenario = { ...CURRENT, retirementState: 'elsewhere' }
     // A PRICED state persists as a fact.
     expect(decodeScenario(encodeScenario(nc))).toEqual({ ok: true, scenario: nc, droppedAtoms: [] })
     // 'elsewhere' is an EXPLICIT vocab member — a chosen "somewhere else" persists as itself,
     // never collapsed to absence (distinct from never-asked; the advocate's trust law).
     expect(decodeScenario(encodeScenario(elsewhere))).toEqual({ ok: true, scenario: elsewhere, droppedAtoms: [] })
     // ABSENT: the pre-unit / unanswered vault is untouched by the new vocabulary (tolerant reader).
-    expect(decodeScenario(encodeScenario(V3))).toEqual({ ok: true, scenario: V3, droppedAtoms: [] })
-    if (decodeScenario(encodeScenario(V3)).ok) {
-      const d = decodeScenario(encodeScenario(V3))
-      if (d.ok && d.scenario.schemaVersion === 3) expect(d.scenario.retirementState).toBeUndefined()
+    expect(decodeScenario(encodeScenario(CURRENT))).toEqual({ ok: true, scenario: CURRENT, droppedAtoms: [] })
+    if (decodeScenario(encodeScenario(CURRENT)).ok) {
+      const d = decodeScenario(encodeScenario(CURRENT))
+      if (d.ok && d.scenario.schemaVersion === CURRENT_SCHEMA_VERSION) expect(d.scenario.retirementState).toBeUndefined()
     }
   })
 
   it('every DEFERRED roster state (SC/GA/DE) is a legitimate persistable value (recognised-but-unpriced), and an out-of-vocab string fails decode CALMLY (corrupt, never silently unpriced)', () => {
     for (const deferred of ['SC', 'GA', 'DE'] as const) {
-      const s: ScenarioV3 = { ...V3, retirementState: deferred }
+      const s: CurrentScenario = { ...CURRENT, retirementState: deferred }
       expect(decodeScenario(encodeScenario(s)), `${deferred} must round-trip`).toEqual({ ok: true, scenario: s, droppedAtoms: [] })
     }
     // The needVocab rejection arm: an out-of-roster string (a typo'd state, a lowercase code, a
     // full name) is corruption named LOUD — NEVER silently treated as 'elsewhere'/unpriced (a
     // typo'd 'NC' silently unpriced would UNDERSTATE tax for a household that meant a priced state).
     for (const bad of ['NY', 'nc', 'North Carolina', 'PR', '', 42, null]) {
-      const d = decodeScenario(mutated(V3, (o) => { o.retirementState = bad }))
+      const d = decodeScenario(mutated(CURRENT, (o) => { o.retirementState = bad }))
       expect(d.ok, `retirementState=${String(bad)} must be rejected`).toBe(false)
       if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('retirementState')
     }
@@ -694,17 +946,17 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
   // explicit unset sentinel (burned/062 — never a default goal); an out-of-vocab string is corrupt.
   it('v3 WITH chosenGoal round-trips exactly — both goals persist; ABSENT (pre-U15/unset) decodes untouched; an out-of-vocab goal is corrupt (never a default)', () => {
     for (const goal of ['leave-more', 'pay-less-tax'] as const) {
-      const s: ScenarioV3 = { ...V3, chosenGoal: goal }
+      const s: CurrentScenario = { ...CURRENT, chosenGoal: goal }
       expect(decodeScenario(encodeScenario(s)), `${goal} must round-trip`).toEqual({ ok: true, scenario: s, droppedAtoms: [] })
     }
     // ABSENT: the unset sentinel — a pre-U15 vault (or an unchosen goal) decodes unchanged.
-    const decoded = decodeScenario(encodeScenario(V3))
-    expect(decoded).toEqual({ ok: true, scenario: V3, droppedAtoms: [] })
-    if (decoded.ok && decoded.scenario.schemaVersion === 3) expect(decoded.scenario.chosenGoal).toBeUndefined()
+    const decoded = decodeScenario(encodeScenario(CURRENT))
+    expect(decoded).toEqual({ ok: true, scenario: CURRENT, droppedAtoms: [] })
+    if (decoded.ok && decoded.scenario.schemaVersion === CURRENT_SCHEMA_VERSION) expect(decoded.scenario.chosenGoal).toBeUndefined()
     // The needVocab rejection arm: a fabricated / typo'd goal is corruption named LOUD, NEVER coerced
     // to a plausible default goal (asserting a goal the user never picked is the calm-but-wrong shape).
     for (const bad of ['leave more', 'PAY-LESS-TAX', 'live-bigger-now', '', 1, null]) {
-      const d = decodeScenario(mutated(V3, (o) => { o.chosenGoal = bad }))
+      const d = decodeScenario(mutated(CURRENT, (o) => { o.chosenGoal = bad }))
       expect(d.ok, `chosenGoal=${String(bad)} must be rejected`).toBe(false)
       if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('chosenGoal')
     }
@@ -715,19 +967,19 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
   // a tampered/corrupt vault and a mid-solve explosion. The upper bound is EXCLUSIVE.
   it('v3 WITH heirBracket round-trips; ABSENT decodes untouched; anything outside [0, 1) is corrupt — including a percent typed as a fraction', () => {
     for (const rate of [0, 0.1, 0.24, 0.37, 0.999]) {
-      const s: ScenarioV3 = { ...V3, heirBracket: rate }
+      const s: CurrentScenario = { ...CURRENT, heirBracket: rate }
       expect(decodeScenario(encodeScenario(s)), `${rate} must round-trip`).toEqual({ ok: true, scenario: s, droppedAtoms: [] })
     }
     // ABSENT: "took our default" — a vault predating the seat decodes unchanged, NOT seeded to 0.24.
-    const decoded = decodeScenario(encodeScenario(V3))
-    expect(decoded).toEqual({ ok: true, scenario: V3, droppedAtoms: [] })
-    if (decoded.ok && decoded.scenario.schemaVersion === 3) expect(decoded.scenario.heirBracket).toBeUndefined()
+    const decoded = decodeScenario(encodeScenario(CURRENT))
+    expect(decoded).toEqual({ ok: true, scenario: CURRENT, droppedAtoms: [] })
+    if (decoded.ok && decoded.scenario.schemaVersion === CURRENT_SCHEMA_VERSION) expect(decoded.scenario.heirBracket).toBeUndefined()
     // The rejection arm. `24` is the one that matters most: a percent where a fraction belongs is
     // FINITE and in no way suspicious to a naive guard, and it detonates inside the engine one beat
     // later. `1` matters second: it is a legal [0,1] fraction that this field's EXCLUSIVE bound must
     // still reject, which is why `needUnitFraction` could not be reused.
     for (const bad of [24, 1, 1.5, -0.01, Number.NaN, Number.POSITIVE_INFINITY, '0.24', null]) {
-      const d = decodeScenario(mutated(V3, (o) => { o.heirBracket = bad }))
+      const d = decodeScenario(mutated(CURRENT, (o) => { o.heirBracket = bad }))
       expect(d.ok, `heirBracket=${String(bad)} must be rejected`).toBe(false)
       if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('heirBracket')
     }
@@ -754,13 +1006,13 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       { kind: 'entered', amountReal: 1, entryPeriod: 'year', stateTaxReading: 'none' },
     ]
     for (const w of answers) {
-      const s: ScenarioV3 = { ...V3, workingYearCost: w }
+      const s: CurrentScenario = { ...CURRENT, workingYearCost: w }
       expect(decodeScenario(encodeScenario(s)), `${w.kind} / ${w.stateTaxReading}`).toEqual({ ok: true, scenario: s, droppedAtoms: [] })
     }
     // ABSENT: no W was ever answered (every pre-pay-check vault) — decodes unchanged, never seeded.
-    const decoded = decodeScenario(encodeScenario(V3))
-    expect(decoded).toEqual({ ok: true, scenario: V3, droppedAtoms: [] })
-    if (decoded.ok && decoded.scenario.schemaVersion === 3) expect(decoded.scenario.workingYearCost).toBeUndefined()
+    const decoded = decodeScenario(encodeScenario(CURRENT))
+    expect(decoded).toEqual({ ok: true, scenario: CURRENT, droppedAtoms: [] })
+    if (decoded.ok && decoded.scenario.schemaVersion === CURRENT_SCHEMA_VERSION) expect(decoded.scenario.workingYearCost).toBeUndefined()
     // The top-level null rides the every-field null sweep below; this pins that the sweep reaches W.
     expect(SCENARIO_V3_FIELDS).toContain('workingYearCost')
   })
@@ -770,7 +1022,7 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       { ...W_CONFIRMED, quotedReal: MAX_REAL_DOLLAR },
       { ...W_ENTERED, amountReal: MAX_REAL_DOLLAR },
     ]) {
-      expect(decodeScenario(mutated(V3, (o) => { o.workingYearCost = w })).ok, `${w.kind} at the ceiling`).toBe(true)
+      expect(decodeScenario(mutated(CURRENT, (o) => { o.workingYearCost = w })).ok, `${w.kind} at the ceiling`).toBe(true)
     }
     for (const [w, field] of [
       [{ ...W_CONFIRMED, quotedReal: MAX_REAL_DOLLAR + 1 }, 'quotedReal'],
@@ -778,7 +1030,7 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       [{ ...W_CONFIRMED, quotedReal: MAX_REAL_DOLLAR * 10 }, 'quotedReal'],
       [{ ...W_ENTERED, amountReal: MAX_REAL_DOLLAR * 10 }, 'amountReal'],
     ] as const) {
-      const d = decodeScenario(mutated(V3, (o) => { o.workingYearCost = w }))
+      const d = decodeScenario(mutated(CURRENT, (o) => { o.workingYearCost = w }))
       expect(d.ok, `${field} over the ceiling`).toBe(false)
       if (!d.ok) expect(d.reason).toBe('corrupt')
       if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain(`workingYearCost.${field}`)
@@ -835,7 +1087,7 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
   ]
 
   it.each(badWorkingYearCostArms)('workingYearCost with %s is CORRUPT, naming the field it refused', (_label, bad, field) => {
-    const d = decodeScenario(mutated(V3, (o) => { o.workingYearCost = bad }))
+    const d = decodeScenario(mutated(CURRENT, (o) => { o.workingYearCost = bad }))
     expect(d.ok).toBe(false)
     if (!d.ok) expect(d.reason).toBe('corrupt')
     if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain(field)
@@ -845,7 +1097,7 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     // The reconciliation of U7's "a stray figure on the wrong kind" with the file's tolerant-reader
     // law: the refused strays are the named sibling fields above, never an arbitrary additive key.
     for (const w of [{ ...W_CONFIRMED, futureAdditiveField: 'present' }, { ...W_ENTERED, note: 1 }]) {
-      expect(decodeScenario(mutated(V3, (o) => { o.workingYearCost = w })).ok, w.kind).toBe(true)
+      expect(decodeScenario(mutated(CURRENT, (o) => { o.workingYearCost = w })).ok, w.kind).toBe(true)
     }
   })
 
@@ -884,15 +1136,15 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
   }
 
   it('v3 WITH a saved recommendation round-trips EXACTLY (every enum, the optional grade, all five era fields), reporting NO dropped atom; ABSENT decodes untouched', () => {
-    const s: ScenarioV3 = { ...V3, savedRecommendation: RECORD }
+    const s: CurrentScenario = { ...CURRENT, savedRecommendation: RECORD }
     expect(decodeScenario(encodeScenario(s))).toEqual({ ok: true, scenario: s, droppedAtoms: [] })
     // The WITHHELD-grade shape: `grade` ABSENT is the burned/062 sentinel (the B-floor refusal /
     // no runner-up), and it must survive the round trip as ABSENCE — never defaulted to a letter.
     // The QUALIFIER goes WITH IT (the biconditional): with nothing to qualify, `subTenthCollapse`
     // is absent too — a required boolean here would force this writer to invent a `false`, the
     // structurally-dormant disclosure fed from an empty default.
-    const withheld: ScenarioV3 = {
-      ...V3,
+    const withheld: CurrentScenario = {
+      ...CURRENT,
       savedRecommendation: {
         ...RECORD,
         verdict: { noChange: true, surplusRegime: true, noDollarRegister: true },
@@ -900,7 +1152,7 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     }
     const d = decodeScenario(encodeScenario(withheld))
     expect(d).toEqual({ ok: true, scenario: withheld, droppedAtoms: [] })
-    if (d.ok && d.scenario.schemaVersion === 3) {
+    if (d.ok && d.scenario.schemaVersion === CURRENT_SCHEMA_VERSION) {
       expect(d.scenario.savedRecommendation?.verdict.grade).toBeUndefined()
       expect(d.scenario.savedRecommendation?.verdict.subTenthCollapse).toBeUndefined()
       // …and the no-dollar register survives as its own bit — the ONLY carrier of "the live
@@ -908,9 +1160,9 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       expect(d.scenario.savedRecommendation?.verdict.noDollarRegister).toBe(true)
     }
     // A pre-U17 vault lacks the field entirely and decodes unchanged (the tolerant reader).
-    const none = decodeScenario(encodeScenario(V3))
-    expect(none).toEqual({ ok: true, scenario: V3, droppedAtoms: [] })
-    if (none.ok && none.scenario.schemaVersion === 3) {
+    const none = decodeScenario(encodeScenario(CURRENT))
+    expect(none).toEqual({ ok: true, scenario: CURRENT, droppedAtoms: [] })
+    if (none.ok && none.scenario.schemaVersion === CURRENT_SCHEMA_VERSION) {
       expect(none.scenario.savedRecommendation).toBeUndefined()
     }
   })
@@ -925,15 +1177,15 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     // re-presented as CURRENT however far the law had moved — and conjunct 1 cannot backstop it
     // (`solverRunFingerprint` excludes the constant vintages BY DESIGN, which is the whole reason
     // conjunct 3 exists). The tolerance had no population and failed OPEN.
-    const bareEra = mutated({ ...V3, savedRecommendation: RECORD }, (o) => {
+    const bareEra = mutated({ ...CURRENT, savedRecommendation: RECORD }, (o) => {
       ;(o.savedRecommendation as Obj).era = { appDefaultVersion: 'defaults-2026-06' }
     })
     const decoded = decodeScenario(bareEra)
     // The DROP, not a bounce: the plan still opens (the non-fatal atom's charter is untouched).
     expect(decoded.ok).toBe(true)
     if (!decoded.ok) return
-    expect(decoded.scenario).toEqual(V3)
-    if (decoded.scenario.schemaVersion === 3) {
+    expect(decoded.scenario).toEqual(CURRENT)
+    if (decoded.scenario.schemaVersion === CURRENT_SCHEMA_VERSION) {
       expect('savedRecommendation' in decoded.scenario).toBe(false)
     }
     // …and the drop is REPORTED, naming the atom AND the codec's own reason (the write side
@@ -1030,19 +1282,19 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
   it.each(badRecordArms)(
     'a saved recommendation with %s DROPS THE ATOM and keeps the model — ok:true AND the field absent from the RETURNED scenario (never a data-damaged door for a bad memory)',
     (_label, bad) => {
-      const decoded = decodeScenario(mutated({ ...V3, savedRecommendation: RECORD }, (o) => { o.savedRecommendation = bad }))
+      const decoded = decodeScenario(mutated({ ...CURRENT, savedRecommendation: RECORD }, (o) => { o.savedRecommendation = bad }))
       // 1) The vault OPENS. A corrupt recommendation memory must never make a household's whole
       //    plan unopenable (both unlock paths map `corrupt` to the terminal data-damaged door).
       expect(decoded.ok).toBe(true)
       // 2) …and the atom is GONE from the object the caller receives. This is the non-vacuous
       //    half: the codec returns `parsed` itself (a validated pass-through cast), so a merely
       //    "ignored" bad atom would still be sitting right here.
-      if (decoded.ok && decoded.scenario.schemaVersion === 3) {
+      if (decoded.ok && decoded.scenario.schemaVersion === CURRENT_SCHEMA_VERSION) {
         expect(decoded.scenario.savedRecommendation).toBeUndefined()
         expect('savedRecommendation' in decoded.scenario).toBe(false)
         // 3) …and NOTHING ELSE was dropped: the rest of the plan decodes byte-identically to the
         //    record-free vault (the drop is surgical, never a widened bail-out).
-        expect(decoded.scenario).toEqual(V3)
+        expect(decoded.scenario).toEqual(CURRENT)
       }
       // 4) …and the drop ANNOUNCES ITSELF. Without this the read side and the WRITE side are
       //    indistinguishable: `scenarioFromDraft` runs this same codec as its save gate, and a
@@ -1056,8 +1308,8 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
 
   it('a NON-Corrupt throw from INSIDE a validator ESCAPES decodeScenario — a programming defect is never laundered into a calm dropped atom', () => {
     // THE TWO RE-THROWS THIS COVERS, and they CHAIN, so one arm holds both:
-    //   `scenarioCodec.ts:950`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
-    //   `scenarioCodec.ts:995`  `throw e`                              (decodeScenario's outer catch)
+    //   `scenarioCodec.ts:967`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
+    //   `scenarioCodec.ts:1028`  `throw e`                              (decodeScenario's outer catch)
     // Both were UNEXERCISED. They were filed as "correct-by-inspection but SEAM-LESS" on the
     // reasoning that decodeScenario builds its input from `JSON.parse` — data properties only,
     // no getters — and that no validator here recurses or calls a method on an unchecked value.
@@ -1067,8 +1319,8 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     // Spying THAT — value-targeted, so nothing else in this ~100-arm file can see it — reaches
     // :899 through the REAL decodeScenario with no prototype pollution and no injection seam
     // added to shipping code.
-    const SENTINEL = 777_777_777 // unique in V3; an integer, and outside the epoch-day range
-    const bytes = mutated({ ...V3, savedRecommendation: RECORD }, (o) => {
+    const SENTINEL = 777_777_777 // unique in CURRENT; an integer, and outside the epoch-day range
+    const bytes = mutated({ ...CURRENT, savedRecommendation: RECORD }, (o) => {
       ;(o.savedRecommendation as Obj).mintedAt = SENTINEL
     })
     // CONTROL — and it is a STRONG one, not a formality. Un-spied, this exact record is the
@@ -1107,15 +1359,15 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     // be-red — a corrupt person silently decoding is the calm-but-wrong reload the codec exists
     // to prevent.
     const d = decodeScenario(
-      mutated({ ...V3, savedRecommendation: RECORD }, (o) => { (o.people as Obj[])[0]!.pia = null }),
+      mutated({ ...CURRENT, savedRecommendation: RECORD }, (o) => { (o.people as Obj[])[0]!.pia = null }),
     )
     expect(d.ok).toBe(false)
     if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('people[0].pia')
   })
 
   it('v3 WITH the stateTaxVintage stamp round-trips exactly; it is an ATOMIC object — a missing profile or a non-string profile rejects (the healthcareVintage precedent)', () => {
-    const withStamp: ScenarioV3 = {
-      ...V3,
+    const withStamp: CurrentScenario = {
+      ...CURRENT,
       retirementState: 'NC',
       stateTaxVintage: { ncProfile: '{"nc":1}', paProfile: '{"pa":1}', flProfile: '{"fl":0}' },
     }
@@ -1127,7 +1379,7 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       (o) => { o.stateTaxVintage = 'nc-profile' }, // not an object
     ]
     for (const mutate of bads) {
-      const d = decodeScenario(mutated(V3, mutate))
+      const d = decodeScenario(mutated(CURRENT, mutate))
       expect(d.ok).toBe(false)
       if (!d.ok) expect(d.reason).toBe('corrupt')
     }
@@ -1144,12 +1396,12 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
       (o) => { (o.enteredAccounts as Obj[])[2]!.hsaEmployerAnnual = -1_000 },
     ]
     for (const mutate of bads) {
-      const d = decodeScenario(mutated(V3, mutate))
+      const d = decodeScenario(mutated(CURRENT, mutate))
       expect(d.ok).toBe(false)
       if (!d.ok) expect(d.reason).toBe('corrupt')
     }
     // At the ceiling exactly: a lavish-but-real balance passes (the gate is corruption-only).
-    const atCeiling = decodeScenario(mutated(V3, (o) => { (o.enteredAccounts as Obj[])[0]!.valueToday = MAX_REAL_DOLLAR }))
+    const atCeiling = decodeScenario(mutated(CURRENT, (o) => { (o.enteredAccounts as Obj[])[0]!.valueToday = MAX_REAL_DOLLAR }))
     expect(atCeiling.ok).toBe(true)
   })
 
@@ -1169,7 +1421,7 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
     // only trips the OUTER needArray/needObject — the inner-shape coverage is the targeted tests below.
     for (const field of SCENARIO_V3_FIELDS) {
       if (NON_FATAL_V3_FIELDS.has(field)) continue // its own pinned failure mode — see below
-      const decoded = decodeScenario(mutated(V3, (o) => { o[field] = null }))
+      const decoded = decodeScenario(mutated(CURRENT, (o) => { o[field] = null }))
       expect(decoded.ok, `${field}=null must be rejected`).toBe(false)
       if (!decoded.ok) expect(decoded.reason, `${field}=null is corruption, not a mis-routed reason`).toBe('corrupt')
     }
@@ -1179,17 +1431,17 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
   })
 
   it('v3 person uses pia + birthYear (the LIVE SS fields, never legacy socialSecurityReal)', () => {
-    expect(decodeScenario(mutated(V3, (o) => { delete (o.people as Obj[])[0]!.birthYear })).ok).toBe(false)
-    const d = decodeScenario(mutated(V3, (o) => { (o.people as Obj[])[1]!.pia = null }))
+    expect(decodeScenario(mutated(CURRENT, (o) => { delete (o.people as Obj[])[0]!.birthYear })).ok).toBe(false)
+    const d = decodeScenario(mutated(CURRENT, (o) => { (o.people as Obj[])[1]!.pia = null }))
     expect(d.ok).toBe(false)
     if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('people[1].pia')
     // birthYear is the FRA-lookup key — a non-integer violates the contract
-    expect(decodeScenario(mutated(V3, (o) => { (o.people as Obj[])[0]!.birthYear = 1964.5 })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.people as Obj[])[0]!.birthYear = 1964.5 })).ok).toBe(false)
   })
 
   it('v3 person name (string) + workStatus (vocab) are validated', () => {
-    expect(decodeScenario(mutated(V3, (o) => { (o.people as Obj[])[0]!.workStatus = 'semi-retired' })).ok).toBe(false)
-    expect(decodeScenario(mutated(V3, (o) => { (o.people as Obj[])[0]!.name = 42 })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.people as Obj[])[0]!.workStatus = 'semi-retired' })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.people as Obj[])[0]!.name = 42 })).ok).toBe(false)
   })
 
   // The retirementAge ⟺ workStatus biconditional (council 2026-06-30, Option B STRICT). The persisted
@@ -1199,138 +1451,138 @@ describe('v3 — the forward-written persist shape (U8, the first v3 writer)', (
   // masquerade ever decoding.
   it('retired person WITHOUT a retirementAge is REJECTED (the retired invariant; optFinite would have let it pass)', () => {
     // people[0] = Pat, retired. Removing the stop age must fail — not silently accepted as "optional".
-    expect(decodeScenario(mutated(V3, (o) => { delete (o.people as Obj[])[0]!.retirementAge })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { delete (o.people as Obj[])[0]!.retirementAge })).ok).toBe(false)
   })
 
   it('working person WITH a retirementAge is REJECTED (the Option-A masquerade artifact, reject-on-present)', () => {
     // people[1] = Sam, working. A synthetic stop age must fail to decode, so it can never masquerade
     // as the user's entered age via the flip-to-retired path.
-    const d = decodeScenario(mutated(V3, (o) => { (o.people as Obj[])[1]!.retirementAge = 64 }))
+    const d = decodeScenario(mutated(CURRENT, (o) => { (o.people as Obj[])[1]!.retirementAge = 64 }))
     expect(d.ok).toBe(false)
     if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('people[1].retirementAge')
   })
 
   it('working person WITHOUT a retirementAge ACCEPTS (the headline fuck-off-date household saves)', () => {
-    // The base V3 fixture's Sam is working-without — it round-trips, byte-identical.
-    const decoded = decodeScenario(encodeScenario(V3))
+    // The base CURRENT fixture's Sam is working-without — it round-trips, byte-identical.
+    const decoded = decodeScenario(encodeScenario(CURRENT))
     expect(decoded.ok).toBe(true)
     if (decoded.ok) expect(decoded.scenario.people[1]?.retirementAge).toBeUndefined()
   })
 
   it('an enteredAccount with a dangling ownerIndex (outside people range) is corruption', () => {
-    expect(decodeScenario(mutated(V3, (o) => { (o.enteredAccounts as Obj[])[0]!.ownerIndex = 5 })).ok).toBe(false)
-    expect(decodeScenario(mutated(V3, (o) => { (o.enteredAccounts as Obj[])[0]!.ownerIndex = -1 })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.enteredAccounts as Obj[])[0]!.ownerIndex = 5 })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.enteredAccounts as Obj[])[0]!.ownerIndex = -1 })).ok).toBe(false)
   })
 
   it('enteredAccount: bad kind, non-finite valueToday, and a present-but-non-finite optional all reject', () => {
-    expect(decodeScenario(mutated(V3, (o) => { (o.enteredAccounts as Obj[])[0]!.kind = 'crypto' })).ok).toBe(false)
-    const d = decodeScenario(mutated(V3, (o) => { (o.enteredAccounts as Obj[])[1]!.valueToday = null }))
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.enteredAccounts as Obj[])[0]!.kind = 'crypto' })).ok).toBe(false)
+    const d = decodeScenario(mutated(CURRENT, (o) => { (o.enteredAccounts as Obj[])[1]!.valueToday = null }))
     expect(d.ok).toBe(false)
     if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('enteredAccounts[1].valueToday')
-    expect(decodeScenario(mutated(V3, (o) => { (o.enteredAccounts as Obj[])[0]!.basis = null })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.enteredAccounts as Obj[])[0]!.basis = null })).ok).toBe(false)
   })
 
   it('the ticker-classification union: bad kind, a simple-arm bad choice, an exact-arm non-finite/missing pct all reject', () => {
-    expect(decodeScenario(mutated(V3, (o) => { (o.tickerClassifications as Obj).VFIAX = { kind: 'magic' } })).ok).toBe(false)
-    expect(decodeScenario(mutated(V3, (o) => { (o.tickerClassifications as Obj).VFIAX = { kind: 'simple', choice: 'gold' } })).ok).toBe(false)
-    expect(decodeScenario(mutated(V3, (o) => { (o.tickerClassifications as Obj).BIICX = { kind: 'exact', stockPct: null, bondPct: 100, cashPct: 0 } })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.tickerClassifications as Obj).VFIAX = { kind: 'magic' } })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.tickerClassifications as Obj).VFIAX = { kind: 'simple', choice: 'gold' } })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.tickerClassifications as Obj).BIICX = { kind: 'exact', stockPct: null, bondPct: 100, cashPct: 0 } })).ok).toBe(false)
     // a manualBlend on an account runs the SAME union — a missing leg rejects
-    expect(decodeScenario(mutated(V3, (o) => { (o.enteredAccounts as Obj[])[0]!.manualBlend = { kind: 'exact', stockPct: 60, bondPct: 35 } })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.enteredAccounts as Obj[])[0]!.manualBlend = { kind: 'exact', stockPct: 60, bondPct: 35 } })).ok).toBe(false)
   })
 
   it('the exact blend rejects a negative component and a zero-sum blend (mirrors stockWeightForBlend, which throws downstream)', () => {
     // stockWeightForBlend (tickerBlend.ts:1608) throws on any negative component or a zero sum — an
     // UNCAUGHT crash in the hydrate/render builder. The codec is the sole restore-path gate, so it must
     // surface these as calm 'corrupt' BEFORE the collapse (a finite-only check let them through).
-    expect(decodeScenario(mutated(V3, (o) => { (o.tickerClassifications as Obj).VFIAX = { kind: 'exact', stockPct: -50, bondPct: 100, cashPct: 50 } })).ok).toBe(false)
-    expect(decodeScenario(mutated(V3, (o) => { (o.tickerClassifications as Obj).VFIAX = { kind: 'exact', stockPct: 0, bondPct: 0, cashPct: 0 } })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.tickerClassifications as Obj).VFIAX = { kind: 'exact', stockPct: -50, bondPct: 100, cashPct: 50 } })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.tickerClassifications as Obj).VFIAX = { kind: 'exact', stockPct: 0, bondPct: 0, cashPct: 0 } })).ok).toBe(false)
     // the same guard on an account's manualBlend
-    expect(decodeScenario(mutated(V3, (o) => { (o.enteredAccounts as Obj[])[0]!.manualBlend = { kind: 'exact', stockPct: -1, bondPct: 1, cashPct: 0 } })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.enteredAccounts as Obj[])[0]!.manualBlend = { kind: 'exact', stockPct: -1, bondPct: 1, cashPct: 0 } })).ok).toBe(false)
   })
 
   it('health: a present scalar must be finite; a MAGI array with a null entry rejects; all-absent passes', () => {
-    expect(decodeScenario(mutated(V3, (o) => { (o.health as Obj).slcspMonthlyToday = null })).ok).toBe(false)
-    expect(decodeScenario(mutated(V3, (o) => { (o.health as Obj).irmaaMagiSeed = [180_000, null] })).ok).toBe(false)
-    expect(decodeScenario(mutated(V3, (o) => { o.health = {} })).ok).toBe(true) // every health field is optional
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.health as Obj).slcspMonthlyToday = null })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.health as Obj).irmaaMagiSeed = [180_000, null] })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { o.health = {} })).ok).toBe(true) // every health field is optional
   })
 
   it('income stream: colaPct is REQUIRED-and-finite under fixed-pct (DND-009 — absent ≠ a silent 0)', () => {
-    const d = decodeScenario(mutated(V3, (o) => { delete (o.incomeStreams as Obj[])[0]!.colaPct })) // [0] is fixed-pct
+    const d = decodeScenario(mutated(CURRENT, (o) => { delete (o.incomeStreams as Obj[])[0]!.colaPct })) // [0] is fixed-pct
     expect(d.ok).toBe(false)
     if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('incomeStreams[0].colaPct')
     // a non-fixed-pct stream MAY omit colaPct
-    expect(decodeScenario(mutated(V3, (o) => { delete (o.incomeStreams as Obj[])[1]!.colaPct })).ok).toBe(true)
+    expect(decodeScenario(mutated(CURRENT, (o) => { delete (o.incomeStreams as Obj[])[1]!.colaPct })).ok).toBe(true)
   })
 
   it('income stream: fixed-pct colaPct outside the grounded band [-1, 0.05] is corruption; boundary values pass (not over-strict)', () => {
     // A fat-fingered 0.30 (30%/yr) compounds to fantasy real income (~$689M/yr by year 40) the
     // confidence fan is structurally BLIND to — this codec is the SOLE gate (COLA_PCT_MAX/MIN, council
     // 2026-07-01). [0] is the fixed-pct pension stream. Out-of-range → corrupt.
-    const d = decodeScenario(mutated(V3, (o) => { (o.incomeStreams as Obj[])[0]!.colaPct = 0.3 }))
+    const d = decodeScenario(mutated(CURRENT, (o) => { (o.incomeStreams as Obj[])[0]!.colaPct = 0.3 }))
     expect(d.ok).toBe(false)
     if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('incomeStreams[0].colaPct')
-    expect(decodeScenario(mutated(V3, (o) => { (o.incomeStreams as Obj[])[0]!.colaPct = -1.5 })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.incomeStreams as Obj[])[0]!.colaPct = -1.5 })).ok).toBe(false)
     // NOT over-strict (insight 046/043): the inclusive ceiling (0.05), a real 3% COLA, flat (0),
     // and a nominally-decaying stream (-0.02, the conservative non-sin direction) all decode ok.
     for (const v of [0.05, 0.03, 0, -0.02]) {
-      expect(decodeScenario(mutated(V3, (o) => { (o.incomeStreams as Obj[])[0]!.colaPct = v })).ok).toBe(true)
+      expect(decodeScenario(mutated(CURRENT, (o) => { (o.incomeStreams as Obj[])[0]!.colaPct = v })).ok).toBe(true)
     }
   })
 
   it('income stream tax-treatment union (KTD-6): alimony needs executedAfter2018; annuity non-qualified needs exclusionFraction', () => {
-    expect(decodeScenario(mutated(V3, (o) => { delete (o.incomeStreams as Obj[])[1]!.executedAfter2018 })).ok).toBe(false) // [1] alimony
-    expect(decodeScenario(mutated(V3, (o) => { (o.incomeStreams as Obj[])[1]!.executedAfter2018 = 'yes' })).ok).toBe(false)
-    expect(decodeScenario(mutated(V3, (o) => { delete (o.incomeStreams as Obj[])[2]!.exclusionFraction })).ok).toBe(false) // [2] annuity non-qualified
-    expect(decodeScenario(mutated(V3, (o) => { (o.incomeStreams as Obj[])[3]!.qualified = 'sure' })).ok).toBe(false) // [3] qualified boolean
+    expect(decodeScenario(mutated(CURRENT, (o) => { delete (o.incomeStreams as Obj[])[1]!.executedAfter2018 })).ok).toBe(false) // [1] alimony
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.incomeStreams as Obj[])[1]!.executedAfter2018 = 'yes' })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { delete (o.incomeStreams as Obj[])[2]!.exclusionFraction })).ok).toBe(false) // [2] annuity non-qualified
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.incomeStreams as Obj[])[3]!.qualified = 'sure' })).ok).toBe(false) // [3] qualified boolean
   })
 
   it('income stream: a dangling ownerIndex, a bad colaMode, and an out-of-vocab type are corruption', () => {
-    expect(decodeScenario(mutated(V3, (o) => { (o.incomeStreams as Obj[])[0]!.ownerIndex = 9 })).ok).toBe(false)
-    expect(decodeScenario(mutated(V3, (o) => { (o.incomeStreams as Obj[])[0]!.colaMode = 'compound' })).ok).toBe(false)
-    expect(decodeScenario(mutated(V3, (o) => { (o.incomeStreams as Obj[])[0]!.type = 'lottery' })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.incomeStreams as Obj[])[0]!.ownerIndex = 9 })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.incomeStreams as Obj[])[0]!.colaMode = 'compound' })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.incomeStreams as Obj[])[0]!.type = 'lottery' })).ok).toBe(false)
   })
 
   it('income entity fractions are range-gated to [0,1] — the codec is the SOLE [0,1] guard on restore (KTD-4; the optimistic calm-but-wrong direction)', () => {
     // survivorPct > 1 ⇒ the survivor "inherits" >100% of a benefit — inflating a POSITIVE per-year vector
     // the engine's finiteNonNeg backstop cannot catch. This is the cardinal-sin false-accept the adversarial
     // pass surfaced; the codec is the only [0,1] gate that runs on the restore path.
-    const overSurvivor = decodeScenario(mutated(V3, (o) => { (o.incomeStreams as Obj[])[0]!.survivorPct = 5 }))
+    const overSurvivor = decodeScenario(mutated(CURRENT, (o) => { (o.incomeStreams as Obj[])[0]!.survivorPct = 5 }))
     expect(overSurvivor.ok).toBe(false)
     if (!overSurvivor.ok && overSurvivor.reason === 'corrupt') expect(overSurvivor.detail).toContain('incomeStreams[0].survivorPct')
-    expect(decodeScenario(mutated(V3, (o) => { (o.incomeStreams as Obj[])[0]!.survivorPct = -0.5 })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.incomeStreams as Obj[])[0]!.survivorPct = -0.5 })).ok).toBe(false)
     // taxableFraction (pension arm) out of range ⇒ effectiveTaxableFraction leaves [0,1]
-    expect(decodeScenario(mutated(V3, (o) => { (o.incomeStreams as Obj[])[0]!.taxableFraction = -0.1 })).ok).toBe(false)
-    expect(decodeScenario(mutated(V3, (o) => { (o.incomeStreams as Obj[])[0]!.taxableFraction = 1.5 })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.incomeStreams as Obj[])[0]!.taxableFraction = -0.1 })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.incomeStreams as Obj[])[0]!.taxableFraction = 1.5 })).ok).toBe(false)
     // exclusionFraction (non-qualified annuity, stream [2]) > 1 ⇒ 1 − f < 0 (negative taxable)
-    expect(decodeScenario(mutated(V3, (o) => { (o.incomeStreams as Obj[])[2]!.exclusionFraction = 5 })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.incomeStreams as Obj[])[2]!.exclusionFraction = 5 })).ok).toBe(false)
     // the boundary values 0 and 1 are VALID — the gate is [0,1], not over-strict (false-reject guard)
-    expect(decodeScenario(mutated(V3, (o) => { (o.incomeStreams as Obj[])[0]!.survivorPct = 0 })).ok).toBe(true)
-    expect(decodeScenario(mutated(V3, (o) => { (o.incomeStreams as Obj[])[0]!.survivorPct = 1 })).ok).toBe(true)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.incomeStreams as Obj[])[0]!.survivorPct = 0 })).ok).toBe(true)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.incomeStreams as Obj[])[0]!.survivorPct = 1 })).ok).toBe(true)
   })
 
   it('income inner scalars (annualRealToday / startAge / survivorPct) each reject a null — the null-loop only trips the outer array', () => {
     for (const field of ['annualRealToday', 'startAge', 'survivorPct']) {
-      expect(decodeScenario(mutated(V3, (o) => { (o.incomeStreams as Obj[])[0]![field] = null })).ok, `${field}=null`).toBe(false)
+      expect(decodeScenario(mutated(CURRENT, (o) => { (o.incomeStreams as Obj[])[0]![field] = null })).ok, `${field}=null`).toBe(false)
     }
   })
 
   it('alimony modifiedAdoptsPost2018Rules must be a boolean when present (the otherwise-dead union branch)', () => {
     // stream [1] is the pre-2019 alimony carrying modifiedAdoptsPost2018Rules: false — its happy path
     // round-trips above; here a non-boolean value rejects.
-    expect(decodeScenario(mutated(V3, (o) => { (o.incomeStreams as Obj[])[1]!.modifiedAdoptsPost2018Rules = 'no' })).ok).toBe(false)
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.incomeStreams as Obj[])[1]!.modifiedAdoptsPost2018Rules = 'no' })).ok).toBe(false)
   })
 
   it('the remaining inner shapes reject a wrong TYPE (not just a missing field): ticker, manualBlend, the MAGI arrays, a ticker-class value', () => {
-    expect(decodeScenario(mutated(V3, (o) => { (o.enteredAccounts as Obj[])[1]!.ticker = 42 })).ok).toBe(false) // non-string ticker
-    expect(decodeScenario(mutated(V3, (o) => { (o.enteredAccounts as Obj[])[0]!.manualBlend = 'stocks' })).ok).toBe(false) // non-object manualBlend
-    expect(decodeScenario(mutated(V3, (o) => { (o.tickerClassifications as Obj).VFIAX = 'stocks' })).ok).toBe(false) // non-object class value
-    expect(decodeScenario(mutated(V3, (o) => { (o.health as Obj).irmaaMagiSeed = 'lots' })).ok).toBe(false) // non-array
-    expect(decodeScenario(mutated(V3, (o) => { (o.health as Obj).workingYearInvestmentByPerson = [0, null] })).ok).toBe(false) // array-with-null
-    expect(decodeScenario(mutated(V3, (o) => { (o.health as Obj).workingYearInvestmentByPerson = 5 })).ok).toBe(false) // non-array
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.enteredAccounts as Obj[])[1]!.ticker = 42 })).ok).toBe(false) // non-string ticker
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.enteredAccounts as Obj[])[0]!.manualBlend = 'stocks' })).ok).toBe(false) // non-object manualBlend
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.tickerClassifications as Obj).VFIAX = 'stocks' })).ok).toBe(false) // non-object class value
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.health as Obj).irmaaMagiSeed = 'lots' })).ok).toBe(false) // non-array
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.health as Obj).workingYearInvestmentByPerson = [0, null] })).ok).toBe(false) // array-with-null
+    expect(decodeScenario(mutated(CURRENT, (o) => { (o.health as Obj).workingYearInvestmentByPerson = 5 })).ok).toBe(false) // non-array
   })
 
   it('v3 is a tolerant reader too — an unknown additive field passes', () => {
-    const decoded = decodeScenario(mutated(V3, (o) => {
+    const decoded = decodeScenario(mutated(CURRENT, (o) => {
       o.futureAdditiveField = 'present'
       ;(o.people as Obj[])[0]!.nickname = 'P'
     }))

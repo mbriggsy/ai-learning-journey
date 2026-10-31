@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { agedBalancesYearFor, deriveResultSave, unsavedWorkPending, type PersistState } from '../resultSave'
 import { scenarioFromDraft, currentEpochDay, type SaveReady } from '../scenarioFromDraft'
 import { DEV_SEEDS, doctorRecordHolds, doctorRecordSuperseded } from '../devSeeds'
-import { scenarioIdentity, type SavedRecommendationV3, type ScenarioV3 } from '@shared/model'
+import { scenarioIdentity, type SavedRecommendationV3, type CurrentScenario } from '@shared/model'
 
 /**
  * The edit-and-re-save machine (resultSave.ts) — the pure seam that retires the U8-review ②
@@ -32,7 +32,7 @@ const notReady: SaveReady = { ready: false, detail: 'incomplete' }
  * compare walks. They differ in the two fields the plants differ in (identity + ranking-code
  * version), which is what makes A-vs-B a real edit rather than a typo.
  */
-function recordFromPlant(doctor: (s: ScenarioV3, today: number) => ScenarioV3): SavedRecommendationV3 {
+function recordFromPlant(doctor: (s: CurrentScenario, today: number) => CurrentScenario): SavedRecommendationV3 {
   const record = doctor(retired.scenario, currentEpochDay()).savedRecommendation
   if (record === undefined) throw new Error('the record plants exist to produce a record')
   return record
@@ -238,11 +238,11 @@ describe('deriveResultSave — the dirty compare is key-order-INSENSITIVE (never
   })
 
   it('(b) a NESTED VALUE difference under a reordered disk operand still reads DIRTY — order-blindness never widened into content-blindness', () => {
-    const edited: ScenarioV3 = { ...retired.scenario, annualSpendingReal: retired.scenario.annualSpendingReal + 1 }
+    const edited: CurrentScenario = { ...retired.scenario, annualSpendingReal: retired.scenario.annualSpendingReal + 1 }
     const persist: PersistState = { kind: 'saved', scenario: reverseKeys(edited) }
     expect(deriveResultSave(persist, retired)).toEqual({ kind: 'dirty' })
     // …and a deep, nested edit (a person's claim age) under the same reordering.
-    const deepEdited: ScenarioV3 = {
+    const deepEdited: CurrentScenario = {
       ...retired.scenario,
       people: [
         { ...retired.scenario.people[0]!, socialSecurityClaimAge: retired.scenario.people[0]!.socialSecurityClaimAge + 1 },
@@ -253,7 +253,7 @@ describe('deriveResultSave — the dirty compare is key-order-INSENSITIVE (never
   })
 
   it('a REORDERED people array is a real edit and still reads DIRTY (arrays keep their order — sorting them would make swapping the spouses read clean)', () => {
-    const swapped: ScenarioV3 = {
+    const swapped: CurrentScenario = {
       ...retired.scenario,
       people: [retired.scenario.people[1]!, retired.scenario.people[0]!],
     }
@@ -265,7 +265,7 @@ describe('deriveResultSave — the dirty compare is key-order-INSENSITIVE (never
     // shipped `mintSavedRecommendation` over the engine's own run-identity producer). A hand-typed
     // literal here would prove the codec's SHAPE gate and nothing about the era snapshot or the
     // identity string the compare actually walks (DND 012).
-    const onDisk: ScenarioV3 = { ...retired.scenario, savedRecommendation: recordA }
+    const onDisk: CurrentScenario = { ...retired.scenario, savedRecommendation: recordA }
     const live = liveWith(recordB)
     expect(live.droppedAtoms, 'the differing record must SURVIVE — a dropped one proves nothing here').toEqual([])
     expect(deriveResultSave({ kind: 'saved', scenario: onDisk }, live)).toEqual({ kind: 'dirty' })
@@ -283,7 +283,7 @@ describe('deriveResultSave — the dirty compare is key-order-INSENSITIVE (never
  * not run the codec — it compares two `scenarioIdentityKey`s (resultSave.ts:63-64) — so a
  * hand-assembled `SaveReady` whose scenario simply LACKS a record would make every assertion below
  * pass against a hand-typed ABSENCE, while the mutant that matters (removing
- * `delete o.savedRecommendation`, scenarioCodec.ts:951) stayed green. Driving the live operand
+ * `delete o.savedRecommendation`, scenarioCodec.ts:968) stayed green. Driving the live operand
  * through `scenarioFromDraft` — the SAME round-trip the real save runs — makes the delete itself the
  * thing under test: `droppedAtoms.length === 1` witnesses the codec REPORTING the drop, and the
  * absence assertion witnesses it MUTATING the object it returns.
@@ -312,7 +312,7 @@ describe('deriveResultSave — a record the codec DROPS, in all three disk state
     expect(dropped.droppedAtoms[0]).toContain('savedRecommendation')
     expect(dropped.droppedAtoms[0]).toContain('mintedAt')
     // …and it is GONE from the returned scenario. MUTANT (delete the `delete` at
-    // scenarioCodec.ts:951): the report still fires, this line reds, and case (b) below flips.
+    // scenarioCodec.ts:968): the report still fires, this line reds, and case (b) below flips.
     expect(dropped.scenario.savedRecommendation).toBeUndefined()
     // NON-VACUITY: the SAME pipeline keeps a valid record, so the drop above is the record being
     // bad — not this pipeline losing records.
@@ -340,7 +340,7 @@ describe('deriveResultSave — a record the codec DROPS, in all three disk state
     // record. The badge reading DIRTY is what keeps the plan rail's re-save CTA on screen; what it
     // must never do is read CLEAN and let the household believe the vault still matches, one
     // plan-save away from a record-FREE scenario written over the record they had.
-    const onDisk: ScenarioV3 = { ...retired.scenario, savedRecommendation: recordA }
+    const onDisk: CurrentScenario = { ...retired.scenario, savedRecommendation: recordA }
     expect(deriveResultSave({ kind: 'saved', scenario: onDisk }, dropped)).toEqual({ kind: 'dirty' })
     // …and the direction is the record's, not the plan's: the same disk against the live operand
     // that KEPT that very record reads clean.

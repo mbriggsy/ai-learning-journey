@@ -117,6 +117,7 @@ import { copy } from '../copy'
 import { readyToApplyUpdate } from '../updateGate'
 import { holdUnsavedBuffer } from '@intake/unsavedBuffer'
 import type { ScenarioDraft } from '@store/memoryModel'
+import { CURRENT_SCHEMA_VERSION } from '@shared/model'
 
 // A complete, persistable household — the same fixture the seeds prove against the real engine.
 const ready = scenarioFromDraft(DEV_SEEDS.retired)
@@ -138,6 +139,45 @@ beforeEach(() => {
   recomputeSpy.mockClear()
 })
 afterEach(cleanup)
+
+describe('IntakeApp — the hydrate gate admits exactly the current version (the schema-v4 bump)', () => {
+  // A version-3 plan never reaches the gate as 3 (the codec relabels it at unlock), so what the gate
+  // refuses is null and the version-1/2 ladder members, which the codec decodes as-is. The CURRENT
+  // model hydrating is every other hydrate test in this file (the fixture is a fresh mint).
+  const v1Model = {
+    schemaVersion: 1,
+    initialPortfolio: 1_000_000,
+    annualSpendingReal: 52_000,
+    stockWeight: 0.55,
+    people: [{ sex: 'female', currentAge: 52, retirementAge: 59, earnedIncomeReal: 110_000, socialSecurityReal: 26_000, socialSecurityClaimAge: 67 }],
+    survivorSpendingRatio: 1,
+    drawdownPolicy: 'proportional',
+    seed: 0x7eedf00d,
+  }
+  it.each([
+    ['a version-1 model', v1Model],
+    ['a version-2 label', { ...v1Model, schemaVersion: 2 }],
+    ['no model at all', null],
+  ])('%s is refused to the restore-failed face — never hydrated, never computed', async (_label, model) => {
+    const current = h.model
+    h.model = model
+    try {
+      render(<IntakeApp hydrateFromVault />)
+      expect(await screen.findByText(copy.unlockGeneric)).toBeInTheDocument()
+      expect(screen.queryByText('result stub')).toBeNull()
+      expect(recomputeSpy).not.toHaveBeenCalled()
+    } finally {
+      h.model = current
+    }
+  })
+
+  it('the current model passes the gate (the fixture is a fresh mint, labeled with the constant)', async () => {
+    expect((h.model as { schemaVersion: unknown }).schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
+    render(<IntakeApp hydrateFromVault />)
+    await affirmGate()
+    expect(await screen.findByText('result stub')).toBeInTheDocument()
+  })
+})
 
 describe('IntakeApp — the read-only verdict reaches deriveResultSave (Fork C ii glue)', () => {
   it('a READ-ONLY hydrated session derives NO save claim (kills the dropped-3rd-arg mutant)', async () => {

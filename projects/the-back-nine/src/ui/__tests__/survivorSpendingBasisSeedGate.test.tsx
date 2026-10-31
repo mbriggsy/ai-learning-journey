@@ -30,7 +30,7 @@ import { cashTermsForYear, survivorSpendingBasis, type PersonOffsets } from '@en
 import { epochDayFromIsoDate } from '@engine/validation/oracleToken'
 import { acaEnhancedSubsidyStatus } from '@engine/constants'
 import { FIRST_UNAMBIGUOUS_SAVE_DAY } from '@engine/pricingVersion'
-import type { ScenarioV3, SimulationParams, SurvivorReading } from '@shared/model'
+import type { CurrentScenario, SimulationParams, SurvivorReading } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import {
   DEV_SEEDS,
@@ -56,13 +56,13 @@ const PLANTS = {
   statestale: ['nc', doctorStateStaleVault],
   rec: ['retired', doctorRecordHolds],
   recold: ['retired', doctorRecordSuperseded],
-} as const satisfies Record<string, readonly [DevSeedKey, (s: ScenarioV3, today: number) => ScenarioV3]>
+} as const satisfies Record<string, readonly [DevSeedKey, (s: CurrentScenario, today: number) => CurrentScenario]>
 
 const plantDraft = (key: keyof typeof PLANTS): ScenarioDraft => {
   const [base, doctor] = PLANTS[key]
   const built = scenarioFromDraft(DEV_SEEDS[base])
   if (!built.ready) throw new Error(`${key}: the base seed is not save-ready`)
-  const save: ScenarioV3 = {
+  const save: CurrentScenario = {
     ...built.scenario,
     savedAt: Math.max(built.scenario.savedAt ?? FIRST_UNAMBIGUOUS_SAVE_DAY, FIRST_UNAMBIGUOUS_SAVE_DAY),
   }

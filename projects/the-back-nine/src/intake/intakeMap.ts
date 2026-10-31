@@ -3,7 +3,7 @@
  * between the single plaintext draft and U1's `SimulationParams`). READ-ONLY
  * over the draft: every aggregate the engine needs (portfolio, stockWeight,
  * buckets, basis, streams) is DERIVED here and never stored (the
- * fidelity-over-duplication rule on ScenarioV3).
+ * fidelity-over-duplication rule on CurrentScenario).
  *
  * THE RENDER ANCHOR (D1: "anchored to the engine contract, not a UI-side
  * account list"): the builders return null exactly while

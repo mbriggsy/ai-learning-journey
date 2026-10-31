@@ -22,7 +22,7 @@
  * intake AND the Save ceremony every time. It is equally DEV-gated + DCE'd.
  */
 import type { ScenarioDraft } from '@store/memoryModel'
-import type { BudgetLineItem, RecommendationGoal, ScenarioV3 } from '@shared/model'
+import type { BudgetLineItem, RecommendationGoal, CurrentScenario } from '@shared/model'
 import {
   STATE_TAX_PROFILES,
   isPricedState,
@@ -685,7 +685,7 @@ const dateDipSeed: ScenarioDraft = {
  *
  * THREE DISTINCT BUCKETS on purpose: a $725k Traditional IRA (pretax) + a $300k brokerage (taxable,
  * $180k basis) + a $200k Roth. The order is INERT on a single collapsed pool (reduce-to-spine —
- * model.ts:180), so an all-in-one-bucket household could carry a 'custom' order that never governs
+ * model.ts:181), so an all-in-one-bucket household could carry a 'custom' order that never governs
  * anything and the round-trip would still "pass" while proving nothing. With the buckets split, the
  * order genuinely picks which bucket funds each year's net withdrawal → different ordinary income →
  * different lifetime tax. The order `['roth', 'pretax', 'taxable']` (Roth-first) is DELIBERATELY not
@@ -1363,7 +1363,7 @@ export const DEV_VAULT_RECOVERY = 'lattice harbor cinder vellum 48 thicket'
  * intake and the Save ceremony. Idempotent — locks + clears any existing vault first, so reloading
  * `?vault=<key>` re-plants cleanly. The crypto/store graph is DYNAMICALLY imported so this module's
  * static top level stays light (and the whole thing is DEV-gated + DCE'd from prod, like the seeds).
- * Returns the seed's `ScenarioV3` on success (App pre-fills the passphrase + shows the unlock screen)
+ * Returns the seed's `CurrentScenario` on success (App pre-fills the passphrase + shows the unlock screen)
  * or a reason string for the (dev-only) failure log.
  */
 type PlantResult =
@@ -1423,7 +1423,7 @@ export function plantDevVault(key: string): Promise<PlantResult> {
  * The rule is ENFORCED by the guard below (the review's fold — its light sibling fail-louds on a
  * mis-wire, so this one does too; prose alone held the asymmetry).
  */
-export function doctorStaleVault(s: ScenarioV3, todayEpochDay: number): ScenarioV3 {
+export function doctorStaleVault(s: CurrentScenario, todayEpochDay: number): CurrentScenario {
   if (s.retirementState !== undefined && isPricedState(s.retirementState)) {
     throw new Error(
       `doctorStaleVault must never take a priced-state base (got ${s.retirementState}): its -2y ` +
@@ -1440,7 +1440,7 @@ export function doctorStaleVault(s: ScenarioV3, todayEpochDay: number): Scenario
   // on re-run (honest degradation); absent vintage ⇒ the U13 comparator reads "not-comparable",
   // never "the typical moved" (the extras-typical clock's own absence-means-not-applicable arm).
   const { medicareExtrasByPerson: _strippedExtras, ...preExtras } = s
-  let staleHealthcare = undefined as ScenarioV3['healthcareVintage']
+  let staleHealthcare = undefined as CurrentScenario['healthcareVintage']
   if (s.healthcareVintage !== undefined) {
     const { medicareExtrasTypicalVintage: _strippedVintage, ...hv } = s.healthcareVintage
     staleHealthcare = { ...hv, coverageYear: hv.coverageYear - 1, partBStandardMonthly: hv.partBStandardMonthly - 10 }
@@ -1520,7 +1520,7 @@ function agedStateProfile(state: PricedState): string {
  * EXPORTED for the devSeeds battery (like {@link doctorStaleVault}). Fail-loud if handed a
  * non-priced-state base — the ONLY legitimate caller is a priced-state aged plant (`statestale`).
  */
-export function doctorStateStaleVault(s: ScenarioV3, todayEpochDay: number): ScenarioV3 {
+export function doctorStateStaleVault(s: CurrentScenario, todayEpochDay: number): CurrentScenario {
   const hhState = s.retirementState
   if (s.stateTaxVintage === undefined || hhState === undefined || !isPricedState(hhState)) {
     throw new Error(
@@ -1551,7 +1551,7 @@ export function doctorStateStaleVault(s: ScenarioV3, todayEpochDay: number): Sce
  * plan never reads the table, so the clock could never fire (a wiring error, never a silent no-op).
  * `?vault=wyclock` rides it, over `date` ({@link AGED_PLANTS}).
  */
-export function doctorWorkingYearsStaleVault(s: ScenarioV3, todayEpochDay: number): ScenarioV3 {
+export function doctorWorkingYearsStaleVault(s: CurrentScenario, todayEpochDay: number): CurrentScenario {
   const stamp = s.dateVintage?.workingYearsVintage
   if (s.workingYearCost === undefined || s.dateVintage === undefined || stamp === undefined) {
     throw new Error(
@@ -1607,7 +1607,7 @@ const ARRIVED_SAVED_DAYS_AGO = 30
  * the spec's `earliestPricedRateYear` probe was reaching for. `dip` carries no `retirementState`.
  *
  * IT AGES `birthYear` ALONGSIDE `startCalendarYear`, AND THAT IS LOAD-BEARING. `PersonInputs`
- * (`model.ts:98`) documents `currentAge === startCalendarYear − birthYear` as a model invariant, and
+ * (`model.ts:99`) documents `currentAge === startCalendarYear − birthYear` as a model invariant, and
  * the engine reads a birth year through TWO paths that must agree: the SS sub-engine's stated
  * `p.birthYear` (FRA / DRC / deemed-filing lookups) and the tax overlay's DERIVED
  * `startCalendarYear − currentAge` (`simulate.ts:346`). Aging the build clock ALONE forks them by
@@ -1630,7 +1630,7 @@ const ARRIVED_SAVED_DAYS_AGO = 30
  *
  * EXPORTED for the devSeeds battery, like its sibling doctors.
  */
-export function doctorArrivedVault(s: ScenarioV3, todayEpochDay: number): ScenarioV3 {
+export function doctorArrivedVault(s: CurrentScenario, todayEpochDay: number): CurrentScenario {
   if (s.retirementState !== undefined && isPricedState(s.retirementState)) {
     throw new Error(
       `doctorArrivedVault must never take a priced-state base (got ${s.retirementState}): its ` +
@@ -1756,7 +1756,7 @@ function devRecommendationPayload(solverCodeVersion: number): SolveRecommendatio
  *  the engine's own fingerprint producer. Fails LOUD rather than returning a placeholder: a plant
  *  whose fingerprint could never match is a plant whose card can only ever say "your numbers
  *  changed", which is the broken-gate symptom, not a fixture. */
-function recordFingerprintFor(s: ScenarioV3, todayEpochDay: number): string {
+function recordFingerprintFor(s: CurrentScenario, todayEpochDay: number): string {
   const hydrated = draftFromScenario(s)
   if (!hydrated.ok) throw new Error(`the record plant's base is not a two-person household: ${hydrated.detail}`)
   const request = buildSolveRequest(hydrated.draft, todayEpochDay)
@@ -1774,8 +1774,8 @@ function recordFingerprintFor(s: ScenarioV3, todayEpochDay: number): string {
 
 /** Put a freshly-minted record on a built scenario. `chosenGoal` lands FIRST — the fingerprint is
  *  computed over the draft that carries it, which is the draft the app hydrates. */
-function withMintedRecord(s: ScenarioV3, mintedAt: number, solverCodeVersion: number, todayEpochDay: number): ScenarioV3 {
-  const goaled: ScenarioV3 = { ...s, chosenGoal: RECORD_GOAL }
+function withMintedRecord(s: CurrentScenario, mintedAt: number, solverCodeVersion: number, todayEpochDay: number): CurrentScenario {
+  const goaled: CurrentScenario = { ...s, chosenGoal: RECORD_GOAL }
   const minted = mintSavedRecommendation(
     devRecommendationPayload(solverCodeVersion),
     recordFingerprintFor(goaled, todayEpochDay),
@@ -1795,7 +1795,7 @@ function withMintedRecord(s: ScenarioV3, mintedAt: number, solverCodeVersion: nu
  * Minted TODAY, so the card's age clause suppresses (the minimal `holds` face: heading + standing +
  * the re-open door).
  */
-export function doctorRecordHolds(s: ScenarioV3, todayEpochDay: number): ScenarioV3 {
+export function doctorRecordHolds(s: CurrentScenario, todayEpochDay: number): CurrentScenario {
   return withMintedRecord(s, todayEpochDay, SOLVER_CODE_VERSION, todayEpochDay)
 }
 
@@ -1817,9 +1817,9 @@ export function doctorRecordHolds(s: ScenarioV3, todayEpochDay: number): Scenari
  *
  * Minted ~400 days back, so this plant is ALSO the live route to the card's `Saved in <year>` slot.
  */
-export function doctorRecordSuperseded(s: ScenarioV3, todayEpochDay: number): ScenarioV3 {
+export function doctorRecordSuperseded(s: CurrentScenario, todayEpochDay: number): CurrentScenario {
   const withRecord = withMintedRecord(s, todayEpochDay - RECORD_AGED_DAYS, SOLVER_CODE_VERSION + 1, todayEpochDay)
-  const edited: ScenarioV3 = { ...withRecord, annualSpendingReal: withRecord.annualSpendingReal + RECORD_SPEND_EDIT }
+  const edited: CurrentScenario = { ...withRecord, annualSpendingReal: withRecord.annualSpendingReal + RECORD_SPEND_EDIT }
   // NEVER A SILENT NO-OP (the `agedStateProfile` law): if the edit did not actually move the run
   // identity, `inputs-changed` could not fire and this plant would quietly become a one-cause
   // fixture that still LOOKS like the two-cause one. Prove the divergence against the real producer.
@@ -1889,11 +1889,11 @@ export function doctorRecordSuperseded(s: ScenarioV3, todayEpochDay: number): Sc
 /** One aged plant: the base seed it doctors + WHICH doctor (the state-tax unit split the single
  *  doctor into two — the spine/date stale plants ride the full {@link doctorStaleVault}; a
  *  priced-state stale plant rides the light {@link doctorStateStaleVault}, which never trips the
- *  engine's priced-state year bound). Both doctors share the `(ScenarioV3, todayEpochDay) → ScenarioV3`
+ *  engine's priced-state year bound). Both doctors share the `(CurrentScenario, todayEpochDay) → CurrentScenario`
  *  shape, so the dispatch is uniform. */
 export interface AgedPlant {
   readonly base: DevSeedKey
-  readonly doctor: (s: ScenarioV3, todayEpochDay: number) => ScenarioV3
+  readonly doctor: (s: CurrentScenario, todayEpochDay: number) => CurrentScenario
 }
 
 /** EXPORTED for the devSeeds battery (like the doctors): the pay check's U10 sweep builds EVERY plant
@@ -1943,7 +1943,7 @@ async function runPlantDevVault(key: string): Promise<PlantResult> {
   // nameless method line on exactly the day a row ships (CI runs that day) and not the next. Stamp it
   // at the first unambiguous day instead; a doctor that AGES the save overrides it (and owns what its
   // older save crosses — `src/engine/pricingVersion.ts`).
-  const thisBuildSave: ScenarioV3 = {
+  const thisBuildSave: CurrentScenario = {
     ...built.scenario,
     savedAt: Math.max(built.scenario.savedAt ?? FIRST_UNAMBIGUOUS_SAVE_DAY, FIRST_UNAMBIGUOUS_SAVE_DAY),
   }

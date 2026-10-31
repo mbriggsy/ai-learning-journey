@@ -1,18 +1,31 @@
 import { describe, it, expect } from 'vitest'
 import { scenarioFromDraft } from '../scenarioFromDraft'
 import { DEV_SEEDS } from '../devSeeds'
+import { CURRENT_SCHEMA_VERSION } from '@shared/model'
+import { encodeScenario } from '@shared/scenarioCodec'
 import type { ScenarioDraft } from '@store/memoryModel'
 
 // DEV_SEEDS are complete, engine-valid drafts (the `?seed=` fixtures) — the canonical
 // "ready to save" inputs. We mutate copies to plant the incompleteness the gate must catch.
 
 describe('scenarioFromDraft — Save completeness + field-fidelity gate', () => {
-  it('a complete draft is ready, and the returned scenario is the field-identical v3 form', () => {
+  it('EVERY dev seed’s save carries the current version — in the returned plan AND in the bytes a save writes (read raw: through the codec a stale label would read current)', () => {
+    for (const [key, draft] of Object.entries(DEV_SEEDS)) {
+      const r = scenarioFromDraft(draft)
+      expect(r.ready, `${key} must be saveable`).toBe(true)
+      if (!r.ready) continue
+      expect(r.scenario.schemaVersion, key).toBe(CURRENT_SCHEMA_VERSION)
+      const onDisk = JSON.parse(new TextDecoder().decode(encodeScenario(r.scenario))) as { schemaVersion: unknown }
+      expect(onDisk.schemaVersion, key).toBe(CURRENT_SCHEMA_VERSION)
+    }
+  })
+
+  it('a complete draft is ready, and the returned scenario is the field-identical current form', () => {
     const draft = DEV_SEEDS.retired
     const r = scenarioFromDraft(draft)
     expect(r.ready).toBe(true)
     if (!r.ready) return
-    expect(r.scenario.schemaVersion).toBe(3)
+    expect(r.scenario.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
     // Field-fidelity: the answer-producing facts survive the round-trip unchanged.
     expect(r.scenario.seed).toBe(draft.seed)
     expect(r.scenario.annualSpendingReal).toBe(draft.annualSpendingReal)

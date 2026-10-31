@@ -38,17 +38,13 @@ matched) and its runner `mutants.cjs` + `mutants.spec.json` (per-test kills with
 smaller; all fixed. U10's Caddie card stays **HARD-FLAG** on its two Tier 1 builds (unchanged). The pay-check review's record:
 `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-whole-review\FIXES.md` (`pre\`, `pre-a4\`, `head\` and several lens folders hold `node_modules` JUNCTIONS —
 remove each link alone before deleting any folder there). Rulings 38–42 are in `b9-phaseb\DECISIONS.md`. Next, in order:
-1. **Build the old-copy version bump before his first real save — the plan is PLANNED, DEEPENED AND CHECKED; NEXT: the build.**
-   The plan: `docs/plans/features/schema-v4-old-copy-refusal-build-spec.md` (`594e4ae9`; ce-plan 3.34.0, confirm:auto, opus
-   helpers; deepened by a data-integrity and an architecture lens; ce-doc-review with coherence, feasibility, scope-guardian,
-   adversarial and security, the whole plan to each, every finding applied — the resolved review is `plan-review.md` in
-   `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-schema-v4-proof\`, beside the
-   research dossiers and b9-2's ranking-pass notes). What it builds: `CURRENT_SCHEMA_VERSION = 4`; `ScenarioV3` renamed
-   `CurrentScenario`; the codec reads version 3 FOREVER by relabeling it to its literal successor; real version-3 plans from the
-   old builds frozen as fixtures; a version-floor test in its own second commit. Steps still owed, in order: `/brief` on the
-   unit (b9-2 briefed the topic: insights 102, 073, 085, 046/049, 018/041 — all CURRENT); the build (U6 and U4 first, before any
-   edit: they read the old builds; then U1–U3 and U5 in ONE commit, the floor test in a second); the whole-file ultramode review;
-   `/distill`. The register entry's RULED bullet still says option (a) "closes this half too": U5 corrects it (shape-keyed).
+1. **The old-copy version bump — BUILT (b9-3, 2026-10-31): the bump commit (U1–U3, U5, U6's fixtures) has landed; NEXT: the
+   version-floor test in its own second commit, then the gates, the whole-file ultramode review, `/distill`.** The plan:
+   `docs/plans/features/schema-v4-old-copy-refusal-build-spec.md` (`594e4ae9`). U4 and U6 ran against `git archive` copies of the
+   two old builds; their runs, cited reads and the mint script are in
+   `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-schema-v4-proof\README.md`. The
+   register entry is CLOSED with its NEGATIVEs; the two gaps the bump leaves are filed (Tier 2: *A date-route plan saved before
+   the pay check opens with W unanswered…* and *The "saved by a newer version" face names an update and offers no door to it…*).
 2. **Rank the registers against the D7 queue** (his order; never re-ordered without him) — b9-8's list, unchanged, plus the review's:
    - **b9-2 started this pass, notes durable:** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-schema-v4-proof\ranking-pass-notes.md`. The tier rule needs a register-wide
      sweep to be true of the body (the body was never tiered by direction): ~26 entries with a recorded rosy or either-way
@@ -66,7 +62,7 @@ remove each link alone before deleting any folder there). Rulings 38–42 are in
      figure…* (it re-opens ruling 34) and *The spending help names only Medicare premiums to leave out…*.
    - **U11's (b9-8).**
      - ⏰ *A copy of the app built before the pay check opens a plan carrying W without a word…* (Tier 2) — RULED 2026-10-31:
-       option (a), the `schemaVersion` bump (his OK, on the entry's ⚑ RULED bullet). Its BUILD is item 1 above, not a ranking call.
+       option (a), the `schemaVersion` bump (his OK, on the entry's ⚑ RULED bullet). BUILT 2026-10-31 and the entry CLOSED (item 1 above), not a ranking call.
      - *Until the W step is answered, the walk's provisional date runs without the pay check…* (Tier 1). Measure the strip just
        before and just after the W step on every date seed and `dateshort`, then `/council` the remedy. (b9-9: the no-W date also
        stands on the money-picture step until the W step's run lands.)
@@ -419,15 +415,15 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    *Unpriced states — a confident winner computed with zero state income tax* carries the state-by-state negative.
    ⚑ **Real costs the partial omits.** `verify-state-tax.ts:120` loops `PRICED_STATES`, so **every state
    added is a new annual red-build gate with its own `nextDue`** (FL already carries one). Per state:
-   `model.ts:319` STATE_ROSTER · a sourced(0) constants entry + profile · `copy.ts` `stateOption<X>` +
+   `model.ts:320` STATE_ROSTER · a sourced(0) constants entry + profile · `copy.ts` `stateOption<X>` +
    `verdictResidualState<X>` (the THREE exhaustive switches at `stateTaxDisclosure.ts:52-63`,
    `stateTaxDisclosure.ts:93-104` (the standalone note, Card 4) and `stateTaxDisclosure.ts:172-181` fail
    `tsc` until written) · `recommendationView.ts:344-348` · the intake picker **4 → 11 vertical arms**
    against `verify:fit`. Engine cost is genuinely near-zero (`stateTax.ts:163` structural early return).
    ⚑ **The filed "every saved vault decodes Corrupt" blocker is FALSE — do not act on it, and do NOT loosen
-   the compile tie.** `_V3FieldsCover` (`model.ts:2654-2656`) covers only `keyof ScenarioV3`;
-   `checkStateTaxVintageV3` (`scenarioCodec.ts:558-563`) is hand-written and compels no `needString`. Safe
-   because `scenarioCodec.ts:799-800` gates `retirementState` via `needVocab(STATE_ROSTER)`, so no
+   the compile tie.** `_V3FieldsCover` (`model.ts:2694-2696`) covers only `keyof CurrentScenario`;
+   `checkStateTaxVintageV3` (`scenarioCodec.ts:574-579`) is hand-written and compels no `needString`. Safe
+   because `scenarioCodec.ts:815-816` gates `retirementState` via `needVocab(STATE_ROSTER)`, so no
    pre-widening vault can *be* a household in a newly-priced state. The prescribed remedy — loosening
    `stateTax.ts:429-433` — would **re-open the exact hole that tie was minted to close** (`:424-428`).
    ⚑ **His call, sharpened:** does the refusal reach the **headline + date** (`engineProtocol.ts:423`/`:460`)
@@ -631,12 +627,12 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     household (up to **14** steps — 8 unconditional + 6 gated, `questions.tsx:1364-1389`) if the
     reader confirms the dialog, because nothing is written until Save (the D1 law; a plaintext
     draft outside the vault is a security-posture ruling, never a build) · the
-    `schemaVersion` migration ladder **does not exist as code** — `IntakeApp.tsx:581` refuses anything but
-    v3, and the brick runs in the LEGACY direction: a v4 blob is caught honestly upstream
-    (`scenarioCodec.ts:998` → `unlockNewerVersion`), but the moment a future build writes v4, today's v3
-    vaults fall into the arm v1/v2 sit in now — decode-ok, then "That didn't work. Try again." over a
-    reload that cannot succeed (`IntakeApp.tsx:686-703`) — and their backups fail identically (same bytes,
-    `backup.ts:84-93`) · there is **no way to delete the vault** (`clearVault` exists; its only PRODUCTION
+    `schemaVersion` migration ladder **does not exist as code for versions 1 and 2** — `IntakeApp.tsx:584`
+    refuses anything but the current version, so a v1/v2 plan decodes ok, then meets "That didn't work. Try
+    again." over a reload that cannot succeed (`IntakeApp.tsx:689-706`), and its backups fail identically
+    (same bytes, `backup.ts:84-93`). No build ever wrote either. *(Re-scoped 2026-10-31, b9-3: this bullet
+    said a future v4 would push today's v3 vaults into that arm. The schema-v4 bump did not: version 3
+    relabels to 4 at decode, a label-only step — `docs/architecture.md` §7.3.)* · there is **no way to delete the vault** (`clearVault` exists; its only PRODUCTION
     caller is the dev seed planter, `devSeeds.ts:1977` — eight test/e2e files also call it).
     ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 9 — the aged note, the v2→v3 ladder, the leaves-out section) — its 2026-09-04 re-verify clause, still live:** Aged-window disclosure note (S; the ranking fork stays yours, three arms with corrected costs, due
     before 2027-01-01) · migration ladder scaffold (S; the honest legacy state names NO remedy — the
@@ -650,10 +646,10 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:263-264`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
-    PRESCRIBED: `model.ts:1677-1679` mints synthetic entered accounts from the old aggregates "so the ladder
-    stays total"; the write primitive exists (`db.ts:231 rewriteModel`, pinned `db.test.ts:180`); today's
-    ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:981-998`), and a v1 vault survives
-    every store seam on real IndexedDB (`e2e/vaultHarness.ts:21-22`) to die only at `IntakeApp.tsx:581`.
+    PRESCRIBED: `model.ts:1691-1693` mints synthetic entered accounts from the old aggregates "so the ladder
+    stays total"; the write primitive exists (`db.ts:232 rewriteModel`, pinned `db.test.ts:180`); today's
+    ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:1004-1011`, the v1/v2 arms), and a v1 vault survives
+    every store seam on real IndexedDB (`e2e/vaultHarness.ts:21-22`) to die only at `IntakeApp.tsx:584`.
     Two new defects ride with it: `session.ts:464-468` claims the writer and UNLOCKS before the version is
     judged (the recovery path claims unconditionally, `:539`), and `backup.ts:209-213` LANDS a legacy backup
     on a clean device and only then dead-ends. Size M–L, not S. His word narrows to the TERMINAL arm's
@@ -661,7 +657,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     additive-optional fields" (`staleness.ts:27`, `resultSave.ts:146`), so the new reason must not reuse it.
     The docs that called the refuse-ladder "the migration ladder" were swept 2026-09-25 (architecture §7.3,
     product R39, roadmap R39 trace, plans/3-controls; plans/1-engine and the roadmap U4 row earlier) — re-word
-    them again only when the ladder is actually built.
+    them again only when the ladder is actually built. (2026-10-31: the schema-v4 bump re-wrote §7.3, R39 and
+    the roadmap's U4 and R39 rows for the version-3 relabel; the v1/v2 half above is unchanged.)
     (c) THE LEAVES-OUT SECTION is pilot (register *Post-65 non-qualified HSA money is silently forfeited* and *Long-term care is neither modeled nor listed as left out*, both **pilot**); anchors + the four traps are under
     the *Long-term care* bullet of *Smaller, each self-contained* above (its ⚑ 2026-09-04 re-anchor).
 
@@ -728,9 +725,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     riders, the open copy obligations, the deferred richer market draw, and the `dateinvert` (c) mint —
     its own session, a size-L parameter hunt.
     ⚑ **2026-09-04:** two bullets were half-dead and are closed — the `partBTrendVintage` "no exposure gate"
-    clause was swept in `staleness.ts:712-715` but still lived verbatim at `model.ts:2610` (swept), and
+    clause was swept in `staleness.ts:712-715` but still lived verbatim at `model.ts:2645` (swept), and
     Plan 4's "the record carries `seedA`/`seedB`" (`plans/4-recommendation.md:283`) had outlived its own
-    "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:2191-2213`) has no seed
+    "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:2226-2248`) has no seed
     field (struck in the plan). ⚑ (b)'s SOURCE twin outlived that close — `heldOutSeed.ts:13-14` still said
     the U17 record stores the seed — and was swept 2026-09-25 (the register bullet is closed with it).
     ✅ **NC's RETIRED CERTIFICATION CHECKPOINT — SWEPT 2026-08-14.** Six shipped surfaces (not the
@@ -773,7 +770,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     flag) and BOTH candidate fixes cost something — "mint through `update()`" turns a deferred false-arm
     into an immediate one; an eager mint in `createMemoryModel` breaks the WRITTEN contract #1b (mint at the
     FIRST ENGINE RUN, `plans/2-first-answer.md:57`) with no test that would catch it. His ruling, framed as
-    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:2610` and
+    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:2645` and
     `plans/4-recommendation.md:283`.
 
 ---
@@ -945,7 +942,7 @@ These are the mechanical ones that keep costing hours.*
   - **The re-anchor after an engine edit.** `pnpm doc:reanchor HEAD` (dry run) then `--apply` made 148 edits, including
     dated logs and insights (the precedent `b4bbbd3e` accepted the same). Then: hand-fix each REVIEW token by content
     (a reworded cited line); run `pair-check.mjs` + `crossline-sweep.mjs` + `content-check.mjs` from the tools folder.
-    `pair-check` flags a HISTORICAL token as MISMATCH (TODO's "`model.ts`'s `:658` … had been stale") — a recorded
+    `pair-check` flags a HISTORICAL token as MISMATCH (TODO's "`model.ts`'s `:659` … had been stale") — a recorded
     number stays. `crossline-sweep` found two bare `:151-152` docstring tokens the tool cannot see (fixed by hand).
   - **A plan doc under `docs/` must carry no line-numbered code citation and no count:** `verify:doc-stats` scans every
     doc there for both.

@@ -13,7 +13,7 @@
  * here is stored, stamped, or later displayed as "confirmed on DATE" — a reflexive tap must
  * not be laundered into a freshness claim (R19).
  */
-import type { ScenarioV3 } from '@shared/model'
+import type { CurrentScenario } from '@shared/model'
 import { KIND_TO_BUCKET } from '@intake/intakeMap'
 import type { StalenessReport } from '@store/staleness'
 import type { PricingFamily } from '@engine/pricingVersion'
@@ -85,7 +85,7 @@ export interface ReentryPayCheckStale {
 }
 
 export function composeReentry(
-  scenario: ScenarioV3,
+  scenario: CurrentScenario,
   report: StalenessReport,
   payCheckStale: ReentryPayCheckStale | null,
 ): ReentryView {

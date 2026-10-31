@@ -319,7 +319,8 @@ describe('the U4 boundary-review folds', () => {
 
   it('a VERSION-3 backup restores as the FILE’S OWN BYTES (the stored model record is byte-identical to the file’s), then unlocks as the current version', async () => {
     // A REAL version-3 save, frozen from the last build before the schema-v4 bump (the codec suite's
-    // U6 fixture), read with fs: the store layer may not reach into ui to mint one. A backup keeps
+    // U6 fixture), read from the committed file, never minted: today's mint stamps
+    // CURRENT_SCHEMA_VERSION, so only a save frozen from an older build can carry 3. A backup keeps
     // the version of the save it was cut from forever, so this is the restore a version-3 backup
     // file meets in every later build.
     const v3 = JSON.parse(
@@ -329,14 +330,19 @@ describe('the U4 boundary-review folds', () => {
     const session = createSession(db)
     const saved = await session.firstSave(v3, await floorPass(PASSPHRASE), await floorPass(RECOVERY_PASSPHRASE))
     if (!saved.ok) throw new Error('firstSave failed')
+    const stored = await loadVault(db) // firstSave encodes the plan as given, so this record holds version 3
+    if (stored.kind !== 'vault') throw new Error(`expected a vault, got ${stored.kind}`)
     const exported = await exportVault(db)
     if (!exported.ok) throw new Error('export failed')
     await session.lock()
     await clearVault(db)
 
-    expect(await restoreVault(db, exported.file, RECOVERY_PASSPHRASE, await floorPass(NEW_PASSPHRASE))).toEqual({ ok: true })
     const file = JSON.parse(exported.file) as BackupFileV1
     const fromB64 = (s: string): number[] => Array.from(atob(s), (c) => c.charCodeAt(0))
+    // Export copies the STORED ciphertext (D1), so the file carries the version-3 save itself — never a
+    // re-encoding of the relabeled plan.
+    expect(fromB64(file.model.ciphertext)).toEqual(Array.from(stored.model.ciphertext))
+    expect(await restoreVault(db, exported.file, RECOVERY_PASSPHRASE, await floorPass(NEW_PASSPHRASE))).toEqual({ ok: true })
     const landed = await loadVault(db)
     if (landed.kind !== 'vault') throw new Error(`expected a vault, got ${landed.kind}`)
     // Restore probes the plaintext through the codec (which relabels) but writes the FILE's bytes —

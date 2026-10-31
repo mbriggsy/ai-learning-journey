@@ -9,7 +9,11 @@ import type { ScenarioDraft } from '@store/memoryModel'
 // "ready to save" inputs. We mutate copies to plant the incompleteness the gate must catch.
 
 describe('scenarioFromDraft — Save completeness + field-fidelity gate', () => {
-  it('EVERY dev seed’s save carries the current version — in the returned plan AND in the bytes a save writes (read raw: through the codec a stale label would read current)', () => {
+  it('EVERY dev seed’s save carries the current version — in the returned plan AND in the bytes a save writes', () => {
+    // The bytes are read raw because decoding them would relabel an old label. What this pins is the
+    // encode: the bytes `session.save` writes carry the returned plan's label. It cannot see a mint
+    // that stamps a stale literal — the mint's own round trip relabels it, so both reads say current;
+    // only the candidate's `as CurrentScenario` cast, under `pnpm typecheck`, catches that (KTD2).
     for (const [key, draft] of Object.entries(DEV_SEEDS)) {
       const r = scenarioFromDraft(draft)
       expect(r.ready, `${key} must be saveable`).toBe(true)

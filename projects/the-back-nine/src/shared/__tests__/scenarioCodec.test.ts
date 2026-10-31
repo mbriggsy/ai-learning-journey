@@ -342,6 +342,10 @@ describe('the schema surface — docs/architecture.md §7.3 rules (b) and (c), h
    *       so a copy built before it DROPS the key when it saves (the working-years stamp was this case).
    * WHEN THIS FAILS: either bump `CURRENT_SCHEMA_VERSION` under §7.3 and update this record in the same
    * change, or — if no older copy is harmed — update the record with a one-line comment saying why.
+   * A REMOVED vocabulary value is never that second case once a real save exists: a plan that carries
+   * it would read "damaged" in every later copy (§7.3's newer reader's half) — keep it, or write an
+   * up-convert step. What this record cannot see (a loosened range or rule, a key nested in a
+   * sub-object) is listed in §7.3 as the author's call.
    */
   const RECORDED_VOCABULARIES: Readonly<Record<string, readonly string[]>> = {
     ACCOUNT_KINDS: ['401k', '403b', 'traditional-ira', 'roth-401k', 'roth-ira', 'brokerage', 'hsa'],
@@ -403,7 +407,8 @@ describe('the schema surface — docs/architecture.md §7.3 rules (b) and (c), h
   const why = (what: string): string =>
     `${what} changed while CURRENT_SCHEMA_VERSION is ${CURRENT_SCHEMA_VERSION}: an older copy would ` +
     'refuse the new value (§7.3 rule (b)) or drop the new key on save (rule (c)). Bump the version under ' +
-    'docs/architecture.md §7.3, or update this record with a one-line reason no older copy is harmed.'
+    'docs/architecture.md §7.3, or update this record with a one-line reason no older copy is harmed. ' +
+    'A REMOVED vocabulary value strands every real save that carries it (§7.3, the newer reader): keep it, or up-convert.'
 
   it('every vocabulary the codec checks is recorded, value for value', () => {
     expect(LIVE_VOCABULARIES, why('A vocabulary the codec checks')).toEqual(RECORDED_VOCABULARIES)
@@ -1308,8 +1313,8 @@ describe('the current shape — the v3 field set (U8, the first v3 writer), writ
 
   it('a NON-Corrupt throw from INSIDE a validator ESCAPES decodeScenario — a programming defect is never laundered into a calm dropped atom', () => {
     // THE TWO RE-THROWS THIS COVERS, and they CHAIN, so one arm holds both:
-    //   `scenarioCodec.ts:967`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
-    //   `scenarioCodec.ts:1028`  `throw e`                              (decodeScenario's outer catch)
+    //   `scenarioCodec.ts:969`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
+    //   `scenarioCodec.ts:1031`  `throw e`                              (decodeScenario's outer catch)
     // Both were UNEXERCISED. They were filed as "correct-by-inspection but SEAM-LESS" on the
     // reasoning that decodeScenario builds its input from `JSON.parse` — data properties only,
     // no getters — and that no validator here recurses or calls a method on an unchecked value.

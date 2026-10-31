@@ -472,9 +472,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    `tsc` until written) · `recommendationView.ts:344-348` · the intake picker **4 → 11 vertical arms**
    against `verify:fit`. Engine cost is genuinely near-zero (`stateTax.ts:163` structural early return).
    ⚑ **The filed "every saved vault decodes Corrupt" blocker is FALSE — do not act on it, and do NOT loosen
-   the compile tie.** `_V3FieldsCover` (`model.ts:2694-2696`) covers only `keyof CurrentScenario`;
-   `checkStateTaxVintageV3` (`scenarioCodec.ts:574-579`) is hand-written and compels no `needString`. Safe
-   because `scenarioCodec.ts:815-816` gates `retirementState` via `needVocab(STATE_ROSTER)`, so no
+   the compile tie.** `_V3FieldsCover` (`model.ts:2696-2698`) covers only `keyof CurrentScenario`;
+   `checkStateTaxVintageV3` (`scenarioCodec.ts:576-581`) is hand-written and compels no `needString`. Safe
+   because `scenarioCodec.ts:817-818` gates `retirementState` via `needVocab(STATE_ROSTER)`, so no
    pre-widening vault can *be* a household in a newly-priced state. The prescribed remedy — loosening
    `stateTax.ts:429-433` — would **re-open the exact hole that tie was minted to close** (`:424-428`).
    ⚑ **His call, sharpened:** does the refusal reach the **headline + date** (`engineProtocol.ts:423`/`:460`)
@@ -699,7 +699,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
     PRESCRIBED: `model.ts:1691-1693` mints synthetic entered accounts from the old aggregates "so the ladder
     stays total"; the write primitive exists (`db.ts:232 rewriteModel`, pinned `db.test.ts:180`); today's
-    ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:1004-1011`, the v1/v2 arms), and a v1 vault survives
+    ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:1007-1014`, the v1/v2 arms), and a v1 vault survives
     every store seam on real IndexedDB (`e2e/vaultHarness.ts:21-22`) to die only at `IntakeApp.tsx:584`.
     Two new defects ride with it: `session.ts:464-468` claims the writer and UNLOCKS before the version is
     judged (the recovery path claims unconditionally, `:539`), and `backup.ts:209-213` LANDS a legacy backup

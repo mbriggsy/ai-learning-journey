@@ -72,7 +72,7 @@ vi.mock('../vaultSession', () => ({
  * entire point of `mintSavedRecommendation`'s own gate, which runs the SAME
  * `checkSavedRecommendationV3` the codec runs, so a record this probe could drop can never get past
  * the mint. But a declared refusal with no producer is the dead arm insight 100 forbids, and the
- * ORDER it guards (probe BEFORE the store write) is the data-loss case `scenarioCodec.ts:682-686`
+ * ORDER it guards (probe BEFORE the store write) is the data-loss case `scenarioCodec.ts:684-688`
  * names. So it is witnessed with the planted-seam idiom this repo already uses for the
  * broken-trichotomy split (`recommendationSaveView.test.ts`): passthrough everywhere, and one extra
  * atom reported ONLY for a record-bearing candidate, ONLY while armed. The paired control inside
@@ -421,7 +421,7 @@ afterEach(cleanup)
 /**
  * THE MUTANT THIS SECTION EXISTS FOR: move `appModel.update` above the mint's validation / the
  * gate's probe. It is the worst one in the feature, and it is invisible to every other battery.
- * `scenarioCodec.ts:682-686` names the loss: where the disk already holds a VALID record and a new
+ * `scenarioCodec.ts:684-688` names the loss: where the disk already holds a VALID record and a new
  * mint is bad, the codec deletes the bad record from the LIVE operand only, the two
  * `scenarioIdentityKey`s diverge, `deriveResultSave` reads DIRTY, and the household's next
  * plan-save writes a record-FREE scenario OVER the good record. The refusal renders either way —

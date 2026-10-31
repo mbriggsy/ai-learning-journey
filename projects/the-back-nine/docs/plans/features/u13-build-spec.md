@@ -41,7 +41,7 @@ atomic change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` +
    few hours early every Dec 31 for any household behind UTC (the ultramode review's basis-mismatch catch,
    2026-07-09 — a dated correction of this spec's original UTC unit; Result.tsx's date anchor reads the same
    chain, so one screen carries one time base).
-   - Codec RANGE gate (`SAVED_AT_EPOCH_DAY_MIN`/`MAX`, scenarioCodec.ts:829-837): outside the epoch-day
+   - Codec RANGE gate (`SAVED_AT_EPOCH_DAY_MIN`/`MAX`, scenarioCodec.ts:831-839): outside the epoch-day
      window it rejects as corrupt, because an epoch-MILLISECOND value is a finite integer that silently
      reads as year ~55000 (insight-046 class — an in-range garbage value is worse than a reject; mere
      finiteness is not enough). DND-009. `savedRecommendation`'s `mintedAt` carries the same gate.

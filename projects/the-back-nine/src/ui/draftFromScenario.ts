@@ -17,7 +17,7 @@
  *
  * THE ONE ARITY GAP (why this returns a RESULT, not a bare draft). The draft types `people` as a
  * strict two-tuple (the married-couple model; single-user is deferred — TODO), but the codec only
- * gates `people.length >= 1` (scenarioCodec.ts:294 — it also validates the legacy v1/v2 degenerate
+ * gates `people.length >= 1` (scenarioCodec.ts:296 — it also validates the legacy v1/v2 degenerate
  * case). A vault WE wrote is always two-person (scenarioFromDraft encodes a two-tuple, GCM-
  * authenticated on disk), so the failure arm is defensive: a `!== 2` scenario is an unsupported shape
  * we refuse to silently coerce into the two-tuple (that would be the calm-but-wrong sin — dropping or

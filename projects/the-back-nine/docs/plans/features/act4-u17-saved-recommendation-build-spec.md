@@ -31,7 +31,7 @@ here exists because the aged surface that record lands on was not honest before 
 2. **The "Act-4 `schemaVersion` 3 bump" is counterfactual.** v3 is the shipped forward-written shape
    (`model.ts:1974-1980`; codec `> 3` = newer-version). `savedRecommendation?` landed **additive-optional
    within v3**, presence-keyed, following the `rothConversion` / `savedAt` / `retirementState` precedents
-   (`scenarioCodec.ts:753-756` was the pattern copied).
+   (`scenarioCodec.ts:755-758` was the pattern copied).
 
 ---
 
@@ -275,7 +275,7 @@ headline, where it would read as current).
   stays green. The identity consumers were enumerated first: `resultSave.ts`'s two compares and the
   round-trip guard.
 - **The `JSON.stringify` accident was removed, not documented.** `resultSave.ts` justified its compare with
-  *"decodeScenario builds every object."* It does **not** — `scenarioCodec.ts:1022-1024` is a validated
+  *"decodeScenario builds every object."* It does **not** — `scenarioCodec.ts:1025-1027` is a validated
   pass-through cast, and the behavior was safe only because `JSON.parse` preserves `encodeScenario`'s
   insertion order, so a future field reorder would have broken dirty-detection silently. The fix is
   `scenarioIdentityKey` (`model.ts:2577`), which rebuilds plain objects with SORTED keys and throws on a
@@ -396,7 +396,7 @@ verdict prefix, unlike `staleness*`, so they clear the scoped gates rather than 
 
 **The four mint obligations**, all discharged in `src/store/savedRecommendationMint.ts`:
 
-1. `validateSavedRecommendation` (`scenarioCodec.ts:704`) is called BEFORE the record touches the draft
+1. `validateSavedRecommendation` (`scenarioCodec.ts:706`) is called BEFORE the record touches the draft
    (`savedRecommendationMint.ts:141`) — the SAME validator the decode path runs, never a parallel copy. It
    had ZERO product callers before this stage.
 2. A non-empty `droppedAtoms` at the gesture **refuses aloud** and never reports a saved recommendation

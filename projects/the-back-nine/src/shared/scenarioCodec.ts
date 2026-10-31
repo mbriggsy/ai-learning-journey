@@ -11,8 +11,10 @@
  * the bit-identical reproduction field). The engine's R19 `validateParams` proves
  * SEMANTICS (ranges, sums, age ordering) and remains in the path of every decoded
  * scenario before an answer renders — the codec never re-implements a domain rule,
- * so the two gates cannot disagree. It moves no field; the one thing it ever rewrites
- * is a LABEL (the version-3 step below).
+ * so the two gates cannot disagree. It moves no field, and it changes the parsed object in
+ * exactly two ways: it relabels a version-3 plan (the step below), and it deletes a
+ * savedRecommendation that fails its checks — the one tolerated atom, reported on
+ * `droppedAtoms` (the bottom of `checkV3Fields`). Anything else it returns is the disk's.
  *
  * VERSION LADDER: `schemaVersion` is judged BEFORE any other field (the migration
  * enabler). An integer above {@link CURRENT_SCHEMA_VERSION} surfaces the calm "saved by a
@@ -973,9 +975,10 @@ function checkV3Fields(o: Obj): string[] {
 }
 
 /**
- * Decode + structurally validate plaintext vault/export bytes. Never throws: every
- * failure is a typed result the store maps to its calm states ("data damaged" /
- * "saved by a newer version").
+ * Decode + structurally validate plaintext vault/export bytes. Never throws on bad DATA:
+ * every data failure is a typed result the store maps to its calm states ("data damaged" /
+ * "saved by a newer version"). A defect inside a validator (a throw that is not `Corrupt`)
+ * propagates on purpose — pinned in the codec suite (the note above the tolerated drop).
  */
 export function decodeScenario(bytes: Uint8Array): ScenarioDecode {
   let parsed: unknown

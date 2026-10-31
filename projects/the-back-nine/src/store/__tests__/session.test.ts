@@ -630,7 +630,9 @@ describe('the schema-v4 bump — a newer plan is refused before anything is inst
   const NEWER = CURRENT_SCHEMA_VERSION + 1
   const newerModel = (): Scenario => ({ ...MODEL, schemaVersion: NEWER }) as unknown as Scenario
   /** A REAL version-3 save, frozen from the last build before the bump (the codec suite's U6 fixture).
-   *  Read with fs, never imported: the store layer may not reach into ui to mint one. */
+   *  Read from the committed file, never minted: today's mint stamps CURRENT_SCHEMA_VERSION, so only a
+   *  save frozen from an older build can carry 3. Cast to `AnyScenario` only to reach the store's write
+   *  API — no member of that union is labeled 3; the codec relabels it at decode. */
   const frozenV3 = (): AnyScenario =>
     JSON.parse(
       readFileSync(join(process.cwd(), 'src', 'shared', '__tests__', 'fixtures', 'scenario-v3-date-postw.json'), 'utf8'),
@@ -711,6 +713,7 @@ describe('the schema-v4 bump — a newer plan is refused before anything is inst
     const session = createSession(db)
     expect(await session.recoveryUnlock(RECOVERY_PASSPHRASE)).toEqual({ ok: true })
     expect(session.currentModel()?.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
+    expect({ ...session.currentModel(), schemaVersion: 3 }).toEqual(frozenV3())
     expect((await session.setNewPassphrase(await floorPass(NEW_PASSPHRASE))).ok).toBe(true)
     expect(await storedModelRecord(db)).toEqual(before)
     await session.lock()

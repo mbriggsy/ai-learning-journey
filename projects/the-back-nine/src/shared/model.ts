@@ -2652,11 +2652,13 @@ export interface HealthcareVintageV3 {
 /** The exhaustive v3 field set — U8's `checkV3Fields` checklist (burned/063: the
  *  codec arm iterates THIS list, so a field added to the interface cannot
  *  silently skip validation — it fails the compile-time tie below first).
- *  Version 4 carries exactly this set (the label-only bump). A NEW field must join this list to
- *  compile, and whether it also BUMPS {@link CURRENT_SCHEMA_VERSION} is decided by the rule in
- *  `docs/architecture.md` §7.3 (would an older copy that ignores it answer differently, refuse it,
- *  or drop it on save?). A new VALUE in a vocabulary the codec checks, or a new key in a vintage
- *  stamp, never touches this list: the codec suite's schema-surface pin holds those. */
+ *  Version 4 carries exactly this set (the label-only bump). A new TOP-LEVEL field must join this
+ *  list to compile, and whether it also BUMPS {@link CURRENT_SCHEMA_VERSION} is decided by the rule
+ *  in `docs/architecture.md` §7.3 (would an older copy that ignores it answer differently, refuse
+ *  one of its values, or drop it on save?). A new VALUE in a vocabulary the codec checks, or a new
+ *  key in a vintage stamp, never touches this list: the codec suite's schema-surface pin holds
+ *  those. A key nested inside a sub-object (a person, an account, a stream, `health`) trips
+ *  neither — §7.3 makes it the author's call. */
 export const SCENARIO_V3_FIELDS = [
   'schemaVersion',
   'people',

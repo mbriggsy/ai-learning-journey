@@ -144,6 +144,11 @@ describe('IntakeApp — the hydrate gate admits exactly the current version (the
   // A version-3 plan never reaches the gate as 3 (the codec relabels it at unlock), so what the gate
   // refuses is null and the version-1/2 ladder members, which the codec decodes as-is. The CURRENT
   // model hydrating is every other hydrate test in this file (the fixture is a fresh mint).
+  // Only the RELABELED arms can see the gate's version clause: the current two-person plan carrying
+  // an old label passes `draftFromScenario` and re-mints at the current version, so with the clause
+  // deleted it would hydrate. The version-1 model has ONE person (`draftFromScenario` refuses it
+  // anyway), and null also lands on this face through the effect's catch — those two pin the
+  // refusal end to end, not the clause (the schema-v4 whole-file review, wf_edc27bef-48a).
   const v1Model = {
     schemaVersion: 1,
     initialPortfolio: 1_000_000,
@@ -156,7 +161,8 @@ describe('IntakeApp — the hydrate gate admits exactly the current version (the
   }
   it.each([
     ['a version-1 model', v1Model],
-    ['a version-2 label', { ...v1Model, schemaVersion: 2 }],
+    ['the current plan labeled 2', { ...ready.scenario, schemaVersion: 2 }],
+    ['the current plan labeled 3', { ...ready.scenario, schemaVersion: 3 }],
     ['no model at all', null],
   ])('%s is refused to the restore-failed face — never hydrated, never computed', async (_label, model) => {
     const current = h.model

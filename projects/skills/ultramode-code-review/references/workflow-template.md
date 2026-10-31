@@ -30,7 +30,7 @@ console.log(dir&&fs.existsSync(dir)?dir:'PERSONAS-UNAVAILABLE');"
 If it prints `PERSONAS-UNAVAILABLE`, set `PERSONA_DIR = null` — every lens then runs on its inline
 role and the review proceeds. **Persona files are enrichment, not a dependency; the review NEVER
 blocks on CE's presence or layout.** After resolving, `ls` the dir and null out any persona filename
-you planned to use that doesn't exist (CE renames things across versions). Roster as of 3.14.3:
+you planned to use that doesn't exist (CE renames things across versions). Roster when last checked (the ls decides):
 correctness, testing, maintainability, project-standards, security, performance, api-contract,
 data-migration, reliability, adversarial, previous-comments, julik-frontend-races, swift-ios,
 agent-native, learnings-researcher, deployment-verification-agent (mostly `<stem>-reviewer.md`, but

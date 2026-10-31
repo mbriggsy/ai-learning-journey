@@ -22,6 +22,7 @@ If TODO.md exists in the project root, update it to reflect reality:
 - Current state (build and gate status by exit code, bundle sizes; a test or open count only where the project gives it no single gated home — a TODO that says its counts live elsewhere, e.g. under a doc-stats gate, gets the gate's NAME, never its numbers — run the actual commands, don't copy from memory)
 - Next steps in priority order
 - Landmines (known issues, gotchas, things that'll bite the next session)
+- **The flow, for a sizable job** ([playbook/principles.md](../../../playbook/principles.md), "Sizable work runs the whole flow"): the TODO's START HERE line names the job's next step by name, then the steps still owed after it, in order. If the TODO has no START HERE line, add one at the top. Name each step by what it is and the bar it must meet, not by a tool: `/brief <topic>`; the plan, deepened and checked as a whole; a build unit, opened with `/brief <that unit's topic>`; the whole-file review, with an adversary and every finding verified; `/distill`. A step this session skipped or cut short goes first. A lesson this session paid for goes in the TODO's DISTILL CANDIDATES list. This line is what keeps the flow running: every step a START HERE line named has run, and steps left to a standing rule faded.
 
 Rules:
 - TODO is for actionable items ONLY. No session history, no "What We Did" logs. Git log has the history.
@@ -56,7 +57,7 @@ Flag anything in **Mine** that must not be committed (.env, credentials, large b
 ### 4. Clean Temp Files
 
 - **`temp/`:** delete the files this session created. A file it only read (a screenshot Briggsy dropped for it) goes too, unless `ListAgents`, run right before, shows another live session in this project folder: that session may be reading it. Delete each by exact path (`rm -- <path>` in Bash; `Remove-Item -LiteralPath <path>` in PowerShell, which otherwise reads `[ ]` as a wildcard), never a glob, a folder, a link or a `*.lock`. Leave the rest. Never ask about `temp/`.
-- **Never delete a lock or another session's marker:** `.git/index.lock`, `/tmp/.distill-needed`, `/tmp/.brief-gate`, or any marker this session didn't create. If `.git/index.lock` exists, report its path and age: a peer's commit may be holding it.
+- **Never delete a lock or another session's marker:** `.git/index.lock`, or any marker this session didn't create. If `.git/index.lock` exists, report its path and age: a peer's commit may be holding it.
 - **`.playwright-mcp/` folders, generated HTML reports and system-temp files:** delete what this session created only when `ListAgents`, run right before, shows no other live local session; otherwise list them and leave them (a `.playwright-mcp/` folder belongs to every session in that folder). This session's own scratchpad folder is always yours to clean.
 
 ### 5. Check for Doc Drift

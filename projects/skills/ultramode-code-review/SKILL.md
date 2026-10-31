@@ -86,7 +86,11 @@ Right-size the severity from what the code actually shows. Then classify what su
 Apply the verified fixes — the smallest change that holds the contract, matching the surrounding code. Run the project's **full gate** (whatever its `CLAUDE.md` lists — typecheck / tests / lint / project-specific verifies). First trace every hand-verification finding (no votes, a tie, a split — including a split on newness — or a verdict decided on fewer votes than its severity quorum because the rest abstained) to source yourself and settle it into one of the buckets below. Then report the coverage line (lenses that ran · lenses that crashed and were re-run or left uncovered) and three buckets: what was real (fixed), what's advisory (deferred/documented), and **what you threw out** — the false alarms you caught are part of the review's integrity, not an embarrassment to hide.
 
 ### 7 · Distill — MANDATORY
-Run `/distill` to capture the session's hard-won insight — the gap you found, the false-alarm pattern, the contract you had to re-derive. A review that finds something and doesn't write it down makes the team rediscover it later; distilling is how each review makes the next one smarter.
+Capture the session's hard-won insight — the gap you found, the false-alarm pattern, the contract you had to re-derive. A review that finds something and doesn't write it down makes the team rediscover it later; distilling is how each review makes the next one smarter.
+- **A job done in this session:** run `/distill` now, once the findings are in.
+- **A job that spans sessions:** add each lesson to the TODO's DISTILL CANDIDATES list instead. The job's `/distill` runs once, on that whole list, right after the job's closing whole-file review: if this review is that one, run it now; otherwise START HERE names it until it runs.
+
+Either way it gets written down.
 
 ## Calibration — the difference between signal and noise
 Hand reviewers the project's *values* (from step 2) so they don't flag deliberate choices: dense explanatory/intent-comments where the project treats them as a value, required fail-loud guards (not over-engineering), "wow over simplicity" in a UI layer. The **simplicity** lens hunts YAGNI · premature abstraction · dead code · unnecessary indirection ("*should this exist?*") plus the structural-quality territory its merged persona carries (coupling, module boundaries, type-boundary leaks — "*does it live in the right place?*") — but NOT comment density or required guards.

@@ -1,6 +1,6 @@
 # Distill & Brief
 
-**Status: COMPLETE** — deployed and enforcing.
+**Status: active.** Two skills. The enforcement hooks that used to sit around them were retired on 2026-10-31 (why, below).
 
 ### How We Stopped Losing What We Learned
 
@@ -8,7 +8,7 @@
 
 > **The pitch:** Every engineering session produces hard-won knowledge. By the next session, it's gone.
 >
-> We built a system where AI agents *automatically* brief themselves before starting work and get *automatically* reminded to distill findings when work completes. Two skills, three hooks, zero human effort, minimum token burn.
+> Two skills close the loop: `/brief` reads the lessons that bear on the work before it starts, and `/distill` writes the new lesson when it's done. What makes them run is plain: the next step is named, by name, where the next session starts.
 
 ---
 
@@ -23,23 +23,21 @@ Session 1: Debug for 45 min  -->  Find root cause  -->  Fix it  -->  Session end
 Session 2: Debug for 45 min  -->  Find root cause  -->  "...wait, didn't we do this before?"
 ```
 
-Putting "remember to check past fixes" in instructions doesn't work. Humans forget to ask. Agents skip them, forget them, or deprioritize them under task pressure.
-
-**We needed something stronger than instructions.**
+A standing rule ("check past fixes before work") doesn't hold: humans forget to ask, and agents let it slide under task pressure.
 
 ---
 
 ## The Solution
 
-Two directions. Two skills. Three hooks. One feedback loop.
+Two directions. Two skills. One shared store of lessons.
 
 ```mermaid
 flowchart LR
     subgraph BRIEF ["  /brief  "]
         direction TB
-        B1["Agent starts /ce:work"]
-        B2["Hook blocks:\n'Run /brief first'"]
-        B3["Agent works with\nfull awareness"]
+        B1["START HERE names\n/brief &lt;topic&gt;"]
+        B2["Top 5 lessons, each\nchecked against today's code"]
+        B3["Plan and build with\nthe landmines in view"]
         B1 --> B2 --> B3
     end
 
@@ -53,10 +51,9 @@ flowchart LR
 
     subgraph DISTILL ["  /distill  "]
         direction TB
-        D1["Agent tries to stop"]
-        D2["Stop hook:\n'Run /distill first'"]
-        D3["Agent captures insight\nor confirms nothing to capture"]
-        D1 --> D2 --> D3
+        D1["The review's last step,\nor START HERE after the review"]
+        D2["Write the lesson:\nproblem, root cause, fix,\nkey insight, also applies to"]
+        D1 --> D2
     end
 
     BRIEF -->|"reads from"| KB
@@ -67,57 +64,13 @@ flowchart LR
     style BRIEF fill:#1e3a5f,stroke:#60a5fa,color:#fff
 ```
 
-### The Flow
+### When each one runs
 
-1. **Agent starts a work session** with `/ce:work` — PreToolUse hook blocks it: *"Run `/brief` first."*
-2. **`/brief`** greps the insights' frontmatter for the work's topic (steered by a corpus card capped under 4 KB), reads the top 5 in full, and checks each against today's code. Marker created.
-3. **Agent re-runs `/ce:work`** — hook sees the marker, consumes it, allows through. The agent works with full awareness of past root causes and gotchas.
-4. **`/ce:work` loads** — PostToolUse silently drops a `.distill-needed` marker. No output, no interruption.
-5. **Work happens.** The agent follows ce:work's instructions.
-6. **Agent tries to stop** — Stop hook sees the marker: *"Run `/distill` to capture any non-obvious findings."*
-7. **`/distill`** captures insights (or the agent confirms nothing to capture). Marker cleared. Agent stops.
-8. **`/brief`** is also available on-demand — any time, any session, just ask.
+- **`/brief`:** at the start of every sizable job, before the plan, and at the start of each build unit's session. It greps the lessons' frontmatter for one topic (steered by a corpus card capped under 4 KB), reads the top 5 in full, and checks each against today's code.
+- **`/distill`:** as the deep review's last step for a job done in one session. For a job that spans sessions, each close queues the session's lessons in the TODO's DISTILL CANDIDATES list, and `/distill` writes them once, after the job's whole-file review.
+- **Either one, any time:** "brief me on X", "distill this".
 
----
-
-## Architecture
-
-```mermaid
-flowchart TB
-    subgraph HOOKS ["Hooks"]
-        H1["PreToolUse\n<b>enforce-brief-before-work.sh</b>\nBlocks /ce:work until /brief runs"]
-        H2["PostToolUse\n<b>remind-distill-after-work.sh</b>\nDrops marker silently"]
-        H3["Stop\n<b>stop-distill-gate.sh</b>\nBlocks stop until /distill runs"]
-    end
-
-    subgraph SKILLS ["Skills"]
-        SK1["<b>/distill</b>\nWrite an insight doc"]
-        SK2["<b>/brief</b>\nRead insight context"]
-    end
-
-    subgraph STORE ["Knowledge Store"]
-        FS["docs/insights/*.md"]
-    end
-
-    WORK["/ce:work"] --> H1
-    H1 -->|"BLOCK → /brief"| SK2
-    SK2 -->|"greps, reads top 5"| FS
-    SK2 -->|"marker"| H1
-    H1 -->|"allow"| WORK2["/ce:work ✓"]
-
-    WORK2 --> H2
-    H2 -->|"silent marker"| DONE["Work completes"]
-    DONE --> H3
-    H3 -->|"BLOCK → /distill"| SK1
-    SK1 -->|"writes"| FS
-
-    style HOOKS fill:#1a1a2e,stroke:#e94560,color:#fff
-    style SKILLS fill:#1a1a2e,stroke:#4ade80,color:#fff
-    style STORE fill:#1a1a2e,stroke:#facc15,color:#fff
-    style WORK fill:#0f3460,stroke:#60a5fa,color:#fff
-    style WORK2 fill:#0f3460,stroke:#60a5fa,color:#fff
-    style DONE fill:#0f3460,stroke:#60a5fa,color:#fff
-```
+What makes them run is the TODO's START HERE line: every session's close writes the job's next step there by name (`/brief <topic>`, the whole-file review, `/distill`), and the next session starts there. The rule lives in [squeaky-clean](../squeaky-clean/SKILL.md) step 1 and [playbook/principles.md](../../../playbook/principles.md).
 
 ---
 
@@ -125,28 +78,16 @@ flowchart TB
 
 | Approach | Verdict | Why |
 |----------|---------|-----|
-| **Agent instructions** ("check insights before work") | Rejected | Instructions are suggestions. Agents skip them under task pressure. |
-| **Existing plugin skill** (ce:compound) | Rejected | Spins up 5 parallel subagents, produces 150+ line docs. Overkill for our 40-line format. |
-| **Auto-triggering skills** (no hooks) | Rejected | Claude's own docs say it "tends to under-trigger." Unreliable for enforcement. |
-| **Non-blocking hooks** (inject context via systemMessage) | Rejected | Platform bug — non-blocking hook output is silently discarded. Tested, filed issues, waited. Doesn't work. |
-| **Blocking hooks + custom skills** | Selected | Blocking hooks deliver their message to Claude. Block `/ce:work`, redirect to `/brief`, allow on re-run. Deterministic enforcement. |
+| **A standing rule** ("check insights before work", in memory or a TODO's standing list) | Rejected | It fades. A B9 TODO line asked for `/brief` before every unit from June on; main sessions ran it 0 times from 09-17 to 10-18. |
+| **Blocking hooks** (hold the build skill until `/brief`; block the stop until `/distill`) | Tried 2026-04 to 2026-10, retired 2026-10-31 | They keyed on skill names. The brief gate held only `ce-work`, unused since 2026-08-08, so it held nothing. The distill gate fired when a review skill *loaded*, not when the review ended: in the 6 review sessions checked from 10-20 to 10-31 it interrupted a review still running every time, and 5 of the 6 were waved off. |
+| **The plugin's lesson tools** (compound-engineering's `ce-compound` and learnings researcher) | Rejected | They write and read their own `solutions/` folder in their own format, so `/brief` would never see those lessons. |
+| **Claude Code's own memory** | Rejected | By design it skips what can be derived from the code and debugging fixes, which is exactly what these lessons hold, and it lives on one laptop, outside git. |
+| **Name the next step where the next session starts** | Selected | From 10-20 to 10-31, every step a START HERE line named ran. `/brief`, left unnamed through most of one job's build, ran in about 4 of its 13 build sessions. Plus skills that run their own next step: the deep review ends by running `/distill`. |
 
-### Design Principles
-
-Only blocking hooks work reliably on the current platform. Three hooks enforce the knowledge loop:
-
-- **enforce-brief-before-work.sh** (PreToolUse) — blocks `/ce:work` until `/brief` runs. Uses a marker file (`/tmp/.brief-gate`). Also clears the distill marker when `/distill` runs.
-- **remind-distill-after-work.sh** (PostToolUse) — silently drops a `.distill-needed` marker after `/ce:work` or `/ce:review` loads. No output (PostToolUse fires at skill load, too early for a reminder).
-- **stop-distill-gate.sh** (Stop) — blocks Claude from stopping if the distill marker exists. This fires at the RIGHT moment — when work is actually done, not when the skill loads.
-
-**Supporting hook:**
-
-- **block-webfetch.sh** (PreToolUse) — blocks `WebFetch` (no timeout parameter) and redirects to `gemini-grounding` or `curl`. Unrelated to the knowledge loop.
-
-**Skills:**
+### The skills
 
 - **`/distill`** uses dynamic context injection to list the existing insight filenames and compute the next number before the agent writes; its quality bar greps the corpus's `title:` / `tags:` lines to prevent duplicates.
-- **`/brief`** injects a size-capped corpus card (counts, frontmatter coverage, tag vocabulary; never an insight body), then greps the frontmatter for ONE topic and reads at most the top 5 insights in full — on demand, in any session.
+- **`/brief`** injects a size-capped corpus card (counts, frontmatter coverage, tag vocabulary; never an insight body), then greps the frontmatter for ONE topic and reads at most the top 5 insights in full, on demand, in any session.
 
 ---
 
@@ -191,53 +132,37 @@ request-ID-based supersession.
 
 ```mermaid
 flowchart LR
-    PLAN["Plan"] --> BRIEF["/brief"]
-    BRIEF -->|"context loaded"| EXECUTE["/ce:work"]
-    EXECUTE -->|"work done"| STOP{"Stop hook"}
-    STOP -->|"marker exists"| DISTILL["/distill"]
+    BRIEF["/brief"] -->|"lessons in view"| PLAN["Plan, deepened\nand checked"]
+    PLAN --> BUILD["Build"]
+    BUILD --> REVIEW["Whole-file review"]
+    REVIEW --> DISTILL["/distill"]
     DISTILL --> COMMIT["Commit"]
 
     DISTILL -->|"writes"| KB["docs/insights/"]
     KB -->|"reads"| BRIEF
 
     style PLAN fill:#0f3460,stroke:#60a5fa,color:#fff
-    style EXECUTE fill:#0f3460,stroke:#60a5fa,color:#fff
+    style BUILD fill:#0f3460,stroke:#60a5fa,color:#fff
+    style REVIEW fill:#0f3460,stroke:#60a5fa,color:#fff
     style COMMIT fill:#0f3460,stroke:#60a5fa,color:#fff
-    style STOP fill:#1a1a2e,stroke:#e94560,color:#fff
     style DISTILL fill:#2d4a3e,stroke:#4ade80,color:#fff
     style KB fill:#3b3520,stroke:#facc15,color:#fff
     style BRIEF fill:#1e3a5f,stroke:#60a5fa,color:#fff
 ```
 
-Plan. Brief. Execute. Stop hook catches you. Distill. Commit. Repeat. The briefing is enforced (PreToolUse block), the distill reminder fires at the right moment (Stop hook, not PostToolUse). The knowledge base grows. Rediscovery drops.
-
-> *Currently implemented with the [compound-engineering](https://github.com/nichochar/compound-engineering) plugin for Claude Code. The pattern is tool-agnostic — any workflow with plan/execute/review steps can plug in.*
-
----
-
-## Platform Note: Why Blocking Hooks
-
-Non-blocking hooks (`exit 0` + stdout) are silently discarded by Claude Code — the model never sees the output. This is a confirmed platform bug. Filed as [anthropics/claude-code#42250](https://github.com/anthropics/claude-code/issues/42250).
-
-Three key platform findings from empirical testing:
-
-1. **Only error-path output reaches the model** — `{"decision":"block"}` and stderr (exit 2) deliver. All other formats silently dropped. Applies to PreToolUse, PostToolUse, and Stop.
-2. **PreToolUse hooks don't fire on user slash commands** — only on Claude's programmatic Skill invocations. PostToolUse and Stop hooks fire in both cases.
-3. **PostToolUse block delivers without undoing the tool result** — useful for silent side effects (marker files) paired with delivery at a later hook point.
-
-We use PreToolUse to gate `/ce:work` behind `/brief` (Claude invocations), PostToolUse to silently drop a marker after ce:work loads, and a **Stop hook** to catch the agent when work is done and remind about `/distill`. The Stop hook is the timing breakthrough — it fires when the agent is finished, not when a skill loads.
+Brief. Plan. Build. Review. Distill. Commit. Repeat. The knowledge base grows (262 lessons across four projects as of 2026-10-31). Rediscovery drops. The whole flow, step by step: [the playbook](../../../playbook/README.md#the-plays-in-order).
 
 ---
 
 ## Appendix: Engineering the Skills
 
-We ran both `/distill` and `/brief` through Anthropic's [Skill Creator](https://github.com/anthropics/skills) — the meta-skill that turns skill development from vibes into engineering.
+We ran both `/distill` and `/brief` through Anthropic's [Skill Creator](https://github.com/anthropics/skills), the meta-skill that turns skill development from vibes into engineering.
 
 ### A/B Eval Results
 
-Both skills were optimized through the Skill Creator's description optimizer — 5 iterations each, 20 queries, 3 runs per query, 0.4 holdout split.
+Both skills were optimized through the Skill Creator's description optimizer: 5 iterations each, 20 queries, 3 runs per query, 0.4 holdout split.
 
-**`/distill`** — 3 test cases, 6 parallel subagents (with-skill + baseline for each):
+**`/distill`**: 3 test cases, 6 parallel subagents (with-skill + baseline for each):
 
 | Metric | /distill | No Skill | Delta |
 |--------|---------|----------|-------|
@@ -245,7 +170,7 @@ Both skills were optimized through the Skill Creator's description optimizer —
 | **Avg Tokens** | 26.6K | 28.4K | -1.8K |
 | **Avg Lines** | 49 | 101 | -52 |
 
-**`/brief`** — 3 test cases, 6 parallel subagents:
+**`/brief`**: 3 test cases, 6 parallel subagents:
 
 | Metric | /brief | No Skill | Delta |
 |--------|--------|----------|-------|
@@ -253,9 +178,9 @@ Both skills were optimized through the Skill Creator's description optimizer —
 | **Avg Lines** | 83 | 83 | 0 |
 | **Avg Words** | 857 | 792 | +65 |
 
-`/brief` shows minimal quality delta because it's a **read skill** — it surfaces existing insight docs. Without the skill, Claude still finds and reads `docs/insights/`. The value of `/brief` is **convenience** (one command vs manual discovery) and **hook-enforced auto-injection** before `/ce:work` — the blocking hook ensures it always runs. `/distill` shows the large delta because it's a **write skill** — the template enforces structure that Claude doesn't produce on its own.
+`/brief` shows minimal quality delta because it's a **read skill**: it surfaces existing insight docs, and without the skill Claude still finds and reads `docs/insights/`. Its value is that it runs, at the right moment, and stays cheap (a brief takes under a minute). `/distill` shows the large delta because it's a **write skill**: the template enforces structure that Claude doesn't produce on its own.
 
-The skills don't make Claude smarter — they make Claude **consistent**. `/distill` proves this with half the length and perfect structure every time. `/brief` proves a different thing: that the real value of a read skill is in the delivery mechanism (hooks), not the formatting.
+The skills don't make Claude smarter; they make Claude **consistent**. `/distill` proves this with half the length and perfect structure every time. `/brief` proves a different thing: the real value of a read skill is that it runs when the work starts, which is why the next step gets named where the next session starts.
 
 ### What the Baseline Gets Wrong
 
@@ -268,9 +193,9 @@ Without the skill, Claude produces good documentation but with:
 
 ### Windows Bug: `select.select()` on Pipes
 
-While running the Skill Creator's description optimizer, we hit `WinError 10038` — every trigger test returned 0%. Root cause: `run_eval.py` uses Python's `select.select()` to read subprocess pipes. On Windows, `select.select()` only works with sockets, not pipes. Every query silently failed.
+While running the Skill Creator's description optimizer, we hit `WinError 10038`: every trigger test returned 0%. Root cause: `run_eval.py` uses Python's `select.select()` to read subprocess pipes. On Windows, `select.select()` only works with sockets, not pipes. Every query silently failed.
 
-**The fix:** Replace `select.select()` with a threading-based reader — a background thread does blocking reads from the pipe and puts lines into a `queue.Queue`. The main loop pulls from the queue with a timeout. Same behavior, cross-platform.
+**The fix:** Replace `select.select()` with a threading-based reader: a background thread does blocking reads from the pipe and puts lines into a `queue.Queue`. The main loop pulls from the queue with a timeout. Same behavior, cross-platform.
 
 ```python
 # Before (Unix-only):
@@ -285,4 +210,4 @@ def _reader():
 threading.Thread(target=_reader, daemon=True).start()
 ```
 
-Anthropic merged this same fix on March 13, 2026 in `claude-plugins-official`. The `anthropic-agent-skills` plugin hasn't picked it up yet — we applied it locally.
+Anthropic merged this same fix on March 13, 2026 in `claude-plugins-official`. The `anthropic-agent-skills` plugin hadn't picked it up when we applied it locally.

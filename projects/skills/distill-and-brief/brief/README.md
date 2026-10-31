@@ -25,11 +25,11 @@ If no insights exist yet, or nothing matches the topic, the skill says so, lists
 
 The skill's one `!` injection runs `corpus.mjs`, which prints a corpus card capped under 4 KB: counts, frontmatter-field coverage, the ids a frontmatter grep can't see (empty tags, no frontmatter), and the tag vocabulary by use count — never an insight body. (Current Claude Code hands the injection back to the model to run instead of running it at load; the card is the same either way.) The agent then greps the `title:` / `tags:` / `modules:` / `phase:` lines and the filename slugs for the topic (broadening to a body search when fewer than 3 candidates hit), scores the candidates from frontmatter alone, reads the top 5 in full, and checks each against the code. It never injects the corpus itself: at 139 insights the old full dump was ~370 KB, and Claude Code cut it to a 2 KB preview holding insight 001 alone, so every brief silently recalled nothing.
 
-## Enforcement Hook
+## When It Runs in the Flow
 
-A PreToolUse blocking hook (`enforce-brief-before-work.sh`) gates `/ce:work` — the agent can't start work without running `/brief` first. The hook blocks `/ce:work`, tells Claude to run `/brief`, and allows `/ce:work` through on re-run via a marker file (`/tmp/.brief-gate`).
+For sizable work, /brief runs at the start of the job, before the plan, so the plan carries the lessons; and again at the start of each build unit's session, because one brief for the whole job doesn't catch everything a single unit touches. What makes it run is the TODO's START HERE line naming `/brief <topic>`: the session's close writes that line ([squeaky-clean](../../squeaky-clean/SKILL.md) step 1), and the next session starts there. Anyone can also just ask.
 
-This means the agent gets briefed every time, mechanically — no one has to remember, no instructions to skip under task pressure.
+A hook used to hold the `ce-work` build skill until /brief had run. It was retired on 2026-10-31: builds stopped going through `ce-work` in August, so it held nothing, and /brief ran 0 times in main sessions from 09-17 to 10-18 with the hook in place.
 
 ## Installation
 

@@ -66,6 +66,10 @@ Say what happened and what the fix is, then move on. We are a team, not a vendor
 **Sizable work runs the whole flow.**
 Five steps, in order: brief, plan (deepened, then checked as a whole before any build), build, review, distill. The [front door](README.md#the-plays-in-order) explains each step and where it lives. A plan holds decisions, not pre-written code, and every phase of it is deepened before any of it is built. Which tool delivers each step is Claude's call, and that call can change as the tools improve; skipping a step is not.
 
+Work is sizable when it adds new logic (a new script or module, a new engine rule, or any change to a number the product shows) or will take more than one session. Copy, docs, config, and a bug fix that changes no number the product shows and comes with a test that failed first are not. When unsure, it is sizable. (Briggsy, 2026-10-31.)
+
+What keeps the flow running is the TODO: every session's close writes the job's next step, by name, into the START HERE line, where the next session starts. From 2026-10-20 to 10-31 every step a START HERE line named ran; steps left to a standing rule or a hook faded, so there is no hook for this.
+
 **Match the ask and stay on the thread.**
 A written plan is a menu, not an order: when Briggsy asks for a small fix, Claude does the small fix and nothing around it. When a tangent starts eating time, Claude names it and either gets back on track or agrees with Briggsy to change course.
 

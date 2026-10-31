@@ -6,43 +6,49 @@ Sessions about how we work start in this folder: open the terminal in `playbook/
 
 ## The plays, in order
 
-For sizable work, steps 1 to 5 are required, in this order: brief, a deepened and checked plan, the build, the whole-file review, and distill. Steps 6 and 7 close the session: squeaky when you call it, and the handoff when you have named a successor. Which tool delivers a step is Claude's call, made job by job, and it can change when a better tool comes along.
+For sizable work, steps 1 to 5 are required, in this order: brief, a deepened and checked plan, the build, the whole-file review, and distill. Sizable means new logic, or work that will take more than one session ([the full line](principles.md#how-we-work)). Steps 6 and 7 close the session: squeaky when you call it, and the handoff when you have named a successor. Which tool delivers a step is Claude's call, made job by job, and it can change when a better tool comes along.
+
+What keeps the steps running: each session's close writes the job's next step, by name, into the TODO's START HERE line, where the next session starts.
 
 ### 1. Brief
 
-Before work starts on a topic, Claude finds the few past lessons in the project's `docs/insights/` folder that bear on it, checks each one against today's code, and hands back a short list of landmines.
+Before work starts on a topic, Claude finds the few past lessons in the project's `docs/insights/` folder that bear on it, checks each one against today's code, and hands back a short list of landmines. For sizable work it runs at the start of the job, before the plan, and again at the start of each build unit's session.
 
-- **Start it:** "brief me on <topic>", "any gotchas with <topic>?", "what should I know before I start <topic>?", or `/brief <topic>`.
+- **Start it:** nothing to say for sizable work: START HERE names it. You can also say "brief me on <topic>", "any gotchas with <topic>?", "what should I know before I start <topic>?", or `/brief <topic>`.
 - **Lives in:** [projects/skills/distill-and-brief/brief/](../projects/skills/distill-and-brief/brief/SKILL.md)
 
 ### 2. Plan, deepen, then check the plan
 
-Claude writes a structured plan into the project's `docs/plans/` folder, and the planning skill gives it a quick strength check automatically. Deepening is the extra pass on a finished plan: it scores each section, picks the two to five weakest, and sends helper agents (other copies of Claude that Claude starts to do part of a job) to research them.
+Today Claude runs the compound-engineering plugin's `ce-plan` skill from start to finish, and that one run does all three parts:
 
-Then, before any build, the deepened plan gets checked as a whole: skeptical reviewers look for parts that contradict each other, sections a later change left out of date, steps that can't be built, and work nobody asked for. Their fixes go into the plan before any code is written.
+- **Plan:** a structured plan goes into the project's own `docs/plans/` folder. Claude names the path, because otherwise the plugin picks a folder at the top of the whole repo.
+- **Deepen:** it scores every section, picks the two to five weakest, and sends helper agents (other copies of Claude that Claude starts to do part of a job) to research them, folding their findings in without stopping to ask you.
+- **Check:** skeptical reviewers from the plugin's `ce-doc-review` skill read the plan as a whole, looking for parts that contradict each other, sections a later change left out of date, steps that can't be built, and work nobody asked for. Claude checks each finding against the code and puts the fixes into the plan before any code is written.
 
-- **Start it:** "plan <the work>", then "deepen the plan". For the full, broader research pass instead of the quick, targeted one, add "do not use fast path". Claude runs the check itself once the deepen is done, with the compound-engineering plugin's `ce-doc-review` skill or a batch of reviewer agents.
-- **Lives in:** the `ce-plan` skill of the compound-engineering plugin (an add-on pack of skills installed into Claude Code), under `~/.claude/plugins/`.
+Every helper runs on Opus, and only Claude models do the work: the plugin's review pass by another company's model is switched off in the repo's `.compound-engineering/config.yaml`. The plan's commit message says what ran ("planned, deepened and checked"), and the build starts only once the plan's history shows all three. Claude asks `ce-plan` for the plan only, ending after the check (why: step 3).
+
+- **Start it:** nothing to say; Claude starts it for sizable work. You can also say "plan <the work>".
+- **Lives in:** the `ce-plan` and `ce-doc-review` skills of the compound-engineering plugin (an add-on pack of skills installed into Claude Code), under `~/.claude/plugins/`. The plugin updates itself.
 
 ### 3. Build
 
-Claude builds from the plan you approved. Claude also picks how: the `ce-work` build skill, a Workflow script (a script that runs several helper agents side by side), helper agents one after another, or plain hands-on work.
+Claude builds from the plan and picks how: plain hands-on work for pieces that must land one after another, or a Workflow script (a script that runs several helper agents side by side) when the work splits into independent pieces. Both are built into Claude Code and get better with it. Each build unit's session opens with a brief on that unit.
 
 - **Start it:** your go-ahead on the plan. When the answer is clearly yes ([what counts](principles.md#who-decides-what)), Claude checks there is room in its working memory (the context window; see the window check under Always on) and goes without waiting.
-- **Lives in:** the `ce-work` skill of the compound-engineering plugin, when that is the tool. Its brief gate is under Always on, below.
+- **Lives in:** Claude Code itself. The compound-engineering plugin's `ce-work` build skill isn't used: from version 3.34.0 it moves the work off main onto a new branch without asking, and every session shares one copy of this repo on main. So Claude never picks `ce-plan`'s "Start ce-work" option.
 
 ### 4. Review (the deep review we call ultramode)
 
 The deep review at the end of a milestone or feature: whole files, specialist reviewers including one whose only job is to break the code, and every finding checked against the real code before anything is fixed.
 
-- **Start it:** Claude runs it on its own at a milestone. You can also ask for an "ultramode code review", "a deep review before we move on", or "review what we just built".
+- **Start it:** Claude runs it on its own at a milestone. For sizable work, START HERE names it (a whole-file review of everything since the work began, then `/distill`) until it runs. You can also ask for an "ultramode code review", "a deep review before we move on", or "review what we just built".
 - **Lives in:** [projects/skills/ultramode-code-review/](../projects/skills/ultramode-code-review/SKILL.md). Step by step: [how-to/code-review.md](how-to/code-review.md).
 
 ### 5. Distill
 
 Claude writes the hard-won lesson as a short, numbered note in the project's `docs/insights/` folder: the problem, the root cause, the fix, the lesson, and where else it applies. The next brief finds it.
 
-- **Start it:** "distill", "capture this", "write it up", "before we forget", or `/distill`. The review runs it as its last step, and the Stop gate (below) reminds Claude after a build or review skill.
+- **Start it:** "distill", "capture this", "write it up", "before we forget", or `/distill`. For a job done in one session, the review runs it as its last step. A longer job saves its lessons in the TODO's DISTILL CANDIDATES list, and START HERE names the one `/distill` that writes them, right after the job's closing review.
 - **Lives in:** [projects/skills/distill-and-brief/distill/](../projects/skills/distill-and-brief/distill/SKILL.md)
 
 ### 6. Squeaky (close the session)
@@ -65,8 +71,6 @@ These fire by themselves, except the window check, which Claude runs itself at c
 
 - **The manifesto at session start.** Every new session opens with the Elite Engineer Protocol loaded in full: the quality bar, the rules, and the test before any "done". A warning block comes with it only when a hook names a skill or script that isn't there, or a skill link is broken. [elite-engineer.md](../projects/hooks/elite-engineer.md) · [elite-engineer-session-start.sh](../projects/hooks/elite-engineer-session-start.sh) · [check-config-liveness.mjs](../projects/hooks/check-config-liveness.mjs)
 - **The WebFetch blocker.** Claude's built-in page fetcher has no time limit and can hang forever, so it is blocked. Claude uses the gemini-grounding search tool (a web search that answers with its sources) or `curl` (a plain command-line page fetcher) with a 15-second limit instead. [block-webfetch.sh](../projects/hooks/block-webfetch.sh)
-- **The brief gate.** When Claude starts the `ce-work` build skill, it is held until `/brief` has run. A build done another way (a Workflow script, helper agents) passes no gate, so there the brief is on Claude. [enforce-brief-before-work.sh](../projects/hooks/enforce-brief-before-work.sh)
-- **The distill reminder and Stop gate.** After the `ce-work` build skill or a code review skill (`ce-code-review` or `ultramode-code-review`), a flag is set. When Claude next tries to finish its reply, it is stopped once and told to run `/distill`, or to say nothing was worth writing down. A build or review done another way (a Workflow script, helper agents) sets no flag, so there the distill is on Claude. [remind-distill-after-work.sh](../projects/hooks/remind-distill-after-work.sh) · [stop-distill-gate.sh](../projects/hooks/stop-distill-gate.sh)
 - **The status line.** One line Claude Code refreshes after each reply: the model, the folder, the git branch, how full the context window is, how much of the 5-hour and weekly Claude usage limits is used, tokens (the units Claude's usage is counted in) this session and all time, how long the session has run, and the effort level (how hard Claude is set to work, from low to max). It lives in Claude's private config, at `~/.claude/statusline.py`.
 - **The window check.** A one-line answer to "how full is the context window?" Claude runs it at natural checkpoints without being asked; you can type `/window` or ask "how's the window?". It names the line you've reached (40%, 50% or 60%) and what that means; the details are on the [cheat sheet](cheat-sheet.md#during-the-session). It never runs `/context`, whose big table can't be scrolled on a phone. [projects/skills/window/](../projects/skills/window/SKILL.md)
 
@@ -83,6 +87,6 @@ These fire by themselves, except the window check, which Claude runs itself at c
 
 - **Hooks:** [projects/hooks/](../projects/hooks/) holds the source; its [README](../projects/hooks/README.md) explains each hook. The live copies run from `~/.claude/hooks/` and match the source byte for byte: a change edits both, then compares them.
 - **Skills we built:** [projects/skills/](../projects/skills/) holds brief and distill, squeaky-clean, ultramode-code-review, window and doc-audit. Claude Code loads them from `~/.claude/skills/`.
-- **Plugin skills:** `ce-plan` and `ce-work` come from the compound-engineering plugin, installed under `~/.claude/plugins/`.
+- **Plugin skills:** `ce-plan` and `ce-doc-review` come from the compound-engineering plugin, installed under `~/.claude/plugins/`. It updates itself; its settings for this repo are in [.compound-engineering/config.yaml](../.compound-engineering/config.yaml).
 - **Lessons:** each project keeps its own `docs/insights/` folder, with the lessons that project's work discovered. `/distill` writes to it; `/brief` reads from it. For example: [the-back-nine](../projects/the-back-nine/docs/insights/), [burned](../projects/burned/docs/insights/), and [this folder's](docs/insights/), about how we work. Each one names the files it is about.
 - **Claude's private memory:** under `~/.claude`, outside this public repo.

@@ -38,14 +38,15 @@ When invoked, the skill dynamically:
 
 The `!` backtick syntax in SKILL.md marks those two shell commands. Current Claude Code hands each one back to the model to run exactly as written (an `[output of command N, …]` placeholder) instead of running it at skill load; the output is the same either way. Never put a dollar sign followed by a digit anywhere in SKILL.md: Claude Code replaces it with a /distill argument before the shell or the model sees it (the comment above the Next Number command says how to escape one).
 
-## Enforcement Hooks
+## When It Runs in the Flow
 
-Two hooks work together to enforce /distill at the right moment:
+- **A job done in one session:** the deep review's last step ([ultramode-code-review](../../ultramode-code-review/SKILL.md) step 7) runs /distill once the findings are in.
+- **A job that spans sessions:** each session's close adds the lessons it paid for to the TODO's DISTILL CANDIDATES list, and START HERE names /distill right after the job's whole-file review, so the job's lessons are written in one batch.
+- **Any time:** "distill", "capture this", "write it up".
 
-1. **`remind-distill-after-work.sh`** (PostToolUse) — silently drops a marker file (`/tmp/.distill-needed`) when `/ce:work` or `/ce:review` loads. No output.
-2. **`stop-distill-gate.sh`** (Stop) — fires when Claude tries to finish responding. If the marker exists, blocks with "run /distill." This fires when work is actually DONE, not when the skill loads.
+If nothing non-obvious surfaced, the agent says so and moves on.
 
-If nothing non-obvious surfaced, the agent says so during /distill and moves on.
+A pair of hooks used to remind Claude with a Stop-hook block after a build or review skill. They were retired on 2026-10-31: the reminder fired when the review skill *loaded*, not when the review ended, so in the 6 review sessions checked from 10-20 to 10-31 it interrupted a review still running every time, and 5 of the 6 were waved off.
 
 ## Installation
 

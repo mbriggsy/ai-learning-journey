@@ -1,0 +1,5 @@
+# Compound Engineering plugin settings for this repo (Briggsy, 2026-10-31).
+# Never send a plan, document or diff to another company's model: no Codex,
+# no other vendor (his ruling, 2026-10-19). This turns off the cross-model pass
+# in both ce-doc-review and ce-code-review.
+cross_model_review_mode: off

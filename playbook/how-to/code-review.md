@@ -11,7 +11,7 @@ The deep review we run when a piece of work is done: whole files, several specia
 Not for:
 
 - A one-line or trivial change. Just read it.
-- Posting review comments on a GitHub pull request (a proposed change waiting to be accepted on GitHub). That is `/code-review`.
+- A quick check of just the changed lines, or review comments posted on a GitHub pull request (a proposed change waiting to be accepted on GitHub). That is Claude Code's built-in `/code-review`.
 
 ## How to ask
 
@@ -36,7 +36,7 @@ Say any of the phrases above, or type `/ultramode-code-review` followed by what 
    - at least one attacker, who tries to make the code give a confidently wrong answer
 4. **Has skeptics check every finding against the actual code.** A confident finding is a guess until it is checked. Each finding gets one to three skeptics, the number rising with how serious it is, and each skeptic answers five things separately: is it real, can it cause a wrong result or real harm, did existing tests or reviews already catch it, how serious is it really, and is the suggested fix itself right? Many reviewers agreeing on a fix does not prove the fix, so the fix gets checked as its own question. Most splits follow the majority. Claude reads the code itself and decides when the skeptics tie, when too few answer, or when even one says the problem is real and not already caught while the rest disagree. A skeptic that crashes counts as no vote, never as a no.
 5. **Fixes only what is real, can cause harm, and was not already caught by existing tests or reviews,** with the smallest change that does the job, then runs the project's full checks: the type check (a quick automatic test that the code's pieces fit together), the tests, and whatever else its `CLAUDE.md` lists.
-6. **Writes the lesson down** with `/distill`, as a new file in the project's `docs/insights/` folder, so the next review starts smarter.
+6. **Writes the lesson down** with `/distill`, as a new file in the project's `docs/insights/` folder, so the next review starts smarter. In a job that spans several sessions, the lesson waits in the TODO's DISTILL CANDIDATES list instead, and the job's one `/distill` writes them all right after its closing review.
 
 House rules on every review:
 

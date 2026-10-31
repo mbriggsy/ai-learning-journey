@@ -22,24 +22,25 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-10-31, written by b9-9 for b9-10): the pay check's whole-file review is LANDED at `2c36e6f4`** (CI run
-41174108996 green on both jobs, `verify` — which runs `verify:fit` and `verify:csp`, so the harness lane's fit changes and the
-picture's new streak line hold there — and `verify-rv-chart-text`; read by id). The review's record,
-with every repro, mutant spec and the merged fix list: `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-whole-review\FIXES.md`
-(its `README.md` indexes the folder; `pre\`, `pre-a4\`, `head\` and several lens folders hold `node_modules` JUNCTIONS — remove each
-link alone before deleting any folder there). Rulings 38–42 are in `b9-phaseb\DECISIONS.md`; the spec's new section *The whole-file
-review (Phase C, …)* records it. U10's Caddie card stays **HARD-FLAG** on its two Tier 1 builds (unchanged). Phase C's
-`/distill` is DONE (b9-10, 2026-10-31): insights 144–148, and dated extensions on 22 older ones. Next, in order:
-1. **Measure h2 in real Chromium** (the review's one unsettled finding; its two refuters split on existence). The W figure's
-   blur-commit un-stales W, so the stale note above the figure unmounts (the walk) or the money picture mounts above the question
-   (the panel) between the period radio's mousedown and mouseup — if the layout moves under the pointer, the unit tap is lost and a
-   figure typed for a month stays yearly (12× low, rosy; under $8,000 the period rule never asks). b9-9's probe
-   (`b9-paycheck-whole-review\coordinator\tapProbe.mts`: `?seed=datecoststale` → panel → Keep → PA → type 7000 → a coordinate tap on
-   Month / Year, at 1536×791 @2.5 and a 390×844 phone) hung beside the full suite and was stopped — run it ALONE, against its own
-   `pnpm dev --port 5199`, and fix its leak first (each failed run leaves a browser: put `browser.close()` in a `finally`). If a tap
-   is lost: the insight-035 cure is layout-side (keep the stale note's box until pointerup, or defer the panel's face swap), never a
-   new commit path for every period tap; pin it with a coordinate-tap `verify:fit` arm. If no tap is lost on either device, record
-   it on the spec's review section and close it.
+▶ **START HERE (2026-10-31, written by b9-10 for b9-1): the pay check's Phase C is closed but for one cure.** The whole-file
+review landed at `2c36e6f4` (CI run 41174108996 green on both jobs) and its `/distill` at `0fc79987` (insights 144–148, dated
+extensions on 22 older ones; CI run 41206358779 green on both jobs, read by id). **h2 is measured: REAL, on
+screens taller than his.** In real Chromium every coordinate tap on the W figure's month/year choice lands on his 1536×791
+window, his whole 1536×960 screen and his 448×891 phone (scroll anchoring moves the scroller before the release), but a
+1536×1300 window and a 1024×1366 touch screen miss, and a monthly figure runs 12× low, unasked. The record: the register's new
+Tier 0 entry, the spec's review section's h2 bullet, and `b9-paycheck-whole-review\coordinator\tapProbe2.mts` with its
+`h2-results-run1..4*.jsonl` (FIXES.md's h2 line). The review's record, with every repro, mutant spec and the merged fix list:
+`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-whole-review\FIXES.md` (its
+`README.md` indexes the folder; `pre\`, `pre-a4\`, `head\` and several lens folders hold `node_modules` JUNCTIONS — remove each
+link alone before deleting any folder there). Rulings 38–42 are in `b9-phaseb\DECISIONS.md`. U10's Caddie card stays
+**HARD-FLAG** on its two Tier 1 builds (unchanged). Next, in order:
+1. **Build the h2 cure** — the register's Tier 0 *On a screen taller than his laptop's, a tap on "Each month" right after typing
+   the working-year figure can miss…*; its Prescription IS the build: a gesture hold in a new `src/intake/gestureHold.ts`, set on a
+   `pointerdown` inside the face and cleared on the `click` (never on `pointerup` — touch blurs after the finger lifts), read by
+   `WorkingCostQuestion.tsx`'s stale note and `AssumptionPanel.tsx`'s `WorkingCostRow` picture; four coordinate-tap `verify:fit`
+   arms (1536×1300 mouse, 1024×1366 touch; walk and panel), each with its non-vacuity floor, mutant-proven. Load the four UI
+   design skills first. The witness before and after: `tapProbe2.mts walkStaleLow panelStaleLow tall talltouch` (all four miss
+   today; all must land after), run ALONE against its own `pnpm dev --port 5199 --strictPort`, started harness-tracked.
 2. **Rank the registers against the D7 queue** (his order; never re-ordered without him) — b9-8's list, unchanged, plus the review's:
    - **b9-5's four.** Tier 0 *A self-employed worker's Social Security and Medicare tax is charged at an employee's half…*
      (a D7 ask; measure first). Tier 1: *The money picture's later years name a change without its dollars or its
@@ -82,7 +83,8 @@ review (Phase C, …)* records it. U10's Caddie card stays **HARD-FLAG** on its 
      - the two-unpriced-states entry.
 
      U11 amended K6's and K7's text and left their tiers alone. K5 rides the Tier 2 birth-month entry. The register also keeps
-     narrow rosy entries in Tier 2 (Philadelphia's School Income Tax, PA's inheritance tax). Rule it by the header's "worst
+     narrow rosy entries in Tier 2 (Philadelphia's School Income Tax, PA's inheritance tax), and b9-10 filed the h2 entry in Tier 0
+     though no device of his reaches it (the rule decides that one too). Rule it by the header's "worst
      consequence, never by size". Either move all four up, or move §219(g) and the catch-up back down. Then write the rule
      into the register header so it stops being re-derived.
 3. **Build 2, the surplus question**, follows. The council's shape is on the ⚑ RULED bullet of the CLOSED Tier 0 *A working
@@ -103,27 +105,29 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-10-30/31 (b9-9, the pay check's whole-file review):** by exit code at this close, on the committed tree:
-`pnpm typecheck` 0; `pnpm lint` 0; the full suite (`pnpm test`) green but for one red during the run (the live-docs citation arm, read before the
-re-anchor landed), green on its re-run alone — the counts live under `verify:doc-stats`; `pnpm verify:doc-stats` 0;
-`pnpm build` 0; `pnpm verify:bundle` 0 (initial JS 288.5 KiB of 300). `pnpm doc:reanchor HEAD --apply` moved 355 citations; its three
-REVIEW cites were settled by hand (two `AssumptionPanel.tsx:423` → `:416`, one left: it names `healthOverlay.test.ts`'s lines);
-`docs/council-log.md` was restored as it was. `verify:fit`, `verify:csp` and `verify:fit:rv` ran only on CI — green in run
-41174108996 — so the harness lane's two fit changes (a figure-count floor on the picture's clip audit; the `dateshort` arm reading
-its words from the catalog) and the picture's new "Still short, as in {year}" line on `dateshort`'s later years hold there.
+**SESSION 2026-10-31 (b9-10, Phase C's distill and h2):** by exit code at this close, on the committed tree: `pnpm typecheck` 0;
+`pnpm lint` 0; `pnpm verify:doc-stats` 0 (the register header at its new count, all 148 insights indexed, every citation
+resolving); the full suite 6 red of 4748 at the close — every one a test that timed out in a 616 s run (the same tree ran 296 s earlier); the 6 files re-run alone 0 (56 of 56) — the counts live under `verify:doc-stats`. `pnpm build`, `verify:bundle`, `verify:fit`,
+`verify:csp` and `verify:fit:rv` were not run: no `src` change since `2c36e6f4` but two comment-only lines in `0fc79987` (the
+exhaustiveness comments now cite insight 147). The h2 probe's port 5199 server was this session's and is stopped.
+**DISTILL CANDIDATES (for the next `/distill`):**
+- (b9-10) a probe that scrolls its target into view tests the geometry the browser already cures. Chromium's scroll anchoring moved
+  the scroller by exactly the shift on every run where the anchor node sat below the change and the scroller had room to move
+  back (19 of 19 on his devices), so the first measurement read "no tap lost". The miss lives where the changing content, or
+  something above it, shares the screen with the target, or where the scroll offset is smaller than the shift — a taller screen
+  (4 of 5 missed there, mouse and touch). Before "no tap lost", pin the target LOW (the most content above it on screen) and run
+  the tallest screen the face can meet; record the scroll offset and what was on screen beside the verdict.
 **LANDMINES from this session:**
-- **`gh run list --commit` needs the FULL 40-character sha.** A short one (`--commit 2c36e6f4`) returns `[]` with no error, so b9-9's
-  wait-for-CI loop never saw its run and spun for about six hours after CI had gone green. Pass `git rev-parse <sha>`, or find the
-  run by `gh run list --limit 5 --json databaseId,headSha`, and give every wait loop a deadline that fails loud.
-- **A subagent cannot write a file named like a report** (`REPORT.md`): the harness's guard refused it in all three fix lanes. Ask
-  for the depth in the return value or a differently named file.
-- **Fix lanes in COPIED trees merge cleanly** (`git merge-file -p <laneA file> <frozen HEAD file> <laneB file>` for the one file two
-  lanes shared): freeze HEAD first (`git archive HEAD … | tar -x`), point every lane and verifier at the frozen copy, and edit the
-  live tree only yourself — insight 083's coupling never reached it.
-- **The mutation runner's spec path must be ABSOLUTE** (`b9-phaseb-review\b9-4-mutants\mutants-named.cjs`): it writes its vitest
-  JSON beside the spec, but runs vitest with `cwd` = the tree copy, so a relative spec path reports "no report (baseline)".
-- **In Git Bash, `cmd //c mklink /J "<path>" "<target>"` fails with "Invalid switch"**; make a junction from PowerShell
-  (`New-Item -ItemType Junction -Path <link> -Target <target>`).
+- **tsx (esbuild keepNames) wraps a NAMED function declared inside a Playwright page callback in `__name(…)`**, which the page does
+  not have: "ReferenceError: __name is not defined" killed the first h2 run. Keep `evaluate` callbacks free of named inner
+  functions (inline arrows passed to `map` / `find` are fine).
+- **Every stage of a Monitor pipe must flush per line:** `grep --line-buffered … | cut -c1-600` held every event in `cut`'s
+  buffer, so the first probe monitor never fired. Drop the trailing filter or line-buffer it.
+- **`TaskStop` on a background shell ends the harness's shell, but on Windows the child tree can outlive it.** The probe's
+  pnpm → tsx → node → chrome-headless-shell tree exited within seconds; the `pnpm dev --port 5199` server's `vite.js` (under a
+  `cmd.exe`) kept the port for ~25 minutes until stopped by pid. After every `TaskStop`, check the port
+  (`Get-NetTCPConnection -LocalPort <port> -State Listen`), `Get-Process chrome-headless-shell` and the node command lines, and
+  stop this session's survivors by pid.
 
 **THE A7 REVIEW (durable, 2026-10-29):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a7-review\`
 — `brief.md` (the review's contract brief, a template for Phase C's), every lens's repros in its own folder, `a7-tools\` (A7's
@@ -180,7 +184,7 @@ re-point each script's output path off the dead session scratchpad before runnin
 - **States:** the priced roster stays NC, PA and FL "for now" (his ruling 2026-10-21). His generic-state idea (ask the state's rate, and whether it taxes Social Security) is filed on *Unpriced states — a confident winner computed with zero state income tax*.
 - **The pilot's working rule (a HOW call, not his ruling):** no new process or tooling work unless a D7 build needs it. October ran 55 docs/bookkeeping commits to 17 features; that ratio is part of what took us off course.
 **WHERE THE SOLVE STANDS (carried from b9-6; the RIB-LIM clause added 2026-10-27, b9-11):** ONE pricing change since the 2026-10-12 (b9-2) close — ledger v12, the working-year tax floor (`b4bbbd3e`): a reprice of `tax` + NC's `stateTax` gated row-wide on `reach: 'working-years'`, UNSCORED (the solver runs only on the all-retired spine, so it left `SOLVER_CODE_VERSION` at 11; the date-route Roth preview moves, unpersisted); no roster change — THE POOL (`225d8da4`, laws in `docs/architecture.md`'s *The pooled solve*), the all-in objective (v10, `6dab9ec0`), the budgetless survivor-medical lean (v11, `c1ada867`; a scored spend-side pricing change, no roster change), then — no ledger row — the RIB-LIM order (`SOLVER_CODE_VERSION` 12, 2026-10-27, the current one: survivor income where a member claims before FRA, and a dime or two lower on a PIA with odd cents; measured on `healthss`, both goals, crown / runner-up / grade / top five unmoved), the v9 window walk, rosters `retired`-type 93 / `health` 97 / `healthgap` 101; THE APP (production, his laptop, P = 12): `retired` 36.5 s · `nc` 39.8 s · `healthnc` 150.9 s (ANY roster growth re-times `healthnc` first, `e2e/held/solve-timing.spec.ts`). The PHONE half of the pending-line entry is still owed (a ≤ 3-core device gets no pool).
-**UNFINISHED:** the distills are DONE through the pay check's Phase C (2026-10-31, b9-10: insights 144–148 and dated extensions on 22 older ones; the candidate block is retired — the re-tier candidate's rule is START HERE's ranking item, and the cohort-bound candidate was dropped as the constants discipline's own). Still open from the 2026-10-21 pass: move the re-anchor verification scripts (`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-reanchor-verification-tools\`, now with `content-check.mjs` — b9-9's cited-line content check) into the repo beside the register Tier 4 re-anchor entry, so they stop living only in a session folder.
+**UNFINISHED:** the distills are DONE through the pay check's Phase C (2026-10-31, b9-10: insights 144–148 and dated extensions on 22 older ones; that candidate block is retired; b9-10's close starts a new one — the re-tier candidate's rule is START HERE's ranking item, and the cohort-bound candidate was dropped as the constants discipline's own). Still open from the 2026-10-21 pass: move the re-anchor verification scripts (`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-reanchor-verification-tools\`, now with `content-check.mjs` — b9-9's cited-line content check) into the repo beside the register Tier 4 re-anchor entry, so they stop living only in a session folder.
 **OWED (carried from b9-6):** to HIM — the "Income Medicare looks at" heading (⚑, `docs/council-log.md` 2026-10-20 — the figure now also sets the income-tax base). The NIIT clause's "here" is no longer a word call: under D7 the surtax gets figured (queue 3), and the clause goes. OWED (both carried from b9-2, still live): (a) the engine measurement of the discount a crossing dollar loses, for the scope entry (Tier 0 *The health sheet's "26¢ on each dollar converted" holds only inside the ~$18,600 of room…*) — only hand figures exist, from the 2026-10-15 early-claim Caddie walk's hunter in b9-toronto1 (`healthss` $9,479 at the anchor; about $8,374 at the ~$84,600 line, the same on `healthnc`'s line — both seeds carry `slcspMonthlyToday` 1,400); measure through the engine on `healthnc`, `healthgap` (the register's Prescription (1) names it — its cliff is live, "about 2 of 10 futures") and `healthss` (a paired CRN run across the line, the anchor year's readout) before his words; (b) the Caddie tape rows awaiting his read — 2026-10-06 all-in, 2026-10-09 survivor-medical, 2026-10-14 survivor spending-basis, and 2026-10-15's four (held-flat, NC cents, early-claim cents, the same-age Medicare card), 2026-10-16's one (the one-figure card's first-year frame + his trend clause), 2026-10-16 (b9-1)'s one (his three rulings + his two in-session rulings), and 2026-10-19 (b9-2)'s one (his four b9-1 walk rulings + his in-session Medicare re-ruling), and 2026-10-21 (b9-6)'s one (the working-year tax row, three walks — his in-chat reads of its DRAFTS are on it as E20, not a read of the shipped face) — `docs/caddie/tape.md`.
 **Keep out of every commit from here:** the three family-feud working files (`../family-feud/newsletter/…`) are uncommitted on purpose; never stage them from this project.
 
@@ -771,6 +775,15 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 
 *Engineering lessons live in [`docs/insights/`](docs/insights/) (one file per lesson; cite by full path + slug).
 These are the mechanical ones that keep costing hours.*
+
+- **From the b9-9 close (2026-10-31), migrated by b9-10:**
+  - `gh run list --commit` needs the FULL 40-character sha (the b9-toronto2 bullet below): it bit again, and b9-9's CI wait spun
+    about six hours after green. Pass `git rev-parse <sha>`, and give every wait loop a deadline that fails loud.
+  - A subagent cannot write a file named like a report (`REPORT.md`): the harness's guard refused it in all three fix lanes. Ask
+    for the depth in the return value or a differently named file.
+  - Fix lanes in frozen `git archive` copies, merged with `git merge-file -p <lane A> <frozen HEAD> <lane B>`; an ABSOLUTE spec
+    path for the mutation runner (it runs vitest with the copy as `cwd`); junctions from PowerShell, never Git Bash's
+    `cmd //c mklink /J` ("Invalid switch") — all three now live in insight 148's Key Insight and its landmines.
 
 - **From the b9-8 close (2026-10-30), migrated by b9-9:**
   - `verify:doc-stats`'s citation arm checks only CODE targets: its `CITATION` regex has no `.md`, so a doc-to-doc citation such

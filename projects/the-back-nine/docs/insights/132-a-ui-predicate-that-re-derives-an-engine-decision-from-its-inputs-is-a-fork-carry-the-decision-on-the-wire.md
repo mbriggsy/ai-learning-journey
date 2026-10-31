@@ -3,7 +3,7 @@ title: "A UI predicate that re-derives an engine DECISION from the engine's INPU
 date: 2026-09-13
 phase: Act 4 hardening (the sibling-sheets Caddie walk, Card 8 — the walk's calm-but-wrong)
 modules: [src/ui/healthSheetChrome.ts, src/ui/copy.ts, src/engine/taxOverlay.ts, src/engine/simulate.ts, src/shared/model.ts, src/ui/__tests__/healthSheetChrome.test.ts, src/ui/__tests__/healthSheetSeedGate.test.ts, src/engine/__tests__/healthReadout.test.ts]
-tags: [calm-but-wrong, medicare, irmaa, readout-wire, single-source, proxy-by-derivation, council, caddie, trend, fixtures]
+tags: [calm-but-wrong, medicare, irmaa, readout-wire, single-source, proxy-by-derivation, council, caddie, trend, fixtures, fra-year-exemption, held-back-reason, classifier-order]
 ---
 
 ## Problem
@@ -41,3 +41,17 @@ When a surface needs a fact the engine DECIDED — who is enrolled, who is price
 - The date route: the readout is absent there by contract, so nothing may be derived — the sheet's only Medicare surface is `showMedicarePricedNote`.
 - Any readout field that reports a household MEDIAN without the count it was taken over (a per-person figure quoted as a household one, or the reverse): report the denominator on the wire beside the numerator.
 - The residuals the council filed as the SAME defect, not polish: the step card's per-person ×1 figure now sits under a household-era headline (register entry *The step card's per-person ×1 figure sits under the household-era headline*), and the loud figure is Part-B-scoped while the engine charges ~2× that in premiums once the extras count (register entry *The premium card's loud figure is Part-B-scoped…* — a framing fork, his eye).
+
+## Extended (2026-10-31) — the same law inside the engine: key a rule and its words on the decision itself
+
+- **The FRA-year exemption (b9-12).** "Starts this year" is not "starts at FRA": the exemption has to key on how the
+  engine PRICED the benefit (unreduced = begun at FRA), never on its start year. A spousal excess the other spouse's
+  filing starts that year is priced as the payee's early claim, and an own claim at 67 was shielding a widow(er)
+  benefit begun years before — the review's two confirmed rosy holes (`wf_bb2c6dec-c1c`).
+- **The held-back reason (b9-4).** "Each month held back raises the benefit later" was the law's general case, false
+  in the FRA year (the stopgap credits none) and for a payee past FRA. `heldBackReason` now classifies each month on
+  the crediting test itself (the settle's own ages), so the words and `creditMonths` cannot disagree; a hand-derived
+  fixture caught the pilot's own wrong guess (the widow's FRA-year excess was $0: 11/12 of $60,000 sits under the
+  higher exempt amount). The whole-file review (b9-9, c1) then found its first branch reading `!deducted` before the
+  payee's age — a past-FRA payee under a worker's FRA-year stopgap read "until the birth month" — fixed to read
+  past-FRA first. Even a classifier that reads the decision must read it in the decision's own order.

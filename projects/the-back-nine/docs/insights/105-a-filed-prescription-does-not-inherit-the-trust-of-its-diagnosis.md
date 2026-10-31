@@ -3,7 +3,7 @@ title: A filed prescription does not inherit the trust of its diagnosis — audi
 date: 2026-07-27
 phase: U17 — the S5 residue sweep (the pre-work before S6)
 modules: [TODO.md, src/ui/styles/recommendation.css, src/ui/__tests__/recommendationSaveGesture.test.tsx, src/ui/devSeeds.ts, .claude/workflows/caddie.js]
-tags: [process, queue, prescriptions, verification, mobile-first, mutation-testing, dev-seeds, insight-017]
+tags: [process, queue, prescriptions, verification, mobile-first, mutation-testing, dev-seeds, insight-017, entry-premise, impossible-household]
 ---
 
 ## Problem
@@ -85,3 +85,10 @@ written, believed somewhere it is not. It also sharpens insight 086: when splitt
 re-point every consumer *and* re-check every note that described the old shape. And it is
 insight 017 at build altitude — 017 found the same law inside a doc-review fold (even confirmed
 prescriptions need source-verification before folding), this one inside a filed queue entry.
+
+## Extended (2026-10-29, Phase B, b9-1) — a register entry's PREMISE is checked before its size is measured
+
+The Tier 1 premium entry assumed a marketplace spouse beside a worker — a household the intake refuses outright
+(`employerCoverageUnpriced`). The real shape, her share of the plan at work inside an ENTERED W, changed the remedy
+from an engine step to words. A diagnosis inherits no more trust than its prescription does: before measuring an
+entry's size, check the household it describes can exist in the code.

@@ -3,7 +3,7 @@ title: A rule written to kill an over-alarm must be checked in the silencing dir
 date: 2026-07-25
 phase: Act-4 · U17 S4 (the exposure-gated action-warning register)
 modules: [src/store/staleness.ts, src/ui/stalenessExposure.ts, src/intake/intakeMap.ts]
-tags: [alarm-when-fine, silent-stale, exposure-gate, vintage-stamp, producers-output, calm-but-wrong, pilot-ruling]
+tags: [alarm-when-fine, silent-stale, exposure-gate, vintage-stamp, producers-output, calm-but-wrong, pilot-ruling, new-control, both-directions, keep-door]
 ---
 
 ## Problem
@@ -81,3 +81,11 @@ clock), 102 (a transplanted contract carries words but not premise — the same 
 premise-not-checked failure, one layer down in the schema), 088 (read the producer of the run the
 surface describes — the law S4's gates are built on, and which the pilot over-applied once by
 forgetting the unlock gate has no crowned run to describe).
+
+## Extended (2026-10-30, the Phase B Caddie re-walk) — a fix that adds a CONTROL has its own rosy direction
+
+b9-5's Keep door closed one rosy path (the easy Yes cut W when spending fell) and, read cold as the stale note's only
+visible action, opened its mirror: a one-tap keep BELOW today's spending where spending rose. The gate that cured it
+(the door shows only at or above the quote) came from the second panel's first-look seat, not the chair. A control is
+a rule a reader applies: re-read every new control in BOTH directions of the quantity it moves, the same way this
+insight checks a suppression rule in its silencing direction.

@@ -3,7 +3,7 @@ title: "An 'externally derived' fixture is independent only along the axis its S
 date: 2026-09-25
 phase: Act 4 hardening (the frozen-nominal Tier 0 — the senior bonus's per-person phase-out, found by that build's statute check)
 modules: [src/engine/taxCore.ts, src/engine/constants/tax.ts, src/engine/__tests__/taxOverlay.test.ts, src/engine/__tests__/magiLandscape.test.ts, src/engine/constants/__tests__/constants.shape.test.ts, docs/research/engine-validation-and-tax.md]
-tags: [dnd-012, externally-derived, fixtures, oracle-independence, primary-source, irs-forms, senior-bonus, obbba, phase-out, calm-but-wrong, rosy-direction, landmine-comments]
+tags: [dnd-012, externally-derived, fixtures, oracle-independence, primary-source, irs-forms, senior-bonus, obbba, phase-out, calm-but-wrong, rosy-direction, landmine-comments, no-oracle-claim, poms-underline, self-referential-oracle, ties]
 ---
 
 ## Problem
@@ -67,3 +67,15 @@ against the primary before it becomes a pin.
   the rule. The review's statute lens caught it before commit.
 - Insight 135's lesson ("frozen" means nominal, so deflate) came from the same kind of read. Both defects
   lived in documents that described the law, while the code or the fixtures encoded a paraphrase of it.
+
+## Extended (2026-10-27, the RIB-LIM reorder) — "no oracle exists" is a claim too; and a property that calls the function
+
+- **b9-10.** `ss-computation.md` said no oracle covered the RIB-LIM × age-reduction order and pinned the engine's
+  order as deliberate. The RS 00615.322 D worksheet's chart is that oracle — its payable cell is a `poms-underline`
+  span, which a plain-text scrape drops — and the order was backwards (the gloomy direction; $623.40 a month where the
+  law pays $755.70). A decision record's "no oracle exists" is a claim to check at the primary, rendered, not
+  scraped.
+- **b9-11.** A property test whose oracle calls the function under test certifies that shared arithmetic, not the
+  rule: say what it pins (the composition) and pin the rest by hand goldens. And count a chart row "reached" only on
+  strictly ordered amounts — a $0 PIA ties all three, so it reaches every row and proves none. Both were
+  mutant-proven.

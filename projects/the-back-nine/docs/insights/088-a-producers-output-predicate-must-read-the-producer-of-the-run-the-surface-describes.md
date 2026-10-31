@@ -3,7 +3,7 @@ title: A producer's-output predicate must read the producer of the run the surfa
 date: 2026-07-17
 phase: Act 3 (oracle lane — the O16 reconciliation pass, the ultramode fold's P1)
 modules: [intake/intakeMap, ui/Result, engine/dateSearch]
-tags: [producer-output, insight-081, predicate, date-route, window-gating, disclosure, preview]
+tags: [producer-output, insight-081, predicate, date-route, window-gating, disclosure, preview, input-vs-output-surface, draft-reading, scope-label, per-reading]
 ---
 
 ## Problem
@@ -58,3 +58,17 @@ comment was doing load-bearing work the field couldn't support.
 - Insight 080's family tree: 080 (a second producer of a flag), 081 (inputs vs output),
   088 (base producer vs transform output) — each is "the predicate and the run diverged at a
   seam nobody re-checked."
+
+## Extended (2026-10-31) — input surfaces read the draft; output surfaces read the producer, per reading
+
+Two Phase B cases sharpen which producer a surface must read:
+- **Ruling 5 (b9-1).** KTD18 took the W question's state reading from the BUILT run, which is `undefined` on any
+  unbuildable draft — so the W step would have told an NC household the opposite of the spend step, and staled its
+  answer when a skipped question was filled. An INPUT surface reads the draft (`spendHelpKeyFor`'s doctrine), the same
+  source as its sibling input surface; an OUTPUT surface reads the producer of the run it describes. Decide which a
+  new surface is before copying a sibling's predicate.
+- **The re-walk (b9-5).** "Income tax on that income" read as every income tax where the run charged federal only. A
+  label is a claim about scope, and the producer owns scope: the fix read the run's own state slice. The chair's first
+  rule (point at W only where the slice is $0) was wrong for PA, whose run prices its tax on investment income and
+  leaves its tax on pay to W. A real-seed arm per reading (NC / PA / unpriced / FL) caught it before landing. Key the
+  words to what the producer did, per reading — never to one inferred proxy ([[147]] types that partition).

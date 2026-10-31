@@ -3,7 +3,7 @@ title: A copy string that promises an affordance is a UI contract — pair every
 date: 2026-07-22
 phase: U16 recommendation surface (ultramode fold)
 modules: [src/ui/Result.tsx, src/ui/RecommendationSurface.tsx, src/ui/copy.ts]
-tags: [copy-contract, affordance, stranded-state, stale, compute-error, blocked, dead-end, calm-but-wrong]
+tags: [copy-contract, affordance, stranded-state, stale, compute-error, blocked, dead-end, calm-but-wrong, hint-rewording, control-routing]
 ---
 
 ## Problem
@@ -52,3 +52,10 @@ Every future solve-channel state (U17's re-entry copy explicitly promises
 re-validation); the vault unlock/staleness notes; any "adjust it in your
 assumptions" disclosure — each names a door that must exist on every surface the
 sentence reaches.
+
+## Extended (2026-10-30, the U10 Caddie card) — trace where each control leads before rewording a hint a second time
+
+Three rewordings of one pointer on the W step's stale face failed the same seat ("which button fixes it?") until the
+chair read where each control leads: both reach W. A hint that names a fix is a promise about a control, so the
+wording question was really a routing question. When one rewording fails, trace the controls before drafting the
+next (b9-7).

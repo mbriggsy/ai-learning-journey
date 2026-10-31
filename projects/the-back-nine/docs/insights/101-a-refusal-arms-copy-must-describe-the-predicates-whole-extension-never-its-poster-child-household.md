@@ -3,7 +3,7 @@ title: A refusal arm's copy must describe the predicate's whole extension — ne
 date: 2026-07-23
 phase: The median-advantage + typed-refusal steer increment (review wf_6f89fe6f-35a)
 modules: [src/ui/copy.ts, src/intake/solveDispatch.ts, src/engine/solver/candidates.ts]
-tags: [copy-contract, refusal-arm, predicate-extension, calm-but-wrong, no-pretax, superset]
+tags: [copy-contract, refusal-arm, predicate-extension, calm-but-wrong, no-pretax, superset, stopgap-help, household-shapes]
 ---
 
 ## Problem
@@ -53,3 +53,11 @@ phrasing whose truth is monotone across the extension ("not enough" covers zero
 and small alike; "none entered" does not). And when a code comment claims the
 predicate equals its example, that comment is itself a copy-contract defect —
 correct it in the same commit, or it mints the next false sentence.
+
+## Extended (2026-10-30, Phase B's Caddie card) — a STOPGAP help sentence is read by every household shape too
+
+The same enumerate-the-extension law holds for help text written as a stopgap. Phase B's ruling 1 told the W step to
+count "health premiums before anyone's Medicare starts" — right for its poster child (a retired spouse on the
+worker's plan), and it told `dateshort` (one spouse already on Medicare, one working) to count no premium at all. And
+"leave out Medicare premiums" turned a register gap (no sentence covers it) into an instruction that hides the cost.
+Walk a help sentence against each seed's household shape before shipping it (b9-3's Caddie card).

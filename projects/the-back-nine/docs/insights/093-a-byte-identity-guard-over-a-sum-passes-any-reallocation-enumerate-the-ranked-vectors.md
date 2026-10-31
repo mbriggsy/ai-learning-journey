@@ -3,7 +3,7 @@ title: A byte-identity guard over a SUM passes any reallocation — a CRN law mu
 date: 2026-07-18
 phase: Act 4 · the U14 ultramode-review fold
 modules: [src/engine/validation/rankingStability.ts]
-tags: [crn, byte-identity, conservation, presence-companion, insight-029, perturbation, solver]
+tags: [crn, byte-identity, conservation, presence-companion, insight-029, perturbation, solver, producer-omission-oracle, converse-pin]
 ---
 
 ## Problem
@@ -54,3 +54,11 @@ regression (the perturbation going inert) green-light the other.
 - Golden-fixture comparisons that assert a headline statistic instead of the distribution.
 - Cache-invalidation tests ("changing X doesn't change Y") — always pair with "changing X
   changes X's own output."
+
+## Extended (2026-10-29, A7) — the producer-omission oracle: pin the converse of what a producer reports
+
+The same two-claims law applies to any producer that REPORTS a subset. A7's year-0 and named-year `Object.is` pins
+checked every year the money picture named against the run, and could not see a year it failed to name: a
+cross-check over only what a producer chose to report cannot catch what it left out. The converse pin — every year
+the RUN itself finds short is named (`devSeeds.test.ts`, "the producer-omission oracle") — closes it. For every
+"what we report is right" check, add "everything that should be reported is".

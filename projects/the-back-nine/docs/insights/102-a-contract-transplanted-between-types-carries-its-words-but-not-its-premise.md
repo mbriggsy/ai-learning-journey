@@ -3,7 +3,7 @@ title: A contract transplanted between types carries its words but not its premi
 date: 2026-07-25
 phase: Act-4 · U17 S3 (the saved-recommendation record + the re-entry trichotomy)
 modules: [src/shared/model.ts, src/shared/scenarioCodec.ts, src/store/savedRecommendation.ts, src/store/staleness.ts]
-tags: [persisted-schema, absent-is-quiet, fail-open, calm-but-wrong, transplanted-contract, tolerance, staleness]
+tags: [persisted-schema, absent-is-quiet, fail-open, calm-but-wrong, transplanted-contract, tolerance, staleness, sibling-event-gate, gate-direction, turns65, senior-bonus]
 ---
 
 ## Problem
@@ -75,3 +75,14 @@ the original's defenses inherits a rationalizing comment that is only true WITH 
 comment channel travels with the code and must be swept), 101 (an arm's copy must describe its
 predicate's whole extension, not its poster child — the same enumerate-the-population move one
 layer up, in copy rather than schema).
+
+## Extended (2026-10-29, the A7 review) — a gate copied between sibling EVENTS carries its direction too
+
+The money picture names a member turning 65 where "the year before owed some" federal tax on the outside income —
+the right gate, because the larger deduction at 65 LOWERS a tax. The senior bonus's end copied that gate, but its end
+RAISES one, so the gate hid every 2029 where the bonus had zeroed 2028 (the year's cash fell $185–$1,050, unnamed) — and
+named a false sunset where a pension's end took 2029 to $0. Six of nine lenses found it (`wf_b97c0055-346`; the
+coordinator had withheld its own suspicion, [[037]]'s extension). The whole-file review (b9-9, c3) then found
+`turns65` itself still one-sided: a year the larger deduction meets with tax only in the year itself went unnamed —
+fixed to "the year before OR this year owes". **Before reusing a gate, ask which way this step moves the quantity the
+gate reads**; a gate tuned to a fall hides a rise.

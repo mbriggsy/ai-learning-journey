@@ -3,7 +3,7 @@ title: A design defined as the INVERSE of a sibling's rule can invert a phantom 
 date: 2026-07-18
 phase: Act 4 runway (pre-build reconciliation)
 modules: [docs/plans, src/store/staleness.ts]
-tags: [plan-reconciliation, cross-unit-claims, staleness, premise-rot, supersession, runway]
+tags: [plan-reconciliation, cross-unit-claims, staleness, premise-rot, supersession, runway, extraction, next-consumer, import-allowlist]
 ---
 
 ## Problem
@@ -56,3 +56,11 @@ hypothesized, so there was no event to notice.
 - BURNED's cross-phase specs (a phase describing another phase's protocol behavior).
 - Review comments citing a sibling's guarantee ("compliant with X's gate") — 080's
   docstring cousin, one layer up in the doc stack.
+
+## Extended (2026-10-28, A5, b9-13) — an extraction is cut for its NEXT consumer's constraints
+
+The same sibling-unit rot runs forward. A5 extracted `medicareChargeForYear` so A7's ledger could reuse it, and first
+gave it the IRMAA schedule and the run's Part B schedule as inputs — what the year loop holds. But A7's ledger may
+import neither `@engine/healthOverlay` nor the constants (its import allowlist, pinned by a source test), so A7 would
+have re-cut it. Before fixing an extracted signature, read the downstream unit's own import and data constraints;
+the first caller's convenience is not the reason the function exists.

@@ -238,7 +238,7 @@ function heldBackRaiseLines(r: WorkingYearHeldBackRaise): string[] {
 /** Where a working year's state tax on PAY went, by the W answer's state reading — `null` where the run
  *  itself charges it (NC) or there is none to charge (FL); otherwise the household holds it in W, said
  *  under the tax line, or on the W line when no tax line shows. Exhaustive over the readings, so a
- *  reading added later fails to compile here instead of silently dropping the line (insight 081). */
+ *  reading added later fails to compile here instead of silently dropping the line (insight 147). */
 const STATE_TAX_IN_W: Readonly<
   Record<WorkingYearStateTaxReading, { readonly underTaxLine: CopyKey; readonly onCostLine: CopyKey } | null>
 > = {

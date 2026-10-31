@@ -28,10 +28,9 @@ picture's new streak line hold there — and `verify-rv-chart-text`; read by id)
 with every repro, mutant spec and the merged fix list: `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-whole-review\FIXES.md`
 (its `README.md` indexes the folder; `pre\`, `pre-a4\`, `head\` and several lens folders hold `node_modules` JUNCTIONS — remove each
 link alone before deleting any folder there). Rulings 38–42 are in `b9-phaseb\DECISIONS.md`; the spec's new section *The whole-file
-review (Phase C, …)* records it. U10's Caddie card stays **HARD-FLAG** on its two Tier 1 builds (unchanged). Next, in order:
-1. **`/distill`** — the DISTILL CANDIDATES below, b9-9's first (they are the review's), then b9-8's and b9-7's. b9-9 corrected the
-   A7 candidate the review proved false ("no per-person arrays needed"); distill its correction, never the old text.
-2. **Measure h2 in real Chromium** (the review's one unsettled finding; its two refuters split on existence). The W figure's
+review (Phase C, …)* records it. U10's Caddie card stays **HARD-FLAG** on its two Tier 1 builds (unchanged). Phase C's
+`/distill` is DONE (b9-10, 2026-10-31): insights 144–148, and dated extensions on 22 older ones. Next, in order:
+1. **Measure h2 in real Chromium** (the review's one unsettled finding; its two refuters split on existence). The W figure's
    blur-commit un-stales W, so the stale note above the figure unmounts (the walk) or the money picture mounts above the question
    (the panel) between the period radio's mousedown and mouseup — if the layout moves under the pointer, the unit tap is lost and a
    figure typed for a month stays yearly (12× low, rosy; under $8,000 the period rule never asks). b9-9's probe
@@ -41,7 +40,7 @@ review (Phase C, …)* records it. U10's Caddie card stays **HARD-FLAG** on its 
    is lost: the insight-035 cure is layout-side (keep the stale note's box until pointerup, or defer the panel's face swap), never a
    new commit path for every period tap; pin it with a coordinate-tap `verify:fit` arm. If no tap is lost on either device, record
    it on the spec's review section and close it.
-3. **Rank the registers against the D7 queue** (his order; never re-ordered without him) — b9-8's list, unchanged, plus the review's:
+2. **Rank the registers against the D7 queue** (his order; never re-ordered without him) — b9-8's list, unchanged, plus the review's:
    - **b9-5's four.** Tier 0 *A self-employed worker's Social Security and Medicare tax is charged at an employee's half…*
      (a D7 ask; measure first). Tier 1: *The money picture's later years name a change without its dollars or its
      direction…* (b9-9 added two halves: a year the 65+ deduction zeroes names nothing; a state rate CUT can read as a short year's
@@ -86,7 +85,7 @@ review (Phase C, …)* records it. U10's Caddie card stays **HARD-FLAG** on its 
      narrow rosy entries in Tier 2 (Philadelphia's School Income Tax, PA's inheritance tax). Rule it by the header's "worst
      consequence, never by size". Either move all four up, or move §219(g) and the catch-up back down. Then write the rule
      into the register header so it stops being re-derived.
-4. **Build 2, the surplus question**, follows. The council's shape is on the ⚑ RULED bullet of the CLOSED Tier 0 *A working
+3. **Build 2, the surplus question**, follows. The council's shape is on the ⚑ RULED bullet of the CLOSED Tier 0 *A working
    year never checks the household's pay against its spending…*.
 **The review's record, durable:** `wf_ea145a86-a5a` (the 15-lens review) and `wf_19d636e2-77c` (the three fix lanes + the overflow
 verifies), journals under
@@ -125,167 +124,7 @@ its words from the catalog) and the picture's new "Still short, as in {year}" li
   JSON beside the spec, but runs vitest with `cwd` = the tree copy, so a relative spec path reports "no report (baseline)".
 - **In Git Bash, `cmd //c mklink /J "<path>" "<target>"` fails with "Invalid switch"**; make a junction from PowerShell
   (`New-Item -ItemType Junction -Path <link> -Target <target>`).
-- **Leftover processes b9-9 could not stop** (the auto-mode classifier refused the kill): its tap probe's `pnpm dev --port 5199`
-  (pids 39092, 37372), the probe's own node (30772, 37584, 36576) and up to 16 `chrome-headless-shell` started 2026-10-31
-  01:22–01:25. Harmless but holding memory; a fresh session or a reboot clears them. Check `Get-NetTCPConnection -LocalPort 5199`
-  before reusing that port.
 
-**DISTILL CANDIDATES (for the pay check's Phase C `/distill`):**
-- (b9-9) a disarm must live beside what it vouches for: the W period's touched mark lived in the HOST (the flow, the panel) while
-  the unit it vouched for lived in the FACE's own state, and three lenses found three ways they drifted — the Keep door marked the
-  period and left the face at month, a provenance flag read once at mount outlived the figure it vouched for, and a yes replacing a
-  yearly figure reopened the next one under an untapped year. Ruling 38 moved the whole lifecycle into the face. Before adding a
-  second channel for one fact, ask which component knows the moment it stops being true.
-- (b9-9) a household TOTAL hides offsetting per-person moves, and a per-PAYEE read misfires too: a release beside a claim held in
-  full cancelled inside the household's held-back sum, and 404.439's re-split lowers a payee's own hold with nothing released. The
-  quantity the law makes monotone was each EARNER's charged excess (`chargedExcess`). Find that quantity before reading a direction
-  off any sum (it corrects the A7 candidate below).
-- (b9-9) a rule's edge must match what the screen shows: the zero rules refused ≤ 0 while the field printed whole dollars, so 40¢ a
-  month read "$0" and ran as W (ruling 39, one `showsAsZero` for spend and W).
-- (b9-9) a vocabulary partition typed as a Set or a ternary in two homes compiles clean when a member is added and silently drops a
-  line; an exhaustive `Record<Vocabulary, …>` makes tsc find every home (`WORK_STATE_KEY`, `STATE_TAX_IN_W`).
-- (b9-9) a review's overflow titles are unverified findings, not noise: 37 titles and 51 residuals yielded 13 more mutant pins (two
-  of them rosy survivors), a producer bug (L-D1) and several false comments — and two of the three items sent to refuters were
-  dropped. Verify overflow the way findings are verified.
-- (b9-8) a plan's reachability sentence is a claim about every caller, and a later ruling can move the carriage rule under
-  it. KTD1 and KTD22's "only dev plants and engine tests reach a W-absent run" went false the day Phase B ruling 17 made
-  `buildDateInput` carry W only once it is answered: the walk's provisional strip runs W-absent before the W step. Three
-  drafting lanes found it independently from the code; the spec was never re-read. When a carriage rule changes, grep the
-  plan for "only … reach".
-- (b9-8) drafting from a spec inherits the spec's stale sentences. Six careful lanes copied R1's "Medicare excepted" and
-  KTD22's reachability into four docs. What caught them was an adversarial verify against the CODE: 70 findings, 35 of them
-  "wrong", and 0 rejected on re-check. The fix pass's own new sentences then carried 11 more. Budget draft → verify → fix →
-  verify-the-fix for any docs unit.
-- (b9-8) a plan's "file these new entries" list is a hypothesis about the register. One of seven was already filed (b9-5's
-  self-employment) and a second was half covered. The scout read entry BODIES, not only headings, before any lane filed.
-- (b9-8) a re-tier is a rule, not a pair of moves. Lifting §219(g) and the catch-up to Tier 0 for "a rosy half that now
-  reaches cash" left K6–K8's entries in Tier 2 under the same rule. It also made two "the other rosy keys sit in Tier 0"
-  sentences false, because K5 rides a Tier 2 entry. Apply a tier rule to the whole family, or write down why not.
-- (b9-7) a "can" sentence is read as "is": "this answer can look worse than it really is" was true of the mechanism (a higher
-  W never improves the answer) and false of the household — on `datecoststale` neither figure makes a year short, the curves are
-  identical, and two seats read it as "the real answer is better". A direction claim is a claim about THIS household: say it
-  where measured, or only on the side whose over-read errs safe.
-- (b9-7) a capture artifact readers route around is still a hole: `crop-w-row.png` painted the landing over its top third since
-  U8 (a crop taller than its sheet's scroller — the harness's own docblock named the limit), four seats quietly read copy.txt
-  instead, and the color lane had never screened that row. When a reader says "I read it from the text instead", the capture
-  is the finding.
-- (b9-7) "this seam takes no draft" was a convenience, not a law: the gate's static line existed because `composeReentry` took
-  no draft, and its caller held the hydrated draft one line above. Before writing a figure-less stopgap, read the caller.
-- (b9-7) three rewordings of one pointer failed ("which button fixes it?") until the chair read where each control leads —
-  both reach W. Trace the controls before rewording a hint about them a second time.
-- (b9-6) a seed measurement can take its AFTER without touching the tree: mint the change at run time with the SHIPPED
-  producer on a frozen `git archive` HEAD copy (`b9-u10-tools\probe.mts --w`), then require the edited tree to reproduce that
-  run byte for byte. It splits "what the change does" from "did I make the change I measured" — and the edit can land while
-  the measurement runs.
-- (b9-6) a prediction is a claim about REACH before it is a claim about size: "dip's crown moves at most one year earlier"
-  could not happen, because the earnings test reaches only offsets that work past the 62 claim and the crown IS the claim
-  year — offsets 0–4 are byte-identical by construction. Ask which offsets a new mechanism can touch before predicting where
-  the crown goes. And measuring EVERY seed, not only the ones predicted to move, caught two docblock crowns ("≈ 7 years out",
-  "floor ≈ 4") that were wrong before the change too.
-- (b9-5) a fix that adds a control is a new surface with its OWN rosy direction: the Keep door closed one rosy path (the easy
-  Yes cut W when spending fell) and, read cold as the stale note's only visible action, opened its mirror (a one-tap keep BELOW
-  today's spending where spending rose). Re-read every new control in BOTH directions of the quantity it moves; the gate (shown
-  only at or above the quote) came from the second panel's first-look seat, not the chair.
-- (b9-5) a label is a claim about scope, and the producer owns scope: "Income tax on that income" read as every income tax
-  where the run charged federal only. The fix read the run's own state slice — and the chair's first rule (point at W only
-  where the slice is $0) was wrong for PA, whose run prices its tax on investment income and leaves its tax on pay to W. A
-  real-seed arm per reading (NC / PA / unpriced / FL) caught it before landing; key the words to what the producer did, per
-  reading, never to one inferred proxy.
-- (b9-5) each re-walk round after a fix found one more holds-type defect in the fix's neighborhood (walk 1: "keep" read as
-  already counted; walk 2: the federal-only line and the Keep door's mirror). A fixed sentence is a new sentence: put it in
-  front of fresh readers before clearing, and budget the second round.
-- (b9-4) a review's ADVISORY bucket is still findings: the held-back sentence (confidence 100, rosy words, a repro) sat in the
-  review result's `advisory` list and fell out of b9-3's merged fix list, which drew from `confirmed` and the overflow. Merge
-  EVERY bucket of a review result, then rule each item — an advisory is a severity guess, never a dismissal.
-- (b9-4) a sentence about what the run does has to come FROM the run's own rule, per household: "each month held back raises
-  the benefit later" was the law's general case, false in the full-retirement-age year (the stopgap credits none) and for a
-  payee past FRA. The fix classifies each held-back month on the crediting test itself (`heldBackReason` reads the settle's own
-  ages), so the words and `creditMonths` can never disagree — and a hand-derived fixture caught the pilot's own wrong guess (the
-  widow's FRA-year excess was $0: 11/12 of $60,000 sits under the higher amount).
-- (b9-3) a stopgap sentence is read by EVERY household shape, not the one it was written for: ruling 1's "health premiums
-  before anyone's Medicare starts" was right for a retired spouse on the worker's plan and told `dateshort` (one already on
-  Medicare, one working) to count no premium at all; and "leave out Medicare premiums" turned a register gap ("no sentence covers
-  it") into an instruction that hides the cost. Walk a help sentence against each seed's shape before shipping it (the Caddie
-  card, b9-3).
-- (b9-3) four review lenses found the same exit independently: Back is the one ungated way out of a gated step, so a value the
-  step's Continue refuses ($0, an unconfirmed period) leaves through it and meets a route change or a remount's provenance. A
-  gated step owns what it leaves behind on EVERY exit (`discardOnBack`), not only on Continue.
-- (b9-3) a CSS fix outlives its reason: `.strip-fact { white-space: nowrap }` was written for a "(62–70)" label no longer in the
-  catalog, and ran a 60-character fact off a 390 px phone. An atomic-when-it-fits unit is an inline-block with `max-inline-size:
-  100%`, not nowrap.
-- (b9-1, Phase B) an input surface's reading must come from the same source as its sibling input surface: KTD18 took the
-  W question's state reading from the BUILT run, which is `undefined` on any unbuildable draft, so the W step would have told an
-  NC household the opposite of the spend step and then staled its answer when a skipped question was filled. Input surfaces
-  read the draft (`spendHelpKeyFor`'s doctrine); output surfaces read the producer — check which a new surface is before
-  copying a predicate (`b9-phaseb\DECISIONS.md` ruling 5).
-- (b9-1) a register entry's premise is a claim to check against the code before measuring its size: the Tier 1 premium entry
-  assumed a marketplace spouse beside a worker, a household the intake refuses outright (`employerCoverageUnpriced`); the real
-  shape (her share of the plan at work, only inside an ENTERED W) changed the remedy from an engine step to words.
-- (A7 review, 2026-10-29) a gate copied from a sibling event whose step moves the quantity the OTHER way: `turns65` lowers
-  a tax, so "the year before owed some" is its right gate; the senior bonus's end RAISES one, so the same gate hid every
-  2029 where the bonus had zeroed 2028 (a $185–$1,050 yearly drop, unnamed — and it named a false sunset where a pension's
-  end took 2029 to $0). Before reusing a gate, ask which way this step moves what the gate reads (`wf_b97c0055-346`, six of
-  nine lenses).
-- (A7 review) the coordinator suspected that gate before the launch and kept it OUT of every prompt; six lenses found it
-  independently. A hypothesis handed to a reviewer comes back confirmed, not tested — hold it back, then check whether the
-  fan-out reaches it unaided (a free measure of the review's own coverage).
-- (A7 review) snapping to the money's grain does not settle a true tie: `Math.round` lets the float's dust pick the side,
-  so a true −$12.005 (payroll on $72,570 is a half cent) read "Short $12". A grain snap needs its own tie rule — the
-  gloomy side, within a dust tolerance — and every gate that compares money reads the same grain.
-- (A7 review) a cross-check over only what a producer chose to report cannot catch what it failed to report: the year-0 and
-  named-year `Object.is` pins could not see an unnamed year. Pin the converse too (every year the run itself finds short is
-  named) — the producer-omission oracle.
-- (A7 review, CORRECTED 2026-10-31 by the whole-file review's c2) "who explains this move" can NOT be settled on household
-  figures: a claim held in full can raise the household's hold past a release beside it, and 404.439's re-split lowers a payee's
-  own hold with nothing released. The law's monotone quantity is each EARNER's charged excess — a start only widens what an excess
-  can reach and never starts a credit — so a fall there is the test's own step (`EarningsTestYears.chargedExcess`).
-- (A7, 2026-10-29) a floor-based dollar rule turns float dust into a visible dollar: $3,060.0000000000005 of payroll, as a
-  money-out line, floors to −$3,061 on a round-number household. Snap each figure to the money's own grain (the cent) before
-  any dollar rule; then the largest remainder is exact in integer cents (`roundLinesToBottomLine`).
-- (A7) a compiled input that pre-sums per-item vectors loses the items' boundaries: a person's income streams are one leaf, so
-  a pension ending beside a second stream never reaches 0 in the run. An event producer takes such a boundary from the source
-  that still holds it (the draft, compiled one stream at a time), never from the summed vector.
-- (b9-14) a "reads the SAME object" test that checks what a probe was HANDED proves nothing about what the code READ: the
-  check composed from a second floor preparation survived, because the probe was passed the prepared floor while the
-  composition used the copy. Pin it by a value only the right object carries (an NC household through the loop, a later
-  calendar year), never by identity on the probe's argument.
-- (b9-14) a zero a component returns for one composition's reason can be a hole in the next: PA's floor pair is 0 because
-  the increment over pay is pay-invariant (the floor's question), and the check (a new question: what does the outside
-  income cost by itself?) inherited that 0 and charged PA nothing on a pension or I. Re-ask what a reused figure MEANS
-  before composing it into a new total (the A6 review's money-law lens; its skeptic reproduced $675.40 a year).
-- (b9-13) an extraction is cut for its NEXT consumer's constraints, not only its first caller's: `medicareChargeForYear` first
-  took the IRMAA schedule and the run's Part B schedule as inputs, which is what the year loop holds — but A7's ledger, the
-  reason the function exists, may import neither `@engine/healthOverlay` nor the constants (KTD12's allowlist), so A7 would
-  have re-cut it. Read the downstream unit's import and data constraints before fixing an extracted signature.
-- (b9-13) an equivalent mutant is a question the DOMAIN answers: the producer's both-alive `auxStart` survived planting
-  (`spousalStart` → `ownStart`) because in the FRA year a piece that began in an earlier year was always claimed before FRA,
-  so it is already priced early and its start never decides; 20,000 aimed households (2,735 paying a spousal excess in a
-  working FRA year) digested identically. Prove it by an aimed fuzz, never by the argument alone.
-- (b9-12) "starts this year" is not "starts at FRA": the FRA-year exemption has to key on how the ENGINE PRICED the benefit
-  (unreduced = begun at FRA), never on its start year — a spousal excess the other spouse's filing starts that year is priced
-  as the payee's early claim, and an own claim at 67 was shielding a widow(er) benefit begun years before (the review's two
-  confirmed rosy holes, `wf_bb2c6dec-c1c`).
-- (b9-12) "the most the year can hold back" was a flat 11; derive the bound from the sourced table per cohort, (FRA + 11) mod 12 —
-  the one cohort a plan can reach on a fractional FRA (1959) holds 9.
-- (b9-12) owed − withheld in floating point leaves a crumb (a year withheld in full read −3.6e-12): keep the composed float
-  where nothing is withheld (bit-identity) and sum the remaining months in exact cents where something is — the seeded sweep
-  caught it on its first run.
-- (b9-10, now proven by the fix) a decision record's "no oracle exists" is a claim to check at the primary, not a
-  fact: `ss-computation.md` said no oracle covered the RIB-LIM × age-reduction order and pinned the engine's order as
-  deliberate; the RS 00615.322 D worksheet's chart (its payable cell is a `poms-underline` span — plain text drops it)
-  is that oracle, and the order was backwards.
-- (b9-11) a reach claim reasoned from who a change is "for" missed a branch: "only the early claimers can move" was
-  false — the dime floor's delayed-credit path reaches every pre-1960 cohort claiming at 67 (past a ~66 FRA). A probe
-  of the CHANGED FUNCTION over every seed's death orders and drawable death ages, old against new
-  (`b9-seed-probe\reach.mts`), settled it; and a seed reading byte-identical is a statement about OUTPUTS — `failing`'s
-  function moved on all 93 cells and no output reads it (every path is depleted in year 0). Insight 143's sibling, one
-  level down: enumerate the function's own domain, never infer it.
-- (b9-11) a normalization added inside ONE function makes a mixed basis with its siblings: flooring the PIA to the
-  dime for the full rate while the cap read the raw figure let the reorder pay a cap a dime above the law — the round-1
-  law lens's catch (`wf_c6ac19f3-207`); the own-benefit sibling is the filing above.
-- (b9-11) a property whose oracle calls the function under test certifies that shared arithmetic: say what it pins (the
-  composition) and pin the rest by hand goldens; count a chart row "reached" only on strictly ordered amounts (a $0 PIA
-  ties all three) — both mutant-proven.
 **THE A7 REVIEW (durable, 2026-10-29):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a7-review\`
 — `brief.md` (the review's contract brief, a template for Phase C's), every lens's repros in its own folder, `a7-tools\` (A7's
 53-mutant spec and `seeds.mts`, saved from the dead A7 scratchpad), and `fixes\` (the fix's 28-mutant spec + its result,
@@ -324,7 +163,7 @@ is paid for the whole year"; the review's two refuters split on it. Asking the b
 re-point each script's output path off the dead session scratchpad before running. Run it from the project dir with tsx.
 **THE D7 QUEUE — his order, ruled 2026-10-21 ("yep, seems right").** Every item is a register entry; cite it by title.
 1. **An honest quit date (the working years).** Most of these make the date read too early:
-   - (a) ✅ BUILT 2026-10-30, build 1, the pay check (the CLOSED Tier 0 *A working year never checks the household's pay against its spending…*): with W answered, every working year checks pay against W, payroll tax, the tax on outside income and its own deposits, and a short year draws from savings. Its open residuals are their own register entries (START HERE item 3 ranks them);
+   - (a) ✅ BUILT 2026-10-30, build 1, the pay check (the CLOSED Tier 0 *A working year never checks the household's pay against its spending…*): with W answered, every working year checks pay against W, payroll tax, the tax on outside income and its own deposits, and a short year draws from savings. Its open residuals are their own register entries (START HERE's ranking step ranks them);
    - (b) the 10% charge for pulling from an IRA or 401(k) before 59½: *Money taken from retirement accounts before age 59½ is never charged the 10% early-withdrawal tax…* (mind the age-55 rule for a job's plan);
    - (c) the Social Security figure assumes work continues to full retirement age and is used unchanged for an earlier stop: *The Social Security statement's default figure assumes continued earnings…*;
    - (d) *A pension from the job you still work at counts the same whatever stop date is tested…*;
@@ -341,7 +180,7 @@ re-point each script's output path off the dead session scratchpad before runnin
 - **States:** the priced roster stays NC, PA and FL "for now" (his ruling 2026-10-21). His generic-state idea (ask the state's rate, and whether it taxes Social Security) is filed on *Unpriced states — a confident winner computed with zero state income tax*.
 - **The pilot's working rule (a HOW call, not his ruling):** no new process or tooling work unless a D7 build needs it. October ran 55 docs/bookkeeping commits to 17 features; that ratio is part of what took us off course.
 **WHERE THE SOLVE STANDS (carried from b9-6; the RIB-LIM clause added 2026-10-27, b9-11):** ONE pricing change since the 2026-10-12 (b9-2) close — ledger v12, the working-year tax floor (`b4bbbd3e`): a reprice of `tax` + NC's `stateTax` gated row-wide on `reach: 'working-years'`, UNSCORED (the solver runs only on the all-retired spine, so it left `SOLVER_CODE_VERSION` at 11; the date-route Roth preview moves, unpersisted); no roster change — THE POOL (`225d8da4`, laws in `docs/architecture.md`'s *The pooled solve*), the all-in objective (v10, `6dab9ec0`), the budgetless survivor-medical lean (v11, `c1ada867`; a scored spend-side pricing change, no roster change), then — no ledger row — the RIB-LIM order (`SOLVER_CODE_VERSION` 12, 2026-10-27, the current one: survivor income where a member claims before FRA, and a dime or two lower on a PIA with odd cents; measured on `healthss`, both goals, crown / runner-up / grade / top five unmoved), the v9 window walk, rosters `retired`-type 93 / `health` 97 / `healthgap` 101; THE APP (production, his laptop, P = 12): `retired` 36.5 s · `nc` 39.8 s · `healthnc` 150.9 s (ANY roster growth re-times `healthnc` first, `e2e/held/solve-timing.spec.ts`). The PHONE half of the pending-line entry is still owed (a ≤ 3-core device gets no pool).
-**UNFINISHED:** the distills are DONE (2026-10-21, b9-7): insights 141 (a headline on the population its caveat names), 142 (a disclosure instead of a used number — D7) and 143 (reach enumerates every consumer), plus refinements on 126 (a plan witness LABEL) and 136 (the re-anchor verification method). Still open from them: move the re-anchor verification scripts (`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-reanchor-verification-tools\`, now with `content-check.mjs` — b9-9's cited-line content check) into the repo beside the register Tier 4 re-anchor entry, so they stop living only in a session folder. No distill is owed for b9-9 or b9-11 yet: the pay-check build's whole-file review and `/distill` run at its end (the plan's Phase C), with the DISTILL CANDIDATES above.
+**UNFINISHED:** the distills are DONE through the pay check's Phase C (2026-10-31, b9-10: insights 144–148 and dated extensions on 22 older ones; the candidate block is retired — the re-tier candidate's rule is START HERE's ranking item, and the cohort-bound candidate was dropped as the constants discipline's own). Still open from the 2026-10-21 pass: move the re-anchor verification scripts (`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-reanchor-verification-tools\`, now with `content-check.mjs` — b9-9's cited-line content check) into the repo beside the register Tier 4 re-anchor entry, so they stop living only in a session folder.
 **OWED (carried from b9-6):** to HIM — the "Income Medicare looks at" heading (⚑, `docs/council-log.md` 2026-10-20 — the figure now also sets the income-tax base). The NIIT clause's "here" is no longer a word call: under D7 the surtax gets figured (queue 3), and the clause goes. OWED (both carried from b9-2, still live): (a) the engine measurement of the discount a crossing dollar loses, for the scope entry (Tier 0 *The health sheet's "26¢ on each dollar converted" holds only inside the ~$18,600 of room…*) — only hand figures exist, from the 2026-10-15 early-claim Caddie walk's hunter in b9-toronto1 (`healthss` $9,479 at the anchor; about $8,374 at the ~$84,600 line, the same on `healthnc`'s line — both seeds carry `slcspMonthlyToday` 1,400); measure through the engine on `healthnc`, `healthgap` (the register's Prescription (1) names it — its cliff is live, "about 2 of 10 futures") and `healthss` (a paired CRN run across the line, the anchor year's readout) before his words; (b) the Caddie tape rows awaiting his read — 2026-10-06 all-in, 2026-10-09 survivor-medical, 2026-10-14 survivor spending-basis, and 2026-10-15's four (held-flat, NC cents, early-claim cents, the same-age Medicare card), 2026-10-16's one (the one-figure card's first-year frame + his trend clause), 2026-10-16 (b9-1)'s one (his three rulings + his two in-session rulings), and 2026-10-19 (b9-2)'s one (his four b9-1 walk rulings + his in-session Medicare re-ruling), and 2026-10-21 (b9-6)'s one (the working-year tax row, three walks — his in-chat reads of its DRAFTS are on it as E20, not a read of the shipped face) — `docs/caddie/tape.md`.
 **Keep out of every commit from here:** the three family-feud working files (`../family-feud/newsletter/…`) are uncommitted on purpose; never stage them from this project.
 

@@ -3,7 +3,7 @@ title: A confirming review-fold loop never reaches zero findings — closure is 
 date: 2026-06-10
 phase: P1 (the fuck-off-date re-plan, rounds 3–11)
 modules: [docs/plans, workflow-orchestration]
-tags: [doc-review, adversarial-verify, convergence, closure-criterion, prescription-verification, review-fold-loop, fix-regression]
+tags: [doc-review, adversarial-verify, convergence, closure-criterion, prescription-verification, review-fold-loop, fix-regression, fixed-sentence, second-round, caddie-rewalk]
 ---
 
 ## Problem
@@ -58,3 +58,11 @@ verify the prescription against source as its own step, every time.
   prescribed fix," especially when the fix spans interacting systems.
 - A failed/empty review run (e.g. agents dying on a token limit) returns the same shape
   as a clean pass — `confirmed: []` — and must be read as FAILURE, never as clean.
+
+## Extended (2026-10-31) — a fixed sentence is a new sentence: budget the second round
+
+The non-monotone count reappears wherever a fix writes new text. The Phase B Caddie re-walks (b9-5) found one more
+holds-type defect in each fix's neighborhood: walk 1, "keep" read as already counted; walk 2, the federal-only line
+and the Keep door's mirror ([[103]]'s extension). U11's docs unit (b9-8) verified its drafts against the code (70
+findings, [[042]]'s extension), and its own fix pass's new sentences then carried 11 more. Put every fixed sentence in front of fresh readers
+or verifiers before clearing it, and plan the second round into the unit's budget instead of discovering it.

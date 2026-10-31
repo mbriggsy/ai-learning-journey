@@ -3,7 +3,7 @@ title: A mutant proof is only as good as its LABEL — the recorded "tier-keyed 
 date: 2026-09-10
 phase: Post-Act-4 (the gap to a friend betting real money) — the council build's adversarial review
 modules: [e2e/vertical-fit.spec.ts, src/ui/styles/app.css, docs/council-log.md, TODO.md]
-tags: [mutant-proof, mutation-testing, planted-fail, arm-topology, oracle-lens, record-truth, adversarial-review, gate-by-exit-code]
+tags: [mutant-proof, mutation-testing, planted-fail, arm-topology, oracle-lens, record-truth, adversarial-review, gate-by-exit-code, equivalent-mutant, aimed-fuzz]
 ---
 
 ## Problem
@@ -55,3 +55,14 @@ replaced the oracle with a grep of it.
   decides which oracles can see it.
 - CI summaries piped through `grep`/`tail` in a `&&` chain — `pipefail` or a captured `$?` on the
   gate itself, or the chain lies.
+
+## Extended (2026-10-31) — "equivalent" is a verdict the DOMAIN gives, proven by an aimed fuzz
+
+A surviving mutant labelled "equivalent" is the same kind of hypothesis. In A5 (b9-13) the producer's both-alive
+`auxStart` survived planting (`spousalStart` → `ownStart`): in the FRA year a piece that began in an earlier year was
+always claimed before FRA, so it is already priced early and its start never decides. The argument was right, and it
+was still proven, not believed — 20,000 aimed households (2,735 paying a spousal excess in a working FRA year)
+digested identically. The whole-file review (b9-9) ran the same test on its survivors: E22 and R14 proved equivalent
+by aimed fuzz, and E31's claimed equivalence was REFUTED at the API — no money moved, but an output did, so its
+contract was pinned. Aim the fuzz at the branch the argument says can never decide, and judge equivalence at every
+output, not only the money.

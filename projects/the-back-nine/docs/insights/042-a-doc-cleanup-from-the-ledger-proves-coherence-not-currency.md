@@ -3,7 +3,7 @@ title: A doc cleanup re-authored "from the ledger" proves coherence, not currenc
 date: 2026-06-19
 phase: P2 (Act 2 — Where You Stand)
 modules: [README.md, docs/roadmap.md, scripts/verify-doc-stats.ts]
-tags: [docs, drift, test-count, single-source, verify-gate, coherence-vs-currency, cold-read, summary-surface]
+tags: [docs, drift, test-count, single-source, verify-gate, coherence-vs-currency, cold-read, summary-surface, spec-drift, reachability-claim, filing-list, verify-against-code]
 ---
 
 ## Problem
@@ -31,3 +31,18 @@ Corrected all four against source. Shipped `scripts/verify-doc-stats.ts` (`pnpm 
 - Any duplicated stat/figure across surfaces (README ↔ roadmap ↔ CLAUDE.md) — single-source it or gate it.
 - "How it works" prose written in present tense while features are still planned — signpost intent vs. shipped (the mermaid solver/REC nodes, the thesis beats).
 - Mechanical-step / fixture hypotheses obsoleted by later work ([[041-a-plans-mechanical-step-is-a-hypothesis-obsoleted-by-a-later-decision-in-the-same-effort]]); verifying a gate's target when writing it ([[033-verify-a-gates-target-when-writing-the-gate-not-when-clearing-it]]).
+
+## Extended (2026-10-31) — drafting from a spec inherits the spec's stale sentences
+
+U11 (b9-8) drafted every doc for the pay check from its spec. Six careful lanes copied R1's "Medicare excepted" and
+KTD22's reachability claim into four docs, and both were already false: KTD1 and KTD22's "only dev plants and engine
+tests reach a W-absent run" went false the day Phase B ruling 17 made `buildDateInput` carry W only once it is
+answered, so the walk's provisional strip runs W-absent before the W step — three lanes found that from the code;
+the spec was never re-read. An adversarial verify against the CODE returned 70 findings, 35 of them "wrong", and 0
+were rejected on re-check ([[017]]'s extension has the fix pass's own 11). The plan's "file these new entries" list
+was a hypothesis too: one of seven was already filed and a second half covered; the scout read entry BODIES, not
+headings, before any lane filed.
+
+**Rules:** a docs unit budgets draft → verify against the code → fix → verify the fix. A spec sentence about
+reachability ("only X reaches Y") is a claim about every caller: when a carriage rule changes, grep the plan for
+"only … reach". A plan's filing list is checked against the register's bodies before anything is filed.

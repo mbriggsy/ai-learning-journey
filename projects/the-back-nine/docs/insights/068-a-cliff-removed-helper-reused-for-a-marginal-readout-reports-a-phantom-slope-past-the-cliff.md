@@ -3,7 +3,7 @@ title: "A cliff-removed helper reused for a marginal readout reports a phantom s
 date: 2026-07-03
 phase: Act 3 (the levers)
 modules: []
-tags: []  # backfilled 2026-09-06 (doc audit) — tag by hand when next touched
+tags: [helper-reuse, cliff, discontinuity, marginal-rate, derivative, branch-ownership, reused-zero, composition, pa-floor]
 ---
 
 # A cliff-removed helper reused for a marginal readout reports a phantom slope past the cliff
@@ -58,3 +58,11 @@ rides whenever the readout earns more precision.
   probe through it can straddle.
 - The same shape to watch at Act 4: the solver's cliff-aware oracle must not read marginal
   slopes through cliff-removed primitives either.
+
+## Extended (2026-10-29, the A6 review, b9-14) — a ZERO reused in a new composition can be a hole
+
+The same reuse hazard holds for a figure, not only a helper. PA's working-year floor pair is 0 because the increment
+over pay is pay-invariant (the floor's own question). A6's check asked a new question — what does the outside income
+cost by itself? — inherited that 0, and charged PA nothing on a pension or on investment income (the A6 review's
+money-law lens; its skeptic reproduced $675.40 a year). Before composing a reused figure into a new total, re-ask
+what it MEANS: a zero returned for one composition's reason is not a zero for the next.

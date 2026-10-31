@@ -3,7 +3,7 @@ title: The orchestrator's own "pre-verified" finding is still a hypothesis — a
 date: 2026-06-14
 phase: P2 (D1 — the account-level intake; ultramode review)
 modules: [intake, store, engine]
-tags: [review, adversarial-verify, over-confidence, source-trace, false-confidence, data-contract, magi]
+tags: [review, adversarial-verify, over-confidence, source-trace, false-confidence, data-contract, magi, withheld-hypothesis, coverage-measure]
 ---
 
 ## Problem
@@ -60,3 +60,11 @@ confirmed findings; this is about your independently-*found* claims.)
   premise was false though the underlying law-adherence gap was real.
 - Any multi-layer data-flow finding: trace the writer, the reader, and every gate
   — a value's hazard is rarely visible from just the two ends.
+
+## Extended (2026-10-29, the A7 review) — hold your own hypothesis OUT of the reviewers' prompts
+
+The A7 review's coordinator suspected one gate before launch (the senior bonus's end reused `turns65`'s "the year
+before owed some" gate — see [[102]]'s extension) and kept it out of every prompt. Six of the nine lenses found it
+independently (`wf_b97c0055-346`). A hypothesis handed to a reviewer comes back confirmed, not tested; held back, it
+becomes a free measure of the fan-out's own coverage — if the lenses reach your suspicion unaided, their silence
+elsewhere means more. Write the suspicion down before launch, withhold it, then check whether the review found it.

@@ -3,7 +3,7 @@ title: A screenshot proves ONE column — a per-width seat is governed by the WI
 date: 2026-09-06
 phase: Post-Act-4 (the gap to a friend betting real money) — the council-held 320 shape, ruled by his eye and built the same day
 modules: [src/viz/chartText.tsx, src/viz/ConfidenceBand.tsx, src/viz/OddsLadder.tsx, e2e/chart-text.spec.ts, docs/caddie/cold-read-log.md]
-tags: [cold-read, screenshot-evidence, per-width-seat, measured-catalog, chart-text, oracle-vs-eye, arithmetic-check, the-room-is-not-the-ink]
+tags: [cold-read, screenshot-evidence, per-width-seat, measured-catalog, chart-text, oracle-vs-eye, arithmetic-check, the-room-is-not-the-ink, css-outlives-string, nowrap, inline-block]
 ---
 
 ## Problem
@@ -53,3 +53,10 @@ into a doc: an inverted factor of two turns a watch item into a false law.
 Any per-width layout decision (the band's annotation rows, TwoFutures' end labels, the crown's headroom);
 every cold-read capture set — the caption names the column, the seed and the root font; every "cannot fit /
 never reaches / structurally impossible" sentence in a report or a doc comment.
+
+## Extended (2026-10-30, Phase B's review) — a CSS rule written for one string outlives the string
+
+`.strip-fact { white-space: nowrap }` was written for a "(62–70)" label no longer in the catalog, and it ran a
+60-character fact off a 390 px phone (b9-3). A per-width rule is governed by the catalog's widest instance TODAY, not
+by the string it was written for: when copy changes, re-measure every CSS rule keyed to its old shape. An
+atomic-when-it-fits unit is `display: inline-block; max-inline-size: 100%` (`intake.css`), never `nowrap`.

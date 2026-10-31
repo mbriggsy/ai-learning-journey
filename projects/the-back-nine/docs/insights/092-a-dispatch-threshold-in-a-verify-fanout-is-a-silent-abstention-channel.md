@@ -3,7 +3,7 @@ title: A dispatch threshold in a verify fan-out is a SILENT abstention channel �
 date: 2026-07-18
 phase: Act 4 · the U14 ultramode-review fold
 modules: [process — multi-agent review workflows]
-tags: [workflow, verify, abstain, threshold, insight-019, insight-084, review-fold, ultramode-review]
+tags: [workflow, verify, abstain, threshold, insight-019, insight-084, review-fold, ultramode-review, advisory, overflow, residuals, merge, fix-list]
 ---
 
 ## Problem
@@ -55,3 +55,17 @@ difference by name.
   green.
 - The Caddie's reader panels: a lens dropped for budget must be listed as not-run on the
   card, never omitted.
+
+## Extended (2026-10-31) — the same set-diff at the MERGE: every bucket of a review result is findings
+
+The silent channel can open one stage later, where the coordinator merges a finished review into a fix list. b9-3
+merged the Phase B review from `confirmed` and the overflow; the held-back sentence (confidence 100, rosy words, a
+repro) sat in the `advisory` bucket and fell out — b9-4 found it. The pay check's whole-file review (b9-9) merged
+every bucket: its 37 overflow titles and 51 residual risks yielded about a dozen more pinned engine mutant survivors
+(two of them rosy — $7,700 on one household, and $834 a year), a producer bug (L-D1: a short year whose named events could
+not have made it short carried no reason for the shortfall) and several false comments; of the three items sent to
+refuters, two were dropped. A bucket name is a severity GUESS made by the reviewer, never a disposition.
+
+**Rule:** merge EVERY bucket a review returns — confirmed, hand-verify, advisory, overflow, residual — then rule each
+item by name; verify overflow the way findings are verified. The entered-minus-exited set-diff above runs at the
+merge too.

@@ -216,7 +216,7 @@ export type MethodologyArm = 'default' | 'workingCost'
 
 /** K7 — where a working year's state tax on pay comes from — by the W answer's state reading. ONE key
  *  per household, exhaustive over the readings, so a reading added later fails to compile here instead
- *  of silently dropping the line (insight 081):
+ *  of silently dropping the line (insight 147):
  *  · NC (AGI-derived) — the run taxes working years by the retirement state, which may tax pay more or
  *    less than the state worked in: either way;
  *  · FL (no income tax) — the run charges the least any state can, so a taxing work state only flatters:

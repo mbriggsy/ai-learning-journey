@@ -3,7 +3,7 @@ title: A Playwright fullPage screenshot drops CDP Page.setFontSizes emulation, s
 date: 2026-09-10
 phase: Post-Act-4 (the gap to a friend betting real money) — the eye's evidence for the 24 px ruling
 modules: [e2e/held/council-24px-shots.spec.ts, e2e/vertical-fit.spec.ts]
-tags: [screenshot-evidence, CDP-setFontSizes, fullPage, emulation-reset, md5, his-eye, instrument, claim-vs-tree]
+tags: [screenshot-evidence, CDP-setFontSizes, fullPage, emulation-reset, md5, his-eye, instrument, claim-vs-tree, routed-around-artifact, crop, caddie]
 ---
 
 ## Problem
@@ -48,3 +48,11 @@ first, then prove each one anyway.
 - Caddie walk bundles: any two frames that should differ but hash equal are a harness bug before
   they are a product observation.
 - Any "before/after" pair for his eye — hash both; identical means the instrument, not the product.
+
+## Extended (2026-10-30, the U10 Caddie card) — a capture artifact readers route around is still a hole
+
+`crop-w-row.png` had painted the landing over its top third since U8 — the crop was taller than its sheet's scroller,
+a limit the harness's own docblock named. Four seats quietly read `copy.txt` instead, and the color lane had never
+screened that row (b9-7; fixed in `e9fd7636`: the walk crops tall sheet rows in segments). A reader who routes around
+an artifact is reporting a broken instrument. **When a seat says "I read it from the text instead", the capture is
+the finding** — fix it before trusting any verdict the capture was meant to carry.

@@ -3,7 +3,7 @@ title: An equality assertion on a structurally-zero surface discriminates nothin
 date: 2026-06-10
 phase: P1·U3·M6 (the per-path taxAware collection + boundary review)
 modules: [src/engine/simulate.ts, src/engine/__tests__/simulate.test.ts]
-tags: [mutation-survival, vacuous-assertion, presence-companion, test-design, taxAware, collection-wiring]
+tags: [mutation-survival, vacuous-assertion, presence-companion, test-design, taxAware, collection-wiring, identity-assertion, probe-argument]
 ---
 
 ## Problem
@@ -53,3 +53,11 @@ identically; the review left this as a tracked advisory); the future ScenarioV2�
 (every new persisted field needs a non-default round-trip fixture); any fromWire/serializer
 test built on fixtures whose optional fields are all absent; UI display mappings of
 multi-field results.
+
+## Extended (2026-10-29, A6, b9-14) — a "reads the SAME object" test that checks what a probe was HANDED
+
+A6's check was meant to read the one prepared working-year floor. A version composed from a SECOND floor preparation
+survived its test, because the test checked the object the probe was passed — the prepared floor — while the
+composition used the copy. An identity assertion on a probe's argument says nothing about what the code READ. Pin it
+by a value only the right object carries (an NC household through the loop, a later calendar year), the same
+non-default-value rule as above, applied to identity instead of equality.

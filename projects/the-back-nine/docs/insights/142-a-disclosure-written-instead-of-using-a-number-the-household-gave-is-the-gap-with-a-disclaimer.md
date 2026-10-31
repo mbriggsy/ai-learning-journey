@@ -3,7 +3,7 @@ title: "A disclosure written INSTEAD of using a number the household already gav
 date: 2026-10-21
 phase: D7 — the off-course discussion and the audit
 modules: [src/ui/copy.ts, src/intake/AssumptionPanel.tsx, src/engine/simulate.ts, src/intake/intakeMap.ts, docs/product.md]
-tags: [D7, disclosure, calm-but-wrong, omissions, product-direction, plain-words, audit, intake, cardinal-rule]
+tags: [D7, disclosure, calm-but-wrong, omissions, product-direction, plain-words, audit, intake, cardinal-rule, figure-less-stopgap, read-the-caller]
 ---
 
 ## Problem
@@ -45,3 +45,10 @@ have asked it. A growing omissions list is a symptom to measure, never a feature
 - Code comments that call a shortcut "disclosed" — check the copy actually says it (two such comments were false).
 - D6's OUT-but-disclosed members (NIIT, unpriced states) — re-opened under D7, never grandfathered.
 - [[074]] — a disclosure built on metadata must grep its consumer; this is the same check aimed at the household's own inputs.
+
+## Extended (2026-10-30, the U10 Caddie card) — "this seam takes no draft" is a convenience, not a law
+
+The re-entry gate said "Markets and paychecks move" over a static, figure-less working-year line because
+`composeReentry` (`reentryChrome.ts`) took no draft — while its caller (`IntakeApp.tsx`) held the hydrated draft one
+line above. The figure-less stopgap was a seam's signature, not a missing input (b9-7). Before writing a sentence
+that works around a figure, read the CALLER: the number is often one argument away.

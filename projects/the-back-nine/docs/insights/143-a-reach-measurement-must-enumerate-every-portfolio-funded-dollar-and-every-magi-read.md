@@ -3,7 +3,7 @@ title: "A reach measurement must enumerate EVERY portfolio-funded dollar and EVE
 date: 2026-10-21
 phase: the working-year tax floor (B) — U4, the measurement (b9-6)
 modules: [src/engine/simulate.ts, src/engine/taxOverlay.ts, src/engine/healthOverlay.ts, docs/plans/features/working-year-tax-floor-build-spec.md]
-tags: [reach, measurement, enumerate, channels, irmaa, medicare, social-security, working-year-clamp, register-claim]
+tags: [reach, measurement, enumerate, channels, irmaa, medicare, social-security, working-year-clamp, register-claim, prediction, changed-function-domain, outputs-vs-function]
 ---
 
 ## Problem
@@ -42,3 +42,20 @@ reach table whose rows are the feature's own nouns.
 - Every ledger row's `reach` qualifier and every "unscored / no seed moves" claim in a commit or register entry.
 - The D7 builds that move a working year's base (the pay check, the yield model, NIIT): each re-touches IRMAA's look-back.
 - [[096]] — a fail-closed serialization is only as closed as its argument list; this is the same enumeration over consumers.
+
+## Extended (2026-10-31) — a prediction is a claim about REACH before SIZE; enumerate the changed function's domain
+
+Two later cases, one level down from this insight's consumers:
+- **U10 (b9-6).** The plan predicted `dip`'s crown would move "at most one year earlier". It could not move at all: the
+  earnings test reaches only offsets that work past the 62 claim, and the crown IS the claim year, so offsets 0–4 are
+  byte-identical by construction. Measuring EVERY seed, not only the ones predicted to move, also caught two docblock
+  crowns ("≈ 7 years out", "floor ≈ 4") that were wrong before the change.
+- **The RIB-LIM reorder (b9-11).** "Only the early claimers can move" was false: the dime floor's delayed-credit path
+  reaches every pre-1960 cohort claiming at 67 (past a ~66 FRA). A probe of the CHANGED FUNCTION over every seed's
+  death orders and drawable death ages, old against new (`b9-seed-probe\reach.mts`), settled it. And "the seed reads
+  byte-identical" is a statement about OUTPUTS: `failing`'s function moved on all 93 cells while no output reads it
+  (every path is depleted in year 0).
+
+**Rule:** before predicting where a result goes, ask which inputs the new mechanism can touch at all; then enumerate
+the changed function's own domain (every seed, every drawable branch), never infer reach from whom the change is
+"for", and keep "the function moved" apart from "an output moved".

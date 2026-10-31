@@ -22,10 +22,9 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-10-31, written by b9-9 for b9-10): the pay check's whole-file review is DONE — its fixes are in the commit
-that carries this close.** b9-9 did not read that commit's CI (it handed off while CI ran): **first read it by id**
-(`gh run list --commit <HEAD's sha> --json databaseId,conclusion,status` from the repo root, then `gh run view <id>`), both jobs,
-`verify` (which runs `verify:fit` and `verify:csp`) and `verify-rv-chart-text`. A red there is the first job. The review's record,
+▶ **START HERE (2026-10-31, written by b9-9 for b9-10): the pay check's whole-file review is LANDED at `2c36e6f4`** (CI run
+41174108996 green on both jobs, `verify` — which runs `verify:fit` and `verify:csp`, so the harness lane's fit changes and the
+picture's new streak line hold there — and `verify-rv-chart-text`; read by id). The review's record,
 with every repro, mutant spec and the merged fix list: `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-whole-review\FIXES.md`
 (its `README.md` indexes the folder; `pre\`, `pre-a4\`, `head\` and several lens folders hold `node_modules` JUNCTIONS — remove each
 link alone before deleting any folder there). Rulings 38–42 are in `b9-phaseb\DECISIONS.md`; the spec's new section *The whole-file
@@ -110,10 +109,13 @@ real plan.
 re-anchor landed), green on its re-run alone — the counts live under `verify:doc-stats`; `pnpm verify:doc-stats` 0;
 `pnpm build` 0; `pnpm verify:bundle` 0 (initial JS 288.5 KiB of 300). `pnpm doc:reanchor HEAD --apply` moved 355 citations; its three
 REVIEW cites were settled by hand (two `AssumptionPanel.tsx:423` → `:416`, one left: it names `healthOverlay.test.ts`'s lines);
-`docs/council-log.md` was restored as it was. `verify:fit`, `verify:csp` and `verify:fit:rv` ran only on CI (step 1 above) — the
-harness lane's two fit changes (a figure-count floor on the picture's clip audit; the `dateshort` arm reading its words from the
-catalog) and the picture's new "Still short, as in {year}" line on `dateshort`'s later years are proven only there.
+`docs/council-log.md` was restored as it was. `verify:fit`, `verify:csp` and `verify:fit:rv` ran only on CI — green in run
+41174108996 — so the harness lane's two fit changes (a figure-count floor on the picture's clip audit; the `dateshort` arm reading
+its words from the catalog) and the picture's new "Still short, as in {year}" line on `dateshort`'s later years hold there.
 **LANDMINES from this session:**
+- **`gh run list --commit` needs the FULL 40-character sha.** A short one (`--commit 2c36e6f4`) returns `[]` with no error, so b9-9's
+  wait-for-CI loop never saw its run and spun for about six hours after CI had gone green. Pass `git rev-parse <sha>`, or find the
+  run by `gh run list --limit 5 --json databaseId,headSha`, and give every wait loop a deadline that fails loud.
 - **A subagent cannot write a file named like a report** (`REPORT.md`): the harness's guard refused it in all three fix lanes. Ask
   for the depth in the return value or a differently named file.
 - **Fix lanes in COPIED trees merge cleanly** (`git merge-file -p <laneA file> <frozen HEAD file> <laneB file>` for the one file two

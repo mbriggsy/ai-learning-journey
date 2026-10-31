@@ -1,0 +1,2718 @@
+{
+ "measured": "2026-10-31",
+ "what": "Recall of /brief on the 17 briefs run in main sessions from 2026-10-19 to 2026-10-31 (B03, a duplicate transcript of B04, and B19, a brief whose work was still running, left out). Blind Opus judges read every lesson that existed at each brief time and listed the ones that bear on the work (strong: a trap this exact work could hit; moderate: the same mechanism close by), from the brief topic and the commits the work made, never seeing what the brief picked. Opus skeptics then classed each judged lesson SURFACED (the brief named or opened it), IN_PLAN (the plan the work followed cites it), MISSED, or NOT_RELEVANT, and for each miss looked for evidence the work then hit that trap (HIT). Workflow wf_eb9c6c39-cab, 9 agents.",
+ "reuse": "The judged sets are a benchmark: re-run /brief on the same topics against the lessons that existed at each ts (lessons added later excluded) and score it against the judged lessons that are not NOT_RELEVANT.",
+ "totals": {
+  "judgedPairs": 260,
+  "notRelevant": 6,
+  "relevant": 254,
+  "surfaced": 102,
+  "inPlan": 12,
+  "missed": 140,
+  "missedWithHit": 73
+ },
+ "briefs": [
+  {
+   "id": "B01",
+   "ts": "2026-10-19T23:30:07.556Z",
+   "project": "projects",
+   "session": "our setup",
+   "topic": "Planning the \"our setup\" implementation: our Claude Code tooling and method. Covers the flow (brief, ce-plan + deepen, ultramode-code-review, distill) and making it structurally mandatory for sizable work; the global hooks in ~/.claude/hooks and projects/hooks; CE plugin version and review path; settings.json permissions and env; MCP servers; plugin cleanup; skill listing budget; squeaky-clean peer-session guard. Sources: the preflight reports (clearances C1–C24, squawks S1–S14).",
+   "lessonsTheBriefNamedOrOpened": [
+    "001",
+    "005",
+    "015",
+    "019",
+    "033",
+    "084",
+    "092",
+    "103",
+    "128",
+    "139",
+    "248",
+    "302",
+    "307",
+    "360"
+   ],
+   "judged": [
+    {
+     "lesson": "dnb-001",
+     "strength": "strong",
+     "trap": "The plan makes the flow mandatory through hooks, but PreToolUse never fires on a slash command the user types, and only block/exit-2 output reaches the model. A Skill-matcher gate or a plain-text reminder would quietly do nothing.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "First landmine: 'd&b-001: Hook platform behavior (2026-04-01) ... PreToolUse didn't fire on slash commands the user typed', read in full, marked CONFLICTS, with a re-test prescribed in Before you start.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "ultra-001",
+     "strength": "moderate",
+     "trap": "The plan was deepened by 10 lenses and sets the ultramode review path. Lenses agreeing on a remedy are one inference repeated, so each proposed change still needs its own check of where it could go wrong.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line: 'ultramode-001: when several lenses agree on a finding, that doesn't validate the suggested fix. Relevant to the bake-off scoring.'",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-019",
+     "strength": "strong",
+     "trap": "The flow's deepen/review fan-outs (the commit reports '10 lenses ... 0 abstained') can count a crashed lens or verifier as a refutation or a clean pass unless zero-vote findings are scored as abstain and re-run.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 'B9-019: A crashed verifier is an abstention, not a refutation' in the brief output; read in full (Bash cat at 2026-10-19T23:30:34).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-005",
+     "strength": "moderate",
+     "trap": "Designing the review path and permissions: review agents given full tool access write probe files into the tree under review, and confident findings folded on faith break CI. Reviewers should run read-only and every finding should be verified.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line 'B9-005: verify review findings, and keep reviewers read-only'.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-015",
+     "strength": "moderate",
+     "trap": "Making ultramode-code-review part of the required flow can quietly drop the always-on generative adversary, or let reviewers default to a mid-tier model, and then the review finds no mutation-survival seams.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line 'B9-015: a generative adversary finds what checks and verifiers can't'.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-017",
+     "strength": "moderate",
+     "trap": "The plan's deepen/review loop never reaches zero findings. Closure has to be judged by finding class, prescriptions verified against source before folding, and an empty confirmed list from a failed run read as failure.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "Not named. The deepened plan (~/.claude git 00c4197:docs/plans/our-setup/2026-10-19-001-refactor-our-setup-flight-plan.md:1221) cites Back Nine 005, 018, 019, 033, 084, 092 and 103 only. The deepen was one pass, with 'every P1 checked against its cited source' (:1226). No loop symptom in this session.",
+     "why_missed": "Not a candidate: its tags (doc-review, adversarial-verify, convergence, closure-criterion, review-fold-loop) share no word with the brief's tag terms (workflow, process, gate, hook, deepen, ultramode-review). 'workflow-orchestration' is in its modules, which B01 never grepped."
+    },
+    {
+     "lesson": "b9-016",
+     "strength": "moderate",
+     "trap": "Planning settings.json deny/allow rules and enforcing hooks: checking that the config string is right is theater. Enforcement needs a live probe with a control arm and a mutation, and an allowlist assertion must be exact, not a contains check.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Deepen finding [P1|gap] 'U4 force-push ask rules and test' (~/.claude 00c4197:docs/plans/our-setup/research/2026-10-19-deepen-findings.md:47-50): 'the -p test counts any denial as proof, though the classifier denies force pushes'. The test had no control arm. The fix adds git -C and PowerShell controls and records which layer denied.",
+     "why_missed": "No shared words: tags csp, security, playwright, vitest, false-pass, theater against the topic's hooks, settings.json and permissions. 'harness' appears only in its title, which wasn't grepped."
+    },
+    {
+     "lesson": "b9-042",
+     "strength": "moderate",
+     "trap": "A plan drafted from the preflight reports inherits their snapshot of hooks, settings.json, the CE version and MCP servers. It agrees with the reports but may be out of date against the live files, so check each claimed fact against the current config before building a plan step on it.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "Not named or cited in the plan. The deepen's one count drift ('U5's 8 files is really 9', deepen-findings.md:148) was the draft plan's own miscount: the preflight already said 9 (sources/2026-10-17-deep-dive-report.md:808). It was not a stale snapshot.",
+     "why_missed": "A candidate ('verify-gate' matched 'gate' in the 39-file tag grep). It shared one concept and ranked below the top 5 (d&b-001, 033, 019, 084, 092)."
+    },
+    {
+     "lesson": "b9-041",
+     "strength": "moderate",
+     "trap": "The preflight clearances and squawks predate the 10-19 research. A later decision in the same effort may already have made an item obsolete, so check each one against the newest authoritative doc before it becomes a plan step.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "Not named or cited. No deepen finding shows a preflight item, made obsolete by a later 10-19 decision, being planned on.",
+     "why_missed": "Not a candidate: its tags (doc-reconciliation, plan-staleness, ground-truth-first, supersession, precedence) share no word with the brief's terms."
+    },
+    {
+     "lesson": "b9-063",
+     "strength": "moderate",
+     "trap": "The 10-lens deepen is a fan-out. A crashed lens or verifier returns an empty list that reads as 'no findings', so read the run's failure and abstention channel before folding anything in (the commit's '0 abstained' is that check).",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "Not named. The plan's 'BURNED 020, 059 and 063' (:1222) is another corpus. Commit 00c4197 reports '10 lenses + seam read, 0 abstained', so the abstention channel was read (019 covered the trap).",
+     "why_missed": "Empty tags. The corpus card listed 063 among the empty-tag entries, but the brief never searched those titles or filename slugs, although this slug has 'crashed-verify-stage'. 019, the same concept, took the slot."
+    },
+    {
+     "lesson": "b9-084",
+     "strength": "moderate",
+     "trap": "The plan sets the review and deepen path (10-lens fan-out with schema output). Lens agents asked for essay-sized StructuredOutput calls get truncated and die in the retry loop unless the schema caps field sizes.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 'B9-084: An oversized StructuredOutput call truncates'; read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-092",
+     "strength": "moderate",
+     "trap": "When designing the ultramode review path, any dispatch filter (for example a confidence threshold) silently drops findings unless every path ends in a named bin. The deepen commit's '0 abstained' count is exactly that accounting.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 'B9-092: A dispatch threshold in a verify fan-out silently drops findings'; read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-077",
+     "strength": "moderate",
+     "trap": "Review-path aggregation that majority-votes the 'real AND material' combination throws away findings where every refuter agrees the defect is real but they split on how much it matters. Ties should go to the coordinator.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "Not named or cited. The plan's review core (four bins, severity-scaled refuters; plan :226, :807-808) has no materiality-tie rule, but no finding in this planning session shows a tie discarding a real gap.",
+     "why_missed": "Not a candidate: its tags 'ultramode' and 'verification' miss the regex's exact 'ultramode-review' and 'verify'. 'review-cadence' sits in modules, which wasn't grepped."
+    },
+    {
+     "lesson": "b9-083",
+     "strength": "moderate",
+     "trap": "The squeaky-clean peer-session guard covers sessions that share one working tree. They couple through the tree itself (collected scratch probes, line-ending flips, shared fixtures), which no agent's own green gates can see.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Two deepen findings. deepen-findings.md:194 (learnings lens): every squeaky close 'still stages \"all relevant changes\"... That is the 10-06 sweep shape, learned again'. :210-212: a reviewer's 'stray probe becomes a mine path that U16 commits to the public repo', with evidence 'B9 insights 005 and 083'. The fix moved peer-safe squeaky to Phase 1 (U29, 00c4197).",
+     "why_missed": "No shared words: the topic's 'squeaky-clean peer-session guard' against tags parallel-agents, shared-working-tree, scratch-fixtures, eol, crlf. 'process' is in its modules, not its tags."
+    },
+    {
+     "lesson": "b9-105",
+     "strength": "moderate",
+     "trap": "The plan is built from filed preflight squawks and clearances. Each filed prescription is a prediction nobody ran, so check that the mechanism it names exists before planning on it.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "deepen-findings.md:39-42 [P1|wrong-claim] 'U5 Context7 removal'. The draft followed S3's filed fix ('remove the local copy, along with its plaintext key', sources/2026-10-17-preflight-page-template.html:404; draft ca08f1c plan:449). But 'Removing the ~/.claude.json entry leaves the key live' (an HKCU env var plus 23 files), so S3 closes only on revocation. :43-46: the filed Skill(name) denials also miss calls with arguments.",
+     "why_missed": "A candidate (tag 'process' matched). It shared one concept and ranked below the top 5."
+    }
+   ]
+  },
+  {
+   "id": "B02",
+   "ts": "2026-10-19T23:39:17.292Z",
+   "project": "projects-the-back-nine",
+   "session": "b9",
+   "topic": "The Back Nine: rewording three ruled verdict copy strings (floorReadoutTrimNote \"rather than once\", verdictMedicarePriced reorder so the Medicare list sits next to \"Medicare's costs\", verdictResidualLead \"Those are the Medicare pieces…\" + the verdictMedicareResidual monolith) and moving the Healthcare sheet's per-person \"Coverage beyond Part B\" extras block directly under the Medicare premium card (healthcareSheet order). Gotchas for copy changes, copyGuard pins, stateTaxDisclosure composer, verify:fit one-frame fit, health sheet layout, Caddie walk, doc:reanchor.",
+   "lessonsTheBriefNamedOrOpened": [
+    "082",
+    "086",
+    "087",
+    "097",
+    "136",
+    "139",
+    "233",
+    "240",
+    "361",
+    "370",
+    "499"
+   ],
+   "judged": [
+    {
+     "lesson": "b9-018",
+     "strength": "moderate",
+     "trap": "Re-ruling the Medicare verdict strings supersedes their old framing. The lesson names the copyGuard catalog: sweep for sibling strings and pins built on the old wording ('Those are the Medicare pieces'), not just the named entries.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "1b685648 swept the old wording through docs/plans (3-controls.md, medicare-extras and state-tax specs) and comments. The one near-miss, a third home of the wrong 'copyGuard drift-pin' name in state-tax-build-spec.md, was caught by the session's own repo-wide grep before commit (transcript 35eb13f2 line 1088). No later fix.",
+     "why_missed": "Its only hit was the tag 'deepening-drift' matching 'drift'. Its tags (amendment, supersession, blast-radius) and modules (docs/plans, docs/brainstorms) share no copy, verdict or Medicare word, so it ranked below the top 5."
+    },
+    {
+     "lesson": "b9-017",
+     "strength": "moderate",
+     "trap": "Each reworded sentence is new text for the next Caddie walk to attack, so expect fresh findings in the fixes' neighborhood. The walk did find the $0-premium Medicare Advantage misread, so plan a second pass instead of clearing after one walk.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "The cold-read-log 2026-10-19 (b9-2) card in 1b685648: walk 1 found ONE regression in the freshly reworded b9-1 Medicare line (SURVIVED at medium), Briggsy re-ruled it, and a second walk (wf_23461352-808) was needed to clear it. Those words were themselves the fix for the b9-1 walk's 'three first-read stumbles' entry, so each fix round minted new findings.",
+     "why_missed": "A title-only hit: 'fold' in 'review-fold loop' matched by coincidence on the fit-fold term. One concept, ranked below the top 5. Its caddie-rewalk and fixed-sentence tags were never searched."
+    },
+    {
+     "lesson": "b9-069",
+     "strength": "strong",
+     "trap": "Rewording the verdict and Medicare strings risks comprehension holes that tests cannot see: undefined referents, derived figures with no source named, the mechanism's vocabulary. Only the Caddie walk or a cold read catches them, as it did when a $0-premium Medicare Advantage couple read the copays as counted on top.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "1b685648: the 531 focused tests and verify:fit 142/142 were green. Only the walk's readers found that 'Medicare's costs … like a drug, supplement, or Medicare Advantage plan' let a $0-premium Medicare Advantage couple read their copays as counted on top. Distilled that night as insight 140 (0854e43c).",
+     "why_missed": "Empty tags and modules. Its title words (comprehension holes, cold reader, tests cannot see) share none of the brief's terms (copy, verdict, medicare, fit, walk). The corpus card listed it as having empty tags, but the brief ran no filename-slug glob."
+    },
+    {
+     "lesson": "b9-074",
+     "strength": "moderate",
+     "trap": "verdictMedicarePriced and the residual lead describe what the engine counts. Trace each claim ('Medicare's costs', 'the Medicare pieces') to the engine code that consumes it, or the copy describes pricing that never happens.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "The card's routedToOracle calls the engine fact (premiums on top, out-of-pocket inside the spending) settled. The walk-1 defect was a reader misreading 'costs', not copy claiming pricing the engine lacks. The review summary (transcript line 1462) has no finding on engine claims.",
+     "why_missed": "A single tag hit on 'disclosure'. Its metadata, sunset and staleness tags are off-topic, and it ranked below the top 5 of about 30 candidates."
+    },
+    {
+     "lesson": "b9-097",
+     "strength": "strong",
+     "trap": "Rewording the Medicare residual and lead sentences on the one-frame fit frame is a layout change. A local Windows verify:fit pass proves nothing; ubuntu's metrics can wrap one more line past the fold on the tallest composite.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 1 in the brief, read in full (transcript line 260).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-087",
+     "strength": "strong",
+     "trap": "Rewording verdictMedicarePriced, verdictResidualLead and floorReadoutTrimNote leaves prop-docs and comments quoting the old words or the old sentence structure. Grep the old wording in comments too.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 2, read in full (line 262).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-082",
+     "strength": "strong",
+     "trap": "The Medicare pair's fit budget is already down to its floor: whitespace, leading and the text-sm type-size rung are spent, and the cs-medicare-residual--typical scoping is pinned by computed style. A longer reword has no honest rung left.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 5, read in full (line 268).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-086",
+     "strength": "moderate",
+     "trap": "If the verdictMedicareResidual monolith is split or re-pointed, every renderer of the old key must be re-pointed in the same commit, or an orphan keeps showing yesterday's claim.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 3, read in full (line 264).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-078",
+     "strength": "moderate",
+     "trap": "The Medicare line's meaning is also shown by the Healthcare sheet's own components. Sweeping by copy key misses sibling surfaces that state the same claim through their own code.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "The walks found sibling-surface issues only as pre-existing ones (slots.medicareExtrasFactTypical's 'next to nothing on Medicare Advantage'; 'higher than shown' on pa), appended to their owning entries. The 'a drug plan' leftover was a comment (critic C2), which is 087's channel. 087, read in full, cites 078's sweep-by-meaning law.",
+     "why_missed": "Not a candidate. Its tags (defect-class, sweep, sibling, time-base, aged-vault) and modules (bandAnnotations, twoFuturesChrome…) share no word with copy, verdict, medicare or fit."
+    },
+    {
+     "lesson": "b9-101",
+     "strength": "moderate",
+     "trap": "The reordered Medicare copy must be true for every household that reaches it, not just the typical one. The walk found a $0-premium Medicare Advantage couple who read their copays as counted on top.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "The 2026-10-19 (b9-2) card in 1b685648: the reordered line read true for premium-paying households, but walk 1's pa and datenc seats (a $0-premium Medicare Advantage couple, a household the line reaches) read their copays and prescriptions as counted. The finding SURVIVED at medium and was fixed by the b9-2 re-ruling to 'premiums'.",
+     "why_missed": "A candidate in all three greps and among the 10 whose headers were scored (copy-contract tag, copy.ts module), but it ranked 6th to 10th. The brief printed no also-relevant section, so it was never named."
+    },
+    {
+     "lesson": "b9-075",
+     "strength": "moderate",
+     "trap": "If CI fails the fit check after the reword, a whitespace fix written on Windows may change nothing that matters. Prove the measured position actually moves in the failing environment.",
+     "verdict": "IN_PLAN",
+     "hit": "N/A",
+     "evidence": "The pre-build trace's chaired build-plan.md (wf_8543877d-54d, read at transcript line 431), line 341: '⚑ NEGATIVE: never author a fold fix from Windows metrics (insight 075 / 097)'. CI was green on 1b685648 (run 39355937811).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-132",
+     "strength": "strong",
+     "trap": "Moving the per-person extras block and rewording the Medicare lines on the health sheet can drop the scoping noun again (\"Part B premiums and any income surcharge\") or fold placeholder extras into the modelled figure, two failures this card already shipped once.",
+     "verdict": "NOT_RELEVANT",
+     "hit": "N/A",
+     "evidence": "132's law is a UI predicate that re-derives an engine decision (the age-65 enrollment proxy, cured by medicareEnrolledP50 on the wire). 1b685648 only moved the extras block, seated by splitting the producer's composed fact list at its medicare fact, and reworded verdict strings. No health-sheet card text or derived predicate changed. The 'scoping noun' drop the judge cites is insight 140's lesson (0854e43c), not 132's.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-136",
+     "strength": "strong",
+     "trap": "copy.ts edits shift line citations. 136 cites copy.ts:1340 as verdictMedicarePriced, the key being reworded here, and a doc:reanchor run moves its record lines, which must then be restored by hand. A green citation gate does not mean the cites are current.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 4, read in full (line 266).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-114",
+     "strength": "moderate",
+     "trap": "Splitting the verdictMedicareResidual monolith into new keys means each new key has to join the copyGuard scope nets (isVerdictKey and the rest) by name. The nets are name-driven, so a new key slips through silently.",
+     "verdict": "NOT_RELEVANT",
+     "hit": "N/A",
+     "evidence": "114 is about giving a typed class to a harness vacuity that is the household's own property (?seed=failing). The monolith was not split: the copy.ts diff in 1b685648 rewords three existing strings and adds no key, so no name-driven copyGuard net needed a new entry.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-133",
+     "strength": "moderate",
+     "trap": "Rewording the residual held-flat disclosure (\"Those are the Medicare pieces...\") can turn an arm-level consequence of a hold into an unproven claim that the whole answer leans one way.",
+     "verdict": "NOT_RELEVANT",
+     "hit": "N/A",
+     "evidence": "133 is about direction claims on a two-arm (Roth) comparison. Only the residual's first sentence changed ('Those are the Medicare pieces…'). The held-flat Tail sentence is byte-identical in 1b685648, and no direction claim was written.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-126",
+     "strength": "moderate",
+     "trap": "When mutant-proving the copyGuard / stateTaxDisclosure pins, where the plant goes (copy.ts or a fixture) decides which oracles can see it. Predict which arms cannot go red before trusting a red count.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "1b685648: 'eleven planted mutants each reddened (four of them found surviving the first arm by the whole-file review)'. The review found faces the seat arm did not cover (top-tier no-step-card, ACA-only, HSA). That is a coverage gap, not a mislabelled plant or an inflated red count.",
+     "why_missed": "A module hit only, on e2e/vertical-fit.spec.ts through the 'vertical-fit' term. Its mutant-proof tags were never searched, and it ranked below the top 5."
+    }
+   ]
+  },
+  {
+   "id": "B04",
+   "ts": "2026-10-20T22:08:14.090Z",
+   "project": "projects-the-back-nine",
+   "session": "b9",
+   "topic": "the working-year tax build: solveGrossWithdrawal in a §7-clamped accumulation (date-route) year — pricing a Roth conversion / RMD incrementally over the workers' taxable wages (tax(W+X) − tax(W)), federal + state, the §86 provisional base, presence-keyed on the accumulation construct, reduce-to-spine byte-identical, the IRMAA lag-read clamped-year override, dip's Y=5 crown pins, SOLVER_CODE_VERSION / pricing-ledger bump",
+   "lessonsTheBriefNamedOrOpened": [
+    "006",
+    "007",
+    "012",
+    "023",
+    "025",
+    "027",
+    "029",
+    "049",
+    "091",
+    "135",
+    "137",
+    "140",
+    "175",
+    "192",
+    "380",
+    "401",
+    "520"
+   ],
+   "judged": [
+    {
+     "lesson": "b9-006",
+     "strength": "strong",
+     "trap": "Adding the workers' wage base W to solveGrossWithdrawal changes the fixed point's map. A convergence probe at large net or low wages samples the fast regime, so k and the pass cap have to be re-derived and probed at small net with W present.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line: a clamped year has household net = 0, the small-net corner.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-007",
+     "strength": "strong",
+     "trap": "Wages stacked under the conversion/RMD, plus the state term, can push ordinary income into new bracket/torpedo/cap-gains corners. The contraction rests on those corners being disjoint, so the worst-case k needs re-deriving from the sum of channels.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine, read in full (code check MOVED, cap 192).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-027",
+     "strength": "strong",
+     "trap": "The IRMAA lag-read override for clamped years and the presence key must use the §7 clamp's own firing predicate (accumulation construct present), not a correlated proxy like earnedIncome>0, or zero-income workers are left unguarded.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 1, read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-014",
+     "strength": "moderate",
+     "trap": "The tax base moves when W vanishes in the retirement year, and the 2-year IRMAA lag reads clamped-year MAGI. Test those transition years, not just steady working and retired years.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "The plan's U5 predicate (spec at 8484bd24 :165/:317: t >= medicareOnsetSimYear, >= rmdStartAgeForBirthYear) listed no crossing-year arm. The build's review wf_899aa36c-118 R2 P3 (dateSearch.test.ts:884): mutants D3 (t >= o to t > o) and D4 (>= to >) survive, under-reading where the onset or RMD-start year is the only reached clamped year.",
+     "why_missed": "A module hit only (engine/taxOverlay, engine/simulate), one of about 27 module matches, and not among the 17 whose headers were scored."
+    },
+    {
+     "lesson": "b9-011",
+     "strength": "moderate",
+     "trap": "Goldens for tax(W+X)-tax(W) sit behind an aggregate-only API. Use the one-year zero-return read-off or the differencing identity rather than using the engine as its own oracle.",
+     "verdict": "IN_PLAN",
+     "hit": "N/A",
+     "evidence": "working-year-tax-floor-build-spec.md:417 at 8484bd24: 'The insights: 027, 007, 135, 137, 023, 049, 029, 011.'",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-023",
+     "strength": "moderate",
+     "trap": "Externally derived goldens for the working-year floor can cross a conditional rule (the §86 provisional base, state rules, senior bonus) that the derivers' stated conventions never mention. Unanimous agreement then confirms the wrong rule.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine, read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-029",
+     "strength": "moderate",
+     "trap": "The reduce-to-spine byte-identity checks pass trivially on structurally-zero surfaces. The new wage-base channel needs a fixture that drives it to a non-default value.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line (a moved companion for reduce-to-spine).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-025",
+     "strength": "moderate",
+     "trap": "The plan's enumerated fixtures (the dip Y=5 crown pins, the incremental-pricing cases) are hypotheses. Derive that each mechanism exists in this engine before writing it into the test battery.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line (confirm dip year 4 lands a conversion).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-062",
+     "strength": "strong",
+     "trap": "The dip seed's crown at Y=5 exists only because the §7 clamp makes work years cheap and conversion income collides with budget windows anchored to the retirement date. Pricing conversions over wages in clamped years changes that money gradient, so the crown pins can move or the dip can vanish.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "b4bbbd3e U4: 'No crown and no non-monotone set moved'. dip's re-tune law did not fire, and its dip survived (nm [0,1,2] provisional, [0,1] final).",
+     "why_missed": "A body-search hit only (+1), with empty tags and modules. Its title (non-monotonicity, dual-clock collision) shares no topic word, so it ranked far below."
+    },
+    {
+     "lesson": "b9-049",
+     "strength": "strong",
+     "trap": "Clamped years used to carry no taxable draw. Pricing Roth conversions and RMDs over wages changes that precondition, so every path that relied on it must be re-audited, not just solveGrossWithdrawal: the IRMAA lag-read clamped-year override, the ACA window gate, presence keying.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line (the IRMAA lag-read override's precondition).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-055",
+     "strength": "moderate",
+     "trap": "The new presence-keyed pricing collides with the reduce-to-spine byte-identity law. Limit the identity claim to the region where the accumulation construct is absent and pin both behaviors, rather than special-casing one rule.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "The build kept I = 0 bit-identical and B = I = 0 exactly 'unpriced' (b4bbbd3e As built). No review finding of a rule collision with the spine identity.",
+     "why_missed": "A tag hit on byte-identity only, and not among the 17 scored."
+    },
+    {
+     "lesson": "b9-074",
+     "strength": "moderate",
+     "trap": "The SOLVER_CODE_VERSION / pricing-ledger bump drives a staleness note the user sees. The reach it claims must match what the engine actually re-prices (which households, which years), or the note describes re-pricing that doesn't happen.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Plan KTD8 residual (a) (spec at 8484bd24 :115) explained the NC vault's line with a world fact, 'since NC exempts SS'. The build found the engine's reason was different: T(0,ss) = $0, no draw funds it, and the vault moves only through IRMAA. b4bbbd3e As built: 'KTD8's residual (a) gave the wrong reason'. Review wf_899aa36c-118 R3 P2 (docs/backlog.md:816): 'a mechanism the code does not have'.",
+     "why_missed": "Not a candidate. The brief searched ledger, SOLVER_CODE_VERSION and pricingLedger, while 074 carries the tags staleness, disclosure and metadata and the module store/staleness."
+    },
+    {
+     "lesson": "b9-093",
+     "strength": "strong",
+     "trap": "Reduce-to-spine byte-identity must compare every ranked vector, not a total. The presence-keyed accumulation pricing also needs a moved-witness proving it changes something, or an 'unchanged' pass is vacuous.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "The vacuous identity arms the build's review found (R2 P2 at taxOverlay.test.ts:5017 and :5082) are 029's class, identical input run twice. No sum hid a reallocation.",
+     "why_missed": "A tag hit (byte-identity), scored among the 17 but ranked below the top 5 and left out of also-relevant."
+    },
+    {
+     "lesson": "b9-088",
+     "strength": "moderate",
+     "trap": "On the date route the crowned candidate's transform touches accumulation streams and clamped years, so anything describing the working-year tax must read the candidate's params, not the base overlay.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "U5's predicate walks each candidate's built params (buildCandidateParams to cashTermsForYear), and the spine route walks its own. No finding of a surface reading the base overlay.",
+     "why_missed": "A module hit (engine/dateSearch, intake/intakeMap), and not scored."
+    },
+    {
+     "lesson": "b9-091",
+     "strength": "moderate",
+     "trap": "Oracle fixtures for incremental tax(W+X) minus tax(W) have premises that drift across years (unscaled basis realizes gains from year 1 on). When the engine disagrees with the hand math, trace the mechanism before patching either side.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line (trace the mechanism before fixing either side).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-096",
+     "strength": "moderate",
+     "trap": "The SOLVER_CODE_VERSION and ledger bump: any new input that affects the solve (the W and accumulation construct) must join the run's identity and fingerprint, or saved values match spuriously.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "SOLVER_CODE_VERSION stayed 11, with KTD9's proof that the solver runs only on the all-retired spine. No identity or fingerprint finding in the build or its review.",
+     "why_missed": "Not a candidate. Its tags (fingerprint, identity, fail-closed) and module engine/validation miss the brief's terms (byte-identity, SOLVER_CODE_VERSION, ledger)."
+    },
+    {
+     "lesson": "b9-103",
+     "strength": "moderate",
+     "trap": "Planning the pricing-ledger row's reach qualifier (which households get told) is a suppression rule. Check its worst false negative, and gate on the table the run consumed.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "The plan's exposure predicate read 'priced' only when 'some clamped year has B > 0 and …' (spec at 8484bd24 :317, :165). That silenced a B = 0, I > 0 household whose charge moves. The build changed it to B > 0 OR I > 0 (b4bbbd3e As built). Review R2 P1 (dateSearch.test.ts:823): the under-read direction was untested, and mutants D1/D5 survived.",
+     "why_missed": "A module hit only (src/intake/intakeMap.ts). Its exposure-gate and silent-stale tags never met the topic's 'pricing-ledger' wording, and it was not scored."
+    },
+    {
+     "lesson": "b9-105",
+     "strength": "moderate",
+     "trap": "Tier 0 (B) is a filed prescription. Check that every mechanism it names (the section 7 clamp base, the IRMAA lag-read) exists in source as described before planning on it.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "8484bd24, 'What the planning pass changed against the entry as filed': the register's prescribed tax(W+X) − tax(W) 'falsified the NEGATIVE's own premise wherever Social Security alone is taxable', and the filed reach measurement had never counted the Medicare draw.",
+     "why_missed": "Not a candidate. Its tags (process, queue, prescriptions) and modules (TODO.md, devSeeds.ts…) share no word with a topic that never says register or prescription."
+    },
+    {
+     "lesson": "b9-135",
+     "strength": "strong",
+     "trap": "The §86 provisional base, now carrying wages, is compared with frozen-nominal thresholds that must be deflated with cumulativePriceIndex. Before predicting that dip's Y=5 crown pins won't move, find which arm of each min/max cap actually binds.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine, read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-137",
+     "strength": "strong",
+     "trap": "Hand-derived fixtures for tax(W+X)-tax(W), federal and state, are independent only if the rule comes from the IRS/state form rather than our research paraphrase. Otherwise the fixture and the engine share one misreading and count as one witness.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine, read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-139",
+     "strength": "moderate",
+     "trap": "The IRMAA lag-read override for clamped years reads MAGI from a different year than the bill. If a year-k quantity is built from another year's frame, or the witnesses keep income constant across the work-to-retirement edge, the mixed frame goes green by construction.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "No cross-year frame finding in the build or its review. R3 P3 (docs/backlog.md:887) was a doc claim about when I joined the IRMAA read.",
+     "why_missed": "A tag hit (irmaa, social-security), scored among the 17 but ranked below the top 5 and never named."
+    }
+   ]
+  },
+  {
+   "id": "B05",
+   "ts": "2026-10-21T00:31:00.347Z",
+   "project": "projects-the-back-nine",
+   "session": "b9",
+   "topic": "The working-year tax floor build (Tier 0 (B)): docs/plans/features/working-year-tax-floor-build-spec.md — solveGrossWithdrawal / GrossUpContext in src/engine/taxOverlay.ts priced by T(base+P,ss)−T(base,ss)+T(0,ss) with a three-arm max over the investment-income readings; cashTermsForYear's §7 clamp in src/engine/simulate.ts carrying the year's base B; state tax channel in src/engine/stateTax.ts (NC/PA/FL); the engine-pricing ledger row v12 with a reach qualifier (src/engine/pricingVersion.ts, src/store/staleness.ts, src/ui/stalenessExposure.ts); dip seed re-tune in src/ui/devSeeds.ts; byte-identity / reduce-to-spine; gross-up convergence GROSS_UP_MAX_PASSES; the methodology disclosure row in src/ui/assumptionRegistry.ts. Plan names insights 027, 007, 135, 137, 023, 049, 029, 011.",
+   "lessonsTheBriefNamedOrOpened": [
+    "000",
+    "006",
+    "007",
+    "011",
+    "020",
+    "023",
+    "027",
+    "029",
+    "081",
+    "088",
+    "093",
+    "135",
+    "137",
+    "140",
+    "180",
+    "192",
+    "250",
+    "380",
+    "470",
+    "516",
+    "812"
+   ],
+   "judged": [
+    {
+     "lesson": "b9-006",
+     "strength": "strong",
+     "trap": "T(base+P)-T(base)+T(0) changes the gross-up map. The GROSS_UP_MAX_PASSES justification has to be re-probed in the slow regime (small net, base present), not at a convenient large net.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line: 'Probe at small net.'",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-007",
+     "strength": "strong",
+     "trap": "The stacked base B plus the NC/PA state channel raises the worst-case k, and convergence depends on the regime corners staying disjoint. Re-derive k from the sum of channels and extend the stress sweep.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine, read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-027",
+     "strength": "strong",
+     "trap": "cashTermsForYear's §7 clamp now carries base B. The presence key and guards must fire on the clamp's own predicate (construct present), not a proxy like earnedIncome>0.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine, read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-011",
+     "strength": "strong",
+     "trap": "Value-correct goldens for the floor go through an aggregate-only solver. The zero-return read-off and the differencing identity (two runs with the same inner solve) are the tools for asserting the incremental tax without the engine as oracle.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line '023 / 011'.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-029",
+     "strength": "strong",
+     "trap": "Byte-identity and reduce-to-spine assertions are vacuous where the new base or an arm is structurally zero. Each arm of the three-arm max needs a fixture where it is the one that wins.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-023",
+     "strength": "strong",
+     "trap": "A golden for the three-arm max, or for NC/PA/FL state tax, can sit on the wrong side of an arm switch or a state rule (PA does not tax retirement distributions). Walk every fixture through the selection predicates first.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line '023 / 011'.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-028",
+     "strength": "moderate",
+     "trap": "The cap's eps-bound pass count holds only inside the declared domain (ENGINE_MAX_DOLLAR etc.). Adding the base raises the tax magnitude, so re-derive the worst case inside the bounds.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "b4bbbd3e spec As built: 'KTD3's and the Risks table's \"an absurd B fails loud\" is wrong. Above B ≈ $1e8 the T(base + P) − T(base) cancellation quantizes the increment…' Review wf_899aa36c-118 R1 P3 (taxOverlay.test.ts:4829): the plan's fail-loud story at extreme magnitude was false; measured, it converges with sub-cent error.",
+     "why_missed": "Tag (convergence) and module hits, scored among the 15 but ranked below the top 5 and left out of also-relevant."
+    },
+    {
+     "lesson": "b9-014",
+     "strength": "moderate",
+     "trap": "Base B drops to zero at the clamp's retirement crossing. Test that transition year, not just static working and retired positions.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Review wf_899aa36c-118 R2 P3 (dateSearch.test.ts:884): the predicate's Medicare-onset and RMD-start boundary compares were untested. Mutants D3/D4 survive and under-read where that year is the only reached clamped year.",
+     "why_missed": "A module hit only (engine/taxOverlay, engine/simulate), and not among the 15 scored."
+    },
+    {
+     "lesson": "b9-025",
+     "strength": "moderate",
+     "trap": "The build spec's enumerated fixtures (the dip seed re-tune, the crown pins) may be premise-false for this engine. Derive the mechanism before building them.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "b4bbbd3e As built decision 4: 'The plan's ordinary-wins witness was wrong.' dip's I = $10,000 prices the preferential reading at $5,880, not ordinary $5,380, so U1's and U3's expectations were 'false as written'.",
+     "why_missed": "A module hit (engine/dateSearch, engine/taxOverlay), and not scored."
+    },
+    {
+     "lesson": "b9-049",
+     "strength": "strong",
+     "trap": "This is the lesson the plan cites. The §7 clamp's precondition (no taxable draw in a work year) changes, so re-audit every path that establishes or relies on it (cashTermsForYear's base B, the IRMAA lag read, the overlays), not only the edited GrossUpContext.",
+     "verdict": "IN_PLAN",
+     "hit": "N/A",
+     "evidence": "working-year-tax-floor-build-spec.md:96 ('…untouched (insight 049)') and :417. The topic itself lists it among the plan's insights.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-062",
+     "strength": "strong",
+     "trap": "The dip seed re-tune in devSeeds.ts: the dip exists only through the dual-clock collision plus cheap work years. Working-year tax lowers that gradient, so re-derive the mechanism before re-tuning instead of nudging seed numbers until it dips again.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "U4: no crown or non-monotone set moved, dip's re-tune law did not fire, and devSeeds.ts was not re-tuned (b4bbbd3e).",
+     "why_missed": "A title-only hit ('monoton'), with empty tags and modules, and not scored."
+    },
+    {
+     "lesson": "b9-074",
+     "strength": "strong",
+     "trap": "The v12 ledger row's reach qualifier (staleness.ts, stalenessExposure.ts) and the methodology row in assumptionRegistry.ts describe engine behavior. Grep the consumer for each state (NC, PA, FL) and each arm before writing the sentence; a qualifier that claims more reach than the engine has is calm but wrong.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Review wf_899aa36c-118 R3 P2 (docs/backlog.md:816): the closed entry, the As-built table and NC residual (a) described the SS-only seeds moving 'through the draw that pays SS's own tax'. 'No such draw exists.' Corrected along with KTD8's 'NC exempts SS' reason (b4bbbd3e As built).",
+     "why_missed": "Tag (staleness, disclosure) and module (store/staleness) hits, but not among the 15 scored."
+    },
+    {
+     "lesson": "b9-055",
+     "strength": "moderate",
+     "trap": "The presence-keyed working-year floor against the reduce-to-spine byte-identity: limit the identity golden to runs without the construct, and pin the divergence with an explicit test instead of special-casing.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "I = 0 stayed bit-identical, B = I = 0 stayed exactly 'unpriced', and no collision finding was raised (b4bbbd3e).",
+     "why_missed": "A tag hit on byte-identity only, and not scored."
+    },
+    {
+     "lesson": "b9-103",
+     "strength": "strong",
+     "trap": "The v12 ledger row's reach qualifier in stalenessExposure.ts is an exposure gate. Test it in the silencing direction: a household whose run consumed the new pricing must never fall outside the reach and read 'nothing changed'.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "The spec's exposure predicate (B > 0 alone) would silence a B = 0, I > 0 household whose charge moves; the build re-keyed it to B > 0 OR I > 0 (b4bbbd3e As built). Review R2 P1 (dateSearch.test.ts:823): the under-read channel was untested ('unpriced' was 'documented as a proof that never under-reads'), and mutants D1/D5 survived.",
+     "why_missed": "A module hit (staleness.ts, stalenessExposure.ts), and not among the 15 scored."
+    },
+    {
+     "lesson": "b9-093",
+     "strength": "strong",
+     "trap": "Byte-identity and reduce-to-spine for the new gross-up must be proven per vector, not on a total that a pretax-to-Roth reallocation preserves. Pair it with a witness proving the clamped-year pricing actually moved.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-088",
+     "strength": "moderate",
+     "trap": "The methodology disclosure row and the state channel must read the producer of the run being described. Date-route accumulation streams are changed by the candidate transform, so the base overlay is the wrong source.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-091",
+     "strength": "moderate",
+     "trap": "The three-arm max over investment-income readings sits on taxOverlay's unscaled basis, so year-1-and-later draws realize gains. Hand-derived expected tax that assumes basis equals value will diverge; trace before patching.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "As built decision 4: the engine disagreed with the plan's hand figure ($5,380 ordinary). The trace showed the hand math was wrong (the $34,000 conversion lifts the $10,000 gain block past the $98,900 0% edge, giving $5,880 preferential), so the plan was corrected, not the engine (transcript 588210fc line 1127).",
+     "why_missed": "Empty tags and modules. Its title (engine disagreeing with a hand-derivation) shares no topic word, and the brief ran no filename search."
+    },
+    {
+     "lesson": "b9-106",
+     "strength": "moderate",
+     "trap": "If gross-up convergence fails and GROSS_UP_MAX_PASSES gets raised, prove the pass cap is the bound that actually binds, not another limit on the path.",
+     "verdict": "NOT_RELEVANT",
+     "hit": "N/A",
+     "evidence": "The judge's trap only applies if GROSS_UP_MAX_PASSES were raised after a convergence failure, and none occurred: k ≈ 0.78 stood and the cap stayed 192 (b4bbbd3e As built; review R1 P2 only asked for the written derivation). 106 itself is about nested test timeouts.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-096",
+     "strength": "moderate",
+     "trap": "The SOLVER_CODE_VERSION bump: the changed pricing must change the run's identity, or old persisted fingerprints and records match the new encoding by accident.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "SOLVER_CODE_VERSION stayed 11 by KTD9. No identity or fingerprint finding among the 24 review findings.",
+     "why_missed": "Not a candidate. Its tags (fingerprint, identity) miss the 'byte-identity' pattern, and its module engine/validation was not in the module grep."
+    },
+    {
+     "lesson": "b9-083",
+     "strength": "moderate",
+     "trap": "The dip seed re-tune in devSeeds.ts: that file is CRLF, and a script rewrite silently flips it to LF, turning a few-line edit into an unreviewable whole-file diff.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Review wf_899aa36c-118 R1/R2 P1 (devSeeds.test.ts:1085): one parallel builder's new StalenessExposure key turned another builder's 'stale' arm red, 'flagged by both and fixed by neither'. It is recorded in the b9-5 close's landmine. The builders' hard rule would also have rewritten the CRLF devSeeds.test.ts to LF; one builder kept CRLF on its own judgment.",
+     "why_missed": "Not a candidate. Its tags (parallel-agents, crlf, eol, seed-tuning) miss the brief's dev-seeds and re-tune terms, and the topic never mentioned parallel builders."
+    },
+    {
+     "lesson": "b9-108",
+     "strength": "moderate",
+     "trap": "Re-pinning dip's crown means real-solve witnesses in devSeeds.test.ts. Without an explicit measured timeout they pass when run filtered and time out in the full parallel suite.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "No test timeout in the build or landing transcripts (588210fc, 3453c2de), and the dip seed was not re-pinned.",
+     "why_missed": "A module hit (devSeeds.test.ts), and not scored."
+    },
+    {
+     "lesson": "b9-135",
+     "strength": "strong",
+     "trap": "The build touches §86 and the NC deduction, both frozen-nominal and in need of deflation, runs a three-arm max where the binding arm must be measured rather than assumed, and re-tunes the dip seed. That calls for 135's seed law: record the move at the old inputs first, then turn the smallest knob.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine, read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-137",
+     "strength": "strong",
+     "trap": "Fixtures for the base+P pricing and the NC/PA/FL state channel need the government's form as the oracle for the rule. A hand worksheet drawn from the research strand repeats the same misread.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine, read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-122",
+     "strength": "moderate",
+     "trap": "Changing the gross-up fixed point (wages in the base, so a steeper slope) can move GROSS_UP_MAX_PASSES and the contraction k. Those values are hand-typed in several docs and will rot unless the copies become pointers.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "k and the cap did not move ('k_sup ≈ 0.78 stands', b4bbbd3e). The stale 006/007 copies fixed later (52a9b0d7) date from the 2026-07-15 cap change, not from this build.",
+     "why_missed": "Not a candidate. Its tags (doc-rot, single-home, pointer-not-copy) and docs modules share no topic word."
+    },
+    {
+     "lesson": "b9-133",
+     "strength": "moderate",
+     "trap": "The new methodology disclosure row in assumptionRegistry.ts must not claim a net lean for conversions. Working-year pricing reaches both arms of the Roth comparison.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Review wf_899aa36c-118 R3 P2 (docs/backlog.md:825): the closed entry and the decision record called the wage-blind tax 'the optimistic direction', when it is regime-conditional. Builder C replaced taxOverlay's one-sided label (transcript line 1190), and walk 2 (wf_78c8c7fe-9e0) made the row say the costliest reading sits above OR below the real tax (b4bbbd3e As built).",
+     "why_missed": "Tag (disclosure) and module (taxOverlay) hits, scored among the 15 but ranked below the top 5 and never named."
+    }
+   ]
+  },
+  {
+   "id": "B06",
+   "ts": "2026-10-21T17:20:08.044Z",
+   "project": "projects-the-back-nine",
+   "session": "b9 10.21 -1",
+   "topic": "the working-year clamp (§7, cashTermsForYear) — measuring take-home pay vs spending per working year on the date seeds; payroll tax (FICA) sourcing; the contribute-and-draw double count",
+   "lessonsTheBriefNamedOrOpened": [
+    "022",
+    "025",
+    "026",
+    "027",
+    "029",
+    "104",
+    "135",
+    "140"
+   ],
+   "judged": [
+    {
+     "lesson": "b9-006",
+     "strength": "moderate",
+     "trap": "Measuring take-home vs spending on a few date seeds can sample only the benign regime. Confirm the probe reaches the households where the double count or shortfall actually bites before trusting its verdict.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "The probe covered every working-household seed × 11 offsets × every working year (3d49ffdd). Its headline error ran the opposite way from a benign-regime sample: a maximum taken over unreachable deaths (insight 141), corrected in 8c32a8c7.",
+     "why_missed": "Not a candidate. Its tags (fixed-point, convergence, GROSS_UP_MAX_PASSES) share no word with clamp, take-home or FICA."
+    },
+    {
+     "lesson": "b9-027",
+     "strength": "moderate",
+     "trap": "The §7 clamp fires income-blind (alive and before retirement) while related guards key on earned income. Any measurement or finding about clamp years has to use the clamp's own predicate.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine, read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-022",
+     "strength": "moderate",
+     "trap": "Sourcing FICA: the SS wage base is indexed every year while the Additional Medicare thresholds are frozen and never indexed. Each figure needs its own citation and an explicit frozen-or-live call.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine, read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-037",
+     "strength": "moderate",
+     "trap": "The D7 audit's filed gaps are hypotheses until the full chain is traced. The survivor-shortfall bullet quoted deaths the engine never draws.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "8c32a8c7: the pilot's own MEASURED bullet (~$33,197 / ~$15,372 survivor shortfalls) went to Briggsy and the council as fact. The council's red team re-read survivor-rows.json and refuted it. Insight 141: 'Every opening seat of the council had reasoned from the false headline.'",
+     "why_missed": "Not a candidate. Its tags (review, adversarial-verify, over-confidence, source-trace) and modules (intake, store, engine) share no topic word."
+    },
+    {
+     "lesson": "b9-025",
+     "strength": "moderate",
+     "trap": "Before filing or ranking a gap, derive that the mechanism (contribute-and-draw double count, survivor shortfall) can actually occur in this engine.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine, read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-062",
+     "strength": "moderate",
+     "trap": "This lesson spells out the §7 clamp's work-year economics: net withdrawals are zeroed, so each work year is worth spend plus contributions. The contribute-and-draw double count is that generosity, and fixing it moves the dip seed's crowns on the very date seeds being measured.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "Measurement and filing only. No clamp change shipped in the window, so no crown could move.",
+     "why_missed": "Empty tags and modules, and its title shares no topic word. The brief ran one combined frontmatter grep with no body or filename search."
+    },
+    {
+     "lesson": "b9-040",
+     "strength": "moderate",
+     "trap": "Claims about survivors during the working years must respect the stochastic timeline: the longevity sampler never draws a death before 66. A shortfall that quotes earlier deaths describes paths the engine never runs, which is the bullet this work had to correct.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "8c32a8c7: the survivor figures 'came only from deaths the engine never draws (none before 65)' (longevity.ts:59-66), 271 dip and 108 datemixed unreachable rows. The bullet described paths the engine never runs; it was corrected and the register purged (Step 0).",
+     "why_missed": "A module hit (simulate.ts). The topic never named survivors or deaths, so it ranked below the top 5 of 36."
+    },
+    {
+     "lesson": "b9-042",
+     "strength": "moderate",
+     "trap": "Filing 48 register gaps from reasoning makes them consistent with each other, not current with the code. Check each filed claim about engine behavior (which deaths are drawn, whether FICA is modeled, the double count) against the code before filing.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "The D7 audit's ~166 claims were skeptic-checked against code, none refuted (3d49ffdd). No entry from this filing was later shown stale against code. The 042 extension (U11, b9-8) describes later work.",
+     "why_missed": "Not a candidate. Its tags (docs, drift, coherence-vs-currency) share no topic word."
+    },
+    {
+     "lesson": "b9-088",
+     "strength": "moderate",
+     "trap": "Measuring take-home pay against spending per working year on the date seeds must read the crowned candidate's transformed params, because accumulation streams change per candidate. The base overlay measures a run the household never sees.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "The probe ran every candidate offset (3d49ffdd). No finding that it read the base overlay.",
+     "why_missed": "A module hit (engine/dateSearch), ranked below the top 5."
+    },
+    {
+     "lesson": "b9-095",
+     "strength": "moderate",
+     "trap": "The pay-check measurement probe must run the shipped date-search decision path. A reference path describes a crown the household never sees.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "No finding that the probe ran a reference path. A hand derivation matched it to the cent.",
+     "why_missed": "Not a candidate. Its tags (named-driver, sensitivity-probe) and modules (engine/validation, solver) share no topic word."
+    },
+    {
+     "lesson": "b9-091",
+     "strength": "moderate",
+     "trap": "Where the engine's measured working-year cash disagrees with the hand estimate (the contribute-and-draw double count), trace the mechanism before filing it as a gap or a fixture bug.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "The hand derivation agreed with the engine to the cent. The one disagreement was with the pilot's written prediction, recorded as wrong (135's measure-first law).",
+     "why_missed": "Empty tags and modules, and its title shares no topic word."
+    },
+    {
+     "lesson": "b9-105",
+     "strength": "moderate",
+     "trap": "Filing 48 D7 gaps: each entry's household premise and prescription must be checked against what the code can produce. The survivor bullet quoted deaths the engine never draws.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "8c32a8c7: the Hawk's veto rejected the pilot's proposed remedy (a shortfall arm fed by the k = 0 retirement budget 'invents a gap on every reachable seed row'; 'the pilot's shortfall sentence is REJECTED'), while the diagnosis (pay is never checked) stood. A sound diagnosis was carrying a wrong prescription.",
+     "why_missed": "A candidate only by a false match: the brief's 'FICA' term hit inside the tag 'verification'. It ranked below the top 5."
+    },
+    {
+     "lesson": "b9-135",
+     "strength": "strong",
+     "trap": "Sourcing FICA brings in the Additional Medicare Tax threshold, frozen nominal at $250k MFJ. 135 says Medicare surtax lines must divide by cumulativePriceIndex, or the real-dollar engine indexes them in the rosy direction. Also write the take-home-vs-spending prediction down before measuring.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 1, read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-137",
+     "strength": "moderate",
+     "trap": "FICA constants and rules should come from the SSA/IRS primary text or form, not a research paraphrase. Otherwise later fixtures agree with the engine by construction.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "The measurement's hand derivation used IRS primary sources and matched to the cent (3d49ffdd). No later fix to a payroll figure from this session.",
+     "why_missed": "A tag hit on 'rosy-direction' only, ranked below the top 5."
+    },
+    {
+     "lesson": "b9-139",
+     "strength": "moderate",
+     "trap": "Measuring take-home pay against spending per working year must judge each year on its own income and lines. Seeds with constant income across years can hide a mixed-frame error.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "8c32a8c7 and council-log 2026-10-21: dip's one reachable short year was 'the Go-go years travel line charged at k = 0 in a working year', a retirement-phase budget line judged in a working year's frame. The Hawk's veto bars 'k = 0 retirement spending' from feeding a working-year draw.",
+     "why_missed": "Not a candidate. Its tags (frame, cross-year, window, irmaa, social-security) share no word with the topic."
+    }
+   ]
+  },
+  {
+   "id": "B07",
+   "ts": "2026-10-21T19:25:28.178Z",
+   "project": "projects-the-back-nine",
+   "session": "b9 10.21 -2",
+   "topic": "The working-year pay check (D7 build 1): the accumulation §7 clamp in cashTermsForYear (simulate.ts), the working-year tax floor (b4bbbd3e — baseTax − zeroTax), fundingNet in taxOverlay.ts, presence-keyed overlays and the reduce-to-spine law, validateParams, payroll tax (FICA) constants sourcing, the Social Security earnings test, a new intake question (confirm-or-correct working-year cost W), the engine-pricing ledger / SOLVER_CODE_VERSION, and the date route (fuck-off date sweep). What should I know before planning and building this?",
+   "lessonsTheBriefNamedOrOpened": [
+    "027",
+    "029",
+    "076",
+    "093",
+    "132",
+    "135",
+    "137",
+    "141",
+    "142",
+    "143",
+    "184",
+    "223",
+    "500",
+    "827"
+   ],
+   "judged": [
+    {
+     "lesson": "b9-027",
+     "strength": "strong",
+     "trap": "The pay check reworks the §7 clamp. Every guard and override (IRMAA, the bridge) must key on the clamp's own firing predicate, not on earnedIncome>0.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 2, read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-022",
+     "strength": "strong",
+     "trap": "FICA and earnings-test constants: the wage base and the earnings-test thresholds are indexed yearly, while the Additional Medicare thresholds are frozen statute. Cite each figure separately and pin the plausible wrong derivation.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "a5d62b06 (A2+A3 review): 'The \"aren't indexed for inflation\" quote is the Form 8959 instructions', not 3101(b)(2)'s'. Also, 3121(v)(1)(A) covers 401(k) only (403(b) and 457(b) rest on other subsections). Figures and quotes were cited to sources that don't hold them, fixed in workingYears.ts and payrollTax.ts.",
+     "why_missed": "Not a candidate. Its tags (constants-discipline, provenance, citations) and module engine/constants miss the brief's tag terms (payroll, fica) and its 'constants/tax' module term."
+    },
+    {
+     "lesson": "b9-008",
+     "strength": "strong",
+     "trap": "The new intake answer W goes into validateParams beside existing streams. Mirror the siblings' finiteness guards, and never read it with `?? default`, which lets NaN through.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "W landed with isFinite and range checks in validateParams (e2890887). The one NaN leak found (c805fa8f) went through a relational guard, which is 010's form, not ?? default.",
+     "why_missed": "Empty tags and modules, and its title (NaN, ?? default) shares no topic word."
+    },
+    {
+     "lesson": "b9-014",
+     "strength": "strong",
+     "trap": "The earnings test's exempt amount and withholding change at the FRA year, and the retirement and death years move W. Each transition year needs its own fixture, not just static positions.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "fde13929 (A4 review wf_bb2c6dec-c1c) found three FRA-year defects: an own claim at 67 shielded a widow(er) benefit begun earlier; a spousal excess starting in the payee's FRA year went untested ($6,792.50 rosy); the 1959 stopgap charged 11 months where at most 9 apply. 2c36e6f4 fixed a past-FRA payee under the FRA-year stopgap.",
+     "why_missed": "A module hit, scored among the 18, but ranked below the top 5 and left out of also-relevant."
+    },
+    {
+     "lesson": "b9-010",
+     "strength": "moderate",
+     "trap": "validateParams range or tolerance checks on W (like W>=0) admit NaN, because every comparison with NaN is false. Check Number.isFinite first.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "c805fa8f: 'the floor's check fails loud on a NaN … again (A7's refactor had let a NaN through)'. The taxOverlay.ts guard `x < WORKING_YEAR_INCREMENT_FLOOR` was rewritten as `!(x >= …)`.",
+     "why_missed": "Tag (fixed-point) and module hits. Its NaN and input-validation tags never met the topic's 'validateParams', and it was not scored."
+    },
+    {
+     "lesson": "b9-024",
+     "strength": "moderate",
+     "trap": "FICA's wage cap and the earnings test are per-person. Collapsing workers' pay or W into a household scalar destroys the attribution that guards and pricing need.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "2c36e6f4: 'a release beside a start is named when some EARNER's charge falls (the household net hid it)'; chargedExcess was made per earner. Insight 145 (0fc79987) 'corrects A7's \"no per-person arrays needed\"'.",
+     "why_missed": "A module hit (engine/taxOverlay, simulate), and not scored."
+    },
+    {
+     "lesson": "b9-023",
+     "strength": "moderate",
+     "trap": "Pay-check goldens may silently cross the wage-base cap, the Additional Medicare threshold or the earnings-test FRA switch, none of which the derivers' conventions mention.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "fde13929: the review's independent oracle found the FRA-year stopgap convention wrong for the 1959 cohort (11 months vs at most 9), and the research example rested on an unrounded convention ($8,640 vs $8,596.20). 132's 2026-10-31 extension (b9-4): the pilot's FRA-year guess applied the wrong exempt amount.",
+     "why_missed": "Tag (externally-derived) and module hits, and not scored."
+    },
+    {
+     "lesson": "b9-029",
+     "strength": "moderate",
+     "trap": "The reduce-to-spine law at W-absent discriminates nothing for the new channels. A fixture must drive fundingNet, FICA and the earnings-test withholding to non-default values.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 5, read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-025",
+     "strength": "moderate",
+     "trap": "The plan's test battery for the pay check and the date-route sweep is hypotheses. Derive that each enumerated mechanism exists in this engine before committing to it.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "e5a88dd4: 'The plan's \"dip's crown moves at most one year earlier\" did not happen: the crown is the claim year'. 9b6a6daf fixed the plan's 'never takes the ACA branch' premise.",
+     "why_missed": "A module hit (engine/dateSearch, taxOverlay), and not scored."
+    },
+    {
+     "lesson": "b9-036",
+     "strength": "moderate",
+     "trap": "The new confirm-or-correct W intake question commits on blur, so a Continue gate reading the render snapshot validates one commit stale.",
+     "verdict": "IN_PLAN",
+     "hit": "N/A",
+     "evidence": "working-year-pay-check-build-spec.md:921 at 9edcd3c3, the reviewed plan the build used: 'Insights: 027, 029, 036, 048, 055, …'. The blur race still landed later (68aba728).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-018",
+     "strength": "moderate",
+     "trap": "The pay check supersedes §7's premise that wages cover working-year spending. Docs and comments citing that premise (not just the units being edited) are the blast radius, so grep for the premise phrases.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "d7930466 (U11): KTD1/KTD22's 'only dev plants and engine tests reach [a W-absent run]' went false when Phase B ruling 17 changed buildDateInput's carriage, and six drafting lanes copied it into four docs. 042's 2026-10-31 extension: 'grep the plan for \"only … reach\"'.",
+     "why_missed": "A candidate only by a false match ('fica' inside the tag 'verification'), and not scored."
+    },
+    {
+     "lesson": "b9-062",
+     "strength": "strong",
+     "trap": "The pay check changes the §7 clamp (a work year can now run short and draw), and that clamp is mechanism #1 behind the dip seed's non-monotone date sweep. Changing it can move the crowns or erase the dip that the date-route gates rely on.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "e5a88dd4: 'No crown, non-monotone set or crowned grade moved anywhere'. dip's dip survived.",
+     "why_missed": "Empty tags and modules, and its title shares no topic word."
+    },
+    {
+     "lesson": "b9-049",
+     "strength": "strong",
+     "trap": "'A clamped year draws $0' is the precondition that the working-year tax floor (baseTax − zeroTax), fundingNet and the IRMAA/ACA overrides were built on. Letting work years draw makes each of those paths unchecked unless every one is re-audited.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "24ed7410 (A6 review): 'PA's tax on the NON-pay outside income … was charged nowhere — the floor ignores PA's clamped base because its tax on pay rides in W'. 9b6a6daf fixed the plan's 'never takes the ACA branch' premise.",
+     "why_missed": "Not a candidate. Its tags (invariant-precondition, recovery-rework, restore) and store/crypto modules share no topic word."
+    },
+    {
+     "lesson": "b9-046",
+     "strength": "moderate",
+     "trap": "The new W answer is persisted in ScenarioV3. On restore the codec is the only range gate, and checking finiteness is not checking range, so test a finite but out-of-range W, not just null or NaN.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "U12, the return-path ask, was cut because no saved plan predates W (9edcd3c3). No codec range finding on W.",
+     "why_missed": "Not a candidate. The topic never named the codec or ScenarioV3."
+    },
+    {
+     "lesson": "b9-050",
+     "strength": "moderate",
+     "trap": "W is a user-entered value applied identically to every path. The confidence fan cannot flag an implausibly low W (it just shows as more confidence), so a grounded range gate at intake and codec is the only defense.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "68aba728: 'a monthly 7,000 kept as $7,000 a YEAR, unasked'. 2c36e6f4 and insight 144: the period gate's disarm let '84,000 ran as $1,008,000, unasked'. An implausible W got past the only gate.",
+     "why_missed": "Not a candidate. Its tags (confidence-fan, range-gate, grounded-bound) and modules (incomeBounds, sanity) share no topic word."
+    },
+    {
+     "lesson": "b9-040",
+     "strength": "moderate",
+     "trap": "The working-year stream is a plan that a death can cut short (the lesson lists 'a planned contribution stream vs a death-truncated working window'). The seam must reconcile W against each path, and a fixture must drive that preemption.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "9edcd3c3: the earnings test's fast path had to count the survivor stream 'so a working widow(er) before FRA is tested (datemixed's 7 rows turn short)'. fde13929: an own claim at 67 shielded an earlier widow(er) benefit.",
+     "why_missed": "A module hit, scored among the 18, but ranked below the top 5."
+    },
+    {
+     "lesson": "b9-039",
+     "strength": "moderate",
+     "trap": "The Social Security earnings test is a new pure schedule. Guard its own domain (age window, earnings) at the pure boundary instead of deferring to validateParams, and range-guard any schedule it extends past its defined window.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "fde13929 (A4 review) lists 'the horizon-guarded accessor': socialSecurityPaid now throws on a read past the schedule's horizon. The reviewed plan (9edcd3c3) had no such guard, so the review added it.",
+     "why_missed": "A module hit (socialSecurityBenefit.ts), and not scored."
+    },
+    {
+     "lesson": "b9-055",
+     "strength": "moderate",
+     "trap": "Presence-keyed overlays and the reduce-to-spine law collide with the new pay-check rule. Keep the byte-identity claim to W-absent runs and pin both behaviors.",
+     "verdict": "IN_PLAN",
+     "hit": "N/A",
+     "evidence": "working-year-pay-check-build-spec.md:921 at 9edcd3c3 cites 055.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-069",
+     "strength": "moderate",
+     "trap": "The confirm-or-correct W question quotes a figure the plan derives. Name its source ('the plan expects'), quote the number in the sentence, and tell working-year cost apart from retirement spending, or the reader stumbles.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "e9fd7636 (U10's Caddie card) found three misreadings tests could not see. Example: 'Premiums are added on top' was false in working years, next to W's 'count the health premiums you pay today'. 017's 2026-10-31 extension adds walk 1 reading 'keep' as already counted.",
+     "why_missed": "Empty tags and modules, and its title shares no topic word."
+    },
+    {
+     "lesson": "b9-076",
+     "strength": "strong",
+     "trap": "New engine guards (the W block, the earnings-test schedule, the clamp) narrow what the engine accepts. validateParams must be swept against every new throw, or a bad input crashes the run instead of returning a calm indeterminate.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 4, read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-093",
+     "strength": "moderate",
+     "trap": "A presence-keyed W overlay with a reduce-to-spine law must be proven per vector, and needs a moved-witness showing the W-present arm actually changes the run.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-096",
+     "strength": "moderate",
+     "trap": "The ledger and SOLVER_CODE_VERSION: the new W input must join the run's identity in the commit it ships, or the identity gate under-covers.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "KTD14: no ledger row and no solver bump with W as the key (spec :324-325). No identity or fingerprint finding in any pay-check commit message.",
+     "why_missed": "A module hit (engine/validation), and not scored."
+    },
+    {
+     "lesson": "b9-088",
+     "strength": "moderate",
+     "trap": "The date-route sweep transforms accumulation streams per candidate. Any W or pay-check disclosure must read the crowned candidate's params, not the base.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "088's 2026-10-31 extension (Ruling 5): the plan's KTD18 took the W question's state reading from the BUILT run, which would have contradicted the spend step. The b9-5 re-walk's tax label was re-keyed to the run's state slice.",
+     "why_missed": "Tag (disclosure) and module hits, and not scored."
+    },
+    {
+     "lesson": "b9-091",
+     "strength": "moderate",
+     "trap": "Fixtures for fundingNet and baseTax minus zeroTax across working years: re-walk each world premise against year-by-year state changes (earnings-test steps, contributions), not just year 0.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "a5d62b06: a golden's hand math ($18,136.80) disagreed with the engine's dime floor. Traced, the comment was wrong and was rewritten. fde13929: the research example was re-derived under the engine's rounding.",
+     "why_missed": "Empty tags and modules, and its title shares no topic word."
+    },
+    {
+     "lesson": "b9-103",
+     "strength": "moderate",
+     "trap": "Bumping the pricing ledger's reach qualifier for the pay check: check that the exposure rule never silences households whose run consumed the changed pricing.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "103's 2026-10-30 extension (Phase B re-walk): the Keep door closed one rosy path and opened its mirror (keeping W below today's spending). It is now gated at the quote (c07e5758, ruling 34).",
+     "why_missed": "A module hit (intakeMap.ts), and not scored."
+    },
+    {
+     "lesson": "b9-105",
+     "strength": "moderate",
+     "trap": "D7 build 1 is planned from filed register entries. Verify each prescription's named mechanism against source rather than inheriting trust from its diagnosis.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "105's 2026-10-29 extension: an entry filed during this build (the A7 review, c805fa8f) assumed a household the intake refuses. Its premise was false, and its remedy changed to words (backlog.md:3178-3184).",
+     "why_missed": "A candidate only by the false 'fica'-in-'verification' match, and not scored."
+    },
+    {
+     "lesson": "b9-143",
+     "strength": "strong",
+     "trap": "The pay check moves a working year's base. Its reach and ledger qualifier must count every dollar the portfolio funds (fundingNet, the Medicare draw) and every MAGI read (IRMAA two years on), not only the channels the feature was designed for.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 1, read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-142",
+     "strength": "strong",
+     "trap": "D7 is why this build exists: once W is used or asked for, the old \"doesn't check your pay covers it\" row must not survive or be replaced by a new disclaimer. A note stays only as a stopgap while its build is open.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-135",
+     "strength": "strong",
+     "trap": "Sourcing the FICA constants includes the frozen-nominal Medicare surtax threshold, which must deflate. The earnings-test exempt amounts are indexed by law, so flat-real is right for them. Ask which statute indexes each figure.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 3, read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-137",
+     "strength": "strong",
+     "trap": "Fixtures for payroll tax and the earnings test must take the rule from SSA/IRS primary text or forms (POMS, 20 CFR, Form 8959), not the research summary, or they become one witness counted twice.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-141",
+     "strength": "moderate",
+     "trap": "Planning from the pay-check measurement risks quoting survivor-shortfall magnitudes taken over deaths the engine never draws. Filter to reachable rows first, then take the max.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-139",
+     "strength": "moderate",
+     "trap": "Earnings-test and clamp quantities must be per-year frames. A year-0 skeleton extended over the working years, or witnesses with constant income, will hide claims and income changes in later years.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "c805fa8f (A7 review): the senior-bonus sunset was 'gated on the YEAR BEFORE owing federal tax', so year k was read from year k−1's line and 2029's drop went unnamed. It is now gated on this year's line.",
+     "why_missed": "A tag hit (social-security), scored among the 18, but ranked below the top 5."
+    },
+    {
+     "lesson": "b9-132",
+     "strength": "moderate",
+     "trap": "The confirm-or-correct W quote shown in intake must come from the engine's own decision path. A UI mirror that re-derives W from draft inputs forks the first time the engine adds a guard.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-112",
+     "strength": "moderate",
+     "trap": "A new intake question that holds a typed W in component state until a tap must register with unsavedBuffer and useUnloadGuard, or a reload loses the answer with no warning.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "No reload-loses-W finding. 144 found a sibling exit leak (Back carried an unconfirmed period past the step's gate, cured by discardOnBack) and links it to 112, but there was no unsaved-buffer or unload-guard fix.",
+     "why_missed": "Not a candidate. Its tags (beforeunload, unsaved-work) were never searched."
+    }
+   ]
+  },
+  {
+   "id": "B08",
+   "ts": "2026-10-22T13:46:48.119Z",
+   "project": "projects",
+   "session": "our setup",
+   "topic": "the squeaky-clean skill (projects/skills/squeaky-clean: SKILL.md contract + docs.test.mjs) and cross-session messaging / session handoff between Claude Code sessions",
+   "lessonsTheBriefNamedOrOpened": [
+    "001",
+    "002",
+    "003",
+    "004",
+    "308"
+   ],
+   "judged": [
+    {
+     "lesson": "hooks-001",
+     "strength": "strong",
+     "trap": "Squeaky's commit steps (commit-mine and peers.mjs) run on an index the successor session shares. Any change to the contract that drops named-path commits (--only, :(literal)) or proof that a file is this session's would sweep up a peer's staged work.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 'hooks 001: on a shared index, \"mine\" must be proven', read in full (transcript 71a1e09b line 498).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "hooks-003",
+     "strength": "strong",
+     "trap": "Cross-session messaging rests on platform claims, such as whether a message or notice wakes an idle session. Writing those claims from docs, or reusing a neighboring run's 'measured' label, builds the handoff on a guess.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "First landmine 'hooks 003: a rule about the platform is a map until a run measures it'. It warns that a held or refused delivery notice is not measured. Read in full (line 496).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "hooks-002",
+     "strength": "strong",
+     "trap": "Same unit and test pattern: the mutation harness plants mutants in SKILL.md itself, which docs.test.mjs reads. Mutate a copy only, and expect each review round's fixes to open the next round's seams.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 'hooks 002: review rounds on squeaky have a long tail ... run mutation tests only on a copy'.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "hooks-004",
+     "strength": "moderate",
+     "trap": "docs.test.mjs pins SKILL.md prose that a person or successor will act on (handoff or no-handoff lines). Tests that only pin the wording lock in whatever the author believed, so assert what the prose must hold instead.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 'hooks 004: recovery advice is the least-run code ... tests should check what the rule is supposed to guarantee', read in full (line 500).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "dnb-001",
+     "strength": "moderate",
+     "trap": "The /distill reminder runs on a Stop hook, which fires when the session tries to finish. In a closer it fires after the handoff is sent, so a write can land after 'your turn'.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Hooks insight 005, added in the step-10 commit 9270fb6b: 'The Stop hook asking for /distill fired in this very session after the turn ended. In a closer, that comes after the send, so insight files could land in the tree the successor now works in.' The fix in 9270fb6b's SKILL.md: 'after the send this session edits and commits nothing: a later wake (an agent's notice, the /distill Stop hook) gets a report, never a write.'",
+     "why_missed": "The brief printed all 9 frontmatters (line 485), but dnb-001's title ('Hook platform behavior') and tags (hooks, platform-bug, blocking, PostToolUse, PreToolUse, slash-commands) share no word with the topic (squeaky-clean, SKILL.md, docs.test.mjs, cross-session messaging, handoff). The brief's tags were squeaky-clean, peer-sessions, platform-behavior and code-review, and 'platform-bug' did not match 'platform-behavior'. The topic never named a Stop hook."
+    }
+   ]
+  },
+  {
+   "id": "B09",
+   "ts": "2026-10-22T23:52:06.751Z",
+   "project": "playbook",
+   "session": "our setup-1",
+   "topic": "projects/hooks probes: Q8 --bg arm, run.mjs bgJob and cleanupTargets, the trusted scratch folder (triage F27), the settings writer --target claude-json",
+   "lessonsTheBriefNamedOrOpened": [
+    "001",
+    "002",
+    "003",
+    "004",
+    "005",
+    "110",
+    "115"
+   ],
+   "judged": [
+    {
+     "lesson": "hooks-003",
+     "strength": "strong",
+     "trap": "Same module: Q8 must be re-verified on a new CLI (2.1.309), and run.mjs's process branches have already been wrongly 'proven' unreachable by reasoning. Measure in PowerShell, read permission_denials and modelUsage before blaming the CLI, and tie each verdict to the bytes that produced it.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "First landmine '003: A rule about the platform is a map until a run measures it', read in full, with the verdict-hash check run.mjs:110-115.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "hooks-001",
+     "strength": "moderate",
+     "trap": "cleanupTargets and bgJob delete folders in the shared real temp/trusted folder and stop background sessions. Unless cleanup acts only on targets the run recorded as its own, it reaches a peer's folders or sessions.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line '001: Shared git index: every write names its paths. This governs the landing commit.' The peer-cleanup angle was covered by landmine 004 ('cleanup must never delete another run's live --bg job').",
+     "why_missed": ""
+    },
+    {
+     "lesson": "hooks-004",
+     "strength": "moderate",
+     "trap": "Adding --target claude-json to the U3 settings writer extends its way-back and undo stack. Recovery advice gets tested only by its own tests, and each printed command must actually run in pwsh as well as sh.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine '004: Recovery advice is the least-run code in a safety tool', read in full, applied to F27's cleanup path.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "hooks-005",
+     "strength": "moderate",
+     "trap": "The --bg arm launches throwaway background sessions that later have to be found and removed by name (claude rm). A name lookup with a fuzzy fallback hits a lookalike once the target is gone, and a session-state claim needs a run that measured that exact thing.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line '005: The `your turn` handoff. Not relevant to 8b.' It was named, but the brief dismissed it and never mentioned its fuzzy-name half.",
+     "why_missed": ""
+    }
+   ]
+  },
+  {
+   "id": "B10",
+   "ts": "2026-10-23T02:03:29.922Z",
+   "project": "projects-family-feud",
+   "session": "feud",
+   "topic": "building scripts/trade_eval.py — an on-demand trade evaluator for the Family Feud league: Sleeper weekly projections + three-source consensus, optimal weekly lineups both sides, drop/FA fill, week-lock modelling, counter-offer search",
+   "lessonsTheBriefNamedOrOpened": [
+    "008",
+    "009",
+    "010",
+    "018",
+    "020",
+    "024",
+    "036",
+    "298",
+    "333"
+   ],
+   "judged": [
+    {
+     "lesson": "ff-024",
+     "strength": "strong",
+     "trap": "A trade simulator is a model, and a strawman baseline will flatter whichever side you test. If the before-trade lineup is left an empty slot (like a bye-week QB taking a 0) while the after-trade world gets a free-agent fill, or the comparison is against an empty lineup instead of replacement level, the trade_eval verdict comes out clean and wrong. The fix is to print what each world actually started, not just the totals.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "The brief's own text was never shown; the record's output field is the end-of-review summary written later. The session did read the lesson in full during the brief (the session transcript line 585, Read 024-four-broken-simulators...). The plan ~\\ai-learning-journey\\projects\\family-feud\\docs\\plans\\2026-10-22-001-feat-trade-eval-plan.md cites it at lines 69, 321 and 354.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "ff-030",
+     "strength": "moderate",
+     "trap": "Value a trade by lineup gain, not player value in a vacuum, and reuse lineup_value.py's replacement-filled counterfactual. Its pinned failure shapes (K/DEF falling outside the candidate window, the degenerate empty-lineup case) carry straight over to the weekly lineup optimiser. Check the weekly lineups it builds every time the objective changes.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "Never read or named. It reached the session only as grep lines in the brief's check for later lessons that cite 024 (transcript line 618). The plan cites 004/008/010/013/016-021/024/035 but not 030, though it uses lineup_value.best_lineup as a test oracle (plan lines 217, 350, 413). Neither 32551616 nor the 19 fixes in 74245502 includes a K/DEF candidate-window bug or an empty-lineup bug. The week-7 Marks lineup error (035 defect 3) was caught by reading the lineups, which 024 (surfaced) already teaches. V7 (Travis Hunter as DB priced at 0) is a position-mapping bug, not 030's.",
+     "why_missed": "Tags [queue, marginal-value, replay, insight-024, endgame, mock] and the title (naive queue, five quarterbacks) share no word with the brief's tag and title alternations (trade, lineup, baseline, simulat, projection, vorp, model). Its modules line names draft-kit/lineup_value.py, but the brief ran no ^modules: grep."
+    },
+    {
+     "lesson": "ff-031",
+     "strength": "moderate",
+     "trap": "The trade verdict rests on modelling a third party: how the other manager fills his roster and streams, and how the free-agent pool behaves. Find the single modelling choice that would flip the sign (Sleeper-only projections vs three-site, or the fill rule), flip it, and check who actually decided the result before believing it.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "74245502 (the review) added a guessed model of Sleeper's waivers: 'A man let go at processing is on waivers until next week (Wednesday waivers): worth 3.4 on the headline ... Unverified, printed in the report.' ae120cf1 (2026-10-29) measured it and found the guess wrong: 'The 10-23 review guessed Wednesday-only waivers ... a dropped player sits on waivers ONE day (waiver_clear_days 1)'. The frozen headline moved from -36.25 to -32.83. Insight 036 also shows Kaeperni's side moving up to 4 points on coin-flip tie-breaks in his modelled fill. Mitigation: the guess was printed as unverified and the sign held, so this is a costed hit, not a wrong verdict.",
+     "why_missed": "No frontmatter. The brief's title grep did include 'model' and 'null', both in 031's H1, but it searched only ^title: lines, which 031 doesn't have. Its body count grep (trade|baseline|projection|simulat|lineup|consensus) found 0 hits in 031. The session looked at the first 12 lines (transcript lines 569-570) and dropped it."
+    },
+    {
+     "lesson": "ff-020",
+     "strength": "moderate",
+     "trap": "trade_eval is a new caller of api.sleeper.app (rosters, projections, transactions). Those responses go through Cloudflare's stale-while-revalidate cache, which hands a lone poller the old body. Without a cache-busting nonce on every call, it can price a trade against rosters from before a waiver or trade landed.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Read in full during the brief (transcript line 593, Read 020-the-cdn-served...). Plan line 172: 'come through g.fetch (per-call nonce, insight 020)'.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "ff-009",
+     "strength": "moderate",
+     "trap": "This project mutation-tests every new tool. A mutant harness that rewrites trade_eval.py with same-size edits inside one second makes CPython load a stale .pyc, so kills and survivals get credited to the wrong code. Purge __pycache__ or turn off bytecode writing between mutants.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Insight 036 lines 51-52 (added in 74245502): 'same-size mutants in one second shared a .pyc stamp and M44 ran M15's code -- 009, re-hit because I wrote the harness without reading the corpus'. The 74245502 message says 'the harness first lied twice -- stale module refs, stale .pyc'. The session's own closing summary: 'I also hit a stale-file trap that insight 009 already describes, because I didn't read the old insight first.' The record's mention of 009 comes from that later summary, not from the brief.",
+     "why_missed": "It matched the broad tag grep only through 'verification', and the topic named no mutation-testing, harness, pycache or bytecode term. So it was one of 18 tag hits that never reached frontmatter scoring (the scored set was 005, 008, 010, 016, 018, 020, 021, 023, 024; transcript line 567)."
+    }
+   ]
+  },
+  {
+   "id": "B11",
+   "ts": "2026-10-23T17:30:05.772Z",
+   "project": "playbook",
+   "session": "our-setup-2",
+   "topic": "U4: permissions in ~/.claude/settings.json through the settings writer -- push boundary (deny/ask rules for force pushes in Bash and PowerShell, removing the user-scope Bash(*) allow), Skill denials in parameter form, other-vendor model CLI denials, the review-lens agent file, plugin marketplace autoUpdate, CLAUDE.md line 48",
+   "lessonsTheBriefNamedOrOpened": [
+    "001",
+    "002",
+    "003",
+    "004",
+    "005",
+    "006",
+    "007",
+    "008",
+    "157",
+    "231",
+    "309",
+    "876"
+   ],
+   "judged": [
+    {
+     "lesson": "playbook-003",
+     "strength": "strong",
+     "trap": "How deny/ask/allow precedence, Skill rules in parameter form, and Bash versus PowerShell matching behave are platform claims. Build the push boundary only on probe-measured behavior, never on the docs or a reviewer's reasoning.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine '003: A rule about the platform is a guess until a run measures it', read in full (read-in-full list: 003, 004, 007, 001, 008).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "playbook-008",
+     "strength": "strong",
+     "trap": "This work redoes the U3 step 8c laptop measurement, and its D3 answer and landing consent from Briggsy were still owed. Writing 'his words', 'confirmed' or 'settled' before the line that holds it exists is this lesson's exact overclaim.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine '008: Don't write a result before it happens ... Write \"expected\" or \"owed\" until it lands', read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "playbook-007",
+     "strength": "moderate",
+     "trap": "Force-push deny rules are text patterns over command lines. A loose phrase also matches harmless commands that contain it (a commit message quoting a force push), so check the pattern against everything that can appear.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine '007: Matching a refusal by a loose phrase', read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "playbook-004",
+     "strength": "moderate",
+     "trap": "U4 writes the live ~/.claude/settings.json through the U3 settings writer. Its rollback and way-back advice is the least-run path, so assert it never points back at the version being escaped, across sequences of steps.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine '004: Recovery advice is the least-run code in a safety tool ... Test it as a sequence', read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "playbook-006",
+     "strength": "moderate",
+     "trap": "The writer targets the real user settings, and the --cleanup and made.json paths are nearby. If tests derive the target path from the code under test, a mutant writes or deletes the real files before the assert kills it.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line '006: Test fixtures must not be built with the code under test.'",
+     "why_missed": ""
+    }
+   ]
+  },
+  {
+   "id": "B12",
+   "ts": "2026-10-27T00:48:06.320Z",
+   "project": "playbook",
+   "session": "our-setup",
+   "topic": "U4 round 2 fixes: the push-boundary allow-rule reader in projects/hooks/lib/permissions.mjs (pushesByStructure, matchesPush), plugin-grants, the landing check, Q17/Q18 probes",
+   "lessonsTheBriefNamedOrOpened": [
+    "001",
+    "002",
+    "003",
+    "004",
+    "006",
+    "007",
+    "008",
+    "125",
+    "228",
+    "311",
+    "800"
+   ],
+   "judged": [
+    {
+     "lesson": "playbook-007",
+     "strength": "strong",
+     "trap": "matchesPush and pushesByStructure decide whether a command line is a push. A phrase-level match refuses non-push commands that merely contain a force-push string, such as a commit message quoting one.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine '007: Matching a refusal by a loose phrase matches every message that shares it', read in full and applied to permission-landing-check.mjs:800.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "playbook-003",
+     "strength": "strong",
+     "trap": "The Q17/Q18 probes and the decision to stop rerunning probes after each CLI update both rest on 'a verdict holds only for its bytes'. A rule-reader fix justified by unmeasured claims about platform matching can be a regression.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "First landmine '003: A rule about the platform is a map until a run measures it ... Measure on 2.1.311', read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "playbook-002",
+     "strength": "moderate",
+     "trap": "These are round-2 fixes with round 3 queued. Count the seams that trace to the previous round's fixes, gate landing on harm class, and prefer the structural cut over another patch round.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine '002: When review rounds stop shrinking ... Make the structural flip, not another patch round', read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "playbook-008",
+     "strength": "moderate",
+     "trap": "Memory, TODO and probes.md entries are being written for decisions not yet built (D3 ask turning to deny). Each record must say 'decided, not built' or 'owed' until the build and evidence land.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine '008: A record written ahead of its evidence reads as evidence', read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "playbook-006",
+     "strength": "moderate",
+     "trap": "Fixes to permissions.mjs, plugin-grants and the probes come with tests and mutation runs on code that names real settings and trusted-folder paths. Fixture paths built with the code under test let a mutant write to the real folders.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine '006: A test that builds fixture paths with the code under test lets a mutant move fixtures into the real folder', read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "playbook-004",
+     "strength": "moderate",
+     "trap": "The landing check and the settings-writer deploy own the way back for live permissions. That recovery path gets tested only by its own tests, so assert its direction, not just its wording.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line '004: Recovery advice is the least-run code in a safety tool. The landing check's failure table and rollback rows ... are recovery paths.'",
+     "why_missed": ""
+    }
+   ]
+  },
+  {
+   "id": "B13",
+   "ts": "2026-10-27T22:24:32.757Z",
+   "project": "projects-the-back-nine",
+   "session": "b9",
+   "topic": "the survivor (widow/er) Social Security benefit — survivorBenefitAnnual's RIB-LIM × age-reduction order fix, the pricing ledger (pricingVersion.ts / pricingWitness) and SOLVER_CODE_VERSION bump decision, re-pinning seed goldens",
+   "lessonsTheBriefNamedOrOpened": [
+    "172",
+    "214",
+    "255"
+   ],
+   "judged": [
+    {
+     "lesson": "b9-023",
+     "strength": "strong",
+     "trap": "The fix is a rule-order fix (RIB-LIM vs age reduction). Goldens derived from stated conventions bake whichever order the prompt states, so derive which rule order applies, not just the arithmetic.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Round-1 review findings 3, 5 and 6 (B13 transcript 2026-10-27T23:18:48): 'The property test's oracle isn't as independent as its comment claims, it re-types the same raw-PIA cap'. That is independent arithmetic over the engine's own rule. The same case is in 0fc79987's 137 Extended (2026-10-27, the RIB-LIM reorder, b9-11).",
+     "why_missed": "Its header was scored (tags DND-012, externally-derived-fixtures) but it wasn't read. 137, the newer form of the same rule-selection lesson, took the top-5 slot, and B13 wrote no brief text to name the rest."
+    },
+    {
+     "lesson": "b9-022",
+     "strength": "moderate",
+     "trap": "A domain-fluent derivation of the survivor benefit keyed to the wrong anchor is the dangerous error. Pin the specific wrong value the old order produces as a red test.",
+     "verdict": "NOT_RELEVANT",
+     "hit": "N/A",
+     "evidence": "022 covers the provenance of formula-defined CONSTANT figures (the frozen-base super catch-up, the COLA first bump, a catch-up cited to the wrong document; modules engine/constants). 99ffc746 transcribed no constant figure. It reordered a function's rules, which is 023/137 ground.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-015",
+     "strength": "moderate",
+     "trap": "Unless a fixture has both RIB-LIM and the survivor's age reduction binding (deceased claimed early, survivor claims early), the old-order mutant passes the whole suite, including the re-pinned seed goldens.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "The property test kills the old order and all three dime mutants; nine planted mutants went red, and one equivalent mutant survived as predicted (99ffc746). No mutation-survival seam escaped to a later fix.",
+     "why_missed": "Not a candidate: its tags (code-review, adversarial, mutation-testing, review-cadence) share no word with the topic (survivor, RIB-LIM, pricing ledger, goldens)."
+    },
+    {
+     "lesson": "b9-039",
+     "strength": "strong",
+     "trap": "survivorBenefitAnnual's early return at or after survivor FRA once skipped the only guard that threw on NaN. Reordering RIB-LIM and the age reduction can reopen a path around assertClaimAge or applyFactorAnnual, so keep the chokepoint ahead of every branch and re-run the guard tests.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "Not read or named. The fix kept the finite-age guards (edit at 2026-10-27T22:35:43, 'Age must be a finite whole year … insights 010/020'), and no review raised NaN.",
+     "why_missed": "Its header was scored (modules socialSecurityBenefit.ts, tag claim-age) but ranked below the five read (137, 141, 135, 045, 054). No brief text was written."
+    },
+    {
+     "lesson": "b9-040",
+     "strength": "strong",
+     "trap": "The deceased's claim age reaches survivorBenefitAnnual after the seam's realizedClaimAgeAtDeath adjustment (capped at death, floored at FRA), and RIB-LIM depends on it. The order fix must keep that adjustment, and the six survivor goldens must be re-derived by hand, not re-pinned to engine output.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Round-1 finding #4. 99ffc746 filed a new register entry: 'A spouse who dies in the year they planned to claim is treated as having filed early, though the model never paid them a check — the survivor gets a RIB-LIM cap the law may not apply' (docs/backlog.md:1362 at 99ffc746). That is 040's shape, a planned input cut short by death, found again. The defect was pre-existing and was filed, not fixed.",
+     "why_missed": "Its header was scored (tags survivor-floor, claim-age; modules socialSecurityBenefit.ts) but it wasn't read. No brief text was written."
+    },
+    {
+     "lesson": "b9-045",
+     "strength": "moderate",
+     "trap": "The survivor step-down's steady-state anchor and its exact §202 $1,000/mo golden depend on survivorBenefitAnnual. The order fix moves them, so re-derive the step-down rather than blindly re-pinning.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Read in full during the brief (sed of 045-*.md at 2026-10-27T22:24:46).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-062",
+     "strength": "moderate",
+     "trap": "Re-pinning seed goldens: the dip seed sits right at the 0.85 bar, so a survival change on survivor paths can silently move its crowns or erase the dip. Re-check the non-monotone gate rather than just re-pinning.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "99ffc746: dip's survival fractions rose 1-3 paths of 16,000, and 'no crown, grade, non-monotone set, verdict or displayed figure moved'.",
+     "why_missed": "Empty tags. The title (non-monotonicity, dual-clock collision) shares no topic word, and the brief never searched empty-tag titles or slugs."
+    },
+    {
+     "lesson": "b9-074",
+     "strength": "moderate",
+     "trap": "The SOLVER_CODE_VERSION / ledger bump decision drives a staleness note. What it tells a saved reader must match what actually re-prices (survivor paths in the affected age window), not a blanket 'your reading changed'.",
+     "verdict": "NOT_RELEVANT",
+     "hit": "N/A",
+     "evidence": "074 guards a disclosure built on a constant's sunset/effective METADATA that no consumer reads. B13 changed no dated constant: it moved a function's rule order and ruled out any ENGINE_PRICING_LEDGER row ('Social Security income is no PricingFamily', 99ffc746). The judge's 'match what re-prices' point is 103/143 ground.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-098",
+     "strength": "moderate",
+     "trap": "Before fixing the order of RIB-LIM and age reduction, check the order against the primary's own printed rules and worked examples. Do not adopt a derived mechanism unverified.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "The work used the primary's own table (the RS 00615.322 D worksheet read from its markup, plus GN 00204.045 C's worked figure; 99ffc746), so no trap appeared.",
+     "why_missed": "Empty tags. The title (ratified mechanism, the primary's own table) shares no topic word."
+    },
+    {
+     "lesson": "b9-091",
+     "strength": "moderate",
+     "trap": "When re-pinning seed goldens after the survivor fix, trace why each golden moved before accepting the new value. A blind re-pin turns the oracle into a rubber stamp.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "When a round-2 skeptic contradicted the seed diff (the 'failing' seed moving a dime), the session stopped and traced the mechanism (transcript 2026-10-28T00:02:58). There was no blind re-pin.",
+     "why_missed": "Empty tags. The title shares no topic word."
+    },
+    {
+     "lesson": "b9-103",
+     "strength": "moderate",
+     "trap": "The ledger and pricingWitness reach for the survivor fix: gate on whether the run consumed the changed benefit path, and check the silencing direction for survivor households.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Round-2 review wf_9b506cb3-dbb, findings #2 and #8 (transcript 2026-10-28T00:06:19-27): the proposed exposure read for the ledger-cannot-name bullet ('claimed early ∧ survivor under FRA') 'misses (b) and (c)', two of the three groups that move. That gate would stay silent on households whose answers moved. The backlog bullet was rewritten from the reach probe.",
+     "why_missed": "Not a candidate: its tags (exposure-gate, silent-stale, vintage-stamp) and modules (staleness.ts, stalenessExposure.ts) share no word with 'pricing ledger / pricingWitness / SOLVER_CODE_VERSION'."
+    },
+    {
+     "lesson": "b9-105",
+     "strength": "moderate",
+     "trap": "The filed order-fix prescription is a prediction. Verify the mechanism it names in survivorBenefitAnnual before executing it.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "99ffc746: 'The filed Prescription's GN arm was not buildable (whole-year ages)'. The prescription dime-floored only some arms (docs/backlog.md:1321 at 99ffc746^). Review wf_c6ac19f3-207's finding #1 then caught the one-dime rosy edge that this opened.",
+     "why_missed": "Its header was scored (tag dev-seeds) but it wasn't read. No brief text was written."
+    },
+    {
+     "lesson": "b9-137",
+     "strength": "strong",
+     "trap": "The engine's RIB-LIM x age-reduction order was pinned as deliberate on our own paraphrase, a confident claim. The oracle is SSA's own worksheet (POMS), and hand goldens must come from it, not from the engine's new output.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Read in full (sed at 2026-10-27T22:24:46).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-143",
+     "strength": "strong",
+     "trap": "The SOLVER_CODE_VERSION / pricing-ledger bump decision is a reach claim. Enumerate every seed and every drawable survivor branch the changed function touches; don't assume only early claimers move.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "0fc79987's 143 Extended (2026-10-31): 'The RIB-LIM reorder (b9-11). \"Only the early claimers can move\" was false'. Round-1 findings #10 and #12-13 ('the order never touched it' false; 'dip at most one path' false; datesolo counted identical though it ran nothing) and round-2 #2/#8 say the same. The session had first claimed 'Exactly the two seeds I predicted moved' (2026-10-27T22:44:22).",
+     "why_missed": "Its header was scored (tag social-security) but it wasn't read, and no brief text was written. The parent pay-check spec lists 143 in its Sources, but the RIB-LIM register entry the fix was built from doesn't cite it."
+    },
+    {
+     "lesson": "b9-135",
+     "strength": "strong",
+     "trap": "RIB-LIM is a min-cap, and reordering it against the reduction changes which arm binds. Measure before predicting which seed goldens move, and re-pin them under the seed law (record first, re-tune second).",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Read in full (sed at 2026-10-27T22:24:46).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-139",
+     "strength": "moderate",
+     "trap": "Its side note applies directly: hand-derived Social Security figures must apply SSA's monthly dime floor (POMS RS 00615.101), or re-pinned goldens will disagree with a correct engine.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Review wf_c6ac19f3-207 finding #1 (99ffc746 body): the full rate read the PIA floored to the dime while the cap read the raw figure, paying a dime above the law. Fixed to 'ONE PIA floored to the dime', and an odd-cents own-benefit entry was filed. 146:4 cites 'the RIB-LIM reorder (b9-11)'.",
+     "why_missed": "It matched the tag grep only on social-security and was never scored. Its dime-floor note is in the body (139:48), which header scoring can't see."
+    }
+   ]
+  },
+  {
+   "id": "B14",
+   "ts": "2026-10-29T19:15:57.881Z",
+   "project": "projects-the-back-nine",
+   "session": "b9",
+   "topic": "A6 of the working-year pay check: U5's check — the clamped working-year block in simulate.ts (required schedule, own-deposit helper, the stream, survivor W), taxOverlay.ts composition between the hoisted working-year floor and fundingNet, the observation hook, dateSearch.ts reach walk (KTD15), consumedConstants family rule, earnings-test schedule read in every year",
+   "lessonsTheBriefNamedOrOpened": [
+    "006",
+    "007",
+    "014",
+    "020",
+    "027",
+    "028",
+    "029",
+    "040",
+    "045",
+    "076",
+    "093",
+    "128",
+    "143",
+    "192",
+    "580"
+   ],
+   "judged": [
+    {
+     "lesson": "b9-027",
+     "strength": "strong",
+     "trap": "The clamped working-year block (the required schedule, survivor W) creates the hazard. Guards and the observation hook must key on its exact predicate, including the surviving-worker case.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 027; read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-029",
+     "strength": "strong",
+     "trap": "A6's check composes the hoisted floor and fundingNet. Equality or identity assertions on surfaces that are structurally default in the fixtures (no NC, year 0 only) let a wrong composition pass.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 029; read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-014",
+     "strength": "strong",
+     "trap": "The earnings-test schedule read every year, and survivor W at a death, move thresholds mid-run. Each crossing year needs a fixture.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line '014: When a threshold moves with the simulation, test the year it's crossed'.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-015",
+     "strength": "strong",
+     "trap": "A per-year schedule mapping (the required schedule, the earnings-test steps) pinned only by constant or single-year fixtures lets a year-0-constant or off-by-one mutant pass.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "A6 review wf_fdc509f6-84c, findings ML-3 and TC3: mutants that hard-code 'mfj' or fix payroll's calendar year at 2026 survive every W test file, because 'No fixture puts wages above a 0.9% line on a single return or in a later year'. 24ed7410: 'Ten test gaps, each confirmed by a surviving planted mutant'. The findings are saved at ~/.claude/projects/<slug>/<id>",
+     "why_missed": "It matched only the modules grep (simulate.ts, taxOverlay.ts) and was not among the 19 scored."
+    },
+    {
+     "lesson": "b9-020",
+     "strength": "moderate",
+     "trap": "The hoisted working-year floor gains a second consumer (the fundingNet composition). Any guard on it must be gated on the property, not on its first consumer.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 020; read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-024",
+     "strength": "moderate",
+     "trap": "The own-deposit helper and survivor W need per-person attribution to vet a dead slot's deposits. A household scalar leaves the dead-slot guard blind.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "No dead-slot deposit finding. TC2 (no fixture has a second living earner) is a coverage gap, and the check already carries wages per person (24ed7410).",
+     "why_missed": "It matched only the modules grep (engine/simulate, engine/taxOverlay) and was not scored."
+    },
+    {
+     "lesson": "b9-040",
+     "strength": "strong",
+     "trap": "Survivor W in the clamped block: the working-year cost and pay are a plan that a death can cut short. The seam must reconcile them against the path (who died, who still works), and a fixture must drive that preemption with a nonzero value.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line '040: ... survivor W when the death lands inside a working year'.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-074",
+     "strength": "strong",
+     "trap": "The consumedConstants family rule and reading the earnings-test schedule in every year are this lesson's law. A dated constant prices nothing unless a consumer reads it for each sim year (seniorBonusFor needed calendarYear), so grep the consumer of each family member and thread the year.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "consumedConstants: 'the workingYears.* family is consumed iff W is present' (24ed7410). Payroll's calendar year was threaded in the code; TC3 found only that no test pinned it. No disclosure narrated metadata nothing consumes.",
+     "why_missed": "Not a candidate: the topic's 'consumedConstants' shares only a root with 074's filename slug ('nothing-consumes'). Its tags and title (sunset, metadata, staleness) weren't hit, and slugs weren't searched."
+    },
+    {
+     "lesson": "b9-049",
+     "strength": "moderate",
+     "trap": "The clamped block gained a required schedule, an own-deposit helper and a stream. Every path built on the old clamp's 'no draw in a work year' (fundingNet, the hoisted floor, the IRMAA read) has to be re-proven under the new precondition.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "No finding shows a path built on 'no draw in a work year' breaking. The PA hole (ML-1) is a reused zero, which 068's extension claims.",
+     "why_missed": "Not a candidate: its tags (invariant-precondition, restore, recovery-rework, mirror-path) share no word with the topic."
+    },
+    {
+     "lesson": "b9-068",
+     "strength": "moderate",
+     "trap": "Composing the hoisted working-year floor, a tax difference built for one question, into fundingNet means reusing it in a new consumer. Ask what the reused figure means in the new total and who owns its branch there.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "24ed7410: 'One rosy hole, confirmed: PA's tax on the NON-pay outside income... was charged nowhere — the floor ignores PA's clamped base because its tax on pay rides in W' (review ML-1). 0fc79987's 068 Extended (2026-10-29, the A6 review, b9-14): 'a ZERO reused in a new composition can be a hole'.",
+     "why_missed": "It had empty tags at brief time (tagged only on 10-31). The title (cliff-removed helper, marginal readout, phantom slope) shares no topic word, and empty-tag titles weren't searched."
+    },
+    {
+     "lesson": "b9-062",
+     "strength": "moderate",
+     "trap": "The dateSearch reach walk: the date curve's shape depends on the clamp's work-year gradient, so changes in the clamped block can move the dip seed's crowns that the date route's gates pin.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "24ed7410: every dev seed's full engine output is byte-identical to HEAD without W; no crown moved.",
+     "why_missed": "Empty tags. The title shares no topic word."
+    },
+    {
+     "lesson": "b9-090",
+     "strength": "strong",
+     "trap": "The hoisted working-year floor and the own-deposit helper will be composed by A7's ledger, which has an import allowlist. Cut their signatures for that next consumer's constraints, not for simulate.ts's convenience, or A7 re-cuts them.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "A6 review C1 (wf_fdc509f6-84c): 'KTD12's import allowlist leaves A7 unable to build four of the things KTD12 asks for... A7 also has to rebuild simulate's Household and bridge mask inline, because nothing exports them' (2 of 4 sub-claims held). 24ed7410 wrote the A7 allowlist ruling into KTD12, and A7 (2990b8c1) then extracted overlayHouseholdFor and exported seniorBonusFor.",
+     "why_missed": "At brief time its header read plan-reconciliation, staleness, premise-rot, runway. The 'an extraction is cut for its NEXT consumer / import-allowlist' extension (dated 10-28) was written into the file only on 10-31 by 0fc79987, so no topic word could reach it."
+    },
+    {
+     "lesson": "b9-088",
+     "strength": "moderate",
+     "trap": "The dateSearch reach walk (KTD15): working-year streams are changed per candidate, so reach must be judged on the candidate's transformed params, not the base overlay.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "Not named. The KTD15 reach-walk gap (TC5, 'some' to 'every') is 027's predicate-domain trap, not a read of the base overlay instead of the candidate's params.",
+     "why_missed": "Its header was scored (modules engine/dateSearch), but it was neither read nor one of the five also-relevant lines."
+    },
+    {
+     "lesson": "b9-091",
+     "strength": "moderate",
+     "trap": "The earnings-test schedule is read in every year, so fixtures must re-walk their premises across year-by-year state, not just year 0.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "No blind re-pin. Every expected figure was typed by hand from the primaries (24ed7410).",
+     "why_missed": "Empty tags."
+    },
+    {
+     "lesson": "b9-076",
+     "strength": "moderate",
+     "trap": "Making the schedule required or adding throws in the clamped block narrows the engine's input contract. Re-audit validateParams against the new throw sites.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line '076: A new deep throw quietly narrows ... validateParams'.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-103",
+     "strength": "moderate",
+     "trap": "The consumedConstants family rule feeds exposure. A clock must name itself when the run consumed the table the stamp dates, never only when the stamp field has a reader.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "A6 is inert in the app (nothing sets W until Phase B), and wf_fdc509f6-84c has no exposure or clock finding.",
+     "why_missed": "Not a candidate: its tags (exposure-gate, silent-stale, vintage-stamp) share no word with the topic."
+    },
+    {
+     "lesson": "b9-143",
+     "strength": "strong",
+     "trap": "Composing the hoisted working-year floor with fundingNet and walking reach in dateSearch.ts must count every dollar the portfolio funds and every MAGI read in the clamped year, not only the pay-check's own nouns.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 143; read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-139",
+     "strength": "strong",
+     "trap": "Reading the earnings-test schedule in every year and the survivor W must judge each year on its own income and claims. A year-0 frame carried forward, or a constant-income witness, goes green on a mixed frame.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Review TC3: a 'fixed 2026' calendar-year mutant (too low in later years) survives, because no fixture's later-year wages cross the line. That is a year-0 frame carried forward that the witness world can't see. TC1: computing net on the unwithheld, uncredited Social Security survives all 456 tests (wf_fdc509f6-84c).",
+     "why_missed": "Its header was scored (tag social-security), but it was neither read nor named."
+    },
+    {
+     "lesson": "b9-132",
+     "strength": "moderate",
+     "trap": "The observation hook should carry the engine's decisions on the wire, observe-only so reduce-to-spine stays byte-identical. Later consumers must not re-derive them from inputs.",
+     "verdict": "IN_PLAN",
+     "hit": "N/A",
+     "evidence": "The spec at 24ed7410^ cites 132 (working-year-pay-check-build-spec.md:701 '(insight 132)'; Sources :941).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-137",
+     "strength": "moderate",
+     "trap": "A check whose oracle calls the same functions under test only certifies the composition (10-27 extension). Pin the rule with hand goldens taken from the primary source.",
+     "verdict": "IN_PLAN",
+     "hit": "N/A",
+     "evidence": "Spec :426 (U2 'Patterns to follow... insight 137') and Sources :941. A6 typed every expected figure by hand from the primaries (24ed7410).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-135",
+     "strength": "moderate",
+     "trap": "The consumedConstants family rule should ask of each nominal constant (FICA surtax line, earnings-test amounts) whether its statute indexes it, and whether it must divide by cumulativePriceIndex.",
+     "verdict": "IN_PLAN",
+     "hit": "N/A",
+     "evidence": "Spec :207 ('The two 0.9 % lines... are frozen nominal, and are divided by the same year's price index (insight 135)') and Sources :941.",
+     "why_missed": ""
+    }
+   ]
+  },
+  {
+   "id": "B15",
+   "ts": "2026-10-29T22:08:05.819Z",
+   "project": "projects-the-back-nine",
+   "session": "b9-2",
+   "topic": "A7 / U6a: the engine producer workingYearLedger.ts (the working-year money picture) composing cashTermsForYear, overlayYearContext, prepareWorkingYearFloor, workingYearCashLines, medicareChargeForYear; later-year events (claims, earnings-test steps, Medicare onset, catch-up step-down, income streams, NC rate steps, senior-bonus sunset); largest-remainder rounding; import allowlist source test; cross-check against the overlay's recorded year 0",
+   "lessonsTheBriefNamedOrOpened": [
+    "014",
+    "020",
+    "029",
+    "045",
+    "081",
+    "088",
+    "093",
+    "126",
+    "132",
+    "134",
+    "139",
+    "143"
+   ],
+   "judged": [
+    {
+     "lesson": "b9-014",
+     "strength": "strong",
+     "trap": "The producer names later years where state changes move the money picture (Medicare onset, catch-up step-down, earnings-test steps, NC rate steps, senior-bonus sunset). Each transition year needs a fixture.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line '014: test the year a moving threshold is crossed'.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-029",
+     "strength": "strong",
+     "trap": "The cross-check against the overlay's recorded year 0 is an equality between two lineages. It passes vacuously when the fixture's lines (state tax, Medicare, catch-up) are structurally zero.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 029; read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-003",
+     "strength": "strong",
+     "trap": "The import allowlist source test can be bypassed by dynamic import, alternate extensions, re-exports or deep relative paths. Prove it with a planted-positive probe.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "A7 review wf_b97c0055-346: 'Allowlist scan misses any import not at column 0 (indented, same-line, after a comment)'. That is a bypass of the import ban. Fixed in c805fa8f ('the allowlist scan reads the file through the TypeScript parser').",
+     "why_missed": "A candidate in two fields (the tag no-restricted-imports and the title 'dynamic import' both matched 'import'), but dropped before scoring (not among the 13). Its ESLint/engine-purity framing doesn't read like a source test."
+    },
+    {
+     "lesson": "b9-016",
+     "strength": "moderate",
+     "trap": "An allowlist assertion that checks containment stays green when an extra import is added. Assert the exact set and prove the test goes red on a planted import.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "The same A7 review finding: an indented or same-line extra import leaves the allowlist source test green. Fixed in c805fa8f with a TypeScript-parser scan.",
+     "why_missed": "No shared words: tags csp, security, playwright, false-pass, theater against 'import allowlist source test'."
+    },
+    {
+     "lesson": "b9-015",
+     "strength": "moderate",
+     "trap": "Naming 'every later working year that changes' is a per-year mapping. Fixtures with one event or evenly spaced events let an off-by-one-year mutant pass.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "A7 review wf_b97c0055-346: 'RMD tax-flag and turns65 age frame unpinned: no arm at the start age or with birthYear ≠ START−age' and 'Later-year KTD12 rounding unpinned: a later \"Short $1\" year can vanish with the suite green'. These are seams that A7's 53 planted mutants missed. Closed in c805fa8f (15 new arms, 28 mutants).",
+     "why_missed": "It matched only the modules grep (simulate, taxOverlay) and was not among the 13 scored."
+    },
+    {
+     "lesson": "b9-022",
+     "strength": "moderate",
+     "trap": "The catch-up step-down involves the frozen-base §109 super catch-up ($11,250, never 150% of the current regular catch-up). Read it from the constants, never re-derive it.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "No catch-up finding in wf_b97c0055-346 or c805fa8f. The step-down year arrives from intakeMap's firstStepDownYear (the KTD12 ruling).",
+     "why_missed": "Not a candidate: 'catch-up' is in its title, but the brief's title alternation left it out, and its tags (constants-discipline, provenance, contribution-limits) share nothing with the topic."
+    },
+    {
+     "lesson": "b9-068",
+     "strength": "strong",
+     "trap": "The money picture adds up reused helpers and figures (prepareWorkingYearFloor, workingYearCashLines, medicareChargeForYear). A figure built for one composition can be a hole in the next, as with a helper stripped of its cliff or PA's zero floor pair (this lesson's 10-29 extension), so re-ask what each one means in the new total.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "A7's composition holes were a re-derived RMD gate (081) and a copied gate direction (102/103), not a reused figure's meaning.",
+     "why_missed": "Empty tags at brief time. The title shares no topic word."
+    },
+    {
+     "lesson": "b9-074",
+     "strength": "strong",
+     "trap": "Naming a 'senior-bonus sunset' year, an NC rate step or a catch-up step-down must trace to the consumer that actually applies it (seniorBonusFor's calendarYear gate), never to a constant's sunsetAfter or effectiveFrom metadata.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "A7's sunset reads the consumer: workingYearLawSteps sets seniorBonusSunset from seniorBonusFor(prior...) > 0 (taxOverlay.ts:1550 at 2990b8c1), not from sunsetAfter alone. Its defect was gate direction (see 103).",
+     "why_missed": "A candidate via the tag 'sunset' (its title hit was a false match on 'sum' inside 'consumer'), but not among the 13 scored."
+    },
+    {
+     "lesson": "b9-056",
+     "strength": "moderate",
+     "trap": "The money picture is a composite. Every line must read the same run (the W-present run, the same track, through the run's own functions); one line from another source asserts a false combination, and the cross-check against the overlay's recorded year 0 is the guard.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "Year 0's lines are Object.is the overlay's recorded year 0 (2990b8c1). The re-derived savingsTaxLine finding cites 081, which was surfaced.",
+     "why_missed": "Not a candidate: its tags (composite-surface, coherence, dateSearch, DateBand) share no word with the topic."
+    },
+    {
+     "lesson": "b9-090",
+     "strength": "strong",
+     "trap": "workingYearLedger.ts composes medicareChargeForYear and the floor helpers under an import allowlist enforced by a source test. Extractions shaped for the year loop's inputs (the IRMAA and Part B schedules) will not fit.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "A7 extracted overlayHouseholdFor and exported seniorBonusFor as the KTD12 ruling (written by A6) prescribed (2990b8c1). No re-cut finding in wf_b97c0055-346.",
+     "why_missed": "At brief time its header (plan-reconciliation, staleness, runway) had no extraction or allowlist content. That extension landed on 10-31 (0fc79987)."
+    },
+    {
+     "lesson": "b9-081",
+     "strength": "strong",
+     "trap": "A ledger that re-derives year 0 from the producer's inputs forks at every early return and guard. Compose through the run's own functions and cross-check against the overlay's recorded output.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 081; read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-093",
+     "strength": "strong",
+     "trap": "A cross-check against the overlay's year 0 on a total (largest-remainder rounding conserves the sum) passes any wrong split between lines. Compare line by line.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 093; read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-095",
+     "strength": "moderate",
+     "trap": "The money picture is a diagnostic channel. It must run the shipped decision path, or it describes a run the household never sees.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "The ledger composes through the run's own functions (2990b8c1). The spec's three '095' hits are POMS RS 02501.095, a false match.",
+     "why_missed": "Not a candidate: its tags (named-driver, sensitivity-probe, oracle-vs-production) share no word with the topic."
+    },
+    {
+     "lesson": "b9-088",
+     "strength": "moderate",
+     "trap": "On the date route the described run is the crowned candidate, whose transform touches accumulation streams and onsets. The ledger must read that run, not the base input.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line '088: a check on a producer's output must read the producer for the run the surface describes'.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-103",
+     "strength": "moderate",
+     "trap": "Gates that decide which later year gets named (turning 65, the senior-bonus sunset, NC rate steps) are suppression rules. Construct each one's worst false negative: a year that changes but goes unnamed.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "A7 review wf_b97c0055-346 (6 of 9 lenses): 'Senior-bonus sunset gated on the prior year's federal tax: a bonus-zeroed 2028 hides 2029's drop' ($185-$1,050 unnamed). A naming gate failed in the silencing direction. Fixed in c805fa8f ('Now gated on THIS year's line'), and recorded in 0fc79987's 102 Extended (2026-10-29, the A7 review).",
+     "why_missed": "A candidate (the tag producers-output matched 'producer'; modules intakeMap), but not among the 13 scored."
+    },
+    {
+     "lesson": "b9-132",
+     "strength": "strong",
+     "trap": "Later-year events such as Medicare onset, claims and earnings-test steps must read the engine's decision (e.g. medicareEnrolledCount, not age 65 / count65). Re-deriving them from draft inputs forks wherever someone works past 65 or dies.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Named in the 081 landmine's code check ('088 and 132 extend it'), whose watch-for names the enrolled count. Its header was also scored.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-139",
+     "strength": "strong",
+     "trap": "The ledger builds year 0 and then names later years. Every term in a later year's line must come from that year's own frame, not a year-0 skeleton widened over many years.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 139; read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-137",
+     "strength": "strong",
+     "trap": "Cross-checking the producer against the overlay's recorded year 0 runs the same functions (cashTermsForYear, overlayYearContext), so it certifies the composition only. The figures need independent hand goldens.",
+     "verdict": "IN_PLAN",
+     "hit": "N/A",
+     "evidence": "The spec at 2990b8c1^ cites it: working-year-pay-check-build-spec.md:443 (U2 'insight 137') and Sources :966.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-143",
+     "strength": "moderate",
+     "trap": "The money picture's line-by-line year 0 must list every dollar the portfolio funds (the Medicare draw, fundingNet) and every income read, or a channel goes missing from the sum.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line '143: count every dollar the portfolio funds and every income read'.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-116",
+     "strength": "moderate",
+     "trap": "An import-allowlist source test that runs a regex over the TS source can match an import inside a comment or docblock, or miss a multi-line import. Strip comments and anchor on statement position, then run a negative control.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "A7 review: 'Allowlist scan misses any import not at column 0 (indented, same-line, after a comment)'. A regex instrument answered a narrower question than the one asked. c805fa8f replaced it with a TypeScript-parser scan.",
+     "why_missed": "Not a candidate: its tags (instrument, first-match-regex, css-comment, playwright-locator) and title (fonts.check, getBBox, regex over CSS text) share no word with 'import allowlist source test'."
+    }
+   ]
+  },
+  {
+   "id": "B16",
+   "ts": "2026-10-29T23:41:39.497Z",
+   "project": "projects-family-feud",
+   "session": "feud",
+   "topic": "gameday_check.py projected_total / the Expected header, ESPN scoreboard status, live points",
+   "lessonsTheBriefNamedOrOpened": [],
+   "judged": [
+    {
+     "lesson": "ff-035",
+     "strength": "strong",
+     "trap": "gameday_check.score silently drops stat keys the league's scoring doesn't name (kickers were scored low in every in-season tool since week 1). projected_total and live points both run through that function, so a live stat line with unfamiliar keys would quietly lose points under the Expected header. Check score(live line) against Sleeper's own players_points.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "The output is empty, but during the brief the session printed 035's frontmatter (the session transcript line 356) and ran grep -n -i gameday on 035 (line 372). That grep returned the defect-5 row: 'gameday_check.score silently drops unknown keys'. Caveat: the judge assumed live points go through score(). In fa6966be they come straight from Sleeper's /matchups players_points, and the kicker-key aliases were already in place (32551616).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "ff-020",
+     "strength": "moderate",
+     "trap": "Live points are a feed whose whole value is being current. If gameday_check fetches Sleeper live data from the bare URL, the Cloudflare cache (with stale-while-revalidate) can serve minutes-old scores to a lone poller, and the Expected header will blend stale live points without any warning.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Shortlisted during the brief. Its frontmatter was printed with 013, 035 and 036 (line 356), and the session tried to read its '## Key' section (line 372). That read printed nothing, because 020's heading is '## Rule', so the session saw only the title and tags. Because the output is hidden, whether the brief named it is unconfirmed. The judge's trap couldn't fire anyway: Sleeper fetches already go through the per-call nc= nonce wrapper in gameday_check.py, and fa6966be reads players_points through it.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "ff-028",
+     "strength": "moderate",
+     "trap": "Tests written from the TODO's 'live plus projection times time left' prescription can only agree with it. Run the rebuilt Expected header against a real in-progress gameday payload and read it the way Briggsy would; that is the check that shows whether the formula holds for every position.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "The plan (scratchpad plan-gameday-expected.md, D3, transcript line 457) applied the TODO's 'live + projection x left' to every position. Its real-data check (D7) used week 7, where every game was final, so it couldn't test a game in progress. The plan check found the blocker (line 543): 'A team defense's live score starts at +10 at kickoff ... would count that bonus twice'. Insight 037 lines 12-13 and 46-48: 'every unit test written from it passed ... the prescription itself was the trap ... surfaced only when a reviewer held the formula against a REAL live payload'. fa6966be: 'one blocker: the DEF double count'.",
+     "why_missed": "No frontmatter. The brief's body grep (gameday_check|projected_total|players_points|scoreboard|kickoff) hit only 035 and found 0 matches in 028. Its filename and H1 ('writing the output found what the tests could not') share no word with the topic (gameday_check, projected_total, Expected header, ESPN, live points)."
+    },
+    {
+     "lesson": "ff-015",
+     "strength": "moderate",
+     "trap": "ESPN scoreboard status becomes a new input that decides whether a game is pre-game, live or final. When ESPN can't be read, the code has to treat that as 'cannot tell' and fall back openly to the pre-game projection, saying it did. It must not swallow the failure through the same Refuse handler and print a header that looks live-adjusted when it isn't.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Read in full during the brief: a cat of 008, 015 and 013 (transcript line 361). The plan-check failure lens also cites it (line 462: 'insight 015 \"I can't tell\" and \"I can tell, and no\" must not share one fallback').",
+     "why_missed": ""
+    },
+    {
+     "lesson": "ff-036",
+     "strength": "moderate",
+     "trap": "If gameday_check changes are mutation-tested, the harness must run its baseline first and refuse unless it is clean, write one file per mutant, disable bytecode writing, and reload every module that patches gameday_check (trade_eval imports it). Otherwise the kills are void or come from the wrong mutant, as happened during the trade_eval review.",
+     "verdict": "IN_PLAN",
+     "hit": "N/A",
+     "evidence": "The brief printed only its frontmatter (line 356) and never read it. The work's source spec still carried it: TODO.md at fa6966be^ (landmine lines 70-72 and 144-147: 'A mutant harness needs four things ... (insight 036)'). The work's mutant harness docstring (transcript lines 816 and 1301) reads 'Rules (TODO landmine + insight 009/036): baseline first and refuse unless clean ... no bytecode'. fa6966be reports 30 of 30 mutants killed.",
+     "why_missed": ""
+    }
+   ]
+  },
+  {
+   "id": "B17",
+   "ts": "2026-10-30T03:26:57.794Z",
+   "project": "projects-the-back-nine",
+   "session": "b9-1",
+   "topic": "Phase B of the working-year pay check: the go-live commit — the W answer (ScenarioV3 key, codec), the quote, the W question + money-picture intake steps, the assumption panel's W row, the stale line on the result, the methodology row by arm, the working-years vintage clock, dev seeds, verify:fit / intake-fold / caddie arms",
+   "lessonsTheBriefNamedOrOpened": [
+    "036",
+    "046",
+    "058",
+    "073",
+    "085",
+    "086",
+    "088",
+    "100",
+    "109",
+    "132",
+    "143",
+    "173",
+    "694"
+   ],
+   "judged": [
+    {
+     "lesson": "b9-029",
+     "strength": "strong",
+     "trap": "The new ScenarioV3 W key and codec need a round-trip fixture with a non-default W. Otherwise a dropped or swapped field round-trips identically and passes.",
+     "verdict": "IN_PLAN",
+     "hit": "N/A",
+     "evidence": "Spec at 903a9c5e: working-year-pay-check-build-spec.md:1001 (Sources) lists 029.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-036",
+     "strength": "strong",
+     "trap": "The W question commits on blur, so a Continue or fold gate reading the render snapshot validates a draft one commit stale. Read the store's current snapshot instead.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line '036: A gate reading a stale render snapshot when blur and the click land together'.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-035",
+     "strength": "strong",
+     "trap": "The live quote or stale note sitting above the W question's controls resizes on each blur-commit and moves the tap target mid-gesture. Reserve its box, and walk it with coordinate taps.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "h2. Phase B's stale note and money picture change height above the period control at blur-commit, and the tap misses (8ee6d178: 'the walk's stale note unmounts, 139-158 px; the panel's money picture mounts... 842-909 px'). The whole-file review (wf_ea145a86-a5a) raised it, b9-10 measured it, and 68aba728 cured it. The same race also lost the Keep door on every screen.",
+     "why_missed": "Not a candidate: its tags (layout-shift, tap-target, race, answer-strip, mobile) and title (live-updating region, tap targets) share no word with the topic's stale line, W question and verify:fit."
+    },
+    {
+     "lesson": "b9-008",
+     "strength": "moderate",
+     "trap": "A decoded W read with `?? default` lets a NaN through to the engine. Validate finiteness at the codec and gate boundary.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "No NaN finding in Phase B's review (wf_65e70286-868) or in c07e5758.",
+     "why_missed": "Empty tags. The title (NaN, nullish coalescing) shares no topic word."
+    },
+    {
+     "lesson": "b9-018",
+     "strength": "moderate",
+     "trap": "Going live with W supersedes copy and methodology premised on wages covering working-year spending. Sweep the assumption panel, methodology rows and result lines for the old framing.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Phase B review wf_65e70286-868: 'Codec and model docs say intake never commits an entered $0, but the walk writes one to the draft' and 'employerCoverageHelp still false: the run bills the stopped spouse's Medicare while the other works'. Both are consumers of a premise Phase B superseded, and neither was swept.",
+     "why_missed": "Not a candidate: its tags (doc-reconciliation, amendment, supersession, blast-radius) and modules (docs/plans, docs/brainstorms) share no word with the topic."
+    },
+    {
+     "lesson": "b9-016",
+     "strength": "moderate",
+     "trap": "The new verify:fit, intake-fold and Caddie arms need a control arm and a mutation run proving they go red, or a green arm may prove nothing.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "b9-4's owed tests were mutant-proven on a copied tree (44 + 16 plants, all killed; c07e5758). No vacuous fit arm was reported.",
+     "why_missed": "Not a candidate: tags csp, security, playwright, theater."
+    },
+    {
+     "lesson": "b9-046",
+     "strength": "strong",
+     "trap": "The new ScenarioV3 W key: on restore the codec is the only range gate (session installs the decoded scenario without re-running sanity), and checking finiteness is not checking range. Range-check W and test a finite out-of-range value plus the valid boundaries.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 046; read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-073",
+     "strength": "strong",
+     "trap": "The working-years vintage clock adds a stamp to the save payload. If it holds any time-varying value, resultSave's dirty compare and the round-trip guard become clock comparisons. Route them through scenarioIdentity in the same commit and test with an aged copy of a save.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line '073: A wall-clock stamp in a save payload breaks byte-identity'.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-074",
+     "strength": "strong",
+     "trap": "The stale line, the methodology row for each arm and the vintage clock describe engine behavior. Grep the consumer for each arm (W present or absent) before writing a sentence; a disclosure based on a marker rather than consumption describes pricing that doesn't exist.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Phase B review: '\"Income tax on that income\" silently includes tax on investment income the picture never shows'. b9-5's re-walk read the label as covering every income tax, where the run charged federal only. Fixed by ruling 37 ('the tax line labelled by the run's own state slice', c07e5758), and recorded in 0fc79987's 088 Extended ('The re-walk (b9-5)').",
+     "why_missed": "A candidate in all three greps (tag staleness; modules copy.ts and staleness; title 'disclosure'), yet left out of the 15 scored."
+    },
+    {
+     "lesson": "b9-069",
+     "strength": "strong",
+     "trap": "The W question, the quote and the money-picture steps are new copy for the reader. A derived figure must name its source ('the plan expects'), referenced numbers must be quoted in the sentence, and working-year cost must be told apart from spending. Tests can't see these; the Caddie arms and a cold read must.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Phase B's Caddie cold reads found holes that tests passed: b9-3's walk had two HOLDS findings (c07e5758), and b9-5's re-walks read 'keep' as already counted and misread the federal-only line (0fc79987's 017 Extended).",
+     "why_missed": "Empty tags. The title (comprehension holes, a defect class tests cannot see) shares no topic word."
+    },
+    {
+     "lesson": "b9-050",
+     "strength": "moderate",
+     "trap": "W is a user-confirmed value applied identically to every path, so the confidence fan cannot flag a fat-fingered low W. A grounded range gate shared by form, sanity and codec is the only defense.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Phase B review: 'Unvalidated W escapes its gate on a route flip: Save CTA vanishes, or a 12x W skips the period ask'. The one gate against a fat-fingered deterministic W could be bypassed, and nothing downstream caught it.",
+     "why_missed": "A candidate (modules scenarioCodec, sanity; its title hit was a false match on 'seed' inside 'seedless'), not scored. 046, the codec-range lesson, took the slot."
+    },
+    {
+     "lesson": "b9-058",
+     "strength": "moderate",
+     "trap": "The W answer goes stale when any input of its quote changes. Every writer of each of those inputs (spend, budget, pay, out-of-pocket medical) must trip the stale line, not just the editor you are looking at.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 058; read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-059",
+     "strength": "moderate",
+     "trap": "On a confirm-or-correct money field, blank may validly mean 'keep the quote'. A shared parse primitive that turns both empty and garbage into undefined would silently accept a typo as a confirmation.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "No empty-versus-invalid parse finding. The tab-through re-stamp (wf_65e70286-868) is a blur/commit issue.",
+     "why_missed": "Not a candidate: tags parse-primitive, sentinel-collapse, empty-vs-invalid; modules fields.tsx, BudgetLineItem.tsx."
+    },
+    {
+     "lesson": "b9-065",
+     "strength": "moderate",
+     "trap": "The stale line and the W step's note appear on change above content. Reserve their box by stacking the real alternatives hidden in one grid cell, not with an em guess, or the layout jumps under the reader.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "The same h2 defect: the stale note unmounts and the money picture mounts above the control with no reserved box, so the layout jumps under the tap (8ee6d178; 68aba728).",
+     "why_missed": "Empty tags. The title (fixed em-reserve, stacking the real content) shares no topic word."
+    },
+    {
+     "lesson": "b9-070",
+     "strength": "moderate",
+     "trap": "New verify:fit arms on intake steps can't reuse the result's data-answer-tier wait. Waiting for something to be absent on a surface where it never renders passes before and after the event, so wait for a state only the awaited event creates.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "c07e5758 reports stale 'yet' expectations and load timeouts in verify:fit, not an absence-wait that passed both before and after.",
+     "why_missed": "A candidate (tag provisional-final), not scored."
+    },
+    {
+     "lesson": "b9-079",
+     "strength": "strong",
+     "trap": "The new ScenarioV3 W key and the working-years vintage stamp go through the hydrate seed's scenarioFromDraft normalizer, which re-mints fields. Audit each new field's provenance at every seed and write site before its first consumer reads it.",
+     "verdict": "IN_PLAN",
+     "hit": "N/A",
+     "evidence": "Spec at 903a9c5e :1001 (Sources) lists 079.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-102",
+     "strength": "strong",
+     "trap": "If the working-years vintage stamp is optional with 'absent means quiet', a field born now has no legacy households to excuse it. The clock goes fail-open forever and keeps re-presenting stale answers as current.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Phase B's working-years clock treats an absent stamp as quiet (src/store/staleness.ts:769-772 at c07e5758: 'savedDate?.workingYearsVintage !== undefined &&'). U11 then filed 'A copy of the app built before the pay check opens a plan... its save drops the working-years clock's stamp' (b9-8, 2026-10-30): 'deriveStaleness reads a missing stamp as not comparable, so after that save U13's clock stays quiet'. Ruled in 24289e8a (a schemaVersion bump).",
+     "why_missed": "A candidate (tag staleness; modules scenarioCodec, staleness), not scored."
+    },
+    {
+     "lesson": "b9-103",
+     "strength": "strong",
+     "trap": "The new working-years clock and the stale line on the result: decide whether it names itself by whether the run consumed what the stamp dates, and test the silencing direction, not only over-alarm.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "0fc79987's 103 Extended (2026-10-30, the Phase B Caddie re-walk): b9-5's Keep door opened its mirror image, a one-tap keep below today's spending. Gated by ruling 34 in c07e5758.",
+     "why_missed": "A candidate (tag vintage-stamp; modules staleness, intakeMap), not scored."
+    },
+    {
+     "lesson": "b9-085",
+     "strength": "strong",
+     "trap": "New dev seeds and aged plants for the W answer and its clock are new producers of persisted state. Each needs an engine-acceptance pin, and must not be aged to before W existed.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 085; read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-086",
+     "strength": "strong",
+     "trap": "The W question and the assumption panel's W row both render the help and state copy. Gated variants must be picked through one shared helper, or the second renderer keeps the old, now-conditional meaning.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 086; read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-097",
+     "strength": "strong",
+     "trap": "The stale line and the W copy land on fold-law frames. A local verify:fit pass is not proof; ubuntu's metrics can push the protected disclaimer past the fold by one line.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "Phase B's one copy-driven overflow (the 390 px strip-fact, b9-3) was seen locally and belongs to 123's extension. No CI-only fold push was reported (c07e5758: verify:fit 150/150).",
+     "why_missed": "Empty tags. The title (copy swap on a fold-law frame) shares no topic word."
+    },
+    {
+     "lesson": "b9-100",
+     "strength": "strong",
+     "trap": "The stale line points the household at a fix. Every state that shows the string must render the promised control and drive it, or the note is a dead end.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line '100: A sentence that promises a button has to have that button in every state'.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-088",
+     "strength": "moderate",
+     "trap": "The methodology row by arm is a disclosure. It must be keyed to the producer of the run being described, not to a sibling predicate's source copied across.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Landmine 088; read in full.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-101",
+     "strength": "moderate",
+     "trap": "The W question's help copy must be true for every household shape that reaches it (one spouse working, one retired; Medicare onsets), not just the typical one.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "0fc79987's 101 Extended (2026-10-30, Phase B's Caddie card, b9-3): ruling 1's help 'health premiums before anyone's Medicare starts' told dateshort to count no premium. Phase B review: 'Held-back note promises a later raise the run never credits (FRA-year stopgap; spouse past FRA)'.",
+     "why_missed": "A candidate (tags copy-contract, predicate-extension; modules copy.ts), not scored."
+    },
+    {
+     "lesson": "b9-111",
+     "strength": "moderate",
+     "trap": "Go-live makes W-present frames reachable. Every consumer of the newly reachable state (result, panel, save slot) must be audited, not just the gate that opened.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Phase B review wf_65e70286-868: 'A walk-time $0 W left behind by a route change silently removes Save from the result' and 'A walk-time $0 W outlives its gate on a route flip; the spine plan can then never be saved'. A newly reachable W state broke a consumer nobody audited, the save slot.",
+     "why_missed": "A candidate (tag dead-end; modules AssumptionPanel), not scored."
+    },
+    {
+     "lesson": "b9-142",
+     "strength": "strong",
+     "trap": "Going live with the W answer means the assumption panel's W row and the methodology row must stop being \"the tool doesn't check X\" disclaimers. Each item becomes use, ask, or a plain can't-be-known note, with no stopgap left behind once W is used.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "c07e5758's reentryChrome.ts wrote the stale-W re-entry line as 'a static key, because this seam takes no draft'. 0fc79987's 142 Extended (2026-10-30, the U10 Caddie card) names it a figure-less stopgap while the caller held the draft. Fixed in e9fd7636 ('the gate speaks the stale working-year figure').",
+     "why_missed": "Its header was scored (one of the 15), but it was neither read nor one of the five also-relevant lines."
+    },
+    {
+     "lesson": "b9-112",
+     "strength": "moderate",
+     "trap": "The new W question and money-picture intake steps hold typed figures in component state. They must hold the unsavedBuffer counter and go through useUnloadGuard, or a reload silently drops the answer.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "No reload-loss finding. WorkingCostQuestion commits on blur, and no review flagged an unguarded buffer.",
+     "why_missed": "Not a candidate: tags beforeunload, unsaved-work, hold-counter; the topic names no reload or unsaved work."
+    },
+    {
+     "lesson": "b9-131",
+     "strength": "moderate",
+     "trap": "A gated Continue on the W step made aria-disabled per project law goes vacuous under toBeEnabled, leaks the :not(:disabled) hover darken, and gets refused by Playwright's actionability check in the intake-fold and caddie arms.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "WorkingCostQuestion at c07e5758 uses no aria-disabled. The review's aria finding was aria-invalid persisting, a different attribute.",
+     "why_missed": "A candidate (tag a11y), not scored."
+    },
+    {
+     "lesson": "b9-132",
+     "strength": "moderate",
+     "trap": "The quote and the stale line on the result must read the engine's decision (the shipped W producer). Re-deriving it in the UI from draft inputs forks.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Also-relevant line '132: The screen re-deriving an engine decision is a fork'.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-133",
+     "strength": "moderate",
+     "trap": "Both the stale line and the methodology row by arm risk a direction claim (\"looks better/worse than it is\") the engine never measured for the comparison or the household. Keep the consequence scoped and conditional.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "Phase B's surfaces made no direction claim. 133's 10-31 Refinement describes U10's first fix ('can look worse', b9-7), which came after go-live.",
+     "why_missed": "A candidate (tag copy-law; modules copy.ts), not scored."
+    },
+    {
+     "lesson": "b9-134",
+     "strength": "moderate",
+     "trap": "The working-years vintage clock and any dated working-year line need one clock for the whole surface. Pair each distance with its calendar year, and keep stock rows and flow rows distinct, or off-by-one errors go unseen.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Phase B review wf_65e70286-868: 'Budget quote says \"your budget's lines for this year\" — they are the first RETIREMENT year's lines'. A dated line on the wrong clock.",
+     "why_missed": "A candidate (tags readout-clock, copy-law; modules copy.ts), not scored."
+    },
+    {
+     "lesson": "b9-140",
+     "strength": "moderate",
+     "trap": "Methodology and W-row copy that says what is \"counted\" must put its scope on the claim's own head noun. A later sentence cannot narrow a claim the reader has already finished.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "Phase B review: '\"Income tax on that income\" silently includes tax on investment income the picture never shows'. The head noun claimed every income tax, where the run charged federal only. Fixed by ruling 37 (c07e5758).",
+     "why_missed": "A candidate (modules copy.ts), not scored."
+    }
+   ]
+  },
+  {
+   "id": "B18",
+   "ts": "2026-10-31T14:11:53.048Z",
+   "project": "projects-the-back-nine",
+   "session": "b9-1",
+   "topic": "the h2 cure: a gesture hold that freezes the working-year figure face's above-control layout (WorkingCostQuestion stale note, AssumptionPanel WorkingCostRow picture) from pointerdown to click, so a blur-commit layout shift can't eat a tap on \"Each month\"; plus coordinate-tap verify:fit arms at 1536x1300 mouse and 1024x1366 touch, mutant-proven",
+   "lessonsTheBriefNamedOrOpened": [
+    "000",
+    "150",
+    "158",
+    "770"
+   ],
+   "judged": [
+    {
+     "lesson": "b9-035",
+     "strength": "strong",
+     "trap": "This is the exact mechanism. The stale note or picture above the 'Each month' control resizes on blur-commit and eats the tap. The lesson prescribes a reserved box, and only coordinate-based real-browser taps show the defect.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Read in full during the brief (cat 035-*.md at 2026-10-31T14:12:11). The h2 entry's prescription is 'the insight-035 cure'.",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-036",
+     "strength": "moderate",
+     "trap": "Blur fires on pointerdown of the new target, so blur-commit and the click are two events with no guaranteed re-render between them. The hold's timing must account for that sequence.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Read in full (2026-10-31T14:12:11).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-016",
+     "strength": "moderate",
+     "trap": "The mutant-proven coordinate-tap arms need both a control and a mutation (remove the hold, watch the arm go red) to show they are not vacuous.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "68aba728: 13 unit and 5 e2e mutants went red exactly their predicted sets, so the control and mutation were done.",
+     "why_missed": "A candidate (tag playwright), not scored."
+    },
+    {
+     "lesson": "b9-065",
+     "strength": "strong",
+     "trap": "The h2 bug is the stale note and picture changing height above the control at blur-commit. Reserving their box by stacking the real alternatives hidden removes the shift outright, a fix that doesn't depend on event timing the way the gesture hold does. Weigh it before building the hold.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "The cure chose a gesture hold (68aba728). No reserve was built and no new jump was reported. This trap's hit belongs to Phase B (B17).",
+     "why_missed": "A title-grep candidate ('layout') plus a false tag hit ('touch' matched 'touched' in the empty-tags backfill comment), not scored."
+    },
+    {
+     "lesson": "b9-070",
+     "strength": "moderate",
+     "trap": "A coordinate-tap arm proves nothing if it settles or waits before tapping, because the shift never happens during the gesture. Prove each arm actually races the blur-commit shift: removing the hold must turn it red at both 1536x1300 mouse and 1024x1366 touch.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Read in full (2026-10-31T14:12:14).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-071",
+     "strength": "moderate",
+     "trap": "The order of blur, pointerdown and click differs between mouse, touch and jsdom, just as teardown order did for the focus-restore guard. A hold pinned in jsdom is pinned against jsdom's order, so it needs real-browser arms for each input type.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "68aba728 docs/backlog.md:1459: the prescribed capture-phase release re-renders in a real browser before React dispatches the click and detaches the Keep door, but 'jsdom's synchronous dispatchEvent runs no microtask mid-dispatch'. :1463: jsdom's PointerEvent isPrimary default 'silently disabled the first draft in every unit test'. Also, pointerup can't release the hold, because on touch the blur comes after the lift.",
+     "why_missed": "Its header was scored (printed with 035, 036, 119, 124, 126, 070, 144 and 116) but ranked below the five read. No brief text was written."
+    },
+    {
+     "lesson": "b9-072",
+     "strength": "moderate",
+     "trap": "The hold freezes two displays (the WorkingCostQuestion stale note and the WorkingCostRow picture) over a value that has already committed. Freeze and release them together as one pair, so the face never shows a note from one state over a picture from another and never stays stale after the click.",
+     "verdict": "MISSED",
+     "hit": "HIT",
+     "evidence": "68aba728 docs/backlog.md:1461 and the commit body: the review's P1 found that 'holding the whole draft let a tap on the door that blurred the spending row (raised past $84,000) keep the $84,000 ruling 34 had just withheld'. A held display acted on a state that was no longer live. The fix holds W alone and keeps the quote live.",
+     "why_missed": "Empty tags; its only tag hit was the 'touched' false match. Its title says 'hysteresis hold', and the brief's title alternation had no 'hold'. Not scored."
+    },
+    {
+     "lesson": "b9-081",
+     "strength": "moderate",
+     "trap": "A coordinate-tap regression arm can pass vacuously, for example when the layout shift never lands between pointerdown and click in the test. Plant the mutant (no gesture hold) and see each arm go red first.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "Every arm was seen red first: 18 planted regressions, each failing exactly the predicted tests (68aba728).",
+     "why_missed": "Not a candidate: its tags say 'mutant' where the regex said 'mutation', and the rest (single-source, producer, early-return) share nothing. The parent spec lists 081 in its Sources, but the h2 entry the cure was built from cites only 035."
+    },
+    {
+     "lesson": "b9-075",
+     "strength": "moderate",
+     "trap": "The h2 failure lives on tall screens (1536x1300, 1024x1366), not the dev laptop's frame. A green run there carries no information unless the arm measures that the hold moves the tap outcome in the failing setup.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "Measured in the failing geometry: missed 4/4 before and landed 4/4 after on 1536x1300 and 1024x1366 (68aba728).",
+     "why_missed": "A modules-grep candidate (vertical-fit), not scored."
+    },
+    {
+     "lesson": "b9-119",
+     "strength": "strong",
+     "trap": "The 1024x1366 touch arm's synthetic tap can land no pointerdown at an element's exact edge even when elementFromPoint returns the element. Inset the tap on \"Each month\" by a device pixel, or the arm fails for harness reasons.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Read in full (2026-10-31T14:12:11).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-144",
+     "strength": "strong",
+     "trap": "The gesture hold in WorkingCostQuestion / AssumptionPanel is a mark about a gesture's lifecycle. It must be set and dropped in the component that sees every way the gesture ends (pointerup elsewhere, pointercancel, blur, unmount), or the frozen layout outlives the tap.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "68aba728 releases the hold on cancel, contextmenu and window blur, after a 500 ms fallback, and on effect cleanup. No finding shows a hold outliving its tap. The lens's find was about where the hold engages (backlog.md:1460).",
+     "why_missed": "Its header was scored but ranked below the five read. No brief text was written."
+    },
+    {
+     "lesson": "b9-124",
+     "strength": "moderate",
+     "trap": "Coordinate taps exist because Playwright's .click() scrolls and waits for stable layout, which would hide the blur-commit shift. Drive only gestures a reader has, and prove what was hit with a hit-test.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "The arms use coordinate taps with hit-tested geometry floors (68aba728). No reachability-oracle finding.",
+     "why_missed": "Its header was scored but ranked below the five read."
+    },
+    {
+     "lesson": "b9-126",
+     "strength": "moderate",
+     "trap": "Mutant-proving the new verify:fit arms: plant exactly the regression the label names (hold removed) and predict which arms (mouse 1536x1300 vs touch 1024x1366) cannot go red before running.",
+     "verdict": "SURFACED",
+     "hit": "N/A",
+     "evidence": "Read in full (2026-10-31T14:12:14).",
+     "why_missed": ""
+    },
+    {
+     "lesson": "b9-116",
+     "strength": "moderate",
+     "trap": "Asserting that the tap landed through a locator keyed on the state the click changes (e.g. :not(:checked)) re-resolves to another element after the click. Pin \"Each month\" by an attribute that survives the click.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "No locator re-resolve finding. Every kill landed on the test's own assertion (68aba728).",
+     "why_missed": "Its header was scored but ranked below the five read."
+    },
+    {
+     "lesson": "b9-112",
+     "strength": "moderate",
+     "trap": "Build the hold on the existing hold-counter shape with idempotent release, so a missed or doubled release cannot leave the layout frozen or let the shift through.",
+     "verdict": "MISSED",
+     "hit": "NO_EVIDENCE",
+     "evidence": "useGestureHold is a new hook, not the hold counter. No missed or doubled release was found; 68aba728 lists only the event-order, Keep and gate findings.",
+     "why_missed": "Not a candidate: its tags include 'hold-counter', but the brief's tag regex had no 'hold'."
+    }
+   ]
+  }
+ ]
+}
